@@ -18,3 +18,13 @@ target/release/litex -compact -runner -r scratch/math_concepts_in_litex/elementa
 The file uses Builtin real arithmetic, order, powers, absolute value, and
 square root. It contains no `trust` or local axiom. It is a focused first
 version, not a general polynomial solver or a complete inequalities library.
+
+For comparison, `lean_core_analogy.lean` uses Prelude integers for the
+factorized-root and extraneous-candidate arguments, and exposes the real
+square/order step behind AM-GM as an explicit premise because Prelude has no
+real square root. It has no imports and is handwritten analogy code, not
+compiler-generated output. Run it with:
+
+```sh
+lean showcases/math_concepts_in_litex/elementary_algebra_and_inequalities/lean_core_analogy.lean
+```

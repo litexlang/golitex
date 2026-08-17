@@ -31,7 +31,7 @@ impl Runtime {
         }
         Ok(Some(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                equal_fact.clone().into(),
                 "sqrt: (sqrt(x))^2 = x".to_string(),
                 vec![arg_result],
             )
@@ -74,7 +74,7 @@ impl Runtime {
             }
             return Ok(Some(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                    EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                    equal_fact.clone().into(),
                     "sqrt: sqrt(0) = 0 and sqrt(1) = 1".to_string(),
                     vec![arg_result, other_result],
                 )
@@ -123,7 +123,7 @@ impl Runtime {
 
         Ok(Some(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                equal_fact.clone().into(),
                 "sqrt: sqrt(a^2) = a for a >= 0".to_string(),
                 vec![nonnegative_result, square_result],
             )
@@ -192,7 +192,7 @@ impl Runtime {
 
         Ok(Some(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                equal_fact.clone().into(),
                 "sqrt: sqrt(a * b) = sqrt(a) * sqrt(b)".to_string(),
                 vec![
                     left_nonnegative_result,
@@ -265,7 +265,7 @@ impl Runtime {
 
         Ok(Some(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                equal_fact.clone().into(),
                 "sqrt: sqrt(a / b) = sqrt(a) / sqrt(b)".to_string(),
                 vec![
                     numerator_nonnegative_result,

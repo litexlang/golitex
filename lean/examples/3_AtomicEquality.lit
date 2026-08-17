@@ -1,9 +1,9 @@
-# Tracer: compiler2 top-level atomic equality
+# Tracer: compiler top-level atomic equality
 #
 # Before (did not compile):
 # sketch:
 #     1 = 1
-# Former compiler2 behavior: only forall facts inside sketch had an emitter.
+# Former compiler behavior: only forall facts inside sketch had an emitter.
 #
 # Now: ordinary verified equality facts may appear directly at file top level.
 # Numerals and the supported `+` expression lower to Mathlib complex values;
@@ -14,8 +14,8 @@
 #
 # Evidence:
 # target/release/litex -compact -strict -runner -f lean/examples/3_AtomicEquality.lit
-# cd lean && ./compiler2.sh compile examples/3_AtomicEquality.lit
-# cd lean && ./compiler2.sh check examples
+# cd lean && ./compiler.sh compile examples/3_AtomicEquality.lit
+# cd lean && ./compiler.sh check examples
 
 1 = 1
 2 + 3 = 5

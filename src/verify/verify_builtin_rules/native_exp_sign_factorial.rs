@@ -1,6 +1,6 @@
 use super::order_normalize::normalize_positive_order_atomic_fact;
 use crate::prelude::*;
-use crate::verify::verify_equality_by_builtin_rules::objs_match_for_equality_pattern;
+use crate::verify::verify_equality_by_builtin_rules::objs_match_for_pattern;
 
 impl Runtime {
     // Natural exp/ln are inverse and agree with the existing e-power/log interface.
@@ -635,11 +635,8 @@ fn native_equal_success(
     reason: &str,
     subgoals: Vec<StmtResult>,
 ) -> StmtResult {
-    let left = &equal_fact.left;
-    let right = &equal_fact.right;
-    let line_file = equal_fact.line_file.clone();
     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-        EqualFact::new(left.clone(), right.clone(), line_file).into(),
+        equal_fact.clone().into(),
         reason.to_string(),
         subgoals,
     )
@@ -650,21 +647,23 @@ fn exp_ln_identity_shape(native: &Obj, other: &Obj) -> bool {
     match native {
         Obj::Exp(exp) => {
             if let Obj::Ln(ln) = exp.arg.as_ref() {
-                return same(&ln.arg, other);
+                return objs_match_for_pattern(&ln.arg, other);
             }
             let Obj::Pow(pow) = other else {
                 return false;
             };
-            matches!(pow.base.as_ref(), Obj::EulerNumber(_)) && same(&exp.arg, &pow.exponent)
+            matches!(pow.base.as_ref(), Obj::EulerNumber(_))
+                && objs_match_for_pattern(&exp.arg, &pow.exponent)
         }
         Obj::Ln(ln) => {
             if let Obj::Exp(exp) = ln.arg.as_ref() {
-                return same(&exp.arg, other);
+                return objs_match_for_pattern(&exp.arg, other);
             }
             let Obj::Log(log) = other else {
                 return false;
             };
-            matches!(log.base.as_ref(), Obj::EulerNumber(_)) && same(&ln.arg, &log.arg)
+            matches!(log.base.as_ref(), Obj::EulerNumber(_))
+                && objs_match_for_pattern(&ln.arg, &log.arg)
         }
         _ => false,
     }
@@ -715,14 +714,14 @@ fn exp_pair_matches(first: &Obj, second: &Obj, first_native: &Obj, second_native
     let (Obj::Exp(first_exp), Obj::Exp(second_exp)) = (first_native, second_native) else {
         return false;
     };
-    same(first, &first_exp.arg) && same(second, &second_exp.arg)
+    objs_match_for_pattern(first, &first_exp.arg) && objs_match_for_pattern(second, &second_exp.arg)
 }
 
 fn ln_pair_matches(first: &Obj, second: &Obj, first_native: &Obj, second_native: &Obj) -> bool {
     let (Obj::Ln(first_ln), Obj::Ln(second_ln)) = (first_native, second_native) else {
         return false;
     };
-    same(first, &first_ln.arg) && same(second, &second_ln.arg)
+    objs_match_for_pattern(first, &first_ln.arg) && objs_match_for_pattern(second, &second_ln.arg)
 }
 
 fn sign_abs_identity_shape(product: &Obj, other: &Obj) -> bool {
@@ -733,7 +732,7 @@ fn sign_abs_identity_shape(product: &Obj, other: &Obj) -> bool {
         (Obj::Sign(sign), Obj::Abs(abs)) | (Obj::Abs(abs), Obj::Sign(sign)) => (sign, abs),
         _ => return false,
     };
-    same(&sign.arg, &abs.arg) && same(&sign.arg, other)
+    objs_match_for_pattern(&sign.arg, &abs.arg) && objs_match_for_pattern(&sign.arg, other)
 }
 
 fn sign_algebra_shape(native: &Obj, other: &Obj) -> bool {
@@ -744,7 +743,9 @@ fn sign_algebra_shape(native: &Obj, other: &Obj) -> bool {
         if let (Obj::Sign(left_sign), Obj::Sign(right_sign)) =
             (other_product.left.as_ref(), other_product.right.as_ref())
         {
-            if same(&product.left, &left_sign.arg) && same(&product.right, &right_sign.arg) {
+            if objs_match_for_pattern(&product.left, &left_sign.arg)
+                && objs_match_for_pattern(&product.right, &right_sign.arg)
+            {
                 return true;
             }
         }
@@ -759,7 +760,7 @@ fn sign_algebra_shape(native: &Obj, other: &Obj) -> bool {
     let Obj::Sign(other_sign) = other_inner else {
         return false;
     };
-    same(inner, &other_sign.arg)
+    objs_match_for_pattern(inner, &other_sign.arg)
 }
 
 fn negative_one_factor(obj: &Obj) -> Option<&Obj> {
@@ -789,8 +790,8 @@ fn factorial_recurrence_shape(factorial: &Obj, product: &Obj) -> bool {
         let Obj::Factorial(predecessor_factorial) = factorial else {
             return false;
         };
-        same(successor_factorial.arg.as_ref(), successor)
-            && same(predecessor, predecessor_factorial.arg.as_ref())
+        objs_match_for_pattern(successor_factorial.arg.as_ref(), successor)
+            && objs_match_for_pattern(predecessor, predecessor_factorial.arg.as_ref())
     };
     let matches_predecessor_product = |factor: &Obj, factorial: &Obj| {
         let Obj::Factorial(predecessor_factorial) = factorial else {
@@ -799,8 +800,8 @@ fn factorial_recurrence_shape(factorial: &Obj, product: &Obj) -> bool {
         let Obj::Sub(predecessor) = predecessor_factorial.arg.as_ref() else {
             return false;
         };
-        same(successor_factorial.arg.as_ref(), factor)
-            && same(successor_factorial.arg.as_ref(), predecessor.left.as_ref())
+        objs_match_for_pattern(successor_factorial.arg.as_ref(), factor)
+            && objs_match_for_pattern(successor_factorial.arg.as_ref(), predecessor.left.as_ref())
             && is_one(predecessor.right.as_ref())
     };
     matches_successor_product(product.left.as_ref(), product.right.as_ref())
@@ -820,10 +821,6 @@ fn successor_predecessor(obj: &Obj) -> Option<&Obj> {
     } else {
         None
     }
-}
-
-fn same(left: &Obj, right: &Obj) -> bool {
-    objs_match_for_equality_pattern(left, right)
 }
 
 fn is_zero(obj: &Obj) -> bool {

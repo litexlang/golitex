@@ -191,7 +191,7 @@ theorem same_rep
 
 end In
 
-/-- The first compiler2 function carrier: one named unary Litex application
+/-- The first compiler function carrier: one named unary Litex application
 layer. Its argument remains heterogeneous; the function can be called only
 with an explicit proof that the argument belongs to `domain`. -/
 structure Fn

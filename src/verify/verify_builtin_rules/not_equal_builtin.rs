@@ -1066,15 +1066,19 @@ impl Runtime {
             };
 
             let target_matches_left = self.verify_zero_product_factor_matches_target(
-                &target,
-                product.left.as_ref(),
-                not_equal_fact.line_file.clone(),
+                &EqualFact::new_from_refs(
+                    &target,
+                    product.left.as_ref(),
+                    not_equal_fact.line_file.clone(),
+                ),
                 builtin_state,
             )?;
             let target_matches_right = self.verify_zero_product_factor_matches_target(
-                &target,
-                product.right.as_ref(),
-                not_equal_fact.line_file.clone(),
+                &EqualFact::new_from_refs(
+                    &target,
+                    product.right.as_ref(),
+                    not_equal_fact.line_file.clone(),
+                ),
                 builtin_state,
             )?;
             if !target_matches_left.is_true() && !target_matches_right.is_true() {
@@ -1534,8 +1538,7 @@ impl Runtime {
 
 #[cfg(test)]
 mod tests {
-    use crate::compile_to_lean::compile_to_lean_from_source;
-    use crate::compile_to_lean::lean_test_support::SharedLeanTestLibrary;
+    use crate::litex_to_lean_compiler::compile_source;
     use crate::pipeline::{render_run_source_code_output, run_source_code};
     use crate::prelude::*;
 
@@ -1605,28 +1608,9 @@ y != x
     }
 
     #[test]
-    fn not_equal_symmetry_has_checked_litex_to_lean_evidence() {
-        let output =
-            compile_to_lean_from_source(SYMMETRY_SOURCE, "not-equality-symmetry-compile-to-lean")
-                .expect("the builtin symmetry proof should lower to Lean");
-        assert!(output.contains("(a : Litex.Object)"), "{output}");
-        assert!(output.contains("(b : Litex.Object)"), "{output}");
-        assert!(output.contains("Litex.IsSet a"), "{output}");
-        assert!(output.contains("Litex.IsSet b"), "{output}");
-        assert!(!output.contains("theorem notEqualSymmetry"), "{output}");
-        assert!(output.contains("Litex.Rules.notEqualSymmetry"), "{output}");
-        assert!(!output.contains("axiom notEqualSymmetry"), "{output}");
-        assert!(!output.contains("Set α"), "{output}");
-        assert!(!output.contains("sorry"), "{output}");
-    }
-
-    #[test]
-    #[ignore = "requires LITEX_LEAN_PROJECT pointing to a fetched Mathlib Lake project"]
-    fn generated_not_equal_symmetry_compiles_with_lean() {
-        let generated =
-            compile_to_lean_from_source(SYMMETRY_SOURCE, "not-equality-symmetry-kernel")
-                .expect("the builtin symmetry proof should lower to Lean");
-        let mut library = SharedLeanTestLibrary::new("not-equality-symmetry-kernel");
-        library.compile_generated("not-equality-symmetry-kernel", &generated);
+    fn not_equal_symmetry_remains_an_explicit_compiler_boundary() {
+        let error = compile_source(SYMMETRY_SOURCE, "not-equality-symmetry-compiler")
+            .expect_err("the wrapper compiler has no reviewed non-equality adapter yet");
+        assert!(error.contains("unsupported compiler"), "{error}");
     }
 }

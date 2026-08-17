@@ -1,20 +1,22 @@
 use crate::prelude::*;
 use crate::verify::verify_equality_by_builtin_rules::{
-    factual_equal_success_by_builtin_reason, objs_match_for_equality_pattern,
+    factual_equal_success_by_builtin_reason, objs_match_for_pattern,
 };
 
 impl Runtime {
-    pub fn objs_have_same_known_equality_rc_in_some_env(&self, left: &Obj, right: &Obj) -> bool {
-        let left_key = obj_equality_key(left);
-        let right_key = obj_equality_key(right);
+    pub fn equal_fact_sides_have_same_known_equality_in_some_env(
+        &self,
+        equal_fact: &EqualFact,
+    ) -> bool {
+        let left_key = obj_equality_key(&equal_fact.left);
+        let right_key = obj_equality_key(&equal_fact.right);
         self.get_all_objs_equal_to_given(&left_key)
             .contains(&right_key)
     }
 
     pub(crate) fn compiler_known_equality_path(
         &self,
-        left: &Obj,
-        right: &Obj,
+        equal_fact: &EqualFact,
     ) -> Option<Vec<KnownEqualityBuiltinRuleStep>> {
         let mut equalities = KnownEquality::new();
         for environment in self.iter_environments_from_top() {
@@ -31,7 +33,7 @@ impl Runtime {
             }
         }
         equalities
-            .proof_path(left, right)?
+            .proof_path(&equal_fact.left, &equal_fact.right)?
             .into_iter()
             .map(|step| {
                 let equality_fact: Fact = AtomicFact::EqualFact(step.equality.clone()).into();
@@ -63,8 +65,14 @@ impl Runtime {
         {
             return factual_equal_success_by_builtin_reason(equal_fact, "calculation");
         }
-        if objs_match_for_equality_pattern(&left_resolved, &right_resolved)
-            || self.objs_have_same_known_equality_rc_in_some_env(&left_resolved, &right_resolved)
+        if objs_match_for_pattern(&left_resolved, &right_resolved)
+            || self.equal_fact_sides_have_same_known_equality_in_some_env(
+                &EqualFact::new_from_refs(
+                    &left_resolved,
+                    &right_resolved,
+                    equal_fact.line_file.clone(),
+                ),
+            )
         {
             return factual_equal_success_by_builtin_reason(
                 equal_fact,
@@ -95,16 +103,16 @@ impl Runtime {
     fn verify_equal_fact_directly_known_only(&self, equal_fact: &EqualFact) -> StmtResult {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
-        if objs_match_for_equality_pattern(left, right) {
+        if objs_match_for_pattern(left, right) {
             return factual_equal_success_by_builtin_reason(
                 equal_fact,
                 "known-only equality: they are the same",
             );
         }
 
-        if self.objs_have_same_known_equality_rc_in_some_env(left, right) {
+        if self.equal_fact_sides_have_same_known_equality_in_some_env(equal_fact) {
             if self.captures_well_definedness() {
-                if let Some(path) = self.compiler_known_equality_path(left, right) {
+                if let Some(path) = self.compiler_known_equality_path(equal_fact) {
                     if !path.is_empty() {
                         let target: Fact = equal_fact.clone().into();
                         return FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
@@ -128,52 +136,41 @@ impl Runtime {
         StmtResult::Unknown(StmtUnknown::new())
     }
 
-    pub(crate) fn objs_are_congruent_by_known_equalities(
+    pub(crate) fn equal_fact_sides_are_congruent_by_known_equalities(
         &self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
     ) -> bool {
         if self
-            .verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
-                left,
-                right,
-                line_file.clone(),
-            ))
+            .verify_equal_fact_by_known_equality(equal_fact)
             .is_true()
         {
             return true;
         }
 
         let result: Result<bool, ()> = Self::same_shape_and_corresponding_args_match(
-            left,
-            right,
+            &equal_fact.left,
+            &equal_fact.right,
             &mut |left_arg, right_arg| {
-                Ok(self.objs_are_congruent_by_known_equalities(
-                    left_arg,
-                    right_arg,
-                    line_file.clone(),
+                Ok(self.equal_fact_sides_are_congruent_by_known_equalities(
+                    &EqualFact::new_from_refs(left_arg, right_arg, equal_fact.line_file.clone()),
                 ))
             },
         );
         result.expect("known-equality comparison is infallible")
     }
 
-    pub(crate) fn objs_are_equal_by_terminating_reduction_and_congruence(
+    pub(crate) fn equal_fact_sides_are_equal_by_terminating_reduction_and_congruence(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
     ) -> Result<bool, RuntimeError> {
-        let candidate_fact = EqualFact::new(left.clone(), right.clone(), line_file.clone());
-        let known_result = self.verify_equal_fact_with_known_fact(&candidate_fact);
+        let known_result = self.verify_equal_fact_with_known_fact(equal_fact);
         if known_result.is_true() {
             return Ok(true);
         }
-        let direct_evaluation_result = self.verify_equal_fact_by_direct_evaluation(&candidate_fact);
+        let direct_evaluation_result = self.verify_equal_fact_by_direct_evaluation(equal_fact);
         if direct_evaluation_result.is_true() {
             self.remember_successful_atomic_fact_for_statement(
-                &candidate_fact.clone().into(),
+                &equal_fact.clone().into(),
                 direct_evaluation_result,
             );
             return Ok(true);
@@ -183,32 +180,39 @@ impl Runtime {
         // terminating structural comparison. This introduces no new proof route: after
         // one reduction, every leaf is still limited to stored non-forall
         // equality or obligation-free direct evaluation.
-        let reduced_left = self.reduce_structural_equality_obj_once(left)?;
-        let reduced_right = self.reduce_structural_equality_obj_once(right)?;
+        let reduced_left = self.reduce_structural_equality_obj_once(&equal_fact.left)?;
+        let reduced_right = self.reduce_structural_equality_obj_once(&equal_fact.right)?;
         if reduced_left.is_some() || reduced_right.is_some() {
-            let candidate_left = reduced_left.as_ref().unwrap_or(left);
-            let candidate_right = reduced_right.as_ref().unwrap_or(right);
+            let candidate_left = reduced_left.as_ref().unwrap_or(&equal_fact.left);
+            let candidate_right = reduced_right.as_ref().unwrap_or(&equal_fact.right);
             let made_progress =
-                !objs_equal_with_nested_binder_alpha_equivalence(left, candidate_left)
-                    || !objs_equal_with_nested_binder_alpha_equivalence(right, candidate_right);
+                !objs_equal_with_nested_binder_alpha_equivalence(&equal_fact.left, candidate_left)
+                    || !objs_equal_with_nested_binder_alpha_equivalence(
+                        &equal_fact.right,
+                        candidate_right,
+                    );
             if made_progress
-                && self.objs_are_equal_by_terminating_reduction_and_congruence(
-                    candidate_left,
-                    candidate_right,
-                    line_file.clone(),
+                && self.equal_fact_sides_are_equal_by_terminating_reduction_and_congruence(
+                    &EqualFact::new_from_refs(
+                        candidate_left,
+                        candidate_right,
+                        equal_fact.line_file.clone(),
+                    ),
                 )?
             {
                 return Ok(true);
             }
         }
 
-        Self::same_shape_and_corresponding_args_match(left, right, &mut |left_arg, right_arg| {
-            self.objs_are_equal_by_terminating_reduction_and_congruence(
-                left_arg,
-                right_arg,
-                line_file.clone(),
-            )
-        })
+        Self::same_shape_and_corresponding_args_match(
+            &equal_fact.left,
+            &equal_fact.right,
+            &mut |left_arg, right_arg| {
+                self.equal_fact_sides_are_equal_by_terminating_reduction_and_congruence(
+                    &EqualFact::new_from_refs(left_arg, right_arg, equal_fact.line_file.clone()),
+                )
+            },
+        )
     }
 
     /// Perform one obligation-free definitional reduction used by structural
@@ -570,9 +574,9 @@ mod tests {
     fn matcher_accepts_with_one_known_leaf(left: &Obj, right: &Obj, x: &Obj, y: &Obj) -> bool {
         Runtime::same_shape_and_corresponding_args_match(left, right, &mut |left_arg, right_arg| {
             Ok::<bool, ()>(
-                objs_match_for_equality_pattern(left_arg, right_arg)
-                    || (objs_match_for_equality_pattern(left_arg, x)
-                        && objs_match_for_equality_pattern(right_arg, y)),
+                objs_match_for_pattern(left_arg, right_arg)
+                    || (objs_match_for_pattern(left_arg, x)
+                        && objs_match_for_pattern(right_arg, y)),
             )
         })
         .expect("structural matching is infallible in this test")
@@ -650,11 +654,19 @@ mod tests {
 
         let result: Result<(), RuntimeError> = runtime.run_in_local_env(|runtime| {
             store_compiler_equality(runtime, b.clone(), c.clone(), FactId::new(2));
-            assert!(runtime.compiler_known_equality_path(&a, &c).is_some());
+            assert!(runtime
+                .compiler_known_equality_path(&EqualFact::new_from_refs(
+                    &a,
+                    &c,
+                    default_line_file(),
+                ))
+                .is_some());
             Ok(())
         });
         result.expect("discarded-child evidence probe should run");
-        assert!(runtime.compiler_known_equality_path(&a, &c).is_none());
+        assert!(runtime
+            .compiler_known_equality_path(&EqualFact::new_from_refs(&a, &c, default_line_file(),))
+            .is_none());
     }
 
     #[test]
@@ -668,7 +680,9 @@ mod tests {
             .store_equality(&EqualFact::new(a.clone(), b.clone(), default_line_file()))
             .expect("store semantic equality without compiler identity");
 
-        assert!(runtime.compiler_known_equality_path(&a, &b).is_none());
+        assert!(runtime
+            .compiler_known_equality_path(&EqualFact::new_from_refs(&a, &b, default_line_file(),))
+            .is_none());
     }
 
     #[test]
@@ -687,7 +701,7 @@ mod tests {
             })
             .expect("committed-child evidence probe should run");
         let path = runtime
-            .compiler_known_equality_path(&a, &c)
+            .compiler_known_equality_path(&EqualFact::new_from_refs(&a, &c, default_line_file()))
             .expect("committed child equality should remain visible");
         assert_eq!(path.len(), 2);
         assert_eq!(path[0].source_fact_id, FactId::new(1));

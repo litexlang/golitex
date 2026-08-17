@@ -7,6 +7,7 @@ use std::rc::Rc;
 
 const LITEX_CONFIG: &str = "litex.config";
 const LITEX_TODO: &str = "todo.lit";
+const LOCAL_DRAFTS: &str = ".drafts";
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum RepositoryFileTarget {
@@ -1463,6 +1464,10 @@ fn validate_config_directory_contents(
         let name = entry.file_name().to_string_lossy().into_owned();
         let path = entry.path();
         if name == LITEX_CONFIG {
+            continue;
+        }
+        // Local work records are outside the ordered, publishable module tree.
+        if name == LOCAL_DRAFTS {
             continue;
         }
         if name == LITEX_TODO {

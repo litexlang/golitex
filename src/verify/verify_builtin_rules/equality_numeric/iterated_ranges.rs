@@ -428,7 +428,6 @@ impl Runtime {
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
-        let line_file = equal_fact.line_file.clone();
         let (add, s3) = match (left, right) {
             (Obj::Add(a), Obj::Sum(s)) => (a, s),
             (Obj::Sum(s), Obj::Add(a)) => (a, s),
@@ -439,15 +438,9 @@ impl Runtime {
             _ => return Ok(None),
         };
         for (a, b) in [(s1, s2), (s2, s1)] {
-            if let Some(done) = self.try_verify_sum_merge_ordered_pair(
-                a,
-                b,
-                s3,
-                left,
-                right,
-                line_file.clone(),
-                builtin_state,
-            )? {
+            if let Some(done) =
+                self.try_verify_sum_merge_ordered_pair(equal_fact, a, b, s3, builtin_state)?
+            {
                 return Ok(Some(done));
             }
         }
@@ -456,14 +449,13 @@ impl Runtime {
 
     pub(super) fn try_verify_sum_merge_ordered_pair(
         &mut self,
+        equal_fact: &EqualFact,
         s1: &Sum,
         s2: &Sum,
         s3: &Sum,
-        stmt_left: &Obj,
-        stmt_right: &Obj,
-        line_file: LineFile,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let line_file = &equal_fact.line_file;
         let one: Obj = Number::new("1".to_string()).into();
         let gap = Add::new((*s1.end).clone(), one).into();
         if !self
@@ -512,7 +504,7 @@ impl Runtime {
             return Ok(None);
         }
         Ok(Some(factual_equal_success_by_builtin_reason(
-            &EqualFact::new_from_refs(stmt_left, stmt_right, line_file),
+            equal_fact,
             "equality: merge adjacent sum ranges with the same summand",
         )))
     }

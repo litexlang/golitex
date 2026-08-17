@@ -38,11 +38,10 @@ LITEX_CURSOR_LOCAL.md
 /private/
 
 examples/testings/.order
-tools/*
-!tools/predeploy_gate.py
-!tools/release/
-!tools/release/**
-tools/release/__pycache__/
+
+# Root tools are local-only. Public repository automation lives in .github/scripts.
+/tools/
+/.github/scripts/release/__pycache__/
 
 mathematics_in_litex/
 
@@ -73,15 +72,15 @@ example_cleanup_plan.md
 
 todo/
 
-scripts
+/scripts
 
 # Independent local planning repository.
 /plan/
 ./plan
 
-# Local work records for each mathematical showcase.
-/showcases/math_concepts_in_litex/*/todo.*
-/showcases/math_concepts_in_litex/*/proof_journal*
-/showcases/math_concepts_in_litex/*/plan*
+# Local drafts for mathematical showcases. Files outside these explicit draft
+# directories remain visible to Git so misplaced work records fail loudly.
+/showcases/math_concepts_in_litex/.drafts/
+/showcases/math_concepts_in_litex/*/.drafts/
 
 scratch/

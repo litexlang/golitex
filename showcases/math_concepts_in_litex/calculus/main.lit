@@ -39,15 +39,13 @@ thm square_function_has_derivative_at:
                     abs(x - x0) < epsilon
                     =>:
                         abs((square_function(x) - square_function(x0)) / (x - x0) - 2 * x0) < epsilon
-                by thm square_difference_quotient(x0, x)
-                (square_function(x) - square_function(x0)) / (x - x0) = x + x0
+                by thm square_difference_quotient(x0, x) => (square_function(x) - square_function(x0)) / (x - x0) = x + x0
                 (square_function(x) - square_function(x0)) / (x - x0) - 2 * x0 = (x + x0) - 2 * x0 = x - x0
                 abs((square_function(x) - square_function(x0)) / (x - x0) - 2 * x0) = abs(x - x0) < epsilon
             by def $derivative_delta_controlled(square_function, x0, 2 * x0, epsilon, delta)
     by def $has_derivative_at_R(square_function, x0, 2 * x0)
 
-by thm square_function_has_derivative_at(3)
-$has_derivative_at_R(square_function, 3, 6)
+by thm square_function_has_derivative_at(3) => $has_derivative_at_R(square_function, 3, 6)
 
 # Differentiability records existence of a candidate. This first version keeps
 # the derivative relational; it does not assume a trusted global selector.
@@ -81,8 +79,7 @@ thm affine_function_has_derivative_at:
                     abs(x - x0) < 1
                     =>:
                         abs((\affine_function<a, b>(x) - \affine_function<a, b>(x0)) / (x - x0) - a) < epsilon
-                by thm affine_difference_quotient(a, b, x0, x)
-                (\affine_function<a, b>(x) - \affine_function<a, b>(x0)) / (x - x0) = a
+                by thm affine_difference_quotient(a, b, x0, x) => (\affine_function<a, b>(x) - \affine_function<a, b>(x0)) / (x - x0) = a
                 (\affine_function<a, b>(x) - \affine_function<a, b>(x0)) / (x - x0) - a = 0
                 abs((\affine_function<a, b>(x) - \affine_function<a, b>(x0)) / (x - x0) - a) = abs(0) = 0 < epsilon
             by def:
@@ -101,14 +98,12 @@ thm derivative_candidate_implies_differentiable:
 thm square_function_is_differentiable_at:
     ? forall x0 R:
         $is_differentiable_at_R(square_function, x0)
-    by thm square_function_has_derivative_at(x0)
-    by thm derivative_candidate_implies_differentiable(square_function, x0, 2 * x0)
+    by thm square_function_has_derivative_at(x0) => $has_derivative_at_R(square_function, x0, 2 * x0)
+    by thm derivative_candidate_implies_differentiable(square_function, x0, 2 * x0) => $is_differentiable_at_R(square_function, x0)
 
 \affine_function<3, 2>(4) = 14
-by thm affine_function_has_derivative_at(3, 2, 4)
-$has_derivative_at_R(\affine_function<3, 2>, 4, 3)
-by thm derivative_candidate_implies_differentiable(\affine_function<3, 2>, 4, 3)
-$is_differentiable_at_R(\affine_function<3, 2>, 4)
+by thm affine_function_has_derivative_at(3, 2, 4) => $has_derivative_at_R(\affine_function<3, 2>, 4, 3)
+by thm derivative_candidate_implies_differentiable(\affine_function<3, 2>, 4, 3) => $is_differentiable_at_R(\affine_function<3, 2>, 4)
 
 # At x0=3 the derivative 6 becomes the slope of the displayed tangent. The
 # remaining error is exactly quadratic, not hidden behind automation.

@@ -257,21 +257,13 @@ and more modest: let users first write the mathematical facts they actually
 mean, then let the machine expose the verification, provenance, and boundaries
 clearly. (Since Litex operates on a higher mathematical abstraction level, it usually runs faster than existing formal languages.)
 
-Litex is also researching a compilation path to Lean. The current MVP assigns
-stable IDs to stored facts and, only in explicit Litex-to-Lean mode, returns a
-recursive IR recording which fact, forall instantiation, definition, or builtin
-rule verified each step. The Lean emitter consumes that IR rather than
-re-running pattern matching over source statements. Its supported surface is
-still deliberately narrow; the current scoped-statement slice includes
-explicit-value `have`, checked bare selection such as `have x R`, binary
-`by cases`, atomic `by contra`, trust-free positive `witness exist`, and
-atomic-fact witnesses for single-clause plain positive existential props, and existential
-extraction through `obtain` or body-style `have x T: ...`. Bare
-selection and existential extraction are compiled from their exact checked
-packages with `Exists.choose`/`choose_spec`, never an invented opaque constant.
-Unsupported routes fail instead of becoming `sorry` or implicit axioms. See the
-[compiler README](src/compile_to_lean/README.md) for the supported subset and current
-boundary.
+Litex is also developing a compilation path to Lean. The verifier produces a
+backend-facing IR with stable fact identities and checked proof evidence. The
+active Lean compiler consumes that IR and emits Litex semantic wrappers over
+native Lean and Mathlib carriers. Its supported surface remains deliberately
+narrow and unsupported routes fail instead of becoming `sorry` or implicit
+axioms. See the [compiler README](lean/README.md) for the implemented examples
+and current boundary.
 
 ## Real mathematics is the pressure test
 

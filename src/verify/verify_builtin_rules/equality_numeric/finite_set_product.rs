@@ -149,10 +149,12 @@ impl Runtime {
                 }
                 if !self
                     .verify_finite_set_sum_functions_pointwise_premise(
-                        union_product.func.as_ref(),
-                        smaller_product.func.as_ref(),
+                        &EqualFact::new_from_refs(
+                            union_product.func.as_ref(),
+                            smaller_product.func.as_ref(),
+                            line_file.clone(),
+                        ),
                         smaller_set.clone(),
-                        line_file.clone(),
                         builtin_state,
                     )?
                     .is_true()
@@ -244,10 +246,12 @@ impl Runtime {
             }
             if !self
                 .verify_finite_set_sum_functions_pointwise_premise(
-                    full_product.func.as_ref(),
-                    remaining_product.func.as_ref(),
+                    &EqualFact::new_from_refs(
+                        full_product.func.as_ref(),
+                        remaining_product.func.as_ref(),
+                        line_file.clone(),
+                    ),
                     remaining_product.set.as_ref().clone(),
-                    line_file.clone(),
                     builtin_state,
                 )?
                 .is_true()
@@ -414,7 +418,7 @@ impl Runtime {
             (Obj::ProductOfFiniteSet(l), Obj::ProductOfFiniteSet(r)) => (l, r),
             _ => return Ok(None),
         };
-        if !objs_equal_by_display_string(left_product.set.as_ref(), right_product.set.as_ref())
+        if !objs_match_for_pattern(left_product.set.as_ref(), right_product.set.as_ref())
             && !self
                 .verify_equal_fact_as_builtin_premise(
                     &EqualFact::new_from_refs(
@@ -460,7 +464,7 @@ impl Runtime {
                     if fn_eq_result.is_true() {
                         return Ok(Some(
                             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                                EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                                equal_fact.clone().into(),
                                 "equality: finite-set products from known fn_eq_in".to_string(),
                                 vec![fn_eq_result],
                             )
@@ -693,7 +697,7 @@ impl Runtime {
         let expected_head = FnObjHead::from_callable_obj(callable.clone())?;
         let actual_head_obj: Obj = fn_obj.head.as_ref().clone().into();
         let expected_head_obj: Obj = expected_head.into();
-        if !objs_equal_by_display_string(&actual_head_obj, &expected_head_obj) {
+        if !objs_match_for_pattern(&actual_head_obj, &expected_head_obj) {
             return None;
         }
         Some(fn_obj.body[0][0].as_ref().clone())
@@ -701,12 +705,12 @@ impl Runtime {
 
     pub(super) fn verify_finite_set_sum_functions_pointwise_premise(
         &mut self,
-        left_func: &Obj,
-        right_func: &Obj,
+        equal_fact: &EqualFact,
         set: Obj,
-        line_file: LineFile,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
+        let left_func = &equal_fact.left;
+        let right_func = &equal_fact.right;
         let x_name = self.generate_random_unused_name();
         let (x_binding, x_obj) = self.fresh_bound_param(x_name, ParamObjType::Forall)?;
         let Some(left_inst) = self.instantiate_unary_function_at(left_func, &x_obj)? else {
@@ -715,7 +719,8 @@ impl Runtime {
         let Some(right_inst) = self.instantiate_unary_function_at(right_func, &x_obj)? else {
             return Ok(StmtResult::Unknown(StmtUnknown::new()));
         };
-        let pointwise_fact: AtomicFact = EqualFact::new(left_inst, right_inst, line_file).into();
+        let pointwise_fact: AtomicFact =
+            EqualFact::new(left_inst, right_inst, equal_fact.line_file.clone()).into();
         self.verify_set_pointwise_atomic_fact_by_known_atomic_or_builtin_only(
             x_binding,
             set,
@@ -769,10 +774,10 @@ impl Runtime {
 
         let first_arg = tuple.args[0].as_ref();
         let second_arg = tuple.args[1].as_ref();
-        let first_is_outer = objs_match_for_equality_pattern(first_arg, &outer_obj);
-        let second_is_inner = objs_match_for_equality_pattern(second_arg, &inner_obj);
-        let first_is_inner = objs_match_for_equality_pattern(first_arg, &inner_obj);
-        let second_is_outer = objs_match_for_equality_pattern(second_arg, &outer_obj);
+        let first_is_outer = objs_match_for_pattern(first_arg, &outer_obj);
+        let second_is_inner = objs_match_for_pattern(second_arg, &inner_obj);
+        let first_is_inner = objs_match_for_pattern(first_arg, &inner_obj);
+        let second_is_outer = objs_match_for_pattern(second_arg, &outer_obj);
         let product_set: Obj = if first_is_outer && second_is_inner {
             Cart::new(vec![
                 outer_sum.set.as_ref().clone(),
@@ -909,7 +914,7 @@ impl Runtime {
             return Ok(None);
         }
         let index_obj = obj_for_bound_param_in_scope(param_binding, ParamObjType::FnSet);
-        if !objs_match_for_equality_pattern(enumerator_call.body[0][0].as_ref(), &index_obj) {
+        if !objs_match_for_pattern(enumerator_call.body[0][0].as_ref(), &index_obj) {
             return Ok(None);
         }
 

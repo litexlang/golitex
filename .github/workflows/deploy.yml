@@ -135,7 +135,7 @@ jobs:
       - name: Smoke test archive (native)
         if: (matrix.os_name == 'linux' && matrix.arch == 'amd64') || matrix.os_name == 'darwin'
         run: |
-          python3 tools/release/preflight.py --archive \
+          python3 .github/scripts/release/preflight.py --archive \
             "litex_${VERSION}_${{ matrix.os_name }}_${{ matrix.arch }}.tar.gz" \
             --version "${VERSION}"
 
@@ -143,7 +143,7 @@ jobs:
         if: matrix.os_name == 'windows'
         shell: pwsh
         run: |
-          python tools/release/preflight.py --archive "litex_${env:VERSION}_${{ matrix.os_name }}_${{ matrix.arch }}.zip" --version "${env:VERSION}"
+          python .github/scripts/release/preflight.py --archive "litex_${env:VERSION}_${{ matrix.os_name }}_${{ matrix.arch }}.zip" --version "${env:VERSION}"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4

@@ -241,7 +241,7 @@ impl Runtime {
         Ok(None)
     }
 
-    fn objs_same_by_display(left: &Obj, right: &Obj) -> bool {
+    fn objs_have_same_display(left: &Obj, right: &Obj) -> bool {
         left.to_string() == right.to_string()
     }
 
@@ -273,7 +273,7 @@ impl Runtime {
             ),
         ];
         for (left_common, left_remaining, right_common, right_remaining) in pairs {
-            if Self::objs_same_by_display(left_common, right_common) {
+            if Self::objs_have_same_display(left_common, right_common) {
                 return Some((left_remaining.clone(), right_remaining.clone()));
             }
         }
@@ -347,10 +347,10 @@ impl Runtime {
                     if left_pow.exponent.to_string() != right_pow.exponent.to_string() {
                         continue;
                     }
-                    if !Self::objs_same_by_display(left_pow.base.as_ref(), left_base) {
+                    if !Self::objs_have_same_display(left_pow.base.as_ref(), left_base) {
                         continue;
                     }
-                    if !Self::objs_same_by_display(right_pow.base.as_ref(), right_base) {
+                    if !Self::objs_have_same_display(right_pow.base.as_ref(), right_base) {
                         continue;
                     }
                     candidates.push(known_fact.clone());
@@ -377,11 +377,11 @@ impl Runtime {
                     else {
                         continue;
                     };
-                    if !Self::objs_same_by_display(
+                    if !Self::objs_have_same_display(
                         left_pow.exponent.as_ref(),
                         right_pow.exponent.as_ref(),
-                    ) || !Self::objs_same_by_display(left_pow.base.as_ref(), left_base)
-                        || !Self::objs_same_by_display(right_pow.base.as_ref(), right_base)
+                    ) || !Self::objs_have_same_display(left_pow.base.as_ref(), left_base)
+                        || !Self::objs_have_same_display(right_pow.base.as_ref(), right_base)
                     {
                         continue;
                     }
@@ -729,7 +729,7 @@ impl Runtime {
         atomic_fact: &AtomicFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
-        if !Self::objs_same_by_display(left_pow.exponent.as_ref(), right_pow.exponent.as_ref()) {
+        if !Self::objs_have_same_display(left_pow.exponent.as_ref(), right_pow.exponent.as_ref()) {
             return Ok(None);
         }
 
@@ -2315,7 +2315,7 @@ impl Runtime {
 
         if let (Obj::Abs(left_abs), Obj::Abs(right_abs)) = (&f.left, &f.right) {
             if let Obj::Sub(sub) = left_abs.arg.as_ref() {
-                if Self::objs_same_by_display(sub.left.as_ref(), right_abs.arg.as_ref())
+                if Self::objs_have_same_display(sub.left.as_ref(), right_abs.arg.as_ref())
                     && Self::obj_is_positive_integer_number(sub.right.as_ref())
                 {
                     let zero = Self::literal_zero_obj();

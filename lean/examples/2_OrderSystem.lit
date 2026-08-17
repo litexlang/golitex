@@ -1,4 +1,4 @@
-# Tracer: compiler2 real comparison bridge
+# Tracer: compiler real comparison bridge
 #
 # Before (ABI was split):
 # import Litex.Order
@@ -6,16 +6,16 @@
 # lived in a separate Order.lean feature header.
 #
 # Now: the registered Litex rule order.less_equal_of_less still produces the
-# proof certificate consumed by compiler2, while every order concept and
+# proof certificate consumed by compiler, while every order concept and
 # Lean/Mathlib bridge is provided directly by Litex.Core. The sketch becomes
 # an isolated `__Sketch01` namespace rather than being flattened.
 #
 # Boundary: a registered rule with another ID, fingerprint, or certificate
-# shape is rejected until compiler2 receives a reviewed adapter.
+# shape is rejected until compiler receives a reviewed adapter.
 #
 # Evidence:
 # target/release/litex -compact -strict -runner -f lean/examples/2_OrderSystem.lit
-# cd lean && ./compiler2.sh check examples && lake env lean examples/2_OrderSystem.lean
+# cd lean && ./compiler.sh check examples && lake env lean examples/2_OrderSystem.lean
 
 sketch:
     forall a, b R:

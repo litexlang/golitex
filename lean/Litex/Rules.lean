@@ -19,6 +19,17 @@ theorem complexRatInQ (q : ℚ) : Litex.In (q : ℂ) Litex.Q :=
 theorem complexRealInR (r : ℝ) : Litex.In (r : ℂ) Litex.R :=
   ⟨r, Litex.Same.complexReal r⟩
 
+/-- Negated Litex semantic equality is symmetric because `Same` itself is
+symmetric. Example: `a != b` proves `b != a`. -/
+theorem notSameSymm
+    {alpha beta : Litex.u.{u}}
+    {a : alpha}
+    {b : beta}
+    (h : ¬ Litex.Same a b) :
+    ¬ Litex.Same b a := by
+  intro hba
+  exact h (Litex.Same.symm hba)
+
 /-- Introduce membership in a predicate-defined set from a semantically equal
 base representative satisfying the predicate. -/
 theorem inSetBuilder

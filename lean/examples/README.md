@@ -1,32 +1,36 @@
-# Compiler2 examples
+# Compiler examples
 
 This directory is the canonical generated ledger for examples targeting the
-`litex_to_lean_compiler2` ABI. Every example has one authoritative `.lit`
+`litex_to_lean_compiler` ABI. Every example has one authoritative `.lit`
 source and one same-name generated `.lean` output. It must not import or depend
 on the archived universal-`Litex.Object` ABI.
+
+Every generated file imports the public `Litex` umbrella module. The umbrella
+owns the internal module list, so adding supported theorem or strategy modules
+does not require changing the generated import header.
 
 Refresh every pair from fresh Litex verification and verifier-owned IR:
 
 ```sh
 cd lean
-./compiler2.sh generate examples
+./compiler.sh generate examples
 ```
 
 After editing one source, refresh only its same-name output:
 
 ```sh
 cd lean
-./compiler2.sh compile examples/1_SetSystem.lit
+./compiler.sh compile examples/1_SetSystem.lit
 ```
 
 Check byte-for-byte freshness and run every output through Lean:
 
 ```sh
 cd lean
-./compiler2.sh check examples
+./compiler.sh check examples
 ```
 
-Compiler2 preserves source sketch scope. A top-level `sketch:` becomes an
+Compiler preserves source sketch scope. A top-level `sketch:` becomes an
 isolated `__SketchNN` namespace nested inside the file namespace; declarations
 and FactIds created there do not become later file-level bindings. Ordinary
 top-level facts are emitted directly in the file namespace.
@@ -37,7 +41,7 @@ verifier equality-rewrite evidence becomes a `Litex.In.congr` proof. A bare
 `have A set` remains outside this slice because the verifier has no checked
 inhabited-type backend for that arbitrary choice.
 
-`2_OrderSystem.lit` is the tracer for heterogeneous `Lt`/`Le`. Compiler2 emits
+`2_OrderSystem.lit` is the tracer for heterogeneous `Lt`/`Le`. Compiler emits
 `Litex.Lt.toLe` only after validating the registered rule ID, fingerprint,
 parameter evidence, and premise evidence.
 
@@ -56,5 +60,5 @@ multiple arguments, domain clauses, and curried returns remain outside this
 first adapter.
 
 Generated `.lean` files are review artifacts, not editing surfaces. A new
-compiler2 feature must add the next numbered same-name pair. Unsupported
+compiler feature must add the next numbered same-name pair. Unsupported
 statements, objects, facts, or proof routes fail closed.

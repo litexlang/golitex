@@ -1,4 +1,4 @@
-//! Checked, backend-facing evidence built by `LitexToLeanCompiler` from verifier results.
+//! Checked, backend-facing evidence built by `LitexToLeanIrBuilder` from verifier results.
 //!
 //! This IR records the verifier route that succeeded. Lean emission consumes
 //! these values and must not re-run Litex proof search or guess a proof from a
@@ -17,7 +17,9 @@ use crate::result::{
 use crate::symbol::SymbolId;
 use std::fmt;
 
+mod builder;
 mod builtin_rule;
+mod capture;
 mod def_thm_stmt;
 mod function;
 mod object;
@@ -25,6 +27,7 @@ mod registered_rule;
 mod statement;
 mod well_definedness;
 
+pub use builder::LitexToLeanIrBuilder;
 pub use builtin_rule::{
     LitexToLeanAbsoluteValueBuiltinRuleIr, LitexToLeanArithmeticBuiltinRuleIr,
     LitexToLeanBuiltinRuleIr, LitexToLeanComplexArithmeticMembershipClosureBuiltinRuleIr,
@@ -33,6 +36,7 @@ pub use builtin_rule::{
     LitexToLeanRealArithmeticMembershipClosureBuiltinRuleIr, LitexToLeanSetBuiltinRuleIr,
     LitexToLeanSetRelationDualityBuiltinRuleIr,
 };
+pub use capture::capture_litex_to_lean_ir_from_source;
 pub use def_thm_stmt::{LitexToLeanDefThmStmtIr, LitexToLeanDefThmStmtProofStepIr};
 pub use function::{
     LitexToLeanFunctionApplicationIr, LitexToLeanFunctionParameterIr, LitexToLeanFunctionTypeIr,

@@ -6,7 +6,7 @@
 // Full repository aggregate (examples + docs + runtime contracts):
 // cargo test run_all_docs_examples_runtime_contracts -- --ignored --nocapture
 // Workspace-owned textbooks: python3 scripts/textbook_gate.py
-// Parallel pre-deploy docs/examples gate: python3 tools/predeploy_gate.py
+// Parallel pre-deploy docs/examples gate: python3 .github/scripts/predeploy_gate.py
 
 #[cfg(test)]
 mod lit_file_runner_tests;

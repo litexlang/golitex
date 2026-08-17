@@ -1,18 +1,22 @@
 # Math Concepts in Litex Showcases
 
-This directory is a planning and executable-showcase workspace for seven small,
+This directory is an executable showcase collection for seven small,
 independent Litex projects. Each project has a checked first version. It is not
-a textbook or part of `std`, and the later gates in each `plan.md` remain design
-rather than implemented API.
+a textbook or part of `std`; only interfaces present in the published source
+and described by the formal module documentation are implemented API.
 
 Each child project owns:
 
-- `plan.md`: scope, mathematical spine, examples, stop line, and acceptance
-  gates;
 - `main.lit`: the current executable first-version spine;
 - `litex.config`: a standalone module exporting only `main.lit`;
 - `README.md`: factual status of the current executable artifact; and
 - `math_collections.md`: the ideal concept and interface design.
+
+Each checked showcase also owns `lean_core_analogy.lean`: a standalone,
+handwritten comparison that uses only Lean's automatically loaded Prelude. It
+must contain no `import`, Mathlib dependency, project axiom, or proof hole, and
+must identify any real-number or library fact that Prelude cannot supply as an
+explicit setting boundary. These files are comparisons, never compiler output.
 
 The projects intentionally do not import one another yet. The arrows below are
 mathematical dependencies and reader order, not hidden runtime dependencies:
@@ -43,7 +47,7 @@ dependency. Every child module remains independently runnable.
 | `linear_algebra_core` | Reusable abstract structures connect to concrete computation | A coordinate projection on `R^2` | Kernel-zero iff injective, then a guarded finite-dimensional tranche | Before inner products, eigenvalues, determinants as a general theory, or SVD |
 | `calculus` | Approximation relations become derivative and integral values only after existence and uniqueness | Epsilon-delta derivative of `x^2` | MVT application, then Riemann FTC behind separate gates | Before series, multivariable calculus, differential equations, or measure theory |
 | `abstract_algebra` | Group laws become reusable theorem contexts without packaging every group as a value | Left cancellation | A group homomorphism preserves inverses | Before rings, ideals, quotients, actions, or representation theory |
-| `topology` | Native set operations express open-set laws and continuity | Three-way open intersection | Continuous maps are closed under composition | Before bases, compactness, connectedness, separation, products, or quotients |
+| `topology` | Native set operations express open-set laws and continuity | Three-way open intersection | Closed-preimage continuity criterion and compactness of continuous images | Before bases, connectedness, separation, products, or quotients |
 
 ## Checked first-version endpoints
 
@@ -55,11 +59,23 @@ dependency. Every child module remains independently runnable.
 | Linear algebra | Concrete `R^2` Gate A through kernel-zero iff injective |
 | Calculus | Relational derivatives for `x^2` and affine functions, differentiability existence, and a tangent-error identity |
 | Abstract algebra | The kernel of a group homomorphism is a normal subgroup, built from the earlier identity and inverse results |
-| Topology | Binary unions, three-way intersections, and composition of continuous maps via native preimages |
+| Topology | Closed-preimage characterization of continuity and compactness of continuous images |
 
 All seven `main.lit` files pass their independent release file and module
 runners. None contains a direct `trust` or local axiom. These statements do not
 remove the broader trust boundary in Litex's Builtin/infer rules.
+
+## Published boundary
+
+Each concept directory publishes its checked Litex module, formal module
+documentation, and explicitly intended comparison sources: `main.lit`,
+`litex.config`, `README.md`, `math_collections.md`, and
+`lean_core_analogy.lean` where present. Plans, proof journals, acceptance
+notes, verifier captures, and other work records belong in that concept's
+local `.drafts/` directory. The collection root uses its own `.drafts/` only
+for genuinely cross-concept work. All such draft directories are Git-ignored;
+a work record placed beside published files is intentionally left visible to
+`git status` as a boundary violation.
 
 ## Modeling rule
 
@@ -124,9 +140,9 @@ Calculus is included as a staged project, not as a completed core. Its checked
 first version proves derivative relations for `x^2` and affine functions and
 packages candidate existence as differentiability.
 Selected limits/derivatives/integrals, compact-interval theorems, MVT, Riemann
-integrability, and FTC enter only through the explicit gates in
-`calculus/plan.md`; they must not be represented as completed by importing or
-copying trusted textbook statements.
+integrability, and FTC remain outside the published calculus boundary; they
+must not be represented as completed by importing or copying trusted textbook
+statements.
 
 The collection still stops before probability, rings and modules, algebraic
 topology, infinite series, multivariable analysis, measure theory, and any

@@ -463,20 +463,24 @@ impl Runtime {
                     continue;
                 }
                 let first_pointwise = self.verify_finite_set_sum_functions_pointwise_premise(
-                    union_sum.func.as_ref(),
-                    first_sum.func.as_ref(),
+                    &EqualFact::new_from_refs(
+                        union_sum.func.as_ref(),
+                        first_sum.func.as_ref(),
+                        line_file.clone(),
+                    ),
                     first_sum.set.as_ref().clone(),
-                    line_file.clone(),
                     builtin_state,
                 )?;
                 if !first_pointwise.is_true() {
                     continue;
                 }
                 let second_pointwise = self.verify_finite_set_sum_functions_pointwise_premise(
-                    union_sum.func.as_ref(),
-                    second_sum.func.as_ref(),
+                    &EqualFact::new_from_refs(
+                        union_sum.func.as_ref(),
+                        second_sum.func.as_ref(),
+                        line_file.clone(),
+                    ),
                     second_sum.set.as_ref().clone(),
-                    line_file.clone(),
                     builtin_state,
                 )?;
                 if !second_pointwise.is_true() {

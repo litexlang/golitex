@@ -1490,7 +1490,7 @@ mod tests {
     }
 
     #[test]
-    fn compile_to_lean_capture_retains_function_domain_well_definedness_proof() {
+    fn litex_to_lean_ir_capture_retains_function_domain_well_definedness_proof() {
         let mut runtime = new_test_runtime();
         runtime.start_well_defined_capture();
         let stmt = parse_stmt(&mut runtime, "forall f fn(x R: x > 0) R:\n    f(2) = f(2)");
@@ -1563,7 +1563,7 @@ mod tests {
     }
 
     #[test]
-    fn compile_to_lean_capture_retains_all_division_target_requirements() {
+    fn litex_to_lean_ir_capture_retains_all_division_target_requirements() {
         let mut runtime = new_test_runtime();
         runtime.start_well_defined_capture();
         let stmt = parse_stmt(
@@ -1610,7 +1610,7 @@ mod tests {
     }
 
     #[test]
-    fn compile_to_lean_capture_retains_list_set_children_and_pairwise_requirements() {
+    fn litex_to_lean_ir_capture_retains_list_set_children_and_pairwise_requirements() {
         fn check() {
             let mut runtime = new_test_runtime();
             runtime.start_well_defined_capture();
@@ -1695,7 +1695,7 @@ mod tests {
     }
 
     #[test]
-    fn compile_to_lean_capture_does_not_accept_a_boolean_obj_cache_without_proof_evidence() {
+    fn litex_to_lean_ir_capture_does_not_accept_a_boolean_obj_cache_without_proof_evidence() {
         let mut runtime = new_test_runtime();
         let warmup = parse_stmt(&mut runtime, "2 > 0");
         runtime
@@ -1715,7 +1715,7 @@ mod tests {
     }
 
     #[test]
-    fn compile_to_lean_capture_retains_have_fn_body_well_definedness_proofs() {
+    fn litex_to_lean_ir_capture_retains_have_fn_body_well_definedness_proofs() {
         let mut runtime = new_test_runtime();
         runtime.start_well_defined_capture();
         let stmt = parse_stmt(&mut runtime, "have fn reciprocal(x R: x != 0) R = 1 / x");

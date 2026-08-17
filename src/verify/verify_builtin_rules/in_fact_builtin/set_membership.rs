@@ -29,9 +29,7 @@ impl Runtime {
             .iter_environments_from_top()
             .flat_map(|environment| environment.known_owner_sets.values())
             .flat_map(|owner_sets| owner_sets.values())
-            .filter(|membership| {
-                objs_match_for_equality_pattern(&membership.element, &goal.element)
-            })
+            .filter(|membership| objs_match_for_pattern(&membership.element, &goal.element))
             .cloned()
             .collect();
         let final_state = UseContextVerifyState::new_with_final_round(true);

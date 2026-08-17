@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use crate::verify::verify_equality_by_builtin_rules::objs_equal_by_display_string;
+use crate::verify::verify_equality_by_builtin_rules::objs_match_for_pattern;
 use std::result::Result;
 
 /// Two atomic facts of the form `s > t` / `s <= t` (or `<` / `>=`) with the same left and right
@@ -8,26 +8,26 @@ fn order_split_or_real_line_operands(a: &AtomicFact, b: &AtomicFact) -> Option<(
     use AtomicFact::*;
     match (a, b) {
         (GreaterFact(g), LessEqualFact(le))
-            if objs_equal_by_display_string(&g.left, &le.left)
-                && objs_equal_by_display_string(&g.right, &le.right) =>
+            if objs_match_for_pattern(&g.left, &le.left)
+                && objs_match_for_pattern(&g.right, &le.right) =>
         {
             Some((g.left.clone(), g.right.clone()))
         }
         (LessFact(l), GreaterEqualFact(ge))
-            if objs_equal_by_display_string(&l.left, &ge.left)
-                && objs_equal_by_display_string(&l.right, &ge.right) =>
+            if objs_match_for_pattern(&l.left, &ge.left)
+                && objs_match_for_pattern(&l.right, &ge.right) =>
         {
             Some((l.left.clone(), l.right.clone()))
         }
         (LessEqualFact(le), GreaterFact(g))
-            if objs_equal_by_display_string(&le.left, &g.left)
-                && objs_equal_by_display_string(&le.right, &g.right) =>
+            if objs_match_for_pattern(&le.left, &g.left)
+                && objs_match_for_pattern(&le.right, &g.right) =>
         {
             Some((le.left.clone(), le.right.clone()))
         }
         (GreaterEqualFact(ge), LessFact(l))
-            if objs_equal_by_display_string(&ge.left, &l.left)
-                && objs_equal_by_display_string(&ge.right, &l.right) =>
+            if objs_match_for_pattern(&ge.left, &l.left)
+                && objs_match_for_pattern(&ge.right, &l.right) =>
         {
             Some((ge.left.clone(), ge.right.clone()))
         }
@@ -44,18 +44,18 @@ fn equality_and_strict_order_need_weak_bound(
     };
     match strict {
         AtomicFact::GreaterFact(g)
-            if (objs_equal_by_display_string(&eq.left, &g.left)
-                && objs_equal_by_display_string(&eq.right, &g.right))
-                || (objs_equal_by_display_string(&eq.left, &g.right)
-                    && objs_equal_by_display_string(&eq.right, &g.left)) =>
+            if (objs_match_for_pattern(&eq.left, &g.left)
+                && objs_match_for_pattern(&eq.right, &g.right))
+                || (objs_match_for_pattern(&eq.left, &g.right)
+                    && objs_match_for_pattern(&eq.right, &g.left)) =>
         {
             Some(GreaterEqualFact::new(g.left.clone(), g.right.clone(), g.line_file.clone()).into())
         }
         AtomicFact::LessFact(l)
-            if (objs_equal_by_display_string(&eq.left, &l.left)
-                && objs_equal_by_display_string(&eq.right, &l.right))
-                || (objs_equal_by_display_string(&eq.left, &l.right)
-                    && objs_equal_by_display_string(&eq.right, &l.left)) =>
+            if (objs_match_for_pattern(&eq.left, &l.left)
+                && objs_match_for_pattern(&eq.right, &l.right))
+                || (objs_match_for_pattern(&eq.left, &l.right)
+                    && objs_match_for_pattern(&eq.right, &l.left)) =>
         {
             Some(LessEqualFact::new(l.left.clone(), l.right.clone(), l.line_file.clone()).into())
         }
@@ -82,13 +82,13 @@ fn real_line_order_or_builtin_match(or_fact: &OrFact) -> Option<(&'static str, O
         let (Some(equality), Some(less), Some(greater)) = (equality, less, greater) else {
             return None;
         };
-        let equality_matches_order = (objs_equal_by_display_string(&equality.left, &less.left)
-            && objs_equal_by_display_string(&equality.right, &less.right))
-            || (objs_equal_by_display_string(&equality.left, &less.right)
-                && objs_equal_by_display_string(&equality.right, &less.left));
+        let equality_matches_order = (objs_match_for_pattern(&equality.left, &less.left)
+            && objs_match_for_pattern(&equality.right, &less.right))
+            || (objs_match_for_pattern(&equality.left, &less.right)
+                && objs_match_for_pattern(&equality.right, &less.left));
         if equality_matches_order
-            && objs_equal_by_display_string(&less.left, &greater.left)
-            && objs_equal_by_display_string(&less.right, &greater.right)
+            && objs_match_for_pattern(&less.left, &greater.left)
+            && objs_match_for_pattern(&less.right, &greater.right)
         {
             return Some((
                 "or: real-line trichotomy (a = b, a < b, or a > b)",
@@ -110,8 +110,8 @@ fn real_line_order_or_builtin_match(or_fact: &OrFact) -> Option<(&'static str, O
             (AtomicFact::GreaterEqualFact(ge), AtomicFact::LessEqualFact(le)) => (le, ge),
             _ => return None,
         };
-        if objs_equal_by_display_string(&less_equal.left, &greater_equal.left)
-            && objs_equal_by_display_string(&less_equal.right, &greater_equal.right)
+        if objs_match_for_pattern(&less_equal.left, &greater_equal.left)
+            && objs_match_for_pattern(&less_equal.right, &greater_equal.right)
         {
             return Some((
                 "or: real-line weak-order comparability (a <= b or a >= b)",
@@ -135,9 +135,9 @@ fn obj_is_negation_of_for_abs_or_builtin(obj: &Obj, expected_arg: &Obj) -> bool 
     match obj {
         Obj::Mul(m) => {
             (obj_is_literal_neg_one_for_abs_or_builtin(m.left.as_ref())
-                && objs_equal_by_display_string(m.right.as_ref(), expected_arg))
+                && objs_match_for_pattern(m.right.as_ref(), expected_arg))
                 || (obj_is_literal_neg_one_for_abs_or_builtin(m.right.as_ref())
-                    && objs_equal_by_display_string(m.left.as_ref(), expected_arg))
+                    && objs_match_for_pattern(m.left.as_ref(), expected_arg))
         }
         _ => false,
     }
@@ -152,7 +152,7 @@ fn abs_sign_split_or_is_exhaustive_pair(a: &AtomicFact, b: &AtomicFact) -> bool 
         (other, Obj::Abs(abs)) => (abs.arg.as_ref(), other),
         _ => return false,
     };
-    if !objs_equal_by_display_string(arg, first_other) {
+    if !objs_match_for_pattern(arg, first_other) {
         return false;
     }
     let (second_arg, second_other) = match (&second.left, &second.right) {
@@ -160,7 +160,7 @@ fn abs_sign_split_or_is_exhaustive_pair(a: &AtomicFact, b: &AtomicFact) -> bool 
         (other, Obj::Abs(abs)) => (abs.arg.as_ref(), other),
         _ => return false,
     };
-    objs_equal_by_display_string(arg, second_arg)
+    objs_match_for_pattern(arg, second_arg)
         && obj_is_negation_of_for_abs_or_builtin(second_other, arg)
 }
 
@@ -261,8 +261,8 @@ fn mod_positive_integer_residue_or_is_exhaustive(or_fact: &OrFact) -> bool {
         else {
             return false;
         };
-        if !objs_equal_by_display_string(obj, first_obj)
-            || !objs_equal_by_display_string(
+        if !objs_match_for_pattern(obj, first_obj)
+            || !objs_match_for_pattern(
                 &Obj::Number(modulus.clone()),
                 &Obj::Number(first_modulus.clone()),
             )
@@ -307,10 +307,8 @@ fn equality_branch_matches_subject_and_value(
     let AtomicFact::EqualFact(eq) = atomic else {
         return false;
     };
-    (objs_equal_by_display_string(&eq.left, subject)
-        && objs_equal_by_display_string(&eq.right, value))
-        || (objs_equal_by_display_string(&eq.right, subject)
-            && objs_equal_by_display_string(&eq.left, value))
+    (objs_match_for_pattern(&eq.left, subject) && objs_match_for_pattern(&eq.right, value))
+        || (objs_match_for_pattern(&eq.right, subject) && objs_match_for_pattern(&eq.left, value))
 }
 
 fn strict_tail_branch_matches_subject_and_value(
@@ -320,12 +318,10 @@ fn strict_tail_branch_matches_subject_and_value(
 ) -> bool {
     match atomic {
         AtomicFact::GreaterFact(g) => {
-            objs_equal_by_display_string(&g.left, subject)
-                && objs_equal_by_display_string(&g.right, tail_value)
+            objs_match_for_pattern(&g.left, subject) && objs_match_for_pattern(&g.right, tail_value)
         }
         AtomicFact::LessFact(l) => {
-            objs_equal_by_display_string(&l.right, subject)
-                && objs_equal_by_display_string(&l.left, tail_value)
+            objs_match_for_pattern(&l.right, subject) && objs_match_for_pattern(&l.left, tail_value)
         }
         _ => false,
     }

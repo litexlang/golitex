@@ -8,6 +8,11 @@ verifier-rule theorems in `Litex/Rules.lean`, and the same-name generated pairs
 under `examples/`. Concept definitions and Lean/Mathlib representation bridges
 must not be split into feature headers beside `Core.lean`.
 
+`Litex.lean` is the public umbrella import. Generated files depend on that
+stable entrypoint rather than on the current internal module list; future
+supported theorem or strategy modules join the umbrella without changing the
+compiler's generated header.
+
 The first unary function-set/application interface is included together with
 the set system. The first ordered-numeric interface fixes how native Mathlib
 order is reached without retyping Litex objects.
@@ -77,7 +82,7 @@ subtype `{x : base.Carrier // predicate x}` as its exact carrier.
 
 The construction remains universe-polymorphic. In particular,
 `Litex.Set.{0} : Type 1`, so it may be the carrier of `Litex.Set.{1}`. A
-generated example is deferred until compiler2 supports the corresponding
+generated example is deferred until compiler supports the corresponding
 Litex statement form; the examples ledger contains no hand-written substitute.
 
 Nearest rejected form: using the same carrier for a base set and a proper
@@ -115,8 +120,8 @@ The authoritative probe is `examples/4_FunctionSet.lit`. Its generated theorem
 quantifies independent carriers for `x` and `f`, retains both membership
 hypotheses, and emits both occurrences of `f(x)` with the exact
 verifier-selected FactId/WD proofs. The nearest negative probe lives under
-workspace-local `private/compiler2-function-set-test/`: changing `x s` to
-`x S` is rejected by Litex before compiler2 emission.
+the compiler's function-set regression: changing `x s` to `x S` is rejected
+by Litex before Lean emission.
 
 The current boundary is intentionally narrow: one named unary layer, no extra
 domain facts, no anonymous functions, no multiple arguments, and no curried
@@ -125,11 +130,12 @@ to this ABI.
 
 ## Generated example contract
 
-The `.lit` file is authoritative. Compiler2 first verifies it and captures the
+The `.lit` file is authoritative. Compiler first verifies it and captures the
 exact `LitexToLeanStatementIr`; its native-carrier emitter validates and
 consumes that IR. It does not reparse display text or search for a Lean proof.
 A same-name `.lean` file is committed so reviewers can inspect the translation
-without running the tool.
+without running the tool. Every generated file imports the public `Litex`
+umbrella exactly once.
 
 The drift gate recompiles each `.lit` in memory, compares the output byte for
 byte, and invokes Lean on the checked-in result. Unsupported verified IR fails
@@ -163,8 +169,9 @@ Mathlib native carriers
   -> Lt / Le                    [definition: native real order]
   -> order transport/bridges    [proof, still owned by Core.lean]
   -> Rules.lean                 [concrete verifier-certificate theorems]
+  -> Litex.lean                 [public umbrella import]
   -> verifier-produced statement IR [checked compilation evidence]
-  -> compiler2 strict emitter   [reviewed v2 adapters]
+  -> compiler strict emitter    [reviewed adapters]
   -> same-name generated examples [real Lean proof]
 ```
 

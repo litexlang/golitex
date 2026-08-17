@@ -35,9 +35,7 @@ impl Runtime {
                     continue;
                 };
                 let base_result = self.verify_zero_product_factor_matches_target(
-                    target_base,
-                    pow.base.as_ref(),
-                    line_file.clone(),
+                    &EqualFact::new_from_refs(target_base, pow.base.as_ref(), line_file.clone()),
                     builtin_state,
                 )?;
                 if !base_result.is_true() {
@@ -76,16 +74,16 @@ impl Runtime {
                     let Obj::Pow(pow) = obj else {
                         continue;
                     };
-                    if objs_equal_by_display_string(pow.base.as_ref(), left_base) {
+                    if objs_match_for_pattern(pow.base.as_ref(), left_base) {
                         left_exponents.push(pow.exponent.as_ref().clone());
                     }
-                    if objs_equal_by_display_string(pow.base.as_ref(), right_base) {
+                    if objs_match_for_pattern(pow.base.as_ref(), right_base) {
                         right_exponents.push(pow.exponent.as_ref().clone());
                     }
                 }
                 for left_exponent in left_exponents.iter() {
                     for right_exponent in right_exponents.iter() {
-                        if !objs_equal_by_display_string(left_exponent, right_exponent) {
+                        if !objs_match_for_pattern(left_exponent, right_exponent) {
                             continue;
                         }
                         let key = left_exponent.to_string();
@@ -355,13 +353,13 @@ impl Runtime {
         }
 
         let mut subgoals = Vec::new();
-        if !objs_equal_by_display_string(
+        if !objs_match_for_pattern(
             negative_power.base.as_ref(),
             denominator_power.base.as_ref(),
         ) {
             subgoals.push(base_result);
         }
-        if !objs_equal_by_display_string(
+        if !objs_match_for_pattern(
             &positive_exponent_for_display,
             denominator_power.exponent.as_ref(),
         ) {

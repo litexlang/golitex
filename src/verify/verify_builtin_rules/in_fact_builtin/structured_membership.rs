@@ -341,9 +341,11 @@ impl Runtime {
             (*anon.body.ret_set).clone(),
         )?;
         let signature_equality = self.verify_fn_set_with_params_equality_by_builtin_rules(
-            &signature_from_anon,
-            expected_fn_set,
-            in_fact.line_file.clone(),
+            &EqualFact::new(
+                signature_from_anon.into(),
+                expected_fn_set.clone().into(),
+                in_fact.line_file.clone(),
+            ),
             verify_state,
         )?;
         if signature_equality.is_true() {

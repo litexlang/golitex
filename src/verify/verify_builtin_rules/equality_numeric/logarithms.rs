@@ -28,13 +28,15 @@ impl Runtime {
                 )?;
                 if exp_ok.is_true() {
                     let mut subgoals = equality_builtin_match_subgoals(
-                        p.base.as_ref(),
-                        log.base.as_ref(),
+                        &EqualFact::new_from_refs(
+                            p.base.as_ref(),
+                            log.base.as_ref(),
+                            line_file.clone(),
+                        ),
                         base_ok,
                     );
                     subgoals.extend(equality_builtin_match_subgoals(
-                        p.exponent.as_ref(),
-                        other,
+                        &EqualFact::new_from_refs(p.exponent.as_ref(), other, line_file.clone()),
                         exp_ok,
                     ));
                     return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
@@ -73,7 +75,10 @@ impl Runtime {
             builtin_state,
         )?;
         if inner.is_true() {
-            let subgoals = equality_builtin_match_subgoals(other, &expected, inner);
+            let subgoals = equality_builtin_match_subgoals(
+                &EqualFact::new_from_refs(other, &expected, line_file.clone()),
+                inner,
+            );
             return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
                 equal_fact,
                 "equality: log(a^b, c) = log(a, c) / b",
@@ -109,7 +114,10 @@ impl Runtime {
                 builtin_state,
             )?;
             if inner.is_true() {
-                let subgoals = equality_builtin_match_subgoals(other, &expected, inner);
+                let subgoals = equality_builtin_match_subgoals(
+                    &EqualFact::new_from_refs(other, &expected, line_file.clone()),
+                    inner,
+                );
                 return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
                     equal_fact,
                     "equality: log(a, x^b) = b * log(a, x)",
@@ -147,7 +155,10 @@ impl Runtime {
                 builtin_state,
             )?;
             if inner.is_true() {
-                let subgoals = equality_builtin_match_subgoals(other, &expected, inner);
+                let subgoals = equality_builtin_match_subgoals(
+                    &EqualFact::new_from_refs(other, &expected, line_file.clone()),
+                    inner,
+                );
                 return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
                     equal_fact,
                     "equality: log(a, x*y) = log(a, x) + log(a, y)",
@@ -183,7 +194,10 @@ impl Runtime {
             builtin_state,
         )?;
         if inner.is_true() {
-            let subgoals = equality_builtin_match_subgoals(other, &expected, inner);
+            let subgoals = equality_builtin_match_subgoals(
+                &EqualFact::new_from_refs(other, &expected, line_file.clone()),
+                inner,
+            );
             return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
                 equal_fact,
                 "equality: log(a, x/y) = log(a, x) - log(a, y)",
@@ -260,8 +274,14 @@ impl Runtime {
                 builtin_state,
             )?;
             if ok.is_true() {
-                let mut subgoals = equality_builtin_match_subgoals(d.left.as_ref(), &one, one_ok);
-                subgoals.extend(equality_builtin_match_subgoals(other, &expected, ok));
+                let mut subgoals = equality_builtin_match_subgoals(
+                    &EqualFact::new_from_refs(d.left.as_ref(), &one, line_file.clone()),
+                    one_ok,
+                );
+                subgoals.extend(equality_builtin_match_subgoals(
+                    &EqualFact::new_from_refs(other, &expected, line_file.clone()),
+                    ok,
+                ));
                 return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
                     equal_fact,
                     "equality: log(a, 1/x) = -log(a, x)",
@@ -321,16 +341,20 @@ impl Runtime {
             return Ok(None);
         }
 
-        let mut subgoals =
-            equality_builtin_match_subgoals(log_cb.base.as_ref(), log_ca.base.as_ref(), base_ok);
+        let mut subgoals = equality_builtin_match_subgoals(
+            &EqualFact::new_from_refs(
+                log_cb.base.as_ref(),
+                log_ca.base.as_ref(),
+                line_file.clone(),
+            ),
+            base_ok,
+        );
         subgoals.extend(equality_builtin_match_subgoals(
-            log_cb.arg.as_ref(),
-            log_ab.arg.as_ref(),
+            &EqualFact::new_from_refs(log_cb.arg.as_ref(), log_ab.arg.as_ref(), line_file.clone()),
             arg_ok,
         ));
         subgoals.extend(equality_builtin_match_subgoals(
-            log_ca.arg.as_ref(),
-            log_ab.base.as_ref(),
+            &EqualFact::new_from_refs(log_ca.arg.as_ref(), log_ab.base.as_ref(), line_file.clone()),
             inner_ok,
         ));
 
@@ -366,8 +390,11 @@ impl Runtime {
             );
             if same_base_and_arg.is_true() {
                 let subgoals = equality_builtin_match_subgoals(
-                    log.base.as_ref(),
-                    log.arg.as_ref(),
+                    &EqualFact::new_from_refs(
+                        log.base.as_ref(),
+                        log.arg.as_ref(),
+                        line_file.clone(),
+                    ),
                     same_base_and_arg,
                 );
                 return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
@@ -428,7 +455,7 @@ impl Runtime {
 
         Ok(Some(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                equal_fact.clone().into(),
                 "equality: a^c = b from c = log(a, b)".to_string(),
                 vec![exponent_ok],
             )

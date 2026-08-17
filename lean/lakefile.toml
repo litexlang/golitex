@@ -1,4 +1,4 @@
-name = "litex_to_lean_compiler2"
+name = "litex_to_lean_compiler"
 version = "0.1.0"
 defaultTargets = ["Litex"]
 

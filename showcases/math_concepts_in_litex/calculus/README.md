@@ -24,3 +24,13 @@ relation with a proposed value: uniqueness and a selected derivative function
 are not assumed. General limits and continuity, compact-interval theorems, the
 Mean Value Theorem, Riemann integration, and the Fundamental Theorem of
 Calculus remain later gates, not current API claims.
+
+For comparison, `lean_core_analogy.lean` checks the same epsilon-delta witness
+shape using only Lean's automatically loaded Prelude. Because Prelude has no
+real-number or ordered-field library, the real operations and two algebraic
+identities consumed by the proof are explicit setting fields. The file is a
+handwritten semantic analogy, not compiler-generated output. Run it with:
+
+```sh
+lean showcases/math_concepts_in_litex/calculus/lean_core_analogy.lean
+```

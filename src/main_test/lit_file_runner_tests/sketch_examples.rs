@@ -3,7 +3,7 @@ use std::io::Write;
 use std::path::PathBuf;
 use std::time::Instant;
 
-use crate::compile_to_lean::compile_to_lean;
+use crate::litex_to_lean_compiler::compile_source;
 use crate::pipeline::{render_run_source_code_output, run_source_code};
 use crate::prelude::*;
 
@@ -68,7 +68,7 @@ fn compile_tmp_to_lean() {
     if lit_source.is_empty() {
         let output = "\n=== LITEX -> LEAN: examples/tmp.lit is empty ===\n\
              Put Litex source in that file and rerun:\n  \
-             cargo test --release tmp0_to_lean\n";
+             cargo test --release tmp0_to_lean -- --ignored\n";
         write_scratch_command_output(output);
         return;
     }
@@ -77,23 +77,15 @@ fn compile_tmp_to_lean() {
         .to_str()
         .unwrap_or_else(|| panic!("{:?} must be valid UTF-8", lit_path));
     let normalized_source = remove_windows_carriage_return(lit_source);
-    let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(path_str);
-    runtime.isolated = source_has_isolated_import(normalized_source.as_str());
-    let generated_lean =
-        compile_to_lean(normalized_source.as_str(), &mut runtime).unwrap_or_else(|error| {
-            panic!(
-                "failed to generate Lean from {}:\n{}",
-                path_str,
-                display_runtime_error_json(&runtime, &error, false)
-            )
-        });
+    let generated_lean = compile_source(normalized_source.as_str(), path_str)
+        .unwrap_or_else(|error| panic!("failed to generate Lean from {path_str}:\n{error}"));
 
     let output = render_tmp_translation(source_path, lit_source, &generated_lean);
     write_scratch_command_output(&output);
 }
 
 #[test]
+#[ignore = "manual compiler display command over user-owned examples/tmp.lit"]
 fn tmp0_to_lean() {
     run_with_large_stack("tmp0_to_lean_large_stack", compile_tmp_to_lean);
 }

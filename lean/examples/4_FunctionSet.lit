@@ -1,10 +1,10 @@
-# Tracer: compiler2 unary function set and proof-carrying application
+# Tracer: compiler unary function set and proof-carrying application
 #
 # Before (required an incidental wrapper):
 # sketch:
 #     forall s, S set, x s, f fn(y s) S:
 #         f(x) = f(x)
-# Former behavior: the function tracer was nested in `sketch`, and compiler2
+# Former behavior: the function tracer was nested in `sketch`, and compiler
 # flattened sketch statements instead of preserving their source scope.
 #
 # Now: the forall is a direct top-level fact. s and S become Litex.Set values.
@@ -21,8 +21,8 @@
 #
 # Evidence:
 # target/release/litex -compact -strict -runner -f lean/examples/4_FunctionSet.lit
-# cd lean && ./compiler2.sh compile examples/4_FunctionSet.lit
-# cd lean && ./compiler2.sh check examples && lake env lean examples/4_FunctionSet.lean
+# cd lean && ./compiler.sh compile examples/4_FunctionSet.lit
+# cd lean && ./compiler.sh check examples && lake env lean examples/4_FunctionSet.lean
 
 forall s, S set, x s, f fn(y s) S:
     f(x) = f(x)
