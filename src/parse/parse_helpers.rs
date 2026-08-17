@@ -1,6 +1,145 @@
 use crate::prelude::*;
+use std::collections::HashMap;
+
+pub(crate) struct FreshSettingParameterBundle {
+    pub(crate) param_def: ParamDefWithType,
+    pub(crate) dom_facts: Vec<Fact>,
+}
 
 impl Runtime {
+    /// Parses `[Setting]` or `[Setting(fresh_name, ...)]` and elaborates it into
+    /// ordinary parameters and facts in `target_kind`.
+    ///
+    /// Explicit arguments are declarations, never expressions or references to
+    /// an outer binding. Each parameter is allocated afresh, while its type and
+    /// the setting conditions are instantiated from the setting's `forall`
+    /// binders into the target binding kind.
+    pub(crate) fn parse_fresh_setting_parameter_bundle(
+        &mut self,
+        tb: &mut TokenBlock,
+        target_kind: ParamObjType,
+    ) -> Result<FreshSettingParameterBundle, RuntimeError> {
+        tb.skip_token(LEFT_BRACKET)?;
+        if tb.current_token_is_equal_to(RIGHT_BRACKET) {
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    "setting parameter bundle cannot be empty".to_string(),
+                    tb.line_file.clone(),
+                ),
+            )));
+        }
+
+        let setting_name = self.parse_module_qualified_reference_name(tb)?.to_string();
+        let explicit_names = if tb.current_token_is_equal_to(LEFT_BRACE) {
+            tb.skip_token(LEFT_BRACE)?;
+            let mut names = Vec::new();
+            while !tb.current_token_is_equal_to(RIGHT_BRACE) {
+                let name = tb.advance()?;
+                self.validate_name(&name, tb.line_file.clone())?;
+                names.push(name);
+                if tb.current_token_is_equal_to(RIGHT_BRACE) {
+                    break;
+                }
+                if !tb.current_token_is_equal_to(COMMA) {
+                    return Err(RuntimeError::from(ParseRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_line_file(
+                            format!(
+                                "setting `{}` arguments must be bare binder names separated by `,`",
+                                setting_name
+                            ),
+                            tb.line_file.clone(),
+                        ),
+                    )));
+                }
+                tb.skip_token(COMMA)?;
+            }
+            tb.skip_token(RIGHT_BRACE)?;
+            Some(names)
+        } else {
+            None
+        };
+        tb.skip_token(RIGHT_BRACKET)?;
+
+        let setting = self
+            .get_setting_definition_by_name(&setting_name)
+            .ok_or_else(|| {
+                RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        format!("unknown setting `{}`", setting_name),
+                        tb.line_file.clone(),
+                    ),
+                ))
+            })?;
+        let source_bindings = setting.param_def.collect_param_bindings();
+        let target_names = explicit_names.unwrap_or_else(|| {
+            source_bindings
+                .iter()
+                .map(|binding| binding.name().to_string())
+                .collect()
+        });
+        if target_names.len() != source_bindings.len() {
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    format!(
+                        "setting `{}` expects {} binder name(s), got {}",
+                        setting_name,
+                        source_bindings.len(),
+                        target_names.len()
+                    ),
+                    tb.line_file.clone(),
+                ),
+            )));
+        }
+
+        let mut source_to_target: HashMap<String, Obj> = HashMap::new();
+        let mut groups = Vec::with_capacity(setting.param_def.groups.len());
+        let mut target_index = 0;
+        for source_group in &setting.param_def.groups {
+            let instantiated_type = self.inst_param_type(
+                &source_group.param_type,
+                &source_to_target,
+                ParamObjType::BinderRetag(BinderRetagSource::Forall),
+            )?;
+            let group_len = source_group.params.len();
+            let group_names = target_names[target_index..target_index + group_len].to_vec();
+            let target_bindings =
+                self.begin_parsing_scope(target_kind, &group_names, tb.line_file.clone())?;
+            if let ParamType::Obj(Obj::StructObj(struct_obj)) = &instantiated_type {
+                self.register_default_struct_view(&target_bindings, struct_obj);
+            }
+            if let ParamType::Obj(Obj::Cart(cart)) = &instantiated_type {
+                self.register_default_tuple_view(&target_bindings, cart);
+            }
+            for (source, target) in source_group.params.iter().zip(target_bindings.iter()) {
+                insert_symbol_substitution(
+                    &mut source_to_target,
+                    source,
+                    obj_for_bound_param_in_scope(target, target_kind),
+                );
+            }
+            groups.push(ParamGroupWithParamType::new(
+                target_bindings,
+                instantiated_type,
+            ));
+            target_index += group_len;
+        }
+
+        let mut dom_facts = Vec::with_capacity(setting.dom_facts.len());
+        for fact in &setting.dom_facts {
+            dom_facts.push(self.inst_fact(
+                fact,
+                &source_to_target,
+                ParamObjType::BinderRetag(BinderRetagSource::Forall),
+                Some(tb.line_file.clone()),
+            )?);
+        }
+
+        Ok(FreshSettingParameterBundle {
+            param_def: ParamDefWithType::new(groups),
+            dom_facts,
+        })
+    }
+
     pub(super) fn new_parsed_fn_obj(
         &self,
         head: FnObjHead,

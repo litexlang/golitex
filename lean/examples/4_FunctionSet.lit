@@ -1,0 +1,24 @@
+# Tracer: compiler2 unary function set and proof-carrying application
+#
+# Before: compiler2 rejected `fn(y s) S` while rendering the forall parameter,
+# and it had no native-carrier representation for the verified call `f(x)`.
+#
+# Now: s and S become Litex.Set values. x and f retain independent Lean
+# carriers plus their verifier-created Litex.In hypotheses. Each generated
+# Litex.fnApply consumes both the exact function-membership FactId proof and
+# the exact argument-membership WD proof selected for that source occurrence.
+#
+# Boundary: this first slice supports one named unary application layer with no
+# extra domain facts. Anonymous functions, multiple parameters, domain clauses,
+# and curried return function sets remain fail-closed. The focused Rust
+# negative test changes `x s` to `x S`; Litex rejects `f(x)` before emission
+# because no proof of `x $in s` exists.
+#
+# Evidence:
+# target/release/litex -compact -strict -runner -f lean/examples/4_FunctionSet.lit
+# cd lean && ./compiler2.sh compile examples/4_FunctionSet.lit
+# cd lean && ./compiler2.sh check examples && lake env lean examples/4_FunctionSet.lean
+
+sketch:
+    forall s, S set, x s, f fn(y s) S:
+        f(x) = f(x)

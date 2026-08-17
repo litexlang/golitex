@@ -16,6 +16,14 @@ completion boundary, before a surrounding proof environment can disappear,
 and stores the resulting IR snapshot in the `StmtResult`. Lean emission then
 consumes only compiler IR.
 
+The public `capture_litex_to_lean_ir_from_source` entry point exposes that same
+verified IR to the independent compiler2 module under
+`src/litex_to_lean_compiler2`.
+It does not change the existing universal-object emitter or the `-lean` CLI.
+Direct closed equality reported by the verifier as `calculation` is retained as
+a zero-premise rational-normalization certificate only after the IR builder
+rechecks the exact equality with the verifier's calculation predicate.
+
 The consolidated target design and its ten representative examples are in
 [`litex_object_design.md`](litex_object_design.md). The shared ABI is owned by
 [`Litex.Core`](../../lean/Litex/Core.lean), concrete builtin theorems by

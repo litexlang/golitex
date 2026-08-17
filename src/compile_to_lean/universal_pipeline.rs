@@ -36,6 +36,24 @@ pub fn compile_to_lean_from_source(
     compile_to_lean(&normalized, &mut runtime)
 }
 
+/// Verify one standalone Litex source and return the exact compiler IR captured
+/// from that successful verifier run. Backends consume this tree instead of
+/// reparsing source text or rerunning proof search.
+pub fn capture_litex_to_lean_ir_from_source(
+    source_code: &str,
+    entry_label: &str,
+) -> Result<Vec<LitexToLeanStatementIr>, RuntimeError> {
+    let normalized = source_code.replace('\r', "");
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(entry_label);
+    let started_capture = runtime.start_well_defined_capture();
+    let result = capture_litex_to_lean_ir(&normalized, &mut runtime);
+    if started_capture {
+        runtime.stop_well_defined_capture();
+    }
+    result
+}
+
 pub fn compile_to_lean_from_source_with_report(
     source_code: &str,
     entry_label: &str,
@@ -84,6 +102,14 @@ fn compile_to_lean_in_mode(
     source_code: &str,
     runtime: &mut Runtime,
 ) -> Result<String, RuntimeError> {
+    let ir = capture_litex_to_lean_ir(source_code, runtime)?;
+    emit_lean_from_litex_to_lean_ir(&ir)
+}
+
+fn capture_litex_to_lean_ir(
+    source_code: &str,
+    runtime: &mut Runtime,
+) -> Result<Vec<LitexToLeanStatementIr>, RuntimeError> {
     let tokenizer = Tokenizer::new();
     let blocks = tokenizer.parse_blocks(source_code, runtime.current_file_path_rc())?;
     let mut ir = Vec::new();
@@ -110,7 +136,7 @@ fn compile_to_lean_in_mode(
             "Litex-to-Lean requires at least one supported statement",
         ));
     }
-    emit_lean_from_litex_to_lean_ir(&ir)
+    Ok(ir)
 }
 
 #[derive(Clone)]

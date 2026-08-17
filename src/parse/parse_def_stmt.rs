@@ -5,78 +5,56 @@ impl Runtime {
         tb.skip_token(SETTING)?;
         let name = tb.advance()?;
         self.validate_name(&name, tb.line_file.clone())?;
-        tb.skip_token(COLON)?;
-        if !tb.exceed_end_of_head() {
+        if !tb.current_token_is_equal_to(LEFT_BRACE) {
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "setting header expects `setting Name:`".to_string(),
-                    tb.line_file.clone(),
-                ),
-            )));
-        }
-        if tb.body.is_empty() {
-            return Err(RuntimeError::from(ParseRuntimeError(
-                RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "setting expects at least one parameter line".to_string(),
+                    "setting header expects `setting Name(...)`".to_string(),
                     tb.line_file.clone(),
                 ),
             )));
         }
 
         self.run_in_local_parsing_time_name_scope(|this| {
-            let mut groups = Vec::new();
-            let mut dom_facts = Vec::new();
-            let mut saw_fact = false;
+            let (param_def, mut dom_facts) = this.parse_def_parameter_bundles_between(
+                tb,
+                LEFT_BRACE,
+                RIGHT_BRACE,
+                ParamObjType::Forall,
+                "setting",
+            )?;
 
-            for block in tb.body.iter_mut() {
-                let saved_parse_context = this.current_parse_context().clone();
-                let mut probe = block.clone();
-                let parsed_group = if probe.body.is_empty() {
-                    this.parse_param_def_with_param_type_and_skip_comma(
-                        &mut probe,
-                        ParamObjType::Forall,
-                    )
-                    .ok()
-                    .filter(|_| probe.exceed_end_of_head())
-                } else {
-                    None
-                };
-
-                if let Some(group) = parsed_group {
-                    if saw_fact {
-                        return Err(RuntimeError::from(ParseRuntimeError(
-                            RuntimeErrorStruct::new_with_msg_and_line_file(
-                                "setting parameter lines must come before common-condition facts"
-                                    .to_string(),
-                                block.line_file.clone(),
-                            ),
-                        )));
-                    }
-                    groups.push(group);
-                    continue;
-                }
-
-                *this.current_parse_context_mut() = saved_parse_context;
-                saw_fact = true;
-                dom_facts.push(this.parse_fact(block)?);
-            }
-
-            if groups.is_empty() {
+            if param_def.is_empty() {
                 return Err(RuntimeError::from(ParseRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "setting expects at least one parameter line before its facts".to_string(),
+                        "setting expects at least one parameter".to_string(),
                         tb.line_file.clone(),
                     ),
                 )));
             }
 
-            Ok(DefSettingStmt::new(
-                name,
-                ParamDefWithType::new(groups),
-                dom_facts,
-                tb.line_file.clone(),
-            )
-            .into())
+            if tb.current_token_is_equal_to(COLON) {
+                tb.skip_token(COLON)?;
+                if !tb.exceed_end_of_head() {
+                    return Err(RuntimeError::from(ParseRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_line_file(
+                            "setting header expects `:` to end the header".to_string(),
+                            tb.line_file.clone(),
+                        ),
+                    )));
+                }
+                dom_facts.extend(this.parse_facts_in_body(tb)?);
+            } else {
+                if !tb.exceed_end_of_head() {
+                    return Err(RuntimeError::from(ParseRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_line_file(
+                            "setting header expects `:` or end of line after `)`".to_string(),
+                            tb.line_file.clone(),
+                        ),
+                    )));
+                }
+            }
+
+            Ok(DefSettingStmt::new(name, param_def, dom_facts, tb.line_file.clone()).into())
         })
     }
 
@@ -210,15 +188,26 @@ impl Runtime {
         })?;
 
         let stmt_result = self.run_in_local_parsing_time_name_scope(|this| {
-            let param_def_with_dom = if tb.current_token_is_equal_to(LESS) {
-                let param_def =
-                    this.parse_def_param_groups_with_param_type_between(tb, LESS, GREATER)?;
-                Some((param_def, Vec::new()))
+            let (param_def_with_dom, setting_facts) = if tb.current_token_is_equal_to(LESS) {
+                let (param_def, setting_facts) = this.parse_def_parameter_bundles_between(
+                    tb,
+                    LESS,
+                    GREATER,
+                    ParamObjType::DefHeader,
+                    "struct",
+                )?;
+                (Some((param_def, Vec::new())), setting_facts)
             } else if tb.current_token_is_equal_to(LEFT_BRACE) {
-                let param_def = this.parse_def_braced_param_groups_with_param_type(tb)?;
-                Some((param_def, Vec::new()))
+                let (param_def, setting_facts) = this.parse_def_parameter_bundles_between(
+                    tb,
+                    LEFT_BRACE,
+                    RIGHT_BRACE,
+                    ParamObjType::DefHeader,
+                    "struct",
+                )?;
+                (Some((param_def, Vec::new())), setting_facts)
             } else {
-                None
+                (None, Vec::new())
             };
             let struct_param_names = param_def_with_dom
                 .as_ref()
@@ -238,7 +227,7 @@ impl Runtime {
 
                 let mut parsed_fields: Vec<(String, Obj)> = Vec::new();
                 let mut field_bindings: Vec<SymbolBinding> = Vec::new();
-                let mut equivalent_facts: Vec<Fact> = Vec::new();
+                let mut equivalent_facts = setting_facts;
                 let mut seen_equivalent = false;
 
                 for block in tb.body.iter_mut() {
@@ -267,8 +256,8 @@ impl Runtime {
                                 );
                             }
                         }
-                        equivalent_facts =
-                            this.parse_struct_equivalent_facts(block, &field_bindings)?;
+                        equivalent_facts
+                            .extend(this.parse_struct_equivalent_facts(block, &field_bindings)?);
                     } else {
                         if seen_equivalent {
                             return Err(RuntimeError::from(ParseRuntimeError(
@@ -403,7 +392,7 @@ impl Runtime {
         let stmt = self.run_in_local_parsing_time_name_scope(|this| {
             tb.skip_token(PROP)?;
             let name = this.parse_name_and_insert_into_top_parsing_time_name_scope(tb)?;
-            let param_defs = this.parse_def_braced_param_groups_with_param_type(tb)?;
+            let (param_defs, mut setting_facts) = this.parse_def_prop_parameter_bundles(tb)?;
             let def_param_names = param_defs.collect_param_names();
 
             if tb.current_token_is_equal_to(COLON) {
@@ -421,7 +410,7 @@ impl Runtime {
                     return Ok(DefPropStmt::new(
                         name,
                         param_defs,
-                        vec![],
+                        setting_facts,
                         tb.line_file.clone(),
                     ));
                 }
@@ -429,11 +418,11 @@ impl Runtime {
 
             let facts_result = this.parse_facts_in_body(tb);
             this.end_parsing_scope(ParamObjType::DefHeader, &def_param_names);
-            let facts = facts_result?;
+            setting_facts.extend(facts_result?);
             Ok(DefPropStmt::new(
                 name,
                 param_defs,
-                facts,
+                setting_facts,
                 tb.line_file.clone(),
             ))
         });
@@ -1818,32 +1807,63 @@ impl Runtime {
             })
     }
 
-    /// `prop name` / similar: consumes `{` … `}` of typed param groups and registers names.
-    fn parse_def_braced_param_groups_with_param_type(
-        &mut self,
-        tb: &mut TokenBlock,
-    ) -> Result<ParamDefWithType, RuntimeError> {
-        self.parse_def_param_groups_with_param_type_between(tb, LEFT_BRACE, RIGHT_BRACE)
-    }
-
-    fn parse_def_param_groups_with_param_type_between(
+    /// Definition headers accept ordinary typed parameters mixed with setting
+    /// bundles. Each bundle contributes fresh parameters and instantiated
+    /// conditions in header order; the caller chooses where those conditions
+    /// belong in the target definition.
+    fn parse_def_parameter_bundles_between(
         &mut self,
         tb: &mut TokenBlock,
         left_token: &str,
         right_token: &str,
-    ) -> Result<ParamDefWithType, RuntimeError> {
+        target_kind: ParamObjType,
+        definition_kind: &str,
+    ) -> Result<(ParamDefWithType, Vec<Fact>), RuntimeError> {
         tb.skip_token(left_token)?;
         let mut groups = Vec::new();
-        while tb.current()? != right_token {
-            groups.push(
-                self.parse_param_def_with_param_type_and_skip_comma(tb, ParamObjType::DefHeader)?,
-            );
+        let mut setting_facts = Vec::new();
+        while !tb.current_token_is_equal_to(right_token) {
+            if tb.current_token_is_equal_to(LEFT_BRACKET) {
+                let bundle = self.parse_fresh_setting_parameter_bundle(tb, target_kind)?;
+                groups.extend(bundle.param_def.groups);
+                setting_facts.extend(bundle.dom_facts);
+                if tb.current_token_is_equal_to(COMMA) {
+                    tb.skip_token(COMMA)?;
+                } else if !tb.current_token_is_equal_to(right_token) {
+                    return Err(RuntimeError::from(ParseRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_line_file(
+                            format!(
+                                "expected `,` or `{}` after {} setting parameter bundle",
+                                right_token, definition_kind
+                            ),
+                            tb.line_file.clone(),
+                        ),
+                    )));
+                }
+            } else {
+                groups.push(self.parse_param_def_with_param_type_and_skip_comma(tb, target_kind)?);
+            }
         }
         tb.skip_token(right_token)?;
         let param_defs = ParamDefWithType::new(groups);
         let names = param_defs.collect_param_names();
         self.register_collected_param_names_for_def_parse(&names, tb.line_file.clone())?;
-        Ok(param_defs)
+        Ok((param_defs, setting_facts))
+    }
+
+    /// Concrete `prop` headers elaborate setting conditions into the
+    /// proposition body before any explicitly written facts.
+    fn parse_def_prop_parameter_bundles(
+        &mut self,
+        tb: &mut TokenBlock,
+    ) -> Result<(ParamDefWithType, Vec<Fact>), RuntimeError> {
+        self.parse_def_parameter_bundles_between(
+            tb,
+            LEFT_BRACE,
+            RIGHT_BRACE,
+            ParamObjType::DefHeader,
+            "prop",
+        )
     }
 
     pub fn insert_parsed_name_into_top_parsing_time_name_scope(

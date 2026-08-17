@@ -1510,15 +1510,15 @@ useful when a chapter repeatedly quantifies over the same mathematical
 objects:
 
 ```litex
-setting EqualPair:
-    X nonempty_set
-    x, y X
+setting EqualPair(X nonempty_set, x, y X):
     x = y
 
 forall [EqualPair], z X:
     z = z
 
 forall [EqualPair] => x = y
+
+forall [EqualPair(Y, a, b)] => a = b
 ```
 
 This elaborates to the ordinary fact:
@@ -1530,19 +1530,79 @@ forall X nonempty_set, x, y X, z X:
         z = z
 ```
 
-Parameter lines must precede shared-assumption lines in a `setting`. The
-setting does not introduce global objects and does not assert its assumptions;
-it only abbreviates the corresponding `forall` prefix. Every use allocates
-fresh binders, even when the same setting is used several times. Extra
-parameters require a comma after the closing bracket.
+Parameters are declared in parentheses in the `setting` header; the indented
+body contains only shared assumptions. A setting with no shared assumptions
+omits both the colon and body, for example `setting OneElement(X nonempty_set,
+x X)`. The legacy body-parameter form `setting Name:` is rejected. A setting
+does not introduce global objects and does not assert its assumptions; it only
+abbreviates the corresponding `forall` prefix. Every use allocates fresh
+binders, even when the same setting is used several times. Extra parameters
+require a comma after the closing bracket.
+
+The optional argument list renames the freshly declared binders positionally:
+`[EqualPair(Y, a, b)]` declares new `Y`, `a`, and `b` parameters and
+instantiates the stored parameter types and assumptions with those names. The
+arguments are exact bare binder names, not expressions and not references to
+outer objects. Their count must equal the setting's parameter count; an active
+or otherwise visible name is a collision rather than a shadowed reference.
+The bare `[EqualPair]` spelling is shorthand for fresh binders with the
+setting's original names.
 
 Settings are supported in block `forall [Name]` headers and in the inline form
 `forall [Name] => fact`. The inline form uses exactly the parameters and
 shared assumptions stored by the setting; add extra parameters with block
 syntax. Goal and negated universal positions use the same expansion paths. A
 module-qualified setting may be referenced as `forall [Module::Name]:` or
-`forall [Module::Name] => fact`. Settings do not expand in definition
-headers, template headers, or object expressions.
+`forall [Module::Name] => fact`; explicit names may follow the qualified name
+in the same way.
+
+Concrete `prop` and `setting` headers also accept setting bundles mixed with
+ordinary typed parameters. Each bundle expands to ordinary definition
+parameters, and its shared assumptions are inserted in header order before the
+explicitly written body:
+
+```litex
+setting GroupSetting(A nonempty_set, mul fn(x, y A) A, one A, inv fn(x A) A):
+    forall u, v, w A:
+        mul(mul(u, v), w) = mul(u, mul(v, w))
+    forall u A:
+        mul(one, u) = u
+        mul(inv(u), u) = one
+
+prop is_group_homomorphism([GroupSetting(A, mul_A, one_A, inv_A)], [GroupSetting(B, mul_B, one_B, inv_B)], f fn(x A) B):
+    forall x, y A:
+        f(mul_A(x, y)) = mul_B(f(x), f(y))
+
+setting GroupHomomorphismSetting([GroupSetting(A, mul_A, one_A, inv_A)], [GroupSetting(B, mul_B, one_B, inv_B)], f fn(x A) B):
+    forall x, y A:
+        f(mul_A(x, y)) = mul_B(f(x), f(y))
+```
+
+The stored and displayed declarations use the equivalent flat parameter list,
+followed by the two instantiated `GroupSetting` condition lists and the
+explicit homomorphism condition.
+
+A parameterized `struct` header accepts the same bundles. Its expanded
+parameters remain header parameters, while the setting conditions are
+prepended to the struct's membership conditions before explicit `<=>:` facts:
+
+```litex
+setting GroupSetting(G nonempty_set, mul_G fn(x, y G) G, one_G G, inv_G fn(x G) G):
+    forall u, v, w G:
+        mul_G(mul_G(u, v), w) = mul_G(u, mul_G(v, w))
+    forall u G:
+        mul_G(one_G, u) = u
+        mul_G(inv_G(u), u) = one_G
+
+struct GroupAction<[GroupSetting(G, mul_G, one_G, inv_G)], V nonempty_set>:
+    act fn(g G, v V) V
+```
+
+Consequently membership in `&GroupAction<G, mul_G, one_G, inv_G, V>` exposes
+the instantiated group laws. `G`, `mul_G`, `one_G`, and `inv_G` are not struct
+fields and are not emitted by `unfold`. Setting bundles are not currently
+accepted in `abstract_prop` or `template` headers, in struct field lists, or in
+object expressions.
 
 An ordinary universal fact may use a one-line form when it has exactly one
 premise and one conclusion, or no premise. The conclusion is a bare fact; it
@@ -2397,7 +2457,7 @@ explanation; this index does not repeat its examples.
 | Multiple names in one domain | `x, y R` | [Universal facts](#universal-facts) |
 | Domain condition | `x R: x != 0` | [Domain obligations](#domain-obligations) |
 | Parameterized definition | `template<S set, x S>:` | [Templates](#templates) |
-| Named universal prefix | `setting Name: ...`, then `forall [Name], ...:` or `forall [Name] => fact` | [Named universal settings](#named-universal-settings) |
+| Named universal prefix | `setting Name(params): ...`, then `forall [Name]`, `forall [Name(fresh_names)]`, or a `prop`/`setting`/`struct` parameter bundle | [Named universal settings](#named-universal-settings) |
 | Struct parameter | `struct Group<S nonempty_set>:` | [Struct objects](#struct-objects-and-explicit-or-default-view-field-access-preview) |
 
 ### Object syntax index
@@ -2418,7 +2478,7 @@ explanation; this index does not repeat its examples.
 | Atomic | equality, order, membership, set relations, named predicates | [Atomic facts](#atomic-facts) |
 | Compound | `and`, relation chains, `or` | [Conjunctions, chains, and disjunctions](#conjunctions-chains-and-disjunctions) |
 | Existential | `exist`, `exist!`, `not exist` | [Existential facts](#existential-facts) |
-| Universal | `forall`, `forall [Setting]`, `forall`, `forall ... <=>:`, `not forall` | [Universal facts](#universal-facts) |
+| Universal | `forall`, `forall [Setting]`, `forall [Setting(fresh_names)]`, `forall ... <=>:`, `not forall` | [Universal facts](#universal-facts) |
 | Function predicates | `$fn_eq_in`, `$fn_eq`, mapping properties | [Function predicates](#function-predicates) |
 
 ### Statement syntax index

@@ -95,14 +95,9 @@ struct RealNormedSpace<E nonempty_set>:
     <=>:
         $is_real_normed_space(E, add, zero, neg, smul, norm)
 
-setting RealNormedSpaceSetting:
-    E nonempty_set
-    space &RealNormedSpace<E>
+setting RealNormedSpaceSetting(E nonempty_set, space &RealNormedSpace<E>)
 
-setting RealNormedSpacesSetting:
-    E, F nonempty_set
-    source &RealNormedSpace<E>
-    target &RealNormedSpace<F>
+setting RealNormedSpacesSetting(E, F nonempty_set, source &RealNormedSpace<E>, target &RealNormedSpace<F>)
 
 template<E nonempty_set, space &RealNormedSpace<E>>:
     have fn norm_distance(x, y E) R = space.norm(space.add(x, space.neg(y)))

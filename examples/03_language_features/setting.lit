@@ -1,8 +1,24 @@
-setting PairedElements:
-    X, Y nonempty_set
-    x X
-    y Y
+# Tracer: parameters in setting headers
+#
+# Before (required body parameters):
+# setting PairedElements:
+#     X, Y nonempty_set
+#     x X
+#     y Y
+#     x = x
+# Former limitation: `setting PairedElements(X, Y nonempty_set, x X, y Y):`
+# was rejected with `Expected token: :`.
+#
+# Now (verified):
+setting PairedElements(X, Y nonempty_set, x X, y Y):
     x = x
+# Current behavior: parameters are declared in the header and the body contains
+# only shared assumptions.
+#
+# Boundary: legacy `setting Name:` headers remain rejected. A setting without
+# shared assumptions omits the colon, as in `setting OneElement(X set, x X)`.
+# Evidence: target/release/litex -compact -isolated -runner -f examples/03_language_features/setting.lit
+# Implementation: src/parse/parse_def_stmt.rs
 
 forall [PairedElements]:
     y = y

@@ -1,0 +1,25 @@
+# Tracer: compiler2 set membership transport
+#
+# Before: compiler2 only had a hand-written SetSystem.lean file, so there was
+# no executable evidence that its Lean theorem came from Litex verification.
+#
+# Now: A and B are verified Litex definitions, and the equality rewrite is the
+# only source for the paired 1_SetSystem.lean theorem.
+#
+# Boundary: this first named-set route supports checked aliases of R/C. A bare
+# `have A set` still has no verifier-backed inhabitant choice, and richer set
+# constructors remain fail-closed until they receive their own numbered pair.
+#
+# Evidence:
+# target/release/litex -compact -strict -runner -f lean/examples/1_SetSystem.lit
+# cd lean && ./compiler2.sh check examples && lake env lean examples/1_SetSystem.lean
+
+sketch:
+    have A set = R
+    have B set = C
+    forall a A, b B:
+        a = b
+        =>:
+            b $in A
+            a $in B
+1 = 1

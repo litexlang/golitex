@@ -53,14 +53,9 @@ struct VectorSpace<K, V nonempty_set>:
     <=>:
         $is_vector_space(K, V, scalar_add, scalar_zero, scalar_neg, scalar_mul, scalar_one, scalar_inv, add, zero, neg, smul)
 
-setting VectorSpaceSetting:
-    K, V nonempty_set
-    space &VectorSpace<K, V>
+setting VectorSpaceSetting(K, V nonempty_set, space &VectorSpace<K, V>)
 
-setting VectorSpacesSetting:
-    K, V, W nonempty_set
-    source &VectorSpace<K, V>
-    target &VectorSpace<K, W>
+setting VectorSpacesSetting(K, V, W nonempty_set, source &VectorSpace<K, V>, target &VectorSpace<K, W>)
 
 thm vector_smul_add:
     ? forall [VectorSpaceSetting], a K, u, v V:

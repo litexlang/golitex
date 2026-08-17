@@ -1,5 +1,4 @@
 use crate::prelude::*;
-use std::collections::HashMap;
 
 impl Runtime {
     pub fn parse_fact(&mut self, tb: &mut TokenBlock) -> Result<Fact, RuntimeError> {
@@ -93,17 +92,8 @@ impl Runtime {
             tb.skip_token(FORALL)?;
 
             if tb.current_token_is_equal_to(LEFT_BRACKET) {
-                tb.skip_token(LEFT_BRACKET)?;
-                if tb.current_token_is_equal_to(RIGHT_BRACKET) {
-                    return Err(RuntimeError::from(ParseRuntimeError(
-                        RuntimeErrorStruct::new_with_msg_and_line_file(
-                            "inline forall setting reference cannot be empty".to_string(),
-                            tb.line_file.clone(),
-                        ),
-                    )));
-                }
-                let setting_name = this.parse_module_qualified_reference_name(tb)?.to_string();
-                tb.skip_token(RIGHT_BRACKET)?;
+                let setting_prefix =
+                    this.parse_fresh_setting_parameter_bundle(tb, ParamObjType::Forall)?;
                 if !tb.current_token_is_equal_to(RIGHT_ARROW) {
                     return Err(RuntimeError::from(ParseRuntimeError(
                         RuntimeErrorStruct::new_with_msg_and_line_file(
@@ -112,43 +102,23 @@ impl Runtime {
                         ),
                     )));
                 }
-                let setting = this
-                    .get_setting_definition_by_name(&setting_name)
-                    .ok_or_else(|| {
-                        RuntimeError::from(ParseRuntimeError(
-                            RuntimeErrorStruct::new_with_msg_and_line_file(
-                                format!("unknown setting `{}`", setting_name),
-                                tb.line_file.clone(),
-                            ),
-                        ))
-                    })?;
-                let setting_prefix =
-                    this.fresh_setting_forall_prefix(&setting, tb.line_file.clone())?;
-                let setting_bindings = setting_prefix.params_def_with_type.collect_param_bindings();
-                return this.parse_in_existing_free_param_scope(
-                    ParamObjType::Forall,
-                    &setting_bindings,
-                    tb.line_file.clone(),
-                    |this| {
-                        tb.skip_token(RIGHT_ARROW)?;
-                        let then_facts = this.parse_inline_forall_then(tb)?;
-                        if !nested && !tb.exceed_end_of_head() {
-                            return Err(RuntimeError::from(ParseRuntimeError(
-                                RuntimeErrorStruct::new_with_msg_and_line_file(
-                                    format!("unexpected token after inline `{}`", FORALL),
-                                    tb.line_file.clone(),
-                                ),
-                            )));
-                        }
-                        Ok(ForallFact::new(
-                            setting_prefix.params_def_with_type,
-                            setting_prefix.dom_facts,
-                            then_facts,
+                tb.skip_token(RIGHT_ARROW)?;
+                let then_facts = this.parse_inline_forall_then(tb)?;
+                if !nested && !tb.exceed_end_of_head() {
+                    return Err(RuntimeError::from(ParseRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_line_file(
+                            format!("unexpected token after inline `{}`", FORALL),
                             tb.line_file.clone(),
-                        )?
-                        .into())
-                    },
-                );
+                        ),
+                    )));
+                }
+                return Ok(ForallFact::new(
+                    setting_prefix.param_def,
+                    setting_prefix.dom_facts,
+                    then_facts,
+                    tb.line_file.clone(),
+                )?
+                .into());
             }
 
             let mut groups: Vec<ParamGroupWithParamType> = vec![];
@@ -327,18 +297,9 @@ impl Runtime {
     ) -> Result<Fact, RuntimeError> {
         self.run_in_local_parsing_time_name_scope(|this| {
             tb.skip_token(FORALL)?;
-            let setting_prefix = if tb.current_token_is_equal_to(LEFT_BRACKET) {
-                tb.skip_token(LEFT_BRACKET)?;
-                if tb.current_token_is_equal_to(RIGHT_BRACKET) {
-                    return Err(RuntimeError::from(ParseRuntimeError(
-                        RuntimeErrorStruct::new_with_msg_and_line_file(
-                            "forall setting reference cannot be empty".to_string(),
-                            tb.line_file.clone(),
-                        ),
-                    )));
-                }
-                let setting_name = this.parse_module_qualified_reference_name(tb)?.to_string();
-                tb.skip_token(RIGHT_BRACKET)?;
+            let (mut groups, setting_dom_facts) = if tb.current_token_is_equal_to(LEFT_BRACKET) {
+                let setting_prefix =
+                    this.parse_fresh_setting_parameter_bundle(tb, ParamObjType::Forall)?;
                 if !tb.current_token_is_equal_to(COLON) {
                     tb.skip_token(COMMA).map_err(|_| {
                         RuntimeError::from(ParseRuntimeError(
@@ -349,111 +310,41 @@ impl Runtime {
                         ))
                     })?;
                 }
-                let setting = this
-                    .get_setting_definition_by_name(&setting_name)
-                    .ok_or_else(|| {
-                        RuntimeError::from(ParseRuntimeError(
-                            RuntimeErrorStruct::new_with_msg_and_line_file(
-                                format!("unknown setting `{}`", setting_name),
-                                tb.line_file.clone(),
-                            ),
-                        ))
-                    })?;
-                this.fresh_setting_forall_prefix(&setting, tb.line_file.clone())?
+                (setting_prefix.param_def.groups, setting_prefix.dom_facts)
             } else {
-                ForallFact::new_canonical_forall(
-                    ParamDefWithType::new(Vec::new()),
-                    Vec::new(),
-                    Vec::new(),
-                    tb.line_file.clone(),
-                )?
+                (Vec::new(), Vec::new())
             };
 
-            let setting_bindings = setting_prefix.params_def_with_type.collect_param_bindings();
-            this.parse_in_existing_free_param_scope(
-                ParamObjType::Forall,
-                &setting_bindings,
+            while tb.current()? != COLON {
+                groups.push(
+                    this.parse_param_def_with_param_type_and_skip_comma(tb, ParamObjType::Forall)?,
+                );
+            }
+            let param_def = ParamDefWithType::new(groups);
+            let forall_param_names = param_def.collect_param_names();
+            this.register_collected_param_names_for_def_parse(
+                &forall_param_names,
                 tb.line_file.clone(),
-                |this| {
-                    let mut groups = setting_prefix.params_def_with_type.groups.clone();
-                    let mut explicit_param_names = Vec::new();
-                    while tb.current()? != COLON {
-                        let group = this.parse_param_def_with_param_type_and_skip_comma(
-                            tb,
-                            ParamObjType::Forall,
-                        )?;
-                        explicit_param_names.extend(
-                            group
-                                .params
-                                .iter()
-                                .map(|binding| binding.name().to_string()),
-                        );
-                        groups.push(group);
-                    }
-                    let param_def = ParamDefWithType::new(groups);
-                    let forall_param_names = param_def.collect_param_names();
-                    this.register_collected_param_names_for_def_parse(
-                        &forall_param_names,
-                        tb.line_file.clone(),
-                    )?;
-                    tb.skip_token(COLON)?;
+            )?;
+            tb.skip_token(COLON)?;
 
-                    let last_is_equiv = {
-                        let last_body = tb.body.last().ok_or_else(|| {
-                            RuntimeError::from(ParseRuntimeError(
-                                RuntimeErrorStruct::new_with_msg_and_line_file(
-                                    "Expected body".to_string(),
-                                    tb.line_file.clone(),
-                                ),
-                            ))
-                        })?;
-                        last_body.current()? == EQUIVALENT_SIGN
-                    };
-                    let initial_dom_facts = setting_prefix.dom_facts.clone();
-                    let fact_result = if last_is_equiv {
-                        this.parse_forall_with_iff(tb, param_def, initial_dom_facts)
-                    } else {
-                        this.parse_forall(tb, param_def, initial_dom_facts)
-                    };
-                    this.end_parsing_scope(ParamObjType::Forall, &explicit_param_names);
-                    fact_result
-                },
-            )
+            let last_is_equiv = {
+                let last_body = tb.body.last().ok_or_else(|| {
+                    RuntimeError::from(ParseRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_line_file(
+                            "Expected body".to_string(),
+                            tb.line_file.clone(),
+                        ),
+                    ))
+                })?;
+                last_body.current()? == EQUIVALENT_SIGN
+            };
+            if last_is_equiv {
+                this.parse_forall_with_iff(tb, param_def, setting_dom_facts)
+            } else {
+                this.parse_forall(tb, param_def, setting_dom_facts)
+            }
         })
-    }
-
-    fn fresh_setting_forall_prefix(
-        &mut self,
-        setting: &DefSettingStmt,
-        use_line_file: LineFile,
-    ) -> Result<ForallFact, RuntimeError> {
-        let skeleton = ForallFact::new_canonical_forall(
-            setting.param_def.clone(),
-            setting.dom_facts.clone(),
-            Vec::new(),
-            setting.line_file.clone(),
-        )?;
-        let mut rename_map: HashMap<String, Obj> = HashMap::new();
-        for source_binding in setting.param_def.collect_param_bindings() {
-            let fresh_binding =
-                self.allocate_local_symbol_binding(source_binding.name().to_string())?;
-            insert_symbol_substitution(
-                &mut rename_map,
-                &source_binding,
-                ForallFreeParamObj::new(&fresh_binding).into(),
-            );
-        }
-        let mut fresh = self.alpha_rename_forall_fact(&skeleton, &rename_map)?;
-        for group in &fresh.params_def_with_type.groups {
-            if let ParamType::Obj(Obj::StructObj(struct_obj)) = &group.param_type {
-                self.register_default_struct_view(&group.params, struct_obj);
-            }
-            if let ParamType::Obj(Obj::Cart(cart)) = &group.param_type {
-                self.register_default_tuple_view(&group.params, cart);
-            }
-        }
-        fresh.line_file = use_line_file;
-        Ok(fresh)
     }
 
     fn parse_forall_with_iff(

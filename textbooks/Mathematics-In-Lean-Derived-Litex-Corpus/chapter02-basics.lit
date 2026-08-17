@@ -10,11 +10,7 @@
 
 # 2.2 Proving identities in algebraic structures
 
-setting AdditiveCommutativeGroupSetting:
-    A nonempty_set
-    add fn(x, y A) A
-    zero A
-    neg fn(x A) A
+setting AdditiveCommutativeGroupSetting(A nonempty_set, add fn(x, y A) A, zero A, neg fn(x A) A):
     forall u, v, w A:
         add(add(u, v), w) = add(u, add(v, w))
     forall u A:
@@ -23,24 +19,14 @@ setting AdditiveCommutativeGroupSetting:
     forall u, v A:
         add(u, v) = add(v, u)
 
-setting GroupSetting:
-    A nonempty_set
-    mul fn(x, y A) A
-    one A
-    inv fn(x A) A
+setting GroupSetting(A nonempty_set, mul fn(x, y A) A, one A, inv fn(x A) A):
     forall u, v, w A:
         mul(mul(u, v), w) = mul(u, mul(v, w))
     forall u A:
         mul(one, u) = u
         mul(inv(u), u) = one
 
-setting RingSetting:
-    A nonempty_set
-    add fn(x, y A) A
-    zero A
-    neg fn(x A) A
-    mul fn(x, y A) A
-    one A
+setting RingSetting(A nonempty_set, add fn(x, y A) A, zero A, neg fn(x A) A, mul fn(x, y A) A, one A):
     forall u, v, w A:
         add(add(u, v), w) = add(u, add(v, w))
         mul(mul(u, v), w) = mul(u, mul(v, w))
@@ -192,9 +178,7 @@ thm neg_mul_neg:
     by thm mul_neg_right(A, add, zero, neg, mul, one, a, b)
     by thm neg_neg(A, add, zero, neg, mul(a, b))
 
-setting CommutativeMultiplicationSetting:
-    A set
-    mul fn(x, y A) A
+setting CommutativeMultiplicationSetting(A set, mul fn(x, y A) A):
     forall u, v, w A:
         mul(mul(u, v), w) = mul(u, mul(v, w))
     forall u, v A:
@@ -248,9 +232,7 @@ thm mul_inv_rev:
 
 # 2.5 Proving facts about algebraic structures
 
-setting PartialOrderSetting:
-    A set
-    le_rel power_set(cart(A, A))
+setting PartialOrderSetting(A set, le_rel power_set(cart(A, A))):
     forall u A:
         (u, u) $in le_rel
     forall u, v, w A:
@@ -267,11 +249,7 @@ setting PartialOrderSetting:
 # Strict comparison is represented directly through the setting relation here,
 # so this presentation does not need a separate structure-view equivalence.
 
-setting LatticeSetting:
-    A nonempty_set
-    le_rel power_set(cart(A, A))
-    meet fn(x, y A) A
-    join fn(x, y A) A
+setting LatticeSetting(A nonempty_set, le_rel power_set(cart(A, A)), meet fn(x, y A) A, join fn(x, y A) A):
     forall u A:
         (u, u) $in le_rel
     forall u, v, w A:
@@ -406,14 +384,7 @@ thm lattice_meet_join_distributive_of_join_meet_distributive:
 # OrderedRingSetting deliberately flattens both component structures. This is
 # the strongest version of the setting-first choice: the theorem talks only
 # about the operations, relation, and their ambient laws.
-setting OrderedRingSetting:
-    A nonempty_set
-    add fn(x, y A) A
-    zero A
-    neg fn(x A) A
-    mul fn(x, y A) A
-    one A
-    le_rel power_set(cart(A, A))
+setting OrderedRingSetting(A nonempty_set, add fn(x, y A) A, zero A, neg fn(x A) A, mul fn(x, y A) A, one A, le_rel power_set(cart(A, A))):
     forall u, v, w A:
         add(add(u, v), w) = add(u, add(v, w))
         mul(mul(u, v), w) = mul(u, mul(v, w))
@@ -481,9 +452,7 @@ thm ring_mul_le_mul_right_of_nonnegative:
     mul(add(b, neg(a)), c) = add(mul(b, c), mul(neg(a), c)) = add(mul(b, c), neg(mul(a, c)))
     by thm ring_le_of_sub_nonnegative(A, add, zero, neg, mul, one, le_rel, mul(a, c), mul(b, c))
 
-setting MetricSpaceSetting:
-    X set
-    dist fn(x, y X) R
+setting MetricSpaceSetting(X set, dist fn(x, y X) R):
     forall u, v X:
         dist(u, v) >= 0
     forall u, v X:
