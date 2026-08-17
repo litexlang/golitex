@@ -354,6 +354,7 @@ impl Runtime {
         union: &Union,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
+        let mut alternatives = Vec::with_capacity(2);
         for (side, side_name) in [
             (union.left.as_ref(), "left"),
             (union.right.as_ref(), "right"),
@@ -364,6 +365,7 @@ impl Runtime {
                 in_fact.line_file.clone(),
             )
             .into();
+            alternatives.push(vec![member_fact.clone()]);
             let member_result =
                 self.verify_atomic_fact_as_builtin_rule_premise(&member_fact, builtin_state)?;
             if member_result.is_true() {
@@ -383,6 +385,22 @@ impl Runtime {
             }
         }
 
+        let premise_result = self.verify_builtin_rule_premise_alternatives(
+            alternatives,
+            in_fact.line_file.clone(),
+            builtin_state,
+        )?;
+        if premise_result.is_true() {
+            return Ok(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    in_fact.clone().into(),
+                    "union membership from complete left-or-right membership premise".to_string(),
+                    vec![premise_result],
+                )
+                .into(),
+            );
+        }
+
         Ok((StmtUnknown::new()).into())
     }
 
@@ -400,33 +418,45 @@ impl Runtime {
             in_fact.line_file.clone(),
         )
         .into();
-        let left_member_result =
-            self.verify_atomic_fact_as_builtin_rule_premise(&left_member_fact, builtin_state)?;
-        if !left_member_result.is_true() {
-            return Ok((StmtUnknown::new()).into());
-        }
-
         let right_member_fact: AtomicFact = InFact::new(
             in_fact.element.clone(),
             intersect.right.as_ref().clone(),
             in_fact.line_file.clone(),
         )
         .into();
+        let left_member_result =
+            self.verify_atomic_fact_as_builtin_rule_premise(&left_member_fact, builtin_state)?;
         let right_member_result =
             self.verify_atomic_fact_as_builtin_rule_premise(&right_member_fact, builtin_state)?;
-        if !right_member_result.is_true() {
-            return Ok((StmtUnknown::new()).into());
+        if left_member_result.is_true() && right_member_result.is_true() {
+            return Ok(
+                FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    in_fact.clone().into(),
+                    "intersection membership: member of both sides".to_string(),
+                    BuiltinRuleEvidence::Set(SetBuiltinRule::IntersectMembershipBoth),
+                    vec![left_member_result, right_member_result],
+                )
+                .into(),
+            );
         }
 
-        Ok(
-            FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
-                in_fact.clone().into(),
-                "intersection membership: member of both sides".to_string(),
-                BuiltinRuleEvidence::Set(SetBuiltinRule::IntersectMembershipBoth),
-                vec![left_member_result, right_member_result],
-            )
-            .into(),
-        )
+        let premise = QuantifierFreeFact::AndFact(AndFact::new(
+            vec![left_member_fact, right_member_fact],
+            in_fact.line_file.clone(),
+        ));
+        let premise_result = self.verify_builtin_rule_premise(&premise, builtin_state)?;
+        if premise_result.is_true() {
+            return Ok(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    in_fact.clone().into(),
+                    "intersection membership from complete conjunction premise".to_string(),
+                    vec![premise_result],
+                )
+                .into(),
+            );
+        }
+
+        Ok(StmtUnknown::new().into())
     }
 
     // A non-member of either side is outside the intersection.
@@ -437,6 +467,7 @@ impl Runtime {
         intersect: &Intersect,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
+        let mut alternatives = Vec::with_capacity(2);
         for (side, side_name) in [
             (intersect.left.as_ref(), "left"),
             (intersect.right.as_ref(), "right"),
@@ -447,6 +478,7 @@ impl Runtime {
                 not_in_fact.line_file.clone(),
             )
             .into();
+            alternatives.push(vec![non_member_fact.clone()]);
             let non_member_result =
                 self.verify_atomic_fact_as_builtin_rule_premise(&non_member_fact, builtin_state)?;
             if non_member_result.is_true() {
@@ -466,6 +498,23 @@ impl Runtime {
             }
         }
 
+        let premise_result = self.verify_builtin_rule_premise_alternatives(
+            alternatives,
+            not_in_fact.line_file.clone(),
+            builtin_state,
+        )?;
+        if premise_result.is_true() {
+            return Ok(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    not_in_fact.clone().into(),
+                    "intersection non-membership from complete side-disjunction premise"
+                        .to_string(),
+                    vec![premise_result],
+                )
+                .into(),
+            );
+        }
+
         Ok((StmtUnknown::new()).into())
     }
 
@@ -483,34 +532,46 @@ impl Runtime {
             in_fact.line_file.clone(),
         )
         .into();
-        let left_member_result =
-            self.verify_atomic_fact_as_builtin_rule_premise(&left_member_fact, builtin_state)?;
-        if !left_member_result.is_true() {
-            return Ok((StmtUnknown::new()).into());
-        }
-
         let right_non_member_fact: AtomicFact = NotInFact::new(
             in_fact.element.clone(),
             set_minus.right.as_ref().clone(),
             in_fact.line_file.clone(),
         )
         .into();
+        let left_member_result =
+            self.verify_atomic_fact_as_builtin_rule_premise(&left_member_fact, builtin_state)?;
         let right_non_member_result =
             self.verify_atomic_fact_as_builtin_rule_premise(&right_non_member_fact, builtin_state)?;
-        if !right_non_member_result.is_true() {
-            return Ok((StmtUnknown::new()).into());
+        if left_member_result.is_true() && right_non_member_result.is_true() {
+            return Ok(
+                FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    in_fact.clone().into(),
+                    "set-minus membership: member of left side and non-member of right side"
+                        .to_string(),
+                    BuiltinRuleEvidence::Set(SetBuiltinRule::SetMinusMembership),
+                    vec![left_member_result, right_non_member_result],
+                )
+                .into(),
+            );
         }
 
-        Ok(
-            FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
-                in_fact.clone().into(),
-                "set-minus membership: member of left side and non-member of right side"
-                    .to_string(),
-                BuiltinRuleEvidence::Set(SetBuiltinRule::SetMinusMembership),
-                vec![left_member_result, right_non_member_result],
-            )
-            .into(),
-        )
+        let premise = QuantifierFreeFact::AndFact(AndFact::new(
+            vec![left_member_fact, right_non_member_fact],
+            in_fact.line_file.clone(),
+        ));
+        let premise_result = self.verify_builtin_rule_premise(&premise, builtin_state)?;
+        if premise_result.is_true() {
+            return Ok(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    in_fact.clone().into(),
+                    "set-minus membership from complete conjunction premise".to_string(),
+                    vec![premise_result],
+                )
+                .into(),
+            );
+        }
+
+        Ok(StmtUnknown::new().into())
     }
 
     // Family-union introduction: `x $in big_union(F)` follows from a member set
@@ -1323,24 +1384,19 @@ impl Runtime {
     ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
         match source_set {
             Obj::ListSet(list_set) => {
-                let mut results = Vec::new();
-                for element in &list_set.list {
-                    let element_in_standard_set: AtomicFact = InFact::new(
-                        element.as_ref().clone(),
-                        standard_set.clone(),
-                        line_file.clone(),
-                    )
-                    .into();
-                    let result = self.verify_atomic_fact_as_builtin_rule_premise(
-                        &element_in_standard_set,
-                        builtin_state,
-                    )?;
-                    if !result.is_true() {
-                        return Ok(None);
-                    }
-                    results.push(result);
-                }
-                Ok(Some(results))
+                let premises = list_set
+                    .list
+                    .iter()
+                    .map(|element| {
+                        InFact::new(
+                            element.as_ref().clone(),
+                            standard_set.clone(),
+                            line_file.clone(),
+                        )
+                        .into()
+                    })
+                    .collect::<Vec<AtomicFact>>();
+                self.verify_builtin_rule_premises(&premises, builtin_state)
             }
             Obj::Union(union) => self.verify_two_finite_set_parts_in_standard_set(
                 &union.left,

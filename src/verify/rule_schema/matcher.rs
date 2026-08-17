@@ -143,6 +143,90 @@ pub(crate) fn canonical_atomic_facts_equal(
     Ok(true)
 }
 
+fn canonical_and_chain_atomic_facts_equal(
+    left: &AndChainAtomicFact,
+    right: &AndChainAtomicFact,
+    limits: MatchLimits,
+) -> Result<bool, CanonicalMatchError> {
+    match (left, right) {
+        (AndChainAtomicFact::AtomicFact(left), AndChainAtomicFact::AtomicFact(right)) => {
+            canonical_atomic_facts_equal(left, right, limits)
+        }
+        (AndChainAtomicFact::AndFact(left), AndChainAtomicFact::AndFact(right)) => {
+            if left.facts.len() != right.facts.len() {
+                return Ok(false);
+            }
+            for (left, right) in left.facts.iter().zip(&right.facts) {
+                if !canonical_atomic_facts_equal(left, right, limits)? {
+                    return Ok(false);
+                }
+            }
+            Ok(true)
+        }
+        (AndChainAtomicFact::ChainFact(left), AndChainAtomicFact::ChainFact(right)) => {
+            canonical_chain_facts_equal(left, right, limits)
+        }
+        _ => Ok(false),
+    }
+}
+
+fn canonical_chain_facts_equal(
+    left: &ChainFact,
+    right: &ChainFact,
+    limits: MatchLimits,
+) -> Result<bool, CanonicalMatchError> {
+    if left.prop_names.len() != right.prop_names.len()
+        || left.objs.len() != right.objs.len()
+        || left
+            .prop_names
+            .iter()
+            .zip(&right.prop_names)
+            .any(|(left, right)| left.to_string() != right.to_string())
+    {
+        return Ok(false);
+    }
+    for (left, right) in left.objs.iter().zip(&right.objs) {
+        if !canonical_objs_equal(left, right, limits)? {
+            return Ok(false);
+        }
+    }
+    Ok(true)
+}
+
+pub(crate) fn canonical_quantifier_free_facts_equal(
+    left: &QuantifierFreeFact,
+    right: &QuantifierFreeFact,
+    limits: MatchLimits,
+) -> Result<bool, CanonicalMatchError> {
+    match (left, right) {
+        (QuantifierFreeFact::AtomicFact(left), QuantifierFreeFact::AtomicFact(right)) => {
+            canonical_atomic_facts_equal(left, right, limits)
+        }
+        (QuantifierFreeFact::AndFact(left), QuantifierFreeFact::AndFact(right)) => {
+            canonical_and_chain_atomic_facts_equal(
+                &AndChainAtomicFact::AndFact(left.clone()),
+                &AndChainAtomicFact::AndFact(right.clone()),
+                limits,
+            )
+        }
+        (QuantifierFreeFact::ChainFact(left), QuantifierFreeFact::ChainFact(right)) => {
+            canonical_chain_facts_equal(left, right, limits)
+        }
+        (QuantifierFreeFact::OrFact(left), QuantifierFreeFact::OrFact(right)) => {
+            if left.facts.len() != right.facts.len() {
+                return Ok(false);
+            }
+            for (left, right) in left.facts.iter().zip(&right.facts) {
+                if !canonical_and_chain_atomic_facts_equal(left, right, limits)? {
+                    return Ok(false);
+                }
+            }
+            Ok(true)
+        }
+        _ => Ok(false),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

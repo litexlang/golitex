@@ -1,0 +1,27 @@
+# Tracer: minimal native object definitions
+#
+# Before: object definitions were either unsupported or represented through
+# the retired universal `Litex.Object` carrier.
+#
+# Now: `let x = 1` and `have y R = 1` create ordinary Lean definitions whose
+# value is `(1 : C)`. The latter additionally replays the verifier-owned
+# `Litex.In y R` proof; both defining equalities use `Litex.Same`.
+#
+# Boundary: this pair accepts closed numeric values and one exact membership
+# constraint. Rich object constructors and inferred native types without a
+# reviewed renderer remain fail-closed.
+#
+# Evidence:
+# target/release/litex -compact -strict -runner -f lean/examples/11_ObjectDefinitions.lit
+# cd lean && ./compiler.sh compile examples/11_ObjectDefinitions.lit
+# cd lean && ./compiler.sh check examples
+
+let x = 1
+
+have y R = 1
+
+thm local_definition:
+    ? forall:
+        2 = 2
+    let z = 2
+    z = 2

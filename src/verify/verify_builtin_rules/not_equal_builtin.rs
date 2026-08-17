@@ -107,26 +107,32 @@ impl Runtime {
             return Ok(verified_result);
         }
 
-        if let Some(verified_result) =
-            self.try_verify_sub_not_equal_zero_from_operand_not_equal(not_equal_fact)?
+        if let Some(verified_result) = self
+            .try_verify_sub_not_equal_zero_from_operand_not_equal(not_equal_fact, builtin_state)?
         {
             return Ok(verified_result);
         }
 
-        if let Some(verified_result) =
-            self.try_verify_add_not_equal_zero_from_operand_not_equal_negation(not_equal_fact)?
+        if let Some(verified_result) = self
+            .try_verify_add_not_equal_zero_from_operand_not_equal_negation(
+                not_equal_fact,
+                builtin_state,
+            )?
         {
             return Ok(verified_result);
         }
 
-        if let Some(verified_result) =
-            self.try_verify_operand_not_equal_from_sub_not_equal_zero(not_equal_fact)?
+        if let Some(verified_result) = self
+            .try_verify_operand_not_equal_from_sub_not_equal_zero(not_equal_fact, builtin_state)?
         {
             return Ok(verified_result);
         }
 
-        if let Some(verified_result) =
-            self.try_verify_operand_not_equal_negation_from_add_not_equal_zero(not_equal_fact)?
+        if let Some(verified_result) = self
+            .try_verify_operand_not_equal_negation_from_add_not_equal_zero(
+                not_equal_fact,
+                builtin_state,
+            )?
         {
             return Ok(verified_result);
         }
@@ -351,9 +357,9 @@ impl Runtime {
             LessFact::new(y.clone(), x.clone(), line_file.clone()).into(),
             GreaterFact::new(y.clone(), x.clone(), line_file.clone()).into(),
         ];
-        for order_atomic in candidates {
+        for order_atomic in &candidates {
             let sub =
-                self.verify_non_equational_atomic_fact_with_known_atomic_facts(&order_atomic)?;
+                self.verify_non_equational_atomic_fact_with_known_atomic_facts(order_atomic)?;
             if sub.is_true() {
                 steps.push(sub);
                 let success = if self.captures_well_definedness() {
@@ -375,6 +381,29 @@ impl Runtime {
                     )
                 };
                 return Ok(Some(success.into()));
+            }
+        }
+
+        for alternatives in [
+            vec![vec![candidates[0].clone()], vec![candidates[1].clone()]],
+            vec![vec![candidates[2].clone()], vec![candidates[3].clone()]],
+        ] {
+            let premise_result = self.verify_builtin_rule_premise_alternatives(
+                alternatives,
+                line_file.clone(),
+                builtin_state,
+            )?;
+            if premise_result.is_true() {
+                steps.push(premise_result);
+                return Ok(Some(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
+                        not_equal_fact.clone().into(),
+                        InferResult::new(),
+                        "not_equal_from_complete_strict_order_disjunction".to_string(),
+                        steps,
+                    )
+                    .into(),
+                ));
             }
         }
         Ok(None)
@@ -584,6 +613,7 @@ impl Runtime {
     fn try_verify_sub_not_equal_zero_from_operand_not_equal(
         &mut self,
         not_equal_fact: &NotEqualFact,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let line_file = not_equal_fact.line_file.clone();
         let sub = match (&not_equal_fact.left, &not_equal_fact.right) {
@@ -613,9 +643,9 @@ impl Runtime {
             .into(),
         ];
 
-        for candidate in candidates {
+        for candidate in &candidates {
             let sub_result =
-                self.verify_non_equational_atomic_fact_with_known_atomic_facts(&candidate)?;
+                self.verify_non_equational_atomic_fact_with_known_atomic_facts(candidate)?;
             if sub_result.is_true() {
                 return Ok(Some(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
@@ -629,6 +659,26 @@ impl Runtime {
             }
         }
 
+        let premise_result = self.verify_builtin_rule_premise_alternatives(
+            candidates
+                .into_iter()
+                .map(|candidate| vec![candidate])
+                .collect(),
+            line_file,
+            builtin_state,
+        )?;
+        if premise_result.is_true() {
+            return Ok(Some(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
+                    not_equal_fact.clone().into(),
+                    InferResult::new(),
+                    "sub_not_equal_zero_from_complete_operand_disjunction".to_string(),
+                    vec![premise_result],
+                )
+                .into(),
+            ));
+        }
+
         Ok(None)
     }
 
@@ -637,6 +687,7 @@ impl Runtime {
     fn try_verify_add_not_equal_zero_from_operand_not_equal_negation(
         &mut self,
         not_equal_fact: &NotEqualFact,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let line_file = not_equal_fact.line_file.clone();
         let add = match (&not_equal_fact.left, &not_equal_fact.right) {
@@ -674,9 +725,9 @@ impl Runtime {
             .into(),
         ];
 
-        for candidate in candidates {
+        for candidate in &candidates {
             let sub_result =
-                self.verify_non_equational_atomic_fact_with_known_atomic_facts(&candidate)?;
+                self.verify_non_equational_atomic_fact_with_known_atomic_facts(candidate)?;
             if sub_result.is_true() {
                 return Ok(Some(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
@@ -690,6 +741,26 @@ impl Runtime {
             }
         }
 
+        let premise_result = self.verify_builtin_rule_premise_alternatives(
+            candidates
+                .into_iter()
+                .map(|candidate| vec![candidate])
+                .collect(),
+            line_file,
+            builtin_state,
+        )?;
+        if premise_result.is_true() {
+            return Ok(Some(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
+                    not_equal_fact.clone().into(),
+                    InferResult::new(),
+                    "add_not_equal_zero_from_complete_negation_disjunction".to_string(),
+                    vec![premise_result],
+                )
+                .into(),
+            ));
+        }
+
         Ok(None)
     }
 
@@ -698,6 +769,7 @@ impl Runtime {
     fn try_verify_operand_not_equal_from_sub_not_equal_zero(
         &mut self,
         not_equal_fact: &NotEqualFact,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let line_file = not_equal_fact.line_file.clone();
         let zero_obj: Obj = Number::new("0".to_string()).into();
@@ -716,9 +788,9 @@ impl Runtime {
             .into(),
         ];
 
-        for candidate in candidates {
+        for candidate in &candidates {
             let sub_result =
-                self.verify_non_equational_atomic_fact_with_known_atomic_facts(&candidate)?;
+                self.verify_non_equational_atomic_fact_with_known_atomic_facts(candidate)?;
             if sub_result.is_true() {
                 return Ok(Some(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
@@ -732,6 +804,26 @@ impl Runtime {
             }
         }
 
+        let premise_result = self.verify_builtin_rule_premise_alternatives(
+            candidates
+                .into_iter()
+                .map(|candidate| vec![candidate])
+                .collect(),
+            line_file,
+            builtin_state,
+        )?;
+        if premise_result.is_true() {
+            return Ok(Some(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
+                    not_equal_fact.clone().into(),
+                    InferResult::new(),
+                    "operand_not_equal_from_complete_difference_disjunction".to_string(),
+                    vec![premise_result],
+                )
+                .into(),
+            ));
+        }
+
         Ok(None)
     }
 
@@ -740,6 +832,7 @@ impl Runtime {
     fn try_verify_operand_not_equal_negation_from_add_not_equal_zero(
         &mut self,
         not_equal_fact: &NotEqualFact,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let line_file = not_equal_fact.line_file.clone();
         let zero_obj: Obj = Number::new("0".to_string()).into();
@@ -784,9 +877,9 @@ impl Runtime {
             );
         }
 
-        for candidate in candidates {
+        for candidate in &candidates {
             let sub_result =
-                self.verify_non_equational_atomic_fact_with_known_atomic_facts(&candidate)?;
+                self.verify_non_equational_atomic_fact_with_known_atomic_facts(candidate)?;
             if sub_result.is_true() {
                 return Ok(Some(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
@@ -794,6 +887,28 @@ impl Runtime {
                         InferResult::new(),
                         "operand_not_equal_negation_from_add_not_equal_zero".to_string(),
                         vec![sub_result],
+                    )
+                    .into(),
+                ));
+            }
+        }
+
+        if !candidates.is_empty() {
+            let premise_result = self.verify_builtin_rule_premise_alternatives(
+                candidates
+                    .into_iter()
+                    .map(|candidate| vec![candidate])
+                    .collect(),
+                line_file,
+                builtin_state,
+            )?;
+            if premise_result.is_true() {
+                return Ok(Some(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
+                        not_equal_fact.clone().into(),
+                        InferResult::new(),
+                        "operand_not_equal_negation_from_complete_sum_disjunction".to_string(),
+                        vec![premise_result],
                     )
                     .into(),
                 ));
@@ -818,37 +933,25 @@ impl Runtime {
         };
         let in_n: AtomicFact =
             InFact::new(x.clone(), StandardSet::N.into(), line_file.clone()).into();
-        let in_n_result = self.verify_atomic_fact_as_builtin_rule_premise(&in_n, builtin_state)?;
-        if !in_n_result.is_true() {
-            return Ok(None);
-        }
         let ge: AtomicFact =
             GreaterEqualFact::new(x.clone(), one_obj.clone(), line_file.clone()).into();
-        let ge_result = self.verify_atomic_fact_as_builtin_rule_premise(&ge, builtin_state)?;
-        if ge_result.is_true() {
-            return Ok(Some(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                    not_equal_fact.clone().into(),
-                    "n != 0 from n $in N and 1 <= n".to_string(),
-                    vec![in_n_result, ge_result],
-                )
-                .into(),
-            ));
-        }
         let one_le: AtomicFact = LessEqualFact::new(one_obj, x, line_file.clone()).into();
-        let one_le_result =
-            self.verify_atomic_fact_as_builtin_rule_premise(&one_le, builtin_state)?;
-        if one_le_result.is_true() {
-            return Ok(Some(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                    not_equal_fact.clone().into(),
-                    "n != 0 from n $in N and 1 <= n".to_string(),
-                    vec![in_n_result, one_le_result],
-                )
-                .into(),
-            ));
+        let premise_result = self.verify_builtin_rule_premise_alternatives(
+            vec![vec![in_n.clone(), ge], vec![in_n, one_le]],
+            line_file,
+            builtin_state,
+        )?;
+        if !premise_result.is_true() {
+            return Ok(None);
         }
-        Ok(None)
+        Ok(Some(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                not_equal_fact.clone().into(),
+                "n != 0 from n $in N and 1 <= n".to_string(),
+                vec![premise_result],
+            )
+            .into(),
+        ))
     }
 
     fn obj_is_verified_integer_exponent_for_not_equal_builtin(
@@ -982,19 +1085,13 @@ impl Runtime {
         let denominator_nonzero: AtomicFact =
             NotEqualFact::new(div.right.as_ref().clone(), zero_obj, line_file.clone()).into();
 
-        let numerator_result =
-            self.verify_atomic_fact_as_builtin_rule_premise(&numerator_nonzero, builtin_state)?;
-        if !numerator_result.is_true() {
+        let Some(step_results) = self.verify_builtin_rule_premises(
+            &[numerator_nonzero, denominator_nonzero],
+            builtin_state,
+        )?
+        else {
             return Ok(None);
-        }
-
-        let denominator_result =
-            self.verify_atomic_fact_as_builtin_rule_premise(&denominator_nonzero, builtin_state)?;
-        if !denominator_result.is_true() {
-            return Ok(None);
-        }
-
-        let step_results = vec![numerator_result, denominator_result];
+        };
         let success = if matches!(
             matched_zero,
             Obj::Number(number) if number.normalized_value == "0"
@@ -1238,25 +1335,6 @@ impl Runtime {
         None
     }
 
-    fn operand_is_not_equal_to_zero_by_known_non_equational_facts(
-        &mut self,
-        operand: &Obj,
-        line_file: LineFile,
-        builtin_state: &UseBuiltinRuleVerifyState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
-        let zero_obj: Obj = Number::new("0".to_string()).into();
-        let operand_not_equal_zero_fact =
-            NotEqualFact::new(operand.clone(), zero_obj, line_file).into();
-        // A factor may be a computable nonzero scalar such as `7 / 5`, not
-        // only a previously stored nonzero fact. Example: from `b != 0`,
-        // prove `b * (7 / 5) != 0`.
-        let verify_result = self.verify_atomic_fact_as_builtin_rule_premise(
-            &operand_not_equal_zero_fact,
-            builtin_state,
-        )?;
-        Ok(verify_result.is_true().then_some(verify_result))
-    }
-
     fn both_operands_nonzero_by_known_non_equational_facts(
         &mut self,
         left_operand: &Obj,
@@ -1264,23 +1342,13 @@ impl Runtime {
         line_file: LineFile,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
-        let Some(left_nonzero) = self.operand_is_not_equal_to_zero_by_known_non_equational_facts(
-            left_operand,
-            line_file.clone(),
-            builtin_state,
-        )?
-        else {
-            return Ok(None);
-        };
-        let Some(right_nonzero) = self.operand_is_not_equal_to_zero_by_known_non_equational_facts(
-            right_operand,
-            line_file,
-            builtin_state,
-        )?
-        else {
-            return Ok(None);
-        };
-        Ok(Some(vec![left_nonzero, right_nonzero]))
+        let zero_obj: Obj = Number::new("0".to_string()).into();
+        let premises = [
+            NotEqualFact::new(left_operand.clone(), zero_obj.clone(), line_file.clone()).into(),
+            NotEqualFact::new(right_operand.clone(), zero_obj, line_file).into(),
+        ];
+        // A factor may also be a directly computable nonzero scalar such as `7 / 5`.
+        self.verify_builtin_rule_premises(&premises, builtin_state)
     }
 
     fn both_operands_strictly_positive_by_non_equational_verify(
@@ -1291,20 +1359,11 @@ impl Runtime {
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
         let zero_obj: Obj = Number::new("0".to_string()).into();
-        let zero_less_than_left =
-            LessFact::new(zero_obj.clone(), left_operand.clone(), line_file.clone()).into();
-        let left_result =
-            self.verify_atomic_fact_as_builtin_rule_premise(&zero_less_than_left, builtin_state)?;
-        if !left_result.is_true() {
-            return Ok(None);
-        }
-        let zero_less_than_right = LessFact::new(zero_obj, right_operand.clone(), line_file).into();
-        let right_result =
-            self.verify_atomic_fact_as_builtin_rule_premise(&zero_less_than_right, builtin_state)?;
-        if !right_result.is_true() {
-            return Ok(None);
-        }
-        Ok(Some(vec![left_result, right_result]))
+        let premises = [
+            LessFact::new(zero_obj.clone(), left_operand.clone(), line_file.clone()).into(),
+            LessFact::new(zero_obj, right_operand.clone(), line_file).into(),
+        ];
+        self.verify_builtin_rule_premises(&premises, builtin_state)
     }
 
     fn both_operands_strictly_negative_by_non_equational_verify(
@@ -1315,20 +1374,11 @@ impl Runtime {
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
         let zero_obj: Obj = Number::new("0".to_string()).into();
-        let left_less_than_zero =
-            LessFact::new(left_operand.clone(), zero_obj.clone(), line_file.clone()).into();
-        let left_result =
-            self.verify_atomic_fact_as_builtin_rule_premise(&left_less_than_zero, builtin_state)?;
-        if !left_result.is_true() {
-            return Ok(None);
-        }
-        let right_less_than_zero = LessFact::new(right_operand.clone(), zero_obj, line_file).into();
-        let right_result =
-            self.verify_atomic_fact_as_builtin_rule_premise(&right_less_than_zero, builtin_state)?;
-        if !right_result.is_true() {
-            return Ok(None);
-        }
-        Ok(Some(vec![left_result, right_result]))
+        let premises = [
+            LessFact::new(left_operand.clone(), zero_obj.clone(), line_file.clone()).into(),
+            LessFact::new(right_operand.clone(), zero_obj, line_file).into(),
+        ];
+        self.verify_builtin_rule_premises(&premises, builtin_state)
     }
 
     pub fn mul_product_negative_when_factors_have_strict_opposite_sign_by_non_equational_verify(
@@ -1339,29 +1389,19 @@ impl Runtime {
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
         let zero_obj: Obj = Number::new("0".to_string()).into();
-        let left_less_than_zero =
-            LessFact::new(left_factor.clone(), zero_obj.clone(), line_file.clone()).into();
-        let zero_less_than_right =
-            LessFact::new(zero_obj.clone(), right_factor.clone(), line_file.clone()).into();
-        let first_left =
-            self.verify_atomic_fact_as_builtin_rule_premise(&left_less_than_zero, builtin_state)?;
-        let first_right =
-            self.verify_atomic_fact_as_builtin_rule_premise(&zero_less_than_right, builtin_state)?;
-        if first_left.is_true() && first_right.is_true() {
-            return Ok(Some(vec![first_left, first_right]));
-        }
-        let zero_less_than_left =
-            LessFact::new(zero_obj.clone(), left_factor.clone(), line_file.clone()).into();
-        let right_less_than_zero = LessFact::new(right_factor.clone(), zero_obj, line_file).into();
-        let second_left =
-            self.verify_atomic_fact_as_builtin_rule_premise(&zero_less_than_left, builtin_state)?;
-        let second_right =
-            self.verify_atomic_fact_as_builtin_rule_premise(&right_less_than_zero, builtin_state)?;
-        if second_left.is_true() && second_right.is_true() {
-            Ok(Some(vec![second_left, second_right]))
-        } else {
-            Ok(None)
-        }
+        let alternatives = vec![
+            vec![
+                LessFact::new(left_factor.clone(), zero_obj.clone(), line_file.clone()).into(),
+                LessFact::new(zero_obj.clone(), right_factor.clone(), line_file.clone()).into(),
+            ],
+            vec![
+                LessFact::new(zero_obj.clone(), left_factor.clone(), line_file.clone()).into(),
+                LessFact::new(right_factor.clone(), zero_obj, line_file.clone()).into(),
+            ],
+        ];
+        let result =
+            self.verify_builtin_rule_premise_alternatives(alternatives, line_file, builtin_state)?;
+        Ok(result.is_true().then_some(vec![result]))
     }
 
     fn sub_difference_nonzero_when_operands_have_strict_opposite_sign_by_non_equational_verify(
@@ -1372,34 +1412,19 @@ impl Runtime {
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
         let zero_obj: Obj = Number::new("0".to_string()).into();
-        let zero_less_than_minuend =
-            LessFact::new(zero_obj.clone(), minuend.clone(), line_file.clone()).into();
-        let subtrahend_less_than_zero =
-            LessFact::new(subtrahend.clone(), zero_obj.clone(), line_file.clone()).into();
-        let first_left = self
-            .verify_atomic_fact_as_builtin_rule_premise(&zero_less_than_minuend, builtin_state)?;
-        let first_right = self.verify_atomic_fact_as_builtin_rule_premise(
-            &subtrahend_less_than_zero,
-            builtin_state,
-        )?;
-        if first_left.is_true() && first_right.is_true() {
-            return Ok(Some(vec![first_left, first_right]));
-        }
-        let minuend_less_than_zero =
-            LessFact::new(minuend.clone(), zero_obj.clone(), line_file.clone()).into();
-        let zero_less_than_subtrahend =
-            LessFact::new(zero_obj, subtrahend.clone(), line_file).into();
-        let second_left = self
-            .verify_atomic_fact_as_builtin_rule_premise(&minuend_less_than_zero, builtin_state)?;
-        let second_right = self.verify_atomic_fact_as_builtin_rule_premise(
-            &zero_less_than_subtrahend,
-            builtin_state,
-        )?;
-        if second_left.is_true() && second_right.is_true() {
-            Ok(Some(vec![second_left, second_right]))
-        } else {
-            Ok(None)
-        }
+        let alternatives = vec![
+            vec![
+                LessFact::new(zero_obj.clone(), minuend.clone(), line_file.clone()).into(),
+                LessFact::new(subtrahend.clone(), zero_obj.clone(), line_file.clone()).into(),
+            ],
+            vec![
+                LessFact::new(minuend.clone(), zero_obj.clone(), line_file.clone()).into(),
+                LessFact::new(zero_obj, subtrahend.clone(), line_file.clone()).into(),
+            ],
+        ];
+        let result =
+            self.verify_builtin_rule_premise_alternatives(alternatives, line_file, builtin_state)?;
+        Ok(result.is_true().then_some(vec![result]))
     }
 
     fn try_verify_not_equal_fact_when_zero_and_binary_arithmetic_reduces_by_operand_facts(

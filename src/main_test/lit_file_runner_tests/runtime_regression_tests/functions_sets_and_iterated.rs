@@ -1806,6 +1806,7 @@ claim:
         fn(J P) R {0}(K) = 0
         c(K) = 0
         fn(J P) R {0}(K) = c(K)
+    by def $fn_eq(fn(J P) R {0}, c)
     $fn_eq(fn(J P) R {0}, c)
 
 fn(J P) R {0} = c

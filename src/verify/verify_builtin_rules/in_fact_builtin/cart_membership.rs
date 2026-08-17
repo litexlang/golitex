@@ -15,23 +15,24 @@ impl Runtime {
             return Ok((StmtUnknown::new()).into());
         }
 
-        let mut component_results = Vec::with_capacity(tuple.args.len());
+        let mut component_facts = Vec::with_capacity(tuple.args.len());
         for component_index in 0..tuple.args.len() {
             let tuple_component_obj = (*tuple.args[component_index]).clone();
             let cart_component_obj = (*cart.args[component_index]).clone();
-            let component_in_fact = InFact::new(
-                tuple_component_obj,
-                cart_component_obj,
-                in_fact.line_file.clone(),
-            )
-            .into();
-            let component_verify_result =
-                self.verify_atomic_fact_as_builtin_rule_premise(&component_in_fact, builtin_state)?;
-            if !component_verify_result.is_true() {
-                return Ok((StmtUnknown::new()).into());
-            }
-            component_results.push(component_verify_result);
+            component_facts.push(
+                InFact::new(
+                    tuple_component_obj,
+                    cart_component_obj,
+                    in_fact.line_file.clone(),
+                )
+                .into(),
+            );
         }
+        let Some(component_results) =
+            self.verify_builtin_rule_premises(&component_facts, builtin_state)?
+        else {
+            return Ok((StmtUnknown::new()).into());
+        };
 
         Ok(
             (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(

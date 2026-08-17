@@ -878,23 +878,15 @@ impl Runtime {
             (Obj::FiniteSeqListObj(list), Obj::FiniteSeqSet(fs)) => {
                 let lf = in_fact.line_file.clone();
                 let len_obj: Obj = Number::new(list.objs.len().to_string()).into();
-                let length_result = self.verify_equal_fact_by_known_equality(
-                    &EqualFact::new_from_refs(&len_obj, fs.n.as_ref(), lf.clone()),
-                );
-                if !length_result.is_true() {
-                    return Ok((StmtUnknown::new()).into());
-                }
-                let mut subgoals = vec![length_result];
+                let mut premises: Vec<AtomicFact> =
+                    vec![EqualFact::new_from_refs(&len_obj, fs.n.as_ref(), lf.clone()).into()];
                 for o in list.objs.iter() {
-                    let f: AtomicFact =
-                        InFact::new((**o).clone(), (*fs.set).clone(), lf.clone()).into();
-                    let result =
-                        self.verify_atomic_fact_as_builtin_rule_premise(&f, builtin_state)?;
-                    if !result.is_true() {
-                        return Ok((StmtUnknown::new()).into());
-                    }
-                    subgoals.push(result);
+                    premises.push(InFact::new((**o).clone(), (*fs.set).clone(), lf.clone()).into());
                 }
+                let Some(subgoals) = self.verify_builtin_rule_premises(&premises, builtin_state)?
+                else {
+                    return Ok((StmtUnknown::new()).into());
+                };
                 Ok(
                     number_in_set_verified_by_builtin_rules_result_with_subgoals(
                         in_fact,
@@ -906,33 +898,26 @@ impl Runtime {
             (Obj::MatrixListObj(list), Obj::MatrixSet(ms)) => {
                 let lf = in_fact.line_file.clone();
                 let n_rows_obj: Obj = Number::new(list.rows.len().to_string()).into();
-                let row_count_result = self.verify_equal_fact_by_known_equality(
-                    &EqualFact::new_from_refs(&n_rows_obj, ms.row_len.as_ref(), lf.clone()),
-                );
-                if !row_count_result.is_true() {
-                    return Ok((StmtUnknown::new()).into());
-                }
-                let mut subgoals = vec![row_count_result];
+                let mut premises: Vec<AtomicFact> =
+                    vec![
+                        EqualFact::new_from_refs(&n_rows_obj, ms.row_len.as_ref(), lf.clone())
+                            .into(),
+                    ];
                 for row in list.rows.iter() {
                     let n_col_obj: Obj = Number::new(row.len().to_string()).into();
-                    let column_count_result = self.verify_equal_fact_by_known_equality(
-                        &EqualFact::new_from_refs(&n_col_obj, ms.col_len.as_ref(), lf.clone()),
+                    premises.push(
+                        EqualFact::new_from_refs(&n_col_obj, ms.col_len.as_ref(), lf.clone())
+                            .into(),
                     );
-                    if !column_count_result.is_true() {
-                        return Ok((StmtUnknown::new()).into());
-                    }
-                    subgoals.push(column_count_result);
                     for o in row.iter() {
-                        let f: AtomicFact =
-                            InFact::new((**o).clone(), (*ms.set).clone(), lf.clone()).into();
-                        let result =
-                            self.verify_atomic_fact_as_builtin_rule_premise(&f, builtin_state)?;
-                        if !result.is_true() {
-                            return Ok((StmtUnknown::new()).into());
-                        }
-                        subgoals.push(result);
+                        premises
+                            .push(InFact::new((**o).clone(), (*ms.set).clone(), lf.clone()).into());
                     }
                 }
+                let Some(subgoals) = self.verify_builtin_rule_premises(&premises, builtin_state)?
+                else {
+                    return Ok((StmtUnknown::new()).into());
+                };
                 Ok(
                     number_in_set_verified_by_builtin_rules_result_with_subgoals(
                         in_fact,

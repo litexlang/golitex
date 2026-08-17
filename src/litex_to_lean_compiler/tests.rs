@@ -164,3 +164,79 @@ fn unsupported_atomic_predicate_fails_closed() {
         .expect_err("unsupported fact must fail closed");
     assert!(error.contains("supports positive <, >, <=, or >= facts"));
 }
+
+#[test]
+fn proof_scope_tracer_emits_named_theorem_claim_and_example() {
+    let generated = compile_on_verifier_stack(
+        "thm one_eq_one:\n    ? forall:\n        1 = 1\n\nclaim:\n    ? 2 = 2\n    2 = 2\n\nexample:\n    ? 3 = 3\n    3 = 3\n",
+        "8_ProofScopes.lit",
+    )
+    .expect("compile proof-scope tracer");
+    assert!(generated.contains("theorem one_eq_one :"));
+    assert!(generated.contains("theorem __fact1 : Litex.Same (2 : ℂ) (2 : ℂ)"));
+    assert!(generated.contains("example : Litex.Same (3 : ℂ) (3 : ℂ)"));
+    assert!(generated.contains("have __step1 : Litex.Same (2 : ℂ) (2 : ℂ)"));
+    assert!(!generated.contains("Litex.Object"));
+    assert!(!generated.contains("sorry"));
+}
+
+#[test]
+fn cases_and_contradiction_replay_branch_local_fact_ids() {
+    let generated = compile_on_verifier_stack(
+        "thm cases_and_contra:\n    ? forall:\n        2 = 2\n    by cases:\n        ? 1 = 1\n        case 1 = 1:\n            by contra:\n                ? 2 = 2\n                impossible 2 != 2\n",
+        "9_CasesAndContradiction.lit",
+    )
+    .expect("compile cases-and-contradiction tracer");
+    assert!(generated.contains("theorem cases_and_contra :"));
+    assert!(generated.contains("have __case1"));
+    assert!(generated.contains("by_contra __reverse"));
+    assert!(!generated.contains("Litex.Object"));
+    assert!(!generated.contains("sorry"));
+}
+
+#[test]
+fn existential_intro_and_elim_use_native_carrier_and_exact_projections() {
+    let generated = compile_on_verifier_stack(
+        "witness exist x R st {x = 1} from 1:\n    1 = 1\nobtain y from exist x R st {x = 1}\ny = 1\n",
+        "10_ExistentialWitness.lit",
+    )
+    .expect("compile existential introduction/elimination tracer");
+    assert!(generated.contains("∃ (x : ℂ), Litex.In x Litex.R ∧ Litex.Same x (1 : ℂ)"));
+    assert!(generated.contains("noncomputable def y : ℂ := Classical.choose"));
+    assert!(generated.contains("Classical.choose_spec"));
+    assert!(!generated.contains("Litex.Object"));
+    assert!(!generated.contains("LitexObject"));
+    assert!(!generated.contains("sorry"));
+}
+
+#[test]
+fn object_definitions_emit_native_values_and_replay_definition_evidence() {
+    let generated = compile_on_verifier_stack(
+        "let x = 1\nx = 1\nhave y R = 1\ny $in R\ny = 1\nthm local_definition:\n    ? forall:\n        2 = 2\n    let z = 2\n    z = 2\n",
+        "11_ObjectDefinitions.lit",
+    )
+    .expect("compile native object-definition tracer");
+    assert!(generated.contains("noncomputable def x := (1 : ℂ)"));
+    assert!(generated.contains("noncomputable def y := (1 : ℂ)"));
+    assert!(generated.contains("Litex.In y Litex.R"));
+    assert!(generated.contains("unfold x"));
+    assert!(generated.contains("unfold y"));
+    assert!(generated.contains("let z := (2 : ℂ)"));
+    assert!(!generated.contains("Litex.Object"));
+    assert!(!generated.contains("LitexObject"));
+    assert!(!generated.contains("sorry"));
+}
+
+#[test]
+fn multiple_existential_witnesses_fail_closed() {
+    let error = compile_on_verifier_stack(
+        "witness exist x, y R st {x = y} from 1, 1:\n    1 = 1\n",
+        "unsupported_multi_witness.lit",
+    )
+    .expect_err("multiple witnesses must remain outside the reviewed compiler slice");
+    assert!(
+        error.contains("one positive witness and one body fact")
+            || error.contains("one membership witness"),
+        "unexpected error: {error}"
+    );
+}

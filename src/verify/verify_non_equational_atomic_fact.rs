@@ -120,7 +120,9 @@ impl Runtime {
             return Ok(StmtUnknown::new().into());
         }
         let child_state = builtin_state.after_applying_builtin_rule();
-        if let Some(result) = self.try_verify_atomic_fact_with_local_builtin_catalog(atomic_fact)? {
+        if let Some(result) =
+            self.try_verify_atomic_fact_with_local_builtin_catalog(atomic_fact, &child_state)?
+        {
             return Ok(self.remember_successful_atomic_fact_for_statement(atomic_fact, result));
         }
         if let Some(result) =

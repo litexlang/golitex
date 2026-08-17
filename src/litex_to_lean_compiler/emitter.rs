@@ -77,32 +77,149 @@ fn emit_statement(
         }
         LitexToLeanStatementIr::DefObjStmt(LitexToLeanDefObjStmtIr::HaveObjEqualStmt(
             definition,
-        )) => declarations.extend(emit_named_set_aliases(definition, context)?),
-        LitexToLeanStatementIr::Fact(fact) => {
+        )) => emit_have_object_equal(definition, declarations, fact_index, context)?,
+        LitexToLeanStatementIr::DefObjStmt(LitexToLeanDefObjStmtIr::LetObjStmt(definition)) => {
+            emit_let_object(definition, declarations, fact_index, context)?;
+        }
+        LitexToLeanStatementIr::DefThmStmt(theorem) => {
             crate::litex_to_lean_ir::validate_litex_to_lean_well_definedness_certificate(
-                &fact.well_definedness,
+                &theorem.well_definedness,
             )?;
+            if theorem.expected_proof_step_count != theorem.proof_steps.len()
+                || !theorem.stored_projections.is_empty()
+                || !theorem.inferred_facts.is_empty()
+            {
+                return Err(
+                    "compiler named-theorem MVP rejects changed proof-step counts, projections, or inferred facts"
+                        .into(),
+                );
+            }
+            let theorem_name = lean_identifier(&theorem.name);
+            let proof_steps = theorem
+                .proof_steps
+                .iter()
+                .enumerate()
+                .map(|(index, step)| {
+                    if step.position != index + 1 {
+                        return Err(
+                            "named theorem proof-step positions changed source order".into()
+                        );
+                    }
+                    Ok(step.statement.clone())
+                })
+                .collect::<Result<Vec<_>, String>>()?;
+            declarations.push(emit_forall_fact(
+                &theorem.theorem,
+                &theorem.well_definedness,
+                *fact_index,
+                &format!("theorem {theorem_name}"),
+                &proof_steps,
+                context,
+            )?);
+            if let Some(fact_id) = theorem.theorem.fact_id {
+                context.fact_names.insert(fact_id, theorem_name);
+                context
+                    .fact_propositions
+                    .insert(fact_id, theorem.theorem.proposition.clone());
+            }
+            *fact_index += 1;
+        }
+        LitexToLeanStatementIr::ProofBlock(LitexToLeanProofBlockStmtIr::ClaimStmt(claim)) => {
+            emit_claim(claim, declarations, fact_index, context)?;
+        }
+        LitexToLeanStatementIr::ProofBlock(LitexToLeanProofBlockStmtIr::ExampleStmt(example)) => {
+            emit_example(example, declarations, fact_index, context)?;
+        }
+        LitexToLeanStatementIr::Fact(fact) => {
             if !fact.stored_projections.is_empty() {
                 return Err(
                     "compiler does not yet emit independently stored forall projections".into(),
                 );
             }
-            for stored in std::iter::once(&fact.source).chain(fact.inferred_facts.iter()) {
-                let theorem_name = format!("__fact{fact_index}");
-                declarations.push(emit_stored_fact(
-                    stored,
-                    &fact.well_definedness,
-                    *fact_index,
-                    context,
-                )?);
-                if let Some(fact_id) = stored.fact_id {
-                    context.fact_names.insert(fact_id, theorem_name);
-                    context
-                        .fact_propositions
-                        .insert(fact_id, stored.proposition.clone());
-                }
-                *fact_index += 1;
-            }
+            emit_fact_effects(
+                std::iter::once(&fact.source)
+                    .chain(fact.inferred_facts.iter())
+                    .collect::<Vec<_>>(),
+                &fact.well_definedness,
+                declarations,
+                fact_index,
+                context,
+            )?;
+        }
+        LitexToLeanStatementIr::By(LitexToLeanByStmtIr::ByCasesStmt(statement)) => {
+            emit_fact_effects(
+                statement
+                    .facts
+                    .iter()
+                    .chain(statement.inferred_facts.iter())
+                    .collect::<Vec<_>>(),
+                &statement.well_definedness,
+                declarations,
+                fact_index,
+                context,
+            )?;
+        }
+        LitexToLeanStatementIr::By(LitexToLeanByStmtIr::ByContraStmt(statement)) => {
+            emit_fact_effects(
+                statement
+                    .facts
+                    .iter()
+                    .chain(statement.inferred_facts.iter())
+                    .collect::<Vec<_>>(),
+                &statement.well_definedness,
+                declarations,
+                fact_index,
+                context,
+            )?;
+        }
+        LitexToLeanStatementIr::Witness(LitexToLeanWitnessStmtIr::WitnessExistFact(statement)) => {
+            emit_fact_effects(
+                statement
+                    .facts
+                    .iter()
+                    .chain(statement.inferred_facts.iter())
+                    .collect::<Vec<_>>(),
+                &statement.well_definedness,
+                declarations,
+                fact_index,
+                context,
+            )?;
+        }
+        LitexToLeanStatementIr::DefObjStmt(LitexToLeanDefObjStmtIr::ObtainObjFromExistFact(
+            statement,
+        )) => {
+            emit_existential_elimination(
+                &statement.source,
+                &statement.witnesses,
+                &statement.projections,
+                declarations,
+                fact_index,
+                context,
+            )?;
+        }
+        LitexToLeanStatementIr::DefObjStmt(LitexToLeanDefObjStmtIr::ObtainObjFromAtomicFact(
+            statement,
+        )) => {
+            emit_existential_elimination(
+                &statement.source,
+                &statement.witnesses,
+                &statement.projections,
+                declarations,
+                fact_index,
+                context,
+            )?;
+        }
+        LitexToLeanStatementIr::DefObjStmt(LitexToLeanDefObjStmtIr::HaveObjByExistFactsStmt(
+            statement,
+        )) => {
+            emit_existential_elimination(
+                &statement.source,
+                &statement.witnesses,
+                &statement.projections,
+                declarations,
+                fact_index,
+                context,
+            )?;
         }
         other => {
             return Err(format!(
@@ -110,6 +227,271 @@ fn emit_statement(
             ));
         }
     }
+    Ok(())
+}
+
+fn emit_fact_effects(
+    facts: Vec<&LitexToLeanFactIr>,
+    well_definedness: &LitexToLeanWellDefinednessCertificateIr,
+    declarations: &mut Vec<String>,
+    fact_index: &mut usize,
+    context: &mut RenderContext,
+) -> Result<(), String> {
+    crate::litex_to_lean_ir::validate_litex_to_lean_well_definedness_certificate(well_definedness)?;
+    for fact in facts {
+        let theorem_name = format!("__fact{fact_index}");
+        declarations.push(emit_stored_fact(
+            fact,
+            well_definedness,
+            *fact_index,
+            context,
+        )?);
+        if let Some(fact_id) = fact.fact_id {
+            context.fact_names.insert(fact_id, theorem_name);
+            context
+                .fact_propositions
+                .insert(fact_id, fact.proposition.clone());
+        }
+        *fact_index += 1;
+    }
+    Ok(())
+}
+
+fn emit_let_object(
+    definition: &LitexToLeanLetObjStmtIr,
+    declarations: &mut Vec<String>,
+    fact_index: &mut usize,
+    context: &mut RenderContext,
+) -> Result<(), String> {
+    crate::litex_to_lean_ir::validate_litex_to_lean_well_definedness_certificate(
+        &definition.well_definedness,
+    )?;
+    let name = lean_identifier(&definition.name);
+    let value = render_native_object_ir(&definition.value, context)?;
+    if context
+        .symbol_names
+        .insert(definition.symbol_id, name.clone())
+        .is_some()
+    {
+        return Err(format!(
+            "duplicate compiler symbol identity for `{}`",
+            definition.name
+        ));
+    }
+    declarations.push(format!("noncomputable def {name} := {value}"));
+    emit_fact_effects(
+        std::iter::once(&definition.defining_equality)
+            .chain(definition.inferred_facts.iter())
+            .collect(),
+        &definition.well_definedness,
+        declarations,
+        fact_index,
+        context,
+    )
+}
+
+fn emit_existential_elimination(
+    source: &LitexToLeanFactIr,
+    witnesses: &[LitexToLeanExistentialWitnessIr],
+    projections: &[LitexToLeanFactIr],
+    declarations: &mut Vec<String>,
+    fact_index: &mut usize,
+    context: &mut RenderContext,
+) -> Result<(), String> {
+    let Fact::ExistFact(existential) = &source.proposition else {
+        return Err("existential elimination retained a non-existential source".into());
+    };
+    if !existential.is_plain_exist()
+        || existential.params_def_with_type().number_of_params() != 1
+        || existential.facts().len() != 1
+        || witnesses.len() != 1
+        || projections.len() != 2
+    {
+        return Err(
+            "compiler existential elimination supports one positive witness and one body fact"
+                .into(),
+        );
+    }
+    let group = &existential.params_def_with_type().groups[0];
+    if group.params.len() != 1 {
+        return Err("existential elimination requires one singleton parameter group".into());
+    }
+    let LitexToLeanParameterTypeIr::MemberOf { set } = &witnesses[0].param_type else {
+        return Err("existential elimination currently requires a membership witness".into());
+    };
+    let source_proof = render_proof(source, context)?;
+    let witness_name = lean_identifier(&witnesses[0].name);
+    let source_set = parameter_set(&group.param_type)?;
+    if LitexToLeanObjectIr::lower(source_set)? != *set {
+        return Err("existential witness changed its retained source set".into());
+    }
+    let dynamic_carrier = set_requires_heterogeneous_carrier(source_set);
+    let function_carrier = matches!(source_set, Obj::FnSet(_));
+    let carrier_name = format!("__carrier_{witness_name}");
+    let specification = if dynamic_carrier || function_carrier {
+        declarations.push(format!(
+            "noncomputable def {carrier_name} : {} := Classical.choose ({source_proof})",
+            if function_carrier { "Type 1" } else { "Type" }
+        ));
+        declarations.push(format!(
+            "noncomputable def {witness_name} : {carrier_name} :=\n  Classical.choose (Classical.choose_spec ({source_proof}))"
+        ));
+        format!("Classical.choose_spec (Classical.choose_spec ({source_proof}))")
+    } else {
+        declarations.push(format!(
+            "noncomputable def {witness_name} : ℂ := Classical.choose ({source_proof})"
+        ));
+        format!("Classical.choose_spec ({source_proof})")
+    };
+    context
+        .symbol_names
+        .insert(witnesses[0].symbol_id, witness_name.clone());
+    context
+        .symbol_names
+        .insert(group.params[0].id(), witness_name.clone());
+    context
+        .existential_names
+        .insert(group.params[0].name().to_string(), witness_name.clone());
+
+    let expected_requirement = format!(
+        "Litex.In {witness_name} {}",
+        render_obj(source_set, context)?
+    );
+    let expected_body = render_fact(&existential.facts()[0].from_ref_to_cloned_fact(), context)?;
+    let mut saw_requirement = false;
+    let mut saw_body = false;
+    for projection in projections {
+        let LitexToLeanFactProofIr::ExistentialElimination {
+            source_proposition,
+            role,
+            expected_proposition,
+        } = &projection.proof
+        else {
+            return Err("existential projection has malformed proof evidence".into());
+        };
+        if source_proposition.to_string() != source.proposition.to_string()
+            || expected_proposition.to_string() != projection.proposition.to_string()
+        {
+            return Err("existential projection changed its source or target".into());
+        }
+        let (expected, selector) = match role {
+            LitexToLeanExistentialProjectionRoleIr::ParameterType { witness_index: 0 } => {
+                saw_requirement = true;
+                (&expected_requirement, ".1")
+            }
+            LitexToLeanExistentialProjectionRoleIr::BodyFact { body_index: 0 } => {
+                saw_body = true;
+                (&expected_body, ".2")
+            }
+            _ => return Err("existential projection role is outside the one-witness slice".into()),
+        };
+        let proposition = render_fact(&projection.proposition, context)?;
+        if &proposition != expected {
+            return Err("existential projection does not match its retained role".into());
+        }
+        let theorem_name = format!("__fact{fact_index}");
+        let unfold = if dynamic_carrier || function_carrier {
+            format!("{witness_name} {carrier_name}")
+        } else {
+            witness_name.clone()
+        };
+        declarations.push(format!(
+            "theorem {theorem_name} : {proposition} := by\n  unfold {unfold}\n  exact ({specification}){selector}"
+        ));
+        if let Some(fact_id) = projection.fact_id {
+            context.fact_names.insert(fact_id, theorem_name);
+            context
+                .fact_propositions
+                .insert(fact_id, projection.proposition.clone());
+        }
+        *fact_index += 1;
+    }
+    if !saw_requirement || !saw_body {
+        return Err("existential elimination lost a required projection".into());
+    }
+    Ok(())
+}
+
+fn emit_claim(
+    claim: &LitexToLeanClaimStmtIr,
+    declarations: &mut Vec<String>,
+    fact_index: &mut usize,
+    context: &mut RenderContext,
+) -> Result<(), String> {
+    crate::litex_to_lean_ir::validate_litex_to_lean_well_definedness_certificate(
+        &claim.well_definedness,
+    )?;
+    if !claim.inferred_facts.is_empty() {
+        return Err("compiler claim MVP does not yet emit inferred outer facts".into());
+    }
+    let mut nested = context.clone();
+    let mut local_index = 0;
+    let mut lines =
+        render_local_proof_block(&claim.block, &mut nested, "__step", &mut local_index)?;
+    let proposition = render_fact(&claim.target.proposition, &nested)?;
+    lines.push(format!("exact {}", render_proof(&claim.target, &nested)?));
+    declarations.push(format!(
+        "theorem __fact{fact_index} : {proposition} := by\n{}",
+        indent_lines(&lines.join("\n"), 2)
+    ));
+    if let Some(fact_id) = claim.target.fact_id {
+        context
+            .fact_names
+            .insert(fact_id, format!("__fact{fact_index}"));
+        context
+            .fact_propositions
+            .insert(fact_id, claim.target.proposition.clone());
+    }
+    *fact_index += 1;
+    Ok(())
+}
+
+fn emit_example(
+    example: &LitexToLeanExampleStmtIr,
+    declarations: &mut Vec<String>,
+    fact_index: &mut usize,
+    context: &RenderContext,
+) -> Result<(), String> {
+    crate::litex_to_lean_ir::validate_litex_to_lean_well_definedness_certificate(
+        &example.well_definedness,
+    )?;
+    if matches!(
+        (&example.target.proposition, &example.target.proof),
+        (
+            Fact::ForallFact(_),
+            LitexToLeanFactProofIr::ForallIntroduction { .. }
+        )
+    ) {
+        crate::litex_to_lean_ir::validate_litex_to_lean_well_definedness_certificate(
+            &example.block.well_definedness,
+        )?;
+        if !example.block.premise_aliases.is_empty()
+            || !example.block.assumption_inferred_facts.is_empty()
+        {
+            return Err("forall example retained unsupported local assumption effects".into());
+        }
+        declarations.push(emit_forall_fact(
+            &example.target,
+            &example.well_definedness,
+            *fact_index,
+            "example",
+            &example.block.steps,
+            context,
+        )?);
+        *fact_index += 1;
+        return Ok(());
+    }
+    let mut nested = context.clone();
+    let mut local_index = 0;
+    let mut lines =
+        render_local_proof_block(&example.block, &mut nested, "__step", &mut local_index)?;
+    let proposition = render_fact(&example.target.proposition, &nested)?;
+    lines.push(format!("exact {}", render_proof(&example.target, &nested)?));
+    declarations.push(format!(
+        "example : {proposition} := by\n{}",
+        indent_lines(&lines.join("\n"), 2)
+    ));
+    *fact_index += 1;
     Ok(())
 }
 
@@ -121,7 +503,14 @@ fn emit_stored_fact(
 ) -> Result<String, String> {
     match (&source.proposition, &source.proof) {
         (Fact::ForallFact(_), LitexToLeanFactProofIr::ForallIntroduction { .. }) => {
-            emit_forall_fact(source, well_definedness, theorem_index, context)
+            emit_forall_fact(
+                source,
+                well_definedness,
+                theorem_index,
+                &format!("theorem __fact{theorem_index}"),
+                &[],
+                context,
+            )
         }
         (Fact::ForallFact(forall), LitexToLeanFactProofIr::KnownFactCitation { .. }) => {
             Ok(format!(
@@ -131,6 +520,7 @@ fn emit_stored_fact(
             ))
         }
         (Fact::AtomicFact(_), _)
+        | (Fact::ExistFact(_), _)
         | (Fact::AndFact(_), _)
         | (Fact::OrFact(_), _)
         | (Fact::ChainFact(_), _) => {
@@ -149,8 +539,11 @@ fn emit_direct_fact(
     context: &RenderContext,
 ) -> Result<String, String> {
     let proposition = render_fact(&source.proposition, context)?;
-    let mut proof_lines =
-        emit_closed_numeric_well_definedness(well_definedness, theorem_index, context)?;
+    let mut proof_lines = if matches!(source.proposition, Fact::ExistFact(_)) {
+        Vec::new()
+    } else {
+        emit_closed_numeric_well_definedness(well_definedness, theorem_index, context)?
+    };
     proof_lines.push(format!("  exact {}", render_proof(source, context)?));
     Ok(format!(
         "theorem __fact{theorem_index} : {proposition} := by\n{}",
@@ -321,6 +714,60 @@ fn emit_named_set_aliases(
     Ok(declarations)
 }
 
+fn emit_have_object_equal(
+    source: &LitexToLeanHaveObjEqualStmtIr,
+    declarations: &mut Vec<String>,
+    fact_index: &mut usize,
+    context: &mut RenderContext,
+) -> Result<(), String> {
+    crate::litex_to_lean_ir::validate_litex_to_lean_well_definedness_certificate(
+        &source.well_definedness,
+    )?;
+    if source
+        .definitions
+        .iter()
+        .all(|definition| definition.param_type == LitexToLeanParameterTypeIr::Set)
+    {
+        declarations.extend(emit_named_set_aliases(source, context)?);
+        return Ok(());
+    }
+    if source.definitions.len() != 1 || source.facts.len() != 2 {
+        return Err(
+            "compiler native object definition supports one membership-constrained object".into(),
+        );
+    }
+    let definition = &source.definitions[0];
+    if !matches!(
+        definition.param_type,
+        LitexToLeanParameterTypeIr::MemberOf { .. }
+    ) {
+        return Err(format!(
+            "compiler native object `{}` requires an exact membership type",
+            definition.name
+        ));
+    }
+    let name = lean_identifier(&definition.name);
+    let value = render_native_object_ir(&definition.value, context)?;
+    if context
+        .symbol_names
+        .insert(definition.symbol_id, name.clone())
+        .is_some()
+    {
+        return Err(format!(
+            "duplicate compiler symbol identity for `{}`",
+            definition.name
+        ));
+    }
+    declarations.push(format!("noncomputable def {name} := {value}"));
+    emit_fact_effects(
+        source.facts.iter().collect(),
+        &source.well_definedness,
+        declarations,
+        fact_index,
+        context,
+    )
+}
+
 fn render_set_definition_value(value: &LitexToLeanObjectIr) -> Result<&'static str, String> {
     match value {
         LitexToLeanObjectIr::StandardSet(LitexToLeanStandardSetIr::Real) => Ok("Litex.R"),
@@ -335,6 +782,8 @@ fn emit_forall_fact(
     source: &LitexToLeanFactIr,
     well_definedness: &LitexToLeanWellDefinednessCertificateIr,
     theorem_index: usize,
+    declaration: &str,
+    proof_steps: &[LitexToLeanStatementIr],
     outer_context: &RenderContext,
 ) -> Result<String, String> {
     let Fact::ForallFact(forall) = &source.proposition else {
@@ -469,6 +918,10 @@ fn emit_forall_fact(
         .map(|conclusion| render_fact(&conclusion.proposition, &context))
         .collect::<Result<Vec<_>, _>>()?;
     let conclusion_type = conjunction(&conclusion_types);
+    let mut local_index = 0;
+    for local in render_local_statements(proof_steps, &mut context, "__step", &mut local_index)? {
+        derived_lines.push(indent_lines(&local, 2));
+    }
     let conclusion_proofs = conclusions
         .iter()
         .map(|conclusion| render_proof(conclusion, &context))
@@ -480,10 +933,18 @@ fn emit_forall_fact(
     };
 
     derived_lines.push(proof);
+    let theorem_type = if binders.is_empty() {
+        conclusion_type
+    } else {
+        format!("∀ {},\n      {conclusion_type}", binders.join(" "))
+    };
+    let intro = if intro_names.is_empty() {
+        String::new()
+    } else {
+        format!("  intro {}\n", intro_names.join(" "))
+    };
     Ok(format!(
-        "theorem __fact{theorem_index} :\n    ∀ {},\n      {conclusion_type} := by\n  intro {}\n{}",
-        binders.join(" "),
-        intro_names.join(" "),
+        "{declaration} :\n    {theorem_type} := by\n{intro}{}",
         derived_lines.join("\n")
     ))
 }
@@ -551,6 +1012,10 @@ fn render_forall_fact_type(
 #[derive(Clone, Default)]
 struct RenderContext {
     symbol_names: HashMap<SymbolId, String>,
+    /// Existential bodies are cloned before reaching this IR, so their scoped
+    /// `Exist` marker can carry a fresh SymbolId. The exact source-local name
+    /// is safe as a fallback only inside a cloned existential render scope.
+    existential_names: HashMap<String, String>,
     fact_names: HashMap<crate::common::fact_id::FactId, String>,
     fact_propositions: HashMap<crate::common::fact_id::FactId, Fact>,
     function_bindings: HashMap<crate::common::fact_id::FactId, FunctionBinding>,
@@ -562,6 +1027,172 @@ struct FunctionBinding {
     symbol_id: SymbolId,
     function: LitexToLeanFunctionTypeIr,
     membership_proof_name: String,
+}
+
+fn render_local_proof_block(
+    block: &LitexToLeanLocalProofBlockIr,
+    context: &mut RenderContext,
+    prefix: &str,
+    local_index: &mut usize,
+) -> Result<Vec<String>, String> {
+    crate::litex_to_lean_ir::validate_litex_to_lean_well_definedness_certificate(
+        &block.well_definedness,
+    )?;
+    for alias in &block.premise_aliases {
+        let parent_name =
+            resolve_fact_citation(&alias.parent_fact_id, &alias.expected_fact, context)?;
+        context.fact_names.insert(alias.local_fact_id, parent_name);
+        context
+            .fact_propositions
+            .insert(alias.local_fact_id, alias.expected_fact.clone());
+    }
+    let mut lines = Vec::new();
+    for inferred in &block.assumption_inferred_facts {
+        lines.push(render_local_fact(
+            inferred,
+            &block.well_definedness,
+            context,
+            prefix,
+            local_index,
+        )?);
+    }
+    lines.extend(render_local_statements(
+        &block.steps,
+        context,
+        prefix,
+        local_index,
+    )?);
+    Ok(lines)
+}
+
+fn render_local_statements(
+    statements: &[LitexToLeanStatementIr],
+    context: &mut RenderContext,
+    prefix: &str,
+    local_index: &mut usize,
+) -> Result<Vec<String>, String> {
+    let mut lines = Vec::new();
+    for statement in statements {
+        if let LitexToLeanStatementIr::DefObjStmt(LitexToLeanDefObjStmtIr::LetObjStmt(definition)) =
+            statement
+        {
+            crate::litex_to_lean_ir::validate_litex_to_lean_well_definedness_certificate(
+                &definition.well_definedness,
+            )?;
+            let name = lean_identifier(&definition.name);
+            let value = render_native_object_ir(&definition.value, context)?;
+            if context
+                .symbol_names
+                .insert(definition.symbol_id, name.clone())
+                .is_some()
+            {
+                return Err(format!(
+                    "duplicate local compiler symbol identity for `{}`",
+                    definition.name
+                ));
+            }
+            lines.push(format!("let {name} := {value}"));
+            for fact in std::iter::once(&definition.defining_equality)
+                .chain(definition.inferred_facts.iter())
+            {
+                lines.push(render_local_fact(
+                    fact,
+                    &definition.well_definedness,
+                    context,
+                    prefix,
+                    local_index,
+                )?);
+            }
+            continue;
+        }
+        let (facts, well_definedness) = match statement {
+            LitexToLeanStatementIr::Fact(statement) => {
+                if !statement.stored_projections.is_empty() {
+                    return Err(
+                        "compiler local proof does not yet emit stored forall projections".into(),
+                    );
+                }
+                (
+                    std::iter::once(&statement.source)
+                        .chain(statement.inferred_facts.iter())
+                        .collect::<Vec<_>>(),
+                    &statement.well_definedness,
+                )
+            }
+            LitexToLeanStatementIr::By(LitexToLeanByStmtIr::ByCasesStmt(statement)) => (
+                statement
+                    .facts
+                    .iter()
+                    .chain(statement.inferred_facts.iter())
+                    .collect::<Vec<_>>(),
+                &statement.well_definedness,
+            ),
+            LitexToLeanStatementIr::By(LitexToLeanByStmtIr::ByContraStmt(statement)) => (
+                statement
+                    .facts
+                    .iter()
+                    .chain(statement.inferred_facts.iter())
+                    .collect::<Vec<_>>(),
+                &statement.well_definedness,
+            ),
+            LitexToLeanStatementIr::Witness(LitexToLeanWitnessStmtIr::WitnessExistFact(
+                statement,
+            )) => (
+                statement
+                    .facts
+                    .iter()
+                    .chain(statement.inferred_facts.iter())
+                    .collect::<Vec<_>>(),
+                &statement.well_definedness,
+            ),
+            other => {
+                return Err(format!(
+                    "unsupported local proof statement in compiler MVP: {other:?}"
+                ));
+            }
+        };
+        crate::litex_to_lean_ir::validate_litex_to_lean_well_definedness_certificate(
+            well_definedness,
+        )?;
+        for fact in facts {
+            lines.push(render_local_fact(
+                fact,
+                well_definedness,
+                context,
+                prefix,
+                local_index,
+            )?);
+        }
+    }
+    Ok(lines)
+}
+
+fn render_local_fact(
+    fact: &LitexToLeanFactIr,
+    well_definedness: &LitexToLeanWellDefinednessCertificateIr,
+    context: &mut RenderContext,
+    prefix: &str,
+    local_index: &mut usize,
+) -> Result<String, String> {
+    *local_index += 1;
+    let name = format!("{prefix}{local_index}");
+    let proposition = render_fact(&fact.proposition, context)?;
+    let mut proof_lines = if matches!(fact.proposition, Fact::ExistFact(_)) {
+        Vec::new()
+    } else {
+        emit_closed_numeric_well_definedness(well_definedness, *local_index, context)?
+    };
+    proof_lines.push(format!("  exact {}", render_proof(fact, context)?));
+    if let Some(fact_id) = fact.fact_id {
+        context.fact_names.insert(fact_id, name.clone());
+        context
+            .fact_propositions
+            .insert(fact_id, fact.proposition.clone());
+    }
+    Ok(format!(
+        "have {name} : {proposition} := by\n{}",
+        proof_lines.join("\n")
+    ))
 }
 
 fn render_proof(fact: &LitexToLeanFactIr, context: &RenderContext) -> Result<String, String> {
@@ -577,6 +1208,49 @@ fn render_proof(fact: &LitexToLeanFactIr, context: &RenderContext) -> Result<Str
         LitexToLeanFactProofIr::KnownFactCitation { source_fact_id } => {
             resolve_fact_citation(source_fact_id, &fact.proposition, context)
         }
+        LitexToLeanFactProofIr::ExistentialAlphaRenameCitation {
+            source_fact_id,
+            source_proposition,
+        } => {
+            let stored = context
+                .fact_propositions
+                .get(source_fact_id)
+                .ok_or_else(|| {
+                    format!("existential citation references unavailable FactId `{source_fact_id}`")
+                })?;
+            if stored.to_string() != source_proposition.to_string()
+                || !one_witness_existentials_are_alpha_equal(
+                    source_proposition,
+                    &fact.proposition,
+                    context,
+                )?
+            {
+                return Err(
+                    "existential citation changed its retained source or alpha-equivalent target"
+                        .into(),
+                );
+            }
+            context
+                .fact_names
+                .get(source_fact_id)
+                .cloned()
+                .ok_or_else(|| {
+                    format!("existential citation FactId `{source_fact_id}` has no Lean name")
+                })
+        }
+        LitexToLeanFactProofIr::ObjectDefinition {
+            definition,
+            value,
+            value_check,
+        } => render_object_definition(fact, definition, value, value_check.as_deref(), context),
+        LitexToLeanFactProofIr::CaseSplit { coverage, branches } => {
+            render_case_split(fact, coverage, branches, context)
+        }
+        LitexToLeanFactProofIr::ByContradiction {
+            reverse_assumption,
+            block,
+            contradiction,
+        } => render_by_contradiction(fact, reverse_assumption, block, contradiction, context),
         LitexToLeanFactProofIr::RuleApplication {
             rule,
             parameter_requirements,
@@ -674,12 +1348,326 @@ fn render_proof(fact: &LitexToLeanFactIr, context: &RenderContext) -> Result<Str
                 premises,
                 context,
             ),
+            LitexToLeanProofRuleIr::ExistIntroduction {
+                witnesses,
+                steps,
+                expected_parameter_requirements,
+                expected_body_facts,
+            } => render_exist_introduction(
+                fact,
+                witnesses,
+                steps,
+                expected_parameter_requirements,
+                expected_body_facts,
+                parameter_requirements,
+                premises,
+                context,
+            ),
             LitexToLeanProofRuleIr::RegisteredRule(rule) => {
                 emit_registered_rule(fact, rule, parameter_requirements, premises, context)
             }
             other => Err(format!("unsupported verified proof rule: {other:?}")),
         },
         other => Err(format!("unsupported verified proof evidence: {other:?}")),
+    }
+}
+
+fn render_object_definition(
+    target: &LitexToLeanFactIr,
+    definition: &str,
+    value: &LitexToLeanObjectIr,
+    value_check: Option<&LitexToLeanFactIr>,
+    context: &RenderContext,
+) -> Result<String, String> {
+    let name = lean_identifier(definition);
+    let rendered_value = render_native_object_ir(value, context)?;
+    if let Some(value_check) = value_check {
+        let (target_element, target_set) = membership_parts(&target.proposition)?;
+        let (source_element, source_set) = membership_parts(&value_check.proposition)?;
+        if render_obj(target_element, context)? != name
+            || render_obj(source_element, context)? != rendered_value
+            || obj_equality_key(target_set) != obj_equality_key(source_set)
+        {
+            return Err("object definition changed its retained membership check".into());
+        }
+        return Ok(format!(
+            "(by\n  unfold {name}\n  exact {})",
+            render_proof(value_check, context)?
+        ));
+    }
+
+    let (left, right) = equality_parts(&target.proposition)?;
+    if render_obj(left, context)? != name
+        || LitexToLeanObjectIr::lower(right)? != *value
+        || render_obj(right, context)? != rendered_value
+    {
+        return Err("object definition changed its retained defining equality".into());
+    }
+    Ok(format!(
+        "(by\n  unfold {name}\n  exact Litex.Same.refl {rendered_value})"
+    ))
+}
+
+fn render_exist_introduction(
+    target: &LitexToLeanFactIr,
+    witnesses: &[Obj],
+    steps: &[LitexToLeanStatementIr],
+    expected_parameter_requirements: &[Fact],
+    expected_body_facts: &[Fact],
+    parameter_requirements: &[LitexToLeanFactIr],
+    premises: &[LitexToLeanFactIr],
+    context: &RenderContext,
+) -> Result<String, String> {
+    let Fact::ExistFact(existential) = &target.proposition else {
+        return Err("existential introduction targets a non-existential proposition".into());
+    };
+    if !existential.is_plain_exist()
+        || existential.params_def_with_type().number_of_params() != 1
+        || existential.facts().len() != 1
+        || witnesses.len() != 1
+        || expected_parameter_requirements.len() != 1
+        || expected_body_facts.len() != 1
+        || parameter_requirements.len() != 1
+        || premises.len() != 1
+    {
+        return Err(
+            "compiler existential introduction supports one membership witness and one body fact"
+                .into(),
+        );
+    }
+    if parameter_requirements[0].proposition.to_string()
+        != expected_parameter_requirements[0].to_string()
+        || premises[0].proposition.to_string() != expected_body_facts[0].to_string()
+    {
+        return Err(
+            "existential introduction changed its retained requirement or body fact".into(),
+        );
+    }
+
+    let group = &existential.params_def_with_type().groups[0];
+    if group.params.len() != 1 {
+        return Err("existential introduction requires one singleton parameter group".into());
+    }
+    let set = parameter_set(&group.param_type)?;
+    let witness = render_obj(&witnesses[0], context)?;
+    let mut instantiated = context.clone();
+    instantiated
+        .symbol_names
+        .insert(group.params[0].id(), witness.clone());
+    instantiated
+        .existential_names
+        .insert(group.params[0].name().to_string(), witness.clone());
+    let expected_requirement = format!("Litex.In {witness} {}", render_obj(set, &instantiated)?);
+    let expected_body = render_fact(
+        &existential.facts()[0].from_ref_to_cloned_fact(),
+        &instantiated,
+    )?;
+    if render_fact(&parameter_requirements[0].proposition, context)? != expected_requirement
+        || render_fact(&premises[0].proposition, context)? != expected_body
+    {
+        return Err(
+            "existential introduction witness does not instantiate its retained target facts"
+                .into(),
+        );
+    }
+
+    let mut nested = context.clone();
+    let mut local_index = 0;
+    let mut lines = vec!["by".to_string()];
+    for local in render_local_statements(steps, &mut nested, "__exist_step", &mut local_index)? {
+        lines.push(indent_lines(&local, 2));
+    }
+    let requirement_proof = render_proof(&parameter_requirements[0], &nested)?;
+    let body_proof = render_proof(&premises[0], &nested)?;
+    let carrier = if matches!(set, Obj::FnSet(_)) || set_requires_heterogeneous_carrier(set) {
+        "_, "
+    } else {
+        ""
+    };
+    lines.push(format!(
+        "  exact ⟨{carrier}{witness}, ({requirement_proof}), ({body_proof})⟩"
+    ));
+    Ok(format!("({})", lines.join("\n")))
+}
+
+fn render_case_split(
+    target: &LitexToLeanFactIr,
+    coverage: &LitexToLeanFactIr,
+    branches: &[LitexToLeanCaseBranchIr],
+    context: &RenderContext,
+) -> Result<String, String> {
+    let Fact::OrFact(disjunction) = &coverage.proposition else {
+        return Err("case split retained non-disjunctive coverage".into());
+    };
+    if disjunction.facts.is_empty() || disjunction.facts.len() != branches.len() {
+        return Err("case split coverage and branch counts do not match".into());
+    }
+    let coverage_proof = render_proof(coverage, context)?;
+    let case_names = (0..branches.len())
+        .map(|index| format!("__case{}", index + 1))
+        .collect::<Vec<_>>();
+    let mut lines = vec!["by".to_string()];
+    if case_names.len() == 1 {
+        let case_type = render_fact(&branches[0].assumption.fact, context)?;
+        lines.push(format!(
+            "  have {} : {case_type} := {coverage_proof}",
+            case_names[0]
+        ));
+    } else {
+        lines.push(format!(
+            "  rcases ({coverage_proof}) with {}",
+            case_names.join(" | ")
+        ));
+    }
+
+    for (index, branch) in branches.iter().enumerate() {
+        let expected: Fact = disjunction.facts[index].clone().into();
+        if expected.to_string() != branch.assumption.fact.to_string() {
+            return Err("case branch assumption changed its coverage position".into());
+        }
+        let mut nested = context.clone();
+        nested
+            .fact_names
+            .insert(branch.assumption.fact_id, case_names[index].clone());
+        nested
+            .fact_propositions
+            .insert(branch.assumption.fact_id, branch.assumption.fact.clone());
+        let mut local_index = 0;
+        let local_lines = render_local_proof_block(
+            &branch.block,
+            &mut nested,
+            &format!("__case{}_step", index + 1),
+            &mut local_index,
+        )?;
+        let exit = match &branch.exit {
+            LitexToLeanCaseBranchExitIr::Conclusion(conclusion) => {
+                if conclusion.proposition.to_string() != target.proposition.to_string() {
+                    return Err("case branch conclusion changed the exported goal".into());
+                }
+                render_proof(conclusion, &nested)?
+            }
+            LitexToLeanCaseBranchExitIr::Contradiction(contradiction) => {
+                format!(
+                    "False.elim ({})",
+                    render_contradiction(contradiction, &nested)?
+                )
+            }
+        };
+        if branches.len() == 1 {
+            for local in local_lines {
+                lines.push(indent_lines(&local, 2));
+            }
+            lines.push(format!("  exact {exit}"));
+        } else {
+            lines.push("  ·".into());
+            for local in local_lines {
+                lines.push(indent_lines(&local, 4));
+            }
+            lines.push(format!("    exact {exit}"));
+        }
+    }
+    Ok(format!("({})", lines.join("\n")))
+}
+
+fn render_by_contradiction(
+    target: &LitexToLeanFactIr,
+    reverse_assumption: &LitexToLeanReverseAssumptionIr,
+    block: &LitexToLeanLocalProofBlockIr,
+    contradiction: &LitexToLeanContradictionIr,
+    context: &RenderContext,
+) -> Result<String, String> {
+    let Fact::AtomicFact(target_atomic) = &target.proposition else {
+        return Err("by-contradiction currently requires an atomic target".into());
+    };
+    let target_is_negated = matches!(
+        target_atomic,
+        AtomicFact::NotNormalAtomicFact(_)
+            | AtomicFact::NotEqualFact(_)
+            | AtomicFact::NotLessFact(_)
+            | AtomicFact::NotGreaterFact(_)
+            | AtomicFact::NotLessEqualFact(_)
+            | AtomicFact::NotGreaterEqualFact(_)
+            | AtomicFact::NotIsSetFact(_)
+            | AtomicFact::NotIsNonemptySetFact(_)
+            | AtomicFact::NotIsFiniteSetFact(_)
+            | AtomicFact::NotInFact(_)
+            | AtomicFact::NotIsCartFact(_)
+            | AtomicFact::NotIsTupleFact(_)
+            | AtomicFact::NotSubsetFact(_)
+            | AtomicFact::NotSupersetFact(_)
+    );
+    let expected_introduction = if target_is_negated {
+        LitexToLeanReverseAssumptionIntroductionIr::ClassicalDoubleNegation
+    } else {
+        LitexToLeanReverseAssumptionIntroductionIr::DirectNegation
+    };
+    if reverse_assumption.introduction != expected_introduction {
+        return Err("by-contradiction changed target polarity".into());
+    }
+    let expected_reverse: Fact = target_atomic
+        .logical_negation()
+        .map_err(|_| "by-contradiction target has no atomic negation".to_string())?
+        .into();
+    if expected_reverse.to_string() != reverse_assumption.premise.fact.to_string() {
+        return Err("by-contradiction reverse assumption is not the negated target".into());
+    }
+
+    let mut nested = context.clone();
+    nested
+        .fact_names
+        .insert(reverse_assumption.premise.fact_id, "__reverse".into());
+    nested.fact_propositions.insert(
+        reverse_assumption.premise.fact_id,
+        reverse_assumption.premise.fact.clone(),
+    );
+    let mut local_index = 0;
+    let local_lines =
+        render_local_proof_block(block, &mut nested, "__contra_step", &mut local_index)?;
+    let contradiction = render_contradiction(contradiction, &nested)?;
+    let mut lines = vec!["by".to_string(), "  classical".to_string()];
+    match reverse_assumption.introduction {
+        LitexToLeanReverseAssumptionIntroductionIr::DirectNegation => {
+            lines.push("  by_contra __reverse".into());
+            for local in local_lines {
+                lines.push(indent_lines(&local, 2));
+            }
+            lines.push(format!("  exact {contradiction}"));
+        }
+        LitexToLeanReverseAssumptionIntroductionIr::ClassicalDoubleNegation => {
+            let reverse_type = render_fact(&reverse_assumption.premise.fact, context)?;
+            lines.push("  exact Classical.byContradiction (fun __negated_goal => by".into());
+            lines.push(format!(
+                "    have __reverse : {reverse_type} := Classical.byContradiction (fun __not_reverse => __negated_goal __not_reverse)"
+            ));
+            for local in local_lines {
+                lines.push(indent_lines(&local, 4));
+            }
+            lines.push(format!("    exact {contradiction})"));
+        }
+    }
+    Ok(format!("({})", lines.join("\n")))
+}
+
+fn render_contradiction(
+    contradiction: &LitexToLeanContradictionIr,
+    context: &RenderContext,
+) -> Result<String, String> {
+    let Fact::AtomicFact(positive) = &contradiction.fact.proposition else {
+        return Err("contradiction retained a non-atomic fact".into());
+    };
+    let expected_negation: Fact = positive
+        .logical_negation()
+        .map_err(|_| "contradiction fact has no atomic negation".to_string())?
+        .into();
+    if expected_negation.to_string() != contradiction.negated_fact.proposition.to_string() {
+        return Err("contradiction facts are not logical complements".into());
+    }
+    let fact = render_proof(&contradiction.fact, context)?;
+    let negated = render_proof(&contradiction.negated_fact, context)?;
+    if matches!(positive, AtomicFact::NotEqualFact(_)) {
+        Ok(format!("({fact}) ({negated})"))
+    } else {
+        Ok(format!("({negated}) ({fact})"))
     }
 }
 
@@ -1174,8 +2162,78 @@ fn render_fact(fact: &Fact, context: &RenderContext) -> Result<String, String> {
             }
             Ok(rendered.join(" ∨ "))
         }
+        Fact::ExistFact(existential) => render_existential_fact(existential, context),
         _ => Err(format!("unsupported compiler fact `{fact}`")),
     }
+}
+
+fn render_existential_fact(
+    existential: &ExistFactEnum,
+    context: &RenderContext,
+) -> Result<String, String> {
+    let group = one_witness_existential_group(existential)?;
+    let name = lean_identifier(group.params[0].name());
+    render_existential_fact_with_names(existential, context, &name, &format!("__carrier_{name}"))
+}
+
+fn render_existential_fact_with_names(
+    existential: &ExistFactEnum,
+    context: &RenderContext,
+    witness_name: &str,
+    carrier_name: &str,
+) -> Result<String, String> {
+    let group = one_witness_existential_group(existential)?;
+    let set = parameter_set(&group.param_type)?;
+    let mut nested = context.clone();
+    nested
+        .symbol_names
+        .insert(group.params[0].id(), witness_name.to_string());
+    nested
+        .existential_names
+        .insert(group.params[0].name().to_string(), witness_name.to_string());
+    let requirement = format!("Litex.In {witness_name} {}", render_obj(set, &nested)?);
+    let body = render_fact(&existential.facts()[0].from_ref_to_cloned_fact(), &nested)?;
+    let binders = match set {
+        Obj::FnSet(_) => format!("({carrier_name} : Type 1) ({witness_name} : {carrier_name})"),
+        set if set_requires_heterogeneous_carrier(set) => {
+            format!("({carrier_name} : Type) ({witness_name} : {carrier_name})")
+        }
+        _ => format!("({witness_name} : ℂ)"),
+    };
+    Ok(format!("∃ {binders}, {requirement} ∧ {body}"))
+}
+
+fn one_witness_existential_group(
+    existential: &ExistFactEnum,
+) -> Result<&ParamGroupWithParamType, String> {
+    if !existential.is_plain_exist()
+        || existential.params_def_with_type().number_of_params() != 1
+        || existential.facts().len() != 1
+    {
+        return Err(
+            "compiler existential facts support one positive witness and one body fact".into(),
+        );
+    }
+    let group = &existential.params_def_with_type().groups[0];
+    if group.params.len() != 1 {
+        return Err("compiler existential fact requires one singleton parameter group".into());
+    }
+    parameter_set(&group.param_type)?;
+    Ok(group)
+}
+
+fn one_witness_existentials_are_alpha_equal(
+    source: &Fact,
+    target: &Fact,
+    context: &RenderContext,
+) -> Result<bool, String> {
+    let (Fact::ExistFact(source), Fact::ExistFact(target)) = (source, target) else {
+        return Ok(false);
+    };
+    Ok(
+        render_existential_fact_with_names(source, context, "__bound", "__bound_carrier")?
+            == render_existential_fact_with_names(target, context, "__bound", "__bound_carrier")?,
+    )
 }
 
 fn render_obj(obj: &Obj, context: &RenderContext) -> Result<String, String> {
@@ -1189,6 +2247,12 @@ fn render_obj(obj: &Obj, context: &RenderContext) -> Result<String, String> {
             .symbol_names
             .get(&parameter.symbol.id())
             .cloned()
+            .ok_or_else(|| format!("unbound compiler symbol `{obj}`")),
+        Obj::Atom(AtomObj::Exist(parameter)) => context
+            .symbol_names
+            .get(&parameter.symbol.id())
+            .cloned()
+            .or_else(|| context.existential_names.get(parameter.name()).cloned())
             .ok_or_else(|| format!("unbound compiler symbol `{obj}`")),
         Obj::Atom(AtomObj::Identifier(identifier)) => identifier
             .symbol
@@ -1417,6 +2481,34 @@ fn render_ir_symbol(
         .ok_or_else(|| format!("unbound compiler symbol `{name}`"))
 }
 
+fn render_native_object_ir(
+    object: &LitexToLeanObjectIr,
+    context: &RenderContext,
+) -> Result<String, String> {
+    match object {
+        LitexToLeanObjectIr::Symbol { .. } => render_ir_symbol(object, context),
+        LitexToLeanObjectIr::Number { normalized_value }
+            if !normalized_value.is_empty()
+                && normalized_value
+                    .chars()
+                    .all(|character| character.is_ascii_digit()) =>
+        {
+            Ok(format!("({normalized_value} : ℂ)"))
+        }
+        LitexToLeanObjectIr::StandardSet(set) => match set {
+            LitexToLeanStandardSetIr::Natural => Ok("Litex.N".into()),
+            LitexToLeanStandardSetIr::Integer => Ok("Litex.Z".into()),
+            LitexToLeanStandardSetIr::Rational => Ok("Litex.Q".into()),
+            LitexToLeanStandardSetIr::Real => Ok("Litex.R".into()),
+            LitexToLeanStandardSetIr::Complex => Ok("Litex.C".into()),
+            other => Err(format!("unsupported native standard-set value `{other:?}`")),
+        },
+        other => Err(format!(
+            "unsupported native object definition value `{other:?}`"
+        )),
+    }
+}
+
 fn parameter_set(param_type: &ParamType) -> Result<&Obj, String> {
     match param_type {
         ParamType::Obj(set) => Ok(set),
@@ -1580,4 +2672,12 @@ fn lean_identifier(source: &str) -> String {
         result.push('_');
     }
     result
+}
+
+fn indent_lines(text: &str, spaces: usize) -> String {
+    let indentation = " ".repeat(spaces);
+    text.lines()
+        .map(|line| format!("{indentation}{line}"))
+        .collect::<Vec<_>>()
+        .join("\n")
 }

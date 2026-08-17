@@ -106,27 +106,21 @@ impl Runtime {
             line_file.clone(),
         )
         .into();
-        let nonnegative_result =
-            self.verify_atomic_fact_as_builtin_rule_premise(&nonnegative, builtin_state)?;
-        if !nonnegative_result.is_true() {
-            return Ok(None);
-        }
-
         let other_squared: Obj =
             Pow::new(other.clone(), Number::new("2".to_string()).into()).into();
-        let square_result = self.verify_equal_fact_as_builtin_premise(
-            &EqualFact::new_from_refs(sqrt.arg.as_ref(), &other_squared, line_file.clone()),
-            builtin_state,
-        )?;
-        if !square_result.is_true() {
+        let square: AtomicFact =
+            EqualFact::new_from_refs(sqrt.arg.as_ref(), &other_squared, line_file.clone()).into();
+        let Some(results) =
+            self.verify_builtin_rule_premises(&[nonnegative, square], builtin_state)?
+        else {
             return Ok(None);
-        }
+        };
 
         Ok(Some(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 equal_fact.clone().into(),
                 "sqrt: sqrt(a^2) = a for a >= 0".to_string(),
-                vec![nonnegative_result, square_result],
+                results,
             )
             .into(),
         ))
@@ -160,46 +154,47 @@ impl Runtime {
             line_file.clone(),
         )
         .into();
-        let left_nonnegative_result =
-            self.verify_atomic_fact_as_builtin_rule_premise(&left_nonnegative, builtin_state)?;
-        if !left_nonnegative_result.is_true() {
-            return Ok(None);
-        }
-
         let right_nonnegative: AtomicFact = LessEqualFact::new(
             Self::literal_zero_obj_for_abs_builtin(),
             right_factor.arg.as_ref().clone(),
             line_file.clone(),
         )
         .into();
-        let right_nonnegative_result =
-            self.verify_atomic_fact_as_builtin_rule_premise(&right_nonnegative, builtin_state)?;
-        if !right_nonnegative_result.is_true() {
-            return Ok(None);
-        }
-
         let arg_product: Obj = Mul::new(
             left_factor.arg.as_ref().clone(),
             right_factor.arg.as_ref().clone(),
         )
         .into();
-        let arg_product_result = self.verify_equal_fact_as_builtin_premise(
-            &EqualFact::new_from_refs(sqrt.arg.as_ref(), &arg_product, line_file.clone()),
-            builtin_state,
-        )?;
-        if !arg_product_result.is_true() {
-            return Ok(None);
-        }
+        let arg_product_fact: AtomicFact =
+            EqualFact::new_from_refs(sqrt.arg.as_ref(), &arg_product, line_file.clone()).into();
+        let arg_product_result =
+            self.verify_atomic_fact_as_builtin_rule_premise(&arg_product_fact, builtin_state)?;
+        let results = if arg_product_result.is_true() {
+            let Some(mut results) = self.verify_builtin_rule_premises(
+                &[left_nonnegative, right_nonnegative],
+                builtin_state,
+            )?
+            else {
+                return Ok(None);
+            };
+            results.push(arg_product_result);
+            results
+        } else {
+            let Some(results) = self.verify_builtin_rule_premises(
+                &[left_nonnegative, right_nonnegative, arg_product_fact],
+                builtin_state,
+            )?
+            else {
+                return Ok(None);
+            };
+            results
+        };
 
         Ok(Some(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 equal_fact.clone().into(),
                 "sqrt: sqrt(a * b) = sqrt(a) * sqrt(b)".to_string(),
-                vec![
-                    left_nonnegative_result,
-                    right_nonnegative_result,
-                    arg_product_result,
-                ],
+                results,
             )
             .into(),
         ))
@@ -233,46 +228,51 @@ impl Runtime {
             line_file.clone(),
         )
         .into();
-        let numerator_nonnegative_result =
-            self.verify_atomic_fact_as_builtin_rule_premise(&numerator_nonnegative, builtin_state)?;
-        if !numerator_nonnegative_result.is_true() {
-            return Ok(None);
-        }
-
         let denominator_positive: AtomicFact = LessFact::new(
             Self::literal_zero_obj_for_abs_builtin(),
             denominator_sqrt.arg.as_ref().clone(),
             line_file.clone(),
         )
         .into();
-        let denominator_positive_result =
-            self.verify_atomic_fact_as_builtin_rule_premise(&denominator_positive, builtin_state)?;
-        if !denominator_positive_result.is_true() {
-            return Ok(None);
-        }
-
         let arg_quotient: Obj = Div::new(
             numerator_sqrt.arg.as_ref().clone(),
             denominator_sqrt.arg.as_ref().clone(),
         )
         .into();
-        let arg_quotient_result = self.verify_equal_fact_as_builtin_premise(
-            &EqualFact::new_from_refs(sqrt.arg.as_ref(), &arg_quotient, line_file.clone()),
-            builtin_state,
-        )?;
-        if !arg_quotient_result.is_true() {
-            return Ok(None);
-        }
+        let arg_quotient_fact: AtomicFact =
+            EqualFact::new_from_refs(sqrt.arg.as_ref(), &arg_quotient, line_file.clone()).into();
+        let arg_quotient_result =
+            self.verify_atomic_fact_as_builtin_rule_premise(&arg_quotient_fact, builtin_state)?;
+        let results = if arg_quotient_result.is_true() {
+            let Some(mut results) = self.verify_builtin_rule_premises(
+                &[numerator_nonnegative, denominator_positive],
+                builtin_state,
+            )?
+            else {
+                return Ok(None);
+            };
+            results.push(arg_quotient_result);
+            results
+        } else {
+            let Some(results) = self.verify_builtin_rule_premises(
+                &[
+                    numerator_nonnegative,
+                    denominator_positive,
+                    arg_quotient_fact,
+                ],
+                builtin_state,
+            )?
+            else {
+                return Ok(None);
+            };
+            results
+        };
 
         Ok(Some(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 equal_fact.clone().into(),
                 "sqrt: sqrt(a / b) = sqrt(a) / sqrt(b)".to_string(),
-                vec![
-                    numerator_nonnegative_result,
-                    denominator_positive_result,
-                    arg_quotient_result,
-                ],
+                results,
             )
             .into(),
         ))

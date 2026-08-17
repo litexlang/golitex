@@ -264,7 +264,9 @@ impl Runtime {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_subtraction_from_known_addition(equal_fact)? {
+        if let Some(done) =
+            self.try_verify_subtraction_from_known_addition(equal_fact, builtin_state)?
+        {
             return Ok(done);
         }
 
@@ -1722,11 +1724,14 @@ impl Runtime {
     fn try_verify_subtraction_from_known_addition(
         &mut self,
         equal_fact: &EqualFact,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
-        if let Some(done) = self.try_verify_one_subtraction_from_known_addition(equal_fact, true)? {
+        if let Some(done) =
+            self.try_verify_one_subtraction_from_known_addition(equal_fact, true, builtin_state)?
+        {
             return Ok(Some(done));
         }
-        self.try_verify_one_subtraction_from_known_addition(equal_fact, false)
+        self.try_verify_one_subtraction_from_known_addition(equal_fact, false, builtin_state)
     }
 
     // Moves one addend across a known sum equality.
@@ -1735,6 +1740,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         target_is_left: bool,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (target_a, subtraction_side) = if target_is_left {
             (&equal_fact.left, &equal_fact.right)
@@ -1748,11 +1754,12 @@ impl Runtime {
 
         let candidate_sum_1: Obj =
             Add::new(target_a.clone(), subtraction.right.as_ref().clone()).into();
-        let known_sum_1 = self.verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
+        let sum_fact_1 = EqualFact::new_from_refs(
             &candidate_sum_1,
             subtraction.left.as_ref(),
             line_file.clone(),
-        ));
+        );
+        let known_sum_1 = self.verify_equal_fact_by_known_equality(&sum_fact_1);
         if known_sum_1.is_true() {
             return Ok(Some(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -1766,17 +1773,34 @@ impl Runtime {
 
         let candidate_sum_2: Obj =
             Add::new(subtraction.right.as_ref().clone(), target_a.clone()).into();
-        let known_sum_2 = self.verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
+        let sum_fact_2 = EqualFact::new_from_refs(
             &candidate_sum_2,
             subtraction.left.as_ref(),
             line_file.clone(),
-        ));
+        );
+        let known_sum_2 = self.verify_equal_fact_by_known_equality(&sum_fact_2);
         if known_sum_2.is_true() {
             return Ok(Some(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     equal_fact.clone().into(),
                     "equality: a = c - b from known b + a = c".to_string(),
                     vec![known_sum_2],
+                )
+                .into(),
+            ));
+        }
+
+        let premise_result = self.verify_builtin_rule_premise_alternatives(
+            vec![vec![sum_fact_1.into()], vec![sum_fact_2.into()]],
+            line_file.clone(),
+            builtin_state,
+        )?;
+        if premise_result.is_true() {
+            return Ok(Some(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    equal_fact.clone().into(),
+                    "equality: subtraction from complete addition-order disjunction".to_string(),
+                    vec![premise_result],
                 )
                 .into(),
             ));
@@ -1985,16 +2009,39 @@ impl Runtime {
 
         let is_cart_fact: AtomicFact =
             IsCartFact::new(target_obj.clone(), line_file.clone()).into();
+        let cart_dim_obj: Obj = CartDim::new(target_obj.clone()).into();
+        let cart_dim_value_obj: Obj = Number::new(cart_obj.args.len().to_string()).into();
+        let cart_dim_fact: AtomicFact =
+            EqualFact::new(cart_dim_obj, cart_dim_value_obj, line_file.clone()).into();
+        let mut complete_premises = vec![is_cart_fact.clone(), cart_dim_fact.clone()];
+        for (index, arg) in cart_obj.args.iter().enumerate() {
+            let index_obj: Obj = Number::new((index + 1).to_string()).into();
+            complete_premises.push(
+                EqualFact::new(
+                    Proj::new(target_obj.clone(), index_obj).into(),
+                    arg.as_ref().clone(),
+                    line_file.clone(),
+                )
+                .into(),
+            );
+        }
+        if let Some(steps) = self.verify_builtin_rule_premises(&complete_premises, builtin_state)? {
+            return Ok(Some(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    equal_fact.clone().into(),
+                    "cart equality from dimension and projections".to_string(),
+                    steps,
+                )
+                .into(),
+            ));
+        }
+
         let is_cart_result =
             self.verify_atomic_fact_as_builtin_rule_premise(&is_cart_fact, builtin_state)?;
         if !is_cart_result.is_true() {
             return Ok(None);
         }
 
-        let cart_dim_obj: Obj = CartDim::new(target_obj.clone()).into();
-        let cart_dim_value_obj: Obj = Number::new(cart_obj.args.len().to_string()).into();
-        let cart_dim_fact: AtomicFact =
-            EqualFact::new(cart_dim_obj, cart_dim_value_obj, line_file.clone()).into();
         let cart_dim_result =
             self.verify_atomic_fact_as_builtin_rule_premise(&cart_dim_fact, builtin_state)?;
         if !cart_dim_result.is_true() {
@@ -2226,6 +2273,54 @@ impl Runtime {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
+        let left_in_r: AtomicFact =
+            InFact::new(left.clone(), StandardSet::R.into(), line_file.clone()).into();
+        let right_in_r: AtomicFact =
+            InFact::new(right.clone(), StandardSet::R.into(), line_file.clone()).into();
+        let left_ge_right: AtomicFact =
+            GreaterEqualFact::new(left.clone(), right.clone(), line_file.clone()).into();
+        let right_le_left: AtomicFact =
+            LessEqualFact::new(right.clone(), left.clone(), line_file.clone()).into();
+        let right_ge_left: AtomicFact =
+            GreaterEqualFact::new(right.clone(), left.clone(), line_file.clone()).into();
+        let left_le_right: AtomicFact =
+            LessEqualFact::new(left.clone(), right.clone(), line_file.clone()).into();
+        let complete_result = self.verify_builtin_rule_premise_alternatives(
+            vec![
+                vec![
+                    left_in_r.clone(),
+                    right_in_r.clone(),
+                    left_ge_right.clone(),
+                    right_ge_left.clone(),
+                ],
+                vec![
+                    left_in_r.clone(),
+                    right_in_r.clone(),
+                    left_ge_right,
+                    left_le_right.clone(),
+                ],
+                vec![
+                    left_in_r.clone(),
+                    right_in_r.clone(),
+                    right_le_left.clone(),
+                    right_ge_left,
+                ],
+                vec![left_in_r, right_in_r, right_le_left, left_le_right],
+            ],
+            line_file.clone(),
+            builtin_state,
+        )?;
+        if complete_result.is_true() {
+            return Ok(Some(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    equal_fact.clone().into(),
+                    "equality from a >= b and b >= a".to_string(),
+                    vec![complete_result],
+                )
+                .into(),
+            ));
+        }
+
         let Some(mut steps) = self.verify_objects_are_known_reals_in_builtin(
             &[left, right],
             &line_file,

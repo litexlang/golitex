@@ -7,6 +7,7 @@ impl Runtime {
     pub(crate) fn try_verify_atomic_fact_with_local_builtin_catalog(
         &mut self,
         goal: &AtomicFact,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let mut rules = registered_local_builtin_rules()?;
         rules.sort_by(|left, right| {
@@ -39,28 +40,36 @@ impl Runtime {
             let goal_line_file = goal.line_file();
             let mut step_results = Vec::new();
             let mut candidate_failed = false;
-            for template in rule
-                .schema()
-                .parameter_requirements
-                .iter()
-                .chain(rule.schema().premises.iter())
-            {
+            for template in &rule.schema().parameter_requirements {
                 let instantiated = self.inst_atomic_fact(
                     template,
                     &param_to_arg_map,
                     ParamObjType::Forall,
                     Some(&goal_line_file),
                 )?;
-                // Deliberately restricted: a local schema may cite an already
-                // known atomic fact. It cannot recurse into another builtin,
-                // computation, resolve, definition unfolding, or a strategy.
-                let result = match &instantiated {
-                    AtomicFact::EqualFact(equal_fact) => {
-                        self.verify_equal_fact_with_known_fact(equal_fact)
-                    }
-                    _ => self
-                        .verify_non_equational_atomic_fact_with_known_atomic_facts(&instantiated)?,
-                };
+                let result =
+                    self.verify_atomic_fact_as_builtin_rule_premise(&instantiated, builtin_state)?;
+                if !result.is_true() {
+                    candidate_failed = true;
+                    break;
+                }
+                step_results.push(result);
+            }
+            if candidate_failed {
+                continue;
+            }
+
+            for template in &rule.schema().premises {
+                let instantiated = self.inst_quantifier_free_fact(
+                    template,
+                    &param_to_arg_map,
+                    ParamObjType::Forall,
+                    Some(&goal_line_file),
+                )?;
+                // The local rule has already consumed the one premise-producing builtin step.
+                // Compound structure may organize known/directly evaluable leaves, but cannot
+                // reset that budget or reopen general proof search.
+                let result = self.verify_builtin_rule_premise(&instantiated, builtin_state)?;
                 if !result.is_true() {
                     candidate_failed = true;
                     break;

@@ -139,37 +139,26 @@ impl Runtime {
             )
             .into();
 
-            let dividend_result =
-                self.verify_atomic_fact_as_builtin_rule_premise(&dividend_in_z, builtin_state)?;
-            let inner_modulus_result = self.verify_atomic_fact_as_builtin_rule_premise(
-                &inner_modulus_in_n_pos,
+            let Some(carrier_results) = self.verify_builtin_rule_premises(
+                &[
+                    dividend_in_z,
+                    inner_modulus_in_n_pos,
+                    outer_modulus_in_n_pos,
+                    modulus_divisibility,
+                ],
                 builtin_state,
-            )?;
-            let outer_modulus_result = self.verify_atomic_fact_as_builtin_rule_premise(
-                &outer_modulus_in_n_pos,
-                builtin_state,
-            )?;
-            let divisibility_result = self
-                .verify_atomic_fact_as_builtin_rule_premise(&modulus_divisibility, builtin_state)?;
-            if !dividend_result.is_true()
-                || !inner_modulus_result.is_true()
-                || !outer_modulus_result.is_true()
-                || !divisibility_result.is_true()
-            {
+            )?
+            else {
                 continue;
-            }
+            };
+
+            let mut subgoals = vec![outer_modulus_matches, dividend_matches];
+            subgoals.extend(carrier_results);
 
             return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
                 equal_fact,
                 "equality: nested mod absorbs an inner modulus divisible by the outer modulus",
-                vec![
-                    outer_modulus_matches,
-                    dividend_matches,
-                    dividend_result,
-                    inner_modulus_result,
-                    outer_modulus_result,
-                    divisibility_result,
-                ],
+                subgoals,
             )));
         }
         Ok(None)
@@ -428,25 +417,24 @@ impl Runtime {
                 line_file.clone(),
             )
             .into();
-            let dividend_result =
-                self.verify_atomic_fact_as_builtin_rule_premise(&dividend_in_z, builtin_state)?;
-            let modulus_result =
-                self.verify_atomic_fact_as_builtin_rule_premise(&modulus_in_n_pos, builtin_state)?;
-            if !dividend_result.is_true() || !modulus_result.is_true() {
+            let Some(carrier_results) = self
+                .verify_builtin_rule_premises(&[dividend_in_z, modulus_in_n_pos], builtin_state)?
+            else {
                 continue;
-            }
+            };
+
+            let mut subgoals = vec![
+                modulus_matches,
+                complement_starts_at_modulus,
+                inner_modulus_matches,
+                dividend_matches,
+            ];
+            subgoals.extend(carrier_results);
 
             return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
                 equal_fact,
                 "equality: (-n) % k = (k - n % k) % k for n in Z and k in N+",
-                vec![
-                    modulus_matches,
-                    complement_starts_at_modulus,
-                    inner_modulus_matches,
-                    dividend_matches,
-                    dividend_result,
-                    modulus_result,
-                ],
+                subgoals,
             )));
         }
 
@@ -543,24 +531,21 @@ impl Runtime {
                 line_file.clone(),
             )
             .into();
-            let base_result =
-                self.verify_atomic_fact_as_builtin_rule_premise(&base_in_z, builtin_state)?;
-            let mut exponent_result =
-                self.verify_atomic_fact_as_builtin_rule_premise(&exponent_in_n, builtin_state)?;
-            if !exponent_result.is_true() {
-                let exponent_in_n_pos: AtomicFact = InFact::new(
-                    unreduced_power.exponent.as_ref().clone(),
-                    StandardSet::NPos.into(),
-                    line_file.clone(),
-                )
-                .into();
-                exponent_result = self.verify_non_equational_atomic_fact_with_known_atomic_facts(
-                    &exponent_in_n_pos,
-                )?;
-            }
-            let modulus_result =
-                self.verify_atomic_fact_as_builtin_rule_premise(&modulus_in_n_pos, builtin_state)?;
-            if !base_result.is_true() || !exponent_result.is_true() || !modulus_result.is_true() {
+            let exponent_in_n_pos: AtomicFact = InFact::new(
+                unreduced_power.exponent.as_ref().clone(),
+                StandardSet::NPos.into(),
+                line_file.clone(),
+            )
+            .into();
+            let carrier_result = self.verify_builtin_rule_premise_alternatives(
+                vec![
+                    vec![base_in_z.clone(), exponent_in_n, modulus_in_n_pos.clone()],
+                    vec![base_in_z, exponent_in_n_pos, modulus_in_n_pos],
+                ],
+                line_file.clone(),
+                builtin_state,
+            )?;
+            if !carrier_result.is_true() {
                 continue;
             }
 
@@ -572,9 +557,7 @@ impl Runtime {
                     inner_modulus_matches,
                     base_matches,
                     exponent_matches,
-                    base_result,
-                    exponent_result,
-                    modulus_result,
+                    carrier_result,
                 ],
             )));
         }

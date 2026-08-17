@@ -1,5 +1,4 @@
 use super::*;
-use crate::verify::number_is_in_n_pos;
 
 impl Runtime {
     pub(crate) fn try_verify_base_zero_from_known_positive_power_zero(
@@ -299,43 +298,25 @@ impl Runtime {
         else {
             return Ok(None);
         };
-        let positive_exponent_for_display = positive_exponent.clone();
-
-        let base_result = self.verify_equal_fact_as_builtin_premise(
-            &EqualFact::new_from_refs(
-                negative_power.base.as_ref(),
-                denominator_power.base.as_ref(),
-                line_file.clone(),
-            ),
-            builtin_state,
-        )?;
-        if !base_result.is_true() {
-            return Ok(None);
-        }
-
-        let exponent_result = self.verify_equal_fact_as_builtin_premise(
-            &EqualFact::new_from_refs(
-                &positive_exponent,
-                denominator_power.exponent.as_ref(),
-                line_file.clone(),
-            ),
-            builtin_state,
-        )?;
-        if !exponent_result.is_true() {
-            return Ok(None);
-        }
+        let base_match: AtomicFact = EqualFact::new_from_refs(
+            negative_power.base.as_ref(),
+            denominator_power.base.as_ref(),
+            line_file.clone(),
+        )
+        .into();
+        let exponent_match: AtomicFact = EqualFact::new_from_refs(
+            &positive_exponent,
+            denominator_power.exponent.as_ref(),
+            line_file.clone(),
+        )
+        .into();
 
         let exponent_in_n_pos: AtomicFact = InFact::new(
-            positive_exponent,
+            positive_exponent.clone(),
             StandardSet::NPos.into(),
             line_file.clone(),
         )
         .into();
-        let exponent_in_n_pos_result =
-            self.verify_atomic_fact_as_builtin_rule_premise(&exponent_in_n_pos, builtin_state)?;
-        if !exponent_in_n_pos_result.is_true() {
-            return Ok(None);
-        }
 
         // The reciprocal law's primitive domain condition is `a != 0`.
         // Asking the premise verifier for `a^n != 0` here would require a
@@ -347,28 +328,23 @@ impl Runtime {
             line_file,
         )
         .into();
-        let base_nonzero_result =
-            self.verify_atomic_fact_as_builtin_rule_premise(&base_nonzero, builtin_state)?;
-        if !base_nonzero_result.is_true() {
-            return Ok(None);
+        let base_match_result =
+            self.verify_atomic_fact_as_builtin_rule_premise(&base_match, builtin_state)?;
+        let exponent_match_result =
+            self.verify_atomic_fact_as_builtin_rule_premise(&exponent_match, builtin_state)?;
+        if base_match_result.is_true() && exponent_match_result.is_true() {
+            let Some(mut results) = self
+                .verify_builtin_rule_premises(&[exponent_in_n_pos, base_nonzero], builtin_state)?
+            else {
+                return Ok(None);
+            };
+            results.extend([base_match_result, exponent_match_result]);
+            return Ok(Some(results));
         }
-
-        let mut subgoals = Vec::new();
-        if !objs_match_for_pattern(
-            negative_power.base.as_ref(),
-            denominator_power.base.as_ref(),
-        ) {
-            subgoals.push(base_result);
-        }
-        if !objs_match_for_pattern(
-            &positive_exponent_for_display,
-            denominator_power.exponent.as_ref(),
-        ) {
-            subgoals.push(exponent_result);
-        }
-        subgoals.push(exponent_in_n_pos_result);
-        subgoals.push(base_nonzero_result);
-        Ok(Some(subgoals))
+        self.verify_builtin_rule_premises(
+            &[base_match, exponent_match, exponent_in_n_pos, base_nonzero],
+            builtin_state,
+        )
     }
 
     // Negative integer powers are reciprocals of the corresponding positive powers.
@@ -444,47 +420,42 @@ impl Runtime {
 
         let degree_in_n_pos: AtomicFact =
             InFact::new(degree.clone(), StandardSet::NPos.into(), line_file.clone()).into();
-        let mut degree_result =
-            self.verify_atomic_fact_as_builtin_rule_premise(&degree_in_n_pos, builtin_state)?;
-        if !degree_result.is_true()
-            && matches!(&degree, Obj::Number(number) if number_is_in_n_pos(number))
-        {
-            degree_result = FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                degree_in_n_pos.clone().into(),
-                "number in N+".to_string(),
-                Vec::new(),
-            )
-            .into();
-        }
-        if !degree_result.is_true() {
-            return Ok(None);
-        }
-
         let root_nonnegative: AtomicFact = LessEqualFact::new(
             Self::literal_zero_obj_for_abs_builtin(),
             root.clone(),
             line_file.clone(),
         )
         .into();
-        let root_nonnegative_result =
-            self.verify_atomic_fact_as_builtin_rule_premise(&root_nonnegative, builtin_state)?;
-        if !root_nonnegative_result.is_true() {
-            return Ok(None);
-        }
-
         let root_power: Obj = Pow::new(root.clone(), degree).into();
-        let inverse_result = self.verify_equal_fact_as_builtin_premise(
-            &EqualFact::new_from_refs(pow.base.as_ref(), &root_power, line_file.clone()),
-            builtin_state,
-        )?;
-        if !inverse_result.is_true() {
-            return Ok(None);
-        }
+        let inverse: AtomicFact =
+            EqualFact::new_from_refs(pow.base.as_ref(), &root_power, line_file.clone()).into();
+        let inverse_result =
+            self.verify_atomic_fact_as_builtin_rule_premise(&inverse, builtin_state)?;
+        let results = if inverse_result.is_true() {
+            let Some(mut results) = self.verify_builtin_rule_premises(
+                &[degree_in_n_pos, root_nonnegative],
+                builtin_state,
+            )?
+            else {
+                return Ok(None);
+            };
+            results.push(inverse_result);
+            results
+        } else {
+            let Some(results) = self.verify_builtin_rule_premises(
+                &[degree_in_n_pos, root_nonnegative, inverse],
+                builtin_state,
+            )?
+            else {
+                return Ok(None);
+            };
+            results
+        };
 
         Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
             equal_fact,
             "equality: x^(1/n) = z from x = z^n, n in N+, and z >= 0",
-            vec![degree_result, root_nonnegative_result, inverse_result],
+            results,
         )))
     }
 }

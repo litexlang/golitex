@@ -132,18 +132,23 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         let base_set = power_set.set.as_ref();
         let mut infer_result = InferResult::new();
-        let mut subgoals = Vec::with_capacity(list_set.list.len());
-        for element_box in list_set.list.iter() {
-            let element_obj = *element_box.clone();
-            let element_in_base_fact =
-                InFact::new(element_obj, base_set.clone(), in_fact.line_file.clone()).into();
-            let verify_one_element_result = self
-                .verify_atomic_fact_as_builtin_rule_premise(&element_in_base_fact, builtin_state)?;
-            if !verify_one_element_result.is_true() {
-                return Ok((StmtUnknown::new()).into());
-            }
-            infer_result.new_infer_result_inside(verify_one_element_result.infer_result());
-            subgoals.push(verify_one_element_result);
+        let premises = list_set
+            .list
+            .iter()
+            .map(|element_box| {
+                InFact::new(
+                    element_box.as_ref().clone(),
+                    base_set.clone(),
+                    in_fact.line_file.clone(),
+                )
+                .into()
+            })
+            .collect::<Vec<AtomicFact>>();
+        let Some(subgoals) = self.verify_builtin_rule_premises(&premises, builtin_state)? else {
+            return Ok((StmtUnknown::new()).into());
+        };
+        for subgoal in &subgoals {
+            infer_result.new_infer_result_inside(subgoal.infer_result());
         }
         let stmt = in_fact.clone().into();
         infer_result.new_fact(&stmt);
@@ -238,21 +243,21 @@ impl Runtime {
         list_set: &ListSet,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
-        let mut steps = Vec::with_capacity(list_set.list.len());
-        for current_element_in_list_set in list_set.list.iter() {
-            let not_equal_fact = NotEqualFact::new(
-                not_in_fact.element.clone(),
-                *current_element_in_list_set.clone(),
-                not_in_fact.line_file.clone(),
-            )
-            .into();
-            let not_equal_fact_verify_result =
-                self.verify_atomic_fact_as_builtin_rule_premise(&not_equal_fact, builtin_state)?;
-            if !not_equal_fact_verify_result.is_true() {
-                return Ok((StmtUnknown::new()).into());
-            }
-            steps.push(not_equal_fact_verify_result);
-        }
+        let premises = list_set
+            .list
+            .iter()
+            .map(|current_element| {
+                NotEqualFact::new(
+                    not_in_fact.element.clone(),
+                    current_element.as_ref().clone(),
+                    not_in_fact.line_file.clone(),
+                )
+                .into()
+            })
+            .collect::<Vec<AtomicFact>>();
+        let Some(steps) = self.verify_builtin_rule_premises(&premises, builtin_state)? else {
+            return Ok((StmtUnknown::new()).into());
+        };
 
         Ok(
             (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -457,47 +462,30 @@ impl Runtime {
         };
 
         let index_obj = fn_obj.body[0][0].as_ref().clone();
-        let mut step_results = Vec::new();
-
         let index_in_n_pos: AtomicFact = InFact::new(
             index_obj.clone(),
             StandardSet::NPos.into(),
             in_fact.line_file.clone(),
         )
         .into();
-        let index_in_n_pos_result =
-            self.verify_atomic_fact_as_builtin_rule_premise(&index_in_n_pos, builtin_state)?;
-        if !index_in_n_pos_result.is_true() {
-            return Ok((StmtUnknown::new()).into());
-        }
-        step_results.push(index_in_n_pos_result);
-
         let list_len_obj: Obj = Number::new(list.objs.len().to_string()).into();
         let index_in_range: AtomicFact =
             LessEqualFact::new(index_obj, list_len_obj, in_fact.line_file.clone()).into();
-        let index_in_range_result =
-            self.verify_atomic_fact_as_builtin_rule_premise(&index_in_range, builtin_state)?;
-        if !index_in_range_result.is_true() {
-            return Ok((StmtUnknown::new()).into());
-        }
-        step_results.push(index_in_range_result);
-
+        let mut premises = vec![index_in_n_pos, index_in_range];
         for element in list.objs.iter() {
-            let element_in_target_set: AtomicFact = InFact::new(
-                element.as_ref().clone(),
-                target_set_obj.clone(),
-                in_fact.line_file.clone(),
-            )
-            .into();
-            let result = self.verify_atomic_fact_as_builtin_rule_premise(
-                &element_in_target_set,
-                builtin_state,
-            )?;
-            if !result.is_true() {
-                return Ok((StmtUnknown::new()).into());
-            }
-            step_results.push(result);
+            premises.push(
+                InFact::new(
+                    element.as_ref().clone(),
+                    target_set_obj.clone(),
+                    in_fact.line_file.clone(),
+                )
+                .into(),
+            );
         }
+        let Some(step_results) = self.verify_builtin_rule_premises(&premises, builtin_state)?
+        else {
+            return Ok((StmtUnknown::new()).into());
+        };
 
         Ok(
             (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -544,23 +532,22 @@ impl Runtime {
             return Ok((StmtUnknown::new()).into());
         };
 
-        let mut step_results = Vec::new();
-        for element in list_set.list.iter() {
-            let element_in_target_set: AtomicFact = InFact::new(
-                element.as_ref().clone(),
-                target_set_obj.clone(),
-                in_fact.line_file.clone(),
-            )
-            .into();
-            let result = self.verify_atomic_fact_as_builtin_rule_premise(
-                &element_in_target_set,
-                builtin_state,
-            )?;
-            if !result.is_true() {
-                return Ok((StmtUnknown::new()).into());
-            }
-            step_results.push(result);
-        }
+        let premises = list_set
+            .list
+            .iter()
+            .map(|element| {
+                InFact::new(
+                    element.as_ref().clone(),
+                    target_set_obj.clone(),
+                    in_fact.line_file.clone(),
+                )
+                .into()
+            })
+            .collect::<Vec<AtomicFact>>();
+        let Some(step_results) = self.verify_builtin_rule_premises(&premises, builtin_state)?
+        else {
+            return Ok((StmtUnknown::new()).into());
+        };
 
         Ok(
             (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(

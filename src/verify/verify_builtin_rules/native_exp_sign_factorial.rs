@@ -57,17 +57,15 @@ impl Runtime {
             return Ok(None);
         }
         let zero: Obj = Number::new("0".to_string()).into();
-        let mut positivity_results = Vec::new();
-        for arg in [left, right] {
-            let positive: AtomicFact =
-                LessFact::new(zero.clone(), arg.clone(), line_file.clone()).into();
-            let result =
-                self.verify_atomic_fact_as_builtin_rule_premise(&positive, builtin_state)?;
-            if !result.is_true() {
-                return Ok(None);
-            }
-            positivity_results.push(result);
-        }
+        let positivity = [
+            LessFact::new(zero.clone(), left.clone(), line_file.clone()).into(),
+            LessFact::new(zero, right.clone(), line_file.clone()).into(),
+        ];
+        let Some(mut positivity_results) =
+            self.verify_builtin_rule_premises(&positivity, builtin_state)?
+        else {
+            return Ok(None);
+        };
         positivity_results.push(ln_result);
         Ok(Some(native_equal_success(
             equal_fact,
@@ -389,15 +387,9 @@ impl Runtime {
                 .into(),
             );
         }
-        let mut results = Vec::new();
-        for premise in premises {
-            let result =
-                self.verify_atomic_fact_as_builtin_rule_premise(&premise, builtin_state)?;
-            if !result.is_true() {
-                return Ok(None);
-            }
-            results.push(result);
-        }
+        let Some(results) = self.verify_builtin_rule_premises(&premises, builtin_state)? else {
+            return Ok(None);
+        };
         Ok(Some(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
@@ -556,7 +548,7 @@ impl Runtime {
                 .into(),
             ]
         };
-        for (index, premise) in reflected_premises.into_iter().enumerate() {
+        for (index, premise) in reflected_premises.iter().enumerate() {
             let result =
                 self.verify_non_equational_atomic_fact_with_known_atomic_facts(&premise)?;
             if !result.is_true() {
@@ -565,20 +557,16 @@ impl Runtime {
             let mut subgoals = Vec::new();
             if index == 1 {
                 let zero: Obj = Number::new("0".to_string()).into();
-                for arg in [left, right] {
-                    let positive: AtomicFact =
-                        LessFact::new(zero.clone(), arg.clone(), line_file.clone()).into();
-                    let result =
-                        self.verify_atomic_fact_as_builtin_rule_premise(&positive, builtin_state)?;
-                    if !result.is_true() {
-                        subgoals.clear();
-                        break;
-                    }
-                    subgoals.push(result);
-                }
-                if subgoals.len() != 2 {
+                let positive_args = [
+                    LessFact::new(zero.clone(), left.clone(), line_file.clone()).into(),
+                    LessFact::new(zero, right.clone(), line_file.clone()).into(),
+                ];
+                let Some(results) =
+                    self.verify_builtin_rule_premises(&positive_args, builtin_state)?
+                else {
                     continue;
-                }
+                };
+                subgoals.extend(results);
             }
             subgoals.push(result);
             let order_kind = if strict { "strict" } else { "weak" };
@@ -587,6 +575,31 @@ impl Runtime {
                     atomic_fact.clone().into(),
                     format!("native exp/ln reflects {order_kind} order"),
                     subgoals,
+                )
+                .into(),
+            ));
+        }
+
+        let zero: Obj = Number::new("0".to_string()).into();
+        let reflected_result = self.verify_builtin_rule_premise_alternatives(
+            vec![
+                vec![reflected_premises[0].clone()],
+                vec![
+                    reflected_premises[1].clone(),
+                    LessFact::new(zero.clone(), left.clone(), line_file.clone()).into(),
+                    LessFact::new(zero, right.clone(), line_file.clone()).into(),
+                ],
+            ],
+            line_file.clone(),
+            builtin_state,
+        )?;
+        if reflected_result.is_true() {
+            let order_kind = if strict { "strict" } else { "weak" };
+            return Ok(Some(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    atomic_fact.clone().into(),
+                    format!("native exp/ln reflects {order_kind} order"),
+                    vec![reflected_result],
                 )
                 .into(),
             ));
@@ -615,15 +628,9 @@ impl Runtime {
                 .push(LessEqualFact::new(left_arg.clone(), right_arg.clone(), line_file).into());
         }
 
-        let mut results = Vec::new();
-        for premise in premises {
-            let result =
-                self.verify_atomic_fact_as_builtin_rule_premise(&premise, builtin_state)?;
-            if !result.is_true() {
-                return Ok(None);
-            }
-            results.push(result);
-        }
+        let Some(results) = self.verify_builtin_rule_premises(&premises, builtin_state)? else {
+            return Ok(None);
+        };
         let order_kind = if strict { "strict" } else { "weak" };
         Ok(Some(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(

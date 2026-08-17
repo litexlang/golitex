@@ -4,7 +4,8 @@ use crate::litex_to_lean_ir::{
 use crate::prelude::*;
 use crate::verify::local_builtin_catalog::registered_local_builtin_rules;
 use crate::verify::rule_schema::{
-    canonical_atomic_facts_equal, canonical_objs_equal, match_conclusion, MatchLimits,
+    canonical_atomic_facts_equal, canonical_objs_equal, canonical_quantifier_free_facts_equal,
+    match_conclusion, MatchLimits,
 };
 use std::collections::{HashMap, HashSet};
 
@@ -4372,20 +4373,23 @@ impl LitexToLeanIrBuilder<'_> {
         for (variable, binding) in rule.schema().variables.iter().zip(&evidence.bindings) {
             insert_symbol_substitution(&mut param_to_arg_map, &variable.binding, binding.clone());
         }
-        let expected_templates = rule
-            .schema()
-            .parameter_requirements
-            .iter()
-            .chain(rule.schema().premises.iter())
-            .collect::<Vec<_>>();
-        if subgoals.len() != expected_templates.len() {
+        let expected_child_count =
+            rule.schema().parameter_requirements.len() + rule.schema().premises.len();
+        if subgoals.len() != expected_child_count {
             return Err(litex_to_lean_ir_error(
                 &goal.line_file(),
                 "local builtin certificate has the wrong child-proof arity",
             ));
         }
         let children = self.build_litex_to_lean_ir_subgoals(subgoals, context)?;
-        for (template, child) in expected_templates.iter().zip(&children) {
+        let (requirement_children, premise_children) =
+            children.split_at(rule.schema().parameter_requirements.len());
+        for (template, child) in rule
+            .schema()
+            .parameter_requirements
+            .iter()
+            .zip(requirement_children)
+        {
             let expected = self.runtime.inst_atomic_fact(
                 template,
                 &param_to_arg_map,
@@ -4404,6 +4408,40 @@ impl LitexToLeanIrBuilder<'_> {
                 return Err(litex_to_lean_ir_error(
                     &child.proposition.line_file(),
                     "local builtin child proof does not match its instantiated schema fact",
+                ));
+            }
+        }
+
+        for (template, child) in rule.schema().premises.iter().zip(premise_children) {
+            let expected = self.runtime.inst_quantifier_free_fact(
+                template,
+                &param_to_arg_map,
+                ParamObjType::Forall,
+                Some(&goal.line_file()),
+            )?;
+            let actual = match &child.proposition {
+                Fact::AtomicFact(fact) => QuantifierFreeFact::AtomicFact(fact.clone()),
+                Fact::AndFact(fact) => QuantifierFreeFact::AndFact(fact.clone()),
+                Fact::ChainFact(fact) => QuantifierFreeFact::ChainFact(fact.clone()),
+                Fact::OrFact(fact) => QuantifierFreeFact::OrFact(fact.clone()),
+                Fact::ExistFact(_)
+                | Fact::ForallFact(_)
+                | Fact::ForallFactWithIff(_)
+                | Fact::NotForall(_) => {
+                    return Err(litex_to_lean_ir_error(
+                        &child.proposition.line_file(),
+                        "local builtin premise child proof is not quantifier-free",
+                    ));
+                }
+            };
+            if !canonical_quantifier_free_facts_equal(&expected, &actual, MatchLimits::default())
+                .map_err(|error| {
+                    litex_to_lean_ir_error(&child.proposition.line_file(), error.message)
+                })?
+            {
+                return Err(litex_to_lean_ir_error(
+                    &child.proposition.line_file(),
+                    "local builtin premise proof does not match its instantiated schema fact",
                 ));
             }
         }

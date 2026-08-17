@@ -168,7 +168,9 @@ impl Runtime {
         }
         let child_state = builtin_state.after_applying_builtin_rule();
         let goal: AtomicFact = equal_fact.clone().into();
-        if let Some(result) = self.try_verify_atomic_fact_with_local_builtin_catalog(&goal)? {
+        if let Some(result) =
+            self.try_verify_atomic_fact_with_local_builtin_catalog(&goal, &child_state)?
+        {
             return Ok(self.remember_successful_atomic_fact_for_statement(&goal, result));
         }
         if let Some(result) =

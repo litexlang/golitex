@@ -73,6 +73,24 @@ cites the previously emitted forall theorem.
 well as structural conjunction projection. A projected local fact is emitted
 only when its exact FactId is cited by a conclusion.
 
+`8_ProofScopes.lit` covers source-named `thm` declarations plus local `claim`
+and `example` blocks. Local facts remain Lean `have`s and are resolved only by
+their verifier-owned FactIds.
+
+`9_CasesAndContradiction.lit` covers `by cases` and `by contra`. Branch facts
+and reverse assumptions are installed in cloned contexts, so neither can leak
+outside its source scope.
+
+`10_ExistentialWitness.lit` covers one positive witness and one body fact. A
+witness over a user set retains an independent Lean carrier and an explicit
+`Litex.In`; the standard-real elimination tracer chooses a native `ℂ` witness
+and projects the exact membership and body roles.
+
+`11_ObjectDefinitions.lit` covers the minimum native definition layer:
+untyped `let` and one membership-constrained `have ... = ...`. Definitions use
+ordinary Lean values, while their stored Litex membership and `Same` facts are
+replayed from verifier evidence.
+
 Generated `.lean` files are review artifacts, not editing surfaces. A new
 compiler feature must add the next numbered same-name pair. Unsupported
 statements, objects, facts, or proof routes fail closed.

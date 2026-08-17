@@ -134,6 +134,20 @@ This first function adapter supports one named unary layer with no extra
 domain facts. Anonymous functions, multiple arguments, domain clauses, and
 curried function returns remain fail-closed.
 
+The second statement tranche is recorded by examples 8–11. Source `thm`,
+`claim`, and `example` blocks compile to ordinary Lean proof scopes. `by cases`
+and `by contra` replay their verifier-owned branch and contradiction evidence
+without target-side proof search. A one-witness positive existential becomes
+an ordinary Lean `Exists` package containing both explicit `Litex.In` and the
+body proof. For a user set, the existential quantifies an independent Lean
+carrier; for the standard numeric sets, the current numeric representation is
+`ℂ`. Elimination uses classical choice already provided by Lean and projects
+the two retained roles; there is no wrapper-to-native inverse transport API.
+
+Minimal `let x = value` and `have x S = value` statements now create ordinary
+Lean definitions. Their stored facts still use `Litex.Same` and `Litex.In`, so
+Lean's inferred type never substitutes for the Litex membership check.
+
 Sketch is a real source scope, not an example-file wrapper. Each top-level
 sketch is emitted as `__Sketch01`, `__Sketch02`, and so on. Its emitter context
 starts with the facts and symbols visible outside the sketch, but definitions
@@ -177,9 +191,11 @@ deferred until the IR and compiler emitter support its Litex statement form; it 
 not represented by hand-written code under `examples/`.
 
 The compiler currently emits only the reviewed IR routes exercised by the
-four numbered examples. Checked named aliases of `R` and `C`, top-level atomic
+eleven numbered examples. Checked named aliases of `R` and `C`, top-level atomic
 equality, nonnegative integer numerals, addition, arbitrary set parameters,
-unary function sets, and named unary application are supported. Other atomic
+unary function sets, named unary application, basic proof scopes,
+case/contradiction proofs, one-witness positive existentials, and minimal
+native object definitions are supported. Other atomic
 predicates and arithmetic operators, bare arbitrary-set choices
 (`have A set`), richer function forms, richer set constructors, and broader
 production code-generation are not implemented yet.

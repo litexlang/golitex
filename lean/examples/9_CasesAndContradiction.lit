@@ -1,0 +1,25 @@
+# Tracer: verifier-owned case and contradiction scopes
+#
+# Before: `by cases` and `by contra` had structured IR but no native-carrier
+# proof adapter.
+#
+# Now: each case assumption and reverse assumption is installed only in its
+# cloned Lean proof context, and every conclusion replays exact FactId evidence.
+#
+# Boundary: this first acceptance case uses one verified branch and an atomic
+# contradiction. Broader branch shapes remain fail-closed until traced.
+#
+# Evidence:
+# target/release/litex -compact -strict -runner -f lean/examples/9_CasesAndContradiction.lit
+# cd lean && ./compiler.sh compile examples/9_CasesAndContradiction.lit
+# cd lean && ./compiler.sh check examples
+
+thm cases_and_contra:
+    ? forall:
+        2 = 2
+    by cases:
+        ? 1 = 1
+        case 1 = 1:
+            by contra:
+                ? 2 = 2
+                impossible 2 != 2

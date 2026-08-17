@@ -227,23 +227,41 @@ impl Runtime {
                     );
                 }
 
+                let premise_result = self.verify_builtin_rule_premise_alternatives(
+                    vec![vec![left_nonempty], vec![right_nonempty]],
+                    is_nonempty_set_fact.line_file.clone(),
+                    builtin_state,
+                )?;
+                if premise_result.is_true() {
+                    return Ok(
+                        FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                            is_nonempty_set_fact.clone().into(),
+                            "union_is_nonempty_set_from_complete_side_disjunction".to_string(),
+                            vec![premise_result],
+                        )
+                        .into(),
+                    );
+                }
+
                 Ok((StmtUnknown::new()).into())
             }
             Obj::Cart(cart) => {
-                for arg_obj in &cart.args {
-                    let is_nonempty_set_result = self.verify_atomic_fact_as_builtin_rule_premise(
-                        &IsNonemptySetFact::new(
+                let premises = cart
+                    .args
+                    .iter()
+                    .map(|arg_obj| {
+                        IsNonemptySetFact::new(
                             *arg_obj.clone(),
                             is_nonempty_set_fact.line_file.clone(),
                         )
-                        .into(),
-                        builtin_state,
-                    )?;
-
-                    if is_nonempty_set_result.is_unknown() {
-                        return Ok((StmtUnknown::new()).into());
-                    }
-                }
+                        .into()
+                    })
+                    .collect::<Vec<AtomicFact>>();
+                let Some(_premise_results) =
+                    self.verify_builtin_rule_premises(&premises, builtin_state)?
+                else {
+                    return Ok((StmtUnknown::new()).into());
+                };
 
                 Ok(
                     (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -403,10 +421,31 @@ impl Runtime {
                 // Equality transport: a named set is nonempty when it is already known equal
                 // to a structural set whose nonemptiness is verified by builtin rules.
                 // Example: from `T = fn(i closed_range(1, 3)) R`, prove `$is_nonempty_set(T)`.
-                for equal_set in self
-                    .get_all_obj_representatives_equal_to_given(&is_nonempty_set_fact.set)
-                    .into_iter()
-                {
+                let equal_sets =
+                    self.get_all_obj_representatives_equal_to_given(&is_nonempty_set_fact.set);
+                for equal_set in &equal_sets {
+                    let codomain = match equal_set {
+                        Obj::FnSet(function) => Some(function.body.ret_set.as_ref()),
+                        Obj::AnonymousFn(function) => Some(function.body.ret_set.as_ref()),
+                        _ => None,
+                    };
+                    if codomain.is_some_and(obj_is_intrinsically_nonempty_without_premises) {
+                        // `equal_set` came from the runtime's known-equality class for the
+                        // target, so do not ask the bounded child verifier to rediscover the
+                        // same transport. The function-space constructor then needs no further
+                        // premise when its codomain is intrinsically nonempty (for example `R`).
+                        return Ok(FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
+                                is_nonempty_set_fact.clone().into(),
+                                InferResult::new(),
+                                "nonempty named function space from known equality and intrinsically nonempty codomain"
+                                    .to_string(),
+                                Vec::new(),
+                            )
+                            .into());
+                    }
+                }
+
+                for equal_set in equal_sets {
                     if !obj_can_trigger_nonempty_structural_builtin(&equal_set) {
                         continue;
                     }
@@ -444,32 +483,24 @@ impl Runtime {
         let line_file = is_nonempty_set_fact.line_file.clone();
         let finite: AtomicFact =
             IsFiniteSetFact::new(is_nonempty_set_fact.set.clone(), line_file.clone()).into();
-        let finite_result =
-            self.verify_atomic_fact_as_builtin_rule_premise(&finite, builtin_state)?;
-        if !finite_result.is_true() {
-            return Ok(None);
-        }
-
         let finite_set_size_at_least_one: AtomicFact = GreaterEqualFact::new(
             FiniteSetSize::new(is_nonempty_set_fact.set.clone()).into(),
             Number::new("1".to_string()).into(),
             line_file,
         )
         .into();
-        let finite_set_size_result = self
-            .verify_non_equational_atomic_fact_with_known_atomic_facts(
-                &finite_set_size_at_least_one,
-            )?;
-        if !finite_set_size_result.is_true() {
+        let Some(results) = self
+            .verify_builtin_rule_premises(&[finite, finite_set_size_at_least_one], builtin_state)?
+        else {
             return Ok(None);
-        }
+        };
 
         Ok(Some(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
                 is_nonempty_set_fact.clone().into(),
                 InferResult::new(),
                 "nonempty_finite_set_from_positive_finite_set_size".to_string(),
-                vec![finite_result, finite_set_size_result],
+                results,
             )
             .into(),
         ))
@@ -579,22 +610,17 @@ impl Runtime {
                     is_finite_set_fact.line_file.clone(),
                 )
                 .into();
-                let left_result =
-                    self.verify_atomic_fact_as_builtin_rule_premise(&left_finite, builtin_state)?;
-                if !left_result.is_true() {
+                let Some(results) =
+                    self.verify_builtin_rule_premises(&[left_finite, right_finite], builtin_state)?
+                else {
                     return Ok((StmtUnknown::new()).into());
-                }
-                let right_result =
-                    self.verify_atomic_fact_as_builtin_rule_premise(&right_finite, builtin_state)?;
-                if !right_result.is_true() {
-                    return Ok((StmtUnknown::new()).into());
-                }
+                };
 
                 Ok(
                     (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         is_finite_set_fact.clone().into(),
                         "union_is_finite_set_when_both_sides_are_finite_set".to_string(),
-                        vec![left_result, right_result],
+                        results,
                     ))
                     .into(),
                 )
@@ -613,22 +639,17 @@ impl Runtime {
                     is_finite_set_fact.line_file.clone(),
                 )
                 .into();
-                let left_result =
-                    self.verify_atomic_fact_as_builtin_rule_premise(&left_finite, builtin_state)?;
-                if !left_result.is_true() {
+                let Some(results) =
+                    self.verify_builtin_rule_premises(&[left_finite, right_finite], builtin_state)?
+                else {
                     return Ok((StmtUnknown::new()).into());
-                }
-                let right_result =
-                    self.verify_atomic_fact_as_builtin_rule_premise(&right_finite, builtin_state)?;
-                if !right_result.is_true() {
-                    return Ok((StmtUnknown::new()).into());
-                }
+                };
 
                 Ok(
                     (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         is_finite_set_fact.clone().into(),
                         "intersect_is_finite_set_when_both_sides_are_finite_set".to_string(),
-                        vec![left_result, right_result],
+                        results,
                     ))
                     .into(),
                 )
@@ -683,22 +704,22 @@ impl Runtime {
             // Example: from `$is_finite_set(A)` and `$is_finite_set(B)`, prove
             // `$is_finite_set(cart(A, B))`.
             Obj::Cart(cart) => {
-                let mut step_results = Vec::new();
-                for arg in cart.args.iter() {
-                    let factor_finite: AtomicFact = IsFiniteSetFact::new(
-                        arg.as_ref().clone(),
-                        is_finite_set_fact.line_file.clone(),
-                    )
-                    .into();
-                    let factor_result = self.verify_atomic_fact_as_builtin_rule_premise(
-                        &factor_finite,
-                        builtin_state,
-                    )?;
-                    if !factor_result.is_true() {
-                        return Ok((StmtUnknown::new()).into());
-                    }
-                    step_results.push(factor_result);
-                }
+                let premises = cart
+                    .args
+                    .iter()
+                    .map(|arg| {
+                        IsFiniteSetFact::new(
+                            arg.as_ref().clone(),
+                            is_finite_set_fact.line_file.clone(),
+                        )
+                        .into()
+                    })
+                    .collect::<Vec<AtomicFact>>();
+                let Some(step_results) =
+                    self.verify_builtin_rule_premises(&premises, builtin_state)?
+                else {
+                    return Ok((StmtUnknown::new()).into());
+                };
                 Ok(
                     (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         is_finite_set_fact.clone().into(),
@@ -729,17 +750,32 @@ impl Runtime {
             not_is_finite_set_fact.line_file.clone(),
         )
         .into();
+        let right_finite: AtomicFact = IsFiniteSetFact::new(
+            set_minus.right.as_ref().clone(),
+            not_is_finite_set_fact.line_file.clone(),
+        )
+        .into();
+        if let Some(results) = self.verify_builtin_rule_premises(
+            &[left_infinite.clone(), right_finite.clone()],
+            builtin_state,
+        )? {
+            return Ok(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    not_is_finite_set_fact.clone().into(),
+                    "set_minus_is_infinite_when_left_side_is_infinite_and_right_side_is_finite"
+                        .to_string(),
+                    results,
+                )
+                .into(),
+            );
+        }
+
         let left_result =
             self.verify_atomic_fact_as_builtin_rule_premise(&left_infinite, builtin_state)?;
         if !left_result.is_true() {
             return Ok((StmtUnknown::new()).into());
         }
 
-        let right_finite: AtomicFact = IsFiniteSetFact::new(
-            set_minus.right.as_ref().clone(),
-            not_is_finite_set_fact.line_file.clone(),
-        )
-        .into();
         let mut right_result =
             self.verify_atomic_fact_as_builtin_rule_premise(&right_finite, builtin_state)?;
         if !right_result.is_true()
@@ -1037,4 +1073,12 @@ fn obj_can_trigger_nonempty_structural_builtin(obj: &Obj) -> bool {
             | Obj::MatrixSet(_)
             | Obj::StructObj(_)
     )
+}
+
+fn obj_is_intrinsically_nonempty_without_premises(obj: &Obj) -> bool {
+    match obj {
+        Obj::StandardSet(_) | Obj::PowerSet(_) => true,
+        Obj::ListSet(list) => !list.list.is_empty(),
+        _ => false,
+    }
 }

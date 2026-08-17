@@ -43,24 +43,21 @@ impl Runtime {
         // A union is contained in a set when both operands are already known
         // to be contained in it.
         if let Obj::Union(union) = &subset_fact.left {
-            let mut steps = Vec::with_capacity(2);
-            let mut both_operands_are_subsets = true;
-            for operand in [&union.left, &union.right] {
-                let operand_subset: AtomicFact = SubsetFact::new(
-                    operand.as_ref().clone(),
+            let premises: [AtomicFact; 2] = [
+                SubsetFact::new(
+                    union.left.as_ref().clone(),
                     subset_fact.right.clone(),
                     subset_fact.line_file.clone(),
                 )
-                .into();
-                let result = self
-                    .verify_atomic_fact_as_builtin_rule_premise(&operand_subset, builtin_state)?;
-                if !result.is_true() {
-                    both_operands_are_subsets = false;
-                    break;
-                }
-                steps.push(result);
-            }
-            if both_operands_are_subsets {
+                .into(),
+                SubsetFact::new(
+                    union.right.as_ref().clone(),
+                    subset_fact.right.clone(),
+                    subset_fact.line_file.clone(),
+                )
+                .into(),
+            ];
+            if let Some(steps) = self.verify_builtin_rule_premises(&premises, builtin_state)? {
                 return Ok(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         subset_fact.clone().into(),
@@ -75,24 +72,19 @@ impl Runtime {
         // A literal finite set is contained in a set when every listed member
         // is already known to belong to the target.
         if let Obj::ListSet(list_set) = &subset_fact.left {
-            let mut steps = Vec::with_capacity(list_set.list.len());
-            let mut all_elements_are_members = true;
-            for element in &list_set.list {
-                let membership: AtomicFact = InFact::new(
-                    element.as_ref().clone(),
-                    subset_fact.right.clone(),
-                    subset_fact.line_file.clone(),
-                )
-                .into();
-                let result =
-                    self.verify_atomic_fact_as_builtin_rule_premise(&membership, builtin_state)?;
-                if !result.is_true() {
-                    all_elements_are_members = false;
-                    break;
-                }
-                steps.push(result);
-            }
-            if all_elements_are_members {
+            let premises = list_set
+                .list
+                .iter()
+                .map(|element| {
+                    InFact::new(
+                        element.as_ref().clone(),
+                        subset_fact.right.clone(),
+                        subset_fact.line_file.clone(),
+                    )
+                    .into()
+                })
+                .collect::<Vec<AtomicFact>>();
+            if let Some(steps) = self.verify_builtin_rule_premises(&premises, builtin_state)? {
                 return Ok(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         subset_fact.clone().into(),
@@ -111,27 +103,20 @@ impl Runtime {
             (&subset_fact.left, &subset_fact.right)
         {
             if left_cart.args.len() == right_cart.args.len() {
-                let mut steps = Vec::with_capacity(left_cart.args.len());
-                let mut all_factors_are_subsets = true;
-                for (left_factor, right_factor) in left_cart.args.iter().zip(right_cart.args.iter())
-                {
-                    let factor_subset: AtomicFact = SubsetFact::new(
-                        left_factor.as_ref().clone(),
-                        right_factor.as_ref().clone(),
-                        subset_fact.line_file.clone(),
-                    )
-                    .into();
-                    let result = self.verify_atomic_fact_as_builtin_rule_premise(
-                        &factor_subset,
-                        builtin_state,
-                    )?;
-                    if !result.is_true() {
-                        all_factors_are_subsets = false;
-                        break;
-                    }
-                    steps.push(result);
-                }
-                if all_factors_are_subsets {
+                let premises = left_cart
+                    .args
+                    .iter()
+                    .zip(right_cart.args.iter())
+                    .map(|(left_factor, right_factor)| {
+                        SubsetFact::new(
+                            left_factor.as_ref().clone(),
+                            right_factor.as_ref().clone(),
+                            subset_fact.line_file.clone(),
+                        )
+                        .into()
+                    })
+                    .collect::<Vec<AtomicFact>>();
+                if let Some(steps) = self.verify_builtin_rule_premises(&premises, builtin_state)? {
                     return Ok(
                         FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                             subset_fact.clone().into(),

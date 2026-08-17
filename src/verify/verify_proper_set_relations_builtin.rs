@@ -1,6 +1,32 @@
 use crate::prelude::*;
 
 impl Runtime {
+    pub(crate) fn verify_builtin_proper_set_relation_from_quantifier_free_premise(
+        &mut self,
+        atomic_fact: &AtomicFact,
+        builtin_state: &UseBuiltinRuleVerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        let Some(premise) = proper_set_relation_definition_premise(atomic_fact) else {
+            return Ok(StmtUnknown::new().into());
+        };
+        let premise_result = self.verify_builtin_rule_premise(&premise, builtin_state)?;
+        if !premise_result.is_true() {
+            return Ok(StmtUnknown::new().into());
+        }
+
+        Ok(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                atomic_fact.clone().into(),
+                format!(
+                    "{} from its complete quantifier-free definition premise",
+                    atomic_fact
+                ),
+                vec![premise_result],
+            )
+            .into(),
+        )
+    }
+
     // Proper containment is ordinary containment plus inequality.
     // Example: `A $subset B` and `A != B` prove `A $proper_subset B`.
     pub(crate) fn verify_builtin_proper_set_relation_by_definition(
@@ -111,6 +137,16 @@ fn proper_set_relation_definition_facts(fact: &AtomicFact) -> Option<Vec<Fact>> 
             .into();
             Some(vec![definition])
         }
+        _ => None,
+    }
+}
+
+fn proper_set_relation_definition_premise(fact: &AtomicFact) -> Option<QuantifierFreeFact> {
+    match proper_set_relation_definition_facts(fact)?.as_slice() {
+        [Fact::AtomicFact(left), Fact::AtomicFact(right)] => Some(QuantifierFreeFact::AndFact(
+            AndFact::new(vec![left.clone(), right.clone()], fact.line_file()),
+        )),
+        [Fact::OrFact(or_fact)] => Some(QuantifierFreeFact::OrFact(or_fact.clone())),
         _ => None,
     }
 }

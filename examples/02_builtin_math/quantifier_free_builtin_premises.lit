@@ -26,6 +26,85 @@ forall a, b, c R:
     =>:
         a <= b / c
 
+forall a, b R:
+    a != 0 and b != 0
+    =>:
+        a / b != 0
+
+# Set constructors consume their defining logical shape as one premise.
+forall A, B set, x set:
+    x $in A or x $in B
+    =>:
+        x $in union(A, B)
+
+forall A, B set, x set:
+    x $in A and x $in B
+    =>:
+        x $in intersect(A, B)
+
+forall A, B set, x set:
+    x $in A and not x $in B
+    =>:
+        x $in set_minus(A, B)
+
+# A stored comparison chain remains a chain-shaped premise.
+forall a, x, b Z:
+    a <= x <= b
+    =>:
+        x $in closed_range(a, b)
+
+# Equality rearrangement may consume the complete addition-order disjunction.
+forall a, b, c R:
+    a + b = c or b + a = c
+    =>:
+        a = c - b
+
+# Compound alternatives can be disjunctions of conjunctions.
+forall a, b R:
+    0 <= a and 0 <= b or a <= 0 and b <= 0
+    =>:
+        0 <= a * b
+
+# Joint constructor premises work beyond binary set algebra.
+forall A, B set, x, y set:
+    x $in A and y $in B
+    =>:
+        (x, y) $in cart(A, B)
+
+forall A, B set:
+    $is_finite_set(A) and $is_finite_set(B)
+    =>:
+        $is_finite_set(union(A, B))
+
+# Proper containment is containment AND inequality; its negation is the complete OR
+# of failed containment and equality.
+forall A, B set:
+    A $subset B and A != B
+    =>:
+        A $proper_subset B
+
+forall A, B set:
+    not A $subset B or A = B
+    =>:
+        not A $proper_subset B
+
+# Equality builtins consume their mathematical side conditions as one premise.
+forall a, b R:
+    0 <= a and 0 <= b
+    =>:
+        sqrt(a * b) = sqrt(a) * sqrt(b)
+
+forall a, m, n set:
+    m $in N and n $in N and a $in C
+    =>:
+        a^(m + n) = a^m * a^n
+
+# Set-builder predicates are quantifier-free facts too, including disjunctions.
+forall x R:
+    x <= 0 or 1 <= x
+    =>:
+        x $in {y R: y <= 0 or 1 <= y}
+
 # Boundary: AndFact, ChainFact, and OrFact only organize the bounded atomic leaves.
 # They do not reset a consumed builtin-rule step or invoke the full verifier.
 # Executable boundary: verify::verify_builtin_rule::tests::

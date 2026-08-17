@@ -1,0 +1,29 @@
+# Tracer: named theorem, claim, and example proof scopes
+#
+# Before (unsupported by the native-carrier emitter):
+# thm one_eq_one:
+#     ? forall:
+#         1 = 1
+#
+# Now: the source theorem name is preserved, while claim and example bodies
+# become scoped Lean proofs whose local facts are joined by exact FactId.
+#
+# Boundary: theorem projections and unreviewed local statement kinds remain
+# fail-closed.
+#
+# Evidence:
+# target/release/litex -compact -strict -runner -f lean/examples/8_ProofScopes.lit
+# cd lean && ./compiler.sh compile examples/8_ProofScopes.lit
+# cd lean && ./compiler.sh check examples
+
+thm one_eq_one:
+    ? forall:
+        1 = 1
+
+claim:
+    ? 2 = 2
+    2 = 2
+
+example:
+    ? 3 = 3
+    3 = 3

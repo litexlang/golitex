@@ -129,11 +129,10 @@ impl Runtime {
         self.verify_in_fact_by_struct_obj(fact, struct_obj, &final_state)
     }
 
-    // Fold one literal or one-layer defined set builder. Atomic predicates,
-    // conjunctions, and comparison chains are verified without unfolding a
-    // second set builder. Example: known `0 <= x and x <= 1` introduces
-    // `x in {y R: 0 <= y and y <= 1}`. Disjunctions and quantified predicates
-    // remain outside this bounded constructor strategy.
+    // Fold one literal or one-layer defined set builder. Every quantifier-free
+    // predicate shape is kept intact, including disjunction: a known complete
+    // `P(x) or Q(x)` may establish membership without selecting either branch.
+    // Quantified predicates remain outside this bounded constructor strategy.
     fn verify_one_layer_set_builder_membership_with_builtin_strategy(
         &mut self,
         fact: &InFact,
@@ -209,14 +208,6 @@ impl Runtime {
                 ParamObjType::SetBuilder,
                 Some(&fact.line_file),
             )?;
-            if !matches!(
-                instantiated,
-                QuantifierFreeFact::AtomicFact(_)
-                    | QuantifierFreeFact::AndFact(_)
-                    | QuantifierFreeFact::ChainFact(_)
-            ) {
-                return Ok(StmtUnknown::new().into());
-            }
             // A set-builder predicate may itself be a checked proposition whose
             // body is already known (for example an existential witness). Try
             // the restricted final round first, then fold exactly one named
