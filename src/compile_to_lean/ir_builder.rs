@@ -37,8 +37,18 @@ impl LitexToLeanIrConstructionContext {
     }
 }
 
-impl Runtime {
-    pub(crate) fn build_litex_to_lean_ir_statement(
+pub struct LitexToLeanCompiler<'a> {
+    runtime: &'a Runtime,
+}
+
+impl<'a> LitexToLeanCompiler<'a> {
+    pub fn new(runtime: &'a Runtime) -> Self {
+        Self { runtime }
+    }
+}
+
+impl LitexToLeanCompiler<'_> {
+    pub fn compile_statement(
         &self,
         result: &StmtResult,
     ) -> Result<LitexToLeanStatementIr, RuntimeError> {
@@ -220,7 +230,7 @@ impl Runtime {
                 for fact in stmt.facts.iter() {
                     ensure_fact_objects_supported_by_litex_to_lean_ir(fact)?;
                     facts.push(LitexToLeanFactIr {
-                        fact_id: self.known_fact_id_for_fact(fact)?,
+                        fact_id: self.runtime.known_fact_id_for_fact(fact)?,
                         proposition: fact.clone(),
                         proof: LitexToLeanFactProofIr::Trusted,
                     });
@@ -412,7 +422,7 @@ impl Runtime {
         }
         return_check.fact_id = None;
 
-        let function_identifier_obj = self.declared_identifier_obj(stmt.name());
+        let function_identifier_obj = self.runtime.declared_identifier_obj(stmt.name());
         let expected_membership: Fact = InFact::new(
             function_identifier_obj.clone(),
             source_function_set.clone(),
@@ -509,7 +519,7 @@ impl Runtime {
             dimension_checks.push(check);
         }
 
-        let target = self.declared_identifier_obj(stmt.name());
+        let target = self.runtime.declared_identifier_obj(stmt.name());
         let expected_is_tuple: Fact =
             IsTupleFact::new(target.clone(), stmt.line_file.clone()).into();
         let expected_dimension: Fact = EqualFact::new(
@@ -702,7 +712,7 @@ impl Runtime {
             .map(|result| self.build_litex_to_lean_ir_nested_statement(result))
             .collect::<Result<Vec<_>, RuntimeError>>()?;
 
-        let instantiated_types = self.inst_param_def_with_type_one_by_one(
+        let instantiated_types = self.runtime.inst_param_def_with_type_one_by_one(
             param_defs,
             &stmt.equal_tos,
             ParamObjType::Exist,
@@ -780,6 +790,7 @@ impl Runtime {
                 ));
             }
             let expected = self
+                .runtime
                 .inst_quantifier_free_fact(body, &param_to_obj_map, ParamObjType::Exist, None)?
                 .to_fact();
             let mut premise = self.build_litex_to_lean_ir_fact_from_result(
@@ -888,15 +899,15 @@ impl Runtime {
             ));
         }
 
-        let reconstructed = self.instantiate_existential_prop_definition(
+        let reconstructed = self.runtime.instantiate_existential_prop_definition(
             &stmt.atomic_fact,
             &verification.definition,
             &stmt.line_file,
         )?;
         if !reconstructed.is_plain_exist()
-            || Runtime::exist_fact_normalized_body_string(self, &reconstructed)?
+            || Runtime::exist_fact_normalized_body_string(self.runtime, &reconstructed)?
                 != Runtime::exist_fact_normalized_body_string(
-                    self,
+                    self.runtime,
                     &verification.instantiated_existential,
                 )?
         {
@@ -1046,8 +1057,8 @@ impl Runtime {
             ));
         };
         if !source_exist_fact.is_plain_exist()
-            || Runtime::exist_fact_normalized_body_string(self, source_exist_fact)?
-                != Runtime::exist_fact_normalized_body_string(self, exist_fact)?
+            || Runtime::exist_fact_normalized_body_string(self.runtime, source_exist_fact)?
+                != Runtime::exist_fact_normalized_body_string(self.runtime, exist_fact)?
         {
             return Err(litex_to_lean_ir_error(
                 line_file,
@@ -1068,7 +1079,7 @@ impl Runtime {
                 Identifier::new_bound(binding.name().to_string(), binding.as_ref()).into()
             })
             .collect::<Vec<Obj>>();
-        let instantiated_types = self.inst_param_def_with_type_one_by_one(
+        let instantiated_types = self.runtime.inst_param_def_with_type_one_by_one(
             source_exist_fact.params_def_with_type(),
             &witness_objs,
             ParamObjType::Exist,
@@ -1139,6 +1150,7 @@ impl Runtime {
             .enumerate()
         {
             let calculated = self
+                .runtime
                 .inst_quantifier_free_fact(body, &param_to_obj_map, ParamObjType::Exist, None)?
                 .to_fact();
             if calculated.to_string() != expected.to_string() {
@@ -1469,6 +1481,7 @@ impl Runtime {
             ));
         }
         let definition = self
+            .runtime
             .get_active_prop_definition_by_name(&verification.prop)
             .ok_or_else(|| {
                 litex_to_lean_ir_error(
@@ -1880,7 +1893,7 @@ impl Runtime {
     ) -> Result<LitexToLeanStatementIr, RuntimeError> {
         match result.litex_to_lean_ir() {
             Some(ir) => Ok(ir.clone()),
-            None => self.build_litex_to_lean_ir_statement(result),
+            None => self.compile_statement(result),
         }
     }
 
@@ -1923,6 +1936,7 @@ impl Runtime {
         }
         ensure_fact_objects_supported_by_litex_to_lean_ir(&verification.fact)?;
         let target_fact_id = self
+            .runtime
             .known_fact_id_for_fact(&verification.fact)?
             .ok_or_else(|| {
                 litex_to_lean_ir_error(
@@ -3067,7 +3081,7 @@ impl Runtime {
                 "concrete prop reduction target does not match its retained definition",
             ));
         }
-        let instantiated_types = self.inst_param_def_with_type_one_by_one(
+        let instantiated_types = self.runtime.inst_param_def_with_type_one_by_one(
             &definition.params_def_with_type,
             &target.body,
             ParamObjType::DefHeader,
@@ -3094,7 +3108,7 @@ impl Runtime {
             .iff_facts
             .iter()
             .map(|clause| {
-                self.inst_fact(
+                self.runtime.inst_fact(
                     clause,
                     &param_to_arg_map,
                     ParamObjType::DefHeader,
@@ -3381,8 +3395,8 @@ impl Runtime {
                 if source_exist.is_plain_exist()
                     && goal_exist.is_plain_exist()
                     && source_exist.can_be_used_to_verify_goal(goal_exist)
-                    && Runtime::exist_fact_normalized_body_string(self, source_exist)?
-                        == Runtime::exist_fact_normalized_body_string(self, goal_exist)?
+                    && Runtime::exist_fact_normalized_body_string(self.runtime, source_exist)?
+                        == Runtime::exist_fact_normalized_body_string(self.runtime, goal_exist)?
                 {
                     return Ok(LitexToLeanFactProofIr::ExistentialAlphaRenameCitation {
                         source_fact_id,
@@ -3600,7 +3614,7 @@ impl Runtime {
         if let Some(fact_id) = context.local_fact_ids.get(&cited_fact.to_string()) {
             return Ok(Some(*fact_id));
         }
-        if let Some(fact_id) = self.known_fact_id_for_fact(cited_fact)? {
+        if let Some(fact_id) = self.runtime.known_fact_id_for_fact(cited_fact)? {
             return Ok(Some(fact_id));
         }
         // A forall conclusion can cite one of its temporary premises. The
@@ -3718,7 +3732,7 @@ impl Runtime {
         let param_to_arg_map = source_forall
             .params_def_with_type
             .param_defs_and_args_to_param_to_arg_map(&argument_objects);
-        let instantiated_conclusion = self.inst_fact(
+        let instantiated_conclusion = self.runtime.inst_fact(
             &source_conclusion.clone().to_fact(),
             &param_to_arg_map,
             ParamObjType::Forall,
@@ -4165,7 +4179,7 @@ impl Runtime {
                 .local_fact_ids
                 .get(&equality_fact.to_string())
                 .copied()
-                .or(self.known_fact_id_for_fact(&equality_fact)?);
+                .or(self.runtime.known_fact_id_for_fact(&equality_fact)?);
             if available_fact_id != Some(step.source_fact_id) {
                 return Err(litex_to_lean_ir_error(
                     &goal.line_file(),
@@ -4232,14 +4246,14 @@ impl Runtime {
             ));
         }
 
-        let reconstructed = self.instantiate_existential_prop_definition(
+        let reconstructed = self.runtime.instantiate_existential_prop_definition(
             &evidence.fact,
             &evidence.definition,
             &goal.line_file(),
         )?;
         if !reconstructed.is_plain_exist()
-            || Runtime::exist_fact_normalized_body_string(self, &reconstructed)?
-                != Runtime::exist_fact_normalized_body_string(self, goal_existential)?
+            || Runtime::exist_fact_normalized_body_string(self.runtime, &reconstructed)?
+                != Runtime::exist_fact_normalized_body_string(self.runtime, goal_existential)?
         {
             return Err(litex_to_lean_ir_error(
                 &goal.line_file(),
@@ -4355,7 +4369,7 @@ impl Runtime {
         }
         let children = self.build_litex_to_lean_ir_subgoals(subgoals, context)?;
         for (template, child) in expected_templates.iter().zip(&children) {
-            let expected = self.inst_atomic_fact(
+            let expected = self.runtime.inst_atomic_fact(
                 template,
                 &param_to_arg_map,
                 ParamObjType::Forall,
@@ -4381,7 +4395,7 @@ impl Runtime {
         for (variable, object) in rule.schema().variables.iter().zip(&evidence.bindings) {
             let object = LitexToLeanObjectIr::lower(object)
                 .map_err(|message| litex_to_lean_ir_error(&goal.line_file(), message))?;
-            let instantiated_param_type = self.inst_param_type(
+            let instantiated_param_type = self.runtime.inst_param_type(
                 &variable.param_type,
                 &param_to_arg_map,
                 ParamObjType::Forall,
@@ -4536,7 +4550,9 @@ impl Runtime {
         let mut inferred = Vec::new();
         for output in infer_result.store_fact_outputs.iter() {
             let source_fact = &output.itself_and_why_itself_is_stored.0;
-            let source_id = output.fact_id.or(self.known_fact_id_for_fact(source_fact)?);
+            let source_id = output
+                .fact_id
+                .or(self.runtime.known_fact_id_for_fact(source_fact)?);
             let source_key = source_fact.to_string();
             if seen.insert(source_key) {
                 let proof = if let Some(target_set) =
@@ -4593,7 +4609,7 @@ impl Runtime {
                     fact,
                     &output.itself_and_why_itself_is_stored.1,
                 )?;
-                let fact_id = (*recorded_fact_id).or(self.known_fact_id_for_fact(fact)?);
+                let fact_id = (*recorded_fact_id).or(self.runtime.known_fact_id_for_fact(fact)?);
                 if matches!(proof, LitexToLeanFactProofIr::Inference { .. }) {
                     if let Some(fact_id) = fact_id {
                         return Err(litex_to_lean_ir_error(
@@ -4692,7 +4708,7 @@ fn infer_results_have_same_frozen_effects(left: &InferResult, right: &InferResul
 }
 
 fn build_litex_to_lean_ir_inferred_fact_proof(
-    runtime: &Runtime,
+    compiler: &LitexToLeanCompiler<'_>,
     source_fact: &Fact,
     source_fact_id: Option<FactId>,
     inferred_fact: &Fact,
@@ -4745,14 +4761,16 @@ fn build_litex_to_lean_ir_inferred_fact_proof(
         Some(source_fact_id),
     ) = (source_fact, inferred_fact, source_fact_id)
     {
-        let module_names = runtime.atomic_fact_referenced_module_names(source_atomic);
-        if let Some(transport) = runtime.equality_transport_for_known_atomic_fact(
+        let module_names = compiler
+            .runtime
+            .atomic_fact_referenced_module_names(source_atomic);
+        if let Some(transport) = compiler.runtime.equality_transport_for_known_atomic_fact(
             source_atomic,
             inferred_atomic,
             &module_names,
         ) {
             if !transport.steps.is_empty() {
-                let rewritten = runtime.build_litex_to_lean_ir_equality_rewrite_fact(
+                let rewritten = compiler.build_litex_to_lean_ir_equality_rewrite_fact(
                     inferred_fact,
                     LitexToLeanFactIr {
                         fact_id: Some(source_fact_id),
@@ -4768,11 +4786,12 @@ fn build_litex_to_lean_ir_inferred_fact_proof(
     if let (Fact::AtomicFact(AtomicFact::NormalAtomicFact(source)), Some(source_fact_id)) =
         (source_fact, source_fact_id)
     {
-        if let Some(definition) =
-            runtime.get_active_prop_definition_by_name(&source.predicate.to_string())
+        if let Some(definition) = compiler
+            .runtime
+            .get_active_prop_definition_by_name(&source.predicate.to_string())
         {
             let (parameter_requirements, clauses) =
-                runtime.instantiated_prop_definition_components(&definition, source_fact)?;
+                compiler.instantiated_prop_definition_components(&definition, source_fact)?;
             if parameter_requirements
                 .iter()
                 .chain(clauses.iter())
@@ -4959,7 +4978,7 @@ fn added_fact_id_from_infer_result(
 }
 
 fn build_litex_to_lean_ir_contradiction_results(
-    runtime: &Runtime,
+    compiler: &LitexToLeanCompiler<'_>,
     results: &[StmtResult],
     impossible_fact: &AtomicFact,
     context: &LitexToLeanIrConstructionContext,
@@ -4972,9 +4991,12 @@ fn build_litex_to_lean_ir_contradiction_results(
     }
     let expected_fact: Fact = impossible_fact.clone().into();
     let expected_negation: Fact = impossible_fact.logical_negation()?.into();
-    let mut fact =
-        runtime.build_litex_to_lean_ir_fact_from_result(&results[0], "impossible fact", context)?;
-    let mut negated_fact = runtime.build_litex_to_lean_ir_fact_from_result(
+    let mut fact = compiler.build_litex_to_lean_ir_fact_from_result(
+        &results[0],
+        "impossible fact",
+        context,
+    )?;
+    let mut negated_fact = compiler.build_litex_to_lean_ir_fact_from_result(
         &results[1],
         "negated impossible fact",
         context,
@@ -5199,6 +5221,7 @@ mod fact_transformation_evidence_tests {
     #[test]
     fn equality_rewrite_without_fact_id_is_explicitly_unsupported() {
         let runtime = Runtime::new();
+        let compiler = LitexToLeanCompiler::new(&runtime);
         let source = integer_membership(Number::new("2".to_string()).into());
         let alias: Obj = Identifier::new("alias".to_string()).into();
         let target = integer_membership(alias.clone());
@@ -5207,7 +5230,7 @@ mod fact_transformation_evidence_tests {
             Number::new("2".to_string()).into(),
             default_line_file(),
         );
-        let rewritten = runtime.build_litex_to_lean_ir_equality_rewrite_fact(
+        let rewritten = compiler.build_litex_to_lean_ir_equality_rewrite_fact(
             &target,
             LitexToLeanFactIr {
                 fact_id: None,
@@ -5234,9 +5257,10 @@ mod fact_transformation_evidence_tests {
     #[test]
     fn fact_transformation_rejects_a_changed_source() {
         let runtime = Runtime::new();
+        let compiler = LitexToLeanCompiler::new(&runtime);
         let proved = integer_membership(Number::new("2".to_string()).into());
         let changed = integer_membership(Number::new("3".to_string()).into());
-        let transformed = runtime.build_litex_to_lean_ir_fact_transformation(
+        let transformed = compiler.build_litex_to_lean_ir_fact_transformation(
             LitexToLeanFactIr {
                 fact_id: None,
                 proposition: proved,

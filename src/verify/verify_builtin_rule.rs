@@ -180,6 +180,7 @@ mod tests {
                 "with_builtin_computation",
             ]
             .concat(),
+            ["verify_non_equational_atomic_fact_with_", "known_fact("].concat(),
             [
                 "verify_non_equational_atomic_fact_by_builtin_",
                 "computation",
@@ -226,9 +227,11 @@ mod tests {
             .split("pub(crate) fn verify_non_equational_atomic_fact_with_direct_routes(")
             .nth(1)
             .expect("non-equational owner must expose a direct route")
-            .split("pub(crate) fn verify_non_equational_atomic_fact_with_known_fact(")
+            .split(
+                "pub(crate) fn verify_non_equational_atomic_fact_with_zero_premise_verification(",
+            )
             .next()
-            .expect("known-fact leaf must follow the non-equational direct route");
+            .expect("zero-premise verification must follow the non-equational direct route");
         let non_equational_zero_premise = non_equational_direct
             .find("verify_non_equational_atomic_fact_with_zero_premise_verification")
             .expect("non-equational direct route must begin with zero-premise verification");
@@ -247,7 +250,7 @@ mod tests {
             .next()
             .expect("direct evaluation must follow zero-premise verification");
         let known_index = zero_premise_impl
-            .find("verify_non_equational_atomic_fact_with_known_fact(atomic_fact)")
+            .find("verify_non_equational_atomic_fact_with_known_atomic_facts(atomic_fact)")
             .expect("zero-premise verification must try known facts first");
         let evaluation_index = zero_premise_impl
             .find("verify_non_equational_atomic_fact_by_direct_evaluation(atomic_fact)")

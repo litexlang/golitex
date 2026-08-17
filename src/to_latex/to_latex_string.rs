@@ -1517,6 +1517,16 @@ impl Mod {
     }
 }
 
+impl Quot {
+    pub fn to_latex_string(&self) -> String {
+        format!(
+            r"\operatorname{{quot}}\left( {}, {} \right)",
+            self.left.to_latex_string(),
+            self.right.to_latex_string()
+        )
+    }
+}
+
 impl Gcd {
     pub fn to_latex_string(&self) -> String {
         format!(
@@ -2264,6 +2274,7 @@ impl Obj {
             Obj::Mul(x) => x.to_latex_string(),
             Obj::Div(x) => x.to_latex_string(),
             Obj::Mod(x) => x.to_latex_string(),
+            Obj::Quot(x) => x.to_latex_string(),
             Obj::Gcd(x) => x.to_latex_string(),
             Obj::Lcm(x) => x.to_latex_string(),
             Obj::Floor(x) => x.to_latex_string(),

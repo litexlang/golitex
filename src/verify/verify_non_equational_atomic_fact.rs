@@ -23,14 +23,6 @@ impl Runtime {
         )
     }
 
-    pub(crate) fn verify_non_equational_atomic_fact_with_known_fact(
-        &mut self,
-        atomic_fact: &AtomicFact,
-    ) -> Result<StmtResult, RuntimeError> {
-        let result = self.verify_non_equational_atomic_fact_with_known_atomic_facts(atomic_fact)?;
-        Ok(self.remember_successful_atomic_fact_for_statement(atomic_fact, result))
-    }
-
     // A premise is a child fact that a rule must verify before concluding its parent fact.
     // Zero-premise verification closes the current fact without generating such child facts:
     // it first reuses a known fact, then tries direct evaluation on the fact as written.
@@ -41,7 +33,8 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
     ) -> Result<StmtResult, RuntimeError> {
-        let known_result = self.verify_non_equational_atomic_fact_with_known_fact(atomic_fact)?;
+        let known_result =
+            self.verify_non_equational_atomic_fact_with_known_atomic_facts(atomic_fact)?;
         if known_result.is_true() {
             return Ok(known_result);
         }

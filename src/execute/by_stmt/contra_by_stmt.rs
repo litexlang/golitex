@@ -36,7 +36,7 @@ impl Runtime {
         let to_prove_fact = stmt.to_prove.clone();
         let (exec_proof_inside_results, last_error, reverse_assumption_fact_id, proof_scope) = self
             .run_in_local_env(|rt| {
-                let captures_well_definedness = rt.captures_litex_to_lean_well_definedness();
+                let captures_well_definedness = rt.captures_well_definedness();
                 if captures_well_definedness {
                     rt.begin_statement_well_definedness_capture();
                 }

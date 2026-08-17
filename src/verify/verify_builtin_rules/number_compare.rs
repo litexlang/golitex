@@ -969,7 +969,8 @@ impl Runtime {
                 line_file.clone(),
             )
             .into();
-            subset_result = self.verify_non_equational_atomic_fact_with_known_fact(&superset)?;
+            subset_result =
+                self.verify_non_equational_atomic_fact_with_known_atomic_facts(&superset)?;
         }
         if !subset_result.is_true() {
             return Ok(None);

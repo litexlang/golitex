@@ -315,7 +315,7 @@ impl Runtime {
             // without a Lean declaration and turns the real proof into a
             // circular known-fact citation.  Proper prefixes remain available
             // for the next curried layer.
-            if self.litex_to_lean_ir_mode() && i == fn_obj.body.len() - 1 {
+            if self.captures_well_definedness() && i == fn_obj.body.len() - 1 {
                 break;
             }
 

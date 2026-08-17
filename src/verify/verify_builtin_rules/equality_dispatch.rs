@@ -1042,6 +1042,15 @@ impl Runtime {
             return Ok(done);
         }
 
+        if let Some(done) = self.try_verify_quot_euclidean_decomposition(
+            left,
+            right,
+            line_file.clone(),
+            builtin_state,
+        )? {
+            return Ok(done);
+        }
+
         if let Some(done) = self.try_verify_mod_eq_remainder_from_euclidean_division(
             left,
             right,

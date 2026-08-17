@@ -1,4 +1,4 @@
-//! Checked, backend-facing evidence produced only by `Runtime::litex_to_lean_ir_mode`.
+//! Checked, backend-facing evidence built by `LitexToLeanCompiler` from verifier results.
 //!
 //! This IR records the verifier route that succeeded. Lean emission consumes
 //! these values and must not re-run Litex proof search or guess a proof from a

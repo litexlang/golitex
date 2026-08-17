@@ -178,6 +178,8 @@ pub fn builtin_symbol_ref(name: &str) -> Option<SymbolRef> {
         FACTORIAL => 58,
         C_NOT_ZERO => 59,
         COPRIME => 60,
+        DVD => 61,
+        QUOT => 62,
         _ => return None,
     };
     Some(SymbolRef::new(

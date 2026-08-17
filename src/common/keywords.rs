@@ -13,6 +13,7 @@ pub const SUB: &str = "-";
 pub const MUL: &str = "*";
 pub const DIV: &str = "/";
 pub const MOD: &str = "%";
+pub const QUOT: &str = "quot";
 pub const GCD: &str = "gcd";
 pub const LCM: &str = "lcm";
 pub const FLOOR: &str = "floor";
@@ -208,6 +209,7 @@ pub const SURJECTIVE: &str = "surjective";
 pub const BIJECTIVE: &str = "bijective";
 pub const PRIME: &str = "prime";
 pub const COPRIME: &str = "coprime";
+pub const DVD: &str = "dvd";
 pub const IS_CHOICE_FUNCTION_FOR: &str = "is_choice_function_for";
 
 fn build_key_symbols_map() -> HashMap<&'static str, &'static str> {
@@ -379,6 +381,7 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         TUPLE,
         ALGO,
         ABS,
+        QUOT,
         SIN,
         COS,
         TAN,
@@ -397,6 +400,7 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         BIJECTIVE,
         PRIME,
         COPRIME,
+        DVD,
         PROPER_SUBSET,
         PROPER_SUPERSET,
     ];
@@ -524,6 +528,7 @@ pub fn is_builtin_predicate(atom_name: &str) -> bool {
         || atom_name == BIJECTIVE
         || atom_name == PRIME
         || atom_name == COPRIME
+        || atom_name == DVD
         || atom_name == IS_CHOICE_FUNCTION_FOR
 }
 

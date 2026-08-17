@@ -206,6 +206,7 @@ pub(crate) fn canonical_obj_view(obj: &Obj) -> Result<CanonicalObjView<'_>, Cano
         Obj::Mul(x) => binary(ObjKind::Mul, &x.left, &x.right),
         Obj::Div(x) => binary(ObjKind::Div, &x.left, &x.right),
         Obj::Mod(x) => binary(ObjKind::Mod, &x.left, &x.right),
+        Obj::Quot(x) => binary(ObjKind::Quot, &x.left, &x.right),
         Obj::Gcd(x) => binary(ObjKind::Gcd, &x.left, &x.right),
         Obj::Lcm(x) => binary(ObjKind::Lcm, &x.left, &x.right),
         Obj::Min(x) => binary(ObjKind::Min, &x.left, &x.right),

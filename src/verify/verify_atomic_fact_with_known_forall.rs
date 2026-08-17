@@ -900,6 +900,12 @@ impl Runtime {
             Obj::Mul(ref a) => self.match_arg_when_left_is_mul(&a.left, &a.right, given_arg),
             Obj::Div(ref a) => self.match_arg_when_left_is_div(&a.left, &a.right, given_arg),
             Obj::Mod(ref a) => self.match_arg_when_left_is_mod(&a.left, &a.right, given_arg),
+            Obj::Quot(ref a) => match given_arg {
+                Obj::Quot(g) => {
+                    self.match_arg_binary_then_merge(&a.left, &a.right, &g.left, &g.right)
+                }
+                _ => Ok(None),
+            },
             Obj::Gcd(ref a) => match given_arg {
                 Obj::Gcd(g) => {
                     self.match_arg_binary_then_merge(&a.left, &a.right, &g.left, &g.right)

@@ -655,7 +655,7 @@ impl Runtime {
             tb.skip_token(RIGHT_BRACE)?;
             return Ok(Abs::new(arg).into());
         }
-        if tok == GCD || tok == LCM || tok == MIN || tok == MAX {
+        if tok == QUOT || tok == GCD || tok == LCM || tok == MIN || tok == MAX {
             let operator = tok.to_string();
             tb.skip()?;
             let args = self.parse_braced_objs(tb)?;
@@ -671,6 +671,7 @@ impl Runtime {
             let left = args.next().expect("native binary arity was checked");
             let right = args.next().expect("native binary arity was checked");
             return Ok(match operator.as_str() {
+                QUOT => Quot::new(left, right).into(),
                 GCD => Gcd::new(left, right).into(),
                 LCM => Lcm::new(left, right).into(),
                 MIN => Min::new(left, right).into(),

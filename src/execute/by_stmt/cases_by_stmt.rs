@@ -103,7 +103,7 @@ impl Runtime {
 
         for case_index in 0..stmt.cases.len() {
             let (case_fact_id, mut case_results, proof_scope) = self.run_in_local_env(|rt| {
-                let captures_well_definedness = rt.captures_litex_to_lean_well_definedness();
+                let captures_well_definedness = rt.captures_well_definedness();
                 if captures_well_definedness {
                     rt.begin_statement_well_definedness_capture();
                 }

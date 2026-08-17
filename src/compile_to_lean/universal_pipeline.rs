@@ -10,9 +10,11 @@ use super::{
 };
 
 pub fn compile_to_lean(source_code: &str, runtime: &mut Runtime) -> Result<String, RuntimeError> {
-    let previous_mode = runtime.replace_litex_to_lean_ir_mode(true);
+    let started_capture = runtime.start_well_defined_capture();
     let result = compile_to_lean_in_mode(source_code, runtime);
-    runtime.replace_litex_to_lean_ir_mode(previous_mode);
+    if started_capture {
+        runtime.stop_well_defined_capture();
+    }
     result
 }
 
@@ -97,7 +99,7 @@ fn compile_to_lean_in_mode(
         let Some(statement_ir) = result.litex_to_lean_ir() else {
             return Err(universal_error(
                 &statement.line_file(),
-                "Litex-to-Lean mode completed a statement without producing IR",
+                "Litex-to-Lean capture completed a statement without producing IR",
             ));
         };
         ir.push(statement_ir.clone());
@@ -11131,7 +11133,7 @@ mod tests {
             runtime.new_file_path_new_env_new_name_scope(
                 "compile_to_lean_inferred_forall_premise.lit",
             );
-            runtime.replace_litex_to_lean_ir_mode(true);
+            runtime.start_well_defined_capture();
             let tokenizer = Tokenizer::new();
             let mut blocks = tokenizer
                 .parse_blocks(source, runtime.current_file_path_rc())
@@ -11267,7 +11269,7 @@ mod tests {
             let source = "have x R\nx $in R\n";
             let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope("compile_to_lean_object_choice.lit");
-            runtime.replace_litex_to_lean_ir_mode(true);
+            runtime.start_well_defined_capture();
             let tokenizer = Tokenizer::new();
             let blocks = tokenizer
                 .parse_blocks(source, runtime.current_file_path_rc())
@@ -11379,7 +11381,7 @@ y = 1
             let mut runtime = Runtime::new();
             runtime
                 .new_file_path_new_env_new_name_scope("compile_to_lean_existential_intro_elim.lit");
-            runtime.replace_litex_to_lean_ir_mode(true);
+            runtime.start_well_defined_capture();
             let tokenizer = Tokenizer::new();
             let blocks = tokenizer
                 .parse_blocks(source, runtime.current_file_path_rc())
@@ -11500,7 +11502,7 @@ y = 1
                 include_str!("../../lean/examples/cases/compile_to_lean_example_and_sketch.lit");
             let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope("compile_to_lean_example_and_sketch.lit");
-            runtime.replace_litex_to_lean_ir_mode(true);
+            runtime.start_well_defined_capture();
             let tokenizer = Tokenizer::new();
             let blocks = tokenizer
                 .parse_blocks(source, runtime.current_file_path_rc())
@@ -11615,7 +11617,7 @@ by contra:
             runtime.new_file_path_new_env_new_name_scope(
                 "compile_to_lean_case_and_contradiction_scopes.lit",
             );
-            runtime.replace_litex_to_lean_ir_mode(true);
+            runtime.start_well_defined_capture();
             let tokenizer = Tokenizer::new();
             let blocks = tokenizer
                 .parse_blocks(source, runtime.current_file_path_rc())
@@ -11768,7 +11770,7 @@ by contra:
             runtime.new_file_path_new_env_new_name_scope(
                 "compile_to_lean_structured_case_and_negative_contra.lit",
             );
-            runtime.replace_litex_to_lean_ir_mode(true);
+            runtime.start_well_defined_capture();
             let tokenizer = Tokenizer::new();
             let blocks = tokenizer
                 .parse_blocks(source, runtime.current_file_path_rc())
@@ -11910,7 +11912,7 @@ by contra:
             runtime.new_file_path_new_env_new_name_scope(
                 "compile_to_lean_nested_case_contra_branch_wd.lit",
             );
-            runtime.replace_litex_to_lean_ir_mode(true);
+            runtime.start_well_defined_capture();
             let tokenizer = Tokenizer::new();
             let blocks = tokenizer
                 .parse_blocks(source, runtime.current_file_path_rc())
@@ -12028,7 +12030,7 @@ by contra:
 "#;
             let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope("compile_to_lean_named_theorem.lit");
-            runtime.replace_litex_to_lean_ir_mode(true);
+            runtime.start_well_defined_capture();
             let tokenizer = Tokenizer::new();
             let mut blocks = tokenizer
                 .parse_blocks(source, runtime.current_file_path_rc())
@@ -12212,7 +12214,7 @@ S = S
 
             let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope("set-builder-scope-malformed.lit");
-            runtime.replace_litex_to_lean_ir_mode(true);
+            runtime.start_well_defined_capture();
             let tokenizer = Tokenizer::new();
             let mut blocks = tokenizer
                 .parse_blocks(source, runtime.current_file_path_rc())
@@ -12258,7 +12260,7 @@ S = S
             let source = "have S set = {x R: x != 0, 1 / x > 0}\nS = S\n";
             let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope("set-builder-ordered-local-wd.lit");
-            runtime.replace_litex_to_lean_ir_mode(true);
+            runtime.start_well_defined_capture();
             let tokenizer = Tokenizer::new();
             let mut blocks = tokenizer
                 .parse_blocks(source, runtime.current_file_path_rc())
@@ -12388,7 +12390,7 @@ id(1) = 1
 
             let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope("named-function-malformed.lit");
-            runtime.replace_litex_to_lean_ir_mode(true);
+            runtime.start_well_defined_capture();
             let tokenizer = Tokenizer::new();
             let blocks = tokenizer
                 .parse_blocks(source, runtime.current_file_path_rc())
@@ -12480,7 +12482,7 @@ forall a R:
             let source = "have fn inc(x R) R = x + 1";
             let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope("named-function-malformed-wd.lit");
-            runtime.replace_litex_to_lean_ir_mode(true);
+            runtime.start_well_defined_capture();
             let tokenizer = Tokenizer::new();
             let mut blocks = tokenizer
                 .parse_blocks(source, runtime.current_file_path_rc())
@@ -12525,7 +12527,7 @@ forall a R:
             let reciprocal_source = "have fn reciprocal(x R: x != 0) R = 1 / x";
             let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope("named-function-missing-domain.lit");
-            runtime.replace_litex_to_lean_ir_mode(true);
+            runtime.start_well_defined_capture();
             let tokenizer = Tokenizer::new();
             let mut blocks = tokenizer
                 .parse_blocks(reciprocal_source, runtime.current_file_path_rc())
@@ -12601,7 +12603,7 @@ q = q
 "#;
             let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope("indexed-aggregate.lit");
-            runtime.replace_litex_to_lean_ir_mode(true);
+            runtime.start_well_defined_capture();
             let tokenizer = Tokenizer::new();
             let blocks = tokenizer
                 .parse_blocks(source, runtime.current_file_path_rc())
@@ -12749,7 +12751,7 @@ into_builder(1) = 1
             let source = scoped_nested_application_source();
             let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope("scoped-object-cache-tracer.lit");
-            runtime.replace_litex_to_lean_ir_mode(true);
+            runtime.start_well_defined_capture();
             let tokenizer = Tokenizer::new();
             let blocks = tokenizer
                 .parse_blocks(source, runtime.current_file_path_rc())
@@ -12887,7 +12889,7 @@ into_builder(1) = 1
             runtime.new_file_path_new_env_new_name_scope(
                 "compile_to_lean_trusted_forall_atomic_fact.lit",
             );
-            runtime.replace_litex_to_lean_ir_mode(true);
+            runtime.start_well_defined_capture();
             let tokenizer = Tokenizer::new();
             let blocks = tokenizer
                 .parse_blocks(source, runtime.current_file_path_rc())
@@ -13117,7 +13119,7 @@ $is_zero(0)
 "#;
             let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope("fact-id-completeness.lit");
-            runtime.replace_litex_to_lean_ir_mode(true);
+            runtime.start_well_defined_capture();
             let tokenizer = Tokenizer::new();
             let blocks = tokenizer
                 .parse_blocks(source, runtime.current_file_path_rc())
@@ -13272,7 +13274,7 @@ trust $is_zero(0)
             let source = "have named_zero R = 0\n";
             let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope("changed-object-definition.lit");
-            runtime.replace_litex_to_lean_ir_mode(true);
+            runtime.start_well_defined_capture();
             let tokenizer = Tokenizer::new();
             let mut blocks = tokenizer
                 .parse_blocks(source, runtime.current_file_path_rc())
@@ -13318,7 +13320,7 @@ by def $is_zero(named_zero)
 "#;
             let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope("changed-definition-reduction.lit");
-            runtime.replace_litex_to_lean_ir_mode(true);
+            runtime.start_well_defined_capture();
             let tokenizer = Tokenizer::new();
             let blocks = tokenizer
                 .parse_blocks(source, runtime.current_file_path_rc())
@@ -13410,7 +13412,7 @@ forall a, b, c set:
 "#;
             let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope("bad-known-equality-fact-id.lit");
-            runtime.replace_litex_to_lean_ir_mode(true);
+            runtime.start_well_defined_capture();
             let tokenizer = Tokenizer::new();
             let blocks = tokenizer
                 .parse_blocks(source, runtime.current_file_path_rc())
@@ -13592,7 +13594,7 @@ forall g fn(x R) fn(y R) R:
 "#;
             let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope("missing-arithmetic-result-carrier.lit");
-            runtime.replace_litex_to_lean_ir_mode(true);
+            runtime.start_well_defined_capture();
             let tokenizer = Tokenizer::new();
             let blocks = tokenizer
                 .parse_blocks(source, runtime.current_file_path_rc())
@@ -13652,7 +13654,7 @@ forall g fn(x R) fn(y R) R:
 "#;
             let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope("malformed-occurrence-wd-use.lit");
-            runtime.replace_litex_to_lean_ir_mode(true);
+            runtime.start_well_defined_capture();
             let tokenizer = Tokenizer::new();
             let blocks = tokenizer
                 .parse_blocks(source, runtime.current_file_path_rc())
@@ -13954,7 +13956,7 @@ forall g fn(x R) fn(y R) R:
             runtime.new_file_path_new_env_new_name_scope(
                 "ordinary-constructor-occurrence-projection.lit",
             );
-            runtime.replace_litex_to_lean_ir_mode(true);
+            runtime.start_well_defined_capture();
             let tokenizer = Tokenizer::new();
             let blocks = tokenizer
                 .parse_blocks(source, runtime.current_file_path_rc())
@@ -14019,7 +14021,7 @@ finite_set_product(1...3, fn(k Z) Z {k}) = finite_set_product(1...3, fn(k Z) Z {
             runtime.new_file_path_new_env_new_name_scope(
                 "finite-range-aggregate-construction-recipe.lit",
             );
-            runtime.replace_litex_to_lean_ir_mode(true);
+            runtime.start_well_defined_capture();
             let tokenizer = Tokenizer::new();
             let blocks = tokenizer
                 .parse_blocks(source, runtime.current_file_path_rc())
@@ -14151,7 +14153,7 @@ seq(Z) = seq(Z)
             let source = "fn(x R) R {x} = fn(y R) R {y}";
             let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope("anonymous-function-wd-recipe.lit");
-            runtime.replace_litex_to_lean_ir_mode(true);
+            runtime.start_well_defined_capture();
             let tokenizer = Tokenizer::new();
             let blocks = tokenizer
                 .parse_blocks(source, runtime.current_file_path_rc())
@@ -14327,7 +14329,7 @@ seq(Z) = seq(Z)
             let source = "fn(x, y R: x < y) R {x} = fn(a, b R: a < b) R {a}";
             let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope("anonymous-function-scope-order.lit");
-            runtime.replace_litex_to_lean_ir_mode(true);
+            runtime.start_well_defined_capture();
             let tokenizer = Tokenizer::new();
             let blocks = tokenizer
                 .parse_blocks(source, runtime.current_file_path_rc())
@@ -14475,7 +14477,7 @@ forall a R:
 "#;
             let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope("missing-arithmetic-wd-role.lit");
-            runtime.replace_litex_to_lean_ir_mode(true);
+            runtime.start_well_defined_capture();
             let tokenizer = Tokenizer::new();
             let blocks = tokenizer
                 .parse_blocks(source, runtime.current_file_path_rc())
@@ -14537,7 +14539,7 @@ forall a R:
 "#;
             let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope("missing-division-nonzero-role.lit");
-            runtime.replace_litex_to_lean_ir_mode(true);
+            runtime.start_well_defined_capture();
             let tokenizer = Tokenizer::new();
             let blocks = tokenizer
                 .parse_blocks(source, runtime.current_file_path_rc())
@@ -14597,7 +14599,7 @@ forall a R:
 "#;
             let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope("missing-list-set-pair-role.lit");
-            runtime.replace_litex_to_lean_ir_mode(true);
+            runtime.start_well_defined_capture();
             let tokenizer = Tokenizer::new();
             let blocks = tokenizer
                 .parse_blocks(source, runtime.current_file_path_rc())
@@ -14661,7 +14663,7 @@ forall a R:
 "#;
             let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope("reversed-list-set-pair-role.lit");
-            runtime.replace_litex_to_lean_ir_mode(true);
+            runtime.start_well_defined_capture();
             let tokenizer = Tokenizer::new();
             let blocks = tokenizer
                 .parse_blocks(source, runtime.current_file_path_rc())
@@ -14731,7 +14733,7 @@ forall a R:
 "#;
             let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope("retargeted-list-set-pair.lit");
-            runtime.replace_litex_to_lean_ir_mode(true);
+            runtime.start_well_defined_capture();
             let tokenizer = Tokenizer::new();
             let blocks = tokenizer
                 .parse_blocks(source, runtime.current_file_path_rc())
@@ -14802,7 +14804,7 @@ forall a R:
         run_with_large_stack(|| {
             let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope("dangling-wd-child.lit");
-            runtime.replace_litex_to_lean_ir_mode(true);
+            runtime.start_well_defined_capture();
             let tokenizer = Tokenizer::new();
             let blocks = tokenizer
                 .parse_blocks(
@@ -14853,7 +14855,7 @@ forall a R:
 "#;
             let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope("mismatched-wd-fact-pair.lit");
-            runtime.replace_litex_to_lean_ir_mode(true);
+            runtime.start_well_defined_capture();
             let tokenizer = Tokenizer::new();
             let blocks = tokenizer
                 .parse_blocks(source, runtime.current_file_path_rc())
@@ -14908,7 +14910,7 @@ forall a R:
 "#;
             let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope("changed-occurrence-id.lit");
-            runtime.replace_litex_to_lean_ir_mode(true);
+            runtime.start_well_defined_capture();
             let tokenizer = Tokenizer::new();
             let blocks = tokenizer
                 .parse_blocks(source, runtime.current_file_path_rc())

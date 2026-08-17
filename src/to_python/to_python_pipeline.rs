@@ -434,6 +434,12 @@ impl PythonExtractor {
                 "python extractor v1 does not support builtin coprime",
             ));
         }
+        if rendered.contains("$dvd(") {
+            return Err(python_extract_error(
+                &fact.line_file(),
+                "python extractor v1 does not support builtin dvd",
+            ));
+        }
         if fact.contains_native_complex_syntax() {
             return Err(python_extract_error(
                 &fact.line_file(),
@@ -646,6 +652,10 @@ impl PythonExtractor {
             Obj::Gcd(_) => Err(python_extract_error(
                 line_file,
                 "python extractor v1 does not support native gcd",
+            )),
+            Obj::Quot(_) => Err(python_extract_error(
+                line_file,
+                "python extractor v1 does not support native quot",
             )),
             Obj::Lcm(x) => {
                 self.needs_math = true;

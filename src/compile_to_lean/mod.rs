@@ -1,7 +1,8 @@
-//! Litex-to-Lean compiler consuming verifier-produced Litex-to-Lean IR.
+//! Litex-to-Lean compiler building IR from verifier results and emitting Lean.
 
 mod compilation_report;
 mod file;
+mod ir_builder;
 #[cfg(test)]
 pub(crate) mod lean_test_support;
 mod ledger;
@@ -15,6 +16,7 @@ pub use compilation_report::{
     LitexToLeanUnsupportedStatement,
 };
 pub(crate) use file::compile_litex_file_to_lean;
+pub use ir_builder::LitexToLeanCompiler;
 pub(crate) use ledger::compile_markdown_ledger_file_to_lean;
 pub use universal_pipeline::{
     compile_to_lean, compile_to_lean_from_source, compile_to_lean_from_source_with_report,

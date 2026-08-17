@@ -178,6 +178,7 @@ sqrt(4) = 2
 | `name`, `Module::name` | Local or module-qualified name |
 | `2`, `3.5` | Exact numeric literal |
 | `e`, `pi` | Native Euler and circle constants |
+| `quot(a, d)` | Native Euclidean integer quotient for `a $in Z` and `d $in N+` |
 | `gcd(a, b)` | Native positive greatest common divisor for integer arguments, with `a != 0 or b != 0` |
 | `lcm(a, b)` | Native nonnegative least common multiple for integer arguments; `lcm(0, 0) = 0` |
 | `floor(a)`, `ceil(a)` | Native integer floor and ceiling of a real argument |
@@ -198,6 +199,10 @@ Concrete gcd calls normalize inside ordinary facts, so
 ordinary arithmetic. Write `eval gcd(54, -24)` when an explicit evaluation
 statement is the intended presentation. Signs do not affect the positive
 result. The pair `(0, 0)` is intentionally outside the object's domain.
+
+Native `quot(a, d)` uses Euclidean division with a nonnegative remainder:
+`a = d * quot(a, d) + a % d`. In particular, `quot(-7, 3) = -3` and
+`-7 % 3 = 2`. The positive-divisor requirement is part of the object's domain.
 
 Native `lcm`, integer rounding, and binary extrema likewise normalize exact
 numeric inputs:
@@ -1336,6 +1341,12 @@ It is total on natural pairs, so `$coprime(0, 1)` holds while
 condition needed by native `gcd` and the gcd-one equation. Integer or real
 arguments require a separate future interface rather than silently changing
 this predicate's domain.
+
+The preview predicate `$dvd(x, y)` uses dividend-first order: the nonzero
+integer `y` divides the integer `x`. Its domain is `Z × Z*`, and its defining
+consequences are `x % y = 0` and `exist a Z st {x = a * y}`. In particular,
+`$dvd(0, 0)` is not a well-defined application; the nonzero divisor requirement
+keeps the remainder and integer-multiple formulations equivalent.
 
 An object expression alone is not a fact:
 
@@ -2615,7 +2626,8 @@ atomic target. The older `by def:` goal block remains accepted for compatibility
 
 `by def` also names the mathematical-definition route for these builtin
 positive forms: subset, superset, proper subset, proper superset,
-`$injective`, `$surjective`, `$bijective`, `$fn_eq_in`, and `$fn_eq`.
+`$prime`, `$coprime`, `$dvd`, `$injective`, `$surjective`, `$bijective`,
+`$fn_eq_in`, and `$fn_eq`.
 
 When a grouped universal law binds shared convenience variables, a conclusion
 may use only some of them. Litex stores the corresponding reduced universal
@@ -4012,7 +4024,7 @@ Most triggers are atomic facts. A few larger shapes have explicit behavior.
 |---|---|
 | Equality | Numeric values, simple linear solved values, `u-v=0` equality, tuple/cart/set-builder/sequence/matrix/function structure, and positive-real membership transported from a known power side. |
 | `$fn_eq(f,g)` | Ordinary object equality `f=g`, so known-equality congruence can use it. `$fn_eq_in` alone has no such global consequence. |
-| Positive concrete or builtin predicate | Instantiated parameter-type and defining clauses. Proper inclusion exposes inclusion plus inequality; `$prime` exposes its lower bound and trial-divisor universal; `$coprime(a,b)` exposes `a != 0 or b != 0` and `gcd(a,b)=1`; mapping properties expose their exact definitions. Abstract predicates have no clauses to expose. |
+| Positive concrete or builtin predicate | Instantiated parameter-type and defining clauses. Proper inclusion exposes inclusion plus inequality; `$prime` exposes its lower bound and trial-divisor universal; `$coprime(a,b)` exposes `a != 0 or b != 0` and `gcd(a,b)=1`; `$dvd(x,y)` exposes `x % y = 0` and an integer multiple witness; mapping properties expose their exact definitions. Abstract predicates have no clauses to expose. |
 | Membership | Constructor-specific carrier, shape, bound, component, disjunction, or existential information listed below. |
 | `$is_cart(C)` | The structural lower bound `2 <= cart_dim(C)`. Other positive/negative type predicates have no general inference branch. |
 | Subset or superset | One fresh universal membership consequence in the corresponding direction. A builder on the subset side skips this eager universal because builder membership already exposes its domain and filters. |
@@ -4171,6 +4183,7 @@ change:
 - native symbolic real trigonometry `sin`, `cos`, `tan`, and `cot`;
 - native `floor`, `ceil`, binary `min`/`max`, and integer `lcm`;
 - native natural-number `$coprime(a, b)`;
+- native nonzero-integer-divisor `$dvd(x, y)` in dividend-first order;
 - native real `exp`/`ln`, real `sign`, and natural `factorial`;
 - `struct`, struct view objects, and default-view field access;
 - proper subset and proper superset relations;

@@ -73,7 +73,7 @@ impl Runtime {
             )
             .into();
             let source_result =
-                self.verify_non_equational_atomic_fact_with_known_fact(&source_membership)?;
+                self.verify_non_equational_atomic_fact_with_known_atomic_facts(&source_membership)?;
             if !source_result.is_true() {
                 continue;
             }
@@ -883,7 +883,8 @@ impl Runtime {
 
         let in_n_pos: AtomicFact =
             InFact::new(elem.clone(), StandardSet::NPos.into(), lf.clone()).into();
-        let in_n_pos_result = self.verify_non_equational_atomic_fact_with_known_fact(&in_n_pos)?;
+        let in_n_pos_result =
+            self.verify_non_equational_atomic_fact_with_known_atomic_facts(&in_n_pos)?;
         if in_n_pos_result.is_true() {
             return Ok(
                 number_in_set_verified_by_builtin_rules_result_with_subgoals(
@@ -1095,7 +1096,7 @@ impl Runtime {
         &mut self,
         bound: &AtomicFact,
     ) -> Result<StmtResult, RuntimeError> {
-        let exact = self.verify_non_equational_atomic_fact_with_known_fact(bound)?;
+        let exact = self.verify_non_equational_atomic_fact_with_known_atomic_facts(bound)?;
         if exact.is_true() {
             return Ok(exact);
         }
@@ -1125,7 +1126,9 @@ impl Runtime {
             _ => None,
         };
         match stronger {
-            Some(stronger) => self.verify_non_equational_atomic_fact_with_known_fact(&stronger),
+            Some(stronger) => {
+                self.verify_non_equational_atomic_fact_with_known_atomic_facts(&stronger)
+            }
             None => Ok(StmtUnknown::new().into()),
         }
     }
@@ -1320,6 +1323,7 @@ impl Runtime {
                 Some(RealArithmeticMembershipClosureBuiltinRule::Pow),
             ),
             Obj::Mod(_)
+            | Obj::Quot(_)
             | Obj::Abs(_)
             | Obj::Sin(_)
             | Obj::Cos(_)
@@ -1447,7 +1451,7 @@ impl Runtime {
                     IsFiniteSetFact::new(finite_set_size.set.as_ref().clone(), line_file.clone())
                         .into();
                 let finite_result =
-                    self.verify_non_equational_atomic_fact_with_known_fact(&finite_fact)?;
+                    self.verify_non_equational_atomic_fact_with_known_atomic_facts(&finite_fact)?;
                 if finite_result.is_true() {
                     steps.push(
                         number_in_set_verified_by_builtin_rules_result_with_subgoals(
@@ -1470,8 +1474,10 @@ impl Runtime {
                 }
                 let source_membership: AtomicFact =
                     InFact::new((*obj).clone(), source_set.clone(), line_file.clone()).into();
-                let source_result =
-                    self.verify_non_equational_atomic_fact_with_known_fact(&source_membership)?;
+                let source_result = self
+                    .verify_non_equational_atomic_fact_with_known_atomic_facts(
+                        &source_membership,
+                    )?;
                 if !source_result.is_true() {
                     continue;
                 }
@@ -1519,7 +1525,7 @@ impl Runtime {
             let source_membership: AtomicFact =
                 InFact::new(obj.clone(), source_set.clone(), line_file.clone()).into();
             let source_result =
-                self.verify_non_equational_atomic_fact_with_known_fact(&source_membership)?;
+                self.verify_non_equational_atomic_fact_with_known_atomic_facts(&source_membership)?;
             if !source_result.is_true() {
                 continue;
             }
@@ -1559,7 +1565,7 @@ impl Runtime {
                     }
                 }
                 let subset_result =
-                    self.verify_non_equational_atomic_fact_with_known_fact(&subset)?;
+                    self.verify_non_equational_atomic_fact_with_known_atomic_facts(&subset)?;
                 if subset_result.is_true() {
                     return Ok(Some(vec![source_result, subset_result]));
                 }
@@ -1684,6 +1690,13 @@ impl Runtime {
                 ],
                 builtin_state,
             )?,
+            Obj::Quot(x) => self.verify_builtin_rule_premises(
+                &[
+                    InFact::new(x.left.as_ref().clone(), z_obj.clone(), lf.clone()).into(),
+                    InFact::new(x.right.as_ref().clone(), n_pos_obj.clone(), lf.clone()).into(),
+                ],
+                builtin_state,
+            )?,
             Obj::Pow(p) => {
                 let exponent_in_n: AtomicFact =
                     InFact::new(p.exponent.as_ref().clone(), n_obj.clone(), lf.clone()).into();
@@ -1788,6 +1801,7 @@ impl Runtime {
                 InFact::new(p.exponent.as_ref().clone(), z_obj, lf.clone()).into(),
             ],
             Obj::Abs(a) => vec![InFact::new(a.arg.as_ref().clone(), q_obj, lf.clone()).into()],
+            Obj::Quot(_) => Vec::new(),
             _ => return Ok((StmtUnknown::new()).into()),
         };
 

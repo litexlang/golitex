@@ -32,7 +32,6 @@ pub(crate) struct WellDefinednessObjectCaptureFrame {
     pub target_requirements: Vec<WellDefinedTargetRequirementProof>,
     pub ambient_binder_scope_ids: Vec<WellDefinedBinderScopeId>,
     pub owned_binder_scope: Option<WellDefinedBinderScopeProof>,
-    pub statement_capture_depth: usize,
 }
 
 impl WellDefinednessObjectCaptureFrame {
@@ -40,7 +39,6 @@ impl WellDefinednessObjectCaptureFrame {
         object: Obj,
         cache_key: WellDefinedCacheKey,
         cacheable: bool,
-        statement_capture_depth: usize,
         ambient_binder_scope_ids: Vec<WellDefinedBinderScopeId>,
     ) -> Self {
         Self {
@@ -52,7 +50,6 @@ impl WellDefinednessObjectCaptureFrame {
             target_requirements: Vec::new(),
             ambient_binder_scope_ids,
             owned_binder_scope: None,
-            statement_capture_depth,
         }
     }
 }
@@ -63,7 +60,54 @@ pub(crate) struct WellDefinednessBinderScopeCaptureFrame {
     pub ambient_scope_ids: Vec<WellDefinedBinderScopeId>,
     pub premises: Vec<WellDefinedBinderPremiseProof>,
     pub assumption_infers: InferResult,
-    pub statement_capture_depth: usize,
+}
+
+pub(crate) struct WellDefinednessCaptureFrame {
+    pub certificate: WellDefinednessCertificate,
+    pub phase: WellDefinednessTargetRequirementPhase,
+    pub object_stack: Vec<WellDefinednessObjectCaptureFrame>,
+    pub binder_stack: Vec<WellDefinednessBinderScopeCaptureFrame>,
+}
+
+impl WellDefinednessCaptureFrame {
+    fn new() -> Self {
+        Self {
+            certificate: WellDefinednessCertificate::default(),
+            phase: WellDefinednessTargetRequirementPhase::Preflight,
+            object_stack: Vec::new(),
+            binder_stack: Vec::new(),
+        }
+    }
+}
+
+pub(crate) struct WellDefinednessIdAllocator {
+    next_obj_id: u64,
+    next_fact_id: u64,
+    next_binder_scope_id: u64,
+}
+
+impl WellDefinednessIdAllocator {
+    fn new(next_obj_id: u64, next_fact_id: u64, next_binder_scope_id: u64) -> Self {
+        Self {
+            next_obj_id,
+            next_fact_id,
+            next_binder_scope_id,
+        }
+    }
+}
+
+pub(crate) struct WellDefinednessCaptureSession {
+    pub frames: Vec<WellDefinednessCaptureFrame>,
+    ids: WellDefinednessIdAllocator,
+}
+
+impl WellDefinednessCaptureSession {
+    fn new(next_obj_id: u64, next_fact_id: u64, next_binder_scope_id: u64) -> Self {
+        Self {
+            frames: Vec::new(),
+            ids: WellDefinednessIdAllocator::new(next_obj_id, next_fact_id, next_binder_scope_id),
+        }
+    }
 }
 
 #[derive(Clone)]
@@ -88,35 +132,12 @@ pub struct Runtime {
     pub module_manager: Box<ModuleManager>,
     pub execution_stack: Vec<ExecutionFrame>,
     pub run_mode: RunMode,
-    /// Only compiler entry points enable this. Ordinary verification never
-    /// pays the cost of constructing Litex-to-Lean IR.
-    pub(crate) litex_to_lean_ir_mode: bool,
-    /// Report compilation collects verifier evidence without eagerly building
-    /// IR inside `exec_stmt`.
-    pub(crate) litex_to_lean_well_definedness_mode: bool,
-    /// Nonzero only while constructor-specific object WD checks are running.
-    pub(crate) well_definedness_capture_depth: usize,
-    /// One isolated collector per (possibly nested) executed statement.
-    pub(crate) well_definedness_capture_stack: Vec<WellDefinednessCertificate>,
-    /// Current execution phase for each statement-local WD collector.
-    pub(crate) well_definedness_target_requirement_phase_stack:
-        Vec<WellDefinednessTargetRequirementPhase>,
-    /// Object occurrences whose constructor-specific WD checks are active.
-    pub(crate) well_definedness_object_capture_stack: Vec<WellDefinednessObjectCaptureFrame>,
-    /// Lexical binder environments currently active inside object WD checks.
-    /// These mirror Litex child environments without extending their runtime
-    /// lifetime; successful owners freeze only the compiler evidence.
-    pub(crate) well_definedness_binder_scope_capture_stack:
-        Vec<WellDefinednessBinderScopeCaptureFrame>,
+    /// Present only while a compiler asks verification to retain replayable
+    /// well-definedness evidence. Ordinary execution keeps this as `None`.
+    pub(crate) well_defined_capture: Option<WellDefinednessCaptureSession>,
     /// Monotone runtime-wide allocator. Local environments may disappear, but
     /// a fact ID is never reused during the run.
     pub(crate) next_fact_id: u64,
-    /// Monotone runtime-wide allocators for compiler-only WD proof identity.
-    /// Environment visibility remains the authority for whether an ID may be
-    /// cited.
-    pub(crate) next_well_defined_obj_id: u64,
-    pub(crate) next_well_defined_fact_id: u64,
-    pub(crate) next_well_defined_binder_scope_id: u64,
     /// Parameters that the active recursive fact matcher may instantiate.
     /// Captured parameters of the same object kind must remain rigid.
     pub(crate) active_arg_match_bindings: Vec<(ParamObjType, String)>,
@@ -158,17 +179,8 @@ impl Runtime {
             module_manager: Box::new(ModuleManager::new()),
             execution_stack: vec![],
             run_mode: RunMode::File,
-            litex_to_lean_ir_mode: false,
-            litex_to_lean_well_definedness_mode: false,
-            well_definedness_capture_depth: 0,
-            well_definedness_capture_stack: Vec::new(),
-            well_definedness_target_requirement_phase_stack: Vec::new(),
-            well_definedness_object_capture_stack: Vec::new(),
-            well_definedness_binder_scope_capture_stack: Vec::new(),
+            well_defined_capture: None,
             next_fact_id: 1,
-            next_well_defined_obj_id: 1,
-            next_well_defined_fact_id: 1,
-            next_well_defined_binder_scope_id: 1,
             active_arg_match_bindings: vec![],
             active_atomic_fact_inferences: HashSet::new(),
             active_well_defined_objects: HashSet::new(),
@@ -194,39 +206,103 @@ impl Runtime {
 }
 
 impl Runtime {
-    pub fn litex_to_lean_ir_mode(&self) -> bool {
-        self.litex_to_lean_ir_mode
+    pub(crate) fn captures_well_definedness(&self) -> bool {
+        self.well_defined_capture.is_some()
     }
 
-    pub fn replace_litex_to_lean_ir_mode(&mut self, enabled: bool) -> bool {
-        std::mem::replace(&mut self.litex_to_lean_ir_mode, enabled)
+    pub(crate) fn current_well_defined_capture_frame(
+        &self,
+    ) -> Option<&WellDefinednessCaptureFrame> {
+        self.well_defined_capture.as_ref()?.frames.last()
     }
 
-    #[cfg(test)]
-    pub(crate) fn replace_litex_to_lean_well_definedness_mode(&mut self, enabled: bool) -> bool {
-        std::mem::replace(&mut self.litex_to_lean_well_definedness_mode, enabled)
+    pub(crate) fn current_well_defined_capture_frame_mut(
+        &mut self,
+    ) -> Option<&mut WellDefinednessCaptureFrame> {
+        self.well_defined_capture.as_mut()?.frames.last_mut()
     }
 
-    pub(crate) fn captures_litex_to_lean_well_definedness(&self) -> bool {
-        self.litex_to_lean_ir_mode || self.litex_to_lean_well_definedness_mode
+    pub(crate) fn active_well_defined_binder_scope_ids(&self) -> Vec<WellDefinedBinderScopeId> {
+        self.well_defined_capture
+            .as_ref()
+            .into_iter()
+            .flat_map(|capture| capture.frames.iter())
+            .flat_map(|frame| frame.binder_stack.iter())
+            .map(|scope| scope.id)
+            .collect()
+    }
+
+    pub(crate) fn has_active_well_defined_object_capture(&self) -> bool {
+        self.current_well_defined_capture_frame()
+            .is_some_and(|frame| !frame.object_stack.is_empty())
+    }
+
+    pub(crate) fn start_well_defined_capture(&mut self) -> bool {
+        if self.well_defined_capture.is_some() {
+            return false;
+        }
+        let (next_obj_id, next_fact_id, next_binder_scope_id) = self.next_well_definedness_ids();
+        self.well_defined_capture = Some(WellDefinednessCaptureSession::new(
+            next_obj_id,
+            next_fact_id,
+            next_binder_scope_id,
+        ));
+        true
+    }
+
+    pub(crate) fn stop_well_defined_capture(&mut self) {
+        self.well_defined_capture = None;
+    }
+
+    fn next_well_definedness_ids(&self) -> (u64, u64, u64) {
+        let mut next_obj_id = 1;
+        let mut next_fact_id = 1;
+        let mut next_binder_scope_id = 1;
+        for module in self.module_manager.modules.values() {
+            include_environment_well_definedness_ids(
+                module.main_environment.as_ref(),
+                &mut next_obj_id,
+                &mut next_fact_id,
+                &mut next_binder_scope_id,
+            );
+            for file in &module.files {
+                include_environment_well_definedness_ids(
+                    file.environment.as_ref(),
+                    &mut next_obj_id,
+                    &mut next_fact_id,
+                    &mut next_binder_scope_id,
+                );
+            }
+        }
+        for execution in &self.execution_stack {
+            for environment in &execution.local_environment_stack {
+                include_environment_well_definedness_ids(
+                    environment.as_ref(),
+                    &mut next_obj_id,
+                    &mut next_fact_id,
+                    &mut next_binder_scope_id,
+                );
+            }
+        }
+        (next_obj_id, next_fact_id, next_binder_scope_id)
     }
 
     pub(crate) fn begin_statement_well_definedness_capture(&mut self) {
-        self.well_definedness_capture_stack
-            .push(WellDefinednessCertificate::default());
-        self.well_definedness_target_requirement_phase_stack
-            .push(WellDefinednessTargetRequirementPhase::Preflight);
+        if let Some(capture) = self.well_defined_capture.as_mut() {
+            capture.frames.push(WellDefinednessCaptureFrame::new());
+        }
     }
 
     pub(crate) fn set_well_definedness_target_requirement_phase(
         &mut self,
         phase: WellDefinednessTargetRequirementPhase,
     ) {
-        if let Some(current) = self
-            .well_definedness_target_requirement_phase_stack
-            .last_mut()
+        if let Some(frame) = self
+            .well_defined_capture
+            .as_mut()
+            .and_then(|capture| capture.frames.last_mut())
         {
-            *current = phase;
+            frame.phase = phase;
         }
     }
 
@@ -234,38 +310,40 @@ impl Runtime {
         &mut self,
     ) -> Result<WellDefinednessCertificate, RuntimeError> {
         let certificate = self
-            .well_definedness_capture_stack
-            .pop()
+            .well_defined_capture
+            .as_mut()
+            .and_then(|capture| capture.frames.pop())
+            .map(|frame| frame.certificate)
             .unwrap_or_default();
-        let _ = self.well_definedness_target_requirement_phase_stack.pop();
         self.freeze_well_definedness_certificate(certificate)
     }
 
     pub(crate) fn discard_statement_well_definedness_capture(&mut self) {
-        let _ = self.well_definedness_capture_stack.pop();
-        let _ = self.well_definedness_target_requirement_phase_stack.pop();
+        if let Some(capture) = self.well_defined_capture.as_mut() {
+            let _ = capture.frames.pop();
+        }
     }
 
     pub(crate) fn well_definedness_capture_checkpoint(
         &self,
     ) -> Option<WellDefinednessCaptureCheckpoint> {
-        let certificate = self.well_definedness_capture_stack.last()?;
+        let frame = self.well_defined_capture.as_ref()?.frames.last()?;
         Some(WellDefinednessCaptureCheckpoint {
-            root_proof_count: certificate.root_obj_ids.len(),
-            root_proof_use_count: certificate.root_proof_uses.len(),
-            target_requirement_use_count: certificate.target_requirement_uses.len(),
-            active_object_child_counts: self
-                .well_definedness_object_capture_stack
+            root_proof_count: frame.certificate.root_obj_ids.len(),
+            root_proof_use_count: frame.certificate.root_proof_uses.len(),
+            target_requirement_use_count: frame.certificate.target_requirement_uses.len(),
+            active_object_child_counts: frame
+                .object_stack
                 .iter()
                 .map(|frame| frame.child_uses.len())
                 .collect(),
-            active_object_fact_counts: self
-                .well_definedness_object_capture_stack
+            active_object_fact_counts: frame
+                .object_stack
                 .iter()
                 .map(|frame| frame.fact_ids.len())
                 .collect(),
-            active_object_target_requirement_counts: self
-                .well_definedness_object_capture_stack
+            active_object_target_requirement_counts: frame
+                .object_stack
                 .iter()
                 .map(|frame| frame.target_requirements.len())
                 .collect(),
@@ -276,40 +354,46 @@ impl Runtime {
         &mut self,
         checkpoint: Option<WellDefinednessCaptureCheckpoint>,
     ) {
-        let (Some(checkpoint), Some(certificate)) =
-            (checkpoint, self.well_definedness_capture_stack.last_mut())
-        else {
+        let (Some(checkpoint), Some(frame)) = (
+            checkpoint,
+            self.well_defined_capture
+                .as_mut()
+                .and_then(|capture| capture.frames.last_mut()),
+        ) else {
             return;
         };
-        certificate
+        frame
+            .certificate
             .root_obj_ids
             .truncate(checkpoint.root_proof_count);
-        certificate
+        frame
+            .certificate
             .root_proof_uses
             .truncate(checkpoint.root_proof_use_count);
-        certificate
+        frame
+            .certificate
             .target_requirement_uses
             .truncate(checkpoint.target_requirement_use_count);
-        for (frame, child_count) in self
-            .well_definedness_object_capture_stack
+        for (object, child_count) in frame
+            .object_stack
             .iter_mut()
             .zip(checkpoint.active_object_child_counts)
         {
-            frame.child_uses.truncate(child_count);
+            object.child_uses.truncate(child_count);
         }
-        for (frame, fact_count) in self
-            .well_definedness_object_capture_stack
+        for (object, fact_count) in frame
+            .object_stack
             .iter_mut()
             .zip(checkpoint.active_object_fact_counts)
         {
-            frame.fact_ids.truncate(fact_count);
+            object.fact_ids.truncate(fact_count);
         }
-        for (frame, requirement_count) in self
-            .well_definedness_object_capture_stack
+        for (object, requirement_count) in frame
+            .object_stack
             .iter_mut()
             .zip(checkpoint.active_object_target_requirement_counts)
         {
-            frame.target_requirements.truncate(requirement_count);
+            object.target_requirements.truncate(requirement_count);
         }
     }
 
@@ -326,8 +410,13 @@ impl Runtime {
     pub(crate) fn allocate_well_defined_obj_id(
         &mut self,
     ) -> Result<WellDefinedObjId, RuntimeError> {
-        let value = self.next_well_defined_obj_id;
-        self.next_well_defined_obj_id = value.checked_add(1).ok_or_else(|| {
+        let allocator = &mut self
+            .well_defined_capture
+            .as_mut()
+            .expect("WD object IDs are allocated only during capture")
+            .ids;
+        let value = allocator.next_obj_id;
+        allocator.next_obj_id = value.checked_add(1).ok_or_else(|| {
             RuntimeError::from(UnknownRuntimeError(RuntimeErrorStruct::new_with_just_msg(
                 "well-defined object proof ID space exhausted".to_string(),
             )))
@@ -338,8 +427,13 @@ impl Runtime {
     pub(crate) fn allocate_well_defined_fact_id(
         &mut self,
     ) -> Result<WellDefinedFactId, RuntimeError> {
-        let value = self.next_well_defined_fact_id;
-        self.next_well_defined_fact_id = value.checked_add(1).ok_or_else(|| {
+        let allocator = &mut self
+            .well_defined_capture
+            .as_mut()
+            .expect("WD fact IDs are allocated only during capture")
+            .ids;
+        let value = allocator.next_fact_id;
+        allocator.next_fact_id = value.checked_add(1).ok_or_else(|| {
             RuntimeError::from(UnknownRuntimeError(RuntimeErrorStruct::new_with_just_msg(
                 "well-defined fact ID space exhausted".to_string(),
             )))
@@ -350,8 +444,13 @@ impl Runtime {
     pub(crate) fn allocate_well_defined_binder_scope_id(
         &mut self,
     ) -> Result<WellDefinedBinderScopeId, RuntimeError> {
-        let value = self.next_well_defined_binder_scope_id;
-        self.next_well_defined_binder_scope_id = value.checked_add(1).ok_or_else(|| {
+        let allocator = &mut self
+            .well_defined_capture
+            .as_mut()
+            .expect("WD binder IDs are allocated only during capture")
+            .ids;
+        let value = allocator.next_binder_scope_id;
+        allocator.next_binder_scope_id = value.checked_add(1).ok_or_else(|| {
             RuntimeError::from(UnknownRuntimeError(RuntimeErrorStruct::new_with_just_msg(
                 "well-defined binder scope ID space exhausted".to_string(),
             )))
@@ -622,6 +721,33 @@ impl Runtime {
     }
 }
 
+fn include_environment_well_definedness_ids(
+    environment: &Environment,
+    next_obj_id: &mut u64,
+    next_fact_id: &mut u64,
+    next_binder_scope_id: &mut u64,
+) {
+    for proof in environment.well_defined_obj_proofs.values() {
+        *next_obj_id = (*next_obj_id).max(proof.id.value().saturating_add(1));
+        for scope_id in &proof.ambient_binder_scope_ids {
+            *next_binder_scope_id = (*next_binder_scope_id).max(scope_id.value().saturating_add(1));
+        }
+        if let Some(scope) = &proof.owned_binder_scope {
+            *next_binder_scope_id = (*next_binder_scope_id).max(scope.id.value().saturating_add(1));
+            for scope_id in &scope.ambient_scope_ids {
+                *next_binder_scope_id =
+                    (*next_binder_scope_id).max(scope_id.value().saturating_add(1));
+            }
+        }
+    }
+    for proof in environment.well_defined_fact_proofs.values() {
+        *next_fact_id = (*next_fact_id).max(proof.id.value().saturating_add(1));
+        for scope_id in &proof.ambient_binder_scope_ids {
+            *next_binder_scope_id = (*next_binder_scope_id).max(scope_id.value().saturating_add(1));
+        }
+    }
+}
+
 impl Runtime {
     pub fn validate_name(
         &mut self,
@@ -845,7 +971,7 @@ impl Runtime {
             .last_mut()
             .and_then(|frame| frame.local_environment_stack.pop())
             .expect("local environment should exist after push_env");
-        if result.is_ok() && self.captures_litex_to_lean_well_definedness() {
+        if result.is_ok() && self.captures_well_definedness() {
             self.promote_referenced_well_definedness_from_child(&mut child);
         }
         result
@@ -858,30 +984,34 @@ impl Runtime {
     fn promote_referenced_well_definedness_from_child(&mut self, child: &mut Environment) {
         let mut pending_object_ids = Vec::new();
         let mut retained_fact_ids = HashSet::new();
-        for certificate in &self.well_definedness_capture_stack {
-            pending_object_ids.extend(certificate.root_obj_ids.iter().copied());
-            pending_object_ids.extend(
-                certificate
-                    .target_requirement_uses
-                    .iter()
-                    .map(|requirement| requirement.well_defined_obj_id),
-            );
-            retained_fact_ids.extend(
-                certificate
-                    .target_requirement_uses
-                    .iter()
-                    .map(|requirement| requirement.fact_id),
-            );
-        }
-        for frame in &self.well_definedness_object_capture_stack {
-            pending_object_ids.extend(frame.child_uses.iter().map(|child| child.obj_id));
-            retained_fact_ids.extend(frame.fact_ids.iter().copied());
-            retained_fact_ids.extend(
-                frame
-                    .target_requirements
-                    .iter()
-                    .map(|requirement| requirement.fact_id),
-            );
+        if let Some(capture) = &self.well_defined_capture {
+            for frame in &capture.frames {
+                pending_object_ids.extend(frame.certificate.root_obj_ids.iter().copied());
+                pending_object_ids.extend(
+                    frame
+                        .certificate
+                        .target_requirement_uses
+                        .iter()
+                        .map(|requirement| requirement.well_defined_obj_id),
+                );
+                retained_fact_ids.extend(
+                    frame
+                        .certificate
+                        .target_requirement_uses
+                        .iter()
+                        .map(|requirement| requirement.fact_id),
+                );
+                for object in &frame.object_stack {
+                    pending_object_ids.extend(object.child_uses.iter().map(|child| child.obj_id));
+                    retained_fact_ids.extend(object.fact_ids.iter().copied());
+                    retained_fact_ids.extend(
+                        object
+                            .target_requirements
+                            .iter()
+                            .map(|requirement| requirement.fact_id),
+                    );
+                }
+            }
         }
 
         let mut retained_object_ids = HashSet::new();

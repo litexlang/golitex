@@ -355,7 +355,7 @@ impl Runtime {
                 self.verify_non_equational_atomic_fact_with_known_atomic_facts(&order_atomic)?;
             if sub.is_true() {
                 steps.push(sub);
-                let success = if self.captures_litex_to_lean_well_definedness() {
+                let success = if self.captures_well_definedness() {
                     FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_and_steps(
                         not_equal_fact.clone().into(),
                         InferResult::new(),
@@ -428,13 +428,15 @@ impl Runtime {
                     not_equal_fact.line_file.clone(),
                 )
                 .into();
-                let positive_result =
-                    self.verify_non_equational_atomic_fact_with_known_fact(&positive_membership)?;
+                let positive_result = self
+                    .verify_non_equational_atomic_fact_with_known_atomic_facts(
+                        &positive_membership,
+                    )?;
                 if !positive_result.is_true() {
                     continue;
                 }
                 let order_result =
-                    self.verify_non_equational_atomic_fact_with_known_fact(&order)?;
+                    self.verify_non_equational_atomic_fact_with_known_atomic_facts(&order)?;
                 if !order_result.is_true() {
                     continue;
                 }
@@ -928,8 +930,8 @@ impl Runtime {
         for positive_set in [StandardSet::NPos, StandardSet::QPos, StandardSet::RPos] {
             let positive_membership: AtomicFact =
                 InFact::new(base.clone(), positive_set.into(), line_file.clone()).into();
-            let positive_result =
-                self.verify_non_equational_atomic_fact_with_known_fact(&positive_membership)?;
+            let positive_result = self
+                .verify_non_equational_atomic_fact_with_known_atomic_facts(&positive_membership)?;
             if positive_result.is_true() {
                 return Ok(Some(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
@@ -1152,9 +1154,9 @@ impl Runtime {
         let right_nonzero: AtomicFact =
             NotEqualFact::new(right_base.clone(), zero_obj, line_file.clone()).into();
         let left_nonzero_result =
-            self.verify_non_equational_atomic_fact_with_known_fact(&left_nonzero)?;
+            self.verify_non_equational_atomic_fact_with_known_atomic_facts(&left_nonzero)?;
         let right_nonzero_result =
-            self.verify_non_equational_atomic_fact_with_known_fact(&right_nonzero)?;
+            self.verify_non_equational_atomic_fact_with_known_atomic_facts(&right_nonzero)?;
         let nonzero_result = if left_nonzero_result.is_true() {
             Some(left_nonzero_result)
         } else if right_nonzero_result.is_true() {

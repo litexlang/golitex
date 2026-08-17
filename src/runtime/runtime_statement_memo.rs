@@ -66,13 +66,7 @@ impl Runtime {
         &mut self,
         proof: Rc<FactualStmtSuccess>,
     ) -> Option<WellDefinedFactId> {
-        if self.well_definedness_capture_depth == 0
-            || !self.captures_litex_to_lean_well_definedness()
-        {
-            return None;
-        }
-        let statement_capture_depth = self.well_definedness_capture_stack.len();
-        if statement_capture_depth == 0 {
+        if !self.has_active_well_defined_object_capture() {
             return None;
         }
         let fact_id = if let Some(fact_id) = self.well_defined_fact_id_for_proof(&proof) {
@@ -82,11 +76,7 @@ impl Runtime {
                 .allocate_well_defined_fact_id()
                 .expect("runtime-wide WD fact ID allocation should not exhaust");
             let proposition = proof.stmt.clone();
-            let ambient_binder_scope_ids = self
-                .well_definedness_binder_scope_capture_stack
-                .iter()
-                .map(|scope| scope.id)
-                .collect();
+            let ambient_binder_scope_ids = self.active_well_defined_binder_scope_ids();
             let proof = Rc::new(WellDefinedFactProof::new(
                 fact_id,
                 proposition,
@@ -99,10 +89,8 @@ impl Runtime {
             fact_id
         };
         if let Some(frame) = self
-            .well_definedness_object_capture_stack
-            .iter_mut()
-            .rev()
-            .find(|frame| frame.statement_capture_depth == statement_capture_depth)
+            .current_well_defined_capture_frame_mut()
+            .and_then(|capture| capture.object_stack.last_mut())
         {
             if !frame.fact_ids.contains(&fact_id) {
                 frame.fact_ids.push(fact_id);
@@ -117,23 +105,17 @@ impl Runtime {
         cache_key: WellDefinedCacheKey,
         cacheable: bool,
     ) {
-        if !self.captures_litex_to_lean_well_definedness()
-            || self.well_definedness_capture_stack.is_empty()
-        {
+        if self.current_well_defined_capture_frame().is_none() {
             return;
         }
-        let statement_capture_depth = self.well_definedness_capture_stack.len();
-        let ambient_binder_scope_ids = self
-            .well_definedness_binder_scope_capture_stack
-            .iter()
-            .map(|scope| scope.id)
-            .collect();
-        self.well_definedness_object_capture_stack
+        let ambient_binder_scope_ids = self.active_well_defined_binder_scope_ids();
+        self.current_well_defined_capture_frame_mut()
+            .expect("checked active WD capture frame")
+            .object_stack
             .push(WellDefinednessObjectCaptureFrame::new(
                 object.clone(),
                 cache_key,
                 cacheable,
-                statement_capture_depth,
                 ambient_binder_scope_ids,
             ));
     }
@@ -143,14 +125,16 @@ impl Runtime {
         succeeded: bool,
         intrinsic_result_set: Option<Obj>,
     ) -> Result<Option<WellDefinedObjId>, RuntimeError> {
-        if !self.captures_litex_to_lean_well_definedness() {
+        if !self.captures_well_definedness() {
             return Ok(None);
         }
-        let statement_capture_depth = self.well_definedness_capture_stack.len();
-        let Some(frame) = self.well_definedness_object_capture_stack.pop() else {
+        let Some(frame) = self
+            .current_well_defined_capture_frame_mut()
+            .and_then(|capture| capture.object_stack.pop())
+        else {
             return Ok(None);
         };
-        if frame.statement_capture_depth != statement_capture_depth || !succeeded {
+        if !succeeded {
             return Ok(None);
         }
         let proof_id = self.allocate_well_defined_obj_id()?;
@@ -179,21 +163,17 @@ impl Runtime {
         &mut self,
         owner_object: &Obj,
     ) -> Result<Option<WellDefinedBinderScopeId>, RuntimeError> {
-        if !self.captures_litex_to_lean_well_definedness()
-            || self.well_definedness_capture_stack.is_empty()
-        {
+        if self.current_well_defined_capture_frame().is_none() {
             return Ok(None);
         }
-        let statement_capture_depth = self.well_definedness_capture_stack.len();
         let owner_key = obj_equality_key(owner_object);
         let owner = self
-            .well_definedness_object_capture_stack
+            .current_well_defined_capture_frame()
+            .expect("checked active WD capture frame")
+            .object_stack
             .iter()
             .rev()
-            .find(|frame| {
-                frame.statement_capture_depth == statement_capture_depth
-                    && obj_equality_key(&frame.object) == owner_key
-            })
+            .find(|frame| obj_equality_key(&frame.object) == owner_key)
             .ok_or_else(|| {
                 missing_well_definedness_proof_error(format!(
                     "binder scope for `{owner_object}` has no active owner object frame"
@@ -205,21 +185,17 @@ impl Runtime {
             )));
         }
         let id = self.allocate_well_defined_binder_scope_id()?;
-        let ambient_scope_ids = self
-            .well_definedness_binder_scope_capture_stack
-            .iter()
-            .map(|scope| scope.id)
-            .collect();
-        self.well_definedness_binder_scope_capture_stack.push(
-            super::runtime::WellDefinednessBinderScopeCaptureFrame {
+        let ambient_scope_ids = self.active_well_defined_binder_scope_ids();
+        self.current_well_defined_capture_frame_mut()
+            .expect("checked active WD capture frame")
+            .binder_stack
+            .push(super::runtime::WellDefinednessBinderScopeCaptureFrame {
                 id,
                 owner_object: owner_object.clone(),
                 ambient_scope_ids,
                 premises: Vec::new(),
                 assumption_infers: InferResult::new(),
-                statement_capture_depth,
-            },
-        );
+            });
         Ok(Some(id))
     }
 
@@ -234,8 +210,8 @@ impl Runtime {
             return Ok(());
         };
         let scope = self
-            .well_definedness_binder_scope_capture_stack
-            .last_mut()
+            .current_well_defined_capture_frame_mut()
+            .and_then(|capture| capture.binder_stack.last_mut())
             .filter(|scope| scope.id == scope_id)
             .ok_or_else(|| {
                 missing_well_definedness_proof_error(format!(
@@ -301,8 +277,8 @@ impl Runtime {
             return Ok(());
         };
         let scope = self
-            .well_definedness_binder_scope_capture_stack
-            .last_mut()
+            .current_well_defined_capture_frame_mut()
+            .and_then(|capture| capture.binder_stack.last_mut())
             .filter(|scope| scope.id == scope_id)
             .ok_or_else(|| {
                 missing_well_definedness_proof_error(format!(
@@ -392,8 +368,8 @@ impl Runtime {
             return Ok(());
         };
         let scope = self
-            .well_definedness_binder_scope_capture_stack
-            .last_mut()
+            .current_well_defined_capture_frame_mut()
+            .and_then(|capture| capture.binder_stack.last_mut())
             .filter(|scope| scope.id == scope_id)
             .ok_or_else(|| {
                 missing_well_definedness_proof_error(format!(
@@ -438,8 +414,8 @@ impl Runtime {
             return Ok(());
         };
         let scope = self
-            .well_definedness_binder_scope_capture_stack
-            .pop()
+            .current_well_defined_capture_frame_mut()
+            .and_then(|capture| capture.binder_stack.pop())
             .ok_or_else(|| {
                 missing_well_definedness_proof_error(format!(
                     "WD binder scope {} disappeared before completion",
@@ -458,13 +434,12 @@ impl Runtime {
         }
         let owner_key = obj_equality_key(&scope.owner_object);
         let owner = self
-            .well_definedness_object_capture_stack
+            .current_well_defined_capture_frame_mut()
+            .expect("WD binder owner requires an active capture frame")
+            .object_stack
             .iter_mut()
             .rev()
-            .find(|frame| {
-                frame.statement_capture_depth == scope.statement_capture_depth
-                    && obj_equality_key(&frame.object) == owner_key
-            })
+            .find(|frame| obj_equality_key(&frame.object) == owner_key)
             .ok_or_else(|| {
                 missing_well_definedness_proof_error(format!(
                     "completed WD binder scope {} has no active owner object",
@@ -498,9 +473,7 @@ impl Runtime {
         result_set: Obj,
         through_layer_index: usize,
     ) -> Result<Option<WellDefinedObjId>, RuntimeError> {
-        if !self.captures_litex_to_lean_well_definedness()
-            || self.well_definedness_object_capture_stack.is_empty()
-        {
+        if !self.has_active_well_defined_object_capture() {
             return Ok(None);
         }
 
@@ -513,17 +486,11 @@ impl Runtime {
             .and_then(|key| self.well_defined_cache_entry(key))
             .and_then(|entry| entry.obj_id);
 
-        let statement_capture_depth = self.well_definedness_capture_stack.len();
         let (child_uses, fact_ids, target_requirements) = {
             let frame = self
-                .well_definedness_object_capture_stack
-                .last_mut()
+                .current_well_defined_capture_frame_mut()
+                .and_then(|capture| capture.object_stack.last_mut())
                 .expect("checked nonempty WD object capture stack");
-            if frame.statement_capture_depth != statement_capture_depth {
-                return Err(missing_well_definedness_proof_error(
-                    "layered application prefix escaped its statement capture".to_string(),
-                ));
-            }
             (
                 std::mem::take(&mut frame.child_uses),
                 std::mem::take(&mut frame.fact_ids),
@@ -543,10 +510,7 @@ impl Runtime {
                 fact_ids,
                 target_requirements,
                 Some(result_set),
-                self.well_definedness_binder_scope_capture_stack
-                    .iter()
-                    .map(|scope| scope.id)
-                    .collect(),
+                self.active_well_defined_binder_scope_ids(),
                 None,
             ));
             let environment = self.top_level_env();
@@ -575,17 +539,12 @@ impl Runtime {
         proof_id: WellDefinedObjId,
         child_role: Option<WellDefinedObjChildRole>,
     ) -> Result<(), RuntimeError> {
-        let statement_capture_depth = self.well_definedness_capture_stack.len();
-        if statement_capture_depth == 0 {
-            return Ok(());
-        }
         let phase = self
-            .well_definedness_target_requirement_phase_stack
-            .last()
-            .copied()
+            .current_well_defined_capture_frame()
+            .map(|frame| frame.phase)
             .ok_or_else(|| {
                 missing_well_definedness_proof_error(
-                    "WD target-requirement phase stack is missing its statement frame".to_string(),
+                    "WD capture is missing its current result frame".to_string(),
                 )
             })?;
         let record_source_self = !matches!(
@@ -612,12 +571,10 @@ impl Runtime {
             _ => None,
         }
         .transpose()?;
-        if let Some(parent) = self
-            .well_definedness_object_capture_stack
-            .iter_mut()
-            .rev()
-            .find(|frame| frame.statement_capture_depth == statement_capture_depth)
-        {
+        let capture = self
+            .current_well_defined_capture_frame_mut()
+            .expect("checked active WD capture frame");
+        if let Some(parent) = capture.object_stack.last_mut() {
             let child_role = child_role.unwrap_or_else(|| {
                 let dependency_index = parent
                     .child_uses
@@ -637,10 +594,7 @@ impl Runtime {
                 source_object.clone(),
             ));
         } else {
-            let certificate = self
-                .well_definedness_capture_stack
-                .last_mut()
-                .expect("checked nonempty WD capture stack");
+            let certificate = &mut capture.certificate;
             if !certificate.root_obj_ids.contains(&proof_id) {
                 certificate.root_obj_ids.push(proof_id);
             }
@@ -651,10 +605,10 @@ impl Runtime {
         }
 
         if let Some((source_occurrence_id, requirements)) = target_requirement_use {
-            let certificate = self
-                .well_definedness_capture_stack
-                .last_mut()
-                .expect("checked nonempty WD capture stack");
+            let certificate = &mut self
+                .current_well_defined_capture_frame_mut()
+                .expect("checked active WD capture frame")
+                .certificate;
             for requirement in requirements {
                 let target_use = WellDefinedTargetRequirementUse::new(
                     source_occurrence_id,
@@ -698,10 +652,10 @@ impl Runtime {
     ) -> Result<(), RuntimeError> {
         if record_self {
             if let Some(source_occurrence_id) = source_object.source_occurrence_id() {
-                let certificate = self
-                    .well_definedness_capture_stack
-                    .last_mut()
-                    .expect("checked nonempty WD capture stack");
+                let certificate = &mut self
+                    .current_well_defined_capture_frame_mut()
+                    .expect("checked active WD capture frame")
+                    .certificate;
                 if let Some(existing) = certificate.source_object_uses.iter().find(|existing| {
                     existing.source_occurrence_id == source_occurrence_id
                         && existing.phase == phase
@@ -1022,7 +976,7 @@ impl Runtime {
         role: WellDefinednessRequirementRole,
         result: StmtResult,
     ) -> Result<(), RuntimeError> {
-        if !self.captures_litex_to_lean_well_definedness() {
+        if !self.captures_well_definedness() {
             return Ok(());
         }
         let success = result.into_factual_success().ok_or_else(|| {
@@ -1046,16 +1000,14 @@ impl Runtime {
                     "target WD requirement {role:?} for `{source_object}` was not captured"
                 ))
             })?;
-        let statement_capture_depth = self.well_definedness_capture_stack.len();
         let source_key = obj_equality_key(source_object);
         let frame = self
-            .well_definedness_object_capture_stack
+            .current_well_defined_capture_frame_mut()
+            .expect("target WD requirement requires an active capture frame")
+            .object_stack
             .iter_mut()
             .rev()
-            .find(|frame| {
-                frame.statement_capture_depth == statement_capture_depth
-                    && obj_equality_key(&frame.object) == source_key
-            })
+            .find(|frame| obj_equality_key(&frame.object) == source_key)
             .ok_or_else(|| {
                 missing_well_definedness_proof_error(format!(
                     "target WD requirement {role:?} for `{source_object}` has no active object frame"
@@ -1084,9 +1036,7 @@ impl Runtime {
         params: &ParamDefWithType,
         infer_result: &InferResult,
     ) -> Result<(), RuntimeError> {
-        if !self.captures_litex_to_lean_well_definedness()
-            || self.well_definedness_capture_stack.is_empty()
-        {
+        if self.current_well_defined_capture_frame().is_none() {
             return Ok(());
         }
         let parameter_reason = InferReason::ParameterDefinition.store_reason();
@@ -1118,10 +1068,10 @@ impl Runtime {
                 proposition,
             ));
         }
-        let certificate = self
-            .well_definedness_capture_stack
-            .last_mut()
-            .expect("checked nonempty WD capture stack");
+        let certificate = &mut self
+            .current_well_defined_capture_frame_mut()
+            .expect("checked active WD capture frame")
+            .certificate;
         for evidence in additions {
             if !certificate.parameter_facts.iter().any(|existing| {
                 existing.symbol_id == evidence.symbol_id && existing.fact_id == evidence.fact_id
@@ -1541,7 +1491,7 @@ mod tests {
     #[test]
     fn compile_to_lean_capture_retains_function_domain_well_definedness_proof() {
         let mut runtime = new_test_runtime();
-        runtime.replace_litex_to_lean_well_definedness_mode(true);
+        runtime.start_well_defined_capture();
         let stmt = parse_stmt(&mut runtime, "forall f fn(x R: x > 0) R:\n    f(2) = f(2)");
 
         let result = runtime
@@ -1614,7 +1564,7 @@ mod tests {
     #[test]
     fn compile_to_lean_capture_retains_all_division_target_requirements() {
         let mut runtime = new_test_runtime();
-        runtime.replace_litex_to_lean_well_definedness_mode(true);
+        runtime.start_well_defined_capture();
         let stmt = parse_stmt(
             &mut runtime,
             "forall a, b C:\n    b != 0\n    =>:\n        a / b = a / b",
@@ -1662,7 +1612,7 @@ mod tests {
     fn compile_to_lean_capture_retains_list_set_children_and_pairwise_requirements() {
         fn check() {
             let mut runtime = new_test_runtime();
-            runtime.replace_litex_to_lean_well_definedness_mode(true);
+            runtime.start_well_defined_capture();
             let stmt = parse_stmt(
                 &mut runtime,
                 "forall a, b set:\n    a != b\n    =>:\n        {a, b} = {a, b}",
@@ -1751,7 +1701,7 @@ mod tests {
             .exec_stmt(&warmup)
             .expect("warmup fact should populate ordinary verifier caches");
 
-        runtime.replace_litex_to_lean_well_definedness_mode(true);
+        runtime.start_well_defined_capture();
         let stmt = parse_stmt(&mut runtime, "forall f fn(x R: x > 0) R:\n    f(2) = f(2)");
         let result = runtime
             .exec_stmt(&stmt)
@@ -1766,7 +1716,7 @@ mod tests {
     #[test]
     fn compile_to_lean_capture_retains_have_fn_body_well_definedness_proofs() {
         let mut runtime = new_test_runtime();
-        runtime.replace_litex_to_lean_well_definedness_mode(true);
+        runtime.start_well_defined_capture();
         let stmt = parse_stmt(&mut runtime, "have fn reciprocal(x R: x != 0) R = 1 / x");
 
         let result = runtime
@@ -1846,7 +1796,7 @@ mod tests {
         runtime
             .exec_stmt(&declaration)
             .expect("function declaration should verify");
-        runtime.replace_litex_to_lean_well_definedness_mode(true);
+        runtime.start_well_defined_capture();
         let application = equality_left_obj(&mut runtime, "f(1) = f(1)");
 
         let first = capture_well_defined_obj(&mut runtime, &application);
@@ -1882,7 +1832,7 @@ mod tests {
     #[test]
     fn root_object_proof_use_retains_each_execution_phase() {
         let mut runtime = new_test_runtime();
-        runtime.replace_litex_to_lean_well_definedness_mode(true);
+        runtime.start_well_defined_capture();
         let object = equality_left_obj(&mut runtime, "1 = 1");
         runtime.begin_statement_well_definedness_capture();
         runtime
@@ -1924,11 +1874,11 @@ mod tests {
             .exec_stmt(&declaration)
             .expect("function declaration should verify");
         let old_contract_id = current_function_membership_fact_id(&runtime, "f");
-        runtime.replace_litex_to_lean_well_definedness_mode(true);
+        runtime.start_well_defined_capture();
         let application = equality_left_obj(&mut runtime, "f(1) = f(1)");
         let first = capture_well_defined_obj(&mut runtime, &application);
 
-        runtime.replace_litex_to_lean_well_definedness_mode(false);
+        runtime.stop_well_defined_capture();
         let replacement = parse_stmt(&mut runtime, "f $in fn(x R) R+");
         let Stmt::Fact(replacement_fact) = replacement else {
             panic!("expected function membership fact")
@@ -1939,7 +1889,7 @@ mod tests {
         let new_contract_id = current_function_membership_fact_id(&runtime, "f");
         assert_ne!(new_contract_id, old_contract_id);
 
-        runtime.replace_litex_to_lean_well_definedness_mode(true);
+        runtime.start_well_defined_capture();
         runtime.clear_statement_verified_atomic_facts();
         let second = capture_well_defined_obj(&mut runtime, &application);
         assert_ne!(second.root_obj_ids, first.root_obj_ids);
@@ -1957,7 +1907,7 @@ mod tests {
     #[test]
     fn nested_function_application_is_retained_as_a_direct_proof_dag() {
         let mut runtime = new_test_runtime();
-        runtime.replace_litex_to_lean_well_definedness_mode(true);
+        runtime.start_well_defined_capture();
         let stmt = parse_stmt(
             &mut runtime,
             "forall f fn(u R) R, g fn(v R) R, h fn(w R) R, x R:\n    f(g(h(x))) = f(g(h(x)))",
@@ -2012,7 +1962,7 @@ mod tests {
     #[test]
     fn layered_function_application_freezes_the_callable_prefix() {
         let mut runtime = new_test_runtime();
-        runtime.replace_litex_to_lean_well_definedness_mode(true);
+        runtime.start_well_defined_capture();
         let stmt = parse_stmt(
             &mut runtime,
             "forall g fn(x R) fn(y R) R:\n    g(1)(2) = g(1)(2)",
@@ -2061,7 +2011,7 @@ mod tests {
     #[test]
     fn repeated_function_argument_keeps_both_ordered_child_uses() {
         let mut runtime = new_test_runtime();
-        runtime.replace_litex_to_lean_well_definedness_mode(true);
+        runtime.start_well_defined_capture();
         let stmt = parse_stmt(
             &mut runtime,
             "forall f fn(u, v R) R, g fn(x R) R, a R:\n    f(g(a), g(a)) = f(g(a), g(a))",
@@ -2109,7 +2059,7 @@ mod tests {
     #[test]
     fn nested_function_application_dag_names_each_direct_child_before_parent() {
         let mut runtime = new_test_runtime();
-        runtime.replace_litex_to_lean_well_definedness_mode(true);
+        runtime.start_well_defined_capture();
         let stmt = parse_stmt(
             &mut runtime,
             "forall f fn(u, v R) R, g fn(x R) R, t fn(y R) R, a, b R:\n    f(g(a), t(b)) = f(g(a), t(b))",
@@ -2179,7 +2129,7 @@ mod tests {
     #[test]
     fn compiler_well_defined_facts_do_not_enter_the_ordinary_fact_cache() {
         let mut runtime = new_test_runtime();
-        runtime.replace_litex_to_lean_well_definedness_mode(true);
+        runtime.start_well_defined_capture();
         let stmt = parse_stmt(&mut runtime, "forall f fn(x R: x > 0) R:\n    f(2) = f(2)");
         let result = runtime.exec_stmt(&stmt).expect("statement should verify");
         let certificate = &result.factual_success().unwrap().well_definedness;
@@ -2224,7 +2174,7 @@ mod tests {
             "the ordinary binder cache should remain proofless"
         );
 
-        runtime.replace_litex_to_lean_well_definedness_mode(true);
+        runtime.start_well_defined_capture();
         let certificate = capture_well_defined_obj(&mut runtime, &set_builder);
         assert_eq!(certificate.root_obj_ids.len(), 1);
         assert!(
@@ -2250,7 +2200,7 @@ mod tests {
         runtime
             .exec_stmt(&declaration)
             .expect("function declaration should verify");
-        runtime.replace_litex_to_lean_well_definedness_mode(true);
+        runtime.start_well_defined_capture();
 
         let parent_application = equality_left_obj(&mut runtime, "f(1) = f(1)");
         let parent_certificate = capture_well_defined_obj(&mut runtime, &parent_application);
@@ -2297,7 +2247,7 @@ mod tests {
         runtime
             .exec_stmt(&declaration)
             .expect("function declaration should verify");
-        runtime.replace_litex_to_lean_well_definedness_mode(true);
+        runtime.start_well_defined_capture();
         let application = equality_left_obj(&mut runtime, "f(2) = f(2)");
         let cache_key = runtime
             .well_defined_cache_key_for_obj(&application)
@@ -2334,7 +2284,7 @@ mod tests {
         runtime
             .exec_stmt(&declaration)
             .expect("function declaration should verify");
-        runtime.replace_litex_to_lean_well_definedness_mode(true);
+        runtime.start_well_defined_capture();
         let application = equality_left_obj(&mut runtime, "f(3) = f(3)");
         let cache_key = runtime
             .well_defined_cache_key_for_obj(&application)

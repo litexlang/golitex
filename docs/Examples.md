@@ -2034,13 +2034,15 @@ forall x R:
 For a complete checked sample, see
 [`examples/02_builtin_math/trigonometric_builtin_rules.lit`](../examples/02_builtin_math/trigonometric_builtin_rules.lit).
 
-### 2.3. Native Gcd, Prime, And Coprime
+### 2.3. Native Quot, Gcd, Prime, Coprime, And Dvd
 
 - Category: `builtin object and predicate`
 - Purpose: Shows direct gcd calculation, optional explicit evaluation, and
   concrete primality and coprimality decisions.
 
 ```litex
+quot(-7, 3) = -3
+-7 = 3 * quot(-7, 3) + -7 % 3
 gcd(54, -24) = 6
 gcd(54, -24) + gcd(10, 15) = 11
 eval gcd(54, -24)
@@ -2052,6 +2054,10 @@ $coprime(14, 25)
 not $coprime(14, 21)
 not $coprime(0, 0)
 ```
+
+`quot(a, d)` is the native Euclidean quotient on `Z x N+`. It satisfies
+`a = d * quot(a, d) + a % d`; therefore `quot(-7, 3) = -3`, while the
+nonnegative remainder is `-7 % 3 = 2`.
 
 `gcd(a, b)` takes integer arguments and requires `a != 0 or b != 0`.
 Concrete gcd expressions normalize inside ordinary facts, so `eval` is a
@@ -2065,6 +2071,12 @@ outside the predicate's domain.
 Closed natural pairs are decided exactly; `by def $coprime(a, b)` exposes the
 non-all-zero fact together with the gcd-one equation. This predicate does not
 accept arguments known only to lie in `Z` or `R`.
+
+The preview predicate `$dvd(x, y)` instead operates on `Z x Z*` and uses
+dividend-first order. It exposes both `x % y = 0` and an integer witness for
+`x = a * y`. See the runnable
+[`examples/02_builtin_math/dvd.lit`](../examples/02_builtin_math/dvd.lit)
+tracer for its definition and zero-divisor boundary.
 
 For symbolic examples, see
 [`examples/02_builtin_math/gcd_and_prime_builtin.lit`](../examples/02_builtin_math/gcd_and_prime_builtin.lit).

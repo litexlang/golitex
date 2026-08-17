@@ -652,11 +652,23 @@ impl Runtime {
                     builtin_state,
                 ),
             (
-                Obj::Add(_) | Obj::Sub(_) | Obj::Mul(_) | Obj::Mod(_) | Obj::Pow(_) | Obj::Abs(_),
+                Obj::Add(_)
+                | Obj::Sub(_)
+                | Obj::Mul(_)
+                | Obj::Mod(_)
+                | Obj::Quot(_)
+                | Obj::Pow(_)
+                | Obj::Abs(_),
                 Obj::StandardSet(StandardSet::Z),
             ) => self.verify_in_fact_arithmetic_expression_in_z(in_fact, builtin_state),
             (
-                Obj::Add(_) | Obj::Sub(_) | Obj::Mul(_) | Obj::Div(_) | Obj::Pow(_) | Obj::Abs(_),
+                Obj::Add(_)
+                | Obj::Sub(_)
+                | Obj::Mul(_)
+                | Obj::Div(_)
+                | Obj::Quot(_)
+                | Obj::Pow(_)
+                | Obj::Abs(_),
                 Obj::StandardSet(StandardSet::Q),
             ) => self.verify_in_fact_arithmetic_expression_in_q(in_fact, builtin_state),
             (
@@ -689,6 +701,7 @@ impl Runtime {
                 | Obj::Mul(_)
                 | Obj::Div(_)
                 | Obj::Mod(_)
+                | Obj::Quot(_)
                 | Obj::Pow(_)
                 | Obj::Abs(_)
                 | Obj::Sin(_)
@@ -705,6 +718,7 @@ impl Runtime {
                 | Obj::Mul(_)
                 | Obj::Div(_)
                 | Obj::Mod(_)
+                | Obj::Quot(_)
                 | Obj::Pow(_)
                 | Obj::Abs(_)
                 | Obj::Sqrt(_)

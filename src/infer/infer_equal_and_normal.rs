@@ -518,14 +518,17 @@ impl Runtime {
                 Some(facts) => Some(facts),
                 None => match self.builtin_coprime_definition_facts(normal_atomic_fact) {
                     Some(facts) => Some(facts),
-                    None => match crate::verify::choice_function_for_definition_facts(
-                        self,
-                        normal_atomic_fact,
-                    )? {
+                    None => match self.builtin_dvd_definition_facts(normal_atomic_fact)? {
                         Some(facts) => Some(facts),
-                        None => {
-                            self.builtin_function_property_definition_facts(normal_atomic_fact)?
-                        }
+                        None => match crate::verify::choice_function_for_definition_facts(
+                            self,
+                            normal_atomic_fact,
+                        )? {
+                            Some(facts) => Some(facts),
+                            None => {
+                                self.builtin_function_property_definition_facts(normal_atomic_fact)?
+                            }
+                        },
                     },
                 },
             },

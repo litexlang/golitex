@@ -1117,6 +1117,7 @@ impl DepCollector {
             Obj::Mul(x) => self.collect_two_objs(&x.left, &x.right),
             Obj::Div(x) => self.collect_two_objs(&x.left, &x.right),
             Obj::Mod(x) => self.collect_two_objs(&x.left, &x.right),
+            Obj::Quot(x) => self.collect_two_objs(&x.left, &x.right),
             Obj::Gcd(x) => self.collect_two_objs(&x.left, &x.right),
             Obj::Lcm(x) => self.collect_two_objs(&x.left, &x.right),
             Obj::Min(x) => self.collect_two_objs(&x.left, &x.right),

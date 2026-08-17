@@ -542,8 +542,9 @@ impl Runtime {
                     line_file.clone(),
                 )
                 .into();
-                exponent_result =
-                    self.verify_non_equational_atomic_fact_with_known_fact(&exponent_in_n_pos)?;
+                exponent_result = self.verify_non_equational_atomic_fact_with_known_atomic_facts(
+                    &exponent_in_n_pos,
+                )?;
             }
             let modulus_result =
                 self.verify_builtin_rule_premise(&modulus_in_n_pos, builtin_state)?;

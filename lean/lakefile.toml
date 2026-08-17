@@ -1,6 +1,6 @@
-name = "litex"
-version = "0.9.113-beta"
-defaultTargets = ["Litex"]
+name = "litex_to_lean_compiler2"
+version = "0.1.0"
+defaultTargets = ["Litex", "Compiler2Examples"]
 
 [[require]]
 name = "mathlib"
@@ -9,3 +9,8 @@ rev = "v4.28.0"
 
 [[lean_lib]]
 name = "Litex"
+
+[[lean_lib]]
+name = "Compiler2Examples"
+srcDir = "examples"
+roots = ["SetSystem"]

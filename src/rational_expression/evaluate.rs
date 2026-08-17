@@ -70,6 +70,18 @@ impl Obj {
                     None
                 }
             }
+            Obj::Quot(quot) => {
+                let left_number = quot.left.evaluate_to_normalized_decimal_number();
+                let right_number = quot.right.evaluate_to_normalized_decimal_number();
+                if let (Some(left_number), Some(right_number)) = (left_number, right_number) {
+                    Some(Number::new(quot_decimal_str_and_normalize(
+                        &left_number.normalized_value,
+                        &right_number.normalized_value,
+                    )))
+                } else {
+                    None
+                }
+            }
             Obj::Gcd(gcd) => {
                 let left = gcd.left.evaluate_to_normalized_decimal_number()?;
                 let right = gcd.right.evaluate_to_normalized_decimal_number()?;
@@ -623,6 +635,56 @@ pub fn mod_decimal_str_and_normalize(a: &str, b: &str) -> String {
     }
 }
 
+/// Computes the Euclidean quotient on signed integer decimal strings.
+///
+/// Together with [`mod_decimal_str_and_normalize`], this satisfies
+/// `a = b * quot(a, b) + a % b` for a non-zero divisor. The public `quot`
+/// object further restricts `b` to a positive natural.
+pub fn quot_decimal_str_and_normalize(a: &str, b: &str) -> String {
+    let normalized_a = normalize_decimal_number_string(a);
+    let normalized_b = normalize_decimal_number_string(b);
+    let (a_is_negative, a_magnitude) = split_sign_and_magnitude(&normalized_a);
+    let (_, b_magnitude) = split_sign_and_magnitude(&normalized_b);
+    let quotient = quot_nonnegative_decimal_str_and_normalize(&a_magnitude, &b_magnitude);
+    let remainder = mod_nonnegative_decimal_str_and_normalize(&a_magnitude, &b_magnitude);
+
+    if !a_is_negative || quotient == "0" && remainder == "0" {
+        quotient
+    } else if remainder == "0" {
+        format!("-{quotient}")
+    } else {
+        format!("-{}", add_decimal_str_and_normalize(&quotient, "1"))
+    }
+}
+
+fn quot_nonnegative_decimal_str_and_normalize(a: &str, b: &str) -> String {
+    let (int_a, _) = parse_decimal_parts(a);
+    let (int_b, _) = parse_decimal_parts(b);
+    let a_digits = trim_leading_zeros(&int_a);
+    let b_digits = trim_leading_zeros(&int_b);
+    if a_digits.is_empty() || b_digits.is_empty() || (b_digits.len() == 1 && b_digits[0] == 0) {
+        return "0".to_string();
+    }
+
+    let mut current: Vec<u8> = vec![];
+    let mut quotient_digits = Vec::with_capacity(a_digits.len());
+    for &digit in &a_digits {
+        current.push(digit);
+        current = trim_leading_zeros(&current);
+        let mut quotient_digit = 9u8;
+        loop {
+            let product = mul_digit(&b_digits, quotient_digit);
+            if compare_digits(&current, &product) != std::cmp::Ordering::Less {
+                current = sub_digits(&current, &product);
+                quotient_digits.push(quotient_digit);
+                break;
+            }
+            quotient_digit -= 1;
+        }
+    }
+    normalize_decimal_number_string(&digits_to_string(&trim_leading_zeros(&quotient_digits)))
+}
+
 fn mod_nonnegative_decimal_str_and_normalize(a: &str, b: &str) -> String {
     let (int_a, _) = parse_decimal_parts(a);
     let (int_b, _) = parse_decimal_parts(b);
@@ -955,5 +1017,16 @@ mod tests {
         assert_eq!(mod_decimal_str_and_normalize("-7", "3"), "2");
         assert_eq!(mod_decimal_str_and_normalize("-6", "3"), "0");
         assert_eq!(mod_decimal_str_and_normalize("-7", "-3"), "2");
+    }
+
+    #[test]
+    fn signed_quot_uses_euclidean_quotients() {
+        assert_eq!(quot_decimal_str_and_normalize("7", "3"), "2");
+        assert_eq!(quot_decimal_str_and_normalize("-7", "3"), "-3");
+        assert_eq!(quot_decimal_str_and_normalize("-6", "3"), "-2");
+        assert_eq!(
+            quot_decimal_str_and_normalize("1234567890123456789012345678900", "10"),
+            "123456789012345678901234567890"
+        );
     }
 }

@@ -571,7 +571,7 @@ impl Runtime {
         for (selected_index, fact) in or_fact.facts.iter().enumerate() {
             let result = self.verify_and_chain_atomic_fact(fact, &verify_state_for_children)?;
             if result.is_true() {
-                if self.litex_to_lean_ir_mode() {
+                if self.captures_well_definedness() {
                     return Ok(
                         (FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             or_fact.clone().into(),

@@ -3,11 +3,15 @@ use super::*;
 #[test]
 fn native_number_theory_names_and_ids_are_stable() {
     assert!(is_keyword(GCD));
+    assert!(is_keyword(QUOT));
     assert!(is_keyword(PRIME));
     assert!(is_keyword(COPRIME));
+    assert!(is_keyword(DVD));
     assert!(is_builtin_identifier_name(GCD));
+    assert!(is_builtin_identifier_name(QUOT));
     assert!(is_builtin_predicate(PRIME));
     assert!(is_builtin_predicate(COPRIME));
+    assert!(is_builtin_predicate(DVD));
     assert_eq!(
         builtin_symbol_ref(GCD)
             .expect("gcd builtin symbol")
@@ -29,6 +33,20 @@ fn native_number_theory_names_and_ids_are_stable() {
             .value(),
         (1_u64 << 62) + 60
     );
+    assert_eq!(
+        builtin_symbol_ref(DVD)
+            .expect("dvd builtin symbol")
+            .id()
+            .value(),
+        (1_u64 << 62) + 61
+    );
+    assert_eq!(
+        builtin_symbol_ref(QUOT)
+            .expect("quot builtin symbol")
+            .id()
+            .value(),
+        (1_u64 << 62) + 62
+    );
     let gcd: Obj = Gcd::new(
         Number::new("6".to_string()).into(),
         Number::new("4".to_string()).into(),
@@ -36,6 +54,47 @@ fn native_number_theory_names_and_ids_are_stable() {
     .into();
     assert_eq!(gcd.kind(), ObjKind::Gcd);
     assert_eq!(gcd.kind().as_u8(), 80);
+    let quot: Obj = Quot::new(
+        Number::new("-7".to_string()).into(),
+        Number::new("3".to_string()).into(),
+    )
+    .into();
+    assert_eq!(quot.kind(), ObjKind::Quot);
+    assert_eq!(quot.kind().as_u8(), 92);
+}
+
+#[test]
+fn native_quot_computes_and_exposes_the_euclidean_contract() {
+    assert_source_succeeds(
+        r#"
+quot(7, 3) = 2
+quot(-7, 3) = -3
+quot(-6, 3) = -2
+quot(1234567890123456789012345678900, 10) = 123456789012345678901234567890
+eval quot(-7, 3)
+
+forall a Z, d N+:
+    quot(a, d) $in Z
+    a = d * quot(a, d) + a % d
+"#,
+        "native_quot_computes_and_exposes_the_euclidean_contract",
+    );
+}
+
+#[test]
+fn native_quot_rejects_wrong_arity_and_arguments_outside_z_times_n_pos() {
+    for (label, source) in [
+        ("native_quot_wrong_arity", "quot(7) = 7"),
+        ("native_quot_zero_divisor", "quot(7, 0) = 0"),
+        ("native_quot_negative_divisor", "quot(7, -3) = -2"),
+        ("native_quot_noninteger_dividend", "quot(7.5, 3) = 2"),
+        (
+            "native_quot_symbolic_nonpositive_domain",
+            "forall a Z, d Z*:\n    quot(a, d) $in Z",
+        ),
+    ] {
+        assert_source_fails(source, label);
+    }
 }
 
 #[test]
@@ -217,6 +276,43 @@ fn native_coprime_rejects_false_claims_arity_and_non_natural_carriers() {
 }
 
 #[test]
+fn native_dvd_definition_and_symbolic_expansion_are_exact() {
+    assert_source_succeeds(
+        r#"
+$dvd(12, 3)
+by def $dvd(12, 3)
+
+forall x Z, y Z*:
+    x % y = 0
+    =>:
+        $dvd(x, y)
+
+forall x Z, y Z*:
+    $dvd(x, y)
+    =>:
+        x % y = 0
+        exist a Z st {x = a * y}
+"#,
+        "native_dvd_definition_and_symbolic_expansion_are_exact",
+    );
+}
+
+#[test]
+fn native_dvd_rejects_false_claims_zero_divisors_arity_and_non_integer_carriers() {
+    for (label, source) in [
+        ("native_dvd_false_literal", "$dvd(7, 3)"),
+        ("native_dvd_zero_divisor", "$dvd(0, 0)"),
+        ("native_dvd_wrong_arity", "$dvd(12)"),
+        (
+            "native_dvd_rejects_arbitrary_reals",
+            "forall x, y R:\n    $dvd(x, y)\n    =>:\n        x = x",
+        ),
+    ] {
+        assert_source_fails(source, label);
+    }
+}
+
+#[test]
 fn native_number_theory_symbolic_builtin_targets_can_be_deferred_to_their_proofs() {
     assert_source_succeeds(
         r#"
@@ -236,7 +332,7 @@ thm deferred_symbolic_prime:
 
 #[test]
 fn native_number_theory_names_are_hard_reserved_but_uppercase_names_are_available() {
-    for name in [GCD, PRIME, COPRIME] {
+    for name in [QUOT, GCD, PRIME, COPRIME, DVD] {
         for (position, source) in [
             ("declaration", format!("have {name} Z = 1")),
             ("forall binder", format!("forall {name} Z:\n    1 = 1")),
@@ -251,7 +347,7 @@ fn native_number_theory_names_are_hard_reserved_but_uppercase_names_are_availabl
         }
     }
     assert_source_succeeds(
-        "have Prime Z = 1\nhave Coprime Z = 2\nPrime = 1\nCoprime = 2",
+        "have Quot Z = 0\nhave Prime Z = 1\nhave Coprime Z = 2\nhave Dvd Z = 3\nQuot = 0\nPrime = 1\nCoprime = 2\nDvd = 3",
         "uppercase_number_theory_names_remain_available",
     );
 }
@@ -259,10 +355,14 @@ fn native_number_theory_names_are_hard_reserved_but_uppercase_names_are_availabl
 #[test]
 fn native_number_theory_latex_is_mathematical() {
     let latex = to_latex_from_source(
-        "gcd(54, 24) = 6\n$prime(97)\n$coprime(14, 25)\nnot $coprime(14, 21)",
+        "quot(-7, 3) = -3\ngcd(54, 24) = 6\n$prime(97)\n$coprime(14, 25)\nnot $coprime(14, 21)",
         "native_number_theory_latex_is_mathematical",
     )
     .expect("native number theory should convert to LaTeX");
+    assert!(
+        latex.contains(r"\operatorname{quot}\left( -7, 3 \right)"),
+        "{latex}"
+    );
     assert!(latex.contains(r"\gcd\left( 54, 24 \right)"), "{latex}");
     assert!(latex.contains(r"\operatorname{prime}"), "{latex}");
     assert!(latex.contains(r"\operatorname{coprime}"), "{latex}");
@@ -297,6 +397,17 @@ forall x R:
         "{gcd_error}"
     );
 
+    let quot_error = to_python_from_source(
+        "quot(-7, 3) = -3",
+        "native_quot_python_boundary_is_structural",
+    )
+    .expect_err("the native quot object is not supported by the Python extractor")
+    .trace_message();
+    assert!(
+        quot_error.contains("does not support native quot"),
+        "{quot_error}"
+    );
+
     let prime_error =
         to_python_from_source("$prime(97)", "native_prime_python_boundary_is_structural")
             .expect_err("the builtin prime predicate is not supported by the Python extractor")
@@ -315,6 +426,15 @@ forall x R:
     assert!(
         coprime_error.contains("does not support builtin coprime"),
         "{coprime_error}"
+    );
+
+    let dvd_error =
+        to_python_from_source("$dvd(12, 3)", "native_dvd_python_boundary_is_structural")
+            .expect_err("the builtin dvd predicate is not supported by the Python extractor")
+            .trace_message();
+    assert!(
+        dvd_error.contains("does not support builtin dvd"),
+        "{dvd_error}"
     );
 }
 

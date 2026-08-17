@@ -1,9 +1,10 @@
+use crate::compile_to_lean::LitexToLeanCompiler;
 use crate::prelude::*;
 
 impl Runtime {
     pub fn exec_stmt(&mut self, stmt: &Stmt) -> Result<StmtResult, RuntimeError> {
         self.clear_statement_verified_atomic_facts();
-        if self.captures_litex_to_lean_well_definedness() {
+        if self.captures_well_definedness() {
             self.begin_statement_well_definedness_capture();
         }
         let trusted = self.current_execution_is_trusted_file();
@@ -24,7 +25,7 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         match result {
             Ok(mut result) => {
-                let well_definedness = if self.captures_litex_to_lean_well_definedness() {
+                let well_definedness = if self.captures_well_definedness() {
                     self.end_statement_well_definedness_capture()?
                 } else {
                     WellDefinednessCertificate::default()
@@ -44,15 +45,16 @@ impl Runtime {
                     StatementExecutionTrace::verified(result.is_unknown())
                 };
                 let result = result.with_execution_trace(trace);
-                if self.litex_to_lean_ir_mode && !result.is_unknown() {
-                    let litex_to_lean_ir = self.build_litex_to_lean_ir_statement(&result)?;
+                if self.captures_well_definedness() && !result.is_unknown() {
+                    let litex_to_lean_ir =
+                        LitexToLeanCompiler::new(self).compile_statement(&result)?;
                     Ok(result.with_litex_to_lean_ir(litex_to_lean_ir))
                 } else {
                     Ok(result)
                 }
             }
             Err(error) => {
-                if self.captures_litex_to_lean_well_definedness() {
+                if self.captures_well_definedness() {
                     self.discard_statement_well_definedness_capture();
                 }
                 let phase = execution_phase_for_error(&error);
@@ -112,7 +114,7 @@ impl Runtime {
             {
                 output.fact_id = Some(fact_id);
             }
-            if !self.captures_litex_to_lean_well_definedness() {
+            if !self.captures_well_definedness() {
                 continue;
             }
             if output.inferred_fact_ids.len() != output.inferred_facts.len() {

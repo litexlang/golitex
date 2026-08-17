@@ -3,7 +3,7 @@ use crate::prelude::*;
 impl Runtime {
     pub fn exec_sketch_stmt(&mut self, stmt: &SketchStmt) -> Result<StmtResult, RuntimeError> {
         let result = self.run_in_local_env(|rt| {
-            let captures_well_definedness = rt.captures_litex_to_lean_well_definedness();
+            let captures_well_definedness = rt.captures_well_definedness();
             if captures_well_definedness {
                 rt.begin_statement_well_definedness_capture();
             }

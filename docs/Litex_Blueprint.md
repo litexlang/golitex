@@ -16,6 +16,14 @@ Website: https://litexlang.com/doc/Litex_Blueprint
 
 Litex is a formal language for mathematics centered on objects and facts. It aims to lower the barriers to learning, writing, and reviewing formal proofs, so people and AI can express reasoning, enhance understanding, and spark new ideas in a form close to ordinary mathematics. At the same time, every conclusion submitted to the system is subject to rigorous machine checking.
 
+### From Mathematical Notation to Formal Language in the AI Era
+
+Throughout the history of mathematics, important new systems of notation have done more than shorten what people write. They have gradually changed how people see problems, organize reasoning, and explore new directions. The Hindu–Arabic numeral system reshaped calculation. The calculus notation developed and promoted by Leibniz made relationships among rates of change, differentials, and integrals easier to express and manipulate. In the modern era, TeX and LaTeX primarily addressed mathematical typesetting, but their stable, widely shared notation also changed how mathematical knowledge is written, exchanged, published, and reused.
+
+Today, AI is making candidate mathematical proofs far more common and scalable. As proofs cease to be only texts written by hand by a comparatively small number of people, the central bottleneck shifts from “can a plausible-looking argument be generated?” toward “can it be checked, reused, and accumulated reliably?” This makes formal languages increasingly important. Formal expression may gradually become a layer of mathematical infrastructure as indispensable as LaTeX is for typesetting—not only allowing machines to read proofs, but allowing them to check those proofs rigorously.
+
+Litex aims to bring that layer of technology within reach of ordinary learners and users of mathematics. Its ideal is: **if you understand some mathematics, you should be able to express that mathematics in a formal language.** Someone who already understands secondary-school mathematics, for example, should be able to learn quickly how to express the corresponding definitions, reasoning, and proofs in Litex, without first becoming a proof-assistant expert. This remains a design goal to be tested through runnable examples, learning costs, and real use; it is not a promise that the current beta has already achieved it across mathematics.
+
 To understand why this goal calls for a different language design, first consider the relationship between formal proof and the workflow of ordinary mathematical writing.
 
 ## Starting from the Everyday Mathematical Workflow

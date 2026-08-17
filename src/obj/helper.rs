@@ -119,6 +119,10 @@ impl Obj {
                 binary.left.contains_native_complex_syntax()
                     || binary.right.contains_native_complex_syntax()
             }
+            Obj::Quot(binary) => {
+                binary.left.contains_native_complex_syntax()
+                    || binary.right.contains_native_complex_syntax()
+            }
             Obj::Pow(pow) => {
                 pow.base.contains_native_complex_syntax()
                     || pow.exponent.contains_native_complex_syntax()
@@ -385,6 +389,10 @@ impl Obj {
                     || binary.right.contains_native_transcendental_syntax()
             }
             Obj::Mod(binary) => {
+                binary.left.contains_native_transcendental_syntax()
+                    || binary.right.contains_native_transcendental_syntax()
+            }
+            Obj::Quot(binary) => {
                 binary.left.contains_native_transcendental_syntax()
                     || binary.right.contains_native_transcendental_syntax()
             }

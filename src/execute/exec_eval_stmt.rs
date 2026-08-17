@@ -249,6 +249,19 @@ impl Runtime {
                 )?;
                 Ok(Mod::new(l, r).into())
             }
+            Obj::Quot(x) => {
+                let l = self.eval_reduce_nested_sum_product_in_obj(
+                    (*x.left).clone(),
+                    eval_stmt,
+                    active_fn_calls,
+                )?;
+                let r = self.eval_reduce_nested_sum_product_in_obj(
+                    (*x.right).clone(),
+                    eval_stmt,
+                    active_fn_calls,
+                )?;
+                Ok(Quot::new(l, r).into())
+            }
             Obj::Pow(p) => {
                 let base = self.eval_reduce_nested_sum_product_in_obj(
                     (*p.base).clone(),

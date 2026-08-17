@@ -134,7 +134,7 @@ impl Runtime {
         }
         let output_fact = fact.clone();
         let may_store_forall_projections =
-            self.litex_to_lean_ir_mode && matches!(&fact, Fact::ForallFact(_));
+            self.captures_well_definedness() && matches!(&fact, Fact::ForallFact(_));
 
         let ret = match fact {
             Fact::AtomicFact(_)

@@ -58,7 +58,8 @@ impl Runtime {
                     AtomicFact::EqualFact(equal_fact) => {
                         self.verify_equal_fact_with_known_fact(equal_fact)
                     }
-                    _ => self.verify_non_equational_atomic_fact_with_known_fact(&instantiated)?,
+                    _ => self
+                        .verify_non_equational_atomic_fact_with_known_atomic_facts(&instantiated)?,
                 };
                 if !result.is_true() {
                     candidate_failed = true;
