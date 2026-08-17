@@ -8,6 +8,7 @@ use crate::prelude::*;
 use super::helper::{print_slowest_run_labels, run_with_large_stack, source_has_isolated_import};
 
 #[test]
+#[ignore = "large dataset gate; run explicitly with an exact filter and --ignored"]
 fn run_gsm8k_solutions() {
     run_with_large_stack("run_gsm8k_solutions_large_stack", run_gsm8k_solutions_impl);
 }
@@ -26,13 +27,11 @@ fn run_gsm8k_solutions_impl() {
     ];
 
     for jsonl_path in jsonl_paths.iter() {
-        if !jsonl_path.is_file() {
-            println!(
-                "--- gsm8k jsonl file missing at {:?}; skip gsm8k solutions ---",
-                jsonl_path
-            );
-            return;
-        }
+        assert!(
+            jsonl_path.is_file(),
+            "GSM8K-litex JSONL file must exist at {:?}",
+            jsonl_path
+        );
     }
 
     let runtime_setup_start = Instant::now();
@@ -173,6 +172,7 @@ fn run_gsm8k_jsonl_file(
 }
 
 #[test]
+#[ignore = "large dataset gate; run explicitly with an exact filter and --ignored"]
 fn run_metamathqa_litex_solutions() {
     run_with_large_stack(
         "run_metamathqa_litex_solutions_large_stack",
@@ -181,6 +181,7 @@ fn run_metamathqa_litex_solutions() {
 }
 
 #[test]
+#[ignore = "large dataset gate; run explicitly with an exact filter and --ignored"]
 fn run_minif2f_litex_finished() {
     run_with_large_stack(
         "run_minif2f_litex_finished_large_stack",

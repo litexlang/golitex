@@ -12,11 +12,13 @@ Each child project owns:
 - `README.md`: factual status of the current executable artifact; and
 - `math_collections.md`: the ideal concept and interface design.
 
-Each checked showcase also owns `lean_core_analogy.lean`: a standalone,
-handwritten comparison that uses only Lean's automatically loaded Prelude. It
+Each checked showcase also owns `same_math_in_lean.lean`: a standalone,
+handwritten Lean formulation of the same mathematics that uses only Lean's
+automatically loaded Prelude. It
 must contain no `import`, Mathlib dependency, project axiom, or proof hole, and
 must identify any real-number or library fact that Prelude cannot supply as an
-explicit setting boundary. These files are comparisons, never compiler output.
+explicit setting boundary. These files express the same mathematical content
+in Lean; they are never compiler output.
 
 The projects intentionally do not import one another yet. The arrows below are
 mathematical dependencies and reader order, not hidden runtime dependencies:
@@ -70,7 +72,7 @@ remove the broader trust boundary in Litex's Builtin/infer rules.
 Each concept directory publishes its checked Litex module, formal module
 documentation, and explicitly intended comparison sources: `main.lit`,
 `litex.config`, `README.md`, `math_collections.md`, and
-`lean_core_analogy.lean` where present. Plans, proof journals, acceptance
+`same_math_in_lean.lean` where present. Plans, proof journals, acceptance
 notes, verifier captures, and other work records belong in that concept's
 local `.drafts/` directory. The collection root uses its own `.drafts/` only
 for genuinely cross-concept work. All such draft directories are Git-ignored;

@@ -1,0 +1,33 @@
+# Tracer: quantifier-free facts as builtin-rule premises
+#
+# Before (did not work):
+# forall a set:
+#     a = 1 or a = 2 or a = 3
+#     =>:
+#         a $in {1, 2, 3}
+# Former behavior: list-set membership queried each equality separately, so the known
+# complete disjunction remained unused and the membership result was unknown.
+#
+# Now (verified):
+forall a set:
+    a = 1 or a = 2 or a = 3
+    =>:
+        a $in {1, 2, 3}
+
+# The same premise route restores the two other historical disjunction consumers.
+forall x, y R:
+    x != 0 or y != 0
+    =>:
+        x^2 + y^2 != 0
+
+forall a, b, c R:
+    0 < c
+    c * a <= b or a * c <= b
+    =>:
+        a <= b / c
+
+# Boundary: AndFact, ChainFact, and OrFact only organize the bounded atomic leaves.
+# They do not reset a consumed builtin-rule step or invoke the full verifier.
+# Executable boundary: verify::verify_builtin_rule::tests::
+# quantifier_free_premise_structure_does_not_reset_the_builtin_depth_budget
+# Evidence: target/release/litex -compact -isolated -runner -f examples/02_builtin_math/quantifier_free_builtin_premises.lit

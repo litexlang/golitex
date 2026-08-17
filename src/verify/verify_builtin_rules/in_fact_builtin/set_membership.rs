@@ -364,7 +364,8 @@ impl Runtime {
                 in_fact.line_file.clone(),
             )
             .into();
-            let member_result = self.verify_builtin_rule_premise(&member_fact, builtin_state)?;
+            let member_result =
+                self.verify_atomic_fact_as_builtin_rule_premise(&member_fact, builtin_state)?;
             if member_result.is_true() {
                 return Ok(
                     FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
@@ -400,7 +401,7 @@ impl Runtime {
         )
         .into();
         let left_member_result =
-            self.verify_builtin_rule_premise(&left_member_fact, builtin_state)?;
+            self.verify_atomic_fact_as_builtin_rule_premise(&left_member_fact, builtin_state)?;
         if !left_member_result.is_true() {
             return Ok((StmtUnknown::new()).into());
         }
@@ -412,7 +413,7 @@ impl Runtime {
         )
         .into();
         let right_member_result =
-            self.verify_builtin_rule_premise(&right_member_fact, builtin_state)?;
+            self.verify_atomic_fact_as_builtin_rule_premise(&right_member_fact, builtin_state)?;
         if !right_member_result.is_true() {
             return Ok((StmtUnknown::new()).into());
         }
@@ -447,7 +448,7 @@ impl Runtime {
             )
             .into();
             let non_member_result =
-                self.verify_builtin_rule_premise(&non_member_fact, builtin_state)?;
+                self.verify_atomic_fact_as_builtin_rule_premise(&non_member_fact, builtin_state)?;
             if non_member_result.is_true() {
                 return Ok(
                     FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
@@ -483,7 +484,7 @@ impl Runtime {
         )
         .into();
         let left_member_result =
-            self.verify_builtin_rule_premise(&left_member_fact, builtin_state)?;
+            self.verify_atomic_fact_as_builtin_rule_premise(&left_member_fact, builtin_state)?;
         if !left_member_result.is_true() {
             return Ok((StmtUnknown::new()).into());
         }
@@ -495,7 +496,7 @@ impl Runtime {
         )
         .into();
         let right_non_member_result =
-            self.verify_builtin_rule_premise(&right_non_member_fact, builtin_state)?;
+            self.verify_atomic_fact_as_builtin_rule_premise(&right_non_member_fact, builtin_state)?;
         if !right_non_member_result.is_true() {
             return Ok((StmtUnknown::new()).into());
         }
@@ -545,8 +546,8 @@ impl Runtime {
                 in_fact.line_file.clone(),
             )
             .into();
-            let member_set_result =
-                self.verify_builtin_rule_premise(&member_set_in_family, builtin_state)?;
+            let member_set_result = self
+                .verify_atomic_fact_as_builtin_rule_premise(&member_set_in_family, builtin_state)?;
             if !member_set_result.is_true() {
                 continue;
             }
@@ -557,8 +558,10 @@ impl Runtime {
                 in_fact.line_file.clone(),
             )
             .into();
-            let element_result =
-                self.verify_builtin_rule_premise(&element_in_member_set, builtin_state)?;
+            let element_result = self.verify_atomic_fact_as_builtin_rule_premise(
+                &element_in_member_set,
+                builtin_state,
+            )?;
             if element_result.is_true() {
                 return Ok(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -631,8 +634,8 @@ impl Runtime {
                 in_fact.line_file.clone(),
             )
             .into();
-            let mut preimage_result =
-                self.verify_builtin_rule_premise(&preimage_in_source, builtin_state)?;
+            let mut preimage_result = self
+                .verify_atomic_fact_as_builtin_rule_premise(&preimage_in_source, builtin_state)?;
             // Literal source membership is a bounded structural leaf, so it
             // may discharge the witness carrier without consuming a second
             // recursive builtin-rule layer. Example: `$P(1,z)` introduces
@@ -659,7 +662,7 @@ impl Runtime {
             )
             .into();
             let relation_result =
-                self.verify_builtin_rule_premise(&relation_fact, builtin_state)?;
+                self.verify_atomic_fact_as_builtin_rule_premise(&relation_fact, builtin_state)?;
             if relation_result.is_true() {
                 return Ok(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -877,7 +880,8 @@ impl Runtime {
             in_fact.line_file.clone(),
         )
         .into();
-        let mut subset_result = self.verify_builtin_rule_premise(&subset_fact, builtin_state)?;
+        let mut subset_result =
+            self.verify_atomic_fact_as_builtin_rule_premise(&subset_fact, builtin_state)?;
         if !subset_result.is_true()
             && (objs_equal_with_nested_binder_alpha_equivalence(
                 body.ret_set.as_ref(),
@@ -924,7 +928,8 @@ impl Runtime {
             in_fact.line_file.clone(),
         )
         .into();
-        let mut subset_result = self.verify_builtin_rule_premise(&subset_fact, builtin_state)?;
+        let mut subset_result =
+            self.verify_atomic_fact_as_builtin_rule_premise(&subset_fact, builtin_state)?;
         if !subset_result.is_true()
             && (objs_equal_with_nested_binder_alpha_equivalence(
                 &in_fact.element,
@@ -1237,7 +1242,8 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         let finite_fact =
             IsFiniteSetFact::new((*finite_set_size.set).clone(), in_fact.line_file.clone());
-        let finite_result = self.verify_builtin_rule_premise(&finite_fact.into(), builtin_state)?;
+        let finite_result =
+            self.verify_atomic_fact_as_builtin_rule_premise(&finite_fact.into(), builtin_state)?;
         if finite_result.is_true() {
             return Ok(
                 number_in_set_verified_by_builtin_rules_result_with_subgoals(
@@ -1325,8 +1331,10 @@ impl Runtime {
                         line_file.clone(),
                     )
                     .into();
-                    let result =
-                        self.verify_builtin_rule_premise(&element_in_standard_set, builtin_state)?;
+                    let result = self.verify_atomic_fact_as_builtin_rule_premise(
+                        &element_in_standard_set,
+                        builtin_state,
+                    )?;
                     if !result.is_true() {
                         return Ok(None);
                     }
@@ -1363,7 +1371,8 @@ impl Runtime {
                 let subset_fact: AtomicFact =
                     SubsetFact::new(source_set.clone(), standard_set.clone(), line_file.clone())
                         .into();
-                let result = self.verify_builtin_rule_premise(&subset_fact, builtin_state)?;
+                let result =
+                    self.verify_atomic_fact_as_builtin_rule_premise(&subset_fact, builtin_state)?;
                 if result.is_true() {
                     Ok(Some(vec![result]))
                 } else {

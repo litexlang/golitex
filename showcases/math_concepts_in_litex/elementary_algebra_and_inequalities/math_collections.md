@@ -2,10 +2,10 @@
 
 ## Implemented first-version slice
 
-`main.lit` now checks the mean definitions and AM-GM, linear isolation,
-factorization with zero-product cases, an absolute-value equation, and the
-planned radical-equation flagship. The file deliberately exposes the
-nonnegative-radicand premise before `sqrt` and contains no direct `trust`.
+`main.lit` now checks the mean definitions and AM-GM, linear isolation, the
+real quadratic formula, and the radical-equation flagship. The file
+deliberately exposes nonnegative square-root premises and contains no direct
+`trust`.
 
 ## Core interface cards
 
@@ -28,16 +28,17 @@ nonnegative-radicand premise before `sqrt` and contains no direct `trust`.
 - **Rejected form:** a universal `is_solution` wrapper that only renames `=`.
 - **Use:** proofs should expose transformations on the original equality.
 
-### Absolute-value bound
+### Quadratic formula
 
-- **Meaning:** connects `abs(x) <= r` with the interval `-r <= x <= r` for
-  nonnegative `r`.
-- **Form:** important reusable `thm`, with `abs` remaining Builtin.
-- **Dependencies:** order and cases on the sign of `x`.
-- **Use:** inequalities and domain constraints.
-
-The first version instantiates this proof pattern on `abs(x - 3) = 2`; the
-fully reusable interval equivalence remains a later library candidate.
+- **Meaning:** every real root of `a*x^2+b*x+c=0` is one of the two standard
+  formula values when `a != 0` and the discriminant is nonnegative.
+- **Form:** reusable `thm quadratic_formula`, returning the two candidates as
+  a disjunction.
+- **Dependencies:** real arithmetic, square root, difference-of-squares
+  factorization, zero-product cases, and division by `2*a`.
+- **Use:** direct candidate generation for the radical-equation example.
+- **Boundary:** it does not construct complex roots when the discriminant is
+  negative and is not a general polynomial-solving API.
 
 ### Zero-product bridge
 
@@ -52,12 +53,14 @@ fully reusable interval equivalence remains a later library candidate.
 Builtin R/order/sqrt
   -> arithmetic_mean, geometric_mean              [signature, definition]
   -> square nonnegativity                         [proof]
-  -> factorization and zero-product bridge        [proof]
   -> AM-GM                                        [proof]
+  -> completed square and zero-product cases      [proof]
+  -> quadratic_formula                            [interface]
   -> radical-equation domain and candidate roots  [well_definedness, proof]
   -> unique valid root                            [proof]
 ```
 
 No canonical root-selection function or general polynomial solver belongs in
-this project. The flagship theorem proves one transparent problem, not an API
-for arbitrary equations.
+this project. The quadratic theorem exposes the standard real formula under
+its natural domain conditions, and the flagship theorem consumes it in one
+transparent problem.

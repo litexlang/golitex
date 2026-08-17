@@ -1,5 +1,5 @@
 /-
-Pure Lean 4 analogy for `main.lit`.
+The same mathematics as `main.lit`, expressed in pure Lean 4.
 
 This file deliberately has no imports: it uses only Lean's automatically
 loaded Prelude. It is a handwritten comparison, not compiler-generated output

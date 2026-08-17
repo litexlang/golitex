@@ -13,7 +13,8 @@ impl Runtime {
             line_file.clone(),
         )
         .into();
-        let positive_result = self.verify_builtin_rule_premise(&positive, builtin_state)?;
+        let positive_result =
+            self.verify_atomic_fact_as_builtin_rule_premise(&positive, builtin_state)?;
         if positive_result.is_true() {
             return Ok(Some(positive_result));
         }
@@ -21,7 +22,8 @@ impl Runtime {
         for carrier in [StandardSet::NPos, StandardSet::QPos, StandardSet::RPos] {
             let membership: AtomicFact =
                 InFact::new(obj.clone(), carrier.into(), line_file.clone()).into();
-            let membership_result = self.verify_builtin_rule_premise(&membership, builtin_state)?;
+            let membership_result =
+                self.verify_atomic_fact_as_builtin_rule_premise(&membership, builtin_state)?;
             if membership_result.is_true() {
                 return Ok(Some(membership_result));
             }
@@ -83,7 +85,7 @@ impl Runtime {
         };
         let m_in_n: AtomicFact =
             InFact::new(m.clone(), StandardSet::N.into(), line_file.clone()).into();
-        let m_result = self.verify_builtin_rule_premise(&m_in_n, builtin_state)?;
+        let m_result = self.verify_atomic_fact_as_builtin_rule_premise(&m_in_n, builtin_state)?;
         if !m_result.is_true() {
             return Ok(None);
         }
@@ -227,7 +229,7 @@ impl Runtime {
         )
         .into();
         let positive_result =
-            self.verify_builtin_rule_premise(&positive_exponent, builtin_state)?;
+            self.verify_atomic_fact_as_builtin_rule_premise(&positive_exponent, builtin_state)?;
         let mut positive_steps = Vec::new();
         if positive_result.is_true() {
             positive_steps.push(positive_result);

@@ -120,22 +120,22 @@ impl Runtime {
                 NotEqualFact::new(exponent.clone(), zero.clone(), line_file.clone()).into();
 
             let left_positive_result =
-                self.verify_builtin_rule_premise(&left_positive, builtin_state)?;
+                self.verify_atomic_fact_as_builtin_rule_premise(&left_positive, builtin_state)?;
             if !left_positive_result.is_true() {
                 continue;
             }
             let right_positive_result =
-                self.verify_builtin_rule_premise(&right_positive, builtin_state)?;
+                self.verify_atomic_fact_as_builtin_rule_premise(&right_positive, builtin_state)?;
             if !right_positive_result.is_true() {
                 continue;
             }
             let exponent_in_z_result =
-                self.verify_builtin_rule_premise(&exponent_in_z, builtin_state)?;
+                self.verify_atomic_fact_as_builtin_rule_premise(&exponent_in_z, builtin_state)?;
             if !exponent_in_z_result.is_true() {
                 continue;
             }
             let exponent_nonzero_result =
-                self.verify_builtin_rule_premise(&exponent_nonzero, builtin_state)?;
+                self.verify_atomic_fact_as_builtin_rule_premise(&exponent_nonzero, builtin_state)?;
             if !exponent_nonzero_result.is_true() {
                 continue;
             }
@@ -332,7 +332,7 @@ impl Runtime {
         )
         .into();
         let exponent_in_n_pos_result =
-            self.verify_builtin_rule_premise(&exponent_in_n_pos, builtin_state)?;
+            self.verify_atomic_fact_as_builtin_rule_premise(&exponent_in_n_pos, builtin_state)?;
         if !exponent_in_n_pos_result.is_true() {
             return Ok(None);
         }
@@ -347,7 +347,8 @@ impl Runtime {
             line_file,
         )
         .into();
-        let base_nonzero_result = self.verify_builtin_rule_premise(&base_nonzero, builtin_state)?;
+        let base_nonzero_result =
+            self.verify_atomic_fact_as_builtin_rule_premise(&base_nonzero, builtin_state)?;
         if !base_nonzero_result.is_true() {
             return Ok(None);
         }
@@ -444,7 +445,7 @@ impl Runtime {
         let degree_in_n_pos: AtomicFact =
             InFact::new(degree.clone(), StandardSet::NPos.into(), line_file.clone()).into();
         let mut degree_result =
-            self.verify_builtin_rule_premise(&degree_in_n_pos, builtin_state)?;
+            self.verify_atomic_fact_as_builtin_rule_premise(&degree_in_n_pos, builtin_state)?;
         if !degree_result.is_true()
             && matches!(&degree, Obj::Number(number) if number_is_in_n_pos(number))
         {
@@ -466,7 +467,7 @@ impl Runtime {
         )
         .into();
         let root_nonnegative_result =
-            self.verify_builtin_rule_premise(&root_nonnegative, builtin_state)?;
+            self.verify_atomic_fact_as_builtin_rule_premise(&root_nonnegative, builtin_state)?;
         if !root_nonnegative_result.is_true() {
             return Ok(None);
         }

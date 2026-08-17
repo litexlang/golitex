@@ -111,6 +111,48 @@ sum(1, finite_set_size(X), fn(left_index closed_range(1, finite_set_size(X))) R 
 }
 
 #[test]
+fn numeric_builtin_rules_consume_complete_disjunction_premises() {
+    run_with_large_stack(
+        "numeric_builtin_rules_consume_complete_disjunction_premises",
+        || {
+            let source_code = r#"
+forall x, y R:
+    x != 0 or y != 0
+    =>:
+        x^2 + y^2 != 0
+
+forall a, b, c R:
+    0 < c
+    c * a <= b or a * c <= b
+    =>:
+        a <= b / c
+"#;
+
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "numeric_builtin_rules_consume_complete_disjunction_premises",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            assert!(
+                run_succeeded,
+                "numeric builtin rules should consume known disjunctions as complete premises:\n{run_output}"
+            );
+            for rule in [
+                "square sum not equal zero from nonzero component or",
+                "a <= b / c from 0 < c and (c * a <= b or a * c <= b)",
+            ] {
+                assert!(
+                    run_output.contains(rule),
+                    "missing compound-premise builtin provenance `{rule}`:\n{run_output}"
+                );
+            }
+        },
+    );
+}
+
+#[test]
 fn requested_numeric_builtin_rules_preserve_their_boundaries() {
     run_with_large_stack(
         "requested_numeric_builtin_rules_preserve_their_boundaries",

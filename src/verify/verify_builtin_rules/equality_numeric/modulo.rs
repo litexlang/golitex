@@ -140,13 +140,17 @@ impl Runtime {
             .into();
 
             let dividend_result =
-                self.verify_builtin_rule_premise(&dividend_in_z, builtin_state)?;
-            let inner_modulus_result =
-                self.verify_builtin_rule_premise(&inner_modulus_in_n_pos, builtin_state)?;
-            let outer_modulus_result =
-                self.verify_builtin_rule_premise(&outer_modulus_in_n_pos, builtin_state)?;
-            let divisibility_result =
-                self.verify_builtin_rule_premise(&modulus_divisibility, builtin_state)?;
+                self.verify_atomic_fact_as_builtin_rule_premise(&dividend_in_z, builtin_state)?;
+            let inner_modulus_result = self.verify_atomic_fact_as_builtin_rule_premise(
+                &inner_modulus_in_n_pos,
+                builtin_state,
+            )?;
+            let outer_modulus_result = self.verify_atomic_fact_as_builtin_rule_premise(
+                &outer_modulus_in_n_pos,
+                builtin_state,
+            )?;
+            let divisibility_result = self
+                .verify_atomic_fact_as_builtin_rule_premise(&modulus_divisibility, builtin_state)?;
             if !dividend_result.is_true()
                 || !inner_modulus_result.is_true()
                 || !outer_modulus_result.is_true()
@@ -425,9 +429,9 @@ impl Runtime {
             )
             .into();
             let dividend_result =
-                self.verify_builtin_rule_premise(&dividend_in_z, builtin_state)?;
+                self.verify_atomic_fact_as_builtin_rule_premise(&dividend_in_z, builtin_state)?;
             let modulus_result =
-                self.verify_builtin_rule_premise(&modulus_in_n_pos, builtin_state)?;
+                self.verify_atomic_fact_as_builtin_rule_premise(&modulus_in_n_pos, builtin_state)?;
             if !dividend_result.is_true() || !modulus_result.is_true() {
                 continue;
             }
@@ -539,9 +543,10 @@ impl Runtime {
                 line_file.clone(),
             )
             .into();
-            let base_result = self.verify_builtin_rule_premise(&base_in_z, builtin_state)?;
+            let base_result =
+                self.verify_atomic_fact_as_builtin_rule_premise(&base_in_z, builtin_state)?;
             let mut exponent_result =
-                self.verify_builtin_rule_premise(&exponent_in_n, builtin_state)?;
+                self.verify_atomic_fact_as_builtin_rule_premise(&exponent_in_n, builtin_state)?;
             if !exponent_result.is_true() {
                 let exponent_in_n_pos: AtomicFact = InFact::new(
                     unreduced_power.exponent.as_ref().clone(),
@@ -554,7 +559,7 @@ impl Runtime {
                 )?;
             }
             let modulus_result =
-                self.verify_builtin_rule_premise(&modulus_in_n_pos, builtin_state)?;
+                self.verify_atomic_fact_as_builtin_rule_premise(&modulus_in_n_pos, builtin_state)?;
             if !base_result.is_true() || !exponent_result.is_true() || !modulus_result.is_true() {
                 continue;
             }

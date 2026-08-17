@@ -3281,9 +3281,10 @@ impl LitexToLeanIrBuilder<'_> {
                         })?;
                     premises.push(LitexToLeanLocalPremiseIr::new(fact_id, fact));
                 }
-                let inferred_premises = self.build_litex_to_lean_ir_supported_inferred_premises(
-                    &result.assumption_infers,
-                )?;
+                let mut inferred_premises = self
+                    .build_litex_to_lean_ir_supported_inferred_premises(
+                        &result.assumption_infers,
+                    )?;
                 let conclusion_context = context.with_infer_result(&result.assumption_infers);
                 let mut conclusions = Vec::with_capacity(result.proves.len());
                 for proved in result.proves.iter() {
@@ -3293,6 +3294,7 @@ impl LitexToLeanIrBuilder<'_> {
                         &conclusion_context,
                     )?);
                 }
+                add_cited_conjunction_projections(&premises, &conclusions, &mut inferred_premises)?;
                 Ok(LitexToLeanFactProofIr::ForallIntroduction {
                     parameter_premises,
                     premises,
@@ -4697,6 +4699,79 @@ impl LitexToLeanIrBuilder<'_> {
             }
         }
         Ok(inferred)
+    }
+}
+
+fn add_cited_conjunction_projections(
+    premises: &[LitexToLeanLocalPremiseIr],
+    conclusions: &[LitexToLeanFactIr],
+    inferred_premises: &mut Vec<LitexToLeanFactIr>,
+) -> Result<(), RuntimeError> {
+    for conclusion in conclusions {
+        let Some(projected_fact_id) = known_fact_citation_id(&conclusion.proof) else {
+            continue;
+        };
+        if inferred_premises
+            .iter()
+            .any(|inferred| inferred.fact_id == Some(projected_fact_id))
+            || premises
+                .iter()
+                .any(|premise| premise.fact_id == projected_fact_id)
+        {
+            continue;
+        }
+        for premise in premises {
+            let components = match &premise.fact {
+                Fact::AndFact(and_fact) => and_fact
+                    .facts
+                    .iter()
+                    .cloned()
+                    .map(Fact::from)
+                    .collect::<Vec<_>>(),
+                Fact::ChainFact(chain_fact) => chain_fact
+                    .facts()?
+                    .into_iter()
+                    .map(Fact::from)
+                    .collect::<Vec<_>>(),
+                _ => continue,
+            };
+            let Some(index) = components
+                .iter()
+                .position(|component| component.to_string() == conclusion.proposition.to_string())
+            else {
+                continue;
+            };
+            inferred_premises.push(LitexToLeanFactIr {
+                fact_id: Some(projected_fact_id),
+                proposition: conclusion.proposition.clone(),
+                proof: LitexToLeanFactProofIr::RuleApplication {
+                    rule: LitexToLeanProofRuleIr::ConjunctionProjection {
+                        expected_source: premise.fact.clone(),
+                        expected_target: conclusion.proposition.clone(),
+                        index,
+                        count: components.len(),
+                    },
+                    parameter_requirements: Vec::new(),
+                    premises: vec![LitexToLeanFactIr {
+                        fact_id: Some(premise.fact_id),
+                        proposition: premise.fact.clone(),
+                        proof: LitexToLeanFactProofIr::KnownFactCitation {
+                            source_fact_id: premise.fact_id,
+                        },
+                    }],
+                },
+            });
+            break;
+        }
+    }
+    Ok(())
+}
+
+fn known_fact_citation_id(proof: &LitexToLeanFactProofIr) -> Option<FactId> {
+    match proof {
+        LitexToLeanFactProofIr::KnownFactCitation { source_fact_id } => Some(*source_fact_id),
+        LitexToLeanFactProofIr::Memo { proof } => known_fact_citation_id(proof),
+        _ => None,
     }
 }
 

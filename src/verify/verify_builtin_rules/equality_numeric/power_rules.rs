@@ -53,7 +53,7 @@ impl Runtime {
         let in_n_pos: AtomicFact =
             InFact::new(obj.clone(), StandardSet::NPos.into(), line_file).into();
         Ok(self
-            .verify_builtin_rule_premise(&in_n_pos, builtin_state)?
+            .verify_atomic_fact_as_builtin_rule_premise(&in_n_pos, builtin_state)?
             .is_true())
     }
 
@@ -67,7 +67,7 @@ impl Runtime {
         let in_set: AtomicFact =
             InFact::new(obj.clone(), standard_set.clone().into(), line_file.clone()).into();
         if self
-            .verify_builtin_rule_premise(&in_set, builtin_state)?
+            .verify_atomic_fact_as_builtin_rule_premise(&in_set, builtin_state)?
             .is_true()
         {
             return Ok(true);
@@ -186,7 +186,7 @@ impl Runtime {
         let in_r: AtomicFact =
             InFact::new(obj.clone(), StandardSet::R.into(), line_file.clone()).into();
         if !self
-            .verify_builtin_rule_premise(&in_r, builtin_state)?
+            .verify_atomic_fact_as_builtin_rule_premise(&in_r, builtin_state)?
             .is_true()
         {
             return Ok(false);
@@ -211,7 +211,7 @@ impl Runtime {
         )
         .into();
         Ok(self
-            .verify_builtin_rule_premise(&nonzero, builtin_state)?
+            .verify_atomic_fact_as_builtin_rule_premise(&nonzero, builtin_state)?
             .is_true())
     }
 

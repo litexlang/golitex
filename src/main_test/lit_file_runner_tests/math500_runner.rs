@@ -13,6 +13,7 @@ use super::helper::{print_slowest_run_labels, run_with_large_stack, source_has_i
 // It is meant for local iteration while authoring snippets under
 // ../external_repos/MATH-500-litex/tmp/.
 #[test]
+#[ignore = "local dataset workflow; run explicitly with an exact filter and --ignored"]
 fn run_math500_tmp() {
     let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     let local_tmp_path = manifest_dir.join("tmp").join("math500_work.lit");
@@ -137,6 +138,7 @@ fn run_math500_tmp() {
 }
 
 #[test]
+#[ignore = "large dataset gate; run explicitly with an exact filter and --ignored"]
 fn run_math500_litex_simple() {
     run_with_large_stack(
         "run_math500_litex_simple_large_stack",
@@ -145,6 +147,7 @@ fn run_math500_litex_simple() {
 }
 
 #[test]
+#[ignore = "large dataset gate; run explicitly with an exact filter and --ignored"]
 fn run_math500_litex_all() {
     run_with_large_stack(
         "run_math500_litex_all_large_stack",

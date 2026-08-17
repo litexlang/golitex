@@ -1,5 +1,5 @@
 /-
-Pure Lean 4 analogy for `main.lit`.
+The same mathematics as `main.lit`, expressed in pure Lean 4.
 
 No imports are used. This is handwritten comparison code, not generated
 Litex-to-Lean compiler output.
@@ -7,7 +7,7 @@ Litex-to-Lean compiler output.
 
 universe u v w
 
-namespace TopologyCoreAnalogy
+namespace TopologySameMathInLean
 
 abbrev Set (X : Type u) := X → Prop
 
@@ -178,4 +178,4 @@ theorem continuous_image_of_compact_is_compact
                   refine ⟨index, hindex.left, ?_⟩
                   exact hxy ▸ hindex.right
 
-end TopologyCoreAnalogy
+end TopologySameMathInLean

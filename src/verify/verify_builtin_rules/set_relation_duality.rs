@@ -52,7 +52,8 @@ impl Runtime {
                     subset_fact.line_file.clone(),
                 )
                 .into();
-                let result = self.verify_builtin_rule_premise(&operand_subset, builtin_state)?;
+                let result = self
+                    .verify_atomic_fact_as_builtin_rule_premise(&operand_subset, builtin_state)?;
                 if !result.is_true() {
                     both_operands_are_subsets = false;
                     break;
@@ -83,7 +84,8 @@ impl Runtime {
                     subset_fact.line_file.clone(),
                 )
                 .into();
-                let result = self.verify_builtin_rule_premise(&membership, builtin_state)?;
+                let result =
+                    self.verify_atomic_fact_as_builtin_rule_premise(&membership, builtin_state)?;
                 if !result.is_true() {
                     all_elements_are_members = false;
                     break;
@@ -119,7 +121,10 @@ impl Runtime {
                         subset_fact.line_file.clone(),
                     )
                     .into();
-                    let result = self.verify_builtin_rule_premise(&factor_subset, builtin_state)?;
+                    let result = self.verify_atomic_fact_as_builtin_rule_premise(
+                        &factor_subset,
+                        builtin_state,
+                    )?;
                     if !result.is_true() {
                         all_factors_are_subsets = false;
                         break;
@@ -181,8 +186,10 @@ impl Runtime {
                         subset_fact.line_file.clone(),
                     )
                     .into();
-                    let result =
-                        self.verify_builtin_rule_premise(&start_membership, builtin_state)?;
+                    let result = self.verify_atomic_fact_as_builtin_rule_premise(
+                        &start_membership,
+                        builtin_state,
+                    )?;
                     if !result.is_true() {
                         return Ok((StmtUnknown::new()).into());
                     }
@@ -248,7 +255,7 @@ impl Runtime {
                     )
                     .into()
                 } else {
-                    self.verify_builtin_rule_premise(&ret_subset, builtin_state)?
+                    self.verify_atomic_fact_as_builtin_rule_premise(&ret_subset, builtin_state)?
                 };
                 if ret_subset_result.is_true() {
                     return Ok(

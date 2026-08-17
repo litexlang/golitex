@@ -20,11 +20,11 @@ The module has no `trust` or local axiom. Its gcd is a proof-facing
 certificate rather than a newly selected global gcd function; a general
 Euclidean-algorithm implementation and CRT remain later work.
 
-For comparison, `lean_core_analogy.lean` uses Prelude `Int` and preserves the
+`same_math_in_lean.lean` uses Prelude `Int` and preserves the
 same witness-facing interfaces for divisibility, gcd certificates, linear
 Diophantine equations, and congruence addition. It has no imports and is
-handwritten analogy code, not compiler-generated output. Run it with:
+the same mathematics in handwritten Lean, not compiler-generated output. Run it with:
 
 ```sh
-lean showcases/math_concepts_in_litex/number_theory/lean_core_analogy.lean
+lean showcases/math_concepts_in_litex/number_theory/same_math_in_lean.lean
 ```

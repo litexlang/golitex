@@ -1,0 +1,44 @@
+# Tracer: compiler FactId replay
+#
+# Before (not in the persistent compiler ledger):
+# forall a, b, c set:
+#     a = b
+#     b = c
+#     =>:
+#         a = c
+# Former limitation: exact known-equality paths, negated-equality symmetry,
+# and alpha-equivalent forall citation were covered only by Rust tests and
+# disposable probes, not by a generated same-name .lit/.lean pair.
+#
+# Now: compiler replays verifier-owned FactIds through Litex.Same.symm/trans,
+# Litex.Rules.notSameSymm, and an exact previously emitted forall theorem.
+#
+# Boundary: a closed semantic inequality such as `1 != 0`, opaque
+# OtherUnsupported proof evidence, and an unavailable or retargeted FactId
+# remain fail-closed.
+#
+# Evidence:
+# target/release/litex -compact -strict -runner -f lean/examples/6_FactReplay.lit
+# cd lean && ./compiler.sh compile examples/6_FactReplay.lit
+# cd lean && ./compiler.sh check examples
+
+forall a, b set:
+    a = b
+    =>:
+        b = a
+
+forall a, b, c set:
+    a = b
+    b = c
+    =>:
+        a = c
+
+forall a, b set:
+    a != b
+    =>:
+        b != a
+
+forall x, y set:
+    x = y
+    =>:
+        y = x

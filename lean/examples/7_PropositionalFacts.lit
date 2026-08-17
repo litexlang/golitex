@@ -1,0 +1,39 @@
+# Tracer: compiler propositional fact spine
+#
+# Before (not in the persistent compiler ledger):
+# forall a, b, c, d set:
+#     a != b and c != d
+#     =>:
+#         c != d
+# Former limitation: conjunction/disjunction introduction and exact
+# conjunction projection had no numbered generated acceptance pair.
+#
+# Now: compiler emits Lean conjunction/disjunction constructors and materializes
+# only the conjunction component whose verifier-owned FactId is cited by the
+# conclusion.
+#
+# Boundary: independently stored forall projections and propositional proof
+# evidence without a reviewed structured IR adapter remain fail-closed.
+#
+# Evidence:
+# target/release/litex -compact -strict -runner -f lean/examples/7_PropositionalFacts.lit
+# cd lean && ./compiler.sh compile examples/7_PropositionalFacts.lit
+# cd lean && ./compiler.sh check examples
+
+1 = 1 and 2 = 2
+
+forall a, b set:
+    a = a
+    b = b
+    =>:
+        a = a and b = b
+
+forall a, b set:
+    a = a
+    =>:
+        a = a or b = b
+
+forall a, b, c, d set:
+    a != b and c != d
+    =>:
+        c != d

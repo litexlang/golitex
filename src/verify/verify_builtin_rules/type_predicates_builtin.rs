@@ -79,7 +79,8 @@ impl Runtime {
                     is_nonempty_set_fact.line_file.clone(),
                 )
                 .into();
-                let result = self.verify_builtin_rule_premise(&endpoint_order, builtin_state)?;
+                let result = self
+                    .verify_atomic_fact_as_builtin_rule_premise(&endpoint_order, builtin_state)?;
                 if !result.is_true() {
                     return Ok(StmtUnknown::new().into());
                 }
@@ -101,7 +102,8 @@ impl Runtime {
                     is_nonempty_set_fact.line_file.clone(),
                 )
                 .into();
-                let result = self.verify_builtin_rule_premise(&endpoint_order, builtin_state)?;
+                let result = self
+                    .verify_atomic_fact_as_builtin_rule_premise(&endpoint_order, builtin_state)?;
                 if !result.is_true() {
                     return Ok(StmtUnknown::new().into());
                 }
@@ -134,7 +136,8 @@ impl Runtime {
                     )
                     .into()
                 };
-                let result = self.verify_builtin_rule_premise(&endpoint_order, builtin_state)?;
+                let result = self
+                    .verify_atomic_fact_as_builtin_rule_premise(&endpoint_order, builtin_state)?;
                 if !result.is_true() {
                     return Ok(StmtUnknown::new().into());
                 }
@@ -194,7 +197,7 @@ impl Runtime {
                 )
                 .into();
                 let left_result =
-                    self.verify_builtin_rule_premise(&left_nonempty, builtin_state)?;
+                    self.verify_atomic_fact_as_builtin_rule_premise(&left_nonempty, builtin_state)?;
                 if left_result.is_true() {
                     return Ok(
                         (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -211,8 +214,8 @@ impl Runtime {
                     is_nonempty_set_fact.line_file.clone(),
                 )
                 .into();
-                let right_result =
-                    self.verify_builtin_rule_premise(&right_nonempty, builtin_state)?;
+                let right_result = self
+                    .verify_atomic_fact_as_builtin_rule_premise(&right_nonempty, builtin_state)?;
                 if right_result.is_true() {
                     return Ok(
                         (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -228,7 +231,7 @@ impl Runtime {
             }
             Obj::Cart(cart) => {
                 for arg_obj in &cart.args {
-                    let is_nonempty_set_result = self.verify_builtin_rule_premise(
+                    let is_nonempty_set_result = self.verify_atomic_fact_as_builtin_rule_premise(
                         &IsNonemptySetFact::new(
                             *arg_obj.clone(),
                             is_nonempty_set_fact.line_file.clone(),
@@ -265,8 +268,10 @@ impl Runtime {
                     is_nonempty_set_fact.line_file.clone(),
                 )
                 .into();
-                let ret_check =
-                    self.verify_builtin_rule_premise(&ret_nonempty_fact, builtin_state)?;
+                let ret_check = self.verify_atomic_fact_as_builtin_rule_premise(
+                    &ret_nonempty_fact,
+                    builtin_state,
+                )?;
                 if ret_check.is_true() {
                     Ok(
                         (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -286,8 +291,10 @@ impl Runtime {
                     is_nonempty_set_fact.line_file.clone(),
                 )
                 .into();
-                let ret_check =
-                    self.verify_builtin_rule_premise(&ret_nonempty_fact, builtin_state)?;
+                let ret_check = self.verify_atomic_fact_as_builtin_rule_premise(
+                    &ret_nonempty_fact,
+                    builtin_state,
+                )?;
                 if ret_check.is_true() {
                     Ok(
                         (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -328,8 +335,10 @@ impl Runtime {
                     is_nonempty_set_fact.line_file.clone(),
                 )
                 .into();
-                let codomain_check =
-                    self.verify_builtin_rule_premise(&codomain_nonempty, builtin_state)?;
+                let codomain_check = self.verify_atomic_fact_as_builtin_rule_premise(
+                    &codomain_nonempty,
+                    builtin_state,
+                )?;
                 if codomain_check.is_true() {
                     Ok(
                         (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -349,8 +358,10 @@ impl Runtime {
                     is_nonempty_set_fact.line_file.clone(),
                 )
                 .into();
-                let codomain_check =
-                    self.verify_builtin_rule_premise(&codomain_nonempty, builtin_state)?;
+                let codomain_check = self.verify_atomic_fact_as_builtin_rule_premise(
+                    &codomain_nonempty,
+                    builtin_state,
+                )?;
                 if codomain_check.is_true() {
                     Ok(
                         (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -370,8 +381,10 @@ impl Runtime {
                     is_nonempty_set_fact.line_file.clone(),
                 )
                 .into();
-                let codomain_check =
-                    self.verify_builtin_rule_premise(&codomain_nonempty, builtin_state)?;
+                let codomain_check = self.verify_atomic_fact_as_builtin_rule_premise(
+                    &codomain_nonempty,
+                    builtin_state,
+                )?;
                 if codomain_check.is_true() {
                     Ok(
                         (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -400,8 +413,10 @@ impl Runtime {
                     let equal_nonempty: AtomicFact =
                         IsNonemptySetFact::new(equal_set, is_nonempty_set_fact.line_file.clone())
                             .into();
-                    let equal_result =
-                        self.verify_builtin_rule_premise(&equal_nonempty, builtin_state)?;
+                    let equal_result = self.verify_atomic_fact_as_builtin_rule_premise(
+                        &equal_nonempty,
+                        builtin_state,
+                    )?;
                     if equal_result.is_true() {
                         return Ok(
                             FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
@@ -429,7 +444,8 @@ impl Runtime {
         let line_file = is_nonempty_set_fact.line_file.clone();
         let finite: AtomicFact =
             IsFiniteSetFact::new(is_nonempty_set_fact.set.clone(), line_file.clone()).into();
-        let finite_result = self.verify_builtin_rule_premise(&finite, builtin_state)?;
+        let finite_result =
+            self.verify_atomic_fact_as_builtin_rule_premise(&finite, builtin_state)?;
         if !finite_result.is_true() {
             return Ok(None);
         }
@@ -503,7 +519,8 @@ impl Runtime {
                     is_finite_set_fact.line_file.clone(),
                 )
                 .into();
-                let base_result = self.verify_builtin_rule_premise(&base_finite, builtin_state)?;
+                let base_result =
+                    self.verify_atomic_fact_as_builtin_rule_premise(&base_finite, builtin_state)?;
                 if !base_result.is_true() {
                     return Ok((StmtUnknown::new()).into());
                 }
@@ -534,7 +551,7 @@ impl Runtime {
                 )
                 .into();
                 let domain_result =
-                    self.verify_builtin_rule_premise(&domain_finite, builtin_state)?;
+                    self.verify_atomic_fact_as_builtin_rule_premise(&domain_finite, builtin_state)?;
                 if domain_result.is_true() {
                     Ok(
                         (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -562,12 +579,13 @@ impl Runtime {
                     is_finite_set_fact.line_file.clone(),
                 )
                 .into();
-                let left_result = self.verify_builtin_rule_premise(&left_finite, builtin_state)?;
+                let left_result =
+                    self.verify_atomic_fact_as_builtin_rule_premise(&left_finite, builtin_state)?;
                 if !left_result.is_true() {
                     return Ok((StmtUnknown::new()).into());
                 }
                 let right_result =
-                    self.verify_builtin_rule_premise(&right_finite, builtin_state)?;
+                    self.verify_atomic_fact_as_builtin_rule_premise(&right_finite, builtin_state)?;
                 if !right_result.is_true() {
                     return Ok((StmtUnknown::new()).into());
                 }
@@ -595,12 +613,13 @@ impl Runtime {
                     is_finite_set_fact.line_file.clone(),
                 )
                 .into();
-                let left_result = self.verify_builtin_rule_premise(&left_finite, builtin_state)?;
+                let left_result =
+                    self.verify_atomic_fact_as_builtin_rule_premise(&left_finite, builtin_state)?;
                 if !left_result.is_true() {
                     return Ok((StmtUnknown::new()).into());
                 }
                 let right_result =
-                    self.verify_builtin_rule_premise(&right_finite, builtin_state)?;
+                    self.verify_atomic_fact_as_builtin_rule_premise(&right_finite, builtin_state)?;
                 if !right_result.is_true() {
                     return Ok((StmtUnknown::new()).into());
                 }
@@ -622,7 +641,8 @@ impl Runtime {
                     is_finite_set_fact.line_file.clone(),
                 )
                 .into();
-                let left_result = self.verify_builtin_rule_premise(&left_finite, builtin_state)?;
+                let left_result =
+                    self.verify_atomic_fact_as_builtin_rule_premise(&left_finite, builtin_state)?;
                 if !left_result.is_true() {
                     return Ok((StmtUnknown::new()).into());
                 }
@@ -644,7 +664,8 @@ impl Runtime {
                     is_finite_set_fact.line_file.clone(),
                 )
                 .into();
-                let base_result = self.verify_builtin_rule_premise(&base_finite, builtin_state)?;
+                let base_result =
+                    self.verify_atomic_fact_as_builtin_rule_premise(&base_finite, builtin_state)?;
                 if !base_result.is_true() {
                     return Ok((StmtUnknown::new()).into());
                 }
@@ -669,8 +690,10 @@ impl Runtime {
                         is_finite_set_fact.line_file.clone(),
                     )
                     .into();
-                    let factor_result =
-                        self.verify_builtin_rule_premise(&factor_finite, builtin_state)?;
+                    let factor_result = self.verify_atomic_fact_as_builtin_rule_premise(
+                        &factor_finite,
+                        builtin_state,
+                    )?;
                     if !factor_result.is_true() {
                         return Ok((StmtUnknown::new()).into());
                     }
@@ -706,7 +729,8 @@ impl Runtime {
             not_is_finite_set_fact.line_file.clone(),
         )
         .into();
-        let left_result = self.verify_builtin_rule_premise(&left_infinite, builtin_state)?;
+        let left_result =
+            self.verify_atomic_fact_as_builtin_rule_premise(&left_infinite, builtin_state)?;
         if !left_result.is_true() {
             return Ok((StmtUnknown::new()).into());
         }
@@ -716,7 +740,8 @@ impl Runtime {
             not_is_finite_set_fact.line_file.clone(),
         )
         .into();
-        let mut right_result = self.verify_builtin_rule_premise(&right_finite, builtin_state)?;
+        let mut right_result =
+            self.verify_atomic_fact_as_builtin_rule_premise(&right_finite, builtin_state)?;
         if !right_result.is_true()
             && matches!(
                 set_minus.right.as_ref(),
@@ -868,7 +893,7 @@ impl Runtime {
                 not_is_nonempty_set_fact.line_file.clone(),
             )
             .into();
-            let lt_ok = self.verify_builtin_rule_premise(&lt, builtin_state)?;
+            let lt_ok = self.verify_atomic_fact_as_builtin_rule_premise(&lt, builtin_state)?;
             if lt_ok.is_true() {
                 return Ok(
                     (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -889,7 +914,7 @@ impl Runtime {
                 not_is_nonempty_set_fact.line_file.clone(),
             )
             .into();
-            let le_ok = self.verify_builtin_rule_premise(&le, builtin_state)?;
+            let le_ok = self.verify_atomic_fact_as_builtin_rule_premise(&le, builtin_state)?;
             if le_ok.is_true() {
                 return Ok(
                     (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(

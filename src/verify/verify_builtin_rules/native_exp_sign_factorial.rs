@@ -61,7 +61,8 @@ impl Runtime {
         for arg in [left, right] {
             let positive: AtomicFact =
                 LessFact::new(zero.clone(), arg.clone(), line_file.clone()).into();
-            let result = self.verify_builtin_rule_premise(&positive, builtin_state)?;
+            let result =
+                self.verify_atomic_fact_as_builtin_rule_premise(&positive, builtin_state)?;
             if !result.is_true() {
                 return Ok(None);
             }
@@ -195,7 +196,8 @@ impl Runtime {
             "-1" => LessFact::new((*sign.arg).clone(), zero, line_file.clone()).into(),
             _ => return Ok(None),
         };
-        let premise_result = self.verify_builtin_rule_premise(&premise, builtin_state)?;
+        let premise_result =
+            self.verify_atomic_fact_as_builtin_rule_premise(&premise, builtin_state)?;
         if premise_result.is_unknown() {
             return Ok(None);
         }
@@ -289,7 +291,7 @@ impl Runtime {
             line_file.clone(),
         )
         .into();
-        let result = self.verify_builtin_rule_premise(&premise, builtin_state)?;
+        let result = self.verify_atomic_fact_as_builtin_rule_premise(&premise, builtin_state)?;
         if !result.is_true() {
             return Ok(None);
         }
@@ -389,7 +391,8 @@ impl Runtime {
         }
         let mut results = Vec::new();
         for premise in premises {
-            let result = self.verify_builtin_rule_premise(&premise, builtin_state)?;
+            let result =
+                self.verify_atomic_fact_as_builtin_rule_premise(&premise, builtin_state)?;
             if !result.is_true() {
                 return Ok(None);
             }
@@ -425,7 +428,7 @@ impl Runtime {
             f.line_file.clone(),
         )
         .into();
-        let result = self.verify_builtin_rule_premise(&premise, builtin_state)?;
+        let result = self.verify_atomic_fact_as_builtin_rule_premise(&premise, builtin_state)?;
         if !result.is_true() {
             return Ok(None);
         }
@@ -495,7 +498,8 @@ impl Runtime {
             return Ok(None);
         };
         let _ = ln;
-        let premise_result = self.verify_builtin_rule_premise(&premise, builtin_state)?;
+        let premise_result =
+            self.verify_atomic_fact_as_builtin_rule_premise(&premise, builtin_state)?;
         if premise_result.is_unknown() {
             return Ok(None);
         }
@@ -564,7 +568,8 @@ impl Runtime {
                 for arg in [left, right] {
                     let positive: AtomicFact =
                         LessFact::new(zero.clone(), arg.clone(), line_file.clone()).into();
-                    let result = self.verify_builtin_rule_premise(&positive, builtin_state)?;
+                    let result =
+                        self.verify_atomic_fact_as_builtin_rule_premise(&positive, builtin_state)?;
                     if !result.is_true() {
                         subgoals.clear();
                         break;
@@ -612,7 +617,8 @@ impl Runtime {
 
         let mut results = Vec::new();
         for premise in premises {
-            let result = self.verify_builtin_rule_premise(&premise, builtin_state)?;
+            let result =
+                self.verify_atomic_fact_as_builtin_rule_premise(&premise, builtin_state)?;
             if !result.is_true() {
                 return Ok(None);
             }

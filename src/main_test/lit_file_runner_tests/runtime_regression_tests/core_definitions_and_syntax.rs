@@ -2017,7 +2017,7 @@ fn standalone_ellipsis_is_not_a_noop() {
 }
 
 #[test]
-fn list_set_membership_implies_equality_or() {
+fn equality_or_implies_list_set_membership() {
     let source_code = r#"
 forall a set:
     a = 1 or a = 2 or a = 3
@@ -2026,14 +2026,14 @@ forall a set:
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope("list_set_membership_implies_equality_or");
+    runtime.new_file_path_new_env_new_name_scope("equality_or_implies_list_set_membership");
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
     let (run_succeeded, run_output) =
         render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
     assert!(
         run_succeeded,
-        "list_set_membership_implies_equality_or failed:\n{}",
+        "equality_or_implies_list_set_membership failed:\n{}",
         run_output
     );
 }

@@ -59,6 +59,20 @@ WD proof. The source `forall` is deliberately top-level rather than wrapped in
 multiple arguments, domain clauses, and curried returns remain outside this
 first adapter.
 
+`5_AtomicMembership.lit` covers ordinary top-level membership in the standard
+numeric sets. Numerals remain complex-valued Lean terms, while the generated
+theorems construct separate `Litex.In` evidence for `N`, `Z`, `Q`, `R`, and
+`C`; Lean typing never substitutes for Litex membership.
+
+`6_FactReplay.lit` covers exact verifier-owned proof reuse. Equality symmetry
+and transitivity replay cited FactIds through `Litex.Same`, negated equality
+uses its proved symmetry rule, and an alpha-equivalent universal statement
+cites the previously emitted forall theorem.
+
+`7_PropositionalFacts.lit` covers conjunction and disjunction introduction as
+well as structural conjunction projection. A projected local fact is emitted
+only when its exact FactId is cited by a conclusion.
+
 Generated `.lean` files are review artifacts, not editing surfaces. A new
 compiler feature must add the next numbered same-name pair. Unsupported
 statements, objects, facts, or proof routes fail closed.

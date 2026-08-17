@@ -4,7 +4,7 @@ impl Runtime {
     pub fn parse_by_thm_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(THM)?;
         let (name, args) = self.parse_theorem_call(tb)?;
-        let selected_fact = if tb.current_token_is_equal_to(RIGHT_ARROW) {
+        let selected_facts = if tb.current_token_is_equal_to(RIGHT_ARROW) {
             if !tb.body.is_empty() {
                 return Err(RuntimeError::from(ParseRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_line_file(
@@ -31,7 +31,7 @@ impl Runtime {
                     ),
                 )));
             }
-            Some(fact)
+            Some(vec![fact.into()])
         } else if tb.current_token_is_equal_to(COLON) {
             tb.skip_token(COLON)?;
             if !tb.exceed_end_of_head() || tb.body.len() != 1 {
@@ -43,7 +43,9 @@ impl Runtime {
                     ),
                 )));
             }
-            Some(self.parse_goal_atomic_fact_block(&mut tb.body[0], "by thm")?)
+            Some(vec![self
+                .parse_goal_atomic_fact_block(&mut tb.body[0], "by thm")?
+                .into()])
         } else {
             if !tb.body.is_empty() {
                 return Err(RuntimeError::from(ParseRuntimeError(
@@ -63,7 +65,7 @@ impl Runtime {
                 ),
             )));
         }
-        Ok(ByThmStmt::new(name, args, selected_fact, tb.line_file.clone()).into())
+        Ok(ByThmStmt::new(name, args, selected_facts, tb.line_file.clone()).into())
     }
 
     /// Parse the shared `name(args)` portion of an explicit theorem call.
@@ -103,17 +105,16 @@ mod tests {
         let Stmt::By(ByStmt::ByThmStmt(legacy)) = legacy else {
             panic!("expected by thm statement")
         };
-        assert!(legacy.selected_fact.is_none());
+        assert!(legacy.selected_facts.is_none());
 
         let selected =
             parse_one("by thm T(a) => not $P(a)").expect("parse by thm with selected atomic fact");
         let Stmt::By(ByStmt::ByThmStmt(selected)) = selected else {
             panic!("expected by thm statement")
         };
-        assert!(selected
-            .selected_fact
-            .as_ref()
-            .is_some_and(|fact| !fact.is_true()));
+        assert!(selected.selected_facts.as_ref().is_some_and(
+            |facts| matches!(facts.as_slice(), [Fact::AtomicFact(fact)] if !fact.is_true())
+        ));
         assert_eq!(selected.to_string(), "by thm T(a) => not $P(a)");
 
         let goal_block =
@@ -121,10 +122,9 @@ mod tests {
         let Stmt::By(ByStmt::ByThmStmt(goal_block)) = goal_block else {
             panic!("expected by thm statement")
         };
-        assert!(goal_block
-            .selected_fact
-            .as_ref()
-            .is_some_and(|fact| !fact.is_true()));
+        assert!(goal_block.selected_facts.as_ref().is_some_and(
+            |facts| matches!(facts.as_slice(), [Fact::AtomicFact(fact)] if !fact.is_true())
+        ));
         assert_eq!(goal_block.to_string(), "by thm T(a) => not $P(a)");
     }
 

@@ -193,7 +193,8 @@ impl Runtime {
                     f.line_file.clone(),
                 )
                 .into();
-                let result = self.verify_builtin_rule_premise(&premise, builtin_state)?;
+                let result =
+                    self.verify_atomic_fact_as_builtin_rule_premise(&premise, builtin_state)?;
                 if result.is_true() {
                     return Ok(Some(complex_order_result(
                         atomic_fact,
@@ -225,7 +226,7 @@ impl Runtime {
             not_equal_fact.line_file.clone(),
         )
         .into();
-        let result = self.verify_builtin_rule_premise(&premise, builtin_state)?;
+        let result = self.verify_atomic_fact_as_builtin_rule_premise(&premise, builtin_state)?;
         if !result.is_true() {
             return Ok(None);
         }
@@ -435,7 +436,7 @@ impl Runtime {
                 )
                 .into();
                 let exponent_result =
-                    self.verify_builtin_rule_premise(&exponent_in_n, builtin_state)?;
+                    self.verify_atomic_fact_as_builtin_rule_premise(&exponent_in_n, builtin_state)?;
                 if !exponent_result.is_true() {
                     return Ok(None);
                 }
@@ -488,8 +489,10 @@ impl Runtime {
                     line_file.clone(),
                 )
                 .into();
-                let nonzero_result =
-                    self.verify_builtin_rule_premise(&denominator_nonzero, builtin_state)?;
+                let nonzero_result = self.verify_atomic_fact_as_builtin_rule_premise(
+                    &denominator_nonzero,
+                    builtin_state,
+                )?;
                 if !nonzero_result.is_true() {
                     return Ok(None);
                 }
@@ -612,7 +615,7 @@ impl Runtime {
         for obj in objs {
             let fact: AtomicFact =
                 InFact::new((*obj).clone(), StandardSet::C.into(), line_file.clone()).into();
-            let result = self.verify_builtin_rule_premise(&fact, builtin_state)?;
+            let result = self.verify_atomic_fact_as_builtin_rule_premise(&fact, builtin_state)?;
             if !result.is_true() {
                 return Ok(None);
             }

@@ -2594,13 +2594,21 @@ For an ordinary atomic fact, the main order is:
 11. On success, store the fact and run builtin inference.
 
 Here a **premise** is a child fact that a rule must verify before it may
-conclude its parent fact. Zero-premise verification does not generate such
-child facts: it reuses a known fact in step 2 or directly evaluates the current
-fact in step 3. Equality may additionally use the terminating comparison in
-step 5 because its reductions and constructor descent create no mathematical
-child facts. Step 4 may cite an equality that is already verified, but it does
-not generate a new proof obligation. This separation is necessary after a
-builtin rule has consumed the allowed rule step. For example, proving
+conclude its parent fact. A builtin premise may be an atomic fact or a flat
+quantifier-free `and`, relation chain, or `or`. Compound logical structure does
+not reset the builtin depth: every atomic leaf uses the same bounded premise
+state. A known complete disjunction can therefore be consumed without treating
+any one of its branches as separately known; for example,
+`a = 1 or a = 2 or a = 3` is the single premise for
+`a $in {1, 2, 3}`.
+
+Zero-premise verification does not generate new mathematical child facts: it
+reuses a known fact in step 2 or directly evaluates the current fact in step 3.
+Equality may additionally use the terminating comparison in step 5 because its
+reductions and constructor descent create no mathematical child facts. Step 4
+may cite an equality that is already verified, but it does not generate a new
+proof obligation. This separation is necessary after a builtin rule has
+consumed the allowed rule step. For example, proving
 `x * 2 >= 0` from known `x >= 0`
 uses the multiplication rule once; its remaining premise `2 >= 0` must still
 close by direct evaluation without opening another premise-producing rule.
@@ -3202,11 +3210,15 @@ Builtin verification rules are small mathematical patterns implemented by the
 checker. They close the current goal; they are different from inference, which
 stores useful consequences after a statement has already been accepted.
 
-An automatic builtin rule is deliberately one layer deep. Its premises may use
-already-known non-`forall` atomic facts and deterministic computation, but may
-not invoke a second builtin rule. A dedicated rule state records whether that
-single direct-rule layer has already been used; there is no shared node counter
-or same-family/cross-family exception.
+An automatic builtin rule is deliberately one layer deep. Its premises may be
+atomic facts or flat quantifier-free conjunctions, relation chains, and
+disjunctions. They may use already-known non-`forall` facts and deterministic
+atomic computation, but may not invoke a second builtin rule. For `and` and a
+chain every atomic leaf must verify; for `or`, an already-known complete
+disjunction suffices, or one branch may be verified. A dedicated rule state is
+threaded through every leaf and records whether the single direct-rule layer
+has already been used; compound syntax never resets it, and there is no shared
+node counter or same-family/cross-family exception.
 
 Separate builtin strategies handle only strictly structural descent, such as
 arithmetic carrier trees, additive or multiplicative sign trees, finite and

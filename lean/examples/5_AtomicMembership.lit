@@ -1,0 +1,27 @@
+# Tracer: compiler top-level standard-set membership
+#
+# Before (not in the persistent compiler ledger):
+# 1 $in N
+# Former limitation: this route was exercised only by transient probes and a
+# Rust regression, so `./compiler.sh check examples` did not protect its
+# generated Lean output.
+#
+# Now: each verified top-level membership is emitted as an explicit Litex.In
+# proposition. The complex-valued source numeral retains separate membership
+# evidence for N, Z, Q, R, and C; its Lean type is never used as a replacement
+# for Litex membership.
+#
+# Boundary: this adapter currently accepts natural numeral literals for
+# N/Z/Q/R membership. Negative, fractional, and general expression membership
+# require their own reviewed verifier certificate and emitter adapter.
+#
+# Evidence:
+# target/release/litex -compact -strict -runner -f lean/examples/5_AtomicMembership.lit
+# cd lean && ./compiler.sh compile examples/5_AtomicMembership.lit
+# cd lean && ./compiler.sh check examples
+
+1 $in N
+1 $in Z
+1 $in Q
+1 $in R
+1 $in C

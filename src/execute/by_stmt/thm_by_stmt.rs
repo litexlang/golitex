@@ -2,7 +2,7 @@ use crate::prelude::*;
 
 impl Runtime {
     pub fn exec_by_thm_stmt(&mut self, stmt: &ByThmStmt) -> Result<StmtResult, RuntimeError> {
-        if stmt.selected_fact.is_some() {
+        if stmt.selected_facts.is_some() {
             return self.exec_by_thm_stmt_select_atomic_fact(stmt);
         }
         if let Some(result) = self.exec_builtin_thm_stmt(stmt)? {
@@ -169,7 +169,7 @@ impl Runtime {
         &mut self,
         stmt: &ByThmStmt,
     ) -> Result<StmtResult, RuntimeError> {
-        if stmt.selected_fact.is_some() {
+        if stmt.selected_facts.is_some() {
             return self.exec_by_thm_stmt_select_atomic_fact_affect_environment_only(stmt);
         }
         if let Some(result) = self.exec_builtin_thm_stmt_affect_environment_only(stmt)? {
@@ -254,10 +254,19 @@ impl Runtime {
         stmt: &ByThmStmt,
     ) -> Result<StmtResult, RuntimeError> {
         let selected_fact = stmt
-            .selected_fact
+            .selected_facts
             .as_ref()
             .expect("selected by thm execution requires a target")
-            .clone();
+            .as_slice();
+        let [Fact::AtomicFact(selected_fact)] = selected_fact else {
+            return Err(short_exec_error(
+                stmt.clone().into(),
+                "by thm: selected targets currently require exactly one atomic fact".to_string(),
+                None,
+                vec![],
+            ));
+        };
+        let selected_fact = selected_fact.clone();
         let verify_state = UseContextVerifyState::new(0, false);
         self.verify_atomic_fact_well_defined(&selected_fact, &verify_state)
             .map_err(|error| {
@@ -364,10 +373,19 @@ impl Runtime {
         stmt: &ByThmStmt,
     ) -> Result<StmtResult, RuntimeError> {
         let selected_fact = stmt
-            .selected_fact
+            .selected_facts
             .as_ref()
             .expect("selected by thm execution requires a target")
-            .clone();
+            .as_slice();
+        let [Fact::AtomicFact(selected_fact)] = selected_fact else {
+            return Err(short_exec_error(
+                stmt.clone().into(),
+                "by thm: selected targets currently require exactly one atomic fact".to_string(),
+                None,
+                vec![],
+            ));
+        };
+        let selected_fact = selected_fact.clone();
         let expanded_stmt = ByThmStmt::new(
             stmt.name.clone(),
             stmt.args.clone(),

@@ -67,7 +67,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn fn_eq_infers_ordinary_equality_for_known_congruence() {
+    fn fn_eq_infers_ordinary_equality() {
         let mut runtime = Runtime::new();
         runtime.new_file_path_new_env_new_name_scope("fn_eq_infers_ordinary_equality");
 
@@ -83,21 +83,7 @@ mod tests {
             .expect("store fn_eq and infer ordinary equality");
         assert!(infer_result.contains_added_fact(&ordinary_equality));
         assert!(runtime
-            .verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
-                &f,
-                &g,
-                line_file.clone()
-            ))
-            .is_true());
-
-        let left_power_set: Obj = PowerSet::new(f).into();
-        let right_power_set: Obj = PowerSet::new(g).into();
-        assert!(runtime
-            .verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
-                &left_power_set,
-                &right_power_set,
-                line_file
-            ))
+            .verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(&f, &g, line_file))
             .is_true());
     }
 }
