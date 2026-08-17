@@ -25,4 +25,12 @@ name = "litex"
 name = "litex"
 path = "src/main.rs"
 
+[[bin]]
+name = "litex_to_lean_compiler2"
+path = "src/litex_to_lean_compiler2/main.rs"
+
+[[test]]
+name = "litex_to_lean_compiler2_tracers"
+path = "src/litex_to_lean_compiler2/tests.rs"
+
 [dependencies]

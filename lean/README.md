@@ -1,12 +1,23 @@
 # Litex-to-Lean Compiler 2
 
-This repository is an independent executable prototype of the second Litex
-target ABI. It does not modify or wrap the existing universal-`Litex.Object`
-compiler.
+Compiler2 is the new implementation path for the second Litex target ABI. Its
+Rust implementation is the root-crate module and binary under
+`../src/litex_to_lean_compiler2/`; this directory owns the Lean ABI, generated
+examples, and the stable `compiler2.sh` entrypoint. Compiler2 reuses the
+verifier's checked IR capture, but it does not use the old universal-object
+emitter. That emitter and its `-lean` CLI remain temporarily available outside
+the compiler2 design.
 
 The package retains the established `Litex` namespace and `abiVersion` name,
 but reports `Litex.abiVersion = 2` so it cannot be mistaken for the old object
 ABI.
+
+`Litex/Core.lean` is the single semantic bridge header. It defines every
+compiler2 concept that interprets Litex through Lean and Mathlib, including
+`Same`, `Set`, `In`, numeric carriers, `AsReal`, `Lt`, and `Le` together with
+their bridge/transport interface. `Litex/Rules.lean` contains only concrete
+theorems selected by verifier certificates; it introduces no second semantic
+layer.
 
 The implemented scope is deliberately small:
 
@@ -23,36 +34,58 @@ The implemented scope is deliberately small:
 - `RealCoherence` is the explicit registry certificate asserting uniqueness of
   real representatives.
 
-The primary executable example translates the intended source shape
+Every compiler2 example is a checked-in generated pair:
 
 ```text
-forall a R, b C:
-    a = b
-    =>:
-        b $in R
-        a $in C
+examples/<name>.lit   authoritative verified Litex source
+examples/<name>.lean  generated compiler2 output; never hand-edited
 ```
 
-to two complex-valued binders, separate membership hypotheses, and one
-heterogeneous `Litex.Same` hypothesis. The emitted theorem shape retains the
-old compiler's `__SetSystem01`, `__fact0`, and `__h0_*` naming convention:
+`./compiler2.sh generate examples` verifies every source, captures its
+verifier-produced IR, and refreshes the paired Lean file. `./compiler2.sh check
+examples` recompiles each source in memory, rejects checked-in drift, and
+submits every generated file to the real Lean kernel.
+
+To refresh one pair after editing its Litex source, pass only the source path;
+compiler2 infers the same-name `.lean` output:
+
+```sh
+./compiler2.sh compile examples/1_SetSystem.lit
+```
+
+The first executable example translates the intended source shape
+
+```text
+have A set = R
+have B set = C
+forall a A, b B:
+    a = b
+    =>:
+        b $in A
+        a $in B
+```
+
+to two checked named-set aliases, two complex-valued binders, separate
+membership hypotheses, and one heterogeneous `Litex.Same` hypothesis. The
+emitted theorem shape retains the old compiler's `__fact0` and `__h0_*` naming
+convention inside a namespace derived from the source filename:
 
 ```lean
 theorem __fact0 :
-  ∀ (a : ℂ) (__h0_1 : Litex.In a Litex.R)
-    (b : ℂ) (__h0_2 : Litex.In b Litex.C)
+  ∀ (a : ℂ) (__h0_1 : Litex.In a A)
+    (b : ℂ) (__h0_2 : Litex.In b B)
     (__h0_3 : Litex.Same a b),
-    Litex.In b Litex.R ∧ Litex.In a Litex.C
+    Litex.In b A ∧ Litex.In a B
 ```
 
-See `examples/SetSystem.lean` for the compiled proof. Compiler2 examples live
-exclusively in that directory; the `Compiler2Examples` Lake target compiles
-them from the compiler2 environment.
+See `examples/1_SetSystem.lit` and its generated
+`examples/1_SetSystem.lean`. Compiler2 examples live exclusively in that
+directory.
 
-The comparison tracer in `examples/OrderSystem.lean` translates
+The comparison tracer in `examples/2_OrderSystem.lit` translates
 
 ```text
-forall a R, b R:
+forall a, b R:
     a < b
     =>:
         a <= b
@@ -61,24 +94,31 @@ forall a R, b R:
 as complex-valued binders with `In`, `Lt`, and `Le` propositions.  The proof
 is the ordinary real theorem `< → ≤` after unpacking the representatives.
 
-For an exact user-defined set, the compiler creates a hidden carrier such as
-`__Marker` and emits `Markers := Litex.Set.ofType __Marker`. An element of
-`__Marker` is automatically in `Markers` via `Litex.In.own`. A proper subset,
-such as the nonzero reals, is instead emitted with `Litex.setBuilder`, whose
-carrier is a subtype and therefore does not collapse back to all reals.
+The first non-`sketch` tracer is `examples/3_AtomicEquality.lit`:
 
-Build with:
+```text
+1 = 1
+2 + 3 = 5
+```
+
+Both are ordinary top-level facts. Numerals and `+` lower to native `ℂ`
+expressions, while equality lowers to `Litex.Same`. Reflexivity consumes the
+verifier's `ObjectReflexivity` certificate. Closed addition consumes a checked
+rational-normalization certificate, replays its numeric WD membership facts,
+and invokes `norm_num` only after compiler2 independently validates that exact
+source equality with Litex's rational-expression evaluator.
+
+Build and audit with:
 
 ```sh
 lake build
+./compiler2.sh compile examples/1_SetSystem.lit
+./compiler2.sh check examples
 ```
 
-The example file prints each tracer theorem's Lean axiom dependencies and
-contains a checked negative probe showing that the standard header does not
-install a `Bool`-to-`Nat` bridge. This project declares no new Lean axioms.
-The numeric examples inherit Mathlib's ordinary foundational dependencies for
-`ℝ` and `ℂ` (`propext`, `Classical.choice`, and `Quot.sound`); the independent
-finite-carrier example has no axiom dependencies.
+Generated files contain no `sorry`. The compiler2 Rust tests also pass a
+Litex-verified but unsupported proof route and require compilation to fail
+closed. This project declares no new Lean axioms.
 
 `BridgeRule` is intentionally extensible on the Lean side: an integration may
 register a new, reviewed representation relation. The Litex compiler will only
@@ -97,10 +137,15 @@ they do not create a separate Litex universe. Mathlib's usual numeric carriers
 therefore work directly. `Same` currently relates different carriers at the
 same Lean universe level; cross-universe edges are not part of this slice.
 This does not prevent higher-order sets: `Litex.Set.{0}` lives in `Type 1`, so
-it can be the carrier of `Litex.Set.{1}`. `SetSystem.lean` compiles this exact
-use probe. Only the real-comparison layer is confined to ordinary `Type`, since
-its representatives are Mathlib values in universe zero.
+it can be the carrier of `Litex.Set.{1}`. Only the real-comparison layer is
+confined to ordinary `Type`, since its representatives are Mathlib values in
+universe zero. A generated example for higher-order set construction is
+deferred until the IR and v2 emitter support its Litex statement form; it is
+not represented by hand-written code under `examples/`.
 
-Function spaces, application, compiler IR, verifier evidence, FactIds,
-well-definedness DAGs, set union/intersection/power set, and production
-code-generation are not implemented yet.
+The compiler currently emits only the reviewed IR routes exercised by the
+three numbered examples. Checked named aliases of `R` and `C`, top-level atomic
+equality, nonnegative integer numerals, and addition are supported. Other
+atomic predicates and arithmetic operators, bare arbitrary-set choices
+(`have A set`), function spaces, application, richer set constructors, and
+broader production code-generation are not implemented yet.

@@ -1,4 +1,4 @@
-import Litex.Order
+import Litex.Core
 
 namespace Litex.Rules
 

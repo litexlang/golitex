@@ -164,8 +164,9 @@ pub struct DefTemplateStmt {
 
 /// A named abbreviation for a repeated `forall` parameter/domain prefix.
 ///
-/// A setting is elaboration-only: using it produces an ordinary [`ForallFact`]
-/// whose binders are freshly alpha-renamed at every use site.
+/// A setting is elaboration-only: a `forall` use produces an ordinary
+/// [`ForallFact`], while `prop`, `setting`, and `struct` header uses contribute
+/// ordinary definition parameters and facts. Every use allocates fresh binders.
 #[derive(Clone)]
 pub struct DefSettingStmt {
     pub name: String,
@@ -192,9 +193,13 @@ impl DefSettingStmt {
 
 impl fmt::Display for DefSettingStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        write!(f, "{} {}{}", SETTING, self.name, COLON)?;
-        for group in self.param_def.iter() {
-            write!(f, "\n    {}", group)?;
+        write!(
+            f,
+            "{} {}{}{}{}",
+            SETTING, self.name, LEFT_BRACE, self.param_def, RIGHT_BRACE
+        )?;
+        if !self.dom_facts.is_empty() {
+            write!(f, "{}", COLON)?;
         }
         for fact in &self.dom_facts {
             write!(f, "\n    {}", fact)?;

@@ -749,7 +749,7 @@ This makes Litex more than a shorter syntax; it offers a different interaction c
 
 > **Litex aims to bring the entrance to formal mathematics closer to mathematics itself, while allowing its results to flow into Lean's trusted kernel and broad ecosystem. Even a ten-year-old doing mathematics should be able to begin with Litex and experience the appeal and power of formal languages.**
 
-This remains a goal that Litex is implementing and testing, not a capability that the current beta has already achieved in full. The Litex-to-Lean compiler currently covers only some verification routes. Its next steps are to expand semantic coverage, make the mapping auditable and replayable, and fail explicitly on unsupported routes rather than filling gaps with implicit axioms or incomplete proofs.
+_This remains a goal that Litex is implementing and testing, not a capability that the current beta has already achieved in full. The general idea and implementation framework is established, but implementation details need refinement. I welcome feedback from the community as we work to improve Litex._
 
 <a id="conclusions"></a>
 ## Conclusions

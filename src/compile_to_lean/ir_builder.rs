@@ -2441,18 +2441,18 @@ impl LitexToLeanCompiler<'_> {
             &source,
             &mut excluded,
         )?;
-        let Fact::ForallFact(source_forall) = &source.proposition else {
+        let Fact::ForallFact(_) = &source.proposition else {
             return Err(litex_to_lean_ir_error(
                 &source.proposition.line_file(),
                 "a verified non-forall fact was not assigned a stored FactId",
             ));
         };
-        if facts.is_empty() {
-            return Err(litex_to_lean_ir_error(
-                &source_forall.line_file,
-                "a verified forall had neither a FactId nor stored projections",
-            ));
-        }
+        // A fully verified reflexive forall may deliberately be omitted from
+        // the runtime's stored environment because no later proof needs to
+        // cite it. It is still a source statement and still carries complete
+        // ForallIntroduction and WD evidence, so retain it in statement IR
+        // with `fact_id = None`. Emitters may compile the theorem but cannot
+        // invent a citation identity for later statements.
 
         Ok(LitexToLeanStatementIr::Fact(LitexToLeanFactStatementIr {
             source,
@@ -4096,6 +4096,21 @@ impl LitexToLeanCompiler<'_> {
                     )
                 })?,
             ),
+            None if label == "calculation"
+                && matches!(
+                    goal,
+                    Fact::AtomicFact(AtomicFact::EqualFact(equality))
+                        if equality
+                            .left
+                            .two_objs_can_be_calculated_and_equal_by_calculation(
+                                &equality.right,
+                            )
+                ) =>
+            {
+                LitexToLeanProofRuleIr::Normalization {
+                    kind: LitexToLeanNormalizationKindIr::RationalExpressionSimplification,
+                }
+            }
             None => LitexToLeanProofRuleIr::from_verified_builtin_label(label, goal),
         };
         let premises = if matches!(

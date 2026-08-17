@@ -3,9 +3,10 @@
 ## Scope
 
 This document records the mathematical design of the v2 set system. The source
-of truth is the executable interface in `Litex/Core.lean`, the reusable facts
-in `Litex/Rules.lean`, and the immediate use probes in
-`examples/SetSystem.lean`.
+of truth is the single semantic bridge header `Litex/Core.lean`, the concrete
+verifier-rule theorems in `Litex/Rules.lean`, and the same-name generated pairs
+under `examples/`. Concept definitions and Lean/Mathlib representation bridges
+must not be split into feature headers beside `Core.lean`.
 
 Functions and compiler execution are intentionally outside this first slice.
 The first ordered-numeric interface is included because it fixes how native
@@ -75,8 +76,9 @@ For a predicate-defined subset, `Litex.setBuilder base predicate` uses the
 subtype `{x : base.Carrier // predicate x}` as its exact carrier.
 
 The construction remains universe-polymorphic. In particular,
-`Litex.Set.{0} : Type 1`, and `SetSystem.lean` defines a `Litex.Set.{1}` whose
-carrier is `Litex.Set.{0}` and proves that `R` belongs to it.
+`Litex.Set.{0} : Type 1`, so it may be the carrier of `Litex.Set.{1}`. A
+generated example is deferred until compiler2 supports the corresponding
+Litex statement form; the examples ledger contains no hand-written substitute.
 
 Nearest rejected form: using the same carrier for a base set and a proper
 subset. That would collapse their memberships.
@@ -86,14 +88,36 @@ subset. That would collapse their memberships.
 `Litex.In x S` means that some `y : S.Carrier` satisfies `Litex.Same x y`.
 It is an ordinary proposition and never changes the Lean type of `x`.
 
-The central use probe starts with `a b : ℂ`, `a In R`, `b In C`, and
-`Same a b`, then derives `b In R` and `a In C`. Its generated names follow the
-existing compiler ledger convention: `__SetSystem01.__fact0` and `__h0_*`.
+The central use probe first defines the checked aliases `A = R` and `B = C`,
+then starts with `a b : ℂ`, `a In A`, `b In B`, and `Same a b`, deriving
+`b In A` and `a In B`. Its authoritative source is
+`examples/1_SetSystem.lit`; the aliases become `Litex.Set` abbreviations and
+verifier equality-rewrite evidence becomes `Litex.In.congr` in the paired
+generated Lean file. A bare `have A set` is intentionally not synthesized by
+the emitter: the verifier currently rejects that arbitrary choice because no
+checked inhabited-type backend exists for the meta-level parameter type
+`set`.
+
+## Generated example contract
+
+The `.lit` file is authoritative. Compiler2 first verifies it and captures the
+exact `LitexToLeanStatementIr`; its native-carrier emitter validates and
+consumes that IR. It does not reparse display text or search for a Lean proof.
+A same-name `.lean` file is committed so reviewers can inspect the translation
+without running the tool.
+
+The drift gate recompiles each `.lit` in memory, compares the output byte for
+byte, and invokes Lean on the checked-in result. Unsupported verified IR fails
+closed. The initial reviewed routes are equality-based membership transport,
+the fingerprinted `order.less_equal_of_less` registered rule, and top-level
+closed numeric equality through verifier-selected reflexivity or rational
+normalization. Numeric expression WD facts remain named local Lean facts.
 
 ## Dependency order
 
 ```text
 Mathlib native carriers
+  -> Core.lean                  [single semantic bridge header]
   -> BridgeRule                 [controlled representation interface]
   -> Bridge                     [definition]
   -> Same                       [definition]
@@ -105,8 +129,11 @@ Mathlib native carriers
   -> AsReal                     [definition: Same + native real]
   -> RealCoherence              [certificate interface, no inhabitant assumed]
   -> Lt / Le                    [definition: native real order]
-  -> order transport/bridges    [proof]
-  -> executable examples        [proof]
+  -> order transport/bridges    [proof, still owned by Core.lean]
+  -> Rules.lean                 [concrete verifier-certificate theorems]
+  -> verifier-produced statement IR [checked compilation evidence]
+  -> compiler2 strict emitter   [reviewed v2 adapters]
+  -> same-name generated examples [real Lean proof]
 ```
 
 There are currently no project-declared axiom or trust edges. A theorem may

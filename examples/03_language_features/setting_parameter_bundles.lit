@@ -1,0 +1,63 @@
+# Tracer: explicit fresh names for setting parameter bundles
+#
+# Before: `forall [GroupSetting(B, mul_B, one_B, inv_B)]` stopped at `(`
+# because a setting reference accepted only the bare setting name. Concrete
+# `prop`, `setting`, and `struct` headers could not contain a setting
+# reference at all.
+# setting GroupHomomorphismSetting([GroupSetting(A, mul_A, one_A, inv_A)], [GroupSetting(B, mul_B, one_B, inv_B)], f fn(x A) B):
+#     forall x, y A:
+#         f(mul_A(x, y)) = mul_B(f(x), f(y))
+# struct GroupAction<[GroupSetting(G, mul_G, one_G, inv_G)], V nonempty_set>:
+#     act fn(g G, v V) V
+# Former behavior: both declarations stopped at `[` in their parameter lists.
+#
+# Now: every name inside `Setting(...)` declares a fresh binder, in the same
+# order as the setting parameters. The setting parameter types and conditions
+# are instantiated with those fresh binders. The bare `[Setting]` form remains
+# shorthand for using the setting's original parameter names.
+#
+# A nested setting receives the inherited conditions as shared assumptions. A
+# struct receives them as membership conditions before its explicit `<=>:`
+# facts; bundle parameters remain header parameters and never become fields.
+#
+# Boundary: arguments are exact bare binder names, not expressions or outer
+# references. Arity must match the setting exactly, active-name collisions are
+# rejected, and a struct bundle does not define dependent record fields.
+#
+# Evidence:
+# target/release/litex -compact -isolated -runner -f examples/03_language_features/setting_parameter_bundles.lit
+# Implementation: src/parse/parse_helpers.rs, src/parse/parse_fact.rs,
+# src/parse/parse_def_stmt.rs
+
+setting GroupSetting(A nonempty_set, mul fn(x, y A) A, one A, inv fn(x A) A):
+    forall u, v, w A:
+        mul(mul(u, v), w) = mul(u, mul(v, w))
+    forall u A:
+        mul(one, u) = u
+        mul(inv(u), u) = one
+
+forall [GroupSetting(B, mul_B, one_B, inv_B)]:
+    mul_B(one_B, one_B) = one_B
+
+forall [GroupSetting(G, mul_G, one_G, inv_G)] => mul_G(inv_G(one_G), one_G) = one_G
+
+prop is_group_homomorphism([GroupSetting(A, mul_A, one_A, inv_A)], [GroupSetting(B, mul_B, one_B, inv_B)], f fn(x A) B):
+    forall x, y A:
+        f(mul_A(x, y)) = mul_B(f(x), f(y))
+
+setting GroupHomomorphismSetting([GroupSetting(A, mul_A, one_A, inv_A)], [GroupSetting(B, mul_B, one_B, inv_B)], f fn(x A) B):
+    forall x, y A:
+        f(mul_A(x, y)) = mul_B(f(x), f(y))
+
+struct GroupAction<[GroupSetting(G, mul_G, one_G, inv_G)], V nonempty_set>:
+    act fn(g G, v V) V
+    <=>:
+        forall v V:
+            act(one_G, v) = v
+
+forall G nonempty_set, mul_G fn(x, y G) G, one_G G, inv_G fn(x G) G, V nonempty_set, action &GroupAction<G, mul_G, one_G, inv_G, V>:
+    forall u, v, w G:
+        mul_G(mul_G(u, v), w) = mul_G(u, mul_G(v, w))
+
+forall [GroupSetting]:
+    mul(one, one) = one

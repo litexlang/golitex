@@ -10,22 +10,11 @@ prop is_linear_map(s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpa
     forall a s, v VSet:
         T(V.smul(a, v)) = W.smul(a, T(v))
 
-setting VectorSpaceSetting:
-    s nonempty_set
-    VSet nonempty_set
-    V &chap1b::VectorSpace<s, VSet>
+setting VectorSpaceSetting(s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>)
 
-setting VectorSpacesSetting:
-    s nonempty_set
-    VSet, WSet nonempty_set
-    V &chap1b::VectorSpace<s, VSet>
-    W &chap1b::VectorSpace<s, WSet>
+setting VectorSpacesSetting(s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>)
 
-setting CompatibleVectorSpaces:
-    s nonempty_set
-    VSet, WSet nonempty_set
-    V &chap1b::VectorSpace<s, VSet>
-    W &chap1b::VectorSpace<s, WSet>
+setting CompatibleVectorSpaces(s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>):
     V.scalars = W.scalars
 # Notation 3.2. L(VSet,WSet) is the set of all linear maps VSet -> WSet; L(VSet) is the
 # special case WSet=VSet. Because the result carrier varies with VSet and WSet, Litex uses

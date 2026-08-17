@@ -13,9 +13,7 @@ prop is_topology_on(X set, T power_set(power_set(X))):
         =>:
             big_union(family) $in T
 
-setting TopologicalSpaceSetting:
-    X set
-    T power_set(power_set(X))
+setting TopologicalSpaceSetting(X set, T power_set(power_set(X))):
     {} $in T
     X $in T
     forall U, V T:
@@ -91,13 +89,7 @@ prop is_continuous(X, Y set, T_X power_set(power_set(X)), T_Y power_set(power_se
     forall open_Y T_Y:
         {x X: f(x) $in open_Y} $in T_X
 
-setting ContinuousCompositionSetting:
-    A, B, CarrierC set
-    T_A power_set(power_set(A))
-    T_B power_set(power_set(B))
-    T_C power_set(power_set(CarrierC))
-    f fn(x A) B
-    g fn(y B) CarrierC
+setting ContinuousCompositionSetting(A, B, CarrierC set, T_A power_set(power_set(A)), T_B power_set(power_set(B)), T_C power_set(power_set(CarrierC)), f fn(x A) B, g fn(y B) CarrierC):
     {} $in T_A
     A $in T_A
     forall open_A1, open_A2 T_A:

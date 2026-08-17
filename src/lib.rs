@@ -7,6 +7,7 @@ pub mod execute;
 pub mod fact;
 pub mod graph;
 pub mod infer;
+pub mod litex_to_lean_compiler2;
 pub mod litex_to_lean_ir;
 pub mod main_test;
 pub mod module_manager;

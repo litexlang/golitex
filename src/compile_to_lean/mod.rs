@@ -19,7 +19,7 @@ pub(crate) use file::compile_litex_file_to_lean;
 pub use ir_builder::LitexToLeanCompiler;
 pub(crate) use ledger::compile_markdown_ledger_file_to_lean;
 pub use universal_pipeline::{
-    compile_to_lean, compile_to_lean_from_source, compile_to_lean_from_source_with_report,
-    compile_to_lean_with_report, emit_lean_from_litex_to_lean_ir,
-    emit_lean_from_litex_to_lean_ir_with_report,
+    capture_litex_to_lean_ir_from_source, compile_to_lean, compile_to_lean_from_source,
+    compile_to_lean_from_source_with_report, compile_to_lean_with_report,
+    emit_lean_from_litex_to_lean_ir, emit_lean_from_litex_to_lean_ir_with_report,
 };
