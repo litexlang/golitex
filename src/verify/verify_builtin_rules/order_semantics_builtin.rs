@@ -289,10 +289,8 @@ impl Runtime {
         }
         for maximum in self.known_equal_finite_set_max_candidates(&fact.right) {
             let maximum_obj: Obj = maximum.clone().into();
-            let equality_result = self.verify_objs_are_equal_by_known_equality(
-                &fact.right,
-                &maximum_obj,
-                fact.line_file.clone(),
+            let equality_result = self.verify_equal_fact_by_known_equality(
+                &EqualFact::new_from_refs(&fact.right, &maximum_obj, fact.line_file.clone()),
             );
             if !equality_result.is_true() {
                 continue;
@@ -339,10 +337,8 @@ impl Runtime {
         }
         for minimum in self.known_equal_finite_set_min_candidates(&fact.left) {
             let minimum_obj: Obj = minimum.clone().into();
-            let equality_result = self.verify_objs_are_equal_by_known_equality(
-                &fact.left,
-                &minimum_obj,
-                fact.line_file.clone(),
+            let equality_result = self.verify_equal_fact_by_known_equality(
+                &EqualFact::new_from_refs(&fact.left, &minimum_obj, fact.line_file.clone()),
             );
             if !equality_result.is_true() {
                 continue;
@@ -562,11 +558,12 @@ impl Runtime {
     /// Example: `n <= x`, `x < n + 1` => `x = n`.
     pub(crate) fn try_verify_integer_singleton_interval_equality_builtin_rule(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         for (subject, base) in [(left, right), (right, left)] {
             let Some(mut steps) = self
                 .verify_objects_are_known_integers_in_builtin_leaf(&[subject, base], &line_file)?

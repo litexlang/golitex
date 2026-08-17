@@ -20,7 +20,8 @@ from typing import Sequence
 
 SMOKE_SOURCE = (
     "import std basics\n"
-    "by thm basics::prime_implies_prime_by_trial_division(2)\n"
+    "quot(-7, 3) = -3\n"
+    "$dvd(12, 3)\n"
 )
 PACKAGE_VERSION = re.compile(r'^version\s*=\s*"([^"]+)"\s*$')
 HOST_TARGET = re.compile(r"^host:\s*(\S+)\s*$", re.MULTILINE)
@@ -283,7 +284,7 @@ def check_archive(
     validate_runner_output(smoke_result.stdout, smoke_result.returncode)
     print(
         "PREFLIGHT smoke: import std basics + "
-        "basics::prime_implies_prime_by_trial_division(2) -> ok",
+        "native quot(-7, 3) and $dvd(12, 3) -> ok",
         flush=True,
     )
 

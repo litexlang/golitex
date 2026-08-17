@@ -1,36 +1,26 @@
 use crate::prelude::*;
 use crate::verify::verify_equality_by_builtin_rules::{
     factual_equal_success_by_builtin_reason, factual_equal_success_by_builtin_reason_with_subgoals,
-    verify_equality_by_they_are_the_same,
+    objs_match_for_equality_pattern,
 };
 use std::rc::Rc;
 
 impl Runtime {
-    pub fn verify_equality_by_builtin_rules(
+    pub fn verify_equal_fact_by_builtin_rules(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
-        if verify_equality_by_they_are_the_same(left, right) {
-            return Ok(factual_equal_success_by_builtin_reason(
-                left,
-                right,
-                line_file,
-                "they are the same",
-            )
-            .into());
-        }
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         // A gcd divides each input.
         // Example: `a % gcd(a, b) = 0`.
         if gcd_divides_its_argument_shape(left, right)
             || gcd_divides_its_argument_shape(right, left)
         {
             return Ok(factual_equal_success_by_builtin_reason(
-                left,
-                right,
-                line_file,
+                equal_fact,
                 "gcd divides each argument",
             ));
         }
@@ -41,130 +31,129 @@ impl Runtime {
             || product_mod_factor_is_zero_shape(right, left)
         {
             return Ok(factual_equal_success_by_builtin_reason(
-                left,
-                right,
-                line_file,
+                equal_fact,
                 "a product modulo either factor is zero",
             ));
         }
-        if let Some(result) =
-            self.try_verify_native_min_max_equality(left, right, line_file.clone(), builtin_state)?
-        {
+        if let Some(result) = self.try_verify_native_min_max_equality(
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
+            builtin_state,
+        )? {
             return Ok(result);
         }
-        if let Some(result) =
-            self.try_verify_native_min_max_lattice_equality(left, right, line_file.clone())
-        {
+        if let Some(result) = self.try_verify_native_min_max_lattice_equality(
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
+        ) {
             return Ok(result);
         }
         if let Some(result) = self.try_verify_native_rounding_integer_equality(
-            left,
-            right,
-            line_file.clone(),
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
             builtin_state,
         )? {
             return Ok(result);
         }
         if let Some(result) = self.try_verify_native_rounding_algebra_equality(
-            left,
-            right,
-            line_file.clone(),
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
             builtin_state,
         )? {
             return Ok(result);
         }
-        if let Some(result) =
-            self.try_verify_native_lcm_gcd_product_equality(left, right, line_file.clone())
-        {
+        if let Some(result) = self.try_verify_native_lcm_gcd_product_equality(
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
+        ) {
             return Ok(result);
         }
-        if let Some(result) =
-            self.try_verify_native_lcm_basic_equality(left, right, line_file.clone())
-        {
+        if let Some(result) = self.try_verify_native_lcm_basic_equality(&EqualFact::new_from_refs(
+            left,
+            right,
+            line_file.clone(),
+        )) {
             return Ok(result);
         }
         // Absolute-value identities retain their direct premise certificates.
         // Check them before the broad exp/ln injectivity route can repackage
         // the same equality through an unrelated intermediate equality.
-        if let Some(done) =
-            self.try_verify_abs_equalities(left, right, line_file.clone(), builtin_state)?
-        {
+        if let Some(done) = self.try_verify_abs_equalities(
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
+            builtin_state,
+        )? {
             return Ok(done);
         }
-        if let Some(result) = self.try_verify_native_exp_ln_identity(left, right, line_file.clone())
-        {
-            return Ok(result);
-        }
-        if let Some(result) = self.try_verify_native_exp_ln_injectivity(
+        if let Some(result) = self.try_verify_native_exp_ln_identity(&EqualFact::new_from_refs(
             left,
             right,
             line_file.clone(),
+        )) {
+            return Ok(result);
+        }
+        if let Some(result) = self.try_verify_native_exp_ln_injectivity(
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
             builtin_state,
         )? {
             return Ok(result);
         }
         if let Some(result) = self.try_verify_native_sign_zero_reflection(
-            left,
-            right,
-            line_file.clone(),
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
             builtin_state,
         )? {
             return Ok(result);
         }
-        if let Some(result) = self.try_verify_native_exp_ln_algebra(left, right, line_file.clone())
-        {
-            return Ok(result);
-        }
-        if let Some(result) =
-            self.try_verify_native_sign_value(left, right, line_file.clone(), builtin_state)?
-        {
-            return Ok(result);
-        }
-        if let Some(result) =
-            self.try_verify_native_sign_abs_identity(left, right, line_file.clone())
-        {
-            return Ok(result);
-        }
-        if let Some(result) = self.try_verify_native_sign_algebra(left, right, line_file.clone()) {
-            return Ok(result);
-        }
-        if let Some(result) =
-            self.try_verify_native_factorial_recurrence(left, right, line_file.clone())
-        {
-            return Ok(result);
-        }
-        if let Some(result) = self.try_verify_native_factorial_divisibility(
+        if let Some(result) = self.try_verify_native_exp_ln_algebra(&EqualFact::new_from_refs(
             left,
             right,
             line_file.clone(),
+        )) {
+            return Ok(result);
+        }
+        if let Some(result) = self.try_verify_native_sign_value(
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
+            builtin_state,
+        )? {
+            return Ok(result);
+        }
+        if let Some(result) = self.try_verify_native_sign_abs_identity(&EqualFact::new_from_refs(
+            left,
+            right,
+            line_file.clone(),
+        )) {
+            return Ok(result);
+        }
+        if let Some(result) = self.try_verify_native_sign_algebra(&EqualFact::new_from_refs(
+            left,
+            right,
+            line_file.clone(),
+        )) {
+            return Ok(result);
+        }
+        if let Some(result) = self.try_verify_native_factorial_recurrence(
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
+        ) {
+            return Ok(result);
+        }
+        if let Some(result) = self.try_verify_native_factorial_divisibility(
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
             builtin_state,
         )? {
             return Ok(result);
         }
         if let Some(result) = self.try_verify_minus_one_odd_natural_power(
-            left,
-            right,
-            line_file.clone(),
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
             builtin_state,
         )? {
             return Ok(result);
         }
-        if let Some(result) =
-            self.try_verify_indexed_fn_set_definition_equality(left, right, line_file.clone())?
-        {
+        if let Some(result) = self.try_verify_indexed_fn_set_definition_equality(
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
+        )? {
             return Ok(result);
         }
         if let Some(result) = self.try_verify_tuple_reconstruction_from_known_cart_membership(
-            left,
-            right,
-            line_file.clone(),
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
         )? {
             return Ok(result);
         }
         if let Some(result) = self.try_verify_cart_equality_from_dim_and_projections(
-            left,
-            right,
-            line_file.clone(),
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
             builtin_state,
         )? {
             return Ok(result);
@@ -172,79 +161,66 @@ impl Runtime {
 
         // Prefer exact modulo shapes before generic equality rewrites.
         if let Some(done) = self.try_verify_mod_nested_same_modulus_absorption(
-            left,
-            right,
-            line_file.clone(),
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
             builtin_state,
         )? {
             return Ok(done);
         }
         if let Some(done) = self.try_verify_mod_nested_divisible_modulus_absorption(
-            left,
-            right,
-            line_file.clone(),
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
             builtin_state,
         )? {
             return Ok(done);
         }
         if let Some(done) = self.try_verify_mod_peel_nested_same_modulus(
-            left,
-            right,
-            line_file.clone(),
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
             builtin_state,
         )? {
             return Ok(done);
         }
         if let Some(done) = self.try_verify_mod_congruence_from_inner_binary(
-            left,
-            right,
-            line_file.clone(),
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
             builtin_state,
         )? {
             return Ok(done);
         }
 
-        if let Some(done) =
-            self.try_verify_native_complex_equality(left, right, line_file.clone(), builtin_state)?
-        {
+        if let Some(done) = self.try_verify_native_complex_equality(
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
+            builtin_state,
+        )? {
             return Ok(done);
         }
-        if let Some(done) =
-            self.try_verify_trigonometric_equality(left, right, line_file.clone())?
-        {
+        if let Some(done) = self.try_verify_trigonometric_equality(&EqualFact::new_from_refs(
+            left,
+            right,
+            line_file.clone(),
+        ))? {
             return Ok(done);
         }
 
-        if let Some(done) =
-            self.try_verify_matrix_power_definition(left, right, left, right, line_file.clone())
-        {
+        if let Some(done) = self.try_verify_matrix_power_definition(equal_fact, left, right) {
             return Ok(done);
         }
-        if let Some(done) =
-            self.try_verify_matrix_power_definition(left, right, right, left, line_file.clone())
-        {
+        if let Some(done) = self.try_verify_matrix_power_definition(equal_fact, right, left) {
             return Ok(done);
         }
 
         if let Some(done) = self.try_verify_general_cart_set_builder_equality(
-            left,
-            right,
-            line_file.clone(),
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
             builtin_state,
         )? {
             return Ok(done);
         }
 
-        if let Some(done) =
-            self.try_verify_integer_range_set_builder_equality(left, right, line_file.clone())?
-        {
+        if let Some(done) = self.try_verify_integer_range_set_builder_equality(
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
+        )? {
             return Ok(done);
         }
 
         if let Some(done) = self.try_verify_finite_set_size_integer_range_equality(
-            left,
-            right,
-            line_file.clone(),
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
             builtin_state,
         )? {
             return Ok(done);
@@ -269,83 +245,46 @@ impl Runtime {
         }
 
         if let Some(done) = self.try_verify_zero_equals_subtraction_implies_equal_operands(
-            left,
-            right,
-            line_file.clone(),
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
             builtin_state,
         )? {
             return Ok(done);
         }
 
         if let Some(done) = self.try_verify_zero_equals_product_implies_other_factor_zero(
-            left,
-            right,
-            line_file.clone(),
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
             builtin_state,
         )? {
             return Ok(done);
         }
 
         if let Some(done) = self.try_verify_square_sum_zero_from_zero_components(
-            left,
-            right,
-            line_file.clone(),
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
             builtin_state,
         )? {
             return Ok(done);
         }
 
         if let Some(done) = self.try_verify_square_sum_component_zero_from_known_sum_zero(
-            left,
-            right,
-            line_file.clone(),
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
             builtin_state,
         )? {
             return Ok(done);
         }
 
-        // Direct calculation: if both sides normalize to the same computed value, close the
-        // equality before falling back to two-sided order. Example: `(-1 * sqrt(2)) ^ 2 = 2`.
-        let (result, calculated_left, calculated_right) = self
-            .verify_equality_by_they_are_the_same_and_calculation(
-                left,
-                right,
-                line_file.clone(),
-                builtin_state,
-            )?;
-        if result.is_true() {
-            return Ok(result);
-        }
-
-        if objs_equal_by_rational_expression_evaluation(&left, &right) {
-            return Ok(
-                (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                    EqualFact::new(left.clone(), right.clone(), line_file).into(),
-                    "calculation and rational expression simplification".to_string(),
-                    Vec::new(),
-                ))
-                .into(),
-            );
-        }
-
-        if objs_equal_by_rational_expression_evaluation(&calculated_left, &calculated_right) {
-            return Ok(
-                (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                    EqualFact::new(left.clone(), right.clone(), line_file).into(),
-                    "calculation and rational expression simplification".to_string(),
-                    Vec::new(),
-                ))
-                .into(),
-            );
-        }
-
-        if let Some(done) = self.try_verify_union_set_equalities(left, right, line_file.clone()) {
+        if let Some(done) = self.try_verify_union_set_equalities(&EqualFact::new_from_refs(
+            left,
+            right,
+            line_file.clone(),
+        )) {
             return Ok(done);
         }
 
-        if let Some(done) =
-            self.try_verify_intersection_set_equalities(left, right, line_file.clone())
-        {
+        if let Some(done) = self.try_verify_intersection_set_equalities(&EqualFact::new_from_refs(
+            left,
+            right,
+            line_file.clone(),
+        )) {
             return Ok(done);
         }
 
@@ -380,627 +319,576 @@ impl Runtime {
             return Ok(done);
         }
 
-        if let Some(done) =
-            self.try_verify_set_minus_equalities(left, right, line_file.clone(), builtin_state)?
-        {
+        if let Some(done) = self.try_verify_set_minus_equalities(
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
+            builtin_state,
+        )? {
             return Ok(done);
         }
 
         if let Some(done) = self.try_verify_finite_set_size_set_minus_equality(
-            left,
-            right,
-            line_file.clone(),
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
             builtin_state,
         )? {
             return Ok(done);
         }
 
         if let Some(done) = self.try_verify_finite_set_size_union_equality(
-            left,
-            right,
-            line_file.clone(),
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
             builtin_state,
         )? {
             return Ok(done);
         }
 
         if let Some(done) = self.try_verify_finite_set_size_partition_equality(
-            left,
-            right,
-            line_file.clone(),
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
             builtin_state,
         )? {
             return Ok(done);
         }
 
         if let Some(done) = self.try_verify_finite_set_size_set_minus_of_subset_equality(
-            left,
-            right,
-            line_file.clone(),
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
             builtin_state,
         )? {
             return Ok(done);
         }
 
-        if let Some(done) =
-            self.try_verify_cart_finite_set_size_product_equality(left, right, line_file.clone())
-        {
+        if let Some(done) = self.try_verify_cart_finite_set_size_product_equality(
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
+        ) {
             return Ok(done);
         }
 
         if let Some(done) = self.try_verify_power_set_finite_set_size_equality(
-            left,
-            right,
-            line_file.clone(),
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
             builtin_state,
         )? {
             return Ok(done);
         }
 
-        if let Some(done) =
-            self.try_verify_subtraction_from_known_addition(left, right, line_file.clone())?
-        {
+        if let Some(done) = self.try_verify_subtraction_from_known_addition(
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
+        )? {
             return Ok(done);
         }
 
         if let Some(done) = self.try_verify_equality_from_two_sided_weak_order(
-            left,
-            right,
-            line_file.clone(),
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
             builtin_state,
         )? {
             return Ok(done);
         }
 
         if let Some(done) = self.try_verify_integer_singleton_interval_equality_builtin_rule(
-            left,
-            right,
-            line_file.clone(),
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
             builtin_state,
         )? {
             return Ok(done);
         }
 
         if let Some(done) = self.try_verify_equality_from_known_antisymmetric_props(
-            left,
-            right,
-            line_file.clone(),
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
             builtin_state,
         )? {
             return Ok(done);
         }
 
         if let Some(done) = self.try_verify_positive_base_equal_from_equal_nonzero_integer_power(
-            left,
-            right,
-            line_file.clone(),
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
             builtin_state,
         )? {
             return Ok(done);
         }
 
         if let Some(done) = self.try_verify_division_product_conversion(
-            left,
-            right,
-            line_file.clone(),
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
             builtin_state,
         )? {
             return Ok(done);
         }
 
         if let Some(done) = self.try_verify_zero_equals_pow_from_base_zero(
-            left,
-            right,
-            line_file.clone(),
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
             builtin_state,
         )? {
             return Ok(done);
         }
 
-        if let Some(done) =
-            self.try_verify_pow_one_identity(left, right, line_file.clone(), builtin_state)?
-        {
+        if let Some(done) = self.try_verify_pow_one_identity(
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
+            builtin_state,
+        )? {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_pow_zero_identity(left, right, line_file.clone())? {
+        if let Some(done) = self.try_verify_pow_zero_identity(&EqualFact::new_from_refs(
+            left,
+            right,
+            line_file.clone(),
+        ))? {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_one_pow_identity(left, right, line_file.clone())? {
+        if let Some(done) = self.try_verify_one_pow_identity(&EqualFact::new_from_refs(
+            left,
+            right,
+            line_file.clone(),
+        ))? {
             return Ok(done);
         }
 
         if let Some(done) = self.try_verify_zero_pow_positive_exponent_identity(
-            left,
-            right,
-            line_file.clone(),
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
             builtin_state,
         )? {
             return Ok(done);
         }
 
-        if let Some(done) =
-            self.try_verify_sqrt_equalities(left, right, line_file.clone(), builtin_state)?
-        {
+        if let Some(done) = self.try_verify_sqrt_equalities(
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
+            builtin_state,
+        )? {
             return Ok(done);
         }
 
         if let Some(done) = self.try_verify_power_addition_exponent_rule(
-            left,
-            right,
-            line_file.clone(),
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
             builtin_state,
         )? {
             return Ok(done);
         }
 
-        if let Some(done) =
-            self.try_verify_power_of_power_rule(left, right, line_file.clone(), builtin_state)?
-        {
+        if let Some(done) = self.try_verify_power_of_power_rule(
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
+            builtin_state,
+        )? {
             return Ok(done);
         }
 
-        if let Some(done) =
-            self.try_verify_power_product_rule(left, right, line_file.clone(), builtin_state)?
-        {
+        if let Some(done) = self.try_verify_power_product_rule(
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
+            builtin_state,
+        )? {
             return Ok(done);
         }
 
         if let Some(done) = self.try_verify_base_zero_from_known_positive_power_zero(
-            left,
-            right,
-            line_file.clone(),
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
             builtin_state,
         )? {
             return Ok(done);
         }
 
-        if let Some(done) =
-            self.try_verify_abs_power_rule(left, right, line_file.clone(), builtin_state)?
-        {
+        if let Some(done) = self.try_verify_abs_power_rule(
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
+            builtin_state,
+        )? {
             return Ok(done);
         }
 
-        if let Some(done) =
-            self.try_verify_power_inverse_rule(left, right, line_file.clone(), builtin_state)?
-        {
+        if let Some(done) = self.try_verify_power_inverse_rule(
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
+            builtin_state,
+        )? {
             return Ok(done);
         }
 
         if let Some(done) = self.try_verify_pow_reciprocal_exponent_equals_root_by_power(
-            left,
-            right,
-            line_file.clone(),
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
             builtin_state,
         )? {
             return Ok(done);
         }
 
-        if let Some(done) =
-            self.try_verify_log_identity_equalities(left, right, line_file.clone(), builtin_state)?
-        {
+        if let Some(done) = self.try_verify_log_identity_equalities(
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
+            builtin_state,
+        )? {
             return Ok(done);
         }
 
-        if let Some(done) =
-            self.try_verify_log_algebra_identities(left, right, line_file.clone(), builtin_state)?
-        {
+        if let Some(done) = self.try_verify_log_algebra_identities(
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
+            builtin_state,
+        )? {
             return Ok(done);
         }
 
-        if let Some(done) =
-            self.try_verify_log_reciprocal_rule(left, right, line_file.clone(), builtin_state)?
-        {
+        if let Some(done) = self.try_verify_log_reciprocal_rule(
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
+            builtin_state,
+        )? {
             return Ok(done);
         }
 
-        if let Some(done) =
-            self.try_verify_log_change_of_base_rule(left, right, line_file.clone(), builtin_state)?
-        {
+        if let Some(done) = self.try_verify_log_change_of_base_rule(
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
+            builtin_state,
+        )? {
             return Ok(done);
         }
 
         if let Some(done) = self.try_verify_log_equals_by_pow_inverse(
-            left,
-            right,
-            line_file.clone(),
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
             builtin_state,
         )? {
             return Ok(done);
         }
 
         if let Some(done) = self.try_verify_pow_equals_by_known_log_inverse(
-            left,
-            right,
-            line_file.clone(),
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
             builtin_state,
         )? {
             return Ok(done);
         }
 
         if let Some(done) = self.try_verify_reduce_specialized_aggregate_bridge(
-            left,
-            right,
-            line_file.clone(),
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
             builtin_state,
         )? {
             return Ok(done);
         }
 
         if let Some(done) = self.try_verify_finite_set_reduce_specialized_aggregate_bridge(
-            left,
-            right,
-            line_file.clone(),
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
             builtin_state,
         )? {
             return Ok(done);
         }
 
         if let Some(done) = self.try_verify_reduce_pointwise_congruence(
-            left,
-            right,
-            line_file.clone(),
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
             builtin_state,
         )? {
             return Ok(done);
         }
 
         if let Some(done) = self.try_verify_reduce_order_preserving_translation(
-            left,
-            right,
-            line_file.clone(),
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
             builtin_state,
         )? {
             return Ok(done);
         }
 
-        if let Some(done) =
-            self.try_verify_reduce_first_step(left, right, line_file.clone(), builtin_state)?
-        {
+        if let Some(done) = self.try_verify_reduce_first_step(
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
+            builtin_state,
+        )? {
             return Ok(done);
         }
 
         if let Some(done) = self.try_verify_reduce_adjacent_partition(
-            left,
-            right,
-            line_file.clone(),
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
             builtin_state,
         )? {
             return Ok(done);
         }
 
         if let Some(done) = self.try_verify_finite_set_reduce_disjoint_union(
-            left,
-            right,
-            line_file.clone(),
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
             builtin_state,
         )? {
             return Ok(done);
         }
 
         if let Some(done) = self.try_verify_finite_set_reduce_bijective_reindexing(
-            left,
-            right,
-            line_file.clone(),
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
             builtin_state,
         )? {
             return Ok(done);
         }
 
-        if let Some(done) =
-            self.try_verify_reduce_empty(left, right, line_file.clone(), builtin_state)?
-        {
+        if let Some(done) = self.try_verify_reduce_empty(
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
+            builtin_state,
+        )? {
             return Ok(done);
         }
 
-        if let Some(done) =
-            self.try_verify_reduce_literal_expansion(left, right, line_file.clone(), builtin_state)?
-        {
+        if let Some(done) = self.try_verify_reduce_literal_expansion(
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
+            builtin_state,
+        )? {
             return Ok(done);
         }
 
-        if let Some(done) =
-            self.try_verify_reduce_step(left, right, line_file.clone(), builtin_state)?
-        {
+        if let Some(done) = self.try_verify_reduce_step(
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
+            builtin_state,
+        )? {
             return Ok(done);
         }
 
-        if let Some(done) =
-            self.try_verify_finite_set_reduce_empty(left, right, line_file.clone(), builtin_state)?
-        {
+        if let Some(done) = self.try_verify_finite_set_reduce_empty(
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
+            builtin_state,
+        )? {
             return Ok(done);
         }
 
         if let Some(done) = self.try_verify_finite_set_reduce_list_expansion(
-            left,
-            right,
-            line_file.clone(),
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
             builtin_state,
         )? {
             return Ok(done);
         }
 
         if let Some(done) = self.try_verify_finite_set_reduce_closed_range_bridge(
-            left,
-            right,
-            line_file.clone(),
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
             builtin_state,
         )? {
             return Ok(done);
         }
 
         if let Some(done) = self.try_verify_finite_set_reduce_fresh_insertion(
-            left,
-            right,
-            line_file.clone(),
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
             builtin_state,
         )? {
             return Ok(done);
         }
 
-        if let Some(done) =
-            self.try_verify_literal_zero_range_sum_is_zero(left, right, line_file.clone())?
-        {
+        if let Some(done) = self.try_verify_literal_zero_range_sum_is_zero(
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
+        )? {
             return Ok(done);
         }
 
-        if let Some(done) =
-            self.try_verify_sum_pointwise_congruence(left, right, line_file.clone(), builtin_state)?
-        {
+        if let Some(done) = self.try_verify_sum_pointwise_congruence(
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
+            builtin_state,
+        )? {
             return Ok(done);
         }
 
-        if let Some(done) =
-            self.try_verify_sum_additivity(left, right, line_file.clone(), builtin_state)?
-        {
+        if let Some(done) = self.try_verify_sum_additivity(
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
+            builtin_state,
+        )? {
             return Ok(done);
         }
 
-        if let Some(done) =
-            self.try_verify_sum_subtraction(left, right, line_file.clone(), builtin_state)?
-        {
+        if let Some(done) = self.try_verify_sum_subtraction(
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
+            builtin_state,
+        )? {
             return Ok(done);
         }
 
         if let Some(done) = self.try_verify_sum_merge_adjacent_ranges(
-            left,
-            right,
-            line_file.clone(),
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
             builtin_state,
         )? {
             return Ok(done);
         }
 
-        if let Some(done) =
-            self.try_verify_sum_single_term(left, right, line_file.clone(), builtin_state)?
-        {
+        if let Some(done) = self.try_verify_sum_single_term(
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
+            builtin_state,
+        )? {
             return Ok(done);
         }
 
-        if let Some(done) =
-            self.try_verify_sum_split_last_term(left, right, line_file.clone(), builtin_state)?
-        {
+        if let Some(done) = self.try_verify_sum_split_last_term(
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
+            builtin_state,
+        )? {
             return Ok(done);
         }
 
-        if let Some(done) =
-            self.try_verify_product_single_term(left, right, line_file.clone(), builtin_state)?
-        {
+        if let Some(done) = self.try_verify_product_single_term(
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
+            builtin_state,
+        )? {
             return Ok(done);
         }
 
-        if let Some(done) =
-            self.try_verify_product_split_last_term(left, right, line_file.clone(), builtin_state)?
-        {
+        if let Some(done) = self.try_verify_product_split_last_term(
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
+            builtin_state,
+        )? {
             return Ok(done);
         }
 
         if let Some(done) = self.try_verify_sum_partition_adjacent_ranges(
-            left,
-            right,
-            line_file.clone(),
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
             builtin_state,
         )? {
             return Ok(done);
         }
 
         if let Some(done) = self.try_verify_product_partition_adjacent_ranges(
-            left,
-            right,
-            line_file.clone(),
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
             builtin_state,
         )? {
             return Ok(done);
         }
 
-        if let Some(done) =
-            self.try_verify_sum_reindex_shift(left, right, line_file.clone(), builtin_state)?
-        {
+        if let Some(done) = self.try_verify_sum_reindex_shift(
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
+            builtin_state,
+        )? {
             return Ok(done);
         }
 
-        if let Some(done) =
-            self.try_verify_sum_constant_summand(left, right, line_file.clone(), builtin_state)?
-        {
+        if let Some(done) = self.try_verify_sum_constant_summand(
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
+            builtin_state,
+        )? {
             return Ok(done);
         }
 
-        if let Some(done) =
-            self.try_verify_sum_scalar_mul(left, right, line_file.clone(), builtin_state)?
-        {
+        if let Some(done) = self.try_verify_sum_scalar_mul(
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
+            builtin_state,
+        )? {
             return Ok(done);
         }
 
-        if let Some(done) =
-            self.try_verify_finite_set_sum_empty(left, right, line_file.clone(), builtin_state)?
-        {
+        if let Some(done) = self.try_verify_finite_set_sum_empty(
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
+            builtin_state,
+        )? {
             return Ok(done);
         }
 
         if let Some(done) = self.try_verify_finite_set_sum_list_expansion(
-            left,
-            right,
-            line_file.clone(),
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
             builtin_state,
         )? {
             return Ok(done);
         }
 
         if let Some(done) = self.try_verify_finite_set_sum_closed_range_bridge(
-            left,
-            right,
-            line_file.clone(),
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
             builtin_state,
         )? {
             return Ok(done);
         }
 
         if let Some(done) = self.try_verify_finite_set_sum_constant_summand(
-            left,
-            right,
-            line_file.clone(),
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
             builtin_state,
         )? {
             return Ok(done);
         }
 
         if let Some(done) = self.try_verify_finite_set_sum_pointwise_equality(
-            left,
-            right,
-            line_file.clone(),
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
             builtin_state,
         )? {
             return Ok(done);
         }
 
         if let Some(done) = self.try_verify_finite_set_sum_disjoint_union(
-            left,
-            right,
-            line_file.clone(),
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
             builtin_state,
         )? {
             return Ok(done);
         }
 
-        if let Some(done) =
-            self.try_verify_finite_set_sum_add(left, right, line_file.clone(), builtin_state)?
-        {
+        if let Some(done) = self.try_verify_finite_set_sum_add(
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
+            builtin_state,
+        )? {
             return Ok(done);
         }
 
         if let Some(done) = self.try_verify_finite_set_sum_scalar_mul(
-            left,
-            right,
-            line_file.clone(),
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
             builtin_state,
         )? {
             return Ok(done);
         }
 
         if let Some(done) = self.try_verify_finite_set_sum_over_cartesian_product(
-            left,
-            right,
-            line_file.clone(),
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
             builtin_state,
         )? {
             return Ok(done);
         }
 
-        if let Some(done) =
-            self.try_verify_finite_set_sum_fubini(left, right, line_file.clone(), builtin_state)?
-        {
+        if let Some(done) = self.try_verify_finite_set_sum_fubini(
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
+            builtin_state,
+        )? {
             return Ok(done);
         }
 
         if let Some(done) = self.try_verify_sum_over_bijective_finite_set_enumerations(
-            left,
-            right,
-            line_file.clone(),
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
             builtin_state,
         )? {
             return Ok(done);
         }
 
-        if let Some(done) =
-            self.try_verify_finite_set_product_empty(left, right, line_file.clone(), builtin_state)?
-        {
+        if let Some(done) = self.try_verify_finite_set_product_empty(
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
+            builtin_state,
+        )? {
             return Ok(done);
         }
 
         if let Some(done) = self.try_verify_finite_set_product_list_expansion(
-            left,
-            right,
-            line_file.clone(),
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
             builtin_state,
         )? {
             return Ok(done);
         }
 
         if let Some(done) = self.try_verify_finite_set_product_fresh_insertion(
-            left,
-            right,
-            line_file.clone(),
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
             builtin_state,
         )? {
             return Ok(done);
         }
 
         if let Some(done) = self.try_verify_finite_set_product_remove_member(
-            left,
-            right,
-            line_file.clone(),
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
             builtin_state,
         )? {
             return Ok(done);
         }
 
         if let Some(done) = self.try_verify_finite_set_product_closed_range_bridge(
-            left,
-            right,
-            line_file.clone(),
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
             builtin_state,
         )? {
             return Ok(done);
         }
 
         if let Some(done) = self.try_verify_finite_set_product_constant_factor(
-            left,
-            right,
-            line_file.clone(),
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
             builtin_state,
         )? {
             return Ok(done);
         }
 
         if let Some(done) = self.try_verify_finite_set_product_pointwise_equality(
-            left,
-            right,
-            line_file.clone(),
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
             builtin_state,
         )? {
             return Ok(done);
         }
 
-        if let Some(done) =
-            self.try_verify_finite_set_product_mul(left, right, line_file.clone(), builtin_state)?
-        {
+        if let Some(done) = self.try_verify_finite_set_product_mul(
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
+            builtin_state,
+        )? {
             return Ok(done);
         }
 
         if let Some(done) = self.try_verify_finite_set_product_substitution(
-            left,
-            right,
-            line_file.clone(),
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
             builtin_state,
         )? {
             return Ok(done);
         }
 
         // A finite set with zero cardinality is empty.
-        if let Some(done) =
-            self.try_verify_empty_finite_set_from_size_zero(left, right, line_file.clone())?
-        {
+        if let Some(done) = self.try_verify_empty_finite_set_from_size_zero(
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
+        )? {
             return Ok(done);
         }
 
@@ -1008,71 +896,65 @@ impl Runtime {
         // This replaces the old common fact `S = {} <=> not $is_nonempty_set(S)`.
         // Example: after `not $is_nonempty_set(S)`, prove `S = {}`.
         if let Some(done) = self.try_verify_empty_set_equality_from_not_nonempty(
-            left,
-            right,
-            line_file.clone(),
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
             builtin_state,
         )? {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_zero_mod_equals_zero(left, right, line_file.clone())? {
+        if let Some(done) = self.try_verify_zero_mod_equals_zero(&EqualFact::new_from_refs(
+            left,
+            right,
+            line_file.clone(),
+        ))? {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_mod_one_equals_zero(left, right, line_file.clone())? {
+        if let Some(done) = self.try_verify_mod_one_equals_zero(&EqualFact::new_from_refs(
+            left,
+            right,
+            line_file.clone(),
+        ))? {
             return Ok(done);
         }
 
         if let Some(done) = self.try_verify_one_mod_equals_one_for_modulus_at_least_two(
-            left,
-            right,
-            line_file.clone(),
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
             builtin_state,
         )? {
             return Ok(done);
         }
 
         if let Some(done) = self.try_verify_mod_dividend_minus_remainder_equals_zero(
-            left,
-            right,
-            line_file.clone(),
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
             builtin_state,
         )? {
             return Ok(done);
         }
 
         if let Some(done) = self.try_verify_quot_euclidean_decomposition(
-            left,
-            right,
-            line_file.clone(),
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
             builtin_state,
         )? {
             return Ok(done);
         }
 
         if let Some(done) = self.try_verify_mod_eq_remainder_from_euclidean_division(
-            left,
-            right,
-            line_file.clone(),
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
             builtin_state,
         )? {
             return Ok(done);
         }
 
         if let Some(done) = self.try_verify_integer_mod_negation_rule(
-            left,
-            right,
-            line_file.clone(),
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
             builtin_state,
         )? {
             return Ok(done);
         }
 
         if let Some(done) = self.try_verify_integer_mod_natural_power_rule(
-            left,
-            right,
-            line_file.clone(),
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
             builtin_state,
         )? {
             return Ok(done);
@@ -1087,10 +969,11 @@ impl Runtime {
     // accepts the canonical projection list `(p[1], ..., p[n])`.
     fn try_verify_tuple_reconstruction_from_known_cart_membership(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         let (target, tuple) = match (left, right) {
             (target, Obj::Tuple(tuple)) if !matches!(target, Obj::Tuple(_)) => (target, tuple),
             (Obj::Tuple(tuple), target) if !matches!(target, Obj::Tuple(_)) => (target, tuple),
@@ -1100,7 +983,7 @@ impl Runtime {
         for (index, component) in tuple.args.iter().enumerate() {
             let expected: Obj =
                 ObjAtIndex::new(target.clone(), Number::new((index + 1).to_string()).into()).into();
-            if !verify_equality_by_they_are_the_same(component.as_ref(), &expected) {
+            if !objs_match_for_equality_pattern(component.as_ref(), &expected) {
                 return Ok(None);
             }
         }
@@ -1132,19 +1015,15 @@ impl Runtime {
         Ok(None)
     }
 
-    fn try_verify_union_set_equalities(
-        &self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
-    ) -> Option<StmtResult> {
+    fn try_verify_union_set_equalities(&self, equal_fact: &EqualFact) -> Option<StmtResult> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         // Union commutativity for sets.
         // Example: `union(A, B) = union(B, A)`.
         if Self::union_commutative_shape(left, right) {
             return Some(Self::set_equality_success(
-                left,
-                right,
-                line_file,
+                &EqualFact::new_from_refs(left, right, line_file),
                 "union_commutative",
                 Some(SetBuiltinRule::UnionCommutative),
             ));
@@ -1155,9 +1034,7 @@ impl Runtime {
         if Self::union_associative_shape(left, right) || Self::union_associative_shape(right, left)
         {
             return Some(Self::set_equality_success(
-                left,
-                right,
-                line_file,
+                &EqualFact::new_from_refs(left, right, line_file),
                 "union_associative",
                 Some(SetBuiltinRule::UnionAssociative),
             ));
@@ -1167,9 +1044,7 @@ impl Runtime {
         // Example: `union(A, A) = A`.
         if Self::union_idempotent_shape(left, right) || Self::union_idempotent_shape(right, left) {
             return Some(Self::set_equality_success(
-                left,
-                right,
-                line_file,
+                &EqualFact::new_from_refs(left, right, line_file),
                 "union_idempotent",
                 Some(SetBuiltinRule::UnionIdempotent),
             ));
@@ -1181,9 +1056,7 @@ impl Runtime {
             || Self::union_empty_identity_shape(right, left)
         {
             return Some(Self::set_equality_success(
-                left,
-                right,
-                line_file,
+                &EqualFact::new_from_refs(left, right, line_file),
                 "union_empty_identity",
                 Some(SetBuiltinRule::UnionEmptyIdentity),
             ));
@@ -1192,19 +1065,15 @@ impl Runtime {
         None
     }
 
-    fn try_verify_intersection_set_equalities(
-        &self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
-    ) -> Option<StmtResult> {
+    fn try_verify_intersection_set_equalities(&self, equal_fact: &EqualFact) -> Option<StmtResult> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         // Intersection commutativity for sets.
         // Example: `intersect(A, B) = intersect(B, A)`.
         if Self::intersect_commutative_shape(left, right) {
             return Some(Self::set_equality_success(
-                left,
-                right,
-                line_file,
+                &EqualFact::new_from_refs(left, right, line_file),
                 "intersect_commutative",
                 Some(SetBuiltinRule::IntersectCommutative),
             ));
@@ -1216,9 +1085,7 @@ impl Runtime {
             || Self::intersect_associative_shape(right, left)
         {
             return Some(Self::set_equality_success(
-                left,
-                right,
-                line_file,
+                &EqualFact::new_from_refs(left, right, line_file),
                 "intersect_associative",
                 Some(SetBuiltinRule::IntersectAssociative),
             ));
@@ -1230,9 +1097,7 @@ impl Runtime {
             || Self::intersect_union_distributive_shape(right, left)
         {
             return Some(Self::set_equality_success(
-                left,
-                right,
-                line_file,
+                &EqualFact::new_from_refs(left, right, line_file),
                 "intersect_union_distributive",
                 None,
             ));
@@ -1243,20 +1108,19 @@ impl Runtime {
 
     fn try_verify_set_minus_equalities(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         // Set-minus distributes over union by De Morgan's law, accepted in either direction.
         // Example: `set_minus(A, union(B, C)) = intersect(set_minus(A, B), set_minus(A, C))`.
         if Self::set_minus_union_de_morgan_shape(left, right)
             || Self::set_minus_union_de_morgan_shape(right, left)
         {
             return Ok(Some(Self::set_equality_success(
-                left,
-                right,
-                line_file,
+                &EqualFact::new_from_refs(left, right, line_file),
                 "set_minus_union_de_morgan",
                 None,
             )));
@@ -1268,9 +1132,7 @@ impl Runtime {
             || Self::set_minus_intersect_de_morgan_shape(right, left)
         {
             return Ok(Some(Self::set_equality_success(
-                left,
-                right,
-                line_file,
+                &EqualFact::new_from_refs(left, right, line_file),
                 "set_minus_intersect_de_morgan",
                 None,
             )));
@@ -1301,19 +1163,18 @@ impl Runtime {
 
     fn try_verify_cart_finite_set_size_product_equality(
         &self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
     ) -> Option<StmtResult> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         // Cardinality of a finite Cartesian product is the product of factor cardinalities.
         // Example: `finite_set_size(cart(A, B)) = finite_set_size(A) * finite_set_size(B)`.
         if Self::cart_finite_set_size_product_shape(left, right)
             || Self::cart_finite_set_size_product_shape(right, left)
         {
             return Some(Self::set_equality_success(
-                left,
-                right,
-                line_file,
+                &EqualFact::new_from_refs(left, right, line_file),
                 "cart_finite_set_size_product",
                 None,
             ));
@@ -1324,11 +1185,12 @@ impl Runtime {
 
     fn try_verify_finite_set_size_set_minus_equality(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         // Removing a finite subset counts the original set minus its overlap with the removed set.
         // Example: `finite_set_size(set_minus(S, T)) = finite_set_size(S) - finite_set_size(intersect(S, T))`.
         let Some((first_set, second_set)) = Self::finite_set_size_set_minus_shape(left, right)
@@ -1363,11 +1225,12 @@ impl Runtime {
     // Example: `finite_set_size(union(A, B)) = finite_set_size(A) + finite_set_size(B) - finite_set_size(intersect(A, B))`.
     fn try_verify_finite_set_size_union_equality(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         let Some((first_set, second_set)) = Self::finite_set_size_union_shape(left, right)
             .or_else(|| Self::finite_set_size_union_shape(right, left))
         else {
@@ -1397,11 +1260,12 @@ impl Runtime {
     // Example: `finite_set_size(A) = finite_set_size(intersect(A, B)) + finite_set_size(set_minus(A, B))`.
     fn try_verify_finite_set_size_partition_equality(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         let Some((first_set, second_set)) = Self::finite_set_size_partition_shape(left, right)
             .or_else(|| Self::finite_set_size_partition_shape(right, left))
         else {
@@ -1431,11 +1295,12 @@ impl Runtime {
     // Example: `B $subset A` gives `finite_set_size(set_minus(A, B)) = finite_set_size(A) - finite_set_size(B)`.
     fn try_verify_finite_set_size_set_minus_of_subset_equality(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         let Some((container, subset)) =
             Self::finite_set_size_set_minus_of_subset_shape(left, right)
                 .or_else(|| Self::finite_set_size_set_minus_of_subset_shape(right, left))
@@ -1478,11 +1343,12 @@ impl Runtime {
     // `finite_set_size(range(a, b)) = b - a` when `a <= b` and both endpoints are natural.
     fn try_verify_finite_set_size_integer_range_equality(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         let Some((start, end, closed)) = Self::finite_set_size_integer_range_shape(left, right)
             .or_else(|| Self::finite_set_size_integer_range_shape(right, left))
         else {
@@ -1527,11 +1393,12 @@ impl Runtime {
 
     fn try_verify_power_set_finite_set_size_equality(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         // Cardinality of a finite power set is `2` to the cardinality of the base set.
         // Example: from `$is_finite_set(S)`, prove `finite_set_size(power_set(S)) = 2^finite_set_size(S)`.
         let Some(base_set) = Self::power_set_finite_set_size_shape(left, right)
@@ -1557,12 +1424,13 @@ impl Runtime {
     }
 
     fn set_equality_success(
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         reason: &str,
         evidence: Option<SetBuiltinRule>,
     ) -> StmtResult {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         let fact = EqualFact::new(left.clone(), right.clone(), line_file).into();
         match evidence {
             Some(rule) => {
@@ -1586,8 +1454,8 @@ impl Runtime {
         let (Obj::Union(left_union), Obj::Union(right_union)) = (left, right) else {
             return false;
         };
-        verify_equality_by_they_are_the_same(&left_union.left, &right_union.right)
-            && verify_equality_by_they_are_the_same(&left_union.right, &right_union.left)
+        objs_match_for_equality_pattern(&left_union.left, &right_union.right)
+            && objs_match_for_equality_pattern(&left_union.right, &right_union.left)
     }
 
     fn union_associative_shape(left: &Obj, right: &Obj) -> bool {
@@ -1603,9 +1471,9 @@ impl Runtime {
         let Obj::Union(right_inner) = right_outer.right.as_ref() else {
             return false;
         };
-        verify_equality_by_they_are_the_same(&left_inner.left, &right_outer.left)
-            && verify_equality_by_they_are_the_same(&left_inner.right, &right_inner.left)
-            && verify_equality_by_they_are_the_same(&left_outer.right, &right_inner.right)
+        objs_match_for_equality_pattern(&left_inner.left, &right_outer.left)
+            && objs_match_for_equality_pattern(&left_inner.right, &right_inner.left)
+            && objs_match_for_equality_pattern(&left_outer.right, &right_inner.right)
     }
 
     fn intersect_commutative_shape(left: &Obj, right: &Obj) -> bool {
@@ -1613,8 +1481,8 @@ impl Runtime {
         else {
             return false;
         };
-        verify_equality_by_they_are_the_same(&left_intersect.left, &right_intersect.right)
-            && verify_equality_by_they_are_the_same(&left_intersect.right, &right_intersect.left)
+        objs_match_for_equality_pattern(&left_intersect.left, &right_intersect.right)
+            && objs_match_for_equality_pattern(&left_intersect.right, &right_intersect.left)
     }
 
     fn intersect_associative_shape(left: &Obj, right: &Obj) -> bool {
@@ -1630,9 +1498,9 @@ impl Runtime {
         let Obj::Intersect(right_inner) = right_outer.right.as_ref() else {
             return false;
         };
-        verify_equality_by_they_are_the_same(&left_inner.left, &right_outer.left)
-            && verify_equality_by_they_are_the_same(&left_inner.right, &right_inner.left)
-            && verify_equality_by_they_are_the_same(&left_outer.right, &right_inner.right)
+        objs_match_for_equality_pattern(&left_inner.left, &right_outer.left)
+            && objs_match_for_equality_pattern(&left_inner.right, &right_inner.left)
+            && objs_match_for_equality_pattern(&left_outer.right, &right_inner.right)
     }
 
     fn intersect_union_distributive_shape(left: &Obj, right: &Obj) -> bool {
@@ -1651,13 +1519,10 @@ impl Runtime {
         let Obj::Intersect(right_right_intersect) = right_union.right.as_ref() else {
             return false;
         };
-        verify_equality_by_they_are_the_same(&left_intersect.left, &right_left_intersect.left)
-            && verify_equality_by_they_are_the_same(
-                &left_intersect.left,
-                &right_right_intersect.left,
-            )
-            && verify_equality_by_they_are_the_same(&left_union.left, &right_left_intersect.right)
-            && verify_equality_by_they_are_the_same(&left_union.right, &right_right_intersect.right)
+        objs_match_for_equality_pattern(&left_intersect.left, &right_left_intersect.left)
+            && objs_match_for_equality_pattern(&left_intersect.left, &right_right_intersect.left)
+            && objs_match_for_equality_pattern(&left_union.left, &right_left_intersect.right)
+            && objs_match_for_equality_pattern(&left_union.right, &right_right_intersect.right)
     }
 
     fn set_minus_union_de_morgan_shape(left: &Obj, right: &Obj) -> bool {
@@ -1720,8 +1585,8 @@ impl Runtime {
         let Obj::SetMinus(inner_difference) = outer_difference.right.as_ref() else {
             return None;
         };
-        if verify_equality_by_they_are_the_same(&outer_difference.left, &inner_difference.left)
-            && verify_equality_by_they_are_the_same(subset_side, &inner_difference.right)
+        if objs_match_for_equality_pattern(&outer_difference.left, &inner_difference.left)
+            && objs_match_for_equality_pattern(subset_side, &inner_difference.right)
         {
             Some((outer_difference.left.as_ref().clone(), subset_side.clone()))
         } else {
@@ -1736,16 +1601,10 @@ impl Runtime {
         right_left_set_minus: &SetMinus,
         right_right_set_minus: &SetMinus,
     ) -> bool {
-        verify_equality_by_they_are_the_same(&left_set_minus.left, &right_left_set_minus.left)
-            && verify_equality_by_they_are_the_same(
-                &left_set_minus.left,
-                &right_right_set_minus.left,
-            )
-            && verify_equality_by_they_are_the_same(first_removed_set, &right_left_set_minus.right)
-            && verify_equality_by_they_are_the_same(
-                second_removed_set,
-                &right_right_set_minus.right,
-            )
+        objs_match_for_equality_pattern(&left_set_minus.left, &right_left_set_minus.left)
+            && objs_match_for_equality_pattern(&left_set_minus.left, &right_right_set_minus.left)
+            && objs_match_for_equality_pattern(first_removed_set, &right_left_set_minus.right)
+            && objs_match_for_equality_pattern(second_removed_set, &right_right_set_minus.right)
     }
 
     fn cart_finite_set_size_product_shape(finite_set_size_side: &Obj, product_side: &Obj) -> bool {
@@ -1758,7 +1617,7 @@ impl Runtime {
         let Some(expected_product) = Self::count_product_for_cart_args(&cart.args) else {
             return false;
         };
-        verify_equality_by_they_are_the_same(&expected_product, product_side)
+        objs_match_for_equality_pattern(&expected_product, product_side)
     }
 
     fn finite_set_size_set_minus_shape(
@@ -1784,9 +1643,9 @@ impl Runtime {
             return None;
         };
 
-        if verify_equality_by_they_are_the_same(&set_minus.left, &first_size.set)
-            && verify_equality_by_they_are_the_same(&set_minus.left, &intersection.left)
-            && verify_equality_by_they_are_the_same(&set_minus.right, &intersection.right)
+        if objs_match_for_equality_pattern(&set_minus.left, &first_size.set)
+            && objs_match_for_equality_pattern(&set_minus.left, &intersection.left)
+            && objs_match_for_equality_pattern(&set_minus.right, &intersection.right)
         {
             Some((
                 set_minus.left.as_ref().clone(),
@@ -1826,10 +1685,10 @@ impl Runtime {
             return None;
         };
 
-        if verify_equality_by_they_are_the_same(&union.left, &first_size.set)
-            && verify_equality_by_they_are_the_same(&union.right, &second_size.set)
-            && verify_equality_by_they_are_the_same(&union.left, &intersection.left)
-            && verify_equality_by_they_are_the_same(&union.right, &intersection.right)
+        if objs_match_for_equality_pattern(&union.left, &first_size.set)
+            && objs_match_for_equality_pattern(&union.right, &second_size.set)
+            && objs_match_for_equality_pattern(&union.left, &intersection.left)
+            && objs_match_for_equality_pattern(&union.right, &intersection.right)
         {
             Some((union.left.as_ref().clone(), union.right.as_ref().clone()))
         } else {
@@ -1860,17 +1719,17 @@ impl Runtime {
             return None;
         };
 
-        if verify_equality_by_they_are_the_same(&main_size.set, &intersection.left)
-            && verify_equality_by_they_are_the_same(&main_size.set, &remainder.left)
-            && verify_equality_by_they_are_the_same(&intersection.right, &remainder.right)
+        if objs_match_for_equality_pattern(&main_size.set, &intersection.left)
+            && objs_match_for_equality_pattern(&main_size.set, &remainder.left)
+            && objs_match_for_equality_pattern(&intersection.right, &remainder.right)
         {
             Some((
                 main_size.set.as_ref().clone(),
                 intersection.right.as_ref().clone(),
             ))
-        } else if verify_equality_by_they_are_the_same(&main_size.set, &intersection.right)
-            && verify_equality_by_they_are_the_same(&main_size.set, &remainder.left)
-            && verify_equality_by_they_are_the_same(&intersection.left, &remainder.right)
+        } else if objs_match_for_equality_pattern(&main_size.set, &intersection.right)
+            && objs_match_for_equality_pattern(&main_size.set, &remainder.left)
+            && objs_match_for_equality_pattern(&intersection.left, &remainder.right)
         {
             Some((
                 main_size.set.as_ref().clone(),
@@ -1901,8 +1760,8 @@ impl Runtime {
             return None;
         };
 
-        if verify_equality_by_they_are_the_same(&remainder.left, &container_size.set)
-            && verify_equality_by_they_are_the_same(&remainder.right, &subset_size.set)
+        if objs_match_for_equality_pattern(&remainder.left, &container_size.set)
+            && objs_match_for_equality_pattern(&remainder.right, &subset_size.set)
         {
             Some((
                 remainder.left.as_ref().clone(),
@@ -1952,7 +1811,7 @@ impl Runtime {
         } else {
             difference
         };
-        if !verify_equality_by_they_are_the_same(&expected_cardinality, cardinality_side) {
+        if !objs_match_for_equality_pattern(&expected_cardinality, cardinality_side) {
             return None;
         }
         Some((start.clone(), end.clone(), closed))
@@ -1968,7 +1827,7 @@ impl Runtime {
         let two: Obj = Number::new("2".to_string()).into();
         let base_finite_set_size: Obj = FiniteSetSize::new(power_set.set.as_ref().clone()).into();
         let expected_pow: Obj = Pow::new(two, base_finite_set_size).into();
-        if verify_equality_by_they_are_the_same(&expected_pow, pow_side) {
+        if objs_match_for_equality_pattern(&expected_pow, pow_side) {
             Some(power_set.set.as_ref().clone())
         } else {
             None
@@ -1990,8 +1849,8 @@ impl Runtime {
         let Obj::Union(union) = union_side else {
             return false;
         };
-        verify_equality_by_they_are_the_same(&union.left, &union.right)
-            && verify_equality_by_they_are_the_same(&union.left, other_side)
+        objs_match_for_equality_pattern(&union.left, &union.right)
+            && objs_match_for_equality_pattern(&union.left, other_side)
     }
 
     fn union_empty_identity_shape(union_side: &Obj, other_side: &Obj) -> bool {
@@ -1999,9 +1858,9 @@ impl Runtime {
             return false;
         };
         (Self::is_empty_list_set(&union.left)
-            && verify_equality_by_they_are_the_same(&union.right, other_side))
+            && objs_match_for_equality_pattern(&union.right, other_side))
             || (Self::is_empty_list_set(&union.right)
-                && verify_equality_by_they_are_the_same(&union.left, other_side))
+                && objs_match_for_equality_pattern(&union.left, other_side))
     }
 
     fn is_empty_list_set(obj: &Obj) -> bool {
@@ -2034,9 +1893,9 @@ impl Runtime {
             };
 
             let (subset, superset) =
-                if verify_equality_by_they_are_the_same(target_side, &intersection.right) {
+                if objs_match_for_equality_pattern(target_side, &intersection.right) {
                     (&intersection.right, &intersection.left)
-                } else if verify_equality_by_they_are_the_same(target_side, &intersection.left) {
+                } else if objs_match_for_equality_pattern(target_side, &intersection.left) {
                     (&intersection.left, &intersection.right)
                 } else {
                     continue;
@@ -2113,7 +1972,7 @@ impl Runtime {
         }
 
         let filtered_set: Obj = ListSet::new(kept).into();
-        if !verify_equality_by_they_are_the_same(&filtered_set, target_side) {
+        if !objs_match_for_equality_pattern(&filtered_set, target_side) {
             return Ok(None);
         }
 
@@ -2129,10 +1988,11 @@ impl Runtime {
 
     fn try_verify_subtraction_from_known_addition(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         if let Some(done) = self.try_verify_one_subtraction_from_known_addition(
             left,
             right,
@@ -2161,11 +2021,11 @@ impl Runtime {
 
         let candidate_sum_1: Obj =
             Add::new(target_a.clone(), subtraction.right.as_ref().clone()).into();
-        let known_sum_1 = self.verify_objs_are_equal_by_known_equality(
+        let known_sum_1 = self.verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
             &candidate_sum_1,
             subtraction.left.as_ref(),
             line_file.clone(),
-        );
+        ));
         if known_sum_1.is_true() {
             return Ok(Some(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -2180,11 +2040,11 @@ impl Runtime {
 
         let candidate_sum_2: Obj =
             Add::new(subtraction.right.as_ref().clone(), target_a.clone()).into();
-        let known_sum_2 = self.verify_objs_are_equal_by_known_equality(
+        let known_sum_2 = self.verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
             &candidate_sum_2,
             subtraction.left.as_ref(),
             line_file.clone(),
-        );
+        ));
         if known_sum_2.is_true() {
             return Ok(Some(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -2205,11 +2065,12 @@ impl Runtime {
     // Example: from `tuple_dim(t) = 2`, `t[1] = a`, and `t[2] = b`, prove `t = (a, b)`.
     pub(crate) fn try_verify_tuple_equality_from_dim_and_projections(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         verify_state: &UseContextVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         let (tuple_obj, target_obj) = match (left, right) {
             (target_obj, Obj::Tuple(tuple_obj)) => (tuple_obj, target_obj),
             (Obj::Tuple(tuple_obj), target_obj) => (tuple_obj, target_obj),
@@ -2265,11 +2126,12 @@ impl Runtime {
     // prove `p = q`.
     pub(crate) fn try_verify_symbolic_tuple_equality_from_coordinates(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         verify_state: &UseContextVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         let left_is_direct_symbol = matches!(
             left,
             Obj::Atom(
@@ -2380,11 +2242,12 @@ impl Runtime {
     // `c = cart(R, R, R)`.
     fn try_verify_cart_equality_from_dim_and_projections(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         let (cart_obj, target_obj) = match (left, right) {
             (target_obj, Obj::Cart(cart_obj)) => (cart_obj, target_obj),
             (Obj::Cart(cart_obj), target_obj) => (cart_obj, target_obj),
@@ -2495,11 +2358,12 @@ impl Runtime {
 
     fn try_verify_empty_set_equality_from_not_nonempty(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         let set = match (left, right) {
             (Obj::ListSet(list), set) if list.list.is_empty() => set.clone(),
             (set, Obj::ListSet(list)) if list.list.is_empty() => set.clone(),
@@ -2561,10 +2425,11 @@ impl Runtime {
 
     fn try_verify_empty_finite_set_from_size_zero(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         let set = match (left, right) {
             (Obj::ListSet(list), set) if list.list.is_empty() => set.clone(),
             (set, Obj::ListSet(list)) if list.list.is_empty() => set.clone(),
@@ -2572,8 +2437,11 @@ impl Runtime {
         };
         let size: Obj = FiniteSetSize::new(set).into();
         let zero: Obj = Number::new("0".to_string()).into();
-        let size_zero =
-            self.verify_objs_are_equal_by_known_equality(&size, &zero, line_file.clone());
+        let size_zero = self.verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
+            &size,
+            &zero,
+            line_file.clone(),
+        ));
         if !size_zero.is_true() {
             return Ok(None);
         }
@@ -2623,11 +2491,12 @@ impl Runtime {
     // search so that this fallback cannot recursively reopen the same goals.
     fn try_verify_equality_from_two_sided_weak_order(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         let Some(mut steps) = self.verify_objects_are_known_reals_in_builtin(
             &[left, right],
             &line_file,
@@ -2664,7 +2533,7 @@ impl Runtime {
     }
 
     fn objs_are_the_same_or_known_equal(&self, left: &Obj, right: &Obj) -> bool {
-        verify_equality_by_they_are_the_same(left, right)
+        objs_match_for_equality_pattern(left, right)
             || self.objs_have_same_known_equality_rc_in_some_env(left, right)
     }
 
@@ -2722,11 +2591,12 @@ impl Runtime {
 
     fn try_verify_product_from_known_division(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         let (dividend, product) = match (left, right) {
             (dividend, Obj::Mul(product)) => (dividend, product),
             (Obj::Mul(product), dividend) => (dividend, product),
@@ -2758,11 +2628,12 @@ impl Runtime {
 
     fn try_verify_division_from_known_product(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         let (division, quotient) = match (left, right) {
             (Obj::Div(division), quotient) => (division, quotient),
             (quotient, Obj::Div(division)) => (division, quotient),
@@ -2801,31 +2672,34 @@ impl Runtime {
     // Example: from `a / b = c`, prove `a = c * b`; from `a = b * c`, prove `a / b = c`.
     fn try_verify_division_product_conversion(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         if let Some(done) = self.try_verify_product_from_known_division(
-            left,
-            right,
-            line_file.clone(),
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
             builtin_state,
         )? {
             return Ok(Some(done));
         }
 
-        self.try_verify_division_from_known_product(left, right, line_file, builtin_state)
+        self.try_verify_division_from_known_product(
+            &EqualFact::new_from_refs(left, right, line_file),
+            builtin_state,
+        )
     }
 
     fn verify_user_prop_subgoal(
         &mut self,
         prop_name: &str,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         let fact: AtomicFact = NormalAtomicFact::new(
             AtomicName::WithoutMod(prop_name.to_string()),
             vec![left.clone(), right.clone()],
@@ -2840,11 +2714,12 @@ impl Runtime {
     // {f fn(alpha I)big_union(S): $is_choice_function_for(I, S, g, f)}`.
     fn try_verify_general_cart_set_builder_equality(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         for (general_cart_side, set_builder_side) in [(left, right), (right, left)] {
             let Obj::GeneralCart(general_cart) = general_cart_side else {
                 continue;
@@ -2862,9 +2737,7 @@ impl Runtime {
                 continue;
             };
             return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
-                left,
-                right,
-                line_file,
+                equal_fact,
                 "general_cart equals its named-property set-builder definition",
                 steps,
             )));
@@ -2889,20 +2762,24 @@ impl Runtime {
             return Ok(None);
         }
 
-        let domain_result = self.verify_objs_are_equal_in_equality_builtin(
-            fn_set.body.params_def_with_set[0].set_obj(),
-            general_cart.index_set.as_ref(),
-            line_file.clone(),
+        let domain_result = self.verify_equal_fact_as_builtin_premise(
+            &EqualFact::new_from_refs(
+                fn_set.body.params_def_with_set[0].set_obj(),
+                general_cart.index_set.as_ref(),
+                line_file.clone(),
+            ),
             builtin_state,
         )?;
         if !domain_result.is_true() {
             return Ok(None);
         }
         let expected_ret_set: Obj = BigUnion::new(general_cart.family_set.as_ref().clone()).into();
-        let ret_result = self.verify_objs_are_equal_in_equality_builtin(
-            fn_set.body.ret_set.as_ref(),
-            &expected_ret_set,
-            line_file.clone(),
+        let ret_result = self.verify_equal_fact_as_builtin_premise(
+            &EqualFact::new_from_refs(
+                fn_set.body.ret_set.as_ref(),
+                &expected_ret_set,
+                line_file.clone(),
+            ),
             builtin_state,
         )?;
         if !ret_result.is_true() {
@@ -2928,7 +2805,7 @@ impl Runtime {
         };
         let expected_member =
             obj_for_bound_param_in_scope(&set_builder.param_binding, ParamObjType::SetBuilder);
-        if !verify_equality_by_they_are_the_same(choice_member, &expected_member) {
+        if !objs_match_for_equality_pattern(choice_member, &expected_member) {
             return Ok(None);
         }
 
@@ -2938,10 +2815,8 @@ impl Runtime {
             (choice_family_set, general_cart.family_set.as_ref()),
             (choice_family_fn, general_cart.family_fn.as_ref()),
         ] {
-            let result = self.verify_objs_are_equal_in_equality_builtin(
-                actual,
-                expected,
-                line_file.clone(),
+            let result = self.verify_equal_fact_as_builtin_premise(
+                &EqualFact::new_from_refs(actual, expected, line_file.clone()),
                 builtin_state,
             )?;
             if !result.is_true() {
@@ -2957,10 +2832,10 @@ impl Runtime {
     // `range(a, b) = {x Z: a <= x < b}`.
     fn try_verify_integer_range_set_builder_equality(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
         for (range_side, set_builder_side) in [(left, right), (right, left)] {
             let (start, end, right_closed) = match range_side {
                 Obj::ClosedRange(range) => (range.start.as_ref(), range.end.as_ref(), true),
@@ -2990,17 +2865,17 @@ impl Runtime {
                 obj_for_bound_param_in_scope(&set_builder.param_binding, ParamObjType::SetBuilder);
             let (upper_left_matches, upper_right_matches) = match (right_closed, upper) {
                 (true, AtomicFact::LessEqualFact(fact)) => (
-                    verify_equality_by_they_are_the_same(&fact.left, &bound_param),
-                    verify_equality_by_they_are_the_same(&fact.right, end),
+                    objs_match_for_equality_pattern(&fact.left, &bound_param),
+                    objs_match_for_equality_pattern(&fact.right, end),
                 ),
                 (false, AtomicFact::LessFact(fact)) => (
-                    verify_equality_by_they_are_the_same(&fact.left, &bound_param),
-                    verify_equality_by_they_are_the_same(&fact.right, end),
+                    objs_match_for_equality_pattern(&fact.left, &bound_param),
+                    objs_match_for_equality_pattern(&fact.right, end),
                 ),
                 _ => (false, false),
             };
-            if !verify_equality_by_they_are_the_same(&lower.left, start)
-                || !verify_equality_by_they_are_the_same(&lower.right, &bound_param)
+            if !objs_match_for_equality_pattern(&lower.left, start)
+                || !objs_match_for_equality_pattern(&lower.right, &bound_param)
                 || !upper_left_matches
                 || !upper_right_matches
             {
@@ -3012,7 +2887,7 @@ impl Runtime {
                 "equality: range is its integer set-builder definition"
             };
             return Ok(Some(factual_equal_success_by_builtin_reason(
-                left, right, line_file, rule,
+                equal_fact, rule,
             )));
         }
         Ok(None)
@@ -3022,10 +2897,11 @@ impl Runtime {
     // Example: `matrix(R, 2, 3) = fn(i, j N+: i <= 2, j <= 3) R`.
     fn try_verify_indexed_fn_set_definition_equality(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         for (indexed_set_side, fn_set_side) in [(left, right), (right, left)] {
             let Obj::FnSet(fn_set) = fn_set_side else {
                 continue;
@@ -3059,9 +2935,9 @@ impl Runtime {
                 self.fn_set_alpha_renamed_for_display_compare(&expanded.body, &alpha_names)?;
             let explicit_obj =
                 self.fn_set_alpha_renamed_for_display_compare(&fn_set.body, &alpha_names)?;
-            if verify_equality_by_they_are_the_same(&expanded_obj, &explicit_obj) {
+            if objs_match_for_equality_pattern(&expanded_obj, &explicit_obj) {
                 return Ok(Some(factual_equal_success_by_builtin_reason(
-                    left, right, line_file, rule,
+                    equal_fact, rule,
                 )));
             }
         }
@@ -3073,11 +2949,12 @@ impl Runtime {
     // Example: from `$p(a, b)` and `$p(b, a)`, prove `a = b`.
     fn try_verify_equality_from_known_antisymmetric_props(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         let mut prop_names: Vec<String> = Vec::new();
         for env in self.iter_environments_from_top() {
             for prop_name in env.known_antisymmetric_props.keys() {
@@ -3090,9 +2967,7 @@ impl Runtime {
         for prop_name in prop_names {
             let left_to_right = self.verify_user_prop_subgoal(
                 &prop_name,
-                left,
-                right,
-                line_file.clone(),
+                &EqualFact::new_from_refs(left, right, line_file.clone()),
                 builtin_state,
             )?;
             if !left_to_right.is_true() {
@@ -3100,9 +2975,7 @@ impl Runtime {
             }
             let right_to_left = self.verify_user_prop_subgoal(
                 &prop_name,
-                right,
-                left,
-                line_file.clone(),
+                &EqualFact::new_from_refs(right, left, line_file.clone()),
                 builtin_state,
             )?;
             if !right_to_left.is_true() {
@@ -3138,8 +3011,8 @@ fn gcd_divides_its_argument_shape(remainder: &Obj, zero: &Obj) -> bool {
     let Obj::Gcd(gcd) = modulo.right.as_ref() else {
         return false;
     };
-    verify_equality_by_they_are_the_same(&modulo.left, &gcd.left)
-        || verify_equality_by_they_are_the_same(&modulo.left, &gcd.right)
+    objs_match_for_equality_pattern(&modulo.left, &gcd.left)
+        || objs_match_for_equality_pattern(&modulo.left, &gcd.right)
 }
 
 fn product_mod_factor_is_zero_shape(remainder: &Obj, zero: &Obj) -> bool {
@@ -3155,6 +3028,6 @@ fn product_mod_factor_is_zero_shape(remainder: &Obj, zero: &Obj) -> bool {
     let Obj::Mul(product) = modulo.left.as_ref() else {
         return false;
     };
-    verify_equality_by_they_are_the_same(&modulo.right, &product.left)
-        || verify_equality_by_they_are_the_same(&modulo.right, &product.right)
+    objs_match_for_equality_pattern(&modulo.right, &product.left)
+        || objs_match_for_equality_pattern(&modulo.right, &product.right)
 }

@@ -1,10 +1,9 @@
 # This teaching example constructs gcd from the largest positive common divisor.
 # Ordinary user code should call the native `gcd(a, b)` object directly.
-import std basics
 
 thm positive_divisor_le_abs:
     ? forall d N+, a Z:
-        $basics::divides(d, a)
+        $dvd(a, d)
         a != 0
         =>:
             d <= abs(a)
@@ -25,9 +24,9 @@ thm common_divisor_set_is_finite_and_nonempty:
     ? forall a, b Z:
         a != 0 or b != 0
         =>:
-            $is_finite_set({d N+: $basics::divides(d, a), $basics::divides(d, b)})
-            $is_nonempty_set({d N+: $basics::divides(d, a), $basics::divides(d, b)})
-    have c power_set(N) = {d N+: $basics::divides(d, a), $basics::divides(d, b)}
+            $is_finite_set({d N+: $dvd(a, d), $dvd(b, d)})
+            $is_nonempty_set({d N+: $dvd(a, d), $dvd(b, d)})
+    have c power_set(N) = {d N+: $dvd(a, d), $dvd(b, d)}
     claim:
         ? $is_finite_set(c)
         by cases:
@@ -39,7 +38,7 @@ thm common_divisor_set_is_finite_and_nonempty:
                     d $in c
                     d $in N+
                     d >= 1
-                    $basics::divides(d, a)
+                    $dvd(a, d)
                     by thm positive_divisor_le_abs(d, a)
                 by def c $subset closed_range(1, abs(a))
                 by thm subset_of_finite_set_is_finite(c, closed_range(1, abs(a)))
@@ -50,7 +49,7 @@ thm common_divisor_set_is_finite_and_nonempty:
                     d $in c
                     d $in N+
                     d >= 1
-                    $basics::divides(d, b)
+                    $dvd(b, d)
                     by thm positive_divisor_le_abs(d, b)
                 by def c $subset closed_range(1, abs(b))
                 by thm subset_of_finite_set_is_finite(c, closed_range(1, abs(b)))
@@ -58,16 +57,16 @@ thm common_divisor_set_is_finite_and_nonempty:
         1 $in N+
         witness exist k Z st {a = 1 * k} from a:
             a = 1 * a
-        by def $basics::divides(1, a)
+        by def $dvd(a, 1)
         witness exist k Z st {b = 1 * k} from b:
             b = 1 * b
-        by def $basics::divides(1, b)
-        by thm set_builder_member(1, {d N+: $basics::divides(d, a), $basics::divides(d, b)})
+        by def $dvd(b, 1)
+        by thm set_builder_member(1, {d N+: $dvd(a, d), $dvd(b, d)})
         1 $in c
-    $is_finite_set({d N+: $basics::divides(d, a), $basics::divides(d, b)})
-    $is_nonempty_set({d N+: $basics::divides(d, a), $basics::divides(d, b)})
+    $is_finite_set({d N+: $dvd(a, d), $dvd(b, d)})
+    $is_nonempty_set({d N+: $dvd(a, d), $dvd(b, d)})
 
-have fn gcd_from_finite_divisors(a, b Z: a != 0 or b != 0) N = finite_set_max({d N+: $basics::divides(d, a), $basics::divides(d, b)})
+have fn gcd_from_finite_divisors(a, b Z: a != 0 or b != 0) N = finite_set_max({d N+: $dvd(a, d), $dvd(b, d)})
 
 thm gcd_from_finite_divisors_eq_native:
     ? forall a, b Z:
@@ -75,11 +74,11 @@ thm gcd_from_finite_divisors_eq_native:
         =>:
             gcd_from_finite_divisors(a, b) = gcd(a, b)
     by thm common_divisor_set_is_finite_and_nonempty(a, b)
-    gcd_from_finite_divisors(a, b) = finite_set_max({d N+: $basics::divides(d, a), $basics::divides(d, b)})
-    finite_set_max({d N+: $basics::divides(d, a), $basics::divides(d, b)}) $in {d N+: $basics::divides(d, a), $basics::divides(d, b)}
-    gcd_from_finite_divisors(a, b) $in {d N+: $basics::divides(d, a), $basics::divides(d, b)}
-    $basics::divides(gcd_from_finite_divisors(a, b), a)
-    $basics::divides(gcd_from_finite_divisors(a, b), b)
+    gcd_from_finite_divisors(a, b) = finite_set_max({d N+: $dvd(a, d), $dvd(b, d)})
+    finite_set_max({d N+: $dvd(a, d), $dvd(b, d)}) $in {d N+: $dvd(a, d), $dvd(b, d)}
+    gcd_from_finite_divisors(a, b) $in {d N+: $dvd(a, d), $dvd(b, d)}
+    $dvd(a, gcd_from_finite_divisors(a, b))
+    $dvd(b, gcd_from_finite_divisors(a, b))
     obtain ka from exist k Z st {a = gcd_from_finite_divisors(a, b) * k}
     obtain kb from exist k Z st {b = gcd_from_finite_divisors(a, b) * k}
     a % gcd_from_finite_divisors(a, b) = (gcd_from_finite_divisors(a, b) * ka) % gcd_from_finite_divisors(a, b) = 0
@@ -88,8 +87,8 @@ thm gcd_from_finite_divisors_eq_native:
     gcd(a, b) $in N+
     a % gcd(a, b) = 0
     b % gcd(a, b) = 0
-    by def $basics::divides(gcd(a, b), a)
-    by def $basics::divides(gcd(a, b), b)
-    by thm set_builder_member(gcd(a, b), {d N+: $basics::divides(d, a), $basics::divides(d, b)})
-    gcd(a, b) <= finite_set_max({d N+: $basics::divides(d, a), $basics::divides(d, b)})
+    by def $dvd(a, gcd(a, b))
+    by def $dvd(b, gcd(a, b))
+    by thm set_builder_member(gcd(a, b), {d N+: $dvd(a, d), $dvd(b, d)})
+    gcd(a, b) <= finite_set_max({d N+: $dvd(a, d), $dvd(b, d)})
     gcd(a, b) <= gcd_from_finite_divisors(a, b)

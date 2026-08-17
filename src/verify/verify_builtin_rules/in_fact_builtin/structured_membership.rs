@@ -167,11 +167,12 @@ impl Runtime {
         // Check reflexive and already-known element equalities before invoking
         // the broader equality builtin search for list-set membership.
         for current_element_in_list_set in list_set.list.iter() {
-            let equal_fact_verify_result = self.verify_objs_are_equal_by_known_equality(
-                &in_fact.element,
-                current_element_in_list_set.as_ref(),
-                in_fact.line_file.clone(),
-            );
+            let equal_fact_verify_result =
+                self.verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
+                    &in_fact.element,
+                    current_element_in_list_set.as_ref(),
+                    in_fact.line_file.clone(),
+                ));
             if equal_fact_verify_result.is_true() {
                 return Ok(
                     (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(

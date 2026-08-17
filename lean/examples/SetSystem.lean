@@ -80,3 +80,24 @@ theorem twoInReal : Litex.In (2 : ℂ) Litex.R :=
 #print axioms twoInReal
 
 end __UserSet01
+
+namespace __HigherUniverseSet01
+
+/-!
+`Litex.Set.{0}` itself lives in `Type 1`, so a collection whose elements are
+small Litex sets uses `Litex.Set.{1}`.  The ordered-numeric layer being confined
+to ordinary Mathlib values does not restrict this construction.
+-/
+
+abbrev SmallSets : Litex.Set.{1} :=
+  Litex.Set.ofType (Litex.Set.{0})
+
+def theRealSet : Litex.Set.{0} :=
+  Litex.R
+
+theorem realSetInSmallSets : Litex.In theRealSet SmallSets :=
+  Litex.In.own SmallSets theRealSet
+
+#print axioms realSetInSmallSets
+
+end __HigherUniverseSet01

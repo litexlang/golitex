@@ -18,6 +18,11 @@ cd lean
 lake env lean examples/SetSystem.lean
 ```
 
-`SetSystem.lean` is the current tracer for `Same`, `Set`, heterogeneous `In`,
-the native numeric sets, and user-defined exact-carrier and predicate sets.
-Function compilation is intentionally deferred.
+`SetSystem.lean` is the tracer for `Same`, `Set`, heterogeneous `In`, native
+numeric sets, user-defined exact-carrier and predicate sets, and a universe-1
+set whose elements are universe-0 Litex sets.
+
+`OrderSystem.lean` is the tracer for `AsReal`, heterogeneous `Lt`/`Le`, the
+source rule `a < b => a <= b`, and the explicit `RealCoherence` boundary used
+when a theorem must identify two real representatives. Function compilation is
+intentionally deferred.

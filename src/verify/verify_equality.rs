@@ -5,29 +5,38 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
     ) -> Result<StmtResult, RuntimeError> {
-        let builtin_state = UseBuiltinRuleVerifyState::new();
-        let builtin_result =
-            self.verify_equal_fact_with_one_builtin_rule(equal_fact, &builtin_state)?;
-        if builtin_result.is_true() {
-            return Ok(builtin_result);
+        let zero_premise_result =
+            self.verify_equal_fact_with_zero_premise_verification(equal_fact)?;
+        if zero_premise_result.is_true() {
+            return Ok(zero_premise_result);
         }
 
-        self.verify_equal_fact_with_leaf_routes(equal_fact)
+        let builtin_state = UseBuiltinRuleVerifyState::new();
+        self.verify_equal_fact_with_one_premise_producing_builtin_rule(equal_fact, &builtin_state)
     }
 
     pub(crate) fn verify_equal_fact_with_known_fact(
         &mut self,
         equal_fact: &EqualFact,
     ) -> StmtResult {
-        let result = self.verify_objs_are_equal_by_known_equality(
-            &equal_fact.left,
-            &equal_fact.right,
-            equal_fact.line_file.clone(),
+        let result = self.verify_equal_fact_by_known_equality_without_direct_evaluation(
+            &EqualFact::new_from_refs(
+                &equal_fact.left,
+                &equal_fact.right,
+                equal_fact.line_file.clone(),
+            ),
         );
         self.remember_successful_atomic_fact_for_statement(&equal_fact.clone().into(), result)
     }
 
-    pub(crate) fn verify_equal_fact_with_known_fact_then_computation(
+    // A premise is a child fact that a rule must verify before concluding its parent fact.
+    // Zero-premise equality verification closes the current equality without generating a new
+    // proof obligation: it tries known equality, direct evaluation, and terminating congruence.
+    // This phase must stay separate because a surrounding builtin rule may already have consumed
+    // the one allowed premise-producing step. For example, after using a rule whose child is
+    // `(-1 * sqrt(2)) ^ 2 = 2`, that closed child must still be calculable without recursively
+    // opening another mathematical rule.
+    pub(crate) fn verify_equal_fact_with_zero_premise_verification(
         &mut self,
         equal_fact: &EqualFact,
     ) -> Result<StmtResult, RuntimeError> {
@@ -36,17 +45,21 @@ impl Runtime {
             return Ok(known_result);
         }
 
-        let result = self.verify_equal_fact_by_builtin_computation(equal_fact);
-        Ok(self.remember_successful_atomic_fact_for_statement(&equal_fact.clone().into(), result))
-    }
+        let direct_evaluation_result = self.verify_equal_fact_by_direct_evaluation(equal_fact);
+        if direct_evaluation_result.is_true() {
+            return Ok(self.remember_successful_atomic_fact_for_statement(
+                &equal_fact.clone().into(),
+                direct_evaluation_result,
+            ));
+        }
 
-    pub(crate) fn verify_equal_fact_with_leaf_routes(
-        &mut self,
-        equal_fact: &EqualFact,
-    ) -> Result<StmtResult, RuntimeError> {
-        let leaf_result = self.verify_equal_fact_with_known_fact_then_computation(equal_fact)?;
-        if leaf_result.is_true() {
-            return Ok(leaf_result);
+        let known_equality_evaluation_result =
+            self.verify_equal_fact_by_known_equality_then_direct_evaluation(equal_fact);
+        if known_equality_evaluation_result.is_true() {
+            return Ok(self.remember_successful_atomic_fact_for_statement(
+                &equal_fact.clone().into(),
+                known_equality_evaluation_result,
+            ));
         }
 
         if !self.objs_are_equal_by_terminating_reduction_and_congruence(
@@ -54,7 +67,7 @@ impl Runtime {
             &equal_fact.right,
             equal_fact.line_file.clone(),
         )? {
-            return Ok(leaf_result);
+            return Ok(direct_evaluation_result);
         }
 
         let result: StmtResult =
@@ -67,7 +80,9 @@ impl Runtime {
         Ok(self.remember_successful_atomic_fact_for_statement(&equal_fact.clone().into(), result))
     }
 
-    pub(crate) fn verify_equal_fact_by_builtin_computation(
+    // Direct evaluation is the computation arm of zero-premise verification. It may normalize
+    // the two objects, but it cannot generate premises or apply another mathematical rule.
+    pub(crate) fn verify_equal_fact_by_direct_evaluation(
         &self,
         equal_fact: &EqualFact,
     ) -> StmtResult {
@@ -78,7 +93,11 @@ impl Runtime {
             .two_objs_can_be_calculated_and_equal_by_calculation(&equal_fact.right)
             || left_resolved.two_objs_can_be_calculated_and_equal_by_calculation(&right_resolved)
         {
-            "direct numeric computation"
+            "calculation"
+        } else if objs_equal_by_rational_expression_evaluation(&equal_fact.left, &equal_fact.right)
+            || objs_equal_by_rational_expression_evaluation(&left_resolved, &right_resolved)
+        {
+            "calculation and rational expression simplification"
         } else if objs_equal_by_bounded_symbolic_normalization(&equal_fact.left, &equal_fact.right)
             || objs_equal_by_bounded_symbolic_normalization(&left_resolved, &right_resolved)
         {
@@ -96,7 +115,56 @@ impl Runtime {
         .into()
     }
 
-    pub(crate) fn verify_equal_fact_with_one_builtin_rule(
+    // Reusing an already stored equality and then normalizing its representative still creates
+    // no new premise. Example: from `a^2 + a*a + b = 0`, normalize the known left representative
+    // to close `0 = 2*a^2 + b`. Keep this after direct evaluation of the submitted equality so a
+    // self-contained calculation does not acquire unrelated known-equality provenance.
+    pub(crate) fn verify_equal_fact_by_known_equality_then_direct_evaluation(
+        &mut self,
+        equal_fact: &EqualFact,
+    ) -> StmtResult {
+        let left_representatives =
+            self.get_all_obj_representatives_equal_to_given(&equal_fact.left);
+        let left_match = left_representatives.into_iter().find(|representative| {
+            objs_equal_by_rational_expression_evaluation(representative, &equal_fact.right)
+        });
+        let known_fact = if let Some(representative) = left_match {
+            EqualFact::new(
+                equal_fact.left.clone(),
+                representative,
+                equal_fact.line_file.clone(),
+            )
+        } else {
+            let Some(representative) = self
+                .get_all_obj_representatives_equal_to_given(&equal_fact.right)
+                .into_iter()
+                .find(|representative| {
+                    objs_equal_by_rational_expression_evaluation(&equal_fact.left, representative)
+                })
+            else {
+                return StmtUnknown::new().into();
+            };
+            EqualFact::new(
+                equal_fact.right.clone(),
+                representative,
+                equal_fact.line_file.clone(),
+            )
+        };
+        let known_result = self.verify_equal_fact_with_known_fact(&known_fact);
+        if !known_result.is_true() {
+            return StmtUnknown::new().into();
+        }
+        FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            equal_fact.clone().into(),
+            "calculation and rational expression simplification".to_string(),
+            vec![known_result],
+        )
+        .into()
+    }
+
+    // This bounded phase may generate premises, so entering it consumes the available
+    // builtin-rule step before any child equality is checked.
+    pub(crate) fn verify_equal_fact_with_one_premise_producing_builtin_rule(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -114,12 +182,7 @@ impl Runtime {
         {
             return Ok(self.remember_successful_atomic_fact_for_statement(&goal, result));
         }
-        let result = self.verify_equality_by_builtin_rules(
-            &equal_fact.left,
-            &equal_fact.right,
-            equal_fact.line_file.clone(),
-            &child_state,
-        )?;
+        let result = self.verify_equal_fact_by_builtin_rules(equal_fact, &child_state)?;
         Ok(self.remember_successful_atomic_fact_for_statement(&goal, result))
     }
 
@@ -147,11 +210,9 @@ impl Runtime {
 
         if verify_state.is_round_0() {
             let verified_by_arg_to_arg = self
-                .verify_objs_are_equal_when_they_have_same_builtin_shape_and_equal_args_recursively(
-                    &equal_fact.left,
-                    &equal_fact.right,
+                .verify_equal_fact_when_both_sides_have_same_builtin_shape_and_equal_args_recursively(
+                    equal_fact,
                     verify_state,
-                    equal_fact.line_file.clone(),
                 )?;
             if verified_by_arg_to_arg {
                 return Ok(
@@ -190,22 +251,14 @@ impl Runtime {
             return Ok((StmtUnknown::new()).into());
         }
 
-        if let Some(result) = self.try_reduce_one_checked_definition_side(
-            &equal_fact.left,
-            &equal_fact.right,
-            true,
-            equal_fact.line_file.clone(),
-            verify_state,
-        )? {
+        if let Some(result) =
+            self.try_reduce_one_checked_definition_side(equal_fact, true, verify_state)?
+        {
             return Ok(result);
         }
-        if let Some(result) = self.try_reduce_one_checked_definition_side(
-            &equal_fact.right,
-            &equal_fact.left,
-            false,
-            equal_fact.line_file.clone(),
-            verify_state,
-        )? {
+        if let Some(result) =
+            self.try_reduce_one_checked_definition_side(equal_fact, false, verify_state)?
+        {
             return Ok(result);
         }
         Ok((StmtUnknown::new()).into())
@@ -213,17 +266,16 @@ impl Runtime {
 
     fn try_reduce_one_checked_definition_side(
         &mut self,
-        application_side: &Obj,
-        other_side: &Obj,
+        equal_fact: &EqualFact,
         application_is_left: bool,
-        line_file: LineFile,
         verify_state: &UseContextVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
-        let (statement_left, statement_right) = if application_is_left {
-            (application_side, other_side)
+        let (application_side, other_side) = if application_is_left {
+            (&equal_fact.left, &equal_fact.right)
         } else {
-            (other_side, application_side)
+            (&equal_fact.right, &equal_fact.left)
         };
+        let line_file = equal_fact.line_file.clone();
         // Reduce exactly one checked definition already present in the goal.
         // Comparison remains limited to known facts, terminating computation,
         // and constructor descent.
@@ -272,12 +324,7 @@ impl Runtime {
             if let Some((definition_object, defining_equality, defining_equality_fact_id)) =
                 checked_function_source.clone()
             {
-                let fact: Fact = EqualFact::new(
-                    statement_left.clone(),
-                    statement_right.clone(),
-                    line_file.clone(),
-                )
-                .into();
+                let fact: Fact = equal_fact.clone().into();
                 let evidence = CheckedFunctionDefinitionReductionEvidence {
                     definition_object,
                     defining_equality,
@@ -303,11 +350,9 @@ impl Runtime {
                 ));
             }
             return Ok(Some(checked_definition_reduction_success(
-                statement_left,
-                statement_right,
+                equal_fact,
                 application_side,
                 &comparison_candidate,
-                line_file,
                 &reason,
             )));
         }
@@ -357,29 +402,22 @@ impl Runtime {
         )))
     }
 
-    fn verify_binary_objs_are_equal_when_both_corresponding_args_are_equal(
+    fn verify_two_equal_fact_premises_for_corresponding_binary_args(
         &mut self,
-        left_left: &Obj,
-        left_right: &Obj,
-        right_left: &Obj,
-        right_right: &Obj,
+        left_args_equal_fact: &EqualFact,
+        right_args_equal_fact: &EqualFact,
         verify_state: &UseContextVerifyState,
-        equality_line_file: LineFile,
     ) -> Result<bool, RuntimeError> {
-        let result = self.verify_two_objs_equal_by_builtin_rules_and_known_equalities(
-            left_left,
-            right_left,
+        let result = self.verify_equal_fact_by_builtin_rules_and_known_equalities(
+            left_args_equal_fact,
             verify_state,
-            equality_line_file.clone(),
         )?;
         if result.is_unknown() {
             return Ok(false);
         }
-        let result = self.verify_two_objs_equal_by_builtin_rules_and_known_equalities(
-            left_right,
-            right_right,
+        let result = self.verify_equal_fact_by_builtin_rules_and_known_equalities(
+            right_args_equal_fact,
             verify_state,
-            equality_line_file.clone(),
         )?;
         if result.is_unknown() {
             return Ok(false);
@@ -387,134 +425,134 @@ impl Runtime {
         Ok(true)
     }
 
-    fn verify_unary_objs_are_equal_when_their_only_args_are_equal(
+    fn verify_equal_fact_for_corresponding_unary_args(
         &mut self,
-        left_value: &Obj,
-        right_value: &Obj,
+        equal_fact: &EqualFact,
         verify_state: &UseContextVerifyState,
-        equality_line_file: LineFile,
     ) -> Result<bool, RuntimeError> {
-        let result = self.verify_two_objs_equal_by_builtin_rules_and_known_equalities(
-            left_value,
-            right_value,
-            verify_state,
-            equality_line_file.clone(),
-        )?;
+        let result =
+            self.verify_equal_fact_by_builtin_rules_and_known_equalities(equal_fact, verify_state)?;
         if result.is_true() {
             return Ok(true);
         }
         Ok(false)
     }
 
-    fn verify_function_args_are_equal_for_iterated_operator(
+    fn verify_equal_fact_for_iterated_operator_functions(
         &mut self,
-        left_func: &Obj,
-        right_func: &Obj,
+        equal_fact: &EqualFact,
         verify_state: &UseContextVerifyState,
-        equality_line_file: LineFile,
     ) -> Result<bool, RuntimeError> {
         // Iterated operators such as sum/product compare their summand
         // functions extensionally. Example:
         // `sum(1, n, fn(x Z) Z {f(x)}) = sum(1, n, fn(y Z) Z {f(y)})`.
-        self.verify_unary_objs_are_equal_when_their_only_args_are_equal(
-            left_func,
-            right_func,
-            verify_state,
-            equality_line_file,
-        )
+        self.verify_equal_fact_for_corresponding_unary_args(equal_fact, verify_state)
     }
 
-    pub(crate) fn verify_objs_are_equal_when_they_have_same_builtin_shape_and_equal_args_recursively(
+    pub(crate) fn verify_equal_fact_when_both_sides_have_same_builtin_shape_and_equal_args_recursively(
         &mut self,
-        left_obj: &Obj,
-        right_obj: &Obj,
+        equal_fact: &EqualFact,
         verify_state: &UseContextVerifyState,
-        equality_line_file: LineFile,
     ) -> Result<bool, RuntimeError> {
+        let left_obj = &equal_fact.left;
+        let right_obj = &equal_fact.right;
+        let equality_line_file = equal_fact.line_file.clone();
         match (left_obj, right_obj) {
             (Obj::Sum(left), Obj::Sum(right)) => {
-                if !self.verify_binary_objs_are_equal_when_both_corresponding_args_are_equal(
-                    &left.start,
-                    &left.end,
-                    &right.start,
-                    &right.end,
+                if !self.verify_two_equal_fact_premises_for_corresponding_binary_args(
+                    &EqualFact::new_from_refs(
+                        &left.start,
+                        &right.start,
+                        equality_line_file.clone(),
+                    ),
+                    &EqualFact::new_from_refs(&left.end, &right.end, equality_line_file.clone()),
                     verify_state,
-                    equality_line_file.clone(),
                 )? {
                     return Ok(false);
                 }
-                self.verify_function_args_are_equal_for_iterated_operator(
-                    left.func.as_ref(),
-                    right.func.as_ref(),
+                self.verify_equal_fact_for_iterated_operator_functions(
+                    &EqualFact::new_from_refs(
+                        left.func.as_ref(),
+                        right.func.as_ref(),
+                        equality_line_file,
+                    ),
                     verify_state,
-                    equality_line_file,
                 )
             }
             (Obj::SumOfFiniteSet(left), Obj::SumOfFiniteSet(right)) => {
                 if !self
-                    .verify_two_objs_equal_by_builtin_rules_and_known_equalities(
-                        left.set.as_ref(),
-                        right.set.as_ref(),
+                    .verify_equal_fact_by_builtin_rules_and_known_equalities(
+                        &EqualFact::new_from_refs(
+                            left.set.as_ref(),
+                            right.set.as_ref(),
+                            equality_line_file.clone(),
+                        ),
                         verify_state,
-                        equality_line_file.clone(),
                     )?
                     .is_true()
                 {
                     return Ok(false);
                 }
-                self.verify_function_args_are_equal_for_iterated_operator(
-                    left.func.as_ref(),
-                    right.func.as_ref(),
+                self.verify_equal_fact_for_iterated_operator_functions(
+                    &EqualFact::new_from_refs(
+                        left.func.as_ref(),
+                        right.func.as_ref(),
+                        equality_line_file,
+                    ),
                     verify_state,
-                    equality_line_file,
                 )
             }
             (Obj::ProductOfFiniteSet(left), Obj::ProductOfFiniteSet(right)) => {
                 if !self
-                    .verify_two_objs_equal_by_builtin_rules_and_known_equalities(
-                        left.set.as_ref(),
-                        right.set.as_ref(),
+                    .verify_equal_fact_by_builtin_rules_and_known_equalities(
+                        &EqualFact::new_from_refs(
+                            left.set.as_ref(),
+                            right.set.as_ref(),
+                            equality_line_file.clone(),
+                        ),
                         verify_state,
-                        equality_line_file.clone(),
                     )?
                     .is_true()
                 {
                     return Ok(false);
                 }
-                self.verify_function_args_are_equal_for_iterated_operator(
-                    left.func.as_ref(),
-                    right.func.as_ref(),
+                self.verify_equal_fact_for_iterated_operator_functions(
+                    &EqualFact::new_from_refs(
+                        left.func.as_ref(),
+                        right.func.as_ref(),
+                        equality_line_file,
+                    ),
                     verify_state,
-                    equality_line_file,
                 )
             }
             (Obj::Product(left), Obj::Product(right)) => {
-                if !self.verify_binary_objs_are_equal_when_both_corresponding_args_are_equal(
-                    &left.start,
-                    &left.end,
-                    &right.start,
-                    &right.end,
+                if !self.verify_two_equal_fact_premises_for_corresponding_binary_args(
+                    &EqualFact::new_from_refs(
+                        &left.start,
+                        &right.start,
+                        equality_line_file.clone(),
+                    ),
+                    &EqualFact::new_from_refs(&left.end, &right.end, equality_line_file.clone()),
                     verify_state,
-                    equality_line_file.clone(),
                 )? {
                     return Ok(false);
                 }
-                self.verify_function_args_are_equal_for_iterated_operator(
-                    left.func.as_ref(),
-                    right.func.as_ref(),
+                self.verify_equal_fact_for_iterated_operator_functions(
+                    &EqualFact::new_from_refs(
+                        left.func.as_ref(),
+                        right.func.as_ref(),
+                        equality_line_file,
+                    ),
                     verify_state,
-                    equality_line_file,
                 )
             }
             _ => Self::same_shape_and_corresponding_args_match(
                 left_obj,
                 right_obj,
                 &mut |left_arg, right_arg| {
-                    self.verify_two_objs_equal_by_builtin_rules_and_known_equalities(
-                        left_arg,
-                        right_arg,
+                    self.verify_equal_fact_by_builtin_rules_and_known_equalities(
+                        &EqualFact::new_from_refs(left_arg, right_arg, equality_line_file.clone()),
                         verify_state,
-                        equality_line_file.clone(),
                     )
                     .map(|result| result.is_true())
                 },
@@ -522,28 +560,18 @@ impl Runtime {
         }
     }
 
-    fn verify_two_objs_equal_by_builtin_rules_and_known_equalities(
+    fn verify_equal_fact_by_builtin_rules_and_known_equalities(
         &mut self,
-        left_obj: &Obj,
-        right_obj: &Obj,
+        equal_fact: &EqualFact,
         verify_state: &UseContextVerifyState,
-        equality_line_file: LineFile,
     ) -> Result<StmtResult, RuntimeError> {
-        let direct_goal = EqualFact::new(
-            left_obj.clone(),
-            right_obj.clone(),
-            equality_line_file.clone(),
-        );
-        let result = self.verify_equal_fact_with_direct_routes(&direct_goal)?;
+        let left_obj = &equal_fact.left;
+        let right_obj = &equal_fact.right;
+        let result = self.verify_equal_fact_with_direct_routes(equal_fact)?;
         if result.is_true() {
             return Ok(
                 (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                    EqualFact::new(
-                        left_obj.clone(),
-                        right_obj.clone(),
-                        equality_line_file.clone(),
-                    )
-                    .into(),
+                    equal_fact.clone().into(),
                     "builtin rules".to_string(),
                     Vec::new(),
                 ))
@@ -552,16 +580,14 @@ impl Runtime {
         }
 
         let verified_by_arg_to_arg = self
-            .verify_objs_are_equal_when_they_have_same_builtin_shape_and_equal_args_recursively(
-                left_obj,
-                right_obj,
+            .verify_equal_fact_when_both_sides_have_same_builtin_shape_and_equal_args_recursively(
+                equal_fact,
                 verify_state,
-                equality_line_file.clone(),
             )?;
         if verified_by_arg_to_arg {
             return Ok(
                 (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                    EqualFact::new(left_obj.clone(), right_obj.clone(), equality_line_file).into(),
+                    equal_fact.clone().into(),
                     same_shape_and_equal_args_reason(left_obj, right_obj),
                     Vec::new(),
                 ))
@@ -574,10 +600,6 @@ impl Runtime {
 }
 
 fn objs_equal_by_bounded_symbolic_normalization(left: &Obj, right: &Obj) -> bool {
-    if objs_equal_by_rational_expression_evaluation(left, right) {
-        return true;
-    }
-
     // Absolute value is invariant under sign change. This remains a bounded
     // computation leaf: it creates no proof obligations and applies no rules.
     // Example: `abs(x - y) = abs(y - x)`.
@@ -600,15 +622,12 @@ fn same_shape_and_equal_args_reason(left_obj: &Obj, right_obj: &Obj) -> String {
 }
 
 fn checked_definition_reduction_success(
-    statement_left: &Obj,
-    statement_right: &Obj,
+    equal_fact: &EqualFact,
     application_side: &Obj,
     reduced_side: &Obj,
-    line_file: LineFile,
     reason: &str,
 ) -> StmtResult {
-    let fact: Fact =
-        EqualFact::new(statement_left.clone(), statement_right.clone(), line_file).into();
+    let fact: Fact = equal_fact.clone().into();
     let msg = format!(
         "{}; reduced goal side `{}` is compared with `{}` using stored equalities, terminating computation, anonymous-function beta reduction, or constructor descent",
         reason, application_side, reduced_side
@@ -620,6 +639,29 @@ fn checked_definition_reduction_success(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn zero_premise_structural_equality_still_requires_known_equal_leaves() {
+        let mut runtime = Runtime::new();
+        runtime.new_file_path_new_env_new_name_scope("zero_premise_structural_boundary.lit");
+
+        let x: Obj = Identifier::new("x".to_string()).into();
+        let y: Obj = Identifier::new("y".to_string()).into();
+        let one: Obj = Number::new("1".to_string()).into();
+        let two: Obj = Number::new("2".to_string()).into();
+        let left: Obj = Mul::new(
+            Add::new(x.clone(), one.clone()).into(),
+            Add::new(x, two.clone()).into(),
+        )
+        .into();
+        let right: Obj = Mul::new(Add::new(y.clone(), one).into(), Add::new(y, two).into()).into();
+        let equal_fact = EqualFact::new(left, right, default_line_file());
+
+        assert!(runtime
+            .verify_equal_fact_with_zero_premise_verification(&equal_fact)
+            .expect("zero-premise equality boundary must not error")
+            .is_unknown());
+    }
 
     #[test]
     fn structural_equality_runs_only_from_the_outer_round() {
@@ -636,7 +678,11 @@ mod tests {
             StructObj::new(AtomicName::WithoutMod("Box".to_string()), vec![union_ba]).into();
         let equal_fact = EqualFact::new(left.clone(), right.clone(), default_line_file());
         assert!(runtime
-            .verify_objs_are_equal_by_known_equality(&left, &right, default_line_file())
+            .verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
+                &left,
+                &right,
+                default_line_file()
+            ))
             .is_unknown());
         assert!(runtime
             .verify_equal_fact(&equal_fact, &UseContextVerifyState::new(1, true))
@@ -679,8 +725,10 @@ mod tests {
             .split("pub(crate) fn same_shape_and_corresponding_args_match")
             .next()
             .expect("central structural matcher must follow the terminating comparator");
+        assert!(terminating_comparator.contains("verify_equal_fact_with_known_fact"));
+        assert!(terminating_comparator.contains("verify_equal_fact_by_direct_evaluation"));
         assert!(
-            terminating_comparator.contains("verify_equal_fact_with_known_fact_then_computation")
+            !terminating_comparator.contains("verify_equal_fact_with_zero_premise_verification")
         );
         assert!(terminating_comparator.contains("beta_reduce_complete_anonymous_application_once"));
         let obsolete_one_rule = ["verify_atomic_fact_with_one_", "builtin_rule"].concat();

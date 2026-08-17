@@ -229,7 +229,11 @@ impl Runtime {
         let two: Obj = Number::new("2".to_string()).into();
         let one = Self::literal_one_obj();
         let mod_obj: Obj = Mod::new(exp.clone(), two).into();
-        let odd_result = self.verify_objs_are_equal_by_known_equality(&mod_obj, &one, lf.clone());
+        let odd_result = self.verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
+            &mod_obj,
+            &one,
+            lf.clone(),
+        ));
         if odd_result.is_true() {
             steps.push(odd_result);
             return Ok(Some(steps));

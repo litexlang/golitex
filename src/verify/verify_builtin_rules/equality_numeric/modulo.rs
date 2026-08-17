@@ -7,11 +7,12 @@ impl Runtime {
     /// `(X+Y)%Z = ((X%Z)+(Y%Z))%Z` can close via congruence.
     pub(crate) fn try_verify_mod_nested_same_modulus_absorption(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         for (side_nested, side_simple) in [(left, right), (right, left)] {
             let Obj::Mod(outer) = side_nested else {
                 continue;
@@ -23,10 +24,12 @@ impl Runtime {
                 continue;
             };
             if !self
-                .verify_objs_are_equal_in_equality_builtin(
-                    outer.right.as_ref(),
-                    inner.right.as_ref(),
-                    line_file.clone(),
+                .verify_equal_fact_as_builtin_premise(
+                    &EqualFact::new_from_refs(
+                        outer.right.as_ref(),
+                        inner.right.as_ref(),
+                        line_file.clone(),
+                    ),
                     builtin_state,
                 )?
                 .is_true()
@@ -34,10 +37,12 @@ impl Runtime {
                 continue;
             }
             if !self
-                .verify_objs_are_equal_in_equality_builtin(
-                    outer.right.as_ref(),
-                    simple.right.as_ref(),
-                    line_file.clone(),
+                .verify_equal_fact_as_builtin_premise(
+                    &EqualFact::new_from_refs(
+                        outer.right.as_ref(),
+                        simple.right.as_ref(),
+                        line_file.clone(),
+                    ),
                     builtin_state,
                 )?
                 .is_true()
@@ -45,10 +50,12 @@ impl Runtime {
                 continue;
             }
             if !self
-                .verify_objs_are_equal_in_equality_builtin(
-                    inner.left.as_ref(),
-                    simple.left.as_ref(),
-                    line_file.clone(),
+                .verify_equal_fact_as_builtin_premise(
+                    &EqualFact::new_from_refs(
+                        inner.left.as_ref(),
+                        simple.left.as_ref(),
+                        line_file.clone(),
+                    ),
                     builtin_state,
                 )?
                 .is_true()
@@ -56,9 +63,7 @@ impl Runtime {
                 continue;
             }
             return Ok(Some(factual_equal_success_by_builtin_reason(
-                left,
-                right,
-                line_file,
+                equal_fact,
                 "equality: nested mod with same modulus absorbs inner mod",
             )));
         }
@@ -69,11 +74,12 @@ impl Runtime {
     /// Example: `(a % 8) % 2 = a % 2` for `a in Z`.
     pub(crate) fn try_verify_mod_nested_divisible_modulus_absorption(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         for (nested_side, simple_side) in [(left, right), (right, left)] {
             let Obj::Mod(outer) = nested_side else {
                 continue;
@@ -85,19 +91,23 @@ impl Runtime {
                 continue;
             };
 
-            let outer_modulus_matches = self.verify_objs_are_equal_in_equality_builtin(
-                outer.right.as_ref(),
-                simple.right.as_ref(),
-                line_file.clone(),
+            let outer_modulus_matches = self.verify_equal_fact_as_builtin_premise(
+                &EqualFact::new_from_refs(
+                    outer.right.as_ref(),
+                    simple.right.as_ref(),
+                    line_file.clone(),
+                ),
                 builtin_state,
             )?;
             if !outer_modulus_matches.is_true() {
                 continue;
             }
-            let dividend_matches = self.verify_objs_are_equal_in_equality_builtin(
-                inner.left.as_ref(),
-                simple.left.as_ref(),
-                line_file.clone(),
+            let dividend_matches = self.verify_equal_fact_as_builtin_premise(
+                &EqualFact::new_from_refs(
+                    inner.left.as_ref(),
+                    simple.left.as_ref(),
+                    line_file.clone(),
+                ),
                 builtin_state,
             )?;
             if !dividend_matches.is_true() {
@@ -146,9 +156,7 @@ impl Runtime {
             }
 
             return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
-                left,
-                right,
-                line_file,
+                equal_fact,
                 "equality: nested mod absorbs an inner modulus divisible by the outer modulus",
                 vec![
                     outer_modulus_matches,
@@ -166,19 +174,18 @@ impl Runtime {
     // a % m = (b % m) % m reduces to a % m = b % m (same m); the inner equality must be known-only.
     pub(crate) fn try_verify_mod_peel_nested_same_modulus(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         let (Obj::Mod(lm), Obj::Mod(rm)) = (left, right) else {
             return Ok(None);
         };
         if !self
-            .verify_objs_are_equal_in_equality_builtin(
-                lm.right.as_ref(),
-                rm.right.as_ref(),
-                line_file.clone(),
+            .verify_equal_fact_as_builtin_premise(
+                &EqualFact::new_from_refs(lm.right.as_ref(), rm.right.as_ref(), line_file.clone()),
                 builtin_state,
             )?
             .is_true()
@@ -189,10 +196,8 @@ impl Runtime {
 
         if let Obj::Mod(r_inner) = rm.left.as_ref() {
             if self
-                .verify_objs_are_equal_in_equality_builtin(
-                    r_inner.right.as_ref(),
-                    modulus,
-                    line_file.clone(),
+                .verify_equal_fact_as_builtin_premise(
+                    &EqualFact::new_from_refs(r_inner.right.as_ref(), modulus, line_file.clone()),
                     builtin_state,
                 )?
                 .is_true()
@@ -200,18 +205,14 @@ impl Runtime {
                 let lhs: Obj = Mod::new((*lm.left).clone(), (*lm.right).clone()).into();
                 let rhs: Obj = Mod::new((*r_inner.left).clone(), (*lm.right).clone()).into();
                 if self
-                    .verify_objs_are_equal_in_equality_builtin(
-                        &lhs,
-                        &rhs,
-                        line_file.clone(),
+                    .verify_equal_fact_as_builtin_premise(
+                        &EqualFact::new_from_refs(&lhs, &rhs, line_file.clone()),
                         builtin_state,
                     )?
                     .is_true()
                 {
                     return Ok(Some(factual_equal_success_by_builtin_reason(
-                        left,
-                        right,
-                        line_file,
+                        equal_fact,
                         "equality: mod — peel outer nested % m to reuse known residue equality",
                     )));
                 }
@@ -220,10 +221,8 @@ impl Runtime {
 
         if let Obj::Mod(l_inner) = lm.left.as_ref() {
             if self
-                .verify_objs_are_equal_in_equality_builtin(
-                    l_inner.right.as_ref(),
-                    modulus,
-                    line_file.clone(),
+                .verify_equal_fact_as_builtin_premise(
+                    &EqualFact::new_from_refs(l_inner.right.as_ref(), modulus, line_file.clone()),
                     builtin_state,
                 )?
                 .is_true()
@@ -231,18 +230,14 @@ impl Runtime {
                 let lhs: Obj = Mod::new((*l_inner.left).clone(), (*lm.right).clone()).into();
                 let rhs: Obj = Mod::new((*rm.left).clone(), (*lm.right).clone()).into();
                 if self
-                    .verify_objs_are_equal_in_equality_builtin(
-                        &lhs,
-                        &rhs,
-                        line_file.clone(),
+                    .verify_equal_fact_as_builtin_premise(
+                        &EqualFact::new_from_refs(&lhs, &rhs, line_file.clone()),
                         builtin_state,
                     )?
                     .is_true()
                 {
                     return Ok(Some(factual_equal_success_by_builtin_reason(
-                        left,
-                        right,
-                        line_file,
+                        equal_fact,
                         "equality: mod — peel outer nested % m to reuse known residue equality",
                     )));
                 }
@@ -258,18 +253,17 @@ impl Runtime {
     /// Example: `(x + y) % m = (x' + y') % m` from `(x % m) = (x' % m)` and `(y % m) = (y' % m)`.
     pub(crate) fn try_verify_mod_congruence_from_inner_binary(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         let (Obj::Mod(lm), Obj::Mod(rm)) = (left, right) else {
             return Ok(None);
         };
-        let modulus_result = self.verify_objs_are_equal_in_equality_builtin(
-            lm.right.as_ref(),
-            rm.right.as_ref(),
-            line_file.clone(),
+        let modulus_result = self.verify_equal_fact_as_builtin_premise(
+            &EqualFact::new_from_refs(lm.right.as_ref(), rm.right.as_ref(), line_file.clone()),
             builtin_state,
         )?;
         if !modulus_result.is_true() {
@@ -303,9 +297,7 @@ impl Runtime {
             || canonical_reduction_matches(rm.left.as_ref(), lm.left.as_ref(), rm.right.as_ref())
         {
             return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
-                left,
-                right,
-                line_file,
+                equal_fact,
                 "equality: integer congruence — reduce matching + / - / * operands modulo m",
                 equality_builtin_match_subgoals(
                     lm.right.as_ref(),
@@ -319,10 +311,8 @@ impl Runtime {
             let l: Obj = Mod::new(a.clone(), (*lm.right).clone()).into();
             let r: Obj = Mod::new(b.clone(), (*rm.right).clone()).into();
             Ok(self
-                .verify_objs_are_equal_in_equality_builtin(
-                    &l,
-                    &r,
-                    line_file.clone(),
+                .verify_equal_fact_as_builtin_premise(
+                    &EqualFact::new_from_refs(&l, &r, line_file.clone()),
                     builtin_state,
                 )?
                 .is_true())
@@ -346,9 +336,7 @@ impl Runtime {
             return Ok(None);
         }
         Ok(Some(factual_equal_success_by_builtin_reason(
-            left,
-            right,
-            line_file,
+            equal_fact,
             "equality: integer congruence — same modulus, residues for matching + / - / *",
         )))
     }
@@ -357,11 +345,12 @@ impl Runtime {
     // Example: for `n Z` and `k N+`, `(-n) % k = (k - n % k) % k`.
     pub(crate) fn try_verify_integer_mod_negation_rule(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         for (negative_side, complementary_side) in [(left, right), (right, left)] {
             let Obj::Mod(negative_mod) = negative_side else {
                 continue;
@@ -379,37 +368,45 @@ impl Runtime {
                 continue;
             };
 
-            let modulus_matches = self.verify_objs_are_equal_in_equality_builtin(
-                negative_mod.right.as_ref(),
-                complementary_mod.right.as_ref(),
-                line_file.clone(),
+            let modulus_matches = self.verify_equal_fact_as_builtin_premise(
+                &EqualFact::new_from_refs(
+                    negative_mod.right.as_ref(),
+                    complementary_mod.right.as_ref(),
+                    line_file.clone(),
+                ),
                 builtin_state,
             )?;
             if !modulus_matches.is_true() {
                 continue;
             }
-            let complement_starts_at_modulus = self.verify_objs_are_equal_in_equality_builtin(
-                complementary_sub.left.as_ref(),
-                negative_mod.right.as_ref(),
-                line_file.clone(),
+            let complement_starts_at_modulus = self.verify_equal_fact_as_builtin_premise(
+                &EqualFact::new_from_refs(
+                    complementary_sub.left.as_ref(),
+                    negative_mod.right.as_ref(),
+                    line_file.clone(),
+                ),
                 builtin_state,
             )?;
             if !complement_starts_at_modulus.is_true() {
                 continue;
             }
-            let inner_modulus_matches = self.verify_objs_are_equal_in_equality_builtin(
-                inner_remainder.right.as_ref(),
-                negative_mod.right.as_ref(),
-                line_file.clone(),
+            let inner_modulus_matches = self.verify_equal_fact_as_builtin_premise(
+                &EqualFact::new_from_refs(
+                    inner_remainder.right.as_ref(),
+                    negative_mod.right.as_ref(),
+                    line_file.clone(),
+                ),
                 builtin_state,
             )?;
             if !inner_modulus_matches.is_true() {
                 continue;
             }
-            let dividend_matches = self.verify_objs_are_equal_in_equality_builtin(
-                dividend,
-                inner_remainder.left.as_ref(),
-                line_file.clone(),
+            let dividend_matches = self.verify_equal_fact_as_builtin_premise(
+                &EqualFact::new_from_refs(
+                    dividend,
+                    inner_remainder.left.as_ref(),
+                    line_file.clone(),
+                ),
                 builtin_state,
             )?;
             if !dividend_matches.is_true() {
@@ -433,9 +430,7 @@ impl Runtime {
             }
 
             return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
-                left,
-                right,
-                line_file,
+                equal_fact,
                 "equality: (-n) % k = (k - n % k) % k for n in Z and k in N+",
                 vec![
                     modulus_matches,
@@ -455,11 +450,12 @@ impl Runtime {
     // Example: for `n Z`, `m N`, and `k N+`, `n^m % k = ((n % k)^m) % k`.
     pub(crate) fn try_verify_integer_mod_natural_power_rule(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         for (unreduced_side, reduced_side) in [(left, right), (right, left)] {
             let Obj::Mod(unreduced_mod) = unreduced_side else {
                 continue;
@@ -477,37 +473,45 @@ impl Runtime {
                 continue;
             };
 
-            let outer_modulus_matches = self.verify_objs_are_equal_in_equality_builtin(
-                unreduced_mod.right.as_ref(),
-                reduced_mod.right.as_ref(),
-                line_file.clone(),
+            let outer_modulus_matches = self.verify_equal_fact_as_builtin_premise(
+                &EqualFact::new_from_refs(
+                    unreduced_mod.right.as_ref(),
+                    reduced_mod.right.as_ref(),
+                    line_file.clone(),
+                ),
                 builtin_state,
             )?;
             if !outer_modulus_matches.is_true() {
                 continue;
             }
-            let inner_modulus_matches = self.verify_objs_are_equal_in_equality_builtin(
-                unreduced_mod.right.as_ref(),
-                inner_remainder.right.as_ref(),
-                line_file.clone(),
+            let inner_modulus_matches = self.verify_equal_fact_as_builtin_premise(
+                &EqualFact::new_from_refs(
+                    unreduced_mod.right.as_ref(),
+                    inner_remainder.right.as_ref(),
+                    line_file.clone(),
+                ),
                 builtin_state,
             )?;
             if !inner_modulus_matches.is_true() {
                 continue;
             }
-            let base_matches = self.verify_objs_are_equal_in_equality_builtin(
-                unreduced_power.base.as_ref(),
-                inner_remainder.left.as_ref(),
-                line_file.clone(),
+            let base_matches = self.verify_equal_fact_as_builtin_premise(
+                &EqualFact::new_from_refs(
+                    unreduced_power.base.as_ref(),
+                    inner_remainder.left.as_ref(),
+                    line_file.clone(),
+                ),
                 builtin_state,
             )?;
             if !base_matches.is_true() {
                 continue;
             }
-            let exponent_matches = self.verify_objs_are_equal_in_equality_builtin(
-                unreduced_power.exponent.as_ref(),
-                reduced_power.exponent.as_ref(),
-                line_file.clone(),
+            let exponent_matches = self.verify_equal_fact_as_builtin_premise(
+                &EqualFact::new_from_refs(
+                    unreduced_power.exponent.as_ref(),
+                    reduced_power.exponent.as_ref(),
+                    line_file.clone(),
+                ),
                 builtin_state,
             )?;
             if !exponent_matches.is_true() {
@@ -553,9 +557,7 @@ impl Runtime {
             }
 
             return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
-                left,
-                right,
-                line_file,
+                equal_fact,
                 "equality: n^m % k = ((n % k)^m) % k for n in Z, m in N, and k in N+",
                 vec![
                     outer_modulus_matches,

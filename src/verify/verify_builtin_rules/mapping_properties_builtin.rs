@@ -12,10 +12,8 @@ impl Runtime {
             let Some((domain, codomain, _)) = function_property_parts(&property) else {
                 continue;
             };
-            let codomain_match = self.verify_objs_are_equal_by_known_equality(
-                &codomain,
-                &target.set,
-                target.line_file.clone(),
+            let codomain_match = self.verify_equal_fact_by_known_equality(
+                &EqualFact::new_from_refs(&codomain, &target.set, target.line_file.clone()),
             );
             if !codomain_match.is_true() {
                 continue;
@@ -66,12 +64,13 @@ impl Runtime {
             let Some((domain, _, candidate_function)) = function_property_parts(&property) else {
                 continue;
             };
-            let domain_match =
-                self.verify_objs_are_equal_by_known_equality(&domain, &source, line_file.clone());
-            let function_match = self.verify_objs_are_equal_by_known_equality(
-                &candidate_function,
-                &function,
+            let domain_match = self.verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
+                &domain,
+                &source,
                 line_file.clone(),
+            ));
+            let function_match = self.verify_equal_fact_by_known_equality(
+                &EqualFact::new_from_refs(&candidate_function, &function, line_file.clone()),
             );
             if !domain_match.is_true() || !function_match.is_true() {
                 continue;
@@ -119,25 +118,17 @@ impl Runtime {
             let Some((domain, codomain, _)) = function_property_parts(&property) else {
                 continue;
             };
-            let direct_domain = self.verify_objs_are_equal_by_known_equality(
-                &domain,
-                left_size.set.as_ref(),
-                line_file.clone(),
+            let direct_domain = self.verify_equal_fact_by_known_equality(
+                &EqualFact::new_from_refs(&domain, left_size.set.as_ref(), line_file.clone()),
             );
-            let direct_codomain = self.verify_objs_are_equal_by_known_equality(
-                &codomain,
-                right_size.set.as_ref(),
-                line_file.clone(),
+            let direct_codomain = self.verify_equal_fact_by_known_equality(
+                &EqualFact::new_from_refs(&codomain, right_size.set.as_ref(), line_file.clone()),
             );
-            let reverse_domain = self.verify_objs_are_equal_by_known_equality(
-                &domain,
-                right_size.set.as_ref(),
-                line_file.clone(),
+            let reverse_domain = self.verify_equal_fact_by_known_equality(
+                &EqualFact::new_from_refs(&domain, right_size.set.as_ref(), line_file.clone()),
             );
-            let reverse_codomain = self.verify_objs_are_equal_by_known_equality(
-                &codomain,
-                left_size.set.as_ref(),
-                line_file.clone(),
+            let reverse_codomain = self.verify_equal_fact_by_known_equality(
+                &EqualFact::new_from_refs(&codomain, left_size.set.as_ref(), line_file.clone()),
             );
             let (domain_match, codomain_match) =
                 if direct_domain.is_true() && direct_codomain.is_true() {
@@ -188,13 +179,14 @@ impl Runtime {
             let Some((domain, codomain, _)) = function_property_parts(&property) else {
                 continue;
             };
-            let codomain_match = self.verify_objs_are_equal_by_known_equality(
-                &codomain,
-                &smaller,
-                line_file.clone(),
+            let codomain_match = self.verify_equal_fact_by_known_equality(
+                &EqualFact::new_from_refs(&codomain, &smaller, line_file.clone()),
             );
-            let domain_match =
-                self.verify_objs_are_equal_by_known_equality(&domain, &larger, line_file.clone());
+            let domain_match = self.verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
+                &domain,
+                &larger,
+                line_file.clone(),
+            ));
             if !codomain_match.is_true() || !domain_match.is_true() {
                 continue;
             }
@@ -245,22 +237,16 @@ impl Runtime {
             // range. Use the ordinary checked equality dispatcher here, just as
             // the enumeration-shape recognizer does, so a builtin theorem's
             // witness can feed a builtin sum/product consumer directly.
-            let domain_match = self.verify_objs_are_equal_in_equality_builtin(
-                &candidate_domain,
-                domain,
-                line_file.clone(),
+            let domain_match = self.verify_equal_fact_as_builtin_premise(
+                &EqualFact::new_from_refs(&candidate_domain, domain, line_file.clone()),
                 builtin_state,
             )?;
-            let codomain_match = self.verify_objs_are_equal_in_equality_builtin(
-                &candidate_codomain,
-                codomain,
-                line_file.clone(),
+            let codomain_match = self.verify_equal_fact_as_builtin_premise(
+                &EqualFact::new_from_refs(&candidate_codomain, codomain, line_file.clone()),
                 builtin_state,
             )?;
-            let function_match = self.verify_objs_are_equal_in_equality_builtin(
-                &candidate_function,
-                function,
-                line_file.clone(),
+            let function_match = self.verify_equal_fact_as_builtin_premise(
+                &EqualFact::new_from_refs(&candidate_function, function, line_file.clone()),
                 builtin_state,
             )?;
             if domain_match.is_true() && codomain_match.is_true() && function_match.is_true() {

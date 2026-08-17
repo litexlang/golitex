@@ -7,11 +7,15 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         match child {
             AtomicFact::EqualFact(equal_fact) => {
-                let leaf_result = self.verify_equal_fact_with_leaf_routes(equal_fact)?;
-                if leaf_result.is_true() || !builtin_state.can_apply_builtin_rule() {
-                    return Ok(leaf_result);
+                let zero_premise_result =
+                    self.verify_equal_fact_with_zero_premise_verification(equal_fact)?;
+                if zero_premise_result.is_true() || !builtin_state.can_apply_builtin_rule() {
+                    return Ok(zero_premise_result);
                 }
-                self.verify_equal_fact_with_one_builtin_rule(equal_fact, builtin_state)
+                self.verify_equal_fact_with_one_premise_producing_builtin_rule(
+                    equal_fact,
+                    builtin_state,
+                )
             }
             _ => {
                 let zero_premise_result =
@@ -72,7 +76,9 @@ mod tests {
             1,
             "a builtin premise must dispatch to its fact-family owner exactly once"
         );
-        assert!(implementation.contains("verify_equal_fact_with_one_builtin_rule"));
+        assert!(
+            implementation.contains("verify_equal_fact_with_one_premise_producing_builtin_rule")
+        );
         assert!(implementation
             .contains("verify_non_equational_atomic_fact_with_one_premise_producing_builtin_rule"));
     }
@@ -143,6 +149,10 @@ mod tests {
         let non_equational = include_str!("verify_builtin_rules/non_equational_dispatch.rs");
         assert!(!non_equational.contains("verify_prime_fact_by_computation"));
 
+        let equality = include_str!("verify_builtin_rules/equality_dispatch.rs");
+        assert!(!equality.contains("objs_match_for_equality_pattern_and_calculation"));
+        assert!(!equality.contains("objs_equal_by_rational_expression_evaluation"));
+
         let numeric_order = include_str!("verify_builtin_rules/number_compare.rs");
         assert_eq!(
             numeric_order
@@ -191,6 +201,10 @@ mod tests {
                 "builtin_rule",
             ]
             .concat(),
+            ["verify_equal_fact_with_known_fact_then_", "computation"].concat(),
+            ["verify_equal_fact_with_", "leaf_routes"].concat(),
+            ["verify_equal_fact_by_builtin_", "computation"].concat(),
+            ["verify_equal_fact_with_one_", "builtin_rule"].concat(),
         ];
         visit_rust_files(&src, &mut |path, source| {
             for name in &obsolete {
@@ -214,13 +228,46 @@ mod tests {
             .split("pub(crate) fn verify_equal_fact_with_known_fact(")
             .next()
             .expect("known-equality leaf must follow the equality direct route");
+        let equality_zero_premise = equality_direct
+            .find("verify_equal_fact_with_zero_premise_verification")
+            .expect("equality direct route must begin with zero-premise verification");
         let equality_builtin = equality_direct
-            .find("verify_equal_fact_with_one_builtin_rule")
-            .expect("equality direct route must try a named builtin rule");
-        let equality_leaf = equality_direct
-            .find("verify_equal_fact_with_leaf_routes")
-            .expect("equality direct route must retain its structural leaf fallback");
-        assert!(equality_builtin < equality_leaf);
+            .find("verify_equal_fact_with_one_premise_producing_builtin_rule")
+            .expect("equality direct route must finish with one premise-producing rule");
+        assert!(equality_zero_premise < equality_builtin);
+
+        let equality_zero_premise_impl = equality
+            .split("pub(crate) fn verify_equal_fact_with_zero_premise_verification(")
+            .nth(1)
+            .expect("equality owner must define zero-premise verification")
+            .split("pub(crate) fn verify_equal_fact_by_direct_evaluation(")
+            .next()
+            .expect("direct evaluation must follow zero-premise equality verification");
+        let equality_known = equality_zero_premise_impl
+            .find("verify_equal_fact_with_known_fact(equal_fact)")
+            .expect("zero-premise equality must try known equality first");
+        let equality_evaluation = equality_zero_premise_impl
+            .find("verify_equal_fact_by_direct_evaluation(equal_fact)")
+            .expect("zero-premise equality must try direct evaluation second");
+        let equality_known_evaluation = equality_zero_premise_impl
+            .find("verify_equal_fact_by_known_equality_then_direct_evaluation(equal_fact)")
+            .expect("zero-premise equality must retain known-equality-assisted evaluation");
+        let equality_structural = equality_zero_premise_impl
+            .find("objs_are_equal_by_terminating_reduction_and_congruence")
+            .expect("zero-premise equality must finish with terminating congruence");
+        assert!(equality_known < equality_evaluation);
+        assert!(equality_evaluation < equality_known_evaluation);
+        assert!(equality_known_evaluation < equality_structural);
+
+        let equality_direct_evaluation_impl = equality
+            .split("pub(crate) fn verify_equal_fact_by_direct_evaluation(")
+            .nth(1)
+            .expect("equality owner must define direct evaluation")
+            .split("pub(crate) fn verify_equal_fact_with_one_premise_producing_builtin_rule(")
+            .next()
+            .expect("premise-producing equality rules must follow direct evaluation");
+        assert!(!equality_direct_evaluation_impl.contains("UseBuiltinRuleVerifyState"));
+        assert!(!equality_direct_evaluation_impl.contains("verify_builtin_rule_premise"));
 
         let non_equational = include_str!("verify_non_equational_atomic_fact.rs");
         let non_equational_direct = non_equational
@@ -302,37 +349,38 @@ mod tests {
 
     #[test]
     fn structural_equality_uses_one_shape_matcher_only_in_structural_routes() {
-        let equality_owner = include_str!("verify_equality.rs");
-        let equality_leaf_impl = equality_owner
-            .split("pub(crate) fn verify_equal_fact_with_known_fact_then_computation(")
-            .nth(1)
-            .expect("equality owner must define its known/computation leaf")
-            .split("pub(crate) fn verify_equal_fact_with_leaf_routes(")
-            .next()
-            .expect("equality structural leaf must follow known/computation");
-        let known_fact_index = equality_leaf_impl
-            .find("verify_equal_fact_with_known_fact(equal_fact)")
-            .expect("equality leaf must first check known equality");
-        let computation_index = equality_leaf_impl
-            .find("verify_equal_fact_by_builtin_computation(equal_fact)")
-            .expect("equality leaf must finish with builtin computation");
-        assert!(known_fact_index < computation_index);
-        assert!(
-            !equality_leaf_impl.contains("try_verify_equality_by_corresponding_known_equalities")
-        );
-
         let equality_structural = include_str!("verify_builtin_rules/equality_structural.rs");
+        let known_without_evaluation_impl = equality_structural
+            .split("pub(crate) fn verify_equal_fact_by_known_equality_without_direct_evaluation(")
+            .nth(1)
+            .expect("equality must expose a known-only leaf without direct evaluation")
+            .split("fn verify_equal_fact_directly_known_only(")
+            .next()
+            .expect("the direct known-only implementation must follow its memoized entry");
+        assert!(!known_without_evaluation_impl
+            .contains("two_objs_can_be_calculated_and_equal_by_calculation"));
         let known_only_impl = equality_structural
-            .split("pub fn verify_objs_are_equal_by_known_equality(")
+            .split("pub fn verify_equal_fact_by_known_equality(")
             .nth(1)
             .expect("known-only equality implementation must exist")
-            .split("fn verify_objs_are_equal_directly_known_only(")
+            .split("fn verify_equal_fact_directly_known_only(")
             .next()
             .expect("direct known-only implementation must follow the public entry");
-        assert!(known_only_impl.contains("verify_objs_are_equal_directly_known_only("));
+        assert!(known_only_impl.contains("verify_equal_fact_directly_known_only("));
         assert!(!known_only_impl.contains("same_shape_and_corresponding_args_match("));
         assert!(
             !equality_structural.contains("try_verify_equality_by_corresponding_known_equalities")
+        );
+        let direct_known_only_impl = equality_structural
+            .split("fn verify_equal_fact_directly_known_only(")
+            .nth(1)
+            .expect("direct known-only equality implementation must exist")
+            .split("pub(crate) fn objs_are_congruent_by_known_equalities(")
+            .next()
+            .expect("known congruence must follow direct known-only equality");
+        assert!(!direct_known_only_impl.contains("resolve_obj"));
+        assert!(
+            !direct_known_only_impl.contains("two_objs_can_be_calculated_and_equal_by_calculation")
         );
         assert_eq!(
             equality_structural
@@ -348,12 +396,26 @@ mod tests {
             .split("pub(crate) fn same_shape_and_corresponding_args_match")
             .next()
             .expect("central matcher must follow terminating comparison");
+        let known_index = terminating_impl
+            .find("verify_equal_fact_with_known_fact(&candidate_fact)")
+            .expect("terminating comparison must try known equality first");
+        let evaluation_index = terminating_impl
+            .find("verify_equal_fact_by_direct_evaluation(&candidate_fact)")
+            .expect("terminating comparison must try direct evaluation second");
+        let shape_index = terminating_impl
+            .find("same_shape_and_corresponding_args_match(")
+            .expect("terminating comparison must finish with constructor descent");
+        assert!(known_index < evaluation_index);
+        assert!(evaluation_index < shape_index);
         assert!(terminating_impl.contains("same_shape_and_corresponding_args_match("));
+        assert!(!terminating_impl.contains("verify_equal_fact_with_zero_premise_verification"));
 
         let equality_dispatch = include_str!("verify_builtin_rules/equality_dispatch.rs");
         assert!(
             !equality_dispatch.contains("try_verify_equality_by_corresponding_known_equalities")
         );
+        assert!(!equality_dispatch.contains("verify_equal_fact_by_direct_evaluation"));
+        assert!(!equality_dispatch.contains("objs_match_for_equality_pattern_and_calculation"));
 
         let equality = include_str!("verify_equality.rs");
         let full_equality_impl = equality
@@ -370,20 +432,65 @@ mod tests {
             .expect("structural equality must be restricted to round zero");
         let structural_index = full_equality_impl
             .find(
-                "verify_objs_are_equal_when_they_have_same_builtin_shape_and_equal_args_recursively",
+                "verify_equal_fact_when_both_sides_have_same_builtin_shape_and_equal_args_recursively",
             )
             .expect("full equality must contain the structural equality route");
         assert!(round_zero_index < structural_index);
         let recursive_structural_impl = equality
             .split(
-                "pub(crate) fn verify_objs_are_equal_when_they_have_same_builtin_shape_and_equal_args_recursively(",
+                "pub(crate) fn verify_equal_fact_when_both_sides_have_same_builtin_shape_and_equal_args_recursively(",
             )
             .nth(1)
             .expect("recursive structural equality implementation must exist")
-            .split("fn verify_two_objs_equal_by_builtin_rules_and_known_equalities(")
+            .split("fn verify_equal_fact_by_builtin_rules_and_known_equalities(")
             .next()
             .expect("recursive child verifier must follow structural equality");
         assert!(recursive_structural_impl.contains("same_shape_and_corresponding_args_match("));
+    }
+
+    #[test]
+    fn equality_proof_apis_receive_the_owned_equal_fact() {
+        visit_rust_files(Path::new("src/verify"), &mut |path, source| {
+            for function_tail in source.split("fn ").skip(1) {
+                let Some((header, _)) = function_tail.split_once('{') else {
+                    continue;
+                };
+                let Some((name, _)) = header.split_once('(') else {
+                    continue;
+                };
+                let name = name.trim();
+                if !(name.contains("equal") || name.contains("equality"))
+                    || name.contains("not_equal")
+                    || name.contains("non_equational")
+                {
+                    continue;
+                }
+                let returns_equality_proof_result = (header.contains("-> StmtResult")
+                    || header.contains("Option<StmtResult>"))
+                    && !header.contains("Vec<StmtResult>");
+                if !returns_equality_proof_result {
+                    continue;
+                }
+                assert!(
+                    header.contains("&EqualFact"),
+                    "equality proof API `{name}` in {} must receive the complete EqualFact",
+                    path.display(),
+                );
+            }
+        });
+
+        let equality = include_str!("verify_equality.rs");
+        assert!(equality.contains(
+            "fn verify_equal_fact_when_both_sides_have_same_builtin_shape_and_equal_args_recursively(\n        &mut self,\n        equal_fact: &EqualFact,"
+        ));
+        let structural = include_str!("verify_builtin_rules/equality_structural.rs");
+        assert!(structural.contains(
+            "pub fn verify_equal_fact_as_builtin_premise(\n        &mut self,\n        equal_fact: &EqualFact,"
+        ));
+        let dispatcher = include_str!("verify_builtin_rules/equality_dispatch.rs");
+        assert!(dispatcher.contains(
+            "pub fn verify_equal_fact_by_builtin_rules(\n        &mut self,\n        equal_fact: &EqualFact,"
+        ));
     }
 
     fn visit_rust_files(dir: &Path, f: &mut impl FnMut(&Path, &str)) {

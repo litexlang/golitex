@@ -721,8 +721,10 @@ claim:
         a % m = k
         =>:
             exist r Z st {a = m * r + k}
-    witness exist q Z st {a = m * q + a % m} from basics::integer_quotient(a, m):
-        a = m * basics::integer_quotient(a, m) + a % m
+    quot(a, m) $in Z
+    by thm citation::quot_euclidean(a, m)
+    witness exist q Z st {a = m * q + a % m} from quot(a, m):
+        a = m * quot(a, m) + a % m
     obtain r from exist q Z st {a = m * q + a % m}
     witness exist q Z st {a = m * q + k} from r:
         a = m * r + a % m = m * r + k

@@ -5,11 +5,12 @@ impl Runtime {
     // Example: from `a = 0` and `b = 0`, prove `a^2 + b^2 = 0`.
     pub(crate) fn try_verify_square_sum_zero_from_zero_components(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         let square_sum = if Self::obj_is_builtin_literal_zero(left) {
             right
         } else if Self::obj_is_builtin_literal_zero(right) {
@@ -30,10 +31,16 @@ impl Runtime {
         };
 
         let zero = Self::literal_zero_obj_for_abs_builtin();
-        let first_zero =
-            self.verify_objs_are_equal_by_known_equality(&first_base, &zero, line_file.clone());
-        let second_zero =
-            self.verify_objs_are_equal_by_known_equality(&second_base, &zero, line_file.clone());
+        let first_zero = self.verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
+            &first_base,
+            &zero,
+            line_file.clone(),
+        ));
+        let second_zero = self.verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
+            &second_base,
+            &zero,
+            line_file.clone(),
+        ));
         if !first_zero.is_true() || !second_zero.is_true() {
             return Ok(None);
         }
@@ -54,11 +61,12 @@ impl Runtime {
     // Example: from `a^2 + b^2 = 0`, prove `a = 0` and separately `b = 0`.
     pub(crate) fn try_verify_square_sum_component_zero_from_known_sum_zero(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         let target = if Self::obj_is_builtin_literal_zero(left) {
             right
         } else if Self::obj_is_builtin_literal_zero(right) {
@@ -91,11 +99,11 @@ impl Runtime {
                 else {
                     continue;
                 };
-                let sum_zero = self.verify_objs_are_equal_by_known_equality(
+                let sum_zero = self.verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
                     &square_sum,
                     &zero,
                     line_file.clone(),
-                );
+                ));
                 if !sum_zero.is_true() {
                     continue;
                 }

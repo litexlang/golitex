@@ -1,0 +1,98 @@
+# Abstract algebra — groups and homomorphisms, setting-first.
+#
+# The named propositions are first-class interfaces.  The settings are the
+# theorem-writing surface.  Their laws are repeated directly because the
+# current setting elaborator cannot replay a proposition call in a theorem
+# header reliably.
+
+prop is_group(A nonempty_set, mul fn(x, y A) A, one A, inv fn(x A) A):
+    forall u, v, w A:
+        mul(mul(u, v), w) = mul(u, mul(v, w))
+    forall u A:
+        mul(one, u) = u
+    forall u A:
+        mul(inv(u), u) = one
+
+setting GroupSetting:
+    A nonempty_set
+    mul fn(x, y A) A
+    one A
+    inv fn(x A) A
+    forall u, v, w A:
+        mul(mul(u, v), w) = mul(u, mul(v, w))
+    forall u A:
+        mul(one, u) = u
+        mul(inv(u), u) = one
+
+thm group_left_cancel:
+    ? forall [GroupSetting], a, b, c A:
+        mul(a, b) = mul(a, c)
+        =>:
+            b = c
+    mul(inv(a), a) = one
+    b = mul(one, b) = mul(mul(inv(a), a), b) = mul(inv(a), mul(a, b)) = mul(inv(a), mul(a, c)) = mul(mul(inv(a), a), c) = mul(one, c) = c
+
+thm group_mul_one:
+    ? forall [GroupSetting], a A:
+        mul(a, one) = a
+    mul(inv(a), a) = one
+    mul(inv(a), mul(a, one)) = mul(mul(inv(a), a), one) = mul(one, one) = one = mul(inv(a), a)
+    by thm group_left_cancel(A, mul, one, inv, inv(a), mul(a, one), a)
+
+thm group_mul_inv:
+    ? forall [GroupSetting], a A:
+        mul(a, inv(a)) = one
+    mul(inv(a), a) = one
+    by thm group_mul_one(A, mul, one, inv, inv(a))
+    mul(inv(a), mul(a, inv(a))) = mul(mul(inv(a), a), inv(a)) = mul(one, inv(a)) = inv(a) = mul(inv(a), one)
+    by thm group_left_cancel(A, mul, one, inv, inv(a), mul(a, inv(a)), one)
+
+prop is_group_homomorphism(A, B nonempty_set, mul_A fn(x, y A) A, one_A A, inv_A fn(x A) A, mul_B fn(x, y B) B, one_B B, inv_B fn(x B) B, f fn(x A) B):
+    $is_group(A, mul_A, one_A, inv_A)
+    $is_group(B, mul_B, one_B, inv_B)
+    forall x, y A:
+        f(mul_A(x, y)) = mul_B(f(x), f(y))
+
+setting GroupHomomorphismSetting:
+    A, B nonempty_set
+    mul_A fn(x, y A) A
+    one_A A
+    inv_A fn(x A) A
+    mul_B fn(x, y B) B
+    one_B B
+    inv_B fn(x B) B
+    f fn(x A) B
+    forall u, v, w A:
+        mul_A(mul_A(u, v), w) = mul_A(u, mul_A(v, w))
+    forall u A:
+        mul_A(one_A, u) = u
+        mul_A(inv_A(u), u) = one_A
+    forall u, v, w B:
+        mul_B(mul_B(u, v), w) = mul_B(u, mul_B(v, w))
+    forall u B:
+        mul_B(one_B, u) = u
+        mul_B(inv_B(u), u) = one_B
+    forall x, y A:
+        f(mul_A(x, y)) = mul_B(f(x), f(y))
+
+thm homomorphism_maps_identity:
+    ? forall [GroupHomomorphismSetting]:
+        f(one_A) = one_B
+    mul_A(one_A, one_A) = one_A
+    f(mul_A(one_A, one_A)) = mul_B(f(one_A), f(one_A))
+    by thm group_mul_one(B, mul_B, one_B, inv_B, f(one_A))
+    mul_B(f(one_A), f(one_A)) = f(mul_A(one_A, one_A)) = f(one_A) = mul_B(f(one_A), one_B)
+    by thm group_left_cancel(B, mul_B, one_B, inv_B, f(one_A), f(one_A), one_B)
+
+# Tracer theorem: the setting keeps the ambient groups readable while the
+# proof works directly with the map and the two multiplications.
+thm homomorphism_maps_inverse:
+    ? forall [GroupHomomorphismSetting], a A:
+        f(inv_A(a)) = inv_B(f(a))
+    by thm homomorphism_maps_identity(A, B, mul_A, one_A, inv_A, mul_B, one_B, inv_B, f)
+    mul_A(inv_A(a), a) = one_A
+    f(mul_A(inv_A(a), a)) = mul_B(f(inv_A(a)), f(a))
+    mul_B(f(inv_A(a)), f(a)) = f(mul_A(inv_A(a), a)) = f(one_A) = one_B
+    by thm group_mul_one(B, mul_B, one_B, inv_B, f(inv_A(a)))
+    by thm group_mul_inv(B, mul_B, one_B, inv_B, f(a))
+    f(inv_A(a)) = mul_B(f(inv_A(a)), one_B) = mul_B(f(inv_A(a)), mul_B(f(a), inv_B(f(a)))) = mul_B(mul_B(f(inv_A(a)), f(a)), inv_B(f(a))) = mul_B(one_B, inv_B(f(a))) = inv_B(f(a))

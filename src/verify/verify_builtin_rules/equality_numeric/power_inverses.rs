@@ -4,11 +4,12 @@ use crate::verify::number_is_in_n_pos;
 impl Runtime {
     pub(crate) fn try_verify_base_zero_from_known_positive_power_zero(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         let zero_obj = Self::literal_zero_obj_for_abs_builtin();
         let target_base = if Self::obj_is_builtin_literal_zero(left) {
             right
@@ -51,9 +52,7 @@ impl Runtime {
                     continue;
                 }
                 return Ok(Some(factual_equal_success_by_builtin_reason(
-                    left,
-                    right,
-                    line_file,
+                    equal_fact,
                     "equality: a = 0 from a^n = 0 and n in N+",
                 )));
             }
@@ -104,11 +103,12 @@ impl Runtime {
     // Example: from `0 < x`, `0 < y`, `n in Z`, `n != 0`, and `x^n = y^n`, prove `x = y`.
     pub(crate) fn try_verify_positive_base_equal_from_equal_nonzero_integer_power(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         let zero = Self::literal_zero_obj_for_abs_builtin();
         let exponents = self.collect_known_equal_power_exponents_for_bases(left, right);
         for exponent in exponents {
@@ -144,19 +144,15 @@ impl Runtime {
 
             let left_power: Obj = Pow::new(left.clone(), exponent.clone()).into();
             let right_power: Obj = Pow::new(right.clone(), exponent).into();
-            let power_equal_result = self.verify_objs_are_equal_by_known_equality(
-                &left_power,
-                &right_power,
-                line_file.clone(),
+            let power_equal_result = self.verify_equal_fact_by_known_equality(
+                &EqualFact::new_from_refs(&left_power, &right_power, line_file.clone()),
             );
             if !power_equal_result.is_true() {
                 continue;
             }
 
             return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
-                left,
-                right,
-                line_file,
+                equal_fact,
                 "equality: positive bases equal from equal nonzero integer powers",
                 vec![
                     left_positive_result,
@@ -172,11 +168,12 @@ impl Runtime {
 
     pub(crate) fn try_verify_abs_power_rule(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         let (abs, pow) = match (left, right) {
             (Obj::Abs(abs), Obj::Pow(pow)) => (abs, pow),
             (Obj::Pow(pow), Obj::Abs(abs)) => (abs, pow),
@@ -189,10 +186,12 @@ impl Runtime {
             return Ok(None);
         };
         if !self
-            .verify_objs_are_equal_in_equality_builtin(
-                inner_pow.base.as_ref(),
-                abs_base.arg.as_ref(),
-                line_file.clone(),
+            .verify_equal_fact_as_builtin_premise(
+                &EqualFact::new_from_refs(
+                    inner_pow.base.as_ref(),
+                    abs_base.arg.as_ref(),
+                    line_file.clone(),
+                ),
                 builtin_state,
             )?
             .is_true()
@@ -200,10 +199,12 @@ impl Runtime {
             return Ok(None);
         }
         if !self
-            .verify_objs_are_equal_in_equality_builtin(
-                inner_pow.exponent.as_ref(),
-                pow.exponent.as_ref(),
-                line_file.clone(),
+            .verify_equal_fact_as_builtin_premise(
+                &EqualFact::new_from_refs(
+                    inner_pow.exponent.as_ref(),
+                    pow.exponent.as_ref(),
+                    line_file.clone(),
+                ),
                 builtin_state,
             )?
             .is_true()
@@ -225,9 +226,7 @@ impl Runtime {
             builtin_state,
         )? {
             return Ok(Some(factual_equal_success_by_builtin_reason(
-                left,
-                right,
-                line_file,
+                equal_fact,
                 "equality: abs(a^n) = abs(a)^n for n in N+",
             )));
         }
@@ -242,9 +241,7 @@ impl Runtime {
         )?;
         if exponent_in_n {
             return Ok(Some(factual_equal_success_by_builtin_reason(
-                left,
-                right,
-                line_file,
+                equal_fact,
                 "equality: abs(a^n) = abs(a)^n for n in N over real bases",
             )));
         }
@@ -266,9 +263,7 @@ impl Runtime {
             return Ok(None);
         }
         Ok(Some(factual_equal_success_by_builtin_reason(
-            left,
-            right,
-            line_file,
+            equal_fact,
             "equality: abs(a^n) = abs(a)^n for n in Z and a != 0",
         )))
     }
@@ -308,20 +303,24 @@ impl Runtime {
         };
         let positive_exponent_for_display = positive_exponent.clone();
 
-        let base_result = self.verify_objs_are_equal_in_equality_builtin(
-            negative_power.base.as_ref(),
-            denominator_power.base.as_ref(),
-            line_file.clone(),
+        let base_result = self.verify_equal_fact_as_builtin_premise(
+            &EqualFact::new_from_refs(
+                negative_power.base.as_ref(),
+                denominator_power.base.as_ref(),
+                line_file.clone(),
+            ),
             builtin_state,
         )?;
         if !base_result.is_true() {
             return Ok(None);
         }
 
-        let exponent_result = self.verify_objs_are_equal_in_equality_builtin(
-            &positive_exponent,
-            denominator_power.exponent.as_ref(),
-            line_file.clone(),
+        let exponent_result = self.verify_equal_fact_as_builtin_premise(
+            &EqualFact::new_from_refs(
+                &positive_exponent,
+                denominator_power.exponent.as_ref(),
+                line_file.clone(),
+            ),
             builtin_state,
         )?;
         if !exponent_result.is_true() {
@@ -377,11 +376,12 @@ impl Runtime {
     // Example: for `x != 0` and `n in N+`, prove `x^(-n) = 1 / x^n`.
     pub(crate) fn try_verify_power_inverse_rule(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         let subgoals = match (left, right) {
             (Obj::Pow(negative_power), Obj::Div(quotient)) => self
                 .power_inverse_rule_holds_one_direction(
@@ -403,9 +403,7 @@ impl Runtime {
             return Ok(None);
         };
         Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
-            left,
-            right,
-            line_file,
+            equal_fact,
             "equality: a^(-n) = 1 / a^n for n in N+ and a != 0",
             subgoals,
         )))
@@ -428,11 +426,12 @@ impl Runtime {
     // Example: `8^(1/3) = 2`, since `3 $in N+`, `0 <= 2`, and `8 = 2^3`.
     pub(crate) fn try_verify_pow_reciprocal_exponent_equals_root_by_power(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         let (pow, root) = match (left, right) {
             (Obj::Pow(pow), root) => (pow, root),
             (root, Obj::Pow(pow)) => (pow, root),
@@ -475,10 +474,8 @@ impl Runtime {
         }
 
         let root_power: Obj = Pow::new(root.clone(), degree).into();
-        let inverse_result = self.verify_objs_are_equal_in_equality_builtin(
-            pow.base.as_ref(),
-            &root_power,
-            line_file.clone(),
+        let inverse_result = self.verify_equal_fact_as_builtin_premise(
+            &EqualFact::new_from_refs(pow.base.as_ref(), &root_power, line_file.clone()),
             builtin_state,
         )?;
         if !inverse_result.is_true() {
@@ -486,9 +483,7 @@ impl Runtime {
         }
 
         Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
-            left,
-            right,
-            line_file,
+            equal_fact,
             "equality: x^(1/n) = z from x = z^n, n in N+, and z >= 0",
             vec![degree_result, root_nonnegative_result, inverse_result],
         )))

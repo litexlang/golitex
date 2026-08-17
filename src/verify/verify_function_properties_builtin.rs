@@ -116,10 +116,8 @@ impl Runtime {
         };
 
         if function_body.dom_facts.is_empty() {
-            let domain_result = self.verify_objs_are_equal_by_known_equality(
-                param_group.set_obj(),
-                &domain,
-                fact.line_file(),
+            let domain_result = self.verify_equal_fact_by_known_equality(
+                &EqualFact::new_from_refs(param_group.set_obj(), &domain, fact.line_file()),
             );
             if domain_result.is_unknown() {
                 return Ok(Some(domain_result));
@@ -150,32 +148,32 @@ impl Runtime {
             }
 
             let one: Obj = Number::new("1".to_string()).into();
-            let start_result = self.verify_objs_are_equal_by_known_equality(
+            let start_result = self.verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
                 closed_range.start.as_ref(),
                 &one,
                 fact.line_file(),
-            );
+            ));
             if start_result.is_unknown() {
                 return Ok(Some(start_result));
             }
             infer_result.new_infer_result_inside(start_result.infer_result());
 
-            let end_result = self.verify_objs_are_equal_by_known_equality(
+            let end_result = self.verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
                 closed_range.end.as_ref(),
                 &bound.right,
                 fact.line_file(),
-            );
+            ));
             if end_result.is_unknown() {
                 return Ok(Some(end_result));
             }
             infer_result.new_infer_result_inside(end_result.infer_result());
         }
 
-        let codomain_result = self.verify_objs_are_equal_by_known_equality(
+        let codomain_result = self.verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
             function_body.ret_set.as_ref(),
             &codomain,
             fact.line_file(),
-        );
+        ));
         if codomain_result.is_unknown() {
             return Ok(Some(codomain_result));
         }

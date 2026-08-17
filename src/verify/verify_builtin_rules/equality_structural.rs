@@ -1,6 +1,6 @@
 use crate::prelude::*;
 use crate::verify::verify_equality_by_builtin_rules::{
-    factual_equal_success_by_builtin_reason, verify_equality_by_they_are_the_same,
+    factual_equal_success_by_builtin_reason, objs_match_for_equality_pattern,
 };
 
 impl Runtime {
@@ -46,20 +46,45 @@ impl Runtime {
             .collect()
     }
 
-    pub fn verify_objs_are_equal_by_known_equality(
+    pub fn verify_equal_fact_by_known_equality(&self, equal_fact: &EqualFact) -> StmtResult {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let known_result =
+            self.verify_equal_fact_by_known_equality_without_direct_evaluation(equal_fact);
+        if known_result.is_true() {
+            return known_result;
+        }
+
+        let left_resolved = self.resolve_obj(left);
+        let right_resolved = self.resolve_obj(right);
+        if (left_resolved.to_string() != left.to_string()
+            || right_resolved.to_string() != right.to_string())
+            && left_resolved.two_objs_can_be_calculated_and_equal_by_calculation(&right_resolved)
+        {
+            return factual_equal_success_by_builtin_reason(equal_fact, "calculation");
+        }
+        if objs_match_for_equality_pattern(&left_resolved, &right_resolved)
+            || self.objs_have_same_known_equality_rc_in_some_env(&left_resolved, &right_resolved)
+        {
+            return factual_equal_success_by_builtin_reason(
+                equal_fact,
+                "known-only equality: resolved objects match",
+            );
+        }
+
+        StmtResult::Unknown(StmtUnknown::new())
+    }
+
+    pub(crate) fn verify_equal_fact_by_known_equality_without_direct_evaluation(
         &self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
     ) -> StmtResult {
-        let goal: AtomicFact =
-            EqualFact::new(left.clone(), right.clone(), line_file.clone()).into();
+        let goal: AtomicFact = equal_fact.clone().into();
         if let Some(memoized_result) = self.verify_atomic_fact_from_statement_memo(&goal) {
             return memoized_result;
         }
 
-        let direct_result =
-            self.verify_objs_are_equal_directly_known_only(left, right, line_file.clone());
+        let direct_result = self.verify_equal_fact_directly_known_only(equal_fact);
         if direct_result.is_true() {
             return direct_result;
         }
@@ -67,17 +92,12 @@ impl Runtime {
         StmtResult::Unknown(StmtUnknown::new())
     }
 
-    fn verify_objs_are_equal_directly_known_only(
-        &self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
-    ) -> StmtResult {
-        if verify_equality_by_they_are_the_same(left, right) {
+    fn verify_equal_fact_directly_known_only(&self, equal_fact: &EqualFact) -> StmtResult {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        if objs_match_for_equality_pattern(left, right) {
             return factual_equal_success_by_builtin_reason(
-                left,
-                right,
-                line_file,
+                equal_fact,
                 "known-only equality: they are the same",
             );
         }
@@ -86,8 +106,7 @@ impl Runtime {
             if self.captures_well_definedness() {
                 if let Some(path) = self.compiler_known_equality_path(left, right) {
                     if !path.is_empty() {
-                        let target: Fact =
-                            EqualFact::new(left.clone(), right.clone(), line_file.clone()).into();
+                        let target: Fact = equal_fact.clone().into();
                         return FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             target.clone(),
                             "known-only equality: same known equality class".to_string(),
@@ -101,37 +120,9 @@ impl Runtime {
                 }
             }
             return factual_equal_success_by_builtin_reason(
-                left,
-                right,
-                line_file,
+                equal_fact,
                 "known-only equality: same known equality class",
             );
-        }
-
-        let left_resolved = self.resolve_obj(left);
-        let right_resolved = self.resolve_obj(right);
-        if left_resolved.to_string() != left.to_string()
-            || right_resolved.to_string() != right.to_string()
-        {
-            if left_resolved.two_objs_can_be_calculated_and_equal_by_calculation(&right_resolved) {
-                return factual_equal_success_by_builtin_reason(
-                    left,
-                    right,
-                    line_file,
-                    "calculation",
-                );
-            }
-            if verify_equality_by_they_are_the_same(&left_resolved, &right_resolved)
-                || self
-                    .objs_have_same_known_equality_rc_in_some_env(&left_resolved, &right_resolved)
-            {
-                return factual_equal_success_by_builtin_reason(
-                    left,
-                    right,
-                    line_file,
-                    "known-only equality: resolved objects match",
-                );
-            }
         }
 
         StmtResult::Unknown(StmtUnknown::new())
@@ -144,7 +135,11 @@ impl Runtime {
         line_file: LineFile,
     ) -> bool {
         if self
-            .verify_objs_are_equal_directly_known_only(left, right, line_file.clone())
+            .verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
+                left,
+                right,
+                line_file.clone(),
+            ))
             .is_true()
         {
             return true;
@@ -171,16 +166,23 @@ impl Runtime {
         line_file: LineFile,
     ) -> Result<bool, RuntimeError> {
         let candidate_fact = EqualFact::new(left.clone(), right.clone(), line_file.clone());
-        let leaf_result =
-            self.verify_equal_fact_with_known_fact_then_computation(&candidate_fact)?;
-        if leaf_result.is_true() {
+        let known_result = self.verify_equal_fact_with_known_fact(&candidate_fact);
+        if known_result.is_true() {
+            return Ok(true);
+        }
+        let direct_evaluation_result = self.verify_equal_fact_by_direct_evaluation(&candidate_fact);
+        if direct_evaluation_result.is_true() {
+            self.remember_successful_atomic_fact_for_statement(
+                &candidate_fact.clone().into(),
+                direct_evaluation_result,
+            );
             return Ok(true);
         }
 
         // Definitional redexes expose their reduced objects to the same
         // terminating structural comparison. This introduces no new proof route: after
         // one reduction, every leaf is still limited to stored non-forall
-        // equality or obligation-free builtin computation.
+        // equality or obligation-free direct evaluation.
         let reduced_left = self.reduce_structural_equality_obj_once(left)?;
         let reduced_right = self.reduce_structural_equality_obj_once(right)?;
         if reduced_left.is_some() || reduced_right.is_some() {
@@ -539,53 +541,13 @@ impl Runtime {
         }
     }
 
-    pub fn verify_objs_are_equal_in_equality_builtin(
+    pub fn verify_equal_fact_as_builtin_premise(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
-        let fact: AtomicFact = EqualFact::new(left.clone(), right.clone(), line_file).into();
+        let fact: AtomicFact = equal_fact.clone().into();
         self.verify_builtin_rule_premise(&fact, builtin_state)
-    }
-
-    pub fn verify_equality_by_they_are_the_same_and_calculation(
-        &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
-        _builtin_state: &UseBuiltinRuleVerifyState,
-    ) -> Result<(StmtResult, Obj, Obj), RuntimeError> {
-        if verify_equality_by_they_are_the_same(left, right) {
-            return Ok((
-                factual_equal_success_by_builtin_reason(
-                    left,
-                    right,
-                    line_file,
-                    "they are the same",
-                ),
-                left.clone(),
-                right.clone(),
-            ));
-        }
-
-        let left_resolved = self.resolve_obj(left);
-        let right_resolved = self.resolve_obj(right);
-
-        if left_resolved.two_objs_can_be_calculated_and_equal_by_calculation(&right_resolved) {
-            return Ok((
-                factual_equal_success_by_builtin_reason(left, right, line_file, "calculation"),
-                left_resolved,
-                right_resolved,
-            ));
-        }
-
-        Ok((
-            StmtResult::Unknown(StmtUnknown::new()),
-            left_resolved,
-            right_resolved,
-        ))
     }
 }
 
@@ -608,9 +570,9 @@ mod tests {
     fn matcher_accepts_with_one_known_leaf(left: &Obj, right: &Obj, x: &Obj, y: &Obj) -> bool {
         Runtime::same_shape_and_corresponding_args_match(left, right, &mut |left_arg, right_arg| {
             Ok::<bool, ()>(
-                verify_equality_by_they_are_the_same(left_arg, right_arg)
-                    || (verify_equality_by_they_are_the_same(left_arg, x)
-                        && verify_equality_by_they_are_the_same(right_arg, y)),
+                objs_match_for_equality_pattern(left_arg, right_arg)
+                    || (objs_match_for_equality_pattern(left_arg, x)
+                        && objs_match_for_equality_pattern(right_arg, y)),
             )
         })
         .expect("structural matching is infallible in this test")

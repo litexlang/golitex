@@ -21,19 +21,15 @@ impl Runtime {
                 return Ok(false);
             }
             return Ok(self
-                .verify_objs_are_equal_in_equality_builtin(
-                    base,
-                    factor,
-                    line_file.clone(),
+                .verify_equal_fact_as_builtin_premise(
+                    &EqualFact::new_from_refs(base, factor, line_file.clone()),
                     builtin_state,
                 )?
                 .is_true());
         };
         if !self
-            .verify_objs_are_equal_in_equality_builtin(
-                base,
-                pow.base.as_ref(),
-                line_file.clone(),
+            .verify_equal_fact_as_builtin_premise(
+                &EqualFact::new_from_refs(base, pow.base.as_ref(), line_file.clone()),
                 builtin_state,
             )?
             .is_true()
@@ -41,10 +37,8 @@ impl Runtime {
             return Ok(false);
         }
         Ok(self
-            .verify_objs_are_equal_in_equality_builtin(
-                exponent,
-                pow.exponent.as_ref(),
-                line_file.clone(),
+            .verify_equal_fact_as_builtin_premise(
+                &EqualFact::new_from_refs(exponent, pow.exponent.as_ref(), line_file.clone()),
                 builtin_state,
             )?
             .is_true())
@@ -361,11 +355,12 @@ impl Runtime {
 
     pub(crate) fn try_verify_power_addition_exponent_rule(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         let holds = match (left, right) {
             (Obj::Pow(pow), Obj::Mul(product)) => self
                 .power_addition_exponent_rule_holds_one_direction(
@@ -384,12 +379,7 @@ impl Runtime {
             _ => false,
         };
         if holds {
-            return Ok(Some(factual_equal_success_by_builtin_reason(
-                left,
-                right,
-                line_file,
-                "equality: a^(m+n) = a^m * a^n for real exponents over positive real bases, natural exponents over complex bases, positive integer exponents, or integer exponents with nonzero base",
-            )));
+            return Ok(Some(factual_equal_success_by_builtin_reason(equal_fact, "equality: a^(m+n) = a^m * a^n for real exponents over positive real bases, natural exponents over complex bases, positive integer exponents, or integer exponents with nonzero base")));
         }
         Ok(None)
     }
@@ -405,10 +395,12 @@ impl Runtime {
             return Ok(false);
         };
         if !self
-            .verify_objs_are_equal_in_equality_builtin(
-                inner_power.base.as_ref(),
-                combined_power.base.as_ref(),
-                line_file.clone(),
+            .verify_equal_fact_as_builtin_premise(
+                &EqualFact::new_from_refs(
+                    inner_power.base.as_ref(),
+                    combined_power.base.as_ref(),
+                    line_file.clone(),
+                ),
                 builtin_state,
             )?
             .is_true()
@@ -523,10 +515,8 @@ impl Runtime {
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<bool, RuntimeError> {
         if self
-            .verify_objs_are_equal_in_equality_builtin(
-                product,
-                expected,
-                line_file.clone(),
+            .verify_equal_fact_as_builtin_premise(
+                &EqualFact::new_from_refs(product, expected, line_file.clone()),
                 builtin_state,
             )?
             .is_true()
@@ -576,11 +566,12 @@ impl Runtime {
 
     pub(crate) fn try_verify_power_of_power_rule(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         let holds = match (left, right) {
             (Obj::Pow(left_power), Obj::Pow(right_power)) => {
                 self.power_of_power_rule_holds_one_direction(
@@ -610,12 +601,7 @@ impl Runtime {
             _ => false,
         };
         if holds {
-            return Ok(Some(factual_equal_success_by_builtin_reason(
-                left,
-                right,
-                line_file,
-                "equality: (a^m)^n = a^(m*n) for real exponents over positive real bases, natural exponents over complex bases, positive integer exponents, or integer exponents with nonzero base",
-            )));
+            return Ok(Some(factual_equal_success_by_builtin_reason(equal_fact, "equality: (a^m)^n = a^(m*n) for real exponents over positive real bases, natural exponents over complex bases, positive integer exponents, or integer exponents with nonzero base")));
         }
         Ok(None)
     }
@@ -767,11 +753,12 @@ impl Runtime {
 
     pub(crate) fn try_verify_power_product_rule(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         let holds = match (left, right) {
             (Obj::Pow(pow), Obj::Mul(product)) => self.power_product_rule_holds_one_direction(
                 pow,
@@ -788,12 +775,7 @@ impl Runtime {
             _ => false,
         };
         if holds {
-            return Ok(Some(factual_equal_success_by_builtin_reason(
-                left,
-                right,
-                line_file,
-                "equality: (a*b)^x = a^x * b^x for real x over positive real factors, n in N over complex bases, n in N+, or n in Z with nonzero bases",
-            )));
+            return Ok(Some(factual_equal_success_by_builtin_reason(equal_fact, "equality: (a*b)^x = a^x * b^x for real x over positive real factors, n in N over complex bases, n in N+, or n in Z with nonzero bases")));
         }
         Ok(None)
     }

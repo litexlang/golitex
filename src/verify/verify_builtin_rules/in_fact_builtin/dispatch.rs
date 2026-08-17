@@ -69,10 +69,10 @@ impl Runtime {
                             let Obj::SetMinus(set_minus) = &member.set else {
                                 continue;
                             };
-                            if verify_equality_by_they_are_the_same(
+                            if objs_match_for_equality_pattern(
                                 &member.element,
                                 &not_in_fact.element,
-                            ) && verify_equality_by_they_are_the_same(&set_minus.right, right)
+                            ) && objs_match_for_equality_pattern(&set_minus.right, right)
                             {
                                 evidence = Some(known_fact.clone());
                                 break;
@@ -878,10 +878,8 @@ impl Runtime {
             (Obj::FiniteSeqListObj(list), Obj::FiniteSeqSet(fs)) => {
                 let lf = in_fact.line_file.clone();
                 let len_obj: Obj = Number::new(list.objs.len().to_string()).into();
-                let length_result = self.verify_objs_are_equal_by_known_equality(
-                    &len_obj,
-                    fs.n.as_ref(),
-                    lf.clone(),
+                let length_result = self.verify_equal_fact_by_known_equality(
+                    &EqualFact::new_from_refs(&len_obj, fs.n.as_ref(), lf.clone()),
                 );
                 if !length_result.is_true() {
                     return Ok((StmtUnknown::new()).into());
@@ -907,10 +905,8 @@ impl Runtime {
             (Obj::MatrixListObj(list), Obj::MatrixSet(ms)) => {
                 let lf = in_fact.line_file.clone();
                 let n_rows_obj: Obj = Number::new(list.rows.len().to_string()).into();
-                let row_count_result = self.verify_objs_are_equal_by_known_equality(
-                    &n_rows_obj,
-                    ms.row_len.as_ref(),
-                    lf.clone(),
+                let row_count_result = self.verify_equal_fact_by_known_equality(
+                    &EqualFact::new_from_refs(&n_rows_obj, ms.row_len.as_ref(), lf.clone()),
                 );
                 if !row_count_result.is_true() {
                     return Ok((StmtUnknown::new()).into());
@@ -918,10 +914,8 @@ impl Runtime {
                 let mut subgoals = vec![row_count_result];
                 for row in list.rows.iter() {
                     let n_col_obj: Obj = Number::new(row.len().to_string()).into();
-                    let column_count_result = self.verify_objs_are_equal_by_known_equality(
-                        &n_col_obj,
-                        ms.col_len.as_ref(),
-                        lf.clone(),
+                    let column_count_result = self.verify_equal_fact_by_known_equality(
+                        &EqualFact::new_from_refs(&n_col_obj, ms.col_len.as_ref(), lf.clone()),
                     );
                     if !column_count_result.is_true() {
                         return Ok((StmtUnknown::new()).into());

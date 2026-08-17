@@ -1,17 +1,18 @@
 use super::order_normalize::normalize_positive_order_atomic_fact;
 use crate::prelude::*;
-use crate::verify::verify_equality_by_builtin_rules::verify_equality_by_they_are_the_same;
+use crate::verify::verify_equality_by_builtin_rules::objs_match_for_equality_pattern;
 
 impl Runtime {
     // Integer inputs are fixed by both rounding operations.
     // Example: `n $in Z` proves `floor(n) = n` and `ceil(n) = n`.
     pub(super) fn try_verify_native_rounding_integer_equality(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         let (arg, other, name) = match (left, right) {
             (Obj::Floor(value), other) | (other, Obj::Floor(value)) => {
                 (value.arg.as_ref(), other, FLOOR)
@@ -21,7 +22,7 @@ impl Runtime {
             }
             _ => return Ok(None),
         };
-        if !verify_equality_by_they_are_the_same(arg, other) {
+        if !objs_match_for_equality_pattern(arg, other) {
             return Ok(None);
         }
         let integer_fact: AtomicFact =
@@ -45,11 +46,12 @@ impl Runtime {
     // `n in Z => floor(x+n) = floor(x)+n`.
     pub(super) fn try_verify_native_rounding_algebra_equality(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         if rounding_negation_shape(left, right) || rounding_negation_shape(right, left) {
             return Ok(Some(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -86,11 +88,12 @@ impl Runtime {
     // Example: `a <= b` proves `min(a, b) = a` and `max(a, b) = b`.
     pub(super) fn try_verify_native_min_max_equality(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         let (first_arg, second_arg, selected, is_min) = match (left, right) {
             (Obj::Min(value), selected) | (selected, Obj::Min(value)) => {
                 (value.left.as_ref(), value.right.as_ref(), selected, true)
@@ -100,8 +103,8 @@ impl Runtime {
             }
             _ => return Ok(None),
         };
-        let selected_is_first = verify_equality_by_they_are_the_same(selected, first_arg);
-        let selected_is_second = verify_equality_by_they_are_the_same(selected, second_arg);
+        let selected_is_first = objs_match_for_equality_pattern(selected, first_arg);
+        let selected_is_second = objs_match_for_equality_pattern(selected, second_arg);
         if !selected_is_first && !selected_is_second {
             return Ok(None);
         }
@@ -317,10 +320,11 @@ impl Runtime {
     // `min(a,max(a,b))=a`, with dual max laws.
     pub(super) fn try_verify_native_min_max_lattice_equality(
         &self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
     ) -> Option<StmtResult> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         if !min_max_lattice_shape(left, right) && !min_max_lattice_shape(right, left) {
             return None;
         }
@@ -339,10 +343,11 @@ impl Runtime {
     // `lcm(a, b) * gcd(a, b) = abs(a * b)`.
     pub(super) fn try_verify_native_lcm_gcd_product_equality(
         &self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
     ) -> Option<StmtResult> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         if !lcm_gcd_product_shape(left, right) && !lcm_gcd_product_shape(right, left) {
             return None;
         }
@@ -361,10 +366,11 @@ impl Runtime {
     // `lcm(a,b) % abs(a) = 0` when the remainder is well-defined.
     pub(super) fn try_verify_native_lcm_basic_equality(
         &self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
     ) -> Option<StmtResult> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         if !lcm_basic_shape(left, right) && !lcm_basic_shape(right, left) {
             return None;
         }
@@ -383,7 +389,7 @@ fn floor_lower_shape(left: &Obj, right: &Obj) -> bool {
     let Obj::Floor(floor) = left else {
         return false;
     };
-    verify_equality_by_they_are_the_same(&floor.arg, right)
+    objs_match_for_equality_pattern(&floor.arg, right)
 }
 
 fn floor_upper_shape(left: &Obj, right: &Obj) -> bool {
@@ -393,7 +399,7 @@ fn floor_upper_shape(left: &Obj, right: &Obj) -> bool {
     let Obj::Floor(floor) = add.left.as_ref() else {
         return false;
     };
-    verify_equality_by_they_are_the_same(left, &floor.arg)
+    objs_match_for_equality_pattern(left, &floor.arg)
         && add
             .right
             .evaluate_to_normalized_decimal_number()
@@ -407,7 +413,7 @@ fn ceil_lower_shape(left: &Obj, right: &Obj) -> bool {
     let Obj::Ceil(ceil) = sub.left.as_ref() else {
         return false;
     };
-    verify_equality_by_they_are_the_same(&ceil.arg, right)
+    objs_match_for_equality_pattern(&ceil.arg, right)
         && sub
             .right
             .evaluate_to_normalized_decimal_number()
@@ -418,23 +424,23 @@ fn ceil_upper_shape(left: &Obj, right: &Obj) -> bool {
     let Obj::Ceil(ceil) = right else {
         return false;
     };
-    verify_equality_by_they_are_the_same(left, &ceil.arg)
+    objs_match_for_equality_pattern(left, &ceil.arg)
 }
 
 fn min_lower_shape(left: &Obj, right: &Obj) -> bool {
     let Obj::Min(min) = left else {
         return false;
     };
-    verify_equality_by_they_are_the_same(&min.left, right)
-        || verify_equality_by_they_are_the_same(&min.right, right)
+    objs_match_for_equality_pattern(&min.left, right)
+        || objs_match_for_equality_pattern(&min.right, right)
 }
 
 fn max_upper_shape(left: &Obj, right: &Obj) -> bool {
     let Obj::Max(max) = right else {
         return false;
     };
-    verify_equality_by_they_are_the_same(left, &max.left)
-        || verify_equality_by_they_are_the_same(left, &max.right)
+    objs_match_for_equality_pattern(left, &max.left)
+        || objs_match_for_equality_pattern(left, &max.right)
 }
 
 fn lcm_gcd_product_shape(left: &Obj, right: &Obj) -> bool {
@@ -451,10 +457,10 @@ fn lcm_gcd_product_shape(left: &Obj, right: &Obj) -> bool {
     let Obj::Mul(arguments_product) = abs.arg.as_ref() else {
         return false;
     };
-    verify_equality_by_they_are_the_same(&lcm.left, &gcd.left)
-        && verify_equality_by_they_are_the_same(&lcm.right, &gcd.right)
-        && verify_equality_by_they_are_the_same(&lcm.left, &arguments_product.left)
-        && verify_equality_by_they_are_the_same(&lcm.right, &arguments_product.right)
+    objs_match_for_equality_pattern(&lcm.left, &gcd.left)
+        && objs_match_for_equality_pattern(&lcm.right, &gcd.right)
+        && objs_match_for_equality_pattern(&lcm.left, &arguments_product.left)
+        && objs_match_for_equality_pattern(&lcm.right, &arguments_product.right)
 }
 
 fn lcm_basic_shape(native: &Obj, other: &Obj) -> bool {
@@ -570,7 +576,7 @@ fn max_contains(obj: &Obj, expected: &Obj) -> bool {
 }
 
 fn same(left: &Obj, right: &Obj) -> bool {
-    verify_equality_by_they_are_the_same(left, right)
+    objs_match_for_equality_pattern(left, right)
 }
 
 fn rounding_negation_shape(native: &Obj, other: &Obj) -> bool {

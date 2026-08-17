@@ -1,6 +1,6 @@
 use super::order_normalize::normalize_positive_order_atomic_fact;
 use crate::prelude::*;
-use crate::verify::verify_equality_by_builtin_rules::verify_equality_by_they_are_the_same;
+use crate::verify::verify_equality_by_builtin_rules::objs_match_for_equality_pattern;
 
 impl Runtime {
     // The nonnegative / positive cone under field operations is checked here on normalized
@@ -315,11 +315,11 @@ impl Runtime {
                     ),
                 ));
             }
-            let equal_result = self.verify_objs_are_equal_by_known_equality(
+            let equal_result = self.verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
                 &less_equal_fact.left,
                 &less_equal_fact.right,
                 less_equal_fact.line_file.clone(),
-            );
+            ));
             if equal_result.is_true() {
                 return Ok(StmtResult::from(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -360,11 +360,11 @@ impl Runtime {
                     ),
                 ));
             }
-            let equal_result = self.verify_objs_are_equal_by_known_equality(
+            let equal_result = self.verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
                 &greater_equal_fact.left,
                 &greater_equal_fact.right,
                 greater_equal_fact.line_file.clone(),
-            );
+            ));
             if equal_result.is_true() {
                 return Ok(StmtResult::from(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -407,7 +407,7 @@ impl Runtime {
         let normalized = normalize_positive_order_atomic_fact(atomic_fact)?;
         match normalized {
             AtomicFact::LessFact(less_fact) => {
-                if verify_equality_by_they_are_the_same(&less_fact.left, &less_fact.right) {
+                if objs_match_for_equality_pattern(&less_fact.left, &less_fact.right) {
                     return Some(false);
                 }
                 if let Some(calculated_number_string_pair) =
@@ -428,10 +428,7 @@ impl Runtime {
                 )
             }
             AtomicFact::LessEqualFact(less_equal_fact) => {
-                if verify_equality_by_they_are_the_same(
-                    &less_equal_fact.left,
-                    &less_equal_fact.right,
-                ) {
+                if objs_match_for_equality_pattern(&less_equal_fact.left, &less_equal_fact.right) {
                     return Some(true);
                 }
                 if let Some(calculated_number_string_pair) = self
@@ -924,11 +921,11 @@ impl Runtime {
         };
 
         if let Obj::Intersect(intersection) = left_size.set.as_ref() {
-            let right_matches_left = verify_equality_by_they_are_the_same(
+            let right_matches_left = objs_match_for_equality_pattern(
                 intersection.left.as_ref(),
                 right_size.set.as_ref(),
             );
-            let right_matches_right = verify_equality_by_they_are_the_same(
+            let right_matches_right = objs_match_for_equality_pattern(
                 intersection.right.as_ref(),
                 right_size.set.as_ref(),
             );
@@ -1030,8 +1027,8 @@ impl Runtime {
             Obj::Union(union) => (union.left.as_ref().clone(), union.right.as_ref().clone()),
             _ => return Ok(None),
         };
-        if !verify_equality_by_they_are_the_same(&left_set, &left_size.set)
-            || !verify_equality_by_they_are_the_same(&right_set, &right_size.set)
+        if !objs_match_for_equality_pattern(&left_set, &left_size.set)
+            || !objs_match_for_equality_pattern(&right_set, &right_size.set)
         {
             return Ok(None);
         }
@@ -1969,11 +1966,12 @@ impl Runtime {
         if let AtomicFact::LessFact(f) = &norm {
             match (&f.left, &f.right) {
                 (Obj::Log(left_log), Obj::Log(right_log)) => {
-                    let same_base = self.verify_objs_are_equal_by_known_equality(
-                        left_log.base.as_ref(),
-                        right_log.base.as_ref(),
-                        f.line_file.clone(),
-                    );
+                    let same_base =
+                        self.verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
+                            left_log.base.as_ref(),
+                            right_log.base.as_ref(),
+                            f.line_file.clone(),
+                        ));
                     if !same_base.is_true() {
                         return Ok(None);
                     }

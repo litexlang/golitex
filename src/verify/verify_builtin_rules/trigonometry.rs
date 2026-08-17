@@ -91,10 +91,11 @@ impl Runtime {
     // Example: `sin(x + y) = sin(x) * cos(y) + cos(x) * sin(y)`.
     pub(crate) fn try_verify_trigonometric_equality(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         if first_trig_arg(left).is_none() && first_trig_arg(right).is_none() {
             return Ok(None);
         }

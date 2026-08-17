@@ -206,6 +206,9 @@ atomic target
   -> zero-premise verification:
        -> match a known non-forall atomic fact, or
        -> directly evaluate the written atomic fact, or
+       -> for equality, normalize an already known equality representative, or
+       -> for equality, use terminating reductions and constructor congruence
+          whose leaves need only known equality or direct evaluation, or
   -> try one premise-producing builtin mathematical rule, or
   -> run a strictly structural builtin strategy, or
   -> for equality at outer round 0, recursively compare matching object constructors, or
@@ -219,7 +222,10 @@ A premise is a child fact that a rule must verify before concluding its parent
 fact. Zero-premise verification generates no child facts and consumes no new
 builtin-rule step. This is why a rule proving `x * 2 >= 0` from `x >= 0` may
 still directly evaluate its closed premise `2 >= 0` after the multiplication
-rule has consumed the allowed rule step.
+rule has consumed the allowed rule step. Equality uses the same boundary:
+calculation and terminating constructor congruence run before a
+premise-producing equality rule, while the fuller recursive equality route
+remains outside zero-premise verification.
 
 Closed `$prime(n)` and `$coprime(a,b)` goals use dedicated direct-evaluation leaves
 after their natural-number domains are checked. Symbolic positive facts use

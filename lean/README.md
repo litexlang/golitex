@@ -17,7 +17,11 @@ The implemented scope is deliberately small:
 - `Litex.Set` packages the exact carrier of a Litex set;
 - `Litex.In` defines heterogeneous membership through `Same`;
 - `N`, `Z`, `Q`, `R`, and `C` use Mathlib's native carriers;
-- `setBuilder` represents a predicate-defined subset by a subtype carrier.
+- `setBuilder` represents a predicate-defined subset by a subtype carrier;
+- `AsReal x r` means that `r : ℝ` is a real representative of `x`;
+- `Lt` and `Le` compare heterogeneous objects through such representatives;
+- `RealCoherence` is the explicit registry certificate asserting uniqueness of
+  real representatives.
 
 The primary executable example translates the intended source shape
 
@@ -45,6 +49,18 @@ See `examples/SetSystem.lean` for the compiled proof. Compiler2 examples live
 exclusively in that directory; the `Compiler2Examples` Lake target compiles
 them from the compiler2 environment.
 
+The comparison tracer in `examples/OrderSystem.lean` translates
+
+```text
+forall a R, b R:
+    a < b
+    =>:
+        a <= b
+```
+
+as complex-valued binders with `In`, `Lt`, and `Le` propositions.  The proof
+is the ordinary real theorem `< → ≤` after unpacking the representatives.
+
 For an exact user-defined set, the compiler creates a hidden carrier such as
 `__Marker` and emits `Markers := Litex.Set.ofType __Marker`. An element of
 `__Marker` is automatically in `Markers` via `Litex.In.own`. A proper subset,
@@ -69,10 +85,21 @@ register a new, reviewed representation relation. The Litex compiler will only
 emit/import its own allowlisted rules; ordinary source equality never creates
 a bridge by itself.
 
+An arbitrary extension can make real representatives non-unique—for example,
+a rule identifying numerical zero and one. The core therefore does not silently
+postulate uniqueness. Theorems that need it take a `RealCoherence` certificate;
+supplying such a certificate after an incoherent extension requires an explicit
+trusted assumption. Transporting an already chosen representative and deriving
+`Lt → Le` require no certificate.
+
 `universe u` and `Litex.u := Type u` use Lean's ordinary universe hierarchy;
 they do not create a separate Litex universe. Mathlib's usual numeric carriers
 therefore work directly. `Same` currently relates different carriers at the
 same Lean universe level; cross-universe edges are not part of this slice.
+This does not prevent higher-order sets: `Litex.Set.{0}` lives in `Type 1`, so
+it can be the carrier of `Litex.Set.{1}`. `SetSystem.lean` compiles this exact
+use probe. Only the real-comparison layer is confined to ordinary `Type`, since
+its representatives are Mathlib values in universe zero.
 
 Function spaces, application, compiler IR, verifier evidence, FactIds,
 well-definedness DAGs, set union/intersection/power set, and production

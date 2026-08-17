@@ -1,0 +1,9 @@
+# Compatibility import: the module still exists but exports no declarations.
+import std basics
+
+# Former std/basics consumers now use native vocabulary.
+quot(-7, 3) = -3
+-7 = 3 * quot(-7, 3) + -7 % 3
+$dvd(12, 3)
+
+# Boundary: non-kernel theorem suites belong in the caller's own module.

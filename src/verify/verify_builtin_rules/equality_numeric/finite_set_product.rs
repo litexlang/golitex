@@ -5,11 +5,12 @@ impl Runtime {
     // Example: `finite_set_product({}, fn(x Z) Z {x}) = 1`.
     pub(crate) fn try_verify_finite_set_product_empty(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         let empty_set: Obj = ListSet::new(vec![]).into();
         let one: Obj = Number::new("1".to_string()).into();
         for (product_side, other) in [(left, right), (right, left)] {
@@ -17,10 +18,8 @@ impl Runtime {
                 continue;
             };
             if !self
-                .verify_objs_are_equal_in_equality_builtin(
-                    p.set.as_ref(),
-                    &empty_set,
-                    line_file.clone(),
+                .verify_equal_fact_as_builtin_premise(
+                    &EqualFact::new_from_refs(p.set.as_ref(), &empty_set, line_file.clone()),
                     builtin_state,
                 )?
                 .is_true()
@@ -28,18 +27,14 @@ impl Runtime {
                 continue;
             }
             if self
-                .verify_objs_are_equal_in_equality_builtin(
-                    other,
-                    &one,
-                    line_file.clone(),
+                .verify_equal_fact_as_builtin_premise(
+                    &EqualFact::new_from_refs(other, &one, line_file.clone()),
                     builtin_state,
                 )?
                 .is_true()
             {
                 return Ok(Some(factual_equal_success_by_builtin_reason(
-                    left,
-                    right,
-                    line_file,
+                    equal_fact,
                     "equality: finite-set product over empty set is one",
                 )));
             }
@@ -52,11 +47,12 @@ impl Runtime {
     // `finite_set_product({1, 2}, fn(x Z) Z {x}) = 1 * 2`.
     pub(crate) fn try_verify_finite_set_product_list_expansion(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         for (product_side, other) in [(left, right), (right, left)] {
             let Obj::ProductOfFiniteSet(p) = product_side else {
                 continue;
@@ -79,18 +75,14 @@ impl Runtime {
             }
             let expected = Self::left_assoc_mul_from_terms(terms);
             if self
-                .verify_objs_are_equal_in_equality_builtin(
-                    other,
-                    &expected,
-                    line_file.clone(),
+                .verify_equal_fact_as_builtin_premise(
+                    &EqualFact::new_from_refs(other, &expected, line_file.clone()),
                     builtin_state,
                 )?
                 .is_true()
             {
                 return Ok(Some(factual_equal_success_by_builtin_reason(
-                    left,
-                    right,
-                    line_file,
+                    equal_fact,
                     "equality: finite-set product over displayed set expands elementwise",
                 )));
             }
@@ -103,11 +95,12 @@ impl Runtime {
     // `finite_set_product(union({x}, S), f) = finite_set_product(S, f|S) * f(x)`.
     pub(crate) fn try_verify_finite_set_product_fresh_insertion(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         for (union_side, product_side) in [(left, right), (right, left)] {
             let Obj::ProductOfFiniteSet(union_product) = union_side else {
                 continue;
@@ -142,10 +135,12 @@ impl Runtime {
                     continue;
                 }
                 if !self
-                    .verify_objs_are_equal_in_equality_builtin(
-                        smaller_product.set.as_ref(),
-                        smaller_set,
-                        line_file.clone(),
+                    .verify_equal_fact_as_builtin_premise(
+                        &EqualFact::new_from_refs(
+                            smaller_product.set.as_ref(),
+                            smaller_set,
+                            line_file.clone(),
+                        ),
                         builtin_state,
                     )?
                     .is_true()
@@ -153,7 +148,7 @@ impl Runtime {
                     continue;
                 }
                 if !self
-                    .verify_finite_set_sum_functions_pointwise_equal(
+                    .verify_finite_set_sum_functions_pointwise_premise(
                         union_product.func.as_ref(),
                         smaller_product.func.as_ref(),
                         smaller_set.clone(),
@@ -170,10 +165,12 @@ impl Runtime {
                     continue;
                 };
                 if !self
-                    .verify_objs_are_equal_in_equality_builtin(
-                        mul.right.as_ref(),
-                        &inserted_factor,
-                        line_file.clone(),
+                    .verify_equal_fact_as_builtin_premise(
+                        &EqualFact::new_from_refs(
+                            mul.right.as_ref(),
+                            &inserted_factor,
+                            line_file.clone(),
+                        ),
                         builtin_state,
                     )?
                     .is_true()
@@ -181,9 +178,7 @@ impl Runtime {
                     continue;
                 }
                 return Ok(Some(factual_equal_success_by_builtin_reason(
-                    left,
-                    right,
-                    line_file,
+                    equal_fact,
                     "equality: finite-set product after inserting a fresh element",
                 )));
             }
@@ -196,11 +191,12 @@ impl Runtime {
     // `finite_set_product(A, f) = finite_set_product(set_minus(A, {x}), f|-) * f(x)`.
     pub(crate) fn try_verify_finite_set_product_remove_member(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         for (full_side, product_side) in [(left, right), (right, left)] {
             let Obj::ProductOfFiniteSet(full_product) = full_side else {
                 continue;
@@ -222,10 +218,12 @@ impl Runtime {
             }
             let removed = singleton.list[0].as_ref().clone();
             if !self
-                .verify_objs_are_equal_in_equality_builtin(
-                    full_product.set.as_ref(),
-                    remaining_set.left.as_ref(),
-                    line_file.clone(),
+                .verify_equal_fact_as_builtin_premise(
+                    &EqualFact::new_from_refs(
+                        full_product.set.as_ref(),
+                        remaining_set.left.as_ref(),
+                        line_file.clone(),
+                    ),
                     builtin_state,
                 )?
                 .is_true()
@@ -245,7 +243,7 @@ impl Runtime {
                 continue;
             }
             if !self
-                .verify_finite_set_sum_functions_pointwise_equal(
+                .verify_finite_set_sum_functions_pointwise_premise(
                     full_product.func.as_ref(),
                     remaining_product.func.as_ref(),
                     remaining_product.set.as_ref().clone(),
@@ -262,10 +260,12 @@ impl Runtime {
                 continue;
             };
             if !self
-                .verify_objs_are_equal_in_equality_builtin(
-                    mul.right.as_ref(),
-                    &removed_factor,
-                    line_file.clone(),
+                .verify_equal_fact_as_builtin_premise(
+                    &EqualFact::new_from_refs(
+                        mul.right.as_ref(),
+                        &removed_factor,
+                        line_file.clone(),
+                    ),
                     builtin_state,
                 )?
                 .is_true()
@@ -273,9 +273,7 @@ impl Runtime {
                 continue;
             }
             return Ok(Some(factual_equal_success_by_builtin_reason(
-                left,
-                right,
-                line_file,
+                equal_fact,
                 "equality: finite-set product after removing a member",
             )));
         }
@@ -286,11 +284,12 @@ impl Runtime {
     // Example: `finite_set_product(1...3, fn(x Z) Z {x}) = product(1, 3, fn(x Z) Z {x})`.
     pub(crate) fn try_verify_finite_set_product_closed_range_bridge(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         for (finite_side, range_side) in [(left, right), (right, left)] {
             let Obj::ProductOfFiniteSet(finite_product) = finite_side else {
                 continue;
@@ -302,10 +301,12 @@ impl Runtime {
                 continue;
             };
             if !self
-                .verify_objs_are_equal_in_equality_builtin(
-                    range.start.as_ref(),
-                    range_product.start.as_ref(),
-                    line_file.clone(),
+                .verify_equal_fact_as_builtin_premise(
+                    &EqualFact::new_from_refs(
+                        range.start.as_ref(),
+                        range_product.start.as_ref(),
+                        line_file.clone(),
+                    ),
                     builtin_state,
                 )?
                 .is_true()
@@ -313,10 +314,12 @@ impl Runtime {
                 continue;
             }
             if !self
-                .verify_objs_are_equal_in_equality_builtin(
-                    range.end.as_ref(),
-                    range_product.end.as_ref(),
-                    line_file.clone(),
+                .verify_equal_fact_as_builtin_premise(
+                    &EqualFact::new_from_refs(
+                        range.end.as_ref(),
+                        range_product.end.as_ref(),
+                        line_file.clone(),
+                    ),
                     builtin_state,
                 )?
                 .is_true()
@@ -324,10 +327,12 @@ impl Runtime {
                 continue;
             }
             if !self
-                .verify_objs_are_equal_in_equality_builtin(
-                    finite_product.func.as_ref(),
-                    range_product.func.as_ref(),
-                    line_file.clone(),
+                .verify_equal_fact_as_builtin_premise(
+                    &EqualFact::new_from_refs(
+                        finite_product.func.as_ref(),
+                        range_product.func.as_ref(),
+                        line_file.clone(),
+                    ),
                     builtin_state,
                 )?
                 .is_true()
@@ -335,9 +340,7 @@ impl Runtime {
                 continue;
             }
             return Ok(Some(factual_equal_success_by_builtin_reason(
-                left,
-                right,
-                line_file,
+                equal_fact,
                 "equality: finite-set product over closed integer range equals range product",
             )));
         }
@@ -348,11 +351,12 @@ impl Runtime {
     // Example: `finite_set_product(X, fn(x X) R {c}) = c ^ finite_set_size(X)`.
     pub(crate) fn try_verify_finite_set_product_constant_factor(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         for (product_side, other) in [(left, right), (right, left)] {
             let Obj::ProductOfFiniteSet(p) = product_side else {
                 continue;
@@ -380,18 +384,14 @@ impl Runtime {
             let finite_set_size: Obj = FiniteSetSize::new((*p.set).clone()).into();
             let expected: Obj = Pow::new(c, finite_set_size).into();
             if self
-                .verify_objs_are_equal_in_equality_builtin(
-                    other,
-                    &expected,
-                    line_file.clone(),
+                .verify_equal_fact_as_builtin_premise(
+                    &EqualFact::new_from_refs(other, &expected, line_file.clone()),
                     builtin_state,
                 )?
                 .is_true()
             {
                 return Ok(Some(factual_equal_success_by_builtin_reason(
-                    left,
-                    right,
-                    line_file,
+                    equal_fact,
                     "equality: finite-set product of a constant factor",
                 )));
             }
@@ -404,21 +404,24 @@ impl Runtime {
     // `finite_set_product(X, f) = finite_set_product(X, g)`.
     pub(crate) fn try_verify_finite_set_product_pointwise_equality(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         let (left_product, right_product) = match (left, right) {
             (Obj::ProductOfFiniteSet(l), Obj::ProductOfFiniteSet(r)) => (l, r),
             _ => return Ok(None),
         };
         if !objs_equal_by_display_string(left_product.set.as_ref(), right_product.set.as_ref())
             && !self
-                .verify_objs_are_equal_in_equality_builtin(
-                    left_product.set.as_ref(),
-                    right_product.set.as_ref(),
-                    line_file.clone(),
+                .verify_equal_fact_as_builtin_premise(
+                    &EqualFact::new_from_refs(
+                        left_product.set.as_ref(),
+                        right_product.set.as_ref(),
+                        line_file.clone(),
+                    ),
                     builtin_state,
                 )?
                 .is_true()
@@ -489,9 +492,7 @@ impl Runtime {
         )?;
         if r.is_true() {
             return Ok(Some(factual_equal_success_by_builtin_reason(
-                left,
-                right,
-                line_file,
+                equal_fact,
                 "equality: finite-set products from pointwise equality on the finite set",
             )));
         }
@@ -503,11 +504,12 @@ impl Runtime {
     // finite_set_product(X, f) * finite_set_product(X, g)`.
     pub(crate) fn try_verify_finite_set_product_mul(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         for (product_side, multiplied_side) in [(left, right), (right, left)] {
             let Obj::ProductOfFiniteSet(product) = product_side else {
                 continue;
@@ -520,19 +522,23 @@ impl Runtime {
             else {
                 continue;
             };
-            let first_set_result = self.verify_objs_are_equal_in_equality_builtin(
-                product.set.as_ref(),
-                first.set.as_ref(),
-                line_file.clone(),
+            let first_set_result = self.verify_equal_fact_as_builtin_premise(
+                &EqualFact::new_from_refs(
+                    product.set.as_ref(),
+                    first.set.as_ref(),
+                    line_file.clone(),
+                ),
                 builtin_state,
             )?;
             if !first_set_result.is_true() {
                 continue;
             }
-            let second_set_result = self.verify_objs_are_equal_in_equality_builtin(
-                product.set.as_ref(),
-                second.set.as_ref(),
-                line_file.clone(),
+            let second_set_result = self.verify_equal_fact_as_builtin_premise(
+                &EqualFact::new_from_refs(
+                    product.set.as_ref(),
+                    second.set.as_ref(),
+                    line_file.clone(),
+                ),
                 builtin_state,
             )?;
             if !second_set_result.is_true() {
@@ -570,9 +576,7 @@ impl Runtime {
                 continue;
             }
             return Ok(Some(factual_equal_success_by_builtin_reason(
-                left,
-                right,
-                line_file,
+                equal_fact,
                 "equality: finite-set product distributes over pointwise multiplication",
             )));
         }
@@ -584,11 +588,12 @@ impl Runtime {
     // `finite_set_product(X, f) = finite_set_product(Y, fn(y Y) Z {f(g(y))})`.
     pub(crate) fn try_verify_finite_set_product_substitution(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         for (source_side, pullback_side) in [(left, right), (right, left)] {
             let (Obj::ProductOfFiniteSet(source), Obj::ProductOfFiniteSet(pullback)) =
                 (source_side, pullback_side)
@@ -644,9 +649,7 @@ impl Runtime {
             }
 
             return Ok(Some(factual_equal_success_by_builtin_reason(
-                left,
-                right,
-                line_file,
+                equal_fact,
                 "equality: finite-set product substitution along a bijection",
             )));
         }
@@ -696,7 +699,7 @@ impl Runtime {
         Some(fn_obj.body[0][0].as_ref().clone())
     }
 
-    pub(super) fn verify_finite_set_sum_functions_pointwise_equal(
+    pub(super) fn verify_finite_set_sum_functions_pointwise_premise(
         &mut self,
         left_func: &Obj,
         right_func: &Obj,
@@ -766,10 +769,10 @@ impl Runtime {
 
         let first_arg = tuple.args[0].as_ref();
         let second_arg = tuple.args[1].as_ref();
-        let first_is_outer = verify_equality_by_they_are_the_same(first_arg, &outer_obj);
-        let second_is_inner = verify_equality_by_they_are_the_same(second_arg, &inner_obj);
-        let first_is_inner = verify_equality_by_they_are_the_same(first_arg, &inner_obj);
-        let second_is_outer = verify_equality_by_they_are_the_same(second_arg, &outer_obj);
+        let first_is_outer = objs_match_for_equality_pattern(first_arg, &outer_obj);
+        let second_is_inner = objs_match_for_equality_pattern(second_arg, &inner_obj);
+        let first_is_inner = objs_match_for_equality_pattern(first_arg, &inner_obj);
+        let second_is_outer = objs_match_for_equality_pattern(second_arg, &outer_obj);
         let product_set: Obj = if first_is_outer && second_is_inner {
             Cart::new(vec![
                 outer_sum.set.as_ref().clone(),
@@ -884,10 +887,8 @@ impl Runtime {
         let sum_index_set: Obj =
             ClosedRange::new(sum.start.as_ref().clone(), sum.end.as_ref().clone()).into();
         if !self
-            .verify_objs_are_equal_in_equality_builtin(
-                &index_set,
-                &sum_index_set,
-                line_file.clone(),
+            .verify_equal_fact_as_builtin_premise(
+                &EqualFact::new_from_refs(&index_set, &sum_index_set, line_file.clone()),
                 builtin_state,
             )?
             .is_true()
@@ -908,7 +909,7 @@ impl Runtime {
             return Ok(None);
         }
         let index_obj = obj_for_bound_param_in_scope(param_binding, ParamObjType::FnSet);
-        if !verify_equality_by_they_are_the_same(enumerator_call.body[0][0].as_ref(), &index_obj) {
+        if !objs_match_for_equality_pattern(enumerator_call.body[0][0].as_ref(), &index_obj) {
             return Ok(None);
         }
 
@@ -949,10 +950,12 @@ impl Runtime {
             return Ok(None);
         };
         let return_set_matches = self
-            .verify_objs_are_equal_in_equality_builtin(
-                enumerator_body.ret_set.as_ref(),
-                &target_set,
-                line_file.clone(),
+            .verify_equal_fact_as_builtin_premise(
+                &EqualFact::new_from_refs(
+                    enumerator_body.ret_set.as_ref(),
+                    &target_set,
+                    line_file.clone(),
+                ),
                 builtin_state,
             )?
             .is_true();
@@ -961,10 +964,8 @@ impl Runtime {
         }
 
         let declared_domain_matches = self
-            .verify_objs_are_equal_in_equality_builtin(
-                &enumerator_index_set,
-                &index_set,
-                line_file.clone(),
+            .verify_equal_fact_as_builtin_premise(
+                &EqualFact::new_from_refs(&enumerator_index_set, &index_set, line_file.clone()),
                 builtin_state,
             )?
             .is_true();

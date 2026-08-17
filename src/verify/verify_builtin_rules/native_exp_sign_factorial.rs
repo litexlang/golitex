@@ -1,6 +1,6 @@
 use super::order_normalize::normalize_positive_order_atomic_fact;
 use crate::prelude::*;
-use crate::verify::verify_equality_by_builtin_rules::verify_equality_by_they_are_the_same;
+use crate::verify::verify_equality_by_builtin_rules::objs_match_for_equality_pattern;
 
 impl Runtime {
     // Natural exp/ln are inverse and agree with the existing e-power/log interface.
@@ -8,15 +8,14 @@ impl Runtime {
     // `exp(x) = e^x`, and `ln(x) = log(e, x)`.
     pub(super) fn try_verify_native_exp_ln_identity(
         &self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
     ) -> Option<StmtResult> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         if exp_ln_identity_shape(left, right) || exp_ln_identity_shape(right, left) {
             return Some(native_equal_success(
-                left,
-                right,
-                line_file,
+                &EqualFact::new_from_refs(left, right, line_file),
                 "native exp/ln inverse or canonical-base identity",
                 Vec::new(),
             ));
@@ -28,28 +27,33 @@ impl Runtime {
     // Example: a known `exp(a) = exp(b)` proves `a = b`.
     pub(super) fn try_verify_native_exp_ln_injectivity(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         let exp_left: Obj = Exp::new(left.clone()).into();
         let exp_right: Obj = Exp::new(right.clone()).into();
-        let exp_result =
-            self.verify_objs_are_equal_by_known_equality(&exp_left, &exp_right, line_file.clone());
+        let exp_result = self.verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
+            &exp_left,
+            &exp_right,
+            line_file.clone(),
+        ));
         if exp_result.is_true() {
             return Ok(Some(native_equal_success(
-                left,
-                right,
-                line_file,
+                &EqualFact::new_from_refs(left, right, line_file),
                 "injectivity of native exp",
                 vec![exp_result],
             )));
         }
         let ln_left: Obj = Ln::new(left.clone()).into();
         let ln_right: Obj = Ln::new(right.clone()).into();
-        let ln_result =
-            self.verify_objs_are_equal_by_known_equality(&ln_left, &ln_right, line_file.clone());
+        let ln_result = self.verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
+            &ln_left,
+            &ln_right,
+            line_file.clone(),
+        ));
         if !ln_result.is_true() {
             return Ok(None);
         }
@@ -66,9 +70,7 @@ impl Runtime {
         }
         positivity_results.push(ln_result);
         Ok(Some(native_equal_success(
-            left,
-            right,
-            line_file,
+            &EqualFact::new_from_refs(left, right, line_file),
             "injectivity of native ln",
             positivity_results,
         )))
@@ -78,11 +80,12 @@ impl Runtime {
     // Example: a known `sign(x) = 0` proves `x = 0`.
     pub(super) fn try_verify_native_sign_zero_reflection(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         _builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         let arg = if normalized_number_is(left, "0") {
             right
         } else if normalized_number_is(right, "0") {
@@ -92,14 +95,16 @@ impl Runtime {
         };
         let sign: Obj = Sign::new(arg.clone()).into();
         let zero: Obj = Number::new("0".to_string()).into();
-        let result = self.verify_objs_are_equal_by_known_equality(&sign, &zero, line_file.clone());
+        let result = self.verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
+            &sign,
+            &zero,
+            line_file.clone(),
+        ));
         if !result.is_true() {
             return Ok(None);
         }
         Ok(Some(native_equal_success(
-            left,
-            right,
-            line_file,
+            &EqualFact::new_from_refs(left, right, line_file),
             "sign is zero only at zero",
             vec![result],
         )))
@@ -153,15 +158,14 @@ impl Runtime {
     // Examples: `exp(a+b)=exp(a)*exp(b)` and `ln(a*b)=ln(a)+ln(b)`.
     pub(super) fn try_verify_native_exp_ln_algebra(
         &self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
     ) -> Option<StmtResult> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         if exp_ln_algebra_shape(left, right) || exp_ln_algebra_shape(right, left) {
             return Some(native_equal_success(
-                left,
-                right,
-                line_file,
+                &EqualFact::new_from_refs(left, right, line_file),
                 "native exp/ln algebra identity",
                 Vec::new(),
             ));
@@ -173,11 +177,12 @@ impl Runtime {
     // Example: `x > 0` proves `sign(x) = 1`.
     pub(super) fn try_verify_native_sign_value(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         let (sign, selected) = match (left, right) {
             (Obj::Sign(sign), selected) | (selected, Obj::Sign(sign)) => (sign, selected),
             _ => return Ok(None),
@@ -197,9 +202,7 @@ impl Runtime {
             return Ok(None);
         }
         Ok(Some(native_equal_success(
-            left,
-            right,
-            line_file,
+            &EqualFact::new_from_refs(left, right, line_file),
             "sign value selected from the argument order at zero",
             vec![premise_result],
         )))
@@ -209,15 +212,14 @@ impl Runtime {
     // Example: `sign(x) * abs(x) = x`.
     pub(super) fn try_verify_native_sign_abs_identity(
         &self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
     ) -> Option<StmtResult> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         if sign_abs_identity_shape(left, right) || sign_abs_identity_shape(right, left) {
             return Some(native_equal_success(
-                left,
-                right,
-                line_file,
+                &EqualFact::new_from_refs(left, right, line_file),
                 "sign times absolute value restores the argument",
                 Vec::new(),
             ));
@@ -230,17 +232,16 @@ impl Runtime {
     // `sign(a*b) = sign(a)*sign(b)`.
     pub(super) fn try_verify_native_sign_algebra(
         &self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
     ) -> Option<StmtResult> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         if !sign_algebra_shape(left, right) && !sign_algebra_shape(right, left) {
             return None;
         }
         Some(native_equal_success(
-            left,
-            right,
-            line_file,
+            &EqualFact::new_from_refs(left, right, line_file),
             "native sign oddness or multiplicativity",
             Vec::new(),
         ))
@@ -250,15 +251,14 @@ impl Runtime {
     // Example: `factorial(n + 1) = (n + 1) * factorial(n)`.
     pub(super) fn try_verify_native_factorial_recurrence(
         &self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
     ) -> Option<StmtResult> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         if factorial_recurrence_shape(left, right) || factorial_recurrence_shape(right, left) {
             return Some(native_equal_success(
-                left,
-                right,
-                line_file,
+                &EqualFact::new_from_refs(left, right, line_file),
                 "factorial successor recurrence",
                 Vec::new(),
             ));
@@ -270,11 +270,12 @@ impl Runtime {
     // Example: `m <= n => factorial(n) % factorial(m) = 0`.
     pub(super) fn try_verify_native_factorial_divisibility(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         let (remainder, zero) = match (left, right) {
             (Obj::Mod(remainder), zero) | (zero, Obj::Mod(remainder)) => (remainder, zero),
             _ => return Ok(None),
@@ -298,9 +299,7 @@ impl Runtime {
             return Ok(None);
         }
         Ok(Some(native_equal_success(
-            left,
-            right,
-            line_file,
+            &EqualFact::new_from_refs(left, right, line_file),
             "earlier factorial divides later factorial",
             vec![result],
         )))
@@ -637,12 +636,13 @@ impl Runtime {
 }
 
 fn native_equal_success(
-    left: &Obj,
-    right: &Obj,
-    line_file: LineFile,
+    equal_fact: &EqualFact,
     reason: &str,
     subgoals: Vec<StmtResult>,
 ) -> StmtResult {
+    let left = &equal_fact.left;
+    let right = &equal_fact.right;
+    let line_file = equal_fact.line_file.clone();
     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
         EqualFact::new(left.clone(), right.clone(), line_file).into(),
         reason.to_string(),
@@ -828,7 +828,7 @@ fn successor_predecessor(obj: &Obj) -> Option<&Obj> {
 }
 
 fn same(left: &Obj, right: &Obj) -> bool {
-    verify_equality_by_they_are_the_same(left, right)
+    objs_match_for_equality_pattern(left, right)
 }
 
 fn is_zero(obj: &Obj) -> bool {

@@ -14,7 +14,7 @@ impl Runtime {
             _ => return None,
         };
         let carrier = self.reduce_carrier_from_operation(operation)?;
-        let carrier_is_contained = verify_equality_by_they_are_the_same(&carrier, &in_fact.set)
+        let carrier_is_contained = objs_match_for_equality_pattern(&carrier, &in_fact.set)
             || matches!(
                 (&carrier, &in_fact.set),
                 (Obj::StandardSet(source), Obj::StandardSet(target))
@@ -232,7 +232,7 @@ impl Runtime {
             return Ok((StmtUnknown::new()).into());
         };
         let n_pos_obj: Obj = StandardSet::NPos.into();
-        if !verify_equality_by_they_are_the_same(&ret_set, &n_pos_obj) {
+        if !objs_match_for_equality_pattern(&ret_set, &n_pos_obj) {
             return Ok((StmtUnknown::new()).into());
         }
         let reason = format!("{op}: iterand return set is N+");
@@ -270,7 +270,11 @@ impl Runtime {
         };
         let target = &in_fact.set;
         let ret_matches = self
-            .verify_objs_are_equal_by_known_equality(target, &typed_ret, in_fact.line_file.clone())
+            .verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
+                target,
+                &typed_ret,
+                in_fact.line_file.clone(),
+            ))
             .is_true();
         let ret_matches_alpha_renamed_fn_set =
             if let (Obj::FnSet(typed_fn_set), Obj::FnSet(target_fn_set)) = (&typed_ret, target) {

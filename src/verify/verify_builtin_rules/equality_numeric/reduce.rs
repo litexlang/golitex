@@ -6,11 +6,12 @@ impl Runtime {
     /// The ordered fold of an empty closed interval is its seed.
     pub(crate) fn try_verify_reduce_empty(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         for (reduce_side, other) in [(left, right), (right, left)] {
             let Obj::Reduce(reduce) = reduce_side else {
                 continue;
@@ -28,18 +29,14 @@ impl Runtime {
                 continue;
             }
             if self
-                .verify_objs_are_equal_in_equality_builtin(
-                    other,
-                    reduce.seed.as_ref(),
-                    line_file.clone(),
+                .verify_equal_fact_as_builtin_premise(
+                    &EqualFact::new_from_refs(other, reduce.seed.as_ref(), line_file.clone()),
                     builtin_state,
                 )?
                 .is_true()
             {
                 return Ok(Some(factual_equal_success_by_builtin_reason(
-                    left,
-                    right,
-                    line_file,
+                    equal_fact,
                     "equality: reduce over an empty closed interval returns its seed",
                 )));
             }
@@ -52,11 +49,12 @@ impl Runtime {
     /// `op(op(op(s,f(1)),f(2)),f(3))`.
     pub(crate) fn try_verify_reduce_literal_expansion(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         for (reduce_side, other) in [(left, right), (right, left)] {
             let Obj::Reduce(reduce) = reduce_side else {
                 continue;
@@ -94,18 +92,14 @@ impl Runtime {
                 accumulator = next;
             }
             if self
-                .verify_objs_are_equal_in_equality_builtin(
-                    other,
-                    &accumulator,
-                    line_file.clone(),
+                .verify_equal_fact_as_builtin_premise(
+                    &EqualFact::new_from_refs(other, &accumulator, line_file.clone()),
                     builtin_state,
                 )?
                 .is_true()
             {
                 return Ok(Some(factual_equal_success_by_builtin_reason(
-                    left,
-                    right,
-                    line_file,
+                    equal_fact,
                     "equality: literal reduce expands as an ascending left fold",
                 )));
             }
@@ -129,11 +123,12 @@ impl Runtime {
     /// Recursive defining equation for a nonempty ordered fold.
     pub(crate) fn try_verify_reduce_step(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         for (reduce_side, other) in [(left, right), (right, left)] {
             let Obj::Reduce(reduce) = reduce_side else {
                 continue;
@@ -176,18 +171,14 @@ impl Runtime {
                 continue;
             };
             if self
-                .verify_objs_are_equal_in_equality_builtin(
-                    other,
-                    &expected,
-                    line_file.clone(),
+                .verify_equal_fact_as_builtin_premise(
+                    &EqualFact::new_from_refs(other, &expected, line_file.clone()),
                     builtin_state,
                 )?
                 .is_true()
             {
                 return Ok(Some(factual_equal_success_by_builtin_reason(
-                    left,
-                    right,
-                    line_file,
+                    equal_fact,
                     "equality: nonempty reduce satisfies its last-step equation",
                 )));
             }
@@ -197,21 +188,20 @@ impl Runtime {
 
     pub(crate) fn try_verify_finite_set_reduce_empty(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         let empty_set: Obj = ListSet::new(Vec::new()).into();
         for (reduce_side, other) in [(left, right), (right, left)] {
             let Obj::FiniteSetReduce(reduce) = reduce_side else {
                 continue;
             };
             if !self
-                .verify_objs_are_equal_in_equality_builtin(
-                    reduce.set.as_ref(),
-                    &empty_set,
-                    line_file.clone(),
+                .verify_equal_fact_as_builtin_premise(
+                    &EqualFact::new_from_refs(reduce.set.as_ref(), &empty_set, line_file.clone()),
                     builtin_state,
                 )?
                 .is_true()
@@ -219,18 +209,14 @@ impl Runtime {
                 continue;
             }
             if self
-                .verify_objs_are_equal_in_equality_builtin(
-                    other,
-                    reduce.seed.as_ref(),
-                    line_file.clone(),
+                .verify_equal_fact_as_builtin_premise(
+                    &EqualFact::new_from_refs(other, reduce.seed.as_ref(), line_file.clone()),
                     builtin_state,
                 )?
                 .is_true()
             {
                 return Ok(Some(factual_equal_success_by_builtin_reason(
-                    left,
-                    right,
-                    line_file,
+                    equal_fact,
                     "equality: finite_set_reduce over the empty set returns its seed",
                 )));
             }
@@ -244,11 +230,12 @@ impl Runtime {
     /// with mathematical significance.
     pub(crate) fn try_verify_finite_set_reduce_list_expansion(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         for (reduce_side, other) in [(left, right), (right, left)] {
             let Obj::FiniteSetReduce(reduce) = reduce_side else {
                 continue;
@@ -290,18 +277,14 @@ impl Runtime {
                     continue;
                 }
                 if self
-                    .verify_objs_are_equal_in_equality_builtin(
-                        other,
-                        &accumulator,
-                        line_file.clone(),
+                    .verify_equal_fact_as_builtin_premise(
+                        &EqualFact::new_from_refs(other, &accumulator, line_file.clone()),
                         builtin_state,
                     )?
                     .is_true()
                 {
                     return Ok(Some(factual_equal_success_by_builtin_reason(
-                        left,
-                        right,
-                        line_file,
+                        equal_fact,
                         "equality: finite_set_reduce expands through a finite-set enumeration",
                     )));
                 }
@@ -312,11 +295,12 @@ impl Runtime {
 
     pub(crate) fn try_verify_finite_set_reduce_closed_range_bridge(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         for (finite_side, other) in [(left, right), (right, left)] {
             let Obj::FiniteSetReduce(finite) = finite_side else {
                 continue;
@@ -333,20 +317,13 @@ impl Runtime {
             )
             .into();
             if self
-                .verify_objs_are_equal_in_equality_builtin(
-                    other,
-                    &expected,
-                    line_file.clone(),
+                .verify_equal_fact_as_builtin_premise(
+                    &EqualFact::new_from_refs(other, &expected, line_file.clone()),
                     builtin_state,
                 )?
                 .is_true()
             {
-                return Ok(Some(factual_equal_success_by_builtin_reason(
-                    left,
-                    right,
-                    line_file,
-                    "equality: finite_set_reduce over a closed range uses its ascending enumeration",
-                )));
+                return Ok(Some(factual_equal_success_by_builtin_reason(equal_fact, "equality: finite_set_reduce over a closed range uses its ascending enumeration")));
             }
         }
         Ok(None)
@@ -356,11 +333,12 @@ impl Runtime {
     /// operation-law gate makes the chosen side/order immaterial.
     pub(crate) fn try_verify_finite_set_reduce_fresh_insertion(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         for (union_side, other) in [(left, right), (right, left)] {
             let Obj::FiniteSetReduce(union_reduce) = union_side else {
                 continue;
@@ -410,18 +388,14 @@ impl Runtime {
                     continue;
                 };
                 if self
-                    .verify_objs_are_equal_in_equality_builtin(
-                        other,
-                        &expected,
-                        line_file.clone(),
+                    .verify_equal_fact_as_builtin_premise(
+                        &EqualFact::new_from_refs(other, &expected, line_file.clone()),
                         builtin_state,
                     )?
                     .is_true()
                 {
                     return Ok(Some(factual_equal_success_by_builtin_reason(
-                        left,
-                        right,
-                        line_file,
+                        equal_fact,
                         "equality: finite_set_reduce after inserting a fresh element",
                     )));
                 }
@@ -435,11 +409,12 @@ impl Runtime {
     /// Example: `reduce(a,b,f,add,0) = sum(a,b,f)`.
     pub(crate) fn try_verify_reduce_specialized_aggregate_bridge(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         for (reduce_side, aggregate_side) in [(left, right), (right, left)] {
             let Obj::Reduce(reduce) = reduce_side else {
                 continue;
@@ -459,9 +434,7 @@ impl Runtime {
                         continue;
                     };
                     return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
-                        left,
-                        right,
-                        line_file,
+                        equal_fact,
                         "equality: additive reduce with seed zero equals range sum",
                         subgoals,
                     )));
@@ -480,9 +453,7 @@ impl Runtime {
                         continue;
                     };
                     return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
-                        left,
-                        right,
-                        line_file,
+                        equal_fact,
                         "equality: multiplicative reduce with seed one equals range product",
                         subgoals,
                     )));
@@ -498,11 +469,12 @@ impl Runtime {
     /// Example: `finite_set_reduce(S,f,add,0) = finite_set_sum(S,f)`.
     pub(crate) fn try_verify_finite_set_reduce_specialized_aggregate_bridge(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         for (reduce_side, aggregate_side) in [(left, right), (right, left)] {
             let Obj::FiniteSetReduce(reduce) = reduce_side else {
                 continue;
@@ -521,9 +493,7 @@ impl Runtime {
                         continue;
                     };
                     return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
-                        left,
-                        right,
-                        line_file,
+                        equal_fact,
                         "equality: additive finite_set_reduce with seed zero equals finite_set_sum",
                         subgoals,
                     )));
@@ -540,13 +510,7 @@ impl Runtime {
                     else {
                         continue;
                     };
-                    return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
-                        left,
-                        right,
-                        line_file,
-                        "equality: multiplicative finite_set_reduce with seed one equals finite_set_product",
-                        subgoals,
-                    )));
+                    return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(equal_fact, "equality: multiplicative finite_set_reduce with seed one equals finite_set_product", subgoals)));
                 }
                 _ => {}
             }
@@ -559,11 +523,12 @@ impl Runtime {
     /// Examples use `$fn_eq_in(f,g,a...b)` or `$fn_eq_in(f,g,S)`.
     pub(crate) fn try_verify_reduce_pointwise_congruence(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         match (left, right) {
             (Obj::Reduce(left_reduce), Obj::Reduce(right_reduce)) => {
                 let mut subgoals = Vec::new();
@@ -573,10 +538,8 @@ impl Runtime {
                     (left_reduce.op.as_ref(), right_reduce.op.as_ref()),
                     (left_reduce.seed.as_ref(), right_reduce.seed.as_ref()),
                 ] {
-                    let result = self.verify_objs_are_equal_in_equality_builtin(
-                        left_arg,
-                        right_arg,
-                        line_file.clone(),
+                    let result = self.verify_equal_fact_as_builtin_premise(
+                        &EqualFact::new_from_refs(left_arg, right_arg, line_file.clone()),
                         builtin_state,
                     )?;
                     if !result.is_true() {
@@ -601,9 +564,7 @@ impl Runtime {
                 }
                 subgoals.push(pointwise);
                 Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
-                    left,
-                    right,
-                    line_file,
+                    equal_fact,
                     "equality: reduce congruence from pointwise equality on the closed range",
                     subgoals,
                 )))
@@ -615,10 +576,8 @@ impl Runtime {
                     (left_reduce.op.as_ref(), right_reduce.op.as_ref()),
                     (left_reduce.seed.as_ref(), right_reduce.seed.as_ref()),
                 ] {
-                    let result = self.verify_objs_are_equal_in_equality_builtin(
-                        left_arg,
-                        right_arg,
-                        line_file.clone(),
+                    let result = self.verify_equal_fact_as_builtin_premise(
+                        &EqualFact::new_from_refs(left_arg, right_arg, line_file.clone()),
                         builtin_state,
                     )?;
                     if !result.is_true() {
@@ -638,9 +597,7 @@ impl Runtime {
                 }
                 subgoals.push(pointwise);
                 Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
-                    left,
-                    right,
-                    line_file,
+                    equal_fact,
                     "equality: finite_set_reduce congruence from fn_eq_in on the finite set",
                     subgoals,
                 )))
@@ -655,11 +612,12 @@ impl Runtime {
     /// Example: `reduce(a,b,f,op,s) = reduce(0,b-a,fn(k Z) T {f(a+k)},op,s)`.
     pub(crate) fn try_verify_reduce_order_preserving_translation(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         for (source_side, translated_side) in [(left, right), (right, left)] {
             let (Obj::Reduce(source), Obj::Reduce(translated)) = (source_side, translated_side)
             else {
@@ -672,10 +630,8 @@ impl Runtime {
                 (source.op.as_ref(), translated.op.as_ref()),
                 (source.seed.as_ref(), translated.seed.as_ref()),
             ] {
-                let result = self.verify_objs_are_equal_in_equality_builtin(
-                    actual,
-                    expected,
-                    line_file.clone(),
+                let result = self.verify_equal_fact_as_builtin_premise(
+                    &EqualFact::new_from_refs(actual, expected, line_file.clone()),
                     builtin_state,
                 )?;
                 if !result.is_true() {
@@ -695,10 +651,8 @@ impl Runtime {
                 translated.start.as_ref().clone(),
             )
             .into();
-            let length_result = self.verify_objs_are_equal_in_equality_builtin(
-                &source_length,
-                &translated_length,
-                line_file.clone(),
+            let length_result = self.verify_equal_fact_as_builtin_premise(
+                &EqualFact::new_from_refs(&source_length, &translated_length, line_file.clone()),
                 builtin_state,
             )?;
             if !length_result.is_true() {
@@ -730,9 +684,7 @@ impl Runtime {
                 }
                 subgoals.push(empty_result);
                 return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
-                    left,
-                    right,
-                    line_file,
+                    equal_fact,
                     "equality: reduce substitution translates equally long empty intervals",
                     subgoals,
                 )));
@@ -787,9 +739,7 @@ impl Runtime {
             subgoals.push(pointwise_result);
 
             return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
-                left,
-                right,
-                line_file,
+                equal_fact,
                 "equality: reduce substitution by an order-preserving interval translation",
                 subgoals,
             )));
@@ -802,11 +752,12 @@ impl Runtime {
     /// Example: `reduce(a,b,f,op,s) = reduce(a+1,b,f,op,op(s,f(a)))`.
     pub(crate) fn try_verify_reduce_first_step(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         for (full_side, tail_side) in [(left, right), (right, left)] {
             let (Obj::Reduce(full), Obj::Reduce(tail)) = (full_side, tail_side) else {
                 continue;
@@ -822,10 +773,8 @@ impl Runtime {
                 (tail.func.as_ref(), full.func.as_ref()),
                 (tail.op.as_ref(), full.op.as_ref()),
             ] {
-                let result = self.verify_objs_are_equal_in_equality_builtin(
-                    actual,
-                    expected,
-                    line_file.clone(),
+                let result = self.verify_equal_fact_as_builtin_premise(
+                    &EqualFact::new_from_refs(actual, expected, line_file.clone()),
                     builtin_state,
                 )?;
                 if !result.is_true() {
@@ -864,10 +813,8 @@ impl Runtime {
             else {
                 continue;
             };
-            let seed_result = self.verify_objs_are_equal_in_equality_builtin(
-                tail.seed.as_ref(),
-                &expected_seed,
-                line_file.clone(),
+            let seed_result = self.verify_equal_fact_as_builtin_premise(
+                &EqualFact::new_from_refs(tail.seed.as_ref(), &expected_seed, line_file.clone()),
                 builtin_state,
             )?;
             if !seed_result.is_true() {
@@ -880,9 +827,7 @@ impl Runtime {
             ));
 
             return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
-                left,
-                right,
-                line_file,
+                equal_fact,
                 "equality: nonempty reduce consumes its first value into the seed",
                 subgoals,
             )));
@@ -895,11 +840,12 @@ impl Runtime {
     /// Example: `reduce(a,c,f,op,s) = reduce(b+1,c,f,op,reduce(a,b,f,op,s))`.
     pub(crate) fn try_verify_reduce_adjacent_partition(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         for (full_side, resumed_side) in [(left, right), (right, left)] {
             let (Obj::Reduce(full), Obj::Reduce(tail)) = (full_side, resumed_side) else {
                 continue;
@@ -921,10 +867,8 @@ impl Runtime {
                 (full.op.as_ref(), tail.op.as_ref()),
                 (full.seed.as_ref(), prefix.seed.as_ref()),
             ] {
-                let result = self.verify_objs_are_equal_in_equality_builtin(
-                    actual,
-                    expected,
-                    line_file.clone(),
+                let result = self.verify_equal_fact_as_builtin_premise(
+                    &EqualFact::new_from_refs(actual, expected, line_file.clone()),
                     builtin_state,
                 )?;
                 if !result.is_true() {
@@ -960,9 +904,7 @@ impl Runtime {
             subgoals.push(prefix_result);
             subgoals.push(tail_result);
             return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
-                left,
-                right,
-                line_file,
+                equal_fact,
                 "equality: reduce partitions into adjacent ordered ranges",
                 subgoals,
             )));
@@ -976,11 +918,12 @@ impl Runtime {
     /// Example: `F(union(A,B),s) = F(A,F(B,s))` when `intersect(A,B) = {}`.
     pub(crate) fn try_verify_finite_set_reduce_disjoint_union(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         for (full_side, nested_side) in [(left, right), (right, left)] {
             let (Obj::FiniteSetReduce(full), Obj::FiniteSetReduce(outer)) =
                 (full_side, nested_side)
@@ -992,10 +935,8 @@ impl Runtime {
             };
             let expected_union: Obj =
                 Union::new(outer.set.as_ref().clone(), inner.set.as_ref().clone()).into();
-            let union_result = self.verify_objs_are_equal_in_equality_builtin(
-                full.set.as_ref(),
-                &expected_union,
-                line_file.clone(),
+            let union_result = self.verify_equal_fact_as_builtin_premise(
+                &EqualFact::new_from_refs(full.set.as_ref(), &expected_union, line_file.clone()),
                 builtin_state,
             )?;
             if !union_result.is_true() {
@@ -1006,10 +947,8 @@ impl Runtime {
             let empty_set: Obj = ListSet::new(Vec::new()).into();
             let intersection: Obj =
                 Intersect::new(outer.set.as_ref().clone(), inner.set.as_ref().clone()).into();
-            let disjoint_result = self.verify_objs_are_equal_in_equality_builtin(
-                &intersection,
-                &empty_set,
-                line_file.clone(),
+            let disjoint_result = self.verify_equal_fact_as_builtin_premise(
+                &EqualFact::new_from_refs(&intersection, &empty_set, line_file.clone()),
                 builtin_state,
             )?;
             if !disjoint_result.is_true() {
@@ -1022,10 +961,8 @@ impl Runtime {
                 (full.op.as_ref(), inner.op.as_ref()),
                 (full.seed.as_ref(), inner.seed.as_ref()),
             ] {
-                let result = self.verify_objs_are_equal_in_equality_builtin(
-                    actual,
-                    expected,
-                    line_file.clone(),
+                let result = self.verify_equal_fact_as_builtin_premise(
+                    &EqualFact::new_from_refs(actual, expected, line_file.clone()),
                     builtin_state,
                 )?;
                 if !result.is_true() {
@@ -1060,9 +997,7 @@ impl Runtime {
             subgoals.push(outer_pointwise);
             subgoals.push(inner_pointwise);
             return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
-                left,
-                right,
-                line_file,
+                equal_fact,
                 "equality: finite_set_reduce over a disjoint union preserves the single seed",
                 subgoals,
             )));
@@ -1075,30 +1010,35 @@ impl Runtime {
     /// `F(X,f)` to `F(Y,fn(y Y) T {f(g(y))})`.
     pub(crate) fn try_verify_finite_set_reduce_bijective_reindexing(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         for (source_side, pullback_side) in [(left, right), (right, left)] {
             let (Obj::FiniteSetReduce(source), Obj::FiniteSetReduce(pullback)) =
                 (source_side, pullback_side)
             else {
                 continue;
             };
-            let op_result = self.verify_objs_are_equal_in_equality_builtin(
-                source.op.as_ref(),
-                pullback.op.as_ref(),
-                line_file.clone(),
+            let op_result = self.verify_equal_fact_as_builtin_premise(
+                &EqualFact::new_from_refs(
+                    source.op.as_ref(),
+                    pullback.op.as_ref(),
+                    line_file.clone(),
+                ),
                 builtin_state,
             )?;
             if !op_result.is_true() {
                 continue;
             }
-            let seed_result = self.verify_objs_are_equal_in_equality_builtin(
-                source.seed.as_ref(),
-                pullback.seed.as_ref(),
-                line_file.clone(),
+            let seed_result = self.verify_equal_fact_as_builtin_premise(
+                &EqualFact::new_from_refs(
+                    source.seed.as_ref(),
+                    pullback.seed.as_ref(),
+                    line_file.clone(),
+                ),
                 builtin_state,
             )?;
             if !seed_result.is_true() {
@@ -1168,9 +1108,7 @@ impl Runtime {
             ));
             subgoals.push(pointwise_result);
             return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
-                left,
-                right,
-                line_file,
+                equal_fact,
                 "equality: finite_set_reduce substitution along a bijection",
                 subgoals,
             )));
@@ -1193,10 +1131,8 @@ impl Runtime {
             (reduce.start.as_ref(), aggregate_start),
             (reduce.end.as_ref(), aggregate_end),
         ] {
-            let result = self.verify_objs_are_equal_in_equality_builtin(
-                actual,
-                expected,
-                line_file.clone(),
+            let result = self.verify_equal_fact_as_builtin_premise(
+                &EqualFact::new_from_refs(actual, expected, line_file.clone()),
                 builtin_state,
             )?;
             if !result.is_true() {
@@ -1218,10 +1154,8 @@ impl Runtime {
         }
         subgoals.push(function_result);
         let identity = specialization.identity();
-        let seed_result = self.verify_objs_are_equal_in_equality_builtin(
-            reduce.seed.as_ref(),
-            &identity,
-            line_file.clone(),
+        let seed_result = self.verify_equal_fact_as_builtin_premise(
+            &EqualFact::new_from_refs(reduce.seed.as_ref(), &identity, line_file.clone()),
             builtin_state,
         )?;
         if !seed_result.is_true() {
@@ -1258,10 +1192,8 @@ impl Runtime {
         line_file: LineFile,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
-        let set_result = self.verify_objs_are_equal_in_equality_builtin(
-            reduce.set.as_ref(),
-            aggregate_set,
-            line_file.clone(),
+        let set_result = self.verify_equal_fact_as_builtin_premise(
+            &EqualFact::new_from_refs(reduce.set.as_ref(), aggregate_set, line_file.clone()),
             builtin_state,
         )?;
         if !set_result.is_true() {
@@ -1281,10 +1213,8 @@ impl Runtime {
         }
         subgoals.push(function_result);
         let identity = specialization.identity();
-        let seed_result = self.verify_objs_are_equal_in_equality_builtin(
-            reduce.seed.as_ref(),
-            &identity,
-            line_file.clone(),
+        let seed_result = self.verify_equal_fact_as_builtin_premise(
+            &EqualFact::new_from_refs(reduce.seed.as_ref(), &identity, line_file.clone()),
             builtin_state,
         )?;
         if !seed_result.is_true() {
@@ -1358,10 +1288,8 @@ impl Runtime {
         line_file: LineFile,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
-        let direct = self.verify_objs_are_equal_in_equality_builtin(
-            left_func,
-            right_func,
-            line_file.clone(),
+        let direct = self.verify_equal_fact_as_builtin_premise(
+            &EqualFact::new_from_refs(left_func, right_func, line_file.clone()),
             builtin_state,
         )?;
         if direct.is_true() {
