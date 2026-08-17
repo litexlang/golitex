@@ -47,11 +47,12 @@ impl Runtime {
 
     pub(super) fn try_verify_abs_nonnegative_identity(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         let (arg, other) = match (left, right) {
             (Obj::Abs(abs), other) => (abs.arg.as_ref(), other),
             (other, Obj::Abs(abs)) => (abs.arg.as_ref(), other),
@@ -93,11 +94,12 @@ impl Runtime {
 
     pub(super) fn try_verify_abs_nonpositive_negation(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         let (arg, other) = match (left, right) {
             (Obj::Abs(abs), other) => (abs.arg.as_ref(), other),
             (other, Obj::Abs(abs)) => (abs.arg.as_ref(), other),
@@ -139,10 +141,11 @@ impl Runtime {
 
     pub(super) fn try_verify_abs_product(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         let matches_abs_product = |abs_side: &Obj, product_side: &Obj| -> bool {
             let Obj::Abs(abs) = abs_side else {
                 return false;
@@ -175,11 +178,12 @@ impl Runtime {
     // Example: `forall x R: x ^ 4 = abs(x) ^ 4`.
     pub(super) fn try_verify_abs_even_power(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         let (Obj::Pow(left_pow), Obj::Pow(right_pow)) = (left, right) else {
             return Ok(None);
         };
@@ -217,9 +221,7 @@ impl Runtime {
         };
 
         Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
-            left,
-            right,
-            line_file,
+            equal_fact,
             "abs: x^n = abs(x)^n for even integer n",
             steps,
         )))
@@ -227,10 +229,10 @@ impl Runtime {
 
     pub(super) fn try_verify_zero_from_abs_zero(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
         let zero = Self::literal_zero_obj_for_abs_builtin();
         let arg = if objs_equal_by_display_string(left, &zero) {
             right
@@ -244,39 +246,45 @@ impl Runtime {
             return Ok(None);
         }
         Ok(Some(factual_equal_success_by_builtin_reason(
-            left,
-            right,
-            line_file,
+            equal_fact,
             "abs: x = 0 from abs(x) = 0",
         )))
     }
 
     pub(crate) fn try_verify_abs_equalities(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
-        if let Some(done) =
-            self.try_verify_abs_nonnegative_identity(left, right, line_file.clone(), builtin_state)?
-        {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
+        if let Some(done) = self.try_verify_abs_nonnegative_identity(
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
+            builtin_state,
+        )? {
+            return Ok(Some(done));
+        }
+        if let Some(done) = self.try_verify_abs_nonpositive_negation(
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
+            builtin_state,
+        )? {
             return Ok(Some(done));
         }
         if let Some(done) =
-            self.try_verify_abs_nonpositive_negation(left, right, line_file.clone(), builtin_state)?
+            self.try_verify_abs_product(&EqualFact::new_from_refs(left, right, line_file.clone()))?
         {
             return Ok(Some(done));
         }
-        if let Some(done) = self.try_verify_abs_product(left, right, line_file.clone())? {
+        if let Some(done) = self.try_verify_abs_even_power(
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
+            builtin_state,
+        )? {
             return Ok(Some(done));
         }
         if let Some(done) =
-            self.try_verify_abs_even_power(left, right, line_file.clone(), builtin_state)?
+            self.try_verify_zero_from_abs_zero(&EqualFact::new_from_refs(left, right, line_file))?
         {
-            return Ok(Some(done));
-        }
-        if let Some(done) = self.try_verify_zero_from_abs_zero(left, right, line_file)? {
             return Ok(Some(done));
         }
         Ok(None)

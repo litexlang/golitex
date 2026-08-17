@@ -306,11 +306,12 @@ impl Runtime {
                 // A zero-length finite-sequence space contains the empty sequence,
                 // even when its codomain is empty. Example: `finite_seq({}, 0)`.
                 let zero: Obj = Number::new("0".to_string()).into();
-                let length_zero = self.verify_objs_are_equal_by_known_equality(
-                    fs.n.as_ref(),
-                    &zero,
-                    is_nonempty_set_fact.line_file.clone(),
-                );
+                let length_zero =
+                    self.verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
+                        fs.n.as_ref(),
+                        &zero,
+                        is_nonempty_set_fact.line_file.clone(),
+                    ));
                 if length_zero.is_true() {
                     return Ok(
                         FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
@@ -824,11 +825,11 @@ impl Runtime {
         // Example: `finite_set_size(S) = 0` => `not $is_nonempty_set(S)`.
         let finite_set_size: Obj = FiniteSetSize::new(not_is_nonempty_set_fact.set.clone()).into();
         let zero: Obj = Number::new("0".to_string()).into();
-        let size_zero_result = self.verify_objs_are_equal_by_known_equality(
+        let size_zero_result = self.verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
             &finite_set_size,
             &zero,
             not_is_nonempty_set_fact.line_file.clone(),
-        );
+        ));
         if size_zero_result.is_true() {
             return Ok(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(

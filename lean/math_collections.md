@@ -8,6 +8,8 @@ in `Litex/Rules.lean`, and the immediate use probes in
 `examples/SetSystem.lean`.
 
 Functions and compiler execution are intentionally outside this first slice.
+The first ordered-numeric interface is included because it fixes how native
+Mathlib order is reached without retyping Litex objects.
 
 ## Representation bridge
 
@@ -38,7 +40,27 @@ Immediate use: a proof of `Same a b` transports `In a S` to `In b S` without
 changing either Lean variable's carrier.
 
 Open obligation: later function and predicate interfaces must explicitly
-respect `Same`. No such interface is claimed here.
+respect `Same`. The ordered-numeric predicates below are the first executable
+instance of that rule.
+
+## Real representatives and order
+
+`Litex.AsReal x r` is `Litex.Same x r` with `r : ℝ`. Consequently,
+`Litex.In x Litex.R ↔ ∃ r, Litex.AsReal x r` holds definitionally. This keeps
+real membership in the same object/set semantics instead of introducing a
+second casting subsystem.
+
+`Litex.Lt x y` and `Litex.Le x y` existentially select real representatives
+and apply Mathlib's native `<` and `≤`. Both predicates transport across
+`Same`. The rule `Lt x y → Le x y` needs no uniqueness assumption.
+
+The registry remains extensible, so the core distinguishes choosing a
+representative from identifying two representatives. `Litex.RealCoherence`
+states the latter invariant. Irreflexivity, transitivity through independently
+chosen middle representatives, and elimination to native Mathlib comparison
+take this certificate explicitly. No inhabitant is postulated by the header.
+An incoherent user bridge can only be combined with these elimination rules by
+introducing a visibly trusted, false certificate.
 
 ## Exact-carrier sets
 
@@ -51,6 +73,10 @@ For a new hidden mathematical carrier `__Marker`, the set is
 
 For a predicate-defined subset, `Litex.setBuilder base predicate` uses the
 subtype `{x : base.Carrier // predicate x}` as its exact carrier.
+
+The construction remains universe-polymorphic. In particular,
+`Litex.Set.{0} : Type 1`, and `SetSystem.lean` defines a `Litex.Set.{1}` whose
+carrier is `Litex.Set.{0}` and proves that `R` belongs to it.
 
 Nearest rejected form: using the same carrier for a base set and a proper
 subset. That would collapse their memberships.
@@ -76,10 +102,16 @@ Mathlib native carriers
   -> numeric sets N/Z/Q/R/C     [definition]
   -> setBuilder                 [definition: subtype carrier]
   -> membership transport       [proof]
+  -> AsReal                     [definition: Same + native real]
+  -> RealCoherence              [certificate interface, no inhabitant assumed]
+  -> Lt / Le                    [definition: native real order]
+  -> order transport/bridges    [proof]
   -> executable examples        [proof]
 ```
 
-There are currently no project-declared axiom or trust edges. The native
+There are currently no project-declared axiom or trust edges. A theorem may
+take `RealCoherence` as an ordinary explicit typeclass parameter; that is not a
+header axiom and remains visible in the generated theorem signature. The native
 `ℝ`/`ℂ` examples retain Mathlib's foundational dependencies (`propext`,
 `Classical.choice`, and `Quot.sound`). The next set-system decisions are
 extensional set equality, union/intersection carriers, power-set universes,

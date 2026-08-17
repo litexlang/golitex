@@ -6,7 +6,7 @@ pub fn objs_equal_by_display_string(a: &Obj, b: &Obj) -> bool {
     objs_equal_with_nested_binder_alpha_equivalence(a, b)
 }
 
-pub fn verify_equality_by_they_are_the_same(left: &Obj, right: &Obj) -> bool {
+pub fn objs_match_for_equality_pattern(left: &Obj, right: &Obj) -> bool {
     objs_equal_by_display_string(left, right)
 }
 
@@ -208,30 +208,20 @@ pub(crate) fn obj_expr_mentions_bare_id(obj: &Obj, id: &str) -> bool {
 }
 
 pub(crate) fn factual_equal_success_by_builtin_reason(
-    left: &Obj,
-    right: &Obj,
-    line_file: LineFile,
+    equal_fact: &EqualFact,
     reason: &str,
 ) -> StmtResult {
-    factual_equal_success_by_builtin_reason_with_subgoals(
-        left,
-        right,
-        line_file,
-        reason,
-        Vec::new(),
-    )
+    factual_equal_success_by_builtin_reason_with_subgoals(equal_fact, reason, Vec::new())
 }
 
 pub(crate) fn factual_equal_success_by_builtin_reason_with_subgoals(
-    left: &Obj,
-    right: &Obj,
-    line_file: LineFile,
+    equal_fact: &EqualFact,
     reason: &str,
     subgoals: Vec<StmtResult>,
 ) -> StmtResult {
     StmtResult::from(
         FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-            EqualFact::new(left.clone(), right.clone(), line_file).into(),
+            equal_fact.clone().into(),
             reason.to_string(),
             subgoals,
         ),
@@ -243,7 +233,7 @@ pub(crate) fn equality_builtin_match_subgoals(
     expected: &Obj,
     result: StmtResult,
 ) -> Vec<StmtResult> {
-    if verify_equality_by_they_are_the_same(actual, expected) {
+    if objs_match_for_equality_pattern(actual, expected) {
         Vec::new()
     } else {
         vec![result]

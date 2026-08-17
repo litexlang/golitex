@@ -13,4 +13,4 @@ name = "Litex"
 [[lean_lib]]
 name = "Compiler2Examples"
 srcDir = "examples"
-roots = ["SetSystem"]
+roots = ["SetSystem", "OrderSystem"]

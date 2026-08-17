@@ -1,0 +1,197 @@
+# Topology — open sets and continuity, setting-first.
+#
+# All set constructions below are native Litex objects.  In particular,
+# arbitrary unions use big_union and preimages use set builders.
+
+prop is_topology_on(X set, T power_set(power_set(X))):
+    {} $in T
+    X $in T
+    forall U, V T:
+        intersect(U, V) $in T
+    forall family power_set(power_set(X)):
+        family $subset T
+        =>:
+            big_union(family) $in T
+
+setting TopologicalSpaceSetting:
+    X set
+    T power_set(power_set(X))
+    {} $in T
+    X $in T
+    forall U, V T:
+        intersect(U, V) $in T
+    forall family power_set(power_set(X)):
+        family $subset T
+        =>:
+            big_union(family) $in T
+
+thm topology_triple_intersection:
+    ? forall [TopologicalSpaceSetting], open_A, open_B, open_C T:
+        intersect(intersect(open_A, open_B), open_C) $in T
+    intersect(open_A, open_B) $in T
+
+# A set-builder family remains well-defined even when open_A = open_B; a
+# two-element set literal would incorrectly require them to be distinct.
+thm topology_binary_union:
+    ? forall [TopologicalSpaceSetting], open_A, open_B T:
+        union(open_A, open_B) $in T
+    have family power_set(power_set(X)) = {candidate power_set(X): candidate = open_A or candidate = open_B}
+    claim:
+        ? family $subset T
+        claim:
+            ? forall candidate family:
+                candidate $in T
+            candidate $in {choice power_set(X): choice = open_A or choice = open_B}
+            candidate = open_A or candidate = open_B
+            by cases:
+                ? candidate $in T
+                case candidate = open_A:
+                    candidate $in T
+                case candidate = open_B:
+                    candidate $in T
+        by def:
+            ? family $subset T
+    big_union(family) $in T
+    by extension:
+        ? big_union(family) = union(open_A, open_B)
+        claim:
+            ? forall point big_union(family):
+                point $in union(open_A, open_B)
+            obtain candidate from exist candidate family st {point $in candidate}
+            candidate $in {choice power_set(X): choice = open_A or choice = open_B}
+            candidate = open_A or candidate = open_B
+            by cases:
+                ? point $in union(open_A, open_B)
+                case candidate = open_A:
+                    point $in open_A
+                    point $in union(open_A, open_B)
+                case candidate = open_B:
+                    point $in open_B
+                    point $in union(open_A, open_B)
+        claim:
+            ? forall point union(open_A, open_B):
+                point $in big_union(family)
+            point $in open_A or point $in open_B
+            by cases:
+                ? point $in big_union(family)
+                case point $in open_A:
+                    open_A = open_A or open_A = open_B
+                    by thm set_builder_member(open_A, {choice power_set(X): choice = open_A or choice = open_B})
+                    open_A $in family
+                    point $in big_union(family)
+                case point $in open_B:
+                    open_B = open_A or open_B = open_B
+                    by thm set_builder_member(open_B, {choice power_set(X): choice = open_A or choice = open_B})
+                    open_B $in family
+                    point $in big_union(family)
+
+prop is_continuous(X, Y set, T_X power_set(power_set(X)), T_Y power_set(power_set(Y)), f fn(x X) Y):
+    $is_topology_on(X, T_X)
+    $is_topology_on(Y, T_Y)
+    forall open_Y T_Y:
+        {x X: f(x) $in open_Y} $in T_X
+
+setting ContinuousCompositionSetting:
+    A, B, CarrierC set
+    T_A power_set(power_set(A))
+    T_B power_set(power_set(B))
+    T_C power_set(power_set(CarrierC))
+    f fn(x A) B
+    g fn(y B) CarrierC
+    {} $in T_A
+    A $in T_A
+    forall open_A1, open_A2 T_A:
+        intersect(open_A1, open_A2) $in T_A
+    forall family_A power_set(power_set(A)):
+        family_A $subset T_A
+        =>:
+            big_union(family_A) $in T_A
+    {} $in T_B
+    B $in T_B
+    forall open_B1, open_B2 T_B:
+        intersect(open_B1, open_B2) $in T_B
+    forall family_B power_set(power_set(B)):
+        family_B $subset T_B
+        =>:
+            big_union(family_B) $in T_B
+    {} $in T_C
+    CarrierC $in T_C
+    forall open_C1, open_C2 T_C:
+        intersect(open_C1, open_C2) $in T_C
+    forall family_C power_set(power_set(CarrierC)):
+        family_C $subset T_C
+        =>:
+            big_union(family_C) $in T_C
+    forall open_B T_B:
+        {x A: f(x) $in open_B} $in T_A
+    forall open_C T_C:
+        {y B: g(y) $in open_C} $in T_B
+
+# Tracer theorem: settings carry the ambient hypotheses; the proof works with
+# the native preimage set builders directly.
+thm continuous_composition:
+    ? forall [ContinuousCompositionSetting]:
+        $is_continuous(A, CarrierC, T_A, T_C, fn(x A) CarrierC {g(f(x))})
+    claim:
+        ? forall target_open T_C:
+            {x A: g(f(x)) $in target_open} $in T_A
+        {y B: g(y) $in target_open} $in T_B
+        have middle_open T_B = {y B: g(y) $in target_open}
+        {x A: f(x) $in middle_open} $in T_A
+        have nested_preimage T_A = {x A: f(x) $in middle_open}
+        have direct_preimage power_set(A) = {x A: g(f(x)) $in target_open}
+        claim:
+            ? nested_preimage $subset direct_preimage
+            claim:
+                ? forall point nested_preimage:
+                    point $in direct_preimage
+                f(point) $in middle_open
+                g(f(point)) $in target_open
+                by thm set_builder_member(point, {x A: g(f(x)) $in target_open})
+            by def:
+                ? nested_preimage $subset direct_preimage
+        claim:
+            ? direct_preimage $subset nested_preimage
+            claim:
+                ? forall point direct_preimage:
+                    point $in nested_preimage
+                g(f(point)) $in target_open
+                by thm set_builder_member(f(point), {y B: g(y) $in target_open})
+                f(point) $in middle_open
+                by thm set_builder_member(point, {x A: f(x) $in middle_open})
+            by def:
+                ? direct_preimage $subset nested_preimage
+        by extension:
+            ? nested_preimage = direct_preimage
+        direct_preimage $in T_A
+    claim:
+        ? forall target_open T_C:
+            {candidate A: fn(argument A) CarrierC {g(f(argument))}(candidate) $in target_open} $in T_A
+        have direct_preimage T_A = {candidate A: g(f(candidate)) $in target_open}
+        have literal_preimage power_set(A) = {candidate A: fn(argument A) CarrierC {g(f(argument))}(candidate) $in target_open}
+        claim:
+            ? literal_preimage $subset direct_preimage
+            claim:
+                ? forall point literal_preimage:
+                    point $in direct_preimage
+                fn(argument A) CarrierC {g(f(argument))}(point) = g(f(point))
+                g(f(point)) $in target_open
+                by thm set_builder_member(point, {candidate A: g(f(candidate)) $in target_open})
+            by def:
+                ? literal_preimage $subset direct_preimage
+        claim:
+            ? direct_preimage $subset literal_preimage
+            claim:
+                ? forall point direct_preimage:
+                    point $in literal_preimage
+                g(f(point)) $in target_open
+                fn(argument A) CarrierC {g(f(argument))}(point) = g(f(point))
+                fn(argument A) CarrierC {g(f(argument))}(point) $in target_open
+                by thm set_builder_member(point, {candidate A: fn(argument A) CarrierC {g(f(argument))}(candidate) $in target_open})
+            by def:
+                ? direct_preimage $subset literal_preimage
+        by extension:
+            ? literal_preimage = direct_preimage
+        literal_preimage $in T_A
+    by def:
+        ? $is_continuous(A, CarrierC, T_A, T_C, fn(x A) CarrierC {g(f(x))})

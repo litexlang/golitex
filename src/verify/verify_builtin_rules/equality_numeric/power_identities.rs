@@ -33,11 +33,12 @@ impl Runtime {
     // Example: `m $in N` proves `(-1)^(2*m+1) = -1`.
     pub(crate) fn try_verify_minus_one_odd_natural_power(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         let is_minus_one = |obj: &Obj| match obj {
             Obj::Number(number) => number.normalized_value == "-1",
             Obj::Mul(mul) => {
@@ -100,11 +101,12 @@ impl Runtime {
     // Example: `forall a Z: a^1 = a`.
     pub(crate) fn try_verify_pow_one_identity(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         let (pow, other) = match (left, right) {
             (Obj::Pow(p), other) => (p, other),
             (other, Obj::Pow(p)) => (p, other),
@@ -114,10 +116,8 @@ impl Runtime {
             return Ok(None);
         }
         if !self
-            .verify_objs_are_equal_in_equality_builtin(
-                pow.base.as_ref(),
-                other,
-                line_file.clone(),
+            .verify_equal_fact_as_builtin_premise(
+                &EqualFact::new_from_refs(pow.base.as_ref(), other, line_file.clone()),
                 builtin_state,
             )?
             .is_true()
@@ -125,9 +125,7 @@ impl Runtime {
             return Ok(None);
         }
         Ok(Some(factual_equal_success_by_builtin_reason(
-            left,
-            right,
-            line_file,
+            equal_fact,
             "equality: a^1 = a",
         )))
     }
@@ -137,10 +135,10 @@ impl Runtime {
     // Example: `forall a C: a^0 = 1`.
     pub(crate) fn try_verify_pow_zero_identity(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
         let pow = if Self::obj_is_builtin_literal_one(left) {
             match right {
                 Obj::Pow(p) => p,
@@ -158,9 +156,7 @@ impl Runtime {
             return Ok(None);
         }
         Ok(Some(factual_equal_success_by_builtin_reason(
-            left,
-            right,
-            line_file,
+            equal_fact,
             "equality: a^0 = 1",
         )))
     }
@@ -170,10 +166,10 @@ impl Runtime {
     // Example: `forall x R: 1^x = 1`.
     pub(crate) fn try_verify_one_pow_identity(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
         let pow = if Self::obj_is_builtin_literal_one(left) {
             match right {
                 Obj::Pow(p) => p,
@@ -191,9 +187,7 @@ impl Runtime {
             return Ok(None);
         }
         Ok(Some(factual_equal_success_by_builtin_reason(
-            left,
-            right,
-            line_file,
+            equal_fact,
             "equality: 1^x = 1",
         )))
     }
@@ -203,11 +197,12 @@ impl Runtime {
     // Example: `forall x R+: 0^x = 0`.
     pub(crate) fn try_verify_zero_pow_positive_exponent_identity(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         let pow = if Self::obj_is_builtin_literal_zero(left) {
             match right {
                 Obj::Pow(p) => p,

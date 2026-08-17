@@ -1,8 +1,6 @@
 # Tracer: obtain the canonical reduced fraction of a rational
 #
-# Before (library-owned and trusted):
-# import std basics
-# by thm basics::rational_has_unique_reduced_fraction(q)
+# Before migration, the trusted wrapper lived in the standard library.
 # Former behavior: the reusable name lived in std/basics and its existential
 # conclusion was introduced by `trust`.
 #

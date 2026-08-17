@@ -28,11 +28,12 @@ impl Runtime {
     // Literal 0 vs `x - y`: verify the equality if `x = y` holds via the full equality pipeline.
     pub(crate) fn try_verify_zero_equals_subtraction_implies_equal_operands(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         let (x, y) = if Self::obj_is_builtin_literal_zero(left) {
             match right {
                 Obj::Sub(s) => (s.left.as_ref(), s.right.as_ref()),
@@ -47,13 +48,13 @@ impl Runtime {
             return Ok(None);
         };
 
-        let inner =
-            self.verify_objs_are_equal_in_equality_builtin(x, y, line_file.clone(), builtin_state)?;
+        let inner = self.verify_equal_fact_as_builtin_premise(
+            &EqualFact::new_from_refs(x, y, line_file.clone()),
+            builtin_state,
+        )?;
         if inner.is_true() {
             return Ok(Some(factual_equal_success_by_builtin_reason(
-                left,
-                right,
-                line_file,
+                equal_fact,
                 "equality: 0 = x - y with x = y (known or builtin)",
             )));
         }
@@ -67,23 +68,24 @@ impl Runtime {
         target: &Obj,
         factor: &Obj,
         line_file: LineFile,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        _builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         // Do not call the full equality builtin here; that would re-enter zero-product
         // cancellation while this rule is already trying to match a factor.
-        let known_result =
-            self.verify_objs_are_equal_by_known_equality(target, factor, line_file.clone());
+        let known_result = self.verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
+            target,
+            factor,
+            line_file.clone(),
+        ));
         if known_result.is_true() {
             return Ok(known_result);
         }
 
-        let (calculation_result, _, _) = self
-            .verify_equality_by_they_are_the_same_and_calculation(
-                target,
-                factor,
-                line_file.clone(),
-                builtin_state,
-            )?;
+        let calculation_result = self.verify_equal_fact_by_direct_evaluation(&EqualFact::new(
+            target.clone(),
+            factor.clone(),
+            line_file.clone(),
+        ));
         if calculation_result.is_true() {
             return Ok(calculation_result);
         }
@@ -93,11 +95,12 @@ impl Runtime {
 
     pub(crate) fn try_verify_zero_equals_product_implies_other_factor_zero(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         let target = if Self::obj_is_builtin_literal_zero(left) {
             right
         } else if Self::obj_is_builtin_literal_zero(right) {
@@ -185,11 +188,12 @@ impl Runtime {
     // 0 = a^n when n is a literal integer > 0 (does not rewrite 0^0 or 0^negative), from a = 0.
     pub(crate) fn try_verify_zero_equals_pow_from_base_zero(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         let pow = if Self::obj_is_builtin_literal_zero(left) {
             match right {
                 Obj::Pow(p) => p,
@@ -222,17 +226,13 @@ impl Runtime {
         } else {
             right
         };
-        let inner = self.verify_objs_are_equal_in_equality_builtin(
-            base,
-            zero_side,
-            line_file.clone(),
+        let inner = self.verify_equal_fact_as_builtin_premise(
+            &EqualFact::new_from_refs(base, zero_side, line_file.clone()),
             builtin_state,
         )?;
         if inner.is_true() {
             return Ok(Some(factual_equal_success_by_builtin_reason(
-                left,
-                right,
-                line_file,
+                equal_fact,
                 "equality: 0 = a^n from a = 0, n positive integer literal",
             )));
         }
@@ -243,10 +243,10 @@ impl Runtime {
     // Example: `forall m Z: m != 0 =>: 0 % m = 0`.
     pub(crate) fn try_verify_zero_mod_equals_zero(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
         let mod_obj = if Self::obj_is_builtin_literal_zero(left) {
             match right {
                 Obj::Mod(m) => m,
@@ -264,9 +264,7 @@ impl Runtime {
             return Ok(None);
         }
         Ok(Some(factual_equal_success_by_builtin_reason(
-            left,
-            right,
-            line_file,
+            equal_fact,
             "equality: 0 % m = 0",
         )))
     }
@@ -276,10 +274,10 @@ impl Runtime {
     // Example: `forall x Z: x % 1 = 0`.
     pub(crate) fn try_verify_mod_one_equals_zero(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
         let mod_obj = if Self::obj_is_builtin_literal_zero(left) {
             match right {
                 Obj::Mod(m) => m,
@@ -297,9 +295,7 @@ impl Runtime {
             return Ok(None);
         }
         Ok(Some(factual_equal_success_by_builtin_reason(
-            left,
-            right,
-            line_file,
+            equal_fact,
             "equality: x % 1 = 0",
         )))
     }
@@ -308,11 +304,12 @@ impl Runtime {
     // Example: `k >= 2` => `1 % k = 1`.
     pub(crate) fn try_verify_one_mod_equals_one_for_modulus_at_least_two(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         let modulus = if Self::obj_is_builtin_literal_one(left) {
             let Obj::Mod(mod_obj) = right else {
                 return Ok(None);
@@ -359,11 +356,12 @@ impl Runtime {
     // Example: `forall a Z, b N+: (a - a % b) % b = 0`.
     pub(crate) fn try_verify_mod_dividend_minus_remainder_equals_zero(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         let target = if Self::obj_is_builtin_literal_zero(left) {
             right
         } else if Self::obj_is_builtin_literal_zero(right) {
@@ -423,11 +421,12 @@ impl Runtime {
     /// Example: `forall a Z, d N+: a = d * quot(a, d) + a % d`.
     pub(crate) fn try_verify_quot_euclidean_decomposition(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         fn decomposition_parts(side: &Obj) -> Option<(&Obj, &Obj)> {
             let Obj::Add(sum) = side else {
                 return None;
@@ -488,11 +487,12 @@ impl Runtime {
     // Example: `a = m * q + r`, `0 <= r < m`, `m > 0` => `a % m = r`.
     pub(crate) fn try_verify_mod_eq_remainder_from_euclidean_division(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         let (modulus, dividend, remainder) = match (left, right) {
             (Obj::Mod(mod_obj), remainder) => {
                 (mod_obj.right.as_ref(), mod_obj.left.as_ref(), remainder)
@@ -538,10 +538,8 @@ impl Runtime {
                 self.verify_builtin_rule_premise(&remainder_in_n, builtin_state)?;
             let bound_result =
                 self.verify_builtin_rule_premise(&remainder_lt_modulus, builtin_state)?;
-            let decomposition_result = self.verify_objs_are_equal_by_known_equality(
-                dividend,
-                &candidate,
-                line_file.clone(),
+            let decomposition_result = self.verify_equal_fact_by_known_equality(
+                &EqualFact::new_from_refs(dividend, &candidate, line_file.clone()),
             );
             if !divisor_result.is_true()
                 || !remainder_result.is_true()

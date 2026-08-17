@@ -1,0 +1,24 @@
+# Tracer: equality closes zero-premise routes before premise-producing rules.
+#
+# Before (verified through the builtin-rule-first route):
+# (-1 * sqrt(2)) ^ 2 = 2
+# forall x, y R:
+#     x = y
+#     =>:
+#         (x + 1) * (x + 2) = (y + 1) * (y + 2)
+# Former behavior: equality entered the builtin-rule dispatcher before trying
+# direct evaluation and terminating structural congruence.
+#
+# Now (verified by zero-premise equality verification first):
+(-1 * sqrt(2)) ^ 2 = 2
+forall x, y R:
+    x = y
+    =>:
+        (x + 1) * (x + 2) = (y + 1) * (y + 2)
+# Current behavior: calculation and constructor-by-constructor congruence can
+# close the equality without opening another mathematical proof premise.
+#
+# Boundary: without the premise `x = y`, the symbolic product equality remains
+# unknown. The executable negative regression is
+# `zero_premise_structural_equality_still_requires_known_equal_leaves`.
+# Evidence: target/release/litex -compact -isolated -runner -f examples/01_proof_patterns/zero_premise_equality_boundary.lit

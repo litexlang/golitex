@@ -83,13 +83,21 @@ mod tests {
             .expect("store fn_eq and infer ordinary equality");
         assert!(infer_result.contains_added_fact(&ordinary_equality));
         assert!(runtime
-            .verify_objs_are_equal_by_known_equality(&f, &g, line_file.clone())
+            .verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
+                &f,
+                &g,
+                line_file.clone()
+            ))
             .is_true());
 
         let left_power_set: Obj = PowerSet::new(f).into();
         let right_power_set: Obj = PowerSet::new(g).into();
         assert!(runtime
-            .verify_objs_are_equal_by_known_equality(&left_power_set, &right_power_set, line_file,)
+            .verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
+                &left_power_set,
+                &right_power_set,
+                line_file
+            ))
             .is_true());
     }
 }

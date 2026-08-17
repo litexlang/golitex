@@ -1,11 +1,10 @@
-# Before migration, this example imported std/basics and used the
-# source-defined selection function below:
-# import std basics
+# Before migration, this example used a standard-library selection function
+# with the interface below:
 # forall a Z, d N+:
-#     basics::integer_quotient(a, d) $in Z
-#     a = d * basics::integer_quotient(a, d) + a % d
-# basics::integer_quotient(-7, 3) = -3
-# -7 = 3 * basics::integer_quotient(-7, 3) + -7 % 3
+#     quot(a, d) $in Z
+#     a = d * quot(a, d) + a % d
+# quot(-7, 3) = -3
+# -7 = 3 * quot(-7, 3) + -7 % 3
 
 # Active interface: quot is a kernel object, so no std import is needed.
 # Boundary: the dividend must be in Z and the divisor must be in N+.

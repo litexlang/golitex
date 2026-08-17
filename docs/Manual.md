@@ -2517,23 +2517,34 @@ For an ordinary atomic fact, the main order is:
    atomic fact with the same predicate shape, using known equalities.
 3. Finish zero-premise verification by directly evaluating the atomic fact as
    written.
-4. Try one bounded premise-producing builtin mathematical rule.
-5. For an equality at outer round 0, compare matching object constructors by
+4. For equality, normalize an already known equality representative when that
+   directly closes the submitted equality.
+5. For equality, finish zero-premise verification with terminating reductions
+   and constructor congruence whose leaves use only known equality or direct
+   evaluation.
+6. Try one bounded premise-producing builtin mathematical rule.
+7. At equality outer round 0, reduce one checked definition already present on
+   a goal side and compare the reduced result through terminating equality.
+8. For an equality at outer round 0, compare matching object constructors by
    recursively proving their corresponding arguments equal.
-6. At outer round 0, try the target's concrete definition with the full
-   verifier.
-7. Try an applicable known `forall` fact
+9. Try an applicable known `forall` fact
    and verify its instantiated premises.
-8. Try registered predicate properties or enabled strategies where applicable.
-9. On success, store the fact and run builtin inference.
+10. Try registered predicate properties or enabled strategies where applicable.
+11. On success, store the fact and run builtin inference.
 
 Here a **premise** is a child fact that a rule must verify before it may
 conclude its parent fact. Zero-premise verification does not generate such
 child facts: it reuses a known fact in step 2 or directly evaluates the current
-fact in step 3. This separation is necessary after a builtin rule has consumed
-the allowed rule step. For example, proving `x * 2 >= 0` from known `x >= 0`
+fact in step 3. Equality may additionally use the terminating comparison in
+step 5 because its reductions and constructor descent create no mathematical
+child facts. Step 4 may cite an equality that is already verified, but it does
+not generate a new proof obligation. This separation is necessary after a
+builtin rule has consumed the allowed rule step. For example, proving
+`x * 2 >= 0` from known `x >= 0`
 uses the multiplication rule once; its remaining premise `2 >= 0` must still
 close by direct evaluation without opening another premise-producing rule.
+Likewise, a child equality may calculate or descend through matching
+constructors after the surrounding rule has consumed that step.
 
 Direct evaluation does not unfold every argument through checked
 `have x T = value` definitions and retry on a rewritten target. Equality-aware

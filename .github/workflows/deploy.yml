@@ -196,7 +196,7 @@ jobs:
         run: |
           sudo dpkg -i "litex_${VERSION}_${{ matrix.deb_arch }}.deb"
           SMOKE_FILE="$(mktemp)"
-          printf '%s\n' 'import std basics' 'by thm basics::prime_implies_prime_by_trial_division(2)' > "${SMOKE_FILE}"
+          printf '%s\n' 'import std basics' 'quot(-7, 3) = -3' '$dvd(12, 3)' > "${SMOKE_FILE}"
           if ! OUTPUT=$(litex -runner -isolated -f "${SMOKE_FILE}"); then
             printf '%s\n' "${OUTPUT}"
             exit 1
@@ -259,11 +259,11 @@ jobs:
             throw "MSI did not install the Litex binary at $binary"
           }
           $smokeFile = Join-Path $env:TEMP "litex-msi-smoke.lit"
-          Set-Content -Path $smokeFile -Value "import std basics`nby thm basics::prime_implies_prime_by_trial_division(2)"
+          Set-Content -Path $smokeFile -Value "import std basics`nquot(-7, 3) = -3`n`$dvd(12, 3)"
           $output = & $binary -isolated -f $smokeFile
           $outputText = $output -join "`n"
           Remove-Item -Force $smokeFile
-          if ($LASTEXITCODE -ne 0 -or $outputText.Contains('"result": "error"') -or -not $outputText.Contains('"type": "proof by theorem"')) {
+          if ($LASTEXITCODE -ne 0 -or $outputText.Contains('"result": "error"') -or -not $outputText.Contains('quot(-7, 3) = -3')) {
             $outputText
             throw "MSI smoke test failed"
           }
@@ -391,9 +391,9 @@ jobs:
 
             test do
               assert_match "litex VERSION_PLACEHOLDER", shell_output("#{bin}/litex -version")
-              (testpath/"test.lit").write "import std basics\nby thm basics::prime_implies_prime_by_trial_division(2)\n"
+              (testpath/"test.lit").write "import std basics\nquot(-7, 3) = -3\n$dvd(12, 3)\n"
               output = shell_output("#{bin}/litex -isolated -f #{testpath}/test.lit")
-              assert_match '"type": "proof by theorem"', output
+              assert_match 'quot(-7, 3) = -3', output
               refute_match '"result": "error"', output
             end
           end
@@ -533,7 +533,7 @@ jobs:
         run: |
           SMOKE_FILE="$(mktemp)"
           trap 'rm -f "${SMOKE_FILE}"' EXIT
-          printf '%s\n' 'import std basics' 'by thm basics::prime_implies_prime_by_trial_division(2)' > "${SMOKE_FILE}"
+          printf '%s\n' 'import std basics' 'quot(-7, 3) = -3' '$dvd(12, 3)' > "${SMOKE_FILE}"
           if ! OUTPUT=$(docker run --rm -v "${SMOKE_FILE}:/tmp/litex-smoke.lit:ro" "ghcr.io/litexlang/litex:${VERSION}" -runner -isolated -f /tmp/litex-smoke.lit); then
             printf '%s\n' "${OUTPUT}"
             exit 1
@@ -584,7 +584,7 @@ jobs:
             litex -version
             SMOKE_FILE="$(mktemp)"
             trap 'rm -f "${SMOKE_FILE}"' EXIT
-            printf '%s\n' 'import std basics' 'by thm basics::prime_implies_prime_by_trial_division(2)' > "${SMOKE_FILE}"
+            printf '%s\n' 'import std basics' 'quot(-7, 3) = -3' '$dvd(12, 3)' > "${SMOKE_FILE}"
             if ! OUTPUT=$(litex -runner -isolated -f "${SMOKE_FILE}"); then
               printf '%s\n' "${OUTPUT}"
               exit 1

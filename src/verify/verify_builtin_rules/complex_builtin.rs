@@ -1,6 +1,6 @@
 use super::order_normalize::normalize_positive_order_atomic_fact;
 use crate::prelude::*;
-use crate::verify::verify_equality_by_builtin_rules::verify_equality_by_they_are_the_same;
+use crate::verify::verify_equality_by_builtin_rules::objs_match_for_equality_pattern;
 
 impl Runtime {
     /// Native complex equalities use dedicated AST nodes and intentionally normalize only the
@@ -8,23 +8,20 @@ impl Runtime {
     /// Example: `i^2 = -1`, while an arbitrary `(a + b*i) * (c + d*i)` stays opaque.
     pub(super) fn try_verify_native_complex_equality(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         if let Some((expected, reason)) = native_i_normal_form(left) {
             if native_normal_form_matches(&expected, right) {
-                return Ok(Some(complex_equality_result(
-                    left, right, line_file, reason,
-                )));
+                return Ok(Some(complex_equality_result(equal_fact, reason)));
             }
         }
         if let Some((expected, reason)) = native_i_normal_form(right) {
             if native_normal_form_matches(&expected, left) {
-                return Ok(Some(complex_equality_result(
-                    left, right, line_file, reason,
-                )));
+                return Ok(Some(complex_equality_result(equal_fact, reason)));
             }
         }
 
@@ -35,7 +32,7 @@ impl Runtime {
             builtin_state,
         )? {
             return Ok(Some(complex_equality_result_with_steps(
-                left, right, line_file, &reason, steps,
+                equal_fact, &reason, steps,
             )));
         }
         if let Some((reason, steps)) = self.try_verify_native_coordinate_equality(
@@ -45,16 +42,13 @@ impl Runtime {
             builtin_state,
         )? {
             return Ok(Some(complex_equality_result_with_steps(
-                left, right, line_file, &reason, steps,
+                equal_fact, &reason, steps,
             )));
         }
 
-        if let Some(result) = self.try_verify_native_complex_abs_equality(
-            left,
-            right,
-            line_file.clone(),
-            builtin_state,
-        )? {
+        if let Some(result) =
+            self.try_verify_native_complex_abs_equality(equal_fact, builtin_state)?
+        {
             return Ok(Some(result));
         }
         if let Some((reason, steps)) = self.native_complex_abs_equality_reason_and_steps(
@@ -64,7 +58,7 @@ impl Runtime {
             builtin_state,
         )? {
             return Ok(Some(complex_equality_result_with_steps(
-                left, right, line_file, &reason, steps,
+                equal_fact, &reason, steps,
             )));
         }
 
@@ -78,11 +72,11 @@ impl Runtime {
         };
         if let Some(z) = candidate {
             let complex_abs: Obj = ComplexAbs::new(z.clone()).into();
-            let known_zero = self.verify_objs_are_equal_by_known_equality(
+            let known_zero = self.verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
                 &complex_abs,
                 &zero,
                 line_file.clone(),
-            );
+            ));
             if known_zero.is_true() {
                 let Some(mut steps) =
                     self.verify_objects_are_known_complex(&[z], &line_file, builtin_state)?
@@ -91,9 +85,7 @@ impl Runtime {
                 };
                 steps.push(known_zero);
                 return Ok(Some(complex_equality_result_with_steps(
-                    left,
-                    right,
-                    line_file,
+                    &EqualFact::new_from_refs(left, right, line_file),
                     "complex modulus zero implies zero argument",
                     steps,
                 )));
@@ -101,31 +93,27 @@ impl Runtime {
         }
 
         let (z, expected) = native_reconstruction_pair(left);
-        if verify_equality_by_they_are_the_same(&expected, right) {
+        if objs_match_for_equality_pattern(&expected, right) {
             let Some(steps) =
                 self.verify_objects_are_known_complex(&[z], &line_file, builtin_state)?
             else {
                 return Ok(None);
             };
             return Ok(Some(complex_equality_result_with_steps(
-                left,
-                right,
-                line_file,
+                &EqualFact::new_from_refs(left, right, line_file),
                 "complex reconstruction from real and imaginary coordinates",
                 steps,
             )));
         }
         let (z, expected) = native_reconstruction_pair(right);
-        if verify_equality_by_they_are_the_same(&expected, left) {
+        if objs_match_for_equality_pattern(&expected, left) {
             let Some(steps) =
                 self.verify_objects_are_known_complex(&[z], &line_file, builtin_state)?
             else {
                 return Ok(None);
             };
             return Ok(Some(complex_equality_result_with_steps(
-                left,
-                right,
-                line_file,
+                &EqualFact::new_from_refs(left, right, line_file),
                 "complex reconstruction from real and imaginary coordinates",
                 steps,
             )));
@@ -143,22 +131,26 @@ impl Runtime {
         let right_re: Obj = RealPart::new(right.clone()).into();
         let left_img: Obj = ImaginaryPart::new(left.clone()).into();
         let right_img: Obj = ImaginaryPart::new(right.clone()).into();
-        let re_result =
-            self.verify_objs_are_equal_by_known_equality(&left_re, &right_re, line_file.clone());
+        let re_result = self.verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
+            &left_re,
+            &right_re,
+            line_file.clone(),
+        ));
         if !re_result.is_true() {
             return Ok(None);
         }
-        let img_result =
-            self.verify_objs_are_equal_by_known_equality(&left_img, &right_img, line_file.clone());
+        let img_result = self.verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
+            &left_img,
+            &right_img,
+            line_file.clone(),
+        ));
         if !img_result.is_true() {
             return Ok(None);
         }
         steps.push(re_result);
         steps.push(img_result);
         Ok(Some(complex_equality_result_with_steps(
-            left,
-            right,
-            line_file,
+            &EqualFact::new_from_refs(left, right, line_file),
             "complex extensionality by re and img",
             steps,
         )))
@@ -286,7 +278,7 @@ impl Runtime {
 
         if obj_is_native_i(arg) {
             let target: Obj = Number::new(if is_real_part { "0" } else { "1" }.to_string()).into();
-            if verify_equality_by_they_are_the_same(&target, expected) {
+            if objs_match_for_equality_pattern(&target, expected) {
                 return Ok(Some((
                     format!("{coordinate}: native imaginary-unit coordinate"),
                     Vec::new(),
@@ -300,7 +292,7 @@ impl Runtime {
             } else {
                 imaginary_part.clone()
             };
-            if verify_equality_by_they_are_the_same(&target, expected) {
+            if objs_match_for_equality_pattern(&target, expected) {
                 let Some(steps) = self.verify_objects_are_known_reals_in_builtin(
                     &[real_part, imaginary_part],
                     &line_file,
@@ -316,7 +308,7 @@ impl Runtime {
             }
         }
 
-        if verify_equality_by_they_are_the_same(arg, expected) && is_real_part {
+        if objs_match_for_equality_pattern(arg, expected) && is_real_part {
             let Some(steps) =
                 self.verify_objects_are_known_reals_in_builtin(&[arg], &line_file, builtin_state)?
             else {
@@ -353,7 +345,7 @@ impl Runtime {
             _ => None,
         };
         if let Some(target) = additive_target {
-            if verify_equality_by_they_are_the_same(&target, expected) {
+            if objs_match_for_equality_pattern(&target, expected) {
                 let operands = match arg {
                     Obj::Add(add) => [add.left.as_ref(), add.right.as_ref()],
                     Obj::Sub(sub) => [sub.left.as_ref(), sub.right.as_ref()],
@@ -391,7 +383,7 @@ impl Runtime {
                 )
                 .into()
             };
-            if verify_equality_by_they_are_the_same(&target, expected) {
+            if objs_match_for_equality_pattern(&target, expected) {
                 let Some(steps) = self.verify_objects_are_known_complex(
                     &[mul.left.as_ref(), mul.right.as_ref()],
                     &line_file,
@@ -430,7 +422,7 @@ impl Runtime {
                 )
                 .into()
             };
-            if verify_equality_by_they_are_the_same(&target, expected) {
+            if objs_match_for_equality_pattern(&target, expected) {
                 let Some(mut steps) =
                     self.verify_objects_are_known_complex(&[base], &line_file, builtin_state)?
                 else {
@@ -481,7 +473,7 @@ impl Runtime {
             )
             .into();
             let target: Obj = Div::new(numerator, denominator).into();
-            if verify_equality_by_they_are_the_same(&target, expected) {
+            if objs_match_for_equality_pattern(&target, expected) {
                 let Some(mut steps) = self.verify_objects_are_known_complex(
                     &[div.left.as_ref(), div.right.as_ref()],
                     &line_file,
@@ -514,26 +506,22 @@ impl Runtime {
 
     fn try_verify_native_complex_abs_equality(
         &mut self,
-        application: &Obj,
-        expected: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let application = &equal_fact.left;
+        let expected = &equal_fact.right;
         let Some((reason, steps)) = self.native_complex_abs_equality_reason_and_steps(
             application,
             expected,
-            line_file.clone(),
+            equal_fact.line_file.clone(),
             builtin_state,
         )?
         else {
             return Ok(None);
         };
         Ok(Some(complex_equality_result_with_steps(
-            application,
-            expected,
-            line_file,
-            &reason,
-            steps,
+            equal_fact, &reason, steps,
         )))
     }
 
@@ -553,7 +541,7 @@ impl Runtime {
         }
 
         let real_abs: Obj = Abs::new(arg.clone()).into();
-        if verify_equality_by_they_are_the_same(&real_abs, expected) {
+        if objs_match_for_equality_pattern(&real_abs, expected) {
             let Some(steps) =
                 self.verify_objects_are_known_reals_in_builtin(&[arg], &line_file, builtin_state)?
             else {
@@ -566,7 +554,7 @@ impl Runtime {
         }
 
         let definition = native_complex_abs_definition(arg);
-        if verify_equality_by_they_are_the_same(&definition, expected) {
+        if objs_match_for_equality_pattern(&definition, expected) {
             return Ok(Some((
                 "complex modulus coordinate definition".to_string(),
                 Vec::new(),
@@ -575,8 +563,11 @@ impl Runtime {
 
         if obj_is_literal_zero(expected) {
             let zero: Obj = Number::new("0".to_string()).into();
-            let arg_zero =
-                self.verify_objs_are_equal_by_known_equality(arg, &zero, line_file.clone());
+            let arg_zero = self.verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
+                arg,
+                &zero,
+                line_file.clone(),
+            ));
             if arg_zero.is_true() {
                 return Ok(Some((
                     "complex modulus is zero when its argument is zero".to_string(),
@@ -594,8 +585,8 @@ impl Runtime {
             ) else {
                 return Ok(None);
             };
-            if verify_equality_by_they_are_the_same(&product.left, &left_abs.arg)
-                && verify_equality_by_they_are_the_same(&product.right, &right_abs.arg)
+            if objs_match_for_equality_pattern(&product.left, &left_abs.arg)
+                && objs_match_for_equality_pattern(&product.right, &right_abs.arg)
             {
                 return Ok(Some((
                     "complex modulus is multiplicative".to_string(),
@@ -644,13 +635,15 @@ impl Runtime {
     }
 }
 
-fn complex_equality_result(
-    left: &Obj,
-    right: &Obj,
-    line_file: LineFile,
-    reason: &str,
-) -> StmtResult {
-    complex_equality_result_with_steps(left, right, line_file, reason, Vec::new())
+fn complex_equality_result(equal_fact: &EqualFact, reason: &str) -> StmtResult {
+    let left = &equal_fact.left;
+    let right = &equal_fact.right;
+    let line_file = equal_fact.line_file.clone();
+    complex_equality_result_with_steps(
+        &EqualFact::new_from_refs(left, right, line_file),
+        reason,
+        Vec::new(),
+    )
 }
 
 fn complex_successor_power_base_and_exponent(obj: &Obj) -> Option<(&Obj, &Obj)> {
@@ -670,12 +663,13 @@ fn complex_successor_power_base_and_exponent(obj: &Obj) -> Option<(&Obj, &Obj)> 
 }
 
 fn complex_equality_result_with_steps(
-    left: &Obj,
-    right: &Obj,
-    line_file: LineFile,
+    equal_fact: &EqualFact,
     reason: &str,
     steps: Vec<StmtResult>,
 ) -> StmtResult {
+    let left = &equal_fact.left;
+    let right = &equal_fact.right;
+    let line_file = equal_fact.line_file.clone();
     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
         EqualFact::new(left.clone(), right.clone(), line_file).into(),
         reason.to_string(),
@@ -712,8 +706,8 @@ fn complex_triangle_shape(left: &Obj, right: &Obj) -> bool {
     else {
         return false;
     };
-    verify_equality_by_they_are_the_same(&sum.left, &left_abs.arg)
-        && verify_equality_by_they_are_the_same(&sum.right, &right_abs.arg)
+    objs_match_for_equality_pattern(&sum.left, &left_abs.arg)
+        && objs_match_for_equality_pattern(&sum.right, &right_abs.arg)
 }
 
 fn complex_reverse_triangle_shape(left: &Obj, right: &Obj) -> bool {
@@ -734,8 +728,8 @@ fn complex_reverse_triangle_shape(left: &Obj, right: &Obj) -> bool {
     let Obj::Sub(bound_difference) = bound_abs.arg.as_ref() else {
         return false;
     };
-    verify_equality_by_they_are_the_same(&left_abs.arg, &bound_difference.left)
-        && verify_equality_by_they_are_the_same(&right_abs.arg, &bound_difference.right)
+    objs_match_for_equality_pattern(&left_abs.arg, &bound_difference.left)
+        && objs_match_for_equality_pattern(&right_abs.arg, &bound_difference.right)
 }
 
 fn native_i_normal_form(obj: &Obj) -> Option<(Obj, &'static str)> {
@@ -770,7 +764,7 @@ fn native_i_normal_form(obj: &Obj) -> Option<(Obj, &'static str)> {
 }
 
 fn native_normal_form_matches(expected: &Obj, target: &Obj) -> bool {
-    if verify_equality_by_they_are_the_same(expected, target) {
+    if objs_match_for_equality_pattern(expected, target) {
         return true;
     }
     match (

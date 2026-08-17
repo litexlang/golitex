@@ -1,4 +1,3 @@
-import std basics
 
 # Tracer: apply one named theorem and eliminate its sole existential conclusion.
 #
@@ -20,7 +19,7 @@ copy = 2
 
 # Module-qualified imported theorems use the same call-resolution path.
 have q Q
-obtain imported_p, imported_d from thm basics::rational_has_reduced_fraction(q)
+obtain imported_p, imported_d from thm rational_has_unique_reduced_fraction(q)
 imported_p $in Z
 imported_d $in N+
 q = imported_p / imported_d

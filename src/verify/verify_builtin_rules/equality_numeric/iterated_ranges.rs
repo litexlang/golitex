@@ -17,10 +17,10 @@ impl Runtime {
     /// A finite integer-range sum of the literal zero function is zero.
     pub(crate) fn try_verify_literal_zero_range_sum_is_zero(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
         let sum = if Self::obj_is_builtin_literal_zero(left) {
             match right {
                 Obj::Sum(sum) => sum,
@@ -43,9 +43,7 @@ impl Runtime {
             return Ok(None);
         }
         Ok(Some(factual_equal_success_by_builtin_reason(
-            left,
-            right,
-            line_file,
+            equal_fact,
             "equality: a finite range sum of the literal zero function is zero",
         )))
     }
@@ -55,28 +53,33 @@ impl Runtime {
     /// `forall x Z: s <= x, x <= e => f(x) = g(x)`, the two sums are equal.
     pub(crate) fn try_verify_sum_pointwise_congruence(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         let (Obj::Sum(left_sum), Obj::Sum(right_sum)) = (left, right) else {
             return Ok(None);
         };
 
         if !self
-            .verify_objs_are_equal_in_equality_builtin(
-                left_sum.start.as_ref(),
-                right_sum.start.as_ref(),
-                line_file.clone(),
+            .verify_equal_fact_as_builtin_premise(
+                &EqualFact::new_from_refs(
+                    left_sum.start.as_ref(),
+                    right_sum.start.as_ref(),
+                    line_file.clone(),
+                ),
                 builtin_state,
             )?
             .is_true()
             || !self
-                .verify_objs_are_equal_in_equality_builtin(
-                    left_sum.end.as_ref(),
-                    right_sum.end.as_ref(),
-                    line_file.clone(),
+                .verify_equal_fact_as_builtin_premise(
+                    &EqualFact::new_from_refs(
+                        left_sum.end.as_ref(),
+                        right_sum.end.as_ref(),
+                        line_file.clone(),
+                    ),
                     builtin_state,
                 )?
                 .is_true()
@@ -106,10 +109,8 @@ impl Runtime {
         ) {
             (Some(left_set), Some(right_set))
                 if self
-                    .verify_objs_are_equal_in_equality_builtin(
-                        &left_set,
-                        &right_set,
-                        line_file.clone(),
+                    .verify_equal_fact_as_builtin_premise(
+                        &EqualFact::new_from_refs(&left_set, &right_set, line_file.clone()),
                         builtin_state,
                     )?
                     .is_true() =>
@@ -161,23 +162,19 @@ impl Runtime {
             return Ok(None);
         }
 
-        Ok(Some(factual_equal_success_by_builtin_reason(
-            left,
-            right,
-            line_file,
-            "equality: finite sums are congruent from pointwise equality on the shared integer range",
-        )))
+        Ok(Some(factual_equal_success_by_builtin_reason(equal_fact, "equality: finite sums are congruent from pointwise equality on the shared integer range")))
     }
 
     /// `sum(s,e,f) = sum(s,e,g) + sum(s,e,h)` when for all integer `x` with `s <= x <= e`,
     /// `f(x) = g(x) + h(x)` (summands are unary anonymous `fn` bodies, instantiated at `x`).
     pub(crate) fn try_verify_sum_additivity(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         let (sum_m, sum_a, sum_b) = match (left, right) {
             (Obj::Sum(m), Obj::Add(a)) => match (a.left.as_ref(), a.right.as_ref()) {
                 (Obj::Sum(a1), Obj::Sum(a2)) => (m, a1, a2),
@@ -192,7 +189,10 @@ impl Runtime {
 
         let mut require_eq = |a: &Obj, b: &Obj| -> Result<bool, RuntimeError> {
             Ok(self
-                .verify_objs_are_equal_in_equality_builtin(a, b, line_file.clone(), builtin_state)?
+                .verify_equal_fact_as_builtin_premise(
+                    &EqualFact::new_from_refs(a, b, line_file.clone()),
+                    builtin_state,
+                )?
                 .is_true())
         };
         if !require_eq(sum_m.start.as_ref(), sum_a.start.as_ref())? {
@@ -243,9 +243,7 @@ impl Runtime {
         )?;
         if r.is_true() {
             return Ok(Some(factual_equal_success_by_builtin_reason(
-                left,
-                right,
-                line_file,
+                equal_fact,
                 "equality: sum additivity from pointwise equality on the integer index range",
             )));
         }
@@ -256,11 +254,12 @@ impl Runtime {
     /// Example: `sum(m,n,fn(i Z) R {f(i)-g(i)}) = sum(m,n,f) - sum(m,n,g)`.
     pub(crate) fn try_verify_sum_subtraction(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         let (difference_sum, minuend_sum, subtrahend_sum) = match (left, right) {
             (Obj::Sum(sum), Obj::Sub(difference)) => {
                 let (Obj::Sum(minuend), Obj::Sum(subtrahend)) =
@@ -283,18 +282,22 @@ impl Runtime {
 
         for other_sum in [minuend_sum, subtrahend_sum] {
             if !self
-                .verify_objs_are_equal_in_equality_builtin(
-                    difference_sum.start.as_ref(),
-                    other_sum.start.as_ref(),
-                    line_file.clone(),
+                .verify_equal_fact_as_builtin_premise(
+                    &EqualFact::new_from_refs(
+                        difference_sum.start.as_ref(),
+                        other_sum.start.as_ref(),
+                        line_file.clone(),
+                    ),
                     builtin_state,
                 )?
                 .is_true()
                 || !self
-                    .verify_objs_are_equal_in_equality_builtin(
-                        difference_sum.end.as_ref(),
-                        other_sum.end.as_ref(),
-                        line_file.clone(),
+                    .verify_equal_fact_as_builtin_premise(
+                        &EqualFact::new_from_refs(
+                            difference_sum.end.as_ref(),
+                            other_sum.end.as_ref(),
+                            line_file.clone(),
+                        ),
                         builtin_state,
                     )?
                     .is_true()
@@ -353,9 +356,7 @@ impl Runtime {
         }
 
         Ok(Some(factual_equal_success_by_builtin_reason(
-            left,
-            right,
-            line_file,
+            equal_fact,
             "equality: finite sum subtraction over a common additive carrier",
         )))
     }
@@ -422,11 +423,12 @@ impl Runtime {
     /// `sum(a..b) + sum((b+1)..c) = sum(a..c)` with the same unary anonymous summand on each side.
     pub(crate) fn try_verify_sum_merge_adjacent_ranges(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         let (add, s3) = match (left, right) {
             (Obj::Add(a), Obj::Sum(s)) => (a, s),
             (Obj::Sum(s), Obj::Add(a)) => (a, s),
@@ -465,10 +467,8 @@ impl Runtime {
         let one: Obj = Number::new("1".to_string()).into();
         let gap = Add::new((*s1.end).clone(), one).into();
         if !self
-            .verify_objs_are_equal_in_equality_builtin(
-                &gap,
-                s2.start.as_ref(),
-                line_file.clone(),
+            .verify_equal_fact_as_builtin_premise(
+                &EqualFact::new_from_refs(&gap, s2.start.as_ref(), line_file.clone()),
                 builtin_state,
             )?
             .is_true()
@@ -476,10 +476,8 @@ impl Runtime {
             return Ok(None);
         }
         if !self
-            .verify_objs_are_equal_in_equality_builtin(
-                s1.start.as_ref(),
-                s3.start.as_ref(),
-                line_file.clone(),
+            .verify_equal_fact_as_builtin_premise(
+                &EqualFact::new_from_refs(s1.start.as_ref(), s3.start.as_ref(), line_file.clone()),
                 builtin_state,
             )?
             .is_true()
@@ -487,10 +485,8 @@ impl Runtime {
             return Ok(None);
         }
         if !self
-            .verify_objs_are_equal_in_equality_builtin(
-                s2.end.as_ref(),
-                s3.end.as_ref(),
-                line_file.clone(),
+            .verify_equal_fact_as_builtin_premise(
+                &EqualFact::new_from_refs(s2.end.as_ref(), s3.end.as_ref(), line_file.clone()),
                 builtin_state,
             )?
             .is_true()
@@ -498,10 +494,8 @@ impl Runtime {
             return Ok(None);
         }
         if !self
-            .verify_objs_are_equal_in_equality_builtin(
-                s1.func.as_ref(),
-                s2.func.as_ref(),
-                line_file.clone(),
+            .verify_equal_fact_as_builtin_premise(
+                &EqualFact::new_from_refs(s1.func.as_ref(), s2.func.as_ref(), line_file.clone()),
                 builtin_state,
             )?
             .is_true()
@@ -509,10 +503,8 @@ impl Runtime {
             return Ok(None);
         }
         if !self
-            .verify_objs_are_equal_in_equality_builtin(
-                s1.func.as_ref(),
-                s3.func.as_ref(),
-                line_file.clone(),
+            .verify_equal_fact_as_builtin_premise(
+                &EqualFact::new_from_refs(s1.func.as_ref(), s3.func.as_ref(), line_file.clone()),
                 builtin_state,
             )?
             .is_true()
@@ -520,9 +512,7 @@ impl Runtime {
             return Ok(None);
         }
         Ok(Some(factual_equal_success_by_builtin_reason(
-            stmt_left,
-            stmt_right,
-            line_file,
+            &EqualFact::new_from_refs(stmt_left, stmt_right, line_file),
             "equality: merge adjacent sum ranges with the same summand",
         )))
     }
@@ -531,20 +521,23 @@ impl Runtime {
     // Example: `sum(1, 1, fn(x N+) N+ {x}) = 1`.
     pub(crate) fn try_verify_sum_single_term(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         for (sum_obj, other) in [(left, right), (right, left)] {
             let Obj::Sum(sum) = sum_obj else {
                 continue;
             };
             if !self
-                .verify_objs_are_equal_in_equality_builtin(
-                    sum.start.as_ref(),
-                    sum.end.as_ref(),
-                    line_file.clone(),
+                .verify_equal_fact_as_builtin_premise(
+                    &EqualFact::new_from_refs(
+                        sum.start.as_ref(),
+                        sum.end.as_ref(),
+                        line_file.clone(),
+                    ),
                     builtin_state,
                 )?
                 .is_true()
@@ -557,18 +550,14 @@ impl Runtime {
                 continue;
             };
             if self
-                .verify_objs_are_equal_in_equality_builtin(
-                    &expected,
-                    other,
-                    line_file.clone(),
+                .verify_equal_fact_as_builtin_premise(
+                    &EqualFact::new_from_refs(&expected, other, line_file.clone()),
                     builtin_state,
                 )?
                 .is_true()
             {
                 return Ok(Some(factual_equal_success_by_builtin_reason(
-                    left,
-                    right,
-                    line_file,
+                    equal_fact,
                     "equality: single-term sum equals the summand",
                 )));
             }
@@ -580,20 +569,23 @@ impl Runtime {
     // Example: `product(1, 1, fn(x N+) N+ {x}) = 1`.
     pub(crate) fn try_verify_product_single_term(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         for (product_obj, other) in [(left, right), (right, left)] {
             let Obj::Product(product) = product_obj else {
                 continue;
             };
             if !self
-                .verify_objs_are_equal_in_equality_builtin(
-                    product.start.as_ref(),
-                    product.end.as_ref(),
-                    line_file.clone(),
+                .verify_equal_fact_as_builtin_premise(
+                    &EqualFact::new_from_refs(
+                        product.start.as_ref(),
+                        product.end.as_ref(),
+                        line_file.clone(),
+                    ),
                     builtin_state,
                 )?
                 .is_true()
@@ -608,18 +600,14 @@ impl Runtime {
                 continue;
             };
             if self
-                .verify_objs_are_equal_in_equality_builtin(
-                    &expected,
-                    other,
-                    line_file.clone(),
+                .verify_equal_fact_as_builtin_premise(
+                    &EqualFact::new_from_refs(&expected, other, line_file.clone()),
                     builtin_state,
                 )?
                 .is_true()
             {
                 return Ok(Some(factual_equal_success_by_builtin_reason(
-                    left,
-                    right,
-                    line_file,
+                    equal_fact,
                     "equality: single-term product equals the factor",
                 )));
             }
@@ -630,11 +618,12 @@ impl Runtime {
     // sum(s,e,f) = sum(s,e-1,f) + f(e): same unary summand, shared start, e = (e-1)+1 on the shorter range.
     pub(crate) fn try_verify_sum_split_last_term(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         let one: Obj = Number::new("1".to_string()).into();
         for (full_obj, add_obj) in [(left, right), (right, left)] {
             let Obj::Sum(s_full) = full_obj else {
@@ -651,10 +640,12 @@ impl Runtime {
                     continue;
                 };
                 if !self
-                    .verify_objs_are_equal_in_equality_builtin(
-                        s_full.start.as_ref(),
-                        s_pre.start.as_ref(),
-                        line_file.clone(),
+                    .verify_equal_fact_as_builtin_premise(
+                        &EqualFact::new_from_refs(
+                            s_full.start.as_ref(),
+                            s_pre.start.as_ref(),
+                            line_file.clone(),
+                        ),
                         builtin_state,
                     )?
                     .is_true()
@@ -663,10 +654,12 @@ impl Runtime {
                 }
                 let end_pre_plus_one: Obj = Add::new((*s_pre.end).clone(), one.clone()).into();
                 if !self
-                    .verify_objs_are_equal_in_equality_builtin(
-                        s_full.end.as_ref(),
-                        &end_pre_plus_one,
-                        line_file.clone(),
+                    .verify_equal_fact_as_builtin_premise(
+                        &EqualFact::new_from_refs(
+                            s_full.end.as_ref(),
+                            &end_pre_plus_one,
+                            line_file.clone(),
+                        ),
                         builtin_state,
                     )?
                     .is_true()
@@ -674,10 +667,12 @@ impl Runtime {
                     continue;
                 }
                 if !self
-                    .verify_objs_are_equal_in_equality_builtin(
-                        s_full.func.as_ref(),
-                        s_pre.func.as_ref(),
-                        line_file.clone(),
+                    .verify_equal_fact_as_builtin_premise(
+                        &EqualFact::new_from_refs(
+                            s_full.func.as_ref(),
+                            s_pre.func.as_ref(),
+                            line_file.clone(),
+                        ),
                         builtin_state,
                     )?
                     .is_true()
@@ -692,10 +687,8 @@ impl Runtime {
                     continue;
                 };
                 if !self
-                    .verify_objs_are_equal_in_equality_builtin(
-                        &expected_tail,
-                        tail,
-                        line_file.clone(),
+                    .verify_equal_fact_as_builtin_premise(
+                        &EqualFact::new_from_refs(&expected_tail, tail, line_file.clone()),
                         builtin_state,
                     )?
                     .is_true()
@@ -703,9 +696,7 @@ impl Runtime {
                     continue;
                 }
                 return Ok(Some(factual_equal_success_by_builtin_reason(
-                    left,
-                    right,
-                    line_file,
+                    equal_fact,
                     "equality: sum through e equals sum through e-1 plus last summand f(e)",
                 )));
             }
@@ -716,11 +707,12 @@ impl Runtime {
     // product(s,e,f) = product(s,e-1,f) * f(e): same unary factor, shared start, e = (e-1)+1.
     pub(crate) fn try_verify_product_split_last_term(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         let one: Obj = Number::new("1".to_string()).into();
         for (full_obj, mul_obj) in [(left, right), (right, left)] {
             let Obj::Product(p_full) = full_obj else {
@@ -737,10 +729,12 @@ impl Runtime {
                     continue;
                 };
                 if !self
-                    .verify_objs_are_equal_in_equality_builtin(
-                        p_full.start.as_ref(),
-                        p_pre.start.as_ref(),
-                        line_file.clone(),
+                    .verify_equal_fact_as_builtin_premise(
+                        &EqualFact::new_from_refs(
+                            p_full.start.as_ref(),
+                            p_pre.start.as_ref(),
+                            line_file.clone(),
+                        ),
                         builtin_state,
                     )?
                     .is_true()
@@ -749,10 +743,12 @@ impl Runtime {
                 }
                 let end_pre_plus_one: Obj = Add::new((*p_pre.end).clone(), one.clone()).into();
                 if !self
-                    .verify_objs_are_equal_in_equality_builtin(
-                        p_full.end.as_ref(),
-                        &end_pre_plus_one,
-                        line_file.clone(),
+                    .verify_equal_fact_as_builtin_premise(
+                        &EqualFact::new_from_refs(
+                            p_full.end.as_ref(),
+                            &end_pre_plus_one,
+                            line_file.clone(),
+                        ),
                         builtin_state,
                     )?
                     .is_true()
@@ -760,10 +756,12 @@ impl Runtime {
                     continue;
                 }
                 if !self
-                    .verify_objs_are_equal_in_equality_builtin(
-                        p_full.func.as_ref(),
-                        p_pre.func.as_ref(),
-                        line_file.clone(),
+                    .verify_equal_fact_as_builtin_premise(
+                        &EqualFact::new_from_refs(
+                            p_full.func.as_ref(),
+                            p_pre.func.as_ref(),
+                            line_file.clone(),
+                        ),
                         builtin_state,
                     )?
                     .is_true()
@@ -778,10 +776,8 @@ impl Runtime {
                     continue;
                 };
                 if !self
-                    .verify_objs_are_equal_in_equality_builtin(
-                        &expected_tail,
-                        tail,
-                        line_file.clone(),
+                    .verify_equal_fact_as_builtin_premise(
+                        &EqualFact::new_from_refs(&expected_tail, tail, line_file.clone()),
                         builtin_state,
                     )?
                     .is_true()
@@ -789,9 +785,7 @@ impl Runtime {
                     continue;
                 }
                 return Ok(Some(factual_equal_success_by_builtin_reason(
-                    left,
-                    right,
-                    line_file,
+                    equal_fact,
                     "equality: product through e equals product through e-1 times last factor f(e)",
                 )));
             }
@@ -824,11 +818,12 @@ impl Runtime {
     // sum(s,e,f) = sum(s1,e1,f) + sum(s2,e2,f) + ... with contiguous [si,ei] tiling [s,e], same unary f.
     pub(crate) fn try_verify_sum_partition_adjacent_ranges(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         let one: Obj = Number::new("1".to_string()).into();
         for (full_side, add_side) in [(left, right), (right, left)] {
             let Obj::Sum(s_full) = full_side else {
@@ -855,10 +850,12 @@ impl Runtime {
                 continue;
             }
             if !self
-                .verify_objs_are_equal_in_equality_builtin(
-                    s_full.start.as_ref(),
-                    sums[0].start.as_ref(),
-                    line_file.clone(),
+                .verify_equal_fact_as_builtin_premise(
+                    &EqualFact::new_from_refs(
+                        s_full.start.as_ref(),
+                        sums[0].start.as_ref(),
+                        line_file.clone(),
+                    ),
                     builtin_state,
                 )?
                 .is_true()
@@ -866,10 +863,12 @@ impl Runtime {
                 continue;
             }
             if !self
-                .verify_objs_are_equal_in_equality_builtin(
-                    s_full.end.as_ref(),
-                    sums[sums.len() - 1].end.as_ref(),
-                    line_file.clone(),
+                .verify_equal_fact_as_builtin_premise(
+                    &EqualFact::new_from_refs(
+                        s_full.end.as_ref(),
+                        sums[sums.len() - 1].end.as_ref(),
+                        line_file.clone(),
+                    ),
                     builtin_state,
                 )?
                 .is_true()
@@ -880,10 +879,12 @@ impl Runtime {
             for i in 0..sums.len().saturating_sub(1) {
                 let gap = Add::new((*sums[i].end).clone(), one.clone()).into();
                 if !self
-                    .verify_objs_are_equal_in_equality_builtin(
-                        &gap,
-                        sums[i + 1].start.as_ref(),
-                        line_file.clone(),
+                    .verify_equal_fact_as_builtin_premise(
+                        &EqualFact::new_from_refs(
+                            &gap,
+                            sums[i + 1].start.as_ref(),
+                            line_file.clone(),
+                        ),
                         builtin_state,
                     )?
                     .is_true()
@@ -898,10 +899,12 @@ impl Runtime {
             let mut func_ok = true;
             for s in &sums {
                 if !self
-                    .verify_objs_are_equal_in_equality_builtin(
-                        s_full.func.as_ref(),
-                        s.func.as_ref(),
-                        line_file.clone(),
+                    .verify_equal_fact_as_builtin_premise(
+                        &EqualFact::new_from_refs(
+                            s_full.func.as_ref(),
+                            s.func.as_ref(),
+                            line_file.clone(),
+                        ),
                         builtin_state,
                     )?
                     .is_true()
@@ -913,12 +916,7 @@ impl Runtime {
             if !func_ok {
                 continue;
             }
-            return Ok(Some(factual_equal_success_by_builtin_reason(
-                left,
-                right,
-                line_file,
-                "equality: sum partitions closed range into adjacent sub-sums with the same summand",
-            )));
+            return Ok(Some(factual_equal_success_by_builtin_reason(equal_fact, "equality: sum partitions closed range into adjacent sub-sums with the same summand")));
         }
         Ok(None)
     }
@@ -926,11 +924,12 @@ impl Runtime {
     // product(s,e,f) = product(s1,e1,f) * product(s2,e2,f) * ... contiguous tiling, same unary f.
     pub(crate) fn try_verify_product_partition_adjacent_ranges(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         let one: Obj = Number::new("1".to_string()).into();
         for (full_side, mul_side) in [(left, right), (right, left)] {
             let Obj::Product(p_full) = full_side else {
@@ -957,10 +956,12 @@ impl Runtime {
                 continue;
             }
             if !self
-                .verify_objs_are_equal_in_equality_builtin(
-                    p_full.start.as_ref(),
-                    products[0].start.as_ref(),
-                    line_file.clone(),
+                .verify_equal_fact_as_builtin_premise(
+                    &EqualFact::new_from_refs(
+                        p_full.start.as_ref(),
+                        products[0].start.as_ref(),
+                        line_file.clone(),
+                    ),
                     builtin_state,
                 )?
                 .is_true()
@@ -968,10 +969,12 @@ impl Runtime {
                 continue;
             }
             if !self
-                .verify_objs_are_equal_in_equality_builtin(
-                    p_full.end.as_ref(),
-                    products[products.len() - 1].end.as_ref(),
-                    line_file.clone(),
+                .verify_equal_fact_as_builtin_premise(
+                    &EqualFact::new_from_refs(
+                        p_full.end.as_ref(),
+                        products[products.len() - 1].end.as_ref(),
+                        line_file.clone(),
+                    ),
                     builtin_state,
                 )?
                 .is_true()
@@ -982,10 +985,12 @@ impl Runtime {
             for i in 0..products.len().saturating_sub(1) {
                 let gap = Add::new((*products[i].end).clone(), one.clone()).into();
                 if !self
-                    .verify_objs_are_equal_in_equality_builtin(
-                        &gap,
-                        products[i + 1].start.as_ref(),
-                        line_file.clone(),
+                    .verify_equal_fact_as_builtin_premise(
+                        &EqualFact::new_from_refs(
+                            &gap,
+                            products[i + 1].start.as_ref(),
+                            line_file.clone(),
+                        ),
                         builtin_state,
                     )?
                     .is_true()
@@ -1000,10 +1005,12 @@ impl Runtime {
             let mut func_ok = true;
             for p in &products {
                 if !self
-                    .verify_objs_are_equal_in_equality_builtin(
-                        p_full.func.as_ref(),
-                        p.func.as_ref(),
-                        line_file.clone(),
+                    .verify_equal_fact_as_builtin_premise(
+                        &EqualFact::new_from_refs(
+                            p_full.func.as_ref(),
+                            p.func.as_ref(),
+                            line_file.clone(),
+                        ),
                         builtin_state,
                     )?
                     .is_true()
@@ -1015,12 +1022,7 @@ impl Runtime {
             if !func_ok {
                 continue;
             }
-            return Ok(Some(factual_equal_success_by_builtin_reason(
-                left,
-                right,
-                line_file,
-                "equality: product partitions closed range into adjacent sub-products with the same factor",
-            )));
+            return Ok(Some(factual_equal_success_by_builtin_reason(equal_fact, "equality: product partitions closed range into adjacent sub-products with the same factor")));
         }
         Ok(None)
     }
@@ -1029,11 +1031,12 @@ impl Runtime {
     /// equality on the right-hand index range.
     pub(crate) fn try_verify_sum_reindex_shift(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         for (l_obj, r_obj) in [(left, right), (right, left)] {
             let (Obj::Sum(l_sum), Obj::Sum(r_sum)) = (l_obj, r_obj) else {
                 continue;
@@ -1050,10 +1053,8 @@ impl Runtime {
                 ),
             };
             if !self
-                .verify_objs_are_equal_in_equality_builtin(
-                    &k,
-                    &k_end,
-                    line_file.clone(),
+                .verify_equal_fact_as_builtin_premise(
+                    &EqualFact::new_from_refs(&k, &k_end, line_file.clone()),
                     builtin_state,
                 )?
                 .is_true()
@@ -1101,9 +1102,7 @@ impl Runtime {
             )?;
             if r.is_true() {
                 return Ok(Some(factual_equal_success_by_builtin_reason(
-                    left,
-                    right,
-                    line_file,
+                    equal_fact,
                     "equality: sum reindexing (integer shift) from pointwise equality on the range",
                 )));
             }
@@ -1114,11 +1113,12 @@ impl Runtime {
     /// `sum(s,e, \lambda x.c) = (e - s + 1) * c` when `c` does not mention the index parameter.
     pub(crate) fn try_verify_sum_constant_summand(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         for (sum_side, other) in [(left, right), (right, left)] {
             let Obj::Sum(s) = sum_side else {
                 continue;
@@ -1149,26 +1149,20 @@ impl Runtime {
             let m1: Obj = Mul::new(count.clone(), c.clone()).into();
             let m2: Obj = Mul::new(c, count).into();
             if self
-                .verify_objs_are_equal_in_equality_builtin(
-                    other,
-                    &m1,
-                    line_file.clone(),
+                .verify_equal_fact_as_builtin_premise(
+                    &EqualFact::new_from_refs(other, &m1, line_file.clone()),
                     builtin_state,
                 )?
                 .is_true()
                 || self
-                    .verify_objs_are_equal_in_equality_builtin(
-                        other,
-                        &m2,
-                        line_file.clone(),
+                    .verify_equal_fact_as_builtin_premise(
+                        &EqualFact::new_from_refs(other, &m2, line_file.clone()),
                         builtin_state,
                     )?
                     .is_true()
             {
                 return Ok(Some(factual_equal_success_by_builtin_reason(
-                    left,
-                    right,
-                    line_file,
+                    equal_fact,
                     "equality: sum of a constant summand over a closed integer range",
                 )));
             }
@@ -1180,11 +1174,12 @@ impl Runtime {
     // Example: `sum(m, n, fn(i Z) R {c * a(i)}) = c * sum(m, n, fn(i Z) R {a(i)})`.
     pub(crate) fn try_verify_sum_scalar_mul(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         for (sum_side, product_side) in [(left, right), (right, left)] {
             let Obj::Sum(sum) = sum_side else {
                 continue;
@@ -1199,19 +1194,23 @@ impl Runtime {
                 let Obj::Sum(base_sum) = base_side else {
                     continue;
                 };
-                let start_result = self.verify_objs_are_equal_in_equality_builtin(
-                    sum.start.as_ref(),
-                    base_sum.start.as_ref(),
-                    line_file.clone(),
+                let start_result = self.verify_equal_fact_as_builtin_premise(
+                    &EqualFact::new_from_refs(
+                        sum.start.as_ref(),
+                        base_sum.start.as_ref(),
+                        line_file.clone(),
+                    ),
                     builtin_state,
                 )?;
                 if !start_result.is_true() {
                     continue;
                 }
-                let end_result = self.verify_objs_are_equal_in_equality_builtin(
-                    sum.end.as_ref(),
-                    base_sum.end.as_ref(),
-                    line_file.clone(),
+                let end_result = self.verify_equal_fact_as_builtin_premise(
+                    &EqualFact::new_from_refs(
+                        sum.end.as_ref(),
+                        base_sum.end.as_ref(),
+                        line_file.clone(),
+                    ),
                     builtin_state,
                 )?;
                 if !end_result.is_true() {
@@ -1249,9 +1248,7 @@ impl Runtime {
                     continue;
                 }
                 return Ok(Some(factual_equal_success_by_builtin_reason(
-                    left,
-                    right,
-                    line_file,
+                    equal_fact,
                     "equality: finite sum scalar multiplication",
                 )));
             }

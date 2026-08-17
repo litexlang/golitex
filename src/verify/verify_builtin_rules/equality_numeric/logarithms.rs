@@ -4,11 +4,12 @@ impl Runtime {
     // log_a(a^b) = b  (Litex `log(a, a^b) = b`; same base in log and in the power.)
     pub(crate) fn try_verify_log_identity_equalities(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         let (log, other) = match (left, right) {
             (Obj::Log(l), o) => (l, o),
             (o, Obj::Log(l)) => (l, o),
@@ -16,17 +17,13 @@ impl Runtime {
         };
 
         if let Obj::Pow(p) = log.arg.as_ref() {
-            let base_ok = self.verify_objs_are_equal_in_equality_builtin(
-                p.base.as_ref(),
-                log.base.as_ref(),
-                line_file.clone(),
+            let base_ok = self.verify_equal_fact_as_builtin_premise(
+                &EqualFact::new_from_refs(p.base.as_ref(), log.base.as_ref(), line_file.clone()),
                 builtin_state,
             )?;
             if base_ok.is_true() {
-                let exp_ok = self.verify_objs_are_equal_in_equality_builtin(
-                    p.exponent.as_ref(),
-                    other,
-                    line_file.clone(),
+                let exp_ok = self.verify_equal_fact_as_builtin_premise(
+                    &EqualFact::new_from_refs(p.exponent.as_ref(), other, line_file.clone()),
                     builtin_state,
                 )?;
                 if exp_ok.is_true() {
@@ -41,9 +38,7 @@ impl Runtime {
                         exp_ok,
                     ));
                     return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
-                        left,
-                        right,
-                        line_file,
+                        equal_fact,
                         "equality: log(a, a^b) = b",
                         subgoals,
                     )));
@@ -57,11 +52,12 @@ impl Runtime {
     // log_{a^b}(c) = log_a(c) / b  (Litex `log(a^b, c) = log(a, c) / b`; need b != 0 for a valid base.)
     pub(super) fn try_verify_log_base_power_rule(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         let (log, other) = match (left, right) {
             (Obj::Log(l), o) => (l, o),
             (o, Obj::Log(l)) => (l, o),
@@ -72,18 +68,14 @@ impl Runtime {
         };
         let inner_log: Obj = Log::new((*p.base).clone(), (*log.arg).clone()).into();
         let expected: Obj = Div::new(inner_log, (*p.exponent).clone()).into();
-        let inner = self.verify_objs_are_equal_in_equality_builtin(
-            other,
-            &expected,
-            line_file.clone(),
+        let inner = self.verify_equal_fact_as_builtin_premise(
+            &EqualFact::new_from_refs(other, &expected, line_file.clone()),
             builtin_state,
         )?;
         if inner.is_true() {
             let subgoals = equality_builtin_match_subgoals(other, &expected, inner);
             return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
-                left,
-                right,
-                line_file,
+                equal_fact,
                 "equality: log(a^b, c) = log(a, c) / b",
                 subgoals,
             )));
@@ -94,11 +86,12 @@ impl Runtime {
     // log_a(x^b) = b * log_a(x)  (Litex `log(a, x^b) = b * log(a, x)`.)
     pub(super) fn try_verify_log_arg_power_rule(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         let (log, other) = match (left, right) {
             (Obj::Log(l), o) => (l, o),
             (o, Obj::Log(l)) => (l, o),
@@ -111,18 +104,14 @@ impl Runtime {
         let expected1: Obj = Mul::new((*p.exponent).clone(), inner_log.clone()).into();
         let expected2: Obj = Mul::new(inner_log, (*p.exponent).clone()).into();
         for expected in [expected1, expected2] {
-            let inner = self.verify_objs_are_equal_in_equality_builtin(
-                other,
-                &expected,
-                line_file.clone(),
+            let inner = self.verify_equal_fact_as_builtin_premise(
+                &EqualFact::new_from_refs(other, &expected, line_file.clone()),
                 builtin_state,
             )?;
             if inner.is_true() {
                 let subgoals = equality_builtin_match_subgoals(other, &expected, inner);
                 return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
-                    left,
-                    right,
-                    line_file,
+                    equal_fact,
                     "equality: log(a, x^b) = b * log(a, x)",
                     subgoals,
                 )));
@@ -134,11 +123,12 @@ impl Runtime {
     // log_a(x y) = log_a(x) + log_a(y)  (Litex `log(a, x*y) = log(a, x) + log(a, y)`.)
     pub(super) fn try_verify_log_product_rule(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         let (log, other) = match (left, right) {
             (Obj::Log(l), o) => (l, o),
             (o, Obj::Log(l)) => (l, o),
@@ -152,18 +142,14 @@ impl Runtime {
         let expected1: Obj = Add::new(l1.clone(), l2.clone()).into();
         let expected2: Obj = Add::new(l2, l1).into();
         for expected in [expected1, expected2] {
-            let inner = self.verify_objs_are_equal_in_equality_builtin(
-                other,
-                &expected,
-                line_file.clone(),
+            let inner = self.verify_equal_fact_as_builtin_premise(
+                &EqualFact::new_from_refs(other, &expected, line_file.clone()),
                 builtin_state,
             )?;
             if inner.is_true() {
                 let subgoals = equality_builtin_match_subgoals(other, &expected, inner);
                 return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
-                    left,
-                    right,
-                    line_file,
+                    equal_fact,
                     "equality: log(a, x*y) = log(a, x) + log(a, y)",
                     subgoals,
                 )));
@@ -175,11 +161,12 @@ impl Runtime {
     // log_a(x / y) = log_a(x) - log_a(y)  (Litex `log(a, x/y) = log(a, x) - log(a, y)`.)
     pub(super) fn try_verify_log_quotient_rule(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         let (log, other) = match (left, right) {
             (Obj::Log(l), o) => (l, o),
             (o, Obj::Log(l)) => (l, o),
@@ -191,18 +178,14 @@ impl Runtime {
         let l1: Obj = Log::new((*log.base).clone(), (*d.left).clone()).into();
         let l2: Obj = Log::new((*log.base).clone(), (*d.right).clone()).into();
         let expected = Sub::new(l1, l2).into();
-        let inner = self.verify_objs_are_equal_in_equality_builtin(
-            other,
-            &expected,
-            line_file.clone(),
+        let inner = self.verify_equal_fact_as_builtin_premise(
+            &EqualFact::new_from_refs(other, &expected, line_file.clone()),
             builtin_state,
         )?;
         if inner.is_true() {
             let subgoals = equality_builtin_match_subgoals(other, &expected, inner);
             return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
-                left,
-                right,
-                line_file,
+                equal_fact,
                 "equality: log(a, x/y) = log(a, x) - log(a, y)",
                 subgoals,
             )));
@@ -213,29 +196,34 @@ impl Runtime {
     // Algebraic log rules: log_{a^b}(c), log_a(x^b), log_a(x y), log_a(x / y) (see functions above).
     pub(crate) fn try_verify_log_algebra_identities(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
-        if let Some(done) =
-            self.try_verify_log_base_power_rule(left, right, line_file.clone(), builtin_state)?
-        {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
+        if let Some(done) = self.try_verify_log_base_power_rule(
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
+            builtin_state,
+        )? {
             return Ok(Some(done));
         }
-        if let Some(done) =
-            self.try_verify_log_arg_power_rule(left, right, line_file.clone(), builtin_state)?
-        {
+        if let Some(done) = self.try_verify_log_arg_power_rule(
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
+            builtin_state,
+        )? {
             return Ok(Some(done));
         }
-        if let Some(done) =
-            self.try_verify_log_product_rule(left, right, line_file.clone(), builtin_state)?
-        {
+        if let Some(done) = self.try_verify_log_product_rule(
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
+            builtin_state,
+        )? {
             return Ok(Some(done));
         }
-        if let Some(done) =
-            self.try_verify_log_quotient_rule(left, right, line_file.clone(), builtin_state)?
-        {
+        if let Some(done) = self.try_verify_log_quotient_rule(
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
+            builtin_state,
+        )? {
             return Ok(Some(done));
         }
         Ok(None)
@@ -245,11 +233,12 @@ impl Runtime {
     // Example: `forall a, x R+: a != 1 =>: log(a, 1 / x) = -log(a, x)`.
     pub(crate) fn try_verify_log_reciprocal_rule(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         let (log, other) = match (left, right) {
             (Obj::Log(l), o) => (l, o),
             (o, Obj::Log(l)) => (l, o),
@@ -259,10 +248,8 @@ impl Runtime {
             return Ok(None);
         };
         let one = Self::literal_one_obj_for_log_builtin();
-        let one_ok = self.verify_objs_are_equal_in_equality_builtin(
-            d.left.as_ref(),
-            &one,
-            line_file.clone(),
+        let one_ok = self.verify_equal_fact_as_builtin_premise(
+            &EqualFact::new_from_refs(d.left.as_ref(), &one, line_file.clone()),
             builtin_state,
         )?;
         if !one_ok.is_true() {
@@ -283,19 +270,15 @@ impl Runtime {
         let expected3: Obj = Sub::new(Self::literal_zero_obj_for_abs_builtin(), inner_log).into();
 
         for expected in [expected1, expected2, expected3] {
-            let ok = self.verify_objs_are_equal_in_equality_builtin(
-                other,
-                &expected,
-                line_file.clone(),
+            let ok = self.verify_equal_fact_as_builtin_premise(
+                &EqualFact::new_from_refs(other, &expected, line_file.clone()),
                 builtin_state,
             )?;
             if ok.is_true() {
                 let mut subgoals = equality_builtin_match_subgoals(d.left.as_ref(), &one, one_ok);
                 subgoals.extend(equality_builtin_match_subgoals(other, &expected, ok));
                 return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
-                    left,
-                    right,
-                    line_file,
+                    equal_fact,
                     "equality: log(a, 1/x) = -log(a, x)",
                     subgoals,
                 )));
@@ -309,11 +292,12 @@ impl Runtime {
     // Example: `forall a, b, c R+: a != 1, c != 1 =>: log(a, b) = log(c, b) / log(c, a)`.
     pub(crate) fn try_verify_log_change_of_base_rule(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         let (log_ab, other) = match (left, right) {
             (Obj::Log(l), o) => (l, o),
             (o, Obj::Log(l)) => (l, o),
@@ -326,28 +310,26 @@ impl Runtime {
             return Ok(None);
         };
 
-        let base_ok = self.verify_objs_are_equal_in_equality_builtin(
-            log_cb.base.as_ref(),
-            log_ca.base.as_ref(),
-            line_file.clone(),
+        let base_ok = self.verify_equal_fact_as_builtin_premise(
+            &EqualFact::new_from_refs(
+                log_cb.base.as_ref(),
+                log_ca.base.as_ref(),
+                line_file.clone(),
+            ),
             builtin_state,
         )?;
         if !base_ok.is_true() {
             return Ok(None);
         }
-        let arg_ok = self.verify_objs_are_equal_in_equality_builtin(
-            log_cb.arg.as_ref(),
-            log_ab.arg.as_ref(),
-            line_file.clone(),
+        let arg_ok = self.verify_equal_fact_as_builtin_premise(
+            &EqualFact::new_from_refs(log_cb.arg.as_ref(), log_ab.arg.as_ref(), line_file.clone()),
             builtin_state,
         )?;
         if !arg_ok.is_true() {
             return Ok(None);
         }
-        let inner_ok = self.verify_objs_are_equal_in_equality_builtin(
-            log_ca.arg.as_ref(),
-            log_ab.base.as_ref(),
-            line_file.clone(),
+        let inner_ok = self.verify_equal_fact_as_builtin_premise(
+            &EqualFact::new_from_refs(log_ca.arg.as_ref(), log_ab.base.as_ref(), line_file.clone()),
             builtin_state,
         )?;
         if !inner_ok.is_true() {
@@ -368,9 +350,7 @@ impl Runtime {
         ));
 
         Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
-            left,
-            right,
-            line_file,
+            equal_fact,
             "equality: log(a, b) = log(c, b) / log(c, a)",
             subgoals,
         )))
@@ -379,11 +359,12 @@ impl Runtime {
     // log_a(b) = c  iff  a^c = b  (Litex `log(a, b) = c`; reduces to proving `a^c = b`.)
     pub(crate) fn try_verify_log_equals_by_pow_inverse(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         let (log, other) = match (left, right) {
             (Obj::Log(l), o) => (l, o),
             (o, Obj::Log(l)) => (l, o),
@@ -395,10 +376,8 @@ impl Runtime {
         // rule, even though the remaining checks are only literal/shape
         // matching.
         if Self::obj_is_builtin_literal_one(other) {
-            let same_base_and_arg = self.verify_objs_are_equal_by_known_equality(
-                log.base.as_ref(),
-                log.arg.as_ref(),
-                line_file.clone(),
+            let same_base_and_arg = self.verify_equal_fact_by_known_equality(
+                &EqualFact::new_from_refs(log.base.as_ref(), log.arg.as_ref(), line_file.clone()),
             );
             if same_base_and_arg.is_true() {
                 let subgoals = equality_builtin_match_subgoals(
@@ -407,9 +386,7 @@ impl Runtime {
                     same_base_and_arg,
                 );
                 return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
-                    left,
-                    right,
-                    line_file,
+                    equal_fact,
                     "equality: log(a, a) = 1",
                     subgoals,
                 )));
@@ -419,25 +396,19 @@ impl Runtime {
             && Self::obj_is_builtin_literal_one(log.arg.as_ref())
         {
             return Ok(Some(factual_equal_success_by_builtin_reason(
-                left,
-                right,
-                line_file,
+                equal_fact,
                 "equality: log(a, 1) = 0",
             )));
         }
 
         let pow_obj: Obj = Pow::new((*log.base).clone(), other.clone()).into();
-        let inner = self.verify_objs_are_equal_in_equality_builtin(
-            &pow_obj,
-            log.arg.as_ref(),
-            line_file.clone(),
+        let inner = self.verify_equal_fact_as_builtin_premise(
+            &EqualFact::new_from_refs(&pow_obj, log.arg.as_ref(), line_file.clone()),
             builtin_state,
         )?;
         if inner.is_true() {
             return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
-                left,
-                right,
-                line_file,
+                equal_fact,
                 "equality: log(a, b) = c from a^c = b",
                 vec![inner],
             )));
@@ -449,22 +420,23 @@ impl Runtime {
     // Example: `forall a, b R+, c R: log(a, b) = c =>: a^c = b`.
     pub(crate) fn try_verify_pow_equals_by_known_log_inverse(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         _builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         let (pow, other) = match (left, right) {
             (Obj::Pow(p), o) => (p, o),
             (o, Obj::Pow(p)) => (p, o),
             _ => return Ok(None),
         };
         let expected_log: Obj = Log::new((*pow.base).clone(), other.clone()).into();
-        let exponent_ok = self.verify_objs_are_equal_by_known_equality(
+        let exponent_ok = self.verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
             pow.exponent.as_ref(),
             &expected_log,
             line_file.clone(),
-        );
+        ));
         if !exponent_ok.is_true() {
             return Ok(None);
         }

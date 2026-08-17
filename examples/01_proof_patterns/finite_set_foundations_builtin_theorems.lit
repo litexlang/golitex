@@ -1,5 +1,5 @@
 # Finite-set foundations are reserved bare builtin theorem interfaces.
-# No `import std basics` and no `basics::` qualification is needed.
+# No standard-library import or qualification is needed.
 
 # Before this kernel interface, clients reconstructed subset finiteness through
 # a source theorem in std/basics. Now the checked subset premise is consumed by

@@ -6,11 +6,12 @@ impl Runtime {
     // Example: `finite_set_sum({}, fn(x Z) Z {x}) = 0`.
     pub(crate) fn try_verify_finite_set_sum_empty(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         let empty_set: Obj = ListSet::new(vec![]).into();
         let zero: Obj = Number::new("0".to_string()).into();
         for (sum_side, other) in [(left, right), (right, left)] {
@@ -18,10 +19,8 @@ impl Runtime {
                 continue;
             };
             if !self
-                .verify_objs_are_equal_in_equality_builtin(
-                    s.set.as_ref(),
-                    &empty_set,
-                    line_file.clone(),
+                .verify_equal_fact_as_builtin_premise(
+                    &EqualFact::new_from_refs(s.set.as_ref(), &empty_set, line_file.clone()),
                     builtin_state,
                 )?
                 .is_true()
@@ -29,18 +28,14 @@ impl Runtime {
                 continue;
             }
             if self
-                .verify_objs_are_equal_in_equality_builtin(
-                    other,
-                    &zero,
-                    line_file.clone(),
+                .verify_equal_fact_as_builtin_premise(
+                    &EqualFact::new_from_refs(other, &zero, line_file.clone()),
                     builtin_state,
                 )?
                 .is_true()
             {
                 return Ok(Some(factual_equal_success_by_builtin_reason(
-                    left,
-                    right,
-                    line_file,
+                    equal_fact,
                     "equality: finite-set sum over empty set is zero",
                 )));
             }
@@ -53,11 +48,12 @@ impl Runtime {
     // Example: `P = {1, 2}` gives `finite_set_sum(P, fn(x P) Z {x}) = 1 + 2`.
     pub(crate) fn try_verify_finite_set_sum_list_expansion(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         for (sum_side, other) in [(left, right), (right, left)] {
             let Obj::SumOfFiniteSet(s) = sum_side else {
                 continue;
@@ -90,18 +86,14 @@ impl Runtime {
                 }
                 let expected = Self::left_assoc_add_from_terms(terms);
                 if self
-                    .verify_objs_are_equal_in_equality_builtin(
-                        other,
-                        &expected,
-                        line_file.clone(),
+                    .verify_equal_fact_as_builtin_premise(
+                        &EqualFact::new_from_refs(other, &expected, line_file.clone()),
                         builtin_state,
                     )?
                     .is_true()
                 {
                     return Ok(Some(factual_equal_success_by_builtin_reason(
-                        left,
-                        right,
-                        line_file,
+                        equal_fact,
                         "equality: finite-set sum over displayed set expands elementwise",
                     )));
                 }
@@ -114,11 +106,12 @@ impl Runtime {
     // Example: `finite_set_sum(1...3, fn(x Z) Z {x}) = sum(1, 3, fn(x Z) Z {x})`.
     pub(crate) fn try_verify_finite_set_sum_closed_range_bridge(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         for (finite_side, range_side) in [(left, right), (right, left)] {
             let Obj::SumOfFiniteSet(finite_sum) = finite_side else {
                 continue;
@@ -130,10 +123,12 @@ impl Runtime {
                 continue;
             };
             if !self
-                .verify_objs_are_equal_in_equality_builtin(
-                    range.start.as_ref(),
-                    range_sum.start.as_ref(),
-                    line_file.clone(),
+                .verify_equal_fact_as_builtin_premise(
+                    &EqualFact::new_from_refs(
+                        range.start.as_ref(),
+                        range_sum.start.as_ref(),
+                        line_file.clone(),
+                    ),
                     builtin_state,
                 )?
                 .is_true()
@@ -141,20 +136,24 @@ impl Runtime {
                 continue;
             }
             if !self
-                .verify_objs_are_equal_in_equality_builtin(
-                    range.end.as_ref(),
-                    range_sum.end.as_ref(),
-                    line_file.clone(),
+                .verify_equal_fact_as_builtin_premise(
+                    &EqualFact::new_from_refs(
+                        range.end.as_ref(),
+                        range_sum.end.as_ref(),
+                        line_file.clone(),
+                    ),
                     builtin_state,
                 )?
                 .is_true()
             {
                 continue;
             }
-            let exact_func_result = self.verify_objs_are_equal_in_equality_builtin(
-                finite_sum.func.as_ref(),
-                range_sum.func.as_ref(),
-                line_file.clone(),
+            let exact_func_result = self.verify_equal_fact_as_builtin_premise(
+                &EqualFact::new_from_refs(
+                    finite_sum.func.as_ref(),
+                    range_sum.func.as_ref(),
+                    line_file.clone(),
+                ),
                 builtin_state,
             )?;
             if !exact_func_result.is_true() {
@@ -192,9 +191,7 @@ impl Runtime {
                 }
             }
             return Ok(Some(factual_equal_success_by_builtin_reason(
-                left,
-                right,
-                line_file,
+                equal_fact,
                 "equality: finite-set sum over closed integer range equals range sum",
             )));
         }
@@ -205,11 +202,12 @@ impl Runtime {
     // Example: `finite_set_sum(X, fn(x X) R {c}) = finite_set_size(X) * c`.
     pub(crate) fn try_verify_finite_set_sum_constant_summand(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         for (sum_side, other) in [(left, right), (right, left)] {
             let Obj::SumOfFiniteSet(s) = sum_side else {
                 continue;
@@ -236,9 +234,7 @@ impl Runtime {
             let c = (*af.equal_to).clone();
             if Self::obj_is_builtin_literal_zero(&c) && Self::obj_is_builtin_literal_zero(other) {
                 return Ok(Some(factual_equal_success_by_builtin_reason(
-                    left,
-                    right,
-                    line_file,
+                    equal_fact,
                     "equality: finite-set sum of the literal zero function is zero",
                 )));
             }
@@ -246,26 +242,20 @@ impl Runtime {
             let m1: Obj = Mul::new(finite_set_size.clone(), c.clone()).into();
             let m2: Obj = Mul::new(c, finite_set_size).into();
             if self
-                .verify_objs_are_equal_in_equality_builtin(
-                    other,
-                    &m1,
-                    line_file.clone(),
+                .verify_equal_fact_as_builtin_premise(
+                    &EqualFact::new_from_refs(other, &m1, line_file.clone()),
                     builtin_state,
                 )?
                 .is_true()
                 || self
-                    .verify_objs_are_equal_in_equality_builtin(
-                        other,
-                        &m2,
-                        line_file.clone(),
+                    .verify_equal_fact_as_builtin_premise(
+                        &EqualFact::new_from_refs(other, &m2, line_file.clone()),
                         builtin_state,
                     )?
                     .is_true()
             {
                 return Ok(Some(factual_equal_success_by_builtin_reason(
-                    left,
-                    right,
-                    line_file,
+                    equal_fact,
                     "equality: finite-set sum of a constant summand",
                 )));
             }
@@ -278,20 +268,23 @@ impl Runtime {
     // `finite_set_sum(X, f) = finite_set_sum(X, g)`.
     pub(crate) fn try_verify_finite_set_sum_pointwise_equality(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         let (left_sum, right_sum) = match (left, right) {
             (Obj::SumOfFiniteSet(l), Obj::SumOfFiniteSet(r)) => (l, r),
             _ => return Ok(None),
         };
         if !self
-            .verify_objs_are_equal_in_equality_builtin(
-                left_sum.set.as_ref(),
-                right_sum.set.as_ref(),
-                line_file.clone(),
+            .verify_equal_fact_as_builtin_premise(
+                &EqualFact::new_from_refs(
+                    left_sum.set.as_ref(),
+                    right_sum.set.as_ref(),
+                    line_file.clone(),
+                ),
                 builtin_state,
             )?
             .is_true()
@@ -318,9 +311,7 @@ impl Runtime {
         )?;
         if r.is_true() {
             return Ok(Some(factual_equal_success_by_builtin_reason(
-                left,
-                right,
-                line_file,
+                equal_fact,
                 "equality: finite-set sums from pointwise equality on the finite set",
             )));
         }
@@ -332,11 +323,12 @@ impl Runtime {
     // `finite_set_sum(X, f) = finite_set_sum(Y, fn(y Y) R {f(g(y))})`.
     pub(crate) fn try_verify_finite_set_sum_substitution(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         for (source_side, pullback_side) in [(left, right), (right, left)] {
             let (Obj::SumOfFiniteSet(source_sum), Obj::SumOfFiniteSet(pullback_sum)) =
                 (source_side, pullback_side)
@@ -407,9 +399,7 @@ impl Runtime {
             }
 
             return Ok(Some(factual_equal_success_by_builtin_reason(
-                left,
-                right,
-                line_file,
+                equal_fact,
                 "equality: finite-set sum substitution along a uniquely-covered index set",
             )));
         }
@@ -421,11 +411,12 @@ impl Runtime {
     // `finite_set_sum(union(X, Y), f) = finite_set_sum(X, f|X) + finite_set_sum(Y, f|Y)`.
     pub(crate) fn try_verify_finite_set_sum_disjoint_union(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         for (union_side, add_side) in [(left, right), (right, left)] {
             let Obj::SumOfFiniteSet(union_sum) = union_side else {
                 continue;
@@ -447,10 +438,12 @@ impl Runtime {
                     second_sum.set.as_ref().clone(),
                 )
                 .into();
-                let union_result = self.verify_objs_are_equal_in_equality_builtin(
-                    union_sum.set.as_ref(),
-                    &expected_union,
-                    line_file.clone(),
+                let union_result = self.verify_equal_fact_as_builtin_premise(
+                    &EqualFact::new_from_refs(
+                        union_sum.set.as_ref(),
+                        &expected_union,
+                        line_file.clone(),
+                    ),
                     builtin_state,
                 )?;
                 if !union_result.is_true() {
@@ -462,16 +455,14 @@ impl Runtime {
                     second_sum.set.as_ref().clone(),
                 )
                 .into();
-                let disjoint_result = self.verify_objs_are_equal_in_equality_builtin(
-                    &intersection,
-                    &empty_set,
-                    line_file.clone(),
+                let disjoint_result = self.verify_equal_fact_as_builtin_premise(
+                    &EqualFact::new_from_refs(&intersection, &empty_set, line_file.clone()),
                     builtin_state,
                 )?;
                 if !disjoint_result.is_true() {
                     continue;
                 }
-                let first_pointwise = self.verify_finite_set_sum_functions_pointwise_equal(
+                let first_pointwise = self.verify_finite_set_sum_functions_pointwise_premise(
                     union_sum.func.as_ref(),
                     first_sum.func.as_ref(),
                     first_sum.set.as_ref().clone(),
@@ -481,7 +472,7 @@ impl Runtime {
                 if !first_pointwise.is_true() {
                     continue;
                 }
-                let second_pointwise = self.verify_finite_set_sum_functions_pointwise_equal(
+                let second_pointwise = self.verify_finite_set_sum_functions_pointwise_premise(
                     union_sum.func.as_ref(),
                     second_sum.func.as_ref(),
                     second_sum.set.as_ref().clone(),
@@ -492,9 +483,7 @@ impl Runtime {
                     continue;
                 }
                 return Ok(Some(factual_equal_success_by_builtin_reason(
-                    left,
-                    right,
-                    line_file,
+                    equal_fact,
                     "equality: finite-set sum over a disjoint union",
                 )));
             }
@@ -507,11 +496,12 @@ impl Runtime {
     // finite_set_sum(X, f) + finite_set_sum(X, g)`.
     pub(crate) fn try_verify_finite_set_sum_add(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         for (sum_side, add_side) in [(left, right), (right, left)] {
             let Obj::SumOfFiniteSet(sum) = sum_side else {
                 continue;
@@ -524,19 +514,23 @@ impl Runtime {
             else {
                 continue;
             };
-            let first_set_result = self.verify_objs_are_equal_in_equality_builtin(
-                sum.set.as_ref(),
-                first_sum.set.as_ref(),
-                line_file.clone(),
+            let first_set_result = self.verify_equal_fact_as_builtin_premise(
+                &EqualFact::new_from_refs(
+                    sum.set.as_ref(),
+                    first_sum.set.as_ref(),
+                    line_file.clone(),
+                ),
                 builtin_state,
             )?;
             if !first_set_result.is_true() {
                 continue;
             }
-            let second_set_result = self.verify_objs_are_equal_in_equality_builtin(
-                sum.set.as_ref(),
-                second_sum.set.as_ref(),
-                line_file.clone(),
+            let second_set_result = self.verify_equal_fact_as_builtin_premise(
+                &EqualFact::new_from_refs(
+                    sum.set.as_ref(),
+                    second_sum.set.as_ref(),
+                    line_file.clone(),
+                ),
                 builtin_state,
             )?;
             if !second_set_result.is_true() {
@@ -573,9 +567,7 @@ impl Runtime {
                 continue;
             }
             return Ok(Some(factual_equal_success_by_builtin_reason(
-                left,
-                right,
-                line_file,
+                equal_fact,
                 "equality: finite-set sum distributes over pointwise addition",
             )));
         }
@@ -586,11 +578,12 @@ impl Runtime {
     // Example: `finite_set_sum(X, fn(x X) R {c * f(x)}) = c * finite_set_sum(X, f)`.
     pub(crate) fn try_verify_finite_set_sum_scalar_mul(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         for (sum_side, product_side) in [(left, right), (right, left)] {
             let Obj::SumOfFiniteSet(sum) = sum_side else {
                 continue;
@@ -605,10 +598,12 @@ impl Runtime {
                 let Obj::SumOfFiniteSet(base_sum) = base_side else {
                     continue;
                 };
-                let set_result = self.verify_objs_are_equal_in_equality_builtin(
-                    sum.set.as_ref(),
-                    base_sum.set.as_ref(),
-                    line_file.clone(),
+                let set_result = self.verify_equal_fact_as_builtin_premise(
+                    &EqualFact::new_from_refs(
+                        sum.set.as_ref(),
+                        base_sum.set.as_ref(),
+                        line_file.clone(),
+                    ),
                     builtin_state,
                 )?;
                 if !set_result.is_true() {
@@ -641,9 +636,7 @@ impl Runtime {
                     continue;
                 }
                 return Ok(Some(factual_equal_success_by_builtin_reason(
-                    left,
-                    right,
-                    line_file,
+                    equal_fact,
                     "equality: finite-set sum scalar multiplication",
                 )));
             }
@@ -657,11 +650,12 @@ impl Runtime {
     // = finite_set_sum(cart(X, Y), f)`.
     pub(crate) fn try_verify_finite_set_sum_over_cartesian_product(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         for (nested_side, flat_side) in [(left, right), (right, left)] {
             let Some(nested_shape) = self.nested_finite_set_sum_cartesian_shape(
                 nested_side,
@@ -674,28 +668,30 @@ impl Runtime {
             let Obj::SumOfFiniteSet(flat_sum) = flat_side else {
                 continue;
             };
-            let set_result = self.verify_objs_are_equal_in_equality_builtin(
-                flat_sum.set.as_ref(),
-                &nested_shape.product_set,
-                line_file.clone(),
+            let set_result = self.verify_equal_fact_as_builtin_premise(
+                &EqualFact::new_from_refs(
+                    flat_sum.set.as_ref(),
+                    &nested_shape.product_set,
+                    line_file.clone(),
+                ),
                 builtin_state,
             )?;
             if !set_result.is_true() {
                 continue;
             }
-            let func_result = self.verify_objs_are_equal_in_equality_builtin(
-                flat_sum.func.as_ref(),
-                &nested_shape.function,
-                line_file.clone(),
+            let func_result = self.verify_equal_fact_as_builtin_premise(
+                &EqualFact::new_from_refs(
+                    flat_sum.func.as_ref(),
+                    &nested_shape.function,
+                    line_file.clone(),
+                ),
                 builtin_state,
             )?;
             if !func_result.is_true() {
                 continue;
             }
             return Ok(Some(factual_equal_success_by_builtin_reason(
-                left,
-                right,
-                line_file,
+                equal_fact,
                 "equality: double finite-set sum over Cartesian product",
             )));
         }
@@ -707,11 +703,12 @@ impl Runtime {
     // Example: `sum_X sum_Y f((x, y)) = sum_Y sum_X f((x, y))`.
     pub(crate) fn try_verify_finite_set_sum_fubini(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         let Some(left_shape) =
             self.nested_finite_set_sum_cartesian_shape(left, line_file.clone(), builtin_state)?
         else {
@@ -722,28 +719,30 @@ impl Runtime {
         else {
             return Ok(None);
         };
-        let set_result = self.verify_objs_are_equal_in_equality_builtin(
-            &left_shape.product_set,
-            &right_shape.product_set,
-            line_file.clone(),
+        let set_result = self.verify_equal_fact_as_builtin_premise(
+            &EqualFact::new_from_refs(
+                &left_shape.product_set,
+                &right_shape.product_set,
+                line_file.clone(),
+            ),
             builtin_state,
         )?;
         if !set_result.is_true() {
             return Ok(None);
         }
-        let func_result = self.verify_objs_are_equal_in_equality_builtin(
-            &left_shape.function,
-            &right_shape.function,
-            line_file.clone(),
+        let func_result = self.verify_equal_fact_as_builtin_premise(
+            &EqualFact::new_from_refs(
+                &left_shape.function,
+                &right_shape.function,
+                line_file.clone(),
+            ),
             builtin_state,
         )?;
         if !func_result.is_true() {
             return Ok(None);
         }
         Ok(Some(factual_equal_success_by_builtin_reason(
-            left,
-            right,
-            line_file,
+            equal_fact,
             "equality: finite-set Fubini over Cartesian product",
         )))
     }
@@ -754,20 +753,23 @@ impl Runtime {
     // = sum(1, finite_set_size(X), fn(i 1...finite_set_size(X)) R {f(h(i))})`.
     pub(crate) fn try_verify_sum_over_bijective_finite_set_enumerations(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         let (left_sum, right_sum) = match (left, right) {
             (Obj::Sum(l), Obj::Sum(r)) => (l, r),
             _ => return Ok(None),
         };
         if !self
-            .verify_objs_are_equal_in_equality_builtin(
-                left_sum.start.as_ref(),
-                right_sum.start.as_ref(),
-                line_file.clone(),
+            .verify_equal_fact_as_builtin_premise(
+                &EqualFact::new_from_refs(
+                    left_sum.start.as_ref(),
+                    right_sum.start.as_ref(),
+                    line_file.clone(),
+                ),
                 builtin_state,
             )?
             .is_true()
@@ -775,10 +777,12 @@ impl Runtime {
             return Ok(None);
         }
         if !self
-            .verify_objs_are_equal_in_equality_builtin(
-                left_sum.end.as_ref(),
-                right_sum.end.as_ref(),
-                line_file.clone(),
+            .verify_equal_fact_as_builtin_premise(
+                &EqualFact::new_from_refs(
+                    left_sum.end.as_ref(),
+                    right_sum.end.as_ref(),
+                    line_file.clone(),
+                ),
                 builtin_state,
             )?
             .is_true()
@@ -798,10 +802,12 @@ impl Runtime {
         };
 
         if !self
-            .verify_objs_are_equal_in_equality_builtin(
-                &left_shape.outer_function,
-                &right_shape.outer_function,
-                line_file.clone(),
+            .verify_equal_fact_as_builtin_premise(
+                &EqualFact::new_from_refs(
+                    &left_shape.outer_function,
+                    &right_shape.outer_function,
+                    line_file.clone(),
+                ),
                 builtin_state,
             )?
             .is_true()
@@ -809,10 +815,12 @@ impl Runtime {
             return Ok(None);
         }
         if !self
-            .verify_objs_are_equal_in_equality_builtin(
-                &left_shape.index_set,
-                &right_shape.index_set,
-                line_file.clone(),
+            .verify_equal_fact_as_builtin_premise(
+                &EqualFact::new_from_refs(
+                    &left_shape.index_set,
+                    &right_shape.index_set,
+                    line_file.clone(),
+                ),
                 builtin_state,
             )?
             .is_true()
@@ -820,10 +828,12 @@ impl Runtime {
             return Ok(None);
         }
         if !self
-            .verify_objs_are_equal_in_equality_builtin(
-                &left_shape.target_set,
-                &right_shape.target_set,
-                line_file.clone(),
+            .verify_equal_fact_as_builtin_premise(
+                &EqualFact::new_from_refs(
+                    &left_shape.target_set,
+                    &right_shape.target_set,
+                    line_file.clone(),
+                ),
                 builtin_state,
             )?
             .is_true()
@@ -855,9 +865,7 @@ impl Runtime {
         }
 
         Ok(Some(factual_equal_success_by_builtin_reason(
-            left,
-            right,
-            line_file,
+            equal_fact,
             "equality: sums over bijective enumerations of the same finite set",
         )))
     }

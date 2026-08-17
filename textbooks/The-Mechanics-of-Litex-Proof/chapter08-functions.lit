@@ -1595,9 +1595,9 @@ sketch:
             case n % 2 = 1:
                 (n + 1) % 2 = (n % 2 + 1 % 2) % 2 = 0
                 n * (n + 1) % 2 = (n % 2) * ((n + 1) % 2) % 2 = 1 * 0 % 2 = 0 % 2 = 0
-        have quotient Z = basics::integer_quotient(n * (n + 1), 2)
-        n * (n + 1) = 2 * basics::integer_quotient(n * (n + 1), 2) + n * (n + 1) % 2
-        2 * basics::integer_quotient(n * (n + 1), 2) + n * (n + 1) % 2 = 2 * quotient + n * (n + 1) % 2 = 2 * quotient + 0 = 2 * quotient
+        have quotient Z = quot(n * (n + 1), 2)
+        n * (n + 1) = 2 * quot(n * (n + 1), 2) + n * (n + 1) % 2
+        2 * quot(n * (n + 1), 2) + n * (n + 1) % 2 = 2 * quotient + n * (n + 1) % 2 = 2 * quotient + 0 = 2 * quotient
         n * (n + 1) = 2 * quotient
         quotient = (2 * quotient) / 2 = n * (n + 1) / 2
         0 <= n * (n + 1)

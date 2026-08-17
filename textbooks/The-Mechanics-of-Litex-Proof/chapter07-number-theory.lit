@@ -78,13 +78,16 @@ claim:
             have prefix_product Z = product(1, k, fn(x N+) N+ {x})
             have suffix_product Z = product(k + 1, a, fn(x N+) N+ {x})
             have whole_product N+ = product(1, a, fn(x N+) N+ {x})
-            prefix_product % k = product(1, k, fn(x N+) N+ {x}) % k = 0
-            witness exist q Z st {prefix_product = k * q + prefix_product % k} from basics::integer_quotient(prefix_product, k):
-                prefix_product = k * basics::integer_quotient(prefix_product, k) + prefix_product % k
-            obtain r from exist q Z st {prefix_product = k * q + prefix_product % k}
-            prefix_product = k * r + prefix_product % k = k * r = r * k
-            witness exist t Z st {whole_product = t * k} from r * suffix_product:
-                whole_product = product(1, a, fn(x N+) N+ {x}) = prefix_product * suffix_product = (r * k) * suffix_product = (r * suffix_product) * k
+            product(1, k, fn(x N+) N+ {x}) % k = 0
+            quot(product(1, k, fn(x N+) N+ {x}), k) $in Z
+            by thm citation::quot_euclidean(product(1, k, fn(x N+) N+ {x}), k)
+            witness exist q Z st {product(1, k, fn(x N+) N+ {x}) = k * q + product(1, k, fn(x N+) N+ {x}) % k} from quot(product(1, k, fn(x N+) N+ {x}), k):
+                product(1, k, fn(x N+) N+ {x}) = k * quot(product(1, k, fn(x N+) N+ {x}), k) + product(1, k, fn(x N+) N+ {x}) % k
+            obtain r from exist q Z st {product(1, k, fn(x N+) N+ {x}) = k * q + product(1, k, fn(x N+) N+ {x}) % k}
+            prefix_product = product(1, k, fn(x N+) N+ {x}) = k * r + product(1, k, fn(x N+) N+ {x}) % k = k * r + 0 = k * r = r * k
+            by thm citation::mul_swap_tail(r, k, product(k + 1, a, fn(x N+) N+ {x}))
+            witness exist t Z st {whole_product = t * k} from r * product(k + 1, a, fn(x N+) N+ {x}):
+                whole_product = product(1, a, fn(x N+) N+ {x}) = product(1, k, fn(x N+) N+ {x}) * product(k + 1, a, fn(x N+) N+ {x}) = (r * k) * product(k + 1, a, fn(x N+) N+ {x}) = (r * product(k + 1, a, fn(x N+) N+ {x})) * k
             obtain whole_quotient from exist t Z st {whole_product = t * k}
             whole_product = whole_quotient * k = k * whole_quotient = k * whole_quotient + 0
             whole_product % k = 0
@@ -166,13 +169,17 @@ claim:
 
                     obtain d from exist k N+ st {$prime(k), c % k = 0}
 
-                    witness exist q Z st {n + 1 = c * q + (n + 1) % c} from basics::integer_quotient(n + 1, c):
-                        n + 1 = c * basics::integer_quotient(n + 1, c) + (n + 1) % c
+                    quot(n + 1, c) $in Z
+                    by thm citation::quot_euclidean(n + 1, c)
+                    witness exist q Z st {n + 1 = c * q + (n + 1) % c} from quot(n + 1, c):
+                        n + 1 = c * quot(n + 1, c) + (n + 1) % c
                     obtain e1 from exist q Z st {n + 1 = c * q + (n + 1) % c}
                     n + 1 = c * e1 + (n + 1) % c = c * e1 = e1 * c
 
-                    witness exist q Z st {c = d * q + c % d} from basics::integer_quotient(c, d):
-                        c = d * basics::integer_quotient(c, d) + c % d
+                    quot(c, d) $in Z
+                    by thm citation::quot_euclidean(c, d)
+                    witness exist q Z st {c = d * q + c % d} from quot(c, d):
+                        c = d * quot(c, d) + c % d
                     obtain f from exist r Z st {c = d * r + c % d}
                     c = d * f + c % d = d * f = f * d
 
@@ -206,7 +213,7 @@ claim:
             1 % k = 1
             (0 + 1) % k = 1 % k = 1
             (product(1, a, fn(x N+) N+ {x}) + 1) % k = (product(1, a, fn(x N+) N+ {x}) % k + 1 % k) % k = (0 + 1) % k = 1
-            0 = (product(1, a, fn(x N+) N+ {x}) + 1) % k = 1
+            0 = (product(1, a, fn(x N+) N+ {x}) + 1) % k = (product(1, a, fn(x N+) N+ {x}) % k + 1 % k) % k = (0 + 1) % k = 1
             impossible 0 = 1
         case k > a
     witness exist prime_larger N+ st {prime_larger > a, $prime(prime_larger)} from k
@@ -519,8 +526,10 @@ sketch:
                         ? $gcd_eq_one(k, a)
                     by thm bezout_of_coprime(k, a)
                     obtain x, y from exist x Z, y Z st {1 = x * k + y * a}
-                    witness exist q Z st {k^2 = a * q + k^2 % a} from basics::integer_quotient(k^2, a):
-                        k^2 = a * basics::integer_quotient(k^2, a) + k^2 % a
+                    quot(k^2, a) $in Z
+                    by thm citation::quot_euclidean(k^2, a)
+                    witness exist q Z st {k^2 = a * q + k^2 % a} from quot(k^2, a):
+                        k^2 = a * quot(k^2, a) + k^2 % a
                     obtain q from exist q Z st {k^2 = a * q + k^2 % a}
                     k^2 = a * q + k^2 % a = a * q
                     witness exist t Z st {k = a * t} from x * q + y * k:
@@ -564,8 +573,10 @@ sketch:
         p^2 = 2 * q^2 + 0
         p^2 % 2 = 0
         p % 2 = 0
-        witness exist quotient_p Z st {p = 2 * quotient_p + p % 2} from basics::integer_quotient(p, 2):
-            p = 2 * basics::integer_quotient(p, 2) + p % 2
+        quot(p, 2) $in Z
+        by thm citation::quot_euclidean(p, 2)
+        witness exist quotient_p Z st {p = 2 * quotient_p + p % 2} from quot(p, 2):
+            p = 2 * quot(p, 2) + p % 2
         obtain c from exist quotient_p Z st {p = 2 * quotient_p + p % 2}
         p = 2 * c + p % 2 = 2 * c
         q^2 = (2 * q^2) / 2 = p^2 / 2 = (2 * c)^2 / 2 = 4 * c^2 / 2 = 2 * c^2
@@ -576,8 +587,10 @@ sketch:
         q^2 % 2= 0
         q % 2 = 0
         witness $citation::divides(2, p) from c
-        witness exist t Z st {q = 2 * t + q % 2} from basics::integer_quotient(q, 2):
-            q = 2 * basics::integer_quotient(q, 2) + q % 2
+        quot(q, 2) $in Z
+        by thm citation::quot_euclidean(q, 2)
+        witness exist t Z st {q = 2 * t + q % 2} from quot(q, 2):
+            q = 2 * quot(q, 2) + q % 2
         obtain d from exist t Z st {q = 2 * t + q % 2}
         q = 2 * d + q % 2 = 2 * d
         witness $citation::divides(2, q) from d

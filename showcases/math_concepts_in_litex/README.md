@@ -1,9 +1,9 @@
-# Math Concepts in Litex Scratch
+# Math Concepts in Litex Showcases
 
-This directory is a planning and executable-scratch workspace for six small,
-independent Litex projects. Each project now has a checked first version. It is
-not a textbook or part of `std`, and the later gates in each `plan.md` remain
-design rather than implemented API.
+This directory is a planning and executable-showcase workspace for seven small,
+independent Litex projects. Each project has a checked first version. It is not
+a textbook or part of `std`, and the later gates in each `plan.md` remain design
+rather than implemented API.
 
 Each child project owns:
 
@@ -21,47 +21,54 @@ mathematical dependencies and reader order, not hidden runtime dependencies:
 elementary algebra and inequalities
             |
             v
-sets, functions, and relations
-       /             \
-      v               v
 number theory     Euclidean geometry
-       \             /
-        v           v
-  linear algebra core    single-variable calculus
+       |                 |
+       v                 v
+abstract algebra   linear algebra core
+       \                 /
+        v               v
+       topology    single-variable calculus
 ```
 
-The graph is not a claim that number theory or geometry logically requires all
-earlier files. It records the intended learning path: calculations first,
-shared mathematical language second, two contrasting domain worlds third, then
-an abstract algebraic structure and a staged approximation-based theory. The
-last two projects are parallel destinations rather than dependencies of one
-another.
+The graph records a reader path, not runtime imports or strict logical
+dependency. Every child module remains independently runnable.
 
-## Six roles
+## Seven roles
 
 | Project | Reader promise | Starter tracer | Intended flagship | Stop line |
 | --- | --- | --- | --- | --- |
 | `elementary_algebra_and_inequalities` | Recognizable school mathematics becomes checked calculation | Two-variable AM-GM | A radical equation with domain and extraneous-root control | Before trigonometry, probability, or calculus |
-| `sets_functions_and_relations` | Objects, relations, and constructions get usable interfaces | A concrete preimage | Two-sided inverse iff bijective | Before ZF foundations, cardinal arithmetic, quotients, or choice |
 | `number_theory` | Witnesses, induction, and discrete structure form a natural proof chain | Divisibility transitivity | Linear Diophantine solvability through Bezout | Before unique factorization machinery, reciprocity, or analytic number theory |
 | `euclidean_geometry` | A visual domain grows from readable definitions and checked facts | The 3-4-5 distance computation | Euclid I.1 by an explicit equilateral vertex | Before synthetic axiom systems, 3D, or non-Euclidean geometry |
 | `linear_algebra_core` | Reusable abstract structures connect to concrete computation | A coordinate projection on `R^2` | Kernel-zero iff injective, then a guarded finite-dimensional tranche | Before inner products, eigenvalues, determinants as a general theory, or SVD |
 | `calculus` | Approximation relations become derivative and integral values only after existence and uniqueness | Epsilon-delta derivative of `x^2` | MVT application, then Riemann FTC behind separate gates | Before series, multivariable calculus, differential equations, or measure theory |
+| `abstract_algebra` | Group laws become reusable theorem contexts without packaging every group as a value | Left cancellation | A group homomorphism preserves inverses | Before rings, ideals, quotients, actions, or representation theory |
+| `topology` | Native set operations express open-set laws and continuity | Three-way open intersection | Continuous maps are closed under composition | Before bases, compactness, connectedness, separation, products, or quotients |
 
 ## Checked first-version endpoints
 
 | Project | Current checked endpoint |
 | --- | --- |
 | Elementary algebra | Radical equation with explicit square-root domain and extraneous-root rejection |
-| Sets/functions/relations | Preimage intersection, supplied two-sided inverse implies bijection, and same-parity equivalence laws |
 | Number theory | Gcd/Bezout certificate and both directions of the linear-Diophantine criterion |
 | Euclidean geometry | Euclid I.1 from an explicit analytic equilateral vertex |
 | Linear algebra | Concrete `R^2` Gate A through kernel-zero iff injective |
 | Calculus | Relational derivatives for `x^2` and affine functions, differentiability existence, and a tangent-error identity |
+| Abstract algebra | Derived right identity and inverse laws, then preservation of identity and inverse by group homomorphisms |
+| Topology | Binary unions, three-way intersections, and composition of continuous maps via native preimages |
 
-All six `main.lit` files pass their independent release file and module
+All seven `main.lit` files pass their independent release file and module
 runners. None contains a direct `trust` or local axiom. These statements do not
 remove the broader trust boundary in Litex's Builtin/infer rules.
+
+## Modeling rule
+
+Showcases use interfaces in this order: Builtin object or rule, then `std`, then
+a local declaration only when neither existing layer expresses the intended
+mathematics. Local aliases for an existing mathematical object are duplication,
+not examples of abstraction. Settings are the default theorem-facing form;
+structs are reserved for structures that must themselves be constructed,
+passed, compared, stored, or returned.
 
 ## Litex and Lean: the interface difference shown here
 
@@ -77,7 +84,7 @@ derivative before uniqueness exists.
 Litex is not trying to replace Lean. It tests a different hypothesis: that a
 smaller, readable, fact-oriented formal language can make checked mathematics
 cheap enough for students, domain scientists, and AI agents to produce useful
-formal data at scale. These scratch files are evidence for that interface
+formal data at scale. These showcase files are evidence for that interface
 experiment, not a general superiority or soundness claim.
 
 ## Shared internal architecture
@@ -98,7 +105,7 @@ Every mature `main.lit` should eventually read in the same order:
 
 ## Promotion gates
 
-A project remains scratch until all of the following hold:
+A project remains a showcase draft until all of the following hold:
 
 - every public concept has a real downstream use in the same project;
 - the main theorem spine has no direct `trust`;
@@ -121,7 +128,7 @@ integrability, and FTC enter only through the explicit gates in
 `calculus/plan.md`; they must not be represented as completed by importing or
 copying trusted textbook statements.
 
-The collection still stops before probability, abstract algebra as its own
-project, infinite series, multivariable analysis, measure theory, and any
+The collection still stops before probability, rings and modules, algebraic
+topology, infinite series, multivariable analysis, measure theory, and any
 cross-domain least-squares project. Those should be opened only in response to
-real consumers of stable interfaces from these six projects.
+real consumers of stable interfaces from these seven projects.

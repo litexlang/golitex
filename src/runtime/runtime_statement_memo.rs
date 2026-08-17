@@ -1435,11 +1435,12 @@ mod tests {
         let AtomicFact::EqualFact(equality_fact) = equality else {
             unreachable!()
         };
-        let known_equality_result = runtime.verify_objs_are_equal_by_known_equality(
-            &equality_fact.left,
-            &equality_fact.right,
-            equality_fact.line_file,
-        );
+        let known_equality_result =
+            runtime.verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
+                &equality_fact.left,
+                &equality_fact.right,
+                equality_fact.line_file,
+            ));
         assert!(Rc::ptr_eq(
             &equality_source,
             statement_memo_source(&known_equality_result)

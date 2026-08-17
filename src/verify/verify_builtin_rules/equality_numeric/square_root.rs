@@ -5,11 +5,12 @@ impl Runtime {
     // Example: `forall x R: x >= 0 =>: (sqrt(x))^2 = x`.
     pub(crate) fn try_verify_sqrt_square_identity(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         let (pow, other) = match (left, right) {
             (Obj::Pow(pow), other) => (pow, other),
             (other, Obj::Pow(pow)) => (pow, other),
@@ -21,10 +22,8 @@ impl Runtime {
         let Obj::Sqrt(sqrt) = pow.base.as_ref() else {
             return Ok(None);
         };
-        let arg_result = self.verify_objs_are_equal_in_equality_builtin(
-            sqrt.arg.as_ref(),
-            other,
-            line_file.clone(),
+        let arg_result = self.verify_equal_fact_as_builtin_premise(
+            &EqualFact::new_from_refs(sqrt.arg.as_ref(), other, line_file.clone()),
             builtin_state,
         )?;
         if !arg_result.is_true() {
@@ -44,11 +43,12 @@ impl Runtime {
     // Example: `sqrt(0) = 0` and `sqrt(1) = 1`.
     pub(crate) fn try_verify_sqrt_zero_one_identity(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         let (sqrt, other) = match (left, right) {
             (Obj::Sqrt(sqrt), other) => (sqrt, other),
             (other, Obj::Sqrt(sqrt)) => (sqrt, other),
@@ -58,19 +58,15 @@ impl Runtime {
             Number::new("0".to_string()).into(),
             Number::new("1".to_string()).into(),
         ] {
-            let arg_result = self.verify_objs_are_equal_in_equality_builtin(
-                sqrt.arg.as_ref(),
-                &literal,
-                line_file.clone(),
+            let arg_result = self.verify_equal_fact_as_builtin_premise(
+                &EqualFact::new_from_refs(sqrt.arg.as_ref(), &literal, line_file.clone()),
                 builtin_state,
             )?;
             if !arg_result.is_true() {
                 continue;
             }
-            let other_result = self.verify_objs_are_equal_in_equality_builtin(
-                other,
-                &literal,
-                line_file.clone(),
+            let other_result = self.verify_equal_fact_as_builtin_premise(
+                &EqualFact::new_from_refs(other, &literal, line_file.clone()),
                 builtin_state,
             )?;
             if !other_result.is_true() {
@@ -92,11 +88,12 @@ impl Runtime {
     // Example: from `a >= 0` and `x = a^2`, prove `sqrt(x) = a`.
     pub(crate) fn try_verify_sqrt_of_square_identity(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         let (sqrt, other) = match (left, right) {
             (Obj::Sqrt(sqrt), other) => (sqrt, other),
             (other, Obj::Sqrt(sqrt)) => (sqrt, other),
@@ -116,10 +113,8 @@ impl Runtime {
 
         let other_squared: Obj =
             Pow::new(other.clone(), Number::new("2".to_string()).into()).into();
-        let square_result = self.verify_objs_are_equal_in_equality_builtin(
-            sqrt.arg.as_ref(),
-            &other_squared,
-            line_file.clone(),
+        let square_result = self.verify_equal_fact_as_builtin_premise(
+            &EqualFact::new_from_refs(sqrt.arg.as_ref(), &other_squared, line_file.clone()),
             builtin_state,
         )?;
         if !square_result.is_true() {
@@ -141,11 +136,12 @@ impl Runtime {
     // `sqrt(x) = sqrt(a) * sqrt(b)`.
     pub(crate) fn try_verify_sqrt_product_identity(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         let (sqrt, product) = match (left, right) {
             (Obj::Sqrt(sqrt), Obj::Mul(product)) => (sqrt, product),
             (Obj::Mul(product), Obj::Sqrt(sqrt)) => (sqrt, product),
@@ -186,10 +182,8 @@ impl Runtime {
             right_factor.arg.as_ref().clone(),
         )
         .into();
-        let arg_product_result = self.verify_objs_are_equal_in_equality_builtin(
-            sqrt.arg.as_ref(),
-            &arg_product,
-            line_file.clone(),
+        let arg_product_result = self.verify_equal_fact_as_builtin_premise(
+            &EqualFact::new_from_refs(sqrt.arg.as_ref(), &arg_product, line_file.clone()),
             builtin_state,
         )?;
         if !arg_product_result.is_true() {
@@ -215,11 +209,12 @@ impl Runtime {
     // `sqrt(x) = sqrt(a) / sqrt(b)`.
     pub(crate) fn try_verify_sqrt_quotient_identity(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
         let (sqrt, quotient) = match (left, right) {
             (Obj::Sqrt(sqrt), Obj::Div(quotient)) => (sqrt, quotient),
             (Obj::Div(quotient), Obj::Sqrt(sqrt)) => (sqrt, quotient),
@@ -260,10 +255,8 @@ impl Runtime {
             denominator_sqrt.arg.as_ref().clone(),
         )
         .into();
-        let arg_quotient_result = self.verify_objs_are_equal_in_equality_builtin(
-            sqrt.arg.as_ref(),
-            &arg_quotient,
-            line_file.clone(),
+        let arg_quotient_result = self.verify_equal_fact_as_builtin_premise(
+            &EqualFact::new_from_refs(sqrt.arg.as_ref(), &arg_quotient, line_file.clone()),
             builtin_state,
         )?;
         if !arg_quotient_result.is_true() {
@@ -286,34 +279,40 @@ impl Runtime {
 
     pub(crate) fn try_verify_sqrt_equalities(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
-        if let Some(done) =
-            self.try_verify_sqrt_square_identity(left, right, line_file.clone(), builtin_state)?
-        {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
+        let line_file = equal_fact.line_file.clone();
+        if let Some(done) = self.try_verify_sqrt_square_identity(
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
+            builtin_state,
+        )? {
             return Ok(Some(done));
         }
-        if let Some(done) =
-            self.try_verify_sqrt_zero_one_identity(left, right, line_file.clone(), builtin_state)?
-        {
+        if let Some(done) = self.try_verify_sqrt_zero_one_identity(
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
+            builtin_state,
+        )? {
             return Ok(Some(done));
         }
-        if let Some(done) =
-            self.try_verify_sqrt_of_square_identity(left, right, line_file.clone(), builtin_state)?
-        {
+        if let Some(done) = self.try_verify_sqrt_of_square_identity(
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
+            builtin_state,
+        )? {
             return Ok(Some(done));
         }
-        if let Some(done) =
-            self.try_verify_sqrt_product_identity(left, right, line_file.clone(), builtin_state)?
-        {
+        if let Some(done) = self.try_verify_sqrt_product_identity(
+            &EqualFact::new_from_refs(left, right, line_file.clone()),
+            builtin_state,
+        )? {
             return Ok(Some(done));
         }
-        if let Some(done) =
-            self.try_verify_sqrt_quotient_identity(left, right, line_file, builtin_state)?
-        {
+        if let Some(done) = self.try_verify_sqrt_quotient_identity(
+            &EqualFact::new_from_refs(left, right, line_file),
+            builtin_state,
+        )? {
             return Ok(Some(done));
         }
         Ok(None)

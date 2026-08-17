@@ -30,7 +30,7 @@ impl Runtime {
             .flat_map(|environment| environment.known_owner_sets.values())
             .flat_map(|owner_sets| owner_sets.values())
             .filter(|membership| {
-                verify_equality_by_they_are_the_same(&membership.element, &goal.element)
+                objs_match_for_equality_pattern(&membership.element, &goal.element)
             })
             .cloned()
             .collect();

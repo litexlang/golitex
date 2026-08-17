@@ -1085,6 +1085,14 @@ still transport an already proved fact through checked equalities, but it does
 not manufacture that source fact by running direct evaluation on rewritten
 arguments.
 
+For equality, the zero-premise phase also includes terminating structural
+congruence. From known `x = y`, for example, matching products such as
+`(x + 1) * (x + 2)` and `(y + 1) * (y + 2)` may be compared
+constructor-by-constructor. This does not make arbitrary symbolic equalities
+automatic: without the known leaf `x = y`, that product equality remains
+unknown. Premise-producing mathematical equality rules are tried only after
+these zero-premise routes fail.
+
 ## Why does Litex distinguish `true`, `unknown`, and `error`?
 
 The three statuses separate three different situations that are easy to

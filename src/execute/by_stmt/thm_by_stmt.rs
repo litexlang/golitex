@@ -799,26 +799,26 @@ impl Runtime {
                         let actual = self.real_matrix_type(element, &verify_state, "operator")?;
                         let real: Obj = StandardSet::R.into();
                         let steps = vec![
-                            self.verify_objs_are_equal_by_known_equality(
+                            self.verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
                                 &actual.set,
                                 &expected.set,
                                 stmt.line_file.clone(),
-                            ),
-                            self.verify_objs_are_equal_by_known_equality(
+                            )),
+                            self.verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
                                 &expected.set,
                                 &real,
                                 stmt.line_file.clone(),
-                            ),
-                            self.verify_objs_are_equal_by_known_equality(
+                            )),
+                            self.verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
                                 &actual.row_len,
                                 &expected.row_len,
                                 stmt.line_file.clone(),
-                            ),
-                            self.verify_objs_are_equal_by_known_equality(
+                            )),
+                            self.verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
                                 &actual.col_len,
                                 &expected.col_len,
                                 stmt.line_file.clone(),
-                            ),
+                            )),
                         ];
                         if steps.iter().all(StmtResult::is_true) {
                             Some(
@@ -1208,18 +1208,22 @@ impl Runtime {
                 let verification = if verify_requirements {
                     self.verify_atomic_fact_well_defined(&conclusion, &verify_state)?;
                     let literal = self.try_verify_tuple_equality_from_dim_and_projections(
-                        &stmt.args[0],
-                        &stmt.args[1],
-                        stmt.line_file.clone(),
+                        &EqualFact::new_from_refs(
+                            &stmt.args[0],
+                            &stmt.args[1],
+                            stmt.line_file.clone(),
+                        ),
                         &verify_state,
                     )?;
                     Some(if let Some(result) = literal {
                         result
                     } else {
                         self.try_verify_symbolic_tuple_equality_from_coordinates(
-                            &stmt.args[0],
-                            &stmt.args[1],
-                            stmt.line_file.clone(),
+                            &EqualFact::new_from_refs(
+                                &stmt.args[0],
+                                &stmt.args[1],
+                                stmt.line_file.clone(),
+                            ),
                             &verify_state,
                         )?
                         .unwrap_or_else(|| StmtUnknown::new().into())
@@ -1256,18 +1260,22 @@ impl Runtime {
                     self.verify_atomic_fact_well_defined(&conclusion, &verify_state)?;
                     let builtin_state = UseBuiltinRuleVerifyState::new();
                     let pointwise = self.try_verify_finite_set_sum_pointwise_equality(
-                        &stmt.args[0],
-                        &stmt.args[1],
-                        stmt.line_file.clone(),
+                        &EqualFact::new_from_refs(
+                            &stmt.args[0],
+                            &stmt.args[1],
+                            stmt.line_file.clone(),
+                        ),
                         &builtin_state,
                     )?;
                     Some(if let Some(result) = pointwise {
                         result
                     } else {
                         self.try_verify_finite_set_sum_substitution(
-                            &stmt.args[0],
-                            &stmt.args[1],
-                            stmt.line_file.clone(),
+                            &EqualFact::new_from_refs(
+                                &stmt.args[0],
+                                &stmt.args[1],
+                                stmt.line_file.clone(),
+                            ),
                             &builtin_state,
                         )?
                         .unwrap_or_else(|| StmtUnknown::new().into())
@@ -1303,9 +1311,11 @@ impl Runtime {
                     let builtin_state = UseBuiltinRuleVerifyState::new();
                     Some(
                         self.try_verify_sum_over_bijective_finite_set_enumerations(
-                            &stmt.args[0],
-                            &stmt.args[1],
-                            stmt.line_file.clone(),
+                            &EqualFact::new_from_refs(
+                                &stmt.args[0],
+                                &stmt.args[1],
+                                stmt.line_file.clone(),
+                            ),
                             &builtin_state,
                         )?
                         .unwrap_or_else(|| StmtUnknown::new().into()),
