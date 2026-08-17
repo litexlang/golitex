@@ -22,6 +22,8 @@ fn set_tracer_consumes_verified_equality_rewrite_ir() {
     assert!(generated.contains("Litex.In.congr"));
     assert!(generated.contains("Litex.Same a b"));
     assert!(generated.contains("theorem __fact1 : Litex.Same (1 : ℂ) (1 : ℂ)"));
+    assert!(generated.contains("namespace __Sketch01"));
+    assert!(generated.contains("end __Sketch01"));
     assert!(!generated.contains("sorry"));
 }
 
@@ -54,7 +56,7 @@ fn top_level_atomic_equality_reuses_verified_proof_ir() {
 #[test]
 fn unary_function_set_application_consumes_both_memberships() {
     let generated = compile_on_verifier_stack(
-        "sketch:\n    forall s, S set, x s, f fn(y s) S:\n        f(x) = f(x)\n",
+        "forall s, S set, x s, f fn(y s) S:\n    f(x) = f(x)\n",
         "4_FunctionSet.lit",
     )
     .expect("compile unary function-set tracer");
@@ -63,13 +65,26 @@ fn unary_function_set_application_consumes_both_memberships() {
     assert!(generated.contains("Litex.In x s"));
     assert!(generated.contains("Litex.In f (Litex.fnSet s S)"));
     assert!(generated.contains("Litex.fnApply f __h0_4 x __h0_3"));
+    assert!(!generated.contains("namespace __Sketch"));
     assert!(!generated.contains("sorry"));
+}
+
+#[test]
+fn sketch_compiles_to_an_isolated_namespace() {
+    let generated =
+        compile_on_verifier_stack("1 = 1\nsketch:\n    2 = 2\n3 = 3\n", "sketch_namespace.lit")
+            .expect("compile sketch namespace tracer");
+    assert!(generated.contains("namespace __Sketch01"));
+    assert!(generated.contains("end __Sketch01"));
+    assert_eq!(generated.matches("theorem __fact0").count(), 2);
+    assert!(generated.contains("theorem __fact1 : Litex.Same (3 : ℂ) (3 : ℂ)"));
+    assert!(!generated.contains("theorem __fact2"));
 }
 
 #[test]
 fn function_application_without_domain_membership_is_rejected_by_litex() {
     let error = compile_on_verifier_stack(
-        "sketch:\n    forall s, S set, x S, f fn(y s) S:\n        f(x) = f(x)\n",
+        "forall s, S set, x S, f fn(y s) S:\n    f(x) = f(x)\n",
         "function_without_domain_membership.lit",
     )
     .expect_err("Litex must reject an application without x in s");
