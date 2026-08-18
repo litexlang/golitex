@@ -1,0 +1,24 @@
+# Tracer: exact positive-natural carrier
+#
+# Before (Litex verified, but compiler emission stopped):
+# 1 $in N+
+# Former compiler behavior: the verifier recorded the checked closed-numeral
+# membership, but the native-carrier compiler had no exact `N+` ABI.
+#
+# Now: `N+` is the exact subtype of native naturals satisfying `0 < n`.
+# Closed positive numerals construct that subtype, and membership projects back
+# to `N` without erasing or independently reconstructing the positivity proof.
+1 $in N+
+
+forall n N+:
+    n $in N
+
+# Boundary (Litex verifies; compiler remains fail-closed):
+# 1 $in Q+
+# This batch does not generalize one reviewed refined carrier into `Q+` or the
+# other sign/nonzero sets; each needs its own exact native predicate contract.
+#
+# Evidence:
+# target/release/litex -compact -strict -runner -f lean/examples/20_PositiveNaturalCarrier.lit
+# cargo test --release --test litex_to_lean_compiler_tracers positive_natural
+# cd lean && ./compiler.sh check examples

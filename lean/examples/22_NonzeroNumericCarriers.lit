@@ -1,0 +1,72 @@
+# Tracer: exact nonzero numeric carriers and constructive widening
+#
+# Before (Litex verified, but compiler emission stopped):
+# forall z Z:
+#     z != 0
+#     =>:
+#         z $in Z*
+# Former compiler behavior: verifier IR retained the exact base-membership and
+# nonzero premises, but refined numeric membership had no Lean replay adapter.
+#
+# Now: each nonzero standard set is an exact certified complex-source subtype.
+# A base membership plus the source `!= 0` premise constructs that carrier;
+# membership projects both the base-set certificate and the retained semantic
+# nonzero certificate, and widens along `Z* -> Q* -> R* -> C*` without adding a
+# global coherence premise.
+forall z Z:
+    z != 0
+    =>:
+        z $in Z*
+
+forall q Q:
+    q != 0
+    =>:
+        q $in Q*
+
+forall r R:
+    r != 0
+    =>:
+        r $in R*
+
+forall c C:
+    c != 0
+    =>:
+        c $in C*
+
+forall z Z*:
+    z != 0
+    z $in Z
+    z $in Q
+    z $in R
+    z $in C
+    z $in Q*
+    z $in R*
+    z $in C*
+
+forall q Q*:
+    q != 0
+    q $in Q
+    q $in R
+    q $in C
+    q $in R*
+    q $in C*
+
+forall r R*:
+    r != 0
+    r $in R
+    r $in C
+    r $in C*
+
+forall c C*:
+    c != 0
+    c $in C
+
+# Boundary (Litex verifies; compiler remains fail-closed):
+# 1 $in Z*
+# Star construction and elimination are replayed, but standalone closed `!=`
+# reflection is still outside the compiler's reviewed numeric-comparison rules.
+#
+# Evidence:
+# target/release/litex -compact -strict -runner -f lean/examples/22_NonzeroNumericCarriers.lit
+# cargo test --release --test litex_to_lean_compiler_tracers nonzero_numeric
+# cd lean && ./compiler.sh check examples

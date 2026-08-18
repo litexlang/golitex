@@ -1,9 +1,9 @@
 # Tracer: native mathematical constants
 #
 # Before (Litex verified, but compiler emission stopped):
-# e = e
-# Former compiler behavior: fail closed at the unsupported source object `e`,
-# even though the verifier retained exact native-constant membership evidence.
+# pi $in R
+# Former compiler behavior: IR capture stopped at line 16 because the generic
+# `native mathematical constant is a real` label had no To-Lean proof rule.
 #
 # Now: `i`, `e`, and `pi` lower to native Mathlib complex terms. Base-carrier
 # memberships replay exact verifier-selected certificates through proved rules.
@@ -17,10 +17,10 @@ pi $in R
 e $in C
 pi $in C
 
-# Boundary (Litex verifies; compiler remains fail-closed):
+# Handoff (implemented by Example 21):
 # e $in R+
-# Positive-real membership needs the exact refined carrier and its positivity
-# predicate. This batch must not erase that predicate or reuse plain `R`.
+# Positive-real membership uses its own exact refined carrier and must not
+# erase that predicate or reuse plain `R`.
 #
 # Evidence:
 # target/release/litex -compact -strict -runner -f lean/examples/19_NativeConstants.lit

@@ -1,0 +1,34 @@
+# Tracer: exact positive-real carrier and elimination
+#
+# Before (Litex verified, but compiler emission stopped):
+# e $in R+
+# forall r R+:
+#     r > 0
+# Former compiler behavior: refined membership had no native-carrier replay
+# adapter, and the retained `PositiveRealMembership` IR rule had no emitter.
+#
+# Now: `R+` is the exact subtype of native reals satisfying `0 < r`. Closed
+# positive terms construct that subtype; membership projects to `R` and `C`
+# and eliminates to the source strict-positivity proposition.
+1 $in R+
+e $in R+
+pi $in R+
+
+forall r R+:
+    r $in R
+    r $in C
+    r > 0
+
+# Boundary (Litex verifies; compiler remains fail-closed):
+# forall r R:
+#     r > 0
+#     =>:
+#         r $in R+
+# Base membership and heterogeneous order may select different real
+# representatives, so the constructor needs `RealCoherence` or a revised
+# order contract. This batch must not silently identify them.
+#
+# Evidence:
+# target/release/litex -compact -strict -runner -f lean/examples/21_PositiveRealCarrier.lit
+# cargo test --release --test litex_to_lean_compiler_tracers positive_real
+# cd lean && ./compiler.sh check examples

@@ -953,6 +953,74 @@ thm shifted_hanoi_recurrence_predecessor_probe:
 }
 
 #[test]
+fn recursive_function_successor_equation_unfolds_and_normalizes_automatically() {
+    run_with_large_stack(
+        "recursive_function_successor_equation_unfolds_and_normalizes_automatically",
+        || {
+            let source_code = r#"
+have fn successor(x N) N = x + 1
+
+have fn recursive_count(n N) N by induc n from 0:
+    case n = 0: 0
+    case n > 0: successor(recursive_count(n - 1))
+
+thm recursive_count_successor:
+    ? forall n N:
+        recursive_count(n + 1) = successor(recursive_count(n))
+"#;
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "recursive_function_successor_equation_unfolds_and_normalizes_automatically",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            assert!(
+                run_succeeded,
+                "a provable recursive successor case should unfold directly:\n{run_output}"
+            );
+            assert!(
+                run_output.contains("\"type\": \"cite forall fact\"")
+                    && run_output.contains("recursive_count(_generated_1 - 1)"),
+                "the successor equation must retain the recursive case as provenance:\n{run_output}"
+            );
+
+            let boundary_source = r#"
+have fn successor(x N) N = x + 1
+
+have fn recursive_count(n N) N by induc n from 0:
+    case n = 0: 0
+    case n > 0: successor(recursive_count(n - 1))
+
+thm recursive_count_unknown_branch:
+    ? forall n N:
+        recursive_count(n) = 0
+"#;
+            let mut boundary_runtime = Runtime::new();
+            boundary_runtime.new_file_path_new_env_new_name_scope(
+                "recursive_function_successor_equation_requires_a_provable_case",
+            );
+            let (boundary_results, boundary_error) =
+                run_source_code(boundary_source, &mut boundary_runtime);
+            let (boundary_succeeded, boundary_output) = render_run_source_code_output(
+                &boundary_runtime,
+                &boundary_results,
+                &boundary_error,
+                false,
+            );
+            assert!(
+                !boundary_succeeded,
+                "an unconstrained recursive argument must not select the base case:\n{boundary_output}"
+            );
+            assert!(
+                boundary_output.contains("\"failed_goal\": \"recursive_count(n) = 0\""),
+                "the boundary should remain an unknown equality, not an arbitrary unfolding:\n{boundary_output}"
+            );
+        },
+    );
+}
+
+#[test]
 fn number_theory_for_beginners_migration_builtin_patterns() {
     run_with_large_stack(
         "number_theory_for_beginners_migration_builtin_patterns",

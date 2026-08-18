@@ -31,15 +31,10 @@ square_root_two_residual(1) = -1
 square_root_two_residual(3 / 2) = 1 / 4
 square_root_two_residual(17 / 12) = 1 / 144
 
-# Proof machinery: recursive unfolding and one-step algebra.
+# Proof machinery: recursive successor unfolding is automatic; then one-step algebra.
 thm sqrt_two_newton_iterate_step:
     ? forall n N:
         sqrt_two_newton_iterate(n + 1) = newton_sqrt_two(sqrt_two_newton_iterate(n))
-    n + 1 > 0
-    sqrt_two_newton_iterate(n + 1) = newton_sqrt_two(sqrt_two_newton_iterate(n + 1 - 1))
-    n + 1 - 1 = n
-    newton_sqrt_two(sqrt_two_newton_iterate(n + 1 - 1)) = newton_sqrt_two(sqrt_two_newton_iterate(n))
-    sqrt_two_newton_iterate(n + 1) = newton_sqrt_two(sqrt_two_newton_iterate(n))
 
 thm newton_sqrt_two_residual_identity:
     ? forall x R+:

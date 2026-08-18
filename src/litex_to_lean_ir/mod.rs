@@ -622,6 +622,13 @@ impl LitexToLeanProofRuleIr {
             return Some(Self::RationalNormalization);
         }
         if let Some(rule) =
+            builtin_rule::litex_to_lean_native_constant_membership_from_verified_label(label, goal)
+        {
+            return Some(Self::Builtin(
+                LitexToLeanBuiltinRuleIr::NativeConstantMembership(rule),
+            ));
+        }
+        if let Some(rule) =
             builtin_rule::litex_to_lean_builtin_rule_from_verified_strategy_label(label, goal)
         {
             return Some(Self::Builtin(rule));
@@ -710,6 +717,8 @@ pub(crate) fn is_closed_standard_membership(goal: &Fact) -> bool {
                 membership.set,
                 Obj::StandardSet(
                     crate::obj::StandardSet::N
+                        | crate::obj::StandardSet::NPos
+                        | crate::obj::StandardSet::RPos
                         | crate::obj::StandardSet::Z
                         | crate::obj::StandardSet::Q
                         | crate::obj::StandardSet::R

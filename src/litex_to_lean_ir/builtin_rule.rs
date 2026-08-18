@@ -75,6 +75,8 @@ pub enum LitexToLeanNativeConstantMembershipBuiltinRuleIr {
     ImaginaryUnitInComplex,
     EulerNumberInReal,
     PiInReal,
+    EulerNumberInPositiveReal,
+    PiInPositiveReal,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -130,6 +132,8 @@ pub enum LitexToLeanBuiltinRuleIr {
     PrimeU64Reflection,
     CoprimeNaturalReflection,
     StandardSetMembershipProjection,
+    NonzeroNumericMembership,
+    NonzeroNumericMembershipElimination,
     PositiveRealMembership,
 }
 
@@ -402,4 +406,26 @@ pub(super) fn litex_to_lean_builtin_rule_from_verified_strategy_label(
     Some(LitexToLeanBuiltinRuleIr::RealArithmeticMembershipClosure(
         rule,
     ))
+}
+
+pub(super) fn litex_to_lean_native_constant_membership_from_verified_label(
+    label: &str,
+    goal: &Fact,
+) -> Option<LitexToLeanNativeConstantMembershipBuiltinRuleIr> {
+    if label != "native mathematical constant is a positive real" {
+        return None;
+    }
+    let Fact::AtomicFact(AtomicFact::InFact(membership)) = goal else {
+        return None;
+    };
+    if !matches!(membership.set, Obj::StandardSet(StandardSet::RPos)) {
+        return None;
+    }
+    match membership.element {
+        Obj::EulerNumber(_) => {
+            Some(LitexToLeanNativeConstantMembershipBuiltinRuleIr::EulerNumberInPositiveReal)
+        }
+        Obj::Pi(_) => Some(LitexToLeanNativeConstantMembershipBuiltinRuleIr::PiInPositiveReal),
+        _ => None,
+    }
 }

@@ -122,12 +122,12 @@ fn native_constants_use_mathlib_terms_and_exact_membership_rules() {
     assert!(!generated.contains("axiom "));
     assert!(!generated.contains("sorry"));
 
-    let boundary = compile_on_verifier_stack("e $in R+\n", "unsupported_e_in_r_pos.lit")
-        .expect_err("positive-real constants need the reviewed refined carrier ABI");
+    let boundary = compile_on_verifier_stack("1 $in Q+\n", "unsupported_one_in_q_pos.lit")
+        .expect_err("other refined carriers need their own reviewed exact-carrier ABI");
     assert!(
         boundary.contains("has no supported Litex-to-Lean proof rule")
             || boundary.contains("unsupported standard set")
-            || boundary.contains("R+"),
+            || boundary.contains("Q+"),
         "unexpected boundary error: {boundary}"
     );
 }
@@ -155,16 +155,170 @@ fn standard_set_hierarchy_replays_exact_projection_chain() {
     assert!(!generated.contains("Litex.Object"));
     assert!(!generated.contains("Set.univ"));
     assert!(!generated.contains("sorry"));
+}
+
+#[test]
+fn positive_natural_uses_exact_subtype_and_projection() {
+    const SOURCE: &str = "1 $in N+\n\nforall n N+:\n    n $in N\n";
+    let core = include_str!("../../lean/Litex/Core.lean");
+    assert!(core.contains("abbrev NPos : Litex.Set := setBuilder N (fun n => 0 < n)"));
+
+    let ir = capture_ir_debug_on_verifier_stack(SOURCE, "20_PositiveNaturalCarrier.lit")
+        .expect("capture positive-natural tracer IR");
+    assert!(ir.contains("ClosedStandardMembership"), "{ir}");
+    assert!(ir.contains("StandardSetMembershipProjection"), "{ir}");
+
+    let generated = compile_on_verifier_stack(SOURCE, "20_PositiveNaturalCarrier.lit")
+        .expect("compile positive-natural tracer");
+    for expected in [
+        "Litex.In (1 : ℂ) Litex.NPos",
+        "Litex.Rules.complexEqNatInNPos (1 : ℂ) 1 (by norm_num) (by norm_num)",
+        "Litex.Rules.inNOfInNPos",
+    ] {
+        assert!(
+            generated.contains(expected),
+            "missing {expected}: {generated}"
+        );
+    }
+    assert!(!generated.contains("LitexObject"));
+    assert!(!generated.contains("Litex.Object"));
+    assert!(!generated.contains("Set.univ"));
+    assert!(!generated.contains("axiom "));
+    assert!(!generated.contains("sorry"));
+
+    let boundary = compile_on_verifier_stack("1 $in Q+\n", "unsupported_one_in_q_pos.lit")
+        .expect_err("other refined carriers must remain fail-closed");
+    assert!(
+        boundary.contains("has no supported Litex-to-Lean proof rule")
+            || boundary.contains("unsupported standard set")
+            || boundary.contains("Q+"),
+        "unexpected boundary error: {boundary}"
+    );
+}
+
+#[test]
+fn positive_real_uses_exact_subtype_projection_and_elimination() {
+    const SOURCE: &str =
+        "1 $in R+\ne $in R+\npi $in R+\n\nforall r R+:\n    r $in R\n    r $in C\n    r > 0\n";
+    let core = include_str!("../../lean/Litex/Core.lean");
+    assert!(core.contains("abbrev RPos : Litex.Set := setBuilder R (fun r => 0 < r)"));
+
+    let ir = capture_ir_debug_on_verifier_stack(SOURCE, "21_PositiveRealCarrier.lit")
+        .expect("capture positive-real tracer IR");
+    for expected in [
+        "ClosedStandardMembership",
+        "EulerNumberInPositiveReal",
+        "PiInPositiveReal",
+        "StandardSetMembershipProjection",
+        "PositiveRealMembership",
+    ] {
+        assert!(ir.contains(expected), "missing {expected}: {ir}");
+    }
+
+    let generated = compile_on_verifier_stack(SOURCE, "21_PositiveRealCarrier.lit")
+        .expect("compile positive-real tracer");
+    for expected in [
+        "Litex.Rules.complexEqRealInRPos (1 : ℂ) (1 : ℝ)",
+        "Litex.Rules.eInRPos",
+        "Litex.Rules.piInRPos",
+        "Litex.Rules.inROfInRPos",
+        "Litex.Rules.inCOfInR",
+        "Litex.Rules.positiveOfInRPos",
+    ] {
+        assert!(
+            generated.contains(expected),
+            "missing {expected}: {generated}"
+        );
+    }
+    assert!(!generated.contains("LitexObject"));
+    assert!(!generated.contains("Litex.Object"));
+    assert!(!generated.contains("Set.univ"));
+    assert!(!generated.contains("axiom "));
+    assert!(!generated.contains("sorry"));
 
     let boundary = compile_on_verifier_stack(
-        "forall n N+:\n    n $in N\n",
-        "unsupported_refined_standard_set_projection.lit",
+        "forall r R:\n    r > 0\n    =>:\n        r $in R+\n",
+        "unsupported_generic_r_pos_constructor.lit",
     )
-    .expect_err("refined numeric carrier projection must remain fail-closed");
+    .expect_err("generic R+ construction still needs representative coherence");
     assert!(
-        boundary.contains("unsupported standard-set membership projection")
-            || boundary.contains("unsupported standard set")
-            || boundary.contains("N+"),
+        boundary.contains("refined numeric membership has no Lean replay adapter")
+            || boundary.contains("has no supported Litex-to-Lean proof rule")
+            || boundary.contains("R+"),
+        "unexpected boundary error: {boundary}"
+    );
+}
+
+#[test]
+fn nonzero_numeric_carriers_replay_exact_constructors_and_widening() {
+    const SOURCE: &str = include_str!("../../lean/examples/22_NonzeroNumericCarriers.lit");
+    let core = include_str!("../../lean/Litex/Core.lean");
+    for (carrier, base) in [
+        ("ZStar", "Z"),
+        ("QStar", "Q"),
+        ("RStar", "R"),
+        ("CStar", "C"),
+    ] {
+        assert!(
+            core.contains(&format!("abbrev {carrier} : Litex.Set :="))
+                && core.contains(&format!(
+                    "setBuilder C (fun z => In z {base} ∧ ¬ Same z (0 : ℂ))"
+                )),
+            "missing exact {carrier} carrier"
+        );
+    }
+
+    let ir = capture_ir_debug_on_verifier_stack(SOURCE, "22_NonzeroNumericCarriers.lit")
+        .expect("capture nonzero numeric-carrier tracer IR");
+    assert_eq!(ir.matches("NonzeroNumericMembership,\n").count(), 4, "{ir}");
+    assert_eq!(
+        ir.matches("NonzeroNumericMembershipElimination").count(),
+        4,
+        "{ir}"
+    );
+    assert_eq!(
+        ir.matches("StandardSetMembershipProjection").count(),
+        22,
+        "{ir}"
+    );
+
+    let generated = compile_on_verifier_stack(SOURCE, "22_NonzeroNumericCarriers.lit")
+        .expect("compile nonzero numeric-carrier tracer");
+    for theorem in [
+        "inZStarOfInZNotSameZero",
+        "inQStarOfInQNotSameZero",
+        "inRStarOfInRNotSameZero",
+        "inCStarOfInCNotSameZero",
+        "inZOfInZStar",
+        "inQOfInQStar",
+        "inROfInRStar",
+        "inCOfInCStar",
+        "inQStarOfInZStar",
+        "inRStarOfInQStar",
+        "inCStarOfInRStar",
+        "notSameZeroOfInZStar",
+        "notSameZeroOfInQStar",
+        "notSameZeroOfInRStar",
+        "notSameZeroOfInCStar",
+    ] {
+        assert!(
+            generated.contains(&format!("Litex.Rules.{theorem}")),
+            "missing {theorem}: {generated}"
+        );
+    }
+    assert!(!generated.contains("LitexObject"));
+    assert!(!generated.contains("Litex.Object"));
+    assert!(!generated.contains("Set.univ"));
+    assert!(!generated.contains("axiom "));
+    assert!(!generated.contains("sorry"));
+
+    let boundary = compile_on_verifier_stack("1 $in Z*\n", "unsupported_closed_z_star.lit")
+        .expect_err("standalone closed star reflection remains fail-closed");
+    assert!(
+        boundary.contains("closed comparison")
+            || boundary.contains("unsupported inferred proof")
+            || boundary.contains("has no supported Litex-to-Lean proof rule")
+            || boundary.contains("Z*"),
         "unexpected boundary error: {boundary}"
     );
 }

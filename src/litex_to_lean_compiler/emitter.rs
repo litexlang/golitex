@@ -1115,19 +1115,23 @@ fn emit_forall_fact(
     }
 
     // Inferred premises are verifier-owned consequences of the explicit
-    // binders above. This stage materializes structural conjunction
-    // projections; other inference routes remain unavailable until their own
-    // proof adapters are intentionally enabled.
+    // binders above. Materialize only inference routes with reviewed proof
+    // adapters so later exact FactId citations can resolve them.
     let mut derived_lines = Vec::new();
     for (inferred_index, inferred) in inferred_premises.iter().enumerate() {
         let proposition = render_fact(&inferred.proposition, &context)?;
-        if !matches!(
+        let supported = matches!(
             &inferred.proof,
             LitexToLeanFactProofIr::RuleApplication {
-                rule: LitexToLeanProofRuleIr::ConjunctionProjection { .. },
+                rule: LitexToLeanProofRuleIr::ConjunctionProjection { .. }
+                    | LitexToLeanProofRuleIr::Builtin(
+                        LitexToLeanBuiltinRuleIr::PositiveRealMembership
+                            | LitexToLeanBuiltinRuleIr::NonzeroNumericMembershipElimination
+                    ),
                 ..
             }
-        ) {
+        );
+        if !supported {
             continue;
         }
         let proof = render_proof(inferred, &context)?;
@@ -1561,6 +1565,17 @@ fn render_proof(fact: &LitexToLeanFactIr, context: &RenderContext) -> Result<Str
                 premises,
                 context,
             ),
+            LitexToLeanProofRuleIr::Builtin(LitexToLeanBuiltinRuleIr::NonzeroNumericMembership) => {
+                render_nonzero_numeric_membership(fact, parameter_requirements, premises, context)
+            }
+            LitexToLeanProofRuleIr::Builtin(
+                LitexToLeanBuiltinRuleIr::NonzeroNumericMembershipElimination,
+            ) => render_nonzero_numeric_membership_elimination(
+                fact,
+                parameter_requirements,
+                premises,
+                context,
+            ),
             LitexToLeanProofRuleIr::Builtin(
                 LitexToLeanBuiltinRuleIr::NativeConstantMembership(rule),
             ) => render_native_constant_membership_rule(
@@ -1569,6 +1584,9 @@ fn render_proof(fact: &LitexToLeanFactIr, context: &RenderContext) -> Result<Str
                 parameter_requirements,
                 premises,
             ),
+            LitexToLeanProofRuleIr::Builtin(LitexToLeanBuiltinRuleIr::PositiveRealMembership) => {
+                render_positive_real_membership(fact, parameter_requirements, premises, context)
+            }
             LitexToLeanProofRuleIr::Builtin(
                 LitexToLeanBuiltinRuleIr::ComplexArithmeticMembershipClosure(rule),
             ) => render_complex_binary_membership_rule(
@@ -2794,6 +2812,27 @@ fn render_closed_standard_membership(
             number.normalized_value
         ));
     }
+    if *set == StandardSet::NPos {
+        if !number
+            .normalized_value
+            .chars()
+            .any(|character| character != '0')
+        {
+            return Err(
+                "compiler closed N+ membership requires a strictly positive natural numeral".into(),
+            );
+        }
+        return Ok(format!(
+            "Litex.Rules.complexEqNatInNPos ({} : ℂ) {} (by norm_num) (by norm_num)",
+            number.normalized_value, number.normalized_value
+        ));
+    }
+    if *set == StandardSet::RPos {
+        return Ok(format!(
+            "Litex.Rules.complexEqRealInRPos ({} : ℂ) ({} : ℝ) (by norm_num) (by norm_num)",
+            number.normalized_value, number.normalized_value
+        ));
+    }
     let theorem = match set {
         StandardSet::N => "complexEqNatInN",
         StandardSet::Z => "complexEqIntInZ",
@@ -2891,6 +2930,29 @@ fn render_standard_set_membership_projection(
         return Err("standard-set membership projection retained a nonstandard set".into());
     };
     let theorem_chain: &[&str] = match (source_set, target_set) {
+        (StandardSet::NPos, StandardSet::N) => &["inNOfInNPos"],
+        (StandardSet::RPos, StandardSet::R) => &["inROfInRPos"],
+        (StandardSet::RPos, StandardSet::C) => &["inROfInRPos", "inCOfInR"],
+        (StandardSet::ZStar, StandardSet::Z) => &["inZOfInZStar"],
+        (StandardSet::ZStar, StandardSet::Q) => &["inZOfInZStar", "inQOfInZ"],
+        (StandardSet::ZStar, StandardSet::R) => &["inZOfInZStar", "inQOfInZ", "inROfInQ"],
+        (StandardSet::ZStar, StandardSet::C) => {
+            &["inZOfInZStar", "inQOfInZ", "inROfInQ", "inCOfInR"]
+        }
+        (StandardSet::QStar, StandardSet::Q) => &["inQOfInQStar"],
+        (StandardSet::QStar, StandardSet::R) => &["inQOfInQStar", "inROfInQ"],
+        (StandardSet::QStar, StandardSet::C) => &["inQOfInQStar", "inROfInQ", "inCOfInR"],
+        (StandardSet::RStar, StandardSet::R) => &["inROfInRStar"],
+        (StandardSet::RStar, StandardSet::C) => &["inROfInRStar", "inCOfInR"],
+        (StandardSet::CStar, StandardSet::C) => &["inCOfInCStar"],
+        (StandardSet::ZStar, StandardSet::QStar) => &["inQStarOfInZStar"],
+        (StandardSet::ZStar, StandardSet::RStar) => &["inQStarOfInZStar", "inRStarOfInQStar"],
+        (StandardSet::ZStar, StandardSet::CStar) => {
+            &["inQStarOfInZStar", "inRStarOfInQStar", "inCStarOfInRStar"]
+        }
+        (StandardSet::QStar, StandardSet::RStar) => &["inRStarOfInQStar"],
+        (StandardSet::QStar, StandardSet::CStar) => &["inRStarOfInQStar", "inCStarOfInRStar"],
+        (StandardSet::RStar, StandardSet::CStar) => &["inCStarOfInRStar"],
         (StandardSet::N, StandardSet::Z) => &["inZOfInN"],
         (StandardSet::N, StandardSet::Q) => &["inZOfInN", "inQOfInZ"],
         (StandardSet::N, StandardSet::R) => &["inZOfInN", "inQOfInZ", "inROfInQ"],
@@ -2912,6 +2974,91 @@ fn render_standard_set_membership_projection(
         proof = format!("Litex.Rules.{theorem} ({proof})");
     }
     Ok(proof)
+}
+
+fn render_nonzero_numeric_membership(
+    fact: &LitexToLeanFactIr,
+    parameter_requirements: &[LitexToLeanFactIr],
+    premises: &[LitexToLeanFactIr],
+    context: &RenderContext,
+) -> Result<String, String> {
+    if !parameter_requirements.is_empty() || premises.len() != 2 {
+        return Err(
+            "nonzero numeric membership requires two premises and no parameter requirements".into(),
+        );
+    }
+    let (target_element, target_set) = membership_parts(&fact.proposition)?;
+    let (base_element, base_set) = membership_parts(&premises[0].proposition)?;
+    let (nonzero_left, nonzero_right) = not_equal_parts(&premises[1].proposition)?;
+    if obj_equality_key(target_element) != obj_equality_key(base_element)
+        || obj_equality_key(target_element) != obj_equality_key(nonzero_left)
+        || !matches!(nonzero_right, Obj::Number(number) if number.normalized_value == "0")
+    {
+        return Err("nonzero numeric membership changed its retained source element".into());
+    }
+    let theorem = match (target_set, base_set) {
+        (Obj::StandardSet(StandardSet::ZStar), Obj::StandardSet(StandardSet::Z)) => {
+            "inZStarOfInZNotSameZero"
+        }
+        (Obj::StandardSet(StandardSet::QStar), Obj::StandardSet(StandardSet::Q)) => {
+            "inQStarOfInQNotSameZero"
+        }
+        (Obj::StandardSet(StandardSet::RStar), Obj::StandardSet(StandardSet::R)) => {
+            "inRStarOfInRNotSameZero"
+        }
+        (Obj::StandardSet(StandardSet::CStar), Obj::StandardSet(StandardSet::C)) => {
+            "inCStarOfInCNotSameZero"
+        }
+        _ => {
+            return Err(
+                "nonzero numeric membership changed its exact base or refined carrier".into(),
+            )
+        }
+    };
+    Ok(format!(
+        "Litex.Rules.{theorem} ({}) ({})",
+        render_proof(&premises[0], context)?,
+        render_proof(&premises[1], context)?
+    ))
+}
+
+fn render_nonzero_numeric_membership_elimination(
+    fact: &LitexToLeanFactIr,
+    parameter_requirements: &[LitexToLeanFactIr],
+    premises: &[LitexToLeanFactIr],
+    context: &RenderContext,
+) -> Result<String, String> {
+    if !parameter_requirements.is_empty() || premises.len() != 1 {
+        return Err(
+            "nonzero numeric membership elimination requires one premise and no parameter requirements"
+                .into(),
+        );
+    }
+    let (source_element, source_set) = membership_parts(&premises[0].proposition)?;
+    let (target_left, target_right) = not_equal_parts(&fact.proposition)?;
+    if obj_equality_key(source_element) != obj_equality_key(target_left)
+        || !matches!(target_right, Obj::Number(number) if number.normalized_value == "0")
+    {
+        return Err(
+            "nonzero numeric membership elimination changed its retained source element or zero orientation"
+                .into(),
+        );
+    }
+    let theorem = match source_set {
+        Obj::StandardSet(StandardSet::ZStar) => "notSameZeroOfInZStar",
+        Obj::StandardSet(StandardSet::QStar) => "notSameZeroOfInQStar",
+        Obj::StandardSet(StandardSet::RStar) => "notSameZeroOfInRStar",
+        Obj::StandardSet(StandardSet::CStar) => "notSameZeroOfInCStar",
+        _ => {
+            return Err(
+                "nonzero numeric membership elimination retained a non-star source carrier".into(),
+            )
+        }
+    };
+    Ok(format!(
+        "Litex.Rules.{theorem} ({})",
+        render_proof(&premises[0], context)?
+    ))
 }
 
 fn render_native_constant_membership_rule(
@@ -2940,9 +3087,57 @@ fn render_native_constant_membership_rule(
             Obj::Pi(_),
             Obj::StandardSet(StandardSet::R),
         ) => "piInR",
+        (
+            LitexToLeanNativeConstantMembershipBuiltinRuleIr::EulerNumberInPositiveReal,
+            Obj::EulerNumber(_),
+            Obj::StandardSet(StandardSet::RPos),
+        ) => "eInRPos",
+        (
+            LitexToLeanNativeConstantMembershipBuiltinRuleIr::PiInPositiveReal,
+            Obj::Pi(_),
+            Obj::StandardSet(StandardSet::RPos),
+        ) => "piInRPos",
         _ => return Err("native constant membership changed its constant or carrier".into()),
     };
     Ok(format!("Litex.Rules.{theorem}"))
+}
+
+fn render_positive_real_membership(
+    fact: &LitexToLeanFactIr,
+    parameter_requirements: &[LitexToLeanFactIr],
+    premises: &[LitexToLeanFactIr],
+    context: &RenderContext,
+) -> Result<String, String> {
+    if !parameter_requirements.is_empty() || premises.len() != 1 {
+        return Err(
+            "positive-real membership elimination requires one premise and no parameter requirements"
+                .into(),
+        );
+    }
+    let (source_element, source_set) = membership_parts(&premises[0].proposition)?;
+    if !matches!(source_set, Obj::StandardSet(StandardSet::RPos)) {
+        return Err("positive-real membership retained a source carrier other than R+".into());
+    }
+    let target_element = match &fact.proposition {
+        Fact::AtomicFact(AtomicFact::LessFact(order)) if order.left.to_string() == "0" => {
+            &order.right
+        }
+        Fact::AtomicFact(AtomicFact::GreaterFact(order)) if order.right.to_string() == "0" => {
+            &order.left
+        }
+        _ => {
+            return Err(
+                "positive-real membership targets a fact other than strict positivity".into(),
+            )
+        }
+    };
+    if obj_equality_key(source_element) != obj_equality_key(target_element) {
+        return Err("positive-real membership changed its inferred object".into());
+    }
+    Ok(format!(
+        "Litex.Rules.positiveOfInRPos ({})",
+        render_proof(&premises[0], context)?
+    ))
 }
 
 fn render_complex_binary_membership_rule(
@@ -4368,10 +4563,16 @@ fn parameter_set(param_type: &ParamType) -> Result<&Obj, String> {
 fn render_standard_set(set: StandardSet) -> Result<&'static str, String> {
     match set {
         StandardSet::N => Ok("Litex.N"),
+        StandardSet::NPos => Ok("Litex.NPos"),
         StandardSet::Z => Ok("Litex.Z"),
+        StandardSet::ZStar => Ok("Litex.ZStar"),
         StandardSet::Q => Ok("Litex.Q"),
+        StandardSet::QStar => Ok("Litex.QStar"),
         StandardSet::R => Ok("Litex.R"),
+        StandardSet::RPos => Ok("Litex.RPos"),
+        StandardSet::RStar => Ok("Litex.RStar"),
         StandardSet::C => Ok("Litex.C"),
+        StandardSet::CStar => Ok("Litex.CStar"),
         _ => Err(format!("unsupported compiler standard set `{set}`")),
     }
 }

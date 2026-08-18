@@ -3845,7 +3845,7 @@ impl LitexToLeanIrBuilder<'_> {
                     "refined numeric membership evidence retained a non-membership target",
                 ));
             };
-            let Obj::StandardSet(_) = &expected_target.set else {
+            let Obj::StandardSet(target_set) = &expected_target.set else {
                 return Err(litex_to_lean_ir_error(
                     &goal.line_file(),
                     "refined numeric membership evidence retained a non-numeric target set",
@@ -3862,10 +3862,56 @@ impl LitexToLeanIrBuilder<'_> {
                     "refined numeric membership evidence lost its exact constructor premises",
                 ));
             }
-            return Err(litex_to_lean_ir_error(
-                &goal.line_file(),
-                "refined numeric membership has no Lean replay adapter",
-            ));
+            let base_set = match target_set {
+                StandardSet::ZStar => StandardSet::Z,
+                StandardSet::QStar => StandardSet::Q,
+                StandardSet::RStar => StandardSet::R,
+                StandardSet::CStar => StandardSet::C,
+                _ => {
+                    return Err(litex_to_lean_ir_error(
+                        &goal.line_file(),
+                        "refined numeric membership has no Lean replay adapter",
+                    ))
+                }
+            };
+            let [base_premise, nonzero_premise] = premises.as_slice() else {
+                return Err(litex_to_lean_ir_error(
+                    &goal.line_file(),
+                    "nonzero numeric membership did not retain exactly two premises",
+                ));
+            };
+            let Fact::AtomicFact(AtomicFact::InFact(base_membership)) = &base_premise.proposition
+            else {
+                return Err(litex_to_lean_ir_error(
+                    &goal.line_file(),
+                    "nonzero numeric membership lost its base-carrier premise",
+                ));
+            };
+            let Fact::AtomicFact(AtomicFact::NotEqualFact(nonzero)) = &nonzero_premise.proposition
+            else {
+                return Err(litex_to_lean_ir_error(
+                    &goal.line_file(),
+                    "nonzero numeric membership lost its non-equality premise",
+                ));
+            };
+            if obj_equality_key(&base_membership.element)
+                != obj_equality_key(&expected_target.element)
+                || !matches!(&base_membership.set, Obj::StandardSet(actual) if *actual == base_set)
+                || obj_equality_key(&nonzero.left) != obj_equality_key(&expected_target.element)
+                || !matches!(&nonzero.right, Obj::Number(number) if number.normalized_value == "0")
+            {
+                return Err(litex_to_lean_ir_error(
+                    &goal.line_file(),
+                    "nonzero numeric membership changed its base carrier, element, or zero orientation",
+                ));
+            }
+            return Ok(LitexToLeanFactProofIr::RuleApplication {
+                rule: LitexToLeanProofRuleIr::Builtin(
+                    LitexToLeanBuiltinRuleIr::NonzeroNumericMembership,
+                ),
+                parameter_requirements: Vec::new(),
+                premises,
+            });
         }
         if let Some(BuiltinRuleEvidence::FunctionSetMembership(evidence)) = evidence {
             if evidence.expected_target.to_string() != goal.to_string() {
@@ -4871,6 +4917,21 @@ fn build_litex_to_lean_ir_inferred_fact_proof(
             }
         }
     }
+    if nonzero_numeric_membership_infers_nonzero(source_fact, inferred_fact) {
+        if let Some(source_fact_id) = source_fact_id {
+            return supported_inferred_proof(LitexToLeanFactProofIr::RuleApplication {
+                rule: LitexToLeanProofRuleIr::Builtin(
+                    LitexToLeanBuiltinRuleIr::NonzeroNumericMembershipElimination,
+                ),
+                parameter_requirements: Vec::new(),
+                premises: vec![LitexToLeanFactIr {
+                    storage: LitexToLeanFactStorageIr::Stored(source_fact_id),
+                    proposition: source_fact.clone(),
+                    proof: LitexToLeanFactProofIr::KnownFactCitation { source_fact_id },
+                }],
+            });
+        }
+    }
     if positive_real_membership_infers_strict_positivity(source_fact, inferred_fact) {
         if let Some(source_fact_id) = source_fact_id {
             return supported_inferred_proof(LitexToLeanFactProofIr::RuleApplication {
@@ -4925,6 +4986,25 @@ fn supported_inferred_proof(
     proof: LitexToLeanFactProofIr,
 ) -> Result<Option<LitexToLeanFactProofIr>, RuntimeError> {
     Ok(Some(proof))
+}
+
+fn nonzero_numeric_membership_infers_nonzero(source_fact: &Fact, inferred_fact: &Fact) -> bool {
+    let Fact::AtomicFact(AtomicFact::InFact(membership)) = source_fact else {
+        return false;
+    };
+    if !matches!(
+        membership.set,
+        Obj::StandardSet(
+            StandardSet::ZStar | StandardSet::QStar | StandardSet::RStar | StandardSet::CStar
+        )
+    ) {
+        return false;
+    }
+    let Fact::AtomicFact(AtomicFact::NotEqualFact(nonzero)) = inferred_fact else {
+        return false;
+    };
+    obj_equality_key(&nonzero.left) == obj_equality_key(&membership.element)
+        && matches!(&nonzero.right, Obj::Number(number) if number.normalized_value == "0")
 }
 
 fn positive_real_membership_infers_strict_positivity(

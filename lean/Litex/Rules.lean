@@ -487,4 +487,221 @@ theorem inBaseOfInSetBuilder
   rcases (inSetBuilder_iff.mp h) with ⟨y, _, hxy⟩
   exact ⟨y, hxy⟩
 
+/-- A checked positive natural numeral constructs the exact `N+` subtype
+carrier rather than reusing the carrier of `N`. -/
+theorem complexEqNatInNPos
+    (z : ℂ)
+    (n : ℕ)
+    (hz : z = (n : ℂ))
+    (h : 0 < n) :
+    Litex.In z Litex.NPos :=
+  inSetBuilder
+    (Litex.Same.trans (Litex.Same.ofEq hz) (Litex.Same.complexNat n))
+    h
+
+/-- Forget only the refining predicate carried by `N+`; the selected natural
+representative and its semantic equality are preserved. -/
+theorem inNOfInNPos
+    {alpha : Type}
+    {x : alpha}
+    (h : Litex.In x Litex.NPos) :
+    Litex.In x Litex.N :=
+  inBaseOfInSetBuilder h
+
+/-- A checked positive real numeral constructs the exact `R+` subtype
+carrier from its native real representative. -/
+theorem complexEqRealInRPos
+    (z : ℂ)
+    (r : ℝ)
+    (hz : z = (r : ℂ))
+    (h : 0 < r) :
+    Litex.In z Litex.RPos :=
+  inSetBuilder
+    (Litex.Same.trans (Litex.Same.ofEq hz) (Litex.Same.complexReal r))
+    h
+
+theorem eInRPos : Litex.In ((Real.exp 1 : ℝ) : ℂ) Litex.RPos :=
+  inSetBuilder (Litex.Same.complexReal (Real.exp 1)) (Real.exp_pos 1)
+
+theorem piInRPos : Litex.In ((Real.pi : ℝ) : ℂ) Litex.RPos :=
+  inSetBuilder (Litex.Same.complexReal Real.pi) Real.pi_pos
+
+/-- Forget the refining predicate carried by `R+` while retaining its selected
+native real representative. -/
+theorem inROfInRPos
+    {alpha : Type}
+    {x : alpha}
+    (h : Litex.In x Litex.RPos) :
+    Litex.In x Litex.R :=
+  inBaseOfInSetBuilder h
+
+/-- Exact `R+` membership exposes strict positivity using the same retained
+native real witness; no representative-coherence assumption is needed. -/
+theorem positiveOfInRPos
+    {alpha : Type}
+    {x : alpha}
+    (h : Litex.In x Litex.RPos) :
+    Litex.Lt (0 : ℂ) x := by
+  rcases (inSetBuilder_iff.mp h) with ⟨r, hr, hxr⟩
+  exact Litex.Lt.intro (Litex.Same.complexReal 0) hxr hr
+
+/-- Construct exact nonzero-integer membership from the verifier's base
+membership and heterogeneous non-equality premises. -/
+theorem inZStarOfInZNotSameZero
+    {alpha : Type}
+    {x : alpha}
+    (hbase : Litex.In x Litex.Z)
+    (hnonzero : ¬ Litex.Same x (0 : ℂ)) :
+    Litex.In x Litex.ZStar := by
+  rcases inCOfInR (inROfInQ (inQOfInZ hbase)) with ⟨z, hxz⟩
+  apply inSetBuilder hxz
+  constructor
+  · exact (Litex.In.congr hxz Litex.Z).mp hbase
+  · intro hz
+    exact hnonzero (Litex.Same.trans hxz hz)
+
+/-- Construct exact nonzero-rational membership from the verifier's base
+membership and heterogeneous non-equality premises. -/
+theorem inQStarOfInQNotSameZero
+    {alpha : Type}
+    {x : alpha}
+    (hbase : Litex.In x Litex.Q)
+    (hnonzero : ¬ Litex.Same x (0 : ℂ)) :
+    Litex.In x Litex.QStar := by
+  rcases inCOfInR (inROfInQ hbase) with ⟨z, hxz⟩
+  apply inSetBuilder hxz
+  constructor
+  · exact (Litex.In.congr hxz Litex.Q).mp hbase
+  · intro hz
+    exact hnonzero (Litex.Same.trans hxz hz)
+
+/-- Construct exact nonzero-real membership from the verifier's base
+membership and heterogeneous non-equality premises. -/
+theorem inRStarOfInRNotSameZero
+    {alpha : Type}
+    {x : alpha}
+    (hbase : Litex.In x Litex.R)
+    (hnonzero : ¬ Litex.Same x (0 : ℂ)) :
+    Litex.In x Litex.RStar := by
+  rcases inCOfInR hbase with ⟨z, hxz⟩
+  apply inSetBuilder hxz
+  constructor
+  · exact (Litex.In.congr hxz Litex.R).mp hbase
+  · intro hz
+    exact hnonzero (Litex.Same.trans hxz hz)
+
+/-- Construct exact nonzero-complex membership from the verifier's base
+membership and heterogeneous non-equality premises. -/
+theorem inCStarOfInCNotSameZero
+    {alpha : Type}
+    {x : alpha}
+    (hbase : Litex.In x Litex.C)
+    (hnonzero : ¬ Litex.Same x (0 : ℂ)) :
+    Litex.In x Litex.CStar := by
+  rcases hbase with ⟨z, hxz⟩
+  apply inSetBuilder hxz
+  constructor
+  · exact Litex.In.own Litex.C z
+  · intro hz
+    exact hnonzero (Litex.Same.trans hxz hz)
+
+theorem inZOfInZStar
+    {alpha : Type}
+    {x : alpha}
+    (h : Litex.In x Litex.ZStar) :
+    Litex.In x Litex.Z := by
+  rcases (inSetBuilder_iff.mp h) with ⟨z, hz, hxz⟩
+  exact (Litex.In.congr hxz Litex.Z).mpr hz.1
+
+theorem inQOfInQStar
+    {alpha : Type}
+    {x : alpha}
+    (h : Litex.In x Litex.QStar) :
+    Litex.In x Litex.Q := by
+  rcases (inSetBuilder_iff.mp h) with ⟨z, hz, hxz⟩
+  exact (Litex.In.congr hxz Litex.Q).mpr hz.1
+
+theorem inROfInRStar
+    {alpha : Type}
+    {x : alpha}
+    (h : Litex.In x Litex.RStar) :
+    Litex.In x Litex.R := by
+  rcases (inSetBuilder_iff.mp h) with ⟨z, hz, hxz⟩
+  exact (Litex.In.congr hxz Litex.R).mpr hz.1
+
+theorem inCOfInCStar
+    {alpha : Type}
+    {x : alpha}
+    (h : Litex.In x Litex.CStar) :
+    Litex.In x Litex.C := by
+  rcases (inSetBuilder_iff.mp h) with ⟨z, hz, hxz⟩
+  exact (Litex.In.congr hxz Litex.C).mpr hz.1
+
+/-- Exact `Z*` membership exposes the retained semantic nonzero certificate. -/
+theorem notSameZeroOfInZStar
+    {alpha : Type}
+    {x : alpha}
+    (h : Litex.In x Litex.ZStar) :
+    ¬ Litex.Same x (0 : ℂ) := by
+  rcases (inSetBuilder_iff.mp h) with ⟨z, hz, hxz⟩
+  intro hx
+  exact hz.2 (Litex.Same.trans (Litex.Same.symm hxz) hx)
+
+/-- Exact `Q*` membership exposes the retained semantic nonzero certificate. -/
+theorem notSameZeroOfInQStar
+    {alpha : Type}
+    {x : alpha}
+    (h : Litex.In x Litex.QStar) :
+    ¬ Litex.Same x (0 : ℂ) := by
+  rcases (inSetBuilder_iff.mp h) with ⟨z, hz, hxz⟩
+  intro hx
+  exact hz.2 (Litex.Same.trans (Litex.Same.symm hxz) hx)
+
+/-- Exact `R*` membership exposes the retained semantic nonzero certificate. -/
+theorem notSameZeroOfInRStar
+    {alpha : Type}
+    {x : alpha}
+    (h : Litex.In x Litex.RStar) :
+    ¬ Litex.Same x (0 : ℂ) := by
+  rcases (inSetBuilder_iff.mp h) with ⟨z, hz, hxz⟩
+  intro hx
+  exact hz.2 (Litex.Same.trans (Litex.Same.symm hxz) hx)
+
+/-- Exact `C*` membership exposes the retained semantic nonzero certificate. -/
+theorem notSameZeroOfInCStar
+    {alpha : Type}
+    {x : alpha}
+    (h : Litex.In x Litex.CStar) :
+    ¬ Litex.Same x (0 : ℂ) := by
+  rcases (inSetBuilder_iff.mp h) with ⟨z, hz, hxz⟩
+  intro hx
+  exact hz.2 (Litex.Same.trans (Litex.Same.symm hxz) hx)
+
+/-- Widen retained nonzero-integer evidence to nonzero-rational evidence. -/
+theorem inQStarOfInZStar
+    {alpha : Type}
+    {x : alpha}
+    (h : Litex.In x Litex.ZStar) :
+    Litex.In x Litex.QStar := by
+  rcases (inSetBuilder_iff.mp h) with ⟨z, hz, hxz⟩
+  exact inSetBuilder hxz ⟨inQOfInZ hz.1, hz.2⟩
+
+/-- Widen retained nonzero-rational evidence to nonzero-real evidence. -/
+theorem inRStarOfInQStar
+    {alpha : Type}
+    {x : alpha}
+    (h : Litex.In x Litex.QStar) :
+    Litex.In x Litex.RStar := by
+  rcases (inSetBuilder_iff.mp h) with ⟨z, hz, hxz⟩
+  exact inSetBuilder hxz ⟨inROfInQ hz.1, hz.2⟩
+
+/-- Widen retained nonzero-real evidence to nonzero-complex evidence. -/
+theorem inCStarOfInRStar
+    {alpha : Type}
+    {x : alpha}
+    (h : Litex.In x Litex.RStar) :
+    Litex.In x Litex.CStar := by
+  rcases (inSetBuilder_iff.mp h) with ⟨z, hz, hxz⟩
+  exact inSetBuilder hxz ⟨inCOfInR hz.1, hz.2⟩
+
 end Litex.Rules

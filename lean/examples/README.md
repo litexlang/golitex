@@ -117,8 +117,8 @@ only that marker and calls reviewed rules; it never re-runs strategy search.
 `16_StandardSetHierarchy.lit` traces all ten proper projections in the base
 numeric hierarchy `N → Z → Q → R → C`. Generated proofs compose four proved
 adjacent membership bridges and retain each complex-valued binder's original
-`Litex.In` premise. The paired negative regression uses verified `N+ → N` and
-requires compiler to reject it until the refined exact-carrier ABI exists.
+`Litex.In` premise. Refined carriers are represented separately rather than
+being collapsed into this base hierarchy.
 
 `17_NumericCarrierClosures.lit` traces complex `+`, `-`, `*`, `/` closure and
 integer `+`, `-`, `*` closure. The integer proofs consume the exact ordered
@@ -136,8 +136,30 @@ still has no reviewed native power-term contract.
 `19_NativeConstants.lit` traces native `i`, `e`, and `pi` terms together with
 their base numeric memberships. Generated equality uses `Complex.I`,
 `Real.exp 1`, and `Real.pi`; `e` and `pi` reach `C` by citing their exact `R`
-facts and the existing hierarchy projection. Verified `e $in R+` is the paired
-negative boundary until the refined positive-real carrier is implemented.
+facts and the existing hierarchy projection. Verified `e $in R+` is the
+handoff implemented by Example 21's exact positive-real carrier.
+
+`20_PositiveNaturalCarrier.lit` traces the first exact refined numeric set.
+`N+` lowers to the subtype `{n : ℕ // 0 < n}`; a checked positive numeral
+constructs that carrier, and `N+ → N` projects its retained native-natural
+witness. Verified `1 $in Q+` remains the paired negative boundary because no
+positive-rational carrier is introduced by analogy.
+
+`21_PositiveRealCarrier.lit` traces the archived positive-real elimination on
+the native-carrier ABI. `R+` is `{r : ℝ // 0 < r}`; closed `1`, `e`, and `pi`
+construct it, projection reaches `R` and `C`, and the verifier-inferred
+positivity FactId becomes a local proved `have`. The reverse generic constructor
+from separate `R` membership and heterogeneous positivity remains fail-closed
+without representative coherence.
+
+`22_NonzeroNumericCarriers.lit` traces exact `Z*`, `Q*`, `R*`, and `C*`
+carriers on the native ABI. Each carrier is a certified complex-source subtype
+that retains base membership and semantic nonzero evidence. Generated proofs
+cover all four constructors, base/supercarrier projections, adjacent
+`Z* → Q* → R* → C*` widening, and verifier-inferred membership-to-`!= 0`
+elimination without a coherence premise. Verified closed reflection
+`1 $in Z*` is the paired negative boundary because its closed non-equality
+child has no reviewed standalone emitter.
 
 Generated `.lean` files are review artifacts, not editing surfaces. A new
 compiler feature must add the next numbered same-name pair. Unsupported

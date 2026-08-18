@@ -1,0 +1,23 @@
+# Tracer: recursive case equations instantiate before nested arithmetic normalization.
+#
+# Before, the successor equation below needed five explicit proof lines:
+# `n + 1 > 0`, the raw recursive equation at `n + 1`, `(n + 1) - 1 = n`,
+# congruence through the nested calls, and the final transitive equality.
+#
+# Now, the recursive definition itself is enough.
+have fn newton_sqrt_two(x R+) R+ = (x + 2 / x) / 2
+
+have fn sqrt_two_newton_iterate(n N) R+ by induc n from 0:
+    case n = 0: 1
+    case n > 0: newton_sqrt_two(sqrt_two_newton_iterate(n - 1))
+
+thm sqrt_two_newton_iterate_step:
+    ? forall n N:
+        sqrt_two_newton_iterate(n + 1) = newton_sqrt_two(sqrt_two_newton_iterate(n))
+
+# Current behavior: matching the stored positive case at `n + 1` checks its
+# condition and then normalizes `(n + 1) - 1` to `n` inside the result.
+#
+# Boundary: Litex does not select a recursive case for an unconstrained `n`;
+# for example, `sqrt_two_newton_iterate(n) = 1` is not inferred for every n.
+# Evidence: target/release/litex -compact -isolated -runner -f examples/01_proof_patterns/recursive_definition_successor_unfolding.lit
