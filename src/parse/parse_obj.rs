@@ -2495,7 +2495,10 @@ mod module_qualification_parse_tests {
             panic!("expected struct parameter definition");
         };
         assert_eq!(param_def.collect_param_names(), vec!["s".to_string()]);
-        assert_eq!(format!("{}", stmt), "struct Group<s set>:");
+        assert_eq!(
+            strip_free_param_numeric_tags_in_display(&format!("{}", stmt)),
+            "struct Group<s set>:"
+        );
 
         let obj = parse_one_obj_line_with_runtime(&mut rt, "&Group<s>{p}.op");
         let Obj::ObjAsStructInstanceWithFieldAccess(access) = obj else {
@@ -2504,16 +2507,25 @@ mod module_qualification_parse_tests {
         assert_without_mod(&access.struct_obj.name, "Group");
         assert_eq!(access.struct_obj.params.len(), 1);
         assert_eq!(access.field_name, "op");
-        assert_eq!(format!("{}", access), "&Group<s>{p}.op");
+        assert_eq!(
+            strip_free_param_numeric_tags_in_display(&format!("{}", access)),
+            "&Group<s>{p}.op"
+        );
 
         let old_obj = parse_one_obj_line_with_runtime(&mut rt, "&Group(s){p}.op");
-        assert_eq!(format!("{}", old_obj), "&Group<s>{p}.op");
+        assert_eq!(
+            strip_free_param_numeric_tags_in_display(&format!("{}", old_obj)),
+            "&Group<s>{p}.op"
+        );
 
         let projected_call = parse_one_obj_line_with_runtime(&mut rt, "p[2](x, y)");
         assert_eq!(format!("{}", projected_call), "p[2](x, y)");
 
         let field_call = parse_one_obj_line_with_runtime(&mut rt, "&Group<s>{p}.op(x, y)");
-        assert_eq!(format!("{}", field_call), "&Group<s>{p}.op(x, y)");
+        assert_eq!(
+            strip_free_param_numeric_tags_in_display(&format!("{}", field_call)),
+            "&Group<s>{p}.op(x, y)"
+        );
     }
 
     #[test]
@@ -2766,42 +2778,38 @@ mod module_qualification_parse_tests {
         let Stmt::By(ByStmt::ByThmStmt(thm_stmt)) = thm_stmt else {
             panic!("expected by thm stmt");
         };
-        assert_with_mod(&thm_stmt.name, "basics::implementation", "T");
+        assert_with_mod(&thm_stmt.name, "basics", "T");
 
         let template_obj = parse_one_obj_line_with_runtime(&mut rt, "\\basics::Template<2>");
         let Obj::InstantiatedTemplateObj(template_obj) = template_obj else {
             panic!("expected instantiated template object");
         };
-        assert_with_mod(
-            &template_obj.template_name,
-            "basics::implementation",
-            "Template",
-        );
+        assert_with_mod(&template_obj.template_name, "basics", "Template");
 
         let struct_obj = parse_one_obj_line_with_runtime(&mut rt, "&basics::Struct");
         let Obj::StructObj(struct_obj) = struct_obj else {
             panic!("expected struct object");
         };
-        assert_with_mod(&struct_obj.name, "basics::implementation", "Struct");
+        assert_with_mod(&struct_obj.name, "basics", "Struct");
 
         let replacement_obj = parse_one_obj_line_with_runtime(&mut rt, "replacement(basics::P, A)");
         let Obj::Replacement(replacement_obj) = replacement_obj else {
             panic!("expected replacement object");
         };
-        assert_with_mod(&replacement_obj.prop_name, "basics::implementation", "P");
+        assert_with_mod(&replacement_obj.prop_name, "basics", "P");
 
         let obj = parse_one_obj_line_with_runtime(&mut rt, "basics::value");
         let Obj::Atom(AtomObj::IdentifierWithMod(obj)) = obj else {
             panic!("expected module-qualified identifier");
         };
-        assert_eq!(obj.mod_name, "basics::implementation");
+        assert_eq!(obj.mod_name, "basics");
         assert_eq!(obj.name, "value");
 
         let fact = parse_one_fact_line_with_runtime(&mut rt, "$basics::P(a)");
         let Fact::AtomicFact(AtomicFact::NormalAtomicFact(fact)) = fact else {
             panic!("expected normal atomic fact");
         };
-        assert_with_mod(&fact.predicate, "basics::implementation", "P");
+        assert_with_mod(&fact.predicate, "basics", "P");
 
         let tokenizer = Tokenizer::new();
         let mut blocks = tokenizer

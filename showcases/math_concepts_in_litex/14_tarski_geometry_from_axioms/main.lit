@@ -10,6 +10,20 @@ prop is_between(Point set, Bet power_set(cart(Point, Point, Point)), a, b, c Poi
 prop are_segments_congruent(Point set, Cong power_set(cart(Point, Point, Point, Point)), a, b, c, d Point):
     (a, b, c, d) $in Cong
 
+# Package the full conditional law as one transparent proposition. The setting
+# can then expose a stable named rule instead of relying on anonymous matching.
+prop satisfies_five_segment(Point set, Bet power_set(cart(Point, Point, Point)), Cong power_set(cart(Point, Point, Point, Point))):
+    forall q1, q2, q3, q4, q5, q6, q7, q8 Point:
+        $are_segments_congruent(Point, Cong, q1, q3, q2, q4)
+        $are_segments_congruent(Point, Cong, q3, q5, q4, q6)
+        $are_segments_congruent(Point, Cong, q1, q7, q2, q8)
+        $are_segments_congruent(Point, Cong, q3, q7, q4, q8)
+        $is_between(Point, Bet, q1, q3, q5)
+        $is_between(Point, Bet, q2, q4, q6)
+        q1 != q3
+        =>:
+            $are_segments_congruent(Point, Cong, q5, q7, q6, q8)
+
 # Litex eliminates an existential most reliably through an atomic prop. This
 # packages the conclusion of inner Pasch without strengthening the axiom.
 prop inner_pasch_witness_exists(Point set, Bet power_set(cart(Point, Point, Point)), first_line_point, second_line_point, first_side_point, second_side_point Point):
@@ -31,16 +45,7 @@ setting TarskiNeutralDimensionlessSetting(Point nonempty_set, Bet power_set(cart
             p1 = p2
     forall p1, p2, p3, p4 Point:
         exist x Point st {(p1, p2, x) $in Bet, (p2, x, p3, p4) $in Cong}
-    forall p1, p2, p3, p4, p5, p6, p7, p8 Point:
-        (p1, p3, p2, p4) $in Cong
-        (p3, p5, p4, p6) $in Cong
-        (p1, p7, p2, p8) $in Cong
-        (p3, p7, p4, p8) $in Cong
-        (p1, p3, p5) $in Bet
-        (p2, p4, p6) $in Bet
-        p1 != p3
-        =>:
-            (p5, p7, p6, p8) $in Cong
+    $satisfies_five_segment(Point, Bet, Cong)
     forall p1, p2 Point:
         (p1, p2, p1) $in Bet
         =>:
@@ -227,6 +232,280 @@ thm point_is_own_degenerate_midpoint:
     by thm between_trivial(Point, Bet, Cong, lower_a, lower_b, lower_c, a, a) => $is_between(Point, Bet, a, a, a)
     by thm segment_congruence_reflexive(Point, Bet, Cong, lower_a, lower_b, lower_c, a, a) => $are_segments_congruent(Point, Cong, a, a, a, a)
     by def $is_midpoint(Point, Bet, Cong, a, a, a)
+
+# Chapter 8: right angles and perpendicularity are defined without a numeric
+# angle measure. A right angle is witnessed by reflecting one ray endpoint
+# through the vertex and comparing the two distances from the other endpoint.
+prop is_right_angle(Point set, Bet power_set(cart(Point, Point, Point)), Cong power_set(cart(Point, Point, Point, Point)), point_a, vertex, point_c Point):
+    exist reflected_c Point st {$is_midpoint(Point, Bet, Cong, vertex, point_c, reflected_c), $are_segments_congruent(Point, Cong, point_a, point_c, point_a, reflected_c)}
+
+prop is_perpendicular_at(Point set, Bet power_set(cart(Point, Point, Point)), Cong power_set(cart(Point, Point, Point, Point)), intersection, line1_a, line1_b, line2_a, line2_b Point):
+    line1_a != line1_b
+    line2_a != line2_b
+    $are_collinear(Point, Bet, intersection, line1_a, line1_b)
+    $are_collinear(Point, Bet, intersection, line2_a, line2_b)
+    forall point_u, point_v Point:
+        $are_collinear(Point, Bet, point_u, line1_a, line1_b)
+        $are_collinear(Point, Bet, point_v, line2_a, line2_b)
+        =>:
+            $is_right_angle(Point, Bet, Cong, point_u, intersection, point_v)
+
+prop are_lines_perpendicular(Point set, Bet power_set(cart(Point, Point, Point)), Cong power_set(cart(Point, Point, Point, Point)), line1_a, line1_b, line2_a, line2_b Point):
+    exist intersection Point st {$is_perpendicular_at(Point, Bet, Cong, intersection, line1_a, line1_b, line2_a, line2_b)}
+
+thm right_angle_has_reflected_witness:
+    ? forall Point set, Bet power_set(cart(Point, Point, Point)), Cong power_set(cart(Point, Point, Point, Point)), point_a, vertex, point_c Point:
+        $is_right_angle(Point, Bet, Cong, point_a, vertex, point_c)
+        =>:
+            exist reflected_c Point st {$is_midpoint(Point, Bet, Cong, vertex, point_c, reflected_c), $are_segments_congruent(Point, Cong, point_a, point_c, point_a, reflected_c)}
+    obtain selected_c from $is_right_angle(Point, Bet, Cong, point_a, vertex, point_c)
+    witness exist reflected_c Point st {$is_midpoint(Point, Bet, Cong, vertex, point_c, reflected_c), $are_segments_congruent(Point, Cong, point_a, point_c, point_a, reflected_c)} from selected_c
+
+thm perpendicular_lines_have_intersection:
+    ? forall Point set, Bet power_set(cart(Point, Point, Point)), Cong power_set(cart(Point, Point, Point, Point)), line1_a, line1_b, line2_a, line2_b Point:
+        $are_lines_perpendicular(Point, Bet, Cong, line1_a, line1_b, line2_a, line2_b)
+        =>:
+            exist intersection Point st {$is_perpendicular_at(Point, Bet, Cong, intersection, line1_a, line1_b, line2_a, line2_b)}
+    obtain selected_intersection from $are_lines_perpendicular(Point, Bet, Cong, line1_a, line1_b, line2_a, line2_b)
+    witness exist intersection Point st {$is_perpendicular_at(Point, Bet, Cong, intersection, line1_a, line1_b, line2_a, line2_b)} from selected_intersection
+
+# Chapter 9: sidedness, central reflection, and dimension-free coplanarity.
+prop are_on_opposite_sides(Point set, Bet power_set(cart(Point, Point, Point)), line_a, line_b, point_p, point_q Point):
+    not $are_collinear(Point, Bet, point_p, line_a, line_b)
+    not $are_collinear(Point, Bet, point_q, line_a, line_b)
+    exist crossing Point st {$are_collinear(Point, Bet, crossing, line_a, line_b), $is_between(Point, Bet, point_p, crossing, point_q)}
+
+prop is_point_reflection(Point set, Bet power_set(cart(Point, Point, Point)), Cong power_set(cart(Point, Point, Point, Point)), point, reflected_point, center Point):
+    $is_midpoint(Point, Bet, Cong, center, point, reflected_point)
+
+prop are_on_same_side(Point set, Bet power_set(cart(Point, Point, Point)), line_a, line_b, point_p, point_q Point):
+    exist reference_point Point st {$are_on_opposite_sides(Point, Bet, line_a, line_b, point_p, reference_point), $are_on_opposite_sides(Point, Bet, line_a, line_b, point_q, reference_point)}
+
+# Litex disjunction operands are kept atomic by naming the shared-point case.
+prop line_pairs_share_point(Point set, Bet power_set(cart(Point, Point, Point)), line1_a, line1_b, line2_a, line2_b, intersection Point):
+    $are_collinear(Point, Bet, line1_a, line1_b, intersection)
+    $are_collinear(Point, Bet, line2_a, line2_b, intersection)
+
+prop is_coplanarity_witness(Point set, Bet power_set(cart(Point, Point, Point)), point_a, point_b, point_c, point_d, intersection Point):
+    $line_pairs_share_point(Point, Bet, point_a, point_b, point_c, point_d, intersection) or $line_pairs_share_point(Point, Bet, point_a, point_c, point_b, point_d, intersection) or $line_pairs_share_point(Point, Bet, point_a, point_d, point_b, point_c, intersection)
+
+prop are_coplanar(Point set, Bet power_set(cart(Point, Point, Point)), point_a, point_b, point_c, point_d Point):
+    exist intersection Point st {$is_coplanarity_witness(Point, Bet, point_a, point_b, point_c, point_d, intersection)}
+
+thm opposite_sides_points_are_off_line:
+    ? forall Point set, Bet power_set(cart(Point, Point, Point)), line_a, line_b, point_p, point_q Point:
+        $are_on_opposite_sides(Point, Bet, line_a, line_b, point_p, point_q)
+        =>:
+            not $are_collinear(Point, Bet, point_p, line_a, line_b)
+            not $are_collinear(Point, Bet, point_q, line_a, line_b)
+
+thm point_reflection_is_midpoint:
+    ? forall Point set, Bet power_set(cart(Point, Point, Point)), Cong power_set(cart(Point, Point, Point, Point)), point, reflected_point, center Point:
+        $is_point_reflection(Point, Bet, Cong, point, reflected_point, center)
+        =>:
+            $is_midpoint(Point, Bet, Cong, center, point, reflected_point)
+
+thm same_side_has_reference_point:
+    ? forall Point set, Bet power_set(cart(Point, Point, Point)), line_a, line_b, point_p, point_q Point:
+        $are_on_same_side(Point, Bet, line_a, line_b, point_p, point_q)
+        =>:
+            exist reference_point Point st {$are_on_opposite_sides(Point, Bet, line_a, line_b, point_p, reference_point), $are_on_opposite_sides(Point, Bet, line_a, line_b, point_q, reference_point)}
+    obtain selected_reference from $are_on_same_side(Point, Bet, line_a, line_b, point_p, point_q)
+    witness exist reference_point Point st {$are_on_opposite_sides(Point, Bet, line_a, line_b, point_p, reference_point), $are_on_opposite_sides(Point, Bet, line_a, line_b, point_q, reference_point)} from selected_reference
+
+thm coplanar_has_intersection_pattern:
+    ? forall Point set, Bet power_set(cart(Point, Point, Point)), point_a, point_b, point_c, point_d Point:
+        $are_coplanar(Point, Bet, point_a, point_b, point_c, point_d)
+        =>:
+            exist intersection Point st {$is_coplanarity_witness(Point, Bet, point_a, point_b, point_c, point_d, intersection)}
+    obtain selected_intersection from $are_coplanar(Point, Bet, point_a, point_b, point_c, point_d)
+    witness exist intersection Point st {$is_coplanarity_witness(Point, Bet, point_a, point_b, point_c, point_d, intersection)} from selected_intersection
+
+# Chapter 10: reflection in a line. The degenerate-axis branch follows
+# GeoCoq's totalized definition and remains explicit instead of being hidden.
+prop line_reflection_axis_hit(Point set, Bet power_set(cart(Point, Point, Point)), Cong power_set(cart(Point, Point, Point, Point)), point, reflected_point, line_a, line_b Point):
+    exist intersection Point st {$is_midpoint(Point, Bet, Cong, intersection, point, reflected_point), $are_collinear(Point, Bet, line_a, line_b, intersection)}
+
+prop is_line_reflection(Point set, Bet power_set(cart(Point, Point, Point)), Cong power_set(cart(Point, Point, Point, Point)), point, reflected_point, line_a, line_b Point):
+    $line_reflection_axis_hit(Point, Bet, Cong, point, reflected_point, line_a, line_b)
+    $are_lines_perpendicular(Point, Bet, Cong, line_a, line_b, point, reflected_point) or point = reflected_point
+
+prop is_nondegenerate_line_reflection_case(Point set, Bet power_set(cart(Point, Point, Point)), Cong power_set(cart(Point, Point, Point, Point)), point, reflected_point, line_a, line_b Point):
+    line_a != line_b
+    $is_line_reflection(Point, Bet, Cong, point, reflected_point, line_a, line_b)
+
+prop is_degenerate_line_reflection_case(Point set, Bet power_set(cart(Point, Point, Point)), Cong power_set(cart(Point, Point, Point, Point)), point, reflected_point, line_a, line_b Point):
+    line_a = line_b
+    $is_midpoint(Point, Bet, Cong, line_a, point, reflected_point)
+
+prop is_reflection(Point set, Bet power_set(cart(Point, Point, Point)), Cong power_set(cart(Point, Point, Point, Point)), point, reflected_point, line_a, line_b Point):
+    $is_nondegenerate_line_reflection_case(Point, Bet, Cong, point, reflected_point, line_a, line_b) or $is_degenerate_line_reflection_case(Point, Bet, Cong, point, reflected_point, line_a, line_b)
+
+thm line_reflection_has_axis_hit:
+    ? forall Point set, Bet power_set(cart(Point, Point, Point)), Cong power_set(cart(Point, Point, Point, Point)), point, reflected_point, line_a, line_b Point:
+        $is_line_reflection(Point, Bet, Cong, point, reflected_point, line_a, line_b)
+        =>:
+            $line_reflection_axis_hit(Point, Bet, Cong, point, reflected_point, line_a, line_b)
+
+thm line_reflection_is_perpendicular_or_fixed:
+    ? forall Point set, Bet power_set(cart(Point, Point, Point)), Cong power_set(cart(Point, Point, Point, Point)), point, reflected_point, line_a, line_b Point:
+        $is_line_reflection(Point, Bet, Cong, point, reflected_point, line_a, line_b)
+        =>:
+            $are_lines_perpendicular(Point, Bet, Cong, line_a, line_b, point, reflected_point) or point = reflected_point
+
+thm reflection_has_nondegenerate_or_degenerate_case:
+    ? forall Point set, Bet power_set(cart(Point, Point, Point)), Cong power_set(cart(Point, Point, Point, Point)), point, reflected_point, line_a, line_b Point:
+        $is_reflection(Point, Bet, Cong, point, reflected_point, line_a, line_b)
+        =>:
+            $is_nondegenerate_line_reflection_case(Point, Bet, Cong, point, reflected_point, line_a, line_b) or $is_degenerate_line_reflection_case(Point, Bet, Cong, point, reflected_point, line_a, line_b)
+
+# Chapter 11, GeoCoq Definition 11.2. Angle congruence is intentionally the
+# exact four-extension construction, not an SSS alias or a numeric measure.
+prop are_angles_congruent(Point set, Bet power_set(cart(Point, Point, Point)), Cong power_set(cart(Point, Point, Point, Point)), point_a, vertex_b, point_c, point_d, vertex_e, point_f Point):
+    point_a != vertex_b
+    point_c != vertex_b
+    point_d != vertex_e
+    point_f != vertex_e
+    exist a_ext, c_ext, d_ext, f_ext Point st {$is_between(Point, Bet, vertex_b, point_a, a_ext), $are_segments_congruent(Point, Cong, point_a, a_ext, vertex_e, point_d), $is_between(Point, Bet, vertex_b, point_c, c_ext), $are_segments_congruent(Point, Cong, point_c, c_ext, vertex_e, point_f), $is_between(Point, Bet, vertex_e, point_d, d_ext), $are_segments_congruent(Point, Cong, point_d, d_ext, vertex_b, point_a), $is_between(Point, Bet, vertex_e, point_f, f_ext), $are_segments_congruent(Point, Cong, point_f, f_ext, vertex_b, point_c), $are_segments_congruent(Point, Cong, a_ext, c_ext, d_ext, f_ext)}
+
+thm angle_congruence_is_nondegenerate:
+    ? forall Point set, Bet power_set(cart(Point, Point, Point)), Cong power_set(cart(Point, Point, Point, Point)), point_a, vertex_b, point_c, point_d, vertex_e, point_f Point:
+        $are_angles_congruent(Point, Bet, Cong, point_a, vertex_b, point_c, point_d, vertex_e, point_f)
+        =>:
+            point_a != vertex_b
+            point_c != vertex_b
+            point_d != vertex_e
+            point_f != vertex_e
+
+thm noncollinear_points_are_pairwise_distinct:
+    ? forall [TarskiNeutralDimensionlessSetting], a, b, c Point:
+        not $are_collinear(Point, Bet, a, b, c)
+        =>:
+            a != b
+            b != c
+            a != c
+    claim:
+        ? a != b
+        by contra:
+            ? a != b
+            a = b
+            by thm between_trivial(Point, Bet, Cong, lower_a, lower_b, lower_c, c, a) => $is_between(Point, Bet, c, a, a)
+            (c, a, b) $in Bet
+            by def $are_collinear(Point, Bet, a, b, c)
+            impossible not $are_collinear(Point, Bet, a, b, c)
+    claim:
+        ? b != c
+        by contra:
+            ? b != c
+            b = c
+            by thm between_trivial(Point, Bet, Cong, lower_a, lower_b, lower_c, a, b) => $is_between(Point, Bet, a, b, b)
+            (a, b, c) $in Bet
+            by def $are_collinear(Point, Bet, a, b, c)
+            impossible not $are_collinear(Point, Bet, a, b, c)
+    claim:
+        ? a != c
+        by contra:
+            ? a != c
+            a = c
+            by thm between_trivial(Point, Bet, Cong, lower_a, lower_b, lower_c, b, a) => $is_between(Point, Bet, b, a, a)
+            (b, c, a) $in Bet
+            by def $are_collinear(Point, Bet, a, b, c)
+            impossible not $are_collinear(Point, Bet, a, b, c)
+
+# Two small projections make the primitive SST axioms explicitly callable in
+# later synthetic proofs.
+thm degenerate_segments_congruent:
+    ? forall [TarskiNeutralDimensionlessSetting], a, b Point:
+        $are_segments_congruent(Point, Cong, a, a, b, b)
+    exist x Point st {(a, a, x) $in Bet, (a, x, b, b) $in Cong}
+    obtain x from exist x Point st {(a, a, x) $in Bet, (a, x, b, b) $in Cong}
+    a = x
+    (a, a, b, b) $in Cong
+    by def $are_segments_congruent(Point, Cong, a, a, b, b)
+
+thm five_segment:
+    ? forall [TarskiNeutralDimensionlessSetting], q1, q2, q3, q4, q5, q6, q7, q8 Point:
+        $are_segments_congruent(Point, Cong, q1, q3, q2, q4)
+        $are_segments_congruent(Point, Cong, q3, q5, q4, q6)
+        $are_segments_congruent(Point, Cong, q1, q7, q2, q8)
+        $are_segments_congruent(Point, Cong, q3, q7, q4, q8)
+        $is_between(Point, Bet, q1, q3, q5)
+        $is_between(Point, Bet, q2, q4, q6)
+        q1 != q3
+        =>:
+            $are_segments_congruent(Point, Cong, q5, q7, q6, q8)
+    $satisfies_five_segment(Point, Bet, Cong)
+
+# Two applications of five-segment compare a pair of opposite extensions,
+# first at their endpoints and then from an arbitrary comparison point b.
+thm opposite_extensions_preserve_distances:
+    ? forall [TarskiNeutralDimensionlessSetting], a, b, c, c_ext, f_ext Point:
+        $is_between(Point, Bet, a, c, c_ext)
+        $are_segments_congruent(Point, Cong, c, c_ext, c, a)
+        $is_between(Point, Bet, c, a, f_ext)
+        $are_segments_congruent(Point, Cong, a, f_ext, a, c)
+        $are_segments_congruent(Point, Cong, a, b, c, b)
+        a != c
+        =>:
+            $are_segments_congruent(Point, Cong, a, c_ext, c, f_ext)
+            $are_segments_congruent(Point, Cong, b, c_ext, b, f_ext)
+    by thm segment_congruence_symmetric(Point, Bet, Cong, lower_a, lower_b, lower_c, a, f_ext, a, c) => $are_segments_congruent(Point, Cong, a, c, a, f_ext)
+    by thm segment_congruence_left_commutative(Point, Bet, Cong, lower_a, lower_b, lower_c, a, c, a, f_ext) => $are_segments_congruent(Point, Cong, c, a, a, f_ext)
+    by thm segment_congruence_transitive(Point, Bet, Cong, lower_a, lower_b, lower_c, c, c_ext, c, a, a, f_ext) => $are_segments_congruent(Point, Cong, c, c_ext, a, f_ext)
+    by thm degenerate_segments_congruent(Point, Bet, Cong, lower_a, lower_b, lower_c, a, c) => $are_segments_congruent(Point, Cong, a, a, c, c)
+    (a, c, c, a) $in Cong
+    by def $are_segments_congruent(Point, Cong, a, c, c, a)
+    (c, a, a, c) $in Cong
+    by def $are_segments_congruent(Point, Cong, c, a, a, c)
+    by thm five_segment(Point, Bet, Cong, lower_a, lower_b, lower_c, a, c, c, a, c_ext, f_ext, a, c) => $are_segments_congruent(Point, Cong, c_ext, a, f_ext, c)
+    by thm segment_congruence_endpoint_commutative(Point, Bet, Cong, lower_a, lower_b, lower_c, c_ext, a, f_ext, c) => $are_segments_congruent(Point, Cong, a, c_ext, c, f_ext)
+    by thm segment_congruence_symmetric(Point, Bet, Cong, lower_a, lower_b, lower_c, a, b, c, b) => $are_segments_congruent(Point, Cong, c, b, a, b)
+    by thm five_segment(Point, Bet, Cong, lower_a, lower_b, lower_c, a, c, c, a, c_ext, f_ext, b, b) => $are_segments_congruent(Point, Cong, c_ext, b, f_ext, b)
+    by thm segment_congruence_endpoint_commutative(Point, Bet, Cong, lower_a, lower_b, lower_c, c_ext, b, f_ext, b) => $are_segments_congruent(Point, Cong, b, c_ext, b, f_ext)
+
+# Euclid I.5 in the neutral, dimensionless Tarski setting: equal sides imply
+# equal base angles. Four segment constructions supply Definition 11.2's
+# witnesses; the final five-segment application joins them.
+thm isosceles_triangle_has_equal_base_angles:
+    ? forall [TarskiNeutralDimensionlessSetting], a, b, c Point:
+        not $are_collinear(Point, Bet, a, b, c)
+        $are_segments_congruent(Point, Cong, b, a, b, c)
+        =>:
+            $are_angles_congruent(Point, Bet, Cong, b, a, c, b, c, a)
+    by thm noncollinear_points_are_pairwise_distinct(Point, Bet, Cong, lower_a, lower_b, lower_c, a, b, c)
+    b != a
+    c != a
+    by thm segment_congruence_endpoint_commutative(Point, Bet, Cong, lower_a, lower_b, lower_c, b, a, b, c) => $are_segments_congruent(Point, Cong, a, b, c, b)
+
+    exist a_ext Point st {(a, b, a_ext) $in Bet, (b, a_ext, c, b) $in Cong}
+    obtain a_ext from exist a_ext Point st {(a, b, a_ext) $in Bet, (b, a_ext, c, b) $in Cong}
+    by def $is_between(Point, Bet, a, b, a_ext)
+    by def $are_segments_congruent(Point, Cong, b, a_ext, c, b)
+
+    exist c_ext Point st {(a, c, c_ext) $in Bet, (c, c_ext, c, a) $in Cong}
+    obtain c_ext from exist c_ext Point st {(a, c, c_ext) $in Bet, (c, c_ext, c, a) $in Cong}
+    by def $is_between(Point, Bet, a, c, c_ext)
+    by def $are_segments_congruent(Point, Cong, c, c_ext, c, a)
+
+    exist d_ext Point st {(c, b, d_ext) $in Bet, (b, d_ext, a, b) $in Cong}
+    obtain d_ext from exist d_ext Point st {(c, b, d_ext) $in Bet, (b, d_ext, a, b) $in Cong}
+    by def $is_between(Point, Bet, c, b, d_ext)
+    by def $are_segments_congruent(Point, Cong, b, d_ext, a, b)
+
+    exist f_ext Point st {(c, a, f_ext) $in Bet, (a, f_ext, a, c) $in Cong}
+    obtain f_ext from exist f_ext Point st {(c, a, f_ext) $in Bet, (a, f_ext, a, c) $in Cong}
+    by def $is_between(Point, Bet, c, a, f_ext)
+    by def $are_segments_congruent(Point, Cong, a, f_ext, a, c)
+
+    by thm opposite_extensions_preserve_distances(Point, Bet, Cong, lower_a, lower_b, lower_c, a, b, c, c_ext, f_ext)
+    by thm segment_congruence_symmetric(Point, Bet, Cong, lower_a, lower_b, lower_c, a, b, c, b) => $are_segments_congruent(Point, Cong, c, b, a, b)
+    by thm segment_congruence_symmetric(Point, Bet, Cong, lower_a, lower_b, lower_c, b, d_ext, a, b) => $are_segments_congruent(Point, Cong, a, b, b, d_ext)
+    by thm segment_congruence_transitive(Point, Bet, Cong, lower_a, lower_b, lower_c, b, a_ext, c, b, a, b) => $are_segments_congruent(Point, Cong, b, a_ext, a, b)
+    by thm segment_congruence_transitive(Point, Bet, Cong, lower_a, lower_b, lower_c, b, a_ext, a, b, b, d_ext) => $are_segments_congruent(Point, Cong, b, a_ext, b, d_ext)
+    by thm five_segment(Point, Bet, Cong, lower_a, lower_b, lower_c, a, c, b, b, a_ext, d_ext, c_ext, f_ext) => $are_segments_congruent(Point, Cong, a_ext, c_ext, d_ext, f_ext)
+
+    witness exist selected_a, selected_c, selected_d, selected_f Point st {$is_between(Point, Bet, a, b, selected_a), $are_segments_congruent(Point, Cong, b, selected_a, c, b), $is_between(Point, Bet, a, c, selected_c), $are_segments_congruent(Point, Cong, c, selected_c, c, a), $is_between(Point, Bet, c, b, selected_d), $are_segments_congruent(Point, Cong, b, selected_d, a, b), $is_between(Point, Bet, c, a, selected_f), $are_segments_congruent(Point, Cong, a, selected_f, a, c), $are_segments_congruent(Point, Cong, selected_a, selected_c, selected_d, selected_f)} from a_ext, c_ext, d_ext, f_ext
+    by def $are_angles_congruent(Point, Bet, Cong, b, a, c, b, c, a)
 
 # The hierarchy now branches by adding laws rather than changing primitives.
 setting TarskiNeutralWithDecidableEqualitySetting([TarskiNeutralDimensionlessSetting]):

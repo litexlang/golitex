@@ -116,17 +116,17 @@ fn setting_headers_compose_setting_bundles() {
 setting EqualPair(X nonempty_set, x, y X):
     x = y
 
-setting EqualPairWithWitness([EqualPair(S, left, right)], witness S):
-    witness = left
+setting EqualPairWithWitness([EqualPair(S, left, right)], chosen S):
+    chosen = left
 
 forall [EqualPairWithWitness]:
     left = right
-    witness = left
+    chosen = left
 "#;
     let (succeeded, output) = run_setting_source(source, "setting_header_bundle");
     assert!(succeeded, "nested setting bundle failed:\n{}", output);
     assert!(
-        output.contains("setting EqualPairWithWitness(S nonempty_set, left, right S, witness S):")
+        output.contains("setting EqualPairWithWitness(S nonempty_set, left, right S, chosen S):")
     );
     let nested_setting = output
         .find("setting EqualPairWithWitness(")
@@ -136,7 +136,7 @@ forall [EqualPairWithWitness]:
         .find("left = right")
         .expect("inherited setting condition should be expanded");
     let explicit = nested_output
-        .find("witness = left")
+        .find("chosen = left")
         .expect("explicit setting condition should remain present");
     assert!(inherited < explicit);
 }
@@ -148,9 +148,9 @@ setting EqualPair(X nonempty_set, x, y X):
     x = y
 
 struct EqualPairWitness<[EqualPair(S, left, right)]>:
-    witness S
+    chosen S
     <=>:
-        witness = left
+        chosen = left
 
 forall S nonempty_set, left, right S, item &EqualPairWitness<S, left, right>:
     left = right
@@ -188,10 +188,16 @@ forall S nonempty_set, left, right S, item &EqualPairWitness<S, left, right>:
         1,
         "bundle parameters are not fields"
     );
-    assert_eq!(struct_def.fields[0].name(), "witness");
+    assert_eq!(struct_def.fields[0].name(), "chosen");
     assert_eq!(struct_def.equivalent_facts.len(), 2);
-    assert_eq!(struct_def.equivalent_facts[0].to_string(), "left = right");
-    assert_eq!(struct_def.equivalent_facts[1].to_string(), "witness = left");
+    assert_eq!(
+        strip_free_param_numeric_tags_in_display(&struct_def.equivalent_facts[0].to_string()),
+        "left = right"
+    );
+    assert_eq!(
+        strip_free_param_numeric_tags_in_display(&struct_def.equivalent_facts[1].to_string()),
+        "chosen = left"
+    );
 }
 
 #[test]

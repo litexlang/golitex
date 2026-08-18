@@ -343,17 +343,63 @@ fn builtin_strategy_ir_marks_each_selected_layer_and_replays_exact_rules() {
     );
     assert!(!generated.contains("UseBuiltinStrategy"));
     assert!(!generated.contains("sorry"));
+
+    const REAL_ADDITION_CARRIER_SOURCE: &str = "forall a, b R:\n    a + b $in R\n";
+    let carrier_ir =
+        capture_ir_debug_on_verifier_stack(REAL_ADDITION_CARRIER_SOURCE, "15_BuiltinStrategy.lit")
+            .expect("capture real-addition carrier tracer IR");
+    assert_eq!(
+        carrier_ir
+            .matches("RealArithmeticMembershipClosure")
+            .count(),
+        1,
+        "{carrier_ir}"
+    );
+    let carrier_generated =
+        compile_on_verifier_stack(REAL_ADDITION_CARRIER_SOURCE, "15_BuiltinStrategy.lit")
+            .expect("compile real-addition carrier tracer");
+    assert!(carrier_generated.contains("Litex.Rules.complexAddInR"));
+
+    const RIGHT_STRICT_SOURCE: &str = "forall a, b, c, d R:\n    a >= 0\n    b > 0\n    c >= 0\n    d >= 0\n    =>:\n        (a + b) + (c + d) > 0\n";
+    let right_ir =
+        capture_ir_debug_on_verifier_stack(RIGHT_STRICT_SOURCE, "15_BuiltinStrategy.lit")
+            .expect("capture right-strict builtin-strategy tracer IR");
+    assert_eq!(
+        right_ir.matches("AddPositiveRightStrict").count(),
+        1,
+        "{right_ir}"
+    );
+    assert_eq!(
+        right_ir
+            .matches("order.add_positive_of_nonnegative_positive")
+            .count(),
+        1,
+        "{right_ir}"
+    );
+
+    let right_generated = compile_on_verifier_stack(RIGHT_STRICT_SOURCE, "15_BuiltinStrategy.lit")
+        .expect("compile right-strict builtin-strategy tracer");
+    assert_eq!(
+        right_generated
+            .matches("Litex.Rules.complexAddPositiveRightStrict")
+            .count(),
+        2
+    );
+    assert!(!right_generated.contains("Litex.Object"));
+    assert!(!right_generated.contains("Set.univ"));
+    assert!(!right_generated.contains("axiom "));
+    assert!(!right_generated.contains("sorry"));
 }
 
 #[test]
 fn unsupported_builtin_strategy_rule_remains_fail_closed() {
     let error = compile_on_verifier_stack(
-        "forall a, b R:\n    a >= 0\n    b > 0\n    =>:\n        a + b > 0\n",
+        "forall a, b R:\n    a >= 0\n    b >= 0\n    =>:\n        a * b >= 0\n",
         "unsupported_builtin_strategy_rule.lit",
     )
-    .expect_err("unreviewed right-strict addition must remain outside the compiler slice");
+    .expect_err("unreviewed nonnegative multiplication must remain outside the compiler slice");
     assert!(
-        error.contains("AddPositiveRightStrict"),
+        error.contains("MulNonnegative"),
         "unexpected error: {error}"
     );
 }

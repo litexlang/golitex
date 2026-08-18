@@ -26,9 +26,11 @@ readable setting-first development.
   `Point × Point × Point × Point`.
 - Named settings are theorem-facing assumption bundles. They expose an
   explicit axiom boundary without injecting a global Litex `axiom`.
-- Conditional existential axiom conclusions are packaged as concrete
-  witness-existence predicates. This is propositionally the same statement,
-  but gives existential elimination a named atomic source in Litex.
+- Conditional primitive laws are packaged as transparent concrete predicates:
+  the full five-segment implication receives a named rule predicate and inner
+  Pasch receives a witness-existence result predicate. These are
+  propositionally the same statements, but give fresh Litex sessions stable
+  named proof sources.
 - Concrete predicates provide readable judgment interfaces over the primitive
   relation sets.
 - A theorem is `checked under the setting`; this does not prove that a model of
@@ -136,8 +138,8 @@ readable setting-first development.
 - **Ideal Litex form:** Concrete `prop` declarations over `Point`, `Bet`, and
   `Cong`; no coordinate carrier, quotient angle object, or numerical length.
 - **Interface sketch:** `are_triangles_congruent`, `is_segment_le`,
-  `is_out_on_ray`, `is_perpendicular`, `are_on_opposite_sides`,
-  `is_reflection_in_line`, and `are_angles_congruent` retain the witness-based
+  `is_out_on_ray`, `is_perpendicular_at`, `are_on_opposite_sides`,
+  `is_line_reflection`, and `are_angles_congruent` retain the witness-based
   GeoCoq definitions.
 - **Nearest wrong alternative:** Replacing angle congruence by an unexplained
   SSS abbreviation would make Euclid I.5 short but would no longer implement

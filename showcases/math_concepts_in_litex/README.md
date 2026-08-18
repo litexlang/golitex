@@ -28,7 +28,7 @@ Every directory publishes the same five artifacts:
 | 11 | `11_multivariable_calculus_in_nutshell` | epsilon-delta partials and coordinate gradient |
 | 12 | `12_ordinary_differential_equations_in_nutshell` | quadratic family and the IVP `y' = 2x, y(0)=1` |
 | 13 | `13_numerical_analysis_in_nutshell` | exact Newton iterates and residual contraction |
-| 14 | `14_tarski_geometry_from_axioms` | point-only SST axioms and derived congruence symmetry |
+| 14 | `14_tarski_geometry_from_axioms` | GeoCoq-aligned SST Chapters 2–11 layer and neutral proof of Euclid I.5 |
 
 Run any project from the repository root:
 

@@ -2141,9 +2141,21 @@ mod tests {
             output.contains("definition:prop:first::first_prop"),
             "{output}"
         );
+        let imported_prop_id = r#""id": "definition:prop:first::first_prop""#;
+        let imported_prop_index = output.find(imported_prop_id).expect("imported prop node");
+        let imported_prop_end = (imported_prop_index + 500).min(output.len());
+        let imported_prop_window = &output[imported_prop_index..imported_prop_end];
         assert!(
-            output.contains(r#""definition_kind": "unverified_import""#),
-            "{output}"
+            imported_prop_window.contains(r#""definition_kind": "prop""#),
+            "{imported_prop_window}"
+        );
+        assert!(
+            imported_prop_window.contains(r#""defined": false"#),
+            "{imported_prop_window}"
+        );
+        assert!(
+            imported_prop_window.contains(r#""knowledge_status": "checked""#),
+            "{imported_prop_window}"
         );
         let certificate_id = r#""id": "certificate:exist_unique:selected:"#;
         let certificate_index = output

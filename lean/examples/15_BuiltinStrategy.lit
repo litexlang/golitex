@@ -13,6 +13,9 @@
 #
 # Now every selected strategy layer is retained as `UseBuiltinStrategy` around
 # its concrete `RuleApplication`; leaf premises remain exact FactId citations.
+forall a, b R:
+    a + b $in R
+
 forall a, b, c, d R:
     a > 0
     b >= 0
@@ -21,7 +24,17 @@ forall a, b, c, d R:
     =>:
         (a + b) + (c + d) > 0
 
-# Boundary: the adjacent right-strict `a >= 0, b > 0 => a + b > 0` route is
-# deliberately still rejected by the compiler until its Lean adapter is added.
+# The symmetric right-strict route retains both its direct builtin certificate
+# and the registered inner-sum rule selected by the recursive strategy.
+forall a, b, c, d R:
+    a >= 0
+    b > 0
+    c >= 0
+    d >= 0
+    =>:
+        (a + b) + (c + d) > 0
+
+# Boundary: nonnegative multiplication remains rejected until its own native
+# carrier theorem and exact `MulNonnegative` adapter are reviewed.
 # Evidence: target/release/litex -compact -strict -runner -f lean/examples/15_BuiltinStrategy.lit
 # and cargo test --release --test litex_to_lean_compiler_tracers builtin_strategy

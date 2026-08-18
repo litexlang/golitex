@@ -13,9 +13,9 @@
 # Now: compiler replays verifier-owned FactIds through Litex.Same.symm/trans,
 # Litex.Rules.notSameSymm, and an exact previously emitted forall theorem.
 #
-# Boundary: a closed semantic inequality such as `1 != 0`, opaque
-# OtherUnsupported proof evidence, and an unavailable or retargeted FactId
-# remain fail-closed.
+# Boundary: a closed semantic inequality such as `1 != 0`, proof evidence
+# without a replay adapter, and an unavailable or retargeted FactId remain
+# fail-closed; unsupported evidence now fails during IR capture.
 #
 # Evidence:
 # target/release/litex -compact -strict -runner -f lean/examples/6_FactReplay.lit

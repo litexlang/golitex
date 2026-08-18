@@ -596,6 +596,7 @@ pub fn is_builtin_identifier_name(atom_name: &str) -> bool {
         || atom_name == FINITE_SET_MAX
         || atom_name == FINITE_SET_MIN
         || atom_name == GCD
+        || atom_name == QUOT
         || atom_name == LCM
         || atom_name == FLOOR
         || atom_name == CEIL

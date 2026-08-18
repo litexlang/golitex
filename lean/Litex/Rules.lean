@@ -89,6 +89,16 @@ private theorem complexAddAsReal
   Litex.Same.symm
     (Litex.Same.realAddComplex (Litex.Same.symm ha) (Litex.Same.symm hb))
 
+/-- Addition preserves real membership for complex-carrier source values. -/
+theorem complexAddInR
+    {a b : ℂ}
+    (ha : Litex.In a Litex.R)
+    (hb : Litex.In b Litex.R) :
+    Litex.In (a + b) Litex.R := by
+  rcases ha with ⟨ra, hra⟩
+  rcases hb with ⟨rb, hrb⟩
+  exact ⟨ra + rb, complexAddAsReal hra hrb⟩
+
 /-- The concrete complex-carrier adapter for Litex's nonnegative-addition
 builtin rule. It combines the independently selected zero representatives
 instead of assuming global representative coherence. -/
@@ -117,6 +127,20 @@ theorem complexAddPositiveLeftStrict
     complexZeroAddAsReal hra0 hrb0,
     complexAddAsReal hra hrb,
     add_lt_add_of_lt_of_le haOrder hbOrder⟩
+
+/-- The concrete complex-carrier adapter for Litex's nonnegative-left,
+strict-right addition builtin rule. -/
+theorem complexAddPositiveRightStrict
+    {a b : ℂ}
+    (ha : Litex.Le (0 : ℂ) a)
+    (hb : Litex.Lt (0 : ℂ) b) :
+    Litex.Lt (0 : ℂ) (a + b) := by
+  rcases ha with ⟨ra0, ra, hra0, hra, haOrder⟩
+  rcases hb with ⟨rb0, rb, hrb0, hrb, hbOrder⟩
+  exact ⟨ra0 + rb0, ra + rb,
+    complexZeroAddAsReal hra0 hrb0,
+    complexAddAsReal hra hrb,
+    add_lt_add_of_le_of_lt haOrder hbOrder⟩
 
 /-- Introduce membership in a predicate-defined set from a semantically equal
 base representative satisfying the predicate. -/

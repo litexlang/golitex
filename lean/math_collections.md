@@ -211,6 +211,21 @@ universal Litex carrier. The defining relation is still `Litex.Same`; a typed
 `have x S = value` additionally replays the checked `Litex.In x S` fact.
 Example 11 fixes this contract for closed numeric values.
 
+## Builtin strategy replay
+
+Example 15 retains `UseBuiltinStrategy` as provenance around the exact
+recursive rule tree; compiler never reruns the strategy in Lean. Complex-
+carrier values with separately proved real membership use
+`Rules.complexAddInR` for addition closure. The three reviewed additive sign
+adapters cover nonnegative plus nonnegative and either one of the two ordered
+summands being strictly positive. Both a direct arithmetic certificate and a
+registered local-rule certificate validate their ordered operands before
+calling the corresponding theorem.
+
+Nearest rejected form: nonnegative multiplication. Although verifier IR names
+`MulNonnegative`, compiler has no reviewed native-carrier theorem or emitter
+adapter for that certificate and continues to fail closed.
+
 ## Generated example contract
 
 The `.lit` file is authoritative. Compiler first verifies it and captures the

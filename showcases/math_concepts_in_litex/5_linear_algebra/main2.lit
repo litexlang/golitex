@@ -1,0 +1,138 @@
+# Linear algebra, setting-first.
+#
+# Unlike main.lit, this file treats the field and vector-space data as an
+# ambient theorem context. No first-class structure value is constructed.
+
+setting FieldSetting(K nonempty_set, scalar_zero, scalar_one K, scalar_add fn(x, y K) K, scalar_neg fn(x K) K, scalar_mul fn(x, y K) K, scalar_inv fn(x K) K):
+    scalar_zero != scalar_one
+    forall x, y, z K:
+        scalar_add(scalar_add(x, y), z) = scalar_add(x, scalar_add(y, z))
+        scalar_mul(scalar_mul(x, y), z) = scalar_mul(x, scalar_mul(y, z))
+        scalar_mul(x, scalar_add(y, z)) = scalar_add(scalar_mul(x, y), scalar_mul(x, z))
+    forall x, y K:
+        scalar_add(x, y) = scalar_add(y, x)
+        scalar_mul(x, y) = scalar_mul(y, x)
+    forall x K:
+        scalar_add(scalar_zero, x) = x
+        scalar_add(x, scalar_neg(x)) = scalar_zero
+        scalar_mul(scalar_one, x) = x
+    forall x K:
+        x != scalar_zero
+        =>:
+            scalar_mul(x, scalar_inv(x)) = scalar_one
+
+prop has_vector_space_laws(K, V nonempty_set, scalar_one K, scalar_add fn(x, y K) K, scalar_mul fn(x, y K) K, zero_V V, add_V fn(x, y V) V, smul_V fn(a K, x V) V):
+    forall x, y, z V:
+        add_V(add_V(x, y), z) = add_V(x, add_V(y, z))
+    forall x, y V:
+        add_V(x, y) = add_V(y, x)
+    forall x V:
+        add_V(zero_V, x) = x
+        exist y V st {add_V(x, y) = zero_V}
+    forall a, b K, x V:
+        smul_V(scalar_mul(a, b), x) = smul_V(a, smul_V(b, x))
+        smul_V(scalar_add(a, b), x) = add_V(smul_V(a, x), smul_V(b, x))
+    forall a K, x, y V:
+        smul_V(a, add_V(x, y)) = add_V(smul_V(a, x), smul_V(a, y))
+    forall x V:
+        smul_V(scalar_one, x) = x
+
+setting VectorSpaceSetting([FieldSetting(K, scalar_zero, scalar_one, scalar_add, scalar_neg, scalar_mul, scalar_inv)], V nonempty_set, zero_V V, add_V fn(x, y V) V, smul_V fn(a K, x V) V):
+    $has_vector_space_laws(K, V, scalar_one, scalar_add, scalar_mul, zero_V, add_V, smul_V)
+
+prop is_field_in_setting([FieldSetting])
+
+prop is_vector_space_in_setting([VectorSpaceSetting])
+
+setting VectorSpacesSetting([FieldSetting(K, scalar_zero, scalar_one, scalar_add, scalar_neg, scalar_mul, scalar_inv)], V, W nonempty_set, zero_V V, add_V fn(x, y V) V, smul_V fn(a K, x V) V, zero_W W, add_W fn(x, y W) W, smul_W fn(a K, x W) W):
+    $has_vector_space_laws(K, V, scalar_one, scalar_add, scalar_mul, zero_V, add_V, smul_V)
+    $has_vector_space_laws(K, W, scalar_one, scalar_add, scalar_mul, zero_W, add_W, smul_W)
+
+setting LinearMapSetting([VectorSpacesSetting], T fn(v V) W):
+    forall u, v V:
+        T(add_V(u, v)) = add_W(T(u), T(v))
+    forall a K, v V:
+        T(smul_V(a, v)) = smul_W(a, T(v))
+
+prop is_linear_map_in_setting([LinearMapSetting])
+
+thm setting_add_left_cancel:
+    ? forall [VectorSpaceSetting], p, q, r V:
+        add_V(p, q) = add_V(p, r)
+        =>:
+            q = r
+    obtain inverse_p from exist inverse_p V st {add_V(p, inverse_p) = zero_V}
+    add_V(inverse_p, p) = add_V(p, inverse_p) = zero_V
+    q = add_V(zero_V, q) = add_V(add_V(inverse_p, p), q) = add_V(inverse_p, add_V(p, q)) = add_V(inverse_p, add_V(p, r)) = add_V(add_V(inverse_p, p), r) = add_V(zero_V, r) = r
+
+thm setting_scalar_times_zero_vector:
+    ? forall [VectorSpaceSetting], coefficient K:
+        smul_V(coefficient, zero_V) = zero_V
+    have q V = smul_V(coefficient, zero_V)
+    add_V(zero_V, zero_V) = zero_V
+    smul_V(coefficient, add_V(zero_V, zero_V)) = smul_V(coefficient, zero_V) = q
+    smul_V(coefficient, add_V(zero_V, zero_V)) = add_V(smul_V(coefficient, zero_V), smul_V(coefficient, zero_V)) = add_V(q, q)
+    q = add_V(q, q)
+    add_V(q, zero_V) = add_V(zero_V, q) = q
+    add_V(q, q) = add_V(q, zero_V)
+    by thm setting_add_left_cancel(K, scalar_zero, scalar_one, scalar_add, scalar_neg, scalar_mul, scalar_inv, V, zero_V, add_V, smul_V, q, q, zero_V) => q = zero_V
+
+# Tracer theorem: the common scalar field is part of the ambient setting, so
+# the proof needs no record projections or source/target field-equality fact.
+thm setting_linear_map_sends_zero_to_zero:
+    ? forall [LinearMapSetting]:
+        T(zero_V) = zero_W
+    add_V(zero_V, zero_V) = zero_V
+    T(add_V(zero_V, zero_V)) = add_W(T(zero_V), T(zero_V))
+    add_W(T(zero_V), T(zero_V)) = T(add_V(zero_V, zero_V)) = T(zero_V)
+    add_W(T(zero_V), zero_W) = add_W(zero_W, T(zero_V)) = T(zero_V)
+    add_W(T(zero_V), T(zero_V)) = add_W(T(zero_V), zero_W)
+    by thm setting_add_left_cancel(K, scalar_zero, scalar_one, scalar_add, scalar_neg, scalar_mul, scalar_inv, W, zero_W, add_W, smul_W, T(zero_V), T(zero_V), zero_W) => T(zero_V) = zero_W
+
+prop is_subspace_in_setting([VectorSpaceSetting], U power_set(V)):
+    zero_V $in U
+    forall p, q V:
+        p $in U
+        q $in U
+        =>:
+            add_V(p, q) $in U
+    forall coefficient K, p V:
+        p $in U
+        =>:
+            smul_V(coefficient, p) $in U
+
+template<V, W set, zero_W W, T fn(v V) W>:
+    have setting_linear_kernel power_set(V) = {v V: T(v) = zero_W}
+
+thm setting_linear_map_kernel_is_subspace:
+    ? forall [LinearMapSetting]:
+        $is_subspace_in_setting(K, scalar_zero, scalar_one, scalar_add, scalar_neg, scalar_mul, scalar_inv, V, zero_V, add_V, smul_V, \setting_linear_kernel<V, W, zero_W, T>)
+    by thm setting_linear_map_sends_zero_to_zero(K, scalar_zero, scalar_one, scalar_add, scalar_neg, scalar_mul, scalar_inv, V, W, zero_V, add_V, smul_V, zero_W, add_W, smul_W, T) => T(zero_V) = zero_W
+    \setting_linear_kernel<V, W, zero_W, T> = {candidate V: T(candidate) = zero_W}
+    by thm set_builder_member(zero_V, {candidate V: T(candidate) = zero_W}) => zero_V $in {candidate V: T(candidate) = zero_W}
+    zero_V $in \setting_linear_kernel<V, W, zero_W, T>
+    claim:
+        ? forall kernel_left, kernel_right V:
+            kernel_left $in \setting_linear_kernel<V, W, zero_W, T>
+            kernel_right $in \setting_linear_kernel<V, W, zero_W, T>
+            =>:
+                add_V(kernel_left, kernel_right) $in \setting_linear_kernel<V, W, zero_W, T>
+        kernel_left $in {candidate V: T(candidate) = zero_W}
+        T(kernel_left) = zero_W
+        kernel_right $in {candidate V: T(candidate) = zero_W}
+        T(kernel_right) = zero_W
+        T(add_V(kernel_left, kernel_right)) = add_W(T(kernel_left), T(kernel_right)) = add_W(zero_W, zero_W) = zero_W
+        by thm set_builder_member(add_V(kernel_left, kernel_right), {candidate V: T(candidate) = zero_W}) => add_V(kernel_left, kernel_right) $in {candidate V: T(candidate) = zero_W}
+        add_V(kernel_left, kernel_right) $in \setting_linear_kernel<V, W, zero_W, T>
+    claim:
+        ? forall coefficient K, kernel_vector V:
+            kernel_vector $in \setting_linear_kernel<V, W, zero_W, T>
+            =>:
+                smul_V(coefficient, kernel_vector) $in \setting_linear_kernel<V, W, zero_W, T>
+        kernel_vector $in {candidate V: T(candidate) = zero_W}
+        T(kernel_vector) = zero_W
+        by thm setting_scalar_times_zero_vector(K, scalar_zero, scalar_one, scalar_add, scalar_neg, scalar_mul, scalar_inv, W, zero_W, add_W, smul_W, coefficient) => smul_W(coefficient, zero_W) = zero_W
+        T(smul_V(coefficient, kernel_vector)) = smul_W(coefficient, T(kernel_vector)) = smul_W(coefficient, zero_W) = zero_W
+        by thm set_builder_member(smul_V(coefficient, kernel_vector), {candidate V: T(candidate) = zero_W}) => smul_V(coefficient, kernel_vector) $in {candidate V: T(candidate) = zero_W}
+        smul_V(coefficient, kernel_vector) $in \setting_linear_kernel<V, W, zero_W, T>
+    by def $is_subspace_in_setting(K, scalar_zero, scalar_one, scalar_add, scalar_neg, scalar_mul, scalar_inv, V, zero_V, add_V, smul_V, \setting_linear_kernel<V, W, zero_W, T>)

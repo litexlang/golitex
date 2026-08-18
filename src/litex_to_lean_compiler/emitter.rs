@@ -1,17 +1,12 @@
+use crate::litex_to_lean_ir::{
+    ADD_NONNEGATIVE_FINGERPRINT, ADD_NONNEGATIVE_RULE_ID,
+    ADD_POSITIVE_OF_NONNEGATIVE_POSITIVE_FINGERPRINT, ADD_POSITIVE_OF_NONNEGATIVE_POSITIVE_RULE_ID,
+    ADD_POSITIVE_OF_POSITIVE_NONNEGATIVE_FINGERPRINT, ADD_POSITIVE_OF_POSITIVE_NONNEGATIVE_RULE_ID,
+    LESS_EQUAL_OF_LESS_FINGERPRINT, LESS_EQUAL_OF_LESS_RULE_ID,
+};
 use crate::prelude::*;
 use std::collections::HashMap;
 use std::path::Path;
-
-const LESS_EQUAL_OF_LESS_RULE_ID: &str = "order.less_equal_of_less";
-const LESS_EQUAL_OF_LESS_FINGERPRINT: &str =
-    "990acd86094d0a1d3c750541cac271a185c4d399c1277d2fdebac77b98130788";
-const ADD_POSITIVE_OF_POSITIVE_NONNEGATIVE_RULE_ID: &str =
-    "order.add_positive_of_positive_nonnegative";
-const ADD_POSITIVE_OF_POSITIVE_NONNEGATIVE_FINGERPRINT: &str =
-    "ff80e2bc4b7d44084e9c82870dafbe8f51c63a3d5d0f854f9f89a3bda8eb021e";
-const ADD_NONNEGATIVE_RULE_ID: &str = "order.add_nonnegative";
-const ADD_NONNEGATIVE_FINGERPRINT: &str =
-    "25002877aac825f5b15aef687f3169ebcda7e22fd6f9aeced46397e2a5ae148c";
 
 pub fn emit_file(ir: &[LitexToLeanStatementIr], source_label: &str) -> Result<String, String> {
     let mut declarations = Vec::new();
@@ -101,9 +96,7 @@ fn emit_statement(
             crate::litex_to_lean_ir::validate_litex_to_lean_well_definedness_certificate(
                 &theorem.well_definedness,
             )?;
-            if !theorem.stored_projections.is_empty()
-                || !theorem.inferred_facts.is_empty()
-            {
+            if !theorem.stored_projections.is_empty() || !theorem.inferred_facts.is_empty() {
                 return Err(
                     "compiler named-theorem MVP rejects changed proof-step counts, projections, or inferred facts"
                         .into(),
@@ -123,7 +116,7 @@ fn emit_statement(
                 &proof_steps,
                 context,
             )?);
-            if let Some(fact_id) = theorem.theorem.fact_id {
+            if let Some(fact_id) = theorem.theorem.stored_fact_id() {
                 context.fact_names.insert(fact_id, theorem_name);
                 context
                     .fact_propositions
@@ -266,7 +259,7 @@ fn emit_fact_effects(
             *fact_index,
             context,
         )?);
-        if let Some(fact_id) = fact.fact_id {
+        if let Some(fact_id) = fact.stored_fact_id() {
             context.fact_names.insert(fact_id, theorem_name);
             context
                 .fact_propositions
@@ -422,7 +415,7 @@ fn emit_object_choices(
         declarations.push(format!(
             "theorem {theorem_name} : {proposition} := by\n  exact {proof}"
         ));
-        if let Some(fact_id) = choice.membership.fact_id {
+        if let Some(fact_id) = choice.membership.stored_fact_id() {
             context.fact_names.insert(fact_id, theorem_name);
             context
                 .fact_propositions
@@ -496,16 +489,6 @@ fn emit_named_function(
         "noncomputable def {name} : {function_type} :=\n  {value}"
     ));
 
-    if definition.membership.proposition.to_string()
-        != definition.membership.expected_proposition.to_string()
-        || definition.defining_equality.proposition.to_string()
-            != definition
-                .defining_equality
-                .expected_proposition
-                .to_string()
-    {
-        return Err("named function changed one of its stored propositions".into());
-    }
     let membership_proposition = render_fact(&definition.membership.proposition, context)?;
     let membership_name = format!("__fact{fact_index}");
     declarations.push(format!(
@@ -546,7 +529,6 @@ fn emit_named_function(
         NamedFunctionDefinitionBinding {
             symbol_id: definition.symbol_id,
             name,
-            defining_equality: definition.defining_equality.proposition.clone(),
             function: definition.function.clone(),
             body: definition.body.clone(),
         },
@@ -626,19 +608,9 @@ fn emit_existential_elimination(
     let mut saw_requirement = false;
     let mut saw_body = false;
     for projection in projections {
-        let LitexToLeanFactProofIr::ExistentialElimination {
-            source_proposition,
-            role,
-            expected_proposition,
-        } = &projection.proof
-        else {
+        let LitexToLeanFactProofIr::ExistentialElimination { role } = &projection.proof else {
             return Err("existential projection has malformed proof evidence".into());
         };
-        if source_proposition.to_string() != source.proposition.to_string()
-            || expected_proposition.to_string() != projection.proposition.to_string()
-        {
-            return Err("existential projection changed its source or target".into());
-        }
         let (expected, selector) = match role {
             LitexToLeanExistentialProjectionRoleIr::ParameterType { witness_index: 0 } => {
                 saw_requirement = true;
@@ -663,7 +635,7 @@ fn emit_existential_elimination(
         declarations.push(format!(
             "theorem {theorem_name} : {proposition} := by\n  unfold {unfold}\n  exact ({specification}){selector}"
         ));
-        if let Some(fact_id) = projection.fact_id {
+        if let Some(fact_id) = projection.stored_fact_id() {
             context.fact_names.insert(fact_id, theorem_name);
             context
                 .fact_propositions
@@ -699,7 +671,7 @@ fn emit_claim(
         "theorem __fact{fact_index} : {proposition} := by\n{}",
         indent_lines(&lines.join("\n"), 2)
     ));
-    if let Some(fact_id) = claim.target.fact_id {
+    if let Some(fact_id) = claim.target.stored_fact_id() {
         context
             .fact_names
             .insert(fact_id, format!("__fact{fact_index}"));
@@ -831,17 +803,6 @@ fn emit_closed_numeric_well_definedness(
             "atomic equality has unsupported target, parameter, or binder WD evidence".into(),
         );
     }
-    for root_id in &certificate.root_obj_ids {
-        if !certificate
-            .objects
-            .iter()
-            .any(|object| object.well_defined_obj_id == *root_id)
-        {
-            return Err(format!(
-                "WD root references unavailable object `{root_id:?}`"
-            ));
-        }
-    }
     for root_use in &certificate.root_proof_uses {
         if !certificate
             .objects
@@ -926,19 +887,14 @@ fn emit_closed_numeric_well_definedness(
                         requirement.well_defined_fact_id
                     )
                 })?;
-            if fact.expected_proposition.to_string() != requirement.expected_proposition.to_string()
-            {
-                return Err("WD requirement changed its expected proposition".into());
-            }
+            let _ = fact;
         }
     }
 
     let mut lines = Vec::new();
     for (index, fact) in certificate.facts.iter().enumerate() {
-        if !fact.ambient_binder_scope_ids.is_empty()
-            || fact.expected_proposition.to_string() != fact.fact.proposition.to_string()
-        {
-            return Err("closed numeric WD fact changed scope or proposition".into());
+        if !fact.ambient_binder_scope_ids.is_empty() {
+            return Err("closed numeric WD fact changed scope".into());
         }
         let proposition = render_fact(&fact.fact.proposition, context)?;
         let proof = render_proof(&fact.fact, context)?;
@@ -1177,7 +1133,7 @@ fn emit_forall_fact(
         let proof = render_proof(inferred, &context)?;
         let name = format!("__i{theorem_index}_{inferred_index}");
         derived_lines.push(format!("  have {name} : {proposition} := {proof}"));
-        if let Some(fact_id) = inferred.fact_id {
+        if let Some(fact_id) = inferred.stored_fact_id() {
             context.fact_names.insert(fact_id, name);
             context
                 .fact_propositions
@@ -1318,7 +1274,6 @@ struct FunctionBinding {
 struct NamedFunctionDefinitionBinding {
     symbol_id: SymbolId,
     name: String,
-    defining_equality: Fact,
     function: LitexToLeanFunctionTypeIr,
     body: LitexToLeanObjectIr,
 }
@@ -1333,12 +1288,21 @@ fn render_local_proof_block(
         &block.well_definedness,
     )?;
     for alias in &block.premise_aliases {
-        let parent_name =
-            resolve_fact_citation(&alias.parent_fact_id, &alias.expected_fact, context)?;
+        let proposition = context
+            .fact_propositions
+            .get(&alias.parent_fact_id)
+            .cloned()
+            .ok_or_else(|| {
+                format!(
+                    "local alias references unavailable parent FactId `{}`",
+                    alias.parent_fact_id
+                )
+            })?;
+        let parent_name = resolve_fact_citation(&alias.parent_fact_id, &proposition, context)?;
         context.fact_names.insert(alias.local_fact_id, parent_name);
         context
             .fact_propositions
-            .insert(alias.local_fact_id, alias.expected_fact.clone());
+            .insert(alias.local_fact_id, proposition);
     }
     let mut lines = Vec::new();
     for inferred in &block.assumption_inferred_facts {
@@ -1485,7 +1449,7 @@ fn render_local_fact(
         Vec::new()
     };
     proof_lines.push(format!("  exact {}", render_proof(fact, context)?));
-    if let Some(fact_id) = fact.fact_id {
+    if let Some(fact_id) = fact.stored_fact_id() {
         context.fact_names.insert(fact_id, name.clone());
         context
             .fact_propositions
@@ -1499,10 +1463,9 @@ fn render_local_fact(
 
 fn render_proof(fact: &LitexToLeanFactIr, context: &RenderContext) -> Result<String, String> {
     match &fact.proof {
-        LitexToLeanFactProofIr::Memo { proof }
-        | LitexToLeanFactProofIr::UseBuiltinStrategy { proof } => {
+        LitexToLeanFactProofIr::UseBuiltinStrategy { proof } => {
             let unwrapped = LitexToLeanFactIr {
-                fact_id: fact.fact_id,
+                storage: fact.storage,
                 proposition: fact.proposition.clone(),
                 proof: proof.as_ref().clone(),
             };
@@ -1511,23 +1474,14 @@ fn render_proof(fact: &LitexToLeanFactIr, context: &RenderContext) -> Result<Str
         LitexToLeanFactProofIr::KnownFactCitation { source_fact_id } => {
             resolve_fact_citation(source_fact_id, &fact.proposition, context)
         }
-        LitexToLeanFactProofIr::ExistentialAlphaRenameCitation {
-            source_fact_id,
-            source_proposition,
-        } => {
+        LitexToLeanFactProofIr::ExistentialAlphaRenameCitation { source_fact_id } => {
             let stored = context
                 .fact_propositions
                 .get(source_fact_id)
                 .ok_or_else(|| {
                     format!("existential citation references unavailable FactId `{source_fact_id}`")
                 })?;
-            if stored.to_string() != source_proposition.to_string()
-                || !one_witness_existentials_are_alpha_equal(
-                    source_proposition,
-                    &fact.proposition,
-                    context,
-                )?
-            {
+            if !one_witness_existentials_are_alpha_equal(stored, &fact.proposition, context)? {
                 return Err(
                     "existential citation changed its retained source or alpha-equivalent target"
                         .into(),
@@ -1541,15 +1495,13 @@ fn render_proof(fact: &LitexToLeanFactIr, context: &RenderContext) -> Result<Str
                     format!("existential citation FactId `{source_fact_id}` has no Lean name")
                 })
         }
-        LitexToLeanFactProofIr::ObjectDefinition {
-            definition,
-            value,
-            value_check,
-        } => render_object_definition(fact, definition, value, value_check.as_deref(), context),
-        LitexToLeanFactProofIr::ObjectChoice {
-            definition,
-            carrier,
-        } => render_object_choice(fact, definition, carrier, context),
+        LitexToLeanFactProofIr::ObjectDefinitionEquality => {
+            render_object_definition_equality(fact, context)
+        }
+        LitexToLeanFactProofIr::ObjectDefinitionMembership { value_check } => {
+            render_object_definition_membership(fact, value_check, context)
+        }
+        LitexToLeanFactProofIr::ObjectChoice => render_object_choice(fact, context),
         LitexToLeanFactProofIr::CaseSplit { coverage, branches } => {
             render_case_split(fact, coverage, branches, context)
         }
@@ -1572,9 +1524,9 @@ fn render_proof(fact: &LitexToLeanFactIr, context: &RenderContext) -> Result<Str
                 }
                 Ok(format!("Litex.Same.refl {}", render_obj(left, context)?))
             }
-            LitexToLeanProofRuleIr::Normalization {
-                kind: LitexToLeanNormalizationKindIr::RationalExpressionSimplification,
-            } if parameter_requirements.is_empty() && premises.is_empty() => {
+            LitexToLeanProofRuleIr::RationalNormalization
+                if parameter_requirements.is_empty() && premises.is_empty() =>
+            {
                 let (left, right) = equality_parts(&fact.proposition)?;
                 if !objs_equal_by_rational_expression_evaluation(left, right) {
                     return Err(
@@ -1586,51 +1538,35 @@ fn render_proof(fact: &LitexToLeanFactIr, context: &RenderContext) -> Result<Str
                 Ok("Litex.Same.ofEq (by norm_num)".into())
             }
             LitexToLeanProofRuleIr::ClosedStandardMembership
-            | LitexToLeanProofRuleIr::ClosedRealMembership
                 if parameter_requirements.is_empty() && premises.is_empty() =>
             {
                 render_closed_standard_membership(fact, context)
             }
-            LitexToLeanProofRuleIr::RealSetNonempty
-            | LitexToLeanProofRuleIr::StandardSetNonempty
+            LitexToLeanProofRuleIr::StandardSetNonempty
                 if parameter_requirements.is_empty() && premises.is_empty() =>
             {
                 render_standard_set_nonempty(fact, context)
             }
-            LitexToLeanProofRuleIr::ClosedNumericComparison { expected_target } => {
-                render_closed_numeric_comparison(
-                    fact,
-                    expected_target,
-                    parameter_requirements,
-                    premises,
-                    context,
-                )
+            LitexToLeanProofRuleIr::ClosedNumericComparison => {
+                render_closed_numeric_comparison(fact, parameter_requirements, premises, context)
             }
             LitexToLeanProofRuleIr::Builtin(LitexToLeanBuiltinRuleIr::NotEqualSymmetry) => {
                 render_not_equal_symmetry(fact, parameter_requirements, premises, context)
             }
+            LitexToLeanProofRuleIr::Builtin(LitexToLeanBuiltinRuleIr::RealAddMembershipClosure) => {
+                render_real_add_membership_rule(fact, parameter_requirements, premises, context)
+            }
             LitexToLeanProofRuleIr::Builtin(LitexToLeanBuiltinRuleIr::Arithmetic(
                 rule @ (LitexToLeanArithmeticBuiltinRuleIr::AddNonnegative
-                | LitexToLeanArithmeticBuiltinRuleIr::AddPositiveLeftStrict),
+                | LitexToLeanArithmeticBuiltinRuleIr::AddPositiveLeftStrict
+                | LitexToLeanArithmeticBuiltinRuleIr::AddPositiveRightStrict),
             )) => render_additive_sign_rule(fact, *rule, parameter_requirements, premises, context),
-            LitexToLeanProofRuleIr::ComparisonNotationDuality {
-                expected_source,
-                expected_target,
-            } => render_comparison_notation_duality(
-                fact,
-                expected_source,
-                expected_target,
-                parameter_requirements,
-                premises,
-                context,
-            ),
-            LitexToLeanProofRuleIr::EqualityRewrite(rewrite) => emit_membership_equality_rewrite(
-                fact,
-                rewrite.steps.len(),
-                parameter_requirements,
-                premises,
-                context,
-            ),
+            LitexToLeanProofRuleIr::ComparisonNotationDuality => {
+                render_comparison_notation_duality(fact, parameter_requirements, premises, context)
+            }
+            LitexToLeanProofRuleIr::EqualityRewrite => {
+                emit_membership_equality_rewrite(fact, parameter_requirements, premises, context)
+            }
             LitexToLeanProofRuleIr::KnownEqualityPath => {
                 render_known_equality_path(fact, parameter_requirements, premises, context)
             }
@@ -1648,146 +1584,74 @@ fn render_proof(fact: &LitexToLeanFactIr, context: &RenderContext) -> Result<Str
             LitexToLeanProofRuleIr::AndIntroduction => {
                 render_and_introduction(fact, parameter_requirements, premises, context)
             }
-            LitexToLeanProofRuleIr::DisjunctionIntroduction {
-                expected_target,
-                expected_selected,
-                selected_index,
-            } => render_disjunction_introduction(
-                fact,
-                expected_target,
-                expected_selected,
-                *selected_index,
-                parameter_requirements,
-                premises,
-                context,
-            ),
-            LitexToLeanProofRuleIr::ConjunctionProjection {
-                expected_source,
-                expected_target,
-                index,
-            } => render_conjunction_projection(
-                fact,
-                expected_source,
-                expected_target,
-                *index,
-                parameter_requirements,
-                premises,
-                context,
-            ),
-            LitexToLeanProofRuleIr::DefinitionReduction {
-                definition,
-                expected_parameter_requirements,
-                expected_clauses,
-            } => render_definition_reduction(
-                fact,
-                definition,
-                expected_parameter_requirements,
-                expected_clauses,
-                parameter_requirements,
-                premises,
-                context,
-            ),
-            LitexToLeanProofRuleIr::DefinitionProjection {
-                definition,
-                expected_source,
-                expected_target,
-            } => render_definition_projection(
-                fact,
-                definition,
-                expected_source,
-                expected_target,
-                parameter_requirements,
-                premises,
-                context,
-            ),
-            LitexToLeanProofRuleIr::DefinitionIntroduction {
-                definition,
-                expected_source,
-                expected_target,
-            } => render_definition_introduction(
-                fact,
-                definition,
-                expected_source,
-                expected_target,
-                parameter_requirements,
-                premises,
-                context,
-            ),
+            LitexToLeanProofRuleIr::DisjunctionIntroduction { selected_index } => {
+                render_disjunction_introduction(
+                    fact,
+                    *selected_index,
+                    parameter_requirements,
+                    premises,
+                    context,
+                )
+            }
+            LitexToLeanProofRuleIr::ConjunctionProjection { index } => {
+                render_conjunction_projection(
+                    fact,
+                    *index,
+                    parameter_requirements,
+                    premises,
+                    context,
+                )
+            }
+            LitexToLeanProofRuleIr::DefinitionReduction => {
+                render_definition_reduction(fact, parameter_requirements, premises, context)
+            }
+            LitexToLeanProofRuleIr::DefinitionProjection => {
+                render_definition_projection(fact, parameter_requirements, premises, context)
+            }
+            LitexToLeanProofRuleIr::DefinitionIntroduction => {
+                render_definition_introduction(fact, parameter_requirements, premises, context)
+            }
             LitexToLeanProofRuleIr::CheckedFunctionDefinitionReduction {
-                definition,
                 defining_equality_fact_id,
-                defining_equality,
-                expected_target,
-                reduced,
                 application_side,
             } => render_checked_identity_function_reduction(
                 fact,
-                definition,
                 *defining_equality_fact_id,
-                defining_equality,
-                expected_target,
-                reduced,
                 *application_side,
                 parameter_requirements,
                 premises,
                 context,
             ),
-            LitexToLeanProofRuleIr::SetBuilderMembership {
-                set_builder,
-                expected_target,
-                expected_premises,
-            } => render_set_builder_membership(
-                fact,
-                set_builder,
-                expected_target,
-                expected_premises,
-                parameter_requirements,
-                premises,
-                context,
-            ),
-            LitexToLeanProofRuleIr::SetBuilderBaseMembershipProjection {
-                set_builder,
-                expected_source,
-                expected_target,
-            } => render_set_builder_base_membership_projection(
-                fact,
-                set_builder,
-                expected_source,
-                expected_target,
-                parameter_requirements,
-                premises,
-                context,
-            ),
-            LitexToLeanProofRuleIr::SetBuilderPredicateProjection {
-                set_builder,
-                clause_index,
-                expected_source,
-                expected_target,
-            } => render_set_builder_predicate_projection(
-                fact,
-                set_builder,
-                *clause_index,
-                expected_source,
-                expected_target,
-                parameter_requirements,
-                premises,
-                context,
-            ),
-            LitexToLeanProofRuleIr::ExistIntroduction {
-                witnesses,
-                steps,
-                expected_parameter_requirements,
-                expected_body_facts,
-            } => render_exist_introduction(
-                fact,
-                witnesses,
-                steps,
-                expected_parameter_requirements,
-                expected_body_facts,
-                parameter_requirements,
-                premises,
-                context,
-            ),
+            LitexToLeanProofRuleIr::SetBuilderMembership => {
+                render_set_builder_membership(fact, parameter_requirements, premises, context)
+            }
+            LitexToLeanProofRuleIr::SetBuilderBaseMembershipProjection => {
+                render_set_builder_base_membership_projection(
+                    fact,
+                    parameter_requirements,
+                    premises,
+                    context,
+                )
+            }
+            LitexToLeanProofRuleIr::SetBuilderPredicateProjection { clause_index } => {
+                render_set_builder_predicate_projection(
+                    fact,
+                    *clause_index,
+                    parameter_requirements,
+                    premises,
+                    context,
+                )
+            }
+            LitexToLeanProofRuleIr::ExistIntroduction { witnesses, steps } => {
+                render_exist_introduction(
+                    fact,
+                    witnesses,
+                    steps,
+                    parameter_requirements,
+                    premises,
+                    context,
+                )
+            }
             LitexToLeanProofRuleIr::RegisteredRule(rule) => {
                 emit_registered_rule(fact, rule, parameter_requirements, premises, context)
             }
@@ -1799,52 +1663,42 @@ fn render_proof(fact: &LitexToLeanFactIr, context: &RenderContext) -> Result<Str
 
 fn proof_requires_closed_numeric_well_definedness(proof: &LitexToLeanFactProofIr) -> bool {
     match proof {
-        LitexToLeanFactProofIr::Memo { proof }
-        | LitexToLeanFactProofIr::UseBuiltinStrategy { proof } => {
+        LitexToLeanFactProofIr::UseBuiltinStrategy { proof } => {
             proof_requires_closed_numeric_well_definedness(proof)
         }
         LitexToLeanFactProofIr::RuleApplication {
-            rule:
-                LitexToLeanProofRuleIr::Normalization {
-                    kind: LitexToLeanNormalizationKindIr::RationalExpressionSimplification,
-                },
+            rule: LitexToLeanProofRuleIr::RationalNormalization,
             ..
         } => true,
         _ => false,
     }
 }
 
-fn render_object_definition(
+fn render_object_definition_membership(
     target: &LitexToLeanFactIr,
-    definition: &str,
-    value: &LitexToLeanObjectIr,
-    value_check: Option<&LitexToLeanFactIr>,
+    value_check: &LitexToLeanFactIr,
     context: &RenderContext,
 ) -> Result<String, String> {
-    let name = lean_identifier(definition);
-    let rendered_value = render_native_object_ir(value, context)?;
-    if let Some(value_check) = value_check {
-        let (target_element, target_set) = membership_parts(&target.proposition)?;
-        let (source_element, source_set) = membership_parts(&value_check.proposition)?;
-        if render_obj(target_element, context)? != name
-            || render_obj(source_element, context)? != rendered_value
-            || obj_equality_key(target_set) != obj_equality_key(source_set)
-        {
-            return Err("object definition changed its retained membership check".into());
-        }
-        return Ok(format!(
-            "(by\n  unfold {name}\n  exact {})",
-            render_proof(value_check, context)?
-        ));
+    let (target_element, target_set) = membership_parts(&target.proposition)?;
+    let (source_element, source_set) = membership_parts(&value_check.proposition)?;
+    let name = render_obj(target_element, context)?;
+    if obj_equality_key(target_set) != obj_equality_key(source_set) {
+        return Err("object definition changed its retained membership check".into());
     }
+    render_obj(source_element, context)?;
+    Ok(format!(
+        "(by\n  unfold {name}\n  exact {})",
+        render_proof(value_check, context)?
+    ))
+}
 
+fn render_object_definition_equality(
+    target: &LitexToLeanFactIr,
+    context: &RenderContext,
+) -> Result<String, String> {
     let (left, right) = equality_parts(&target.proposition)?;
-    if render_obj(left, context)? != name
-        || LitexToLeanObjectIr::lower(right)? != *value
-        || render_obj(right, context)? != rendered_value
-    {
-        return Err("object definition changed its retained defining equality".into());
-    }
+    let name = render_obj(left, context)?;
+    let rendered_value = render_obj(right, context)?;
     Ok(format!(
         "(by\n  unfold {name}\n  exact Litex.Same.refl {rendered_value})"
     ))
@@ -1852,19 +1706,14 @@ fn render_object_definition(
 
 fn render_object_choice(
     target: &LitexToLeanFactIr,
-    definition: &str,
-    carrier: &LitexToLeanObjectIr,
     context: &RenderContext,
 ) -> Result<String, String> {
     let (element, target_set) = membership_parts(&target.proposition)?;
-    let name = lean_identifier(definition);
-    if render_obj(element, context)? != name || LitexToLeanObjectIr::lower(target_set)? != *carrier
-    {
-        return Err("object choice changed its retained membership target".into());
-    }
+    let name = render_obj(element, context)?;
+    let carrier = LitexToLeanObjectIr::lower(target_set)?;
     Ok(format!(
         "Litex.In.own {} {name}",
-        render_set_ir(carrier, context)?
+        render_set_ir(&carrier, context)?
     ))
 }
 
@@ -1894,40 +1743,33 @@ fn render_standard_set_nonempty(
 
 fn render_definition_reduction(
     target: &LitexToLeanFactIr,
-    definition: &str,
-    expected_parameter_requirements: &[Fact],
-    expected_clauses: &[Fact],
     parameter_requirements: &[LitexToLeanFactIr],
     premises: &[LitexToLeanFactIr],
     context: &RenderContext,
 ) -> Result<String, String> {
-    let binding = context
-        .predicate_bindings
-        .get(definition)
-        .ok_or_else(|| format!("unavailable concrete predicate definition `{definition}`"))?;
     let Fact::AtomicFact(AtomicFact::NormalAtomicFact(predicate)) = &target.proposition else {
         return Err("concrete predicate reduction targets a non-predicate fact".into());
     };
-    if predicate.predicate.to_string() != definition
-        || predicate.body.len() != binding.parameter_count
-        || expected_parameter_requirements.len() != binding.requirement_count
-        || expected_clauses.len() != binding.clause_count
-        || parameter_requirements.len() != expected_parameter_requirements.len()
-        || premises.len() != expected_clauses.len()
+    let definition = predicate.predicate.to_string();
+    let binding = context
+        .predicate_bindings
+        .get(&definition)
+        .ok_or_else(|| format!("unavailable concrete predicate definition `{definition}`"))?;
+    if predicate.body.len() != binding.parameter_count
+        || parameter_requirements.len() != binding.requirement_count
+        || premises.len() != binding.clause_count
     {
         return Err("concrete predicate reduction changed its definition contract".into());
     }
+    let expected_components =
+        instantiated_predicate_components(&target.proposition, binding, context)?;
     for (actual, expected) in parameter_requirements
         .iter()
-        .zip(expected_parameter_requirements.iter())
+        .chain(premises.iter())
+        .zip(expected_components.iter())
     {
-        if actual.proposition.to_string() != expected.to_string() {
+        if render_fact(&actual.proposition, context)? != *expected {
             return Err("concrete predicate reduction changed a parameter requirement".into());
-        }
-    }
-    for (actual, expected) in premises.iter().zip(expected_clauses.iter()) {
-        if actual.proposition.to_string() != expected.to_string() {
-            return Err("concrete predicate reduction changed a defining clause".into());
         }
     }
     let proofs = parameter_requirements
@@ -1947,26 +1789,23 @@ fn render_definition_reduction(
 
 fn render_definition_projection(
     target: &LitexToLeanFactIr,
-    definition: &str,
-    expected_source: &Fact,
-    expected_target: &Fact,
     parameter_requirements: &[LitexToLeanFactIr],
     premises: &[LitexToLeanFactIr],
     context: &RenderContext,
 ) -> Result<String, String> {
-    if !parameter_requirements.is_empty()
-        || premises.len() != 1
-        || target.proposition.to_string() != expected_target.to_string()
-        || premises[0].proposition.to_string() != expected_source.to_string()
-    {
+    if !parameter_requirements.is_empty() || premises.len() != 1 {
         return Err("concrete predicate projection changed its source or target".into());
     }
+    let Fact::AtomicFact(AtomicFact::NormalAtomicFact(source)) = &premises[0].proposition else {
+        return Err("concrete predicate projection source is not a predicate fact".into());
+    };
+    let definition = source.predicate.to_string();
     let binding = context
         .predicate_bindings
-        .get(definition)
+        .get(&definition)
         .ok_or_else(|| format!("unavailable concrete predicate definition `{definition}`"))?;
-    let components = instantiated_predicate_components(expected_source, binding, context)?;
-    let rendered_target = render_fact(expected_target, context)?;
+    let components = instantiated_predicate_components(&premises[0].proposition, binding, context)?;
+    let rendered_target = render_fact(&target.proposition, context)?;
     let indices = components
         .iter()
         .enumerate()
@@ -1985,26 +1824,23 @@ fn render_definition_projection(
 
 fn render_definition_introduction(
     target: &LitexToLeanFactIr,
-    definition: &str,
-    expected_source: &Fact,
-    expected_target: &Fact,
     parameter_requirements: &[LitexToLeanFactIr],
     premises: &[LitexToLeanFactIr],
     context: &RenderContext,
 ) -> Result<String, String> {
-    if !parameter_requirements.is_empty()
-        || premises.len() != 1
-        || target.proposition.to_string() != expected_target.to_string()
-        || premises[0].proposition.to_string() != expected_source.to_string()
-    {
+    if !parameter_requirements.is_empty() || premises.len() != 1 {
         return Err("concrete predicate introduction changed its source or target".into());
     }
+    let Fact::AtomicFact(AtomicFact::NormalAtomicFact(predicate)) = &target.proposition else {
+        return Err("concrete predicate introduction target is not a predicate fact".into());
+    };
+    let definition = predicate.predicate.to_string();
     let binding = context
         .predicate_bindings
-        .get(definition)
+        .get(&definition)
         .ok_or_else(|| format!("unavailable concrete predicate definition `{definition}`"))?;
-    let components = instantiated_predicate_components(expected_target, binding, context)?;
-    if components.len() != 1 || components[0] != render_fact(expected_source, context)? {
+    let components = instantiated_predicate_components(&target.proposition, binding, context)?;
+    if components.len() != 1 || components[0] != render_fact(&premises[0].proposition, context)? {
         return Err(
             "concrete predicate introduction currently requires one exact definition component"
                 .into(),
@@ -2017,23 +1853,15 @@ fn render_definition_introduction(
     ))
 }
 
-#[allow(clippy::too_many_arguments)]
 fn render_checked_identity_function_reduction(
     target: &LitexToLeanFactIr,
-    definition: &LitexToLeanObjectIr,
     defining_equality_fact_id: crate::common::fact_id::FactId,
-    defining_equality: &Fact,
-    expected_target: &Fact,
-    reduced: &Obj,
     application_side: LitexToLeanEqualitySideIr,
     parameter_requirements: &[LitexToLeanFactIr],
     premises: &[LitexToLeanFactIr],
     context: &RenderContext,
 ) -> Result<String, String> {
-    if !parameter_requirements.is_empty()
-        || !premises.is_empty()
-        || target.proposition.to_string() != expected_target.to_string()
-    {
+    if !parameter_requirements.is_empty() || !premises.is_empty() {
         return Err("checked function reduction changed its verifier certificate".into());
     }
     let binding = context
@@ -2044,23 +1872,10 @@ fn render_checked_identity_function_reduction(
                 "checked function reduction references unavailable defining FactId `{defining_equality_fact_id}`"
             )
         })?;
-    if binding.defining_equality.to_string() != defining_equality.to_string() {
-        return Err("checked function reduction changed its defining equality".into());
-    }
-    let LitexToLeanObjectIr::Symbol {
-        symbol_id: definition_symbol_id,
-        ..
-    } = definition
-    else {
-        return Err("checked function reduction retained a non-symbol definition".into());
-    };
-    if *definition_symbol_id != binding.symbol_id {
-        return Err("checked function reduction cited another function symbol".into());
-    }
     let (target_left, target_right) = equality_parts(&target.proposition)?;
-    let (application_object, other_side) = match application_side {
-        LitexToLeanEqualitySideIr::Left => (target_left, target_right),
-        LitexToLeanEqualitySideIr::Right => (target_right, target_left),
+    let application_object = match application_side {
+        LitexToLeanEqualitySideIr::Left => target_left,
+        LitexToLeanEqualitySideIr::Right => target_right,
     };
     let LitexToLeanObjectIr::FunctionApplication(application) =
         LitexToLeanObjectIr::lower(application_object)?
@@ -2081,9 +1896,7 @@ fn render_checked_identity_function_reduction(
     else {
         return Err("checked function reduction requires a named head".into());
     };
-    if *head_symbol_id != binding.symbol_id
-        || obj_equality_key(reduced) != obj_equality_key(other_side)
-    {
+    if *head_symbol_id != binding.symbol_id {
         return Err("checked function reduction changed its checked substitution".into());
     }
 
@@ -2119,10 +1932,7 @@ fn render_checked_identity_function_reduction(
     let argument_proof = render_proof(&argument_fact.fact, context)?;
     let application_term = render_function_application(&application, context)?;
     let expected_application = render_obj(application_object, context)?;
-    let expected_other = render_obj(other_side, context)?;
-    if expected_application != application_term
-        || expected_other != render_obj(other_side, context)?
-    {
+    if expected_application != application_term {
         return Err("checked identity reduction changed its rendered equality sides".into());
     }
     let body_same = render_real_function_body_same(
@@ -2273,33 +2083,22 @@ fn conjunction_selector(index: usize, count: usize) -> Result<String, String> {
 
 fn render_set_builder_membership(
     target: &LitexToLeanFactIr,
-    set_builder: &LitexToLeanObjectIr,
-    expected_target: &Fact,
-    expected_premises: &[Fact],
     parameter_requirements: &[LitexToLeanFactIr],
     premises: &[LitexToLeanFactIr],
     context: &RenderContext,
 ) -> Result<String, String> {
-    if !parameter_requirements.is_empty()
-        || target.proposition.to_string() != expected_target.to_string()
-        || premises.len() != expected_premises.len()
-        || premises
-            .iter()
-            .zip(expected_premises.iter())
-            .any(|(actual, expected)| actual.proposition.to_string() != expected.to_string())
-    {
+    if !parameter_requirements.is_empty() {
         return Err("set-builder membership changed its checked constructor premises".into());
     }
+    let (_, target_set) = membership_parts(&target.proposition)?;
+    let set_builder = LitexToLeanObjectIr::lower(target_set)?;
     let LitexToLeanObjectIr::SetBuilder(builder) = set_builder else {
         return Err("set-builder membership retained a non-builder object".into());
     };
     if premises.len() != builder.facts.len() + 1 {
         return Err("set-builder membership lost its base or predicate premises".into());
     }
-    let (element, target_set) = membership_parts(&target.proposition)?;
-    if LitexToLeanObjectIr::lower(target_set)? != *set_builder {
-        return Err("set-builder membership changed its target set".into());
-    }
+    let (element, _) = membership_parts(&target.proposition)?;
     let (base_element, base_set) = membership_parts(&premises[0].proposition)?;
     if obj_equality_key(element) != obj_equality_key(base_element)
         || LitexToLeanObjectIr::lower(base_set)? != *builder.set
@@ -2473,27 +2272,20 @@ fn render_equality_across_representative(
 
 fn render_set_builder_base_membership_projection(
     target: &LitexToLeanFactIr,
-    set_builder: &LitexToLeanObjectIr,
-    expected_source: &Fact,
-    expected_target: &Fact,
     parameter_requirements: &[LitexToLeanFactIr],
     premises: &[LitexToLeanFactIr],
     context: &RenderContext,
 ) -> Result<String, String> {
-    if !parameter_requirements.is_empty()
-        || premises.len() != 1
-        || target.proposition.to_string() != expected_target.to_string()
-        || premises[0].proposition.to_string() != expected_source.to_string()
-    {
+    if !parameter_requirements.is_empty() || premises.len() != 1 {
         return Err("set-builder base projection changed its checked source or target".into());
     }
+    let (source_element, source_set) = membership_parts(&premises[0].proposition)?;
+    let set_builder = LitexToLeanObjectIr::lower(source_set)?;
     let LitexToLeanObjectIr::SetBuilder(builder) = set_builder else {
         return Err("set-builder base projection retained a non-builder object".into());
     };
-    let (source_element, source_set) = membership_parts(expected_source)?;
-    let (target_element, target_set) = membership_parts(expected_target)?;
+    let (target_element, target_set) = membership_parts(&target.proposition)?;
     if obj_equality_key(source_element) != obj_equality_key(target_element)
-        || LitexToLeanObjectIr::lower(source_set)? != *set_builder
         || LitexToLeanObjectIr::lower(target_set)? != *builder.set
     {
         return Err("set-builder base projection changed its element or base set".into());
@@ -2507,21 +2299,16 @@ fn render_set_builder_base_membership_projection(
 #[allow(clippy::too_many_arguments)]
 fn render_set_builder_predicate_projection(
     target: &LitexToLeanFactIr,
-    set_builder: &LitexToLeanObjectIr,
     clause_index: usize,
-    expected_source: &Fact,
-    expected_target: &Fact,
     parameter_requirements: &[LitexToLeanFactIr],
     premises: &[LitexToLeanFactIr],
     context: &RenderContext,
 ) -> Result<String, String> {
-    if !parameter_requirements.is_empty()
-        || premises.len() != 1
-        || target.proposition.to_string() != expected_target.to_string()
-        || premises[0].proposition.to_string() != expected_source.to_string()
-    {
+    if !parameter_requirements.is_empty() || premises.len() != 1 {
         return Err("set-builder predicate projection changed its checked source or target".into());
     }
+    let (_, source_set) = membership_parts(&premises[0].proposition)?;
+    let set_builder = LitexToLeanObjectIr::lower(source_set)?;
     let LitexToLeanObjectIr::SetBuilder(builder) = set_builder else {
         return Err("set-builder predicate projection retained a non-builder object".into());
     };
@@ -2534,7 +2321,8 @@ fn render_set_builder_predicate_projection(
             "set-builder predicate projection currently supports concrete predicates".into(),
         );
     };
-    let Fact::AtomicFact(AtomicFact::NormalAtomicFact(target_predicate)) = expected_target else {
+    let Fact::AtomicFact(AtomicFact::NormalAtomicFact(target_predicate)) = &target.proposition
+    else {
         return Err("set-builder concrete predicate projected to another fact family".into());
     };
     if predicate.predicate.to_string() != target_predicate.predicate.to_string()
@@ -2543,10 +2331,7 @@ fn render_set_builder_predicate_projection(
     {
         return Err("set-builder concrete predicate projection changed its application".into());
     }
-    let (element, source_set) = membership_parts(expected_source)?;
-    if LitexToLeanObjectIr::lower(source_set)? != *set_builder {
-        return Err("set-builder predicate projection changed its source set".into());
-    }
+    let (element, _) = membership_parts(&premises[0].proposition)?;
     let rendered_element = render_obj(element, context)?;
     let predicate_name = predicate.predicate.to_string();
     let binding = context
@@ -2619,8 +2404,6 @@ fn render_exist_introduction(
     target: &LitexToLeanFactIr,
     witnesses: &[Obj],
     steps: &[LitexToLeanStatementIr],
-    expected_parameter_requirements: &[Fact],
-    expected_body_facts: &[Fact],
     parameter_requirements: &[LitexToLeanFactIr],
     premises: &[LitexToLeanFactIr],
     context: &RenderContext,
@@ -2632,8 +2415,6 @@ fn render_exist_introduction(
         || existential.params_def_with_type().number_of_params() != 1
         || existential.facts().len() != 1
         || witnesses.len() != 1
-        || expected_parameter_requirements.len() != 1
-        || expected_body_facts.len() != 1
         || parameter_requirements.len() != 1
         || premises.len() != 1
     {
@@ -2642,15 +2423,6 @@ fn render_exist_introduction(
                 .into(),
         );
     }
-    if parameter_requirements[0].proposition.to_string()
-        != expected_parameter_requirements[0].to_string()
-        || premises[0].proposition.to_string() != expected_body_facts[0].to_string()
-    {
-        return Err(
-            "existential introduction changed its retained requirement or body fact".into(),
-        );
-    }
-
     let group = &existential.params_def_with_type().groups[0];
     if group.params.len() != 1 {
         return Err("existential introduction requires one singleton parameter group".into());
@@ -2955,14 +2727,12 @@ fn render_closed_standard_membership(
 
 fn render_closed_numeric_comparison(
     fact: &LitexToLeanFactIr,
-    expected_target: &Fact,
     parameter_requirements: &[LitexToLeanFactIr],
     premises: &[LitexToLeanFactIr],
     context: &RenderContext,
 ) -> Result<String, String> {
     if !parameter_requirements.is_empty()
         || !premises.is_empty()
-        || fact.proposition.to_string() != expected_target.to_string()
         || !crate::litex_to_lean_ir::is_closed_numeric_relation(&fact.proposition)
     {
         return Err(
@@ -3037,7 +2807,9 @@ fn render_additive_sign_rule(
         LitexToLeanArithmeticBuiltinRuleIr::AddPositiveLeftStrict => {
             (true, true, false, "complexAddPositiveLeftStrict")
         }
-        _ => return Err(format!("unsupported additive sign builtin rule: {rule:?}")),
+        LitexToLeanArithmeticBuiltinRuleIr::AddPositiveRightStrict => {
+            (true, false, true, "complexAddPositiveRightStrict")
+        }
     };
 
     let (target_zero, target_sum) = positive_order_parts(&fact.proposition, target_is_strict)?;
@@ -3064,23 +2836,58 @@ fn render_additive_sign_rule(
     Ok(format!("Litex.Rules.{theorem} ({left}) ({right})"))
 }
 
+fn render_real_add_membership_rule(
+    fact: &LitexToLeanFactIr,
+    parameter_requirements: &[LitexToLeanFactIr],
+    premises: &[LitexToLeanFactIr],
+    context: &RenderContext,
+) -> Result<String, String> {
+    if !parameter_requirements.is_empty() || premises.len() != 1 {
+        return Err(
+            "real-addition membership requires one conjunction premise and no parameter requirements"
+                .into(),
+        );
+    }
+    let components = conjunction_components(&premises[0].proposition)?;
+    if components.len() != 2 {
+        return Err("real-addition membership premise is not a binary conjunction".into());
+    }
+    let (target_element, target_set) = membership_parts(&fact.proposition)?;
+    let Obj::Add(target_addition) = target_element else {
+        return Err("real-addition membership target is not an addition".into());
+    };
+    if !matches!(target_set, Obj::StandardSet(StandardSet::R)) {
+        return Err("real-addition membership target is not R".into());
+    }
+    let (left_element, left_set) = membership_parts(&components[0])?;
+    let (right_element, right_set) = membership_parts(&components[1])?;
+    if !matches!(left_set, Obj::StandardSet(StandardSet::R))
+        || !matches!(right_set, Obj::StandardSet(StandardSet::R))
+        || obj_equality_key(target_addition.left.as_ref()) != obj_equality_key(left_element)
+        || obj_equality_key(target_addition.right.as_ref()) != obj_equality_key(right_element)
+    {
+        return Err("real-addition membership premises changed its ordered operands".into());
+    }
+    let pair = render_proof(&premises[0], context)?;
+    Ok(format!(
+        "Litex.Rules.complexAddInR (({pair}).1) (({pair}).2)"
+    ))
+}
+
 fn render_comparison_notation_duality(
     fact: &LitexToLeanFactIr,
-    expected_source: &Fact,
-    expected_target: &Fact,
     parameter_requirements: &[LitexToLeanFactIr],
     premises: &[LitexToLeanFactIr],
     context: &RenderContext,
 ) -> Result<String, String> {
     if !parameter_requirements.is_empty()
         || premises.len() != 1
-        || fact.proposition.to_string() != expected_target.to_string()
-        || premises[0].proposition.to_string() != expected_source.to_string()
         || !crate::litex_to_lean_ir::facts_are_comparison_notation_duals(
-            expected_source,
-            expected_target,
+            &premises[0].proposition,
+            &fact.proposition,
         )
-        || render_fact(expected_source, context)? != render_fact(expected_target, context)?
+        || render_fact(&premises[0].proposition, context)?
+            != render_fact(&fact.proposition, context)?
     {
         return Err("comparison-notation duality changed its source or target".into());
     }
@@ -3101,7 +2908,10 @@ fn render_known_equality_path(
     let target_key = obj_equality_key(target_right);
     let mut accumulated = None;
     for premise in premises {
-        if !matches!(premise.proof, LitexToLeanFactProofIr::KnownFactCitation { .. }) {
+        if !matches!(
+            premise.proof,
+            LitexToLeanFactProofIr::KnownFactCitation { .. }
+        ) {
             return Err("known-equality path lost an exact FactId citation".into());
         }
         let (premise_left, premise_right) = equality_parts(&premise.proposition)?;
@@ -3135,7 +2945,7 @@ fn render_known_equality_path(
 fn render_known_forall_instantiation(
     fact: &LitexToLeanFactIr,
     source_fact_id: FactId,
-    arguments: &[LitexToLeanKnownForallArgumentIr],
+    arguments: &[Obj],
     parameter_requirements: &[LitexToLeanFactIr],
     premises: &[LitexToLeanFactIr],
     context: &RenderContext,
@@ -3173,14 +2983,14 @@ fn render_known_forall_instantiation(
         .zip(parameter_requirements.iter())
     {
         let _ = binding;
-        terms.push(render_obj(&argument.argument, context)?);
+        terms.push(render_obj(argument, context)?);
         match source_type {
             ParamType::Set(_) => {
                 let Fact::AtomicFact(AtomicFact::IsSetFact(sethood)) = &requirement.proposition
                 else {
                     return Err("known forall set argument retained a non-set requirement".into());
                 };
-                if obj_equality_key(&sethood.set) != obj_equality_key(&argument.argument) {
+                if obj_equality_key(&sethood.set) != obj_equality_key(argument) {
                     return Err("known forall set requirement changed its argument".into());
                 }
             }
@@ -3229,24 +3039,19 @@ fn render_and_introduction(
 
 fn render_disjunction_introduction(
     fact: &LitexToLeanFactIr,
-    expected_target: &Fact,
-    expected_selected: &Fact,
     selected_index: usize,
     parameter_requirements: &[LitexToLeanFactIr],
     premises: &[LitexToLeanFactIr],
     context: &RenderContext,
 ) -> Result<String, String> {
-    if !parameter_requirements.is_empty()
-        || premises.len() != 1
-        || fact.proposition.to_string() != expected_target.to_string()
-        || premises[0].proposition.to_string() != expected_selected.to_string()
-    {
+    if !parameter_requirements.is_empty() || premises.len() != 1 {
         return Err(
             "disjunction introduction changed its target, selected proof, or premise arity".into(),
         );
     }
-    let branches = disjunction_components(expected_target)?;
-    if branches.get(selected_index).map(ToString::to_string) != Some(expected_selected.to_string())
+    let branches = disjunction_components(&fact.proposition)?;
+    if branches.get(selected_index).map(ToString::to_string)
+        != Some(premises[0].proposition.to_string())
     {
         return Err("disjunction introduction selected a different branch proposition".into());
     }
@@ -3259,23 +3064,16 @@ fn render_disjunction_introduction(
 
 fn render_conjunction_projection(
     fact: &LitexToLeanFactIr,
-    expected_source: &Fact,
-    expected_target: &Fact,
     index: usize,
     parameter_requirements: &[LitexToLeanFactIr],
     premises: &[LitexToLeanFactIr],
     context: &RenderContext,
 ) -> Result<String, String> {
-    if !parameter_requirements.is_empty()
-        || premises.len() != 1
-        || fact.proposition.to_string() != expected_target.to_string()
-        || premises[0].proposition.to_string() != expected_source.to_string()
-    {
+    if !parameter_requirements.is_empty() || premises.len() != 1 {
         return Err("conjunction projection changed its source, target, or premise arity".into());
     }
-    let components = conjunction_components(expected_source)?;
-    if components.get(index).map(ToString::to_string) != Some(expected_target.to_string())
-    {
+    let components = conjunction_components(&premises[0].proposition)?;
+    if components.get(index).map(ToString::to_string) != Some(fact.proposition.to_string()) {
         return Err("conjunction projection changed its retained component position".into());
     }
     let source = render_proof(&premises[0], context)?;
@@ -3284,12 +3082,11 @@ fn render_conjunction_projection(
 
 fn emit_membership_equality_rewrite(
     target: &LitexToLeanFactIr,
-    rewrite_step_count: usize,
     parameter_requirements: &[LitexToLeanFactIr],
     premises: &[LitexToLeanFactIr],
     context: &RenderContext,
 ) -> Result<String, String> {
-    if rewrite_step_count != 1 || !parameter_requirements.is_empty() || premises.len() != 2 {
+    if !parameter_requirements.is_empty() || premises.len() != 2 {
         return Err("membership equality rewrite has unsupported certificate shape".into());
     }
     let (target_element, target_set) = membership_parts(&target.proposition)?;
@@ -3340,6 +3137,19 @@ fn emit_registered_rule(
                 context,
             );
         }
+        ADD_POSITIVE_OF_NONNEGATIVE_POSITIVE_RULE_ID
+            if rule.semantic_fingerprint.as_hex()
+                == ADD_POSITIVE_OF_NONNEGATIVE_POSITIVE_FINGERPRINT =>
+        {
+            validate_registered_binary_real_rule(rule, parameter_requirements, premises, context)?;
+            return render_additive_sign_rule(
+                target,
+                LitexToLeanArithmeticBuiltinRuleIr::AddPositiveRightStrict,
+                &[],
+                premises,
+                context,
+            );
+        }
         ADD_NONNEGATIVE_RULE_ID
             if rule.semantic_fingerprint.as_hex() == ADD_NONNEGATIVE_FINGERPRINT =>
         {
@@ -3359,10 +3169,7 @@ fn emit_registered_rule(
             ))
         }
     }
-    if rule.bindings.len() != 2
-        || parameter_requirements.len() != 2
-        || premises.len() != 1
-    {
+    if rule.bindings.len() != 2 || parameter_requirements.len() != 2 || premises.len() != 1 {
         return Err("less-to-less-equal registered rule changed its certificate shape".into());
     }
     for requirement in parameter_requirements {
@@ -3387,10 +3194,7 @@ fn validate_registered_binary_real_rule(
     premises: &[LitexToLeanFactIr],
     context: &RenderContext,
 ) -> Result<(), String> {
-    if rule.bindings.len() != 2
-        || parameter_requirements.len() != 2
-        || premises.len() != 2
-    {
+    if rule.bindings.len() != 2 || parameter_requirements.len() != 2 || premises.len() != 2 {
         return Err("binary real registered rule changed its certificate shape".into());
     }
     for (binding, requirement) in rule.bindings.iter().zip(parameter_requirements.iter()) {
@@ -4042,18 +3846,13 @@ fn render_function_application(
         .iter()
         .find(|fact| fact.well_defined_fact_id == argument_requirement.well_defined_fact_id)
         .ok_or_else(|| "unary application argument-membership proof is missing".to_string())?;
-    if argument_fact.expected_proposition.to_string()
-        != argument_requirement.expected_proposition.to_string()
-    {
-        return Err("unary application argument requirement changed proposition".into());
-    }
     let head = render_ir_symbol(application.head.as_ref(), context)?;
     let argument = render_obj(&application.source_argument_layers[0][0], context)?;
     let expected_argument_membership = format!(
         "Litex.In {argument} {}",
         render_set_ir(&binding.function.parameters[0].set, context)?
     );
-    let retained_argument_membership = render_fact(&argument_fact.expected_proposition, context)?;
+    let retained_argument_membership = render_fact(&argument_fact.fact.proposition, context)?;
     if retained_argument_membership != expected_argument_membership {
         return Err(format!(
             "unary application expected `{expected_argument_membership}`, retained `{retained_argument_membership}`"
@@ -4078,15 +3877,8 @@ fn render_function_application(
             .iter()
             .find(|fact| fact.well_defined_fact_id == requirement.well_defined_fact_id)
             .ok_or_else(|| format!("unary application domain proof {index} is missing"))?;
-        if domain_fact.expected_proposition.to_string()
-            != requirement.expected_proposition.to_string()
-        {
-            return Err(format!(
-                "unary application domain requirement {index} changed proposition"
-            ));
-        }
         let expected = render_fact(source_fact, &nested)?;
-        let retained = render_fact(&domain_fact.expected_proposition, context)?;
+        let retained = render_fact(&domain_fact.fact.proposition, context)?;
         if expected != retained {
             return Err(format!(
                 "unary application expected domain clause {expected}, retained {retained}"
@@ -4316,21 +4108,6 @@ fn conjunction_projection(source: &str, index: usize, count: usize) -> Result<St
         projection.push_str(".1");
     }
     Ok(projection)
-}
-
-fn parameter_type_matches(
-    source: &ParamType,
-    retained: &LitexToLeanParameterTypeIr,
-) -> Result<bool, String> {
-    match (source, retained) {
-        (ParamType::Set(_), LitexToLeanParameterTypeIr::Set) => Ok(true),
-        (ParamType::Obj(source_set), LitexToLeanParameterTypeIr::MemberOf { set }) => {
-            Ok(LitexToLeanObjectIr::lower(source_set)? == *set)
-        }
-        (ParamType::NonemptySet(_), LitexToLeanParameterTypeIr::NonemptySet) => Ok(true),
-        (ParamType::FiniteSet(_), LitexToLeanParameterTypeIr::FiniteSet) => Ok(true),
-        _ => Ok(false),
-    }
 }
 
 fn lean_identifier(source: &str) -> String {

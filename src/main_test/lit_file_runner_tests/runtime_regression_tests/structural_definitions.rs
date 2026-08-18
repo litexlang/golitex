@@ -3103,9 +3103,11 @@ forall F finite_set, c set:
     );
     for rule in [
         "intersection non-membership: non-member of the left side",
-        "intersection subset operand",
-        "operand subset union",
-        "set minus subset left operand",
+        "local builtin set.intersect_subset_left",
+        "local builtin set.intersect_subset_right",
+        "local builtin set.subset_union_left",
+        "local builtin set.subset_union_right",
+        "local builtin set.set_minus_subset_left",
         "set minus recovers subset from relative complement",
     ] {
         assert!(

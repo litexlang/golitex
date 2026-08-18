@@ -219,10 +219,7 @@ pub struct LitexToLeanHaveFnEqualStmtIr {
     pub symbol_id: SymbolId,
     pub name: String,
     pub function: LitexToLeanFunctionTypeIr,
-    pub source_function_set: Obj,
     pub body: LitexToLeanObjectIr,
-    pub source_body: Obj,
-    pub source_return_set: Obj,
     pub parameter_premises: Vec<LitexToLeanLocalPremiseIr>,
     pub domain_premises: Vec<LitexToLeanLocalPremiseIr>,
     pub inferred_premises: Vec<LitexToLeanFactIr>,
@@ -239,10 +236,7 @@ impl fmt::Debug for LitexToLeanHaveFnEqualStmtIr {
             .field("symbol_id", &self.symbol_id)
             .field("name", &self.name)
             .field("function", &self.function)
-            .field("source_function_set", &self.source_function_set.to_string())
             .field("body", &self.body)
-            .field("source_body", &self.source_body.to_string())
-            .field("source_return_set", &self.source_return_set.to_string())
             .field("parameter_premises", &self.parameter_premises)
             .field("domain_premises", &self.domain_premises)
             .field("inferred_premises", &self.inferred_premises)
@@ -305,7 +299,6 @@ pub struct LitexToLeanWitnessAtomicFactIr {
 pub struct LitexToLeanLocalFactAliasIr {
     pub local_fact_id: FactId,
     pub parent_fact_id: FactId,
-    pub expected_fact: Fact,
 }
 
 #[derive(Clone, Debug)]
