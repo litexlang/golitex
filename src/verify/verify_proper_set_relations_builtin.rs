@@ -15,7 +15,7 @@ impl Runtime {
         }
 
         Ok(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
                 format!(
                     "{} from its complete quantifier-free definition premise",
@@ -48,7 +48,7 @@ impl Runtime {
         }
 
         Ok(Some(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
                 format!(
                     "{} by its builtin proper-set-relation definition",

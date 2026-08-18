@@ -104,7 +104,7 @@ impl Runtime {
         }
         let forall_fact = self.parse_goal_forall_fact_block(goal_block, keyword)?;
 
-        let stmt = DefThmStmt::new_axiom(axiom_name, forall_fact, tb.line_file.clone());
+        let stmt = AxiomStmt::new(axiom_name, forall_fact, tb.line_file.clone());
         Ok(stmt.into())
     }
 }

@@ -31,6 +31,12 @@ impl Runtime {
         stmt: &ClaimStmt,
     ) -> Result<StmtResult, RuntimeError> {
         let infer_result = self.exec_claim_stmt_affect_environment(stmt)?;
-        Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![]).into())
+        Ok(VerifiedProofBlockStmtIr::ClaimStmt {
+            statement: stmt.clone(),
+            common: VerifiedStmtCommonIr::new(infer_result, vec![]),
+            verification: None,
+            local_scope: None,
+        }
+        .into())
     }
 }

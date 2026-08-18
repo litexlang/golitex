@@ -61,7 +61,7 @@ impl Runtime {
         }
 
         let result: StmtResult =
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 equal_fact.clone().into(),
                 "structural equality with terminating reductions".to_string(),
                 Vec::new(),
@@ -101,7 +101,7 @@ impl Runtime {
         } else {
             return StmtUnknown::new().into();
         };
-        FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+        VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
             equal_fact.clone().into(),
             reason.to_string(),
             Vec::new(),
@@ -148,7 +148,7 @@ impl Runtime {
         if !known_result.is_true() {
             return StmtUnknown::new().into();
         }
-        FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+        VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
             equal_fact.clone().into(),
             "calculation and rational expression simplification".to_string(),
             vec![known_result],
@@ -212,7 +212,7 @@ impl Runtime {
                 )?;
             if verified_by_arg_to_arg {
                 return Ok(
-                    (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    (VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                         equal_fact.clone().into(),
                         same_shape_and_equal_args_reason(equal_fact),
                         Vec::new(),
@@ -335,7 +335,7 @@ impl Runtime {
                     Some(reason),
                 );
                 return Ok(Some(
-                    FactualStmtSuccess::new_with_verified_by_known_fact(
+                    VerifiedFactStmtIr::new_with_verified_by_known_fact(
                         fact,
                         verified_by,
                         Vec::new(),
@@ -562,7 +562,7 @@ impl Runtime {
         let result = self.verify_equal_fact_with_direct_routes(equal_fact)?;
         if result.is_true() {
             return Ok(
-                (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                (VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                     equal_fact.clone().into(),
                     "builtin rules".to_string(),
                     Vec::new(),
@@ -578,7 +578,7 @@ impl Runtime {
             )?;
         if verified_by_arg_to_arg {
             return Ok(
-                (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                (VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                     equal_fact.clone().into(),
                     same_shape_and_equal_args_reason(equal_fact),
                     Vec::new(),
@@ -625,7 +625,7 @@ fn checked_definition_reduction_success(
         reason, application_side, reduced_side
     );
     let verified_by = VerifiedByResult::fact_with_note(fact.clone(), Some(msg));
-    FactualStmtSuccess::new_with_verified_by_known_fact(fact, verified_by, Vec::new()).into()
+    VerifiedFactStmtIr::new_with_verified_by_known_fact(fact, verified_by, Vec::new()).into()
 }
 
 #[cfg(test)]

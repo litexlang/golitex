@@ -31,7 +31,7 @@ impl Runtime {
                     return Ok(StmtUnknown::new().into());
                 };
                 return Ok(
-                    FactualStmtSuccess::new_with_verified_by_builtin_strategy_recording_stmt(
+                    VerifiedFactStmtIr::new_with_verified_by_builtin_strategy_recording_stmt(
                         fact.clone().into(),
                         "numeric-carrier strategy: cardinality of a structurally finite set"
                             .to_string(),
@@ -47,7 +47,7 @@ impl Runtime {
                     return Ok(StmtUnknown::new().into());
                 };
                 return Ok(
-                    FactualStmtSuccess::new_with_verified_by_builtin_strategy_recording_stmt(
+                    VerifiedFactStmtIr::new_with_verified_by_builtin_strategy_recording_stmt(
                         fact.clone().into(),
                         "numeric-carrier strategy: finite extremum source is real-valued"
                             .to_string(),
@@ -62,7 +62,7 @@ impl Runtime {
                 return Ok(StmtUnknown::new().into());
             };
             return Ok(
-                FactualStmtSuccess::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
+                VerifiedFactStmtIr::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
                     fact.clone().into(),
                     format!(
                         "numeric-carrier strategy: base carrier and sign conditions for {target}"
@@ -95,7 +95,7 @@ impl Runtime {
             return Ok(StmtUnknown::new().into());
         };
         Ok(
-            FactualStmtSuccess::new_with_verified_by_builtin_strategy_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_strategy_recording_stmt(
                 fact.clone().into(),
                 format!("numeric-carrier strategy: structural closure in {target}"),
                 children,
@@ -349,7 +349,7 @@ impl Runtime {
         for required in alternatives {
             if let Some(children) = self.verify_numeric_carrier_strategy_children(&required)? {
                 return Ok(
-                    FactualStmtSuccess::new_with_verified_by_builtin_strategy_recording_stmt(
+                    VerifiedFactStmtIr::new_with_verified_by_builtin_strategy_recording_stmt(
                         fact.clone().into(),
                         "numeric-carrier strategy: structural closure in N+".to_string(),
                         children,

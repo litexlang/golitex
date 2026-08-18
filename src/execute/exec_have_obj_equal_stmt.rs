@@ -10,11 +10,10 @@ impl Runtime {
         let check_results = self.exec_have_obj_equal_stmt_verify_process(have_obj_equal_stmt)?;
         let infer_result = self.exec_have_obj_equal_stmt_affect_environment(have_obj_equal_stmt)?;
 
-        Ok((NonFactualStmtSuccess::new(
-            have_obj_equal_stmt.clone().into(),
-            infer_result,
-            check_results,
-        ))
+        Ok(VerifiedDefObjStmtIr::HaveObjEqualStmt {
+            statement: have_obj_equal_stmt.clone(),
+            common: VerifiedStmtCommonIr::new(infer_result, check_results),
+        }
         .into())
     }
 
@@ -294,9 +293,10 @@ impl Runtime {
         have_obj_equal_stmt: &HaveObjEqualStmt,
     ) -> Result<StmtResult, RuntimeError> {
         let infer_result = self.exec_have_obj_equal_stmt_affect_environment(have_obj_equal_stmt)?;
-        Ok(
-            NonFactualStmtSuccess::new(have_obj_equal_stmt.clone().into(), infer_result, vec![])
-                .into(),
-        )
+        Ok(VerifiedDefObjStmtIr::HaveObjEqualStmt {
+            statement: have_obj_equal_stmt.clone(),
+            common: VerifiedStmtCommonIr::new(infer_result, vec![]),
+        }
+        .into())
     }
 }

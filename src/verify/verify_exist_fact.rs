@@ -465,7 +465,7 @@ impl Runtime {
                 verify_state,
             )? {
                 return Ok(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                         exist_fact.clone().into(),
                         "exist: real-line comparison witness".to_string(),
                         steps,
@@ -484,7 +484,7 @@ impl Runtime {
                 self.verify_atomic_fact_restricted_known_builtin(&nonempty, verify_state)?;
             if nonempty_result.is_true() {
                 return Ok(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                         exist_fact.clone().into(),
                         "exist: member of a nonempty set".to_string(),
                         vec![nonempty_result],
@@ -509,7 +509,7 @@ impl Runtime {
                 self.verify_atomic_fact_restricted_known_builtin(&in_q, verify_state)?;
             if rational_membership.is_true() {
                 return Ok(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                         exist_fact.clone().into(),
                         "exist: rational representation with positive integer denominator"
                             .to_string(),
@@ -534,7 +534,7 @@ impl Runtime {
                 self.verify_atomic_fact_restricted_known_builtin(&in_q, verify_state)?;
             if rational_membership.is_true() {
                 return Ok(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                         exist_fact.clone().into(),
                         "exist: rational integer ratio representation".to_string(),
                         vec![rational_membership],
@@ -557,7 +557,7 @@ impl Runtime {
                 self.verify_atomic_fact_restricted_known_builtin(&divisor_in_n_pos, verify_state)?;
             if dividend_result.is_true() && divisor_result.is_true() {
                 return Ok(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                         exist_fact.clone().into(),
                         "exist!: unique Euclidean quotient for an integer and positive divisor"
                             .to_string(),
@@ -609,7 +609,7 @@ impl Runtime {
                 && remainder_result.is_true()
             {
                 return Ok(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                         exist_fact.clone().into(),
                         "exist: zero remainder gives an integer multiple of a nonzero modulus"
                             .to_string(),
@@ -638,7 +638,7 @@ impl Runtime {
                 self.verify_atomic_fact_restricted_known_builtin(&positive_bound, verify_state)?;
             if positive_bound_result.is_true() {
                 return Ok(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                         exist_fact.clone().into(),
                         "exist: Archimedean reciprocal bound".to_string(),
                         vec![positive_bound_result],
@@ -665,7 +665,7 @@ impl Runtime {
                 if interval_result.is_true() {
                     steps.push(interval_result);
                     return Ok(
-                        FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                             exist_fact.clone().into(),
                             "exist: rational density in the real line".to_string(),
                             steps,
@@ -693,7 +693,7 @@ impl Runtime {
                 if interval_result.is_true() {
                     steps.push(interval_result);
                     return Ok(
-                        FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                             exist_fact.clone().into(),
                             "exist: real density by the midpoint principle".to_string(),
                             steps,
@@ -732,7 +732,7 @@ impl Runtime {
                         "exist: integer inside a real interval of length at least 1"
                     };
                     return Ok(
-                        FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                             exist_fact.clone().into(),
                             rule.to_string(),
                             steps,
@@ -883,7 +883,7 @@ impl Runtime {
         }
 
         Ok(Some(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 exist_fact.clone().into(),
                 "finite nonempty natural set has a greatest member".to_string(),
                 steps,
@@ -1107,7 +1107,7 @@ impl Runtime {
         infers.new_infer_result_inside(stmt_result_infers(&uniq_res));
         infers.new_fact(&uniqueness_fact);
 
-        let out = FactualStmtSuccess::new_with_verified_by_known_fact_and_infer(
+        let out = VerifiedFactStmtIr::new_with_verified_by_known_fact_and_infer(
             exist_fact.clone().into(),
             infers,
             VerifiedByResult::cited_fact(
@@ -1176,7 +1176,7 @@ impl Runtime {
                         )))
                     })?;
                 if target_body_string == known_body_string {
-                    return Ok((FactualStmtSuccess::new_with_verified_by_known_fact(
+                    return Ok((VerifiedFactStmtIr::new_with_verified_by_known_fact(
                         exist_fact.clone().into(),
                         VerifiedByResult::cited_fact(
                             exist_fact.clone().into(),

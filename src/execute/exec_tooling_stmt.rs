@@ -8,14 +8,22 @@ impl Runtime {
         self.exec_do_nothing_stmt_verify_well_definedness(stmt)?;
         let inside_results = self.exec_do_nothing_stmt_verify_process(stmt)?;
         let infer_result = self.exec_do_nothing_stmt_affect_environment(stmt)?;
-        Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, inside_results).into())
+        Ok(VerifiedCommandStmtIr::DoNothingStmt {
+            statement: stmt.clone(),
+            common: VerifiedStmtCommonIr::new(infer_result, inside_results),
+        }
+        .into())
     }
 
     pub fn exec_clear_stmt(&mut self, stmt: &ClearStmt) -> Result<StmtResult, RuntimeError> {
         self.exec_clear_stmt_verify_well_definedness(stmt)?;
         let inside_results = self.exec_clear_stmt_verify_process(stmt)?;
         let infer_result = self.exec_clear_stmt_affect_environment(stmt)?;
-        Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, inside_results).into())
+        Ok(VerifiedCommandStmtIr::ClearStmt {
+            statement: stmt.clone(),
+            common: VerifiedStmtCommonIr::new(infer_result, inside_results),
+        }
+        .into())
     }
 
     /// Mathematical contract: a no-op statement contains no mathematical

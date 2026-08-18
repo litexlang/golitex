@@ -15,11 +15,11 @@ impl Runtime {
                 let mut inside_results = Vec::new();
                 inside_results.extend(rt.exec_finite_set_induc_base_proof(stmt)?);
                 inside_results.extend(rt.exec_finite_set_induc_step_proof(stmt)?);
-                Ok(NonFactualStmtSuccess::new(
-                    stmt.clone().into(),
-                    InferResult::new(),
-                    inside_results,
-                )
+                Ok(VerifiedByStmtIr::ByFiniteSetInducStmt {
+                    statement: stmt.clone(),
+                    common: VerifiedStmtCommonIr::new(InferResult::new(), inside_results),
+                    verification: None,
+                }
                 .into())
             })?;
 
@@ -35,9 +35,14 @@ impl Runtime {
                 })?;
         let verification =
             self.finite_set_induc_verification_result(stmt, &corresponding_forall_fact)?;
-        if let Some(success) = result.non_factual_success_mut() {
-            success.by_verification = Some(verification.into());
-        }
+        let Some(VerifiedStmtIr::By(VerifiedByStmtIr::ByFiniteSetInducStmt {
+            verification: result_verification,
+            ..
+        })) = result.non_factual_ir_mut()
+        else {
+            unreachable!("finite-set induction must emit its matching IR variant")
+        };
+        *result_verification = Some(verification);
         let infer_result = self
             .store_with_well_defined_verification_and_infer_with_default_verify_state(
                 corresponding_forall_fact,
@@ -63,7 +68,12 @@ impl Runtime {
             corresponding_forall_fact,
             InferReason::VerifiedStatement,
         )?;
-        Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![]).into())
+        Ok(VerifiedByStmtIr::ByFiniteSetInducStmt {
+            statement: stmt.clone(),
+            common: VerifiedStmtCommonIr::new(infer_result, vec![]),
+            verification: None,
+        }
+        .into())
     }
 
     fn exec_finite_set_induc_base_proof(

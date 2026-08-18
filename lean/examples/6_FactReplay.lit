@@ -10,7 +10,9 @@
 # and alpha-equivalent forall citation were covered only by Rust tests and
 # disposable probes, not by a generated same-name .lit/.lean pair.
 #
-# Now: compiler replays verifier-owned FactIds through Litex.Same.symm/trans,
+# Now: execution first emits the complete recursive
+# VerifiedStmtIr::Fact(VerifiedFactStmtIr::ForallFact { .. }) sequence; the
+# compiler then replays verifier-owned FactIds through Litex.Same.symm/trans,
 # Litex.Rules.notSameSymm, and an exact previously emitted forall theorem.
 #
 # Boundary: a closed semantic inequality such as `1 != 0`, proof evidence

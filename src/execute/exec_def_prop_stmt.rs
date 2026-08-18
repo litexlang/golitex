@@ -9,10 +9,11 @@ impl Runtime {
             .map_err(|e| exec_stmt_error_with_stmt_and_cause(def_prop_stmt.clone().into(), e))?;
         let inside_results = self.exec_def_prop_stmt_verify_process(def_prop_stmt)?;
         let infer_result = self.exec_def_prop_stmt_affect_environment(def_prop_stmt)?;
-        Ok(
-            NonFactualStmtSuccess::new(def_prop_stmt.clone().into(), infer_result, inside_results)
-                .into(),
-        )
+        Ok(VerifiedDefPredicateStmtIr::DefPropStmt {
+            statement: def_prop_stmt.clone(),
+            common: VerifiedStmtCommonIr::new(infer_result, inside_results),
+        }
+        .into())
     }
 
     /// Mathematical contract: a concrete proposition definition is checked in
@@ -80,7 +81,11 @@ impl Runtime {
         def_prop_stmt: &DefPropStmt,
     ) -> Result<StmtResult, RuntimeError> {
         let infer_result = self.exec_def_prop_stmt_affect_environment(def_prop_stmt)?;
-        Ok(NonFactualStmtSuccess::new(def_prop_stmt.clone().into(), infer_result, vec![]).into())
+        Ok(VerifiedDefPredicateStmtIr::DefPropStmt {
+            statement: def_prop_stmt.clone(),
+            common: VerifiedStmtCommonIr::new(infer_result, vec![]),
+        }
+        .into())
     }
 }
 

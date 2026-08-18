@@ -35,7 +35,7 @@ impl Runtime {
         };
 
         Ok(
-            (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            (VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 in_fact.clone().into(),
                 "tuple in cart: each component is in the corresponding cart factor".to_string(),
                 component_results,
@@ -106,7 +106,7 @@ impl Runtime {
         }
 
         Ok(Some(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 in_fact.clone().into(),
                 "cart membership from symbolic dimension and projections".to_string(),
                 vec![

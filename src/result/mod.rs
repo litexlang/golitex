@@ -4,6 +4,7 @@ mod fact_unknown;
 mod runtime_result;
 mod runtime_success;
 mod runtime_unknown;
+mod verified_stmt_ir;
 mod well_definedness_certificate;
 mod well_definedness_proof;
 
@@ -28,28 +29,32 @@ pub use fact_unknown::{
     FactUnknownParam, FactUnknownPart, ForallFactUnknown, ForallFactWithIffUnknown,
     NotForallUnknown, OrFactUnknown,
 };
-pub use runtime_result::{
-    StmtResult, UnknownStatementResult, VerifiedStmtIr, VerifiedStmtVerificationIr,
-};
+pub use runtime_result::{StmtResult, UnknownStatementResult};
 pub use runtime_success::{
     ByAssignmentVerificationResult, ByCasesVerificationResult, ByChoiceVerificationResult,
     ByContraVerificationResult, ByDefinitionVerificationResult,
     ByEnumerateFiniteSetVerificationResult, ByEnumerateRangeVerificationResult,
     ByExtensionVerificationResult, ByForVerificationResult, ByInducVerificationResult,
-    ByPropRegistrationVerificationResult, ByTheoremVerificationResult, ByVerificationResult,
+    ByPropRegistrationVerificationResult, ByTheoremVerificationResult,
     CheckedFunctionDefinitionReductionEvidence, ClaimFactVerificationResult,
     ClaimForallVerificationResult, ClaimVerificationResult,
     DefinitionReductionVerificationEvidence, EqualityTransportEvidence, EqualityTransportStep,
     ExistentialEliminationVerificationResult, FactTransformationEvidence, FactTransformationRule,
-    FactTransformationStep, FactualStmtSuccess, ForallProofResult, ForallProvedFactResult,
+    FactTransformationStep, ForallProofResult, ForallProvedFactResult,
     FunctionDefinitionVerificationResult, KnownForallInstantiationItem,
     KnownForallInstantiationResult, KnownForallRequirementKind, KnownForallRequirementResult,
-    LocalProofScopeVerificationResult, NonFactualStmtSuccess, ObjectChoiceVerificationResult,
-    ObjectIntroductionItem, TheoremVerificationResult, VerifiedByBuiltinRuleResult,
-    VerifiedByFactResult, VerifiedByResult, VerifiedBysEnum, VerifiedBysResult,
-    WitnessAtomicFactVerificationResult, WitnessExistVerificationResult,
+    LocalProofScopeVerificationResult, ObjectChoiceVerificationResult, ObjectIntroductionItem,
+    TheoremVerificationResult, VerifiedByBuiltinRuleResult, VerifiedByFactResult, VerifiedByResult,
+    VerifiedBysEnum, VerifiedBysResult, WitnessAtomicFactVerificationResult,
+    WitnessExistVerificationResult,
 };
 pub use runtime_unknown::StmtUnknown;
+pub use verified_stmt_ir::{
+    VerifiedByStmtIr, VerifiedCommandStmtIr, VerifiedDefInterfaceStmtIr, VerifiedDefObjStmtIr,
+    VerifiedDefPredicateStmtIr, VerifiedFactStmtDataIr, VerifiedFactStmtIr,
+    VerifiedProofBlockStmtIr, VerifiedStmtCommonIr, VerifiedStmtIr, VerifiedUnsafeStmtIr,
+    VerifiedWitnessStmtIr,
+};
 pub use well_definedness_certificate::{
     WellDefinednessBinderScopeEvidence, WellDefinednessCertificate, WellDefinednessFactEvidence,
     WellDefinednessObjectEvidence, WellDefinednessParameterFactEvidence,

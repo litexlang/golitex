@@ -150,26 +150,43 @@ impl Runtime {
                             } else {
                                 WellDefinednessCertificate::default()
                             };
-                            let verification = ClaimForallVerificationResult::new(
-                                forall_fact.clone(),
-                                assumption_infers.clone(),
-                                proof.len(),
-                            )
-                            .into();
-                            Ok(NonFactualStmtSuccess::new_with_claim_verification(
-                                source_stmt.clone(),
-                                InferResult::new(),
-                                inside_results,
-                                verification,
-                            )
-                            .with_local_proof_scope_verification(
-                                LocalProofScopeVerificationResult::new(
-                                    assumption_infers,
-                                    Vec::new(),
-                                    well_definedness,
+                            let verification = ClaimVerificationResult::Forall(
+                                ClaimForallVerificationResult::new(
+                                    forall_fact.clone(),
+                                    assumption_infers.clone(),
+                                    proof.len(),
                                 ),
-                            )
-                            .into())
+                            );
+                            let common =
+                                VerifiedStmtCommonIr::new(InferResult::new(), inside_results);
+                            let local_scope = Some(LocalProofScopeVerificationResult::new(
+                                assumption_infers,
+                                Vec::new(),
+                                well_definedness,
+                            ));
+                            match source_stmt.clone() {
+                                Stmt::ProofBlock(ProofBlockStmt::ClaimStmt(statement)) => {
+                                    Ok(VerifiedProofBlockStmtIr::ClaimStmt {
+                                        statement,
+                                        common,
+                                        verification: Some(verification),
+                                        local_scope,
+                                    }
+                                    .into())
+                                }
+                                Stmt::ProofBlock(ProofBlockStmt::ExampleStmt(statement)) => {
+                                    Ok(VerifiedProofBlockStmtIr::ExampleStmt {
+                                        statement,
+                                        common,
+                                        verification: Some(verification),
+                                        local_scope,
+                                    }
+                                    .into())
+                                }
+                                _ => unreachable!(
+                                    "checked goal block source must be claim or example"
+                                ),
+                            }
                         }
                         Err(error) => {
                             if captures_well_definedness {
@@ -218,22 +235,36 @@ impl Runtime {
                         } else {
                             WellDefinednessCertificate::default()
                         };
-                        let verification =
-                            ClaimFactVerificationResult::new(fact.clone(), proof.len()).into();
-                        Ok(NonFactualStmtSuccess::new_with_claim_verification(
-                            source_stmt.clone(),
+                        let verification = ClaimVerificationResult::Fact(
+                            ClaimFactVerificationResult::new(fact.clone(), proof.len()),
+                        );
+                        let common = VerifiedStmtCommonIr::new(InferResult::new(), inside_results);
+                        let local_scope = Some(LocalProofScopeVerificationResult::new(
                             InferResult::new(),
-                            inside_results,
-                            verification,
-                        )
-                        .with_local_proof_scope_verification(
-                            LocalProofScopeVerificationResult::new(
-                                InferResult::new(),
-                                Vec::new(),
-                                well_definedness,
-                            ),
-                        )
-                        .into())
+                            Vec::new(),
+                            well_definedness,
+                        ));
+                        match source_stmt.clone() {
+                            Stmt::ProofBlock(ProofBlockStmt::ClaimStmt(statement)) => {
+                                Ok(VerifiedProofBlockStmtIr::ClaimStmt {
+                                    statement,
+                                    common,
+                                    verification: Some(verification),
+                                    local_scope,
+                                }
+                                .into())
+                            }
+                            Stmt::ProofBlock(ProofBlockStmt::ExampleStmt(statement)) => {
+                                Ok(VerifiedProofBlockStmtIr::ExampleStmt {
+                                    statement,
+                                    common,
+                                    verification: Some(verification),
+                                    local_scope,
+                                }
+                                .into())
+                            }
+                            _ => unreachable!("checked goal block source must be claim or example"),
+                        }
                     }
                     Err(error) => {
                         if captures_well_definedness {

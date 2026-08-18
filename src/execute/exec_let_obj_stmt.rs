@@ -9,7 +9,11 @@ impl Runtime {
         .map_err(|error| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), error))?;
 
         let infer_result = self.exec_let_obj_stmt_affect_environment(stmt)?;
-        Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![]).into())
+        Ok(VerifiedDefObjStmtIr::LetObjStmt {
+            statement: stmt.clone(),
+            common: VerifiedStmtCommonIr::new(infer_result, vec![]),
+        }
+        .into())
     }
 
     fn exec_let_obj_stmt_affect_environment(
@@ -41,6 +45,10 @@ impl Runtime {
         stmt: &LetObjStmt,
     ) -> Result<StmtResult, RuntimeError> {
         let infer_result = self.exec_let_obj_stmt_affect_environment(stmt)?;
-        Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![]).into())
+        Ok(VerifiedDefObjStmtIr::LetObjStmt {
+            statement: stmt.clone(),
+            common: VerifiedStmtCommonIr::new(infer_result, vec![]),
+        }
+        .into())
     }
 }

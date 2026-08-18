@@ -9,19 +9,21 @@ impl Runtime {
             return Ok(result);
         }
         let thm_name = stmt.name.to_string();
-        let thm = self.get_thm_definition_by_name(&thm_name).ok_or_else(|| {
-            short_exec_error(
-                stmt.clone().into(),
-                format!("by thm: theorem `{}` is not defined", stmt.name),
-                None,
-                vec![],
-            )
-        })?;
+        let forall_fact = self
+            .get_thm_or_axiom_forall_fact_by_name(&thm_name)
+            .ok_or_else(|| {
+                short_exec_error(
+                    stmt.clone().into(),
+                    format!("by thm: theorem `{}` is not defined", stmt.name),
+                    None,
+                    vec![],
+                )
+            })?;
 
         let verify_state = UseContextVerifyState::new(0, false);
         let arg_type_result = self
             .verify_args_satisfy_param_def_flat_types(
-                &thm.forall_fact.params_def_with_type,
+                &forall_fact.params_def_with_type,
                 &stmt.args,
                 &verify_state,
                 ParamObjType::Forall,
@@ -49,8 +51,7 @@ impl Runtime {
             ));
         }
 
-        let param_to_arg_map = thm
-            .forall_fact
+        let param_to_arg_map = forall_fact
             .params_def_with_type
             .param_defs_and_args_to_param_to_arg_map(&stmt.args);
 
@@ -58,7 +59,7 @@ impl Runtime {
         Self::merge_stmt_result_infers(&mut infer_result, &arg_type_result);
         let mut inside_results = vec![arg_type_result];
         let mut domain_facts = Vec::new();
-        for dom_fact in thm.forall_fact.dom_facts.iter() {
+        for dom_fact in forall_fact.dom_facts.iter() {
             let instantiated_dom = self
                 .inst_fact(
                     dom_fact,
@@ -108,7 +109,7 @@ impl Runtime {
 
         let mut stored_then_facts = Vec::new();
         let mut direct_conclusions = Vec::new();
-        for then_fact in thm.forall_fact.then_facts.iter() {
+        for then_fact in forall_fact.then_facts.iter() {
             let instantiated_then = self
                 .inst_exist_or_and_chain_atomic_fact(
                     then_fact,
@@ -156,12 +157,11 @@ impl Runtime {
             direct_conclusions,
             stored_then_facts,
         );
-        Ok(NonFactualStmtSuccess::new_with_by_verification(
-            stmt.clone().into(),
-            infer_result,
-            inside_results,
-            by_verification.into(),
-        )
+        Ok(VerifiedByStmtIr::ByThmStmt {
+            statement: stmt.clone(),
+            common: VerifiedStmtCommonIr::new(infer_result, inside_results),
+            verification: Some(by_verification),
+        }
         .into())
     }
 
@@ -176,24 +176,25 @@ impl Runtime {
             return Ok(result);
         }
         let thm_name = stmt.name.to_string();
-        let thm = self.get_thm_definition_by_name(&thm_name).ok_or_else(|| {
-            short_exec_error(
-                stmt.clone().into(),
-                format!("by thm: theorem `{}` is not defined", stmt.name),
-                None,
-                vec![],
-            )
-        })?;
+        let forall_fact = self
+            .get_thm_or_axiom_forall_fact_by_name(&thm_name)
+            .ok_or_else(|| {
+                short_exec_error(
+                    stmt.clone().into(),
+                    format!("by thm: theorem `{}` is not defined", stmt.name),
+                    None,
+                    vec![],
+                )
+            })?;
 
-        let param_to_arg_map = thm
-            .forall_fact
+        let param_to_arg_map = forall_fact
             .params_def_with_type
             .param_defs_and_args_to_param_to_arg_map(&stmt.args);
 
         let mut infer_result = InferResult::new();
         let mut stored_then_facts = Vec::new();
         let mut direct_conclusions = Vec::new();
-        for then_fact in thm.forall_fact.then_facts.iter() {
+        for then_fact in forall_fact.then_facts.iter() {
             let instantiated_then = self
                 .inst_exist_or_and_chain_atomic_fact(
                     then_fact,
@@ -240,12 +241,11 @@ impl Runtime {
             direct_conclusions,
             stored_then_facts,
         );
-        Ok(NonFactualStmtSuccess::new_with_by_verification(
-            stmt.clone().into(),
-            infer_result,
-            vec![],
-            by_verification.into(),
-        )
+        Ok(VerifiedByStmtIr::ByThmStmt {
+            statement: stmt.clone(),
+            common: VerifiedStmtCommonIr::new(infer_result, vec![]),
+            verification: Some(by_verification),
+        }
         .into())
     }
 
@@ -287,7 +287,7 @@ impl Runtime {
             None,
             stmt.line_file.clone(),
         );
-        let (mut expanded_success, target_result) = self.run_in_local_env(|rt| {
+        let (expanded_success, target_result) = self.run_in_local_env(|rt| {
             let expanded_result = rt.exec_by_thm_stmt(&expanded_stmt).map_err(|error| {
                 short_exec_error(
                     stmt.clone().into(),
@@ -327,7 +327,7 @@ impl Runtime {
                 ));
             }
             let expanded_success = expanded_result
-                .into_non_factual_success()
+                .into_non_factual_ir()
                 .expect("by thm application must return a non-factual success");
             Ok((expanded_success, target_result))
         })?;
@@ -351,20 +351,22 @@ impl Runtime {
                 )
             })?;
 
-        let Some(ByVerificationResult::Theorem(mut verification)) =
-            expanded_success.by_verification.take()
+        let VerifiedStmtIr::By(VerifiedByStmtIr::ByThmStmt {
+            common,
+            verification: Some(mut verification),
+            ..
+        }) = expanded_success
         else {
             unreachable!("by thm application must contain theorem verification metadata")
         };
         verification.select_atomic_fact(selected_fact.to_string());
-        let mut inside_results = expanded_success.inside_results;
+        let mut inside_results = common.inside_results;
         inside_results.push(target_result);
-        Ok(NonFactualStmtSuccess::new_with_by_verification(
-            stmt.clone().into(),
-            infer_result,
-            inside_results,
-            verification.into(),
-        )
+        Ok(VerifiedByStmtIr::ByThmStmt {
+            statement: stmt.clone(),
+            common: VerifiedStmtCommonIr::new(infer_result, inside_results),
+            verification: Some(verification),
+        }
         .into())
     }
 
@@ -392,7 +394,7 @@ impl Runtime {
             None,
             stmt.line_file.clone(),
         );
-        let mut expanded_success = self.run_in_local_env(|rt| {
+        let expanded_success = self.run_in_local_env(|rt| {
             rt.exec_by_thm_stmt_affect_environment_only(&expanded_stmt)
                 .map_err(|error| {
                     short_exec_error(
@@ -405,7 +407,7 @@ impl Runtime {
                         vec![],
                     )
                 })?
-                .into_non_factual_success()
+                .into_non_factual_ir()
                 .ok_or_else(|| {
                     short_exec_error(
                         stmt.clone().into(),
@@ -435,18 +437,20 @@ impl Runtime {
                 )
             })?;
 
-        let Some(ByVerificationResult::Theorem(mut verification)) =
-            expanded_success.by_verification.take()
+        let VerifiedStmtIr::By(VerifiedByStmtIr::ByThmStmt {
+            common,
+            verification: Some(mut verification),
+            ..
+        }) = expanded_success
         else {
             unreachable!("by thm application must contain theorem verification metadata")
         };
         verification.select_atomic_fact(selected_fact.to_string());
-        Ok(NonFactualStmtSuccess::new_with_by_verification(
-            stmt.clone().into(),
-            infer_result,
-            expanded_success.inside_results,
-            verification.into(),
-        )
+        Ok(VerifiedByStmtIr::ByThmStmt {
+            statement: stmt.clone(),
+            common: VerifiedStmtCommonIr::new(infer_result, common.inside_results),
+            verification: Some(verification),
+        }
         .into())
     }
 
@@ -572,12 +576,11 @@ impl Runtime {
                 None,
             );
             return Ok(Some(
-                NonFactualStmtSuccess::new_with_by_verification(
-                    stmt.clone().into(),
-                    infer_result,
-                    inside_results,
-                    verification.into(),
-                )
+                VerifiedByStmtIr::ByThmStmt {
+                    statement: stmt.clone(),
+                    common: VerifiedStmtCommonIr::new(infer_result, inside_results),
+                    verification: Some(verification),
+                }
                 .into(),
             ));
         }
@@ -654,12 +657,11 @@ impl Runtime {
                 None,
             );
             return Ok(Some(
-                NonFactualStmtSuccess::new_with_by_verification(
-                    stmt.clone().into(),
-                    infer_result,
-                    inside_results,
-                    verification.into(),
-                )
+                VerifiedByStmtIr::ByThmStmt {
+                    statement: stmt.clone(),
+                    common: VerifiedStmtCommonIr::new(infer_result, inside_results),
+                    verification: Some(verification),
+                }
                 .into(),
             ));
         }
@@ -754,12 +756,11 @@ impl Runtime {
                 None,
             );
             return Ok(Some(
-                NonFactualStmtSuccess::new_with_by_verification(
-                    stmt.clone().into(),
-                    infer_result,
-                    inside_results,
-                    verification.into(),
-                )
+                VerifiedByStmtIr::ByThmStmt {
+                    statement: stmt.clone(),
+                    common: VerifiedStmtCommonIr::new(infer_result, inside_results),
+                    verification: Some(verification),
+                }
                 .into(),
             ));
         }
@@ -840,7 +841,7 @@ impl Runtime {
                         ];
                         if steps.iter().all(StmtResult::is_true) {
                             Some(
-                                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                                         conclusion.clone().into(),
                                         "real matrix operator has the requested matrix type"
                                             .to_string(),
@@ -1367,7 +1368,7 @@ impl Runtime {
             }
             let verified_requirement = result
                 .factual_success()
-                .map(|success| success.stmt.to_string())
+                .map(|success| success.fact().to_string())
                 .unwrap_or_else(|| conclusion.to_string());
             requirement_facts.push(verified_requirement);
             requirement_roles.push(requirement_role.clone());
@@ -1394,12 +1395,11 @@ impl Runtime {
             provenance,
         );
         Ok(Some(
-            NonFactualStmtSuccess::new_with_by_verification(
-                stmt.clone().into(),
-                infer_result,
-                inside_results,
-                verification.into(),
-            )
+            VerifiedByStmtIr::ByThmStmt {
+                statement: stmt.clone(),
+                common: VerifiedStmtCommonIr::new(infer_result, inside_results),
+                verification: Some(verification),
+            }
             .into(),
         ))
     }

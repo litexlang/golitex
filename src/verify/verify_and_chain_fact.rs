@@ -46,7 +46,7 @@ impl Runtime {
             }
             child_results.push(result);
         }
-        Ok((FactualStmtSuccess::new_with_verified_by_known_fact(
+        Ok((VerifiedFactStmtIr::new_with_verified_by_known_fact(
             and_fact.clone().into(),
             VerifiedByResult::wrap_bys(Vec::new()),
             child_results,
@@ -58,7 +58,7 @@ impl Runtime {
         &mut self,
         and_fact: &AndFact,
         verify_state: &UseContextVerifyState,
-    ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
+    ) -> Result<Option<VerifiedFactStmtIr>, RuntimeError> {
         let key = and_fact.key();
         let envs_count = self.environment_count();
         for stack_idx in 0..envs_count {
@@ -119,7 +119,7 @@ impl Runtime {
         arg_map: HashMap<String, Obj>,
         given_and_fact: &AndFact,
         verify_state: &UseContextVerifyState,
-    ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
+    ) -> Result<Option<VerifiedFactStmtIr>, RuntimeError> {
         let Some((instantiation, requirements)) = self
             .verify_known_forall_requirements_and_build_evidence(
                 known_forall.as_ref(),
@@ -139,7 +139,7 @@ impl Runtime {
         )?;
         let source_fact: Fact = verified_by_known_forall_fact.into();
         let source_fact_id = self.known_fact_id_for_fact(&source_fact)?;
-        let fact_verified = FactualStmtSuccess::new_with_verified_by_known_fact(
+        let fact_verified = VerifiedFactStmtIr::new_with_verified_by_known_fact(
             given_and_fact.clone().into(),
             VerifiedByResult::known_forall_instantiation(
                 source_fact,
@@ -202,7 +202,7 @@ impl Runtime {
 
             child_results.push(result);
         }
-        Ok((FactualStmtSuccess::new_with_verified_by_known_fact(
+        Ok((VerifiedFactStmtIr::new_with_verified_by_known_fact(
             chain_fact.clone().into(),
             VerifiedByResult::wrap_bys(Vec::new()),
             child_results,

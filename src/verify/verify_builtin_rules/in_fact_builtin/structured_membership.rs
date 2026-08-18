@@ -49,7 +49,7 @@ impl Runtime {
                 builtin_state,
             )? {
                 selected_result =
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                         selected_membership.clone().into(),
                         "selected literal tuple component has a real carrier".to_string(),
                         real_steps,
@@ -62,7 +62,7 @@ impl Runtime {
         }
 
         Ok(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 in_fact.clone().into(),
                 "literal tuple projection inherits the selected component carrier".to_string(),
                 vec![selected_result],
@@ -89,7 +89,7 @@ impl Runtime {
         .into();
         let verify_subset_result = match (&*set_builder.param_set, base_set) {
             (Obj::StandardSet(left), Obj::StandardSet(right)) if left.is_subset_eq(right) => {
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                     subset_fact.clone().into(),
                     "standard_set_subset".to_string(),
                     Vec::new(),
@@ -97,7 +97,7 @@ impl Runtime {
                 .into()
             }
             (left, right) if objs_equal_with_nested_binder_alpha_equivalence(left, right) => {
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                     subset_fact.clone().into(),
                     "subset reflexivity".to_string(),
                     Vec::new(),
@@ -113,7 +113,7 @@ impl Runtime {
         infer_result.new_infer_result_inside(verify_subset_result.infer_result());
         let stmt = in_fact.clone().into();
         infer_result.new_fact(&stmt);
-        Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
+        Ok((VerifiedFactStmtIr::new_with_verified_by_builtin_rules_label_and_steps(
             stmt,
             infer_result,
             "set_builder in power_set: param_set subset of base implies builder defines a subset of base"
@@ -153,7 +153,7 @@ impl Runtime {
         let stmt = in_fact.clone().into();
         infer_result.new_fact(&stmt);
         Ok(
-            (FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
+            (VerifiedFactStmtIr::new_with_verified_by_builtin_rules_label_and_steps(
                 stmt,
                 infer_result,
                 "list_set in power_set: each element is in the base set".to_string(),
@@ -180,7 +180,7 @@ impl Runtime {
                 ));
             if equal_fact_verify_result.is_true() {
                 return Ok(
-                    (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    (VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                         in_fact.clone().into(),
                         format!(
                             "{} equals one element in list_set {}",
@@ -224,7 +224,7 @@ impl Runtime {
             let premise_result = self.verify_builtin_rule_premise(&premise, builtin_state)?;
             if premise_result.is_true() {
                 return Ok(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                         in_fact.clone().into(),
                         "list-set membership from equality with one listed element".to_string(),
                         vec![premise_result],
@@ -260,7 +260,7 @@ impl Runtime {
         };
 
         Ok(
-            (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            (VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 not_in_fact.clone().into(),
                 format!(
                     "{} is not equal to every element in list_set {}",
@@ -284,7 +284,7 @@ impl Runtime {
         };
         if stored_fn_set.to_string() == expected_fn_set.to_string() {
             return Ok(
-                (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                (VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                     in_fact.clone().into(),
                     "fn membership: stored fn signature matches RHS".to_string(),
                     Vec::new(),
@@ -306,7 +306,7 @@ impl Runtime {
             self.fn_set_alpha_renamed_for_display_compare(&expected_fn_set.body, &shared_names)?;
         if stored_norm.to_string() == expected_norm.to_string() {
             return Ok(
-                (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                (VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                     in_fact.clone().into(),
                     "fn membership: stored fn signature matches RHS (alpha-renamed parameters)"
                         .to_string(),
@@ -336,7 +336,7 @@ impl Runtime {
         )?;
         if signature_from_anon.to_string() == expected_fn_set.to_string() {
             return Ok(
-                (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                (VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                     in_fact.clone().into(),
                     "anonymous function: signature (params, dom, co-domain) matches `fn` set"
                         .to_string(),
@@ -359,7 +359,7 @@ impl Runtime {
             self.fn_set_alpha_renamed_for_display_compare(&expected_fn_set.body, &shared_names)?;
         if a_norm.to_string() == e_norm.to_string() {
             return Ok(
-                (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                (VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                     in_fact.clone().into(),
                     "anonymous function: signature matches `fn` set (alpha-renamed parameters)"
                         .to_string(),
@@ -396,7 +396,7 @@ impl Runtime {
         )?;
         if signature_equality.is_true() {
             return Ok(
-                (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                (VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                     in_fact.clone().into(),
                     "anonymous function: signature matches `fn` set through propositionally equal parameter sets"
                         .to_string(),
@@ -488,7 +488,7 @@ impl Runtime {
         };
 
         Ok(
-            (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            (VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 in_fact.clone().into(),
                 format!(
                     "finite sequence literal application is in {}",
@@ -550,7 +550,7 @@ impl Runtime {
         };
 
         Ok(
-            (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            (VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 in_fact.clone().into(),
                 format!(
                     "cart projection list_set elements are all in {}",
@@ -587,7 +587,7 @@ impl Runtime {
                 self.verify_atomic_fact_as_builtin_rule_premise(&source_membership, builtin_state)?;
             if source_result.is_true() {
                 return Ok(
-                    (FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    (VerifiedFactStmtIr::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         in_fact.clone().into(),
                         format!(
                             "{} in {} implies in {} (standard subset relation)",
@@ -658,7 +658,7 @@ impl Runtime {
             }
             if all_elements_match {
                 return Ok(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                         in_fact.clone().into(),
                         "listed-set member inherits a carrier shared by every listed element"
                             .to_string(),

@@ -24,18 +24,17 @@ impl Runtime {
             have_fn_equal_stmt.line_file.clone(),
         )
         .into();
-        let mut success = NonFactualStmtSuccess::new(
-            have_fn_equal_stmt.clone().into(),
-            infer_result,
-            inside_results,
-        );
-        success.function_definition_verification = Some(FunctionDefinitionVerificationResult::new(
-            0,
-            assumption_infers,
-            function_membership,
-            defining_equality,
-        ));
-        Ok(success.into())
+        Ok(VerifiedDefObjStmtIr::HaveFnEqualStmt {
+            statement: have_fn_equal_stmt.clone(),
+            common: VerifiedStmtCommonIr::new(infer_result, inside_results),
+            verification: Some(FunctionDefinitionVerificationResult::new(
+                0,
+                assumption_infers,
+                function_membership,
+                defining_equality,
+            )),
+        }
+        .into())
     }
 
     fn store_have_fn_equal_stmt_facts(
@@ -119,10 +118,12 @@ impl Runtime {
             })?;
         let infer_result =
             self.exec_have_fn_equal_stmt_affect_environment(have_fn_equal_stmt, &fn_set_stored)?;
-        Ok(
-            NonFactualStmtSuccess::new(have_fn_equal_stmt.clone().into(), infer_result, vec![])
-                .into(),
-        )
+        Ok(VerifiedDefObjStmtIr::HaveFnEqualStmt {
+            statement: have_fn_equal_stmt.clone(),
+            common: VerifiedStmtCommonIr::new(infer_result, vec![]),
+            verification: None,
+        }
+        .into())
     }
 
     /// Mathematical contract: an explicit function definition has a

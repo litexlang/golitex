@@ -15,7 +15,7 @@ impl Runtime {
                     return Ok(None);
                 };
                 Ok(Some(
-                    FactualStmtSuccess::new_with_verified_by_known_fact(
+                    VerifiedFactStmtIr::new_with_verified_by_known_fact(
                         clause.clone(),
                         VerifiedByResult::cached_fact(
                             clause.clone(),
@@ -56,7 +56,7 @@ impl Runtime {
             subgoals.push(result);
         }
         Ok(Some(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
                 "prime by trial-division definition".to_string(),
                 subgoals,
@@ -85,7 +85,7 @@ impl Runtime {
             subgoals.push(result);
         }
         Ok(Some(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
                 "coprime by natural gcd-one definition".to_string(),
                 subgoals,
@@ -114,7 +114,7 @@ impl Runtime {
             subgoals.push(result);
         }
         Ok(Some(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
                 "dvd by zero-remainder and integer-multiple definition".to_string(),
                 subgoals,
@@ -145,7 +145,7 @@ impl Runtime {
             subgoals.push(result);
         }
         Ok(Some(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
                 "choice function by pointwise membership definition".to_string(),
                 subgoals,
@@ -226,7 +226,7 @@ impl Runtime {
             return Ok(None);
         }
         Ok(Some(
-            (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            (VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 subset_fact.clone().into(),
                 "subset by definition (forall x in left: x in right)".to_string(),
                 Vec::new(),
@@ -262,7 +262,7 @@ impl Runtime {
             return Ok(None);
         }
         Ok(Some(
-            (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            (VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 superset_fact.clone().into(),
                 "superset by definition (forall x in right: x in left)".to_string(),
                 Vec::new(),
@@ -323,7 +323,7 @@ impl Runtime {
         }
 
         let parameter_checks = args_param_types
-            .into_non_factual_success()
+            .into_non_factual_ir()
             .ok_or_else(|| {
                 VerifyRuntimeError(RuntimeErrorStruct::new(
                     Some(Fact::from(normal_atomic_fact.clone()).into_stmt()),
@@ -334,6 +334,8 @@ impl Runtime {
                     vec![],
                 ))
             })?
+            .into_common()
+            .expect("non-factual parameter verification carries common evidence")
             .inside_results;
 
         let mut infer_result = InferResult::new();
@@ -351,7 +353,7 @@ impl Runtime {
         let fact_by_definition: Fact = normal_atomic_fact.clone().into();
         infer_result.add_fact_by_definition(&fact_by_definition);
         Ok(Some(
-            (FactualStmtSuccess::new_with_verified_by_known_fact_and_infer(
+            (VerifiedFactStmtIr::new_with_verified_by_known_fact_and_infer(
                 normal_atomic_fact.clone().into(),
                 infer_result,
                 VerifiedByResult::cited_definition(

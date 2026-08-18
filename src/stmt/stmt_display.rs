@@ -17,6 +17,7 @@ impl fmt::Display for Stmt {
             Stmt::DefInterfaceStmt(x) => write!(f, "{}", x),
             Stmt::DefAlgoStmt(x) => write!(f, "{}", x),
             Stmt::DefThmStmt(x) => write!(f, "{}", x),
+            Stmt::AxiomStmt(x) => write!(f, "{}", x),
             Stmt::DefStrategyStmt(x) => write!(f, "{}", x),
             Stmt::By(x) => write!(f, "{}", x),
             Stmt::Witness(x) => write!(f, "{}", x),

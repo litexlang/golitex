@@ -54,11 +54,12 @@ impl LitexToLeanIrBuilder<'_> {
         result: &StmtResult,
     ) -> Result<LitexToLeanStatementIr, RuntimeError> {
         if let Some(success) = result.factual_success() {
-            ensure_fact_objects_supported_by_litex_to_lean_ir(&success.stmt)?;
+            let source_fact = success.fact();
+            ensure_fact_objects_supported_by_litex_to_lean_ir(&source_fact)?;
             let fact = self.build_litex_to_lean_ir_fact_from_success(success)?;
             let well_definedness_context =
                 self.well_definedness_context_for_factual_success(success);
-            let excluded = HashSet::from([success.stmt.to_string()]);
+            let excluded = HashSet::from([source_fact.to_string()]);
             if success.fact_id.is_none() {
                 return self
                     .build_litex_to_lean_ir_projected_forall_statement(success, fact, excluded);
@@ -75,14 +76,16 @@ impl LitexToLeanIrBuilder<'_> {
             }));
         }
 
-        let Some(success) = result.non_factual_success() else {
+        let Some(success) = result.non_factual_ir() else {
             return Err(litex_to_lean_ir_error(
                 &result.line_file(),
                 "Litex-to-Lean IR requires a successful statement result",
             ));
         };
-        match &success.stmt {
-            Stmt::DefPredicateStmt(DefPredicateStmt::DefAbstractPropStmt(stmt)) => Ok(
+        match success {
+            VerifiedStmtIr::DefPredicateStmt(
+                VerifiedDefPredicateStmtIr::DefAbstractPropStmt { statement: stmt, .. },
+            ) => Ok(
                 LitexToLeanStatementIr::DefPredicateStmt(
                     LitexToLeanDefPredicateStmtIr::DefAbstractPropStmt(
                         LitexToLeanDefAbstractPropStmtIr {
@@ -92,7 +95,10 @@ impl LitexToLeanIrBuilder<'_> {
                     ),
                 ),
             ),
-            Stmt::DefPredicateStmt(DefPredicateStmt::DefPropStmt(stmt)) => {
+            VerifiedStmtIr::DefPredicateStmt(VerifiedDefPredicateStmtIr::DefPropStmt {
+                statement: stmt,
+                ..
+            }) => {
                 for fact in stmt.iff_facts.iter() {
                     ensure_fact_objects_supported_by_litex_to_lean_ir(fact)?;
                 }
@@ -109,27 +115,57 @@ impl LitexToLeanIrBuilder<'_> {
                     }),
                 ))
             }
-            Stmt::DefObjStmt(DefObjStmt::LetObjStmt(stmt)) => {
-                self.build_litex_to_lean_ir_let_object_statement(stmt, success)
+            VerifiedStmtIr::DefObjStmt(VerifiedDefObjStmtIr::LetObjStmt {
+                statement: stmt,
+                common,
+            }) => {
+                self.build_litex_to_lean_ir_let_object_statement(stmt, common)
             }
-            Stmt::DefObjStmt(DefObjStmt::HaveObjEqualStmt(stmt)) => {
-                self.build_litex_to_lean_ir_have_object_equal_statement(stmt, success)
+            VerifiedStmtIr::DefObjStmt(VerifiedDefObjStmtIr::HaveObjEqualStmt {
+                statement: stmt,
+                common,
+            }) => {
+                self.build_litex_to_lean_ir_have_object_equal_statement(stmt, common)
             }
-            Stmt::DefObjStmt(DefObjStmt::HaveFnEqualStmt(stmt)) => {
-                self.build_litex_to_lean_ir_have_function_equal_statement(stmt, success)
+            VerifiedStmtIr::DefObjStmt(VerifiedDefObjStmtIr::HaveFnEqualStmt {
+                statement: stmt,
+                common,
+                verification,
+            }) => {
+                self.build_litex_to_lean_ir_have_function_equal_statement(
+                    stmt,
+                    common,
+                    verification.as_ref(),
+                )
             }
-            Stmt::DefObjStmt(DefObjStmt::HaveTupleStmt(stmt)) => {
-                self.build_litex_to_lean_ir_have_tuple_statement(stmt, success)
+            VerifiedStmtIr::DefObjStmt(VerifiedDefObjStmtIr::HaveTupleStmt {
+                statement: stmt,
+                common,
+            }) => {
+                self.build_litex_to_lean_ir_have_tuple_statement(stmt, common)
             }
-            Stmt::DefObjStmt(DefObjStmt::HaveObjInNonemptySetStmt(stmt)) => {
-                self.build_litex_to_lean_ir_have_object_choice_statement(stmt, success)
+            VerifiedStmtIr::DefObjStmt(VerifiedDefObjStmtIr::HaveObjInNonemptySetStmt {
+                statement: stmt,
+                common,
+                verification,
+            }) => {
+                self.build_litex_to_lean_ir_have_object_choice_statement(
+                    stmt,
+                    common,
+                    verification.as_ref(),
+                )
             }
-            Stmt::DefObjStmt(DefObjStmt::ObtainObjFromExistFact(stmt)) => {
+            VerifiedStmtIr::DefObjStmt(VerifiedDefObjStmtIr::ObtainObjFromExistFact {
+                statement: stmt,
+                common,
+                verification,
+            }) => {
                 let (source, witnesses, projections) = self
                     .build_litex_to_lean_ir_existential_witness(
                         &stmt.equal_tos,
                         &stmt.line_file,
-                        success,
+                        common,
+                        verification.as_ref(),
                     )?;
                 Ok(LitexToLeanStatementIr::DefObjStmt(
                     LitexToLeanDefObjStmtIr::ObtainObjFromExistFact(
@@ -141,12 +177,17 @@ impl LitexToLeanIrBuilder<'_> {
                     ),
                 ))
             }
-            Stmt::DefObjStmt(DefObjStmt::ObtainObjFromAtomicFact(stmt)) => {
+            VerifiedStmtIr::DefObjStmt(VerifiedDefObjStmtIr::ObtainObjFromAtomicFact {
+                statement: stmt,
+                common,
+                verification,
+            }) => {
                 let (source, witnesses, projections) = self
                     .build_litex_to_lean_ir_existential_witness(
                         &stmt.equal_tos,
                         &stmt.line_file,
-                        success,
+                        common,
+                        verification.as_ref(),
                     )?;
                 Ok(LitexToLeanStatementIr::DefObjStmt(
                     LitexToLeanDefObjStmtIr::ObtainObjFromAtomicFact(
@@ -158,18 +199,26 @@ impl LitexToLeanIrBuilder<'_> {
                     ),
                 ))
             }
-            Stmt::DefObjStmt(DefObjStmt::ObtainObjFromThm(stmt)) => Err(
+            VerifiedStmtIr::DefObjStmt(VerifiedDefObjStmtIr::ObtainObjFromThm {
+                statement: stmt,
+                ..
+            }) => Err(
                 litex_to_lean_ir_error(
                     &stmt.line_file,
                     "Litex-to-Lean does not yet support theorem-backed `obtain`; use an explicit theorem application followed by existential elimination",
                 ),
             ),
-            Stmt::DefObjStmt(DefObjStmt::HaveObjByExistFactsStmt(stmt)) => {
+            VerifiedStmtIr::DefObjStmt(VerifiedDefObjStmtIr::HaveObjByExistFactsStmt {
+                statement: stmt,
+                common,
+                verification,
+            }) => {
                 let (source, witnesses, projections) = self
                     .build_litex_to_lean_ir_existential_witness(
                         &stmt.param_def.collect_param_bindings(),
                         &stmt.line_file,
-                        success,
+                        common,
+                        verification.as_ref(),
                     )?;
                 Ok(LitexToLeanStatementIr::DefObjStmt(
                     LitexToLeanDefObjStmtIr::HaveObjByExistFactsStmt(
@@ -181,32 +230,103 @@ impl LitexToLeanIrBuilder<'_> {
                     ),
                 ))
             }
-            Stmt::Witness(WitnessStmt::WitnessExistFact(stmt)) => {
-                self.build_litex_to_lean_ir_witness_exist_statement(stmt, success)
+            VerifiedStmtIr::Witness(VerifiedWitnessStmtIr::WitnessExistFact {
+                statement: stmt,
+                common,
+                verification,
+            }) => {
+                self.build_litex_to_lean_ir_witness_exist_statement(
+                    stmt,
+                    common,
+                    verification.as_ref(),
+                )
             }
-            Stmt::Witness(WitnessStmt::WitnessAtomicFact(stmt)) => {
-                self.build_litex_to_lean_ir_witness_atomic_fact_statement(stmt, success)
+            VerifiedStmtIr::Witness(VerifiedWitnessStmtIr::WitnessAtomicFact {
+                statement: stmt,
+                common,
+                verification,
+            }) => {
+                self.build_litex_to_lean_ir_witness_atomic_fact_statement(
+                    stmt,
+                    common,
+                    verification.as_ref(),
+                )
             }
-            Stmt::By(ByStmt::ByCasesStmt(stmt)) => {
-                self.build_litex_to_lean_ir_by_cases_statement(stmt, success)
+            VerifiedStmtIr::By(VerifiedByStmtIr::ByCasesStmt {
+                statement: stmt,
+                common,
+                verification,
+            }) => {
+                self.build_litex_to_lean_ir_by_cases_statement(
+                    stmt,
+                    common,
+                    verification.as_ref(),
+                )
             }
-            Stmt::By(ByStmt::ByContraStmt(stmt)) => {
-                self.build_litex_to_lean_ir_by_contra_statement(stmt, success)
+            VerifiedStmtIr::By(VerifiedByStmtIr::ByContraStmt {
+                statement: stmt,
+                common,
+                verification,
+            }) => {
+                self.build_litex_to_lean_ir_by_contra_statement(
+                    stmt,
+                    common,
+                    verification.as_ref(),
+                )
             }
-            Stmt::By(ByStmt::ByDefStmt(stmt)) => {
-                self.build_litex_to_lean_ir_by_definition_statement(stmt, success)
+            VerifiedStmtIr::By(VerifiedByStmtIr::ByDefStmt {
+                statement: stmt,
+                common,
+                verification,
+            }) => {
+                self.build_litex_to_lean_ir_by_definition_statement(
+                    stmt,
+                    common,
+                    verification.as_ref(),
+                )
             }
-            Stmt::ProofBlock(ProofBlockStmt::ExampleStmt(stmt)) => {
-                self.build_litex_to_lean_ir_example_statement(stmt, success)
+            VerifiedStmtIr::ProofBlock(VerifiedProofBlockStmtIr::ExampleStmt {
+                statement: stmt,
+                common,
+                verification,
+                local_scope,
+            }) => {
+                self.build_litex_to_lean_ir_example_statement(
+                    stmt,
+                    common,
+                    verification.as_ref(),
+                    local_scope.as_ref(),
+                )
             }
-            Stmt::ProofBlock(ProofBlockStmt::ClaimStmt(stmt)) => {
-                self.build_litex_to_lean_ir_claim_statement(stmt, success)
+            VerifiedStmtIr::ProofBlock(VerifiedProofBlockStmtIr::ClaimStmt {
+                statement: stmt,
+                common,
+                verification,
+                local_scope,
+            }) => {
+                self.build_litex_to_lean_ir_claim_statement(
+                    stmt,
+                    common,
+                    verification.as_ref(),
+                    local_scope.as_ref(),
+                )
             }
-            Stmt::ProofBlock(ProofBlockStmt::SketchStmt(stmt)) => {
-                self.build_litex_to_lean_ir_sketch_statement(stmt, success)
+            VerifiedStmtIr::ProofBlock(VerifiedProofBlockStmtIr::SketchStmt {
+                statement: stmt,
+                common,
+                local_scope,
+            }) => {
+                self.build_litex_to_lean_ir_sketch_statement(
+                    stmt,
+                    common,
+                    local_scope.as_ref(),
+                )
             }
-            Stmt::Command(CommandStmt::DoNothingStmt(stmt)) => {
-                if !success.infers.is_empty() || !success.inside_results.is_empty() {
+            VerifiedStmtIr::Command(VerifiedCommandStmtIr::DoNothingStmt {
+                statement: stmt,
+                common,
+            }) => {
+                if !common.infers.is_empty() || !common.inside_results.is_empty() {
                     return Err(litex_to_lean_ir_error(
                         &stmt.line_file,
                         "`do_nothing` unexpectedly changed the environment or retained proof results",
@@ -218,10 +338,25 @@ impl LitexToLeanIrBuilder<'_> {
                     )),
                 ))
             }
-            Stmt::DefThmStmt(stmt) => {
-                self.build_litex_to_lean_ir_named_theorem_statement(stmt, success)
+            VerifiedStmtIr::DefThmStmt {
+                statement: stmt,
+                common,
+                verification,
+            } => {
+                self.build_litex_to_lean_ir_named_theorem_statement(
+                    stmt,
+                    common,
+                    verification.as_ref(),
+                )
             }
-            Stmt::UnsafeStmt(UnsafeStmt::TrustStmt(stmt)) => {
+            VerifiedStmtIr::AxiomStmt { statement: stmt, .. } => Err(litex_to_lean_ir_error(
+                &stmt.line_file,
+                "Litex-to-Lean does not compile explicit `axiom` declarations",
+            )),
+            VerifiedStmtIr::UnsafeStmt(VerifiedUnsafeStmtIr::TrustStmt {
+                statement: stmt,
+                common,
+            }) => {
                 let excluded = stmt
                     .facts
                     .iter()
@@ -240,24 +375,26 @@ impl LitexToLeanIrBuilder<'_> {
                     LitexToLeanUnsafeStmtIr::TrustStmt(LitexToLeanTrustStmtIr {
                         facts,
                         inferred_facts: self
-                            .build_litex_to_lean_ir_inferred_facts(&success.infers, &excluded)?,
+                            .build_litex_to_lean_ir_inferred_facts(&common.infers, &excluded)?,
                     }),
                 ))
             }
-            other => Err(litex_to_lean_ir_error(
-                &other.line_file(),
+            other => {
+                let statement = other.statement();
+                Err(litex_to_lean_ir_error(
+                &statement.line_file(),
                 format!(
                     "Litex-to-Lean IR MVP does not support statement kind `{}`",
-                    other.stmt_type_name()
+                    statement.stmt_type_name()
                 ),
-            )),
+            ))}
         }
     }
 
     fn build_litex_to_lean_ir_let_object_statement(
         &self,
         stmt: &LetObjStmt,
-        success: &NonFactualStmtSuccess,
+        success: &VerifiedStmtCommonIr,
     ) -> Result<LitexToLeanStatementIr, RuntimeError> {
         if !success.inside_results.is_empty() {
             return Err(litex_to_lean_ir_error(
@@ -303,9 +440,10 @@ impl LitexToLeanIrBuilder<'_> {
     fn build_litex_to_lean_ir_have_function_equal_statement(
         &self,
         stmt: &HaveFnEqualStmt,
-        success: &NonFactualStmtSuccess,
+        success: &VerifiedStmtCommonIr,
+        verification: Option<&FunctionDefinitionVerificationResult>,
     ) -> Result<LitexToLeanStatementIr, RuntimeError> {
-        let Some(verification) = success.function_definition_verification.as_ref() else {
+        let Some(verification) = verification else {
             return Err(litex_to_lean_ir_error(
                 &stmt.line_file,
                 "function definition has no structured body-to-environment verification result",
@@ -492,7 +630,7 @@ impl LitexToLeanIrBuilder<'_> {
     fn build_litex_to_lean_ir_have_tuple_statement(
         &self,
         stmt: &HaveTupleStmt,
-        success: &NonFactualStmtSuccess,
+        success: &VerifiedStmtCommonIr,
     ) -> Result<LitexToLeanStatementIr, RuntimeError> {
         if success.inside_results.len() != 2 {
             return Err(litex_to_lean_ir_error(
@@ -604,9 +742,10 @@ impl LitexToLeanIrBuilder<'_> {
     fn build_litex_to_lean_ir_witness_exist_statement(
         &self,
         stmt: &WitnessExistFact,
-        success: &NonFactualStmtSuccess,
+        success: &VerifiedStmtCommonIr,
+        verification: Option<&WitnessExistVerificationResult>,
     ) -> Result<LitexToLeanStatementIr, RuntimeError> {
-        let Some(verification) = success.witness_exist_verification.as_ref() else {
+        let Some(verification) = verification else {
             return Err(litex_to_lean_ir_error(
                 &stmt.line_file,
                 "existential witness has no structured introduction verification result",
@@ -833,9 +972,10 @@ impl LitexToLeanIrBuilder<'_> {
     fn build_litex_to_lean_ir_witness_atomic_fact_statement(
         &self,
         stmt: &WitnessAtomicFact,
-        success: &NonFactualStmtSuccess,
+        success: &VerifiedStmtCommonIr,
+        verification: Option<&WitnessAtomicFactVerificationResult>,
     ) -> Result<LitexToLeanStatementIr, RuntimeError> {
-        let Some(verification) = success.witness_atomic_fact_verification.as_ref() else {
+        let Some(verification) = verification else {
             return Err(litex_to_lean_ir_error(
                 &stmt.line_file,
                 "atomic fact witness has no frozen definition-introduction verification result",
@@ -967,7 +1107,8 @@ impl LitexToLeanIrBuilder<'_> {
         &self,
         bindings: &[SymbolBinding],
         line_file: &LineFile,
-        success: &NonFactualStmtSuccess,
+        success: &VerifiedStmtCommonIr,
+        verification: Option<&ExistentialEliminationVerificationResult>,
     ) -> Result<
         (
             LitexToLeanFactIr,
@@ -976,7 +1117,7 @@ impl LitexToLeanIrBuilder<'_> {
         ),
         RuntimeError,
     > {
-        let Some(verification) = success.existential_elimination_verification.as_ref() else {
+        let Some(verification) = verification else {
             return Err(litex_to_lean_ir_error(
                 line_file,
                 "existential elimination has no structured source-to-projection verification result",
@@ -1171,9 +1312,10 @@ impl LitexToLeanIrBuilder<'_> {
     fn build_litex_to_lean_ir_have_object_choice_statement(
         &self,
         stmt: &HaveObjInNonemptySetOrParamTypeStmt,
-        success: &NonFactualStmtSuccess,
+        success: &VerifiedStmtCommonIr,
+        verification: Option<&ObjectChoiceVerificationResult>,
     ) -> Result<LitexToLeanStatementIr, RuntimeError> {
-        let Some(verification) = success.object_choice_verification.as_ref() else {
+        let Some(verification) = verification else {
             return Err(litex_to_lean_ir_error(
                 &stmt.line_file,
                 "object choice has no structured nonemptiness-to-membership verification result",
@@ -1299,7 +1441,7 @@ impl LitexToLeanIrBuilder<'_> {
     fn build_litex_to_lean_ir_have_object_equal_statement(
         &self,
         stmt: &HaveObjEqualStmt,
-        success: &NonFactualStmtSuccess,
+        success: &VerifiedStmtCommonIr,
     ) -> Result<LitexToLeanStatementIr, RuntimeError> {
         let bindings_with_types = stmt.param_def.collect_param_bindings_with_types();
         if bindings_with_types.len() != stmt.objs_equal_to.len()
@@ -1425,10 +1567,10 @@ impl LitexToLeanIrBuilder<'_> {
     fn build_litex_to_lean_ir_by_definition_statement(
         &self,
         stmt: &ByDefStmt,
-        success: &NonFactualStmtSuccess,
+        success: &VerifiedStmtCommonIr,
+        verification: Option<&ByDefinitionVerificationResult>,
     ) -> Result<LitexToLeanStatementIr, RuntimeError> {
-        let Some(ByVerificationResult::Definition(verification)) = success.by_verification.as_ref()
-        else {
+        let Some(verification) = verification else {
             return Err(litex_to_lean_ir_error(
                 &stmt.line_file,
                 "by-definition statement has no structured verification result",
@@ -1468,7 +1610,8 @@ impl LitexToLeanIrBuilder<'_> {
         let parameter_wrapper = success
             .inside_results
             .first()
-            .and_then(StmtResult::non_factual_success)
+            .and_then(StmtResult::non_factual_ir)
+            .and_then(VerifiedStmtIr::common)
             .ok_or_else(|| {
                 litex_to_lean_ir_error(
                     &stmt.line_file,
@@ -1510,10 +1653,10 @@ impl LitexToLeanIrBuilder<'_> {
     fn build_litex_to_lean_ir_by_cases_statement(
         &self,
         stmt: &ByCasesStmt,
-        success: &NonFactualStmtSuccess,
+        success: &VerifiedStmtCommonIr,
+        verification: Option<&ByCasesVerificationResult>,
     ) -> Result<LitexToLeanStatementIr, RuntimeError> {
-        let Some(ByVerificationResult::Cases(verification)) = success.by_verification.as_ref()
-        else {
+        let Some(verification) = verification else {
             return Err(litex_to_lean_ir_error(
                 &stmt.line_file,
                 "by-cases statement has no structured verification result",
@@ -1763,10 +1906,10 @@ impl LitexToLeanIrBuilder<'_> {
     fn build_litex_to_lean_ir_by_contra_statement(
         &self,
         stmt: &ByContraStmt,
-        success: &NonFactualStmtSuccess,
+        success: &VerifiedStmtCommonIr,
+        verification: Option<&ByContraVerificationResult>,
     ) -> Result<LitexToLeanStatementIr, RuntimeError> {
-        let Some(ByVerificationResult::Contra(verification)) = success.by_verification.as_ref()
-        else {
+        let Some(verification) = verification else {
             return Err(litex_to_lean_ir_error(
                 &stmt.line_file,
                 "by-contra statement has no structured verification result",
@@ -1856,9 +1999,11 @@ impl LitexToLeanIrBuilder<'_> {
     fn build_litex_to_lean_ir_claim_statement(
         &self,
         stmt: &ClaimStmt,
-        success: &NonFactualStmtSuccess,
+        success: &VerifiedStmtCommonIr,
+        verification: Option<&ClaimVerificationResult>,
+        scope: Option<&LocalProofScopeVerificationResult>,
     ) -> Result<LitexToLeanStatementIr, RuntimeError> {
-        let verification = success.claim_verification.as_ref().ok_or_else(|| {
+        let verification = verification.ok_or_else(|| {
             litex_to_lean_ir_error(
                 &stmt.line_file,
                 "a verified `claim` reached Litex-to-Lean without goal proof evidence",
@@ -1870,15 +2015,12 @@ impl LitexToLeanIrBuilder<'_> {
                 "this simple `claim` tranche supports ordinary fact goals, not `forall` goals",
             ));
         };
-        let scope = success
-            .local_proof_scope_verification
-            .as_ref()
-            .ok_or_else(|| {
-                litex_to_lean_ir_error(
-                    &stmt.line_file,
-                    "a verified `claim` reached Litex-to-Lean without local proof-scope evidence",
-                )
-            })?;
+        let scope = scope.ok_or_else(|| {
+            litex_to_lean_ir_error(
+                &stmt.line_file,
+                "a verified `claim` reached Litex-to-Lean without local proof-scope evidence",
+            )
+        })?;
         if verification.fact.to_string() != stmt.fact.to_string()
             || verification.proof_step_count != stmt.proof.len()
             || success.inside_results.len() != verification.proof_step_count + 1
@@ -1954,7 +2096,9 @@ impl LitexToLeanIrBuilder<'_> {
     fn build_litex_to_lean_ir_example_statement(
         &self,
         stmt: &ExampleStmt,
-        success: &NonFactualStmtSuccess,
+        success: &VerifiedStmtCommonIr,
+        verification: Option<&ClaimVerificationResult>,
+        scope: Option<&LocalProofScopeVerificationResult>,
     ) -> Result<LitexToLeanStatementIr, RuntimeError> {
         if !success.infers.is_empty() {
             return Err(litex_to_lean_ir_error(
@@ -1962,21 +2106,18 @@ impl LitexToLeanIrBuilder<'_> {
                 "an `example` unexpectedly exported facts to the surrounding environment",
             ));
         }
-        let verification = success.claim_verification.as_ref().ok_or_else(|| {
+        let verification = verification.ok_or_else(|| {
             litex_to_lean_ir_error(
                 &stmt.line_file,
                 "a verified `example` reached Litex-to-Lean without goal proof evidence",
             )
         })?;
-        let scope = success
-            .local_proof_scope_verification
-            .as_ref()
-            .ok_or_else(|| {
-                litex_to_lean_ir_error(
-                    &stmt.line_file,
-                    "a verified `example` reached Litex-to-Lean without local proof-scope evidence",
-                )
-            })?;
+        let scope = scope.ok_or_else(|| {
+            litex_to_lean_ir_error(
+                &stmt.line_file,
+                "a verified `example` reached Litex-to-Lean without local proof-scope evidence",
+            )
+        })?;
         if !scope.assumption_components.is_empty() {
             return Err(litex_to_lean_ir_error(
                 &stmt.line_file,
@@ -2150,7 +2291,8 @@ impl LitexToLeanIrBuilder<'_> {
     fn build_litex_to_lean_ir_sketch_statement(
         &self,
         stmt: &SketchStmt,
-        success: &NonFactualStmtSuccess,
+        success: &VerifiedStmtCommonIr,
+        scope: Option<&LocalProofScopeVerificationResult>,
     ) -> Result<LitexToLeanStatementIr, RuntimeError> {
         if !success.infers.is_empty() {
             return Err(litex_to_lean_ir_error(
@@ -2158,15 +2300,12 @@ impl LitexToLeanIrBuilder<'_> {
                 "a `sketch` unexpectedly exported facts to the surrounding environment",
             ));
         }
-        let scope = success
-            .local_proof_scope_verification
-            .as_ref()
-            .ok_or_else(|| {
-                litex_to_lean_ir_error(
-                    &stmt.line_file,
-                    "a verified `sketch` reached Litex-to-Lean without local proof-scope evidence",
-                )
-            })?;
+        let scope = scope.ok_or_else(|| {
+            litex_to_lean_ir_error(
+                &stmt.line_file,
+                "a verified `sketch` reached Litex-to-Lean without local proof-scope evidence",
+            )
+        })?;
         if !scope.assumption_infers.is_empty() || !scope.assumption_components.is_empty() {
             return Err(litex_to_lean_ir_error(
                 &stmt.line_file,
@@ -2209,15 +2348,10 @@ impl LitexToLeanIrBuilder<'_> {
     fn build_litex_to_lean_ir_named_theorem_statement(
         &self,
         stmt: &DefThmStmt,
-        success: &NonFactualStmtSuccess,
+        success: &VerifiedStmtCommonIr,
+        verification: Option<&TheoremVerificationResult>,
     ) -> Result<LitexToLeanStatementIr, RuntimeError> {
-        if stmt.is_axiom() {
-            return Err(litex_to_lean_ir_error(
-                &stmt.line_file,
-                "Litex-to-Lean does not compile explicit `axiom` declarations",
-            ));
-        }
-        let verification = success.theorem_verification.as_ref().ok_or_else(|| {
+        let verification = verification.ok_or_else(|| {
             litex_to_lean_ir_error(
                 &stmt.line_file,
                 "a verified theorem reached Litex-to-Lean without theorem proof-scope evidence",
@@ -2359,7 +2493,7 @@ impl LitexToLeanIrBuilder<'_> {
         impossible_fact: &AtomicFact,
         context: &LitexToLeanIrConstructionContext,
     ) -> Result<LitexToLeanContradictionIr, RuntimeError> {
-        let Some(success) = result.non_factual_success() else {
+        let Some(success) = result.non_factual_ir() else {
             return Err(litex_to_lean_ir_error(
                 &result.line_file(),
                 "impossible branch did not retain a proof-scope result",
@@ -2367,7 +2501,10 @@ impl LitexToLeanIrBuilder<'_> {
         };
         build_litex_to_lean_ir_contradiction_results(
             self,
-            &success.inside_results,
+            &success
+                .common()
+                .expect("non-factual IR carries common execution evidence")
+                .inside_results,
             impossible_fact,
             context,
         )
@@ -2375,7 +2512,7 @@ impl LitexToLeanIrBuilder<'_> {
 
     fn build_litex_to_lean_ir_fact_from_success(
         &self,
-        success: &FactualStmtSuccess,
+        success: &VerifiedFactStmtIr,
     ) -> Result<LitexToLeanFactIr, RuntimeError> {
         self.build_litex_to_lean_ir_fact_from_success_with_context(
             success,
@@ -2385,7 +2522,7 @@ impl LitexToLeanIrBuilder<'_> {
 
     fn build_litex_to_lean_ir_projected_forall_statement(
         &self,
-        success: &FactualStmtSuccess,
+        success: &VerifiedFactStmtIr,
         source: LitexToLeanFactIr,
         mut excluded: HashSet<String>,
     ) -> Result<LitexToLeanStatementIr, RuntimeError> {
@@ -2602,7 +2739,7 @@ impl LitexToLeanIrBuilder<'_> {
 
     fn well_definedness_context_for_factual_success(
         &self,
-        success: &FactualStmtSuccess,
+        success: &VerifiedFactStmtIr,
     ) -> LitexToLeanIrConstructionContext {
         match success.underlying_verified_by() {
             VerifiedByResult::ForallProof(result) => LitexToLeanIrConstructionContext::default()
@@ -2622,9 +2759,10 @@ impl LitexToLeanIrBuilder<'_> {
                 evidence.proof.as_ref(),
                 context,
             )?;
-            if fact.proposition.to_string() != evidence.proof.stmt.to_string() {
+            let proof_fact = evidence.proof.fact();
+            if fact.proposition.to_string() != proof_fact.to_string() {
                 return Err(litex_to_lean_ir_error(
-                    &evidence.proof.stmt.line_file(),
+                    &proof_fact.line_file(),
                     "well-definedness certificate proof changed its proposition during IR lowering",
                 ));
             }
@@ -2807,14 +2945,14 @@ impl LitexToLeanIrBuilder<'_> {
 
     fn build_litex_to_lean_ir_fact_from_success_with_context(
         &self,
-        success: &FactualStmtSuccess,
+        success: &VerifiedFactStmtIr,
         context: &LitexToLeanIrConstructionContext,
     ) -> Result<LitexToLeanFactIr, RuntimeError> {
         Ok(LitexToLeanFactIr {
             storage: success.fact_id.into(),
-            proposition: success.stmt.clone(),
+            proposition: success.fact(),
             proof: self.build_litex_to_lean_ir_verified_by(
-                &success.stmt,
+                &success.fact(),
                 success.fact_id,
                 &success.verified_by,
                 context,

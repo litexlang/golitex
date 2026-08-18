@@ -735,7 +735,7 @@ impl Runtime {
                 continue;
             }
             return Ok(Some(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                     equal_fact.clone().into(),
                     "tuple reconstruction from known Cartesian-product membership".to_string(),
                     vec![membership_result],
@@ -879,7 +879,7 @@ impl Runtime {
                 self.verify_atomic_fact_as_builtin_rule_premise(&subset_fact, builtin_state)?;
             if subset_result.is_true() {
                 return Ok(Some(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                         equal_fact.clone().into(),
                         "set_minus_recovers_subset_from_relative_complement".to_string(),
                         vec![subset_result],
@@ -944,7 +944,7 @@ impl Runtime {
         }
 
         Ok(Some(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 equal_fact.clone().into(),
                 "finite_set_size_set_minus".to_string(),
                 vec![first_result, second_result],
@@ -979,7 +979,7 @@ impl Runtime {
         };
 
         Ok(Some(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 equal_fact.clone().into(),
                 "finite_set_size_union_inclusion_exclusion".to_string(),
                 step_results,
@@ -1014,7 +1014,7 @@ impl Runtime {
         };
 
         Ok(Some(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 equal_fact.clone().into(),
                 "finite_set_size_partition_by_intersection_and_difference".to_string(),
                 step_results,
@@ -1062,7 +1062,7 @@ impl Runtime {
         }
 
         Ok(Some(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 equal_fact.clone().into(),
                 "finite_set_size_set_minus_finite_subset".to_string(),
                 vec![subset_result, container_result, subset_finite_result],
@@ -1118,7 +1118,7 @@ impl Runtime {
             "finite_set_size_range"
         };
         Ok(Some(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 equal_fact.clone().into(),
                 rule.to_string(),
                 vec![start_result, end_result, order_result],
@@ -1151,7 +1151,7 @@ impl Runtime {
         }
 
         Ok(Some(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 equal_fact.clone().into(),
                 "power_set_finite_set_size_two_pow_finite_set_size_base".to_string(),
                 vec![base_result],
@@ -1168,14 +1168,14 @@ impl Runtime {
         let fact = equal_fact.clone().into();
         match evidence {
             Some(rule) => {
-                FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                VerifiedFactStmtIr::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     fact,
                     reason.to_string(),
                     BuiltinRuleEvidence::Set(rule),
                     Vec::new(),
                 )
             }
-            None => FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            None => VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 fact,
                 reason.to_string(),
                 Vec::new(),
@@ -1644,7 +1644,7 @@ impl Runtime {
             }
 
             return Ok(Some(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                     equal_fact.clone().into(),
                     "intersect_from_subset".to_string(),
                     vec![subset_result],
@@ -1712,7 +1712,7 @@ impl Runtime {
         }
 
         Ok(Some(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 equal_fact.clone().into(),
                 "intersect_literal_set_filter".to_string(),
                 steps,
@@ -1762,7 +1762,7 @@ impl Runtime {
         let known_sum_1 = self.verify_equal_fact_by_known_equality(&sum_fact_1);
         if known_sum_1.is_true() {
             return Ok(Some(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                     equal_fact.clone().into(),
                     "equality: a = c - b from known a + b = c".to_string(),
                     vec![known_sum_1],
@@ -1781,7 +1781,7 @@ impl Runtime {
         let known_sum_2 = self.verify_equal_fact_by_known_equality(&sum_fact_2);
         if known_sum_2.is_true() {
             return Ok(Some(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                     equal_fact.clone().into(),
                     "equality: a = c - b from known b + a = c".to_string(),
                     vec![known_sum_2],
@@ -1797,7 +1797,7 @@ impl Runtime {
         )?;
         if premise_result.is_true() {
             return Ok(Some(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                     equal_fact.clone().into(),
                     "equality: subtraction from complete addition-order disjunction".to_string(),
                     vec![premise_result],
@@ -1860,7 +1860,7 @@ impl Runtime {
         }
 
         Ok(Some(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 equal_fact.clone().into(),
                 "tuple equality from dimension and projections".to_string(),
                 steps,
@@ -1969,7 +1969,7 @@ impl Runtime {
         }
 
         Ok(Some(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 equal_fact.clone().into(),
                 "tuple equality from symbolic dimension and coordinates".to_string(),
                 vec![
@@ -2027,7 +2027,7 @@ impl Runtime {
         }
         if let Some(steps) = self.verify_builtin_rule_premises(&complete_premises, builtin_state)? {
             return Ok(Some(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                     equal_fact.clone().into(),
                     "cart equality from dimension and projections".to_string(),
                     steps,
@@ -2070,7 +2070,7 @@ impl Runtime {
         }
 
         Ok(Some(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 equal_fact.clone().into(),
                 "cart equality from dimension and projections".to_string(),
                 steps,
@@ -2174,7 +2174,7 @@ impl Runtime {
                         &empty_order,
                     )?;
                 if comparison.is_true() {
-                    sub = FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    sub = VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                         not_nonempty.clone().into(),
                         "integer interval emptiness by number comparison".to_string(),
                         vec![comparison],
@@ -2188,7 +2188,7 @@ impl Runtime {
         }
 
         Ok(Some(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_label_and_steps(
                 equal_fact.clone().into(),
                 InferResult::new(),
                 "empty_set_equality_from_not_nonempty".to_string(),
@@ -2222,7 +2222,7 @@ impl Runtime {
         }
 
         Ok(Some(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_label_and_steps(
                 equal_fact.clone().into(),
                 InferResult::new(),
                 "finite_set_size_zero_implies_empty_set".to_string(),
@@ -2312,7 +2312,7 @@ impl Runtime {
         )?;
         if complete_result.is_true() {
             return Ok(Some(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                     equal_fact.clone().into(),
                     "equality from a >= b and b >= a".to_string(),
                     vec![complete_result],
@@ -2343,7 +2343,7 @@ impl Runtime {
         steps.push(right_ge_left);
 
         Ok(Some(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 equal_fact.clone().into(),
                 "equality from a >= b and b >= a".to_string(),
                 steps,
@@ -2407,7 +2407,7 @@ impl Runtime {
         };
 
         Ok(Some(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 equal_fact.clone().into(),
                 "division elimination: from a / b = c and b != 0, prove a = c * b".to_string(),
                 vec![nonzero_result],
@@ -2486,7 +2486,7 @@ impl Runtime {
         };
 
         Ok(Some(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 equal_fact.clone().into(),
                 "division introduction: from a = b * c and b != 0, prove a / b = c".to_string(),
                 vec![nonzero_result],
@@ -2800,7 +2800,7 @@ impl Runtime {
                 continue;
             }
             return Ok(Some(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                     equal_fact.clone().into(),
                     format!(
                         "equality from registered antisymmetric prop `{}`",

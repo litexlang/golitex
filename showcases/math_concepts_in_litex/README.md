@@ -1,6 +1,6 @@
 # Math Concepts in Litex
 
-This collection contains fourteen independent, executable showcases ordered as
+This collection contains fifteen independent, executable showcases ordered as
 a reader path from school mathematics to early undergraduate numerical work.
 The numeric prefixes are editorial order only: the projects do not import one
 another.
@@ -29,6 +29,7 @@ Every directory publishes the same five artifacts:
 | 12 | `12_ordinary_differential_equations_in_nutshell` | quadratic family and the IVP `y' = 2x, y(0)=1` |
 | 13 | `13_numerical_analysis_in_nutshell` | Newton iteration with a proved gap bound |
 | 14 | `14_tarski_geometry_from_axioms` | GeoCoq-aligned SST Chapters 2–11, Euclid I.5, and exact angle-based SAS |
+| 16 | `16_probability_theory` | sigma-algebras, Kolmogorov countable additivity, random variables, and distributions |
 
 Run any project from the repository root:
 
@@ -45,7 +46,8 @@ default theorem-facing form; structs are for values that must be constructed,
 stored, passed, compared, or returned.
 
 Published files contain no direct `trust`, local axiom, Lean `axiom`,
-`sorry`, or `admit`. Lean analogies use only the automatically loaded
-Prelude and state missing library mathematics as explicit structure fields or
-theorem hypotheses. Proof journals and other iteration records belong under
+`sorry`, or `admit`. Lean analogies state missing mathematics as explicit
+structure fields or theorem hypotheses; analytic comparisons may use the
+repository's Mathlib environment for standard objects such as real series.
+Proof journals and other iteration records belong under
 each project's `.drafts/` directory and are Git-ignored.

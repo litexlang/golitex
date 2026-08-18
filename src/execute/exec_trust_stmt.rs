@@ -64,7 +64,11 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         self.run_in_local_env_and_commit(|rt| {
             let infer_result = rt.exec_trust_stmt_affect_environment(trust_stmt)?;
-            Ok(NonFactualStmtSuccess::new(trust_stmt.clone().into(), infer_result, vec![]).into())
+            Ok(VerifiedUnsafeStmtIr::TrustStmt {
+                statement: trust_stmt.clone(),
+                common: VerifiedStmtCommonIr::new(infer_result, vec![]),
+            }
+            .into())
         })
     }
 }

@@ -53,12 +53,11 @@ impl Runtime {
         });
 
         match result {
-            Ok((inside_results, proof_scope)) => Ok(NonFactualStmtSuccess::new(
-                stmt.clone().into(),
-                InferResult::new(),
-                inside_results,
-            )
-            .with_local_proof_scope_verification(proof_scope)
+            Ok((inside_results, proof_scope)) => Ok(VerifiedProofBlockStmtIr::SketchStmt {
+                statement: stmt.clone(),
+                common: VerifiedStmtCommonIr::new(InferResult::new(), inside_results),
+                local_scope: Some(proof_scope),
+            }
             .into()),
             Err(inside_results_error) => Err(inside_results_error),
         }

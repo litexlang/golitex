@@ -80,7 +80,7 @@ impl Runtime {
                 }
                 if evidence.is_some() {
                     Ok(
-                        FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                             not_in_fact.clone().into(),
                             "set-minus membership excludes the right operand".to_string(),
                             Vec::new(),
@@ -229,7 +229,7 @@ impl Runtime {
             (Obj::ImaginaryUnit(_), Obj::StandardSet(StandardSet::C))
         ) {
             return Ok(
-                FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                VerifiedFactStmtIr::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
                     "native imaginary unit is in C".to_string(),
                     BuiltinRuleEvidence::NativeConstantMembership(
@@ -257,7 +257,7 @@ impl Runtime {
                     _ => unreachable!(),
                 };
                 return Ok(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    VerifiedFactStmtIr::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         in_fact.clone().into(),
                         "native mathematical constant is a real".to_string(),
                         BuiltinRuleEvidence::NativeConstantMembership(rule),
@@ -477,7 +477,7 @@ impl Runtime {
                 }
                 if let Some(evidence) = evidence {
                     Ok(
-                        FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                             in_fact.clone().into(),
                             "absolute value of a known nonzero integer is a positive natural"
                                 .to_string(),
@@ -519,7 +519,7 @@ impl Runtime {
                     | StandardSet::RPos,
                 ),
             ) => Ok(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                     in_fact.clone().into(),
                     "gcd of a non-all-zero integer pair is a positive integer".to_string(),
                     Vec::new(),
@@ -536,7 +536,7 @@ impl Runtime {
                     | StandardSet::C,
                 ),
             ) => Ok(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                     in_fact.clone().into(),
                     "lcm of two integers is a nonnegative integer".to_string(),
                     Vec::new(),
@@ -547,7 +547,7 @@ impl Runtime {
                 Obj::Floor(_) | Obj::Ceil(_),
                 Obj::StandardSet(StandardSet::Z | StandardSet::Q | StandardSet::R | StandardSet::C),
             ) => Ok(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                     in_fact.clone().into(),
                     "floor and ceil return integers".to_string(),
                     Vec::new(),
@@ -555,7 +555,7 @@ impl Runtime {
                 .into(),
             ),
             (Obj::Min(_) | Obj::Max(_), Obj::StandardSet(StandardSet::R | StandardSet::C)) => Ok(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                     in_fact.clone().into(),
                     "minimum and maximum of real arguments are real".to_string(),
                     Vec::new(),
@@ -566,7 +566,7 @@ impl Runtime {
                 Obj::Exp(_),
                 Obj::StandardSet(StandardSet::RPos | StandardSet::R | StandardSet::C),
             ) => Ok(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                     in_fact.clone().into(),
                     "real exponential values are positive reals".to_string(),
                     Vec::new(),
@@ -574,7 +574,7 @@ impl Runtime {
                 .into(),
             ),
             (Obj::Ln(_), Obj::StandardSet(StandardSet::R | StandardSet::C)) => Ok(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                     in_fact.clone().into(),
                     "natural logarithm of a positive real is real".to_string(),
                     Vec::new(),
@@ -585,7 +585,7 @@ impl Runtime {
                 Obj::Sign(_),
                 Obj::StandardSet(StandardSet::Z | StandardSet::Q | StandardSet::R | StandardSet::C),
             ) => Ok(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                     in_fact.clone().into(),
                     "the real sign function returns an integer".to_string(),
                     Vec::new(),
@@ -605,7 +605,7 @@ impl Runtime {
                     | StandardSet::RPos,
                 ),
             ) => Ok(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                     in_fact.clone().into(),
                     "factorial of a natural number is a positive integer".to_string(),
                     Vec::new(),

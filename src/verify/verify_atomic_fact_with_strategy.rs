@@ -151,7 +151,7 @@ impl Runtime {
             }
         }
 
-        Ok(FactualStmtSuccess::new_with_verified_by_known_fact(
+        Ok(VerifiedFactStmtIr::new_with_verified_by_known_fact(
             atomic_fact.clone().into(),
             VerifiedByResult::cited_stmt(
                 atomic_fact.clone().into(),

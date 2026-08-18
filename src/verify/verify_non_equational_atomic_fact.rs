@@ -80,7 +80,7 @@ impl Runtime {
                 if self.verify_number_comparison_builtin_rule(atomic_fact) != Some(true) {
                     return StmtUnknown::new().into();
                 }
-                FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                VerifiedFactStmtIr::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     atomic_fact.clone().into(),
                     "number comparison".to_string(),
                     BuiltinRuleEvidence::ClosedNumericComparison(
@@ -261,7 +261,7 @@ impl Runtime {
         for env in self.iter_environments_from_top() {
             if env.known_reflexive_props.contains_key(&prop_name) {
                 return Ok(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                         atomic_fact.clone().into(),
                         "registered reflexive prop".to_string(),
                         Vec::new(),
@@ -321,19 +321,11 @@ impl Runtime {
         fallback: StmtResult,
     ) -> Result<StmtResult, RuntimeError> {
         match alternate_result {
-            StmtResult::Success(VerifiedStmtIr {
-                verification: VerifiedStmtVerificationIr::Fact(inner_success),
-                ..
-            }) => {
-                let FactualStmtSuccess {
-                    verified_by,
-                    infers: _,
-                    stmt: _,
-                    ..
-                } = inner_success;
-                Ok(FactualStmtSuccess::new_with_verified_by_known_fact(
+            StmtResult::Success(VerifiedStmtIr::Fact(inner_success)) => {
+                let (_, data) = inner_success.into_parts();
+                Ok(VerifiedFactStmtIr::new_with_verified_by_known_fact(
                     original.clone().into(),
-                    verified_by,
+                    data.verified_by,
                     Vec::new(),
                 )
                 .into())

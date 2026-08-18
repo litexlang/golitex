@@ -19,11 +19,10 @@ impl Runtime {
             .map_err(|e| {
                 exec_stmt_error_with_stmt_and_cause(def_abstract_prop_stmt.clone().into(), e)
             })?;
-        Ok(NonFactualStmtSuccess::new(
-            def_abstract_prop_stmt.clone().into(),
-            infer_result,
-            inside_results,
-        )
+        Ok(VerifiedDefPredicateStmtIr::DefAbstractPropStmt {
+            statement: def_abstract_prop_stmt.clone(),
+            common: VerifiedStmtCommonIr::new(infer_result, inside_results),
+        }
         .into())
     }
 
@@ -69,10 +68,11 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         let infer_result =
             self.exec_def_abstract_prop_stmt_affect_environment(def_abstract_prop_stmt)?;
-        Ok(
-            NonFactualStmtSuccess::new(def_abstract_prop_stmt.clone().into(), infer_result, vec![])
-                .into(),
-        )
+        Ok(VerifiedDefPredicateStmtIr::DefAbstractPropStmt {
+            statement: def_abstract_prop_stmt.clone(),
+            common: VerifiedStmtCommonIr::new(infer_result, vec![]),
+        }
+        .into())
     }
 }
 

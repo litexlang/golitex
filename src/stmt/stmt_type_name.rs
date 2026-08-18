@@ -214,6 +214,12 @@ impl DefThmStmt {
     }
 }
 
+impl AxiomStmt {
+    pub fn stmt_type_name(&self) -> String {
+        "AxiomStmt".to_string()
+    }
+}
+
 impl UseStrategyStmt {
     pub fn stmt_type_name(&self) -> String {
         "UseStrategyStmt".to_string()
@@ -541,6 +547,12 @@ impl ByDefStmt {
 impl DefThmStmt {
     pub fn output_type_string() -> String {
         "theorem".to_string()
+    }
+}
+
+impl AxiomStmt {
+    pub fn output_type_string() -> String {
+        "axiom".to_string()
     }
 }
 

@@ -1186,6 +1186,21 @@ $axiom_prop(3)
         "axiom output should identify the declaration as an axiom:\n{}",
         run_output
     );
+    assert!(matches!(
+        stmt_results[1].statement(),
+        Some(Stmt::AxiomStmt(_))
+    ));
+    assert!(runtime.top_level_env().defined_thm_stmts.is_empty());
+    assert!(runtime
+        .top_level_env()
+        .defined_axiom_stmts
+        .contains_key("axiom_prop_all"));
+    assert!(runtime
+        .get_axiom_definition_by_name("axiom_prop_all")
+        .is_some());
+    assert!(runtime
+        .get_thm_definition_by_name("axiom_prop_all")
+        .is_none());
 }
 
 #[test]
@@ -1284,7 +1299,7 @@ axiom strict_axiom:
         run_output
     );
     assert!(
-        run_output.contains(DefThmStmt::strict_mode_rejection_message()),
+        run_output.contains(AxiomStmt::strict_mode_rejection_message()),
         "strict mode should report the axiom boundary:\n{}",
         run_output
     );
@@ -1318,7 +1333,7 @@ axiom strict_axiom:
         output
     );
     assert!(output.contains("\"result\": \"error\""));
-    assert!(output.contains(DefThmStmt::strict_mode_rejection_message()));
+    assert!(output.contains(AxiomStmt::strict_mode_rejection_message()));
 }
 
 #[test]
@@ -2886,10 +2901,8 @@ fn error_output_preserves_failed_step_and_step_indexes_in_all_styles() {
     let (stmt_results, runtime_error) = run_source_code("do_nothing", &mut runtime);
     assert!(runtime_error.is_none());
     let failed_step = stmt_results[0]
-        .non_factual_success()
-        .expect("do_nothing should have a non-factual result")
-        .stmt
-        .clone();
+        .statement()
+        .expect("do_nothing should have a successful statement result");
     let unknown: StmtResult = StmtUnknown::new().into();
     let error: RuntimeError = UnknownRuntimeError(RuntimeErrorStruct::new_with_output(
         Some(failed_step.clone()),

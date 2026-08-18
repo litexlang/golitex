@@ -35,7 +35,7 @@ impl Runtime {
         }
 
         Ok(
-            (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            (VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 forall_iff.clone().into(),
                 "forall iff: then=>iff and iff=>then verified".to_string(),
                 step_results,

@@ -23,7 +23,7 @@ impl Runtime {
         }
 
         Ok(Some(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 fact.clone().into(),
                 format!(
                     "{} by its builtin function-property definition",
@@ -180,11 +180,10 @@ impl Runtime {
         infer_result.new_infer_result_inside(codomain_result.infer_result());
 
         Ok(Some(
-            NonFactualStmtSuccess::new(
-                DoNothingStmt::new(fact.line_file()).into(),
-                infer_result,
-                Vec::new(),
-            )
+            VerifiedCommandStmtIr::DoNothingStmt {
+                statement: DoNothingStmt::new(fact.line_file()),
+                common: VerifiedStmtCommonIr::new(infer_result, Vec::new()),
+            }
             .into(),
         ))
     }

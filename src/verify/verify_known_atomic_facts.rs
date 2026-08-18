@@ -694,7 +694,7 @@ impl Runtime {
             return result;
         }
         citation.fact_transformation = Some(fact_transformation);
-        FactualStmtSuccess::new_with_verified_by_known_fact(
+        VerifiedFactStmtIr::new_with_verified_by_known_fact(
             goal.clone().into(),
             VerifiedByResult::Fact(citation),
             Vec::new(),
@@ -735,7 +735,7 @@ impl Runtime {
         {
             for obj in all_objs_equal_to_arg.iter() {
                 if let Some(known_atomic_fact) = known_facts_map.get(obj) {
-                    return Ok((FactualStmtSuccess::new_with_verified_by_known_fact(
+                    return Ok((VerifiedFactStmtIr::new_with_verified_by_known_fact(
                         atomic_fact.clone().into(),
                         self.cited_known_atomic_fact(
                             atomic_fact,
@@ -770,7 +770,7 @@ impl Runtime {
                     if let Some(known_atomic_fact) =
                         known_facts_map.get(&(obj0.clone(), obj1.clone()))
                     {
-                        return Ok((FactualStmtSuccess::new_with_verified_by_known_fact(
+                        return Ok((VerifiedFactStmtIr::new_with_verified_by_known_fact(
                             atomic_fact.clone().into(),
                             self.cited_known_atomic_fact(
                                 atomic_fact,
@@ -800,7 +800,7 @@ impl Runtime {
                             )
                         });
                 if args_match {
-                    return Ok((FactualStmtSuccess::new_with_verified_by_known_fact(
+                    return Ok((VerifiedFactStmtIr::new_with_verified_by_known_fact(
                         atomic_fact.clone().into(),
                         self.cited_known_atomic_fact(
                             atomic_fact,
@@ -826,7 +826,7 @@ impl Runtime {
                         if let Some(known_atomic_fact) =
                             known_facts_map.get(&(obj0.clone(), obj1.clone()))
                         {
-                            return Ok((FactualStmtSuccess::new_with_verified_by_known_fact(
+                            return Ok((VerifiedFactStmtIr::new_with_verified_by_known_fact(
                                 atomic_fact.clone().into(),
                                 VerifiedByResult::cited_fact(
                                     atomic_fact.clone().into(),
@@ -926,7 +926,7 @@ impl Runtime {
                     }
                 }
                 if all_args_match {
-                    return Ok((FactualStmtSuccess::new_with_verified_by_known_fact(
+                    return Ok((VerifiedFactStmtIr::new_with_verified_by_known_fact(
                         atomic_fact.clone().into(),
                         self.cited_known_atomic_fact(atomic_fact, known_fact, module_names, None),
                         Vec::new(),
@@ -1021,7 +1021,7 @@ impl Runtime {
             }
             if all_args_match {
                 return Ok(Some(
-                    FactualStmtSuccess::new_with_verified_by_known_fact(
+                    VerifiedFactStmtIr::new_with_verified_by_known_fact(
                         atomic_fact.clone().into(),
                         VerifiedByResult::cited_fact(
                             atomic_fact.clone().into(),

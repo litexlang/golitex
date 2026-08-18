@@ -161,7 +161,7 @@ impl Runtime {
         }
 
         Ok(Some(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
                 "positive even integer is greater than one".to_string(),
                 vec![membership_result, even_result],
@@ -243,7 +243,7 @@ impl Runtime {
                 steps.push(first_result);
                 steps.push(second_result);
                 return Ok(Some(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                         atomic_fact.clone().into(),
                         "order: transitivity through a shared ordered numeric middle term"
                             .to_string(),
@@ -280,7 +280,7 @@ impl Runtime {
                 self.verify_known_or_concrete_finite_set_membership(&member_fact)?;
             if member_result.is_true() {
                 return Ok(Some(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                         atomic_fact.clone().into(),
                         "finite_set_max: every member is at most the maximum".to_string(),
                         vec![member_result],
@@ -307,7 +307,7 @@ impl Runtime {
                 self.verify_known_or_concrete_finite_set_membership(&member_fact)?;
             if member_result.is_true() {
                 return Ok(Some(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                         atomic_fact.clone().into(),
                         "finite_set_max: every member is at most a known-equal maximum".to_string(),
                         vec![equality_result, member_result],
@@ -328,7 +328,7 @@ impl Runtime {
                 self.verify_known_or_concrete_finite_set_membership(&member_fact)?;
             if member_result.is_true() {
                 return Ok(Some(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                         atomic_fact.clone().into(),
                         "finite_set_min: the minimum is at most every member".to_string(),
                         vec![member_result],
@@ -355,7 +355,7 @@ impl Runtime {
                 self.verify_known_or_concrete_finite_set_membership(&member_fact)?;
             if member_result.is_true() {
                 return Ok(Some(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                         atomic_fact.clone().into(),
                         "finite_set_min: a known-equal minimum is at most every member".to_string(),
                         vec![equality_result, member_result],
@@ -383,7 +383,7 @@ impl Runtime {
             return Ok(StmtUnknown::new().into());
         }
         Ok(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 member_fact.clone().into(),
                 "membership by concrete finite-set structure".to_string(),
                 Vec::new(),
@@ -468,7 +468,7 @@ impl Runtime {
                     if strict_result.is_true() {
                         steps.push(strict_result);
                         return Ok(Some(
-                            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                                 atomic_fact.clone().into(),
                                 "integer difference: a < b gives b - a >= 1".to_string(),
                                 steps,
@@ -497,7 +497,7 @@ impl Runtime {
             if strict_result.is_true() {
                 steps.push(strict_result);
                 return Ok(Some(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                         atomic_fact.clone().into(),
                         "integer adjacency: a < b + 1 gives a <= b".to_string(),
                         steps,
@@ -522,7 +522,7 @@ impl Runtime {
             if strict_result.is_true() {
                 steps.push(strict_result);
                 return Ok(Some(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                         atomic_fact.clone().into(),
                         "integer successor: a < b gives a + 1 <= b".to_string(),
                         steps,
@@ -547,7 +547,7 @@ impl Runtime {
             if strict_result.is_true() {
                 steps.push(strict_result);
                 return Ok(Some(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                         atomic_fact.clone().into(),
                         "integer predecessor: a < b gives a <= b - 1".to_string(),
                         steps,
@@ -593,7 +593,7 @@ impl Runtime {
             steps.push(lower_result);
             steps.push(upper_result);
             return Ok(Some(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                     equal_fact.clone().into(),
                     "integer singleton interval: n <= x < n + 1 gives x = n".to_string(),
                     steps,
@@ -629,7 +629,7 @@ impl Runtime {
             steps.push(lower_result);
             steps.push(upper_result);
             return Ok(Some(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                     equal_fact.clone().into(),
                     "integer successor singleton interval: n < x <= n + 1 gives x = n + 1"
                         .to_string(),
@@ -684,7 +684,7 @@ impl Runtime {
             return Ok(None);
         };
         Ok(Some(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 or_fact.clone().into(),
                 reason.to_string(),
                 steps,

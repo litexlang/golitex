@@ -1870,11 +1870,12 @@ impl Runtime {
             )?;
 
         let reported_store_facts = infer_result.store_fact_outputs().to_vec();
-        Ok(
-            (NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![])
-                .with_reported_store_facts(reported_store_facts))
-            .into(),
-        )
+        Ok(VerifiedCommandStmtIr::EvalStmt {
+            statement: stmt.clone(),
+            common: VerifiedStmtCommonIr::new(infer_result, vec![]),
+            reported_store_facts,
+        }
+        .into())
     }
 }
 

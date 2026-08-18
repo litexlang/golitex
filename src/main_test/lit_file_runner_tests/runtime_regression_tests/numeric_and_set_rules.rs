@@ -109,7 +109,7 @@ forall a Z:
         let source_membership = rule.subgoals[0]
             .factual_success()
             .expect("each projection should retain its source membership");
-        let Fact::AtomicFact(AtomicFact::InFact(source_in_fact)) = &source_membership.stmt else {
+        let Fact::AtomicFact(AtomicFact::InFact(source_in_fact)) = source_membership.fact() else {
             panic!("each projection subgoal should be a membership fact: {source_membership:?}");
         };
         assert!(matches!(
@@ -137,7 +137,7 @@ forall a Z:
     let source_membership = rule.subgoals[0]
         .factual_success()
         .expect("the builtin should retain its known source membership");
-    let Fact::AtomicFact(AtomicFact::InFact(source_in_fact)) = &source_membership.stmt else {
+    let Fact::AtomicFact(AtomicFact::InFact(source_in_fact)) = source_membership.fact() else {
         panic!("the builtin subgoal should be a membership fact: {source_membership:?}");
     };
     assert!(matches!(

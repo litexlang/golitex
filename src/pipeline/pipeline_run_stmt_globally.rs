@@ -135,7 +135,11 @@ fn run_isolated_import(
         runtime.module_manager = module_manager_before;
         return Err(error);
     }
-    Ok(NonFactualStmtSuccess::new_with_stmt(import.clone().into()).into())
+    Ok(VerifiedCommandStmtIr::ImportStmt {
+        statement: import.clone(),
+        common: VerifiedStmtCommonIr::new(InferResult::new(), vec![]),
+    }
+    .into())
 }
 
 fn run_repository_module_prefix(

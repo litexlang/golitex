@@ -25,10 +25,12 @@ impl Runtime {
                     };
                     infer_result.new_infer_result_inside(one_fact_infer_result);
                 }
-                Ok(
-                    NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, inside_results)
-                        .into(),
-                )
+                Ok(VerifiedByStmtIr::ByInducStmt {
+                    statement: stmt.clone(),
+                    common: VerifiedStmtCommonIr::new(infer_result, inside_results),
+                    verification: None,
+                }
+                .into())
             })
         };
 
@@ -54,9 +56,14 @@ impl Runtime {
                 })?;
         let by_verification =
             self.by_induc_verification_result(stmt, &corresponding_forall_fact)?;
-        if let Some(success) = non_err_after_body.non_factual_success_mut() {
-            success.by_verification = Some(by_verification.into());
-        }
+        let Some(VerifiedStmtIr::By(VerifiedByStmtIr::ByInducStmt {
+            verification: result_verification,
+            ..
+        })) = non_err_after_body.non_factual_ir_mut()
+        else {
+            unreachable!("induction must emit its matching IR variant")
+        };
+        *result_verification = Some(by_verification);
         let infer_after_store = self
             .store_with_well_defined_verification_and_infer_with_default_verify_state(
                 corresponding_forall_fact,
@@ -83,7 +90,12 @@ impl Runtime {
             corresponding_forall_fact,
             InferReason::VerifiedStatement,
         )?;
-        Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![]).into())
+        Ok(VerifiedByStmtIr::ByInducStmt {
+            statement: stmt.clone(),
+            common: VerifiedStmtCommonIr::new(infer_result, vec![]),
+            verification: None,
+        }
+        .into())
     }
 }
 
@@ -659,10 +671,12 @@ impl Runtime {
             inside_results.extend(rt.exec_structured_induc_base_proof(stmt)?);
             inside_results.extend(rt.exec_structured_induc_step_proof(stmt)?);
 
-            Ok(
-                NonFactualStmtSuccess::new(stmt.clone().into(), InferResult::new(), inside_results)
-                    .into(),
-            )
+            Ok(VerifiedByStmtIr::ByInducStmt {
+                statement: stmt.clone(),
+                common: VerifiedStmtCommonIr::new(InferResult::new(), inside_results),
+                verification: None,
+            }
+            .into())
         })
     }
 

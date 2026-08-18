@@ -96,7 +96,7 @@ impl Runtime {
         };
 
         Ok(
-            FactualStmtSuccess::new_with_verified_by_builtin_strategy_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_strategy_recording_stmt(
                 fact.clone().into(),
                 reason.to_string(),
                 child_results,
@@ -138,7 +138,7 @@ impl Runtime {
                     return Ok(StmtUnknown::new().into());
                 }
                 Ok(
-                    FactualStmtSuccess::new_with_verified_by_builtin_strategy_recording_stmt(
+                    VerifiedFactStmtIr::new_with_verified_by_builtin_strategy_recording_stmt(
                         fact.clone().into(),
                         "nonempty-set strategy: closed integer range has ordered endpoints"
                             .to_string(),
@@ -161,7 +161,7 @@ impl Runtime {
                     return Ok(StmtUnknown::new().into());
                 }
                 Ok(
-                    FactualStmtSuccess::new_with_verified_by_builtin_strategy_recording_stmt(
+                    VerifiedFactStmtIr::new_with_verified_by_builtin_strategy_recording_stmt(
                         fact.clone().into(),
                         "nonempty-set strategy: half-open integer range has strictly ordered endpoints"
                             .to_string(),
@@ -200,7 +200,7 @@ impl Runtime {
                     "nonempty-set strategy: real interval with an open endpoint has strictly ordered endpoints"
                 };
                 Ok(
-                    FactualStmtSuccess::new_with_verified_by_builtin_strategy_recording_stmt(
+                    VerifiedFactStmtIr::new_with_verified_by_builtin_strategy_recording_stmt(
                         fact.clone().into(),
                         reason.to_string(),
                         vec![result],
@@ -214,7 +214,7 @@ impl Runtime {
                     let result = self.verify_is_nonempty_set_strategy_child(&child)?;
                     if result.is_true() {
                         return Ok(
-                            FactualStmtSuccess::new_with_verified_by_builtin_strategy_recording_stmt(
+                            VerifiedFactStmtIr::new_with_verified_by_builtin_strategy_recording_stmt(
                                 fact.clone().into(),
                                 "nonempty-set strategy: a union has a nonempty side".to_string(),
                                 vec![result],
@@ -237,7 +237,7 @@ impl Runtime {
                     results.push(result);
                 }
                 Ok(
-                    FactualStmtSuccess::new_with_verified_by_builtin_strategy_recording_stmt(
+                    VerifiedFactStmtIr::new_with_verified_by_builtin_strategy_recording_stmt(
                         fact.clone().into(),
                         "nonempty-set strategy: all Cartesian factors are nonempty".to_string(),
                         results,
@@ -286,7 +286,7 @@ impl Runtime {
             return Ok(StmtUnknown::new().into());
         }
         Ok(
-            FactualStmtSuccess::new_with_verified_by_builtin_strategy_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_strategy_recording_stmt(
                 fact.clone().into(),
                 reason.to_string(),
                 vec![result],

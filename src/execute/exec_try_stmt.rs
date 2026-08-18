@@ -9,10 +9,11 @@ impl Runtime {
         let committed_results =
             self.run_in_local_env_and_commit(|rt| rt.exec_try_proof_steps(stmt))?;
 
-        Ok(
-            NonFactualStmtSuccess::new(stmt.clone().into(), InferResult::new(), committed_results)
-                .into(),
-        )
+        Ok(VerifiedProofBlockStmtIr::TryStmt {
+            statement: stmt.clone(),
+            common: VerifiedStmtCommonIr::new(InferResult::new(), committed_results),
+        }
+        .into())
     }
 
     fn exec_try_proof_steps(&mut self, stmt: &TryStmt) -> Result<Vec<StmtResult>, RuntimeError> {
@@ -79,6 +80,7 @@ fn first_disallowed_control_stmt(stmt: &Stmt) -> Option<(Stmt, &'static str)> {
             first_disallowed_control_stmt_in_template_def(&s.template_def_stmt)
         }
         Stmt::DefThmStmt(s) => first_disallowed_control_stmt_in_stmts(&s.prove_process),
+        Stmt::AxiomStmt(_) => None,
         Stmt::DefStrategyStmt(s) => first_disallowed_control_stmt_in_stmts(&s.prove_process),
         Stmt::By(ByStmt::ByCasesStmt(s)) => {
             for proof in s.proofs.iter() {

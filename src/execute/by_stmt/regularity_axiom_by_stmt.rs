@@ -66,12 +66,11 @@ impl Runtime {
             vec![("nonempty".to_string(), nonempty_fact.to_string(), true)],
             regularity_fact_string,
         );
-        Ok(NonFactualStmtSuccess::new_with_by_verification(
-            stmt.clone().into(),
-            infer_result,
-            vec![nonempty_result],
-            ByVerificationResult::RegularityAxiom(by_verification),
-        )
+        Ok(VerifiedByStmtIr::ByRegularityAxiomStmt {
+            statement: stmt.clone(),
+            common: VerifiedStmtCommonIr::new(infer_result, vec![nonempty_result]),
+            verification: Some(by_verification),
+        }
         .into())
     }
 
@@ -85,7 +84,12 @@ impl Runtime {
             regularity_fact,
             InferReason::VerifiedStatement,
         )?;
-        Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![]).into())
+        Ok(VerifiedByStmtIr::ByRegularityAxiomStmt {
+            statement: stmt.clone(),
+            common: VerifiedStmtCommonIr::new(infer_result, vec![]),
+            verification: None,
+        }
+        .into())
     }
 }
 

@@ -99,14 +99,25 @@ impl Runtime {
         {
             return Err(name_already_used_error(&def_thm_stmt.name, "thm"));
         }
-        let role = match def_thm_stmt.kind {
-            DefThmKind::Theorem => SymbolRole::Theorem,
-            DefThmKind::Axiom => SymbolRole::Axiom,
-        };
-        self.register_declared_symbol(&def_thm_stmt.name, role)?;
+        self.register_declared_symbol(&def_thm_stmt.name, SymbolRole::Theorem)?;
         let env = self.top_level_env();
         env.defined_thm_stmts
             .insert(def_thm_stmt.name.clone(), def_thm_stmt.clone());
+        Ok(())
+    }
+
+    pub fn store_axiom(&mut self, axiom_stmt: &AxiomStmt) -> Result<(), RuntimeError> {
+        if self
+            .top_level_env()
+            .defined_axiom_stmts
+            .contains_key(&axiom_stmt.name)
+        {
+            return Err(name_already_used_error(&axiom_stmt.name, "axiom"));
+        }
+        self.register_declared_symbol(&axiom_stmt.name, SymbolRole::Axiom)?;
+        let env = self.top_level_env();
+        env.defined_axiom_stmts
+            .insert(axiom_stmt.name.clone(), axiom_stmt.clone());
         Ok(())
     }
 

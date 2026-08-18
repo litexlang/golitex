@@ -106,7 +106,7 @@ impl Runtime {
             return Ok(StmtUnknown::new().into());
         };
         Ok(
-            FactualStmtSuccess::new_with_verified_by_builtin_strategy_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_strategy_recording_stmt(
                 fact.clone().into(),
                 "set-membership strategy: constructor membership decomposition".to_string(),
                 children,
@@ -238,7 +238,7 @@ impl Runtime {
         let target: Fact = fact.clone().into();
         if matches!(fact.set, Obj::SetBuilder(_)) {
             return Ok(
-                FactualStmtSuccess::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
+                VerifiedFactStmtIr::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
                     target.clone(),
                     "set-builder membership strategy: unfold one set definition and verify its atomic obligations"
                         .to_string(),
@@ -254,7 +254,7 @@ impl Runtime {
             );
         }
         Ok(
-            FactualStmtSuccess::new_with_verified_by_builtin_strategy_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_strategy_recording_stmt(
                 target,
                 "set-builder membership strategy: unfold one set definition and verify its atomic obligations"
                     .to_string(),
@@ -315,7 +315,7 @@ impl Runtime {
             return Ok(StmtUnknown::new().into());
         };
         Ok(
-            FactualStmtSuccess::new_with_verified_by_builtin_strategy_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_strategy_recording_stmt(
                 fact.clone().into(),
                 "set-containment strategy: constructor containment decomposition".to_string(),
                 children,

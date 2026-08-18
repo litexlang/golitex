@@ -252,7 +252,7 @@ impl CachedWellDefinedObj {
 pub struct WellDefinedFactProof {
     pub id: WellDefinedFactId,
     pub proposition: Fact,
-    pub proof: Rc<FactualStmtSuccess>,
+    pub proof: Rc<VerifiedFactStmtIr>,
     pub ambient_binder_scope_ids: Vec<WellDefinedBinderScopeId>,
 }
 
@@ -260,7 +260,7 @@ impl WellDefinedFactProof {
     pub fn new(
         id: WellDefinedFactId,
         proposition: Fact,
-        proof: Rc<FactualStmtSuccess>,
+        proof: Rc<VerifiedFactStmtIr>,
         ambient_binder_scope_ids: Vec<WellDefinedBinderScopeId>,
     ) -> Self {
         Self {

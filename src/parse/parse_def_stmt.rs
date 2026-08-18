@@ -1586,26 +1586,26 @@ impl Runtime {
         args: &[Obj],
         line_file: &LineFile,
     ) -> Result<Option<ExistFactEnum>, RuntimeError> {
-        let Some(thm) = self.get_thm_definition_by_name(&thm_name.to_string()) else {
+        let Some(forall_fact) = self.get_thm_or_axiom_forall_fact_by_name(&thm_name.to_string())
+        else {
             // Reserved builtin theorem interfaces are execution-owned. An
             // unresolved user/imported theorem likewise receives its normal
             // authoritative diagnostic during execution.
             return Ok(None);
         };
-        if thm.forall_fact.then_facts.len() != 1 {
+        if forall_fact.then_facts.len() != 1 {
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
                     format!(
                         "obtain from thm `{}` requires exactly one direct theorem conclusion, got {}",
                         thm_name,
-                        thm.forall_fact.then_facts.len()
+                        forall_fact.then_facts.len()
                     ),
                     line_file.clone(),
                 ),
             )));
         }
-        let ExistOrAndChainAtomicFact::ExistFact(exist_fact) = &thm.forall_fact.then_facts[0]
-        else {
+        let ExistOrAndChainAtomicFact::ExistFact(exist_fact) = &forall_fact.then_facts[0] else {
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
                     format!(
@@ -1627,8 +1627,7 @@ impl Runtime {
                 ),
             )));
         }
-        let Ok(param_to_arg_map) =
-            self.params_to_arg_map(&thm.forall_fact.params_def_with_type, args)
+        let Ok(param_to_arg_map) = self.params_to_arg_map(&forall_fact.params_def_with_type, args)
         else {
             // Preview data is optional. The executor owns theorem arity and
             // argument diagnostics through the ordinary `by thm` path.

@@ -2,43 +2,6 @@ use crate::prelude::*;
 use std::fmt;
 use std::rc::Rc;
 
-#[derive(Debug)]
-pub struct NonFactualStmtSuccess {
-    pub stmt: Stmt,
-    pub well_definedness: WellDefinednessCertificate,
-    pub infers: InferResult,
-    /// Stored facts selected for ordinary statement output. Most statements keep
-    /// their environment effects in the detailed execution trace only; value-
-    /// producing statements such as `eval` may expose their primary result.
-    pub reported_store_facts: Vec<StoreFactOutput>,
-    pub inside_results: Vec<StmtResult>,
-    pub execution_trace: Option<StatementExecutionTrace>,
-    pub theorem_verification: Option<TheoremVerificationResult>,
-    pub claim_verification: Option<ClaimVerificationResult>,
-    /// Evidence owned by a disposable proof-block environment. The runtime
-    /// freezes it before `claim`, `example`, or `sketch` pops that environment.
-    pub local_proof_scope_verification: Option<LocalProofScopeVerificationResult>,
-    /// Exact verifier-to-environment mapping for bare `have x T` selection.
-    /// The proof results stay in `inside_results`; this record identifies which
-    /// one certifies each selected object's stored type fact.
-    pub object_choice_verification: Option<ObjectChoiceVerificationResult>,
-    /// Checked witness, parameter, and body-result layout for
-    /// `witness exist ... from ...`.
-    pub witness_exist_verification: Option<WitnessExistVerificationResult>,
-    /// Runtime-resolved definition and witness evidence for
-    /// `witness $P(args) from ...`.
-    pub witness_atomic_fact_verification: Option<WitnessAtomicFactVerificationResult>,
-    /// Exact source-to-environment projection contract for `obtain ... from
-    /// exist ...` and body-style `have x T: ...`.
-    pub existential_elimination_verification: Option<ExistentialEliminationVerificationResult>,
-    /// Exact verifier-to-environment contract for `have fn f(...) ... = body`.
-    /// The statement retains the signature/body; this mapping freezes which
-    /// checked result certifies the return value and which two stored facts
-    /// introduce the function object to later statements.
-    pub function_definition_verification: Option<FunctionDefinitionVerificationResult>,
-    pub by_verification: Option<ByVerificationResult>,
-}
-
 #[derive(Clone, Debug)]
 pub struct FunctionDefinitionVerificationResult {
     pub return_check_index: usize,
@@ -86,22 +49,6 @@ pub struct ClaimForallVerificationResult {
 pub struct ClaimFactVerificationResult {
     pub fact: Fact,
     pub proof_step_count: usize,
-}
-
-pub enum ByVerificationResult {
-    Cases(ByCasesVerificationResult),
-    Contra(ByContraVerificationResult),
-    EnumerateFiniteSet(ByEnumerateFiniteSetVerificationResult),
-    EnumerateRange(ByEnumerateRangeVerificationResult),
-    Induc(ByInducVerificationResult),
-    For(ByForVerificationResult),
-    Extension(ByExtensionVerificationResult),
-    PropRegistration(ByPropRegistrationVerificationResult),
-    AxiomOfChoice(ByChoiceVerificationResult),
-    ZornLemma(ByChoiceVerificationResult),
-    RegularityAxiom(ByChoiceVerificationResult),
-    Definition(ByDefinitionVerificationResult),
-    Theorem(ByTheoremVerificationResult),
 }
 
 pub struct ByCasesVerificationResult {
@@ -275,7 +222,7 @@ pub struct ObjectChoiceVerificationResult {
     /// One exact stored type fact for every selected object, in declaration
     /// order. For an object carrier this is the selected membership fact.
     pub selected_type_facts: Vec<Fact>,
-    /// Index into `NonFactualStmtSuccess::inside_results` for the checked
+    /// Index into the owning statement IR's `common.inside_results` for the checked
     /// nonemptiness producer. Meta-level parameter types currently have no
     /// such producer and retain `None` as an explicit backend boundary.
     pub nonempty_check_indices: Vec<Option<usize>>,
@@ -644,7 +591,7 @@ pub enum VerifiedBysEnum {
     ByFact(FactVerifiedByFactInVerifiedBys),
     ByKnownForall(FactVerifiedByKnownForallInVerifiedBys),
     /// Internal proof sharing; output and dependency analysis expose the source proof.
-    ByStatementMemo(Fact, Rc<FactualStmtSuccess>),
+    ByStatementMemo(Fact, Rc<VerifiedFactStmtIr>),
 }
 
 #[derive(Debug)]
@@ -656,35 +603,16 @@ pub enum VerifiedByResult {
     VerifiedBys(VerifiedBysResult),
     ForallProof(ForallProofResult),
     /// Internal proof sharing; this is not a user-visible verification method.
-    StatementMemo(Rc<FactualStmtSuccess>),
+    StatementMemo(Rc<VerifiedFactStmtIr>),
 }
 
-#[derive(Debug)]
-pub struct FactualStmtSuccess {
-    pub stmt: Fact,
-    /// Filled when this proved fact has actually been stored. Verification-only
-    /// subgoals legitimately keep `None`.
-    pub fact_id: Option<FactId>,
-    pub well_definedness: WellDefinednessCertificate,
-    pub infers: InferResult,
-    pub verified_by: VerifiedByResult,
-    pub execution_trace: Option<StatementExecutionTrace>,
-}
-
-impl FactualStmtSuccess {
+impl VerifiedFactStmtIr {
     pub fn new_with_verified_by_builtin_rules(
         stmt: Fact,
         infers: InferResult,
         verified_by: VerifiedByResult,
     ) -> Self {
-        FactualStmtSuccess {
-            stmt,
-            fact_id: None,
-            well_definedness: WellDefinednessCertificate::default(),
-            infers,
-            verified_by,
-            execution_trace: None,
-        }
+        Self::new(stmt, infers, verified_by)
     }
 
     pub fn new_with_verified_by_builtin_rules_recording_stmt(
@@ -773,14 +701,7 @@ impl FactualStmtSuccess {
         step_results: Vec<StmtResult>,
     ) -> Self {
         let verified_by = merge_verified_by_with_steps(stmt.clone(), verified_by, step_results);
-        FactualStmtSuccess {
-            stmt,
-            fact_id: None,
-            well_definedness: WellDefinednessCertificate::default(),
-            infers,
-            verified_by,
-            execution_trace: None,
-        }
+        Self::new(stmt, infers, verified_by)
     }
 
     pub fn new_with_verified_by_known_fact(
@@ -799,7 +720,7 @@ impl FactualStmtSuccess {
     pub fn new_with_statement_memo(
         stmt: Fact,
         infers: InferResult,
-        source: Rc<FactualStmtSuccess>,
+        source: Rc<VerifiedFactStmtIr>,
     ) -> Self {
         Self::new_with_verified_by_builtin_rules(
             stmt,
@@ -1209,120 +1130,6 @@ impl fmt::Debug for ForallProvedFactResult {
     }
 }
 
-impl NonFactualStmtSuccess {
-    pub fn new(stmt: Stmt, infers: InferResult, inside_results: Vec<StmtResult>) -> Self {
-        NonFactualStmtSuccess {
-            stmt,
-            well_definedness: WellDefinednessCertificate::default(),
-            infers,
-            reported_store_facts: vec![],
-            inside_results,
-            execution_trace: None,
-            theorem_verification: None,
-            claim_verification: None,
-            local_proof_scope_verification: None,
-            object_choice_verification: None,
-            witness_exist_verification: None,
-            witness_atomic_fact_verification: None,
-            existential_elimination_verification: None,
-            function_definition_verification: None,
-            by_verification: None,
-        }
-    }
-
-    pub fn new_with_theorem_verification(
-        stmt: Stmt,
-        infers: InferResult,
-        inside_results: Vec<StmtResult>,
-        theorem_verification: TheoremVerificationResult,
-    ) -> Self {
-        NonFactualStmtSuccess {
-            stmt,
-            well_definedness: WellDefinednessCertificate::default(),
-            infers,
-            reported_store_facts: vec![],
-            inside_results,
-            execution_trace: None,
-            theorem_verification: Some(theorem_verification),
-            claim_verification: None,
-            local_proof_scope_verification: None,
-            object_choice_verification: None,
-            witness_exist_verification: None,
-            witness_atomic_fact_verification: None,
-            existential_elimination_verification: None,
-            function_definition_verification: None,
-            by_verification: None,
-        }
-    }
-
-    pub fn new_with_claim_verification(
-        stmt: Stmt,
-        infers: InferResult,
-        inside_results: Vec<StmtResult>,
-        claim_verification: ClaimVerificationResult,
-    ) -> Self {
-        NonFactualStmtSuccess {
-            stmt,
-            well_definedness: WellDefinednessCertificate::default(),
-            infers,
-            reported_store_facts: vec![],
-            inside_results,
-            execution_trace: None,
-            theorem_verification: None,
-            claim_verification: Some(claim_verification),
-            local_proof_scope_verification: None,
-            object_choice_verification: None,
-            witness_exist_verification: None,
-            witness_atomic_fact_verification: None,
-            existential_elimination_verification: None,
-            function_definition_verification: None,
-            by_verification: None,
-        }
-    }
-
-    pub fn new_with_by_verification(
-        stmt: Stmt,
-        infers: InferResult,
-        inside_results: Vec<StmtResult>,
-        by_verification: ByVerificationResult,
-    ) -> Self {
-        NonFactualStmtSuccess {
-            stmt,
-            well_definedness: WellDefinednessCertificate::default(),
-            infers,
-            reported_store_facts: vec![],
-            inside_results,
-            execution_trace: None,
-            theorem_verification: None,
-            claim_verification: None,
-            local_proof_scope_verification: None,
-            object_choice_verification: None,
-            witness_exist_verification: None,
-            witness_atomic_fact_verification: None,
-            existential_elimination_verification: None,
-            function_definition_verification: None,
-            by_verification: Some(by_verification),
-        }
-    }
-
-    pub fn new_with_stmt(stmt: Stmt) -> Self {
-        Self::new(stmt, InferResult::new(), vec![])
-    }
-
-    pub fn with_reported_store_facts(mut self, reported_store_facts: Vec<StoreFactOutput>) -> Self {
-        self.reported_store_facts = reported_store_facts;
-        self
-    }
-
-    pub fn with_local_proof_scope_verification(
-        mut self,
-        verification: LocalProofScopeVerificationResult,
-    ) -> Self {
-        self.local_proof_scope_verification = Some(verification);
-        self
-    }
-}
-
 impl TheoremVerificationResult {
     pub fn new(
         name: String,
@@ -1668,66 +1475,6 @@ impl ByDefinitionVerificationResult {
     }
 }
 
-impl From<ByCasesVerificationResult> for ByVerificationResult {
-    fn from(v: ByCasesVerificationResult) -> Self {
-        ByVerificationResult::Cases(v)
-    }
-}
-
-impl From<ByContraVerificationResult> for ByVerificationResult {
-    fn from(v: ByContraVerificationResult) -> Self {
-        ByVerificationResult::Contra(v)
-    }
-}
-
-impl From<ByEnumerateFiniteSetVerificationResult> for ByVerificationResult {
-    fn from(v: ByEnumerateFiniteSetVerificationResult) -> Self {
-        ByVerificationResult::EnumerateFiniteSet(v)
-    }
-}
-
-impl From<ByEnumerateRangeVerificationResult> for ByVerificationResult {
-    fn from(v: ByEnumerateRangeVerificationResult) -> Self {
-        ByVerificationResult::EnumerateRange(v)
-    }
-}
-
-impl From<ByInducVerificationResult> for ByVerificationResult {
-    fn from(v: ByInducVerificationResult) -> Self {
-        ByVerificationResult::Induc(v)
-    }
-}
-
-impl From<ByForVerificationResult> for ByVerificationResult {
-    fn from(v: ByForVerificationResult) -> Self {
-        ByVerificationResult::For(v)
-    }
-}
-
-impl From<ByExtensionVerificationResult> for ByVerificationResult {
-    fn from(v: ByExtensionVerificationResult) -> Self {
-        ByVerificationResult::Extension(v)
-    }
-}
-
-impl From<ByPropRegistrationVerificationResult> for ByVerificationResult {
-    fn from(v: ByPropRegistrationVerificationResult) -> Self {
-        ByVerificationResult::PropRegistration(v)
-    }
-}
-
-impl From<ByTheoremVerificationResult> for ByVerificationResult {
-    fn from(v: ByTheoremVerificationResult) -> Self {
-        ByVerificationResult::Theorem(v)
-    }
-}
-
-impl From<ByDefinitionVerificationResult> for ByVerificationResult {
-    fn from(v: ByDefinitionVerificationResult) -> Self {
-        ByVerificationResult::Definition(v)
-    }
-}
-
 impl fmt::Debug for ClaimVerificationResult {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         match self {
@@ -1764,36 +1511,6 @@ impl fmt::Debug for ClaimFactVerificationResult {
             .field("fact", &self.fact.to_string())
             .field("proof_step_count", &self.proof_step_count)
             .finish()
-    }
-}
-
-impl fmt::Debug for ByVerificationResult {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        match self {
-            ByVerificationResult::Cases(v) => f.debug_tuple("Cases").field(v).finish(),
-            ByVerificationResult::Contra(v) => f.debug_tuple("Contra").field(v).finish(),
-            ByVerificationResult::EnumerateFiniteSet(v) => {
-                f.debug_tuple("EnumerateFiniteSet").field(v).finish()
-            }
-            ByVerificationResult::EnumerateRange(v) => {
-                f.debug_tuple("EnumerateRange").field(v).finish()
-            }
-            ByVerificationResult::Induc(v) => f.debug_tuple("Induc").field(v).finish(),
-            ByVerificationResult::For(v) => f.debug_tuple("For").field(v).finish(),
-            ByVerificationResult::Extension(v) => f.debug_tuple("Extension").field(v).finish(),
-            ByVerificationResult::PropRegistration(v) => {
-                f.debug_tuple("PropRegistration").field(v).finish()
-            }
-            ByVerificationResult::AxiomOfChoice(v) => {
-                f.debug_tuple("AxiomOfChoice").field(v).finish()
-            }
-            ByVerificationResult::ZornLemma(v) => f.debug_tuple("ZornLemma").field(v).finish(),
-            ByVerificationResult::RegularityAxiom(v) => {
-                f.debug_tuple("RegularityAxiom").field(v).finish()
-            }
-            ByVerificationResult::Definition(v) => f.debug_tuple("Definition").field(v).finish(),
-            ByVerificationResult::Theorem(v) => f.debug_tuple("Theorem").field(v).finish(),
-        }
     }
 }
 
@@ -1871,14 +1588,13 @@ fn merge_verified_by_with_steps(
 
 fn verified_by_items_from_stmt_result(result: StmtResult) -> Vec<VerifiedBysEnum> {
     match result {
-        StmtResult::Success(VerifiedStmtIr {
-            verification: VerifiedStmtVerificationIr::Fact(success),
-            ..
-        }) => VerifiedBysEnum::from_verified_by_result(success.stmt, success.verified_by),
-        StmtResult::Success(VerifiedStmtIr {
-            verification: VerifiedStmtVerificationIr::NonFact(success),
-            ..
-        }) => success
+        StmtResult::Success(VerifiedStmtIr::Fact(success)) => {
+            let (fact, data) = success.into_parts();
+            VerifiedBysEnum::from_verified_by_result(fact, data.verified_by)
+        }
+        StmtResult::Success(success) => success
+            .into_common()
+            .expect("non-factual statement IR must have common execution evidence")
             .inside_results
             .into_iter()
             .flat_map(verified_by_items_from_stmt_result)

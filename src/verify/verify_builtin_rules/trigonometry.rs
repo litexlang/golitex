@@ -148,7 +148,7 @@ impl Runtime {
         let reason = trig_reason(&left_expansion.lemmas);
         let dependencies = trig_core_dependency_results(equal_fact, &left_expansion.lemmas);
         Ok(Some(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 equal_fact.clone().into(),
                 reason,
                 dependencies,
@@ -190,7 +190,7 @@ impl Runtime {
                 return Ok(None);
             };
             return Ok(Some(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                     atomic_fact.clone().into(),
                     format!(
                         "trigonometry layer {}: {} derived from the unit-circle identity",
@@ -218,7 +218,7 @@ impl Runtime {
             return Ok(None);
         };
         Ok(Some(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
                 "trigonometry: -1 <= sin/cos <= 1 from the unit-circle square bound".to_string(),
                 vec![square_bound_result],
@@ -549,7 +549,7 @@ impl Runtime {
             return Ok(None);
         };
         Ok(Some(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
                 format!("trigonometry: {reason}"),
                 results,
@@ -614,7 +614,7 @@ impl Runtime {
         if let Some(premises) = quotient_nonzero_premises {
             if let Some(results) = self.verify_builtin_rule_premises(&premises, builtin_state)? {
                 return Ok(Some(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                         not_equal_fact.clone().into(),
                         "trigonometry: non-zero transfer through canonical expansion".to_string(),
                         results,
@@ -699,7 +699,7 @@ impl Runtime {
             )?;
             if interval_result.is_true() {
                 return Ok(Some(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                         not_equal_fact.clone().into(),
                         "trigonometry: sine/cosine is nonzero on a canonical sign interval"
                             .to_string(),
@@ -720,7 +720,7 @@ impl Runtime {
                 self.verify_atomic_fact_as_builtin_rule_premise(&reduced, builtin_state)?;
             if reduced_result.is_true() {
                 return Ok(Some(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                         not_equal_fact.clone().into(),
                         "trigonometry: pi shift changes only sign, preserving non-zero".to_string(),
                         vec![reduced_result],
@@ -744,7 +744,7 @@ impl Runtime {
             return Ok(None);
         }
         Ok(Some(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 not_equal_fact.clone().into(),
                 "trigonometry: non-zero transfer through canonical expansion".to_string(),
                 vec![expanded_result],
@@ -1102,7 +1102,7 @@ fn try_trig_quotient_definition(equal_fact: &EqualFact) -> Option<StmtResult> {
         };
         if objs_equal_by_rational_expression_evaluation(&expected, quotient_side) {
             return Some(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                     equal_fact.clone().into(),
                     "trigonometry core: tan/cot quotient definition".to_string(),
                     Vec::new(),
@@ -1125,7 +1125,7 @@ fn pythagorean_core_result(sin_or_cos: &Obj, other: &Obj, line_file: &LineFile) 
         Pow::new(cos, Number::new("2".to_string()).into()).into(),
     )
     .into();
-    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
         EqualFact::new(left, Number::new("1".to_string()).into(), line_file.clone()).into(),
         "trigonometry core: sin(x)^2 + cos(x)^2 = 1".to_string(),
         Vec::new(),
@@ -1223,7 +1223,7 @@ fn trig_core_dependency_results(equal_fact: &EqualFact, lemmas: &[TrigLemma]) ->
         )
         .into();
         results.push(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 EqualFact::new(source, expanded, equal_fact.line_file.clone()).into(),
                 "trigonometry core: sine addition formula".to_string(),
                 Vec::new(),

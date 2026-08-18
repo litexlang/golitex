@@ -11,7 +11,11 @@ impl Runtime {
         let inside_results = self.exec_have_fn_by_induc_verify_process(stmt)?;
         let infer_result = self.exec_have_fn_by_induc_affect_environment(stmt)?;
 
-        Ok((NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, inside_results)).into())
+        Ok(VerifiedDefObjStmtIr::HaveFnByInducStmt {
+            statement: stmt.clone(),
+            common: VerifiedStmtCommonIr::new(infer_result, inside_results),
+        }
+        .into())
     }
 
     pub(crate) fn exec_have_fn_by_induc_affect_environment(
@@ -31,7 +35,11 @@ impl Runtime {
         stmt: &HaveFnByInducStmt,
     ) -> Result<StmtResult, RuntimeError> {
         let infer_result = self.exec_have_fn_by_induc_affect_environment(stmt)?;
-        Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![]).into())
+        Ok(VerifiedDefObjStmtIr::HaveFnByInducStmt {
+            statement: stmt.clone(),
+            common: VerifiedStmtCommonIr::new(infer_result, vec![]),
+        }
+        .into())
     }
 
     fn have_fn_by_induc_err(stmt: &HaveFnByInducStmt, cause: RuntimeError) -> RuntimeError {

@@ -1,0 +1,125 @@
+# Probability theory from the Kolmogorov axioms, setting-first.
+#
+# Main line:
+#
+#   sigma-algebra + real series
+#       -> real-valued probability space
+#       -> countable additivity
+#       -> conditional probability and independence
+#       -> measurable random variables and their distributions.
+
+# Countable unions are set-valued constructions. The membership relation keeps
+# the existential surface explicit and stable inside set builders.
+prop member_of_countable_union(Omega set, family fn(n N+) power_set(Omega), omega Omega):
+    exist n N+ st {omega $in family(n)}
+
+template<Omega set>:
+    have fn countable_union(family fn(n N+) power_set(Omega)) power_set(Omega) = {omega Omega: $member_of_countable_union(Omega, family, omega)}
+
+# A real series sum is a relation on a candidate value, not a total selector.
+have fn partial_sum(a seq(R), k N) R by induc k from 0:
+    case k = 0: 0
+    case k >= 1: partial_sum(a, k - 1) + a(k)
+
+prop is_tail_close_to(a seq(R), L R, epsilon R+, n0 N+):
+    forall n N+:
+        n >= n0
+        =>:
+            abs(a(n) - L) < epsilon
+
+prop has_sequence_limit(a seq(R), L R):
+    forall epsilon R+:
+        exist n0 N+ st {$is_tail_close_to(a, L, epsilon, n0)}
+
+prop has_series_sum(a seq(R), L R):
+    $has_sequence_limit(fn(k N+) R {partial_sum(a, k)}, L)
+
+# The whole-space and binary-intersection laws are conservative projections of
+# the usual empty/complement/countable-union sigma-algebra axioms. Keeping them
+# visible gives later exact-carrier probability applications a direct event
+# membership fact.
+setting SigmaAlgebraSetting(Omega set, events power_set(power_set(Omega))):
+    {} $in events
+    Omega $in events
+    forall event events:
+        set_minus(Omega, event) $in events
+    forall left_event, right_event events:
+        intersect(left_event, right_event) $in events
+    forall family fn(n N+) events:
+        \countable_union<Omega>(fn(n N+) power_set(Omega) {family(n)}) $in events
+
+prop is_sigma_algebra([SigmaAlgebraSetting])
+
+prop pairwise_disjoint_event_sequence(Omega set, events power_set(power_set(Omega)), family fn(n N+) events):
+    forall idx, j N+:
+        idx != j
+        =>:
+            intersect(family(idx), family(j)) = {}
+
+# Kolmogorov probability is real-valued: total mass one makes infinity
+# unnecessary. Empty-event zero is retained as its standard derived projection.
+setting ProbabilitySpaceSetting([SigmaAlgebraSetting], probability fn(event events) R):
+    probability({}) = 0
+    probability(Omega) = 1
+    forall event events:
+        probability(event) >= 0
+    forall family fn(n N+) events:
+        $pairwise_disjoint_event_sequence(Omega, events, family)
+        =>:
+            $has_series_sum(fn(n N+) R {probability(family(n))}, probability(\countable_union<Omega>(fn(n N+) power_set(Omega) {family(n)})))
+
+prop is_probability_space([ProbabilitySpaceSetting])
+
+# Tracer theorem: the third Kolmogorov axiom is directly consumable, with the
+# right side carrying ordinary real-series convergence semantics.
+thm kolmogorov_countable_additivity:
+    ? forall [ProbabilitySpaceSetting], event_sequence fn(n N+) events:
+        $pairwise_disjoint_event_sequence(Omega, events, event_sequence)
+        =>:
+            $has_series_sum(fn(n N+) R {probability(event_sequence(n))}, probability(\countable_union<Omega>(fn(n N+) power_set(Omega) {event_sequence(n)})))
+
+# Event-level probability calculus.
+template<Omega set, events power_set(power_set(Omega)), probability fn(event events) R>:
+    have fn conditional_probability(A, B events: intersect(A, B) $in events, probability(B) > 0) R = probability(intersect(A, B)) / probability(B)
+
+prop are_independent(Omega set, events power_set(power_set(Omega)), probability fn(event events) R, A, B events):
+    intersect(A, B) $in events
+    probability(intersect(A, B)) = probability(A) * probability(B)
+
+thm event_intersection_is_event:
+    ? forall [SigmaAlgebraSetting], A, B events:
+        intersect(A, B) $in events
+
+thm independent_event_conditional_probability:
+    ? forall [ProbabilitySpaceSetting], A, B events:
+        $are_independent(Omega, events, probability, A, B)
+        probability(B) > 0
+        =>:
+            \conditional_probability<Omega, events, probability>(A, B) = probability(A)
+    by def $are_independent(Omega, events, probability, A, B)
+    \conditional_probability<Omega, events, probability>(A, B) = probability(intersect(A, B)) / probability(B)
+    probability(B) != 0
+    probability(intersect(A, B)) / probability(B) = (probability(A) * probability(B)) / probability(B) = probability(A)
+
+# Measurable maps and random variables remain distinct from their pushforward
+# distributions. The target sigma-algebra on R is supplied, not silently
+# identified with a constructed Borel sigma-algebra.
+prop is_measurable_map(Source, Target set, source_events power_set(power_set(Source)), target_events power_set(power_set(Target)), f fn(x Source) Target):
+    forall target_event target_events:
+        {x Source: f(x) $in target_event} $in source_events
+
+prop is_random_variable(Omega set, events power_set(power_set(Omega)), real_events power_set(power_set(R)), X fn(omega Omega) R):
+    $is_measurable_map(Omega, R, events, real_events, X)
+
+prop is_distribution_of(Omega set, events power_set(power_set(Omega)), probability fn(event events) R, Target set, target_events power_set(power_set(Target)), X fn(omega Omega) Target, distribution fn(target_event target_events) R):
+    forall target_event target_events:
+        {omega Omega: X(omega) $in target_event} $in events
+        distribution(target_event) = probability({omega Omega: X(omega) $in target_event})
+
+thm distribution_of_has_measurable_map:
+    ? forall Omega set, events power_set(power_set(Omega)), probability fn(event events) R, Target set, target_events power_set(power_set(Target)), X fn(omega Omega) Target, distribution fn(target_event target_events) R:
+        $is_distribution_of(Omega, events, probability, Target, target_events, X, distribution)
+        =>:
+            $is_measurable_map(Omega, Target, events, target_events, X)
+    by def $is_distribution_of(Omega, events, probability, Target, target_events, X, distribution)
+    by def $is_measurable_map(Omega, Target, events, target_events, X)

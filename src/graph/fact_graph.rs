@@ -370,36 +370,53 @@ impl FactGraphBuilder {
 
     fn collect_result_nodes(&mut self, result: &StmtResult) {
         if let Some(success) = result.factual_success() {
-            self.add_fact_node(&success.stmt, "fact", None);
+            self.add_fact_node(&success.fact(), "fact", None);
             self.add_infer_nodes(&success.infers);
             self.collect_verified_by_nodes(&success.verified_by);
             return;
         }
 
-        let Some(success) = result.non_factual_success() else {
+        let Some(success) = result.non_factual_ir() else {
             return;
         };
-        match &success.stmt {
-            Stmt::DefThmStmt(stmt) => self.add_theorem_nodes(stmt, &success.stmt),
+        let source_stmt = success.statement();
+        let common = success
+            .common()
+            .expect("non-factual IR carries common execution evidence");
+        match &source_stmt {
+            Stmt::DefThmStmt(stmt) => self.add_theorem_nodes(stmt, &source_stmt),
+            Stmt::AxiomStmt(stmt) => self.add_axiom_nodes(stmt, &source_stmt),
             Stmt::ProofBlock(ProofBlockStmt::ClaimStmt(stmt)) => {
-                self.add_claim_nodes(stmt, &success.stmt)
+                self.add_claim_nodes(stmt, &source_stmt)
             }
             Stmt::UnsafeStmt(UnsafeStmt::TrustStmt(_))
             | Stmt::UnsafeStmt(UnsafeStmt::TrustHaveStmt(_)) => {
-                self.add_trust_nodes(&success.infers)
+                self.add_trust_nodes(&common.infers)
             }
-            Stmt::By(ByStmt::ByDefStmt(_)) => self.add_infer_nodes(&success.infers),
+            Stmt::By(ByStmt::ByDefStmt(_)) => self.add_infer_nodes(&common.infers),
             _ => {}
         }
-        if let Some(verification) = success.theorem_verification.as_ref() {
-            self.add_assumption_nodes(&verification.assumption_infers);
-        }
-        if let Some(ClaimVerificationResult::Forall(verification)) =
-            success.claim_verification.as_ref()
+        if let VerifiedStmtIr::DefThmStmt {
+            verification: Some(verification),
+            ..
+        } = success
         {
             self.add_assumption_nodes(&verification.assumption_infers);
         }
-        for inside in &success.inside_results {
+        if let VerifiedStmtIr::ProofBlock(
+            VerifiedProofBlockStmtIr::ClaimStmt {
+                verification: Some(ClaimVerificationResult::Forall(verification)),
+                ..
+            }
+            | VerifiedProofBlockStmtIr::ExampleStmt {
+                verification: Some(ClaimVerificationResult::Forall(verification)),
+                ..
+            },
+        ) = success
+        {
+            self.add_assumption_nodes(&verification.assumption_infers);
+        }
+        for inside in &common.inside_results {
             self.collect_result_nodes(inside);
         }
     }
@@ -515,6 +532,22 @@ impl FactGraphBuilder {
         self.theorem_node_by_line.insert(interface_line, theorem_id);
     }
 
+    fn add_axiom_nodes(&mut self, stmt: &AxiomStmt, full_stmt: &Stmt) {
+        let interface_fact: Fact = stmt.forall_fact.clone().into();
+        let interface_line = line_key(&interface_fact.line_file());
+        let theorem_id = theorem_id(&stmt.name);
+        self.ensure_node(
+            theorem_id.clone(),
+            "fact",
+            stmt.name.clone(),
+            Some(&stmt.line_file),
+            Some(&full_stmt.to_string()),
+            Some("axiom"),
+            None,
+        );
+        self.theorem_node_by_line.insert(interface_line, theorem_id);
+    }
+
     fn add_claim_nodes(&mut self, stmt: &ClaimStmt, full_stmt: &Stmt) {
         let claim_id = claim_id(&stmt.line_file);
         self.ensure_node(
@@ -560,6 +593,20 @@ impl FactGraphBuilder {
                 );
                 Some(node_id)
             }
+            Stmt::AxiomStmt(axiom) => {
+                let name = &axiom.name;
+                let node_id = theorem_id(name);
+                self.ensure_node(
+                    node_id.clone(),
+                    "fact",
+                    name.to_string(),
+                    Some(&axiom.line_file),
+                    Some(&stmt.to_string()),
+                    Some("axiom"),
+                    None,
+                );
+                Some(node_id)
+            }
             Stmt::ProofBlock(ProofBlockStmt::ClaimStmt(claim)) => {
                 self.add_claim_nodes(claim, stmt);
                 Some(claim_id(&claim.line_file))
@@ -570,23 +617,27 @@ impl FactGraphBuilder {
 
     fn collect_result_edges(&mut self, result: &StmtResult) {
         if let Some(success) = result.factual_success() {
-            let target_id = self.add_fact_node(&success.stmt, "fact", None);
+            let target_id = self.add_fact_node(&success.fact(), "fact", None);
             self.add_infer_edges(&success.infers);
             self.collect_verified_by_edges(&target_id, &success.verified_by);
             return;
         }
 
-        let Some(success) = result.non_factual_success() else {
+        let Some(success) = result.non_factual_ir() else {
             return;
         };
-        for inside in &success.inside_results {
+        let source_stmt = success.statement();
+        let common = success
+            .common()
+            .expect("non-factual IR carries common execution evidence");
+        for inside in &common.inside_results {
             self.collect_result_edges(inside);
         }
-        if let Stmt::By(ByStmt::ByDefStmt(stmt)) = &success.stmt {
-            self.add_infer_edges(&success.infers);
+        if let Stmt::By(ByStmt::ByDefStmt(stmt)) = &source_stmt {
+            self.add_infer_edges(&common.infers);
             let target_fact: Fact = stmt.fact.clone().into();
             let target_id = self.add_fact_node(&target_fact, "fact", None);
-            for clause_result in success.inside_results.iter().skip(1) {
+            for clause_result in common.inside_results.iter().skip(1) {
                 for source_id in self.dependency_source_ids_from_result(clause_result) {
                     for source_id in self.main_chain_source_ids(&source_id) {
                         self.add_edge(&source_id, &target_id, "unfolds");
@@ -595,10 +646,10 @@ impl FactGraphBuilder {
             }
             return;
         }
-        let Some(last_fact_id) = self.last_factual_result_node_id(&success.inside_results) else {
+        let Some(last_fact_id) = self.last_factual_result_node_id(&common.inside_results) else {
             return;
         };
-        match &success.stmt {
+        match &source_stmt {
             Stmt::DefThmStmt(stmt) => {
                 self.add_edge(&last_fact_id, &theorem_id(&stmt.name), "proves");
             }
@@ -722,17 +773,18 @@ impl FactGraphBuilder {
 
     fn dependency_source_ids_from_result(&mut self, result: &StmtResult) -> Vec<String> {
         if let Some(success) = result.factual_success() {
-            let direct_id = fact_node_id(&success.stmt);
+            let direct_id = fact_node_id(&success.fact());
             if self.node_index.contains_key(&direct_id) {
                 return vec![direct_id];
             }
             return self.dependency_source_ids_from_verified_by(&success.verified_by);
         }
-        let Some(success) = result.non_factual_success() else {
+        let Some(success) = result.non_factual_ir() else {
             return vec![];
         };
-        match &success.stmt {
+        match &success.statement() {
             Stmt::DefThmStmt(stmt) => vec![theorem_id(&stmt.name)],
+            Stmt::AxiomStmt(stmt) => vec![theorem_id(&stmt.name)],
             Stmt::ProofBlock(ProofBlockStmt::ClaimStmt(stmt)) => {
                 vec![claim_id(&stmt.line_file)]
             }
@@ -842,11 +894,12 @@ impl FactGraphBuilder {
 
     fn primary_result_node_id(&mut self, result: &StmtResult) -> Option<String> {
         if let Some(success) = result.factual_success() {
-            return Some(self.add_fact_node(&success.stmt, "fact", None));
+            return Some(self.add_fact_node(&success.fact(), "fact", None));
         }
-        let success = result.non_factual_success()?;
-        match &success.stmt {
+        let success = result.non_factual_ir()?;
+        match &success.statement() {
             Stmt::DefThmStmt(stmt) => Some(theorem_id(&stmt.name)),
+            Stmt::AxiomStmt(stmt) => Some(theorem_id(&stmt.name)),
             Stmt::ProofBlock(ProofBlockStmt::ClaimStmt(stmt)) => Some(claim_id(&stmt.line_file)),
             Stmt::By(ByStmt::ByDefStmt(stmt)) => {
                 let fact: Fact = stmt.fact.clone().into();
@@ -859,14 +912,17 @@ impl FactGraphBuilder {
     fn last_factual_result_node_id(&mut self, results: &[StmtResult]) -> Option<String> {
         for result in results.iter().rev() {
             if let Some(success) = result.factual_success() {
-                return Some(self.add_fact_node(&success.stmt, "fact", None));
+                return Some(self.add_fact_node(&success.fact(), "fact", None));
             }
-            if let Some(success) = result.non_factual_success() {
-                if let Stmt::By(ByStmt::ByDefStmt(stmt)) = &success.stmt {
+            if let Some(success) = result.non_factual_ir() {
+                if let Stmt::By(ByStmt::ByDefStmt(stmt)) = &success.statement() {
                     let fact: Fact = stmt.fact.clone().into();
                     return Some(self.add_fact_node(&fact, "fact", None));
                 }
-                if let Some(node_id) = self.last_factual_result_node_id(&success.inside_results) {
+                let common = success
+                    .common()
+                    .expect("non-factual IR carries common execution evidence");
+                if let Some(node_id) = self.last_factual_result_node_id(&common.inside_results) {
                     return Some(node_id);
                 }
             }

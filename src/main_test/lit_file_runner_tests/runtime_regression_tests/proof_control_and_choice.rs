@@ -54,11 +54,16 @@ example:
 
     assert!(run_succeeded, "{run_output}");
     assert_eq!(stmt_results.len(), 1, "{run_output}");
-    let success = stmt_results[0]
-        .non_factual_success()
-        .expect("example should be a non-factual success");
-    assert!(success.infers.store_fact_outputs.is_empty(), "{run_output}");
-    assert!(success.claim_verification.is_some(), "{run_output}");
+    let StmtResult::Success(VerifiedStmtIr::ProofBlock(VerifiedProofBlockStmtIr::ExampleStmt {
+        common,
+        verification,
+        ..
+    })) = &stmt_results[0]
+    else {
+        panic!("example should retain its exact verified IR: {run_output}")
+    };
+    assert!(common.infers.store_fact_outputs.is_empty(), "{run_output}");
+    assert!(verification.is_some(), "{run_output}");
 }
 
 #[test]

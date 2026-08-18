@@ -10,23 +10,12 @@ impl Runtime {
         Ok(body_exec_result.with_infers(infer_result_after_store))
     }
 
-    /// Mathematical contract: a theorem or axiom statement is meaningful when
-    /// its complete universal fact is well-defined; strict mode additionally
-    /// forbids introducing an axiom trust boundary.
+    /// Mathematical contract: a theorem statement is meaningful when its
+    /// complete universal fact is well-defined.
     fn exec_def_thm_stmt_verify_well_definedness(
         &mut self,
         stmt: &DefThmStmt,
     ) -> Result<Environment, RuntimeError> {
-        if stmt.is_axiom() && self.strict_mode_applies_to_current_module() {
-            return Err(short_exec_error(
-                stmt.clone().into(),
-                DefThmStmt::strict_mode_rejection_message(),
-                None,
-                vec![],
-            ));
-        }
-
-        let keyword = stmt.keyword();
         self.verify_forall_fact_well_defined_and_collect_certificate(
             &stmt.forall_fact,
             &UseContextVerifyState::new(0, false),
@@ -34,7 +23,7 @@ impl Runtime {
         .map_err(|e| {
             short_exec_error(
                 stmt.clone().into(),
-                format!("{}: forall fact is not well defined", keyword),
+                "thm: forall fact is not well defined".to_string(),
                 Some(e),
                 vec![],
             )
@@ -46,14 +35,8 @@ impl Runtime {
         stmt: &DefThmStmt,
         prechecked_well_definedness: &Environment,
     ) -> Result<StmtResult, RuntimeError> {
-        if stmt.is_axiom() {
-            return Ok(
-                NonFactualStmtSuccess::new(stmt.clone().into(), InferResult::new(), vec![]).into(),
-            );
-        }
-
         let thm_name = stmt.name.clone();
-        let keyword = stmt.keyword();
+        let keyword = THM;
         self.run_in_local_env(|rt| {
             let mut assumption_infers = rt
                 .define_params_with_type(
@@ -149,12 +132,11 @@ impl Runtime {
                 proof_len,
             );
 
-            Ok(NonFactualStmtSuccess::new_with_theorem_verification(
-                stmt.clone().into(),
-                InferResult::new(),
-                inside_results,
-                theorem_verification,
-            )
+            Ok(VerifiedStmtIr::DefThmStmt {
+                statement: stmt.clone(),
+                common: VerifiedStmtCommonIr::new(InferResult::new(), inside_results),
+                verification: Some(theorem_verification),
+            }
             .into())
         })
     }
@@ -184,6 +166,11 @@ impl Runtime {
         stmt: &DefThmStmt,
     ) -> Result<StmtResult, RuntimeError> {
         let infer_result = self.exec_def_thm_stmt_affect_environment(stmt)?;
-        Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![]).into())
+        Ok(VerifiedStmtIr::DefThmStmt {
+            statement: stmt.clone(),
+            common: VerifiedStmtCommonIr::new(infer_result, vec![]),
+            verification: None,
+        }
+        .into())
     }
 }

@@ -65,7 +65,7 @@ impl Runtime {
         }
 
         Ok(
-            FactualStmtSuccess::new_with_verified_by_builtin_strategy_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_strategy_recording_stmt(
                 fact.clone().into(),
                 "finite-set product congruence strategy: prove pointwise factor equality"
                     .to_string(),
@@ -116,7 +116,7 @@ impl Runtime {
         }
 
         Ok(
-            FactualStmtSuccess::new_with_verified_by_builtin_strategy_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_strategy_recording_stmt(
                 fact.clone().into(),
                 "finite-extremum equality strategy: prove both weak-order directions".to_string(),
                 steps,
@@ -191,7 +191,7 @@ impl Runtime {
         }
 
         Ok(
-            FactualStmtSuccess::new_with_verified_by_builtin_strategy_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_strategy_recording_stmt(
                 fact.clone().into(),
                 "mod-congruence strategy: reduce immediate binary operands modulo m".to_string(),
                 subgoals,

@@ -59,7 +59,7 @@ impl Runtime {
                 "known membership in an equal one-layer set-builder definition",
             );
             return Ok(Some(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                     goal.clone().into(),
                     "set-builder membership transport through one unfolded definition".to_string(),
                     vec![membership_result],
@@ -154,7 +154,7 @@ impl Runtime {
             };
             let membership_result: StmtResult = membership_success.into();
             return Ok(Some(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                     goal.clone().into(),
                     "set-builder membership transport from a known universal named-set membership"
                         .to_string(),
@@ -254,7 +254,7 @@ impl Runtime {
                     };
                     let membership_result: StmtResult = membership_success.into();
                     return Ok(Some(
-                        FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                             goal.clone().into(),
                             "universal set-builder membership eliminates to its defining fact"
                                 .to_string(),
@@ -333,7 +333,7 @@ impl Runtime {
                     "known membership in a set-builder or its one-layer named definition",
                 );
                 return Ok(Some(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                         goal.clone().into(),
                         "set-builder membership eliminates to its instantiated defining fact"
                             .to_string(),
@@ -370,7 +370,7 @@ impl Runtime {
                 self.verify_atomic_fact_as_builtin_rule_premise(&member_fact, builtin_state)?;
             if member_result.is_true() {
                 return Ok(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    VerifiedFactStmtIr::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         in_fact.clone().into(),
                         format!("union membership: member of the {side_name} side"),
                         BuiltinRuleEvidence::Set(if side_name == "left" {
@@ -392,7 +392,7 @@ impl Runtime {
         )?;
         if premise_result.is_true() {
             return Ok(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                     in_fact.clone().into(),
                     "union membership from complete left-or-right membership premise".to_string(),
                     vec![premise_result],
@@ -430,7 +430,7 @@ impl Runtime {
             self.verify_atomic_fact_as_builtin_rule_premise(&right_member_fact, builtin_state)?;
         if left_member_result.is_true() && right_member_result.is_true() {
             return Ok(
-                FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                VerifiedFactStmtIr::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
                     "intersection membership: member of both sides".to_string(),
                     BuiltinRuleEvidence::Set(SetBuiltinRule::IntersectMembershipBoth),
@@ -447,7 +447,7 @@ impl Runtime {
         let premise_result = self.verify_builtin_rule_premise(&premise, builtin_state)?;
         if premise_result.is_true() {
             return Ok(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                     in_fact.clone().into(),
                     "intersection membership from complete conjunction premise".to_string(),
                     vec![premise_result],
@@ -483,7 +483,7 @@ impl Runtime {
                 self.verify_atomic_fact_as_builtin_rule_premise(&non_member_fact, builtin_state)?;
             if non_member_result.is_true() {
                 return Ok(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    VerifiedFactStmtIr::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         not_in_fact.clone().into(),
                         format!("intersection non-membership: non-member of the {side_name} side"),
                         BuiltinRuleEvidence::Set(if side_name == "left" {
@@ -505,7 +505,7 @@ impl Runtime {
         )?;
         if premise_result.is_true() {
             return Ok(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                     not_in_fact.clone().into(),
                     "intersection non-membership from complete side-disjunction premise"
                         .to_string(),
@@ -544,7 +544,7 @@ impl Runtime {
             self.verify_atomic_fact_as_builtin_rule_premise(&right_non_member_fact, builtin_state)?;
         if left_member_result.is_true() && right_non_member_result.is_true() {
             return Ok(
-                FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                VerifiedFactStmtIr::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
                     "set-minus membership: member of left side and non-member of right side"
                         .to_string(),
@@ -562,7 +562,7 @@ impl Runtime {
         let premise_result = self.verify_builtin_rule_premise(&premise, builtin_state)?;
         if premise_result.is_true() {
             return Ok(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                     in_fact.clone().into(),
                     "set-minus membership from complete conjunction premise".to_string(),
                     vec![premise_result],
@@ -588,7 +588,7 @@ impl Runtime {
             self.verify_exist_fact_with_known_exist_fact(&exist_fact, &exist_fact)?;
         if exist_result.is_true() {
             return Ok(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                     in_fact.clone().into(),
                     "big_union membership: an element of a member set is in the family union"
                         .to_string(),
@@ -625,7 +625,7 @@ impl Runtime {
             )?;
             if element_result.is_true() {
                 return Ok(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                         in_fact.clone().into(),
                         "big_union membership: an element of a member set is in the family union"
                             .to_string(),
@@ -678,7 +678,7 @@ impl Runtime {
             self.verify_exist_fact_with_known_exist_fact(&exist_fact, &exist_fact)?;
         if exist_result.is_true() {
             return Ok(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                     in_fact.clone().into(),
                     "replacement membership: a relation witness is in the replacement set"
                         .to_string(),
@@ -726,7 +726,7 @@ impl Runtime {
                 self.verify_atomic_fact_as_builtin_rule_premise(&relation_fact, builtin_state)?;
             if relation_result.is_true() {
                 return Ok(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                         in_fact.clone().into(),
                         "replacement membership: a relation witness is in the replacement set"
                             .to_string(),
@@ -913,7 +913,7 @@ impl Runtime {
             return Ok((StmtUnknown::new()).into());
         }
         Ok(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 in_fact.clone().into(),
                 "fn_range membership: a well-defined function application is in the function range"
                     .to_string(),
@@ -953,7 +953,7 @@ impl Runtime {
                     if left.is_subset_eq(right)
             ))
         {
-            subset_result = FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            subset_result = VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 subset_fact.clone().into(),
                 "structural subset".to_string(),
                 Vec::new(),
@@ -965,7 +965,7 @@ impl Runtime {
         }
 
         Ok(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 in_fact.clone().into(),
                 "fn_range power_set membership: function range is contained in the codomain"
                     .to_string(),
@@ -1001,7 +1001,7 @@ impl Runtime {
                     if left.is_subset_eq(right)
             ))
         {
-            subset_result = FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            subset_result = VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 subset_fact.clone().into(),
                 "structural subset".to_string(),
                 Vec::new(),
@@ -1013,7 +1013,7 @@ impl Runtime {
         }
 
         Ok(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 in_fact.clone().into(),
                 "power_set membership: a subset of the base set is an element of the power set"
                     .to_string(),
@@ -1055,7 +1055,7 @@ impl Runtime {
         }
 
         Ok(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 in_fact.clone().into(),
                 "general_cart membership: function carrier and named pointwise choice property"
                     .to_string(),
@@ -1123,7 +1123,7 @@ impl Runtime {
             step_results.push(instantiated_fact_result);
         }
 
-        Ok(FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+        Ok(VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
             in_fact.clone().into(),
             "set builder membership: element is in the base set and satisfies all defining facts"
                 .to_string(),
@@ -1184,7 +1184,7 @@ impl Runtime {
         }
 
         Ok(Some(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 in_fact.clone().into(),
                 "membership in a set-valued definition: unfold one function or template definition to a set builder".to_string(),
                 vec![unfolded_result],
@@ -1230,7 +1230,7 @@ impl Runtime {
                 }
                 field_results.push(field_result);
             }
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 carrier_membership.into(),
                 "dependent struct constructor: each literal tuple field has its instantiated carrier"
                     .to_string(),
@@ -1285,7 +1285,7 @@ impl Runtime {
             step_results.push(fact_result);
         }
 
-        Ok(FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+        Ok(VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
             in_fact.clone().into(),
             "struct membership: element is in the named structure carrier and satisfies struct equivalent facts".to_string(),
             step_results,
@@ -1338,7 +1338,7 @@ impl Runtime {
                 _ => unreachable!(),
             };
             return Ok(Some(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                     in_fact.clone().into(),
                     rule_name.to_string(),
                     Vec::new(),
@@ -1366,7 +1366,7 @@ impl Runtime {
         };
 
         Ok(Some(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 in_fact.clone().into(),
                 "finite-set extremum: member of a standard numeric superset".to_string(),
                 type_results,
@@ -1541,7 +1541,7 @@ impl Runtime {
             let inclusion_result =
                 Self::stmt_result_for_indexed_fact(inclusion_fact, "known direct set inclusion");
             return Ok(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                     in_fact.clone().into(),
                     "membership through a known direct set inclusion".to_string(),
                     vec![membership_result, inclusion_result],
@@ -1600,7 +1600,7 @@ impl Runtime {
 
     fn stmt_result_for_indexed_fact(indexed_fact: AtomicFact, detail: &str) -> StmtResult {
         let fact: Fact = indexed_fact.into();
-        FactualStmtSuccess::new_with_verified_by_known_fact(
+        VerifiedFactStmtIr::new_with_verified_by_known_fact(
             fact.clone(),
             VerifiedByResult::cited_fact(fact.clone(), fact, Some(detail.to_string())),
             Vec::new(),

@@ -17,7 +17,7 @@ impl Runtime {
             }
             let checked_definition = result
                 .factual_success()
-                .map(|success| success.stmt.to_string())
+                .map(|success| success.fact().to_string())
                 .unwrap_or_else(|| stmt.fact.to_string());
             return self.finish_by_def_stmt(
                 stmt,
@@ -248,12 +248,11 @@ impl Runtime {
             concrete_user_prop,
             definition_clause_facts,
         );
-        Ok(NonFactualStmtSuccess::new_with_by_verification(
-            stmt.clone().into(),
-            infer_result,
-            inside_results,
-            by_verification.into(),
-        )
+        Ok(VerifiedByStmtIr::ByDefStmt {
+            statement: stmt.clone(),
+            common: VerifiedStmtCommonIr::new(infer_result, inside_results),
+            verification: Some(by_verification),
+        }
         .into())
     }
 }

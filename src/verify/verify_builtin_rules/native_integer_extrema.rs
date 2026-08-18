@@ -33,7 +33,7 @@ impl Runtime {
             return Ok(None);
         }
         Ok(Some(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 equal_fact.clone().into(),
                 format!("{name} fixes integer inputs"),
                 vec![premise_result],
@@ -55,7 +55,7 @@ impl Runtime {
         let line_file = equal_fact.line_file.clone();
         if rounding_negation_shape(left, right) || rounding_negation_shape(right, left) {
             return Ok(Some(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                     equal_fact.clone().into(),
                     "native floor/ceil negation duality".to_string(),
                     Vec::new(),
@@ -77,7 +77,7 @@ impl Runtime {
             return Ok(None);
         }
         Ok(Some(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 equal_fact.clone().into(),
                 "native floor/ceil integer translation".to_string(),
                 vec![premise_result],
@@ -128,7 +128,7 @@ impl Runtime {
         }
         let name = if is_min { "min" } else { "max" };
         Ok(Some(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 equal_fact.clone().into(),
                 format!("{name} selects the ordered argument: {premise_left} <= {premise_right}"),
                 vec![premise_result],
@@ -169,7 +169,7 @@ impl Runtime {
                 || max_upper_shape(left, right)
         };
         Ok(verified.then(|| {
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
                 "native rounding/extremum characteristic order bound".to_string(),
                 Vec::new(),
@@ -218,7 +218,7 @@ impl Runtime {
             return Ok(None);
         };
         Ok(Some(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
                 "native lcm is bounded by every positive common multiple".to_string(),
                 results,
@@ -299,7 +299,7 @@ impl Runtime {
             return Ok(None);
         };
         Ok(Some(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
                 reason.to_string(),
                 results,
@@ -321,7 +321,7 @@ impl Runtime {
             return None;
         }
         Some(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 equal_fact.clone().into(),
                 "native min/max lattice identity".to_string(),
                 Vec::new(),
@@ -343,7 +343,7 @@ impl Runtime {
             return None;
         }
         Some(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 equal_fact.clone().into(),
                 "lcm times gcd is the absolute product".to_string(),
                 Vec::new(),
@@ -365,7 +365,7 @@ impl Runtime {
             return None;
         }
         Some(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 equal_fact.clone().into(),
                 "native lcm symmetry, zero law, or divisibility".to_string(),
                 Vec::new(),

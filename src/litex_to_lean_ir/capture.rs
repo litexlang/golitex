@@ -94,19 +94,56 @@ mod tests {
         .expect("verify the whole single-file source");
 
         assert_eq!(results.len(), 1);
-        let StmtResult::Success(VerifiedStmtIr {
-            statement,
-            verification,
-            ..
-        }) = &results[0]
+        let StmtResult::Success(VerifiedStmtIr::Fact(VerifiedFactStmtIr::ForallFact {
+            data, ..
+        })) = &results[0]
         else {
-            panic!("expected one completed VerifiedStmtIr");
+            panic!("expected one completed forall-fact IR");
         };
-        assert!(matches!(statement, Stmt::Fact(Fact::ForallFact(_))));
+        assert!(matches!(data.verified_by, VerifiedByResult::ForallProof(_)));
+    }
+
+    #[test]
+    fn explicit_trust_and_checked_fact_have_distinct_ir_variants() {
+        let mut runtime = Runtime::new();
+        runtime.isolated = true;
+        runtime.new_file_path_new_env_new_name_scope("trust_shape.lit");
+
+        let results = execute_single_file_source("trust:\n    1 = 1\n\n1 = 1\n", &mut runtime)
+            .expect("execute explicit trust followed by an ordinary checked fact");
+
         assert!(matches!(
-            verification,
-            VerifiedStmtVerificationIr::Fact(FactualStmtSuccess {
-                verified_by: VerifiedByResult::ForallProof(_),
+            &results[0],
+            StmtResult::Success(VerifiedStmtIr::UnsafeStmt(
+                VerifiedUnsafeStmtIr::TrustStmt { .. }
+            ))
+        ));
+        assert!(matches!(
+            &results[1],
+            StmtResult::Success(VerifiedStmtIr::Fact(VerifiedFactStmtIr::AtomicFact { .. }))
+        ));
+    }
+
+    #[test]
+    fn axiom_and_theorem_have_distinct_top_level_ir_variants() {
+        let mut runtime = Runtime::new();
+        runtime.isolated = true;
+        runtime.new_file_path_new_env_new_name_scope("axiom_theorem_shape.lit");
+
+        let results = execute_single_file_source(
+            "axiom assumed_reflexive:\n    ? forall a R:\n        a = a\n\nthm checked_reflexive:\n    ? forall a R:\n        a = a\n",
+            &mut runtime,
+        )
+        .expect("execute one axiom and one checked theorem");
+
+        assert!(matches!(
+            &results[0],
+            StmtResult::Success(VerifiedStmtIr::AxiomStmt { .. })
+        ));
+        assert!(matches!(
+            &results[1],
+            StmtResult::Success(VerifiedStmtIr::DefThmStmt {
+                verification: Some(_),
                 ..
             })
         ));

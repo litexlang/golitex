@@ -11,7 +11,11 @@ impl Runtime {
                 exec_stmt_error_with_stmt_and_cause(def_template_stmt.clone().into(), e)
             })?;
         self.store_def_template(def_template_stmt)?;
-        Ok(NonFactualStmtSuccess::new_with_stmt(def_template_stmt.clone().into()).into())
+        Ok(VerifiedDefInterfaceStmtIr::DefTemplateStmt {
+            statement: def_template_stmt.clone(),
+            common: VerifiedStmtCommonIr::new(InferResult::new(), vec![]),
+        }
+        .into())
     }
 
     /// Mathematical contract: a template declaration has meaningful typed
