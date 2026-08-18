@@ -6,6 +6,7 @@
 | sequence limit | `prop` | keeps existence relational |
 | convergence | existential `prop` | does not select a limit prematurely |
 | uniqueness | `thm` | flagship epsilon argument |
+| canonical limit | `have fn by exist!` | selects only after existence and uniqueness are proved |
 
 The first version stops before Cauchy completeness, continuity, series,
 uniform convergence, and measure theory.

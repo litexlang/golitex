@@ -1,195 +1,459 @@
-# Scratch tracer: coordinate projection is a concrete linear map with a
-# visible kernel. The abstract real-vector-space interface comes later.
+# Linear algebra begins with a scalar field and a vector space over that field.
+# Coordinate spaces appear later as instances of these interfaces.
 
-have fn vector_add(u, v cart(R, R)) cart(R, R) = (u[1] + v[1], u[2] + v[2])
-have fn scalar_mul(a R, v cart(R, R)) cart(R, R) = (a * v[1], a * v[2])
-have fn projection_x(v cart(R, R)) R = v[1]
+struct Field<K nonempty_set>:
+    zero K
+    one K
+    add fn(x, y K) K
+    neg fn(x K) K
+    mul fn(x, y K) K
+    inv fn(x K) K
+    <=>:
+        zero != one
+        forall x, y, z K:
+            add(add(x, y), z) = add(x, add(y, z))
+            mul(mul(x, y), z) = mul(x, mul(y, z))
+            mul(x, add(y, z)) = add(mul(x, y), mul(x, z))
+        forall x, y K:
+            add(x, y) = add(y, x)
+            mul(x, y) = mul(y, x)
+        forall x K:
+            add(zero, x) = x
+            add(x, neg(x)) = zero
+            mul(one, x) = x
+        forall x K:
+            x != zero
+            =>:
+                mul(x, inv(x)) = one
 
-prop is_linear_map_R2_to_R(T fn(v cart(R, R)) R):
-    forall u, v cart(R, R):
-        T(vector_add(u, v)) = T(u) + T(v)
-    forall a R, v cart(R, R):
-        T(scalar_mul(a, v)) = a * T(v)
+struct VectorSpace<K, V nonempty_set>:
+    field &Field<K>
+    zero V
+    add fn(x, y V) V
+    smul fn(a K, x V) V
+    <=>:
+        forall x, y, z V:
+            add(add(x, y), z) = add(x, add(y, z))
+        forall x, y V:
+            add(x, y) = add(y, x)
+        forall x V:
+            add(zero, x) = x
+            exist y V st {add(x, y) = zero}
+        forall a, b K, x V:
+            smul(field.mul(a, b), x) = smul(a, smul(b, x))
+            smul(field.add(a, b), x) = add(smul(a, x), smul(b, x))
+        forall a K, x, y V:
+            smul(a, add(x, y)) = add(smul(a, x), smul(a, y))
+        forall x V:
+            smul(field.one, x) = x
 
-thm projection_x_is_linear:
-    ? forall:
-        $is_linear_map_R2_to_R(projection_x)
-    claim:
-        ? forall u, v cart(R, R):
-            projection_x(vector_add(u, v)) = projection_x(u) + projection_x(v)
-        vector_add(u, v) = (u[1] + v[1], u[2] + v[2])
-        projection_x(u) = u[1]
-        projection_x(v) = v[1]
-        projection_x(vector_add(u, v)) = vector_add(u, v)[1] = u[1] + v[1]
-        projection_x(u) + projection_x(v) = u[1] + v[1]
-    claim:
-        ? forall a R, v cart(R, R):
-            projection_x(scalar_mul(a, v)) = a * projection_x(v)
-        scalar_mul(a, v) = (a * v[1], a * v[2])
-        projection_x(v) = v[1]
-        projection_x(scalar_mul(a, v)) = scalar_mul(a, v)[1] = a * v[1]
-        a * projection_x(v) = a * v[1]
-    by def $is_linear_map_R2_to_R(projection_x)
+thm additive_identity_unique:
+    ? forall K, V nonempty_set, space &VectorSpace<K, V>, identity_candidate V:
+        forall x V:
+            space.add(identity_candidate, x) = x
+        =>:
+            identity_candidate = space.zero
+    space.add(identity_candidate, space.zero) = space.zero
+    space.add(identity_candidate, space.zero) = space.add(space.zero, identity_candidate) = identity_candidate
 
-have projection_kernel power_set(cart(R, R)) = {v cart(R, R): projection_x(v) = 0}
-(0, 7) $in cart(R, R)
-projection_x((0, 7)) = 0
-by thm set_builder_member((0, 7), {v cart(R, R): projection_x(v) = 0}) => (0, 7) $in {v cart(R, R): projection_x(v) = 0}
-projection_kernel = {v cart(R, R): projection_x(v) = 0}
-(0, 7) $in projection_kernel
-(1, 7) $in cart(R, R)
-projection_x((1, 7)) = 1 != 0
-by contra:
-    ? not (1, 7) $in projection_kernel
-    (1, 7) $in projection_kernel
-    (1, 7) $in {v cart(R, R): projection_x(v) = 0}
-    projection_x((1, 7)) = 0
-    impossible projection_x((1, 7)) != 0
+thm additive_inverse_exists_unique:
+    ? forall K, V nonempty_set, space &VectorSpace<K, V>, x V:
+        exist! y V st {space.add(x, y) = space.zero}
+    obtain y from exist y V st {space.add(x, y) = space.zero}
+    forall y1, y2 V:
+        space.add(x, y1) = space.zero
+        space.add(x, y2) = space.zero
+        =>:
+            space.add(y2, x) = space.add(x, y2) = space.zero
+            y1 = space.add(space.zero, y1) = space.add(space.add(y2, x), y1) = space.add(y2, space.add(x, y1)) = space.add(y2, space.zero) = space.add(space.zero, y2) = y2
+    witness exist! y2 V st {space.add(x, y2) = space.zero} from y
 
-# A compact Gate A interface over R2: subtraction, kernels, subspaces, and the
-# injectivity criterion. Vector negation deliberately reuses scalar
-# multiplication by -1 instead of introducing a second operation.
-have fn vector_neg(v cart(R, R)) cart(R, R) = scalar_mul(-1, v)
-have fn vector_sub(u, v cart(R, R)) cart(R, R) = vector_add(u, vector_neg(v))
-have fn kernel_of(T fn(v cart(R, R)) R) power_set(cart(R, R)) = {v cart(R, R): T(v) = 0}
+template<K, V nonempty_set, space &VectorSpace<K, V>>:
+    have fn vector_neg by exist!:
+        ? forall x V:
+            exist! y V st {space.add(x, y) = space.zero}
+        by thm additive_inverse_exists_unique(K, V, space, x)
 
-prop is_subspace_R2(U power_set(cart(R, R))):
-    $is_nonempty_set(U)
-    (0, 0) $in U
-    forall u, v U:
-        vector_add(u, v) $in U
-    forall a R, v U:
-        scalar_mul(a, v) $in U
+thm vector_neg_spec:
+    ? forall K, V nonempty_set, space &VectorSpace<K, V>, x V:
+        space.add(x, \vector_neg<K, V, space>(x)) = space.zero
+
+template<K, V nonempty_set, space &VectorSpace<K, V>>:
+    have fn vector_sub(u, v V) V = space.add(u, \vector_neg<K, V, space>(v))
+
+thm add_left_cancel:
+    ? forall K, V nonempty_set, space &VectorSpace<K, V>, x, y, z V:
+        space.add(x, y) = space.add(x, z)
+        =>:
+            y = z
+    by thm vector_neg_spec(K, V, space, x) => space.add(x, \vector_neg<K, V, space>(x)) = space.zero
+    space.add(\vector_neg<K, V, space>(x), x) = space.add(x, \vector_neg<K, V, space>(x)) = space.zero
+    space.add(\vector_neg<K, V, space>(x), space.add(x, y)) = space.add(space.add(\vector_neg<K, V, space>(x), x), y)
+    space.add(space.add(\vector_neg<K, V, space>(x), x), y) = space.add(space.zero, y) = y
+    space.add(\vector_neg<K, V, space>(x), space.add(x, z)) = space.add(space.add(\vector_neg<K, V, space>(x), x), z)
+    space.add(space.add(\vector_neg<K, V, space>(x), x), z) = space.add(space.zero, z) = z
+    y = space.add(\vector_neg<K, V, space>(x), space.add(x, y)) = space.add(\vector_neg<K, V, space>(x), space.add(x, z)) = z
+
+thm zero_scalar_times_vector:
+    ? forall K, V nonempty_set, space &VectorSpace<K, V>, x V:
+        space.smul(space.field.zero, x) = space.zero
+    have p V = space.smul(space.field.zero, x)
+    space.field.add(space.field.zero, space.field.zero) = space.field.zero
+    space.smul(space.field.add(space.field.zero, space.field.zero), x) = space.smul(space.field.zero, x) = p
+    space.smul(space.field.add(space.field.zero, space.field.zero), x) = space.add(space.smul(space.field.zero, x), space.smul(space.field.zero, x)) = space.add(p, p)
+    p = space.add(p, p)
+    space.add(p, space.zero) = space.add(space.zero, p) = p
+    space.add(p, p) = space.add(p, space.zero)
+    by thm add_left_cancel(K, V, space, p, p, space.zero) => p = space.zero
+
+thm scalar_times_zero_vector:
+    ? forall K, V nonempty_set, space &VectorSpace<K, V>, a K:
+        space.smul(a, space.zero) = space.zero
+    have q V = space.smul(a, space.zero)
+    space.add(space.zero, space.zero) = space.zero
+    space.smul(a, space.add(space.zero, space.zero)) = space.smul(a, space.zero) = q
+    space.smul(a, space.add(space.zero, space.zero)) = space.add(space.smul(a, space.zero), space.smul(a, space.zero)) = space.add(q, q)
+    q = space.add(q, q)
+    space.add(q, space.zero) = space.add(space.zero, q) = q
+    space.add(q, q) = space.add(q, space.zero)
+    by thm add_left_cancel(K, V, space, q, q, space.zero) => q = space.zero
+
+prop is_linear_map(K, V, W nonempty_set, source &VectorSpace<K, V>, target &VectorSpace<K, W>, T fn(v V) W):
+    source.field = target.field
+    forall u, v V:
+        T(source.add(u, v)) = target.add(T(u), T(v))
+    forall a K, v V:
+        T(source.smul(a, v)) = target.smul(a, T(v))
+
+prop is_subspace(K, V nonempty_set, space &VectorSpace<K, V>, U power_set(V)):
+    space.zero $in U
+    forall u, v V:
+        u $in U
+        v $in U
+        =>:
+            space.add(u, v) $in U
+    forall a K, v V:
+        v $in U
+        =>:
+            space.smul(a, v) $in U
+
+template<V, W set, zeroW W, T fn(v V) W>:
+    have linear_kernel power_set(V) = {x V: T(x) = zeroW}
+
+template<V set, zeroV V>:
+    have zero_subspace power_set(V) = {zeroV}
 
 thm linear_map_sends_zero_to_zero:
-    ? forall T fn(v cart(R, R)) R:
-        $is_linear_map_R2_to_R(T)
+    ? forall K, V, W nonempty_set, source &VectorSpace<K, V>, target &VectorSpace<K, W>, T fn(v V) W:
+        $is_linear_map(K, V, W, source, target, T)
         =>:
-            T((0, 0)) = 0
-    by def:
-        ? $is_linear_map_R2_to_R(T)
-    T(scalar_mul(0, (0, 0))) = 0 * T((0, 0))
-    scalar_mul(0, (0, 0)) = (0, 0)
-    0 * T((0, 0)) = 0
-    T((0, 0)) = T(scalar_mul(0, (0, 0))) = 0 * T((0, 0)) = 0
+            T(source.zero) = target.zero
+    source.add(source.zero, source.zero) = source.zero
+    T(source.add(source.zero, source.zero)) = target.add(T(source.zero), T(source.zero))
+    target.add(T(source.zero), T(source.zero)) = T(source.add(source.zero, source.zero)) = T(source.zero)
+    target.add(T(source.zero), target.zero) = target.add(target.zero, T(source.zero)) = T(source.zero)
+    target.add(T(source.zero), T(source.zero)) = target.add(T(source.zero), target.zero)
+    by thm add_left_cancel(K, W, target, T(source.zero), T(source.zero), target.zero) => T(source.zero) = target.zero
 
-thm kernel_of_linear_map_is_subspace:
-    ? forall T fn(v cart(R, R)) R:
-        $is_linear_map_R2_to_R(T)
+thm linear_map_sends_neg_to_neg:
+    ? forall K, V, W nonempty_set, source &VectorSpace<K, V>, target &VectorSpace<K, W>, T fn(v V) W, x V:
+        $is_linear_map(K, V, W, source, target, T)
         =>:
-            $is_subspace_R2(kernel_of(T))
-    by thm linear_map_sends_zero_to_zero(T) => T((0, 0)) = 0
-    kernel_of(T) = {v cart(R, R): T(v) = 0}
-    by thm set_builder_member((0, 0), {v cart(R, R): T(v) = 0}) => (0, 0) $in {v cart(R, R): T(v) = 0}
-    (0, 0) $in kernel_of(T)
-    witness $is_nonempty_set(kernel_of(T)) from (0, 0)
-    by def:
-        ? $is_linear_map_R2_to_R(T)
-    claim:
-        ? forall u, v kernel_of(T):
-            vector_add(u, v) $in kernel_of(T)
-        T(u) = 0
-        T(v) = 0
-        T(vector_add(u, v)) = T(u) + T(v) = 0
-        by thm set_builder_member(vector_add(u, v), {z cart(R, R): T(z) = 0}) => vector_add(u, v) $in {z cart(R, R): T(z) = 0}
-        vector_add(u, v) $in kernel_of(T)
-    claim:
-        ? forall a R, v kernel_of(T):
-            scalar_mul(a, v) $in kernel_of(T)
-        T(v) = 0
-        T(scalar_mul(a, v)) = a * T(v) = 0
-        by thm set_builder_member(scalar_mul(a, v), {z cart(R, R): T(z) = 0}) => scalar_mul(a, v) $in {z cart(R, R): T(z) = 0}
-        scalar_mul(a, v) $in kernel_of(T)
-    by def:
-        ? $is_subspace_R2(kernel_of(T))
+            T(\vector_neg<K, V, source>(x)) = \vector_neg<K, W, target>(T(x))
+    by thm vector_neg_spec(K, V, source, x) => source.add(x, \vector_neg<K, V, source>(x)) = source.zero
+    by thm vector_neg_spec(K, W, target, T(x)) => target.add(T(x), \vector_neg<K, W, target>(T(x))) = target.zero
+    by thm linear_map_sends_zero_to_zero(K, V, W, source, target, T) => T(source.zero) = target.zero
+    T(source.add(x, \vector_neg<K, V, source>(x))) = target.add(T(x), T(\vector_neg<K, V, source>(x)))
+    T(source.add(x, \vector_neg<K, V, source>(x))) = T(source.zero) = target.zero
+    target.add(T(x), T(\vector_neg<K, V, source>(x))) = target.zero
+    target.add(T(x), \vector_neg<K, W, target>(T(x))) = target.zero
+    target.add(T(x), T(\vector_neg<K, V, source>(x))) = target.add(T(x), \vector_neg<K, W, target>(T(x)))
+    by thm add_left_cancel(K, W, target, T(x), T(\vector_neg<K, V, source>(x)), \vector_neg<K, W, target>(T(x))) => T(\vector_neg<K, V, source>(x)) = \vector_neg<K, W, target>(T(x))
 
-have zero_subspace power_set(cart(R, R)) = {v cart(R, R): v = (0, 0)}
+thm linear_map_kernel_is_subspace:
+    ? forall K, V, W nonempty_set, source &VectorSpace<K, V>, target &VectorSpace<K, W>, T fn(v V) W:
+        $is_linear_map(K, V, W, source, target, T)
+        =>:
+            $is_subspace(K, V, source, \linear_kernel<V, W, target.zero, T>)
+    by thm linear_map_sends_zero_to_zero(K, V, W, source, target, T) => T(source.zero) = target.zero
+    \linear_kernel<V, W, target.zero, T> = {x V: T(x) = target.zero}
+    by thm set_builder_member(source.zero, {x V: T(x) = target.zero}) => source.zero $in {x V: T(x) = target.zero}
+    source.zero $in \linear_kernel<V, W, target.zero, T>
+    claim:
+        ? forall u, v V:
+            u $in \linear_kernel<V, W, target.zero, T>
+            v $in \linear_kernel<V, W, target.zero, T>
+            =>:
+                source.add(u, v) $in \linear_kernel<V, W, target.zero, T>
+        u $in {x V: T(x) = target.zero}
+        T(u) = target.zero
+        v $in {x V: T(x) = target.zero}
+        T(v) = target.zero
+        T(source.add(u, v)) = target.add(T(u), T(v)) = target.add(target.zero, target.zero) = target.zero
+        by thm set_builder_member(source.add(u, v), {x V: T(x) = target.zero}) => source.add(u, v) $in {x V: T(x) = target.zero}
+        source.add(u, v) $in \linear_kernel<V, W, target.zero, T>
+    claim:
+        ? forall a K, v V:
+            v $in \linear_kernel<V, W, target.zero, T>
+            =>:
+                source.smul(a, v) $in \linear_kernel<V, W, target.zero, T>
+        v $in {x V: T(x) = target.zero}
+        T(v) = target.zero
+        by thm scalar_times_zero_vector(K, W, target, a) => target.smul(a, target.zero) = target.zero
+        T(source.smul(a, v)) = target.smul(a, T(v)) = target.smul(a, target.zero) = target.zero
+        by thm set_builder_member(source.smul(a, v), {x V: T(x) = target.zero}) => source.smul(a, v) $in {x V: T(x) = target.zero}
+        source.smul(a, v) $in \linear_kernel<V, W, target.zero, T>
+    by def $is_subspace(K, V, source, \linear_kernel<V, W, target.zero, T>)
 
 thm injective_linear_map_has_trivial_kernel:
-    ? forall T fn(v cart(R, R)) R:
-        $is_linear_map_R2_to_R(T)
-        $injective(cart(R, R), R, T)
+    ? forall K, V, W nonempty_set, source &VectorSpace<K, V>, target &VectorSpace<K, W>, T fn(v V) W:
+        $is_linear_map(K, V, W, source, target, T)
+        $injective(V, W, T)
         =>:
-            kernel_of(T) = zero_subspace
-    by thm linear_map_sends_zero_to_zero(T) => T((0, 0)) = 0
+            \linear_kernel<V, W, target.zero, T> = \zero_subspace<V, source.zero>
+    by thm linear_map_sends_zero_to_zero(K, V, W, source, target, T) => T(source.zero) = target.zero
     by def:
-        ? $injective(cart(R, R), R, T)
-    kernel_of(T) = {v cart(R, R): T(v) = 0}
-    zero_subspace = {v cart(R, R): v = (0, 0)}
+        ? $injective(V, W, T)
+    \linear_kernel<V, W, target.zero, T> = {x V: T(x) = target.zero}
+    \zero_subspace<V, source.zero> = {source.zero}
     by extension:
-        ? kernel_of(T) = zero_subspace
-        forall x kernel_of(T):
-            T(x) = 0 = T((0, 0))
-            x = (0, 0)
-            x $in zero_subspace
-        forall x zero_subspace:
-            x = (0, 0)
-            T(x) = T((0, 0)) = 0
-            x $in kernel_of(T)
+        ? \linear_kernel<V, W, target.zero, T> = \zero_subspace<V, source.zero>
+        forall x \linear_kernel<V, W, target.zero, T>:
+            T(x) = target.zero = T(source.zero)
+            x = source.zero
+            x $in {source.zero}
+            x $in \zero_subspace<V, source.zero>
+        forall x \zero_subspace<V, source.zero>:
+            x = source.zero
+            T(x) = T(source.zero) = target.zero
+            x $in \linear_kernel<V, W, target.zero, T>
 
 thm trivial_kernel_implies_injective:
-    ? forall T fn(v cart(R, R)) R:
-        $is_linear_map_R2_to_R(T)
-        kernel_of(T) = zero_subspace
+    ? forall K, V, W nonempty_set, source &VectorSpace<K, V>, target &VectorSpace<K, W>, T fn(v V) W:
+        $is_linear_map(K, V, W, source, target, T)
+        \linear_kernel<V, W, target.zero, T> = \zero_subspace<V, source.zero>
         =>:
-            $injective(cart(R, R), R, T)
-    by def:
-        ? $is_linear_map_R2_to_R(T)
-    kernel_of(T) = {v cart(R, R): T(v) = 0}
-    zero_subspace = {v cart(R, R): v = (0, 0)}
+            $injective(V, W, T)
+    \linear_kernel<V, W, target.zero, T> = {x V: T(x) = target.zero}
+    \zero_subspace<V, source.zero> = {source.zero}
     claim:
-        ? forall u, v cart(R, R):
+        ? forall u, v V:
             T(u) = T(v)
             =>:
                 u = v
-        vector_neg(v) = scalar_mul(-1, v)
-        T(scalar_mul(-1, v)) = (-1) * T(v)
-        T(vector_neg(v)) = T(scalar_mul(-1, v)) = (-1) * T(v)
-        T(vector_add(u, vector_neg(v))) = T(u) + T(vector_neg(v)) = T(u) + (-1) * T(v) = T(u) - T(v) = 0
-        vector_sub(u, v) = vector_add(u, vector_neg(v))
-        T(vector_sub(u, v)) = T(vector_add(u, vector_neg(v))) = 0
-        vector_sub(u, v) $in kernel_of(T)
-        vector_sub(u, v) $in zero_subspace
-        vector_sub(u, v) = (0, 0)
-        scalar_mul(-1, v) = ((-1) * v[1], (-1) * v[2])
-        vector_neg(v) = scalar_mul(-1, v) = ((-1) * v[1], (-1) * v[2])
-        vector_neg(v)[1] = (-1) * v[1]
-        vector_neg(v)[2] = (-1) * v[2]
-        vector_add(u, vector_neg(v)) = (u[1] + vector_neg(v)[1], u[2] + vector_neg(v)[2]) = (u[1] - v[1], u[2] - v[2])
-        vector_sub(u, v) = vector_add(u, vector_neg(v)) = (u[1] - v[1], u[2] - v[2])
-        vector_sub(u, v)[1] = u[1] - v[1]
-        vector_sub(u, v)[2] = u[2] - v[2]
-        vector_sub(u, v)[1] = 0
-        vector_sub(u, v)[2] = 0
-        u[1] - v[1] = 0
-        u[2] - v[2] = 0
-        u[1] = v[1]
-        u[2] = v[2]
-        u = (u[1], u[2])
-        v = (v[1], v[2])
-        (u[1], u[2]) = (v[1], v[2])
-        u = (u[1], u[2]) = (v[1], v[2]) = v
+        by thm linear_map_sends_neg_to_neg(K, V, W, source, target, T, v) => T(\vector_neg<K, V, source>(v)) = \vector_neg<K, W, target>(T(v))
+        by thm vector_neg_spec(K, W, target, T(v)) => target.add(T(v), \vector_neg<K, W, target>(T(v))) = target.zero
+        \vector_sub<K, V, source>(u, v) = source.add(u, \vector_neg<K, V, source>(v))
+        T(\vector_sub<K, V, source>(u, v)) = T(source.add(u, \vector_neg<K, V, source>(v))) = target.add(T(u), T(\vector_neg<K, V, source>(v))) = target.add(T(u), \vector_neg<K, W, target>(T(v))) = target.add(T(v), \vector_neg<K, W, target>(T(v))) = target.zero
+        by thm set_builder_member(\vector_sub<K, V, source>(u, v), {x V: T(x) = target.zero}) => \vector_sub<K, V, source>(u, v) $in {x V: T(x) = target.zero}
+        \vector_sub<K, V, source>(u, v) $in \linear_kernel<V, W, target.zero, T>
+        \vector_sub<K, V, source>(u, v) $in \zero_subspace<V, source.zero>
+        \vector_sub<K, V, source>(u, v) $in {source.zero}
+        \vector_sub<K, V, source>(u, v) = source.zero
+        source.add(u, \vector_neg<K, V, source>(v)) = source.zero
+        source.add(\vector_neg<K, V, source>(v), u) = source.add(u, \vector_neg<K, V, source>(v)) = source.zero
+        by thm vector_neg_spec(K, V, source, v) => source.add(v, \vector_neg<K, V, source>(v)) = source.zero
+        source.add(\vector_neg<K, V, source>(v), v) = source.add(v, \vector_neg<K, V, source>(v)) = source.zero
+        source.add(\vector_neg<K, V, source>(v), u) = source.add(\vector_neg<K, V, source>(v), v)
+        by thm add_left_cancel(K, V, source, \vector_neg<K, V, source>(v), u, v) => u = v
     by def:
-        ? $injective(cart(R, R), R, T)
+        ? $injective(V, W, T)
 
-kernel_of(projection_x) = {v cart(R, R): projection_x(v) = 0} = projection_kernel
-by thm projection_x_is_linear() => $is_linear_map_R2_to_R(projection_x)
-by thm kernel_of_linear_map_is_subspace(projection_x) => $is_subspace_R2(kernel_of(projection_x))
+# The real numbers are the first concrete field instance.
+have fn real_inv(x R) R by cases:
+    case x = 0: 0
+    case x != 0: 1 / x
 
-thm projection_x_is_not_injective:
+have fn real_add(x, y R) R = x + y
+have fn real_neg(x R) R = -x
+have fn real_mul(x, y R) R = x * y
+
+claim:
+    ? forall x R:
+        x != 0
+        =>:
+            real_mul(x, real_inv(x)) = 1
+    real_inv(x) = 1 / x
+    real_mul(x, real_inv(x)) = x * real_inv(x) = x * (1 / x) = 1
+
+claim:
+    ? forall x, y, z R:
+        real_add(real_add(x, y), z) = real_add(x, real_add(y, z))
+        real_mul(real_mul(x, y), z) = real_mul(x, real_mul(y, z))
+        real_mul(x, real_add(y, z)) = real_add(real_mul(x, y), real_mul(x, z))
+    real_add(x, y) = x + y
+    real_add(y, z) = y + z
+    real_add(real_add(x, y), z) = real_add(x, y) + z = (x + y) + z = x + (y + z) = x + real_add(y, z) = real_add(x, real_add(y, z))
+    real_mul(x, y) = x * y
+    real_mul(x, z) = x * z
+    real_mul(y, z) = y * z
+    real_mul(real_mul(x, y), z) = real_mul(x, y) * z = (x * y) * z = x * (y * z) = x * real_mul(y, z) = real_mul(x, real_mul(y, z))
+    real_mul(x, real_add(y, z)) = x * real_add(y, z) = x * (y + z) = x * y + x * z
+    real_add(real_mul(x, y), real_mul(x, z)) = real_mul(x, y) + real_mul(x, z) = x * y + x * z
+    real_mul(x, real_add(y, z)) = real_add(real_mul(x, y), real_mul(x, z))
+
+claim:
+    ? forall x, y R:
+        real_add(x, y) = real_add(y, x)
+        real_mul(x, y) = real_mul(y, x)
+    real_add(x, y) = x + y = y + x = real_add(y, x)
+    real_mul(x, y) = x * y = y * x = real_mul(y, x)
+
+claim:
+    ? forall x R:
+        real_add(0, x) = x
+        real_add(x, real_neg(x)) = 0
+        real_mul(1, x) = x
+    real_add(0, x) = 0 + x = x
+    real_neg(x) = -x
+    real_add(x, real_neg(x)) = x + real_neg(x) = x + (-x) = 0
+    real_mul(1, x) = 1 * x = x
+
+by thm struct_member((0, 1, real_add, real_neg, real_mul, real_inv), &Field<R>) => (0, 1, real_add, real_neg, real_mul, real_inv) $in &Field<R>
+have real_field &Field<R> = (0, 1, real_add, real_neg, real_mul, real_inv)
+
+thm real_field_adapter_values:
+    ? forall x, y R:
+        real_field.zero = 0
+        real_field.one = 1
+        real_field.add = real_add
+        real_field.neg = real_neg
+        real_field.mul = real_mul
+        real_field.add(x, y) = x + y
+        real_field.mul(x, y) = x * y
+    real_field = (0, 1, real_add, real_neg, real_mul, real_inv)
+    real_field.zero = 0
+    real_field.one = 1
+    real_field.add = real_add
+    real_field.neg = real_neg
+    real_field.mul = real_mul
+    real_field.add(x, y) = real_add(x, y) = x + y
+    real_field.mul(x, y) = real_mul(x, y) = x * y
+
+have fn plane_add(u, v cart(R, R)) cart(R, R) = (u[1] + v[1], u[2] + v[2])
+have fn plane_smul(a R, v cart(R, R)) cart(R, R) = (a * v[1], a * v[2])
+
+claim:
+    ? forall x, y, z cart(R, R):
+        plane_add(plane_add(x, y), z) = plane_add(x, plane_add(y, z))
+    plane_add(x, y) = (x[1] + y[1], x[2] + y[2])
+    plane_add(x, y)[1] = x[1] + y[1]
+    plane_add(x, y)[2] = x[2] + y[2]
+    plane_add(plane_add(x, y), z) = (plane_add(x, y)[1] + z[1], plane_add(x, y)[2] + z[2]) = ((x[1] + y[1]) + z[1], (x[2] + y[2]) + z[2])
+    plane_add(y, z) = (y[1] + z[1], y[2] + z[2])
+    plane_add(y, z)[1] = y[1] + z[1]
+    plane_add(y, z)[2] = y[2] + z[2]
+    plane_add(x, plane_add(y, z)) = (x[1] + plane_add(y, z)[1], x[2] + plane_add(y, z)[2]) = (x[1] + (y[1] + z[1]), x[2] + (y[2] + z[2]))
+    plane_add(plane_add(x, y), z) = ((x[1] + y[1]) + z[1], (x[2] + y[2]) + z[2]) = (x[1] + (y[1] + z[1]), x[2] + (y[2] + z[2])) = plane_add(x, plane_add(y, z))
+
+claim:
+    ? forall x, y cart(R, R):
+        plane_add(x, y) = plane_add(y, x)
+    plane_add(x, y) = (x[1] + y[1], x[2] + y[2]) = (y[1] + x[1], y[2] + x[2]) = plane_add(y, x)
+
+claim:
+    ? forall x cart(R, R):
+        plane_add((0, 0), x) = x
+        exist inverse_x cart(R, R) st {plane_add(x, inverse_x) = (0, 0)}
+    x = (x[1], x[2])
+    plane_add((0, 0), x) = (x[1], x[2]) = x
+    have inverse_x cart(R, R) = (0 - x[1], 0 - x[2])
+    inverse_x[1] = 0 - x[1]
+    inverse_x[2] = 0 - x[2]
+    plane_add(x, inverse_x) = (x[1] + inverse_x[1], x[2] + inverse_x[2]) = (0, 0)
+    witness exist inverse_x2 cart(R, R) st {plane_add(x, inverse_x2) = (0, 0)} from inverse_x
+
+claim:
+    ? forall a, b R, x cart(R, R):
+        plane_smul(real_field.mul(a, b), x) = plane_smul(a, plane_smul(b, x))
+        plane_smul(real_field.add(a, b), x) = plane_add(plane_smul(a, x), plane_smul(b, x))
+    by thm real_field_adapter_values(a, b)
+    plane_smul(b, x) = (b * x[1], b * x[2])
+    plane_smul(b, x)[1] = b * x[1]
+    plane_smul(b, x)[2] = b * x[2]
+    plane_smul(a, plane_smul(b, x)) = (a * plane_smul(b, x)[1], a * plane_smul(b, x)[2]) = (a * (b * x[1]), a * (b * x[2]))
+    plane_smul(real_field.mul(a, b), x) = ((a * b) * x[1], (a * b) * x[2]) = (a * (b * x[1]), a * (b * x[2])) = plane_smul(a, plane_smul(b, x))
+    plane_smul(a, x) = (a * x[1], a * x[2])
+    plane_smul(a, x)[1] = a * x[1]
+    plane_smul(a, x)[2] = a * x[2]
+    plane_smul(b, x) = (b * x[1], b * x[2])
+    plane_add(plane_smul(a, x), plane_smul(b, x)) = (plane_smul(a, x)[1] + plane_smul(b, x)[1], plane_smul(a, x)[2] + plane_smul(b, x)[2]) = (a * x[1] + b * x[1], a * x[2] + b * x[2])
+    plane_smul(real_field.add(a, b), x) = ((a + b) * x[1], (a + b) * x[2]) = (a * x[1] + b * x[1], a * x[2] + b * x[2]) = plane_add(plane_smul(a, x), plane_smul(b, x))
+
+claim:
+    ? forall a R, x, y cart(R, R):
+        plane_smul(a, plane_add(x, y)) = plane_add(plane_smul(a, x), plane_smul(a, y))
+    plane_add(x, y) = (x[1] + y[1], x[2] + y[2])
+    plane_add(x, y)[1] = x[1] + y[1]
+    plane_add(x, y)[2] = x[2] + y[2]
+    plane_smul(a, plane_add(x, y)) = (a * plane_add(x, y)[1], a * plane_add(x, y)[2]) = (a * (x[1] + y[1]), a * (x[2] + y[2]))
+    plane_smul(a, x) = (a * x[1], a * x[2])
+    plane_smul(a, y) = (a * y[1], a * y[2])
+    plane_smul(a, x)[1] = a * x[1]
+    plane_smul(a, x)[2] = a * x[2]
+    plane_smul(a, y)[1] = a * y[1]
+    plane_smul(a, y)[2] = a * y[2]
+    plane_add(plane_smul(a, x), plane_smul(a, y)) = (a * x[1] + a * y[1], a * x[2] + a * y[2])
+    plane_smul(a, plane_add(x, y)) = (a * (x[1] + y[1]), a * (x[2] + y[2])) = (a * x[1] + a * y[1], a * x[2] + a * y[2]) = plane_add(plane_smul(a, x), plane_smul(a, y))
+
+claim:
+    ? forall x cart(R, R):
+        plane_smul(real_field.one, x) = x
+    by thm real_field_adapter_values(0, 0)
+    x = (x[1], x[2])
+    plane_smul(real_field.one, x) = (x[1], x[2]) = x
+
+by thm struct_member((real_field, (0, 0), plane_add, plane_smul), &VectorSpace<R, cart(R, R)>)
+have real_plane &VectorSpace<R, cart(R, R)> = (real_field, (0, 0), plane_add, plane_smul)
+
+have fn projection_x_axis(v cart(R, R)) cart(R, R) = (v[1], 0)
+
+thm projection_x_axis_is_linear:
     ? forall:
-        not $injective(cart(R, R), R, projection_x)
+        $is_linear_map(R, cart(R, R), cart(R, R), real_plane, real_plane, projection_x_axis)
+    real_plane.field = real_plane.field
+    claim:
+        ? forall u, v cart(R, R):
+            projection_x_axis(real_plane.add(u, v)) = real_plane.add(projection_x_axis(u), projection_x_axis(v))
+        real_plane.add = plane_add
+        plane_add(u, v) = (u[1] + v[1], u[2] + v[2])
+        plane_add(u, v)[1] = u[1] + v[1]
+        projection_x_axis(real_plane.add(u, v)) = projection_x_axis(plane_add(u, v)) = (plane_add(u, v)[1], 0) = (u[1] + v[1], 0)
+        projection_x_axis(u) = (u[1], 0)
+        projection_x_axis(v) = (v[1], 0)
+        real_plane.add(projection_x_axis(u), projection_x_axis(v)) = plane_add(projection_x_axis(u), projection_x_axis(v)) = (u[1] + v[1], 0)
+    claim:
+        ? forall a R, v cart(R, R):
+            projection_x_axis(real_plane.smul(a, v)) = real_plane.smul(a, projection_x_axis(v))
+        real_plane.smul = plane_smul
+        plane_smul(a, v) = (a * v[1], a * v[2])
+        plane_smul(a, v)[1] = a * v[1]
+        projection_x_axis(real_plane.smul(a, v)) = projection_x_axis(plane_smul(a, v)) = (plane_smul(a, v)[1], 0) = (a * v[1], 0)
+        projection_x_axis(v) = (v[1], 0)
+        plane_smul(a, projection_x_axis(v)) = (a * v[1], 0)
+        real_plane.smul(a, projection_x_axis(v)) = plane_smul(a, projection_x_axis(v)) = (a * v[1], 0)
+    by def:
+        ? $is_linear_map(R, cart(R, R), cart(R, R), real_plane, real_plane, projection_x_axis)
+
+by thm projection_x_axis_is_linear() => $is_linear_map(R, cart(R, R), cart(R, R), real_plane, real_plane, projection_x_axis)
+by thm linear_map_kernel_is_subspace(R, cart(R, R), cart(R, R), real_plane, real_plane, projection_x_axis) => $is_subspace(R, cart(R, R), real_plane, \linear_kernel<cart(R, R), cart(R, R), real_plane.zero, projection_x_axis>)
+
+projection_x_axis((0, 7)) = (0, 0) = real_plane.zero
+by thm set_builder_member((0, 7), {v cart(R, R): projection_x_axis(v) = real_plane.zero}) => (0, 7) $in {v cart(R, R): projection_x_axis(v) = real_plane.zero}
+(0, 7) $in \linear_kernel<cart(R, R), cart(R, R), real_plane.zero, projection_x_axis>
+
+thm projection_x_axis_is_not_injective:
+    ? forall:
+        not $injective(cart(R, R), cart(R, R), projection_x_axis)
     by contra:
-        ? not $injective(cart(R, R), R, projection_x)
-        $injective(cart(R, R), R, projection_x)
+        ? not $injective(cart(R, R), cart(R, R), projection_x_axis)
+        $injective(cart(R, R), cart(R, R), projection_x_axis)
         by def:
-            ? $injective(cart(R, R), R, projection_x)
-        projection_x((0, 1)) = (0, 1)[1] = 0
-        projection_x((0, 0)) = (0, 0)[1] = 0
-        projection_x((0, 1)) = projection_x((0, 0))
+            ? $injective(cart(R, R), cart(R, R), projection_x_axis)
+        projection_x_axis((0, 1)) = (0, 0)
+        projection_x_axis((0, 0)) = (0, 0)
+        projection_x_axis((0, 1)) = projection_x_axis((0, 0))
         (0, 1) = (0, 0)
         (0, 1)[2] = (0, 0)[2]
-        (0, 1)[2] = 1
-        (0, 0)[2] = 0
         1 = (0, 1)[2] = (0, 0)[2] = 0
         impossible 1 != 0

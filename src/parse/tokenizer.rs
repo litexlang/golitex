@@ -5,7 +5,12 @@
 //!   matched with longest-first priority.
 //! - Double-quoted segments are one token (with `\"` and `\\` skips for the closing quote).
 
-use crate::common::keywords::{key_symbols_sorted_by_len_desc, unicode_alias_tokens};
+use crate::common::keywords::{
+    key_symbols_sorted_by_len_desc, unicode_alias_tokens, UNICODE_C_NOT_ZERO, UNICODE_N_POSITIVE,
+    UNICODE_Q_NEGATIVE, UNICODE_Q_NOT_ZERO, UNICODE_Q_POSITIVE, UNICODE_R_NEGATIVE,
+    UNICODE_R_NOT_ZERO, UNICODE_R_POSITIVE, UNICODE_Z_NEGATIVE, UNICODE_Z_NOT_ZERO,
+    UNICODE_Z_POSITIVE,
+};
 use crate::parse::TokenBlock;
 use crate::prelude::*;
 
@@ -333,6 +338,17 @@ impl Tokenizer {
                 | Q_NOT_ZERO
                 | R_NOT_ZERO
                 | C_NOT_ZERO
+                | UNICODE_N_POSITIVE
+                | UNICODE_Z_POSITIVE
+                | UNICODE_Q_POSITIVE
+                | UNICODE_R_POSITIVE
+                | UNICODE_Z_NEGATIVE
+                | UNICODE_Q_NEGATIVE
+                | UNICODE_R_NEGATIVE
+                | UNICODE_Z_NOT_ZERO
+                | UNICODE_Q_NOT_ZERO
+                | UNICODE_R_NOT_ZERO
+                | UNICODE_C_NOT_ZERO
         ) {
             return true;
         }
@@ -407,6 +423,17 @@ mod tests {
             ("ℚ", vec!["Q"]),
             ("ℝ", vec!["R"]),
             ("ℂ", vec!["C"]),
+            ("ℕ+", vec!["N+"]),
+            ("ℤ+", vec!["Z+"]),
+            ("ℚ+", vec!["Q+"]),
+            ("ℝ+", vec!["R+"]),
+            ("ℤ-", vec!["Z-"]),
+            ("ℚ-", vec!["Q-"]),
+            ("ℝ-", vec!["R-"]),
+            ("ℤ*", vec!["Z*"]),
+            ("ℚ*", vec!["Q*"]),
+            ("ℝ*", vec!["R*"]),
+            ("ℂ*", vec!["C*"]),
             ("π", vec!["pi"]),
             ("∅", vec!["{", "}"]),
         ];
@@ -534,6 +561,12 @@ mod tests {
                 .tokenize_line("N+1 R-x Q-(a) R*x", test_line_file())
                 .unwrap(),
             vec!["N", "+", "1", "R", "-", "x", "Q", "-", "(", "a", ")", "R", "*", "x"]
+        );
+        assert_eq!(
+            tokenizer
+                .tokenize_line("ℕ+1 ℝ-x ℚ-(a) ℝ*x ℕ*", test_line_file())
+                .unwrap(),
+            vec!["N", "+", "1", "R", "-", "x", "Q", "-", "(", "a", ")", "R", "*", "x", "N", "*"]
         );
     }
 }

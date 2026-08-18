@@ -8,15 +8,26 @@ have fn newton_sqrt_two(x R: x != 0) R = (x + 2 / x) / 2
 newton_sqrt_two(1) = 3 / 2
 newton_sqrt_two(3 / 2) = 17 / 12
 
-thm newton_sqrt_two_scaled_error_identity:
+thm newton_sqrt_two_residual_identity:
     ? forall x R:
         x != 0
         =>:
-            4 * x^2 * (newton_sqrt_two(x)^2 - 2) = (x^2 - 2)^2
-    x != 0
+            4 * x^2 * square_root_two_residual(newton_sqrt_two(x)) = square_root_two_residual(x)^2
+    square_root_two_residual(newton_sqrt_two(x)) = newton_sqrt_two(x)^2 - 2
+    square_root_two_residual(x) = x^2 - 2
     newton_sqrt_two(x) = (x + 2 / x) / 2
+    newton_sqrt_two(x)^2 - 2 = ((x + 2 / x) / 2)^2 - 2
+    square_root_two_residual(newton_sqrt_two(x)) = newton_sqrt_two(x)^2 - 2 = ((x + 2 / x) / 2)^2 - 2
+    square_root_two_residual(x)^2 = (x^2 - 2)^2
     4 * x^2 * (((x + 2 / x) / 2)^2 - 2) = (x^2 - 2)^2
-    4 * x^2 * (newton_sqrt_two(x)^2 - 2) = 4 * x^2 * (((x + 2 / x) / 2)^2 - 2) = (x^2 - 2)^2
+    4 * x^2 * square_root_two_residual(newton_sqrt_two(x)) = 4 * x^2 * (((x + 2 / x) / 2)^2 - 2) = (x^2 - 2)^2 = square_root_two_residual(x)^2
 
+newton_sqrt_two(17 / 12) = 577 / 408
 square_root_two_residual(1) = -1
 square_root_two_residual(3 / 2) = 1 / 4
+square_root_two_residual(17 / 12) = 1 / 144
+1 / 144 > 0
+1 / 4 > 0
+abs(square_root_two_residual(17 / 12)) = abs(1 / 144) = 1 / 144
+abs(square_root_two_residual(3 / 2)) = abs(1 / 4) = 1 / 4
+abs(square_root_two_residual(17 / 12)) = 1 / 144 < 1 / 4 = abs(square_root_two_residual(3 / 2))

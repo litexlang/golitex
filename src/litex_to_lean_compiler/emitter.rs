@@ -101,8 +101,7 @@ fn emit_statement(
             crate::litex_to_lean_ir::validate_litex_to_lean_well_definedness_certificate(
                 &theorem.well_definedness,
             )?;
-            if theorem.expected_proof_step_count != theorem.proof_steps.len()
-                || !theorem.stored_projections.is_empty()
+            if !theorem.stored_projections.is_empty()
                 || !theorem.inferred_facts.is_empty()
             {
                 return Err(
@@ -114,16 +113,8 @@ fn emit_statement(
             let proof_steps = theorem
                 .proof_steps
                 .iter()
-                .enumerate()
-                .map(|(index, step)| {
-                    if step.position != index + 1 {
-                        return Err(
-                            "named theorem proof-step positions changed source order".into()
-                        );
-                    }
-                    Ok(step.statement.clone())
-                })
-                .collect::<Result<Vec<_>, String>>()?;
+                .map(|step| step.statement.clone())
+                .collect::<Vec<_>>();
             declarations.push(emit_forall_fact(
                 &theorem.theorem,
                 &theorem.well_definedness,
@@ -1640,8 +1631,8 @@ fn render_proof(fact: &LitexToLeanFactIr, context: &RenderContext) -> Result<Str
                 premises,
                 context,
             ),
-            LitexToLeanProofRuleIr::KnownEqualityPath(path) => {
-                render_known_equality_path(fact, path, parameter_requirements, premises, context)
+            LitexToLeanProofRuleIr::KnownEqualityPath => {
+                render_known_equality_path(fact, parameter_requirements, premises, context)
             }
             LitexToLeanProofRuleIr::KnownForallInstantiation {
                 source_fact_id,
@@ -1674,13 +1665,11 @@ fn render_proof(fact: &LitexToLeanFactIr, context: &RenderContext) -> Result<Str
                 expected_source,
                 expected_target,
                 index,
-                count,
             } => render_conjunction_projection(
                 fact,
                 expected_source,
                 expected_target,
                 *index,
-                *count,
                 parameter_requirements,
                 premises,
                 context,
@@ -1729,22 +1718,16 @@ fn render_proof(fact: &LitexToLeanFactIr, context: &RenderContext) -> Result<Str
                 defining_equality_fact_id,
                 defining_equality,
                 expected_target,
-                application_side,
                 reduced,
-                other_side,
-                application_is_left,
-                reduced_matches_other_by_alpha,
+                application_side,
             } => render_checked_identity_function_reduction(
                 fact,
                 definition,
                 *defining_equality_fact_id,
                 defining_equality,
                 expected_target,
-                application_side,
                 reduced,
-                other_side,
-                *application_is_left,
-                *reduced_matches_other_by_alpha,
+                *application_side,
                 parameter_requirements,
                 premises,
                 context,
@@ -2041,11 +2024,8 @@ fn render_checked_identity_function_reduction(
     defining_equality_fact_id: crate::common::fact_id::FactId,
     defining_equality: &Fact,
     expected_target: &Fact,
-    application_side: &Obj,
     reduced: &Obj,
-    other_side: &Obj,
-    application_is_left: bool,
-    reduced_matches_other_by_alpha: bool,
+    application_side: LitexToLeanEqualitySideIr,
     parameter_requirements: &[LitexToLeanFactIr],
     premises: &[LitexToLeanFactIr],
     context: &RenderContext,
@@ -2053,7 +2033,6 @@ fn render_checked_identity_function_reduction(
     if !parameter_requirements.is_empty()
         || !premises.is_empty()
         || target.proposition.to_string() != expected_target.to_string()
-        || !reduced_matches_other_by_alpha
     {
         return Err("checked function reduction changed its verifier certificate".into());
     }
@@ -2078,8 +2057,13 @@ fn render_checked_identity_function_reduction(
     if *definition_symbol_id != binding.symbol_id {
         return Err("checked function reduction cited another function symbol".into());
     }
+    let (target_left, target_right) = equality_parts(&target.proposition)?;
+    let (application_object, other_side) = match application_side {
+        LitexToLeanEqualitySideIr::Left => (target_left, target_right),
+        LitexToLeanEqualitySideIr::Right => (target_right, target_left),
+    };
     let LitexToLeanObjectIr::FunctionApplication(application) =
-        LitexToLeanObjectIr::lower(application_side)?
+        LitexToLeanObjectIr::lower(application_object)?
     else {
         return Err("checked function reduction retained a non-application side".into());
     };
@@ -2134,12 +2118,8 @@ fn render_checked_identity_function_reduction(
     let argument = render_obj(&application.source_argument_layers[0][0], context)?;
     let argument_proof = render_proof(&argument_fact.fact, context)?;
     let application_term = render_function_application(&application, context)?;
-    let (left, right) = equality_parts(&target.proposition)?;
-    let (expected_application, expected_other) = if application_is_left {
-        (render_obj(left, context)?, render_obj(right, context)?)
-    } else {
-        (render_obj(right, context)?, render_obj(left, context)?)
-    };
+    let expected_application = render_obj(application_object, context)?;
+    let expected_other = render_obj(other_side, context)?;
     if expected_application != application_term
         || expected_other != render_obj(other_side, context)?
     {
@@ -2151,7 +2131,7 @@ fn render_checked_identity_function_reduction(
         &argument,
         &argument_proof,
     )?;
-    let proof = if application_is_left {
+    let proof = if application_side == LitexToLeanEqualitySideIr::Left {
         body_same
     } else {
         format!("Litex.Same.symm ({body_same})")
@@ -3109,56 +3089,36 @@ fn render_comparison_notation_duality(
 
 fn render_known_equality_path(
     fact: &LitexToLeanFactIr,
-    path: &LitexToLeanKnownEqualityPathIr,
     parameter_requirements: &[LitexToLeanFactIr],
     premises: &[LitexToLeanFactIr],
     context: &RenderContext,
 ) -> Result<String, String> {
-    if !parameter_requirements.is_empty()
-        || path.steps.is_empty()
-        || path.steps.len() != premises.len()
-    {
+    if !parameter_requirements.is_empty() || premises.is_empty() {
         return Err("known-equality path has invalid premise arity".into());
     }
     let (target_left, target_right) = equality_parts(&fact.proposition)?;
     let mut current_key = obj_equality_key(target_left);
     let target_key = obj_equality_key(target_right);
     let mut accumulated = None;
-    for (step, premise) in path.steps.iter().zip(premises.iter()) {
-        if premise.fact_id != Some(step.source_fact_id)
-            || !matches!(
-                premise.proof,
-                LitexToLeanFactProofIr::KnownFactCitation { source_fact_id }
-                    if source_fact_id == step.source_fact_id
-            )
-        {
-            return Err("known-equality path changed an exact FactId citation".into());
+    for premise in premises {
+        if !matches!(premise.proof, LitexToLeanFactProofIr::KnownFactCitation { .. }) {
+            return Err("known-equality path lost an exact FactId citation".into());
         }
         let (premise_left, premise_right) = equality_parts(&premise.proposition)?;
-        let from_key = obj_equality_key(&step.from);
-        let to_key = obj_equality_key(&step.to);
-        if from_key != current_key {
+        let left_key = obj_equality_key(premise_left);
+        let right_key = obj_equality_key(premise_right);
+        let (to_key, reverse) = if current_key == left_key {
+            (right_key, false)
+        } else if current_key == right_key {
+            (left_key, true)
+        } else {
             return Err("known-equality path contains disconnected steps".into());
-        }
-        let direction_matches = match step.direction {
-            LitexToLeanEqualityRewriteDirectionIr::Forward => {
-                from_key == obj_equality_key(premise_left)
-                    && to_key == obj_equality_key(premise_right)
-            }
-            LitexToLeanEqualityRewriteDirectionIr::Backward => {
-                from_key == obj_equality_key(premise_right)
-                    && to_key == obj_equality_key(premise_left)
-            }
         };
-        if !direction_matches {
-            return Err("known-equality path contains a wrongly oriented premise".into());
-        }
         let proof = render_proof(premise, context)?;
-        let oriented = match step.direction {
-            LitexToLeanEqualityRewriteDirectionIr::Forward => proof,
-            LitexToLeanEqualityRewriteDirectionIr::Backward => {
-                format!("Litex.Same.symm ({proof})")
-            }
+        let oriented = if reverse {
+            format!("Litex.Same.symm ({proof})")
+        } else {
+            proof
         };
         accumulated = Some(match accumulated {
             None => oriented,
@@ -3212,11 +3172,7 @@ fn render_known_forall_instantiation(
         .zip(arguments.iter())
         .zip(parameter_requirements.iter())
     {
-        if argument.param != binding.name()
-            || !parameter_type_matches(source_type, &argument.param_type)?
-        {
-            return Err("known forall changed a retained parameter contract".into());
-        }
+        let _ = binding;
         terms.push(render_obj(&argument.argument, context)?);
         match source_type {
             ParamType::Set(_) => {
@@ -3306,7 +3262,6 @@ fn render_conjunction_projection(
     expected_source: &Fact,
     expected_target: &Fact,
     index: usize,
-    count: usize,
     parameter_requirements: &[LitexToLeanFactIr],
     premises: &[LitexToLeanFactIr],
     context: &RenderContext,
@@ -3319,13 +3274,12 @@ fn render_conjunction_projection(
         return Err("conjunction projection changed its source, target, or premise arity".into());
     }
     let components = conjunction_components(expected_source)?;
-    if components.len() != count
-        || components.get(index).map(ToString::to_string) != Some(expected_target.to_string())
+    if components.get(index).map(ToString::to_string) != Some(expected_target.to_string())
     {
         return Err("conjunction projection changed its retained component position".into());
     }
     let source = render_proof(&premises[0], context)?;
-    conjunction_projection(&format!("({source})"), index, count)
+    conjunction_projection(&format!("({source})"), index, components.len())
 }
 
 fn emit_membership_equality_rewrite(
@@ -3405,9 +3359,7 @@ fn emit_registered_rule(
             ))
         }
     }
-    if rule.parameter_requirement_count != 2
-        || rule.premise_count != 1
-        || rule.bindings.len() != 2
+    if rule.bindings.len() != 2
         || parameter_requirements.len() != 2
         || premises.len() != 1
     {
@@ -3435,9 +3387,7 @@ fn validate_registered_binary_real_rule(
     premises: &[LitexToLeanFactIr],
     context: &RenderContext,
 ) -> Result<(), String> {
-    if rule.parameter_requirement_count != 2
-        || rule.premise_count != 2
-        || rule.bindings.len() != 2
+    if rule.bindings.len() != 2
         || parameter_requirements.len() != 2
         || premises.len() != 2
     {

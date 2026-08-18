@@ -1,5 +1,6 @@
-/- The same recurrence behind the Litex Pascal-table example, using only
-Lean's automatically loaded Prelude. -/
+/- The same direct recurrence theorem as the Litex Pascal-table example,
+using only Lean's automatically loaded Prelude.  No separate proposition
+wrapper is needed: the recursive equation is already the reusable theorem. -/
 
 def choose : Nat → Nat → Nat
   | 0, 0 => 1

@@ -9,6 +9,18 @@ prop is_probability_vector2(p finite_seq(R, 2)):
 
 have fn expectation2(values, probs finite_seq(R, 2)) R = values(1) * probs(1) + values(2) * probs(2)
 have fn variance2(values, probs finite_seq(R, 2)) R = (values(1) - expectation2(values, probs))^2 * probs(1) + (values(2) - expectation2(values, probs))^2 * probs(2)
+have fn affine_combine2(X, Y finite_seq(R, 2), a, b R) finite_seq(R, 2) = fn(k N+: k <= 2) R {a * X(k) + b * Y(k)}
+
+thm expectation2_affine:
+    ? forall X, Y finite_seq(R, 2), probs finite_seq(R, 2), a, b R:
+        expectation2(affine_combine2(X, Y, a, b), probs) = a * expectation2(X, probs) + b * expectation2(Y, probs)
+    affine_combine2(X, Y, a, b)(1) = a * X(1) + b * Y(1)
+    affine_combine2(X, Y, a, b)(2) = a * X(2) + b * Y(2)
+    expectation2(X, probs) = X(1) * probs(1) + X(2) * probs(2)
+    expectation2(Y, probs) = Y(1) * probs(1) + Y(2) * probs(2)
+    expectation2(affine_combine2(X, Y, a, b), probs) = (a * X(1) + b * Y(1)) * probs(1) + (a * X(2) + b * Y(2)) * probs(2)
+    expectation2(affine_combine2(X, Y, a, b), probs) = a * (X(1) * probs(1) + X(2) * probs(2)) + b * (Y(1) * probs(1) + Y(2) * probs(2))
+    a * expectation2(X, probs) + b * expectation2(Y, probs) = a * (X(1) * probs(1) + X(2) * probs(2)) + b * (Y(1) * probs(1) + Y(2) * probs(2))
 
 have fair_coin_values finite_seq(R, 2) = [0, 1]
 have fair_coin_probs finite_seq(R, 2) = [1 / 2, 1 / 2]
@@ -26,11 +38,11 @@ thm bayes_rule:
         joint = likelihood * prior
         =>:
             conditional_probability(joint, evidence) = bayes_posterior(prior, likelihood, evidence)
-    evidence > 0
-    joint = likelihood * prior
     conditional_probability(joint, evidence) = joint / evidence
     bayes_posterior(prior, likelihood, evidence) = likelihood * prior / evidence
     joint / evidence = likelihood * prior / evidence
 
-conditional_probability(1 / 5, 2 / 5) = 1 / 2
+1 / 4 = (3 / 4) * (1 / 3)
+by thm bayes_rule(1 / 3, 3 / 4, 1 / 2, 1 / 4) => conditional_probability(1 / 4, 1 / 2) = bayes_posterior(1 / 3, 3 / 4, 1 / 2)
+conditional_probability(1 / 4, 1 / 2) = 1 / 2
 bayes_posterior(1 / 3, 3 / 4, 1 / 2) = 1 / 2

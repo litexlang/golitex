@@ -463,7 +463,7 @@ pub enum LitexToLeanProofRuleIr {
         expected_head_membership: Fact,
     },
     EqualityRewrite(LitexToLeanEqualityRewriteIr),
-    KnownEqualityPath(LitexToLeanKnownEqualityPathIr),
+    KnownEqualityPath,
     IffRewrite {
         direction: LitexToLeanIffDirectionIr,
     },
@@ -486,11 +486,8 @@ pub enum LitexToLeanProofRuleIr {
         defining_equality_fact_id: FactId,
         defining_equality: Fact,
         expected_target: Fact,
-        application_side: Obj,
         reduced: Obj,
-        other_side: Obj,
-        application_is_left: bool,
-        reduced_matches_other_by_alpha: bool,
+        application_side: LitexToLeanEqualitySideIr,
     },
     /// Checked unfolding of one concrete proposition definition. In the
     /// enclosing application, the sole premise proves `expected_source`, and
@@ -526,7 +523,6 @@ pub enum LitexToLeanProofRuleIr {
         expected_source: Fact,
         expected_target: Fact,
         index: usize,
-        count: usize,
     },
     ExistIntroduction {
         witnesses: Vec<Obj>,
@@ -564,6 +560,12 @@ pub enum LitexToLeanEqualityRewriteDirectionIr {
     Backward,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum LitexToLeanEqualitySideIr {
+    Left,
+    Right,
+}
+
 /// Equality rewrite metadata. In its enclosing `RuleApplication`, premise 0
 /// is the fact being transported and premise `n + 1` proves `steps[n]`.
 #[derive(Clone, Debug)]
@@ -576,33 +578,6 @@ pub struct LitexToLeanEqualityRewriteStepIr {
     pub from: Obj,
     pub to: Obj,
     pub direction: LitexToLeanEqualityRewriteDirectionIr,
-}
-
-/// A direct equality proof path. In its enclosing `RuleApplication`, premise
-/// `n` is the exact stored equality cited by `steps[n].source_fact_id`.
-#[derive(Clone, Debug)]
-pub struct LitexToLeanKnownEqualityPathIr {
-    pub steps: Vec<LitexToLeanKnownEqualityStepIr>,
-}
-
-#[derive(Clone)]
-pub struct LitexToLeanKnownEqualityStepIr {
-    pub from: Obj,
-    pub to: Obj,
-    pub source_fact_id: FactId,
-    pub direction: LitexToLeanEqualityRewriteDirectionIr,
-}
-
-impl fmt::Debug for LitexToLeanKnownEqualityStepIr {
-    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        formatter
-            .debug_struct("LitexToLeanKnownEqualityStepIr")
-            .field("from", &self.from.to_string())
-            .field("to", &self.to.to_string())
-            .field("source_fact_id", &self.source_fact_id)
-            .field("direction", &self.direction)
-            .finish()
-    }
 }
 
 impl fmt::Debug for LitexToLeanEqualityRewriteStepIr {
@@ -740,9 +715,7 @@ impl fmt::Debug for LitexToLeanProofRuleIr {
             LitexToLeanProofRuleIr::EqualityRewrite(rewrite) => {
                 f.debug_tuple("EqualityRewrite").field(rewrite).finish()
             }
-            LitexToLeanProofRuleIr::KnownEqualityPath(path) => {
-                f.debug_tuple("KnownEqualityPath").field(path).finish()
-            }
+            LitexToLeanProofRuleIr::KnownEqualityPath => f.write_str("KnownEqualityPath"),
             LitexToLeanProofRuleIr::IffRewrite { direction } => f
                 .debug_struct("IffRewrite")
                 .field("direction", direction)
@@ -764,25 +737,16 @@ impl fmt::Debug for LitexToLeanProofRuleIr {
                 defining_equality_fact_id,
                 defining_equality,
                 expected_target,
-                application_side,
                 reduced,
-                other_side,
-                application_is_left,
-                reduced_matches_other_by_alpha,
+                application_side,
             } => f
                 .debug_struct("CheckedFunctionDefinitionReduction")
                 .field("definition", definition)
                 .field("defining_equality_fact_id", defining_equality_fact_id)
                 .field("defining_equality", &defining_equality.to_string())
                 .field("expected_target", &expected_target.to_string())
-                .field("application_side", &application_side.to_string())
                 .field("reduced", &reduced.to_string())
-                .field("other_side", &other_side.to_string())
-                .field("application_is_left", application_is_left)
-                .field(
-                    "reduced_matches_other_by_alpha",
-                    reduced_matches_other_by_alpha,
-                )
+                .field("application_side", application_side)
                 .finish(),
             LitexToLeanProofRuleIr::DefinitionProjection {
                 definition,
@@ -821,13 +785,11 @@ impl fmt::Debug for LitexToLeanProofRuleIr {
                 expected_source,
                 expected_target,
                 index,
-                count,
             } => f
                 .debug_struct("ConjunctionProjection")
                 .field("expected_source", &expected_source.to_string())
                 .field("expected_target", &expected_target.to_string())
                 .field("index", index)
-                .field("count", count)
                 .finish(),
             LitexToLeanProofRuleIr::DisjunctionIntroduction {
                 expected_target,
@@ -924,20 +886,13 @@ pub fn facts_are_comparison_notation_duals(source: &Fact, target: &Fact) -> bool
 
 #[derive(Clone)]
 pub struct LitexToLeanKnownForallArgumentIr {
-    pub param: String,
     pub argument: Obj,
-    /// Records the exact membership or set-property requirement retained from
-    /// Litex. A backend selects the argument carrier without erasing this
-    /// propositional requirement.
-    pub param_type: LitexToLeanParameterTypeIr,
 }
 
 impl fmt::Debug for LitexToLeanKnownForallArgumentIr {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("LitexToLeanKnownForallArgumentIr")
-            .field("param", &self.param)
             .field("argument", &self.argument.to_string())
-            .field("param_type", &self.param_type)
             .finish()
     }
 }

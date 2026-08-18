@@ -33,10 +33,8 @@ thm constant_sequence_has_limit:
                     abs(c - c) = abs(0) = 0
                     0 < epsilon
                     abs(fn(k N+) R {c}(n) - c) = abs(c - c) = 0 < epsilon
-            by def:
-                ? $is_tail_close_to(fn(n N+) R {c}, c, epsilon, 1)
-    by def:
-        ? $has_limit(fn(n N+) R {c}, c)
+            by def $is_tail_close_to(fn(n N+) R {c}, c, epsilon, 1)
+    by def $has_limit(fn(n N+) R {c}, c)
 
 thm sequence_limit_unique:
     ? forall a seq(R), L1, L2 R:
@@ -67,3 +65,22 @@ thm sequence_limit_unique:
         abs(L1 - a(n0)) + abs(a(n0) - L2) = abs(a(n0) - L1) + abs(a(n0) - L2) < abs(L1 - L2) / 3 + abs(L1 - L2) / 3 < abs(L1 - L2)
         abs(L1 - L2) <= abs(L1 - a(n0)) + abs(a(n0) - L2) < abs(L1 - L2)
         impossible abs(L1 - L2) = abs(L1 - L2)
+
+have fn lim by exist!:
+    ? forall a seq(R):
+        $is_convergent_sequence(a)
+        =>:
+            exist! L R st {$has_limit(a, L)}
+    obtain L from $is_convergent_sequence(a)
+    claim:
+        ? forall L1, L2 R:
+            $has_limit(a, L1)
+            $has_limit(a, L2)
+            =>:
+                L1 = L2
+        by thm sequence_limit_unique(a, L1, L2) => L1 = L2
+
+forall a seq(R):
+    $is_convergent_sequence(a)
+    =>:
+        $has_limit(a, lim(a))

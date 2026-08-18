@@ -9,19 +9,27 @@ prop derivative_delta_controlled(f fn(x R) R, x0, slope R, epsilon, delta R+):
         =>:
             abs((f(x) - f(x0)) / (x - x0) - slope) < epsilon
 
-prop has_derivative_at_R(f fn(x R) R, x0, slope R):
+prop has_derivative_at(f fn(x R) R, x0, slope R):
     forall epsilon R+:
         exist delta R+ st {$derivative_delta_controlled(f, x0, slope, epsilon, delta)}
 
 have fn ode_rhs(x, y R) R = 2 * x
+have fn quadratic_solution(c, x R) R = x^2 + c
 have fn ode_solution(x R) R = x^2 + 1
 
 prop solves_ode_at(f fn(t R) R, rhs fn(t, y R) R, x R):
-    exist slope R st {$has_derivative_at_R(f, x, slope), slope = rhs(x, f(x))}
+    exist slope R st {$has_derivative_at(f, x, slope), slope = rhs(x, f(x))}
 
-thm square_plus_one_derivative:
+thm quadratic_initial_value_selects_parameter:
+    ? forall c, y0 R:
+        quadratic_solution(c, 0) = y0
+        =>:
+            c = y0
+    quadratic_solution(c, 0) = 0^2 + c = c
+
+thm ode_solution_has_derivative:
     ? forall x0 R:
-        $has_derivative_at_R(ode_solution, x0, 2 * x0)
+        $has_derivative_at(ode_solution, x0, 2 * x0)
     claim:
         ? forall epsilon R+:
             exist delta R+ st {$derivative_delta_controlled(ode_solution, x0, 2 * x0, epsilon, delta)}
@@ -40,13 +48,14 @@ thm square_plus_one_derivative:
                 (ode_solution(x) - ode_solution(x0)) / (x - x0) - 2 * x0 = x - x0
                 abs((ode_solution(x) - ode_solution(x0)) / (x - x0) - 2 * x0) = abs(x - x0) < epsilon
             by def $derivative_delta_controlled(ode_solution, x0, 2 * x0, epsilon, delta)
-    by def $has_derivative_at_R(ode_solution, x0, 2 * x0)
+    by def $has_derivative_at(ode_solution, x0, 2 * x0)
 
-thm square_plus_one_solves_ode:
+thm ode_solution_solves_equation:
     ? forall x R:
         $solves_ode_at(ode_solution, ode_rhs, x)
     witness $solves_ode_at(ode_solution, ode_rhs, x) from 2 * x:
-        $has_derivative_at_R(ode_solution, x, 2 * x)
+        by thm ode_solution_has_derivative(x) => $has_derivative_at(ode_solution, x, 2 * x)
         ode_rhs(x, ode_solution(x)) = 2 * x
 
 ode_solution(0) = 1
+quadratic_solution(1, 0) = 1

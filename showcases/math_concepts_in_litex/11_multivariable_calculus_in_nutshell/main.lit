@@ -10,25 +10,100 @@ thm quadratic_surface_x_difference_quotient:
         x != p[1]
         =>:
             (quadratic_surface((x, p[2])) - quadratic_surface(p)) / (x - p[1]) = x + p[1]
-    x != p[1]
     x - p[1] != 0
     quadratic_surface((x, p[2])) = x^2 + p[2]^2
     quadratic_surface(p) = p[1]^2 + p[2]^2
     quadratic_surface((x, p[2])) - quadratic_surface(p) = (x^2 + p[2]^2) - (p[1]^2 + p[2]^2) = x^2 - p[1]^2
     x^2 - p[1]^2 = (x - p[1]) * (x + p[1])
-    (x^2 - p[1]^2) / (x - p[1]) = x + p[1]
+    (quadratic_surface((x, p[2])) - quadratic_surface(p)) / (x - p[1]) = (x^2 - p[1]^2) / (x - p[1]) = x + p[1]
 
 thm quadratic_surface_y_difference_quotient:
     ? forall p cart(R, R), y R:
         y != p[2]
         =>:
             (quadratic_surface((p[1], y)) - quadratic_surface(p)) / (y - p[2]) = y + p[2]
-    y != p[2]
     y - p[2] != 0
     quadratic_surface((p[1], y)) = p[1]^2 + y^2
     quadratic_surface(p) = p[1]^2 + p[2]^2
     quadratic_surface((p[1], y)) - quadratic_surface(p) = (p[1]^2 + y^2) - (p[1]^2 + p[2]^2) = y^2 - p[2]^2
     y^2 - p[2]^2 = (y - p[2]) * (y + p[2])
-    (y^2 - p[2]^2) / (y - p[2]) = y + p[2]
+    (quadratic_surface((p[1], y)) - quadratic_surface(p)) / (y - p[2]) = (y^2 - p[2]^2) / (y - p[2]) = y + p[2]
+
+prop x_partial_delta_controlled(f fn(p cart(R, R)) R, point cart(R, R), slope R, epsilon, delta R+):
+    forall x R:
+        x != point[1]
+        abs(x - point[1]) < delta
+        =>:
+            abs((f((x, point[2])) - f(point)) / (x - point[1]) - slope) < epsilon
+
+prop has_x_partial_derivative_at(f fn(p cart(R, R)) R, point cart(R, R), slope R):
+    forall epsilon R+:
+        exist delta R+ st {$x_partial_delta_controlled(f, point, slope, epsilon, delta)}
+
+prop y_partial_delta_controlled(f fn(p cart(R, R)) R, point cart(R, R), slope R, epsilon, delta R+):
+    forall y R:
+        y != point[2]
+        abs(y - point[2]) < delta
+        =>:
+            abs((f((point[1], y)) - f(point)) / (y - point[2]) - slope) < epsilon
+
+prop has_y_partial_derivative_at(f fn(p cart(R, R)) R, point cart(R, R), slope R):
+    forall epsilon R+:
+        exist delta R+ st {$y_partial_delta_controlled(f, point, slope, epsilon, delta)}
+
+thm quadratic_surface_has_x_partial_derivative:
+    ? forall point cart(R, R):
+        $has_x_partial_derivative_at(quadratic_surface, point, 2 * point[1])
+    claim:
+        ? forall epsilon R+:
+            exist delta R+ st {$x_partial_delta_controlled(quadratic_surface, point, 2 * point[1], epsilon, delta)}
+        witness exist delta R+ st {$x_partial_delta_controlled(quadratic_surface, point, 2 * point[1], epsilon, delta)} from epsilon:
+            claim:
+                ? forall x R:
+                    x != point[1]
+                    abs(x - point[1]) < epsilon
+                    =>:
+                        abs((quadratic_surface((x, point[2])) - quadratic_surface(point)) / (x - point[1]) - 2 * point[1]) < epsilon
+                by thm quadratic_surface_x_difference_quotient(point, x) => (quadratic_surface((x, point[2])) - quadratic_surface(point)) / (x - point[1]) = x + point[1]
+                (quadratic_surface((x, point[2])) - quadratic_surface(point)) / (x - point[1]) - 2 * point[1] = x - point[1]
+                abs((quadratic_surface((x, point[2])) - quadratic_surface(point)) / (x - point[1]) - 2 * point[1]) = abs(x - point[1]) < epsilon
+            by def $x_partial_delta_controlled(quadratic_surface, point, 2 * point[1], epsilon, delta)
+    by def $has_x_partial_derivative_at(quadratic_surface, point, 2 * point[1])
+
+thm quadratic_surface_has_y_partial_derivative:
+    ? forall point cart(R, R):
+        $has_y_partial_derivative_at(quadratic_surface, point, 2 * point[2])
+    claim:
+        ? forall epsilon R+:
+            exist delta R+ st {$y_partial_delta_controlled(quadratic_surface, point, 2 * point[2], epsilon, delta)}
+        witness exist delta R+ st {$y_partial_delta_controlled(quadratic_surface, point, 2 * point[2], epsilon, delta)} from epsilon:
+            claim:
+                ? forall y R:
+                    y != point[2]
+                    abs(y - point[2]) < epsilon
+                    =>:
+                        abs((quadratic_surface((point[1], y)) - quadratic_surface(point)) / (y - point[2]) - 2 * point[2]) < epsilon
+                by thm quadratic_surface_y_difference_quotient(point, y) => (quadratic_surface((point[1], y)) - quadratic_surface(point)) / (y - point[2]) = y + point[2]
+                (quadratic_surface((point[1], y)) - quadratic_surface(point)) / (y - point[2]) - 2 * point[2] = y - point[2]
+                abs((quadratic_surface((point[1], y)) - quadratic_surface(point)) / (y - point[2]) - 2 * point[2]) = abs(y - point[2]) < epsilon
+            by def $y_partial_delta_controlled(quadratic_surface, point, 2 * point[2], epsilon, delta)
+    by def $has_y_partial_derivative_at(quadratic_surface, point, 2 * point[2])
+
+prop is_coordinate_gradient_at(f fn(p cart(R, R)) R, point, gradient cart(R, R)):
+    $has_x_partial_derivative_at(f, point, gradient[1])
+    $has_y_partial_derivative_at(f, point, gradient[2])
+
+thm quadratic_gradient_is_coordinate_gradient:
+    ? forall point cart(R, R):
+        $is_coordinate_gradient_at(quadratic_surface, point, quadratic_gradient(point))
+    quadratic_gradient(point) = (2 * point[1], 2 * point[2])
+    quadratic_gradient(point)[1] = (2 * point[1], 2 * point[2])[1] = 2 * point[1]
+    quadratic_gradient(point)[2] = (2 * point[1], 2 * point[2])[2] = 2 * point[2]
+    by thm quadratic_surface_has_x_partial_derivative(point) => $has_x_partial_derivative_at(quadratic_surface, point, 2 * point[1])
+    by thm quadratic_surface_has_y_partial_derivative(point) => $has_y_partial_derivative_at(quadratic_surface, point, 2 * point[2])
+    $has_x_partial_derivative_at(quadratic_surface, point, quadratic_gradient(point)[1])
+    $has_y_partial_derivative_at(quadratic_surface, point, quadratic_gradient(point)[2])
+    by def $is_coordinate_gradient_at(quadratic_surface, point, quadratic_gradient(point))
 
 quadratic_gradient((3, 4)) = (6, 8)
+by thm quadratic_gradient_is_coordinate_gradient((3, 4)) => $is_coordinate_gradient_at(quadratic_surface, (3, 4), quadratic_gradient((3, 4)))

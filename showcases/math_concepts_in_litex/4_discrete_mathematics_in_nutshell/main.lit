@@ -17,19 +17,12 @@ have fn choose_fn(n, k N) N:
     case k <= n: pascal_entry(k, n - k)
     case k > n: 0
 
-prop pascal_identity_for_combination_counts(n, r N+):
-    r < n
-    r > 1
-    choose_fn(n, r) = choose_fn(n - 1, r) + choose_fn(n - 1, r - 1)
-
 thm pascal_identity:
     ? forall n, r N+:
         r < n
         r > 1
         =>:
-            $pascal_identity_for_combination_counts(n, r)
-    r < n
-    r > 1
+            choose_fn(n, r) = choose_fn(n - 1, r) + choose_fn(n - 1, r - 1)
     r <= n
     r <= n - 1
     r - 1 <= n - 1
@@ -71,5 +64,3 @@ thm pascal_identity:
     choose_fn(n, r) = pascal_entry(r, n - r) = pascal_entry(r - 1, n - r) + pascal_entry(r, n - r - 1)
     choose_fn(n - 1, r - 1) + choose_fn(n - 1, r) = pascal_entry(r - 1, n - r) + pascal_entry(r, n - r - 1)
     choose_fn(n, r) = choose_fn(n - 1, r - 1) + choose_fn(n - 1, r) = choose_fn(n - 1, r) + choose_fn(n - 1, r - 1)
-    by def:
-        ? $pascal_identity_for_combination_counts(n, r)

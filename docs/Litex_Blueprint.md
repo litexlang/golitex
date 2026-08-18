@@ -16,7 +16,7 @@ Website: https://litexlang.com/doc/Litex_Blueprint
 
 - [Background](#background)
 - [Starting from the Everyday Mathematical Workflow](#workflow)
-- [A Small but Complete Comparison: Uniqueness of the Identity in a Group](#group-comparison)
+- [A Small but Complete Comparison: A Reciprocal with a Restricted Domain](#reciprocal-comparison)
 - [How Litex Pursues These Goals](#design-goals)
   1. [Users State Mathematical Patterns and Results; the System Searches for Concrete Proof Support](#goal-1)
   2. [Present Set-Theoretic Objects at the Surface](#goal-2)
@@ -104,37 +104,37 @@ Litex turns this everyday workflow into its default execution model. The whole p
 Returning to the sequence example, the Litex code reads more like ordinary mathematical writing to a beginner:
 
 ```litex
-prop is_eventually_close(s fn(n N) R, a R, epsilon R+, N0 N):
-    forall n N:
-        n >= N0
-        =>:
-            abs(s(n) - a) < epsilon
+prop is_eventually_close(s fn(n ℕ) ℝ, a ℝ, ε ℝ+, N0 ℕ):
+    ∀ n ℕ:
+        n ≥ N0
+        →:
+            abs(s(n) - a) < ε
 
-prop converges_to(s fn(n N) R, a R):
-    forall epsilon R+:
-        exist N0 N st {$is_eventually_close(s, a, epsilon, N0)}
+prop converges_to(s fn(n ℕ) ℝ, a ℝ):
+    ∀ ε ℝ+:
+        ∃ N0 ℕ st {$is_eventually_close(s, a, ε, N0)}
 
 thm converges_to_mul_const:
-    ? forall s fn(n N) R, a, c R:
+    ? ∀ s fn(n ℕ) ℝ, a, c ℝ:
         $converges_to(s, a)
-        =>:
-            $converges_to(fn(n N) R {c * s(n)}, c * a)
+        →:
+            $converges_to(fn(n ℕ) ℝ {c * s(n)}, c * a)
     claim:
-        ? forall epsilon R+:
-            exist N0 N st {$is_eventually_close(fn(n N) R {c * s(n)}, c * a, epsilon, N0)}
+        ? ∀ ε ℝ+:
+            ∃ N0 ℕ st {$is_eventually_close(fn(n ℕ) ℝ {c * s(n)}, c * a, ε, N0)}
         abs(c) + 1 > 0
-        epsilon / (abs(c) + 1) $in R+
-        obtain N0 from exist K N st {$is_eventually_close(s, a, epsilon / (abs(c) + 1), K)}
-        witness exist K N st {$is_eventually_close(fn(n N) R {c * s(n)}, c * a, epsilon, K)} from N0:
-            forall n N:
-                n >= N0
-                =>:
-                    abs(s(n) - a) < epsilon / (abs(c) + 1)
+        ε / (abs(c) + 1) ∈ ℝ+
+        obtain N0 from ∃ K ℕ st {$is_eventually_close(s, a, ε / (abs(c) + 1), K)}
+        witness ∃ K ℕ st {$is_eventually_close(fn(n ℕ) ℝ {c * s(n)}, c * a, ε, K)} from N0:
+            ∀ n ℕ:
+                n ≥ N0
+                →:
+                    abs(s(n) - a) < ε / (abs(c) + 1)
                     abs(c * s(n) - c * a) = abs(c * (s(n) - a)) = abs(c) * abs(s(n) - a)
-                    abs(c) * abs(s(n) - a) <= (abs(c) + 1) * abs(s(n) - a) < (abs(c) + 1) * (epsilon / (abs(c) + 1)) = epsilon
-                    abs(fn(k N) R {c * s(k)}(n) - c * a) < epsilon
-            by def $is_eventually_close(fn(n N) R {c * s(n)}, c * a, epsilon, N0)
-    by def $converges_to(fn(n N) R {c * s(n)}, c * a)
+                    abs(c) * abs(s(n) - a) ≤ (abs(c) + 1) * abs(s(n) - a) < (abs(c) + 1) * (ε / (abs(c) + 1)) = ε
+                    abs(fn(k ℕ) ℝ {c * s(k)}(n) - c * a) < ε
+            by def $is_eventually_close(fn(n ℕ) ℝ {c * s(n)}, c * a, ε, N0)
+    by def $converges_to(fn(n ℕ) ℝ {c * s(n)}, c * a)
 ```
 
 Along these two axes, Litex's default interaction runs in the opposite direction from Lean tactics. Here, “opposite” describes only the direction of the default workflows, not the overall capabilities of the two systems.
@@ -156,67 +156,52 @@ These two analogies describe the center of gravity of the default interfaces, no
 > these systems. The references identify neighboring ideas and the resulting
 > differences; they are not claims of direct intellectual influence.
 
-<a id="group-comparison"></a>
-## A Small but Complete Comparison: Uniqueness of the Identity in a Group
+<a id="reciprocal-comparison"></a>
+## A Small but Complete Comparison: A Reciprocal with a Restricted Domain
 
-The group-identity example makes the two workflow differences above concrete. It shows who states the result, who supplies the proof route, and whether the proof is organized from a final Goal downward or from verified facts upward. This comparison also presents definitions and proofs in mathematical order and treats structures and carriers explicitly as set-theoretic objects.
+The reciprocal example makes the interface difference concrete without introducing an algebraic hierarchy. The mathematical intention is simple: a positive real is nonzero, so it may be supplied to a reciprocal function whose declared domain excludes zero.
 
-### Lean: An Explicit Record, Named Hypotheses, and a Proof Script
+### Lean: Package the Domain Condition in a Subtype
 
-The following Lean code uses an explicit `Group` record. In an earlier draft of this comparison, the first line of `calc` used `hright G.one` for `e = G.mul e G.one`, but that hypothesis actually gives `G.mul G.one e = G.one`. The version below matches the hypothesis and is accepted by Lean:
+One ordinary Lean formulation makes the restricted domain a subtype. Calling `reciprocal` then requires constructing a new subtype value that packages the real number together with its nonzero proof:
 
 ```lean
-structure Group where
-  Carrier : Type
-  mul : Carrier → Carrier → Carrier
-  one : Carrier
-  inv : Carrier → Carrier
-  mul_assoc : ∀ a b c : Carrier, mul (mul a b) c = mul a (mul b c)
-  one_mul : ∀ a : Carrier, mul one a = a
-  mul_one : ∀ a : Carrier, mul a one = a
-  mul_left_inv : ∀ a : Carrier, mul (inv a) a = one
+import Mathlib
 
-theorem one_unique
-    (G : Group)
-    (e : G.Carrier)
-    (hleft : ∀ a : G.Carrier, G.mul e a = a)
-    (hright : ∀ a : G.Carrier, G.mul a e = a) :
-    e = G.one := by
-  calc
-    e = G.mul G.one e := (G.one_mul e).symm
-    _ = G.one := hright G.one
+def NonzeroReal :=
+  {x : ℝ // x ≠ 0}
+
+def reciprocal (x : NonzeroReal) : ℝ :=
+  1 / x.1
+
+theorem reciprocal_of_positive (a : ℝ) (ha : 0 < a) :
+    reciprocal ⟨a, ne_of_gt ha⟩ = 1 / a := by
+  rfl
 ```
 
-This corrected Lean proof makes the steps required by the proof term explicit. The hypothesis `hleft` remains because the statement says that `e` is a two-sided identity, although the conclusion itself only needs the right-identity law for the candidate `e` and the left-identity law for `G.one`.
+Lean and Mathlib also permit an unrestricted `ℝ → ℝ` reciprocal because division is total there. The subtype is chosen deliberately in this comparison: it makes the source-level domain condition visible and shows how a type-oriented interface packages the value and proof before application.
 
-The Litex version below presents the same structure and uniqueness argument through a different surface syntax. The five sections following both snippets explain the design contrast once and tie each general point back to this example.
+### Litex: Keep the Object and Grow the Required Facts
 
-### Litex: Structures, Local Facts, and Conclusions in Mathematical Order
-
-The following Litex snippet has been verified with the Litex runner.
+In Litex, `a` remains the same object. `a ℝ` contributes the membership fact `a ∈ ℝ`; `a > 0` supports the next fact `a ≠ 0`; once that domain fact has been checked, the same `a` can be passed directly to `reciprocal`.
 
 ```litex
-struct Group<s nonempty_set>:
-    mul fn(x, y s) s
-    one s
-    inv fn(x s) s
-    <=>:
-        forall x, y, z s:
-            mul(mul(x, y), z) = mul(x, mul(y, z))
-        forall x s:
-            mul(x, one) = x
-            mul(one, x) = x
-            mul(inv(x), x) = one
+have fn reciprocal(x ℝ: x ≠ 0) ℝ = 1 / x
 
-forall s nonempty_set, G &Group<s>, identity s:
-    forall a s:
-        G.mul(identity, a) = a
-        G.mul(a, identity) = a
-    =>:
-        identity = G.mul(G.one, identity) = G.one
+∀ a ℝ:
+    a > 0
+    →:
+        a ≠ 0
+        reciprocal(a) = 1 / a
 ```
 
-With this code comparison in place, the next five sections explain its design differences in turn and return to the example at the end of each section. This keeps the code comparison and the design argument aligned around the same set of correspondences.
+The Litex runner verifies this snippet without `trust`. It checks the function definition and result set, derives nonzero from the strict order, uses that newly accepted fact to justify the application, and then reduces the named function definition.
+
+The two snippets express the same mathematical move but expose different interfaces. Lean constructs `⟨a, ne_of_gt ha⟩ : NonzeroReal`; Litex retains `a` and accumulates the relations needed to use it. This is not a claim that Lean cannot express membership-oriented mathematics, or that Litex avoids all proof structure. It isolates the default question each surface asks: “which typed value should be constructed?” versus “which facts about this object are now available?”
+
+There is also an important compiler boundary. The Lean block above is ordinary hand-written Lean, not generated output. The current Litex-to-Lean compiler already supports the reciprocal definition and an application whose `a ≠ 0` fact is supplied as a premise in [`12_NamedFunction.lit`](../lean/examples/12_NamedFunction.lit). It does not yet replay the stronger within-theorem path in which the first conclusion `a ≠ 0` supplies the well-definedness evidence for the following application. That exact source remains Litex-checkable while compiler emission fails closed; no `axiom` or `sorry` is inserted.
+
+With this comparison in place, the next five sections explain its design differences and return to the same domain condition from five angles.
 
 <a id="design-goals"></a>
 ## How Litex Pursues These Goals
@@ -380,10 +365,11 @@ the named theorem.
 Thus builtin rules and user-proved universal facts are not two unrelated
 automation mechanisms. They feed the same bounded match–substitute–check
 architecture, while remaining distinguishable in the evidence: one cites a
-builtin rule, and the other cites a previously proved fact. More structured
-examples, such as applying the identity laws in a `Group`, scale up the same
-idea; they add `struct` and carrier notation, not a different verification
-principle.
+builtin rule, and the other cites a previously proved fact. Domain-conditioned
+functions scale up the same idea: in the reciprocal example, strict order
+supports nonzero, and that accepted fact then satisfies the function's call
+requirement. The verification principle remains local fact matching even
+though the later expression is well-defined only after the earlier fact.
 
 The apparent magic is therefore mostly careful engineering around candidate
 indexing, canonical structural matching, equality-aware replacement, bounded
@@ -427,14 +413,11 @@ out of the system.
 #### Verification at the Level Where Mathematics Is Written
 
 Much of working mathematics proceeds by using established facts at the
-current level of abstraction. The same mechanism scales to structured
-theories: in the earlier `Group` example, the step
-`identity = G.mul(G.one, identity)` is checked against the identity laws at
-that mathematical level. The additional carrier and `struct` notation changes
-the available facts, not the underlying matching principle. On its ordinary
-verification path, Litex does not first require that local step to be lowered
-into a foundational proof term: it tries the relevant fact instances,
-equality replacements, definitions, and bounded mathematical rules directly.
+current level of abstraction. The reciprocal example stays at that level:
+`a > 0` supports `a ≠ 0`, and the named function definition supports
+`reciprocal(a) = 1 / a`. On its ordinary verification path, Litex does not
+first require the user to construct a subtype term. It tries the relevant fact
+instances, definitions, replacements, and bounded mathematical rules directly.
 
 This differs from Lean's acceptance path, even though Lean source can also be
 high-level. Lean elaboration translates user-facing syntax and tactic results
@@ -517,10 +500,11 @@ For builtin rules, known-`forall` instantiation, computation, and deeper composi
 
 </details>
 
-In the `Group` example, the laws are stated in `<=>:` and the uniqueness
-argument is stated as `identity = G.mul(G.one, identity) = G.one`. The checker
-finds the relevant identity-law instances and equality direction, so the
-source records what should hold while the verification route supplies why.
+In the reciprocal example, the source states `a ≠ 0` and then
+`reciprocal(a) = 1 / a`. The checker supplies two different local reasons: a
+strict-order rule for the first fact and the named function definition for the
+second. The source records what should hold, while the verification route
+records why each line is available.
 
 > **Position in the design space.** Local support search is not unique to Litex:
 > [Lean `grind`](https://lean-lang.org/doc/reference/latest/The--grind--tactic/),
@@ -545,10 +529,11 @@ The Litex surface language presents objects, sets, membership, functions, and st
 
 This does not mean that the language imposes no constraints. In the current implementation, function domains, result sets, structure fields, and set membership are still checked; these constraints are simply written where mathematicians would normally write them. Litex also retains parameterized constructions such as `template`, because ordinary mathematics genuinely needs families of objects indexed by carriers, parameters, or assumptions. Litex does not present itself as a complete dependent type theory.
 
-The `Group` example makes this set-theoretic surface concrete: `s nonempty_set` introduces
-the carrier, `identity s` states membership, and `G &Group<s>` places the
-structure on that set. The carrier constraints remain explicit without first
-presenting them as a user-managed universe hierarchy.
+The reciprocal example makes this surface concrete. `a ℝ` contributes
+membership in the real set, while `a ≠ 0` is a separate applicability fact.
+Litex does not replace `a` with a newly packaged “nonzero real” object before
+the call; the original object remains available with both relations attached
+to it.
 
 > **Position in the design space.** A set-theoretic presentation is not a Litex
 > novelty: [Mizar's library](https://wiki.mizar.org/library/) is based on
@@ -571,10 +556,11 @@ A Litex file has only a few core kinds of action: define an object or concept, c
 
 This does not mean that Litex never needs structured proofs. Existence, contradiction, case analysis, and induction still require the corresponding mathematical moves to be stated explicitly. Routine computation, substitution, and use of known laws, however, need not be decomposed into a pipeline of “set a goal, invoke a tactic, name an intermediate result, invoke another tactic.” The language should not force users to reorder a clear mathematical narrative merely to follow the construction order of a functional proof term.
 
-In the `Group` declaration, multiplication is written as the binary function
-`mul fn(x, y s) s` and used as `G.mul(x, y)`. The definition therefore exposes
-the familiar mathematical arity instead of requiring the user-facing syntax
-to present multiplication as a curried chain of unary functions.
+In the reciprocal example, the file follows the ordinary mathematical order:
+define the restricted function, assume positivity, state nonzero, and apply
+the function. The source does not interrupt that sequence with a constructor
+such as `⟨a, ne_of_gt ha⟩`; the domain evidence stays visible as the
+mathematical fact `a ≠ 0`.
 
 > **Position in the design space.** Readable, declarative mathematical syntax also
 > has important predecessors: Mizar organizes formal articles as sequences of
@@ -593,9 +579,10 @@ A textbook-like surface does not lower the standard of checking. In the current 
 
 Litex is therefore not a replacement for Lean, Coq, or Isabelle. It currently tests a complementary interface: can a smaller, readable, fact-oriented, set-theoretic surface make it inexpensive enough for students, domain researchers, and AI agents to produce, check, and repair useful formal mathematical data? Whether this interface experiment succeeds must be demonstrated through runnable examples, recorded failures, tests, rule audits, and independent checking—not by how natural the syntax appears.
 
-The `Group` snippet passes only after the runner checks its fields, carrier
-memberships, law instances, and both links of the equality chain. It contains
-no `trust`; any such statement would instead be an explicit addition to the
+The reciprocal snippet passes only after the runner checks the function body
+and result set, real membership, strict order, the derived nonzero fact, the
+application's domain requirement, and the final equality. It contains no
+`trust`; any such statement would instead be an explicit addition to the
 trusted boundary, alongside the checker and its builtin and inference rules.
 
 The intended fast path and this trusted boundary are two sides of the same
@@ -733,10 +720,11 @@ proof state, so Infoview reports which Goal remains after each step.
 
 Together, the two examples make “bottom-up” concrete. Lean begins with a complete Goal and rewrites or decomposes it until it reaches known facts. Litex establishes checkable equalities or membership facts until they support the final conclusion. Ordinary mathematical writing often works similarly: definitions, known facts, and decisive intermediate results are recorded first and then converge on a conclusion, rather than always decomposing a formal Goal backward into subgoals. For both people and AI systems, proposing meaningful intermediate expressions is often more natural than continually remembering library identifiers such as `pow_two` and `mul_assoc` together with their invocation directions. This common tendency does not mean that every mathematical discovery or proof is strictly bottom-up: induction, contradiction, existence proofs, and complex theorems may still need an explicit goal structure.
 
-Returning to `Group`, the structure laws are verified and stored when the
-concept is defined; the candidate identity laws later enlarge the context;
-only then is the uniqueness chain checked. That sequence is the same
-bottom-up pattern illustrated by the calculation and inclusion examples.
+Returning to `reciprocal`, its definition is verified and stored first. Inside
+the later universal fact, positivity supports nonzero; only after that fact is
+accepted is the restricted application checked. This is the same bottom-up
+pattern illustrated by the calculation and inclusion examples, compressed
+into a function call whose well-definedness visibly depends on context growth.
 
 > **Position in the design space.** Mizar and Isar already support forward,
 > declarative proof text; ACL2 grows a reusable theorem database; and Naproche

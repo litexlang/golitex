@@ -16,6 +16,20 @@
 # Former limitation: `∃!` composed into the right tokens, but had no persistent
 # end-to-end example documenting that it is the Unicode spelling of `exist!`.
 #
+# 1 ∈ ℕ+
+# 1 ∈ ℤ+
+# 1 ∈ ℚ+
+# 1 ∈ ℝ+
+# -1 ∈ ℤ-
+# -1 ∈ ℚ-
+# -1 ∈ ℝ-
+# 1 ∈ ℤ*
+# 1 ∈ ℚ*
+# 1 ∈ ℝ*
+# 1 ∈ ℂ*
+# Former behavior: a blackboard-bold carrier followed by `+`, `-`, or `*` was
+# split into separate tokens instead of using the corresponding compact set.
+#
 # Now (verified): the active examples below use every supported Unicode alias.
 
 ∀ x ℝ:
@@ -52,6 +66,17 @@ witness ∃! n ℝ st {n = 0} from 0:
 1 ∈ ℚ
 1 ∈ ℝ
 1 ∈ ℂ
+1 ∈ ℕ+
+1 ∈ ℤ+
+1 ∈ ℚ+
+1 ∈ ℝ+
+-1 ∈ ℤ-
+-1 ∈ ℚ-
+-1 ∈ ℝ-
+1 ∈ ℤ*
+1 ∈ ℚ*
+1 ∈ ℝ*
+1 ∈ ℂ*
 ∅ ⊆ ℕ
 ℤ ⊇ ℕ
 
@@ -82,5 +107,7 @@ claim:
 # numeric multiplication is still written `2 * 3 = 6`. The executable boundary
 # is `unicode_cart_does_not_mean_numeric_multiplication`. `witness ∃!` still
 # requires an explicit uniqueness proof; omitting it remains rejected by
-# `witness_exist_unique_rejects_missing_uniqueness_proof`.
+# `witness_exist_unique_rejects_missing_uniqueness_proof`. `ℕ*` remains
+# unsupported, matching the absence of an ASCII `N*`; the parser regression is
+# `unicode_and_ascii_facts_share_one_canonical_representation`.
 # Evidence: target/release/litex -compact -isolated -runner -f examples/03_language_features/unicode_math_aliases.lit
