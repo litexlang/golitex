@@ -3,12 +3,14 @@
 ## Purpose and scope
 
 This module is a synthetic counterpart to the analytic plane in
-`2_euclidean_geometry`. Its authoritative first-version source is the
-Schwabhäuser–Szmielew–Tarski axiom hierarchy as exposed by GeoCoq:
-dimensionless neutral geometry, decidable point equality, two-dimensionality,
-and the Euclidean parallel extension. Continuity, coordinates, angles,
-circles, and the hyperbolic extension are deliberately outside the executable
-first slice.
+`2_euclidean_geometry`. Its authoritative source is the
+Schwabhäuser–Szmielew–Tarski axiom hierarchy and the Chapter 2–11 definitions
+exposed by GeoCoq. The executable target is a source-aligned minimal foundation:
+it declares the central relation introduced by each chapter and proves the
+neutral dependency chain needed for Euclid I.5, the equality of the base
+angles of an isosceles triangle. It does not claim complete theorem coverage
+of those GeoCoq chapters. Continuity, coordinates, circles, and the hyperbolic
+extension remain outside this slice.
 
 The intended reader is someone comparing proof interfaces rather than logical
 expressive power. The module should show that Litex can keep a point carrier,
@@ -24,6 +26,9 @@ readable setting-first development.
   `Point × Point × Point × Point`.
 - Named settings are theorem-facing assumption bundles. They expose an
   explicit axiom boundary without injecting a global Litex `axiom`.
+- Conditional existential axiom conclusions are packaged as concrete
+  witness-existence predicates. This is propositionally the same statement,
+  but gives existential elimination a named atomic source in Litex.
 - Concrete predicates provide readable judgment interfaces over the primitive
   relation sets.
 - A theorem is `checked under the setting`; this does not prove that a model of
@@ -113,10 +118,39 @@ readable setting-first development.
 - **Nearest wrong alternative:** A selected `midpoint(A, B)` function would
   claim existence and uniqueness before those theorems have been derived.
 - **Dependencies:** Betweenness and segment congruence.
-- **Downstream uses:** The future midpoint-existence and midpoint-uniqueness
-  tracer once the required Chapter 2–7 neutral lemmas exist.
-- **Allowable hole:** Existence, uniqueness, and canonical selection are
-  intentionally not claimed by the first executable slice.
+- **Downstream uses:** Perpendicularity and reflection definitions in Chapters
+  8–10.
+- **Allowable hole:** General midpoint existence is GeoCoq Chapter 8's involved
+  orthogonality result, not a Chapter 7 primitive. The I.5 tracer uses a direct
+  segment-construction proof and does not smuggle midpoint existence into the
+  setting.
+
+### Chapter 2–11 relation layer
+
+- **Ordinary meaning:** The layer follows GeoCoq's source order: congruence
+  algebra; betweenness; triangle congruence and collinearity; segment order;
+  rays; midpoints; perpendicularity; plane sides and point reflection; line
+  reflection; and angle congruence.
+- **Semantic role:** Derived relations plus the smallest checked theorem family
+  needed to consume them.
+- **Ideal Litex form:** Concrete `prop` declarations over `Point`, `Bet`, and
+  `Cong`; no coordinate carrier, quotient angle object, or numerical length.
+- **Interface sketch:** `are_triangles_congruent`, `is_segment_le`,
+  `is_out_on_ray`, `is_perpendicular`, `are_on_opposite_sides`,
+  `is_reflection_in_line`, and `are_angles_congruent` retain the witness-based
+  GeoCoq definitions.
+- **Nearest wrong alternative:** Replacing angle congruence by an unexplained
+  SSS abbreviation would make Euclid I.5 short but would no longer implement
+  GeoCoq Definition 11.2.
+- **Dependencies:** Every chapter definition may use only primitive relations
+  and earlier chapter interfaces. The Chapter 11 tracer constructs the four
+  witnesses in Definition 11.2 directly and uses the five-segment axiom three
+  times; this avoids depending on GeoCoq's later Chapter 8 midpoint-existence
+  development.
+- **Downstream uses:** `isosceles_triangle_has_equal_base_angles`.
+- **Allowable hole:** The public layer need not reproduce every lemma from each
+  GeoCoq chapter. Perpendicularity, side, and reflection receive definition-use
+  probes but are not artificial dependencies of Euclid I.5.
 
 ## Dependency map
 
@@ -130,7 +164,17 @@ Point
   -> neutral SST setting                            [source, law]
        -> congruence reflexivity                    [proof]
        -> congruence symmetry                       [proof]
-       -> midpoint relation                         [definition]
+       -> congruence algebra (Ch2)                  [proof]
+       -> betweenness algebra (Ch3)                 [proof]
+            -> Cong_3 and Col (Ch4)                 [definition]
+            -> segment order (Ch5)                  [definition]
+            -> rays (Ch6)                           [definition]
+            -> midpoint relation (Ch7)              [definition]
+            -> perpendicularity (Ch8)               [definition]
+            -> plane sides and point reflection (Ch9) [definition]
+            -> line reflection (Ch10)               [definition]
+            -> exact angle congruence (Ch11)         [definition, proof]
+                 -> isosceles base angles            [proof]
        -> decidable-equality extension              [source, law]
             -> 2D extension                         [source, law]
                  -> Euclidean extension             [source, law]
@@ -145,20 +189,25 @@ wait for both existence and uniqueness rather than feeding either theorem.
 1. Declare the two primitive relation predicates.
 2. Declare the dimensionless neutral setting from the SST/GeoCoq source.
 3. Derive segment congruence reflexivity and symmetry.
-4. Declare collinearity and midpoint as derived relations and add immediate
-   definition-use probes.
-5. Layer decidable equality, two-dimensionality, and the Euclidean postulate.
-6. In later work, develop neutral betweenness and construction lemmas through
-   midpoint uniqueness before adding a canonical midpoint selector.
-7. Fix a standard hyperbolic postulate and continuity formulation before
+4. Add the Chapter 2–4 congruence, betweenness, triangle-congruence, and
+   collinearity foundation.
+5. Add the Chapter 5–7 segment-order, ray, and midpoint relation layer.
+6. Add the Chapter 8–10 perpendicularity, side, and reflection definitions
+   with use probes.
+7. Add exact GeoCoq-style angle congruence and prove Euclid I.5 by direct
+   construction of its four witnesses plus three five-segment applications.
+8. Layer decidable equality, two-dimensionality, and the Euclidean postulate;
+   verify that I.5 remains neutral and does not consume either extension.
+9. Fix a standard hyperbolic postulate and continuity formulation before
    adding those sibling extensions.
 
 ## Interface decisions and permissible gaps
 
 The point-only carrier and the two primitive relation sets are fixed. Settings,
 not global axioms or first-class structs, are the public theorem-facing
-boundary for this showcase. Midpoint remains a relation until existence and
-uniqueness are checked. Euclidean and future hyperbolic theories must share the
-neutral prefix rather than copy it. The first slice may omit continuity,
-coordinates, and downstream synthetic geometry, but it may not relabel an
-unproved or assumed result as checked.
+boundary for this showcase. Midpoint remains a relation; this slice does not
+claim GeoCoq Chapter 8's later general existence theorem. Angle congruence uses GeoCoq Definition 11.2 rather than a
+numerical angle or an SSS alias. Euclid I.5 must typecheck under the neutral
+setting, demonstrating that the Euclidean parallel axiom is unrelated to this
+theorem. The slice may omit continuity, coordinates, and unrelated downstream
+theorems, but it may not relabel an unproved or assumed result as checked.

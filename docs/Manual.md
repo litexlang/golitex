@@ -82,30 +82,18 @@ Comparisons](Representative_Lean_Litex_Example_Comparisons.md).
 Litex is not a replacement for Lean, Coq, or Isabelle. Its checker, builtin
 objects, builtin verification and inference rules, imported assumptions, and
 every explicit `trust` or `axiom` are relevant to the trusted boundary.
-`trust` records an assumption; it is not a proof. The current Litex-to-Lean code is a
-deliberately partial compiler, not a general compiler. Its checked subset now
-includes selected declarations, recursive proof certificates, explicit-value
-`have`, checked real-carrier selection such as `have x R`, binary `by cases`
-with branch-local proof statements, nested proof-control, and structural
-conjunct projections, atomic `by contra` with local proof statements and an
-explicit double-negation bridge for negative targets, positive `witness exist`, and positive existential
-extraction through `obtain` or body-style `have`, alongside a limited set of
-object and builtin-rule backends. It also includes source-named theorems,
-checked `have fn name(args) range = body` definitions, set builders, and one
-tuple-construction recipe. Selection and extraction consume retained
-existential certificates and emit `Exists.choose` plus `choose_spec`; they do
-not invent opaque values. `exist!`, `not exist`, and preimage extraction remain
-outside this slice. Unsupported statements remain explicit instead of becoming
-`sorry` or implicit axioms, so reliability claims must stay grounded in
-inspectable rules, tests, verifier output, and trust reporting.
+`trust` records an assumption; it is not a proof. A successful Litex check is
+therefore a claim relative to the checker, its builtin rules, and any visible
+trusted inputs. Use `-strict` when a run must reject user `trust`, `trust have`,
+and `axiom` statements.
 
-Within the universal-`Litex.Object` backend, the first statement-definition
-tranche compiles `abstract_prop`, bodyful `prop`, explicit-value
-`have name S = value`, ordinary `trust fact`, and concrete `by def`. Only the
-explicit trusted proposition becomes a target axiom; definition consequences
-are checked theorems. The later named-function slice supports only a checked
-body equality with a replayable domain/range recipe; bodyless concrete `prop`,
-`trust have`, and unsupported function declaration forms still fail closed.
+The Litex-to-Lean compiler provides an additional, independent checking path
+for the language subset it supports. It is deliberately fail-closed: an
+unsupported Litex construct must be reported instead of being translated with
+`sorry` or an implicit project axiom. Compiler coverage changes more quickly
+than the language reference, so the active representation, supported examples,
+and current boundary live in the [compiler README](../lean/README.md), not in
+this manual.
 
 ---
 
@@ -148,9 +136,6 @@ own well-definedness obligations. These restrictions are what separate
 "every object is set-coded" from the inconsistent claim that every predicate
 defines a set of all objects.
 
-The active Litex-to-Lean wrapper design and current implementation boundary
-are recorded in the [compiler README](../lean/README.md).
-
 ### Names, numbers, and arithmetic
 
 Names refer to builtin objects, earlier declarations, local binders, or
@@ -161,8 +146,7 @@ division, then addition and subtraction.
 User-defined names may begin with a letter or one underscore and may then use
 letters, numbers, and underscores. The prefix `__` is reserved for generated
 names and is rejected in Litex source. Prefixes such as `h_` and `fn_` remain
-ordinary user space; the compiler's own Lean helpers instead use names such as
-`__fact43`, `__h0_1`, and `__wd0_7`.
+ordinary user space.
 
 ```litex
 have x R = 3
@@ -193,131 +177,34 @@ sqrt(4) = 2
 | `re(z)`, `img(z)`, `C_abs(z)` | Real coordinate, imaginary coordinate, and complex modulus |
 | `finite_set_max(S)`, `finite_set_min(S)` | Extremum of a suitable finite set |
 
-Concrete gcd calls normalize inside ordinary facts, so
-`gcd(54, -24) = 6` verifies directly and `gcd(54, -24) + 1 = 7` behaves like
-ordinary arithmetic. Write `eval gcd(54, -24)` when an explicit evaluation
-statement is the intended presentation. Signs do not affect the positive
-result. The pair `(0, 0)` is intentionally outside the object's domain.
-
-Native `quot(a, d)` uses Euclidean division with a nonnegative remainder:
-`a = d * quot(a, d) + a % d`. In particular, `quot(-7, 3) = -3` and
-`-7 % 3 = 2`. The positive-divisor requirement is part of the object's domain.
-
-Native `lcm`, integer rounding, and binary extrema likewise normalize exact
-numeric inputs:
+Exact numeric calls normalize inside ordinary facts or `eval` statements:
 
 ```litex
+gcd(54, -24) = 6
+quot(-7, 3) = -3
+-7 % 3 = 2
 lcm(12, -18) = 36
 lcm(0, 0) = 0
 floor(3.75) = 3
-floor(-3.75) = -4
 ceil(3.25) = 4
 min(7, -2) = -2
 max(7, -2) = 7
-```
-
-Floor and ceiling return integers, expose their characteristic bounds, preserve
-weak order, commute with integer translation, and are dual under negation.
-`min` and `max` expose their argument bounds, componentwise monotonicity, and
-the usual commutative, associative, idempotent, and absorption laws. Native
-`lcm` is symmetric, divides by either nonzero input in the Euclidean-remainder
-sense, is bounded by every positive common multiple, and satisfies
-`lcm(a, b) * gcd(a, b) = abs(a * b)` for non-all-zero integer pairs.
-
-```litex
-forall x R:
-    floor(x) $in Z
-    ceil(x) $in Z
-    floor(x) <= x
-    x < floor(x) + 1
-    ceil(x) - 1 < x
-    x <= ceil(x)
-
-forall a, b R:
-    a <= b
-    =>:
-        min(a, b) = a
-        max(a, b) = b
-
-forall a, b R:
-    a <= b
-    =>:
-        floor(a) <= floor(b)
-        ceil(a) <= ceil(b)
-
-forall x R, n Z:
-    floor(x + n) = floor(x) + n
-    floor(-x) = -ceil(x)
-```
-
-The five names are hard-reserved. LaTeX uses the conventional floor, ceiling,
-minimum, maximum, and least-common-multiple notation. Python extraction uses
-`math.floor`, `math.ceil`, `min`, `max`, and `math.lcm`. These objects are
-outside the current checked Litex-to-Lean subset.
-
-The second native-function batch adds `exp`, `ln`, `sign`, and `factorial`.
-Their exact special values and finite integer calculations normalize directly:
-
-```litex
 exp(0) = 1
 ln(1) = 0
 sign(-9) = -1
-sign(0) = 0
-sign(2.5) = 1
 factorial(10) = 3628800
 ```
 
-`exp` maps reals to positive reals and preserves strict and weak order. `ln`
-accepts positive real arguments, agrees with `log(e, x)`, and preserves strict
-and weak order on that domain. Both functions also reflect strict/weak order
-and equality, so their outputs can be used to recover input facts. The two
-functions expose their inverse and elementary algebra laws. Litex does not
-decimal-approximate transcendental values: `exp(2)` and `ln(2)` remain symbolic.
-
-```litex
-forall x R:
-    exp(x) $in R+
-    exp(x) = e^x
-    ln(exp(x)) = x
-
-forall x R:
-    x > 0
-    =>:
-        exp(ln(x)) = x
-        ln(x) = log(e, x)
-
-forall a, b R:
-    exp(a + b) = exp(a) * exp(b)
-
-forall a, b R:
-    a < b
-    =>:
-        exp(a) < exp(b)
-
-forall a, b R+:
-    a <= b
-    =>:
-        ln(a) <= ln(b)
-
-forall a, b R:
-    exp(a) = exp(b)
-    =>:
-        a = b
-
-forall a, b R+:
-    ln(a) < ln(b)
-    =>:
-        a < b
-```
-
-`sign` always returns an integer between `-1` and `1`, preserves weak order,
-is odd and multiplicative, and characterizes zero and nonzero arguments. It
-also satisfies `sign(x) * abs(x) = x`. `factorial` accepts `N`, returns `N+`,
-exposes the successor recurrence, preserves weak order (and strict order away
-from the `0! = 1!` boundary), and makes every earlier factorial divide a later
-one. All four names are hard-reserved. Python extraction uses `math.exp`,
-`math.log`, a conditional sign expression, and `math.factorial`. These objects
-are outside the current checked Litex-to-Lean subset.
+`gcd(a,b)` requires integer arguments that are not both zero. `quot(a,d)` uses
+Euclidean division with `d $in N+`, so
+`a = d * quot(a,d) + a % d` with a nonnegative remainder. `lcm`, `floor`,
+`ceil`, `min`, and `max` have the domains shown in [Main object
+criteria](#main-object-criteria).
+`exp` is total on `R`; `ln` requires a positive real; `sign` accepts a real;
+and `factorial` accepts a natural. Transcendental values such as `exp(2)` and
+`ln(2)` remain symbolic rather than being replaced by decimal approximations.
+These builtin names are reserved. Their verified algebraic and order laws are
+listed under [Native numeric function rules](#native-numeric-function-rules).
 
 The parser does not make an invalid expression meaningful:
 
@@ -355,18 +242,8 @@ Both names are hard-reserved and cannot be rebound as declarations,
 parameters, indices, or fields. Longer names such as `e1`, `epsilon`, and
 `pi_value` remain ordinary identifiers.
 
-The output backends preserve the named constants rather than inserting decimal
-approximations:
-
-| Backend | `e` | `pi` |
-|---|---|---|
-| LaTeX | `\mathrm{e}` | `\pi` |
-| Python extractor | `math.e` | `math.pi` |
-
-The current checked Litex-to-Lean subset does not lower these symbolic constants.
-
-The symbolic evaluator likewise does not assign decimal runtime values to
-these constants.
+The symbolic evaluator does not replace these constants with decimal runtime
+values.
 
 ### Native real trigonometry (beta preview)
 
@@ -375,68 +252,14 @@ not source-defined functions or ordinary function calls. Their arguments are
 real angles in radians. `sin` and `cos` are total on `R`; `tan(x)` is
 well-defined only when `cos(x) != 0`, and `cot(x)` only when `sin(x) != 0`.
 
-The kernel keeps one centralized symbolic interface. Its core consists of the
-values at `0` and `pi / 2`, the sine and cosine addition formulas, the
-unit-circle identity, and the quotient definitions of tangent and cotangent:
+The expressions remain symbolic, while common exact identities verify:
 
 ```litex
 sin(0) = 0
 cos(0) = 1
-sin(pi / 2) = 1
-cos(pi / 2) = 0
-
-forall x, y R:
-    sin(x + y) = sin(x) * cos(y) + cos(x) * sin(y)
-    cos(x + y) = cos(x) * cos(y) - sin(x) * sin(y)
-
 forall x R:
     sin(x)^2 + cos(x)^2 = 1
 ```
-
-A single canonical normalizer builds the derived layers from that interface.
-It handles parity, difference and double-angle formulas, values at integral
-and supported half-integral multiples of `pi`, cofunction and shift formulas,
-periodicity, and the `[-1, 1]` bounds. Those are not maintained as unrelated
-copies:
-
-```litex
-forall x R:
-    sin(-x) = -sin(x)
-    cos(-x) = cos(x)
-    sin(2 * x) = 2 * sin(x) * cos(x)
-    cos(2 * x) = 1 - 2 * sin(x)^2
-    sin(x + 2 * pi) = sin(x)
-    cos(x + 2 * pi) = cos(x)
-    -1 <= sin(x) <= 1
-    -1 <= cos(x) <= 1
-
-sin(pi) = 0
-cos(pi) = -1
-```
-
-Tangent and cotangent uses must expose the appropriate denominator fact:
-
-```litex
-forall x R:
-    cos(x) != 0
-    =>:
-        tan(x) = sin(x) / cos(x)
-        cos(x + pi) != 0
-        tan(x + pi) = tan(x)
-
-forall x R:
-    sin(x) != 0
-    =>:
-        cot(x) = cos(x) / sin(x)
-        sin(x + pi) != 0
-        cot(x + pi) = cot(x)
-```
-
-The kernel also supplies `3 < pi < 4`, the standard sign intervals for sine,
-cosine, tangent, and cotangent, and local monotonicity for sine on
-`[-pi/2, pi/2]`, cosine on `[0, pi]`, tangent on `(-pi/2, pi/2)`, and
-cotangent on `(0, pi)`. Tangent and cotangent statements must still make each
-argument's open-domain bounds available for well-definedness.
 
 The preview intentionally does not assign every familiar special-angle value;
 for example, `sin(pi / 6) = 1 / 2` still needs an explicit source fact.
@@ -445,10 +268,10 @@ and continuity theorems are also outside this interface.
 
 The names `sin`, `cos`, `tan`, and `cot` are hard-reserved. Their bare names
 are not first-class function values; higher-order code can use
-`fn(x R) R {sin(x)}`. LaTeX emits standard trigonometric notation. The
-evaluator and current Python extractor report native trigonometric expressions
-as unsupported. They are also outside the current checked Litex-to-Lean subset rather
-than being assigned a library semantics silently.
+`fn(x R) R {sin(x)}`. The evaluator does not assign approximate runtime values
+to symbolic trigonometric expressions. The supported exact identities, bounds,
+sign intervals, and monotonicity shapes are summarized under [Trigonometric
+rules](#trigonometric-rules).
 
 ### Complex scalars (beta preview)
 
@@ -526,10 +349,7 @@ i^(1 / 2)
 ```
 
 `C`, `i`, `re`, `img`, and `C_abs` are hard-reserved builtin names and cannot
-be rebound as declarations, parameters, indices, or fields. Mechanical
-migration therefore means renaming every user-defined binding with one of
-these spellings before parsing it; binding sites do not receive a legacy
-compatibility interpretation.
+be rebound as declarations, parameters, indices, or fields.
 
 ### Sets and set-forming objects
 
@@ -874,22 +694,6 @@ Consequently, `finite_set_sum(3...1, fn(k Z) Z {0}) = 0` and the analogous
 empty product equal to `1` are well-defined, while range `sum(3,1,...)` and
 `product(3,1,...)` remain outside the nonempty range-aggregate contract.
 
-Closed-range sums distribute over pointwise subtraction when all three
-summands use the same endpoints and their declared scalar return sets embed in
-an additive carrier (`Z`, `Q`, `R`, or `C`). Unary negation is the existing
-scalar-multiplication rule with scalar `-1`:
-
-```litex
-have f fn(k Z) R
-have g fn(k Z) R
-
-sum(1, 3, fn(k Z) R {f(k) - g(k)}) = sum(1, 3, fn(k Z) R {f(k)}) - sum(1, 3, fn(k Z) R {g(k)})
-sum(1, 3, fn(k Z) R {-f(k)}) = -sum(1, 3, fn(k Z) R {f(k)})
-```
-
-This rule does not totalize natural subtraction: a function declared to return
-`N` must still prove that its pointwise difference belongs to `N`.
-
 The generic folds are not restricted to scalar arithmetic. For both forms,
 `op` must have an unconditional homogeneous signature `fn(x, y T) T`, `f`
 must be unary with return set `T`, and `seed` must belong to `T`; the result
@@ -906,84 +710,15 @@ set returns `seed`; `seed` need not be an identity element. If order matters
 or `op` is noncommutative, provide an explicit integer enumeration and use
 `reduce` instead.
 
-Generic reductions connect to the existing aggregate and function interfaces
-through the following direct rules:
-
-| Verified shape | Required relationship |
-|---|---|
-| `reduce(a,b,f,op,0) = sum(a,b,g)` | Same bounds, `f` and `g` pointwise equal on `a...b`, and `op(x,y) = x + y` on its carrier |
-| `reduce(a,b,f,op,1) = product(a,b,g)` | Same bounds, pointwise-equal functions, and `op(x,y) = x * y` |
-| `finite_set_reduce(S,f,op,0) = finite_set_sum(S,g)` | Equal finite sets, pointwise equality on `S`, and additive `op` |
-| `finite_set_reduce(S,f,op,1) = finite_set_product(S,g)` | Equal finite sets, pointwise equality on `S`, and multiplicative `op` |
-| two reductions with otherwise equal arguments | `$fn_eq_in(f,g,a...b)` or `$fn_eq_in(f,g,S)` |
-| `reduce(a,b,f,op,s) = reduce(c,d,fn(k Z) T {f(a+(k-c))},op,s)` | `a <= b` and `b-a = d-c`; this is an order-preserving translation, so no operation law is needed |
-| `reduce(a,b,f,op,s) = reduce(a+1,b,f,op,op(s,f(a)))` | `a <= b`; consume the first value into the seed |
-| `reduce(a,b,f,op,s) = op(reduce(a,b-1,f,op,s),f(b))` | `a <= b`; consume the last value after the prefix |
-| `reduce(a,c,f,op,s) = reduce(b+1,c,f,op,reduce(a,b,f,op,s))` | `a <= b < c`; no commutativity assumption |
-| `finite_set_reduce(union(A,B),f,op,s) = finite_set_reduce(A,f,op,finite_set_reduce(B,f,op,s))` | `intersect(A,B) = {}` |
-| a finite-set pullback written as `fn(y B) T {f(g(y))}` | `$bijective(B,A,g)`; a checked named function may unfold once to the same shape |
-
-The operation test is extensional rather than name-based. A user-defined prop
-may provide `forall x, y T: op(x,y) = x + y`; once that prop is verified and
-its definition has unfolded into the proof context, the sum bridge can use the
-fact. Likewise, congruence consumes the existing `$fn_eq_in` predicate, and
-reindexing consumes the existing `$bijective` predicate. These are one-step
-builtin rules: they use relationships already present in the context but do
-not invent a pointwise proof, disjointness fact, or bijection.
-
-For interval translation, the target index `k` is sent to
-`a + (k - c)`. Equal differences `b - a = d - c` ensure that the two closed
-integer ranges have the same length, and the pullback condition ensures that
-the folds see the same value sequence. The common zero-based form takes
-`c = 0` and `d = b - a`. If `b < a`, equally long translated intervals are
-both empty and therefore return the same seed.
-
-This rule is deliberately not arbitrary bijective reindexing. A
-`closed_range` is a set object, but `reduce` uses its ascending enumeration;
-a bijection may reverse that order. When `op` is associative and commutative,
-first bridge the range reduction to `finite_set_reduce` and use its existing
-`$bijective` substitution rule. Otherwise the translation must preserve the
-index order.
-
-The disjoint-union formula deliberately nests the second reduction as the
-first reduction's seed. Writing `op(reduce(A,...,s), reduce(B,...,s))` would
-count a non-identity seed twice, so that more familiar formula is not a generic
-law. With additive seed `0` or multiplicative seed `1`, first bridge to
-`finite_set_sum` or `finite_set_product` and use their existing union rules.
-
-Integer ranges are always subsets of `Z` (and its standard supersets). If the
-lower endpoint is known in `N` or `N+`, the range is also a subset of that
-carrier. A set-builder over any finite base is finite, so a finite, nonempty
-filtered integer range can feed `finite_set_min` or `finite_set_max` without a
-separate trust boundary.
-
-For a finite nonempty real set, the extrema are members of the set and bound
-all of its members. The order rules also recognize a displayed two-element
-set symbolically:
-
-```litex
-forall a, b R:
-    a <= finite_set_max(union({a}, {b}))
-    b <= finite_set_max(union({a}, {b}))
-    finite_set_min(union({a}, {b})) <= a
-    finite_set_min(union({a}, {b})) <= b
-
-forall a, b, c R:
-    a <= c
-    b <= c
-    =>:
-        finite_set_max(union({a}, {b})) <= c
-```
+The checked equality, partition, congruence, and reindexing laws for these
+aggregates are listed in [Powers, logarithms, sums, products, and
+remainder](#powers-logarithms-sums-products-and-remainder). In particular,
+`reduce` is order-sensitive; arbitrary bijective reindexing belongs to the
+associative-commutative `finite_set_reduce` interface instead.
 
 `finite_set_max(S)` and `finite_set_min(S)` are not total default-value
 operators. If finiteness, nonemptiness, or `S $subset R` is unavailable, the
 object is ill-defined rather than assigned an arbitrary endpoint.
-
-Finite sums also respect proved pointwise equality on their closed index
-range. This applies both to sums with the same bounds and to integer-shifted
-bounds: prove the corresponding guarded `forall` for the shared or target
-range, then state the aggregate equality. A common anonymous summand carrier
-such as `N+` is preserved while checking the pointwise premise.
 
 The operations still require suitable domains:
 
@@ -1120,7 +855,7 @@ membership facts for a possible view.
 ### Template instances
 
 `template` defines a family whose parameters belong to the definition itself.
-The current instance syntax is `\name<args>`.
+Write an instance as `\name<args>`.
 
 ```litex
 template<S set>:
@@ -1158,8 +893,7 @@ template<S set>:
 carrier_copy<R> = R
 ```
 
-With the current parser, omitting the backslash is a parse `error`; bare
-`name<...>` template instances are a separate syntax proposal.
+Omitting the backslash is a parse `error`.
 
 ---
 
@@ -1370,8 +1104,7 @@ chain, and `or` for alternatives.
 The fact grammar has a deliberate canonical hierarchy rather than arbitrary
 recursive nesting. A conjunction is a flat list of atomic facts. A disjunction
 is the outer layer, and each of its branches is one atomic fact, one relation
-chain, or one flat conjunction. Thus the grammar/AST layer for `or` sits above
-the `and` layer; in the usual operator-binding terminology, `and` binds more
+chain, or one flat conjunction. In ordinary operator terms, `and` binds more
 tightly than `or`.
 
 For example:
@@ -1508,6 +1241,14 @@ The last line is an `error` because the bound `x` no longer exists.
 useful when a chapter repeatedly quantifies over the same mathematical
 objects:
 
+A useful way to think about a `setting` is as the standing convention at the
+beginning of a mathematics chapter: throughout the chapter, `M` denotes a
+space of a certain kind, `f` and `g` denote certain kinds of functions, and
+`a`, `b`, and `c` denote certain kinds of numbers. Later statements can then
+use this recurring cast of objects and common assumptions without introducing
+them again each time. A Litex `setting` makes the same convention explicit,
+reusable, and checkable.
+
 ```litex
 setting EqualPair(X nonempty_set, x, y X):
     x = y
@@ -1532,11 +1273,10 @@ forall X nonempty_set, x, y X, z X:
 Parameters are declared in parentheses in the `setting` header; the indented
 body contains only shared assumptions. A setting with no shared assumptions
 omits both the colon and body, for example `setting OneElement(X nonempty_set,
-x X)`. The legacy body-parameter form `setting Name:` is rejected. A setting
-does not introduce global objects and does not assert its assumptions; it only
-abbreviates the corresponding `forall` prefix. Every use allocates fresh
-binders, even when the same setting is used several times. Extra parameters
-require a comma after the closing bracket.
+x X)`. A setting does not introduce global objects and does not assert its
+assumptions; it only abbreviates the corresponding `forall` prefix. Every use
+allocates fresh binders, even when the same setting is used several times.
+Extra parameters require a comma after the closing bracket.
 
 The optional argument list renames the freshly declared binders positionally:
 `[EqualPair(Y, a, b)]` declares new `Y`, `a`, and `b` parameters and
@@ -1821,8 +1561,8 @@ Common binder forms are:
 | `have A nonempty_set` | Introduce a nonempty set. |
 | `have A finite_set` | Introduce a finite set. |
 
-For `have x S = value`, Litex checks `value $in S` during `verify_process`
-before committing `x`. A carrier-mismatch error names the required carrier,
+For `have x S = value`, Litex checks `value $in S` before committing `x`. A
+carrier-mismatch error names the required carrier,
 the narrowest standard numeric carrier currently provable for `value` when one
 is available, and confirms that the binding was not stored. For example,
 `q * x % p` is declaration-time `Z` data even when `p`, `q`, and `x` are
@@ -2170,12 +1910,11 @@ existential, disjunctive, conjunctive, and chain targets are not accepted. The
 goal-block form is intentionally bodyless: it accepts no proof statements after
 the single atomic goal.
 
-Detailed output uses `"mode": "select_atomic_fact"`, reports the scoped
-conclusions as `temporary_then_facts`, records `target_check`, and separates
-the committed `parent_stored_facts`. The legacy call without `=>` remains
-`"mode": "release_all"` and stores every instantiated conclusion as before.
+A bare `by thm name(args)` stores all instantiated conclusions. A selected
+call stores only the requested atomic fact and its ordinary inferred
+consequences.
 
-There is no separate `lemma` keyword in the current parser:
+There is no separate `lemma` keyword:
 
 ```text
 lemma self_equal:
@@ -2341,31 +2080,10 @@ basics
 
 This manifest is invalid because a `submodule` cannot declare imports.
 
-Execution commands:
-
-| Command | Behavior |
-|---|---|
-| `litex` | Start an isolated REPL. |
-| `litex -r path/to/module` | Run the selected module or submodule export tree. |
-| `litex -f path/to/file.lit` | Run the project prefix ending at an exported file. |
-| `litex -isolated -f path/to/file.lit` | Run one file outside project discovery, then keep an isolated session. |
-| `litex -session` | Use the persistent session protocol. |
-| `litex -session -f path/to/file.lit` | Load the project prefix through one file, then continue in the same persistent session Runtime. |
-| `litex -session -before path/to/file.lit` | Load the project prefix before one registered file, then continue in that file's environment without executing its current contents. |
-| `litex -strict ...` | Verify imports and trusted project prefix sources; reject user trust forms. |
-| `litex -f path/to/file.lit -trust-before-line X` | Preview: trust target-file top-level statements before the exact header line `X`, then verify normally from `X`. |
-| `litex -compact`, `litex -detail` | Select compact or detailed output. |
-| `litex -lang <code>` | Select a supported output language. |
-
-`-trust-before-line` is a development-only direct-file shortcut. `X` must be
-the exact one-based physical line of a top-level statement header; nested
-proof lines and lines inside a statement are not valid boundaries. The prefix
-is still parsed and registered, but its well-definedness and proofs are
-trusted. Prefix statements report `verification_status: trusted_prefix`, while
-normally checked suffix statements report `verification_status: verified`.
-The runtime does not propagate trust metadata from the prefix into suffix
-results. It cannot be combined with `-strict` or used with repository,
-session, runner, graph, Python, or LaTeX commands.
+Project execution, persistent sessions, output modes, graph commands, and the
+development-only `-trust-before-line` option are CLI contracts rather than
+language syntax. See the [CLI reference](cli.md) for the current command set
+and [Setup](Setup.md) for installation and project-running examples.
 
 ### Utility statements
 
@@ -2395,16 +2113,16 @@ The claim is `unknown` because the target was never established.
 
 ### Statement index
 
-This table is exhaustive at the public statement-family level. Several rows
-cover multiple internal AST variants that share one user contract, such as the
-tuple/cart/sequence/matrix introductions.
+This table is exhaustive at the public statement-family level. Closely related
+forms share one row, such as tuple, Cartesian-product, sequence, and matrix
+introductions.
 
 | Public form | What is checked before success | What success commits or exposes |
 |---|---|---|
 | Bare fact | Well-definedness, then known facts/builtin rules/definitions/universals/strategies. | The fact and its ordinary inferred consequences. |
 | `let x = value` | `value` is well-defined and `x` is fresh. | One untyped name and `x = value`. |
 | `have x S`, `have x S = value`, `have x S: ...` | Nonemptiness or concrete membership, declared carrier, and any witness body. | A fresh object, its carrier facts, equality/body facts, and inference. |
-| `trust fact`, `trust have ...` | Parsing, binding, well-definedness, and atomic staging still run; proof truth is assumed. | One atomic trusted transaction. Failure commits nothing. |
+| `trust fact`, `trust have ...` | Parsing, binding, well-definedness, and transactional staging still run; proof truth is assumed. | One trusted transaction. Failure commits nothing. |
 | `obtain ... from exist ...` | The source existential is known; names, count, and dependent parameter types match. | Opaque witness names plus their type and direct body facts. |
 | `obtain ... from $P(args)` | `$P(args)` is known and its concrete definition has exactly one positive `exist`/`exist!` clause. | The same witness facts after checked definition projection. |
 | `obtain ... from thm name(args)` | The named user, imported, or reserved builtin theorem passes the ordinary `by thm` argument/premise checks and has exactly one direct positive `exist`/`exist!` conclusion. | The theorem application remains scoped; only the eliminated witnesses, types, body facts, and `exist!` uniqueness interface escape. |
@@ -2524,6 +2242,9 @@ semantics continue to use canonical ASCII Litex syntax.
 | `A ∪ B`, `A ∩ B` | `union(A, B)`, `intersect(A, B)` |
 | `A × B` | `cart(A, B)` |
 | `ℕ`, `ℤ`, `ℚ`, `ℝ`, `ℂ` | `N`, `Z`, `Q`, `R`, `C` |
+| `ℕ+`, `ℤ+`, `ℚ+`, `ℝ+` | `N+`, `Z+`, `Q+`, `R+` |
+| `ℤ-`, `ℚ-`, `ℝ-` | `Z-`, `Q-`, `R-` |
+| `ℤ*`, `ℚ*`, `ℝ*`, `ℂ*` | `Z*`, `Q*`, `R*`, `C*` |
 | `π`, `∅` | `pi`, `{}` |
 
 For example, this is the same universal fact as its ASCII spelling:
@@ -2538,7 +2259,9 @@ For example, this is the same universal fact as its ASCII spelling:
 
 Aliases are recognized only as complete tokens and are not rewritten inside
 quoted module paths. `⊂` deliberately means strict/proper subset, the same as
-`⊊`; non-strict subset remains `⊆`.
+`⊊`; non-strict subset remains `⊆`. Unicode compact numeric sets mirror the
+existing ASCII keyword family exactly, so `ℕ*` remains unsupported just as
+`N*` is unsupported.
 
 `∃!` has exactly the existing unique-existence semantics of `exist!`. In
 particular, `witness ∃! ...` must prove both that the supplied witness satisfies
@@ -2571,60 +2294,21 @@ must always be an explicit `impossible fact`.
 
 ### The core loop
 
-For an ordinary atomic fact, the main order is:
+For an ordinary atomic fact, Litex follows this public progression:
 
-1. Parse the statement and check every object for well-definedness.
-2. Begin zero-premise verification by checking an already known non-`forall`
-   atomic fact with the same predicate shape, using known equalities.
-3. Finish zero-premise verification by directly evaluating the atomic fact as
-   written.
-4. For equality, normalize an already known equality representative when that
-   directly closes the submitted equality.
-5. For equality, finish zero-premise verification with terminating reductions
-   and constructor congruence whose leaves use only known equality or direct
-   evaluation.
-6. Try one bounded premise-producing builtin mathematical rule.
-7. At equality outer round 0, reduce one checked definition already present on
-   a goal side and compare the reduced result through terminating equality.
-8. For an equality at outer round 0, compare matching object constructors by
-   recursively proving their corresponding arguments equal.
-9. Try an applicable known `forall` fact
-   and verify its instantiated premises.
-10. Try registered predicate properties or enabled strategies where applicable.
-11. On success, store the fact and run builtin inference.
+1. Parse the statement and check that every object is well-defined.
+2. Reuse an already known fact, including transport through known equalities,
+   or evaluate a closed expression directly.
+3. Try a bounded builtin mathematical rule or a terminating structural rule.
+4. Try an applicable known `forall`, a concrete definition, a registered
+   predicate property, or an enabled user strategy.
+5. On success, store the fact and run builtin inference on the new information.
 
-Here a **premise** is a child fact that a rule must verify before it may
-conclude its parent fact. A builtin premise may be an atomic fact or a flat
-quantifier-free `and`, relation chain, or `or`. Compound logical structure does
-not reset the builtin depth: every atomic leaf uses the same bounded premise
-state. A known complete disjunction can therefore be consumed without treating
-any one of its branches as separately known; for example,
-`a = 1 or a = 2 or a = 3` is the single premise for
-`a $in {1, 2, 3}`.
-
-Zero-premise verification does not generate new mathematical child facts: it
-reuses a known fact in step 2 or directly evaluates the current fact in step 3.
-Equality may additionally use the terminating comparison in step 5 because its
-reductions and constructor descent create no mathematical child facts. Step 4
-may cite an equality that is already verified, but it does not generate a new
-proof obligation. This separation is necessary after a builtin rule has
-consumed the allowed rule step. For example, proving
-`x * 2 >= 0` from known `x >= 0`
-uses the multiplication rule once; its remaining premise `2 >= 0` must still
-close by direct evaluation without opening another premise-producing rule.
-Likewise, a child equality may calculate or descend through matching
-constructors after the surrounding rule has consumed that step.
-
-Direct evaluation does not unfold every argument through checked
-`have x T = value` definitions and retry on a rewritten target. Equality-aware
-known-fact matching remains separate: it can transport an already proved fact,
-but it does not create that source fact by computing rewritten arguments.
-
-During step 1, function application uses direct callable metadata first. Only
-when the callee has no direct signature does it inspect the callee's stored
-equality representatives for already registered callable metadata. This is a
-bounded context lookup, not an invocation of the equality verifier; truth
-verification still starts only after well-definedness succeeds.
+This is goal-directed verification, not unrestricted theorem search. A builtin
+rule may ask for its documented premises, but it does not silently build an
+arbitrary chain of other builtin rules. When a mathematically valid jump is
+`unknown`, expose one or two intermediate facts in the source; those facts make
+the intended route readable to both the checker and the reader.
 
 ```litex
 abstract_prop P(x)
@@ -2782,17 +2466,13 @@ witness $is_nonempty_set({1, 2}) from 1:
 ```
 
 `witness $has_copy(2) from 2` is a checked definition-introduction statement.
-The AST retains the named positive prop call, witness values, and proof. Only
-when the statement executes does Litex resolve the active concrete definition,
-substitute the call arguments, and require its sole clause to be positive
-ordinary `exist`. The existing existential-witness checker then verifies the
-witness types and body. On success Litex stores
-`$has_copy(2)` as the primary fact, and ordinary definition inference exposes
-the exact instantiated `exist` consequence. `exist!` deliberately remains on
-the explicit `witness exist! ...` route, including its uniqueness proof, after
-which `by def` can introduce the named predicate. `not exist`, abstract props,
-nonexistential definitions, and multi-clause definitions also remain
-unsupported for the atomic-fact witness form.
+The concrete proposition must have exactly one positive ordinary `exist`
+clause. Litex substitutes the call arguments, verifies the witness types and
+body, stores `$has_copy(2)`, and then exposes its instantiated existential
+meaning through ordinary definition inference. For `exist!`, use the explicit
+`witness exist! ...` route and prove uniqueness before folding the named
+predicate with `by def`. Abstract, negative, nonexistential, and multi-clause
+definitions do not use this shorthand.
 
 The `obtain ... from $P(args)` shorthand is a checked definition-elimination
 step. The source
@@ -2810,29 +2490,7 @@ domain facts, and builtin requirements are checked exactly as for `by thm`.
 Zero or multiple direct conclusions, a nonexistential conclusion, `not exist`,
 or a witness-count mismatch are errors. The intermediate existential does not
 enter the parent context; detailed output retains the nested named-theorem
-application as the elimination's proof source. Litex-to-Lean currently rejects
-this combined form explicitly until theorem-application IR exists. The older
-two-line `by thm` plus `obtain` spelling is not a compiler workaround because
-general theorem calls are outside the current compiled subset too.
-
-The checked Litex-to-Lean subset currently lowers positive `witness exist`,
-atomic-fact witnesses whose sole clause is plain positive `exist`, and positive
-extraction by `obtain` or `have x T: ...`. It preserves alpha-renamed
-existential citations, introduces file-scope or proof-local witness names with
-ordered `Exists.choose`, and exports only the exact parameter and direct-body
-facts justified by `choose_spec`. Explicit unique existence, non-existence, and
-preimage forms still report an explicit compiler boundary. For
-`obtain ... from $prop(args)`, the
-compiler retains the verified prop call as a premise, re-instantiates the sole
-existential definition clause, and emits a checked definition-unfolding proof
-before applying the same `Exists.choose` projections. This path does not add
-trust or require the user to spell out the expanded existential.
-For `witness $prop(args) from values`, the compiler consumes the definition
-frozen by execution, constructs the existential from the checked values, and
-folds it to the named prop with a validated `DefinitionIntroduction` node and
-`simpa only [definition]`. It never performs a fresh definition lookup.
-If two distinct Litex identifiers would sanitize to the same Lean binder name,
-the compiler asks for a rename rather than emitting a captured quantifier.
+application as the elimination's proof source.
 
 The witness must satisfy the displayed body:
 
@@ -3210,132 +2868,20 @@ Builtin verification rules are small mathematical patterns implemented by the
 checker. They close the current goal; they are different from inference, which
 stores useful consequences after a statement has already been accepted.
 
-An automatic builtin rule is deliberately one layer deep. Its premises may be
-atomic facts or flat quantifier-free conjunctions, relation chains, and
-disjunctions. They may use already-known non-`forall` facts and deterministic
-atomic computation, but may not invoke a second builtin rule. For `and` and a
-chain every atomic leaf must verify; for `or`, an already-known complete
-disjunction suffices, or one branch may be verified. A dedicated rule state is
-threaded through every leaf and records whether the single direct-rule layer
-has already been used; compound syntax never resets it, and there is no shared
-node counter or same-family/cross-family exception.
+Automatic rules are intentionally bounded. A direct rule checks its documented
+premises; a structural builtin strategy may recurse only through smaller pieces
+of the same object shape. Neither route is unrestricted theorem search. The
+detailed verifier output shows the rule and its child facts when that boundary
+matters.
 
-Separate builtin strategies handle only strictly structural descent, such as
-arithmetic carrier trees, additive or multiplicative sign trees, finite and
-nonempty set constructors, set membership/containment constructors, and tuple
-coordinates. Finite-product congruence likewise descends to one factor
-equality at a fresh member of the common finite set. Every strategy layer first tries known non-`forall` facts and one
-fresh direct builtin rule for each immediate child, then repeats only its own
-strictly smaller structural pattern. It never enters known `forall` matching,
-definitions, user strategies, or the full verifier. Detailed output preserves
-the child proof tree and labels the outer route as `builtin strategy`.
-
-Finite-endpoint nonemptiness has a direct fast path when its endpoint order is
-already known or computationally decidable. When that order itself needs one
-builtin step, the structural route reduces `closed_range(a, b)` to `a <= b`
-and the half-open `range(a, b)` to `a < b`. For real intervals, `'[a, b]` uses
-`a <= b`; any open endpoint uses `a < b`. This order fact is a strictly smaller
-child, so a local stronger bound such as `2 <= n` may establish the needed
-`1 <= n` or `1 < n` through one fresh direct rule. No order premise means no
-positive nonemptiness result, and `range(n, n)` and `'(x, x)` remain empty.
-
-For an ordinary atomic goal the search order is: known non-`forall` fact,
-one-layer builtin rule, builtin strategy, an applicable known `forall`, then a
-user-defined strategy. A multi-step semantic implication is not automatic
-unless it has its own reviewed direct rule. For example, `sqrt(t) != 0` now has
-the dedicated direct premise `t > 0`; the weaker `t >= 0` does not trigger it.
-
-Not-equality symmetry is one such direct one-premise rule: an exact known
-`a != b` proves `b != a`. Detailed output retains `a != b` as the checked child
-of `not-equality symmetry`; with neither orientation known, the rule remains
-`unknown`.
-
-Direct rules may package a fixed elementary implication when all of their
-premises are already known. In particular, `n $in N` together with `n > 0`
-proves `n - 1 $in N`. This lets a recursive `have fn` over `N` call itself at
-`n - 1` inside its positive branch without adding a source-level carrier lemma.
-An already positive-natural `n $in N+` also directly proves `n - 1 $in N`.
-The parallel strict-positive result uses the stronger bound `n > 1` to prove
-`n - 1 $in N+`.
-
-Several definition-facing strategies are intentionally one layer deep. A
-literal tuple can be checked as a dependent struct constructor field by field,
-and a callable struct field can project through one checked tuple/function or
-template constructor. Membership in a literal set builder, in a set builder
-returned by one checked function/template application, or in a named set with
-one exact indexed set-builder equality unfolds only that one definition and
-verifies its base carrier plus atomic predicate obligations. The exact index
-avoids an environment-wide named-definition scan.
-
-Integer discreteness includes both singleton endpoint orientations. For known
-integers, `n <= x` with `x < n + 1` proves `x = n`, while `n < x` with
-`x <= n + 1` proves `x = n + 1`. Both bounds are required.
-
-An exact known pointwise `forall` can package `$fn_eq(f, g)` when the declared
-function carriers are alpha-equivalent. This route does not reconstruct
-dependent mutual membership and does not apply across mismatched carriers.
-After the resulting `$fn_eq(f, g)` is stored, inference materializes `f = g` in
-the ordinary known-equality class; equality verification does not separately
-scan for `$fn_eq` facts.
-
-At outer round 0, equality does not enumerate equality-class representatives or
-open a candidate graph. It may reduce one checked named-function application
-only when the application is literally one side of the submitted goal. The
-reduced result is compared with the other goal side by the central constructor
-matcher. Each comparison node first tries syntactic identity (including
-binder alpha-equivalence where applicable), an already stored non-forall
-equality class, pure numeric computation, bounded obligation-free rational
-expression normalization, capture-avoiding beta reduction of one complete
-anonymous-function application layer, and constructor descent. Extra curried
-application layers are preserved when the substituted result is callable. The
-normalization and beta-reduction matchers are terminating and create no proof
-obligations; they handle shapes such as `a * t + 0 = a * t` and expose
-`fn(x R) R {f(x) * g(x)}(a)` as `f(a) * g(a)` without opening the ordinary
-builtin dispatcher. Definition reduction does not instantiate known `forall`
-facts, follow a stored representative to discover a reducible application, or
-unfold a second named function recursively. Consequently `square(2) = 4` may
-reduce `square(2)` directly, while two aliases that hide the application need
-an explicit bridge equality. Likewise, after `selected = f(a, 0)` and `a = 1`,
-write `selected = f(a, 0) = f(1, 0)` rather than expecting
-`selected = f(1, 0)` to reopen the alias automatically.
-
-For example, after the first two conclusions below have been verified and
-stored, the last comparison beta-reduces both sides transiently. Multiplication
-congruence then checks exactly the two stored leaf equalities; the intermediate
-product equality is not added to the environment:
-
-```litex
-forall f, g fn(x R) R, a R:
-    forall x R:
-        f(x) = f(-x)
-        g(x) = g(-x)
-    =>:
-        f(a) = f(-a)
-        g(a) = g(-a)
-        fn(x R) R {f(x) * g(x)}(a) = fn(x R) R {f(x) * g(x)}(-a)
-```
-
-Removing either stored leaf equality makes the final line unknown; beta
-reduction itself does not instantiate the preceding `forall`.
-
-The ordinary known-only equality route can still check identity, direct
-lookup/calculation, and stored equality classes. Separately, the full equality
-route reuses the constructor matcher while recursively allowing bounded builtin
-and known-equality child proofs. Function applications align argument groups
-from right to left and then compare the remaining function prefixes. Thus
-several arguments may change in one equality, and
-`f(a, b) = g(1, 2)(a, b)` is accepted exactly when the paired arguments and the
-remaining equality `f = g(1, 2)` can be proved. A non-equality fact lookup may
-transport through known-only congruence, but it does not launch the fuller
-child-proof route implicitly.
-
-For nonzero facts, a known strict premise `x > 0` proves `sqrt(x) != 0`.
-Nonnegativity alone is deliberately insufficient because `sqrt(0) = 0`.
+The catalog below records the public mathematical shapes rather than the
+checker dispatch order. For example, `sqrt(t) != 0` requires the strict premise
+`t > 0`; `t >= 0` is insufficient because `sqrt(0) = 0`. Likewise, interval
+nonemptiness depends on the appropriate strict or weak endpoint comparison.
 
 Rules that genuinely need a universal, existential, or compound premise are
-called explicitly through reserved builtin theorem names. Their handlers use
-the ordinary full verifier for the requirement and store the conclusion only
-after it succeeds:
+called explicitly through reserved builtin theorem names. Each call verifies
+its stated requirements before storing the conclusion:
 
 | Explicit call | Conclusion shape |
 |---|---|
@@ -3365,9 +2911,6 @@ requires finite `s`; its witness is noncanonical. The finite-subset interface
 requires an already verified subset premise and does not enable automatic
 subset-chain search. Both finite-set names are kernel interfaces, not
 `std/basics` exports.
-Detailed output marks the route with `"theorem_source": "builtin_rule"`, shows
-`requirement_checks`, and preserves `axiom_of_choice` provenance on the two
-general-cart nonemptiness interfaces.
 
 This section catalogues public rule families. It does not promise that every
 mathematically equivalent spelling is recognized. When a goal is `unknown`,
@@ -3388,62 +2931,23 @@ write a smaller intermediate fact that exposes a supported shape.
 | Modular arithmetic | Concrete remainders, congruence-preserving operations, and nested-remainder absorption when the outer modulus divides the inner modulus |
 | Structured objects | Tuples, Cartesian products, sequences, matrices, structs, and templates |
 
-#### What this atlas counts
+#### How to read the catalogue
 
-The user-visible unit is a mathematical rule schema, not a Rust success call.
-The verifier sources record label-bearing success sites, including mirrored
-orientations, dispatcher branches, computation paths, and structural strategy
-nodes. Several such sites may implement one public law, while one declarative
-schema may be instantiated at arbitrarily many objects. The Manual therefore
-groups rules by their mathematical contract and gives the recognized shapes;
-the source remains the authoritative code-location audit.
+The tables group rules by their mathematical contract, not by implementation
+branches. A listed law describes a recognized source shape and
+its required facts; it does not promise that every logically equivalent
+reformulation is automatic.
 
-Builtin success has six distinct mechanisms:
-
-| Mechanism | What it may use | What it does not do |
-|---|---|---|
-| Exact computation/reflection | Closed numeric values and bounded rational-expression normalization. | It does not invent symbolic premises or decimal approximations of symbolic constants. |
-| One direct rule | Already-known atomic premises and deterministic computation. | Its premises cannot invoke a second direct builtin rule. |
-| Declarative local schema | One of the reviewed `algebra.*`, `nonzero.*`, `order.*`, or `set.*` universal schemas below. | It is still one direct rule; schema matching is not unrestricted theorem search. |
-| Structural builtin strategy | Strictly smaller constructor children, each with known lookup plus one fresh direct rule. | It does not enter definitions, known `forall` matching, or user strategies. |
-| Definition route | One exact builtin/user definition such as subset, prime, or a checked outer object definition. | It does not recursively unfold an arbitrary chain of definitions. |
-| Explicit builtin theorem | The ordinary full verifier for named compound, universal, or existential requirements. | It runs only after `by thm reserved_name(...)`; it is not silent automation. |
-
-Automatic routes with a closed premise family are goal-directed and
-cache-neutral. Their finite candidate premises come from the target rule or
-target constructor, not from a reverse scan of facts that happen to have been
-stored for the subject. For example, `value $in C` checks the fixed proper
-standard subcarriers of `C`. Writing its already derivable intermediate
-`value $in N` first may make that premise a faster lookup, but it cannot be
-required to turn the later `C` goal from `unknown` into success. Cold and warm
-forms of that route must agree. Litex remains deliberately bounded: an
-explicit user lemma outside a rule's documented premise family may still
-enable a later proof.
-
-Detailed output distinguishes these routes through the reason/provenance tree.
-This matters when a nearby spelling is `unknown`: a direct rule cannot silently
-turn itself into a two-step theorem search.
-
-The 27 label-bearing builtin-strategy sites implement five bounded structural
-contracts:
-
-| Strategy family | Structural descent |
-|---|---|
-| Equality | Finite-set product equality reduces to equality of the index sets and one pointwise factor equality; finite-extremum equality reduces to the two weak-order directions; modulo congruence recursively compares the immediate operands of matching `+`, `-`, or `*` trees under one common modulus. |
-| Numeric carrier | Arithmetic trees are decomposed for `R`, `Q`, `Z`, `N`, and `N+`; refined positive/negative/nonzero carriers add the exact sign or disequality child. Cardinality asks for structural finiteness, while finite extrema ask that the source elements lie in the target numeric carrier. |
-| Numeric sign | A normalized zero comparison over an addition tree descends to nonnegative/nonpositive children, with one strict child when the requested result is strict. It is not a general nonlinear inequality strategy. |
-| Set membership and containment | Literal tuples/products, union, intersection, difference, power set, integer/real intervals, displayed-set containment, and constructor subset goals decompose to smaller component facts. A literal or one-layer defined set builder exposes only its base and atomic/conjunction/chain obligations. |
-| Set/type structure | `$is_set`, `$is_finite_set`, and `$is_nonempty_set` descend only through supported constructors. Nonemptiness covers endpoint order, a nonempty union side, all Cartesian factors, or the codomain/entry set of function, sequence, and matrix spaces. |
-
-Every child gets a fresh known-fact lookup plus at most one direct rule. A
-strategy can recursively repeat only its own strictly smaller constructor
-shape; it cannot switch into arbitrary theorem or definition search.
+Detailed output distinguishes computation, direct builtin rules, structural
+strategies, definition routes, and explicit builtin theorem calls. Consult that
+proof tree when a nearby spelling is `unknown`, then state the missing bridge
+fact explicitly.
 
 #### Declarative algebra, nonzero, and order schemas
 
-The current local catalog contains one algebra schema, two nonzero schemas,
-and 49 order schemas. The table groups mirrored strict/weak variants but lists
-every mathematical law represented by those IDs.
+The following table groups the main algebra, nonzero, and order schemas by
+their mathematical role. Mirrored strict and weak orientations are described
+together.
 
 | Group | Recognized laws and required premises |
 |---|---|
@@ -3491,7 +2995,7 @@ known nonzero premises directly.
 
 #### Declarative set schemas
 
-The 34 `set.*` schemas cover the following complete groups:
+The declarative set schemas cover the following groups:
 
 | Group | Recognized laws and required premises |
 |---|---|
@@ -3562,30 +3066,9 @@ The boundary is semantic: replacing `finite_set` by arbitrary `set` makes
 `finite_set_size(...)` ill-defined. The rule does not attempt to prove an
 unknown set finite merely because it appears in a cardinality expression.
 
-#### Source-family coverage map
-
-The remaining Rust dispatchers are grouped below so every public family has a
-canonical explanation and a runnable evidence file. A source family can have
-many success sites because it handles orientations, constructors, and
-diagnostic branches separately.
-
-| Source family | Public semantic surface | Runnable evidence |
-|---|---|---|
-| Membership and type predicates | Standard-set lifting, literals/builders, union/intersection/difference, big union, replacement, ranges/intervals, power sets, products, function values/ranges, sequence/matrix carriers, set/nonempty/finite/tuple/cart predicates. | [`set_membership_builtin_rules.lit`](../examples/02_builtin_math/set_membership_builtin_rules.lit), [`standard_set_membership_lifting.lit`](../examples/02_builtin_math/standard_set_membership_lifting.lit) |
-| Numeric equality and equality dispatch | Computation, rational normalization, congruence, set/cardinality identities, tuple/cart reconstruction, division introduction/elimination, powers, roots, logarithms, modulo, sums/products/reductions. | [`requested_numeric_builtin_rules.lit`](../examples/02_builtin_math/requested_numeric_builtin_rules.lit), [`reduce_builtin_rules.lit`](../examples/02_builtin_math/reduce_builtin_rules.lit) |
-| Equality structural/function | Constructor-by-constructor equality, alpha-equivalent binders, function applications, matrix-power base/step. | [`anonymous_function_beta_structural_equality.lit`](../examples/03_language_features/anonymous_function_beta_structural_equality.lit), [`matrix_operators.lit`](../examples/02_builtin_math/matrix_operators.lit) |
-| Order algebra, comparison, and order semantics | Sign propagation, transitivity, trichotomy/disjunctions, integer adjacency/discreteness, division inequalities, extrema, real powers, and interval centers. | [`fundamental_comparison_builtin_rules.lit`](../examples/02_builtin_math/fundamental_comparison_builtin_rules.lit), [`order_semantics_builtin_rules.lit`](../examples/02_builtin_math/order_semantics_builtin_rules.lit) |
-| Absolute value and non-equality | Bounds, triangle/reverse-triangle forms, aggregate triangle bounds, positivity/nonzeroness, symmetry and algebraic nonzero consequences. | [`requested_numeric_builtin_rules.lit`](../examples/02_builtin_math/requested_numeric_builtin_rules.lit), [`not_equal_symmetry.lit`](../examples/01_proof_patterns/not_equal_symmetry.lit) |
-| Set-relation duality and proper relations | Subset/superset dual orientations, proper containment definition, chains, and negated boundaries. | [`proper_set_relations.lit`](../examples/02_builtin_math/proper_set_relations.lit) |
-| Function membership/equality/mapping | Function-set membership, `$fn_eq_in`, `$fn_eq`, injective/surjective/bijective definitions, finite range cardinality. | [`function_mapping_properties.lit`](../examples/03_language_features/function_mapping_properties.lit) |
-| Finite aggregates | Closed-range and finite-set sums/products, empty/insert/remove/union laws, pointwise congruence, scalar/product distribution, and bijective reindexing. | [`finite_set_product_builtin_rules.lit`](../examples/02_builtin_math/finite_set_product_builtin_rules.lit), [`sum_subtraction_negation_builtin_rules.lit`](../examples/02_builtin_math/sum_subtraction_negation_builtin_rules.lit) |
-| Generic reductions | Ordered left-fold evaluation, endpoint consumption, adjacent partition, interval translation, associative-commutative finite-set folding, aggregate bridges, congruence, and reindexing. | [`reduce_builtin_rules.lit`](../examples/02_builtin_math/reduce_builtin_rules.lit) |
-| Number theory and remainder | Exact primality and natural coprimality, definition consequences, gcd/lcm contracts, Euclidean remainder uniqueness, and compatible-modulus absorption. | [`gcd_and_prime_builtin.lit`](../examples/02_builtin_math/gcd_and_prime_builtin.lit), [`coprime_on_natural.lit`](../examples/02_builtin_math/coprime_on_natural.lit), [`integer_quotient_euclidean.lit`](../examples/02_builtin_math/integer_quotient_euclidean.lit), [`modulo_compatible_moduli.lit`](../examples/02_builtin_math/modulo_compatible_moduli.lit) |
-| Native exponential/sign/factorial and integer extrema | Special values, domains, monotonicity/reflection, inverse/algebra laws, sign characterization, factorial recurrence/divisibility, floor/ceiling, min/max, and lcm. | [`native_exp_sign_factorial.lit`](../examples/02_builtin_math/native_exp_sign_factorial.lit), [`native_rounding_extrema_and_lcm.lit`](../examples/02_builtin_math/native_rounding_extrema_and_lcm.lit) |
-| Trigonometry | Core values/addition/unit-circle laws, normalized parity/shift/double-angle layers, bounds, sign intervals, and partial tangent/cotangent domains. | [`trigonometric_builtin_rules.lit`](../examples/02_builtin_math/trigonometric_builtin_rules.lit) |
-| Complex scalars | Coordinates, reconstruction/extensionality, arithmetic coordinates, integer powers, modulus bounds/multiplication/nonzero behavior. | [`native_complex_modulus.lit`](../examples/02_builtin_math/native_complex_modulus.lit), [`complex_star_standard_set.lit`](../examples/02_builtin_math/complex_star_standard_set.lit) |
-| Existential, universal, iff, and disjunction helpers | Canonical existential witnesses, unique-existence consequences, known-universal application, implication-to-disjunction packaging, and finite comparison alternatives. | [Witnesses, `obtain`, and preimages](#witnesses-obtain-and-preimages), [Known facts, universal facts, and theorem calls](#known-facts-universal-facts-and-theorem-calls) |
-| Builtin strategies | Strict constructor descent for numeric carriers/signs, type predicates, set membership/containment, equality, tuples, and finite products. | [`prechecked_goal_well_definedness.lit`](../examples/01_proof_patterns/prechecked_goal_well_definedness.lit), [`set_membership_builtin_rules.lit`](../examples/02_builtin_math/set_membership_builtin_rules.lit) |
+Runnable examples for these families are indexed in [Litex
+Examples](Examples.md). Keeping that evidence map there avoids duplicating a
+second, quickly stale list of implementation files in the language reference.
 
 ```litex
 2 + 3 * 4 = 14
@@ -3609,9 +3092,9 @@ builtin pattern closes it.
 
 ### Equality rules
 
-Equality is dispatched by the outer shape of both sides. The following table
-is the public contract of the equality dispatchers; later subsections expand
-the power, logarithm, aggregate, and remainder rows.
+Equality routes depend on the outer shape of both sides. The following table
+records the public behavior; later subsections expand the power, logarithm,
+aggregate, and remainder rows.
 
 | Shape | Recognized equality route |
 |---|---|
@@ -3717,7 +3200,7 @@ alone never supplies an order. The order layer recognizes these contracts:
 | Powers | Positive real bases with positive real/rational exponent preserve and reflect order. Positive natural exponents are monotone on nonnegative bases; odd exponents are monotone on all reals; even exponents compare absolute values. Negative integer exponents reverse positive-base order. |
 | Roots, logarithms, and absolute value | `sqrt(x)` is nonnegative, and positive for positive `x`. A logarithm with base `>1` preserves strict order; a base strictly between `0` and `1` reverses it. Absolute value supplies direct, triangle, and reverse-triangle bounds, including `abs(sum(...,f)) <= sum(...,fn(index Z) R {abs(f(index))})` and the analogous finite-set sum under the matching index/carrier facts. |
 | Finite aggregates and extrema | Pointwise weak/strict order on the relevant index set gives sum order. A nonnegative finite-set summand is at most the total. Finite-set extrema bound every member. Finite subset inclusion bounds cardinality, and union cardinality is at most the sum. |
-| Native ordered objects | Floor and ceiling preserve weak order but not strict order. `min` and `max` expose argument bounds and componentwise monotonicity. Native `exp`/`ln`, trigonometric intervals, and complex modulus use their dedicated contracts in the object sections above. |
+| Native ordered objects | Floor and ceiling preserve weak order but not strict order. `min` and `max` expose argument bounds and componentwise monotonicity. Native `exp`/`ln` and trigonometric order use the dedicated sections below; complex modulus uses the [complex scalar contract](#complex-scalars-beta-preview). |
 
 ```litex
 forall x R:
@@ -3766,6 +3249,35 @@ forall a, b, c R:
 
 This is `unknown` because multiplication reverses or collapses order when the
 sign of `c` is not known.
+
+### Trigonometric rules
+
+The symbolic trigonometric interface recognizes the following exact families:
+
+| Family | Recognized laws and required domains |
+|---|---|
+| Core identities | Values at `0` and `pi / 2`, sine and cosine addition and difference formulas, the unit-circle identity, and `tan(x)=sin(x)/cos(x)` or `cot(x)=cos(x)/sin(x)` when the denominator is known nonzero. |
+| Symmetry and angles | Odd/even parity, double-angle and cofunction formulas, supported integral and half-integral multiples of `pi`, shifts by `pi` and `pi/2`, and period `2*pi` for sine/cosine or `pi` for tangent/cotangent when defined. |
+| Bounds and signs | `-1 <= sin(x), cos(x) <= 1`, `3 < pi < 4`, and the standard sign intervals for sine, cosine, tangent, and cotangent. Open-domain bounds remain necessary for tangent and cotangent. |
+| Local order | Sine is monotone on `[-pi/2, pi/2]`, cosine on `[0, pi]`, tangent on `(-pi/2, pi/2)`, and cotangent in the reverse direction on `(0, pi)`. |
+
+These are exact symbolic rules, not numerical approximation. Unlisted special
+angles, inverse or complex trigonometry, continuity, and analytic definitions
+need explicit source facts or library interfaces.
+
+### Native numeric function rules
+
+| Family | Recognized laws and required domains |
+|---|---|
+| `exp` and `ln` | `exp(0)=1`, `ln(1)=0`, `exp(x)=e^x`, their inverse laws, and the usual addition/product identities. `exp` maps `R` to `R+` and preserves and reflects order and equality. `ln` has the corresponding behavior on `R+` and agrees with `log(e,x)`. |
+| `sign` | Returns `-1`, `0`, or `1`; is odd, multiplicative, and weakly monotone; characterizes zero and nonzero inputs; and satisfies `sign(x)*abs(x)=x`. |
+| `factorial` | Maps `N` to `N+`, evaluates finite natural inputs, exposes the successor recurrence, preserves weak order, is strictly increasing past the `0! = 1!` boundary, and gives divisibility from an earlier to a later factorial. |
+| `floor` and `ceil` | Return integers, expose their characteristic bounds, preserve weak order, commute with integer translation, and are dual under negation. |
+| `min` and `max` | Select an argument from a known comparison, bound both arguments, preserve componentwise weak order, and satisfy the usual commutative, associative, idempotent, and absorption laws. |
+| `gcd` and `lcm` | Are symmetric on their domains; `gcd` divides both integer inputs; `lcm` is nonnegative, has the expected common-multiple bounds, and satisfies `lcm(a,b)*gcd(a,b)=abs(a*b)` when the pair is not both zero. |
+
+Symbolic transcendental expressions are not decimal approximations. Every law
+still requires its ordinary well-definedness conditions.
 
 ### Powers, logarithms, sums, products, and remainder
 
@@ -3852,7 +3364,7 @@ presentation.
 | Standard numeric carriers | Literal classification; the inclusion chain among signed/nonzero `N`, `Z`, `Q`, `R`, and `C`; arithmetic closure at the narrowest supported carrier; refinement from integer/real carrier plus known sign; nonmembership for resolved literals; `floor`/`ceil` in `Z`, `sign` in `Z`, `factorial(N)` in `N+`, and numeric carriers for gcd/lcm/extrema/aggregates. |
 | Displayed sets and builders | Equality with one displayed element introduces membership, and disequality from every element introduces nonmembership. Builder membership requires base membership and all instantiated defining facts; stored builder membership exposes those facts. A builder over a finite base is finite. |
 | Binary set operations | Either-side membership introduces union membership; intersection requires both sides; difference requires left membership and right nonmembership. Corresponding stored intersection/difference facts expose their component facts. |
-| Family and image operators | `big_union` uses a member-set witness; `replacement` uses its functional relation witness; `fn_range` uses a well-defined application. Stored membership exposes the existential source described in the object section. `big_intersect` currently has no symmetric builtin package. |
+| Family and image operators | `big_union` uses a member-set witness; `replacement` uses its functional relation witness; `fn_range` uses a well-defined application. Stored membership exposes the existential source described in the object section. |
 | Ranges and intervals | `range(a,b)` uses integer `a<=i<b`; `closed_range(a,b)` uses `a<=i<=b`. Real intervals require real membership plus their open/closed endpoint bounds. Half-infinite intervals impose only their displayed endpoint bound. |
 | Power sets and inclusions | `A $subset B` introduces `A $in power_set(B)`. A displayed set or builder belongs to a power set after its elements/base are contained. One directly known inclusion can lift an element into the target set. |
 | Products and indexed objects | Tuple membership checks every component against the corresponding Cartesian factor. General Cartesian membership checks a function into `big_union(S)` plus every indexed factor. Sequence and matrix literals check length/shape and every entry. Projection and index access inherit the selected carrier. |
@@ -4071,13 +3583,9 @@ After an accepted or trusted fact is stored, builtin inference may add routine
 consequences to the same environment. These consequences become ordinary
 known information for later statements.
 
-Inference can be transitive: an inferred atomic fact may in turn expose its
-own routine consequences. Litex does not impose a global one-layer inference
-limit. It only stops a recursive branch when it returns to the same normalized
-atomic fact that is already being expanded on the current inference stack;
-different newly inferred facts continue normally. This prevents a cyclic
-definition graph from repeatedly reopening itself without suppressing ordinary
-parameter-type or structure-field inference.
+Inference may chain through newly inferred facts, but it stops cyclic
+re-expansion. This supports routine carrier, definition, and structure
+consequences without promising arbitrary logical closure.
 
 ### Verification versus inference
 
@@ -4199,11 +3707,9 @@ Main families are:
 | `x $in &Struct<...>` | Instantiated field-carrier and equivalent facts; literal tuples additionally expose component projections. |
 
 Membership inference also transports through concrete equal set
-representatives and through one checked set-valued function/template
-definition. To avoid repeatedly unfolding deep templates for every fresh proof
-binder, opaque application representatives are deferred to explicit
-membership verification. This is a performance boundary, not a stronger
-mathematical inference claim.
+representatives and through one checked set-valued function or template
+definition. More deeply hidden membership facts may need to be stated and
+verified explicitly.
 
 Membership in a broad set does not imply a narrower property:
 
@@ -4224,11 +3730,9 @@ forall x {1}:
 ```
 
 Subset and superset facts retain their reusable universal-membership
-interface. Separately, the membership builtin can check one known owner set
-against one directly known superset when a membership goal is requested. That
-direct-index check is on demand: it does not materialize the lifted membership
-or compute a transitive subset closure. Other proof rules can still use its
-one-step result as a requirement.
+interface. A membership goal may use one directly known inclusion, but Litex
+does not automatically materialize every lifted membership or compute an
+unbounded transitive subset closure.
 
 Proper subset additionally gives subset and inequality; proper superset is
 dual. Negated proper relations do not select either branch of their
@@ -4256,34 +3760,12 @@ are checker code, not source-level theorems silently imported from a library.
 
 ## Appendix
 
-### Preview feature inventory
+### Preview labels
 
-Preview features are public enough to test, but their syntax or semantics may
-change:
-
-- native complex scalars `C`, `C*`, `i`, `re`, `img`, and `C_abs`;
-- native positive real constants `e` and `pi`;
-- native symbolic real trigonometry `sin`, `cos`, `tan`, and `cot`;
-- native `floor`, `ceil`, binary `min`/`max`, and integer `lcm`;
-- native natural-number `$coprime(a, b)`;
-- native nonzero-integer-divisor `$dvd(x, y)` in dividend-first order;
-- native real `exp`/`ln`, real `sign`, and natural `factorial`;
-- `struct`, struct view objects, and default-view field access;
-- proper subset and proper superset relations;
-- injective, surjective, and bijective mapping predicates;
-- explicit `by def`;
-- selected atomic consequences with `by thm name(args) => fact` or its
-  bodyless `:` plus `? fact` goal-block spelling;
-- untyped object definitions with `let x = value`;
-- modules, manifests, flattening, and localized output;
-- one-step membership verification through a known subset or superset;
-- direct-file `-trust-before-line` development checks;
-- reduced rational fraction verification;
-- positive nested-`forall` conclusion normalization;
-- trusted Zorn, choice, and regularity proof steps.
-- Unicode mathematical input for quantifiers, logic, comparisons, set
-  relations and operations, Cartesian products, standard number sets, `pi`,
-  and the empty set.
+A heading marked **preview** documents behavior that is implemented and tested
+but whose surface syntax or exact contract may still change. The label stays
+beside the canonical explanation instead of being repeated in a separate
+inventory that can drift out of sync.
 
 ### Trust and strict mode
 
@@ -4303,9 +3785,10 @@ its builtin rules into a separately verified small kernel.
 ### Documentation and test contract
 
 Every unskipped `litex` fenced block in this manual is intended to be
-self-contained and is run by `cargo test run_examples`. A skipped `litex`
-block carries an adjacent `litex:skip-test` marker and is deliberately invalid;
-a `text` block is either another deliberately invalid example, a
+self-contained and is run by
+`cargo test --release run_docs_markdown_files -- --nocapture`. A skipped
+`litex` block carries an adjacent `litex:skip-test` marker and is deliberately
+invalid; a `text` block is either another deliberately invalid example, a
 non-executable shape, or an output sketch. The surrounding paragraph states
 the intended reading and, for failures, whether checking reaches `unknown` or
 `error`.
@@ -4313,16 +3796,3 @@ the intended reading and, for failures, whether checking reaches `unknown` or
 The language implementation is the final source of truth when this manual and
 the runner disagree. Such disagreement is a documentation or diagnostic bug
 to fix, not a reason to reinterpret a failed example silently.
-
-### Bounded maximum existence and definition packaging
-
-Litex recognizes the standard maximum-existence shape for a finite nonempty
-subset of `N`. The concrete predicate must state both that the witness belongs
-to the set and that every natural member is at most the witness. The rule does
-not fire without finite, nonempty, and natural-carrier evidence.
-
-When `by def` folds a concrete proposition, it first checks argument types and
-exact already-known definition clauses through bounded known/builtin routes.
-Only a missing clause falls back to ordinary proof search. This keeps large
-contexts responsive without weakening the requirement that every concrete
-definition clause be proved.

@@ -13,6 +13,4 @@ pub struct LitexToLeanRegisteredRuleApplicationIr {
     pub rule_id: RuleId,
     pub semantic_fingerprint: RuleFingerprint,
     pub bindings: Vec<LitexToLeanTypedBoundObjectIr>,
-    pub parameter_requirement_count: usize,
-    pub premise_count: usize,
 }

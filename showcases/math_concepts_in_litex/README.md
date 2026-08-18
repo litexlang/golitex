@@ -18,16 +18,16 @@ Every directory publishes the same five artifacts:
 | 1 | `1_middle_school_math_in_nutshell` | equations, AM-GM, geometry, probability, statistics |
 | 2 | `2_euclidean_geometry` | analytic construction of an equilateral triangle |
 | 3 | `3_number_theory` | gcd/Bezout and linear Diophantine solvability |
-| 4 | `4_discrete_mathematics_in_nutshell` | finite counting and Pascal's identity |
-| 5 | `5_linear_algebra` | concrete linear maps and kernel-zero iff injective |
+| 4 | `4_discrete_mathematics_in_nutshell` | finite counting and direct Pascal recurrence |
+| 5 | `5_linear_algebra` | fields, vector spaces, and kernel-zero iff injective |
 | 6 | `6_abstract_algebra` | kernels of group homomorphisms are normal |
 | 7 | `7_calculus` | epsilon-delta derivatives and tangent error |
-| 8 | `8_probability_and_statistics_in_nutshell` | finite distributions and Bayes' rule |
+| 8 | `8_probability_and_statistics_in_nutshell` | expectation linearity and Bayes' rule |
 | 9 | `9_topology` | continuity, closed preimages, compact images |
-| 10 | `10_real_analysis_in_nutshell` | epsilon tails and uniqueness of limits |
-| 11 | `11_multivariable_calculus_in_nutshell` | coordinate difference quotients and gradient |
-| 12 | `12_ordinary_differential_equations_in_nutshell` | the IVP `y' = 2x, y(0)=1` |
-| 13 | `13_numerical_analysis_in_nutshell` | Newton iteration for `sqrt(2)` |
+| 10 | `10_real_analysis_in_nutshell` | unique sequence limits and a canonical selector |
+| 11 | `11_multivariable_calculus_in_nutshell` | epsilon-delta partials and coordinate gradient |
+| 12 | `12_ordinary_differential_equations_in_nutshell` | quadratic family and the IVP `y' = 2x, y(0)=1` |
+| 13 | `13_numerical_analysis_in_nutshell` | exact Newton iterates and residual contraction |
 | 14 | `14_tarski_geometry_from_axioms` | point-only SST axioms and derived congruence symmetry |
 
 Run any project from the repository root:

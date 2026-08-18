@@ -1735,7 +1735,6 @@ impl LitexToLeanIrBuilder<'_> {
                                 expected_source: case_fact.clone(),
                                 expected_target: retained.clone(),
                                 index: component_index,
-                                count: retained_components.len(),
                             },
                             parameter_requirements: Vec::new(),
                             premises: vec![LitexToLeanFactIr {
@@ -2347,7 +2346,6 @@ impl LitexToLeanIrBuilder<'_> {
             .enumerate()
             .map(|(index, result)| {
                 Ok(LitexToLeanDefThmStmtProofStepIr {
-                    position: index + 1,
                     statement: self.build_litex_to_lean_ir_nested_statement(result)?,
                 })
             })
@@ -2388,7 +2386,6 @@ impl LitexToLeanIrBuilder<'_> {
             LitexToLeanDefThmStmtIr {
                 name: verification.name.clone(),
                 theorem,
-                expected_proof_step_count: verification.proof_step_count,
                 proof_steps,
                 stored_projections,
                 inferred_facts: self
@@ -2964,11 +2961,12 @@ impl LitexToLeanIrBuilder<'_> {
                 defining_equality_fact_id: reduction.defining_equality_fact_id,
                 defining_equality: reduction.defining_equality.clone(),
                 expected_target: goal.clone(),
-                application_side: reduction.application_side.clone(),
                 reduced: reduction.reduced.clone(),
-                other_side: reduction.other_side.clone(),
-                application_is_left: reduction.application_is_left,
-                reduced_matches_other_by_alpha: reduction.reduced_matches_other_by_alpha,
+                application_side: if reduction.application_is_left {
+                    LitexToLeanEqualitySideIr::Left
+                } else {
+                    LitexToLeanEqualitySideIr::Right
+                },
             },
             parameter_requirements: Vec::new(),
             premises: Vec::new(),
@@ -3656,7 +3654,7 @@ impl LitexToLeanIrBuilder<'_> {
             });
         };
 
-        let mut param_types = Vec::new();
+        let mut source_parameters = Vec::new();
         for group in source_forall.params_def_with_type.groups.iter() {
             if group.params.is_empty() {
                 return Ok(LitexToLeanFactProofIr::Unsupported {
@@ -3664,30 +3662,36 @@ impl LitexToLeanIrBuilder<'_> {
                 });
             }
             let param_type = build_litex_to_lean_ir_parameter_type(&group.param_type)?;
-            for _ in group.params.iter() {
-                param_types.push(param_type.clone());
+            for parameter in group.params.iter() {
+                source_parameters.push((parameter.name().to_string(), param_type.clone()));
             }
         }
-        if result.instantiation.len() != param_types.len() {
+        if result.instantiation.len() != source_parameters.len() {
             return Ok(LitexToLeanFactProofIr::Unsupported {
                 reason: format!(
                     "known forall `{}` recorded {} arguments for {} parameter types",
                     source_fact,
                     result.instantiation.len(),
-                    param_types.len()
+                    source_parameters.len()
                 ),
             });
         }
         let arguments = result
             .instantiation
             .iter()
-            .zip(param_types)
-            .map(|(item, param_type)| LitexToLeanKnownForallArgumentIr {
-                param: item.param.clone(),
-                argument: item.arg_obj.clone(),
-                param_type,
+            .zip(source_parameters.iter())
+            .map(|(item, (parameter, _))| {
+                if item.param != *parameter {
+                    return Err(litex_to_lean_ir_error(
+                        &goal.line_file(),
+                        "known forall changed its retained parameter order",
+                    ));
+                }
+                Ok(LitexToLeanKnownForallArgumentIr {
+                    argument: item.arg_obj.clone(),
+                })
             })
-            .collect::<Vec<_>>();
+            .collect::<Result<Vec<_>, RuntimeError>>()?;
         let mut parameter_requirements = Vec::new();
         let mut requirements = Vec::new();
         for requirement in result.requirements.iter() {
@@ -4216,7 +4220,6 @@ impl LitexToLeanIrBuilder<'_> {
         let mut current_key = obj_equality_key(&target.left);
         let target_key = obj_equality_key(&target.right);
         let mut premises = Vec::with_capacity(evidence.steps.len());
-        let mut steps = Vec::with_capacity(evidence.steps.len());
         for step in evidence.steps.iter() {
             let from_key = obj_equality_key(&step.from);
             let to_key = obj_equality_key(&step.to);
@@ -4262,12 +4265,6 @@ impl LitexToLeanIrBuilder<'_> {
                     source_fact_id: step.source_fact_id,
                 },
             });
-            steps.push(LitexToLeanKnownEqualityStepIr {
-                from: step.from.clone(),
-                to: step.to.clone(),
-                source_fact_id: step.source_fact_id,
-                direction,
-            });
             current_key = to_key;
         }
         if current_key != target_key {
@@ -4278,9 +4275,7 @@ impl LitexToLeanIrBuilder<'_> {
         }
 
         Ok(LitexToLeanFactProofIr::RuleApplication {
-            rule: LitexToLeanProofRuleIr::KnownEqualityPath(LitexToLeanKnownEqualityPathIr {
-                steps,
-            }),
+            rule: LitexToLeanProofRuleIr::KnownEqualityPath,
             parameter_requirements: Vec::new(),
             premises,
         })
@@ -4514,8 +4509,6 @@ impl LitexToLeanIrBuilder<'_> {
                 rule_id: evidence.rule_id.clone(),
                 semantic_fingerprint: evidence.semantic_fingerprint.clone(),
                 bindings,
-                parameter_requirement_count: rule.schema().parameter_requirements.len(),
-                premise_count: rule.schema().premises.len(),
             }),
             parameter_requirements: premises.0.to_vec(),
             premises: premises.1.to_vec(),
@@ -4835,7 +4828,6 @@ fn add_cited_conjunction_projections(
                         expected_source: premise.fact.clone(),
                         expected_target: conclusion.proposition.clone(),
                         index,
-                        count: components.len(),
                     },
                     parameter_requirements: Vec::new(),
                     premises: vec![LitexToLeanFactIr {
@@ -5100,7 +5092,6 @@ fn build_litex_to_lean_ir_inferred_fact_proof(
                         expected_source: source_fact.clone(),
                         expected_target: inferred_fact.clone(),
                         index,
-                        count: components.len(),
                     },
                     parameter_requirements: Vec::new(),
                     premises: vec![LitexToLeanFactIr {

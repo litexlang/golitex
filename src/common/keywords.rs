@@ -89,6 +89,17 @@ pub const Z_NOT_ZERO: &str = "Z*";
 pub const Q_NOT_ZERO: &str = "Q*";
 pub const R_NOT_ZERO: &str = "R*";
 pub const C_NOT_ZERO: &str = "C*";
+pub const UNICODE_N_POSITIVE: &str = "ℕ+";
+pub const UNICODE_Z_POSITIVE: &str = "ℤ+";
+pub const UNICODE_Q_POSITIVE: &str = "ℚ+";
+pub const UNICODE_R_POSITIVE: &str = "ℝ+";
+pub const UNICODE_Z_NEGATIVE: &str = "ℤ-";
+pub const UNICODE_Q_NEGATIVE: &str = "ℚ-";
+pub const UNICODE_R_NEGATIVE: &str = "ℝ-";
+pub const UNICODE_Z_NOT_ZERO: &str = "ℤ*";
+pub const UNICODE_Q_NOT_ZERO: &str = "ℚ*";
+pub const UNICODE_R_NOT_ZERO: &str = "ℝ*";
+pub const UNICODE_C_NOT_ZERO: &str = "ℂ*";
 pub const N: &str = "N";
 pub const Q: &str = "Q";
 pub const Z: &str = "Z";
@@ -237,6 +248,17 @@ fn build_key_symbols_map() -> HashMap<&'static str, &'static str> {
         Q_NOT_ZERO,
         R_NOT_ZERO,
         C_NOT_ZERO,
+        UNICODE_N_POSITIVE,
+        UNICODE_Z_POSITIVE,
+        UNICODE_Q_POSITIVE,
+        UNICODE_R_POSITIVE,
+        UNICODE_Z_NEGATIVE,
+        UNICODE_Q_NEGATIVE,
+        UNICODE_R_NEGATIVE,
+        UNICODE_Z_NOT_ZERO,
+        UNICODE_Q_NOT_ZERO,
+        UNICODE_R_NOT_ZERO,
+        UNICODE_C_NOT_ZERO,
         ADD,
         SUB,
         MUL,
@@ -437,6 +459,17 @@ pub(crate) fn unicode_alias_tokens(token: &str) -> Option<&'static [&'static str
         "ℚ" => Some(&[Q]),
         "ℝ" => Some(&[R]),
         "ℂ" => Some(&[C]),
+        UNICODE_N_POSITIVE => Some(&[N_POSITIVE]),
+        UNICODE_Z_POSITIVE => Some(&[Z_POSITIVE]),
+        UNICODE_Q_POSITIVE => Some(&[Q_POSITIVE]),
+        UNICODE_R_POSITIVE => Some(&[R_POSITIVE]),
+        UNICODE_Z_NEGATIVE => Some(&[Z_NEGATIVE]),
+        UNICODE_Q_NEGATIVE => Some(&[Q_NEGATIVE]),
+        UNICODE_R_NEGATIVE => Some(&[R_NEGATIVE]),
+        UNICODE_Z_NOT_ZERO => Some(&[Z_NOT_ZERO]),
+        UNICODE_Q_NOT_ZERO => Some(&[Q_NOT_ZERO]),
+        UNICODE_R_NOT_ZERO => Some(&[R_NOT_ZERO]),
+        UNICODE_C_NOT_ZERO => Some(&[C_NOT_ZERO]),
         "π" => Some(&[PI]),
         "∅" => Some(&[LEFT_CURLY_BRACE, RIGHT_CURLY_BRACE]),
         _ => None,

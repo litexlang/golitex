@@ -1016,6 +1016,17 @@ mod inline_forall_parse_tests {
             ("{0, 1} $proper_superset {0}", "{0, 1} ⊋ {0}"),
             ("not x $in union(intersect(A, B), C)", "x ∉ A ∩ B ∪ C"),
             ("cart(A, B, C) = cart(A, B, C)", "A × B × C = cart(A, B, C)"),
+            ("1 $in N+", "1 ∈ ℕ+"),
+            ("1 $in Z+", "1 ∈ ℤ+"),
+            ("1 $in Q+", "1 ∈ ℚ+"),
+            ("1 $in R+", "1 ∈ ℝ+"),
+            ("-1 $in Z-", "-1 ∈ ℤ-"),
+            ("-1 $in Q-", "-1 ∈ ℚ-"),
+            ("-1 $in R-", "-1 ∈ ℝ-"),
+            ("1 $in Z*", "1 ∈ ℤ*"),
+            ("1 $in Q*", "1 ∈ ℚ*"),
+            ("1 $in R*", "1 ∈ ℝ*"),
+            ("1 $in C*", "1 ∈ ℂ*"),
         ];
 
         for (ascii, unicode) in cases {
@@ -1027,6 +1038,11 @@ mod inline_forall_parse_tests {
                 "{unicode}"
             );
         }
+
+        assert!(
+            parse_one_fact_line("1 ∈ ℕ*").is_err(),
+            "ℕ* must remain unsupported because N* is not a standard set"
+        );
     }
 
     #[test]
