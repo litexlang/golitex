@@ -1,0 +1,47 @@
+# Tracer: base numeric-carrier arithmetic closure
+#
+# Before (Litex verified, but compiler emission stopped):
+# forall a, b Z:
+#     a * b $in Z
+# Former compiler behavior: fail closed at
+# `Builtin(IntegerMembershipClosure(Mul))`.
+#
+# Now: complex `+`, `-`, `*`, `/` and integer `+`, `-`, `*` replay the exact
+# verifier-selected closure certificates through proved native-carrier rules.
+# Source binders stay complex-valued and retain independent Litex.In evidence.
+forall a, b C:
+    a + b $in C
+
+forall a, b C:
+    a - b $in C
+
+forall a, b C:
+    a * b $in C
+
+forall a, b C:
+    b != 0
+    =>:
+        a / b $in C
+
+forall a, b Z:
+    a + b $in Z
+
+forall a, b Z:
+    a - b $in Z
+
+forall a, b Z:
+    a * b $in Z
+
+# Boundary (Litex verifies; compiler remains fail-closed):
+# forall a, b Z:
+#     b != 0
+#     =>:
+#         a % b $in Z
+# Integer remainder has verifier evidence and structural IR, but the current
+# numeric source representation is ℂ and has no reviewed native `%` term ABI.
+# This batch must not invent a remainder operation or retype the source binder.
+#
+# Evidence:
+# target/release/litex -compact -strict -runner -f lean/examples/17_NumericCarrierClosures.lit
+# cargo test --release --test litex_to_lean_compiler_tracers numeric_carrier_closures
+# cd lean && ./compiler.sh check examples

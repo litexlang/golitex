@@ -7,6 +7,18 @@ universe u
 theorem complexInC (z : ℂ) : Litex.In z Litex.C :=
   Litex.In.own Litex.C z
 
+theorem complexAddInC (a b : ℂ) : Litex.In (a + b) Litex.C :=
+  complexInC (a + b)
+
+theorem complexSubInC (a b : ℂ) : Litex.In (a - b) Litex.C :=
+  complexInC (a - b)
+
+theorem complexMulInC (a b : ℂ) : Litex.In (a * b) Litex.C :=
+  complexInC (a * b)
+
+theorem complexDivInC (a b : ℂ) : Litex.In (a / b) Litex.C :=
+  complexInC (a / b)
+
 theorem complexNatInN (n : ℕ) : Litex.In (n : ℂ) Litex.N :=
   ⟨n, Litex.Same.complexNat n⟩
 
@@ -164,6 +176,23 @@ private theorem complexDivAsReal
   Litex.Same.symm
     (Litex.Same.realDivComplex (Litex.Same.symm ha) (Litex.Same.symm hb))
 
+private theorem complexIntAsReal
+    {a : ℂ}
+    {z : ℤ}
+    (haz : Litex.Same a z) :
+    Litex.AsReal a (z : ℝ) :=
+  Litex.Same.trans haz
+    (Litex.Same.trans (Litex.Same.intComplex z)
+      (Litex.Same.trans
+        (Litex.Same.ofEq (by norm_num : (z : ℂ) = ((z : ℝ) : ℂ)))
+        (Litex.Same.complexReal (z : ℝ))))
+
+private theorem realSameInt (z : ℤ) : Litex.Same (z : ℝ) z :=
+  Litex.Same.trans (Litex.Same.realComplex (z : ℝ))
+    (Litex.Same.trans
+      (Litex.Same.ofEq (by norm_num : ((z : ℝ) : ℂ) = (z : ℂ)))
+      (Litex.Same.complexInt z))
+
 /-- Addition preserves real membership for complex-carrier source values. -/
 theorem complexAddInR
     {a b : ℂ}
@@ -204,6 +233,48 @@ theorem complexDivInR
   rcases ha with ⟨ra, hra⟩
   rcases hb with ⟨rb, hrb⟩
   exact ⟨ra / rb, complexDivAsReal hra hrb⟩
+
+/-- Addition preserves integer membership for complex-carrier source values. -/
+theorem complexAddInZ
+    {a b : ℂ}
+    (ha : Litex.In a Litex.Z)
+    (hb : Litex.In b Litex.Z) :
+    Litex.In (a + b) Litex.Z := by
+  rcases ha with ⟨za, hza⟩
+  rcases hb with ⟨zb, hzb⟩
+  exact ⟨za + zb, Litex.Same.trans
+    (complexAddAsReal (complexIntAsReal hza) (complexIntAsReal hzb))
+    (Litex.Same.trans
+      (Litex.Same.ofEq (by norm_cast : (za : ℝ) + (zb : ℝ) = ((za + zb : ℤ) : ℝ)))
+      (realSameInt (za + zb)))⟩
+
+/-- Subtraction preserves integer membership for complex-carrier source values. -/
+theorem complexSubInZ
+    {a b : ℂ}
+    (ha : Litex.In a Litex.Z)
+    (hb : Litex.In b Litex.Z) :
+    Litex.In (a - b) Litex.Z := by
+  rcases ha with ⟨za, hza⟩
+  rcases hb with ⟨zb, hzb⟩
+  exact ⟨za - zb, Litex.Same.trans
+    (complexSubAsReal (complexIntAsReal hza) (complexIntAsReal hzb))
+    (Litex.Same.trans
+      (Litex.Same.ofEq (by norm_cast : (za : ℝ) - (zb : ℝ) = ((za - zb : ℤ) : ℝ)))
+      (realSameInt (za - zb)))⟩
+
+/-- Multiplication preserves integer membership for complex-carrier source values. -/
+theorem complexMulInZ
+    {a b : ℂ}
+    (ha : Litex.In a Litex.Z)
+    (hb : Litex.In b Litex.Z) :
+    Litex.In (a * b) Litex.Z := by
+  rcases ha with ⟨za, hza⟩
+  rcases hb with ⟨zb, hzb⟩
+  exact ⟨za * zb, Litex.Same.trans
+    (complexMulAsReal (complexIntAsReal hza) (complexIntAsReal hzb))
+    (Litex.Same.trans
+      (Litex.Same.ofEq (by norm_cast : (za : ℝ) * (zb : ℝ) = ((za * zb : ℤ) : ℝ)))
+      (realSameInt (za * zb)))⟩
 
 /-- The concrete complex-carrier adapter for Litex's nonnegative-addition
 builtin rule. It combines the independently selected zero representatives

@@ -1,11 +1,148 @@
 # Numerical analysis in Litex: Newton's method for sqrt(2).
 #
-# newton_iteration.lit defines the iteration and its gap.
-# gap_bound.lit proves that the gap is at most sqrt_two_newton_gap_bound(n).
+# Main line: Newton iteration -> one-step gap contraction ->
+# closed-form gap bound -> small numerical checkpoint.
 
-iteration::newton_sqrt_two(1) = 3 / 2
-iteration::newton_sqrt_two(3 / 2) = 17 / 12
+# Definitions.
+have fn square_root_two_residual(x R) R = x^2 - 2
+have fn newton_sqrt_two(x R+) R+ = (x + 2 / x) / 2
 
-by thm proof::sqrt_two_newton_gap_bound(2) => iteration::sqrt_two_newton_gap(2) <= iteration::sqrt_two_newton_gap_bound(2)
-iteration::sqrt_two_newton_gap_bound(2) = 1 / 64
-iteration::sqrt_two_newton_gap(2) <= 1 / 64
+have fn sqrt_two_newton_iterate(n N) R+ by induc n from 0:
+    case n = 0: 1
+    case n > 0: newton_sqrt_two(sqrt_two_newton_iterate(n - 1))
+
+have fn sqrt_two_newton_gap(n N) R = abs(square_root_two_residual(sqrt_two_newton_iterate(n)))
+have fn sqrt_two_newton_gap_bound(n N) R+ = 4 * (1 / 4)^(2^n)
+
+thm sqrt_two_newton_iterate_step:
+    ? forall n N:
+        sqrt_two_newton_iterate(n + 1) = newton_sqrt_two(sqrt_two_newton_iterate(n))
+    n + 1 > 0
+    sqrt_two_newton_iterate(n + 1) = newton_sqrt_two(sqrt_two_newton_iterate(n + 1 - 1))
+    n + 1 - 1 = n
+    newton_sqrt_two(sqrt_two_newton_iterate(n + 1 - 1)) = newton_sqrt_two(sqrt_two_newton_iterate(n))
+    sqrt_two_newton_iterate(n + 1) = newton_sqrt_two(sqrt_two_newton_iterate(n))
+
+# One-step gap estimate and iterate invariant.
+thm newton_sqrt_two_residual_identity:
+    ? forall x R+:
+        4 * x^2 * square_root_two_residual(newton_sqrt_two(x)) = square_root_two_residual(x)^2
+    square_root_two_residual(newton_sqrt_two(x)) = newton_sqrt_two(x)^2 - 2
+    square_root_two_residual(x) = x^2 - 2
+    newton_sqrt_two(x) = (x + 2 / x) / 2
+    newton_sqrt_two(x)^2 - 2 = ((x + 2 / x) / 2)^2 - 2
+    square_root_two_residual(newton_sqrt_two(x)) = newton_sqrt_two(x)^2 - 2 = ((x + 2 / x) / 2)^2 - 2
+    square_root_two_residual(x)^2 = (x^2 - 2)^2
+    4 * x^2 * (((x + 2 / x) / 2)^2 - 2) = (x^2 - 2)^2
+    4 * x^2 * square_root_two_residual(newton_sqrt_two(x)) = 4 * x^2 * (((x + 2 / x) / 2)^2 - 2) = (x^2 - 2)^2 = square_root_two_residual(x)^2
+
+thm newton_sqrt_two_residual_nonnegative:
+    ? forall x R+:
+        square_root_two_residual(newton_sqrt_two(x)) >= 0
+    by thm newton_sqrt_two_residual_identity(x) => 4 * x^2 * square_root_two_residual(newton_sqrt_two(x)) = square_root_two_residual(x)^2
+    4 * x^2 > 0
+    4 * x^2 != 0
+    square_root_two_residual(x)^2 >= 0
+    4 * x^2 * square_root_two_residual(newton_sqrt_two(x)) >= 0
+    (4 * x^2 * square_root_two_residual(newton_sqrt_two(x))) / (4 * x^2) >= 0
+    square_root_two_residual(newton_sqrt_two(x)) = (4 * x^2 * square_root_two_residual(newton_sqrt_two(x))) / (4 * x^2) >= 0
+
+thm newton_sqrt_two_one_step_gap_identity:
+    ? forall x R+:
+        4 * x^2 * abs(square_root_two_residual(newton_sqrt_two(x))) = abs(square_root_two_residual(x))^2
+    by thm newton_sqrt_two_residual_identity(x) => 4 * x^2 * square_root_two_residual(newton_sqrt_two(x)) = square_root_two_residual(x)^2
+    by thm newton_sqrt_two_residual_nonnegative(x) => square_root_two_residual(newton_sqrt_two(x)) >= 0
+    abs(square_root_two_residual(newton_sqrt_two(x))) = square_root_two_residual(newton_sqrt_two(x))
+    abs(square_root_two_residual(x))^2 = square_root_two_residual(x)^2
+    4 * x^2 * abs(square_root_two_residual(newton_sqrt_two(x))) = 4 * x^2 * square_root_two_residual(newton_sqrt_two(x)) = square_root_two_residual(x)^2 = abs(square_root_two_residual(x))^2
+
+thm newton_sqrt_two_greater_than_one:
+    ? forall x R+:
+        newton_sqrt_two(x) > 1
+    newton_sqrt_two(x) = (x + 2 / x) / 2
+    newton_sqrt_two(x) - 1 = ((x - 1)^2 + 1) / (2 * x)
+    (x - 1)^2 >= 0
+    (x - 1)^2 + 1 > 0
+    2 * x > 0
+    ((x - 1)^2 + 1) / (2 * x) > 0
+
+thm sqrt_two_newton_iterate_at_least_one:
+    ? forall n N:
+        sqrt_two_newton_iterate(n) >= 1
+    by induc n from 0:
+        ? sqrt_two_newton_iterate(n) >= 1
+        ? from n = 0:
+            sqrt_two_newton_iterate(0) = 1
+        ? induc:
+            by thm sqrt_two_newton_iterate_step(n) => sqrt_two_newton_iterate(n + 1) = newton_sqrt_two(sqrt_two_newton_iterate(n))
+            by thm newton_sqrt_two_greater_than_one(sqrt_two_newton_iterate(n)) => newton_sqrt_two(sqrt_two_newton_iterate(n)) > 1
+
+thm sqrt_two_newton_gap_step_identity:
+    ? forall n N:
+        4 * sqrt_two_newton_iterate(n)^2 * sqrt_two_newton_gap(n + 1) = sqrt_two_newton_gap(n)^2
+    by thm sqrt_two_newton_iterate_step(n) => sqrt_two_newton_iterate(n + 1) = newton_sqrt_two(sqrt_two_newton_iterate(n))
+    sqrt_two_newton_gap(n + 1) = abs(square_root_two_residual(sqrt_two_newton_iterate(n + 1))) = abs(square_root_two_residual(newton_sqrt_two(sqrt_two_newton_iterate(n))))
+    sqrt_two_newton_gap(n) = abs(square_root_two_residual(sqrt_two_newton_iterate(n)))
+    4 * sqrt_two_newton_iterate(n)^2 * sqrt_two_newton_gap(n + 1) = 4 * sqrt_two_newton_iterate(n)^2 * abs(square_root_two_residual(newton_sqrt_two(sqrt_two_newton_iterate(n))))
+    sqrt_two_newton_gap(n)^2 = abs(square_root_two_residual(sqrt_two_newton_iterate(n)))^2
+    by thm newton_sqrt_two_one_step_gap_identity(sqrt_two_newton_iterate(n)) => 4 * sqrt_two_newton_iterate(n)^2 * abs(square_root_two_residual(newton_sqrt_two(sqrt_two_newton_iterate(n)))) = abs(square_root_two_residual(sqrt_two_newton_iterate(n)))^2
+
+thm sqrt_two_newton_gap_contracts_quadratically:
+    ? forall n N:
+        sqrt_two_newton_gap(n + 1) <= sqrt_two_newton_gap(n)^2 / 4
+    by thm sqrt_two_newton_iterate_at_least_one(n) => sqrt_two_newton_iterate(n) >= 1
+    sqrt_two_newton_iterate(n) - 1 >= 0
+    sqrt_two_newton_iterate(n) + 1 > 0
+    (sqrt_two_newton_iterate(n) - 1) * (sqrt_two_newton_iterate(n) + 1) >= 0
+    sqrt_two_newton_iterate(n)^2 - 1 = (sqrt_two_newton_iterate(n) - 1) * (sqrt_two_newton_iterate(n) + 1) >= 0
+    sqrt_two_newton_iterate(n)^2 >= 1
+    sqrt_two_newton_gap(n + 1) = abs(square_root_two_residual(sqrt_two_newton_iterate(n + 1)))
+    abs(square_root_two_residual(sqrt_two_newton_iterate(n + 1))) >= 0
+    sqrt_two_newton_gap(n + 1) >= 0
+    4 * sqrt_two_newton_gap(n + 1) <= 4 * sqrt_two_newton_iterate(n)^2 * sqrt_two_newton_gap(n + 1)
+    by thm sqrt_two_newton_gap_step_identity(n) => 4 * sqrt_two_newton_iterate(n)^2 * sqrt_two_newton_gap(n + 1) = sqrt_two_newton_gap(n)^2
+    4 * sqrt_two_newton_gap(n + 1) <= sqrt_two_newton_gap(n)^2
+
+# Closed-form gap bound.
+thm sqrt_two_newton_gap_bound_step:
+    ? forall n N:
+        sqrt_two_newton_gap_bound(n + 1) = sqrt_two_newton_gap_bound(n)^2 / 4
+    have t R+ = (1 / 4)^(2^n)
+    sqrt_two_newton_gap_bound(n) = 4 * (1 / 4)^(2^n) = 4 * t
+    2^(n + 1) = 2^n * 2
+    (1 / 4)^(2^(n + 1)) = (1 / 4)^(2^n * 2) = ((1 / 4)^(2^n))^2 = t^2
+    sqrt_two_newton_gap_bound(n + 1) = 4 * (1 / 4)^(2^(n + 1)) = 4 * t^2
+    sqrt_two_newton_gap_bound(n)^2 / 4 = (4 * t)^2 / 4 = 16 * t^2 / 4 = 4 * t^2
+
+thm sqrt_two_newton_gap_is_bounded:
+    ? forall n N:
+        sqrt_two_newton_gap(n) <= sqrt_two_newton_gap_bound(n)
+    by induc n from 0:
+        ? sqrt_two_newton_gap(n) <= sqrt_two_newton_gap_bound(n)
+        ? from n = 0:
+            sqrt_two_newton_iterate(0) = 1
+            square_root_two_residual(1) = -1
+            sqrt_two_newton_gap(0) = abs(square_root_two_residual(sqrt_two_newton_iterate(0))) = abs(-1) = 1
+            sqrt_two_newton_gap_bound(0) = 4 * (1 / 4)^(2^0) = 4 * (1 / 4) = 1
+        ? induc:
+            sqrt_two_newton_gap(n) = abs(square_root_two_residual(sqrt_two_newton_iterate(n)))
+            abs(square_root_two_residual(sqrt_two_newton_iterate(n))) >= 0
+            sqrt_two_newton_gap(n) >= 0
+            sqrt_two_newton_gap_bound(n) > 0
+            sqrt_two_newton_gap_bound(n) - sqrt_two_newton_gap(n) >= 0
+            sqrt_two_newton_gap_bound(n) + sqrt_two_newton_gap(n) >= 0
+            (sqrt_two_newton_gap_bound(n) - sqrt_two_newton_gap(n)) * (sqrt_two_newton_gap_bound(n) + sqrt_two_newton_gap(n)) >= 0
+            sqrt_two_newton_gap_bound(n)^2 - sqrt_two_newton_gap(n)^2 = (sqrt_two_newton_gap_bound(n) - sqrt_two_newton_gap(n)) * (sqrt_two_newton_gap_bound(n) + sqrt_two_newton_gap(n)) >= 0
+            sqrt_two_newton_gap(n)^2 <= sqrt_two_newton_gap_bound(n)^2
+            sqrt_two_newton_gap(n)^2 / 4 <= sqrt_two_newton_gap_bound(n)^2 / 4
+            by thm sqrt_two_newton_gap_contracts_quadratically(n) => sqrt_two_newton_gap(n + 1) <= sqrt_two_newton_gap(n)^2 / 4
+            by thm sqrt_two_newton_gap_bound_step(n) => sqrt_two_newton_gap_bound(n + 1) = sqrt_two_newton_gap_bound(n)^2 / 4
+            sqrt_two_newton_gap(n + 1) <= sqrt_two_newton_gap(n)^2 / 4 <= sqrt_two_newton_gap_bound(n)^2 / 4 = sqrt_two_newton_gap_bound(n + 1)
+
+# Small numerical checkpoint.
+newton_sqrt_two(1) = 3 / 2
+newton_sqrt_two(3 / 2) = 17 / 12
+
+by thm sqrt_two_newton_gap_is_bounded(2) => sqrt_two_newton_gap(2) <= sqrt_two_newton_gap_bound(2)
+sqrt_two_newton_gap_bound(2) = 1 / 64
+sqrt_two_newton_gap(2) <= 1 / 64

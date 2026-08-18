@@ -199,6 +199,14 @@ original membership proof. Refined sets such as `N+` remain fail-closed
 because their exact subtype carriers and defining predicates have not yet
 received a compiler ABI.
 
+Example 17 adds base numeric-carrier arithmetic closure. Complex `+`, `-`,
+`*`, and `/` target `C` through the verifier's zero-child closure certificate;
+the source WD graph still retains the operand memberships and division domain
+check. Integer `+`, `-`, and `*` consume the verifier's ordered conjunction of
+two `Z` memberships, select native integer witnesses, and construct the result
+witness through proved `Same` bridges. Integer remainder remains fail-closed
+because a complex-valued source term has no reviewed native `%` representation.
+
 Sketch is a real source scope, not an example-file wrapper. Each top-level
 sketch is emitted as `__Sketch01`, `__Sketch02`, and so on. Its emitter context
 starts with the facts and symbols visible outside the sketch, but definitions
@@ -238,7 +246,7 @@ deferred until the IR and compiler emitter support its Litex statement form; it 
 not represented by hand-written code under `examples/`.
 
 The compiler currently emits only the reviewed IR routes exercised by the
-sixteen numbered examples. Checked named aliases of `R` and `C`, top-level atomic
+seventeen numbered examples. Checked named aliases of `R` and `C`, top-level atomic
 equality, nonnegative integer numerals, addition, arbitrary set parameters,
 unary function sets, named unary application, basic proof scopes,
 case/contradiction proofs, one-witness positive existentials, minimal native
@@ -248,7 +256,10 @@ and one-parameter concrete-predicate set-builder membership, and checked
 nonempty choice are supported. Real `+`, `-`, `*`, `/` carrier closure and
 additive nonnegative/one-strict sign strategies are also supported, as is
 standard membership widening through `N → Z → Q → R → C`. Other atomic
-predicates and arithmetic operators, refined numeric carriers, bare arbitrary-
+Complex carrier closure for all four basic operators and integer carrier
+closure for `+`, `-`, and `*` are supported as well. Other atomic predicates
+and arithmetic operators, including integer remainder, refined numeric
+carriers, bare arbitrary-
 set choices (`have A set`), multi-parameter or
 multi-layer functions, nested set-builder binder expressions, richer set
 constructors, and broader production code-generation are not implemented yet.

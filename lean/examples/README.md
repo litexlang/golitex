@@ -120,6 +120,12 @@ adjacent membership bridges and retain each complex-valued binder's original
 `Litex.In` premise. The paired negative regression uses verified `N+ → N` and
 requires compiler to reject it until the refined exact-carrier ABI exists.
 
+`17_NumericCarrierClosures.lit` traces complex `+`, `-`, `*`, `/` closure and
+integer `+`, `-`, `*` closure. The integer proofs consume the exact ordered
+conjunction retained by verifier IR and construct native integer result
+witnesses. Verified integer `%` is the paired negative boundary because the
+current complex-valued source representation has no native remainder term.
+
 Generated `.lean` files are review artifacts, not editing surfaces. A new
 compiler feature must add the next numbered same-name pair. Unsupported
 statements, objects, facts, or proof routes fail closed.

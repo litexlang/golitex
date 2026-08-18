@@ -66,7 +66,7 @@ Status meanings:
 
 | Capability | Status | Active evidence or remaining boundary |
 | --- | --- | --- |
-| Numerals and `+`, `-`, `*`, `/` expressions | partial | Native complex expressions, named real-function bodies, and real carrier closure for all four operators compile; other occurrence contexts remain incomplete. |
+| Numerals and `+`, `-`, `*`, `/` expressions | partial | Native complex expressions, named real-function bodies, real/complex closure for all four operators, and integer `+`/`-`/`*` closure compile; other occurrence contexts remain incomplete. |
 | Power, remainder, floor/ceil, elementary and transcendental functions | pending | Structural IR exists for many operators; native terms, membership closure, and proof adapters are missing. |
 | Predicate-defined set builders | partial | Example 14 supports whole-side equality and one concrete predicate; nested binder expressions remain rejected. |
 | Finite list-set literals | pending | The old compiler emitted proof-free list sets with ordered distinctness evidence; an exact heterogeneous carrier is undecided. |
@@ -87,7 +87,7 @@ Status meanings:
 | Multiplicative/divisive sign strategies | decision | IR now retains direct and recursive `Mul*`/`Div*` evidence, but Example 15 keeps `MulNonnegative` fail-closed because the native proof needs the uninhabited `RealCoherence` certificate. |
 | Standard-set hierarchy | migrated | Example 16 validates every proper projection through `N → Z → Q → R → C` and composes four proved adjacent native-carrier bridges. |
 | Refined numeric membership | pending | Verified `N+ → N` remains an executable compiler negative; refined exact carriers must preserve their sign/nonzero predicates. |
-| Integer/complex/real arithmetic membership families | partial | Example 15 traces real `+`, `-`, `*`, and `/` closure; real power and the remaining integer/complex carrier families are pending. |
+| Integer/complex/real arithmetic membership families | partial | Examples 15 and 17 cover real and complex `+`/`-`/`*`/`/`, plus integer `+`/`-`/`*`; integer remainder/quotient/power/absolute value, rational/natural families, and real power remain pending. |
 | Set-relation and set-operator rules | pending | Depend on exact native set constructors and their proved laws. |
 | Reflection rules such as prime and coprime | pending | Verifier evidence exists; no active native-carrier compiler theorem family is accepted yet. |
 | Remaining registered local rules | pending | Every rule needs its stable ID/fingerprint adapter and a real-Lean tracer; no generic theorem search is allowed. |

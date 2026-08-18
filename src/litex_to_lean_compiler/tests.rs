@@ -129,6 +129,52 @@ fn standard_set_hierarchy_replays_exact_projection_chain() {
 }
 
 #[test]
+fn numeric_carrier_closures_replay_exact_rules() {
+    const SOURCE: &str = "forall a, b C:\n    a + b $in C\n\nforall a, b C:\n    a - b $in C\n\nforall a, b C:\n    a * b $in C\n\nforall a, b C:\n    b != 0\n    =>:\n        a / b $in C\n\nforall a, b Z:\n    a + b $in Z\n\nforall a, b Z:\n    a - b $in Z\n\nforall a, b Z:\n    a * b $in Z\n";
+    let ir = capture_ir_debug_on_verifier_stack(SOURCE, "17_NumericCarrierClosures.lit")
+        .expect("capture numeric carrier-closure tracer IR");
+    assert_eq!(
+        ir.matches("ComplexArithmeticMembershipClosure").count(),
+        4,
+        "{ir}"
+    );
+    assert_eq!(ir.matches("IntegerMembershipClosure").count(), 3, "{ir}");
+
+    let generated = compile_on_verifier_stack(SOURCE, "17_NumericCarrierClosures.lit")
+        .expect("compile numeric carrier-closure tracer");
+    for theorem in [
+        "complexAddInC",
+        "complexSubInC",
+        "complexMulInC",
+        "complexDivInC",
+        "complexAddInZ",
+        "complexSubInZ",
+        "complexMulInZ",
+    ] {
+        assert!(
+            generated.contains(&format!("Litex.Rules.{theorem}")),
+            "missing {theorem}: {generated}"
+        );
+    }
+    assert!(!generated.contains("LitexObject"));
+    assert!(!generated.contains("Litex.Object"));
+    assert!(!generated.contains("Set.univ"));
+    assert!(!generated.contains("axiom "));
+    assert!(!generated.contains("sorry"));
+
+    let boundary = compile_on_verifier_stack(
+        "forall a, b Z:\n    b != 0\n    =>:\n        a % b $in Z\n",
+        "unsupported_integer_remainder_closure.lit",
+    )
+    .expect_err("integer remainder needs a reviewed source-term ABI");
+    assert!(
+        boundary.contains("unsupported compiler object")
+            || boundary.contains("unsupported integer membership closure rule: Mod"),
+        "unexpected boundary error: {boundary}"
+    );
+}
+
+#[test]
 fn known_equality_paths_replay_same_symmetry_and_transitivity() {
     let generated = compile_on_verifier_stack(
         "forall a, b set:\n    a = b\n    =>:\n        b = a\n\nforall a, b, c set:\n    a = b\n    b = c\n    =>:\n        a = c\n",

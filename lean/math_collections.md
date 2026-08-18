@@ -252,6 +252,28 @@ required `RealCoherence` certificate shape without installing an instance, so
 compiler continues to fail closed rather than add an axiom or silently make
 all generated theorems conditional on coherence.
 
+## Base numeric arithmetic closure
+
+Example 17 separates result-carrier closure from order reasoning. For a
+complex-valued source expression, the `C` carrier is exact: the result of
+native complex `+`, `-`, `*`, or `/` belongs to `C` by `In.own`. The verifier
+selects a zero-child `ComplexArithmeticMembershipClosure` certificate because
+operand admission and division well-definedness are already retained in the
+owning statement's WD graph. Compiler validates the exact target operator and
+set before calling the corresponding `Rules.complex*InC` theorem.
+
+Integer closure is constructive rather than a type cast. From
+`Litex.In a Z` and `Litex.In b Z`, the proved adapters select witnesses
+`za zb : ℤ`, relate the complex source values to the corresponding real
+embeddings, apply the closed real/complex operation congruence, and rebuild an
+integer witness for `za + zb`, `za - zb`, or `za * zb`. Emitter requires the
+exact ordered binary conjunction carried by `IntegerMembershipClosure`.
+
+Nearest rejected form: `a % b $in Z`. Litex verifies it and IR records `Mod`,
+but source numeric values currently lower to `ℂ`, where there is no native
+remainder operation matching the source meaning. Adding a symbolic wrapper or
+retyping operands would be a new object ABI decision, so compiler rejects it.
+
 ## Generated example contract
 
 The `.lit` file is authoritative. Compiler first verifies it and captures the
