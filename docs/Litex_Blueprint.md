@@ -25,6 +25,8 @@ Website: https://litexlang.com/doc/Litex_Blueprint
   5. [Build Proofs Bottom-Up from Verified Facts](#goal-5)
 - [Litex: A Concise Mathematical Front-End Language for the Trusted Lean Ecosystem](#compatibility)
 - [Conclusions](#conclusions)
+- [Appendix A: Why Does Litex Have So Many Builtin Rules?](#appendix-builtins)
+- [Appendix B: Why Does Litex Have So Many Examples?](#appendix-examples)
 
 <a id="background"></a>
 ## Background
@@ -462,36 +464,50 @@ In the compiler's design model, every successful verification corresponds to a r
 
 *This section expands on the implementation and its current correctness boundary. Skipping it does not affect the discussion that follows.*
 
-From a compiler perspective, the evidence selected by the checker for the successful verification of a Litex fact forms a recursively expandable proof tree. Citation of known facts, introduction of `forall` parameters and premises, equality substitution, definition unfolding, computation, and builtin rules form concrete steps in that tree, and any one step may itself branch further. The Litex-to-Lean compiler is not intended to reread the source after verification and “guess” a collection of tactics. Instead, it records the verification route already found by the checker, lowers each supported node to a Lean proof term—sometimes expressed as several tactics—and submits the result to the Lean kernel for an independent check. For example, the following universally quantified Litex fact says that if `a != c` and `a = b`, then `b != c`:
+From a compiler perspective, the evidence selected by the checker for the successful verification of a Litex fact forms a recursively expandable proof tree. Citation of known facts, introduction of `forall` parameters and premises, equality substitution, definition unfolding, computation, and builtin rules form concrete steps in that tree, and any one step may itself branch further. The Litex-to-Lean compiler is not intended to reread the source after verification and “guess” a collection of tactics. Instead, it records the verification route already found by the checker, lowers each supported node to a Lean proof term—sometimes expressed as several tactics—and submits the result to the Lean kernel for an independent check. For example, the persistent compiler ledger contains this membership-transport example:
 
 ```litex
-forall a, b, c set:
-    a != c
-    a = b
-    =>:
-        b != c
+sketch:
+    have A set = R
+    have B set = C
+    forall a A, b B:
+        a = b
+        =>:
+            b $in A
+            a $in B
 ```
 
-For this equality-rewrite route supported by the current MVP, the compiler generates the following Lean code (the concrete fact ID is assigned at runtime):
+For this currently supported route, the core of the generated file is shown below. The complete same-name output is checked in as [`lean/examples/1_SetSystem.lean`](../lean/examples/1_SetSystem.lean):
 
 ```lean
-import Litex.Rules
+import Litex
 
-theorem __fact19 :
-    ∀ (a : Litex.Object) (__h0_1 : Litex.IsSet a)
-      (b : Litex.Object) (__h0_2 : Litex.IsSet b)
-      (c : Litex.Object) (__h0_3 : Litex.IsSet c)
-      (__h0_4 : a ≠ c)
-      (__h0_5 : a = b),
-      b ≠ c := by
-  intro a __h0_1 b __h0_2 c __h0_3 __h0_4 __h0_5
-  exact by
-    simpa only [__h0_5] using __h0_4
+set_option linter.style.nameCheck false
+
+namespace __Compiler_1_SetSystem
+namespace __Sketch01
+
+abbrev A : Litex.Set := Litex.R
+abbrev B : Litex.Set := Litex.C
+
+theorem __fact0 :
+    ∀ (a : ℂ) (__h0_1 : Litex.In a A)
+      (b : ℂ) (__h0_2 : Litex.In b B)
+      (__h0_3 : Litex.Same a b),
+      Litex.In b A ∧ Litex.In a B := by
+  intro a __h0_1 b __h0_2 __h0_3
+  exact ⟨(Litex.In.congr __h0_3 A).mp __h0_1,
+    (Litex.In.congr __h0_3 B).mpr __h0_2⟩
+
+end __Sketch01
+end __Compiler_1_SetSystem
 ```
 
-This Lean code expands the verification route found automatically by Litex. `__fact19` carries the environment-stored Litex `FactId`. The shared `Litex.Rules` Lake module supplies the one `Litex.Object` universe and checks ABI version 8; the generated file does not repeat that semantic core. Each source parameter is a value of `Litex.Object`, followed by its exact retained `Litex.IsSet` parameter fact. Compiler-owned names use the Litex-reserved `__` prefix; assumptions use `__h<forall-depth>_<local-order>`. Parameter facts and domain premises share one source-ordered counter within each `forall` layer. The two domain facts are introduced in source order. The final `simpa only` transports `a ≠ c` along the retained equality `a = b` to obtain `b ≠ c`. The corresponding proof IR records the `forall` introduction, every parameter and domain `FactId`, one forward equality rewrite, and the recursive dependencies between those nodes. The compiler is therefore not guessing a convenient Lean tactic after the fact; it is explicitly re-expressing the verification evidence already selected by the checker as a Lean proof.
+This Lean code exposes the new semantic wrapper directly. Generated files uniformly `import Litex`, the public umbrella for the core and its proved rules; Litex values are no longer compressed into a custom universal `Litex.Object` type. The source definitions `A = R` and `B = C` become `Litex.Set` values. Each `Litex.Set` stores the set's exact Lean carrier: `R` uses `ℝ` and `C` uses `ℂ`, rather than simulating a source set with `Set.univ` over an ambient type. In the current numeric slice, the source variables are ordinary Lean values `(a b : ℂ)`. Whether they belong to a Litex set is expressed by separate evidence, `Litex.In a A` and `Litex.In b B`; Lean typing does not replace source membership. The source equality `a = b` becomes heterogeneous semantic equality, `Litex.Same a b`. The two applications of `Litex.In.congr` then transport the retained membership facts strictly along that `Same` evidence, without a cast, implicit axiom, or new proof hole.
 
-Known-`forall` use is expanded in the same style. The IR retains every concrete Litex object selected for a binder, its parameter-type check, every proposition-valued domain requirement, and the conclusion obtained by direct substitution. Lean materializes the selected objects as typed local names such as `proof_arg_2_1`, replays domain requirements as `proof_fact` values, and names the direct theorem application. If that direct instance is only rationally equal to the requested spelling of the goal, an enclosing normalization node names the final result separately and checks the conversion. Thus an application is not compressed into a single opaque-looking `factN ...` line, and a matcher-level equality is not silently treated as definitional equality by Lean.
+The source `sketch` becomes a Lean namespace rather than an extra logical wrapper. `__fact0` corresponds to the persistent fact's verifier-owned `FactId`; its three `__h...` arguments retain the two domain-membership facts and the equality premise in source order. The proof IR records the `forall` introduction, these exact fact identities, and the proof nodes used for membership transport. The compiler is therefore not guessing a convenient Lean tactic after the fact; it is explicitly re-expressing the verification evidence already selected by the checker as a Lean proof.
+
+Known-`forall` use is expanded in the same style. The IR retains every source object selected for a binder, the exact `Litex.In` or other domain evidence it satisfies, every proposition-valued premise, and the conclusion obtained by direct substitution; it does not repack those objects into a universal object universe. Lean materializes the selected ordinary Lean values as local names such as `proof_arg_2_1`, replays proposition-valued premises as `proof_fact` values, and names the direct theorem application. If that direct instance is only rationally equal to the requested spelling of the goal, an enclosing normalization node names the final result separately and checks the conversion. Thus an application is not compressed into a single opaque-looking `factN ...` line, and a matcher-level equality is not silently treated as definitional equality by Lean.
 
 For existential statements, the same principle now has a concrete implementation. A positive `witness exist` retains its concrete witnesses, type checks, local proof steps, and direct body proofs; `obtain` and body-style `have` retain the alpha-checked source existential and each exact stored projection. Lean receives a nested `Exists` proof followed by ordered `Exists.choose`/`choose_spec` terms, including multiple witnesses and proof-local extraction. `exist!`, `not exist`, and preimage extraction remain separate boundaries rather than being approximated by this node.
 
@@ -844,6 +860,42 @@ together—a direction worth practicing and testing.
 Because this design direction is still being explored as a research project, the current repository should also be understood as open research in progress:
 
 > At the current research stage, Litex is developed in public, so the repository intentionally exposes experiments and unfinished work as well as checked results. Public availability is not a completion claim; each claim should be read against its current tests, dated status, trust boundary, and known limitations.
+
+<a id="appendix-builtins"></a>
+## Appendix A: Why Does Litex Have So Many Builtin Rules?
+
+Litex includes many builtin rules partly to cover the basic behavior of common mathematical objects—numbers, sets, equality, order, functions, and structures—and partly as a deliberate product choice. The richer the catalog of usable mathematical patterns becomes, the less often users must restate mechanical intermediate steps, and the more clearly the source can preserve the mathematical spine. The same design direction appears in language conveniences such as `setting`. A `setting` is not a builtin rule, but it packages recurring parameters, conditions, and mathematical background into a reusable declaration, greatly simplifying what follows.
+
+Hundreds of rules may sound complicated, but many of them work in a very direct way: check whether the current object or fact has a particular structural pattern, then reduce it to smaller premises. A pattern here can be compared to a “regular expression over mathematical objects,” but the implementation does not run a regular expression over source text. The parser has already converted the source into structured `Obj` and `Fact` values, and the Rust code matches the concrete shapes of those enums.
+
+For example, when the goal is `x $in union(A, B)`, the mathematical pattern says that the goal follows if either `x $in A` or `x $in B` holds. The representative branch in the current Rust implementation says exactly that:
+
+```rust
+Obj::Union(set) => vec![
+    vec![
+        InFact::new(fact.element.clone(), set.left.as_ref().clone(), lf.clone()).into(),
+    ],
+    vec![
+        InFact::new(fact.element.clone(), set.right.as_ref().clone(), lf.clone())
+            .into(),
+    ],
+],
+```
+
+The outer `Obj::Union(set)` recognizes a binary union as the target set. The two inner `vec!` values represent alternative routes: prove membership in the left side, or prove membership in the right side. The checker continues through a bounded premise-verification entry point for these smaller facts and records the selected rule and child evidence on success. Many builtin rules can be understood in this way: they form an explicit catalog organized by mathematical shape, not an inexplicable black box.
+
+More rules generally make Litex more comfortable to use, but they also enlarge the trusted implementation surface that must be audited. The Litex-to-Lean compiler is therefore more than an ecosystem integration feature; it is part of the correctness architecture that answers this tradeoff. For a supported route, the compiler must preserve the verifier-selected rule, premises, and fact citations, then replay that route through proved Lean theorems. An unsupported rule must stop compilation explicitly rather than being filled with a new axiom, `sorry`, or another proof hole. The existence of many rules cannot by itself prove that the entire kernel is correct, but this design allows each covered builtin route to receive an independent check from the Lean kernel.
+
+<a id="appendix-examples"></a>
+## Appendix B: Why Does Litex Have So Many Examples?
+
+Litex's examples, dataset translations, and complete textbooks are first of all continuing stress tests of the language and kernel, not merely feature demonstrations. A carefully chosen small example may happen to avoid a system's weak points. Hundreds or thousands of examples spanning mathematical domains, proof shapes, and long-range dependencies continually force the syntax, runtime, well-definedness checking, builtin and inference rules, standard library, and diagnostics to work together. Complete textbooks matter especially because they test whether definitions, lemmas, and structures compose across chapters rather than only within an isolated theorem.
+
+Many examples cannot by themselves prove soundness or establish that the architecture is the final correct design. They provide a different kind of important evidence: Litex is not working only on toy problems, and the same design can continue to express, check, and reuse facts across varied mathematical settings. Local bugs and design gaps become easier to discover in this process and can be reduced to permanent regression tests. Thus, “doing more exposes more problems” is not evidence against rigor; it shows that more real mathematics is entering the system's test surface.
+
+The important question is therefore not only how many examples exist, but whether they preserve the original mathematics, compose in real contexts, remain continuously executable by the runner, and turn failures into reproducible boundaries. Within the compiler's supported scope, the same Litex example should also generate a Lean proof and pass the real Lean kernel. Examples then become more than claims about what Litex can do: they become executable evidence that can fail, be repaired, and increasingly be checked independently.
+
+> **Litex builds many examples not to make problems harder to see, but to make it harder for the language to escape the test of real mathematics.**
 
 Related links
 

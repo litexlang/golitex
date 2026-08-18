@@ -1,0 +1,36 @@
+# Probability and statistics in Litex, setting-first.
+#
+# Main line: finite distributions -> expectation and variance -> Bayes' rule.
+
+prop is_probability_vector2(p finite_seq(R, 2)):
+    p(1) >= 0
+    p(2) >= 0
+    p(1) + p(2) = 1
+
+have fn expectation2(values, probs finite_seq(R, 2)) R = values(1) * probs(1) + values(2) * probs(2)
+have fn variance2(values, probs finite_seq(R, 2)) R = (values(1) - expectation2(values, probs))^2 * probs(1) + (values(2) - expectation2(values, probs))^2 * probs(2)
+
+have fair_coin_values finite_seq(R, 2) = [0, 1]
+have fair_coin_probs finite_seq(R, 2) = [1 / 2, 1 / 2]
+
+$is_probability_vector2(fair_coin_probs)
+expectation2(fair_coin_values, fair_coin_probs) = 1 / 2
+variance2(fair_coin_values, fair_coin_probs) = 1 / 4
+
+have fn conditional_probability(joint, evidence R: evidence > 0) R = joint / evidence
+have fn bayes_posterior(prior, likelihood, evidence R: evidence > 0) R = likelihood * prior / evidence
+
+thm bayes_rule:
+    ? forall prior, likelihood, evidence, joint R:
+        evidence > 0
+        joint = likelihood * prior
+        =>:
+            conditional_probability(joint, evidence) = bayes_posterior(prior, likelihood, evidence)
+    evidence > 0
+    joint = likelihood * prior
+    conditional_probability(joint, evidence) = joint / evidence
+    bayes_posterior(prior, likelihood, evidence) = likelihood * prior / evidence
+    joint / evidence = likelihood * prior / evidence
+
+conditional_probability(1 / 5, 2 / 5) = 1 / 2
+bayes_posterior(1 / 3, 3 / 4, 1 / 2) = 1 / 2

@@ -3137,7 +3137,7 @@ impl LitexToLeanIrBuilder<'_> {
                     context,
                 ),
             VerifiedByResult::BuiltinStrategy(result) => self
-                .build_litex_to_lean_ir_builtin_rule_application(
+                .build_litex_to_lean_ir_builtin_strategy_application(
                     goal,
                     &result.msg,
                     result.evidence.as_ref(),
@@ -4139,6 +4139,54 @@ impl LitexToLeanIrBuilder<'_> {
         })
     }
 
+    fn build_litex_to_lean_ir_builtin_strategy_application(
+        &self,
+        goal: &Fact,
+        label: &str,
+        evidence: Option<&BuiltinRuleEvidence>,
+        subgoals: &[StmtResult],
+        context: &LitexToLeanIrConstructionContext,
+    ) -> Result<LitexToLeanFactProofIr, RuntimeError> {
+        let proof =
+            if label == "additive sign strategy: normalized order goal" && evidence.is_none() {
+                let [subgoal] = subgoals else {
+                    return Err(litex_to_lean_ir_error(
+                        &goal.line_file(),
+                        "normalized additive strategy must retain exactly one subgoal",
+                    ));
+                };
+                let normalized = self.build_litex_to_lean_ir_fact_from_result(
+                    subgoal,
+                    "normalized additive strategy subgoal",
+                    context,
+                )?;
+                if !crate::litex_to_lean_ir::facts_are_comparison_notation_duals(
+                    &normalized.proposition,
+                    goal,
+                ) {
+                    return Err(litex_to_lean_ir_error(
+                        &goal.line_file(),
+                        "normalized additive strategy changed its order relation or operands",
+                    ));
+                }
+                LitexToLeanFactProofIr::RuleApplication {
+                    rule: LitexToLeanProofRuleIr::ComparisonNotationDuality {
+                        expected_source: normalized.proposition.clone(),
+                        expected_target: goal.clone(),
+                    },
+                    parameter_requirements: Vec::new(),
+                    premises: vec![normalized],
+                }
+            } else {
+                self.build_litex_to_lean_ir_builtin_rule_application(
+                    goal, label, evidence, subgoals, context,
+                )?
+            };
+        Ok(LitexToLeanFactProofIr::UseBuiltinStrategy {
+            proof: Box::new(proof),
+        })
+    }
+
     fn build_litex_to_lean_ir_known_equality_path(
         &self,
         goal: &Fact,
@@ -4518,7 +4566,7 @@ impl LitexToLeanIrBuilder<'_> {
             VerifiedBysEnum::ByBuiltinStrategy(result) => Ok(LitexToLeanFactIr {
                 fact_id: step_fact_id(&result.verify_what)?,
                 proposition: result.verify_what.clone(),
-                proof: self.build_litex_to_lean_ir_builtin_rule_application(
+                proof: self.build_litex_to_lean_ir_builtin_strategy_application(
                     &result.verify_what,
                     &result.msg,
                     result.evidence.as_ref(),
@@ -4808,7 +4856,8 @@ fn add_cited_conjunction_projections(
 fn known_fact_citation_id(proof: &LitexToLeanFactProofIr) -> Option<FactId> {
     match proof {
         LitexToLeanFactProofIr::KnownFactCitation { source_fact_id } => Some(*source_fact_id),
-        LitexToLeanFactProofIr::Memo { proof } => known_fact_citation_id(proof),
+        LitexToLeanFactProofIr::Memo { proof }
+        | LitexToLeanFactProofIr::UseBuiltinStrategy { proof } => known_fact_citation_id(proof),
         _ => None,
     }
 }
@@ -4842,6 +4891,87 @@ fn build_litex_to_lean_ir_inferred_fact_proof(
     inferred_fact: &Fact,
     reason: &str,
 ) -> Result<LitexToLeanFactProofIr, RuntimeError> {
+    if let (Fact::AtomicFact(AtomicFact::InFact(source)), Some(source_fact_id)) =
+        (source_fact, source_fact_id)
+    {
+        if let Obj::SetBuilder(builder) = &source.set {
+            if let Fact::AtomicFact(AtomicFact::InFact(target)) = inferred_fact {
+                if obj_equality_key(&source.element) == obj_equality_key(&target.element)
+                    && obj_equality_key(builder.param_set.as_ref()) == obj_equality_key(&target.set)
+                {
+                    return Ok(LitexToLeanFactProofIr::RuleApplication {
+                        rule: LitexToLeanProofRuleIr::SetBuilderBaseMembershipProjection {
+                            set_builder: LitexToLeanObjectIr::lower(&source.set).map_err(
+                                |message| {
+                                    litex_to_lean_ir_error(&inferred_fact.line_file(), message)
+                                },
+                            )?,
+                            expected_source: source_fact.clone(),
+                            expected_target: inferred_fact.clone(),
+                        },
+                        parameter_requirements: Vec::new(),
+                        premises: vec![LitexToLeanFactIr {
+                            fact_id: Some(source_fact_id),
+                            proposition: source_fact.clone(),
+                            proof: LitexToLeanFactProofIr::KnownFactCitation { source_fact_id },
+                        }],
+                    });
+                }
+            }
+            let mut substitutions = HashMap::new();
+            insert_symbol_substitution(
+                &mut substitutions,
+                &builder.param_binding,
+                source.element.clone(),
+            );
+            for (clause_index, clause) in builder.facts.iter().enumerate() {
+                if !matches!(
+                    clause,
+                    QuantifierFreeFact::AtomicFact(AtomicFact::NormalAtomicFact(_))
+                ) {
+                    continue;
+                }
+                let instantiated = compiler
+                    .runtime
+                    .inst_quantifier_free_fact(
+                        clause,
+                        &substitutions,
+                        ParamObjType::SetBuilder,
+                        Some(&inferred_fact.line_file()),
+                    )
+                    .map_err(|error| {
+                        litex_to_lean_ir_error(
+                            &inferred_fact.line_file(),
+                            format!(
+                                "could not replay set-builder predicate projection: {}",
+                                error.trace_message()
+                            ),
+                        )
+                    })?
+                    .to_fact();
+                if instantiated.to_string() == inferred_fact.to_string() {
+                    return Ok(LitexToLeanFactProofIr::RuleApplication {
+                        rule: LitexToLeanProofRuleIr::SetBuilderPredicateProjection {
+                            set_builder: LitexToLeanObjectIr::lower(&source.set).map_err(
+                                |message| {
+                                    litex_to_lean_ir_error(&inferred_fact.line_file(), message)
+                                },
+                            )?,
+                            clause_index,
+                            expected_source: source_fact.clone(),
+                            expected_target: inferred_fact.clone(),
+                        },
+                        parameter_requirements: Vec::new(),
+                        premises: vec![LitexToLeanFactIr {
+                            fact_id: Some(source_fact_id),
+                            proposition: source_fact.clone(),
+                            proof: LitexToLeanFactProofIr::KnownFactCitation { source_fact_id },
+                        }],
+                    });
+                }
+            }
+        }
+    }
     if let Fact::AtomicFact(AtomicFact::IsTupleFact(tuple_fact)) = inferred_fact {
         if matches!(&tuple_fact.set, Obj::Tuple(_)) {
             let tuple = LitexToLeanObjectIr::lower(&tuple_fact.set)
@@ -4996,6 +5126,33 @@ fn build_litex_to_lean_ir_inferred_fact_proof(
                 }],
             });
         }
+    }
+    if matches!(
+        inferred_fact,
+        Fact::AtomicFact(AtomicFact::EqualFact(equality))
+            if obj_equality_key(&equality.left) == obj_equality_key(&equality.right)
+    ) {
+        return Ok(LitexToLeanFactProofIr::RuleApplication {
+            rule: LitexToLeanProofRuleIr::ObjectReflexivity,
+            parameter_requirements: Vec::new(),
+            premises: Vec::new(),
+        });
+    }
+    if matches!(
+        inferred_fact,
+        Fact::AtomicFact(AtomicFact::EqualFact(equality))
+            if crate::rational_expression::objs_equal_by_rational_expression_evaluation(
+                &equality.left,
+                &equality.right,
+            )
+    ) {
+        return Ok(LitexToLeanFactProofIr::RuleApplication {
+            rule: LitexToLeanProofRuleIr::Normalization {
+                kind: LitexToLeanNormalizationKindIr::RationalExpressionSimplification,
+            },
+            parameter_requirements: Vec::new(),
+            premises: Vec::new(),
+        });
     }
     if crate::litex_to_lean_ir::is_closed_numeric_relation(inferred_fact) {
         return Ok(LitexToLeanFactProofIr::RuleApplication {

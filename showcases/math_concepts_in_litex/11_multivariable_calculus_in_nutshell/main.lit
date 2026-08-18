@@ -1,0 +1,34 @@
+# Multivariable calculus in Litex, setting-first.
+#
+# Main line: a scalar field -> exact coordinate difference quotients -> gradient.
+
+have fn quadratic_surface(p cart(R, R)) R = p[1]^2 + p[2]^2
+have fn quadratic_gradient(p cart(R, R)) cart(R, R) = (2 * p[1], 2 * p[2])
+
+thm quadratic_surface_x_difference_quotient:
+    ? forall p cart(R, R), x R:
+        x != p[1]
+        =>:
+            (quadratic_surface((x, p[2])) - quadratic_surface(p)) / (x - p[1]) = x + p[1]
+    x != p[1]
+    x - p[1] != 0
+    quadratic_surface((x, p[2])) = x^2 + p[2]^2
+    quadratic_surface(p) = p[1]^2 + p[2]^2
+    quadratic_surface((x, p[2])) - quadratic_surface(p) = (x^2 + p[2]^2) - (p[1]^2 + p[2]^2) = x^2 - p[1]^2
+    x^2 - p[1]^2 = (x - p[1]) * (x + p[1])
+    (x^2 - p[1]^2) / (x - p[1]) = x + p[1]
+
+thm quadratic_surface_y_difference_quotient:
+    ? forall p cart(R, R), y R:
+        y != p[2]
+        =>:
+            (quadratic_surface((p[1], y)) - quadratic_surface(p)) / (y - p[2]) = y + p[2]
+    y != p[2]
+    y - p[2] != 0
+    quadratic_surface((p[1], y)) = p[1]^2 + y^2
+    quadratic_surface(p) = p[1]^2 + p[2]^2
+    quadratic_surface((p[1], y)) - quadratic_surface(p) = (p[1]^2 + y^2) - (p[1]^2 + p[2]^2) = y^2 - p[2]^2
+    y^2 - p[2]^2 = (y - p[2]) * (y + p[2])
+    (y^2 - p[2]^2) / (y - p[2]) = y + p[2]
+
+quadratic_gradient((3, 4)) = (6, 8)

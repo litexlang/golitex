@@ -19,11 +19,11 @@ order is reached without retyping Litex objects.
 
 ## Representation bridge
 
-`Litex.BridgeRule α β` supplies a reviewed primitive representation relation,
-and `Litex.Bridge x y` means that an installed rule relates `x` and `y`.
-Numeric rules currently connect native naturals, integers, rationals, and
-reals to their canonical complex embeddings. The subtype rule connects a
-member of a predicate-defined carrier to its base value.
+`Core.lean` owns a closed primitive representation registry. Numeric edges
+connect native naturals, integers, rationals, and reals to their canonical
+complex embeddings. The subtype edge connects a member of a
+predicate-defined carrier to its base value. The registry types and instances
+are private, so downstream Lean code cannot widen `Same`.
 
 This primitive relation matters because reflexivity, symmetry, and
 transitivity alone cannot create genuine cross-carrier equality.
@@ -31,16 +31,19 @@ transitivity alone cannot create genuine cross-carrier equality.
 Immediate use: `Litex.Same.complexReal r` relates `(r : ℂ)` to `r : ℝ`.
 
 Nearest rejected form: silently treating all values of unrelated Lean types as
-bridged. The executable boundary checks that the standard header installs no
-primitive `Bool`-to-`Nat` bridge. A downstream Lean integration may explicitly
-register another rule, but this is a trusted ABI extension rather than a
-consequence of Litex source equality.
+bridged. There is no public registration API for a `Bool`-to-`Nat` edge;
+adding another carrier relation requires changing and reviewing `Core.lean`.
 
 ## Semantic equality
 
-`Litex.Same x y` is the equivalence closure of `Litex.Bridge`. Native Lean
-equality implies `Same` through `Litex.Same.ofEq`, while heterogeneous numeric
-and subtype equality enters through `Same.base`.
+`Litex.Same x y` is the public equivalence closure of the closed
+representation edges. Native Lean equality implies `Same` through
+`Litex.Same.ofEq`; public numeric/subtype theorems expose the reviewed
+cross-carrier cases without exposing the registry.
+
+The closed derived layer currently contains native real-to-complex
+congruence for `+`, `-`, `*`, and `/`. These are the exact operations used
+by the named-function compiler adapter.
 
 Immediate use: a proof of `Same a b` transports `In a S` to `In b S` without
 changing either Lean variable's carrier.
@@ -60,13 +63,13 @@ second casting subsystem.
 and apply Mathlib's native `<` and `≤`. Both predicates transport across
 `Same`. The rule `Lt x y → Le x y` needs no uniqueness assumption.
 
-The registry remains extensible, so the core distinguishes choosing a
-representative from identifying two representatives. `Litex.RealCoherence`
-states the latter invariant. Irreflexivity, transitivity through independently
-chosen middle representatives, and elimination to native Mathlib comparison
-take this certificate explicitly. No inhabitant is postulated by the header.
-An incoherent user bridge can only be combined with these elimination rules by
-introducing a visibly trusted, false certificate.
+The core distinguishes choosing a representative from proving a global
+normalization theorem for independently chosen representatives.
+`Litex.RealCoherence` states the latter invariant. Irreflexivity,
+transitivity through independently chosen middle representatives, and
+elimination to native Mathlib comparison take this certificate explicitly. No
+inhabitant is postulated by the header, even though the representation
+registry is now closed.
 
 ## Exact-carrier sets
 
@@ -116,6 +119,20 @@ by `hf : Litex.In f (Litex.fnSet s S)`, then calls it with
 `hx : Litex.In x s`. Both proofs are explicit inputs. The result is directly
 an `S.Carrier`; this wrapper layer has no inverse transport API.
 
+`Litex.fnApplyOwn` is the companion path for a compiler-constructed value
+whose Lean type is already exactly `Fn s S`. It still takes the stored
+`f $in fn(...)` proof and the argument-membership proof, but it does not make a
+second representative choice for `f`. Example 12 uses this path for
+`have fn id(x R) R = x`; its result is the representative already carried by
+`x $in R`, and `Same.symm (In.same_rep x hx)` proves the checked defining
+reduction.
+
+`Litex.FnWhere s S requires` adds one explicit proposition after argument
+membership. `fnSetWhere`, `fnApplyWhere`, and `fnApplyWhereOwn` preserve
+that exact contract. Example 12 uses it for
+`reciprocal(x R: x != 0) = 1 / x`: the application must pass the verifier's
+nonzero WD FactId even though Mathlib division itself is total.
+
 The authoritative probe is `examples/4_FunctionSet.lit`. Its generated theorem
 quantifies independent carriers for `x` and `f`, retains both membership
 hypotheses, and emits both occurrences of `f(x)` with the exact
@@ -123,10 +140,46 @@ verifier-selected FactId/WD proofs. The nearest negative probe lives under
 the compiler's function-set regression: changing `x s` to `x S` is rejected
 by Litex before Lean emission.
 
-The current boundary is intentionally narrow: one named unary layer, no extra
-domain facts, no anonymous functions, no multiple arguments, and no curried
-function return. Those forms remain unsupported rather than being flattened
-to this ABI.
+The current construction boundary is one named real-valued unary layer.
+Identity and expression trees built from the parameter, natural literals, and
+`+`, `-`, `*`, `/` are compiled to the exact `ℝ` codomain carrier.
+Checked reduction uses the closed native-operation `Same` congruence
+theorems. Standalone anonymous compound functions, multiple parameters,
+curried returns, other domains/codomains, and other operations remain
+rejected.
+
+## Concrete predicates
+
+A concrete source `prop P(x S): ...` becomes a native Lean predicate whose
+body conjoins `Litex.In x S` with the rendered defining clauses. This makes
+parameter admission part of the wrapper proposition instead of letting Lean
+argument typing stand in for Litex membership. Example 13 replays the exact
+membership and clause proofs for `by def` and projects inferred components by
+their position in that same conjunction.
+
+Nearest rejected form: `abstract_prop` or a bodyless concrete predicate. No
+checked Lean definition exists for either, so compiler does not manufacture
+an axiom or arbitrary proposition.
+
+## Set-builder membership and choice
+
+Example 14 gives the existing `setBuilder` subtype carrier its first generated
+construction route. A checked literal membership supplies base membership and
+the defining facts in source order. The adapter transports whole-side
+equalities such as `x = 1` to the selected base representative. A
+one-parameter concrete predicate is unfolded into its membership requirement
+and equality clauses; the inverse inference from set-builder membership uses
+the explicit `SetBuilderPredicateProjection` IR rule. The inferred
+`x $in base` fact remains the proved `Rules.inBaseOfInSetBuilder` projection.
+
+Nearest rejected form: a changing binder nested inside an expression, such as
+`x + 1 = 2`. The current adapter does not recursively prove predicate
+respectfulness for arbitrary object constructors.
+
+`Litex.Set.Nonempty S` is native `Nonempty S.Carrier`. A source `have x S`
+therefore chooses an ordinary value of the exact carrier and proves its
+membership with `In.own`. The verifier must supply the nonemptiness proof; a
+bare meta-level `have A set` remains rejected.
 
 ## Existential witnesses
 
@@ -184,13 +237,14 @@ file scope. A direct top-level fact is not placed in that namespace.
 ```text
 Mathlib native carriers
   -> Core.lean                  [single semantic bridge header]
-  -> BridgeRule                 [controlled representation interface]
-  -> Bridge                     [definition]
-  -> Same                       [definition]
+  -> private primitive/derived registries [closed representation rules]
+  -> Same                       [public heterogeneous relation]
   -> Set                        [signature]
   -> In                         [definition: Same + Set.Carrier]
-  -> Fn / fnSet                 [one unary proof-carrying function carrier]
-  -> fnApply                    [consumes function + argument membership]
+  -> Fn / fnSet                 [total unary proof-carrying carrier]
+  -> FnWhere / fnSetWhere       [source-domain proposition retained]
+  -> fnApply / fnApplyOwn       [total checked application]
+  -> fnApplyWhere variants      [membership + domain proof application]
   -> numeric sets N/Z/Q/R/C     [definition]
   -> setBuilder                 [definition: subtype carrier]
   -> membership transport       [proof]
@@ -203,6 +257,7 @@ Mathlib native carriers
   -> verifier-produced statement IR [checked compilation evidence]
   -> compiler strict emitter    [reviewed adapters]
   -> proof/existential/object scopes [native values + explicit Litex evidence]
+  -> concrete prop / set builder / choice [checked transport components]
   -> same-name generated examples [real Lean proof]
 ```
 
