@@ -19,11 +19,11 @@ order is reached without retyping Litex objects.
 
 ## Representation bridge
 
-`Core.lean` owns a closed primitive representation registry. Numeric edges
+`Core.lean` owns a closed representation registry. Private proof constructors
 connect native naturals, integers, rationals, and reals to their canonical
-complex embeddings. The subtype edge connects a member of a
-predicate-defined carrier to its base value. The registry types and instances
-are private, so downstream Lean code cannot widen `Same`.
+complex embeddings; the subtype edge connects a member of a predicate-defined
+carrier to its base value. Downstream Lean code can use the public `Same`
+interface but cannot add another primitive or derived edge.
 
 This primitive relation matters because reflexivity, symmetry, and
 transitivity alone cannot create genuine cross-carrier equality.
@@ -63,13 +63,11 @@ second casting subsystem.
 and apply Mathlib's native `<` and `≤`. Both predicates transport across
 `Same`. The rule `Lt x y → Le x y` needs no uniqueness assumption.
 
-The core distinguishes choosing a representative from proving a global
-normalization theorem for independently chosen representatives.
-`Litex.RealCoherence` states the latter invariant. Irreflexivity,
-transitivity through independently chosen middle representatives, and
-elimination to native Mathlib comparison take this certificate explicitly. No
-inhabitant is postulated by the header, even though the representation
-registry is now closed.
+The core distinguishes choosing one representative from comparing two
+independently selected representatives. `Litex.RealCoherence` remains the
+explicit certificate shape consumed by the latter order theorems, and the
+header postulates no inhabitant. Example 22's nonzero elimination avoids this
+obligation by retaining the exact semantic nonzero certificate in the carrier.
 
 ## Exact-carrier sets
 
@@ -82,6 +80,14 @@ For a new hidden mathematical carrier `__Marker`, the set is
 
 For a predicate-defined subset, `Litex.setBuilder base predicate` uses the
 subtype `{x : base.Carrier // predicate x}` as its exact carrier.
+
+The implemented standard refined carriers use that same contract:
+`Litex.NPos = Litex.setBuilder Litex.N (fun n => 0 < n)`,
+`Litex.RPos = Litex.setBuilder Litex.R (fun r => 0 < r)`, and
+`Litex.ZStar` / `QStar` / `RStar` / `CStar` use `Litex.C` as the exact source
+carrier with predicate `In x base ∧ ¬ Same x 0`. Each star carrier therefore
+retains the source-level base membership and semantic nonzero certificate;
+none is an alias of its base set.
 
 The construction remains universe-polymorphic. In particular,
 `Litex.Set.{0} : Type 1`, so it may be the carrier of `Litex.Set.{1}`. A
@@ -121,10 +127,78 @@ because a single complex-valued source binder can keep several independently
 proved memberships without native Lean typing becoming the source set
 semantics.
 
-Nearest rejected form: `N+ → N`. The verifier already selects the hierarchy
-certificate, but `N+` must retain an exact carrier carrying its positivity
-predicate. Erasing that predicate or reusing the plain `N` carrier would make
-refined membership unsound, so the active emitter fails closed.
+Example 20 adds the exact `N+ → N` edge. The source remains a complex-valued
+object with `Litex.In n Litex.NPos`; `Rules.inNOfInNPos` projects the selected
+subtype witness to its native-natural base without reconstructing or erasing
+the witness's positivity proof.
+
+Example 21 adds `R+ → R` and composes it with `R → C`. Like the `N+`
+projection, it forgets only the exact subtype predicate while retaining the
+selected native witness.
+
+Example 22 adds predicate-preserving nonzero widening
+`Z* → Q* → R* → C*` and predicate-forgetting projections from each star set
+to its base carrier. Base hierarchy bridges then reach every supported base
+supercarrier. Each star-to-star rule keeps the same complex representative and
+semantic nonzero proof while widening only the retained base membership.
+
+Nearest rejected form: `Q+ → Q`. `Q+` still needs its own exact predicate
+carrier and proved projection rather than a rename of either implemented set.
+
+## Positive-natural reflection
+
+Example 20 also gives closed positive-natural numerals their exact constructor.
+After verifier evidence identifies `1 $in N+`, compiler independently requires
+a nonzero natural numeral and calls `Rules.complexEqNatInNPos`. The theorem uses
+the closed complex-to-natural `Same` bridge and `Rules.inSetBuilder`; it does
+not turn native positivity into the heterogeneous `Litex.Lt` relation or
+assume `RealCoherence`.
+
+Nearest rejected form: `1 $in Q+`. The positive-rational carrier remains
+unimplemented even though the closed source fact verifies.
+
+## Positive-real carrier and elimination
+
+Example 21 defines `RPos` as the subtype `{r : ℝ // 0 < r}`. Closed positive
+numerals use an explicit complex-to-real equality bridge; `e` and `pi` use
+Mathlib's `Real.exp_pos` and `Real.pi_pos`. Membership projects to `R` and then
+to `C` without retyping the source object.
+
+`Rules.positiveOfInRPos` opens the exact subtype witness and constructs
+`Litex.Lt (0 : ℂ) x` with that same real representative. The forall emitter
+materializes this verifier-inferred rule under its retained FactId before a
+later conclusion cites it.
+
+Nearest rejected form: constructing `x $in R+` from separate `x $in R` and
+`x > 0` premises. The two wrapper propositions may select different real
+representatives, so the active compiler rejects the verifier's generic refined
+membership certificate instead of silently assuming `RealCoherence`.
+
+## Nonzero numeric carriers
+
+Example 22 gives `Z*`, `Q*`, `R*`, and `C*` exact certified complex-source
+subtype carriers. The four constructor rules consume the verifier's ordered
+premises `x $in base` and `x != 0`, select a complex representative already
+proved `Same` to `x`, and retain both the transported base membership and
+semantic nonzero proof in the subtype predicate.
+
+Membership projects back to `Z`, `Q`, `R`, or `C` by opening that same
+certificate. Predicate-preserving widening along `Z* → Q* → R* → C*` keeps
+the representative and nonzero proof unchanged and widens only its base
+membership through the reviewed hierarchy rules.
+
+The inverse inference is constructive without a global endpoint theorem. From
+`x $in Z*`, for example, the exact subtype supplies a complex representative
+`z`, `Same x z`, and `¬ Same z 0`. An assumed `Same x 0`, combined with
+symmetry and transitivity, contradicts the retained certificate. The same
+argument applies to `Q*`, `R*`, and `C*` and materializes the exact
+verifier-inferred nonzero FactId.
+
+Nearest rejected form: closed reflection such as `1 $in Z*`. Litex verifies
+the source, but its retained `1 != 0` child still needs a separately reviewed
+closed negated-equality emitter. Example 22 does not generalize closed
+non-equality into target-side proof search, and star arithmetic closure remains
+a later evidence-adapter batch.
 
 ## Native mathematical constants
 
@@ -139,10 +213,9 @@ The verifier represents `e $in C` and `pi $in C` as the corresponding real
 membership followed by `StandardSetMembershipProjection`, so compiler reuses
 the exact real-membership FactId and the proved `inCOfInR` bridge.
 
-Nearest rejected form: `e $in R+`. Its positivity is mathematically known, but
-`R+` needs an exact subtype carrier that preserves the strict-positive
-predicate. Reusing `R` would erase source semantics, so refined membership
-remains fail-closed.
+Example 21 constructs `e $in R+` and `pi $in R+` through fixed native-constant
+adapters. The nearest rejected constant-adjacent refined form is `1 $in Q+`;
+positive-rational membership cannot reuse the real subtype.
 
 ## Unary function sets and application
 
@@ -340,9 +413,13 @@ Mathlib native carriers
   -> FnWhere / fnSetWhere       [source-domain proposition retained]
   -> fnApply / fnApplyOwn       [total checked application]
   -> fnApplyWhere variants      [membership + domain proof application]
-  -> numeric sets N/Z/Q/R/C     [definition]
+  -> numeric sets N/Z/Q/R/C     [exact native-carrier definitions]
   -> adjacent numeric membership bridges [proved hierarchy projection]
   -> setBuilder                 [definition: subtype carrier]
+  -> NPos                       [exact positive-natural subtype]
+  -> RPos                       [exact positive-real subtype]
+  -> ZStar/QStar/RStar/CStar    [certified complex-source subtypes]
+  -> nonzero constructor/projection/widening/elimination rules [retained certificate]
   -> membership transport       [proof]
   -> AsReal                     [definition: Same + native real]
   -> RealCoherence              [certificate interface, no inhabitant assumed]

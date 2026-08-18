@@ -41,6 +41,10 @@ The implemented scope is deliberately small:
 - `Litex.FnWhere`, `fnSetWhere`, `fnApplyWhere`, and
   `fnApplyWhereOwn` retain source-domain clauses as explicit call proofs;
 - `N`, `Z`, `Q`, `R`, and `C` use Mathlib's native carriers;
+- `NPos` is the exact subtype `{n : ℕ // 0 < n}` rather than an alias of `N`;
+- `RPos` is the exact subtype `{r : ℝ // 0 < r}` rather than an alias of `R`;
+- `ZStar`, `QStar`, `RStar`, and `CStar` are exact certified complex-source
+  subtypes retaining base membership and semantic nonzero evidence;
 - verifier-selected membership widens constructively through
   `N → Z → Q → R → C` without changing the source value's Lean type;
 - `setBuilder` represents a predicate-defined subset by a subtype carrier;
@@ -195,9 +199,8 @@ Example 16 adds the standard numeric-set membership hierarchy. A premise such
 as `Litex.In n Litex.N` is replayed through proved adjacent rules
 `inZOfInN`, `inQOfInZ`, `inROfInQ`, and `inCOfInR`; wider targets compose
 those fixed bridges in order. The generated binder remains `n : ℂ` with its
-original membership proof. Refined sets such as `N+` remain fail-closed
-because their exact subtype carriers and defining predicates have not yet
-received a compiler ABI.
+original membership proof. This base hierarchy does not erase refined-set
+predicates; Example 20 adds the first reviewed refined carrier separately.
 
 Example 17 adds base numeric-carrier arithmetic closure. Complex `+`, `-`,
 `*`, and `/` target `C` through the verifier's zero-child closure certificate;
@@ -221,8 +224,33 @@ carrier. Source `i`, `e`, and `pi` lower respectively to `Complex.I`, the
 complex embedding of `Real.exp 1`, and the complex embedding of `Real.pi`.
 Verifier-selected rules prove `i $in C` and `e, pi $in R`; complex membership
 for the two real constants reuses those exact FactIds through `inCOfInR`.
-Positive-real membership remains fail-closed until the refined `R+` carrier is
-represented exactly.
+Example 21 additionally gives `e` and `pi` exact positive-real constructors.
+
+Example 20 adds the first exact refined numeric carrier. `Litex.NPos` is the
+subtype of native naturals satisfying `0 < n`; a checked positive numeral
+constructs that subtype through `complexEqNatInNPos`, and `N+ → N` uses the
+generic subtype-to-base projection through `inNOfInNPos`. Other refined sets,
+including `Q+`, remain fail-closed instead of inheriting this predicate by
+analogy.
+
+Example 21 adds the exact positive-real carrier and restores the archived
+compiler's `PositiveRealMembership` elimination without its universal object.
+Closed `1`, `e`, and `pi` construct `Litex.RPos`; `R+ → R → C` uses proved
+membership projections; and a verifier-inferred positivity FactId is
+materialized as `positiveOfInRPos`. The reverse generic constructor from an
+independent `In r R` proof and `Lt 0 r` remains fail-closed because those
+premises may choose different real representatives.
+
+Example 22 adds exact nonzero numeric carriers for `Z*`, `Q*`, `R*`, and
+`C*`. Each carrier retains a complex source representative together with its
+base-set membership and `¬ Litex.Same source 0` certificates. The four
+constructors consume the verifier's ordered base-membership and `!= 0`
+premises; projections recover both nonzero and base/supercarrier facts; and
+adjacent widening composes `Z* → Q* → R* → C*`. The forall emitter
+materializes each verifier-inferred nonzero FactId as a local proved `have`.
+No `RealCoherence` premise or new `Same` edge is introduced. Standalone closed
+reflection such as `1 $in Z*` remains fail-closed because closed `!=` replay is
+still outside the reviewed comparison emitter.
 
 Sketch is a real source scope, not an example-file wrapper. Each top-level
 sketch is emitted as `__Sketch01`, `__Sketch02`, and so on. Its emitter context
@@ -263,7 +291,7 @@ deferred until the IR and compiler emitter support its Litex statement form; it 
 not represented by hand-written code under `examples/`.
 
 The compiler currently emits only the reviewed IR routes exercised by the
-nineteen numbered examples. Checked named aliases of `R` and `C`, top-level atomic
+twenty-two numbered examples. Checked named aliases of `R` and `C`, top-level atomic
 equality, nonnegative integer numerals, addition, arbitrary set parameters,
 unary function sets, named unary application, basic proof scopes,
 case/contradiction proofs, one-witness positive existentials, minimal native
@@ -276,8 +304,15 @@ standard membership widening through `N → Z → Q → R → C`. Complex and
 rational carrier closure support all four basic operators; integer closure
 supports `+`, `-`, and `*`; natural closure supports `+` and `*`. Other atomic
 predicates and arithmetic operators are not implemented yet. Native `i`, `e`,
-and `pi` terms and their base-carrier memberships are supported. Remaining
-boundaries include integer remainder, rational
-power, refined numeric carriers, bare arbitrary-set choices (`have A set`), multi-parameter or
+and `pi` terms and their base-carrier memberships are supported, as are the
+exact positive-natural carrier, closed positive numerals, and `N+ → N`.
+The exact positive-real carrier supports closed positive numerals, `e`, `pi`,
+`R+ → R/C`, and elimination to strict positivity.
+The exact nonzero numeric carriers support construction from base membership
+plus source non-equality, elimination back to source non-equality, base and
+supercarrier projection, and `Z* → Q* → R* → C*` widening.
+Remaining boundaries include integer remainder, rational power, the remaining
+positive/negative refined numeric carriers, closed non-equality reflection,
+bare arbitrary-set choices (`have A set`), multi-parameter or
 multi-layer functions, nested set-builder binder expressions, richer set
 constructors, and broader production code-generation are not implemented yet.

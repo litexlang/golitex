@@ -62,6 +62,17 @@ impl Runtime {
             return Ok(self.remember_successful_atomic_fact_for_statement(&atomic_fact, result));
         }
 
+        if let Some(fact_verified) = self
+            .try_verify_equal_fact_with_known_forall_after_nested_rational_normalization(
+                equal_fact,
+                verify_state,
+            )?
+        {
+            known_forall_profile::record_success();
+            let result = fact_verified.into();
+            return Ok(self.remember_successful_atomic_fact_for_statement(&atomic_fact, result));
+        }
+
         let fact_with_reversed_args: AtomicFact = EqualFact::new(
             equal_fact.right.clone(),
             equal_fact.left.clone(),
@@ -78,6 +89,166 @@ impl Runtime {
 
         known_forall_profile::record_unknown();
         Ok((StmtUnknown::new()).into())
+    }
+
+    /// Match one side of a stored universally quantified equality, instantiate
+    /// the complete equality, and then admit only obligation-free arithmetic
+    /// normalization between that instance and the requested equality.
+    ///
+    /// Recursive `have fn ... by induc` definitions store their case equations
+    /// as ordinary conditional forall facts.  For a positive recursive case,
+    /// matching `f(k)` against `f(n + 1)` selects `k := n + 1`; the stored
+    /// right-hand side then contains `(n + 1) - 1`, which normalizes to `n`.
+    /// Case requirements are still checked independently, so an argument whose
+    /// branch is unknown cannot be unfolded by this route.
+    fn try_verify_equal_fact_with_known_forall_after_nested_rational_normalization(
+        &mut self,
+        equal_fact: &EqualFact,
+        verify_state: &UseContextVerifyState,
+    ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
+        let target_atomic: AtomicFact = equal_fact.clone().into();
+        let lookup_key = (target_atomic.key(), target_atomic.is_true());
+        let candidates: Vec<(AtomicFact, Rc<KnownForallFactParamsAndDom>)> = self
+            .iter_environments_from_top()
+            .flat_map(|environment| {
+                environment
+                    .known_atomic_facts_in_forall_facts
+                    .get(&lookup_key)
+                    .into_iter()
+                    .flat_map(|facts| facts.iter())
+                    .chain(
+                        environment
+                            .known_atomic_facts_in_forall_facts_by_arg_shape
+                            .get(&lookup_key)
+                            .into_iter()
+                            .flat_map(|shape_map| shape_map.values())
+                            .flat_map(|facts| facts.iter()),
+                    )
+            })
+            .cloned()
+            .collect();
+
+        for (candidate, known_forall) in candidates {
+            if let Some(success) = self
+                .try_verify_known_forall_equality_candidate_after_nested_rational_normalization(
+                    candidate,
+                    known_forall,
+                    &target_atomic,
+                    &target_atomic,
+                    verify_state,
+                )?
+            {
+                return Ok(Some(success));
+            }
+        }
+
+        let module_names = self.atomic_fact_referenced_module_names(&target_atomic);
+        for module_name in module_names.iter() {
+            let module_local_identifiers =
+                self.imported_module_identifier_to_local_obj_map(module_name);
+            let matching_target = self.inst_atomic_fact(
+                &target_atomic,
+                &module_local_identifiers,
+                ParamObjType::Identifier,
+                None,
+            )?;
+            let imported_candidates = self
+                .imported_module_environments(module_name)
+                .into_iter()
+                .flat_map(|environment| {
+                    environment
+                        .known_atomic_facts_in_forall_facts
+                        .get(&lookup_key)
+                        .into_iter()
+                        .flat_map(|facts| facts.iter())
+                        .chain(
+                            environment
+                                .known_atomic_facts_in_forall_facts_by_arg_shape
+                                .get(&lookup_key)
+                                .into_iter()
+                                .flat_map(|shape_map| shape_map.values())
+                                .flat_map(|facts| facts.iter()),
+                        )
+                })
+                .cloned()
+                .collect::<Vec<_>>();
+            for (candidate, known_forall) in imported_candidates {
+                if let Some(success) = self
+                    .try_verify_known_forall_equality_candidate_after_nested_rational_normalization(
+                        candidate,
+                        known_forall,
+                        &matching_target,
+                        &target_atomic,
+                        verify_state,
+                    )?
+                {
+                    return Ok(Some(success));
+                }
+            }
+        }
+        Ok(None)
+    }
+
+    fn try_verify_known_forall_equality_candidate_after_nested_rational_normalization(
+        &mut self,
+        candidate: AtomicFact,
+        known_forall: Rc<KnownForallFactParamsAndDom>,
+        matching_target: &AtomicFact,
+        given_target: &AtomicFact,
+        verify_state: &UseContextVerifyState,
+    ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
+        let (AtomicFact::EqualFact(candidate_equality), AtomicFact::EqualFact(matching_equality)) =
+            (&candidate, matching_target)
+        else {
+            return Ok(None);
+        };
+        for (candidate_anchor, target_anchor) in [
+            (&candidate_equality.left, &matching_equality.left),
+            (&candidate_equality.right, &matching_equality.right),
+        ] {
+            known_forall_profile::record_candidate_attempt(KnownForallSearchPhase::OtherShape);
+            let Some((mut arg_map, _)) = self.match_args_in_fact_with_known_forall_bindings(
+                &[candidate_anchor],
+                &[target_anchor],
+                &known_forall.params_def,
+                None,
+            )?
+            else {
+                continue;
+            };
+            known_forall_profile::record_arg_match();
+            self.complete_known_forall_arg_map_from_known_dom_facts(
+                known_forall.as_ref(),
+                &mut arg_map,
+            )?;
+            if !known_forall
+                .params_def
+                .collect_param_names()
+                .iter()
+                .all(|param_name| arg_map.contains_key(param_name))
+            {
+                continue;
+            }
+            let instantiated =
+                self.inst_atomic_fact(&candidate, &arg_map, ParamObjType::Forall, None)?;
+            if !super::verify_known_atomic_facts::atomic_facts_align_by_nested_rational_normalization(
+                &instantiated,
+                matching_target,
+            ) {
+                continue;
+            }
+            if let Some(success) = self.verify_args_satisfy_forall_requirements(
+                &candidate,
+                &known_forall,
+                arg_map,
+                given_target,
+                verify_state,
+            )? {
+                return Ok(Some(success));
+            }
+            known_forall_profile::record_requirement_failure();
+        }
+        Ok(None)
     }
 
     fn verify_atomic_fact_with_known_forall_forward(

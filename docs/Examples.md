@@ -3698,7 +3698,13 @@ have fn count_from_zero(n Z: n >= 0) R by induc n from 0:
     case n > 0: count_from_zero(n - 1) + 1
 
 count_from_zero(0) = 0
+forall n N:
+    count_from_zero(n + 1) = count_from_zero(n) + 1
 ```
+
+The successor equation selects the positive recursive case automatically and
+normalizes `(n + 1) - 1` to `n`. An argument with no provable case condition is
+not unfolded.
 
 #### 11. Function Implementation And Evaluation
 

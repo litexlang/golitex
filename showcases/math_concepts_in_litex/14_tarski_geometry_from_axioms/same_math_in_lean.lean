@@ -1,8 +1,9 @@
 /-
-The same point-only Chapters 2--11 layer, Euclid I.5, and exact angle-based
-SAS theorem as `main.lit`, expressed in pure Lean 4. Relations use functions
-into `Prop` because Prelude does not provide the first-class relation-set
-notation used by Litex.
+The same point-only Chapters 2--12 layer, Euclid I.5, exact angle-based SAS and
+SSS-to-angle theorems, reflection construction, and parallel interfaces as
+`main.lit`, expressed in pure Lean 4. Relations use functions into `Prop`
+because Prelude does not provide the first-class relation-set notation used by
+Litex.
 
 The structures are explicit assumption bundles, not claims that a model of
 the axioms has been constructed. This is handwritten comparison code, not
@@ -96,6 +97,36 @@ def CoplanarityWitness {Point : Type} (Bet : Betweenness Point)
 def Coplanar {Point : Type} (Bet : Betweenness Point)
     (a b c d : Point) : Prop :=
   ∃ intersection, CoplanarityWitness Bet a b c d intersection
+
+def LinesHaveCommonPoint {Point : Type} (Bet : Betweenness Point)
+    (line1A line1B line2A line2B : Point) : Prop :=
+  ∃ intersection,
+    Collinear Bet intersection line1A line1B ∧
+      Collinear Bet intersection line2A line2B
+
+def StrictlyParallel {Point : Type} (Bet : Betweenness Point)
+    (line1A line1B line2A line2B : Point) : Prop :=
+  line1A ≠ line1B ∧ line2A ≠ line2B ∧
+    Coplanar Bet line1A line1B line2A line2B ∧
+    ¬ LinesHaveCommonPoint Bet line1A line1B line2A line2B
+
+def CoincidentNondegenerateLines {Point : Type} (Bet : Betweenness Point)
+    (line1A line1B line2A line2B : Point) : Prop :=
+  line1A ≠ line1B ∧ line2A ≠ line2B ∧
+    Collinear Bet line1A line2A line2B ∧
+    Collinear Bet line1B line2A line2B
+
+def Parallel {Point : Type} (Bet : Betweenness Point)
+    (line1A line1B line2A line2B : Point) : Prop :=
+  StrictlyParallel Bet line1A line1B line2A line2B ∨
+    CoincidentNondegenerateLines Bet line1A line1B line2A line2B
+
+def EuclidIntersectionWitnessExists {Point : Type} (Bet : Betweenness Point)
+    (rayStart firstRayPoint secondRayPoint betweenPoint : Point) : Prop :=
+  ∃ firstIntersection secondIntersection,
+    Bet rayStart firstRayPoint firstIntersection ∧
+      Bet rayStart secondRayPoint secondIntersection ∧
+      Bet firstIntersection betweenPoint secondIntersection
 
 def LineReflectionAxisHit {Point : Type} (Bet : Betweenness Point)
     (Cong : SegmentCongruence Point)
@@ -224,6 +255,28 @@ theorem between_exchange {Point : Type}
   have hx : c = x := G.betweenIdentity c x hcx
   simpa [hx] using hbxd
 
+theorem out_on_ray_reflexive {Point : Type}
+    (G : TarskiNeutralDimensionless Point) {vertex point : Point}
+    (h : point ≠ vertex) : Out G.Bet vertex point point :=
+  ⟨h, h, Or.inl (between_trivial G vertex point)⟩
+
+theorem out_on_ray_symmetric {Point : Type} (Bet : Betweenness Point)
+    {vertex firstPoint secondPoint : Point}
+    (h : Out Bet vertex firstPoint secondPoint) :
+    Out Bet vertex secondPoint firstPoint := by
+  rcases h with ⟨hfirst, hsecond, hbet | hbet⟩
+  · exact ⟨hsecond, hfirst, Or.inr hbet⟩
+  · exact ⟨hsecond, hfirst, Or.inl hbet⟩
+
+theorem out_on_ray_implies_collinear {Point : Type}
+    (G : TarskiNeutralDimensionless Point)
+    {vertex firstPoint secondPoint : Point}
+    (h : Out G.Bet vertex firstPoint secondPoint) :
+    Collinear G.Bet vertex firstPoint secondPoint := by
+  rcases h.2.2 with hbet | hbet
+  · exact Or.inl hbet
+  · exact Or.inr (Or.inl (between_symmetric G hbet))
+
 theorem point_has_strict_extension {Point : Type}
     (G : TarskiNeutralDimensionless Point) (a b : Point) :
     ∃ x, G.Bet a b x ∧ b ≠ x := by
@@ -326,9 +379,98 @@ theorem midpoint_is_between {Point : Type} (Bet : Betweenness Point)
     Bet endpointA midpoint endpointB :=
   h.1
 
+theorem midpoint_has_congruent_halves {Point : Type}
+    (Bet : Betweenness Point) (Cong : SegmentCongruence Point)
+    {midpoint endpointA endpointB : Point}
+    (h : IsMidpoint Bet Cong midpoint endpointA endpointB) :
+    Cong endpointA midpoint midpoint endpointB :=
+  h.2
+
+theorem midpoint_symmetric {Point : Type}
+    (G : TarskiNeutralDimensionless Point)
+    {midpoint endpointA endpointB : Point}
+    (h : IsMidpoint G.Bet G.Cong midpoint endpointA endpointB) :
+    IsMidpoint G.Bet G.Cong midpoint endpointB endpointA :=
+  ⟨between_symmetric G h.1,
+    segment_congruence_symmetric G
+      (segment_congruence_endpoint_commutative G h.2)⟩
+
+theorem point_is_own_degenerate_midpoint {Point : Type}
+    (G : TarskiNeutralDimensionless Point) (a : Point) :
+    IsMidpoint G.Bet G.Cong a a a :=
+  ⟨between_trivial G a a, segment_congruence_reflexive G a a⟩
+
+theorem point_reflection_is_midpoint {Point : Type}
+    (Bet : Betweenness Point) (Cong : SegmentCongruence Point)
+    {point reflectedPoint center : Point}
+    (h : PointReflection Bet Cong point reflectedPoint center) :
+    IsMidpoint Bet Cong center point reflectedPoint :=
+  h
+
+theorem segment_extension_unique {Point : Type}
+    (G : TarskiNeutralDimensionless Point)
+    {q a b c x y : Point} (hqa : q ≠ a)
+    (hqax : G.Bet q a x) (hax : G.Cong a x b c)
+    (hqay : G.Bet q a y) (hay : G.Cong a y b c) : x = y := by
+  have haxy : G.Cong a x a y :=
+    segment_congruence_transitive G hax
+      (segment_congruence_symmetric G hay)
+  have hxy : G.Cong x y y y :=
+    G.fiveSegment q q a a x y y y
+      (segment_congruence_reflexive G q a) haxy
+      (segment_congruence_reflexive G q y)
+      (segment_congruence_reflexive G a y) hqax hqay hqa
+  exact G.congrIdentity x y y hxy
+
+theorem point_reflection_exists {Point : Type}
+    (G : TarskiNeutralDimensionless Point) (point center : Point) :
+    ∃ reflectedPoint, PointReflection G.Bet G.Cong point reflectedPoint center := by
+  rcases G.segmentConstruction point center point center with
+    ⟨reflectedPoint, hbet, hcong⟩
+  exact ⟨reflectedPoint, hbet, segment_congruence_symmetric G hcong⟩
+
+theorem point_reflection_fixes_center {Point : Type}
+    (G : TarskiNeutralDimensionless Point) (center : Point) :
+    PointReflection G.Bet G.Cong center center center :=
+  point_is_own_degenerate_midpoint G center
+
+theorem point_reflection_involutive {Point : Type}
+    (G : TarskiNeutralDimensionless Point)
+    {point reflectedPoint center : Point}
+    (h : PointReflection G.Bet G.Cong point reflectedPoint center) :
+    PointReflection G.Bet G.Cong reflectedPoint point center :=
+  midpoint_symmetric G h
+
 structure TarskiNeutralWithDecidableEquality (Point : Type) where
   neutral : TarskiNeutralDimensionless Point
   pointEqualityDecidable : ∀ p1 p2 : Point, p1 = p2 ∨ p1 ≠ p2
+
+theorem point_reflection_unique {Point : Type}
+    (G : TarskiNeutralWithDecidableEquality Point)
+    {point center reflected1 reflected2 : Point}
+    (h1 : PointReflection G.neutral.Bet G.neutral.Cong
+      point reflected1 center)
+    (h2 : PointReflection G.neutral.Bet G.neutral.Cong
+      point reflected2 center) : reflected1 = reflected2 := by
+  rcases G.pointEqualityDecidable point center with heq | hne
+  · have hr1 : reflected1 = center := by
+      have hdeg : G.neutral.Cong reflected1 center center center := by
+        have hright : G.neutral.Cong center center reflected1 center :=
+          segment_congruence_right_commutative G.neutral (by
+            simpa [heq] using h1.2)
+        exact segment_congruence_symmetric G.neutral hright
+      exact G.neutral.congrIdentity reflected1 center center hdeg
+    have hr2 : reflected2 = center := by
+      have hdeg : G.neutral.Cong reflected2 center center center := by
+        have hright : G.neutral.Cong center center reflected2 center :=
+          segment_congruence_right_commutative G.neutral (by
+            simpa [heq] using h2.2)
+        exact segment_congruence_symmetric G.neutral hright
+      exact G.neutral.congrIdentity reflected2 center center hdeg
+    exact hr1.trans hr2.symm
+  · exact segment_extension_unique G.neutral hne h1.1
+      (segment_congruence_symmetric G.neutral h1.2) h2.1
+      (segment_congruence_symmetric G.neutral h2.2)
 
 theorem segment_congruence_addition {Point : Type}
     (G : TarskiNeutralWithDecidableEquality Point)
@@ -458,6 +600,160 @@ theorem triangle_congruence_sas {Point : Type}
     TrianglesCongruent G.neutral.Cong a b c a₂ b₂ c₂ :=
   ⟨hab, side_angle_side_gives_third_side G hangle hab hbc, hbc⟩
 
+theorem triangle_congruence_reflexive {Point : Type}
+    (G : TarskiNeutralDimensionless Point) (a b c : Point) :
+    TrianglesCongruent G.Cong a b c a b c :=
+  ⟨segment_congruence_reflexive G a b,
+    segment_congruence_reflexive G a c,
+    segment_congruence_reflexive G b c⟩
+
+theorem triangle_congruence_symmetric {Point : Type}
+    (G : TarskiNeutralDimensionless Point) {a b c a₂ b₂ c₂ : Point}
+    (h : TrianglesCongruent G.Cong a b c a₂ b₂ c₂) :
+    TrianglesCongruent G.Cong a₂ b₂ c₂ a b c :=
+  ⟨segment_congruence_symmetric G h.1,
+    segment_congruence_symmetric G h.2.1,
+    segment_congruence_symmetric G h.2.2⟩
+
+theorem triangle_congruence_transitive {Point : Type}
+    (G : TarskiNeutralDimensionless Point)
+    {a b c a₂ b₂ c₂ a₃ b₃ c₃ : Point}
+    (h1 : TrianglesCongruent G.Cong a b c a₂ b₂ c₂)
+    (h2 : TrianglesCongruent G.Cong a₂ b₂ c₂ a₃ b₃ c₃) :
+    TrianglesCongruent G.Cong a b c a₃ b₃ c₃ :=
+  ⟨segment_congruence_transitive G h1.1 h2.1,
+    segment_congruence_transitive G h1.2.1 h2.2.1,
+    segment_congruence_transitive G h1.2.2 h2.2.2⟩
+
+theorem triangle_congruence_sss_gives_angles {Point : Type}
+    (G : TarskiNeutralWithDecidableEquality Point)
+    {a b c a₂ b₂ c₂ : Point} (habne : a ≠ b) (hcbne : c ≠ b)
+    (htri : TrianglesCongruent G.neutral.Cong a b c a₂ b₂ c₂) :
+    AnglesCongruent G.neutral.Bet G.neutral.Cong a b c a₂ b₂ c₂ := by
+  rcases htri with ⟨hab, hac, hbc⟩
+  have ha₂b₂ : a₂ ≠ b₂ := by
+    intro heq
+    have hdeg : G.neutral.Cong a b a₂ a₂ := by simpa [heq] using hab
+    exact habne (G.neutral.congrIdentity a b a₂ hdeg)
+  have hc₂b₂ : c₂ ≠ b₂ := by
+    intro heq
+    have hdeg : G.neutral.Cong b c b₂ b₂ := by simpa [heq] using hbc
+    exact hcbne (G.neutral.congrIdentity b c b₂ hdeg).symm
+  rcases G.neutral.segmentConstruction b a b₂ a₂ with
+    ⟨aExt, hbaExt, haaExt⟩
+  rcases G.neutral.segmentConstruction b c b₂ c₂ with
+    ⟨cExt, hbcExt, hccExt⟩
+  rcases G.neutral.segmentConstruction b₂ a₂ b a with
+    ⟨a₂Ext, hb₂a₂Ext, ha₂a₂Ext⟩
+  rcases G.neutral.segmentConstruction b₂ c₂ b c with
+    ⟨c₂Ext, hb₂c₂Ext, hc₂c₂Ext⟩
+
+  have hba : G.neutral.Cong b a b₂ a₂ :=
+    segment_congruence_endpoint_commutative G.neutral hab
+  have haaExtBA : G.neutral.Cong a aExt b a :=
+    segment_congruence_transitive G.neutral haaExt
+      (segment_congruence_symmetric G.neutral hba)
+  have hbaA₂Ext : G.neutral.Cong b a a₂ a₂Ext :=
+    segment_congruence_symmetric G.neutral ha₂a₂Ext
+  have haaExtA₂Ext : G.neutral.Cong a aExt a₂ a₂Ext :=
+    segment_congruence_transitive G.neutral haaExtBA hbaA₂Ext
+  have hbaWhole : G.neutral.Cong b aExt b₂ a₂Ext :=
+    segment_congruence_addition G hbaExt hb₂a₂Ext hba haaExtA₂Ext
+
+  have hccExtBC : G.neutral.Cong c cExt b c :=
+    segment_congruence_transitive G.neutral hccExt
+      (segment_congruence_symmetric G.neutral hbc)
+  have hbcC₂Ext : G.neutral.Cong b c c₂ c₂Ext :=
+    segment_congruence_symmetric G.neutral hc₂c₂Ext
+  have hccExtC₂Ext : G.neutral.Cong c cExt c₂ c₂Ext :=
+    segment_congruence_transitive G.neutral hccExtBC hbcC₂Ext
+
+  have hfirst : G.neutral.Cong aExt c a₂Ext c₂ :=
+    G.neutral.fiveSegment b b₂ a a₂ aExt a₂Ext c c₂
+      hba haaExtA₂Ext hbc hac hbaExt hb₂a₂Ext habne.symm
+  have hcaExt : G.neutral.Cong c aExt c₂ a₂Ext :=
+    segment_congruence_endpoint_commutative G.neutral hfirst
+  have hfinalReverse : G.neutral.Cong cExt aExt c₂Ext a₂Ext :=
+    G.neutral.fiveSegment b b₂ c c₂ cExt c₂Ext aExt a₂Ext
+      hbc hccExtC₂Ext hbaWhole hcaExt hbcExt hb₂c₂Ext hcbne.symm
+  have hfinal : G.neutral.Cong aExt cExt a₂Ext c₂Ext :=
+    segment_congruence_endpoint_commutative G.neutral hfinalReverse
+  exact ⟨habne, hcbne, ha₂b₂, hc₂b₂,
+    aExt, cExt, a₂Ext, c₂Ext,
+    hbaExt, haaExt, hbcExt, hccExt,
+    hb₂a₂Ext, ha₂a₂Ext, hb₂c₂Ext, hc₂c₂Ext, hfinal⟩
+
+theorem angle_congruence_reflexive {Point : Type}
+    (G : TarskiNeutralWithDecidableEquality Point) {a b c : Point}
+    (hab : a ≠ b) (hcb : c ≠ b) :
+    AnglesCongruent G.neutral.Bet G.neutral.Cong a b c a b c :=
+  triangle_congruence_sss_gives_angles G hab hcb
+    ⟨segment_congruence_reflexive G.neutral a b,
+      segment_congruence_reflexive G.neutral a c,
+      segment_congruence_reflexive G.neutral b c⟩
+
+theorem angle_congruence_symmetric {Point : Type}
+    (G : TarskiNeutralDimensionless Point)
+    {a b c a₂ b₂ c₂ : Point}
+    (h : AnglesCongruent G.Bet G.Cong a b c a₂ b₂ c₂) :
+    AnglesCongruent G.Bet G.Cong a₂ b₂ c₂ a b c := by
+  rcases h with ⟨hab, hcb, ha₂b₂, hc₂b₂,
+    aExt, cExt, a₂Ext, c₂Ext,
+    hbaExt, haaExt, hbcExt, hccExt,
+    hb₂a₂Ext, ha₂a₂Ext, hb₂c₂Ext, hc₂c₂Ext, hfinal⟩
+  exact ⟨ha₂b₂, hc₂b₂, hab, hcb,
+    a₂Ext, c₂Ext, aExt, cExt,
+    hb₂a₂Ext, ha₂a₂Ext, hb₂c₂Ext, hc₂c₂Ext,
+    hbaExt, haaExt, hbcExt, hccExt,
+    segment_congruence_symmetric G hfinal⟩
+
+theorem angle_congruence_arms_commutative {Point : Type}
+    (G : TarskiNeutralDimensionless Point)
+    {a b c a₂ b₂ c₂ : Point}
+    (h : AnglesCongruent G.Bet G.Cong a b c a₂ b₂ c₂) :
+    AnglesCongruent G.Bet G.Cong c b a c₂ b₂ a₂ := by
+  rcases h with ⟨hab, hcb, ha₂b₂, hc₂b₂,
+    aExt, cExt, a₂Ext, c₂Ext,
+    hbaExt, haaExt, hbcExt, hccExt,
+    hb₂a₂Ext, ha₂a₂Ext, hb₂c₂Ext, hc₂c₂Ext, hfinal⟩
+  exact ⟨hcb, hab, hc₂b₂, ha₂b₂,
+    cExt, aExt, c₂Ext, a₂Ext,
+    hbcExt, hccExt, hbaExt, haaExt,
+    hb₂c₂Ext, hc₂c₂Ext, hb₂a₂Ext, ha₂a₂Ext,
+    segment_congruence_endpoint_commutative G hfinal⟩
+
+theorem parallel_lines_are_nondegenerate {Point : Type}
+    (Bet : Betweenness Point) {line1A line1B line2A line2B : Point}
+    (h : Parallel Bet line1A line1B line2A line2B) :
+    line1A ≠ line1B ∧ line2A ≠ line2B := by
+  rcases h with hstrict | hcoincident
+  · exact ⟨hstrict.1, hstrict.2.1⟩
+  · exact ⟨hcoincident.1, hcoincident.2.1⟩
+
+theorem strict_parallel_lines_are_coplanar_and_disjoint {Point : Type}
+    (Bet : Betweenness Point) {line1A line1B line2A line2B : Point}
+    (h : StrictlyParallel Bet line1A line1B line2A line2B) :
+    Coplanar Bet line1A line1B line2A line2B ∧
+      ¬ LinesHaveCommonPoint Bet line1A line1B line2A line2B :=
+  ⟨h.2.2.1, h.2.2.2⟩
+
+theorem perpendicular_at_has_nondegenerate_lines_and_incidence {Point : Type}
+    (Bet : Betweenness Point) (Cong : SegmentCongruence Point)
+    {intersection line1A line1B line2A line2B : Point}
+    (h : PerpendicularAt Bet Cong intersection line1A line1B line2A line2B) :
+    line1A ≠ line1B ∧ line2A ≠ line2B ∧
+      Collinear Bet intersection line1A line1B ∧
+      Collinear Bet intersection line2A line2B :=
+  ⟨h.1, h.2.1, h.2.2.1, h.2.2.2.1⟩
+
+theorem perpendicular_lines_are_nondegenerate {Point : Type}
+    (Bet : Betweenness Point) (Cong : SegmentCongruence Point)
+    {line1A line1B line2A line2B : Point}
+    (h : LinesPerpendicular Bet Cong line1A line1B line2A line2B) :
+    line1A ≠ line1B ∧ line2A ≠ line2B := by
+  rcases h with ⟨intersection, hintersection⟩
+  exact ⟨hintersection.1, hintersection.2.1⟩
+
 structure Tarski2D (Point : Type) where
   base : TarskiNeutralWithDecidableEquality Point
   upperDimension : ∀ p1 p2 p3 p4 p5 : Point,
@@ -475,8 +771,13 @@ structure TarskiEuclidean2D (Point : Type) where
     plane.base.neutral.Bet p1 p4 p5 →
     plane.base.neutral.Bet p2 p4 p3 →
     p1 ≠ p4 →
-      ∃ x y, plane.base.neutral.Bet p1 p2 x ∧
-        plane.base.neutral.Bet p1 p3 y ∧
-        plane.base.neutral.Bet x p5 y
+      EuclidIntersectionWitnessExists plane.base.neutral.Bet p1 p2 p3 p5
+
+theorem euclid_postulate_supplies_intersections {Point : Type}
+    (G : TarskiEuclidean2D Point) {a b c d e : Point}
+    (hade : G.plane.base.neutral.Bet a d e)
+    (hbdc : G.plane.base.neutral.Bet b d c) (had : a ≠ d) :
+    EuclidIntersectionWitnessExists G.plane.base.neutral.Bet a b c e :=
+  G.euclid a b c d e hade hbdc had
 
 end TarskiGeometryFromAxiomsSameMathInLean

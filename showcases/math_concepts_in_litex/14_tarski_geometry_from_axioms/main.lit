@@ -848,6 +848,12 @@ setting Tarski2DSetting([TarskiNeutralWithDecidableEqualitySetting]):
         =>:
             $are_collinear(Point, Bet, p1, p2, p3)
 
+# Litex consumes universal axioms with existential conclusions most reliably
+# through a named atomic result predicate; this is propositionally the same
+# witness statement appearing in the SST Euclid axiom.
+prop euclid_intersection_witness_exists(Point set, Bet power_set(cart(Point, Point, Point)), ray_start, first_ray_point, second_ray_point, between_point Point):
+    exist first_intersection, second_intersection Point st {$is_between(Point, Bet, ray_start, first_ray_point, first_intersection), $is_between(Point, Bet, ray_start, second_ray_point, second_intersection), $is_between(Point, Bet, first_intersection, between_point, second_intersection)}
+
 # The Euclidean branch adds only the SST Euclid axiom. All preceding segment,
 # angle, and reflection results therefore remain visibly neutral.
 setting TarskiEuclidean2DSetting([Tarski2DSetting]):
@@ -856,7 +862,7 @@ setting TarskiEuclidean2DSetting([Tarski2DSetting]):
         $is_between(Point, Bet, p2, p4, p3)
         p1 != p4
         =>:
-            exist x, y Point st {$is_between(Point, Bet, p1, p2, x), $is_between(Point, Bet, p1, p3, y), $is_between(Point, Bet, x, p5, y)}
+            $euclid_intersection_witness_exists(Point, Bet, p1, p2, p3, p5)
 
 # Chapter 12 (Par_strict and Par). The intersection existential is named so
 # the no-common-point clause remains an atomic, reusable proposition.
@@ -874,3 +880,126 @@ prop are_coincident_nondegenerate_lines(Point set, Bet power_set(cart(Point, Poi
     line2_a != line2_b
     $are_collinear(Point, Bet, line1_a, line2_a, line2_b)
     $are_collinear(Point, Bet, line1_b, line2_a, line2_b)
+
+prop are_parallel(Point set, Bet power_set(cart(Point, Point, Point)), line1_a, line1_b, line2_a, line2_b Point):
+    $are_strictly_parallel(Point, Bet, line1_a, line1_b, line2_a, line2_b) or $are_coincident_nondegenerate_lines(Point, Bet, line1_a, line1_b, line2_a, line2_b)
+
+thm parallel_lines_are_nondegenerate:
+    ? forall Point set, Bet power_set(cart(Point, Point, Point)), line1_a, line1_b, line2_a, line2_b Point:
+        $are_parallel(Point, Bet, line1_a, line1_b, line2_a, line2_b)
+        =>:
+            line1_a != line1_b
+            line2_a != line2_b
+    by def $are_parallel(Point, Bet, line1_a, line1_b, line2_a, line2_b)
+    by cases:
+        ? line1_a != line1_b
+        ? line2_a != line2_b
+        case $are_strictly_parallel(Point, Bet, line1_a, line1_b, line2_a, line2_b):
+            by def $are_strictly_parallel(Point, Bet, line1_a, line1_b, line2_a, line2_b)
+        case $are_coincident_nondegenerate_lines(Point, Bet, line1_a, line1_b, line2_a, line2_b):
+            by def $are_coincident_nondegenerate_lines(Point, Bet, line1_a, line1_b, line2_a, line2_b)
+
+thm strict_parallel_lines_are_coplanar_and_disjoint:
+    ? forall Point set, Bet power_set(cart(Point, Point, Point)), line1_a, line1_b, line2_a, line2_b Point:
+        $are_strictly_parallel(Point, Bet, line1_a, line1_b, line2_a, line2_b)
+        =>:
+            $are_coplanar(Point, Bet, line1_a, line1_b, line2_a, line2_b)
+            not $lines_have_common_point(Point, Bet, line1_a, line1_b, line2_a, line2_b)
+    by def $are_strictly_parallel(Point, Bet, line1_a, line1_b, line2_a, line2_b)
+
+# Tracer for the one genuinely Euclidean law in this slice.
+thm euclid_postulate_supplies_intersections:
+    ? forall [TarskiEuclidean2DSetting], euclid_a, euclid_b, euclid_c, euclid_d, euclid_e Point:
+        $is_between(Point, Bet, euclid_a, euclid_d, euclid_e)
+        $is_between(Point, Bet, euclid_b, euclid_d, euclid_c)
+        euclid_a != euclid_d
+        =>:
+            $euclid_intersection_witness_exists(Point, Bet, euclid_a, euclid_b, euclid_c, euclid_e)
+    $euclid_intersection_witness_exists(Point, Bet, euclid_a, euclid_b, euclid_c, euclid_e)
+
+thm triangle_congruence_reflexive:
+    ? forall [TarskiNeutralDimensionlessSetting], a, b, c Point:
+        $are_triangles_congruent(Point, Cong, a, b, c, a, b, c)
+    by thm segment_congruence_reflexive(Point, Bet, Cong, lower_a, lower_b, lower_c, a, b) => $are_segments_congruent(Point, Cong, a, b, a, b)
+    by thm segment_congruence_reflexive(Point, Bet, Cong, lower_a, lower_b, lower_c, a, c) => $are_segments_congruent(Point, Cong, a, c, a, c)
+    by thm segment_congruence_reflexive(Point, Bet, Cong, lower_a, lower_b, lower_c, b, c) => $are_segments_congruent(Point, Cong, b, c, b, c)
+    by def $are_triangles_congruent(Point, Cong, a, b, c, a, b, c)
+
+thm triangle_congruence_symmetric:
+    ? forall [TarskiNeutralDimensionlessSetting], a, b, c, a2, b2, c2 Point:
+        $are_triangles_congruent(Point, Cong, a, b, c, a2, b2, c2)
+        =>:
+            $are_triangles_congruent(Point, Cong, a2, b2, c2, a, b, c)
+    by thm triangle_congruence_has_three_sides(Point, Cong, a, b, c, a2, b2, c2)
+    by thm segment_congruence_symmetric(Point, Bet, Cong, lower_a, lower_b, lower_c, a, b, a2, b2) => $are_segments_congruent(Point, Cong, a2, b2, a, b)
+    by thm segment_congruence_symmetric(Point, Bet, Cong, lower_a, lower_b, lower_c, a, c, a2, c2) => $are_segments_congruent(Point, Cong, a2, c2, a, c)
+    by thm segment_congruence_symmetric(Point, Bet, Cong, lower_a, lower_b, lower_c, b, c, b2, c2) => $are_segments_congruent(Point, Cong, b2, c2, b, c)
+    by def $are_triangles_congruent(Point, Cong, a2, b2, c2, a, b, c)
+
+thm triangle_congruence_transitive:
+    ? forall [TarskiNeutralDimensionlessSetting], a, b, c, a2, b2, c2, a3, b3, c3 Point:
+        $are_triangles_congruent(Point, Cong, a, b, c, a2, b2, c2)
+        $are_triangles_congruent(Point, Cong, a2, b2, c2, a3, b3, c3)
+        =>:
+            $are_triangles_congruent(Point, Cong, a, b, c, a3, b3, c3)
+    by thm triangle_congruence_has_three_sides(Point, Cong, a, b, c, a2, b2, c2)
+    by thm triangle_congruence_has_three_sides(Point, Cong, a2, b2, c2, a3, b3, c3)
+    by thm segment_congruence_transitive(Point, Bet, Cong, lower_a, lower_b, lower_c, a, b, a2, b2, a3, b3) => $are_segments_congruent(Point, Cong, a, b, a3, b3)
+    by thm segment_congruence_transitive(Point, Bet, Cong, lower_a, lower_b, lower_c, a, c, a2, c2, a3, c3) => $are_segments_congruent(Point, Cong, a, c, a3, c3)
+    by thm segment_congruence_transitive(Point, Bet, Cong, lower_a, lower_b, lower_c, b, c, b2, c2, b3, c3) => $are_segments_congruent(Point, Cong, b, c, b3, c3)
+    by def $are_triangles_congruent(Point, Cong, a, b, c, a3, b3, c3)
+
+thm out_on_ray_reflexive:
+    ? forall [TarskiNeutralDimensionlessSetting], vertex, point Point:
+        point != vertex
+        =>:
+            $is_out_on_ray(Point, Bet, vertex, point, point)
+    by thm between_trivial(Point, Bet, Cong, lower_a, lower_b, lower_c, vertex, point) => $is_between(Point, Bet, vertex, point, point)
+    by def $is_out_on_ray(Point, Bet, vertex, point, point)
+
+thm out_on_ray_symmetric:
+    ? forall Point set, Bet power_set(cart(Point, Point, Point)), vertex, first_point, second_point Point:
+        $is_out_on_ray(Point, Bet, vertex, first_point, second_point)
+        =>:
+            $is_out_on_ray(Point, Bet, vertex, second_point, first_point)
+    by thm out_on_ray_is_nondegenerate_and_ordered(Point, Bet, vertex, first_point, second_point)
+    by cases:
+        ? $is_out_on_ray(Point, Bet, vertex, second_point, first_point)
+        case $is_between(Point, Bet, vertex, first_point, second_point):
+            by def $is_out_on_ray(Point, Bet, vertex, second_point, first_point)
+        case $is_between(Point, Bet, vertex, second_point, first_point):
+            by def $is_out_on_ray(Point, Bet, vertex, second_point, first_point)
+
+thm out_on_ray_implies_collinear:
+    ? forall [TarskiNeutralDimensionlessSetting], vertex, first_point, second_point Point:
+        $is_out_on_ray(Point, Bet, vertex, first_point, second_point)
+        =>:
+            $are_collinear(Point, Bet, vertex, first_point, second_point)
+    by thm out_on_ray_is_nondegenerate_and_ordered(Point, Bet, vertex, first_point, second_point)
+    by cases:
+        ? $are_collinear(Point, Bet, vertex, first_point, second_point)
+        case $is_between(Point, Bet, vertex, first_point, second_point):
+            by def $are_collinear(Point, Bet, vertex, first_point, second_point)
+        case $is_between(Point, Bet, vertex, second_point, first_point):
+            by thm between_symmetric(Point, Bet, Cong, lower_a, lower_b, lower_c, vertex, second_point, first_point) => $is_between(Point, Bet, first_point, second_point, vertex)
+            by def $are_collinear(Point, Bet, vertex, first_point, second_point)
+
+thm perpendicular_at_has_nondegenerate_lines_and_incidence:
+    ? forall Point set, Bet power_set(cart(Point, Point, Point)), Cong power_set(cart(Point, Point, Point, Point)), intersection, line1_a, line1_b, line2_a, line2_b Point:
+        $is_perpendicular_at(Point, Bet, Cong, intersection, line1_a, line1_b, line2_a, line2_b)
+        =>:
+            line1_a != line1_b
+            line2_a != line2_b
+            $are_collinear(Point, Bet, intersection, line1_a, line1_b)
+            $are_collinear(Point, Bet, intersection, line2_a, line2_b)
+    by def $is_perpendicular_at(Point, Bet, Cong, intersection, line1_a, line1_b, line2_a, line2_b)
+
+thm perpendicular_lines_are_nondegenerate:
+    ? forall Point set, Bet power_set(cart(Point, Point, Point)), Cong power_set(cart(Point, Point, Point, Point)), line1_a, line1_b, line2_a, line2_b Point:
+        $are_lines_perpendicular(Point, Bet, Cong, line1_a, line1_b, line2_a, line2_b)
+        =>:
+            line1_a != line1_b
+            line2_a != line2_b
+    by thm perpendicular_lines_have_intersection(Point, Bet, Cong, line1_a, line1_b, line2_a, line2_b)
+    obtain intersection from exist selected Point st {$is_perpendicular_at(Point, Bet, Cong, selected, line1_a, line1_b, line2_a, line2_b)}
+    by thm perpendicular_at_has_nondegenerate_lines_and_incidence(Point, Bet, Cong, intersection, line1_a, line1_b, line2_a, line2_b)

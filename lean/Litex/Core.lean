@@ -381,6 +381,35 @@ def setBuilder
     Litex.Set.{u} :=
   Set.ofType (Subtype predicate)
 
+/-- Positive naturals use the exact subtype of native naturals carrying their
+strict-positivity proof. This is not an alias of `N`: membership retains the
+refining predicate in the carrier. -/
+abbrev NPos : Litex.Set := setBuilder N (fun n => 0 < n)
+
+/-- Positive reals use the exact subtype of native reals carrying their
+strict-positivity proof. -/
+abbrev RPos : Litex.Set := setBuilder R (fun r => 0 < r)
+
+/-- Nonzero integers retain a complex source representative together with the
+exact integer-membership and semantic-nonzero certificates used by Litex. -/
+abbrev ZStar : Litex.Set :=
+  setBuilder C (fun z => In z Z ∧ ¬ Same z (0 : ℂ))
+
+/-- Nonzero rationals retain a complex source representative together with the
+exact rational-membership and semantic-nonzero certificates used by Litex. -/
+abbrev QStar : Litex.Set :=
+  setBuilder C (fun z => In z Q ∧ ¬ Same z (0 : ℂ))
+
+/-- Nonzero reals retain a complex source representative together with the
+exact real-membership and semantic-nonzero certificates used by Litex. -/
+abbrev RStar : Litex.Set :=
+  setBuilder C (fun z => In z R ∧ ¬ Same z (0 : ℂ))
+
+/-- Nonzero complexes retain a complex source representative together with the
+exact complex-membership and semantic-nonzero certificates used by Litex. -/
+abbrev CStar : Litex.Set :=
+  setBuilder C (fun z => In z C ∧ ¬ Same z (0 : ℂ))
+
 /-!
 The ordered-numeric layer deliberately lives at Lean universe `0`: Mathlib's
 native `ℕ`, `ℤ`, `ℚ`, `ℝ`, and `ℂ` all live there. This does not restrict the

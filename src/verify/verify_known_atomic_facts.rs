@@ -1039,7 +1039,7 @@ impl Runtime {
     }
 }
 
-fn atomic_facts_align_by_nested_rational_normalization(
+pub(super) fn atomic_facts_align_by_nested_rational_normalization(
     source: &AtomicFact,
     goal: &AtomicFact,
 ) -> bool {

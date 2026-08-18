@@ -1755,6 +1755,12 @@ forall n N:
     countdown(n) $in N
 ```
 
+The stored case equations are directly usable at arguments whose case can be
+proved. Litex instantiates the selected equation and performs nested arithmetic
+normalization, so a successor argument does not require separate lines for
+`n + 1 > 0` and `(n + 1) - 1 = n`. It still refuses to select a case when its
+condition is not known.
+
 A merely decreasing real measure is not accepted:
 
 ```text
