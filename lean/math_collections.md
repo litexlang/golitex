@@ -106,6 +106,26 @@ the emitter: the verifier currently rejects that arbitrary choice because no
 checked inhabited-type backend exists for the meta-level parameter type
 `set`.
 
+## Standard numeric membership hierarchy
+
+The base standard sets have exact native carriers `ℕ`, `ℤ`, `ℚ`, `ℝ`, and
+`ℂ`. Membership widening does not coerce or replace the source Lean value.
+Instead, `Rules.inZOfInN`, `inQOfInZ`, `inROfInQ`, and `inCOfInR` unpack an
+existing witness, embed that witness into the next native carrier, and rebuild
+`Litex.In` through the closed numeric `Same` bridges. The compiler validates
+the verifier's exact `StandardSetMembershipProjection` source and target, then
+composes only these adjacent rules.
+
+Example 16 covers every proper pair in `N → Z → Q → R → C`. This matters
+because a single complex-valued source binder can keep several independently
+proved memberships without native Lean typing becoming the source set
+semantics.
+
+Nearest rejected form: `N+ → N`. The verifier already selects the hierarchy
+certificate, but `N+` must retain an exact carrier carrying its positivity
+predicate. Erasing that predicate or reusing the plain `N` carrier would make
+refined membership unsound, so the active emitter fails closed.
+
 ## Unary function sets and application
 
 `Litex.Fn s S` contains one call field
@@ -216,15 +236,21 @@ Example 11 fixes this contract for closed numeric values.
 Example 15 retains `UseBuiltinStrategy` as provenance around the exact
 recursive rule tree; compiler never reruns the strategy in Lean. Complex-
 carrier values with separately proved real membership use
-`Rules.complexAddInR` for addition closure. The three reviewed additive sign
+`Rules.complexAddInR`, `complexSubInR`, `complexMulInR`, and `complexDivInR`
+for the four basic real carrier closures. The three reviewed additive sign
 adapters cover nonnegative plus nonnegative and either one of the two ordered
 summands being strictly positive. Both a direct arithmetic certificate and a
 registered local-rule certificate validate their ordered operands before
 calling the corresponding theorem.
 
-Nearest rejected form: nonnegative multiplication. Although verifier IR names
-`MulNonnegative`, compiler has no reviewed native-carrier theorem or emitter
-adapter for that certificate and continues to fail closed.
+Nearest rejected form: nonnegative multiplication. Verifier IR now retains
+`MulNonnegative`, including recursive strategy and registered-rule children,
+but `Litex.Le (0 : ℂ) a` and `Litex.Le (0 : ℂ) b` may select different native
+real representatives for source zero. Multiplication needs those witnesses to
+be identified before Mathlib's `mul_nonneg` applies. `Core.lean` exposes the
+required `RealCoherence` certificate shape without installing an instance, so
+compiler continues to fail closed rather than add an axiom or silently make
+all generated theorems conditional on coherence.
 
 ## Generated example contract
 
@@ -261,6 +287,7 @@ Mathlib native carriers
   -> fnApply / fnApplyOwn       [total checked application]
   -> fnApplyWhere variants      [membership + domain proof application]
   -> numeric sets N/Z/Q/R/C     [definition]
+  -> adjacent numeric membership bridges [proved hierarchy projection]
   -> setBuilder                 [definition: subtype carrier]
   -> membership transport       [proof]
   -> AsReal                     [definition: Same + native real]

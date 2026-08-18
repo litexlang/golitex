@@ -29,6 +29,46 @@ algebra.
 - `trust`, `axiom`, and verifier acceptance are epistemic statuses, never
   substitutes for a mathematical concept.
 
+## Parallel setting-first presentation
+
+`main2.lit` supplies a second checked interface without changing the
+first-class design of `main.lit`. Its central forms are:
+
+- `FieldSetting`: one scalar carrier, its operations, and the field laws as an
+  ambient binder prefix;
+- `VectorSpaceSetting`: the field prefix plus one vector carrier and its laws;
+- `VectorSpacesSetting`: one shared field plus source and target vector-space
+  operations;
+- `LinearMapSetting`: the two-space prefix plus a map and its preservation
+  laws;
+- ordinary props `is_field_in_setting`, `is_vector_space_in_setting`,
+  `is_linear_map_in_setting`, and `is_subspace_in_setting` for judgments that
+  concrete examples can assert.
+
+A setting is not a competing kind of field or vector-space value. It cannot be
+stored, returned, or projected; theorem bodies consume its operations directly
+as `add_V(u,v)` and `smul_V(a,v)`. This makes it a good LADR-style presentation
+when the goal is to state theorems in a fixed ambient algebra. The struct form
+remains preferable when spaces themselves must be passed around as data.
+
+The paired setting is intentional. Explicit setting references introduce fresh
+binders, so two nested `VectorSpaceSetting` references cannot currently identify
+their scalar field binders. `VectorSpacesSetting` binds one field once and then
+checks both vector-space law predicates over it.
+
+The setting-first dependency spine is:
+
+```text
+FieldSetting
+  -> VectorSpaceSetting
+  -> VectorSpacesSetting
+  -> LinearMapSetting
+  -> T(0) = 0
+  -> setting_linear_kernel
+  -> kernel is a subspace
+  -> real plane and x-axis projection instance
+```
+
 ## Core interface cards
 
 ### Field

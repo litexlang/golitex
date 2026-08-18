@@ -121,6 +121,22 @@ forall x R:
     cos(x) != 0
     sin(x) != 0
     =>:
+        # Tracer: nonzero tangent and cotangent.
+        #
+        # Before (did not work):
+        # tan(x) != 0
+        # cot(x) != 0
+        # Former behavior: both goals remained unknown even with both quotient parts nonzero.
+        #
+        # Now: the trigonometry builtin consumes the two nonzero premises directly.
+        tan(x) != 0
+        cot(x) != 0
         tan(x) * cot(x) = 1
+        tan(x) = 1 / cot(x)
+        cot(x) = 1 / tan(x)
         1 + tan(x)^2 = 1 / cos(x)^2
         1 + cot(x)^2 = 1 / sin(x)^2
+
+# Boundary: `cos(x) != 0` alone does not prove `tan(x) != 0`, and `sin(x) != 0`
+# alone does not prove `cot(x) != 0`.
+# Evidence: target/release/litex -compact -isolated -runner -f examples/02_builtin_math/trigonometric_builtin_rules.lit

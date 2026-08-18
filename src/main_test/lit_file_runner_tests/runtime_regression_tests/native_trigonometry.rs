@@ -128,6 +128,42 @@ forall x R:
 }
 
 #[test]
+fn native_tan_and_cot_nonzero_require_nonzero_sine_and_cosine() {
+    let positive_source = r#"
+forall x R:
+    sin(x) != 0
+    cos(x) != 0
+    =>:
+        tan(x) != 0
+        cot(x) != 0
+"#;
+    let (run_succeeded, run_output) =
+        run_trigonometric_source(positive_source, "native_tan_cot_nonzero");
+    assert!(
+        run_succeeded,
+        "nonzero sine and cosine should prove nonzero tangent and cotangent:\n{run_output}"
+    );
+    assert!(run_output.contains("non-zero transfer through canonical expansion"));
+
+    for (label, source_code) in [
+        (
+            "tan_nonzero_without_nonzero_sine",
+            "forall x R:\n    cos(x) != 0\n    =>:\n        tan(x) != 0",
+        ),
+        (
+            "cot_nonzero_without_nonzero_cosine",
+            "forall x R:\n    sin(x) != 0\n    =>:\n        cot(x) != 0",
+        ),
+    ] {
+        let (run_succeeded, run_output) = run_trigonometric_source(source_code, label);
+        assert!(
+            !run_succeeded,
+            "{label} must not prove a nonzero quotient without a nonzero numerator:\n{run_output}"
+        );
+    }
+}
+
+#[test]
 fn native_tan_and_cot_require_their_denominators() {
     for (label, source_code, expected) in [
         (

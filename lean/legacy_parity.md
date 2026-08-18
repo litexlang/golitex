@@ -29,6 +29,7 @@ Status meanings:
 | Native carriers plus independent Litex membership | migrated | Examples 1, 4, and 5; generated output forbids `Litex.Object` and set encodings based on `Set.univ`. |
 | Heterogeneous equality and membership transport | migrated | Examples 1 and 6 use `Litex.Same` and exact equality-path `FactId`s. |
 | Real order wrappers and registered order rules | migrated | Example 2; exact rule ID and fingerprint are validated before `Litex.Lt.toLe`. |
+| Real-representative coherence | decision | `Core.lean` declares `RealCoherence` but intentionally installs no instance. Multiplicative/divisive sign laws compare independently selected zero representatives and cannot be emitted until this boundary is approved or constructively proved. |
 | Source order, persistent/local scope, and exact `FactId` replay | migrated | Examples 6, 8, and 9. |
 | Verifier-owned WD object/fact graph | partial | Current arithmetic and function tracers consume it; old constructor families below still lack emitters. |
 | Known forall instantiation and alpha-equivalent citation | migrated | Example 6 and focused compiler tests. |
@@ -65,7 +66,7 @@ Status meanings:
 
 | Capability | Status | Active evidence or remaining boundary |
 | --- | --- | --- |
-| Numerals and `+`, `-`, `*`, `/` expressions | partial | Native complex expressions and named real-function bodies compile; other occurrence contexts and closure rules remain incomplete. |
+| Numerals and `+`, `-`, `*`, `/` expressions | partial | Native complex expressions, named real-function bodies, and real carrier closure for all four operators compile; other occurrence contexts remain incomplete. |
 | Power, remainder, floor/ceil, elementary and transcendental functions | pending | Structural IR exists for many operators; native terms, membership closure, and proof adapters are missing. |
 | Predicate-defined set builders | partial | Example 14 supports whole-side equality and one concrete predicate; nested binder expressions remain rejected. |
 | Finite list-set literals | pending | The old compiler emitted proof-free list sets with ordered distinctness evidence; an exact heterogeneous carrier is undecided. |
@@ -83,17 +84,19 @@ Status meanings:
 | Reflexivity, rational normalization, standard numeral membership | migrated | Examples 3 and 5. |
 | Not-equality symmetry and exact equality paths | migrated | Example 6. |
 | Additive nonnegative and one-strict sign strategies | migrated | Example 15 covers real-addition closure, left/right strict routes, direct evidence, and registered rule certificates. |
-| Multiplicative/divisive sign strategies | pending | `MulNonnegative` is the current executable negative boundary in example 15. |
-| Standard-set hierarchy and refined numeric membership | pending | IR variants exist; the active emitter supports only the numbered-example slice. |
-| Integer/complex/real arithmetic membership families | partial | Real addition is traced in example 15; the remaining operators and carriers are pending. |
+| Multiplicative/divisive sign strategies | decision | IR now retains direct and recursive `Mul*`/`Div*` evidence, but Example 15 keeps `MulNonnegative` fail-closed because the native proof needs the uninhabited `RealCoherence` certificate. |
+| Standard-set hierarchy | migrated | Example 16 validates every proper projection through `N → Z → Q → R → C` and composes four proved adjacent native-carrier bridges. |
+| Refined numeric membership | pending | Verified `N+ → N` remains an executable compiler negative; refined exact carriers must preserve their sign/nonzero predicates. |
+| Integer/complex/real arithmetic membership families | partial | Example 15 traces real `+`, `-`, `*`, and `/` closure; real power and the remaining integer/complex carrier families are pending. |
 | Set-relation and set-operator rules | pending | Depend on exact native set constructors and their proved laws. |
 | Reflection rules such as prime and coprime | pending | Verifier evidence exists; no active native-carrier compiler theorem family is accepted yet. |
 | Remaining registered local rules | pending | Every rule needs its stable ID/fingerprint adapter and a real-Lean tracer; no generic theorem search is allowed. |
 
 ## Required migration order
 
-1. Finish the additive-strategy tracer and keep multiplication as its negative
-   boundary.
+1. Keep the real `+`/`-`/`*`/`/` closure and additive-strategy tracer green;
+   decide whether `RealCoherence` is proved, required explicitly, or avoided
+   by a revised order wrapper before porting multiplication/division signs.
 2. Approve and implement the native-carrier function telescope: multiple
    parameters, exact application layers, dependent requirements, then compound
    anonymous bodies.

@@ -1,6 +1,5 @@
 use crate::litex_to_lean_ir::{
-    registered_rule_has_lean_adapter, LitexToLeanRegisteredRuleApplicationIr,
-    LitexToLeanTypedBoundObjectIr,
+    LitexToLeanRegisteredRuleApplicationIr, LitexToLeanTypedBoundObjectIr,
 };
 use crate::prelude::*;
 use crate::verify::local_builtin_catalog::registered_local_builtin_rules;
@@ -3767,10 +3766,11 @@ impl LitexToLeanIrBuilder<'_> {
                     "function-application return membership evidence lowered to the wrong object constructors",
                 ));
             }
-            return Err(litex_to_lean_ir_error(
-                &goal.line_file(),
-                "function-application return membership has no Lean replay adapter",
-            ));
+            return Ok(LitexToLeanFactProofIr::RuleApplication {
+                rule: LitexToLeanProofRuleIr::FunctionApplicationReturnMembership,
+                parameter_requirements: Vec::new(),
+                premises,
+            });
         }
         if let Some(BuiltinRuleEvidence::DisjunctionIntroduction(evidence)) = evidence {
             if evidence.expected_target.to_string() != goal.to_string() {
@@ -3971,7 +3971,9 @@ impl LitexToLeanIrBuilder<'_> {
                 LitexToLeanBuiltinRuleIr::from_legacy_evidence(evidence).ok_or_else(|| {
                     litex_to_lean_ir_error(
                         &goal.line_file(),
-                        "registered local builtin reached legacy evidence lowering",
+                        format!(
+                            "builtin evidence `{evidence:?}` has no Litex-to-Lean IR representation"
+                        ),
                     )
                 })?,
             ),
@@ -4229,15 +4231,6 @@ impl LitexToLeanIrBuilder<'_> {
                 &goal.line_file(),
                 format!(
                     "stale local builtin fingerprint for `{}`",
-                    evidence.rule_id.as_str()
-                ),
-            ));
-        }
-        if !registered_rule_has_lean_adapter(&evidence.rule_id, &evidence.semantic_fingerprint) {
-            return Err(litex_to_lean_ir_error(
-                &goal.line_file(),
-                format!(
-                    "registered builtin `{}` has no Litex-to-Lean replay adapter",
                     evidence.rule_id.as_str()
                 ),
             ));
@@ -4876,6 +4869,21 @@ fn build_litex_to_lean_ir_inferred_fact_proof(
             }
         }
     }
+    if positive_real_membership_infers_strict_positivity(source_fact, inferred_fact) {
+        if let Some(source_fact_id) = source_fact_id {
+            return supported_inferred_proof(LitexToLeanFactProofIr::RuleApplication {
+                rule: LitexToLeanProofRuleIr::Builtin(
+                    LitexToLeanBuiltinRuleIr::PositiveRealMembership,
+                ),
+                parameter_requirements: Vec::new(),
+                premises: vec![LitexToLeanFactIr {
+                    storage: LitexToLeanFactStorageIr::Stored(source_fact_id),
+                    proposition: source_fact.clone(),
+                    proof: LitexToLeanFactProofIr::KnownFactCitation { source_fact_id },
+                }],
+            });
+        }
+    }
     if matches!(
         inferred_fact,
         Fact::AtomicFact(AtomicFact::EqualFact(equality))
@@ -4915,6 +4923,32 @@ fn supported_inferred_proof(
     proof: LitexToLeanFactProofIr,
 ) -> Result<Option<LitexToLeanFactProofIr>, RuntimeError> {
     Ok(Some(proof))
+}
+
+fn positive_real_membership_infers_strict_positivity(
+    source_fact: &Fact,
+    inferred_fact: &Fact,
+) -> bool {
+    let Fact::AtomicFact(AtomicFact::InFact(membership)) = source_fact else {
+        return false;
+    };
+    if !matches!(membership.set, Obj::StandardSet(StandardSet::RPos)) {
+        return false;
+    }
+    let Fact::AtomicFact(order) = inferred_fact else {
+        return false;
+    };
+    match order {
+        AtomicFact::LessFact(fact) => {
+            fact.left.to_string() == "0"
+                && obj_equality_key(&fact.right) == obj_equality_key(&membership.element)
+        }
+        AtomicFact::GreaterFact(fact) => {
+            fact.right.to_string() == "0"
+                && obj_equality_key(&fact.left) == obj_equality_key(&membership.element)
+        }
+        _ => false,
+    }
 }
 
 fn object_type_fact_for_litex_to_lean(

@@ -28,7 +28,7 @@ impl Runtime {
         if let Some(children) = self.verify_structural_order_strategy(&normalized)? {
             let strategy_label =
                 "numeric-order strategy: structurally smaller order goals".to_string();
-            let success = match additive_strategy_rule_evidence(&normalized, &children) {
+            let success = match structural_order_strategy_rule_evidence(&normalized, &children) {
                 Some(evidence) => FactualStmtSuccess::
                     new_with_verified_by_builtin_strategy_evidence_recording_stmt(
                         atomic_fact.clone().into(),
@@ -759,11 +759,11 @@ impl Runtime {
     }
 }
 
-// A strategy is search orchestration, while each successful additive layer is
-// justified by the same mathematical rule as its direct builtin counterpart.
-// Example: `0 < (a + b) + (c + d)` records strict-plus-weak at the root and
-// nonnegative addition for the recursively decomposed right child.
-fn additive_strategy_rule_evidence(
+// A strategy is search orchestration, while each supported arithmetic layer
+// is justified by the same mathematical rule as its direct builtin
+// counterpart. Example: `0 <= (a * b) * (c * d)` records nonnegative
+// multiplication at the root and for both recursively decomposed children.
+fn structural_order_strategy_rule_evidence(
     target: &AtomicFact,
     children: &[StmtResult],
 ) -> Option<BuiltinRuleEvidence> {
@@ -772,45 +772,122 @@ fn additive_strategy_rule_evidence(
     }
 
     match target {
-        AtomicFact::LessEqualFact(fact) if fact.left.to_string() == "0" => {
-            let Obj::Add(add) = &fact.right else {
-                return None;
-            };
-            if additive_strategy_child_matches(&children[0], add.left.as_ref(), true)
-                && additive_strategy_child_matches(&children[1], add.right.as_ref(), true)
+        AtomicFact::LessEqualFact(fact) if fact.left.to_string() == "0" => match &fact.right {
+            Obj::Add(add)
+                if structural_order_strategy_child_matches(
+                    &children[0],
+                    add.left.as_ref(),
+                    true,
+                ) && structural_order_strategy_child_matches(
+                    &children[1],
+                    add.right.as_ref(),
+                    true,
+                ) =>
             {
                 Some(BuiltinRuleEvidence::Arithmetic(
                     ArithmeticBuiltinRule::AddNonnegative,
                 ))
-            } else {
-                None
             }
-        }
-        AtomicFact::LessFact(fact) if fact.left.to_string() == "0" => {
-            let Obj::Add(add) = &fact.right else {
-                return None;
-            };
-            if additive_strategy_child_matches(&children[0], add.left.as_ref(), false)
-                && additive_strategy_child_matches(&children[1], add.right.as_ref(), true)
+            Obj::Mul(product)
+                if structural_order_strategy_child_matches(
+                    &children[0],
+                    product.left.as_ref(),
+                    true,
+                ) && structural_order_strategy_child_matches(
+                    &children[1],
+                    product.right.as_ref(),
+                    true,
+                ) =>
+            {
+                Some(BuiltinRuleEvidence::Arithmetic(
+                    ArithmeticBuiltinRule::MulNonnegative,
+                ))
+            }
+            Obj::Div(quotient)
+                if structural_order_strategy_child_matches(
+                    &children[0],
+                    quotient.left.as_ref(),
+                    true,
+                ) && structural_order_strategy_child_matches(
+                    &children[1],
+                    quotient.right.as_ref(),
+                    false,
+                ) =>
+            {
+                Some(BuiltinRuleEvidence::Arithmetic(
+                    ArithmeticBuiltinRule::DivNonnegative,
+                ))
+            }
+            _ => None,
+        },
+        AtomicFact::LessFact(fact) if fact.left.to_string() == "0" => match &fact.right {
+            Obj::Add(add)
+                if structural_order_strategy_child_matches(
+                    &children[0],
+                    add.left.as_ref(),
+                    false,
+                ) && structural_order_strategy_child_matches(
+                    &children[1],
+                    add.right.as_ref(),
+                    true,
+                ) =>
             {
                 Some(BuiltinRuleEvidence::Arithmetic(
                     ArithmeticBuiltinRule::AddPositiveLeftStrict,
                 ))
-            } else if additive_strategy_child_matches(&children[0], add.left.as_ref(), true)
-                && additive_strategy_child_matches(&children[1], add.right.as_ref(), false)
+            }
+            Obj::Add(add)
+                if structural_order_strategy_child_matches(
+                    &children[0],
+                    add.left.as_ref(),
+                    true,
+                ) && structural_order_strategy_child_matches(
+                    &children[1],
+                    add.right.as_ref(),
+                    false,
+                ) =>
             {
                 Some(BuiltinRuleEvidence::Arithmetic(
                     ArithmeticBuiltinRule::AddPositiveRightStrict,
                 ))
-            } else {
-                None
             }
-        }
+            Obj::Mul(product)
+                if structural_order_strategy_child_matches(
+                    &children[0],
+                    product.left.as_ref(),
+                    false,
+                ) && structural_order_strategy_child_matches(
+                    &children[1],
+                    product.right.as_ref(),
+                    false,
+                ) =>
+            {
+                Some(BuiltinRuleEvidence::Arithmetic(
+                    ArithmeticBuiltinRule::MulPositive,
+                ))
+            }
+            Obj::Div(quotient)
+                if structural_order_strategy_child_matches(
+                    &children[0],
+                    quotient.left.as_ref(),
+                    false,
+                ) && structural_order_strategy_child_matches(
+                    &children[1],
+                    quotient.right.as_ref(),
+                    false,
+                ) =>
+            {
+                Some(BuiltinRuleEvidence::Arithmetic(
+                    ArithmeticBuiltinRule::DivPositive,
+                ))
+            }
+            _ => None,
+        },
         _ => None,
     }
 }
 
-fn additive_strategy_child_matches(result: &StmtResult, operand: &Obj, weak: bool) -> bool {
+fn structural_order_strategy_child_matches(result: &StmtResult, operand: &Obj, weak: bool) -> bool {
     let Some(success) = result.factual_success() else {
         return false;
     };

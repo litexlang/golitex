@@ -1,0 +1,20 @@
+# Residual, Newton step, iteration, and the gap bound for sqrt(2).
+
+have fn square_root_two_residual(x R) R = x^2 - 2
+have fn newton_sqrt_two(x R+) R+ = (x + 2 / x) / 2
+
+have fn sqrt_two_newton_iterate(n N) R+ by induc n from 0:
+    case n = 0: 1
+    case n > 0: newton_sqrt_two(sqrt_two_newton_iterate(n - 1))
+
+have fn sqrt_two_newton_gap(n N) R = abs(square_root_two_residual(sqrt_two_newton_iterate(n)))
+have fn sqrt_two_newton_gap_bound(n N) R+ = 4 * (1 / 4)^(2^n)
+
+thm sqrt_two_newton_iterate_step:
+    ? forall n N:
+        sqrt_two_newton_iterate(n + 1) = newton_sqrt_two(sqrt_two_newton_iterate(n))
+    n + 1 > 0
+    sqrt_two_newton_iterate(n + 1) = newton_sqrt_two(sqrt_two_newton_iterate(n + 1 - 1))
+    n + 1 - 1 = n
+    newton_sqrt_two(sqrt_two_newton_iterate(n + 1 - 1)) = newton_sqrt_two(sqrt_two_newton_iterate(n))
+    sqrt_two_newton_iterate(n + 1) = newton_sqrt_two(sqrt_two_newton_iterate(n))

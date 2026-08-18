@@ -8,9 +8,11 @@ Schwabhäuser–Szmielew–Tarski axiom hierarchy and the Chapter 2–11 definit
 exposed by GeoCoq. The executable target is a source-aligned minimal foundation:
 it declares the central relation introduced by each chapter and proves the
 neutral dependency chain needed for Euclid I.5, the equality of the base
-angles of an isosceles triangle. It does not claim complete theorem coverage
-of those GeoCoq chapters. Continuity, coordinates, circles, and the hyperbolic
-extension remain outside this slice.
+angles of an isosceles triangle. It also derives GeoCoq's segment-addition and
+inner five-segment lemmas, then proves SAS for the exact Chapter 11 angle
+relation. It does not claim complete theorem coverage of those GeoCoq
+chapters. Continuity, coordinates, circles, and the hyperbolic extension
+remain outside this slice.
 
 The intended reader is someone comparing proof interfaces rather than logical
 expressive power. The module should show that Litex can keep a point carrier,
@@ -149,10 +151,33 @@ readable setting-first development.
   witnesses in Definition 11.2 directly and uses the five-segment axiom three
   times; this avoids depending on GeoCoq's later Chapter 8 midpoint-existence
   development.
-- **Downstream uses:** `isosceles_triangle_has_equal_base_angles`.
+- **Downstream uses:** `isosceles_triangle_has_equal_base_angles`,
+  `side_angle_side_gives_third_side`, and `triangle_congruence_sas`.
 - **Allowable hole:** The public layer need not reproduce every lemma from each
   GeoCoq chapter. Perpendicularity, side, and reflection receive definition-use
   probes but are not artificial dependencies of Euclid I.5.
+
+### Exact side-angle-side theorem
+
+- **Ordinary meaning:** If two pairs of adjacent sides are congruent and their
+  included angles are congruent, then the remaining sides are congruent and
+  the triangles satisfy Chapter 4's `Cong_3` relation.
+- **Semantic role:** Derived theorem family, not an axiom or an alternative
+  definition of angle congruence.
+- **Ideal Litex form:** A third-side theorem followed by a thin
+  `are_triangles_congruent` wrapper.
+- **Interface sketch:** `CongA(a,b,c,a2,b2,c2)`, `Cong(a,b,a2,b2)`, and
+  `Cong(b,c,b2,c2)` imply `Cong(a,c,a2,c2)` and then `Cong_3`.
+- **Nearest wrong alternative:** Defining the angle premise as an SSS fact, or
+  silently assuming the desired third-side congruence, would make the theorem
+  circular.
+- **Dependencies:** Chapter 11's four-witness angle relation, segment
+  congruence algebra, segment addition (`l2_11`), and inner five-segment
+  (`l4_2`). Decidable point equality handles their degenerate branches.
+- **Downstream uses:** A reusable triangle-congruence interface for elementary
+  synthetic geometry and later IMO-style proof developments.
+- **Allowable hole:** This slice does not yet derive ASA, AAS, RHS, or a
+  canonical numerical angle measure.
 
 ## Dependency map
 
@@ -178,6 +203,10 @@ Point
             -> exact angle congruence (Ch11)         [definition, proof]
                  -> isosceles base angles            [proof]
        -> decidable-equality extension              [source, law]
+            -> segment addition (l2_11)              [proof]
+            -> inner five-segment (l4_2)             [proof]
+            -> exact SAS third side                  [proof]
+                 -> triangle congruence (Cong_3)     [definition, proof]
             -> 2D extension                         [source, law]
                  -> Euclidean extension             [source, law]
                  -> future hyperbolic extension     [source, law]
@@ -198,9 +227,11 @@ wait for both existence and uniqueness rather than feeding either theorem.
    with use probes.
 7. Add exact GeoCoq-style angle congruence and prove Euclid I.5 by direct
    construction of its four witnesses plus three five-segment applications.
-8. Layer decidable equality, two-dimensionality, and the Euclidean postulate;
-   verify that I.5 remains neutral and does not consume either extension.
-9. Fix a standard hyperbolic postulate and continuity formulation before
+8. Layer decidable equality; derive segment addition and inner five-segment,
+   then prove the exact Chapter 11 SAS third-side and `Cong_3` theorems.
+9. Add two-dimensionality and the Euclidean postulate; verify that I.5 remains
+   neutral and SAS consumes neither of these geometric extensions.
+10. Fix a standard hyperbolic postulate and continuity formulation before
    adding those sibling extensions.
 
 ## Interface decisions and permissible gaps
@@ -211,5 +242,8 @@ boundary for this showcase. Midpoint remains a relation; this slice does not
 claim GeoCoq Chapter 8's later general existence theorem. Angle congruence uses GeoCoq Definition 11.2 rather than a
 numerical angle or an SSS alias. Euclid I.5 must typecheck under the neutral
 setting, demonstrating that the Euclidean parallel axiom is unrelated to this
-theorem. The slice may omit continuity, coordinates, and unrelated downstream
-theorems, but it may not relabel an unproved or assumed result as checked.
+theorem. SAS uses the neutral-with-decidable-equality setting because the
+source-aligned segment-addition and inner-five proofs split degenerate point
+equalities; it does not consume upper dimension or Euclid. The slice may omit
+continuity, coordinates, and unrelated downstream theorems, but it may not
+relabel an unproved or assumed result as checked.

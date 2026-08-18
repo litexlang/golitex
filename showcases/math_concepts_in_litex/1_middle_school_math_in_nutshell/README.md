@@ -22,11 +22,12 @@ target/release/litex -compact -runner -r showcases/math_concepts_in_litex/1_midd
 sets, square root, and finite-set size. It contains no direct `trust` or local
 axiom and does not recreate those builtin concepts through local wrappers.
 
-`same_math_in_lean.lean` expresses the same mainline with only Lean's
-automatically loaded Prelude. Where Prelude lacks real square root or rational
-probability, the exact required boundary is explicit rather than attributed to
-Mathlib or to the Litex-to-Lean compiler. Run it with:
+`same_math_in_lean.lean` keeps the same real-number meanings. It uses
+Mathlib's `ℝ`, square root, finite sets, and field arithmetic to prove the
+linear equation and AM-GM theorem without adding surrogate assumptions. Run it
+from the `lean/` project:
 
 ```sh
-lean showcases/math_concepts_in_litex/1_middle_school_math_in_nutshell/same_math_in_lean.lean
+cd lean
+lake env lean ../showcases/math_concepts_in_litex/1_middle_school_math_in_nutshell/same_math_in_lean.lean
 ```

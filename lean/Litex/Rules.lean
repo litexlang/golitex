@@ -19,6 +19,54 @@ theorem complexRatInQ (q : ℚ) : Litex.In (q : ℂ) Litex.Q :=
 theorem complexRealInR (r : ℝ) : Litex.In (r : ℂ) Litex.R :=
   ⟨r, Litex.Same.complexReal r⟩
 
+/-- Standard hierarchy projection from natural to integer membership. -/
+theorem inZOfInN
+    {alpha : Type}
+    {x : alpha}
+    (hx : Litex.In x Litex.N) :
+    Litex.In x Litex.Z := by
+  rcases hx with ⟨n, hxn⟩
+  exact ⟨(n : ℤ), Litex.Same.trans hxn
+    (Litex.Same.trans (Litex.Same.natComplex n)
+      (Litex.Same.trans
+        (Litex.Same.ofEq (by norm_num : (n : ℂ) = ((n : ℤ) : ℂ)))
+        (Litex.Same.complexInt (n : ℤ))))⟩
+
+/-- Standard hierarchy projection from integer to rational membership. -/
+theorem inQOfInZ
+    {alpha : Type}
+    {x : alpha}
+    (hx : Litex.In x Litex.Z) :
+    Litex.In x Litex.Q := by
+  rcases hx with ⟨z, hxz⟩
+  exact ⟨(z : ℚ), Litex.Same.trans hxz
+    (Litex.Same.trans (Litex.Same.intComplex z)
+      (Litex.Same.trans
+        (Litex.Same.ofEq (by norm_num : (z : ℂ) = ((z : ℚ) : ℂ)))
+        (Litex.Same.complexRat (z : ℚ))))⟩
+
+/-- Standard hierarchy projection from rational to real membership. -/
+theorem inROfInQ
+    {alpha : Type}
+    {x : alpha}
+    (hx : Litex.In x Litex.Q) :
+    Litex.In x Litex.R := by
+  rcases hx with ⟨q, hxq⟩
+  exact ⟨(q : ℝ), Litex.Same.trans hxq
+    (Litex.Same.trans (Litex.Same.ratComplex q)
+      (Litex.Same.trans
+        (Litex.Same.ofEq (by norm_num : (q : ℂ) = ((q : ℝ) : ℂ)))
+        (Litex.Same.complexReal (q : ℝ))))⟩
+
+/-- Standard hierarchy projection from real to complex membership. -/
+theorem inCOfInR
+    {alpha : Type}
+    {x : alpha}
+    (hx : Litex.In x Litex.R) :
+    Litex.In x Litex.C := by
+  rcases hx with ⟨r, hxr⟩
+  exact ⟨(r : ℂ), Litex.Same.trans hxr (Litex.Same.realComplex r)⟩
+
 theorem naturalNonempty : Litex.Set.Nonempty Litex.N :=
   ⟨0⟩
 
@@ -89,6 +137,33 @@ private theorem complexAddAsReal
   Litex.Same.symm
     (Litex.Same.realAddComplex (Litex.Same.symm ha) (Litex.Same.symm hb))
 
+private theorem complexSubAsReal
+    {a b : ℂ}
+    {r s : ℝ}
+    (ha : Litex.AsReal a r)
+    (hb : Litex.AsReal b s) :
+    Litex.AsReal (a - b) (r - s) :=
+  Litex.Same.symm
+    (Litex.Same.realSubComplex (Litex.Same.symm ha) (Litex.Same.symm hb))
+
+private theorem complexMulAsReal
+    {a b : ℂ}
+    {r s : ℝ}
+    (ha : Litex.AsReal a r)
+    (hb : Litex.AsReal b s) :
+    Litex.AsReal (a * b) (r * s) :=
+  Litex.Same.symm
+    (Litex.Same.realMulComplex (Litex.Same.symm ha) (Litex.Same.symm hb))
+
+private theorem complexDivAsReal
+    {a b : ℂ}
+    {r s : ℝ}
+    (ha : Litex.AsReal a r)
+    (hb : Litex.AsReal b s) :
+    Litex.AsReal (a / b) (r / s) :=
+  Litex.Same.symm
+    (Litex.Same.realDivComplex (Litex.Same.symm ha) (Litex.Same.symm hb))
+
 /-- Addition preserves real membership for complex-carrier source values. -/
 theorem complexAddInR
     {a b : ℂ}
@@ -98,6 +173,37 @@ theorem complexAddInR
   rcases ha with ⟨ra, hra⟩
   rcases hb with ⟨rb, hrb⟩
   exact ⟨ra + rb, complexAddAsReal hra hrb⟩
+
+/-- Subtraction preserves real membership for complex-carrier source values. -/
+theorem complexSubInR
+    {a b : ℂ}
+    (ha : Litex.In a Litex.R)
+    (hb : Litex.In b Litex.R) :
+    Litex.In (a - b) Litex.R := by
+  rcases ha with ⟨ra, hra⟩
+  rcases hb with ⟨rb, hrb⟩
+  exact ⟨ra - rb, complexSubAsReal hra hrb⟩
+
+/-- Multiplication preserves real membership for complex-carrier source values. -/
+theorem complexMulInR
+    {a b : ℂ}
+    (ha : Litex.In a Litex.R)
+    (hb : Litex.In b Litex.R) :
+    Litex.In (a * b) Litex.R := by
+  rcases ha with ⟨ra, hra⟩
+  rcases hb with ⟨rb, hrb⟩
+  exact ⟨ra * rb, complexMulAsReal hra hrb⟩
+
+/-- Division preserves real membership for complex-carrier source values.
+The source verifier retains denominator well-definedness separately. -/
+theorem complexDivInR
+    {a b : ℂ}
+    (ha : Litex.In a Litex.R)
+    (hb : Litex.In b Litex.R) :
+    Litex.In (a / b) Litex.R := by
+  rcases ha with ⟨ra, hra⟩
+  rcases hb with ⟨rb, hrb⟩
+  exact ⟨ra / rb, complexDivAsReal hra hrb⟩
 
 /-- The concrete complex-carrier adapter for Litex's nonnegative-addition
 builtin rule. It combines the independently selected zero representatives

@@ -136,3 +136,203 @@ thm setting_linear_map_kernel_is_subspace:
         by thm set_builder_member(smul_V(coefficient, kernel_vector), {candidate V: T(candidate) = zero_W}) => smul_V(coefficient, kernel_vector) $in {candidate V: T(candidate) = zero_W}
         smul_V(coefficient, kernel_vector) $in \setting_linear_kernel<V, W, zero_W, T>
     by def $is_subspace_in_setting(K, scalar_zero, scalar_one, scalar_add, scalar_neg, scalar_mul, scalar_inv, V, zero_V, add_V, smul_V, \setting_linear_kernel<V, W, zero_W, T>)
+
+# A concrete instance comes last: R^2 is evidence for the abstract interface,
+# not the definition of linear algebra.
+
+have fn setting_real_inv(x R) R by cases:
+    case x = 0: 0
+    case x != 0: 1 / x
+
+have fn setting_real_add(x, y R) R = x + y
+have fn setting_real_neg(x R) R = -x
+have fn setting_real_mul(x, y R) R = x * y
+
+thm setting_real_numbers_form_field:
+    ? forall:
+        $is_field_in_setting(R, 0, 1, setting_real_add, setting_real_neg, setting_real_mul, setting_real_inv)
+    0 != 1
+    claim:
+        ? forall x R:
+            x != 0
+            =>:
+                setting_real_mul(x, setting_real_inv(x)) = 1
+        setting_real_inv(x) = 1 / x
+        setting_real_mul(x, setting_real_inv(x)) = x * setting_real_inv(x) = x * (1 / x) = 1
+    claim:
+        ? forall x, y, z R:
+            setting_real_add(setting_real_add(x, y), z) = setting_real_add(x, setting_real_add(y, z))
+            setting_real_mul(setting_real_mul(x, y), z) = setting_real_mul(x, setting_real_mul(y, z))
+            setting_real_mul(x, setting_real_add(y, z)) = setting_real_add(setting_real_mul(x, y), setting_real_mul(x, z))
+        setting_real_add(x, y) = x + y
+        setting_real_add(y, z) = y + z
+        setting_real_add(setting_real_add(x, y), z) = setting_real_add(x, y) + z = (x + y) + z = x + (y + z) = x + setting_real_add(y, z) = setting_real_add(x, setting_real_add(y, z))
+        setting_real_mul(x, y) = x * y
+        setting_real_mul(x, z) = x * z
+        setting_real_mul(y, z) = y * z
+        setting_real_mul(setting_real_mul(x, y), z) = setting_real_mul(x, y) * z = (x * y) * z = x * (y * z) = x * setting_real_mul(y, z) = setting_real_mul(x, setting_real_mul(y, z))
+        setting_real_mul(x, setting_real_add(y, z)) = x * setting_real_add(y, z) = x * (y + z) = x * y + x * z
+        setting_real_add(setting_real_mul(x, y), setting_real_mul(x, z)) = setting_real_mul(x, y) + setting_real_mul(x, z) = x * y + x * z
+        setting_real_mul(x, setting_real_add(y, z)) = setting_real_add(setting_real_mul(x, y), setting_real_mul(x, z))
+    claim:
+        ? forall x, y R:
+            setting_real_add(x, y) = setting_real_add(y, x)
+            setting_real_mul(x, y) = setting_real_mul(y, x)
+        setting_real_add(x, y) = x + y = y + x = setting_real_add(y, x)
+        setting_real_mul(x, y) = x * y = y * x = setting_real_mul(y, x)
+    claim:
+        ? forall x R:
+            setting_real_add(0, x) = x
+            setting_real_add(x, setting_real_neg(x)) = 0
+            setting_real_mul(1, x) = x
+        setting_real_add(0, x) = 0 + x = x
+        setting_real_neg(x) = -x
+        setting_real_add(x, setting_real_neg(x)) = x + setting_real_neg(x) = x + (-x) = 0
+        setting_real_mul(1, x) = 1 * x = x
+    by def $is_field_in_setting(R, 0, 1, setting_real_add, setting_real_neg, setting_real_mul, setting_real_inv)
+
+have fn setting_plane_add(u, v cart(R, R)) cart(R, R) = (u[1] + v[1], u[2] + v[2])
+have fn setting_plane_smul(coefficient R, v cart(R, R)) cart(R, R) = (coefficient * v[1], coefficient * v[2])
+
+# These small value theorems are replay adapters for nested concrete claims.
+thm setting_real_operation_values:
+    ? forall x, y R:
+        setting_real_add(x, y) = x + y
+        setting_real_mul(x, y) = x * y
+    setting_real_add(x, y) = x + y
+    setting_real_mul(x, y) = x * y
+
+thm setting_real_plane_is_vector_space:
+    ? forall:
+        $is_vector_space_in_setting(R, 0, 1, setting_real_add, setting_real_neg, setting_real_mul, setting_real_inv, cart(R, R), (0, 0), setting_plane_add, setting_plane_smul)
+    by thm setting_real_numbers_form_field()
+    claim:
+        ? forall x, y, z cart(R, R):
+            setting_plane_add(setting_plane_add(x, y), z) = setting_plane_add(x, setting_plane_add(y, z))
+        setting_plane_add(x, y) = (x[1] + y[1], x[2] + y[2])
+        setting_plane_add(x, y)[1] = x[1] + y[1]
+        setting_plane_add(x, y)[2] = x[2] + y[2]
+        setting_plane_add(setting_plane_add(x, y), z) = (setting_plane_add(x, y)[1] + z[1], setting_plane_add(x, y)[2] + z[2]) = ((x[1] + y[1]) + z[1], (x[2] + y[2]) + z[2])
+        setting_plane_add(y, z) = (y[1] + z[1], y[2] + z[2])
+        setting_plane_add(y, z)[1] = y[1] + z[1]
+        setting_plane_add(y, z)[2] = y[2] + z[2]
+        setting_plane_add(x, setting_plane_add(y, z)) = (x[1] + setting_plane_add(y, z)[1], x[2] + setting_plane_add(y, z)[2]) = (x[1] + (y[1] + z[1]), x[2] + (y[2] + z[2]))
+        setting_plane_add(setting_plane_add(x, y), z) = ((x[1] + y[1]) + z[1], (x[2] + y[2]) + z[2]) = (x[1] + (y[1] + z[1]), x[2] + (y[2] + z[2])) = setting_plane_add(x, setting_plane_add(y, z))
+    claim:
+        ? forall x, y cart(R, R):
+            setting_plane_add(x, y) = setting_plane_add(y, x)
+        setting_plane_add(x, y) = (x[1] + y[1], x[2] + y[2]) = (y[1] + x[1], y[2] + x[2]) = setting_plane_add(y, x)
+    claim:
+        ? forall x cart(R, R):
+            setting_plane_add((0, 0), x) = x
+            exist inverse_x cart(R, R) st {setting_plane_add(x, inverse_x) = (0, 0)}
+        x = (x[1], x[2])
+        setting_plane_add((0, 0), x) = (x[1], x[2]) = x
+        have inverse_x cart(R, R) = (0 - x[1], 0 - x[2])
+        inverse_x[1] = 0 - x[1]
+        inverse_x[2] = 0 - x[2]
+        setting_plane_add(x, inverse_x) = (x[1] + inverse_x[1], x[2] + inverse_x[2]) = (0, 0)
+        witness exist inverse_x2 cart(R, R) st {setting_plane_add(x, inverse_x2) = (0, 0)} from inverse_x
+    claim:
+        ? forall a, b R, x cart(R, R):
+            setting_plane_smul(setting_real_mul(a, b), x) = setting_plane_smul(a, setting_plane_smul(b, x))
+            setting_plane_smul(setting_real_add(a, b), x) = setting_plane_add(setting_plane_smul(a, x), setting_plane_smul(b, x))
+        by thm setting_real_operation_values(a, b)
+        setting_plane_smul(b, x) = (b * x[1], b * x[2])
+        setting_plane_smul(b, x)[1] = b * x[1]
+        setting_plane_smul(b, x)[2] = b * x[2]
+        setting_plane_smul(a, setting_plane_smul(b, x)) = (a * setting_plane_smul(b, x)[1], a * setting_plane_smul(b, x)[2]) = (a * (b * x[1]), a * (b * x[2]))
+        setting_plane_smul(setting_real_mul(a, b), x) = ((a * b) * x[1], (a * b) * x[2]) = (a * (b * x[1]), a * (b * x[2])) = setting_plane_smul(a, setting_plane_smul(b, x))
+        setting_plane_smul(a, x) = (a * x[1], a * x[2])
+        setting_plane_smul(a, x)[1] = a * x[1]
+        setting_plane_smul(a, x)[2] = a * x[2]
+        setting_plane_smul(b, x) = (b * x[1], b * x[2])
+        setting_plane_add(setting_plane_smul(a, x), setting_plane_smul(b, x)) = (setting_plane_smul(a, x)[1] + setting_plane_smul(b, x)[1], setting_plane_smul(a, x)[2] + setting_plane_smul(b, x)[2]) = (a * x[1] + b * x[1], a * x[2] + b * x[2])
+        setting_plane_smul(setting_real_add(a, b), x) = ((a + b) * x[1], (a + b) * x[2]) = (a * x[1] + b * x[1], a * x[2] + b * x[2]) = setting_plane_add(setting_plane_smul(a, x), setting_plane_smul(b, x))
+    claim:
+        ? forall a R, x, y cart(R, R):
+            setting_plane_smul(a, setting_plane_add(x, y)) = setting_plane_add(setting_plane_smul(a, x), setting_plane_smul(a, y))
+        setting_plane_add(x, y) = (x[1] + y[1], x[2] + y[2])
+        setting_plane_add(x, y)[1] = x[1] + y[1]
+        setting_plane_add(x, y)[2] = x[2] + y[2]
+        setting_plane_smul(a, setting_plane_add(x, y)) = (a * setting_plane_add(x, y)[1], a * setting_plane_add(x, y)[2]) = (a * (x[1] + y[1]), a * (x[2] + y[2]))
+        setting_plane_smul(a, x) = (a * x[1], a * x[2])
+        setting_plane_smul(a, y) = (a * y[1], a * y[2])
+        setting_plane_smul(a, x)[1] = a * x[1]
+        setting_plane_smul(a, x)[2] = a * x[2]
+        setting_plane_smul(a, y)[1] = a * y[1]
+        setting_plane_smul(a, y)[2] = a * y[2]
+        setting_plane_add(setting_plane_smul(a, x), setting_plane_smul(a, y)) = (a * x[1] + a * y[1], a * x[2] + a * y[2])
+        setting_plane_smul(a, setting_plane_add(x, y)) = (a * (x[1] + y[1]), a * (x[2] + y[2])) = (a * x[1] + a * y[1], a * x[2] + a * y[2]) = setting_plane_add(setting_plane_smul(a, x), setting_plane_smul(a, y))
+    claim:
+        ? forall x cart(R, R):
+            setting_plane_smul(1, x) = x
+        x = (x[1], x[2])
+        setting_plane_smul(1, x) = (x[1], x[2]) = x
+    by def $has_vector_space_laws(R, cart(R, R), 1, setting_real_add, setting_real_mul, (0, 0), setting_plane_add, setting_plane_smul)
+    by def $is_vector_space_in_setting(R, 0, 1, setting_real_add, setting_real_neg, setting_real_mul, setting_real_inv, cart(R, R), (0, 0), setting_plane_add, setting_plane_smul)
+
+have fn setting_projection_x_axis(v cart(R, R)) cart(R, R) = (v[1], 0)
+
+thm setting_plane_operation_values:
+    ? forall coefficient R, u, v cart(R, R):
+        setting_plane_add(u, v) = (u[1] + v[1], u[2] + v[2])
+        setting_plane_smul(coefficient, u) = (coefficient * u[1], coefficient * u[2])
+    setting_plane_add(u, v) = (u[1] + v[1], u[2] + v[2])
+    setting_plane_smul(coefficient, u) = (coefficient * u[1], coefficient * u[2])
+
+thm setting_projection_x_axis_value:
+    ? forall u cart(R, R):
+        setting_projection_x_axis(u) = (u[1], 0)
+    setting_projection_x_axis(u) = (u[1], 0)
+
+thm setting_projection_x_axis_is_linear:
+    ? forall:
+        $is_linear_map_in_setting(R, 0, 1, setting_real_add, setting_real_neg, setting_real_mul, setting_real_inv, cart(R, R), cart(R, R), (0, 0), setting_plane_add, setting_plane_smul, (0, 0), setting_plane_add, setting_plane_smul, setting_projection_x_axis)
+    by thm setting_real_numbers_form_field()
+    by thm setting_real_plane_is_vector_space()
+    claim:
+        ? forall u, v cart(R, R):
+            setting_projection_x_axis(setting_plane_add(u, v)) = setting_plane_add(setting_projection_x_axis(u), setting_projection_x_axis(v))
+        by thm setting_plane_operation_values(0, u, v)
+        by thm setting_projection_x_axis_value(u)
+        by thm setting_projection_x_axis_value(v)
+        by thm setting_projection_x_axis_value(setting_plane_add(u, v))
+        setting_projection_x_axis(u)[1] = u[1]
+        setting_projection_x_axis(u)[2] = 0
+        setting_projection_x_axis(v)[1] = v[1]
+        setting_projection_x_axis(v)[2] = 0
+        setting_projection_x_axis(u)[1] + setting_projection_x_axis(v)[1] = u[1] + v[1]
+        setting_projection_x_axis(u)[2] + setting_projection_x_axis(v)[2] = 0
+        setting_projection_x_axis(setting_plane_add(u, v)) = (setting_plane_add(u, v)[1], 0) = (u[1] + v[1], 0)
+        setting_plane_add(setting_projection_x_axis(u), setting_projection_x_axis(v)) = (setting_projection_x_axis(u)[1] + setting_projection_x_axis(v)[1], setting_projection_x_axis(u)[2] + setting_projection_x_axis(v)[2]) = (u[1] + v[1], 0)
+        setting_projection_x_axis(setting_plane_add(u, v)) = setting_plane_add(setting_projection_x_axis(u), setting_projection_x_axis(v))
+    claim:
+        ? forall coefficient R, v cart(R, R):
+            setting_projection_x_axis(setting_plane_smul(coefficient, v)) = setting_plane_smul(coefficient, setting_projection_x_axis(v))
+        by thm setting_plane_operation_values(coefficient, v, v)
+        by thm setting_projection_x_axis_value(v)
+        by thm setting_projection_x_axis_value(setting_plane_smul(coefficient, v))
+        by thm setting_plane_operation_values(coefficient, setting_projection_x_axis(v), setting_projection_x_axis(v))
+        setting_projection_x_axis(v)[1] = v[1]
+        setting_projection_x_axis(v)[2] = 0
+        coefficient * setting_projection_x_axis(v)[1] = coefficient * v[1]
+        coefficient * setting_projection_x_axis(v)[2] = 0
+        setting_projection_x_axis(setting_plane_smul(coefficient, v)) = (setting_plane_smul(coefficient, v)[1], 0) = (coefficient * v[1], 0)
+        setting_plane_smul(coefficient, setting_projection_x_axis(v)) = (coefficient * setting_projection_x_axis(v)[1], coefficient * setting_projection_x_axis(v)[2]) = (coefficient * v[1], 0)
+        setting_projection_x_axis(setting_plane_smul(coefficient, v)) = setting_plane_smul(coefficient, setting_projection_x_axis(v))
+    by def $is_linear_map_in_setting(R, 0, 1, setting_real_add, setting_real_neg, setting_real_mul, setting_real_inv, cart(R, R), cart(R, R), (0, 0), setting_plane_add, setting_plane_smul, (0, 0), setting_plane_add, setting_plane_smul, setting_projection_x_axis)
+
+thm setting_projection_kernel_is_subspace:
+    ? forall:
+        $is_subspace_in_setting(R, 0, 1, setting_real_add, setting_real_neg, setting_real_mul, setting_real_inv, cart(R, R), (0, 0), setting_plane_add, setting_plane_smul, \setting_linear_kernel<cart(R, R), cart(R, R), (0, 0), setting_projection_x_axis>)
+    by thm setting_projection_x_axis_is_linear()
+    by thm setting_linear_map_kernel_is_subspace(R, 0, 1, setting_real_add, setting_real_neg, setting_real_mul, setting_real_inv, cart(R, R), cart(R, R), (0, 0), setting_plane_add, setting_plane_smul, (0, 0), setting_plane_add, setting_plane_smul, setting_projection_x_axis)
+
+thm setting_vertical_vector_lies_in_projection_kernel:
+    ? forall:
+        (0, 7) $in \setting_linear_kernel<cart(R, R), cart(R, R), (0, 0), setting_projection_x_axis>
+    by thm setting_projection_x_axis_value((0, 7)) => setting_projection_x_axis((0, 7)) = (0, 0)
+    \setting_linear_kernel<cart(R, R), cart(R, R), (0, 0), setting_projection_x_axis> = {candidate cart(R, R): setting_projection_x_axis(candidate) = (0, 0)}
+    by thm set_builder_member((0, 7), {candidate cart(R, R): setting_projection_x_axis(candidate) = (0, 0)}) => (0, 7) $in {candidate cart(R, R): setting_projection_x_axis(candidate) = (0, 0)}
+    (0, 7) $in \setting_linear_kernel<cart(R, R), cart(R, R), (0, 0), setting_projection_x_axis>

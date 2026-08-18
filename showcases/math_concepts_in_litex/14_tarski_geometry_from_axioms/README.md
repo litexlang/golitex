@@ -12,9 +12,12 @@ The executable Litex slice now contains:
   Euclidean parallel postulate;
 - a source-ordered Chapters 2–11 relation layer: congruence algebra,
   betweenness, collinearity, segment order, rays, midpoint, perpendicularity,
-  sides, point/line reflection, coplanarity, and exact angle congruence; and
+  sides, point/line reflection, coplanarity, and exact angle congruence;
 - a checked neutral proof of Euclid I.5: an isosceles triangle has equal base
-  angles.
+  angles; and
+- GeoCoq-aligned segment addition and inner five-segment lemmas, followed by
+  exact side-angle-side: two congruent adjacent sides and congruent included
+  angles imply the third side, hence triangle congruence.
 
 Run it from the repository root with:
 
@@ -30,7 +33,11 @@ GeoCoq's general midpoint-existence proof is a later and much longer
 orthogonality development. The I.5 proof instead constructs the four witnesses
 required by angle congruence directly, then uses the five-segment axiom three
 times. Thus I.5 needs neither the upper-dimension axiom nor Euclid's parallel
-postulate.
+postulate. The SAS proof unfolds the witness-based Chapter 11 angle relation,
+aligns its four extension witnesses using segment addition, and applies the
+inner five-segment theorem twice. Its source-aligned proof uses decidable point
+equality to separate degenerate cases, but still needs neither the
+upper-dimension axiom nor Euclid's parallel postulate.
 
 The axiom hierarchy follows the public
 [GeoCoq Tarski interfaces](https://geocoq.github.io/GeoCoq/html/GeoCoq.Axioms.tarski_axioms.html).
@@ -39,7 +46,8 @@ The chapter layer tracks the public
 and Chapters
 [2](https://geocoq.github.io/GeoCoq/html/GeoCoq.Tarski_dev.Ch02_cong.html),
 [3](https://geocoq.github.io/GeoCoq/html/GeoCoq.Tarski_dev.Ch03_bet.html),
-[4](https://geocoq.github.io/GeoCoq/html/GeoCoq.Tarski_dev.Ch04_col.html),
+[4a](https://geocoq.github.io/GeoCoq/html/GeoCoq.Tarski_dev.Ch04_col.html),
+[4b](https://geocoq.github.io/GeoCoq/html/GeoCoq.Tarski_dev.Ch04_cong_bet.html),
 [7](https://geocoq.github.io/GeoCoq/html/GeoCoq.Tarski_dev.Ch07_midpoint.html),
 [8](https://geocoq.github.io/GeoCoq/html/GeoCoq.Tarski_dev.Ch08_orthogonality.html),
 and [11](https://geocoq.github.io/GeoCoq/html/GeoCoq.Tarski_dev.Ch11_angles.html).
@@ -48,8 +56,8 @@ parity with all ten GeoCoq chapters.
 
 `same_math_in_lean.lean` gives a no-import, handwritten Lean analogy. It uses
 explicit structures for the same assumption bundles, defines the same Chapters
-2–11 relations, and independently proves I.5 without `axiom`, `sorry`, or
-`admit`. Run it with:
+2–11 relations, and independently proves both I.5 and the same exact SAS
+theorem without `axiom`, `sorry`, or `admit`. Run it with:
 
 ```bash
 cd lean

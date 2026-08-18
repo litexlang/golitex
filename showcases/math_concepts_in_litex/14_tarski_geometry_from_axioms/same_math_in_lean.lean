@@ -1,7 +1,8 @@
 /-
-The same point-only Chapters 2--11 layer and Euclid I.5 as `main.lit`,
-expressed in pure Lean 4. Relations use functions into `Prop` because Prelude
-does not provide the first-class relation-set notation used by Litex.
+The same point-only Chapters 2--11 layer, Euclid I.5, and exact angle-based
+SAS theorem as `main.lit`, expressed in pure Lean 4. Relations use functions
+into `Prop` because Prelude does not provide the first-class relation-set
+notation used by Litex.
 
 The structures are explicit assumption bundles, not claims that a model of
 the axioms has been constructed. This is handwritten comparison code, not
@@ -127,6 +128,12 @@ def AnglesCongruent {Point : Type} (Bet : Betweenness Point)
     Bet vertexE pointF fExt ∧ Cong pointF fExt vertexB pointC ∧
     Cong aExt cExt dExt fExt
 
+def InnerFiveSegmentConfiguration {Point : Type} (Bet : Betweenness Point)
+    (Cong : SegmentCongruence Point)
+    (a b c d a₂ b₂ c₂ d₂ : Point) : Prop :=
+  Bet a b c ∧ Bet a₂ b₂ c₂ ∧ Cong a c a₂ c₂ ∧
+    Cong b c b₂ c₂ ∧ Cong a d a₂ d₂ ∧ Cong c d c₂ d₂
+
 structure TarskiNeutralDimensionless (Point : Type) where
   Bet : Betweenness Point
   Cong : SegmentCongruence Point
@@ -208,6 +215,32 @@ theorem between_symmetric {Point : Type}
     ⟨x, hbx, hcx⟩
   have hx : b = x := G.betweenIdentity b x hbx
   simpa [hx] using hcx
+
+theorem between_exchange {Point : Type}
+    (G : TarskiNeutralDimensionless Point) {a b c d : Point}
+    (h₁ : G.Bet a b c) (h₂ : G.Bet a c d) : G.Bet b c d := by
+  rcases G.innerPasch d c a c b (between_symmetric G h₂)
+      (between_symmetric G h₁) with ⟨x, hcx, hbxd⟩
+  have hx : c = x := G.betweenIdentity c x hcx
+  simpa [hx] using hbxd
+
+theorem point_has_strict_extension {Point : Type}
+    (G : TarskiNeutralDimensionless Point) (a b : Point) :
+    ∃ x, G.Bet a b x ∧ b ≠ x := by
+  have hlower : G.lowerA ≠ G.lowerB := by
+    intro h
+    apply G.lowerDimension3
+    simpa [h] using between_trivial G G.lowerC G.lowerA
+  rcases G.segmentConstruction a b G.lowerA G.lowerB with
+    ⟨x, hbet, hcong⟩
+  refine ⟨x, hbet, ?_⟩
+  intro h
+  apply hlower
+  have hsymmetric : G.Cong G.lowerA G.lowerB b x :=
+    segment_congruence_symmetric G hcong
+  have hdegenerate : G.Cong G.lowerA G.lowerB b b := by
+    simpa [h] using hsymmetric
+  exact G.congrIdentity G.lowerA G.lowerB b hdegenerate
 
 theorem noncollinear_points_are_pairwise_distinct {Point : Type}
     (G : TarskiNeutralDimensionless Point) {a b c : Point}
@@ -296,6 +329,134 @@ theorem midpoint_is_between {Point : Type} (Bet : Betweenness Point)
 structure TarskiNeutralWithDecidableEquality (Point : Type) where
   neutral : TarskiNeutralDimensionless Point
   pointEqualityDecidable : ∀ p1 p2 : Point, p1 = p2 ∨ p1 ≠ p2
+
+theorem segment_congruence_addition {Point : Type}
+    (G : TarskiNeutralWithDecidableEquality Point)
+    {a b c a₂ b₂ c₂ : Point}
+    (hbet : G.neutral.Bet a b c) (hbet₂ : G.neutral.Bet a₂ b₂ c₂)
+    (hab : G.neutral.Cong a b a₂ b₂)
+    (hbc : G.neutral.Cong b c b₂ c₂) :
+    G.neutral.Cong a c a₂ c₂ := by
+  rcases G.pointEqualityDecidable a b with heq | hne
+  · have ha₂b₂ : a₂ = b₂ := by
+      have hsymmetric : G.neutral.Cong a₂ b₂ a a := by
+        simpa [heq] using segment_congruence_symmetric G.neutral hab
+      exact G.neutral.congrIdentity a₂ b₂ a hsymmetric
+    simpa [heq, ha₂b₂] using hbc
+  · have hzero : G.neutral.Cong a a a₂ a₂ :=
+      degenerate_segments_congruent G.neutral a a₂
+    have hreverse : G.neutral.Cong b a b₂ a₂ :=
+      segment_congruence_endpoint_commutative G.neutral hab
+    have hca : G.neutral.Cong c a c₂ a₂ :=
+      G.neutral.fiveSegment a a₂ b b₂ c c₂ a a₂
+        hab hbc hzero hreverse hbet hbet₂ hne
+    exact segment_congruence_endpoint_commutative G.neutral hca
+
+theorem inner_five_segment {Point : Type}
+    (G : TarskiNeutralWithDecidableEquality Point)
+    {a b c d a₂ b₂ c₂ d₂ : Point}
+    (h : InnerFiveSegmentConfiguration G.neutral.Bet G.neutral.Cong
+      a b c d a₂ b₂ c₂ d₂) :
+    G.neutral.Cong b d b₂ d₂ := by
+  rcases h with ⟨habc, ha₂b₂c₂, hac, hbc, had, hcd⟩
+  rcases G.pointEqualityDecidable a c with heq | hne
+  · have ha₂c₂ : a₂ = c₂ := by
+      have hsymmetric : G.neutral.Cong a₂ c₂ a a := by
+        simpa [heq] using segment_congruence_symmetric G.neutral hac
+      exact G.neutral.congrIdentity a₂ c₂ a hsymmetric
+    have hab : a = b := by
+      apply G.neutral.betweenIdentity a b
+      simpa [heq] using habc
+    have ha₂b₂ : a₂ = b₂ := by
+      apply G.neutral.betweenIdentity a₂ b₂
+      simpa [ha₂c₂] using ha₂b₂c₂
+    simpa [hab, ha₂b₂] using had
+  · rcases point_has_strict_extension G.neutral a c with
+      ⟨extendedC, hacExtended, hcExtended⟩
+    rcases G.neutral.segmentConstruction a₂ c₂ c extendedC with
+      ⟨extendedC₂, ha₂c₂Extended, hconstructed⟩
+    have hcExtendedCong : G.neutral.Cong c extendedC c₂ extendedC₂ :=
+      segment_congruence_symmetric G.neutral hconstructed
+    have hextendedD : G.neutral.Cong extendedC d extendedC₂ d₂ :=
+      G.neutral.fiveSegment a a₂ c c₂ extendedC extendedC₂ d d₂
+        hac hcExtendedCong had hcd hacExtended ha₂c₂Extended hne
+    have hbcExtended : G.neutral.Bet b c extendedC :=
+      between_exchange G.neutral habc hacExtended
+    have hextendedCB : G.neutral.Bet extendedC c b :=
+      between_symmetric G.neutral hbcExtended
+    have hb₂c₂Extended : G.neutral.Bet b₂ c₂ extendedC₂ :=
+      between_exchange G.neutral ha₂b₂c₂ ha₂c₂Extended
+    have hextendedC₂B₂ : G.neutral.Bet extendedC₂ c₂ b₂ :=
+      between_symmetric G.neutral hb₂c₂Extended
+    have hextendedCCong : G.neutral.Cong extendedC c extendedC₂ c₂ :=
+      segment_congruence_endpoint_commutative G.neutral hcExtendedCong
+    have hcb : G.neutral.Cong c b c₂ b₂ :=
+      segment_congruence_endpoint_commutative G.neutral hbc
+    exact G.neutral.fiveSegment extendedC extendedC₂ c c₂ b b₂ d d₂
+      hextendedCCong hcb hextendedD hcd hextendedCB hextendedC₂B₂
+      hcExtended.symm
+
+theorem side_angle_side_gives_third_side {Point : Type}
+    (G : TarskiNeutralWithDecidableEquality Point)
+    {a b c a₂ b₂ c₂ : Point}
+    (hangle : AnglesCongruent G.neutral.Bet G.neutral.Cong
+      a b c a₂ b₂ c₂)
+    (hab : G.neutral.Cong a b a₂ b₂)
+    (hbc : G.neutral.Cong b c b₂ c₂) :
+    G.neutral.Cong a c a₂ c₂ := by
+  rcases hangle with
+    ⟨_, _, _, _, aExt, cExt, a₂Ext, c₂Ext,
+      hbaExt, haaExt, hbcExt, hccExt,
+      hb₂a₂Ext, ha₂a₂Ext, hb₂c₂Ext, hc₂c₂Ext, hextensions⟩
+  have hba : G.neutral.Cong b a b₂ a₂ :=
+    segment_congruence_endpoint_commutative G.neutral hab
+  have hb₂a₂ba : G.neutral.Cong b₂ a₂ b a :=
+    segment_congruence_symmetric G.neutral hba
+  have haaExtBA : G.neutral.Cong a aExt b a :=
+    segment_congruence_transitive G.neutral haaExt hb₂a₂ba
+  have hbaA₂Ext : G.neutral.Cong b a a₂ a₂Ext :=
+    segment_congruence_symmetric G.neutral ha₂a₂Ext
+  have haaExtA₂Ext : G.neutral.Cong a aExt a₂ a₂Ext :=
+    segment_congruence_transitive G.neutral haaExtBA hbaA₂Ext
+  have hbaWhole : G.neutral.Cong b aExt b₂ a₂Ext :=
+    segment_congruence_addition G hbaExt hb₂a₂Ext hba haaExtA₂Ext
+
+  have hb₂c₂bc : G.neutral.Cong b₂ c₂ b c :=
+    segment_congruence_symmetric G.neutral hbc
+  have hccExtBC : G.neutral.Cong c cExt b c :=
+    segment_congruence_transitive G.neutral hccExt hb₂c₂bc
+  have hbcC₂Ext : G.neutral.Cong b c c₂ c₂Ext :=
+    segment_congruence_symmetric G.neutral hc₂c₂Ext
+  have hccExtC₂Ext : G.neutral.Cong c cExt c₂ c₂Ext :=
+    segment_congruence_transitive G.neutral hccExtBC hbcC₂Ext
+  have hbcWhole : G.neutral.Cong b cExt b₂ c₂Ext :=
+    segment_congruence_addition G hbcExt hb₂c₂Ext hbc hccExtC₂Ext
+
+  have hfirstConfiguration :
+      InnerFiveSegmentConfiguration G.neutral.Bet G.neutral.Cong
+        b a aExt cExt b₂ a₂ a₂Ext c₂Ext :=
+    ⟨hbaExt, hb₂a₂Ext, hbaWhole, haaExtA₂Ext, hbcWhole, hextensions⟩
+  have haCext : G.neutral.Cong a cExt a₂ c₂Ext :=
+    inner_five_segment G hfirstConfiguration
+  have hCextA : G.neutral.Cong cExt a c₂Ext a₂ :=
+    segment_congruence_endpoint_commutative G.neutral haCext
+  have hsecondConfiguration :
+      InnerFiveSegmentConfiguration G.neutral.Bet G.neutral.Cong
+        b c cExt a b₂ c₂ c₂Ext a₂ :=
+    ⟨hbcExt, hb₂c₂Ext, hbcWhole, hccExtC₂Ext, hba, hCextA⟩
+  have hca : G.neutral.Cong c a c₂ a₂ :=
+    inner_five_segment G hsecondConfiguration
+  exact segment_congruence_endpoint_commutative G.neutral hca
+
+theorem triangle_congruence_sas {Point : Type}
+    (G : TarskiNeutralWithDecidableEquality Point)
+    {a b c a₂ b₂ c₂ : Point}
+    (hangle : AnglesCongruent G.neutral.Bet G.neutral.Cong
+      a b c a₂ b₂ c₂)
+    (hab : G.neutral.Cong a b a₂ b₂)
+    (hbc : G.neutral.Cong b c b₂ c₂) :
+    TrianglesCongruent G.neutral.Cong a b c a₂ b₂ c₂ :=
+  ⟨hab, side_angle_side_gives_third_side G hangle hab hbc, hbc⟩
 
 structure Tarski2D (Point : Type) where
   base : TarskiNeutralWithDecidableEquality Point

@@ -92,6 +92,43 @@ fn top_level_atomic_membership_emits_source_and_inferred_fact_ids() {
 }
 
 #[test]
+fn standard_set_hierarchy_replays_exact_projection_chain() {
+    const SOURCE: &str = "forall n N:\n    n $in Z\n\nforall n N:\n    n $in Q\n\nforall n N:\n    n $in R\n\nforall n N:\n    n $in C\n\nforall z Z:\n    z $in Q\n\nforall z Z:\n    z $in R\n\nforall z Z:\n    z $in C\n\nforall q Q:\n    q $in R\n\nforall q Q:\n    q $in C\n\nforall r R:\n    r $in C\n";
+    let ir = capture_ir_debug_on_verifier_stack(SOURCE, "16_StandardSetHierarchy.lit")
+        .expect("capture standard-set hierarchy tracer IR");
+    assert_eq!(
+        ir.matches("StandardSetMembershipProjection").count(),
+        10,
+        "{ir}"
+    );
+
+    let generated = compile_on_verifier_stack(SOURCE, "16_StandardSetHierarchy.lit")
+        .expect("compile standard-set hierarchy tracer");
+    for theorem in ["inZOfInN", "inQOfInZ", "inROfInQ", "inCOfInR"] {
+        assert!(
+            generated.contains(&format!("Litex.Rules.{theorem}")),
+            "missing {theorem}: {generated}"
+        );
+    }
+    assert!(!generated.contains("LitexObject"));
+    assert!(!generated.contains("Litex.Object"));
+    assert!(!generated.contains("Set.univ"));
+    assert!(!generated.contains("sorry"));
+
+    let boundary = compile_on_verifier_stack(
+        "forall n N+:\n    n $in N\n",
+        "unsupported_refined_standard_set_projection.lit",
+    )
+    .expect_err("refined numeric carrier projection must remain fail-closed");
+    assert!(
+        boundary.contains("unsupported standard-set membership projection")
+            || boundary.contains("unsupported standard set")
+            || boundary.contains("N+"),
+        "unexpected boundary error: {boundary}"
+    );
+}
+
+#[test]
 fn known_equality_paths_replay_same_symmetry_and_transitivity() {
     let generated = compile_on_verifier_stack(
         "forall a, b set:\n    a = b\n    =>:\n        b = a\n\nforall a, b, c set:\n    a = b\n    b = c\n    =>:\n        a = c\n",
@@ -360,7 +397,7 @@ fn builtin_strategy_ir_marks_each_selected_layer_and_replays_exact_rules() {
             .expect("compile real-addition carrier tracer");
     assert!(carrier_generated.contains("Litex.Rules.complexAddInR"));
 
-    const RIGHT_STRICT_SOURCE: &str = "forall a, b, c, d R:\n    a >= 0\n    b > 0\n    c >= 0\n    d >= 0\n    =>:\n        (a + b) + (c + d) > 0\n";
+    const RIGHT_STRICT_SOURCE: &str = "forall a, b, c, d R:\n    a >= 0\n    b >= 0\n    c >= 0\n    d > 0\n    =>:\n        (a + b) + (c + d) > 0\n";
     let right_ir =
         capture_ir_debug_on_verifier_stack(RIGHT_STRICT_SOURCE, "15_BuiltinStrategy.lit")
             .expect("capture right-strict builtin-strategy tracer IR");
@@ -392,14 +429,60 @@ fn builtin_strategy_ir_marks_each_selected_layer_and_replays_exact_rules() {
 }
 
 #[test]
-fn unsupported_builtin_strategy_rule_remains_fail_closed() {
-    let error = compile_on_verifier_stack(
-        "forall a, b R:\n    a >= 0\n    b >= 0\n    =>:\n        a * b >= 0\n",
-        "unsupported_builtin_strategy_rule.lit",
-    )
-    .expect_err("unreviewed nonnegative multiplication must remain outside the compiler slice");
+fn real_arithmetic_membership_closures_replay_exact_rules() {
+    const SOURCE: &str = "forall a, b R:\n    a + b $in R\n\nforall a, b R:\n    a - b $in R\n\nforall a, b R:\n    a * b $in R\n\nforall a, b R:\n    b != 0\n    =>:\n        a / b $in R\n";
+    let ir = capture_ir_debug_on_verifier_stack(SOURCE, "15_BuiltinStrategy.lit")
+        .expect("capture real arithmetic closure tracer IR");
+    assert!(
+        ir.matches("RealArithmeticMembershipClosure").count() >= 4,
+        "{ir}"
+    );
+
+    let generated = compile_on_verifier_stack(SOURCE, "15_BuiltinStrategy.lit")
+        .expect("compile real arithmetic closure tracer");
+    for theorem in [
+        "Litex.Rules.complexAddInR",
+        "Litex.Rules.complexSubInR",
+        "Litex.Rules.complexMulInR",
+        "Litex.Rules.complexDivInR",
+    ] {
+        assert!(
+            generated.contains(theorem),
+            "missing {theorem}: {generated}"
+        );
+    }
+    assert!(!generated.contains("Litex.Object"));
+    assert!(!generated.contains("Set.univ"));
+    assert!(!generated.contains("axiom "));
+    assert!(!generated.contains("sorry"));
+}
+
+#[test]
+fn multiplicative_strategy_evidence_is_retained_but_emission_requires_coherence() {
+    const SOURCE: &str = "forall a, b, c, d R:\n    a >= 0\n    b >= 0\n    c >= 0\n    d >= 0\n    =>:\n        (a * b) * (c * d) >= 0\n";
+    let ir = capture_ir_debug_on_verifier_stack(SOURCE, "15_BuiltinStrategy.lit")
+        .expect("capture nested multiplicative strategy IR");
+    assert!(ir.contains("UseBuiltinStrategy"), "{ir}");
+    assert!(ir.contains("MulNonnegative"), "{ir}");
+    assert!(ir.contains("order.mul_nonnegative"), "{ir}");
+
+    let error = compile_on_verifier_stack(SOURCE, "15_BuiltinStrategy.lit")
+        .expect_err("multiplicative signs require an approved real-coherence ABI");
     assert!(
         error.contains("MulNonnegative"),
+        "unexpected error: {error}"
+    );
+}
+
+#[test]
+fn unsupported_subtractive_strategy_rule_remains_fail_closed() {
+    let error = compile_on_verifier_stack(
+        "forall a, b R:\n    a <= b\n    =>:\n        b - a >= 0\n",
+        "unsupported_builtin_strategy_rule.lit",
+    )
+    .expect_err("unreviewed subtractive sign rule must remain outside the compiler slice");
+    assert!(
+        error.contains("SubNonnegativeFromLessEqual"),
         "unexpected error: {error}"
     );
 }

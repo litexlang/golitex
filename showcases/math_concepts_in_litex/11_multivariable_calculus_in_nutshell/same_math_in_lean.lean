@@ -1,49 +1,84 @@
-/- Prelude-level representation of the Litex quadratic surface example.
-The polynomial difference identity is proved directly.  Since Prelude has no
-real numbers or multivariable derivative library, only the two coordinate
-partial-derivative facts remain explicit setting boundaries. -/
+import Mathlib
 
-structure Point where
-  x : Int
-  y : Int
-deriving DecidableEq
+/- The same real coordinate-partial-derivative development as `main.lit`.
+The surface lives on `ℝ × ℝ`; both partial derivatives are proved directly
+from their epsilon-delta definitions. -/
 
-def quadraticSurface (p : Point) : Int :=
-  p.x * p.x + p.y * p.y
+namespace MultivariableCalculusSameMathInLean
 
-def quadraticGradient (p : Point) : Point :=
-  { x := 2 * p.x, y := 2 * p.y }
+abbrev Point := ℝ × ℝ
 
-theorem squareDifference (x y : Int) :
-    x * x - y * y = (x - y) * (x + y) := by
-  rw [Int.sub_mul, Int.mul_add, Int.mul_add]
-  rw [Int.mul_comm y x]
-  omega
+def quadraticSurface (p : Point) : ℝ := p.1 ^ 2 + p.2 ^ 2
+def quadraticGradient (p : Point) : Point := (2 * p.1, 2 * p.2)
 
-theorem coordinateDifferenceIdentity
-    (p : Point) (x : Int) :
-    quadraticSurface { x := x, y := p.y } - quadraticSurface p =
-      (x - p.x) * (x + p.x) := by
-  simp only [quadraticSurface]
-  rw [Int.add_sub_add_right]
-  exact squareDifference x p.x
+theorem xDifferenceQuotient (p : Point) (x : ℝ) (hne : x ≠ p.1) :
+    (quadraticSurface (x, p.2) - quadraticSurface p) / (x - p.1) =
+      x + p.1 := by
+  have hsub : x - p.1 ≠ 0 := sub_ne_zero.mpr hne
+  unfold quadraticSurface
+  field_simp [hsub]
+  ring
 
-structure PartialDerivativeSetting where
-  HasXPartial : (Point → Int) → Point → Int → Prop
-  HasYPartial : (Point → Int) → Point → Int → Prop
-  quadraticX : ∀ p, HasXPartial quadraticSurface p (2 * p.x)
-  quadraticY : ∀ p, HasYPartial quadraticSurface p (2 * p.y)
+theorem yDifferenceQuotient (p : Point) (y : ℝ) (hne : y ≠ p.2) :
+    (quadraticSurface (p.1, y) - quadraticSurface p) / (y - p.2) =
+      y + p.2 := by
+  have hsub : y - p.2 ≠ 0 := sub_ne_zero.mpr hne
+  unfold quadraticSurface
+  field_simp [hsub]
+  ring
 
-def IsCoordinateGradient (S : PartialDerivativeSetting)
-    (f : Point → Int) (p gradient : Point) : Prop :=
-  S.HasXPartial f p gradient.x ∧ S.HasYPartial f p gradient.y
+def XPartialDeltaControlled (f : Point → ℝ) (p : Point)
+    (slope ε δ : ℝ) : Prop :=
+  ∀ x, x ≠ p.1 → |x - p.1| < δ →
+    |(f (x, p.2) - f p) / (x - p.1) - slope| < ε
 
-theorem quadraticGradientIsCoordinateGradient
-    (S : PartialDerivativeSetting) (p : Point) :
-    IsCoordinateGradient S quadraticSurface p (quadraticGradient p) := by
+def HasXPartialDerivativeAt (f : Point → ℝ) (p : Point)
+    (slope : ℝ) : Prop :=
+  ∀ ε > 0, ∃ δ > 0, XPartialDeltaControlled f p slope ε δ
+
+def YPartialDeltaControlled (f : Point → ℝ) (p : Point)
+    (slope ε δ : ℝ) : Prop :=
+  ∀ y, y ≠ p.2 → |y - p.2| < δ →
+    |(f (p.1, y) - f p) / (y - p.2) - slope| < ε
+
+def HasYPartialDerivativeAt (f : Point → ℝ) (p : Point)
+    (slope : ℝ) : Prop :=
+  ∀ ε > 0, ∃ δ > 0, YPartialDeltaControlled f p slope ε δ
+
+theorem quadraticSurfaceHasXPartialDerivative (p : Point) :
+    HasXPartialDerivativeAt quadraticSurface p (2 * p.1) := by
+  intro ε hε
+  refine ⟨ε, hε, ?_⟩
+  intro x hne hclose
+  rw [xDifferenceQuotient p x hne]
+  convert hclose using 1 <;> ring
+
+theorem quadraticSurfaceHasYPartialDerivative (p : Point) :
+    HasYPartialDerivativeAt quadraticSurface p (2 * p.2) := by
+  intro ε hε
+  refine ⟨ε, hε, ?_⟩
+  intro y hne hclose
+  rw [yDifferenceQuotient p y hne]
+  convert hclose using 1 <;> ring
+
+def IsCoordinateGradientAt (f : Point → ℝ) (p gradient : Point) : Prop :=
+  HasXPartialDerivativeAt f p gradient.1 ∧
+    HasYPartialDerivativeAt f p gradient.2
+
+theorem quadraticGradientIsCoordinateGradient (p : Point) :
+    IsCoordinateGradientAt quadraticSurface p (quadraticGradient p) := by
+  exact ⟨quadraticSurfaceHasXPartialDerivative p,
+    quadraticSurfaceHasYPartialDerivative p⟩
+
+theorem quadraticSurfaceHasMathlibCoordinateDerivatives (p : Point) :
+    HasDerivAt (fun x => quadraticSurface (x, p.2)) (2 * p.1) p.1 ∧
+      HasDerivAt (fun y => quadraticSurface (p.1, y)) (2 * p.2) p.2 := by
   constructor
-  · exact S.quadraticX p
-  · exact S.quadraticY p
+  · simpa [quadraticSurface, two_mul] using
+      (hasDerivAt_pow 2 p.1).add_const (p.2 ^ 2)
+  · simpa [quadraticSurface, two_mul, add_comm] using
+      (hasDerivAt_pow 2 p.2).const_add (p.1 ^ 2)
 
-example : quadraticGradient { x := 3, y := 4 } = { x := 6, y := 8 } := by
-  decide
+example : quadraticGradient (3, 4) = (6, 8) := by norm_num [quadraticGradient]
+
+end MultivariableCalculusSameMathInLean

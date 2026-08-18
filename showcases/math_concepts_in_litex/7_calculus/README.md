@@ -25,12 +25,12 @@ are not assumed. General limits and continuity, compact-interval theorems, the
 Mean Value Theorem, Riemann integration, and the Fundamental Theorem of
 Calculus remain later gates, not current API claims.
 
-`same_math_in_lean.lean` checks the same epsilon-delta witness
-shape using only Lean's automatically loaded Prelude. Because Prelude has no
-real-number or ordered-field library, the real operations and two algebraic
-identities consumed by the proof are explicit setting fields. The file is a
-handwritten formulation of the same semantics, not compiler-generated output. Run it with:
+`same_math_in_lean.lean` defines the same epsilon-delta relation over
+Mathlib's `ℝ`, proves the square and affine difference quotients directly,
+and also connects the square result to `HasDerivAt`. No derivative identity
+is supplied as a setting field. Run it from the `lean/` project:
 
 ```sh
-lean showcases/math_concepts_in_litex/7_calculus/same_math_in_lean.lean
+cd lean
+lake env lean ../showcases/math_concepts_in_litex/7_calculus/same_math_in_lean.lean
 ```
