@@ -235,9 +235,12 @@ forall s nonempty_set, G &Group<s>, identity s:
 
 This comparison motivates six questions that guide Litex:
 
-1. **Write facts before orchestrating a proof script.** Can users state the
-   mathematical facts in their natural order instead of first organizing them
-   as commands that manipulate a proof state?
+1. **Make source fact-oriented rather than tactic-oriented.** Can users state
+   *what should be verified*—the objects, conditions, intermediate facts, and
+   conclusions—in their natural mathematical order, while the checker
+   reconstructs and exposes *how those facts were verified*, instead of
+   requiring ordinary source to be organized primarily as commands that
+   manipulate a proof state?
 2. **Reuse the shape of a fact, not only its theorem name.** Can the checker
    recognize and instantiate an available fact without requiring the user to
    recall and invoke its name?
@@ -251,6 +254,11 @@ This comparison motivates six questions that guide Litex:
 6. **Let relevance to a Goal be decided later.** Can a well-defined, verified
    fact enter the current context without having to advance an active Goal, so
    mathematical branches can be developed first and combined later?
+
+Here, *fact-oriented* and *tactic-oriented* name the centers of gravity of two
+default interfaces, not exclusive capability boundaries. Lean also supports
+declarative and forward styles, while Litex also provides goal-directed forms
+and explicit proof structure when the mathematics requires them.
 
 Litex should not promise to “omit proof.” Its intended promise is both stricter
 and more modest: let users first write the mathematical facts they actually

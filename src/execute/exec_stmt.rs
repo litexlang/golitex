@@ -1,4 +1,3 @@
-use crate::litex_to_lean_ir::LitexToLeanIrBuilder;
 use crate::prelude::*;
 
 impl Runtime {
@@ -45,13 +44,7 @@ impl Runtime {
                     StatementExecutionTrace::verified(result.is_unknown())
                 };
                 let result = result.with_execution_trace(trace);
-                if self.captures_well_definedness() && !result.is_unknown() {
-                    let litex_to_lean_ir =
-                        LitexToLeanIrBuilder::new(self).compile_statement(&result)?;
-                    Ok(result.with_litex_to_lean_ir(litex_to_lean_ir))
-                } else {
-                    Ok(result)
-                }
+                Ok(result)
             }
             Err(error) => {
                 if self.captures_well_definedness() {
@@ -69,8 +62,13 @@ impl Runtime {
         result: &mut StmtResult,
     ) -> Result<(), RuntimeError> {
         if let Some(success) = result.factual_success_mut() {
-            if let Some(fact_id) = self.known_fact_id_for_fact(&success.stmt)? {
-                success.fact_id = Some(fact_id);
+            // A nested proof result may already carry the exact FactId from a
+            // local environment that has since been popped. Never retarget it
+            // to a later ambient fact with the same proposition.
+            if success.fact_id.is_none() {
+                if let Some(fact_id) = self.known_fact_id_for_fact(&success.stmt)? {
+                    success.fact_id = Some(fact_id);
+                }
             }
             self.attach_known_fact_ids_to_infer_result(&mut success.infers)?;
             self.attach_known_fact_ids_to_verified_by(&mut success.verified_by)?;

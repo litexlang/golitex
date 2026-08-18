@@ -80,7 +80,7 @@ impl Runtime {
             );
         }
 
-        StmtResult::Unknown(StmtUnknown::new())
+        StmtUnknown::new().into()
     }
 
     pub(crate) fn verify_equal_fact_by_known_equality_without_direct_evaluation(
@@ -97,7 +97,7 @@ impl Runtime {
             return direct_result;
         }
 
-        StmtResult::Unknown(StmtUnknown::new())
+        StmtUnknown::new().into()
     }
 
     fn verify_equal_fact_directly_known_only(&self, equal_fact: &EqualFact) -> StmtResult {
@@ -133,7 +133,7 @@ impl Runtime {
             );
         }
 
-        StmtResult::Unknown(StmtUnknown::new())
+        StmtUnknown::new().into()
     }
 
     pub(crate) fn equal_fact_sides_are_congruent_by_known_equalities(

@@ -321,10 +321,10 @@ impl Runtime {
         fallback: StmtResult,
     ) -> Result<StmtResult, RuntimeError> {
         match alternate_result {
-            StmtResult::Fact(fact_result) => {
-                let Some(inner_success) = (*fact_result).into_success() else {
-                    return Ok(fallback);
-                };
+            StmtResult::Success(VerifiedStmtIr {
+                verification: VerifiedStmtVerificationIr::Fact(inner_success),
+                ..
+            }) => {
                 let FactualStmtSuccess {
                     verified_by,
                     infers: _,

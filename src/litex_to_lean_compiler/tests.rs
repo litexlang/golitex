@@ -417,11 +417,16 @@ fn rational_and_natural_carrier_closures_replay_exact_rules() {
 
 #[test]
 fn known_equality_paths_replay_same_symmetry_and_transitivity() {
-    let generated = compile_on_verifier_stack(
-        "forall a, b set:\n    a = b\n    =>:\n        b = a\n\nforall a, b, c set:\n    a = b\n    b = c\n    =>:\n        a = c\n",
-        "known_equality.lit",
-    )
-    .expect("compile exact known-equality paths");
+    const SOURCE: &str = "forall a, b set:\n    a = b\n    =>:\n        b = a\n\nforall a, b, c set:\n    a = b\n    b = c\n    =>:\n        a = c\n";
+    let ir = capture_ir_debug_on_verifier_stack(SOURCE, "known_equality.lit")
+        .expect("capture exact known-equality paths");
+    assert!(ir.contains("ForallIntroduction"));
+    assert!(ir.contains("KnownEqualityPath"));
+    assert!(ir.contains("KnownFactCitation"));
+    assert!(!ir.contains("UseBuiltinStrategy"));
+
+    let generated = compile_on_verifier_stack(SOURCE, "known_equality.lit")
+        .expect("compile exact known-equality paths");
     assert!(generated.contains("Litex.Same.symm (__h0_3)"));
     assert!(generated.contains("Litex.Same.trans (__h1_4) (__h1_5)"));
     assert!(!generated.contains("Eq.symm"));

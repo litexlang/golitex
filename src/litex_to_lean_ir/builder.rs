@@ -1850,10 +1850,7 @@ impl LitexToLeanIrBuilder<'_> {
         &self,
         result: &StmtResult,
     ) -> Result<LitexToLeanStatementIr, RuntimeError> {
-        match result.litex_to_lean_ir() {
-            Some(ir) => Ok(ir.clone()),
-            None => self.compile_statement(result),
-        }
+        self.compile_statement(result)
     }
 
     fn build_litex_to_lean_ir_claim_statement(
@@ -3514,15 +3511,16 @@ impl LitexToLeanIrBuilder<'_> {
         if let Some(fact_id) = context.local_fact_ids.get(&cited_fact.to_string()) {
             return Ok(Some(*fact_id));
         }
-        if let Some(fact_id) = self.runtime.known_fact_id_for_fact(cited_fact)? {
-            return Ok(Some(fact_id));
-        }
         // A forall conclusion can cite one of its temporary premises. The
-        // local environment has already been popped when statement IR is
-        // assembled, but verification stored the identical conclusion under
-        // the premise's ID and retained that ID on the result.
+        // local environment has already been popped when the completed result
+        // list is lowered. Prefer the verifier-retained goal identity before
+        // consulting the final ambient runtime, which may now contain a later
+        // statement with the same proposition.
         if cited_fact.to_string() == goal.to_string() {
             return Ok(goal_fact_id);
+        }
+        if let Some(fact_id) = self.runtime.known_fact_id_for_fact(cited_fact)? {
+            return Ok(Some(fact_id));
         }
         Ok(None)
     }
