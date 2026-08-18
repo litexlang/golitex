@@ -1,13 +1,12 @@
 # Numerical Analysis in a Nutshell
 
 This standalone showcase studies Newton's method for `x^2 - 2 = 0`, starting
-from `x₀ = 1`. Its reader-facing path is deliberately short:
+from `x₀ = 1`. Everything is kept in one `main.lit`, in this order:
 
-- `newton_iteration.lit` defines the residual, Newton step, recursive iterate,
-  gap `gₙ = |xₙ² - 2|`, and comparison bound `bₙ = 4(1/4)^(2^n)`;
-- `gap_bound.lit` proves `gₙ ≤ bₙ`, including the exact one-step identity
-  and quadratic contraction used by the induction;
-- `main.lit` shows two exact Newton updates and applies the bound at `n = 2`.
+- the residual, Newton step, recursive iterate, gap
+  `gₙ = |xₙ² - 2|`, and comparison bound `bₙ = 4(1/4)^(2^n)`;
+- the exact one-step identity, quadratic contraction, and proof of `gₙ ≤ bₙ`;
+- two exact Newton updates and the concrete checkpoint `g₂ ≤ 1/64`.
 
 ```bash
 target/release/litex -compact -runner -r showcases/math_concepts_in_litex/13_numerical_analysis_in_nutshell
@@ -16,5 +15,5 @@ lake env lean ../showcases/math_concepts_in_litex/13_numerical_analysis_in_nutsh
 ```
 
 The Lean file expresses the same definitions, proof, and small example over
-`ℝ`. None of the results is supplied as a setting field. The Litex files
-contain no direct trust or local axiom.
+`ℝ`. None of the results is supplied as a setting field. The Litex file
+contains no direct trust or local axiom.

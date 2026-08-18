@@ -658,19 +658,3 @@ thm triangle_congruence_sas:
     by thm side_angle_side_gives_third_side(Point, Bet, Cong, lower_a, lower_b, lower_c, a, b, c, a2, b2, c2) => $are_segments_congruent(Point, Cong, a, c, a2, c2)
     by def $are_triangles_congruent(Point, Cong, a, b, c, a2, b2, c2)
 
-setting Tarski2DSetting([TarskiNeutralWithDecidableEqualitySetting]):
-    forall p1, p2, p3, p4, p5 Point:
-        p4 != p5
-        (p1, p4, p1, p5) $in Cong
-        (p2, p4, p2, p5) $in Cong
-        (p3, p4, p3, p5) $in Cong
-        =>:
-            (p1, p2, p3) $in Bet or (p2, p3, p1) $in Bet or (p3, p1, p2) $in Bet
-
-setting TarskiEuclidean2DSetting([Tarski2DSetting]):
-    forall p1, p2, p3, p4, p5 Point:
-        (p1, p4, p5) $in Bet
-        (p2, p4, p3) $in Bet
-        p1 != p4
-        =>:
-            exist x, y Point st {(p1, p2, x) $in Bet, (p1, p3, y) $in Bet, (x, p5, y) $in Bet}

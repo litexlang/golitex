@@ -10,7 +10,7 @@
 | gap bound | inductive `thm` | proves `gₙ ≤ bₙ` for every natural `n` |
 
 The exact scaled-residual identity, iterate lower bound, quadratic contraction,
-and bound recurrence are supporting lemmas in `gap_bound.lit`; they are not
-extra concepts in the reader-facing path. The scope stops before floating-point
-roundoff, stopping criteria, interpolation, quadrature, numerical ODEs, and
-matrix algorithms.
+and bound recurrence remain supporting lemmas inside the same `main.lit`; they
+are not extra concepts in the reader-facing path. The scope stops before
+floating-point roundoff, stopping criteria, interpolation, quadrature,
+numerical ODEs, and matrix algorithms.

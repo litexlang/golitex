@@ -1562,6 +1562,24 @@ fn render_proof(fact: &LitexToLeanFactIr, context: &RenderContext) -> Result<Str
                 context,
             ),
             LitexToLeanProofRuleIr::Builtin(
+                LitexToLeanBuiltinRuleIr::ComplexArithmeticMembershipClosure(rule),
+            ) => render_complex_binary_membership_rule(
+                fact,
+                *rule,
+                parameter_requirements,
+                premises,
+                context,
+            ),
+            LitexToLeanProofRuleIr::Builtin(
+                LitexToLeanBuiltinRuleIr::IntegerMembershipClosure(rule),
+            ) => render_integer_binary_membership_rule(
+                fact,
+                *rule,
+                parameter_requirements,
+                premises,
+                context,
+            ),
+            LitexToLeanProofRuleIr::Builtin(
                 LitexToLeanBuiltinRuleIr::RealArithmeticMembershipClosure(
                     rule @ (LitexToLeanRealArithmeticMembershipClosureBuiltinRuleIr::Add
                     | LitexToLeanRealArithmeticMembershipClosureBuiltinRuleIr::Sub
@@ -2868,6 +2886,109 @@ fn render_standard_set_membership_projection(
         proof = format!("Litex.Rules.{theorem} ({proof})");
     }
     Ok(proof)
+}
+
+fn render_complex_binary_membership_rule(
+    fact: &LitexToLeanFactIr,
+    rule: LitexToLeanComplexArithmeticMembershipClosureBuiltinRuleIr,
+    parameter_requirements: &[LitexToLeanFactIr],
+    premises: &[LitexToLeanFactIr],
+    context: &RenderContext,
+) -> Result<String, String> {
+    if !parameter_requirements.is_empty() || !premises.is_empty() {
+        return Err("complex binary membership closure retained unexpected proof premises".into());
+    }
+    let (target_element, target_set) = membership_parts(&fact.proposition)?;
+    if !matches!(target_set, Obj::StandardSet(StandardSet::C)) {
+        return Err("complex binary membership target is not C".into());
+    }
+    let (left, right, theorem) = match (rule, target_element) {
+        (LitexToLeanComplexArithmeticMembershipClosureBuiltinRuleIr::Add, Obj::Add(operation)) => (
+            operation.left.as_ref(),
+            operation.right.as_ref(),
+            "complexAddInC",
+        ),
+        (LitexToLeanComplexArithmeticMembershipClosureBuiltinRuleIr::Sub, Obj::Sub(operation)) => (
+            operation.left.as_ref(),
+            operation.right.as_ref(),
+            "complexSubInC",
+        ),
+        (LitexToLeanComplexArithmeticMembershipClosureBuiltinRuleIr::Mul, Obj::Mul(operation)) => (
+            operation.left.as_ref(),
+            operation.right.as_ref(),
+            "complexMulInC",
+        ),
+        (LitexToLeanComplexArithmeticMembershipClosureBuiltinRuleIr::Div, Obj::Div(operation)) => (
+            operation.left.as_ref(),
+            operation.right.as_ref(),
+            "complexDivInC",
+        ),
+        _ => return Err("complex binary membership target changed its operator".into()),
+    };
+    Ok(format!(
+        "Litex.Rules.{theorem} {} {}",
+        render_obj(left, context)?,
+        render_obj(right, context)?
+    ))
+}
+
+fn render_integer_binary_membership_rule(
+    fact: &LitexToLeanFactIr,
+    rule: LitexToLeanIntegerMembershipClosureBuiltinRuleIr,
+    parameter_requirements: &[LitexToLeanFactIr],
+    premises: &[LitexToLeanFactIr],
+    context: &RenderContext,
+) -> Result<String, String> {
+    if !parameter_requirements.is_empty() || premises.len() != 1 {
+        return Err(
+            "integer binary membership closure requires one ordered conjunction and no parameter requirements"
+                .into(),
+        );
+    }
+    let components = conjunction_components(&premises[0].proposition)?;
+    if components.len() != 2 {
+        return Err("integer binary membership premise is not a binary conjunction".into());
+    }
+    let (target_element, target_set) = membership_parts(&fact.proposition)?;
+    if !matches!(target_set, Obj::StandardSet(StandardSet::Z)) {
+        return Err("integer binary membership target is not Z".into());
+    }
+    let (left, right, theorem) = match (rule, target_element) {
+        (LitexToLeanIntegerMembershipClosureBuiltinRuleIr::Add, Obj::Add(operation)) => (
+            operation.left.as_ref(),
+            operation.right.as_ref(),
+            "complexAddInZ",
+        ),
+        (LitexToLeanIntegerMembershipClosureBuiltinRuleIr::Sub, Obj::Sub(operation)) => (
+            operation.left.as_ref(),
+            operation.right.as_ref(),
+            "complexSubInZ",
+        ),
+        (LitexToLeanIntegerMembershipClosureBuiltinRuleIr::Mul, Obj::Mul(operation)) => (
+            operation.left.as_ref(),
+            operation.right.as_ref(),
+            "complexMulInZ",
+        ),
+        _ => {
+            return Err(format!(
+                "unsupported integer membership closure rule: {rule:?}"
+            ))
+        }
+    };
+    let (premise_left, premise_left_set) = membership_parts(&components[0])?;
+    let (premise_right, premise_right_set) = membership_parts(&components[1])?;
+    if !matches!(premise_left_set, Obj::StandardSet(StandardSet::Z))
+        || !matches!(premise_right_set, Obj::StandardSet(StandardSet::Z))
+        || obj_equality_key(left) != obj_equality_key(premise_left)
+        || obj_equality_key(right) != obj_equality_key(premise_right)
+    {
+        return Err("integer binary membership premises changed its ordered operands".into());
+    }
+    let pair = render_proof(&premises[0], context)?;
+    let pair_type = render_fact(&premises[0].proposition, context)?;
+    Ok(format!(
+        "(by\n  have __components : {pair_type} := {pair}\n  exact Litex.Rules.{theorem} (__components.1) (__components.2))"
+    ))
 }
 
 fn render_additive_sign_rule(
