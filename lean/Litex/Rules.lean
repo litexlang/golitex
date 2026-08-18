@@ -31,6 +31,15 @@ theorem complexRatInQ (q : ℚ) : Litex.In (q : ℂ) Litex.Q :=
 theorem complexRealInR (r : ℝ) : Litex.In (r : ℂ) Litex.R :=
   ⟨r, Litex.Same.complexReal r⟩
 
+theorem imaginaryUnitInC : Litex.In Complex.I Litex.C :=
+  complexInC Complex.I
+
+theorem eInR : Litex.In ((Real.exp 1 : ℝ) : ℂ) Litex.R :=
+  complexRealInR (Real.exp 1)
+
+theorem piInR : Litex.In ((Real.pi : ℝ) : ℂ) Litex.R :=
+  complexRealInR Real.pi
+
 /-- Standard hierarchy projection from natural to integer membership. -/
 theorem inZOfInN
     {alpha : Type}
@@ -193,6 +202,40 @@ private theorem realSameInt (z : ℤ) : Litex.Same (z : ℝ) z :=
       (Litex.Same.ofEq (by norm_num : ((z : ℝ) : ℂ) = (z : ℂ)))
       (Litex.Same.complexInt z))
 
+private theorem complexNatAsReal
+    {a : ℂ}
+    {n : ℕ}
+    (han : Litex.Same a n) :
+    Litex.AsReal a (n : ℝ) :=
+  Litex.Same.trans han
+    (Litex.Same.trans (Litex.Same.natComplex n)
+      (Litex.Same.trans
+        (Litex.Same.ofEq (by norm_num : (n : ℂ) = ((n : ℝ) : ℂ)))
+        (Litex.Same.complexReal (n : ℝ))))
+
+private theorem realSameNat (n : ℕ) : Litex.Same (n : ℝ) n :=
+  Litex.Same.trans (Litex.Same.realComplex (n : ℝ))
+    (Litex.Same.trans
+      (Litex.Same.ofEq (by norm_num : ((n : ℝ) : ℂ) = (n : ℂ)))
+      (Litex.Same.complexNat n))
+
+private theorem complexRatAsReal
+    {a : ℂ}
+    {q : ℚ}
+    (haq : Litex.Same a q) :
+    Litex.AsReal a (q : ℝ) :=
+  Litex.Same.trans haq
+    (Litex.Same.trans (Litex.Same.ratComplex q)
+      (Litex.Same.trans
+        (Litex.Same.ofEq (by norm_num : (q : ℂ) = ((q : ℝ) : ℂ)))
+        (Litex.Same.complexReal (q : ℝ))))
+
+private theorem realSameRat (q : ℚ) : Litex.Same (q : ℝ) q :=
+  Litex.Same.trans (Litex.Same.realComplex (q : ℝ))
+    (Litex.Same.trans
+      (Litex.Same.ofEq (by norm_num : ((q : ℝ) : ℂ) = (q : ℂ)))
+      (Litex.Same.complexRat q))
+
 /-- Addition preserves real membership for complex-carrier source values. -/
 theorem complexAddInR
     {a b : ℂ}
@@ -275,6 +318,91 @@ theorem complexMulInZ
     (Litex.Same.trans
       (Litex.Same.ofEq (by norm_cast : (za : ℝ) * (zb : ℝ) = ((za * zb : ℤ) : ℝ)))
       (realSameInt (za * zb)))⟩
+
+/-- Addition preserves natural membership for complex-carrier source values. -/
+theorem complexAddInN
+    {a b : ℂ}
+    (ha : Litex.In a Litex.N)
+    (hb : Litex.In b Litex.N) :
+    Litex.In (a + b) Litex.N := by
+  rcases ha with ⟨na, hna⟩
+  rcases hb with ⟨nb, hnb⟩
+  exact ⟨na + nb, Litex.Same.trans
+    (complexAddAsReal (complexNatAsReal hna) (complexNatAsReal hnb))
+    (Litex.Same.trans
+      (Litex.Same.ofEq (by norm_cast : (na : ℝ) + (nb : ℝ) = ((na + nb : ℕ) : ℝ)))
+      (realSameNat (na + nb)))⟩
+
+/-- Multiplication preserves natural membership for complex-carrier source values. -/
+theorem complexMulInN
+    {a b : ℂ}
+    (ha : Litex.In a Litex.N)
+    (hb : Litex.In b Litex.N) :
+    Litex.In (a * b) Litex.N := by
+  rcases ha with ⟨na, hna⟩
+  rcases hb with ⟨nb, hnb⟩
+  exact ⟨na * nb, Litex.Same.trans
+    (complexMulAsReal (complexNatAsReal hna) (complexNatAsReal hnb))
+    (Litex.Same.trans
+      (Litex.Same.ofEq (by norm_cast : (na : ℝ) * (nb : ℝ) = ((na * nb : ℕ) : ℝ)))
+      (realSameNat (na * nb)))⟩
+
+/-- Addition preserves rational membership for complex-carrier source values. -/
+theorem complexAddInQ
+    {a b : ℂ}
+    (ha : Litex.In a Litex.Q)
+    (hb : Litex.In b Litex.Q) :
+    Litex.In (a + b) Litex.Q := by
+  rcases ha with ⟨qa, hqa⟩
+  rcases hb with ⟨qb, hqb⟩
+  exact ⟨qa + qb, Litex.Same.trans
+    (complexAddAsReal (complexRatAsReal hqa) (complexRatAsReal hqb))
+    (Litex.Same.trans
+      (Litex.Same.ofEq (by norm_cast : (qa : ℝ) + (qb : ℝ) = ((qa + qb : ℚ) : ℝ)))
+      (realSameRat (qa + qb)))⟩
+
+/-- Subtraction preserves rational membership for complex-carrier source values. -/
+theorem complexSubInQ
+    {a b : ℂ}
+    (ha : Litex.In a Litex.Q)
+    (hb : Litex.In b Litex.Q) :
+    Litex.In (a - b) Litex.Q := by
+  rcases ha with ⟨qa, hqa⟩
+  rcases hb with ⟨qb, hqb⟩
+  exact ⟨qa - qb, Litex.Same.trans
+    (complexSubAsReal (complexRatAsReal hqa) (complexRatAsReal hqb))
+    (Litex.Same.trans
+      (Litex.Same.ofEq (by norm_cast : (qa : ℝ) - (qb : ℝ) = ((qa - qb : ℚ) : ℝ)))
+      (realSameRat (qa - qb)))⟩
+
+/-- Multiplication preserves rational membership for complex-carrier source values. -/
+theorem complexMulInQ
+    {a b : ℂ}
+    (ha : Litex.In a Litex.Q)
+    (hb : Litex.In b Litex.Q) :
+    Litex.In (a * b) Litex.Q := by
+  rcases ha with ⟨qa, hqa⟩
+  rcases hb with ⟨qb, hqb⟩
+  exact ⟨qa * qb, Litex.Same.trans
+    (complexMulAsReal (complexRatAsReal hqa) (complexRatAsReal hqb))
+    (Litex.Same.trans
+      (Litex.Same.ofEq (by norm_cast : (qa : ℝ) * (qb : ℝ) = ((qa * qb : ℚ) : ℝ)))
+      (realSameRat (qa * qb)))⟩
+
+/-- Division preserves rational membership for complex-carrier source values.
+The source verifier retains denominator well-definedness separately. -/
+theorem complexDivInQ
+    {a b : ℂ}
+    (ha : Litex.In a Litex.Q)
+    (hb : Litex.In b Litex.Q) :
+    Litex.In (a / b) Litex.Q := by
+  rcases ha with ⟨qa, hqa⟩
+  rcases hb with ⟨qb, hqb⟩
+  exact ⟨qa / qb, Litex.Same.trans
+    (complexDivAsReal (complexRatAsReal hqa) (complexRatAsReal hqb))
+    (Litex.Same.trans
+      (Litex.Same.ofEq (by norm_cast : (qa : ℝ) / (qb : ℝ) = ((qa / qb : ℚ) : ℝ)))
+      (realSameRat (qa / qb)))⟩
 
 /-- The concrete complex-carrier adapter for Litex's nonnegative-addition
 builtin rule. It combines the independently selected zero representatives

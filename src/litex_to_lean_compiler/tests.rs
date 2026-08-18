@@ -92,6 +92,47 @@ fn top_level_atomic_membership_emits_source_and_inferred_fact_ids() {
 }
 
 #[test]
+fn native_constants_use_mathlib_terms_and_exact_membership_rules() {
+    const SOURCE: &str = "i = i\ne = e\npi = pi\n\ni $in C\ne $in R\npi $in R\ne $in C\npi $in C\n";
+    let ir = capture_ir_debug_on_verifier_stack(SOURCE, "19_NativeConstants.lit")
+        .expect("capture native-constant tracer IR");
+    for evidence in [
+        "ImaginaryUnitInComplex",
+        "EulerNumberInReal",
+        "PiInReal",
+        "StandardSetMembershipProjection",
+    ] {
+        assert!(ir.contains(evidence), "missing {evidence}: {ir}");
+    }
+
+    let generated = compile_on_verifier_stack(SOURCE, "19_NativeConstants.lit")
+        .expect("compile native-constant tracer");
+    for term in ["Complex.I", "((Real.exp 1 : ℝ) : ℂ)", "((Real.pi : ℝ) : ℂ)"] {
+        assert!(generated.contains(term), "missing {term}: {generated}");
+    }
+    for theorem in ["imaginaryUnitInC", "eInR", "piInR", "inCOfInR"] {
+        assert!(
+            generated.contains(&format!("Litex.Rules.{theorem}")),
+            "missing {theorem}: {generated}"
+        );
+    }
+    assert!(!generated.contains("LitexObject"));
+    assert!(!generated.contains("Litex.Object"));
+    assert!(!generated.contains("Set.univ"));
+    assert!(!generated.contains("axiom "));
+    assert!(!generated.contains("sorry"));
+
+    let boundary = compile_on_verifier_stack("e $in R+\n", "unsupported_e_in_r_pos.lit")
+        .expect_err("positive-real constants need the reviewed refined carrier ABI");
+    assert!(
+        boundary.contains("has no supported Litex-to-Lean proof rule")
+            || boundary.contains("unsupported standard set")
+            || boundary.contains("R+"),
+        "unexpected boundary error: {boundary}"
+    );
+}
+
+#[test]
 fn standard_set_hierarchy_replays_exact_projection_chain() {
     const SOURCE: &str = "forall n N:\n    n $in Z\n\nforall n N:\n    n $in Q\n\nforall n N:\n    n $in R\n\nforall n N:\n    n $in C\n\nforall z Z:\n    z $in Q\n\nforall z Z:\n    z $in R\n\nforall z Z:\n    z $in C\n\nforall q Q:\n    q $in R\n\nforall q Q:\n    q $in C\n\nforall r R:\n    r $in C\n";
     let ir = capture_ir_debug_on_verifier_stack(SOURCE, "16_StandardSetHierarchy.lit")
@@ -170,6 +211,52 @@ fn numeric_carrier_closures_replay_exact_rules() {
     assert!(
         boundary.contains("unsupported compiler object")
             || boundary.contains("unsupported integer membership closure rule: Mod"),
+        "unexpected boundary error: {boundary}"
+    );
+}
+
+#[test]
+fn rational_and_natural_carrier_closures_replay_exact_rules() {
+    const SOURCE: &str = "forall a, b Q:\n    a + b $in Q\n\nforall a, b Q:\n    a - b $in Q\n\nforall a, b Q:\n    a * b $in Q\n\nforall a, b Q:\n    b != 0\n    =>:\n        a / b $in Q\n\nforall a, b N:\n    a + b $in N\n\nforall a, b N:\n    a * b $in N\n";
+    let ir = capture_ir_debug_on_verifier_stack(SOURCE, "18_RationalNaturalClosures.lit")
+        .expect("capture rational/natural carrier-closure tracer IR");
+    assert_eq!(ir.matches("RationalMembershipClosure").count(), 4, "{ir}");
+    assert_eq!(ir.matches("NaturalMembershipClosure").count(), 2, "{ir}");
+
+    let generated = compile_on_verifier_stack(SOURCE, "18_RationalNaturalClosures.lit")
+        .expect("compile rational/natural carrier-closure tracer");
+    for theorem in [
+        "complexAddInQ",
+        "complexSubInQ",
+        "complexMulInQ",
+        "complexDivInQ",
+        "complexAddInN",
+        "complexMulInN",
+    ] {
+        assert!(
+            generated.contains(&format!("Litex.Rules.{theorem}")),
+            "missing {theorem}: {generated}"
+        );
+    }
+    assert!(!generated.contains("LitexObject"));
+    assert!(!generated.contains("Litex.Object"));
+    assert!(!generated.contains("Set.univ"));
+    assert!(!generated.contains("axiom "));
+    assert!(!generated.contains("sorry"));
+
+    const BOUNDARY: &str = "forall a Q, z Z:\n    a != 0\n    =>:\n        a^z $in Q\n";
+    let boundary_ir =
+        capture_ir_debug_on_verifier_stack(BOUNDARY, "unsupported_rational_power_closure.lit")
+            .expect("rational power boundary must verify and retain exact evidence");
+    assert!(
+        boundary_ir.contains("RationalMembershipClosure") && boundary_ir.contains("Pow"),
+        "unexpected boundary IR: {boundary_ir}"
+    );
+    let boundary = compile_on_verifier_stack(BOUNDARY, "unsupported_rational_power_closure.lit")
+        .expect_err("rational power needs a reviewed source-term ABI");
+    assert!(
+        boundary.contains("unsupported compiler object")
+            || boundary.contains("unsupported rational membership closure rule: Pow"),
         "unexpected boundary error: {boundary}"
     );
 }

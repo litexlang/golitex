@@ -32,7 +32,9 @@ pub use builtin_rule::{
     LitexToLeanAbsoluteValueBuiltinRuleIr, LitexToLeanArithmeticBuiltinRuleIr,
     LitexToLeanBuiltinRuleIr, LitexToLeanComplexArithmeticMembershipClosureBuiltinRuleIr,
     LitexToLeanIntegerMembershipClosureBuiltinRuleIr,
-    LitexToLeanNativeConstantMembershipBuiltinRuleIr, LitexToLeanNonzeroExpressionOrientationIr,
+    LitexToLeanNativeConstantMembershipBuiltinRuleIr,
+    LitexToLeanNaturalMembershipClosureBuiltinRuleIr, LitexToLeanNonzeroExpressionOrientationIr,
+    LitexToLeanRationalMembershipClosureBuiltinRuleIr,
     LitexToLeanRealArithmeticMembershipClosureBuiltinRuleIr, LitexToLeanSetBuiltinRuleIr,
     LitexToLeanSetRelationDualityBuiltinRuleIr,
 };

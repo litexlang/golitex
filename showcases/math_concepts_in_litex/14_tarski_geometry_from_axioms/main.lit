@@ -658,3 +658,219 @@ thm triangle_congruence_sas:
     by thm side_angle_side_gives_third_side(Point, Bet, Cong, lower_a, lower_b, lower_c, a, b, c, a2, b2, c2) => $are_segments_congruent(Point, Cong, a, c, a2, c2)
     by def $are_triangles_congruent(Point, Cong, a, b, c, a2, b2, c2)
 
+# SSS yields the exact Chapter 11 angle relation. Segment construction creates
+# its four required extensions; two five-segment applications compare their
+# final chord without replacing the angle definition by an SSS abbreviation.
+thm triangle_congruence_sss_gives_angles:
+    ? forall [TarskiNeutralWithDecidableEqualitySetting], a, b, c, a2, b2, c2 Point:
+        a != b
+        c != b
+        $are_triangles_congruent(Point, Cong, a, b, c, a2, b2, c2)
+        =>:
+            $are_angles_congruent(Point, Bet, Cong, a, b, c, a2, b2, c2)
+    by thm triangle_congruence_has_three_sides(Point, Cong, a, b, c, a2, b2, c2)
+    claim:
+        ? a2 != b2
+        by contra:
+            ? a2 != b2
+            a2 = b2
+            (a, b, a2, a2) $in Cong
+            a = b
+            impossible a != b
+    claim:
+        ? c2 != b2
+        by contra:
+            ? c2 != b2
+            c2 = b2
+            (b, c, b2, b2) $in Cong
+            b = c
+            impossible c != b
+    claim:
+        ? b != c
+        by contra:
+            ? b != c
+            b = c
+            impossible c != b
+
+    obtain a_ext from exist selected Point st {(b, a, selected) $in Bet, (a, selected, b2, a2) $in Cong}
+    by def $is_between(Point, Bet, b, a, a_ext)
+    by def $are_segments_congruent(Point, Cong, a, a_ext, b2, a2)
+    obtain c_ext from exist selected Point st {(b, c, selected) $in Bet, (c, selected, b2, c2) $in Cong}
+    by def $is_between(Point, Bet, b, c, c_ext)
+    by def $are_segments_congruent(Point, Cong, c, c_ext, b2, c2)
+    obtain a2_ext from exist selected Point st {(b2, a2, selected) $in Bet, (a2, selected, b, a) $in Cong}
+    by def $is_between(Point, Bet, b2, a2, a2_ext)
+    by def $are_segments_congruent(Point, Cong, a2, a2_ext, b, a)
+    obtain c2_ext from exist selected Point st {(b2, c2, selected) $in Bet, (c2, selected, b, c) $in Cong}
+    by def $is_between(Point, Bet, b2, c2, c2_ext)
+    by def $are_segments_congruent(Point, Cong, c2, c2_ext, b, c)
+
+    by thm segment_congruence_endpoint_commutative(Point, Bet, Cong, lower_a, lower_b, lower_c, a, b, a2, b2) => $are_segments_congruent(Point, Cong, b, a, b2, a2)
+    by thm segment_congruence_symmetric(Point, Bet, Cong, lower_a, lower_b, lower_c, b, a, b2, a2) => $are_segments_congruent(Point, Cong, b2, a2, b, a)
+    by thm segment_congruence_transitive(Point, Bet, Cong, lower_a, lower_b, lower_c, a, a_ext, b2, a2, b, a) => $are_segments_congruent(Point, Cong, a, a_ext, b, a)
+    by thm segment_congruence_symmetric(Point, Bet, Cong, lower_a, lower_b, lower_c, a2, a2_ext, b, a) => $are_segments_congruent(Point, Cong, b, a, a2, a2_ext)
+    by thm segment_congruence_transitive(Point, Bet, Cong, lower_a, lower_b, lower_c, a, a_ext, b, a, a2, a2_ext) => $are_segments_congruent(Point, Cong, a, a_ext, a2, a2_ext)
+    by thm segment_congruence_addition(Point, Bet, Cong, lower_a, lower_b, lower_c, b, a, a_ext, b2, a2, a2_ext) => $are_segments_congruent(Point, Cong, b, a_ext, b2, a2_ext)
+
+    by thm segment_congruence_symmetric(Point, Bet, Cong, lower_a, lower_b, lower_c, b, c, b2, c2) => $are_segments_congruent(Point, Cong, b2, c2, b, c)
+    by thm segment_congruence_transitive(Point, Bet, Cong, lower_a, lower_b, lower_c, c, c_ext, b2, c2, b, c) => $are_segments_congruent(Point, Cong, c, c_ext, b, c)
+    by thm segment_congruence_symmetric(Point, Bet, Cong, lower_a, lower_b, lower_c, c2, c2_ext, b, c) => $are_segments_congruent(Point, Cong, b, c, c2, c2_ext)
+    by thm segment_congruence_transitive(Point, Bet, Cong, lower_a, lower_b, lower_c, c, c_ext, b, c, c2, c2_ext) => $are_segments_congruent(Point, Cong, c, c_ext, c2, c2_ext)
+    by thm segment_congruence_addition(Point, Bet, Cong, lower_a, lower_b, lower_c, b, c, c_ext, b2, c2, c2_ext) => $are_segments_congruent(Point, Cong, b, c_ext, b2, c2_ext)
+
+    by thm five_segment(Point, Bet, Cong, lower_a, lower_b, lower_c, b, b2, a, a2, a_ext, a2_ext, c, c2) => $are_segments_congruent(Point, Cong, a_ext, c, a2_ext, c2)
+    by thm segment_congruence_endpoint_commutative(Point, Bet, Cong, lower_a, lower_b, lower_c, a_ext, c, a2_ext, c2) => $are_segments_congruent(Point, Cong, c, a_ext, c2, a2_ext)
+    by thm five_segment(Point, Bet, Cong, lower_a, lower_b, lower_c, b, b2, c, c2, c_ext, c2_ext, a_ext, a2_ext) => $are_segments_congruent(Point, Cong, c_ext, a_ext, c2_ext, a2_ext)
+    by thm segment_congruence_endpoint_commutative(Point, Bet, Cong, lower_a, lower_b, lower_c, c_ext, a_ext, c2_ext, a2_ext) => $are_segments_congruent(Point, Cong, a_ext, c_ext, a2_ext, c2_ext)
+
+    witness exist selected_a, selected_c, selected_a2, selected_c2 Point st {$is_between(Point, Bet, b, a, selected_a), $are_segments_congruent(Point, Cong, a, selected_a, b2, a2), $is_between(Point, Bet, b, c, selected_c), $are_segments_congruent(Point, Cong, c, selected_c, b2, c2), $is_between(Point, Bet, b2, a2, selected_a2), $are_segments_congruent(Point, Cong, a2, selected_a2, b, a), $is_between(Point, Bet, b2, c2, selected_c2), $are_segments_congruent(Point, Cong, c2, selected_c2, b, c), $are_segments_congruent(Point, Cong, selected_a, selected_c, selected_a2, selected_c2)} from a_ext, c_ext, a2_ext, c2_ext
+    by def $are_angles_congruent(Point, Bet, Cong, a, b, c, a2, b2, c2)
+
+thm angle_congruence_reflexive:
+    ? forall [TarskiNeutralWithDecidableEqualitySetting], a, b, c Point:
+        a != b
+        c != b
+        =>:
+            $are_angles_congruent(Point, Bet, Cong, a, b, c, a, b, c)
+    by thm segment_congruence_reflexive(Point, Bet, Cong, lower_a, lower_b, lower_c, a, b) => $are_segments_congruent(Point, Cong, a, b, a, b)
+    by thm segment_congruence_reflexive(Point, Bet, Cong, lower_a, lower_b, lower_c, a, c) => $are_segments_congruent(Point, Cong, a, c, a, c)
+    by thm segment_congruence_reflexive(Point, Bet, Cong, lower_a, lower_b, lower_c, b, c) => $are_segments_congruent(Point, Cong, b, c, b, c)
+    by def $are_triangles_congruent(Point, Cong, a, b, c, a, b, c)
+    by thm triangle_congruence_sss_gives_angles(Point, Bet, Cong, lower_a, lower_b, lower_c, a, b, c, a, b, c) => $are_angles_congruent(Point, Bet, Cong, a, b, c, a, b, c)
+
+thm angle_congruence_symmetric:
+    ? forall [TarskiNeutralDimensionlessSetting], a, b, c, a2, b2, c2 Point:
+        $are_angles_congruent(Point, Bet, Cong, a, b, c, a2, b2, c2)
+        =>:
+            $are_angles_congruent(Point, Bet, Cong, a2, b2, c2, a, b, c)
+    obtain a_ext, c_ext, a2_ext, c2_ext from exist selected_a, selected_c, selected_a2, selected_c2 Point st {$is_between(Point, Bet, b, a, selected_a), $are_segments_congruent(Point, Cong, a, selected_a, b2, a2), $is_between(Point, Bet, b, c, selected_c), $are_segments_congruent(Point, Cong, c, selected_c, b2, c2), $is_between(Point, Bet, b2, a2, selected_a2), $are_segments_congruent(Point, Cong, a2, selected_a2, b, a), $is_between(Point, Bet, b2, c2, selected_c2), $are_segments_congruent(Point, Cong, c2, selected_c2, b, c), $are_segments_congruent(Point, Cong, selected_a, selected_c, selected_a2, selected_c2)}
+    by thm segment_congruence_symmetric(Point, Bet, Cong, lower_a, lower_b, lower_c, a_ext, c_ext, a2_ext, c2_ext) => $are_segments_congruent(Point, Cong, a2_ext, c2_ext, a_ext, c_ext)
+    witness exist selected_a2, selected_c2, selected_a, selected_c Point st {$is_between(Point, Bet, b2, a2, selected_a2), $are_segments_congruent(Point, Cong, a2, selected_a2, b, a), $is_between(Point, Bet, b2, c2, selected_c2), $are_segments_congruent(Point, Cong, c2, selected_c2, b, c), $is_between(Point, Bet, b, a, selected_a), $are_segments_congruent(Point, Cong, a, selected_a, b2, a2), $is_between(Point, Bet, b, c, selected_c), $are_segments_congruent(Point, Cong, c, selected_c, b2, c2), $are_segments_congruent(Point, Cong, selected_a2, selected_c2, selected_a, selected_c)} from a2_ext, c2_ext, a_ext, c_ext
+    by def $are_angles_congruent(Point, Bet, Cong, a2, b2, c2, a, b, c)
+
+thm angle_congruence_arms_commutative:
+    ? forall [TarskiNeutralDimensionlessSetting], a, b, c, a2, b2, c2 Point:
+        $are_angles_congruent(Point, Bet, Cong, a, b, c, a2, b2, c2)
+        =>:
+            $are_angles_congruent(Point, Bet, Cong, c, b, a, c2, b2, a2)
+    obtain a_ext, c_ext, a2_ext, c2_ext from exist selected_a, selected_c, selected_a2, selected_c2 Point st {$is_between(Point, Bet, b, a, selected_a), $are_segments_congruent(Point, Cong, a, selected_a, b2, a2), $is_between(Point, Bet, b, c, selected_c), $are_segments_congruent(Point, Cong, c, selected_c, b2, c2), $is_between(Point, Bet, b2, a2, selected_a2), $are_segments_congruent(Point, Cong, a2, selected_a2, b, a), $is_between(Point, Bet, b2, c2, selected_c2), $are_segments_congruent(Point, Cong, c2, selected_c2, b, c), $are_segments_congruent(Point, Cong, selected_a, selected_c, selected_a2, selected_c2)}
+    by thm segment_congruence_endpoint_commutative(Point, Bet, Cong, lower_a, lower_b, lower_c, a_ext, c_ext, a2_ext, c2_ext) => $are_segments_congruent(Point, Cong, c_ext, a_ext, c2_ext, a2_ext)
+    witness exist selected_c, selected_a, selected_c2, selected_a2 Point st {$is_between(Point, Bet, b, c, selected_c), $are_segments_congruent(Point, Cong, c, selected_c, b2, c2), $is_between(Point, Bet, b, a, selected_a), $are_segments_congruent(Point, Cong, a, selected_a, b2, a2), $is_between(Point, Bet, b2, c2, selected_c2), $are_segments_congruent(Point, Cong, c2, selected_c2, b, c), $is_between(Point, Bet, b2, a2, selected_a2), $are_segments_congruent(Point, Cong, a2, selected_a2, b, a), $are_segments_congruent(Point, Cong, selected_c, selected_a, selected_c2, selected_a2)} from c_ext, a_ext, c2_ext, a2_ext
+    by def $are_angles_congruent(Point, Bet, Cong, c, b, a, c2, b2, a2)
+
+# GeoCoq's construction_uniqueness: two points extending the same ray by the
+# same segment coincide. A degenerate five-segment conclusion reduces to
+# Cong(x,y,y,y), so congruence identity finishes the proof.
+thm segment_extension_unique:
+    ? forall [TarskiNeutralDimensionlessSetting], q, a, b, c, x, y Point:
+        q != a
+        $is_between(Point, Bet, q, a, x)
+        $are_segments_congruent(Point, Cong, a, x, b, c)
+        $is_between(Point, Bet, q, a, y)
+        $are_segments_congruent(Point, Cong, a, y, b, c)
+        =>:
+            x = y
+    by thm segment_congruence_symmetric(Point, Bet, Cong, lower_a, lower_b, lower_c, a, y, b, c) => $are_segments_congruent(Point, Cong, b, c, a, y)
+    by thm segment_congruence_transitive(Point, Bet, Cong, lower_a, lower_b, lower_c, a, x, b, c, a, y) => $are_segments_congruent(Point, Cong, a, x, a, y)
+    by thm segment_congruence_reflexive(Point, Bet, Cong, lower_a, lower_b, lower_c, q, a) => $are_segments_congruent(Point, Cong, q, a, q, a)
+    by thm segment_congruence_reflexive(Point, Bet, Cong, lower_a, lower_b, lower_c, q, y) => $are_segments_congruent(Point, Cong, q, y, q, y)
+    by thm segment_congruence_reflexive(Point, Bet, Cong, lower_a, lower_b, lower_c, a, y) => $are_segments_congruent(Point, Cong, a, y, a, y)
+    by thm five_segment(Point, Bet, Cong, lower_a, lower_b, lower_c, q, q, a, a, x, y, y, y) => $are_segments_congruent(Point, Cong, x, y, y, y)
+    (x, y, y, y) $in Cong
+    x = y
+
+# Central reflection exists directly by extending the ray from the point
+# through its center by another copy of the point-center segment.
+thm point_reflection_exists:
+    ? forall [TarskiNeutralDimensionlessSetting], point, center Point:
+        exist reflected_point Point st {$is_point_reflection(Point, Bet, Cong, point, reflected_point, center)}
+    obtain reflected_point from exist selected Point st {(point, center, selected) $in Bet, (center, selected, point, center) $in Cong}
+    by def $is_between(Point, Bet, point, center, reflected_point)
+    by def $are_segments_congruent(Point, Cong, center, reflected_point, point, center)
+    by thm segment_congruence_symmetric(Point, Bet, Cong, lower_a, lower_b, lower_c, center, reflected_point, point, center) => $are_segments_congruent(Point, Cong, point, center, center, reflected_point)
+    by def $is_midpoint(Point, Bet, Cong, center, point, reflected_point)
+    by def $is_point_reflection(Point, Bet, Cong, point, reflected_point, center)
+    witness exist selected Point st {$is_point_reflection(Point, Bet, Cong, point, selected, center)} from reflected_point
+
+thm point_reflection_unique:
+    ? forall [TarskiNeutralWithDecidableEqualitySetting], point, center, reflected1, reflected2 Point:
+        $is_point_reflection(Point, Bet, Cong, point, reflected1, center)
+        $is_point_reflection(Point, Bet, Cong, point, reflected2, center)
+        =>:
+            reflected1 = reflected2
+    by thm point_reflection_is_midpoint(Point, Bet, Cong, point, reflected1, center) => $is_midpoint(Point, Bet, Cong, center, point, reflected1)
+    by thm point_reflection_is_midpoint(Point, Bet, Cong, point, reflected2, center) => $is_midpoint(Point, Bet, Cong, center, point, reflected2)
+    by thm midpoint_is_between(Point, Bet, Cong, center, point, reflected1) => $is_between(Point, Bet, point, center, reflected1)
+    by thm midpoint_is_between(Point, Bet, Cong, center, point, reflected2) => $is_between(Point, Bet, point, center, reflected2)
+    by thm midpoint_has_congruent_halves(Point, Bet, Cong, center, point, reflected1) => $are_segments_congruent(Point, Cong, point, center, center, reflected1)
+    by thm midpoint_has_congruent_halves(Point, Bet, Cong, center, point, reflected2) => $are_segments_congruent(Point, Cong, point, center, center, reflected2)
+    point = center or point != center
+    by cases:
+        ? reflected1 = reflected2
+        case point = center:
+            by thm segment_congruence_right_commutative(Point, Bet, Cong, lower_a, lower_b, lower_c, center, center, center, reflected1) => $are_segments_congruent(Point, Cong, center, center, reflected1, center)
+            by thm segment_congruence_symmetric(Point, Bet, Cong, lower_a, lower_b, lower_c, center, center, reflected1, center) => $are_segments_congruent(Point, Cong, reflected1, center, center, center)
+            (reflected1, center, center, center) $in Cong
+            reflected1 = center
+            by thm segment_congruence_right_commutative(Point, Bet, Cong, lower_a, lower_b, lower_c, center, center, center, reflected2) => $are_segments_congruent(Point, Cong, center, center, reflected2, center)
+            by thm segment_congruence_symmetric(Point, Bet, Cong, lower_a, lower_b, lower_c, center, center, reflected2, center) => $are_segments_congruent(Point, Cong, reflected2, center, center, center)
+            (reflected2, center, center, center) $in Cong
+            reflected2 = center
+            reflected1 = reflected2
+        case point != center:
+            by thm segment_congruence_symmetric(Point, Bet, Cong, lower_a, lower_b, lower_c, point, center, center, reflected1) => $are_segments_congruent(Point, Cong, center, reflected1, point, center)
+            by thm segment_congruence_symmetric(Point, Bet, Cong, lower_a, lower_b, lower_c, point, center, center, reflected2) => $are_segments_congruent(Point, Cong, center, reflected2, point, center)
+            by thm segment_extension_unique(Point, Bet, Cong, lower_a, lower_b, lower_c, point, center, point, center, reflected1, reflected2) => reflected1 = reflected2
+
+thm point_reflection_fixes_center:
+    ? forall [TarskiNeutralDimensionlessSetting], center Point:
+        $is_point_reflection(Point, Bet, Cong, center, center, center)
+    by thm point_is_own_degenerate_midpoint(Point, Bet, Cong, lower_a, lower_b, lower_c, center) => $is_midpoint(Point, Bet, Cong, center, center, center)
+    by def $is_point_reflection(Point, Bet, Cong, center, center, center)
+
+thm point_reflection_involutive:
+    ? forall [TarskiNeutralDimensionlessSetting], point, reflected_point, center Point:
+        $is_point_reflection(Point, Bet, Cong, point, reflected_point, center)
+        =>:
+            $is_point_reflection(Point, Bet, Cong, reflected_point, point, center)
+    by thm point_reflection_is_midpoint(Point, Bet, Cong, point, reflected_point, center) => $is_midpoint(Point, Bet, Cong, center, point, reflected_point)
+    by thm midpoint_symmetric(Point, Bet, Cong, lower_a, lower_b, lower_c, center, point, reflected_point) => $is_midpoint(Point, Bet, Cong, center, reflected_point, point)
+    by def $is_point_reflection(Point, Bet, Cong, reflected_point, point, center)
+
+# Upper dimension specializes the dimensionless neutral theory to a plane:
+# three points equidistant from two distinct points must be collinear.
+setting Tarski2DSetting([TarskiNeutralWithDecidableEqualitySetting]):
+    forall p1, p2, p3, p4, p5 Point:
+        p4 != p5
+        $are_segments_congruent(Point, Cong, p1, p4, p1, p5)
+        $are_segments_congruent(Point, Cong, p2, p4, p2, p5)
+        $are_segments_congruent(Point, Cong, p3, p4, p3, p5)
+        =>:
+            $are_collinear(Point, Bet, p1, p2, p3)
+
+# The Euclidean branch adds only the SST Euclid axiom. All preceding segment,
+# angle, and reflection results therefore remain visibly neutral.
+setting TarskiEuclidean2DSetting([Tarski2DSetting]):
+    forall p1, p2, p3, p4, p5 Point:
+        $is_between(Point, Bet, p1, p4, p5)
+        $is_between(Point, Bet, p2, p4, p3)
+        p1 != p4
+        =>:
+            exist x, y Point st {$is_between(Point, Bet, p1, p2, x), $is_between(Point, Bet, p1, p3, y), $is_between(Point, Bet, x, p5, y)}
+
+# Chapter 12 (Par_strict and Par). The intersection existential is named so
+# the no-common-point clause remains an atomic, reusable proposition.
+prop lines_have_common_point(Point set, Bet power_set(cart(Point, Point, Point)), line1_a, line1_b, line2_a, line2_b Point):
+    exist intersection Point st {$are_collinear(Point, Bet, intersection, line1_a, line1_b), $are_collinear(Point, Bet, intersection, line2_a, line2_b)}
+
+prop are_strictly_parallel(Point set, Bet power_set(cart(Point, Point, Point)), line1_a, line1_b, line2_a, line2_b Point):
+    line1_a != line1_b
+    line2_a != line2_b
+    $are_coplanar(Point, Bet, line1_a, line1_b, line2_a, line2_b)
+    not $lines_have_common_point(Point, Bet, line1_a, line1_b, line2_a, line2_b)
+
+prop are_coincident_nondegenerate_lines(Point set, Bet power_set(cart(Point, Point, Point)), line1_a, line1_b, line2_a, line2_b Point):
+    line1_a != line1_b
+    line2_a != line2_b
+    $are_collinear(Point, Bet, line1_a, line2_a, line2_b)
+    $are_collinear(Point, Bet, line1_b, line2_a, line2_b)

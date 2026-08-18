@@ -128,6 +128,12 @@ forall x R:
         # cot(x) != 0
         # Former behavior: both goals remained unknown even with both quotient parts nonzero.
         #
+        # A premise is a smaller fact that a rule needs before it may conclude its target.
+        # Here product nonzero needs the two premises `2 != 0` and `cot(x) != 0`.
+        # This extra builtin strategy is necessary because a direct builtin rule deliberately
+        # cannot recursively invoke another premise-producing builtin rule. The strategy only
+        # splits nested multiplication, so every recursive target is structurally smaller.
+        2 * cot(x) != 0
         # Now: the trigonometry builtin consumes the two nonzero premises directly.
         tan(x) != 0
         cot(x) != 0
@@ -137,6 +143,7 @@ forall x R:
         1 + tan(x)^2 = 1 / cos(x)^2
         1 + cot(x)^2 = 1 / sin(x)^2
 
-# Boundary: `cos(x) != 0` alone does not prove `tan(x) != 0`, and `sin(x) != 0`
-# alone does not prove `cot(x) != 0`.
+# Boundary: `cos(x) != 0` alone does not prove `tan(x) != 0`, `sin(x) != 0`
+# alone does not prove `cot(x) != 0`, and a product remains unknown if any factor's
+# nonzero premise is missing.
 # Evidence: target/release/litex -compact -isolated -runner -f examples/02_builtin_math/trigonometric_builtin_rules.lit

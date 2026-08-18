@@ -4,6 +4,8 @@ Created and maintained by Jiachen Shen.
 
 Website: https://litexlang.com/doc/Litex_Blueprint
 
+Chinese version: https://litexlang.com/doc/Litex中文蓝图
+
 > **Litex is an experimental hobby project still in beta. Expect rough edges.**
 
 > **Core positioning.** Litex is a set-theory-based, fact-oriented language
@@ -27,6 +29,7 @@ Website: https://litexlang.com/doc/Litex_Blueprint
 - [Conclusions](#conclusions)
 - [Appendix A: Why Does Litex Have So Many Builtin Rules?](#appendix-builtins)
 - [Appendix B: Why Does Litex Have So Many Examples?](#appendix-examples)
+- [Appendix C: What Litex Is Doing About the Conditions for Success](#appendix-conditions)
 
 <a id="background"></a>
 ## Background
@@ -834,6 +837,15 @@ _This remains a goal that Litex is implementing and testing, not a capability th
 
 Litex should not promise to “omit proof.” Its intended promise is both stricter and more modest: let users first write the mathematical facts they actually mean, then let the machine expose the verification, provenance, and boundaries clearly.
 
+That design thesis creates four layers of potential value:
+
+1. **Lower the cost of checked formalization.** By letting authors record the mathematical proof spine while the checker reconstructs routine local connections, Litex aims to make more mathematics economical to formalize. The decisive metric is total effort on the same real tasks, not source-code length alone.
+2. **Provide a verification interface for human–AI collaboration.** A person or AI system can propose the next mathematical fact, receive local machine-checkable feedback, and repair the exact boundary that failed; accepted facts and repair traces can then become reusable formal data rather than merely plausible text. This value depends on the verdicts and their provenance being trustworthy.
+3. **Make mathematical texts executable.** Definitions, lemmas, and proofs can remain readable as mathematical exposition while also being checked and reused across files and chapters. This could bring formal verification closer to textbooks, teaching, and scientific writing instead of confining it to specialist proof-assistant projects.
+4. **Turn failed formalization into research evidence.** A precise failure can expose a missing language feature, library fact, inference route, kernel capability, diagnostic, or mathematical formulation. That evidence is valuable only when failures and trusted gaps are recorded rather than concealed.
+
+These values are conditional, not consequences of readable syntax alone. [Appendix C](#appendix-conditions) summarizes the concrete work Litex has begun on the conditions required for them to hold, together with the boundaries that remain open.
+
 In operational terms, that promise has a precise meaning:
 
 > **In Litex, local justification is not a tactic that users invoke; it is the
@@ -958,6 +970,25 @@ Many examples cannot by themselves prove soundness or establish that the archite
 The important question is therefore not only how many examples exist, but whether they preserve the original mathematics, compose in real contexts, remain continuously executable by the runner, and turn failures into reproducible boundaries. Within the compiler's supported scope, the same Litex example should also generate a Lean proof and pass the real Lean kernel. Examples then become more than claims about what Litex can do: they become executable evidence that can fail, be repaired, and increasingly be checked independently.
 
 > **Litex builds many examples not to make problems harder to see, but to make it harder for the language to escape the test of real mathematics.**
+
+<a id="appendix-conditions"></a>
+## Appendix C: What Litex Is Doing About the Conditions for Success
+
+The four layers of value in the conclusion do not follow automatically from Litex's interface. The current beta has invested in six concrete directions to test the conditions behind them; these are ongoing efforts, not a completed soundness, scalability, usability, or performance case.
+
+1. **Make trust boundaries visible and independently checkable.** `trust`, `trust have`, and `axiom` are explicit source forms; ordinary file runs report unverified imports, while `-strict` verifies configured dependencies and rejects those trusted forms. Normal and detailed output separate why a fact was accepted, what was stored, what was inferred, and which direct trusted statements occurred. Verification routes increasingly carry structured evidence that the partial Litex-to-Lean compiler can replay through the Lean kernel, while unsupported routes fail closed instead of generating `sorry` or new axioms. The present boundary remains important: Litex records direct trusted statements but does not yet propagate a transitive trust label to every downstream fact, and Lean replay covers only a documented subset of the language and builtin rules. See the [system map](Litex_System_Map.md#reading-results-and-trust), [CLI trust controls](cli.md#global-options), and [compiler boundary](../lean/README.md).
+
+2. **Pressure-test composition across long developments.** Litex's module system gives imports and exports a deterministic mathematical order and supports focused file checks as well as complete module runs. Registered multi-file textbook workspaces exercise definitions, theorems, namespaces, and dependencies across chapters instead of only inside isolated examples. These projects are continuing stress tests, not proof that arbitrary long developments already scale smoothly; see the [module contract](cli.md#project-modules) and [registered textbook workspaces](../scripts/.textbooks).
+
+3. **Keep natural source from becoming invisible magic.** A concise fact can trigger local reconstruction, but the reading and audit views expose immediate `why_verified` reasons, well-definedness and verification phases, cited facts, builtin-rule premises, and failure boundaries; relation and fact graphs provide another view of those dependencies. Builtin rules are implemented as explicit mathematical patterns with named evidence, while focused positive regressions and nearby negative boundaries are the audit target rather than one undifferentiated automation command. This tooling makes the hidden work inspectable, but it does not by itself prove every rule correct or guarantee that every explanation is yet easy to understand; see the [CLI output contract](cli.md) and [Appendix A](#appendix-builtins).
+
+4. **Reduce and measure total formalization cost.** The fact-oriented surface, bounded local proof search, compact feedback, registered-file execution, and persistent `-session -before` workflow are all attempts to reduce the effort and latency of writing and repairing proofs. Litex has not yet established a controlled, same-task, end-to-end cost advantage over mature alternatives; that claim requires measurements of author time, repair iterations, proof debt, runtime, and maintenance on representative mathematics, not a few short comparisons.
+
+5. **Build a bridge to Lean instead of a knowledge island.** The repository contains a partial Litex-to-Lean compiler, a Lean semantic wrapper, paired generated examples, and real Lean kernel checks. The compiler retains verifier-owned fact identities, scopes, proof evidence, and well-definedness obligations for the routes it supports, while rejecting unsupported verified statements rather than silently inventing proof. Its coverage is still deliberately partial, so interoperability is a growing audit path and migration route rather than a general export guarantee; see [Litex: A Concise Mathematical Front-End Language for the Trusted Lean Ecosystem](#compatibility) and the [compiler's current support boundary](../lean/README.md).
+
+6. **Use real corpora and preserve failure evidence.** Litex is being exercised on examples, multi-file textbooks, and dataset workspaces including MATH500, miniF2F, school mathematics, and longer undergraduate developments. Dataset runners, source-local todo files, proof journals, trust audits, and reduced regression cases are used to distinguish checked results from translated-but-incomplete work and to turn failures into language, library, inference, diagnostic, or kernel work. Corpus size alone is not evidence of capability: an item counts as checked evidence only when its registered gate passes, and mixed or unfinished corpora must remain labeled as such; see [Appendix B](#appendix-examples) and the [dataset runner sources](../src/main_test/lit_file_runner_tests/dataset_runners.rs).
+
+Together, these efforts define an engineering and research program rather than a claim that the hard conditions have already been met. Litex earns the four values above only to the extent that trust stays auditable, long developments continue to compose, explanations remain inspectable, end-to-end costs fall on measured tasks, Lean replay expands without proof holes, and real failures remain visible.
 
 Related links
 

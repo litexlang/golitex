@@ -39,6 +39,21 @@ pub enum LitexToLeanIntegerMembershipClosureBuiltinRuleIr {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum LitexToLeanNaturalMembershipClosureBuiltinRuleIr {
+    Add,
+    Mul,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum LitexToLeanRationalMembershipClosureBuiltinRuleIr {
+    Add,
+    Sub,
+    Mul,
+    Div,
+    Pow,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum LitexToLeanComplexArithmeticMembershipClosureBuiltinRuleIr {
     Add,
     Sub,
@@ -59,6 +74,7 @@ pub enum LitexToLeanRealArithmeticMembershipClosureBuiltinRuleIr {
 pub enum LitexToLeanNativeConstantMembershipBuiltinRuleIr {
     ImaginaryUnitInComplex,
     EulerNumberInReal,
+    PiInReal,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -101,6 +117,8 @@ pub enum LitexToLeanBuiltinRuleIr {
     DivNotEqualZero(LitexToLeanNonzeroExpressionOrientationIr),
     Arithmetic(LitexToLeanArithmeticBuiltinRuleIr),
     IntegerMembershipClosure(LitexToLeanIntegerMembershipClosureBuiltinRuleIr),
+    NaturalMembershipClosure(LitexToLeanNaturalMembershipClosureBuiltinRuleIr),
+    RationalMembershipClosure(LitexToLeanRationalMembershipClosureBuiltinRuleIr),
     ComplexArithmeticMembershipClosure(LitexToLeanComplexArithmeticMembershipClosureBuiltinRuleIr),
     RealArithmeticMembershipClosure(LitexToLeanRealArithmeticMembershipClosureBuiltinRuleIr),
     NativeConstantMembership(LitexToLeanNativeConstantMembershipBuiltinRuleIr),
@@ -116,7 +134,7 @@ pub enum LitexToLeanBuiltinRuleIr {
 }
 
 impl LitexToLeanBuiltinRuleIr {
-    pub(crate) fn from_legacy_evidence(evidence: &BuiltinRuleEvidence) -> Option<Self> {
+    pub(crate) fn try_from_builtin_rule_evidence(evidence: &BuiltinRuleEvidence) -> Option<Self> {
         Some(match evidence {
             BuiltinRuleEvidence::RegisteredLocal(_)
             | BuiltinRuleEvidence::DefinitionProjection(_)
@@ -215,6 +233,35 @@ impl LitexToLeanBuiltinRuleIr {
                     }
                 })
             }
+            BuiltinRuleEvidence::NaturalMembershipClosure(rule) => {
+                Self::NaturalMembershipClosure(match rule {
+                    NaturalMembershipClosureBuiltinRule::Add => {
+                        LitexToLeanNaturalMembershipClosureBuiltinRuleIr::Add
+                    }
+                    NaturalMembershipClosureBuiltinRule::Mul => {
+                        LitexToLeanNaturalMembershipClosureBuiltinRuleIr::Mul
+                    }
+                })
+            }
+            BuiltinRuleEvidence::RationalMembershipClosure(rule) => {
+                Self::RationalMembershipClosure(match rule {
+                    RationalMembershipClosureBuiltinRule::Add => {
+                        LitexToLeanRationalMembershipClosureBuiltinRuleIr::Add
+                    }
+                    RationalMembershipClosureBuiltinRule::Sub => {
+                        LitexToLeanRationalMembershipClosureBuiltinRuleIr::Sub
+                    }
+                    RationalMembershipClosureBuiltinRule::Mul => {
+                        LitexToLeanRationalMembershipClosureBuiltinRuleIr::Mul
+                    }
+                    RationalMembershipClosureBuiltinRule::Div => {
+                        LitexToLeanRationalMembershipClosureBuiltinRuleIr::Div
+                    }
+                    RationalMembershipClosureBuiltinRule::Pow => {
+                        LitexToLeanRationalMembershipClosureBuiltinRuleIr::Pow
+                    }
+                })
+            }
             BuiltinRuleEvidence::ComplexArithmeticMembershipClosure(rule) => {
                 Self::ComplexArithmeticMembershipClosure(match rule {
                     ComplexArithmeticMembershipClosureBuiltinRule::Add => {
@@ -257,6 +304,9 @@ impl LitexToLeanBuiltinRuleIr {
                     }
                     NativeConstantMembershipBuiltinRule::EulerNumberInReal => {
                         LitexToLeanNativeConstantMembershipBuiltinRuleIr::EulerNumberInReal
+                    }
+                    NativeConstantMembershipBuiltinRule::PiInReal => {
+                        LitexToLeanNativeConstantMembershipBuiltinRuleIr::PiInReal
                     }
                 })
             }

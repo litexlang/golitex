@@ -126,6 +126,24 @@ certificate, but `N+` must retain an exact carrier carrying its positivity
 predicate. Erasing that predicate or reusing the plain `N` carrier would make
 refined membership unsound, so the active emitter fails closed.
 
+## Native mathematical constants
+
+Example 19 gives the three primitive source constants ordinary Mathlib terms:
+`i` is `Complex.I`, `e` is the complex embedding of `Real.exp 1`, and `pi` is
+the complex embedding of `Real.pi`. They therefore participate in `Same` and
+native complex expressions without a universal object wrapper.
+
+`NativeConstantMembership` proves `i $in C`, `e $in R`, and `pi $in R` through
+fixed theorem adapters after validating both the constant and the target set.
+The verifier represents `e $in C` and `pi $in C` as the corresponding real
+membership followed by `StandardSetMembershipProjection`, so compiler reuses
+the exact real-membership FactId and the proved `inCOfInR` bridge.
+
+Nearest rejected form: `e $in R+`. Its positivity is mathematically known, but
+`R+` needs an exact subtype carrier that preserves the strict-positive
+predicate. Reusing `R` would erase source semantics, so refined membership
+remains fail-closed.
+
 ## Unary function sets and application
 
 `Litex.Fn s S` contains one call field
@@ -273,6 +291,20 @@ Nearest rejected form: `a % b $in Z`. Litex verifies it and IR records `Mod`,
 but source numeric values currently lower to `ℂ`, where there is no native
 remainder operation matching the source meaning. Adding a symbolic wrapper or
 retyping operands would be a new object ABI decision, so compiler rejects it.
+
+Example 18 extends the same constructive pattern to exact rational and natural
+carriers. Rational `+`, `-`, `*`, and `/` select `ℚ` witnesses, use the closed
+real/complex operation bridges, and reconstruct a `ℚ` result witness. Natural
+`+` and `*` do the same with `ℕ`; natural subtraction is deliberately not
+inferred from this closure family. The verifier records
+`RationalMembershipClosure` and `NaturalMembershipClosure` with their ordered
+operand facts, so emitter validates the target operator, set, and operands
+instead of rediscovering a theorem.
+
+Nearest rejected rational form: `a^z $in Q` for `a $in Q`, `z $in Z`. Its
+operator-specific `Pow` certificate reaches IR, but the complex-valued source
+power term and native exponent semantics have not received a reviewed compiler
+contract. It therefore remains fail-closed.
 
 ## Generated example contract
 

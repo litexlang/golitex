@@ -108,6 +108,27 @@ pub enum IntegerMembershipClosureBuiltinRule {
     Mod,
 }
 
+/// Stable identities for closure of the natural carrier under binary
+/// arithmetic. The enclosing result contains the checked left- and
+/// right-operand memberships in that exact order.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum NaturalMembershipClosureBuiltinRule {
+    Add,
+    Mul,
+}
+
+/// Stable identities for closure of the rational carrier under binary
+/// arithmetic. The enclosing result contains the checked left- and
+/// right-operand memberships in that exact order.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum RationalMembershipClosureBuiltinRule {
+    Add,
+    Sub,
+    Mul,
+    Div,
+    Pow,
+}
+
 /// Stable identities for closure of the complex carrier under the migrated
 /// proof-carrying binary arithmetic constructors.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -135,6 +156,7 @@ pub enum RealArithmeticMembershipClosureBuiltinRule {
 pub enum NativeConstantMembershipBuiltinRule {
     ImaginaryUnitInComplex,
     EulerNumberInReal,
+    PiInReal,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -453,6 +475,8 @@ pub enum BuiltinRuleEvidence {
     DivNotEqualZero(DivNotEqualZeroBuiltinRuleEvidence),
     Arithmetic(ArithmeticBuiltinRule),
     IntegerMembershipClosure(IntegerMembershipClosureBuiltinRule),
+    NaturalMembershipClosure(NaturalMembershipClosureBuiltinRule),
+    RationalMembershipClosure(RationalMembershipClosureBuiltinRule),
     ComplexArithmeticMembershipClosure(ComplexArithmeticMembershipClosureBuiltinRule),
     RealArithmeticMembershipClosure(RealArithmeticMembershipClosureBuiltinRule),
     NativeConstantMembership(NativeConstantMembershipBuiltinRule),
@@ -516,6 +540,14 @@ impl fmt::Debug for BuiltinRuleEvidence {
             }
             BuiltinRuleEvidence::IntegerMembershipClosure(rule) => f
                 .debug_tuple("IntegerMembershipClosure")
+                .field(rule)
+                .finish(),
+            BuiltinRuleEvidence::NaturalMembershipClosure(rule) => f
+                .debug_tuple("NaturalMembershipClosure")
+                .field(rule)
+                .finish(),
+            BuiltinRuleEvidence::RationalMembershipClosure(rule) => f
+                .debug_tuple("RationalMembershipClosure")
                 .field(rule)
                 .finish(),
             BuiltinRuleEvidence::ComplexArithmeticMembershipClosure(rule) => f

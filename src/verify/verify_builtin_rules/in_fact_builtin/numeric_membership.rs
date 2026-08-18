@@ -378,9 +378,12 @@ impl Runtime {
             return Ok((StmtUnknown::new()).into());
         }
         Ok(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 in_fact.clone().into(),
                 "N: a + b from a in N and b in N".to_string(),
+                BuiltinRuleEvidence::NaturalMembershipClosure(
+                    NaturalMembershipClosureBuiltinRule::Add,
+                ),
                 vec![r_left, r_right],
             )
             .into(),
@@ -533,9 +536,12 @@ impl Runtime {
             return Ok((StmtUnknown::new()).into());
         }
         Ok(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 in_fact.clone().into(),
                 "N: a * b from a in N and b in N".to_string(),
+                BuiltinRuleEvidence::NaturalMembershipClosure(
+                    NaturalMembershipClosureBuiltinRule::Mul,
+                ),
                 vec![r_left, r_right],
             )
             .into(),
@@ -1981,6 +1987,26 @@ impl Runtime {
         let Some(subgoals) = self.verify_builtin_rule_premises(&required, builtin_state)? else {
             return Ok((StmtUnknown::new()).into());
         };
+
+        let closure_rule = match &in_fact.element {
+            Obj::Add(_) => Some(RationalMembershipClosureBuiltinRule::Add),
+            Obj::Sub(_) => Some(RationalMembershipClosureBuiltinRule::Sub),
+            Obj::Mul(_) => Some(RationalMembershipClosureBuiltinRule::Mul),
+            Obj::Div(_) => Some(RationalMembershipClosureBuiltinRule::Div),
+            Obj::Pow(_) => Some(RationalMembershipClosureBuiltinRule::Pow),
+            _ => None,
+        };
+        if let Some(rule) = closure_rule {
+            return Ok(
+                FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    in_fact.clone().into(),
+                    "Q closure: binary rational arithmetic".to_string(),
+                    BuiltinRuleEvidence::RationalMembershipClosure(rule),
+                    subgoals,
+                )
+                .into(),
+            );
+        }
 
         Ok(
             (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
