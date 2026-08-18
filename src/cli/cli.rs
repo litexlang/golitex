@@ -124,6 +124,50 @@ pub fn run_cli() {
                         process::exit(2);
                     }
                 };
+                if args.get(index).is_some_and(|arg| arg == "-lean") {
+                    index += 1;
+                    let output_path =
+                        match read_non_flag_value_after_flag(&args, &mut index, "-lean") {
+                            Ok(value) => value,
+                            Err(message) => {
+                                eprintln!("-lean requires an output .lean path: {}", message);
+                                print_help_message();
+                                process::exit(2);
+                            }
+                        };
+                    if !force_isolated {
+                        eprintln!(
+                            "single-file Litex-to-Lean requires `-isolated`: litex -f <input.lit> -isolated -lean <output.lean>"
+                        );
+                        print_help_message();
+                        process::exit(2);
+                    }
+                    if strict_mode
+                        || summarize_output
+                        || output_style != OutputStyle::Normal
+                        || trust_before_line.is_some()
+                    {
+                        eprintln!(
+                            "single-file Litex-to-Lean accepts only `-f <input.lit> -isolated -lean <output.lean>`"
+                        );
+                        print_help_message();
+                        process::exit(2);
+                    }
+                    if let Some(unexpected) = args.get(index) {
+                        eprintln!("unexpected argument after -lean output: {}", unexpected);
+                        print_help_message();
+                        process::exit(2);
+                    }
+                    match compile_litex_file_to_lean(Path::new(&file_path), Path::new(&output_path))
+                    {
+                        Ok(()) => println!("wrote freshly generated Lean to {}", output_path),
+                        Err(message) => {
+                            eprintln!("{}", message);
+                            process::exit(1);
+                        }
+                    }
+                    return;
+                }
                 main_flag_file(
                     file_path.as_str(),
                     output_style,
@@ -377,38 +421,6 @@ pub fn run_cli() {
                             count, output_path
                         );
                     }
-                    Err(message) => {
-                        eprintln!("{}", message);
-                        process::exit(1);
-                    }
-                }
-                return;
-            }
-            "-lean" => {
-                index += 1;
-                let source_path = match read_non_flag_value_after_flag(&args, &mut index, "-lean") {
-                    Ok(value) => value,
-                    Err(message) => {
-                        eprintln!("{}", message);
-                        print_help_message();
-                        process::exit(2);
-                    }
-                };
-                let output_path = match read_non_flag_value_after_flag(&args, &mut index, "-lean") {
-                    Ok(value) => value,
-                    Err(message) => {
-                        eprintln!("-lean requires an output .lean path: {}", message);
-                        print_help_message();
-                        process::exit(2);
-                    }
-                };
-                if let Some(unexpected) = args.get(index) {
-                    eprintln!("unexpected argument after -lean output: {}", unexpected);
-                    print_help_message();
-                    process::exit(2);
-                }
-                match compile_litex_file_to_lean(Path::new(&source_path), Path::new(&output_path)) {
-                    Ok(()) => println!("wrote freshly generated Lean to {}", output_path),
                     Err(message) => {
                         eprintln!("{}", message);
                         process::exit(1);
@@ -1384,7 +1396,7 @@ litex -runner -r <project> : run a project and return one wrapper JSON object
 litex -session : run a machine-readable project REPL for framed code blocks
 litex -session -f <file> : load the project prefix through a registered file, then keep the same Runtime in session mode
 litex -session -before <file> : load the registered project prefix before a file, then edit in that file's Runtime context
-litex -lean <input.lit> <output.lean> : compile one Litex file into one complete Lean file
+litex -f <input.lit> -isolated -lean <output.lean> : verify every statement in one standalone file, then compile the complete result to Lean
 litex -lean-ledger <markdown> <output.lean> : freshly compile every H2 Litex fence into one namespaced Lean file
 litex -graph -f <file> <json> : run a file and save a prop/function/fact relation graph JSON object
 litex -graph -e <code> <json> : run source code and save a prop/function/fact relation graph JSON object
@@ -1718,9 +1730,10 @@ mod tests {
     }
 
     #[test]
-    fn help_lists_lean_ledger_command() {
+    fn help_lists_single_file_lean_and_ledger_commands() {
         let message = help_message();
-        assert!(message.contains("litex -lean <input.lit> <output.lean>"));
+        assert!(message.contains("litex -f <input.lit> -isolated -lean <output.lean>"));
+        assert!(!message.contains("litex -lean <input.lit> <output.lean>"));
         assert!(message.contains("litex -lean-ledger <markdown> <output.lean>"));
     }
 

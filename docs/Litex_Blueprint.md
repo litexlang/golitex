@@ -8,12 +8,6 @@ Chinese version: https://litexlang.com/doc/Litex中文蓝图
 
 > **Litex is an experimental hobby project still in beta. Expect rough edges.**
 
-> **Core positioning.** Litex is a set-theory-based, fact-oriented language
-> for readable checked mathematics. Users write the mathematical facts that
-> form the proof spine; Litex reconstructs routine local justification through
-> fact matching, equality replacement, definitions, quantified rules, and
-> bounded mathematical reasoning.
-
 ## Table of Contents
 
 - [Background](#background)
@@ -836,6 +830,8 @@ _This remains a goal that Litex is implementing and testing, not a capability th
 ## Conclusions
 
 Litex is not meant to make proof disappear. More precisely, it asks users to write the mathematical facts they intend, while the machine makes clear how those facts were checked, where their support came from, and where the trust boundary lies.
+
+This is what Litex means by *fact-oriented*: primary source preserves *what to verify*, while the checker reconstructs and explains *how it was verified*. This describes the default division of labor; it does not mean that Litex never needs explicit proof structure or that Lean can only be used through tactics.
 
 Seen as a sequence, this approach offers three connected forms of value:
 

@@ -5,7 +5,6 @@ use std::rc::Rc;
 #[derive(Debug)]
 pub struct NonFactualStmtSuccess {
     pub stmt: Stmt,
-    pub litex_to_lean_ir: Option<LitexToLeanStatementIr>,
     pub well_definedness: WellDefinednessCertificate,
     pub infers: InferResult,
     /// Stored facts selected for ordinary statement output. Most statements keep
@@ -666,7 +665,6 @@ pub struct FactualStmtSuccess {
     /// Filled when this proved fact has actually been stored. Verification-only
     /// subgoals legitimately keep `None`.
     pub fact_id: Option<FactId>,
-    pub litex_to_lean_ir: Option<LitexToLeanStatementIr>,
     pub well_definedness: WellDefinednessCertificate,
     pub infers: InferResult,
     pub verified_by: VerifiedByResult,
@@ -682,7 +680,6 @@ impl FactualStmtSuccess {
         FactualStmtSuccess {
             stmt,
             fact_id: None,
-            litex_to_lean_ir: None,
             well_definedness: WellDefinednessCertificate::default(),
             infers,
             verified_by,
@@ -779,7 +776,6 @@ impl FactualStmtSuccess {
         FactualStmtSuccess {
             stmt,
             fact_id: None,
-            litex_to_lean_ir: None,
             well_definedness: WellDefinednessCertificate::default(),
             infers,
             verified_by,
@@ -1217,7 +1213,6 @@ impl NonFactualStmtSuccess {
     pub fn new(stmt: Stmt, infers: InferResult, inside_results: Vec<StmtResult>) -> Self {
         NonFactualStmtSuccess {
             stmt,
-            litex_to_lean_ir: None,
             well_definedness: WellDefinednessCertificate::default(),
             infers,
             reported_store_facts: vec![],
@@ -1243,7 +1238,6 @@ impl NonFactualStmtSuccess {
     ) -> Self {
         NonFactualStmtSuccess {
             stmt,
-            litex_to_lean_ir: None,
             well_definedness: WellDefinednessCertificate::default(),
             infers,
             reported_store_facts: vec![],
@@ -1269,7 +1263,6 @@ impl NonFactualStmtSuccess {
     ) -> Self {
         NonFactualStmtSuccess {
             stmt,
-            litex_to_lean_ir: None,
             well_definedness: WellDefinednessCertificate::default(),
             infers,
             reported_store_facts: vec![],
@@ -1295,7 +1288,6 @@ impl NonFactualStmtSuccess {
     ) -> Self {
         NonFactualStmtSuccess {
             stmt,
-            litex_to_lean_ir: None,
             well_definedness: WellDefinednessCertificate::default(),
             infers,
             reported_store_facts: vec![],
@@ -1879,22 +1871,18 @@ fn merge_verified_by_with_steps(
 
 fn verified_by_items_from_stmt_result(result: StmtResult) -> Vec<VerifiedBysEnum> {
     match result {
-        StmtResult::Fact(fact_result) => {
-            if let Some(f) = (*fact_result).into_success() {
-                VerifiedBysEnum::from_verified_by_result(f.stmt, f.verified_by)
-            } else {
-                Vec::new()
-            }
-        }
-        other => {
-            let inside_results = other
-                .into_non_factual_success()
-                .map(|n| n.inside_results)
-                .unwrap_or_default();
-            inside_results
-                .into_iter()
-                .flat_map(verified_by_items_from_stmt_result)
-                .collect::<Vec<_>>()
-        }
+        StmtResult::Success(VerifiedStmtIr {
+            verification: VerifiedStmtVerificationIr::Fact(success),
+            ..
+        }) => VerifiedBysEnum::from_verified_by_result(success.stmt, success.verified_by),
+        StmtResult::Success(VerifiedStmtIr {
+            verification: VerifiedStmtVerificationIr::NonFact(success),
+            ..
+        }) => success
+            .inside_results
+            .into_iter()
+            .flat_map(verified_by_items_from_stmt_result)
+            .collect::<Vec<_>>(),
+        StmtResult::Unknown(_) => Vec::new(),
     }
 }

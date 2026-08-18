@@ -80,7 +80,7 @@ impl Runtime {
             return Ok(calculation_result);
         }
 
-        Ok(StmtResult::Unknown(StmtUnknown::new()))
+        Ok(StmtUnknown::new().into())
     }
 
     pub(crate) fn try_verify_zero_equals_product_implies_other_factor_zero(

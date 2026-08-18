@@ -391,7 +391,7 @@ impl Runtime {
                 ));
             }
         }
-        Ok(StmtResult::Unknown(StmtUnknown::new()))
+        Ok(StmtUnknown::new().into())
     }
 
     pub(in crate::verify) fn verify_number_comparison_builtin_rule(

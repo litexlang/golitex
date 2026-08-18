@@ -14,10 +14,10 @@ fn lean_command_reproduces_the_checked_in_examples() {
 
     let output = Command::new(env!("CARGO_BIN_EXE_litex"))
         .current_dir(root)
-        .args(["-lean", SOURCE])
+        .args(["-f", SOURCE, "-isolated", "-lean"])
         .arg(&output_path)
         .output()
-        .expect("run -lean");
+        .expect("run single-file -lean");
 
     assert!(
         output.status.success(),
@@ -53,11 +53,13 @@ fn lean_command_preserves_existing_output_when_compilation_fails() {
 
     let output = Command::new(env!("CARGO_BIN_EXE_litex"))
         .current_dir(root)
-        .arg("-lean")
+        .arg("-f")
         .arg(&source_path)
+        .arg("-isolated")
+        .arg("-lean")
         .arg(&output_path)
         .output()
-        .expect("run failing -lean");
+        .expect("run failing single-file -lean");
 
     assert!(!output.status.success());
     assert!(String::from_utf8_lossy(&output.stderr).contains("failed to compile"));
@@ -77,11 +79,13 @@ fn lean_command_rejects_the_litex_file_as_its_output() {
 
     let output = Command::new(env!("CARGO_BIN_EXE_litex"))
         .current_dir(root)
+        .arg("-f")
+        .arg(&source_path)
+        .arg("-isolated")
         .arg("-lean")
         .arg(&source_path)
-        .arg(&source_path)
         .output()
-        .expect("run same-path -lean");
+        .expect("run same-path single-file -lean");
 
     assert!(!output.status.success());
     assert!(String::from_utf8_lossy(&output.stderr)
@@ -90,6 +94,30 @@ fn lean_command_rejects_the_litex_file_as_its_output() {
         fs::read_to_string(&source_path).expect("read preserved input"),
         source
     );
+}
+
+#[test]
+fn lean_command_rejects_imports_in_single_file_mode() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let mut scratch = ScratchFiles::new("import");
+    let source_path = scratch.new_path("lit");
+    let output_path = scratch.new_path("lean");
+    fs::write(&source_path, "import std basics\n").expect("write importing Litex input");
+
+    let output = Command::new(env!("CARGO_BIN_EXE_litex"))
+        .current_dir(root)
+        .arg("-f")
+        .arg(&source_path)
+        .arg("-isolated")
+        .arg("-lean")
+        .arg(&output_path)
+        .output()
+        .expect("run importing single-file -lean");
+
+    assert!(!output.status.success());
+    assert!(String::from_utf8_lossy(&output.stderr)
+        .contains("single-file Litex-to-Lean does not support `import`"));
+    assert!(!output_path.exists());
 }
 
 struct ScratchFiles {
