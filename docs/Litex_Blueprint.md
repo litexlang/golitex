@@ -28,15 +28,17 @@ Chinese version: https://litexlang.com/doc/Litex中文蓝图
 <a id="background"></a>
 ## Background
 
-Litex is a formal language for mathematics centered on objects and facts. It aims to lower the barriers to learning, writing, and reviewing formal proofs, so people and AI can express reasoning, enhance understanding, and spark new ideas in a form close to ordinary mathematics. At the same time, every conclusion submitted to the system is subject to rigorous machine checking.
+Litex is a *set-theory-based*, *fact-oriented* formal language whose *proof flow grows bottom-up* and whose mathematics *can be compiled to Lean code*. “Set-theory-based” means that sets, elements, and relations provide a unified language for mathematical objects; Litex is based on ZFC set theory rather than type theory. “Fact-oriented” means writing known facts and new facts directly, while the Litex kernel follows mechanical rules to find corresponding verification strategies. “Bottom-up proof flow” means progressing from definitions and basic facts toward the target conclusion, rather than reducing the final Goal backward to known premises. “Compilable to Lean code” means that Litex mathematics can be translated into Lean expressions for further checking and connection to the Lean ecosystem.
+
+It aims to lower the barriers to learning, writing, and reviewing formal proofs, so people and AI can express reasoning, enhance understanding, and spark new ideas in a form close to ordinary mathematics. At the same time, every conclusion submitted to the system is subject to rigorous machine checking.
 
 ### From Mathematical Notation to Formal Language in the AI Era
 
 Throughout the history of mathematics, important new systems of notation have done more than shorten what people write. They have gradually changed how people see problems, organize reasoning, and explore new directions. The Hindu–Arabic numeral system reshaped calculation. The calculus notation developed and promoted by Leibniz made relationships among rates of change, differentials, and integrals easier to express and manipulate. In the modern era, TeX and LaTeX primarily addressed mathematical typesetting, but their stable, widely shared notation also changed how mathematical knowledge is written, exchanged, published, and reused.
 
-Today, AI is making candidate mathematical proofs far more common and scalable. As proofs cease to be only texts written by hand by a comparatively small number of people, the central bottleneck shifts from “can a plausible-looking argument be generated?” toward “can it be checked, reused, and accumulated reliably?” This makes formal languages increasingly important. Formal expression may gradually become a layer of mathematical infrastructure as indispensable as LaTeX is for typesetting—not only allowing machines to read proofs, but allowing them to check those proofs rigorously.
+Today, AI is making candidate mathematical proofs far more common and scalable. As proofs cease to be only texts written by hand by a comparatively small number of people, the central bottleneck shifts from “can a plausible-looking argument be generated?” toward “can it be checked, reused, and accumulated reliably?” This makes formal languages increasingly important: like LaTeX for mathematical typesetting, they may gradually become an indispensable layer of *mathematical infrastructure*—one that allows mathematics to be checked rigorously by machine.
 
-Litex aims to bring that layer of technology within reach of ordinary learners and users of mathematics. Its ideal is: **if you understand some mathematics, you should be able to express that mathematics in a formal language.** Someone who already understands secondary-school mathematics, for example, should be able to learn quickly how to express the corresponding definitions, reasoning, and proofs in Litex, without first becoming a proof-assistant expert. This remains a design goal to be tested through runnable examples, learning costs, and real use; it is not a promise that the current beta has already achieved it across mathematics.
+Litex aims to bring that layer of technology within reach of ordinary learners and users of mathematics. Its ideal is: **if you understand some mathematics, you should be able to express that mathematics in a formal language.** Someone who already understands secondary-school mathematics, for example, should be able to learn quickly how to express the corresponding definitions, reasoning, and proofs in Litex, without first becoming a proof-assistant expert.
 
 To understand why this goal calls for a different language design, first consider the relationship between formal proof and the workflow of ordinary mathematical writing.
 
@@ -831,15 +833,7 @@ _This remains a goal that Litex is implementing and testing, not a capability th
 
 Litex is not meant to make proof disappear. More precisely, it asks users to write the mathematical facts they intend, while the machine makes clear how those facts were checked, where their support came from, and where the trust boundary lies.
 
-This is what Litex means by *fact-oriented*: primary source preserves *what to verify*, while the checker reconstructs and explains *how it was verified*. This describes the default division of labor; it does not mean that Litex never needs explicit proof structure or that Lean can only be used through tactics.
-
-Seen as a sequence, this approach offers three connected forms of value:
-
-1. **Lower the barrier to writing and reviewing formal mathematics.** The first step is to keep formal source close enough to mathematical language that authors and reviewers can inspect its objects, assumptions, proof spine, and conclusions directly. This matters especially when the source was generated by AI: the verifier can check the statement that was written, while readable semantics lets a person judge whether that statement faithfully captures the intended mathematics.
-2. **Make mathematical texts executable.** Once definitions, lemmas, and proofs are readable enough to review as mathematical exposition, they can also be checked and reused across files and chapters. Formal verification can then move closer to textbooks, teaching, and scientific writing rather than remaining confined to specialist proof-assistant projects.
-3. **Use blocked proof attempts to improve reasoning and formulation.** When a proof attempt stalls, a clearly localized boundary can help distinguish a reasoning path that still needs an intermediate fact from a mathematical formulation that needs revision. Keeping that diagnosis and the subsequent repair trace gives both people and AI useful material for improving the next attempt.
-
-Together, these three values form a progression: readability makes review possible, executability supports accumulation and reuse, and localized feedback improves the next round of reasoning. None of them follows from readable syntax alone, however. [Appendix C](#appendix-conditions) describes the work Litex has begun on the conditions they require, as well as the boundaries that remain open.
+Litex is a *set-theory-based*, *fact-oriented* formal language whose *proof flow grows bottom-up* and whose mathematics *can be compiled to Lean code*. “Set-theory-based” means that sets, elements, and relations provide a unified language for mathematical objects; Litex is based on ZFC set theory rather than type theory. “Fact-oriented” means writing known facts and new facts directly, while the Litex kernel follows mechanical rules to find corresponding verification strategies. “Bottom-up proof flow” means progressing from definitions and basic facts toward the target conclusion, rather than reducing the final Goal backward to known premises. “Compilable to Lean code” means that Litex mathematics can be translated into Lean expressions for further checking and connection to the Lean ecosystem.
 
 At the language level, this approach begins with an ordinary mathematical fact:
 
@@ -907,14 +901,6 @@ When Litex moves concrete proof operations into the checker, however, the pressu
 
 For this reason, Litex needs to accumulate experience toward a compilation path to Lean. The current repository has a deliberately partial compiler: it retains stable fact identities and recursive proof evidence, supports a selected object and builtin-rule subset, and now preserves the declaration and temporary-premise scopes of explicit-value `have`, checked bare selection such as `have x R`, positive `witness exist` plus `obtain`/body-style existential extraction, binary `by cases`, atomic `by contra`, source-named theorems, checked named-function definitions, set builders, and one tuple-construction recipe. Selection and extraction consume the verifier's exact existential certificates through Lean's `Exists.choose` and `choose_spec`; they do not become invented opaque constants. Unsupported verified statements are reported and omitted transactionally instead of becoming `sorry` or implicit axioms. It is still far from a compiler for general Litex statements or builtin rules. The long-term target remains to check source with Litex, generate an equivalent Lean statement and proof, and have Lean check that result independently.
 
-The compilation target above addresses trust without giving up the interface
-choice. A mature path would let Litex users continue to state *what* should
-hold and let the checker reconstruct the local route, while an exported Lean
-proof term independently replays and checks that route. The interface thesis
-and the trust strategy therefore belong together: local justification can
-remain implicit in the source only if the work it absorbs remains inspectable
-and becomes increasingly replayable outside Litex's present trusted boundary.
-
 As collaboration between humans and AI gradually creates and accumulates more
 mathematical knowledge, formal systems should explore more
 than one way to write and verify that knowledge. At the level of their default
@@ -969,7 +955,7 @@ The important question is therefore not only how many examples exist, but whethe
 <a id="appendix-conditions"></a>
 ## Appendix C: What Litex Is Doing About the Conditions for Success
 
-The three values above depend on more than a readable interface. The current beta is therefore investing in six connected directions and using both the implementation and real mathematical corpora to test them. They describe ongoing work, not a completed case for soundness, scalability, usability, or performance.
+The three values summarized below depend on more than a readable interface. The current beta is therefore investing in six connected directions and using both the implementation and real mathematical corpora to test them. They describe ongoing work, not a completed case for soundness, scalability, usability, or performance.
 
 1. **Keep trust boundaries visible and open to independent checking.** Reliability begins with knowing exactly what the system has and has not checked. `trust`, `trust have`, and `axiom` are explicit source forms; ordinary file runs report unverified imports, while `-strict` verifies configured dependencies and rejects those trusted forms. Normal and detailed output distinguish why a fact was accepted, what was stored, what was inferred, and which direct trusted statements occurred. Verification routes increasingly carry structured evidence that the partial Litex-to-Lean compiler can replay through the Lean kernel, while unsupported routes stop explicitly instead of generating `sorry` or new axioms. Important limits remain: Litex records direct trusted statements but does not yet propagate a transitive trust label to every downstream fact, and Lean replay covers only a documented subset of the language and builtin rules. See the [system map](Litex_System_Map.md#reading-results-and-trust), [CLI trust controls](cli.md#global-options), and [compiler boundary](../lean/README.md).
 
@@ -983,7 +969,13 @@ The three values above depend on more than a readable interface. The current bet
 
 6. **Test the design against real mathematical work.** Finally, all of these conditions need to hold beyond carefully selected demonstrations. Litex is being exercised on ordinary examples, multi-file textbooks, and dataset workspaces including MATH500, miniF2F, school mathematics, and longer undergraduate developments. Dataset runners, source-local todo files, proof journals, trust audits, and reduced regression cases distinguish checked results from translated-but-incomplete work; they also preserve cases where a reasoning path needs another intermediate fact or a source-facing mathematical formulation needs revision. A large corpus becomes meaningful evidence only when each item's status remains clear: an item counts as checked evidence only when its registered gate passes, and mixed or unfinished corpora remain labeled as such. See [Appendix B](#appendix-examples) and the [dataset runner sources](../src/main_test/lit_file_runner_tests/dataset_runners.rs).
 
-Taken together, these six directions form an engineering and research program rather than a claim that the difficult conditions have already been met. The three values above become credible only as trust remains auditable, long developments continue to compose, explanations stay inspectable, measured end-to-end costs fall, Lean replay expands without proof holes, and differences between the intended mathematics and its formal expression remain visible.
+Taken together, these six directions form an engineering and research program rather than a claim that the difficult conditions have already been met. The three values below become credible only as trust remains auditable, long developments continue to compose, explanations stay inspectable, measured end-to-end costs fall, Lean replay expands without proof holes, and differences between the intended mathematics and its formal expression remain visible.
+
+Seen as a sequence, this approach offers three connected forms of value:
+
+1. **Lower the barrier to writing and reviewing formal mathematics.** The first step is to keep formal source close enough to mathematical language that authors and reviewers can inspect its objects, assumptions, proof spine, and conclusions directly. This matters especially when the source was generated by AI: the verifier can check the statement that was written, while readable semantics lets a person judge whether that statement faithfully captures the intended mathematics.
+2. **Make mathematical texts executable.** Once definitions, lemmas, and proofs are readable enough to review as mathematical exposition, they can also be checked and reused across files and chapters. Formal verification can then move closer to textbooks, teaching, and scientific writing rather than remaining confined to specialist proof-assistant projects.
+3. **Use blocked proof attempts to improve reasoning and formulation.** When a proof attempt stalls, a clearly localized boundary can help distinguish a reasoning path that still needs an intermediate fact from a mathematical formulation that needs revision. Keeping that diagnosis and the subsequent repair trace gives both people and AI useful material for improving the next attempt.
 
 Related links
 
