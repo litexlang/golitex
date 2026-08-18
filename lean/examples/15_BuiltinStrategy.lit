@@ -1,0 +1,27 @@
+# Tracer: builtin strategy provenance wraps the exact recursive rule/fact tree.
+#
+# Before (Litex verified, but compiler emission stopped):
+# forall a, b, c, d R:
+#     a > 0
+#     b >= 0
+#     c >= 0
+#     d >= 0
+#     =>:
+#         (a + b) + (c + d) > 0
+# Former compiler error:
+# unsupported verified proof rule: Builtin(Arithmetic(AddPositiveLeftStrict))
+#
+# Now every selected strategy layer is retained as `UseBuiltinStrategy` around
+# its concrete `RuleApplication`; leaf premises remain exact FactId citations.
+forall a, b, c, d R:
+    a > 0
+    b >= 0
+    c >= 0
+    d >= 0
+    =>:
+        (a + b) + (c + d) > 0
+
+# Boundary: the adjacent right-strict `a >= 0, b > 0 => a + b > 0` route is
+# deliberately still rejected by the compiler until its Lean adapter is added.
+# Evidence: target/release/litex -compact -strict -runner -f lean/examples/15_BuiltinStrategy.lit
+# and cargo test --release --test litex_to_lean_compiler_tracers builtin_strategy

@@ -91,6 +91,29 @@ untyped `let` and one membership-constrained `have ... = ...`. Definitions use
 ordinary Lean values, while their stored Litex membership and `Same` facts are
 replayed from verifier evidence.
 
+`12_NamedFunction.lit` closes the first function construction/application
+loop. The identity and `inc(x)=x+1` definitions become native `Litex.Fn`
+values. `reciprocal(x: x != 0)=1/x` becomes `Litex.FnWhere`; its call
+consumes the verifier-selected function membership, argument membership, and
+nonzero domain FactId. Checked reductions use the closed real/complex
+operation congruence routes.
+
+`13_PredicateDefinitions.lit` covers concrete `prop` plus `by def`. The Lean
+definition includes parameter-membership requirements and defining clauses;
+reduction and the inferred projections preserve their checked component
+order. Abstract or bodyless predicates remain fail-closed.
+
+`14_SetBuilderAndChoice.lit` covers an exact subtype carrier, non-reflexive
+`x = 1` membership, one-parameter concrete-predicate transport, the base and
+predicate projection adapters, and choice from a set whose nonemptiness proof
+was retained by the verifier. It never uses `Set.univ` or a universal object
+carrier.
+
+`15_BuiltinStrategy.lit` traces recursive additive-sign search. Each selected
+strategy layer remains visible as `UseBuiltinStrategy` in IR, while its inner
+tree records the exact arithmetic rule and cited FactIds. Lean emission unwraps
+only that marker and calls reviewed rules; it never re-runs strategy search.
+
 Generated `.lean` files are review artifacts, not editing surfaces. A new
 compiler feature must add the next numbered same-name pair. Unsupported
 statements, objects, facts, or proof routes fail closed.

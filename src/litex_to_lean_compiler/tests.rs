@@ -1,4 +1,5 @@
 use litex::litex_to_lean_compiler::compile_source;
+use litex::litex_to_lean_ir::capture_litex_to_lean_ir_from_source;
 
 fn compile_on_verifier_stack(source: &'static str, label: &'static str) -> Result<String, String> {
     std::thread::Builder::new()
@@ -8,6 +9,32 @@ fn compile_on_verifier_stack(source: &'static str, label: &'static str) -> Resul
         .expect("spawn compiler verifier thread")
         .join()
         .expect("compiler verifier thread panicked")
+}
+
+fn capture_ir_debug_on_verifier_stack(
+    source: &'static str,
+    label: &'static str,
+) -> Result<String, String> {
+    std::thread::Builder::new()
+        .name(format!("compiler-ir-test-{label}"))
+        .stack_size(32 * 1024 * 1024)
+        .spawn(move || {
+            capture_litex_to_lean_ir_from_source(source, label)
+                .map(|ir| format!("{ir:#?}"))
+                .map_err(|error| format!("{error:?}"))
+        })
+        .expect("spawn compiler IR verifier thread")
+        .join()
+        .expect("compiler IR verifier thread panicked")
+}
+
+#[test]
+fn compiler_core_keeps_representation_registry_closed() {
+    let core = include_str!("../../lean/Litex/Core.lean");
+    assert!(core.contains("private class PrimitiveRule"));
+    assert!(core.contains("private class DerivedRule"));
+    assert!(!core.contains("class BridgeRule"));
+    assert!(!core.contains("def Bridge"));
 }
 
 #[test]
@@ -128,7 +155,7 @@ fn unary_function_set_application_consumes_both_memberships() {
     assert!(generated.contains("(S : Litex.Set)"));
     assert!(generated.contains("Litex.In x s"));
     assert!(generated.contains("Litex.In f (Litex.fnSet s S)"));
-    assert!(generated.contains("Litex.fnApply f __h0_4 x __h0_3"));
+    assert!(generated.contains("Litex.fnApply f __h0_4 x (__h0_3)"));
     assert!(!generated.contains("namespace __Sketch"));
     assert!(!generated.contains("sorry"));
 }
@@ -225,6 +252,136 @@ fn object_definitions_emit_native_values_and_replay_definition_evidence() {
     assert!(!generated.contains("Litex.Object"));
     assert!(!generated.contains("LitexObject"));
     assert!(!generated.contains("sorry"));
+}
+
+#[test]
+fn named_real_functions_compile_compound_bodies_and_domain_clauses() {
+    let generated = compile_on_verifier_stack(
+        "have fn id(x R) R = x\nid(1) = 1\nhave fn inc(x R) R = x + 1\ninc(1) = 1 + 1\nhave fn reciprocal(x R: x != 0) R = 1 / x\nforall a R:\n    a != 0\n    =>:\n        reciprocal(a) = 1 / a\n",
+        "12_NamedFunction.lit",
+    )
+    .expect("compile compound named-function tracer");
+    assert!(generated.contains("noncomputable def id : Litex.Fn Litex.R Litex.R"));
+    assert!(generated.contains("Litex.In id (Litex.fnSet Litex.R Litex.R)"));
+    assert!(generated.contains("Litex.fnApplyOwn id __fact0"));
+    assert!(generated.contains("Litex.In.same_rep (1 : ℂ)"));
+    assert!(generated.contains("noncomputable def inc : Litex.Fn Litex.R Litex.R"));
+    assert!(generated.contains("Litex.Same.realAddComplex"));
+    assert!(generated.contains("noncomputable def reciprocal : Litex.FnWhere"));
+    assert!(generated.contains("Litex.fnSetWhere Litex.R Litex.R"));
+    assert!(generated.contains("Litex.fnApplyWhereOwn reciprocal"));
+    assert!(generated.contains("Litex.Same.realDivComplex"));
+    assert!(!generated.contains("Litex.Object"));
+    assert!(!generated.contains("LitexObject"));
+    assert!(!generated.contains("sorry"));
+}
+
+#[test]
+fn concrete_predicate_definition_and_by_def_replay_checked_components() {
+    let generated = compile_on_verifier_stack(
+        "prop is_unit_pair(x R, y R):\n    x = 1\n    y = 1\n\n1 = 1\nby def $is_unit_pair(1, 1)\n",
+        "13_PredicateDefinitions.lit",
+    )
+    .expect("compile concrete predicate tracer");
+    assert!(generated.contains("def is_unit_pair"));
+    assert!(generated.contains("Litex.In x Litex.R ∧ Litex.In y Litex.R"));
+    assert!(generated.contains("unfold is_unit_pair"));
+    assert!(generated.contains("exact __definition.1"));
+    assert!(!generated.contains("axiom "));
+    assert!(!generated.contains("sorry"));
+}
+
+#[test]
+fn set_builder_membership_and_nonempty_choice_use_exact_carriers() {
+    let generated = compile_on_verifier_stack(
+        "have S set = {x R: x = x}\nS = S\n1 $in {x R: x = 1}\nprop is_one(x R):\n    x = 1\n1 = 1\nby def $is_one(1)\n1 $in {x R: $is_one(x)}\nhave chosen R\nchosen $in R\n",
+        "14_SetBuilderAndChoice.lit",
+    )
+    .expect("compile set-builder and choice tracer");
+    assert!(generated.contains("Litex.setBuilder Litex.R"));
+    assert!(generated.contains("Litex.Rules.inSetBuilder"));
+    assert!(generated.contains("Litex.Rules.inBaseOfInSetBuilder"));
+    assert!(generated.contains("Litex.Same.trans (Litex.Same.symm"));
+    assert!(generated.contains("rcases Litex.Rules.inSetBuilder_iff.mp"));
+    assert!(generated.contains("unfold is_one at __selected"));
+    assert!(generated.contains("noncomputable def chosen : Litex.R.Carrier"));
+    assert!(generated.contains("Litex.In.own Litex.R chosen"));
+    assert!(!generated.contains("Set.univ"));
+    assert!(!generated.contains("Litex.Object"));
+    assert!(!generated.contains("sorry"));
+}
+
+#[test]
+fn builtin_strategy_ir_marks_each_selected_layer_and_replays_exact_rules() {
+    const SOURCE: &str = "forall a, b, c, d R:\n    a > 0\n    b >= 0\n    c >= 0\n    d >= 0\n    =>:\n        (a + b) + (c + d) > 0\n";
+    let ir = capture_ir_debug_on_verifier_stack(SOURCE, "15_BuiltinStrategy.lit")
+        .expect("capture builtin-strategy tracer IR");
+    assert_eq!(ir.matches("UseBuiltinStrategy").count(), 4, "{ir}");
+    assert_eq!(ir.matches("AddPositiveLeftStrict").count(), 1, "{ir}");
+    assert_eq!(
+        ir.matches("order.add_positive_of_positive_nonnegative")
+            .count(),
+        1,
+        "{ir}"
+    );
+    assert_eq!(ir.matches("order.add_nonnegative").count(), 1, "{ir}");
+    assert!(ir.matches("KnownFactCitation").count() >= 4, "{ir}");
+
+    let generated = compile_on_verifier_stack(SOURCE, "15_BuiltinStrategy.lit")
+        .expect("compile builtin-strategy tracer");
+    assert_eq!(
+        generated
+            .matches("Litex.Rules.complexAddPositiveLeftStrict")
+            .count(),
+        2
+    );
+    assert_eq!(
+        generated
+            .matches("Litex.Rules.complexAddNonnegative")
+            .count(),
+        1
+    );
+    assert!(!generated.contains("UseBuiltinStrategy"));
+    assert!(!generated.contains("sorry"));
+}
+
+#[test]
+fn unsupported_builtin_strategy_rule_remains_fail_closed() {
+    let error = compile_on_verifier_stack(
+        "forall a, b R:\n    a >= 0\n    b > 0\n    =>:\n        a + b > 0\n",
+        "unsupported_builtin_strategy_rule.lit",
+    )
+    .expect_err("unreviewed right-strict addition must remain outside the compiler slice");
+    assert!(
+        error.contains("AddPositiveRightStrict"),
+        "unexpected error: {error}"
+    );
+}
+
+#[test]
+fn nested_set_builder_binder_expression_remains_fail_closed() {
+    let error = compile_on_verifier_stack(
+        "2 $in {x R: x + 1 = 3}\n",
+        "unsupported_nested_set_builder_transport.lit",
+    )
+    .expect_err("nested predicate transport must remain outside the reviewed adapter");
+    assert!(
+        error.contains("whole equality side") || error.contains("set-builder"),
+        "unexpected error: {error}"
+    );
+}
+
+#[test]
+fn multi_parameter_named_function_remains_fail_closed() {
+    let error = compile_on_verifier_stack(
+        "have fn first(x, y R) R = x\nfirst(1, 1) = 1\n",
+        "unsupported_multi_parameter_function.lit",
+    )
+    .expect_err("multiple named parameters must remain outside the reviewed function adapter");
+    assert!(
+        error.contains("exactly one parameter") || error.contains("one parameter"),
+        "unexpected error: {error}"
+    );
 }
 
 #[test]

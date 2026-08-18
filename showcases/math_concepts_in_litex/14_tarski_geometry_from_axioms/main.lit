@@ -1,0 +1,104 @@
+# Tarski geometry from axioms — a point-only synthetic first slice.
+#
+# The axiom hierarchy follows the Schwabhäuser–Szmielew–Tarski presentation
+# exposed by GeoCoq. Named settings keep every assumption local to theorem
+# headers; this file introduces no global `axiom` and no `trust`.
+
+prop is_between(Point set, Bet power_set(cart(Point, Point, Point)), a, b, c Point):
+    (a, b, c) $in Bet
+
+prop are_segments_congruent(Point set, Cong power_set(cart(Point, Point, Point, Point)), a, b, c, d Point):
+    (a, b, c, d) $in Cong
+
+# Dimensionless neutral geometry: congruence, segment construction,
+# five-segment, betweenness identity, inner Pasch, and lower dimension.
+setting TarskiNeutralDimensionlessSetting(Point nonempty_set, Bet power_set(cart(Point, Point, Point)), Cong power_set(cart(Point, Point, Point, Point)), lower_a, lower_b, lower_c Point):
+    forall p1, p2 Point:
+        (p1, p2, p2, p1) $in Cong
+    forall p1, p2, p3, p4, p5, p6 Point:
+        (p1, p2, p3, p4) $in Cong
+        (p1, p2, p5, p6) $in Cong
+        =>:
+            (p3, p4, p5, p6) $in Cong
+    forall p1, p2, p3 Point:
+        (p1, p2, p3, p3) $in Cong
+        =>:
+            p1 = p2
+    forall p1, p2, p3, p4 Point:
+        exist x Point st {(p1, p2, x) $in Bet, (p2, x, p3, p4) $in Cong}
+    forall p1, p2, p3, p4, p5, p6, p7, p8 Point:
+        (p1, p3, p2, p4) $in Cong
+        (p3, p5, p4, p6) $in Cong
+        (p1, p7, p2, p8) $in Cong
+        (p3, p7, p4, p8) $in Cong
+        (p1, p3, p5) $in Bet
+        (p2, p4, p6) $in Bet
+        p1 != p3
+        =>:
+            (p5, p7, p6, p8) $in Cong
+    forall p1, p2 Point:
+        (p1, p2, p1) $in Bet
+        =>:
+            p1 = p2
+    forall p1, p2, p3, p4, p5 Point:
+        (p1, p4, p3) $in Bet
+        (p2, p5, p3) $in Bet
+        =>:
+            exist x Point st {(p4, x, p2) $in Bet, (p5, x, p1) $in Bet}
+    not (lower_a, lower_b, lower_c) $in Bet
+    not (lower_b, lower_c, lower_a) $in Bet
+    not (lower_c, lower_a, lower_b) $in Bet
+
+# Tarski assumes only pseudo-reflexivity. Ordinary reflexivity is derived by
+# applying inner transitivity to the reversed segment twice.
+thm segment_congruence_reflexive:
+    ? forall [TarskiNeutralDimensionlessSetting], a, b Point:
+        $are_segments_congruent(Point, Cong, a, b, a, b)
+    (b, a, a, b) $in Cong
+    by def $are_segments_congruent(Point, Cong, a, b, a, b)
+
+# Tracer theorem: symmetry is a checked consequence, not another axiom.
+thm segment_congruence_symmetric:
+    ? forall [TarskiNeutralDimensionlessSetting], a, b, c, d Point:
+        $are_segments_congruent(Point, Cong, a, b, c, d)
+        =>:
+            $are_segments_congruent(Point, Cong, c, d, a, b)
+    by thm segment_congruence_reflexive(Point, Bet, Cong, lower_a, lower_b, lower_c, a, b) => $are_segments_congruent(Point, Cong, a, b, a, b)
+    by def $are_segments_congruent(Point, Cong, c, d, a, b)
+
+prop are_collinear(Point set, Bet power_set(cart(Point, Point, Point)), a, b, c Point):
+    (a, b, c) $in Bet or (b, c, a) $in Bet or (c, a, b) $in Bet
+
+# Midpoint remains a relation. A callable selector must wait for separate
+# existence and uniqueness theorems.
+prop is_midpoint(Point set, Bet power_set(cart(Point, Point, Point)), Cong power_set(cart(Point, Point, Point, Point)), midpoint, endpoint_a, endpoint_b Point):
+    $is_between(Point, Bet, endpoint_a, midpoint, endpoint_b)
+    $are_segments_congruent(Point, Cong, endpoint_a, midpoint, midpoint, endpoint_b)
+
+thm midpoint_is_between:
+    ? forall Point set, Bet power_set(cart(Point, Point, Point)), Cong power_set(cart(Point, Point, Point, Point)), midpoint, endpoint_a, endpoint_b Point:
+        $is_midpoint(Point, Bet, Cong, midpoint, endpoint_a, endpoint_b)
+        =>:
+            $is_between(Point, Bet, endpoint_a, midpoint, endpoint_b)
+
+# The hierarchy now branches by adding laws rather than changing primitives.
+setting TarskiNeutralWithDecidableEqualitySetting([TarskiNeutralDimensionlessSetting]):
+    forall p1, p2 Point:
+        p1 = p2 or p1 != p2
+
+setting Tarski2DSetting([TarskiNeutralWithDecidableEqualitySetting]):
+    forall p1, p2, p3, p4, p5 Point:
+        p4 != p5
+        (p1, p4, p1, p5) $in Cong
+        (p2, p4, p2, p5) $in Cong
+        (p3, p4, p3, p5) $in Cong
+        =>:
+            (p1, p2, p3) $in Bet or (p2, p3, p1) $in Bet or (p3, p1, p2) $in Bet
+
+setting TarskiEuclidean2DSetting([Tarski2DSetting]):
+    forall p1, p2, p3, p4, p5 Point:
+        (p1, p4, p5) $in Bet
+        (p2, p4, p3) $in Bet
+        p1 != p4
+        =>:
+            exist x, y Point st {(p1, p2, x) $in Bet, (p1, p3, y) $in Bet, (x, p5, y) $in Bet}

@@ -1,0 +1,32 @@
+# Tracer: a literal set builder uses its predicate subtype as the exact carrier.
+#
+# Before (Litex verified, but compiler emission stopped):
+# 1 $in {x R: x = 1}
+# Former behavior: compiler transported only a reflexive `x = x` clause.
+#
+# Now (verified and compiled):
+have S set = {x R: x = x}
+S = S
+
+# Membership construction replays base membership and the defining clause;
+# its inferred base membership is projected from the stored builder fact.
+1 $in {x R: x = 1}
+
+prop is_one(x R):
+    x = 1
+
+1 = 1
+by def $is_one(1)
+1 $in {x R: $is_one(x)}
+# Current behavior: direct equality clauses and one-parameter concrete
+# predicates are transported between the source object and exact subtype
+# representative; inferred predicate facts use a named projection adapter.
+
+# Choice is permitted only because the verifier retained nonemptiness of R.
+have chosen R
+chosen $in R
+
+# Boundary: a bare `have A set` still has no checked inhabited carrier;
+# nested binder occurrences such as `x + 1 = 2` remain fail-closed.
+# Evidence: target/release/litex -compact -strict -runner -f lean/examples/14_SetBuilderAndChoice.lit
+# and cargo test --release --test litex_to_lean_compiler_tracers

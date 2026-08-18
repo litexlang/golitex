@@ -1,0 +1,52 @@
+# Ordinary differential equations in Litex, setting-first.
+#
+# Main line: derivative interface -> ODE solution interface -> y' = 2x.
+
+prop derivative_delta_controlled(f fn(x R) R, x0, slope R, epsilon, delta R+):
+    forall x R:
+        x != x0
+        abs(x - x0) < delta
+        =>:
+            abs((f(x) - f(x0)) / (x - x0) - slope) < epsilon
+
+prop has_derivative_at_R(f fn(x R) R, x0, slope R):
+    forall epsilon R+:
+        exist delta R+ st {$derivative_delta_controlled(f, x0, slope, epsilon, delta)}
+
+have fn ode_rhs(x, y R) R = 2 * x
+have fn ode_solution(x R) R = x^2 + 1
+
+prop solves_ode_at(f fn(t R) R, rhs fn(t, y R) R, x R):
+    exist slope R st {$has_derivative_at_R(f, x, slope), slope = rhs(x, f(x))}
+
+thm square_plus_one_derivative:
+    ? forall x0 R:
+        $has_derivative_at_R(ode_solution, x0, 2 * x0)
+    claim:
+        ? forall epsilon R+:
+            exist delta R+ st {$derivative_delta_controlled(ode_solution, x0, 2 * x0, epsilon, delta)}
+        witness exist delta R+ st {$derivative_delta_controlled(ode_solution, x0, 2 * x0, epsilon, delta)} from epsilon:
+            claim:
+                ? forall x R:
+                    x != x0
+                    abs(x - x0) < epsilon
+                    =>:
+                        abs((ode_solution(x) - ode_solution(x0)) / (x - x0) - 2 * x0) < epsilon
+                x - x0 != 0
+                ode_solution(x) = x^2 + 1
+                ode_solution(x0) = x0^2 + 1
+                ode_solution(x) - ode_solution(x0) = (x^2 + 1) - (x0^2 + 1) = x^2 - x0^2 = (x - x0) * (x + x0)
+                (ode_solution(x) - ode_solution(x0)) / (x - x0) = x + x0
+                (ode_solution(x) - ode_solution(x0)) / (x - x0) - 2 * x0 = x - x0
+                abs((ode_solution(x) - ode_solution(x0)) / (x - x0) - 2 * x0) = abs(x - x0) < epsilon
+            by def $derivative_delta_controlled(ode_solution, x0, 2 * x0, epsilon, delta)
+    by def $has_derivative_at_R(ode_solution, x0, 2 * x0)
+
+thm square_plus_one_solves_ode:
+    ? forall x R:
+        $solves_ode_at(ode_solution, ode_rhs, x)
+    witness $solves_ode_at(ode_solution, ode_rhs, x) from 2 * x:
+        $has_derivative_at_R(ode_solution, x, 2 * x)
+        ode_rhs(x, ode_solution(x)) = 2 * x
+
+ode_solution(0) = 1

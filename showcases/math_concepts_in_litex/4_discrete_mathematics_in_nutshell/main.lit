@@ -1,0 +1,75 @@
+# Discrete mathematics in Litex, setting-first.
+#
+# Main line: finite counting -> recursive binomial coefficients -> Pascal's identity.
+
+finite_set_size({1, 2, 3}) = 3
+finite_set_size({4, 5}) = 2
+finite_set_size({1, 2, 3, 4, 5}) = 5
+finite_set_size({1, 2, 3, 4, 5}) = finite_set_size({1, 2, 3}) + finite_set_size({4, 5})
+
+have fn pascal_entry(a Z, b Z: a >= 0, b >= 0) N by induc a + b from 0:
+    case a = 0: 1
+    case a > 0:
+        case b = 0: 1
+        case b > 0: pascal_entry(a - 1, b) + pascal_entry(a, b - 1)
+
+have fn choose_fn(n, k N) N:
+    case k <= n: pascal_entry(k, n - k)
+    case k > n: 0
+
+prop pascal_identity_for_combination_counts(n, r N+):
+    r < n
+    r > 1
+    choose_fn(n, r) = choose_fn(n - 1, r) + choose_fn(n - 1, r - 1)
+
+thm pascal_identity:
+    ? forall n, r N+:
+        r < n
+        r > 1
+        =>:
+            $pascal_identity_for_combination_counts(n, r)
+    r < n
+    r > 1
+    r <= n
+    r <= n - 1
+    r - 1 <= n - 1
+    n - r > 0
+    r > 0
+
+    claim:
+        ? choose_fn(n, r) = pascal_entry(r, n - r)
+        by cases:
+            ? choose_fn(n, r) = pascal_entry(r, n - r)
+            case r <= n:
+                do_nothing
+            case r > n:
+                impossible r < n
+
+    claim:
+        ? choose_fn(n - 1, r) = pascal_entry(r, (n - 1) - r)
+        by cases:
+            ? choose_fn(n - 1, r) = pascal_entry(r, (n - 1) - r)
+            case r <= n - 1:
+                do_nothing
+            case r > n - 1:
+                impossible r <= n - 1
+
+    claim:
+        ? choose_fn(n - 1, r - 1) = pascal_entry(r - 1, (n - 1) - (r - 1))
+        by cases:
+            ? choose_fn(n - 1, r - 1) = pascal_entry(r - 1, (n - 1) - (r - 1))
+            case r - 1 <= n - 1:
+                do_nothing
+            case r - 1 > n - 1:
+                impossible r - 1 <= n - 1
+
+    (n - 1) - r = n - r - 1
+    (n - 1) - (r - 1) = n - r
+    choose_fn(n - 1, r) = pascal_entry(r, (n - 1) - r) = pascal_entry(r, n - r - 1)
+    choose_fn(n - 1, r - 1) = pascal_entry(r - 1, (n - 1) - (r - 1)) = pascal_entry(r - 1, n - r)
+    pascal_entry(r, n - r) = pascal_entry(r - 1, n - r) + pascal_entry(r, n - r - 1)
+    choose_fn(n, r) = pascal_entry(r, n - r) = pascal_entry(r - 1, n - r) + pascal_entry(r, n - r - 1)
+    choose_fn(n - 1, r - 1) + choose_fn(n - 1, r) = pascal_entry(r - 1, n - r) + pascal_entry(r, n - r - 1)
+    choose_fn(n, r) = choose_fn(n - 1, r - 1) + choose_fn(n - 1, r) = choose_fn(n - 1, r) + choose_fn(n - 1, r - 1)
+    by def:
+        ? $pascal_identity_for_combination_counts(n, r)

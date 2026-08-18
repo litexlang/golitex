@@ -19,6 +19,21 @@ theorem complexRatInQ (q : ℚ) : Litex.In (q : ℂ) Litex.Q :=
 theorem complexRealInR (r : ℝ) : Litex.In (r : ℂ) Litex.R :=
   ⟨r, Litex.Same.complexReal r⟩
 
+theorem naturalNonempty : Litex.Set.Nonempty Litex.N :=
+  ⟨0⟩
+
+theorem integerNonempty : Litex.Set.Nonempty Litex.Z :=
+  ⟨0⟩
+
+theorem rationalNonempty : Litex.Set.Nonempty Litex.Q :=
+  ⟨0⟩
+
+theorem realNonempty : Litex.Set.Nonempty Litex.R :=
+  ⟨0⟩
+
+theorem complexNonempty : Litex.Set.Nonempty Litex.C :=
+  ⟨0⟩
+
 /-- A complex value proved equal to a natural cast belongs to `N`. -/
 theorem complexEqNatInN
     (z : ℂ)
@@ -53,6 +68,55 @@ theorem notSameSymm
     ¬ Litex.Same b a := by
   intro hba
   exact h (Litex.Same.symm hba)
+
+private theorem complexZeroAddAsReal
+    {r s : ℝ}
+    (hr : Litex.AsReal (0 : ℂ) r)
+    (hs : Litex.AsReal (0 : ℂ) s) :
+    Litex.AsReal (0 : ℂ) (r + s) := by
+  have hsum : Litex.Same (r + s) ((0 : ℂ) + (0 : ℂ)) :=
+    Litex.Same.realAddComplex (Litex.Same.symm hr) (Litex.Same.symm hs)
+  exact Litex.Same.trans
+    (Litex.Same.ofEq (by norm_num))
+    (Litex.Same.symm hsum)
+
+private theorem complexAddAsReal
+    {a b : ℂ}
+    {r s : ℝ}
+    (ha : Litex.AsReal a r)
+    (hb : Litex.AsReal b s) :
+    Litex.AsReal (a + b) (r + s) :=
+  Litex.Same.symm
+    (Litex.Same.realAddComplex (Litex.Same.symm ha) (Litex.Same.symm hb))
+
+/-- The concrete complex-carrier adapter for Litex's nonnegative-addition
+builtin rule. It combines the independently selected zero representatives
+instead of assuming global representative coherence. -/
+theorem complexAddNonnegative
+    {a b : ℂ}
+    (ha : Litex.Le (0 : ℂ) a)
+    (hb : Litex.Le (0 : ℂ) b) :
+    Litex.Le (0 : ℂ) (a + b) := by
+  rcases ha with ⟨ra0, ra, hra0, hra, haOrder⟩
+  rcases hb with ⟨rb0, rb, hrb0, hrb, hbOrder⟩
+  exact ⟨ra0 + rb0, ra + rb,
+    complexZeroAddAsReal hra0 hrb0,
+    complexAddAsReal hra hrb,
+    add_le_add haOrder hbOrder⟩
+
+/-- The concrete complex-carrier adapter for Litex's strict-left,
+nonnegative-right addition builtin rule. -/
+theorem complexAddPositiveLeftStrict
+    {a b : ℂ}
+    (ha : Litex.Lt (0 : ℂ) a)
+    (hb : Litex.Le (0 : ℂ) b) :
+    Litex.Lt (0 : ℂ) (a + b) := by
+  rcases ha with ⟨ra0, ra, hra0, hra, haOrder⟩
+  rcases hb with ⟨rb0, rb, hrb0, hrb, hbOrder⟩
+  exact ⟨ra0 + rb0, ra + rb,
+    complexZeroAddAsReal hra0 hrb0,
+    complexAddAsReal hra hrb,
+    add_lt_add_of_lt_of_le haOrder hbOrder⟩
 
 /-- Introduce membership in a predicate-defined set from a semantically equal
 base representative satisfying the predicate. -/

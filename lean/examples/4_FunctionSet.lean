@@ -7,8 +7,8 @@ namespace __Compiler_4_FunctionSet
 
 theorem __fact0 :
     ∀ (s : Litex.Set) (S : Litex.Set) {__carrier0_3 : Type} (x : __carrier0_3) (__h0_3 : Litex.In x s) {__carrier0_4 : Type 1} (f : __carrier0_4) (__h0_4 : Litex.In f (Litex.fnSet s S)),
-      Litex.Same (Litex.fnApply f __h0_4 x __h0_3) (Litex.fnApply f __h0_4 x __h0_3) := by
+      Litex.Same (Litex.fnApply f __h0_4 x (__h0_3)) (Litex.fnApply f __h0_4 x (__h0_3)) := by
   intro s S __carrier0_3 x __h0_3 __carrier0_4 f __h0_4
-  exact Litex.Same.refl (Litex.fnApply f __h0_4 x __h0_3)
+  exact Litex.Same.refl (Litex.fnApply f __h0_4 x (__h0_3))
 
 end __Compiler_4_FunctionSet

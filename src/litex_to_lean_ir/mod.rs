@@ -279,6 +279,12 @@ pub enum LitexToLeanFactProofIr {
     KnownFactCitation {
         source_fact_id: FactId,
     },
+    /// Marks that the verifier selected its builtin-strategy route. The
+    /// recursively retained proof is the concrete rule/fact evidence that
+    /// Lean replays; the compiler never re-runs strategy search.
+    UseBuiltinStrategy {
+        proof: Box<LitexToLeanFactProofIr>,
+    },
     /// Citation of a positive existential whose binders were alpha-renamed by
     /// parsing or witness extraction.  Runtime lowering admits this node only
     /// after the verifier's canonical existential comparison succeeds.
@@ -415,6 +421,21 @@ pub enum LitexToLeanProofRuleIr {
         set_builder: LitexToLeanObjectIr,
         expected_target: Fact,
         expected_premises: Vec<Fact>,
+    },
+    /// Projection from membership in a literal set builder to membership in
+    /// its retained base set.
+    SetBuilderBaseMembershipProjection {
+        set_builder: LitexToLeanObjectIr,
+        expected_source: Fact,
+        expected_target: Fact,
+    },
+    /// Projection of one instantiated defining predicate from membership in
+    /// the exact set-builder carrier.
+    SetBuilderPredicateProjection {
+        set_builder: LitexToLeanObjectIr,
+        clause_index: usize,
+        expected_source: Fact,
+        expected_target: Fact,
     },
     /// Extensional function-space membership. The sole semantic premise is
     /// the verifier-checked pointwise `forall` in `expected_pointwise`.
@@ -644,6 +665,28 @@ impl fmt::Debug for LitexToLeanProofRuleIr {
                         .map(ToString::to_string)
                         .collect::<Vec<_>>(),
                 )
+                .finish(),
+            LitexToLeanProofRuleIr::SetBuilderBaseMembershipProjection {
+                set_builder,
+                expected_source,
+                expected_target,
+            } => f
+                .debug_struct("SetBuilderBaseMembershipProjection")
+                .field("set_builder", set_builder)
+                .field("expected_source", &expected_source.to_string())
+                .field("expected_target", &expected_target.to_string())
+                .finish(),
+            LitexToLeanProofRuleIr::SetBuilderPredicateProjection {
+                set_builder,
+                clause_index,
+                expected_source,
+                expected_target,
+            } => f
+                .debug_struct("SetBuilderPredicateProjection")
+                .field("set_builder", set_builder)
+                .field("clause_index", clause_index)
+                .field("expected_source", &expected_source.to_string())
+                .field("expected_target", &expected_target.to_string())
                 .finish(),
             LitexToLeanProofRuleIr::FunctionSetMembership {
                 element,

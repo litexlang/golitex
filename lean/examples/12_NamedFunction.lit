@@ -1,0 +1,30 @@
+# Tracer: define and call native unary functions through exact membership and
+# retained source-domain proofs.
+#
+# Before (Litex verified, but compiler emission stopped):
+# have fn inc(x R) R = x + 1
+# inc(1) = 1 + 1
+# have fn reciprocal(x R: x != 0) R = 1 / x
+# Former behavior: the emitter accepted only an identity body and rejected
+# every source-domain clause.
+#
+# Now (verified and compiled):
+have fn id(x R) R = x
+id(1) = 1
+
+have fn inc(x R) R = x + 1
+inc(1) = 1 + 1
+
+have fn reciprocal(x R: x != 0) R = 1 / x
+forall a R:
+    a != 0
+    =>:
+        reciprocal(a) = 1 / a
+# Current behavior: total functions use `Litex.Fn`; the restricted function
+# uses `Litex.FnWhere`. Every application consumes its function membership,
+# argument membership, and (for reciprocal) exact nonzero FactId.
+#
+# Boundary: standalone anonymous compound functions, multiple parameters,
+# nested application layers, and operators beyond +, -, *, / remain fail-closed.
+# Evidence: target/release/litex -compact -strict -runner -f lean/examples/12_NamedFunction.lit
+# and cargo test --release --test litex_to_lean_compiler_tracers
