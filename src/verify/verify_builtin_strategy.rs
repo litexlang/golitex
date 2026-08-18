@@ -80,6 +80,9 @@ impl Runtime {
             AtomicFact::IsNonemptySetFact(fact) => {
                 self.verify_is_nonempty_set_with_builtin_strategy(fact)
             }
+            AtomicFact::NotEqualFact(fact) => {
+                self.verify_nonzero_product_with_builtin_strategy(fact)
+            }
             AtomicFact::NotLessFact(_)
             | AtomicFact::NotGreaterFact(_)
             | AtomicFact::NotLessEqualFact(_)

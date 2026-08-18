@@ -1,0 +1,43 @@
+# Tracer: rational and natural arithmetic closure
+#
+# Before (Litex verified, but compiler emission stopped):
+# forall a, b Q:
+#     a * b $in Q
+# Former compiler behavior: the verifier kept only a generic builtin-rule
+# label, so the compiler had no exact rational-closure certificate to replay.
+#
+# Now: rational `+`, `-`, `*`, `/` and natural `+`, `*` replay exact
+# verifier-selected closure certificates through proved native-carrier rules.
+# Source binders stay complex-valued and retain independent Litex.In evidence.
+forall a, b Q:
+    a + b $in Q
+
+forall a, b Q:
+    a - b $in Q
+
+forall a, b Q:
+    a * b $in Q
+
+forall a, b Q:
+    b != 0
+    =>:
+        a / b $in Q
+
+forall a, b N:
+    a + b $in N
+
+forall a, b N:
+    a * b $in N
+
+# Boundary (Litex verifies; compiler remains fail-closed):
+# forall a Q, z Z:
+#     a != 0
+#     =>:
+#         a^z $in Q
+# Rational power has verifier closure evidence, but the current compiler has no
+# reviewed native power term/evidence adapter. This batch must not invent one.
+#
+# Evidence:
+# target/release/litex -compact -strict -runner -f lean/examples/18_RationalNaturalClosures.lit
+# cargo test --release --test litex_to_lean_compiler_tracers rational_and_natural_carrier_closures
+# cd lean && ./compiler.sh check examples

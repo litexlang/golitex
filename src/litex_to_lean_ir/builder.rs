@@ -3968,14 +3968,16 @@ impl LitexToLeanIrBuilder<'_> {
         }
         let rule = match evidence {
             Some(evidence) => LitexToLeanProofRuleIr::Builtin(
-                LitexToLeanBuiltinRuleIr::from_legacy_evidence(evidence).ok_or_else(|| {
-                    litex_to_lean_ir_error(
-                        &goal.line_file(),
-                        format!(
-                            "builtin evidence `{evidence:?}` has no Litex-to-Lean IR representation"
-                        ),
-                    )
-                })?,
+                LitexToLeanBuiltinRuleIr::try_from_builtin_rule_evidence(evidence).ok_or_else(
+                    || {
+                        litex_to_lean_ir_error(
+                            &goal.line_file(),
+                            format!(
+                                "builtin evidence `{evidence:?}` has no Litex-to-Lean IR representation"
+                            ),
+                        )
+                    },
+                )?,
             ),
             None if label == "calculation"
                 && matches!(

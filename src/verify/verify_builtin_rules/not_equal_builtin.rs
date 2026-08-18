@@ -1308,7 +1308,7 @@ impl Runtime {
         }
     }
 
-    fn obj_represents_zero_for_not_equal_builtin_rules(self: &Self, obj: &Obj) -> bool {
+    pub(crate) fn obj_represents_zero_for_not_equal_builtin_rules(self: &Self, obj: &Obj) -> bool {
         match self.resolve_obj_to_number(obj) {
             Some(number) => number.normalized_value == "0",
             None => false,

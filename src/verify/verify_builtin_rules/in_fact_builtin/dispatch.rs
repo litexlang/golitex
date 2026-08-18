@@ -250,16 +250,17 @@ impl Runtime {
                     | Obj::StandardSet(StandardSet::C)
             )
         {
-            if matches!(&in_fact.element, Obj::EulerNumber(_))
-                && matches!(&in_fact.set, Obj::StandardSet(StandardSet::R))
-            {
+            if matches!(&in_fact.set, Obj::StandardSet(StandardSet::R)) {
+                let rule = match &in_fact.element {
+                    Obj::EulerNumber(_) => NativeConstantMembershipBuiltinRule::EulerNumberInReal,
+                    Obj::Pi(_) => NativeConstantMembershipBuiltinRule::PiInReal,
+                    _ => unreachable!(),
+                };
                 return Ok(
                     FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         in_fact.clone().into(),
                         "native mathematical constant is a real".to_string(),
-                        BuiltinRuleEvidence::NativeConstantMembership(
-                            NativeConstantMembershipBuiltinRule::EulerNumberInReal,
-                        ),
+                        BuiltinRuleEvidence::NativeConstantMembership(rule),
                         Vec::new(),
                     )
                     .into(),

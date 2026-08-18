@@ -1562,6 +1562,14 @@ fn render_proof(fact: &LitexToLeanFactIr, context: &RenderContext) -> Result<Str
                 context,
             ),
             LitexToLeanProofRuleIr::Builtin(
+                LitexToLeanBuiltinRuleIr::NativeConstantMembership(rule),
+            ) => render_native_constant_membership_rule(
+                fact,
+                *rule,
+                parameter_requirements,
+                premises,
+            ),
+            LitexToLeanProofRuleIr::Builtin(
                 LitexToLeanBuiltinRuleIr::ComplexArithmeticMembershipClosure(rule),
             ) => render_complex_binary_membership_rule(
                 fact,
@@ -1573,6 +1581,24 @@ fn render_proof(fact: &LitexToLeanFactIr, context: &RenderContext) -> Result<Str
             LitexToLeanProofRuleIr::Builtin(
                 LitexToLeanBuiltinRuleIr::IntegerMembershipClosure(rule),
             ) => render_integer_binary_membership_rule(
+                fact,
+                *rule,
+                parameter_requirements,
+                premises,
+                context,
+            ),
+            LitexToLeanProofRuleIr::Builtin(
+                LitexToLeanBuiltinRuleIr::NaturalMembershipClosure(rule),
+            ) => render_natural_binary_membership_rule(
+                fact,
+                *rule,
+                parameter_requirements,
+                premises,
+                context,
+            ),
+            LitexToLeanProofRuleIr::Builtin(
+                LitexToLeanBuiltinRuleIr::RationalMembershipClosure(rule),
+            ) => render_rational_binary_membership_rule(
                 fact,
                 *rule,
                 parameter_requirements,
@@ -2888,6 +2914,37 @@ fn render_standard_set_membership_projection(
     Ok(proof)
 }
 
+fn render_native_constant_membership_rule(
+    fact: &LitexToLeanFactIr,
+    rule: LitexToLeanNativeConstantMembershipBuiltinRuleIr,
+    parameter_requirements: &[LitexToLeanFactIr],
+    premises: &[LitexToLeanFactIr],
+) -> Result<String, String> {
+    if !parameter_requirements.is_empty() || !premises.is_empty() {
+        return Err("native constant membership retained unexpected premises".into());
+    }
+    let (element, set) = membership_parts(&fact.proposition)?;
+    let theorem = match (rule, element, set) {
+        (
+            LitexToLeanNativeConstantMembershipBuiltinRuleIr::ImaginaryUnitInComplex,
+            Obj::ImaginaryUnit(_),
+            Obj::StandardSet(StandardSet::C),
+        ) => "imaginaryUnitInC",
+        (
+            LitexToLeanNativeConstantMembershipBuiltinRuleIr::EulerNumberInReal,
+            Obj::EulerNumber(_),
+            Obj::StandardSet(StandardSet::R),
+        ) => "eInR",
+        (
+            LitexToLeanNativeConstantMembershipBuiltinRuleIr::PiInReal,
+            Obj::Pi(_),
+            Obj::StandardSet(StandardSet::R),
+        ) => "piInR",
+        _ => return Err("native constant membership changed its constant or carrier".into()),
+    };
+    Ok(format!("Litex.Rules.{theorem}"))
+}
+
 fn render_complex_binary_membership_rule(
     fact: &LitexToLeanFactIr,
     rule: LitexToLeanComplexArithmeticMembershipClosureBuiltinRuleIr,
@@ -2983,6 +3040,116 @@ fn render_integer_binary_membership_rule(
         || obj_equality_key(right) != obj_equality_key(premise_right)
     {
         return Err("integer binary membership premises changed its ordered operands".into());
+    }
+    let pair = render_proof(&premises[0], context)?;
+    let pair_type = render_fact(&premises[0].proposition, context)?;
+    Ok(format!(
+        "(by\n  have __components : {pair_type} := {pair}\n  exact Litex.Rules.{theorem} (__components.1) (__components.2))"
+    ))
+}
+
+fn render_natural_binary_membership_rule(
+    fact: &LitexToLeanFactIr,
+    rule: LitexToLeanNaturalMembershipClosureBuiltinRuleIr,
+    parameter_requirements: &[LitexToLeanFactIr],
+    premises: &[LitexToLeanFactIr],
+    context: &RenderContext,
+) -> Result<String, String> {
+    if !parameter_requirements.is_empty() || premises.len() != 2 {
+        return Err(
+            "natural binary membership closure requires two ordered premises and no parameter requirements"
+                .into(),
+        );
+    }
+    let (target_element, target_set) = membership_parts(&fact.proposition)?;
+    if !matches!(target_set, Obj::StandardSet(StandardSet::N)) {
+        return Err("natural binary membership target is not N".into());
+    }
+    let (left, right, theorem) = match (rule, target_element) {
+        (LitexToLeanNaturalMembershipClosureBuiltinRuleIr::Add, Obj::Add(operation)) => (
+            operation.left.as_ref(),
+            operation.right.as_ref(),
+            "complexAddInN",
+        ),
+        (LitexToLeanNaturalMembershipClosureBuiltinRuleIr::Mul, Obj::Mul(operation)) => (
+            operation.left.as_ref(),
+            operation.right.as_ref(),
+            "complexMulInN",
+        ),
+        _ => return Err("natural binary membership target changed its operator".into()),
+    };
+    let (premise_left, premise_left_set) = membership_parts(&premises[0].proposition)?;
+    let (premise_right, premise_right_set) = membership_parts(&premises[1].proposition)?;
+    if !matches!(premise_left_set, Obj::StandardSet(StandardSet::N))
+        || !matches!(premise_right_set, Obj::StandardSet(StandardSet::N))
+        || obj_equality_key(left) != obj_equality_key(premise_left)
+        || obj_equality_key(right) != obj_equality_key(premise_right)
+    {
+        return Err("natural binary membership premises changed its ordered operands".into());
+    }
+    let left_proof = render_proof(&premises[0], context)?;
+    let right_proof = render_proof(&premises[1], context)?;
+    Ok(format!(
+        "Litex.Rules.{theorem} ({left_proof}) ({right_proof})"
+    ))
+}
+
+fn render_rational_binary_membership_rule(
+    fact: &LitexToLeanFactIr,
+    rule: LitexToLeanRationalMembershipClosureBuiltinRuleIr,
+    parameter_requirements: &[LitexToLeanFactIr],
+    premises: &[LitexToLeanFactIr],
+    context: &RenderContext,
+) -> Result<String, String> {
+    if !parameter_requirements.is_empty() || premises.len() != 1 {
+        return Err(
+            "rational binary membership closure requires one ordered conjunction and no parameter requirements"
+                .into(),
+        );
+    }
+    let components = conjunction_components(&premises[0].proposition)?;
+    if components.len() != 2 {
+        return Err("rational binary membership premise is not a binary conjunction".into());
+    }
+    let (target_element, target_set) = membership_parts(&fact.proposition)?;
+    if !matches!(target_set, Obj::StandardSet(StandardSet::Q)) {
+        return Err("rational binary membership target is not Q".into());
+    }
+    let (left, right, theorem) = match (rule, target_element) {
+        (LitexToLeanRationalMembershipClosureBuiltinRuleIr::Add, Obj::Add(operation)) => (
+            operation.left.as_ref(),
+            operation.right.as_ref(),
+            "complexAddInQ",
+        ),
+        (LitexToLeanRationalMembershipClosureBuiltinRuleIr::Sub, Obj::Sub(operation)) => (
+            operation.left.as_ref(),
+            operation.right.as_ref(),
+            "complexSubInQ",
+        ),
+        (LitexToLeanRationalMembershipClosureBuiltinRuleIr::Mul, Obj::Mul(operation)) => (
+            operation.left.as_ref(),
+            operation.right.as_ref(),
+            "complexMulInQ",
+        ),
+        (LitexToLeanRationalMembershipClosureBuiltinRuleIr::Div, Obj::Div(operation)) => (
+            operation.left.as_ref(),
+            operation.right.as_ref(),
+            "complexDivInQ",
+        ),
+        _ => {
+            return Err(format!(
+                "unsupported rational membership closure rule: {rule:?}"
+            ))
+        }
+    };
+    let (premise_left, premise_left_set) = membership_parts(&components[0])?;
+    let (premise_right, premise_right_set) = membership_parts(&components[1])?;
+    if !matches!(premise_left_set, Obj::StandardSet(StandardSet::Q))
+        || !matches!(premise_right_set, Obj::StandardSet(StandardSet::Q))
+        || obj_equality_key(left) != obj_equality_key(premise_left)
+        || obj_equality_key(right) != obj_equality_key(premise_right)
+    {
+        return Err("rational binary membership premises changed its ordered operands".into());
     }
     let pair = render_proof(&premises[0], context)?;
     let pair_type = render_fact(&premises[0].proposition, context)?;
@@ -3657,6 +3824,9 @@ fn render_obj(obj: &Obj, context: &RenderContext) -> Result<String, String> {
         {
             Ok(format!("({} : ℂ)", number.normalized_value))
         }
+        Obj::ImaginaryUnit(_) => Ok("Complex.I".into()),
+        Obj::EulerNumber(_) => Ok("((Real.exp 1 : ℝ) : ℂ)".into()),
+        Obj::Pi(_) => Ok("((Real.pi : ℝ) : ℂ)".into()),
         Obj::Add(addition) => Ok(format!(
             "({} + {})",
             render_obj(addition.left.as_ref(), context)?,

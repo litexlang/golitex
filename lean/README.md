@@ -207,6 +207,23 @@ two `Z` memberships, select native integer witnesses, and construct the result
 witness through proved `Same` bridges. Integer remainder remains fail-closed
 because a complex-valued source term has no reviewed native `%` representation.
 
+Example 18 adds rational `+`, `-`, `*`, `/` and natural `+`, `*` closure.
+Each verifier route now records an operator-specific certificate rather than a
+generic explanation label. Rational proofs choose native `ℚ` witnesses;
+natural proofs choose native `ℕ` witnesses. Both families perform the native
+operation and rebuild the exact result membership while leaving the source
+binder in `ℂ`. Rational integer power remains fail-closed even though its exact
+`Pow` certificate is retained, because the source power term has no reviewed
+compiler representation yet.
+
+Example 19 restores native mathematical constants without a universal object
+carrier. Source `i`, `e`, and `pi` lower respectively to `Complex.I`, the
+complex embedding of `Real.exp 1`, and the complex embedding of `Real.pi`.
+Verifier-selected rules prove `i $in C` and `e, pi $in R`; complex membership
+for the two real constants reuses those exact FactIds through `inCOfInR`.
+Positive-real membership remains fail-closed until the refined `R+` carrier is
+represented exactly.
+
 Sketch is a real source scope, not an example-file wrapper. Each top-level
 sketch is emitted as `__Sketch01`, `__Sketch02`, and so on. Its emitter context
 starts with the facts and symbols visible outside the sketch, but definitions
@@ -246,7 +263,7 @@ deferred until the IR and compiler emitter support its Litex statement form; it 
 not represented by hand-written code under `examples/`.
 
 The compiler currently emits only the reviewed IR routes exercised by the
-seventeen numbered examples. Checked named aliases of `R` and `C`, top-level atomic
+nineteen numbered examples. Checked named aliases of `R` and `C`, top-level atomic
 equality, nonnegative integer numerals, addition, arbitrary set parameters,
 unary function sets, named unary application, basic proof scopes,
 case/contradiction proofs, one-witness positive existentials, minimal native
@@ -255,11 +272,12 @@ and source-domain clauses, concrete predicate reduction, whole-side equality
 and one-parameter concrete-predicate set-builder membership, and checked
 nonempty choice are supported. Real `+`, `-`, `*`, `/` carrier closure and
 additive nonnegative/one-strict sign strategies are also supported, as is
-standard membership widening through `N → Z → Q → R → C`. Other atomic
-Complex carrier closure for all four basic operators and integer carrier
-closure for `+`, `-`, and `*` are supported as well. Other atomic predicates
-and arithmetic operators, including integer remainder, refined numeric
-carriers, bare arbitrary-
-set choices (`have A set`), multi-parameter or
+standard membership widening through `N → Z → Q → R → C`. Complex and
+rational carrier closure support all four basic operators; integer closure
+supports `+`, `-`, and `*`; natural closure supports `+` and `*`. Other atomic
+predicates and arithmetic operators are not implemented yet. Native `i`, `e`,
+and `pi` terms and their base-carrier memberships are supported. Remaining
+boundaries include integer remainder, rational
+power, refined numeric carriers, bare arbitrary-set choices (`have A set`), multi-parameter or
 multi-layer functions, nested set-builder binder expressions, richer set
 constructors, and broader production code-generation are not implemented yet.

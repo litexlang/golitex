@@ -129,6 +129,13 @@ forall x R:
 
 #[test]
 fn native_tan_and_cot_nonzero_require_nonzero_sine_and_cosine() {
+    run_with_large_stack(
+        "native_tan_and_cot_nonzero_require_nonzero_sine_and_cosine",
+        native_tan_and_cot_nonzero_require_nonzero_sine_and_cosine_impl,
+    );
+}
+
+fn native_tan_and_cot_nonzero_require_nonzero_sine_and_cosine_impl() {
     let positive_source = r#"
 forall x R:
     sin(x) != 0
@@ -138,7 +145,7 @@ forall x R:
         cot(x) != 0
 "#;
     let (run_succeeded, run_output) =
-        run_trigonometric_source(positive_source, "native_tan_cot_nonzero");
+        run_trigonometric_source_detailed(positive_source, "native_tan_cot_nonzero");
     assert!(
         run_succeeded,
         "nonzero sine and cosine should prove nonzero tangent and cotangent:\n{run_output}"
@@ -161,6 +168,61 @@ forall x R:
             "{label} must not prove a nonzero quotient without a nonzero numerator:\n{run_output}"
         );
     }
+}
+
+#[test]
+fn nonzero_product_strategy_recurses_and_composes_with_direct_rules() {
+    run_with_large_stack(
+        "nonzero_product_strategy_recurses_and_composes_with_direct_rules",
+        nonzero_product_strategy_recurses_and_composes_with_direct_rules_impl,
+    );
+}
+
+fn nonzero_product_strategy_recurses_and_composes_with_direct_rules_impl() {
+    let positive_source = r#"
+forall a, b, c, d R:
+    a != 0
+    b != 0
+    c != 0
+    d != 0
+    =>:
+        a * b * c * d != 0
+
+forall x R:
+    sin(x) != 0
+    cos(x) != 0
+    =>:
+        2 * cot(x) != 0
+"#;
+    let (run_succeeded, run_output) =
+        run_trigonometric_source_detailed(positive_source, "recursive_nonzero_product_strategy");
+    assert!(
+        run_succeeded,
+        "nonzero products should decompose into nonzero factors:\n{run_output}"
+    );
+    assert!(
+        run_output.contains("nonzero-product strategy"),
+        "{run_output}"
+    );
+    assert!(
+        run_output.contains("non-zero transfer through canonical expansion"),
+        "{run_output}"
+    );
+
+    let missing_factor = r#"
+forall a, b, c, d R:
+    a != 0
+    b != 0
+    c != 0
+    =>:
+        a * b * c * d != 0
+"#;
+    let (run_succeeded, run_output) =
+        run_trigonometric_source(missing_factor, "nonzero_product_missing_factor");
+    assert!(
+        !run_succeeded,
+        "a product must remain unknown when one factor may be zero:\n{run_output}"
+    );
 }
 
 #[test]
@@ -284,6 +346,13 @@ fn native_trigonometry_rejects_nonreal_arguments() {
 
 #[test]
 fn native_tan_and_cot_derived_angle_formulas_are_checkable() {
+    run_with_large_stack(
+        "native_tan_and_cot_derived_angle_formulas_are_checkable",
+        native_tan_and_cot_derived_angle_formulas_are_checkable_impl,
+    );
+}
+
+fn native_tan_and_cot_derived_angle_formulas_are_checkable_impl() {
     let source_code = r#"
 forall x, y R:
     cos(x) != 0
@@ -422,4 +491,12 @@ fn run_trigonometric_source(source_code: &str, label: &str) -> (bool, String) {
     runtime.new_file_path_new_env_new_name_scope(label);
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
     render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false)
+}
+
+fn run_trigonometric_source_detailed(source_code: &str, label: &str) -> (bool, String) {
+    let mut runtime = Runtime::new();
+    runtime.detail_output = true;
+    runtime.new_file_path_new_env_new_name_scope(label);
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    render_run_source_code_output(&runtime, &stmt_results, &runtime_error, true)
 }

@@ -126,6 +126,19 @@ conjunction retained by verifier IR and construct native integer result
 witnesses. Verified integer `%` is the paired negative boundary because the
 current complex-valued source representation has no native remainder term.
 
+`18_RationalNaturalClosures.lit` traces rational `+`, `-`, `*`, `/` closure
+and natural `+`, `*` closure. The verifier emits operator-specific evidence,
+and generated proofs construct native `ℚ` or `ℕ` result witnesses without
+retyping the complex-valued source binders. Verified rational integer power is
+the paired negative boundary: its `Pow` certificate is retained, but compiler
+still has no reviewed native power-term contract.
+
+`19_NativeConstants.lit` traces native `i`, `e`, and `pi` terms together with
+their base numeric memberships. Generated equality uses `Complex.I`,
+`Real.exp 1`, and `Real.pi`; `e` and `pi` reach `C` by citing their exact `R`
+facts and the existing hierarchy projection. Verified `e $in R+` is the paired
+negative boundary until the refined positive-real carrier is implemented.
+
 Generated `.lean` files are review artifacts, not editing surfaces. A new
 compiler feature must add the next numbered same-name pair. Unsupported
 statements, objects, facts, or proof routes fail closed.
