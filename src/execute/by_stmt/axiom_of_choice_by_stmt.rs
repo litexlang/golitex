@@ -96,12 +96,11 @@ impl Runtime {
             obligations_for_output,
             choice_fact_string,
         );
-        Ok(NonFactualStmtSuccess::new_with_by_verification(
-            stmt.clone().into(),
-            infer_result,
-            inside_results,
-            ByVerificationResult::AxiomOfChoice(by_verification),
-        )
+        Ok(VerifiedByStmtIr::ByAxiomOfChoiceStmt {
+            statement: stmt.clone(),
+            common: VerifiedStmtCommonIr::new(infer_result, inside_results),
+            verification: Some(by_verification),
+        }
         .into())
     }
 
@@ -115,7 +114,12 @@ impl Runtime {
             choice_fact,
             InferReason::VerifiedStatement,
         )?;
-        Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![]).into())
+        Ok(VerifiedByStmtIr::ByAxiomOfChoiceStmt {
+            statement: stmt.clone(),
+            common: VerifiedStmtCommonIr::new(infer_result, vec![]),
+            verification: None,
+        }
+        .into())
     }
 }
 

@@ -48,7 +48,7 @@ impl Runtime {
             self.verify_atomic_fact_as_builtin_rule_premise(&reversed, builtin_state)?;
         if reversed_result.is_true() {
             return Ok(
-                FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                VerifiedFactStmtIr::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     not_equal_fact.clone().into(),
                     "not-equality symmetry".to_string(),
                     BuiltinRuleEvidence::NotEqualSymmetry,
@@ -61,7 +61,7 @@ impl Runtime {
         if let (Obj::ListSet(left_ls), Obj::ListSet(right_ls)) = (left_obj, right_obj) {
             if left_ls.list.len() != right_ls.list.len() {
                 return Ok(
-                    (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    (VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                         not_equal_fact.clone().into(),
                         "list_set_different_length".to_string(),
                         Vec::new(),
@@ -211,7 +211,7 @@ fn try_verify_native_real_constant_nonzero(not_equal_fact: &NotEqualFact) -> Opt
         return None;
     }
     Some(
-        FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+        VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
             not_equal_fact.clone().into(),
             "native real constant distinctness".to_string(),
             Vec::new(),
@@ -234,7 +234,7 @@ fn try_verify_intrinsically_positive_native_value_nonzero(
         return None;
     }
     Some(
-        FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+        VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
             not_equal_fact.clone().into(),
             "well-defined exp/factorial values are strictly positive".to_string(),
             Vec::new(),
@@ -256,7 +256,7 @@ impl Runtime {
             return None;
         }
         Some(
-            FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 not_equal_fact.clone().into(),
                 "not_equal_numeric_resolved_or_equal_class_calculation".to_string(),
                 BuiltinRuleEvidence::ClosedNumericComparison(
@@ -327,7 +327,7 @@ impl Runtime {
         }
 
         Ok(Some(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_label_and_steps(
                 not_equal_fact.clone().into(),
                 InferResult::new(),
                 "not_equal_empty_set_from_nonempty".to_string(),
@@ -363,7 +363,7 @@ impl Runtime {
             if sub.is_true() {
                 steps.push(sub);
                 let success = if self.captures_well_definedness() {
-                    FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_and_steps(
+                    VerifiedFactStmtIr::new_with_verified_by_builtin_rule_evidence_and_steps(
                         not_equal_fact.clone().into(),
                         InferResult::new(),
                         "not_equal_from_known_strict_order".to_string(),
@@ -373,7 +373,7 @@ impl Runtime {
                 } else {
                     // Preserve the established ordinary-runtime proof shape;
                     // the typed certificate is backend-only provenance.
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
+                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_label_and_steps(
                         not_equal_fact.clone().into(),
                         InferResult::new(),
                         "not_equal_from_known_strict_order".to_string(),
@@ -396,7 +396,7 @@ impl Runtime {
             if premise_result.is_true() {
                 steps.push(premise_result);
                 return Ok(Some(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
+                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_label_and_steps(
                         not_equal_fact.clone().into(),
                         InferResult::new(),
                         "not_equal_from_complete_strict_order_disjunction".to_string(),
@@ -471,7 +471,7 @@ impl Runtime {
                     continue;
                 }
                 return Ok(Some(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
+                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_label_and_steps(
                         not_equal_fact.clone().into(),
                         InferResult::new(),
                         "not_equal_from_known_positive_lower_bound".to_string(),
@@ -512,7 +512,7 @@ impl Runtime {
                     self.verify_non_equational_atomic_fact_with_known_atomic_facts(&in_set)?;
 
                 return Ok(Some(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
+                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_label_and_steps(
                         not_equal_fact.clone().into(),
                         InferResult::new(),
                         "not_equal_from_membership_contradiction".to_string(),
@@ -556,7 +556,7 @@ impl Runtime {
         }
 
         Ok(Some(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_label_and_steps(
                 not_equal_fact.clone().into(),
                 InferResult::new(),
                 "abs_not_equal_zero_from_arg_nonzero".to_string(),
@@ -599,7 +599,7 @@ impl Runtime {
         }
 
         Ok(Some(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 not_equal_fact.clone().into(),
                 "sqrt(x) != 0 from x > 0".to_string(),
                 vec![positive_result],
@@ -648,7 +648,7 @@ impl Runtime {
                 self.verify_non_equational_atomic_fact_with_known_atomic_facts(candidate)?;
             if sub_result.is_true() {
                 return Ok(Some(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
+                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_label_and_steps(
                         not_equal_fact.clone().into(),
                         InferResult::new(),
                         "sub_not_equal_zero_from_operand_not_equal".to_string(),
@@ -669,7 +669,7 @@ impl Runtime {
         )?;
         if premise_result.is_true() {
             return Ok(Some(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
+                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_label_and_steps(
                     not_equal_fact.clone().into(),
                     InferResult::new(),
                     "sub_not_equal_zero_from_complete_operand_disjunction".to_string(),
@@ -730,7 +730,7 @@ impl Runtime {
                 self.verify_non_equational_atomic_fact_with_known_atomic_facts(candidate)?;
             if sub_result.is_true() {
                 return Ok(Some(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
+                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_label_and_steps(
                         not_equal_fact.clone().into(),
                         InferResult::new(),
                         "add_not_equal_zero_from_operand_not_equal_negation".to_string(),
@@ -751,7 +751,7 @@ impl Runtime {
         )?;
         if premise_result.is_true() {
             return Ok(Some(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
+                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_label_and_steps(
                     not_equal_fact.clone().into(),
                     InferResult::new(),
                     "add_not_equal_zero_from_complete_negation_disjunction".to_string(),
@@ -793,7 +793,7 @@ impl Runtime {
                 self.verify_non_equational_atomic_fact_with_known_atomic_facts(candidate)?;
             if sub_result.is_true() {
                 return Ok(Some(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
+                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_label_and_steps(
                         not_equal_fact.clone().into(),
                         InferResult::new(),
                         "operand_not_equal_from_sub_not_equal_zero".to_string(),
@@ -814,7 +814,7 @@ impl Runtime {
         )?;
         if premise_result.is_true() {
             return Ok(Some(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
+                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_label_and_steps(
                     not_equal_fact.clone().into(),
                     InferResult::new(),
                     "operand_not_equal_from_complete_difference_disjunction".to_string(),
@@ -882,7 +882,7 @@ impl Runtime {
                 self.verify_non_equational_atomic_fact_with_known_atomic_facts(candidate)?;
             if sub_result.is_true() {
                 return Ok(Some(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
+                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_label_and_steps(
                         not_equal_fact.clone().into(),
                         InferResult::new(),
                         "operand_not_equal_negation_from_add_not_equal_zero".to_string(),
@@ -904,7 +904,7 @@ impl Runtime {
             )?;
             if premise_result.is_true() {
                 return Ok(Some(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
+                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_label_and_steps(
                         not_equal_fact.clone().into(),
                         InferResult::new(),
                         "operand_not_equal_negation_from_complete_sum_disjunction".to_string(),
@@ -945,7 +945,7 @@ impl Runtime {
             return Ok(None);
         }
         Ok(Some(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 not_equal_fact.clone().into(),
                 "n != 0 from n $in N and 1 <= n".to_string(),
                 vec![premise_result],
@@ -1021,7 +1021,7 @@ impl Runtime {
             self.verify_atomic_fact_as_builtin_rule_premise(&base_neq_zero, builtin_state)?;
         if result.is_true() {
             return Ok(Some(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
+                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_label_and_steps(
                     not_equal_fact.clone().into(),
                     InferResult::new(),
                     "not_equal_pow_from_base_nonzero".to_string(),
@@ -1042,7 +1042,7 @@ impl Runtime {
                 .verify_non_equational_atomic_fact_with_known_atomic_facts(&positive_membership)?;
             if positive_result.is_true() {
                 return Ok(Some(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
+                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_label_and_steps(
                         not_equal_fact.clone().into(),
                         InferResult::new(),
                         "not_equal_pow_from_positive_base_carrier".to_string(),
@@ -1102,7 +1102,7 @@ impl Runtime {
                     div.right.as_ref().clone(),
                     orientation,
                 ));
-            FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_and_steps(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rule_evidence_and_steps(
                 not_equal_fact.clone().into(),
                 InferResult::new(),
                 "div_not_equal_zero_from_numerator_nonzero".to_string(),
@@ -1112,7 +1112,7 @@ impl Runtime {
         } else {
             // Resolved aliases of zero still verify in Litex, but this rule
             // cannot yet return the equality evidence a compiler would need.
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_label_and_steps(
                 not_equal_fact.clone().into(),
                 InferResult::new(),
                 "div_not_equal_zero_from_numerator_nonzero".to_string(),
@@ -1209,7 +1209,7 @@ impl Runtime {
             }
 
             return Ok(Some(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                     not_equal_fact.clone().into(),
                     "product_nonzero_component: a * b != 0 gives a != 0 and b != 0".to_string(),
                     steps,
@@ -1267,7 +1267,7 @@ impl Runtime {
         if premise_result.is_true() {
             steps.push(premise_result);
             return Ok(Some(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
+                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_label_and_steps(
                     not_equal_fact.clone().into(),
                     InferResult::new(),
                     "square_sum_not_equal_zero_from_nonzero_component_or".to_string(),
@@ -1531,7 +1531,7 @@ impl Runtime {
 
         match verified {
             Some((rule_label, subgoals)) => Ok(Some(
-                (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                (VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                     not_equal_fact.clone().into(),
                     rule_label.to_string(),
                     subgoals,

@@ -16,7 +16,7 @@ impl Runtime {
                 self.verify_non_equational_atomic_fact_with_direct_routes(&normalized)?;
             if normalized_result.is_true() {
                 return Ok(
-                    FactualStmtSuccess::new_with_verified_by_builtin_strategy_recording_stmt(
+                    VerifiedFactStmtIr::new_with_verified_by_builtin_strategy_recording_stmt(
                         atomic_fact.clone().into(),
                         "additive sign strategy: normalized order goal".to_string(),
                         vec![normalized_result],
@@ -29,14 +29,14 @@ impl Runtime {
             let strategy_label =
                 "numeric-order strategy: structurally smaller order goals".to_string();
             let success = match structural_order_strategy_rule_evidence(&normalized, &children) {
-                Some(evidence) => FactualStmtSuccess::
+                Some(evidence) => VerifiedFactStmtIr::
                     new_with_verified_by_builtin_strategy_evidence_recording_stmt(
                         atomic_fact.clone().into(),
                         strategy_label,
                         evidence,
                         children,
                     ),
-                None => FactualStmtSuccess::new_with_verified_by_builtin_strategy_recording_stmt(
+                None => VerifiedFactStmtIr::new_with_verified_by_builtin_strategy_recording_stmt(
                     atomic_fact.clone().into(),
                     strategy_label,
                     children,
@@ -66,7 +66,7 @@ impl Runtime {
                     return Ok(StmtUnknown::new().into());
                 }
                 Ok(
-                    FactualStmtSuccess::new_with_verified_by_builtin_strategy_recording_stmt(
+                    VerifiedFactStmtIr::new_with_verified_by_builtin_strategy_recording_stmt(
                         atomic_fact.clone().into(),
                         "additive sign strategy: nonnegative summands".to_string(),
                         vec![left, right],
@@ -84,7 +84,7 @@ impl Runtime {
                     &fact.line_file,
                 )? {
                     return Ok(
-                        FactualStmtSuccess::new_with_verified_by_builtin_strategy_recording_stmt(
+                        VerifiedFactStmtIr::new_with_verified_by_builtin_strategy_recording_stmt(
                             atomic_fact.clone().into(),
                             "additive sign strategy: one positive and one nonnegative summand"
                                 .to_string(),
@@ -891,10 +891,10 @@ fn structural_order_strategy_child_matches(result: &StmtResult, operand: &Obj, w
     let Some(success) = result.factual_success() else {
         return false;
     };
-    let Fact::AtomicFact(child) = &success.stmt else {
+    let Fact::AtomicFact(child) = success.fact() else {
         return false;
     };
-    let (left, right) = match child {
+    let (left, right) = match &child {
         AtomicFact::LessEqualFact(fact) if weak => (&fact.left, &fact.right),
         AtomicFact::LessFact(fact) if !weak => (&fact.left, &fact.right),
         _ => return false,

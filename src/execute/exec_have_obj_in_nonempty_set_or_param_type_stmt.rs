@@ -10,9 +10,12 @@ impl Runtime {
         let infer_result =
             self.exec_have_obj_in_nonempty_set_or_param_type_stmt_affect_environment(stmt)?;
         let choice_verification = self.object_choice_verification_result(stmt, checks.len())?;
-        let mut success = NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, checks);
-        success.object_choice_verification = Some(choice_verification);
-        Ok(success.into())
+        Ok(VerifiedDefObjStmtIr::HaveObjInNonemptySetStmt {
+            statement: stmt.clone(),
+            common: VerifiedStmtCommonIr::new(infer_result, checks),
+            verification: Some(choice_verification),
+        }
+        .into())
     }
 
     /// Mathematical contract: an object introduction is meaningful when each
@@ -71,7 +74,12 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         let infer_result =
             self.exec_have_obj_in_nonempty_set_or_param_type_stmt_affect_environment(stmt)?;
-        Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![]).into())
+        Ok(VerifiedDefObjStmtIr::HaveObjInNonemptySetStmt {
+            statement: stmt.clone(),
+            common: VerifiedStmtCommonIr::new(infer_result, vec![]),
+            verification: None,
+        }
+        .into())
     }
 
     fn object_choice_verification_result(

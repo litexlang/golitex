@@ -2142,10 +2142,12 @@ $leaf(y)
                 "obtain should expose its direct predicate body:\n{}",
                 run_output
             );
-            let success = stmt_results[3]
-                .non_factual_success()
-                .expect("direct obtain should be a nonfactual success");
-            let Stmt::DefObjStmt(DefObjStmt::ObtainObjFromExistFact(stmt)) = &success.stmt else {
+            let StmtResult::Success(VerifiedStmtIr::DefObjStmt(
+                VerifiedDefObjStmtIr::ObtainObjFromExistFact {
+                    statement: stmt, ..
+                },
+            )) = &stmt_results[3]
+            else {
                 panic!("literal `exist` must parse as ObtainObjFromExistFact")
             };
             assert_eq!(stmt.equal_tos[0].name(), "y");
@@ -2222,10 +2224,12 @@ unique_copy = 3
     assert!(run_output.contains("obtain copy from $has_copy(2)"));
     assert!(run_output.contains("obtain unique_copy from $has_unique_copy(3)"));
     assert!(run_output.contains("existential projection from prop definition `has_copy`"));
-    let success = stmt_results[3]
-        .non_factual_success()
-        .expect("atomic obtain should be a nonfactual success");
-    let Stmt::DefObjStmt(DefObjStmt::ObtainObjFromAtomicFact(stmt)) = &success.stmt else {
+    let StmtResult::Success(VerifiedStmtIr::DefObjStmt(
+        VerifiedDefObjStmtIr::ObtainObjFromAtomicFact {
+            statement: stmt, ..
+        },
+    )) = &stmt_results[3]
+    else {
         panic!("prop source must parse as ObtainObjFromAtomicFact")
     };
     assert_eq!(stmt.equal_tos[0].name(), "copy");
@@ -2354,35 +2358,31 @@ copy = 2
         "theorem-backed obtain should apply and eliminate in one statement:\n{}",
         run_output
     );
-    let success = stmt_results[1]
-        .non_factual_success()
-        .expect("theorem-backed obtain should be a nonfactual success");
-    let Stmt::DefObjStmt(DefObjStmt::ObtainObjFromThm(stmt)) = &success.stmt else {
-        panic!("the parser must retain an ObtainObjFromThm AST node")
+    let StmtResult::Success(VerifiedStmtIr::DefObjStmt(VerifiedDefObjStmtIr::ObtainObjFromThm {
+        statement: stmt,
+        common,
+        verification: Some(elimination),
+    })) = &stmt_results[1]
+    else {
+        panic!("theorem-backed obtain should retain its exact IR node and elimination evidence")
     };
     assert_eq!(stmt.equal_tos[0].name(), "copy");
     assert_eq!(stmt.thm_name.to_string(), "self_exists");
     assert_eq!(stmt.args[0].to_string(), "2");
-    assert_eq!(success.inside_results.len(), 1);
+    assert_eq!(common.inside_results.len(), 1);
     assert!(run_output.contains("\"type\": \"proof by theorem\""));
     assert!(run_output.contains("\"statement\": \"by thm self_exists(2)\""));
-    let application = success.inside_results[0]
-        .non_factual_success()
-        .expect("elimination should retain the theorem application result");
     assert!(matches!(
-        application.by_verification,
-        Some(ByVerificationResult::Theorem(_))
+        &common.inside_results[0],
+        StmtResult::Success(VerifiedStmtIr::By(VerifiedByStmtIr::ByThmStmt {
+            verification: Some(_),
+            ..
+        }))
     ));
-    assert!(success.existential_elimination_verification.is_some());
 
     // The application runs in a child environment: its instantiated
     // existential itself does not enter the parent, while the witness facts do.
-    let source_exist = success
-        .existential_elimination_verification
-        .as_ref()
-        .unwrap()
-        .source_exist_fact
-        .clone();
+    let source_exist = elimination.source_exist_fact.clone();
     assert!(runtime
         .known_fact_id_for_fact(&source_exist.into())
         .unwrap()
@@ -2572,27 +2572,25 @@ copy = 2
         "atomic fact witness should prove the prop and expose its existential meaning:\n{}",
         run_output
     );
-    let success = stmt_results[1]
-        .non_factual_success()
-        .expect("the atomic fact witness should be nonfactual statement success");
-    let Stmt::Witness(WitnessStmt::WitnessAtomicFact(stmt)) = &success.stmt else {
+    let StmtResult::Success(VerifiedStmtIr::Witness(VerifiedWitnessStmtIr::WitnessAtomicFact {
+        statement: stmt,
+        common,
+        verification: Some(verification),
+    })) = &stmt_results[1]
+    else {
         panic!("the parser must retain an atomic-fact witness AST node")
     };
     assert_eq!(stmt.atomic_fact.to_string(), "$has_copy(2)");
     assert_eq!(stmt.witnesses.len(), 1);
-    let verification = success
-        .witness_atomic_fact_verification
-        .as_ref()
-        .expect("execution must retain the resolved existential certificate");
     assert_eq!(verification.definition.name, "has_copy");
     assert_eq!(
         verification.instantiated_existential.to_string(),
         "exist #1#x R st {#1#x = 2}"
     );
-    assert!(success
+    assert!(common
         .infers
         .contains_added_fact(&Fact::from(stmt.atomic_fact.clone())));
-    assert!(success
+    assert!(common
         .infers
         .contains_added_fact(&verification.instantiated_existential.clone().into()));
     assert!(runtime
@@ -2681,10 +2679,10 @@ $has_unique_copy(1)
         "explicit unique existence plus `by def` should remain available:\n{}",
         run_output
     );
-    let success = stmt_results[1]
-        .non_factual_success()
-        .expect("the explicit unique-existence witness should succeed");
-    let Stmt::Witness(WitnessStmt::WitnessExistFact(_)) = &success.stmt else {
+    let StmtResult::Success(VerifiedStmtIr::Witness(VerifiedWitnessStmtIr::WitnessExistFact {
+        ..
+    })) = &stmt_results[1]
+    else {
         panic!("the fallback must retain the explicit existential AST node")
     };
 }

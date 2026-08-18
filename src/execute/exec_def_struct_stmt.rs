@@ -8,7 +8,11 @@ impl Runtime {
         self.run_in_local_env(|rt| rt.def_struct_stmt_check_well_defined(def_struct_stmt))
             .map_err(|e| exec_stmt_error_with_stmt_and_cause(def_struct_stmt.clone().into(), e))?;
         self.store_def_struct(def_struct_stmt)?;
-        Ok(NonFactualStmtSuccess::new_with_stmt(def_struct_stmt.clone().into()).into())
+        Ok(VerifiedDefInterfaceStmtIr::DefStructStmt {
+            statement: def_struct_stmt.clone(),
+            common: VerifiedStmtCommonIr::new(InferResult::new(), vec![]),
+        }
+        .into())
     }
 
     /// Mathematical contract: a struct declaration has meaningful header

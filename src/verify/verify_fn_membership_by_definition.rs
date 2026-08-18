@@ -62,7 +62,7 @@ impl Runtime {
             let membership_fact: Fact =
                 InFact::new(value_fn.clone().into(), declared_return_set, line_file).into();
             return Ok(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                     membership_fact,
                     format!(
                         "anonymous fn satisfies a declared return set through an equal {}",
@@ -153,7 +153,7 @@ impl Runtime {
             )
             .into();
             return Ok(Some(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                     membership_fact,
                     "indexed result inherits its carrier from a symbolic Cartesian projection"
                         .to_string(),
@@ -204,7 +204,7 @@ impl Runtime {
         let pointwise: Fact = forall.into();
 
         Ok(Some(
-            (FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            (VerifiedFactStmtIr::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 target.clone(),
                 "fn membership: same input domain and pointwise values lie in the target return set"
                     .to_string(),

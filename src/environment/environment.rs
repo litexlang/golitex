@@ -37,6 +37,7 @@ pub struct Environment {
     pub defined_templates: HashMap<TemplateName, DefTemplateStmt>,
     pub defined_settings: HashMap<String, DefSettingStmt>,
     pub defined_thm_stmts: HashMap<ThmName, DefThmStmt>,
+    pub defined_axiom_stmts: HashMap<ThmName, AxiomStmt>,
     pub defined_strategy_stmts: HashMap<StrategyName, DefStrategyStmt>,
 
     pub known_equality: KnownEquality,
@@ -90,7 +91,7 @@ pub struct Environment {
     pub cache_known_fact: HashMap<FactString, CachedKnownFact>,
     pub cache_infer_rule_firing: HashMap<String, ()>,
     /// Successful atomic subgoals reusable only while the current statement executes.
-    pub statement_verified_atomic_facts: HashMap<FactString, Rc<FactualStmtSuccess>>,
+    pub statement_verified_atomic_facts: HashMap<FactString, Rc<VerifiedFactStmtIr>>,
 
     pub used_strategy_stmts: HashMap<(PropName, bool), StrategyName>,
     pub stopped_strategy_stmts: HashMap<(PropName, bool), StrategyName>,
@@ -118,6 +119,7 @@ impl Environment {
         self.defined_templates.clear();
         self.defined_settings.clear();
         self.defined_thm_stmts.clear();
+        self.defined_axiom_stmts.clear();
         self.defined_strategy_stmts.clear();
         self.known_equality = KnownEquality::new();
         self.known_exist_facts.clear();
@@ -151,6 +153,7 @@ impl Environment {
         structs: HashMap<StructName, DefStructStmt>,
         templates: HashMap<TemplateName, DefTemplateStmt>,
         defined_thm_stmts: HashMap<ThmName, DefThmStmt>,
+        defined_axiom_stmts: HashMap<ThmName, AxiomStmt>,
         known_equality: KnownEquality,
         known_fn_in_fn_set: HashMap<ObjString, KnownFnInfo>,
         known_atomic_facts_with_0_or_more_than_2_args: HashMap<
@@ -205,6 +208,7 @@ impl Environment {
             defined_templates: templates,
             defined_settings: HashMap::new(),
             defined_thm_stmts,
+            defined_axiom_stmts,
             defined_strategy_stmts: HashMap::new(),
             known_equality,
             known_objs_in_fn_sets: known_fn_in_fn_set,
@@ -740,6 +744,7 @@ impl Environment {
 impl Environment {
     pub fn new_empty_env() -> Self {
         Environment::new(
+            HashMap::new(),
             HashMap::new(),
             HashMap::new(),
             HashMap::new(),

@@ -91,6 +91,13 @@ impl Environment {
             self.defined_thm_stmts.insert(name.clone(), stmt.clone());
         }
 
+        for (name, stmt) in child.defined_axiom_stmts.iter() {
+            if self.defined_axiom_stmts.contains_key(name) {
+                return Err(merge_name_conflict_error(name, "axiom"));
+            }
+            self.defined_axiom_stmts.insert(name.clone(), stmt.clone());
+        }
+
         for (name, stmt) in child.defined_strategy_stmts.iter() {
             if self.defined_strategy_stmts.contains_key(name) {
                 return Err(merge_name_conflict_error(name, "strategy"));
@@ -201,6 +208,7 @@ impl Environment {
             defined_templates: _,
             defined_settings: _,
             defined_thm_stmts: _,
+            defined_axiom_stmts: _,
             defined_strategy_stmts: _,
             known_equality: _,
             known_atomic_facts_with_0_or_more_than_2_args,
@@ -456,6 +464,11 @@ impl Environment {
         for name in child.defined_thm_stmts.keys() {
             if self.defined_thm_stmts.contains_key(name) {
                 return Err(merge_name_conflict_error(name, "thm"));
+            }
+        }
+        for name in child.defined_axiom_stmts.keys() {
+            if self.defined_axiom_stmts.contains_key(name) {
+                return Err(merge_name_conflict_error(name, "axiom"));
             }
         }
         for name in child.defined_strategy_stmts.keys() {

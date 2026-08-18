@@ -330,6 +330,12 @@ impl From<DefThmStmt> for Stmt {
     }
 }
 
+impl From<AxiomStmt> for Stmt {
+    fn from(v: AxiomStmt) -> Self {
+        Stmt::AxiomStmt(v)
+    }
+}
+
 impl From<UseStrategyStmt> for Stmt {
     fn from(v: UseStrategyStmt) -> Self {
         CommandStmt::UseStrategyStmt(v).into()

@@ -72,11 +72,10 @@ impl Runtime {
             infer_result.new_infer_result_inside(result.infer_result());
             check_results.push(result);
         }
-        Ok(NonFactualStmtSuccess::new(
-            DoNothingStmt::new(default_line_file()).into(),
-            infer_result,
-            check_results,
-        )
+        Ok(VerifiedCommandStmtIr::DoNothingStmt {
+            statement: DoNothingStmt::new(default_line_file()),
+            common: VerifiedStmtCommonIr::new(infer_result, check_results),
+        }
         .into())
     }
 
@@ -170,11 +169,10 @@ impl Runtime {
             infer_result.new_infer_result_inside(verify_result.infer_result());
             check_results.push(verify_result);
         }
-        Ok(NonFactualStmtSuccess::new(
-            DoNothingStmt::new(default_line_file()).into(),
-            infer_result,
-            check_results,
-        )
+        Ok(VerifiedCommandStmtIr::DoNothingStmt {
+            statement: DoNothingStmt::new(default_line_file()),
+            common: VerifiedStmtCommonIr::new(infer_result, check_results),
+        }
         .into())
     }
 }

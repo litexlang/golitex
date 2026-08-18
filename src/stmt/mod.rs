@@ -1,3 +1,4 @@
+mod axiom_stmt;
 pub mod by_stmt;
 pub mod claim_stmt;
 pub mod define_algorithm_stmt;
@@ -19,6 +20,7 @@ mod stmt_type_name;
 mod strategy_stmt;
 mod struct_stmt;
 mod thm_stmt;
+pub use axiom_stmt::AxiomStmt;
 pub use by_stmt::ByClosedRangeAsCasesStmt;
 pub use by_stmt::ByDefStmt;
 pub use by_stmt::ByEnumerateRangeStmt;
@@ -36,5 +38,4 @@ pub use strategy_stmt::DefStrategyStmt;
 pub use strategy_stmt::StopStrategyStmt;
 pub use strategy_stmt::UseStrategyStmt;
 pub use struct_stmt::{DefStructStmt, StructFieldDef};
-pub use thm_stmt::DefThmKind;
 pub use thm_stmt::DefThmStmt;

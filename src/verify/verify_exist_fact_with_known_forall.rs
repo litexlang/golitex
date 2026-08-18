@@ -96,7 +96,7 @@ impl Runtime {
         &mut self,
         exist_fact: &ExistFactEnum,
         verify_state: &UseContextVerifyState,
-    ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
+    ) -> Result<Option<VerifiedFactStmtIr>, RuntimeError> {
         let mut iterate_from_env_index = 0;
         let mut iterate_from_known_forall_fact_index = 0;
 
@@ -140,7 +140,7 @@ impl Runtime {
         exist_arg_map: HashMap<String, Obj>,
         given_exist_fact: &ExistFactEnum,
         verify_state: &UseContextVerifyState,
-    ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
+    ) -> Result<Option<VerifiedFactStmtIr>, RuntimeError> {
         if !exist_fact_in_known_forall.can_be_used_to_verify_goal(given_exist_fact) {
             return Ok(None);
         }
@@ -204,7 +204,7 @@ impl Runtime {
         )?;
         let source_fact: Fact = verified_by_known_forall_fact.clone().into();
         let source_fact_id = self.known_fact_id_for_fact(&source_fact)?;
-        let fact_verified = FactualStmtSuccess::new_with_verified_by_known_fact(
+        let fact_verified = VerifiedFactStmtIr::new_with_verified_by_known_fact(
             given_exist_fact.clone().into(),
             VerifiedByResult::known_forall_instantiation(
                 source_fact,

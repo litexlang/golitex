@@ -9,6 +9,7 @@ pub enum Stmt {
     DefInterfaceStmt(DefInterfaceStmt),
     DefAlgoStmt(DefAlgoStmt),
     DefThmStmt(DefThmStmt),
+    AxiomStmt(AxiomStmt),
     DefStrategyStmt(DefStrategyStmt),
     By(ByStmt),
     Witness(WitnessStmt),

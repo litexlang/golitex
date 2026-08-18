@@ -86,15 +86,13 @@ impl Runtime {
             stmt.proof.len(),
             proof_scope,
             stmt.impossible_fact.clone(),
-        )
-        .into();
+        );
 
-        Ok(NonFactualStmtSuccess::new_with_by_verification(
-            stmt.clone().into(),
-            InferResult::new(),
-            exec_proof_inside_results,
-            by_verification,
-        )
+        Ok(VerifiedByStmtIr::ByContraStmt {
+            statement: stmt.clone(),
+            common: VerifiedStmtCommonIr::new(InferResult::new(), exec_proof_inside_results),
+            verification: Some(by_verification),
+        }
         .into())
     }
 
@@ -220,7 +218,12 @@ impl Runtime {
         stmt: &ByContraStmt,
     ) -> Result<StmtResult, RuntimeError> {
         let infer_result = self.exec_by_contra_stmt_affect_environment(stmt)?;
-        Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![]).into())
+        Ok(VerifiedByStmtIr::ByContraStmt {
+            statement: stmt.clone(),
+            common: VerifiedStmtCommonIr::new(infer_result, vec![]),
+            verification: None,
+        }
+        .into())
     }
 }
 

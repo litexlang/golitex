@@ -61,12 +61,11 @@ impl Runtime {
                 vec![],
                 corresponding_forall_fact.to_string(),
             );
-            return Ok(NonFactualStmtSuccess::new_with_by_verification(
-                stmt.clone().into(),
-                infer_result,
-                vec![],
-                by_verification.into(),
-            )
+            return Ok(VerifiedByStmtIr::ByEnumerateFiniteSetStmt {
+                statement: stmt.clone(),
+                common: VerifiedStmtCommonIr::new(infer_result, vec![]),
+                verification: Some(by_verification),
+            }
             .into());
         }
 
@@ -128,12 +127,11 @@ impl Runtime {
             corresponding_forall_fact.to_string(),
         );
 
-        Ok((NonFactualStmtSuccess::new_with_by_verification(
-            stmt.clone().into(),
-            infer_result,
-            inside_results,
-            by_verification.into(),
-        ))
+        Ok(VerifiedByStmtIr::ByEnumerateFiniteSetStmt {
+            statement: stmt.clone(),
+            common: VerifiedStmtCommonIr::new(infer_result, inside_results),
+            verification: Some(by_verification),
+        }
         .into())
     }
 
@@ -148,7 +146,12 @@ impl Runtime {
             corresponding_forall_fact,
             InferReason::VerifiedStatement,
         )?;
-        Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![]).into())
+        Ok(VerifiedByStmtIr::ByEnumerateFiniteSetStmt {
+            statement: stmt.clone(),
+            common: VerifiedStmtCommonIr::new(infer_result, vec![]),
+            verification: None,
+        }
+        .into())
     }
 
     fn infer_result_with_generated_forall_and_store_infer(

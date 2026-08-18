@@ -47,7 +47,7 @@ impl Runtime {
         }
 
         Ok(
-            FactualStmtSuccess::new_with_verified_by_builtin_strategy_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_strategy_recording_stmt(
                 fact.clone().into(),
                 "nonzero-product strategy: all immediate factors are nonzero".to_string(),
                 children,

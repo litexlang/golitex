@@ -348,10 +348,10 @@ impl GraphBuilder {
     fn from_stmt_results(stmt_results: &[StmtResult]) -> Self {
         let mut builder = Self::new();
         for result in stmt_results.iter() {
-            if let Some(success) = result.non_factual_success() {
-                builder.add_stmt(&success.stmt);
+            if let Some(success) = result.non_factual_ir() {
+                builder.add_stmt(&success.statement());
             } else if let Some(success) = result.factual_success() {
-                builder.add_standalone_fact(&success.stmt);
+                builder.add_standalone_fact(&success.fact());
             }
         }
         builder
@@ -392,6 +392,7 @@ impl GraphBuilder {
             }
             Stmt::DefObjStmt(def_obj_stmt) => self.add_def_obj_stmt(def_obj_stmt, stmt),
             Stmt::DefThmStmt(s) => self.add_def_thm_stmt(s, stmt),
+            Stmt::AxiomStmt(s) => self.add_axiom_stmt(s, stmt),
             Stmt::ProofBlock(ProofBlockStmt::ClaimStmt(s)) => self.add_claim_stmt(s, stmt),
             _ => {}
         }
@@ -473,14 +474,13 @@ impl GraphBuilder {
     }
 
     fn add_def_thm_stmt(&mut self, stmt: &DefThmStmt, full_stmt: &Stmt) {
-        let fact_kind = if stmt.is_axiom() { "axiom" } else { "thm" };
-        let node_id = fact_id(fact_kind, &stmt.name);
+        let node_id = fact_id("thm", &stmt.name);
         self.ensure_node(
             node_id.clone(),
             "fact",
             &stmt.name,
             true,
-            Some(fact_kind),
+            Some("thm"),
             Some(&stmt.line_file),
             Some(&full_stmt.to_string()),
         );
@@ -488,6 +488,22 @@ impl GraphBuilder {
         collector.collect_forall_fact(&stmt.forall_fact);
         self.add_dependency_edges(&node_id, &collector.deps);
         self.add_by_thm_edges_to(&node_id, &stmt.prove_process);
+    }
+
+    fn add_axiom_stmt(&mut self, stmt: &AxiomStmt, full_stmt: &Stmt) {
+        let node_id = fact_id("axiom", &stmt.name);
+        self.ensure_node(
+            node_id.clone(),
+            "fact",
+            &stmt.name,
+            true,
+            Some("axiom"),
+            Some(&stmt.line_file),
+            Some(&full_stmt.to_string()),
+        );
+        let mut collector = DepCollector::new();
+        collector.collect_forall_fact(&stmt.forall_fact);
+        self.add_dependency_edges(&node_id, &collector.deps);
     }
 
     fn add_claim_stmt(&mut self, stmt: &ClaimStmt, full_stmt: &Stmt) {

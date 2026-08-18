@@ -93,10 +93,11 @@ impl Runtime {
                 inside_results.push(result);
             }
 
-            Ok(
-                NonFactualStmtSuccess::new(stmt.clone().into(), InferResult::new(), inside_results)
-                    .into(),
-            )
+            Ok(VerifiedStmtIr::DefStrategyStmt {
+                statement: stmt.clone(),
+                common: VerifiedStmtCommonIr::new(InferResult::new(), inside_results),
+            }
+            .into())
         })?;
 
         self.store_def_strategy(stmt)
@@ -128,7 +129,11 @@ impl Runtime {
                 )
             })?;
         self.activate_strategy(&strategy, &strategy_name, stmt.clone().into())?;
-        Ok(NonFactualStmtSuccess::new_with_stmt(stmt.clone().into()).into())
+        Ok(VerifiedCommandStmtIr::UseStrategyStmt {
+            statement: stmt.clone(),
+            common: VerifiedStmtCommonIr::new(InferResult::new(), vec![]),
+        }
+        .into())
     }
 
     pub fn exec_stop_strategy_stmt(
@@ -150,7 +155,11 @@ impl Runtime {
         self.top_level_env()
             .stopped_strategy_stmts
             .insert(atomic_fact_key, strategy_name);
-        Ok(NonFactualStmtSuccess::new_with_stmt(stmt.clone().into()).into())
+        Ok(VerifiedCommandStmtIr::StopStrategyStmt {
+            statement: stmt.clone(),
+            common: VerifiedStmtCommonIr::new(InferResult::new(), vec![]),
+        }
+        .into())
     }
 
     pub(crate) fn exec_def_strategy_stmt_affect_environment_only(
@@ -167,7 +176,11 @@ impl Runtime {
 
         self.activate_strategy(stmt, &stmt.name, stmt.clone().into())?;
 
-        Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![]).into())
+        Ok(VerifiedStmtIr::DefStrategyStmt {
+            statement: stmt.clone(),
+            common: VerifiedStmtCommonIr::new(infer_result, vec![]),
+        }
+        .into())
     }
 
     fn activate_strategy(

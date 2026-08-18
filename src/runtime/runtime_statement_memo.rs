@@ -15,7 +15,7 @@ impl Runtime {
                 .statement_verified_atomic_facts
                 .get(&key)
                 .map(|source| {
-                    FactualStmtSuccess::new_with_statement_memo(
+                    VerifiedFactStmtIr::new_with_statement_memo(
                         fact.clone().into(),
                         InferResult::new(),
                         source.clone(),
@@ -59,12 +59,12 @@ impl Runtime {
             .insert(key, source.clone());
         let _ = self.record_well_definedness_proof_if_active(source.clone());
 
-        FactualStmtSuccess::new_with_statement_memo(fact.clone().into(), infers, source).into()
+        VerifiedFactStmtIr::new_with_statement_memo(fact.clone().into(), infers, source).into()
     }
 
     fn record_well_definedness_proof_if_active(
         &mut self,
-        proof: Rc<FactualStmtSuccess>,
+        proof: Rc<VerifiedFactStmtIr>,
     ) -> Option<WellDefinedFactId> {
         if !self.has_active_well_defined_object_capture() {
             return None;
@@ -75,7 +75,7 @@ impl Runtime {
             let fact_id = self
                 .allocate_well_defined_fact_id()
                 .expect("runtime-wide WD fact ID allocation should not exhaust");
-            let proposition = proof.stmt.clone();
+            let proposition = proof.fact();
             let ambient_binder_scope_ids = self.active_well_defined_binder_scope_ids();
             let proof = Rc::new(WellDefinedFactProof::new(
                 fact_id,
@@ -984,7 +984,7 @@ impl Runtime {
                 "target WD requirement {role:?} for `{source_object}` has no factual proof"
             ))
         })?;
-        let expected_proposition = success.stmt.clone();
+        let expected_proposition = success.fact();
         let proof = if let VerifiedByResult::StatementMemo(proof) = &success.verified_by {
             proof.clone()
         } else {
@@ -1507,12 +1507,12 @@ mod tests {
             certificate
                 .facts
                 .iter()
-                .any(|evidence| evidence.proof.stmt.to_string() == "2 > 0"),
+                .any(|evidence| evidence.proof.fact().to_string() == "2 > 0"),
             "captured facts: {:?}",
             certificate
                 .facts
                 .iter()
-                .map(|evidence| evidence.proof.stmt.to_string())
+                .map(|evidence| evidence.proof.fact().to_string())
                 .collect::<Vec<_>>()
         );
         let requirements = certificate
@@ -1711,7 +1711,7 @@ mod tests {
         assert!(certificate
             .facts
             .iter()
-            .any(|evidence| evidence.proof.stmt.to_string() == "2 > 0"));
+            .any(|evidence| evidence.proof.fact().to_string() == "2 > 0"));
     }
 
     #[test]
@@ -1723,14 +1723,21 @@ mod tests {
         let result = runtime
             .exec_stmt(&stmt)
             .expect("restricted function definition should verify in Litex");
-        let success = result
-            .non_factual_success()
-            .expect("have-fn should return a non-factual success");
-        let captured = success
+        let StmtResult::Success(VerifiedStmtIr::DefObjStmt(
+            VerifiedDefObjStmtIr::HaveFnEqualStmt {
+                common,
+                verification: Some(verification),
+                ..
+            },
+        )) = &result
+        else {
+            panic!("have-fn should return its exact verified IR")
+        };
+        let captured = common
             .well_definedness
             .facts
             .iter()
-            .map(|evidence| evidence.proof.stmt.to_string())
+            .map(|evidence| evidence.proof.fact().to_string())
             .collect::<Vec<_>>();
 
         assert!(
@@ -1738,14 +1745,10 @@ mod tests {
             "captured facts: {captured:?}"
         );
         assert_eq!(
-            success.inside_results.len(),
+            common.inside_results.len(),
             1,
             "have-fn must retain its checked return-membership result"
         );
-        let verification = success
-            .function_definition_verification
-            .as_ref()
-            .expect("have-fn must freeze its body-to-environment verification mapping");
         assert_eq!(verification.return_check_index, 0);
         assert_eq!(
             verification.assumption_infers.store_fact_outputs.len(),
@@ -1765,28 +1768,28 @@ mod tests {
             .defining_equality
             .to_string()
             .contains("reciprocal = fn"));
-        let return_check = success.inside_results[0]
+        let return_check = common.inside_results[0]
             .factual_success()
             .expect("the retained return check must be factual");
         assert!(
-            return_check.stmt.to_string().ends_with("x $in R"),
+            return_check.fact().to_string().ends_with("x $in R"),
             "return check: {}",
-            return_check.stmt
+            return_check.fact()
         );
         assert_eq!(
-            success.infers.store_fact_outputs.len(),
+            common.infers.store_fact_outputs.len(),
             2,
             "stored function effects: {:?}",
-            success.infers
+            common.infers
         );
         assert!(
-            success
+            common
                 .infers
                 .store_fact_outputs
                 .iter()
                 .all(|output| output.inferred_facts.is_empty()),
             "unexpected inferred function effects: {:?}",
-            success.infers
+            common.infers
         );
     }
 
@@ -2137,13 +2140,13 @@ mod tests {
         let positivity = certificate
             .facts
             .iter()
-            .find(|evidence| evidence.proof.stmt.to_string() == "2 > 0")
+            .find(|evidence| evidence.proof.fact().to_string() == "2 > 0")
             .expect("WD environment should retain the checked domain fact");
         assert!(runtime
             .well_defined_fact_proof(positivity.well_defined_fact_id)
             .is_some());
         assert!(runtime
-            .known_fact_id_for_fact(&positivity.proof.stmt)
+            .known_fact_id_for_fact(&positivity.proof.fact())
             .expect("fact lookup should succeed")
             .is_none());
     }
@@ -2366,7 +2369,7 @@ mod tests {
             .expect("test statement should parse")
     }
 
-    fn statement_memo_source(result: &StmtResult) -> &Rc<FactualStmtSuccess> {
+    fn statement_memo_source(result: &StmtResult) -> &Rc<VerifiedFactStmtIr> {
         let success = result
             .factual_success()
             .expect("memoized atomic fact should be factual");

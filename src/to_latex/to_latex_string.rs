@@ -2398,6 +2398,7 @@ impl Stmt {
             Stmt::DefPredicateStmt(DefPredicateStmt::DefAbstractPropStmt(x)) => x.to_latex_string(),
             Stmt::DefAlgoStmt(x) => x.to_latex_string(),
             Stmt::DefThmStmt(x) => latex_texttt_escape(&x.to_string()),
+            Stmt::AxiomStmt(x) => latex_texttt_escape(&x.to_string()),
             Stmt::DefStrategyStmt(x) => latex_texttt_escape(&x.to_string()),
             Stmt::DefInterfaceStmt(DefInterfaceStmt::DefStructStmt(x)) => {
                 latex_texttt_escape(&x.to_string())

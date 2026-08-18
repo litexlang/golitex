@@ -4,18 +4,21 @@ const VERIFIED_BY: &str = "verified by";
 const STORE_FACTS_COLON: &str = "store facts:";
 
 pub(crate) fn stmt_result_body_string(result: &StmtResult) -> String {
-    if let Some(x) = result.non_factual_success() {
+    if let Some(x) = result.non_factual_ir() {
+        let common = x
+            .common()
+            .expect("non-factual IR carries common execution evidence");
         format!(
             "{}\n{}{}",
             SUCCESS_COLON,
-            x.stmt,
-            infer_block_string(&x.infers)
+            x.statement(),
+            infer_block_string(&common.infers)
         )
     } else if let Some(x) = result.factual_success() {
         format!(
             "{}\n{}\n{}\n{}{}",
             SUCCESS_COLON,
-            x.stmt,
+            x.fact(),
             VERIFIED_BY,
             verified_by_display_line(&x.verified_by),
             infer_block_string(&x.infers)

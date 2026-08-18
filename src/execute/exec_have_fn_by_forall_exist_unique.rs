@@ -21,7 +21,11 @@ impl Runtime {
         let infer_result =
             self.exec_have_fn_by_forall_exist_unique_affect_environment(stmt, shape)?;
 
-        Ok((NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, inside_results)).into())
+        Ok(VerifiedDefObjStmtIr::HaveFnByForallExistUniqueStmt {
+            statement: stmt.clone(),
+            common: VerifiedStmtCommonIr::new(infer_result, inside_results),
+        }
+        .into())
     }
 
     /// Mathematical contract: choice of a function from unique existence is
@@ -233,7 +237,11 @@ impl Runtime {
         let shape = self.have_fn_by_forall_exist_unique_shape(stmt)?;
         let infer_result =
             self.exec_have_fn_by_forall_exist_unique_affect_environment(stmt, shape)?;
-        Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![]).into())
+        Ok(VerifiedDefObjStmtIr::HaveFnByForallExistUniqueStmt {
+            statement: stmt.clone(),
+            common: VerifiedStmtCommonIr::new(infer_result, vec![]),
+        }
+        .into())
     }
 
     fn have_fn_by_forall_exist_unique_shape(

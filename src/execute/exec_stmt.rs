@@ -66,37 +66,55 @@ impl Runtime {
             // local environment that has since been popped. Never retarget it
             // to a later ambient fact with the same proposition.
             if success.fact_id.is_none() {
-                if let Some(fact_id) = self.known_fact_id_for_fact(&success.stmt)? {
+                if let Some(fact_id) = self.known_fact_id_for_fact(&success.fact())? {
                     success.fact_id = Some(fact_id);
                 }
             }
             self.attach_known_fact_ids_to_infer_result(&mut success.infers)?;
             self.attach_known_fact_ids_to_verified_by(&mut success.verified_by)?;
-        } else if let Some(success) = result.non_factual_success_mut() {
-            self.attach_known_fact_ids_to_infer_result(&mut success.infers)?;
-            for inside_result in success.inside_results.iter_mut() {
+        } else if let Some(success) = result.non_factual_ir_mut() {
+            let common = success
+                .common_mut()
+                .expect("non-factual IR always carries common execution evidence");
+            self.attach_known_fact_ids_to_infer_result(&mut common.infers)?;
+            for inside_result in common.inside_results.iter_mut() {
                 self.attach_known_fact_ids_to_stmt_result(inside_result)?;
             }
-            if let Some(verification) = success.witness_exist_verification.as_mut() {
-                for check in verification.parameter_checks.iter_mut().flatten() {
-                    self.attach_known_fact_ids_to_stmt_result(check.as_mut())?;
+
+            match success {
+                VerifiedStmtIr::Witness(VerifiedWitnessStmtIr::WitnessExistFact {
+                    verification: Some(verification),
+                    ..
+                }) => {
+                    for check in verification.parameter_checks.iter_mut().flatten() {
+                        self.attach_known_fact_ids_to_stmt_result(check.as_mut())?;
+                    }
                 }
-            }
-            if let Some(verification) = success.witness_atomic_fact_verification.as_mut() {
-                self.attach_known_fact_ids_to_stmt_result(
-                    verification.definition_parameter_check.as_mut(),
-                )?;
-                for check in verification
-                    .witness_verification
-                    .parameter_checks
-                    .iter_mut()
-                    .flatten()
-                {
-                    self.attach_known_fact_ids_to_stmt_result(check.as_mut())?;
+                VerifiedStmtIr::Witness(VerifiedWitnessStmtIr::WitnessAtomicFact {
+                    verification: Some(verification),
+                    ..
+                }) => {
+                    self.attach_known_fact_ids_to_stmt_result(
+                        verification.definition_parameter_check.as_mut(),
+                    )?;
+                    for check in verification
+                        .witness_verification
+                        .parameter_checks
+                        .iter_mut()
+                        .flatten()
+                    {
+                        self.attach_known_fact_ids_to_stmt_result(check.as_mut())?;
+                    }
                 }
-            }
-            if let Some(verification) = success.function_definition_verification.as_mut() {
-                self.attach_known_fact_ids_to_infer_result(&mut verification.assumption_infers)?;
+                VerifiedStmtIr::DefObjStmt(VerifiedDefObjStmtIr::HaveFnEqualStmt {
+                    verification: Some(verification),
+                    ..
+                }) => {
+                    self.attach_known_fact_ids_to_infer_result(
+                        &mut verification.assumption_infers,
+                    )?;
+                }
+                _ => {}
             }
         }
         Ok(())
@@ -262,13 +280,18 @@ impl Runtime {
             Stmt::DefInterfaceStmt(DefInterfaceStmt::DefSettingStmt(s)) => {
                 self.store_def_setting(s)
                     .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone(), e))?;
-                Ok(NonFactualStmtSuccess::new_with_stmt(stmt.clone()).into())
+                Ok(VerifiedDefInterfaceStmtIr::DefSettingStmt {
+                    statement: s.clone(),
+                    common: VerifiedStmtCommonIr::new(InferResult::new(), vec![]),
+                }
+                .into())
             }
             Stmt::DefInterfaceStmt(DefInterfaceStmt::DefStructStmt(s)) => {
                 self.exec_def_struct_stmt(s)
             }
             Stmt::DefAlgoStmt(d) => self.exec_def_algo_stmt(d),
             Stmt::DefThmStmt(s) => self.exec_def_thm_stmt(s),
+            Stmt::AxiomStmt(s) => self.exec_axiom_stmt(s),
             Stmt::DefStrategyStmt(s) => self.exec_def_strategy_stmt(s),
             Stmt::ProofBlock(ProofBlockStmt::ClaimStmt(s)) => self.exec_claim_stmt(s),
             Stmt::ProofBlock(ProofBlockStmt::ExampleStmt(s)) => self.exec_example_stmt(s),
@@ -397,24 +420,41 @@ impl Runtime {
             Stmt::DefInterfaceStmt(DefInterfaceStmt::DefTemplateStmt(s)) => {
                 self.store_def_template(s)
                     .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone(), e))?;
-                Ok(NonFactualStmtSuccess::new_with_stmt(stmt.clone()).into())
+                Ok(VerifiedDefInterfaceStmtIr::DefTemplateStmt {
+                    statement: s.clone(),
+                    common: VerifiedStmtCommonIr::new(InferResult::new(), vec![]),
+                }
+                .into())
             }
             Stmt::DefInterfaceStmt(DefInterfaceStmt::DefSettingStmt(s)) => {
                 self.store_def_setting(s)
                     .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone(), e))?;
-                Ok(NonFactualStmtSuccess::new_with_stmt(stmt.clone()).into())
+                Ok(VerifiedDefInterfaceStmtIr::DefSettingStmt {
+                    statement: s.clone(),
+                    common: VerifiedStmtCommonIr::new(InferResult::new(), vec![]),
+                }
+                .into())
             }
             Stmt::DefInterfaceStmt(DefInterfaceStmt::DefStructStmt(s)) => {
                 self.store_def_struct(s)
                     .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone(), e))?;
-                Ok(NonFactualStmtSuccess::new_with_stmt(stmt.clone()).into())
+                Ok(VerifiedDefInterfaceStmtIr::DefStructStmt {
+                    statement: s.clone(),
+                    common: VerifiedStmtCommonIr::new(InferResult::new(), vec![]),
+                }
+                .into())
             }
             Stmt::DefAlgoStmt(s) => {
                 self.store_def_algo(s)
                     .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone(), e))?;
-                Ok(NonFactualStmtSuccess::new_with_stmt(stmt.clone()).into())
+                Ok(VerifiedStmtIr::DefAlgoStmt {
+                    statement: s.clone(),
+                    common: VerifiedStmtCommonIr::new(InferResult::new(), vec![]),
+                }
+                .into())
             }
             Stmt::DefThmStmt(s) => self.exec_def_thm_stmt_affect_environment_only(s),
+            Stmt::AxiomStmt(s) => self.exec_axiom_stmt_affect_environment_only(s),
             Stmt::DefStrategyStmt(s) => self.exec_def_strategy_stmt_affect_environment_only(s),
             Stmt::ProofBlock(ProofBlockStmt::ClaimStmt(s)) => {
                 self.exec_claim_stmt_affect_environment_only(s)
@@ -424,12 +464,34 @@ impl Runtime {
             {
                 self.exec_try_stmt(s)
             }
-            Stmt::ProofBlock(ProofBlockStmt::ExampleStmt(_))
-            | Stmt::ProofBlock(ProofBlockStmt::SketchStmt(_))
-            | Stmt::ProofBlock(ProofBlockStmt::TryStmt(_))
-            | Stmt::Command(CommandStmt::EvalStmt(_)) => {
-                Ok(NonFactualStmtSuccess::new_with_stmt(stmt.clone()).into())
+            Stmt::ProofBlock(ProofBlockStmt::ExampleStmt(s)) => {
+                Ok(VerifiedProofBlockStmtIr::ExampleStmt {
+                    statement: s.clone(),
+                    common: VerifiedStmtCommonIr::new(InferResult::new(), vec![]),
+                    verification: None,
+                    local_scope: None,
+                }
+                .into())
             }
+            Stmt::ProofBlock(ProofBlockStmt::SketchStmt(s)) => {
+                Ok(VerifiedProofBlockStmtIr::SketchStmt {
+                    statement: s.clone(),
+                    common: VerifiedStmtCommonIr::new(InferResult::new(), vec![]),
+                    local_scope: None,
+                }
+                .into())
+            }
+            Stmt::ProofBlock(ProofBlockStmt::TryStmt(s)) => Ok(VerifiedProofBlockStmtIr::TryStmt {
+                statement: s.clone(),
+                common: VerifiedStmtCommonIr::new(InferResult::new(), vec![]),
+            }
+            .into()),
+            Stmt::Command(CommandStmt::EvalStmt(s)) => Ok(VerifiedCommandStmtIr::EvalStmt {
+                statement: s.clone(),
+                common: VerifiedStmtCommonIr::new(InferResult::new(), vec![]),
+                reported_store_facts: vec![],
+            }
+            .into()),
             Stmt::Command(CommandStmt::ImportStmt(_)) => Err(short_exec_error(
                 stmt.clone(),
                 "import is only valid as a top-level isolated terminal statement".to_string(),

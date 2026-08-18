@@ -8,7 +8,11 @@ impl Runtime {
         self.exec_have_by_preimage_stmt_verify_well_definedness(stmt)?;
         let inside_results = self.exec_have_by_preimage_stmt_verify_process(stmt)?;
         let infer_result = self.exec_have_by_preimage_stmt_affect_environment(stmt)?;
-        Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, inside_results).into())
+        Ok(VerifiedDefObjStmtIr::HaveByPreimageStmt {
+            statement: stmt.clone(),
+            common: VerifiedStmtCommonIr::new(infer_result, inside_results),
+        }
+        .into())
     }
 
     pub(crate) fn exec_have_by_preimage_stmt_affect_environment_only(
@@ -16,7 +20,11 @@ impl Runtime {
         stmt: &HaveByPreimageStmt,
     ) -> Result<StmtResult, RuntimeError> {
         let infer_result = self.exec_have_by_preimage_stmt_affect_environment(stmt)?;
-        Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![]).into())
+        Ok(VerifiedDefObjStmtIr::HaveByPreimageStmt {
+            statement: stmt.clone(),
+            common: VerifiedStmtCommonIr::new(infer_result, vec![]),
+        }
+        .into())
     }
 
     /// Mathematical contract: preimage extraction targets a known function or

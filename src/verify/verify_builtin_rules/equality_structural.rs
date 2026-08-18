@@ -115,7 +115,7 @@ impl Runtime {
                 if let Some(path) = self.compiler_known_equality_path(equal_fact) {
                     if !path.is_empty() {
                         let target: Fact = equal_fact.clone().into();
-                        return FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                        return VerifiedFactStmtIr::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             target.clone(),
                             "known-only equality: same known equality class".to_string(),
                             BuiltinRuleEvidence::KnownEqualityPath(

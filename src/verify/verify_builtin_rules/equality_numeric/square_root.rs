@@ -30,7 +30,7 @@ impl Runtime {
             return Ok(None);
         }
         Ok(Some(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 equal_fact.clone().into(),
                 "sqrt: (sqrt(x))^2 = x".to_string(),
                 vec![arg_result],
@@ -73,7 +73,7 @@ impl Runtime {
                 continue;
             }
             return Ok(Some(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                     equal_fact.clone().into(),
                     "sqrt: sqrt(0) = 0 and sqrt(1) = 1".to_string(),
                     vec![arg_result, other_result],
@@ -117,7 +117,7 @@ impl Runtime {
         };
 
         Ok(Some(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 equal_fact.clone().into(),
                 "sqrt: sqrt(a^2) = a for a >= 0".to_string(),
                 results,
@@ -191,7 +191,7 @@ impl Runtime {
         };
 
         Ok(Some(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 equal_fact.clone().into(),
                 "sqrt: sqrt(a * b) = sqrt(a) * sqrt(b)".to_string(),
                 results,
@@ -269,7 +269,7 @@ impl Runtime {
         };
 
         Ok(Some(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 equal_fact.clone().into(),
                 "sqrt: sqrt(a / b) = sqrt(a) / sqrt(b)".to_string(),
                 results,

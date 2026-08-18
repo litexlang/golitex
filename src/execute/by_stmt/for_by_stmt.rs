@@ -45,7 +45,12 @@ impl Runtime {
             corresponding_forall_fact,
             InferReason::VerifiedStatement,
         )?;
-        Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![]).into())
+        Ok(VerifiedByStmtIr::ByForStmt {
+            statement: stmt.clone(),
+            common: VerifiedStmtCommonIr::new(infer_result, vec![]),
+            verification: None,
+        }
+        .into())
     }
 
     fn exec_by_for_ranges(
@@ -88,12 +93,11 @@ impl Runtime {
                 vec![],
                 corresponding_forall_fact.to_string(),
             );
-            return Ok((NonFactualStmtSuccess::new_with_by_verification(
-                stmt.clone().into(),
-                infer_result_from_stored_forall_fact,
-                vec![],
-                by_verification.into(),
-            ))
+            return Ok(VerifiedByStmtIr::ByForStmt {
+                statement: stmt.clone(),
+                common: VerifiedStmtCommonIr::new(infer_result_from_stored_forall_fact, vec![]),
+                verification: Some(by_verification),
+            }
             .into());
         }
 
@@ -152,12 +156,11 @@ impl Runtime {
             corresponding_forall_fact.to_string(),
         );
 
-        Ok((NonFactualStmtSuccess::new_with_by_verification(
-            stmt.clone().into(),
-            infer_result_from_stored_forall_fact,
-            inside_results,
-            by_verification.into(),
-        ))
+        Ok(VerifiedByStmtIr::ByForStmt {
+            statement: stmt.clone(),
+            common: VerifiedStmtCommonIr::new(infer_result_from_stored_forall_fact, inside_results),
+            verification: Some(by_verification),
+        }
         .into())
     }
 
@@ -193,12 +196,11 @@ impl Runtime {
                 vec![],
                 corresponding_forall_fact.to_string(),
             );
-            return Ok((NonFactualStmtSuccess::new_with_by_verification(
-                stmt.clone().into(),
-                infer_result_from_stored_forall_fact,
-                vec![],
-                by_verification.into(),
-            ))
+            return Ok(VerifiedByStmtIr::ByForStmt {
+                statement: stmt.clone(),
+                common: VerifiedStmtCommonIr::new(infer_result_from_stored_forall_fact, vec![]),
+                verification: Some(by_verification),
+            }
             .into());
         }
 
@@ -241,12 +243,11 @@ impl Runtime {
             corresponding_forall_fact.to_string(),
         );
 
-        Ok((NonFactualStmtSuccess::new_with_by_verification(
-            stmt.clone().into(),
-            infer_result_from_stored_forall_fact,
-            inside_results,
-            by_verification.into(),
-        ))
+        Ok(VerifiedByStmtIr::ByForStmt {
+            statement: stmt.clone(),
+            common: VerifiedStmtCommonIr::new(infer_result_from_stored_forall_fact, inside_results),
+            verification: Some(by_verification),
+        }
         .into())
     }
 

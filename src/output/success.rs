@@ -4,11 +4,12 @@ use crate::prelude::{
     ByContraVerificationResult, ByDefinitionVerificationResult,
     ByEnumerateFiniteSetVerificationResult, ByEnumerateRangeVerificationResult,
     ByExtensionVerificationResult, ByForVerificationResult, ByInducVerificationResult,
-    ByPropRegistrationVerificationResult, ByTheoremVerificationResult, ByVerificationResult,
-    ClaimFactVerificationResult, ClaimForallVerificationResult, ClaimVerificationResult,
-    CommandStmt, DefObjStmt, Fact, FactualStmtSuccess, InferResult, NonFactualStmtSuccess,
-    OutputStyle, ParamDefWithType, Runtime, StatementExecutionTrace, StatementPhaseStatus, Stmt,
-    StmtResult, TheoremVerificationResult, VerifiedByResult,
+    ByPropRegistrationVerificationResult, ByTheoremVerificationResult, ClaimFactVerificationResult,
+    ClaimForallVerificationResult, ClaimVerificationResult, CommandStmt, DefObjStmt, Fact,
+    InferResult, OutputStyle, ParamDefWithType, Runtime, StatementExecutionTrace,
+    StatementPhaseStatus, Stmt, StmtResult, TheoremVerificationResult, VerifiedByResult,
+    VerifiedByStmtIr, VerifiedCommandStmtIr, VerifiedFactStmtIr, VerifiedProofBlockStmtIr,
+    VerifiedStmtIr,
 };
 
 use super::evidence::{
@@ -64,7 +65,7 @@ fn stmt_exec_result_json_value(
 ) -> JsonValue {
     if let Some(x) = r.factual_success() {
         factual_stmt_success_to_json(runtime, x, output_style)
-    } else if let Some(x) = r.non_factual_success() {
+    } else if let Some(x) = r.non_factual_ir() {
         non_factual_stmt_success_to_json(runtime, x, output_style)
     } else {
         unknown_stmt_result_json_value(runtime, r, output_style)
@@ -138,11 +139,15 @@ fn unknown_stmt_result_json_value(
 
 fn non_factual_stmt_success_to_json(
     runtime: &Runtime,
-    x: &NonFactualStmtSuccess,
+    x: &VerifiedStmtIr,
     output_style: OutputStyle,
 ) -> JsonValue {
-    let stmt_line_file = x.stmt.line_file();
-    let stmt_text = stmt_text_for_json(runtime, &x.stmt);
+    let statement = x.statement();
+    let common = x
+        .common()
+        .expect("non-factual IR carries common execution evidence");
+    let stmt_line_file = statement.line_file();
+    let stmt_text = stmt_text_for_json(runtime, &statement);
 
     let mut fields = vec![
         (
@@ -151,7 +156,7 @@ fn non_factual_stmt_success_to_json(
         ),
         (
             JSON_KEY_STMT_TYPE.to_string(),
-            JsonValue::JsonString(x.stmt.output_type_string()),
+            JsonValue::JsonString(statement.output_type_string()),
         ),
         (
             "line".to_string(),
@@ -159,33 +164,40 @@ fn non_factual_stmt_success_to_json(
         ),
         (JSON_KEY_STMT.to_string(), JsonValue::JsonString(stmt_text)),
     ];
-    add_statement_trust_fields(x.execution_trace.as_ref(), &mut fields);
+    add_statement_trust_fields(common.execution_trace.as_ref(), &mut fields);
 
     if let Some(verification) = non_factual_verification_value(runtime, x, output_style) {
         fields.push((JSON_KEY_VERIFICATION.to_string(), verification));
     }
 
-    if !x.reported_store_facts.is_empty() {
+    let reported_store_facts = match x {
+        VerifiedStmtIr::Command(VerifiedCommandStmtIr::EvalStmt {
+            reported_store_facts,
+            ..
+        }) => reported_store_facts.as_slice(),
+        _ => &[],
+    };
+    if !reported_store_facts.is_empty() {
         fields.push((
             "store_facts".to_string(),
-            JsonValue::Array(store_fact_output_json_values(&x.reported_store_facts)),
+            JsonValue::Array(store_fact_output_json_values(reported_store_facts)),
         ));
     }
 
     fields.push((
         JSON_KEY_INSIDE_RESULTS.to_string(),
-        inside_results_value(runtime, &x.stmt, &x.inside_results, output_style),
+        inside_results_value(runtime, &statement, &common.inside_results, output_style),
     ));
 
     if output_style.is_detailed() {
-        if let Some(trace) = x.execution_trace.as_ref() {
+        if let Some(trace) = common.execution_trace.as_ref() {
             fields.push((
                 "phases".to_string(),
                 execution_phases_value(
                     trace,
-                    well_definedness_checks_for_stmt(&x.stmt),
+                    well_definedness_checks_for_stmt(&statement),
                     non_factual_process_fields(runtime, x, output_style),
-                    environment_effect_values(&x.stmt, &x.infers, trace),
+                    environment_effect_values(&statement, &common.infers, trace),
                 ),
             ));
         }
@@ -196,18 +208,22 @@ fn non_factual_stmt_success_to_json(
 
 fn non_factual_process_fields(
     runtime: &Runtime,
-    x: &NonFactualStmtSuccess,
+    x: &VerifiedStmtIr,
     output_style: OutputStyle,
 ) -> Vec<(String, JsonValue)> {
+    let common = x
+        .common()
+        .expect("non-factual IR carries common execution evidence");
     let mut fields = Vec::new();
     if let Some(verification) = non_factual_verification_value(runtime, x, output_style) {
         fields.push((JSON_KEY_VERIFICATION.to_string(), verification));
     }
-    if !x.inside_results.is_empty() {
+    if !common.inside_results.is_empty() {
         fields.push((
             "checks".to_string(),
             JsonValue::Array(
-                x.inside_results
+                common
+                    .inside_results
                     .iter()
                     .map(|result| stmt_exec_result_json_value(runtime, result, output_style))
                     .collect::<Vec<_>>(),
@@ -219,121 +235,183 @@ fn non_factual_process_fields(
 
 fn non_factual_verification_value(
     runtime: &Runtime,
-    x: &NonFactualStmtSuccess,
+    x: &VerifiedStmtIr,
     output_style: OutputStyle,
 ) -> Option<JsonValue> {
-    if let Some(theorem_verification) = x.theorem_verification.as_ref() {
-        return Some(theorem_verification_value(
+    let inside_results = &x
+        .common()
+        .expect("non-factual IR carries common execution evidence")
+        .inside_results;
+    match x {
+        VerifiedStmtIr::DefThmStmt {
+            verification: Some(verification),
+            ..
+        } => Some(theorem_verification_value(
             runtime,
-            theorem_verification,
-            &x.inside_results,
+            verification,
+            inside_results,
             output_style,
-        ));
-    }
-    if let Some(claim_verification) = x.claim_verification.as_ref() {
-        return match claim_verification {
+        )),
+        VerifiedStmtIr::ProofBlock(
+            VerifiedProofBlockStmtIr::ClaimStmt {
+                verification: Some(verification),
+                ..
+            }
+            | VerifiedProofBlockStmtIr::ExampleStmt {
+                verification: Some(verification),
+                ..
+            },
+        ) => match verification {
             ClaimVerificationResult::Forall(verification) => Some(claim_forall_verification_value(
                 runtime,
                 verification,
-                &x.inside_results,
+                inside_results,
                 output_style,
             )),
             ClaimVerificationResult::Fact(verification) => Some(claim_fact_verification_value(
                 runtime,
                 verification,
-                &x.inside_results,
+                inside_results,
                 output_style,
             )),
-        };
-    }
-    match x.by_verification.as_ref()? {
-        ByVerificationResult::Cases(verification) => Some(by_cases_verification_value(
+        },
+        VerifiedStmtIr::By(VerifiedByStmtIr::ByCasesStmt {
+            verification: Some(verification),
+            ..
+        }) => Some(by_cases_verification_value(
             runtime,
             verification,
-            &x.inside_results,
+            inside_results,
             output_style,
         )),
-        ByVerificationResult::Contra(verification) => Some(by_contra_verification_value(
+        VerifiedStmtIr::By(VerifiedByStmtIr::ByContraStmt {
+            verification: Some(verification),
+            ..
+        }) => Some(by_contra_verification_value(
             runtime,
             verification,
-            &x.inside_results,
+            inside_results,
             output_style,
         )),
-        ByVerificationResult::EnumerateFiniteSet(verification) => {
-            Some(by_enumerate_finite_set_verification_value(
-                runtime,
-                verification,
-                &x.inside_results,
-                output_style,
-            ))
-        }
-        ByVerificationResult::EnumerateRange(verification) => {
-            Some(by_enumerate_range_verification_value(
-                runtime,
-                verification,
-                &x.inside_results,
-                output_style,
-            ))
-        }
-        ByVerificationResult::Induc(verification) => Some(by_induc_verification_value(
+        VerifiedStmtIr::By(VerifiedByStmtIr::ByEnumerateFiniteSetStmt {
+            verification: Some(verification),
+            ..
+        }) => Some(by_enumerate_finite_set_verification_value(
             runtime,
             verification,
-            &x.inside_results,
+            inside_results,
             output_style,
         )),
-        ByVerificationResult::For(verification) => Some(by_for_verification_value(
+        VerifiedStmtIr::By(
+            VerifiedByStmtIr::ByEnumerateRangeStmt {
+                verification: Some(verification),
+                ..
+            }
+            | VerifiedByStmtIr::ByClosedRangeAsCasesStmt {
+                verification: Some(verification),
+                ..
+            },
+        ) => Some(by_enumerate_range_verification_value(
             runtime,
             verification,
-            &x.inside_results,
+            inside_results,
             output_style,
         )),
-        ByVerificationResult::Extension(verification) => Some(by_extension_verification_value(
+        VerifiedStmtIr::By(
+            VerifiedByStmtIr::ByFiniteSetInducStmt {
+                verification: Some(verification),
+                ..
+            }
+            | VerifiedByStmtIr::ByInducStmt {
+                verification: Some(verification),
+                ..
+            },
+        ) => Some(by_induc_verification_value(
             runtime,
             verification,
-            &x.inside_results,
+            inside_results,
             output_style,
         )),
-        ByVerificationResult::PropRegistration(verification) => {
-            Some(by_prop_registration_verification_value(
-                runtime,
-                verification,
-                &x.inside_results,
-                output_style,
-            ))
-        }
-        ByVerificationResult::AxiomOfChoice(verification) => Some(by_choice_verification_value(
+        VerifiedStmtIr::By(VerifiedByStmtIr::ByForStmt {
+            verification: Some(verification),
+            ..
+        }) => Some(by_for_verification_value(
             runtime,
             verification,
-            &x.inside_results,
+            inside_results,
+            output_style,
+        )),
+        VerifiedStmtIr::By(VerifiedByStmtIr::ByExtensionStmt {
+            verification: Some(verification),
+            ..
+        }) => Some(by_extension_verification_value(
+            runtime,
+            verification,
+            inside_results,
+            output_style,
+        )),
+        VerifiedStmtIr::By(
+            VerifiedByStmtIr::ByTransitivePropStmt {
+                verification: Some(verification),
+                ..
+            }
+            | VerifiedByStmtIr::BySymmetricPropStmt {
+                verification: Some(verification),
+                ..
+            }
+            | VerifiedByStmtIr::ByReflexivePropStmt {
+                verification: Some(verification),
+                ..
+            }
+            | VerifiedByStmtIr::ByAntisymmetricPropStmt {
+                verification: Some(verification),
+                ..
+            },
+        ) => Some(by_prop_registration_verification_value(
+            runtime,
+            verification,
+            inside_results,
+            output_style,
+        )),
+        VerifiedStmtIr::By(
+            VerifiedByStmtIr::ByAxiomOfChoiceStmt {
+                verification: Some(verification),
+                ..
+            }
+            | VerifiedByStmtIr::ByZornLemmaStmt {
+                verification: Some(verification),
+                ..
+            }
+            | VerifiedByStmtIr::ByRegularityAxiomStmt {
+                verification: Some(verification),
+                ..
+            },
+        ) => Some(by_choice_verification_value(
+            runtime,
+            verification,
+            inside_results,
             "trusted_conclusion",
             output_style,
         )),
-        ByVerificationResult::ZornLemma(verification) => Some(by_choice_verification_value(
+        VerifiedStmtIr::By(VerifiedByStmtIr::ByDefStmt {
+            verification: Some(verification),
+            ..
+        }) => Some(by_definition_verification_value(
             runtime,
             verification,
-            &x.inside_results,
-            "trusted_conclusion",
+            inside_results,
             output_style,
         )),
-        ByVerificationResult::RegularityAxiom(verification) => Some(by_choice_verification_value(
+        VerifiedStmtIr::By(VerifiedByStmtIr::ByThmStmt {
+            verification: Some(verification),
+            ..
+        }) => Some(by_theorem_verification_value(
             runtime,
             verification,
-            &x.inside_results,
-            "trusted_conclusion",
+            inside_results,
             output_style,
         )),
-        ByVerificationResult::Definition(verification) => Some(by_definition_verification_value(
-            runtime,
-            verification,
-            &x.inside_results,
-            output_style,
-        )),
-        ByVerificationResult::Theorem(verification) => Some(by_theorem_verification_value(
-            runtime,
-            verification,
-            &x.inside_results,
-            output_style,
-        )),
+        _ => None,
     }
 }
 
@@ -1370,8 +1448,9 @@ fn impossible_verification_value(
     output_style: OutputStyle,
 ) -> JsonValue {
     let checks = result
-        .and_then(|r| r.non_factual_success())
-        .map(|n| n.inside_results.iter().collect::<Vec<&StmtResult>>())
+        .and_then(|r| r.non_factual_ir())
+        .and_then(VerifiedStmtIr::common)
+        .map(|common| common.inside_results.iter().collect::<Vec<&StmtResult>>())
         .unwrap_or_default();
 
     JsonValue::Object(vec![
@@ -1510,7 +1589,7 @@ fn inside_results_value(
 
 fn factual_stmt_success_to_json(
     runtime: &Runtime,
-    x: &FactualStmtSuccess,
+    x: &VerifiedFactStmtIr,
     output_style: OutputStyle,
 ) -> JsonValue {
     if x.is_verified_by_builtin_rules_only() {
@@ -1522,11 +1601,12 @@ fn factual_stmt_success_to_json(
 
 fn factual_builtin_rules_to_json(
     runtime: &Runtime,
-    x: &FactualStmtSuccess,
+    x: &VerifiedFactStmtIr,
     output_style: OutputStyle,
 ) -> JsonValue {
-    let fact_line_file = x.stmt.line_file();
-    let stmt_user_visible = user_visible_stmt_or_msg_text(&x.stmt.to_string());
+    let fact = x.fact();
+    let fact_line_file = fact.line_file();
+    let stmt_user_visible = user_visible_stmt_or_msg_text(&fact.to_string());
 
     let mut fields = vec![
         (
@@ -1535,7 +1615,7 @@ fn factual_builtin_rules_to_json(
         ),
         (
             JSON_KEY_STMT_TYPE.to_string(),
-            JsonValue::JsonString(x.stmt.output_type_string()),
+            JsonValue::JsonString(fact.output_type_string()),
         ),
         (
             "line".to_string(),
@@ -1568,11 +1648,12 @@ fn factual_builtin_rules_to_json(
 
 fn factual_citation_to_json(
     runtime: &Runtime,
-    x: &FactualStmtSuccess,
+    x: &VerifiedFactStmtIr,
     output_style: OutputStyle,
 ) -> JsonValue {
-    let stmt_line_file = x.stmt.line_file();
-    let stmt_user_visible = user_visible_stmt_or_msg_text(&x.stmt.to_string());
+    let fact = x.fact();
+    let stmt_line_file = fact.line_file();
+    let stmt_user_visible = user_visible_stmt_or_msg_text(&fact.to_string());
 
     let mut fields = vec![
         (
@@ -1581,7 +1662,7 @@ fn factual_citation_to_json(
         ),
         (
             JSON_KEY_STMT_TYPE.to_string(),
-            JsonValue::JsonString(x.stmt.output_type_string()),
+            JsonValue::JsonString(fact.output_type_string()),
         ),
         (
             "line".to_string(),
@@ -1629,7 +1710,7 @@ fn add_statement_trust_fields(
 
 fn add_factual_execution_phases(
     runtime: &Runtime,
-    x: &FactualStmtSuccess,
+    x: &VerifiedFactStmtIr,
     fields: &mut Vec<(String, JsonValue)>,
     output_style: OutputStyle,
 ) {
@@ -1657,9 +1738,9 @@ fn add_factual_execution_phases(
         "phases".to_string(),
         execution_phases_value(
             trace,
-            well_definedness_checks_for_fact(&x.stmt),
+            well_definedness_checks_for_fact(&x.fact()),
             process_fields,
-            environment_effect_values(&x.stmt.clone().into(), &x.infers, trace),
+            environment_effect_values(&x.fact().into(), &x.infers, trace),
         ),
     ));
 }
@@ -1819,6 +1900,7 @@ fn statement_environment_effects(stmt: &Stmt, trace: &StatementExecutionTrace) -
         Stmt::DefInterfaceStmt(_) => vec![statement_environment_effect("define_interface", stmt)],
         Stmt::DefAlgoStmt(_) => vec![statement_environment_effect("define_algorithm", stmt)],
         Stmt::DefThmStmt(_) => vec![statement_environment_effect("define_theorem", stmt)],
+        Stmt::AxiomStmt(_) => vec![statement_environment_effect("define_axiom", stmt)],
         Stmt::DefStrategyStmt(_) => vec![statement_environment_effect("define_strategy", stmt)],
         Stmt::Command(CommandStmt::ClearStmt(_)) => {
             vec![statement_environment_effect("clear_environment", stmt)]
@@ -1851,6 +1933,6 @@ fn statement_environment_effect(kind: &str, stmt: &Stmt) -> JsonValue {
     ])
 }
 
-fn factual_success_is_forall_proof(x: &FactualStmtSuccess) -> bool {
+fn factual_success_is_forall_proof(x: &VerifiedFactStmtIr) -> bool {
     matches!(x.underlying_verified_by(), VerifiedByResult::ForallProof(_))
 }

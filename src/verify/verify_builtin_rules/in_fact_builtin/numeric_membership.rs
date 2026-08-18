@@ -24,7 +24,7 @@ impl Runtime {
             return None;
         }
         Some(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 in_fact.clone().into(),
                 format!(
                     "{name}: operation carrier {carrier} is contained in {}",
@@ -79,7 +79,7 @@ impl Runtime {
                 continue;
             }
             return Ok(Some(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                     in_fact.clone().into(),
                     "refined integer carrier from known integer membership and strict sign"
                         .to_string(),
@@ -324,7 +324,7 @@ impl Runtime {
             let target_fact: Fact = in_fact.clone().into();
             let head_membership_fact: Fact = head_membership.into();
             return Ok(
-                FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                VerifiedFactStmtIr::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     target_fact.clone(),
                     "fn application in its exact instantiated declared return set".to_string(),
                     BuiltinRuleEvidence::FunctionApplicationReturnMembership(
@@ -340,7 +340,7 @@ impl Runtime {
             );
         }
         Ok(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 in_fact.clone().into(),
                 "fn application in declared return set or standard numeric superset (well-defined under typing)".to_string(),
                 Vec::new(),
@@ -378,7 +378,7 @@ impl Runtime {
             return Ok((StmtUnknown::new()).into());
         }
         Ok(
-            FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 in_fact.clone().into(),
                 "N: a + b from a in N and b in N".to_string(),
                 BuiltinRuleEvidence::NaturalMembershipClosure(
@@ -418,7 +418,7 @@ impl Runtime {
                 self.verify_atomic_fact_as_builtin_rule_premise(&left_in_n_pos, builtin_state)?;
             if positive_natural_result.is_true() {
                 return Ok(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                         in_fact.clone().into(),
                         "N: n - 1 from n in N+".to_string(),
                         vec![positive_natural_result],
@@ -436,7 +436,7 @@ impl Runtime {
                 self.verify_atomic_fact_as_builtin_rule_premise(&left_positive, builtin_state)?;
             if membership_result.is_true() && positive_result.is_true() {
                 return Ok(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                         in_fact.clone().into(),
                         "N: n - 1 from n in N and n > 0".to_string(),
                         vec![membership_result, positive_result],
@@ -472,7 +472,7 @@ impl Runtime {
             self.verify_atomic_fact_as_builtin_rule_premise(&right_le_left, builtin_state)?;
         if bound_result.is_true() {
             return Ok(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                     in_fact.clone().into(),
                     "N: a - b from a,b in Z and b <= a".to_string(),
                     vec![left_result, right_result, bound_result],
@@ -494,7 +494,7 @@ impl Runtime {
                 self.verify_non_equational_atomic_fact_with_known_atomic_facts(order_fact)?;
             if order_result.is_true() {
                 return Ok(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                         in_fact.clone().into(),
                         "N: a - b from a,b in Z and known nonnegative difference".to_string(),
                         vec![left_result, right_result, order_result],
@@ -536,7 +536,7 @@ impl Runtime {
             return Ok((StmtUnknown::new()).into());
         }
         Ok(
-            FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 in_fact.clone().into(),
                 "N: a * b from a in N and b in N".to_string(),
                 BuiltinRuleEvidence::NaturalMembershipClosure(
@@ -587,7 +587,7 @@ impl Runtime {
         }
 
         Ok(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 in_fact.clone().into(),
                 reason.to_string(),
                 vec![base_result, exponent_result],
@@ -623,7 +623,7 @@ impl Runtime {
         }
 
         Ok(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 in_fact.clone().into(),
                 "R+: a^x from 0 < a and x in R".to_string(),
                 vec![base_result, exponent_result],
@@ -672,7 +672,7 @@ impl Runtime {
         }
 
         Ok(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 in_fact.clone().into(),
                 "N+: n - 1 from n in N+ and n > 1".to_string(),
                 vec![membership_result, bound_result],
@@ -718,7 +718,7 @@ impl Runtime {
                 .verify_atomic_fact_as_builtin_rule_premise(&right_n_pos_for_pair, builtin_state)?;
             if r_right_n_pos_for_pair.is_true() {
                 return Ok(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                         in_fact.clone().into(),
                         "N+: a + b from a in N+ and b in N+".to_string(),
                         vec![r_left_n_pos_for_pair, r_right_n_pos_for_pair],
@@ -735,7 +735,7 @@ impl Runtime {
                 self.verify_atomic_fact_as_builtin_rule_premise(&right_n, builtin_state)?;
             if r_right_n.is_true() {
                 return Ok(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                         in_fact.clone().into(),
                         "N+: a + b from a in N+ and b in N".to_string(),
                         vec![r_left_n_pos, r_right_n],
@@ -750,7 +750,7 @@ impl Runtime {
             self.verify_atomic_fact_as_builtin_rule_premise(&right_n_pos, builtin_state)?;
         if r_left_n.is_true() && r_right_n_pos.is_true() {
             return Ok(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                     in_fact.clone().into(),
                     "N+: a + b from a in N and b in N+".to_string(),
                     vec![r_left_n, r_right_n_pos],
@@ -778,7 +778,7 @@ impl Runtime {
         )?;
         if premise_result.is_true() {
             return Ok(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                     in_fact.clone().into(),
                     "N+: a + b from complete positive-natural carrier alternatives".to_string(),
                     vec![premise_result],
@@ -819,7 +819,7 @@ impl Runtime {
             return Ok((StmtUnknown::new()).into());
         }
         Ok(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 in_fact.clone().into(),
                 "N+: a * b from a in N+ and b in N+".to_string(),
                 vec![r_left, r_right],
@@ -1155,7 +1155,7 @@ impl Runtime {
         let conjunction_result = self.verify_builtin_rule_premise(&conjunction, builtin_state)?;
         if conjunction_result.is_true() {
             return Ok(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                     in_fact.clone().into(),
                     "in real interval from complete carrier-and-bounds conjunction".to_string(),
                     vec![conjunction_result],
@@ -1182,7 +1182,7 @@ impl Runtime {
         step_results.push(upper_result);
 
         Ok(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 in_fact.clone().into(),
                 "in real interval: x in R and endpoint bounds".to_string(),
                 step_results,
@@ -1221,7 +1221,7 @@ impl Runtime {
         let conjunction_result = self.verify_builtin_rule_premise(&conjunction, builtin_state)?;
         if conjunction_result.is_true() {
             return Ok(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                     in_fact.clone().into(),
                     "in half-infinite real interval from complete carrier-and-bound conjunction"
                         .to_string(),
@@ -1244,7 +1244,7 @@ impl Runtime {
         step_results.push(bound_result);
 
         Ok(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 in_fact.clone().into(),
                 "in half-infinite real interval: x in R and endpoint bound".to_string(),
                 step_results,
@@ -1430,7 +1430,7 @@ impl Runtime {
             ));
         };
         Ok(
-            FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 in_fact.clone().into(),
                 "complex scalar arithmetic is closed in C".to_string(),
                 BuiltinRuleEvidence::ComplexArithmeticMembershipClosure(rule),
@@ -1499,7 +1499,7 @@ impl Runtime {
         };
         Ok(match evidence {
             Some(rule) => {
-                FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                VerifiedFactStmtIr::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
                     "real arithmetic has real operands and result".to_string(),
                     BuiltinRuleEvidence::RealArithmeticMembershipClosure(rule),
@@ -1609,7 +1609,7 @@ impl Runtime {
                     )?
                 {
                     steps.push(
-                        FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                        VerifiedFactStmtIr::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             in_z.clone().into(),
                             "integer expression closure under +, -, and *".to_string(),
                             BuiltinRuleEvidence::IntegerMembershipClosure(rule),
@@ -1664,7 +1664,7 @@ impl Runtime {
                 let subset_fact =
                     SubsetFact::new(source_set, StandardSet::Z.into(), line_file.clone());
                 let subset_result =
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                         subset_fact.into(),
                         "standard_set_subset".to_string(),
                         Vec::new(),
@@ -1736,7 +1736,7 @@ impl Runtime {
                 {
                     if source.is_subset_eq(&carrier) {
                         let subset_result =
-                            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                                 subset_fact.clone().into(),
                                 "standard_set_subset".to_string(),
                                 Vec::new(),
@@ -1919,7 +1919,7 @@ impl Runtime {
         };
         if let Some(rule) = closure_rule {
             return Ok(
-                FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                VerifiedFactStmtIr::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
                     "Z closure: binary integer arithmetic".to_string(),
                     BuiltinRuleEvidence::IntegerMembershipClosure(rule),
@@ -1930,7 +1930,7 @@ impl Runtime {
         }
 
         Ok(
-            (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            (VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 in_fact.clone().into(),
                 "Z closure: integer arithmetic; quot dividend in Z and divisor in N+; pow base in Z or N+ and exponent in N"
                     .to_string(),
@@ -1998,7 +1998,7 @@ impl Runtime {
         };
         if let Some(rule) = closure_rule {
             return Ok(
-                FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                VerifiedFactStmtIr::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
                     "Q closure: binary rational arithmetic".to_string(),
                     BuiltinRuleEvidence::RationalMembershipClosure(rule),
@@ -2009,7 +2009,7 @@ impl Runtime {
         }
 
         Ok(
-            (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            (VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 in_fact.clone().into(),
                 "Q closure: +-*/ operands in Q; pow base in Q and exponent in Z".to_string(),
                 subgoals,
@@ -2061,7 +2061,7 @@ impl Runtime {
                 .verify_atomic_fact_as_builtin_rule_premise(&positive_membership, builtin_state)?;
             if positive_result.is_true() {
                 return Ok(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                         in_fact.clone().into(),
                         "negation maps a positive scalar into the matching negative carrier"
                             .to_string(),
@@ -2096,7 +2096,7 @@ impl Runtime {
         base_subgoals.append(&mut sign_subgoals);
         match target_negative_standard_set {
             StandardSet::RNeg => Ok(
-                (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                (VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                     in_fact.clone().into(),
                     "mul_opposite_signs_product_in_negative_reals".to_string(),
                     base_subgoals,
@@ -2117,7 +2117,7 @@ impl Runtime {
                 if product_in_q_result.is_true() {
                     base_subgoals.push(product_in_q_result);
                     Ok(
-                        (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        (VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                             in_fact.clone().into(),
                             "mul_opposite_signs_product_in_negative_rationals".to_string(),
                             base_subgoals,
@@ -2142,7 +2142,7 @@ impl Runtime {
                 if product_in_z_result.is_true() {
                     base_subgoals.push(product_in_z_result);
                     Ok(
-                        (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        (VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                             in_fact.clone().into(),
                             "mul_opposite_signs_product_in_negative_integers".to_string(),
                             base_subgoals,

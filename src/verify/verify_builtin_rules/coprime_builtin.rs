@@ -39,7 +39,7 @@ impl Runtime {
         if values_are_coprime != fact_is_positive {
             return StmtUnknown::new().into();
         }
-        FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+        VerifiedFactStmtIr::new_with_verified_by_builtin_rule_evidence_recording_stmt(
             atomic_fact.clone().into(),
             "deterministic natural coprimality computation".to_string(),
             BuiltinRuleEvidence::CoprimeNaturalReflection,

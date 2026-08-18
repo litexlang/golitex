@@ -59,7 +59,7 @@ impl Runtime {
         )?;
 
         Ok(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_label_and_steps(
                 fact.clone(),
                 infer_result,
                 "trusted file load".to_string(),

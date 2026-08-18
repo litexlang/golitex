@@ -80,7 +80,12 @@ impl Runtime {
             &obtain.fact,
             obtain.line_file.clone(),
         )?;
-        Ok(NonFactualStmtSuccess::new(obtain.clone().into(), infer_result, vec![]).into())
+        Ok(VerifiedDefObjStmtIr::ObtainObjFromExistFact {
+            statement: obtain.clone(),
+            common: VerifiedStmtCommonIr::new(infer_result, vec![]),
+            verification: None,
+        }
+        .into())
     }
 
     pub(crate) fn exec_obtain_obj_from_atomic_fact_affect_environment_only(
@@ -94,7 +99,12 @@ impl Runtime {
             &source_exist_fact,
             obtain.line_file.clone(),
         )?;
-        Ok(NonFactualStmtSuccess::new(obtain.clone().into(), infer_result, vec![]).into())
+        Ok(VerifiedDefObjStmtIr::ObtainObjFromAtomicFact {
+            statement: obtain.clone(),
+            common: VerifiedStmtCommonIr::new(infer_result, vec![]),
+            verification: None,
+        }
+        .into())
     }
 
     pub(crate) fn exec_obtain_obj_from_thm_affect_environment_only(
@@ -119,7 +129,12 @@ impl Runtime {
             &source_exist_fact,
             obtain.line_file.clone(),
         )?;
-        Ok(NonFactualStmtSuccess::new(stmt, infer_result, vec![]).into())
+        Ok(VerifiedDefObjStmtIr::ObtainObjFromThm {
+            statement: obtain.clone(),
+            common: VerifiedStmtCommonIr::new(infer_result, vec![]),
+            verification: None,
+        }
+        .into())
     }
 
     /// Recover the exact direct theorem conclusion selected by the existing
@@ -131,12 +146,14 @@ impl Runtime {
         application_result: StmtResult,
     ) -> Result<(ExistFactEnum, StmtResult), RuntimeError> {
         let extracted = (|| -> Result<ExistFactEnum, String> {
-            let success = application_result.non_factual_success().ok_or_else(|| {
+            let success = application_result.non_factual_ir().ok_or_else(|| {
                 "obtain from thm: theorem application did not return a statement success"
                     .to_string()
             })?;
-            let Some(ByVerificationResult::Theorem(verification)) =
-                success.by_verification.as_ref()
+            let VerifiedStmtIr::By(VerifiedByStmtIr::ByThmStmt {
+                verification: Some(verification),
+                ..
+            }) = success
             else {
                 return Err(
                     "obtain from thm: theorem application did not retain theorem verification evidence"
@@ -220,7 +237,12 @@ impl Runtime {
             &exist_fact,
             stmt.line_file.clone(),
         )?;
-        Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![]).into())
+        Ok(VerifiedDefObjStmtIr::HaveObjByExistFactsStmt {
+            statement: stmt.clone(),
+            common: VerifiedStmtCommonIr::new(infer_result, vec![]),
+            verification: None,
+        }
+        .into())
     }
 
     fn exec_obj_from_exist_fact(
@@ -268,9 +290,39 @@ impl Runtime {
             line_file,
         )?;
 
-        let mut success = NonFactualStmtSuccess::new(stmt, infer_result, inside_results);
-        success.existential_elimination_verification = Some(elimination_verification);
-        Ok(success.into())
+        let common = VerifiedStmtCommonIr::new(infer_result, inside_results);
+        let ir = match stmt {
+            Stmt::DefObjStmt(DefObjStmt::HaveObjByExistFactsStmt(statement)) => {
+                VerifiedDefObjStmtIr::HaveObjByExistFactsStmt {
+                    statement,
+                    common,
+                    verification: Some(elimination_verification),
+                }
+            }
+            Stmt::DefObjStmt(DefObjStmt::ObtainObjFromExistFact(statement)) => {
+                VerifiedDefObjStmtIr::ObtainObjFromExistFact {
+                    statement,
+                    common,
+                    verification: Some(elimination_verification),
+                }
+            }
+            Stmt::DefObjStmt(DefObjStmt::ObtainObjFromAtomicFact(statement)) => {
+                VerifiedDefObjStmtIr::ObtainObjFromAtomicFact {
+                    statement,
+                    common,
+                    verification: Some(elimination_verification),
+                }
+            }
+            Stmt::DefObjStmt(DefObjStmt::ObtainObjFromThm(statement)) => {
+                VerifiedDefObjStmtIr::ObtainObjFromThm {
+                    statement,
+                    common,
+                    verification: Some(elimination_verification),
+                }
+            }
+            _ => unreachable!("existential elimination must retain its exact object statement"),
+        };
+        Ok(ir.into())
     }
 
     /// Mathematical contract: existential elimination introduces exactly one
@@ -354,7 +406,7 @@ impl Runtime {
         }
 
         let projection_result =
-            FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 source_exist_fact.clone().into(),
                 format!(
                     "existential projection from prop definition `{}`",

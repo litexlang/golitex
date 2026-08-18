@@ -76,25 +76,26 @@ fn verified_by_builtin_strategy_value(
     )
 }
 
-/// Public `verification` field for one [`FactualStmtSuccess`] (builtin rule or citation).
+/// Public `verification` field for one [`VerifiedFactStmtIr`] (builtin rule or citation).
 pub(crate) fn factual_success_verified_by_value(
     runtime: &Runtime,
-    x: &FactualStmtSuccess,
+    x: &VerifiedFactStmtIr,
     output_style: OutputStyle,
 ) -> JsonValue {
-    let current_line_file = x.stmt.line_file();
+    let fact = x.fact();
+    let current_line_file = fact.line_file();
     verified_by_result_json_value(
         runtime,
         &x.verified_by,
         &current_line_file,
-        Some(&x.stmt),
+        Some(&fact),
         output_style,
     )
 }
 
 pub(crate) fn factual_success_forall_proof_fields(
     runtime: &Runtime,
-    x: &FactualStmtSuccess,
+    x: &VerifiedFactStmtIr,
     output_style: OutputStyle,
 ) -> Vec<(String, JsonValue)> {
     match x.underlying_verified_by() {
@@ -464,7 +465,8 @@ pub(crate) fn stmt_result_to_composite_step_verified_by(
 ) -> JsonValue {
     if let Some(f) = r.factual_success() {
         factual_success_verified_by_value(runtime, f, output_style)
-    } else if let Some(n) = r.non_factual_success() {
+    } else if let Some(n) = r.non_factual_ir() {
+        let statement = n.statement();
         JsonValue::Object(vec![
             (
                 "type".to_string(),
@@ -472,7 +474,7 @@ pub(crate) fn stmt_result_to_composite_step_verified_by(
             ),
             (
                 "statement_type".to_string(),
-                JsonValue::JsonString(n.stmt.output_type_string()),
+                JsonValue::JsonString(statement.output_type_string()),
             ),
         ])
     } else {
@@ -497,18 +499,19 @@ fn subgoal_values(
 fn subgoal_value(runtime: &Runtime, subgoal: &StmtResult, output_style: OutputStyle) -> JsonValue {
     let mut fields = Vec::new();
     if let Some(f) = subgoal.factual_success() {
+        let fact = f.fact();
         fields.push((
             JSON_KEY_STMT.to_string(),
-            JsonValue::JsonString(user_visible_stmt_or_msg_text(&f.stmt.to_string())),
+            JsonValue::JsonString(user_visible_stmt_or_msg_text(&fact.to_string())),
         ));
         fields.push((
             JSON_KEY_VERIFICATION.to_string(),
             factual_success_verified_by_value(runtime, f, output_style),
         ));
-    } else if let Some(n) = subgoal.non_factual_success() {
+    } else if let Some(n) = subgoal.non_factual_ir() {
         fields.push((
             JSON_KEY_STMT.to_string(),
-            JsonValue::JsonString(stmt_text_for_json(runtime, &n.stmt)),
+            JsonValue::JsonString(stmt_text_for_json(runtime, &n.statement())),
         ));
         fields.push((
             JSON_KEY_VERIFICATION.to_string(),

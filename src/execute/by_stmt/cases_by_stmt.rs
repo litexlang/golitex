@@ -157,15 +157,13 @@ impl Runtime {
             case_result_counts,
             proof_scopes,
             stmt.impossible_facts.clone(),
-        )
-        .into();
+        );
 
-        Ok(NonFactualStmtSuccess::new_with_by_verification(
-            stmt.clone().into(),
-            InferResult::new(),
-            inside_results,
-            by_verification,
-        )
+        Ok(VerifiedByStmtIr::ByCasesStmt {
+            statement: stmt.clone(),
+            common: VerifiedStmtCommonIr::new(InferResult::new(), inside_results),
+            verification: Some(by_verification),
+        }
         .into())
     }
 
@@ -203,7 +201,12 @@ impl Runtime {
         stmt: &ByCasesStmt,
     ) -> Result<StmtResult, RuntimeError> {
         let infer_result = self.exec_by_cases_stmt_affect_environment(stmt)?;
-        Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![]).into())
+        Ok(VerifiedByStmtIr::ByCasesStmt {
+            statement: stmt.clone(),
+            common: VerifiedStmtCommonIr::new(infer_result, vec![]),
+            verification: None,
+        }
+        .into())
     }
 
     fn exec_by_cases_stmt_verify_cases_cover_all_situations(
@@ -481,14 +484,17 @@ impl Runtime {
             }
 
             inside_results.push(
-                (NonFactualStmtSuccess::new(
-                    stmt.clone().into(),
-                    InferResult::new(),
-                    vec![
-                        verify_impossible_fact_result,
-                        verify_negated_impossible_fact_result,
-                    ],
-                ))
+                VerifiedByStmtIr::ByCasesStmt {
+                    statement: stmt.clone(),
+                    common: VerifiedStmtCommonIr::new(
+                        InferResult::new(),
+                        vec![
+                            verify_impossible_fact_result,
+                            verify_negated_impossible_fact_result,
+                        ],
+                    ),
+                    verification: None,
+                }
                 .into(),
             );
 

@@ -100,15 +100,18 @@ impl RunSummary {
             self.verified_statements += 1;
         }
         if let Some(success) = result.factual_success() {
-            self.visit_fact_stmt(&success.stmt, depth);
+            self.visit_fact_stmt(&success.fact(), depth);
             self.visit_infer_result(&success.infers);
             self.visit_verified_by(&success.verified_by, depth);
         }
-        if let Some(success) = result.non_factual_success() {
-            self.visit_stmt(&success.stmt, depth);
-            self.visit_infer_result(&success.infers);
+        if let Some(success) = result.non_factual_ir() {
+            let common = success
+                .common()
+                .expect("non-factual IR carries common execution evidence");
+            self.visit_stmt(&success.statement(), depth);
+            self.visit_infer_result(&common.infers);
             self.visit_non_factual_verification(success);
-            for inside_result in success.inside_results.iter() {
+            for inside_result in common.inside_results.iter() {
                 self.visit_result(inside_result, depth + 1);
             }
         }
@@ -143,12 +146,11 @@ impl RunSummary {
             Stmt::DefInterfaceStmt(_) => {
                 self.abstract_interfaces += 1;
             }
-            Stmt::DefThmStmt(def_thm) => {
-                if def_thm.is_axiom() {
-                    self.axioms += 1;
-                } else {
-                    self.theorem_statements += 1;
-                }
+            Stmt::DefThmStmt(_) => {
+                self.theorem_statements += 1;
+            }
+            Stmt::AxiomStmt(_) => {
+                self.axioms += 1;
             }
             Stmt::By(_) => {
                 self.by_statements += 1;
@@ -312,49 +314,70 @@ impl RunSummary {
         }
     }
 
-    fn visit_non_factual_verification(&mut self, success: &NonFactualStmtSuccess) {
-        if let Some(theorem) = success.theorem_verification.as_ref() {
-            bump_count(&mut self.proof_method_counts, "theorem proof");
-            self.visit_infer_result(&theorem.assumption_infers);
-        }
-
-        if let Some(claim) = success.claim_verification.as_ref() {
-            bump_count(&mut self.proof_method_counts, "claim");
-            match claim {
-                ClaimVerificationResult::Forall(result) => {
+    fn visit_non_factual_verification(&mut self, success: &VerifiedStmtIr) {
+        match success {
+            VerifiedStmtIr::DefThmStmt {
+                verification: Some(theorem),
+                ..
+            } => {
+                bump_count(&mut self.proof_method_counts, "theorem proof");
+                self.visit_infer_result(&theorem.assumption_infers);
+            }
+            VerifiedStmtIr::ProofBlock(
+                VerifiedProofBlockStmtIr::ClaimStmt {
+                    verification: Some(claim),
+                    ..
+                }
+                | VerifiedProofBlockStmtIr::ExampleStmt {
+                    verification: Some(claim),
+                    ..
+                },
+            ) => {
+                bump_count(&mut self.proof_method_counts, "claim");
+                if let ClaimVerificationResult::Forall(result) = claim {
                     self.visit_infer_result(&result.assumption_infers);
                 }
-                ClaimVerificationResult::Fact(_) => {}
             }
-        }
-
-        if let Some(by_verification) = success.by_verification.as_ref() {
-            self.visit_by_verification(by_verification);
+            VerifiedStmtIr::By(by) => self.visit_by_ir(by),
+            _ => {}
         }
     }
 
-    fn visit_by_verification(&mut self, by_verification: &ByVerificationResult) {
-        match by_verification {
-            ByVerificationResult::Cases(_) => self.bump_by_method("cases"),
-            ByVerificationResult::Contra(_) => self.bump_by_method("contra"),
-            ByVerificationResult::EnumerateFiniteSet(_) => {
+    fn visit_by_ir(&mut self, by: &VerifiedByStmtIr) {
+        match by {
+            VerifiedByStmtIr::ByCasesStmt { .. } => self.bump_by_method("cases"),
+            VerifiedByStmtIr::ByContraStmt { .. } => self.bump_by_method("contra"),
+            VerifiedByStmtIr::ByEnumerateFiniteSetStmt { .. } => {
                 self.bump_by_method("enumerate finite set")
             }
-            ByVerificationResult::EnumerateRange(_) => self.bump_by_method("enumerate range"),
-            ByVerificationResult::Induc(_) => self.bump_by_method("induc"),
-            ByVerificationResult::For(_) => self.bump_by_method("for"),
-            ByVerificationResult::Extension(_) => self.bump_by_method("extension"),
-            ByVerificationResult::PropRegistration(result) => {
-                self.bump_by_method(result.registration_type.as_str());
-                self.visit_infer_result(&result.assumption_infers);
+            VerifiedByStmtIr::ByEnumerateRangeStmt { .. }
+            | VerifiedByStmtIr::ByClosedRangeAsCasesStmt { .. } => {
+                self.bump_by_method("enumerate range")
             }
-            ByVerificationResult::AxiomOfChoice(_) => self.bump_by_method("axiom of choice"),
-            ByVerificationResult::ZornLemma(_) => self.bump_by_method("zorn lemma"),
-            ByVerificationResult::RegularityAxiom(_) => self.bump_by_method("regularity axiom"),
-            ByVerificationResult::Definition(_) => self.bump_by_method("def"),
-            ByVerificationResult::Theorem(result) => {
+            VerifiedByStmtIr::ByFiniteSetInducStmt { .. }
+            | VerifiedByStmtIr::ByInducStmt { .. } => self.bump_by_method("induc"),
+            VerifiedByStmtIr::ByForStmt { .. } => self.bump_by_method("for"),
+            VerifiedByStmtIr::ByExtensionStmt { .. } => self.bump_by_method("extension"),
+            VerifiedByStmtIr::ByTransitivePropStmt { verification, .. }
+            | VerifiedByStmtIr::BySymmetricPropStmt { verification, .. }
+            | VerifiedByStmtIr::ByReflexivePropStmt { verification, .. }
+            | VerifiedByStmtIr::ByAntisymmetricPropStmt { verification, .. } => {
+                if let Some(result) = verification {
+                    self.bump_by_method(result.registration_type.as_str());
+                    self.visit_infer_result(&result.assumption_infers);
+                }
+            }
+            VerifiedByStmtIr::ByAxiomOfChoiceStmt { .. } => self.bump_by_method("axiom of choice"),
+            VerifiedByStmtIr::ByZornLemmaStmt { .. } => self.bump_by_method("zorn lemma"),
+            VerifiedByStmtIr::ByRegularityAxiomStmt { .. } => {
+                self.bump_by_method("regularity axiom")
+            }
+            VerifiedByStmtIr::ByDefStmt { .. } => self.bump_by_method("def"),
+            VerifiedByStmtIr::ByThmStmt { verification, .. } => {
                 self.bump_by_method("theorem");
-                bump_count(&mut self.by_theorem_counts, result.theorem.as_str());
+                if let Some(result) = verification {
+                    bump_count(&mut self.by_theorem_counts, result.theorem.as_str());
+                }
             }
         }
     }
@@ -505,6 +528,11 @@ impl EnvironmentSummary {
             "defined_thm_stmts",
             environment.defined_thm_stmts.len(),
             environment.defined_thm_stmts.len(),
+        );
+        summary.add_field_counts(
+            "defined_axiom_stmts",
+            environment.defined_axiom_stmts.len(),
+            environment.defined_axiom_stmts.len(),
         );
         summary.add_field_counts(
             "defined_strategy_stmts",
@@ -744,6 +772,8 @@ impl EnvironmentSummary {
             .insert("settings".to_string(), environment.defined_settings.len());
         self.category_counts
             .insert("theorems".to_string(), environment.defined_thm_stmts.len());
+        self.category_counts
+            .insert("axioms".to_string(), environment.defined_axiom_stmts.len());
         self.category_counts.insert(
             "strategies".to_string(),
             environment.defined_strategy_stmts.len(),

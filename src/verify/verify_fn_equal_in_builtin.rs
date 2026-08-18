@@ -53,7 +53,7 @@ impl Runtime {
         }
         let recorded: Fact = f.clone().into();
         Ok(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 recorded,
                 "fn_eq_in: pointwise equality on the given set (forall x in S, f(x)=g(x))"
                     .to_string(),
@@ -105,7 +105,7 @@ impl Runtime {
             let pointwise_result = self.verify_forall_fact(&pointwise, verify_state)?;
             if pointwise_result.is_true() {
                 return Ok(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                         f.clone().into(),
                         "fn_eq: exact known pointwise forall over alpha-equivalent function carriers"
                             .to_string(),
@@ -164,7 +164,7 @@ impl Runtime {
         }
         let recorded: Fact = f.clone().into();
         Ok(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 recorded,
                 "fn_eq: mutual function-space membership and pointwise equality (forall+dom)"
                     .to_string(),

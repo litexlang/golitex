@@ -647,7 +647,7 @@ impl Runtime {
 
     pub(crate) fn well_defined_fact_id_for_proof(
         &self,
-        proof: &Rc<FactualStmtSuccess>,
+        proof: &Rc<VerifiedFactStmtIr>,
     ) -> Option<WellDefinedFactId> {
         self.iter_environments_from_top().find_map(|env| {
             env.well_defined_fact_proofs.iter().find_map(|(id, known)| {

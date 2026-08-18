@@ -134,8 +134,14 @@ impl Runtime {
             )?;
             self.attach_known_fact_ids_to_stmt_result(&mut result)?;
 
-            if let Some(non_factual_success) = result.non_factual_success() {
-                infer_result.new_infer_result_inside(non_factual_success.infers.clone());
+            if let Some(non_factual_success) = result.non_factual_ir() {
+                infer_result.new_infer_result_inside(
+                    non_factual_success
+                        .common()
+                        .expect("non-factual IR carries common evidence")
+                        .infers
+                        .clone(),
+                );
             } else if result.factual_success().is_some() {
                 // Do not merge then-fact verification `infers` into `infer_result` (e.g. instantiated
                 // `finite_set_min(S) <= a` from a known forall). Each then proof is attached as Steps under
@@ -148,7 +154,7 @@ impl Runtime {
 
         infer_result.add_verified_statement(&forall_fact.clone().into());
         let infer_for_success = std::mem::replace(infer_result, InferResult::new());
-        Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules(
+        Ok((VerifiedFactStmtIr::new_with_verified_by_builtin_rules(
             forall_fact.clone().into(),
             infer_for_success,
             VerifiedByResult::forall_proof(
@@ -180,7 +186,7 @@ impl Runtime {
                 cached_fact.line_file.clone(),
                 cached_fact.fact_id,
             )?;
-            return Ok(FactualStmtSuccess::new_with_verified_by_known_fact(
+            return Ok(VerifiedFactStmtIr::new_with_verified_by_known_fact(
                 fact.clone(),
                 VerifiedByResult::cached_fact(fact, cached_fact.line_file, cached_fact.fact_id),
                 Vec::new(),
@@ -194,7 +200,7 @@ impl Runtime {
 
         if Self::forall_has_literal_empty_obj_parameter_domain(forall_fact) {
             return Ok(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                     forall_fact.clone().into(),
                     "forall over empty parameter set".to_string(),
                     Vec::new(),

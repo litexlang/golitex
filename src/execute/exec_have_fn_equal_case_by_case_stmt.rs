@@ -19,11 +19,10 @@ impl Runtime {
             &fn_set_stored,
         )?;
 
-        Ok((NonFactualStmtSuccess::new(
-            have_fn_equal_case_by_case_stmt.clone().into(),
-            infer_result,
-            inside_results,
-        ))
+        Ok(VerifiedDefObjStmtIr::HaveFnEqualCaseByCaseStmt {
+            statement: have_fn_equal_case_by_case_stmt.clone(),
+            common: VerifiedStmtCommonIr::new(infer_result, inside_results),
+        }
         .into())
     }
 
@@ -239,11 +238,10 @@ impl Runtime {
             have_fn_equal_case_by_case_stmt,
             &fn_set_stored,
         )?;
-        Ok(NonFactualStmtSuccess::new(
-            have_fn_equal_case_by_case_stmt.clone().into(),
-            infer_result,
-            vec![],
-        )
+        Ok(VerifiedDefObjStmtIr::HaveFnEqualCaseByCaseStmt {
+            statement: have_fn_equal_case_by_case_stmt.clone(),
+            common: VerifiedStmtCommonIr::new(infer_result, vec![]),
+        }
         .into())
     }
 

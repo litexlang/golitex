@@ -105,7 +105,7 @@ impl WellDefinednessSourceObjectUse {
 pub struct WellDefinednessFactEvidence {
     /// Runtime-wide identity of the environment-owned proof fact.
     pub well_defined_fact_id: WellDefinedFactId,
-    pub proof: Rc<FactualStmtSuccess>,
+    pub proof: Rc<VerifiedFactStmtIr>,
     pub ambient_binder_scope_ids: Vec<WellDefinedBinderScopeId>,
 }
 

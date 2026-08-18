@@ -79,7 +79,7 @@ impl Runtime {
             self.cached_known_fact(&normalized_key)
         };
         cached_fact.map(|cached_fact| {
-            FactualStmtSuccess::new_with_verified_by_known_fact(
+            VerifiedFactStmtIr::new_with_verified_by_known_fact(
                 fact.clone(),
                 VerifiedByResult::cached_fact(
                     fact.clone(),
@@ -226,7 +226,7 @@ impl Runtime {
             steps.push(result);
         }
         Ok(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 and_fact.clone().into(),
                 "restricted builtin premise: each conjunct verified".to_string(),
                 steps,
@@ -264,7 +264,7 @@ impl Runtime {
                 self.verify_and_chain_atomic_fact_restricted_known_builtin(fact, verify_state)?;
             if result.is_true() {
                 return Ok(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                         or_fact.clone().into(),
                         "restricted builtin premise: one branch verified".to_string(),
                         vec![result],

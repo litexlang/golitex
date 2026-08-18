@@ -34,7 +34,7 @@ impl Runtime {
             }
 
             return Ok(Some(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                     target.clone().into(),
                     "finite codomain of a surjection from a finite set".to_string(),
                     vec![codomain_match, domain_result, property_result],
@@ -87,7 +87,7 @@ impl Runtime {
             }
 
             return Ok(Some(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                     equal_fact.clone().into(),
                     "finite injection has range cardinality equal to its source".to_string(),
                     vec![domain_match, function_match, finite_result, property_result],
@@ -151,7 +151,7 @@ impl Runtime {
             }
 
             return Ok(Some(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                     equal_fact.clone().into(),
                     "finite bijection preserves cardinality".to_string(),
                     vec![domain_match, codomain_match, finite_result, property_result],
@@ -203,7 +203,7 @@ impl Runtime {
             }
 
             return Ok(Some(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                     target.clone().into(),
                     "finite surjection bounds codomain cardinality by source cardinality"
                         .to_string(),
@@ -270,7 +270,7 @@ impl Runtime {
             return Ok(StmtUnknown::new().into());
         }
         Ok(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 fact.clone().into(),
                 "literal/range finite-set structure".to_string(),
                 Vec::new(),

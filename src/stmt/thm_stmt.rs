@@ -1,15 +1,8 @@
 use crate::prelude::*;
 use std::fmt;
 
-#[derive(Clone, PartialEq)]
-pub enum DefThmKind {
-    Theorem,
-    Axiom,
-}
-
 #[derive(Clone)]
 pub struct DefThmStmt {
-    pub kind: DefThmKind,
     pub name: String,
     pub forall_fact: ForallFact,
     pub prove_process: Vec<Stmt>,
@@ -24,7 +17,6 @@ impl DefThmStmt {
         line_file: LineFile,
     ) -> Self {
         DefThmStmt {
-            kind: DefThmKind::Theorem,
             name,
             forall_fact,
             prove_process,
@@ -32,71 +24,17 @@ impl DefThmStmt {
         }
     }
 
-    pub fn new_axiom(name: String, forall_fact: ForallFact, line_file: LineFile) -> Self {
-        DefThmStmt {
-            kind: DefThmKind::Axiom,
-            name,
-            forall_fact,
-            prove_process: Vec::new(),
-            line_file,
-        }
-    }
-
-    pub fn is_axiom(&self) -> bool {
-        self.kind == DefThmKind::Axiom
-    }
-
-    pub fn keyword(&self) -> &'static str {
-        match self.kind {
-            DefThmKind::Theorem => THM,
-            DefThmKind::Axiom => AXIOM,
-        }
-    }
-
     pub fn store_reason(&self) -> &'static str {
-        match self.kind {
-            DefThmKind::Theorem => "proved theorem",
-            DefThmKind::Axiom => Self::axiom_store_reason(),
-        }
-    }
-
-    pub fn axiom_store_reason() -> &'static str {
-        "declared axiom"
-    }
-
-    pub fn strict_mode_rejection_message() -> &'static str {
-        "strict mode rejects user axiom statements; use thm with a `?` goal or move trusted background into an imported module"
-    }
-
-    pub fn output_type_string_for_stmt(&self) -> String {
-        match self.kind {
-            DefThmKind::Theorem => "theorem".to_string(),
-            DefThmKind::Axiom => "axiom".to_string(),
-        }
+        "proved theorem"
     }
 }
 
 impl fmt::Display for DefThmStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        if self.is_axiom() {
-            write!(
-                f,
-                "{} {}{}\n{}",
-                self.keyword(),
-                self.name,
-                COLON,
-                to_string_and_add_four_spaces_at_beginning_of_each_line(
-                    &format!("{} {}", QUESTION_GOAL, self.forall_fact),
-                    1
-                )
-            )?;
-            return Ok(());
-        }
-
         write!(
             f,
             "{} {}{}\n{}",
-            self.keyword(),
+            THM,
             self.name,
             COLON,
             to_string_and_add_four_spaces_at_beginning_of_each_line(

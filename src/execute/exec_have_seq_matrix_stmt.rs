@@ -32,7 +32,11 @@ impl Runtime {
             HaveSeqStmt::store_reason(),
             stmt.line_file.clone(),
         )?;
-        Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, inside_results).into())
+        Ok(VerifiedDefObjStmtIr::HaveSeqStmt {
+            statement: stmt.clone(),
+            common: VerifiedStmtCommonIr::new(infer_result, inside_results),
+        }
+        .into())
     }
 
     pub(crate) fn exec_have_seq_stmt_affect_environment_only(
@@ -52,7 +56,11 @@ impl Runtime {
             HaveSeqStmt::store_reason(),
             stmt.line_file.clone(),
         )?;
-        Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![]).into())
+        Ok(VerifiedDefObjStmtIr::HaveSeqStmt {
+            statement: stmt.clone(),
+            common: VerifiedStmtCommonIr::new(infer_result, vec![]),
+        }
+        .into())
     }
 
     pub fn exec_have_finite_seq_stmt(
@@ -92,7 +100,11 @@ impl Runtime {
             HaveFiniteSeqStmt::store_reason(),
             stmt.line_file.clone(),
         )?;
-        Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, inside_results).into())
+        Ok(VerifiedDefObjStmtIr::HaveFiniteSeqStmt {
+            statement: stmt.clone(),
+            common: VerifiedStmtCommonIr::new(infer_result, inside_results),
+        }
+        .into())
     }
 
     pub(crate) fn exec_have_finite_seq_stmt_affect_environment_only(
@@ -112,7 +124,11 @@ impl Runtime {
             HaveFiniteSeqStmt::store_reason(),
             stmt.line_file.clone(),
         )?;
-        Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![]).into())
+        Ok(VerifiedDefObjStmtIr::HaveFiniteSeqStmt {
+            statement: stmt.clone(),
+            common: VerifiedStmtCommonIr::new(infer_result, vec![]),
+        }
+        .into())
     }
 
     pub fn exec_have_matrix_stmt(
@@ -159,7 +175,11 @@ impl Runtime {
             HaveMatrixStmt::store_reason(),
             stmt.line_file.clone(),
         )?;
-        Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, inside_results).into())
+        Ok(VerifiedDefObjStmtIr::HaveMatrixStmt {
+            statement: stmt.clone(),
+            common: VerifiedStmtCommonIr::new(infer_result, inside_results),
+        }
+        .into())
     }
 
     pub(crate) fn exec_have_matrix_stmt_affect_environment_only(
@@ -179,7 +199,11 @@ impl Runtime {
             HaveMatrixStmt::store_reason(),
             stmt.line_file.clone(),
         )?;
-        Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![]).into())
+        Ok(VerifiedDefObjStmtIr::HaveMatrixStmt {
+            statement: stmt.clone(),
+            common: VerifiedStmtCommonIr::new(infer_result, vec![]),
+        }
+        .into())
     }
 
     /// Mathematical contract: a sequence or matrix definition uses a fresh

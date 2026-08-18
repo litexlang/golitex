@@ -142,7 +142,7 @@ impl Runtime {
             return Ok(None);
         }
         Ok(Some(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 goal.clone().into(),
                 "sign is nonzero exactly for nonzero arguments".to_string(),
                 vec![result],
@@ -331,7 +331,7 @@ impl Runtime {
             return Ok(None);
         }
         Ok(Some(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
                 "native exp/sign/factorial characteristic order bound".to_string(),
                 subgoals,
@@ -391,7 +391,7 @@ impl Runtime {
             return Ok(None);
         };
         Ok(Some(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
                 "native factorial monotonicity".to_string(),
                 results,
@@ -425,7 +425,7 @@ impl Runtime {
             return Ok(None);
         }
         Ok(Some(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
                 "native sign preserves weak order".to_string(),
                 vec![result],
@@ -571,7 +571,7 @@ impl Runtime {
             subgoals.push(result);
             let order_kind = if strict { "strict" } else { "weak" };
             return Ok(Some(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                     atomic_fact.clone().into(),
                     format!("native exp/ln reflects {order_kind} order"),
                     subgoals,
@@ -596,7 +596,7 @@ impl Runtime {
         if reflected_result.is_true() {
             let order_kind = if strict { "strict" } else { "weak" };
             return Ok(Some(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                     atomic_fact.clone().into(),
                     format!("native exp/ln reflects {order_kind} order"),
                     vec![reflected_result],
@@ -633,7 +633,7 @@ impl Runtime {
         };
         let order_kind = if strict { "strict" } else { "weak" };
         Ok(Some(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
                 format!("native {function_name} preserves {order_kind} order"),
                 results,
@@ -648,7 +648,7 @@ fn native_equal_success(
     reason: &str,
     subgoals: Vec<StmtResult>,
 ) -> StmtResult {
-    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
         equal_fact.clone().into(),
         reason.to_string(),
         subgoals,

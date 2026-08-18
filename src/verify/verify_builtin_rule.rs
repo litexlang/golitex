@@ -83,7 +83,7 @@ impl Runtime {
             }
             child_results.push(result);
         }
-        Ok(FactualStmtSuccess::new_with_verified_by_known_fact(
+        Ok(VerifiedFactStmtIr::new_with_verified_by_known_fact(
             and_fact.clone().into(),
             VerifiedByResult::wrap_bys(Vec::new()),
             child_results,
@@ -112,7 +112,7 @@ impl Runtime {
             }
             child_results.push(result);
         }
-        Ok(FactualStmtSuccess::new_with_verified_by_known_fact(
+        Ok(VerifiedFactStmtIr::new_with_verified_by_known_fact(
             chain_fact.clone().into(),
             VerifiedByResult::wrap_bys(Vec::new()),
             child_results,
@@ -160,7 +160,7 @@ impl Runtime {
                 continue;
             }
             return Ok(
-                FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                VerifiedFactStmtIr::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     or_fact.clone().into(),
                     "builtin premise: one disjunct verified".to_string(),
                     BuiltinRuleEvidence::DisjunctionIntroduction(

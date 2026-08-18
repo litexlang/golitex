@@ -8,14 +8,22 @@ impl Runtime {
         self.exec_have_tuple_stmt_verify_well_definedness(stmt)?;
         let check_results = self.exec_have_tuple_stmt_verify_process(stmt)?;
         let infer_result = self.exec_have_tuple_stmt_affect_environment(stmt)?;
-        Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, check_results).into())
+        Ok(VerifiedDefObjStmtIr::HaveTupleStmt {
+            statement: stmt.clone(),
+            common: VerifiedStmtCommonIr::new(infer_result, check_results),
+        }
+        .into())
     }
 
     pub fn exec_have_cart_stmt(&mut self, stmt: &HaveCartStmt) -> Result<StmtResult, RuntimeError> {
         self.exec_have_cart_stmt_verify_well_definedness(stmt)?;
         let check_results = self.exec_have_cart_stmt_verify_process(stmt)?;
         let infer_result = self.exec_have_cart_stmt_affect_environment(stmt)?;
-        Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, check_results).into())
+        Ok(VerifiedDefObjStmtIr::HaveCartStmt {
+            statement: stmt.clone(),
+            common: VerifiedStmtCommonIr::new(infer_result, check_results),
+        }
+        .into())
     }
 
     /// Mathematical contract: a tuple-family declaration uses a fresh name
@@ -84,7 +92,11 @@ impl Runtime {
         stmt: &HaveTupleStmt,
     ) -> Result<StmtResult, RuntimeError> {
         let infer_result = self.exec_have_tuple_stmt_affect_environment(stmt)?;
-        Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![]).into())
+        Ok(VerifiedDefObjStmtIr::HaveTupleStmt {
+            statement: stmt.clone(),
+            common: VerifiedStmtCommonIr::new(infer_result, vec![]),
+        }
+        .into())
     }
 
     /// Mathematical contract: a Cartesian-family declaration uses a fresh
@@ -157,7 +169,11 @@ impl Runtime {
         stmt: &HaveCartStmt,
     ) -> Result<StmtResult, RuntimeError> {
         let infer_result = self.exec_have_cart_stmt_affect_environment(stmt)?;
-        Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![]).into())
+        Ok(VerifiedDefObjStmtIr::HaveCartStmt {
+            statement: stmt.clone(),
+            common: VerifiedStmtCommonIr::new(infer_result, vec![]),
+        }
+        .into())
     }
 
     fn verify_tuple_or_cart_name_available(

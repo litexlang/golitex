@@ -790,16 +790,41 @@ impl DefinitionGraphBuilder {
         let mut theorems = environment.defined_thm_stmts.iter().collect::<Vec<_>>();
         theorems.sort_by(|left, right| left.0.cmp(right.0));
         for (name, definition) in theorems {
-            let definition_kind = if definition.is_axiom() {
-                "axiom"
-            } else {
-                "theorem"
-            };
             let node_id = definition_id("theorem", name);
             self.ensure_node(
                 node_id.clone(),
                 "theorem",
-                definition_kind,
+                "theorem",
+                name,
+                true,
+                Some(&definition.line_file),
+                Some(&definition.to_string()),
+            );
+            let mut signature = DepCollector::new();
+            signature
+                .collect_param_def_with_type_deps(&definition.forall_fact.params_def_with_type);
+            signature.add_param_def_with_type(&definition.forall_fact.params_def_with_type);
+            for fact in definition.forall_fact.then_facts.iter() {
+                signature.collect_exist_or_and_chain_atomic_fact(fact);
+            }
+            self.add_dependency_edges(&node_id, signature, "signature");
+
+            let mut well_definedness = DepCollector::new();
+            well_definedness.add_param_def_with_type(&definition.forall_fact.params_def_with_type);
+            for fact in definition.forall_fact.dom_facts.iter() {
+                well_definedness.collect_fact(fact);
+            }
+            self.add_dependency_edges(&node_id, well_definedness, "well_definedness");
+        }
+
+        let mut axioms = environment.defined_axiom_stmts.iter().collect::<Vec<_>>();
+        axioms.sort_by(|left, right| left.0.cmp(right.0));
+        for (name, definition) in axioms {
+            let node_id = definition_id("theorem", name);
+            self.ensure_node(
+                node_id.clone(),
+                "theorem",
+                "axiom",
                 name,
                 true,
                 Some(&definition.line_file),
@@ -973,18 +998,22 @@ impl DefinitionGraphBuilder {
     }
 
     fn add_one_result_provenance(&mut self, result: &StmtResult) {
-        let Some(success) = result.non_factual_success() else {
+        let Some(success) = result.non_factual_ir() else {
             return;
         };
-        match &success.stmt {
+        let source_stmt = success.statement();
+        let common = success
+            .common()
+            .expect("non-factual IR carries common execution evidence");
+        match &source_stmt {
             Stmt::DefThmStmt(statement) => {
                 let previous_canonical_name = self.active_canonical_name.clone();
                 self.active_canonical_name = self
                     .canonical_name_by_source
                     .get(statement.line_file.1.as_ref())
                     .cloned();
-                let sources = self.proof_source_ids_from_results(&success.inside_results);
-                let direct_trust = stmt_results_contain_direct_trust(&success.inside_results);
+                let sources = self.proof_source_ids_from_results(&common.inside_results);
+                let direct_trust = stmt_results_contain_direct_trust(&common.inside_results);
                 let name = self.normalized_dependency_name(&statement.name);
                 let target_id = definition_id("theorem", name.as_str());
                 if self.node_is_defined(&target_id) {
@@ -998,7 +1027,7 @@ impl DefinitionGraphBuilder {
                 self.active_canonical_name = previous_canonical_name;
             }
             Stmt::DefObjStmt(DefObjStmt::HaveFnByForallExistUniqueStmt(statement)) => {
-                self.add_selection_certificate(statement, success);
+                self.add_selection_certificate(statement, common);
             }
             Stmt::UnsafeStmt(UnsafeStmt::TrustHaveStmt(statement)) => {
                 let source_id =
@@ -1022,7 +1051,7 @@ impl DefinitionGraphBuilder {
     fn add_selection_certificate(
         &mut self,
         statement: &HaveFnByForallExistUniqueStmt,
-        success: &NonFactualStmtSuccess,
+        common: &VerifiedStmtCommonIr,
     ) {
         let function_id = definition_id("fn", statement.fn_name());
         if !self.node_is_defined(&function_id) {
@@ -1066,10 +1095,10 @@ impl DefinitionGraphBuilder {
         }
         self.add_dependency_edges(&certificate_id, well_definedness, "well_definedness");
 
-        for source_id in self.proof_source_ids_from_results(&success.inside_results) {
+        for source_id in self.proof_source_ids_from_results(&common.inside_results) {
             self.add_edge(&source_id, &certificate_id, "proof");
         }
-        let direct_trust = stmt_results_contain_direct_trust(&success.inside_results);
+        let direct_trust = stmt_results_contain_direct_trust(&common.inside_results);
         if direct_trust {
             self.set_node_knowledge_status(&certificate_id, "trust", Some("direct"));
             self.set_node_knowledge_status(&function_id, "trust", Some("direct"));
@@ -1097,10 +1126,13 @@ impl DefinitionGraphBuilder {
             self.collect_verified_by_source_ids(&success.verified_by, source_ids);
             return;
         }
-        let Some(success) = result.non_factual_success() else {
+        let Some(success) = result.non_factual_ir() else {
             return;
         };
-        if let Some(ByVerificationResult::Theorem(verification)) = success.by_verification.as_ref()
+        if let VerifiedStmtIr::By(VerifiedByStmtIr::ByThmStmt {
+            verification: Some(verification),
+            ..
+        }) = success
         {
             let theorem_name = self.normalized_dependency_name(verification.theorem.as_str());
             let source_id = definition_id("theorem", theorem_name.as_str());
@@ -1115,7 +1147,7 @@ impl DefinitionGraphBuilder {
             );
             source_ids.push(source_id);
         }
-        match &success.stmt {
+        match &success.statement() {
             Stmt::UnsafeStmt(UnsafeStmt::TrustStmt(statement)) => {
                 source_ids.push(self.ensure_direct_trust_source(
                     "trust",
@@ -1130,7 +1162,7 @@ impl DefinitionGraphBuilder {
                     &statement.line_file,
                 ));
             }
-            Stmt::DefThmStmt(statement) if statement.is_axiom() => {
+            Stmt::AxiomStmt(statement) => {
                 let name = self.normalized_dependency_name(&statement.name);
                 let source_id = definition_id("theorem", name.as_str());
                 self.ensure_node(
@@ -1146,7 +1178,10 @@ impl DefinitionGraphBuilder {
             }
             _ => {}
         }
-        for inside in success.inside_results.iter() {
+        let common = success
+            .common()
+            .expect("non-factual IR carries common execution evidence");
+        for inside in common.inside_results.iter() {
             self.collect_proof_source_ids_from_result(inside, source_ids);
         }
     }
@@ -1222,11 +1257,21 @@ impl DefinitionGraphBuilder {
                 self.ensure_node(
                     source_id.clone(),
                     "theorem",
-                    if statement.is_axiom() {
-                        "axiom"
-                    } else {
-                        "theorem"
-                    },
+                    "theorem",
+                    name.as_str(),
+                    false,
+                    Some(&statement.line_file),
+                    Some(&statement.to_string()),
+                );
+                source_ids.push(source_id);
+            }
+            Stmt::AxiomStmt(statement) => {
+                let name = self.normalized_dependency_name(&statement.name);
+                let source_id = definition_id("theorem", name.as_str());
+                self.ensure_node(
+                    source_id.clone(),
+                    "theorem",
+                    "axiom",
                     name.as_str(),
                     false,
                     Some(&statement.line_file),
@@ -1788,17 +1833,20 @@ fn default_definition_knowledge_status(
 
 fn stmt_results_contain_direct_trust(results: &[StmtResult]) -> bool {
     for result in results {
-        let Some(success) = result.non_factual_success() else {
+        let Some(success) = result.non_factual_ir() else {
             continue;
         };
         if matches!(
-            &success.stmt,
+            &success.statement(),
             Stmt::UnsafeStmt(UnsafeStmt::TrustStmt(_))
                 | Stmt::UnsafeStmt(UnsafeStmt::TrustHaveStmt(_))
         ) {
             return true;
         }
-        if stmt_results_contain_direct_trust(&success.inside_results) {
+        let common = success
+            .common()
+            .expect("non-factual IR carries common execution evidence");
+        if stmt_results_contain_direct_trust(&common.inside_results) {
             return true;
         }
     }

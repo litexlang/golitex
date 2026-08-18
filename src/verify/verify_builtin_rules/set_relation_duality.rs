@@ -31,7 +31,7 @@ impl Runtime {
         };
         if let Some(reason) = elementary_set_subset_reason {
             return Ok(
-                (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                (VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                     subset_fact.clone().into(),
                     reason.to_string(),
                     Vec::new(),
@@ -59,7 +59,7 @@ impl Runtime {
             ];
             if let Some(steps) = self.verify_builtin_rule_premises(&premises, builtin_state)? {
                 return Ok(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                         subset_fact.clone().into(),
                         "union subset from both operand subsets".to_string(),
                         steps,
@@ -86,7 +86,7 @@ impl Runtime {
                 .collect::<Vec<AtomicFact>>();
             if let Some(steps) = self.verify_builtin_rule_premises(&premises, builtin_state)? {
                 return Ok(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                         subset_fact.clone().into(),
                         "literal finite-set subset from member facts".to_string(),
                         steps,
@@ -118,7 +118,7 @@ impl Runtime {
                     .collect::<Vec<AtomicFact>>();
                 if let Some(steps) = self.verify_builtin_rule_premises(&premises, builtin_state)? {
                     return Ok(
-                        FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                             subset_fact.clone().into(),
                             "Cartesian-product subset from componentwise subsets".to_string(),
                             steps,
@@ -135,7 +135,7 @@ impl Runtime {
         {
             if left.is_subset_eq(right) {
                 return Ok(
-                    (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    (VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                         subset_fact.clone().into(),
                         "standard_set_subset".to_string(),
                         Vec::new(),
@@ -181,7 +181,7 @@ impl Runtime {
                     dependencies.push(result);
                 }
                 return Ok(
-                    (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    (VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                         subset_fact.clone().into(),
                         "integer range is contained in its standard numeric carrier".to_string(),
                         dependencies,
@@ -195,7 +195,7 @@ impl Runtime {
         // sets such as `fn(x X) X $subset fn(y X) X`.
         if objs_equal_with_nested_binder_alpha_equivalence(&subset_fact.left, &subset_fact.right) {
             return Ok(
-                (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                (VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                     subset_fact.clone().into(),
                     "subset_superset_duality".to_string(),
                     Vec::new(),
@@ -210,7 +210,7 @@ impl Runtime {
             && matches!(subset_fact.right, Obj::StandardSet(StandardSet::R))
         {
             return Ok(
-                (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                (VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                     subset_fact.clone().into(),
                     "real_interval_subset_R".to_string(),
                     Vec::new(),
@@ -233,7 +233,7 @@ impl Runtime {
                     body.ret_set.as_ref(),
                     &subset_fact.right,
                 ) {
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                         ret_subset.clone().into(),
                         "structural subset".to_string(),
                         Vec::new(),
@@ -244,7 +244,7 @@ impl Runtime {
                 };
                 if ret_subset_result.is_true() {
                     return Ok(
-                        (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        (VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                             subset_fact.clone().into(),
                             "fn_range_subset_codomain".to_string(),
                             vec![ret_subset_result],
@@ -265,7 +265,7 @@ impl Runtime {
             .verify_non_equational_atomic_fact_with_known_atomic_facts(&converted_superset_fact)?;
         if verify_result.is_true() {
             Ok(
-                (FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                (VerifiedFactStmtIr::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     subset_fact.clone().into(),
                     "subset_superset_duality".to_string(),
                     BuiltinRuleEvidence::SetRelationDuality(
@@ -292,7 +292,7 @@ impl Runtime {
         {
             if right.is_subset_eq(left) {
                 return Ok(
-                    (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    (VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                         superset_fact.clone().into(),
                         "standard_set_superset".to_string(),
                         Vec::new(),
@@ -309,7 +309,7 @@ impl Runtime {
             &superset_fact.right,
         ) {
             return Ok(
-                (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                (VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                     superset_fact.clone().into(),
                     "subset_superset_duality".to_string(),
                     Vec::new(),
@@ -327,7 +327,7 @@ impl Runtime {
             self.verify_non_equational_atomic_fact_with_known_atomic_facts(&converted_subset_fact)?;
         if verify_result.is_true() {
             Ok(
-                (FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                (VerifiedFactStmtIr::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     superset_fact.clone().into(),
                     "subset_superset_duality".to_string(),
                     BuiltinRuleEvidence::SetRelationDuality(
@@ -359,7 +359,7 @@ impl Runtime {
         )?;
         if verify_result.is_true() {
             Ok(
-                (FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                (VerifiedFactStmtIr::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     not_subset_fact.clone().into(),
                     "subset_superset_duality".to_string(),
                     BuiltinRuleEvidence::SetRelationDuality(
@@ -391,7 +391,7 @@ impl Runtime {
         )?;
         if verify_result.is_true() {
             Ok(
-                (FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                (VerifiedFactStmtIr::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     not_superset_fact.clone().into(),
                     "subset_superset_duality".to_string(),
                     BuiltinRuleEvidence::SetRelationDuality(

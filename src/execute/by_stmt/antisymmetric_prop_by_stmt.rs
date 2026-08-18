@@ -83,12 +83,11 @@ impl Runtime {
             assumption_infer_result,
             stmt.proof.len(),
         );
-        Ok(NonFactualStmtSuccess::new_with_by_verification(
-            stmt.clone().into(),
-            infer_result,
-            inside_results,
-            by_verification.into(),
-        )
+        Ok(VerifiedByStmtIr::ByAntisymmetricPropStmt {
+            statement: stmt.clone(),
+            common: VerifiedStmtCommonIr::new(infer_result, inside_results),
+            verification: Some(by_verification),
+        }
         .into())
     }
 
@@ -133,6 +132,11 @@ impl Runtime {
             .store_antisymmetric_prop_name(prop_name.clone());
         let mut infer_result = InferResult::new();
         infer_result.new_with_msg(format!("registered `{}` as antisymmetric", prop_name));
-        Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![]).into())
+        Ok(VerifiedByStmtIr::ByAntisymmetricPropStmt {
+            statement: stmt.clone(),
+            common: VerifiedStmtCommonIr::new(infer_result, vec![]),
+            verification: None,
+        }
+        .into())
     }
 }

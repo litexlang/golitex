@@ -2,26 +2,10 @@ use crate::prelude::*;
 
 /// The canonical result of executing one Litex statement.
 ///
-/// A successful result owns the verifier evidence needed by downstream
-/// consumers. The original `Stmt` already identifies the statement family,
-/// so this sum does not repeat every statement variant.
 #[derive(Debug)]
 pub enum StmtResult {
     Success(VerifiedStmtIr),
     Unknown(UnknownStatementResult),
-}
-
-#[derive(Debug)]
-pub struct VerifiedStmtIr {
-    pub statement: Stmt,
-    pub verification: VerifiedStmtVerificationIr,
-    pub well_definedness: WellDefinednessCertificate,
-}
-
-#[derive(Debug)]
-pub enum VerifiedStmtVerificationIr {
-    Fact(FactualStmtSuccess),
-    NonFact(NonFactualStmtSuccess),
 }
 
 #[derive(Debug)]
@@ -30,27 +14,63 @@ pub enum UnknownStatementResult {
     Fact(FactUnknown),
 }
 
-impl From<NonFactualStmtSuccess> for StmtResult {
-    fn from(success: NonFactualStmtSuccess) -> Self {
-        let statement = success.stmt.clone();
-        let well_definedness = success.well_definedness.clone();
-        StmtResult::Success(VerifiedStmtIr {
-            statement,
-            verification: VerifiedStmtVerificationIr::NonFact(success),
-            well_definedness,
-        })
+impl From<VerifiedStmtIr> for StmtResult {
+    fn from(success: VerifiedStmtIr) -> Self {
+        StmtResult::Success(success)
     }
 }
 
-impl From<FactualStmtSuccess> for StmtResult {
-    fn from(success: FactualStmtSuccess) -> Self {
-        let statement = Stmt::Fact(success.stmt.clone());
-        let well_definedness = success.well_definedness.clone();
-        StmtResult::Success(VerifiedStmtIr {
-            statement,
-            verification: VerifiedStmtVerificationIr::Fact(success),
-            well_definedness,
-        })
+impl From<VerifiedFactStmtIr> for StmtResult {
+    fn from(success: VerifiedFactStmtIr) -> Self {
+        StmtResult::Success(VerifiedStmtIr::Fact(success))
+    }
+}
+
+impl From<VerifiedUnsafeStmtIr> for StmtResult {
+    fn from(success: VerifiedUnsafeStmtIr) -> Self {
+        VerifiedStmtIr::UnsafeStmt(success).into()
+    }
+}
+
+impl From<VerifiedDefObjStmtIr> for StmtResult {
+    fn from(success: VerifiedDefObjStmtIr) -> Self {
+        VerifiedStmtIr::DefObjStmt(success).into()
+    }
+}
+
+impl From<VerifiedDefPredicateStmtIr> for StmtResult {
+    fn from(success: VerifiedDefPredicateStmtIr) -> Self {
+        VerifiedStmtIr::DefPredicateStmt(success).into()
+    }
+}
+
+impl From<VerifiedDefInterfaceStmtIr> for StmtResult {
+    fn from(success: VerifiedDefInterfaceStmtIr) -> Self {
+        VerifiedStmtIr::DefInterfaceStmt(success).into()
+    }
+}
+
+impl From<VerifiedByStmtIr> for StmtResult {
+    fn from(success: VerifiedByStmtIr) -> Self {
+        VerifiedStmtIr::By(success).into()
+    }
+}
+
+impl From<VerifiedWitnessStmtIr> for StmtResult {
+    fn from(success: VerifiedWitnessStmtIr) -> Self {
+        VerifiedStmtIr::Witness(success).into()
+    }
+}
+
+impl From<VerifiedProofBlockStmtIr> for StmtResult {
+    fn from(success: VerifiedProofBlockStmtIr) -> Self {
+        VerifiedStmtIr::ProofBlock(success).into()
+    }
+}
+
+impl From<VerifiedCommandStmtIr> for StmtResult {
+    fn from(success: VerifiedCommandStmtIr) -> Self {
+        VerifiedStmtIr::Command(success).into()
     }
 }
 
@@ -72,14 +92,10 @@ impl StmtResult {
         certificate: WellDefinednessCertificate,
     ) -> Self {
         if let StmtResult::Success(success) = &mut self {
-            success.well_definedness = certificate.clone();
-            match &mut success.verification {
-                VerifiedStmtVerificationIr::Fact(verification) => {
-                    verification.well_definedness = certificate;
-                }
-                VerifiedStmtVerificationIr::NonFact(verification) => {
-                    verification.well_definedness = certificate;
-                }
+            if let Some(fact) = success.fact_mut() {
+                fact.well_definedness = certificate;
+            } else if let Some(common) = success.common_mut() {
+                common.well_definedness = certificate;
             }
         }
         self
@@ -90,36 +106,42 @@ impl StmtResult {
     }
 
     pub fn with_infers(mut self, infer_result: InferResult) -> Self {
-        if let Some(success) = self.non_factual_success_mut() {
+        if let Some(success) = self.factual_success_mut() {
             success.infers.new_infer_result_inside(infer_result);
-        } else if let Some(success) = self.factual_success_mut() {
-            success.infers.new_infer_result_inside(infer_result);
+        } else if let StmtResult::Success(success) = &mut self {
+            if let Some(common) = success.common_mut() {
+                common.infers.new_infer_result_inside(infer_result);
+            }
         }
         self
     }
 
     pub fn with_execution_trace(mut self, trace: StatementExecutionTrace) -> Self {
-        if let Some(success) = self.non_factual_success_mut() {
+        if let Some(success) = self.factual_success_mut() {
             success.execution_trace = Some(trace);
-        } else if let Some(success) = self.factual_success_mut() {
-            success.execution_trace = Some(trace);
+        } else if let StmtResult::Success(success) = &mut self {
+            if let Some(common) = success.common_mut() {
+                common.execution_trace = Some(trace);
+            }
         }
         self
     }
 
     pub fn execution_trace(&self) -> Option<&StatementExecutionTrace> {
-        if let Some(success) = self.non_factual_success() {
+        if let Some(success) = self.factual_success() {
             success.execution_trace.as_ref()
-        } else if let Some(success) = self.factual_success() {
-            success.execution_trace.as_ref()
+        } else if let StmtResult::Success(success) = self {
+            success
+                .common()
+                .and_then(|common| common.execution_trace.as_ref())
         } else {
             None
         }
     }
 
-    pub fn statement(&self) -> Option<&Stmt> {
+    pub fn statement(&self) -> Option<Stmt> {
         match self {
-            StmtResult::Success(success) => Some(&success.statement),
+            StmtResult::Success(success) => Some(success.statement()),
             StmtResult::Unknown(_) => None,
         }
     }
@@ -127,7 +149,7 @@ impl StmtResult {
     #[allow(dead_code)]
     pub fn line_file(&self) -> LineFile {
         match self {
-            StmtResult::Success(success) => success.statement.line_file(),
+            StmtResult::Success(success) => success.statement().line_file(),
             StmtResult::Unknown(UnknownStatementResult::Fact(unknown)) => {
                 unknown.goal().line_file()
             }
@@ -166,73 +188,91 @@ impl StmtResult {
         }
     }
 
-    pub fn factual_success(&self) -> Option<&FactualStmtSuccess> {
+    pub fn factual_success(&self) -> Option<&VerifiedFactStmtIr> {
         match self {
-            StmtResult::Success(VerifiedStmtIr {
-                verification: VerifiedStmtVerificationIr::Fact(success),
-                ..
-            }) => Some(success),
+            StmtResult::Success(VerifiedStmtIr::Fact(success)) => Some(success),
             _ => None,
         }
     }
 
-    pub fn factual_success_mut(&mut self) -> Option<&mut FactualStmtSuccess> {
+    pub fn factual_success_mut(&mut self) -> Option<&mut VerifiedFactStmtIr> {
         match self {
-            StmtResult::Success(VerifiedStmtIr {
-                verification: VerifiedStmtVerificationIr::Fact(success),
-                ..
-            }) => Some(success),
-            _ => None,
-        }
-    }
-
-    pub fn non_factual_success(&self) -> Option<&NonFactualStmtSuccess> {
-        match self {
-            StmtResult::Success(VerifiedStmtIr {
-                verification: VerifiedStmtVerificationIr::NonFact(success),
-                ..
-            }) => Some(success),
-            _ => None,
-        }
-    }
-
-    pub fn non_factual_success_mut(&mut self) -> Option<&mut NonFactualStmtSuccess> {
-        match self {
-            StmtResult::Success(VerifiedStmtIr {
-                verification: VerifiedStmtVerificationIr::NonFact(success),
-                ..
-            }) => Some(success),
+            StmtResult::Success(VerifiedStmtIr::Fact(success)) => Some(success),
             _ => None,
         }
     }
 
     pub fn infer_result(&self) -> InferResult {
-        if let Some(success) = self.non_factual_success() {
+        if let Some(success) = self.factual_success() {
             success.infers.clone()
-        } else if let Some(success) = self.factual_success() {
-            success.infers.clone()
+        } else if let StmtResult::Success(success) = self {
+            success
+                .common()
+                .map(|common| common.infers.clone())
+                .unwrap_or_else(InferResult::new)
         } else {
             InferResult::new()
         }
     }
 
-    pub fn into_factual_success(self) -> Option<FactualStmtSuccess> {
+    pub fn into_factual_success(self) -> Option<VerifiedFactStmtIr> {
         match self {
-            StmtResult::Success(VerifiedStmtIr {
-                verification: VerifiedStmtVerificationIr::Fact(success),
-                ..
-            }) => Some(success),
+            StmtResult::Success(VerifiedStmtIr::Fact(success)) => Some(success),
             _ => None,
         }
     }
 
-    pub fn into_non_factual_success(self) -> Option<NonFactualStmtSuccess> {
+    pub fn non_factual_ir(&self) -> Option<&VerifiedStmtIr> {
         match self {
-            StmtResult::Success(VerifiedStmtIr {
-                verification: VerifiedStmtVerificationIr::NonFact(success),
-                ..
-            }) => Some(success),
-            _ => None,
+            StmtResult::Success(success @ VerifiedStmtIr::UnsafeStmt(_))
+            | StmtResult::Success(success @ VerifiedStmtIr::DefObjStmt(_))
+            | StmtResult::Success(success @ VerifiedStmtIr::DefPredicateStmt(_))
+            | StmtResult::Success(success @ VerifiedStmtIr::DefInterfaceStmt(_))
+            | StmtResult::Success(success @ VerifiedStmtIr::DefAlgoStmt { .. })
+            | StmtResult::Success(success @ VerifiedStmtIr::DefThmStmt { .. })
+            | StmtResult::Success(success @ VerifiedStmtIr::AxiomStmt { .. })
+            | StmtResult::Success(success @ VerifiedStmtIr::DefStrategyStmt { .. })
+            | StmtResult::Success(success @ VerifiedStmtIr::By(_))
+            | StmtResult::Success(success @ VerifiedStmtIr::Witness(_))
+            | StmtResult::Success(success @ VerifiedStmtIr::ProofBlock(_))
+            | StmtResult::Success(success @ VerifiedStmtIr::Command(_)) => Some(success),
+            StmtResult::Success(VerifiedStmtIr::Fact(_)) | StmtResult::Unknown(_) => None,
+        }
+    }
+
+    pub fn non_factual_ir_mut(&mut self) -> Option<&mut VerifiedStmtIr> {
+        match self {
+            StmtResult::Success(success @ VerifiedStmtIr::UnsafeStmt(_))
+            | StmtResult::Success(success @ VerifiedStmtIr::DefObjStmt(_))
+            | StmtResult::Success(success @ VerifiedStmtIr::DefPredicateStmt(_))
+            | StmtResult::Success(success @ VerifiedStmtIr::DefInterfaceStmt(_))
+            | StmtResult::Success(success @ VerifiedStmtIr::DefAlgoStmt { .. })
+            | StmtResult::Success(success @ VerifiedStmtIr::DefThmStmt { .. })
+            | StmtResult::Success(success @ VerifiedStmtIr::AxiomStmt { .. })
+            | StmtResult::Success(success @ VerifiedStmtIr::DefStrategyStmt { .. })
+            | StmtResult::Success(success @ VerifiedStmtIr::By(_))
+            | StmtResult::Success(success @ VerifiedStmtIr::Witness(_))
+            | StmtResult::Success(success @ VerifiedStmtIr::ProofBlock(_))
+            | StmtResult::Success(success @ VerifiedStmtIr::Command(_)) => Some(success),
+            StmtResult::Success(VerifiedStmtIr::Fact(_)) | StmtResult::Unknown(_) => None,
+        }
+    }
+
+    pub fn into_non_factual_ir(self) -> Option<VerifiedStmtIr> {
+        match self {
+            StmtResult::Success(success @ VerifiedStmtIr::UnsafeStmt(_))
+            | StmtResult::Success(success @ VerifiedStmtIr::DefObjStmt(_))
+            | StmtResult::Success(success @ VerifiedStmtIr::DefPredicateStmt(_))
+            | StmtResult::Success(success @ VerifiedStmtIr::DefInterfaceStmt(_))
+            | StmtResult::Success(success @ VerifiedStmtIr::DefAlgoStmt { .. })
+            | StmtResult::Success(success @ VerifiedStmtIr::DefThmStmt { .. })
+            | StmtResult::Success(success @ VerifiedStmtIr::AxiomStmt { .. })
+            | StmtResult::Success(success @ VerifiedStmtIr::DefStrategyStmt { .. })
+            | StmtResult::Success(success @ VerifiedStmtIr::By(_))
+            | StmtResult::Success(success @ VerifiedStmtIr::Witness(_))
+            | StmtResult::Success(success @ VerifiedStmtIr::ProofBlock(_))
+            | StmtResult::Success(success @ VerifiedStmtIr::Command(_)) => Some(success),
+            StmtResult::Success(VerifiedStmtIr::Fact(_)) | StmtResult::Unknown(_) => None,
         }
     }
 }

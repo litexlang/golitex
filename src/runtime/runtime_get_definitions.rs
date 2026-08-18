@@ -236,6 +236,41 @@ impl Runtime {
         None
     }
 
+    pub fn get_axiom_definition_by_name(&self, axiom_name: &str) -> Option<AxiomStmt> {
+        if let Some((module_name, local_name)) = split_module_qualified_name(axiom_name) {
+            if self.is_current_parse_module(module_name) {
+                return self
+                    .get_axiom_definition_by_name_in_current_envs(local_name)
+                    .cloned();
+            }
+            return self
+                .imported_module_environments(module_name)
+                .into_iter()
+                .find_map(|environment| environment.defined_axiom_stmts.get(local_name).cloned());
+        }
+
+        self.get_axiom_definition_by_name_in_current_envs(axiom_name)
+            .cloned()
+    }
+
+    fn get_axiom_definition_by_name_in_current_envs(&self, axiom_name: &str) -> Option<&AxiomStmt> {
+        for environment in self.iter_environments_from_top() {
+            if let Some(definition) = environment.defined_axiom_stmts.get(axiom_name) {
+                return Some(definition);
+            }
+        }
+
+        None
+    }
+
+    pub fn get_thm_or_axiom_forall_fact_by_name(&self, name: &str) -> Option<ForallFact> {
+        if let Some(theorem) = self.get_thm_definition_by_name(name) {
+            return Some(theorem.forall_fact);
+        }
+        self.get_axiom_definition_by_name(name)
+            .map(|axiom| axiom.forall_fact)
+    }
+
     pub fn get_strategy_definition_by_name(&self, strategy_name: &str) -> Option<DefStrategyStmt> {
         if let Some((module_name, local_name)) = split_module_qualified_name(strategy_name) {
             if self.is_current_parse_module(module_name) {

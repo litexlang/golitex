@@ -93,7 +93,7 @@ impl Runtime {
                 bindings: substitution.bindings().to_vec(),
                 parameter_requirement_count: rule.schema().parameter_requirements.len(),
             };
-            let result = FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_and_steps(
+            let result = VerifiedFactStmtIr::new_with_verified_by_builtin_rule_evidence_and_steps(
                 goal.clone().into(),
                 InferResult::new(),
                 format!("local builtin {}", rule.id().as_str()),

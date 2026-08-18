@@ -95,12 +95,11 @@ impl Runtime {
             endpoint_facts,
             generated_fact_string,
         );
-        Ok(NonFactualStmtSuccess::new_with_by_verification(
-            stmt.clone().into(),
-            infer_result,
-            inside_results,
-            by_verification.into(),
-        )
+        Ok(VerifiedByStmtIr::ByEnumerateRangeStmt {
+            statement: stmt.clone(),
+            common: VerifiedStmtCommonIr::new(infer_result, inside_results),
+            verification: Some(by_verification),
+        }
         .into())
     }
 
@@ -131,7 +130,12 @@ impl Runtime {
             generated_fact,
             InferReason::VerifiedStatement,
         )?;
-        Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![]).into())
+        Ok(VerifiedByStmtIr::ByEnumerateRangeStmt {
+            statement: stmt.clone(),
+            common: VerifiedStmtCommonIr::new(infer_result, vec![]),
+            verification: None,
+        }
+        .into())
     }
 }
 

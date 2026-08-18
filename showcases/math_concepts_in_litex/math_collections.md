@@ -21,6 +21,7 @@ classic examples.
   -> 12 ordinary differential equations
   -> 13 numerical analysis
   -> 14 Tarski geometry from axioms
+  -> 16 probability theory from the Kolmogorov axioms
 ```
 
 The arrows mean suggested reading order only. Shared interfaces should move to

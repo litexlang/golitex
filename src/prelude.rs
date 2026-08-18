@@ -307,7 +307,6 @@ pub use crate::result::ByForVerificationResult;
 pub use crate::result::ByInducVerificationResult;
 pub use crate::result::ByPropRegistrationVerificationResult;
 pub use crate::result::ByTheoremVerificationResult;
-pub use crate::result::ByVerificationResult;
 pub use crate::result::ChainFactUnknown;
 pub use crate::result::CheckedFunctionDefinitionReductionEvidence;
 pub use crate::result::ClaimFactVerificationResult;
@@ -327,7 +326,6 @@ pub use crate::result::FactTransformationStep;
 pub use crate::result::FactUnknown;
 pub use crate::result::FactUnknownParam;
 pub use crate::result::FactUnknownPart;
-pub use crate::result::FactualStmtSuccess;
 pub use crate::result::ForallFactUnknown;
 pub use crate::result::ForallFactWithIffUnknown;
 pub use crate::result::ForallProofResult;
@@ -336,7 +334,6 @@ pub use crate::result::FunctionDefinitionVerificationResult;
 pub use crate::result::KnownForallInstantiationResult;
 pub use crate::result::KnownForallRequirementResult;
 pub use crate::result::LocalProofScopeVerificationResult;
-pub use crate::result::NonFactualStmtSuccess;
 pub use crate::result::NonzeroExpressionOrientation;
 pub use crate::result::NotForallUnknown;
 pub use crate::result::ObjectChoiceVerificationResult;
@@ -354,8 +351,8 @@ pub use crate::result::VerifiedByFactResult;
 pub use crate::result::VerifiedByResult;
 pub use crate::result::VerifiedBysEnum;
 pub use crate::result::VerifiedBysResult;
+pub use crate::result::VerifiedFactStmtIr;
 pub use crate::result::VerifiedStmtIr;
-pub use crate::result::VerifiedStmtVerificationIr;
 pub use crate::result::WitnessAtomicFactVerificationResult;
 pub use crate::result::WitnessExistVerificationResult;
 pub use crate::result::{
@@ -383,6 +380,11 @@ pub use crate::result::{
     WellDefinednessTargetRequirementPhase,
 };
 pub use crate::result::{KnownForallInstantiationItem, KnownForallRequirementKind};
+pub use crate::result::{
+    VerifiedByStmtIr, VerifiedCommandStmtIr, VerifiedDefInterfaceStmtIr, VerifiedDefObjStmtIr,
+    VerifiedDefPredicateStmtIr, VerifiedProofBlockStmtIr, VerifiedStmtCommonIr,
+    VerifiedUnsafeStmtIr, VerifiedWitnessStmtIr,
+};
 pub use crate::runner::{
     resolve_litex_file_path, run_runner_for_code, run_runner_for_code_strict,
     run_runner_for_code_strict_with_language, run_runner_for_code_with_language,
@@ -468,6 +470,7 @@ pub use crate::stmt::try_stmt::TryStmt;
 pub use crate::stmt::witness_stmt::WitnessAtomicFact;
 pub use crate::stmt::witness_stmt::WitnessExistFact;
 pub use crate::stmt::witness_stmt::WitnessNonemptySet;
+pub use crate::stmt::AxiomStmt;
 pub use crate::stmt::ByClosedRangeAsCasesStmt;
 pub use crate::stmt::ByDefStmt;
 pub use crate::stmt::ByEnumerateRangeStmt;
@@ -479,7 +482,6 @@ pub use crate::stmt::DefObjStmt;
 pub use crate::stmt::DefPredicateStmt;
 pub use crate::stmt::DefStrategyStmt;
 pub use crate::stmt::DefStructStmt;
-pub use crate::stmt::DefThmKind;
 pub use crate::stmt::DefThmStmt;
 pub use crate::stmt::ProofBlockStmt;
 pub use crate::stmt::Stmt;

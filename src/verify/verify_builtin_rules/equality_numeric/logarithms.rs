@@ -454,7 +454,7 @@ impl Runtime {
         }
 
         Ok(Some(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
                 equal_fact.clone().into(),
                 "equality: a^c = b from c = log(a, b)".to_string(),
                 vec![exponent_ok],
