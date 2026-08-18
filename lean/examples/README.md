@@ -114,6 +114,12 @@ strategy layer remains visible as `UseBuiltinStrategy` in IR, while its inner
 tree records the exact arithmetic rule and cited FactIds. Lean emission unwraps
 only that marker and calls reviewed rules; it never re-runs strategy search.
 
+`16_StandardSetHierarchy.lit` traces all ten proper projections in the base
+numeric hierarchy `N → Z → Q → R → C`. Generated proofs compose four proved
+adjacent membership bridges and retain each complex-valued binder's original
+`Litex.In` premise. The paired negative regression uses verified `N+ → N` and
+requires compiler to reject it until the refined exact-carrier ABI exists.
+
 Generated `.lean` files are review artifacts, not editing surfaces. A new
 compiler feature must add the next numbered same-name pair. Unsupported
 statements, objects, facts, or proof routes fail closed.

@@ -7,9 +7,12 @@ the coordinate gradient.
 
 ```bash
 target/release/litex -compact -runner -r showcases/math_concepts_in_litex/11_multivariable_calculus_in_nutshell
-lean showcases/math_concepts_in_litex/11_multivariable_calculus_in_nutshell/same_math_in_lean.lean
+cd lean
+lake env lean ../showcases/math_concepts_in_litex/11_multivariable_calculus_in_nutshell/same_math_in_lean.lean
 ```
 
 The example uses native Cartesian products rather than a custom point object.
-A general total-derivative/Jacobian interface is deliberately outside this
-first version.
+The Lean comparison likewise works over `ℝ × ℝ`, proves both partial
+derivatives from their epsilon-delta definitions, and checks the corresponding
+Mathlib coordinate derivatives. A general total-derivative/Jacobian interface
+is deliberately outside this first version.

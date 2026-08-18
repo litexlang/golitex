@@ -1,40 +1,60 @@
-/- The same finite-expectation and Bayes semantics as the Litex example,
-using only Lean's automatically loaded Prelude.  Integer-valued pairs suffice
-to prove the algebraic linearity law without importing an algebra library. -/
+import Mathlib
 
-structure Pair where
-  first : Int
-  second : Int
+/- The same two-point real probability calculations as `main.lit`.
+Probabilities, expectations, variance, and conditional probability all remain
+real-valued rather than being replaced by integer arithmetic. -/
 
-def affineCombine2 (X Y : Pair) (a b : Int) : Pair :=
-  { first := a * X.first + b * Y.first
-    second := a * X.second + b * Y.second }
+namespace ProbabilityAndStatisticsSameMathInLean
 
-def expectation2 (values probs : Pair) : Int :=
-  values.first * probs.first + values.second * probs.second
+noncomputable section
 
-theorem expectation2Affine (X Y probs : Pair) (a b : Int) :
+abbrev Pair := ℝ × ℝ
+
+def IsProbabilityVector2 (p : Pair) : Prop :=
+  0 ≤ p.1 ∧ 0 ≤ p.2 ∧ p.1 + p.2 = 1
+
+def expectation2 (values probs : Pair) : ℝ :=
+  values.1 * probs.1 + values.2 * probs.2
+
+def variance2 (values probs : Pair) : ℝ :=
+  (values.1 - expectation2 values probs) ^ 2 * probs.1 +
+    (values.2 - expectation2 values probs) ^ 2 * probs.2
+
+def affineCombine2 (X Y : Pair) (a b : ℝ) : Pair :=
+  (a * X.1 + b * Y.1, a * X.2 + b * Y.2)
+
+theorem expectation2Affine (X Y probs : Pair) (a b : ℝ) :
     expectation2 (affineCombine2 X Y a b) probs =
       a * expectation2 X probs + b * expectation2 Y probs := by
-  simp only [expectation2, affineCombine2, Int.add_mul, Int.mul_add,
-    Int.mul_assoc]
-  ac_rfl
+  simp [expectation2, affineCombine2]
+  ring
 
-/- Positivity and probability-measure infrastructure are library boundaries
-absent from Prelude; the denominator guard therefore remains explicit. -/
+def fairCoinValues : Pair := (0, 1)
+def fairCoinProbs : Pair := (1 / 2, 1 / 2)
 
-def conditionalProbability [Div α] (joint evidence : α) : α :=
-  joint / evidence
+example : IsProbabilityVector2 fairCoinProbs := by
+  norm_num [IsProbabilityVector2, fairCoinProbs]
 
-def bayesPosterior [Mul α] [Div α]
-    (prior likelihood evidence : α) : α :=
+example : expectation2 fairCoinValues fairCoinProbs = 1 / 2 := by
+  norm_num [expectation2, fairCoinValues, fairCoinProbs]
+
+example : variance2 fairCoinValues fairCoinProbs = 1 / 4 := by
+  norm_num [variance2, expectation2, fairCoinValues, fairCoinProbs]
+
+def conditionalProbability (joint evidence : ℝ) : ℝ := joint / evidence
+def bayesPosterior (prior likelihood evidence : ℝ) : ℝ :=
   likelihood * prior / evidence
 
-theorem bayesRule [Mul α] [Div α]
-    (prior likelihood evidence joint zero : α)
-    (_evidenceNonzero : evidence ≠ zero)
+theorem bayesRule {prior likelihood evidence joint : ℝ}
+    (_evidencePositive : 0 < evidence)
     (jointEq : joint = likelihood * prior) :
     conditionalProbability joint evidence =
       bayesPosterior prior likelihood evidence := by
-  unfold conditionalProbability bayesPosterior
-  rw [jointEq]
+  simp [conditionalProbability, bayesPosterior, jointEq]
+
+example : conditionalProbability (1 / 4) (1 / 2) = 1 / 2 := by
+  norm_num [conditionalProbability]
+
+end
+
+end ProbabilityAndStatisticsSameMathInLean

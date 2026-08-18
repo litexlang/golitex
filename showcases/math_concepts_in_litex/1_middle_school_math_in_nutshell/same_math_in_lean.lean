@@ -1,75 +1,69 @@
-/-
-The same mathematical mainline as `main.lit`, expressed in pure Lean 4.
+import Mathlib
 
-This file has no imports. Prelude integers cover the exact arithmetic,
-equation, function, sequence, geometry, and statistics examples. Prelude has
-no real square root, so AM-GM receives the square-order step explicitly.
-Probability equality is written by cross multiplication because Prelude does
-not provide a rational-probability library. This is handwritten comparison
-code, not compiler output.
--/
+/- The same real-number mathematics as `main.lit`.
+The linear equation and AM-GM theorem are proved over `ℝ`; square root,
+finite-cardinality probability, and division keep their ordinary meanings. -/
 
 namespace MiddleSchoolMathInNutshell
 
 example : Nat.gcd 84 30 = 6 := by decide
 
-theorem factoredQuadraticRoots {r s x : Int}
-    (factoredEquation : (x - r) * (x - s) = 0) :
-    x = r ∨ x = s := by
-  have zeroFactor : x - r = 0 ∨ x - s = 0 :=
-    (Int.mul_eq_zero).mp factoredEquation
-  cases zeroFactor with
-  | inl h => exact Or.inl ((Int.sub_eq_zero).mp h)
-  | inr h => exact Or.inr ((Int.sub_eq_zero).mp h)
+theorem solveLinearEquation {a b c x : ℝ}
+    (ha : a ≠ 0) (h : a * x + b = c) :
+    x = (c - b) / a := by
+  apply (eq_div_iff ha).2
+  linarith
 
-example : 3 * (2 : Int) + (-6) = 0 := by decide
-example : ((3 : Int) - 2) * (3 - 3) = 0 := by decide
+theorem factoredQuadraticRoots {r s x : ℝ}
+    (h : (x - r) * (x - s) = 0) : x = r ∨ x = s := by
+  rcases mul_eq_zero.mp h with hxr | hxs
+  · exact Or.inl (sub_eq_zero.mp hxr)
+  · exact Or.inr (sub_eq_zero.mp hxs)
 
-structure IntegerGeometricMean (x y g : Int) : Prop where
-  nonnegative : 0 ≤ g
-  squareEqProduct : g * g = x * y
+noncomputable def arithmeticMean (x y : ℝ) : ℝ := (x + y) / 2
+noncomputable def geometricMean (x y : ℝ) : ℝ := Real.sqrt (x * y)
 
-theorem doubledAmGm
-    {x y g : Int} (geometric : IntegerGeometricMean x y g)
-    (sumNonnegative : 0 ≤ x + y)
-    (squareBound : (2 * g) * (2 * g) ≤ (x + y) * (x + y))
-    (squareOrderReflection :
-      ∀ a b : Int, 0 ≤ a → 0 ≤ b → a * a ≤ b * b → a ≤ b)
-    (doubleNonnegative : 0 ≤ 2 * g) :
-    2 * g ≤ x + y := by
-  have _productCertificate : g * g = x * y := geometric.squareEqProduct
-  exact squareOrderReflection (2 * g) (x + y)
-    doubleNonnegative sumNonnegative squareBound
+theorem twoVariableAmGm {x y : ℝ} (hx : 0 ≤ x) (hy : 0 ≤ y) :
+    geometricMean x y ≤ arithmeticMean x y := by
+  have hxy : 0 ≤ x * y := mul_nonneg hx hy
+  have hsqrt : 0 ≤ Real.sqrt (x * y) := Real.sqrt_nonneg _
+  have hsqrtSq : (Real.sqrt (x * y)) ^ 2 = x * y :=
+    Real.sq_sqrt hxy
+  have hsum : 0 ≤ x + y := add_nonneg hx hy
+  have hsquare : 0 ≤ (x - y) ^ 2 := sq_nonneg (x - y)
+  unfold geometricMean arithmeticMean
+  nlinarith
 
-def linearFunction (x : Int) : Int := 3 * x + 2
+def linearFunction (x : ℝ) : ℝ := 3 * x + 2
 
-example : linearFunction 4 = 14 := by decide
-example : linearFunction (-1) = -1 := by decide
+example : linearFunction 4 = 14 := by norm_num [linearFunction]
+example : linearFunction (-1) = -1 := by norm_num [linearFunction]
 
-def arithmeticTerm (first difference : Int) (n : Nat) : Int :=
-  first + (Int.ofNat n - 1) * difference
+def arithmeticTerm (first difference : ℝ) (n : ℕ) : ℝ :=
+  first + ((n : ℝ) - 1) * difference
 
-example : arithmeticTerm 2 3 1 = 2 := by decide
-example : arithmeticTerm 2 3 4 = 11 := by decide
+example : arithmeticTerm 2 3 1 = 2 := by norm_num [arithmeticTerm]
+example : arithmeticTerm 2 3 4 = 11 := by norm_num [arithmeticTerm]
 
-abbrev Point := Int × Int
+abbrev Point := ℝ × ℝ
 
-def distanceSq (p q : Point) : Int :=
+def distanceSq (p q : Point) : ℝ :=
   (q.1 - p.1) ^ 2 + (q.2 - p.2) ^ 2
 
-example : distanceSq (0, 0) (3, 4) = 25 := by decide
-example : (3 : Int) ^ 2 + 4 ^ 2 = 5 ^ 2 := by decide
+example : distanceSq (0, 0) (3, 4) = 25 := by norm_num [distanceSq]
+example : (3 : ℝ) ^ 2 + 4 ^ 2 = 5 ^ 2 := by norm_num
 
-def equivalentFractions
-    (firstNumerator firstDenominator secondNumerator secondDenominator : Nat) : Prop :=
-  firstNumerator * secondDenominator = secondNumerator * firstDenominator
+noncomputable def uniformProbability (S A : Finset ℕ) : ℝ :=
+  (A.card : ℝ) / S.card
 
-example : equivalentFractions 3 6 1 2 := by rfl
+example :
+    uniformProbability {1, 2, 3, 4, 5, 6} {2, 4, 6} = 1 / 2 := by
+  norm_num [uniformProbability]
 
-def mean3 (a b c : Int) : Int := (a + b + c) / 3
-def range3 (minimum maximum : Int) : Int := maximum - minimum
+noncomputable def mean3 (a b c : ℝ) : ℝ := (a + b + c) / 3
+def range3 (minimum maximum : ℝ) : ℝ := maximum - minimum
 
-example : mean3 2 4 6 = 4 := by decide
-example : range3 2 6 = 4 := by decide
+example : mean3 2 4 6 = 4 := by norm_num [mean3]
+example : range3 2 6 = 4 := by norm_num [range3]
 
 end MiddleSchoolMathInNutshell

@@ -17,25 +17,6 @@ pub(crate) const ADD_NONNEGATIVE_RULE_ID: &str = "order.add_nonnegative";
 pub(crate) const ADD_NONNEGATIVE_FINGERPRINT: &str =
     "25002877aac825f5b15aef687f3169ebcda7e22fd6f9aeced46397e2a5ae148c";
 
-pub(crate) fn registered_rule_has_lean_adapter(
-    rule_id: &RuleId,
-    fingerprint: &RuleFingerprint,
-) -> bool {
-    matches!(
-        (rule_id.as_str(), fingerprint.as_hex()),
-        (LESS_EQUAL_OF_LESS_RULE_ID, LESS_EQUAL_OF_LESS_FINGERPRINT)
-            | (
-                ADD_POSITIVE_OF_POSITIVE_NONNEGATIVE_RULE_ID,
-                ADD_POSITIVE_OF_POSITIVE_NONNEGATIVE_FINGERPRINT
-            )
-            | (
-                ADD_POSITIVE_OF_NONNEGATIVE_POSITIVE_RULE_ID,
-                ADD_POSITIVE_OF_NONNEGATIVE_POSITIVE_FINGERPRINT
-            )
-            | (ADD_NONNEGATIVE_RULE_ID, ADD_NONNEGATIVE_FINGERPRINT)
-    )
-}
-
 #[derive(Clone, Debug)]
 pub struct LitexToLeanTypedBoundObjectIr {
     pub object: LitexToLeanObjectIr,

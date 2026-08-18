@@ -59,3 +59,91 @@ thm ode_solution_solves_equation:
 
 ode_solution(0) = 1
 quadratic_solution(1, 0) = 1
+
+# `has_derivative_at` remains the epsilon-delta relation used in proofs.
+# Differentiability supplies existence; uniqueness then exposes its value.
+prop is_differentiable_at(f fn(x R) R, x0 R):
+    exist slope R st {$has_derivative_at(f, x0, slope)}
+
+thm derivative_value_unique:
+    ? forall f fn(t R) R, x0, slope1, slope2 R:
+        $has_derivative_at(f, x0, slope1)
+        $has_derivative_at(f, x0, slope2)
+        =>:
+            slope1 = slope2
+    by contra:
+        ? slope1 = slope2
+        slope1 != slope2
+        slope1 - slope2 != 0
+        abs(slope1 - slope2) > 0
+        abs(slope1 - slope2) / 3 $in R+
+        obtain delta1 from exist delta1 R+ st {$derivative_delta_controlled(f, x0, slope1, abs(slope1 - slope2) / 3, delta1)}
+        obtain delta2 from exist delta2 R+ st {$derivative_delta_controlled(f, x0, slope2, abs(slope1 - slope2) / 3, delta2)}
+        finite_set_min(union({delta1}, {delta2})) $in R+
+        finite_set_min(union({delta1}, {delta2})) / 2 $in R+
+        have sample R = x0 + finite_set_min(union({delta1}, {delta2})) / 2
+        sample = x0 + finite_set_min(union({delta1}, {delta2})) / 2 > x0
+        sample != x0
+        sample - x0 = finite_set_min(union({delta1}, {delta2})) / 2
+        sample - x0 > 0
+        abs(sample - x0) = sample - x0 = finite_set_min(union({delta1}, {delta2})) / 2
+        abs(sample - x0) = finite_set_min(union({delta1}, {delta2})) / 2 < finite_set_min(union({delta1}, {delta2})) <= delta1
+        abs(sample - x0) = finite_set_min(union({delta1}, {delta2})) / 2 < finite_set_min(union({delta1}, {delta2})) <= delta2
+        abs((f(sample) - f(x0)) / (sample - x0) - slope1) < abs(slope1 - slope2) / 3
+        abs((f(sample) - f(x0)) / (sample - x0) - slope2) < abs(slope1 - slope2) / 3
+        abs(slope1 - (f(sample) - f(x0)) / (sample - x0)) = abs((f(sample) - f(x0)) / (sample - x0) - slope1)
+        slope1 - slope2 = (slope1 - (f(sample) - f(x0)) / (sample - x0)) + ((f(sample) - f(x0)) / (sample - x0) - slope2)
+        abs(slope1 - slope2) = abs((slope1 - (f(sample) - f(x0)) / (sample - x0)) + ((f(sample) - f(x0)) / (sample - x0) - slope2)) <= abs(slope1 - (f(sample) - f(x0)) / (sample - x0)) + abs((f(sample) - f(x0)) / (sample - x0) - slope2)
+        abs(slope1 - (f(sample) - f(x0)) / (sample - x0)) + abs((f(sample) - f(x0)) / (sample - x0) - slope2) < abs(slope1 - slope2) / 3 + abs(slope1 - slope2) / 3 = 2 * abs(slope1 - slope2) / 3
+        2 / 3 < 1
+        (2 / 3) * abs(slope1 - slope2) < 1 * abs(slope1 - slope2)
+        2 * abs(slope1 - slope2) / 3 = (2 / 3) * abs(slope1 - slope2)
+        1 * abs(slope1 - slope2) = abs(slope1 - slope2)
+        2 * abs(slope1 - slope2) / 3 < abs(slope1 - slope2)
+        abs(slope1 - slope2) <= abs(slope1 - (f(sample) - f(x0)) / (sample - x0)) + abs((f(sample) - f(x0)) / (sample - x0) - slope2) < 2 * abs(slope1 - slope2) / 3 < abs(slope1 - slope2)
+        impossible abs(slope1 - slope2) < abs(slope1 - slope2)
+
+have fn derivative_at by exist!:
+    ? forall f fn(t R) R, x0 R:
+        $is_differentiable_at(f, x0)
+        =>:
+            exist! slope R st {$has_derivative_at(f, x0, slope)}
+    obtain chosen_slope from $is_differentiable_at(f, x0)
+    claim:
+        ? forall slope1, slope2 R:
+            $has_derivative_at(f, x0, slope1)
+            $has_derivative_at(f, x0, slope2)
+            =>:
+                slope1 = slope2
+        by thm derivative_value_unique(f, x0, slope1, slope2)
+    exist! slope R st {$has_derivative_at(f, x0, slope)}
+
+thm has_derivative_at_to_derivative_value:
+    ? forall f fn(t R) R, x0, slope R:
+        $has_derivative_at(f, x0, slope)
+        =>:
+            $is_differentiable_at(f, x0)
+            derivative_at(f, x0) = slope
+    witness $is_differentiable_at(f, x0) from slope:
+        $has_derivative_at(f, x0, slope)
+    slope = derivative_at(f, x0)
+    derivative_at(f, x0) = slope
+
+prop solves_ode_at_by_derivative(f fn(t R) R, rhs fn(t, y R) R, x R):
+    $is_differentiable_at(f, x)
+    derivative_at(f, x) = rhs(x, f(x))
+
+thm ode_solution_derivative_value:
+    ? forall x R:
+        $is_differentiable_at(ode_solution, x)
+        derivative_at(ode_solution, x) = 2 * x
+    by thm ode_solution_has_derivative(x) => $has_derivative_at(ode_solution, x, 2 * x)
+    by thm has_derivative_at_to_derivative_value(ode_solution, x, 2 * x)
+
+thm ode_solution_solves_equation_by_derivative:
+    ? forall x R:
+        $solves_ode_at_by_derivative(ode_solution, ode_rhs, x)
+    by thm ode_solution_derivative_value(x)
+    ode_rhs(x, ode_solution(x)) = 2 * x
+    derivative_at(ode_solution, x) = ode_rhs(x, ode_solution(x))
+    by def $solves_ode_at_by_derivative(ode_solution, ode_rhs, x)

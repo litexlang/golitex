@@ -2,11 +2,15 @@
 
 | Concept | Litex form | Why it is here |
 | --- | --- | --- |
-| residual | `have fn` | measures equation error |
-| Newton update | guarded `have fn` | exposes division by a nonzero iterate |
-| concrete iterates | three checked equalities | shows executable exact arithmetic |
-| scaled residual identity | `thm` | flagship mechanism stated through the residual interface |
-| residual decrease | checked inequalities | connects the identity to visible numerical progress |
+| residual | `have fn` | names the equation error `x² - 2` |
+| Newton update | positive-real `have fn` | keeps division valid and the recursive iterate positive |
+| Newton iterate | inductive `have fn` | turns individual updates into a sequence indexed by `n` |
+| gap | `have fn` | records `gₙ = |xₙ² - 2|` |
+| comparison bound | `have fn` | records `bₙ = 4(1/4)^(2^n)` |
+| gap bound | inductive `thm` | proves `gₙ ≤ bₙ` for every natural `n` |
 
-The first version stops before floating-point error, stopping criteria,
-interpolation, quadrature, numerical ODEs, and matrix algorithms.
+The exact scaled-residual identity, iterate lower bound, quadratic contraction,
+and bound recurrence are supporting lemmas in `gap_bound.lit`; they are not
+extra concepts in the reader-facing path. The scope stops before floating-point
+roundoff, stopping criteria, interpolation, quadrature, numerical ODEs, and
+matrix algorithms.

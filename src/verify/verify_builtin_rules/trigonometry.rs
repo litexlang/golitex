@@ -577,6 +577,52 @@ impl Runtime {
         } else {
             None
         };
+        // A tangent or cotangent value is nonzero when both its quotient numerator and
+        // denominator are nonzero. Examples:
+        // `sin(x) != 0, cos(x) != 0 => tan(x) != 0, cot(x) != 0`.
+        let quotient_nonzero_premises: Option<[AtomicFact; 2]> = match trig {
+            Some(Obj::Tan(tan)) => Some([
+                NotEqualFact::new(
+                    Sin::new(tan.arg.as_ref().clone()).into(),
+                    Number::new("0".to_string()).into(),
+                    not_equal_fact.line_file.clone(),
+                )
+                .into(),
+                NotEqualFact::new(
+                    Cos::new(tan.arg.as_ref().clone()).into(),
+                    Number::new("0".to_string()).into(),
+                    not_equal_fact.line_file.clone(),
+                )
+                .into(),
+            ]),
+            Some(Obj::Cot(cot)) => Some([
+                NotEqualFact::new(
+                    Cos::new(cot.arg.as_ref().clone()).into(),
+                    Number::new("0".to_string()).into(),
+                    not_equal_fact.line_file.clone(),
+                )
+                .into(),
+                NotEqualFact::new(
+                    Sin::new(cot.arg.as_ref().clone()).into(),
+                    Number::new("0".to_string()).into(),
+                    not_equal_fact.line_file.clone(),
+                )
+                .into(),
+            ]),
+            _ => None,
+        };
+        if let Some(premises) = quotient_nonzero_premises {
+            if let Some(results) = self.verify_builtin_rule_premises(&premises, builtin_state)? {
+                return Ok(Some(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        not_equal_fact.clone().into(),
+                        "trigonometry: non-zero transfer through canonical expansion".to_string(),
+                        results,
+                    )
+                    .into(),
+                ));
+            }
+        }
         let pi: Obj = Pi::new().into();
         let half_pi: Obj = Div::new(pi.clone(), Number::new("2".to_string()).into()).into();
         let negative_half_pi: Obj =

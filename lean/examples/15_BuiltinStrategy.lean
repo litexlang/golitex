@@ -6,9 +6,47 @@ set_option linter.style.nameCheck false
 namespace __Compiler_15_BuiltinStrategy
 
 theorem __fact0 :
-    ∀ (a : ℂ) (__h0_1 : Litex.In a Litex.R) (b : ℂ) (__h0_2 : Litex.In b Litex.R) (c : ℂ) (__h0_3 : Litex.In c Litex.R) (d : ℂ) (__h0_4 : Litex.In d Litex.R) (__h0_5 : Litex.Lt (0 : ℂ) a) (__h0_6 : Litex.Le (0 : ℂ) b) (__h0_7 : Litex.Le (0 : ℂ) c) (__h0_8 : Litex.Le (0 : ℂ) d),
+    ∀ (a : ℂ) (__h0_1 : Litex.In a Litex.R) (b : ℂ) (__h0_2 : Litex.In b Litex.R),
+      Litex.In (a + b) Litex.R := by
+  intro a __h0_1 b __h0_2
+  exact (by
+  have __components : Litex.In a Litex.R ∧ Litex.In b Litex.R := ⟨__h0_1, __h0_2⟩
+  exact Litex.Rules.complexAddInR (__components.1) (__components.2))
+
+theorem __fact1 :
+    ∀ (a : ℂ) (__h1_1 : Litex.In a Litex.R) (b : ℂ) (__h1_2 : Litex.In b Litex.R),
+      Litex.In (a - b) Litex.R := by
+  intro a __h1_1 b __h1_2
+  exact (by
+  have __components : Litex.In a Litex.R ∧ Litex.In b Litex.R := ⟨__h1_1, __h1_2⟩
+  exact Litex.Rules.complexSubInR (__components.1) (__components.2))
+
+theorem __fact2 :
+    ∀ (a : ℂ) (__h2_1 : Litex.In a Litex.R) (b : ℂ) (__h2_2 : Litex.In b Litex.R),
+      Litex.In (a * b) Litex.R := by
+  intro a __h2_1 b __h2_2
+  exact (by
+  have __components : Litex.In a Litex.R ∧ Litex.In b Litex.R := ⟨__h2_1, __h2_2⟩
+  exact Litex.Rules.complexMulInR (__components.1) (__components.2))
+
+theorem __fact3 :
+    ∀ (a : ℂ) (__h3_1 : Litex.In a Litex.R) (b : ℂ) (__h3_2 : Litex.In b Litex.R) (__h3_3 : ¬ Litex.Same b (0 : ℂ)),
+      Litex.In (a / b) Litex.R := by
+  intro a __h3_1 b __h3_2 __h3_3
+  exact (by
+  have __components : Litex.In a Litex.R ∧ Litex.In b Litex.R := ⟨__h3_1, __h3_2⟩
+  exact Litex.Rules.complexDivInR (__components.1) (__components.2))
+
+theorem __fact4 :
+    ∀ (a : ℂ) (__h4_1 : Litex.In a Litex.R) (b : ℂ) (__h4_2 : Litex.In b Litex.R) (c : ℂ) (__h4_3 : Litex.In c Litex.R) (d : ℂ) (__h4_4 : Litex.In d Litex.R) (__h4_5 : Litex.Lt (0 : ℂ) a) (__h4_6 : Litex.Le (0 : ℂ) b) (__h4_7 : Litex.Le (0 : ℂ) c) (__h4_8 : Litex.Le (0 : ℂ) d),
       Litex.Lt (0 : ℂ) ((a + b) + (c + d)) := by
-  intro a __h0_1 b __h0_2 c __h0_3 d __h0_4 __h0_5 __h0_6 __h0_7 __h0_8
-  exact Litex.Rules.complexAddPositiveLeftStrict (Litex.Rules.complexAddPositiveLeftStrict (__h0_5) (__h0_6)) (Litex.Rules.complexAddNonnegative (__h0_7) (__h0_8))
+  intro a __h4_1 b __h4_2 c __h4_3 d __h4_4 __h4_5 __h4_6 __h4_7 __h4_8
+  exact Litex.Rules.complexAddPositiveLeftStrict (Litex.Rules.complexAddPositiveLeftStrict (__h4_5) (__h4_6)) (Litex.Rules.complexAddNonnegative (__h4_7) (__h4_8))
+
+theorem __fact5 :
+    ∀ (a : ℂ) (__h5_1 : Litex.In a Litex.R) (b : ℂ) (__h5_2 : Litex.In b Litex.R) (c : ℂ) (__h5_3 : Litex.In c Litex.R) (d : ℂ) (__h5_4 : Litex.In d Litex.R) (__h5_5 : Litex.Le (0 : ℂ) a) (__h5_6 : Litex.Le (0 : ℂ) b) (__h5_7 : Litex.Le (0 : ℂ) c) (__h5_8 : Litex.Lt (0 : ℂ) d),
+      Litex.Lt (0 : ℂ) ((a + b) + (c + d)) := by
+  intro a __h5_1 b __h5_2 c __h5_3 d __h5_4 __h5_5 __h5_6 __h5_7 __h5_8
+  exact Litex.Rules.complexAddPositiveRightStrict (Litex.Rules.complexAddNonnegative (__h5_5) (__h5_6)) (Litex.Rules.complexAddPositiveRightStrict (__h5_7) (__h5_8))
 
 end __Compiler_15_BuiltinStrategy

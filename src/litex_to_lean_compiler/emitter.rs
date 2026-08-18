@@ -1553,9 +1553,28 @@ fn render_proof(fact: &LitexToLeanFactIr, context: &RenderContext) -> Result<Str
             LitexToLeanProofRuleIr::Builtin(LitexToLeanBuiltinRuleIr::NotEqualSymmetry) => {
                 render_not_equal_symmetry(fact, parameter_requirements, premises, context)
             }
-            LitexToLeanProofRuleIr::Builtin(LitexToLeanBuiltinRuleIr::RealAddMembershipClosure) => {
-                render_real_add_membership_rule(fact, parameter_requirements, premises, context)
-            }
+            LitexToLeanProofRuleIr::Builtin(
+                LitexToLeanBuiltinRuleIr::StandardSetMembershipProjection,
+            ) => render_standard_set_membership_projection(
+                fact,
+                parameter_requirements,
+                premises,
+                context,
+            ),
+            LitexToLeanProofRuleIr::Builtin(
+                LitexToLeanBuiltinRuleIr::RealArithmeticMembershipClosure(
+                    rule @ (LitexToLeanRealArithmeticMembershipClosureBuiltinRuleIr::Add
+                    | LitexToLeanRealArithmeticMembershipClosureBuiltinRuleIr::Sub
+                    | LitexToLeanRealArithmeticMembershipClosureBuiltinRuleIr::Mul
+                    | LitexToLeanRealArithmeticMembershipClosureBuiltinRuleIr::Div),
+                ),
+            ) => render_real_binary_membership_rule(
+                fact,
+                *rule,
+                parameter_requirements,
+                premises,
+                context,
+            ),
             LitexToLeanProofRuleIr::Builtin(LitexToLeanBuiltinRuleIr::Arithmetic(
                 rule @ (LitexToLeanArithmeticBuiltinRuleIr::AddNonnegative
                 | LitexToLeanArithmeticBuiltinRuleIr::AddPositiveLeftStrict
@@ -1681,6 +1700,12 @@ fn render_object_definition_membership(
 ) -> Result<String, String> {
     let (target_element, target_set) = membership_parts(&target.proposition)?;
     let (source_element, source_set) = membership_parts(&value_check.proposition)?;
+    if !matches!(
+        LitexToLeanObjectIr::lower(target_element)?,
+        LitexToLeanObjectIr::Symbol { .. }
+    ) {
+        return Err("object-definition membership target is not the declared symbol".into());
+    }
     let name = render_obj(target_element, context)?;
     if obj_equality_key(target_set) != obj_equality_key(source_set) {
         return Err("object definition changed its retained membership check".into());
@@ -1697,6 +1722,12 @@ fn render_object_definition_equality(
     context: &RenderContext,
 ) -> Result<String, String> {
     let (left, right) = equality_parts(&target.proposition)?;
+    if !matches!(
+        LitexToLeanObjectIr::lower(left)?,
+        LitexToLeanObjectIr::Symbol { .. }
+    ) {
+        return Err("object-definition equality target is not the declared symbol".into());
+    }
     let name = render_obj(left, context)?;
     let rendered_value = render_obj(right, context)?;
     Ok(format!(
@@ -1709,6 +1740,12 @@ fn render_object_choice(
     context: &RenderContext,
 ) -> Result<String, String> {
     let (element, target_set) = membership_parts(&target.proposition)?;
+    if !matches!(
+        LitexToLeanObjectIr::lower(element)?,
+        LitexToLeanObjectIr::Symbol { .. }
+    ) {
+        return Err("object-choice membership target is not the chosen symbol".into());
+    }
     let name = render_obj(element, context)?;
     let carrier = LitexToLeanObjectIr::lower(target_set)?;
     Ok(format!(
@@ -2788,6 +2825,51 @@ fn render_not_equal_symmetry(
     ))
 }
 
+fn render_standard_set_membership_projection(
+    fact: &LitexToLeanFactIr,
+    parameter_requirements: &[LitexToLeanFactIr],
+    premises: &[LitexToLeanFactIr],
+    context: &RenderContext,
+) -> Result<String, String> {
+    if !parameter_requirements.is_empty() || premises.len() != 1 {
+        return Err(
+            "standard-set membership projection requires one premise and no parameter requirements"
+                .into(),
+        );
+    }
+    let (target_element, target_set) = membership_parts(&fact.proposition)?;
+    let (source_element, source_set) = membership_parts(&premises[0].proposition)?;
+    if obj_equality_key(target_element) != obj_equality_key(source_element) {
+        return Err("standard-set membership projection changed its source element".into());
+    }
+    let (Obj::StandardSet(source_set), Obj::StandardSet(target_set)) = (source_set, target_set)
+    else {
+        return Err("standard-set membership projection retained a nonstandard set".into());
+    };
+    let theorem_chain: &[&str] = match (source_set, target_set) {
+        (StandardSet::N, StandardSet::Z) => &["inZOfInN"],
+        (StandardSet::N, StandardSet::Q) => &["inZOfInN", "inQOfInZ"],
+        (StandardSet::N, StandardSet::R) => &["inZOfInN", "inQOfInZ", "inROfInQ"],
+        (StandardSet::N, StandardSet::C) => &["inZOfInN", "inQOfInZ", "inROfInQ", "inCOfInR"],
+        (StandardSet::Z, StandardSet::Q) => &["inQOfInZ"],
+        (StandardSet::Z, StandardSet::R) => &["inQOfInZ", "inROfInQ"],
+        (StandardSet::Z, StandardSet::C) => &["inQOfInZ", "inROfInQ", "inCOfInR"],
+        (StandardSet::Q, StandardSet::R) => &["inROfInQ"],
+        (StandardSet::Q, StandardSet::C) => &["inROfInQ", "inCOfInR"],
+        (StandardSet::R, StandardSet::C) => &["inCOfInR"],
+        _ => {
+            return Err(format!(
+                "unsupported standard-set membership projection `{source_set}` to `{target_set}`"
+            ))
+        }
+    };
+    let mut proof = render_proof(&premises[0], context)?;
+    for theorem in theorem_chain {
+        proof = format!("Litex.Rules.{theorem} ({proof})");
+    }
+    Ok(proof)
+}
+
 fn render_additive_sign_rule(
     fact: &LitexToLeanFactIr,
     rule: LitexToLeanArithmeticBuiltinRuleIr,
@@ -2810,6 +2892,7 @@ fn render_additive_sign_rule(
         LitexToLeanArithmeticBuiltinRuleIr::AddPositiveRightStrict => {
             (true, false, true, "complexAddPositiveRightStrict")
         }
+        _ => return Err(format!("unsupported additive sign builtin rule: {rule:?}")),
     };
 
     let (target_zero, target_sum) = positive_order_parts(&fact.proposition, target_is_strict)?;
@@ -2836,41 +2919,63 @@ fn render_additive_sign_rule(
     Ok(format!("Litex.Rules.{theorem} ({left}) ({right})"))
 }
 
-fn render_real_add_membership_rule(
+fn render_real_binary_membership_rule(
     fact: &LitexToLeanFactIr,
+    rule: LitexToLeanRealArithmeticMembershipClosureBuiltinRuleIr,
     parameter_requirements: &[LitexToLeanFactIr],
     premises: &[LitexToLeanFactIr],
     context: &RenderContext,
 ) -> Result<String, String> {
     if !parameter_requirements.is_empty() || premises.len() != 1 {
         return Err(
-            "real-addition membership requires one conjunction premise and no parameter requirements"
+            "real binary membership requires one conjunction premise and no parameter requirements"
                 .into(),
         );
     }
     let components = conjunction_components(&premises[0].proposition)?;
     if components.len() != 2 {
-        return Err("real-addition membership premise is not a binary conjunction".into());
+        return Err("real binary membership premise is not a binary conjunction".into());
     }
     let (target_element, target_set) = membership_parts(&fact.proposition)?;
-    let Obj::Add(target_addition) = target_element else {
-        return Err("real-addition membership target is not an addition".into());
+    let (target_left, target_right, theorem) = match (rule, target_element) {
+        (LitexToLeanRealArithmeticMembershipClosureBuiltinRuleIr::Add, Obj::Add(operation)) => (
+            operation.left.as_ref(),
+            operation.right.as_ref(),
+            "complexAddInR",
+        ),
+        (LitexToLeanRealArithmeticMembershipClosureBuiltinRuleIr::Sub, Obj::Sub(operation)) => (
+            operation.left.as_ref(),
+            operation.right.as_ref(),
+            "complexSubInR",
+        ),
+        (LitexToLeanRealArithmeticMembershipClosureBuiltinRuleIr::Mul, Obj::Mul(operation)) => (
+            operation.left.as_ref(),
+            operation.right.as_ref(),
+            "complexMulInR",
+        ),
+        (LitexToLeanRealArithmeticMembershipClosureBuiltinRuleIr::Div, Obj::Div(operation)) => (
+            operation.left.as_ref(),
+            operation.right.as_ref(),
+            "complexDivInR",
+        ),
+        _ => return Err("real binary membership target changed its operator".into()),
     };
     if !matches!(target_set, Obj::StandardSet(StandardSet::R)) {
-        return Err("real-addition membership target is not R".into());
+        return Err("real binary membership target is not R".into());
     }
     let (left_element, left_set) = membership_parts(&components[0])?;
     let (right_element, right_set) = membership_parts(&components[1])?;
     if !matches!(left_set, Obj::StandardSet(StandardSet::R))
         || !matches!(right_set, Obj::StandardSet(StandardSet::R))
-        || obj_equality_key(target_addition.left.as_ref()) != obj_equality_key(left_element)
-        || obj_equality_key(target_addition.right.as_ref()) != obj_equality_key(right_element)
+        || obj_equality_key(target_left) != obj_equality_key(left_element)
+        || obj_equality_key(target_right) != obj_equality_key(right_element)
     {
-        return Err("real-addition membership premises changed its ordered operands".into());
+        return Err("real binary membership premises changed its ordered operands".into());
     }
     let pair = render_proof(&premises[0], context)?;
+    let pair_type = render_fact(&premises[0].proposition, context)?;
     Ok(format!(
-        "Litex.Rules.complexAddInR (({pair}).1) (({pair}).2)"
+        "(by\n  have __components : {pair_type} := {pair}\n  exact Litex.Rules.{theorem} (__components.1) (__components.2))"
     ))
 }
 

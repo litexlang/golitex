@@ -28,7 +28,14 @@ mod statement;
 mod well_definedness;
 
 pub use builder::LitexToLeanIrBuilder;
-pub use builtin_rule::{LitexToLeanArithmeticBuiltinRuleIr, LitexToLeanBuiltinRuleIr};
+pub use builtin_rule::{
+    LitexToLeanAbsoluteValueBuiltinRuleIr, LitexToLeanArithmeticBuiltinRuleIr,
+    LitexToLeanBuiltinRuleIr, LitexToLeanComplexArithmeticMembershipClosureBuiltinRuleIr,
+    LitexToLeanIntegerMembershipClosureBuiltinRuleIr,
+    LitexToLeanNativeConstantMembershipBuiltinRuleIr, LitexToLeanNonzeroExpressionOrientationIr,
+    LitexToLeanRealArithmeticMembershipClosureBuiltinRuleIr, LitexToLeanSetBuiltinRuleIr,
+    LitexToLeanSetRelationDualityBuiltinRuleIr,
+};
 pub use capture::capture_litex_to_lean_ir_from_source;
 pub use def_thm_stmt::{LitexToLeanDefThmStmtIr, LitexToLeanDefThmStmtProofStepIr};
 pub use function::{
@@ -39,13 +46,13 @@ pub use object::{
     LitexToLeanBuiltinObjectOperatorIr, LitexToLeanCollectionObjectIr, LitexToLeanConstantObjectIr,
     LitexToLeanObjectIr, LitexToLeanSetBuilderIr, LitexToLeanStandardSetIr,
 };
+pub use registered_rule::{LitexToLeanRegisteredRuleApplicationIr, LitexToLeanTypedBoundObjectIr};
 pub(crate) use registered_rule::{
-    registered_rule_has_lean_adapter, ADD_NONNEGATIVE_FINGERPRINT, ADD_NONNEGATIVE_RULE_ID,
+    ADD_NONNEGATIVE_FINGERPRINT, ADD_NONNEGATIVE_RULE_ID,
     ADD_POSITIVE_OF_NONNEGATIVE_POSITIVE_FINGERPRINT, ADD_POSITIVE_OF_NONNEGATIVE_POSITIVE_RULE_ID,
     ADD_POSITIVE_OF_POSITIVE_NONNEGATIVE_FINGERPRINT, ADD_POSITIVE_OF_POSITIVE_NONNEGATIVE_RULE_ID,
     LESS_EQUAL_OF_LESS_FINGERPRINT, LESS_EQUAL_OF_LESS_RULE_ID,
 };
-pub use registered_rule::{LitexToLeanRegisteredRuleApplicationIr, LitexToLeanTypedBoundObjectIr};
 pub use statement::*;
 pub(crate) use well_definedness::validate_litex_to_lean_well_definedness_certificate;
 
@@ -397,6 +404,10 @@ pub enum LitexToLeanProofRuleIr {
     ObjectReflexivity,
     ClosedStandardMembership,
     StandardSetNonempty,
+    /// Litex's explicit verifier rule "Every object is a set." This evidence
+    /// can be consumed structurally as a parameter/WD requirement even when no
+    /// standalone Lean proof term is emitted for it.
+    ObjectIsSet,
     /// Literal set-builder membership from the base membership and each
     /// instantiated defining fact, in source order.
     SetBuilderMembership,
@@ -408,6 +419,10 @@ pub enum LitexToLeanProofRuleIr {
     SetBuilderPredicateProjection {
         clause_index: usize,
     },
+    /// Typed return-membership evidence for a checked source application. It
+    /// is commonly consumed inside the frozen WD DAG rather than emitted as a
+    /// standalone Lean proof term.
+    FunctionApplicationReturnMembership,
     ClosedNumericComparison,
     EqualityRewrite,
     KnownEqualityPath,
@@ -466,6 +481,7 @@ impl fmt::Debug for LitexToLeanProofRuleIr {
                 f.write_str("ClosedStandardMembership")
             }
             LitexToLeanProofRuleIr::StandardSetNonempty => f.write_str("StandardSetNonempty"),
+            LitexToLeanProofRuleIr::ObjectIsSet => f.write_str("ObjectIsSet"),
             LitexToLeanProofRuleIr::SetBuilderMembership => f.write_str("SetBuilderMembership"),
             LitexToLeanProofRuleIr::SetBuilderBaseMembershipProjection => {
                 f.write_str("SetBuilderBaseMembershipProjection")
@@ -474,6 +490,9 @@ impl fmt::Debug for LitexToLeanProofRuleIr {
                 .debug_struct("SetBuilderPredicateProjection")
                 .field("clause_index", clause_index)
                 .finish(),
+            LitexToLeanProofRuleIr::FunctionApplicationReturnMembership => {
+                f.write_str("FunctionApplicationReturnMembership")
+            }
             LitexToLeanProofRuleIr::ClosedNumericComparison => {
                 f.write_str("ClosedNumericComparison")
             }
@@ -600,17 +619,10 @@ impl LitexToLeanProofRuleIr {
         {
             return Some(Self::RationalNormalization);
         }
-        if label == "numeric-carrier strategy: structural closure in R"
-            && matches!(
-                goal,
-                Fact::AtomicFact(AtomicFact::InFact(fact))
-                    if matches!(fact.element, Obj::Add(_))
-                        && matches!(fact.set, Obj::StandardSet(StandardSet::R))
-            )
+        if let Some(rule) =
+            builtin_rule::litex_to_lean_builtin_rule_from_verified_strategy_label(label, goal)
         {
-            return Some(Self::Builtin(
-                LitexToLeanBuiltinRuleIr::RealAddMembershipClosure,
-            ));
+            return Some(Self::Builtin(rule));
         }
         match label {
             "calculation and rational expression simplification" => {
@@ -633,6 +645,11 @@ impl LitexToLeanProofRuleIr {
             }
             "standard_nonempty_set" if is_supported_standard_set_nonempty(goal) => {
                 Some(Self::StandardSetNonempty)
+            }
+            "Every object is a set."
+                if matches!(goal, Fact::AtomicFact(AtomicFact::IsSetFact(_))) =>
+            {
+                Some(Self::ObjectIsSet)
             }
             _ if is_closed_real_membership(goal) => Some(Self::ClosedStandardMembership),
             _ => None,

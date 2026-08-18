@@ -1,0 +1,52 @@
+# Tracer: standard numeric-set membership hierarchy
+#
+# Before (Litex verified, but compiler emission stopped):
+# forall n N:
+#     n $in Z
+# Former compiler behavior: fail closed at
+# `Builtin(StandardSetMembershipProjection)`.
+#
+# Now: the compiler validates the exact source and target standard sets and
+# replays only the native-carrier hierarchy N -> Z -> Q -> R -> C. The source
+# value keeps its original Lean carrier and independent Litex.In evidence.
+forall n N:
+    n $in Z
+
+forall n N:
+    n $in Q
+
+forall n N:
+    n $in R
+
+forall n N:
+    n $in C
+
+forall z Z:
+    z $in Q
+
+forall z Z:
+    z $in R
+
+forall z Z:
+    z $in C
+
+forall q Q:
+    q $in R
+
+forall q Q:
+    q $in C
+
+forall r R:
+    r $in C
+
+# Boundary (Litex verifies; compiler remains fail-closed):
+# forall n N+:
+#     n $in N
+# The verifier uses the same hierarchy certificate, but N+ has a refined
+# exact carrier whose native compiler ABI has not yet been implemented. This
+# batch must not erase its positivity predicate or treat it as plain N.
+#
+# Evidence:
+# target/release/litex -compact -strict -runner -f lean/examples/16_StandardSetHierarchy.lit
+# cargo test --release --test litex_to_lean_compiler_tracers standard_set_hierarchy
+# cd lean && ./compiler.sh check examples

@@ -41,6 +41,8 @@ The implemented scope is deliberately small:
 - `Litex.FnWhere`, `fnSetWhere`, `fnApplyWhere`, and
   `fnApplyWhereOwn` retain source-domain clauses as explicit call proofs;
 - `N`, `Z`, `Q`, `R`, and `C` use Mathlib's native carriers;
+- verifier-selected membership widens constructively through
+  `N → Z → Q → R → C` without changing the source value's Lean type;
 - `setBuilder` represents a predicate-defined subset by a subtype carrier;
 - `AsReal x r` means that `r : ℝ` is a real representative of `x`;
 - `Lt` and `Le` compare heterogeneous objects through such representatives;
@@ -179,12 +181,23 @@ value only after replaying `Litex.Set.Nonempty S`; it does not transport a
 wrapper value back to another Lean type.
 
 Example 15 preserves every verifier-selected builtin-strategy layer around
-its concrete proof tree. Real addition membership calls the proved
-`Litex.Rules.complexAddInR` adapter. Nonnegative addition and the two strict
-variants call separate proved rules, including both direct
+its concrete proof tree. Real `+`, `-`, `*`, and `/` membership call separate
+proved `Litex.Rules.complex*InR` adapters; division keeps its denominator WD
+evidence outside the proof-free native term. Nonnegative addition and the two
+strict variants call separate proved rules, including both direct
 `AddPositiveRightStrict` evidence and the fingerprinted registered
 `order.add_positive_of_nonnegative_positive` route. Nonnegative
-multiplication remains the nearest rejected arithmetic-strategy boundary.
+multiplication remains the nearest rejected arithmetic-strategy boundary:
+its IR evidence is retained, but the native theorem needs a reviewed
+`RealCoherence` policy for independently selected zero representatives.
+
+Example 16 adds the standard numeric-set membership hierarchy. A premise such
+as `Litex.In n Litex.N` is replayed through proved adjacent rules
+`inZOfInN`, `inQOfInZ`, `inROfInQ`, and `inCOfInR`; wider targets compose
+those fixed bridges in order. The generated binder remains `n : ℂ` with its
+original membership proof. Refined sets such as `N+` remain fail-closed
+because their exact subtype carriers and defining predicates have not yet
+received a compiler ABI.
 
 Sketch is a real source scope, not an example-file wrapper. Each top-level
 sketch is emitted as `__Sketch01`, `__Sketch02`, and so on. Its emitter context
@@ -225,15 +238,17 @@ deferred until the IR and compiler emitter support its Litex statement form; it 
 not represented by hand-written code under `examples/`.
 
 The compiler currently emits only the reviewed IR routes exercised by the
-fifteen numbered examples. Checked named aliases of `R` and `C`, top-level atomic
+sixteen numbered examples. Checked named aliases of `R` and `C`, top-level atomic
 equality, nonnegative integer numerals, addition, arbitrary set parameters,
 unary function sets, named unary application, basic proof scopes,
 case/contradiction proofs, one-witness positive existentials, minimal native
 object definitions, unary real named functions with `+`, `-`, `*`, `/`
 and source-domain clauses, concrete predicate reduction, whole-side equality
 and one-parameter concrete-predicate set-builder membership, and checked
-nonempty choice are supported. Real-addition carrier closure and additive
-nonnegative/one-strict sign strategies are also supported. Other atomic predicates and arithmetic
-operators, bare arbitrary-set choices (`have A set`), multi-parameter or
+nonempty choice are supported. Real `+`, `-`, `*`, `/` carrier closure and
+additive nonnegative/one-strict sign strategies are also supported, as is
+standard membership widening through `N → Z → Q → R → C`. Other atomic
+predicates and arithmetic operators, refined numeric carriers, bare arbitrary-
+set choices (`have A set`), multi-parameter or
 multi-layer functions, nested set-builder binder expressions, richer set
 constructors, and broader production code-generation are not implemented yet.

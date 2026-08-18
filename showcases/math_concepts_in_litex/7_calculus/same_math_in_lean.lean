@@ -1,115 +1,71 @@
-/-
-The same mathematics as `main.lit`, expressed in pure Lean 4.
+import Mathlib
 
-Lean's Prelude has no real numbers, absolute value, division, or ordered-field
-library. Those operations and the two algebraic identities used by the proof
-are therefore explicit setting fields. The epsilon-delta witness construction
-itself is checked by Lean core. This is handwritten comparison code, not
-compiler output.
--/
-
-universe u
+/- The same real epsilon-delta calculus as `main.lit`.
+No derivative law is assumed: the difference quotients and bounds are proved
+from the definitions over `ℝ`. -/
 
 namespace CalculusSameMathInLean
 
-structure RealCalculusSetting (R : Type u) where
-  sub : R → R → R
-  div : R → R → R
-  abs : R → R
-  lt : R → R → Prop
-  positive : R → Prop
-  square : R → R
-  add : R → R → R
-  double : R → R
-  square_difference_quotient : ∀ x x0, x ≠ x0 →
-    div (sub (square x) (square x0)) (sub x x0) = add x x0
-  square_error : ∀ x x0, sub (add x x0) (double x0) = sub x x0
+def DerivativeDeltaControlled (f : ℝ → ℝ)
+    (x₀ L ε δ : ℝ) : Prop :=
+  ∀ x, x ≠ x₀ → |x - x₀| < δ →
+    |(f x - f x₀) / (x - x₀) - L| < ε
 
-def DerivativeDeltaControlled (S : RealCalculusSetting R)
-    (f : R → R) (x0 L epsilon delta : R) : Prop :=
-  ∀ x, x ≠ x0 → S.lt (S.abs (S.sub x x0)) delta →
-    S.lt
-      (S.abs
-        (S.sub
-          (S.div (S.sub (f x) (f x0)) (S.sub x x0))
-          L))
-      epsilon
+def HasDerivativeAt (f : ℝ → ℝ) (x₀ L : ℝ) : Prop :=
+  ∀ ε > 0, ∃ δ > 0, DerivativeDeltaControlled f x₀ L ε δ
 
-def HasDerivativeAt (S : RealCalculusSetting R)
-    (f : R → R) (x0 L : R) : Prop :=
-  ∀ epsilon, S.positive epsilon →
-    ∃ delta, S.positive delta ∧
-      DerivativeDeltaControlled S f x0 L epsilon delta
+def IsDifferentiableAt (f : ℝ → ℝ) (x₀ : ℝ) : Prop :=
+  ∃ L, HasDerivativeAt f x₀ L
 
-def IsDifferentiableAt (S : RealCalculusSetting R)
-    (f : R → R) (x0 : R) : Prop :=
-  ∃ L, HasDerivativeAt S f x0 L
+def squareFunction (x : ℝ) : ℝ := x ^ 2
 
-theorem square_function_has_derivative_at (S : RealCalculusSetting R)
-    (x0 : R) : HasDerivativeAt S S.square x0 (S.double x0) := by
-  intro epsilon epsilon_positive
-  refine ⟨epsilon, epsilon_positive, ?_⟩
+theorem squareDifferenceQuotient (x₀ x : ℝ) (hne : x ≠ x₀) :
+    (squareFunction x - squareFunction x₀) / (x - x₀) = x + x₀ := by
+  have hsub : x - x₀ ≠ 0 := sub_ne_zero.mpr hne
+  unfold squareFunction
+  field_simp [hsub]
+  ring
+
+theorem squareFunctionHasDerivativeAt (x₀ : ℝ) :
+    HasDerivativeAt squareFunction x₀ (2 * x₀) := by
+  intro ε hε
+  refine ⟨ε, hε, ?_⟩
   intro x hne hclose
-  change S.lt
-    (S.abs
-      (S.sub
-        (S.div (S.sub (S.square x) (S.square x0)) (S.sub x x0))
-        (S.double x0)))
-    epsilon
-  rw [S.square_difference_quotient x x0 hne, S.square_error x x0]
-  exact hclose
+  rw [squareDifferenceQuotient x₀ x hne]
+  convert hclose using 1 <;> ring
 
-theorem derivative_candidate_implies_differentiable
-    (S : RealCalculusSetting R) {f : R → R} {x0 L : R}
-    (candidate : HasDerivativeAt S f x0 L) :
-    IsDifferentiableAt S f x0 :=
-  ⟨L, candidate⟩
+theorem squareFunctionHasMathlibDerivative (x₀ : ℝ) :
+    HasDerivAt squareFunction (2 * x₀) x₀ := by
+  simpa [squareFunction, two_mul] using
+    (hasDerivAt_pow 2 x₀)
 
-theorem square_function_is_differentiable_at
-    (S : RealCalculusSetting R) (x0 : R) :
-    IsDifferentiableAt S S.square x0 :=
-  derivative_candidate_implies_differentiable S
-    (square_function_has_derivative_at S x0)
+theorem derivativeCandidateImpliesDifferentiable
+    {f : ℝ → ℝ} {x₀ L : ℝ} (h : HasDerivativeAt f x₀ L) :
+    IsDifferentiableAt f x₀ :=
+  ⟨L, h⟩
 
-structure AffineCalculusSetting (R : Type u) extends RealCalculusSetting R where
-  zero : R
-  one : R
-  one_positive : positive one
-  affine : R → R → R → R
-  affine_difference_quotient : ∀ slope intercept x x0, x ≠ x0 →
-    div (sub (affine slope intercept x) (affine slope intercept x0))
-      (sub x x0) = slope
-  affine_error : ∀ slope, sub slope slope = zero
-  abs_zero_lt_positive : ∀ epsilon, positive epsilon → lt (abs zero) epsilon
+def affineFunction (a b x : ℝ) : ℝ := a * x + b
 
-theorem affine_function_has_derivative_at
-    (S : AffineCalculusSetting R) (slope intercept x0 : R) :
-    HasDerivativeAt S.toRealCalculusSetting (S.affine slope intercept) x0 slope := by
-  intro epsilon epsilon_positive
-  refine ⟨S.one, S.one_positive, ?_⟩
-  intro x hne _hclose
-  change S.lt
-    (S.abs
-      (S.sub
-        (S.div
-          (S.sub (S.affine slope intercept x) (S.affine slope intercept x0))
-          (S.sub x x0))
-        slope))
-    epsilon
-  rw [S.affine_difference_quotient slope intercept x x0 hne,
-    S.affine_error slope]
-  exact S.abs_zero_lt_positive epsilon epsilon_positive
+theorem affineDifferenceQuotient (a b x₀ x : ℝ) (hne : x ≠ x₀) :
+    (affineFunction a b x - affineFunction a b x₀) / (x - x₀) = a := by
+  have hsub : x - x₀ ≠ 0 := sub_ne_zero.mpr hne
+  unfold affineFunction
+  field_simp [hsub]
+  ring
 
-structure SquareTangentAtThreeSetting
-    (S : RealCalculusSetting R) where
-  three : R
-  tangent : R → R
-  exact_remainder : ∀ x,
-    S.sub (S.square x) (tangent x) = S.square (S.sub x three)
+theorem affineFunctionHasDerivativeAt (a b x₀ : ℝ) :
+    HasDerivativeAt (affineFunction a b) x₀ a := by
+  intro ε hε
+  refine ⟨1, by norm_num, ?_⟩
+  intro x hne _
+  rw [affineDifferenceQuotient a b x₀ x hne]
+  simpa using hε
 
-theorem square_tangent_error_at_three
-    (S : RealCalculusSetting R) (T : SquareTangentAtThreeSetting S) (x : R) :
-    S.sub (S.square x) (T.tangent x) = S.square (S.sub x T.three) :=
-  T.exact_remainder x
+def squareTangentAtThree (x : ℝ) : ℝ := 9 + 6 * (x - 3)
+
+theorem squareTangentErrorAtThree (x : ℝ) :
+    squareFunction x - squareTangentAtThree x = (x - 3) ^ 2 := by
+  simp [squareFunction, squareTangentAtThree]
+  ring
 
 end CalculusSameMathInLean

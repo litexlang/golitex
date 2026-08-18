@@ -1,20 +1,26 @@
-# Tracer: builtin strategy provenance wraps the exact recursive rule/fact tree.
+# Tracer: native real-arithmetic closure replays exact verifier evidence.
 #
 # Before (Litex verified, but compiler emission stopped):
-# forall a, b, c, d R:
-#     a > 0
-#     b >= 0
-#     c >= 0
-#     d >= 0
-#     =>:
-#         (a + b) + (c + d) > 0
-# Former compiler error:
-# unsupported verified proof rule: Builtin(Arithmetic(AddPositiveLeftStrict))
+# forall a, b R:
+#     a * b $in R
+# Former compiler behavior: fail closed at
+# `RealArithmeticMembershipClosure(Mul)`.
 #
-# Now every selected strategy layer is retained as `UseBuiltinStrategy` around
-# its concrete `RuleApplication`; leaf premises remain exact FactId citations.
+# Now `+`, `-`, `*`, and `/` closure each call a proved native-carrier rule;
+# division retains its source denominator well-definedness separately.
 forall a, b R:
     a + b $in R
+
+forall a, b R:
+    a - b $in R
+
+forall a, b R:
+    a * b $in R
+
+forall a, b R:
+    b != 0
+    =>:
+        a / b $in R
 
 forall a, b, c, d R:
     a > 0
@@ -28,13 +34,21 @@ forall a, b, c, d R:
 # and the registered inner-sum rule selected by the recursive strategy.
 forall a, b, c, d R:
     a >= 0
-    b > 0
+    b >= 0
     c >= 0
-    d >= 0
+    d > 0
     =>:
         (a + b) + (c + d) > 0
 
-# Boundary: nonnegative multiplication remains rejected until its own native
-# carrier theorem and exact `MulNonnegative` adapter are reviewed.
+# Boundary (Litex verifies; compiler remains fail-closed):
+# forall a, b R:
+#     a >= 0
+#     b >= 0
+#     =>:
+#         a * b >= 0
+# `MulNonnegative` must compare independently selected real representatives
+# of source zero. The ABI declares `RealCoherence` but intentionally has no
+# instance, so multiplication/division sign adapters need an explicit design
+# decision rather than an axiom or hidden assumption.
 # Evidence: target/release/litex -compact -strict -runner -f lean/examples/15_BuiltinStrategy.lit
 # and cargo test --release --test litex_to_lean_compiler_tracers builtin_strategy

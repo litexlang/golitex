@@ -6,9 +6,10 @@ uses that existence-and-uniqueness result to define a canonical `lim` selector.
 
 ```bash
 target/release/litex -compact -runner -r showcases/math_concepts_in_litex/10_real_analysis_in_nutshell
-lean showcases/math_concepts_in_litex/10_real_analysis_in_nutshell/same_math_in_lean.lean
+cd lean
+lake env lean ../showcases/math_concepts_in_litex/10_real_analysis_in_nutshell/same_math_in_lean.lean
 ```
 
-The Lean analogy does not assume limit uniqueness as a setting field: it
-derives uniqueness by synchronizing the two tails with `Nat.max`. The published
-Litex file contains no direct trust or local axiom.
+The Lean comparison defines closeness as the actual real inequality
+`|a n - L| < ε` and derives uniqueness with `Nat.max` and the triangle
+inequality. The published Litex file contains no direct trust or local axiom.

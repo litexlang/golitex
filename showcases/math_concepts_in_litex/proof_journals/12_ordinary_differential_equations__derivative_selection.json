@@ -1,0 +1,241 @@
+{
+  "schema_version": 1,
+  "target": "showcases/math_concepts_in_litex/12_ordinary_differential_equations_in_nutshell/main.lit",
+  "session_command": "target/release/litex -compact -session -before showcases/math_concepts_in_litex/12_ordinary_differential_equations_in_nutshell/main.lit",
+  "proof_spine": [
+    "A derivative candidate is an epsilon-delta relation.",
+    "Two derivative candidates at the same point are equal.",
+    "Differentiability gives existence, and uniqueness selects derivative_at(f, x).",
+    "The selected derivative of ode_solution is 2 * x, so it satisfies the ODE through the value interface."
+  ],
+  "blocks": [
+    {
+      "id": "B001",
+      "source_order": 1,
+      "intent": "Define epsilon-delta control for a candidate slope.",
+      "dependencies": [],
+      "attempts": [{"candidate": "prop derivative_delta_controlled(...) ...", "result": "accepted", "verifier_evidence": "session block B001 ok:true"}],
+      "accepted_litex": "prop derivative_delta_controlled(f fn(x R) R, x0, slope R, epsilon, delta R+):\n    forall x R:\n        x != x0\n        abs(x - x0) < delta\n        =>:\n            abs((f(x) - f(x0)) / (x - x0) - slope) < epsilon",
+      "reusable_lesson": "Keep the epsilon-delta candidate relation separate from the selected derivative value.",
+      "status": "materialized"
+    },
+    {
+      "id": "B002",
+      "source_order": 2,
+      "intent": "Define when a supplied real number is a derivative candidate.",
+      "dependencies": ["B001 derivative_delta_controlled"],
+      "attempts": [{"candidate": "prop has_derivative_at(...) ...", "result": "accepted", "verifier_evidence": "session block B002 ok:true"}],
+      "accepted_litex": "prop has_derivative_at(f fn(x R) R, x0, slope R):\n    forall epsilon R+:\n        exist delta R+ st {$derivative_delta_controlled(f, x0, slope, epsilon, delta)}",
+      "reusable_lesson": "The relational graph remains the proof-facing epsilon-delta definition.",
+      "status": "materialized"
+    },
+    {
+      "id": "B003",
+      "source_order": 3,
+      "intent": "Define the ODE right-hand side.",
+      "dependencies": [],
+      "attempts": [{"candidate": "have fn ode_rhs(x, y R) R = 2 * x", "result": "accepted", "verifier_evidence": "session block B003 ok:true"}],
+      "accepted_litex": "have fn ode_rhs(x, y R) R = 2 * x",
+      "reusable_lesson": "Formula-defined maps remain ordinary have fn declarations.",
+      "status": "materialized"
+    },
+    {
+      "id": "B004",
+      "source_order": 4,
+      "intent": "Define the quadratic candidate family.",
+      "dependencies": [],
+      "attempts": [{"candidate": "have fn quadratic_solution(c, x R) R = x^2 + c", "result": "accepted", "verifier_evidence": "session block B004 ok:true"}],
+      "accepted_litex": "have fn quadratic_solution(c, x R) R = x^2 + c",
+      "reusable_lesson": "The integration parameter stays visible as a function argument.",
+      "status": "materialized"
+    },
+    {
+      "id": "B005",
+      "source_order": 5,
+      "intent": "Define the fixed initial-value solution.",
+      "dependencies": [],
+      "attempts": [{"candidate": "have fn ode_solution(x R) R = x^2 + 1", "result": "accepted", "verifier_evidence": "session block B005 ok:true"}],
+      "accepted_litex": "have fn ode_solution(x R) R = x^2 + 1",
+      "reusable_lesson": "The tracer function is a concrete real-valued map.",
+      "status": "materialized"
+    },
+    {
+      "id": "B006",
+      "source_order": 6,
+      "intent": "Preserve the original witness-oriented ODE relation.",
+      "dependencies": ["B002 has_derivative_at", "B003 ode_rhs"],
+      "attempts": [{"candidate": "prop solves_ode_at(...) ...", "result": "accepted", "verifier_evidence": "session block B006 ok:true"}],
+      "accepted_litex": "prop solves_ode_at(f fn(t R) R, rhs fn(t, y R) R, x R):\n    exist slope R st {$has_derivative_at(f, x, slope), slope = rhs(x, f(x))}",
+      "reusable_lesson": "Retain the graph-style ODE interface while adding a value-style interface later.",
+      "status": "materialized"
+    },
+    {
+      "id": "B007",
+      "source_order": 7,
+      "intent": "Replay the initial-value parameter theorem in source order.",
+      "dependencies": ["B004 quadratic_solution"],
+      "attempts": [{"candidate": "thm quadratic_initial_value_selects_parameter ...", "result": "accepted", "verifier_evidence": "session block B007 ok:true"}],
+      "accepted_litex": "thm quadratic_initial_value_selects_parameter:\n    ? forall c, y0 R:\n        quadratic_solution(c, 0) = y0\n        =>:\n            c = y0\n    quadratic_solution(c, 0) = 0^2 + c = c",
+      "reusable_lesson": "The source theorem replays without extra bridges.",
+      "status": "materialized"
+    },
+    {
+      "id": "B008",
+      "source_order": 8,
+      "intent": "Replay the checked epsilon-delta proof for the tracer solution.",
+      "dependencies": ["B001 derivative_delta_controlled", "B002 has_derivative_at", "B005 ode_solution"],
+      "attempts": [{"candidate": "thm ode_solution_has_derivative ...", "result": "accepted", "verifier_evidence": "session block B008 ok:true"}],
+      "accepted_litex": "thm ode_solution_has_derivative:\n    ? forall x0 R:\n        $has_derivative_at(ode_solution, x0, 2 * x0)\n    claim:\n        ? forall epsilon R+:\n            exist delta R+ st {$derivative_delta_controlled(ode_solution, x0, 2 * x0, epsilon, delta)}\n        witness exist delta R+ st {$derivative_delta_controlled(ode_solution, x0, 2 * x0, epsilon, delta)} from epsilon:\n            claim:\n                ? forall x R:\n                    x != x0\n                    abs(x - x0) < epsilon\n                    =>:\n                        abs((ode_solution(x) - ode_solution(x0)) / (x - x0) - 2 * x0) < epsilon\n                x - x0 != 0\n                ode_solution(x) = x^2 + 1\n                ode_solution(x0) = x0^2 + 1\n                ode_solution(x) - ode_solution(x0) = (x^2 + 1) - (x0^2 + 1) = x^2 - x0^2 = (x - x0) * (x + x0)\n                (ode_solution(x) - ode_solution(x0)) / (x - x0) = x + x0\n                (ode_solution(x) - ode_solution(x0)) / (x - x0) - 2 * x0 = x - x0\n                abs((ode_solution(x) - ode_solution(x0)) / (x - x0) - 2 * x0) = abs(x - x0) < epsilon\n            by def $derivative_delta_controlled(ode_solution, x0, 2 * x0, epsilon, delta)\n    by def $has_derivative_at(ode_solution, x0, 2 * x0)",
+      "reusable_lesson": "The existing proof establishes the concrete candidate slope needed by the selected-value tracer.",
+      "status": "materialized"
+    },
+    {
+      "id": "B009",
+      "source_order": 9,
+      "intent": "Replay the original witness-oriented ODE theorem.",
+      "dependencies": ["B006 solves_ode_at", "B008 ode_solution_has_derivative"],
+      "attempts": [{"candidate": "thm ode_solution_solves_equation ...", "result": "accepted", "verifier_evidence": "session block B009 ok:true"}],
+      "accepted_litex": "thm ode_solution_solves_equation:\n    ? forall x R:\n        $solves_ode_at(ode_solution, ode_rhs, x)\n    witness $solves_ode_at(ode_solution, ode_rhs, x) from 2 * x:\n        by thm ode_solution_has_derivative(x) => $has_derivative_at(ode_solution, x, 2 * x)\n        ode_rhs(x, ode_solution(x)) = 2 * x",
+      "reusable_lesson": "The old relational consumer remains valid alongside the new value consumer.",
+      "status": "materialized"
+    },
+    {
+      "id": "B010",
+      "source_order": 10,
+      "intent": "Replay the fixed initial value.",
+      "dependencies": ["B005 ode_solution"],
+      "attempts": [{"candidate": "ode_solution(0) = 1", "result": "accepted", "verifier_evidence": "session block B010 ok:true"}],
+      "accepted_litex": "ode_solution(0) = 1",
+      "reusable_lesson": "The initial value stays independent of the derivative interface extension.",
+      "status": "materialized"
+    },
+    {
+      "id": "B011",
+      "source_order": 11,
+      "intent": "Replay the family member initial value.",
+      "dependencies": ["B004 quadratic_solution"],
+      "attempts": [{"candidate": "quadratic_solution(1, 0) = 1", "result": "accepted", "verifier_evidence": "session block B011 ok:true"}],
+      "accepted_litex": "quadratic_solution(1, 0) = 1",
+      "reusable_lesson": "The family-selection example remains live.",
+      "status": "materialized"
+    },
+    {
+      "id": "B012",
+      "source_order": 12,
+      "intent": "Separate existence of a derivative from a supplied derivative candidate.",
+      "dependencies": ["B002 has_derivative_at"],
+      "attempts": [{"candidate": "prop is_differentiable_at(...) ...", "result": "accepted", "verifier_evidence": "session block B012 ok:true"}],
+      "accepted_litex": "prop is_differentiable_at(f fn(x R) R, x0 R):\n    exist slope R st {$has_derivative_at(f, x0, slope)}",
+      "reusable_lesson": "Use is_differentiable_at as the domain condition for the selected derivative function.",
+      "status": "materialized"
+    },
+    {
+      "id": "B013",
+      "source_order": 13,
+      "intent": "Prove uniqueness of the epsilon-delta derivative candidate on R.",
+      "dependencies": ["B001 derivative_delta_controlled", "B002 has_derivative_at"],
+      "attempts": [
+        {
+          "candidate": "After defining sample = x0 + min(delta1, delta2) / 2, assert sample > x0 directly.",
+          "result": "failed",
+          "verifier_evidence": "B013A1 verify_process failed at line 19: verification failed for sample > x0; well-definedness succeeded.",
+          "diagnosis": "The local object definition equality was not automatically rewritten into the comparison.",
+          "next_change": "Use one calculation chain that exposes sample's defining expression before the strict comparison."
+        },
+        {
+          "candidate": "Use sample = x0 + min(delta1, delta2) / 2 > x0, then assert abs(sample - x0) = min(delta1, delta2) / 2.",
+          "result": "failed",
+          "verifier_evidence": "B013A2 advanced through sample != x0 and sample - x0 = min/2, then failed at line 22 on the abs equality.",
+          "diagnosis": "The verifier needed the positivity of sample - x0 materialized before simplifying its absolute value.",
+          "next_change": "Add sample - x0 > 0 immediately before the absolute-value equality."
+        },
+        {
+          "candidate": "Materialize sample - x0 > 0 and simplify abs(sample - x0), then assert abs(sample - x0) < delta1 directly.",
+          "result": "failed",
+          "verifier_evidence": "B013A3 advanced through both minimum bounds, then failed at line 27 on abs(sample - x0) < delta1.",
+          "diagnosis": "The transitive chain through min/2 < min <= delta1 was not synthesized automatically.",
+          "next_change": "Write the two complete comparison chains explicitly, one for each delta."
+        },
+        {
+          "candidate": "Use explicit min/2 < min <= delta chains, then apply the triangle bound directly to abs(slope1 - slope2).",
+          "result": "failed",
+          "verifier_evidence": "B013A4 verified both epsilon-delta estimates and failed at line 34 on the triangle bound for slope1 - slope2.",
+          "diagnosis": "The verifier needed the algebraic decomposition through the common difference quotient before applying abs triangle inequality.",
+          "next_change": "Expose slope1 - slope2 = (slope1 - q) + (q - slope2), rewrite the absolute value, then apply the triangle bound."
+        },
+        {
+          "candidate": "Expose the quotient decomposition and triangle bound, then assert 2 * abs(slope1 - slope2) / 3 < abs(slope1 - slope2) directly.",
+          "result": "failed",
+          "verifier_evidence": "B013A5 verified the triangle argument through abs/3 + abs/3 = 2*abs/3, then failed at line 41 on the final scaling inequality.",
+          "diagnosis": "The final strict comparison requires the rational coefficient 2/3 < 1 and multiplication bridge to be explicit.",
+          "next_change": "Add 2/3 < 1, multiply by the positive absolute difference, and normalize both products."
+        },
+        {
+          "candidate": "Add the explicit 2/3 scaling and normalization bridge to the complete epsilon-delta uniqueness proof.",
+          "result": "accepted",
+          "verifier_evidence": "session block B013A6 ok:true"
+        }
+      ],
+      "accepted_litex": "thm derivative_value_unique:\n    ? forall f fn(t R) R, x0, slope1, slope2 R:\n        $has_derivative_at(f, x0, slope1)\n        $has_derivative_at(f, x0, slope2)\n        =>:\n            slope1 = slope2\n    by contra:\n        ? slope1 = slope2\n        slope1 != slope2\n        slope1 - slope2 != 0\n        abs(slope1 - slope2) > 0\n        abs(slope1 - slope2) / 3 $in R+\n        obtain delta1 from exist delta1 R+ st {$derivative_delta_controlled(f, x0, slope1, abs(slope1 - slope2) / 3, delta1)}\n        obtain delta2 from exist delta2 R+ st {$derivative_delta_controlled(f, x0, slope2, abs(slope1 - slope2) / 3, delta2)}\n        finite_set_min(union({delta1}, {delta2})) $in R+\n        finite_set_min(union({delta1}, {delta2})) / 2 $in R+\n        have sample R = x0 + finite_set_min(union({delta1}, {delta2})) / 2\n        sample = x0 + finite_set_min(union({delta1}, {delta2})) / 2 > x0\n        sample != x0\n        sample - x0 = finite_set_min(union({delta1}, {delta2})) / 2\n        sample - x0 > 0\n        abs(sample - x0) = sample - x0 = finite_set_min(union({delta1}, {delta2})) / 2\n        finite_set_min(union({delta1}, {delta2})) / 2 < finite_set_min(union({delta1}, {delta2}))\n        finite_set_min(union({delta1}, {delta2})) <= delta1\n        finite_set_min(union({delta1}, {delta2})) <= delta2\n        abs(sample - x0) = finite_set_min(union({delta1}, {delta2})) / 2 < finite_set_min(union({delta1}, {delta2})) <= delta1\n        abs(sample - x0) < delta1\n        abs(sample - x0) = finite_set_min(union({delta1}, {delta2})) / 2 < finite_set_min(union({delta1}, {delta2})) <= delta2\n        abs(sample - x0) < delta2\n        abs((f(sample) - f(x0)) / (sample - x0) - slope1) < abs(slope1 - slope2) / 3\n        abs((f(sample) - f(x0)) / (sample - x0) - slope2) < abs(slope1 - slope2) / 3\n        abs(slope1 - (f(sample) - f(x0)) / (sample - x0)) = abs((f(sample) - f(x0)) / (sample - x0) - slope1)\n        slope1 - slope2 = (slope1 - (f(sample) - f(x0)) / (sample - x0)) + ((f(sample) - f(x0)) / (sample - x0) - slope2)\n        abs(slope1 - slope2) = abs((slope1 - (f(sample) - f(x0)) / (sample - x0)) + ((f(sample) - f(x0)) / (sample - x0) - slope2))\n        abs((slope1 - (f(sample) - f(x0)) / (sample - x0)) + ((f(sample) - f(x0)) / (sample - x0) - slope2)) <= abs(slope1 - (f(sample) - f(x0)) / (sample - x0)) + abs((f(sample) - f(x0)) / (sample - x0) - slope2)\n        abs(slope1 - slope2) <= abs(slope1 - (f(sample) - f(x0)) / (sample - x0)) + abs((f(sample) - f(x0)) / (sample - x0) - slope2)\n        abs(slope1 - (f(sample) - f(x0)) / (sample - x0)) + abs((f(sample) - f(x0)) / (sample - x0) - slope2) < abs(slope1 - slope2) / 3 + abs(slope1 - slope2) / 3\n        abs(slope1 - slope2) < abs(slope1 - slope2) / 3 + abs(slope1 - slope2) / 3\n        abs(slope1 - slope2) / 3 + abs(slope1 - slope2) / 3 = 2 * abs(slope1 - slope2) / 3\n        2 / 3 < 1\n        (2 / 3) * abs(slope1 - slope2) < 1 * abs(slope1 - slope2)\n        2 * abs(slope1 - slope2) / 3 = (2 / 3) * abs(slope1 - slope2)\n        1 * abs(slope1 - slope2) = abs(slope1 - slope2)\n        2 * abs(slope1 - slope2) / 3 < abs(slope1 - slope2)\n        abs(slope1 - slope2) < 2 * abs(slope1 - slope2) / 3 < abs(slope1 - slope2)\n        abs(slope1 - slope2) < abs(slope1 - slope2)\n        impossible abs(slope1 - slope2) < abs(slope1 - slope2)",
+      "accepted_litex_after_liveness": "thm derivative_value_unique:\n    ? forall f fn(t R) R, x0, slope1, slope2 R:\n        $has_derivative_at(f, x0, slope1)\n        $has_derivative_at(f, x0, slope2)\n        =>:\n            slope1 = slope2\n    by contra:\n        ? slope1 = slope2\n        slope1 != slope2\n        slope1 - slope2 != 0\n        abs(slope1 - slope2) > 0\n        abs(slope1 - slope2) / 3 $in R+\n        obtain delta1 from exist delta1 R+ st {$derivative_delta_controlled(f, x0, slope1, abs(slope1 - slope2) / 3, delta1)}\n        obtain delta2 from exist delta2 R+ st {$derivative_delta_controlled(f, x0, slope2, abs(slope1 - slope2) / 3, delta2)}\n        finite_set_min(union({delta1}, {delta2})) $in R+\n        finite_set_min(union({delta1}, {delta2})) / 2 $in R+\n        have sample R = x0 + finite_set_min(union({delta1}, {delta2})) / 2\n        sample = x0 + finite_set_min(union({delta1}, {delta2})) / 2 > x0\n        sample != x0\n        sample - x0 = finite_set_min(union({delta1}, {delta2})) / 2\n        sample - x0 > 0\n        abs(sample - x0) = sample - x0 = finite_set_min(union({delta1}, {delta2})) / 2\n        abs(sample - x0) = finite_set_min(union({delta1}, {delta2})) / 2 < finite_set_min(union({delta1}, {delta2})) <= delta1\n        abs(sample - x0) = finite_set_min(union({delta1}, {delta2})) / 2 < finite_set_min(union({delta1}, {delta2})) <= delta2\n        abs((f(sample) - f(x0)) / (sample - x0) - slope1) < abs(slope1 - slope2) / 3\n        abs((f(sample) - f(x0)) / (sample - x0) - slope2) < abs(slope1 - slope2) / 3\n        abs(slope1 - (f(sample) - f(x0)) / (sample - x0)) = abs((f(sample) - f(x0)) / (sample - x0) - slope1)\n        slope1 - slope2 = (slope1 - (f(sample) - f(x0)) / (sample - x0)) + ((f(sample) - f(x0)) / (sample - x0) - slope2)\n        abs(slope1 - slope2) = abs((slope1 - (f(sample) - f(x0)) / (sample - x0)) + ((f(sample) - f(x0)) / (sample - x0) - slope2)) <= abs(slope1 - (f(sample) - f(x0)) / (sample - x0)) + abs((f(sample) - f(x0)) / (sample - x0) - slope2)\n        abs(slope1 - (f(sample) - f(x0)) / (sample - x0)) + abs((f(sample) - f(x0)) / (sample - x0) - slope2) < abs(slope1 - slope2) / 3 + abs(slope1 - slope2) / 3 = 2 * abs(slope1 - slope2) / 3\n        2 / 3 < 1\n        (2 / 3) * abs(slope1 - slope2) < 1 * abs(slope1 - slope2)\n        2 * abs(slope1 - slope2) / 3 = (2 / 3) * abs(slope1 - slope2)\n        1 * abs(slope1 - slope2) = abs(slope1 - slope2)\n        2 * abs(slope1 - slope2) / 3 < abs(slope1 - slope2)\n        abs(slope1 - slope2) <= abs(slope1 - (f(sample) - f(x0)) / (sample - x0)) + abs((f(sample) - f(x0)) / (sample - x0) - slope2) < 2 * abs(slope1 - slope2) / 3 < abs(slope1 - slope2)\n        impossible abs(slope1 - slope2) < abs(slope1 - slope2)",
+      "liveness_audit": "Removed standalone min inequalities, repeated chain endpoints, and duplicate triangle endpoints; alternate-name probe L013A1 and same-name replay R013 both returned ok:true.",
+      "reusable_lesson": "For derivative uniqueness on R, sample at half the smaller delta and keep only the explicit comparison and triangle bridges that remain live.",
+      "status": "materialized"
+    },
+    {
+      "id": "B014",
+      "source_order": 14,
+      "intent": "Select the unique derivative value on differentiable inputs.",
+      "dependencies": ["B012 is_differentiable_at", "B013 derivative_value_unique"],
+      "attempts": [{"candidate": "have fn derivative_at by exist! ...", "result": "accepted", "verifier_evidence": "session block B014A1 ok:true; trace normalizes the declaration to have fn derivative_at as set"}],
+      "accepted_litex": "have fn derivative_at by exist!:\n    ? forall f fn(t R) R, x0 R:\n        $is_differentiable_at(f, x0)\n        =>:\n            exist! slope R st {$has_derivative_at(f, x0, slope)}\n    obtain chosen_slope from $is_differentiable_at(f, x0)\n    claim:\n        ? forall slope1, slope2 R:\n            $has_derivative_at(f, x0, slope1)\n            $has_derivative_at(f, x0, slope2)\n            =>:\n                slope1 = slope2\n        by thm derivative_value_unique(f, x0, slope1, slope2)\n    exist! slope R st {$has_derivative_at(f, x0, slope)}",
+      "reusable_lesson": "Conditional unique existence creates a derivative function whose valid use is guarded by is_differentiable_at.",
+      "status": "materialized"
+    },
+    {
+      "id": "B015",
+      "source_order": 15,
+      "intent": "Bridge a proved derivative candidate to the selected derivative value.",
+      "dependencies": ["B012 is_differentiable_at", "B014 derivative_at"],
+      "attempts": [{"candidate": "thm has_derivative_at_to_derivative_value ...", "result": "accepted", "verifier_evidence": "session block B015A1 ok:true"}],
+      "accepted_litex": "thm has_derivative_at_to_derivative_value:\n    ? forall f fn(t R) R, x0, slope R:\n        $has_derivative_at(f, x0, slope)\n        =>:\n            $is_differentiable_at(f, x0)\n            derivative_at(f, x0) = slope\n    witness $is_differentiable_at(f, x0) from slope:\n        $has_derivative_at(f, x0, slope)\n    slope = derivative_at(f, x0)\n    derivative_at(f, x0) = slope",
+      "reusable_lesson": "Prove with has_derivative_at, then consume the result as an equality for derivative_at.",
+      "status": "materialized"
+    },
+    {
+      "id": "B016",
+      "source_order": 16,
+      "intent": "Define the value-oriented ODE solution relation.",
+      "dependencies": ["B012 is_differentiable_at", "B014 derivative_at"],
+      "attempts": [{"candidate": "prop solves_ode_at_by_derivative(...) ...", "result": "accepted", "verifier_evidence": "session block B016A1 ok:true"}],
+      "accepted_litex": "prop solves_ode_at_by_derivative(f fn(t R) R, rhs fn(t, y R) R, x R):\n    $is_differentiable_at(f, x)\n    derivative_at(f, x) = rhs(x, f(x))",
+      "reusable_lesson": "A value-oriented ODE predicate must retain differentiability as the guard for derivative_at.",
+      "status": "materialized"
+    },
+    {
+      "id": "B017",
+      "source_order": 17,
+      "intent": "Expose the tracer solution's derivative as a selected value.",
+      "dependencies": ["B008 ode_solution_has_derivative", "B015 has_derivative_at_to_derivative_value"],
+      "attempts": [{"candidate": "thm ode_solution_derivative_value ...", "result": "accepted", "verifier_evidence": "session block B017A1 ok:true"}],
+      "accepted_litex": "thm ode_solution_derivative_value:\n    ? forall x R:\n        $is_differentiable_at(ode_solution, x)\n        derivative_at(ode_solution, x) = 2 * x\n    by thm ode_solution_has_derivative(x) => $has_derivative_at(ode_solution, x, 2 * x)\n    by thm has_derivative_at_to_derivative_value(ode_solution, x, 2 * x)",
+      "reusable_lesson": "The relational proof is converted once into the reader-facing derivative equality.",
+      "status": "materialized"
+    },
+    {
+      "id": "B018",
+      "source_order": 18,
+      "intent": "Prove the ODE through the selected derivative value interface.",
+      "dependencies": ["B016 solves_ode_at_by_derivative", "B017 ode_solution_derivative_value"],
+      "attempts": [{"candidate": "thm ode_solution_solves_equation_by_derivative ...", "result": "accepted", "verifier_evidence": "session block B018A1 ok:true"}],
+      "accepted_litex": "thm ode_solution_solves_equation_by_derivative:\n    ? forall x R:\n        $solves_ode_at_by_derivative(ode_solution, ode_rhs, x)\n    by thm ode_solution_derivative_value(x)\n    ode_rhs(x, ode_solution(x)) = 2 * x\n    derivative_at(ode_solution, x) = ode_rhs(x, ode_solution(x))\n    by def $solves_ode_at_by_derivative(ode_solution, ode_rhs, x)",
+      "reusable_lesson": "ODE consumers can read derivative_at(f, x) = rhs(x, f(x)) once differentiability is carried in the predicate.",
+      "status": "materialized"
+    }
+  ],
+  "materialization": {
+    "block_ids": ["B001", "B002", "B003", "B004", "B005", "B006", "B007", "B008", "B009", "B010", "B011", "B012", "B013", "B014", "B015", "B016", "B017", "B018"],
+    "file_gate_command": "target/release/litex -compact -runner -f showcases/math_concepts_in_litex/12_ordinary_differential_equations_in_nutshell/main.lit",
+    "file_gate_result": "ok:true, exit_code:0"
+  }
+}
