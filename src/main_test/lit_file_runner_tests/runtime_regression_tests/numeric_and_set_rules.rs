@@ -178,7 +178,7 @@ fn standard_set_membership_lifting_does_not_enumerate_stored_owner_sets() {
         .expect("the following membership rule must delimit the implementation");
 
     assert!(implementation.contains("proper_subsets_in_membership_proof_order"));
-    assert!(implementation.contains("verify_builtin_rule_premise"));
+    assert!(implementation.contains("verify_atomic_fact_as_builtin_rule_premise"));
     assert!(
         !implementation.contains("known_sets_containing_obj"),
         "standard-set proof candidates must come from the target hierarchy, not stored owner-set enumeration"
@@ -999,7 +999,7 @@ img(1 + i) = 1
                 "Number Theory for Beginners migration patterns should verify:\n{run_output}"
             );
             for rule in [
-                "N+: 0 < x and x in Z",
+                "refined integer carrier from known integer membership and strict sign",
                 "function range subset codomain",
                 "equality: (-1)^(2*m+1) = -1 for m in N",
                 "integer adjacency: a < b + 1 gives a <= b",
@@ -1495,7 +1495,8 @@ forall a, b R:
         "quotient_nonzero_from_numerator_nonzero_builtin_rule failed:\n{}",
         run_output
     );
-    assert!(run_output.contains("\"rule\": \"div not equal zero from numerator nonzero\""));
+    assert!(run_output.contains("\"rule\": \"local builtin nonzero.div\""));
+    assert!(run_output.contains("\"rule\": \"not-equality symmetry\""));
 }
 
 #[test]

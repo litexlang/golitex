@@ -25,12 +25,6 @@ pub(crate) fn validate_litex_to_lean_well_definedness_certificate(
                 fact.well_defined_fact_id.value()
             ));
         }
-        if fact.expected_proposition.to_string() != fact.fact.proposition.to_string() {
-            return Err(format!(
-                "WellDefinedFactId {} changed proposition inside the frozen certificate",
-                fact.well_defined_fact_id.value()
-            ));
-        }
     }
 
     let mut objects_by_id = HashMap::new();
@@ -90,21 +84,6 @@ pub(crate) fn validate_litex_to_lean_well_definedness_certificate(
     }
 
     let mut root_ids = HashSet::new();
-    for root_id in certificate.root_obj_ids.iter().copied() {
-        if !root_ids.insert(root_id) {
-            return Err(format!(
-                "WellDefinedObjId {} is duplicated in the root object list",
-                root_id.value()
-            ));
-        }
-        if !objects_by_id.contains_key(&root_id) {
-            return Err(format!(
-                "root WellDefinedObjId {} has no frozen object record",
-                root_id.value()
-            ));
-        }
-    }
-
     let mut root_uses = HashSet::new();
     for root_use in certificate.root_proof_uses.iter().copied() {
         if !root_uses.insert(root_use) {
@@ -114,24 +93,13 @@ pub(crate) fn validate_litex_to_lean_well_definedness_certificate(
                 root_use.phase
             ));
         }
-        if !root_ids.contains(&root_use.well_defined_obj_id) {
+        if !objects_by_id.contains_key(&root_use.well_defined_obj_id) {
             return Err(format!(
-                "root use for WellDefinedObjId {} is absent from the root object list",
+                "root use for WellDefinedObjId {} has no frozen object record",
                 root_use.well_defined_obj_id.value()
             ));
         }
-    }
-    for root_id in root_ids.iter() {
-        if !certificate
-            .root_proof_uses
-            .iter()
-            .any(|root_use| root_use.well_defined_obj_id == *root_id)
-        {
-            return Err(format!(
-                "root WellDefinedObjId {} has no execution-phase use",
-                root_id.value()
-            ));
-        }
+        root_ids.insert(root_use.well_defined_obj_id);
     }
 
     let mut source_object_uses = HashMap::new();
@@ -367,7 +335,7 @@ pub(crate) fn validate_litex_to_lean_well_definedness_certificate(
                     requirement.role
                 ));
             }
-            let fact = facts_by_well_defined_id
+            facts_by_well_defined_id
                 .get(&requirement.well_defined_fact_id)
                 .ok_or_else(|| {
                     format!(
@@ -376,14 +344,6 @@ pub(crate) fn validate_litex_to_lean_well_definedness_certificate(
                         requirement.well_defined_fact_id.value()
                     )
                 })?;
-            if fact.expected_proposition.to_string() != requirement.expected_proposition.to_string()
-            {
-                return Err(format!(
-                    "WellDefinedObjId {} target requirement changed WellDefinedFactId {}",
-                    object.well_defined_obj_id.value(),
-                    requirement.well_defined_fact_id.value()
-                ));
-            }
             if !direct_fact_ids.contains(&requirement.well_defined_fact_id) {
                 return Err(format!(
                     "WellDefinedObjId {} target requirement {:?} does not cite one of its direct WD facts",
@@ -417,7 +377,11 @@ pub(crate) fn validate_litex_to_lean_well_definedness_certificate(
             }
             used_fact_ids.insert(requirement.well_defined_fact_id);
         }
-        validate_object_target_requirement_recipe(object, &requirement_roles)?;
+        validate_object_target_requirement_recipe(
+            object,
+            &requirement_roles,
+            &facts_by_well_defined_id,
+        )?;
     }
 
     if owned_scope_ids.len() != certificate.binder_scopes.len() {
@@ -450,7 +414,7 @@ pub(crate) fn validate_litex_to_lean_well_definedness_certificate(
     }
 
     let mut reachable_object_ids = HashSet::new();
-    let mut pending_object_ids = certificate.root_obj_ids.clone();
+    let mut pending_object_ids = root_ids.iter().copied().collect::<Vec<_>>();
     while let Some(object_id) = pending_object_ids.pop() {
         if !reachable_object_ids.insert(object_id) {
             continue;
@@ -491,14 +455,6 @@ pub(crate) fn validate_litex_to_lean_well_definedness_certificate(
                     requirement.source_occurrence_id.value()
                 )
             })?;
-        if source_use.phase != requirement.phase {
-            return Err(format!(
-                "target requirement for source occurrence {} changed execution phase from {:?} to {:?}",
-                requirement.source_occurrence_id.value(),
-                source_use.phase,
-                requirement.phase
-            ));
-        }
         if source_use.well_defined_obj_id != requirement.well_defined_obj_id {
             let mut pending = vec![source_use.well_defined_obj_id];
             let mut visited = HashSet::new();
@@ -526,7 +482,7 @@ pub(crate) fn validate_litex_to_lean_well_definedness_certificate(
                 requirement.source_occurrence_id.value()
             ));
         }
-        let well_defined_fact = facts_by_well_defined_id
+        facts_by_well_defined_id
             .get(&requirement.well_defined_fact_id)
             .ok_or_else(|| {
                 format!(
@@ -534,19 +490,9 @@ pub(crate) fn validate_litex_to_lean_well_definedness_certificate(
                     requirement.well_defined_fact_id.value()
                 )
             })?;
-        if well_defined_fact.expected_proposition.to_string()
-            != requirement.expected_proposition.to_string()
-        {
-            return Err(format!(
-                "target requirement changed WellDefinedFactId {}",
-                requirement.well_defined_fact_id.value()
-            ));
-        }
         if !object.target_requirements.iter().any(|owned| {
             owned.role == requirement.role
                 && owned.well_defined_fact_id == requirement.well_defined_fact_id
-                && owned.expected_proposition.to_string()
-                    == requirement.expected_proposition.to_string()
         }) {
             return Err(format!(
                 "target requirement is not an edge of WellDefinedObjId {}",
@@ -585,6 +531,7 @@ pub(crate) fn validate_litex_to_lean_well_definedness_certificate(
 fn validate_object_target_requirement_recipe(
     object: &LitexToLeanWellDefinednessObjectIr,
     roles: &HashSet<WellDefinednessRequirementRole>,
+    facts_by_well_defined_id: &HashMap<WellDefinedFactId, &LitexToLeanWellDefinednessFactIr>,
 ) -> Result<(), String> {
     let object_id = object.well_defined_obj_id.value();
     let unexpected = |role: WellDefinednessRequirementRole| {
@@ -595,6 +542,16 @@ fn validate_object_target_requirement_recipe(
     };
 
     for requirement in object.target_requirements.iter() {
+        let proposition = &facts_by_well_defined_id
+            .get(&requirement.well_defined_fact_id)
+            .ok_or_else(|| {
+                format!(
+                    "WellDefinedObjId {object_id} target requirement cites missing WellDefinedFactId {}",
+                    requirement.well_defined_fact_id.value()
+                )
+            })?
+            .fact
+            .proposition;
         match requirement.role {
             WellDefinednessRequirementRole::BuiltinArgumentMembership { argument_index } => {
                 let arguments = arithmetic_arguments(&object.source_object)
@@ -604,9 +561,7 @@ fn validate_object_target_requirement_recipe(
                         "WellDefinedObjId {object_id} has out-of-range builtin membership role {argument_index}"
                     )
                 })?;
-                let Fact::AtomicFact(AtomicFact::InFact(membership)) =
-                    &requirement.expected_proposition
-                else {
+                let Fact::AtomicFact(AtomicFact::InFact(membership)) = proposition else {
                     return Err(format!(
                         "WellDefinedObjId {object_id} builtin membership role {argument_index} retained a non-membership proposition"
                     ));
@@ -630,9 +585,7 @@ fn validate_object_target_requirement_recipe(
                 if !matches!(object.source_object, Obj::Div(_)) || argument_index != 1 {
                     return unexpected(requirement.role);
                 }
-                let Fact::AtomicFact(AtomicFact::NotEqualFact(nonzero)) =
-                    &requirement.expected_proposition
-                else {
+                let Fact::AtomicFact(AtomicFact::NotEqualFact(nonzero)) = proposition else {
                     return Err(format!(
                         "WellDefinedObjId {object_id} builtin nonzero role retained a non-inequality proposition"
                     ));
@@ -658,9 +611,7 @@ fn validate_object_target_requirement_recipe(
                         "WellDefinedObjId {object_id} has reversed or out-of-range pairwise role ({left_index}, {right_index})"
                     ));
                 }
-                let Fact::AtomicFact(AtomicFact::NotEqualFact(distinct)) =
-                    &requirement.expected_proposition
-                else {
+                let Fact::AtomicFact(AtomicFact::NotEqualFact(distinct)) = proposition else {
                     return Err(format!(
                         "WellDefinedObjId {object_id} pairwise role retained a non-inequality proposition"
                     ));
@@ -693,9 +644,7 @@ fn validate_object_target_requirement_recipe(
                             "WellDefinedObjId {object_id} has out-of-range function-membership role ({layer_index}, {parameter_index})"
                         )
                     })?;
-                let Fact::AtomicFact(AtomicFact::InFact(membership)) =
-                    &requirement.expected_proposition
-                else {
+                let Fact::AtomicFact(AtomicFact::InFact(membership)) = proposition else {
                     return Err(format!(
                         "WellDefinedObjId {object_id} function-membership role retained a non-membership proposition"
                     ));
@@ -723,9 +672,7 @@ fn validate_object_target_requirement_recipe(
                 let Obj::AnonymousFn(function) = &object.source_object else {
                     return unexpected(requirement.role);
                 };
-                let Fact::AtomicFact(AtomicFact::InFact(membership)) =
-                    &requirement.expected_proposition
-                else {
+                let Fact::AtomicFact(AtomicFact::InFact(membership)) = proposition else {
                     return Err(format!(
                         "WellDefinedObjId {object_id} anonymous-function closure retained a non-membership proposition"
                     ));
@@ -772,9 +719,7 @@ fn validate_object_target_requirement_recipe(
                         "WellDefinedObjId {object_id} anonymous-function subset route does not target its indexed bound parameter"
                     ));
                 }
-                let Fact::AtomicFact(AtomicFact::SubsetFact(subset)) =
-                    &requirement.expected_proposition
-                else {
+                let Fact::AtomicFact(AtomicFact::SubsetFact(subset)) = proposition else {
                     return Err(format!(
                         "WellDefinedObjId {object_id} anonymous-function subset route retained a non-subset proposition"
                     ));
@@ -1082,7 +1027,7 @@ fn validate_binder_scope_recipe(
         .collect::<HashSet<_>>();
     let mut inferred_fact_ids = HashSet::new();
     for inferred in scope.inferred_premises.iter() {
-        let Some(fact_id) = inferred.fact_id else {
+        let Some(fact_id) = inferred.stored_fact_id() else {
             return Err(format!(
                 "WellDefinedBinderScopeId {scope_id} retained an inferred premise without FactId"
             ));

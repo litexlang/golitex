@@ -99,7 +99,7 @@ sum(1, finite_set_size(X), fn(left_index closed_range(1, finite_set_size(X))) R 
                 "equality: (-n) % k = (k - n % k) % k for n in Z and k in N+",
                 "or: integer discrete split x >= n or x <= n - 1",
                 "equality: n^m % k = ((n % k)^m) % k for n in Z, m in N, and k in N+",
-                "abs: -abs(x) <= x",
+                "local builtin order.neg_abs_le",
             ] {
                 assert!(
                     run_output.contains(rule),

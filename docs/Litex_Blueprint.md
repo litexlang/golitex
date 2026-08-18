@@ -171,7 +171,7 @@ import Mathlib
 def NonzeroReal :=
   {x : ℝ // x ≠ 0}
 
-def reciprocal (x : NonzeroReal) : ℝ :=
+noncomputable def reciprocal (x : NonzeroReal) : ℝ :=
   1 / x.1
 
 theorem reciprocal_of_positive (a : ℝ) (ha : 0 < a) :
@@ -569,6 +569,80 @@ mathematical fact `a ≠ 0`.
 > language. Litex's more specific bet is that one compact object–fact syntax
 > can let a meaningful mathematical statement double as its routine
 > verification request.
+
+#### A Larger Comparison: Defining and Using a Group
+
+The reciprocal example isolates one function and one domain condition. Litex
+also needs to scale to mathematical objects that package a carrier, several
+operations, and reusable laws. The following comparison proves that any right
+identity in a group is the group's distinguished identity.
+
+One ordinary Lean formulation makes the carrier and laws explicit in a local
+record. The namespace only avoids a name collision with Mathlib's existing
+`Group` class:
+
+```lean
+import Mathlib
+
+namespace GroupIdentityExample
+
+structure Group where
+  Carrier : Type
+  mul : Carrier → Carrier → Carrier
+  one : Carrier
+  inv : Carrier → Carrier
+  mul_assoc : ∀ a b c : Carrier, mul (mul a b) c = mul a (mul b c)
+  one_mul : ∀ a : Carrier, mul one a = a
+  mul_one : ∀ a : Carrier, mul a one = a
+  mul_left_inv : ∀ a : Carrier, mul (inv a) a = one
+
+theorem right_identity_unique
+    (G : Group)
+    (e : G.Carrier)
+    (hright : ∀ a : G.Carrier, G.mul a e = a) :
+    e = G.one := by
+  calc
+    e = G.mul G.one e := (G.one_mul e).symm
+    _ = G.one := hright G.one
+
+end GroupIdentityExample
+```
+
+The corresponding Litex code defines the same kind of structured interface
+over a set carrier. `struct` packages the operations and laws; a later fact
+receives `G &Group<s>` and can use those laws without expanding how the
+structure is represented:
+
+```litex
+struct Group<s nonempty_set>:
+    mul fn(x, y s) s
+    one s
+    inv fn(x s) s
+    <=>:
+        forall x, y, z s:
+            mul(mul(x, y), z) = mul(x, mul(y, z))
+        forall x s:
+            mul(x, one) = x
+            mul(one, x) = x
+            mul(inv(x), x) = one
+
+forall s nonempty_set, G &Group<s>, identity s:
+    forall a s:
+        G.mul(a, identity) = a
+    =>:
+        identity = G.mul(G.one, identity) = G.one
+```
+
+The Lean proof names the two equality steps in a `calc` block. The Litex
+conclusion states the same chain directly: the stored group law gives
+`identity = G.mul(G.one, identity)`, and the assumed right-identity fact gives
+`G.mul(G.one, identity) = G.one`. This is a secondary capacity comparison,
+not a second running example for the rest of the blueprint: the smaller
+reciprocal example remains the main interface comparison.
+
+Both blocks are hand-written representations of the same mathematics. The
+Lean block is not generated compiler output, and this example does not claim
+that the current Litex-to-Lean compiler supports `struct Group`.
 
 <a id="goal-4"></a>
 ### 4. Preserve Rigor While Remaining Readable and Accessible

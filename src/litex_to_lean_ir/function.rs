@@ -30,19 +30,12 @@ impl Eq for LitexToLeanFunctionTypeIr {}
 #[derive(Clone)]
 pub struct LitexToLeanFunctionParameterIr {
     pub symbol_id: SymbolId,
-    pub name: String,
-    pub substitution_key: String,
-    pub source_set: Obj,
     pub set: LitexToLeanObjectIr,
 }
 
 impl PartialEq for LitexToLeanFunctionParameterIr {
     fn eq(&self, other: &Self) -> bool {
-        self.symbol_id == other.symbol_id
-            && self.name == other.name
-            && self.substitution_key == other.substitution_key
-            && obj_equality_key(&self.source_set) == obj_equality_key(&other.source_set)
-            && self.set == other.set
+        self.symbol_id == other.symbol_id && self.set == other.set
     }
 }
 
@@ -53,9 +46,6 @@ impl fmt::Debug for LitexToLeanFunctionParameterIr {
         formatter
             .debug_struct("LitexToLeanFunctionParameterIr")
             .field("symbol_id", &self.symbol_id)
-            .field("name", &self.name)
-            .field("substitution_key", &self.substitution_key)
-            .field("source_set", &self.source_set.to_string())
             .field("set", &self.set)
             .finish()
     }
@@ -131,9 +121,6 @@ impl LitexToLeanFunctionTypeIr {
             for binding in group.params.iter() {
                 parameters.push(LitexToLeanFunctionParameterIr {
                     symbol_id: binding.id(),
-                    name: binding.name().to_string(),
-                    substitution_key: binding.substitution_key(),
-                    source_set: group.set_obj().clone(),
                     set: set.clone(),
                 });
             }

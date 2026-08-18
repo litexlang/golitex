@@ -1527,8 +1527,8 @@ forall x R+:
         run_output
     );
     assert!(
-        run_output.contains("\"rule\": \"calculation\""),
-        "normal output should retain the direct verification reason:\n{}",
+        run_output.contains("\"rule\": \"same known equality class\""),
+        "normal output should retain the known-equality verification reason:\n{}",
         run_output
     );
     assert!(

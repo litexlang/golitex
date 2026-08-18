@@ -360,7 +360,7 @@ fn native_number_theory_latex_is_mathematical() {
     )
     .expect("native number theory should convert to LaTeX");
     assert!(
-        latex.contains(r"\operatorname{quot}\left( -7, 3 \right)"),
+        latex.contains(r"\operatorname{quot}\left( -1 \cdot 7, 3 \right)"),
         "{latex}"
     );
     assert!(latex.contains(r"\gcd\left( 54, 24 \right)"), "{latex}");

@@ -8,6 +8,9 @@ verifier's checked IR capture, but it does not use the old universal-object
 emitter. The legacy emitter is archived under
 `../tmp/compile_to_lean_legacy/` and is not part of the Rust build. Both
 `litex -lean` and `litex -lean-ledger` route through the active compiler.
+Source-level migration from that archive is tracked explicitly in
+[`legacy_parity.md`](legacy_parity.md); archived Rust and its universal-object
+ABI are never copied as implementation dependencies.
 
 The package retains the established `Litex` namespace and reports
 `Litex.abiVersion = 2` to distinguish the current wrapper ABI from the archived
@@ -175,6 +178,14 @@ through `SetBuilderPredicateProjection`. Base membership still uses
 value only after replaying `Litex.Set.Nonempty S`; it does not transport a
 wrapper value back to another Lean type.
 
+Example 15 preserves every verifier-selected builtin-strategy layer around
+its concrete proof tree. Real addition membership calls the proved
+`Litex.Rules.complexAddInR` adapter. Nonnegative addition and the two strict
+variants call separate proved rules, including both direct
+`AddPositiveRightStrict` evidence and the fingerprinted registered
+`order.add_positive_of_nonnegative_positive` route. Nonnegative
+multiplication remains the nearest rejected arithmetic-strategy boundary.
+
 Sketch is a real source scope, not an example-file wrapper. Each top-level
 sketch is emitted as `__Sketch01`, `__Sketch02`, and so on. Its emitter context
 starts with the facts and symbols visible outside the sketch, but definitions
@@ -214,14 +225,15 @@ deferred until the IR and compiler emitter support its Litex statement form; it 
 not represented by hand-written code under `examples/`.
 
 The compiler currently emits only the reviewed IR routes exercised by the
-fourteen numbered examples. Checked named aliases of `R` and `C`, top-level atomic
+fifteen numbered examples. Checked named aliases of `R` and `C`, top-level atomic
 equality, nonnegative integer numerals, addition, arbitrary set parameters,
 unary function sets, named unary application, basic proof scopes,
 case/contradiction proofs, one-witness positive existentials, minimal native
 object definitions, unary real named functions with `+`, `-`, `*`, `/`
 and source-domain clauses, concrete predicate reduction, whole-side equality
 and one-parameter concrete-predicate set-builder membership, and checked
-nonempty choice are supported. Other atomic predicates and arithmetic
+nonempty choice are supported. Real-addition carrier closure and additive
+nonnegative/one-strict sign strategies are also supported. Other atomic predicates and arithmetic
 operators, bare arbitrary-set choices (`have A set`), multi-parameter or
 multi-layer functions, nested set-builder binder expressions, richer set
 constructors, and broader production code-generation are not implemented yet.
