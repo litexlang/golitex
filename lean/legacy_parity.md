@@ -57,7 +57,7 @@ Status meanings:
 | Unary function set and checked application | migrated | Example 4 uses exact function and argument membership evidence. |
 | Unary named functions with domain clauses | partial | Example 12 supports real-valued `+`, `-`, `*`, and `/` bodies. |
 | Multiple parameters in one application layer | pending | Requires a native-carrier argument telescope; source `f(a,b)` must not become curried application. |
-| Multiple source application layers | pending | Source `g(a)(b)` must retain two applicability/result-membership certificates. |
+| Multiple source application layers | migrated | Example 23 follows the exact verifier `FunctionPrefix` DAG for `g(a)(b)`, binds every intermediate exact function carrier once, and separately consumes each layer's argument/domain evidence; the focused Rust regression also covers three layers. |
 | Dependent parameter requirements and return sets | pending | The old `FnSpec` cannot be copied; a new typed wrapper contract is required. |
 | Compound anonymous functions | pending | Identity is the only current anonymous native-carrier value; body WD and result membership need an owner-scoped adapter. |
 | Function extensionality | not legacy parity | Neither compiler established an extensional equality interface. |
@@ -98,8 +98,8 @@ Status meanings:
 1. Keep the real `+`/`-`/`*`/`/` closure and additive-strategy tracer green;
    decide whether `RealCoherence` is proved, required explicitly, or avoided
    by a revised order wrapper before porting multiplication/division signs.
-2. Approve and implement the native-carrier function telescope: multiple
-   parameters, exact application layers, dependent requirements, then compound
+2. Continue the native-carrier function telescope after exact application
+   layers: multiple parameters, dependent requirements, then compound
    anonymous bodies.
 3. Use that function ABI to migrate ranges, Cartesian products, tuples,
    sequences, and aggregate objects.

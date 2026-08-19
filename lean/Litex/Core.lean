@@ -2,7 +2,7 @@ import Mathlib
 
 namespace Litex
 
-universe u
+universe u v
 
 /-- The Lean universe used by the v2 public ABI. This is an abbreviation for
 Lean's ordinary `Type u`, not a new universe containing Mathlib. -/
@@ -278,14 +278,16 @@ end In
 layer. Its argument remains heterogeneous; the function can be called only
 with an explicit proof that the argument belongs to `domain`. -/
 structure Fn
-    (domain codomain : Litex.Set.{u}) where
+    (domain : Litex.Set.{u})
+    (codomain : Litex.Set.{v}) where
   call : {α : Litex.u.{u}} → (x : α) → In x domain → codomain.Carrier
 
 /-- A unary Litex function with source-domain clauses. Applicability remains
 propositional: a call needs both membership in `domain` and the exact
 source predicate instantiated at the argument. -/
 structure FnWhere
-    (domain codomain : Litex.Set.{u})
+    (domain : Litex.Set.{u})
+    (codomain : Litex.Set.{v})
     (requires : {α : Litex.u.{u}} → α → Prop) where
   call :
     {α : Litex.u.{u}} →
@@ -296,27 +298,32 @@ structure FnWhere
 
 /-- The Litex set of unary functions from `domain` to `codomain`.
 
-`Fn domain codomain` lives one universe above the element carriers because its
-`call` field accepts values from any carrier in universe `u`. -/
+`Fn domain codomain` lives in `max (u + 1) v`: its `call` field accepts values
+from any carrier in the domain universe and returns the exact codomain
+carrier. This permits a base-universe function to return another function
+set without collapsing either source application layer. -/
 abbrev fnSet
-    (domain codomain : Litex.Set.{u}) :
-    Litex.Set.{u + 1} :=
+    (domain : Litex.Set.{u})
+    (codomain : Litex.Set.{v}) :
+    Litex.Set.{max (u + 1) v} :=
   Set.ofType (Fn domain codomain)
 
 /-- The exact carrier of unary functions with source-domain clauses. -/
 abbrev fnSetWhere
-    (domain codomain : Litex.Set.{u})
+    (domain : Litex.Set.{u})
+    (codomain : Litex.Set.{v})
     (requires : {α : Litex.u.{u}} → α → Prop) :
-    Litex.Set.{u + 1} :=
+    Litex.Set.{max (u + 1) v} :=
   Set.ofType (FnWhere domain codomain requires)
 
 /-- Apply a heterogeneous value known to belong to a unary function set.
 Both function membership and argument membership are computational inputs to
 the wrapper; Lean's ambient type alone never authorizes a Litex call. -/
 noncomputable def fnApply
-    {domain codomain : Litex.Set.{u}}
+    {domain : Litex.Set.{u}}
+    {codomain : Litex.Set.{v}}
     {α : Litex.u.{u}}
-    {β : Litex.u.{u + 1}}
+    {β : Litex.u.{max (u + 1) v}}
     (f : β)
     (hf : In f (fnSet domain codomain))
     (x : α)
@@ -328,7 +335,8 @@ noncomputable def fnApply
 membership proof remains an explicit checked input, while no representative
 choice is needed for the function value itself. -/
 def fnApplyOwn
-    {domain codomain : Litex.Set.{u}}
+    {domain : Litex.Set.{u}}
+    {codomain : Litex.Set.{v}}
     (f : Fn domain codomain)
     (_hf : In f (fnSet domain codomain))
     {α : Litex.u.{u}}
@@ -340,10 +348,11 @@ def fnApplyOwn
 /-- Apply a heterogeneous value known to belong to a domain-constrained
 function set. -/
 noncomputable def fnApplyWhere
-    {domain codomain : Litex.Set.{u}}
+    {domain : Litex.Set.{u}}
+    {codomain : Litex.Set.{v}}
     {requires : {α : Litex.u.{u}} → α → Prop}
     {α : Litex.u.{u}}
-    {β : Litex.u.{u + 1}}
+    {β : Litex.u.{max (u + 1) v}}
     (f : β)
     (hf : In f (fnSetWhere domain codomain requires))
     (x : α)
@@ -355,7 +364,8 @@ noncomputable def fnApplyWhere
 /-- Exact-carrier application for a compiler-constructed function with
 source-domain clauses. -/
 def fnApplyWhereOwn
-    {domain codomain : Litex.Set.{u}}
+    {domain : Litex.Set.{u}}
+    {codomain : Litex.Set.{v}}
     {requires : {α : Litex.u.{u}} → α → Prop}
     (f : FnWhere domain codomain requires)
     (_hf : In f (fnSetWhere domain codomain requires))

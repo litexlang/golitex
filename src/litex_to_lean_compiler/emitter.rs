@@ -4093,11 +4093,8 @@ fn validate_unary_function_type(function: &LitexToLeanFunctionTypeIr) -> Result<
     if function.parameters.len() != 1 {
         return Err("compiler function-set MVP supports exactly one parameter".into());
     }
-    if matches!(
-        function.return_set.as_ref(),
-        LitexToLeanObjectIr::FunctionSet { .. }
-    ) {
-        return Err("compiler function-set MVP supports one application layer only".into());
+    if let LitexToLeanObjectIr::FunctionSet { function } = function.return_set.as_ref() {
+        validate_unary_function_type(function)?;
     }
     Ok(())
 }
@@ -4147,7 +4144,42 @@ fn render_function_set(
 ) -> Result<String, String> {
     validate_unary_function_type(function)?;
     let domain = render_set_ir(&function.parameters[0].set, context)?;
-    let codomain = render_set_ir(function.return_set.as_ref(), context)?;
+    let codomain = match function.return_set.as_ref() {
+        LitexToLeanObjectIr::FunctionSet { function } => {
+            render_nested_function_set(function, context)?
+        }
+        return_set => render_set_ir(return_set, context)?,
+    };
+    if function.domain_facts.is_empty() {
+        Ok(format!("(Litex.fnSet {domain} {codomain})"))
+    } else {
+        Ok(format!(
+            "(Litex.fnSetWhere {domain} {codomain} {})",
+            render_function_requirement(function, context)?
+        ))
+    }
+}
+
+fn render_nested_function_set(
+    function: &LitexToLeanFunctionTypeIr,
+    context: &RenderContext,
+) -> Result<String, String> {
+    validate_unary_function_type(function)?;
+    let render_base_set = |set: &LitexToLeanObjectIr| -> Result<String, String> {
+        let rendered = render_set_ir(set, context)?;
+        if matches!(set, LitexToLeanObjectIr::Symbol { .. }) {
+            Ok(format!("({rendered} : Litex.Set.{{0}})"))
+        } else {
+            Ok(rendered)
+        }
+    };
+    let domain = render_base_set(&function.parameters[0].set)?;
+    let codomain = match function.return_set.as_ref() {
+        LitexToLeanObjectIr::FunctionSet { function } => {
+            render_nested_function_set(function, context)?
+        }
+        return_set => render_base_set(return_set)?,
+    };
     if function.domain_facts.is_empty() {
         Ok(format!("(Litex.fnSet {domain} {codomain})"))
     } else {
@@ -4314,6 +4346,7 @@ fn render_set_ir(object: &LitexToLeanObjectIr, context: &RenderContext) -> Resul
                 conjunction(&facts)
             ))
         }
+        LitexToLeanObjectIr::FunctionSet { function } => render_function_set(function, context),
         other => Err(format!(
             "unsupported compiler function domain/codomain `{other:?}`"
         )),
@@ -4324,17 +4357,23 @@ fn render_function_application(
     application: &LitexToLeanFunctionApplicationIr,
     context: &RenderContext,
 ) -> Result<String, String> {
-    if application.argument_layers.len() != 1
-        || application.source_argument_layers.len() != 1
-        || application.argument_layers[0].len() != 1
-        || application.source_argument_layers[0].len() != 1
+    if application.argument_layers.is_empty()
+        || application.argument_layers.len() != application.source_argument_layers.len()
+        || application
+            .argument_layers
+            .iter()
+            .zip(application.source_argument_layers.iter())
+            .any(|(arguments, source_arguments)| {
+                arguments.len() != 1 || source_arguments.len() != 1
+            })
     {
-        return Err(
-            "compiler function application MVP supports one unary source layer only".into(),
-        );
+        return Err("compiler function application supports one parameter per source layer".into());
     }
     let LitexToLeanObjectIr::Symbol { .. } = application.head.as_ref() else {
-        return Err("compiler function application MVP requires a named head".into());
+        return Err("compiler function application requires a named head".into());
+    };
+    let Obj::FnObj(source_application) = &application.source_application else {
+        return Err("function application retained a non-application source object".into());
     };
     let certificate = context
         .well_definedness
@@ -4359,18 +4398,54 @@ fn render_function_application(
     {
         return Err("function application WD object changed its source occurrence".into());
     }
+
+    let layer_count = application.argument_layers.len();
+    let mut layer_objects = vec![None; layer_count];
+    let mut layer_object = object;
+    for layer_index in (0..layer_count).rev() {
+        let source_prefix = source_application.prefix_obj(layer_index + 1);
+        if obj_equality_key(&layer_object.source_object) != obj_equality_key(&source_prefix) {
+            return Err(format!(
+                "application layer {layer_index} changed its verifier-owned source prefix"
+            ));
+        }
+        layer_objects[layer_index] = Some(layer_object);
+        if layer_index == 0 {
+            continue;
+        }
+        let prefix_uses = layer_object
+            .child_uses
+            .iter()
+            .filter(|child| {
+                child.role
+                    == (WellDefinedObjChildRole::FunctionPrefix {
+                        through_layer_index: layer_index - 1,
+                    })
+            })
+            .collect::<Vec<_>>();
+        let [prefix_use] = prefix_uses.as_slice() else {
+            return Err(format!(
+                "application layer {layer_index} requires one exact WD prefix child"
+            ));
+        };
+        layer_object = certificate
+            .objects
+            .iter()
+            .find(|candidate| candidate.well_defined_obj_id == prefix_use.obj_id)
+            .ok_or_else(|| {
+                format!("application layer {layer_index} references a missing WD prefix object")
+            })?;
+    }
+
     let [WellDefinedFunctionContract::StoredMembershipFact(contract_fact_id)] =
         object.function_contracts.as_slice()
     else {
-        return Err(
-            "named unary application requires one verifier-selected membership FactId".into(),
-        );
+        return Err("named application requires one verifier-selected membership FactId".into());
     };
     let binding = context
         .function_bindings
         .get(contract_fact_id)
         .ok_or_else(|| format!("unavailable function membership FactId `{contract_fact_id}`"))?;
-    validate_unary_function_type(&binding.function)?;
     let LitexToLeanObjectIr::Symbol {
         symbol_id: head_symbol_id,
         ..
@@ -4381,128 +4456,177 @@ fn render_function_application(
     if *head_symbol_id != binding.symbol_id {
         return Err("function membership FactId belongs to another head symbol".into());
     }
-    let lowered_source_argument =
-        LitexToLeanObjectIr::lower(&application.source_argument_layers[0][0])?;
-    if lowered_source_argument != application.argument_layers[0][0] {
-        return Err("unary application changed its retained argument IR".into());
-    }
 
-    let application_requirements = certificate
-        .target_requirements
-        .iter()
-        .filter(|requirement| requirement.source_occurrence_id == application.source_occurrence_id)
-        .collect::<Vec<_>>();
-    let mut argument_requirement = None;
-    let mut domain_requirements = vec![None; binding.function.domain_facts.len()];
-    for requirement in application_requirements {
-        match requirement.role {
-            WellDefinednessRequirementRole::FunctionArgumentMembership {
-                layer_index: 0,
-                parameter_index: 0,
-            } => {
-                if argument_requirement.replace(requirement).is_some() {
-                    return Err(
-                        "unary application retained duplicate argument-membership requirements"
-                            .into(),
-                    );
+    let mut function = binding.function.clone();
+    let mut head = render_ir_symbol(application.head.as_ref(), context)?;
+    let mut membership_proof = binding.membership_proof_name.clone();
+    let mut direct = binding.direct;
+    let mut layer_lets = Vec::new();
+    for layer_index in 0..layer_count {
+        validate_unary_function_type(&function)?;
+        let layer_object = layer_objects[layer_index]
+            .ok_or_else(|| format!("application layer {layer_index} lost its WD object"))?;
+        if layer_object.function_contracts
+            != vec![WellDefinedFunctionContract::StoredMembershipFact(
+                *contract_fact_id,
+            )]
+        {
+            return Err(format!(
+                "application layer {layer_index} changed its root function contract"
+            ));
+        }
+        let lowered_source_argument =
+            LitexToLeanObjectIr::lower(&application.source_argument_layers[layer_index][0])?;
+        if lowered_source_argument != application.argument_layers[layer_index][0] {
+            return Err(format!(
+                "application layer {layer_index} changed its retained argument IR"
+            ));
+        }
+
+        let mut argument_requirement = None;
+        let mut domain_requirements = vec![None; function.domain_facts.len()];
+        for requirement in &layer_object.target_requirements {
+            match requirement.role {
+                WellDefinednessRequirementRole::FunctionArgumentMembership {
+                    layer_index: retained_layer_index,
+                    parameter_index: 0,
+                } if retained_layer_index == layer_index => {
+                    if argument_requirement.replace(requirement).is_some() {
+                        return Err(format!(
+                            "application layer {layer_index} retained duplicate argument-membership requirements"
+                        ));
+                    }
                 }
-            }
-            WellDefinednessRequirementRole::FunctionDomain {
-                layer_index: 0,
-                domain_index,
-            } if domain_index < domain_requirements.len() => {
-                if domain_requirements[domain_index]
-                    .replace(requirement)
-                    .is_some()
+                WellDefinednessRequirementRole::FunctionDomain {
+                    layer_index: retained_layer_index,
+                    domain_index,
+                } if retained_layer_index == layer_index
+                    && domain_index < domain_requirements.len() =>
                 {
+                    if domain_requirements[domain_index]
+                        .replace(requirement)
+                        .is_some()
+                    {
+                        return Err(format!(
+                            "application layer {layer_index} retained duplicate domain requirement {domain_index}"
+                        ));
+                    }
+                }
+                role => {
                     return Err(format!(
-                        "unary application retained duplicate domain requirement {domain_index}"
+                        "application layer {layer_index} retained an unexpected target requirement {role:?}"
                     ));
                 }
             }
-            role => {
-                return Err(format!(
-                    "unary application retained an unexpected target requirement {role:?}"
-                ));
-            }
         }
-    }
-    let argument_requirement = argument_requirement
-        .ok_or_else(|| "unary application lost its argument-membership requirement".to_string())?;
-    if domain_requirements.iter().any(Option::is_none) {
-        return Err("unary application lost a checked source-domain requirement".into());
-    }
-    let argument_fact = certificate
-        .facts
-        .iter()
-        .find(|fact| fact.well_defined_fact_id == argument_requirement.well_defined_fact_id)
-        .ok_or_else(|| "unary application argument-membership proof is missing".to_string())?;
-    let head = render_ir_symbol(application.head.as_ref(), context)?;
-    let argument = render_obj(&application.source_argument_layers[0][0], context)?;
-    let expected_argument_membership = format!(
-        "Litex.In {argument} {}",
-        render_set_ir(&binding.function.parameters[0].set, context)?
-    );
-    let retained_argument_membership = render_fact(&argument_fact.fact.proposition, context)?;
-    if retained_argument_membership != expected_argument_membership {
-        return Err(format!(
-            "unary application expected `{expected_argument_membership}`, retained `{retained_argument_membership}`"
-        ));
-    }
-    let argument_membership = render_proof(&argument_fact.fact, context)?;
-    let mut nested = context.clone();
-    nested
-        .symbol_names
-        .insert(binding.function.parameters[0].symbol_id, argument.clone());
-    let mut domain_proofs = Vec::with_capacity(domain_requirements.len());
-    for (index, (source_fact, requirement)) in binding
-        .function
-        .domain_facts
-        .iter()
-        .zip(domain_requirements.into_iter())
-        .enumerate()
-    {
-        let requirement = requirement.expect("domain requirements checked above");
-        let domain_fact = certificate
-            .facts
-            .iter()
-            .find(|fact| fact.well_defined_fact_id == requirement.well_defined_fact_id)
-            .ok_or_else(|| format!("unary application domain proof {index} is missing"))?;
-        let expected = render_fact(source_fact, &nested)?;
-        let retained = render_fact(&domain_fact.fact.proposition, context)?;
-        if expected != retained {
+        let argument_requirement = argument_requirement.ok_or_else(|| {
+            format!("application layer {layer_index} lost its argument-membership requirement")
+        })?;
+        if domain_requirements.iter().any(Option::is_none) {
             return Err(format!(
-                "unary application expected domain clause {expected}, retained {retained}"
+                "application layer {layer_index} lost a checked source-domain requirement"
             ));
         }
-        domain_proofs.push(render_proof(&domain_fact.fact, context)?);
+        let argument_fact = certificate
+            .facts
+            .iter()
+            .find(|fact| fact.well_defined_fact_id == argument_requirement.well_defined_fact_id)
+            .ok_or_else(|| {
+                format!("application layer {layer_index} argument-membership proof is missing")
+            })?;
+        let argument = render_obj(&application.source_argument_layers[layer_index][0], context)?;
+        let expected_argument_membership = format!(
+            "Litex.In {argument} {}",
+            render_set_ir(&function.parameters[0].set, context)?
+        );
+        let retained_argument_membership = render_fact(&argument_fact.fact.proposition, context)?;
+        if retained_argument_membership != expected_argument_membership {
+            return Err(format!(
+                "application layer {layer_index} expected `{expected_argument_membership}`, retained `{retained_argument_membership}`"
+            ));
+        }
+        let argument_membership = render_proof(&argument_fact.fact, context)?;
+        let mut nested = context.clone();
+        nested
+            .symbol_names
+            .insert(function.parameters[0].symbol_id, argument.clone());
+        let mut domain_proofs = Vec::with_capacity(domain_requirements.len());
+        for (domain_index, (source_fact, requirement)) in function
+            .domain_facts
+            .iter()
+            .zip(domain_requirements.into_iter())
+            .enumerate()
+        {
+            let requirement = requirement.expect("domain requirements checked above");
+            let domain_fact = certificate
+                .facts
+                .iter()
+                .find(|fact| fact.well_defined_fact_id == requirement.well_defined_fact_id)
+                .ok_or_else(|| {
+                    format!(
+                        "application layer {layer_index} domain proof {domain_index} is missing"
+                    )
+                })?;
+            let expected = render_fact(source_fact, &nested)?;
+            let retained = render_fact(&domain_fact.fact.proposition, context)?;
+            if expected != retained {
+                return Err(format!(
+                    "application layer {layer_index} expected domain clause {expected}, retained {retained}"
+                ));
+            }
+            domain_proofs.push(render_proof(&domain_fact.fact, context)?);
+        }
+
+        let apply = match (direct, domain_proofs.is_empty()) {
+            (true, true) => "Litex.fnApplyOwn",
+            (false, true) => "Litex.fnApply",
+            (true, false) => "Litex.fnApplyWhereOwn",
+            (false, false) => "Litex.fnApplyWhere",
+        };
+        let application_term = if domain_proofs.is_empty() {
+            format!("({apply} {head} {membership_proof} {argument} ({argument_membership}))")
+        } else {
+            let domain_proof = if domain_proofs.len() == 1 {
+                domain_proofs[0].clone()
+            } else {
+                format!("⟨{}⟩", domain_proofs.join(", "))
+            };
+            format!(
+                "({apply} {head} {membership_proof} {argument} ({argument_membership}) ({domain_proof}))"
+            )
+        };
+
+        if layer_index + 1 == layer_count {
+            head = application_term;
+            continue;
+        }
+        let LitexToLeanObjectIr::FunctionSet {
+            function: next_function,
+        } = function.return_set.as_ref()
+        else {
+            return Err(format!(
+                "application layer {layer_index} does not return the next function set"
+            ));
+        };
+        if layer_object.intrinsic_result_set.as_ref() != Some(function.return_set.as_ref()) {
+            return Err(format!(
+                "application layer {layer_index} lost its exact verifier-owned result set"
+            ));
+        }
+        let next_function_set = render_function_set(next_function, context)?;
+        let layer_name = format!("__fn_layer{}", layer_index + 1);
+        layer_lets.push(format!("(let {layer_name} := {application_term}; "));
+        head = layer_name;
+        membership_proof = format!("(Litex.In.own {next_function_set} {head})");
+        function = next_function.as_ref().clone();
+        direct = true;
     }
-    if domain_proofs.is_empty() {
-        let apply = if binding.direct {
-            "Litex.fnApplyOwn"
-        } else {
-            "Litex.fnApply"
-        };
-        Ok(format!(
-            "({apply} {head} {} {argument} ({argument_membership}))",
-            binding.membership_proof_name
-        ))
-    } else {
-        let apply = if binding.direct {
-            "Litex.fnApplyWhereOwn"
-        } else {
-            "Litex.fnApplyWhere"
-        };
-        let domain_proof = if domain_proofs.len() == 1 {
-            domain_proofs[0].clone()
-        } else {
-            format!("⟨{}⟩", domain_proofs.join(", "))
-        };
-        Ok(format!(
-            "({apply} {head} {} {argument} ({argument_membership}) ({domain_proof}))",
-            binding.membership_proof_name
-        ))
-    }
+    Ok(format!(
+        "{}{}{}",
+        layer_lets.concat(),
+        head,
+        ")".repeat(layer_lets.len())
+    ))
 }
 
 fn render_ir_symbol(

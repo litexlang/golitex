@@ -33,8 +33,10 @@ The implemented scope is deliberately small:
   closed edges plus reflexivity, symmetry, and transitivity;
 - `Litex.Set` packages the exact carrier of a Litex set;
 - `Litex.In` defines heterogeneous membership through `Same`;
-- `Litex.Fn s S` is the first unary proof-carrying function carrier;
-- `Litex.fnSet s S` packages that carrier as a Litex set;
+- `Litex.Fn s S` is one unary proof-carrying function layer whose domain and
+  codomain may inhabit different Lean universes;
+- `Litex.fnSet s S` packages that carrier as an exact Litex set, including
+  function-valued codomains used by multi-layer application;
 - `Litex.fnApply f hf x hx` consumes both function and argument membership;
 - `Litex.fnApplyOwn f hf x hx` is the exact-carrier path used by compiler-
   constructed named functions while retaining both checked memberships;
@@ -151,8 +153,8 @@ function membership, argument membership, and ordered domain-clause WD proofs
 selected by the verifier. Their results are native `ℝ` carrier values, while
 the checked reduction back to the source `ℂ` expression uses the closed
 `Same.realAddComplex` / `Same.realDivComplex` congruence routes. Standalone
-anonymous compound functions, multiple arguments, additional application
-layers, and operators outside `+`, `-`, `*`, and `/` remain fail-closed.
+anonymous compound functions, multiple arguments in one source layer, and
+operators outside `+`, `-`, `*`, and `/` remain fail-closed.
 
 The second statement tranche is recorded by examples 8–11. Source `thm`,
 `claim`, and `example` blocks compile to ordinary Lean proof scopes. `by cases`
@@ -251,6 +253,17 @@ materializes each verifier-inferred nonzero FactId as a local proved `have`.
 No `RealCoherence` premise or new `Same` edge is introduced. Standalone closed
 reflection such as `1 $in Z*` remains fail-closed because closed `!=` replay is
 still outside the reviewed comparison emitter.
+
+Example 23 adds exact multi-layer unary application. Source `g(a)(b)` remains
+two application layers in IR and generated Lean. The first layer consumes the
+stored membership of `g` plus `a $in S`, then binds its exact result once as
+`__fn_layer1`. The verifier-owned prefix node certifies that this result has
+carrier `Litex.Fn T U`; the second layer calls `fnApplyOwn` with
+`In.own (fnSet T U) __fn_layer1` and the separate proof of `b $in T`. The
+emitter follows the same prefix DAG recursively, so a three-layer Rust
+regression is accepted without a two-layer special case. A single source
+layer with multiple parameters, such as `f(a, b)`, remains fail-closed and is
+never translated as Lean currying.
 
 Sketch is a real source scope, not an example-file wrapper. Each top-level
 sketch is emitted as `__Sketch01`, `__Sketch02`, and so on. Its emitter context
