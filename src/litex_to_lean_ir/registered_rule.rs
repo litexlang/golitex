@@ -16,6 +16,21 @@ pub(crate) const ADD_POSITIVE_OF_NONNEGATIVE_POSITIVE_FINGERPRINT: &str =
 pub(crate) const ADD_NONNEGATIVE_RULE_ID: &str = "order.add_nonnegative";
 pub(crate) const ADD_NONNEGATIVE_FINGERPRINT: &str =
     "25002877aac825f5b15aef687f3169ebcda7e22fd6f9aeced46397e2a5ae148c";
+pub(crate) const ADD_POSITIVE_RULE_ID: &str = "order.add_positive";
+pub(crate) const ADD_POSITIVE_FINGERPRINT: &str =
+    "8605e77fc5c5db9072ad675845c010301753bc1452dfe48cb694b6e0e17c8682";
+pub(crate) const MUL_NONNEGATIVE_RULE_ID: &str = "order.mul_nonnegative";
+pub(crate) const MUL_NONNEGATIVE_FINGERPRINT: &str =
+    "029e0c1dfafd0fc02ea4af8de3e41657a71c6bf13668194271474d7be558ed9a";
+pub(crate) const MUL_POSITIVE_RULE_ID: &str = "order.mul_positive";
+pub(crate) const MUL_POSITIVE_FINGERPRINT: &str =
+    "da784594463db9c15a13fa70bc09e25c6e3e0f9fce3afffff28e26d87cc5850b";
+pub(crate) const DIV_NONNEGATIVE_RULE_ID: &str = "order.div_nonnegative";
+pub(crate) const DIV_NONNEGATIVE_FINGERPRINT: &str =
+    "fd665b573e86552a619b77979593d7a4b55b0963071fd56268f4a2624d3e809b";
+pub(crate) const DIV_POSITIVE_RULE_ID: &str = "order.div_positive";
+pub(crate) const DIV_POSITIVE_FINGERPRINT: &str =
+    "d2753d88095aa947c6697b718a807a70c055e4c1f806610cfb1b2003fcad17c4";
 
 #[derive(Clone, Debug)]
 pub struct LitexToLeanTypedBoundObjectIr {

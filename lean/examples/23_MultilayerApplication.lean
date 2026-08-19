@@ -17,4 +17,31 @@ theorem __fact1 :
   intro S T U V __carrier1_5 a __h1_5 __carrier1_6 b __h1_6 __carrier1_7 c __h1_7 __carrier1_8 g __h1_8
   exact Litex.Same.refl (let __fn_layer1 := (Litex.fnApply g __h1_8 a (__h1_5)); (let __fn_layer2 := (Litex.fnApplyOwn __fn_layer1 (Litex.In.own (Litex.fnSet (T : Litex.Set.{0}) (Litex.fnSet (U : Litex.Set.{0}) (V : Litex.Set.{0}))) __fn_layer1) b (__h1_6)); (Litex.fnApplyOwn __fn_layer2 (Litex.In.own (Litex.fnSet (U : Litex.Set.{0}) (V : Litex.Set.{0})) __fn_layer2) c (__h1_7))))
 
+theorem __fact2 :
+    ∀ (S : Litex.Set) (T : Litex.Set) (U : Litex.Set) {__carrier2_4 : Type} (a : __carrier2_4) (__h2_4 : Litex.In a S) {__carrier2_5 : Type} (b : __carrier2_5) (__h2_5 : Litex.In b T) {__carrier2_6 : Type 1} (f : __carrier2_6) (__h2_6 : Litex.In f (Litex.fnTelescopeSet ((Litex.FnTelescope.parameter S (fun {__alpha1 : Type} (__arg1 : __alpha1) (__arg1_in : Litex.In __arg1 S) => (Litex.FnTelescope.parameter T (fun {__alpha2 : Type} (__arg2 : __alpha2) (__arg2_in : Litex.In __arg2 T) => (Litex.FnTelescope.done U))))) : Litex.FnTelescope.{0}))),
+      Litex.Same ((((Litex.fnTelescopeApply f __h2_6) a (__h2_4)) b (__h2_5))).down ((((Litex.fnTelescopeApply f __h2_6) a (__h2_4)) b (__h2_5))).down := by
+  intro S T U __carrier2_4 a __h2_4 __carrier2_5 b __h2_5 __carrier2_6 f __h2_6
+  exact Litex.Same.refl ((((Litex.fnTelescopeApply f __h2_6) a (__h2_4)) b (__h2_5))).down
+
+theorem __fact3 :
+    ∀ {__carrier3_1 : Type 1} (f : __carrier3_1) (__h3_1 : Litex.In f (Litex.fnTelescopeSet ((Litex.FnTelescope.parameter Litex.R (fun {__alpha1 : Type} (__arg1 : __alpha1) (__arg1_in : Litex.In __arg1 Litex.R) => (Litex.FnTelescope.parameter Litex.R (fun {__alpha2 : Type} (__arg2 : __alpha2) (__arg2_in : Litex.In __arg2 Litex.R) => (Litex.FnTelescope.requirement (Litex.Positive __arg1 ∧ Litex.Positive __arg2) (fun __domain => (Litex.FnTelescope.done Litex.R))))))) : Litex.FnTelescope.{0}))) (a : ℂ) (__h3_2 : Litex.In a Litex.R) (b : ℂ) (__h3_3 : Litex.In b Litex.R) (__h3_4 : Litex.Positive a) (__h3_5 : Litex.Positive b),
+      Litex.Same (((((Litex.fnTelescopeApply f __h3_1) a (__h3_2)) b (__h3_3)) (⟨__h3_4, __h3_5⟩))).down (((((Litex.fnTelescopeApply f __h3_1) a (__h3_2)) b (__h3_3)) (⟨__h3_4, __h3_5⟩))).down := by
+  intro __carrier3_1 f __h3_1 a __h3_2 b __h3_3 __h3_4 __h3_5
+  exact Litex.Same.refl (((((Litex.fnTelescopeApply f __h3_1) a (__h3_2)) b (__h3_3)) (⟨__h3_4, __h3_5⟩))).down
+
+noncomputable def first : Litex.FnTelescope.Carrier ((Litex.FnTelescope.parameter Litex.R (fun {__alpha1 : Type} (__arg1 : __alpha1) (__arg1_in : Litex.In __arg1 Litex.R) => (Litex.FnTelescope.parameter Litex.R (fun {__alpha2 : Type} (__arg2 : __alpha2) (__arg2_in : Litex.In __arg2 Litex.R) => (Litex.FnTelescope.done Litex.R))))) : Litex.FnTelescope.{0}) :=
+  fun {__alpha1 : Type} (__arg1 : __alpha1) (__arg1_in : Litex.In __arg1 Litex.R) => fun {__alpha2 : Type} (__arg2 : __alpha2) (__arg2_in : Litex.In __arg2 Litex.R) => ULift.up (Litex.In.rep __arg1 __arg1_in)
+
+theorem __fact4 : Litex.In (@first) (Litex.fnTelescopeSet ((Litex.FnTelescope.parameter Litex.R (fun {__alpha1 : Type} (__arg1 : __alpha1) (__arg1_in : Litex.In __arg1 Litex.R) => (Litex.FnTelescope.parameter Litex.R (fun {__alpha2 : Type} (__arg2 : __alpha2) (__arg2_in : Litex.In __arg2 Litex.R) => (Litex.FnTelescope.done Litex.R))))) : Litex.FnTelescope.{0})) := by
+  exact Litex.In.own (Litex.fnTelescopeSet ((Litex.FnTelescope.parameter Litex.R (fun {__alpha1 : Type} (__arg1 : __alpha1) (__arg1_in : Litex.In __arg1 Litex.R) => (Litex.FnTelescope.parameter Litex.R (fun {__alpha2 : Type} (__arg2 : __alpha2) (__arg2_in : Litex.In __arg2 Litex.R) => (Litex.FnTelescope.done Litex.R))))) : Litex.FnTelescope.{0})) (@first)
+
+theorem __fact5 : Litex.Same (@first) (fun {__alpha1 : Type} (__arg1 : __alpha1) (__arg1_in : Litex.In __arg1 Litex.R) => fun {__alpha2 : Type} (__arg2 : __alpha2) (__arg2_in : Litex.In __arg2 Litex.R) => ULift.up (Litex.In.rep __arg1 __arg1_in) : Litex.FnTelescope.Carrier ((Litex.FnTelescope.parameter Litex.R (fun {__alpha1 : Type} (__arg1 : __alpha1) (__arg1_in : Litex.In __arg1 Litex.R) => (Litex.FnTelescope.parameter Litex.R (fun {__alpha2 : Type} (__arg2 : __alpha2) (__arg2_in : Litex.In __arg2 Litex.R) => (Litex.FnTelescope.done Litex.R))))) : Litex.FnTelescope.{0})) := by
+  unfold first
+  exact Litex.Same.refl (fun {__alpha1 : Type} (__arg1 : __alpha1) (__arg1_in : Litex.In __arg1 Litex.R) => fun {__alpha2 : Type} (__arg2 : __alpha2) (__arg2_in : Litex.In __arg2 Litex.R) => ULift.up (Litex.In.rep __arg1 __arg1_in) : Litex.FnTelescope.Carrier ((Litex.FnTelescope.parameter Litex.R (fun {__alpha1 : Type} (__arg1 : __alpha1) (__arg1_in : Litex.In __arg1 Litex.R) => (Litex.FnTelescope.parameter Litex.R (fun {__alpha2 : Type} (__arg2 : __alpha2) (__arg2_in : Litex.In __arg2 Litex.R) => (Litex.FnTelescope.done Litex.R))))) : Litex.FnTelescope.{0}))
+
+theorem __fact6 : Litex.Same ((((Litex.fnTelescopeApplyOwn (@first) __fact4) (1 : ℂ) (Litex.Rules.complexRealInR 1)) (1 : ℂ) (Litex.Rules.complexRealInR 1))).down (1 : ℂ) := by
+  exact (by
+  unfold Litex.fnTelescopeApplyOwn first
+  exact Litex.Same.symm (Litex.In.same_rep (1 : ℂ) (Litex.Rules.complexRealInR 1)))
+
 end __Compiler_23_MultilayerApplication

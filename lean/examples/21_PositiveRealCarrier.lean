@@ -8,26 +8,26 @@ namespace __Compiler_21_PositiveRealCarrier
 theorem __fact0 : Litex.In (1 : ℂ) Litex.RPos := by
   exact Litex.Rules.complexEqRealInRPos (1 : ℂ) (1 : ℝ) (by norm_num) (by norm_num)
 
-theorem __fact1 : Litex.Lt (0 : ℂ) (1 : ℂ) := by
+theorem __fact1 : Litex.Positive (1 : ℂ) := by
   exact Litex.Rules.positiveOfInRPos (__fact0)
 
 theorem __fact2 : Litex.In ((Real.exp 1 : ℝ) : ℂ) Litex.RPos := by
   exact Litex.Rules.eInRPos
 
-theorem __fact3 : Litex.Lt (0 : ℂ) ((Real.exp 1 : ℝ) : ℂ) := by
+theorem __fact3 : Litex.Positive ((Real.exp 1 : ℝ) : ℂ) := by
   exact Litex.Rules.positiveOfInRPos (__fact2)
 
 theorem __fact4 : Litex.In ((Real.pi : ℝ) : ℂ) Litex.RPos := by
   exact Litex.Rules.piInRPos
 
-theorem __fact5 : Litex.Lt (0 : ℂ) ((Real.pi : ℝ) : ℂ) := by
+theorem __fact5 : Litex.Positive ((Real.pi : ℝ) : ℂ) := by
   exact Litex.Rules.positiveOfInRPos (__fact4)
 
 theorem __fact6 :
     ∀ (r : ℂ) (__h6_1 : Litex.In r Litex.RPos),
-      Litex.In r Litex.R ∧ Litex.In r Litex.C ∧ Litex.Lt (0 : ℂ) r := by
+      Litex.In r Litex.R ∧ Litex.In r Litex.C ∧ Litex.Positive r := by
   intro r __h6_1
-  have __i6_0 : Litex.Lt (0 : ℂ) r := Litex.Rules.positiveOfInRPos (__h6_1)
+  have __i6_0 : Litex.Positive r := Litex.Rules.positiveOfInRPos (__h6_1)
   exact ⟨Litex.Rules.inROfInRPos (__h6_1), Litex.Rules.inCOfInR (Litex.Rules.inROfInRPos (__h6_1)), __i6_0⟩
 
 end __Compiler_21_PositiveRealCarrier

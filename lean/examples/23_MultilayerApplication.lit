@@ -19,7 +19,32 @@ forall S, T, U set, a S, b T, g fn(x S) fn(y T) U:
 forall S, T, U, V set, a S, b T, c U, g fn(x S) fn(y T) fn(z U) V:
     g(a)(b)(c) = g(a)(b)(c)
 #
-# Boundary: multiple parameters in one source layer, such as f(a, b), remain
-# fail-closed; layers are never flattened into target-language currying.
+# Before (Litex verified, compiler emission stopped): one source layer with
+# multiple parameters was rejected by the unary target carrier.
+#
+# Now one dependent telescope represents the entire retained layer. Each
+# parameter keeps its own set and exact membership FactId; the application is
+# unwrapped only after all arguments in that layer are supplied.
+forall S, T, U set, a S, b T, f fn(x S, y T) U:
+    f(a, b) = f(a, b)
+
+# Ordered domain clauses are stored after both parameter nodes and consume the
+# exact premise proofs selected by the verifier.
+forall f fn(x, y R: x > 0, y > 0) R:
+    forall a, b R:
+        a > 0
+        b > 0
+        =>:
+            f(a, b) = f(a, b)
+
+# Named functions use the same one-layer telescope; Lean does not silently
+# reinterpret first(x, y) as a curried first(x)(y).
+have fn first(x, y R) R = x
+
+first(1, 1) = 1
+#
+# Boundary: a two-parameter source layer may not be split into f(a)(b).
+# Litex rejects that application before the compiler and Lean currying never
+# repairs it.
 # Evidence: target/release/litex -compact -strict -runner -f lean/examples/23_MultilayerApplication.lit
 # and cargo test --release --test litex_to_lean_compiler_tracers

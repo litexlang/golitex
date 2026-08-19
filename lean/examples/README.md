@@ -161,13 +161,17 @@ elimination without a coherence premise. Verified closed reflection
 `1 $in Z*` is the paired negative boundary because its closed non-equality
 child has no reviewed standalone emitter.
 
-`23_MultilayerApplication.lit` traces exact unary source-layer chains.
+`23_MultilayerApplication.lit` traces exact unary source-layer chains and one
+same-layer dependent telescope.
 `g(a)(b)` follows the verifier's `FunctionPrefix` WD node: the first call
 binds one exact returned function carrier, and the second call separately
 consumes `b $in T` plus `In.own` for that carrier. A focused three-layer Rust
-regression prevents a two-layer special case. Same-layer multi-parameter
-application `f(a, b)` remains the paired fail-closed boundary and is never
-reinterpreted as target-language currying.
+regression prevents a two-layer special case. Quantified and named `f(a, b)`
+use `FnTelescope.parameter`; ordered domain clauses use a `requirement` node,
+and the result has the exact `done` carrier. Generated named values retain
+`@f` as a whole telescope value so Lean cannot insert an implicit carrier and
+partially apply it. The paired boundary is `f(a)(b)`, which remains a different
+and invalid source application shape.
 
 Generated `.lean` files are review artifacts, not editing surfaces. A new
 compiler feature must add the next numbered same-name pair. Unsupported

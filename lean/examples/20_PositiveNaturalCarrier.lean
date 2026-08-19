@@ -8,8 +8,8 @@ namespace __Compiler_20_PositiveNaturalCarrier
 theorem __fact0 : Litex.In (1 : ℂ) Litex.NPos := by
   exact Litex.Rules.complexEqNatInNPos (1 : ℂ) 1 (by norm_num) (by norm_num)
 
-theorem __fact1 : Litex.Lt (0 : ℂ) (1 : ℂ) := by
-  exact Litex.OrderBridge.ltOfComplexReals (by norm_num)
+theorem __fact1 : Litex.Positive (1 : ℂ) := by
+  exact Litex.OrderBridge.positiveOfComplexReal (by norm_num)
 
 theorem __fact2 :
     ∀ (n : ℂ) (__h2_1 : Litex.In n Litex.NPos),

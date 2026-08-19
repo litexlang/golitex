@@ -40,15 +40,50 @@ forall a, b, c, d R:
     =>:
         (a + b) + (c + d) > 0
 
-# Boundary (Litex verifies; compiler remains fail-closed):
+# Before (Litex verified, but compiler emission stopped):
 # forall a, b R:
 #     a >= 0
 #     b >= 0
 #     =>:
 #         a * b >= 0
-# `MulNonnegative` must compare independently selected real representatives
-# of source zero. The ABI declares `RealCoherence` but intentionally has no
-# instance, so multiplication/division sign adapters need an explicit design
-# decision rather than an axiom or hidden assumption.
+# Former compiler behavior: fail closed at `MulNonnegative` because `0 <= x`
+# selected an unrelated real representative for source zero.
+#
+# Now zero-ended comparisons lower to `Litex.Positive` / `Litex.Nonnegative`.
+# Their zero is Mathlib's canonical real zero, while the source value retains
+# one explicit `AsReal` witness. Direct and registered multiplication/division
+# certificates therefore replay through proved Mathlib sign theorems without
+# `RealCoherence` or a project axiom.
+forall a, b R:
+    a >= 0
+    b >= 0
+    =>:
+        a * b >= 0
+
+forall a, b R:
+    a > 0
+    b > 0
+    =>:
+        a * b > 0
+
+forall a, b R:
+    a >= 0
+    b > 0
+    =>:
+        a / b >= 0
+
+forall a, b R:
+    a > 0
+    b > 0
+    =>:
+        a / b > 0
+
+# Boundary (Litex verifies; compiler remains fail-closed):
+# forall a, b R:
+#     a <= b
+#     =>:
+#         b - a >= 0
+# `SubNonnegativeFromLessEqual` is a separate certificate family and remains
+# executable as the nearest negative Rust regression until its adapter lands.
 # Evidence: target/release/litex -compact -strict -runner -f lean/examples/15_BuiltinStrategy.lit
-# and cargo test --release --test litex_to_lean_compiler_tracers builtin_strategy
+# and cargo test --release --test litex_to_lean_compiler_tracers

@@ -3,7 +3,7 @@ use std::fmt;
 use std::rc::Rc;
 
 #[derive(Clone, Debug)]
-pub struct ≠≠FunctionDefinitionVerificationResult {
+pub struct FunctionDefinitionVerificationResult {
     pub return_check_index: usize,
     /// Membership/domain facts installed while checking the return value,
     /// with their temporary FactIds frozen before that local scope closes.

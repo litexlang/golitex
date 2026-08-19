@@ -20,6 +20,24 @@
       "source": "forall S, T, U, V set, a S, b T, c U, g fn(x S) fn(y T) fn(z U) V:\n    g(a)(b)(c) = g(a)(b)(c)",
       "evidence": "persistent -session -before block event ok=true",
       "lesson": "The same verifier prefix recipe extends structurally beyond two layers."
+    },
+    {
+      "id": "same_layer",
+      "source": "forall S, T, U set, a S, b T, f fn(x S, y T) U:\n    f(a, b) = f(a, b)",
+      "evidence": "persistent -session -before block event ok=true",
+      "lesson": "A same-layer application retains parameter_index 0 and 1 under one source layer."
+    },
+    {
+      "id": "same_layer_domain",
+      "source": "forall f fn(x, y R: x > 0, y > 0) R:\n    forall a, b R:\n        a > 0\n        b > 0\n        =>:\n            f(a, b) = f(a, b)",
+      "evidence": "persistent -session -before block event ok=true",
+      "lesson": "Domain requirements follow the complete parameter telescope and preserve their checked order."
+    },
+    {
+      "id": "named_multi",
+      "source": "have fn first(x, y R) R = x\nfirst(1, 1) = 1",
+      "evidence": "persistent -session -before block event ok=true",
+      "lesson": "A named function with two parameters uses the same single source-layer telescope and reduces at its checked application."
     }
   ]
 }

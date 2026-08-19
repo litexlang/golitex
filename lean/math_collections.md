@@ -63,6 +63,12 @@ second casting subsystem.
 and apply Mathlib's native `<` and `≤`. Both predicates transport across
 `Same`. The rule `Lt x y → Le x y` needs no uniqueness assumption.
 
+Zero-ended source comparisons take a canonical route. The compiler lowers
+`0 < x` to `Litex.Positive x` and `0 ≤ x` to `Litex.Nonnegative x`. Each
+proposition stores one `AsReal` witness for `x`; its zero endpoint is
+Mathlib's native real zero rather than another independently selected Litex
+representative. Sign rules use this contract.
+
 The core distinguishes choosing one representative from comparing two
 independently selected representatives. `Litex.RealCoherence` remains the
 explicit certificate shape consumed by the latter order theorems, and the
@@ -262,16 +268,29 @@ exact `Fn T U` carrier, the second call uses `fnApplyOwn __fn_layer1` together
 with the explicit `In.own (fnSet T U) __fn_layer1` certificate. Longer unary
 chains repeat this prefix recipe rather than flattening layers.
 
-The current named-function construction boundary is one real-valued unary
-layer.
-Identity and expression trees built from the parameter, natural literals, and
-`+`, `-`, `*`, `/` are compiled to the exact `ℝ` codomain carrier.
-Checked reduction uses the closed native-operation `Same` congruence
-theorems. Application of an already quantified function may cross arbitrarily
-many independent unary source layers. Standalone anonymous compound functions,
-multiple parameters in one layer, dependent returned signatures, construction
-of curried named functions, other construction domains/codomains, and other
-operations remain rejected.
+One source layer with several parameters uses `Litex.FnTelescope`. A
+`parameter` node retains each exact set and supplies the argument plus its
+`In` proof to the rest of the signature. A `requirement` node retains the
+ordered conjunction of source domain clauses after the arguments they may
+mention. The `done` node stores the exact codomain. Its carrier is a dependent
+function ending in `ULift codomain.Carrier`, so the recursive signature stays
+universe-correct without erasing the result carrier.
+
+`fnTelescopeSet`, `fnTelescopeApply`, and `fnTelescopeApplyOwn` are the
+same-layer counterparts of the unary ABI. Example 23 checks both quantified
+and named `f(a,b)`. A named telescope function is referenced as the whole
+value `@f`; otherwise Lean would eagerly synthesize its first implicit
+heterogeneous carrier and partially apply it. The negative boundary remains
+`f(a)(b)`: neither the compiler nor Lean currying may repair that different
+source syntax.
+
+Named real functions support identity and expression trees built from their
+parameters, natural literals, and `+`, `-`, `*`, `/`. Checked reduction uses
+the closed native-operation `Same` congruence theorems. Application of an
+already quantified function may also cross arbitrarily many independent unary
+source layers. Standalone anonymous compound functions, generated probes for
+dependent parameter/returned sets, other construction domains/codomains, and
+other operations remain rejected.
 
 ## Concrete predicates
 
@@ -348,14 +367,16 @@ summands being strictly positive. Both a direct arithmetic certificate and a
 registered local-rule certificate validate their ordered operands before
 calling the corresponding theorem.
 
-Nearest rejected form: nonnegative multiplication. Verifier IR now retains
-`MulNonnegative`, including recursive strategy and registered-rule children,
-but `Litex.Le (0 : ℂ) a` and `Litex.Le (0 : ℂ) b` may select different native
-real representatives for source zero. Multiplication needs those witnesses to
-be identified before Mathlib's `mul_nonneg` applies. `Core.lean` exposes the
-required `RealCoherence` certificate shape without installing an instance, so
-compiler continues to fail closed rather than add an axiom or silently make
-all generated theorems conditional on coherence.
+Example 15 also covers `AddPositive`, `MulNonnegative`, `MulPositive`,
+`DivNonnegative`, and `DivPositive`, including recursive strategy children
+whose registered rule IDs and semantic fingerprints are validated exactly.
+The adapters open one representative per operand and call Mathlib's native
+sign theorems. No generated theorem receives a `RealCoherence` parameter and
+no project axiom is added.
+
+Nearest rejected form: `a ≤ b → 0 ≤ b - a`. The verifier retains
+`SubNonnegativeFromLessEqual`, but that separate adapter family remains
+fail-closed and has an executable negative compiler regression.
 
 ## Base numeric arithmetic closure
 
@@ -425,8 +446,10 @@ Mathlib native carriers
   -> In                         [definition: Same + Set.Carrier]
   -> Fn / fnSet                 [total unary proof-carrying carrier]
   -> FnWhere / fnSetWhere       [source-domain proposition retained]
+  -> FnTelescope / fnTelescopeSet [one exact dependent source layer]
   -> fnApply / fnApplyOwn       [total checked application]
   -> fnApplyWhere variants      [membership + domain proof application]
+  -> fnTelescopeApply variants  [all same-layer arguments + requirements]
   -> numeric sets N/Z/Q/R/C     [exact native-carrier definitions]
   -> adjacent numeric membership bridges [proved hierarchy projection]
   -> setBuilder                 [definition: subtype carrier]
@@ -436,6 +459,7 @@ Mathlib native carriers
   -> nonzero constructor/projection/widening/elimination rules [retained certificate]
   -> membership transport       [proof]
   -> AsReal                     [definition: Same + native real]
+  -> Positive / Nonnegative    [canonical Mathlib-zero order]
   -> RealCoherence              [certificate interface, no inhabitant assumed]
   -> Lt / Le                    [definition: native real order]
   -> order transport/bridges    [proof, still owned by Core.lean]
