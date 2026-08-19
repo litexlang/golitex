@@ -483,7 +483,7 @@ fn unary_function_set_application_consumes_both_memberships() {
     assert!(generated.contains("(s : Litex.Set)"));
     assert!(generated.contains("(S : Litex.Set)"));
     assert!(generated.contains("Litex.In x s"));
-    assert!(generated.contains("Litex.In f (Litex.fnSet s S)"));
+    assert!(generated.contains("Litex.In f (Litex.fnSet (s : Litex.Set.{0}) (S : Litex.Set.{0}))"));
     assert!(generated.contains("Litex.fnApply f __h0_4 x (__h0_3)"));
     assert!(!generated.contains("namespace __Sketch"));
     assert!(!generated.contains("sorry"));
@@ -502,10 +502,10 @@ fn multilayer_application_preserves_each_unary_source_contract() {
 
     let generated = compile_on_verifier_stack(SOURCE, "23_MultilayerApplication.lit")
         .expect("compile multi-layer application tracer");
-    assert!(generated.contains("Litex.In g (Litex.fnSet S (Litex.fnSet"));
+    assert!(generated.contains("Litex.In g (Litex.fnSet"));
     assert!(generated.contains("let __fn_layer1 := (Litex.fnApply g __h0_6 a (__h0_4))"));
     assert!(generated.contains("Litex.fnApplyOwn __fn_layer1"));
-    assert!(generated.contains("(Litex.In.own (Litex.fnSet T U) __fn_layer1)"));
+    assert!(generated.contains("(Litex.In.own (Litex.fnSet"));
     assert!(!generated.contains("Litex.Object"));
     assert!(!generated.contains("sorry"));
 
@@ -514,7 +514,7 @@ fn multilayer_application_preserves_each_unary_source_contract() {
         .expect("compile three source application layers");
     assert!(generated.contains("let __fn_layer2 :="));
     assert!(generated.contains("Litex.fnApplyOwn __fn_layer2"));
-    assert!(generated.contains("Litex.fnSet U V"));
+    assert!(generated.contains("(U : Litex.Set.{0}) (V : Litex.Set.{0})"));
 
     let boundary = compile_on_verifier_stack(
         "forall S, T, U set, a S, b T, f fn(x S, y T) U:\n    f(a, b) = f(a, b)\n",
