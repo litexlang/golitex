@@ -1,56 +1,115 @@
-# Sets, functions, and relations in Litex.
+# A small set-theoretic chapter in Litex, setting-first.
 #
 # Included:
-# - union, intersection, and relative difference of two finite sets;
-# - a callable successor function and its builtin range;
-# - a binary relation represented directly as a set of ordered pairs; and
-# - a short proof that successor is injective, using builtin `$injective`.
+# - finite sets, membership, union, and equality by extensionality;
+# - an exhaustive finite-set proof using `by enumerate finite_set`;
+# - the same function as a formula, an anonymous function value, and a
+#   uniquely selected output; and
+# - a binary relation represented as a set of ordered pairs, connected back
+#   to the selected function by a graph-membership theorem.
 
-# Two overlapping finite sets make the three basic set operations concrete.
+# Two overlapping finite sets will serve as domain and codomain throughout.
 have first_set finite_set = {1, 2, 3}
 have second_set finite_set = {2, 3, 4}
 
-# Union membership needs membership in either input set.
-4 $in {2, 3, 4}
-4 $in second_set
-4 $in union(first_set, second_set)
-
-# Intersection membership needs membership in both input sets.
-2 $in {1, 2, 3}
-2 $in {2, 3, 4}
-2 $in first_set
-2 $in second_set
-2 $in intersect(first_set, second_set)
-
-# Relative difference keeps elements of the first set that are not in the second.
-1 $in {1, 2, 3}
-1 $in first_set
-not 1 $in {2, 3, 4}
-not 1 $in second_set
-1 $in set_minus(first_set, second_set)
-
-# A Litex function is callable, and `fn_range` is its actual image.
-have fn successor(n N) N = n + 1
-
-successor(4) = 5
-successor(4) $in fn_range(successor)
-
-# A binary relation is simply a subset of a Cartesian product.
-have next_relation power_set(cart(N, N)) = {(1, 2)}
-
-(1, 2) $in {(1, 2)}
-(1, 2) $in next_relation
-
-# Equal successor values give equal inputs: rewrite, cancel one, then fold the
-# builtin injectivity predicate.
-thm successor_is_injective:
+# Set equality means having the same elements. The forward direction opens
+# union membership and splits cases; the reverse direction exhausts the four
+# displayed elements.
+thm first_union_second:
     ? forall:
-        $injective(N, N, successor)
+        union(first_set, second_set) = {1, 2, 3, 4}
+    by extension:
+        ? union({1, 2, 3}, {2, 3, 4}) = {1, 2, 3, 4}
+        claim:
+            ? forall element union({1, 2, 3}, {2, 3, 4}):
+                element $in {1, 2, 3, 4}
+            element $in {1, 2, 3} or element $in {2, 3, 4}
+            by cases:
+                ? element $in {1, 2, 3, 4}
+                case element $in {1, 2, 3}:
+                    element = 1 or element = 2 or element = 3
+                    by cases:
+                        ? element $in {1, 2, 3, 4}
+                        case element = 1:
+                            element $in {1, 2, 3, 4}
+                        case element = 2:
+                            element $in {1, 2, 3, 4}
+                        case element = 3:
+                            element $in {1, 2, 3, 4}
+                case element $in {2, 3, 4}:
+                    element = 2 or element = 3 or element = 4
+                    by cases:
+                        ? element $in {1, 2, 3, 4}
+                        case element = 2:
+                            element $in {1, 2, 3, 4}
+                        case element = 3:
+                            element $in {1, 2, 3, 4}
+                        case element = 4:
+                            element $in {1, 2, 3, 4}
+        by enumerate finite_set:
+            ? forall target_element {1, 2, 3, 4}:
+                target_element $in union({1, 2, 3}, {2, 3, 4})
+    union(first_set, second_set) = union({1, 2, 3}, {2, 3, 4}) = {1, 2, 3, 4}
+
+# This is the finite-enumeration example: Litex checks x = 1, 2, and 3, then
+# one bridge transports the displayed codomain back to its name.
+thm successor_moves_first_set_to_second_set:
+    ? forall x first_set:
+        x + 1 $in second_set
+    by enumerate finite_set:
+        ? forall element first_set:
+            element + 1 $in {2, 3, 4}
     claim:
-        ? forall x, y N:
-            successor(x) = successor(y)
-            =>:
-                x = y
-        x + 1 = successor(x) = successor(y) = y + 1
-        x = x + 1 - 1 = y + 1 - 1 = y
-    by def $injective(N, N, successor)
+        ? forall input first_set:
+            input + 1 $in second_set
+        input + 1 $in {2, 3, 4}
+        input + 1 $in second_set
+
+# First presentation: define a named function directly by a formula. The
+# preceding theorem supplies the required codomain fact.
+have fn successor_on_first(x first_set) second_set = x + 1
+
+# Second presentation: construct the same map as an anonymous first-class
+# function value, which can be stored or passed as an ordinary object.
+have successor_as_value fn(x first_set) second_set = fn(input first_set) second_set {input + 1}
+
+# Set-theoretically, a binary relation from N to N is a subset of N x N. This
+# relation is the graph of the successor rule.
+have successor_graph power_set(cart(N, N)) = {pair cart(N, N): pair[2] = pair[1] + 1}
+
+# Third presentation: prove that the relation y = x + 1 has exactly one output
+# for each input, then let `have fn by exist!` select the callable function.
+have fn successor_from_unique_output by exist!:
+    ? forall x N:
+        exist! y N st {y = x + 1}
+    witness exist! y N st {y = x + 1} from x + 1:
+        claim:
+            ? forall y1, y2 N:
+                y1 = x + 1
+                y2 = x + 1
+                =>:
+                    y1 = y2
+            y1 = x + 1 = y2
+
+# The selected output satisfies the original set-theoretic graph relation.
+thm selected_successor_lies_on_graph:
+    ? forall x N:
+        (x, successor_from_unique_output(x)) $in successor_graph
+    successor_from_unique_output(x) = x + 1
+    (x, successor_from_unique_output(x))[2] = successor_from_unique_output(x) = x + 1 = (x, successor_from_unique_output(x))[1] + 1
+    by thm set_builder_member((x, successor_from_unique_output(x)), {pair cart(N, N): pair[2] = pair[1] + 1}) => (x, successor_from_unique_output(x)) $in {pair cart(N, N): pair[2] = pair[1] + 1}
+    (x, successor_from_unique_output(x)) $in successor_graph
+
+# Before comparing a function on first_set with one on all naturals, expose
+# the finite domain's ambient carrier once.
+by enumerate finite_set:
+    ? forall element first_set:
+        element $in N
+by def first_set $subset N
+
+# All three definitions now agree on the common finite domain.
+thm three_successor_presentations_agree:
+    ? forall x first_set:
+        successor_on_first(x) = successor_as_value(x) = successor_from_unique_output(x)
+    successor_on_first(x) = x + 1 = successor_as_value(x)
+    successor_as_value(x) = x + 1 = successor_from_unique_output(x)

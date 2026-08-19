@@ -4900,6 +4900,41 @@ fn build_litex_to_lean_ir_inferred_fact_proof(
     if let (Fact::AtomicFact(AtomicFact::InFact(source)), Some(source_fact_id)) =
         (source_fact, source_fact_id)
     {
+        if let Obj::ListSet(list_set) = &source.set {
+            if list_set_membership_inference_matches(source, list_set, inferred_fact) {
+                return supported_inferred_proof(LitexToLeanFactProofIr::RuleApplication {
+                    rule: LitexToLeanProofRuleIr::Builtin(
+                        LitexToLeanBuiltinRuleIr::ListSetMembershipElimination,
+                    ),
+                    parameter_requirements: Vec::new(),
+                    premises: vec![LitexToLeanFactIr {
+                        storage: LitexToLeanFactStorageIr::Stored(source_fact_id),
+                        proposition: source_fact.clone(),
+                        proof: LitexToLeanFactProofIr::KnownFactCitation { source_fact_id },
+                    }],
+                });
+            }
+        }
+    }
+    build_non_list_set_inferred_fact_proof(
+        compiler,
+        source_fact,
+        source_fact_id,
+        inferred_fact,
+        _reason,
+    )
+}
+
+fn build_non_list_set_inferred_fact_proof(
+    compiler: &LitexToLeanIrBuilder<'_>,
+    source_fact: &Fact,
+    source_fact_id: Option<FactId>,
+    inferred_fact: &Fact,
+    _reason: &str,
+) -> Result<Option<LitexToLeanFactProofIr>, RuntimeError> {
+    if let (Fact::AtomicFact(AtomicFact::InFact(source)), Some(source_fact_id)) =
+        (source_fact, source_fact_id)
+    {
         if let Obj::SetBuilder(builder) = &source.set {
             if let Fact::AtomicFact(AtomicFact::InFact(target)) = inferred_fact {
                 if obj_equality_key(&source.element) == obj_equality_key(&target.element)
@@ -5085,6 +5120,32 @@ fn build_litex_to_lean_ir_inferred_fact_proof(
     }
     if matches!(
         inferred_fact,
+        Fact::AtomicFact(AtomicFact::IsTupleFact(tuple))
+            if matches!(&tuple.set, Obj::Tuple(tuple) if tuple.args.len() >= 2)
+    ) {
+        return supported_inferred_proof(LitexToLeanFactProofIr::RuleApplication {
+            rule: LitexToLeanProofRuleIr::Builtin(LitexToLeanBuiltinRuleIr::TupleLiteralShape),
+            parameter_requirements: Vec::new(),
+            premises: Vec::new(),
+        });
+    }
+    if let Fact::AtomicFact(AtomicFact::IsFiniteSetFact(finite)) = inferred_fact {
+        let rule = match &finite.set {
+            Obj::ListSet(_) => Some(LitexToLeanFiniteSetBuiltinRuleIr::ListSet),
+            Obj::Range(_) => Some(LitexToLeanFiniteSetBuiltinRuleIr::Range),
+            Obj::ClosedRange(_) => Some(LitexToLeanFiniteSetBuiltinRuleIr::ClosedRange),
+            _ => None,
+        };
+        if let Some(rule) = rule {
+            return supported_inferred_proof(LitexToLeanFactProofIr::RuleApplication {
+                rule: LitexToLeanProofRuleIr::Builtin(LitexToLeanBuiltinRuleIr::FiniteSet(rule)),
+                parameter_requirements: Vec::new(),
+                premises: Vec::new(),
+            });
+        }
+    }
+    if matches!(
+        inferred_fact,
         Fact::AtomicFact(AtomicFact::EqualFact(equality))
             if obj_equality_key(&equality.left) == obj_equality_key(&equality.right)
     ) {
@@ -5116,6 +5177,36 @@ fn build_litex_to_lean_ir_inferred_fact_proof(
         });
     }
     Ok(None)
+}
+
+fn list_set_membership_inference_matches(
+    source: &InFact,
+    list_set: &ListSet,
+    inferred: &Fact,
+) -> bool {
+    let expected = list_set
+        .list
+        .iter()
+        .map(|item| {
+            EqualFact::new_from_refs(&source.element, item.as_ref(), source.line_file.clone())
+                .into()
+        })
+        .collect::<Vec<AtomicFact>>();
+    if expected.len() == 1 {
+        return matches!(inferred, Fact::AtomicFact(actual) if actual.to_string() == expected[0].to_string());
+    }
+    if expected.is_empty() {
+        return false;
+    }
+    let Fact::OrFact(actual) = inferred else {
+        return false;
+    };
+    actual.facts.len() == expected.len()
+        && actual
+            .facts
+            .iter()
+            .zip(expected.iter())
+            .all(|(actual, expected)| actual.to_string() == expected.to_string())
 }
 
 fn supported_inferred_proof(

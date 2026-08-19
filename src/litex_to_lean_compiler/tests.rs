@@ -32,6 +32,45 @@ fn capture_ir_debug_on_verifier_stack(
 }
 
 #[test]
+fn stored_forall_projections_replay_prior_conclusion_fact_ids() {
+    let generated = compile_on_verifier_stack(
+        "forall a C, f fn(x R) R:\n    a = 1\n    =>:\n        1 $in R\n        a $in R\n        f(a) = f(a)\n",
+        "forall_projection_probe.lit",
+    )
+    .expect("compile independently stored forall projections");
+    assert_eq!(
+        generated.matches("theorem __fact").count(),
+        3,
+        "{generated}"
+    );
+    assert!(
+        generated.contains("Litex.Rules.complexRealInR"),
+        "{generated}"
+    );
+    assert!(generated.contains("Litex.In.congr"), "{generated}");
+    assert!(generated.contains("Litex.fnApply"), "{generated}");
+    assert!(!generated.contains("axiom "), "{generated}");
+    assert!(!generated.contains("sorry"), "{generated}");
+}
+
+#[test]
+fn nested_forall_premises_replay_parameter_aliases_and_normalization() {
+    let generated = compile_on_verifier_stack(
+        "forall h fn(x R) R:\n    forall y R:\n        h(y) = h(y - 1)\n    =>:\n        h(2) = h(1)\n",
+        "nested_forall_probe.lit",
+    )
+    .expect("compile a nested forall premise");
+    assert!(generated.contains("(__h0_2 : ∀"), "{generated}");
+    assert!(generated.contains("convert (__h0_2"), "{generated}");
+    assert!(
+        generated.contains("Litex.Rules.complexAddInR"),
+        "{generated}"
+    );
+    assert!(!generated.contains("axiom "), "{generated}");
+    assert!(!generated.contains("sorry"), "{generated}");
+}
+
+#[test]
 fn compiler_core_keeps_representation_registry_closed() {
     let core = include_str!("../../lean/Litex/Core.lean");
     assert!(core.contains("private class PrimitiveRule"));
@@ -1090,4 +1129,110 @@ fn multiple_existential_witnesses_fail_closed() {
             || error.contains("one membership witness"),
         "unexpected error: {error}"
     );
+}
+
+#[test]
+fn collections_and_aggregates_use_exact_typed_carriers() {
+    const SOURCE: &str = include_str!("../../lean/examples/26_CollectionsAndAggregates.lit");
+    let ir = capture_ir_debug_on_verifier_stack(SOURCE, "26_CollectionsAndAggregates.lit")
+        .expect("capture collection and aggregate tracer IR");
+    for evidence in ["FiniteSet(", "ListSetMembership", "TupleLiteralShape"] {
+        assert!(
+            ir.contains(evidence),
+            "missing collection evidence {evidence}"
+        );
+    }
+
+    let generated = compile_on_verifier_stack(SOURCE, "26_CollectionsAndAggregates.lit")
+        .expect("compile typed collection and aggregate tracer");
+    for term in [
+        "Litex.Set.coproduct",
+        "Litex.SingletonCarrier.element",
+        "Litex.generalCart",
+        "Litex.FnTelescope.Carrier",
+        "Litex.closedRange",
+        "Litex.SequenceLiteral.mk",
+    ] {
+        assert!(
+            generated.contains(term),
+            "missing generated collection term {term}"
+        );
+    }
+    assert!(!generated.contains("Litex.Object"));
+    assert!(!generated.contains("Set.univ"));
+    assert!(!generated.contains("axiom "));
+    assert!(!generated.contains("sorry"));
+}
+
+#[test]
+fn set_operators_replay_registered_certificates_through_exact_carriers() {
+    const SOURCE: &str = include_str!("../../lean/examples/27_SetOperators.lit");
+    let ir = capture_ir_debug_on_verifier_stack(SOURCE, "27_SetOperators.lit")
+        .expect("capture set-operator tracer IR");
+    for rule in [
+        "set.union_commutative",
+        "set.union_associative",
+        "set.intersect_commutative",
+        "set.intersect_associative",
+        "set.set_minus_membership",
+    ] {
+        assert!(ir.contains(rule), "missing {rule}: {ir}");
+    }
+
+    let generated = compile_on_verifier_stack(SOURCE, "27_SetOperators.lit")
+        .expect("compile exact set operators and registered rules");
+    for theorem in [
+        "Litex.SetRules.unionCommutative",
+        "Litex.SetRules.unionAssociative",
+        "Litex.SetRules.intersectCommutative",
+        "Litex.SetRules.intersectAssociative",
+        "Litex.SetRules.inSetMinus",
+    ] {
+        assert!(
+            generated.contains(theorem),
+            "missing {theorem}: {generated}"
+        );
+    }
+    assert!(!generated.contains("Litex.Object"));
+    assert!(!generated.contains("Set.univ"));
+    assert!(!generated.contains("axiom "));
+    assert!(!generated.contains("sorry"));
+}
+
+#[test]
+fn extended_set_rules_use_exact_power_set_and_subset_certificates() {
+    const SOURCE: &str = include_str!("../../lean/examples/28_ExtendedSetRules.lit");
+    let ir = capture_ir_debug_on_verifier_stack(SOURCE, "28_ExtendedSetRules.lit")
+        .expect("capture extended set-rule certificates");
+    for rule in [
+        "set.empty_subset",
+        "set.union_finite",
+        "set.intersect_finite",
+        "set.power_set_membership_of_subset",
+        "set.power_set_finite",
+        "set.set_minus_union_de_morgan",
+    ] {
+        assert!(ir.contains(rule), "missing registered certificate {rule}");
+    }
+
+    let generated = compile_on_verifier_stack(SOURCE, "28_ExtendedSetRules.lit")
+        .expect("compile extended exact-carrier set rules");
+    for theorem in [
+        "Litex.SetRules.emptySubset",
+        "Litex.SetRules.unionFinite",
+        "Litex.SetRules.intersectFinite",
+        "Litex.SetRules.inPowerSetOfSubset",
+        "Litex.SetRules.powerSetFinite",
+        "Litex.SetRules.setMinusUnionDeMorgan",
+    ] {
+        assert!(
+            generated.contains(theorem),
+            "missing generated theorem {theorem}"
+        );
+    }
+    assert!(!generated.contains("LitexObject"));
+    assert!(!generated.contains("Litex.Object"));
+    assert!(!generated.contains("Set.univ"));
+    assert!(!generated.contains("axiom "));
+    assert!(!generated.contains("sorry"));
 }

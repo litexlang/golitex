@@ -223,7 +223,7 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         // Check reflexive and already-known element equalities before invoking
         // the broader equality builtin search for list-set membership.
-        for current_element_in_list_set in list_set.list.iter() {
+        for (selected_index, current_element_in_list_set) in list_set.list.iter().enumerate() {
             let equal_fact_verify_result =
                 self.verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
                     &in_fact.element,
@@ -232,11 +232,14 @@ impl Runtime {
                 ));
             if equal_fact_verify_result.is_true() {
                 return Ok(
-                    (VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                    (VerifiedFactStmtIr::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         in_fact.clone().into(),
                         format!(
                             "{} equals one element in list_set {}",
                             in_fact.element, in_fact.set
+                        ),
+                        BuiltinRuleEvidence::ListSetMembership(
+                            ListSetMembershipBuiltinRuleEvidence { selected_index },
                         ),
                         vec![equal_fact_verify_result],
                     ))

@@ -37,6 +37,18 @@ index_union({1, 2, 3}, N, family) = big_union(fn_range(family))
 $is_nonempty_set({1, 2, 3})
 index_intersect({1, 2, 3}, N, family) = big_intersect(fn_range(family))
 
+# Before (the domain-union equalities were well-defined but not recognized):
+# index_union(union({1}, {2}), N, domain_union_family) = union(index_union({1}, N, fn(left_index {1}) power_set(N) {domain_union_family(left_index)}), index_union({2}, N, fn(right_index {2}) power_set(N) {domain_union_family(right_index)}))
+# index_intersect(union({1}, {2}), N, domain_union_family) = intersect(index_intersect({1}, N, fn(left_index {1}) power_set(N) {domain_union_family(left_index)}), index_intersect({2}, N, fn(right_index {2}) power_set(N) {domain_union_family(right_index)}))
+# Former behavior: both equalities ended in `UnknownError` after well-definedness.
+
+have fn domain_union_family(domain_index union({1}, {2})) power_set(N) = {1}
+
+# Now: splitting a union index domain splits the indexed union/intersection.
+# Each branch is the literal anonymous restriction of the original family.
+index_union(union({1}, {2}), N, domain_union_family) = union(index_union({1}, N, fn(left_index {1}) power_set(N) {domain_union_family(left_index)}), index_union({2}, N, fn(right_index {2}) power_set(N) {domain_union_family(right_index)}))
+index_intersect(union({1}, {2}), N, domain_union_family) = intersect(index_intersect({1}, N, fn(left_index {1}) power_set(N) {domain_union_family(left_index)}), index_intersect({2}, N, fn(right_index {2}) power_set(N) {domain_union_family(right_index)}))
+
 # Boundary: the domain of the family may be empty. The ambient argument makes
 # the empty indexed intersection equal to N rather than to an implicit universe.
 have fn empty_family(k {}) power_set(N) = {}
@@ -44,8 +56,9 @@ have fn empty_family(k {}) power_set(N) = {}
 index_union({}, N, empty_family) = {}
 index_intersect({}, N, empty_family) = N
 
-# Boundary: a family returning N instead of power_set(N), or a family with a
-# different exact index domain, is rejected by the executable Rust regression.
+# Boundary: a family returning N instead of power_set(N), a family with a
+# different exact index domain, or a non-restriction branch body is rejected by
+# the executable Rust regression.
 #
 # Evidence:
 # target/release/litex -compact -isolated -runner -f examples/02_builtin_math/indexed_set_family_operators.lit

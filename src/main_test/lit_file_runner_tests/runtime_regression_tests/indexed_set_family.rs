@@ -54,6 +54,58 @@ index_intersect({}, N, empty_family) = N
 }
 
 #[test]
+fn indexed_set_family_domain_union_decomposes_by_exact_restrictions() {
+    run_with_large_stack(
+        "indexed_set_family_domain_union_decomposes_by_exact_restrictions",
+        || {
+            let source = r#"
+have fn family(index union({1}, {2})) power_set(N) = {1}
+
+index_union(union({1}, {2}), N, family) = union(index_union({1}, N, fn(left_index {1}) power_set(N) {family(left_index)}), index_union({2}, N, fn(right_index {2}) power_set(N) {family(right_index)}))
+index_intersect(union({1}, {2}), N, family) = intersect(index_intersect({1}, N, fn(left_index {1}) power_set(N) {family(left_index)}), index_intersect({2}, N, fn(right_index {2}) power_set(N) {family(right_index)}))
+
+have fn empty_branch_family(index union({}, {1})) power_set(N) = {1}
+index_union(union({}, {1}), N, empty_branch_family) = union(index_union({}, N, fn(empty_index {}) power_set(N) {empty_branch_family(empty_index)}), index_union({1}, N, fn(right_index {1}) power_set(N) {empty_branch_family(right_index)}))
+index_intersect(union({}, {1}), N, empty_branch_family) = intersect(index_intersect({}, N, fn(empty_index {}) power_set(N) {empty_branch_family(empty_index)}), index_intersect({1}, N, fn(right_index {1}) power_set(N) {empty_branch_family(right_index)}))
+"#;
+            let (succeeded, output) = run(source, "indexed_set_family_domain_union_positive");
+            assert!(
+                succeeded,
+                "indexed-family domain-union decomposition failed:\n{output}"
+            );
+            assert!(
+                output.contains("index_union over a union index domain decomposes into a union"),
+                "indexed-union decomposition should expose its builtin provenance:\n{output}"
+            );
+            assert!(
+                output.contains(
+                    "index_intersect over a union index domain decomposes into an intersection"
+                ),
+                "indexed-intersection decomposition should expose its builtin provenance:\n{output}"
+            );
+
+            let wrong_restriction = r#"
+have fn family(index union({1}, {2})) power_set(N) = {1}
+
+index_union(union({1}, {2}), N, family) = union(index_union({1}, N, fn(left_index {1}) power_set(N) {{}}), index_union({2}, N, fn(right_index {2}) power_set(N) {family(right_index)}))
+"#;
+            let (succeeded, output) = run(
+                wrong_restriction,
+                "indexed_set_family_domain_union_wrong_restriction",
+            );
+            assert!(
+                !succeeded,
+                "a branch that is not the literal family restriction must be rejected:\n{output}"
+            );
+            assert!(
+                output.contains("UnknownError"),
+                "the well-defined equality should be rejected during verification:\n{output}"
+            );
+        },
+    );
+}
+
+#[test]
 fn indexed_set_family_operators_reject_wrong_family_signature() {
     let wrong_codomain = r#"
 have fn family(k {1}) N = k
