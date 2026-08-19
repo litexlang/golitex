@@ -406,6 +406,22 @@ impl Runtime {
         Ok(infer_result)
     }
 
+    /// Stores a derived atomic fact whose well-definedness follows from its
+    /// source fact, without recursively firing inference for the derived fact.
+    pub(crate) fn store_derived_atomic_fact_without_infer(
+        &mut self,
+        fact: AtomicFact,
+        reason: impl Into<String>,
+    ) -> Result<InferResult, RuntimeError> {
+        let reason_text = reason.into();
+        let wrapped_fact: Fact = fact.clone().into();
+        self.top_level_env().store_atomic_fact(fact)?;
+        self.store_fact_cache_keys_with_nested_obj_binders(&wrapped_fact)?;
+        let mut infer_result = InferResult::new();
+        infer_result.add_store_fact_output(&wrapped_fact, reason_text, Vec::new());
+        Ok(infer_result)
+    }
+
     pub fn store_exist_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
         &mut self,
         fact: ExistOrAndChainAtomicFact,

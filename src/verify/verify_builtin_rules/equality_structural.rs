@@ -219,9 +219,49 @@ impl Runtime {
     /// equality. Keep this deliberately narrower than ordinary builtin rules:
     /// beta reduction, struct-field iota reduction, and literal projection are
     /// syntax-directed and create no mathematical subgoals.
-    fn reduce_structural_equality_obj_once(&self, obj: &Obj) -> Result<Option<Obj>, RuntimeError> {
+    fn reduce_structural_equality_obj_once(
+        &mut self,
+        obj: &Obj,
+    ) -> Result<Option<Obj>, RuntimeError> {
         if let Some(reduced) = self.beta_reduce_complete_anonymous_application_once(obj)? {
             return Ok(Some(reduced));
+        }
+
+        if matches!(obj, Obj::FnObj(_)) {
+            if let Some(reduced) =
+                self.reduce_direct_known_fn_application_after_well_defined_once(obj)?
+            {
+                return Ok(Some(reduced));
+            }
+        }
+
+        if let Obj::FnObj(fn_obj) = obj {
+            let callable_projection: Option<Obj> = match fn_obj.head.as_ref() {
+                FnObjHead::ObjAsStructInstanceWithFieldAccess(field_access) => {
+                    Some(self.struct_field_access_projection(field_access)?)
+                }
+                FnObjHead::ObjAtIndex(obj_at_index) => Some(obj_at_index.clone().into()),
+                _ => None,
+            };
+            if let Some(projection) = callable_projection {
+                if let Some(component) = self.reduce_structural_equality_obj_once(&projection)? {
+                    return Ok(
+                        self.apply_curried_layers_to_callable_obj(component, fn_obj.body.clone())
+                    );
+                }
+                let mut representatives =
+                    self.get_all_obj_representatives_equal_to_given(&projection);
+                representatives.sort_by_key(|candidate| {
+                    !matches!(candidate, Obj::AnonymousFn(_) | Obj::FnObj(_))
+                });
+                for representative in representatives {
+                    if let Some(applied) = self
+                        .apply_curried_layers_to_callable_obj(representative, fn_obj.body.clone())
+                    {
+                        return Ok(Some(applied));
+                    }
+                }
+            }
         }
 
         if let Obj::ObjAsStructInstanceWithFieldAccess(field_access) = obj {
@@ -238,6 +278,14 @@ impl Runtime {
 
         if let Some(component) = Self::structural_component_at_index(&obj_at_index.obj, index) {
             return Ok(Some(component));
+        }
+
+        if let Some(reduced_owner) =
+            self.reduce_structural_equality_obj_once(obj_at_index.obj.as_ref())?
+        {
+            return Ok(Some(
+                ObjAtIndex::new(reduced_owner, obj_at_index.index.as_ref().clone()).into(),
+            ));
         }
 
         let target_key = obj_equality_key(&obj_at_index.obj);

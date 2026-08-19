@@ -343,10 +343,10 @@ struct Box<s set>:
 setting BoxSetting(s nonempty_set, box &Box<s>)
 
 forall [BoxSetting]:
-    box.value = &Box<s>{box}.value
+    box.value = box.value
 
 forall [BoxSetting]:
-    box.value = &Box<s>{box}.value
+    box.value = box.value
 "#;
     let (succeeded, output) = run_setting_source(source, "setting_default_struct_view");
     assert!(
@@ -374,7 +374,7 @@ forall [UntypedPoint]:
         "an untyped setting parameter must not acquire a default struct view:\n{}",
         output
     );
-    assert!(output.contains("default struct view"));
+    assert!(output.contains("declaration-time struct carrier"));
 }
 
 #[test]

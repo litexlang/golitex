@@ -132,6 +132,50 @@ impl Runtime {
         Ok(fields)
     }
 
+    /// Mathematical contract: the carrier of `value.field` is the field's
+    /// declared carrier after substituting both struct header arguments and
+    /// declaration-owned field projections of `value`.
+    pub(crate) fn instantiated_struct_field_type_for_access(
+        &mut self,
+        field_access: &ObjAsStructInstanceWithFieldAccess,
+        verify_state: &UseContextVerifyState,
+    ) -> Result<Obj, RuntimeError> {
+        let (def, header_map) =
+            self.struct_header_param_to_arg_map(&field_access.struct_obj, verify_state)?;
+        let field_index =
+            self.struct_field_index(&field_access.struct_obj, &field_access.field_name)? - 1;
+
+        let mut field_map = HashMap::new();
+        for field in def.fields.iter() {
+            let field_value: Obj = ObjAsStructInstanceWithFieldAccess::new(
+                (*field_access.struct_obj).clone(),
+                (*field_access.obj).clone(),
+                field.name().to_string(),
+            )
+            .into();
+            insert_symbol_substitution(&mut field_map, &field.binding, field_value);
+        }
+
+        let after_header = self.inst_obj(
+            &def.fields[field_index].field_type,
+            &header_map,
+            ParamObjType::DefHeader,
+        )?;
+        self.inst_obj(&after_header, &field_map, ParamObjType::DefStructField)
+    }
+
+    /// Field membership dispatch reaches this only after the field expression
+    /// itself has passed ordinary well-definedness.
+    pub(crate) fn instantiated_struct_field_type_after_well_defined(
+        &mut self,
+        field_access: &ObjAsStructInstanceWithFieldAccess,
+    ) -> Result<Obj, RuntimeError> {
+        self.instantiated_struct_field_type_for_access(
+            field_access,
+            &UseContextVerifyState::new(0, true),
+        )
+    }
+
     /// Mathematical contract: a one-field structure is a named view of its
     /// sole field carrier.
     /// Multi-field structures retain their Cartesian-product representation.

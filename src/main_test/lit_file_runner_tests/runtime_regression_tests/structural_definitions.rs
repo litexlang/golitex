@@ -81,7 +81,7 @@ forall x, y R:
     discrete_distance(x, y) >= 0
 by thm struct_member(discrete_distance, &MetricSpace<R>)
 have metric &MetricSpace<R> = discrete_distance
-metric.dist(1, 0) = metric(1, 0) = 0
+metric.dist(1, 0) = discrete_distance(1, 0) = 0
 forall candidate &MetricSpace<R>, x, y R:
     candidate(x, y) >= 0
 
@@ -303,8 +303,7 @@ struct Pair:
     second R
 
 have pair_value &Pair = (1, 2)
-have selected_second R = &Pair{pair_value}.second
-selected_second = 2
+pair_value.second = 2
 "#;
 
     let mut runtime = Runtime::new();
@@ -597,27 +596,27 @@ have b &Box<R> = (0, 0)
 }
 
 #[test]
-fn named_struct_membership_does_not_materialize_tuple_projection_view() {
+fn declared_struct_membership_materializes_named_and_positional_projections() {
     let source_code = r#"
 struct Pair<S set>:
     first S
     second S
 
-have p &Pair<R>
+trust have p &Pair<R>
 p.first $in R
 p.second $in R
 "#;
 
     let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope(
-        "named_struct_membership_does_not_materialize_tuple_projection_view",
+        "declared_struct_membership_materializes_named_and_positional_projections",
     );
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
     let (run_succeeded, run_output) =
         render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
     assert!(
         run_succeeded,
-        "named struct fields must remain available without tuple projection inference:\n{}",
+        "declared struct fields and their Cartesian positions should both be available:\n{}",
         run_output
     );
 
@@ -629,8 +628,8 @@ p.second $in R
         .cloned()
         .collect::<Vec<_>>();
     assert!(
-        tuple_related_facts.is_empty(),
-        "named struct membership must not materialize tuple projection facts: {:?}",
+        !tuple_related_facts.is_empty(),
+        "struct membership should materialize positional Cartesian facts: {:?}",
         tuple_related_facts
     );
 }
@@ -642,7 +641,7 @@ struct Pair<S set>:
     first S
     second S
 
-have p &Pair<R>
+trust have p &Pair<R>
 p[1] $in R
 "#;
 
@@ -842,9 +841,9 @@ claim:
 }
 
 #[test]
-fn default_struct_view_keeps_explicit_struct_view_syntax_available() {
+fn declaration_struct_carrier_is_stable_across_other_memberships() {
     run_with_large_stack(
-        "default_struct_view_keeps_explicit_struct_view_syntax_available",
+        "declaration_struct_carrier_is_stable_across_other_memberships",
         || {
             let source_code = r#"
 struct Point:
@@ -856,19 +855,19 @@ struct CoordinatePair:
     second R
 
 have explicit_point &Point = (3, 4)
-&Point{explicit_point}.x = 3
+explicit_point.x = 3
 
 have p &Point = (1, 2)
 p.x = 1
 p.y = 2
-&Point{p}.x = 1
-p $in &CoordinatePair
-&CoordinatePair{p}.first = 1
+trust p $in &CoordinatePair
+have p2 &CoordinatePair = (p.x, p.y)
+p2.first = 1
 "#;
 
             let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope(
-                "default_struct_view_keeps_explicit_struct_view_syntax_available",
+                "declaration_struct_carrier_is_stable_across_other_memberships",
             );
             let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
             let (run_succeeded, run_output) =
@@ -876,12 +875,12 @@ p $in &CoordinatePair
 
             assert!(
                 run_succeeded,
-                "default struct views should coexist with explicit and alternate struct views:\n{}",
+                "a later membership must not change the fields selected by the declaration carrier:\n{}",
                 run_output
             );
             assert!(
-                run_output.contains("\"statement\": \"&Point{p}.y = 2\""),
-                "`p.y` should lower directly to the existing explicit struct-field AST:\n{}",
+                run_output.contains("\"statement\": \"p.y = 2\""),
+                "field output should use only declaration-owned surface syntax:\n{}",
                 run_output
             );
         },
@@ -919,11 +918,6 @@ thm default_struct_unfold_reaches_function_prop_and_theorem:
     by thm consume_group_fields(unfold G)
     by def $has_group_fields(unfold G)
 
-thm explicit_struct_unfold_selects_the_view:
-    ? forall G &GroupData<R>:
-        consume(unfold &GroupData<R>{G}) = G.identity
-    by thm consume_group_fields(unfold &GroupData<R>{G})
-
 have fn first_of_three(x, y, z R) R = x
 first_of_three(unfold (1, 2, 3)) = 1
 
@@ -934,6 +928,46 @@ thm statically_typed_tuple_unfold_uses_index_order:
 
 have named_values cart(R, R, R) = (1, 2, 3)
 first_of_three(unfold named_values) = 1
+
+struct Pair:
+    first R
+    second R
+
+have fn make_pair(first, second R) &Pair = (first, second)
+have fn add_pair(first, second R) R = first + second
+add_pair(unfold make_pair(1, 2)) $in R
+
+struct ValueBox<S set>:
+    value S
+
+have fn boxed_value(s power_set(R), value s) &ValueBox<s> = value
+boxed_value({1}, 1).value $in {1}
+
+template<n N>:
+    have template_pair &Pair = (n, n)
+
+\template_pair<1>.first $in R
+\template_pair<1>.first = 1
+add_pair(unfold \template_pair<1>) $in R
+
+template<n N>:
+    trust have trusted_pair &Pair:
+        trusted_pair = (n, n)
+
+\trusted_pair<1>.second = 1
+
+template<n N>:
+    have fn template_make_pair(value R) &Pair = (value, n)
+
+\template_make_pair<1>(2).second = 1
+
+struct IndexedValue:
+    entries fn(idx N) N
+
+template<n N>:
+    have indexed_value &IndexedValue = (fn(idx N) N {n})
+
+\indexed_value<1>.entries(0) = 1
 "#;
 
             let mut runtime = Runtime::new();
@@ -954,10 +988,17 @@ first_of_three(unfold named_values) = 1
                     && !run_output.contains("$has_group_fields(unfold G)")
                     && !run_output.contains("first_of_three(unfold (1, 2, 3))")
                     && !run_output.contains("first_of_three(unfold values)")
-                    && run_output.contains("&GroupData<R>{G}.identity")
-                    && run_output.contains("&GroupData<R>{G}.inverse")
-                    && run_output.contains("&GroupData<R>{G}.combine")
-                    && run_output.contains("first_of_three(values[1], values[2], values[3])"),
+                    && run_output.contains("G.identity")
+                    && run_output.contains("G.inverse")
+                    && run_output.contains("G.combine")
+                    && run_output.contains("first_of_three(values[1], values[2], values[3])")
+                    && run_output
+                        .contains("add_pair(make_pair(1, 2).first, make_pair(1, 2).second)")
+                    && run_output.contains("boxed_value({1}, 1).value $in {1}")
+                    && run_output.contains("\\\\template_pair<1>.first $in R")
+                    && run_output.contains(
+                        "add_pair(\\\\template_pair<1>.first, \\\\template_pair<1>.second)"
+                    ),
                 "unfold should disappear during parsing and leave explicit field accesses:\n{}",
                 run_output
             );
@@ -966,7 +1007,7 @@ first_of_three(unfold named_values) = 1
 }
 
 #[test]
-fn struct_unfold_rejects_missing_views_and_unverified_explicit_views() {
+fn struct_unfold_rejects_missing_declaration_carriers_and_explicit_selection() {
     let scalar_source = r#"
 have fn identity(x R) R = x
 identity(unfold 1) = 1
@@ -980,13 +1021,13 @@ identity(unfold 1) = 1
     assert!(
         !run_succeeded
             && run_output.contains(
-                "unfold expects a tuple with compile-time arity or an object with an explicit/default struct view"
+                "unfold expects a tuple with compile-time arity or an object whose declaration has a direct `&Struct` carrier"
             ),
         "unfold must reject an object without a compile-time tuple or struct view:\n{}",
         run_output
     );
 
-    let explicit_view_source = r#"
+    let explicit_selection_source = r#"
 struct Pair:
     first R
     second R
@@ -994,17 +1035,20 @@ struct Pair:
 have fn add_pair(first, second R) R = first + second
 add_pair(unfold &Pair{1}) = 1
 "#;
-    let mut explicit_view_runtime = Runtime::new();
-    explicit_view_runtime.new_file_path_new_env_new_name_scope(
-        "struct_unfold_explicit_view_still_requires_struct_membership",
-    );
+    let mut explicit_selection_runtime = Runtime::new();
+    explicit_selection_runtime
+        .new_file_path_new_env_new_name_scope("struct_unfold_rejects_removed_explicit_selection");
     let (stmt_results, runtime_error) =
-        run_source_code(explicit_view_source, &mut explicit_view_runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&explicit_view_runtime, &stmt_results, &runtime_error, false);
+        run_source_code(explicit_selection_source, &mut explicit_selection_runtime);
+    let (run_succeeded, run_output) = render_run_source_code_output(
+        &explicit_selection_runtime,
+        &stmt_results,
+        &runtime_error,
+        false,
+    );
     assert!(
-        !run_succeeded,
-        "an explicit unfold view must not bypass ordinary struct-membership verification:\n{}",
+        !run_succeeded && run_output.contains("explicit struct selection"),
+        "the removed explicit struct-selection syntax must fail directly:\n{}",
         run_output
     );
 
@@ -1023,7 +1067,7 @@ first(unfold ProductSet) = first(unfold ProductSet)
     assert!(
         !run_succeeded
             && run_output.contains(
-                "unfold expects a tuple with compile-time arity or an object with an explicit/default struct view"
+                "unfold expects a tuple with compile-time arity or an object whose declaration has a direct `&Struct` carrier"
             ),
         "a set equal to cart(A, B) is not itself a tuple value and must not unfold:\n{}",
         run_output
@@ -1042,8 +1086,8 @@ struct Point:
 
 thm point_default_view_is_available_in_proof:
     ? forall p &Point:
-        p.x = &Point{p}.x
-    p.x = &Point{p}.x
+        p.x = p.x
+    p.x = p.x
 "#;
 
             let mut runtime = Runtime::new();
@@ -1075,8 +1119,8 @@ struct Box<s set>:
 
 thm box_default_view_keeps_its_carrier:
     ? forall s nonempty_set, b &Box<s>:
-        b.value = &Box<s>{b}.value
-    b.value = &Box<s>{b}.value
+        b.value = b.value
+    b.value = b.value
 "#;
 
             let mut runtime = Runtime::new();
@@ -1104,8 +1148,8 @@ struct Point:
     y R
 
 have p cart(R, R) = (1, 2)
-p $in &Point
-p.x = &Point{p}.x
+trust p $in &Point
+p.x = p.x
 "#;
 
     let mut runtime = Runtime::new();
@@ -1122,8 +1166,8 @@ p.x = &Point{p}.x
         run_output
     );
     assert!(
-        run_output.contains("default struct view"),
-        "missing-default-view syntax should have a focused diagnostic:\n{}",
+        run_output.contains("declaration-time struct carrier"),
+        "missing declaration carrier syntax should have a focused diagnostic:\n{}",
         run_output
     );
 }
@@ -1144,13 +1188,13 @@ struct TaggedInteger:
 
 thm point_view_for_item:
     ? forall item &Point:
-        item.x = &Point{item}.x
-    item.x = &Point{item}.x
+        item.x = item.x
+    item.x = item.x
 
 thm tagged_integer_view_for_item:
     ? forall item &TaggedInteger:
-        item.code = &TaggedInteger{item}.code
-    item.code = &TaggedInteger{item}.code
+        item.code = item.code
+    item.code = item.code
 "#;
 
             let mut runtime = Runtime::new();
@@ -1181,7 +1225,7 @@ struct Endomorphism:
     anchor R
 
 have endomorphism &Endomorphism = (fn(x R) R {x + 1}, 0)
-endomorphism.apply(2) = &Endomorphism{endomorphism}.apply(2)
+endomorphism.apply(2) = endomorphism.apply(2)
 "#;
 
             let mut runtime = Runtime::new();
@@ -1244,9 +1288,8 @@ prop share_scalar_system(s, v, w nonempty_set, Vspace &VectorSpace<s, v>, Wspace
                 run_output
             );
             assert!(
-                run_output
-                    .contains("&ScalarSystem<s>{&VectorSpace<s, v>{space}.scalars}.mul(a, b)"),
-                "the chained shorthand should lower to nested explicit views:\n{}",
+                run_output.contains("space.scalars.mul(a, b)"),
+                "the chained field output should remain in declaration-owned syntax:\n{}",
                 run_output
             );
         },
@@ -1254,9 +1297,9 @@ prop share_scalar_system(s, v, w nonempty_set, Vspace &VectorSpace<s, v>, Wspace
 }
 
 #[test]
-fn chained_field_access_continues_after_an_explicit_struct_view() {
+fn chained_field_access_continues_from_the_declared_struct_carrier() {
     run_with_large_stack(
-        "chained_field_access_continues_after_an_explicit_struct_view",
+        "chained_field_access_continues_from_the_declared_struct_carrier",
         || {
             let source_code = r#"
 struct Leaf:
@@ -1268,12 +1311,12 @@ struct Node:
     marker N
 
 have node &Node = ((1, 0), 0)
-&Node{node}.leaf.value $in R
+node.leaf.value $in R
 "#;
 
             let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope(
-                "chained_field_access_continues_after_an_explicit_struct_view",
+                "chained_field_access_continues_from_the_declared_struct_carrier",
             );
             let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
             let (run_succeeded, run_output) =
@@ -1281,12 +1324,12 @@ have node &Node = ((1, 0), 0)
 
             assert!(
                 run_succeeded,
-                "an explicit field access should carry its declared result view into the next hop:\n{}",
+                "a declared struct-valued field should carry its carrier into the next hop:\n{}",
                 run_output
             );
             assert!(
-                run_output.contains("&Leaf{&Node{node}.leaf}.value $in R"),
-                "the explicit-base chain should use the existing nested field-access AST:\n{}",
+                run_output.contains("node.leaf.value $in R"),
+                "the nested access should retain only the direct field surface:\n{}",
                 run_output
             );
         },
@@ -1305,7 +1348,7 @@ struct CallableBox:
 
 have fn identity_entry(k N+) N = k
 have fn boxed(f fn(k N+) N) &CallableBox = (f, 0)
-have fn projected_entry(f fn(k N+) N, idx N+) N = &CallableBox{boxed(f)}.entries(idx)
+have fn projected_entry(f fn(k N+) N, idx N+) N = boxed(f).entries(idx)
 
 projected_entry(identity_entry, 1) $in N
 "#;
@@ -1320,13 +1363,50 @@ projected_entry(identity_entry, 1) $in N
 
             assert!(
                 run_succeeded,
-                "a struct field declared with a function carrier should remain callable after an explicit view:\n{run_output}"
+                "a function result declared with a struct carrier should expose its callable field:\n{run_output}"
             );
             assert!(
                 run_output.contains(
-                    "have fn projected_entry(f fn (k N+) N, idx N+) = &CallableBox{boxed(f)}.entries(idx)"
+                    "have fn projected_entry(f fn (k N+) N, idx N+) = boxed(f).entries(idx)"
                 ),
                 "the accepted definition should retain the projected function head:\n{run_output}"
+            );
+        },
+    );
+}
+
+#[test]
+fn local_function_struct_return_is_visible_before_nested_block_execution() {
+    run_with_large_stack(
+        "local_function_struct_return_is_visible_before_nested_block_execution",
+        || {
+            let source_code = r#"
+struct NaturalPair:
+    left N
+    right N
+
+thm local_struct_return_projection:
+    ? forall n N:
+        n = n
+    claim:
+        ? n = n
+        have fn local_pair(k N) &NaturalPair = (k, k)
+        local_pair(1).left = 1
+        n = n
+    n = n
+"#;
+
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "local_function_struct_return_is_visible_before_nested_block_execution",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "a local function's direct struct return should be visible while its enclosing block is still being parsed:\n{run_output}"
             );
         },
     );
@@ -1343,7 +1423,7 @@ struct CallableBox:
     tag N
 
 have fn boxed(f fn(k N+) N) &CallableBox = (f, 0)
-have fn invalid_scalar_call(f fn(k N+) N, idx N+) N = &CallableBox{boxed(f)}.tag(idx)
+have fn invalid_scalar_call(f fn(k N+) N, idx N+) N = boxed(f).tag(idx)
 "#;
 
             let mut runtime = Runtime::new();
@@ -1402,10 +1482,8 @@ claim:
                 run_output
             );
             assert!(
-                run_output.contains(
-                    "&Current::ScalarSystem<s>{&Current::Bundle<s>{bundle}.scalars}.one $in s"
-                ),
-                "the nested access should preserve the module-qualified struct view:\n{}",
+                run_output.contains("bundle.scalars.one $in s"),
+                "the nested access should preserve its direct declared carrier:\n{}",
                 run_output
             );
         },
@@ -1440,10 +1518,9 @@ point.x.value = 1
                 run_output
             );
             assert!(
-                run_output.contains("Point.x")
-                    && run_output.contains("is not declared with a struct type")
-                    && run_output.contains("&Struct{"),
-                "a non-struct intermediate field should report the explicit-view fallback:\n{}",
+                run_output.contains("point.x")
+                    && run_output.contains("declared field carrier is not a struct"),
+                "a non-struct intermediate field should report the declaration boundary:\n{}",
                 run_output
             );
         },
@@ -1467,7 +1544,7 @@ struct Holder:
     marker N
 
 trust have holder &Holder
-trust &Holder{holder}.point $in &Point
+trust holder.point $in &Point
 holder.point.x = 1
 "#;
 
@@ -1485,8 +1562,8 @@ holder.point.x = 1
                 run_output
             );
             assert!(
-                run_output.contains("Holder.point")
-                    && run_output.contains("is not declared with a struct type"),
+                run_output.contains("holder.point")
+                    && run_output.contains("declared field carrier is not a struct"),
                 "only a direct struct field declaration should continue the chain:\n{}",
                 run_output
             );
@@ -1495,9 +1572,9 @@ holder.point.x = 1
 }
 
 #[test]
-fn chained_field_access_rejects_access_after_a_function_call() {
+fn chained_field_access_rejects_scalar_function_returns() {
     run_with_large_stack(
-        "chained_field_access_rejects_access_after_a_function_call",
+        "chained_field_access_rejects_scalar_function_returns",
         || {
             let source_code = r#"
 struct Endomorphism:
@@ -1510,7 +1587,7 @@ endomorphism.apply(1).value = 2
 
             let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope(
-                "chained_field_access_rejects_access_after_a_function_call",
+                "chained_field_access_rejects_scalar_function_returns",
             );
             let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
             let (run_succeeded, run_output) =
@@ -1518,13 +1595,51 @@ endomorphism.apply(1).value = 2
 
             assert!(
                 !run_succeeded,
-                "field access after a function call is intentionally outside the chained-field feature:\n{}",
+                "a scalar function return must not acquire a struct carrier:\n{}",
                 run_output
             );
             assert!(
-                run_output.contains("field access after this expression form is not supported")
-                    && run_output.contains("&Struct{expr}.field"),
-                "the unsupported mixed postfix should have a focused diagnostic:\n{}",
+                run_output.contains("has no direct struct return carrier"),
+                "the rejected scalar return should have a focused declaration-carrier diagnostic:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
+fn function_results_do_not_acquire_struct_fields_from_facts() {
+    run_with_large_stack(
+        "function_results_do_not_acquire_struct_fields_from_facts",
+        || {
+            let source_code = r#"
+struct Point:
+    x R
+    y R
+
+have point &Point = (1, 2)
+have fn raw(k N) R = k
+trust raw(1) $in &Point
+trust raw(1) = point
+raw(1).x = 1
+"#;
+
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "function_results_do_not_acquire_struct_fields_from_facts",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                !run_succeeded,
+                "membership and equality facts must not add fields to a function result:\n{}",
+                run_output
+            );
+            assert!(
+                run_output.contains("has no direct struct return carrier"),
+                "the rejection should point to the function's declared return carrier:\n{}",
                 run_output
             );
         },
@@ -1620,7 +1735,7 @@ struct PointHolder:
     point &Point
     marker N
     <=>:
-        point.x = &Point{point}.x
+        point.x = point.x
 "#;
 
         let mut runtime = Runtime::new();
@@ -1650,7 +1765,7 @@ struct Point:
 have original &Point = (1, 2)
 witness exist p &Point st {p = p} from original
 obtain point from exist p &Point st {p = p}
-point.x = &Point{point}.x
+point.x = point.x
 "#;
 
         let mut runtime = Runtime::new();
@@ -1680,7 +1795,7 @@ struct Box<s set>:
 have real_box &Box<R> = (1, 0)
 witness exist s nonempty_set, b &Box<s> st {b = b} from R, real_box
 obtain carrier, box from exist s nonempty_set, b &Box<s> st {b = b}
-box.value = &Box<carrier>{box}.value
+box.value = box.value
 "#;
 
             let mut runtime = Runtime::new();
@@ -1717,7 +1832,7 @@ struct VectorSpace<s nonempty_set, scalars &ScalarSystem<s>, v nonempty_set>:
     smul fn(a s, x v) v
     <=>:
         forall x v:
-            smul(&ScalarSystem<s>{scalars}.one, x) = x
+            smul(scalars.one, x) = x
 
 prop is_real_vector_space(v nonempty_set, vector_zero v, vector_smul fn(a R, x v) v):
     (vector_zero, vector_smul) $in &VectorSpace<R, real_scalars, v>

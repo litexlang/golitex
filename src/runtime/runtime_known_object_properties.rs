@@ -133,6 +133,19 @@ impl Runtime {
         self.unfold_known_fn_application_once_impl(application, verify_state, false)
     }
 
+    /// Structural equality calls this only after the submitted objects have
+    /// passed ordinary well-definedness, so definition reduction must not
+    /// create a second verifier dependency path.
+    pub(crate) fn reduce_direct_known_fn_application_after_well_defined_once(
+        &mut self,
+        application: &Obj,
+    ) -> Result<Option<Obj>, RuntimeError> {
+        self.reduce_direct_known_fn_application_once(
+            application,
+            &UseContextVerifyState::new(0, true),
+        )
+    }
+
     fn unfold_known_fn_application_once_impl(
         &mut self,
         application: &Obj,
@@ -146,7 +159,7 @@ impl Runtime {
             return Ok(None);
         }
         // A callable tuple projection unfolds through a known tuple value.
-        // Example: `&Pair{\selected<a>}.second(x)` reduces when
+        // Example: `\selected<a>.second(x)` reduces when
         // `\selected<a> = (first_value, fn(t T) U {...})` is known.
         let callable_projection = match fn_obj.head.as_ref() {
             FnObjHead::ObjAsStructInstanceWithFieldAccess(field_access) => Some((
@@ -388,6 +401,14 @@ impl Runtime {
         ))
     }
 
+    pub(crate) fn apply_curried_layers_to_callable_obj(
+        &self,
+        obj: Obj,
+        layers: Vec<Vec<Box<Obj>>>,
+    ) -> Option<Obj> {
+        apply_extra_curried_layers_for_unfolding(obj, layers)
+    }
+
     fn get_known_fn_info_for_obj(&self, obj: &Obj) -> Option<KnownFnInfo> {
         let key = obj.to_string();
         if let Some(info) = self.get_known_fn_info_for_key_from_current_envs(&key) {
@@ -412,7 +433,7 @@ impl Runtime {
         None
     }
 
-    fn get_direct_object_in_fn_set(&self, obj: &Obj) -> Option<FnSetBody> {
+    pub(crate) fn get_direct_object_in_fn_set(&self, obj: &Obj) -> Option<FnSetBody> {
         let info = self.get_known_fn_info_for_obj(obj)?;
         info.fn_set.map(|(body, _)| body)
     }

@@ -1194,7 +1194,7 @@ struct ScalarSystem<s nonempty_set>:
 have fn real_add(x, y R) R = x + y
 have real_scalars &ScalarSystem<R> = (0, real_add)
 
-have fn coordinate_add(x, y finite_seq(R, 2)) finite_seq(R, 2) = fn(i1 N+: i1 <= 2) R {&Current::ScalarSystem<R>{Current::real_scalars}.add(x(i1), y(i1))}
+have fn coordinate_add(x, y finite_seq(R, 2)) finite_seq(R, 2) = fn(i1 N+: i1 <= 2) R {Current::real_scalars.add(x(i1), y(i1))}
 "#;
 
             let mut runtime = Runtime::new();
@@ -1262,7 +1262,7 @@ template<n N+>:
 
 trust have result &FunctionBox<2>
 trust result = \zero_box<2>
-&FunctionBox<2>{\zero_box<2>}.entries(1) = 0
+\zero_box<2>.entries(1) = 0
 "#;
 
             let mut runtime = Runtime::new();

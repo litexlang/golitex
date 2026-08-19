@@ -160,28 +160,18 @@ impl Runtime {
                     verify_state,
                     WellDefinedObjChildRole::FunctionHead,
                 )?;
-                let field_index = self
-                    .struct_field_index(&field_access.struct_obj, &field_access.field_name)?
-                    - 1;
-                let field_types =
-                    self.instantiated_struct_field_types(&field_access.struct_obj, verify_state)?;
-                let field_type = field_types.get(field_index).ok_or_else(|| {
-                    RuntimeError::from(WellDefinedRuntimeError(
-                        RuntimeErrorStruct::new_with_just_msg(format!(
-                            "struct field `{}` has no declared carrier",
-                            field_access.field_name
-                        )),
-                    ))
-                })?;
-                let Obj::FnSet(fn_set) = field_type else {
-                    return Err(RuntimeError::from(WellDefinedRuntimeError(
-                        RuntimeErrorStruct::new_with_just_msg(format!(
-                            "struct field `{}` is not callable; its declared carrier is {}",
-                            field_access.field_name, field_type
-                        )),
-                    )));
-                };
-                vec![FnSetSpace::Set(fn_set.clone())]
+                let field_type =
+                    self.instantiated_struct_field_type_for_access(field_access, verify_state)?;
+                vec![self
+                    .fn_set_space_from_return_set_obj(field_type.clone())
+                    .map_err(|_| {
+                        RuntimeError::from(WellDefinedRuntimeError(
+                            RuntimeErrorStruct::new_with_just_msg(format!(
+                                "struct field `{}` is not callable; its declared carrier is {}",
+                                field_access.field_name, field_type
+                            )),
+                        ))
+                    })?]
             }
             FnObjHead::InstantiatedTemplateObj(template_obj) => {
                 let function_name_obj: Obj = template_obj.clone().into();

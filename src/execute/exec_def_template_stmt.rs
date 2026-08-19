@@ -147,6 +147,33 @@ impl Runtime {
         // substitution preserves that result, so only commit the instantiated
         // statement's environment effects here.
         self.exec_preverified_stmt_affect_environment_only(&stmt)?;
+        let mut public_values = match &stmt {
+            Stmt::DefObjStmt(DefObjStmt::HaveObjEqualStmt(value_stmt)) => {
+                value_stmt.objs_equal_to.clone()
+            }
+            _ => Vec::new(),
+        };
+        if let Stmt::UnsafeStmt(UnsafeStmt::TrustHaveStmt(trust_stmt)) = &stmt {
+            let instance_key = obj_equality_key(&instance_identifier);
+            for fact in trust_stmt.facts.iter() {
+                let Fact::AtomicFact(AtomicFact::EqualFact(equal_fact)) = fact else {
+                    continue;
+                };
+                if obj_equality_key(&equal_fact.left) == instance_key {
+                    public_values.push(equal_fact.right.clone());
+                } else if obj_equality_key(&equal_fact.right) == instance_key {
+                    public_values.push(equal_fact.left.clone());
+                }
+            }
+        }
+        // Preserve body values directly at the public template application.
+        // This makes declaration-owned projection a local definitional
+        // reduction instead of a transitive hop through the hidden identifier.
+        for value in public_values {
+            self.store_atomic_fact_without_well_defined_verified_and_infer(
+                EqualFact::new(template_obj.clone().into(), value, def.line_file.clone()).into(),
+            )?;
+        }
         if let Stmt::DefObjStmt(DefObjStmt::HaveFnEqualCaseByCaseStmt(case_stmt)) = &stmt {
             self.store_template_surface_case_equations(case_stmt, template_obj)?;
         }

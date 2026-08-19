@@ -8,6 +8,7 @@ that precedes the finite calculations in
 sigma-algebra + real series convergence
   -> Kolmogorov probability space
   -> countable additivity
+  -> finite additivity and the ordinary event-probability calculus
   -> conditional probability and independence
   -> measurable random variables and pushforward distributions
 ```
@@ -34,18 +35,25 @@ lake env lean ../showcases/math_concepts_in_litex/16_probability_theory/same_mat
 - `has_series_sum` defines the right side of countable additivity by ordinary
   convergence of recursive real partial sums; there is no unconstrained total
   `infinite_sum` function.
+- `probability_of_disjoint_union` derives binary finite additivity by padding
+  two events with empty events and applying countable additivity. From it the
+  module proves the complement and difference formulas, monotonicity,
+  inclusion-exclusion, the union bound, and `0 <= P(A) <= 1`.
 - `conditional_probability` is guarded by positive evidence probability, and
   `are_independent` states factorization of intersection probability.
 - `is_measurable_map` and `is_random_variable` use measurable preimages.
   `is_distribution_of` relates a supplied pushforward distribution to those
   preimages rather than postulating a selected distribution constructor.
 
-The primary tracer is `kolmogorov_countable_additivity`: an arbitrary
-pairwise-disjoint event sequence has a union whose probability is the real
-series sum of the event probabilities. Two checked consumers show that
-independence makes positive-probability conditioning leave probability
-unchanged, and that any candidate distribution carries measurability of its
-underlying map.
+The primary derived tracer is `probability_of_disjoint_union`. It constructs
+the sequence `(A, B, empty, empty, ...)`, proves that its countable union is
+`A union B`, proves the corresponding probability series sums to
+`P(A) + P(B)`, and uses uniqueness of real-series sums together with
+`kolmogorov_countable_additivity`. Thus finite additivity is visibly a theorem,
+not an extra probability axiom. Checked consumers then recover the familiar
+event calculus. Two further consumers show that independence makes
+positive-probability conditioning leave probability unchanged, and that any
+candidate distribution carries measurability of its underlying map.
 
 ## Exact axiom boundary
 
@@ -54,7 +62,8 @@ countable additivity on a sigma-algebra. The settings also expose universe and
 binary-intersection closure and empty-event probability zero. These are
 standard consequences of the smaller axiom bases, retained as conservative
 projection laws so exact-carrier function applications do not need to replay
-the same derivations.
+the same derivations. Binary finite additivity and every event-probability
+formula listed above are proved after that boundary.
 
 The public Litex file contains no direct `trust`, global `axiom`, or
 `abstract_prop`. The settings assume supplied sigma-algebra and probability

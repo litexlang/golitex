@@ -2728,24 +2728,10 @@ impl fmt::Display for InstantiatedTemplateObj {
 
 impl fmt::Display for ObjAsStructInstanceWithFieldAccess {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        write!(f, "{}{}", STRUCT_VIEW_PREFIX, self.struct_obj.name)?;
-        if !self.struct_obj.params.is_empty() {
-            write!(
-                f,
-                "{}{}{}",
-                LESS,
-                vec_to_string_join_by_comma(&self.struct_obj.params),
-                GREATER
-            )?;
-        }
         write!(
             f,
-            "{}{}{}{}{}",
-            LEFT_CURLY_BRACE,
-            self.obj,
-            RIGHT_CURLY_BRACE,
-            DOT_AKA_FIELD_ACCESS_SIGN,
-            self.field_name
+            "{}{}{}",
+            self.obj, DOT_AKA_FIELD_ACCESS_SIGN, self.field_name
         )
     }
 }

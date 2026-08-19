@@ -7,10 +7,10 @@ probability through the Kolmogorov axioms. The source of truth is the standard
 mathematical identity of a probability space `(Omega, events, probability)`:
 `events` is a sigma-algebra on `Omega`, and `probability` is a nonnegative,
 normalized, countably additive real-valued set function. The first checkpoint
-includes event operations, conditional probability, independence, measurable
-maps, real-valued random variables, and pushforward distributions. It excludes measure construction,
-Lebesgue/Borel generation, integration, expectation, laws of large numbers,
-and limit theorems.
+includes the derived event-probability calculus, conditional probability,
+independence, measurable maps, real-valued random variables, and pushforward
+distributions. It excludes measure construction, Lebesgue/Borel generation,
+integration, expectation, laws of large numbers, and limit theorems.
 
 The intended readers are users who want to see the probability-theory layer
 that conceptually precedes the finite calculations in
@@ -106,6 +106,30 @@ public interface usable without changing its models.
 - **Allowable hole:** The setting assumes a supplied probability function; it
   does not prove that every sigma-algebra admits one.
 
+### Derived event-probability calculus
+
+- **Ordinary meaning:** Countable additivity implies binary additivity on
+  disjoint events; finite additivity then yields complement and difference
+  formulas, monotonicity, inclusion-exclusion, the union bound, and the unit
+  interval bound for every event probability.
+- **Semantic role:** Theorem layer derived from the Kolmogorov setting.
+- **Ideal Litex form:** A main theorem
+  `probability_of_disjoint_union`, followed by small named consequences.
+- **Interface sketch:** Pad `A` and `B` by empty events, identify the countable
+  union with `A union B`, calculate the finite-support real series, and use
+  uniqueness of series limits against countable additivity.
+- **Nearest wrong alternative:** Adding finite additivity, complement laws, or
+  monotonicity as new setting fields would obscure which facts are axioms and
+  which are consequences.
+- **Dependencies:** Countable additivity, empty-event probability, elementary
+  set identities, finite-support series convergence, and uniqueness of real
+  sequence limits (`proof`).
+- **Downstream uses:** Conditional probability, estimates on unions, and later
+  continuity-of-measure and probabilistic limit arguments.
+- **Allowable hole:** General finite-family additivity is left as a natural
+  induction exercise; the binary theorem already supports the ordinary
+  formulas exposed in this checkpoint.
+
 ### Conditional probability and independence
 
 - **Ordinary meaning:** `P(A | B) = P(A intersect B) / P(B)` for positive
@@ -177,6 +201,14 @@ SigmaAlgebraSetting + has_series_sum
   -> ProbabilitySpaceSetting                      [law]
   -> countable-additivity tracer                  [proof]
 
+finite-support sequences + uniqueness of limits
+  -> two-term series sum                          [proof]
+countable-additivity tracer + two-term series sum
+  -> probability_of_disjoint_union                [proof]
+  -> complement + difference                      [proof]
+  -> monotonicity + inclusion-exclusion            [proof]
+  -> union bound + 0 <= P(A) <= 1                 [proof]
+
 ProbabilitySpaceSetting + intersection + P(B)>0
   -> conditional_probability                      [well-definedness]
 ProbabilitySpaceSetting + intersection
@@ -198,9 +230,12 @@ part of the intended public file.
 
 Build countable unions first, then partial sums and series convergence, then
 the sigma-algebra setting, the probability-space setting, and its direct
-countable-additivity tracer. Add event-level conditional probability and
-independence only after that foundation. Add measurable maps and the
-real-valued random-variable specialization next, because they consume two
+countable-additivity tracer. Next prove uniqueness of series sums and the
+two-term finite-support series, then specialize countable additivity to obtain
+binary finite additivity. Derive complement, difference, monotonicity,
+inclusion-exclusion, the union bound, and the unit interval bound before adding
+event-level conditional probability and independence. Add measurable maps and
+the real-valued random-variable specialization next, because they consume two
 already-defined measurable spaces. Add the pushforward-distribution relation
 last so it can reuse measurable preimages and the source probability.
 
