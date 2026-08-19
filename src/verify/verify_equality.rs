@@ -188,6 +188,13 @@ impl Runtime {
         verify_state: &UseContextVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let builtin_goal: AtomicFact = equal_fact.clone().into();
+        if self.captures_well_definedness() {
+            let result = self
+                .verify_equality_after_one_checked_definition_reduction(equal_fact, verify_state)?;
+            if result.is_true() {
+                return Ok(result);
+            }
+        }
         let mut result = self.verify_equal_fact_with_direct_routes(equal_fact)?;
         if result.is_true() {
             return Ok(result);
@@ -198,10 +205,12 @@ impl Runtime {
             return Ok(result);
         }
 
-        result =
-            self.verify_equality_after_one_checked_definition_reduction(equal_fact, verify_state)?;
-        if result.is_true() {
-            return Ok(result);
+        if !self.captures_well_definedness() {
+            result = self
+                .verify_equality_after_one_checked_definition_reduction(equal_fact, verify_state)?;
+            if result.is_true() {
+                return Ok(result);
+            }
         }
 
         if verify_state.is_round_0() {

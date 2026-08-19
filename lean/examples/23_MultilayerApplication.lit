@@ -1,0 +1,25 @@
+# Tracer: compiler exact multi-layer unary application
+#
+# Before (Litex verified, but compiler emission stopped):
+# forall S, T, U set, a S, b T, g fn(x S) fn(y T) U:
+#     g(a)(b) = g(a)(b)
+# Former behavior: the compiler rejected every application with more than one
+# source layer, even though the verifier retained a separate callable contract
+# and argument-membership proof for each layer.
+#
+# Now (verified and compiled):
+forall S, T, U set, a S, b T, g fn(x S) fn(y T) U:
+    g(a)(b) = g(a)(b)
+# Current behavior: each unary source layer consumes its own verifier-selected
+# function contract and argument-membership proof. The intermediate g(a) value
+# remains the exact carrier of the second function set. The three-layer case
+# below keeps a second independently certified prefix rather than using a
+# two-layer special case.
+
+forall S, T, U, V set, a S, b T, c U, g fn(x S) fn(y T) fn(z U) V:
+    g(a)(b)(c) = g(a)(b)(c)
+#
+# Boundary: multiple parameters in one source layer, such as f(a, b), remain
+# fail-closed; layers are never flattened into target-language currying.
+# Evidence: target/release/litex -compact -strict -runner -f lean/examples/23_MultilayerApplication.lit
+# and cargo test --release --test litex_to_lean_compiler_tracers

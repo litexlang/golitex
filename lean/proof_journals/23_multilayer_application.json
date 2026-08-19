@@ -1,0 +1,25 @@
+{
+  "target": "lean/examples/23_MultilayerApplication.lit",
+  "attempts": [
+    {
+      "status": "failed",
+      "source": "forall A, B, C set, a A, b B, g fn(x A) fn(y B) C:\n    g(a)(b) = g(a)(b)",
+      "evidence": "ParseError: name `C` is already active in this scope and cannot be rebound",
+      "lesson": "Use fresh user-set names; C is the builtin complex set."
+    }
+  ],
+  "accepted_blocks": [
+    {
+      "id": "corrected_names",
+      "source": "forall S, T, U set, a S, b T, g fn(x S) fn(y T) U:\n    g(a)(b) = g(a)(b)",
+      "evidence": "persistent -session -before block event ok=true",
+      "lesson": "The verifier already checks and retains exact unary source application layers."
+    },
+    {
+      "id": "three_layers",
+      "source": "forall S, T, U, V set, a S, b T, c U, g fn(x S) fn(y T) fn(z U) V:\n    g(a)(b)(c) = g(a)(b)(c)",
+      "evidence": "persistent -session -before block event ok=true",
+      "lesson": "The same verifier prefix recipe extends structurally beyond two layers."
+    }
+  ]
+}

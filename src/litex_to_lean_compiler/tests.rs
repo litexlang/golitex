@@ -490,6 +490,45 @@ fn unary_function_set_application_consumes_both_memberships() {
 }
 
 #[test]
+fn multilayer_application_preserves_each_unary_source_contract() {
+    const SOURCE: &str =
+        "forall S, T, U set, a S, b T, g fn(x S) fn(y T) U:\n    g(a)(b) = g(a)(b)\n";
+    let ir = capture_ir_debug_on_verifier_stack(SOURCE, "23_MultilayerApplication.lit")
+        .expect("capture multi-layer application tracer IR");
+    assert!(ir.contains("through_layer_index: 0"), "{ir}");
+    assert!(ir.contains("intrinsic_result_set: Some("), "{ir}");
+    assert!(ir.contains("layer_index: 0"), "{ir}");
+    assert!(ir.contains("layer_index: 1"), "{ir}");
+
+    let generated = compile_on_verifier_stack(SOURCE, "23_MultilayerApplication.lit")
+        .expect("compile multi-layer application tracer");
+    assert!(generated.contains("Litex.In g (Litex.fnSet S (Litex.fnSet"));
+    assert!(generated.contains("let __fn_layer1 := (Litex.fnApply g __h0_6 a (__h0_4))"));
+    assert!(generated.contains("Litex.fnApplyOwn __fn_layer1"));
+    assert!(generated.contains("(Litex.In.own (Litex.fnSet T U) __fn_layer1)"));
+    assert!(!generated.contains("Litex.Object"));
+    assert!(!generated.contains("sorry"));
+
+    const THREE_LAYERS: &str = "forall S, T, U, V set, a S, b T, c U, g fn(x S) fn(y T) fn(z U) V:\n    g(a)(b)(c) = g(a)(b)(c)\n";
+    let generated = compile_on_verifier_stack(THREE_LAYERS, "three_layer_application.lit")
+        .expect("compile three source application layers");
+    assert!(generated.contains("let __fn_layer2 :="));
+    assert!(generated.contains("Litex.fnApplyOwn __fn_layer2"));
+    assert!(generated.contains("Litex.fnSet U V"));
+
+    let boundary = compile_on_verifier_stack(
+        "forall S, T, U set, a S, b T, f fn(x S, y T) U:\n    f(a, b) = f(a, b)\n",
+        "same_layer_multiple_parameters.lit",
+    )
+    .expect_err("same-layer multiple parameters must remain fail-closed");
+    assert!(
+        boundary.contains("exactly one parameter")
+            || boundary.contains("one parameter per source layer"),
+        "unexpected boundary error: {boundary}"
+    );
+}
+
+#[test]
 fn sketch_compiles_to_an_isolated_namespace() {
     let generated =
         compile_on_verifier_stack("1 = 1\nsketch:\n    2 = 2\n3 = 3\n", "sketch_namespace.lit")

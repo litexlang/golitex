@@ -220,7 +220,9 @@ positive-rational membership cannot reuse the real subtype.
 ## Unary function sets and application
 
 `Litex.Fn s S` contains one call field
-`{α : Type u} → (x : α) → Litex.In x s → S.Carrier`. A value is
+`{α : Type u} → (x : α) → Litex.In x s → S.Carrier`, where `s : Set u`
+and `S : Set v` may use different universes. Consequently
+`fnSet s S : Set (max (u + 1) v)`. A value is
 therefore not callable merely because of its Lean carrier: the call still
 needs the Litex proof that its argument belongs to `s`.
 
@@ -244,20 +246,32 @@ that exact contract. Example 12 uses it for
 `reciprocal(x R: x != 0) = 1 / x`: the application must pass the verifier's
 nonzero WD FactId even though Mathlib division itself is total.
 
-The authoritative probe is `examples/4_FunctionSet.lit`. Its generated theorem
+The first authoritative probe is `examples/4_FunctionSet.lit`. Its generated theorem
 quantifies independent carriers for `x` and `f`, retains both membership
 hypotheses, and emits both occurrences of `f(x)` with the exact
 verifier-selected FactId/WD proofs. The nearest negative probe lives under
 the compiler's function-set regression: changing `x s` to `x S` is rejected
 by Litex before Lean emission.
 
-The current construction boundary is one named real-valued unary layer.
+The multi-layer probe is `examples/23_MultilayerApplication.lit`. For
+`g(a)(b)`, the verifier WD DAG contains a proper-prefix object for `g(a)` with
+`intrinsic_result_set = fn(y T) U`, followed by a final object whose direct
+argument requirement is `b $in T`. Generated Lean binds the first result once
+with `let __fn_layer1 := fnApply g ...`; because that value already has the
+exact `Fn T U` carrier, the second call uses `fnApplyOwn __fn_layer1` together
+with the explicit `In.own (fnSet T U) __fn_layer1` certificate. Longer unary
+chains repeat this prefix recipe rather than flattening layers.
+
+The current named-function construction boundary is one real-valued unary
+layer.
 Identity and expression trees built from the parameter, natural literals, and
 `+`, `-`, `*`, `/` are compiled to the exact `ℝ` codomain carrier.
 Checked reduction uses the closed native-operation `Same` congruence
-theorems. Standalone anonymous compound functions, multiple parameters,
-curried returns, other domains/codomains, and other operations remain
-rejected.
+theorems. Application of an already quantified function may cross arbitrarily
+many independent unary source layers. Standalone anonymous compound functions,
+multiple parameters in one layer, dependent returned signatures, construction
+of curried named functions, other construction domains/codomains, and other
+operations remain rejected.
 
 ## Concrete predicates
 
