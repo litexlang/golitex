@@ -1,0 +1,89 @@
+# Tracer: exact-carrier subset, finiteness, nonemptiness, and power-set rules.
+#
+# Before (verified Litex, unsupported by the new compiler):
+# forall A, B set:
+#     A $subset B
+#     =>:
+#         A $in power_set(B)
+# Former behavior: compiler stopped at the registered rule certificate because
+# the native-carrier backend had no power-set membership theorem adapter.
+#
+# Now (verified and compiled):
+forall A, B set:
+    A $subset B
+    =>:
+        A $in power_set(B)
+# Current behavior: the exact subset proof constructs a native predicate member
+# of the exact power-set carrier and a proved heterogeneous Same bridge.
+#
+# Boundary: unknown rule IDs, stale fingerprints, or changed ordered premises
+# are rejected; no target-side theorem search or project axiom is permitted.
+# Evidence: target/release/litex -compact -strict -runner -f lean/examples/28_ExtendedSetRules.lit
+# and cargo test --release --test litex_to_lean_compiler_tracers extended_set_rules_use_exact_power_set_and_subset_certificates
+
+forall A set:
+    {} $subset A
+
+forall A, B set:
+    A $subset union(A, B)
+    B $subset union(A, B)
+    intersect(A, B) $subset A
+    intersect(A, B) $subset B
+    set_minus(A, B) $subset A
+
+forall A, B, S set:
+    A $subset S
+    B $subset S
+    =>:
+        union(A, B) $subset S
+
+forall A, B set:
+    $is_finite_set(A)
+    $is_finite_set(B)
+    =>:
+        $is_finite_set(union(A, B))
+        $is_finite_set(intersect(A, B))
+
+forall A, B set:
+    $is_finite_set(A)
+    =>:
+        $is_finite_set(set_minus(A, B))
+
+forall A, B set:
+    $is_nonempty_set(A)
+    =>:
+        $is_nonempty_set(union(A, B))
+
+forall A, B set:
+    $is_nonempty_set(B)
+    =>:
+        $is_nonempty_set(union(A, B))
+
+forall A, B set:
+    A $subset B
+    =>:
+        intersect(A, B) = A
+
+forall A, B set:
+    B $subset A
+    =>:
+        intersect(A, B) = B
+        set_minus(A, set_minus(A, B)) = B
+
+forall A, B set:
+    B $subset A
+    =>:
+        B = set_minus(A, set_minus(A, B))
+
+forall A set:
+    $is_nonempty_set(power_set(A))
+
+forall A set:
+    $is_finite_set(A)
+    =>:
+        $is_finite_set(power_set(A))
+
+forall A, B, D set:
+    intersect(A, union(B, D)) = union(intersect(A, B), intersect(A, D))
+    set_minus(A, intersect(B, D)) = union(set_minus(A, B), set_minus(A, D))
+    set_minus(A, union(B, D)) = intersect(set_minus(A, B), set_minus(A, D))

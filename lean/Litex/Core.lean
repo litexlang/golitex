@@ -2,7 +2,7 @@ import Mathlib
 
 namespace Litex
 
-universe u v
+universe u v w x y
 
 /-- The Lean universe used by the v2 public ABI. This is an abbreviation for
 Lean's ordinary `Type u`, not a new universe containing Mathlib. -/
@@ -10,6 +10,12 @@ abbrev u := Type u
 
 /-- Version of this deliberately incompatible target ABI. -/
 def abiVersion : Nat := 2
+
+/-- Exact one-element carrier used by finite Litex set literals. The source
+value indexes the type itself, so the carrier cannot contain another value. -/
+inductive SingletonCarrier {α : Type u} (value : α) : Type u where
+  | element
+deriving Fintype
 
 /-- Compiler-owned primitive representation edges. This class is private so a
 downstream file cannot widen Litex semantic equality by installing an
@@ -93,6 +99,19 @@ inductive Same : {α β : Type u} → α → β → Prop where
       [DerivedRule α β] :
       Derived x y → Same x y
   | refl {α : Litex.u.{u}} (x : α) : Same x x
+  | singleton
+      {α : Litex.u.{u}}
+      (value : α) :
+      Same value
+        (@SingletonCarrier.element.{u} α value : SingletonCarrier.{u} value)
+  | sumLeft
+      {α β : Litex.u.{u}}
+      (value : α) :
+      Same value (Sum.inl value : Sum α β)
+  | sumRight
+      {α β : Litex.u.{u}}
+      (value : β) :
+      Same value (Sum.inr value : Sum α β)
   | symm
       {α β : Litex.u.{u}}
       {x : α}
@@ -226,6 +245,42 @@ tag attached to a source set value. -/
 def Finite (set : Litex.Set.{u}) : Prop :=
   _root_.Finite set.Carrier
 
+/-- Empty finite Litex set carrier. -/
+def empty : Litex.Set :=
+  ofType PEmpty
+
+/-- Exact singleton set carrier indexed by its sole source value. -/
+def singleton {α : Type u} (value : α) : Litex.Set.{u} :=
+  ofType (SingletonCarrier.{u} value)
+
+/-- Exact finite coproduct of two Litex set carriers. This is used instead of
+a universal boxed value for heterogeneous finite set literals. -/
+def coproduct (left right : Litex.Set.{u}) : Litex.Set.{u} :=
+  ofType (Sum left.Carrier right.Carrier)
+
+theorem empty_finite : Finite empty := by
+  unfold Finite empty
+  infer_instance
+
+theorem singleton_finite {α : Type u} (value : α) : Finite (singleton value) := by
+  unfold Finite singleton
+  apply _root_.Finite.of_surjective
+    (fun _ : PUnit =>
+      (@SingletonCarrier.element.{u} α value : SingletonCarrier.{u} value))
+  intro singletonValue
+  cases singletonValue
+  exact ⟨PUnit.unit, rfl⟩
+
+theorem coproduct_finite
+    (left right : Litex.Set.{u})
+    (hleft : Finite left)
+    (hright : Finite right) :
+    Finite (coproduct left right) := by
+  unfold Finite coproduct at *
+  letI : _root_.Finite left.Carrier := hleft
+  letI : _root_.Finite right.Carrier := hright
+  infer_instance
+
 end Set
 
 /-- Heterogeneous membership: `x` belongs to `set` when it is semantically the
@@ -279,11 +334,475 @@ theorem same_rep
 
 end In
 
+/-- Exact binary union carrier. The two sides remain separately typed and are
+joined only by the reviewed `Sum` representation bridges in `Same`. -/
+def union (left right : Litex.Set.{u}) : Litex.Set.{u} :=
+  Set.coproduct left right
+
+/-- Exact binary intersection carrier: one representative from the left side
+together with independently checked membership in the right side. -/
+def intersect (left right : Litex.Set.{u}) : Litex.Set.{u} :=
+  Set.ofType {value : left.Carrier // In value right}
+
+/-- Exact set-difference carrier: one representative from the left side with
+a proof that it is absent from the right side. -/
+def setMinus (left right : Litex.Set.{u}) : Litex.Set.{u} :=
+  Set.ofType {value : left.Carrier // ¬ In value right}
+
 /-- Extension inclusion between two exact Litex set carriers. The element
 carrier remains heterogeneous; a subset proof transports `In` evidence and
 does not retype the source value. -/
 def Subset (left right : Litex.Set.{u}) : Prop :=
   ∀ {alpha : Litex.u.{u}} (x : alpha), In x left → In x right
+
+/-- A power-set member is represented by its exact membership predicate on
+the base carrier. Unlike a carrier of arbitrary `Litex.Set` syntax values,
+this representation remains finite when the base carrier is finite. -/
+abbrev PowerSubset (base : Litex.Set.{u}) : Type (u + 1) :=
+  ULift.{u + 1, u} (base.Carrier → Prop)
+
+def powerSubsetSet
+    (base : Litex.Set.{u})
+    (predicate : PowerSubset base) : Litex.Set.{u} :=
+  Set.ofType {value : base.Carrier // predicate.down value}
+
+def powerSubsetOfSet
+    (base subset : Litex.Set.{u}) : PowerSubset base :=
+  ULift.up (fun value : base.Carrier => In value subset)
+
+def emptyPowerSubset (base : Litex.Set.{u}) : PowerSubset base :=
+  ULift.up (fun _ : base.Carrier => False)
+
+/-- A source set and a native power-subset predicate represent the same
+mathematical set exactly when their Litex membership extensions agree. -/
+private instance (base : Litex.Set.{u}) :
+    DerivedRule (Litex.Set.{u}) (PowerSubset base) where
+  relation source predicate :=
+    Subset source (powerSubsetSet base predicate) ∧
+      Subset (powerSubsetSet base predicate) source
+
+/-- Exact power-set carrier. -/
+def powerSet (base : Litex.Set.{u}) : Litex.Set.{u + 1} :=
+  Set.ofType (PowerSubset base)
+
+/-- Extensional set equality is the closed set/set derived representation
+edge. No other carrier can register or manufacture this relation. -/
+private instance : DerivedRule (Litex.Set.{u}) (Litex.Set.{u}) where
+  relation left right := Subset left right ∧ Subset right left
+
+namespace Same
+
+theorem setExt
+    {left right : Litex.Set.{u}}
+    (forward : Subset left right)
+    (backward : Subset right left) :
+    Same left right := by
+  apply Same.derived
+  change Subset left right ∧ Subset right left
+  exact ⟨forward, backward⟩
+
+end Same
+
+namespace SetRules
+
+theorem inUnionLeft
+    {left right : Litex.Set.{u}}
+    {alpha : Type u}
+    {value : alpha}
+    (membership : In value left) :
+    In value (union left right) := by
+  rcases membership with ⟨representative, same⟩
+  exact ⟨Sum.inl representative, Same.trans same (Same.sumLeft representative)⟩
+
+theorem inUnionRight
+    {left right : Litex.Set.{u}}
+    {alpha : Type u}
+    {value : alpha}
+    (membership : In value right) :
+    In value (union left right) := by
+  rcases membership with ⟨representative, same⟩
+  exact ⟨Sum.inr representative, Same.trans same (Same.sumRight representative)⟩
+
+theorem unionCases
+    {left right : Litex.Set.{u}}
+    {alpha : Type u}
+    {value : alpha}
+    (membership : In value (union left right)) :
+    In value left ∨ In value right := by
+  rcases membership with ⟨representative, same⟩
+  cases representative with
+  | inl leftValue =>
+      exact Or.inl ⟨leftValue, Same.trans same (Same.symm (Same.sumLeft leftValue))⟩
+  | inr rightValue =>
+      exact Or.inr ⟨rightValue, Same.trans same (Same.symm (Same.sumRight rightValue))⟩
+
+theorem inIntersect
+    {left right : Litex.Set.{u}}
+    {alpha : Type u}
+    {value : alpha}
+    (leftMembership : In value left)
+    (rightMembership : In value right) :
+    In value (intersect left right) := by
+  let representative := In.rep value leftMembership
+  have sameRepresentative : Same value representative := In.same_rep value leftMembership
+  have representativeInRight : In representative right :=
+    (In.congr sameRepresentative right).mp rightMembership
+  let exactValue : {value : left.Carrier // In value right} :=
+    ⟨representative, representativeInRight⟩
+  exact ⟨exactValue, Same.trans sameRepresentative (Same.symm (Same.subtype exactValue))⟩
+
+theorem inLeftOfInIntersect
+    {left right : Litex.Set.{u}}
+    {alpha : Type u}
+    {value : alpha}
+    (membership : In value (intersect left right)) :
+    In value left := by
+  rcases membership with ⟨representative, same⟩
+  exact ⟨representative.val, Same.trans same (Same.subtype representative)⟩
+
+theorem inRightOfInIntersect
+    {left right : Litex.Set.{u}}
+    {alpha : Type u}
+    {value : alpha}
+    (membership : In value (intersect left right)) :
+    In value right := by
+  rcases membership with ⟨representative, same⟩
+  have sameValue : Same value representative.val :=
+    Same.trans same (Same.subtype representative)
+  exact (In.congr sameValue right).mpr representative.property
+
+theorem notInIntersectOfNotInLeft
+    {left right : Litex.Set.{u}}
+    {alpha : Type u}
+    {value : alpha}
+    (notMember : ¬ In value left) :
+    ¬ In value (intersect left right) :=
+  fun member => notMember (inLeftOfInIntersect member)
+
+theorem notInIntersectOfNotInRight
+    {left right : Litex.Set.{u}}
+    {alpha : Type u}
+    {value : alpha}
+    (notMember : ¬ In value right) :
+    ¬ In value (intersect left right) :=
+  fun member => notMember (inRightOfInIntersect member)
+
+theorem inSetMinus
+    {left right : Litex.Set.{u}}
+    {alpha : Type u}
+    {value : alpha}
+    (leftMembership : In value left)
+    (rightNonmembership : ¬ In value right) :
+    In value (setMinus left right) := by
+  let representative := In.rep value leftMembership
+  have sameRepresentative : Same value representative := In.same_rep value leftMembership
+  have representativeNotInRight : ¬ In representative right := by
+    intro member
+    exact rightNonmembership ((In.congr sameRepresentative right).mpr member)
+  let exactValue : {value : left.Carrier // ¬ In value right} :=
+    ⟨representative, representativeNotInRight⟩
+  exact ⟨exactValue, Same.trans sameRepresentative (Same.symm (Same.subtype exactValue))⟩
+
+theorem inLeftOfInSetMinus
+    {left right : Litex.Set.{u}}
+    {alpha : Type u}
+    {value : alpha}
+    (membership : In value (setMinus left right)) :
+    In value left := by
+  rcases membership with ⟨representative, same⟩
+  exact ⟨representative.val, Same.trans same (Same.subtype representative)⟩
+
+theorem notInRightOfInSetMinus
+    {left right : Litex.Set.{u}}
+    {alpha : Type u}
+    {value : alpha}
+    (membership : In value (setMinus left right)) :
+    ¬ In value right := by
+  rcases membership with ⟨representative, same⟩
+  have sameValue : Same value representative.val :=
+    Same.trans same (Same.subtype representative)
+  intro rightMembership
+  exact representative.property ((In.congr sameValue right).mp rightMembership)
+
+theorem emptySubset (set : Litex.Set.{u}) : Subset Set.empty set := by
+  intro _ value membership
+  rcases membership with ⟨impossible, _⟩
+  exact PEmpty.elim impossible
+
+theorem subsetUnionLeft (left right : Litex.Set.{u}) :
+    Subset left (union left right) :=
+  fun _ membership => inUnionLeft membership
+
+theorem subsetUnionRight (left right : Litex.Set.{u}) :
+    Subset right (union left right) :=
+  fun _ membership => inUnionRight membership
+
+theorem unionSubset
+    {left right target : Litex.Set.{u}}
+    (leftSubset : Subset left target)
+    (rightSubset : Subset right target) :
+    Subset (union left right) target := by
+  intro _ value membership
+  rcases unionCases membership with leftMembership | rightMembership
+  · exact leftSubset value leftMembership
+  · exact rightSubset value rightMembership
+
+theorem intersectSubsetLeft (left right : Litex.Set.{u}) :
+    Subset (intersect left right) left :=
+  fun _ membership => inLeftOfInIntersect membership
+
+theorem intersectSubsetRight (left right : Litex.Set.{u}) :
+    Subset (intersect left right) right :=
+  fun _ membership => inRightOfInIntersect membership
+
+theorem setMinusSubsetLeft (left right : Litex.Set.{u}) :
+    Subset (setMinus left right) left :=
+  fun _ membership => inLeftOfInSetMinus membership
+
+theorem unionFinite
+    (left right : Litex.Set.{u})
+    (leftFinite : Set.Finite left)
+    (rightFinite : Set.Finite right) :
+    Set.Finite (union left right) :=
+  Set.coproduct_finite left right leftFinite rightFinite
+
+theorem intersectFinite
+    (left right : Litex.Set.{u})
+    (leftFinite : Set.Finite left) :
+    Set.Finite (intersect left right) := by
+  unfold Set.Finite intersect at *
+  letI : _root_.Finite left.Carrier := leftFinite
+  infer_instance
+
+theorem setMinusFiniteLeft
+    (left right : Litex.Set.{u})
+    (leftFinite : Set.Finite left) :
+    Set.Finite (setMinus left right) := by
+  unfold Set.Finite setMinus at *
+  letI : _root_.Finite left.Carrier := leftFinite
+  infer_instance
+
+theorem unionNonemptyLeft
+    (left right : Litex.Set.{u})
+    (leftNonempty : Set.Nonempty left) :
+    Set.Nonempty (union left right) := by
+  rcases leftNonempty with ⟨value⟩
+  exact ⟨Sum.inl value⟩
+
+theorem unionNonemptyRight
+    (left right : Litex.Set.{u})
+    (rightNonempty : Set.Nonempty right) :
+    Set.Nonempty (union left right) := by
+  rcases rightNonempty with ⟨value⟩
+  exact ⟨Sum.inr value⟩
+
+theorem subsetSamePowerMember
+    {subset base : Litex.Set.{u}}
+    (subsetBase : Subset subset base) :
+    Same subset (powerSubsetOfSet base subset) := by
+  apply Same.derived
+  change
+    Subset subset
+        (powerSubsetSet base (powerSubsetOfSet base subset)) ∧
+      Subset
+        (powerSubsetSet base (powerSubsetOfSet base subset)) subset
+  constructor
+  · intro _ value membership
+    rcases subsetBase value membership with ⟨baseValue, sameBase⟩
+    have baseValueMembership : In baseValue subset :=
+      (In.congr sameBase subset).mp membership
+    let exactValue : {value : base.Carrier // In value subset} :=
+      ⟨baseValue, baseValueMembership⟩
+    exact
+      ⟨exactValue, Same.trans sameBase (Same.symm (Same.subtype exactValue))⟩
+  · intro _ value membership
+    rcases membership with ⟨exactValue, sameExact⟩
+    have sameValue : Same value exactValue.val :=
+      Same.trans sameExact (Same.subtype exactValue)
+    exact (In.congr sameValue subset).mpr exactValue.property
+
+theorem inPowerSetOfSubset
+    {subset base : Litex.Set.{u}}
+    (subsetBase : Subset subset base) :
+    In subset (powerSet base) :=
+  ⟨powerSubsetOfSet base subset,
+    subsetSamePowerMember subsetBase⟩
+
+theorem powerSetNonempty (base : Litex.Set.{u}) :
+    Set.Nonempty (powerSet base) :=
+  ⟨emptyPowerSubset base⟩
+
+theorem powerSetFinite
+    (base : Litex.Set.{u})
+    (baseFinite : Set.Finite base) :
+    Set.Finite (powerSet base) := by
+  unfold Set.Finite powerSet
+  letI : _root_.Finite base.Carrier := baseFinite
+  infer_instance
+
+theorem unionCommutative (left right : Litex.Set.{u}) :
+    Same (union left right) (union right left) :=
+  Same.setExt
+    (fun value membership => by
+      rcases unionCases membership with leftMember | rightMember
+      · exact inUnionRight leftMember
+      · exact inUnionLeft rightMember)
+    (fun value membership => by
+      rcases unionCases membership with rightMember | leftMember
+      · exact inUnionRight rightMember
+      · exact inUnionLeft leftMember)
+
+theorem unionAssociative (left middle right : Litex.Set.{u}) :
+    Same (union (union left middle) right) (union left (union middle right)) :=
+  Same.setExt
+    (fun value membership => by
+      rcases unionCases membership with leftMiddle | rightMember
+      · rcases unionCases leftMiddle with leftMember | middleMember
+        · exact inUnionLeft leftMember
+        · exact inUnionRight (inUnionLeft middleMember)
+      · exact inUnionRight (inUnionRight rightMember))
+    (fun value membership => by
+      rcases unionCases membership with leftMember | middleRight
+      · exact inUnionLeft (inUnionLeft leftMember)
+      · rcases unionCases middleRight with middleMember | rightMember
+        · exact inUnionLeft (inUnionRight middleMember)
+        · exact inUnionRight rightMember)
+
+theorem unionIdempotent (set : Litex.Set.{u}) : Same (union set set) set :=
+  Same.setExt
+    (fun _ membership => (unionCases membership).elim id id)
+    (fun _ membership => inUnionLeft membership)
+
+theorem unionEmptyRight (set : Litex.Set.{u}) : Same (union set Set.empty) set :=
+  Same.setExt
+    (fun _ membership => by
+      rcases unionCases membership with member | impossible
+      · exact member
+      · rcases impossible with ⟨empty, _⟩
+        exact PEmpty.elim empty)
+    (fun _ membership => inUnionLeft membership)
+
+theorem unionEmptyLeft (set : Litex.Set.{u}) : Same (union Set.empty set) set :=
+  Same.trans (unionCommutative Set.empty set) (unionEmptyRight set)
+
+theorem intersectCommutative (left right : Litex.Set.{u}) :
+    Same (intersect left right) (intersect right left) :=
+  Same.setExt
+    (fun _ membership =>
+      inIntersect (inRightOfInIntersect membership) (inLeftOfInIntersect membership))
+    (fun _ membership =>
+      inIntersect (inRightOfInIntersect membership) (inLeftOfInIntersect membership))
+
+theorem intersectAssociative (left middle right : Litex.Set.{u}) :
+    Same (intersect (intersect left middle) right)
+      (intersect left (intersect middle right)) :=
+  Same.setExt
+    (fun _ membership =>
+      inIntersect
+        (inLeftOfInIntersect (inLeftOfInIntersect membership))
+        (inIntersect
+          (inRightOfInIntersect (inLeftOfInIntersect membership))
+          (inRightOfInIntersect membership)))
+    (fun _ membership =>
+      inIntersect
+        (inIntersect
+          (inLeftOfInIntersect membership)
+          (inLeftOfInIntersect (inRightOfInIntersect membership)))
+        (inRightOfInIntersect (inRightOfInIntersect membership)))
+
+theorem intersectEqLeftOfSubset
+    {left right : Litex.Set.{u}}
+    (leftSubset : Subset left right) :
+    Same (intersect left right) left :=
+  Same.setExt
+    (intersectSubsetLeft left right)
+    (fun value membership => inIntersect membership (leftSubset value membership))
+
+theorem intersectEqRightOfSubset
+    {left right : Litex.Set.{u}}
+    (rightSubset : Subset right left) :
+    Same (intersect left right) right :=
+  Same.setExt
+    (intersectSubsetRight left right)
+    (fun value membership => inIntersect (rightSubset value membership) membership)
+
+theorem intersectUnionDistributive (left middle right : Litex.Set.{u}) :
+    Same (intersect left (union middle right))
+      (union (intersect left middle) (intersect left right)) :=
+  Same.setExt
+    (fun value membership => by
+      have leftMembership := inLeftOfInIntersect membership
+      rcases unionCases (inRightOfInIntersect membership) with middleMembership | rightMembership
+      · exact inUnionLeft (inIntersect leftMembership middleMembership)
+      · exact inUnionRight (inIntersect leftMembership rightMembership))
+    (fun value membership => by
+      rcases unionCases membership with middleMembership | rightMembership
+      · exact inIntersect
+          (inLeftOfInIntersect middleMembership)
+          (inUnionLeft (inRightOfInIntersect middleMembership))
+      · exact inIntersect
+          (inLeftOfInIntersect rightMembership)
+          (inUnionRight (inRightOfInIntersect rightMembership)))
+
+theorem setMinusIntersectDeMorgan (left middle right : Litex.Set.{u}) :
+    Same (setMinus left (intersect middle right))
+      (union (setMinus left middle) (setMinus left right)) :=
+  Same.setExt
+    (fun value membership => by
+      have leftMembership := inLeftOfInSetMinus membership
+      have notIntersection := notInRightOfInSetMinus membership
+      classical
+      by_cases middleMembership : In value middle
+      · exact inUnionRight (inSetMinus leftMembership (fun rightMembership =>
+          notIntersection (inIntersect middleMembership rightMembership)))
+      · exact inUnionLeft (inSetMinus leftMembership middleMembership))
+    (fun value membership => by
+      rcases unionCases membership with notMiddle | notRight
+      · exact inSetMinus
+          (inLeftOfInSetMinus notMiddle)
+          (notInIntersectOfNotInLeft (notInRightOfInSetMinus notMiddle))
+      · exact inSetMinus
+          (inLeftOfInSetMinus notRight)
+          (notInIntersectOfNotInRight (notInRightOfInSetMinus notRight)))
+
+theorem setMinusUnionDeMorgan (left middle right : Litex.Set.{u}) :
+    Same (setMinus left (union middle right))
+      (intersect (setMinus left middle) (setMinus left right)) :=
+  Same.setExt
+    (fun value membership => by
+      have leftMembership := inLeftOfInSetMinus membership
+      have notUnion := notInRightOfInSetMinus membership
+      exact inIntersect
+        (inSetMinus leftMembership (fun middleMembership =>
+          notUnion (inUnionLeft middleMembership)))
+        (inSetMinus leftMembership (fun rightMembership =>
+          notUnion (inUnionRight rightMembership))))
+    (fun value membership =>
+      inSetMinus
+        (inLeftOfInSetMinus (inLeftOfInIntersect membership))
+        (fun unionMembership => by
+          rcases unionCases unionMembership with middleMembership | rightMembership
+          · exact (notInRightOfInSetMinus (inLeftOfInIntersect membership)) middleMembership
+          · exact (notInRightOfInSetMinus (inRightOfInIntersect membership)) rightMembership))
+
+theorem setMinusRecoverSubset
+    {left subset : Litex.Set.{u}}
+    (subsetLeft : Subset subset left) :
+    Same (setMinus left (setMinus left subset)) subset :=
+  Same.setExt
+    (fun value membership => by
+      have leftMembership := inLeftOfInSetMinus membership
+      have notDifference := notInRightOfInSetMinus membership
+      classical
+      by_contra notSubset
+      exact notDifference (inSetMinus leftMembership notSubset))
+    (fun value membership =>
+      inSetMinus
+        (subsetLeft value membership)
+        (fun differenceMembership =>
+          (notInRightOfInSetMinus differenceMembership) membership))
+
+end SetRules
 
 /-- The first compiler function carrier: one named unary Litex application
 layer. Its argument remains heterogeneous; the function can be called only
@@ -494,6 +1013,28 @@ theorem hcons_isTuple [TupleShape tail] (head : alpha) (rest : tail) :
     IsTuple (HCons.mk head rest) :=
   ⟨inferInstance⟩
 
+def tupleDim [TupleShape alpha] (_value : alpha) : ℂ :=
+  TupleShape.dimension alpha
+
+/-- Exact one-based index carrier for a compiler-declared indexed tuple. -/
+abbrev TupleIndex (dimension : Nat) : Type :=
+  {index : ℤ // index ∈ Finset.Icc 1 (dimension : ℤ)}
+
+/-- A declared indexed tuple keeps its checked dimension at the type level and
+stores one uniform exact coordinate carrier.  This is not a universal object
+box: the compiler selects `alpha` from the verified coordinate expression. -/
+structure IndexedTuple (dimension : Nat) (alpha : Type u) where
+  coordinate : TupleIndex dimension → alpha
+
+instance : TupleShape (IndexedTuple dimension alpha) where
+  dimension := dimension
+
+/-- Checked one-based coordinate projection. -/
+def indexedTupleAt
+    (tuple : IndexedTuple dimension alpha)
+    (index : TupleIndex dimension) : alpha :=
+  tuple.coordinate index
+
 /-- Sequence literals use the same exact typed spine under a distinct wrapper
 so tuple-only facts cannot be inferred from a sequence by Lean typing. -/
 structure SequenceLiteral (payload : Type u) where
@@ -505,6 +1046,86 @@ def finiteSequenceSet (values : Litex.Set.{u}) (length : Nat) : Litex.Set.{u} :=
 
 def sequenceSet (values : Litex.Set.{u}) : Litex.Set.{u} :=
   Set.ofType (Nat → values.Carrier)
+
+/-- The archived compiler only exposed the following higher constructors as
+proof-free object terms plus reflexive equality. Their native ABI therefore
+uses operator-specific typed syntax values until a verifier-owned semantic
+membership adapter is selected; this is deliberately not a universal object
+box. -/
+structure BigUnionExpr (family : Type u) where
+  source : family
+
+structure BigIntersectExpr (family : Type u) where
+  source : family
+
+def bigUnion (family : alpha) : BigUnionExpr alpha := ⟨family⟩
+def bigIntersect (family : alpha) : BigIntersectExpr alpha := ⟨family⟩
+
+structure GeneralCartExpr (index : Type u) (family : Type v) (selector : Type w) where
+  indexSet : index
+  familySet : family
+  familyFunction : selector
+
+def generalCart (index : alpha) (family : beta) (selector : gamma) :
+    GeneralCartExpr alpha beta gamma :=
+  ⟨index, family, selector⟩
+
+structure SumExpr (start : Type u) (finish : Type v) (function : Type w) where
+  lower : start
+  upper : finish
+  body : function
+
+def sum (start : alpha) (finish : beta) (function : gamma) :
+    SumExpr alpha beta gamma :=
+  ⟨start, finish, function⟩
+
+structure ProductExpr (start : Type u) (finish : Type v) (function : Type w) where
+  lower : start
+  upper : finish
+  body : function
+
+def product (start : alpha) (finish : beta) (function : gamma) :
+    ProductExpr alpha beta gamma :=
+  ⟨start, finish, function⟩
+
+structure ReduceExpr
+    (start : Type u) (finish : Type v) (function : Type w)
+    (operation : Type x) (seed : Type y) where
+  lower : start
+  upper : finish
+  body : function
+  reducer : operation
+  initial : seed
+
+def reduce (start : alpha) (finish : beta) (function : gamma)
+    (operation : delta) (seed : epsilon) :
+    ReduceExpr alpha beta gamma delta epsilon :=
+  ⟨start, finish, function, operation, seed⟩
+
+structure FiniteSumExpr (set : Type u) (function : Type v) where
+  sourceSet : set
+  body : function
+
+def finiteSetSum (set : alpha) (function : beta) : FiniteSumExpr alpha beta :=
+  ⟨set, function⟩
+
+structure FiniteProductExpr (set : Type u) (function : Type v) where
+  sourceSet : set
+  body : function
+
+def finiteSetProduct (set : alpha) (function : beta) : FiniteProductExpr alpha beta :=
+  ⟨set, function⟩
+
+structure FiniteReduceExpr
+    (set : Type u) (function : Type v) (operation : Type w) (seed : Type x) where
+  sourceSet : set
+  body : function
+  reducer : operation
+  initial : seed
+
+def finiteSetReduce (set : alpha) (function : beta) (operation : gamma) (seed : delta) :
+    FiniteReduceExpr alpha beta gamma delta :=
+  ⟨set, function, operation, seed⟩
 
 /-- A predicate-defined Litex subset. Its exact carrier is the corresponding
 subtype, and the compiler-owned subtype edge relates each member to its base
@@ -833,5 +1454,46 @@ theorem real_le_iff
   simp [Le, OrderValue]
 
 end OrderBridge
+
+/-- The current compiler numeric carrier's exact natural-primality wrapper.
+The equality conjunct prevents a non-natural complex value from being
+classified through truncation or a host-language coercion. -/
+def Prime (value : ℂ) : Prop :=
+  ∃ natural : ℕ, value = (natural : ℂ) ∧ Nat.Prime natural
+
+/-- Exact natural coprimality on the current complex-valued compiler carrier. -/
+def Coprime (left right : ℂ) : Prop :=
+  ∃ leftNatural rightNatural : ℕ,
+    left = (leftNatural : ℂ) ∧
+      right = (rightNatural : ℂ) ∧
+        Nat.Coprime leftNatural rightNatural
+
+theorem primeOfNat (natural : ℕ) (prime : Nat.Prime natural) :
+    Prime (natural : ℂ) :=
+  ⟨natural, rfl, prime⟩
+
+theorem notPrimeOfNat (natural : ℕ) (notPrime : ¬ Nat.Prime natural) :
+    ¬ Prime (natural : ℂ) := by
+  rintro ⟨other, equalCast, otherPrime⟩
+  have equalNatural : natural = other := by
+    exact_mod_cast equalCast
+  exact notPrime (equalNatural ▸ otherPrime)
+
+theorem coprimeOfNat
+    (left right : ℕ)
+    (coprime : Nat.Coprime left right) :
+    Coprime (left : ℂ) (right : ℂ) :=
+  ⟨left, right, rfl, rfl, coprime⟩
+
+theorem notCoprimeOfNat
+    (left right : ℕ)
+    (notCoprime : ¬ Nat.Coprime left right) :
+    ¬ Coprime (left : ℂ) (right : ℂ) := by
+  rintro ⟨otherLeft, otherRight, equalLeftCast, equalRightCast, otherCoprime⟩
+  have equalLeft : left = otherLeft := by
+    exact_mod_cast equalLeftCast
+  have equalRight : right = otherRight := by
+    exact_mod_cast equalRightCast
+  exact notCoprime (equalLeft ▸ equalRight ▸ otherCoprime)
 
 end Litex

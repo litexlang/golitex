@@ -16,11 +16,11 @@ pub use builtin_rule_evidence::{
     FunctionApplicationReturnMembershipBuiltinRuleEvidence,
     FunctionSetMembershipBuiltinRuleEvidence, IntegerMembershipClosureBuiltinRule,
     KnownEqualityBuiltinRuleEvidence, KnownEqualityBuiltinRuleStep,
-    NativeConstantMembershipBuiltinRule, NaturalMembershipClosureBuiltinRule,
-    NonzeroExpressionOrientation, RationalMembershipClosureBuiltinRule,
-    RealArithmeticMembershipClosureBuiltinRule, RefinedNumericMembershipBuiltinRuleEvidence,
-    RegisteredLocalBuiltinRuleEvidence, SetBuilderMembershipBuiltinRuleEvidence, SetBuiltinRule,
-    SetRelationDualityBuiltinRule,
+    ListSetMembershipBuiltinRuleEvidence, NativeConstantMembershipBuiltinRule,
+    NaturalMembershipClosureBuiltinRule, NonzeroExpressionOrientation,
+    RationalMembershipClosureBuiltinRule, RealArithmeticMembershipClosureBuiltinRule,
+    RefinedNumericMembershipBuiltinRuleEvidence, RegisteredLocalBuiltinRuleEvidence,
+    SetBuilderMembershipBuiltinRuleEvidence, SetBuiltinRule, SetRelationDualityBuiltinRule,
 };
 pub use execution_trace::{
     ExecutionPhaseTrace, StatementExecutionPhase, StatementExecutionTrace, StatementPhaseStatus,

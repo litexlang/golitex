@@ -90,6 +90,7 @@ pub enum LitexToLeanSetRelationDualityBuiltinRuleIr {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum LitexToLeanSetBuiltinRuleIr {
+    EmptySubset,
     UnionCommutative,
     UnionAssociative,
     UnionIdempotent,
@@ -102,6 +103,27 @@ pub enum LitexToLeanSetBuiltinRuleIr {
     IntersectNonMembershipLeft,
     IntersectNonMembershipRight,
     SetMinusMembership,
+    IntersectEqLeftOfSubset,
+    IntersectEqRightOfSubset,
+    IntersectFinite,
+    IntersectSubsetLeft,
+    IntersectSubsetRight,
+    IntersectUnionDistributive,
+    PowerSetFinite,
+    PowerSetMembershipOfSubset,
+    PowerSetNonempty,
+    SetMinusFiniteLeft,
+    SetMinusIntersectDeMorgan,
+    SetMinusRecoverSubset,
+    SetMinusSubsetLeft,
+    SetMinusUnionDeMorgan,
+    SubsetEqSetMinusRecovery,
+    SubsetUnionLeft,
+    SubsetUnionRight,
+    UnionFinite,
+    UnionNonemptyLeft,
+    UnionNonemptyRight,
+    UnionSubset,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -137,6 +159,8 @@ pub enum LitexToLeanBuiltinRuleIr {
     SetRelationDuality(LitexToLeanSetRelationDualityBuiltinRuleIr),
     Set(LitexToLeanSetBuiltinRuleIr),
     FiniteSet(LitexToLeanFiniteSetBuiltinRuleIr),
+    ListSetMembership { selected_index: usize },
+    ListSetMembershipElimination,
     TupleLiteralShape,
     AbsoluteValue(LitexToLeanAbsoluteValueBuiltinRuleIr),
     PrimeU64Reflection,
@@ -379,10 +403,11 @@ impl LitexToLeanBuiltinRuleIr {
             BuiltinRuleEvidence::FiniteSet(rule) => Self::FiniteSet(match rule {
                 FiniteSetBuiltinRule::ListSet => LitexToLeanFiniteSetBuiltinRuleIr::ListSet,
                 FiniteSetBuiltinRule::Range => LitexToLeanFiniteSetBuiltinRuleIr::Range,
-                FiniteSetBuiltinRule::ClosedRange => {
-                    LitexToLeanFiniteSetBuiltinRuleIr::ClosedRange
-                }
+                FiniteSetBuiltinRule::ClosedRange => LitexToLeanFiniteSetBuiltinRuleIr::ClosedRange,
             }),
+            BuiltinRuleEvidence::ListSetMembership(evidence) => Self::ListSetMembership {
+                selected_index: evidence.selected_index,
+            },
             BuiltinRuleEvidence::TupleLiteralShape => Self::TupleLiteralShape,
             BuiltinRuleEvidence::AbsoluteValue(rule) => Self::AbsoluteValue(match rule {
                 AbsoluteValueBuiltinRule::NonnegativeIdentity => {

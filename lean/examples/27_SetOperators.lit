@@ -1,0 +1,42 @@
+forall A, B set:
+    union(A, B) = union(B, A)
+
+forall A, B, D set:
+    union(union(A, B), D) = union(A, union(B, D))
+
+forall A set:
+    union(A, A) = A
+    union(A, {}) = A
+    union({}, A) = A
+
+forall A, B set:
+    intersect(A, B) = intersect(B, A)
+
+forall A, B, D set:
+    intersect(intersect(A, B), D) = intersect(A, intersect(B, D))
+
+forall A, B set, x A:
+    x $in union(A, B)
+
+forall A, B set, x B:
+    x $in union(A, B)
+
+forall A, B set, x A:
+    x $in B
+    =>:
+        x $in intersect(A, B)
+
+forall A, B set, x A:
+    not x $in B
+    =>:
+        x $in set_minus(A, B)
+
+forall A, B, D set, x D:
+    not x $in A
+    =>:
+        not x $in intersect(A, B)
+
+forall A, B, D set, x D:
+    not x $in B
+    =>:
+        not x $in intersect(A, B)

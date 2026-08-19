@@ -1,77 +1,100 @@
-# Mathematical Design: Sets, Functions, and Relations in a Nutshell
+# Mathematical Design: A Small Set-Theoretic Chapter
 
-## Purpose and scope
+## Purpose and tracer
 
-This module introduces the shared language of later mathematics without
-building a miniature set-theory library. Its tracer is the theorem that the
-successor function is injective. That theorem consumes the ordinary function
-interface and Litex's builtin `$injective` predicate, so it checks that the
-simple examples compose into a real mathematical statement.
+This showcase is a compact first chapter about sets and functions, not a list
+of isolated membership checks. Its concrete tracer is
+`successor_moves_first_set_to_second_set`: Litex enumerates the finite domain
+`{1, 2, 3}` and verifies that the rule `x |-> x + 1` lands in `{2, 3, 4}`.
+That fact then supports three presentations of the same function.
+
+The chapter follows one mathematical line:
+
+```text
+membership and extensionality
+    -> a finite mapping theorem
+    -> a checked function
+    -> its graph as a set of ordered pairs
+    -> unique output
+    -> function selected by `have fn ... by exist!`
+```
 
 ## Native interface inventory
 
-| Mathematical role | Litex interface | Reason for using it |
+| Mathematical role | Native Litex interface | Use in this chapter |
 | --- | --- | --- |
-| Natural-number carrier | `N` | Builtin carrier; no local number type. |
-| Displayed finite sets | `finite_set` | Carries finiteness directly. |
-| Set operations | `union`, `intersect`, `set_minus` | Builtin constructors already expose the intended membership rules. |
-| Function image | `fn_range` | Records the actual image of a checked function. |
-| Binary-relation carrier | `power_set(cart(N, N))` | A relation is represented as a set of ordered pairs. |
-| Injectivity | `$injective(N, N, successor)` | Builtin mapping predicate; no duplicate local definition. |
+| Natural numbers | `N` | Ambient carrier for the successor graph. |
+| Displayed finite sets | `finite_set` | Concrete domains that `by enumerate finite_set` can exhaust. |
+| Set union | `union` | A nontrivial equality proved by extensionality. |
+| Set equality | `by extension` | Reduces equality to the two membership directions. |
+| Restricted function | `have fn f(x A) B = ...` | Checks that the formula maps `A` into `B`. |
+| First-class function value | `fn(x A) B {...}` | Packages the same mapping as an object. |
+| Binary relation | `power_set(cart(A, B))` | Represents a graph as a set of ordered pairs. |
+| Unique selection | `have fn ... by exist!` | Turns a proved unique-output relation into a callable function. |
 
-## Source-defined objects
+No local replacement is introduced for a builtin set, Cartesian product,
+function carrier, or unique-existence form.
+
+## Interface cards
 
 ### `first_set` and `second_set`
 
-- **Ordinary meaning:** The overlapping sets `{1, 2, 3}` and `{2, 3, 4}`.
-- **Semantic role:** First-class finite-set values.
-- **Litex form:** `have ... finite_set = ...`.
-- **Use probes:** Membership of `4` in the union, `2` in the intersection, and
-  `1` in the relative difference.
+- **Meaning:** The overlapping finite sets `{1, 2, 3}` and `{2, 3, 4}`.
+- **Form:** First-class values of builtin `finite_set`.
+- **Use probes:** Their union is computed extensionally; enumeration proves
+  that adding one sends every member of the first set to the second.
 
-### `successor`
+### `successor_on_first`
 
-- **Ordinary meaning:** The function `n |-> n + 1` on natural numbers.
-- **Semantic role:** Callable construction.
-- **Litex form:** `have fn successor(n N) N = n + 1`.
-- **Use probes:** `successor(4) = 5`, membership in `fn_range(successor)`, and
-  the injectivity theorem.
-- **Nearest wrong alternative:** A predicate describing input/output pairs
-  would lose ordinary function application and the native range interface.
+- **Meaning:** The restricted map `x |-> x + 1` from `first_set` to
+  `second_set`.
+- **Form:** Formula-defined `have fn`.
+- **Dependency:** Its codomain check consumes the earlier enumeration theorem.
 
-### `next_relation`
+### `successor_as_value`
 
-- **Ordinary meaning:** The singleton relation containing `(1, 2)`.
-- **Semantic role:** Binary relation.
-- **Litex form:** A value of `power_set(cart(N, N))`.
-- **Use probe:** `(1, 2) $in next_relation`.
-- **Nearest wrong alternative:** A custom relation structure would add fields
-  without adding any mathematics needed by this example.
+- **Meaning:** The same restricted map, now stored as a first-class value.
+- **Form:** An anonymous `fn(input first_set) second_set {...}` expression.
+- **Reason to include:** It distinguishes defining a named callable function
+  from constructing a function object that can be stored or passed around.
 
-## Theorem spine
+### `successor_graph`
 
-### `successor_is_injective`
+- **Meaning:** The relation `{(x, y) in N x N : y = x + 1}`.
+- **Form:** A set builder inhabiting `power_set(cart(N, N))`.
+- **Use probe:** The value selected by unique existence lies on this graph.
 
-1. Assume `successor(x) = successor(y)`.
-2. Rewrite through the function definition to obtain `x + 1 = y + 1`.
-3. Subtract one from both sides to obtain `x = y`.
-4. Fold the builtin definition of `$injective`.
+### `successor_from_unique_output`
+
+- **Meaning:** The function selected from the relation `y = x + 1`, after
+  proving that every input has exactly one output.
+- **Form:** `have fn ... by exist!`.
+- **Verifier boundary:** Eliminating named graph membership inside the nested
+  uniqueness proof currently adds administrative proof steps. The public
+  proof uses the equivalent equation `y = x + 1` for selection, then proves
+  graph membership as a separate specification theorem. No trust is added.
 
 ## Dependency order
 
 ```text
-first_set, second_set -> union/intersection/difference membership
-successor -> evaluation -> fn_range membership -> successor_is_injective
-cart(N, N) -> next_relation -> ordered-pair membership
-```
+first_set, second_set
+    |-> first_union_second
+    |-> successor_moves_first_set_to_second_set
+            |-> successor_on_first
+            |-> successor_as_value
 
-The three branches are intentionally independent. The theorem branch is the
-tracer because it exercises declaration, application, arithmetic rewriting,
-and a reusable builtin property in one short path.
+N x N |-> successor_graph
+unique output |-> successor_from_unique_output
+successor_graph + selected output |-> selected_successor_lies_on_graph
+
+first_set subset N + the three definitions
+    |-> three_successor_presentations_agree
+```
 
 ## Boundary
 
-The module does not introduce equivalence relations, quotient sets, inverse
-functions, relation composition, cardinal arithmetic, or Cantor--Bernstein.
-Those require a longer dependency chain and belong in later showcases. The
-public Litex source adds no axiom, `abstract_prop`, or trusted step.
+This is deliberately smaller than a full set-theory or analysis chapter. It
+does not develop axiomatic set theory, inverse images, equivalence relations,
+quotients, cardinal arithmetic, or Cantor--Bernstein. Those require their own
+dependency chains. The public Litex source adds no axiom, `abstract_prop`, or
+trusted step.

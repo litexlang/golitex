@@ -5,7 +5,38 @@ use crate::litex_to_lean_ir::{
     ADD_POSITIVE_RULE_ID, DIV_NONNEGATIVE_FINGERPRINT, DIV_NONNEGATIVE_RULE_ID,
     DIV_POSITIVE_FINGERPRINT, DIV_POSITIVE_RULE_ID, LESS_EQUAL_OF_LESS_FINGERPRINT,
     LESS_EQUAL_OF_LESS_RULE_ID, MUL_NONNEGATIVE_FINGERPRINT, MUL_NONNEGATIVE_RULE_ID,
-    MUL_POSITIVE_FINGERPRINT, MUL_POSITIVE_RULE_ID,
+    MUL_POSITIVE_FINGERPRINT, MUL_POSITIVE_RULE_ID, SET_EMPTY_SUBSET_FINGERPRINT,
+    SET_EMPTY_SUBSET_RULE_ID, SET_INTERSECT_ASSOCIATIVE_FINGERPRINT,
+    SET_INTERSECT_ASSOCIATIVE_RULE_ID, SET_INTERSECT_COMMUTATIVE_FINGERPRINT,
+    SET_INTERSECT_COMMUTATIVE_RULE_ID, SET_INTERSECT_EQ_LEFT_OF_SUBSET_FINGERPRINT,
+    SET_INTERSECT_EQ_LEFT_OF_SUBSET_RULE_ID, SET_INTERSECT_EQ_RIGHT_OF_SUBSET_FINGERPRINT,
+    SET_INTERSECT_EQ_RIGHT_OF_SUBSET_RULE_ID, SET_INTERSECT_FINITE_FINGERPRINT,
+    SET_INTERSECT_FINITE_RULE_ID, SET_INTERSECT_MEMBERSHIP_FINGERPRINT,
+    SET_INTERSECT_MEMBERSHIP_RULE_ID, SET_INTERSECT_SUBSET_LEFT_FINGERPRINT,
+    SET_INTERSECT_SUBSET_LEFT_RULE_ID, SET_INTERSECT_SUBSET_RIGHT_FINGERPRINT,
+    SET_INTERSECT_SUBSET_RIGHT_RULE_ID, SET_INTERSECT_UNION_DISTRIBUTIVE_FINGERPRINT,
+    SET_INTERSECT_UNION_DISTRIBUTIVE_RULE_ID, SET_MINUS_FINITE_LEFT_FINGERPRINT,
+    SET_MINUS_FINITE_LEFT_RULE_ID, SET_MINUS_INTERSECT_DE_MORGAN_FINGERPRINT,
+    SET_MINUS_INTERSECT_DE_MORGAN_RULE_ID, SET_MINUS_MEMBERSHIP_FINGERPRINT,
+    SET_MINUS_MEMBERSHIP_RULE_ID, SET_MINUS_RECOVER_SUBSET_FINGERPRINT,
+    SET_MINUS_RECOVER_SUBSET_RULE_ID, SET_MINUS_SUBSET_LEFT_FINGERPRINT,
+    SET_MINUS_SUBSET_LEFT_RULE_ID, SET_MINUS_UNION_DE_MORGAN_FINGERPRINT,
+    SET_MINUS_UNION_DE_MORGAN_RULE_ID, SET_POWER_SET_FINITE_FINGERPRINT,
+    SET_POWER_SET_FINITE_RULE_ID, SET_POWER_SET_MEMBERSHIP_OF_SUBSET_FINGERPRINT,
+    SET_POWER_SET_MEMBERSHIP_OF_SUBSET_RULE_ID, SET_POWER_SET_NONEMPTY_FINGERPRINT,
+    SET_POWER_SET_NONEMPTY_RULE_ID, SET_SUBSET_EQ_SET_MINUS_RECOVERY_FINGERPRINT,
+    SET_SUBSET_EQ_SET_MINUS_RECOVERY_RULE_ID, SET_SUBSET_UNION_LEFT_FINGERPRINT,
+    SET_SUBSET_UNION_LEFT_RULE_ID, SET_SUBSET_UNION_RIGHT_FINGERPRINT,
+    SET_SUBSET_UNION_RIGHT_RULE_ID, SET_UNION_ASSOCIATIVE_FINGERPRINT,
+    SET_UNION_ASSOCIATIVE_RULE_ID, SET_UNION_COMMUTATIVE_FINGERPRINT,
+    SET_UNION_COMMUTATIVE_RULE_ID, SET_UNION_EMPTY_LEFT_FINGERPRINT, SET_UNION_EMPTY_LEFT_RULE_ID,
+    SET_UNION_EMPTY_RIGHT_FINGERPRINT, SET_UNION_EMPTY_RIGHT_RULE_ID, SET_UNION_FINITE_FINGERPRINT,
+    SET_UNION_FINITE_RULE_ID, SET_UNION_IDEMPOTENT_FINGERPRINT, SET_UNION_IDEMPOTENT_RULE_ID,
+    SET_UNION_MEMBERSHIP_LEFT_FINGERPRINT, SET_UNION_MEMBERSHIP_LEFT_RULE_ID,
+    SET_UNION_MEMBERSHIP_RIGHT_FINGERPRINT, SET_UNION_MEMBERSHIP_RIGHT_RULE_ID,
+    SET_UNION_NONEMPTY_LEFT_FINGERPRINT, SET_UNION_NONEMPTY_LEFT_RULE_ID,
+    SET_UNION_NONEMPTY_RIGHT_FINGERPRINT, SET_UNION_NONEMPTY_RIGHT_RULE_ID,
+    SET_UNION_SUBSET_FINGERPRINT, SET_UNION_SUBSET_RULE_ID,
 };
 use crate::prelude::*;
 use std::collections::{HashMap, HashSet};
@@ -92,6 +123,9 @@ fn emit_statement(
         LitexToLeanStatementIr::DefObjStmt(LitexToLeanDefObjStmtIr::HaveFnEqualStmt(
             definition,
         )) => emit_named_function(definition, declarations, fact_index, context)?,
+        LitexToLeanStatementIr::DefObjStmt(LitexToLeanDefObjStmtIr::HaveTupleStmt(definition)) => {
+            emit_indexed_tuple(definition, declarations, fact_index, context)?
+        }
         LitexToLeanStatementIr::DefPredicateStmt(LitexToLeanDefPredicateStmtIr::DefPropStmt(
             definition,
         )) => emit_predicate_definition(definition, declarations, context)?,
@@ -105,12 +139,6 @@ fn emit_statement(
             crate::litex_to_lean_ir::validate_litex_to_lean_well_definedness_certificate(
                 &theorem.well_definedness,
             )?;
-            if !theorem.stored_projections.is_empty() || !theorem.inferred_facts.is_empty() {
-                return Err(
-                    "compiler named-theorem MVP rejects changed proof-step counts, projections, or inferred facts"
-                        .into(),
-                );
-            }
             let theorem_name = lean_identifier(&theorem.name);
             let proof_steps = theorem
                 .proof_steps
@@ -132,6 +160,17 @@ fn emit_statement(
                     .insert(fact_id, theorem.theorem.proposition.clone());
             }
             *fact_index += 1;
+            emit_fact_effects(
+                theorem
+                    .stored_projections
+                    .iter()
+                    .chain(theorem.inferred_facts.iter())
+                    .collect(),
+                &theorem.well_definedness,
+                declarations,
+                fact_index,
+                context,
+            )?;
         }
         LitexToLeanStatementIr::ProofBlock(LitexToLeanProofBlockStmtIr::ClaimStmt(claim)) => {
             emit_claim(claim, declarations, fact_index, context)?;
@@ -140,15 +179,33 @@ fn emit_statement(
             emit_example(example, declarations, fact_index, context)?;
         }
         LitexToLeanStatementIr::Fact(fact) => {
-            if !fact.stored_projections.is_empty() {
-                return Err(
-                    "compiler does not yet emit independently stored forall projections".into(),
-                );
+            let mut facts = Vec::new();
+            if fact.stored_projections.is_empty() || fact.source.stored_fact_id().is_some() {
+                facts.push(&fact.source);
             }
+            let mut projections = fact.stored_projections.iter().collect::<Vec<_>>();
+            if let Fact::ForallFact(source_forall) = &fact.source.proposition {
+                projections.sort_by_key(|projection| {
+                    let Fact::ForallFact(projected) = &projection.proposition else {
+                        return usize::MAX;
+                    };
+                    let Some(projected_conclusion) = projected.then_facts.first() else {
+                        return usize::MAX;
+                    };
+                    source_forall
+                        .then_facts
+                        .iter()
+                        .position(|source_conclusion| {
+                            source_conclusion.clone().to_fact().to_string()
+                                == projected_conclusion.clone().to_fact().to_string()
+                        })
+                        .unwrap_or(usize::MAX)
+                });
+            }
+            facts.extend(projections);
+            facts.extend(fact.inferred_facts.iter());
             emit_fact_effects(
-                std::iter::once(&fact.source)
-                    .chain(fact.inferred_facts.iter())
-                    .collect::<Vec<_>>(),
+                facts,
                 &fact.well_definedness,
                 declarations,
                 fact_index,
@@ -260,7 +317,34 @@ fn emit_fact_effects(
     context: &mut RenderContext,
 ) -> Result<(), String> {
     crate::litex_to_lean_ir::validate_litex_to_lean_well_definedness_certificate(well_definedness)?;
+    let mut seen_fact_ids = HashMap::new();
     for fact in facts {
+        if let Some(fact_id) = fact.stored_fact_id() {
+            if let Some(previous) = seen_fact_ids.insert(fact_id, fact.proposition.to_string()) {
+                if previous != fact.proposition.to_string() {
+                    return Err(format!(
+                        "FactId `{fact_id}` changed proposition inside one statement emission"
+                    ));
+                }
+                continue;
+            }
+            if let Some(previous) = context.fact_propositions.get(&fact_id) {
+                let same = previous.to_string() == fact.proposition.to_string()
+                    || match (previous, &fact.proposition) {
+                        (Fact::ForallFact(previous), Fact::ForallFact(current)) => {
+                            render_forall_fact_type(previous, context)?
+                                == render_forall_fact_type(current, context)?
+                        }
+                        _ => false,
+                    };
+                if !same {
+                    return Err(format!(
+                        "FactId `{fact_id}` was reused for `{previous}` and `{}`",
+                        fact.proposition
+                    ));
+                }
+            }
+        }
         let theorem_name = format!("__fact{fact_index}");
         declarations.push(emit_stored_fact(
             fact,
@@ -269,12 +353,60 @@ fn emit_fact_effects(
             context,
         )?);
         if let Some(fact_id) = fact.stored_fact_id() {
-            context.fact_names.insert(fact_id, theorem_name);
+            context.fact_names.insert(fact_id, theorem_name.clone());
             context
                 .fact_propositions
                 .insert(fact_id, fact.proposition.clone());
         }
+        register_forall_conclusion_bindings(fact, &theorem_name, context)?;
         *fact_index += 1;
+    }
+    Ok(())
+}
+
+fn register_forall_conclusion_bindings(
+    fact: &LitexToLeanFactIr,
+    theorem_name: &str,
+    context: &mut RenderContext,
+) -> Result<(), String> {
+    let (
+        Fact::ForallFact(forall),
+        LitexToLeanFactProofIr::ForallIntroduction {
+            parameter_premises,
+            premises,
+            conclusions,
+            ..
+        },
+    ) = (&fact.proposition, &fact.proof)
+    else {
+        return Ok(());
+    };
+    for (conclusion_index, conclusion) in conclusions.iter().enumerate() {
+        let Some(fact_id) = conclusion.stored_fact_id() else {
+            continue;
+        };
+        if let Some(previous) = context.fact_propositions.get(&fact_id) {
+            if previous.to_string() != conclusion.proposition.to_string() {
+                return Err(format!(
+                    "forall conclusion FactId `{fact_id}` changed from `{previous}` to `{}`",
+                    conclusion.proposition
+                ));
+            }
+        }
+        context
+            .fact_propositions
+            .insert(fact_id, conclusion.proposition.clone());
+        context.forall_conclusion_bindings.insert(
+            fact_id,
+            ForallConclusionBinding {
+                theorem_name: theorem_name.to_string(),
+                forall: forall.clone(),
+                parameter_premises: parameter_premises.clone(),
+                premises: premises.clone(),
+                conclusion_index,
+                conclusion_count: conclusions.len(),
+            },
+        );
     }
     Ok(())
 }
@@ -449,7 +581,10 @@ fn emit_trust_statement(
             "explicit source `trust` requires one stored source FactId".to_string()
         })?;
         let name = format!("__fact{fact_index}");
-        let proposition = render_fact(&fact.proposition, context)?;
+        let proposition = match &fact.proposition {
+            Fact::ForallFact(forall) => render_forall_fact_type(forall, context)?,
+            _ => render_fact(&fact.proposition, context)?,
+        };
         declarations.push(format!("axiom {name} : {proposition}"));
         context.fact_names.insert(fact_id, name);
         context
@@ -529,6 +664,217 @@ fn emit_object_choices(
     Ok(())
 }
 
+fn emit_indexed_tuple(
+    definition: &LitexToLeanHaveTupleStmtIr,
+    declarations: &mut Vec<String>,
+    fact_index: &mut usize,
+    context: &mut RenderContext,
+) -> Result<(), String> {
+    let LitexToLeanObjectIr::Number { normalized_value } = &definition.dimension else {
+        return Err("indexed tuple dimension must be a closed natural numeral".into());
+    };
+    let dimension = normalized_value
+        .parse::<usize>()
+        .map_err(|_| "indexed tuple dimension is not a machine natural".to_string())?;
+    if dimension < 2 || definition.dimension_checks.len() != 2 {
+        return Err("indexed tuple requires its positive-dimension and at-least-two checks".into());
+    }
+    if !indexed_tuple_value_is_complex(&definition.value, definition.index_symbol_id) {
+        return Err(
+            "indexed tuple coordinate expression has no reviewed uniform complex carrier".into(),
+        );
+    }
+
+    let name = lean_identifier(&definition.name);
+    let mut body_context = context.clone();
+    body_context
+        .symbol_names
+        .insert(definition.index_symbol_id, "__index".into());
+    body_context.numeric_representations.insert(
+        definition.index_symbol_id,
+        "(((__index.val : ℤ) : ℂ))".into(),
+    );
+    let value = render_numeric_object_ir(&definition.value, &body_context)?;
+
+    for (check_index, check) in definition.dimension_checks.iter().enumerate() {
+        let proposition = render_fact(&check.proposition, context)?;
+        let proof = render_proof(check, context)?;
+        declarations.push(format!(
+            "theorem __{name}_dimension_check{} : {proposition} := by\n  exact {proof}",
+            check_index + 1
+        ));
+    }
+    declarations.push(format!(
+        "noncomputable def {name} : Litex.IndexedTuple {dimension} ℂ :=\n  ⟨fun __index => {value}⟩"
+    ));
+    if context
+        .symbol_names
+        .insert(definition.symbol_id, name.clone())
+        .is_some()
+    {
+        return Err(format!(
+            "duplicate compiler symbol identity for indexed tuple `{}`",
+            definition.name
+        ));
+    }
+    context
+        .indexed_tuple_bindings
+        .insert(definition.symbol_id, IndexedTupleBinding { dimension });
+
+    let mut is_tuple = None;
+    let mut dimension_fact = None;
+    let mut coordinate = None;
+    for fact in &definition.stored_facts {
+        let slot = match fact.role {
+            LitexToLeanStoredTupleFactRoleIr::IsTuple => &mut is_tuple,
+            LitexToLeanStoredTupleFactRoleIr::Dimension => &mut dimension_fact,
+            LitexToLeanStoredTupleFactRoleIr::Coordinate => &mut coordinate,
+        };
+        if slot.replace(fact).is_some() {
+            return Err("indexed tuple retained a duplicate stored-effect role".into());
+        }
+    }
+    let (Some(is_tuple), Some(dimension_fact), Some(coordinate)) =
+        (is_tuple, dimension_fact, coordinate)
+    else {
+        return Err("indexed tuple requires three ordered stored-effect roles".into());
+    };
+
+    let Fact::AtomicFact(AtomicFact::IsTupleFact(tuple_fact)) = &is_tuple.proposition else {
+        return Err("indexed tuple IsTuple effect changed proposition shape".into());
+    };
+    if !object_is_symbol(&tuple_fact.set, definition.symbol_id) {
+        return Err("indexed tuple IsTuple effect changed its declared object".into());
+    }
+    let theorem_name = format!("__fact{fact_index}");
+    declarations.push(format!(
+        "theorem {theorem_name} : {} := by\n  exact ⟨inferInstance⟩",
+        render_fact(&is_tuple.proposition, context)?
+    ));
+    context.fact_names.insert(is_tuple.fact_id, theorem_name);
+    context
+        .fact_propositions
+        .insert(is_tuple.fact_id, is_tuple.proposition.clone());
+    *fact_index += 1;
+
+    let (left, right) = equality_parts(&dimension_fact.proposition)?;
+    let Obj::TupleDim(tuple_dimension) = left else {
+        return Err("indexed tuple dimension effect lost tuple_dim".into());
+    };
+    if !object_is_symbol(tuple_dimension.arg.as_ref(), definition.symbol_id)
+        || LitexToLeanObjectIr::lower(right)? != definition.dimension
+    {
+        return Err("indexed tuple dimension effect changed its object or dimension".into());
+    }
+    let theorem_name = format!("__fact{fact_index}");
+    declarations.push(format!(
+        "theorem {theorem_name} : {} := by\n  exact Litex.Same.ofEq (by rfl)",
+        render_fact(&dimension_fact.proposition, context)?
+    ));
+    context
+        .fact_names
+        .insert(dimension_fact.fact_id, theorem_name);
+    context
+        .fact_propositions
+        .insert(dimension_fact.fact_id, dimension_fact.proposition.clone());
+    *fact_index += 1;
+
+    emit_indexed_tuple_coordinate(definition, coordinate, declarations, fact_index, context)
+}
+
+fn emit_indexed_tuple_coordinate(
+    definition: &LitexToLeanHaveTupleStmtIr,
+    coordinate: &LitexToLeanStoredTupleFactIr,
+    declarations: &mut Vec<String>,
+    fact_index: &mut usize,
+    context: &mut RenderContext,
+) -> Result<(), String> {
+    let Fact::ForallFact(forall) = &coordinate.proposition else {
+        return Err("indexed tuple coordinate effect is not a forall".into());
+    };
+    let parameters = forall
+        .params_def_with_type
+        .collect_param_bindings_with_types();
+    let [(binding, param_type)] = parameters.as_slice() else {
+        return Err("indexed tuple coordinate effect changed its one-index binder".into());
+    };
+    if !forall.dom_facts.is_empty() || forall.then_facts.len() != 1 {
+        return Err(
+            "indexed tuple coordinate effect changed its domain or conclusion arity".into(),
+        );
+    }
+    let Obj::ClosedRange(range) = parameter_set(param_type)? else {
+        return Err("indexed tuple coordinate binder is not the checked closed range".into());
+    };
+    let expected_start = LitexToLeanObjectIr::Number {
+        normalized_value: "1".into(),
+    };
+    if LitexToLeanObjectIr::lower(range.start.as_ref())? != expected_start
+        || LitexToLeanObjectIr::lower(range.end.as_ref())? != definition.dimension
+    {
+        return Err("indexed tuple coordinate range changed its one-based dimension".into());
+    }
+
+    let index = "__tuple_index";
+    let membership = "__tuple_index_in";
+    let exact_index = format!("(Litex.In.rep {index} {membership})");
+    let mut nested = context.clone();
+    nested.symbol_names.insert(binding.id(), index.into());
+    nested
+        .exact_tuple_indices
+        .insert(binding.id(), exact_index.clone());
+    nested
+        .numeric_representations
+        .insert(binding.id(), format!("((({exact_index}).val : ℤ) : ℂ)"));
+    let conclusion = forall.then_facts[0].clone().to_fact();
+    let rendered_conclusion = render_fact(&conclusion, &nested)?;
+    let range = format!(
+        "(Litex.closedRange (1 : ℤ) ({} : ℤ))",
+        match &definition.dimension {
+            LitexToLeanObjectIr::Number { normalized_value } => normalized_value,
+            _ => unreachable!("dimension was validated before coordinate emission"),
+        }
+    );
+    let theorem_name = format!("__fact{fact_index}");
+    declarations.push(format!(
+        "theorem {theorem_name} :\n    ∀ {{__tuple_index_carrier : Type}} ({index} : __tuple_index_carrier) ({membership} : Litex.In {index} {range}),\n      {rendered_conclusion} := by\n  intro __tuple_index_carrier {index} {membership}\n  exact Litex.Same.ofEq (by rfl)"
+    ));
+    context.fact_names.insert(coordinate.fact_id, theorem_name);
+    context
+        .fact_propositions
+        .insert(coordinate.fact_id, coordinate.proposition.clone());
+    *fact_index += 1;
+    Ok(())
+}
+
+fn object_is_symbol(object: &Obj, symbol_id: SymbolId) -> bool {
+    matches!(object, Obj::Atom(atom) if atom.symbol_ref().is_some_and(|symbol| symbol.id() == symbol_id))
+}
+
+fn indexed_tuple_value_is_complex(object: &LitexToLeanObjectIr, index: SymbolId) -> bool {
+    match object {
+        LitexToLeanObjectIr::Number { .. } | LitexToLeanObjectIr::Constant(_) => true,
+        LitexToLeanObjectIr::Symbol { symbol_id, .. } => *symbol_id == index,
+        LitexToLeanObjectIr::BuiltinApp {
+            operator,
+            arguments,
+            ..
+        } if matches!(
+            operator,
+            LitexToLeanBuiltinObjectOperatorIr::Add
+                | LitexToLeanBuiltinObjectOperatorIr::Sub
+                | LitexToLeanBuiltinObjectOperatorIr::Mul
+                | LitexToLeanBuiltinObjectOperatorIr::Div
+        ) =>
+        {
+            arguments
+                .iter()
+                .all(|argument| indexed_tuple_value_is_complex(argument, index))
+        }
+        _ => false,
+    }
+}
+
 fn emit_named_function(
     definition: &LitexToLeanHaveFnEqualStmtIr,
     declarations: &mut Vec<String>,
@@ -583,6 +929,11 @@ fn emit_named_function(
             local
                 .numeric_representations
                 .insert(parameter.symbol_id, representation);
+        }
+        if let Some(proof) = membership_numeric_proof(&parameter.set, &argument, &membership) {
+            local
+                .numeric_representation_memberships
+                .insert(parameter.symbol_id, proof);
         }
     }
     for (index, domain) in definition.domain_premises.iter().enumerate() {
@@ -1201,6 +1552,23 @@ fn emit_forall_fact(
             intro_names.push(name);
             continue;
         }
+        if matches!(
+            param_type,
+            ParamType::NonemptySet(_) | ParamType::FiniteSet(_)
+        ) {
+            validate_refined_set_parameter_premise(binding.id(), param_type, &premise.fact)?;
+            binders.push(format!("({name} : Litex.Set)"));
+            intro_names.push(name.clone());
+            let actual = render_fact(&premise.fact, &context)?;
+            let hypothesis = format!("__h{theorem_index}_{}", parameter_index + 1);
+            binders.push(format!("({hypothesis} : {actual})"));
+            intro_names.push(hypothesis.clone());
+            context.fact_names.insert(premise.fact_id, hypothesis);
+            context
+                .fact_propositions
+                .insert(premise.fact_id, premise.fact.clone());
+            continue;
+        }
 
         let set = parameter_set(param_type)?;
         let carrier_name = format!("__carrier{theorem_index}_{}", parameter_index + 1);
@@ -1246,6 +1614,13 @@ fn emit_forall_fact(
                 },
             );
         }
+        install_parameter_fact_aliases(
+            binding.id(),
+            &premise.fact,
+            &format!("__h{theorem_index}_{}", parameter_index + 1),
+            set,
+            &mut context,
+        )?;
     }
 
     for (premise_index, premise) in premises.iter().enumerate() {
@@ -1347,6 +1722,33 @@ fn render_forall_fact_type(
             binders.push(format!("({name} : Litex.Set)"));
             continue;
         }
+        if matches!(
+            param_type,
+            ParamType::NonemptySet(_) | ParamType::FiniteSet(_)
+        ) {
+            binders.push(format!("({name} : Litex.Set)"));
+            let property = match param_type {
+                ParamType::NonemptySet(_) => "Litex.Set.Nonempty",
+                ParamType::FiniteSet(_) => "Litex.Set.Finite",
+                _ => unreachable!("refined-set branch checked above"),
+            };
+            binders.push(format!("(__type{} : {property} {name})", index + 1));
+            let expected = match param_type {
+                ParamType::NonemptySet(_) => {
+                    format!("Litex.Set.Nonempty {name}")
+                }
+                ParamType::FiniteSet(_) => format!("Litex.Set.Finite {name}"),
+                _ => unreachable!("refined-set branch checked above"),
+            };
+            install_rendered_parameter_aliases(
+                binding.id(),
+                &expected,
+                &format!("__type{}", index + 1),
+                None,
+                &mut context,
+            )?;
+            continue;
+        }
 
         let set = parameter_set(param_type)?;
         let carrier = format!("__carrier{}", index + 1);
@@ -1366,6 +1768,17 @@ fn render_forall_fact_type(
             index + 1,
             render_obj(set, &context)?
         ));
+        let expected = format!("Litex.In {name} {}", render_obj(set, &context)?);
+        install_rendered_parameter_aliases(
+            binding.id(),
+            &expected,
+            &format!("__type{}", index + 1),
+            match set {
+                Obj::FnSet(function) => Some(LitexToLeanFunctionTypeIr::lower(function)?),
+                _ => None,
+            },
+            &mut context,
+        )?;
     }
     for (index, premise) in forall.dom_facts.iter().enumerate() {
         binders.push(format!(
@@ -1389,6 +1802,58 @@ fn render_forall_fact_type(
     ))
 }
 
+fn install_parameter_fact_aliases(
+    symbol_id: SymbolId,
+    proposition: &Fact,
+    proof_name: &str,
+    set: &Obj,
+    context: &mut RenderContext,
+) -> Result<(), String> {
+    let function = match set {
+        Obj::FnSet(function) => Some(LitexToLeanFunctionTypeIr::lower(function)?),
+        _ => None,
+    };
+    let expected = render_fact(proposition, context)?;
+    install_rendered_parameter_aliases(symbol_id, &expected, proof_name, function, context)
+}
+
+fn install_rendered_parameter_aliases(
+    symbol_id: SymbolId,
+    expected: &str,
+    proof_name: &str,
+    function: Option<LitexToLeanFunctionTypeIr>,
+    context: &mut RenderContext,
+) -> Result<(), String> {
+    let aliases = context
+        .well_definedness
+        .as_ref()
+        .map(|certificate| certificate.parameter_facts.clone())
+        .unwrap_or_default();
+    for alias in aliases {
+        if alias.symbol_id != symbol_id || render_fact(&alias.proposition, context)? != expected {
+            continue;
+        }
+        context
+            .fact_names
+            .insert(alias.fact_id, proof_name.to_string());
+        context
+            .fact_propositions
+            .insert(alias.fact_id, alias.proposition.clone());
+        if let Some(function) = &function {
+            context.function_bindings.insert(
+                alias.fact_id,
+                FunctionBinding {
+                    symbol_id,
+                    function: function.clone(),
+                    membership_proof_name: proof_name.to_string(),
+                    direct: false,
+                },
+            );
+        }
+    }
+    Ok(())
+}
+
 #[derive(Clone, Default)]
 struct RenderContext {
     symbol_names: HashMap<SymbolId, String>,
@@ -1397,18 +1862,42 @@ struct RenderContext {
     /// Ordinary equality and membership keep using `symbol_names`; only
     /// numeric relation rendering consumes these evidence-backed views.
     numeric_representations: HashMap<SymbolId, String>,
+    /// Membership proofs for the canonical numeric observations above. A
+    /// heterogeneous source parameter and its selected native representative
+    /// are not definitionally the same Lean term, so arithmetic closure rules
+    /// must use this bridge rather than reuse the parameter's original
+    /// membership proof at the representative's type.
+    numeric_representation_memberships: HashMap<SymbolId, String>,
     numeric_real_values: HashMap<SymbolId, String>,
+    exact_tuple_indices: HashMap<SymbolId, String>,
+    indexed_tuple_bindings: HashMap<SymbolId, IndexedTupleBinding>,
     /// Existential bodies are cloned before reaching this IR, so their scoped
     /// `Exist` marker can carry a fresh SymbolId. The exact source-local name
     /// is safe as a fallback only inside a cloned existential render scope.
     existential_names: HashMap<String, String>,
     fact_names: HashMap<crate::common::fact_id::FactId, String>,
     fact_propositions: HashMap<crate::common::fact_id::FactId, Fact>,
+    forall_conclusion_bindings: HashMap<crate::common::fact_id::FactId, ForallConclusionBinding>,
     function_bindings: HashMap<crate::common::fact_id::FactId, FunctionBinding>,
     named_function_definitions:
         HashMap<crate::common::fact_id::FactId, NamedFunctionDefinitionBinding>,
     predicate_bindings: HashMap<String, PredicateBinding>,
     well_definedness: Option<LitexToLeanWellDefinednessCertificateIr>,
+}
+
+#[derive(Clone)]
+struct IndexedTupleBinding {
+    dimension: usize,
+}
+
+#[derive(Clone)]
+struct ForallConclusionBinding {
+    theorem_name: String,
+    forall: ForallFact,
+    parameter_premises: Vec<LitexToLeanLocalPremiseIr>,
+    premises: Vec<LitexToLeanLocalPremiseIr>,
+    conclusion_index: usize,
+    conclusion_count: usize,
 }
 
 #[derive(Clone)]
@@ -1700,7 +2189,29 @@ fn render_proof(fact: &LitexToLeanFactIr, context: &RenderContext) -> Result<Str
                 }
                 render_obj(left, context)?;
                 render_obj(right, context)?;
-                Ok("Litex.Same.ofEq (by norm_num)".into())
+                Ok(
+                    "Litex.Same.ofEq (by norm_num [Litex.tupleDim, Litex.TupleShape.dimension])"
+                        .into(),
+                )
+            }
+            LitexToLeanProofRuleIr::RationalNormalization
+                if parameter_requirements.is_empty() && premises.len() == 1 =>
+            {
+                let (target_left, target_right) = equality_parts(&fact.proposition)?;
+                let (source_left, source_right) = equality_parts(&premises[0].proposition)?;
+                if !objects_match_after_rational_normalization(target_left, source_left)
+                    || !objects_match_after_rational_normalization(target_right, source_right)
+                {
+                    return Err(
+                        "premise-backed rational normalization changed its equality endpoints"
+                            .into(),
+                    );
+                }
+                let source_proof = render_proof(&premises[0], context)?;
+                render_fact(&fact.proposition, context)?;
+                Ok(format!(
+                    "(by\n  convert {source_proof} using 1 <;> norm_num)"
+                ))
             }
             LitexToLeanProofRuleIr::ClosedStandardMembership
                 if parameter_requirements.is_empty() && premises.is_empty() =>
@@ -1729,12 +2240,48 @@ fn render_proof(fact: &LitexToLeanFactIr, context: &RenderContext) -> Result<Str
             LitexToLeanProofRuleIr::Builtin(LitexToLeanBuiltinRuleIr::StandardSetSubset) => {
                 render_standard_set_subset(fact, parameter_requirements, premises, context)
             }
-            LitexToLeanProofRuleIr::Builtin(LitexToLeanBuiltinRuleIr::FiniteSet(rule)) => {
-                render_finite_set_constructor(fact, *rule, parameter_requirements, premises, context)
+            LitexToLeanProofRuleIr::Builtin(LitexToLeanBuiltinRuleIr::Set(rule)) => {
+                render_set_builtin_rule(fact, *rule, parameter_requirements, premises, context)
             }
+            LitexToLeanProofRuleIr::Builtin(LitexToLeanBuiltinRuleIr::FiniteSet(rule)) => {
+                render_finite_set_constructor(
+                    fact,
+                    *rule,
+                    parameter_requirements,
+                    premises,
+                    context,
+                )
+            }
+            LitexToLeanProofRuleIr::Builtin(LitexToLeanBuiltinRuleIr::ListSetMembership {
+                selected_index,
+            }) => render_list_set_membership(
+                fact,
+                *selected_index,
+                parameter_requirements,
+                premises,
+                context,
+            ),
+            LitexToLeanProofRuleIr::Builtin(
+                LitexToLeanBuiltinRuleIr::ListSetMembershipElimination,
+            ) => render_list_set_membership_elimination(
+                fact,
+                parameter_requirements,
+                premises,
+                context,
+            ),
             LitexToLeanProofRuleIr::Builtin(LitexToLeanBuiltinRuleIr::TupleLiteralShape) => {
                 render_tuple_literal_shape(fact, parameter_requirements, premises, context)
             }
+            LitexToLeanProofRuleIr::Builtin(
+                rule @ (LitexToLeanBuiltinRuleIr::PrimeU64Reflection
+                | LitexToLeanBuiltinRuleIr::CoprimeNaturalReflection),
+            ) => render_number_theory_reflection(
+                fact,
+                rule,
+                parameter_requirements,
+                premises,
+                context,
+            ),
             LitexToLeanProofRuleIr::Builtin(LitexToLeanBuiltinRuleIr::NonzeroNumericMembership) => {
                 render_nonzero_numeric_membership(fact, parameter_requirements, premises, context)
             }
@@ -1918,6 +2465,27 @@ fn render_proof(fact: &LitexToLeanFactIr, context: &RenderContext) -> Result<Str
         },
         other => Err(format!("unsupported verified proof evidence: {other:?}")),
     }
+}
+
+fn objects_match_after_rational_normalization(left: &Obj, right: &Obj) -> bool {
+    if objs_equal_by_rational_expression_evaluation(left, right) {
+        return true;
+    }
+    let (Obj::FnObj(left), Obj::FnObj(right)) = (left, right) else {
+        return false;
+    };
+    left.head.to_string() == right.head.to_string()
+        && left.body.len() == right.body.len()
+        && left
+            .body
+            .iter()
+            .zip(right.body.iter())
+            .all(|(left, right)| {
+                left.len() == right.len()
+                    && left.iter().zip(right.iter()).all(|(left, right)| {
+                        objects_match_after_rational_normalization(left, right)
+                    })
+            })
 }
 
 fn proof_requires_closed_numeric_well_definedness(proof: &LitexToLeanFactProofIr) -> bool {
@@ -2260,10 +2828,14 @@ fn render_checked_identity_function_reduction(
                 .numeric_representations
                 .insert(parameter.symbol_id, representation);
         }
-        argument_evidence.insert(
-            parameter.symbol_id,
-            (argument, argument_membership),
-        );
+        if let Some(proof) =
+            membership_numeric_proof(&parameter.set, &argument, &argument_membership)
+        {
+            definition_context
+                .numeric_representation_memberships
+                .insert(parameter.symbol_id, proof);
+        }
+        argument_evidence.insert(parameter.symbol_id, (argument, argument_membership));
     }
     for (domain_index, (source_fact, local_premise)) in binding
         .function
@@ -2334,13 +2906,12 @@ fn render_checked_identity_function_reduction(
             binding.name,
         ));
     }
-    let (source_body, _, _, _) =
-        render_function_return_selection(
-            &binding.source_body,
-            &binding.inferred_premises,
-            &binding.return_check,
-            &definition_context,
-        )?;
+    let (source_body, _, _, _) = render_function_return_selection(
+        &binding.source_body,
+        &binding.inferred_premises,
+        &binding.return_check,
+        &definition_context,
+    )?;
     let other_object = match application_side {
         LitexToLeanEqualitySideIr::Left => target_right,
         LitexToLeanEqualitySideIr::Right => target_left,
@@ -3077,11 +3648,63 @@ fn resolve_fact_citation(
             "cited FactId `{source_fact_id}` changed proposition from `{retained}` to `{expected}`"
         ));
     }
-    context
-        .fact_names
+    if let Some(name) = context.fact_names.get(source_fact_id) {
+        return Ok(name.clone());
+    }
+    let binding = context
+        .forall_conclusion_bindings
         .get(source_fact_id)
-        .cloned()
-        .ok_or_else(|| format!("cited FactId `{source_fact_id}` has no emitted Lean proof"))
+        .ok_or_else(|| format!("cited FactId `{source_fact_id}` has no emitted Lean proof"))?;
+    render_forall_conclusion_citation(binding, context)
+}
+
+fn render_forall_conclusion_citation(
+    binding: &ForallConclusionBinding,
+    context: &RenderContext,
+) -> Result<String, String> {
+    let parameters = binding
+        .forall
+        .params_def_with_type
+        .collect_param_bindings_with_types();
+    if parameters.len() != binding.parameter_premises.len()
+        || binding.forall.dom_facts.len() != binding.premises.len()
+    {
+        return Err("stored forall conclusion binding changed its premise arity".into());
+    }
+    let mut terms = vec![binding.theorem_name.clone()];
+    for ((parameter, param_type), premise) in
+        parameters.iter().zip(binding.parameter_premises.iter())
+    {
+        let argument = context
+            .symbol_names
+            .get(&parameter.id())
+            .cloned()
+            .ok_or_else(|| {
+                format!(
+                    "stored forall conclusion cannot resolve parameter `{}`",
+                    parameter.name()
+                )
+            })?;
+        terms.push(argument);
+        if !matches!(param_type, ParamType::Set(_)) {
+            terms.push(format!(
+                "({})",
+                resolve_fact_citation(&premise.fact_id, &premise.fact, context)?
+            ));
+        }
+    }
+    for premise in &binding.premises {
+        terms.push(format!(
+            "({})",
+            resolve_fact_citation(&premise.fact_id, &premise.fact, context)?
+        ));
+    }
+    let application = format!("({})", terms.join(" "));
+    conjunction_projection(
+        &application,
+        binding.conclusion_index,
+        binding.conclusion_count,
+    )
 }
 
 fn render_closed_standard_membership(
@@ -3098,6 +3721,9 @@ fn render_closed_standard_membership(
             render_obj(element, context)?
         ));
     }
+    if *set == StandardSet::R {
+        return render_closed_real_expression_membership(element, context);
+    }
     let Obj::Number(number) = element else {
         return Err(
             "compiler closed N/Z/Q/R membership currently requires a natural numeral".into(),
@@ -3112,12 +3738,6 @@ fn render_closed_standard_membership(
         return Err(
             "compiler closed N/Z/Q/R membership currently requires a natural numeral".into(),
         );
-    }
-    if *set == StandardSet::R {
-        return Ok(format!(
-            "Litex.Rules.complexRealInR {}",
-            number.normalized_value
-        ));
     }
     if *set == StandardSet::NPos {
         if !number
@@ -3149,6 +3769,56 @@ fn render_closed_standard_membership(
     Ok(format!(
         "Litex.Rules.{theorem} ({} : ℂ) {} (by norm_num)",
         number.normalized_value, number.normalized_value
+    ))
+}
+
+fn render_closed_real_expression_membership(
+    element: &Obj,
+    context: &RenderContext,
+) -> Result<String, String> {
+    let (left, right, theorem) = match element {
+        Obj::Add(operation) => (
+            operation.left.as_ref(),
+            operation.right.as_ref(),
+            "complexAddInR",
+        ),
+        Obj::Sub(operation) => (
+            operation.left.as_ref(),
+            operation.right.as_ref(),
+            "complexSubInR",
+        ),
+        Obj::Mul(operation) => (
+            operation.left.as_ref(),
+            operation.right.as_ref(),
+            "complexMulInR",
+        ),
+        Obj::Div(operation) => (
+            operation.left.as_ref(),
+            operation.right.as_ref(),
+            "complexDivInR",
+        ),
+        Obj::Number(number) => {
+            if number.normalized_value.parse::<i128>().is_err() {
+                return Err(
+                    "closed real-expression membership requires integral numeral leaves".into(),
+                );
+            }
+            return Ok(format!(
+                "Litex.Rules.complexRealInR ({} : ℝ)",
+                number.normalized_value
+            ));
+        }
+        _ => {
+            return Err(format!(
+                "closed real-expression membership has unsupported operand `{element}`"
+            ))
+        }
+    };
+    render_obj(element, context)?;
+    Ok(format!(
+        "Litex.Rules.{theorem} ({}) ({})",
+        render_closed_real_expression_membership(left, context)?,
+        render_closed_real_expression_membership(right, context)?
     ))
 }
 
@@ -3212,6 +3882,81 @@ fn render_closed_numeric_comparison(
         return Ok(format!("Litex.OrderBridge.{theorem} (by norm_num)"));
     }
     Ok(format!("Litex.OrderBridge.{theorem} (by norm_num)"))
+}
+
+fn render_number_theory_reflection(
+    fact: &LitexToLeanFactIr,
+    rule: &LitexToLeanBuiltinRuleIr,
+    parameter_requirements: &[LitexToLeanFactIr],
+    premises: &[LitexToLeanFactIr],
+    context: &RenderContext,
+) -> Result<String, String> {
+    if !parameter_requirements.is_empty() || !premises.is_empty() {
+        return Err("number-theory reflection retained unexpected child proofs".into());
+    }
+    let (predicate, arguments, negated) = match &fact.proposition {
+        Fact::AtomicFact(AtomicFact::NormalAtomicFact(value)) => {
+            (value.predicate.to_string(), value.body.as_slice(), false)
+        }
+        Fact::AtomicFact(AtomicFact::NotNormalAtomicFact(value)) => {
+            (value.predicate.to_string(), value.body.as_slice(), true)
+        }
+        _ => return Err("number-theory reflection retained a non-predicate target".into()),
+    };
+    let (expected_predicate, expected_arity) = match rule {
+        LitexToLeanBuiltinRuleIr::PrimeU64Reflection => (PRIME, 1),
+        LitexToLeanBuiltinRuleIr::CoprimeNaturalReflection => (COPRIME, 2),
+        _ => return Err("non-reflection rule reached number-theory renderer".into()),
+    };
+    if predicate != expected_predicate || arguments.len() != expected_arity {
+        return Err("number-theory reflection changed its predicate or arity".into());
+    }
+    for argument in arguments {
+        let Obj::Number(number) = argument else {
+            return Err("number-theory reflection changed a closed numeric argument".into());
+        };
+        if number.normalized_value.starts_with('-') || number.normalized_value.contains('.') {
+            return Err("number-theory reflection retained a non-natural argument".into());
+        }
+        if matches!(rule, LitexToLeanBuiltinRuleIr::PrimeU64Reflection)
+            && number.normalized_value.parse::<u64>().is_err()
+        {
+            return Err("prime reflection retained a value outside its u64 certificate".into());
+        }
+    }
+    render_fact(&fact.proposition, context)?;
+    let values = arguments
+        .iter()
+        .map(|argument| match argument {
+            Obj::Number(number) => Ok(number.normalized_value.as_str()),
+            _ => Err("number-theory reflection changed a numeric argument".to_string()),
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+    Ok(match rule {
+        LitexToLeanBuiltinRuleIr::PrimeU64Reflection => {
+            let theorem = if negated {
+                "notPrimeOfNat"
+            } else {
+                "primeOfNat"
+            };
+            format!(
+                "(by simpa using (Litex.{theorem} {} (by norm_num)))",
+                values[0]
+            )
+        }
+        LitexToLeanBuiltinRuleIr::CoprimeNaturalReflection => {
+            let theorem = if negated {
+                "notCoprimeOfNat"
+            } else {
+                "coprimeOfNat"
+            };
+            format!(
+                "(by simpa using (Litex.{theorem} {} {} (by norm_num)))",
+                values[0], values[1]
+            )
+        }
+        _ => unreachable!("validated reflection rule"),
+    })
 }
 
 fn render_not_equal_symmetry(
@@ -3318,9 +4063,7 @@ fn render_standard_set_subset(
     let Fact::AtomicFact(AtomicFact::SubsetFact(subset)) = &fact.proposition else {
         return Err("standard-set subset evidence retained a non-subset target".into());
     };
-    let (Obj::StandardSet(source), Obj::StandardSet(target)) =
-        (&subset.left, &subset.right)
-    else {
+    let (Obj::StandardSet(source), Obj::StandardSet(target)) = (&subset.left, &subset.right) else {
         return Err("standard-set subset evidence retained a nonstandard endpoint".into());
     };
     render_fact(&fact.proposition, context)?;
@@ -3333,40 +4076,28 @@ fn render_standard_set_subset(
         (StandardSet::RPos, StandardSet::C) => &["inROfInRPos", "inCOfInR"],
         (StandardSet::ZStar, StandardSet::Z) => &["inZOfInZStar"],
         (StandardSet::ZStar, StandardSet::Q) => &["inZOfInZStar", "inQOfInZ"],
-        (StandardSet::ZStar, StandardSet::R) => {
-            &["inZOfInZStar", "inQOfInZ", "inROfInQ"]
-        }
+        (StandardSet::ZStar, StandardSet::R) => &["inZOfInZStar", "inQOfInZ", "inROfInQ"],
         (StandardSet::ZStar, StandardSet::C) => {
             &["inZOfInZStar", "inQOfInZ", "inROfInQ", "inCOfInR"]
         }
         (StandardSet::QStar, StandardSet::Q) => &["inQOfInQStar"],
         (StandardSet::QStar, StandardSet::R) => &["inQOfInQStar", "inROfInQ"],
-        (StandardSet::QStar, StandardSet::C) => {
-            &["inQOfInQStar", "inROfInQ", "inCOfInR"]
-        }
+        (StandardSet::QStar, StandardSet::C) => &["inQOfInQStar", "inROfInQ", "inCOfInR"],
         (StandardSet::RStar, StandardSet::R) => &["inROfInRStar"],
         (StandardSet::RStar, StandardSet::C) => &["inROfInRStar", "inCOfInR"],
         (StandardSet::CStar, StandardSet::C) => &["inCOfInCStar"],
         (StandardSet::ZStar, StandardSet::QStar) => &["inQStarOfInZStar"],
-        (StandardSet::ZStar, StandardSet::RStar) => {
-            &["inQStarOfInZStar", "inRStarOfInQStar"]
+        (StandardSet::ZStar, StandardSet::RStar) => &["inQStarOfInZStar", "inRStarOfInQStar"],
+        (StandardSet::ZStar, StandardSet::CStar) => {
+            &["inQStarOfInZStar", "inRStarOfInQStar", "inCStarOfInRStar"]
         }
-        (StandardSet::ZStar, StandardSet::CStar) => &[
-            "inQStarOfInZStar",
-            "inRStarOfInQStar",
-            "inCStarOfInRStar",
-        ],
         (StandardSet::QStar, StandardSet::RStar) => &["inRStarOfInQStar"],
-        (StandardSet::QStar, StandardSet::CStar) => {
-            &["inRStarOfInQStar", "inCStarOfInRStar"]
-        }
+        (StandardSet::QStar, StandardSet::CStar) => &["inRStarOfInQStar", "inCStarOfInRStar"],
         (StandardSet::RStar, StandardSet::CStar) => &["inCStarOfInRStar"],
         (StandardSet::N, StandardSet::Z) => &["inZOfInN"],
         (StandardSet::N, StandardSet::Q) => &["inZOfInN", "inQOfInZ"],
         (StandardSet::N, StandardSet::R) => &["inZOfInN", "inQOfInZ", "inROfInQ"],
-        (StandardSet::N, StandardSet::C) => {
-            &["inZOfInN", "inQOfInZ", "inROfInQ", "inCOfInR"]
-        }
+        (StandardSet::N, StandardSet::C) => &["inZOfInN", "inQOfInZ", "inROfInQ", "inCOfInR"],
         (StandardSet::Z, StandardSet::Q) => &["inQOfInZ"],
         (StandardSet::Z, StandardSet::R) => &["inQOfInZ", "inROfInQ"],
         (StandardSet::Z, StandardSet::C) => &["inQOfInZ", "inROfInQ", "inCOfInR"],
@@ -3407,11 +4138,932 @@ fn render_finite_set_constructor(
         (LitexToLeanFiniteSetBuiltinRuleIr::ClosedRange, Obj::ClosedRange(_)) => {
             Ok("(by unfold Litex.Set.Finite Litex.closedRange; infer_instance)".into())
         }
-        (LitexToLeanFiniteSetBuiltinRuleIr::ListSet, Obj::ListSet(_)) => Err(
-            "finite list-set reflection requires the exact coproduct carrier adapter".into(),
-        ),
+        (LitexToLeanFiniteSetBuiltinRuleIr::ListSet, Obj::ListSet(list_set)) => {
+            render_list_set_finiteness(
+                &list_set
+                    .list
+                    .iter()
+                    .map(|item| LitexToLeanObjectIr::lower(item.as_ref()))
+                    .collect::<Result<Vec<_>, _>>()?,
+                context,
+            )
+        }
         _ => Err("finite-set reflection changed its exact constructor family".into()),
     }
+}
+
+fn render_set_builtin_rule(
+    fact: &LitexToLeanFactIr,
+    rule: LitexToLeanSetBuiltinRuleIr,
+    parameter_requirements: &[LitexToLeanFactIr],
+    premises: &[LitexToLeanFactIr],
+    context: &RenderContext,
+) -> Result<String, String> {
+    if !parameter_requirements.is_empty() {
+        return Err("set builtin retained unexpected parameter requirements".into());
+    }
+    match rule {
+        LitexToLeanSetBuiltinRuleIr::UnionCommutative
+        | LitexToLeanSetBuiltinRuleIr::UnionAssociative
+        | LitexToLeanSetBuiltinRuleIr::UnionIdempotent
+        | LitexToLeanSetBuiltinRuleIr::UnionEmptyIdentity
+        | LitexToLeanSetBuiltinRuleIr::IntersectCommutative
+        | LitexToLeanSetBuiltinRuleIr::IntersectAssociative => {
+            if !premises.is_empty() {
+                return Err("structural set equality unexpectedly retained premises".into());
+            }
+            render_structural_set_equality(fact, rule, context)
+        }
+        LitexToLeanSetBuiltinRuleIr::UnionMembershipLeft
+        | LitexToLeanSetBuiltinRuleIr::UnionMembershipRight => {
+            if premises.len() != 1 {
+                return Err("union membership requires one selected side premise".into());
+            }
+            let (element, target_set) = membership_parts(&fact.proposition)?;
+            let Obj::Union(union) = target_set else {
+                return Err("union membership certificate targets another constructor".into());
+            };
+            let expected_side = if rule == LitexToLeanSetBuiltinRuleIr::UnionMembershipLeft {
+                union.left.as_ref()
+            } else {
+                union.right.as_ref()
+            };
+            let (premise_element, premise_set) = membership_parts(&premises[0].proposition)?;
+            if obj_equality_key(element) != obj_equality_key(premise_element)
+                || obj_equality_key(expected_side) != obj_equality_key(premise_set)
+            {
+                return Err("union membership changed its selected side or element".into());
+            }
+            let theorem = if rule == LitexToLeanSetBuiltinRuleIr::UnionMembershipLeft {
+                "inUnionLeft"
+            } else {
+                "inUnionRight"
+            };
+            render_fact(&fact.proposition, context)?;
+            Ok(format!(
+                "Litex.SetRules.{theorem} ({})",
+                render_proof(&premises[0], context)?
+            ))
+        }
+        LitexToLeanSetBuiltinRuleIr::IntersectMembershipBoth => {
+            if premises.len() != 2 {
+                return Err("intersection membership requires two ordered side premises".into());
+            }
+            let (element, target_set) = membership_parts(&fact.proposition)?;
+            let Obj::Intersect(intersection) = target_set else {
+                return Err(
+                    "intersection membership certificate targets another constructor".into(),
+                );
+            };
+            for (premise, expected_set) in premises
+                .iter()
+                .zip([intersection.left.as_ref(), intersection.right.as_ref()])
+            {
+                let (premise_element, premise_set) = membership_parts(&premise.proposition)?;
+                if obj_equality_key(element) != obj_equality_key(premise_element)
+                    || obj_equality_key(expected_set) != obj_equality_key(premise_set)
+                {
+                    return Err("intersection membership changed its ordered side premises".into());
+                }
+            }
+            render_fact(&fact.proposition, context)?;
+            Ok(format!(
+                "Litex.SetRules.inIntersect ({}) ({})",
+                render_proof(&premises[0], context)?,
+                render_proof(&premises[1], context)?
+            ))
+        }
+        LitexToLeanSetBuiltinRuleIr::IntersectNonMembershipLeft
+        | LitexToLeanSetBuiltinRuleIr::IntersectNonMembershipRight => {
+            if premises.len() != 1 {
+                return Err(
+                    "intersection non-membership requires one selected side premise".into(),
+                );
+            }
+            let (element, target_set) = nonmembership_parts(&fact.proposition)?;
+            let Obj::Intersect(intersection) = target_set else {
+                return Err(
+                    "intersection non-membership certificate targets another constructor".into(),
+                );
+            };
+            let expected_side = if rule == LitexToLeanSetBuiltinRuleIr::IntersectNonMembershipLeft {
+                intersection.left.as_ref()
+            } else {
+                intersection.right.as_ref()
+            };
+            let (premise_element, premise_set) = nonmembership_parts(&premises[0].proposition)?;
+            if obj_equality_key(element) != obj_equality_key(premise_element)
+                || obj_equality_key(expected_side) != obj_equality_key(premise_set)
+            {
+                return Err("intersection non-membership changed its selected side".into());
+            }
+            let theorem = if rule == LitexToLeanSetBuiltinRuleIr::IntersectNonMembershipLeft {
+                "notInIntersectOfNotInLeft"
+            } else {
+                "notInIntersectOfNotInRight"
+            };
+            render_fact(&fact.proposition, context)?;
+            Ok(format!(
+                "Litex.SetRules.{theorem} ({})",
+                render_proof(&premises[0], context)?
+            ))
+        }
+        LitexToLeanSetBuiltinRuleIr::SetMinusMembership => {
+            if premises.len() != 2 {
+                return Err(
+                    "set-minus membership requires left membership and right non-membership".into(),
+                );
+            }
+            let (element, target_set) = membership_parts(&fact.proposition)?;
+            let Obj::SetMinus(difference) = target_set else {
+                return Err("set-minus membership certificate targets another constructor".into());
+            };
+            let (left_element, left_set) = membership_parts(&premises[0].proposition)?;
+            let (right_element, right_set) = nonmembership_parts(&premises[1].proposition)?;
+            if obj_equality_key(element) != obj_equality_key(left_element)
+                || obj_equality_key(element) != obj_equality_key(right_element)
+                || obj_equality_key(difference.left.as_ref()) != obj_equality_key(left_set)
+                || obj_equality_key(difference.right.as_ref()) != obj_equality_key(right_set)
+            {
+                return Err("set-minus membership changed its ordered premises".into());
+            }
+            render_fact(&fact.proposition, context)?;
+            Ok(format!(
+                "Litex.SetRules.inSetMinus ({}) ({})",
+                render_proof(&premises[0], context)?,
+                render_proof(&premises[1], context)?
+            ))
+        }
+        rule @ (LitexToLeanSetBuiltinRuleIr::EmptySubset
+        | LitexToLeanSetBuiltinRuleIr::IntersectEqLeftOfSubset
+        | LitexToLeanSetBuiltinRuleIr::IntersectEqRightOfSubset
+        | LitexToLeanSetBuiltinRuleIr::IntersectFinite
+        | LitexToLeanSetBuiltinRuleIr::IntersectSubsetLeft
+        | LitexToLeanSetBuiltinRuleIr::IntersectSubsetRight
+        | LitexToLeanSetBuiltinRuleIr::IntersectUnionDistributive
+        | LitexToLeanSetBuiltinRuleIr::PowerSetFinite
+        | LitexToLeanSetBuiltinRuleIr::PowerSetMembershipOfSubset
+        | LitexToLeanSetBuiltinRuleIr::PowerSetNonempty
+        | LitexToLeanSetBuiltinRuleIr::SetMinusFiniteLeft
+        | LitexToLeanSetBuiltinRuleIr::SetMinusIntersectDeMorgan
+        | LitexToLeanSetBuiltinRuleIr::SetMinusRecoverSubset
+        | LitexToLeanSetBuiltinRuleIr::SetMinusSubsetLeft
+        | LitexToLeanSetBuiltinRuleIr::SetMinusUnionDeMorgan
+        | LitexToLeanSetBuiltinRuleIr::SubsetEqSetMinusRecovery
+        | LitexToLeanSetBuiltinRuleIr::SubsetUnionLeft
+        | LitexToLeanSetBuiltinRuleIr::SubsetUnionRight
+        | LitexToLeanSetBuiltinRuleIr::UnionFinite
+        | LitexToLeanSetBuiltinRuleIr::UnionNonemptyLeft
+        | LitexToLeanSetBuiltinRuleIr::UnionNonemptyRight
+        | LitexToLeanSetBuiltinRuleIr::UnionSubset) => {
+            render_extended_set_rule(fact, rule, premises, context)
+        }
+    }
+}
+
+fn render_extended_set_rule(
+    fact: &LitexToLeanFactIr,
+    rule: LitexToLeanSetBuiltinRuleIr,
+    premises: &[LitexToLeanFactIr],
+    context: &RenderContext,
+) -> Result<String, String> {
+    render_fact(&fact.proposition, context)?;
+    match rule {
+        LitexToLeanSetBuiltinRuleIr::EmptySubset => {
+            if !premises.is_empty() {
+                return Err("empty-subset rule retained premises".into());
+            }
+            let (empty, target) = subset_parts(&fact.proposition)?;
+            if !matches!(empty, Obj::ListSet(set) if set.list.is_empty()) {
+                return Err("empty-subset rule changed its empty left endpoint".into());
+            }
+            Ok(format!(
+                "Litex.SetRules.emptySubset {}",
+                render_obj(target, context)?
+            ))
+        }
+        LitexToLeanSetBuiltinRuleIr::SubsetUnionLeft
+        | LitexToLeanSetBuiltinRuleIr::SubsetUnionRight => {
+            if !premises.is_empty() {
+                return Err("subset-union inclusion retained premises".into());
+            }
+            let (source, target) = subset_parts(&fact.proposition)?;
+            let Obj::Union(union) = target else {
+                return Err("subset-union inclusion changed its target constructor".into());
+            };
+            let (expected, theorem) = if rule == LitexToLeanSetBuiltinRuleIr::SubsetUnionLeft {
+                (union.left.as_ref(), "subsetUnionLeft")
+            } else {
+                (union.right.as_ref(), "subsetUnionRight")
+            };
+            if obj_equality_key(source) != obj_equality_key(expected) {
+                return Err("subset-union inclusion changed its selected operand".into());
+            }
+            Ok(format!(
+                "Litex.SetRules.{theorem} {} {}",
+                render_obj(union.left.as_ref(), context)?,
+                render_obj(union.right.as_ref(), context)?
+            ))
+        }
+        LitexToLeanSetBuiltinRuleIr::UnionSubset => {
+            if premises.len() != 2 {
+                return Err("union-subset rule requires two ordered subset premises".into());
+            }
+            let (source, target) = subset_parts(&fact.proposition)?;
+            let Obj::Union(union) = source else {
+                return Err("union-subset rule changed its source constructor".into());
+            };
+            for (premise, operand) in premises.iter().zip([&union.left, &union.right]) {
+                let (premise_source, premise_target) = subset_parts(&premise.proposition)?;
+                if obj_equality_key(premise_source) != obj_equality_key(operand.as_ref())
+                    || obj_equality_key(premise_target) != obj_equality_key(target)
+                {
+                    return Err("union-subset rule changed its ordered premises".into());
+                }
+            }
+            Ok(format!(
+                "Litex.SetRules.unionSubset ({}) ({})",
+                render_proof(&premises[0], context)?,
+                render_proof(&premises[1], context)?
+            ))
+        }
+        LitexToLeanSetBuiltinRuleIr::IntersectSubsetLeft
+        | LitexToLeanSetBuiltinRuleIr::IntersectSubsetRight
+        | LitexToLeanSetBuiltinRuleIr::SetMinusSubsetLeft => {
+            if !premises.is_empty() {
+                return Err("constructor-subset rule retained premises".into());
+            }
+            let (source, target) = subset_parts(&fact.proposition)?;
+            let (left, right, expected, theorem) = match (rule, source) {
+                (LitexToLeanSetBuiltinRuleIr::IntersectSubsetLeft, Obj::Intersect(value)) => (
+                    value.left.as_ref(),
+                    value.right.as_ref(),
+                    value.left.as_ref(),
+                    "intersectSubsetLeft",
+                ),
+                (LitexToLeanSetBuiltinRuleIr::IntersectSubsetRight, Obj::Intersect(value)) => (
+                    value.left.as_ref(),
+                    value.right.as_ref(),
+                    value.right.as_ref(),
+                    "intersectSubsetRight",
+                ),
+                (LitexToLeanSetBuiltinRuleIr::SetMinusSubsetLeft, Obj::SetMinus(value)) => (
+                    value.left.as_ref(),
+                    value.right.as_ref(),
+                    value.left.as_ref(),
+                    "setMinusSubsetLeft",
+                ),
+                _ => return Err("constructor-subset rule changed its constructor".into()),
+            };
+            if obj_equality_key(target) != obj_equality_key(expected) {
+                return Err("constructor-subset rule changed its projected operand".into());
+            }
+            Ok(format!(
+                "Litex.SetRules.{theorem} {} {}",
+                render_obj(left, context)?,
+                render_obj(right, context)?
+            ))
+        }
+        LitexToLeanSetBuiltinRuleIr::UnionFinite
+        | LitexToLeanSetBuiltinRuleIr::IntersectFinite
+        | LitexToLeanSetBuiltinRuleIr::SetMinusFiniteLeft => {
+            let target = finite_set_parts(&fact.proposition)?;
+            let (left, right, theorem, expected_premises) = match (rule, target) {
+                (LitexToLeanSetBuiltinRuleIr::UnionFinite, Obj::Union(value)) => {
+                    (value.left.as_ref(), value.right.as_ref(), "unionFinite", 2)
+                }
+                (LitexToLeanSetBuiltinRuleIr::IntersectFinite, Obj::Intersect(value)) => (
+                    value.left.as_ref(),
+                    value.right.as_ref(),
+                    "intersectFinite",
+                    2,
+                ),
+                (LitexToLeanSetBuiltinRuleIr::SetMinusFiniteLeft, Obj::SetMinus(value)) => (
+                    value.left.as_ref(),
+                    value.right.as_ref(),
+                    "setMinusFiniteLeft",
+                    1,
+                ),
+                _ => return Err("finite-set rule changed its target constructor".into()),
+            };
+            if premises.len() != expected_premises
+                || obj_equality_key(finite_set_parts(&premises[0].proposition)?)
+                    != obj_equality_key(left)
+                || (expected_premises == 2
+                    && obj_equality_key(finite_set_parts(&premises[1].proposition)?)
+                        != obj_equality_key(right))
+            {
+                return Err("finite-set rule changed its ordered finiteness premises".into());
+            }
+            let mut terms = vec![
+                format!("Litex.SetRules.{theorem}"),
+                render_obj(left, context)?,
+                render_obj(right, context)?,
+                format!("({})", render_proof(&premises[0], context)?),
+            ];
+            if expected_premises == 2 && rule == LitexToLeanSetBuiltinRuleIr::UnionFinite {
+                terms.push(format!("({})", render_proof(&premises[1], context)?));
+            }
+            Ok(terms.join(" "))
+        }
+        LitexToLeanSetBuiltinRuleIr::UnionNonemptyLeft
+        | LitexToLeanSetBuiltinRuleIr::UnionNonemptyRight => {
+            if premises.len() != 1 {
+                return Err("union nonemptiness requires one selected premise".into());
+            }
+            let target = nonempty_set_parts(&fact.proposition)?;
+            let Obj::Union(union) = target else {
+                return Err("union nonemptiness changed its target constructor".into());
+            };
+            let (expected, theorem) = if rule == LitexToLeanSetBuiltinRuleIr::UnionNonemptyLeft {
+                (union.left.as_ref(), "unionNonemptyLeft")
+            } else {
+                (union.right.as_ref(), "unionNonemptyRight")
+            };
+            if obj_equality_key(nonempty_set_parts(&premises[0].proposition)?)
+                != obj_equality_key(expected)
+            {
+                return Err("union nonemptiness changed its selected operand".into());
+            }
+            Ok(format!(
+                "Litex.SetRules.{theorem} {} {} ({})",
+                render_obj(union.left.as_ref(), context)?,
+                render_obj(union.right.as_ref(), context)?,
+                render_proof(&premises[0], context)?
+            ))
+        }
+        LitexToLeanSetBuiltinRuleIr::PowerSetMembershipOfSubset => {
+            if premises.len() != 1 {
+                return Err("power-set membership requires one subset premise".into());
+            }
+            let (subset, target) = membership_parts(&fact.proposition)?;
+            let Obj::PowerSet(power) = target else {
+                return Err("power-set membership changed its target constructor".into());
+            };
+            let (premise_subset, premise_base) = subset_parts(&premises[0].proposition)?;
+            if obj_equality_key(subset) != obj_equality_key(premise_subset)
+                || obj_equality_key(power.set.as_ref()) != obj_equality_key(premise_base)
+            {
+                return Err("power-set membership changed its subset endpoints".into());
+            }
+            Ok(format!(
+                "Litex.SetRules.inPowerSetOfSubset ({})",
+                render_proof(&premises[0], context)?
+            ))
+        }
+        LitexToLeanSetBuiltinRuleIr::PowerSetNonempty => {
+            if !premises.is_empty() {
+                return Err("power-set nonemptiness retained premises".into());
+            }
+            let Obj::PowerSet(power) = nonempty_set_parts(&fact.proposition)? else {
+                return Err("power-set nonemptiness changed its constructor".into());
+            };
+            Ok(format!(
+                "Litex.SetRules.powerSetNonempty {}",
+                render_obj(power.set.as_ref(), context)?
+            ))
+        }
+        LitexToLeanSetBuiltinRuleIr::PowerSetFinite => {
+            if premises.len() != 1 {
+                return Err("power-set finiteness requires one base finiteness premise".into());
+            }
+            let Obj::PowerSet(power) = finite_set_parts(&fact.proposition)? else {
+                return Err("power-set finiteness changed its constructor".into());
+            };
+            if obj_equality_key(finite_set_parts(&premises[0].proposition)?)
+                != obj_equality_key(power.set.as_ref())
+            {
+                return Err("power-set finiteness changed its base premise".into());
+            }
+            Ok(format!(
+                "Litex.SetRules.powerSetFinite {} ({})",
+                render_obj(power.set.as_ref(), context)?,
+                render_proof(&premises[0], context)?
+            ))
+        }
+        LitexToLeanSetBuiltinRuleIr::IntersectEqLeftOfSubset
+        | LitexToLeanSetBuiltinRuleIr::IntersectEqRightOfSubset => {
+            if premises.len() != 1 {
+                return Err("intersection absorption requires one subset premise".into());
+            }
+            let (left, right) = equality_parts(&fact.proposition)?;
+            let Obj::Intersect(intersection) = left else {
+                return Err("intersection absorption changed its equality constructor".into());
+            };
+            let (premise_left, premise_right) = subset_parts(&premises[0].proposition)?;
+            let (expected_result, expected_left, expected_right, theorem) =
+                if rule == LitexToLeanSetBuiltinRuleIr::IntersectEqLeftOfSubset {
+                    (
+                        intersection.left.as_ref(),
+                        intersection.left.as_ref(),
+                        intersection.right.as_ref(),
+                        "intersectEqLeftOfSubset",
+                    )
+                } else {
+                    (
+                        intersection.right.as_ref(),
+                        intersection.right.as_ref(),
+                        intersection.left.as_ref(),
+                        "intersectEqRightOfSubset",
+                    )
+                };
+            if obj_equality_key(right) != obj_equality_key(expected_result)
+                || obj_equality_key(premise_left) != obj_equality_key(expected_left)
+                || obj_equality_key(premise_right) != obj_equality_key(expected_right)
+            {
+                return Err("intersection absorption changed its operands".into());
+            }
+            Ok(format!(
+                "Litex.SetRules.{theorem} ({})",
+                render_proof(&premises[0], context)?
+            ))
+        }
+        LitexToLeanSetBuiltinRuleIr::IntersectUnionDistributive
+        | LitexToLeanSetBuiltinRuleIr::SetMinusIntersectDeMorgan
+        | LitexToLeanSetBuiltinRuleIr::SetMinusUnionDeMorgan => {
+            if !premises.is_empty() {
+                return Err("structural three-set equality retained premises".into());
+            }
+            render_three_set_equality(fact, rule, context)
+        }
+        LitexToLeanSetBuiltinRuleIr::SetMinusRecoverSubset
+        | LitexToLeanSetBuiltinRuleIr::SubsetEqSetMinusRecovery => {
+            if premises.len() != 1 {
+                return Err("set-minus recovery requires one subset premise".into());
+            }
+            let (subset, left) = subset_parts(&premises[0].proposition)?;
+            let (equality_left, equality_right) = equality_parts(&fact.proposition)?;
+            let (difference, plain, reverse) =
+                if rule == LitexToLeanSetBuiltinRuleIr::SetMinusRecoverSubset {
+                    (equality_left, equality_right, false)
+                } else {
+                    (equality_right, equality_left, true)
+                };
+            let Obj::SetMinus(outer) = difference else {
+                return Err("set-minus recovery changed its outer constructor".into());
+            };
+            let Obj::SetMinus(inner) = outer.right.as_ref() else {
+                return Err("set-minus recovery changed its inner constructor".into());
+            };
+            if obj_equality_key(plain) != obj_equality_key(subset)
+                || obj_equality_key(outer.left.as_ref()) != obj_equality_key(left)
+                || obj_equality_key(inner.left.as_ref()) != obj_equality_key(left)
+                || obj_equality_key(inner.right.as_ref()) != obj_equality_key(subset)
+            {
+                return Err("set-minus recovery changed its subset operands".into());
+            }
+            let proof = format!(
+                "Litex.SetRules.setMinusRecoverSubset ({})",
+                render_proof(&premises[0], context)?
+            );
+            Ok(if reverse {
+                format!("Litex.Same.symm ({proof})")
+            } else {
+                proof
+            })
+        }
+        _ => Err("base set rule reached extended set-rule renderer".into()),
+    }
+}
+
+fn render_three_set_equality(
+    fact: &LitexToLeanFactIr,
+    rule: LitexToLeanSetBuiltinRuleIr,
+    context: &RenderContext,
+) -> Result<String, String> {
+    let (left, right) = equality_parts(&fact.proposition)?;
+    let (first, second, third, theorem) = match rule {
+        LitexToLeanSetBuiltinRuleIr::IntersectUnionDistributive => {
+            let Obj::Intersect(left_intersection) = left else {
+                return Err("intersection distributivity changed its left constructor".into());
+            };
+            let Obj::Union(left_union) = left_intersection.right.as_ref() else {
+                return Err("intersection distributivity changed its inner union".into());
+            };
+            let Obj::Union(right_union) = right else {
+                return Err("intersection distributivity changed its right constructor".into());
+            };
+            let (Obj::Intersect(right_left), Obj::Intersect(right_right)) =
+                (right_union.left.as_ref(), right_union.right.as_ref())
+            else {
+                return Err("intersection distributivity changed its result intersections".into());
+            };
+            let first = left_intersection.left.as_ref();
+            let second = left_union.left.as_ref();
+            let third = left_union.right.as_ref();
+            if obj_equality_key(right_left.left.as_ref()) != obj_equality_key(first)
+                || obj_equality_key(right_left.right.as_ref()) != obj_equality_key(second)
+                || obj_equality_key(right_right.left.as_ref()) != obj_equality_key(first)
+                || obj_equality_key(right_right.right.as_ref()) != obj_equality_key(third)
+            {
+                return Err("intersection distributivity changed its repeated operands".into());
+            }
+            (first, second, third, "intersectUnionDistributive")
+        }
+        LitexToLeanSetBuiltinRuleIr::SetMinusIntersectDeMorgan => {
+            let Obj::SetMinus(left_difference) = left else {
+                return Err("intersection De Morgan changed its left difference".into());
+            };
+            let Obj::Intersect(excluded) = left_difference.right.as_ref() else {
+                return Err("intersection De Morgan changed its excluded intersection".into());
+            };
+            let Obj::Union(result) = right else {
+                return Err("intersection De Morgan changed its result union".into());
+            };
+            let (Obj::SetMinus(result_left), Obj::SetMinus(result_right)) =
+                (result.left.as_ref(), result.right.as_ref())
+            else {
+                return Err("intersection De Morgan changed its result differences".into());
+            };
+            let first = left_difference.left.as_ref();
+            let second = excluded.left.as_ref();
+            let third = excluded.right.as_ref();
+            if obj_equality_key(result_left.left.as_ref()) != obj_equality_key(first)
+                || obj_equality_key(result_left.right.as_ref()) != obj_equality_key(second)
+                || obj_equality_key(result_right.left.as_ref()) != obj_equality_key(first)
+                || obj_equality_key(result_right.right.as_ref()) != obj_equality_key(third)
+            {
+                return Err("intersection De Morgan changed its repeated operands".into());
+            }
+            (first, second, third, "setMinusIntersectDeMorgan")
+        }
+        LitexToLeanSetBuiltinRuleIr::SetMinusUnionDeMorgan => {
+            let Obj::SetMinus(left_difference) = left else {
+                return Err("union De Morgan changed its left difference".into());
+            };
+            let Obj::Union(excluded) = left_difference.right.as_ref() else {
+                return Err("union De Morgan changed its excluded union".into());
+            };
+            let Obj::Intersect(result) = right else {
+                return Err("union De Morgan changed its result intersection".into());
+            };
+            let (Obj::SetMinus(result_left), Obj::SetMinus(result_right)) =
+                (result.left.as_ref(), result.right.as_ref())
+            else {
+                return Err("union De Morgan changed its result differences".into());
+            };
+            let first = left_difference.left.as_ref();
+            let second = excluded.left.as_ref();
+            let third = excluded.right.as_ref();
+            if obj_equality_key(result_left.left.as_ref()) != obj_equality_key(first)
+                || obj_equality_key(result_left.right.as_ref()) != obj_equality_key(second)
+                || obj_equality_key(result_right.left.as_ref()) != obj_equality_key(first)
+                || obj_equality_key(result_right.right.as_ref()) != obj_equality_key(third)
+            {
+                return Err("union De Morgan changed its repeated operands".into());
+            }
+            (first, second, third, "setMinusUnionDeMorgan")
+        }
+        _ => return Err("non-three-set rule reached structural renderer".into()),
+    };
+    Ok(format!(
+        "Litex.SetRules.{theorem} {} {} {}",
+        render_obj(first, context)?,
+        render_obj(second, context)?,
+        render_obj(third, context)?
+    ))
+}
+
+fn render_structural_set_equality(
+    fact: &LitexToLeanFactIr,
+    rule: LitexToLeanSetBuiltinRuleIr,
+    context: &RenderContext,
+) -> Result<String, String> {
+    let (left, right) = equality_parts(&fact.proposition)?;
+    render_fact(&fact.proposition, context)?;
+    let symmetric = |proof: String| format!("Litex.Same.symm ({proof})");
+    match rule {
+        LitexToLeanSetBuiltinRuleIr::UnionCommutative => {
+            let (Obj::Union(left_union), Obj::Union(right_union)) = (left, right) else {
+                return Err("union commutativity changed its constructors".into());
+            };
+            if obj_equality_key(left_union.left.as_ref())
+                != obj_equality_key(right_union.right.as_ref())
+                || obj_equality_key(left_union.right.as_ref())
+                    != obj_equality_key(right_union.left.as_ref())
+            {
+                return Err("union commutativity changed its swapped operands".into());
+            }
+            Ok(format!(
+                "Litex.SetRules.unionCommutative {} {}",
+                render_obj(left_union.left.as_ref(), context)?,
+                render_obj(left_union.right.as_ref(), context)?
+            ))
+        }
+        LitexToLeanSetBuiltinRuleIr::UnionAssociative => {
+            if let (Obj::Union(left_outer), Obj::Union(right_outer)) = (left, right) {
+                if let Obj::Union(left_inner) = left_outer.left.as_ref() {
+                    if obj_equality_key(left_inner.left.as_ref())
+                        == obj_equality_key(right_outer.left.as_ref())
+                    {
+                        if let Obj::Union(right_inner) = right_outer.right.as_ref() {
+                            if obj_equality_key(left_inner.right.as_ref())
+                                == obj_equality_key(right_inner.left.as_ref())
+                                && obj_equality_key(left_outer.right.as_ref())
+                                    == obj_equality_key(right_inner.right.as_ref())
+                            {
+                                return Ok(format!(
+                                    "Litex.SetRules.unionAssociative {} {} {}",
+                                    render_obj(left_inner.left.as_ref(), context)?,
+                                    render_obj(left_inner.right.as_ref(), context)?,
+                                    render_obj(left_outer.right.as_ref(), context)?
+                                ));
+                            }
+                        }
+                    }
+                }
+            }
+            let reversed = LitexToLeanFactIr {
+                storage: LitexToLeanFactStorageIr::Anonymous,
+                proposition: EqualFact::new(
+                    right.clone(),
+                    left.clone(),
+                    fact.proposition.line_file(),
+                )
+                .into(),
+                proof: LitexToLeanFactProofIr::RuleApplication {
+                    rule: LitexToLeanProofRuleIr::ObjectReflexivity,
+                    parameter_requirements: Vec::new(),
+                    premises: Vec::new(),
+                },
+            };
+            Ok(symmetric(render_structural_set_equality(
+                &reversed, rule, context,
+            )?))
+        }
+        LitexToLeanSetBuiltinRuleIr::UnionIdempotent => {
+            if let Obj::Union(union) = left {
+                if obj_equality_key(union.left.as_ref()) == obj_equality_key(union.right.as_ref())
+                    && obj_equality_key(union.left.as_ref()) == obj_equality_key(right)
+                {
+                    return Ok(format!(
+                        "Litex.SetRules.unionIdempotent {}",
+                        render_obj(right, context)?
+                    ));
+                }
+            }
+            if let Obj::Union(union) = right {
+                if obj_equality_key(union.left.as_ref()) == obj_equality_key(union.right.as_ref())
+                    && obj_equality_key(union.left.as_ref()) == obj_equality_key(left)
+                {
+                    return Ok(symmetric(format!(
+                        "Litex.SetRules.unionIdempotent {}",
+                        render_obj(left, context)?
+                    )));
+                }
+            }
+            Err("union idempotence changed its repeated operand".into())
+        }
+        LitexToLeanSetBuiltinRuleIr::UnionEmptyIdentity => {
+            for (union_side, plain_side, reverse) in [(left, right, false), (right, left, true)] {
+                let Obj::Union(union) = union_side else {
+                    continue;
+                };
+                let left_empty =
+                    matches!(union.left.as_ref(), Obj::ListSet(set) if set.list.is_empty());
+                let right_empty =
+                    matches!(union.right.as_ref(), Obj::ListSet(set) if set.list.is_empty());
+                let operand = if left_empty {
+                    union.right.as_ref()
+                } else if right_empty {
+                    union.left.as_ref()
+                } else {
+                    continue;
+                };
+                if obj_equality_key(operand) != obj_equality_key(plain_side) {
+                    continue;
+                }
+                let theorem = if left_empty {
+                    "unionEmptyLeft"
+                } else {
+                    "unionEmptyRight"
+                };
+                let proof = format!(
+                    "Litex.SetRules.{theorem} {}",
+                    render_obj(plain_side, context)?
+                );
+                return Ok(if reverse { symmetric(proof) } else { proof });
+            }
+            Err("union empty identity changed its empty or retained operand".into())
+        }
+        LitexToLeanSetBuiltinRuleIr::IntersectCommutative => {
+            let (Obj::Intersect(left_intersection), Obj::Intersect(right_intersection)) =
+                (left, right)
+            else {
+                return Err("intersection commutativity changed its constructors".into());
+            };
+            if obj_equality_key(left_intersection.left.as_ref())
+                != obj_equality_key(right_intersection.right.as_ref())
+                || obj_equality_key(left_intersection.right.as_ref())
+                    != obj_equality_key(right_intersection.left.as_ref())
+            {
+                return Err("intersection commutativity changed its swapped operands".into());
+            }
+            Ok(format!(
+                "Litex.SetRules.intersectCommutative {} {}",
+                render_obj(left_intersection.left.as_ref(), context)?,
+                render_obj(left_intersection.right.as_ref(), context)?
+            ))
+        }
+        LitexToLeanSetBuiltinRuleIr::IntersectAssociative => {
+            if let (Obj::Intersect(left_outer), Obj::Intersect(right_outer)) = (left, right) {
+                if let Obj::Intersect(left_inner) = left_outer.left.as_ref() {
+                    if obj_equality_key(left_inner.left.as_ref())
+                        == obj_equality_key(right_outer.left.as_ref())
+                    {
+                        if let Obj::Intersect(right_inner) = right_outer.right.as_ref() {
+                            if obj_equality_key(left_inner.right.as_ref())
+                                == obj_equality_key(right_inner.left.as_ref())
+                                && obj_equality_key(left_outer.right.as_ref())
+                                    == obj_equality_key(right_inner.right.as_ref())
+                            {
+                                return Ok(format!(
+                                    "Litex.SetRules.intersectAssociative {} {} {}",
+                                    render_obj(left_inner.left.as_ref(), context)?,
+                                    render_obj(left_inner.right.as_ref(), context)?,
+                                    render_obj(left_outer.right.as_ref(), context)?
+                                ));
+                            }
+                        }
+                    }
+                }
+            }
+            let reversed = LitexToLeanFactIr {
+                storage: LitexToLeanFactStorageIr::Anonymous,
+                proposition: EqualFact::new(
+                    right.clone(),
+                    left.clone(),
+                    fact.proposition.line_file(),
+                )
+                .into(),
+                proof: LitexToLeanFactProofIr::RuleApplication {
+                    rule: LitexToLeanProofRuleIr::ObjectReflexivity,
+                    parameter_requirements: Vec::new(),
+                    premises: Vec::new(),
+                },
+            };
+            Ok(symmetric(render_structural_set_equality(
+                &reversed, rule, context,
+            )?))
+        }
+        _ => Err("non-equality set rule reached structural equality renderer".into()),
+    }
+}
+
+fn render_list_set_membership(
+    fact: &LitexToLeanFactIr,
+    selected_index: usize,
+    parameter_requirements: &[LitexToLeanFactIr],
+    premises: &[LitexToLeanFactIr],
+    context: &RenderContext,
+) -> Result<String, String> {
+    if !parameter_requirements.is_empty() || premises.len() != 1 {
+        return Err(
+            "list-set membership requires one selected equality and no parameter requirements"
+                .into(),
+        );
+    }
+    let (element, set) = membership_parts(&fact.proposition)?;
+    let Obj::ListSet(list_set) = set else {
+        return Err("list-set membership certificate targets another set constructor".into());
+    };
+    let selected = list_set
+        .list
+        .get(selected_index)
+        .ok_or_else(|| "list-set membership certificate has an out-of-range index".to_string())?;
+    let (equality_left, equality_right) = equality_parts(&premises[0].proposition)?;
+    if obj_equality_key(equality_left) != obj_equality_key(element)
+        || obj_equality_key(equality_right) != obj_equality_key(selected.as_ref())
+    {
+        return Err("list-set membership equality changed its selected source element".into());
+    }
+    let selected_term = render_obj(selected.as_ref(), context)?;
+    let equality = render_proof(&premises[0], context)?;
+    let (witness, representation) =
+        render_list_set_representation_bridge(&selected_term, selected_index);
+    render_obj(set, context)?;
+    Ok(format!(
+        "⟨{witness}, Litex.Same.trans ({equality}) ({representation})⟩"
+    ))
+}
+
+fn render_list_set_membership_elimination(
+    fact: &LitexToLeanFactIr,
+    parameter_requirements: &[LitexToLeanFactIr],
+    premises: &[LitexToLeanFactIr],
+    context: &RenderContext,
+) -> Result<String, String> {
+    if !parameter_requirements.is_empty() || premises.len() != 1 {
+        return Err(
+            "list-set membership elimination requires one membership and no parameter requirements"
+                .into(),
+        );
+    }
+    let (element, set) = membership_parts(&premises[0].proposition)?;
+    let Obj::ListSet(list_set) = set else {
+        return Err("list-set membership elimination cites another set constructor".into());
+    };
+    if list_set.list.is_empty() {
+        return Err("empty list-set membership cannot produce an equality branch".into());
+    }
+    let target_components = if list_set.list.len() == 1 {
+        vec![fact.proposition.clone()]
+    } else {
+        disjunction_components(&fact.proposition)?
+    };
+    if target_components.len() != list_set.list.len() {
+        return Err("list-set membership inference changed its branch count".into());
+    }
+    for (component, item) in target_components.iter().zip(list_set.list.iter()) {
+        let (left, right) = equality_parts(component)?;
+        if obj_equality_key(left) != obj_equality_key(element)
+            || obj_equality_key(right) != obj_equality_key(item.as_ref())
+        {
+            return Err(
+                "list-set membership inference changed its ordered equality branches".into(),
+            );
+        }
+    }
+    render_fact(&fact.proposition, context)?;
+    let source = render_proof(&premises[0], context)?;
+    let item_terms = list_set
+        .list
+        .iter()
+        .map(|item| render_obj(item.as_ref(), context))
+        .collect::<Result<Vec<_>, _>>()?;
+    let mut lines = vec![
+        "(by".to_string(),
+        format!("  rcases ({source}) with ⟨__member, __same⟩"),
+    ];
+    render_list_set_elimination_cases(&item_terms, 0, "__member", "  ", &mut lines);
+    lines.push(")".into());
+    Ok(lines.join("\n"))
+}
+
+fn render_list_set_elimination_cases(
+    item_terms: &[String],
+    index: usize,
+    member: &str,
+    indent: &str,
+    lines: &mut Vec<String>,
+) {
+    let head = format!("__head{index}");
+    let tail = format!("__tail{index}");
+    lines.push(format!("{indent}cases {member} with"));
+    lines.push(format!("{indent}| inl {head} =>"));
+    lines.push(format!("{indent}  cases {head}"));
+    let (_, representation) = render_list_set_representation_bridge(&item_terms[index], index);
+    let equality = format!("Litex.Same.trans __same (Litex.Same.symm ({representation}))");
+    lines.push(format!(
+        "{indent}  exact {}",
+        inject_disjunction_branch(equality, index, item_terms.len())
+    ));
+    lines.push(format!("{indent}| inr {tail} =>"));
+    if index + 1 == item_terms.len() {
+        lines.push(format!("{indent}  exact PEmpty.elim {tail}"));
+    } else {
+        render_list_set_elimination_cases(
+            item_terms,
+            index + 1,
+            &tail,
+            &format!("{indent}  "),
+            lines,
+        );
+    }
+}
+
+fn inject_disjunction_branch(
+    mut proof: String,
+    selected_index: usize,
+    branch_count: usize,
+) -> String {
+    if branch_count == 1 {
+        return proof;
+    }
+    if selected_index + 1 < branch_count {
+        proof = format!("Or.inl ({proof})");
+    }
+    for _ in 0..selected_index {
+        proof = format!("Or.inr ({proof})");
+    }
+    proof
+}
+
+fn render_list_set_representation_bridge(
+    selected_term: &str,
+    selected_index: usize,
+) -> (String, String) {
+    let mut witness = "Litex.SingletonCarrier.element".to_string();
+    let mut representation = format!("Litex.Same.singleton {selected_term}");
+    representation =
+        format!("Litex.Same.trans ({representation}) (Litex.Same.sumLeft ({witness}))");
+    witness = format!("Sum.inl ({witness})");
+    for _ in 0..selected_index {
+        representation =
+            format!("Litex.Same.trans ({representation}) (Litex.Same.sumRight ({witness}))");
+        witness = format!("Sum.inr ({witness})");
+    }
+    (witness, representation)
 }
 
 fn render_tuple_literal_shape(
@@ -3696,11 +5348,52 @@ fn render_integer_binary_membership_rule(
     {
         return Err("integer binary membership premises changed its ordered operands".into());
     }
-    let pair = render_proof(&premises[0], context)?;
-    let pair_type = render_fact(&premises[0].proposition, context)?;
+    let uses_local_numeric_view = [left, right].iter().any(|object| {
+        matches!(object, Obj::Atom(atom) if atom
+            .symbol_ref()
+            .is_some_and(|symbol| context
+                .numeric_representation_memberships
+                .contains_key(&symbol.id())))
+    });
+    if !uses_local_numeric_view {
+        let pair = render_proof(&premises[0], context)?;
+        let pair_type = render_fact(&premises[0].proposition, context)?;
+        return Ok(format!(
+            "(by\n  have __components : {pair_type} := {pair}\n  exact Litex.Rules.{theorem} (__components.1) (__components.2))"
+        ));
+    }
+    let LitexToLeanFactProofIr::RuleApplication {
+        rule: LitexToLeanProofRuleIr::AndIntroduction,
+        parameter_requirements: conjunction_parameters,
+        premises: conjunction_premises,
+    } = &premises[0].proof
+    else {
+        return Err("integer binary membership conjunction lost its introduction proof".into());
+    };
+    if !conjunction_parameters.is_empty() || conjunction_premises.len() != 2 {
+        return Err("integer binary membership conjunction changed its proof components".into());
+    }
+    let left_fallback = render_proof(&conjunction_premises[0], context)?;
+    let right_fallback = render_proof(&conjunction_premises[1], context)?;
+    let left_proof = render_numeric_operand_membership(left, &left_fallback, context);
+    let right_proof = render_numeric_operand_membership(right, &right_fallback, context);
     Ok(format!(
-        "(by\n  have __components : {pair_type} := {pair}\n  exact Litex.Rules.{theorem} (__components.1) (__components.2))"
+        "Litex.Rules.{theorem} ({left_proof}) ({right_proof})"
     ))
+}
+
+fn render_numeric_operand_membership(
+    object: &Obj,
+    fallback: &str,
+    context: &RenderContext,
+) -> String {
+    let proof = match object {
+        Obj::Atom(atom) => atom
+            .symbol_ref()
+            .and_then(|symbol| context.numeric_representation_memberships.get(&symbol.id())),
+        _ => None,
+    };
+    proof.map_or_else(|| fallback.to_string(), Clone::clone)
 }
 
 fn render_natural_binary_membership_rule(
@@ -4137,7 +5830,7 @@ fn render_known_equality_path(
 }
 
 fn render_known_forall_instantiation(
-    fact: &LitexToLeanFactIr,
+    _fact: &LitexToLeanFactIr,
     source_fact_id: FactId,
     arguments: &[Obj],
     parameter_requirements: &[LitexToLeanFactIr],
@@ -4188,21 +5881,18 @@ fn render_known_forall_instantiation(
                     return Err("known forall set requirement changed its argument".into());
                 }
             }
-            ParamType::Obj(_) => {
+            ParamType::NonemptySet(_) | ParamType::FiniteSet(_) => {
+                validate_refined_set_argument_requirement(source_type, argument, requirement)?;
                 terms.push(format!("({})", render_proof(requirement, context)?));
             }
-            _ => {
-                return Err(
-                    "known forall currently supports set and exact-membership parameters only"
-                        .into(),
-                )
+            ParamType::Obj(_) => {
+                terms.push(format!("({})", render_proof(requirement, context)?));
             }
         }
     }
     for premise in premises {
         terms.push(format!("({})", render_proof(premise, context)?));
     }
-    render_fact(&fact.proposition, context)?;
     Ok(format!("({})", terms.join(" ")))
 }
 
@@ -4315,6 +6005,71 @@ fn emit_registered_rule(
     premises: &[LitexToLeanFactIr],
     context: &RenderContext,
 ) -> Result<String, String> {
+    if let Some((set_rule, expected_bindings, expected_semantic_premises)) =
+        registered_set_rule(rule)
+    {
+        if rule.bindings.len() != expected_bindings
+            || parameter_requirements.len() != rule.bindings.len()
+        {
+            return Err(format!(
+                "registered set rule `{}` changed its binding or requirement arity: expected {expected_bindings} bindings but retained {}/{}",
+                rule.rule_id.as_str(),
+                rule.bindings.len(),
+                parameter_requirements.len()
+            ));
+        }
+        if rule.bindings.iter().any(|binding| {
+            !matches!(
+                binding.param_type,
+                LitexToLeanParameterTypeIr::Set | LitexToLeanParameterTypeIr::MemberOf { .. }
+            )
+        }) {
+            return Err(format!(
+                "registered set rule `{}` changed its parameter types",
+                rule.rule_id.as_str()
+            ));
+        }
+        let mut semantic_premises = Vec::new();
+        for (binding, requirement) in rule.bindings.iter().zip(parameter_requirements.iter()) {
+            match &binding.param_type {
+                LitexToLeanParameterTypeIr::Set => {
+                    let Fact::AtomicFact(AtomicFact::IsSetFact(sethood)) = &requirement.proposition
+                    else {
+                        return Err("registered set parameter retained non-set evidence".into());
+                    };
+                    if LitexToLeanObjectIr::lower(&sethood.set)? != binding.object {
+                        return Err(
+                            "registered set parameter evidence changed its exact binding".into(),
+                        );
+                    }
+                }
+                LitexToLeanParameterTypeIr::MemberOf { set } => {
+                    let (element, actual_set) = membership_parts(&requirement.proposition)?;
+                    if LitexToLeanObjectIr::lower(element)? != binding.object
+                        || LitexToLeanObjectIr::lower(actual_set)? != *set
+                    {
+                        return Err(
+                            "registered member parameter evidence changed its exact binding".into(),
+                        );
+                    }
+                    semantic_premises.push(requirement.clone());
+                }
+                _ => {
+                    return Err(
+                        "registered set rule retained a refined-set parameter unexpectedly".into(),
+                    )
+                }
+            }
+        }
+        semantic_premises.extend_from_slice(premises);
+        if semantic_premises.len() != expected_semantic_premises {
+            return Err(format!(
+                "registered set rule `{}` changed its semantic premise count",
+                rule.rule_id.as_str()
+            ));
+        }
+        return render_set_builtin_rule(target, set_rule, &[], &semantic_premises, context);
+    }
     match rule.rule_id.as_str() {
         LESS_EQUAL_OF_LESS_RULE_ID
             if rule.semantic_fingerprint.as_hex() == LESS_EQUAL_OF_LESS_FINGERPRINT => {}
@@ -4442,6 +6197,148 @@ fn emit_registered_rule(
     ))
 }
 
+fn registered_set_rule(
+    rule: &crate::litex_to_lean_ir::LitexToLeanRegisteredRuleApplicationIr,
+) -> Option<(LitexToLeanSetBuiltinRuleIr, usize, usize)> {
+    let fingerprint = rule.semantic_fingerprint.as_hex();
+    Some(match rule.rule_id.as_str() {
+        SET_EMPTY_SUBSET_RULE_ID if fingerprint == SET_EMPTY_SUBSET_FINGERPRINT => {
+            (LitexToLeanSetBuiltinRuleIr::EmptySubset, 1, 0)
+        }
+        SET_UNION_ASSOCIATIVE_RULE_ID if fingerprint == SET_UNION_ASSOCIATIVE_FINGERPRINT => {
+            (LitexToLeanSetBuiltinRuleIr::UnionAssociative, 3, 0)
+        }
+        SET_UNION_COMMUTATIVE_RULE_ID if fingerprint == SET_UNION_COMMUTATIVE_FINGERPRINT => {
+            (LitexToLeanSetBuiltinRuleIr::UnionCommutative, 2, 0)
+        }
+        SET_UNION_EMPTY_LEFT_RULE_ID if fingerprint == SET_UNION_EMPTY_LEFT_FINGERPRINT => {
+            (LitexToLeanSetBuiltinRuleIr::UnionEmptyIdentity, 1, 0)
+        }
+        SET_UNION_EMPTY_RIGHT_RULE_ID if fingerprint == SET_UNION_EMPTY_RIGHT_FINGERPRINT => {
+            (LitexToLeanSetBuiltinRuleIr::UnionEmptyIdentity, 1, 0)
+        }
+        SET_UNION_IDEMPOTENT_RULE_ID if fingerprint == SET_UNION_IDEMPOTENT_FINGERPRINT => {
+            (LitexToLeanSetBuiltinRuleIr::UnionIdempotent, 1, 0)
+        }
+        SET_UNION_MEMBERSHIP_LEFT_RULE_ID
+            if fingerprint == SET_UNION_MEMBERSHIP_LEFT_FINGERPRINT =>
+        {
+            (LitexToLeanSetBuiltinRuleIr::UnionMembershipLeft, 3, 1)
+        }
+        SET_UNION_MEMBERSHIP_RIGHT_RULE_ID
+            if fingerprint == SET_UNION_MEMBERSHIP_RIGHT_FINGERPRINT =>
+        {
+            (LitexToLeanSetBuiltinRuleIr::UnionMembershipRight, 3, 1)
+        }
+        SET_INTERSECT_ASSOCIATIVE_RULE_ID
+            if fingerprint == SET_INTERSECT_ASSOCIATIVE_FINGERPRINT =>
+        {
+            (LitexToLeanSetBuiltinRuleIr::IntersectAssociative, 3, 0)
+        }
+        SET_INTERSECT_COMMUTATIVE_RULE_ID
+            if fingerprint == SET_INTERSECT_COMMUTATIVE_FINGERPRINT =>
+        {
+            (LitexToLeanSetBuiltinRuleIr::IntersectCommutative, 2, 0)
+        }
+        SET_INTERSECT_MEMBERSHIP_RULE_ID if fingerprint == SET_INTERSECT_MEMBERSHIP_FINGERPRINT => {
+            (LitexToLeanSetBuiltinRuleIr::IntersectMembershipBoth, 3, 2)
+        }
+        SET_MINUS_MEMBERSHIP_RULE_ID if fingerprint == SET_MINUS_MEMBERSHIP_FINGERPRINT => {
+            (LitexToLeanSetBuiltinRuleIr::SetMinusMembership, 3, 2)
+        }
+        SET_INTERSECT_EQ_LEFT_OF_SUBSET_RULE_ID
+            if fingerprint == SET_INTERSECT_EQ_LEFT_OF_SUBSET_FINGERPRINT =>
+        {
+            (LitexToLeanSetBuiltinRuleIr::IntersectEqLeftOfSubset, 2, 1)
+        }
+        SET_INTERSECT_EQ_RIGHT_OF_SUBSET_RULE_ID
+            if fingerprint == SET_INTERSECT_EQ_RIGHT_OF_SUBSET_FINGERPRINT =>
+        {
+            (LitexToLeanSetBuiltinRuleIr::IntersectEqRightOfSubset, 2, 1)
+        }
+        SET_INTERSECT_FINITE_RULE_ID if fingerprint == SET_INTERSECT_FINITE_FINGERPRINT => {
+            (LitexToLeanSetBuiltinRuleIr::IntersectFinite, 2, 2)
+        }
+        SET_INTERSECT_SUBSET_LEFT_RULE_ID
+            if fingerprint == SET_INTERSECT_SUBSET_LEFT_FINGERPRINT =>
+        {
+            (LitexToLeanSetBuiltinRuleIr::IntersectSubsetLeft, 2, 0)
+        }
+        SET_INTERSECT_SUBSET_RIGHT_RULE_ID
+            if fingerprint == SET_INTERSECT_SUBSET_RIGHT_FINGERPRINT =>
+        {
+            (LitexToLeanSetBuiltinRuleIr::IntersectSubsetRight, 2, 0)
+        }
+        SET_INTERSECT_UNION_DISTRIBUTIVE_RULE_ID
+            if fingerprint == SET_INTERSECT_UNION_DISTRIBUTIVE_FINGERPRINT =>
+        {
+            (
+                LitexToLeanSetBuiltinRuleIr::IntersectUnionDistributive,
+                3,
+                0,
+            )
+        }
+        SET_POWER_SET_FINITE_RULE_ID if fingerprint == SET_POWER_SET_FINITE_FINGERPRINT => {
+            (LitexToLeanSetBuiltinRuleIr::PowerSetFinite, 1, 1)
+        }
+        SET_POWER_SET_MEMBERSHIP_OF_SUBSET_RULE_ID
+            if fingerprint == SET_POWER_SET_MEMBERSHIP_OF_SUBSET_FINGERPRINT =>
+        {
+            (
+                LitexToLeanSetBuiltinRuleIr::PowerSetMembershipOfSubset,
+                2,
+                1,
+            )
+        }
+        SET_POWER_SET_NONEMPTY_RULE_ID if fingerprint == SET_POWER_SET_NONEMPTY_FINGERPRINT => {
+            (LitexToLeanSetBuiltinRuleIr::PowerSetNonempty, 1, 0)
+        }
+        SET_MINUS_FINITE_LEFT_RULE_ID if fingerprint == SET_MINUS_FINITE_LEFT_FINGERPRINT => {
+            (LitexToLeanSetBuiltinRuleIr::SetMinusFiniteLeft, 2, 1)
+        }
+        SET_MINUS_INTERSECT_DE_MORGAN_RULE_ID
+            if fingerprint == SET_MINUS_INTERSECT_DE_MORGAN_FINGERPRINT =>
+        {
+            (LitexToLeanSetBuiltinRuleIr::SetMinusIntersectDeMorgan, 3, 0)
+        }
+        SET_MINUS_RECOVER_SUBSET_RULE_ID if fingerprint == SET_MINUS_RECOVER_SUBSET_FINGERPRINT => {
+            (LitexToLeanSetBuiltinRuleIr::SetMinusRecoverSubset, 2, 1)
+        }
+        SET_MINUS_SUBSET_LEFT_RULE_ID if fingerprint == SET_MINUS_SUBSET_LEFT_FINGERPRINT => {
+            (LitexToLeanSetBuiltinRuleIr::SetMinusSubsetLeft, 2, 0)
+        }
+        SET_MINUS_UNION_DE_MORGAN_RULE_ID
+            if fingerprint == SET_MINUS_UNION_DE_MORGAN_FINGERPRINT =>
+        {
+            (LitexToLeanSetBuiltinRuleIr::SetMinusUnionDeMorgan, 3, 0)
+        }
+        SET_SUBSET_EQ_SET_MINUS_RECOVERY_RULE_ID
+            if fingerprint == SET_SUBSET_EQ_SET_MINUS_RECOVERY_FINGERPRINT =>
+        {
+            (LitexToLeanSetBuiltinRuleIr::SubsetEqSetMinusRecovery, 2, 1)
+        }
+        SET_SUBSET_UNION_LEFT_RULE_ID if fingerprint == SET_SUBSET_UNION_LEFT_FINGERPRINT => {
+            (LitexToLeanSetBuiltinRuleIr::SubsetUnionLeft, 2, 0)
+        }
+        SET_SUBSET_UNION_RIGHT_RULE_ID if fingerprint == SET_SUBSET_UNION_RIGHT_FINGERPRINT => {
+            (LitexToLeanSetBuiltinRuleIr::SubsetUnionRight, 2, 0)
+        }
+        SET_UNION_FINITE_RULE_ID if fingerprint == SET_UNION_FINITE_FINGERPRINT => {
+            (LitexToLeanSetBuiltinRuleIr::UnionFinite, 2, 2)
+        }
+        SET_UNION_NONEMPTY_LEFT_RULE_ID if fingerprint == SET_UNION_NONEMPTY_LEFT_FINGERPRINT => {
+            (LitexToLeanSetBuiltinRuleIr::UnionNonemptyLeft, 2, 1)
+        }
+        SET_UNION_NONEMPTY_RIGHT_RULE_ID if fingerprint == SET_UNION_NONEMPTY_RIGHT_FINGERPRINT => {
+            (LitexToLeanSetBuiltinRuleIr::UnionNonemptyRight, 2, 1)
+        }
+        SET_UNION_SUBSET_RULE_ID if fingerprint == SET_UNION_SUBSET_FINGERPRINT => {
+            (LitexToLeanSetBuiltinRuleIr::UnionSubset, 3, 2)
+        }
+        _ => return None,
+    })
+}
+
 fn validate_registered_binary_real_rule(
     rule: &crate::litex_to_lean_ir::LitexToLeanRegisteredRuleApplicationIr,
     parameter_requirements: &[LitexToLeanFactIr],
@@ -4475,6 +6372,19 @@ fn render_fact(fact: &Fact, context: &RenderContext) -> Result<String, String> {
         Fact::AtomicFact(atomic) => match atomic {
             AtomicFact::NormalAtomicFact(fact) => {
                 let source_name = fact.predicate.to_string();
+                if source_name == PRIME && fact.body.len() == 1 {
+                    return Ok(format!(
+                        "Litex.Prime {}",
+                        render_obj(&fact.body[0], context)?
+                    ));
+                }
+                if source_name == COPRIME && fact.body.len() == 2 {
+                    return Ok(format!(
+                        "Litex.Coprime {} {}",
+                        render_obj(&fact.body[0], context)?,
+                        render_obj(&fact.body[1], context)?
+                    ));
+                }
                 let binding = context
                     .predicate_bindings
                     .get(&source_name)
@@ -4495,6 +6405,19 @@ fn render_fact(fact: &Fact, context: &RenderContext) -> Result<String, String> {
             }
             AtomicFact::NotNormalAtomicFact(fact) => {
                 let source_name = fact.predicate.to_string();
+                if source_name == PRIME && fact.body.len() == 1 {
+                    return Ok(format!(
+                        "¬ Litex.Prime {}",
+                        render_obj(&fact.body[0], context)?
+                    ));
+                }
+                if source_name == COPRIME && fact.body.len() == 2 {
+                    return Ok(format!(
+                        "¬ Litex.Coprime {} {}",
+                        render_obj(&fact.body[0], context)?,
+                        render_obj(&fact.body[1], context)?
+                    ));
+                }
                 let binding = context
                     .predicate_bindings
                     .get(&source_name)
@@ -4587,10 +6510,9 @@ fn render_fact(fact: &Fact, context: &RenderContext) -> Result<String, String> {
                 "Litex.Set.Finite {}",
                 render_obj(&fact.set, context)?
             )),
-            AtomicFact::IsTupleFact(fact) => Ok(format!(
-                "Litex.IsTuple {}",
-                render_obj(&fact.set, context)?
-            )),
+            AtomicFact::IsTupleFact(fact) => {
+                Ok(format!("Litex.IsTuple {}", render_obj(&fact.set, context)?))
+            }
             _ => Err(format!("unsupported compiler atomic fact `{fact}`")),
         },
         Fact::AndFact(_) | Fact::ChainFact(_) => {
@@ -4613,6 +6535,7 @@ fn render_fact(fact: &Fact, context: &RenderContext) -> Result<String, String> {
             Ok(rendered.join(" ∨ "))
         }
         Fact::ExistFact(existential) => render_existential_fact(existential, context),
+        Fact::ForallFact(forall) => render_forall_fact_type(forall, context),
         _ => Err(format!("unsupported compiler fact `{fact}`")),
     }
 }
@@ -4827,7 +6750,7 @@ fn render_obj(obj: &Obj, context: &RenderContext) -> Result<String, String> {
             render_function_application(&application, context)
         }
         Obj::StandardSet(set) => render_standard_set(*set).map(str::to_string),
-        _ => Err(format!("unsupported compiler object `{obj}`")),
+        _ => render_object_ir(&LitexToLeanObjectIr::lower(obj)?, context),
     }
 }
 
@@ -4842,6 +6765,65 @@ fn validate_set_parameter_premise(symbol_id: SymbolId, premise: &Fact) -> Result
     };
     if atom.symbol_ref().map(|symbol| symbol.id()) != Some(symbol_id) {
         return Err("set parameter evidence changed its SymbolId".into());
+    }
+    Ok(())
+}
+
+fn validate_refined_set_parameter_premise(
+    symbol_id: SymbolId,
+    param_type: &ParamType,
+    premise: &Fact,
+) -> Result<(), String> {
+    let target = match (param_type, premise) {
+        (ParamType::NonemptySet(_), Fact::AtomicFact(AtomicFact::IsNonemptySetFact(property))) => {
+            &property.set
+        }
+        (ParamType::FiniteSet(_), Fact::AtomicFact(AtomicFact::IsFiniteSetFact(property))) => {
+            &property.set
+        }
+        (ParamType::NonemptySet(_), _) => {
+            return Err(format!(
+                "nonempty-set parameter retained different evidence `{premise}`"
+            ))
+        }
+        (ParamType::FiniteSet(_), _) => {
+            return Err(format!(
+                "finite-set parameter retained different evidence `{premise}`"
+            ))
+        }
+        _ => return Err("refined-set validator received another parameter type".into()),
+    };
+    let Obj::Atom(atom) = target else {
+        return Err("refined-set parameter evidence targets a non-symbol object".into());
+    };
+    if atom.symbol_ref().map(|symbol| symbol.id()) != Some(symbol_id) {
+        return Err("refined-set parameter evidence changed its SymbolId".into());
+    }
+    Ok(())
+}
+
+fn validate_refined_set_argument_requirement(
+    param_type: &ParamType,
+    argument: &Obj,
+    requirement: &LitexToLeanFactIr,
+) -> Result<(), String> {
+    let target = match (param_type, &requirement.proposition) {
+        (ParamType::NonemptySet(_), Fact::AtomicFact(AtomicFact::IsNonemptySetFact(property))) => {
+            &property.set
+        }
+        (ParamType::FiniteSet(_), Fact::AtomicFact(AtomicFact::IsFiniteSetFact(property))) => {
+            &property.set
+        }
+        (ParamType::NonemptySet(_), _) => {
+            return Err("known forall nonempty-set argument retained different evidence".into())
+        }
+        (ParamType::FiniteSet(_), _) => {
+            return Err("known forall finite-set argument retained different evidence".into())
+        }
+        _ => return Err("refined-set argument validator received another parameter type".into()),
+    };
+    if obj_equality_key(target) != obj_equality_key(argument) {
+        return Err("known forall refined-set requirement changed its argument".into());
     }
     Ok(())
 }
@@ -5005,6 +6987,39 @@ fn membership_numeric_value(
     exact_set_numeric_value(set, &format!("Litex.In.rep {value} {membership}"))
 }
 
+fn membership_numeric_proof(
+    set: &LitexToLeanObjectIr,
+    value: &str,
+    membership: &str,
+) -> Option<String> {
+    let representative = format!("Litex.In.rep {value} {membership}");
+    exact_set_numeric_proof(set, &representative)
+}
+
+fn exact_set_numeric_proof(set: &LitexToLeanObjectIr, value: &str) -> Option<String> {
+    match set {
+        LitexToLeanObjectIr::StandardSet(LitexToLeanStandardSetIr::Natural) => Some(format!(
+            "Litex.Rules.complexEqNatInN ((({value} : ℕ) : ℂ)) ({value} : ℕ) (by rfl)"
+        )),
+        LitexToLeanObjectIr::StandardSet(LitexToLeanStandardSetIr::Integer) => Some(format!(
+            "Litex.Rules.complexEqIntInZ ((({value} : ℤ) : ℂ)) ({value} : ℤ) (by rfl)"
+        )),
+        LitexToLeanObjectIr::StandardSet(LitexToLeanStandardSetIr::Rational) => Some(format!(
+            "Litex.Rules.complexEqRatInQ ((({value} : ℚ) : ℂ)) ({value} : ℚ) (by rfl)"
+        )),
+        LitexToLeanObjectIr::StandardSet(LitexToLeanStandardSetIr::Real) => {
+            Some(format!("Litex.Rules.complexRealInR ({value} : ℝ)"))
+        }
+        LitexToLeanObjectIr::StandardSet(LitexToLeanStandardSetIr::Complex) => {
+            Some(format!("Litex.Rules.complexInC ({value} : ℂ)"))
+        }
+        LitexToLeanObjectIr::SetBuilder(builder) => {
+            exact_set_numeric_proof(builder.set.as_ref(), &format!("({value}).val"))
+        }
+        _ => None,
+    }
+}
+
 fn render_telescope_signature(
     function: &LitexToLeanFunctionTypeIr,
     context: &RenderContext,
@@ -5032,6 +7047,13 @@ fn render_telescope_signature(
             nested
                 .numeric_representations
                 .insert(parameter.symbol_id, representation);
+        }
+        if let Some(proof) =
+            membership_numeric_proof(&parameter.set, &format!("__arg{}", index + 1), &membership)
+        {
+            nested
+                .numeric_representation_memberships
+                .insert(parameter.symbol_id, proof);
         }
     }
     if !function.domain_facts.is_empty() {
@@ -5450,9 +7472,7 @@ fn render_anonymous_function(
             parameter_premise.proposition.clone(),
         );
         if let Some(real) = membership_real_value(&parameter.set, &argument, &membership) {
-            nested
-                .numeric_real_values
-                .insert(parameter.symbol_id, real);
+            nested.numeric_real_values.insert(parameter.symbol_id, real);
         }
         if let Some(representation) =
             membership_numeric_value(&parameter.set, &argument, &membership)
@@ -5460,6 +7480,11 @@ fn render_anonymous_function(
             nested
                 .numeric_representations
                 .insert(parameter.symbol_id, representation);
+        }
+        if let Some(proof) = membership_numeric_proof(&parameter.set, &argument, &membership) {
+            nested
+                .numeric_representation_memberships
+                .insert(parameter.symbol_id, proof);
         }
         parameter_values.insert(parameter.symbol_id, (argument, membership));
     }
@@ -5514,8 +7539,7 @@ fn render_anonymous_function(
                 .ok_or_else(|| "anonymous function body-membership proof is missing".to_string())?;
             let (body, return_set) = membership_parts(&closure_fact.fact.proposition)?;
             if LitexToLeanObjectIr::lower(body)? != *function.body
-                || LitexToLeanObjectIr::lower(return_set)?
-                    != *function.function.return_set
+                || LitexToLeanObjectIr::lower(return_set)? != *function.function.return_set
             {
                 return Err(
                     "anonymous function return closure changed its exact body or carrier".into(),
@@ -5538,9 +7562,10 @@ fn render_anonymous_function(
                 .ok_or_else(|| {
                     "anonymous subset closure changed its bound parameter index".to_string()
                 })?;
-            let (argument, membership) = parameter_values
-                .get(&parameter.symbol_id)
-                .ok_or_else(|| "anonymous subset closure lost its parameter evidence".to_string())?;
+            let (argument, membership) =
+                parameter_values.get(&parameter.symbol_id).ok_or_else(|| {
+                    "anonymous subset closure lost its parameter evidence".to_string()
+                })?;
             format!("Litex.In.rep {argument} {membership}")
         }
         _ => return Err("anonymous function retained an unsupported return-closure route".into()),
@@ -5584,6 +7609,11 @@ fn render_set_ir(object: &LitexToLeanObjectIr, context: &RenderContext) -> Resul
                 nested
                     .numeric_representations
                     .insert(builder.symbol_id, representation);
+            }
+            if let Some(proof) = exact_set_numeric_proof(builder.set.as_ref(), &parameter) {
+                nested
+                    .numeric_representation_memberships
+                    .insert(builder.symbol_id, proof);
             }
             let facts = builder
                 .facts
@@ -5883,6 +7913,15 @@ fn render_function_application(
                     .numeric_representations
                     .insert(parameter.symbol_id, representation);
             }
+            if let Some(proof) = membership_numeric_proof(
+                &parameter.set,
+                arguments.last().expect("argument was just retained"),
+                &argument_membership,
+            ) {
+                nested
+                    .numeric_representation_memberships
+                    .insert(parameter.symbol_id, proof);
+            }
         }
         let mut domain_proofs = Vec::with_capacity(domain_requirements.len());
         for (domain_index, (source_fact, requirement)) in function
@@ -6005,6 +8044,13 @@ fn render_native_object_ir(
     object: &LitexToLeanObjectIr,
     context: &RenderContext,
 ) -> Result<String, String> {
+    render_object_ir(object, context)
+}
+
+fn render_object_ir(
+    object: &LitexToLeanObjectIr,
+    context: &RenderContext,
+) -> Result<String, String> {
     match object {
         LitexToLeanObjectIr::Symbol { .. } => render_ir_symbol(object, context),
         LitexToLeanObjectIr::Number { normalized_value }
@@ -6015,22 +8061,315 @@ fn render_native_object_ir(
         {
             Ok(format!("({normalized_value} : ℂ)"))
         }
-        LitexToLeanObjectIr::StandardSet(set) => match set {
-            LitexToLeanStandardSetIr::Natural => Ok("Litex.N".into()),
-            LitexToLeanStandardSetIr::Integer => Ok("Litex.Z".into()),
-            LitexToLeanStandardSetIr::Rational => Ok("Litex.Q".into()),
-            LitexToLeanStandardSetIr::Real => Ok("Litex.R".into()),
-            LitexToLeanStandardSetIr::Complex => Ok("Litex.C".into()),
-            other => Err(format!("unsupported native standard-set value `{other:?}`")),
-        },
+        LitexToLeanObjectIr::Constant(constant) => Ok(match constant {
+            LitexToLeanConstantObjectIr::ImaginaryUnit => "Complex.I".into(),
+            LitexToLeanConstantObjectIr::EulerNumber => "((Real.exp 1 : ℝ) : ℂ)".into(),
+            LitexToLeanConstantObjectIr::Pi => "((Real.pi : ℝ) : ℂ)".into(),
+        }),
+        LitexToLeanObjectIr::StandardSet(set) => render_standard_set_ir(*set),
+        LitexToLeanObjectIr::FunctionSet { function } => render_function_set(function, context),
         LitexToLeanObjectIr::SetBuilder(_) => render_set_ir(object, context),
         LitexToLeanObjectIr::AnonymousFunction(function) => {
             render_anonymous_function(function, context)
         }
+        LitexToLeanObjectIr::FunctionApplication(application) => {
+            render_function_application(application, context)
+        }
+        LitexToLeanObjectIr::Range { start, end } => Ok(format!(
+            "(Litex.range {} {})",
+            render_integer_endpoint(start, context)?,
+            render_integer_endpoint(end, context)?
+        )),
+        LitexToLeanObjectIr::ClosedRange { start, end } => Ok(format!(
+            "(Litex.closedRange {} {})",
+            render_integer_endpoint(start, context)?,
+            render_integer_endpoint(end, context)?
+        )),
+        LitexToLeanObjectIr::GeneralCartesianProduct {
+            index_set,
+            family_set,
+            family_function,
+        } => Ok(format!(
+            "(Litex.generalCart {} {} {})",
+            render_object_ir(index_set, context)?,
+            render_object_ir(family_set, context)?,
+            render_object_ir(family_function, context)?
+        )),
+        LitexToLeanObjectIr::SequenceSet { values, length } => match length {
+            Some(length) => Ok(format!(
+                "(Litex.finiteSequenceSet {} {})",
+                render_set_ir(values, context)?,
+                render_natural_endpoint(length)?
+            )),
+            None => Ok(format!(
+                "(Litex.sequenceSet {})",
+                render_set_ir(values, context)?
+            )),
+        },
+        LitexToLeanObjectIr::Aggregate {
+            kind, arguments, ..
+        } => render_aggregate_object(*kind, arguments, context),
+        LitexToLeanObjectIr::TupleDimension(tuple) => Ok(format!(
+            "(Litex.tupleDim {})",
+            render_object_ir(tuple, context)?
+        )),
+        LitexToLeanObjectIr::IndexedAccess { object, index } => {
+            render_literal_indexed_access(object, index, context)
+        }
+        LitexToLeanObjectIr::BuiltinApp {
+            operator,
+            arguments,
+            ..
+        } => render_builtin_object(*operator, arguments, context),
+        LitexToLeanObjectIr::Collection {
+            constructor: LitexToLeanCollectionObjectIr::Tuple,
+            items,
+            ..
+        } => render_typed_spine(items, context),
+        LitexToLeanObjectIr::Collection {
+            constructor: LitexToLeanCollectionObjectIr::SequenceLiteral,
+            items,
+            ..
+        } => Ok(format!(
+            "(Litex.SequenceLiteral.mk {})",
+            render_typed_spine(items, context)?
+        )),
+        LitexToLeanObjectIr::Collection {
+            constructor: LitexToLeanCollectionObjectIr::ListSet,
+            items,
+            ..
+        } => render_list_set(items, context),
         other => Err(format!(
             "unsupported native object definition value `{other:?}`"
         )),
     }
+}
+
+fn render_list_set(
+    items: &[LitexToLeanObjectIr],
+    context: &RenderContext,
+) -> Result<String, String> {
+    let mut set = "Litex.Set.empty".to_string();
+    for item in items.iter().rev() {
+        set = format!(
+            "(Litex.Set.coproduct (Litex.Set.singleton {}) {set})",
+            render_object_ir(item, context)?
+        );
+    }
+    Ok(set)
+}
+
+fn render_list_set_finiteness(
+    items: &[LitexToLeanObjectIr],
+    context: &RenderContext,
+) -> Result<String, String> {
+    let mut set = "Litex.Set.empty".to_string();
+    let mut proof = "Litex.Set.empty_finite".to_string();
+    for item in items.iter().rev() {
+        let item = render_object_ir(item, context)?;
+        proof = format!(
+            "Litex.Set.coproduct_finite (Litex.Set.singleton {item}) {set} (Litex.Set.singleton_finite {item}) ({proof})"
+        );
+        set = format!("(Litex.Set.coproduct (Litex.Set.singleton {item}) {set})");
+    }
+    Ok(proof)
+}
+
+fn render_integer_endpoint(
+    object: &LitexToLeanObjectIr,
+    _context: &RenderContext,
+) -> Result<String, String> {
+    let LitexToLeanObjectIr::Number { normalized_value } = object else {
+        return Err("integer range endpoints currently require closed integer numerals".into());
+    };
+    if normalized_value.parse::<i128>().is_err() {
+        return Err(format!(
+            "integer range endpoint `{normalized_value}` is not a closed integer numeral"
+        ));
+    }
+    Ok(format!("({normalized_value} : ℤ)"))
+}
+
+fn render_natural_endpoint(object: &LitexToLeanObjectIr) -> Result<String, String> {
+    let LitexToLeanObjectIr::Number { normalized_value } = object else {
+        return Err("finite sequence length currently requires a closed natural numeral".into());
+    };
+    if normalized_value.is_empty()
+        || !normalized_value
+            .chars()
+            .all(|character| character.is_ascii_digit())
+    {
+        return Err(format!(
+            "finite sequence length `{normalized_value}` is not a natural numeral"
+        ));
+    }
+    Ok(format!("({normalized_value} : Nat)"))
+}
+
+fn render_typed_spine(
+    items: &[LitexToLeanObjectIr],
+    context: &RenderContext,
+) -> Result<String, String> {
+    let mut tail = "Litex.HNil.nil".to_string();
+    for item in items.iter().rev() {
+        tail = format!(
+            "(Litex.HCons.mk {} {tail})",
+            render_object_ir(item, context)?
+        );
+    }
+    Ok(tail)
+}
+
+fn render_aggregate_object(
+    kind: LitexToLeanAggregateObjectIr,
+    arguments: &[LitexToLeanObjectIr],
+    context: &RenderContext,
+) -> Result<String, String> {
+    let (name, arity) = match kind {
+        LitexToLeanAggregateObjectIr::Sum => ("Litex.sum", 3),
+        LitexToLeanAggregateObjectIr::Product => ("Litex.product", 3),
+        LitexToLeanAggregateObjectIr::FiniteSetSum => ("Litex.finiteSetSum", 2),
+        LitexToLeanAggregateObjectIr::FiniteSetProduct => ("Litex.finiteSetProduct", 2),
+        LitexToLeanAggregateObjectIr::Reduce => ("Litex.reduce", 5),
+        LitexToLeanAggregateObjectIr::FiniteSetReduce => ("Litex.finiteSetReduce", 4),
+    };
+    if arguments.len() != arity {
+        return Err(format!(
+            "aggregate `{kind:?}` changed its exact source arity"
+        ));
+    }
+    let rendered = arguments
+        .iter()
+        .map(|argument| render_object_ir(argument, context))
+        .collect::<Result<Vec<_>, _>>()?;
+    Ok(format!("({name} {})", rendered.join(" ")))
+}
+
+fn render_literal_indexed_access(
+    object: &LitexToLeanObjectIr,
+    index: &LitexToLeanObjectIr,
+    context: &RenderContext,
+) -> Result<String, String> {
+    if let LitexToLeanObjectIr::Symbol { symbol_id, .. } = object {
+        if let Some(binding) = context.indexed_tuple_bindings.get(symbol_id) {
+            let tuple = render_object_ir(object, context)?;
+            let exact_index = match index {
+                LitexToLeanObjectIr::Symbol {
+                    symbol_id: index_symbol_id,
+                    ..
+                } => context
+                    .exact_tuple_indices
+                    .get(index_symbol_id)
+                    .cloned()
+                    .ok_or_else(|| {
+                        "indexed tuple projection has no exact checked index representative"
+                            .to_string()
+                    })?,
+                LitexToLeanObjectIr::Number { normalized_value } => {
+                    let value = normalized_value.parse::<usize>().map_err(|_| {
+                        "indexed tuple projection index is not a natural numeral".to_string()
+                    })?;
+                    if value == 0 || value > binding.dimension {
+                        return Err(
+                            "indexed tuple projection index is outside its checked dimension"
+                                .into(),
+                        );
+                    }
+                    format!("⟨({value} : ℤ), by norm_num⟩")
+                }
+                _ => {
+                    return Err(
+                        "indexed tuple projection needs a checked range representative".into(),
+                    )
+                }
+            };
+            return Ok(format!("(Litex.indexedTupleAt {tuple} {exact_index})"));
+        }
+    }
+    let LitexToLeanObjectIr::Number { normalized_value } = index else {
+        return Err("literal tuple access requires a closed natural index".into());
+    };
+    let index = normalized_value
+        .parse::<usize>()
+        .map_err(|_| "literal tuple access has an invalid natural index".to_string())?;
+    let LitexToLeanObjectIr::Collection { items, .. } = object else {
+        return Err(
+            "generic heterogeneous indexed access needs a checked projection recipe".into(),
+        );
+    };
+    let item = items.get(index.saturating_sub(1)).ok_or_else(|| {
+        "literal tuple access index is outside the retained source arity".to_string()
+    })?;
+    render_object_ir(item, context)
+}
+
+fn render_builtin_object(
+    operator: LitexToLeanBuiltinObjectOperatorIr,
+    arguments: &[LitexToLeanObjectIr],
+    context: &RenderContext,
+) -> Result<String, String> {
+    let binary_symbol = match operator {
+        LitexToLeanBuiltinObjectOperatorIr::Add => Some("+"),
+        LitexToLeanBuiltinObjectOperatorIr::Sub => Some("-"),
+        LitexToLeanBuiltinObjectOperatorIr::Mul => Some("*"),
+        LitexToLeanBuiltinObjectOperatorIr::Div => Some("/"),
+        _ => None,
+    };
+    if let Some(symbol) = binary_symbol {
+        let [left, right] = arguments else {
+            return Err(format!("numeric operator `{operator:?}` changed its arity"));
+        };
+        return Ok(format!(
+            "({} {symbol} {})",
+            render_numeric_object_ir(left, context)?,
+            render_numeric_object_ir(right, context)?
+        ));
+    }
+    match (operator, arguments) {
+        (LitexToLeanBuiltinObjectOperatorIr::Union, [left, right]) => Ok(format!(
+            "(Litex.union {} {})",
+            render_object_ir(left, context)?,
+            render_object_ir(right, context)?
+        )),
+        (LitexToLeanBuiltinObjectOperatorIr::Intersect, [left, right]) => Ok(format!(
+            "(Litex.intersect {} {})",
+            render_object_ir(left, context)?,
+            render_object_ir(right, context)?
+        )),
+        (LitexToLeanBuiltinObjectOperatorIr::SetMinus, [left, right]) => Ok(format!(
+            "(Litex.setMinus {} {})",
+            render_object_ir(left, context)?,
+            render_object_ir(right, context)?
+        )),
+        (LitexToLeanBuiltinObjectOperatorIr::BigUnion, [family]) => Ok(format!(
+            "(Litex.bigUnion {})",
+            render_object_ir(family, context)?
+        )),
+        (LitexToLeanBuiltinObjectOperatorIr::BigIntersect, [family]) => Ok(format!(
+            "(Litex.bigIntersect {})",
+            render_object_ir(family, context)?
+        )),
+        (LitexToLeanBuiltinObjectOperatorIr::PowerSet, [base]) => Ok(format!(
+            "(Litex.powerSet {})",
+            render_object_ir(base, context)?
+        )),
+        _ => Err(format!(
+            "unsupported typed builtin object `{operator:?}` with {} arguments",
+            arguments.len()
+        )),
+    }
+}
+
+fn render_numeric_object_ir(
+    object: &LitexToLeanObjectIr,
+    context: &RenderContext,
+) -> Result<String, String> {
+    if let LitexToLeanObjectIr::Symbol { symbol_id, .. } = object {
+        if let Some(value) = context.numeric_representations.get(symbol_id) {
+            return Ok(value.clone());
+        }
+    }
+    render_object_ir(object, context)
 }
 
 fn parameter_set(param_type: &ParamType) -> Result<&Obj, String> {
@@ -6081,6 +8420,35 @@ fn membership_parts(fact: &Fact) -> Result<(&Obj, &Obj), String> {
     match fact {
         Fact::AtomicFact(AtomicFact::InFact(fact)) => Ok((&fact.element, &fact.set)),
         _ => Err(format!("expected membership fact, found `{fact}`")),
+    }
+}
+
+fn subset_parts(fact: &Fact) -> Result<(&Obj, &Obj), String> {
+    match fact {
+        Fact::AtomicFact(AtomicFact::SubsetFact(fact)) => Ok((&fact.left, &fact.right)),
+        Fact::AtomicFact(AtomicFact::SupersetFact(fact)) => Ok((&fact.right, &fact.left)),
+        _ => Err(format!("expected subset fact, found `{fact}`")),
+    }
+}
+
+fn finite_set_parts(fact: &Fact) -> Result<&Obj, String> {
+    match fact {
+        Fact::AtomicFact(AtomicFact::IsFiniteSetFact(fact)) => Ok(&fact.set),
+        _ => Err(format!("expected finite-set fact, found `{fact}`")),
+    }
+}
+
+fn nonempty_set_parts(fact: &Fact) -> Result<&Obj, String> {
+    match fact {
+        Fact::AtomicFact(AtomicFact::IsNonemptySetFact(fact)) => Ok(&fact.set),
+        _ => Err(format!("expected nonempty-set fact, found `{fact}`")),
+    }
+}
+
+fn nonmembership_parts(fact: &Fact) -> Result<(&Obj, &Obj), String> {
+    match fact {
+        Fact::AtomicFact(AtomicFact::NotInFact(fact)) => Ok((&fact.element, &fact.set)),
+        _ => Err(format!("expected non-membership fact, found `{fact}`")),
     }
 }
 
@@ -6244,4 +8612,22 @@ fn indent_lines(text: &str, spaces: usize) -> String {
         .map(|line| format!("{indentation}{line}"))
         .collect::<Vec<_>>()
         .join("\n")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::verify::rule_schema::{RuleFingerprint, RuleId};
+
+    #[test]
+    fn registered_set_rule_rejects_stale_fingerprint() {
+        let rule = crate::litex_to_lean_ir::LitexToLeanRegisteredRuleApplicationIr {
+            rule_id: RuleId::new(SET_POWER_SET_MEMBERSHIP_OF_SUBSET_RULE_ID)
+                .expect("valid stable rule id"),
+            semantic_fingerprint: RuleFingerprint::from_hex("0".repeat(64))
+                .expect("valid forged fingerprint shape"),
+            bindings: Vec::new(),
+        };
+        assert!(registered_set_rule(&rule).is_none());
+    }
 }

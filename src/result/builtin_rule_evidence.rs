@@ -47,6 +47,14 @@ impl fmt::Debug for DisjunctionIntroductionBuiltinRuleEvidence {
     }
 }
 
+/// A checked equality with one exact source position introduces membership in
+/// a finite list-set literal. The enclosing result retains that equality as
+/// its sole child; the index fixes the coproduct injection path.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct ListSetMembershipBuiltinRuleEvidence {
+    pub selected_index: usize,
+}
+
 impl DivNotEqualZeroBuiltinRuleEvidence {
     pub fn new(
         numerator: Obj,
@@ -497,6 +505,7 @@ pub enum BuiltinRuleEvidence {
     SetRelationDuality(SetRelationDualityBuiltinRule),
     Set(SetBuiltinRule),
     FiniteSet(FiniteSetBuiltinRule),
+    ListSetMembership(ListSetMembershipBuiltinRuleEvidence),
     TupleLiteralShape,
     AbsoluteValue(AbsoluteValueBuiltinRule),
     PrimeU64Reflection,
@@ -583,8 +592,9 @@ impl fmt::Debug for BuiltinRuleEvidence {
                 f.debug_tuple("SetRelationDuality").field(rule).finish()
             }
             BuiltinRuleEvidence::Set(rule) => f.debug_tuple("Set").field(rule).finish(),
-            BuiltinRuleEvidence::FiniteSet(rule) => {
-                f.debug_tuple("FiniteSet").field(rule).finish()
+            BuiltinRuleEvidence::FiniteSet(rule) => f.debug_tuple("FiniteSet").field(rule).finish(),
+            BuiltinRuleEvidence::ListSetMembership(evidence) => {
+                f.debug_tuple("ListSetMembership").field(evidence).finish()
             }
             BuiltinRuleEvidence::TupleLiteralShape => f.write_str("TupleLiteralShape"),
             BuiltinRuleEvidence::AbsoluteValue(rule) => {
