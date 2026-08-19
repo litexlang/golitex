@@ -35,11 +35,6 @@ thm struct_unfold_reaches_function_prop_and_theorem:
     by thm consume_group_fields(unfold G)
     by def $has_group_fields(unfold G)
 
-thm explicit_struct_unfold_selects_the_view:
-    ? forall G &GroupData<R>:
-        consume(unfold &GroupData<R>{G}) = G.identity
-    by thm consume_group_fields(unfold &GroupData<R>{G})
-
 have fn first_of_three(x, y, z R) R = x
 first_of_three(unfold (1, 2, 3)) = 1
 
@@ -51,11 +46,27 @@ thm statically_typed_tuple_unfold_uses_index_order:
 have named_values cart(R, R, R) = (1, 2, 3)
 first_of_three(unfold named_values) = 1
 
+# A direct function result keeps its declared struct carrier. `unfold` is
+# removed while parsing, and the resulting fields retain their declared types.
+struct Pair:
+    first R
+    second R
+
+have fn make_pair(first, second R) &Pair = (first, second)
+have fn add_pair(first, second R) R = first + second
+add_pair(unfold make_pair(1, 2)) $in R
+
+struct ValueBox<S set>:
+    value S
+
+have fn boxed_value(s power_set(R), value s) &ValueBox<s> = value
+boxed_value({1}, 1).value $in {1}
+
 # Current behavior: GroupData expands strictly to identity, inverse, combine.
 # The header parameter S and the <=>: law are not positional arguments.
 #
 # Boundary: unfold is argument-list syntax. A scalar, a Cartesian-product set,
-# or a tuple whose arity is not known at compile time is rejected. An explicit
-# &Struct{object} view still has to pass ordinary struct-membership verification.
+# or a tuple whose arity is not known at compile time is rejected. The removed
+# `unfold &Struct{object}` syntax is rejected even when membership is known.
 # Those failures are executable Rust regressions rather than trusted Litex
 # statements.

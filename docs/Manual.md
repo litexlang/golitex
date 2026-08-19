@@ -735,11 +735,17 @@ sums and products remain `0` and `1`. The interval forms still require the
 first index to be at most the last. Ordered, positive, and absolute-value
 aggregate rules still require a real-valued iterand.
 
-### Struct objects and explicit or default-view field access (preview)
+### Struct objects and declaration-owned field access
 
-A `struct` defines a named view of a Cartesian product. `&Name<args>` is the
-set-like struct object. Select a view explicitly with `&Name{obj}.field`, or
-bind a fresh name with an explicit struct type and then use `obj.field`.
+A `struct` defines a named subset of a Cartesian carrier. Once its header
+parameters are fixed, `&Name<args>` is one ordinary set, not a set of sets.
+Every binder and function signature position that accepts a set therefore also
+accepts a struct carrier.
+
+Writing `have p &Point = ...` records both the membership fact and the field
+owner of the new symbol. Named fields belong to that declaration: `p.x` means
+the `x` field of the `Point` carrier written when `p` was introduced. Litex no
+longer has an `&Point{p}.x` form for selecting another view later.
 
 A structure with two or more fields uses that Cartesian-product
 representation. A one-field structure is instead a named view of the sole
@@ -757,8 +763,21 @@ struct Point:
 by thm struct_member((1, 2), &Point)
 have p &Point = (1, 2)
 
-&Point{p}.x = 1
+p.x = 1
 p.y = 2
+```
+
+The same rule applies to `forall`, `exist`, set-builder, proposition, theorem,
+template, and function binders. A function may return a struct carrier
+directly, and its result then supports fields:
+
+```litex
+struct Point:
+    x R
+    y R
+
+have fn make_point(x, y R) &Point = (x, y)
+make_point(1, 2).x = 1
 ```
 
 Inside a parenthesized function, proposition, or theorem argument list,
@@ -778,14 +797,11 @@ prop has_point_coordinates(x, y R):
 
 by def:
     ? $has_point_coordinates(unfold p)
-by def:
-    ? $has_point_coordinates(unfold &Point{p})
 ```
 
-Both calls elaborate to `$has_point_coordinates(p.x, p.y)`. The first uses
-the default view selected by `p &Point`; the second selects the view
-explicitly and still verifies `p $in &Point`. Only fields are spread. Struct
-header parameters and `<=>:` facts are not positional arguments. Consequently,
+The call elaborates during parsing to
+`$has_point_coordinates(p.x, p.y)`. Only fields are spread. Struct header
+parameters and `<=>:` facts are not positional arguments. Consequently,
 adding, removing, or reordering a struct field intentionally changes the
 argument list produced by `unfold`.
 
@@ -814,14 +830,12 @@ have item &TaggedPoint = ((1, 2), 0)
 item.point.x $in R
 ```
 
-Here `item.point.x` lowers to
-`&Coordinates{&TaggedPoint{item}.point}.x`. Parameterized and
-module-qualified struct field types work the same way. A final field may be
-called, as in `space.scalars.mul(a, b)` or
-`&CallableBox{make_box(f)}.entries(i)`. The selected field's declared carrier
-must be a function set. Field access after a call, index, or parenthesized
-expression is not currently supported; select that next view explicitly with
-`&Struct{expr}.field`.
+Here the declaration of `TaggedPoint.point` supplies the owner of the next
+field. Parameterized and module-qualified struct field types work the same
+way. A final field may be called, as in `space.scalars.mul(a, b)`. Fields also
+work after a call when the function's declared return carrier is a struct, as
+in `make_box(f).entries(i)`. A callable field's declared carrier must be a
+function set.
 
 When `expr` is a materialized template-selected struct object, a callable
 field projects through the selected tuple value before application. Thus an
@@ -835,7 +849,7 @@ single-space theorem to carry scalar operations separately. With
 as linearity of a map, records one compatibility fact
 `Vspace.scalars = Wspace.scalars`; callers then pass the spaces themselves.
 
-A later membership fact does not choose a default view retroactively:
+A later membership fact does not add named fields retroactively:
 
 ```text
 struct Point:
@@ -847,10 +861,25 @@ by thm struct_member(p, &Point)
 p.x = 1
 ```
 
-The last line is a parse `error`. Bind `p &Point` or write
-`&Point{p}.x` explicitly. Chained notation follows only a field declared
-directly as `&Struct<...>`; it does not follow a named set definition or search known
-membership facts for a possible view.
+The last line is a parse `error`. The membership still exposes the ordinary
+positional Cartesian facts, but not `Point` field names. To use those names,
+construct a new declaration-owned object explicitly:
+
+```litex
+struct Point:
+    x R
+    y R
+
+have p cart(R, R) = (1, 2)
+have p2 &Point = (p[1], p[2])
+p2.x = p[1]
+```
+
+Likewise, if `p &Point` later also belongs to `&ComplexPair`, `p.x` remains the
+field chosen by its `Point` declaration. Write
+`have p2 &ComplexPair = (p.x, p.y)` to obtain `p2.real` and `p2.img`.
+Chained notation follows only directly declared struct carriers; it does not
+follow named set aliases, equalities, or later membership facts.
 
 ### Template instances
 
@@ -1009,7 +1038,7 @@ Every row also requires its subobjects to be well-defined.
 | A finite sum or product | The index domain is suitable, the unary iterand is defined throughout it, and its declared return set is a subset of `C`. |
 | A real interval | Finite endpoints are real; reversed endpoints denote an empty interval rather than an ill-defined object. |
 | `&Struct<args>` or field access | The struct, arguments, field, and membership obligations check. |
-| `unfold value` in an argument list | The value has a compile-time tuple arity or an explicit/default struct view; every expanded argument then passes its ordinary checks. |
+| `unfold value` in an argument list | The value has a compile-time tuple arity or a declaration-owned struct carrier; every expanded argument then passes its ordinary checks. |
 | `\Template<args>` | The template exists and its parameter obligations check. |
 
 After `fn(...) T {body}` has passed these checks, Litex can prove that it
@@ -2183,7 +2212,7 @@ explanation; this index does not repeat its examples.
 | Domain condition | `x R: x != 0` | [Domain obligations](#domain-obligations) |
 | Parameterized definition | `template<S set, x S>:` | [Templates](#templates) |
 | Named universal prefix | `setting Name(params): ...`, then `forall [Name]`, `forall [Name(fresh_names)]`, or a `prop`/`setting`/`struct` parameter bundle | [Named universal settings](#named-universal-settings) |
-| Struct parameter | `struct Group<S nonempty_set>:` | [Struct objects](#struct-objects-and-explicit-or-default-view-field-access-preview) |
+| Struct parameter | `struct Group<S nonempty_set>:` | [Struct objects](#struct-objects-and-declaration-owned-field-access) |
 
 ### Object syntax index
 
@@ -2194,7 +2223,7 @@ explanation; this index does not repeat its examples.
 | Functions | `fn`, anonymous functions, application, `fn_range` | [Functions, application, and range](#functions-application-and-range) |
 | Structured data | `cart`, `proj`, tuples, sequences, matrices, indexing | [Products, tuples, sequences, and matrices](#products-tuples-sequences-and-matrices) |
 | Finite objects | size, extrema, sums, products, integer and real intervals | [Cardinality, finite aggregation, and intervals](#cardinality-finite-aggregation-and-intervals) |
-| Named views | `&Struct<args>`, field access, `\Template<args>` | [Struct objects](#struct-objects-and-explicit-or-default-view-field-access-preview) and [Template instances](#template-instances) |
+| Named struct carriers | `&Struct<args>`, field access, `\Template<args>` | [Struct objects](#struct-objects-and-declaration-owned-field-access) and [Template instances](#template-instances) |
 
 ### Fact syntax index
 

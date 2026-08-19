@@ -129,40 +129,17 @@ impl Runtime {
     /// Subscript `[]`, tighter than `^`.
     fn parse_obj_hierarchy4(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
         let mut left = self.parse_obj_hierarchy5(tb)?;
+        left = self.parse_field_and_call_postfixes(tb, left)?;
         loop {
             if tb.current_token_is_equal_to(LEFT_BRACKET) {
                 tb.skip_token(LEFT_BRACKET)?;
                 let obj = self.parse_obj(tb)?;
                 tb.skip_token(RIGHT_BRACKET)?;
                 left = ObjAtIndex::new(left, obj).into();
+                left = self.parse_field_and_call_postfixes(tb, left)?;
             } else {
                 break;
             }
-        }
-        if !tb.exceed_end_of_head() && tb.current_token_is_equal_to(LEFT_BRACE) {
-            let head = match &left {
-                Obj::ObjAtIndex(x) => FnObjHead::ObjAtIndex(x.clone()),
-                Obj::ObjAsStructInstanceWithFieldAccess(x) => {
-                    FnObjHead::ObjAsStructInstanceWithFieldAccess(x.clone())
-                }
-                _ => return Ok(left),
-            };
-            let mut body_vectors = vec![];
-            while !tb.exceed_end_of_head() && tb.current_token_is_equal_to(LEFT_BRACE) {
-                let args = self.parse_fn_obj_arg_group(tb)?;
-                let group: Vec<Box<Obj>> = args.into_iter().map(Box::new).collect();
-                body_vectors.push(group);
-            }
-            left = self.new_parsed_fn_obj(head, body_vectors)?;
-        }
-        if !tb.exceed_end_of_head() && tb.current_token_is_equal_to(DOT_AKA_FIELD_ACCESS_SIGN) {
-            return Err(RuntimeError::from(ParseRuntimeError(
-                RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "field access after this expression form is not supported; select the next struct view explicitly with `&Struct{expr}.field`"
-                        .to_string(),
-                    tb.line_file.clone(),
-                ),
-            )));
         }
         Ok(left)
     }
@@ -562,55 +539,43 @@ impl Runtime {
         }
 
         // 2. Parse a primary object; builtin standard-set names are reclassified later.
-        let mut result = self.parse_primary_obj(tb)?;
+        let result = self.parse_primary_obj(tb)?;
 
-        // 3. A bound object or struct-valued field may use chained field access.
-        while !tb.exceed_end_of_head() && tb.current_token_is_equal_to(DOT_AKA_FIELD_ACCESS_SIGN) {
-            let struct_obj =
-                self.struct_view_for_field_access_receiver(&result, tb.line_file.clone())?;
-            tb.skip_token(DOT_AKA_FIELD_ACCESS_SIGN)?;
-            let field_name = parse_struct_field_name(tb)?;
-            result = ObjAsStructInstanceWithFieldAccess::new(struct_obj, result, field_name).into();
-        }
+        // 3. Calls and declared-field projections are ordinary composable postfixes.
+        self.parse_field_and_call_postfixes(tb, result)
+    }
 
-        // 4. If the result is callable, parse all following argument groups.
-        let (head, mut body_vectors) = match &result {
-            Obj::Atom(AtomObj::Identifier(i)) => (FnObjHead::Identifier(i.clone()), vec![]),
-            Obj::Atom(AtomObj::IdentifierWithMod(m)) => {
-                (FnObjHead::IdentifierWithMod(m.clone()), vec![])
+    fn parse_field_and_call_postfixes(
+        &mut self,
+        tb: &mut TokenBlock,
+        mut result: Obj,
+    ) -> Result<Obj, RuntimeError> {
+        loop {
+            if !tb.exceed_end_of_head() && tb.current_token_is_equal_to(DOT_AKA_FIELD_ACCESS_SIGN) {
+                let struct_obj =
+                    self.struct_view_for_field_access_receiver(&result, tb.line_file.clone())?;
+                tb.skip_token(DOT_AKA_FIELD_ACCESS_SIGN)?;
+                let field_name = parse_struct_field_name(tb)?;
+                result =
+                    ObjAsStructInstanceWithFieldAccess::new(struct_obj, result, field_name).into();
+                continue;
             }
-            Obj::Atom(AtomObj::Forall(p)) => (FnObjHead::Forall(p.clone()), vec![]),
-            Obj::Atom(AtomObj::Exist(p)) => (FnObjHead::Exist(p.clone()), vec![]),
-            Obj::Atom(AtomObj::Def(p)) => (FnObjHead::DefHeader(p.clone()), vec![]),
-            Obj::Atom(AtomObj::SetBuilder(p)) => (FnObjHead::SetBuilder(p.clone()), vec![]),
-            Obj::Atom(AtomObj::FnSet(p)) => (FnObjHead::FnSet(p.clone()), vec![]),
-            Obj::Atom(AtomObj::Induc(p)) => (FnObjHead::Induc(p.clone()), vec![]),
-            Obj::Atom(AtomObj::DefAlgo(p)) => (FnObjHead::DefAlgo(p.clone()), vec![]),
-            Obj::Atom(AtomObj::DefStructField(p)) => (FnObjHead::DefStructField(p.clone()), vec![]),
-            Obj::AnonymousFn(anon) => (
-                FnObjHead::AnonymousFnLiteral(Box::new(anon.clone())),
-                vec![],
-            ),
-            Obj::FiniteSeqListObj(list) => (FnObjHead::FiniteSeqListObj(list.clone()), vec![]),
-            Obj::ObjAtIndex(x) => (FnObjHead::ObjAtIndex(x.clone()), vec![]),
-            Obj::ObjAsStructInstanceWithFieldAccess(x) => (
-                FnObjHead::ObjAsStructInstanceWithFieldAccess(x.clone()),
-                vec![],
-            ),
-            Obj::InstantiatedTemplateObj(t) => {
-                (FnObjHead::InstantiatedTemplateObj(t.clone()), vec![])
+
+            if !tb.exceed_end_of_head() && tb.current_token_is_equal_to(LEFT_BRACE) {
+                let Some(head) = FnObjHead::from_callable_obj(result.clone()) else {
+                    return Ok(result);
+                };
+                let mut body_vectors = Vec::new();
+                while !tb.exceed_end_of_head() && tb.current_token_is_equal_to(LEFT_BRACE) {
+                    let args = self.parse_fn_obj_arg_group(tb)?;
+                    body_vectors.push(args.into_iter().map(Box::new).collect());
+                }
+                result = self.new_parsed_fn_obj(head, body_vectors)?;
+                continue;
             }
-            _ => return Ok(result),
-        };
-        while !tb.exceed_end_of_head() && tb.current()? == LEFT_BRACE {
-            let args = self.parse_fn_obj_arg_group(tb)?;
-            let group: Vec<Box<Obj>> = args.into_iter().map(Box::new).collect();
-            body_vectors.push(group);
+
+            return Ok(result);
         }
-        if !body_vectors.is_empty() {
-            result = self.new_parsed_fn_obj(head, body_vectors)?;
-        }
-        Ok(result)
     }
 
     /// Parses a primary object from a keyword form or ordinary atom.
@@ -1506,7 +1471,7 @@ impl Runtime {
     }
 
     /// `unfold value` is an argument-list spread. A tuple literal contributes
-    /// its elements; a struct view contributes its declared fields in source
+    /// its elements; a struct-declared value contributes its declared fields in source
     /// order. Struct header parameters and `<=>:` facts are never arguments.
     /// Example: `f(unfold pair, unfold group)`.
     fn parse_call_argument_or_unfold(
@@ -1517,6 +1482,18 @@ impl Runtime {
             return Ok(vec![self.parse_obj(tb)?]);
         }
 
+        self.parse_unfold_call_argument(tb)
+    }
+
+    // Keep the comparatively large unfold/error path out of the ordinary
+    // braced-object parser frame. Parser recursion is already deep for nested
+    // set builders and function signatures, and Rust's test threads use a
+    // deliberately small default stack.
+    #[inline(never)]
+    fn parse_unfold_call_argument(
+        &mut self,
+        tb: &mut TokenBlock,
+    ) -> Result<Vec<Obj>, RuntimeError> {
         let line_file = tb.line_file.clone();
         tb.skip_token(UNFOLD)?;
         if tb.exceed_end_of_head()
@@ -1525,80 +1502,69 @@ impl Runtime {
         {
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "unfold expects a tuple value or a struct-view object".to_string(),
+                    "unfold expects a tuple value or an object declared with a struct carrier"
+                        .to_string(),
                     line_file,
                 ),
             )));
         }
 
-        let (obj, explicit_struct_view) = if tb.current_token_is_equal_to(STRUCT_VIEW_PREFIX) {
-            tb.skip_token(STRUCT_VIEW_PREFIX)?;
-            let struct_obj = self.parse_struct_obj_after_prefix(tb)?;
-            if tb.exceed_end_of_head() || !tb.current_token_is_equal_to(LEFT_CURLY_BRACE) {
-                return Err(RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "explicit struct unfold expects `unfold &Struct{object}`".to_string(),
-                        line_file,
-                    ),
-                )));
-            }
-            tb.skip_token(LEFT_CURLY_BRACE)?;
-            let obj = self.parse_obj(tb)?;
-            tb.skip_token(RIGHT_CURLY_BRACE)?;
-            if !tb.exceed_end_of_head() && tb.current_token_is_equal_to(DOT_AKA_FIELD_ACCESS_SIGN) {
-                return Err(RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "unfold accepts a struct object, not one selected field".to_string(),
-                        line_file,
-                    ),
-                )));
-            }
-            (obj, Some(struct_obj))
-        } else {
-            (self.parse_obj(tb)?, None)
-        };
+        let obj = self.parse_obj(tb)?;
 
-        if explicit_struct_view.is_none() {
-            if let Obj::Tuple(tuple) = &obj {
-                return Ok(tuple.args.iter().map(|arg| arg.as_ref().clone()).collect());
-            }
-
-            let known_tuple_arity = self
-                .get_obj_equal_to_tuple(&obj)
-                .map(|tuple| tuple.args.len())
-                .or_else(|| {
-                    let symbol = match &obj {
-                        Obj::Atom(atom) => atom.symbol_ref(),
-                        _ => None,
-                    }?;
-                    self.default_tuple_view_for_symbol(symbol)
-                        .map(|cart| cart.args.len())
-                })
-                .or_else(|| self.get_obj_tuple_cart(&obj).map(|cart| cart.args.len()));
-            if let Some(arity) = known_tuple_arity {
-                return Ok((1..=arity)
-                    .map(|index| {
-                        ObjAtIndex::new(obj.clone(), Number::new(index.to_string()).into()).into()
-                    })
-                    .collect());
-            }
+        if let Obj::Tuple(tuple) = &obj {
+            return Ok(tuple.args.iter().map(|arg| arg.as_ref().clone()).collect());
         }
 
-        let struct_obj = match explicit_struct_view {
-            Some(struct_obj) => struct_obj,
-            None => self
-                .struct_view_for_field_access_receiver(&obj, line_file.clone())
-                .map_err(|cause| {
-                    RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
-                        None,
-                        "unfold expects a tuple with compile-time arity or an object with an explicit/default struct view"
-                            .to_string(),
-                        line_file.clone(),
-                        Some(cause),
-                        vec![],
-                    )))
-                })?,
-        };
+        // A declaration-owned struct carrier wins over tuple facts learned
+        // later. In particular, materializing a template instance may expose
+        // its tuple constructor, but `unfold` must still preserve the fields
+        // selected by the template body's direct declaration.
+        if let Ok(struct_obj) = self.struct_view_for_field_access_receiver(&obj, line_file.clone())
+        {
+            return self.struct_field_arguments_for_unfold(&obj, struct_obj, line_file);
+        }
+
+        let known_tuple_arity = self
+            .get_obj_equal_to_tuple(&obj)
+            .map(|tuple| tuple.args.len())
+            .or_else(|| {
+                let symbol = match &obj {
+                    Obj::Atom(atom) => atom.symbol_ref(),
+                    _ => None,
+                }?;
+                self.default_tuple_view_for_symbol(symbol)
+                    .map(|cart| cart.args.len())
+            })
+            .or_else(|| self.get_obj_tuple_cart(&obj).map(|cart| cart.args.len()));
+        if let Some(arity) = known_tuple_arity {
+            return Ok((1..=arity)
+                .map(|index| {
+                    ObjAtIndex::new(obj.clone(), Number::new(index.to_string()).into()).into()
+                })
+                .collect());
+        }
+
+        let struct_obj = self
+            .struct_view_for_field_access_receiver(&obj, line_file.clone())
+            .map_err(|cause| {
+                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
+                    None,
+                    "unfold expects a tuple with compile-time arity or an object whose declaration has a direct `&Struct` carrier"
+                        .to_string(),
+                    line_file.clone(),
+                    Some(cause),
+                    vec![],
+                )))
+            })?;
+        self.struct_field_arguments_for_unfold(&obj, struct_obj, line_file)
+    }
+
+    fn struct_field_arguments_for_unfold(
+        &self,
+        obj: &Obj,
+        struct_obj: StructObj,
+        line_file: LineFile,
+    ) -> Result<Vec<Obj>, RuntimeError> {
         let struct_name = struct_obj.name.to_string();
         let definition = self
             .get_struct_definition_by_name(&struct_name)
@@ -2035,14 +2001,6 @@ impl Runtime {
             .pop()
             .expect("qualified name should have a local name");
         let left = self.canonical_module_name_for_parse(&parts.join(MOD_SIGN));
-        if !tb.exceed_end_of_head() && tb.current()? == DOT_AKA_FIELD_ACCESS_SIGN {
-            return Err(RuntimeError::from(ParseRuntimeError(
-                RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "unexpected `.` after module-qualified name".to_string(),
-                    tb.line_file.clone(),
-                ),
-            )));
-        }
         let identifier = match self.resolved_qualified_identifier_symbol(&left, &right) {
             Some(symbol) => IdentifierWithMod::new_bound(left, right, symbol),
             None => IdentifierWithMod::new(left, right),
@@ -2071,16 +2029,16 @@ impl Runtime {
         tb.skip_token(STRUCT_VIEW_PREFIX)?;
         let struct_obj = self.parse_struct_obj_after_prefix(tb)?;
 
-        if tb.exceed_end_of_head() || tb.current()? != LEFT_CURLY_BRACE {
-            return Ok(struct_obj.into());
+        if !tb.exceed_end_of_head() && tb.current()? == LEFT_CURLY_BRACE {
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    "explicit struct selection `&Struct{object}.field` has been removed; declare the object or function return directly with `&Struct` and write `object.field`"
+                        .to_string(),
+                    tb.line_file.clone(),
+                ),
+            )));
         }
-
-        tb.skip_token(LEFT_CURLY_BRACE)?;
-        let obj = self.parse_obj(tb)?;
-        tb.skip_token(RIGHT_CURLY_BRACE)?;
-        tb.skip_token(DOT_AKA_FIELD_ACCESS_SIGN)?;
-        let field_name = parse_struct_field_name(tb)?;
-        Ok(ObjAsStructInstanceWithFieldAccess::new(struct_obj, obj, field_name).into())
+        Ok(struct_obj.into())
     }
 
     fn struct_view_for_field_access_receiver(
@@ -2088,8 +2046,20 @@ impl Runtime {
         obj: &Obj,
         line_file: LineFile,
     ) -> Result<StructObj, RuntimeError> {
+        if let Obj::InstantiatedTemplateObj(template_obj) = obj {
+            if let Some(struct_obj) =
+                self.direct_struct_carrier_for_instantiated_template(template_obj)?
+            {
+                self.default_struct_views
+                    .entry(template_obj.symbol.id())
+                    .or_insert_with(|| struct_obj.clone());
+                return Ok(struct_obj);
+            }
+        }
+
         let symbol = match obj {
             Obj::Atom(atom) => atom.symbol_ref(),
+            Obj::InstantiatedTemplateObj(template_obj) => Some(&template_obj.symbol),
             _ => None,
         };
         if let Some(symbol) = symbol {
@@ -2097,8 +2067,7 @@ impl Runtime {
                 RuntimeError::from(ParseRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_line_file(
                         format!(
-                            "no default struct view is declared for `{}`; bind it with a struct type such as `{} &Struct` or write an explicit `&Struct{{{}}}.field`",
-                            symbol.display_name(),
+                            "no declaration-time struct carrier is recorded for `{}`; declare it directly with a type such as `{} &Struct`",
                             symbol.display_name(),
                             symbol.display_name()
                         ),
@@ -2108,16 +2077,223 @@ impl Runtime {
             });
         }
 
+        if let Obj::FnObj(fn_obj) = obj {
+            let return_set = self.direct_fn_obj_return_set_after_application(fn_obj)?;
+            if let Some(Obj::StructObj(struct_obj)) = return_set {
+                return Ok(struct_obj);
+            }
+
+            // Local proof blocks are parsed before their `have fn` statements
+            // execute. For a non-dependent direct struct return, the signature
+            // parser records the carrier by the function symbol so field access
+            // remains declaration-owned even in that pre-execution window.
+            let head_obj: Obj = (*fn_obj.head).clone().into();
+            if let Obj::Atom(atom) = head_obj {
+                if let Some(struct_obj) = atom
+                    .symbol_ref()
+                    .and_then(|symbol| self.default_struct_view_for_symbol(symbol))
+                {
+                    return Ok(struct_obj);
+                }
+            }
+
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    format!(
+                        "function result `{}` has no direct struct return carrier",
+                        obj
+                    ),
+                    line_file,
+                ),
+            )));
+        }
+
         let Obj::ObjAsStructInstanceWithFieldAccess(field_access) = obj else {
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "default struct field access requires a bound object declared with `&Struct`"
+                    "field access requires a symbol, field, or function result whose declaration has a direct `&Struct` carrier"
                         .to_string(),
                     line_file,
                 ),
             )));
         };
 
+        let instantiated_field_type =
+            self.declared_struct_field_type(field_access, line_file.clone())?;
+        let Obj::StructObj(struct_obj) = instantiated_field_type else {
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    format!(
+                        "cannot continue field access after `{}` because its declared field carrier is not a struct",
+                        field_access
+                    ),
+                    line_file,
+                ),
+            )));
+        };
+        Ok(struct_obj)
+    }
+
+    /// A template application owns the carrier written on its body declaration
+    /// after the template arguments have been substituted. This is deliberately
+    /// declaration-only: an equality or a later membership fact cannot supply a
+    /// named-field carrier.
+    fn direct_struct_carrier_for_instantiated_template(
+        &mut self,
+        template_obj: &InstantiatedTemplateObj,
+    ) -> Result<Option<StructObj>, RuntimeError> {
+        let template_name = template_obj.template_name.to_string();
+        let Some(def) = self.get_template_definition_by_name(&template_name) else {
+            return Ok(None);
+        };
+        if template_obj.args.len() != def.template_arg_def.number_of_params() {
+            return Ok(None);
+        }
+
+        let param_def = match &def.template_def_stmt {
+            TemplateDefEnum::HaveObjInNonemptySetStmt(stmt) => Some(&stmt.param_def),
+            TemplateDefEnum::HaveObjEqualStmt(stmt) => Some(&stmt.param_def),
+            TemplateDefEnum::HaveObjByExistFactsStmt(stmt) => Some(&stmt.param_def),
+            TemplateDefEnum::TrustHaveStmt(stmt) => Some(&stmt.param_def),
+            _ => None,
+        };
+        let Some(param_def) = param_def else {
+            return Ok(None);
+        };
+        let Some(ParamType::Obj(Obj::StructObj(struct_obj))) = param_def
+            .groups
+            .iter()
+            .find(|group| {
+                group
+                    .params
+                    .iter()
+                    .any(|binding| binding.name() == def.template_name)
+            })
+            .map(|group| &group.param_type)
+        else {
+            return Ok(None);
+        };
+
+        let param_to_arg_map = def
+            .template_arg_def
+            .param_defs_and_args_to_param_to_arg_map(&template_obj.args);
+        let instantiated = self.inst_obj(
+            &Obj::StructObj(struct_obj.clone()),
+            &param_to_arg_map,
+            ParamObjType::DefHeader,
+        )?;
+        let Obj::StructObj(instantiated) = instantiated else {
+            unreachable!("instantiating a struct carrier must preserve its object kind");
+        };
+        Ok(Some(instantiated))
+    }
+
+    fn direct_fn_obj_return_set_after_application(
+        &mut self,
+        fn_obj: &FnObj,
+    ) -> Result<Option<Obj>, RuntimeError> {
+        if fn_obj.body.is_empty() {
+            return Ok(None);
+        }
+
+        let mut fn_body = match fn_obj.head.as_ref() {
+            FnObjHead::AnonymousFnLiteral(anonymous_fn) => anonymous_fn.body.clone(),
+            FnObjHead::ObjAsStructInstanceWithFieldAccess(field_access) => {
+                let field_type =
+                    self.declared_struct_field_type(field_access, default_line_file())?;
+                match field_type {
+                    Obj::FnSet(fn_set) => fn_set.body,
+                    Obj::AnonymousFn(anonymous_fn) => anonymous_fn.body,
+                    _ => return Ok(None),
+                }
+            }
+            FnObjHead::FiniteSeqListObj(_) | FnObjHead::MatrixOperator(_) => return Ok(None),
+            FnObjHead::InstantiatedTemplateObj(template_obj) => {
+                let Some(body) = self.direct_fn_body_for_instantiated_template(template_obj)?
+                else {
+                    return Ok(None);
+                };
+                body
+            }
+            _ => {
+                let head_obj: Obj = (*fn_obj.head).clone().into();
+                let Some(body) = self.get_direct_object_in_fn_set(&head_obj) else {
+                    return Ok(None);
+                };
+                body
+            }
+        };
+
+        for (index, args) in fn_obj.body.iter().enumerate() {
+            let args_as_obj: Vec<Obj> = args.iter().map(|arg| (**arg).clone()).collect();
+            let param_to_arg_map = fn_body
+                .params_def_with_set
+                .param_defs_and_args_to_param_to_arg_map(&args_as_obj);
+            let return_set =
+                self.inst_obj(&fn_body.ret_set, &param_to_arg_map, ParamObjType::FnSet)?;
+            if index == fn_obj.body.len() - 1 {
+                return Ok(Some(return_set));
+            }
+            fn_body = match return_set {
+                Obj::FnSet(fn_set) => fn_set.body,
+                Obj::AnonymousFn(anonymous_fn) => anonymous_fn.body,
+                _ => return Ok(None),
+            };
+        }
+
+        Ok(None)
+    }
+
+    fn direct_fn_body_for_instantiated_template(
+        &self,
+        template_obj: &InstantiatedTemplateObj,
+    ) -> Result<Option<FnSetBody>, RuntimeError> {
+        let template_name = template_obj.template_name.to_string();
+        let Some(def) = self.get_template_definition_by_name(&template_name) else {
+            return Ok(None);
+        };
+        if template_obj.args.len() != def.template_arg_def.number_of_params() {
+            return Ok(None);
+        }
+
+        let raw_body = match &def.template_def_stmt {
+            TemplateDefEnum::HaveFnEqualStmt(stmt) => stmt.equal_to_anonymous_fn.body.clone(),
+            TemplateDefEnum::HaveFnEqualCaseByCaseStmt(stmt) => FnSetBody::new(
+                stmt.fn_set_clause.params_def_with_set.clone(),
+                stmt.fn_set_clause.dom_facts.clone(),
+                stmt.fn_set_clause.ret_set.clone(),
+            ),
+            TemplateDefEnum::HaveFnByInducStmt(stmt) => FnSetBody::new(
+                stmt.fn_set_clause.params_def_with_set.clone(),
+                stmt.fn_set_clause.dom_facts.clone(),
+                stmt.fn_set_clause.ret_set.clone(),
+            ),
+            TemplateDefEnum::HaveFnByForallExistUniqueStmt(stmt) => {
+                self.direct_fn_set_body_for_have_fn_by_forall_exist_unique(stmt)?
+            }
+            _ => return Ok(None),
+        };
+
+        let template_param_to_arg = def
+            .template_arg_def
+            .param_defs_and_args_to_param_to_arg_map(&template_obj.args);
+        let instantiated_return = self.inst_obj(
+            &raw_body.ret_set,
+            &template_param_to_arg,
+            ParamObjType::DefHeader,
+        )?;
+        Ok(Some(FnSetBody::new(
+            raw_body.params_def_with_set,
+            raw_body.dom_facts,
+            instantiated_return,
+        )))
+    }
+
+    fn declared_struct_field_type(
+        &mut self,
+        field_access: &ObjAsStructInstanceWithFieldAccess,
+        line_file: LineFile,
+    ) -> Result<Obj, RuntimeError> {
         let struct_name = field_access.struct_obj.name.to_string();
         let Some(def) = self
             .get_struct_definition_by_name(&struct_name)
@@ -2169,21 +2345,6 @@ impl Runtime {
                 ),
             )));
         };
-        if !matches!(&field.field_type, Obj::StructObj(_)) {
-            return Err(RuntimeError::from(ParseRuntimeError(
-                RuntimeErrorStruct::new_with_msg_and_line_file(
-                    format!(
-                        "cannot continue field access after `{}` because `{}.{}` is not declared with a struct type; select the next view explicitly with `&Struct{{{}}}.field`",
-                        field_access,
-                        struct_name,
-                        field_access.field_name,
-                        field_access
-                    ),
-                    line_file,
-                ),
-            )));
-        }
-
         let instantiated_field_type = if let Some((param_def, _)) = &def.param_def_with_dom {
             let param_to_arg_map =
                 param_def.param_defs_and_args_to_param_to_arg_map(&field_access.struct_obj.params);
@@ -2195,12 +2356,7 @@ impl Runtime {
         } else {
             field.field_type.clone()
         };
-        let Obj::StructObj(struct_obj) = instantiated_field_type else {
-            unreachable!(
-                "a directly declared struct field must remain a struct after instantiation"
-            )
-        };
-        Ok(struct_obj)
+        Ok(instantiated_field_type)
     }
 
     fn parse_struct_obj_after_prefix(
@@ -2481,7 +2637,7 @@ mod module_qualification_parse_tests {
     }
 
     #[test]
-    fn parses_angle_bracketed_struct_params_and_field_access() {
+    fn parses_angle_bracketed_struct_params_and_declared_field_access() {
         let mut rt = Runtime::new();
 
         let stmt = parse_one_stmt_line_with_runtime(
@@ -2499,8 +2655,15 @@ mod module_qualification_parse_tests {
             strip_free_param_numeric_tags_in_display(&format!("{}", stmt)),
             "struct Group<s set>:"
         );
+        rt.exec_stmt(&Stmt::DefInterfaceStmt(DefInterfaceStmt::DefStructStmt(
+            stmt,
+        )))
+        .expect("store struct definition");
 
-        let obj = parse_one_obj_line_with_runtime(&mut rt, "&Group<s>{p}.op");
+        let have = parse_one_stmt_line_with_runtime(&mut rt, "trust have p &Group<R>");
+        rt.exec_stmt(&have).expect("store declared struct carrier");
+
+        let obj = parse_one_obj_line_with_runtime(&mut rt, "p.op");
         let Obj::ObjAsStructInstanceWithFieldAccess(access) = obj else {
             panic!("expected struct field access");
         };
@@ -2509,22 +2672,25 @@ mod module_qualification_parse_tests {
         assert_eq!(access.field_name, "op");
         assert_eq!(
             strip_free_param_numeric_tags_in_display(&format!("{}", access)),
-            "&Group<s>{p}.op"
+            "p.op"
         );
 
-        let old_obj = parse_one_obj_line_with_runtime(&mut rt, "&Group(s){p}.op");
+        let old_obj = parse_one_obj_line_with_runtime(&mut rt, "&Group(R)");
         assert_eq!(
             strip_free_param_numeric_tags_in_display(&format!("{}", old_obj)),
-            "&Group<s>{p}.op"
+            "&Group<R>"
         );
 
         let projected_call = parse_one_obj_line_with_runtime(&mut rt, "p[2](x, y)");
-        assert_eq!(format!("{}", projected_call), "p[2](x, y)");
+        assert_eq!(
+            strip_free_param_numeric_tags_in_display(&format!("{}", projected_call)),
+            "p[2](x, y)"
+        );
 
-        let field_call = parse_one_obj_line_with_runtime(&mut rt, "&Group<s>{p}.op(x, y)");
+        let field_call = parse_one_obj_line_with_runtime(&mut rt, "p.op(x, y)");
         assert_eq!(
             strip_free_param_numeric_tags_in_display(&format!("{}", field_call)),
-            "&Group<s>{p}.op(x, y)"
+            "p.op(x, y)"
         );
     }
 

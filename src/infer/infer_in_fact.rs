@@ -644,10 +644,11 @@ impl Runtime {
             | Obj::StandardSet(StandardSet::Z)
             | Obj::StandardSet(StandardSet::R)
             | Obj::StandardSet(StandardSet::C) => Ok(InferResult::new()),
-            // Struct membership releases named field-view facts. Tuple/cart
-            // projection facts are released only for a tuple literal.
-            // Example: `p $in &Point` infers `&Point{p}.x $in R`, while
-            // `(a, b) $in &Point` additionally checks the tuple components.
+            // Struct membership releases positional projection facts. Named
+            // field syntax is parser-owned and comes only from the receiver's
+            // declaration-time struct carrier.
+            // Example: `p $in &Point` infers `p[1] $in R`, but does not make
+            // `p.x` parse when `p` was declared with another carrier.
             Obj::StructObj(struct_obj) => {
                 // Field views are tied to the concrete struct object. Do not
                 // alpha-normalize distinct bound identifiers into one firing:
@@ -673,96 +674,170 @@ impl Runtime {
                     )?);
                 }
 
+                let declared_struct_obj = match &in_fact.element {
+                    Obj::Atom(atom) => atom
+                        .symbol_ref()
+                        .and_then(|symbol| self.default_struct_view_for_symbol(symbol)),
+                    Obj::InstantiatedTemplateObj(template_obj) => {
+                        self.default_struct_view_for_symbol(&template_obj.symbol)
+                    }
+                    Obj::ObjAsStructInstanceWithFieldAccess(field_access) => {
+                        let owner_name = field_access.struct_obj.name.to_string();
+                        let declared_field_type = match self
+                            .get_struct_definition_by_name(&owner_name)
+                        {
+                            Some(owner_def) => match owner_def
+                                .fields
+                                .iter()
+                                .find(|field| field.name() == field_access.field_name)
+                            {
+                                Some(field) => {
+                                    if let Some((param_def, _)) = &owner_def.param_def_with_dom {
+                                        let param_to_arg_map = param_def
+                                            .param_defs_and_args_to_param_to_arg_map(
+                                                &field_access.struct_obj.params,
+                                            );
+                                        Some(self.inst_obj(
+                                            &field.field_type,
+                                            &param_to_arg_map,
+                                            ParamObjType::DefHeader,
+                                        )?)
+                                    } else {
+                                        Some(field.field_type.clone())
+                                    }
+                                }
+                                None => None,
+                            },
+                            None => None,
+                        };
+                        match declared_field_type {
+                            Some(Obj::StructObj(struct_obj)) => Some(struct_obj),
+                            _ => None,
+                        }
+                    }
+                    _ => None,
+                };
+                let receiver_has_this_declared_struct = declared_struct_obj
+                    .as_ref()
+                    .map(|declared| declared.to_string() == struct_obj.to_string())
+                    .unwrap_or(false);
+
                 let mut infer_result = InferResult::new();
                 let tuple = match &in_fact.element {
                     Obj::Tuple(tuple) => Some(tuple),
                     _ => None,
                 };
                 if field_types.len() == 1 {
-                    let carrier_membership: Fact = InFact::new(
+                    let carrier_membership: AtomicFact = InFact::new(
                         in_fact.element.clone(),
                         field_types[0].clone(),
                         in_fact.line_file.clone(),
                     )
                     .into();
-                    infer_result.new_fact(&carrier_membership);
+                    infer_result.new_fact(&Fact::AtomicFact(carrier_membership.clone()));
                     infer_result.new_infer_result_inside(
-                        self.store_with_well_defined_verification_and_infer_with_default_verify_state(
+                        self.store_atomic_fact_without_well_defined_verified_and_infer(
                             carrier_membership,
                         )?,
                     );
-                } else if tuple.is_some() {
-                    let cart_membership: Fact = InFact::new(
-                        in_fact.element.clone(),
-                        Cart::new(field_types.clone()).into(),
+                } else {
+                    let cart = Cart::new(field_types.clone());
+                    self.store_tuple_obj_and_cart(
+                        &in_fact.element.to_string(),
+                        None,
+                        Some(cart.clone()),
+                        in_fact.line_file.clone(),
+                    );
+                    let is_tuple_fact: AtomicFact =
+                        IsTupleFact::new(in_fact.element.clone(), in_fact.line_file.clone()).into();
+                    infer_result.new_infer_result_inside(
+                        self.store_atomic_fact_without_well_defined_verified_and_infer(
+                            is_tuple_fact,
+                        )?,
+                    );
+                    let tuple_dim_fact: AtomicFact = EqualFact::new(
+                        TupleDim::new(in_fact.element.clone()).into(),
+                        Number::new(field_types.len().to_string()).into(),
                         in_fact.line_file.clone(),
                     )
                     .into();
-                    infer_result.new_fact(&cart_membership);
                     infer_result.new_infer_result_inside(
-                        self.store_with_well_defined_verification_and_infer_with_default_verify_state(
+                        self.store_atomic_fact_without_well_defined_verified_and_infer(
+                            tuple_dim_fact,
+                        )?,
+                    );
+                    let cart_membership: AtomicFact = InFact::new(
+                        in_fact.element.clone(),
+                        cart.into(),
+                        in_fact.line_file.clone(),
+                    )
+                    .into();
+                    infer_result.new_fact(&Fact::AtomicFact(cart_membership.clone()));
+                    infer_result.new_infer_result_inside(
+                        self.store_derived_atomic_fact_without_infer(
                             cart_membership,
+                            "struct Cartesian carrier",
                         )?,
                     );
                 }
 
-                let mut field_map: HashMap<String, Obj> = HashMap::new();
-                let mut identity_projection_field_map = (def.fields.len() == 1).then(HashMap::new);
+                let mut positional_field_map: HashMap<String, Obj> = HashMap::new();
+                let mut declared_field_map = receiver_has_this_declared_struct.then(HashMap::new);
                 let mut projection_field_map = tuple.map(|_| HashMap::new());
-                let field_access_element = match &in_fact.element {
-                    Obj::Atom(AtomObj::Identifier(identifier)) => self
-                        .current_parse_namespace()
-                        .map(|module_name| match identifier.symbol.clone() {
-                            Some(symbol) => IdentifierWithMod::new_bound(
-                                module_name.to_string(),
-                                identifier.name.clone(),
-                                symbol,
-                            )
-                            .into(),
-                            None => IdentifierWithMod::new(
-                                module_name.to_string(),
-                                identifier.name.clone(),
-                            )
-                            .into(),
-                        })
-                        .unwrap_or_else(|| in_fact.element.clone()),
-                    _ => in_fact.element.clone(),
-                };
                 for (index, field) in def.fields.iter().enumerate() {
-                    let field_access: Obj = ObjAsStructInstanceWithFieldAccess::new(
-                        struct_obj.clone(),
-                        field_access_element.clone(),
-                        field.name().to_string(),
-                    )
-                    .into();
-                    let law_field_value = if def.fields.len() == 1 {
-                        field_access_element.clone()
+                    let positional_field_value: Obj = if def.fields.len() == 1 {
+                        in_fact.element.clone()
                     } else {
-                        field_access.clone()
+                        ObjAtIndex::new(
+                            in_fact.element.clone(),
+                            Number::new((index + 1).to_string()).into(),
+                        )
+                        .into()
                     };
-                    insert_symbol_substitution(&mut field_map, &field.binding, law_field_value);
-                    if let Some(identity_projection_field_map) =
-                        identity_projection_field_map.as_mut()
-                    {
-                        insert_symbol_substitution(
-                            identity_projection_field_map,
-                            &field.binding,
-                            field_access.clone(),
-                        );
-                    }
+                    insert_symbol_substitution(
+                        &mut positional_field_map,
+                        &field.binding,
+                        positional_field_value.clone(),
+                    );
 
-                    let field_in_type: Fact = InFact::new(
-                        field_access,
+                    let positional_field_in_type: AtomicFact = InFact::new(
+                        positional_field_value,
                         field_types[index].clone(),
                         in_fact.line_file.clone(),
                     )
                     .into();
-                    infer_result.new_fact(&field_in_type);
+                    infer_result.new_fact(&Fact::AtomicFact(positional_field_in_type.clone()));
                     infer_result.new_infer_result_inside(
-                        self.store_with_well_defined_verification_and_infer_with_default_verify_state(
-                            field_in_type,
+                        self.store_atomic_fact_without_well_defined_verified_and_infer(
+                            positional_field_in_type,
                         )?,
                     );
+
+                    if let Some(declared_field_map) = declared_field_map.as_mut() {
+                        let declared_field_value: Obj = ObjAsStructInstanceWithFieldAccess::new(
+                            struct_obj.clone(),
+                            in_fact.element.clone(),
+                            field.name().to_string(),
+                        )
+                        .into();
+                        insert_symbol_substitution(
+                            declared_field_map,
+                            &field.binding,
+                            declared_field_value.clone(),
+                        );
+                        let declared_field_in_type: AtomicFact = InFact::new(
+                            declared_field_value,
+                            field_types[index].clone(),
+                            in_fact.line_file.clone(),
+                        )
+                        .into();
+                        infer_result.new_fact(&Fact::AtomicFact(declared_field_in_type.clone()));
+                        infer_result.new_infer_result_inside(
+                            self.store_atomic_fact_without_well_defined_verified_and_infer(
+                                declared_field_in_type,
+                            )?,
+                        );
+                    }
 
                     if let (Some(tuple), Some(projection_field_map)) =
                         (tuple, projection_field_map.as_mut())
@@ -773,15 +848,15 @@ impl Runtime {
                             &field.binding,
                             projected_field.clone(),
                         );
-                        let projected_field_in_type: Fact = InFact::new(
+                        let projected_field_in_type: AtomicFact = InFact::new(
                             projected_field,
                             field_types[index].clone(),
                             in_fact.line_file.clone(),
                         )
                         .into();
-                        infer_result.new_fact(&projected_field_in_type);
+                        infer_result.new_fact(&Fact::AtomicFact(projected_field_in_type.clone()));
                         infer_result.new_infer_result_inside(
-                            self.store_with_well_defined_verification_and_infer_with_default_verify_state(
+                            self.store_atomic_fact_without_well_defined_verified_and_infer(
                                 projected_field_in_type,
                             )?,
                         );
@@ -795,36 +870,30 @@ impl Runtime {
                         ParamObjType::DefHeader,
                         Some(in_fact.line_file.clone()),
                     )?;
-                    let instantiated_fact = self.inst_fact(
+                    let positional_fact = self.inst_fact(
                         &after_header,
-                        &field_map,
+                        &positional_field_map,
                         ParamObjType::DefStructField,
                         Some(in_fact.line_file.clone()),
                     )?;
-                    // Struct membership assumes each filter fact under the named field view,
-                    // then exposes its normal inference consequences.
-                    // Example: `g &Group<s>` and `$is_group(s, inv, op, e)` infer
-                    // `@G.op(@G.inv(x), x) = @G.e` for the same explicit field view.
                     infer_result.new_infer_result_inside(
                         self.store_fact_without_forall_coverage_check_and_infer_with_reason(
-                            instantiated_fact,
+                            positional_fact,
                             "struct membership filter",
                         )?,
                     );
 
-                    if let Some(identity_projection_field_map) =
-                        identity_projection_field_map.as_ref()
-                    {
-                        let identity_projection_fact = self.inst_fact(
+                    if let Some(declared_field_map) = declared_field_map.as_ref() {
+                        let declared_fact = self.inst_fact(
                             &after_header,
-                            identity_projection_field_map,
+                            declared_field_map,
                             ParamObjType::DefStructField,
                             Some(in_fact.line_file.clone()),
                         )?;
                         infer_result.new_infer_result_inside(
                             self.store_fact_without_forall_coverage_check_and_infer_with_reason(
-                                identity_projection_fact,
-                                "one-field struct identity-projection filter",
+                                declared_fact,
+                                "declared struct field filter",
                             )?,
                         );
                     }

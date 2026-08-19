@@ -166,6 +166,16 @@ impl Runtime {
                 return Ok(fn_try);
             }
         }
+        if let Obj::ObjAsStructInstanceWithFieldAccess(field_access) = &in_fact.element {
+            let field_try = self.verify_in_fact_struct_field_in_declared_carrier(
+                in_fact,
+                field_access,
+                builtin_state,
+            )?;
+            if field_try.is_true() {
+                return Ok(field_try);
+            }
+        }
         if let Obj::StandardSet(standard_set) = &in_fact.set {
             if !matches!(&in_fact.element, Obj::Number(_)) {
                 if let Some(evaluated_number) =

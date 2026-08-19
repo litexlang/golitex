@@ -983,6 +983,24 @@ impl Runtime {
         let fn_param_bindings = fs.collect_all_param_bindings_including_nested_ret_fn_sets();
         let top_level_fn_param_bindings = fs.params_def_with_set.collect_param_bindings();
 
+        // A nested proof block is parsed before any of its statements execute.
+        // Record a direct, non-dependent struct return carrier now so a later
+        // statement in that same block can parse `local_fn(args).field` from
+        // the declaration alone. Dependent carriers keep using the executed
+        // function signature, whose parameter substitution is exact.
+        if let Obj::StructObj(struct_obj) = &fs.ret_set {
+            let return_fn_param_names = fs.ret_set.collect_param_obj_names(ParamObjType::FnSet);
+            let return_depends_on_fn_param = fn_param_bindings
+                .iter()
+                .any(|binding| return_fn_param_names.contains(binding.name()));
+            if !return_depends_on_fn_param {
+                self.register_default_struct_view(
+                    std::slice::from_ref(&symbol_binding),
+                    struct_obj,
+                );
+            }
+        }
+
         if tb.current_token_is_equal_to(EQUAL) {
             tb.skip_token(EQUAL)?;
 

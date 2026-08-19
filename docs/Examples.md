@@ -3466,12 +3466,12 @@ eval [[1 / 2, 1 / 3], [0, 1]] '* [[1, 0], [1 / 6, 1 / 2]]
 eval (1 / 3) *' [[3, 6], [9, 12]]
 ```
 
-#### 10. Struct Objects And Default Views
+#### 10. Struct Carriers And Declaration-Owned Fields
 
 Mathematical meaning: a `struct` names a record-shaped subset of tuples, with
-typed fields and optional defining conditions.  A value of `&Point` can be read
-either by tuple index or by an explicit field projection through
-`&Point{...}.field`.
+typed fields and optional defining conditions. Once parameters are fixed,
+`&Point` is one ordinary set. A symbol declared directly in that carrier owns
+the corresponding field names.
 
 ```litex
 struct Point:
@@ -3480,15 +3480,23 @@ struct Point:
 
 by thm struct_member((1, 2), &Point)
 have p &Point = (1, 2)
-&Point{p}.x = p[1]
-&Point{p}.x = 1
-&Point{(1, 2)}.y = 2
+p.x = p[1]
+p.x = 1
+p.y = 2
 ```
 
-Default-view notation is a preview shorthand for a name whose explicit binding
-type is a struct. Binding `p &Point` selects `&Point` for that binding, so the
-parser lowers `p.x` to `&Point{p}.x`. A later fact `p $in &Point` does not
-select a default view.
+The same carrier syntax is accepted in `forall`, `exist`, set-builder,
+proposition, theorem, template, and function signatures. A function that
+returns `&Point` exposes fields directly on its calls:
+
+```litex
+struct Point:
+    x R
+    y R
+
+have fn make_point(x, y R) &Point = (x, y)
+make_point(1, 2).x = 1
+```
 
 Struct bindings keep their tuple projection view lazy. Declaring `p &Point`
 does not immediately infer `p $in cart(...)` or facts about every `p[i]`;
@@ -3503,7 +3511,7 @@ struct Point:
 
 by thm struct_member((1, 2), &Point)
 have p &Point = (1, 2)
-p.x = &Point{p}.x
+p.x = p[1]
 p.x = 1
 p.y = 2
 
@@ -3511,10 +3519,9 @@ forall q &Point:
     q.x = q[1]
 ```
 
-This notation does not infer a unique struct type. If a value belongs to
-several struct views, the explicit struct type at its binding selects the one
-used by `p.field`; another view remains available through the explicit
-`&OtherStruct{p}.field` form.
+If a value later belongs to another struct carrier, its existing fields do not
+switch and it does not gain the other struct's names. Introduce a new symbol
+directly in that carrier when the other interface is needed.
 
 ### Statement Examples
 
@@ -3834,9 +3841,9 @@ equivalent facts.
 - Well-definedness / structural checks: parameter domains, field types, and
   equivalent facts must be well-defined; the struct name must be unused.
 - Truth verification: does not prove the equivalent facts at declaration time.
-- Environment effects: stores the struct definition and enables membership and
-  field-view facts. A later `name &Struct` binding selects that struct as the
-  name's default view without changing those mathematical facts.
+- Environment effects: stores the struct definition and enables membership,
+  positional projections, and declaration-owned named fields. A later
+  membership fact does not add named fields to an existing symbol.
 
 ```litex
 struct Point:
@@ -3845,8 +3852,8 @@ struct Point:
 
 by thm struct_member((1, 2), &Point)
 have p &Point = (1, 2)
-&Point{p}.x = 1
-&Point{p}.y = 2
+p.x = 1
+p.y = 2
 ```
 
 #### 16. Parameterized Families With `template`
@@ -4088,13 +4095,13 @@ struct Point:
     y R
 
 prop lies_on_x_axis(p &Point):
-    &Point{p}.y = 0
+    p.y = 0
 
 by thm struct_member((0, 0), &Point)
 have origin &Point = (0, 0)
 
-&Point{origin}.x = 0
-&Point{origin}.y = 0
+origin.x = 0
+origin.y = 0
 by def $lies_on_x_axis(origin)
 ```
 

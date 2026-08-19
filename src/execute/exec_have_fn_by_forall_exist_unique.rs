@@ -341,6 +341,20 @@ impl Runtime {
         })
     }
 
+    pub(crate) fn direct_fn_set_body_for_have_fn_by_forall_exist_unique(
+        &self,
+        stmt: &HaveFnByForallExistUniqueStmt,
+    ) -> Result<FnSetBody, RuntimeError> {
+        let clause = self
+            .have_fn_by_forall_exist_unique_shape(stmt)?
+            .fn_set_clause;
+        Ok(FnSetBody::new(
+            clause.params_def_with_set,
+            clause.dom_facts,
+            clause.ret_set,
+        ))
+    }
+
     fn have_fn_by_forall_exist_unique_property_forall(
         &self,
         stmt: &HaveFnByForallExistUniqueStmt,

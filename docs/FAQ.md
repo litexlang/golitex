@@ -67,7 +67,7 @@ Syntax sugar of `xxx set` in `forall xxx set` meaning `$is_set(xxx)` is inspired
 
 Anonymous function syntax like`fn(x R) R {-x}` is essential because they are used as parameters of functions like `sum` and `product` and `\integral`. It's inspired by JavaScript's `(x) => -x` syntax.
 
-The correlation between `tuple` and `cart` and `struct` is essential, because anything, including `struct`, must correlate to something in set theory. Nothing in Litex should be arbitrary and without any concrete mathematical meaning. By viewing one object as a struct, we can use something like `&Point{(0, 0)}.x` to view tuple `(0, 0)` as a point in the plane and get its first coordinate by `.x`.
+The correlation between `tuple`, `cart`, and `struct` is essential, because anything, including `struct`, must correlate to something in set theory. Nothing in Litex should be arbitrary and without concrete mathematical meaning. Once its parameters are fixed, `&Point` is one named subset of a Cartesian carrier. A declaration such as `have p &Point = (0, 0)` therefore gives `p` the corresponding field names, including `p.x` for its first coordinate.
 
 ## What does "Litex is built on relationships between objects instead of meanings of them" mean?
 
@@ -806,7 +806,7 @@ struct FirstQuadrant:
 by thm struct_member((1, 2), &FirstQuadrant)
 have p &FirstQuadrant = (1, 2)
 p.x = 1
-p.y = &FirstQuadrant{p}.y
+p.y = 2
 ```
 
 Read this as a named set-builder over `cart(R, R)`:
@@ -815,46 +815,36 @@ Read this as a named set-builder over `cart(R, R)`:
 &FirstQuadrant = { p in cart(R, R) | p[1] > 0 and p[2] > 0 }
 ```
 
-Here the field name `x` labels index `1`, and `y` labels index `2`. So
-`&FirstQuadrant{p}.x` means: first view `p` as an element of
-`&FirstQuadrant`, then take the component labeled by `x`, namely `p[1]`.
-Similarly, `&FirstQuadrant{p}.y` means `p[2]`.
+Here the field name `x` labels index `1`, and `y` labels index `2`. Because
+`p` was declared directly in `&FirstQuadrant`, `p.x` is its first component
+and `p.y` is its second component.
 
 For a parameterized struct, `&Name<a>` is the instantiated struct set. For a
-non-parameterized struct, `&Name` is the struct set. In both cases, the object
-inside braces is the underlying tuple-like element being viewed through that
-struct.
+non-parameterized struct, `&Name` is the struct set. Both are ordinary sets and
+are valid in every binder or function-signature position that expects a set.
 
-The view choice is intentional. The same tuple may belong to several struct
-sets, and the same field name may refer to different indices in different
-struct views. The fully explicit `&FirstQuadrant{p}.x` form chooses the view at
-that access.
+The same tuple may belong to several struct sets, but that does not make field
+selection ambiguous: named fields belong to the declaration of a symbol or
+function return. Giving a fresh binding the carrier `p &FirstQuadrant` fixes
+that ownership for `p`. There is no surface form for changing it at one use.
 
-Default-view notation is a preview shorthand that still makes this choice
-explicit. Giving a new binding the explicit struct type `p &FirstQuadrant`
-means that `p` belongs to `&FirstQuadrant` and selects that struct as the
-default view for `p` in the current binding scope. The parser then lowers
-`p.x` to `&FirstQuadrant{p}.x` before verification.
-
-The same declaration-driven rule supports consecutive field chains. If
+The same declaration-owned rule supports consecutive field chains. If
 `outer &Outer` and `Outer.inner` is declared directly as `&Inner`, then
-`outer.inner.value` lowers to
-`&Inner{&Outer{outer}.inner}.value`. The intermediate view comes from the
-field declaration, not from proof search. A named set definition or a later fact saying
-that `outer.inner` belongs to `&Inner` does not enable the shorthand.
+`outer.inner.value` is valid. The intermediate field owner comes from the
+field declaration, not from proof search. A named set definition or a later
+fact saying that `outer.inner` belongs to `&Inner` does not add fields.
 
-This is a field-chain feature rather than general postfix type inference. A
-final field may be callable, so `space.scalars.mul(a, b)` is supported when
-`scalars` is a struct-valued field and `mul` is callable. Forms such as
-`a.b(x).c`, `a.b[1].c`, and `(a.b).c` require an explicit next view such as
-`&Inner{a.b(x)}.c`.
+Postfixes compose when declarations provide the carriers. A final field may be
+callable, so `space.scalars.mul(a, b)` is supported when `scalars` is a
+struct-valued field and `mul` is callable. Likewise, after
+`have fn make_inner(...) &Inner = ...`, `make_inner(...).value` is valid.
 
-This binding syntax does not give `p` a unique nominal type, and Litex does not
-infer a default from all known memberships. A later fact
-`p $in &FirstQuadrant` does not select a default view. If a bound `p` also
-belongs to another struct, `p.x` continues to use the view selected by its
-explicit binding type, while `&OtherStruct{p}.x` selects the other view for
-that access.
+This is not a unique nominal type, and Litex does not infer fields from all
+known memberships. A later fact `p $in &FirstQuadrant` supplies membership and
+positional Cartesian consequences, but it does not add `p.x`. If a `p &Point`
+also belongs to `&ComplexPair`, `p.x` remains the `Point` field fixed by its
+declaration. To use the other names, introduce a new object explicitly, for
+example `have p2 &ComplexPair = (p.x, p.y)`, then write `p2.real` and `p2.img`.
 
 ## Why would a vector space own its scalar system?
 
@@ -936,7 +926,7 @@ This pattern appears throughout ordinary mathematics:
   over `S` is essentially a function from positive integers into `S`, not one
   universal function type over all possible value sets.
 - A group structure is a family over a carrier set. `&Group<R>` and
-  `&Group<Z>` are different struct views because the carrier set is part of the
+  `&Group<Z>` are different struct carrier sets because the carrier is part of the
   mathematical data.
 - A quotient construction is naturally a family over a concrete group together
   with the relevant normality or equivalence assumptions. The quotient is not

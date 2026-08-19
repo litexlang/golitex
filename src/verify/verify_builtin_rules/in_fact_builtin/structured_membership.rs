@@ -1,6 +1,57 @@
 use super::*;
 
 impl Runtime {
+    /// A declaration-owned field projection has the carrier declared by its
+    /// owning struct.  The receiver's struct membership remains an explicit
+    /// proof premise, so later unrelated membership facts cannot select or
+    /// change a field owner.
+    pub(super) fn verify_in_fact_struct_field_in_declared_carrier(
+        &mut self,
+        in_fact: &InFact,
+        field_access: &ObjAsStructInstanceWithFieldAccess,
+        builtin_state: &UseBuiltinRuleVerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        let declared_carrier =
+            self.instantiated_struct_field_type_after_well_defined(field_access)?;
+        let carrier_equality = self.verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
+            &declared_carrier,
+            &in_fact.set,
+            in_fact.line_file.clone(),
+        ));
+        let standard_widening = matches!(
+            (&declared_carrier, &in_fact.set),
+            (Obj::StandardSet(declared), Obj::StandardSet(target)) if declared.is_subset_eq(target)
+        );
+        if !carrier_equality.is_true() && !standard_widening {
+            return Ok((StmtUnknown::new()).into());
+        }
+
+        let receiver_membership: AtomicFact = InFact::new(
+            (*field_access.obj).clone(),
+            (*field_access.struct_obj).clone().into(),
+            in_fact.line_file.clone(),
+        )
+        .into();
+        let receiver_result =
+            self.verify_atomic_fact_as_builtin_rule_premise(&receiver_membership, builtin_state)?;
+        if !receiver_result.is_true() {
+            return Ok((StmtUnknown::new()).into());
+        }
+
+        let mut steps = vec![receiver_result];
+        if carrier_equality.is_true() {
+            steps.push(carrier_equality);
+        }
+        Ok(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                in_fact.clone().into(),
+                "declaration-owned struct field has its instantiated declared carrier".to_string(),
+                steps,
+            )
+            .into(),
+        )
+    }
+
     pub(super) fn verify_in_fact_literal_tuple_projection_in_set(
         &mut self,
         in_fact: &InFact,
