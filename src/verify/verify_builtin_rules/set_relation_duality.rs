@@ -135,9 +135,10 @@ impl Runtime {
         {
             if left.is_subset_eq(right) {
                 return Ok(
-                    (VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                    (VerifiedFactStmtIr::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         subset_fact.clone().into(),
                         "standard_set_subset".to_string(),
+                        BuiltinRuleEvidence::StandardSetSubset,
                         Vec::new(),
                     ))
                     .into(),

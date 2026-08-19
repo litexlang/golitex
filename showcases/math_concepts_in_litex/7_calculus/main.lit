@@ -1,6 +1,9 @@
-# Scratch tracer: the derivative of x^2 is proved directly from epsilon-delta
-# control of the difference quotient. This relation does not yet select a
-# derivative value for arbitrary differentiable functions.
+# Single-variable calculus in Litex.
+#
+# Included: epsilon-delta derivatives, exact difference quotients for square
+# and affine functions, differentiability, and the tangent error for x^2 at 3.
+# The derivative relation does not select a value for every differentiable
+# function.
 
 prop derivative_delta_controlled(f fn(x R) R, x0, L R, epsilon, delta R+):
     forall x R:
@@ -15,6 +18,7 @@ prop has_derivative_at_R(f fn(x R) R, x0, L R):
 
 have fn square_function(x R) R = x^2
 
+# Factor the difference of squares to obtain the exact secant slope.
 thm square_difference_quotient:
     ? forall x0, x R:
         x != x0
@@ -26,6 +30,8 @@ thm square_difference_quotient:
     square_function(x) - square_function(x0) = x^2 - x0^2 = (x - x0) * (x + x0)
     (square_function(x) - square_function(x0)) / (x - x0) = ((x - x0) * (x + x0)) / (x - x0) = x + x0
 
+# Choose delta = epsilon; the exact quotient reduces the derivative error to
+# abs(x - x0).
 thm square_function_has_derivative_at:
     ? forall x0 R:
         $has_derivative_at_R(square_function, x0, 2 * x0)
@@ -55,6 +61,7 @@ prop is_differentiable_at_R(f fn(x R) R, x0 R):
 template<a, b R>:
     have fn affine_function(x R) R = a * x + b
 
+# An affine function has the constant difference quotient a.
 thm affine_difference_quotient:
     ? forall a, b, x0, x R:
         x != x0
@@ -66,6 +73,7 @@ thm affine_difference_quotient:
     \affine_function<a, b>(x) - \affine_function<a, b>(x0) = (a * x + b) - (a * x0 + b) = a * (x - x0)
     (\affine_function<a, b>(x) - \affine_function<a, b>(x0)) / (x - x0) = (a * (x - x0)) / (x - x0) = a
 
+# The constant quotient makes every affine function differentiable with slope a.
 thm affine_function_has_derivative_at:
     ? forall a, b, x0 R:
         $has_derivative_at_R(\affine_function<a, b>, x0, a)
@@ -95,6 +103,7 @@ thm derivative_candidate_implies_differentiable:
     witness $is_differentiable_at_R(f, x0) from L:
         $has_derivative_at_R(f, x0, L)
 
+# Package the explicit derivative candidate 2*x0 as differentiability.
 thm square_function_is_differentiable_at:
     ? forall x0 R:
         $is_differentiable_at_R(square_function, x0)

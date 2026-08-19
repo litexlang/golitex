@@ -1077,6 +1077,12 @@ impl Runtime {
             // Family union elimination: `x $in big_union(F)` means `x` lies in some member set of `F`.
             // Example: from `x $in big_union(F)`, infer `exist item F st {x $in item}`.
             Obj::BigUnion(big_union) => self.infer_membership_in_big_union(in_fact, big_union),
+            Obj::IndexUnion(index_union) => {
+                self.infer_membership_in_index_union(in_fact, index_union)
+            }
+            Obj::IndexIntersect(index_intersect) => {
+                self.infer_membership_in_index_intersect(in_fact, index_intersect)
+            }
             set_obj => {
                 let symbolic_cart_infer =
                     self.infer_membership_in_symbolic_cart_from_in_fact(in_fact)?;
@@ -1248,6 +1254,116 @@ impl Runtime {
         infer_result.new_infer_result_inside(
             self.store_with_well_defined_verification_and_infer_with_default_verify_state(
                 exist_fact,
+            )?,
+        );
+        Ok(infer_result)
+    }
+
+    fn indexed_family_application_for_infer(
+        &self,
+        family_fn: &Obj,
+        index: Obj,
+    ) -> Result<Option<Obj>, RuntimeError> {
+        let Some(head) = FnObjHead::from_callable_obj(family_fn.clone()) else {
+            return Ok(None);
+        };
+        let application: Obj = FnObj::new(head, vec![vec![Box::new(index)]]).into();
+        Ok(Some(
+            self.beta_reduce_complete_anonymous_application_once(&application)?
+                .unwrap_or(application),
+        ))
+    }
+
+    fn infer_membership_in_index_union(
+        &mut self,
+        in_fact: &InFact,
+        index_union: &IndexUnion,
+    ) -> Result<InferResult, RuntimeError> {
+        let mut infer_result = InferResult::new();
+        let ambient_membership: Fact = InFact::new(
+            in_fact.element.clone(),
+            index_union.ambient_set.as_ref().clone(),
+            in_fact.line_file.clone(),
+        )
+        .into();
+        infer_result.new_fact(&ambient_membership);
+        infer_result.new_infer_result_inside(
+            self.store_with_well_defined_verification_and_infer_with_default_verify_state(
+                ambient_membership,
+            )?,
+        );
+
+        let index_name = self.generate_internal_binder_name();
+        let index_group = self.fresh_param_group_with_type(
+            vec![index_name],
+            ParamType::Obj(index_union.index_set.as_ref().clone()),
+        )?;
+        let index_obj = obj_for_bound_param_in_scope(&index_group.params[0], ParamObjType::Exist);
+        let Some(fiber) =
+            self.indexed_family_application_for_infer(index_union.family_fn.as_ref(), index_obj)?
+        else {
+            return Ok(infer_result);
+        };
+        let element_in_fiber: AtomicFact =
+            InFact::new(in_fact.element.clone(), fiber, in_fact.line_file.clone()).into();
+        let exist_fact: Fact = ExistFactEnum::ExistFact(ExistentialSpec::new(
+            ParamDefWithType::new(vec![index_group]),
+            vec![element_in_fiber.into()],
+            in_fact.line_file.clone(),
+        )?)
+        .into();
+        infer_result.new_fact(&exist_fact);
+        infer_result.new_infer_result_inside(
+            self.store_with_well_defined_verification_and_infer_with_default_verify_state(
+                exist_fact,
+            )?,
+        );
+        Ok(infer_result)
+    }
+
+    fn infer_membership_in_index_intersect(
+        &mut self,
+        in_fact: &InFact,
+        index_intersect: &IndexIntersect,
+    ) -> Result<InferResult, RuntimeError> {
+        let mut infer_result = InferResult::new();
+        let ambient_membership: Fact = InFact::new(
+            in_fact.element.clone(),
+            index_intersect.ambient_set.as_ref().clone(),
+            in_fact.line_file.clone(),
+        )
+        .into();
+        infer_result.new_fact(&ambient_membership);
+        infer_result.new_infer_result_inside(
+            self.store_with_well_defined_verification_and_infer_with_default_verify_state(
+                ambient_membership,
+            )?,
+        );
+
+        let index_name = self.generate_internal_binder_name();
+        let index_group = self.fresh_param_group_with_type(
+            vec![index_name],
+            ParamType::Obj(index_intersect.index_set.as_ref().clone()),
+        )?;
+        let index_obj = obj_for_bound_param_in_scope(&index_group.params[0], ParamObjType::Forall);
+        let Some(fiber) = self
+            .indexed_family_application_for_infer(index_intersect.family_fn.as_ref(), index_obj)?
+        else {
+            return Ok(infer_result);
+        };
+        let element_in_fiber: AtomicFact =
+            InFact::new(in_fact.element.clone(), fiber, in_fact.line_file.clone()).into();
+        let forall_fact: Fact = ForallFact::new_canonical_forall(
+            ParamDefWithType::new(vec![index_group]),
+            vec![],
+            vec![element_in_fiber.into()],
+            in_fact.line_file.clone(),
+        )?
+        .into();
+        infer_result.new_fact(&forall_fact);
+        infer_result.new_infer_result_inside(
+            self.store_with_well_defined_verification_and_infer_with_default_verify_state(
+                forall_fact,
             )?,
         );
         Ok(infer_result)

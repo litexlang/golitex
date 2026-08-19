@@ -16,7 +16,7 @@ Every directory publishes the same five artifacts:
 | No. | Project | Main line / flagship |
 | ---: | --- | --- |
 | 1 | `1_middle_school_math_in_nutshell` | equations, AM-GM, geometry, probability, statistics |
-| 2 | `2_euclidean_geometry` | analytic construction of an equilateral triangle |
+| 2 | `2_sets_functions_and_relations_in_nutshell` | finite sets, a callable function, a relation, and injectivity |
 | 3 | `3_number_theory` | gcd/Bezout and linear Diophantine solvability |
 | 4 | `4_discrete_mathematics_in_nutshell` | finite counting and direct Pascal recurrence |
 | 5 | `5_linear_algebra` | fields, vector spaces, and kernel-zero iff injective |

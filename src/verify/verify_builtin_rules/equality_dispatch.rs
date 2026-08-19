@@ -153,6 +153,12 @@ impl Runtime {
             return Ok(done);
         }
 
+        if let Some(done) =
+            self.try_verify_indexed_set_family_equalities(equal_fact, builtin_state)?
+        {
+            return Ok(done);
+        }
+
         if let Some(done) = self.try_verify_integer_range_set_builder_equality(equal_fact)? {
             return Ok(done);
         }
@@ -1598,6 +1604,96 @@ impl Runtime {
 
     fn is_empty_list_set(obj: &Obj) -> bool {
         matches!(obj, Obj::ListSet(list_set) if list_set.list.is_empty())
+    }
+
+    fn try_verify_indexed_set_family_equalities(
+        &mut self,
+        equal_fact: &EqualFact,
+        builtin_state: &UseBuiltinRuleVerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        for (indexed_side, other_side) in [
+            (&equal_fact.left, &equal_fact.right),
+            (&equal_fact.right, &equal_fact.left),
+        ] {
+            match indexed_side {
+                Obj::IndexUnion(index_union) => {
+                    if Self::is_empty_list_set(index_union.index_set.as_ref())
+                        && Self::is_empty_list_set(other_side)
+                    {
+                        return Ok(Some(Self::set_equality_success(
+                            equal_fact,
+                            "index_union_empty_index_is_empty",
+                            None,
+                        )));
+                    }
+                    if let Obj::BigUnion(big_union) = other_side {
+                        if let Obj::FnRange(fn_range) = big_union.left.as_ref() {
+                            if objs_match_for_pattern(
+                                index_union.family_fn.as_ref(),
+                                fn_range.function.as_ref(),
+                            ) {
+                                return Ok(Some(Self::set_equality_success(
+                                    equal_fact,
+                                    "index_union agrees with big_union of the family range",
+                                    None,
+                                )));
+                            }
+                        }
+                    }
+                }
+                Obj::IndexIntersect(index_intersect) => {
+                    if Self::is_empty_list_set(index_intersect.index_set.as_ref())
+                        && objs_match_for_pattern(index_intersect.ambient_set.as_ref(), other_side)
+                    {
+                        return Ok(Some(Self::set_equality_success(
+                            equal_fact,
+                            "index_intersect_empty_index_is_ambient_set",
+                            None,
+                        )));
+                    }
+                    if let Obj::BigIntersect(big_intersect) = other_side {
+                        if let Obj::FnRange(fn_range) = big_intersect.left.as_ref() {
+                            if !objs_match_for_pattern(
+                                index_intersect.family_fn.as_ref(),
+                                fn_range.function.as_ref(),
+                            ) {
+                                continue;
+                            }
+                            let nonempty_index: AtomicFact = IsNonemptySetFact::new(
+                                index_intersect.index_set.as_ref().clone(),
+                                equal_fact.line_file.clone(),
+                            )
+                            .into();
+                            let nonempty_result = match index_intersect.index_set.as_ref() {
+                                Obj::ListSet(list) if !list.list.is_empty() => {
+                                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                                        nonempty_index.clone().into(),
+                                        "nonempty literal index set".to_string(),
+                                        Vec::new(),
+                                    )
+                                    .into()
+                                }
+                                _ => self.verify_atomic_fact_as_builtin_rule_premise(
+                                    &nonempty_index,
+                                    builtin_state,
+                                )?,
+                            };
+                            if nonempty_result.is_true() {
+                                return Ok(Some(
+                                    factual_equal_success_by_builtin_reason_with_subgoals(
+                                        equal_fact,
+                                        "index_intersect agrees with big_intersect of the family range for a nonempty index set",
+                                        vec![nonempty_result],
+                                    ),
+                                ));
+                            }
+                        }
+                    }
+                }
+                _ => {}
+            }
+        }
+        Ok(None)
     }
 
     fn intersection_has_literal_set_operand(obj: &Obj) -> bool {

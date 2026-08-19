@@ -1,4 +1,7 @@
 use litex::litex_to_lean_compiler::compile_source;
+use litex::litex_to_lean_compiler::{
+    compile_source_with_report, CompilationPhase, CompilationStatus,
+};
 use litex::litex_to_lean_ir::capture_litex_to_lean_ir_from_source;
 
 fn compile_on_verifier_stack(source: &'static str, label: &'static str) -> Result<String, String> {
@@ -35,6 +38,30 @@ fn compiler_core_keeps_representation_registry_closed() {
     assert!(core.contains("private class DerivedRule"));
     assert!(!core.contains("class BridgeRule"));
     assert!(!core.contains("def Bridge"));
+    assert!(!core.contains("\naxiom "));
+}
+
+#[test]
+fn compilation_report_is_transactional_and_marks_emission_gaps() {
+    let complete = compile_source_with_report("1 = 1\n", "complete_report.lit")
+        .expect("capture and emit a complete report");
+    assert_eq!(complete.status, CompilationStatus::Complete);
+    assert!(complete.is_complete());
+    assert!(complete.unsupported.is_empty());
+    assert!(complete.lean_code.contains("theorem __fact0"));
+
+    let incomplete = compile_source_with_report("1 != 0\n", "incomplete_report.lit")
+        .expect("verified IR with an unsupported emitter route returns a report");
+    assert_eq!(incomplete.status, CompilationStatus::Incomplete);
+    assert!(!incomplete.is_complete());
+    assert_eq!(incomplete.unsupported.len(), 1);
+    assert_eq!(
+        incomplete.unsupported[0].phase,
+        CompilationPhase::LeanEmission
+    );
+    assert!(incomplete.lean_code.contains("Litex-to-Lean incomplete"));
+    assert!(!incomplete.lean_code.contains("theorem __fact0"));
+    assert!(!incomplete.lean_code.contains("axiom "));
 }
 
 #[test]
@@ -57,13 +84,23 @@ fn set_tracer_consumes_verified_equality_rewrite_ir() {
 #[test]
 fn order_tracer_consumes_registered_rule_certificate() {
     let generated = compile_on_verifier_stack(
-        "sketch:\n    forall a, b R:\n        a < b\n        =>:\n            a <= b\n",
+        "sketch:\n    forall a, b R:\n        a < b\n        =>:\n            a <= b\n\n    forall a, b, c R:\n        a < b\n        b < c\n        =>:\n            a < c\n",
         "2_OrderSystem.lit",
     )
     .expect("compile order tracer");
     assert!(generated.contains("Litex.Lt.toLe __h0_3"));
     assert!(generated.contains("Litex.Le a b"));
+    assert!(generated.contains("Litex.Lt.trans (__h1_4) (__h1_5)"));
+    assert!(generated.contains("Litex.Lt a c"));
+    assert!(!generated.contains("RealCoherence"));
     assert!(!generated.contains("sorry"));
+
+    let boundary = compile_on_verifier_stack(
+        "sketch:\n    forall a, b C:\n        a < b\n        =>:\n            a <= b\n",
+        "unsupported_complex_order.lit",
+    )
+    .expect_err("C-only order must remain outside the source ordered-real fragment");
+    assert!(boundary.contains("ordered comparison requires both operands to belong to R"));
 }
 
 #[test]
@@ -556,6 +593,61 @@ fn multilayer_application_preserves_each_unary_source_contract() {
 }
 
 #[test]
+fn dependent_function_sets_keep_parameter_and_return_carriers() {
+    const DEPENDENT_PARAMETER: &str = "forall f fn(x R, y {z R: z > x}) R:\n    f = f\n";
+    let parameter =
+        compile_on_verifier_stack(DEPENDENT_PARAMETER, "24_DependentAnonymousFunction.lit")
+            .expect("compile a parameter set depending on an earlier source parameter");
+    assert!(parameter.contains("Litex.fnTelescopeSet"), "{parameter}");
+    assert!(
+        parameter.contains("Litex.In.rep __arg1 __arg1_in"),
+        "{parameter}"
+    );
+    assert!(parameter.contains("Litex.Lt"), "{parameter}");
+
+    const DEPENDENT_RETURN: &str = "forall f fn(x R) {z R: z > x}, a R:\n    f(a) = f(a)\n";
+    let returned = compile_on_verifier_stack(DEPENDENT_RETURN, "24_DependentAnonymousFunction.lit")
+        .expect("compile an application with an argument-indexed exact return set");
+    assert!(returned.contains("Litex.fnTelescopeSet"), "{returned}");
+    assert!(returned.contains("Litex.fnTelescopeApply f"), "{returned}");
+    assert!(returned.contains("Litex.setBuilder Litex.R"), "{returned}");
+    assert!(returned.contains(").down"), "{returned}");
+    assert!(!returned.contains("Litex.Object"));
+    assert!(!returned.contains("sorry"));
+}
+
+#[test]
+fn compound_anonymous_functions_replay_their_owned_wd_scope() {
+    const SOURCE: &str = "fn(x R) R {x + 1} = fn(y R) R {y + 1}\n\nforall a R:\n    fn(x R) R {x + 1}(a) = fn(x R) R {x + 1}(a)\n";
+    let ir = capture_ir_debug_on_verifier_stack(SOURCE, "24_DependentAnonymousFunction.lit")
+        .expect("capture compound anonymous-function WD IR");
+    assert!(ir.contains("AnonymousFunctionBodyMembership"), "{ir}");
+    assert!(ir.contains("owned_binder_scope_id: Some"), "{ir}");
+    assert!(ir.contains("FunctionHead"), "{ir}");
+
+    let generated = compile_on_verifier_stack(SOURCE, "24_DependentAnonymousFunction.lit")
+        .expect("compile compound anonymous values and their direct application");
+    assert!(
+        generated.contains("Litex.Rules.complexAddInR"),
+        "{generated}"
+    );
+    assert!(generated.contains("Litex.fnApplyOwn"), "{generated}");
+    assert!(
+        generated.contains("Litex.In.own (Litex.fnSet"),
+        "{generated}"
+    );
+    assert!(!generated.contains("Litex.Object"));
+    assert!(!generated.contains("sorry"));
+
+    let boundary = compile_on_verifier_stack(
+        "fn(x R) N {x} = fn(y R) N {y}\n",
+        "unsupported_anonymous_return.lit",
+    )
+    .expect_err("an anonymous body without checked return membership must be rejected");
+    assert!(boundary.contains("not verified to belong to declared return set"));
+}
+
+#[test]
 fn sketch_compiles_to_an_isolated_namespace() {
     let generated =
         compile_on_verifier_stack("1 = 1\nsketch:\n    2 = 2\n3 = 3\n", "sketch_namespace.lit")
@@ -617,6 +709,36 @@ fn cases_and_contradiction_replay_branch_local_fact_ids() {
 }
 
 #[test]
+fn structured_and_nested_case_scopes_match_legacy_coverage() {
+    const STRUCTURED: &str = "by cases:\n    ? 2 = 2\n    case 1 = 1 and 2 = 2:\n        1 = 1\nby contra:\n    ? not 2 < 1\n    impossible 2 < 1\n";
+    let structured = compile_on_verifier_stack(STRUCTURED, "9_CasesAndContradiction.lit")
+        .expect("compile conjunction assumptions and a negative contradiction goal");
+    assert!(structured.contains("have __case1_step1"), "{structured}");
+    assert!(structured.contains("have __case1_step2"), "{structured}");
+    assert!(
+        structured.contains("Classical.byContradiction"),
+        "{structured}"
+    );
+
+    const NESTED: &str = "have fn identity(x R) R = x\nby cases:\n    ? identity(1) = identity(1)\n    case 1 = 1:\n        by contra:\n            ? 2 = 2\n            impossible 2 != 2\n        1 $in R\nby contra:\n    ? 3 = 3\n    by cases:\n        ? 4 = 4\n        case 4 = 4:\n            5 = 5\n    impossible 3 != 3\n";
+    let nested = compile_on_verifier_stack(NESTED, "nested_case_scope.lit")
+        .expect("compile nested case/contradiction scopes with branch-local WD");
+    assert!(
+        nested.matches("by_contra __reverse").count() >= 2,
+        "{nested}"
+    );
+    assert!(nested.contains("Litex.fnApplyOwn identity"), "{nested}");
+    assert!(!nested.contains("sorry"));
+
+    let reused = compile_on_verifier_stack(
+        "2 = 2\nby contra:\n    ? 2 = 2\n    impossible 2 != 2\n",
+        "reused_by_contra_goal.lit",
+    )
+    .expect("compile an explicit proof whose already-known goal receives no new FactId");
+    assert_eq!(reused.matches("theorem __fact").count(), 2, "{reused}");
+}
+
+#[test]
 fn existential_intro_and_elim_use_native_carrier_and_exact_projections() {
     let generated = compile_on_verifier_stack(
         "witness exist x R st {x = 1} from 1:\n    1 = 1\nobtain y from exist x R st {x = 1}\ny = 1\n",
@@ -652,7 +774,7 @@ fn object_definitions_emit_native_values_and_replay_definition_evidence() {
 #[test]
 fn named_real_functions_compile_compound_bodies_and_domain_clauses() {
     let generated = compile_on_verifier_stack(
-        "have fn id(x R) R = x\nid(1) = 1\nhave fn inc(x R) R = x + 1\ninc(1) = 1 + 1\nhave fn reciprocal(x R: x != 0) R = 1 / x\nforall a R:\n    a != 0\n    =>:\n        reciprocal(a) = 1 / a\n",
+        "have fn id(x R) R = x\nid(1) = 1\nhave fn inc(x R) R = x + 1\ninc(1) = 1 + 1\nhave fn reciprocal(x R: x != 0) R = 1 / x\nforall a R:\n    a != 0\n    =>:\n        reciprocal(a) = 1 / a\nhave fn into_builder(x R) {z R: z = z} = x\ninto_builder(1) = 1\n",
         "12_NamedFunction.lit",
     )
     .expect("compile compound named-function tracer");
@@ -666,6 +788,10 @@ fn named_real_functions_compile_compound_bodies_and_domain_clauses() {
     assert!(generated.contains("Litex.fnSetWhere Litex.R Litex.R"));
     assert!(generated.contains("Litex.fnApplyWhereOwn reciprocal"));
     assert!(generated.contains("Litex.Same.realDivComplex"));
+    assert!(generated.contains("noncomputable def into_builder : Litex.FnTelescope.Carrier"));
+    assert!(generated.contains("Litex.setBuilder Litex.R"));
+    assert!(generated.contains("Litex.Rules.inSetBuilder"));
+    assert!(generated.contains("Litex.fnTelescopeApplyOwn into_builder"));
     assert!(!generated.contains("Litex.Object"));
     assert!(!generated.contains("LitexObject"));
     assert!(!generated.contains("sorry"));
@@ -684,6 +810,44 @@ fn concrete_predicate_definition_and_by_def_replay_checked_components() {
     assert!(generated.contains("exact __definition.1"));
     assert!(!generated.contains("axiom "));
     assert!(!generated.contains("sorry"));
+}
+
+#[test]
+fn abstract_predicate_and_explicit_trust_emit_only_source_axioms() {
+    const SOURCE: &str = "abstract_prop marked(x)\n\ntrust $marked(1)\n\n$marked(1)\n";
+    let ir = capture_ir_debug_on_verifier_stack(SOURCE, "25_ExplicitSourceAxioms.lit")
+        .expect("capture abstract-predicate and explicit-trust IR");
+    assert!(ir.contains("DefAbstractPropStmt"), "{ir}");
+    assert_eq!(ir.matches("Trusted").count(), 1, "{ir}");
+
+    let generated = compile_on_verifier_stack(SOURCE, "25_ExplicitSourceAxioms.lit")
+        .expect("compile exact source-scoped axiom declarations");
+    assert_eq!(generated.matches("axiom ").count(), 2, "{generated}");
+    assert!(generated.contains("axiom marked"), "{generated}");
+    assert!(
+        generated.contains("axiom __fact0 : marked (1 : ℂ)"),
+        "{generated}"
+    );
+    assert!(
+        generated.contains("theorem __fact1 : marked (1 : ℂ)"),
+        "{generated}"
+    );
+    assert!(generated.contains("exact __fact0"), "{generated}");
+    assert!(!generated.contains("sorry"));
+
+    let ordinary = compile_on_verifier_stack("1 = 1\n", "ordinary_no_axiom.lit")
+        .expect("compile an ordinary checked statement without an axiom");
+    assert_eq!(ordinary.matches("axiom ").count(), 0, "{ordinary}");
+
+    let unproved = compile_on_verifier_stack(
+        "abstract_prop unproved(x)\n\n$unproved(1)\n",
+        "unproved_abstract_predicate.lit",
+    )
+    .expect_err("an abstract interface declaration must not prove an application");
+    assert!(
+        unproved.contains("verification failed") || unproved.contains("unknown result"),
+        "{unproved}"
+    );
 }
 
 #[test]

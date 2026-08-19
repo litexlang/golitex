@@ -857,6 +857,40 @@ impl Runtime {
             })?;
             return Ok(BigUnion::new(value).into());
         }
+        if tok == INDEX_UNION {
+            tb.skip()?;
+            let mut args = self.parse_braced_objs(tb)?;
+            if args.len() != 3 {
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "index_union expects 3 arguments (index set, ambient set, family function)"
+                            .to_string(),
+                        tb.line_file.clone(),
+                    ),
+                )));
+            }
+            let index_set = args.remove(0);
+            let ambient_set = args.remove(0);
+            let family_fn = args.remove(0);
+            return Ok(IndexUnion::new(index_set, ambient_set, family_fn).into());
+        }
+        if tok == INDEX_INTERSECT {
+            tb.skip()?;
+            let mut args = self.parse_braced_objs(tb)?;
+            if args.len() != 3 {
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "index_intersect expects 3 arguments (index set, ambient set, family function)"
+                            .to_string(),
+                        tb.line_file.clone(),
+                    ),
+                )));
+            }
+            let index_set = args.remove(0);
+            let ambient_set = args.remove(0);
+            let family_fn = args.remove(0);
+            return Ok(IndexIntersect::new(index_set, ambient_set, family_fn).into());
+        }
         if tok == PROJ {
             tb.skip()?;
             let args = self.parse_braced_objs(tb)?;
@@ -3103,6 +3137,8 @@ mod matrix_operator_parse_tests {
         let cases = [
             ("big_union(F)", ObjKind::BigUnion),
             ("big_intersect(F)", ObjKind::BigIntersect),
+            ("index_union(I, X, A)", ObjKind::IndexUnion),
+            ("index_intersect(I, X, A)", ObjKind::IndexIntersect),
         ];
 
         for (source, expected_kind) in cases {
@@ -3113,6 +3149,8 @@ mod matrix_operator_parse_tests {
 
         assert_eq!(ObjKind::BigUnion as u8, 18);
         assert_eq!(ObjKind::BigIntersect as u8, 19);
+        assert_eq!(ObjKind::IndexUnion as u8, 93);
+        assert_eq!(ObjKind::IndexIntersect as u8, 94);
     }
 
     #[test]
@@ -3149,6 +3187,14 @@ mod matrix_operator_parse_tests {
         let cases = [
             ("big_union(A, B)", "big_union expects 1 argument"),
             ("big_intersect(A, B)", "big_intersect expects 1 argument"),
+            (
+                "index_union(I, X)",
+                "index_union expects 3 arguments (index set, ambient set, family function)",
+            ),
+            (
+                "index_intersect(I, X, A, B)",
+                "index_intersect expects 3 arguments (index set, ambient set, family function)",
+            ),
         ];
 
         for (source, expected_message) in cases {

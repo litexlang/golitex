@@ -20,11 +20,16 @@ forall a R:
     a != 0
     =>:
         reciprocal(a) = 1 / a
-# Current behavior: total functions use `Litex.Fn`; the restricted function
-# uses `Litex.FnWhere`. Every application consumes its function membership,
-# argument membership, and (for reciprocal) exact nonzero FactId.
+# The archived compiler also supported a predicate-defined return carrier.
+have fn into_builder(x R) {z R: z = z} = x
+into_builder(1) = 1
+# Current behavior: unary signatures use `Litex.Fn`/`Litex.FnWhere`; dependent
+# or non-base return carriers use the exact `Litex.FnTelescope`. Construction
+# selects the return carrier with the verifier's retained membership proof,
+# and reduction follows that same representative through `Litex.In.same_rep`.
+# Every application consumes its function membership, argument membership,
+# and (for reciprocal) exact nonzero FactId.
 #
-# Boundary: standalone anonymous compound functions, multiple parameters,
-# nested application layers, and operators beyond +, -, *, / remain fail-closed.
+# Boundary: a body not verified in its declared return set remains fail-closed.
 # Evidence: target/release/litex -compact -strict -runner -f lean/examples/12_NamedFunction.lit
 # and cargo test --release --test litex_to_lean_compiler_tracers

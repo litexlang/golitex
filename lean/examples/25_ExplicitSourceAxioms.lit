@@ -1,0 +1,24 @@
+# Tracer: exact visible axioms for the two explicit source trust boundaries
+#
+# `abstract_prop` declares an opaque predicate interface. It becomes one
+# source-scoped, universe-polymorphic Lean axiom with exactly this arity; it
+# does not assert any application of the predicate.
+abstract_prop marked(x)
+
+# Explicit `trust` is the only statement proof allowed to create a proposition
+# axiom. This exact trusted FactId becomes one visible Lean axiom.
+trust $marked(1)
+
+# Ordinary replay cites the trusted source FactId and becomes a theorem, not a
+# third axiom.
+$marked(1)
+
+# Boundaries:
+# - abstract_prop unproved(x) followed by $unproved(1) is rejected by Litex;
+# - an ordinary checked fact emits no axiom;
+# - `-strict` intentionally rejects this explicit unsafe source file, while
+#   the ordinary runner, compiler axiom audit, and real Lean kernel accept the
+#   declared boundary exactly as written.
+# Evidence: target/release/litex -compact -runner -f lean/examples/25_ExplicitSourceAxioms.lit
+# cargo test --release --test litex_to_lean_compiler_tracers
+# and cd lean && lake env lean examples/25_ExplicitSourceAxioms.lean

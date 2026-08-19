@@ -1,5 +1,8 @@
 # Numerical analysis in Litex: Newton's method for sqrt(2).
 #
+# Included: the Newton update, a recursive iterate, residual gaps, the exact
+# one-step gap identity, quadratic contraction, and a closed-form error bound.
+#
 # Write x_n for sqrt_two_newton_iterate(n) and
 # g_n for the residual gap abs(x_n^2 - 2).
 #
@@ -23,6 +26,8 @@ have fn sqrt_two_newton_iterate(n N) R+ by induc n from 0:
     case n > 0: newton_sqrt_two(sqrt_two_newton_iterate(n - 1))
 
 have fn sqrt_two_newton_gap(n N) R = abs(square_root_two_residual(sqrt_two_newton_iterate(n)))
+
+# This comparison sequence is chosen to obey B_(n+1) = B_n^2 / 4.
 have fn sqrt_two_newton_gap_bound(n N) R+ = 4 * (1 / 4)^(2^n)
 
 newton_sqrt_two(1) = 3 / 2
@@ -67,6 +72,7 @@ thm newton_sqrt_two_greater_than_one:
     2 * x > 0
     ((x - 1)^2 + 1) / (2 * x) > 0
 
+# Induction propagates the one-step lower bound through the recursive iterate.
 thm sqrt_two_newton_iterate_at_least_one:
     ? forall n N:
         sqrt_two_newton_iterate(n) >= 1
@@ -119,6 +125,8 @@ thm sqrt_two_newton_gap_bound_step:
     sqrt_two_newton_gap_bound(n + 1) = 4 * (1 / 4)^(2^(n + 1)) = 4 * t^2
     sqrt_two_newton_gap_bound(n)^2 / 4 = (4 * t)^2 / 4 = 16 * t^2 / 4 = 4 * t^2
 
+# The common initial value and the two quadratic recurrences give g_n <= B_n
+# by induction.
 thm sqrt_two_newton_gap_is_bounded:
     ? forall n N:
         sqrt_two_newton_gap(n) <= sqrt_two_newton_gap_bound(n)

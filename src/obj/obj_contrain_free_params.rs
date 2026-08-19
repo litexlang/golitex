@@ -133,6 +133,16 @@ impl Obj {
             }
             Obj::BigUnion(x) => x.left.collect_free_param_names_into(collector),
             Obj::BigIntersect(x) => x.left.collect_free_param_names_into(collector),
+            Obj::IndexUnion(x) => {
+                x.index_set.collect_free_param_names_into(collector);
+                x.ambient_set.collect_free_param_names_into(collector);
+                x.family_fn.collect_free_param_names_into(collector);
+            }
+            Obj::IndexIntersect(x) => {
+                x.index_set.collect_free_param_names_into(collector);
+                x.ambient_set.collect_free_param_names_into(collector);
+                x.family_fn.collect_free_param_names_into(collector);
+            }
             Obj::PowerSet(x) => x.set.collect_free_param_names_into(collector),
             Obj::FiniteSetMax(x) => x.set.collect_free_param_names_into(collector),
             Obj::FiniteSetMin(x) => x.set.collect_free_param_names_into(collector),

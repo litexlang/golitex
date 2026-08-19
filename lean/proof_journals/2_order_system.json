@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "target": "lean/examples/2_OrderSystem.lit",
+  "session_command": "target/release/litex -compact -session -before lean/examples/2_OrderSystem.lit",
+  "proof_spine": [
+    "retain the verifier-owned real-membership evidence for each ordered source object",
+    "observe every compiled numeric term through one canonical Complex.re value",
+    "replay the exact verifier-selected order rule with Mathlib transitivity"
+  ],
+  "blocks": [
+    {
+      "id": "order_trans",
+      "source_order": 1,
+      "intent": "make generic two-ended strict-order transitivity executable without representative coherence",
+      "dependencies": [],
+      "attempts": [
+        {
+          "candidate": "try:\n    forall a, b, c R:\n        a < b\n        b < c\n        =>:\n            a < c",
+          "result": "accepted",
+          "verifier_evidence": "persistent -session -before block event ok=true",
+          "diagnosis": "the verifier retained real-membership checks and the two ordered premises through one shared middle source object",
+          "next_change": "replay the exact transitivity certificate over the canonical Mathlib order view"
+        }
+      ],
+      "accepted_litex": "forall a, b, c R:\n    a < b\n    b < c\n    =>:\n        a < c",
+      "reusable_lesson": "order needs one canonical observation function, not equality between independently chosen representatives",
+      "status": "materialized"
+    },
+    {
+      "id": "complex_order_boundary",
+      "source_order": 2,
+      "intent": "prove that the compiler relation cannot widen source order admission",
+      "dependencies": [],
+      "attempts": [
+        {
+          "candidate": "try:\n    forall a, b C:\n        a < b\n        =>:\n            a <= b",
+          "result": "rejected",
+          "verifier_evidence": "persistent -session -before block event ok=false",
+          "diagnosis": "well-definedness rejected a < b because ordered comparison requires both operands to belong to R",
+          "next_change": "preserve this verifier-owned boundary and add a compiler regression"
+        }
+      ],
+      "accepted_litex": null,
+      "reusable_lesson": "Lean's carrier-level order view is downstream of source real-membership validation",
+      "status": "boundary"
+    }
+  ]
+}

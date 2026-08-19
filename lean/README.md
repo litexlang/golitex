@@ -25,6 +25,13 @@ layer. `Litex.lean` is the public umbrella module: generated files import only
 `Litex`, while this file gathers `Core`, `Rules`, and future supported modules
 such as theorem or strategy libraries.
 
+The wrapper library itself is axiom-free. Example 25 is the only intentional
+generated trust boundary: source `abstract_prop` creates its exact opaque
+predicate interface and explicit source `trust` creates its exact proposition
+axiom. Both declarations remain visibly spelled `axiom` inside the generated
+file's source namespace; no verifier inference or ordinary proof route can
+manufacture one.
+
 The implemented scope is deliberately small:
 
 - primitive cross-carrier and native-operation representation edges are
@@ -55,9 +62,10 @@ The implemented scope is deliberately small:
   `N → Z → Q → R → C` without changing the source value's Lean type;
 - `setBuilder` represents a predicate-defined subset by a subtype carrier;
 - `AsReal x r` means that `r : ℝ` is a real representative of `x`;
-- `Lt` and `Le` compare heterogeneous objects through such representatives;
-- `RealCoherence` is the explicit registry certificate asserting uniqueness of
-  real representatives.
+- `OrderValue z := z.re` is the single canonical Mathlib-ordered observation
+  of the compiler's numeric `ℂ` carrier;
+- custom `Litex.Lt` and `Litex.Le` reduce to native real `<` and `≤` through
+  `OrderValue`; verifier-owned `R` evidence controls source admission.
 
 Every compiler example is a checked-in generated pair:
 
@@ -70,6 +78,13 @@ examples/<name>.lean  generated compiler output; never hand-edited
 verifier-produced IR, and refreshes the paired Lean file. `./compiler.sh check
 examples` recompiles each source in memory, rejects checked-in drift, and
 submits every generated file to the real Lean kernel.
+
+Library callers that need diagnostics without a partial proof artifact use
+`compile_source_with_report`. Successful whole-file emission returns
+`Complete`; an emitter gap returns `Incomplete` with one structured diagnostic
+and an import-only Lean file marked unusable as a proof artifact. Verification
+or IR-construction failure remains an error, and file commands continue to
+preserve any existing output on failure.
 
 To refresh one pair after editing its Litex source, pass only the source path;
 compiler infers the same-name `.lean` output:
@@ -118,7 +133,9 @@ forall a, b R:
 ```
 
 as complex-valued binders with `In`, `Lt`, and `Le` propositions.  The proof
-is the ordinary real theorem `< → ≤` after unpacking the representatives.
+is the ordinary real theorem `< → ≤` on the canonical `Complex.re` view.
+The same tracer includes `a < b`, `b < c → a < c`; compiler consumes the
+stable verifier `OrderTransitivity` certificate and calls `Litex.Lt.trans`.
 
 The first non-`sketch` tracer is `examples/3_AtomicEquality.lit`:
 
@@ -158,9 +175,12 @@ selected by the verifier. Their results are native `ℝ` carrier values, while
 the checked reduction back to the source `ℂ` expression uses the closed
 `Same.realAddComplex` / `Same.realDivComplex` congruence routes. Example 23
 uses `FnTelescope` for quantified and named `f(a,b)`, including ordered domain
-requirements, and keeps the whole named carrier as `@f`. Standalone anonymous
-compound functions, dependent return examples, other carriers, and operators
-outside `+`, `-`, `*`, and `/` remain fail-closed.
+requirements, and keeps the whole named carrier as `@f`. Example 24 adds
+dependent parameter and return carriers plus compound anonymous `R -> R`
+values. Anonymous bodies replay their exact occurrence, owned binder scope,
+parameter premise, and typed return-membership closure; direct calls also
+validate the verifier's exact `FunctionHead` child. Other construction
+carriers and operators outside `+`, `-`, `*`, and `/` remain fail-closed.
 
 The second statement tranche is recorded by examples 8–11. Source `thm`,
 `claim`, and `example` blocks compile to ordinary Lean proof scopes. `by cases`
@@ -292,11 +312,10 @@ closed. This project declares no new Lean axioms.
 
 The representation registry is closed: downstream Lean code cannot install a
 new primitive or derived `Same` edge. Ordinary source equality also never
-creates such an edge. `RealCoherence` remains an explicit normalization
-certificate for theorems that compare independently selected real
-representatives; this header does not claim or postulate that stronger theorem.
-Transporting an already chosen representative and deriving `Lt → Le` require
-no certificate.
+creates such an edge. General order never compares independently selected
+`AsReal` witnesses: it observes the current numeric term through
+`OrderValue : ℂ → ℝ`, so `Lt → Le`, irrefl, and transitivity are direct
+Mathlib theorems. No coherence certificate or project axiom is declared.
 
 `universe u` and `Litex.u := Type u` use Lean's ordinary universe hierarchy;
 they do not create a separate Litex universe. Mathlib's usual numeric carriers

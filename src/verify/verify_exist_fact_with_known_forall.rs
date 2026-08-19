@@ -371,6 +371,16 @@ impl Runtime {
             Obj::Sqrt(x) => Self::obj_depends_on_given_exist_param(x.arg.as_ref(), names),
             Obj::BigUnion(x) => Self::obj_depends_on_given_exist_param(x.left.as_ref(), names),
             Obj::BigIntersect(x) => Self::obj_depends_on_given_exist_param(x.left.as_ref(), names),
+            Obj::IndexUnion(x) => {
+                Self::obj_depends_on_given_exist_param(x.index_set.as_ref(), names)
+                    || Self::obj_depends_on_given_exist_param(x.ambient_set.as_ref(), names)
+                    || Self::obj_depends_on_given_exist_param(x.family_fn.as_ref(), names)
+            }
+            Obj::IndexIntersect(x) => {
+                Self::obj_depends_on_given_exist_param(x.index_set.as_ref(), names)
+                    || Self::obj_depends_on_given_exist_param(x.ambient_set.as_ref(), names)
+                    || Self::obj_depends_on_given_exist_param(x.family_fn.as_ref(), names)
+            }
             Obj::PowerSet(x) => Self::obj_depends_on_given_exist_param(x.set.as_ref(), names),
             Obj::CartDim(x) => Self::obj_depends_on_given_exist_param(x.set.as_ref(), names),
             Obj::TupleDim(x) => Self::obj_depends_on_given_exist_param(x.arg.as_ref(), names),

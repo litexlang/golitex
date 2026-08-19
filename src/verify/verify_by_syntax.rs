@@ -175,6 +175,14 @@ impl Runtime {
                 Obj::BigIntersect(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
+            Obj::IndexUnion(a) => match right {
+                Obj::IndexUnion(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
+            Obj::IndexIntersect(a) => match right {
+                Obj::IndexIntersect(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
             Obj::ListSet(a) => match right {
                 Obj::ListSet(b) => a.to_string() == b.to_string(),
                 _ => false,

@@ -249,6 +249,34 @@ fn mark_forall_param_coverage_in_obj(
         Obj::BigIntersect(unary) => {
             mark_forall_param_coverage_in_obj(unary.left.as_ref(), coverage_by_forall_param);
         }
+        Obj::IndexUnion(index_union) => {
+            mark_forall_param_coverage_in_obj(
+                index_union.index_set.as_ref(),
+                coverage_by_forall_param,
+            );
+            mark_forall_param_coverage_in_obj(
+                index_union.ambient_set.as_ref(),
+                coverage_by_forall_param,
+            );
+            mark_forall_param_coverage_in_obj(
+                index_union.family_fn.as_ref(),
+                coverage_by_forall_param,
+            );
+        }
+        Obj::IndexIntersect(index_intersect) => {
+            mark_forall_param_coverage_in_obj(
+                index_intersect.index_set.as_ref(),
+                coverage_by_forall_param,
+            );
+            mark_forall_param_coverage_in_obj(
+                index_intersect.ambient_set.as_ref(),
+                coverage_by_forall_param,
+            );
+            mark_forall_param_coverage_in_obj(
+                index_intersect.family_fn.as_ref(),
+                coverage_by_forall_param,
+            );
+        }
         Obj::PowerSet(unary) => {
             mark_forall_param_coverage_in_obj(unary.set.as_ref(), coverage_by_forall_param);
         }

@@ -88,6 +88,16 @@ fn collect_obj_binder_bindings(
         }
         Obj::BigUnion(x) => collect_obj_binder_bindings(&x.left, bindings, seen, depth),
         Obj::BigIntersect(x) => collect_obj_binder_bindings(&x.left, bindings, seen, depth),
+        Obj::IndexUnion(x) => {
+            collect_obj_binder_bindings(&x.index_set, bindings, seen, depth);
+            collect_obj_binder_bindings(&x.ambient_set, bindings, seen, depth);
+            collect_obj_binder_bindings(&x.family_fn, bindings, seen, depth);
+        }
+        Obj::IndexIntersect(x) => {
+            collect_obj_binder_bindings(&x.index_set, bindings, seen, depth);
+            collect_obj_binder_bindings(&x.ambient_set, bindings, seen, depth);
+            collect_obj_binder_bindings(&x.family_fn, bindings, seen, depth);
+        }
         Obj::PowerSet(x) => collect_obj_binder_bindings(&x.set, bindings, seen, depth),
         Obj::SeqSet(x) => collect_obj_binder_bindings(&x.set, bindings, seen, depth),
         Obj::FiniteSetSize(x) => collect_obj_binder_bindings(&x.set, bindings, seen, depth),

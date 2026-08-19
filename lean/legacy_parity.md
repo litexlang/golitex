@@ -19,8 +19,19 @@ Status meanings:
   still missing;
 - `pending`: the old source capability has no active native-carrier adapter;
 - `decision`: source behavior is known, but its new trust or ABI semantics
-  require an explicit decision before implementation;
+  require an explicit decision before implementation. There are currently no
+  rows in this state: the outstanding semantic choices have been approved;
 - `not legacy parity`: the old compiler also left the capability unsupported.
+
+Current snapshot (2026-08-19): **25 migrated, 8 partial, 10 pending,
+0 decision, and 3 not-legacy-parity** rows. Thus 18 actual archived
+capabilities still need implementation work. They fall into five remaining batches:
+
+1. remaining named-function carriers and operators (1 row);
+2. wider atomic-statement and object-definition shapes (2 rows);
+3. WD-backed set and collection constructors (8 rows);
+4. remaining numeric objects and refined carriers (4 rows); and
+5. set, reflection, and registered rule adapters (3 rows).
 
 ## Semantic and proof spine
 
@@ -29,11 +40,11 @@ Status meanings:
 | Native carriers plus independent Litex membership | migrated | Examples 1, 4, and 5; generated output forbids `Litex.Object` and set encodings based on `Set.univ`. |
 | Heterogeneous equality and membership transport | migrated | Examples 1 and 6 use `Litex.Same` and exact equality-path `FactId`s. |
 | Real order wrappers and registered order rules | migrated | Example 2; exact rule ID and fingerprint are validated before `Litex.Lt.toLe`. |
-| Real-representative coherence | partial | Zero-ended comparisons now lower to `Positive` / `Nonnegative` with Mathlib's canonical real zero, so migrated sign laws avoid coherence constructively. Generic two-ended transitivity still exposes the explicit certificate interface and has no instance. |
+| Generic two-ended order normalization | migrated | Example 2 lowers custom `Litex.Lt` / `Litex.Le` on the compiler numeric carrier through the single canonical `Complex.re : ℂ → ℝ` observation. The verifier now records a stable `OrderTransitivity` certificate, the compiler validates its carrier evidence, endpoints, shared middle, and strictness, and Lean replays Mathlib transitivity. `RealCoherence` has been removed; C-only comparisons remain rejected before IR capture. |
 | Source order, persistent/local scope, and exact `FactId` replay | migrated | Examples 6, 8, and 9. |
 | Verifier-owned WD object/fact graph | partial | Current arithmetic and function tracers consume it; old constructor families below still lack emitters. |
 | Known forall instantiation and alpha-equivalent citation | migrated | Example 6 and focused compiler tests. |
-| Conjunction, disjunction, cases, and contradiction | partial | Examples 7 and 9 cover the reviewed shapes; wider branch and negation shapes remain fail-closed. |
+| Conjunction, disjunction, cases, and contradiction | migrated | Examples 7 and 9 cover conjunction/disjunction, structured conjunction assumptions, direct contradiction, classical double-negation introduction for a negated order goal, nested case/contra scopes, and branch-local function-application WD. A checked reduction of two identical applications is normalized to the exact reflexivity adapter instead of being rejected as a non-alpha reduction. |
 
 ## Statements and definitions
 
@@ -45,10 +56,10 @@ Status meanings:
 | Checked choice from a nonempty set | migrated | Example 14 uses the exact carrier and retained nonemptiness proof. |
 | Concrete proposition definitions and `by def` | migrated | Example 13 and the concrete-predicate part of example 14. |
 | Bodyless concrete propositions | not legacy parity | The old strict emitter also rejected this shape. |
-| Abstract propositions | decision | The old compiler emitted an uninterpreted declaration. The active compiler currently preserves its zero-project-axiom boundary and fails closed. |
-| Explicit source `trust` | decision | The old compiler emitted an axiom scoped to the source trust. A new exact and visible trust ABI has not been approved. |
-| Positive existential introduction/elimination | partial | Example 10 covers one witness and one body fact; multiple witnesses, uniqueness, and negative existentials remain pending. |
-| Transactional incomplete-report output | pending | The active strict emitter fails closed but has not restored the old incomplete-report mode. |
+| Abstract propositions | migrated | Example 25 emits one source-scoped, independently universe-polymorphic Lean predicate `axiom` with the exact declared arity. The interface proves no application; the untrusted `$unproved(1)` boundary is rejected by Litex. |
+| Explicit source `trust` | migrated | Example 25 requires the distinct `Trusted` IR marker, emits one visible `axiom` for the exact trusted source FactId, and emits later citation and inferred facts only as theorems. Focused audits prove the file has exactly the two source-requested axioms, an ordinary checked file has none, and `Core.lean` remains axiom-free. Litex `-strict` deliberately rejects the explicit unsafe source tracer. |
+| Positive existential introduction/elimination | migrated | Example 10 covers the archived emitter's complete supported shape: one positive witness, one singleton parameter group, one body fact, and checked elimination by choice/projection. The archived implementation explicitly rejected multiple witnesses and did not implement uniqueness or negative existential emission, so those are not parity debt. |
+| Transactional incomplete-report output | migrated | `compile_source_with_report` returns `Complete` only after whole-file emission succeeds. A verified IR emission gap returns one `Incomplete` report and a diagnostic-only Lean artifact with no partial theorem or axiom; verifier/IR failures remain hard errors. Existing file-output preservation stays covered by the CLI regression. |
 
 ## Functions
 
@@ -58,8 +69,8 @@ Status meanings:
 | Unary named functions with domain clauses | partial | Example 12 supports real-valued `+`, `-`, `*`, and `/` bodies; Example 23 extends the same construction route to one multi-parameter source layer. Other carriers and operators remain open. |
 | Multiple parameters in one application layer | migrated | Example 23 uses `FnTelescope.parameter` nodes for every retained parameter, an optional ordered `requirement` node, and one `done` codomain. Both quantified and named `f(a,b)` consume the whole layer; generated named values use `@f` so Lean cannot silently insert an implicit carrier and curry the source layer. |
 | Multiple source application layers | migrated | Example 23 follows the exact verifier `FunctionPrefix` DAG for `g(a)(b)`, binds every intermediate exact function carrier once, and separately consumes each layer's argument/domain evidence; the focused Rust regression also covers three layers. |
-| Dependent parameter requirements and return sets | partial | Example 23 stores domain requirements after the complete parameter telescope and consumes exact premise FactIds. Parameter sets may depend on earlier parameters in the wrapper type; generated examples for dependent parameter and returned sets remain open. |
-| Compound anonymous functions | pending | Identity is the only current anonymous native-carrier value; body WD and result membership need an owner-scoped adapter. |
+| Dependent parameter requirements and return sets | migrated | Example 24 renders parameter and return sets in the progressively extended `FnTelescope` context. A later set consumes the earlier argument plus its exact membership proof, and application returns the argument-indexed subtype carrier. |
+| Compound anonymous functions | migrated | Example 24 selects the exact parser occurrence, owned binder scope, parameter-membership premise, body-membership closure, and direct-application `FunctionHead` WD child. The generated `R -> R` value replays a typed `x + 1 $in R` proof and is accepted by Lean; a body not verified in its declared return carrier remains rejected. |
 | Function extensionality | not legacy parity | Neither compiler established an extensional equality interface. |
 
 ## Objects and sets
@@ -70,7 +81,7 @@ Status meanings:
 | Native constants and base memberships | migrated | Example 19 lowers `i`, `e`, and `pi` to native Mathlib terms, proves `i $in C` and `e, pi $in R`, and reaches `C` from the exact real-membership FactIds. Refined `R+` remains tracked separately. |
 | Power, remainder, floor/ceil, elementary and transcendental functions | pending | Structural IR exists for many operators; native terms, membership closure, and proof adapters are missing. |
 | Predicate-defined set builders | partial | Example 14 supports whole-side equality and one concrete predicate; nested binder expressions remain rejected. |
-| Finite list-set literals | pending | The old compiler emitted proof-free list sets with ordered distinctness evidence; an exact heterogeneous carrier is undecided. |
+| Finite list-set literals | pending | The approved carrier direction is an indexed finite coproduct retaining ordered distinctness evidence; its Core definition, WD adapter, and generated tracer are not implemented. |
 | Union, intersection, set difference, big union/intersection, power set | pending | Exact carriers, semantic laws, and universe behavior must be defined before builtin adapters. |
 | Integer ranges | pending | Half-open and closed range IR is retained but has no native-carrier emitter. |
 | General Cartesian products | pending | Depends on the generalized function ABI and exact family carriers. |
@@ -95,25 +106,22 @@ Status meanings:
 
 ## Required migration order
 
-1. Keep the real `+`/`-`/`*`/`/` closure and additive-strategy tracer green;
-   decide whether `RealCoherence` is proved, required explicitly, or avoided
-   by a revised order wrapper before porting multiplication/division signs.
-2. Continue the native-carrier function telescope after migrated same-layer
-   parameters and ordered domain requirements: dependent parameter/return
-   examples, then compound anonymous bodies.
-3. Use that function ABI to migrate ranges, Cartesian products, tuples,
+1. Generalize named-function construction beyond the current real arithmetic
+   body family while retaining the exact source telescope and return closure.
+2. Add the approved exact source-axiom adapters for `abstract_prop` and
+   explicit `trust`, then restore wider statement shapes and transactional
+   incomplete-report output without allowing implicit axioms.
+3. Use the function ABI to migrate ranges, Cartesian products, tuples,
    sequences, and aggregate objects.
 4. Define exact list/set-constructor carriers and only then port their builtin
    theorem families.
 5. Port the remaining numeric operators, refined carriers, reflection, and
    registered rules in coherent theorem families.
-6. Decide the explicit `trust`/abstract-proposition boundary and restore
-   transactional incomplete-report mode without weakening strict compilation.
 
 ## Completion evidence
 
 Parity is complete only when every row that is actually legacy parity is
-`migrated`, every `decision` row has an explicit approved outcome and matching
+`migrated`, every approved semantic decision has matching implementation and
 tests, and no undocumented old-only source route remains. The final audit must
 use the current versions of these gates:
 

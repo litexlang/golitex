@@ -600,6 +600,12 @@ impl Runtime {
             Obj::Sqrt(x) => collect(&x.arg),
             Obj::BigUnion(x) => collect(&x.left),
             Obj::BigIntersect(x) => collect(&x.left),
+            Obj::IndexUnion(x) => {
+                collect(&x.index_set) && collect(&x.ambient_set) && collect(&x.family_fn)
+            }
+            Obj::IndexIntersect(x) => {
+                collect(&x.index_set) && collect(&x.ambient_set) && collect(&x.family_fn)
+            }
             Obj::PowerSet(x) => collect(&x.set),
             Obj::FiniteSetSize(x) => collect(&x.set),
             Obj::FiniteSetMax(x) => collect(&x.set),
@@ -1253,6 +1259,16 @@ fn collect_module_names_from_obj(obj: &Obj, module_names: &mut Vec<String>) {
         Obj::Sqrt(x) => collect_module_names_from_obj(&x.arg, module_names),
         Obj::BigUnion(x) => collect_module_names_from_obj(&x.left, module_names),
         Obj::BigIntersect(x) => collect_module_names_from_obj(&x.left, module_names),
+        Obj::IndexUnion(x) => {
+            collect_module_names_from_obj(&x.index_set, module_names);
+            collect_module_names_from_obj(&x.ambient_set, module_names);
+            collect_module_names_from_obj(&x.family_fn, module_names);
+        }
+        Obj::IndexIntersect(x) => {
+            collect_module_names_from_obj(&x.index_set, module_names);
+            collect_module_names_from_obj(&x.ambient_set, module_names);
+            collect_module_names_from_obj(&x.family_fn, module_names);
+        }
         Obj::PowerSet(x) => collect_module_names_from_obj(&x.set, module_names),
         Obj::FiniteSetSize(x) => collect_module_names_from_obj(&x.set, module_names),
         Obj::FiniteSetMax(x) => collect_module_names_from_obj(&x.set, module_names),

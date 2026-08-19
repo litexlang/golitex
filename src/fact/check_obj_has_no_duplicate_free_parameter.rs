@@ -198,6 +198,40 @@ fn check_obj_has_no_duplicate_free_parameter(
             free_param_type,
             params_already_used,
         ),
+        Obj::IndexUnion(obj) => {
+            check_obj_has_no_duplicate_free_parameter(
+                &obj.index_set,
+                free_param_type,
+                params_already_used,
+            )?;
+            check_obj_has_no_duplicate_free_parameter(
+                &obj.ambient_set,
+                free_param_type,
+                params_already_used,
+            )?;
+            check_obj_has_no_duplicate_free_parameter(
+                &obj.family_fn,
+                free_param_type,
+                params_already_used,
+            )
+        }
+        Obj::IndexIntersect(obj) => {
+            check_obj_has_no_duplicate_free_parameter(
+                &obj.index_set,
+                free_param_type,
+                params_already_used,
+            )?;
+            check_obj_has_no_duplicate_free_parameter(
+                &obj.ambient_set,
+                free_param_type,
+                params_already_used,
+            )?;
+            check_obj_has_no_duplicate_free_parameter(
+                &obj.family_fn,
+                free_param_type,
+                params_already_used,
+            )
+        }
         Obj::PowerSet(obj) => check_obj_has_no_duplicate_free_parameter(
             &obj.set,
             free_param_type,

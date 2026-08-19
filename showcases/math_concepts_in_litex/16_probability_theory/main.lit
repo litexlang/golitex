@@ -1,5 +1,9 @@
 # Probability theory from the Kolmogorov axioms, setting-first.
 #
+# Included: countable unions and real series, sigma algebras and probability
+# spaces, countable and finite additivity, conditional probability,
+# complements and inclusion-exclusion, measurable maps, and distributions.
+#
 # Main line:
 #
 #   sigma-algebra + real series
@@ -90,6 +94,8 @@ thm event_intersection_is_event:
     ? forall [SigmaAlgebraSetting], A, B events:
         intersect(A, B) $in events
 
+# Independence replaces the intersection probability in the conditional
+# quotient and cancels the positive evidence probability.
 thm independent_event_conditional_probability:
     ? forall [ProbabilitySpaceSetting], A, B events:
         $are_independent(Omega, events, probability, A, B)
@@ -116,6 +122,8 @@ prop is_distribution_of(Omega set, events power_set(power_set(Omega)), probabili
         {omega Omega: X(omega) $in target_event} $in events
         distribution(target_event) = probability({omega Omega: X(omega) $in target_event})
 
+# A distribution package already contains every preimage-event obligation, so
+# it immediately exposes the underlying measurable map.
 thm distribution_of_has_measurable_map:
     ? forall Omega set, events power_set(power_set(Omega)), probability fn(event events) R, Target set, target_events power_set(power_set(Target)), X fn(omega Omega) Target, distribution fn(target_event target_events) R:
         $is_distribution_of(Omega, events, probability, Target, target_events, X, distribution)
@@ -174,6 +182,8 @@ thm real_add_zero:
     ? forall value R:
         value + 0 = value
 
+# The padded two-term sequence has partial sums x+y from index two onward, so
+# its series converges by an explicit eventually-constant tail proof.
 thm two_term_series_has_sum:
     ? forall x, y R:
         $has_series_sum(fn(n N+) R {two_term_sequence(x, y, n)}, x + y)
@@ -237,6 +247,7 @@ template<Omega set, events power_set(power_set(Omega))>:
         case n = 1: A
         case n > 1: \one_event_sequence<Omega, events>(B, n - 1)
 
+# Every event is a subset of the sample space by the exact carrier of `events`.
 thm event_is_subset_of_sample_space:
     ? forall Omega set, events power_set(power_set(Omega)), A events:
         A $subset Omega
@@ -245,6 +256,8 @@ thm event_is_subset_of_sample_space:
     by def:
         ? A $subset Omega
 
+# Extensionality shows that the padded sequence contains exactly A, B, and then
+# empty events, so its countable union is A union B.
 thm two_event_sequence_countable_union:
     ? forall [SigmaAlgebraSetting], A, B events:
         \countable_union<Omega>(fn(n N+) power_set(Omega) {\two_event_sequence<Omega, events>(A, B, n)}) = union(A, B)
@@ -306,6 +319,8 @@ thm two_event_sequence_countable_union:
                     by thm set_builder_member(point, {omega Omega: $member_of_countable_union(Omega, fn(n N+) power_set(Omega) {\two_event_sequence<Omega, events>(A, B, n)}, omega)}) => point $in {omega Omega: $member_of_countable_union(Omega, fn(n N+) power_set(Omega) {\two_event_sequence<Omega, events>(A, B, n)}, omega)}
                     point $in \countable_union<Omega>(fn(n N+) power_set(Omega) {\two_event_sequence<Omega, events>(A, B, n)})
 
+# If A and B are disjoint, a finite index case split proves the padded event
+# sequence pairwise disjoint, including all empty tail terms.
 thm two_event_sequence_pairwise_disjoint:
     ? forall [SigmaAlgebraSetting], A, B events:
         intersect(A, B) = {}
@@ -374,6 +389,8 @@ thm two_event_sequence_pairwise_disjoint:
                         intersect(fn(n N+) events {\two_event_sequence<Omega, events>(A, B, n)}(idx), fn(n N+) events {\two_event_sequence<Omega, events>(A, B, n)}(j)) = intersect({}, fn(n N+) events {\two_event_sequence<Omega, events>(A, B, n)}(j)) = {}
     by def $pairwise_disjoint_event_sequence(Omega, events, fn(n N+) events {\two_event_sequence<Omega, events>(A, B, n)})
 
+# Evaluate probability term by term: the first two values are P(A), P(B), and
+# every later empty-event value is zero.
 thm probability_of_two_event_sequence:
     ? forall [ProbabilitySpaceSetting], A, B events, n N+:
         probability(\two_event_sequence<Omega, events>(A, B, n)) = two_term_sequence(probability(A), probability(B), n)
@@ -403,6 +420,7 @@ thm probability_of_two_event_sequence:
                     two_term_sequence(probability(A), probability(B), n) = one_term_sequence(probability(B), n - 1) = 0
                     probability(\two_event_sequence<Omega, events>(A, B, n)) = 0 = two_term_sequence(probability(A), probability(B), n)
 
+# Induction transports pointwise equality through every finite partial sum.
 thm pointwise_equal_sequences_have_equal_partial_sums:
     ? forall a, b seq(R):
         forall n N+:
@@ -423,6 +441,8 @@ thm pointwise_equal_sequences_have_equal_partial_sums:
             partial_sum(a, k) + a(k + 1) = partial_sum(b, k) + b(k + 1)
             partial_sum(a, k + 1) = partial_sum(b, k + 1)
 
+# Equal partial sums let one sequence reuse the other sequence's epsilon-tail
+# witness for the same series sum.
 thm pointwise_equal_sequences_preserve_series_sum:
     ? forall a, b seq(R), L R:
         forall n N+:
@@ -450,6 +470,7 @@ thm pointwise_equal_sequences_preserve_series_sum:
         by def $has_sequence_limit(fn(k N+) R {partial_sum(a, k)}, L)
     by def $has_series_sum(a, L)
 
+# Combine termwise probability evaluation with the two-term series theorem.
 thm two_event_probability_series_has_sum:
     ? forall [ProbabilitySpaceSetting], A, B events:
         $has_series_sum(fn(n N+) R {probability(\two_event_sequence<Omega, events>(A, B, n))}, probability(A) + probability(B))
@@ -483,6 +504,7 @@ thm probability_of_disjoint_union:
 
 # Complement partitions and relative complements support the ordinary event
 # probability calculus.
+# A subset and its complement inside Omega have no common element.
 thm subset_intersect_complement_is_empty:
     ? forall Omega set, A power_set(Omega):
         intersect(A, set_minus(Omega, A)) = {}
@@ -506,6 +528,7 @@ thm subset_intersect_complement_is_empty:
                 not point $in intersect(A, set_minus(Omega, A))
                 impossible point $in {}
 
+# Every point of Omega lies either in A or in its relative complement.
 thm subset_union_complement_is_universe:
     ? forall Omega set, A power_set(Omega):
         union(A, set_minus(Omega, A)) = Omega
@@ -534,6 +557,7 @@ thm subset_union_complement_is_universe:
                     point $in set_minus(Omega, A)
                     point $in union(A, set_minus(Omega, A))
 
+# Apply finite additivity to the partition Omega = A union (Omega minus A).
 thm probability_of_event_complement:
     ? forall [ProbabilitySpaceSetting], A events:
         probability(set_minus(Omega, A)) = 1 - probability(A)
@@ -547,6 +571,7 @@ thm probability_of_event_complement:
     1 = probability(Omega) = probability(A) + probability(set_minus(Omega, A))
     probability(set_minus(Omega, A)) = 1 - probability(A)
 
+# Rewrite A minus B as A intersected with the complement of B in Omega.
 thm relative_complement_as_intersection:
     ? forall Omega set, A, B power_set(Omega):
         set_minus(A, B) = intersect(A, set_minus(Omega, B))
@@ -569,6 +594,8 @@ thm relative_complement_as_intersection:
             not point $in B
             point $in set_minus(A, B)
 
+# Sigma-algebra closure under complements and intersections makes A minus B
+# an event.
 thm event_difference_is_event:
     ? forall [SigmaAlgebraSetting], A, B events:
         set_minus(A, B) $in events
@@ -581,6 +608,8 @@ thm event_difference_is_event:
     by thm relative_complement_as_intersection(Omega, A, B) => set_minus(A, B) = intersect(A, set_minus(Omega, B))
     set_minus(A, B) $in events
 
+# When B is contained in A, the disjoint partition A = B union (A minus B)
+# gives the subtraction formula for probabilities.
 thm probability_of_difference_under_subset:
     ? forall [ProbabilitySpaceSetting], A, B events:
         B $subset A
@@ -595,6 +624,7 @@ thm probability_of_difference_under_subset:
     probability(A) = probability(union(B, set_minus(A, B))) = probability(B) + probability(set_minus(A, B))
     probability(set_minus(A, B)) = probability(A) - probability(B)
 
+# Nonnegativity of P(B minus A) yields monotonicity under A subset B.
 thm probability_mono:
     ? forall [ProbabilitySpaceSetting], A, B events:
         A $subset B
@@ -607,6 +637,7 @@ thm probability_mono:
     probability(B) - probability(A) >= 0
     probability(A) <= probability(B)
 
+# A is disjoint from the portion of B lying outside A.
 thm set_intersect_relative_complement_is_empty:
     ? forall A, B set:
         intersect(A, set_minus(B, A)) = {}
@@ -630,6 +661,7 @@ thm set_intersect_relative_complement_is_empty:
                 not point $in intersect(A, set_minus(B, A))
                 impossible point $in {}
 
+# Decompose A union B into the disjoint pieces A and B minus A.
 thm union_with_relative_complement:
     ? forall A, B set:
         union(A, set_minus(B, A)) = union(A, B)
@@ -664,6 +696,7 @@ thm union_with_relative_complement:
                             point $in set_minus(B, A)
                             point $in union(A, set_minus(B, A))
 
+# Removing A intersect B from B is the same as removing all of A from B.
 thm remove_intersection_equals_remove_set:
     ? forall A, B set:
         set_minus(B, intersect(A, B)) = set_minus(B, A)
@@ -696,6 +729,8 @@ thm remove_intersection_equals_remove_set:
                     impossible not point $in A
             point $in set_minus(B, intersect(A, B))
 
+# Use the disjoint decomposition A union (B minus A), then express the second
+# term as P(B)-P(A intersect B).
 thm probability_inclusion_exclusion:
     ? forall [ProbabilitySpaceSetting], A, B events:
         union(A, B) $in events
@@ -715,6 +750,7 @@ thm probability_inclusion_exclusion:
     probability(set_minus(B, A)) = probability(set_minus(B, intersect(A, B))) = probability(B) - probability(intersect(A, B))
     probability(union(A, B)) = probability(union(A, set_minus(B, A))) = probability(A) + probability(set_minus(B, A)) = probability(A) + (probability(B) - probability(intersect(A, B))) = probability(A) + probability(B) - probability(intersect(A, B))
 
+# Drop the nonnegative intersection term from inclusion-exclusion.
 thm probability_union_bound:
     ? forall [ProbabilitySpaceSetting], A, B events:
         union(A, B) $in events

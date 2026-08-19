@@ -1,0 +1,51 @@
+# Tracer: first-class indexed union and indexed intersection.
+#
+# Before (did not work):
+# index_union({1}, N, family) $in power_set(N)
+# Former behavior: `WellDefinedError: function 'index_union' not defined`.
+
+have fn family(k {1, 2, 3}) power_set(N) = {1, 2, 3}
+
+# Expose the three checked fibers used by the membership rules.
+family(1) = {1, 2, 3}
+family(2) = {1, 2, 3}
+family(3) = {1, 2, 3}
+1 $in {1, 2, 3}
+3 $in {1, 2, 3}
+1 $in family(1)
+1 $in family(2)
+1 $in family(3)
+3 $in family(3)
+
+# Now: one fiber witness introduces indexed-union membership.
+3 $in index_union({1, 2, 3}, N, family)
+exist k {1, 2, 3} st {3 $in family(k)}
+
+# Now: ambient membership plus membership in every fiber introduces
+# indexed-intersection membership.
+1 $in index_intersect({1, 2, 3}, N, family)
+forall k {1, 2, 3}:
+    1 $in family(k)
+
+# Both constructions retain their explicit ambient carrier.
+index_union({1, 2, 3}, N, family) $in power_set(N)
+index_intersect({1, 2, 3}, N, family) $in power_set(N)
+
+# They agree with the older range encodings where those encodings have the
+# corresponding semantics. The intersection bridge requires a nonempty index.
+index_union({1, 2, 3}, N, family) = big_union(fn_range(family))
+$is_nonempty_set({1, 2, 3})
+index_intersect({1, 2, 3}, N, family) = big_intersect(fn_range(family))
+
+# Boundary: the domain of the family may be empty. The ambient argument makes
+# the empty indexed intersection equal to N rather than to an implicit universe.
+have fn empty_family(k {}) power_set(N) = {}
+1 $in index_intersect({}, N, empty_family)
+index_union({}, N, empty_family) = {}
+index_intersect({}, N, empty_family) = N
+
+# Boundary: a family returning N instead of power_set(N), or a family with a
+# different exact index domain, is rejected by the executable Rust regression.
+#
+# Evidence:
+# target/release/litex -compact -isolated -runner -f examples/02_builtin_math/indexed_set_family_operators.lit

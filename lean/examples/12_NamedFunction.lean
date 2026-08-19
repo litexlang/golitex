@@ -53,4 +53,20 @@ theorem __fact8 :
   unfold Litex.fnApplyWhereOwn reciprocal
   exact Litex.Same.realDivComplex (Litex.Same.realComplex (1 : ℝ)) (Litex.Same.symm (Litex.In.same_rep a (__h8_1))))
 
+noncomputable def into_builder : Litex.FnTelescope.Carrier ((Litex.FnTelescope.parameter Litex.R (fun {__alpha1 : Type} (__arg1 : __alpha1) (__arg1_in : Litex.In __arg1 Litex.R) => (Litex.FnTelescope.done (Litex.setBuilder Litex.R (fun (z : Litex.R.Carrier) => Litex.Same z z))))) : Litex.FnTelescope.{0}) :=
+  fun {__alpha1 : Type} (__arg1 : __alpha1) (__arg1_in : Litex.In __arg1 Litex.R) => ULift.up (Litex.In.rep __arg1 (Litex.Rules.inSetBuilder (Litex.In.same_rep __arg1 (__arg1_in)) (Litex.Same.refl (Litex.In.rep __arg1 (__arg1_in)))))
+
+theorem __fact9 : Litex.In (@into_builder) (Litex.fnTelescopeSet ((Litex.FnTelescope.parameter Litex.R (fun {__alpha1 : Type} (__arg1 : __alpha1) (__arg1_in : Litex.In __arg1 Litex.R) => (Litex.FnTelescope.done (Litex.setBuilder Litex.R (fun (z : Litex.R.Carrier) => Litex.Same z z))))) : Litex.FnTelescope.{0})) := by
+  exact Litex.In.own (Litex.fnTelescopeSet ((Litex.FnTelescope.parameter Litex.R (fun {__alpha1 : Type} (__arg1 : __alpha1) (__arg1_in : Litex.In __arg1 Litex.R) => (Litex.FnTelescope.done (Litex.setBuilder Litex.R (fun (z : Litex.R.Carrier) => Litex.Same z z))))) : Litex.FnTelescope.{0})) (@into_builder)
+
+theorem __fact10 : Litex.Same (@into_builder) (fun {__alpha1 : Type} (__arg1 : __alpha1) (__arg1_in : Litex.In __arg1 Litex.R) => ULift.up (Litex.In.rep __arg1 (Litex.Rules.inSetBuilder (Litex.In.same_rep __arg1 (__arg1_in)) (Litex.Same.refl (Litex.In.rep __arg1 (__arg1_in))))) : Litex.FnTelescope.Carrier ((Litex.FnTelescope.parameter Litex.R (fun {__alpha1 : Type} (__arg1 : __alpha1) (__arg1_in : Litex.In __arg1 Litex.R) => (Litex.FnTelescope.done (Litex.setBuilder Litex.R (fun (z : Litex.R.Carrier) => Litex.Same z z))))) : Litex.FnTelescope.{0})) := by
+  unfold into_builder
+  exact Litex.Same.refl (fun {__alpha1 : Type} (__arg1 : __alpha1) (__arg1_in : Litex.In __arg1 Litex.R) => ULift.up (Litex.In.rep __arg1 (Litex.Rules.inSetBuilder (Litex.In.same_rep __arg1 (__arg1_in)) (Litex.Same.refl (Litex.In.rep __arg1 (__arg1_in))))) : Litex.FnTelescope.Carrier ((Litex.FnTelescope.parameter Litex.R (fun {__alpha1 : Type} (__arg1 : __alpha1) (__arg1_in : Litex.In __arg1 Litex.R) => (Litex.FnTelescope.done (Litex.setBuilder Litex.R (fun (z : Litex.R.Carrier) => Litex.Same z z))))) : Litex.FnTelescope.{0}))
+
+theorem __fact11 : Litex.Same (((Litex.fnTelescopeApplyOwn (@into_builder) __fact9) (1 : ℂ) (Litex.Rules.complexRealInR 1))).down (1 : ℂ) := by
+  exact (by
+  unfold Litex.fnTelescopeApplyOwn into_builder
+  apply Litex.Same.symm
+  apply Litex.In.same_rep)
+
 end __Compiler_12_NamedFunction

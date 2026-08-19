@@ -1,9 +1,9 @@
 # Tarski Geometry from Axioms
 
-This independent showcase is the synthetic counterpart to
-`2_euclidean_geometry`. Instead of choosing coordinates in `R^2`, it starts
-with one point carrier and two primitive relations: ternary betweenness and
-quaternary segment congruence.
+This independent showcase develops synthetic geometry directly from axioms.
+Instead of choosing coordinates in `R^2`, it starts with one point carrier and
+two primitive relations: ternary betweenness and quaternary segment
+congruence.
 
 The executable Litex slice now contains:
 

@@ -3,7 +3,11 @@
 # Named settings are the reusable source of parameter bundles and laws.
 # Concrete propositions elaborate those bundles to their existing flat ABI;
 # theorem-writing uses the same settings directly.
+# Included: cancellation and uniqueness laws, group homomorphisms, subgroup
+# and normal-subgroup predicates, and the theorem that a kernel is normal.
 
+# The group setting supplies one carrier, multiplication, identity, inverse,
+# and the standard group laws to every theorem that names it.
 setting GroupSetting(A nonempty_set, mul fn(x, y A) A, one A, inv fn(x A) A):
     forall u, v, w A:
         mul(mul(u, v), w) = mul(u, mul(v, w))
@@ -44,6 +48,8 @@ prop is_group_homomorphism([GroupSetting(A, mul_A, one_A, inv_A)], [GroupSetting
     forall x, y A:
         f(mul_A(x, y)) = mul_B(f(x), f(y))
 
+# A homomorphism setting combines its source and target groups with the single
+# multiplication-preservation law used by downstream theorems.
 setting GroupHomomorphismSetting([GroupSetting(A, mul_A, one_A, inv_A)], [GroupSetting(B, mul_B, one_B, inv_B)], f fn(x A) B):
     forall x, y A:
         f(mul_A(x, y)) = mul_B(f(x), f(y))

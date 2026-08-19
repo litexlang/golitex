@@ -497,6 +497,14 @@ impl LitexToLeanObjectIr {
                 LitexToLeanBuiltinObjectOperatorIr::BigIntersect,
                 value.left.as_ref(),
             ),
+            Obj::IndexUnion(_) => Err(
+                "Litex-to-Lean does not yet support `index_union`; native indexed-set-family semantics are intentionally deferred"
+                    .to_string(),
+            ),
+            Obj::IndexIntersect(_) => Err(
+                "Litex-to-Lean does not yet support `index_intersect`; native indexed-set-family semantics are intentionally deferred"
+                    .to_string(),
+            ),
             Obj::PowerSet(value) => unary(
                 obj,
                 LitexToLeanBuiltinObjectOperatorIr::PowerSet,
@@ -723,6 +731,22 @@ mod tests {
 
         let error = LitexToLeanObjectIr::lower(&unresolved).unwrap_err();
         assert!(error.contains("resolved SymbolId"));
+    }
+
+    #[test]
+    fn indexed_set_family_operators_fail_closed_until_lean_semantics_are_added() {
+        let index_set: Obj = ListSet::new(vec![]).into();
+        let ambient_set: Obj = StandardSet::N.into();
+        let family: Obj = Identifier::new("family".to_string()).into();
+
+        let union: Obj =
+            IndexUnion::new(index_set.clone(), ambient_set.clone(), family.clone()).into();
+        let union_error = LitexToLeanObjectIr::lower(&union).unwrap_err();
+        assert!(union_error.contains("does not yet support `index_union`"));
+
+        let intersection: Obj = IndexIntersect::new(index_set, ambient_set, family).into();
+        let intersection_error = LitexToLeanObjectIr::lower(&intersection).unwrap_err();
+        assert!(intersection_error.contains("does not yet support `index_intersect`"));
     }
 
     #[test]

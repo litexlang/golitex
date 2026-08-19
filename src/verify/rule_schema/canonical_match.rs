@@ -256,6 +256,16 @@ pub(crate) fn canonical_obj_view(obj: &Obj) -> Result<CanonicalObjView<'_>, Cano
             scalars: Vec::new(),
             children: vec![&x.index_set, &x.family_set, &x.family_fn],
         },
+        Obj::IndexUnion(x) => CanonicalObjView {
+            tag: ObjKind::IndexUnion,
+            scalars: Vec::new(),
+            children: vec![&x.index_set, &x.ambient_set, &x.family_fn],
+        },
+        Obj::IndexIntersect(x) => CanonicalObjView {
+            tag: ObjKind::IndexIntersect,
+            scalars: Vec::new(),
+            children: vec![&x.index_set, &x.ambient_set, &x.family_fn],
+        },
         Obj::ListSet(x) => CanonicalObjView {
             tag: ObjKind::ListSet,
             scalars: vec![CanonicalScalar::Arity(x.list.len())],

@@ -1,0 +1,19 @@
+{
+  "target": "lean/examples/25_ExplicitSourceAxioms.lit",
+  "attempts": [
+    {
+      "status": "failed",
+      "source": "try:\n    abstract_prop unproved(x)\n\n    $unproved(1)",
+      "evidence": "persistent -session -before block event ok=false; verify_process: verification failed; failed_goal: $unproved(1)",
+      "lesson": "Declaring an abstract predicate interface does not prove any application; only an explicit trust statement may add that proposition."
+    }
+  ],
+  "accepted_blocks": [
+    {
+      "id": "abstract_and_trust",
+      "source": "try:\n    abstract_prop marked(x)\n\n    trust forall y R:\n        y = 1\n        =>:\n            $marked(y)",
+      "evidence": "persistent -session -before block event ok=true",
+      "lesson": "The verifier retains the abstract interface and explicit trusted proposition as distinct statement kinds."
+    }
+  ]
+}

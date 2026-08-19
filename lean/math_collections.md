@@ -59,9 +59,11 @@ call interface; it does not claim function extensionality.
 real membership in the same object/set semantics instead of introducing a
 second casting subsystem.
 
-`Litex.Lt x y` and `Litex.Le x y` existentially select real representatives
-and apply Mathlib's native `<` and `≤`. Both predicates transport across
-`Same`. The rule `Lt x y → Le x y` needs no uniqueness assumption.
+`Litex.OrderValue z := z.re` is the canonical Mathlib-ordered observation of
+the compiler's numeric `ℂ` carrier. Custom `Litex.Lt x y` and `Litex.Le x y`
+apply native real `<` and `≤` to those two canonical observations. Source
+admission remains verifier-owned: the generated theorem retains exact `In _ R`
+proofs even though the relation itself reduces definitionally to Mathlib.
 
 Zero-ended source comparisons take a canonical route. The compiler lowers
 `0 < x` to `Litex.Positive x` and `0 ≤ x` to `Litex.Nonnegative x`. Each
@@ -69,11 +71,13 @@ proposition stores one `AsReal` witness for `x`; its zero endpoint is
 Mathlib's native real zero rather than another independently selected Litex
 representative. Sign rules use this contract.
 
-The core distinguishes choosing one representative from comparing two
-independently selected representatives. `Litex.RealCoherence` remains the
-explicit certificate shape consumed by the latter order theorems, and the
-header postulates no inhabitant. Example 22's nonzero elimination avoids this
-obligation by retaining the exact semantic nonzero certificate in the carrier.
+Example 2 implements the general-order contract. Its verifier certificate
+retains the real-carrier conjunction followed by the two ordered premises;
+compiler validates the endpoints, one shared middle term, and strictness before
+calling `Litex.Lt.trans`, `Lt.transLe`, `Le.transLt`, or `Le.trans`. There is no
+`RealCoherence` declaration or assumption. The nearest boundary is executable:
+the verifier rejects `forall a, b C: a < b` because both operands must belong
+to `R` before compiler IR exists.
 
 ## Exact-carrier sets
 
@@ -171,7 +175,7 @@ Mathlib's `Real.exp_pos` and `Real.pi_pos`. Membership projects to `R` and then
 to `C` without retyping the source object.
 
 `Rules.positiveOfInRPos` opens the exact subtype witness and constructs
-`Litex.Lt (0 : ℂ) x` with that same real representative. The forall emitter
+`Litex.Positive x` with that same real representative. The forall emitter
 materializes this verifier-inferred rule under its retained FactId before a
 later conclusion cites it.
 
@@ -288,9 +292,37 @@ Named real functions support identity and expression trees built from their
 parameters, natural literals, and `+`, `-`, `*`, `/`. Checked reduction uses
 the closed native-operation `Same` congruence theorems. Application of an
 already quantified function may also cross arbitrarily many independent unary
-source layers. Standalone anonymous compound functions, generated probes for
-dependent parameter/returned sets, other construction domains/codomains, and
-other operations remain rejected.
+source layers.
+
+Example 24 makes the telescope genuinely dependent. `fn(x R, y {z R: z > x})
+R` renders the second exact carrier only after receiving `x` and its retained
+`R` membership, while `fn(x R) {z R: z > x}` returns that argument-indexed
+subtype directly. The compiler uses the canonical numeric view only inside
+the dependent carrier; zero-ended `Positive` and `Nonnegative` domain clauses
+remain propositions on the original heterogeneous argument.
+
+The same example constructs compound anonymous `R -> R` values. Each literal
+is tied to its exact parser occurrence and verifier-owned binder scope. Its
+parameter premise is named locally, its typed body-membership closure is
+replayed, and the native real expression is returned. Direct application must
+also identify the exact `FunctionHead` WD child. Other construction
+domains/codomains and operators outside the reviewed real-expression family
+remain rejected.
+
+## Explicit source axiom boundary
+
+`Core.lean` and `Rules.lean` contain no axioms. Example 25 handles the two
+source forms which explicitly request opacity or trust. An `abstract_prop`
+with arity `n` becomes one source-scoped Lean predicate axiom with `n`
+independently universe-polymorphic object arguments. It supplies an interface,
+not a proof of any application. An explicit `trust` proposition becomes one
+separate source-scoped axiom under its exact stored FactId. Later citations and
+all verifier-inferred consequences are ordinary theorems.
+
+The focused compiler audit counts exactly those declarations and verifies that
+an ordinary checked source creates none. Litex `-strict` continues to reject
+explicit user trust by design; this tracer is gated by the ordinary release
+runner, exact generated-axiom audit, and the real Lean kernel.
 
 ## Concrete predicates
 
@@ -460,8 +492,8 @@ Mathlib native carriers
   -> membership transport       [proof]
   -> AsReal                     [definition: Same + native real]
   -> Positive / Nonnegative    [canonical Mathlib-zero order]
-  -> RealCoherence              [certificate interface, no inhabitant assumed]
-  -> Lt / Le                    [definition: native real order]
+  -> OrderValue                 [canonical Complex.re to native real]
+  -> Lt / Le                    [custom relation reducing to Mathlib order]
   -> order transport/bridges    [proof, still owned by Core.lean]
   -> Rules.lean                 [concrete verifier-certificate theorems]
   -> Litex.lean                 [public umbrella import]
@@ -472,10 +504,9 @@ Mathlib native carriers
   -> same-name generated examples [real Lean proof]
 ```
 
-There are currently no project-declared axiom or trust edges. A theorem may
-take `RealCoherence` as an ordinary explicit typeclass parameter; that is not a
-header axiom and remains visible in the generated theorem signature. The native
-`ℝ`/`ℂ` examples retain Mathlib's foundational dependencies (`propext`,
+There are currently no project-declared axiom or trust edges. Core contains no
+order coherence class or axiom; generic order transitivity is native Mathlib
+transitivity over `OrderValue`. The native `ℝ`/`ℂ` examples retain Mathlib's foundational dependencies (`propext`,
 `Classical.choice`, and `Quot.sound`). The next set-system decisions are
 extensional set equality, union/intersection carriers, power-set universes,
 and finiteness modulo `Same`.

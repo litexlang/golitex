@@ -664,6 +664,242 @@ impl Runtime {
         Ok(ExistFactEnum::ExistFact(exist_body))
     }
 
+    fn indexed_family_application(
+        &self,
+        family_fn: &Obj,
+        index: Obj,
+    ) -> Result<Option<Obj>, RuntimeError> {
+        let Some(head) = FnObjHead::from_callable_obj(family_fn.clone()) else {
+            return Ok(None);
+        };
+        let application: Obj = FnObj::new(head, vec![vec![Box::new(index)]]).into();
+        Ok(Some(
+            self.beta_reduce_complete_anonymous_application_once(&application)?
+                .unwrap_or(application),
+        ))
+    }
+
+    fn index_union_membership_exist_fact(
+        &self,
+        in_fact: &InFact,
+        index_union: &IndexUnion,
+    ) -> Result<Option<ExistFactEnum>, RuntimeError> {
+        let index_name = self.generate_internal_binder_name();
+        let index_group = self.fresh_param_group_with_type(
+            vec![index_name],
+            ParamType::Obj(index_union.index_set.as_ref().clone()),
+        )?;
+        let index_obj = obj_for_bound_param_in_scope(&index_group.params[0], ParamObjType::Exist);
+        let Some(fiber) =
+            self.indexed_family_application(index_union.family_fn.as_ref(), index_obj)?
+        else {
+            return Ok(None);
+        };
+        let element_in_fiber: AtomicFact =
+            InFact::new(in_fact.element.clone(), fiber, in_fact.line_file.clone()).into();
+        Ok(Some(ExistFactEnum::ExistFact(ExistentialSpec::new(
+            ParamDefWithType::new(vec![index_group]),
+            vec![element_in_fiber.into()],
+            in_fact.line_file.clone(),
+        )?)))
+    }
+
+    fn known_indices_for_indexed_family(&self, in_fact: &InFact, index_set: &Obj) -> Vec<Obj> {
+        let mut indices = match index_set {
+            Obj::ListSet(list) => list
+                .list
+                .iter()
+                .map(|index| index.as_ref().clone())
+                .collect::<Vec<_>>(),
+            _ => Vec::new(),
+        };
+        indices.extend(self.known_member_sets_for_big_union_family(in_fact, index_set));
+        let mut seen = Vec::new();
+        indices.retain(|index| {
+            let key = index.to_string();
+            if seen.contains(&key) {
+                return false;
+            }
+            seen.push(key);
+            true
+        });
+        indices
+    }
+
+    /// Indexed-union introduction: `x in A(i)` for one `i in I` proves
+    /// `x in index_union(I, X, A)`.
+    pub(super) fn verify_in_fact_in_index_union_by_index_witness(
+        &mut self,
+        in_fact: &InFact,
+        index_union: &IndexUnion,
+        builtin_state: &UseBuiltinRuleVerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        if let Some(exist_fact) = self.index_union_membership_exist_fact(in_fact, index_union)? {
+            let exist_result =
+                self.verify_exist_fact_with_known_exist_fact(&exist_fact, &exist_fact)?;
+            if exist_result.is_true() {
+                return Ok(
+                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                        in_fact.clone().into(),
+                        "index_union membership from an indexed fiber witness".to_string(),
+                        vec![exist_result],
+                    )
+                    .into(),
+                );
+            }
+        }
+
+        for index in self.known_indices_for_indexed_family(in_fact, index_union.index_set.as_ref())
+        {
+            let index_member: AtomicFact = InFact::new(
+                index.clone(),
+                index_union.index_set.as_ref().clone(),
+                in_fact.line_file.clone(),
+            )
+            .into();
+            let index_is_literal_member = matches!(
+                index_union.index_set.as_ref(),
+                Obj::ListSet(list)
+                    if list.list.iter().any(|listed| {
+                        objs_match_for_pattern(listed.as_ref(), &index)
+                    })
+            );
+            let index_result = if index_is_literal_member {
+                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                    index_member.clone().into(),
+                    "index is listed in the literal index set".to_string(),
+                    Vec::new(),
+                )
+                .into()
+            } else {
+                self.verify_atomic_fact_as_builtin_rule_premise(&index_member, builtin_state)?
+            };
+            if !index_result.is_true() {
+                continue;
+            }
+            let Some(fiber) =
+                self.indexed_family_application(index_union.family_fn.as_ref(), index)?
+            else {
+                continue;
+            };
+            let fiber_member: AtomicFact =
+                InFact::new(in_fact.element.clone(), fiber, in_fact.line_file.clone()).into();
+            let fiber_result =
+                self.verify_atomic_fact_as_builtin_rule_premise(&fiber_member, builtin_state)?;
+            if fiber_result.is_true() {
+                return Ok(
+                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                        in_fact.clone().into(),
+                        "index_union membership from an indexed fiber witness".to_string(),
+                        vec![index_result, fiber_result],
+                    )
+                    .into(),
+                );
+            }
+        }
+
+        Ok(StmtUnknown::new().into())
+    }
+
+    fn index_intersect_membership_forall_fact(
+        &self,
+        in_fact: &InFact,
+        index_intersect: &IndexIntersect,
+    ) -> Result<Option<ForallFact>, RuntimeError> {
+        let index_name = self.generate_internal_binder_name();
+        let index_group = self.fresh_param_group_with_type(
+            vec![index_name],
+            ParamType::Obj(index_intersect.index_set.as_ref().clone()),
+        )?;
+        let index_obj = obj_for_bound_param_in_scope(&index_group.params[0], ParamObjType::Forall);
+        let Some(fiber) =
+            self.indexed_family_application(index_intersect.family_fn.as_ref(), index_obj)?
+        else {
+            return Ok(None);
+        };
+        let element_in_fiber: AtomicFact =
+            InFact::new(in_fact.element.clone(), fiber, in_fact.line_file.clone()).into();
+        Ok(Some(ForallFact::new_canonical_forall(
+            ParamDefWithType::new(vec![index_group]),
+            vec![],
+            vec![element_in_fiber.into()],
+            in_fact.line_file.clone(),
+        )?))
+    }
+
+    /// Indexed-intersection introduction: the element must be in the ambient
+    /// set and in every indexed fiber. The ambient premise is essential when
+    /// `I` is empty, where the result is exactly `X`.
+    pub(super) fn verify_in_fact_in_index_intersect_by_pointwise_membership(
+        &mut self,
+        in_fact: &InFact,
+        index_intersect: &IndexIntersect,
+        builtin_state: &UseBuiltinRuleVerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        let ambient_member: AtomicFact = InFact::new(
+            in_fact.element.clone(),
+            index_intersect.ambient_set.as_ref().clone(),
+            in_fact.line_file.clone(),
+        )
+        .into();
+        let ambient_result =
+            self.verify_atomic_fact_as_builtin_rule_premise(&ambient_member, builtin_state)?;
+        if !ambient_result.is_true() {
+            return Ok(StmtUnknown::new().into());
+        }
+
+        if let Obj::ListSet(indices) = index_intersect.index_set.as_ref() {
+            let mut evidence = vec![ambient_result];
+            for index in &indices.list {
+                let Some(fiber) = self.indexed_family_application(
+                    index_intersect.family_fn.as_ref(),
+                    index.as_ref().clone(),
+                )?
+                else {
+                    return Ok(StmtUnknown::new().into());
+                };
+                let fiber_member: AtomicFact =
+                    InFact::new(in_fact.element.clone(), fiber, in_fact.line_file.clone()).into();
+                let fiber_result =
+                    self.verify_atomic_fact_as_builtin_rule_premise(&fiber_member, builtin_state)?;
+                if !fiber_result.is_true() {
+                    return Ok(StmtUnknown::new().into());
+                }
+                evidence.push(fiber_result);
+            }
+            return Ok(
+                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                    in_fact.clone().into(),
+                    "index_intersect membership in the ambient set and every indexed fiber"
+                        .to_string(),
+                    evidence,
+                )
+                .into(),
+            );
+        }
+
+        let Some(forall_fact) =
+            self.index_intersect_membership_forall_fact(in_fact, index_intersect)?
+        else {
+            return Ok(StmtUnknown::new().into());
+        };
+        let Some(forall_result) = self.verify_forall_fact_from_known_cache_only(&forall_fact)?
+        else {
+            return Ok(StmtUnknown::new().into());
+        };
+        if !forall_result.is_true() {
+            return Ok(StmtUnknown::new().into());
+        }
+        Ok(
+            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                in_fact.clone().into(),
+                "index_intersect membership in the ambient set and every indexed fiber".to_string(),
+                vec![ambient_result, forall_result],
+            )
+            .into(),
+        )
+    }
+
     // Replacement introduction: `z $in replacement(P, A)` follows from a
     // relation witness in the source set.
     // Example: `x $in A` and `$P(x, z)` prove `z $in replacement(P, A)`.

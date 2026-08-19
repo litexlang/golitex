@@ -1,5 +1,8 @@
 # Real analysis in Litex, setting-first.
 #
+# Included: epsilon tails, sequence limits and convergence, constant-sequence
+# convergence, uniqueness of limits, and a uniquely defined limit selector.
+#
 # Main line: epsilon tails -> convergence -> uniqueness of a sequence limit.
 
 prop is_tail_close_to(a seq(R), L R, epsilon R+, n0 N+):
@@ -18,6 +21,7 @@ prop has_limit(a seq(R), L R):
 prop is_convergent_sequence(a seq(R)):
     exist L R st {$has_limit(a, L)}
 
+# A constant sequence is eventually epsilon-close immediately, with n0 = 1.
 thm constant_sequence_has_limit:
     ? forall c R:
         $has_limit(fn(n N+) R {c}, c)
@@ -36,6 +40,8 @@ thm constant_sequence_has_limit:
             by def $is_tail_close_to(fn(n N+) R {c}, c, epsilon, 1)
     by def $has_limit(fn(n N+) R {c}, c)
 
+# If two limits differed, epsilon = abs(L1-L2)/3 and a common tail index would
+# violate the triangle inequality.
 thm sequence_limit_unique:
     ? forall a seq(R), L1, L2 R:
         $has_limit(a, L1)
@@ -66,6 +72,8 @@ thm sequence_limit_unique:
         abs(L1 - L2) <= abs(L1 - a(n0)) + abs(a(n0) - L2) < abs(L1 - L2)
         impossible abs(L1 - L2) = abs(L1 - L2)
 
+# Convergence plus uniqueness turns the relational limit into a callable
+# selector on the set of convergent real sequences.
 have fn lim by exist!:
     ? forall a seq(R):
         $is_convergent_sequence(a)

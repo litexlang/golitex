@@ -1,0 +1,33 @@
+# Tracer: exact dependent function carriers and compound anonymous values
+#
+# Before (Litex verified, but compiler emission stopped): a later parameter
+# carrier could depend on an earlier source parameter. The old unary renderer
+# had no exact target carrier for that dependency.
+#
+# Now the complete source layer is one dependent telescope. The second
+# parameter carrier consumes the exact first argument and its R-membership
+# witness; it is not flattened into an unrelated Lean function type.
+forall f fn(x R, y {z R: z > x}) R:
+    f = f
+
+# The return carrier may depend on the source argument as well. Application
+# unwraps the telescope only after checking a $in R, and f(a) has precisely
+# the subtype carrier {z R: z > a}.
+forall f fn(x R) {z R: z > x}, a R:
+    f(a) = f(a)
+
+# Compound anonymous bodies replay their own verifier-owned binder scope. The
+# retained x $in R premise and x + 1 $in R closure build a native R-to-R value;
+# equality does not replace the body with an identity-function shortcut.
+fn(x R) R {x + 1} = fn(y R) R {y + 1}
+
+# A direct anonymous application uses the exact FunctionHead WD child and its
+# exact argument-membership proof, then reduces through the native Fn carrier.
+forall a R:
+    fn(x R) R {x + 1}(a) = fn(x R) R {x + 1}(a)
+
+# Boundary: fn(x R) N {x} is rejected by Litex because x is not verified to
+# belong to the declared N return carrier. The compiler never invents a cast
+# or a proof to repair the missing source closure.
+# Evidence: target/release/litex -compact -strict -runner -f lean/examples/24_DependentAnonymousFunction.lit
+# and cargo test --release --test litex_to_lean_compiler_tracers

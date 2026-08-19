@@ -219,6 +219,10 @@ pub struct LitexToLeanHaveFnEqualStmtIr {
     pub symbol_id: SymbolId,
     pub name: String,
     pub function: LitexToLeanFunctionTypeIr,
+    /// Exact source object retained for proof-driven selection of the return
+    /// carrier representative. The lowered body alone does not preserve the
+    /// source FactId/WD render context needed by `Litex.In.rep`.
+    pub source_body: Obj,
     pub body: LitexToLeanObjectIr,
     pub parameter_premises: Vec<LitexToLeanLocalPremiseIr>,
     pub domain_premises: Vec<LitexToLeanLocalPremiseIr>,
@@ -236,6 +240,7 @@ impl fmt::Debug for LitexToLeanHaveFnEqualStmtIr {
             .field("symbol_id", &self.symbol_id)
             .field("name", &self.name)
             .field("function", &self.function)
+            .field("source_body", &self.source_body.to_string())
             .field("body", &self.body)
             .field("parameter_premises", &self.parameter_premises)
             .field("domain_premises", &self.domain_premises)

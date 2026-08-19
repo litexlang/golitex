@@ -355,6 +355,20 @@ impl Runtime {
                     builtin_state,
                 );
             }
+            (_, Obj::IndexUnion(index_union)) => {
+                return self.verify_in_fact_in_index_union_by_index_witness(
+                    in_fact,
+                    index_union,
+                    builtin_state,
+                );
+            }
+            (_, Obj::IndexIntersect(index_intersect)) => {
+                return self.verify_in_fact_in_index_intersect_by_pointwise_membership(
+                    in_fact,
+                    index_intersect,
+                    builtin_state,
+                );
+            }
             (_, Obj::Replacement(replacement)) => {
                 return self.verify_in_fact_in_replacement_by_relation_witness(
                     in_fact,
@@ -878,6 +892,36 @@ impl Runtime {
                 ),
             (Obj::FnRange(fn_range), Obj::PowerSet(power_set)) => self
                 .verify_in_fact_fn_range_in_power_set(in_fact, fn_range, power_set, builtin_state),
+            (Obj::IndexUnion(index_union), Obj::PowerSet(power_set))
+                if objs_equal_with_nested_binder_alpha_equivalence(
+                    index_union.ambient_set.as_ref(),
+                    power_set.set.as_ref(),
+                ) =>
+            {
+                Ok(
+                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                        in_fact.clone().into(),
+                        "index_union is contained in its explicit ambient set".to_string(),
+                        Vec::new(),
+                    )
+                    .into(),
+                )
+            }
+            (Obj::IndexIntersect(index_intersect), Obj::PowerSet(power_set))
+                if objs_equal_with_nested_binder_alpha_equivalence(
+                    index_intersect.ambient_set.as_ref(),
+                    power_set.set.as_ref(),
+                ) =>
+            {
+                Ok(
+                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                        in_fact.clone().into(),
+                        "index_intersect is contained in its explicit ambient set".to_string(),
+                        Vec::new(),
+                    )
+                    .into(),
+                )
+            }
             (_, Obj::PowerSet(power_set)) => {
                 self.verify_in_fact_in_power_set_via_subset(in_fact, power_set, builtin_state)
             }

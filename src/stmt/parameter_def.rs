@@ -818,6 +818,46 @@ fn collect_cited_param_indices_from_obj(
             shadowed_names,
             out,
         ),
+        Obj::IndexUnion(x) => {
+            collect_cited_param_indices_from_obj(
+                &x.index_set,
+                previous_param_indices,
+                shadowed_names,
+                out,
+            );
+            collect_cited_param_indices_from_obj(
+                &x.ambient_set,
+                previous_param_indices,
+                shadowed_names,
+                out,
+            );
+            collect_cited_param_indices_from_obj(
+                &x.family_fn,
+                previous_param_indices,
+                shadowed_names,
+                out,
+            );
+        }
+        Obj::IndexIntersect(x) => {
+            collect_cited_param_indices_from_obj(
+                &x.index_set,
+                previous_param_indices,
+                shadowed_names,
+                out,
+            );
+            collect_cited_param_indices_from_obj(
+                &x.ambient_set,
+                previous_param_indices,
+                shadowed_names,
+                out,
+            );
+            collect_cited_param_indices_from_obj(
+                &x.family_fn,
+                previous_param_indices,
+                shadowed_names,
+                out,
+            );
+        }
         Obj::PowerSet(x) => collect_cited_param_indices_from_obj(
             &x.set,
             previous_param_indices,

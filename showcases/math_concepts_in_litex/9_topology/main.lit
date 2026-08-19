@@ -2,7 +2,11 @@
 #
 # All set constructions below are native Litex objects.  In particular,
 # arbitrary unions use big_union and preimages use set builders.
+# Included: topology laws, finite unions, continuity and composition, the
+# closed-preimage characterization, compactness, and continuous compact images.
 
+# A topology is represented by its family of open subsets, closed under finite
+# intersections and arbitrary unions.
 setting TopologicalSpaceSetting(X set, open_sets power_set(power_set(X))):
     {} $in open_sets
     X $in open_sets
@@ -167,6 +171,8 @@ prop has_closed_preimages([TopologicalMapSetting]):
         =>:
             $is_closed(X, open_sets_X, {x X: f(x) $in F})
 
+# Preimages commute with relative complements; extensionality proves the set
+# identity element by element.
 thm preimage_of_relative_complement:
     ? forall X, Y set, f fn(x X) Y, F power_set(Y):
         {x X: f(x) $in set_minus(Y, F)} = set_minus(X, {x X: f(x) $in F})
@@ -219,6 +225,8 @@ thm continuous_map_has_closed_preimages:
         by def $is_closed(X, open_sets_X, {x X: f(x) $in F})
     by def $has_closed_preimages(X, open_sets_X, Y, open_sets_Y, f)
 
+# Conversely, apply the closed-preimage hypothesis to the complement of an
+# open set and use the double-complement identity.
 thm closed_preimages_imply_continuous:
     ? forall [TopologicalMapSetting]:
         $has_closed_preimages(X, open_sets_X, Y, open_sets_Y, f)
@@ -276,6 +284,8 @@ prop is_compact_subset([TopologicalSpaceSetting], K power_set(X)):
         =>:
             exist J power_set(Index) st {$is_finite_set(J), K $subset big_union(fn_range(fn(index J) open_sets {cover(index)}))}
 
+# Pull an open cover of f(K) back to K, choose a finite subcover there, and
+# push those finitely many open sets forward to cover the image.
 thm continuous_image_of_compact_is_compact:
     ? forall [ContinuousMapSetting], K power_set(X):
         $is_compact_subset(X, open_sets_X, K)

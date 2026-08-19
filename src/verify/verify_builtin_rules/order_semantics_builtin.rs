@@ -243,10 +243,11 @@ impl Runtime {
                 steps.push(first_result);
                 steps.push(second_result);
                 return Ok(Some(
-                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                    VerifiedFactStmtIr::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         atomic_fact.clone().into(),
                         "order: transitivity through a shared ordered numeric middle term"
                             .to_string(),
+                        BuiltinRuleEvidence::Arithmetic(ArithmeticBuiltinRule::OrderTransitivity),
                         steps,
                     )
                     .into(),

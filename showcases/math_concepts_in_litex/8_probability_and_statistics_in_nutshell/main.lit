@@ -1,5 +1,8 @@
 # Probability and statistics in Litex, setting-first.
 #
+# Included: two-point probability vectors, expectation and variance, linearity
+# of expectation, a fair-coin calculation, conditional probability, and Bayes.
+#
 # Main line: finite distributions -> expectation and variance -> Bayes' rule.
 
 prop is_probability_vector2(p finite_seq(R, 2)):
@@ -11,6 +14,7 @@ have fn expectation2(values, probs finite_seq(R, 2)) R = values(1) * probs(1) + 
 have fn variance2(values, probs finite_seq(R, 2)) R = (values(1) - expectation2(values, probs))^2 * probs(1) + (values(2) - expectation2(values, probs))^2 * probs(2)
 have fn affine_combine2(X, Y finite_seq(R, 2), a, b R) finite_seq(R, 2) = fn(k N+: k <= 2) R {a * X(k) + b * Y(k)}
 
+# Expanding the two coordinates proves linearity of expectation directly.
 thm expectation2_affine:
     ? forall X, Y finite_seq(R, 2), probs finite_seq(R, 2), a, b R:
         expectation2(affine_combine2(X, Y, a, b), probs) = a * expectation2(X, probs) + b * expectation2(Y, probs)
@@ -32,6 +36,8 @@ variance2(fair_coin_values, fair_coin_probs) = 1 / 4
 have fn conditional_probability(joint, evidence R: evidence > 0) R = joint / evidence
 have fn bayes_posterior(prior, likelihood, evidence R: evidence > 0) R = likelihood * prior / evidence
 
+# Bayes' rule here is the substitution joint = likelihood * prior into the
+# definition of conditional probability.
 thm bayes_rule:
     ? forall prior, likelihood, evidence, joint R:
         evidence > 0

@@ -606,6 +606,7 @@ impl LitexToLeanIrBuilder<'_> {
                 symbol_id: stmt.symbol_binding.id(),
                 name: stmt.name().to_string(),
                 function,
+                source_body,
                 body,
                 parameter_premises,
                 domain_premises,
@@ -1877,11 +1878,7 @@ impl LitexToLeanIrBuilder<'_> {
             }
 
             facts.push(LitexToLeanFactIr {
-                storage: LitexToLeanFactStorageIr::Stored(stored_fact_id_from_infer_result(
-                    &success.infers,
-                    goal,
-                    "by-cases exported goal",
-                )?),
+                storage: explicit_proof_result_storage(&success.infers, goal),
                 proposition: goal.clone(),
                 proof: LitexToLeanFactProofIr::CaseSplit {
                     coverage: Box::new(coverage.clone()),
@@ -1946,11 +1943,7 @@ impl LitexToLeanIrBuilder<'_> {
         )?;
         let explicit_keys = HashSet::from([stmt.to_prove.to_string()]);
         let fact = LitexToLeanFactIr {
-            storage: LitexToLeanFactStorageIr::Stored(stored_fact_id_from_infer_result(
-                &success.infers,
-                &stmt.to_prove,
-                "by-contra exported goal",
-            )?),
+            storage: explicit_proof_result_storage(&success.infers, &stmt.to_prove),
             proposition: stmt.to_prove.clone(),
             proof: LitexToLeanFactProofIr::ByContradiction {
                 reverse_assumption: LitexToLeanReverseAssumptionIr {
@@ -2998,6 +2991,13 @@ impl LitexToLeanIrBuilder<'_> {
                 &goal.line_file(),
                 "checked function-definition reduction does not match the recorded goal orientation",
             ));
+        }
+        if obj_equality_key(&goal_equality.left) == obj_equality_key(&goal_equality.right) {
+            return Ok(LitexToLeanFactProofIr::RuleApplication {
+                rule: LitexToLeanProofRuleIr::ObjectReflexivity,
+                parameter_requirements: Vec::new(),
+                premises: Vec::new(),
+            });
         }
         if !reduction.reduced_matches_other_by_alpha
             || !objs_equal_with_nested_binder_alpha_equivalence(
@@ -5201,6 +5201,20 @@ fn stored_fact_id_from_infer_result(
                 ),
             )
         })
+}
+
+fn explicit_proof_result_storage(
+    infer_result: &InferResult,
+    expected: &Fact,
+) -> LitexToLeanFactStorageIr {
+    let expected_text = expected.to_string();
+    infer_result
+        .store_fact_outputs
+        .iter()
+        .find(|output| output.itself_and_why_itself_is_stored.0.to_string() == expected_text)
+        .and_then(|output| output.fact_id)
+        .map(LitexToLeanFactStorageIr::Stored)
+        .unwrap_or(LitexToLeanFactStorageIr::Anonymous)
 }
 
 fn added_fact_id_from_infer_result(
