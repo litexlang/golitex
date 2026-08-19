@@ -184,6 +184,12 @@ impl Runtime {
             Obj::BigIntersect(inner) => {
                 self.inst_big_intersect(inner, param_to_arg_map, param_obj_type)
             }
+            Obj::IndexUnion(inner) => {
+                self.inst_index_union(inner, param_to_arg_map, param_obj_type)
+            }
+            Obj::IndexIntersect(inner) => {
+                self.inst_index_intersect(inner, param_to_arg_map, param_obj_type)
+            }
             Obj::ListSet(inner) => self.inst_list_set(inner, param_to_arg_map, param_obj_type),
             Obj::SetBuilder(inner) => {
                 self.inst_set_builder(inner, param_to_arg_map, param_obj_type)
@@ -743,6 +749,38 @@ impl Runtime {
             param_to_arg_map,
             param_obj_type,
         )?)
+        .into())
+    }
+
+    pub fn inst_index_union(
+        &self,
+        index_union: &IndexUnion,
+        param_to_arg_map: &HashMap<String, Obj>,
+        param_obj_type: ParamObjType,
+    ) -> Result<Obj, RuntimeError> {
+        Ok(IndexUnion::new(
+            self.inst_obj(&index_union.index_set, param_to_arg_map, param_obj_type)?,
+            self.inst_obj(&index_union.ambient_set, param_to_arg_map, param_obj_type)?,
+            self.inst_obj(&index_union.family_fn, param_to_arg_map, param_obj_type)?,
+        )
+        .into())
+    }
+
+    pub fn inst_index_intersect(
+        &self,
+        index_intersect: &IndexIntersect,
+        param_to_arg_map: &HashMap<String, Obj>,
+        param_obj_type: ParamObjType,
+    ) -> Result<Obj, RuntimeError> {
+        Ok(IndexIntersect::new(
+            self.inst_obj(&index_intersect.index_set, param_to_arg_map, param_obj_type)?,
+            self.inst_obj(
+                &index_intersect.ambient_set,
+                param_to_arg_map,
+                param_obj_type,
+            )?,
+            self.inst_obj(&index_intersect.family_fn, param_to_arg_map, param_obj_type)?,
+        )
         .into())
     }
 

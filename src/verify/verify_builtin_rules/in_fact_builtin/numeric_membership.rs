@@ -1664,9 +1664,10 @@ impl Runtime {
                 let subset_fact =
                     SubsetFact::new(source_set, StandardSet::Z.into(), line_file.clone());
                 let subset_result =
-                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                    VerifiedFactStmtIr::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         subset_fact.into(),
                         "standard_set_subset".to_string(),
+                        BuiltinRuleEvidence::StandardSetSubset,
                         Vec::new(),
                     )
                     .into();
@@ -1736,9 +1737,10 @@ impl Runtime {
                 {
                     if source.is_subset_eq(&carrier) {
                         let subset_result =
-                            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                            VerifiedFactStmtIr::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                                 subset_fact.clone().into(),
                                 "standard_set_subset".to_string(),
+                                BuiltinRuleEvidence::StandardSetSubset,
                                 Vec::new(),
                             )
                             .into();

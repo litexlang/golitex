@@ -1,6 +1,90 @@
 use crate::prelude::*;
 
 impl Runtime {
+    fn verify_indexed_set_family_operator_well_defined(
+        &mut self,
+        index_set: &Obj,
+        ambient_set: &Obj,
+        family_fn: &Obj,
+        operator_display: &str,
+        verify_state: &UseContextVerifyState,
+    ) -> Result<(), RuntimeError> {
+        for (argument_index, child) in [index_set, ambient_set, family_fn].into_iter().enumerate() {
+            self.verify_child_obj_well_defined_and_store_cache(
+                child,
+                verify_state,
+                WellDefinedObjChildRole::ConstructorArgument { argument_index },
+            )?;
+        }
+
+        for set in [index_set, ambient_set] {
+            let is_set: Fact = IsSetFact::new(set.clone(), default_line_file()).into();
+            self.verify_fact_return_err_if_not_true(&is_set, verify_state)
+                .map_err(|e| {
+                    RuntimeError::from(WellDefinedRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_cause(
+                            format!("failed to verify well-defined of {operator_display}"),
+                            e,
+                        ),
+                    ))
+                })?;
+        }
+
+        let family_param_name = self.generate_internal_binder_name();
+        let family_fn_set: Obj = FnSet::new(
+            vec![self.fresh_param_group_with_set(vec![family_param_name], index_set.clone())?],
+            vec![],
+            PowerSet::new(ambient_set.clone()).into(),
+        )?
+        .into();
+        let family_fn_type: Fact =
+            InFact::new(family_fn.clone(), family_fn_set, default_line_file()).into();
+        self.verify_fact_return_err_if_not_true(&family_fn_type, verify_state)
+            .map_err(|e| {
+                RuntimeError::from(WellDefinedRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_cause(
+                        format!("failed to verify well-defined of {operator_display}"),
+                        e,
+                    ),
+                ))
+            })?;
+
+        Ok(())
+    }
+
+    /// `index_union(I, X, A)` is meaningful for every set `I`, including the
+    /// empty set, when `X` is a set and `A : I -> power_set(X)`.
+    pub(in crate::verify) fn verify_index_union_well_defined(
+        &mut self,
+        x: &IndexUnion,
+        verify_state: &UseContextVerifyState,
+    ) -> Result<(), RuntimeError> {
+        self.verify_indexed_set_family_operator_well_defined(
+            &x.index_set,
+            &x.ambient_set,
+            &x.family_fn,
+            &x.to_string(),
+            verify_state,
+        )
+    }
+
+    /// `index_intersect(I, X, A)` has the same typing contract as indexed
+    /// union; no nonemptiness premise is required because the ambient set is
+    /// the empty-family intersection.
+    pub(in crate::verify) fn verify_index_intersect_well_defined(
+        &mut self,
+        x: &IndexIntersect,
+        verify_state: &UseContextVerifyState,
+    ) -> Result<(), RuntimeError> {
+        self.verify_indexed_set_family_operator_well_defined(
+            &x.index_set,
+            &x.ambient_set,
+            &x.family_fn,
+            &x.to_string(),
+            verify_state,
+        )
+    }
+
     /// Mathematical contract: `power_set(S)` is meaningful when its base
     /// object `S` is well-defined; sethood is handled by the set semantics.
     pub(in crate::verify) fn verify_power_set_well_defined(

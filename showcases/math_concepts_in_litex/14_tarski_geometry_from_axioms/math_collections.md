@@ -2,8 +2,7 @@
 
 ## Purpose and scope
 
-This module is a synthetic counterpart to the analytic plane in
-`2_euclidean_geometry`. Its authoritative source is the
+This module develops synthetic geometry directly from the
 Schwabhäuser–Szmielew–Tarski axiom hierarchy and the Chapter 2–12 definitions
 exposed by GeoCoq. The executable target is a source-aligned minimal foundation:
 it declares the central relation introduced by each chapter and proves the

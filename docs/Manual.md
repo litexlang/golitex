@@ -374,6 +374,7 @@ by def {x R: 0 <= x} $subset R
 | `union(A, B)`, `intersect(A, B)` | Binary union and intersection |
 | `set_minus(A, B)` | Relative complement; write symmetric difference as `union(set_minus(A, B), set_minus(B, A))` |
 | `big_union(F)`, `big_intersect(F)` | Union or intersection of a family |
+| `index_union(I, X, A)`, `index_intersect(I, X, A)` | Union or intersection of the set-valued family `A : I -> power_set(X)`, with explicit ambient set `X` |
 | `power_set(A)` | Set of subsets of `A` |
 | `replacement(P, A)` | Replacement set defined by a functional predicate `P` |
 | `general_cart(I, S, g)` | Choice functions selecting one value from each factor `g(alpha)` |
@@ -460,7 +461,24 @@ similar set-valued syntax does not make them interchangeable:
 |---|---|---|
 | `big_union(F)` | `F` must be a well-defined family expression. | `A $in F` and `x $in A` introduce `x $in big_union(F)`. Conversely, known union membership exposes `exist A F st {x $in A}`. |
 | `big_intersect(F)` | `F` must be a well-defined family expression. | The current kernel has no matching automatic introduction/elimination package. Supply the needed family-membership theorem or facts explicitly. |
+| `index_union(I, X, A)` | `I` and `X` are sets and `A $in fn(index I) power_set(X)`. The function domain must be exactly `I`. | `x $in A(i)` for one `i $in I` introduces membership. Stored membership exposes `exist i I st {x $in A(i)}` and `x $in X`. The result belongs to `power_set(X)`. |
+| `index_intersect(I, X, A)` | Same signature as `index_union`; `I` may be empty. | `x $in X` together with `forall i I: x $in A(i)` introduces membership. Stored membership exposes both facts. The result belongs to `power_set(X)`. |
 | `replacement(P, A)` | `P` must be a binary user `prop`/`abstract_prop`; the context must already prove that each `x $in A` has at most one set-valued output. | A known relation witness introduces membership. Known membership exposes `exist x A st {$P(x, y)}`, and `have by preimage` gives that witness a name. |
+
+The empty-domain function is valid. Its indexed union is empty, while its
+indexed intersection is the explicit ambient set:
+
+```litex
+have fn empty_family(empty_index {}) power_set(N) = {}
+index_union({}, N, empty_family) = {}
+index_intersect({}, N, empty_family) = N
+```
+
+For compatibility with the older family-object forms,
+`index_union(I, X, A) = big_union(fn_range(A))`. The analogous
+`big_intersect(fn_range(A))` bridge is available when `I` is nonempty; the
+three-argument object remains the canonical form when empty-index semantics
+matter.
 
 Family-union construction and elimination are both checked facts:
 
@@ -3399,7 +3417,7 @@ presentation.
 | Standard numeric carriers | Literal classification; the inclusion chain among signed/nonzero `N`, `Z`, `Q`, `R`, and `C`; arithmetic closure at the narrowest supported carrier; refinement from integer/real carrier plus known sign; nonmembership for resolved literals; `floor`/`ceil` in `Z`, `sign` in `Z`, `factorial(N)` in `N+`, and numeric carriers for gcd/lcm/extrema/aggregates. |
 | Displayed sets and builders | Equality with one displayed element introduces membership, and disequality from every element introduces nonmembership. Builder membership requires base membership and all instantiated defining facts; stored builder membership exposes those facts. A builder over a finite base is finite. |
 | Binary set operations | Either-side membership introduces union membership; intersection requires both sides; difference requires left membership and right nonmembership. Corresponding stored intersection/difference facts expose their component facts. |
-| Family and image operators | `big_union` uses a member-set witness; `replacement` uses its functional relation witness; `fn_range` uses a well-defined application. Stored membership exposes the existential source described in the object section. |
+| Family and image operators | `big_union` uses a member-set witness; `index_union(I,X,A)` uses an index witness; `index_intersect(I,X,A)` uses ambient membership plus every indexed fiber; `replacement` uses its functional relation witness; `fn_range` uses a well-defined application. Stored membership exposes the corresponding existential or universal source described in the object section. |
 | Ranges and intervals | `range(a,b)` uses integer `a<=i<b`; `closed_range(a,b)` uses `a<=i<=b`. Real intervals require real membership plus their open/closed endpoint bounds. Half-infinite intervals impose only their displayed endpoint bound. |
 | Power sets and inclusions | `A $subset B` introduces `A $in power_set(B)`. A displayed set or builder belongs to a power set after its elements/base are contained. One directly known inclusion can lift an element into the target set. |
 | Products and indexed objects | Tuple membership checks every component against the corresponding Cartesian factor. General Cartesian membership checks a function into `big_union(S)` plus every indexed factor. Sequence and matrix literals check length/shape and every entry. Projection and index access inherit the selected carrier. |
@@ -3729,6 +3747,8 @@ Main families are:
 | `x $in intersect(A,B)` | Both component memberships |
 | `x $in set_minus(A,B)` | `x $in A` and `not x $in B`; a singleton right side also yields the matching disequality |
 | `x $in big_union(F)` | `exist A F st {x $in A}` |
+| `x $in index_union(I,X,A)` | `x $in X` and `exist i I st {x $in A(i)}` |
+| `x $in index_intersect(I,X,A)` | `x $in X` and `forall i I: x $in A(i)` |
 | `y $in replacement(P,A)` | `exist x A st {$P(x,y)}` |
 | `y $in fn_range(f)` | Membership in the declared codomain plus an existential preimage carrying every instantiated domain condition and `y=f(args)` |
 | `A $in power_set(B)` | `A $subset B` |

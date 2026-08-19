@@ -120,6 +120,7 @@ pub use crate::litex_to_lean_ir::{
     LitexToLeanDoNothingStmtIr, LitexToLeanEqualitySideIr, LitexToLeanExampleStmtIr,
     LitexToLeanExistentialProjectionRoleIr, LitexToLeanExistentialWitnessIr, LitexToLeanFactIr,
     LitexToLeanFactProofIr, LitexToLeanFactStatementIr, LitexToLeanFactStorageIr,
+    LitexToLeanFiniteSetBuiltinRuleIr,
     LitexToLeanFunctionApplicationIr, LitexToLeanFunctionParameterIr, LitexToLeanFunctionTypeIr,
     LitexToLeanHaveFnEqualStmtIr, LitexToLeanHaveObjByExistFactsStmtIr,
     LitexToLeanHaveObjEqualStmtIr, LitexToLeanHaveObjInNonemptySetOrParamTypeStmtIr,
@@ -202,6 +203,8 @@ pub use crate::obj::Identifier;
 pub use crate::obj::IdentifierWithMod;
 pub use crate::obj::ImaginaryPart;
 pub use crate::obj::ImaginaryUnit;
+pub use crate::obj::IndexIntersect;
+pub use crate::obj::IndexUnion;
 pub use crate::obj::InstantiatedTemplateObj;
 pub use crate::obj::Intersect;
 pub use crate::obj::IntervalObj;
@@ -360,7 +363,8 @@ pub use crate::result::{
     ClosedNumericComparisonBuiltinRuleEvidence, ComplexArithmeticMembershipClosureBuiltinRule,
     DisjunctionIntroductionBuiltinRuleEvidence,
     FunctionApplicationReturnMembershipBuiltinRuleEvidence,
-    FunctionSetMembershipBuiltinRuleEvidence, IntegerMembershipClosureBuiltinRule,
+    FiniteSetBuiltinRule, FunctionSetMembershipBuiltinRuleEvidence,
+    IntegerMembershipClosureBuiltinRule,
     KnownEqualityBuiltinRuleEvidence, KnownEqualityBuiltinRuleStep,
     NativeConstantMembershipBuiltinRule, NaturalMembershipClosureBuiltinRule,
     RationalMembershipClosureBuiltinRule, RealArithmeticMembershipClosureBuiltinRule,
@@ -601,6 +605,8 @@ pub use crate::common::keywords::IMG;
 pub use crate::common::keywords::IMPORT;
 pub use crate::common::keywords::IMPOSSIBLE;
 pub use crate::common::keywords::IN;
+pub use crate::common::keywords::INDEX_INTERSECT;
+pub use crate::common::keywords::INDEX_UNION;
 pub use crate::common::keywords::INDUC;
 pub use crate::common::keywords::INDUC_PARAM_2_NAME;
 pub use crate::common::keywords::INJECTIVE;

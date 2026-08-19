@@ -157,6 +157,16 @@ impl Obj {
             }
             Obj::BigUnion(union) => union.left.contains_native_complex_syntax(),
             Obj::BigIntersect(intersect) => intersect.left.contains_native_complex_syntax(),
+            Obj::IndexUnion(index_union) => {
+                index_union.index_set.contains_native_complex_syntax()
+                    || index_union.ambient_set.contains_native_complex_syntax()
+                    || index_union.family_fn.contains_native_complex_syntax()
+            }
+            Obj::IndexIntersect(index_intersect) => {
+                index_intersect.index_set.contains_native_complex_syntax()
+                    || index_intersect.ambient_set.contains_native_complex_syntax()
+                    || index_intersect.family_fn.contains_native_complex_syntax()
+            }
             Obj::PowerSet(power_set) => power_set.set.contains_native_complex_syntax(),
             Obj::ListSet(list) => list
                 .list
@@ -429,6 +439,28 @@ impl Obj {
             }
             Obj::BigUnion(union) => union.left.contains_native_transcendental_syntax(),
             Obj::BigIntersect(intersect) => intersect.left.contains_native_transcendental_syntax(),
+            Obj::IndexUnion(index_union) => {
+                index_union
+                    .index_set
+                    .contains_native_transcendental_syntax()
+                    || index_union
+                        .ambient_set
+                        .contains_native_transcendental_syntax()
+                    || index_union
+                        .family_fn
+                        .contains_native_transcendental_syntax()
+            }
+            Obj::IndexIntersect(index_intersect) => {
+                index_intersect
+                    .index_set
+                    .contains_native_transcendental_syntax()
+                    || index_intersect
+                        .ambient_set
+                        .contains_native_transcendental_syntax()
+                    || index_intersect
+                        .family_fn
+                        .contains_native_transcendental_syntax()
+            }
             Obj::PowerSet(power_set) => power_set.set.contains_native_transcendental_syntax(),
             Obj::ListSet(list) => list
                 .list

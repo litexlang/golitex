@@ -45,6 +45,7 @@ object-introduction family of `have` statements listed below.
 | Set builders `{x S: P(x)}` | The subset of `S` whose elements satisfy the predicate in the builder. | The base set and predicate body must be well-defined under the bound variable assumptions. |
 | `union(A, B)`, `intersect(A, B)`, `set_minus(A, B)` | Ordinary binary union, intersection, and relative complement. Symmetric difference is `union(set_minus(A, B), set_minus(B, A))`. | Arguments must be well-defined sets when set facts about the result are used. |
 | `big_union(F)`, `big_intersect(F)` | Union and intersection over a family of sets. | Each operator takes exactly one well-defined family object. |
+| `index_union(I, X, A)`, `index_intersect(I, X, A)` | Indexed union/intersection of `A : I -> power_set(X)`. | `I` and `X` are sets and the family has exact domain `I`. Empty `I` is valid: union is `{}` and intersection is `X`. Both results lie in `power_set(X)`. |
 | `power_set(A)` | The set of all subsets of `A`. | `A` must be well-defined; proving `B $in power_set(A)` amounts to proving `B $subset A`. |
 | `range(a, b)`, `closed_range(a, b)`, `a...b` | Integer-style ranges; `range` is half-open and `closed_range`/`...` are closed. | Endpoints must be integer-like where range enumeration facts are used. Positive nonemptiness reduces to `a < b` for `range` and `a <= b` for `closed_range`. |
 | Tuple `(a, b, ...)` | An ordered tuple with one-based projection syntax such as `(a, b)[1]`. | Coordinates must be well-defined. |

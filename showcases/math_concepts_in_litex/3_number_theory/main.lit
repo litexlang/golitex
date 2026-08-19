@@ -1,8 +1,12 @@
-# Scratch tracer: divisibility exposes a witness that composes transitively.
+# Elementary number theory in Litex.
+#
+# Included: witness-based divisibility, linear combinations, a Bezout-style
+# gcd certificate, the linear Diophantine criterion, and modular congruence.
 
 prop divides_by(d, n Z):
     exist k Z st {n = d * k}
 
+# Compose the two divisibility witnesses by multiplying them.
 thm divisibility_is_transitive:
     ? forall a, b, c Z:
         $divides_by(a, b)
@@ -55,6 +59,8 @@ prop is_gcd_certificate(a, b, d Z):
 prop linear_diophantine_soluble(a, b, c Z):
     exist x, y Z st {a * x + b * y = c}
 
+# Build a complete gcd certificate for the concrete pair (84, 30), including
+# the Bezout identity 6 = -84 + 3 * 30.
 thm six_is_gcd_certificate_for_84_and_30:
     ? forall:
         $is_gcd_certificate(84, 30, 6)
@@ -78,6 +84,8 @@ thm six_is_gcd_certificate_for_84_and_30:
     by def:
         ? $is_gcd_certificate(84, 30, 6)
 
+# One direction of the Diophantine criterion: every represented target is
+# divisible by the certified gcd.
 thm diophantine_solution_implies_gcd_divides_target:
     ? forall a, b, c, d Z:
         $is_gcd_certificate(a, b, d)
@@ -93,6 +101,7 @@ thm diophantine_solution_implies_gcd_divides_target:
     a * x + b * y = c
     $divides_by(d, c)
 
+# The converse scales the Bezout coefficients by a divisibility witness for c.
 thm gcd_divides_target_implies_diophantine_solution:
     ? forall a, b, c, d Z:
         $is_gcd_certificate(a, b, d)
@@ -125,6 +134,7 @@ prop congruent_mod(a, b, modulus Z):
     modulus > 0
     $divides_by(modulus, a - b)
 
+# Addition preserves congruence because the two difference witnesses add.
 thm congruence_is_compatible_with_addition:
     ? forall a, b, c, d, modulus Z:
         $congruent_mod(a, b, modulus)

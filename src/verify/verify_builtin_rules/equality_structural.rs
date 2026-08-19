@@ -589,6 +589,16 @@ impl Runtime {
                 (&left.family_set, &right.family_set),
                 (&left.family_fn, &right.family_fn),
             ),
+            (Obj::IndexUnion(left), Obj::IndexUnion(right)) => compare_pairs!(
+                (&left.index_set, &right.index_set),
+                (&left.ambient_set, &right.ambient_set),
+                (&left.family_fn, &right.family_fn),
+            ),
+            (Obj::IndexIntersect(left), Obj::IndexIntersect(right)) => compare_pairs!(
+                (&left.index_set, &right.index_set),
+                (&left.ambient_set, &right.ambient_set),
+                (&left.family_fn, &right.family_fn),
+            ),
             _ => Ok(false),
         }
     }

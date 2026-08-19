@@ -1,5 +1,8 @@
 # Discrete mathematics in Litex, setting-first.
 #
+# Included: native finite-set cardinalities, a recursive Pascal table,
+# binomial coefficients, and a checked proof of Pascal's identity.
+#
 # Main line: finite counting -> recursive binomial coefficients -> Pascal's identity.
 
 finite_set_size({1, 2, 3}) = 3
@@ -7,16 +10,21 @@ finite_set_size({4, 5}) = 2
 finite_set_size({1, 2, 3, 4, 5}) = 5
 finite_set_size({1, 2, 3, 4, 5}) = finite_set_size({1, 2, 3}) + finite_set_size({4, 5})
 
+# The Pascal table is defined recursively from its two boundary rows.
 have fn pascal_entry(a Z, b Z: a >= 0, b >= 0) N by induc a + b from 0:
     case a = 0: 1
     case a > 0:
         case b = 0: 1
         case b > 0: pascal_entry(a - 1, b) + pascal_entry(a, b - 1)
 
+# Binomial coefficients read the diagonal coordinates of the Pascal table and
+# are zero outside the usual range k <= n.
 have fn choose_fn(n, k N) N:
     case k <= n: pascal_entry(k, n - k)
     case k > n: 0
 
+# Normalize the three table coordinates and unfold one recursive Pascal step
+# to obtain choose(n,r) = choose(n-1,r) + choose(n-1,r-1).
 thm pascal_identity:
     ? forall n, r N+:
         r < n

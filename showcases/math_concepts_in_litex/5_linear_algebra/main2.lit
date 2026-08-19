@@ -2,7 +2,11 @@
 #
 # Unlike main.lit, this file treats the field and vector-space data as an
 # ambient theorem context. No first-class structure value is constructed.
+# Included: field/vector-space/linear-map settings, kernel and injectivity
+# results, concrete R and R^2 instances, and the x-axis projection example.
 
+# The field setting introduces scalar operations and laws directly into a
+# theorem context instead of constructing a record value.
 setting FieldSetting(K nonempty_set, scalar_zero, scalar_one K, scalar_add fn(x, y K) K, scalar_neg fn(x K) K, scalar_mul fn(x, y K) K, scalar_inv fn(x K) K):
     scalar_zero != scalar_one
     forall x, y, z K:
@@ -21,6 +25,8 @@ setting FieldSetting(K nonempty_set, scalar_zero, scalar_one K, scalar_add fn(x,
         =>:
             scalar_mul(x, scalar_inv(x)) = scalar_one
 
+# This reusable proposition contains exactly the vector laws added by a
+# vector-space setting on top of an existing field setting.
 prop has_vector_space_laws(K, V nonempty_set, scalar_one K, scalar_add fn(x, y K) K, scalar_mul fn(x, y K) K, zero_V V, add_V fn(x, y V) V, smul_V fn(a K, x V) V):
     forall x, y, z V:
         add_V(add_V(x, y), z) = add_V(x, add_V(y, z))
@@ -56,6 +62,7 @@ setting LinearMapSetting([VectorSpacesSetting], T fn(v V) W):
 
 prop is_linear_map_in_setting([LinearMapSetting])
 
+# Cancel a common left summand using an ambient additive inverse witness.
 thm setting_add_left_cancel:
     ? forall [VectorSpaceSetting], p, q, r V:
         add_V(p, q) = add_V(p, r)
@@ -65,6 +72,7 @@ thm setting_add_left_cancel:
     add_V(inverse_p, p) = add_V(p, inverse_p) = zero_V
     q = add_V(zero_V, q) = add_V(add_V(inverse_p, p), q) = add_V(inverse_p, add_V(p, q)) = add_V(inverse_p, add_V(p, r)) = add_V(add_V(inverse_p, p), r) = add_V(zero_V, r) = r
 
+# Distribute a scalar over zero+zero and cancel to prove a*0=0.
 thm setting_scalar_times_zero_vector:
     ? forall [VectorSpaceSetting], coefficient K:
         smul_V(coefficient, zero_V) = zero_V
@@ -89,6 +97,8 @@ thm setting_linear_map_sends_zero_to_zero:
     add_W(T(zero_V), T(zero_V)) = add_W(T(zero_V), zero_W)
     by thm setting_add_left_cancel(K, scalar_zero, scalar_one, scalar_add, scalar_neg, scalar_mul, scalar_inv, W, zero_W, add_W, smul_W, T(zero_V), T(zero_V), zero_W) => T(zero_V) = zero_W
 
+# A subspace is characterized by zero membership and closure under the two
+# ambient vector-space operations.
 prop is_subspace_in_setting([VectorSpaceSetting], U power_set(V)):
     zero_V $in U
     forall p, q V:
@@ -104,6 +114,8 @@ prop is_subspace_in_setting([VectorSpaceSetting], U power_set(V)):
 template<V, W set, zero_W W, T fn(v V) W>:
     have setting_linear_kernel power_set(V) = {v V: T(v) = zero_W}
 
+# The kernel set builder contains zero and is closed under addition and scalar
+# multiplication, hence is a subspace in the source setting.
 thm setting_linear_map_kernel_is_subspace:
     ? forall [LinearMapSetting]:
         $is_subspace_in_setting(K, scalar_zero, scalar_one, scalar_add, scalar_neg, scalar_mul, scalar_inv, V, zero_V, add_V, smul_V, \setting_linear_kernel<V, W, zero_W, T>)
@@ -148,6 +160,8 @@ have fn setting_real_add(x, y R) R = x + y
 have fn setting_real_neg(x R) R = -x
 have fn setting_real_mul(x, y R) R = x * y
 
+# Discharge every field-setting law for the ordinary real operations, including
+# the case-defined inverse at zero.
 thm setting_real_numbers_form_field:
     ? forall:
         $is_field_in_setting(R, 0, 1, setting_real_add, setting_real_neg, setting_real_mul, setting_real_inv)
@@ -202,6 +216,8 @@ thm setting_real_operation_values:
     setting_real_add(x, y) = x + y
     setting_real_mul(x, y) = x * y
 
+# Verify all vector-space laws for coordinatewise addition and scalar
+# multiplication on R^2.
 thm setting_real_plane_is_vector_space:
     ? forall:
         $is_vector_space_in_setting(R, 0, 1, setting_real_add, setting_real_neg, setting_real_mul, setting_real_inv, cart(R, R), (0, 0), setting_plane_add, setting_plane_smul)
@@ -286,6 +302,8 @@ thm setting_projection_x_axis_value:
         setting_projection_x_axis(u) = (u[1], 0)
     setting_projection_x_axis(u) = (u[1], 0)
 
+# Coordinate calculations show that projection onto the x-axis preserves both
+# addition and scalar multiplication.
 thm setting_projection_x_axis_is_linear:
     ? forall:
         $is_linear_map_in_setting(R, 0, 1, setting_real_add, setting_real_neg, setting_real_mul, setting_real_inv, cart(R, R), cart(R, R), (0, 0), setting_plane_add, setting_plane_smul, (0, 0), setting_plane_add, setting_plane_smul, setting_projection_x_axis)
@@ -323,6 +341,7 @@ thm setting_projection_x_axis_is_linear:
         setting_projection_x_axis(setting_plane_smul(coefficient, v)) = setting_plane_smul(coefficient, setting_projection_x_axis(v))
     by def $is_linear_map_in_setting(R, 0, 1, setting_real_add, setting_real_neg, setting_real_mul, setting_real_inv, cart(R, R), cart(R, R), (0, 0), setting_plane_add, setting_plane_smul, (0, 0), setting_plane_add, setting_plane_smul, setting_projection_x_axis)
 
+# Reuse the general kernel theorem for the concrete projection map.
 thm setting_projection_kernel_is_subspace:
     ? forall:
         $is_subspace_in_setting(R, 0, 1, setting_real_add, setting_real_neg, setting_real_mul, setting_real_inv, cart(R, R), (0, 0), setting_plane_add, setting_plane_smul, \setting_linear_kernel<cart(R, R), cart(R, R), (0, 0), setting_projection_x_axis>)

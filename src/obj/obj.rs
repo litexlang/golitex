@@ -43,6 +43,8 @@ pub enum Obj {
     SetMinus(SetMinus),
     BigUnion(BigUnion),
     BigIntersect(BigIntersect),
+    IndexUnion(IndexUnion),
+    IndexIntersect(IndexIntersect),
     PowerSet(PowerSet),
     GeneralCart(GeneralCart),
     ListSet(ListSet),
@@ -181,6 +183,8 @@ pub enum ObjKind {
     Reduce = 90,
     FiniteSetReduce = 91,
     Quot = 92,
+    IndexUnion = 93,
+    IndexIntersect = 94,
 }
 
 impl ObjKind {
@@ -795,6 +799,24 @@ pub struct BigIntersect {
     pub left: Box<Obj>,
 }
 
+/// The union of the set-valued family `family_fn` over `index_set`, with
+/// `ambient_set` fixing the result carrier and the empty-family semantics.
+#[derive(Clone)]
+pub struct IndexUnion {
+    pub index_set: Box<Obj>,
+    pub ambient_set: Box<Obj>,
+    pub family_fn: Box<Obj>,
+}
+
+/// The intersection of the set-valued family `family_fn` over `index_set`,
+/// equal to `ambient_set` when the index set is empty.
+#[derive(Clone)]
+pub struct IndexIntersect {
+    pub index_set: Box<Obj>,
+    pub ambient_set: Box<Obj>,
+    pub family_fn: Box<Obj>,
+}
+
 #[derive(Clone)]
 pub struct ListSet {
     pub list: Vec<Box<Obj>>,
@@ -1163,6 +1185,26 @@ impl BigIntersect {
     pub fn new(left: Obj) -> Self {
         BigIntersect {
             left: Box::new(left),
+        }
+    }
+}
+
+impl IndexUnion {
+    pub fn new(index_set: Obj, ambient_set: Obj, family_fn: Obj) -> Self {
+        IndexUnion {
+            index_set: Box::new(index_set),
+            ambient_set: Box::new(ambient_set),
+            family_fn: Box::new(family_fn),
+        }
+    }
+}
+
+impl IndexIntersect {
+    pub fn new(index_set: Obj, ambient_set: Obj, family_fn: Obj) -> Self {
+        IndexIntersect {
+            index_set: Box::new(index_set),
+            ambient_set: Box::new(ambient_set),
+            family_fn: Box::new(family_fn),
         }
     }
 }
@@ -1561,6 +1603,8 @@ impl Obj {
             Obj::SetMinus(_) => ObjKind::SetMinus,
             Obj::BigUnion(_) => ObjKind::BigUnion,
             Obj::BigIntersect(_) => ObjKind::BigIntersect,
+            Obj::IndexUnion(_) => ObjKind::IndexUnion,
+            Obj::IndexIntersect(_) => ObjKind::IndexIntersect,
             Obj::PowerSet(_) => ObjKind::PowerSet,
             Obj::GeneralCart(_) => ObjKind::GeneralCart,
             Obj::ListSet(_) => ObjKind::ListSet,
@@ -1681,6 +1725,18 @@ impl Obj {
             Obj::Sqrt(value) => unary(&value.arg, index),
             Obj::BigUnion(value) => unary(&value.left, index),
             Obj::BigIntersect(value) => unary(&value.left, index),
+            Obj::IndexUnion(value) => match index {
+                0 => Some(value.index_set.as_ref().clone()),
+                1 => Some(value.ambient_set.as_ref().clone()),
+                2 => Some(value.family_fn.as_ref().clone()),
+                _ => None,
+            },
+            Obj::IndexIntersect(value) => match index {
+                0 => Some(value.index_set.as_ref().clone()),
+                1 => Some(value.ambient_set.as_ref().clone()),
+                2 => Some(value.family_fn.as_ref().clone()),
+                _ => None,
+            },
             Obj::CartDim(value) => unary(&value.set, index),
             Obj::TupleDim(value) => unary(&value.arg, index),
             Obj::FiniteSetSize(value) => unary(&value.set, index),
@@ -1796,6 +1852,8 @@ impl Obj {
             Obj::SetMinus(_) => SET_MINUS.to_string(),
             Obj::BigUnion(_) => BIG_UNION.to_string(),
             Obj::BigIntersect(_) => BIG_INTERSECT.to_string(),
+            Obj::IndexUnion(_) => INDEX_UNION.to_string(),
+            Obj::IndexIntersect(_) => INDEX_INTERSECT.to_string(),
             Obj::PowerSet(_) => POWER_SET.to_string(),
             Obj::GeneralCart(_) => GENERAL_CART.to_string(),
             Obj::Cart(_) => CART.to_string(),
@@ -1992,6 +2050,8 @@ impl Obj {
             Obj::SetMinus(x) => write!(f, "{}", x)?,
             Obj::BigUnion(x) => write!(f, "{}", x)?,
             Obj::BigIntersect(x) => write!(f, "{}", x)?,
+            Obj::IndexUnion(x) => write!(f, "{}", x)?,
+            Obj::IndexIntersect(x) => write!(f, "{}", x)?,
             Obj::Atom(x) => write!(f, "{}", x)?,
             Obj::FnObj(x) => write!(f, "{}", x)?,
             Obj::Number(x) => write!(f, "{}", x)?,
@@ -2174,6 +2234,18 @@ impl Obj {
             Obj::BigIntersect(x) => {
                 BigIntersect::new(Obj::replace_bound_identifier(*x.left, from, to)).into()
             }
+            Obj::IndexUnion(x) => IndexUnion::new(
+                Obj::replace_bound_identifier(*x.index_set, from, to),
+                Obj::replace_bound_identifier(*x.ambient_set, from, to),
+                Obj::replace_bound_identifier(*x.family_fn, from, to),
+            )
+            .into(),
+            Obj::IndexIntersect(x) => IndexIntersect::new(
+                Obj::replace_bound_identifier(*x.index_set, from, to),
+                Obj::replace_bound_identifier(*x.ambient_set, from, to),
+                Obj::replace_bound_identifier(*x.family_fn, from, to),
+            )
+            .into(),
             Obj::PowerSet(x) => {
                 PowerSet::new(Obj::replace_bound_identifier(*x.set, from, to)).into()
             }
@@ -3314,6 +3386,26 @@ impl fmt::Display for BigIntersect {
     }
 }
 
+impl fmt::Display for IndexUnion {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        write!(
+            f,
+            "{}({}, {}, {})",
+            INDEX_UNION, self.index_set, self.ambient_set, self.family_fn
+        )
+    }
+}
+
+impl fmt::Display for IndexIntersect {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        write!(
+            f,
+            "{}({}, {}, {})",
+            INDEX_INTERSECT, self.index_set, self.ambient_set, self.family_fn
+        )
+    }
+}
+
 impl fmt::Display for IdentifierWithMod {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         match self.symbol.as_ref() {
@@ -3632,6 +3724,18 @@ impl From<BigUnion> for Obj {
 impl From<BigIntersect> for Obj {
     fn from(c: BigIntersect) -> Self {
         Obj::BigIntersect(c)
+    }
+}
+
+impl From<IndexUnion> for Obj {
+    fn from(value: IndexUnion) -> Self {
+        Obj::IndexUnion(value)
+    }
+}
+
+impl From<IndexIntersect> for Obj {
+    fn from(value: IndexIntersect) -> Self {
+        Obj::IndexIntersect(value)
     }
 }
 

@@ -31,6 +31,7 @@ pub use builder::LitexToLeanIrBuilder;
 pub use builtin_rule::{
     LitexToLeanAbsoluteValueBuiltinRuleIr, LitexToLeanArithmeticBuiltinRuleIr,
     LitexToLeanBuiltinRuleIr, LitexToLeanComplexArithmeticMembershipClosureBuiltinRuleIr,
+    LitexToLeanFiniteSetBuiltinRuleIr,
     LitexToLeanIntegerMembershipClosureBuiltinRuleIr,
     LitexToLeanNativeConstantMembershipBuiltinRuleIr,
     LitexToLeanNaturalMembershipClosureBuiltinRuleIr, LitexToLeanNonzeroExpressionOrientationIr,

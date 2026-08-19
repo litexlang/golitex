@@ -75,6 +75,9 @@ impl fmt::Debug for DivNotEqualZeroBuiltinRuleEvidence {
 /// the target fact plus the recursively checked ordered premise list.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ArithmeticBuiltinRule {
+    /// Ordered numeric transitivity. The enclosing result retains the
+    /// verifier-owned carrier checks followed by the two ordered premises.
+    OrderTransitivity,
     LessEqualFromStrictOrder,
     GreaterEqualFromStrictOrder,
     SubNonnegativeFromLessEqual,
@@ -181,6 +184,13 @@ pub enum SetBuiltinRule {
     IntersectNonMembershipLeft,
     IntersectNonMembershipRight,
     SetMinusMembership,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum FiniteSetBuiltinRule {
+    ListSet,
+    Range,
+    ClosedRange,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -486,6 +496,8 @@ pub enum BuiltinRuleEvidence {
     NotEqualFromStrictOrder,
     SetRelationDuality(SetRelationDualityBuiltinRule),
     Set(SetBuiltinRule),
+    FiniteSet(FiniteSetBuiltinRule),
+    TupleLiteralShape,
     AbsoluteValue(AbsoluteValueBuiltinRule),
     PrimeU64Reflection,
     CoprimeNaturalReflection,
@@ -493,6 +505,9 @@ pub enum BuiltinRuleEvidence {
     /// centralized standard-set hierarchy. The enclosing result has exactly
     /// one child: the checked source membership fact.
     StandardSetMembershipProjection,
+    /// One fixed inclusion in Litex's standard numeric-set hierarchy. The
+    /// target subset fact itself retains the exact source and target sets.
+    StandardSetSubset,
 }
 
 impl fmt::Debug for BuiltinRuleEvidence {
@@ -568,6 +583,10 @@ impl fmt::Debug for BuiltinRuleEvidence {
                 f.debug_tuple("SetRelationDuality").field(rule).finish()
             }
             BuiltinRuleEvidence::Set(rule) => f.debug_tuple("Set").field(rule).finish(),
+            BuiltinRuleEvidence::FiniteSet(rule) => {
+                f.debug_tuple("FiniteSet").field(rule).finish()
+            }
+            BuiltinRuleEvidence::TupleLiteralShape => f.write_str("TupleLiteralShape"),
             BuiltinRuleEvidence::AbsoluteValue(rule) => {
                 f.debug_tuple("AbsoluteValue").field(rule).finish()
             }
@@ -578,6 +597,7 @@ impl fmt::Debug for BuiltinRuleEvidence {
             BuiltinRuleEvidence::StandardSetMembershipProjection => {
                 f.write_str("StandardSetMembershipProjection")
             }
+            BuiltinRuleEvidence::StandardSetSubset => f.write_str("StandardSetSubset"),
         }
     }
 }

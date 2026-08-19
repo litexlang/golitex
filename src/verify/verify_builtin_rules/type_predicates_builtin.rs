@@ -518,25 +518,28 @@ impl Runtime {
         }
         match &is_finite_set_fact.set {
             Obj::ListSet(_) => Ok(
-                (VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                (VerifiedFactStmtIr::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     is_finite_set_fact.clone().into(),
                     "list_set_finite".to_string(),
+                    BuiltinRuleEvidence::FiniteSet(FiniteSetBuiltinRule::ListSet),
                     Vec::new(),
                 ))
                 .into(),
             ),
             Obj::ClosedRange(_) => Ok(
-                (VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                (VerifiedFactStmtIr::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     is_finite_set_fact.clone().into(),
                     "closed_range_is_finite_set".to_string(),
+                    BuiltinRuleEvidence::FiniteSet(FiniteSetBuiltinRule::ClosedRange),
                     Vec::new(),
                 ))
                 .into(),
             ),
             Obj::Range(_) => Ok(
-                (VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                (VerifiedFactStmtIr::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     is_finite_set_fact.clone().into(),
                     "range_is_finite_set".to_string(),
+                    BuiltinRuleEvidence::FiniteSet(FiniteSetBuiltinRule::Range),
                     Vec::new(),
                 ))
                 .into(),
@@ -836,9 +839,10 @@ impl Runtime {
                     return Ok((StmtUnknown::new()).into());
                 }
                 return Ok(
-                    (VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                    (VerifiedFactStmtIr::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         is_tuple_fact.clone().into(),
                         "any `cart_dim` object is a cart_dim".to_string(),
+                        BuiltinRuleEvidence::TupleLiteralShape,
                         Vec::new(),
                     ))
                     .into(),

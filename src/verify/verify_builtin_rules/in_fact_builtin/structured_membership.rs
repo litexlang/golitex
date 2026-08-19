@@ -140,9 +140,10 @@ impl Runtime {
         .into();
         let verify_subset_result = match (&*set_builder.param_set, base_set) {
             (Obj::StandardSet(left), Obj::StandardSet(right)) if left.is_subset_eq(right) => {
-                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                VerifiedFactStmtIr::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     subset_fact.clone().into(),
                     "standard_set_subset".to_string(),
+                    BuiltinRuleEvidence::StandardSetSubset,
                     Vec::new(),
                 )
                 .into()

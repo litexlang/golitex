@@ -221,6 +221,11 @@ abbrev ofType (α : Litex.u.{u}) : Litex.Set.{u} :=
 def Nonempty (set : Litex.Set.{u}) : Prop :=
   _root_.Nonempty set.Carrier
 
+/-- Finiteness is a property of the exact carrier, not a second cardinality
+tag attached to a source set value. -/
+def Finite (set : Litex.Set.{u}) : Prop :=
+  _root_.Finite set.Carrier
+
 end Set
 
 /-- Heterogeneous membership: `x` belongs to `set` when it is semantically the
@@ -273,6 +278,12 @@ theorem same_rep
   Classical.choose_spec hx
 
 end In
+
+/-- Extension inclusion between two exact Litex set carriers. The element
+carrier remains heterogeneous; a subset proof transports `In` evidence and
+does not retype the source value. -/
+def Subset (left right : Litex.Set.{u}) : Prop :=
+  ∀ {alpha : Litex.u.{u}} (x : alpha), In x left → In x right
 
 /-- The first compiler function carrier: one named unary Litex application
 layer. Its argument remains heterogeneous; the function can be called only
@@ -439,6 +450,62 @@ abbrev Q : Litex.Set := Set.ofType ℚ
 abbrev R : Litex.Set := Set.ofType ℝ
 abbrev C : Litex.Set := Set.ofType ℂ
 
+/-- Half-open integer range with its exact Mathlib finite carrier. -/
+def range (start finish : ℤ) : Litex.Set :=
+  Set.ofType {z : ℤ // z ∈ Finset.Ico start finish}
+
+/-- Closed integer range with its exact Mathlib finite carrier. -/
+def closedRange (start finish : ℤ) : Litex.Set :=
+  Set.ofType {z : ℤ // z ∈ Finset.Icc start finish}
+
+theorem range_finite (start finish : ℤ) : Set.Finite (range start finish) := by
+  unfold Set.Finite range
+  infer_instance
+
+theorem closedRange_finite (start finish : ℤ) :
+    Set.Finite (closedRange start finish) := by
+  unfold Set.Finite closedRange
+  infer_instance
+
+/-- Empty tail of a typed heterogeneous tuple/sequence spine. -/
+inductive HNil where
+  | nil
+
+/-- One typed heterogeneous spine cell. The carrier type is determined by
+the concrete head and tail types; no universal object is stored. -/
+structure HCons (alpha : Type u) (tail : Type v) where
+  head : alpha
+  rest : tail
+
+/-- Structural tuple evidence and its source arity. -/
+class TupleShape (alpha : Type u) where
+  dimension : Nat
+
+instance : TupleShape HNil where
+  dimension := 0
+
+instance [TupleShape tail] : TupleShape (HCons alpha tail) where
+  dimension := TupleShape.dimension tail + 1
+
+def IsTuple {alpha : Type u} (_value : alpha) : Prop :=
+  Nonempty (TupleShape alpha)
+
+theorem hcons_isTuple [TupleShape tail] (head : alpha) (rest : tail) :
+    IsTuple (HCons.mk head rest) :=
+  ⟨inferInstance⟩
+
+/-- Sequence literals use the same exact typed spine under a distinct wrapper
+so tuple-only facts cannot be inferred from a sequence by Lean typing. -/
+structure SequenceLiteral (payload : Type u) where
+  value : payload
+
+/-- Exact finite and infinite sequence carriers over one Litex set. -/
+def finiteSequenceSet (values : Litex.Set.{u}) (length : Nat) : Litex.Set.{u} :=
+  Set.ofType (Fin length → values.Carrier)
+
+def sequenceSet (values : Litex.Set.{u}) : Litex.Set.{u} :=
+  Set.ofType (Nat → values.Carrier)
+
 /-- A predicate-defined Litex subset. Its exact carrier is the corresponding
 subtype, and the compiler-owned subtype edge relates each member to its base
 value. -/
@@ -484,23 +551,16 @@ universe-polymorphic `Litex.Set`, `Litex.In`, or `Litex.Same` interfaces.
 
 Primitive and native-operation representation edges are closed inside this
 header. Facts which only transport a chosen real representative need no global
-assumption. Facts which compare two independently selected representatives
-still require `RealCoherence`; the header does not postulate that normalization
-theorem while `Same` remains an inductively generated wrapper relation.
+assumption. General order does not compare independently selected
+representatives: it uses the one canonical real observation of the compiler's
+current numeric carrier, `Complex.re`, and therefore reduces directly to
+Mathlib order.
 -/
 
 /-- `x` has the real representative `r` when Litex semantic equality relates
 the (possibly differently typed) value `x` to the native Mathlib real `r`. -/
 def AsReal {α : Type} (x : α) (r : ℝ) : Prop :=
   Same x r
-
-/-- The normalization invariant needed whenever a proof must identify two
-independently selected real representatives. The core declares the certificate
-shape but does not postulate an inhabitant. -/
-class RealCoherence : Prop where
-  unique :
-    ∀ {α : Type} (x : α) {r s : ℝ},
-      AsReal x r → AsReal x s → r = s
 
 namespace AsReal
 
@@ -543,16 +603,6 @@ theorem same
     (hyr : AsReal y r) :
     Same x y :=
   .trans hxr (.symm hyr)
-
-theorem unique
-    [RealCoherence]
-    {α : Type}
-    (x : α)
-    {r s : ℝ}
-    (hxr : AsReal x r)
-    (hxs : AsReal x s) :
-    r = s :=
-  RealCoherence.unique x hxr hxs
 
 end AsReal
 
@@ -641,154 +691,94 @@ theorem congr
 
 end Nonnegative
 
-/-- Heterogeneous strict comparison through native Mathlib reals. -/
-def Lt
-    {α β : Type}
-    (x : α)
-    (y : β) : Prop :=
-  ∃ r s : ℝ, AsReal x r ∧ AsReal y s ∧ r < s
+/-- The canonical Mathlib-ordered observation of a compiled Litex numeric
+object. Source admission into the ordered-real fragment is verifier-owned;
+once admitted, every occurrence of the same `ℕ`/`ℤ`/`ℚ`/`ℝ`-lowered complex
+term has exactly this one observation. -/
+def OrderValue (z : ℂ) : ℝ :=
+  z.re
 
-/-- Heterogeneous non-strict comparison through native Mathlib reals. -/
-def Le
-    {α β : Type}
-    (x : α)
-    (y : β) : Prop :=
-  ∃ r s : ℝ, AsReal x r ∧ AsReal y s ∧ r ≤ s
+/-- Litex strict order on its current numeric carrier. This is a custom Litex
+relation with a definitional route to Mathlib's native real order. -/
+def Lt (x y : ℂ) : Prop :=
+  OrderValue x < OrderValue y
+
+/-- Litex non-strict order on its current numeric carrier. -/
+def Le (x y : ℂ) : Prop :=
+  OrderValue x ≤ OrderValue y
 
 namespace Lt
 
 theorem intro
-    {α β : Type}
-    {x : α}
-    {y : β}
-    {r s : ℝ}
-    (hxr : AsReal x r)
-    (hys : AsReal y s)
-    (hrs : r < s) :
+    {x y : ℂ}
+    (hxy : OrderValue x < OrderValue y) :
     Lt x y :=
-  ⟨r, s, hxr, hys, hrs⟩
-
-theorem congr
-    {α α' β β' : Type}
-    {x : α}
-    {x' : α'}
-    {y : β}
-    {y' : β'}
-    (hxx' : Same x x')
-    (hyy' : Same y y') :
-    Lt x y ↔ Lt x' y' := by
-  constructor
-  · rintro ⟨r, s, hxr, hys, hrs⟩
-    exact ⟨r, s,
-      (AsReal.congr hxx').mp hxr,
-      (AsReal.congr hyy').mp hys,
-      hrs⟩
-  · rintro ⟨r, s, hxr, hys, hrs⟩
-    exact ⟨r, s,
-      (AsReal.congr hxx').mpr hxr,
-      (AsReal.congr hyy').mpr hys,
-      hrs⟩
+  hxy
 
 theorem toLe
-    {α β : Type}
-    {x : α}
-    {y : β}
+    {x y : ℂ}
     (h : Lt x y) :
-    Le x y := by
-  rcases h with ⟨r, s, hxr, hys, hrs⟩
-  exact ⟨r, s, hxr, hys, le_of_lt hrs⟩
+    Le x y :=
+  le_of_lt h
 
 theorem irrefl
-    [RealCoherence]
-    {α : Type}
-    (x : α) :
-    ¬ Lt x x := by
-  rintro ⟨r, s, hxr, hxs, hrs⟩
-  have hrsEq : r = s := AsReal.unique x hxr hxs
-  subst s
-  exact (lt_irrefl r) hrs
+    (x : ℂ) :
+    ¬ Lt x x :=
+  lt_irrefl (OrderValue x)
 
 theorem trans
-    [RealCoherence]
-    {α β γ : Type}
-    {x : α}
-    {y : β}
-    {z : γ}
+    {x y z : ℂ}
     (hxy : Lt x y)
     (hyz : Lt y z) :
-    Lt x z := by
-  rcases hxy with ⟨r, s, hxr, hys, hrs⟩
-  rcases hyz with ⟨s', t, hys', hzt, hst⟩
-  have hss' : s = s' := AsReal.unique y hys hys'
-  subst s'
-  exact ⟨r, t, hxr, hzt, lt_trans hrs hst⟩
+    Lt x z :=
+  lt_trans hxy hyz
+
+theorem transLe
+    {x y z : ℂ}
+    (hxy : Lt x y)
+    (hyz : Le y z) :
+    Lt x z :=
+  lt_of_lt_of_le hxy hyz
 
 end Lt
 
 namespace Le
 
 theorem intro
-    {α β : Type}
-    {x : α}
-    {y : β}
-    {r s : ℝ}
-    (hxr : AsReal x r)
-    (hys : AsReal y s)
-    (hrs : r ≤ s) :
+    {x y : ℂ}
+    (hxy : OrderValue x ≤ OrderValue y) :
     Le x y :=
-  ⟨r, s, hxr, hys, hrs⟩
+  hxy
 
-theorem congr
-    {α α' β β' : Type}
-    {x : α}
-    {x' : α'}
-    {y : β}
-    {y' : β'}
-    (hxx' : Same x x')
-    (hyy' : Same y y') :
-    Le x y ↔ Le x' y' := by
-  constructor
-  · rintro ⟨r, s, hxr, hys, hrs⟩
-    exact ⟨r, s,
-      (AsReal.congr hxx').mp hxr,
-      (AsReal.congr hyy').mp hys,
-      hrs⟩
-  · rintro ⟨r, s, hxr, hys, hrs⟩
-    exact ⟨r, s,
-      (AsReal.congr hxx').mpr hxr,
-      (AsReal.congr hyy').mpr hys,
-      hrs⟩
+theorem refl (x : ℂ) : Le x x :=
+  le_refl (OrderValue x)
 
 theorem reflOfAsReal
-    {α : Type}
-    {x : α}
+    {x : ℂ}
     {r : ℝ}
-    (hxr : AsReal x r) :
+    (_hxr : AsReal x r) :
     Le x x :=
-  ⟨r, r, hxr, hxr, le_rfl⟩
+  refl x
 
 theorem reflOfInR
-    {α : Type}
-    {x : α}
-    (hx : In x R) :
-    Le x x := by
-  rcases inR_iff_asReal.mp hx with ⟨r, hxr⟩
-  exact reflOfAsReal hxr
+    {x : ℂ}
+    (_hx : In x R) :
+    Le x x :=
+  refl x
 
 theorem trans
-    [RealCoherence]
-    {α β γ : Type}
-    {x : α}
-    {y : β}
-    {z : γ}
+    {x y z : ℂ}
     (hxy : Le x y)
     (hyz : Le y z) :
-    Le x z := by
-  rcases hxy with ⟨r, s, hxr, hys, hrs⟩
-  rcases hyz with ⟨s', t, hys', hzt, hst⟩
-  have hss' : s = s' := AsReal.unique y hys hys'
-  subst s'
-  exact ⟨r, t, hxr, hzt, le_trans hrs hst⟩
+    Le x z :=
+  le_trans hxy hyz
+
+theorem transLt
+    {x y z : ℂ}
+    (hxy : Le x y)
+    (hyz : Lt y z) :
+    Lt x z :=
+  lt_of_le_of_lt hxy hyz
 
 end Le
 
@@ -799,26 +789,26 @@ any global coherence assumption. -/
 theorem ltOfReal
     {r s : ℝ}
     (h : r < s) :
-    Lt r s :=
-  Lt.intro (AsReal.real r) (AsReal.real s) h
+    Lt (r : ℂ) (s : ℂ) := by
+  simpa [Lt, OrderValue] using h
 
 theorem leOfReal
     {r s : ℝ}
     (h : r ≤ s) :
-    Le r s :=
-  Le.intro (AsReal.real r) (AsReal.real s) h
+    Le (r : ℂ) (s : ℂ) := by
+  simpa [Le, OrderValue] using h
 
 theorem ltOfComplexReals
     {r s : ℝ}
     (h : r < s) :
     Lt (r : ℂ) (s : ℂ) :=
-  Lt.intro (AsReal.complex r) (AsReal.complex s) h
+  ltOfReal h
 
 theorem leOfComplexReals
     {r s : ℝ}
     (h : r ≤ s) :
     Le (r : ℂ) (s : ℂ) :=
-  Le.intro (AsReal.complex r) (AsReal.complex s) h
+  leOfReal h
 
 theorem positiveOfComplexReal
     {r : ℝ}
@@ -833,26 +823,14 @@ theorem nonnegativeOfComplexReal
   Nonnegative.intro (AsReal.complex r) h
 
 theorem real_lt_iff
-    [RealCoherence]
     {r s : ℝ} :
-    Lt r s ↔ r < s := by
-  constructor
-  · rintro ⟨r', s', hrr', hss', hrs⟩
-    have hr : r = r' := AsReal.unique r (AsReal.real r) hrr'
-    have hs : s = s' := AsReal.unique s (AsReal.real s) hss'
-    simpa [hr, hs] using hrs
-  · exact ltOfReal
+    Lt (r : ℂ) (s : ℂ) ↔ r < s := by
+  simp [Lt, OrderValue]
 
 theorem real_le_iff
-    [RealCoherence]
     {r s : ℝ} :
-    Le r s ↔ r ≤ s := by
-  constructor
-  · rintro ⟨r', s', hrr', hss', hrs⟩
-    have hr : r = r' := AsReal.unique r (AsReal.real r) hrr'
-    have hs : s = s' := AsReal.unique s (AsReal.real s) hss'
-    simpa [hr, hs] using hrs
-  · exact leOfReal
+    Le (r : ℂ) (s : ℂ) ↔ r ≤ s := by
+  simp [Le, OrderValue]
 
 end OrderBridge
 

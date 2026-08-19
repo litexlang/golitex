@@ -69,6 +69,8 @@ pub const UNICODE_NOT_IN: &str = "∉";
 pub const SET_MINUS: &str = "set_minus";
 pub const BIG_UNION: &str = "big_union";
 pub const BIG_INTERSECT: &str = "big_intersect";
+pub const INDEX_UNION: &str = "index_union";
+pub const INDEX_INTERSECT: &str = "index_intersect";
 pub const POWER_SET: &str = "power_set";
 pub const GENERAL_CART: &str = "general_cart";
 pub const FN_LOWER_CASE: &str = "fn";
@@ -303,6 +305,8 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         SET_MINUS,
         BIG_UNION,
         BIG_INTERSECT,
+        INDEX_UNION,
+        INDEX_INTERSECT,
         POWER_SET,
         GENERAL_CART,
         FN_LOWER_CASE,

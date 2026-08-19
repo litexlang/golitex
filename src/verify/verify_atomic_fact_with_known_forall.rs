@@ -1198,6 +1198,40 @@ impl Runtime {
             Obj::BigIntersect(ref a) => {
                 self.match_arg_when_left_is_big_intersect(&a.left, given_arg)
             }
+            Obj::IndexUnion(ref left) => {
+                let Obj::IndexUnion(given) = given_arg else {
+                    return Ok(None);
+                };
+                self.match_args_in_active_binding_scope(
+                    &[
+                        left.index_set.as_ref(),
+                        left.ambient_set.as_ref(),
+                        left.family_fn.as_ref(),
+                    ],
+                    &[
+                        given.index_set.as_ref(),
+                        given.ambient_set.as_ref(),
+                        given.family_fn.as_ref(),
+                    ],
+                )
+            }
+            Obj::IndexIntersect(ref left) => {
+                let Obj::IndexIntersect(given) = given_arg else {
+                    return Ok(None);
+                };
+                self.match_args_in_active_binding_scope(
+                    &[
+                        left.index_set.as_ref(),
+                        left.ambient_set.as_ref(),
+                        left.family_fn.as_ref(),
+                    ],
+                    &[
+                        given.index_set.as_ref(),
+                        given.ambient_set.as_ref(),
+                        given.family_fn.as_ref(),
+                    ],
+                )
+            }
             Obj::GeneralCart(ref left) => self.match_arg_when_left_is_general_cart(left, given_arg),
             Obj::ListSet(ref left) => self.match_arg_when_left_is_list_set(&left.list, given_arg),
             Obj::SetBuilder(ref left) => self.match_arg_when_left_is_set_builder(left, given_arg),

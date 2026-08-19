@@ -2,6 +2,35 @@ use crate::prelude::*;
 use std::result::Result;
 
 impl Runtime {
+    pub(crate) fn verify_forall_fact_from_known_cache_only(
+        &mut self,
+        forall_fact: &ForallFact,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        if let Some(cached_result) =
+            self.verify_fact_from_cache_using_display_string(&forall_fact.clone().into())
+        {
+            return Ok(Some(cached_result));
+        }
+        let alpha_normalized_key = self.alpha_normalized_forall_cache_key(forall_fact)?;
+        let Some(cached_fact) = self.cached_known_fact(&alpha_normalized_key).cloned() else {
+            return Ok(None);
+        };
+        let fact: Fact = forall_fact.clone().into();
+        self.top_level_env().store_fact_to_cache_known_fact(
+            fact.to_string(),
+            cached_fact.line_file.clone(),
+            cached_fact.fact_id,
+        )?;
+        Ok(Some(
+            VerifiedFactStmtIr::new_with_verified_by_known_fact(
+                fact.clone(),
+                VerifiedByResult::cached_fact(fact, cached_fact.line_file, cached_fact.fact_id),
+                Vec::new(),
+            )
+            .into(),
+        ))
+    }
+
     /// Assume `forall` parameters and dom facts in the current environment (no extra `push_env`).
     /// Used by [`Self::verify_forall_fact`] and by `by cases` in the same `run_in_local_env` as the
     /// case branch.
@@ -172,26 +201,8 @@ impl Runtime {
         forall_fact: &ForallFact,
         verify_state: &UseContextVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
-        if let Some(cached_result) =
-            self.verify_fact_from_cache_using_display_string(&forall_fact.clone().into())
-        {
+        if let Some(cached_result) = self.verify_forall_fact_from_known_cache_only(forall_fact)? {
             return Ok(cached_result);
-        }
-        let alpha_normalized_key = self.alpha_normalized_forall_cache_key(forall_fact)?;
-        let alpha_cached = self.cached_known_fact(&alpha_normalized_key).cloned();
-        if let Some(cached_fact) = alpha_cached {
-            let fact: Fact = forall_fact.clone().into();
-            self.top_level_env().store_fact_to_cache_known_fact(
-                fact.to_string(),
-                cached_fact.line_file.clone(),
-                cached_fact.fact_id,
-            )?;
-            return Ok(VerifiedFactStmtIr::new_with_verified_by_known_fact(
-                fact.clone(),
-                VerifiedByResult::cached_fact(fact, cached_fact.line_file, cached_fact.fact_id),
-                Vec::new(),
-            )
-            .into());
         }
 
         if !verify_state.is_round_0() {

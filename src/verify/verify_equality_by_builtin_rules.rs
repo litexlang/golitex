@@ -81,6 +81,16 @@ pub(crate) fn obj_expr_mentions_bare_id(obj: &Obj, id: &str) -> bool {
         }
         Obj::BigUnion(u) => obj_expr_mentions_bare_id(u.left.as_ref(), id),
         Obj::BigIntersect(u) => obj_expr_mentions_bare_id(u.left.as_ref(), id),
+        Obj::IndexUnion(u) => {
+            obj_expr_mentions_bare_id(u.index_set.as_ref(), id)
+                || obj_expr_mentions_bare_id(u.ambient_set.as_ref(), id)
+                || obj_expr_mentions_bare_id(u.family_fn.as_ref(), id)
+        }
+        Obj::IndexIntersect(u) => {
+            obj_expr_mentions_bare_id(u.index_set.as_ref(), id)
+                || obj_expr_mentions_bare_id(u.ambient_set.as_ref(), id)
+                || obj_expr_mentions_bare_id(u.family_fn.as_ref(), id)
+        }
         Obj::Log(l) => {
             obj_expr_mentions_bare_id(l.base.as_ref(), id)
                 || obj_expr_mentions_bare_id(l.arg.as_ref(), id)

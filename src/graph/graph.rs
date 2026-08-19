@@ -1204,6 +1204,16 @@ impl DepCollector {
             Obj::Sqrt(x) => self.collect_obj(&x.arg),
             Obj::BigUnion(x) => self.collect_obj(&x.left),
             Obj::BigIntersect(x) => self.collect_obj(&x.left),
+            Obj::IndexUnion(x) => {
+                self.collect_obj(&x.index_set);
+                self.collect_obj(&x.ambient_set);
+                self.collect_obj(&x.family_fn);
+            }
+            Obj::IndexIntersect(x) => {
+                self.collect_obj(&x.index_set);
+                self.collect_obj(&x.ambient_set);
+                self.collect_obj(&x.family_fn);
+            }
             Obj::PowerSet(x) => self.collect_obj(&x.set),
             Obj::FiniteSetSize(x) => self.collect_obj(&x.set),
             Obj::FiniteSetMax(x) => self.collect_obj(&x.set),

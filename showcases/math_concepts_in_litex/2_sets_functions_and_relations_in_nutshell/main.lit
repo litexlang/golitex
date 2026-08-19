@@ -1,0 +1,56 @@
+# Sets, functions, and relations in Litex.
+#
+# Included:
+# - union, intersection, and relative difference of two finite sets;
+# - a callable successor function and its builtin range;
+# - a binary relation represented directly as a set of ordered pairs; and
+# - a short proof that successor is injective, using builtin `$injective`.
+
+# Two overlapping finite sets make the three basic set operations concrete.
+have first_set finite_set = {1, 2, 3}
+have second_set finite_set = {2, 3, 4}
+
+# Union membership needs membership in either input set.
+4 $in {2, 3, 4}
+4 $in second_set
+4 $in union(first_set, second_set)
+
+# Intersection membership needs membership in both input sets.
+2 $in {1, 2, 3}
+2 $in {2, 3, 4}
+2 $in first_set
+2 $in second_set
+2 $in intersect(first_set, second_set)
+
+# Relative difference keeps elements of the first set that are not in the second.
+1 $in {1, 2, 3}
+1 $in first_set
+not 1 $in {2, 3, 4}
+not 1 $in second_set
+1 $in set_minus(first_set, second_set)
+
+# A Litex function is callable, and `fn_range` is its actual image.
+have fn successor(n N) N = n + 1
+
+successor(4) = 5
+successor(4) $in fn_range(successor)
+
+# A binary relation is simply a subset of a Cartesian product.
+have next_relation power_set(cart(N, N)) = {(1, 2)}
+
+(1, 2) $in {(1, 2)}
+(1, 2) $in next_relation
+
+# Equal successor values give equal inputs: rewrite, cancel one, then fold the
+# builtin injectivity predicate.
+thm successor_is_injective:
+    ? forall:
+        $injective(N, N, successor)
+    claim:
+        ? forall x, y N:
+            successor(x) = successor(y)
+            =>:
+                x = y
+        x + 1 = successor(x) = successor(y) = y + 1
+        x = x + 1 - 1 = y + 1 - 1 = y
+    by def $injective(N, N, successor)

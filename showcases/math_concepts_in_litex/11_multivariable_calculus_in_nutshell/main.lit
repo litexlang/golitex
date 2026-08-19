@@ -1,10 +1,14 @@
 # Multivariable calculus in Litex, setting-first.
 #
+# Included: a quadratic scalar field, exact coordinate difference quotients,
+# epsilon-delta partial derivatives, and its coordinate gradient.
+#
 # Main line: a scalar field -> exact coordinate difference quotients -> gradient.
 
 have fn quadratic_surface(p cart(R, R)) R = p[1]^2 + p[2]^2
 have fn quadratic_gradient(p cart(R, R)) cart(R, R) = (2 * p[1], 2 * p[2])
 
+# Holding y fixed reduces the x-coordinate quotient to a difference of squares.
 thm quadratic_surface_x_difference_quotient:
     ? forall p cart(R, R), x R:
         x != p[1]
@@ -17,6 +21,7 @@ thm quadratic_surface_x_difference_quotient:
     x^2 - p[1]^2 = (x - p[1]) * (x + p[1])
     (quadratic_surface((x, p[2])) - quadratic_surface(p)) / (x - p[1]) = (x^2 - p[1]^2) / (x - p[1]) = x + p[1]
 
+# The symmetric calculation holds x fixed and varies only y.
 thm quadratic_surface_y_difference_quotient:
     ? forall p cart(R, R), y R:
         y != p[2]
@@ -51,6 +56,7 @@ prop has_y_partial_derivative_at(f fn(p cart(R, R)) R, point cart(R, R), slope R
     forall epsilon R+:
         exist delta R+ st {$y_partial_delta_controlled(f, point, slope, epsilon, delta)}
 
+# The exact quotient leaves error abs(x-point[1]), so delta = epsilon works.
 thm quadratic_surface_has_x_partial_derivative:
     ? forall point cart(R, R):
         $has_x_partial_derivative_at(quadratic_surface, point, 2 * point[1])
@@ -70,6 +76,7 @@ thm quadratic_surface_has_x_partial_derivative:
             by def $x_partial_delta_controlled(quadratic_surface, point, 2 * point[1], epsilon, delta)
     by def $has_x_partial_derivative_at(quadratic_surface, point, 2 * point[1])
 
+# The y-coordinate proof mirrors the x-coordinate epsilon-delta estimate.
 thm quadratic_surface_has_y_partial_derivative:
     ? forall point cart(R, R):
         $has_y_partial_derivative_at(quadratic_surface, point, 2 * point[2])
@@ -93,6 +100,7 @@ prop is_coordinate_gradient_at(f fn(p cart(R, R)) R, point, gradient cart(R, R))
     $has_x_partial_derivative_at(f, point, gradient[1])
     $has_y_partial_derivative_at(f, point, gradient[2])
 
+# Package the two verified partial derivatives as the displayed gradient pair.
 thm quadratic_gradient_is_coordinate_gradient:
     ? forall point cart(R, R):
         $is_coordinate_gradient_at(quadratic_surface, point, quadratic_gradient(point))

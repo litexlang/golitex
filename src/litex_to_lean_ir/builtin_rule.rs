@@ -8,6 +8,7 @@ pub enum LitexToLeanNonzeroExpressionOrientationIr {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum LitexToLeanArithmeticBuiltinRuleIr {
+    OrderTransitivity,
     LessEqualFromStrictOrder,
     GreaterEqualFromStrictOrder,
     SubNonnegativeFromLessEqual,
@@ -104,6 +105,13 @@ pub enum LitexToLeanSetBuiltinRuleIr {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum LitexToLeanFiniteSetBuiltinRuleIr {
+    ListSet,
+    Range,
+    ClosedRange,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum LitexToLeanAbsoluteValueBuiltinRuleIr {
     NonnegativeIdentity,
     NonpositiveNegation,
@@ -128,10 +136,13 @@ pub enum LitexToLeanBuiltinRuleIr {
     NotEqualFromStrictOrder,
     SetRelationDuality(LitexToLeanSetRelationDualityBuiltinRuleIr),
     Set(LitexToLeanSetBuiltinRuleIr),
+    FiniteSet(LitexToLeanFiniteSetBuiltinRuleIr),
+    TupleLiteralShape,
     AbsoluteValue(LitexToLeanAbsoluteValueBuiltinRuleIr),
     PrimeU64Reflection,
     CoprimeNaturalReflection,
     StandardSetMembershipProjection,
+    StandardSetSubset,
     NonzeroNumericMembership,
     NonzeroNumericMembershipElimination,
     PositiveRealMembership,
@@ -160,6 +171,9 @@ impl LitexToLeanBuiltinRuleIr {
                 })
             }
             BuiltinRuleEvidence::Arithmetic(rule) => Self::Arithmetic(match rule {
+                ArithmeticBuiltinRule::OrderTransitivity => {
+                    LitexToLeanArithmeticBuiltinRuleIr::OrderTransitivity
+                }
                 ArithmeticBuiltinRule::LessEqualFromStrictOrder => {
                     LitexToLeanArithmeticBuiltinRuleIr::LessEqualFromStrictOrder
                 }
@@ -362,6 +376,14 @@ impl LitexToLeanBuiltinRuleIr {
                     LitexToLeanSetBuiltinRuleIr::SetMinusMembership
                 }
             }),
+            BuiltinRuleEvidence::FiniteSet(rule) => Self::FiniteSet(match rule {
+                FiniteSetBuiltinRule::ListSet => LitexToLeanFiniteSetBuiltinRuleIr::ListSet,
+                FiniteSetBuiltinRule::Range => LitexToLeanFiniteSetBuiltinRuleIr::Range,
+                FiniteSetBuiltinRule::ClosedRange => {
+                    LitexToLeanFiniteSetBuiltinRuleIr::ClosedRange
+                }
+            }),
+            BuiltinRuleEvidence::TupleLiteralShape => Self::TupleLiteralShape,
             BuiltinRuleEvidence::AbsoluteValue(rule) => Self::AbsoluteValue(match rule {
                 AbsoluteValueBuiltinRule::NonnegativeIdentity => {
                     LitexToLeanAbsoluteValueBuiltinRuleIr::NonnegativeIdentity
@@ -379,6 +401,7 @@ impl LitexToLeanBuiltinRuleIr {
             BuiltinRuleEvidence::StandardSetMembershipProjection => {
                 Self::StandardSetMembershipProjection
             }
+            BuiltinRuleEvidence::StandardSetSubset => Self::StandardSetSubset,
         })
     }
 }

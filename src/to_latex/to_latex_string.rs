@@ -694,6 +694,28 @@ impl BigUnion {
     }
 }
 
+impl IndexUnion {
+    pub fn to_latex_string(&self) -> String {
+        format!(
+            r"\operatorname{{index\_union}}\left({}, {}, {}\right)",
+            self.index_set.to_latex_string(),
+            self.ambient_set.to_latex_string(),
+            self.family_fn.to_latex_string()
+        )
+    }
+}
+
+impl IndexIntersect {
+    pub fn to_latex_string(&self) -> String {
+        format!(
+            r"\operatorname{{index\_intersect}}\left({}, {}, {}\right)",
+            self.index_set.to_latex_string(),
+            self.ambient_set.to_latex_string(),
+            self.family_fn.to_latex_string()
+        )
+    }
+}
+
 impl DefAbstractPropStmt {
     pub fn to_latex_string(&self) -> String {
         let ps = self
@@ -2301,6 +2323,8 @@ impl Obj {
             Obj::SetMinus(x) => x.to_latex_string(),
             Obj::BigUnion(x) => x.to_latex_string(),
             Obj::BigIntersect(x) => x.to_latex_string(),
+            Obj::IndexUnion(x) => x.to_latex_string(),
+            Obj::IndexIntersect(x) => x.to_latex_string(),
             Obj::PowerSet(x) => x.to_latex_string(),
             Obj::GeneralCart(x) => x.to_latex_string(),
             Obj::ListSet(x) => x.to_latex_string(),
