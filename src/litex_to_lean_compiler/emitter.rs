@@ -4143,12 +4143,20 @@ fn render_function_set(
     context: &RenderContext,
 ) -> Result<String, String> {
     validate_unary_function_type(function)?;
-    let domain = render_set_ir(&function.parameters[0].set, context)?;
+    let render_base_set = |set: &LitexToLeanObjectIr| -> Result<String, String> {
+        let rendered = render_set_ir(set, context)?;
+        if matches!(set, LitexToLeanObjectIr::Symbol { .. }) {
+            Ok(format!("({rendered} : Litex.Set.{{0}})"))
+        } else {
+            Ok(rendered)
+        }
+    };
+    let domain = render_base_set(&function.parameters[0].set)?;
     let codomain = match function.return_set.as_ref() {
         LitexToLeanObjectIr::FunctionSet { function } => {
             render_nested_function_set(function, context)?
         }
-        return_set => render_set_ir(return_set, context)?,
+        return_set => render_base_set(return_set)?,
     };
     if function.domain_facts.is_empty() {
         Ok(format!("(Litex.fnSet {domain} {codomain})"))

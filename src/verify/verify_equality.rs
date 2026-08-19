@@ -189,8 +189,11 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         let builtin_goal: AtomicFact = equal_fact.clone().into();
         if self.captures_well_definedness() {
-            let result = self
-                .verify_equality_after_one_checked_definition_reduction(equal_fact, verify_state)?;
+            let result = self.verify_equality_after_one_checked_definition_reduction(
+                equal_fact,
+                verify_state,
+                true,
+            )?;
             if result.is_true() {
                 return Ok(result);
             }
@@ -206,8 +209,11 @@ impl Runtime {
         }
 
         if !self.captures_well_definedness() {
-            result = self
-                .verify_equality_after_one_checked_definition_reduction(equal_fact, verify_state)?;
+            result = self.verify_equality_after_one_checked_definition_reduction(
+                equal_fact,
+                verify_state,
+                false,
+            )?;
             if result.is_true() {
                 return Ok(result);
             }
@@ -247,6 +253,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         verify_state: &UseContextVerifyState,
+        require_checked_function_source: bool,
     ) -> Result<StmtResult, RuntimeError> {
         // The goal's well-definedness check already discharged the selected
         // function application's carrier and domain obligations. Definition
@@ -256,14 +263,20 @@ impl Runtime {
             return Ok((StmtUnknown::new()).into());
         }
 
-        if let Some(result) =
-            self.try_reduce_one_checked_definition_side(equal_fact, true, verify_state)?
-        {
+        if let Some(result) = self.try_reduce_one_checked_definition_side(
+            equal_fact,
+            true,
+            verify_state,
+            require_checked_function_source,
+        )? {
             return Ok(result);
         }
-        if let Some(result) =
-            self.try_reduce_one_checked_definition_side(equal_fact, false, verify_state)?
-        {
+        if let Some(result) = self.try_reduce_one_checked_definition_side(
+            equal_fact,
+            false,
+            verify_state,
+            require_checked_function_source,
+        )? {
             return Ok(result);
         }
         Ok((StmtUnknown::new()).into())
@@ -274,6 +287,7 @@ impl Runtime {
         equal_fact: &EqualFact,
         application_is_left: bool,
         verify_state: &UseContextVerifyState,
+        require_checked_function_source: bool,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (application_side, other_side) = if application_is_left {
             (&equal_fact.left, &equal_fact.right)
@@ -289,6 +303,9 @@ impl Runtime {
         } else {
             None
         };
+        if require_checked_function_source && checked_function_source.is_none() {
+            return Ok(None);
+        }
         let reduced = match self
             .reduce_direct_known_fn_application_once(application_side, verify_state)?
         {
