@@ -138,17 +138,6 @@ theorem notSameSymm
   intro hba
   exact h (Litex.Same.symm hba)
 
-private theorem complexZeroAddAsReal
-    {r s : ℝ}
-    (hr : Litex.AsReal (0 : ℂ) r)
-    (hs : Litex.AsReal (0 : ℂ) s) :
-    Litex.AsReal (0 : ℂ) (r + s) := by
-  have hsum : Litex.Same (r + s) ((0 : ℂ) + (0 : ℂ)) :=
-    Litex.Same.realAddComplex (Litex.Same.symm hr) (Litex.Same.symm hs)
-  exact Litex.Same.trans
-    (Litex.Same.ofEq (by norm_num))
-    (Litex.Same.symm hsum)
-
 private theorem complexAddAsReal
     {a b : ℂ}
     {r s : ℝ}
@@ -404,48 +393,93 @@ theorem complexDivInQ
       (Litex.Same.ofEq (by norm_cast : (qa : ℝ) / (qb : ℝ) = ((qa / qb : ℚ) : ℝ)))
       (realSameRat (qa / qb)))⟩
 
-/-- The concrete complex-carrier adapter for Litex's nonnegative-addition
-builtin rule. It combines the independently selected zero representatives
-instead of assuming global representative coherence. -/
+/-- The complex-carrier adapter for nonnegative addition. Zero-ended order
+uses Mathlib's canonical real zero, so only the operand representatives are
+opened. -/
 theorem complexAddNonnegative
     {a b : ℂ}
-    (ha : Litex.Le (0 : ℂ) a)
-    (hb : Litex.Le (0 : ℂ) b) :
-    Litex.Le (0 : ℂ) (a + b) := by
-  rcases ha with ⟨ra0, ra, hra0, hra, haOrder⟩
-  rcases hb with ⟨rb0, rb, hrb0, hrb, hbOrder⟩
-  exact ⟨ra0 + rb0, ra + rb,
-    complexZeroAddAsReal hra0 hrb0,
-    complexAddAsReal hra hrb,
-    add_le_add haOrder hbOrder⟩
+    (ha : Litex.Nonnegative a)
+    (hb : Litex.Nonnegative b) :
+    Litex.Nonnegative (a + b) := by
+  rcases ha with ⟨ra, hra, haOrder⟩
+  rcases hb with ⟨rb, hrb, hbOrder⟩
+  exact ⟨ra + rb, complexAddAsReal hra hrb, add_nonneg haOrder hbOrder⟩
+
+/-- Strict positivity is closed under addition. -/
+theorem complexAddPositive
+    {a b : ℂ}
+    (ha : Litex.Positive a)
+    (hb : Litex.Positive b) :
+    Litex.Positive (a + b) := by
+  rcases ha with ⟨ra, hra, haOrder⟩
+  rcases hb with ⟨rb, hrb, hbOrder⟩
+  exact ⟨ra + rb, complexAddAsReal hra hrb, add_pos haOrder hbOrder⟩
 
 /-- The concrete complex-carrier adapter for Litex's strict-left,
 nonnegative-right addition builtin rule. -/
 theorem complexAddPositiveLeftStrict
     {a b : ℂ}
-    (ha : Litex.Lt (0 : ℂ) a)
-    (hb : Litex.Le (0 : ℂ) b) :
-    Litex.Lt (0 : ℂ) (a + b) := by
-  rcases ha with ⟨ra0, ra, hra0, hra, haOrder⟩
-  rcases hb with ⟨rb0, rb, hrb0, hrb, hbOrder⟩
-  exact ⟨ra0 + rb0, ra + rb,
-    complexZeroAddAsReal hra0 hrb0,
-    complexAddAsReal hra hrb,
-    add_lt_add_of_lt_of_le haOrder hbOrder⟩
+    (ha : Litex.Positive a)
+    (hb : Litex.Nonnegative b) :
+    Litex.Positive (a + b) := by
+  rcases ha with ⟨ra, hra, haOrder⟩
+  rcases hb with ⟨rb, hrb, hbOrder⟩
+  exact ⟨ra + rb, complexAddAsReal hra hrb,
+    add_pos_of_pos_of_nonneg haOrder hbOrder⟩
 
 /-- The concrete complex-carrier adapter for Litex's nonnegative-left,
 strict-right addition builtin rule. -/
 theorem complexAddPositiveRightStrict
     {a b : ℂ}
-    (ha : Litex.Le (0 : ℂ) a)
-    (hb : Litex.Lt (0 : ℂ) b) :
-    Litex.Lt (0 : ℂ) (a + b) := by
-  rcases ha with ⟨ra0, ra, hra0, hra, haOrder⟩
-  rcases hb with ⟨rb0, rb, hrb0, hrb, hbOrder⟩
-  exact ⟨ra0 + rb0, ra + rb,
-    complexZeroAddAsReal hra0 hrb0,
-    complexAddAsReal hra hrb,
-    add_lt_add_of_le_of_lt haOrder hbOrder⟩
+    (ha : Litex.Nonnegative a)
+    (hb : Litex.Positive b) :
+    Litex.Positive (a + b) := by
+  rcases ha with ⟨ra, hra, haOrder⟩
+  rcases hb with ⟨rb, hrb, hbOrder⟩
+  exact ⟨ra + rb, complexAddAsReal hra hrb,
+    add_pos_of_nonneg_of_pos haOrder hbOrder⟩
+
+/-- Nonnegative real representatives are closed under multiplication. -/
+theorem complexMulNonnegative
+    {a b : ℂ}
+    (ha : Litex.Nonnegative a)
+    (hb : Litex.Nonnegative b) :
+    Litex.Nonnegative (a * b) := by
+  rcases ha with ⟨ra, hra, haOrder⟩
+  rcases hb with ⟨rb, hrb, hbOrder⟩
+  exact ⟨ra * rb, complexMulAsReal hra hrb, mul_nonneg haOrder hbOrder⟩
+
+/-- Positive real representatives are closed under multiplication. -/
+theorem complexMulPositive
+    {a b : ℂ}
+    (ha : Litex.Positive a)
+    (hb : Litex.Positive b) :
+    Litex.Positive (a * b) := by
+  rcases ha with ⟨ra, hra, haOrder⟩
+  rcases hb with ⟨rb, hrb, hbOrder⟩
+  exact ⟨ra * rb, complexMulAsReal hra hrb, mul_pos haOrder hbOrder⟩
+
+/-- A nonnegative numerator divided by a positive denominator is
+nonnegative. -/
+theorem complexDivNonnegative
+    {a b : ℂ}
+    (ha : Litex.Nonnegative a)
+    (hb : Litex.Positive b) :
+    Litex.Nonnegative (a / b) := by
+  rcases ha with ⟨ra, hra, haOrder⟩
+  rcases hb with ⟨rb, hrb, hbOrder⟩
+  exact ⟨ra / rb, complexDivAsReal hra hrb,
+    div_nonneg haOrder (le_of_lt hbOrder)⟩
+
+/-- A positive numerator divided by a positive denominator is positive. -/
+theorem complexDivPositive
+    {a b : ℂ}
+    (ha : Litex.Positive a)
+    (hb : Litex.Positive b) :
+    Litex.Positive (a / b) := by
+  rcases ha with ⟨ra, hra, haOrder⟩
+  rcases hb with ⟨rb, hrb, hbOrder⟩
+  exact ⟨ra / rb, complexDivAsReal hra hrb, div_pos haOrder hbOrder⟩
 
 /-- Introduce membership in a predicate-defined set from a semantically equal
 base representative satisfying the predicate. -/
@@ -541,9 +575,9 @@ theorem positiveOfInRPos
     {alpha : Type}
     {x : alpha}
     (h : Litex.In x Litex.RPos) :
-    Litex.Lt (0 : ℂ) x := by
+    Litex.Positive x := by
   rcases (inSetBuilder_iff.mp h) with ⟨r, hr, hxr⟩
-  exact Litex.Lt.intro (Litex.Same.complexReal 0) hxr hr
+  exact Litex.Positive.intro hxr hr
 
 /-- Construct exact nonzero-integer membership from the verifier's base
 membership and heterogeneous non-equality premises. -/

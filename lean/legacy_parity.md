@@ -29,7 +29,7 @@ Status meanings:
 | Native carriers plus independent Litex membership | migrated | Examples 1, 4, and 5; generated output forbids `Litex.Object` and set encodings based on `Set.univ`. |
 | Heterogeneous equality and membership transport | migrated | Examples 1 and 6 use `Litex.Same` and exact equality-path `FactId`s. |
 | Real order wrappers and registered order rules | migrated | Example 2; exact rule ID and fingerprint are validated before `Litex.Lt.toLe`. |
-| Real-representative coherence | decision | `Core.lean` declares `RealCoherence` but intentionally installs no instance. Multiplicative/divisive sign laws compare independently selected zero representatives and cannot be emitted until this boundary is approved or constructively proved. |
+| Real-representative coherence | partial | Zero-ended comparisons now lower to `Positive` / `Nonnegative` with Mathlib's canonical real zero, so migrated sign laws avoid coherence constructively. Generic two-ended transitivity still exposes the explicit certificate interface and has no instance. |
 | Source order, persistent/local scope, and exact `FactId` replay | migrated | Examples 6, 8, and 9. |
 | Verifier-owned WD object/fact graph | partial | Current arithmetic and function tracers consume it; old constructor families below still lack emitters. |
 | Known forall instantiation and alpha-equivalent citation | migrated | Example 6 and focused compiler tests. |
@@ -55,10 +55,10 @@ Status meanings:
 | Capability | Status | Active evidence or remaining boundary |
 | --- | --- | --- |
 | Unary function set and checked application | migrated | Example 4 uses exact function and argument membership evidence. |
-| Unary named functions with domain clauses | partial | Example 12 supports real-valued `+`, `-`, `*`, and `/` bodies. |
-| Multiple parameters in one application layer | pending | Requires a native-carrier argument telescope; source `f(a,b)` must not become curried application. |
+| Unary named functions with domain clauses | partial | Example 12 supports real-valued `+`, `-`, `*`, and `/` bodies; Example 23 extends the same construction route to one multi-parameter source layer. Other carriers and operators remain open. |
+| Multiple parameters in one application layer | migrated | Example 23 uses `FnTelescope.parameter` nodes for every retained parameter, an optional ordered `requirement` node, and one `done` codomain. Both quantified and named `f(a,b)` consume the whole layer; generated named values use `@f` so Lean cannot silently insert an implicit carrier and curry the source layer. |
 | Multiple source application layers | migrated | Example 23 follows the exact verifier `FunctionPrefix` DAG for `g(a)(b)`, binds every intermediate exact function carrier once, and separately consumes each layer's argument/domain evidence; the focused Rust regression also covers three layers. |
-| Dependent parameter requirements and return sets | pending | The old `FnSpec` cannot be copied; a new typed wrapper contract is required. |
+| Dependent parameter requirements and return sets | partial | Example 23 stores domain requirements after the complete parameter telescope and consumes exact premise FactIds. Parameter sets may depend on earlier parameters in the wrapper type; generated examples for dependent parameter and returned sets remain open. |
 | Compound anonymous functions | pending | Identity is the only current anonymous native-carrier value; body WD and result membership need an owner-scoped adapter. |
 | Function extensionality | not legacy parity | Neither compiler established an extensional equality interface. |
 
@@ -85,7 +85,7 @@ Status meanings:
 | Reflexivity, rational normalization, standard numeral membership | migrated | Examples 3 and 5. |
 | Not-equality symmetry and exact equality paths | migrated | Example 6. |
 | Additive nonnegative and one-strict sign strategies | migrated | Example 15 covers real-addition closure, left/right strict routes, direct evidence, and registered rule certificates. |
-| Multiplicative/divisive sign strategies | decision | IR now retains direct and recursive `Mul*`/`Div*` evidence, but Example 15 keeps `MulNonnegative` fail-closed because the native proof needs the uninhabited `RealCoherence` certificate. |
+| Multiplicative/divisive sign strategies | migrated | Example 15 replays direct and registered `MulNonnegative`, `MulPositive`, `DivNonnegative`, and `DivPositive` certificates through canonical zero-ended order and proved Mathlib adapters. |
 | Standard-set hierarchy | migrated | Example 16 validates every proper projection through `N → Z → Q → R → C` and composes four proved adjacent native-carrier bridges. |
 | Refined numeric membership | partial | Examples 20–22 give exact `N+`, `R+`, `Z*`, `Q*`, `R*`, and `C*` carriers. The star family compiles construction from base membership plus source `!= 0`, base/supercarrier projection, `Z* → Q* → R* → C*` widening, and membership-to-`!= 0` elimination by retaining the semantic nonzero certificate in a complex-source subtype. Generic `R + positivity → R+`, `Q+`, negative carriers, closed `!=` reflection, and star arithmetic remain fail-closed. |
 | Base numeric arithmetic membership families | partial | Examples 15, 17, and 18 cover real/complex/rational `+`/`-`/`*`/`/`, integer `+`/`-`/`*`, and natural `+`/`*`. Integer remainder/quotient/power/absolute value, rational power/absolute value/quotient, natural subtraction/power, and real power remain pending. |
@@ -98,9 +98,9 @@ Status meanings:
 1. Keep the real `+`/`-`/`*`/`/` closure and additive-strategy tracer green;
    decide whether `RealCoherence` is proved, required explicitly, or avoided
    by a revised order wrapper before porting multiplication/division signs.
-2. Continue the native-carrier function telescope after exact application
-   layers: multiple parameters, dependent requirements, then compound
-   anonymous bodies.
+2. Continue the native-carrier function telescope after migrated same-layer
+   parameters and ordered domain requirements: dependent parameter/return
+   examples, then compound anonymous bodies.
 3. Use that function ABI to migrate ranges, Cartesian products, tuples,
    sequences, and aggregate objects.
 4. Define exact list/set-constructor carriers and only then port their builtin

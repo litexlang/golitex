@@ -86,8 +86,8 @@ fn top_level_atomic_membership_emits_source_and_inferred_fact_ids() {
         .expect("compile top-level atomic membership");
     assert!(generated.contains("Litex.In (1 : ℂ) Litex.N"));
     assert!(generated.contains("Litex.Rules.complexEqNatInN (1 : ℂ) 1 (by norm_num)"));
-    assert!(generated.contains("Litex.Le (0 : ℂ) (1 : ℂ)"));
-    assert!(generated.contains("Litex.OrderBridge.leOfComplexReals (by norm_num)"));
+    assert!(generated.contains("Litex.Nonnegative (1 : ℂ)"));
+    assert!(generated.contains("Litex.OrderBridge.nonnegativeOfComplexReal (by norm_num)"));
     assert!(!generated.contains("sorry"));
 }
 
@@ -516,15 +516,42 @@ fn multilayer_application_preserves_each_unary_source_contract() {
     assert!(generated.contains("Litex.fnApplyOwn __fn_layer2"));
     assert!(generated.contains("(U : Litex.Set.{0}) (V : Litex.Set.{0})"));
 
-    let boundary = compile_on_verifier_stack(
-        "forall S, T, U set, a S, b T, f fn(x S, y T) U:\n    f(a, b) = f(a, b)\n",
-        "same_layer_multiple_parameters.lit",
+    const SAME_LAYER: &str =
+        "forall S, T, U set, a S, b T, f fn(x S, y T) U:\n    f(a, b) = f(a, b)\n";
+    let same_layer_ir =
+        capture_ir_debug_on_verifier_stack(SAME_LAYER, "23_MultilayerApplication.lit")
+            .expect("capture same-layer telescope IR");
+    assert!(same_layer_ir.contains("parameter_index: 0"));
+    assert!(same_layer_ir.contains("parameter_index: 1"));
+    let same_layer = compile_on_verifier_stack(SAME_LAYER, "23_MultilayerApplication.lit")
+        .expect("compile one exact two-parameter source layer");
+    assert!(same_layer.contains("Litex.fnTelescopeSet"));
+    assert!(same_layer.contains("Litex.FnTelescope.parameter"));
+    assert!(same_layer.contains("Litex.fnTelescopeApply f"));
+    assert!(same_layer.contains(").down"));
+    assert!(!same_layer.contains("Litex.Object"));
+    assert!(!same_layer.contains("sorry"));
+
+    const SAME_LAYER_DOMAIN: &str = "forall f fn(x, y R: x > 0, y > 0) R:\n    forall a, b R:\n        a > 0\n        b > 0\n        =>:\n            f(a, b) = f(a, b)\n";
+    let same_layer_domain =
+        compile_on_verifier_stack(SAME_LAYER_DOMAIN, "23_MultilayerApplication.lit")
+            .expect("compile same-layer ordered domain clauses");
+    assert!(same_layer_domain.contains("Litex.FnTelescope.requirement"));
+    assert!(same_layer_domain.contains("Litex.Positive __arg1"));
+    assert!(same_layer_domain.contains("Litex.Positive __arg2"));
+    assert!(same_layer_domain.contains("__h0_4"));
+    assert!(same_layer_domain.contains("__h0_5"));
+
+    let split = compile_on_verifier_stack(
+        "forall S, T, U set, a S, b T, f fn(x S, y T) U:\n    f(a)(b) = f(a)(b)\n",
+        "split_same_layer_application.lit",
     )
-    .expect_err("same-layer multiple parameters must remain fail-closed");
+    .expect_err("a source layer must not be repaired by target currying");
     assert!(
-        boundary.contains("exactly one parameter")
-            || boundary.contains("one parameter per source layer"),
-        "unexpected boundary error: {boundary}"
+        split.contains("parameter")
+            || split.contains("well-defined")
+            || split.contains("cannot verify"),
+        "unexpected split-layer error: {split}"
     );
 }
 
@@ -789,7 +816,7 @@ fn real_arithmetic_membership_closures_replay_exact_rules() {
 }
 
 #[test]
-fn multiplicative_strategy_evidence_is_retained_but_emission_requires_coherence() {
+fn multiplicative_strategy_replays_canonical_mathlib_order_evidence() {
     const SOURCE: &str = "forall a, b, c, d R:\n    a >= 0\n    b >= 0\n    c >= 0\n    d >= 0\n    =>:\n        (a * b) * (c * d) >= 0\n";
     let ir = capture_ir_debug_on_verifier_stack(SOURCE, "15_BuiltinStrategy.lit")
         .expect("capture nested multiplicative strategy IR");
@@ -797,12 +824,53 @@ fn multiplicative_strategy_evidence_is_retained_but_emission_requires_coherence(
     assert!(ir.contains("MulNonnegative"), "{ir}");
     assert!(ir.contains("order.mul_nonnegative"), "{ir}");
 
-    let error = compile_on_verifier_stack(SOURCE, "15_BuiltinStrategy.lit")
-        .expect_err("multiplicative signs require an approved real-coherence ABI");
-    assert!(
-        error.contains("MulNonnegative"),
-        "unexpected error: {error}"
+    let generated = compile_on_verifier_stack(SOURCE, "15_BuiltinStrategy.lit")
+        .expect("compile nested multiplicative signs through canonical zero order");
+    assert_eq!(
+        generated
+            .matches("Litex.Rules.complexMulNonnegative")
+            .count(),
+        3,
+        "{generated}"
     );
+    assert!(generated.contains("Litex.Nonnegative"));
+    assert!(!generated.contains("RealCoherence"));
+    assert!(!generated.contains("axiom "));
+    assert!(!generated.contains("sorry"));
+}
+
+#[test]
+fn direct_multiplicative_and_divisive_sign_rules_all_compile() {
+    const SOURCE: &str = "forall a, b R:\n    a >= 0\n    b >= 0\n    =>:\n        a * b >= 0\n\nforall a, b R:\n    a > 0\n    b > 0\n    =>:\n        a * b > 0\n\nforall a, b R:\n    a >= 0\n    b > 0\n    =>:\n        a / b >= 0\n\nforall a, b R:\n    a > 0\n    b > 0\n    =>:\n        a / b > 0\n";
+    let ir = capture_ir_debug_on_verifier_stack(SOURCE, "15_BuiltinStrategy.lit")
+        .expect("capture direct multiplication/division sign IR");
+    for rule in [
+        "MulNonnegative",
+        "MulPositive",
+        "DivNonnegative",
+        "DivPositive",
+    ] {
+        assert!(ir.contains(rule), "missing {rule}: {ir}");
+    }
+
+    let generated = compile_on_verifier_stack(SOURCE, "15_BuiltinStrategy.lit")
+        .expect("compile direct multiplication/division sign rules");
+    for theorem in [
+        "Litex.Rules.complexMulNonnegative",
+        "Litex.Rules.complexMulPositive",
+        "Litex.Rules.complexDivNonnegative",
+        "Litex.Rules.complexDivPositive",
+    ] {
+        assert!(
+            generated.contains(theorem),
+            "missing {theorem}: {generated}"
+        );
+    }
+    assert!(!generated.contains("RealCoherence"));
+    assert!(!generated.contains("Litex.Object"));
+    assert!(!generated.contains("Set.univ"));
+    assert!(!generated.contains("axiom "));
+    assert!(!generated.contains("sorry"));
 }
 
 #[test]
@@ -832,16 +900,18 @@ fn nested_set_builder_binder_expression_remains_fail_closed() {
 }
 
 #[test]
-fn multi_parameter_named_function_remains_fail_closed() {
-    let error = compile_on_verifier_stack(
+fn multi_parameter_named_function_uses_the_same_telescope_contract() {
+    let generated = compile_on_verifier_stack(
         "have fn first(x, y R) R = x\nfirst(1, 1) = 1\n",
-        "unsupported_multi_parameter_function.lit",
+        "multi_parameter_function.lit",
     )
-    .expect_err("multiple named parameters must remain outside the reviewed function adapter");
-    assert!(
-        error.contains("exactly one parameter") || error.contains("one parameter"),
-        "unexpected error: {error}"
-    );
+    .expect("compile a named two-parameter telescope function");
+    assert!(generated.contains("noncomputable def first : Litex.FnTelescope.Carrier"));
+    assert!(generated.contains("Litex.fnTelescopeSet"));
+    assert!(generated.contains("Litex.fnTelescopeApplyOwn first"));
+    assert!(generated.contains("ULift.up"));
+    assert!(!generated.contains("Litex.Object"));
+    assert!(!generated.contains("sorry"));
 }
 
 #[test]

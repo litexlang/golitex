@@ -42,6 +42,10 @@ The implemented scope is deliberately small:
   constructed named functions while retaining both checked memberships;
 - `Litex.FnWhere`, `fnSetWhere`, `fnApplyWhere`, and
   `fnApplyWhereOwn` retain source-domain clauses as explicit call proofs;
+- `Litex.FnTelescope` retains every parameter, membership proof, ordered
+  domain requirement, and exact codomain of one multi-parameter source layer;
+- `fnTelescopeSet`, `fnTelescopeApply`, and `fnTelescopeApplyOwn` preserve that
+  layer without target-language currying;
 - `N`, `Z`, `Q`, `R`, and `C` use Mathlib's native carriers;
 - `NPos` is the exact subtype `{n : ℕ // 0 < n}` rather than an alias of `N`;
 - `RPos` is the exact subtype `{r : ℝ // 0 < r}` rather than an alias of `R`;
@@ -145,16 +149,18 @@ source parameter facts become `hx : Litex.In x s` and
 exact argument-membership WD edge selected by the verifier. The result already
 has carrier `S.Carrier`; no transport back to a native predicate is added.
 
-The named-function adapter supports one real-valued unary layer. Example 12
-keeps the identity path and adds `inc(x R) = x + 1` plus
+The named-function adapter supports real-valued unary functions and one
+multi-parameter source layer. Example 12 keeps the identity path and adds `inc(x R) = x + 1` plus
 `reciprocal(x R: x != 0) = 1 / x`. Total definitions use `Litex.Fn`;
 domain-constrained definitions use `Litex.FnWhere`. Calls consume the exact
 function membership, argument membership, and ordered domain-clause WD proofs
 selected by the verifier. Their results are native `ℝ` carrier values, while
 the checked reduction back to the source `ℂ` expression uses the closed
-`Same.realAddComplex` / `Same.realDivComplex` congruence routes. Standalone
-anonymous compound functions, multiple arguments in one source layer, and
-operators outside `+`, `-`, `*`, and `/` remain fail-closed.
+`Same.realAddComplex` / `Same.realDivComplex` congruence routes. Example 23
+uses `FnTelescope` for quantified and named `f(a,b)`, including ordered domain
+requirements, and keeps the whole named carrier as `@f`. Standalone anonymous
+compound functions, dependent return examples, other carriers, and operators
+outside `+`, `-`, `*`, and `/` remain fail-closed.
 
 The second statement tranche is recorded by examples 8–11. Source `thm`,
 `claim`, and `example` blocks compile to ordinary Lean proof scopes. `by cases`
@@ -193,9 +199,9 @@ evidence outside the proof-free native term. Nonnegative addition and the two
 strict variants call separate proved rules, including both direct
 `AddPositiveRightStrict` evidence and the fingerprinted registered
 `order.add_positive_of_nonnegative_positive` route. Nonnegative
-multiplication remains the nearest rejected arithmetic-strategy boundary:
-its IR evidence is retained, but the native theorem needs a reviewed
-`RealCoherence` policy for independently selected zero representatives.
+multiplication and division now have separate nonnegative and strict adapters.
+They lower zero-ended comparisons to `Positive` / `Nonnegative`, use Mathlib's
+canonical real zero, and therefore require no `RealCoherence` axiom.
 
 Example 16 adds the standard numeric-set membership hierarchy. A premise such
 as `Litex.In n Litex.N` is replayed through proved adjacent rules

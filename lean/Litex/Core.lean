@@ -376,6 +376,63 @@ def fnApplyWhereOwn
     codomain.Carrier :=
   f.call x hx hrequires
 
+/-!
+`FnTelescope` is the native carrier for one source application layer with any
+finite number of parameters. A parameter node retains its exact Litex set and
+membership proof. Later nodes may depend on the earlier value and proof, so
+dependent parameter sets, domain clauses, and return sets remain explicit.
+One telescope is one Litex application layer; a function-valued `done` set
+starts the next source layer rather than silently currying the current one.
+-/
+
+inductive FnTelescope : Type (max 1 (v + 1)) where
+  | done (codomain : Litex.Set.{v})
+  | parameter
+      (domain : Litex.Set)
+      (next : {α : Type} → (x : α) → In x domain → FnTelescope)
+  | requirement
+      (condition : Prop)
+      (next : condition → FnTelescope)
+
+namespace FnTelescope
+
+/-- Exact Lean carrier described by a source-layer telescope. -/
+def Carrier : Litex.FnTelescope.{v} → Type (max 1 v)
+  | .done codomain => ULift.{max 1 v, v} codomain.Carrier
+  | .parameter domain next =>
+      {α : Type} → (x : α) → (hx : In x domain) → Carrier (next x hx)
+  | .requirement condition next =>
+      (hcondition : condition) → Carrier (next hcondition)
+
+end FnTelescope
+
+/-- Exact Litex set of values implementing one dependent source-layer
+telescope. -/
+abbrev fnTelescopeSet
+    (signature : Litex.FnTelescope.{v}) :
+    Litex.Set.{max 1 v} :=
+  Set.ofType (FnTelescope.Carrier signature)
+
+/-- Select the exact telescope carrier from a heterogeneous membership proof.
+Arguments are subsequently supplied in the source layer's retained order. -/
+noncomputable def fnTelescopeApply
+    {signature : Litex.FnTelescope.{v}}
+    {β : Type (max 1 v)}
+    (f : β)
+    (hf : In f (fnTelescopeSet signature)) :
+    FnTelescope.Carrier signature :=
+  In.rep f hf
+
+/-- The exact-carrier application route avoids representative choice for a
+compiler-constructed telescope function while retaining the checked
+membership certificate as an explicit input. -/
+def fnTelescopeApplyOwn
+    {signature : Litex.FnTelescope.{v}}
+    (f : FnTelescope.Carrier signature)
+    (_hf : In f (fnTelescopeSet signature)) :
+    FnTelescope.Carrier signature :=
+  f
+
 abbrev N : Litex.Set := Set.ofType ℕ
 abbrev Z : Litex.Set := Set.ofType ℤ
 abbrev Q : Litex.Set := Set.ofType ℚ
@@ -505,6 +562,84 @@ theorem inR_iff_asReal
     {x : α} :
     In x R ↔ ∃ r : ℝ, AsReal x r :=
   Iff.rfl
+
+/-!
+Zero-ended source comparisons use a canonical Mathlib zero instead of
+selecting a second real representative for the Litex numeral `0`. This is the
+constructive order bridge used by sign rules: a proof of `0 < x` or `0 ≤ x`
+contains exactly one representative of `x`, and its order certificate is an
+ordinary Mathlib real inequality.
+-/
+
+/-- Canonical lowering of a source comparison `0 < x`. -/
+def Positive
+    {α : Type}
+    (x : α) : Prop :=
+  ∃ r : ℝ, AsReal x r ∧ 0 < r
+
+/-- Canonical lowering of a source comparison `0 ≤ x`. -/
+def Nonnegative
+    {α : Type}
+    (x : α) : Prop :=
+  ∃ r : ℝ, AsReal x r ∧ 0 ≤ r
+
+namespace Positive
+
+theorem intro
+    {α : Type}
+    {x : α}
+    {r : ℝ}
+    (hxr : AsReal x r)
+    (hr : 0 < r) :
+    Positive x :=
+  ⟨r, hxr, hr⟩
+
+theorem toNonnegative
+    {α : Type}
+    {x : α}
+    (hx : Positive x) :
+    Nonnegative x := by
+  rcases hx with ⟨r, hxr, hr⟩
+  exact ⟨r, hxr, le_of_lt hr⟩
+
+theorem congr
+    {α β : Type}
+    {x : α}
+    {y : β}
+    (hxy : Same x y) :
+    Positive x ↔ Positive y := by
+  constructor
+  · rintro ⟨r, hxr, hr⟩
+    exact ⟨r, (AsReal.congr hxy).mp hxr, hr⟩
+  · rintro ⟨r, hyr, hr⟩
+    exact ⟨r, (AsReal.congr hxy).mpr hyr, hr⟩
+
+end Positive
+
+namespace Nonnegative
+
+theorem intro
+    {α : Type}
+    {x : α}
+    {r : ℝ}
+    (hxr : AsReal x r)
+    (hr : 0 ≤ r) :
+    Nonnegative x :=
+  ⟨r, hxr, hr⟩
+
+theorem congr
+    {α β : Type}
+    {x : α}
+    {y : β}
+    (hxy : Same x y) :
+    Nonnegative x ↔ Nonnegative y := by
+  constructor
+  · rintro ⟨r, hxr, hr⟩
+    exact ⟨r, (AsReal.congr hxy).mp hxr, hr⟩
+  · rintro ⟨r, hyr, hr⟩
+    exact ⟨r, (AsReal.congr hxy).mpr hyr, hr⟩
+
+end Nonnegative
 
 /-- Heterogeneous strict comparison through native Mathlib reals. -/
 def Lt
@@ -684,6 +819,18 @@ theorem leOfComplexReals
     (h : r ≤ s) :
     Le (r : ℂ) (s : ℂ) :=
   Le.intro (AsReal.complex r) (AsReal.complex s) h
+
+theorem positiveOfComplexReal
+    {r : ℝ}
+    (h : 0 < r) :
+    Positive (r : ℂ) :=
+  Positive.intro (AsReal.complex r) h
+
+theorem nonnegativeOfComplexReal
+    {r : ℝ}
+    (h : 0 ≤ r) :
+    Nonnegative (r : ℂ) :=
+  Nonnegative.intro (AsReal.complex r) h
 
 theorem real_lt_iff
     [RealCoherence]
