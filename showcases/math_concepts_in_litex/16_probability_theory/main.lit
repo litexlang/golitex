@@ -49,6 +49,21 @@ setting SigmaAlgebraSetting(Omega set, events power_set(power_set(Omega))):
 
 prop is_sigma_algebra([SigmaAlgebraSetting])
 
+# Event families now use the same checked indexed-set algebra as ordinary
+# sets. These are direct builtin identities and bounds, not auxiliary theorems.
+# The concrete finite sample space keeps this section executable on its own.
+have fn finite_event_family(event_index {1, 2}) power_set({1, 2, 3}) by cases:
+    case event_index = 1: {1, 2}
+    case event_index = 2: {2, 3}
+
+finite_event_family(1) $subset index_union({1, 2}, {1, 2, 3}, finite_event_family)
+index_intersect({1, 2}, {1, 2, 3}, finite_event_family) $subset finite_event_family(2)
+
+# Complementing a union/intersection of events is pointwise De Morgan. The
+# explicit sample-space ambient also handles an empty event family correctly.
+set_minus({1, 2, 3}, index_union({1, 2}, {1, 2, 3}, finite_event_family)) = index_intersect({1, 2}, {1, 2, 3}, fn(event_index {1, 2}) power_set({1, 2, 3}) {set_minus({1, 2, 3}, finite_event_family(event_index))})
+set_minus({1, 2, 3}, index_intersect({1, 2}, {1, 2, 3}, finite_event_family)) = index_union({1, 2}, {1, 2, 3}, fn(event_index {1, 2}) power_set({1, 2, 3}) {set_minus({1, 2, 3}, finite_event_family(event_index))})
+
 prop pairwise_disjoint_event_sequence(Omega set, events power_set(power_set(Omega)), family fn(n N+) events):
     forall idx, j N+:
         idx != j

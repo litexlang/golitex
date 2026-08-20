@@ -76,6 +76,7 @@ pub enum ByStmt {
     ByAxiomOfChoiceStmt(ByAxiomOfChoiceStmt),
     ByRegularityAxiomStmt(ByRegularityAxiomStmt),
     ByDefStmt(ByDefStmt),
+    ByStructDefStmt(ByStructDefStmt),
     ByThmStmt(ByThmStmt),
 }
 

@@ -9,10 +9,21 @@ impl Runtime {
         binding_kind: ParamObjType,
     ) -> Result<SuccessInferResult, RuntimeError> {
         let type_fact = self.parameter_type_fact_for_binding(binding, param_type, binding_kind)?;
-        self.store_with_well_defined_verification_and_infer_with_default_verify_state_and_reason(
-            type_fact,
-            InferReason::ParameterDefinition,
-        )
+        let mut infer_result = self
+            .store_with_well_defined_verification_and_infer_with_default_verify_state_and_reason(
+                type_fact,
+                InferReason::ParameterDefinition,
+            )?;
+        if let ParamType::Obj(Obj::StructObj(struct_obj)) = param_type {
+            let parameter = param_binding_element_obj_for_store(binding, binding_kind);
+            infer_result.new_infer_result_inside(self.release_one_struct_definition_layer(
+                &parameter,
+                struct_obj,
+                default_line_file(),
+                InferReason::ParameterDefinition.store_reason(),
+            )?);
+        }
+        Ok(infer_result)
     }
 
     pub(crate) fn parameter_type_fact_for_binding(
@@ -153,6 +164,17 @@ impl Runtime {
                         InferReason::ParameterDefinition,
                     )?,
                 );
+                if let ParamType::Obj(Obj::StructObj(struct_obj)) = &param_def.param_type {
+                    let parameter = param_binding_element_obj_for_store(binding, binding_kind);
+                    infer_result.new_infer_result_inside(
+                        self.release_one_struct_definition_layer(
+                            &parameter,
+                            struct_obj,
+                            default_line_file(),
+                            InferReason::ParameterDefinition.store_reason(),
+                        )?,
+                    );
+                }
             }
         }
         Ok(infer_result)

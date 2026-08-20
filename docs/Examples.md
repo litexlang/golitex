@@ -3484,7 +3484,8 @@ p.y = 2
 
 The same carrier syntax is accepted in `forall`, `exist`, set-builder,
 proposition, theorem, template, and function signatures. A function that
-returns `&Point` exposes fields directly on its calls:
+returns `&Point` makes fields well-defined directly on its calls. Open that
+result explicitly before using its tuple bridge or struct properties:
 
 ```litex
 struct Point:
@@ -3492,14 +3493,17 @@ struct Point:
     y R
 
 have fn make_point(x, y R) &Point = (x, y)
+make_point(1, 2).x = make_point(1, 2).x
+by struct def make_point(1, 2)
 make_point(1, 2).x = 1
 ```
 
-Struct bindings keep their tuple projection view lazy. Declaring `p &Point`
-does not immediately infer `p $in cart(...)` or facts about every `p[i]`;
-using an explicit projection such as `p[1]` materializes that view on demand.
-Use `by thm struct_member((1, 2), &Point)` to check an actual tuple's fields
-and store its struct membership explicitly.
+A direct symbol binding such as `p &Point` is the sole automatic opening case.
+It releases one layer: tuple shape and dimension, Cartesian membership,
+field-to-index bridges, field carriers, and struct laws. In contrast,
+`by thm struct_member((1, 2), &Point)` checks and stores only the named
+membership of that tuple. Generic membership never selects field names or
+releases the tuple representation.
 
 ```litex
 struct Point:

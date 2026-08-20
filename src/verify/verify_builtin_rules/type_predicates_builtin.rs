@@ -6,6 +6,32 @@ impl Runtime {
         is_nonempty_set_fact: &IsNonemptySetFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
+        if let Obj::IndexUnion(index_union) = &is_nonempty_set_fact.set {
+            if let Some(exists_nonempty_fiber) = self
+                .indexed_family_finite_or_nonempty_fiber_exists_fact(
+                    index_union.index_set.as_ref(),
+                    index_union.family_fn.as_ref(),
+                    false,
+                    &is_nonempty_set_fact.line_file,
+                )?
+            {
+                let result = self.verify_exist_fact_with_known_exist_fact(
+                    &exists_nonempty_fiber,
+                    &exists_nonempty_fiber,
+                )?;
+                if result.is_true() {
+                    return Ok(
+                        SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                            is_nonempty_set_fact.clone().into(),
+                            "indexed union is nonempty from an existing nonempty fiber".to_string(),
+                            vec![result],
+                        )
+                        .into(),
+                    );
+                }
+            }
+        }
+
         // Empty set rule: `$is_nonempty_set(S)` follows from `S != {}`.
         // Example: after `S != {}`, prove `$is_nonempty_set(S)`.
         let empty_set: Obj = ListSet::new(vec![]).into();
@@ -518,6 +544,87 @@ impl Runtime {
         is_finite_set_fact: &IsFiniteSetFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
+        if let Obj::IndexUnion(index_union) = &is_finite_set_fact.set {
+            let domain_finite: AtomicFact = IsFiniteSetFact::new(
+                index_union.index_set.as_ref().clone(),
+                is_finite_set_fact.line_file.clone(),
+            )
+            .into();
+            let domain_result =
+                self.verify_atomic_fact_as_builtin_rule_premise(&domain_finite, builtin_state)?;
+            if domain_result.is_true() {
+                if let Some(pointwise_finite) = self.indexed_family_pointwise_finite_fact(
+                    index_union.index_set.as_ref(),
+                    index_union.family_fn.as_ref(),
+                    &is_finite_set_fact.line_file,
+                )? {
+                    if let Some(pointwise_result) =
+                        self.verify_forall_fact_from_known_cache_only(&pointwise_finite)?
+                    {
+                        return Ok(
+                            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                                is_finite_set_fact.clone().into(),
+                                "indexed union is finite from finite domain and pointwise finite fibers"
+                                    .to_string(),
+                                vec![domain_result, pointwise_result],
+                            )
+                            .into(),
+                        );
+                    }
+                }
+            }
+        }
+        if let Obj::IndexIntersect(index_intersect) = &is_finite_set_fact.set {
+            let ambient_finite: AtomicFact = IsFiniteSetFact::new(
+                index_intersect.ambient_set.as_ref().clone(),
+                is_finite_set_fact.line_file.clone(),
+            )
+            .into();
+            let ambient_result =
+                self.verify_atomic_fact_as_builtin_rule_premise(&ambient_finite, builtin_state)?;
+            if ambient_result.is_true() {
+                return Ok(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                        is_finite_set_fact.clone().into(),
+                        "indexed intersection is finite when its ambient set is finite".to_string(),
+                        vec![ambient_result],
+                    )
+                    .into(),
+                );
+            }
+
+            if let Some(nonempty_result) = self.verify_index_set_nonempty_premise(
+                index_intersect.index_set.as_ref(),
+                &is_finite_set_fact.line_file,
+                builtin_state,
+            )? {
+                if let Some(exists_finite_fiber) = self
+                    .indexed_family_finite_or_nonempty_fiber_exists_fact(
+                        index_intersect.index_set.as_ref(),
+                        index_intersect.family_fn.as_ref(),
+                        true,
+                        &is_finite_set_fact.line_file,
+                    )?
+                {
+                    let fiber_result = self.verify_exist_fact_with_known_exist_fact(
+                        &exists_finite_fiber,
+                        &exists_finite_fiber,
+                    )?;
+                    if fiber_result.is_true() {
+                        return Ok(
+                            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                                is_finite_set_fact.clone().into(),
+                                "nonempty indexed intersection is finite from one finite fiber"
+                                    .to_string(),
+                                vec![nonempty_result, fiber_result],
+                            )
+                            .into(),
+                        );
+                    }
+                }
+            }
+        }
+
         if let Some(result) = self
             .try_verify_finite_codomain_from_known_surjection(is_finite_set_fact, builtin_state)?
         {

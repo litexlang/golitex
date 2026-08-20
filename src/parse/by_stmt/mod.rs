@@ -14,6 +14,7 @@ mod for_by_stmt;
 mod induc_by_stmt;
 mod reflexive_prop_by_stmt;
 mod regularity_axiom_by_stmt;
+mod struct_definition_by_stmt;
 mod symmetric_prop_by_stmt;
 mod thm_by_stmt;
 mod transitive_prop_by_stmt;
@@ -38,11 +39,12 @@ impl Runtime {
             ZORN_LEMMA => self.parse_by_zorn_lemma_stmt(tb),
             AXIOM_OF_CHOICE => self.parse_by_axiom_of_choice_stmt(tb),
             REGULARITY_AXIOM => self.parse_by_regularity_axiom_stmt(tb),
+            STRUCT => self.parse_by_struct_def_stmt(tb),
             DEF => self.parse_by_def_stmt(tb),
             THM => self.parse_by_thm_stmt(tb),
             CLOSED_RANGE => self.parse_by_closed_range_as_cases_stmt(tb),
             _ => Err(RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(format!(
-                    "by: expected cases, contra, def, enumerate finite_set/range/closed_range, closed_range as cases, induc, strong_induc, for, extension, transitive_prop, symmetric_prop, reflexive_prop, antisymmetric_prop, zorn_lemma, axiom_of_choice, regularity_axiom, or thm after `by`, got `{}`",
+                    "by: expected cases, contra, def, struct def, enumerate finite_set/range/closed_range, closed_range as cases, induc, strong_induc, for, extension, transitive_prop, symmetric_prop, reflexive_prop, antisymmetric_prop, zorn_lemma, axiom_of_choice, regularity_axiom, or thm after `by`, got `{}`",
                     second_keyword
                 ), tb.line_file.clone())))),
         }

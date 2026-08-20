@@ -593,6 +593,12 @@ pub struct SuccessByDefStmtResult {
     pub verification: Option<SuccessVerifyByDefinitionResult>,
 }
 
+pub struct SuccessByStructDefStmtResult {
+    pub statement: ByStructDefStmt,
+    pub common: SuccessStmtCommonResult,
+    pub membership_check: Option<Box<StmtResult>>,
+}
+
 pub struct SuccessByThmStmtResult {
     pub statement: ByThmStmt,
     pub common: SuccessStmtCommonResult,
@@ -617,6 +623,7 @@ pub enum SuccessByStmtResult {
     ByAxiomOfChoiceStmt(Box<SuccessByAxiomOfChoiceStmtResult>),
     ByRegularityAxiomStmt(Box<SuccessByRegularityAxiomStmtResult>),
     ByDefStmt(Box<SuccessByDefStmtResult>),
+    ByStructDefStmt(Box<SuccessByStructDefStmtResult>),
     ByThmStmt(Box<SuccessByThmStmtResult>),
 }
 
@@ -1042,6 +1049,11 @@ impl SuccessByStmtResult {
                     }
                 }
             }
+            Self::ByStructDefStmt(result) => {
+                if let Some(check) = &result.membership_check {
+                    visitor(check);
+                }
+            }
             Self::ByThmStmt(result) => {
                 if let Some(verification) = &result.verification {
                     if let Some(arguments) = &verification.argument_verification {
@@ -1176,6 +1188,11 @@ impl SuccessByStmtResult {
                     }
                 }
             }
+            Self::ByStructDefStmt(result) => {
+                if let Some(check) = &mut result.membership_check {
+                    visitor(check)?;
+                }
+            }
             Self::ByThmStmt(result) => {
                 if let Some(verification) = &mut result.verification {
                     if let Some(arguments) = &mut verification.argument_verification {
@@ -1306,6 +1323,11 @@ impl SuccessByStmtResult {
                 }
                 children
             }
+            Self::ByStructDefStmt(result) => result
+                .membership_check
+                .into_iter()
+                .map(|check| *check)
+                .collect(),
             Self::ByThmStmt(result) => {
                 let mut children = Vec::new();
                 if let Some(verification) = result.verification {
@@ -2407,6 +2429,7 @@ impl SuccessByStmtResult {
             Self::ByAxiomOfChoiceStmt(result) => result.common,
             Self::ByRegularityAxiomStmt(result) => result.common,
             Self::ByDefStmt(result) => result.common,
+            Self::ByStructDefStmt(result) => result.common,
             Self::ByThmStmt(result) => result.common,
         }
     }
@@ -2430,6 +2453,7 @@ impl SuccessByStmtResult {
             Self::ByAxiomOfChoiceStmt(result) => result.statement.clone().into(),
             Self::ByRegularityAxiomStmt(result) => result.statement.clone().into(),
             Self::ByDefStmt(result) => result.statement.clone().into(),
+            Self::ByStructDefStmt(result) => result.statement.clone().into(),
             Self::ByThmStmt(result) => result.statement.clone().into(),
         }
     }
@@ -2453,6 +2477,7 @@ impl SuccessByStmtResult {
             Self::ByAxiomOfChoiceStmt(result) => &result.common,
             Self::ByRegularityAxiomStmt(result) => &result.common,
             Self::ByDefStmt(result) => &result.common,
+            Self::ByStructDefStmt(result) => &result.common,
             Self::ByThmStmt(result) => &result.common,
         }
     }
@@ -2476,6 +2501,7 @@ impl SuccessByStmtResult {
             Self::ByAxiomOfChoiceStmt(result) => &mut result.common,
             Self::ByRegularityAxiomStmt(result) => &mut result.common,
             Self::ByDefStmt(result) => &mut result.common,
+            Self::ByStructDefStmt(result) => &mut result.common,
             Self::ByThmStmt(result) => &mut result.common,
         }
     }

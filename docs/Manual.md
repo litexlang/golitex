@@ -480,6 +480,43 @@ For compatibility with the older family-object forms,
 three-argument object remains the canonical form when empty-index semantics
 matter.
 
+Indexed-family algebra is handled by ordinary one-step builtin rules. Exact
+family transformations for singleton domains, family/domain monotonicity,
+domain partitions, De Morgan laws, external `union`/`intersect`/`set_minus`,
+pointwise binary operations, ranges, powersets, Cartesian products,
+nonemptiness, and finiteness are recognized in their existing fact-family
+owners. A rule with a mathematical premise consumes an already available
+membership, nonempty, subset, `forall`, or `exist` fact and records it in the
+proof result; it does not launch recursive theorem search. No wrapper `thm`
+declarations are installed for these identities.
+
+For example:
+
+```litex
+have fn A(k {1, 2}) power_set(N) = {1}
+
+A(1) $subset index_union({1, 2}, N, A)
+set_minus(N, index_union({1, 2}, N, A)) = index_intersect({1, 2}, N, fn(k {1, 2}) power_set(N) {set_minus(N, A(k))})
+cart(Z, set_minus(N, {1})) = set_minus(cart(Z, N), cart(Z, {1}))
+```
+
+The matcher keeps one-way laws one-way. In particular, an indexed union of
+pointwise intersections is only contained in the intersection of the indexed
+unions; a union of powersets is only contained in the powerset of the union;
+and a pointwise-union `general_cart` only contains the union of the two
+products. For arbitrary `C`, the exact relative-complement law is
+
+```text
+C set_minus index_intersect(I, X, A)
+= union(
+    set_minus(C, X),
+    index_union(I, C, fn(i I) power_set(C) {set_minus(C, A(i))}))
+```
+
+The correction term may be omitted only when `C $subset X` is already known.
+The complete runnable boundary example is
+`examples/02_builtin_math/indexed_set_family_operators.lit`.
+
 Family-union construction and elimination are both checked facts:
 
 ```litex
@@ -755,23 +792,86 @@ aggregate rules still require a real-valued iterand.
 
 ### Struct objects and declaration-owned field access
 
-A `struct` defines a named subset of a Cartesian carrier. Once its header
-parameters are fixed, `&Name<args>` is one ordinary set, not a set of sets.
-Every binder and function signature position that accepts a set therefore also
-accepts a struct carrier.
+A `struct` defines a named set together with one declaration-owned field view.
+Once its header parameters are fixed, `&Name<args>` is one ordinary set, not a
+set of sets. Every binder and function signature position that accepts a set
+therefore also accepts a struct carrier.
 
-Writing `have p &Point = ...` records both the membership fact and the field
-owner of the new symbol. Named fields belong to that declaration: `p.x` means
-the `x` field of the `Point` carrier written when `p` was introduced. Litex no
-longer has an `&Point{p}.x` form for selecting another view later.
+#### Tuple representation
 
-A structure with two or more fields uses that Cartesian-product
-representation. A one-field structure is instead a named view of the sole
-field carrier, and selecting its only field is an identity projection. This
-supports mathematically natural objects such as a metric space carrying only
-its distance operation or a partial order carrying only its order relation,
-without inventing a dummy field. A structure must still declare at least one
-field.
+A structure with two or more fields is represented by a tuple in declaration
+order. If `Point` declares `x` and then `y`, opening a `Point` value `p`
+establishes `p.x = p[1]` and `p.y = p[2]`. The field-to-index relation belongs
+to the struct declaration; Litex does not guess it from field names.
+
+A one-field structure is instead an identity view of the sole field carrier.
+Opening `v &ScalarView` establishes `v.value = v`, not `v.value = v[1]`.
+This supports objects such as a metric space carrying only its distance
+operation without inventing a dummy field. A structure must declare at least
+one field.
+
+The tuple representation is deliberately opaque outside two places:
+
+1. the verifier may inspect it internally while proving `e $in &Struct`; and
+2. a successful `by struct def e` (or the automatic direct-binding case below)
+   stores the public representation facts.
+
+A generic membership fact `e $in &Struct` does not itself store tuple shape,
+field carriers, field-to-index equalities, or struct laws.
+
+#### Explicit property release: `by struct def`
+
+`by struct def e` opens exactly one declaration-owned struct layer. It has no
+`as &Struct` form: the struct must already be fixed by the declaration of `e`,
+by a function's explicit return carrier, or by the direct struct carrier of the
+previous field in a chain.
+
+Before storing anything, the statement verifies the exact membership
+`e $in &Struct`. Failure is atomic: no partial tuple or field facts remain.
+For a struct with fields `a : A` and `b : B`, success releases:
+
+- `$is_tuple(e)`;
+- `tuple_dim(e) = 2`;
+- `e $in cart(A, B)`;
+- `e.a = e[1]` and `e.b = e[2]`;
+- the instantiated field-carrier facts; and
+- the struct's instantiated `<=>:` facts.
+
+For a one-field struct it instead releases `e.only = e`, the sole carrier for
+both spellings, and the instantiated laws. Repeating the same statement is
+idempotent. Opening is never recursive: `by struct def outer` does not also
+open a struct-valued `outer.inner`; write `by struct def outer.inner` when its
+properties are needed.
+
+#### Field-access well-definedness
+
+Field syntax and property release are separate. To decide whether `e.y` is a
+well-defined object, Litex only determines the declaration-owned struct view
+of `e` and checks that this struct declares `y`. To decide `e.y.z`, it also
+checks that `y` is declared directly with a struct carrier that declares `z`.
+This WD traversal does not store any field carrier, tuple bridge, or struct
+law. The final field's carrier matters only when a surrounding operation needs
+it, for example when calling a function-valued field.
+
+Consequently, `f(t).x = f(t).x` can be well-defined and reflexive before any
+opening, while a theorem that needs a law about `f(t).x` still requires
+`by struct def f(t)` or `by struct def f(t).x`, depending on which layer owns
+that law.
+
+#### The only automatic property release
+
+A direct syntactic symbol binding written with a struct carrier, such as
+`p &Point` or `forall p &Point`, opens one layer automatically. This is why
+properties of a directly bound `p` are immediately available.
+
+No other form opens properties automatically. In particular, a function
+result declared as `&Point`, a nested struct-valued field, an equality, and a
+later proof of membership still require `by struct def ...`. Those declarations
+are sufficient for field-access WD, but not for importing the struct laws.
+Named fields therefore belong to declarations, never to membership search.
+Litex has no `&Point{p}.x` form for selecting another view later.
+
+#### Examples
 
 ```litex
 struct Point:
@@ -781,6 +881,7 @@ struct Point:
 by thm struct_member((1, 2), &Point)
 have p &Point = (1, 2)
 
+# `p &Point` opened one layer automatically.
 p.x = 1
 p.y = 2
 ```
@@ -795,6 +896,11 @@ struct Point:
     y R
 
 have fn make_point(x, y R) &Point = (x, y)
+
+# The declared return makes the field path well-defined, but does not release
+# Point's tuple bridge or properties.
+make_point(1, 2).x = make_point(1, 2).x
+by struct def make_point(1, 2)
 make_point(1, 2).x = 1
 ```
 
@@ -845,15 +951,18 @@ struct TaggedPoint:
 by thm struct_member((1, 2), &Coordinates)
 by thm struct_member(((1, 2), 0), &TaggedPoint)
 have item &TaggedPoint = ((1, 2), 0)
+by struct def item.point
 item.point.x $in R
 ```
 
 Here the declaration of `TaggedPoint.point` supplies the owner of the next
-field. Parameterized and module-qualified struct field types work the same
-way. A final field may be called, as in `space.scalars.mul(a, b)`. Fields also
-work after a call when the function's declared return carrier is a struct, as
-in `make_box(f).entries(i)`. A callable field's declared carrier must be a
-function set.
+field, so the entire path is well-defined before the `by` statement. The
+explicit opening is needed only to release `Coordinates`' field-carrier and
+representation facts. Parameterized and module-qualified struct field types
+work the same way. A final field may be called, as in
+`space.scalars.mul(a, b)`. Fields also work after a call when the function's
+declared return carrier is a struct, as in `make_box(f).entries(i)`. A callable
+field's declared carrier must be a function set.
 
 When `expr` is a materialized template-selected struct object, a callable
 field projects through the selected tuple value before application. Thus an
@@ -880,8 +989,10 @@ p.x = 1
 ```
 
 The last line is a parse `error`. The membership still exposes the ordinary
-positional Cartesian facts, but not `Point` field names. To use those names,
-construct a new declaration-owned object explicitly:
+struct-membership proposition for later proof use, but it exposes neither
+positional Cartesian facts nor `Point` field names. There is deliberately no
+`by struct def p as &Point` escape hatch. To use those names, construct a new
+declaration-owned object explicitly:
 
 ```litex
 struct Point:
@@ -2209,6 +2320,7 @@ introductions.
 | `by cases`, `by contra` | Every branch closes the target, or an explicit contradiction is produced. | The requested target only. |
 | Enumeration, induction, `by for`, `by extension` | The target has the exact finite/range/discrete/extensional shape and every generated subgoal closes. | The requested universal/equality/atomic target. |
 | `by def` | One positive concrete/builtin definitional target and every defining clause. | The target with explicit definition provenance. |
+| `by struct def e` | `e` has a declaration-owned struct view and `e $in &Struct` verifies. | Exactly one layer of tuple/identity bridges, field carriers, and instantiated struct laws. |
 | Predicate-property registrations | The proof has the exact reflexive/symmetric/transitive/antisymmetric predicate shape. | A reusable property route; antisymmetry may later close equality. |
 | `by regularity_axiom` | Its displayed set/nonemptiness obligations. | An explicitly trusted set-theoretic conclusion; strict mode rejects the step. |
 | `by axiom_of_choice` | The family is a set and every member is proved nonempty. | Stores `exist f fn(A S)big_union(S) st {$is_choice_function_for(S,S,fn(A S)S {A},f)}`. The existential body is atomic. |
@@ -3067,13 +3179,13 @@ The declarative set schemas cover the following groups:
 
 | Group | Recognized laws and required premises |
 |---|---|
-| Union membership and containment | Membership in either operand introduces union membership. Both operands are subsets of the union. If `A $subset S` and `B $subset S`, then `union(A,B) $subset S`. |
-| Intersection membership and containment | Membership in the intersection exposes membership in both operands. The intersection is a subset of each operand. A known `A $subset B` reduces `intersect(A,B)` to `A`, with the mirrored form for `B $subset A`. |
+| Union membership and containment | Membership in either operand introduces union membership. Both operands are subsets of the union. If `A $subset S` and `B $subset S`, then `union(A,B) $subset S`; componentwise inclusions also give `union(A,B) $subset union(C,D)`. |
+| Intersection membership and containment | Membership in the intersection exposes membership in both operands. The intersection is a subset of each operand and of every known upper bound of either operand. A known `A $subset B` reduces `intersect(A,B)` to `A`, with the mirrored form for `B $subset A`. |
 | Union/intersection algebra | Both operations are commutative and associative; union is idempotent and has `{}` as a two-sided identity; `intersect(A,union(B,C))` distributes to the union of the two intersections. |
-| Relative complement | Membership exposes membership in the left set and nonmembership in the right; `set_minus(A,B) $subset A`; `A \\ (B union C)` and `A \\ (B intersect C)` obey the two relative De Morgan laws. If `B $subset A`, then removing `A \\ B` from `A` recovers `B` in either equality orientation. |
+| Relative complement | Membership exposes membership in the left set and nonmembership in the right; every upper bound of `A` bounds `set_minus(A,B)`, and `A $subset C` gives `set_minus(A,B) $subset set_minus(C,B)`. The two relative De Morgan laws hold. If `B $subset A`, then removing `A \\ B` from `A` recovers `B` in either equality orientation. |
 | Finiteness and infiniteness | Union/intersection of finite sets is finite; removing anything from a finite left operand is finite; removing a finite set from an infinite set remains infinite. |
 | Nonemptiness | A nonempty union operand makes the union nonempty. `power_set(A)` is nonempty for every set `A`. |
-| Power set | `A $subset B` introduces `A $in power_set(B)`; a finite base gives a finite power set. |
+| Power set | `A $subset B` introduces both `A $in power_set(B)` and `power_set(A) $subset power_set(B)`; a finite base gives a finite power set. |
 | Empty set | `{}` is a subset of every set. |
 
 Representative set algebra and containment rules verify directly:
@@ -3774,7 +3886,7 @@ Main families are:
 | `x` in a real interval | Real membership and endpoint bounds |
 | `x $in {y S: filters}` | `x $in S` and instantiated filters |
 | Function/sequence/matrix type membership | A callable function interface; sequence and matrix sets are expanded to their corresponding function set, while matrix metadata also records its entry carrier and dimensions. |
-| `x $in &Struct<...>` | Instantiated field-carrier and equivalent facts; literal tuples additionally expose component projections. |
+| `x $in &Struct<...>` | No eager public consequences. The membership verifier checks the instantiated tuple carrier and `<=>:` conditions internally; use a declaration-owned `by struct def x` to release one layer. |
 
 Membership inference also transports through concrete equal set
 representatives and through one checked set-valued function or template

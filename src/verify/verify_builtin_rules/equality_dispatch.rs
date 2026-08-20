@@ -158,6 +158,11 @@ impl Runtime {
         {
             return Ok(done);
         }
+        if let Some(done) =
+            self.try_verify_indexed_set_family_algebra_equalities(equal_fact, builtin_state)?
+        {
+            return Ok(done);
+        }
 
         if let Some(done) = self.try_verify_integer_range_set_builder_equality(equal_fact)? {
             return Ok(done);
@@ -1826,7 +1831,7 @@ impl Runtime {
     // Match exactly `fn(i I) power_set(X) {family(i)}` up to alpha-renaming.
     // In particular, a merely well-typed function with a different body is
     // not accepted as the restriction of `family`.
-    fn anonymous_indexed_family_restriction_matches(
+    pub(super) fn anonymous_indexed_family_restriction_matches(
         original_family: &Obj,
         expected_index_set: &Obj,
         expected_ambient_set: &Obj,

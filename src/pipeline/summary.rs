@@ -380,6 +380,7 @@ impl RunSummary {
                 self.bump_by_method("regularity axiom")
             }
             SuccessByStmtResult::ByDefStmt(_) => self.bump_by_method("def"),
+            SuccessByStmtResult::ByStructDefStmt(_) => self.bump_by_method("struct def"),
             SuccessByStmtResult::ByThmStmt(result) => {
                 self.bump_by_method("theorem");
                 if let Some(verification) = &result.verification {

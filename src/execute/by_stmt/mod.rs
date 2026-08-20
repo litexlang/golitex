@@ -14,6 +14,7 @@ mod helpers_by_stmt;
 mod induc_by_stmt;
 mod reflexive_prop_by_stmt;
 mod regularity_axiom_by_stmt;
+mod struct_definition_by_stmt;
 mod symmetric_prop_by_stmt;
 mod thm_by_stmt;
 mod transitive_prop_by_stmt;

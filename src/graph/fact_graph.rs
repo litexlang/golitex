@@ -393,7 +393,9 @@ impl FactGraphBuilder {
             | Stmt::UnsafeStmt(UnsafeStmt::TrustHaveStmt(_)) => {
                 self.add_trust_nodes(&common.infers)
             }
-            Stmt::By(ByStmt::ByDefStmt(_)) => self.add_infer_nodes(&common.infers),
+            Stmt::By(ByStmt::ByDefStmt(_)) | Stmt::By(ByStmt::ByStructDefStmt(_)) => {
+                self.add_infer_nodes(&common.infers)
+            }
             _ => {}
         }
         if let SuccessStmtResult::DefThmStmt(result) = success {
@@ -643,6 +645,25 @@ impl FactGraphBuilder {
                         }
                     }
                 }
+            }
+            return;
+        }
+        if let SuccessStmtResult::By(SuccessByStmtResult::ByStructDefStmt(result)) = success {
+            self.add_infer_edges(&common.infers);
+            let membership: Fact = InFact::new(
+                result.statement.obj.clone(),
+                result.statement.struct_obj.clone().into(),
+                result.statement.line_file.clone(),
+            )
+            .into();
+            let source_id = self.add_fact_node(&membership, "membership", None);
+            for output in common.infers.store_fact_outputs() {
+                let target_id = self.add_fact_node(
+                    &output.itself_and_why_itself_is_stored.0,
+                    "struct definition",
+                    None,
+                );
+                self.add_edge(&source_id, &target_id, "unfolds");
             }
             return;
         }

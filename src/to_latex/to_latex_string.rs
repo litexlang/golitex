@@ -2463,6 +2463,7 @@ impl Stmt {
             Stmt::By(ByStmt::ByAxiomOfChoiceStmt(x)) => x.to_latex_string(),
             Stmt::By(ByStmt::ByRegularityAxiomStmt(x)) => x.to_latex_string(),
             Stmt::By(ByStmt::ByDefStmt(x)) => latex_texttt_escape(&x.to_string()),
+            Stmt::By(ByStmt::ByStructDefStmt(x)) => latex_texttt_escape(&x.to_string()),
             Stmt::By(ByStmt::ByThmStmt(x)) => latex_texttt_escape(&x.to_string()),
         }
     }

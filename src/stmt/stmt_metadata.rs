@@ -222,6 +222,7 @@ impl ByStmt {
             ByStmt::ByAxiomOfChoiceStmt(stmt) => stmt.line_file.clone(),
             ByStmt::ByRegularityAxiomStmt(stmt) => stmt.line_file.clone(),
             ByStmt::ByDefStmt(stmt) => stmt.line_file.clone(),
+            ByStmt::ByStructDefStmt(stmt) => stmt.line_file.clone(),
             ByStmt::ByThmStmt(stmt) => stmt.line_file.clone(),
         }
     }
@@ -245,6 +246,7 @@ impl ByStmt {
             ByStmt::ByAxiomOfChoiceStmt(stmt) => stmt.stmt_type_name(),
             ByStmt::ByRegularityAxiomStmt(stmt) => stmt.stmt_type_name(),
             ByStmt::ByDefStmt(stmt) => stmt.stmt_type_name(),
+            ByStmt::ByStructDefStmt(stmt) => stmt.stmt_type_name(),
             ByStmt::ByThmStmt(stmt) => stmt.stmt_type_name(),
         }
     }
@@ -268,6 +270,7 @@ impl ByStmt {
             ByStmt::ByAxiomOfChoiceStmt(_) => ByAxiomOfChoiceStmt::output_type_string(),
             ByStmt::ByRegularityAxiomStmt(_) => ByRegularityAxiomStmt::output_type_string(),
             ByStmt::ByDefStmt(_) => ByDefStmt::output_type_string(),
+            ByStmt::ByStructDefStmt(_) => ByStructDefStmt::output_type_string(),
             ByStmt::ByThmStmt(_) => ByThmStmt::output_type_string(),
         }
     }

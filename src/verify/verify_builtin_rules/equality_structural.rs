@@ -240,25 +240,34 @@ impl Runtime {
         }
 
         if let Obj::FnObj(fn_obj) = obj {
-            let callable_projection: Option<Obj> = match fn_obj.head.as_ref() {
+            let callable_head: Option<(Obj, bool)> = match fn_obj.head.as_ref() {
                 FnObjHead::ObjAsStructInstanceWithFieldAccess(field_access) => {
-                    Some(self.struct_field_access_projection(field_access)?)
+                    Some((field_access.clone().into(), false))
                 }
-                FnObjHead::ObjAtIndex(obj_at_index) => Some(obj_at_index.clone().into()),
+                FnObjHead::ObjAtIndex(obj_at_index) => Some((obj_at_index.clone().into(), true)),
                 _ => None,
             };
-            if let Some(projection) = callable_projection {
-                if let Some(component) = self.reduce_structural_equality_obj_once(&projection)? {
-                    return Ok(
-                        self.apply_curried_layers_to_callable_obj(component, fn_obj.body.clone())
-                    );
+            if let Some((head, reduce_head_directly)) = callable_head {
+                let mut representatives = self.get_all_obj_representatives_equal_to_given(&head);
+                representatives.retain(|candidate| {
+                    reduce_head_directly || obj_equality_key(candidate) != obj_equality_key(&head)
+                });
+                if reduce_head_directly {
+                    representatives.push(head);
                 }
-                let mut representatives =
-                    self.get_all_obj_representatives_equal_to_given(&projection);
                 representatives.sort_by_key(|candidate| {
                     !matches!(candidate, Obj::AnonymousFn(_) | Obj::FnObj(_))
                 });
                 for representative in representatives {
+                    if let Some(component) =
+                        self.reduce_structural_equality_obj_once(&representative)?
+                    {
+                        if let Some(applied) = self
+                            .apply_curried_layers_to_callable_obj(component, fn_obj.body.clone())
+                        {
+                            return Ok(Some(applied));
+                        }
+                    }
                     if let Some(applied) = self
                         .apply_curried_layers_to_callable_obj(representative, fn_obj.body.clone())
                     {
@@ -269,7 +278,16 @@ impl Runtime {
         }
 
         if let Obj::ObjAsStructInstanceWithFieldAccess(field_access) = obj {
-            return self.struct_field_access_projection(field_access).map(Some);
+            let projection = self.struct_field_access_projection(field_access)?;
+            let projection_key = obj_equality_key(&projection);
+            if self
+                .get_all_obj_representatives_equal_to_given(obj)
+                .iter()
+                .any(|candidate| obj_equality_key(candidate) == projection_key)
+            {
+                return Ok(Some(projection));
+            }
+            return Ok(None);
         }
 
         let Obj::ObjAtIndex(obj_at_index) = obj else {

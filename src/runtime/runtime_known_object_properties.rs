@@ -114,7 +114,50 @@ impl Runtime {
     }
 
     pub fn get_cloned_object_in_fn_set_candidates(&self, obj: &Obj) -> Vec<FnSetBody> {
-        self.get_cloned_object_in_fn_set(obj).into_iter().collect()
+        if let Some(body) = self.get_cloned_object_in_fn_set(obj) {
+            return vec![body];
+        }
+        self.declaration_owned_one_field_callable_body(obj)
+            .into_iter()
+            .collect()
+    }
+
+    /// A one-field struct is an identity view of its sole carrier.  For WD,
+    /// recover a callable carrier directly from the bound symbol's declared
+    /// struct view without storing membership, tuple bridges, or struct laws.
+    fn declaration_owned_one_field_callable_body(&self, obj: &Obj) -> Option<FnSetBody> {
+        let symbol = match obj {
+            Obj::Atom(atom) => atom.symbol_ref(),
+            _ => None,
+        }?;
+        let struct_obj = self.default_struct_view_for_symbol(symbol)?;
+        let def = self.get_struct_definition_by_name(&struct_obj.name.to_string())?;
+        if def.fields.len() != 1 {
+            return None;
+        }
+
+        let header_map = if let Some((params, _)) = &def.param_def_with_dom {
+            if params.number_of_params() != struct_obj.params.len() {
+                return None;
+            }
+            params.param_defs_and_args_to_param_to_arg_map(&struct_obj.params)
+        } else {
+            if !struct_obj.params.is_empty() {
+                return None;
+            }
+            Default::default()
+        };
+        let carrier = self
+            .inst_obj(
+                &def.fields[0].field_type,
+                &header_map,
+                ParamObjType::DefHeader,
+            )
+            .ok()?;
+        match self.fn_set_space_from_return_set_obj(carrier).ok()? {
+            FnSetSpace::Set(fn_set) => Some(fn_set.body),
+            FnSetSpace::Anon(anonymous_fn) => Some(anonymous_fn.body),
+        }
     }
 
     pub fn get_fn_range_function_body(&self, function: &Obj) -> Option<FnSetBody> {

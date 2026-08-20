@@ -10,8 +10,8 @@ verified entrypoint
 
 [book]
 Euclidean-Geometry
-verified book
-"Book Zero, analytic laws, and the repaired Euclid I.1-I.4 chapter all pass the current release runner."
+verified foundation
+"Book Zero and analytic laws only; both pass the current release runner."
 
 [book]
 High-School-Mathematics

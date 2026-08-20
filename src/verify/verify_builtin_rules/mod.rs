@@ -9,6 +9,7 @@ mod equality_function;
 mod equality_numeric;
 mod equality_structural;
 mod in_fact_builtin;
+mod indexed_set_family;
 mod mapping_properties_builtin;
 mod native_exp_sign_factorial;
 mod native_integer_extrema;

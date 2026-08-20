@@ -819,7 +819,23 @@ Read this as a named set-builder over `cart(R, R)`:
 
 Here the field name `x` labels index `1`, and `y` labels index `2`. Because
 `p` was declared directly in `&FirstQuadrant`, `p.x` is its first component
-and `p.y` is its second component.
+and `p.y` is its second component. This direct `p &FirstQuadrant` binding is
+the only automatic property-release case: it opens one struct layer and stores
+the tuple shape, dimension, field/index bridges, field carriers, and laws.
+
+For any other declaration-owned struct expression, write
+`by struct def expression`. The statement first verifies that exact expression
+belongs to its already-declared struct carrier, then releases exactly one
+layer. There is no `as &Struct` syntax and no recursive opening. For example,
+if `make_outer(t)` returns `&Outer` and `Outer.inner` is declared as `&Inner`,
+then `by struct def make_outer(t).inner` opens `Inner`, not `Outer` and not any
+struct below `Inner`.
+
+For a multi-field value `e`, opening stores `$is_tuple(e)`, its `tuple_dim`,
+Cartesian membership, and equations such as `e.x = e[1]`. For a one-field
+identity view it stores `e.only = e` instead. These tuple/struct bridge facts
+are not stored anywhere else, except that the struct-membership verifier may
+use the tuple representation internally while checking membership.
 
 For a parameterized struct, `&Name<a>` is the instantiated struct set. For a
 non-parameterized struct, `&Name` is the struct set. Both are ordinary sets and
@@ -836,17 +852,26 @@ The same declaration-owned rule supports consecutive field chains. If
 field declaration, not from proof search. A named set definition or a later
 fact saying that `outer.inner` belongs to `&Inner` does not add fields.
 
+This validity is only well-definedness. Looking up `outer.inner.value` checks
+that the declared field path exists; it does not store field membership,
+field/index equalities, or struct laws. Use `by struct def outer.inner` before
+a proof that needs `Inner`'s properties. A function's explicit struct return
+carrier behaves the same way: it makes `f(t).field` a legal path but does not
+open the result's properties.
+
 Postfixes compose when declarations provide the carriers. A final field may be
 callable, so `space.scalars.mul(a, b)` is supported when `scalars` is a
 struct-valued field and `mul` is callable. Likewise, after
 `have fn make_inner(...) &Inner = ...`, `make_inner(...).value` is valid.
 
 This is not a unique nominal type, and Litex does not infer fields from all
-known memberships. A later fact `p $in &FirstQuadrant` supplies membership and
-positional Cartesian consequences, but it does not add `p.x`. If a `p &Point`
-also belongs to `&ComplexPair`, `p.x` remains the `Point` field fixed by its
-declaration. To use the other names, introduce a new object explicitly, for
-example `have p2 &ComplexPair = (p.x, p.y)`, then write `p2.real` and `p2.img`.
+known memberships. A later fact `p $in &FirstQuadrant` supplies only that
+membership proposition; it does not eagerly store positional consequences,
+laws, or `p.x`. Nor can it be opened with `by struct def p`, because `p` has no
+declaration-owned `FirstQuadrant` view. If a `p &Point` also belongs to
+`&ComplexPair`, `p.x` remains the `Point` field fixed by its declaration. To use
+the other names, introduce a new object explicitly, for example
+`have p2 &ComplexPair = (p.x, p.y)`, then write `p2.real` and `p2.img`.
 
 ## Why would a vector space own its scalar system?
 
@@ -1298,11 +1323,13 @@ Some mathematical facts carry routine consequences. Litex stores those
 consequences so the user does not have to restate every projection, membership,
 domain fact, or set-builder condition by hand.
 
-For example, after Litex knows that an object belongs to a struct set, it can
-store facts about the corresponding tuple components and explicit struct-field
-views. After it knows a function object and a valid input, it can use the
-function's domain and return-set information. After it records certain set or
-Cartesian-product facts, it can infer basic membership and projection facts.
+For example, after Litex knows a function object and a valid input, it can use
+the function's domain and return-set information. After it records certain set
+or Cartesian-product facts, it can infer basic membership and projection
+facts. Struct membership is intentionally different: a generic
+`e $in &Struct` stores no tuple, field, or law consequences. Those facts are
+released only by a direct `e &Struct` symbol binding or by an explicit,
+membership-checked `by struct def e`.
 
 This is one reason Litex proofs can stay close to ordinary mathematical prose.
 The user states the meaningful structural fact once, and the checker records

@@ -34,3 +34,14 @@ name = "stmt_result_to_lean_compiler_tracers"
 path = "src/stmt_result_to_lean_compiler/stmt_result_to_lean_compiler_tests.rs"
 
 [dependencies]
+
+[profile.dev]
+debug = 0
+incremental = false
+
+[profile.test]
+debug = 0
+incremental = false
+
+[profile.release]
+strip = "symbols"

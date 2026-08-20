@@ -65,6 +65,7 @@ instead of placing `forall y Y` inside the conclusion for `x`.
 |---|---|---|
 | A direct carrier, arithmetic, equality, membership, or inferred consequence | State the target directly | Do not wrap a fact Litex already knows |
 | A positive concrete predicate whose body is proved | `by def $P(args)` | Folds only the matching positive definition target |
+| Properties of a declaration-owned struct expression | `by struct def expression` | Verifies membership, then opens exactly one layer; direct `x &Struct` symbols are the only automatic case |
 | One atomic consequence of a named theorem | `by thm name(args) => fact` | Use bare `by thm` when several conclusions are needed |
 | A semantic constructor with compound requirements | Its reserved `by thm` interface | One-layer automation does not invent quantified premises |
 | An existential target | `witness ... from ...` | Match the target's witnesses and carriers exactly |
@@ -127,6 +128,7 @@ for scripts and CI, and `-strict` for a full dependency and trust audit. See
 ## Hard Boundaries
 
 - `by def` folds a definition; it is not general proof automation.
+- `by struct def e` needs an existing declaration-owned view; later membership alone cannot select one.
 - `claim` proves a fact; it does not introduce a callable object.
 - `prop` names a property; it does not replace `have` or `have fn`.
 - An explicit theorem selection should not be followed by the identical fact
