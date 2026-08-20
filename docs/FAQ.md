@@ -161,11 +161,13 @@ introduces an `or`, it must prove one selected branch. In both directions every
 atomic leaf keeps the surrounding builtin-depth budget; the compound fact does
 not reopen full proof search.
 
-The sole positive nested-`forall` conclusion follows the same canonical
-principle. The surface parser accepts it for convenience, then merges its
-parameters and premises into the outer `forall`; the stored conclusion remains
-non-`forall`. A nested universal mixed with sibling conclusions is rejected
-rather than stored as a different logical shape.
+Universal conclusions follow the same bounded grammar. A `forall` conclusion
+cannot contain another `forall`; declare all quantified parameters in the
+outer header instead. For example, write `forall x R, y R: ...` rather than
+placing `forall y R` inside the conclusion of `forall x R`. A universal fact
+may still appear as an explicit premise before `=>:` because premises are
+stored as assumed facts rather than conclusion branches. A direct `not forall`
+conclusion is also rejected; name the quantified proposition first.
 
 This means that some ordinary logical shapes have no direct anonymous Litex
 syntax. In particular, a `forall` cannot be used directly as one branch of an

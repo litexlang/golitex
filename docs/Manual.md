@@ -1249,11 +1249,11 @@ forall index range(3, 3):
     index != index
 ```
 
-As a preview convenience, the sole direct conclusion of a positive `forall`
-may itself be a `forall`. Litex combines the parameters and assumptions before
-well-definedness, verification, and storage:
+The conclusion of a `forall` cannot itself be another `forall`. Put every
+quantified parameter in the same header. The nested spelling below is a parse
+`error`:
 
-```litex
+```text
 forall x R:
     x > 0
     =>:
@@ -1263,11 +1263,20 @@ forall x R:
                 x + y > 0
 ```
 
-The stored rule is the flat fact
-`forall x R, y R: x > 0; y > 0 => x + y > 0`. The nested universal must be the
-only fact in its direct conclusion block; mixing it with a sibling conclusion
-is an `error`. This normalization does not apply to a universal premise, to
-`not forall`, or to either side of `forall ... <=>:`.
+Write the flat fact instead:
+
+```litex
+forall x, y R:
+    x > 0
+    y > 0
+    =>:
+        x + y > 0
+```
+
+A universal fact may still be an explicit premise before `=>:`. That premise
+is an assumed fact in the outer scope, not a universal conclusion. A
+`not forall` fact is likewise not allowed as a direct universal conclusion;
+name that quantified proposition before using it there.
 
 An assumption is local; it does not become a global fact:
 
@@ -1452,7 +1461,6 @@ This is a parse `error`; write `not forall ...` on one header.
 | Unique existence | `exist! params st {facts}` |
 | Non-existence | `not exist params st {facts}` |
 | Universal implication | `forall params: assumptions =>: conclusions` |
-| Nested universal conclusion (preview; flattened before storage) | `forall outer: assumptions =>: forall inner: assumptions =>: conclusions` |
 | Universal equivalence | `forall params: =>: left <=>: right` |
 | Inline universal | `forall params: assumption => conclusion` |
 | Negated universal | `not forall params: facts` |

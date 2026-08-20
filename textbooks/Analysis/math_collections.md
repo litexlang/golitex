@@ -1,5 +1,9 @@
 # Mathematical Collections for Tao Analysis I
 
+> Publication status (2026-08-20): only Introduction, Chapters 1--4, and
+> Appendix A are in the runnable module. Later concept cards describe preserved
+> work in `../todo_textbook_chapters/`, not current published interfaces.
+
 ## Concept-card convention
 
 For each central mathematical concept, record its ordinary meaning, semantic
@@ -62,10 +66,12 @@ able to bind `state &BisectionState<E>` and read `state.lower` and
 `state.upper`, while a candidate-state relation may still be useful before
 packaging.  A verified nested use can place such a value in another struct and
 read `process.initial.lower`.  The current source nevertheless keeps its
-checked pair-valued recursive sequence.  Field shorthand does not continue
-after a function call, so a state sequence requires the longer expression
-`&BisectionState<E>{states(n)}.lower`; migrating the existing `pair(n)[1]`
-proofs now would increase, rather than reduce, the public proof surface.
+checked pair-valued recursive sequence. Field access now continues after a
+function call only when the function signature directly returns
+`&BisectionState<E>`. The existing `states` sequence is still declared with a
+pair carrier, so later membership alone would not grant `states(n).lower`;
+migrating it would require changing that return declaration and the existing
+`pair(n)[1]` proof surface together.
 
 Chapter 4 formal differences are a smaller named-field possibility, but the
 mathematical identity of that section is the equivalence relation on displayed

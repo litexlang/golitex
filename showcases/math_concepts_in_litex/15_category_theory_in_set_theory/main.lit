@@ -1,0 +1,140 @@
+# Generic small categories encoded with Litex sets.
+#
+# Obj is the set-sized collection of category objects. If object Obj, then
+# object plays the categorical role "object"; its internal representation is
+# deliberately opaque and it does not need to be usable as a set.
+#
+# Mor is one ambient set of arrow encodings. Hom(source, target) is the actual
+# set of arrows from source to target. The dependent return carriers on
+# identity and compose guarantee that they land in the correct hom-sets.
+
+# A candidate ambient arrow is a morphism source -> target exactly when it
+# belongs to Hom(source, target).
+prop is_morphism(Obj, Mor set, Hom fn(hom_source, hom_target Obj) power_set(Mor), source, target Obj, f Mor):
+    f $in Hom(source, target)
+
+# compose(source, middle, target, f, g) means g after f. An endomorphism is an
+# identity morphism when composing it with every arrow on either side changes
+# nothing.
+prop is_identity_morphism(Obj, Mor set, Hom fn(hom_source, hom_target Obj) power_set(Mor), compose fn(comp_source, comp_middle, comp_target Obj, comp_first Hom(comp_source, comp_middle), comp_second Hom(comp_middle, comp_target)) Hom(comp_source, comp_target), object Obj, identity_arrow Hom(object, object)):
+    forall target Obj, f Hom(object, target):
+        compose(object, object, target, identity_arrow, f) = f
+    forall source Obj, g Hom(source, object):
+        compose(source, object, object, g, identity_arrow) = g
+
+# A candidate h is the composite of f and g when it equals the selected
+# composition value.
+prop is_composite(Obj, Mor set, Hom fn(hom_source, hom_target Obj) power_set(Mor), compose fn(comp_source, comp_middle, comp_target Obj, comp_first Hom(comp_source, comp_middle), comp_second Hom(comp_middle, comp_target)) Hom(comp_source, comp_target), source, middle, target Obj, f Hom(source, middle), g Hom(middle, target), h Hom(source, target)):
+    h = compose(source, middle, target, f, g)
+
+# These generic data form a category exactly when every selected identity has
+# the two unit properties and composition is associative. Closure is already
+# encoded by the dependent carriers of identity and compose.
+prop is_category(Obj, Mor set, Hom fn(hom_source, hom_target Obj) power_set(Mor), identity fn(identity_object Obj) Hom(identity_object, identity_object), compose fn(comp_source, comp_middle, comp_target Obj, comp_first Hom(comp_source, comp_middle), comp_second Hom(comp_middle, comp_target)) Hom(comp_source, comp_target)):
+    forall object Obj:
+        $is_identity_morphism(Obj, Mor, Hom, compose, object, identity(object))
+    forall source, middle, target, far_target Obj, f Hom(source, middle), g Hom(middle, target), h Hom(target, far_target):
+        compose(source, target, far_target, compose(source, middle, target, f, g), h) = compose(source, middle, far_target, f, compose(middle, target, far_target, g, h))
+
+# Tracer 1: the category predicate exposes the selected identity law at every
+# object.
+thm category_identity_is_identity_morphism:
+    ? forall Obj, Mor set, Hom fn(hom_source, hom_target Obj) power_set(Mor), identity fn(identity_object Obj) Hom(identity_object, identity_object), compose fn(comp_source, comp_middle, comp_target Obj, comp_first Hom(comp_source, comp_middle), comp_second Hom(comp_middle, comp_target)) Hom(comp_source, comp_target), object Obj:
+        $is_category(Obj, Mor, Hom, identity, compose)
+        =>:
+            $is_identity_morphism(Obj, Mor, Hom, compose, object, identity(object))
+    by def $is_category(Obj, Mor, Hom, identity, compose)
+
+# Tracer 2: dependent composition lands in Hom(source, target), hence its
+# result satisfies the explicit is_morphism predicate as well.
+thm category_composition_is_a_morphism:
+    ? forall Obj, Mor set, Hom fn(hom_source, hom_target Obj) power_set(Mor), compose fn(comp_source, comp_middle, comp_target Obj, comp_first Hom(comp_source, comp_middle), comp_second Hom(comp_middle, comp_target)) Hom(comp_source, comp_target), source, middle, target Obj, f Hom(source, middle), g Hom(middle, target):
+        $is_morphism(Obj, Mor, Hom, source, target, compose(source, middle, target, f, g))
+    compose(source, middle, target, f, g) $in Hom(source, target) $subset Mor
+    by def $is_morphism(Obj, Mor, Hom, source, target, compose(source, middle, target, f, g))
+
+# Tracer 3: the selected composition value is, by definition, the composite
+# of the two input arrows.
+thm selected_composite_is_composite:
+    ? forall Obj, Mor set, Hom fn(hom_source, hom_target Obj) power_set(Mor), compose fn(comp_source, comp_middle, comp_target Obj, comp_first Hom(comp_source, comp_middle), comp_second Hom(comp_middle, comp_target)) Hom(comp_source, comp_target), source, middle, target Obj, f Hom(source, middle), g Hom(middle, target):
+        $is_composite(Obj, Mor, Hom, compose, source, middle, target, f, g, compose(source, middle, target, f, g))
+    by def $is_composite(Obj, Mor, Hom, compose, source, middle, target, f, g, compose(source, middle, target, f, g))
+
+# Concrete example 1: the terminal category has one object and one arrow. Every
+# hom-set is the singleton {0}; identity and composition must therefore return
+# its unique member.
+have terminal_objects finite_set = {0}
+have terminal_morphisms finite_set = {0}
+have fn terminal_hom(source, target terminal_objects) power_set(terminal_morphisms) = {0}
+forall source, target terminal_objects:
+    terminal_hom(source, target) = {0}
+    0 $in {0}
+    0 $in terminal_hom(source, target)
+have fn terminal_identity(object terminal_objects) terminal_hom(object, object) = 0
+have fn terminal_compose(source, middle, target terminal_objects, f terminal_hom(source, middle), g terminal_hom(middle, target)) terminal_hom(source, target) = 0
+
+thm terminal_data_forms_a_category:
+    ? forall:
+        $is_category(terminal_objects, terminal_morphisms, terminal_hom, terminal_identity, terminal_compose)
+    claim:
+        ? forall object terminal_objects:
+            $is_identity_morphism(terminal_objects, terminal_morphisms, terminal_hom, terminal_compose, object, terminal_identity(object))
+        claim:
+            ? forall target terminal_objects, f terminal_hom(object, target):
+                terminal_compose(object, object, target, terminal_identity(object), f) = f
+            terminal_hom(object, target) = {0}
+            f $in {0}
+            f = 0
+            terminal_compose(object, object, target, terminal_identity(object), f) = 0 = f
+        claim:
+            ? forall source terminal_objects, g terminal_hom(source, object):
+                terminal_compose(source, object, object, g, terminal_identity(object)) = g
+            terminal_hom(source, object) = {0}
+            g $in {0}
+            g = 0
+            terminal_compose(source, object, object, g, terminal_identity(object)) = 0 = g
+        by def $is_identity_morphism(terminal_objects, terminal_morphisms, terminal_hom, terminal_compose, object, terminal_identity(object))
+    claim:
+        ? forall source, middle, target, far_target terminal_objects, f terminal_hom(source, middle), g terminal_hom(middle, target), h terminal_hom(target, far_target):
+            terminal_compose(source, target, far_target, terminal_compose(source, middle, target, f, g), h) = terminal_compose(source, middle, far_target, f, terminal_compose(middle, target, far_target, g, h))
+        terminal_compose(source, target, far_target, terminal_compose(source, middle, target, f, g), h) = 0 = terminal_compose(source, middle, far_target, f, terminal_compose(middle, target, far_target, g, h))
+    by def $is_category(terminal_objects, terminal_morphisms, terminal_hom, terminal_identity, terminal_compose)
+
+# Concrete example 2: the chaotic category on two objects. Its objects are 0
+# and 1, and the unique arrow source -> target is encoded by (source, target).
+# Hence every ordered pair of objects has exactly one arrow between it.
+have two_object_objects finite_set = {0, 1}
+have fn two_object_hom(source, target two_object_objects) power_set(cart(two_object_objects, two_object_objects)) = {(source, target)}
+forall source, target two_object_objects:
+    two_object_hom(source, target) = {(source, target)}
+    (source, target) $in {(source, target)}
+    (source, target) $in two_object_hom(source, target)
+have fn two_object_identity(object two_object_objects) two_object_hom(object, object) = (object, object)
+have fn two_object_compose(source, middle, target two_object_objects, f two_object_hom(source, middle), g two_object_hom(middle, target)) two_object_hom(source, target) = (source, target)
+
+thm two_object_chaotic_data_forms_a_category:
+    ? forall:
+        $is_category(two_object_objects, cart(two_object_objects, two_object_objects), two_object_hom, two_object_identity, two_object_compose)
+    claim:
+        ? forall object two_object_objects:
+            $is_identity_morphism(two_object_objects, cart(two_object_objects, two_object_objects), two_object_hom, two_object_compose, object, two_object_identity(object))
+        claim:
+            ? forall target two_object_objects, f two_object_hom(object, target):
+                two_object_compose(object, object, target, two_object_identity(object), f) = f
+            two_object_hom(object, target) = {(object, target)}
+            f $in {(object, target)}
+            f = (object, target)
+            two_object_compose(object, object, target, two_object_identity(object), f) = (object, target) = f
+        claim:
+            ? forall source two_object_objects, g two_object_hom(source, object):
+                two_object_compose(source, object, object, g, two_object_identity(object)) = g
+            two_object_hom(source, object) = {(source, object)}
+            g $in {(source, object)}
+            g = (source, object)
+            two_object_compose(source, object, object, g, two_object_identity(object)) = (source, object) = g
+        by def $is_identity_morphism(two_object_objects, cart(two_object_objects, two_object_objects), two_object_hom, two_object_compose, object, two_object_identity(object))
+    claim:
+        ? forall source, middle, target, far_target two_object_objects, f two_object_hom(source, middle), g two_object_hom(middle, target), h two_object_hom(target, far_target):
+            two_object_compose(source, target, far_target, two_object_compose(source, middle, target, f, g), h) = two_object_compose(source, middle, far_target, f, two_object_compose(middle, target, far_target, g, h))
+        two_object_compose(source, target, far_target, two_object_compose(source, middle, target, f, g), h) = (source, far_target) = two_object_compose(source, middle, far_target, f, two_object_compose(middle, target, far_target, g, h))
+    by def $is_category(two_object_objects, cart(two_object_objects, two_object_objects), two_object_hom, two_object_identity, two_object_compose)

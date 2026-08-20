@@ -112,7 +112,7 @@ impl Runtime {
                         ),
                     )));
                 }
-                return Ok(ForallFact::new(
+                return Ok(ForallFact::new_canonical_forall(
                     setting_prefix.param_def,
                     setting_prefix.dom_facts,
                     then_facts,
@@ -178,7 +178,13 @@ impl Runtime {
                 )));
             }
 
-            Ok(ForallFact::new(param_def, dom_facts, then_facts, tb.line_file.clone())?.into())
+            Ok(ForallFact::new_canonical_forall(
+                param_def,
+                dom_facts,
+                then_facts,
+                tb.line_file.clone(),
+            )?
+            .into())
         })
     }
 
@@ -186,7 +192,7 @@ impl Runtime {
         &mut self,
         tb: &mut TokenBlock,
         has_colon: bool,
-    ) -> Result<(Vec<Fact>, Vec<Fact>), RuntimeError> {
+    ) -> Result<(Vec<Fact>, Vec<ExistOrAndChainAtomicFact>), RuntimeError> {
         if tb.exceed_end_of_head() {
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
@@ -270,7 +276,10 @@ impl Runtime {
         }
     }
 
-    fn parse_inline_forall_then(&mut self, tb: &mut TokenBlock) -> Result<Vec<Fact>, RuntimeError> {
+    fn parse_inline_forall_then(
+        &mut self,
+        tb: &mut TokenBlock,
+    ) -> Result<Vec<ExistOrAndChainAtomicFact>, RuntimeError> {
         if tb.exceed_end_of_head() {
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
@@ -287,7 +296,32 @@ impl Runtime {
                 ),
             )));
         }
-        Ok(vec![self.parse_inline_fact(tb, true)?])
+        Ok(vec![self.parse_forall_conclusion_fact(tb)?])
+    }
+
+    fn parse_forall_conclusion_fact(
+        &mut self,
+        tb: &mut TokenBlock,
+    ) -> Result<ExistOrAndChainAtomicFact, RuntimeError> {
+        if tb.current()? == FORALL {
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    "a forall conclusion cannot contain another forall; move the inner parameters into the outer forall header"
+                        .to_string(),
+                    tb.line_file.clone(),
+                ),
+            )));
+        }
+        if tb.current()? == NOT && tb.token_at_add_index(1) == FORALL {
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    "a forall conclusion cannot contain `not forall`; name that quantified proposition before using it here"
+                        .to_string(),
+                    tb.line_file.clone(),
+                ),
+            )));
+        }
+        self.parse_exist_or_and_chain_atomic_fact(tb)
     }
 
     // fact_hierarchy 1
@@ -435,11 +469,11 @@ impl Runtime {
                 ))
             })?;
             last.skip_token_and_colon_and_exceed_end_of_head(RIGHT_ARROW)?;
-            let mut then_facts: Vec<Fact> = Vec::new();
+            let mut then_facts: Vec<ExistOrAndChainAtomicFact> = Vec::new();
             for block in last.body.iter_mut() {
-                then_facts.push(self.parse_fact(block)?);
+                then_facts.push(self.parse_forall_conclusion_fact(block)?);
             }
-            Ok(ForallFact::new(
+            Ok(ForallFact::new_canonical_forall(
                 param_def,
                 initial_dom_facts,
                 then_facts,
@@ -447,11 +481,11 @@ impl Runtime {
             )?
             .into())
         } else {
-            let mut then_facts: Vec<Fact> = Vec::new();
+            let mut then_facts: Vec<ExistOrAndChainAtomicFact> = Vec::new();
             for block in tb.body.iter_mut() {
-                then_facts.push(self.parse_fact(block)?);
+                then_facts.push(self.parse_forall_conclusion_fact(block)?);
             }
-            Ok(ForallFact::new(
+            Ok(ForallFact::new_canonical_forall(
                 param_def,
                 initial_dom_facts,
                 then_facts,
@@ -1061,15 +1095,9 @@ mod inline_forall_parse_tests {
     }
 
     #[test]
-    fn inline_forall_then_flattens_inline_forall() {
-        let fact =
-            parse_one_fact_line("forall x R: x > 0 => forall y R: y > 0 => x + y > 0").unwrap();
-        let Fact::ForallFact(forall_fact) = fact else {
-            panic!("expected a flattened forall fact");
-        };
-        assert_eq!(forall_fact.params_def_with_type.number_of_params(), 2);
-        assert_eq!(forall_fact.dom_facts.len(), 2);
-        assert_eq!(forall_fact.then_facts.len(), 1);
+    fn inline_forall_then_rejects_nested_forall() {
+        let msg = parse_error_msg("forall x R: x > 0 => forall y R: y > 0 => x + y > 0");
+        assert!(msg.contains("cannot contain another forall"), "{msg}");
     }
 
     #[test]
@@ -1093,12 +1121,10 @@ mod inline_forall_parse_tests {
     }
 
     #[test]
-    fn nested_forall_flattening_recomputes_dependent_parameter_indices() {
-        let fact =
-            parse_one_fact_line("forall S nonempty_set => forall x S => forall y S => x = y")
-                .unwrap();
+    fn flat_forall_computes_dependent_parameter_indices() {
+        let fact = parse_one_fact_line("forall S nonempty_set, x S, y S => x = y").unwrap();
         let Fact::ForallFact(forall_fact) = fact else {
-            panic!("expected a recursively flattened forall fact");
+            panic!("expected a flat forall fact");
         };
         assert_eq!(forall_fact.params_def_with_type.number_of_params(), 3);
         assert_eq!(
@@ -1122,10 +1148,22 @@ mod inline_forall_parse_tests {
     }
 
     #[test]
-    fn forall_then_rejects_nested_forall_with_sibling_fact() {
+    fn block_forall_then_rejects_nested_forall() {
         let msg = parse_error_msg(
-            "forall x R:\n    x > 0\n    =>:\n        x = x\n        forall y R:\n            y = y",
+            "forall x R:\n    x > 0\n    =>:\n        forall y R:\n            x + y > 0",
         );
-        assert!(msg.contains("only direct fact"), "{}", msg);
+        assert!(msg.contains("cannot contain another forall"), "{msg}");
+    }
+
+    #[test]
+    fn block_forall_without_arrow_rejects_nested_forall() {
+        let msg = parse_error_msg("forall x R:\n    forall y R:\n        x + y = y + x");
+        assert!(msg.contains("cannot contain another forall"), "{msg}");
+    }
+
+    #[test]
+    fn forall_conclusion_rejects_not_forall() {
+        let msg = parse_error_msg("forall x R:\n    not forall y R:\n        x = x");
+        assert!(msg.contains("cannot contain `not forall`"), "{msg}");
     }
 }

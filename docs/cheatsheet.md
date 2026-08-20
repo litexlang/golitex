@@ -55,6 +55,10 @@ Neither is a general recursively nested Boolean grammar. If an existential or
 set-builder body needs a quantified condition, name that condition with a
 concrete `prop` and place its atomic call in the body.
 
+Declare every parameter of a universal conclusion in one `forall` header. A
+conclusion cannot itself be another `forall`; write `forall x X, y Y: ...`
+instead of placing `forall y Y` inside the conclusion for `x`.
+
 ## Choose The Proof Action
 
 | Goal or available fact | Try first | Boundary |

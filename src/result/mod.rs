@@ -59,13 +59,14 @@ pub use runtime_success::{
     SuccessVerifyClaimForallResult, SuccessVerifyClaimResult, SuccessVerifyContradictionResult,
     SuccessVerifyExistentialEliminationResult, SuccessVerifyFunctionDefinitionResult,
     SuccessVerifyFunctionFromUniqueExistenceResult, SuccessVerifyHaveObjEqualResult,
-    SuccessVerifyIndexedFunctionDefinitionResult, SuccessVerifyKnownForallRequirementResult,
-    SuccessVerifyLocalProofScopeResult, SuccessVerifyObjectChoiceGroupResult,
-    SuccessVerifyObjectChoiceResult, SuccessVerifyPreimageResult,
-    SuccessVerifyStrategyDefinitionResult, SuccessVerifyTheoremResult,
-    SuccessVerifyTupleOrCartDimensionResult, SuccessVerifyWitnessAtomicFactResult,
-    SuccessVerifyWitnessExistResult, UnknownVerifyArgsSatisfyParamDefResult,
-    VerifyArgsSatisfyParamDefResult,
+    SuccessVerifyIndexedFunctionDefinitionResult,
+    SuccessVerifyIndexedFunctionDefinitionWellDefinedResult,
+    SuccessVerifyKnownForallRequirementResult, SuccessVerifyLocalProofScopeResult,
+    SuccessVerifyObjectChoiceGroupResult, SuccessVerifyObjectChoiceResult,
+    SuccessVerifyPreimageResult, SuccessVerifyStrategyDefinitionResult, SuccessVerifyTheoremResult,
+    SuccessVerifyTupleOrCartDefinitionResult, SuccessVerifyTupleOrCartDimensionResult,
+    SuccessVerifyWitnessAtomicFactResult, SuccessVerifyWitnessExistResult,
+    UnknownVerifyArgsSatisfyParamDefResult, VerifyArgsSatisfyParamDefResult,
 };
 pub use stmt_result::{StmtResult, UnknownStmtResult};
 pub use success_evaluate_obj_result::{

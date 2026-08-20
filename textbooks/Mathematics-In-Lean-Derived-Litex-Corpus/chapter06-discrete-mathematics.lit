@@ -121,16 +121,16 @@ struct ListCore<A set, L nonempty_set>:
 # callable function; list_append is the corresponding selected function.
 prop is_list_append(A set, L nonempty_set, core &ListCore<A, L>, append fn(xs, ys L) L):
     forall ys L:
-        append(&ListCore<A, L>{core}.nil, ys) = ys
+        append(core.nil, ys) = ys
     forall a A, xs, ys L:
-        append(&ListCore<A, L>{core}.cons(a, xs), ys) = &ListCore<A, L>{core}.cons(a, append(xs, ys))
+        append(core.cons(a, xs), ys) = core.cons(a, append(xs, ys))
 
 # Source definition: map. Its domain and codomain list carriers remain
 # independent, exactly as in List.map.
 prop is_list_map(A, B set, L_A, L_B nonempty_set, core_A &ListCore<A, L_A>, core_B &ListCore<B, L_B>, f fn(x A) B, map_fn fn(xs L_A) L_B):
-    map_fn(&ListCore<A, L_A>{core_A}.nil) = &ListCore<B, L_B>{core_B}.nil
+    map_fn(core_A.nil) = core_B.nil
     forall a A, xs L_A:
-        map_fn(&ListCore<A, L_A>{core_A}.cons(a, xs)) = &ListCore<B, L_B>{core_B}.cons(f(a), map_fn(xs))
+        map_fn(core_A.cons(a, xs)) = core_B.cons(f(a), map_fn(xs))
 
 # Source callable selections for append and map.
 # Proof debt: ListCore exposes structural induction but Litex has no generic
@@ -154,24 +154,29 @@ thm list_append_nil:
     ? forall A set, L nonempty_set, core &ListCore<A, L>, append fn(x, y L) L, target L:
         $is_list_append(A, L, core, append)
         =>:
-            append(target, &ListCore<A, L>{core}.nil) = target
-    by def:
-        ? $is_list_append(A, L, core, append)
-    have P power_set(L) = {z L: append(z, &ListCore<A, L>{core}.nil) = z}
-    append(&ListCore<A, L>{core}.nil, &ListCore<A, L>{core}.nil) = &ListCore<A, L>{core}.nil
-    by thm set_builder_member(&ListCore<A, L>{core}.nil, {z L: append(z, &ListCore<A, L>{core}.nil) = z})
-    &ListCore<A, L>{core}.nil $in {z L: append(z, &ListCore<A, L>{core}.nil) = z}
-    &ListCore<A, L>{core}.nil $in P
+            append(target, core.nil) = target
+    by def $is_list_append(A, L, core, append)
+    thm function_substitution:
+        ? forall X, Y set, f fn(x X) Y, x, y X:
+            x = y
+            =>:
+                f(x) = f(y)
+    have P power_set(L) = {z L: append(z, core.nil) = z}
+    append(core.nil, core.nil) = core.nil
+    by thm set_builder_member(core.nil, {z L: append(z, core.nil) = z})
+    core.nil $in {z L: append(z, core.nil) = z}
+    core.nil $in P
     claim:
         ? forall a A, xs L:
             xs $in P
             =>:
-                &ListCore<A, L>{core}.cons(a, xs) $in P
-        append(&ListCore<A, L>{core}.cons(a, xs), &ListCore<A, L>{core}.nil) = &ListCore<A, L>{core}.cons(a, append(xs, &ListCore<A, L>{core}.nil))
-        append(&ListCore<A, L>{core}.cons(a, xs), &ListCore<A, L>{core}.nil) = &ListCore<A, L>{core}.cons(a, xs)
-        by thm set_builder_member(&ListCore<A, L>{core}.cons(a, xs), {z L: append(z, &ListCore<A, L>{core}.nil) = z})
-        &ListCore<A, L>{core}.cons(a, xs) $in {z L: append(z, &ListCore<A, L>{core}.nil) = z}
-    trust append(target, &ListCore<A, L>{core}.nil) = target
+                core.cons(a, xs) $in P
+        append(core.cons(a, xs), core.nil) = core.cons(a, append(xs, core.nil))
+        by thm function_substitution(L, L, fn(t L) L {core.cons(a, t)}, append(xs, core.nil), xs)
+        append(core.cons(a, xs), core.nil) = core.cons(a, xs)
+        by thm set_builder_member(core.cons(a, xs), {z L: append(z, core.nil) = z})
+        core.cons(a, xs) $in {z L: append(z, core.nil) = z}
+    trust append(target, core.nil) = target
 
 # Source theorem: map_map. Structural induction compares the three map
 # specifications; the cons case composes g(f(a)) and reuses the tail result.
@@ -182,35 +187,39 @@ thm list_map_map:
         $is_list_map(A, CarrierC, L_A, L_C, core_A, core_C, fn(x A) CarrierC {g(f(x))}, map_gf)
         =>:
             map_g(map_f(target)) = map_gf(target)
-    by def:
-        ? $is_list_map(A, B, L_A, L_B, core_A, core_B, f, map_f)
-    by def:
-        ? $is_list_map(B, CarrierC, L_B, L_C, core_B, core_C, g, map_g)
-    by def:
-        ? $is_list_map(A, CarrierC, L_A, L_C, core_A, core_C, fn(x A) CarrierC {g(f(x))}, map_gf)
+    by def $is_list_map(A, B, L_A, L_B, core_A, core_B, f, map_f)
+    by def $is_list_map(B, CarrierC, L_B, L_C, core_B, core_C, g, map_g)
+    by def $is_list_map(A, CarrierC, L_A, L_C, core_A, core_C, fn(x A) CarrierC {g(f(x))}, map_gf)
+    thm function_substitution:
+        ? forall X, Y set, h fn(x X) Y, x, y X:
+            x = y
+            =>:
+                h(x) = h(y)
     have P power_set(L_A) = {z L_A: map_g(map_f(z)) = map_gf(z)}
-    map_f(&ListCore<A, L_A>{core_A}.nil) = &ListCore<B, L_B>{core_B}.nil
-    map_g(&ListCore<B, L_B>{core_B}.nil) = &ListCore<CarrierC, L_C>{core_C}.nil
-    map_gf(&ListCore<A, L_A>{core_A}.nil) = &ListCore<CarrierC, L_C>{core_C}.nil
-    map_g(map_f(&ListCore<A, L_A>{core_A}.nil)) = map_g(&ListCore<B, L_B>{core_B}.nil) = &ListCore<CarrierC, L_C>{core_C}.nil = map_gf(&ListCore<A, L_A>{core_A}.nil)
-    by thm set_builder_member(&ListCore<A, L_A>{core_A}.nil, {z L_A: map_g(map_f(z)) = map_gf(z)})
-    &ListCore<A, L_A>{core_A}.nil $in {z L_A: map_g(map_f(z)) = map_gf(z)}
-    &ListCore<A, L_A>{core_A}.nil $in P
+    map_f(core_A.nil) = core_B.nil
+    map_g(core_B.nil) = core_C.nil
+    map_gf(core_A.nil) = core_C.nil
+    map_g(map_f(core_A.nil)) = map_g(core_B.nil) = core_C.nil = map_gf(core_A.nil)
+    by thm set_builder_member(core_A.nil, {z L_A: map_g(map_f(z)) = map_gf(z)})
+    core_A.nil $in {z L_A: map_g(map_f(z)) = map_gf(z)}
+    core_A.nil $in P
     claim:
         ? forall a A, xs L_A:
             xs $in P
             =>:
-                &ListCore<A, L_A>{core_A}.cons(a, xs) $in P
-        map_f(&ListCore<A, L_A>{core_A}.cons(a, xs)) = &ListCore<B, L_B>{core_B}.cons(f(a), map_f(xs))
-        map_g(map_f(&ListCore<A, L_A>{core_A}.cons(a, xs))) = map_g(&ListCore<B, L_B>{core_B}.cons(f(a), map_f(xs)))
-        map_g(&ListCore<B, L_B>{core_B}.cons(f(a), map_f(xs))) = &ListCore<CarrierC, L_C>{core_C}.cons(g(f(a)), map_g(map_f(xs)))
-        map_g(map_f(&ListCore<A, L_A>{core_A}.cons(a, xs))) = &ListCore<CarrierC, L_C>{core_C}.cons(g(f(a)), map_g(map_f(xs)))
-        map_gf(&ListCore<A, L_A>{core_A}.cons(a, xs)) = &ListCore<CarrierC, L_C>{core_C}.cons((fn(x A) CarrierC {g(f(x))})(a), map_gf(xs))
+                core_A.cons(a, xs) $in P
+        map_f(core_A.cons(a, xs)) = core_B.cons(f(a), map_f(xs))
+        map_g(map_f(core_A.cons(a, xs))) = map_g(core_B.cons(f(a), map_f(xs)))
+        map_g(core_B.cons(f(a), map_f(xs))) = core_C.cons(g(f(a)), map_g(map_f(xs)))
+        map_g(map_f(core_A.cons(a, xs))) = core_C.cons(g(f(a)), map_g(map_f(xs)))
+        map_gf(core_A.cons(a, xs)) = core_C.cons((fn(x A) CarrierC {g(f(x))})(a), map_gf(xs))
         (fn(x A) CarrierC {g(f(x))})(a) = g(f(a))
-        map_gf(&ListCore<A, L_A>{core_A}.cons(a, xs)) = &ListCore<CarrierC, L_C>{core_C}.cons(g(f(a)), map_gf(xs))
-        map_g(map_f(&ListCore<A, L_A>{core_A}.cons(a, xs))) = map_gf(&ListCore<A, L_A>{core_A}.cons(a, xs))
-        by thm set_builder_member(&ListCore<A, L_A>{core_A}.cons(a, xs), {z L_A: map_g(map_f(z)) = map_gf(z)})
-        &ListCore<A, L_A>{core_A}.cons(a, xs) $in {z L_A: map_g(map_f(z)) = map_gf(z)}
+        by thm function_substitution(CarrierC, L_C, fn(t CarrierC) L_C {core_C.cons(t, map_gf(xs))}, (fn(x A) CarrierC {g(f(x))})(a), g(f(a)))
+        map_gf(core_A.cons(a, xs)) = core_C.cons(g(f(a)), map_gf(xs))
+        by thm function_substitution(L_C, L_C, fn(t L_C) L_C {core_C.cons(g(f(a)), t)}, map_g(map_f(xs)), map_gf(xs))
+        map_g(map_f(core_A.cons(a, xs))) = map_gf(core_A.cons(a, xs))
+        by thm set_builder_member(core_A.cons(a, xs), {z L_A: map_g(map_f(z)) = map_gf(z)})
+        core_A.cons(a, xs) $in {z L_A: map_g(map_f(z)) = map_gf(z)}
     trust map_g(map_f(target)) = map_gf(target)
 
 # Source definition: reverse, with its defining equations.
@@ -220,10 +229,10 @@ template<A set, L nonempty_set, core &ListCore<A, L>>:
     trust have list_reverse fn(xs L) L
 
 trust forall A set, L nonempty_set, core &ListCore<A, L>:
-    \list_reverse<A, L, core>(&ListCore<A, L>{core}.nil) = &ListCore<A, L>{core}.nil
+    \list_reverse<A, L, core>(core.nil) = core.nil
 
 trust forall A set, L nonempty_set, core &ListCore<A, L>, a A, xs L:
-    \list_reverse<A, L, core>(&ListCore<A, L>{core}.cons(a, xs)) = \list_append<A, L, core>(\list_reverse<A, L, core>(xs), &ListCore<A, L>{core}.cons(a, &ListCore<A, L>{core}.nil))
+    \list_reverse<A, L, core>(core.cons(a, xs)) = \list_append<A, L, core>(\list_reverse<A, L, core>(xs), core.cons(a, core.nil))
 
 thm list_reverse_append:
     ? forall A set, L nonempty_set, core &ListCore<A, L>, xs, ys L:

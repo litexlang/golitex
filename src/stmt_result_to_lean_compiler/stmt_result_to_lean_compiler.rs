@@ -76,6 +76,68 @@ struct CompiledExistentialWitnessProofBody {
     proof_expression: String,
 }
 
+struct CompiledFactProofBody {
+    fact: Fact,
+    proposition: String,
+    proof_expression: String,
+}
+
+struct CompiledByDefinitionComponentProofBody {
+    fact: Fact,
+    retained_fact_id: Option<FactId>,
+    proposition: String,
+    proof_expression: String,
+}
+
+struct CompiledByDefinitionProofBody {
+    target: CompiledFactProofBody,
+    components: Vec<CompiledByDefinitionComponentProofBody>,
+}
+
+struct CompiledLitexTheoremInstantiationConclusionProofBody {
+    retained_fact_id: Option<FactId>,
+    fact: Fact,
+    proposition: String,
+    proof_expression: String,
+}
+
+/// Target-language construction output for one reviewed native-real function
+/// Result. This is not another statement IR: it exists only while the parent
+/// `SuccessHaveFnEqualStmtResult` method wraps its child-scope compilation in
+/// persistent Lean declarations.
+struct CompiledNamedRealFunctionDefinitionBody {
+    function: LitexToLeanFunctionTypeIr,
+    source_body: Obj,
+    lowered_body: LitexToLeanObjectIr,
+    value: String,
+    parameter_premises: Vec<LitexToLeanLocalPremiseIr>,
+    domain_premises: Vec<LitexToLeanLocalPremiseIr>,
+}
+
+/// Target-language construction output returned from the tuple index scope.
+/// The recursive WD Result remains owned by the statement result; this value
+/// contains only what the parent needs after the compiler environment pops.
+struct CompiledIndexedTupleDefinitionBody {
+    dimension: usize,
+    value: String,
+    positive_dimension_proof: String,
+    at_least_two_dimension_proof: String,
+}
+
+/// Target-language construction output returned from one indexed-function
+/// child scope. Sequence, finite-sequence, and matrix Results differ only in
+/// how many parameter and domain premises their nested scopes publish, so the
+/// parent compiler consumes one common shape instead of three parallel
+/// temporary structures.
+struct CompiledIndexedFunctionDefinitionBody {
+    function: LitexToLeanFunctionTypeIr,
+    source_body: Obj,
+    lowered_body: LitexToLeanObjectIr,
+    value: String,
+    parameter_premises: Vec<LitexToLeanLocalPremiseIr>,
+    domain_premises: Vec<LitexToLeanLocalPremiseIr>,
+}
+
 impl StmtResultToLeanCompiler {
     pub fn new(source_label: &str) -> Self {
         Self {
@@ -153,24 +215,69 @@ impl StmtResultToLeanCompiler {
                         self.compile_compatibility_statement_result_to_lean_source(complete_result)
                     }
                 }
-                SuccessDefObjStmtResult::HaveObjByExistFactsStmt(_)
-                | SuccessDefObjStmtResult::ObtainObjFromAtomicFact(_)
-                | SuccessDefObjStmtResult::HaveFnEqualStmt(_)
-                | SuccessDefObjStmtResult::HaveTupleStmt(_) => {
-                    self.compile_compatibility_statement_result_to_lean_source(complete_result)
+                SuccessDefObjStmtResult::HaveObjByExistFactsStmt(result) => {
+                    if self.compile_have_obj_by_exist_facts_stmt_result_to_lean_source(result)? {
+                        Ok(())
+                    } else {
+                        self.compile_compatibility_statement_result_to_lean_source(complete_result)
+                    }
                 }
-                SuccessDefObjStmtResult::ObtainObjFromThm(_) => Err(
-                    "StmtResultToLeanCompiler does not yet support theorem-backed `obtain` Result `ObtainObjFromThm`"
-                        .into(),
-                ),
+                SuccessDefObjStmtResult::ObtainObjFromAtomicFact(result) => {
+                    if self
+                        .compile_obtain_obj_from_atomic_fact_stmt_result_to_lean_source(result)?
+                    {
+                        Ok(())
+                    } else {
+                        self.compile_compatibility_statement_result_to_lean_source(complete_result)
+                    }
+                }
+                SuccessDefObjStmtResult::HaveFnEqualStmt(result) => {
+                    if self.compile_have_fn_equal_stmt_result_to_lean_source(result)? {
+                        Ok(())
+                    } else {
+                        self.compile_compatibility_statement_result_to_lean_source(complete_result)
+                    }
+                }
+                SuccessDefObjStmtResult::HaveTupleStmt(result) => {
+                    if self.compile_have_tuple_stmt_result_to_lean_source(result)? {
+                        Ok(())
+                    } else {
+                        self.compile_compatibility_statement_result_to_lean_source(complete_result)
+                    }
+                }
+                SuccessDefObjStmtResult::HaveSeqStmt(result) => {
+                    if self.compile_have_sequence_stmt_result_to_lean_source(result)? {
+                        Ok(())
+                    } else {
+                        self.compile_compatibility_statement_result_to_lean_source(complete_result)
+                    }
+                }
+                SuccessDefObjStmtResult::HaveFiniteSeqStmt(result) => {
+                    if self.compile_have_finite_sequence_stmt_result_to_lean_source(result)? {
+                        Ok(())
+                    } else {
+                        self.compile_compatibility_statement_result_to_lean_source(complete_result)
+                    }
+                }
+                SuccessDefObjStmtResult::HaveMatrixStmt(result) => {
+                    if self.compile_have_matrix_stmt_result_to_lean_source(result)? {
+                        Ok(())
+                    } else {
+                        self.compile_compatibility_statement_result_to_lean_source(complete_result)
+                    }
+                }
+                SuccessDefObjStmtResult::ObtainObjFromThm(result) => {
+                    if self.compile_obtain_obj_from_theorem_stmt_result_to_lean_source(result)? {
+                        Ok(())
+                    } else {
+                        Err("StmtResultToLeanCompiler does not support this theorem-backed `obtain` Result shape".into())
+                    }
+                }
                 SuccessDefObjStmtResult::HaveByPreimageStmt(_)
                 | SuccessDefObjStmtResult::HaveFnEqualCaseByCaseStmt(_)
                 | SuccessDefObjStmtResult::HaveFnByInducStmt(_)
                 | SuccessDefObjStmtResult::HaveFnByForallExistUniqueStmt(_)
-                | SuccessDefObjStmtResult::HaveCartStmt(_)
-                | SuccessDefObjStmtResult::HaveSeqStmt(_)
-                | SuccessDefObjStmtResult::HaveFiniteSeqStmt(_)
-                | SuccessDefObjStmtResult::HaveMatrixStmt(_) => {
+                | SuccessDefObjStmtResult::HaveCartStmt(_) => {
                     self.unsupported_success_stmt_result(success)
                 }
             },
@@ -196,13 +303,31 @@ impl StmtResultToLeanCompiler {
                 }
             }
             SuccessStmtResult::By(result) => match result {
-                SuccessByStmtResult::ByCasesStmt(_)
-                | SuccessByStmtResult::ByContraStmt(_)
-                | SuccessByStmtResult::ByDefStmt(_) => {
-                    self.compile_compatibility_statement_result_to_lean_source(complete_result)
+                SuccessByStmtResult::ByCasesStmt(result) => {
+                    if self.compile_by_cases_stmt_result_to_lean_source(result)? {
+                        Ok(())
+                    } else {
+                        self.compile_compatibility_statement_result_to_lean_source(complete_result)
+                    }
+                }
+                SuccessByStmtResult::ByContraStmt(result) => {
+                    if self.compile_by_contra_stmt_result_to_lean_source(result)? {
+                        Ok(())
+                    } else {
+                        self.compile_compatibility_statement_result_to_lean_source(complete_result)
+                    }
+                }
+                SuccessByStmtResult::ByDefStmt(result) => {
+                    if self.compile_by_definition_stmt_result_to_lean_source(result)? {
+                        Ok(())
+                    } else {
+                        self.compile_compatibility_statement_result_to_lean_source(complete_result)
+                    }
                 }
                 SuccessByStmtResult::ByThmStmt(result) => {
-                    if self.compile_litex_theorem_instantiation_stmt_result_to_lean_source(result)? {
+                    if self
+                        .compile_litex_theorem_instantiation_stmt_result_to_lean_source(result)?
+                    {
                         Ok(())
                     } else {
                         self.unsupported_success_stmt_result(success)
@@ -529,6 +654,2109 @@ impl StmtResultToLeanCompiler {
         Ok(())
     }
 
+    /// `Combine`: a named function Result first enters the anonymous
+    /// function's binder environment, installs the exact temporary FactIds
+    /// retained by `assumption_infers`, consumes the recursive return-check
+    /// Result there, and only then returns to the parent environment to
+    /// publish the membership/equality FactIds.
+    ///
+    /// The first direct slice is intentionally semantic rather than syntactic:
+    /// every parameter and the codomain must be `R`, while unary/domain and
+    /// multi-parameter telescope shapes are both supported. Other codomains
+    /// continue through the compatibility adapter until their representative
+    /// selection Result paths are migrated.
+    fn compile_have_fn_equal_stmt_result_to_lean_source(
+        &mut self,
+        result: &SuccessHaveFnEqualStmtResult,
+    ) -> Result<bool, String> {
+        let verification = result.verification.as_ref().ok_or_else(|| {
+            "named function has no structured body-to-environment verification Result".to_string()
+        })?;
+        let statement = &result.statement;
+        let function_set = FnSet::from_body(statement.equal_to_anonymous_fn.body.clone())
+            .map_err(|error| error.to_string())?;
+        let function = LitexToLeanFunctionTypeIr::lower(&function_set)?;
+        let is_native_real_signature = function.parameters.iter().all(|parameter| {
+            parameter.set == LitexToLeanObjectIr::StandardSet(LitexToLeanStandardSetIr::Real)
+        }) && function.return_set.as_ref()
+            == &LitexToLeanObjectIr::StandardSet(LitexToLeanStandardSetIr::Real);
+        if !is_native_real_signature {
+            return Ok(false);
+        }
+
+        let source_body = statement.equal_to_anonymous_fn.equal_to.as_ref().clone();
+        let lowered_body = LitexToLeanObjectIr::lower(&source_body)?;
+        let source_return_set = statement
+            .equal_to_anonymous_fn
+            .body
+            .ret_set
+            .as_ref()
+            .clone();
+        let expected_return_check: Fact = InFact::new(
+            source_body.clone(),
+            source_return_set,
+            statement.line_file.clone(),
+        )
+        .into();
+
+        let mut expected_parameter_facts = Vec::new();
+        for group in statement
+            .equal_to_anonymous_fn
+            .body
+            .params_def_with_set
+            .iter()
+        {
+            expected_parameter_facts.extend(group.facts_for_binding_scope(ParamObjType::FnSet));
+        }
+        let expected_domain_facts = statement
+            .equal_to_anonymous_fn
+            .body
+            .dom_facts
+            .iter()
+            .cloned()
+            .map(Fact::from)
+            .collect::<Vec<_>>();
+        if expected_parameter_facts.len() != function.parameters.len()
+            || expected_domain_facts.len() != function.domain_facts.len()
+        {
+            return Err("named real function changed its parameter/domain Result mapping".into());
+        }
+        if !verification.assumption_infers.rule_applications.is_empty()
+            || verification
+                .assumption_infers
+                .store_fact_outputs
+                .iter()
+                .any(|output| {
+                    !output.inferred_facts.is_empty() || !output.inferred_fact_ids.is_empty()
+                })
+        {
+            return Ok(false);
+        }
+        let mut expected_assumptions = expected_parameter_facts.clone();
+        expected_assumptions.extend(expected_domain_facts.iter().cloned());
+        let assumption_fact_ids = exact_ordered_fact_ids_from_store_results(
+            &verification.assumption_infers,
+            &expected_assumptions,
+            "named real function local assumptions",
+        )?;
+        let (parameter_fact_ids, domain_fact_ids) =
+            assumption_fact_ids.split_at(expected_parameter_facts.len());
+
+        let function_object: Obj = Identifier::new_bound(
+            statement.name().to_string(),
+            statement.symbol_binding.as_ref(),
+        )
+        .into();
+        let expected_membership: Fact = InFact::new(
+            function_object.clone(),
+            function_set.clone().into(),
+            statement.line_file.clone(),
+        )
+        .into();
+        let expected_defining_equality: Fact = EqualFact::new(
+            function_object,
+            statement.equal_to_anonymous_fn.clone().into(),
+            statement.line_file.clone(),
+        )
+        .into();
+        if verification.function_membership.to_string() != expected_membership.to_string()
+            || verification.defining_equality.to_string() != expected_defining_equality.to_string()
+        {
+            return Err(
+                "named real function verification changed its outer membership/equality".into(),
+            );
+        }
+        if !result.common.infers.rule_applications.is_empty()
+            || result
+                .common
+                .infers
+                .store_fact_outputs
+                .iter()
+                .any(|output| {
+                    !output.inferred_facts.is_empty() || !output.inferred_fact_ids.is_empty()
+                })
+        {
+            return Ok(false);
+        }
+        let stored_fact_ids = exact_ordered_fact_ids_from_store_results(
+            &result.common.infers,
+            &[
+                expected_membership.clone(),
+                expected_defining_equality.clone(),
+            ],
+            "named real function outer effects",
+        )?;
+
+        self.environment_stack.push_inherited_environment();
+        let compiled_body: Result<Option<CompiledNamedRealFunctionDefinitionBody>, String> =
+            (|| {
+                let mut parameter_premises = Vec::with_capacity(function.parameters.len());
+                for (parameter_index, ((parameter, fact), fact_id)) in function
+                    .parameters
+                    .iter()
+                    .zip(expected_parameter_facts.iter())
+                    .zip(parameter_fact_ids.iter())
+                    .enumerate()
+                {
+                    let suffix = if function_uses_telescope(&function) {
+                        (parameter_index + 1).to_string()
+                    } else {
+                        String::new()
+                    };
+                    let argument_name = format!("__arg{suffix}");
+                    let membership_name = format!("__arg{suffix}_in");
+                    if self
+                        .environment_stack
+                        .symbol_names
+                        .insert(parameter.symbol_id, argument_name.clone())
+                        .is_some()
+                    {
+                        return Err("named real function reused one parameter SymbolId".into());
+                    }
+                    self.environment_stack
+                        .fact_names
+                        .insert(*fact_id, membership_name.clone());
+                    self.environment_stack
+                        .fact_propositions
+                        .insert(*fact_id, fact.clone());
+                    if let Some(real) =
+                        membership_real_value(&parameter.set, &argument_name, &membership_name)
+                    {
+                        self.environment_stack
+                            .numeric_real_values
+                            .insert(parameter.symbol_id, real);
+                    }
+                    if let Some(representation) =
+                        membership_numeric_value(&parameter.set, &argument_name, &membership_name)
+                    {
+                        self.environment_stack
+                            .numeric_representations
+                            .insert(parameter.symbol_id, representation);
+                    }
+                    if let Some(proof) =
+                        membership_numeric_proof(&parameter.set, &argument_name, &membership_name)
+                    {
+                        self.environment_stack
+                            .numeric_representation_memberships
+                            .insert(parameter.symbol_id, proof);
+                    }
+                    parameter_premises.push(LitexToLeanLocalPremiseIr::new(*fact_id, fact.clone()));
+                }
+
+                let mut domain_premises = Vec::with_capacity(expected_domain_facts.len());
+                for (domain_index, (fact, fact_id)) in expected_domain_facts
+                    .iter()
+                    .zip(domain_fact_ids.iter())
+                    .enumerate()
+                {
+                    let selector = conjunction_selector(domain_index, expected_domain_facts.len())?;
+                    let proof_name = if expected_domain_facts.len() == 1 {
+                        "__arg_domain".to_string()
+                    } else {
+                        format!("__arg_domain{selector}")
+                    };
+                    self.environment_stack
+                        .fact_names
+                        .insert(*fact_id, proof_name);
+                    self.environment_stack
+                        .fact_propositions
+                        .insert(*fact_id, fact.clone());
+                    domain_premises.push(LitexToLeanLocalPremiseIr::new(*fact_id, fact.clone()));
+                }
+
+                let return_check = verification
+                    .return_check
+                    .factual_success()
+                    .ok_or_else(|| "named real function return check is not factual".to_string())?;
+                if return_check.fact().to_string() != expected_return_check.to_string()
+                    || return_check.store.fact.to_string() != expected_return_check.to_string()
+                    || !return_check.store.infers.is_empty()
+                {
+                    return Err(
+                        "named real function changed or published effects from its local return check"
+                            .into(),
+                    );
+                }
+                if self
+                    .construct_lean_proof_from_direct_fact_result(return_check)?
+                    .is_none()
+                {
+                    return Err(
+                        "named real function return check has no direct recursive Result proof adapter"
+                            .into(),
+                    );
+                }
+                let value = render_named_real_function_value_from_result(
+                    &function,
+                    &lowered_body,
+                    &self.environment_stack,
+                )?;
+                Ok(Some(CompiledNamedRealFunctionDefinitionBody {
+                    function: function.clone(),
+                    source_body: source_body.clone(),
+                    lowered_body: lowered_body.clone(),
+                    value,
+                    parameter_premises,
+                    domain_premises,
+                }))
+            })();
+        self.environment_stack.pop_local_environment();
+        let Some(compiled_body) = compiled_body? else {
+            return Ok(false);
+        };
+
+        let name = lean_identifier(statement.name());
+        let function_value_name = if function_uses_telescope(&compiled_body.function) {
+            format!("(@{name})")
+        } else {
+            name.clone()
+        };
+        if self
+            .environment_stack
+            .symbol_names
+            .insert(statement.symbol_binding.id(), function_value_name.clone())
+            .is_some()
+        {
+            return Err(format!(
+                "duplicate compiler symbol identity for `{}`",
+                statement.name()
+            ));
+        }
+        let function_type = render_function_type(&compiled_body.function, &self.environment_stack)?;
+        let function_set = render_function_set(&compiled_body.function, &self.environment_stack)?;
+        self.declarations.push(format!(
+            "noncomputable def {name} : {function_type} :=\n  {}",
+            compiled_body.value
+        ));
+
+        let membership_name = format!("__fact{}", self.next_fact_name_index);
+        let membership_proposition = render_fact(&expected_membership, &self.environment_stack)?;
+        self.declarations.push(format!(
+            "theorem {membership_name} : {membership_proposition} := by\n  exact Litex.In.own {function_set} {function_value_name}"
+        ));
+        self.environment_stack
+            .fact_names
+            .insert(stored_fact_ids[0], membership_name.clone());
+        self.environment_stack
+            .fact_propositions
+            .insert(stored_fact_ids[0], expected_membership);
+        self.environment_stack.function_bindings.insert(
+            stored_fact_ids[0],
+            FunctionBinding {
+                symbol_id: statement.symbol_binding.id(),
+                function: compiled_body.function.clone(),
+                membership_proof_name: membership_name,
+                direct: true,
+            },
+        );
+        self.next_fact_name_index += 1;
+
+        let equality_name = format!("__fact{}", self.next_fact_name_index);
+        let equality_proposition = format!(
+            "Litex.Same {function_value_name} ({} : {function_type})",
+            compiled_body.value
+        );
+        self.declarations.push(format!(
+            "theorem {equality_name} : {equality_proposition} := by\n  unfold {name}\n  exact Litex.Same.refl ({} : {function_type})",
+            compiled_body.value
+        ));
+        self.environment_stack
+            .fact_names
+            .insert(stored_fact_ids[1], equality_name);
+        self.environment_stack
+            .fact_propositions
+            .insert(stored_fact_ids[1], expected_defining_equality);
+        self.environment_stack.named_function_definitions.insert(
+            stored_fact_ids[1],
+            NamedFunctionDefinitionBinding {
+                symbol_id: statement.symbol_binding.id(),
+                name,
+                function: compiled_body.function,
+                source_body: compiled_body.source_body,
+                body: compiled_body.lowered_body,
+                uses_native_real_body: true,
+                parameter_premises: compiled_body.parameter_premises,
+                domain_premises: compiled_body.domain_premises,
+                compatibility_return_selection: None,
+                well_definedness: LitexToLeanWellDefinednessCertificateIr::default(),
+            },
+        );
+        self.next_fact_name_index += 1;
+        Ok(true)
+    }
+
+    /// `Combine`: compile the two retained dimension checks in the ambient
+    /// environment, compile the coordinate value under its exact index
+    /// binder, pop that child environment, then publish the three ordered
+    /// tuple-definition store effects.
+    fn compile_have_tuple_stmt_result_to_lean_source(
+        &mut self,
+        result: &SuccessHaveTupleStmtResult,
+    ) -> Result<bool, String> {
+        let Some(verification) = &result.verification else {
+            return Ok(false);
+        };
+        let statement = &result.statement;
+        let lowered_dimension = LitexToLeanObjectIr::lower(&statement.dimension)?;
+        let LitexToLeanObjectIr::Number {
+            normalized_value: normalized_dimension,
+        } = &lowered_dimension
+        else {
+            return Ok(false);
+        };
+        let dimension = normalized_dimension
+            .parse::<usize>()
+            .map_err(|_| "indexed tuple dimension is not a machine natural".to_string())?;
+        if dimension < 2 {
+            return Err("indexed tuple dimension is smaller than two".into());
+        }
+
+        let expected_positive_dimension: Fact = InFact::new(
+            statement.dimension.clone(),
+            StandardSet::NPos.into(),
+            statement.line_file.clone(),
+        )
+        .into();
+        let expected_at_least_two: Fact = LessEqualFact::new(
+            Number::new("2".to_string()).into(),
+            statement.dimension.clone(),
+            statement.line_file.clone(),
+        )
+        .into();
+        let positive_dimension = verification
+            .dimension
+            .positive_check
+            .factual_success()
+            .ok_or_else(|| "indexed tuple positive-dimension check is not factual".to_string())?;
+        let at_least_two = verification
+            .dimension
+            .at_least_two_check
+            .factual_success()
+            .ok_or_else(|| "indexed tuple at-least-two check is not factual".to_string())?;
+        for (check, expected, role) in [
+            (
+                positive_dimension,
+                &expected_positive_dimension,
+                "positive-dimension",
+            ),
+            (at_least_two, &expected_at_least_two, "at-least-two"),
+        ] {
+            if check.fact().to_string() != expected.to_string()
+                || check.store.fact.to_string() != expected.to_string()
+                || !check.store.infers.is_empty()
+            {
+                return Err(format!(
+                    "indexed tuple {role} Result changed its target or published effects"
+                ));
+            }
+        }
+        let Some(positive_dimension_proof) =
+            self.construct_lean_proof_from_direct_fact_result(positive_dimension)?
+        else {
+            return Ok(false);
+        };
+        let Some(at_least_two_dimension_proof) =
+            self.construct_lean_proof_from_direct_fact_result(at_least_two)?
+        else {
+            return Ok(false);
+        };
+
+        let lowered_value = LitexToLeanObjectIr::lower(&statement.value)?;
+        if !indexed_tuple_value_is_complex(&lowered_value, statement.index_binding.id()) {
+            return Ok(false);
+        }
+        let mut visited = HashSet::new();
+        validate_success_obj_well_defined_result(
+            verification.value_well_definedness.as_ref(),
+            &statement.value,
+            &mut visited,
+        )?;
+
+        self.environment_stack.push_inherited_environment();
+        let compiled_body = (|| {
+            self.environment_stack
+                .symbol_names
+                .insert(statement.index_binding.id(), "__index".into());
+            self.environment_stack.numeric_representations.insert(
+                statement.index_binding.id(),
+                "(((__index.val : ℤ) : ℂ))".into(),
+            );
+            let mut installed_well_definedness_nodes = HashSet::new();
+            install_object_well_definedness_store_results(
+                verification.value_well_definedness.as_ref(),
+                &mut self.environment_stack,
+                &mut installed_well_definedness_nodes,
+            )?;
+            let value = render_numeric_object_ir(&lowered_value, &self.environment_stack)?;
+            Ok::<_, String>(CompiledIndexedTupleDefinitionBody {
+                dimension,
+                value,
+                positive_dimension_proof,
+                at_least_two_dimension_proof,
+            })
+        })();
+        self.environment_stack.pop_local_environment();
+        let compiled_body = compiled_body?;
+
+        if !result.common.infers.rule_applications.is_empty() {
+            return Err("indexed tuple stores retained unexpected typed infer rules".into());
+        }
+        let [is_tuple_output, dimension_output, coordinate_output] =
+            result.common.infers.store_fact_outputs.as_slice()
+        else {
+            return Err("indexed tuple requires exactly three ordered store outputs".into());
+        };
+        for output in [is_tuple_output, dimension_output, coordinate_output] {
+            if output.fact_id.is_none()
+                || !output.inferred_facts.is_empty()
+                || !output.inferred_fact_ids.is_empty()
+            {
+                return Err(
+                    "indexed tuple store output lost its FactId or gained inferred children".into(),
+                );
+            }
+        }
+
+        let name = lean_identifier(statement.name());
+        let positive_dimension_proposition =
+            render_fact(&expected_positive_dimension, &self.environment_stack)?;
+        let at_least_two_proposition =
+            render_fact(&expected_at_least_two, &self.environment_stack)?;
+        self.declarations.push(format!(
+            "theorem __{name}_dimension_check1 : {positive_dimension_proposition} := by\n  exact {}",
+            compiled_body.positive_dimension_proof
+        ));
+        self.declarations.push(format!(
+            "theorem __{name}_dimension_check2 : {at_least_two_proposition} := by\n  exact {}",
+            compiled_body.at_least_two_dimension_proof
+        ));
+        self.declarations.push(format!(
+            "noncomputable def {name} : Litex.IndexedTuple {} ℂ :=\n  ⟨fun __index => {}⟩",
+            compiled_body.dimension, compiled_body.value
+        ));
+        if self
+            .environment_stack
+            .symbol_names
+            .insert(statement.symbol_binding.id(), name.clone())
+            .is_some()
+        {
+            return Err(format!(
+                "duplicate compiler symbol identity for indexed tuple `{}`",
+                statement.name()
+            ));
+        }
+        self.environment_stack.indexed_tuple_bindings.insert(
+            statement.symbol_binding.id(),
+            IndexedTupleBinding {
+                dimension: compiled_body.dimension,
+            },
+        );
+
+        let target: Obj = Identifier::new_bound(
+            statement.name().to_string(),
+            statement.symbol_binding.as_ref(),
+        )
+        .into();
+        let expected_is_tuple: Fact =
+            IsTupleFact::new(target.clone(), statement.line_file.clone()).into();
+        if is_tuple_output
+            .itself_and_why_itself_is_stored
+            .0
+            .to_string()
+            != expected_is_tuple.to_string()
+        {
+            return Err("indexed tuple first store is not its exact IsTuple fact".into());
+        }
+        let is_tuple_fact_id = is_tuple_output
+            .fact_id
+            .expect("stored tuple output FactId validated above");
+        let is_tuple_theorem_name = format!("__fact{}", self.next_fact_name_index);
+        self.declarations.push(format!(
+            "theorem {is_tuple_theorem_name} : {} := by\n  exact ⟨inferInstance⟩",
+            render_fact(&expected_is_tuple, &self.environment_stack)?
+        ));
+        self.environment_stack
+            .fact_names
+            .insert(is_tuple_fact_id, is_tuple_theorem_name);
+        self.environment_stack
+            .fact_propositions
+            .insert(is_tuple_fact_id, expected_is_tuple);
+        self.next_fact_name_index += 1;
+
+        let expected_dimension: Fact = EqualFact::new(
+            TupleDim::new(target.clone()).into(),
+            statement.dimension.clone(),
+            statement.line_file.clone(),
+        )
+        .into();
+        if dimension_output
+            .itself_and_why_itself_is_stored
+            .0
+            .to_string()
+            != expected_dimension.to_string()
+        {
+            return Err("indexed tuple second store is not its exact dimension fact".into());
+        }
+        let dimension_fact_id = dimension_output
+            .fact_id
+            .expect("stored tuple output FactId validated above");
+        let dimension_theorem_name = format!("__fact{}", self.next_fact_name_index);
+        self.declarations.push(format!(
+            "theorem {dimension_theorem_name} : {} := by\n  exact Litex.Same.ofEq (by rfl)",
+            render_fact(&expected_dimension, &self.environment_stack)?
+        ));
+        self.environment_stack
+            .fact_names
+            .insert(dimension_fact_id, dimension_theorem_name);
+        self.environment_stack
+            .fact_propositions
+            .insert(dimension_fact_id, expected_dimension);
+        self.next_fact_name_index += 1;
+
+        self.compile_indexed_tuple_coordinate_store_result_to_lean_source(
+            statement,
+            compiled_body.dimension,
+            coordinate_output,
+        )?;
+        Ok(true)
+    }
+
+    fn compile_indexed_tuple_coordinate_store_result_to_lean_source(
+        &mut self,
+        statement: &HaveTupleStmt,
+        dimension: usize,
+        coordinate_output: &SuccessStoreFactOutput,
+    ) -> Result<(), String> {
+        let coordinate_fact_id = coordinate_output
+            .fact_id
+            .ok_or_else(|| "indexed tuple coordinate store has no FactId".to_string())?;
+        let Fact::ForallFact(forall) = &coordinate_output.itself_and_why_itself_is_stored.0 else {
+            return Err("indexed tuple coordinate store is not a forall fact".into());
+        };
+        let parameters = forall
+            .params_def_with_type
+            .collect_param_bindings_with_types();
+        let [(binding, param_type)] = parameters.as_slice() else {
+            return Err("indexed tuple coordinate store changed its one-index binder".into());
+        };
+        if !forall.dom_facts.is_empty() || forall.then_facts.len() != 1 {
+            return Err(
+                "indexed tuple coordinate store changed its domain or conclusion arity".into(),
+            );
+        }
+        let Obj::ClosedRange(range) = parameter_set(param_type)? else {
+            return Err("indexed tuple coordinate binder is not a closed range".into());
+        };
+        let lowered_start = LitexToLeanObjectIr::lower(range.start.as_ref())?;
+        let lowered_end = LitexToLeanObjectIr::lower(range.end.as_ref())?;
+        if lowered_start
+            != (LitexToLeanObjectIr::Number {
+                normalized_value: "1".into(),
+            })
+            || lowered_end != LitexToLeanObjectIr::lower(&statement.dimension)?
+        {
+            return Err("indexed tuple coordinate range changed its one-based dimension".into());
+        }
+        let conclusion = forall.then_facts[0].clone().to_fact();
+        let Fact::AtomicFact(AtomicFact::EqualFact(equality)) = &conclusion else {
+            return Err("indexed tuple coordinate conclusion is not an equality".into());
+        };
+        let Obj::ObjAtIndex(access) = &equality.left else {
+            return Err("indexed tuple coordinate conclusion lost indexed access".into());
+        };
+        if !object_is_symbol(&access.obj, statement.symbol_binding.id())
+            || !object_is_symbol(&access.index, binding.id())
+        {
+            return Err("indexed tuple coordinate conclusion changed its tuple or index".into());
+        }
+
+        let index = "__tuple_index";
+        let membership = "__tuple_index_in";
+        let exact_index = format!("(Litex.In.rep {index} {membership})");
+        let numeric_index = format!("((({exact_index}).val : ℤ) : ℂ)");
+        let mut nested = self.environment_stack.clone();
+        nested.symbol_names.insert(binding.id(), index.into());
+        nested
+            .exact_tuple_indices
+            .insert(binding.id(), exact_index.clone());
+        nested
+            .numeric_representations
+            .insert(binding.id(), numeric_index.clone());
+
+        let mut source_value_context = self.environment_stack.clone();
+        source_value_context
+            .symbol_names
+            .insert(statement.index_binding.id(), index.into());
+        source_value_context
+            .numeric_representations
+            .insert(statement.index_binding.id(), numeric_index);
+        let expected_value = render_numeric_object_ir(
+            &LitexToLeanObjectIr::lower(&statement.value)?,
+            &source_value_context,
+        )?;
+        let retained_value =
+            render_numeric_object_ir(&LitexToLeanObjectIr::lower(&equality.right)?, &nested)?;
+        if retained_value != expected_value {
+            return Err("indexed tuple coordinate store changed its value expression".into());
+        }
+
+        let rendered_conclusion = render_fact(&conclusion, &nested)?;
+        let range = format!("(Litex.closedRange (1 : ℤ) ({dimension} : ℤ))");
+        let theorem_name = format!("__fact{}", self.next_fact_name_index);
+        self.declarations.push(format!(
+            "theorem {theorem_name} :\n    ∀ {{__tuple_index_carrier : Type}} ({index} : __tuple_index_carrier) ({membership} : Litex.In {index} {range}),\n      {rendered_conclusion} := by\n  intro __tuple_index_carrier {index} {membership}\n  exact Litex.Same.ofEq (by rfl)"
+        ));
+        self.environment_stack
+            .fact_names
+            .insert(coordinate_fact_id, theorem_name);
+        self.environment_stack.fact_propositions.insert(
+            coordinate_fact_id,
+            coordinate_output.itself_and_why_itself_is_stored.0.clone(),
+        );
+        self.next_fact_name_index += 1;
+        Ok(())
+    }
+
+    /// `Combine`: validate the three named WD children, enter the retained
+    /// positive-natural index scope, install its exact parameter FactId,
+    /// consume the recursive return-check proof there, and pop the local
+    /// compiler environment before publishing the sequence's three outer
+    /// facts. No compiler scope is reconstructed from Runtime state.
+    fn compile_have_sequence_stmt_result_to_lean_source(
+        &mut self,
+        result: &SuccessHaveSeqStmtResult,
+    ) -> Result<bool, String> {
+        let Some(verification) = &result.verification else {
+            return Ok(false);
+        };
+        if !verification.bound_checks.is_empty() {
+            return Err("unbounded sequence retained unexpected bound checks".into());
+        }
+        let statement = &result.statement;
+        let parameter_group = ParamGroupWithSet::new(
+            vec![statement.index_binding.clone()],
+            StandardSet::NPos.into(),
+        );
+        let anonymous_function = AnonymousFn::new(
+            vec![parameter_group.clone()],
+            Vec::new(),
+            statement.seq_set.set.as_ref().clone(),
+            statement.value.clone(),
+        )
+        .map_err(|error| error.to_string())?;
+        let function_set =
+            FnSet::from_body(anonymous_function.body.clone()).map_err(|error| error.to_string())?;
+        let function = LitexToLeanFunctionTypeIr::lower(&function_set)?;
+        if function.parameters.len() != 1
+            || function.parameters[0].symbol_id != statement.index_binding.id()
+            || function.parameters[0].set
+                != LitexToLeanObjectIr::StandardSet(LitexToLeanStandardSetIr::PositiveNatural)
+            || !function.domain_facts.is_empty()
+            || function.return_set.as_ref()
+                != &LitexToLeanObjectIr::StandardSet(LitexToLeanStandardSetIr::Real)
+        {
+            return Ok(false);
+        }
+
+        let mut visited_well_definedness_results = HashSet::new();
+        validate_success_obj_well_defined_result(
+            verification.well_definedness.surface_set.as_ref(),
+            &statement.seq_set.clone().into(),
+            &mut visited_well_definedness_results,
+        )?;
+        validate_success_obj_well_defined_result(
+            verification.well_definedness.anonymous_function.as_ref(),
+            &anonymous_function.clone().into(),
+            &mut visited_well_definedness_results,
+        )?;
+        validate_success_obj_well_defined_result(
+            verification.well_definedness.function_set.as_ref(),
+            &function_set.clone().into(),
+            &mut visited_well_definedness_results,
+        )?;
+
+        let expected_parameter_facts = parameter_group.facts_for_binding_scope(ParamObjType::FnSet);
+        let [expected_parameter_fact] = expected_parameter_facts.as_slice() else {
+            return Err("sequence index scope did not produce one parameter fact".into());
+        };
+        if !verification.assumption_infers.rule_applications.is_empty() {
+            return Err("sequence index assumptions retained unexpected typed infer rules".into());
+        }
+        let [parameter_store] = verification.assumption_infers.store_fact_outputs.as_slice() else {
+            return Err("sequence index scope requires exactly one parameter store".into());
+        };
+        if parameter_store
+            .itself_and_why_itself_is_stored
+            .0
+            .to_string()
+            != expected_parameter_fact.to_string()
+        {
+            return Err("sequence index scope changed its parameter membership".into());
+        }
+        let parameter_fact_id = parameter_store
+            .fact_id
+            .ok_or_else(|| "sequence index parameter store has no FactId".to_string())?;
+        if parameter_store.inferred_facts.len() != parameter_store.inferred_fact_ids.len()
+            || parameter_store
+                .inferred_fact_ids
+                .iter()
+                .any(Option::is_none)
+        {
+            return Err("sequence index inference lost an inferred FactId".into());
+        }
+        let expected_positive_index: Fact = LessFact::new(
+            Number::new("0".to_string()).into(),
+            obj_for_bound_param_in_scope(&statement.index_binding, ParamObjType::FnSet),
+            statement.line_file.clone(),
+        )
+        .into();
+        if parameter_store.inferred_facts.len() != 1
+            || parameter_store.inferred_facts[0].to_string() != expected_positive_index.to_string()
+        {
+            return Err("sequence index scope changed its positive-index inference".into());
+        }
+
+        let source_body = statement.value.clone();
+        let lowered_body = LitexToLeanObjectIr::lower(&source_body)?;
+        let expected_return_check: Fact = InFact::new(
+            source_body.clone(),
+            statement.seq_set.set.as_ref().clone(),
+            statement.line_file.clone(),
+        )
+        .into();
+        self.environment_stack.push_inherited_environment();
+        let compiled_body: Result<CompiledIndexedFunctionDefinitionBody, String> = (|| {
+            self.environment_stack
+                .symbol_names
+                .insert(statement.index_binding.id(), "__arg".into());
+            self.environment_stack
+                .fact_names
+                .insert(parameter_fact_id, "__arg_in".into());
+            self.environment_stack
+                .fact_propositions
+                .insert(parameter_fact_id, expected_parameter_fact.clone());
+            self.environment_stack.numeric_representations.insert(
+                statement.index_binding.id(),
+                "((((Litex.In.rep __arg __arg_in).val : ℕ) : ℂ))".into(),
+            );
+            self.environment_stack.numeric_real_values.insert(
+                statement.index_binding.id(),
+                "((((Litex.In.rep __arg __arg_in).val : ℕ) : ℝ))".into(),
+            );
+
+            let mut installed_well_definedness_nodes = HashSet::new();
+            for well_definedness in [
+                verification.well_definedness.surface_set.as_ref(),
+                verification.well_definedness.anonymous_function.as_ref(),
+                verification.well_definedness.function_set.as_ref(),
+            ] {
+                install_object_well_definedness_store_results(
+                    well_definedness,
+                    &mut self.environment_stack,
+                    &mut installed_well_definedness_nodes,
+                )?;
+            }
+
+            let return_check = verification
+                .return_check
+                .factual_success()
+                .ok_or_else(|| "sequence return check is not factual".to_string())?;
+            if return_check.fact().to_string() != expected_return_check.to_string()
+                || return_check.store.fact.to_string() != expected_return_check.to_string()
+                || !return_check.store.infers.is_empty()
+            {
+                return Err(
+                    "sequence return check changed its target or published local effects".into(),
+                );
+            }
+            if self
+                .construct_lean_proof_from_direct_fact_result(return_check)?
+                .is_none()
+            {
+                return Err(
+                    "sequence return check has no direct recursive Result proof adapter".into(),
+                );
+            }
+
+            let parameter_real_value = "((((Litex.In.rep __arg __arg_in).val : ℕ) : ℝ))";
+            let rendered_body = render_real_function_body(
+                &lowered_body,
+                statement.index_binding.id(),
+                parameter_real_value,
+                &self.environment_stack,
+            )?;
+            Ok(CompiledIndexedFunctionDefinitionBody {
+                function: function.clone(),
+                source_body: source_body.clone(),
+                lowered_body: lowered_body.clone(),
+                value: format!(
+                    "{{ call := fun {{__alpha}} (__arg : __alpha) __arg_in => {rendered_body} }}"
+                ),
+                parameter_premises: vec![LitexToLeanLocalPremiseIr::new(
+                    parameter_fact_id,
+                    expected_parameter_fact.clone(),
+                )],
+                domain_premises: Vec::new(),
+            })
+        })();
+        self.environment_stack.pop_local_environment();
+        let compiled_body = compiled_body?;
+
+        if !result.common.infers.rule_applications.is_empty() {
+            return Err("sequence definition retained unexpected outer typed infer rules".into());
+        }
+        let [surface_membership_store, defining_equality_store] =
+            result.common.infers.store_fact_outputs.as_slice()
+        else {
+            return Err("sequence definition requires two ordered outer store outputs".into());
+        };
+        let function_object: Obj = Identifier::new_bound(
+            statement.name().to_string(),
+            statement.symbol_binding.as_ref(),
+        )
+        .into();
+        let expected_surface_membership: Fact = InFact::new(
+            function_object.clone(),
+            statement.seq_set.clone().into(),
+            statement.line_file.clone(),
+        )
+        .into();
+        let expected_defining_equality: Fact = EqualFact::new(
+            function_object.clone(),
+            anonymous_function.clone().into(),
+            statement.line_file.clone(),
+        )
+        .into();
+        if surface_membership_store
+            .itself_and_why_itself_is_stored
+            .0
+            .to_string()
+            != expected_surface_membership.to_string()
+        {
+            return Err("sequence first outer store changed its surface membership".into());
+        }
+        let surface_membership_fact_id = surface_membership_store
+            .fact_id
+            .ok_or_else(|| "sequence surface membership store has no FactId".to_string())?;
+        let [inferred_function_membership] = surface_membership_store.inferred_facts.as_slice()
+        else {
+            return Err("sequence surface membership must infer one function membership".into());
+        };
+        let [Some(function_membership_fact_id)] =
+            surface_membership_store.inferred_fact_ids.as_slice()
+        else {
+            return Err("sequence inferred function membership has no FactId".into());
+        };
+        let (inferred_function_object, inferred_function_set) =
+            membership_parts(inferred_function_membership)?;
+        if !object_is_symbol(inferred_function_object, statement.symbol_binding.id()) {
+            return Err("sequence inferred function membership changed its function".into());
+        }
+        let Obj::FnSet(inferred_function_set) = inferred_function_set else {
+            return Err("sequence inferred membership does not retain a function set".into());
+        };
+        let inferred_function = LitexToLeanFunctionTypeIr::lower(inferred_function_set)?;
+        if inferred_function.parameters.len() != 1
+            || inferred_function.parameters[0].set != compiled_body.function.parameters[0].set
+            || !inferred_function.domain_facts.is_empty()
+            || inferred_function.return_set != compiled_body.function.return_set
+        {
+            return Err("sequence inferred function membership changed its signature".into());
+        }
+        if defining_equality_store
+            .itself_and_why_itself_is_stored
+            .0
+            .to_string()
+            != expected_defining_equality.to_string()
+            || !defining_equality_store.inferred_facts.is_empty()
+            || !defining_equality_store.inferred_fact_ids.is_empty()
+        {
+            return Err("sequence second outer store changed its defining equality".into());
+        }
+        let defining_equality_fact_id = defining_equality_store
+            .fact_id
+            .ok_or_else(|| "sequence defining equality store has no FactId".to_string())?;
+        if [
+            surface_membership_fact_id,
+            *function_membership_fact_id,
+            defining_equality_fact_id,
+        ]
+        .into_iter()
+        .collect::<HashSet<_>>()
+        .len()
+            != 3
+        {
+            return Err("sequence outer stores reused a FactId across semantic roles".into());
+        }
+
+        let name = lean_identifier(statement.name());
+        if self
+            .environment_stack
+            .symbol_names
+            .insert(statement.symbol_binding.id(), name.clone())
+            .is_some()
+        {
+            return Err(format!(
+                "duplicate compiler symbol identity for sequence `{}`",
+                statement.name()
+            ));
+        }
+        let function_type = render_function_type(&compiled_body.function, &self.environment_stack)?;
+        let rendered_function_set =
+            render_function_set(&compiled_body.function, &self.environment_stack)?;
+        self.declarations.push(format!(
+            "noncomputable def {name} : {function_type} :=\n  {}",
+            compiled_body.value
+        ));
+
+        let surface_theorem_name = format!("__fact{}", self.next_fact_name_index);
+        self.declarations.push(format!(
+            "theorem {surface_theorem_name} : {} := by\n  exact Litex.In.own {} {name}",
+            render_fact(&expected_surface_membership, &self.environment_stack)?,
+            render_obj(&statement.seq_set.clone().into(), &self.environment_stack)?,
+        ));
+        self.environment_stack
+            .fact_names
+            .insert(surface_membership_fact_id, surface_theorem_name.clone());
+        self.environment_stack
+            .fact_propositions
+            .insert(surface_membership_fact_id, expected_surface_membership);
+        // Runtime selects the surface membership FactId as the callable
+        // contract. `sequenceSet` is definitionally this exact function set,
+        // so preserve that identity instead of substituting the separately
+        // inferred function-membership FactId.
+        self.environment_stack.function_bindings.insert(
+            surface_membership_fact_id,
+            FunctionBinding {
+                symbol_id: statement.symbol_binding.id(),
+                function: compiled_body.function.clone(),
+                membership_proof_name: surface_theorem_name,
+                direct: true,
+            },
+        );
+        self.next_fact_name_index += 1;
+
+        let function_membership_theorem_name = format!("__fact{}", self.next_fact_name_index);
+        self.declarations.push(format!(
+            "theorem {function_membership_theorem_name} : {} := by\n  exact Litex.In.own {rendered_function_set} {name}",
+            render_fact(inferred_function_membership, &self.environment_stack)?,
+        ));
+        self.environment_stack.fact_names.insert(
+            *function_membership_fact_id,
+            function_membership_theorem_name.clone(),
+        );
+        self.environment_stack.fact_propositions.insert(
+            *function_membership_fact_id,
+            inferred_function_membership.clone(),
+        );
+        self.environment_stack.function_bindings.insert(
+            *function_membership_fact_id,
+            FunctionBinding {
+                symbol_id: statement.symbol_binding.id(),
+                function: compiled_body.function.clone(),
+                membership_proof_name: function_membership_theorem_name,
+                direct: true,
+            },
+        );
+        self.next_fact_name_index += 1;
+
+        let equality_theorem_name = format!("__fact{}", self.next_fact_name_index);
+        self.declarations.push(format!(
+            "theorem {equality_theorem_name} : Litex.Same {name} ({} : {function_type}) := by\n  unfold {name}\n  exact Litex.Same.refl ({} : {function_type})",
+            compiled_body.value, compiled_body.value
+        ));
+        self.environment_stack
+            .fact_names
+            .insert(defining_equality_fact_id, equality_theorem_name);
+        self.environment_stack
+            .fact_propositions
+            .insert(defining_equality_fact_id, expected_defining_equality);
+        self.environment_stack.named_function_definitions.insert(
+            defining_equality_fact_id,
+            NamedFunctionDefinitionBinding {
+                symbol_id: statement.symbol_binding.id(),
+                name,
+                function: compiled_body.function,
+                source_body: compiled_body.source_body,
+                body: compiled_body.lowered_body,
+                uses_native_real_body: true,
+                parameter_premises: compiled_body.parameter_premises,
+                domain_premises: compiled_body.domain_premises,
+                compatibility_return_selection: None,
+                well_definedness: LitexToLeanWellDefinednessCertificateIr::default(),
+            },
+        );
+        self.next_fact_name_index += 1;
+        Ok(true)
+    }
+
+    /// `Combine`: consume the two outer bound checks, validate the three
+    /// named WD children, then enter the retained positive-natural parameter
+    /// and domain-premise scope. The local parameter/domain FactIds are
+    /// available while compiling the recursive return check and disappear
+    /// when that Result field closes. Only then are the three persistent
+    /// definition facts published in the parent compiler environment.
+    fn compile_have_finite_sequence_stmt_result_to_lean_source(
+        &mut self,
+        result: &SuccessHaveFiniteSeqStmtResult,
+    ) -> Result<bool, String> {
+        let Some(verification) = &result.verification else {
+            return Ok(false);
+        };
+        let statement = &result.statement;
+        let [positive_bound_check, matching_length_check] = verification.bound_checks.as_slice()
+        else {
+            return Err("finite-sequence verification requires two ordered bound checks".into());
+        };
+        let expected_positive_bound: Fact = InFact::new(
+            statement.bound.clone(),
+            StandardSet::NPos.into(),
+            statement.line_file.clone(),
+        )
+        .into();
+        let expected_matching_length: Fact = EqualFact::new(
+            statement.bound.clone(),
+            statement.finite_seq_set.n.as_ref().clone(),
+            statement.line_file.clone(),
+        )
+        .into();
+        for (label, checked_result, expected_fact) in [
+            (
+                "positive bound",
+                positive_bound_check,
+                &expected_positive_bound,
+            ),
+            (
+                "matching length",
+                matching_length_check,
+                &expected_matching_length,
+            ),
+        ] {
+            let checked_fact = checked_result
+                .factual_success()
+                .ok_or_else(|| format!("finite-sequence {label} check is not factual"))?;
+            if checked_fact.fact().to_string() != expected_fact.to_string()
+                || checked_fact.store.fact.to_string() != expected_fact.to_string()
+                || !checked_fact.store.infers.is_empty()
+            {
+                return Err(format!(
+                    "finite-sequence {label} check changed its target or published effects"
+                ));
+            }
+            if self
+                .construct_lean_proof_from_direct_fact_result(checked_fact)?
+                .is_none()
+            {
+                return Err(format!(
+                    "finite-sequence {label} check has no direct recursive Result proof adapter"
+                ));
+            }
+        }
+
+        let index_object =
+            obj_for_bound_param_in_scope(&statement.index_binding, ParamObjType::FnSet);
+        let expected_domain_atomic_fact: AtomicFact = LessEqualFact::new(
+            index_object,
+            statement.bound.clone(),
+            statement.line_file.clone(),
+        )
+        .into();
+        let expected_domain_fact: Fact = expected_domain_atomic_fact.clone().into();
+        let parameter_group = ParamGroupWithSet::new(
+            vec![statement.index_binding.clone()],
+            StandardSet::NPos.into(),
+        );
+        let anonymous_function = AnonymousFn::new(
+            vec![parameter_group.clone()],
+            vec![expected_domain_atomic_fact.into()],
+            statement.finite_seq_set.set.as_ref().clone(),
+            statement.value.clone(),
+        )
+        .map_err(|error| error.to_string())?;
+        let function_set =
+            FnSet::from_body(anonymous_function.body.clone()).map_err(|error| error.to_string())?;
+        let function = LitexToLeanFunctionTypeIr::lower(&function_set)?;
+        if function.parameters.len() != 1
+            || function.parameters[0].symbol_id != statement.index_binding.id()
+            || function.parameters[0].set
+                != LitexToLeanObjectIr::StandardSet(LitexToLeanStandardSetIr::PositiveNatural)
+            || function.domain_facts.len() != 1
+            || function.return_set.as_ref()
+                != &LitexToLeanObjectIr::StandardSet(LitexToLeanStandardSetIr::Real)
+            || !function_uses_telescope(&function)
+        {
+            return Ok(false);
+        }
+        // The target `finiteSequenceSet` ABI currently requires a closed
+        // natural length. Validate this support boundary before mutating any
+        // compiler environment.
+        let lowered_length = LitexToLeanObjectIr::lower(statement.finite_seq_set.n.as_ref())?;
+        render_natural_endpoint(&lowered_length)?;
+
+        let mut visited_well_definedness_results = HashSet::new();
+        validate_success_obj_well_defined_result(
+            verification.well_definedness.surface_set.as_ref(),
+            &statement.finite_seq_set.clone().into(),
+            &mut visited_well_definedness_results,
+        )?;
+        validate_success_obj_well_defined_result(
+            verification.well_definedness.anonymous_function.as_ref(),
+            &anonymous_function.clone().into(),
+            &mut visited_well_definedness_results,
+        )?;
+        validate_success_obj_well_defined_result(
+            verification.well_definedness.function_set.as_ref(),
+            &function_set.clone().into(),
+            &mut visited_well_definedness_results,
+        )?;
+
+        let expected_parameter_facts = parameter_group.facts_for_binding_scope(ParamObjType::FnSet);
+        let [expected_parameter_fact] = expected_parameter_facts.as_slice() else {
+            return Err("finite-sequence index scope did not produce one parameter fact".into());
+        };
+        if !verification.assumption_infers.rule_applications.is_empty() {
+            return Err(
+                "finite-sequence index assumptions retained unexpected typed infer rules".into(),
+            );
+        }
+        let [parameter_store, domain_store] =
+            verification.assumption_infers.store_fact_outputs.as_slice()
+        else {
+            return Err(
+                "finite-sequence index scope requires one parameter store and one domain store"
+                    .into(),
+            );
+        };
+        if parameter_store
+            .itself_and_why_itself_is_stored
+            .0
+            .to_string()
+            != expected_parameter_fact.to_string()
+        {
+            return Err("finite-sequence index scope changed its parameter membership".into());
+        }
+        let parameter_fact_id = parameter_store
+            .fact_id
+            .ok_or_else(|| "finite-sequence index parameter store has no FactId".to_string())?;
+        if parameter_store.inferred_facts.len() != parameter_store.inferred_fact_ids.len()
+            || parameter_store
+                .inferred_fact_ids
+                .iter()
+                .any(Option::is_none)
+        {
+            return Err("finite-sequence index inference lost an inferred FactId".into());
+        }
+        let expected_positive_index: Fact = LessFact::new(
+            Number::new("0".to_string()).into(),
+            obj_for_bound_param_in_scope(&statement.index_binding, ParamObjType::FnSet),
+            statement.line_file.clone(),
+        )
+        .into();
+        if parameter_store.inferred_facts.len() != 1
+            || parameter_store.inferred_facts[0].to_string() != expected_positive_index.to_string()
+        {
+            return Err("finite-sequence index scope changed its positive-index inference".into());
+        }
+        if domain_store.itself_and_why_itself_is_stored.0.to_string()
+            != expected_domain_fact.to_string()
+            || !domain_store.inferred_facts.is_empty()
+            || !domain_store.inferred_fact_ids.is_empty()
+        {
+            return Err("finite-sequence index scope changed its domain premise".into());
+        }
+        let domain_fact_id = domain_store
+            .fact_id
+            .ok_or_else(|| "finite-sequence domain store has no FactId".to_string())?;
+        if parameter_fact_id == domain_fact_id {
+            return Err("finite-sequence local parameter and domain stores reused a FactId".into());
+        }
+
+        let source_body = statement.value.clone();
+        let lowered_body = LitexToLeanObjectIr::lower(&source_body)?;
+        let expected_return_check: Fact = InFact::new(
+            source_body.clone(),
+            statement.finite_seq_set.set.as_ref().clone(),
+            statement.line_file.clone(),
+        )
+        .into();
+        self.environment_stack.push_inherited_environment();
+        let compiled_body: Result<CompiledIndexedFunctionDefinitionBody, String> = (|| {
+            self.environment_stack
+                .symbol_names
+                .insert(statement.index_binding.id(), "__arg1".into());
+            self.environment_stack
+                .fact_names
+                .insert(parameter_fact_id, "__arg1_in".into());
+            self.environment_stack
+                .fact_propositions
+                .insert(parameter_fact_id, expected_parameter_fact.clone());
+            self.environment_stack
+                .fact_names
+                .insert(domain_fact_id, "__arg_domain".into());
+            self.environment_stack
+                .fact_propositions
+                .insert(domain_fact_id, expected_domain_fact.clone());
+            self.environment_stack.numeric_representations.insert(
+                statement.index_binding.id(),
+                "((((Litex.In.rep __arg1 __arg1_in).val : ℕ) : ℂ))".into(),
+            );
+            self.environment_stack.numeric_real_values.insert(
+                statement.index_binding.id(),
+                "((((Litex.In.rep __arg1 __arg1_in).val : ℕ) : ℝ))".into(),
+            );
+
+            let mut installed_well_definedness_nodes = HashSet::new();
+            for well_definedness in [
+                verification.well_definedness.surface_set.as_ref(),
+                verification.well_definedness.anonymous_function.as_ref(),
+                verification.well_definedness.function_set.as_ref(),
+            ] {
+                install_object_well_definedness_store_results(
+                    well_definedness,
+                    &mut self.environment_stack,
+                    &mut installed_well_definedness_nodes,
+                )?;
+            }
+
+            let return_check = verification
+                .return_check
+                .factual_success()
+                .ok_or_else(|| "finite-sequence return check is not factual".to_string())?;
+            if return_check.fact().to_string() != expected_return_check.to_string()
+                || return_check.store.fact.to_string() != expected_return_check.to_string()
+                || !return_check.store.infers.is_empty()
+            {
+                return Err(
+                    "finite-sequence return check changed its target or published local effects"
+                        .into(),
+                );
+            }
+            if self
+                .construct_lean_proof_from_direct_fact_result(return_check)?
+                .is_none()
+            {
+                return Err(
+                    "finite-sequence return check has no direct recursive Result proof adapter"
+                        .into(),
+                );
+            }
+
+            let rendered_body = render_real_function_body(
+                &lowered_body,
+                statement.index_binding.id(),
+                "((((Litex.In.rep __arg1 __arg1_in).val : ℕ) : ℝ))",
+                &self.environment_stack,
+            )?;
+            Ok(CompiledIndexedFunctionDefinitionBody {
+                function: function.clone(),
+                source_body: source_body.clone(),
+                lowered_body: lowered_body.clone(),
+                value: format!(
+                    "fun {{__alpha1 : Type}} (__arg1 : __alpha1) (__arg1_in : Litex.In __arg1 Litex.NPos) => fun __arg_domain => ULift.up ({rendered_body})"
+                ),
+                parameter_premises: vec![LitexToLeanLocalPremiseIr::new(
+                    parameter_fact_id,
+                    expected_parameter_fact.clone(),
+                )],
+                domain_premises: vec![LitexToLeanLocalPremiseIr::new(
+                    domain_fact_id,
+                    expected_domain_fact.clone(),
+                )],
+            })
+        })();
+        self.environment_stack.pop_local_environment();
+        let compiled_body = compiled_body?;
+
+        if !result.common.infers.rule_applications.is_empty() {
+            return Err(
+                "finite-sequence definition retained unexpected outer typed infer rules".into(),
+            );
+        }
+        let [surface_membership_store, defining_equality_store] =
+            result.common.infers.store_fact_outputs.as_slice()
+        else {
+            return Err(
+                "finite-sequence definition requires two ordered outer store outputs".into(),
+            );
+        };
+        let function_object: Obj = Identifier::new_bound(
+            statement.name().to_string(),
+            statement.symbol_binding.as_ref(),
+        )
+        .into();
+        let expected_surface_membership: Fact = InFact::new(
+            function_object.clone(),
+            statement.finite_seq_set.clone().into(),
+            statement.line_file.clone(),
+        )
+        .into();
+        let expected_defining_equality: Fact = EqualFact::new(
+            function_object.clone(),
+            anonymous_function.clone().into(),
+            statement.line_file.clone(),
+        )
+        .into();
+        if surface_membership_store
+            .itself_and_why_itself_is_stored
+            .0
+            .to_string()
+            != expected_surface_membership.to_string()
+        {
+            return Err("finite-sequence first outer store changed its surface membership".into());
+        }
+        let surface_membership_fact_id = surface_membership_store
+            .fact_id
+            .ok_or_else(|| "finite-sequence surface membership store has no FactId".to_string())?;
+        let [inferred_function_membership] = surface_membership_store.inferred_facts.as_slice()
+        else {
+            return Err(
+                "finite-sequence surface membership must infer one function membership".into(),
+            );
+        };
+        let [Some(function_membership_fact_id)] =
+            surface_membership_store.inferred_fact_ids.as_slice()
+        else {
+            return Err("finite-sequence inferred function membership has no FactId".into());
+        };
+        let (inferred_function_object, inferred_function_set) =
+            membership_parts(inferred_function_membership)?;
+        if !object_is_symbol(inferred_function_object, statement.symbol_binding.id()) {
+            return Err("finite-sequence inferred function membership changed its function".into());
+        }
+        let Obj::FnSet(inferred_function_set) = inferred_function_set else {
+            return Err(
+                "finite-sequence inferred membership does not retain a function set".into(),
+            );
+        };
+        let inferred_function = LitexToLeanFunctionTypeIr::lower(inferred_function_set)?;
+        if inferred_function.parameters.len() != 1
+            || inferred_function.parameters[0].set != compiled_body.function.parameters[0].set
+            || inferred_function.domain_facts.len() != 1
+            || inferred_function.return_set != compiled_body.function.return_set
+        {
+            return Err(
+                "finite-sequence inferred function membership changed its signature".into(),
+            );
+        }
+        let mut expected_domain_environment = self.environment_stack.clone();
+        expected_domain_environment.symbol_names.insert(
+            compiled_body.function.parameters[0].symbol_id,
+            "__finite_sequence_index".into(),
+        );
+        expected_domain_environment.numeric_representations.insert(
+            compiled_body.function.parameters[0].symbol_id,
+            "__finite_sequence_index_complex".into(),
+        );
+        let mut inferred_domain_environment = self.environment_stack.clone();
+        inferred_domain_environment.symbol_names.insert(
+            inferred_function.parameters[0].symbol_id,
+            "__finite_sequence_index".into(),
+        );
+        inferred_domain_environment.numeric_representations.insert(
+            inferred_function.parameters[0].symbol_id,
+            "__finite_sequence_index_complex".into(),
+        );
+        if render_fact(
+            &compiled_body.function.domain_facts[0],
+            &expected_domain_environment,
+        )? != render_fact(
+            &inferred_function.domain_facts[0],
+            &inferred_domain_environment,
+        )? {
+            return Err(
+                "finite-sequence inferred function membership changed its bound clause".into(),
+            );
+        }
+        if defining_equality_store
+            .itself_and_why_itself_is_stored
+            .0
+            .to_string()
+            != expected_defining_equality.to_string()
+            || !defining_equality_store.inferred_facts.is_empty()
+            || !defining_equality_store.inferred_fact_ids.is_empty()
+        {
+            return Err("finite-sequence second outer store changed its defining equality".into());
+        }
+        let defining_equality_fact_id = defining_equality_store
+            .fact_id
+            .ok_or_else(|| "finite-sequence defining equality store has no FactId".to_string())?;
+        if [
+            surface_membership_fact_id,
+            *function_membership_fact_id,
+            defining_equality_fact_id,
+        ]
+        .into_iter()
+        .collect::<HashSet<_>>()
+        .len()
+            != 3
+        {
+            return Err(
+                "finite-sequence outer stores reused a FactId across semantic roles".into(),
+            );
+        }
+
+        let name = lean_identifier(statement.name());
+        let function_value_name = format!("(@{name})");
+        if self
+            .environment_stack
+            .symbol_names
+            .insert(statement.symbol_binding.id(), function_value_name.clone())
+            .is_some()
+        {
+            return Err(format!(
+                "duplicate compiler symbol identity for finite sequence `{}`",
+                statement.name()
+            ));
+        }
+        let function_type = render_function_type(&compiled_body.function, &self.environment_stack)?;
+        let rendered_function_set =
+            render_function_set(&compiled_body.function, &self.environment_stack)?;
+        self.declarations.push(format!(
+            "noncomputable def {name} : {function_type} :=\n  {}",
+            compiled_body.value
+        ));
+
+        let surface_theorem_name = format!("__fact{}", self.next_fact_name_index);
+        self.declarations.push(format!(
+            "theorem {surface_theorem_name} : {} := by\n  exact Litex.In.own {} {function_value_name}",
+            render_fact(&expected_surface_membership, &self.environment_stack)?,
+            render_obj(
+                &statement.finite_seq_set.clone().into(),
+                &self.environment_stack,
+            )?,
+        ));
+        self.environment_stack
+            .fact_names
+            .insert(surface_membership_fact_id, surface_theorem_name.clone());
+        self.environment_stack
+            .fact_propositions
+            .insert(surface_membership_fact_id, expected_surface_membership);
+        self.environment_stack.function_bindings.insert(
+            surface_membership_fact_id,
+            FunctionBinding {
+                symbol_id: statement.symbol_binding.id(),
+                function: compiled_body.function.clone(),
+                membership_proof_name: surface_theorem_name,
+                direct: true,
+            },
+        );
+        self.next_fact_name_index += 1;
+
+        let function_membership_theorem_name = format!("__fact{}", self.next_fact_name_index);
+        self.declarations.push(format!(
+            "theorem {function_membership_theorem_name} : {} := by\n  exact Litex.In.own {rendered_function_set} {function_value_name}",
+            render_fact(inferred_function_membership, &self.environment_stack)?,
+        ));
+        self.environment_stack.fact_names.insert(
+            *function_membership_fact_id,
+            function_membership_theorem_name.clone(),
+        );
+        self.environment_stack.fact_propositions.insert(
+            *function_membership_fact_id,
+            inferred_function_membership.clone(),
+        );
+        self.environment_stack.function_bindings.insert(
+            *function_membership_fact_id,
+            FunctionBinding {
+                symbol_id: statement.symbol_binding.id(),
+                function: compiled_body.function.clone(),
+                membership_proof_name: function_membership_theorem_name,
+                direct: true,
+            },
+        );
+        self.next_fact_name_index += 1;
+
+        let equality_theorem_name = format!("__fact{}", self.next_fact_name_index);
+        self.declarations.push(format!(
+            "theorem {equality_theorem_name} : Litex.Same {function_value_name} ({} : {function_type}) := by\n  unfold {name}\n  exact Litex.Same.refl ({} : {function_type})",
+            compiled_body.value, compiled_body.value
+        ));
+        self.environment_stack
+            .fact_names
+            .insert(defining_equality_fact_id, equality_theorem_name);
+        self.environment_stack
+            .fact_propositions
+            .insert(defining_equality_fact_id, expected_defining_equality);
+        self.environment_stack.named_function_definitions.insert(
+            defining_equality_fact_id,
+            NamedFunctionDefinitionBinding {
+                symbol_id: statement.symbol_binding.id(),
+                name,
+                function: compiled_body.function,
+                source_body: compiled_body.source_body,
+                body: compiled_body.lowered_body,
+                uses_native_real_body: true,
+                parameter_premises: compiled_body.parameter_premises,
+                domain_premises: compiled_body.domain_premises,
+                compatibility_return_selection: None,
+                well_definedness: LitexToLeanWellDefinednessCertificateIr::default(),
+            },
+        );
+        self.next_fact_name_index += 1;
+        Ok(true)
+    }
+
+    /// `Combine`: consume four outer row/column bound checks, enter one local
+    /// Result layer containing two parameter stores, two domain-premise
+    /// stores, and the recursive return check, then publish only the matrix's
+    /// persistent facts after that compiler environment has been popped.
+    fn compile_have_matrix_stmt_result_to_lean_source(
+        &mut self,
+        result: &SuccessHaveMatrixStmtResult,
+    ) -> Result<bool, String> {
+        let Some(verification) = &result.verification else {
+            return Ok(false);
+        };
+        let statement = &result.statement;
+        let expected_bound_checks: [Fact; 4] = [
+            InFact::new(
+                statement.row_bound.clone(),
+                StandardSet::NPos.into(),
+                statement.line_file.clone(),
+            )
+            .into(),
+            EqualFact::new(
+                statement.row_bound.clone(),
+                statement.matrix_set.row_len.as_ref().clone(),
+                statement.line_file.clone(),
+            )
+            .into(),
+            InFact::new(
+                statement.col_bound.clone(),
+                StandardSet::NPos.into(),
+                statement.line_file.clone(),
+            )
+            .into(),
+            EqualFact::new(
+                statement.col_bound.clone(),
+                statement.matrix_set.col_len.as_ref().clone(),
+                statement.line_file.clone(),
+            )
+            .into(),
+        ];
+        if verification.bound_checks.len() != expected_bound_checks.len() {
+            return Err("matrix verification requires four ordered bound checks".into());
+        }
+        for (check_index, (checked_result, expected_fact)) in verification
+            .bound_checks
+            .iter()
+            .zip(expected_bound_checks.iter())
+            .enumerate()
+        {
+            let checked_fact = checked_result
+                .factual_success()
+                .ok_or_else(|| format!("matrix bound check {check_index} is not factual"))?;
+            if checked_fact.fact().to_string() != expected_fact.to_string()
+                || checked_fact.store.fact.to_string() != expected_fact.to_string()
+                || !checked_fact.store.infers.is_empty()
+            {
+                return Err(format!(
+                    "matrix bound check {check_index} changed its target or published effects"
+                ));
+            }
+            if self
+                .construct_lean_proof_from_direct_fact_result(checked_fact)?
+                .is_none()
+            {
+                return Err(format!(
+                    "matrix bound check {check_index} has no direct recursive Result proof adapter"
+                ));
+            }
+        }
+
+        let parameter_groups = [
+            ParamGroupWithSet::new(
+                vec![statement.row_index_binding.clone()],
+                StandardSet::NPos.into(),
+            ),
+            ParamGroupWithSet::new(
+                vec![statement.col_index_binding.clone()],
+                StandardSet::NPos.into(),
+            ),
+        ];
+        let domain_atomic_facts = [
+            AtomicFact::from(LessEqualFact::new(
+                obj_for_bound_param_in_scope(&statement.row_index_binding, ParamObjType::FnSet),
+                statement.row_bound.clone(),
+                statement.line_file.clone(),
+            )),
+            AtomicFact::from(LessEqualFact::new(
+                obj_for_bound_param_in_scope(&statement.col_index_binding, ParamObjType::FnSet),
+                statement.col_bound.clone(),
+                statement.line_file.clone(),
+            )),
+        ];
+        let expected_domain_facts = domain_atomic_facts
+            .iter()
+            .cloned()
+            .map(Fact::from)
+            .collect::<Vec<_>>();
+        let anonymous_function = AnonymousFn::new(
+            parameter_groups.to_vec(),
+            domain_atomic_facts
+                .iter()
+                .cloned()
+                .map(QuantifierFreeFact::from)
+                .collect(),
+            statement.matrix_set.set.as_ref().clone(),
+            statement.value.clone(),
+        )
+        .map_err(|error| error.to_string())?;
+        let function_set =
+            FnSet::from_body(anonymous_function.body.clone()).map_err(|error| error.to_string())?;
+        let function = LitexToLeanFunctionTypeIr::lower(&function_set)?;
+        if function.parameters.len() != 2
+            || function.parameters[0].symbol_id != statement.row_index_binding.id()
+            || function.parameters[1].symbol_id != statement.col_index_binding.id()
+            || function.parameters.iter().any(|parameter| {
+                parameter.set
+                    != LitexToLeanObjectIr::StandardSet(LitexToLeanStandardSetIr::PositiveNatural)
+            })
+            || function.domain_facts.len() != 2
+            || function.return_set.as_ref()
+                != &LitexToLeanObjectIr::StandardSet(LitexToLeanStandardSetIr::Real)
+            || !function_uses_telescope(&function)
+        {
+            return Ok(false);
+        }
+        for count in [
+            statement.matrix_set.row_len.as_ref(),
+            statement.matrix_set.col_len.as_ref(),
+        ] {
+            render_natural_endpoint(&LitexToLeanObjectIr::lower(count)?)?;
+        }
+
+        let mut visited_well_definedness_results = HashSet::new();
+        validate_success_obj_well_defined_result(
+            verification.well_definedness.surface_set.as_ref(),
+            &statement.matrix_set.clone().into(),
+            &mut visited_well_definedness_results,
+        )?;
+        validate_success_obj_well_defined_result(
+            verification.well_definedness.anonymous_function.as_ref(),
+            &anonymous_function.clone().into(),
+            &mut visited_well_definedness_results,
+        )?;
+        validate_success_obj_well_defined_result(
+            verification.well_definedness.function_set.as_ref(),
+            &function_set.clone().into(),
+            &mut visited_well_definedness_results,
+        )?;
+
+        let expected_parameter_facts = parameter_groups
+            .iter()
+            .flat_map(|group| group.facts_for_binding_scope(ParamObjType::FnSet))
+            .collect::<Vec<_>>();
+        if expected_parameter_facts.len() != 2 {
+            return Err("matrix index scope did not produce two parameter facts".into());
+        }
+        if !verification.assumption_infers.rule_applications.is_empty() {
+            return Err("matrix index assumptions retained unexpected typed infer rules".into());
+        }
+        let assumption_stores = &verification.assumption_infers.store_fact_outputs;
+        if assumption_stores.len() != 4 {
+            return Err(
+                "matrix index scope requires two parameter stores and two domain stores".into(),
+            );
+        }
+        let mut parameter_fact_ids = Vec::with_capacity(2);
+        let parameter_bindings = [&statement.row_index_binding, &statement.col_index_binding];
+        for parameter_index in 0..2 {
+            let store = &assumption_stores[parameter_index];
+            let expected_fact = &expected_parameter_facts[parameter_index];
+            if store.itself_and_why_itself_is_stored.0.to_string() != expected_fact.to_string() {
+                return Err(format!(
+                    "matrix parameter store {parameter_index} changed its membership"
+                ));
+            }
+            let fact_id = store
+                .fact_id
+                .ok_or_else(|| format!("matrix parameter store {parameter_index} has no FactId"))?;
+            let expected_positive: Fact = LessFact::new(
+                Number::new("0".to_string()).into(),
+                obj_for_bound_param_in_scope(
+                    parameter_bindings[parameter_index],
+                    ParamObjType::FnSet,
+                ),
+                statement.line_file.clone(),
+            )
+            .into();
+            if store.inferred_facts.len() != 1
+                || store.inferred_fact_ids.len() != 1
+                || store.inferred_fact_ids[0].is_none()
+                || store.inferred_facts[0].to_string() != expected_positive.to_string()
+            {
+                return Err(format!(
+                    "matrix parameter store {parameter_index} changed its positive-index inference"
+                ));
+            }
+            parameter_fact_ids.push(fact_id);
+        }
+        let mut domain_fact_ids = Vec::with_capacity(2);
+        for domain_index in 0..2 {
+            let store = &assumption_stores[domain_index + 2];
+            if store.itself_and_why_itself_is_stored.0.to_string()
+                != expected_domain_facts[domain_index].to_string()
+                || !store.inferred_facts.is_empty()
+                || !store.inferred_fact_ids.is_empty()
+            {
+                return Err(format!(
+                    "matrix domain store {domain_index} changed its premise"
+                ));
+            }
+            domain_fact_ids.push(
+                store
+                    .fact_id
+                    .ok_or_else(|| format!("matrix domain store {domain_index} has no FactId"))?,
+            );
+        }
+        if parameter_fact_ids
+            .iter()
+            .chain(domain_fact_ids.iter())
+            .copied()
+            .collect::<HashSet<_>>()
+            .len()
+            != 4
+        {
+            return Err("matrix local stores reused a FactId across semantic roles".into());
+        }
+
+        let source_body = statement.value.clone();
+        let lowered_body = LitexToLeanObjectIr::lower(&source_body)?;
+        let expected_return_check: Fact = InFact::new(
+            source_body.clone(),
+            statement.matrix_set.set.as_ref().clone(),
+            statement.line_file.clone(),
+        )
+        .into();
+        self.environment_stack.push_inherited_environment();
+        let compiled_body: Result<CompiledIndexedFunctionDefinitionBody, String> = (|| {
+            let mut parameter_premises = Vec::with_capacity(2);
+            let mut parameter_real_representations = HashMap::new();
+            for parameter_index in 0..2 {
+                let suffix = parameter_index + 1;
+                let argument_name = format!("__arg{suffix}");
+                let membership_name = format!("__arg{suffix}_in");
+                let binding = parameter_bindings[parameter_index];
+                let fact_id = parameter_fact_ids[parameter_index];
+                self.environment_stack
+                    .symbol_names
+                    .insert(binding.id(), argument_name.clone());
+                self.environment_stack
+                    .fact_names
+                    .insert(fact_id, membership_name.clone());
+                self.environment_stack
+                    .fact_propositions
+                    .insert(fact_id, expected_parameter_facts[parameter_index].clone());
+                let representative = format!("Litex.In.rep {argument_name} {membership_name}");
+                let numeric_complex = format!("((((({representative}).val : ℕ)) : ℂ))");
+                let numeric_real = format!("((((({representative}).val : ℕ)) : ℝ))");
+                self.environment_stack
+                    .numeric_representations
+                    .insert(binding.id(), numeric_complex);
+                self.environment_stack
+                    .numeric_real_values
+                    .insert(binding.id(), numeric_real.clone());
+                parameter_real_representations.insert(binding.id(), numeric_real);
+                parameter_premises.push(LitexToLeanLocalPremiseIr::new(
+                    fact_id,
+                    expected_parameter_facts[parameter_index].clone(),
+                ));
+            }
+            let mut domain_premises = Vec::with_capacity(2);
+            for domain_index in 0..2 {
+                let fact_id = domain_fact_ids[domain_index];
+                let proof_name = if domain_index == 0 {
+                    "__arg_domain.1"
+                } else {
+                    "__arg_domain.2"
+                };
+                self.environment_stack
+                    .fact_names
+                    .insert(fact_id, proof_name.into());
+                self.environment_stack
+                    .fact_propositions
+                    .insert(fact_id, expected_domain_facts[domain_index].clone());
+                domain_premises.push(LitexToLeanLocalPremiseIr::new(
+                    fact_id,
+                    expected_domain_facts[domain_index].clone(),
+                ));
+            }
+
+            let mut installed_well_definedness_nodes = HashSet::new();
+            for well_definedness in [
+                verification.well_definedness.surface_set.as_ref(),
+                verification.well_definedness.anonymous_function.as_ref(),
+                verification.well_definedness.function_set.as_ref(),
+            ] {
+                install_object_well_definedness_store_results(
+                    well_definedness,
+                    &mut self.environment_stack,
+                    &mut installed_well_definedness_nodes,
+                )?;
+            }
+
+            let return_check = verification
+                .return_check
+                .factual_success()
+                .ok_or_else(|| "matrix return check is not factual".to_string())?;
+            if return_check.fact().to_string() != expected_return_check.to_string()
+                || return_check.store.fact.to_string() != expected_return_check.to_string()
+                || !return_check.store.infers.is_empty()
+            {
+                return Err("matrix return check changed its target or published effects".into());
+            }
+            if self
+                .construct_lean_proof_from_direct_fact_result(return_check)?
+                .is_none()
+            {
+                return Err(
+                    "matrix return check has no direct recursive Result proof adapter".into(),
+                );
+            }
+            let rendered_body = render_real_function_body_with_parameters(
+                &lowered_body,
+                &parameter_real_representations,
+                &self.environment_stack,
+            )?;
+            Ok(CompiledIndexedFunctionDefinitionBody {
+                function: function.clone(),
+                source_body: source_body.clone(),
+                lowered_body: lowered_body.clone(),
+                value: format!(
+                    "fun {{__alpha1 : Type}} (__arg1 : __alpha1) (__arg1_in : Litex.In __arg1 Litex.NPos) => fun {{__alpha2 : Type}} (__arg2 : __alpha2) (__arg2_in : Litex.In __arg2 Litex.NPos) => fun __arg_domain => ULift.up ({rendered_body})"
+                ),
+                parameter_premises,
+                domain_premises,
+            })
+        })();
+        self.environment_stack.pop_local_environment();
+        let compiled_body = compiled_body?;
+
+        if !result.common.infers.rule_applications.is_empty() {
+            return Err("matrix definition retained unexpected outer typed infer rules".into());
+        }
+        let [surface_membership_store, defining_equality_store] =
+            result.common.infers.store_fact_outputs.as_slice()
+        else {
+            return Err("matrix definition requires two ordered outer store outputs".into());
+        };
+        let function_object: Obj = Identifier::new_bound(
+            statement.name().to_string(),
+            statement.symbol_binding.as_ref(),
+        )
+        .into();
+        let expected_surface_membership: Fact = InFact::new(
+            function_object.clone(),
+            statement.matrix_set.clone().into(),
+            statement.line_file.clone(),
+        )
+        .into();
+        let expected_defining_equality: Fact = EqualFact::new(
+            function_object.clone(),
+            anonymous_function.clone().into(),
+            statement.line_file.clone(),
+        )
+        .into();
+        if surface_membership_store
+            .itself_and_why_itself_is_stored
+            .0
+            .to_string()
+            != expected_surface_membership.to_string()
+        {
+            return Err("matrix first outer store changed its surface membership".into());
+        }
+        let surface_membership_fact_id = surface_membership_store
+            .fact_id
+            .ok_or_else(|| "matrix surface membership store has no FactId".to_string())?;
+        let [inferred_function_membership] = surface_membership_store.inferred_facts.as_slice()
+        else {
+            return Err("matrix surface membership must infer one function membership".into());
+        };
+        let [Some(function_membership_fact_id)] =
+            surface_membership_store.inferred_fact_ids.as_slice()
+        else {
+            return Err("matrix inferred function membership has no FactId".into());
+        };
+        let (inferred_function_object, inferred_function_set) =
+            membership_parts(inferred_function_membership)?;
+        if !object_is_symbol(inferred_function_object, statement.symbol_binding.id()) {
+            return Err("matrix inferred function membership changed its function".into());
+        }
+        let Obj::FnSet(inferred_function_set) = inferred_function_set else {
+            return Err("matrix inferred membership does not retain a function set".into());
+        };
+        let inferred_function = LitexToLeanFunctionTypeIr::lower(inferred_function_set)?;
+        if inferred_function.parameters.len() != 2
+            || inferred_function.domain_facts.len() != 2
+            || inferred_function.return_set != compiled_body.function.return_set
+            || inferred_function
+                .parameters
+                .iter()
+                .zip(compiled_body.function.parameters.iter())
+                .any(|(inferred, expected)| inferred.set != expected.set)
+        {
+            return Err("matrix inferred function membership changed its signature".into());
+        }
+        let mut expected_domain_environment = self.environment_stack.clone();
+        let mut inferred_domain_environment = self.environment_stack.clone();
+        for parameter_index in 0..2 {
+            let common_name = format!("__matrix_parameter{}", parameter_index + 1);
+            let common_numeric = format!("__matrix_parameter{}_complex", parameter_index + 1);
+            expected_domain_environment.symbol_names.insert(
+                compiled_body.function.parameters[parameter_index].symbol_id,
+                common_name.clone(),
+            );
+            expected_domain_environment.numeric_representations.insert(
+                compiled_body.function.parameters[parameter_index].symbol_id,
+                common_numeric.clone(),
+            );
+            inferred_domain_environment.symbol_names.insert(
+                inferred_function.parameters[parameter_index].symbol_id,
+                common_name,
+            );
+            inferred_domain_environment.numeric_representations.insert(
+                inferred_function.parameters[parameter_index].symbol_id,
+                common_numeric,
+            );
+        }
+        for domain_index in 0..2 {
+            if render_fact(
+                &compiled_body.function.domain_facts[domain_index],
+                &expected_domain_environment,
+            )? != render_fact(
+                &inferred_function.domain_facts[domain_index],
+                &inferred_domain_environment,
+            )? {
+                return Err(format!(
+                    "matrix inferred function membership changed bound clause {domain_index}"
+                ));
+            }
+        }
+        if defining_equality_store
+            .itself_and_why_itself_is_stored
+            .0
+            .to_string()
+            != expected_defining_equality.to_string()
+            || !defining_equality_store.inferred_facts.is_empty()
+            || !defining_equality_store.inferred_fact_ids.is_empty()
+        {
+            return Err("matrix second outer store changed its defining equality".into());
+        }
+        let defining_equality_fact_id = defining_equality_store
+            .fact_id
+            .ok_or_else(|| "matrix defining equality store has no FactId".to_string())?;
+        if [
+            surface_membership_fact_id,
+            *function_membership_fact_id,
+            defining_equality_fact_id,
+        ]
+        .into_iter()
+        .collect::<HashSet<_>>()
+        .len()
+            != 3
+        {
+            return Err("matrix outer stores reused a FactId across semantic roles".into());
+        }
+
+        let name = lean_identifier(statement.name());
+        let function_value_name = format!("(@{name})");
+        if self
+            .environment_stack
+            .symbol_names
+            .insert(statement.symbol_binding.id(), function_value_name.clone())
+            .is_some()
+        {
+            return Err(format!(
+                "duplicate compiler symbol identity for matrix `{}`",
+                statement.name()
+            ));
+        }
+        let function_type = render_function_type(&compiled_body.function, &self.environment_stack)?;
+        let rendered_function_set =
+            render_function_set(&compiled_body.function, &self.environment_stack)?;
+        self.declarations.push(format!(
+            "noncomputable def {name} : {function_type} :=\n  {}",
+            compiled_body.value
+        ));
+
+        let surface_theorem_name = format!("__fact{}", self.next_fact_name_index);
+        self.declarations.push(format!(
+            "theorem {surface_theorem_name} : {} := by\n  exact Litex.In.own {} {function_value_name}",
+            render_fact(&expected_surface_membership, &self.environment_stack)?,
+            render_obj(&statement.matrix_set.clone().into(), &self.environment_stack)?,
+        ));
+        self.environment_stack
+            .fact_names
+            .insert(surface_membership_fact_id, surface_theorem_name.clone());
+        self.environment_stack
+            .fact_propositions
+            .insert(surface_membership_fact_id, expected_surface_membership);
+        self.environment_stack.function_bindings.insert(
+            surface_membership_fact_id,
+            FunctionBinding {
+                symbol_id: statement.symbol_binding.id(),
+                function: compiled_body.function.clone(),
+                membership_proof_name: surface_theorem_name,
+                direct: true,
+            },
+        );
+        self.next_fact_name_index += 1;
+
+        let function_membership_theorem_name = format!("__fact{}", self.next_fact_name_index);
+        self.declarations.push(format!(
+            "theorem {function_membership_theorem_name} : {} := by\n  exact Litex.In.own {rendered_function_set} {function_value_name}",
+            render_fact(inferred_function_membership, &self.environment_stack)?,
+        ));
+        self.environment_stack.fact_names.insert(
+            *function_membership_fact_id,
+            function_membership_theorem_name.clone(),
+        );
+        self.environment_stack.fact_propositions.insert(
+            *function_membership_fact_id,
+            inferred_function_membership.clone(),
+        );
+        self.environment_stack.function_bindings.insert(
+            *function_membership_fact_id,
+            FunctionBinding {
+                symbol_id: statement.symbol_binding.id(),
+                function: compiled_body.function.clone(),
+                membership_proof_name: function_membership_theorem_name,
+                direct: true,
+            },
+        );
+        self.next_fact_name_index += 1;
+
+        let equality_theorem_name = format!("__fact{}", self.next_fact_name_index);
+        self.declarations.push(format!(
+            "theorem {equality_theorem_name} : Litex.Same {function_value_name} ({} : {function_type}) := by\n  unfold {name}\n  exact Litex.Same.refl ({} : {function_type})",
+            compiled_body.value, compiled_body.value
+        ));
+        self.environment_stack
+            .fact_names
+            .insert(defining_equality_fact_id, equality_theorem_name);
+        self.environment_stack
+            .fact_propositions
+            .insert(defining_equality_fact_id, expected_defining_equality);
+        self.environment_stack.named_function_definitions.insert(
+            defining_equality_fact_id,
+            NamedFunctionDefinitionBinding {
+                symbol_id: statement.symbol_binding.id(),
+                name,
+                function: compiled_body.function,
+                source_body: compiled_body.source_body,
+                body: compiled_body.lowered_body,
+                uses_native_real_body: true,
+                parameter_premises: compiled_body.parameter_premises,
+                domain_premises: compiled_body.domain_premises,
+                compatibility_return_selection: None,
+                well_definedness: LitexToLeanWellDefinednessCertificateIr::default(),
+            },
+        );
+        self.next_fact_name_index += 1;
+        Ok(true)
+    }
+
     fn compile_def_prop_stmt_result_to_lean_source(
         &mut self,
         result: &SuccessDefPropStmtResult,
@@ -610,6 +2838,261 @@ impl StmtResultToLeanCompiler {
             &mut self.declarations,
             &mut self.environment_stack,
         )
+    }
+
+    fn compile_by_definition_stmt_result_to_lean_source(
+        &mut self,
+        result: &SuccessByDefStmtResult,
+    ) -> Result<bool, String> {
+        let Some(proof) = self.construct_lean_proof_from_by_definition_stmt_result(result)? else {
+            return Ok(false);
+        };
+        if !result.common.infers.rule_applications.is_empty() {
+            return Ok(false);
+        }
+        if result.common.infers.store_fact_outputs.is_empty() {
+            let target_was_already_visible = self
+                .environment_stack
+                .fact_propositions
+                .values()
+                .any(|visible| visible.to_string() == proof.target.fact.to_string());
+            if !target_was_already_visible {
+                return Err(
+                    "by-definition target was neither stored nor already compiler-visible".into(),
+                );
+            }
+            return Ok(true);
+        }
+        let [output] = result.common.infers.store_fact_outputs.as_slice() else {
+            return Err("by-definition target retained more than one direct store output".into());
+        };
+        if output.itself_and_why_itself_is_stored.0.to_string() != proof.target.fact.to_string()
+            || output.inferred_facts.len() != output.inferred_fact_ids.len()
+        {
+            return Err("by-definition target changed its direct or inferred effects".into());
+        }
+        let fact_id = output
+            .fact_id
+            .ok_or_else(|| "by-definition target store has no FactId".to_string())?;
+        let theorem_name = format!("__fact{}", self.next_fact_name_index);
+        self.declarations.push(format!(
+            "theorem {theorem_name} : {} := by\n  exact {}",
+            proof.target.proposition, proof.target.proof_expression
+        ));
+        self.environment_stack
+            .fact_names
+            .insert(fact_id, theorem_name);
+        self.environment_stack
+            .fact_propositions
+            .insert(fact_id, proof.target.fact);
+        self.next_fact_name_index += 1;
+
+        for (inferred_fact, inferred_fact_id) in output
+            .inferred_facts
+            .iter()
+            .zip(output.inferred_fact_ids.iter())
+        {
+            let inferred_fact_id = inferred_fact_id.ok_or_else(|| {
+                format!("by-definition inferred fact `{inferred_fact}` has no retained FactId")
+            })?;
+            if self
+                .environment_stack
+                .fact_propositions
+                .contains_key(&inferred_fact_id)
+            {
+                resolve_fact_citation(&inferred_fact_id, inferred_fact, &self.environment_stack)?;
+                continue;
+            }
+            let component = proof
+                .components
+                .iter()
+                .find(|component| {
+                    component.retained_fact_id == Some(inferred_fact_id)
+                        && component.fact.to_string() == inferred_fact.to_string()
+                })
+                .ok_or_else(|| {
+                    format!(
+                        "by-definition inferred fact `{inferred_fact}` has no matching recursive child proof"
+                    )
+                })?;
+            let theorem_name = format!("__fact{}", self.next_fact_name_index);
+            self.declarations.push(format!(
+                "theorem {theorem_name} : {} := by\n  exact {}",
+                component.proposition, component.proof_expression
+            ));
+            self.environment_stack
+                .fact_names
+                .insert(inferred_fact_id, theorem_name);
+            self.environment_stack
+                .fact_propositions
+                .insert(inferred_fact_id, component.fact.clone());
+            self.next_fact_name_index += 1;
+        }
+        Ok(true)
+    }
+
+    /// `Combine`: validate each parameter and definition-clause child in
+    /// source order, then fold those exact proofs into the predicate.
+    fn construct_lean_proof_from_by_definition_stmt_result(
+        &mut self,
+        result: &SuccessByDefStmtResult,
+    ) -> Result<Option<CompiledByDefinitionProofBody>, String> {
+        let Some(verification) = &result.verification else {
+            return Ok(None);
+        };
+        if !verification.concrete_user_prop {
+            return Ok(None);
+        }
+        let Some(definition) = &verification.definition else {
+            return Err("by-definition Result lost its concrete predicate definition".into());
+        };
+        if definition.iff_facts.is_empty() {
+            return Err("by-definition Result retained a bodyless concrete predicate".into());
+        }
+        let target: Fact = result.statement.fact.clone().into();
+        let Fact::AtomicFact(AtomicFact::NormalAtomicFact(target_predicate)) = &target else {
+            return Err("concrete by-definition target is not a predicate application".into());
+        };
+        if verification.prop != target_predicate.predicate.to_string()
+            || verification.stored_fact != target.to_string()
+            || verification.arguments
+                != target_predicate
+                    .body
+                    .iter()
+                    .map(ToString::to_string)
+                    .collect::<Vec<_>>()
+            || verification.definition_clauses
+                != verification
+                    .definition_clause_facts
+                    .iter()
+                    .map(ToString::to_string)
+                    .collect::<Vec<_>>()
+        {
+            return Err("by-definition Result changed its target, arguments, or clauses".into());
+        }
+        let binding = self
+            .environment_stack
+            .predicate_bindings
+            .get(&definition.name)
+            .cloned()
+            .ok_or_else(|| {
+                format!(
+                    "by-definition references unavailable predicate `{}`",
+                    definition.name
+                )
+            })?;
+        let Some(active_definition) = &binding.definition else {
+            return Err("by-definition selected an abstract predicate binding".into());
+        };
+        if active_definition.to_string() != definition.to_string()
+            || target_predicate.predicate.to_string() != definition.name
+        {
+            return Err(
+                "by-definition Result does not match the active predicate definition".into(),
+            );
+        }
+        let Some(argument_verification) = &verification.argument_verification else {
+            return Err("by-definition Result has no parameter-check children".into());
+        };
+        if !argument_verification.infers.is_empty() {
+            return Ok(None);
+        }
+        if argument_verification.checks.len() != binding.requirement_count
+            || verification.definition_clause_facts.len() != binding.clause_count
+            || verification.clause_checks.len() != binding.clause_count
+        {
+            return Err("by-definition Result changed its component arity".into());
+        }
+
+        let expected_components =
+            instantiated_predicate_components(&target, &binding, &self.environment_stack)?;
+        if expected_components.len() != binding.requirement_count + binding.clause_count {
+            return Err("active predicate definition produced an invalid component arity".into());
+        }
+        let mut components = Vec::with_capacity(expected_components.len());
+        for (component_index, check) in argument_verification.checks.iter().enumerate() {
+            let check = check
+                .factual_success()
+                .ok_or_else(|| "by-definition parameter child is not factual".to_string())?;
+            validate_scoped_fact_check_result(
+                check,
+                &check.fact(),
+                &format!("by-definition parameter check {component_index}"),
+            )?;
+            if render_fact(&check.fact(), &self.environment_stack)?
+                != expected_components[component_index]
+            {
+                return Err(format!(
+                    "by-definition parameter check {component_index} changed its expected fact"
+                ));
+            }
+            let Some(proof) = self.construct_lean_proof_from_direct_fact_result(check)? else {
+                return Ok(None);
+            };
+            components.push(CompiledByDefinitionComponentProofBody {
+                fact: check.fact(),
+                retained_fact_id: check.store.fact_id,
+                proposition: expected_components[component_index].clone(),
+                proof_expression: proof,
+            });
+        }
+        for (clause_index, (retained_clause, check)) in verification
+            .definition_clause_facts
+            .iter()
+            .zip(verification.clause_checks.iter())
+            .enumerate()
+        {
+            let check = check
+                .factual_success()
+                .ok_or_else(|| "by-definition clause child is not factual".to_string())?;
+            if check.fact().to_string() != retained_clause.to_string() {
+                return Err(format!(
+                    "by-definition clause check {clause_index} changed its retained fact"
+                ));
+            }
+            validate_scoped_fact_check_result(
+                check,
+                retained_clause,
+                &format!("by-definition clause check {clause_index}"),
+            )?;
+            let component_index = binding.requirement_count + clause_index;
+            if render_fact(retained_clause, &self.environment_stack)?
+                != expected_components[component_index]
+            {
+                return Err(format!(
+                    "by-definition clause check {clause_index} changed its expected fact"
+                ));
+            }
+            let Some(proof) = self.construct_lean_proof_from_direct_fact_result(check)? else {
+                return Ok(None);
+            };
+            components.push(CompiledByDefinitionComponentProofBody {
+                fact: retained_clause.clone(),
+                retained_fact_id: check.store.fact_id,
+                proposition: expected_components[component_index].clone(),
+                proof_expression: proof,
+            });
+        }
+        if components.is_empty() {
+            return Err("by-definition Result retained no proof components".into());
+        }
+        let target_proof_expression = format!(
+            "(by\n  unfold {}\n  exact ⟨{}⟩)",
+            binding.lean_name,
+            components
+                .iter()
+                .map(|component| component.proof_expression.as_str())
+                .collect::<Vec<_>>()
+                .join(", ")
+        );
+        Ok(Some(CompiledByDefinitionProofBody {
+            target: CompiledFactProofBody {
+                fact: target.clone(),
+                proposition: render_fact(&target, &self.environment_stack)?,
+                proof_expression: target_proof_expression,
+            },
+            components,
+        }))
     }
 
     fn compile_trust_stmt_result_to_lean_source(
@@ -923,29 +3406,181 @@ impl StmtResultToLeanCompiler {
         let Some(verification) = &result.verification else {
             return Ok(false);
         };
+        if result.statement.fact.to_string() != verification.source_exist_fact.to_string() {
+            return Err("existential elimination changed its source existential".into());
+        }
+        self.compile_positive_single_witness_existential_elimination_result_to_lean_source(
+            &result.statement.equal_tos,
+            &result.common,
+            verification,
+            None,
+        )
+    }
+
+    /// `Combine`: the statement itself is the existential source. The adapter
+    /// verifies that execution retained that exact binder and body before the
+    /// shared elimination compiler consumes its recursively named children.
+    fn compile_have_obj_by_exist_facts_stmt_result_to_lean_source(
+        &mut self,
+        result: &SuccessHaveObjByExistFactsStmtResult,
+    ) -> Result<bool, String> {
+        let Some(verification) = &result.verification else {
+            return Ok(false);
+        };
+        let existential = &verification.source_exist_fact;
+        if result.statement.param_def.to_string() != existential.params_def_with_type().to_string()
+            || result
+                .statement
+                .facts
+                .iter()
+                .map(ToString::to_string)
+                .collect::<Vec<_>>()
+                != existential
+                    .facts()
+                    .iter()
+                    .map(ToString::to_string)
+                    .collect::<Vec<_>>()
+        {
+            return Err("object-by-existential Result changed its binder or body facts".into());
+        }
+        let bindings = result.statement.param_def.collect_param_bindings();
+        self.compile_positive_single_witness_existential_elimination_result_to_lean_source(
+            &bindings,
+            &result.common,
+            verification,
+            None,
+        )
+    }
+
+    /// `Combine`: the concrete predicate projection is retained as the source
+    /// fact Result. The shared compiler obtains the witness only after that
+    /// exact recursive `DefinitionProjection` proof has been constructed.
+    fn compile_obtain_obj_from_atomic_fact_stmt_result_to_lean_source(
+        &mut self,
+        result: &SuccessObtainObjFromAtomicFactResult,
+    ) -> Result<bool, String> {
+        let Some(verification) = &result.verification else {
+            return Ok(false);
+        };
+        let source_result = verification
+            .source_result
+            .factual_success()
+            .ok_or_else(|| {
+                "predicate-backed existential elimination source is not factual".to_string()
+            })?;
+        let SuccessFactProofResult::BuiltinRule(source_builtin) = source_result.proof() else {
+            return Ok(false);
+        };
+        let Some(BuiltinRuleEvidence::DefinitionProjection(evidence)) = &source_builtin.evidence
+        else {
+            return Ok(false);
+        };
+        if evidence.fact.to_string() != result.statement.fact.to_string() {
+            return Err("predicate-backed existential elimination changed its source fact".into());
+        }
+        self.compile_positive_single_witness_existential_elimination_result_to_lean_source(
+            &result.statement.equal_tos,
+            &result.common,
+            verification,
+            None,
+        )
+    }
+
+    /// `Combine`: the nested theorem application constructs one local
+    /// existential conclusion proof. This parent consumes that proof as its
+    /// source and publishes only the selected witness projections.
+    fn compile_obtain_obj_from_theorem_stmt_result_to_lean_source(
+        &mut self,
+        result: &SuccessObtainObjFromThmResult,
+    ) -> Result<bool, String> {
+        let Some(verification) = &result.verification else {
+            return Ok(false);
+        };
+        let source_result = verification
+            .source_result
+            .non_factual_success()
+            .ok_or_else(|| {
+                "theorem-backed existential elimination source is not a statement Result"
+                    .to_string()
+            })?;
+        let SuccessStmtResult::By(SuccessByStmtResult::ByThmStmt(theorem_application)) =
+            source_result
+        else {
+            return Err(
+                "theorem-backed existential elimination retained another source statement".into(),
+            );
+        };
+        if theorem_application.statement.name.to_string() != result.statement.thm_name.to_string()
+            || theorem_application
+                .statement
+                .args
+                .iter()
+                .map(ToString::to_string)
+                .collect::<Vec<_>>()
+                != result
+                    .statement
+                    .args
+                    .iter()
+                    .map(ToString::to_string)
+                    .collect::<Vec<_>>()
+        {
+            return Err(
+                "theorem-backed existential elimination changed its theorem application".into(),
+            );
+        }
+        let Some(mut conclusions) = self
+            .construct_lean_proofs_from_litex_theorem_instantiation_stmt_result(
+                theorem_application,
+            )?
+        else {
+            return Ok(false);
+        };
+        if conclusions.len() != 1 {
+            return Err(
+                "theorem-backed existential elimination requires one direct conclusion".into(),
+            );
+        }
+        let source = conclusions
+            .pop()
+            .expect("one theorem conclusion was checked above");
+        self.compile_positive_single_witness_existential_elimination_result_to_lean_source(
+            &result.statement.equal_tos,
+            &result.common,
+            verification,
+            Some(CompiledFactProofBody {
+                fact: source.fact,
+                proposition: source.proposition,
+                proof_expression: source.proof_expression,
+            }),
+        )
+    }
+
+    /// Shared `Combine` for the currently reviewed existential-elimination
+    /// shape. Statement-family adapters above own syntax-specific validation;
+    /// this method owns the one source proof, witness binding, and two stored
+    /// projection effects.
+    fn compile_positive_single_witness_existential_elimination_result_to_lean_source(
+        &mut self,
+        introduced_bindings: &[SymbolBinding],
+        common: &SuccessStmtCommonResult,
+        verification: &SuccessVerifyExistentialEliminationResult,
+        prepared_source_proof: Option<CompiledFactProofBody>,
+    ) -> Result<bool, String> {
         let existential = &verification.source_exist_fact;
         if !existential.is_plain_exist()
             || existential.params_def_with_type().number_of_params() != 1
             || existential.facts().len() != 1
-            || result.statement.equal_tos.len() != 1
+            || introduced_bindings.len() != 1
             || verification.witness_type_facts.len() != 1
             || verification.instantiated_body_facts.len() != 1
             || verification.includes_uniqueness
         {
             return Ok(false);
         }
-        if result.statement.fact.to_string() != existential.to_string() {
-            return Err("existential elimination changed its source existential".into());
-        }
-        if !result.common.infers.rule_applications.is_empty()
-            || result
-                .common
-                .infers
-                .store_fact_outputs
-                .iter()
-                .any(|output| {
-                    !output.inferred_facts.is_empty() || !output.inferred_fact_ids.is_empty()
-                })
+        if !common.infers.rule_applications.is_empty()
+            || common.infers.store_fact_outputs.iter().any(|output| {
+                !output.inferred_facts.is_empty() || !output.inferred_fact_ids.is_empty()
+            })
         {
             return Ok(false);
         }
@@ -954,38 +3589,58 @@ impl StmtResultToLeanCompiler {
             verification.instantiated_body_facts[0].clone(),
         ];
         let stored_fact_ids = exact_ordered_fact_ids_from_store_results(
-            &result.common.infers,
+            &common.infers,
             &expected_stored_facts,
             "existential elimination projections",
         )?;
 
-        let source_result = verification
-            .source_result
-            .factual_success()
-            .ok_or_else(|| {
-                "existential elimination source is not a successful fact Result".to_string()
-            })?;
         let source_fact: Fact = existential.clone().into();
+        let source_proof_body = if let Some(source_proof) = prepared_source_proof {
+            source_proof
+        } else {
+            let source_result = verification
+                .source_result
+                .factual_success()
+                .ok_or_else(|| {
+                    "existential elimination source is not a successful fact Result".to_string()
+                })?;
+            if !source_result.store.infers.is_empty() {
+                return Err("existential elimination source Result gained effects".into());
+            }
+            let Some(source_proof) =
+                self.construct_lean_proof_from_direct_fact_result(source_result)?
+            else {
+                return Ok(false);
+            };
+            let fact = source_result.fact();
+            CompiledFactProofBody {
+                proposition: render_fact(&fact, &self.environment_stack)?,
+                fact,
+                proof_expression: source_proof,
+            }
+        };
         if !one_witness_existentials_are_alpha_equal(
-            &source_result.fact(),
+            &source_proof_body.fact,
             &source_fact,
             &self.environment_stack,
-        )? || !source_result.store.infers.is_empty()
-        {
+        )? {
             return Err("existential elimination source Result changed its cited fact".into());
         }
-        let Some(source_proof) =
-            self.construct_lean_proof_from_direct_fact_result(source_result)?
-        else {
-            return Ok(false);
-        };
+        let source_proposition = render_fact(&source_fact, &self.environment_stack)?;
+        if source_proof_body.proposition != source_proposition {
+            return Err("existential elimination source proof changed its Lean proposition".into());
+        }
+        let typed_source_proof = format!(
+            "(show {source_proposition} from {})",
+            source_proof_body.proof_expression
+        );
 
         let group = &existential.params_def_with_type().groups[0];
         if group.params.len() != 1 || !matches!(group.param_type, ParamType::Obj(_)) {
             return Ok(false);
         }
         let source_set = parameter_set(&group.param_type)?;
-        let binding = &result.statement.equal_tos[0];
+        let binding = &introduced_bindings[0];
         let witness_name = lean_identifier(binding.name());
         let mut result_environment_stack = self.environment_stack.clone();
         if result_environment_stack
@@ -1036,18 +3691,18 @@ impl StmtResultToLeanCompiler {
         let carrier_name = format!("__carrier_{witness_name}");
         let specification = if dynamic_carrier || function_carrier {
             self.declarations.push(format!(
-                "noncomputable def {carrier_name} : {} := Classical.choose ({source_proof})",
+                "noncomputable def {carrier_name} : {} := Classical.choose ({typed_source_proof})",
                 if function_carrier { "Type 1" } else { "Type" }
             ));
             self.declarations.push(format!(
-                "noncomputable def {witness_name} : {carrier_name} :=\n  Classical.choose (Classical.choose_spec ({source_proof}))"
+                "noncomputable def {witness_name} : {carrier_name} :=\n  Classical.choose (Classical.choose_spec ({typed_source_proof}))"
             ));
-            format!("Classical.choose_spec (Classical.choose_spec ({source_proof}))")
+            format!("Classical.choose_spec (Classical.choose_spec ({typed_source_proof}))")
         } else {
             self.declarations.push(format!(
-                "noncomputable def {witness_name} : ℂ := Classical.choose ({source_proof})"
+                "noncomputable def {witness_name} : ℂ := Classical.choose ({typed_source_proof})"
             ));
-            format!("Classical.choose_spec ({source_proof})")
+            format!("Classical.choose_spec ({typed_source_proof})")
         };
 
         let unfold = if dynamic_carrier || function_carrier {
@@ -1076,10 +3731,479 @@ impl StmtResultToLeanCompiler {
         Ok(true)
     }
 
+    fn compile_by_cases_stmt_result_to_lean_source(
+        &mut self,
+        result: &SuccessByCasesStmtResult,
+    ) -> Result<bool, String> {
+        let Some(proofs) = self.construct_lean_proofs_from_by_cases_stmt_result(result)? else {
+            return Ok(false);
+        };
+        let fact_ids = validate_compiled_fact_proof_effects(
+            &result.common.infers,
+            &proofs,
+            &self.environment_stack,
+            "by-cases exported goals",
+        )?;
+        for (proof, fact_id) in proofs.into_iter().zip(fact_ids) {
+            let Some(fact_id) = fact_id else {
+                continue;
+            };
+            let theorem_name = format!("__fact{}", self.next_fact_name_index);
+            self.declarations.push(format!(
+                "theorem {theorem_name} : {} := by\n  exact {}",
+                proof.proposition, proof.proof_expression
+            ));
+            self.environment_stack
+                .fact_names
+                .insert(fact_id, theorem_name);
+            self.environment_stack
+                .fact_propositions
+                .insert(fact_id, proof.fact);
+            self.next_fact_name_index += 1;
+        }
+        Ok(true)
+    }
+
+    /// `Combine`: one coverage proof is replayed in every exported goal;
+    /// every branch receives its own inherited compiler environment.
+    fn construct_lean_proofs_from_by_cases_stmt_result(
+        &mut self,
+        result: &SuccessByCasesStmtResult,
+    ) -> Result<Option<Vec<CompiledFactProofBody>>, String> {
+        let Some(verification) = &result.verification else {
+            return Ok(None);
+        };
+        if result.statement.then_facts.len() != verification.then_facts.len()
+            || result.statement.cases.len() != verification.branches.len()
+            || result.statement.proofs.len() != verification.branches.len()
+            || result.statement.impossible_facts.len() != verification.branches.len()
+            || verification.goal_well_definedness.len() != verification.then_facts.len()
+        {
+            return Err("by-cases Result changed its goal or branch arity".into());
+        }
+        for (source, retained) in result
+            .statement
+            .then_facts
+            .iter()
+            .zip(verification.then_facts.iter())
+        {
+            if source.to_string() != retained.to_string() {
+                return Err("by-cases verification changed an exported goal".into());
+            }
+            if !matches!(source, Fact::AtomicFact(_)) {
+                return Ok(None);
+            }
+        }
+        for (goal, well_definedness) in verification
+            .then_facts
+            .iter()
+            .zip(verification.goal_well_definedness.iter())
+        {
+            validate_atomic_fact_well_definedness_result(well_definedness, goal)?;
+        }
+
+        let coverage = verification
+            .coverage_check
+            .factual_success()
+            .ok_or_else(|| "by-cases coverage child is not factual".to_string())?;
+        let expected_coverage: Fact = OrFact::new(
+            verification
+                .branches
+                .iter()
+                .map(|branch| branch.assumption.clone())
+                .collect(),
+            result.statement.line_file.clone(),
+        )
+        .into();
+        if coverage.fact().to_string() != expected_coverage.to_string()
+            || !coverage.store.infers.is_empty()
+        {
+            return Err("by-cases coverage child changed the ordered cases".into());
+        }
+        let Some(coverage_proof) = self.construct_lean_proof_from_direct_fact_result(coverage)?
+        else {
+            return Ok(None);
+        };
+
+        let case_names = (0..verification.branches.len())
+            .map(|index| format!("__case{}", index + 1))
+            .collect::<Vec<_>>();
+        let mut compiled_goals = Vec::with_capacity(verification.then_facts.len());
+        for (goal_index, goal) in verification.then_facts.iter().enumerate() {
+            let mut proof_lines = vec!["by".to_string()];
+            if verification.branches.len() == 1 {
+                let case_type = render_fact(
+                    &verification.branches[0].assumption.clone().into(),
+                    &self.environment_stack,
+                )?;
+                proof_lines.push(format!(
+                    "  have {} : {case_type} := {coverage_proof}",
+                    case_names[0]
+                ));
+            } else {
+                proof_lines.push(format!(
+                    "  rcases ({coverage_proof}) with {}",
+                    case_names.join(" | ")
+                ));
+            }
+
+            for (branch_index, branch) in verification.branches.iter().enumerate() {
+                if branch.assumption.to_string() != result.statement.cases[branch_index].to_string()
+                    || branch.proof_steps.len() != result.statement.proofs[branch_index].len()
+                {
+                    return Err(format!(
+                        "by-cases branch {branch_index} changed its assumption or proof-step order"
+                    ));
+                }
+                self.environment_stack.push_inherited_environment();
+                let branch_compilation = (|| {
+                    let case_fact: Fact = branch.assumption.clone().into();
+                    let stored_assumption_fact_id = validate_single_fact_store_output(
+                        &branch.proof_scope.assumption_infers,
+                        &case_fact,
+                        "by-cases branch assumption",
+                    )?;
+                    if stored_assumption_fact_id != branch.assumption_fact_id {
+                        return Err("by-cases branch assumption FactIds disagree".into());
+                    }
+                    self.environment_stack
+                        .fact_names
+                        .insert(branch.assumption_fact_id, case_names[branch_index].clone());
+                    self.environment_stack
+                        .fact_propositions
+                        .insert(branch.assumption_fact_id, case_fact.clone());
+
+                    let expected_components = match &branch.assumption {
+                        AndChainAtomicFact::AtomicFact(_) => Vec::new(),
+                        AndChainAtomicFact::AndFact(and_fact) => and_fact
+                            .facts
+                            .iter()
+                            .cloned()
+                            .map(Fact::from)
+                            .collect::<Vec<_>>(),
+                        AndChainAtomicFact::ChainFact(chain_fact) => chain_fact
+                            .facts()
+                            .map_err(|error| format!("invalid by-cases chain assumption: {error}"))?
+                            .into_iter()
+                            .map(Fact::from)
+                            .collect::<Vec<_>>(),
+                    };
+                    if expected_components.len() != branch.proof_scope.assumption_components.len() {
+                        return Err("by-cases branch lost a structural assumption component".into());
+                    }
+                    let mut local_lines = Vec::new();
+                    for (component_index, ((fact_id, retained), expected)) in branch
+                        .proof_scope
+                        .assumption_components
+                        .iter()
+                        .zip(expected_components.iter())
+                        .enumerate()
+                    {
+                        if retained.to_string() != expected.to_string() {
+                            return Err(
+                                "by-cases branch changed a structural component position".into()
+                            );
+                        }
+                        let component_name = format!(
+                            "__case{}_component{}",
+                            branch_index + 1,
+                            component_index + 1
+                        );
+                        let component_type = render_fact(retained, &self.environment_stack)?;
+                        let component_proof = conjunction_projection(
+                            &format!("({})", case_names[branch_index]),
+                            component_index,
+                            expected_components.len(),
+                        )?;
+                        local_lines.push(format!(
+                            "have {component_name} : {component_type} := by\n  exact {component_proof}"
+                        ));
+                        self.environment_stack
+                            .fact_names
+                            .insert(*fact_id, component_name);
+                        self.environment_stack
+                            .fact_propositions
+                            .insert(*fact_id, retained.clone());
+                    }
+                    for (proof_step_index, proof_step) in branch.proof_steps.iter().enumerate() {
+                        let Some(lines) = self.compile_stmt_result_as_local_proof_steps(
+                            proof_step,
+                            proof_step_index + 1,
+                        )?
+                        else {
+                            return Ok(None);
+                        };
+                        local_lines.extend(lines);
+                    }
+
+                    let exit_proof = match &branch.exit {
+                        SuccessVerifyByCaseBranchExitResult::Conclusions(exit) => {
+                            if result.statement.impossible_facts[branch_index].is_some()
+                                || exit.checks.len() != verification.then_facts.len()
+                            {
+                                return Err(format!(
+                                    "by-cases branch {branch_index} changed its conclusion exit"
+                                ));
+                            }
+                            let conclusion =
+                                exit.checks[goal_index].factual_success().ok_or_else(|| {
+                                    format!(
+                                        "by-cases branch {branch_index} conclusion is not factual"
+                                    )
+                                })?;
+                            if conclusion.fact().to_string() != goal.to_string() {
+                                return Err(format!(
+                                    "by-cases branch {branch_index} conclusion changed goal `{goal}` to `{}`",
+                                    conclusion.fact()
+                                ));
+                            }
+                            validate_scoped_fact_check_result(
+                                conclusion,
+                                goal,
+                                &format!("by-cases branch {branch_index} conclusion"),
+                            )?;
+                            let Some(proof) =
+                                self.construct_lean_proof_from_direct_fact_result(conclusion)?
+                            else {
+                                return Ok(None);
+                            };
+                            proof
+                        }
+                        SuccessVerifyByCaseBranchExitResult::Contradiction(exit) => {
+                            let Some(expected_impossible) =
+                                &result.statement.impossible_facts[branch_index]
+                            else {
+                                return Err(format!(
+                                    "by-cases branch {branch_index} changed its contradiction exit"
+                                ));
+                            };
+                            if exit.impossible_fact.to_string() != expected_impossible.to_string() {
+                                return Err(format!(
+                                    "by-cases branch {branch_index} changed its impossible fact"
+                                ));
+                            }
+                            let Some(contradiction) = self
+                                .construct_lean_contradiction_from_result(
+                                    &exit.impossible_fact,
+                                    &exit.contradiction,
+                                )?
+                            else {
+                                return Ok(None);
+                            };
+                            format!("False.elim ({contradiction})")
+                        }
+                    };
+                    Ok(Some((local_lines, exit_proof)))
+                })();
+                self.environment_stack.pop_local_environment();
+                let Some((local_lines, exit_proof)) = branch_compilation? else {
+                    return Ok(None);
+                };
+                if verification.branches.len() == 1 {
+                    for line in local_lines {
+                        proof_lines.push(indent_lines(&line, 2));
+                    }
+                    proof_lines.push(format!("  exact {exit_proof}"));
+                } else {
+                    proof_lines.push("  ·".into());
+                    for line in local_lines {
+                        proof_lines.push(indent_lines(&line, 4));
+                    }
+                    proof_lines.push(format!("    exact {exit_proof}"));
+                }
+            }
+            let proposition = self.render_fact_using_well_definedness_result(
+                &verification.goal_well_definedness[goal_index],
+                goal,
+            )?;
+            compiled_goals.push(CompiledFactProofBody {
+                fact: goal.clone(),
+                proposition,
+                proof_expression: format!("({})", proof_lines.join("\n")),
+            });
+        }
+        Ok(Some(compiled_goals))
+    }
+
+    fn compile_by_contra_stmt_result_to_lean_source(
+        &mut self,
+        result: &SuccessByContraStmtResult,
+    ) -> Result<bool, String> {
+        let Some(proof) = self.construct_lean_proof_from_by_contra_stmt_result(result)? else {
+            return Ok(false);
+        };
+        let [fact_id] = validate_compiled_fact_proof_effects(
+            &result.common.infers,
+            std::slice::from_ref(&proof),
+            &self.environment_stack,
+            "by-contra exported goal",
+        )?
+        .try_into()
+        .map_err(|_| "by-contra effect validation changed its output arity".to_string())?;
+        let Some(fact_id) = fact_id else {
+            return Ok(true);
+        };
+        let theorem_name = format!("__fact{}", self.next_fact_name_index);
+        self.declarations.push(format!(
+            "theorem {theorem_name} : {} := by\n  exact {}",
+            proof.proposition, proof.proof_expression
+        ));
+        self.environment_stack
+            .fact_names
+            .insert(fact_id, theorem_name);
+        self.environment_stack
+            .fact_propositions
+            .insert(fact_id, proof.fact);
+        self.next_fact_name_index += 1;
+        Ok(true)
+    }
+
+    /// `Combine`: install the exact reverse-assumption FactId in one inherited
+    /// environment, compile the ordered proof-step Results, then combine the
+    /// two retained contradiction checks.
+    fn construct_lean_proof_from_by_contra_stmt_result(
+        &mut self,
+        result: &SuccessByContraStmtResult,
+    ) -> Result<Option<CompiledFactProofBody>, String> {
+        let Some(verification) = &result.verification else {
+            return Ok(None);
+        };
+        if verification.to_prove.to_string() != result.statement.to_prove.to_string()
+            || verification.proof_steps.len() != result.statement.proof.len()
+            || verification.impossible_fact.to_string()
+                != result.statement.impossible_fact.to_string()
+            || !verification.proof_scope.assumption_components.is_empty()
+        {
+            return Err("by-contra Result changed its target or proof structure".into());
+        }
+        let Fact::AtomicFact(target_atomic) = &verification.to_prove else {
+            return Ok(None);
+        };
+        let expected_reverse: Fact = target_atomic
+            .logical_negation()
+            .map_err(|_| "by-contra target has no atomic negation".to_string())?
+            .into();
+        if verification.reverse_assumption.to_string() != expected_reverse.to_string() {
+            return Err("by-contra Result changed its reverse assumption".into());
+        }
+        let stored_reverse_fact_id = validate_single_fact_store_output(
+            &verification.proof_scope.assumption_infers,
+            &verification.reverse_assumption,
+            "by-contra reverse assumption",
+        )?;
+        if stored_reverse_fact_id != verification.reverse_assumption_fact_id {
+            return Err("by-contra reverse-assumption FactIds disagree".into());
+        }
+        self.environment_stack.push_inherited_environment();
+        let compilation: Result<Option<String>, String> = (|| {
+            self.environment_stack
+                .fact_names
+                .insert(verification.reverse_assumption_fact_id, "__reverse".into());
+            self.environment_stack.fact_propositions.insert(
+                verification.reverse_assumption_fact_id,
+                verification.reverse_assumption.clone(),
+            );
+            let mut local_lines = Vec::new();
+            for (proof_step_index, proof_step) in verification.proof_steps.iter().enumerate() {
+                let Some(lines) = self
+                    .compile_stmt_result_as_local_proof_steps(proof_step, proof_step_index + 1)?
+                else {
+                    return Ok(None);
+                };
+                local_lines.extend(lines);
+            }
+            let Some(contradiction) = self.construct_lean_contradiction_from_result(
+                &verification.impossible_fact,
+                &verification.contradiction,
+            )?
+            else {
+                return Ok(None);
+            };
+            let mut proof_lines = vec!["by".to_string(), "  classical".to_string()];
+            if atomic_fact_is_logically_negated(target_atomic) {
+                let reverse_type =
+                    render_fact(&verification.reverse_assumption, &self.environment_stack)?;
+                proof_lines
+                    .push("  exact Classical.byContradiction (fun __negated_goal => by".into());
+                proof_lines.push(format!(
+                    "    have __reverse : {reverse_type} := Classical.byContradiction (fun __not_reverse => __negated_goal __not_reverse)"
+                ));
+                for line in local_lines {
+                    proof_lines.push(indent_lines(&line, 4));
+                }
+                proof_lines.push(format!("    exact {contradiction})"));
+            } else {
+                proof_lines.push("  by_contra __reverse".into());
+                for line in local_lines {
+                    proof_lines.push(indent_lines(&line, 2));
+                }
+                proof_lines.push(format!("  exact {contradiction}"));
+            }
+            Ok(Some(format!("({})", proof_lines.join("\n"))))
+        })();
+        self.environment_stack.pop_local_environment();
+        let Some(proof_expression) = compilation? else {
+            return Ok(None);
+        };
+        Ok(Some(CompiledFactProofBody {
+            fact: verification.to_prove.clone(),
+            proposition: render_fact(&verification.to_prove, &self.environment_stack)?,
+            proof_expression,
+        }))
+    }
+
+    fn construct_lean_contradiction_from_result(
+        &mut self,
+        impossible_fact: &AtomicFact,
+        contradiction: &SuccessVerifyContradictionResult,
+    ) -> Result<Option<String>, String> {
+        let impossible = contradiction
+            .impossible_check
+            .factual_success()
+            .ok_or_else(|| "contradiction positive child is not factual".to_string())?;
+        let negated = contradiction
+            .negated_impossible_check
+            .factual_success()
+            .ok_or_else(|| "contradiction negated child is not factual".to_string())?;
+        let impossible_target: Fact = impossible_fact.clone().into();
+        let expected_negated: Fact = impossible_fact
+            .logical_negation()
+            .map_err(|_| "contradiction fact has no atomic negation".to_string())?
+            .into();
+        if impossible.fact().to_string() != impossible_target.to_string()
+            || negated.fact().to_string() != expected_negated.to_string()
+            || !impossible.store.infers.is_empty()
+            || !negated.store.infers.is_empty()
+        {
+            return Err("contradiction Result changed one of its complementary facts".into());
+        }
+        let Some(impossible_proof) =
+            self.construct_lean_proof_from_direct_fact_result(impossible)?
+        else {
+            return Ok(None);
+        };
+        let Some(negated_proof) = self.construct_lean_proof_from_direct_fact_result(negated)?
+        else {
+            return Ok(None);
+        };
+        if atomic_fact_is_logically_negated(impossible_fact) {
+            let impossible_type = render_fact(&impossible_target, &self.environment_stack)?;
+            Ok(Some(format!(
+                "(({impossible_proof} : {impossible_type}) ({negated_proof}))"
+            )))
+        } else {
+            let negated_type = render_fact(&expected_negated, &self.environment_stack)?;
+            Ok(Some(format!(
+                "(({negated_proof} : {negated_type}) ({impossible_proof}))"
+            )))
+        }
+    }
+
     fn compile_fact_stmt_result_to_lean_source(
         &mut self,
         result: &SuccessFactStmtResult,
     ) -> Result<(), String> {
+        self.install_atomic_fact_well_definedness_store_results(result)?;
         if self.compile_object_reflexivity_fact_result(result)? {
             return Ok(());
         }
@@ -1101,6 +4225,44 @@ impl StmtResultToLeanCompiler {
             &mut self.next_fact_name_index,
             &mut self.environment_stack,
         )
+    }
+
+    /// Some object-WD constructors intentionally store a fact for later
+    /// statements. Function application is the important example: checking
+    /// `f(x)` stores `f(x) $in ReturnSet` under a real FactId. These are not
+    /// display-only WD details, so the compiler installs their proof bindings
+    /// before compiling the enclosing fact proof.
+    fn install_atomic_fact_well_definedness_store_results(
+        &mut self,
+        result: &SuccessFactStmtResult,
+    ) -> Result<(), String> {
+        let Some(recursive) = result.well_definedness.recursive.as_deref() else {
+            return Ok(());
+        };
+        let SuccessVerifyFactWellDefinedProofResult::AtomicFact(atomic) = recursive else {
+            return Ok(());
+        };
+        let certificate = LitexToLeanIrBuilder::new()
+            .compile_fact_well_definedness_result_for_lean_rendering(
+                &result.well_definedness,
+                &result.fact(),
+            )
+            .map_err(|error| error.to_string())?;
+        let previous_well_definedness =
+            self.environment_stack.well_definedness.replace(certificate);
+        let installation = (|| {
+            let mut visited = HashSet::new();
+            for argument in &atomic.arguments {
+                install_object_well_definedness_store_results(
+                    argument.result.as_ref(),
+                    &mut self.environment_stack,
+                    &mut visited,
+                )?;
+            }
+            Ok(())
+        })();
+        self.environment_stack.well_definedness = previous_well_definedness;
+        installation
     }
 
     fn compile_object_reflexivity_fact_result(
@@ -1192,12 +4354,29 @@ impl StmtResultToLeanCompiler {
         object: &Obj,
     ) -> Result<String, String> {
         let certificate = LitexToLeanIrBuilder::new()
-            .compile_fact_stmt_result(result)
-            .map_err(|error| error.to_string())?
-            .well_definedness;
+            .compile_fact_well_definedness_result_for_lean_rendering(
+                &result.well_definedness,
+                &result.fact(),
+            )
+            .map_err(|error| error.to_string())?;
         let previous_well_definedness =
             self.environment_stack.well_definedness.replace(certificate);
         let rendered = render_obj(object, &self.environment_stack);
+        self.environment_stack.well_definedness = previous_well_definedness;
+        rendered
+    }
+
+    fn render_fact_using_well_definedness_result(
+        &mut self,
+        result: &SuccessVerifyFactWellDefinedResult,
+        fact: &Fact,
+    ) -> Result<String, String> {
+        let certificate = LitexToLeanIrBuilder::new()
+            .compile_fact_well_definedness_result_for_lean_rendering(result, fact)
+            .map_err(|error| error.to_string())?;
+        let previous_well_definedness =
+            self.environment_stack.well_definedness.replace(certificate);
+        let rendered = render_fact(fact, &self.environment_stack);
         self.environment_stack.well_definedness = previous_well_definedness;
         rendered
     }
@@ -1844,12 +5023,12 @@ impl StmtResultToLeanCompiler {
                 verification.proof_steps.len() + verification.conclusion_checks.len() + 1,
             );
             for (proof_step_index, proof_step) in verification.proof_steps.iter().enumerate() {
-                let Some(line) =
-                    self.compile_stmt_result_as_local_proof_step(proof_step, proof_step_index + 1)?
+                let Some(lines) = self
+                    .compile_stmt_result_as_local_proof_steps(proof_step, proof_step_index + 1)?
                 else {
                     return Ok(None);
                 };
-                proof_lines.push(line);
+                proof_lines.extend(lines);
             }
 
             let mut conclusion_names = Vec::new();
@@ -1939,8 +5118,44 @@ impl StmtResultToLeanCompiler {
         &mut self,
         result: &SuccessByThmStmtResult,
     ) -> Result<bool, String> {
-        let Some(verification) = &result.verification else {
+        let Some(conclusions) =
+            self.construct_lean_proofs_from_litex_theorem_instantiation_stmt_result(result)?
+        else {
             return Ok(false);
+        };
+        for conclusion in conclusions {
+            let fact_id = conclusion.retained_fact_id.ok_or_else(|| {
+                format!(
+                    "top-level by-thm conclusion `{}` has no retained FactId",
+                    conclusion.fact
+                )
+            })?;
+            let conclusion_name = format!("__fact{}", self.next_fact_name_index);
+            self.declarations.push(format!(
+                "theorem {conclusion_name} : {} := by\n  exact {}",
+                conclusion.proposition, conclusion.proof_expression
+            ));
+            self.environment_stack
+                .fact_names
+                .insert(fact_id, conclusion_name);
+            self.environment_stack
+                .fact_propositions
+                .insert(fact_id, conclusion.fact);
+            self.next_fact_name_index += 1;
+        }
+        Ok(true)
+    }
+
+    /// `Combine`: construct the exact ordered theorem conclusions without
+    /// publishing them into the caller's compiler environment. The enclosing
+    /// statement decides whether those Result-owned FactIds become visible or
+    /// remain local to another proof layer.
+    fn construct_lean_proofs_from_litex_theorem_instantiation_stmt_result(
+        &mut self,
+        result: &SuccessByThmStmtResult,
+    ) -> Result<Option<Vec<CompiledLitexTheoremInstantiationConclusionProofBody>>, String> {
+        let Some(verification) = &result.verification else {
+            return Ok(None);
         };
         if verification.theorem_source != "litex"
             || verification.mode != "release_all"
@@ -1952,7 +5167,7 @@ impl StmtResultToLeanCompiler {
             || !verification.domain_facts.is_empty()
             || !verification.domain_checks.is_empty()
         {
-            return Ok(false);
+            return Ok(None);
         }
         if verification.theorem != result.statement.name.to_string()
             || verification.arguments
@@ -1985,7 +5200,7 @@ impl StmtResultToLeanCompiler {
                 !matches!(parameter_type, ParamType::Obj(Obj::StandardSet(_)))
             })
         {
-            return Ok(false);
+            return Ok(None);
         }
         if source_parameters.len() != result.statement.args.len()
             || source_forall.then_facts.len() != verification.direct_conclusions.len()
@@ -1999,7 +5214,7 @@ impl StmtResultToLeanCompiler {
         if !argument_verification.infers.is_empty()
             || argument_verification.checks.len() != source_parameters.len()
         {
-            return Ok(false);
+            return Ok(None);
         }
 
         let direct_conclusion_strings = verification
@@ -2020,13 +5235,26 @@ impl StmtResultToLeanCompiler {
             .any(|output| !output.inferred_facts.is_empty() || !output.inferred_fact_ids.is_empty())
             || !result.common.infers.rule_applications.is_empty()
         {
-            return Ok(false);
+            return Ok(None);
         }
-        let conclusion_fact_ids = exact_ordered_fact_ids_from_store_results(
-            &result.common.infers,
-            &verification.direct_conclusions,
-            "by-thm direct conclusions",
-        )?;
+        if result.common.infers.store_fact_outputs.len() != verification.direct_conclusions.len() {
+            return Err("by-thm Result changed its direct conclusion store count".into());
+        }
+        let conclusion_fact_ids = result
+            .common
+            .infers
+            .store_fact_outputs
+            .iter()
+            .zip(verification.direct_conclusions.iter())
+            .map(|(stored, expected)| {
+                if stored.itself_and_why_itself_is_stored.0.to_string() != expected.to_string() {
+                    return Err(
+                        "by-thm Result changed a direct conclusion store proposition".into(),
+                    );
+                }
+                Ok(stored.fact_id)
+            })
+            .collect::<Result<Vec<_>, String>>()?;
 
         let theorem_name = self
             .environment_stack
@@ -2061,13 +5289,14 @@ impl StmtResultToLeanCompiler {
             let Some(parameter_proof) =
                 self.construct_lean_proof_from_direct_fact_result(factual_check)?
             else {
-                return Ok(false);
+                return Ok(None);
             };
             application_parts.push(rendered_argument);
             application_parts.push(format!("({parameter_proof})"));
         }
         let theorem_application = format!("({})", application_parts.join(" "));
 
+        let mut conclusions = Vec::with_capacity(verification.direct_conclusions.len());
         for (conclusion_index, (conclusion, fact_id)) in verification
             .direct_conclusions
             .iter()
@@ -2080,19 +5309,14 @@ impl StmtResultToLeanCompiler {
                 verification.direct_conclusions.len(),
             )?;
             let proposition = render_fact(conclusion, &self.environment_stack)?;
-            let conclusion_name = format!("__fact{}", self.next_fact_name_index);
-            self.declarations.push(format!(
-                "theorem {conclusion_name} : {proposition} := by\n  exact {proof}"
-            ));
-            self.environment_stack
-                .fact_names
-                .insert(*fact_id, conclusion_name);
-            self.environment_stack
-                .fact_propositions
-                .insert(*fact_id, conclusion.clone());
-            self.next_fact_name_index += 1;
+            conclusions.push(CompiledLitexTheoremInstantiationConclusionProofBody {
+                retained_fact_id: *fact_id,
+                fact: conclusion.clone(),
+                proposition,
+                proof_expression: proof,
+            });
         }
-        Ok(true)
+        Ok(Some(conclusions))
     }
 
     fn compile_ordinary_fact_goal_proof_body(
@@ -2122,12 +5346,12 @@ impl StmtResultToLeanCompiler {
         let compilation = (|| {
             let mut local_proof_lines = Vec::with_capacity(verification.proof_steps.len());
             for (proof_step_index, proof_step) in verification.proof_steps.iter().enumerate() {
-                let Some(line) =
-                    self.compile_stmt_result_as_local_proof_step(proof_step, proof_step_index + 1)?
+                let Some(lines) = self
+                    .compile_stmt_result_as_local_proof_steps(proof_step, proof_step_index + 1)?
                 else {
                     return Ok(None);
                 };
-                local_proof_lines.push(line);
+                local_proof_lines.extend(lines);
             }
 
             let conclusion = verification
@@ -2157,13 +5381,60 @@ impl StmtResultToLeanCompiler {
         compilation
     }
 
-    fn compile_stmt_result_as_local_proof_step(
+    fn compile_stmt_result_as_local_proof_steps(
         &mut self,
         result: &StmtResult,
         proof_step_index: usize,
-    ) -> Result<Option<String>, String> {
+    ) -> Result<Option<Vec<String>>, String> {
         if let Some(factual) = result.factual_success() {
-            return self.compile_fact_stmt_result_as_local_proof_step(factual, proof_step_index);
+            return self
+                .compile_fact_stmt_result_as_local_proof_step(factual, proof_step_index)
+                .map(|line| line.map(|line| vec![line]));
+        }
+        if let StmtResult::Success(SuccessStmtResult::By(by_result)) = result {
+            let (proofs, effects) = match by_result {
+                SuccessByStmtResult::ByCasesStmt(result) => (
+                    self.construct_lean_proofs_from_by_cases_stmt_result(result)?,
+                    &result.common.infers,
+                ),
+                SuccessByStmtResult::ByContraStmt(result) => (
+                    self.construct_lean_proof_from_by_contra_stmt_result(result)?
+                        .map(|proof| vec![proof]),
+                    &result.common.infers,
+                ),
+                _ => return Ok(None),
+            };
+            let Some(proofs) = proofs else {
+                return Ok(None);
+            };
+            let fact_ids = validate_compiled_fact_proof_effects(
+                effects,
+                &proofs,
+                &self.environment_stack,
+                "local by-statement outputs",
+            )?;
+            let multiple_outputs = proofs.len() > 1;
+            let mut lines = Vec::with_capacity(proofs.len());
+            for (output_index, (proof, fact_id)) in proofs.into_iter().zip(fact_ids).enumerate() {
+                let name = if multiple_outputs {
+                    format!("__step{proof_step_index}_{}", output_index + 1)
+                } else {
+                    format!("__step{proof_step_index}")
+                };
+                if let Some(fact_id) = fact_id {
+                    self.environment_stack
+                        .fact_names
+                        .insert(fact_id, name.clone());
+                    self.environment_stack
+                        .fact_propositions
+                        .insert(fact_id, proof.fact);
+                }
+                lines.push(format!(
+                    "have {name} : {} := by\n  exact {}",
+                    proof.proposition, proof.proof_expression
+                ));
+            }
+            return Ok(Some(lines));
         }
         let StmtResult::Success(SuccessStmtResult::Witness(
             SuccessWitnessStmtResult::WitnessExistFact(result),
@@ -2189,10 +5460,10 @@ impl StmtResultToLeanCompiler {
         self.environment_stack
             .fact_propositions
             .insert(fact_id, existential);
-        Ok(Some(format!(
+        Ok(Some(vec![format!(
             "have {name} : {} := by\n  exact {}",
             proof_body.proposition, proof_body.proof_expression
-        )))
+        )]))
     }
 
     fn compile_fact_stmt_result_as_local_proof_step(
@@ -2208,18 +5479,27 @@ impl StmtResultToLeanCompiler {
             .store
             .fact_id
             .ok_or_else(|| "local proof-step fact has no frozen FactId".to_string())?;
-        if !result.store.infers.rule_applications.is_empty()
-            || result.store.infers.store_fact_outputs.len() != 1
-        {
-            return Ok(None);
-        }
-        let stored = &result.store.infers.store_fact_outputs[0];
-        if stored.fact_id != Some(fact_id)
-            || stored.itself_and_why_itself_is_stored.0.to_string() != source_fact.to_string()
-            || !stored.inferred_facts.is_empty()
-            || !stored.inferred_fact_ids.is_empty()
-        {
-            return Err("local proof-step store does not retain its exact FactId".into());
+        if result.store.infers.is_empty() {
+            let Some(existing) = self.environment_stack.fact_propositions.get(&fact_id) else {
+                return Err("local proof-step reused a FactId outside its compiler scope".into());
+            };
+            if existing.to_string() != source_fact.to_string() {
+                return Err("local proof-step reused a FactId for a different proposition".into());
+            }
+        } else {
+            if !result.store.infers.rule_applications.is_empty()
+                || result.store.infers.store_fact_outputs.len() != 1
+            {
+                return Ok(None);
+            }
+            let stored = &result.store.infers.store_fact_outputs[0];
+            if stored.fact_id != Some(fact_id)
+                || stored.itself_and_why_itself_is_stored.0.to_string() != source_fact.to_string()
+                || !stored.inferred_facts.is_empty()
+                || !stored.inferred_fact_ids.is_empty()
+            {
+                return Err("local proof-step store does not retain its exact FactId".into());
+            }
         }
         let Some(proof) = self.construct_lean_proof_from_direct_fact_result(result)? else {
             return Ok(None);
@@ -2247,21 +5527,53 @@ impl StmtResultToLeanCompiler {
         let source_fact = result.fact();
         match result.proof() {
             SuccessFactProofResult::Fact(citation)
-                if citation.equality_transport.is_none()
-                    && citation.fact_transformation.is_none()
+                if citation.fact_transformation.is_none()
                     && citation.checked_function_definition_reduction.is_none()
                     && citation.definition_reduction.is_none() =>
             {
-                let Some(source_fact_id) = citation.source_fact_id else {
-                    return Ok(None);
-                };
-                Ok(Some(resolve_fact_citation(
-                    &source_fact_id,
+                self.construct_lean_fact_citation_with_equality_transport_from_result(
                     &source_fact,
-                    &self.environment_stack,
-                )?))
+                    citation.cite_what.as_ref(),
+                    citation.source_fact_id,
+                    citation.equality_transport.as_ref(),
+                )
             }
             SuccessFactProofResult::BuiltinRule(builtin) => {
+                if matches!(
+                    builtin.evidence,
+                    Some(BuiltinRuleEvidence::DisjunctionIntroduction(_))
+                ) {
+                    return self.construct_lean_disjunction_introduction_from_result(
+                        &source_fact,
+                        builtin,
+                    );
+                }
+                if let Some(BuiltinRuleEvidence::DefinitionProjection(evidence)) = &builtin.evidence
+                {
+                    return self.construct_lean_definition_projection_from_result(
+                        &source_fact,
+                        evidence,
+                        &builtin.subgoals,
+                    );
+                }
+                if let Some(BuiltinRuleEvidence::RealArithmeticMembershipClosure(rule)) =
+                    &builtin.evidence
+                {
+                    return self.construct_lean_real_arithmetic_membership_closure_from_result(
+                        &source_fact,
+                        *rule,
+                        &builtin.subgoals,
+                    );
+                }
+                if matches!(
+                    builtin.evidence,
+                    Some(BuiltinRuleEvidence::StandardSetMembershipProjection)
+                ) {
+                    return self.construct_lean_standard_set_membership_projection_from_result(
+                        &source_fact,
+                        &builtin.subgoals,
+                    );
+                }
                 if !builtin.subgoals.is_empty() {
                     return Ok(None);
                 }
@@ -2370,8 +5682,509 @@ impl StmtResultToLeanCompiler {
                             &self.environment_stack,
                         )?))
                     }
+                    Some(BuiltinRuleEvidence::ClosedNumericComparison(evidence)) => {
+                        if evidence.expected_target.to_string() != source_fact.to_string() {
+                            return Err(
+                                "closed-numeric-comparison evidence changed its target".into()
+                            );
+                        }
+                        Ok(Some(render_closed_numeric_comparison_fact(
+                            &source_fact,
+                            &self.environment_stack,
+                        )?))
+                    }
                     _ => Ok(None),
                 }
+            }
+            SuccessFactProofResult::CombinedProofs(combined) => {
+                self.construct_lean_combined_fact_proof_from_result(&source_fact, combined)
+            }
+            SuccessFactProofResult::Reuse(reuse) => {
+                self.construct_lean_proof_from_shared_verify_fact_result(reuse.source.as_ref())
+            }
+            _ => Ok(None),
+        }
+    }
+
+    /// `Wrap`: cite the exact source FactId, then apply the verifier-retained
+    /// equality edges in their recorded order. The Result owns both the
+    /// orientation and the equality FactId of every edge; the compiler does
+    /// not search the current environment for a proposition-shaped match.
+    fn construct_lean_fact_citation_with_equality_transport_from_result(
+        &self,
+        target: &Fact,
+        cited_statement: &Stmt,
+        source_fact_id: Option<FactId>,
+        equality_transport: Option<&EqualityTransportEvidence>,
+    ) -> Result<Option<String>, String> {
+        let Stmt::Fact(source_fact) = cited_statement else {
+            return Ok(None);
+        };
+        let Some(source_fact_id) = source_fact_id else {
+            return Ok(None);
+        };
+        let mut proof =
+            resolve_fact_citation(&source_fact_id, source_fact, &self.environment_stack)?;
+        if equality_transport_has_no_steps(equality_transport) {
+            return Ok(Some(resolve_fact_citation(
+                &source_fact_id,
+                target,
+                &self.environment_stack,
+            )?));
+        }
+
+        let (source_element, source_set) = membership_parts(source_fact)?;
+        let mut current_element = source_element.clone();
+        let (target_element, target_set) = membership_parts(target)?;
+        if obj_equality_key(source_set) != obj_equality_key(target_set) {
+            return Err("equality transport changed the membership set".into());
+        }
+        let rendered_set = render_obj(target_set, &self.environment_stack)?;
+        for (step_index, step) in equality_transport
+            .expect("nonempty transport checked above")
+            .steps
+            .iter()
+            .enumerate()
+        {
+            if obj_equality_key(&current_element) != obj_equality_key(&step.from) {
+                return Err(format!(
+                    "equality transport step {step_index} does not start at the current membership element"
+                ));
+            }
+            let left_key = obj_equality_key(&step.equality.left);
+            let right_key = obj_equality_key(&step.equality.right);
+            let from_key = obj_equality_key(&step.from);
+            let to_key = obj_equality_key(&step.to);
+            let direction = if from_key == left_key && to_key == right_key {
+                "mp"
+            } else if from_key == right_key && to_key == left_key {
+                "mpr"
+            } else {
+                return Err(format!(
+                    "equality transport step {step_index} is not oriented by its retained equality"
+                ));
+            };
+            let equality_fact: Fact = AtomicFact::EqualFact(step.equality.clone()).into();
+            let equality_fact_id = step.equality_fact_id.ok_or_else(|| {
+                format!("equality transport step {step_index} has no equality FactId")
+            })?;
+            let equality_proof =
+                resolve_fact_citation(&equality_fact_id, &equality_fact, &self.environment_stack)?;
+            proof =
+                format!("(Litex.In.congr ({equality_proof}) {rendered_set}).{direction} ({proof})");
+            current_element = step.to.clone();
+        }
+        if obj_equality_key(&current_element) != obj_equality_key(target_element) {
+            return Err("equality transport did not end at the target membership element".into());
+        }
+        Ok(Some(proof))
+    }
+
+    /// `Wrap`: compile the one exact source-membership child first and then
+    /// apply the fixed standard-set inclusion chain selected by the retained
+    /// source and target sets. This consumes the recursive Result directly;
+    /// no diagnostic label or compatibility proof IR participates.
+    fn construct_lean_standard_set_membership_projection_from_result(
+        &mut self,
+        target: &Fact,
+        subgoals: &[StmtResult],
+    ) -> Result<Option<String>, String> {
+        let [source_result] = subgoals else {
+            return Err(
+                "standard-set membership projection requires exactly one child Result".into(),
+            );
+        };
+        let source_result = source_result
+            .factual_success()
+            .ok_or_else(|| "standard-set membership projection child is not factual".to_string())?;
+        let source = source_result.fact();
+        if source_result.store.fact.to_string() != source.to_string()
+            || !source_result.store.infers.is_empty()
+        {
+            return Err(
+                "standard-set membership projection child changed its fact or published effects"
+                    .into(),
+            );
+        }
+        let (target_element, target_set) = membership_parts(target)?;
+        let (source_element, source_set) = membership_parts(&source)?;
+        if obj_equality_key(target_element) != obj_equality_key(source_element) {
+            return Err("standard-set membership projection changed its source element".into());
+        }
+        let (Obj::StandardSet(source_set), Obj::StandardSet(target_set)) = (source_set, target_set)
+        else {
+            return Err("standard-set membership projection retained a nonstandard set".into());
+        };
+        let Some(mut proof) = self.construct_lean_proof_from_direct_fact_result(source_result)?
+        else {
+            return Ok(None);
+        };
+        for theorem in standard_set_membership_projection_theorem_chain(*source_set, *target_set)? {
+            proof = format!("Litex.Rules.{theorem} ({proof})");
+        }
+        Ok(Some(proof))
+    }
+
+    /// `Wrap`: the arithmetic-closure Result owns exactly one conjunction
+    /// child Result. The child retains the two ordered operand memberships;
+    /// no diagnostic label or rebuilt verifier search participates here.
+    fn construct_lean_real_arithmetic_membership_closure_from_result(
+        &mut self,
+        target: &Fact,
+        rule: RealArithmeticMembershipClosureBuiltinRule,
+        subgoals: &[StmtResult],
+    ) -> Result<Option<String>, String> {
+        let (target_element, target_set) = membership_parts(target)?;
+        if !matches!(target_set, Obj::StandardSet(StandardSet::R)) {
+            return Err("real arithmetic membership Result changed its target carrier".into());
+        }
+        let (left, right, theorem) = match (rule, target_element) {
+            (RealArithmeticMembershipClosureBuiltinRule::Add, Obj::Add(operation)) => (
+                operation.left.as_ref(),
+                operation.right.as_ref(),
+                "complexAddInR",
+            ),
+            (RealArithmeticMembershipClosureBuiltinRule::Sub, Obj::Sub(operation)) => (
+                operation.left.as_ref(),
+                operation.right.as_ref(),
+                "complexSubInR",
+            ),
+            (RealArithmeticMembershipClosureBuiltinRule::Mul, Obj::Mul(operation)) => (
+                operation.left.as_ref(),
+                operation.right.as_ref(),
+                "complexMulInR",
+            ),
+            (RealArithmeticMembershipClosureBuiltinRule::Div, Obj::Div(operation)) => (
+                operation.left.as_ref(),
+                operation.right.as_ref(),
+                "complexDivInR",
+            ),
+            (RealArithmeticMembershipClosureBuiltinRule::Pow, _) => return Ok(None),
+            _ => {
+                return Err("real arithmetic membership Result changed its source operator".into());
+            }
+        };
+        let [components] = subgoals else {
+            return Err(
+                "real arithmetic membership Result must retain one conjunction child".into(),
+            );
+        };
+        let components = components
+            .factual_success()
+            .ok_or_else(|| "real arithmetic membership child is not factual".to_string())?;
+        if !components.store.infers.is_empty() || components.store.fact_id.is_some() {
+            return Err(
+                "real arithmetic membership conjunction child unexpectedly published effects"
+                    .into(),
+            );
+        }
+        let retained_components = conjunction_components(&components.fact())?;
+        if retained_components.len() != 2 {
+            return Err("real arithmetic membership child is not a binary conjunction".into());
+        }
+        for (retained, expected_operand) in
+            retained_components.iter().zip([left, right].into_iter())
+        {
+            let (retained_element, retained_set) = membership_parts(retained)?;
+            if !matches!(retained_set, Obj::StandardSet(StandardSet::R))
+                || obj_equality_key(retained_element) != obj_equality_key(expected_operand)
+            {
+                return Err("real arithmetic membership child changed its ordered operands".into());
+            }
+        }
+        let components_proof = self
+            .construct_lean_proof_from_direct_fact_result(components)?
+            .ok_or_else(|| {
+                "real arithmetic membership conjunction has no direct recursive Result proof adapter"
+                    .to_string()
+            })?;
+        Ok(Some(format!(
+            "(by\n  have __components := {components_proof}\n  exact Litex.Rules.{theorem} (__components.1) (__components.2))"
+        )))
+    }
+
+    fn construct_lean_disjunction_introduction_from_result(
+        &mut self,
+        target: &Fact,
+        builtin: &SuccessBuiltinFactProofResult,
+    ) -> Result<Option<String>, String> {
+        let Some(BuiltinRuleEvidence::DisjunctionIntroduction(evidence)) = &builtin.evidence else {
+            return Ok(None);
+        };
+        if evidence.expected_target.to_string() != target.to_string() {
+            return Err("disjunction-introduction evidence changed its target".into());
+        }
+        let branches = disjunction_components(target)?;
+        let Some(selected) = branches.get(evidence.selected_index) else {
+            return Err("disjunction-introduction evidence selected no target branch".into());
+        };
+        if selected.to_string() != evidence.expected_selected.to_string() {
+            return Err("disjunction-introduction evidence changed its selected branch".into());
+        }
+        let [selected_result] = builtin.subgoals.as_slice() else {
+            return Err(
+                "disjunction-introduction evidence must retain one selected child Result".into(),
+            );
+        };
+        let selected_result = selected_result
+            .factual_success()
+            .ok_or_else(|| "disjunction selected child is not factual".to_string())?;
+        if selected_result.fact().to_string() != selected.to_string()
+            || !selected_result.store.infers.is_empty()
+        {
+            return Err("disjunction selected child changed its proposition or effects".into());
+        }
+        let Some(selected_proof) =
+            self.construct_lean_proof_from_direct_fact_result(selected_result)?
+        else {
+            return Ok(None);
+        };
+        Ok(Some(right_associated_disjunction_injection(
+            selected_proof,
+            evidence.selected_index,
+            branches.len(),
+        )?))
+    }
+
+    /// `Combine`: unfold the exact active concrete predicate proof retained as
+    /// the sole child, then select the existential definition clause matching
+    /// this Result's target. No Runtime lookup or label reconstruction occurs.
+    fn construct_lean_definition_projection_from_result(
+        &mut self,
+        target: &Fact,
+        evidence: &DefinitionProjectionBuiltinRuleEvidence,
+        subgoals: &[StmtResult],
+    ) -> Result<Option<String>, String> {
+        let Fact::ExistFact(target_existential) = target else {
+            return Err("definition projection requires an existential target".into());
+        };
+        if !target_existential.is_plain_exist() {
+            return Ok(None);
+        }
+        let [source_result] = subgoals else {
+            return Err(
+                "definition projection must retain exactly one predicate source Result".into(),
+            );
+        };
+        let source_result = source_result
+            .factual_success()
+            .ok_or_else(|| "definition projection source child is not factual".to_string())?;
+        let source_fact: Fact = evidence.fact.clone().into();
+        if source_result.fact().to_string() != source_fact.to_string()
+            || !source_result.store.infers.is_empty()
+        {
+            return Err("definition projection changed its predicate source child".into());
+        }
+
+        let definition_name = evidence.definition.name.clone();
+        if evidence.fact.predicate.to_string() != definition_name {
+            return Err("definition projection evidence names a different predicate".into());
+        }
+        let binding = self
+            .environment_stack
+            .predicate_bindings
+            .get(&definition_name)
+            .cloned()
+            .ok_or_else(|| {
+                format!(
+                    "definition projection references unavailable predicate `{definition_name}`"
+                )
+            })?;
+        let Some(active_definition) = &binding.definition else {
+            return Err("definition projection selected an abstract predicate".into());
+        };
+        if active_definition.to_string() != evidence.definition.to_string() {
+            return Err(
+                "definition projection does not match the active predicate definition".into(),
+            );
+        }
+
+        let components =
+            instantiated_predicate_components(&source_fact, &binding, &self.environment_stack)?;
+        let rendered_target = render_fact(target, &self.environment_stack)?;
+        let clause_index = components
+            .iter()
+            .position(|component| component == &rendered_target)
+            .ok_or_else(|| {
+                "definition projection target is not an instantiated definition component"
+                    .to_string()
+            })?;
+        let selector = conjunction_selector(clause_index, components.len())?;
+        let Some(source_proof) =
+            self.construct_lean_proof_from_direct_fact_result(source_result)?
+        else {
+            return Ok(None);
+        };
+        Ok(Some(format!(
+            "(by\n  have __definition := {source_proof}\n  unfold {} at __definition\n  exact __definition{selector})",
+            binding.lean_name
+        )))
+    }
+
+    fn construct_lean_combined_fact_proof_from_result(
+        &mut self,
+        target: &Fact,
+        combined: &SuccessCombinedFactProofResult,
+    ) -> Result<Option<String>, String> {
+        let components = conjunction_components(target)?;
+        if components.len() != combined.cite_what.len() {
+            return Err("combined fact proof changed its component arity".into());
+        }
+        let mut proofs = Vec::with_capacity(components.len());
+        for (component, item) in components.iter().zip(combined.cite_what.iter()) {
+            let proof = match item {
+                SuccessCombinedFactProofItemResult::Reuse(reuse) => {
+                    if reuse.statement.to_string() != component.to_string()
+                        || reuse.source.fact().to_string() != component.to_string()
+                    {
+                        return Err("combined proof reuse changed its component".into());
+                    }
+                    self.construct_lean_proof_from_shared_verify_fact_result(reuse.source.as_ref())?
+                }
+                SuccessCombinedFactProofItemResult::ByFact(citation)
+                    if citation.verify_what.to_string() == component.to_string()
+                        && citation.fact_transformation.is_none()
+                        && citation.definition_reduction.is_none() =>
+                {
+                    self.construct_lean_fact_citation_with_equality_transport_from_result(
+                        component,
+                        citation.cite_what.as_ref(),
+                        citation.source_fact_id,
+                        citation.equality_transport.as_ref(),
+                    )?
+                }
+                _ => None,
+            };
+            let Some(proof) = proof else {
+                return Ok(None);
+            };
+            proofs.push(proof);
+        }
+        Ok(Some(right_associated_conjunction_proof(&proofs)?))
+    }
+
+    fn construct_lean_proof_from_shared_verify_fact_result(
+        &mut self,
+        verification: &SuccessVerifyFactResult,
+    ) -> Result<Option<String>, String> {
+        let source_fact = verification.fact();
+        match verification.proof() {
+            SuccessFactProofResult::Fact(citation)
+                if citation.fact_transformation.is_none()
+                    && citation.checked_function_definition_reduction.is_none()
+                    && citation.definition_reduction.is_none() =>
+            {
+                self.construct_lean_fact_citation_with_equality_transport_from_result(
+                    &source_fact,
+                    citation.cite_what.as_ref(),
+                    citation.source_fact_id,
+                    citation.equality_transport.as_ref(),
+                )
+            }
+            SuccessFactProofResult::BuiltinRule(builtin) => {
+                if matches!(
+                    builtin.evidence,
+                    Some(BuiltinRuleEvidence::DisjunctionIntroduction(_))
+                ) {
+                    return self.construct_lean_disjunction_introduction_from_result(
+                        &source_fact,
+                        builtin,
+                    );
+                }
+                if let Some(BuiltinRuleEvidence::DefinitionProjection(evidence)) = &builtin.evidence
+                {
+                    return self.construct_lean_definition_projection_from_result(
+                        &source_fact,
+                        evidence,
+                        &builtin.subgoals,
+                    );
+                }
+                if matches!(
+                    builtin.evidence,
+                    Some(BuiltinRuleEvidence::StandardSetMembershipProjection)
+                ) {
+                    return self.construct_lean_standard_set_membership_projection_from_result(
+                        &source_fact,
+                        &builtin.subgoals,
+                    );
+                }
+                if !builtin.subgoals.is_empty() {
+                    return Ok(None);
+                }
+                match &builtin.evidence {
+                    Some(BuiltinRuleEvidence::ObjectReflexivity(evidence)) => {
+                        let Fact::AtomicFact(AtomicFact::EqualFact(equality)) = &source_fact else {
+                            return Err(
+                                "shared object-reflexivity evidence targets a non-equality fact"
+                                    .into(),
+                            );
+                        };
+                        if evidence.expected_target.to_string() != source_fact.to_string()
+                            || obj_equality_key(&equality.left) != obj_equality_key(&equality.right)
+                        {
+                            return Err(
+                                "shared object-reflexivity evidence changed its target".into()
+                            );
+                        }
+                        Ok(Some(format!(
+                            "Litex.Same.refl {}",
+                            render_obj(&equality.left, &self.environment_stack)?
+                        )))
+                    }
+                    Some(BuiltinRuleEvidence::RationalNormalization(evidence)) => {
+                        if evidence.expected_target.to_string() != source_fact.to_string() {
+                            return Err(
+                                "shared rational-normalization evidence changed its target".into(),
+                            );
+                        }
+                        validate_success_evaluate_obj_result(&evidence.left_evaluation)?;
+                        validate_success_evaluate_obj_result(&evidence.right_evaluation)?;
+                        if evidence.left_evaluation.value.normalized_value
+                            != evidence.right_evaluation.value.normalized_value
+                        {
+                            return Err(
+                                "shared rational-normalization retained unequal normal forms"
+                                    .into(),
+                            );
+                        }
+                        Ok(Some(
+                            "Litex.Same.ofEq (by norm_num [Litex.tupleDim, Litex.TupleShape.dimension])"
+                                .into(),
+                        ))
+                    }
+                    Some(BuiltinRuleEvidence::ClosedNumericComparison(evidence)) => {
+                        if evidence.expected_target.to_string() != source_fact.to_string() {
+                            return Err(
+                                "shared closed-numeric-comparison changed its target".into()
+                            );
+                        }
+                        Ok(Some(render_closed_numeric_comparison_fact(
+                            &source_fact,
+                            &self.environment_stack,
+                        )?))
+                    }
+                    Some(BuiltinRuleEvidence::ClosedNumericMembership(evidence)) => {
+                        if evidence.expected_target.to_string() != source_fact.to_string() {
+                            return Err(
+                                "shared closed-numeric-membership changed its target".into()
+                            );
+                        }
+                        validate_success_evaluate_obj_result(&evidence.evaluation)?;
+                        Ok(Some(render_closed_numeric_membership_from_result(
+                            &source_fact,
+                            evidence.target_set,
+                            &evidence.evaluation,
+                            &self.environment_stack,
+                        )?))
+                    }
+                    _ => Ok(None),
+                }
+            }
+            SuccessFactProofResult::CombinedProofs(combined) => {
+                self.construct_lean_combined_fact_proof_from_result(&source_fact, combined)
+            }
+            SuccessFactProofResult::Reuse(reuse) => {
+                self.construct_lean_proof_from_shared_verify_fact_result(reuse.source.as_ref())
             }
             _ => Ok(None),
         }
@@ -2541,6 +6354,84 @@ fn exact_ordered_fact_ids_from_store_results(
         .collect()
 }
 
+fn equality_transport_has_no_steps(transport: Option<&EqualityTransportEvidence>) -> bool {
+    transport.is_none_or(|transport| transport.steps.is_empty())
+}
+
+fn atomic_fact_is_logically_negated(fact: &AtomicFact) -> bool {
+    matches!(
+        fact,
+        AtomicFact::NotNormalAtomicFact(_)
+            | AtomicFact::NotEqualFact(_)
+            | AtomicFact::NotLessFact(_)
+            | AtomicFact::NotGreaterFact(_)
+            | AtomicFact::NotLessEqualFact(_)
+            | AtomicFact::NotGreaterEqualFact(_)
+            | AtomicFact::NotIsSetFact(_)
+            | AtomicFact::NotIsNonemptySetFact(_)
+            | AtomicFact::NotIsFiniteSetFact(_)
+            | AtomicFact::NotInFact(_)
+            | AtomicFact::NotIsCartFact(_)
+            | AtomicFact::NotIsTupleFact(_)
+            | AtomicFact::NotSubsetFact(_)
+            | AtomicFact::NotSupersetFact(_)
+    )
+}
+
+fn validate_compiled_fact_proof_effects(
+    infer_result: &SuccessInferResult,
+    proofs: &[CompiledFactProofBody],
+    environment_stack: &StmtResultToLeanCompilerEnvironmentStack,
+    result_layer: &str,
+) -> Result<Vec<Option<FactId>>, String> {
+    if !infer_result.rule_applications.is_empty() {
+        return Err(format!(
+            "{result_layer} unexpectedly retained typed inference rules"
+        ));
+    }
+    for output in &infer_result.store_fact_outputs {
+        if !output.inferred_facts.is_empty() || !output.inferred_fact_ids.is_empty() {
+            return Err(format!(
+                "{result_layer} retained inferred children beside its direct outputs"
+            ));
+        }
+    }
+
+    let mut output_index = 0;
+    let mut fact_ids = Vec::with_capacity(proofs.len());
+    for proof in proofs {
+        let next_output = infer_result.store_fact_outputs.get(output_index);
+        if next_output.is_some_and(|output| {
+            output.itself_and_why_itself_is_stored.0.to_string() == proof.fact.to_string()
+        }) {
+            let output = next_output.expect("checked as present");
+            fact_ids.push(Some(output.fact_id.ok_or_else(|| {
+                format!("{result_layer} store {output_index} has no FactId")
+            })?));
+            output_index += 1;
+            continue;
+        }
+
+        let fact_was_already_visible = environment_stack
+            .fact_propositions
+            .values()
+            .any(|visible| visible.to_string() == proof.fact.to_string());
+        if !fact_was_already_visible {
+            return Err(format!(
+                "{result_layer} neither stored `{}` nor reused it from the current compiler environment",
+                proof.fact
+            ));
+        }
+        fact_ids.push(None);
+    }
+    if output_index != infer_result.store_fact_outputs.len() {
+        return Err(format!(
+            "{result_layer} retained a store output that does not match its ordered facts"
+        ));
+    }
+    Ok(fact_ids)
+}
+
 fn validate_single_fact_store_output(
     infer_result: &SuccessInferResult,
     expected_fact: &Fact,
@@ -2588,6 +6479,35 @@ fn validate_success_store_fact_result(
         ));
     }
     Ok(fact_id)
+}
+
+fn validate_scoped_fact_check_result(
+    result: &SuccessFactStmtResult,
+    expected_fact: &Fact,
+    result_layer: &str,
+) -> Result<(), String> {
+    if result.store.fact.to_string() != expected_fact.to_string() {
+        return Err(format!("{result_layer} changed its checked fact"));
+    }
+    if result.store.infers.is_empty() {
+        return Ok(());
+    }
+    let [output] = result.store.infers.store_fact_outputs.as_slice() else {
+        return Err(format!(
+            "{result_layer} retained an invalid number of direct store outputs"
+        ));
+    };
+    if output.itself_and_why_itself_is_stored.0.to_string() != expected_fact.to_string() {
+        return Err(format!("{result_layer} changed its direct store output"));
+    }
+    if let (Some(result_fact_id), Some(output_fact_id)) = (result.store.fact_id, output.fact_id) {
+        if result_fact_id != output_fact_id {
+            return Err(format!(
+                "{result_layer} store Result and direct output disagree on FactId"
+            ));
+        }
+    }
+    Ok(())
 }
 
 fn construct_lean_proof_for_compatibility_fact_result_without_storing(
@@ -2810,10 +6730,93 @@ fn validate_success_obj_well_defined_result(
             )?;
         }
         SuccessVerifyObjWellDefinedResult::RecursiveReference(_) => {
-            return Err("closed numeric object retained a recursive WD reference".into());
+            return Err("object WD result retained an unresolved recursive reference".into());
         }
     }
     Ok(())
+}
+
+fn install_object_well_definedness_store_results(
+    result: &SuccessVerifyObjWellDefinedResult,
+    environment_stack: &mut StmtResultToLeanCompilerEnvironmentStack,
+    visited: &mut HashSet<usize>,
+) -> Result<(), String> {
+    let result_address = result as *const SuccessVerifyObjWellDefinedResult as usize;
+    if !visited.insert(result_address) {
+        return Ok(());
+    }
+    match result {
+        SuccessVerifyObjWellDefinedResult::Direct(direct) => {
+            for child in &direct.steps.children {
+                install_object_well_definedness_store_results(
+                    child.result.as_ref(),
+                    environment_stack,
+                    visited,
+                )?;
+            }
+            for store in &direct.steps.stores {
+                let result_set = direct.intrinsic_result_set.as_ref().ok_or_else(|| {
+                    format!(
+                        "object WD stored `{}` without an intrinsic result set",
+                        store.fact
+                    )
+                })?;
+                let expected: Fact = InFact::new(
+                    direct.object.clone(),
+                    result_set.clone(),
+                    store.fact.line_file(),
+                )
+                .into();
+                if store.fact.to_string() != expected.to_string() {
+                    return Err(format!(
+                        "object WD store changed intrinsic membership `{expected}` to `{}`",
+                        store.fact
+                    ));
+                }
+                let fact_id = store.fact_id.ok_or_else(|| {
+                    format!("object WD intrinsic-result store `{expected}` has no FactId")
+                })?;
+                let matching_source_outputs = store
+                    .infers
+                    .store_fact_outputs
+                    .iter()
+                    .filter(|output| {
+                        output.fact_id == Some(fact_id)
+                            && output.itself_and_why_itself_is_stored.0.to_string()
+                                == expected.to_string()
+                    })
+                    .count();
+                if matching_source_outputs != 1 {
+                    return Err(format!(
+                        "object WD intrinsic-result store `{expected}` lost its exact source store output"
+                    ));
+                }
+                let rendered_object = render_obj(&direct.object, environment_stack)?;
+                let rendered_set = render_obj(result_set, environment_stack)?;
+                let proof = format!("Litex.In.own {rendered_set} {rendered_object}");
+                if let Some(existing) = environment_stack.fact_propositions.get(&fact_id) {
+                    if existing.to_string() != expected.to_string() {
+                        return Err(format!(
+                            "object WD FactId `{fact_id}` changed from `{existing}` to `{expected}`"
+                        ));
+                    }
+                }
+                environment_stack.fact_names.insert(fact_id, proof);
+                environment_stack
+                    .fact_propositions
+                    .insert(fact_id, expected);
+            }
+            Ok(())
+        }
+        SuccessVerifyObjWellDefinedResult::Reuse(reuse) => {
+            install_object_well_definedness_store_results(
+                reuse.source.as_ref(),
+                environment_stack,
+                visited,
+            )
+        }
+        SuccessVerifyObjWellDefinedResult::RecursiveReference(_) => Ok(()),
+    }
 }
 
 fn validate_success_obj_binder_well_defined_result(
@@ -4013,8 +8016,12 @@ fn construct_lean_declarations_for_compatibility_named_function_result(
             uses_native_real_body,
             parameter_premises: definition.parameter_premises.clone(),
             domain_premises: definition.domain_premises.clone(),
-            inferred_premises: definition.inferred_premises.clone(),
-            return_check: definition.return_check.clone(),
+            compatibility_return_selection: Some(
+                CompatibilityNamedFunctionReturnSelectionBinding {
+                    inferred_premises: definition.inferred_premises.clone(),
+                    return_check: definition.return_check.clone(),
+                },
+            ),
             well_definedness: definition.well_definedness.clone(),
         },
     );
@@ -5807,7 +9814,16 @@ fn render_checked_identity_function_reduction(
                 .numeric_representation_memberships
                 .insert(parameter.symbol_id, proof);
         }
-        argument_evidence.insert(parameter.symbol_id, (argument, argument_membership));
+        argument_evidence.insert(
+            parameter.symbol_id,
+            (argument, argument_membership, parameter.set.clone()),
+        );
+    }
+    let mut source_domain_definition_context = definition_context.clone();
+    for (symbol_id, (source_argument, _, _)) in &argument_evidence {
+        source_domain_definition_context
+            .numeric_representations
+            .insert(*symbol_id, source_argument.clone());
     }
     for (domain_index, (source_fact, local_premise)) in binding
         .function
@@ -5838,7 +9854,7 @@ fn render_checked_identity_function_reduction(
             .ok_or_else(|| {
                 format!("checked function reduction lost domain proof {domain_index}")
             })?;
-        let expected_domain = render_fact(source_fact, &definition_context)?;
+        let expected_domain = render_fact(source_fact, &source_domain_definition_context)?;
         let retained_domain = render_fact(&domain_fact.fact.proposition, context)?;
         if retained_domain != expected_domain {
             return Err(format!(
@@ -5878,10 +9894,17 @@ fn render_checked_identity_function_reduction(
             binding.name,
         ));
     }
+    let return_selection = binding
+        .compatibility_return_selection
+        .as_ref()
+        .ok_or_else(|| {
+            "native named-function binding unexpectedly requested representative selection"
+                .to_string()
+        })?;
     let (source_body, _, _, _) = render_function_return_selection(
         &binding.source_body,
-        &binding.inferred_premises,
-        &binding.return_check,
+        &return_selection.inferred_premises,
+        &return_selection.return_check,
         &definition_context,
     )?;
     let other_object = match application_side {
@@ -5907,16 +9930,32 @@ fn render_checked_identity_function_reduction(
 
 fn render_real_function_body_same_with_parameters(
     body: &LitexToLeanObjectIr,
-    argument_evidence: &HashMap<SymbolId, (String, String)>,
+    argument_evidence: &HashMap<SymbolId, (String, String, LitexToLeanObjectIr)>,
 ) -> Result<String, String> {
     match body {
         LitexToLeanObjectIr::Symbol { symbol_id, .. }
             if argument_evidence.contains_key(symbol_id) =>
         {
-            let (argument, argument_membership) = &argument_evidence[symbol_id];
-            Ok(format!(
-                "Litex.Same.symm (Litex.In.same_rep {argument} ({argument_membership}))"
-            ))
+            let (argument, argument_membership, parameter_set) = &argument_evidence[symbol_id];
+            match parameter_set {
+                LitexToLeanObjectIr::StandardSet(LitexToLeanStandardSetIr::Real) => {
+                    Ok(format!(
+                        "Litex.Same.symm (Litex.In.same_rep {argument} ({argument_membership}))"
+                    ))
+                }
+                LitexToLeanObjectIr::StandardSet(
+                    LitexToLeanStandardSetIr::PositiveNatural,
+                ) => {
+                    let representative =
+                        format!("(Litex.In.rep {argument} ({argument_membership}))");
+                    Ok(format!(
+                        "Litex.Same.symm (Litex.Same.trans (Litex.In.same_rep {argument} ({argument_membership})) (Litex.Same.trans (Litex.Same.subtype {representative}) (Litex.AsReal.nat ({representative}).val)))"
+                    ))
+                }
+                other => Err(format!(
+                    "checked real function reduction has no source-to-real bridge for parameter set {other:?}"
+                )),
+            }
         }
         LitexToLeanObjectIr::Number { normalized_value }
             if !normalized_value.is_empty()
@@ -6787,13 +10826,19 @@ fn render_closed_numeric_membership_from_result(
     let normalized = &evaluation.value.normalized_value;
     match target_set {
         StandardSet::C => Ok(format!("Litex.Rules.complexInC {source}")),
-        StandardSet::N if normalized.chars().all(|character| character.is_ascii_digit()) => {
+        StandardSet::N
+            if normalized
+                .chars()
+                .all(|character| character.is_ascii_digit()) =>
+        {
             Ok(format!(
                 "Litex.Rules.complexEqNatInN {source} {normalized} (by norm_num)"
             ))
         }
         StandardSet::NPos
-            if normalized.chars().all(|character| character.is_ascii_digit())
+            if normalized
+                .chars()
+                .all(|character| character.is_ascii_digit())
                 && normalized.chars().any(|character| character != '0') =>
         {
             Ok(format!(
@@ -6855,7 +10900,7 @@ fn render_closed_real_expression_membership(
         _ => {
             return Err(format!(
                 "closed real-expression membership has unsupported operand `{element}`"
-            ))
+            ));
         }
     };
     render_obj(element, context)?;
@@ -6880,7 +10925,17 @@ fn render_closed_numeric_comparison(
             "closed numeric comparison changed its target or retained unexpected premises".into(),
         );
     }
-    let (left, right, theorem, strict, negated) = match &fact.proposition {
+    render_closed_numeric_comparison_fact(&fact.proposition, context)
+}
+
+fn render_closed_numeric_comparison_fact(
+    fact: &Fact,
+    context: &StmtResultToLeanCompilerEnvironmentStack,
+) -> Result<String, String> {
+    if !crate::litex_to_lean_ir::is_closed_numeric_relation(fact) {
+        return Err("closed numeric comparison changed its target".into());
+    }
+    let (left, right, theorem, strict, negated) = match fact {
         Fact::AtomicFact(AtomicFact::LessFact(order)) => {
             (&order.left, &order.right, "ltOfComplexReals", true, false)
         }
@@ -7027,6 +11082,62 @@ fn render_not_equal_symmetry(
     ))
 }
 
+fn standard_set_membership_projection_theorem_chain(
+    source_set: StandardSet,
+    target_set: StandardSet,
+) -> Result<&'static [&'static str], String> {
+    match (source_set, target_set) {
+        (StandardSet::NPos, StandardSet::N) => Ok(&["inNOfInNPos"]),
+        (StandardSet::NPos, StandardSet::Z) => Ok(&["inNOfInNPos", "inZOfInN"]),
+        (StandardSet::NPos, StandardSet::Q) => Ok(&["inNOfInNPos", "inZOfInN", "inQOfInZ"]),
+        (StandardSet::NPos, StandardSet::R) => {
+            Ok(&["inNOfInNPos", "inZOfInN", "inQOfInZ", "inROfInQ"])
+        }
+        (StandardSet::NPos, StandardSet::C) => Ok(&[
+            "inNOfInNPos",
+            "inZOfInN",
+            "inQOfInZ",
+            "inROfInQ",
+            "inCOfInR",
+        ]),
+        (StandardSet::RPos, StandardSet::R) => Ok(&["inROfInRPos"]),
+        (StandardSet::RPos, StandardSet::C) => Ok(&["inROfInRPos", "inCOfInR"]),
+        (StandardSet::ZStar, StandardSet::Z) => Ok(&["inZOfInZStar"]),
+        (StandardSet::ZStar, StandardSet::Q) => Ok(&["inZOfInZStar", "inQOfInZ"]),
+        (StandardSet::ZStar, StandardSet::R) => Ok(&["inZOfInZStar", "inQOfInZ", "inROfInQ"]),
+        (StandardSet::ZStar, StandardSet::C) => {
+            Ok(&["inZOfInZStar", "inQOfInZ", "inROfInQ", "inCOfInR"])
+        }
+        (StandardSet::QStar, StandardSet::Q) => Ok(&["inQOfInQStar"]),
+        (StandardSet::QStar, StandardSet::R) => Ok(&["inQOfInQStar", "inROfInQ"]),
+        (StandardSet::QStar, StandardSet::C) => Ok(&["inQOfInQStar", "inROfInQ", "inCOfInR"]),
+        (StandardSet::RStar, StandardSet::R) => Ok(&["inROfInRStar"]),
+        (StandardSet::RStar, StandardSet::C) => Ok(&["inROfInRStar", "inCOfInR"]),
+        (StandardSet::CStar, StandardSet::C) => Ok(&["inCOfInCStar"]),
+        (StandardSet::ZStar, StandardSet::QStar) => Ok(&["inQStarOfInZStar"]),
+        (StandardSet::ZStar, StandardSet::RStar) => Ok(&["inQStarOfInZStar", "inRStarOfInQStar"]),
+        (StandardSet::ZStar, StandardSet::CStar) => {
+            Ok(&["inQStarOfInZStar", "inRStarOfInQStar", "inCStarOfInRStar"])
+        }
+        (StandardSet::QStar, StandardSet::RStar) => Ok(&["inRStarOfInQStar"]),
+        (StandardSet::QStar, StandardSet::CStar) => Ok(&["inRStarOfInQStar", "inCStarOfInRStar"]),
+        (StandardSet::RStar, StandardSet::CStar) => Ok(&["inCStarOfInRStar"]),
+        (StandardSet::N, StandardSet::Z) => Ok(&["inZOfInN"]),
+        (StandardSet::N, StandardSet::Q) => Ok(&["inZOfInN", "inQOfInZ"]),
+        (StandardSet::N, StandardSet::R) => Ok(&["inZOfInN", "inQOfInZ", "inROfInQ"]),
+        (StandardSet::N, StandardSet::C) => Ok(&["inZOfInN", "inQOfInZ", "inROfInQ", "inCOfInR"]),
+        (StandardSet::Z, StandardSet::Q) => Ok(&["inQOfInZ"]),
+        (StandardSet::Z, StandardSet::R) => Ok(&["inQOfInZ", "inROfInQ"]),
+        (StandardSet::Z, StandardSet::C) => Ok(&["inQOfInZ", "inROfInQ", "inCOfInR"]),
+        (StandardSet::Q, StandardSet::R) => Ok(&["inROfInQ"]),
+        (StandardSet::Q, StandardSet::C) => Ok(&["inROfInQ", "inCOfInR"]),
+        (StandardSet::R, StandardSet::C) => Ok(&["inCOfInR"]),
+        _ => Err(format!(
+            "unsupported standard-set membership projection `{source_set}` to `{target_set}`"
+        )),
+    }
+}
+
 fn render_standard_set_membership_projection(
     fact: &LitexToLeanFactIr,
     parameter_requirements: &[LitexToLeanFactIr],
@@ -7048,46 +11159,7 @@ fn render_standard_set_membership_projection(
     else {
         return Err("standard-set membership projection retained a nonstandard set".into());
     };
-    let theorem_chain: &[&str] = match (source_set, target_set) {
-        (StandardSet::NPos, StandardSet::N) => &["inNOfInNPos"],
-        (StandardSet::RPos, StandardSet::R) => &["inROfInRPos"],
-        (StandardSet::RPos, StandardSet::C) => &["inROfInRPos", "inCOfInR"],
-        (StandardSet::ZStar, StandardSet::Z) => &["inZOfInZStar"],
-        (StandardSet::ZStar, StandardSet::Q) => &["inZOfInZStar", "inQOfInZ"],
-        (StandardSet::ZStar, StandardSet::R) => &["inZOfInZStar", "inQOfInZ", "inROfInQ"],
-        (StandardSet::ZStar, StandardSet::C) => {
-            &["inZOfInZStar", "inQOfInZ", "inROfInQ", "inCOfInR"]
-        }
-        (StandardSet::QStar, StandardSet::Q) => &["inQOfInQStar"],
-        (StandardSet::QStar, StandardSet::R) => &["inQOfInQStar", "inROfInQ"],
-        (StandardSet::QStar, StandardSet::C) => &["inQOfInQStar", "inROfInQ", "inCOfInR"],
-        (StandardSet::RStar, StandardSet::R) => &["inROfInRStar"],
-        (StandardSet::RStar, StandardSet::C) => &["inROfInRStar", "inCOfInR"],
-        (StandardSet::CStar, StandardSet::C) => &["inCOfInCStar"],
-        (StandardSet::ZStar, StandardSet::QStar) => &["inQStarOfInZStar"],
-        (StandardSet::ZStar, StandardSet::RStar) => &["inQStarOfInZStar", "inRStarOfInQStar"],
-        (StandardSet::ZStar, StandardSet::CStar) => {
-            &["inQStarOfInZStar", "inRStarOfInQStar", "inCStarOfInRStar"]
-        }
-        (StandardSet::QStar, StandardSet::RStar) => &["inRStarOfInQStar"],
-        (StandardSet::QStar, StandardSet::CStar) => &["inRStarOfInQStar", "inCStarOfInRStar"],
-        (StandardSet::RStar, StandardSet::CStar) => &["inCStarOfInRStar"],
-        (StandardSet::N, StandardSet::Z) => &["inZOfInN"],
-        (StandardSet::N, StandardSet::Q) => &["inZOfInN", "inQOfInZ"],
-        (StandardSet::N, StandardSet::R) => &["inZOfInN", "inQOfInZ", "inROfInQ"],
-        (StandardSet::N, StandardSet::C) => &["inZOfInN", "inQOfInZ", "inROfInQ", "inCOfInR"],
-        (StandardSet::Z, StandardSet::Q) => &["inQOfInZ"],
-        (StandardSet::Z, StandardSet::R) => &["inQOfInZ", "inROfInQ"],
-        (StandardSet::Z, StandardSet::C) => &["inQOfInZ", "inROfInQ", "inCOfInR"],
-        (StandardSet::Q, StandardSet::R) => &["inROfInQ"],
-        (StandardSet::Q, StandardSet::C) => &["inROfInQ", "inCOfInR"],
-        (StandardSet::R, StandardSet::C) => &["inCOfInR"],
-        _ => {
-            return Err(format!(
-                "unsupported standard-set membership projection `{source_set}` to `{target_set}`"
-            ))
-        }
-    };
+    let theorem_chain = standard_set_membership_projection_theorem_chain(*source_set, *target_set)?;
     let mut proof = render_proof(&premises[0], context)?;
     for theorem in theorem_chain {
         proof = format!("Litex.Rules.{theorem} ({proof})");
@@ -7151,7 +11223,7 @@ fn render_standard_set_subset(
         _ => {
             return Err(format!(
                 "unsupported standard-set subset `{source}` to `{target}`"
-            ))
+            ));
         }
     };
     let mut proof = "hx".to_string();
@@ -8168,7 +12240,7 @@ fn render_nonzero_numeric_membership(
         _ => {
             return Err(
                 "nonzero numeric membership changed its exact base or refined carrier".into(),
-            )
+            );
         }
     };
     Ok(format!(
@@ -8208,7 +12280,7 @@ fn render_nonzero_numeric_membership_elimination(
         _ => {
             return Err(
                 "nonzero numeric membership elimination retained a non-star source carrier".into(),
-            )
+            );
         }
     };
     Ok(format!(
@@ -8284,7 +12356,7 @@ fn render_positive_real_membership(
         _ => {
             return Err(
                 "positive-real membership targets a fact other than strict positivity".into(),
-            )
+            );
         }
     };
     if obj_equality_key(source_element) != obj_equality_key(target_element) {
@@ -8425,7 +12497,7 @@ fn render_integer_binary_membership_rule(
         _ => {
             return Err(format!(
                 "unsupported integer membership closure rule: {rule:?}"
-            ))
+            ));
         }
     };
     let (premise_left, premise_left_set) = membership_parts(&components[0])?;
@@ -8576,7 +12648,7 @@ fn render_rational_binary_membership_rule(
         _ => {
             return Err(format!(
                 "unsupported rational membership closure rule: {rule:?}"
-            ))
+            ));
         }
     };
     let (premise_left, premise_left_set) = membership_parts(&components[0])?;
@@ -8652,7 +12724,7 @@ fn render_additive_sign_rule(
         _ => {
             return Err(format!(
                 "sign builtin rule {rule:?} changed its target operator"
-            ))
+            ));
         }
     };
     let (left_zero, left_operand) = positive_order_parts(&premises[0].proposition, left_is_strict)?;
@@ -9150,7 +13222,7 @@ fn construct_lean_proof_for_registered_rule(
                 _ => {
                     return Err(
                         "registered set rule retained a refined-set parameter unexpectedly".into(),
-                    )
+                    );
                 }
             }
         }
@@ -9262,7 +13334,7 @@ fn construct_lean_proof_for_registered_rule(
             return Err(format!(
                 "unsupported or changed registered rule certificate `{}`",
                 rule.rule_id.as_str()
-            ))
+            ));
         }
     }
     if rule.bindings.len() != 2 || parameter_requirements.len() != 2 || premises.len() != 1 {
@@ -9662,6 +13734,14 @@ fn render_numeric_obj(
     obj: &Obj,
     context: &StmtResultToLeanCompilerEnvironmentStack,
 ) -> Result<String, String> {
+    // Bound identifiers are not all stored as the same `Atom` constructor.
+    // Lowering supplies their canonical SymbolId, which is the identity used
+    // by the compiler environment regardless of the source atom shape.
+    if let Ok(LitexToLeanObjectIr::Symbol { symbol_id, .. }) = LitexToLeanObjectIr::lower(obj) {
+        if let Some(representation) = context.numeric_representations.get(&symbol_id) {
+            return Ok(representation.clone());
+        }
+    }
     if let Obj::Atom(atom) = obj {
         if let Some(representation) = atom
             .symbol_ref()
@@ -9901,12 +13981,12 @@ fn validate_refined_set_parameter_premise(
         (ParamType::NonemptySet(_), _) => {
             return Err(format!(
                 "nonempty-set parameter retained different evidence `{premise}`"
-            ))
+            ));
         }
         (ParamType::FiniteSet(_), _) => {
             return Err(format!(
                 "finite-set parameter retained different evidence `{premise}`"
-            ))
+            ));
         }
         _ => return Err("refined-set validator received another parameter type".into()),
     };
@@ -9932,10 +14012,10 @@ fn validate_refined_set_argument_requirement(
             &property.set
         }
         (ParamType::NonemptySet(_), _) => {
-            return Err("known forall nonempty-set argument retained different evidence".into())
+            return Err("known forall nonempty-set argument retained different evidence".into());
         }
         (ParamType::FiniteSet(_), _) => {
-            return Err("known forall finite-set argument retained different evidence".into())
+            return Err("known forall finite-set argument retained different evidence".into());
         }
         _ => return Err("refined-set argument validator received another parameter type".into()),
     };
@@ -9971,6 +14051,18 @@ fn validate_function_type(function: &LitexToLeanFunctionTypeIr) -> Result<(), St
 
 fn function_uses_telescope(function: &LitexToLeanFunctionTypeIr) -> bool {
     if function.parameters.len() != 1 {
+        return true;
+    }
+    if !function.domain_facts.is_empty()
+        && matches!(
+            function.parameters[0].set,
+            LitexToLeanObjectIr::StandardSet(LitexToLeanStandardSetIr::PositiveNatural)
+        )
+    {
+        // The finite-sequence bound depends on the natural representative
+        // selected by the parameter's `N+` membership proof. A `FnWhere`
+        // predicate receives only the heterogeneous value, while the
+        // telescope parameter node owns both that value and its membership.
         return true;
     }
     let parameter_symbols = function
@@ -10026,6 +14118,15 @@ fn object_ir_is_independent_of_symbols(
                     .as_ref()
                     .is_none_or(|length| object_ir_is_independent_of_symbols(length, symbol_ids))
         }
+        LitexToLeanObjectIr::MatrixSet {
+            values,
+            row_count,
+            column_count,
+        } => {
+            object_ir_is_independent_of_symbols(values, symbol_ids)
+                && object_ir_is_independent_of_symbols(row_count, symbol_ids)
+                && object_ir_is_independent_of_symbols(column_count, symbol_ids)
+        }
         LitexToLeanObjectIr::Aggregate { arguments, .. } => arguments
             .iter()
             .all(|argument| object_ir_is_independent_of_symbols(argument, symbol_ids)),
@@ -10054,6 +14155,9 @@ fn object_ir_is_independent_of_symbols(
 
 fn exact_set_real_value(set: &LitexToLeanObjectIr, value: &str) -> Option<String> {
     match set {
+        LitexToLeanObjectIr::StandardSet(LitexToLeanStandardSetIr::PositiveNatural) => {
+            Some(format!("(((({value}).val : ℕ)) : ℝ)"))
+        }
         LitexToLeanObjectIr::StandardSet(LitexToLeanStandardSetIr::Real) => {
             Some(format!("({value} : ℝ)"))
         }
@@ -10066,6 +14170,9 @@ fn exact_set_real_value(set: &LitexToLeanObjectIr, value: &str) -> Option<String
 
 fn exact_set_numeric_value(set: &LitexToLeanObjectIr, value: &str) -> Option<String> {
     match set {
+        LitexToLeanObjectIr::StandardSet(LitexToLeanStandardSetIr::PositiveNatural) => {
+            Some(format!("(((({value}).val : ℕ)) : ℂ)"))
+        }
         LitexToLeanObjectIr::StandardSet(LitexToLeanStandardSetIr::Natural) => {
             Some(format!("((({value} : ℕ)) : ℂ)"))
         }
@@ -10115,6 +14222,11 @@ fn membership_numeric_proof(
 
 fn exact_set_numeric_proof(set: &LitexToLeanObjectIr, value: &str) -> Option<String> {
     match set {
+        LitexToLeanObjectIr::StandardSet(LitexToLeanStandardSetIr::PositiveNatural) => {
+            Some(format!(
+                "Litex.Rules.complexEqNatInNPos (((({value}).val : ℕ) : ℂ)) (({value}).val : ℕ) (by rfl) (({value}).property)"
+            ))
+        }
         LitexToLeanObjectIr::StandardSet(LitexToLeanStandardSetIr::Natural) => Some(format!(
             "Litex.Rules.complexEqNatInN ((({value} : ℕ) : ℂ)) ({value} : ℕ) (by rfl)"
         )),
@@ -10177,7 +14289,7 @@ fn render_telescope_signature(
         let requirements = function
             .domain_facts
             .iter()
-            .map(|fact| render_fact(fact, &nested))
+            .map(|fact| render_telescope_domain_requirement(function, fact, &nested))
             .collect::<Result<Vec<_>, _>>()?;
         prefixes.push(format!(
             "(Litex.FnTelescope.requirement ({}) (fun __domain => ",
@@ -10199,6 +14311,47 @@ fn render_telescope_signature(
         "))".repeat(prefixes.len())
     );
     Ok(format!("({signature} : Litex.FnTelescope.{{{universe}}})"))
+}
+
+/// A bounded `N+` source parameter is heterogeneous in Lean. Its source
+/// domain fact still compares the original Litex argument, so the telescope
+/// requirement retains that comparison through an existential complex
+/// observation instead of silently comparing a chosen carrier value.
+fn render_telescope_domain_requirement(
+    function: &LitexToLeanFunctionTypeIr,
+    fact: &Fact,
+    context: &StmtResultToLeanCompilerEnvironmentStack,
+) -> Result<String, String> {
+    if let Some((parameter_symbol_id, natural_bound)) =
+        positive_natural_parameter_less_equal_natural_bound(function, fact)?
+    {
+        let parameter_name = context
+            .symbol_names
+            .get(&parameter_symbol_id)
+            .ok_or_else(|| "bounded positive-natural parameter has no compiler name".to_string())?;
+        return Ok(format!(
+            "Litex.positiveNaturalParameterLessEqualNaturalBound {parameter_name} {natural_bound}"
+        ));
+    }
+    render_fact(fact, context)
+}
+
+fn positive_natural_parameter_less_equal_natural_bound(
+    function: &LitexToLeanFunctionTypeIr,
+    fact: &Fact,
+) -> Result<Option<(SymbolId, String)>, String> {
+    let Fact::AtomicFact(AtomicFact::LessEqualFact(comparison)) = fact else {
+        return Ok(None);
+    };
+    let Some(parameter) = function.parameters.iter().find(|parameter| {
+        parameter.set == LitexToLeanObjectIr::StandardSet(LitexToLeanStandardSetIr::PositiveNatural)
+            && object_is_symbol(&comparison.left, parameter.symbol_id)
+    }) else {
+        return Ok(None);
+    };
+    let lowered_bound = LitexToLeanObjectIr::lower(&comparison.right)?;
+    let natural_bound = render_natural_endpoint(&lowered_bound)?;
+    Ok(Some((parameter.symbol_id, natural_bound)))
 }
 
 fn render_function_requirement(
@@ -10402,6 +14555,66 @@ fn render_named_function_value(
                 "{{ call := fun {{__alpha}} (__arg : __alpha) __arg_in __arg_domain => {body} }}"
             ),
             uses_native_real_body,
+        ))
+    }
+}
+
+/// Render the target value for the direct native-real named-function slice.
+/// Binder names are the same names installed by the parent Result compiler's
+/// child environment, so the nesting of the generated Lean term mirrors the
+/// nesting of `SuccessVerifyFunctionDefinitionResult`.
+fn render_named_real_function_value_from_result(
+    function: &LitexToLeanFunctionTypeIr,
+    body: &LitexToLeanObjectIr,
+    context: &StmtResultToLeanCompilerEnvironmentStack,
+) -> Result<String, String> {
+    let real_signature = function.parameters.iter().all(|parameter| {
+        parameter.set == LitexToLeanObjectIr::StandardSet(LitexToLeanStandardSetIr::Real)
+    }) && function.return_set.as_ref()
+        == &LitexToLeanObjectIr::StandardSet(LitexToLeanStandardSetIr::Real);
+    if !real_signature {
+        return Err("native-real function renderer received a non-real signature".into());
+    }
+    if function_uses_telescope(function) {
+        validate_function_type(function)?;
+        let mut binders = Vec::with_capacity(function.parameters.len() + 1);
+        let mut parameter_representations = HashMap::new();
+        for (index, parameter) in function.parameters.iter().enumerate() {
+            let suffix = index + 1;
+            let alpha = format!("__alpha{suffix}");
+            let argument = format!("__arg{suffix}");
+            let membership = format!("__arg{suffix}_in");
+            let domain = render_set_ir(&parameter.set, context)?;
+            binders.push(format!(
+                "fun {{{alpha} : Type}} ({argument} : {alpha}) ({membership} : Litex.In {argument} {domain}) => "
+            ));
+            parameter_representations.insert(
+                parameter.symbol_id,
+                format!("Litex.In.rep {argument} {membership}"),
+            );
+        }
+        if !function.domain_facts.is_empty() {
+            binders.push("fun __arg_domain => ".into());
+        }
+        let body =
+            render_real_function_body_with_parameters(body, &parameter_representations, context)?;
+        return Ok(format!("{}ULift.up ({body})", binders.concat()));
+    }
+
+    validate_unary_function_type(function)?;
+    let body = render_real_function_body(
+        body,
+        function.parameters[0].symbol_id,
+        "Litex.In.rep __arg __arg_in",
+        context,
+    )?;
+    if function.domain_facts.is_empty() {
+        Ok(format!(
+            "{{ call := fun {{__alpha}} (__arg : __alpha) __arg_in => {body} }}"
+        ))
+    } else {
+        Ok(format!(
+            "{{ call := fun {{__alpha}} (__arg : __alpha) __arg_in __arg_domain => {body} }}"
         ))
     }
 }
@@ -10982,6 +15195,11 @@ fn render_function_application(
             ));
         }
         let mut nested = context.clone();
+        // Domain verification in Result is about the original source
+        // arguments. The target telescope may separately observe a
+        // heterogeneous parameter through its membership proof, so keep a
+        // source-facing rendering context for exact Result validation.
+        let mut source_domain_nested = context.clone();
         let mut arguments = Vec::with_capacity(function.parameters.len());
         let mut argument_memberships = Vec::with_capacity(function.parameters.len());
         for (parameter_index, ((parameter, source_argument), requirement)) in function
@@ -11016,7 +15234,15 @@ fn render_function_application(
             let argument_membership = render_proof(&argument_fact.fact, context)?;
             arguments.push(argument.clone());
             argument_memberships.push(argument_membership.clone());
-            nested.symbol_names.insert(parameter.symbol_id, argument);
+            nested
+                .symbol_names
+                .insert(parameter.symbol_id, argument.clone());
+            source_domain_nested
+                .symbol_names
+                .insert(parameter.symbol_id, argument.clone());
+            source_domain_nested
+                .numeric_representations
+                .insert(parameter.symbol_id, argument.clone());
             if let Some(real) = membership_real_value(
                 &parameter.set,
                 arguments.last().expect("argument was just retained"),
@@ -11060,14 +15286,23 @@ fn render_function_application(
                         "application layer {layer_index} domain proof {domain_index} is missing"
                     )
                 })?;
-            let expected = render_fact(source_fact, &nested)?;
+            let expected = render_fact(source_fact, &source_domain_nested)?;
             let retained = render_fact(&domain_fact.fact.proposition, context)?;
             if expected != retained {
                 return Err(format!(
                     "application layer {layer_index} expected domain clause {expected}, retained {retained}"
                 ));
             }
-            domain_proofs.push(render_proof(&domain_fact.fact, context)?);
+            let retained_proof = render_proof(&domain_fact.fact, context)?;
+            if positive_natural_parameter_less_equal_natural_bound(&function, source_fact)?
+                .is_some()
+            {
+                domain_proofs.push(format!(
+                    "Litex.positiveNaturalParameterLessEqualNaturalBoundOfComplex ({retained_proof})"
+                ));
+            } else {
+                domain_proofs.push(retained_proof);
+            }
         }
 
         let application_term = if !function_uses_telescope(&function) {
@@ -11217,7 +15452,7 @@ fn render_object_ir(
         )),
         LitexToLeanObjectIr::SequenceSet { values, length } => match length {
             Some(length) => Ok(format!(
-                "(Litex.finiteSequenceSet {} {})",
+                "(Litex.finiteSequenceSet.{{0}} {} {})",
                 render_set_ir(values, context)?,
                 render_natural_endpoint(length)?
             )),
@@ -11226,6 +15461,16 @@ fn render_object_ir(
                 render_set_ir(values, context)?
             )),
         },
+        LitexToLeanObjectIr::MatrixSet {
+            values,
+            row_count,
+            column_count,
+        } => Ok(format!(
+            "(Litex.matrixSet.{{0}} {} {} {})",
+            render_set_ir(values, context)?,
+            render_natural_endpoint(row_count)?,
+            render_natural_endpoint(column_count)?,
+        )),
         LitexToLeanObjectIr::Aggregate {
             kind, arguments, ..
         } => render_aggregate_object(*kind, arguments, context),
@@ -11400,7 +15645,7 @@ fn render_literal_indexed_access(
                 _ => {
                     return Err(
                         "indexed tuple projection needs a checked range representative".into(),
-                    )
+                    );
                 }
             };
             return Ok(format!("(Litex.indexedTupleAt {tuple} {exact_index})"));
@@ -12051,10 +16296,14 @@ mod tests {
             .compile_obtain_obj_from_exist_fact_stmt_result_to_lean_source(elimination)
             .expect("compile direct existential elimination"));
         assert_eq!(compiler.environment_stack.environments.len(), 1);
-        assert!(compiler.declarations[1]
-            .contains("noncomputable def y : ℂ := Classical.choose (__fact0)"));
-        assert!(compiler.declarations[2].contains("exact (Classical.choose_spec (__fact0)).1"));
-        assert!(compiler.declarations[3].contains("exact (Classical.choose_spec (__fact0)).2"));
+        assert!(compiler.declarations[1].contains("noncomputable def y : ℂ := Classical.choose"));
+        assert!(compiler.declarations[1].contains("from __fact0"));
+        assert!(compiler.declarations[2].contains("Classical.choose_spec"));
+        assert!(compiler.declarations[2].contains("from __fact0"));
+        assert!(compiler.declarations[2].contains(").1"));
+        assert!(compiler.declarations[3].contains("Classical.choose_spec"));
+        assert!(compiler.declarations[3].contains("from __fact0"));
+        assert!(compiler.declarations[3].contains(").2"));
     }
 
     #[test]
@@ -12076,6 +16325,218 @@ mod tests {
             .compile_stmt_results_to_lean_source(&results)
             .expect_err("projection without FactId must fail closed");
         assert!(error.contains("existential elimination projections store 1"));
+    }
+
+    fn execute_predicate_backed_existential_elimination() -> Vec<StmtResult> {
+        crate::stmt_result_to_lean_compiler::compile_litex_source_to_lean_source::execute_litex_source_to_stmt_results(
+            "prop has_copy(a R):\n    exist x R st {x = a}\nwitness exist x R st {x = 2} from 2:\n    2 = 2\nby def $has_copy(2)\nobtain copy from $has_copy(2)\n",
+            "direct_predicate_backed_existential_elimination.lit",
+        )
+        .expect("execute predicate-backed existential elimination")
+    }
+
+    #[test]
+    fn predicate_backed_existential_elimination_compiles_definition_projection_directly() {
+        let results = execute_predicate_backed_existential_elimination();
+        let [definition, witness, by_definition, StmtResult::Success(SuccessStmtResult::DefObjStmt(
+            SuccessDefObjStmtResult::ObtainObjFromAtomicFact(elimination),
+        ))] = results.as_slice()
+        else {
+            panic!("expected predicate definition, witness, by-definition, and obtain")
+        };
+
+        let mut compiler =
+            StmtResultToLeanCompiler::new("direct_predicate_backed_existential_elimination.lit");
+        for result in [definition, witness, by_definition] {
+            compiler
+                .compile_stmt_result_to_lean_source(result)
+                .expect("compile prerequisite Result directly");
+        }
+        assert!(compiler
+            .compile_obtain_obj_from_atomic_fact_stmt_result_to_lean_source(elimination)
+            .expect("compile predicate-backed elimination directly"));
+        assert!(compiler
+            .declarations
+            .iter()
+            .any(|declaration| declaration.contains("unfold has_copy at __definition")));
+        assert!(compiler
+            .declarations
+            .iter()
+            .any(|declaration| declaration.contains("noncomputable def copy")));
+    }
+
+    #[test]
+    fn predicate_backed_existential_elimination_rejects_an_unpublished_source_fact_id() {
+        let mut results = execute_predicate_backed_existential_elimination();
+        let StmtResult::Success(SuccessStmtResult::By(SuccessByStmtResult::ByDefStmt(
+            by_definition,
+        ))) = &mut results[2]
+        else {
+            panic!("expected by-definition prerequisite")
+        };
+        let source_fact_id = by_definition.common.infers.store_fact_outputs[0]
+            .fact_id
+            .expect("by-definition retains source FactId");
+        by_definition.common.infers.store_fact_outputs[0].fact_id =
+            Some(FactId::new(source_fact_id.value() + 10_000));
+
+        let mut compiler =
+            StmtResultToLeanCompiler::new("direct_predicate_backed_existential_elimination.lit");
+        for result in &results[..3] {
+            compiler
+                .compile_stmt_result_to_lean_source(result)
+                .expect("compile corrupted prerequisites up to the changed publication identity");
+        }
+        let StmtResult::Success(SuccessStmtResult::DefObjStmt(
+            SuccessDefObjStmtResult::ObtainObjFromAtomicFact(elimination),
+        )) = &results[3]
+        else {
+            panic!("expected predicate-backed elimination")
+        };
+        let error = compiler
+            .compile_obtain_obj_from_atomic_fact_stmt_result_to_lean_source(elimination)
+            .expect_err("unpublished cited FactId must fail closed");
+        assert!(
+            error.contains(&format!("unavailable cited fact `{source_fact_id}`")),
+            "{error}"
+        );
+    }
+
+    fn execute_direct_cases_and_contradiction() -> Vec<StmtResult> {
+        crate::stmt_result_to_lean_compiler::compile_litex_source_to_lean_source::execute_litex_source_to_stmt_results(
+            "by cases:\n    ? 2 = 2\n    case 1 = 1 and 2 = 2:\n        1 = 1\nby contra:\n    ? not 2 < 1\n    impossible 2 < 1\n",
+            "direct_cases_and_contradiction.lit",
+        )
+        .expect("execute direct cases and contradiction")
+    }
+
+    #[test]
+    fn cases_and_contradiction_compile_directly_in_nested_environments() {
+        let results = execute_direct_cases_and_contradiction();
+        let [StmtResult::Success(SuccessStmtResult::By(SuccessByStmtResult::ByCasesStmt(cases))), StmtResult::Success(SuccessStmtResult::By(SuccessByStmtResult::ByContraStmt(
+            contradiction,
+        )))] = results.as_slice()
+        else {
+            panic!("expected cases followed by contradiction")
+        };
+        let branch = &cases
+            .verification
+            .as_ref()
+            .expect("cases retains verification")
+            .branches[0];
+        let branch_assumption_fact_id = branch.assumption_fact_id;
+        let branch_component_fact_ids = branch
+            .proof_scope
+            .assumption_components
+            .iter()
+            .map(|(fact_id, _)| *fact_id)
+            .collect::<Vec<_>>();
+        let reverse_assumption_fact_id = contradiction
+            .verification
+            .as_ref()
+            .expect("contra retains verification")
+            .reverse_assumption_fact_id;
+
+        let mut compiler = StmtResultToLeanCompiler::new("direct_cases_and_contradiction.lit");
+        let coverage = cases
+            .verification
+            .as_ref()
+            .expect("cases retains verification")
+            .coverage_check
+            .factual_success()
+            .expect("coverage is factual");
+        assert!(
+            compiler
+                .construct_lean_proof_from_direct_fact_result(coverage)
+                .expect("construct coverage proof")
+                .is_some(),
+            "coverage proof remained unsupported: {:?}",
+            coverage.proof()
+        );
+        assert!(compiler
+            .compile_by_cases_stmt_result_to_lean_source(cases)
+            .expect("compile cases directly"));
+        assert!(compiler
+            .compile_by_contra_stmt_result_to_lean_source(contradiction)
+            .expect("compile contradiction directly"));
+        assert_eq!(compiler.environment_stack.environments.len(), 1);
+        assert!(!compiler
+            .environment_stack
+            .fact_names
+            .contains_key(&branch_assumption_fact_id));
+        assert!(branch_component_fact_ids
+            .iter()
+            .all(|fact_id| !compiler.environment_stack.fact_names.contains_key(fact_id)));
+        assert!(!compiler
+            .environment_stack
+            .fact_names
+            .contains_key(&reverse_assumption_fact_id));
+        assert!(compiler.declarations[0].contains("have __case1_component1"));
+        assert!(compiler.declarations[0].contains("have __case1_component2"));
+        assert!(compiler.declarations[1].contains("Classical.byContradiction"));
+    }
+
+    #[test]
+    fn cases_and_contradiction_tracer_compiles_from_recursive_results() {
+        let source = include_str!("../../lean/examples/9_CasesAndContradiction.lit");
+        let results = crate::stmt_result_to_lean_compiler::compile_litex_source_to_lean_source::execute_litex_source_to_stmt_results(
+            source,
+            "9_CasesAndContradiction.lit",
+        )
+        .expect("execute cases-and-contradiction tracer");
+        let lean_source = StmtResultToLeanCompiler::new("9_CasesAndContradiction.lit")
+            .compile_stmt_results_to_lean_source(&results)
+            .expect("compile recursive cases-and-contradiction Results");
+        assert!(lean_source.contains("__case1_component1"));
+        assert!(lean_source.contains("Classical.byContradiction"));
+    }
+
+    #[test]
+    fn cases_reject_a_branch_assumption_fact_id_mismatch() {
+        let mut results = execute_direct_cases_and_contradiction();
+        let StmtResult::Success(SuccessStmtResult::By(SuccessByStmtResult::ByCasesStmt(cases))) =
+            &mut results[0]
+        else {
+            panic!("expected cases result")
+        };
+        let exported_fact_id = cases.common.infers.store_fact_outputs[0]
+            .fact_id
+            .expect("cases exports a FactId");
+        cases
+            .verification
+            .as_mut()
+            .expect("cases retains verification")
+            .branches[0]
+            .assumption_fact_id = exported_fact_id;
+
+        let error = StmtResultToLeanCompiler::new("direct_cases_and_contradiction.lit")
+            .compile_stmt_results_to_lean_source(&results)
+            .expect_err("mismatched branch FactId must fail closed");
+        assert!(error.contains("branch assumption FactIds disagree"));
+    }
+
+    #[test]
+    fn contradiction_rejects_a_reverse_assumption_fact_id_mismatch() {
+        let mut results = execute_direct_cases_and_contradiction();
+        let StmtResult::Success(SuccessStmtResult::By(SuccessByStmtResult::ByContraStmt(
+            contradiction,
+        ))) = &mut results[1]
+        else {
+            panic!("expected contradiction result")
+        };
+        let exported_fact_id = contradiction.common.infers.store_fact_outputs[0]
+            .fact_id
+            .expect("contradiction exports a FactId");
+        contradiction
+            .verification
+            .as_mut()
+            .expect("contradiction retains verification")
+            .reverse_assumption_fact_id = exported_fact_id;
+
+        let error = StmtResultToLeanCompiler::new("direct_cases_and_contradiction.lit")
+            .compile_stmt_results_to_lean_source(&results)
+            .expect_err("mismatched reverse FactId must fail closed");
+        assert!(error.contains("reverse-assumption FactIds disagree"));
     }
 
     fn execute_ordinary_claim() -> Vec<StmtResult> {
@@ -12357,6 +16818,547 @@ mod tests {
             .compile_stmt_results_to_lean_source(&results)
             .expect_err("by-thm without its source FactId must fail closed");
         assert!(error.contains("by-thm Result has no source theorem FactId"));
+    }
+
+    #[test]
+    fn theorem_backed_obtain_consumes_but_does_not_publish_its_local_conclusion() {
+        let results = crate::stmt_result_to_lean_compiler::compile_litex_source_to_lean_source::execute_litex_source_to_stmt_results(
+            "thm self_exists:\n    ? forall a R:\n        exist x R st {x = a}\n    witness exist x R st {x = a} from a:\n        a = a\nobtain selected from thm self_exists(3)\n",
+            "direct_theorem_backed_obtain.lit",
+        )
+        .expect("execute theorem-backed obtain");
+        let [StmtResult::Success(SuccessStmtResult::DefThmStmt(theorem)), StmtResult::Success(SuccessStmtResult::DefObjStmt(
+            SuccessDefObjStmtResult::ObtainObjFromThm(obtain),
+        ))] = results.as_slice()
+        else {
+            panic!("expected theorem followed by theorem-backed obtain")
+        };
+        let source = obtain
+            .verification
+            .as_ref()
+            .expect("obtain retains elimination verification")
+            .source_result
+            .non_factual_success()
+            .expect("obtain source is a statement Result");
+        let SuccessStmtResult::By(SuccessByStmtResult::ByThmStmt(application)) = source else {
+            panic!("obtain source is a by-thm Result")
+        };
+        assert_eq!(
+            application.common.infers.store_fact_outputs[0].fact_id, None,
+            "the temporary theorem conclusion is not publishable after its local environment pops"
+        );
+        let theorem_fact_id = theorem.common.infers.store_fact_outputs[0]
+            .fact_id
+            .expect("named theorem retains its published FactId");
+        let projection_fact_ids = obtain
+            .common
+            .infers
+            .store_fact_outputs
+            .iter()
+            .map(|output| output.fact_id.expect("projection retains FactId"))
+            .collect::<Vec<_>>();
+
+        let mut compiler = StmtResultToLeanCompiler::new("direct_theorem_backed_obtain.lit");
+        assert!(compiler
+            .compile_named_theorem_stmt_result_to_lean_source(theorem)
+            .expect("compile source theorem"));
+        assert!(compiler
+            .compile_obtain_obj_from_theorem_stmt_result_to_lean_source(obtain)
+            .expect("compile theorem-backed obtain"));
+        assert_eq!(compiler.environment_stack.fact_names.len(), 3);
+        assert!(compiler
+            .environment_stack
+            .fact_names
+            .contains_key(&theorem_fact_id));
+        for fact_id in projection_fact_ids {
+            assert!(compiler.environment_stack.fact_names.contains_key(&fact_id));
+        }
+        assert_eq!(compiler.declarations.len(), 4);
+        assert!(compiler.declarations[1].contains("noncomputable def selected"));
+    }
+
+    fn execute_concrete_predicate_and_by_definition() -> Vec<StmtResult> {
+        crate::stmt_result_to_lean_compiler::compile_litex_source_to_lean_source::execute_litex_source_to_stmt_results(
+            "prop is_unit_pair(x R, y R):\n    x = 1\n    y = 1\n\n1 = 1\nby def $is_unit_pair(1, 1)\n",
+            "direct_by_definition.lit",
+        )
+        .expect("execute concrete predicate and by-definition")
+    }
+
+    fn by_definition_result_mut(results: &mut [StmtResult]) -> &mut SuccessByDefStmtResult {
+        let [_, _, StmtResult::Success(SuccessStmtResult::By(SuccessByStmtResult::ByDefStmt(result)))] =
+            results
+        else {
+            panic!("expected concrete predicate, fact, and by-definition Results")
+        };
+        result
+    }
+
+    #[test]
+    fn by_definition_combines_parameter_and_clause_results_directly() {
+        let results = execute_concrete_predicate_and_by_definition();
+        let mut compiler = StmtResultToLeanCompiler::new("direct_by_definition.lit");
+        let StmtResult::Success(SuccessStmtResult::DefPredicateStmt(
+            SuccessDefPredicateStmtResult::DefPropStmt(definition),
+        )) = &results[0]
+        else {
+            panic!("first Result is a concrete predicate definition")
+        };
+        let StmtResult::Success(SuccessStmtResult::Fact(fact)) = &results[1] else {
+            panic!("second Result is the reusable clause fact")
+        };
+        let StmtResult::Success(SuccessStmtResult::By(SuccessByStmtResult::ByDefStmt(
+            by_definition,
+        ))) = &results[2]
+        else {
+            panic!("third Result is by-definition")
+        };
+
+        compiler
+            .compile_def_prop_stmt_result_to_lean_source(definition)
+            .expect("compile concrete predicate directly");
+        compiler
+            .compile_fact_stmt_result_to_lean_source(fact)
+            .expect("compile reusable clause fact directly");
+        assert!(compiler
+            .compile_by_definition_stmt_result_to_lean_source(by_definition)
+            .expect("compile by-definition directly"));
+        assert!(compiler.declarations[2].contains("unfold is_unit_pair"));
+        assert!(compiler.declarations[2].contains(
+            "exact ⟨Litex.Rules.complexRealInR (1 : ℝ), Litex.Rules.complexRealInR (1 : ℝ), __fact0, __fact0⟩"
+        ));
+    }
+
+    #[test]
+    fn by_definition_rejects_a_missing_clause_child_result() {
+        let mut results = execute_concrete_predicate_and_by_definition();
+        by_definition_result_mut(&mut results)
+            .verification
+            .as_mut()
+            .expect("by-definition retains verification")
+            .clause_checks
+            .pop();
+
+        let error = StmtResultToLeanCompiler::new("direct_by_definition.lit")
+            .compile_stmt_results_to_lean_source(&results)
+            .expect_err("missing clause child must fail closed");
+        assert!(error.contains("changed its component arity"));
+    }
+
+    #[test]
+    fn by_definition_rejects_a_missing_target_fact_id() {
+        let mut results = execute_concrete_predicate_and_by_definition();
+        by_definition_result_mut(&mut results)
+            .common
+            .infers
+            .store_fact_outputs[0]
+            .fact_id = None;
+
+        let error = StmtResultToLeanCompiler::new("direct_by_definition.lit")
+            .compile_stmt_results_to_lean_source(&results)
+            .expect_err("by-definition target without FactId must fail closed");
+        assert!(error.contains("by-definition target store has no FactId"));
+    }
+
+    fn execute_named_real_function(source: &str) -> Vec<StmtResult> {
+        crate::stmt_result_to_lean_compiler::compile_litex_source_to_lean_source::execute_litex_source_to_stmt_results(
+            source,
+            "direct_named_real_function.lit",
+        )
+        .expect("execute named real function")
+    }
+
+    fn named_real_function_result_mut(
+        results: &mut [StmtResult],
+    ) -> &mut SuccessHaveFnEqualStmtResult {
+        let [StmtResult::Success(SuccessStmtResult::DefObjStmt(
+            SuccessDefObjStmtResult::HaveFnEqualStmt(result),
+        ))] = results
+        else {
+            panic!("expected one named-function Result")
+        };
+        result
+    }
+
+    #[test]
+    fn named_real_function_compiles_return_check_in_child_environment() {
+        let mut results = execute_named_real_function("have fn inc(x R) R = x + 1\n");
+        let result = named_real_function_result_mut(&mut results);
+        let defining_equality_fact_id = result.common.infers.store_fact_outputs[1]
+            .fact_id
+            .expect("defining equality retains FactId");
+        let mut compiler = StmtResultToLeanCompiler::new("direct_named_real_function.lit");
+
+        assert!(compiler
+            .compile_have_fn_equal_stmt_result_to_lean_source(result)
+            .expect("compile named real function directly"));
+        assert_eq!(compiler.environment_stack.environments.len(), 1);
+        assert_eq!(compiler.declarations.len(), 3);
+        assert!(compiler.declarations[0].contains("noncomputable def inc : Litex.Fn"));
+        assert!(compiler.declarations[0].contains("Litex.In.rep __arg __arg_in + (1 : ℝ)"));
+        let binding = compiler
+            .environment_stack
+            .named_function_definitions
+            .get(&defining_equality_fact_id)
+            .expect("direct function publishes its reduction binding");
+        assert!(binding.uses_native_real_body);
+        assert!(binding.compatibility_return_selection.is_none());
+    }
+
+    #[test]
+    fn named_real_function_domain_fact_stays_inside_function_binder() {
+        let mut results =
+            execute_named_real_function("have fn reciprocal(x R: x != 0) R = 1 / x\n");
+        let result = named_real_function_result_mut(&mut results);
+        let mut compiler = StmtResultToLeanCompiler::new("direct_named_real_function.lit");
+
+        assert!(compiler
+            .compile_have_fn_equal_stmt_result_to_lean_source(result)
+            .expect("compile domain-constrained real function directly"));
+        assert_eq!(compiler.environment_stack.environments.len(), 1);
+        assert!(compiler.declarations[0].contains("Litex.FnWhere"));
+        assert!(compiler.declarations[0].contains("__arg_domain"));
+        assert!(compiler
+            .environment_stack
+            .fact_propositions
+            .values()
+            .all(|fact| fact.to_string() != "x != 0"));
+    }
+
+    #[test]
+    fn named_real_function_rejects_missing_local_parameter_fact_id() {
+        let mut results = execute_named_real_function("have fn inc(x R) R = x + 1\n");
+        named_real_function_result_mut(&mut results)
+            .verification
+            .as_mut()
+            .expect("function retains verification")
+            .assumption_infers
+            .store_fact_outputs[0]
+            .fact_id = None;
+
+        let error = StmtResultToLeanCompiler::new("direct_named_real_function.lit")
+            .compile_stmt_results_to_lean_source(&results)
+            .expect_err("missing local parameter FactId must fail closed");
+        assert!(error.contains("named real function local assumptions store 0"));
+        assert!(error.contains("has no FactId"));
+    }
+
+    fn execute_indexed_tuple_definition() -> Vec<StmtResult> {
+        crate::stmt_result_to_lean_compiler::compile_litex_source_to_lean_source::execute_litex_source_to_stmt_results(
+            "have tuple coordinates for index <= 3, coordinates[index] = index + 1\n",
+            "direct_indexed_tuple.lit",
+        )
+        .expect("execute indexed tuple definition")
+    }
+
+    fn indexed_tuple_result_mut(results: &mut [StmtResult]) -> &mut SuccessHaveTupleStmtResult {
+        let [StmtResult::Success(SuccessStmtResult::DefObjStmt(
+            SuccessDefObjStmtResult::HaveTupleStmt(result),
+        ))] = results
+        else {
+            panic!("expected one indexed tuple Result")
+        };
+        result
+    }
+
+    #[test]
+    fn indexed_tuple_compiles_value_well_definedness_in_child_environment() {
+        let mut results = execute_indexed_tuple_definition();
+        let result = indexed_tuple_result_mut(&mut results);
+        let verification = result
+            .verification
+            .as_ref()
+            .expect("indexed tuple retains combined verification");
+        match verification.value_well_definedness.as_ref() {
+            SuccessVerifyObjWellDefinedResult::Direct(value) => {
+                assert_eq!(
+                    obj_equality_key(&value.object),
+                    obj_equality_key(&result.statement.value)
+                );
+            }
+            other => panic!("expected direct tuple value WD Result, found {other:?}"),
+        }
+        let mut compiler = StmtResultToLeanCompiler::new("direct_indexed_tuple.lit");
+
+        assert!(compiler
+            .compile_have_tuple_stmt_result_to_lean_source(result)
+            .expect("compile indexed tuple directly"));
+        assert_eq!(compiler.environment_stack.environments.len(), 1);
+        assert_eq!(compiler.declarations.len(), 6);
+        assert!(compiler.declarations[2]
+            .contains("noncomputable def coordinates : Litex.IndexedTuple 3 ℂ"));
+        assert!(compiler.declarations[2].contains("__index.val"));
+        assert!(compiler.declarations[2].contains("+ (1 : ℂ)"));
+        assert!(compiler.declarations[5].contains("∀ {__tuple_index_carrier : Type}"));
+        assert!(!compiler
+            .environment_stack
+            .symbol_names
+            .contains_key(&result.statement.index_binding.id()));
+    }
+
+    #[test]
+    fn indexed_tuple_rejects_a_coordinate_store_without_fact_id() {
+        let mut results = execute_indexed_tuple_definition();
+        indexed_tuple_result_mut(&mut results)
+            .common
+            .infers
+            .store_fact_outputs[2]
+            .fact_id = None;
+
+        let error = StmtResultToLeanCompiler::new("direct_indexed_tuple.lit")
+            .compile_stmt_results_to_lean_source(&results)
+            .expect_err("coordinate store without a FactId must fail closed");
+        assert!(error.contains("lost its FactId"));
+    }
+
+    fn execute_indexed_sequence_definition() -> Vec<StmtResult> {
+        crate::stmt_result_to_lean_compiler::compile_litex_source_to_lean_source::execute_litex_source_to_stmt_results(
+            "have seq identity_sequence seq(R) for index, identity_sequence(index) = index + 1\n",
+            "direct_indexed_sequence.lit",
+        )
+        .expect("execute indexed sequence definition")
+    }
+
+    fn indexed_sequence_result_mut(results: &mut [StmtResult]) -> &mut SuccessHaveSeqStmtResult {
+        let [StmtResult::Success(SuccessStmtResult::DefObjStmt(
+            SuccessDefObjStmtResult::HaveSeqStmt(result),
+        ))] = results
+        else {
+            panic!("expected one indexed sequence Result")
+        };
+        result
+    }
+
+    #[test]
+    fn indexed_sequence_compiles_return_check_in_its_index_environment() {
+        let mut results = execute_indexed_sequence_definition();
+        let result = indexed_sequence_result_mut(&mut results);
+        let verification = result
+            .verification
+            .as_ref()
+            .expect("sequence retains combined verification");
+        let parameter_fact_id = verification.assumption_infers.store_fact_outputs[0]
+            .fact_id
+            .expect("sequence index membership retains its local FactId");
+        let defining_equality_fact_id = result.common.infers.store_fact_outputs[1]
+            .fact_id
+            .expect("sequence equality retains its outer FactId");
+        let mut compiler = StmtResultToLeanCompiler::new("direct_indexed_sequence.lit");
+
+        assert!(compiler
+            .compile_have_sequence_stmt_result_to_lean_source(result)
+            .expect("compile indexed sequence directly"));
+        assert_eq!(compiler.environment_stack.environments.len(), 1);
+        assert_eq!(compiler.declarations.len(), 4);
+        assert!(compiler.declarations[0]
+            .contains("noncomputable def identity_sequence : Litex.Fn Litex.NPos Litex.R"));
+        assert!(compiler.declarations[0].contains("(Litex.In.rep __arg __arg_in).val : ℕ"));
+        assert!(compiler.declarations[0].contains("+ (1 : ℝ)"));
+        assert!(compiler.declarations[1].contains("Litex.sequenceSet Litex.R"));
+        assert!(compiler.declarations[2].contains("Litex.fnSet Litex.NPos Litex.R"));
+        assert!(!compiler
+            .environment_stack
+            .symbol_names
+            .contains_key(&result.statement.index_binding.id()));
+        assert!(!compiler
+            .environment_stack
+            .fact_names
+            .contains_key(&parameter_fact_id));
+        assert!(compiler
+            .environment_stack
+            .named_function_definitions
+            .contains_key(&defining_equality_fact_id));
+    }
+
+    #[test]
+    fn indexed_sequence_rejects_a_missing_local_parameter_fact_id() {
+        let mut results = execute_indexed_sequence_definition();
+        indexed_sequence_result_mut(&mut results)
+            .verification
+            .as_mut()
+            .expect("sequence retains verification")
+            .assumption_infers
+            .store_fact_outputs[0]
+            .fact_id = None;
+
+        let error = StmtResultToLeanCompiler::new("direct_indexed_sequence.lit")
+            .compile_stmt_results_to_lean_source(&results)
+            .expect_err("sequence index without a local FactId must fail closed");
+        assert!(error.contains("sequence index parameter store has no FactId"));
+    }
+
+    fn execute_finite_sequence_definition() -> Vec<StmtResult> {
+        crate::stmt_result_to_lean_compiler::compile_litex_source_to_lean_source::execute_litex_source_to_stmt_results(
+            "have finite_seq bounded_sequence finite_seq(R, 3) for index <= 3, bounded_sequence(index) = index + 1\nbounded_sequence(2) = 2 + 1\n",
+            "direct_finite_sequence.lit",
+        )
+        .expect("execute finite-sequence definition and application")
+    }
+
+    fn finite_sequence_result_mut(
+        results: &mut [StmtResult],
+    ) -> &mut SuccessHaveFiniteSeqStmtResult {
+        let [StmtResult::Success(SuccessStmtResult::DefObjStmt(
+            SuccessDefObjStmtResult::HaveFiniteSeqStmt(result),
+        )), _] = results
+        else {
+            panic!("expected a finite-sequence definition followed by an application fact")
+        };
+        result
+    }
+
+    #[test]
+    fn finite_sequence_compiles_bound_scope_and_application_from_recursive_results() {
+        let mut results = execute_finite_sequence_definition();
+        let result = finite_sequence_result_mut(&mut results);
+        let verification = result
+            .verification
+            .as_ref()
+            .expect("finite sequence retains combined verification");
+        assert_eq!(verification.bound_checks.len(), 2);
+        assert_eq!(verification.assumption_infers.store_fact_outputs.len(), 2);
+        let parameter_fact_id = verification.assumption_infers.store_fact_outputs[0]
+            .fact_id
+            .expect("finite-sequence parameter membership retains its local FactId");
+        let domain_fact_id = verification.assumption_infers.store_fact_outputs[1]
+            .fact_id
+            .expect("finite-sequence domain premise retains its local FactId");
+        let defining_equality_fact_id = result.common.infers.store_fact_outputs[1]
+            .fact_id
+            .expect("finite-sequence equality retains its outer FactId");
+        let mut compiler = StmtResultToLeanCompiler::new("direct_finite_sequence.lit");
+
+        assert!(compiler
+            .compile_have_finite_sequence_stmt_result_to_lean_source(result)
+            .expect("compile finite sequence directly"));
+        assert_eq!(compiler.environment_stack.environments.len(), 1);
+        assert_eq!(compiler.declarations.len(), 4);
+        assert!(compiler.declarations[0]
+            .contains("noncomputable def bounded_sequence : Litex.FnTelescope.Carrier"));
+        assert!(compiler.declarations[0].contains("Litex.FnTelescope.requirement"));
+        assert!(compiler.declarations[0].contains("fun __arg_domain => ULift.up"));
+        assert!(compiler.declarations[1].contains("Litex.finiteSequenceSet.{0} Litex.R (3 : Nat)"));
+        assert!(compiler.declarations[2].contains("Litex.fnTelescopeSet"));
+        assert!(!compiler
+            .environment_stack
+            .symbol_names
+            .contains_key(&result.statement.index_binding.id()));
+        assert!(!compiler
+            .environment_stack
+            .fact_names
+            .contains_key(&parameter_fact_id));
+        assert!(!compiler
+            .environment_stack
+            .fact_names
+            .contains_key(&domain_fact_id));
+        assert!(compiler
+            .environment_stack
+            .named_function_definitions
+            .contains_key(&defining_equality_fact_id));
+    }
+
+    #[test]
+    fn finite_sequence_rejects_a_missing_local_domain_fact_id() {
+        let mut results = execute_finite_sequence_definition();
+        finite_sequence_result_mut(&mut results)
+            .verification
+            .as_mut()
+            .expect("finite sequence retains verification")
+            .assumption_infers
+            .store_fact_outputs[1]
+            .fact_id = None;
+
+        let error = StmtResultToLeanCompiler::new("direct_finite_sequence.lit")
+            .compile_stmt_results_to_lean_source(&results)
+            .expect_err("finite-sequence domain without a local FactId must fail closed");
+        assert!(error.contains("finite-sequence domain store has no FactId"));
+    }
+
+    fn execute_matrix_definition() -> Vec<StmtResult> {
+        crate::stmt_result_to_lean_compiler::compile_litex_source_to_lean_source::execute_litex_source_to_stmt_results(
+            "have matrix entry_matrix matrix(R, 2, 3) for row <= 2, column <= 3, entry_matrix(row, column) = row + column\nentry_matrix(2, 3) = 2 + 3\n",
+            "direct_matrix.lit",
+        )
+        .expect("execute matrix definition and application")
+    }
+
+    fn matrix_result_mut(results: &mut [StmtResult]) -> &mut SuccessHaveMatrixStmtResult {
+        let [StmtResult::Success(SuccessStmtResult::DefObjStmt(
+            SuccessDefObjStmtResult::HaveMatrixStmt(result),
+        )), _] = results
+        else {
+            panic!("expected a matrix definition followed by an application fact")
+        };
+        result
+    }
+
+    #[test]
+    fn matrix_compiles_two_parameter_and_two_domain_results_in_one_child_environment() {
+        let mut results = execute_matrix_definition();
+        let result = matrix_result_mut(&mut results);
+        let verification = result
+            .verification
+            .as_ref()
+            .expect("matrix retains combined verification");
+        assert_eq!(verification.bound_checks.len(), 4);
+        assert_eq!(verification.assumption_infers.store_fact_outputs.len(), 4);
+        let local_fact_ids = verification
+            .assumption_infers
+            .store_fact_outputs
+            .iter()
+            .map(|store| store.fact_id.expect("matrix local store retains FactId"))
+            .collect::<Vec<_>>();
+        let defining_equality_fact_id = result.common.infers.store_fact_outputs[1]
+            .fact_id
+            .expect("matrix equality retains its outer FactId");
+        let mut compiler = StmtResultToLeanCompiler::new("direct_matrix.lit");
+
+        assert!(compiler
+            .compile_have_matrix_stmt_result_to_lean_source(result)
+            .expect("compile matrix directly"));
+        assert_eq!(compiler.environment_stack.environments.len(), 1);
+        assert_eq!(compiler.declarations.len(), 4);
+        assert!(compiler.declarations[0]
+            .contains("noncomputable def entry_matrix : Litex.FnTelescope.Carrier"));
+        assert!(compiler.declarations[0].contains("__arg1"));
+        assert!(compiler.declarations[0].contains("__arg2"));
+        assert!(compiler.declarations[0].contains("fun __arg_domain => ULift.up"));
+        assert!(
+            compiler.declarations[1].contains("Litex.matrixSet.{0} Litex.R (2 : Nat) (3 : Nat)")
+        );
+        assert!(compiler.declarations[2].contains("Litex.fnTelescopeSet"));
+        for fact_id in local_fact_ids {
+            assert!(!compiler.environment_stack.fact_names.contains_key(&fact_id));
+        }
+        assert!(!compiler
+            .environment_stack
+            .symbol_names
+            .contains_key(&result.statement.row_index_binding.id()));
+        assert!(!compiler
+            .environment_stack
+            .symbol_names
+            .contains_key(&result.statement.col_index_binding.id()));
+        assert!(compiler
+            .environment_stack
+            .named_function_definitions
+            .contains_key(&defining_equality_fact_id));
+    }
+
+    #[test]
+    fn matrix_rejects_a_missing_local_column_domain_fact_id() {
+        let mut results = execute_matrix_definition();
+        matrix_result_mut(&mut results)
+            .verification
+            .as_mut()
+            .expect("matrix retains verification")
+            .assumption_infers
+            .store_fact_outputs[3]
+            .fact_id = None;
+
+        let error = StmtResultToLeanCompiler::new("direct_matrix.lit")
+            .compile_stmt_results_to_lean_source(&results)
+            .expect_err("matrix column domain without a local FactId must fail closed");
+        assert!(error.contains("matrix domain store 1 has no FactId"));
     }
 
     #[test]

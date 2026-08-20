@@ -969,6 +969,20 @@ abbrev Q : Litex.Set := Set.ofType ℚ
 abbrev R : Litex.Set := Set.ofType ℝ
 abbrev C : Litex.Set := Set.ofType ℂ
 
+/-- A predicate-defined Litex subset. Its exact carrier is the corresponding
+subtype, and the compiler-owned subtype edge relates each member to its base
+value. -/
+def setBuilder
+    (base : Litex.Set.{u})
+    (predicate : base.Carrier → Prop) :
+    Litex.Set.{u} :=
+  Set.ofType (Subtype predicate)
+
+/-- Positive naturals use the exact subtype of native naturals carrying their
+strict-positivity proof. This is not an alias of `N`: membership retains the
+refining predicate in the carrier. -/
+abbrev NPos : Litex.Set := setBuilder N (fun n => 0 < n)
+
 /-- Half-open integer range with its exact Mathlib finite carrier. -/
 def range (start finish : ℤ) : Litex.Set :=
   Set.ofType {z : ℤ // z ∈ Finset.Ico start finish}
@@ -1040,12 +1054,8 @@ so tuple-only facts cannot be inferred from a sequence by Lean typing. -/
 structure SequenceLiteral (payload : Type u) where
   value : payload
 
-/-- Exact finite and infinite sequence carriers over one Litex set. -/
-def finiteSequenceSet (values : Litex.Set.{u}) (length : Nat) : Litex.Set.{u} :=
-  Set.ofType (Fin length → values.Carrier)
-
-def sequenceSet (values : Litex.Set.{u}) : Litex.Set.{u} :=
-  Set.ofType (Nat → values.Carrier)
+def sequenceSet (values : Litex.Set.{u}) :=
+  fnSet NPos values
 
 /-- The archived compiler only exposed the following higher constructors as
 proof-free object terms plus reflexive equality. Their native ABI therefore
@@ -1126,20 +1136,6 @@ structure FiniteReduceExpr
 def finiteSetReduce (set : alpha) (function : beta) (operation : gamma) (seed : delta) :
     FiniteReduceExpr alpha beta gamma delta :=
   ⟨set, function, operation, seed⟩
-
-/-- A predicate-defined Litex subset. Its exact carrier is the corresponding
-subtype, and the compiler-owned subtype edge relates each member to its base
-value. -/
-def setBuilder
-    (base : Litex.Set.{u})
-    (predicate : base.Carrier → Prop) :
-    Litex.Set.{u} :=
-  Set.ofType (Subtype predicate)
-
-/-- Positive naturals use the exact subtype of native naturals carrying their
-strict-positivity proof. This is not an alias of `N`: membership retains the
-refining predicate in the carrier. -/
-abbrev NPos : Litex.Set := setBuilder N (fun n => 0 < n)
 
 /-- Positive reals use the exact subtype of native reals carrying their
 strict-positivity proof. -/
@@ -1327,6 +1323,60 @@ def Lt (x y : ℂ) : Prop :=
 /-- Litex non-strict order on its current numeric carrier. -/
 def Le (x y : ℂ) : Prop :=
   OrderValue x ≤ OrderValue y
+
+/-- A bounded positive-natural function parameter is compared through one
+source complex observation. This keeps the telescope requirement usable for a
+heterogeneous argument while retaining the exact Litex `index <= length`
+premise supplied by statement verification. -/
+def positiveNaturalParameterLessEqualNaturalBound
+    {α : Type}
+    (index : α)
+    (length : Nat) :
+    Prop :=
+  ∃ complexIndex : Complex,
+    Litex.Same index complexIndex ∧
+      Litex.Le complexIndex (length : Complex)
+
+theorem positiveNaturalParameterLessEqualNaturalBoundOfComplex
+    {index : Complex}
+    {length : Nat}
+    (indexLessEqualLength : Litex.Le index (length : Complex)) :
+    positiveNaturalParameterLessEqualNaturalBound index length :=
+  ⟨index, Litex.Same.refl index, indexLessEqualLength⟩
+
+/-- One finite sequence is exactly the positive-natural function telescope
+whose retained source-domain clause bounds the index by `length`. The
+membership proof for the `N+` parameter selects the native natural used by
+that clause; no zero-based `Fin` carrier silently changes source indexing. -/
+def finiteSequenceSignature
+    (values : Litex.Set.{u})
+    (length : Nat) :
+  Litex.FnTelescope.{u} :=
+  .parameter Litex.NPos (fun {_alpha : Type} index _indexMembership =>
+    .requirement
+      (positiveNaturalParameterLessEqualNaturalBound index length)
+      (fun _ => .done values))
+
+def finiteSequenceSet (values : Litex.Set.{u}) (length : Nat) :=
+  Litex.fnTelescopeSet (finiteSequenceSignature values length)
+
+/-- A matrix is one source application layer with two positive-natural
+parameters and the two retained one-based bounds. -/
+def matrixSignature
+    (values : Litex.Set.{u})
+    (rowCount columnCount : Nat) :
+    Litex.FnTelescope.{u} :=
+  .parameter Litex.NPos (fun {_rowAlpha : Type} row _rowMembership =>
+    .parameter Litex.NPos (fun {_columnAlpha : Type} column _columnMembership =>
+      .requirement
+        (positiveNaturalParameterLessEqualNaturalBound row rowCount ∧
+          positiveNaturalParameterLessEqualNaturalBound column columnCount)
+        (fun _ => .done values)))
+
+def matrixSet
+    (values : Litex.Set.{u})
+    (rowCount columnCount : Nat) :=
+  Litex.fnTelescopeSet (matrixSignature values rowCount columnCount)
 
 namespace Lt
 

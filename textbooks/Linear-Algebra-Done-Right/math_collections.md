@@ -1,5 +1,9 @@
 # Mathematical Collections
 
+> Publication status (2026-08-20): the runnable module currently stops after
+> Chapters 1A--1B. Later cards describe chapters preserved in
+> `../todo_textbook_chapters/`, not current published interfaces.
+
 ## Purpose and scope
 
 This manual records the mathematical spine for the draft translation of
@@ -39,7 +43,7 @@ concepts and intermediate nodes that determine later interfaces.
 - `template` parameterizes declarations over carriers and structures; it is
   not itself a semantic layer. Source-facing results remain named even when a
   builtin or a more general checked interface supplies their proof.
-- An explicit structure type on a binding selects its default field view.
+- An explicit structure carrier on a binding fixes its declaration-owned fields.
   Thus `V &VectorSpace<s,VSet>` supports `V.zero`,
   `V.smul(a,v)`, and the nested access `V.scalars.mul(a,b)`. Source
   declarations use complete expressions rather than a pre-parser abbreviation

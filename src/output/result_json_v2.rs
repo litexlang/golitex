@@ -388,19 +388,29 @@ impl StmtResultJsonV2 {
         kind: &str,
         statement: String,
         common: &SuccessStmtCommonResult,
-        verification: Option<&SuccessVerifyTupleOrCartDimensionResult>,
+        verification: Option<&SuccessVerifyTupleOrCartDefinitionResult>,
     ) -> JsonValue {
         let verification = verification
             .map(|verification| {
                 object(vec![
-                    string_field("kind", "SuccessVerifyTupleOrCartDimensionResult"),
+                    string_field("kind", "SuccessVerifyTupleOrCartDefinitionResult"),
                     (
-                        "positive_check".to_string(),
-                        self.stmt_result(&verification.positive_check),
+                        "value_well_definedness".to_string(),
+                        self.shared_wd_obj(&verification.value_well_definedness),
                     ),
                     (
-                        "at_least_two_check".to_string(),
-                        self.stmt_result(&verification.at_least_two_check),
+                        "dimension".to_string(),
+                        object(vec![
+                            string_field("kind", "SuccessVerifyTupleOrCartDimensionResult"),
+                            (
+                                "positive_check".to_string(),
+                                self.stmt_result(&verification.dimension.positive_check),
+                            ),
+                            (
+                                "at_least_two_check".to_string(),
+                                self.stmt_result(&verification.dimension.at_least_two_check),
+                            ),
+                        ]),
                     ),
                 ])
             })
@@ -425,8 +435,35 @@ impl StmtResultJsonV2 {
                 object(vec![
                     string_field("kind", "SuccessVerifyIndexedFunctionDefinitionResult"),
                     (
+                        "well_definedness".to_string(),
+                        object(vec![
+                            string_field(
+                                "kind",
+                                "SuccessVerifyIndexedFunctionDefinitionWellDefinedResult",
+                            ),
+                            (
+                                "surface_set".to_string(),
+                                self.shared_wd_obj(&verification.well_definedness.surface_set),
+                            ),
+                            (
+                                "anonymous_function".to_string(),
+                                self.shared_wd_obj(
+                                    &verification.well_definedness.anonymous_function,
+                                ),
+                            ),
+                            (
+                                "function_set".to_string(),
+                                self.shared_wd_obj(&verification.well_definedness.function_set),
+                            ),
+                        ]),
+                    ),
+                    (
                         "bound_checks".to_string(),
                         self.stmt_results(&verification.bound_checks),
+                    ),
+                    (
+                        "assumption_infers".to_string(),
+                        infer_result_value(&verification.assumption_infers),
                     ),
                     (
                         "return_check".to_string(),

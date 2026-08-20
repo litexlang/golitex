@@ -1,4 +1,5 @@
 # Euclid, Elements, Book I, Propositions 1--4.
+# Revalidated for the current release runner on 2026-08-20.
 
 # Select the counterclockwise equilateral apex on the directed base a--b.
 have fn equilateral_vertex(a, b cart(R, R)) cart(R, R) = ((a[1] + b[1]) / 2 - sqrt(3) * (b[2] - a[2]) / 2, (a[2] + b[2]) / 2 + sqrt(3) * (b[1] - a[1]) / 2)
@@ -91,14 +92,14 @@ thm sqrt_ratio_unit_interval:
 thm affine_distance_sq:
     ? forall a, b cart(R, R), t R:
         zero::distance_sq(a, (a[1] + t * (b[1] - a[1]), a[2] + t * (b[2] - a[2]))) = t^2 * zero::distance_sq(a, b)
-    (a[1] + t * (b[1] - a[1]), a[2] + t * (b[2] - a[2])) $in cart(R, R)
-    (a[1] + t * (b[1] - a[1]), a[2] + t * (b[2] - a[2]))[1] = a[1] + t * (b[1] - a[1])
-    (a[1] + t * (b[1] - a[1]), a[2] + t * (b[2] - a[2]))[2] = a[2] + t * (b[2] - a[2])
-    (a[1] + t * (b[1] - a[1]), a[2] + t * (b[2] - a[2]))[1] - a[1] = t * (b[1] - a[1])
-    (a[1] + t * (b[1] - a[1]), a[2] + t * (b[2] - a[2]))[2] - a[2] = t * (b[2] - a[2])
-    by thm laws::distance_sq_coordinate_formula(a, (a[1] + t * (b[1] - a[1]), a[2] + t * (b[2] - a[2])))
+    have p cart(R, R) = (a[1] + t * (b[1] - a[1]), a[2] + t * (b[2] - a[2]))
+    p[1] = a[1] + t * (b[1] - a[1])
+    p[2] = a[2] + t * (b[2] - a[2])
+    p[1] - a[1] = t * (b[1] - a[1])
+    p[2] - a[2] = t * (b[2] - a[2])
+    by thm laws::distance_sq_coordinate_formula(a, p)
     by thm laws::distance_sq_coordinate_formula(a, b)
-    zero::distance_sq(a, (a[1] + t * (b[1] - a[1]), a[2] + t * (b[2] - a[2]))) = ((a[1] + t * (b[1] - a[1]), a[2] + t * (b[2] - a[2]))[1] - a[1])^2 + ((a[1] + t * (b[1] - a[1]), a[2] + t * (b[2] - a[2]))[2] - a[2])^2 = (t * (b[1] - a[1]))^2 + (t * (b[2] - a[2]))^2 = t^2 * ((b[1] - a[1])^2 + (b[2] - a[2])^2) = t^2 * zero::distance_sq(a, b)
+    zero::distance_sq(a, (a[1] + t * (b[1] - a[1]), a[2] + t * (b[2] - a[2]))) = zero::distance_sq(a, p) = (p[1] - a[1])^2 + (p[2] - a[2])^2 = (t * (b[1] - a[1]))^2 + (t * (b[2] - a[2]))^2 = t^2 * ((b[1] - a[1])^2 + (b[2] - a[2])^2) = t^2 * zero::distance_sq(a, b)
 
 # The affine parameter is the ratio of the requested length to the base length.
 have fn cut_point(a, b, c, d cart(R, R): zero::distance_sq(a, b) > 0, 0 <= zero::distance_sq(c, d), zero::distance_sq(c, d) <= zero::distance_sq(a, b)) cart(R, R) = (a[1] + sqrt(zero::distance_sq(c, d) / zero::distance_sq(a, b)) * (b[1] - a[1]), a[2] + sqrt(zero::distance_sq(c, d) / zero::distance_sq(a, b)) * (b[2] - a[2]))
@@ -115,7 +116,7 @@ thm cut_point_lemma:
     have t R = sqrt(zero::distance_sq(c, d) / zero::distance_sq(a, b))
     0 <= t
     t <= 1
-    t^2 = zero::distance_sq(c, d) / zero::distance_sq(a, b)
+    t^2 = sqrt(zero::distance_sq(c, d) / zero::distance_sq(a, b))^2 = zero::distance_sq(c, d) / zero::distance_sq(a, b)
     cut_point(a, b, c, d) = (a[1] + sqrt(zero::distance_sq(c, d) / zero::distance_sq(a, b)) * (b[1] - a[1]), a[2] + sqrt(zero::distance_sq(c, d) / zero::distance_sq(a, b)) * (b[2] - a[2])) = (a[1] + t * (b[1] - a[1]), a[2] + t * (b[2] - a[2]))
     witness exist s R st {0 <= s, s <= 1, cut_point(a, b, c, d) = (a[1] + s * (b[1] - a[1]), a[2] + s * (b[2] - a[2]))} from t:
         0 <= t
@@ -179,9 +180,7 @@ thm distance_sq_positive_of_ne:
         b[2] - a[2] = 0
         a[1] = b[1]
         a[2] = b[2]
-        a = (a[1], a[2])
-        b = (b[1], b[2])
-        a = b
+        a = (a[1], a[2]) = (b[1], b[2]) = b
         impossible a != b
 
 thm distance_sq_law_of_cosines:
@@ -256,9 +255,8 @@ thm sas_third_side_lemma:
     by thm distance_sq_law_of_cosines(u, v, w)
     by thm distance_sq_symmetric(r, p)
     by thm distance_sq_symmetric(w, u)
-    $zero::are_segments_congruent(r, p, w, u)
-    by def:
-        ? $zero::are_segments_congruent(r, p, w, u)
+    zero::distance_sq(r, p) = zero::distance_sq(p, r) = zero::distance_sq(p, q) + zero::distance_sq(q, r) - 2 * zero::dot(zero::vec(q, p), zero::vec(q, r)) = zero::distance_sq(u, v) + zero::distance_sq(v, w) - 2 * zero::dot(zero::vec(v, u), zero::vec(v, w)) = zero::distance_sq(u, w) = zero::distance_sq(w, u)
+    by def $zero::are_segments_congruent(r, p, w, u)
 
 # Euclid I.4: side-angle-side congruence.
 thm euclid_book1_proposition_4:

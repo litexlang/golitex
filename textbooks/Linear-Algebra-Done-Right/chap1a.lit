@@ -141,6 +141,14 @@ claim:
 by thm struct_member((0, 1, real_add, real_neg, real_mul, real_inv), &ScalarSystem<R>)
 have real_scalars &ScalarSystem<R> = (0, 1, real_add, real_neg, real_mul, real_inv)
 
+# Export the declaration-owned real adapter value for later chapters. A `have`
+# definition is local implementation detail across module boundaries; callers
+# should cite this checked bridge instead of relying on implicit record unfolding.
+thm real_scalar_adapter_value:
+    ? forall:
+        real_scalars = (0, 1, real_add, real_neg, real_mul, real_inv)
+    real_scalars = (0, 1, real_add, real_neg, real_mul, real_inv)
+
 claim:
     ? forall x C:
         x != 0
@@ -187,19 +195,28 @@ claim:
 by thm struct_member((0, 1, complex_scalar_add, complex_scalar_neg, complex_scalar_mul, complex_scalar_inv), &ScalarSystem<C>)
 have complex_scalars &ScalarSystem<C> = (0, 1, complex_scalar_add, complex_scalar_neg, complex_scalar_mul, complex_scalar_inv)
 
+thm complex_scalar_adapter_value:
+    ? forall:
+        complex_scalars = (0, 1, complex_scalar_add, complex_scalar_neg, complex_scalar_mul, complex_scalar_inv)
+    complex_scalars = (0, 1, complex_scalar_add, complex_scalar_neg, complex_scalar_mul, complex_scalar_inv)
+
 # The adapter fields compute exactly as builtin complex arithmetic. This named
 # bridge prevents later generic structures from reopening the adapter body.
 thm complex_scalar_adapter_values:
     ? forall x, y C:
-        &ScalarSystem<C>{complex_scalars}.one = 1
-        &ScalarSystem<C>{complex_scalars}.add(x, y) = x + y
-        &ScalarSystem<C>{complex_scalars}.mul(x, y) = x * y
+        complex_scalars.zero = 0
+        complex_scalars.one = 1
+        complex_scalars.add = complex_scalar_add
+        complex_scalars.mul = complex_scalar_mul
+        complex_scalars.add(x, y) = x + y
+        complex_scalars.mul(x, y) = x * y
     complex_scalars = (0, 1, complex_scalar_add, complex_scalar_neg, complex_scalar_mul, complex_scalar_inv)
-    &ScalarSystem<C>{complex_scalars}.one = 1
-    &ScalarSystem<C>{complex_scalars}.add = complex_scalar_add
-    &ScalarSystem<C>{complex_scalars}.mul = complex_scalar_mul
-    &ScalarSystem<C>{complex_scalars}.add(x, y) = complex_scalar_add(x, y) = x + y
-    &ScalarSystem<C>{complex_scalars}.mul(x, y) = complex_scalar_mul(x, y) = x * y
+    complex_scalars.zero = 0
+    complex_scalars.one = 1
+    complex_scalars.add = complex_scalar_add
+    complex_scalars.mul = complex_scalar_mul
+    complex_scalars.add(x, y) = complex_scalar_add(x, y) = x + y
+    complex_scalars.mul(x, y) = complex_scalar_mul(x, y) = x * y
 
 # Equal scalar-system records have equal callable operation fields. Explicit
 # tuple projections expose the congruence once, so callers can reuse it without
@@ -276,8 +293,7 @@ thm finite_list_equal_implies_same_entries:
         x.entries = x[2]
         y.entries = y[2]
         x.entries = y.entries
-    by def:
-        ? $have_same_finite_list_entries(s, n, x, y)
+    by def $have_same_finite_list_entries(s, n, x, y)
 
 thm finite_list_extensionality:
     ? forall s set, n N, x, y &FiniteList<s, n>:
@@ -291,11 +307,9 @@ thm finite_list_extensionality:
             idx <= n
             =>:
                 left_entries(idx) = right_entries(idx)
-        by def:
-            ? $have_same_finite_list_entries(s, n, x, y)
+        by def $have_same_finite_list_entries(s, n, x, y)
         left_entries(idx) = x.entries(idx) = y.entries(idx) = right_entries(idx)
-    by def:
-        ? $fn_eq(left_entries, right_entries)
+    by def $fn_eq(left_entries, right_entries)
     left_entries = right_entries
     x.entries = left_entries = right_entries = y.entries
     x[1] = x.length = n = y.length = y[1]
@@ -368,8 +382,7 @@ thm coordinate_add_commutative:
         left(idx) = scalars.add(x(idx), y(idx))
         scalars.add(x(idx), y(idx)) = scalars.add(y(idx), x(idx))
         scalars.add(y(idx), x(idx)) = right(idx)
-    by def:
-        ? $fn_eq(left, right)
+    by def $fn_eq(left, right)
     left = right
 # Notation 1.15. The zero vector is the constant coordinate list whose value
 # is the scalar zero selected by the ScalarSystem instance.

@@ -182,8 +182,7 @@ sketch:
             forall x R:
                 -1 <= -1 + (x - 1)^2 = x^2 - 2 * x
                 -1 <= x^2 - 2 * x
-            by def:
-                ? $lower_bound_for_parabola(-1)
+            by def $lower_bound_for_parabola(-1)
 
 # Inside the `witness` block (witness block is used to prove an existence
 # statement), the line `forall x R:` proves the universal definition body. The
@@ -220,8 +219,7 @@ sketch:
                 (x + y)^2 <= 3^2
                 abs(x + y) <= abs(3)
                 -3 <= x + y
-            by def:
-                ? $lower_bound_on_disk(-3)
+            by def $lower_bound_on_disk(-3)
 
 # The calculation shows `(x + y)^2 <= 3^2`. The known fact about squares then
 # turns that into `x + y >= -3`. This is a typical Litex pattern: write the
@@ -270,8 +268,7 @@ sketch:
                 n >= 5
                 =>:
                     n^3 >= 4 * n^2 + 7
-            by def:
-                ? $cubic_eventually_large(5)
+            by def $cubic_eventually_large(5)
 
 # The proof supplies `M = 5`. The `proof_debt` block records the estimate needed after
 # the threshold is chosen.
@@ -295,10 +292,8 @@ sketch:
         ? forall n range(2, 2):
             2 % n != 0
 
-    by def:
-        ? $prime_by_trial_division(2)
-    by def:
-        ? $prime(2)
+    by def $prime_by_trial_division(2)
+    by def $prime(2)
 
 # 4.2 “If and Only If”
 
@@ -506,8 +501,7 @@ sketch:
         obtain y from exist y Z st {b - c = n * y}
         witness $mod_eq(a, c, n) from x + y:
             a - c = (a - b) + (b - c) = n * x + n * y = n * (x + y)
-        by def:
-            ? $mod_eq_trans(a, b, c, n)
+        by def $mod_eq_trans(a, b, c, n)
 
     claim:
         ? forall a, b, c, d, n Z:
@@ -584,8 +578,7 @@ sketch:
             0 <= 4
             4 < 5
             14 % 5 = 4
-            by def:
-                ? $remainder_property(4)
+            by def $remainder_property(4)
 
     claim:
         ? forall r Z:

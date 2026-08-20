@@ -419,12 +419,11 @@ thm probability_of_two_event_sequence:
 
 # Induction transports pointwise equality through every finite partial sum.
 thm pointwise_equal_sequences_have_equal_partial_sums:
-    ? forall a, b seq(R):
+    ? forall a, b seq(R), k N:
         forall n N+:
             a(n) = b(n)
         =>:
-            forall k N:
-                partial_sum(a, k) = partial_sum(b, k)
+            partial_sum(a, k) = partial_sum(b, k)
     by induc k from 0:
         ? partial_sum(a, k) = partial_sum(b, k)
         ? from k = 0:

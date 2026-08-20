@@ -8,7 +8,7 @@ classic examples.
 
 ```text
 1 middle-school mathematics
-  -> 2 Euclidean geometry
+  -> 2 sets, functions, and relations
   -> 3 number theory
   -> 4 discrete mathematics
   -> 5 linear algebra
@@ -21,6 +21,7 @@ classic examples.
   -> 12 ordinary differential equations
   -> 13 numerical analysis
   -> 14 Tarski geometry from axioms
+  -> 15 generic small categories plus two finite instances encoded inside set theory
   -> 16 probability theory from the Kolmogorov axioms
 ```
 
@@ -34,6 +35,8 @@ The arrows mean suggested reading order only. Shared interfaces should move to
 - Prefer relations and named settings for theorem-facing assumptions.
 - Use a struct only when a mathematical structure must be a first-class value.
 - Keep existence relational until uniqueness justifies a selector.
+- Use dependent function carriers when a selected value must land in a set
+  determined by earlier arguments, as in category identities and composition.
 - Make every denominator, domain restriction, and trust boundary visible.
 - Put proof iteration under `.drafts/proof_journals/`, never beside published
   artifacts.

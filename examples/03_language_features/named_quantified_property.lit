@@ -37,13 +37,11 @@ claim:
     $is_choice_function_for(I, S, g, f)
 
 claim:
-    ? forall f fn(f_index I)big_union(S):
+    ? forall f fn(f_index I)big_union(S), alpha I:
         $is_choice_function_for(I, S, g, f)
         =>:
-            forall alpha I:
-                f(alpha) $in g(alpha)
-    forall selected_index I:
-        f(selected_index) $in g(selected_index)
+            f(alpha) $in g(alpha)
+    f(alpha) $in g(alpha)
 
 claim:
     ? forall f fn(f_index I)big_union(S):

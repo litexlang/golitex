@@ -81,6 +81,27 @@ impl Runtime {
                         &mut verification.assumption_infers,
                     )?;
                 }
+                SuccessStmtResult::DefObjStmt(SuccessDefObjStmtResult::HaveSeqStmt(result))
+                    if result.verification.is_some() =>
+                {
+                    self.attach_known_fact_ids_to_infer_result(
+                        &mut result.verification.as_mut().unwrap().assumption_infers,
+                    )?;
+                }
+                SuccessStmtResult::DefObjStmt(SuccessDefObjStmtResult::HaveFiniteSeqStmt(
+                    result,
+                )) if result.verification.is_some() => {
+                    self.attach_known_fact_ids_to_infer_result(
+                        &mut result.verification.as_mut().unwrap().assumption_infers,
+                    )?;
+                }
+                SuccessStmtResult::DefObjStmt(SuccessDefObjStmtResult::HaveMatrixStmt(result))
+                    if result.verification.is_some() =>
+                {
+                    self.attach_known_fact_ids_to_infer_result(
+                        &mut result.verification.as_mut().unwrap().assumption_infers,
+                    )?;
+                }
                 _ => {}
             }
         }

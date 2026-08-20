@@ -379,8 +379,7 @@ claim:
         t $in {x Q: x < 10}
     by thm set_builder_member(t, {x Q: x < 10})
 
-by def:
-    ? {1, 3, 6} $subset {x Q: x < 10}
+by def {1, 3, 6} $subset {x Q: x < 10}
 
 # Lean Example as comparison:
 
@@ -563,8 +562,7 @@ claim:
 
     by thm set_builder_member(3, {a Q: 0 < a})
 
-by def:
-    ? intersect({-2, 3}, {y Q: y^2 = 9}) $subset {a Q: 0 < a}
+by def intersect({-2, 3}, {y Q: y^2 = 9}) $subset {a Q: 0 < a}
 
 # This is the standard intersection-subset proof: use one side of the
 # intersection to get a short list of candidates, and use the other side to
@@ -682,8 +680,7 @@ claim:
     by enumerate finite_set:
         ? forall x {}:
             x $in s
-    by def:
-        ? {} $subset s
+    by def {} $subset s
 
 # Now we prove that the intersection of two sets of numbers that are congruent to 1 and 2 modulo 5 is the empty set.
 
@@ -1030,8 +1027,7 @@ sketch:
                 y $in a
                 y $in b
 
-    by def:
-        ? $injective_from_power_set_Z_to_power_set_Z(q)
+    by def $injective_from_power_set_Z_to_power_set_Z(q)
 
 # The predicate `injective_from_power_set_Z_to_power_set_Z` says exactly what
 # injective means for functions from `power_set(Z)` to `power_set(Z)`: if two

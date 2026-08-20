@@ -151,8 +151,7 @@ claim:
                             =>:
                                 (n + 1) % b != 0
                         2 <= n + 1
-                        by def:
-                            ? $prime(n + 1)
+                        by def $prime(n + 1)
                         impossible $prime(n+1)
 
                     obtain c from exist b N+ st {2 <= b < n+1, not (n + 1) % b != 0}
@@ -399,8 +398,7 @@ sketch:
         by cases:
             ? $citation::divides(p, a) or $citation::divides(p, b)
             case gcd(a, p) = 1:
-                by def:
-                    ? $gcd_eq_one(a, p)
+                by def $gcd_eq_one(a, p)
                 by thm bezout_of_coprime(a, p)
                 obtain u, v from exist u Z, v Z st {1 = u * a + v * p}
                 obtain z from exist z Z st {a * b = p * z}
@@ -436,8 +434,7 @@ sketch:
 
                 a ^ k = a ^ 1 = a
 
-            by def:
-                ? $euclid_lemma_pow_at(k)
+            by def $euclid_lemma_pow_at(k)
 
         ? induc:
             claim:
@@ -460,8 +457,7 @@ sketch:
                     case $citation::divides(p, a):
                         $citation::divides(p, a)
 
-            by def:
-                ? $euclid_lemma_pow_at(k + 1)
+            by def $euclid_lemma_pow_at(k + 1)
 
     claim:
         ? forall a, k N, p N+:
@@ -522,8 +518,7 @@ sketch:
                 by contra:
                     ? k % a = 0
                     k % a != 0
-                    by def:
-                        ? $gcd_eq_one(k, a)
+                    by def $gcd_eq_one(k, a)
                     by thm bezout_of_coprime(k, a)
                     obtain x, y from exist x Z, y Z st {1 = x * k + y * a}
                     quot(k^2, a) $in Z
@@ -555,8 +550,7 @@ sketch:
         by for:
             ? forall d range(2, 2):
                 2 % d != 0
-        by def:
-            ? $prime(2)
+        by def $prime(2)
 
     by contra:
         ? not 2^(1/2) $in Q

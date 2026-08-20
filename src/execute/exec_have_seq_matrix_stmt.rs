@@ -9,16 +9,18 @@ impl Runtime {
     pub fn exec_have_seq_stmt(&mut self, stmt: &HaveSeqStmt) -> Result<StmtResult, RuntimeError> {
         let anonymous_fn = build_have_seq_anonymous_fn(self, stmt)
             .map_err(|e| short_exec_error(stmt.clone().into(), String::new(), Some(e), vec![]))?;
-        let shape = self.exec_have_indexed_fn_definition_verify_well_definedness(
-            stmt.clone().into(),
-            stmt.name(),
-            &stmt.symbol_binding,
-            &stmt.seq_set.clone().into(),
-            anonymous_fn,
-        )?;
+        let (shape, well_definedness) = self
+            .exec_have_indexed_fn_definition_verify_well_definedness(
+                stmt.clone().into(),
+                stmt.name(),
+                &stmt.symbol_binding,
+                &stmt.seq_set.clone().into(),
+                anonymous_fn,
+            )?;
         let verification = self.exec_have_indexed_fn_definition_verify_process(
             stmt.clone().into(),
             &shape.anonymous_fn,
+            well_definedness,
             HaveSeqStmt::store_reason(),
             stmt.line_file.clone(),
             vec![],
@@ -75,13 +77,14 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         let anonymous_fn = build_have_finite_seq_anonymous_fn(self, stmt)
             .map_err(|e| short_exec_error(stmt.clone().into(), String::new(), Some(e), vec![]))?;
-        let shape = self.exec_have_indexed_fn_definition_verify_well_definedness(
-            stmt.clone().into(),
-            stmt.name(),
-            &stmt.symbol_binding,
-            &stmt.finite_seq_set.clone().into(),
-            anonymous_fn,
-        )?;
+        let (shape, well_definedness) = self
+            .exec_have_indexed_fn_definition_verify_well_definedness(
+                stmt.clone().into(),
+                stmt.name(),
+                &stmt.symbol_binding,
+                &stmt.finite_seq_set.clone().into(),
+                anonymous_fn,
+            )?;
         let mut process_results = Vec::new();
         process_results.extend(self.verify_have_indexed_fn_bound(
             stmt.clone().into(),
@@ -93,6 +96,7 @@ impl Runtime {
         let verification = self.exec_have_indexed_fn_definition_verify_process(
             stmt.clone().into(),
             &shape.anonymous_fn,
+            well_definedness,
             HaveFiniteSeqStmt::store_reason(),
             stmt.line_file.clone(),
             process_results,
@@ -149,13 +153,14 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         let anonymous_fn = build_have_matrix_anonymous_fn(self, stmt)
             .map_err(|e| short_exec_error(stmt.clone().into(), String::new(), Some(e), vec![]))?;
-        let shape = self.exec_have_indexed_fn_definition_verify_well_definedness(
-            stmt.clone().into(),
-            stmt.name(),
-            &stmt.symbol_binding,
-            &stmt.matrix_set.clone().into(),
-            anonymous_fn,
-        )?;
+        let (shape, well_definedness) = self
+            .exec_have_indexed_fn_definition_verify_well_definedness(
+                stmt.clone().into(),
+                stmt.name(),
+                &stmt.symbol_binding,
+                &stmt.matrix_set.clone().into(),
+                anonymous_fn,
+            )?;
         let mut process_results = Vec::new();
         process_results.extend(self.verify_have_indexed_fn_bound(
             stmt.clone().into(),
@@ -174,6 +179,7 @@ impl Runtime {
         let verification = self.exec_have_indexed_fn_definition_verify_process(
             stmt.clone().into(),
             &shape.anonymous_fn,
+            well_definedness,
             HaveMatrixStmt::store_reason(),
             stmt.line_file.clone(),
             process_results,
@@ -234,22 +240,31 @@ impl Runtime {
         binding: &SymbolBinding,
         surface_set: &Obj,
         anonymous_fn: AnonymousFn,
-    ) -> Result<HaveIndexedFnDefinitionShape, RuntimeError> {
+    ) -> Result<
+        (
+            HaveIndexedFnDefinitionShape,
+            SuccessVerifyIndexedFunctionDefinitionWellDefinedResult,
+        ),
+        RuntimeError,
+    > {
         let fn_set = FnSet::from_body(anonymous_fn.body.clone())
             .map_err(|e| short_exec_error(stmt.clone(), String::new(), Some(e), vec![]))?;
 
         self.verify_have_indexed_fn_name_available(stmt.clone(), binding)?;
-        self.verify_have_indexed_fn_definition_well_defined(
+        let well_definedness = self.verify_have_indexed_fn_definition_well_defined(
             stmt.clone(),
             &anonymous_fn,
             surface_set,
             &fn_set,
         )?;
 
-        Ok(HaveIndexedFnDefinitionShape {
-            anonymous_fn,
-            fn_set,
-        })
+        Ok((
+            HaveIndexedFnDefinitionShape {
+                anonymous_fn,
+                fn_set,
+            },
+            well_definedness,
+        ))
     }
 
     fn have_indexed_fn_definition_shape_trusted(
@@ -269,19 +284,23 @@ impl Runtime {
         &mut self,
         stmt: Stmt,
         anonymous_fn: &AnonymousFn,
+        well_definedness: SuccessVerifyIndexedFunctionDefinitionWellDefinedResult,
         store_reason: &'static str,
         line_file: LineFile,
         bound_checks: Vec<StmtResult>,
     ) -> Result<SuccessVerifyIndexedFunctionDefinitionResult, RuntimeError> {
-        let ret_set_result = self.verify_have_indexed_fn_definition_return_value(
-            stmt,
-            anonymous_fn,
-            store_reason,
-            line_file,
-        )?;
+        let (return_check, assumption_infers) = self
+            .verify_have_indexed_fn_definition_return_value(
+                stmt,
+                anonymous_fn,
+                store_reason,
+                line_file,
+            )?;
         Ok(SuccessVerifyIndexedFunctionDefinitionResult {
+            well_definedness,
             bound_checks,
-            return_check: Box::new(ret_set_result),
+            assumption_infers,
+            return_check: Box::new(return_check),
         })
     }
 
@@ -359,7 +378,7 @@ impl Runtime {
         anonymous_fn: &AnonymousFn,
         surface_set: &Obj,
         fn_set: &FnSet,
-    ) -> Result<(), RuntimeError> {
+    ) -> Result<SuccessVerifyIndexedFunctionDefinitionWellDefinedResult, RuntimeError> {
         self.run_in_local_env(|rt| {
             rt.verify_have_indexed_fn_definition_well_defined_body(
                 stmt,
@@ -379,15 +398,22 @@ impl Runtime {
         anonymous_fn: &AnonymousFn,
         surface_set: &Obj,
         fn_set: &FnSet,
-    ) -> Result<(), RuntimeError> {
+    ) -> Result<SuccessVerifyIndexedFunctionDefinitionWellDefinedResult, RuntimeError> {
         let verify_state = UseContextVerifyState::new(0, false);
-        self.verify_obj_well_defined_and_store_cache(surface_set, &verify_state)
+        let surface_set = self
+            .verify_obj_well_defined_result(surface_set, &verify_state)
             .map_err(|e| short_exec_error(stmt.clone(), String::new(), Some(e), vec![]))?;
-        self.verify_obj_well_defined_and_store_cache(&anonymous_fn.clone().into(), &verify_state)
+        let anonymous_function = self
+            .verify_obj_well_defined_result(&anonymous_fn.clone().into(), &verify_state)
             .map_err(|e| short_exec_error(stmt.clone(), String::new(), Some(e), vec![]))?;
-        self.verify_obj_well_defined_and_store_cache(&fn_set.clone().into(), &verify_state)
+        let function_set = self
+            .verify_obj_well_defined_result(&fn_set.clone().into(), &verify_state)
             .map_err(|e| short_exec_error(stmt.clone(), String::new(), Some(e), vec![]))?;
-        Ok(())
+        Ok(SuccessVerifyIndexedFunctionDefinitionWellDefinedResult {
+            surface_set,
+            anonymous_function,
+            function_set,
+        })
     }
 
     fn verify_have_indexed_fn_definition_return_value(
@@ -396,16 +422,23 @@ impl Runtime {
         anonymous_fn: &AnonymousFn,
         store_reason: &'static str,
         line_file: LineFile,
-    ) -> Result<StmtResult, RuntimeError> {
-        let verify_result = self
+    ) -> Result<(StmtResult, SuccessInferResult), RuntimeError> {
+        let (verify_result, assumption_infers) = self
             .run_in_local_env(|rt| {
+                let mut assumption_infers = SuccessInferResult::new();
                 for param_def_with_set in anonymous_fn.body.params_def_with_set.iter() {
-                    rt.define_params_with_set(param_def_with_set)?;
+                    let param_infers = rt.define_params_with_set(param_def_with_set)?;
+                    assumption_infers.new_infer_result_inside(param_infers);
                 }
                 for dom_fact in anonymous_fn.body.dom_facts.iter() {
-                    let _ = rt.store_quantifier_free_fact_without_well_defined_verified_and_infer(
-                        dom_fact.clone(),
-                    )?;
+                    let mut dom_infers = rt
+                        .store_quantifier_free_fact_without_well_defined_verified_and_infer(
+                            dom_fact.clone(),
+                        )?;
+                    dom_infers.relabel_all_added_facts_with_store_reason(
+                        ForallFact::premise_store_reason(),
+                    );
+                    assumption_infers.new_infer_result_inside(dom_infers);
                 }
                 let value_membership: AtomicFact = InFact::new(
                     (*anonymous_fn.equal_to).clone(),
@@ -413,7 +446,11 @@ impl Runtime {
                     line_file,
                 )
                 .into();
-                rt.verify_atomic_fact(&value_membership, &UseContextVerifyState::new(0, false))
+                let mut return_check = rt
+                    .verify_atomic_fact(&value_membership, &UseContextVerifyState::new(0, false))?;
+                rt.attach_known_fact_ids_to_infer_result(&mut assumption_infers)?;
+                rt.attach_known_fact_ids_to_stmt_result(&mut return_check)?;
+                Ok((return_check, assumption_infers))
             })
             .map_err(|e| short_exec_error(stmt.clone(), String::new(), Some(e), vec![]))?;
         if verify_result.is_unknown() {
@@ -427,7 +464,7 @@ impl Runtime {
                 vec![verify_result],
             ));
         }
-        Ok(verify_result)
+        Ok((verify_result, assumption_infers))
     }
 
     fn verify_have_indexed_fn_bound(

@@ -403,7 +403,7 @@ fn setting_reports_unknown_collision_order_and_duplicate_errors() {
             "arguments must be bare binder names",
         ),
         (
-            "setting S(X nonempty_set, x X)\nforall Outer nonempty_set:\n    forall [S(Outer, inner)]:\n        inner = inner",
+            "setting S(X nonempty_set, x X)\nforall Outer nonempty_set:\n    forall [S(Outer, inner)]:\n        inner = inner\n    =>:\n        1 = 1",
             "already active",
         ),
         (

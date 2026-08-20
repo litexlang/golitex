@@ -3,6 +3,9 @@
 # Litex source:
 # Canonical module: scripts/linear_algebra_done_right/textbook
 #
+# Current runnable layer: Introduction and Chapters 1A--1B. Chapter 1C and all
+# later chapters are preserved in the source workspace's todo_textbook_chapters/.
+#
 # This project is an ongoing Litex formalization inspired by the fourth edition
 # of Sheldon Axler's Linear Algebra Done Right. The current draft has
 # source-ordered files for Chapters 1 through 9, from vector spaces and linear

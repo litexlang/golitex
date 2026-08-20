@@ -1,13 +1,14 @@
 # Math Concepts in Litex
 
-This collection contains fifteen independent, executable showcases ordered as
-a reader path from school mathematics to early undergraduate numerical work.
+This collection contains sixteen independent, executable showcases ordered as
+a reader path from school mathematics to foundational and early undergraduate
+topics.
 The numeric prefixes are editorial order only: the projects do not import one
 another.
 
 Every directory publishes the same five artifacts:
 
-- `main.lit`: a checked, setting-first mathematical spine;
+- `main.lit`: a checked mathematical spine;
 - `litex.config`: the standalone module entry;
 - `README.md`: scope, run command, and trust boundary;
 - `math_collections.md`: the concept/interface inventory; and
@@ -29,6 +30,7 @@ Every directory publishes the same five artifacts:
 | 12 | `12_ordinary_differential_equations_in_nutshell` | quadratic family and the IVP `y' = 2x, y(0)=1` |
 | 13 | `13_numerical_analysis_in_nutshell` | Newton iteration with a proved gap bound |
 | 14 | `14_tarski_geometry_from_axioms` | GeoCoq-aligned SST Chapters 2–11, Euclid I.5, and exact angle-based SAS |
+| 15 | `15_category_theory_in_set_theory` | a generic set-coded small-category signature plus checked terminal and two-object chaotic instances |
 | 16 | `16_probability_theory` | sigma-algebras, Kolmogorov countable additivity, random variables, and distributions |
 
 Run any project from the repository root:

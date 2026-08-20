@@ -124,7 +124,17 @@ pub(super) struct NamedFunctionDefinitionBinding {
     pub(super) uses_native_real_body: bool,
     pub(super) parameter_premises: Vec<LitexToLeanLocalPremiseIr>,
     pub(super) domain_premises: Vec<LitexToLeanLocalPremiseIr>,
+    /// Only non-native return carriers need the old representative-selection
+    /// recipe. Native real functions are constructed directly from the
+    /// recursive return-check Result and deliberately retain no duplicate
+    /// mirrored statement/fact compiler representation here.
+    pub(super) compatibility_return_selection:
+        Option<CompatibilityNamedFunctionReturnSelectionBinding>,
+    pub(super) well_definedness: LitexToLeanWellDefinednessCertificateIr,
+}
+
+#[derive(Clone)]
+pub(super) struct CompatibilityNamedFunctionReturnSelectionBinding {
     pub(super) inferred_premises: Vec<LitexToLeanFactIr>,
     pub(super) return_check: LitexToLeanFactIr,
-    pub(super) well_definedness: LitexToLeanWellDefinednessCertificateIr,
 }

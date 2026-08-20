@@ -8,7 +8,8 @@
 This directory is the canonical Litex module for *The Mechanics of Litex
 Proof*. Its workspace is registered in `scripts/.textbooks`. The ordered
 exports in [`litex.config`](litex.config) load the preface, shared citation
-surface, and Chapters 0--10; no second draft or publication tree is maintained.
+surface, Chapters 0--10, and the executable todo boundary; no second draft or
+publication tree is maintained.
 
 Build and verify the complete module with the release binary:
 
@@ -23,11 +24,11 @@ For an individual registered chapter, use:
 target/release/litex -compact -runner -f scripts/The-Mechanics-of-Litex-Proof/textbook/chapter09-sets.lit
 ```
 
-As of 2026-08-01, Chapters 0--10 pass the complete release project gate. The
-executable module contains no `trust`, `axiom`, or `abstract_prop` statement.
-The project still imports `std/basics`; the ordinary non-strict project runner
-reports that configured imports and earlier exports are loaded through its
-trusted-prefix mode.
+As of 2026-08-17, every registered `.lit` file passes `-f`, and the complete
+module passes the strict release project gate. The executable module contains
+no `trust`, `axiom`, or `abstract_prop` statement. It does not import
+`std/basics`: kernel builtins provide the primitive arithmetic interface, while
+book-specific reusable facts are defined in `citation.lit` and cited explicitly.
 
 ## Proof boundary used by the book
 

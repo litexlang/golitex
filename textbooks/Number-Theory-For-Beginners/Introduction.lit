@@ -3,6 +3,9 @@
 # Litex source:
 # Canonical module: scripts/number_theory_for_beginners/textbook
 #
+# Current runnable layer: this introduction only. All mathematical sections
+# are preserved in the source workspace's todo_textbook_chapters/.
+#
 # This project is an ongoing Litex formalization inspired by Andre Weil and
 # Maxwell Rosenlicht's Number Theory for Beginners. It follows the
 # non-exercise mathematical development of the book through its thirteen

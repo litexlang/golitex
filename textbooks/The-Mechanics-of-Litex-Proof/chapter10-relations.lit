@@ -55,8 +55,7 @@ sketch:
         ? forall x set:
             $rel(x, x)
         x = x
-        by def:
-            ? $rel(x, x)
+        by def $rel(x, x)
 
     by symmetric_prop:
         ? forall x, y set:
@@ -65,8 +64,7 @@ sketch:
                 $rel(y, x)
         x = y
         y = x
-        by def:
-            ? $rel(y, x)
+        by def $rel(y, x)
 
     by transitive_prop:
         ? forall x, y, z set:
@@ -75,8 +73,7 @@ sketch:
             =>:
                 $rel(x, z)
         x = y = z
-        by def:
-            ? $rel(x, z)
+        by def $rel(x, z)
 
     by antisymmetric_prop:
         ? forall x, y set:
@@ -259,28 +256,24 @@ sketch:
             =>:
                 $gap_square_less_than_one(y, x)
         (x - y)^ 2 = (y - x)^2 < 1
-        by def:
-            ? $gap_square_less_than_one(y, x)
+        by def $gap_square_less_than_one(y, x)
 
     # Reflexive
     claim:
         ? forall x R:
             $gap_square_less_than_one(x, x)
         (x - x)^2 = 0 < 1
-        by def:
-            ? $gap_square_less_than_one(x, x)
+        by def $gap_square_less_than_one(x, x)
 
     # Not Antisymmetric
     (1.5 - 1)^2 = (1 - 1.5)^2 = 0.25 < 1
-    by def:
-        ? $gap_square_less_than_one(1, 1.5)
+    by def $gap_square_less_than_one(1, 1.5)
     $gap_square_less_than_one(1.5, 1)
     1.5 != 1
 
     # Not Transitive
     $gap_square_less_than_one(1, 1.5)
-    by def:
-        ? $gap_square_less_than_one(1.5, 2)
+    by def $gap_square_less_than_one(1.5, 2)
     not (2 - 1)^2 < 1
 
 # 10.1.4 Rock-paper-scissors
@@ -394,8 +387,7 @@ sketch:
         ? forall x Z:
             $square_eq(x, x)
         x^2 = x^2
-        by def:
-            ? $square_eq(x, x)
+        by def $square_eq(x, x)
 
     claim:
         ? forall x, y Z:
@@ -404,8 +396,7 @@ sketch:
                 $square_eq(y, x)
         x^2 = y^2
         y^2 = x^2
-        by def:
-            ? $square_eq(y, x)
+        by def $square_eq(y, x)
 
     claim:
         ? forall x, y, z Z:
@@ -416,8 +407,7 @@ sketch:
         x^2 = y^2
         y^2 = z^2
         x^2 = z^2
-        by def:
-            ? $square_eq(x, z)
+        by def $square_eq(x, z)
 
 # 10.2.3 Equivalence classes
 
@@ -513,8 +503,7 @@ sketch:
         ? forall p cart(Z, N):
             $rational_pair_eq(p, p)
         p[1] * (p[2] + 1) = p[1] * (p[2] + 1)
-        by def:
-            ? $rational_pair_eq(p, p)
+        by def $rational_pair_eq(p, p)
 
     claim:
         ? forall p, q cart(Z, N):
@@ -523,8 +512,7 @@ sketch:
                 $rational_pair_eq(q, p)
         p[1] * (q[2] + 1) = q[1] * (p[2] + 1)
         q[1] * (p[2] + 1) = p[1] * (q[2] + 1)
-        by def:
-            ? $rational_pair_eq(q, p)
+        by def $rational_pair_eq(q, p)
 
     claim:
         ? forall p, q, r cart(Z, N):
@@ -536,8 +524,7 @@ sketch:
         q[2] + 1 > 0
         q[2] + 1 != 0
         p[1] * (r[2] + 1) = ((q[2] + 1) * (p[1] * (r[2] + 1))) / (q[2] + 1) = ((q[2] + 1) * (r[1] * (p[2] + 1))) / (q[2] + 1) = r[1] * (p[2] + 1)
-        by def:
-            ? $rational_pair_eq(p, r)
+        by def $rational_pair_eq(p, r)
 
 # 10.2.6 Bijection between sets
 
@@ -621,8 +608,7 @@ sketch:
             g(f(x)) = x
         forall y B:
             y = f(g(y))
-        by def:
-            ? $is_inverse_of_fn(A, B, f, g)
+        by def $is_inverse_of_fn(A, B, f, g)
         witness exist g1 fn(x B) A st {$is_inverse_of_fn(A, B, f, g1)} from g
 
     # The relation "there exists a bijection between the two sets" is an
@@ -645,12 +631,9 @@ sketch:
             ? forall y S:
                 exist x S st {y = id(x)}
             witness exist x S st {y = id(x)} from y
-        by def:
-            ? $injective_fn(S, S, id)
-        by def:
-            ? $surjective_fn(S, S, id)
-        by def:
-            ? $bijective_fn(S, S, id)
+        by def $injective_fn(S, S, id)
+        by def $surjective_fn(S, S, id)
+        by def $bijective_fn(S, S, id)
         witness $exist_bijection(S, S) from id
 
     # Symmetric: if f is a bijection from S to T, then its inverse is a bijection
@@ -670,18 +653,15 @@ sketch:
                 =>:
                     y1 = y2
             y1 = f(g(y1)) = f(g(y2)) = y2
-        by def:
-            ? $injective_fn(T, S, g)
+        by def $injective_fn(T, S, g)
 
         claim:
             ? forall x S:
                 exist y T st {x = g(y)}
             witness exist y T st {x = g(y)} from f(x)
-        by def:
-            ? $surjective_fn(T, S, g)
+        by def $surjective_fn(T, S, g)
 
-        by def:
-            ? $bijective_fn(T, S, g)
+        by def $bijective_fn(T, S, g)
         witness $exist_bijection(T, S) from g
 
     # Transitive: compose two bijections.
@@ -709,8 +689,7 @@ sketch:
                     x1 = x2
             g(f(x1)) = h(x1) = h(x2) = g(f(x2))
             f(x1) = f(x2)
-        by def:
-            ? $injective_fn(S, U, h)
+        by def $injective_fn(S, U, h)
 
         claim:
             ? forall z U:
@@ -719,11 +698,9 @@ sketch:
             obtain x from exist x S st {y = f(x)}
             witness exist source_input S st {z = h(source_input)} from x:
                 z = g(y) = g(f(x)) = h(x)
-        by def:
-            ? $surjective_fn(S, U, h)
+        by def $surjective_fn(S, U, h)
 
-        by def:
-            ? $bijective_fn(S, U, h)
+        by def $bijective_fn(S, U, h)
         witness $exist_bijection(S, U) from h
 
 # Summary

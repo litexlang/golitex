@@ -1,24 +1,39 @@
 [book]
 Analysis
-95%
-"Almost done, needs clean up. some concepts can be expressed in a better way, some verification process can be reduced"
+verified subset
+"Introduction, Chapters 1-4, and Appendix A; Chapters 5-11 are quarantined in the source workspace."
+
+[book]
+Analysis2
+verified entrypoint
+"Introduction only; every mathematical chapter is quarantined pending repair of Chapter 1 and the Chapter 4 timeout."
+
+[book]
+Euclidean-Geometry
+verified book
+"Book Zero, analytic laws, and the repaired Euclid I.1-I.4 chapter all pass the current release runner."
+
+[book]
+High-School-Mathematics
+verified foundation
+"The shared pi foundation only; the cite package and Chapters 1-20 are quarantined."
 
 [book]
 Linear-Algebra-Done-Right
-50%
-"Basic framework done, some concepts need extra thinkings, might require big refactoring"
+verified subset
+"Introduction and Chapters 1A-1B; Chapter 1C onward is quarantined with dependency evidence."
 
 [book]
 Mathematics-In-Lean-Derived-Litex-Corpus
-90%
-"Core explanation is done. There are many ways to improve litex code quality there"
+verified subset
+"Introduction and Chapters 1, 3, 5, 6, and 7, plus the verified structured-basics submodule."
 
 [book]
 Number-Theory-For-Beginners
-60%
-"Basic framework done, some concepts need extra thinkings, might require big refactoring"
+verified entrypoint
+"Introduction only; all mathematical sections and the finite-product toolkit are quarantined."
 
 [book]
 The-Mechanics-of-Litex-Proof
-99%
-"Can work as a mature textbook. welcome feedback"
+verified book
+"The complete published chapter module passes the current release runner."

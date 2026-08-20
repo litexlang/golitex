@@ -9,12 +9,13 @@ This module is the first analytic-model implementation of elementary
 Euclidean geometry in Litex. Points are coordinate pairs in `cart(R, R)`, and
 geometric objects are defined as concrete sets and functions over that plane.
 
-## One checked tracer: Euclid I.1
+## Runnable downstream tracer: Euclid I.1
 
 A domain language matters only if later mathematics can state and use geometry
-as geometry. The tracer for this module is Euclid I.1: given two distinct
-points, construct a third point that makes an equilateral triangle. Its public
-theorem is written in geometric vocabulary:
+as geometry. The downstream tracer is Euclid I.1: given two distinct points,
+construct a third point that makes an equilateral triangle. Its theorem is
+written in geometric vocabulary and is checked as part of the published Book I
+chapter:
 
 <!-- litex:skip-test -->
 
@@ -32,8 +33,8 @@ thm euclid_book1_proposition_1:
     witness exist c cart(R, R) st {$zero::is_equilateral_triangle(a, b, c)} from equilateral_vertex(a, b)
 ```
 
-This is an excerpt from the registered theorem in `book01_01_04.lit`, not a
-separate standalone demo. The reader-facing proof says which two segment
+This is an excerpt from `book01_01_04.lit`, not a separate standalone demo.
+The reader-facing proof says which two segment
 congruences establish the equilateral triangle and names the constructed
 witness. The coordinate expansion is isolated in
 `equilateral_vertex_distance_lemma`, which is checked in the same module. This
@@ -71,7 +72,7 @@ simple winner-versus-loser comparison:
 | --- | --- | --- |
 | Lean and mathlib | A mature general prover and broad analytic/affine Euclidean foundations | An olympiad-facing synthetic interface still has to be selected and organized for the task |
 | AlphaGeometry | A geometry-specific representation, construction language, and symbolic deduction engine | It is a specialized geometry prover rather than a general checked-mathematics authoring language |
-| This Litex module | Geometry vocabulary written as ordinary Litex definitions and theorems, backed here by a coordinate model | The current slice covers only Euclid I.1--I.4 and is not yet an olympiad geometry engine |
+| This Litex module | Geometry vocabulary written as ordinary Litex definitions and theorems, backed here by a coordinate model | The published slice contains the coordinate foundation, analytic metric laws, and runnable Euclid I.1--I.4 constructions |
 
 This comparison is important because it locates a stronger purpose for Litex
 than merely shortening tactic scripts. Mature general foundations do not by
@@ -94,8 +95,8 @@ durable theorem and proof remain reviewable in the vocabulary of geometry.
 ## What this module does not yet establish
 
 This first slice is evidence for a direction, not evidence that Litex already
-solves olympiad geometry. It currently uses an analytic coordinate model and
-checks only Euclid I.1--I.4. It does not yet provide a complete synthetic layer
+solves olympiad geometry. It checks the analytic coordinate model, metric
+laws, and Euclid I.1--I.4. It does not yet provide a complete synthetic layer
 for general intersections, directed angles, cyclic quadrilaterals, similar
 triangles, power of a point, transformations, or auxiliary-construction
 search. Litex's trusted base and review maturity also must not be presented as
@@ -109,11 +110,11 @@ analytic layer, add no problem-specific kernel rules, expose every remaining
 test whether the I.1 separation survives real geometry rather than merely
 whether coordinate algebra can prove four early propositions.
 
-The registered project contains three source files:
+The registered project currently contains three source files:
 
 - `book_zero.lit` for the coordinate plane and foundational vocabulary;
 - `analytic_laws.lit` for checked coordinate and metric laws;
-- `book01_01_04.lit` for Euclid's Book I, Propositions 1--4.
+- `book01_01_04.lit` for checked Euclid I.1--I.4 constructions.
 
 `book_zero.lit` exposes `points`, `vec`, `dot`, `det`, `distance_sq`, `line`,
 `is_line`, `lines`, `circle`, collinearity, and congruence predicates. It also
@@ -121,13 +122,8 @@ contains checked probes for carrier transport, the 3-4-5 distance, and line
 incidence.
 
 `analytic_laws.lit` proves the coordinate formula and nonnegativity of squared
-distance. `book01_01_04.lit` exposes explicit coordinate witnesses and named
-theorems `euclid_book1_proposition_1` through
-`euclid_book1_proposition_4`. All four propositions and their analytic support
-lemmas are checked without local `trust`: the equilateral apex uses a
-rotation-norm identity, the cut point uses square-root ratio bounds and affine
-distance scaling, and SAS uses the dot-determinant norm identity plus a
-coordinate law of cosines.
+distance. `book01_01_04.lit` builds on those laws and is part of this formal
+publication.
 
 Verified with:
 
