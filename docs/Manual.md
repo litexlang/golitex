@@ -2388,41 +2388,10 @@ The last fact is `unknown`; no known equality makes the second arguments match.
 
 ### Goal-shape routing
 
-Use this table before expanding a proof manually. It is organized by the fact
-you need next, rather than by parser keyword. The default search order is:
-reuse a known fact, try one direct builtin consequence, choose the matching
-native proof surface, cite an existing mathematical interface, and only then
-write a manual proof.
-
-First distinguish data from facts. If later code must cite a value, introduce
-it with `have`; if it must apply `f(x)`, use `have fn`; if it asserts
-`$P(x)`, define a `prop`; if it should visibly cite a stable mathematical
-result, use `thm`. `claim` is for a nearby derived fact, not a substitute for
-an object or reusable function. See [Bare facts and `have`](#bare-facts-and-have)
-and [Named interfaces](#named-interfaces-thm-axiom-and-by-thm) for their exact
-execution contracts.
-
-| Goal shape | Fact kind | Required known leaves | Supported direction | Try first | Nearest rejected or over-expanded shape | Executable evidence |
-|---|---|---|---|---|---|---|
-| An atomic arithmetic, carrier, membership, equality, or order consequence already supported by context | Direct fact / one-layer builtin | The exact operands, carrier facts, and any immediate premise required by that rule | Construct the requested atomic fact | State the fact directly | Adding a wrapper `claim` or `thm` around a fact the verifier already knows | [`fundamental_comparison_builtin_rules.lit`](../examples/02_builtin_math/fundamental_comparison_builtin_rules.lit) |
-| A positive concrete predicate call whose definition body is already proved | Definition introduction | The instantiated definition clauses and well-defined arguments | Body facts to named positive predicate | `by def $P(args)` | Bare `by def` on equality, a negative predicate goal, or the placeholder `by def:` form when no nested proof is needed | [`by_definition.lit`](../examples/01_proof_patterns/by_definition.lit), [`inline_by_definition.lit`](../examples/01_proof_patterns/inline_by_definition.lit) |
-| A result supplied by a named user theorem | Named mathematical interface | The theorem's domain requirements and arguments | Theorem premises to its stored conclusions, or to one selected atomic consequence | `by thm name(args)` or `by thm name(args) => fact` | Expecting a theorem call inside bare `forall` conclusion syntax, or selecting a compound target | [`by_theorem_selected_fact.lit`](../examples/01_proof_patterns/by_theorem_selected_fact.lit) |
-| A set-builder, tuple, Cartesian product, function-set, iterated-object, or canonical rational-fraction conclusion whose reserved interface has compound requirements | Explicit builtin theorem interface | The interface-specific full-verifier requirements, such as builder predicate, every coordinate equality, pointwise order, or rational membership | Requirements to one constructed atomic fact, or to the fixed unique-existence fact for `rational_has_unique_reduced_fraction(q)` | Bare reserved `by thm set_builder_member(...)`, `tuple_equal_from_coordinates(...)`, `rational_has_unique_reduced_fraction(q)`, or the matching iterated-object interface | Expecting a one-layer atomic builtin to synthesize an arbitrary quantified premise; qualifying a reserved builtin name | [`rational_reduced_fraction_builtin_theorem.lit`](../examples/01_proof_patterns/rational_reduced_fraction_builtin_theorem.lit), [`generic_cart_member_coordinates.lit`](../examples/_internal/regression/generic_cart_member_coordinates.lit), [`builtin_interfaces.rs`](../src/main_test/lit_file_runner_tests/runtime_regression_tests/builtin_interfaces.rs) |
-| Equality of two sets | Extensional proof | Well-defined set objects and both membership directions | Mutual subset facts to set equality | `by extension A = B` or goal-block `by extension:` | Syntactic normalization of unrelated construction histories, or using set extensionality for functions | [`inline_by_proof_methods.lit`](../examples/01_proof_patterns/inline_by_proof_methods.lit) |
-| A universal fact over displayed finite sets | Finite enumeration | Every quantified domain must be concretely enumerable | All concrete assignments to the universal fact | `by enumerate finite_set` | Enumeration over `N`, an opaque set, or another domain with no concrete finite expansion | [`bodyless_by_goal_blocks.lit`](../examples/01_proof_patterns/bodyless_by_goal_blocks.lit), [`enumerate_finite_set.lit`](../examples/_internal/regression/enumerate_finite_set.lit) |
-| Equality alternatives for a known integer member of `range` or `closed_range` | Bounded range classification | Integer endpoints and enough carrier/order facts to verify membership | Range membership to one equality or a flat disjunction of equalities | `by enumerate range` / `by enumerate closed_range` | A nested numeric boundary-case ladder; arbitrary-set or unbounded enumeration | [`bounded_range_classification.lit`](../examples/01_proof_patterns/bounded_range_classification.lit) |
-| A universal fact over an integer range or supported finite Cartesian product | Bounded universal proof | A supported finite/range domain and a well-defined universal target | Each generated assignment to the universal fact | `by for` | Treating `by for` as unbounded quantifier automation | [`inline_by_proof_methods.lit`](../examples/01_proof_patterns/inline_by_proof_methods.lit) |
-| A goal under an available disjunction or generated alternatives | Case proof | The matching disjunction or exhaustive alternatives must already be known | Every covered branch to the same target | `by cases` | Inventing cases with no known exhaustive source; writing `case fact:` with an empty body instead of bodyless `case fact` | [`bodyless_by_cases.lit`](../examples/01_proof_patterns/bodyless_by_cases.lit) |
-| A negative or contradiction-shaped goal | Contradiction proof | A well-defined target and facts that yield both sides of a contradiction | Negated target assumption to the original target | `by contra` | A bare `impossible` with no contradictory pair; unlike other bodyless routes, omitting the final `impossible` | [`bodyless_by_goal_blocks.lit`](../examples/01_proof_patterns/bodyless_by_goal_blocks.lit) |
-| A discrete natural/integer or finite-set invariant | Inductive proof | Supported induction parameter, base, and invariant shape | Base plus successor/insertion step to the generated universal fact | `by induc` / `by strong_induc` | Induction over an arbitrary real or an invariant that has not been packaged in the required goal shape | [`bodyless_by_goal_blocks.lit`](../examples/01_proof_patterns/bodyless_by_goal_blocks.lit), [`finite_set_induction.lit`](../examples/_internal/regression/finite_set_induction.lit) |
-| A bare universal statement needs proof-control commands such as cases, theorem calls, witnesses, or induction | Local proved fact | The complete universal target must be well-defined | Local proof body to one stored fact | Wrap the target in `claim:` or name it with `thm` when reusable | Putting `by thm`, `by def`, or another proof-control statement directly in a bare `forall ... =>:` conclusion list | [`bodyless_by_goal_blocks.lit`](../examples/01_proof_patterns/bodyless_by_goal_blocks.lit) |
-
-These routes are directional. For example, known set-builder membership can
-expose its base and predicate facts automatically, while constructing that
-membership from the base and predicate uses the explicit
-`set_builder_member` interface. Likewise, a case equality may still need one
-explicit substituted atomic equality before the verifier can rewrite through a
-compound expression; the range-classification example records that boundary.
+Use the [Cheat Sheet's proof-action table](cheatsheet.md#choose-the-proof-action)
+before expanding a proof manually. It owns the compact goal-to-action index;
+this Manual owns the exact syntax, generated obligations, directional
+boundaries, and executable examples for each proof surface.
 
 ### Known facts, universal facts, and theorem calls
 
