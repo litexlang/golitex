@@ -56,12 +56,56 @@ impl Runtime {
             ));
         }
 
+        // A generated builtin premise can compare the very same checked
+        // application that occurred in its parent goal (for example,
+        // `f(y) $in {0}` generates `f(y) = 0`).  Preserve the checked
+        // definition reduction as a real proof node here instead of letting
+        // the terminating boolean comparator erase that evidence.
+        let after_parent_well_definedness = UseContextVerifyState::new(0, true);
+        for application_is_left in [true, false] {
+            let application = if application_is_left {
+                &equal_fact.left
+            } else {
+                &equal_fact.right
+            };
+            if self
+                .checked_function_definition_reduction_source(application)?
+                .is_none()
+            {
+                continue;
+            }
+            if let Some(result) = self.try_reduce_one_checked_definition_side(
+                equal_fact,
+                application_is_left,
+                &after_parent_well_definedness,
+            )? {
+                return Ok(self.remember_successful_atomic_fact_for_statement(
+                    &equal_fact.clone().into(),
+                    result,
+                ));
+            }
+        }
+
+        // Named applications must reach the checked-definition route below,
+        // which freezes the defining FactId and exact reduction.  Letting the
+        // boolean structural shortcut consume them would retain only a label
+        // and make the successful Result unusable after Runtime is dropped.
+        if self
+            .checked_function_definition_reduction_source(&equal_fact.left)?
+            .is_some()
+            || self
+                .checked_function_definition_reduction_source(&equal_fact.right)?
+                .is_some()
+        {
+            return Ok(direct_evaluation_result);
+        }
+
         if !self.equal_fact_sides_are_equal_by_terminating_reduction_and_congruence(equal_fact)? {
             return Ok(direct_evaluation_result);
         }
 
         let result: StmtResult =
-            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                 equal_fact.clone().into(),
                 "structural equality with terminating reductions".to_string(),
                 Vec::new(),
@@ -99,9 +143,9 @@ impl Runtime {
             // `a * t + 0 = a * t` and `abs(x - y) = abs(y - x)`.
             "bounded symbolic normalization"
         } else {
-            return StmtUnknown::new().into();
+            return UnknownGenericStmtResult::new().into();
         };
-        VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+        SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
             equal_fact.clone().into(),
             reason.to_string(),
             Vec::new(),
@@ -136,7 +180,7 @@ impl Runtime {
                     objs_equal_by_rational_expression_evaluation(&equal_fact.left, representative)
                 })
             else {
-                return StmtUnknown::new().into();
+                return UnknownGenericStmtResult::new().into();
             };
             EqualFact::new(
                 equal_fact.right.clone(),
@@ -146,9 +190,9 @@ impl Runtime {
         };
         let known_result = self.verify_equal_fact_with_known_fact(&known_fact);
         if !known_result.is_true() {
-            return StmtUnknown::new().into();
+            return UnknownGenericStmtResult::new().into();
         }
-        VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+        SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
             equal_fact.clone().into(),
             "calculation and rational expression simplification".to_string(),
             vec![known_result],
@@ -164,7 +208,7 @@ impl Runtime {
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         if !builtin_state.can_apply_builtin_rule() {
-            return Ok(StmtUnknown::new().into());
+            return Ok(UnknownGenericStmtResult::new().into());
         }
         let child_state = builtin_state.after_applying_builtin_rule();
         let goal: AtomicFact = equal_fact.clone().into();
@@ -188,16 +232,6 @@ impl Runtime {
         verify_state: &UseContextVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let builtin_goal: AtomicFact = equal_fact.clone().into();
-        if self.captures_well_definedness() {
-            let result = self.verify_equality_after_one_checked_definition_reduction(
-                equal_fact,
-                verify_state,
-                true,
-            )?;
-            if result.is_true() {
-                return Ok(result);
-            }
-        }
         let mut result = self.verify_equal_fact_with_direct_routes(equal_fact)?;
         if result.is_true() {
             return Ok(result);
@@ -208,15 +242,10 @@ impl Runtime {
             return Ok(result);
         }
 
-        if !self.captures_well_definedness() {
-            result = self.verify_equality_after_one_checked_definition_reduction(
-                equal_fact,
-                verify_state,
-                false,
-            )?;
-            if result.is_true() {
-                return Ok(result);
-            }
+        result =
+            self.verify_equality_after_one_checked_definition_reduction(equal_fact, verify_state)?;
+        if result.is_true() {
+            return Ok(result);
         }
 
         if verify_state.is_round_0() {
@@ -227,7 +256,7 @@ impl Runtime {
                 )?;
             if verified_by_arg_to_arg {
                 return Ok(
-                    (VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                    (SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                         equal_fact.clone().into(),
                         same_shape_and_equal_args_reason(equal_fact),
                         Vec::new(),
@@ -244,42 +273,139 @@ impl Runtime {
             if result.is_true() {
                 return Ok(result);
             }
+
+            if let Some(result) = self
+                .try_verify_equal_fact_by_transforming_known_equal_representatives(
+                    equal_fact,
+                    &verify_state_add_one_round,
+                )?
+            {
+                return Ok(result);
+            }
         }
 
-        Ok((StmtUnknown::new()).into())
+        Ok((UnknownGenericStmtResult::new()).into())
+    }
+
+    /// Composition mode: `Wrap`.
+    ///
+    /// A target may use checked surface definitions while a known theorem is
+    /// stated with their expanded values. Verify the expanded equality first,
+    /// then retain the exact stored equality edges that rewrite that child
+    /// result back to the submitted target. This is deliberately a recursive
+    /// result node; no proposition-string rediscovery is needed by consumers.
+    fn try_verify_equal_fact_by_transforming_known_equal_representatives(
+        &mut self,
+        equal_fact: &EqualFact,
+        verify_state: &UseContextVerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let mut left_candidates = vec![equal_fact.left.clone()];
+        left_candidates.extend(self.get_all_obj_representatives_equal_to_given(&equal_fact.left));
+        let mut right_candidates = vec![equal_fact.right.clone()];
+        right_candidates.extend(self.get_all_obj_representatives_equal_to_given(&equal_fact.right));
+
+        let target_left_key = obj_equality_key(&equal_fact.left);
+        let target_right_key = obj_equality_key(&equal_fact.right);
+        for left in left_candidates {
+            for right in right_candidates.iter() {
+                if obj_equality_key(&left) == target_left_key
+                    && obj_equality_key(right) == target_right_key
+                {
+                    continue;
+                }
+
+                let source_fact =
+                    EqualFact::new(left.clone(), right.clone(), equal_fact.line_file.clone());
+                let source_result =
+                    self.verify_equal_fact_with_known_forall(&source_fact, verify_state)?;
+                let Some(source_success) = source_result.into_factual_success() else {
+                    continue;
+                };
+
+                let mut rewrite_steps = Vec::new();
+                if obj_equality_key(&left) != target_left_key {
+                    let Some(path) = self.compiler_known_equality_path(&EqualFact::new(
+                        left.clone(),
+                        equal_fact.left.clone(),
+                        equal_fact.line_file.clone(),
+                    )) else {
+                        continue;
+                    };
+                    rewrite_steps.extend(path.into_iter().map(|step| {
+                        EqualityTransportStep::new(
+                            step.from,
+                            step.to,
+                            step.equality,
+                            Some(step.source_fact_id),
+                        )
+                    }));
+                }
+                if obj_equality_key(right) != target_right_key {
+                    let Some(path) = self.compiler_known_equality_path(&EqualFact::new(
+                        right.clone(),
+                        equal_fact.right.clone(),
+                        equal_fact.line_file.clone(),
+                    )) else {
+                        continue;
+                    };
+                    rewrite_steps.extend(path.into_iter().map(|step| {
+                        EqualityTransportStep::new(
+                            step.from,
+                            step.to,
+                            step.equality,
+                            Some(step.source_fact_id),
+                        )
+                    }));
+                }
+                if rewrite_steps.is_empty() {
+                    continue;
+                }
+
+                let proof = SuccessFactProofResult::Transform(Box::new(
+                    SuccessTransformFactResult::from_shared(
+                        FactTransformationRule::EqualityRewrite(EqualityTransportEvidence::new(
+                            rewrite_steps,
+                        )),
+                        source_success.verification,
+                    ),
+                ));
+                return Ok(Some(
+                    SuccessFactStmtResult::new(
+                        equal_fact.clone().into(),
+                        SuccessInferResult::new(),
+                        proof,
+                    )
+                    .into(),
+                ));
+            }
+        }
+        Ok(None)
     }
 
     fn verify_equality_after_one_checked_definition_reduction(
         &mut self,
         equal_fact: &EqualFact,
         verify_state: &UseContextVerifyState,
-        require_checked_function_source: bool,
     ) -> Result<StmtResult, RuntimeError> {
         // The goal's well-definedness check already discharged the selected
         // function application's carrier and domain obligations. Definition
         // reduction therefore performs substitution only and never opens a
         // second proof-search root.
         if !verify_state.is_round_0() || !verify_state.well_defined_already_verified {
-            return Ok((StmtUnknown::new()).into());
+            return Ok((UnknownGenericStmtResult::new()).into());
         }
 
-        if let Some(result) = self.try_reduce_one_checked_definition_side(
-            equal_fact,
-            true,
-            verify_state,
-            require_checked_function_source,
-        )? {
+        if let Some(result) =
+            self.try_reduce_one_checked_definition_side(equal_fact, true, verify_state)?
+        {
             return Ok(result);
         }
-        if let Some(result) = self.try_reduce_one_checked_definition_side(
-            equal_fact,
-            false,
-            verify_state,
-            require_checked_function_source,
-        )? {
+        if let Some(result) =
+            self.try_reduce_one_checked_definition_side(equal_fact, false, verify_state)?
+        {
             return Ok(result);
         }
-        Ok((StmtUnknown::new()).into())
+        Ok((UnknownGenericStmtResult::new()).into())
     }
 
     fn try_reduce_one_checked_definition_side(
@@ -287,7 +413,6 @@ impl Runtime {
         equal_fact: &EqualFact,
         application_is_left: bool,
         verify_state: &UseContextVerifyState,
-        require_checked_function_source: bool,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (application_side, other_side) = if application_is_left {
             (&equal_fact.left, &equal_fact.right)
@@ -298,14 +423,6 @@ impl Runtime {
         // Reduce exactly one checked definition already present in the goal.
         // Comparison remains limited to known facts, terminating computation,
         // and constructor descent.
-        let checked_function_source = if self.captures_well_definedness() {
-            self.checked_function_definition_reduction_source(application_side)?
-        } else {
-            None
-        };
-        if require_checked_function_source && checked_function_source.is_none() {
-            return Ok(None);
-        }
         let reduced = match self
             .reduce_direct_known_fn_application_once(application_side, verify_state)?
         {
@@ -341,38 +458,16 @@ impl Runtime {
                 "one checked definition reduction `{}` = `{}`",
                 application_side, comparison_candidate
             );
-            if let Some((definition_object, defining_equality, defining_equality_fact_id)) =
-                checked_function_source.clone()
-            {
-                let fact: Fact = equal_fact.clone().into();
-                let evidence = CheckedFunctionDefinitionReductionEvidence {
-                    definition_object,
-                    defining_equality,
-                    defining_equality_fact_id,
-                    application_side: application_side.clone(),
-                    reduced: comparison_candidate.clone(),
-                    other_side: other_side.clone(),
-                    application_is_left,
-                    reduced_matches_other_by_alpha: alpha_equal,
-                };
-                let verified_by = VerifiedByResult::fact_with_checked_function_definition_reduction(
-                    fact.clone(),
-                    evidence,
-                    Some(reason),
-                );
-                return Ok(Some(
-                    VerifiedFactStmtIr::new_with_verified_by_known_fact(
-                        fact,
-                        verified_by,
-                        Vec::new(),
-                    )
-                    .into(),
-                ));
-            }
+            let checked_definition_source =
+                self.checked_function_definition_reduction_source(application_side)?;
             return Ok(Some(checked_definition_reduction_success(
                 equal_fact,
                 application_side,
                 &comparison_candidate,
+                other_side,
+                application_is_left,
+                alpha_equal,
+                checked_definition_source,
                 &reason,
             )));
         }
@@ -588,7 +683,7 @@ impl Runtime {
         let result = self.verify_equal_fact_with_direct_routes(equal_fact)?;
         if result.is_true() {
             return Ok(
-                (VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                (SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                     equal_fact.clone().into(),
                     "builtin rules".to_string(),
                     Vec::new(),
@@ -604,7 +699,7 @@ impl Runtime {
             )?;
         if verified_by_arg_to_arg {
             return Ok(
-                (VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                (SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                     equal_fact.clone().into(),
                     same_shape_and_equal_args_reason(equal_fact),
                     Vec::new(),
@@ -613,7 +708,7 @@ impl Runtime {
             );
         }
 
-        Ok((StmtUnknown::new()).into())
+        Ok((UnknownGenericStmtResult::new()).into())
     }
 }
 
@@ -643,6 +738,10 @@ fn checked_definition_reduction_success(
     equal_fact: &EqualFact,
     application_side: &Obj,
     reduced_side: &Obj,
+    other_side: &Obj,
+    application_is_left: bool,
+    reduced_matches_other_by_alpha: bool,
+    checked_definition_source: Option<(Obj, Fact, FactId)>,
     reason: &str,
 ) -> StmtResult {
     let fact: Fact = equal_fact.clone().into();
@@ -650,8 +749,26 @@ fn checked_definition_reduction_success(
         "{}; reduced goal side `{}` is compared with `{}` using stored equalities, terminating computation, anonymous-function beta reduction, or constructor descent",
         reason, application_side, reduced_side
     );
-    let verified_by = VerifiedByResult::fact_with_note(fact.clone(), Some(msg));
-    VerifiedFactStmtIr::new_with_verified_by_known_fact(fact, verified_by, Vec::new()).into()
+    let verified_by = match checked_definition_source {
+        Some((definition_object, defining_equality, defining_equality_fact_id)) => {
+            SuccessFactProofResult::fact_with_checked_function_definition_reduction(
+                fact.clone(),
+                CheckedFunctionDefinitionReductionEvidence {
+                    definition_object,
+                    defining_equality,
+                    defining_equality_fact_id,
+                    application_side: application_side.clone(),
+                    reduced: reduced_side.clone(),
+                    other_side: other_side.clone(),
+                    application_is_left,
+                    reduced_matches_other_by_alpha,
+                },
+                Some(msg),
+            )
+        }
+        None => SuccessFactProofResult::fact_with_note(fact.clone(), Some(msg)),
+    };
+    SuccessFactStmtResult::new_with_verified_by_known_fact(fact, verified_by, Vec::new()).into()
 }
 
 #[cfg(test)]

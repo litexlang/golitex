@@ -9,48 +9,55 @@ theorem __fact0 :
     ∀ (a : ℂ) (__h0_1 : Litex.In a Litex.C) (b : ℂ) (__h0_2 : Litex.In b Litex.C),
       Litex.In (a + b) Litex.C := by
   intro a __h0_1 b __h0_2
-  exact Litex.Rules.complexAddInC a b
+  have __c0_0 : Litex.In (a + b) Litex.C := Litex.Rules.complexAddInC a b
+  exact __c0_0
 
 theorem __fact1 :
     ∀ (a : ℂ) (__h1_1 : Litex.In a Litex.C) (b : ℂ) (__h1_2 : Litex.In b Litex.C),
       Litex.In (a - b) Litex.C := by
   intro a __h1_1 b __h1_2
-  exact Litex.Rules.complexSubInC a b
+  have __c1_0 : Litex.In (a - b) Litex.C := Litex.Rules.complexSubInC a b
+  exact __c1_0
 
 theorem __fact2 :
     ∀ (a : ℂ) (__h2_1 : Litex.In a Litex.C) (b : ℂ) (__h2_2 : Litex.In b Litex.C),
       Litex.In (a * b) Litex.C := by
   intro a __h2_1 b __h2_2
-  exact Litex.Rules.complexMulInC a b
+  have __c2_0 : Litex.In (a * b) Litex.C := Litex.Rules.complexMulInC a b
+  exact __c2_0
 
 theorem __fact3 :
     ∀ (a : ℂ) (__h3_1 : Litex.In a Litex.C) (b : ℂ) (__h3_2 : Litex.In b Litex.C) (__h3_3 : ¬ Litex.Same b (0 : ℂ)),
       Litex.In (a / b) Litex.C := by
   intro a __h3_1 b __h3_2 __h3_3
-  exact Litex.Rules.complexDivInC a b
+  have __c3_0 : Litex.In (a / b) Litex.C := Litex.Rules.complexDivInC a b
+  exact __c3_0
 
 theorem __fact4 :
     ∀ (a : ℂ) (__h4_1 : Litex.In a Litex.Z) (b : ℂ) (__h4_2 : Litex.In b Litex.Z),
       Litex.In (a + b) Litex.Z := by
   intro a __h4_1 b __h4_2
-  exact (by
+  have __c4_0 : Litex.In (a + b) Litex.Z := (by
   have __components : Litex.In a Litex.Z ∧ Litex.In b Litex.Z := ⟨__h4_1, __h4_2⟩
   exact Litex.Rules.complexAddInZ (__components.1) (__components.2))
+  exact __c4_0
 
 theorem __fact5 :
     ∀ (a : ℂ) (__h5_1 : Litex.In a Litex.Z) (b : ℂ) (__h5_2 : Litex.In b Litex.Z),
       Litex.In (a - b) Litex.Z := by
   intro a __h5_1 b __h5_2
-  exact (by
+  have __c5_0 : Litex.In (a - b) Litex.Z := (by
   have __components : Litex.In a Litex.Z ∧ Litex.In b Litex.Z := ⟨__h5_1, __h5_2⟩
   exact Litex.Rules.complexSubInZ (__components.1) (__components.2))
+  exact __c5_0
 
 theorem __fact6 :
     ∀ (a : ℂ) (__h6_1 : Litex.In a Litex.Z) (b : ℂ) (__h6_2 : Litex.In b Litex.Z),
       Litex.In (a * b) Litex.Z := by
   intro a __h6_1 b __h6_2
-  exact (by
+  have __c6_0 : Litex.In (a * b) Litex.Z := (by
   have __components : Litex.In a Litex.Z ∧ Litex.In b Litex.Z := ⟨__h6_1, __h6_2⟩
   exact Litex.Rules.complexMulInZ (__components.1) (__components.2))
+  exact __c6_0
 
 end __Compiler_17_NumericCarrierClosures

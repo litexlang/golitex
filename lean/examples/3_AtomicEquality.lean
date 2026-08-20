@@ -11,6 +11,6 @@ theorem __fact0 : Litex.Same (1 : ℂ) (1 : ℂ) := by
 theorem __fact1 : Litex.Same ((2 : ℂ) + (3 : ℂ)) (5 : ℂ) := by
   have __wd1_0 : Litex.In (2 : ℂ) Litex.C := Litex.Rules.complexInC (2 : ℂ)
   have __wd1_1 : Litex.In (3 : ℂ) Litex.C := Litex.Rules.complexInC (3 : ℂ)
-  exact Litex.Same.ofEq (by norm_num)
+  exact Litex.Same.ofEq (by norm_num [Litex.tupleDim, Litex.TupleShape.dimension])
 
 end __Compiler_3_AtomicEquality

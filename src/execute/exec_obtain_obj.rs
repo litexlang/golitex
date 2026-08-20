@@ -24,7 +24,7 @@ impl Runtime {
             &obtain.equal_tos,
             &source_exist_fact,
         )?;
-        let inside_results = self.verify_obj_from_atomic_fact_source(
+        let source_result = self.verify_obj_from_atomic_fact_source(
             stmt.clone(),
             obtain,
             &definition,
@@ -34,7 +34,7 @@ impl Runtime {
             stmt,
             &obtain.equal_tos,
             &source_exist_fact,
-            inside_results,
+            source_result,
             obtain.line_file.clone(),
         )
     }
@@ -65,7 +65,7 @@ impl Runtime {
             stmt,
             &obtain.equal_tos,
             &source_exist_fact,
-            vec![application_result],
+            application_result,
             obtain.line_file.clone(),
         )
     }
@@ -80,11 +80,13 @@ impl Runtime {
             &obtain.fact,
             obtain.line_file.clone(),
         )?;
-        Ok(VerifiedDefObjStmtIr::ObtainObjFromExistFact {
-            statement: obtain.clone(),
-            common: VerifiedStmtCommonIr::new(infer_result, vec![]),
-            verification: None,
-        }
+        Ok(SuccessDefObjStmtResult::ObtainObjFromExistFact(Box::new(
+            SuccessObtainObjFromExistFactResult {
+                statement: obtain.clone(),
+                common: SuccessStmtCommonResult::new(infer_result),
+                verification: None,
+            },
+        ))
         .into())
     }
 
@@ -99,11 +101,13 @@ impl Runtime {
             &source_exist_fact,
             obtain.line_file.clone(),
         )?;
-        Ok(VerifiedDefObjStmtIr::ObtainObjFromAtomicFact {
-            statement: obtain.clone(),
-            common: VerifiedStmtCommonIr::new(infer_result, vec![]),
-            verification: None,
-        }
+        Ok(SuccessDefObjStmtResult::ObtainObjFromAtomicFact(Box::new(
+            SuccessObtainObjFromAtomicFactResult {
+                statement: obtain.clone(),
+                common: SuccessStmtCommonResult::new(infer_result),
+                verification: None,
+            },
+        ))
         .into())
     }
 
@@ -129,12 +133,14 @@ impl Runtime {
             &source_exist_fact,
             obtain.line_file.clone(),
         )?;
-        Ok(VerifiedDefObjStmtIr::ObtainObjFromThm {
-            statement: obtain.clone(),
-            common: VerifiedStmtCommonIr::new(infer_result, vec![]),
-            verification: None,
-        }
-        .into())
+        Ok(
+            SuccessDefObjStmtResult::ObtainObjFromThm(Box::new(SuccessObtainObjFromThmResult {
+                statement: obtain.clone(),
+                common: SuccessStmtCommonResult::new(infer_result),
+                verification: None,
+            }))
+            .into(),
+        )
     }
 
     /// Recover the exact direct theorem conclusion selected by the existing
@@ -146,15 +152,17 @@ impl Runtime {
         application_result: StmtResult,
     ) -> Result<(ExistFactEnum, StmtResult), RuntimeError> {
         let extracted = (|| -> Result<ExistFactEnum, String> {
-            let success = application_result.non_factual_ir().ok_or_else(|| {
+            let success = application_result.non_factual_success().ok_or_else(|| {
                 "obtain from thm: theorem application did not return a statement success"
                     .to_string()
             })?;
-            let VerifiedStmtIr::By(VerifiedByStmtIr::ByThmStmt {
-                verification: Some(verification),
-                ..
-            }) = success
-            else {
+            let SuccessStmtResult::By(SuccessByStmtResult::ByThmStmt(result)) = success else {
+                return Err(
+                    "obtain from thm: theorem application did not retain theorem verification evidence"
+                        .to_string(),
+                );
+            };
+            let Some(verification) = result.verification.as_ref() else {
                 return Err(
                     "obtain from thm: theorem application did not retain theorem verification evidence"
                         .to_string(),
@@ -237,11 +245,13 @@ impl Runtime {
             &exist_fact,
             stmt.line_file.clone(),
         )?;
-        Ok(VerifiedDefObjStmtIr::HaveObjByExistFactsStmt {
-            statement: stmt.clone(),
-            common: VerifiedStmtCommonIr::new(infer_result, vec![]),
-            verification: None,
-        }
+        Ok(SuccessDefObjStmtResult::HaveObjByExistFactsStmt(Box::new(
+            SuccessHaveObjByExistFactsStmtResult {
+                statement: stmt.clone(),
+                common: SuccessStmtCommonResult::new(infer_result),
+                verification: None,
+            },
+        ))
         .into())
     }
 
@@ -257,13 +267,13 @@ impl Runtime {
             defined_bindings,
             source_exist_fact,
         )?;
-        let inside_results =
+        let source_result =
             self.verify_obj_from_exist_fact_source(stmt.clone(), source_exist_fact)?;
         self.finish_exec_obj_from_exist_fact(
             stmt,
             defined_bindings,
             source_exist_fact,
-            inside_results,
+            source_result,
             line_file,
         )
     }
@@ -273,7 +283,7 @@ impl Runtime {
         stmt: Stmt,
         defined_bindings: &[SymbolBinding],
         source_exist_fact: &ExistFactEnum,
-        inside_results: Vec<StmtResult>,
+        source_result: StmtResult,
         line_file: LineFile,
     ) -> Result<StmtResult, RuntimeError> {
         let infer_result = self.apply_obj_from_exist_fact_to_environment(
@@ -286,39 +296,45 @@ impl Runtime {
             &stmt,
             defined_bindings,
             source_exist_fact,
-            &inside_results,
+            source_result,
             line_file,
         )?;
 
-        let common = VerifiedStmtCommonIr::new(infer_result, inside_results);
+        let common = SuccessStmtCommonResult::new(infer_result);
         let ir = match stmt {
             Stmt::DefObjStmt(DefObjStmt::HaveObjByExistFactsStmt(statement)) => {
-                VerifiedDefObjStmtIr::HaveObjByExistFactsStmt {
-                    statement,
-                    common,
-                    verification: Some(elimination_verification),
-                }
+                SuccessDefObjStmtResult::HaveObjByExistFactsStmt(Box::new(
+                    SuccessHaveObjByExistFactsStmtResult {
+                        statement,
+                        common,
+                        verification: Some(elimination_verification),
+                    },
+                ))
             }
             Stmt::DefObjStmt(DefObjStmt::ObtainObjFromExistFact(statement)) => {
-                VerifiedDefObjStmtIr::ObtainObjFromExistFact {
-                    statement,
-                    common,
-                    verification: Some(elimination_verification),
-                }
+                SuccessDefObjStmtResult::ObtainObjFromExistFact(Box::new(
+                    SuccessObtainObjFromExistFactResult {
+                        statement,
+                        common,
+                        verification: Some(elimination_verification),
+                    },
+                ))
             }
             Stmt::DefObjStmt(DefObjStmt::ObtainObjFromAtomicFact(statement)) => {
-                VerifiedDefObjStmtIr::ObtainObjFromAtomicFact {
-                    statement,
-                    common,
-                    verification: Some(elimination_verification),
-                }
+                SuccessDefObjStmtResult::ObtainObjFromAtomicFact(Box::new(
+                    SuccessObtainObjFromAtomicFactResult {
+                        statement,
+                        common,
+                        verification: Some(elimination_verification),
+                    },
+                ))
             }
             Stmt::DefObjStmt(DefObjStmt::ObtainObjFromThm(statement)) => {
-                VerifiedDefObjStmtIr::ObtainObjFromThm {
+                SuccessDefObjStmtResult::ObtainObjFromThm(Box::new(SuccessObtainObjFromThmResult {
                     statement,
                     common,
                     verification: Some(elimination_verification),
-                }
+                }))
             }
             _ => unreachable!("existential elimination must retain its exact object statement"),
         };
@@ -364,7 +380,7 @@ impl Runtime {
         &mut self,
         stmt: Stmt,
         source_exist_fact: &ExistFactEnum,
-    ) -> Result<Vec<StmtResult>, RuntimeError> {
+    ) -> Result<StmtResult, RuntimeError> {
         let verify_state = UseContextVerifyState::new(0, false);
         let result = self
             .verify_exist_fact(source_exist_fact, &verify_state)
@@ -380,7 +396,7 @@ impl Runtime {
             ));
         }
 
-        Ok(vec![result])
+        Ok(result)
     }
 
     fn verify_obj_from_atomic_fact_source(
@@ -389,7 +405,7 @@ impl Runtime {
         obtain: &ObtainObjFromAtomicFact,
         definition: &DefPropStmt,
         source_exist_fact: &ExistFactEnum,
-    ) -> Result<Vec<StmtResult>, RuntimeError> {
+    ) -> Result<StmtResult, RuntimeError> {
         let source_atomic: AtomicFact = obtain.fact.clone().into();
         let source_result = self
             .verify_atomic_fact(&source_atomic, &UseContextVerifyState::new(0, false))
@@ -406,7 +422,7 @@ impl Runtime {
         }
 
         let projection_result =
-            VerifiedFactStmtIr::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 source_exist_fact.clone().into(),
                 format!(
                     "existential projection from prop definition `{}`",
@@ -420,7 +436,7 @@ impl Runtime {
                 ),
                 vec![source_result],
             );
-        Ok(vec![projection_result.into()])
+        Ok(projection_result.into())
     }
 
     /// Resolve the concrete definition at execution time; the statement keeps
@@ -470,7 +486,7 @@ impl Runtime {
         defined_bindings: &[SymbolBinding],
         source_exist_fact: &ExistFactEnum,
         line_file: LineFile,
-    ) -> Result<InferResult, RuntimeError> {
+    ) -> Result<SuccessInferResult, RuntimeError> {
         for binding in defined_bindings {
             self.store_parameter_binding(binding, ParamObjType::Identifier)?;
         }
@@ -535,21 +551,12 @@ impl Runtime {
 
     fn existential_elimination_verification_result(
         &self,
-        stmt: &Stmt,
+        _stmt: &Stmt,
         equal_tos: &[SymbolBinding],
         exist_fact: &ExistFactEnum,
-        inside_results: &[StmtResult],
+        source_result: StmtResult,
         line_file: LineFile,
-    ) -> Result<ExistentialEliminationVerificationResult, RuntimeError> {
-        if inside_results.len() != 1 {
-            return Err(exec_stmt_error_with_stmt_and_cause(
-                stmt.clone(),
-                RuntimeError::from(UnknownRuntimeError(RuntimeErrorStruct::new_with_just_msg(
-                    "existential elimination did not retain exactly one source proof".to_string(),
-                ))),
-            ));
-        }
-
+    ) -> Result<SuccessVerifyExistentialEliminationResult, RuntimeError> {
         let witnesses = equal_tos
             .iter()
             .map(|binding| {
@@ -592,8 +599,8 @@ impl Runtime {
             })
             .collect::<Result<Vec<_>, RuntimeError>>()?;
 
-        Ok(ExistentialEliminationVerificationResult::new(
-            0,
+        Ok(SuccessVerifyExistentialEliminationResult::new(
+            source_result,
             exist_fact.clone(),
             witness_type_facts,
             instantiated_body_facts,

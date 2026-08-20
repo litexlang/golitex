@@ -3,24 +3,24 @@ use std::result::Result;
 
 impl Runtime {
     pub fn exec_fact(&mut self, fact: &Fact) -> Result<StmtResult, RuntimeError> {
-        self.exec_fact_stmt_verify_well_definedness(fact)?;
-        self.set_well_definedness_target_requirement_phase(
-            WellDefinednessTargetRequirementPhase::Proof,
-        );
+        let well_definedness = self.exec_fact_stmt_verify_well_definedness(fact)?;
         let result = self.exec_fact_stmt_verify_process(fact)?;
-        self.set_well_definedness_target_requirement_phase(
-            WellDefinednessTargetRequirementPhase::Store,
-        );
-        let infer_result = self.exec_fact_stmt_affect_environment(fact, &result)?;
+        let infer_result =
+            self.exec_fact_stmt_affect_environment(fact, &result, &well_definedness)?;
 
-        Ok(result.with_infers(infer_result))
+        Ok(result
+            .with_fact_well_definedness(well_definedness)
+            .with_infers(infer_result))
     }
 
     /// Mathematical contract: a standalone fact is meaningful exactly when
     /// the central fact checker validates its predicate, arguments, binders,
     /// premises, and conclusions.
-    fn exec_fact_stmt_verify_well_definedness(&mut self, fact: &Fact) -> Result<(), RuntimeError> {
-        self.verify_fact_well_defined(fact, &UseContextVerifyState::new(0, false))
+    fn exec_fact_stmt_verify_well_definedness(
+        &mut self,
+        fact: &Fact,
+    ) -> Result<SuccessVerifyFactWellDefinedResult, RuntimeError> {
+        self.verify_fact_well_defined_result(fact, &UseContextVerifyState::new(0, false))
     }
 
     fn exec_fact_stmt_verify_process(&mut self, fact: &Fact) -> Result<StmtResult, RuntimeError> {
@@ -31,18 +31,12 @@ impl Runtime {
         &mut self,
         fact: &Fact,
         result: &StmtResult,
-    ) -> Result<InferResult, RuntimeError> {
+        _well_definedness: &SuccessVerifyFactWellDefinedResult,
+    ) -> Result<SuccessInferResult, RuntimeError> {
         let verification_store_facts = result.infer_result();
-        let mut infer_result = self
-            .store_with_well_defined_verification_and_infer_with_default_verify_state(
-                fact.clone(),
-            )?;
-        // Ordinary output suppresses the duplicate primary store record.  In
-        // During compiler capture that record also owns the source-to-inferred-fact
-        // edges (for example, concrete-prop definition projections), so keep
-        // it as compiler evidence; IR construction still de-duplicates the
-        // primary proposition itself.
-        if verification_store_facts.contains_added_fact(fact) && !self.captures_well_definedness() {
+        let mut infer_result =
+            self.store_without_well_defined_verification_and_infer(fact.clone())?;
+        if verification_store_facts.contains_added_fact(fact) {
             infer_result.remove_first_verified_statement_for_fact(fact);
         }
 
@@ -59,7 +53,7 @@ impl Runtime {
         )?;
 
         Ok(
-            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_label_and_steps(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rules_label_and_steps(
                 fact.clone(),
                 infer_result,
                 "trusted file load".to_string(),

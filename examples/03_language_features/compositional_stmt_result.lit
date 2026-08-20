@@ -1,0 +1,13 @@
+# Tracer: one fact statement returns compositional WD, proof, store, and infer results.
+#
+# Before: direct numeric membership retained only the diagnostic label
+# `number in N`; the evaluator's `2 + 3 -> 5` derivation was discarded.
+#
+# The selected builtin proof owns a recursive evaluation result
+# `Add(Literal(2), Literal(3)) -> 5`; WD recursively owns the source expression
+# checks, and the source store plus natural-membership inference own distinct
+# FactIds and named recursive child results.
+#
+# Target boundary: Litex execution remains successful independently of whether
+# a backend such as Litex-to-Lean supports this result shape.
+2 + 3 $in N

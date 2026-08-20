@@ -9,11 +9,16 @@ impl Runtime {
         let committed_results =
             self.run_in_local_env_and_commit(|rt| rt.exec_try_proof_steps(stmt))?;
 
-        Ok(VerifiedProofBlockStmtIr::TryStmt {
-            statement: stmt.clone(),
-            common: VerifiedStmtCommonIr::new(InferResult::new(), committed_results),
-        }
-        .into())
+        Ok(
+            SuccessProofBlockStmtResult::TryStmt(Box::new(SuccessTryStmtResult {
+                statement: stmt.clone(),
+                common: SuccessStmtCommonResult::new(SuccessInferResult::new()),
+                proof: Some(SuccessTryProofResult {
+                    proof_steps: committed_results,
+                }),
+            }))
+            .into(),
+        )
     }
 
     fn exec_try_proof_steps(&mut self, stmt: &TryStmt) -> Result<Vec<StmtResult>, RuntimeError> {

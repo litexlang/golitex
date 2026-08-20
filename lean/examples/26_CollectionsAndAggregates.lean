@@ -9,13 +9,15 @@ theorem __fact0 :
     ∀ (F : Litex.Set),
       Litex.Same (Litex.bigUnion F) (Litex.bigUnion F) := by
   intro F
-  exact Litex.Same.refl (Litex.bigUnion F)
+  have __c0_0 : Litex.Same (Litex.bigUnion F) (Litex.bigUnion F) := Litex.Same.refl (Litex.bigUnion F)
+  exact __c0_0
 
 theorem __fact1 :
     ∀ (F : Litex.Set),
       Litex.Same (Litex.bigIntersect F) (Litex.bigIntersect F) := by
   intro F
-  exact Litex.Same.refl (Litex.bigIntersect F)
+  have __c1_0 : Litex.Same (Litex.bigIntersect F) (Litex.bigIntersect F) := Litex.Same.refl (Litex.bigIntersect F)
+  exact __c1_0
 
 theorem __fact2 : Litex.Same (Litex.powerSet Litex.R) (Litex.powerSet Litex.R) := by
   exact Litex.Same.refl (Litex.powerSet Litex.R)
@@ -24,7 +26,8 @@ theorem __fact3 :
     ∀ (I : Litex.Set) (S : Litex.Set) (__h3_2 : Litex.Set.Nonempty S) {__carrier3_3 : Type 1} (g : __carrier3_3) (__h3_3 : Litex.In g (Litex.fnSet (I : Litex.Set.{0}) (S : Litex.Set.{0}))),
       Litex.Same (Litex.generalCart I S g) (Litex.generalCart I S g) := by
   intro I S __h3_2 __carrier3_3 g __h3_3
-  exact Litex.Same.refl (Litex.generalCart I S g)
+  have __c3_0 : Litex.Same (Litex.generalCart I S g) (Litex.generalCart I S g) := Litex.Same.refl (Litex.generalCart I S g)
+  exact __c3_0
 
 theorem __fact4 : Litex.Same (Litex.range (1 : ℤ) (4 : ℤ)) (Litex.range (1 : ℤ) (4 : ℤ)) := by
   exact Litex.Same.refl (Litex.range (1 : ℤ) (4 : ℤ))
@@ -57,7 +60,6 @@ theorem __fact13 : Litex.IsTuple (Litex.HCons.mk (1 : ℂ) (Litex.HCons.mk (2 : 
   exact ⟨inferInstance⟩
 
 theorem __fact14 : Litex.Same (Litex.tupleDim (Litex.HCons.mk (1 : ℂ) (Litex.HCons.mk (2 : ℂ) (Litex.HCons.mk (3 : ℂ) Litex.HNil.nil)))) (3 : ℂ) := by
-  have __wd14_0 : Litex.IsTuple (Litex.HCons.mk (1 : ℂ) (Litex.HCons.mk (2 : ℂ) (Litex.HCons.mk (3 : ℂ) Litex.HNil.nil))) := __fact13
   exact Litex.Same.ofEq (by norm_num [Litex.tupleDim, Litex.TupleShape.dimension])
 
 theorem __fact15 : Litex.Same (Litex.SequenceLiteral.mk (Litex.HCons.mk (1 : ℂ) (Litex.HCons.mk (2 : ℂ) (Litex.HCons.mk (3 : ℂ) Litex.HNil.nil)))) (Litex.SequenceLiteral.mk (Litex.HCons.mk (1 : ℂ) (Litex.HCons.mk (2 : ℂ) (Litex.HCons.mk (3 : ℂ) Litex.HNil.nil)))) := by

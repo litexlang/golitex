@@ -17,6 +17,6 @@ impl Runtime {
             return Ok(cached_result);
         }
 
-        Ok(StmtUnknown::new().into())
+        Ok(UnknownGenericStmtResult::new().into())
     }
 }

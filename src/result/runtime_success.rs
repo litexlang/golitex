@@ -2,25 +2,82 @@ use crate::prelude::*;
 use std::fmt;
 use std::rc::Rc;
 
-#[derive(Clone, Debug)]
-pub struct FunctionDefinitionVerificationResult {
-    pub return_check_index: usize,
+#[derive(Debug)]
+pub struct SuccessVerifyArgsSatisfyParamDefResult {
+    pub checks: Vec<StmtResult>,
+    pub infers: SuccessInferResult,
+}
+
+#[derive(Debug)]
+pub struct UnknownVerifyArgsSatisfyParamDefResult {
+    pub cause: Box<StmtResult>,
+}
+
+#[derive(Debug)]
+pub enum VerifyArgsSatisfyParamDefResult {
+    Success(Box<SuccessVerifyArgsSatisfyParamDefResult>),
+    Unknown(Box<UnknownVerifyArgsSatisfyParamDefResult>),
+}
+
+impl VerifyArgsSatisfyParamDefResult {
+    pub fn success(checks: Vec<StmtResult>, infers: SuccessInferResult) -> Self {
+        Self::Success(Box::new(SuccessVerifyArgsSatisfyParamDefResult {
+            checks,
+            infers,
+        }))
+    }
+
+    pub fn unknown(cause: StmtResult) -> Self {
+        Self::Unknown(Box::new(UnknownVerifyArgsSatisfyParamDefResult {
+            cause: Box::new(cause),
+        }))
+    }
+
+    pub fn is_unknown(&self) -> bool {
+        matches!(self, Self::Unknown(_))
+    }
+
+    pub fn success_result(&self) -> Option<&SuccessVerifyArgsSatisfyParamDefResult> {
+        match self {
+            Self::Success(result) => Some(result),
+            Self::Unknown(_) => None,
+        }
+    }
+
+    pub fn into_success(self) -> Option<SuccessVerifyArgsSatisfyParamDefResult> {
+        match self {
+            Self::Success(result) => Some(*result),
+            Self::Unknown(_) => None,
+        }
+    }
+
+    pub fn into_unknown_cause(self) -> Option<StmtResult> {
+        match self {
+            Self::Success(_) => None,
+            Self::Unknown(result) => Some(*result.cause),
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct SuccessVerifyFunctionDefinitionResult {
+    pub return_check: Box<StmtResult>,
     /// Membership/domain facts installed while checking the return value,
     /// with their temporary FactIds frozen before that local scope closes.
-    pub assumption_infers: InferResult,
+    pub assumption_infers: SuccessInferResult,
     pub function_membership: Fact,
     pub defining_equality: Fact,
 }
 
-impl FunctionDefinitionVerificationResult {
+impl SuccessVerifyFunctionDefinitionResult {
     pub fn new(
-        return_check_index: usize,
-        assumption_infers: InferResult,
+        return_check: StmtResult,
+        assumption_infers: SuccessInferResult,
         function_membership: Fact,
         defining_equality: Fact,
     ) -> Self {
         Self {
-            return_check_index,
+            return_check: Box::new(return_check),
             assumption_infers,
             function_membership,
             defining_equality,
@@ -28,162 +85,248 @@ impl FunctionDefinitionVerificationResult {
     }
 }
 
-pub struct TheoremVerificationResult {
+pub struct SuccessVerifyTheoremResult {
     pub name: String,
     pub forall_fact: ForallFact,
-    pub assumption_infers: InferResult,
-    pub proof_step_count: usize,
+    pub well_definedness: SuccessVerifyFactWellDefinedResult,
+    pub proof_scope: SuccessVerifyLocalProofScopeResult,
+    pub proof_steps: Vec<StmtResult>,
+    pub conclusion_checks: Vec<StmtResult>,
 }
 
-pub enum ClaimVerificationResult {
-    Forall(ClaimForallVerificationResult),
-    Fact(ClaimFactVerificationResult),
+pub enum SuccessVerifyClaimResult {
+    Forall(Box<SuccessVerifyClaimForallResult>),
+    Fact(Box<SuccessVerifyClaimFactResult>),
 }
 
-pub struct ClaimForallVerificationResult {
+pub struct SuccessVerifyClaimForallResult {
     pub forall_fact: ForallFact,
-    pub assumption_infers: InferResult,
-    pub proof_step_count: usize,
+    pub well_definedness: SuccessVerifyFactWellDefinedResult,
+    pub proof_scope: SuccessVerifyLocalProofScopeResult,
+    pub proof_steps: Vec<StmtResult>,
+    pub conclusion_checks: Vec<StmtResult>,
 }
 
-pub struct ClaimFactVerificationResult {
+pub struct SuccessVerifyClaimFactResult {
     pub fact: Fact,
-    pub proof_step_count: usize,
+    pub well_definedness: SuccessVerifyFactWellDefinedResult,
+    pub proof_scope: SuccessVerifyLocalProofScopeResult,
+    pub proof_steps: Vec<StmtResult>,
+    pub conclusion_check: Box<StmtResult>,
 }
 
-pub struct ByCasesVerificationResult {
-    pub cases: Vec<AndChainAtomicFact>,
-    /// Stable IDs of the temporary case assumptions, captured before each
-    /// branch environment is popped. Compiler backends use these IDs to bind
-    /// citations inside the corresponding proof scope.
-    pub case_fact_ids: Vec<FactId>,
+pub struct SuccessVerifyByCasesResult {
+    /// Well-definedness of each exported goal, checked before any case-local
+    /// assumptions are installed. This is intentionally separate from the
+    /// branch conclusion checks below: it is the evidence needed to form the
+    /// statement's result outside every branch scope.
+    pub goal_well_definedness: Vec<SuccessVerifyFactWellDefinedResult>,
+    pub coverage_check: Box<StmtResult>,
     pub then_facts: Vec<Fact>,
-    pub proof_step_counts: Vec<usize>,
-    pub case_result_counts: Vec<usize>,
-    pub proof_scopes: Vec<LocalProofScopeVerificationResult>,
-    pub impossible_facts: Vec<Option<AtomicFact>>,
+    pub branches: Vec<SuccessVerifyByCaseBranchResult>,
 }
 
-pub struct ByContraVerificationResult {
+pub struct SuccessVerifyByCaseBranchResult {
+    pub assumption: AndChainAtomicFact,
+    pub assumption_fact_id: FactId,
+    pub proof_scope: SuccessVerifyLocalProofScopeResult,
+    pub proof_steps: Vec<StmtResult>,
+    pub exit: SuccessVerifyByCaseBranchExitResult,
+}
+
+pub enum SuccessVerifyByCaseBranchExitResult {
+    Conclusions(Box<SuccessVerifyByCaseConclusionsResult>),
+    Contradiction(Box<SuccessVerifyByCaseContradictionResult>),
+}
+
+pub struct SuccessVerifyByCaseConclusionsResult {
+    pub checks: Vec<StmtResult>,
+}
+
+pub struct SuccessVerifyByCaseContradictionResult {
+    pub impossible_fact: AtomicFact,
+    pub contradiction: SuccessVerifyContradictionResult,
+}
+
+pub struct SuccessVerifyByContraResult {
     pub to_prove: Fact,
     pub reverse_assumption: Fact,
     /// Stable ID of the temporary reverse assumption while the contradiction
     /// proof environment was alive.
     pub reverse_assumption_fact_id: FactId,
-    pub proof_step_count: usize,
-    pub proof_scope: LocalProofScopeVerificationResult,
+    pub proof_scope: SuccessVerifyLocalProofScopeResult,
+    pub proof_steps: Vec<StmtResult>,
     pub impossible_fact: AtomicFact,
+    pub contradiction: SuccessVerifyContradictionResult,
+}
+
+#[derive(Debug)]
+pub struct SuccessVerifyContradictionResult {
+    pub impossible_check: Box<StmtResult>,
+    pub negated_impossible_check: Box<StmtResult>,
 }
 
 #[derive(Clone, Debug)]
-pub struct LocalProofScopeVerificationResult {
-    pub assumption_infers: InferResult,
+pub struct SuccessVerifyLocalProofScopeResult {
+    pub assumption_infers: SuccessInferResult,
     pub assumption_components: Vec<(FactId, Fact)>,
-    pub well_definedness: WellDefinednessCertificate,
 }
 
-impl LocalProofScopeVerificationResult {
+impl SuccessVerifyLocalProofScopeResult {
     pub fn new(
-        assumption_infers: InferResult,
+        assumption_infers: SuccessInferResult,
         assumption_components: Vec<(FactId, Fact)>,
-        well_definedness: WellDefinednessCertificate,
     ) -> Self {
         Self {
             assumption_infers,
             assumption_components,
-            well_definedness,
         }
     }
 }
 
-#[derive(Clone, Debug)]
-pub struct ByAssignmentVerificationResult {
+#[derive(Debug)]
+pub struct SuccessVerifyByAssignmentResult {
     pub assignment: Vec<(String, String)>,
     pub assumptions: Vec<(String, String)>,
-    pub domain_check_count: usize,
-    pub proof_step_count: usize,
-    pub conclusion_count: usize,
-    pub skipped_domain: Option<String>,
-    pub result_count: usize,
+    pub domain_checks: Vec<SuccessVerifyByAssignmentDomainResult>,
+    pub proof_steps: Vec<StmtResult>,
+    pub conclusion_checks: Vec<StmtResult>,
 }
 
-#[derive(Clone, Debug)]
-pub struct ByEnumerateFiniteSetVerificationResult {
+#[derive(Debug)]
+pub struct SuccessVerifyByAssignmentDomainResult {
+    pub fact: Fact,
+    pub check: Box<StmtResult>,
+    pub negated_check: Option<Box<StmtResult>>,
+    pub satisfied: bool,
+}
+
+#[derive(Debug)]
+pub struct SuccessVerifyByEnumerateFiniteSetResult {
     pub parameters: Vec<String>,
     pub parameter_sets: Vec<String>,
     pub prove_goal: String,
-    pub assignments: Vec<ByAssignmentVerificationResult>,
+    pub assignments: Vec<SuccessVerifyByAssignmentResult>,
     pub generated_forall: String,
 }
 
-#[derive(Clone, Debug)]
-pub struct ByForVerificationResult {
+#[derive(Debug)]
+pub struct SuccessVerifyByForResult {
     pub iteration_mode: String,
     pub parameters: Vec<String>,
     pub domains: Vec<String>,
     pub prove_goal: String,
-    pub assignments: Vec<ByAssignmentVerificationResult>,
+    pub assignments: Vec<SuccessVerifyByAssignmentResult>,
     pub generated_forall: String,
 }
 
-#[derive(Clone, Debug)]
-pub struct ByEnumerateRangeVerificationResult {
+#[derive(Debug)]
+pub struct SuccessVerifyByEnumerateRangeResult {
     pub proof_type: String,
     pub element: String,
     pub range: String,
     pub membership_fact: String,
     pub endpoint_facts: Vec<String>,
     pub generated_cases: String,
+    pub membership_check: Box<StmtResult>,
+    pub endpoint_checks: Vec<StmtResult>,
 }
 
-#[derive(Clone, Debug)]
-pub struct ByInducVerificationResult {
-    pub strong: bool,
-    pub finite_set: bool,
-    pub structured: bool,
+#[derive(Debug)]
+pub struct SuccessVerifyByInducResult {
     pub parameter: String,
-    pub start: String,
     pub prove_goals: Vec<String>,
     pub generated_forall: String,
-    pub proof_step_count: usize,
-    pub base_assumptions: Vec<(String, String)>,
-    pub base_proof_step_count: usize,
-    pub base_result_count: usize,
-    pub step_assumptions: Vec<(String, String)>,
-    pub step_proof_step_count: usize,
-    pub step_result_count: usize,
+    pub proof: SuccessVerifyByInducProofResult,
 }
 
-#[derive(Clone, Debug)]
-pub struct ByExtensionVerificationResult {
+#[derive(Debug)]
+pub enum SuccessVerifyByInducProofResult {
+    IntegerUnstructured(Box<SuccessVerifyByUnstructuredIntegerInducResult>),
+    IntegerStructured(Box<SuccessVerifyByStructuredIntegerInducResult>),
+    FiniteSet(Box<SuccessVerifyByFiniteSetInducResult>),
+}
+
+#[derive(Debug)]
+pub struct SuccessVerifyByUnstructuredIntegerInducResult {
+    pub strong: bool,
+    pub start: String,
+    pub base_assumptions: Vec<(String, String)>,
+    pub step_assumptions: Vec<(String, String)>,
+    pub proof_steps: Vec<StmtResult>,
+    pub goals: Vec<SuccessVerifyByInducGoalResult>,
+}
+
+#[derive(Debug)]
+pub struct SuccessVerifyByInducGoalResult {
+    pub source_goal: Fact,
+    pub base_check: Box<StmtResult>,
+    pub start_in_z_check: Box<StmtResult>,
+    pub step_check: Box<StmtResult>,
+    pub infers: SuccessInferResult,
+}
+
+#[derive(Debug)]
+pub struct SuccessVerifyByStructuredIntegerInducResult {
+    pub strong: bool,
+    pub start: String,
+    pub start_in_z_check: Box<StmtResult>,
+    pub base: SuccessVerifyByInducCaseResult,
+    pub step: SuccessVerifyByInducCaseResult,
+}
+
+#[derive(Debug)]
+pub struct SuccessVerifyByFiniteSetInducResult {
+    pub base: SuccessVerifyByInducCaseResult,
+    pub step: SuccessVerifyByInducCaseResult,
+}
+
+#[derive(Debug)]
+pub struct SuccessVerifyByInducCaseResult {
+    pub assumptions: Vec<(String, String)>,
+    pub proof_steps: Vec<StmtResult>,
+    pub conclusion_checks: Vec<StmtResult>,
+}
+
+#[derive(Debug)]
+pub struct SuccessVerifyByExtensionResult {
     pub left: String,
     pub right: String,
     pub prove_goal: String,
-    pub proof_step_count: usize,
     pub left_to_right_subset: String,
     pub right_to_left_subset: String,
+    pub proof_steps: Vec<StmtResult>,
+    pub left_to_right_check: Box<StmtResult>,
+    pub right_to_left_check: Box<StmtResult>,
 }
 
-#[derive(Clone)]
-pub struct ByPropRegistrationVerificationResult {
+pub struct SuccessVerifyByPropRegistrationResult {
     pub registration_type: String,
     pub prop_name: String,
     pub forall_fact: ForallFact,
-    pub assumption_infers: InferResult,
-    pub proof_step_count: usize,
+    pub assumption_infers: SuccessInferResult,
+    pub proof_steps: Vec<StmtResult>,
+    pub conclusion_check: Box<StmtResult>,
 }
 
-#[derive(Clone, Debug)]
-pub struct ByChoiceVerificationResult {
+#[derive(Debug)]
+pub struct SuccessVerifyByChoiceResult {
     pub proof_type: String,
     pub target: String,
-    pub proof_step_count: usize,
-    pub obligations: Vec<(String, String, bool)>,
+    pub proof_steps: Vec<StmtResult>,
+    pub obligations: Vec<SuccessVerifyByChoiceObligationResult>,
     pub trusted_conclusion: String,
 }
 
-#[derive(Clone, Debug)]
-pub struct ByTheoremVerificationResult {
+#[derive(Debug)]
+pub struct SuccessVerifyByChoiceObligationResult {
+    pub role: String,
+    pub fact: String,
+    pub check: Option<Box<StmtResult>>,
+}
+
+#[derive(Debug)]
+pub struct SuccessVerifyByTheoremResult {
     pub theorem: String,
     pub theorem_source: String,
     pub mode: String,
@@ -199,16 +342,45 @@ pub struct ByTheoremVerificationResult {
     pub selected_fact: Option<String>,
     pub parent_stored_facts: Vec<String>,
     pub provenance: Option<String>,
+    pub argument_verification: Option<Box<SuccessVerifyArgsSatisfyParamDefResult>>,
+    /// Checked premises for a registered builtin theorem, in the same order
+    /// as `domain_facts` and `requirement_roles`.
+    pub requirement_checks: Vec<StmtResult>,
+    pub domain_checks: Vec<StmtResult>,
+    pub selected_fact_check: Option<Box<StmtResult>>,
 }
 
-#[derive(Clone, Debug)]
-pub struct ByDefinitionVerificationResult {
+pub struct SuccessVerifyByDefinitionResult {
     pub prop: String,
+    /// Exact concrete predicate definition selected by execution. Builtin
+    /// definitions use `None` and are lowered by their own typed evidence.
+    pub definition: Option<DefPropStmt>,
     pub arguments: Vec<String>,
     pub definition_clauses: Vec<String>,
     pub stored_fact: String,
     pub concrete_user_prop: bool,
     pub definition_clause_facts: Vec<Fact>,
+    pub argument_verification: Option<Box<SuccessVerifyArgsSatisfyParamDefResult>>,
+    pub clause_checks: Vec<StmtResult>,
+}
+
+impl fmt::Debug for SuccessVerifyByDefinitionResult {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        f.debug_struct("SuccessVerifyByDefinitionResult")
+            .field("prop", &self.prop)
+            .field(
+                "definition",
+                &self.definition.as_ref().map(ToString::to_string),
+            )
+            .field("arguments", &self.arguments)
+            .field("definition_clauses", &self.definition_clauses)
+            .field("stored_fact", &self.stored_fact)
+            .field("concrete_user_prop", &self.concrete_user_prop)
+            .field("definition_clause_facts", &self.definition_clause_facts)
+            .field("argument_verification", &self.argument_verification)
+            .field("clause_checks", &self.clause_checks)
+            .finish()
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -217,104 +389,132 @@ pub struct ObjectIntroductionItem {
     pub facts: Vec<Fact>,
 }
 
-#[derive(Clone, Debug)]
-pub struct ObjectChoiceVerificationResult {
-    /// One exact stored type fact for every selected object, in declaration
-    /// order. For an object carrier this is the selected membership fact.
-    pub selected_type_facts: Vec<Fact>,
-    /// Index into the owning statement IR's `common.inside_results` for the checked
-    /// nonemptiness producer. Meta-level parameter types currently have no
-    /// such producer and retain `None` as an explicit backend boundary.
-    pub nonempty_check_indices: Vec<Option<usize>>,
-}
-
-impl ObjectChoiceVerificationResult {
-    pub fn new(selected_type_facts: Vec<Fact>, nonempty_check_indices: Vec<Option<usize>>) -> Self {
-        ObjectChoiceVerificationResult {
-            selected_type_facts,
-            nonempty_check_indices,
-        }
-    }
+#[derive(Debug)]
+pub struct SuccessVerifyObjectChoiceResult {
+    pub groups: Vec<SuccessVerifyObjectChoiceGroupResult>,
 }
 
 #[derive(Debug)]
-pub struct WitnessExistVerificationResult {
-    /// Number of user proof statements at the front of `inside_results`.
-    pub proof_step_count: usize,
+pub struct SuccessVerifyObjectChoiceGroupResult {
+    pub selected_type_facts: Vec<Fact>,
+    pub nonempty_check: Option<Box<StmtResult>>,
+}
+
+impl SuccessVerifyObjectChoiceResult {
+    pub fn new(groups: Vec<SuccessVerifyObjectChoiceGroupResult>) -> Self {
+        SuccessVerifyObjectChoiceResult { groups }
+    }
+}
+
+pub struct SuccessVerifyHaveObjEqualResult {
+    pub type_checks: Vec<StmtResult>,
+}
+
+pub struct SuccessVerifyPreimageResult {
+    pub source_membership_check: Box<StmtResult>,
+}
+
+pub struct SuccessVerifyTupleOrCartDimensionResult {
+    pub positive_check: Box<StmtResult>,
+    pub at_least_two_check: Box<StmtResult>,
+}
+
+pub struct SuccessVerifyIndexedFunctionDefinitionResult {
+    pub bound_checks: Vec<StmtResult>,
+    pub return_check: Box<StmtResult>,
+}
+
+pub struct SuccessVerifyCaseFunctionDefinitionResult {
+    pub coverage_check: Box<StmtResult>,
+    pub return_checks: Vec<StmtResult>,
+}
+
+pub struct SuccessVerifyFunctionFromUniqueExistenceResult {
+    pub source_forall_check: Option<Box<StmtResult>>,
+    pub proof_steps: Vec<StmtResult>,
+    pub conclusion_checks: Vec<StmtResult>,
+}
+
+pub struct SuccessVerifyStrategyDefinitionResult {
+    pub proof_steps: Vec<StmtResult>,
+    pub conclusion_checks: Vec<StmtResult>,
+}
+
+#[derive(Debug)]
+pub struct SuccessVerifyWitnessExistResult {
+    pub proof_steps: Vec<StmtResult>,
     /// One factual type-check result for every witness value that contributes
     /// a target-side existential requirement.  Plain `set` binders need no
     /// separate target proposition because every value already has type
     /// `LitexSet`.
     pub parameter_checks: Vec<Option<Box<StmtResult>>>,
     /// One factual result for every direct existential body fact.
-    pub body_check_indices: Vec<usize>,
+    pub body_checks: Vec<StmtResult>,
     /// The final result for the uniqueness obligation, when the source form
     /// is `exist!`.
-    pub uniqueness_check_index: Option<usize>,
+    pub uniqueness_check: Option<Box<StmtResult>>,
 }
 
-pub struct WitnessAtomicFactVerificationResult {
+pub struct SuccessVerifyWitnessAtomicFactResult {
     pub definition: DefPropStmt,
     pub instantiated_existential: ExistFactEnum,
-    pub definition_parameter_check: Box<StmtResult>,
-    pub witness_verification: WitnessExistVerificationResult,
+    pub definition_parameter_verification: Box<SuccessVerifyArgsSatisfyParamDefResult>,
+    pub witness_verification: SuccessVerifyWitnessExistResult,
 }
 
-impl WitnessAtomicFactVerificationResult {
+impl SuccessVerifyWitnessAtomicFactResult {
     pub fn new(
         definition: DefPropStmt,
         instantiated_existential: ExistFactEnum,
-        definition_parameter_check: StmtResult,
-        witness_verification: WitnessExistVerificationResult,
+        definition_parameter_verification: SuccessVerifyArgsSatisfyParamDefResult,
+        witness_verification: SuccessVerifyWitnessExistResult,
     ) -> Self {
-        WitnessAtomicFactVerificationResult {
+        SuccessVerifyWitnessAtomicFactResult {
             definition,
             instantiated_existential,
-            definition_parameter_check: Box::new(definition_parameter_check),
+            definition_parameter_verification: Box::new(definition_parameter_verification),
             witness_verification,
         }
     }
 }
 
-impl fmt::Debug for WitnessAtomicFactVerificationResult {
+impl fmt::Debug for SuccessVerifyWitnessAtomicFactResult {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        f.debug_struct("WitnessAtomicFactVerificationResult")
+        f.debug_struct("SuccessVerifyWitnessAtomicFactResult")
             .field("definition", &self.definition.name)
             .field(
                 "instantiated_existential",
                 &self.instantiated_existential.to_string(),
             )
             .field(
-                "definition_parameter_check",
-                &self.definition_parameter_check,
+                "definition_parameter_verification",
+                &self.definition_parameter_verification,
             )
             .field("witness_verification", &self.witness_verification)
             .finish()
     }
 }
 
-impl WitnessExistVerificationResult {
+impl SuccessVerifyWitnessExistResult {
     pub fn new(
-        proof_step_count: usize,
+        proof_steps: Vec<StmtResult>,
         parameter_checks: Vec<Option<Box<StmtResult>>>,
-        body_check_indices: Vec<usize>,
-        uniqueness_check_index: Option<usize>,
+        body_checks: Vec<StmtResult>,
+        uniqueness_check: Option<StmtResult>,
     ) -> Self {
         Self {
-            proof_step_count,
+            proof_steps,
             parameter_checks,
-            body_check_indices,
-            uniqueness_check_index,
+            body_checks,
+            uniqueness_check: uniqueness_check.map(Box::new),
         }
     }
 }
 
-#[derive(Clone)]
-pub struct ExistentialEliminationVerificationResult {
-    /// Index of the checked source proof in `inside_results`. This may be a
-    /// factual existential/projection or a scoped theorem application whose
-    /// exact direct conclusion is retained in theorem verification evidence.
-    pub source_result_index: usize,
+pub struct SuccessVerifyExistentialEliminationResult {
+    /// Checked existential/projection or scoped theorem application whose
+    /// exact direct conclusion is retained recursively.
+    pub source_result: Box<StmtResult>,
     /// Exact existential eliminated after any definition projection.
     pub source_exist_fact: ExistFactEnum,
     /// Exact instantiated type fact stored for every introduced witness.
@@ -326,10 +526,10 @@ pub struct ExistentialEliminationVerificationResult {
     pub includes_uniqueness: bool,
 }
 
-impl fmt::Debug for ExistentialEliminationVerificationResult {
+impl fmt::Debug for SuccessVerifyExistentialEliminationResult {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        f.debug_struct("ExistentialEliminationVerificationResult")
-            .field("source_result_index", &self.source_result_index)
+        f.debug_struct("SuccessVerifyExistentialEliminationResult")
+            .field("source_result", &self.source_result)
             .field("source_exist_fact", &self.source_exist_fact.to_string())
             .field("witness_type_facts", &self.witness_type_facts)
             .field("instantiated_body_facts", &self.instantiated_body_facts)
@@ -338,16 +538,16 @@ impl fmt::Debug for ExistentialEliminationVerificationResult {
     }
 }
 
-impl ExistentialEliminationVerificationResult {
+impl SuccessVerifyExistentialEliminationResult {
     pub fn new(
-        source_result_index: usize,
+        source_result: StmtResult,
         source_exist_fact: ExistFactEnum,
         witness_type_facts: Vec<Fact>,
         instantiated_body_facts: Vec<Fact>,
         includes_uniqueness: bool,
     ) -> Self {
         Self {
-            source_result_index,
+            source_result: Box::new(source_result),
             source_exist_fact,
             witness_type_facts,
             instantiated_body_facts,
@@ -357,7 +557,7 @@ impl ExistentialEliminationVerificationResult {
 }
 
 #[derive(Debug)]
-pub struct VerifiedByBuiltinRuleResult {
+pub struct SuccessBuiltinFactProofResult {
     pub msg: String,
     /// Structured verifier-side bindings retained for compiler backends.
     /// `None` means this rule still has only its diagnostic label.
@@ -430,6 +630,29 @@ pub enum FactTransformationRule {
     RationalNormalization,
 }
 
+/// One target-directed fact transformation. The enclosing
+/// `SuccessVerifyFactResult` owns the target proposition; this node owns the
+/// immediately preceding successful fact result and the exact rule used for
+/// the single transformation layer.
+#[derive(Debug)]
+pub struct SuccessTransformFactResult {
+    pub rule: FactTransformationRule,
+    pub source: Rc<SuccessVerifyFactResult>,
+}
+
+impl SuccessTransformFactResult {
+    pub fn new(rule: FactTransformationRule, source: SuccessVerifyFactResult) -> Self {
+        Self {
+            rule,
+            source: Rc::new(source),
+        }
+    }
+
+    pub fn from_shared(rule: FactTransformationRule, source: Rc<SuccessVerifyFactResult>) -> Self {
+        Self { rule, source }
+    }
+}
+
 impl fmt::Debug for EqualityTransportStep {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         f.debug_struct("EqualityTransportStep")
@@ -442,7 +665,7 @@ impl fmt::Debug for EqualityTransportStep {
 }
 
 #[derive(Clone, Debug)]
-pub struct VerifiedByFactResult {
+pub struct SuccessFactCitationProofResult {
     pub detail: Option<String>,
     pub cite_what: Box<Stmt>,
     /// Captured while the cited fact's environment is still alive.
@@ -468,7 +691,7 @@ pub struct VerifiedByFactResult {
 
 #[derive(Debug)]
 pub struct DefinitionReductionVerificationEvidence {
-    pub parameter_checks: Vec<StmtResult>,
+    pub argument_verification: SuccessVerifyArgsSatisfyParamDefResult,
     pub clause_facts: Vec<Fact>,
     pub clause_checks: Vec<StmtResult>,
 }
@@ -522,7 +745,7 @@ impl fmt::Debug for KnownForallInstantiationItem {
 }
 
 #[derive(Debug)]
-pub struct KnownForallRequirementResult {
+pub struct SuccessVerifyKnownForallRequirementResult {
     pub stmt: Fact,
     pub result: Box<StmtResult>,
     pub kind: KnownForallRequirementKind,
@@ -535,32 +758,32 @@ pub enum KnownForallRequirementKind {
 }
 
 #[derive(Debug)]
-pub struct KnownForallInstantiationResult {
+pub struct SuccessInstantiateKnownForallResult {
     pub cite_what: Box<Stmt>,
     /// Captured while the source forall's environment is still alive.
     pub source_fact_id: Option<FactId>,
     pub instantiation: Vec<KnownForallInstantiationItem>,
-    pub requirements: Vec<KnownForallRequirementResult>,
+    pub requirements: Vec<SuccessVerifyKnownForallRequirementResult>,
 }
 
 #[derive(Debug)]
-pub struct VerifiedBysResult {
-    pub cite_what: Vec<VerifiedBysEnum>,
+pub struct SuccessCombinedFactProofResult {
+    pub cite_what: Vec<SuccessCombinedFactProofItemResult>,
 }
 
-pub struct ForallProofResult {
+pub struct SuccessForallProofResult {
     pub forall_fact: ForallFact,
-    pub assumption_infers: InferResult,
-    pub proves: Vec<ForallProvedFactResult>,
+    pub assumption_infers: SuccessInferResult,
+    pub proves: Vec<SuccessForallProvedFactResult>,
 }
 
-pub struct ForallProvedFactResult {
+pub struct SuccessForallProvedFactResult {
     pub stmt: ExistOrAndChainAtomicFact,
     pub result: Box<StmtResult>,
 }
 
 #[derive(Debug)]
-pub struct FactVerifiedByBuiltinRuleInVerifiedBys {
+pub struct SuccessCombinedBuiltinFactProofResult {
     pub msg: String,
     pub verify_what: Fact,
     pub evidence: Option<BuiltinRuleEvidence>,
@@ -568,7 +791,7 @@ pub struct FactVerifiedByBuiltinRuleInVerifiedBys {
 }
 
 #[derive(Debug)]
-pub struct FactVerifiedByFactInVerifiedBys {
+pub struct SuccessCombinedFactCitationProofResult {
     pub detail: Option<String>,
     pub verify_what: Fact,
     pub cite_what: Box<Stmt>,
@@ -579,38 +802,50 @@ pub struct FactVerifiedByFactInVerifiedBys {
 }
 
 #[derive(Debug)]
-pub struct FactVerifiedByKnownForallInVerifiedBys {
+pub struct SuccessCombinedKnownForallProofResult {
     pub verify_what: Fact,
-    pub result: KnownForallInstantiationResult,
+    pub result: SuccessInstantiateKnownForallResult,
 }
 
 #[derive(Debug)]
-pub enum VerifiedBysEnum {
-    ByBuiltinRule(FactVerifiedByBuiltinRuleInVerifiedBys),
-    ByBuiltinStrategy(FactVerifiedByBuiltinRuleInVerifiedBys),
-    ByFact(FactVerifiedByFactInVerifiedBys),
-    ByKnownForall(FactVerifiedByKnownForallInVerifiedBys),
+pub struct SuccessCombinedReuseFactProofResult {
+    pub statement: Fact,
+    pub source: Rc<SuccessVerifyFactResult>,
+}
+
+#[derive(Debug)]
+pub struct SuccessReuseFactProofResult {
+    pub source: Rc<SuccessVerifyFactResult>,
+}
+
+#[derive(Debug)]
+pub enum SuccessCombinedFactProofItemResult {
+    ByBuiltinRule(SuccessCombinedBuiltinFactProofResult),
+    ByBuiltinStrategy(SuccessCombinedBuiltinFactProofResult),
+    ByFact(SuccessCombinedFactCitationProofResult),
+    ByKnownForall(SuccessCombinedKnownForallProofResult),
     /// Internal proof sharing; output and dependency analysis expose the source proof.
-    ByStatementMemo(Fact, Rc<VerifiedFactStmtIr>),
+    Reuse(Box<SuccessCombinedReuseFactProofResult>),
 }
 
 #[derive(Debug)]
-pub enum VerifiedByResult {
-    BuiltinRule(VerifiedByBuiltinRuleResult),
-    BuiltinStrategy(VerifiedByBuiltinRuleResult),
-    Fact(VerifiedByFactResult),
-    KnownForallInstantiation(KnownForallInstantiationResult),
-    VerifiedBys(VerifiedBysResult),
-    ForallProof(ForallProofResult),
+pub enum SuccessFactProofResult {
+    BuiltinRule(SuccessBuiltinFactProofResult),
+    BuiltinStrategy(SuccessBuiltinFactProofResult),
+    Fact(SuccessFactCitationProofResult),
+    KnownForallInstantiation(SuccessInstantiateKnownForallResult),
+    CombinedProofs(SuccessCombinedFactProofResult),
+    ForallProof(SuccessForallProofResult),
+    Transform(Box<SuccessTransformFactResult>),
     /// Internal proof sharing; this is not a user-visible verification method.
-    StatementMemo(Rc<VerifiedFactStmtIr>),
+    Reuse(Box<SuccessReuseFactProofResult>),
 }
 
-impl VerifiedFactStmtIr {
+impl SuccessFactStmtResult {
     pub fn new_with_verified_by_builtin_rules(
         stmt: Fact,
-        infers: InferResult,
-        verified_by: VerifiedByResult,
+        infers: SuccessInferResult,
+        verified_by: SuccessFactProofResult,
     ) -> Self {
         Self::new(stmt, infers, verified_by)
     }
@@ -620,9 +855,9 @@ impl VerifiedFactStmtIr {
         builtin_rule_label: String,
         step_results: Vec<StmtResult>,
     ) -> Self {
-        let infers = InferResult::new();
+        let infers = SuccessInferResult::new();
         let verified_by =
-            VerifiedByResult::builtin_rule_with_subgoals(builtin_rule_label, step_results);
+            SuccessFactProofResult::builtin_rule_with_subgoals(builtin_rule_label, step_results);
         Self::new_with_verified_by_builtin_rules(stmt, infers, verified_by)
     }
 
@@ -631,12 +866,12 @@ impl VerifiedFactStmtIr {
         strategy_label: String,
         step_results: Vec<StmtResult>,
     ) -> Self {
-        let verified_by = VerifiedByResult::BuiltinStrategy(VerifiedByBuiltinRuleResult {
+        let verified_by = SuccessFactProofResult::BuiltinStrategy(SuccessBuiltinFactProofResult {
             msg: strategy_label,
             evidence: None,
             subgoals: step_results,
         });
-        Self::new_with_verified_by_builtin_rules(stmt, InferResult::new(), verified_by)
+        Self::new_with_verified_by_builtin_rules(stmt, SuccessInferResult::new(), verified_by)
     }
 
     pub fn new_with_verified_by_builtin_strategy_evidence_recording_stmt(
@@ -645,33 +880,33 @@ impl VerifiedFactStmtIr {
         evidence: BuiltinRuleEvidence,
         step_results: Vec<StmtResult>,
     ) -> Self {
-        let verified_by = VerifiedByResult::BuiltinStrategy(VerifiedByBuiltinRuleResult {
+        let verified_by = SuccessFactProofResult::BuiltinStrategy(SuccessBuiltinFactProofResult {
             msg: strategy_label,
             evidence: Some(evidence),
             subgoals: step_results,
         });
-        Self::new_with_verified_by_builtin_rules(stmt, InferResult::new(), verified_by)
+        Self::new_with_verified_by_builtin_rules(stmt, SuccessInferResult::new(), verified_by)
     }
 
     pub fn new_with_verified_by_builtin_rules_label_and_steps(
         stmt: Fact,
-        infers: InferResult,
+        infers: SuccessInferResult,
         builtin_rule_label: String,
         step_results: Vec<StmtResult>,
     ) -> Self {
         let verified_by =
-            VerifiedByResult::builtin_rule_with_subgoals(builtin_rule_label, step_results);
+            SuccessFactProofResult::builtin_rule_with_subgoals(builtin_rule_label, step_results);
         Self::new_with_verified_by_builtin_rules(stmt, infers, verified_by)
     }
 
     pub fn new_with_verified_by_builtin_rule_evidence_and_steps(
         stmt: Fact,
-        infers: InferResult,
+        infers: SuccessInferResult,
         builtin_rule_label: String,
         evidence: BuiltinRuleEvidence,
         step_results: Vec<StmtResult>,
     ) -> Self {
-        let verified_by = VerifiedByResult::builtin_rule_with_evidence(
+        let verified_by = SuccessFactProofResult::builtin_rule_with_evidence(
             builtin_rule_label,
             evidence,
             step_results,
@@ -687,7 +922,7 @@ impl VerifiedFactStmtIr {
     ) -> Self {
         Self::new_with_verified_by_builtin_rule_evidence_and_steps(
             stmt,
-            InferResult::new(),
+            SuccessInferResult::new(),
             builtin_rule_label,
             evidence,
             step_results,
@@ -696,8 +931,8 @@ impl VerifiedFactStmtIr {
 
     pub fn new_with_verified_by_known_fact_and_infer(
         stmt: Fact,
-        infers: InferResult,
-        verified_by: VerifiedByResult,
+        infers: SuccessInferResult,
+        verified_by: SuccessFactProofResult,
         step_results: Vec<StmtResult>,
     ) -> Self {
         let verified_by = merge_verified_by_with_steps(stmt.clone(), verified_by, step_results);
@@ -706,12 +941,12 @@ impl VerifiedFactStmtIr {
 
     pub fn new_with_verified_by_known_fact(
         stmt: Fact,
-        verified_by: VerifiedByResult,
+        verified_by: SuccessFactProofResult,
         step_results: Vec<StmtResult>,
     ) -> Self {
         Self::new_with_verified_by_known_fact_and_infer(
             stmt,
-            InferResult::new(),
+            SuccessInferResult::new(),
             verified_by,
             step_results,
         )
@@ -719,38 +954,38 @@ impl VerifiedFactStmtIr {
 
     pub fn new_with_statement_memo(
         stmt: Fact,
-        infers: InferResult,
-        source: Rc<VerifiedFactStmtIr>,
+        infers: SuccessInferResult,
+        source: Rc<SuccessVerifyFactResult>,
     ) -> Self {
         Self::new_with_verified_by_builtin_rules(
             stmt,
             infers,
-            VerifiedByResult::StatementMemo(source),
+            SuccessFactProofResult::Reuse(Box::new(SuccessReuseFactProofResult { source })),
         )
     }
 
     pub fn is_verified_by_builtin_rules_only(&self) -> bool {
-        self.verified_by.tree_is_builtin_rules_only()
+        self.proof().tree_is_builtin_rules_only()
     }
 
-    pub(crate) fn underlying_verified_by(&self) -> &VerifiedByResult {
-        let mut success = self;
+    pub(crate) fn underlying_verified_by(&self) -> &SuccessFactProofResult {
+        let mut proof = self.proof();
         loop {
-            match &success.verified_by {
-                VerifiedByResult::StatementMemo(source) => success = source,
+            match proof {
+                SuccessFactProofResult::Reuse(result) => proof = result.source.proof(),
                 verified_by => return verified_by,
             }
         }
     }
 }
 
-impl VerifiedByResult {
+impl SuccessFactProofResult {
     pub fn builtin_rule(msg: impl Into<String>) -> Self {
         Self::builtin_rule_with_subgoals(msg, Vec::new())
     }
 
     pub fn builtin_rule_with_subgoals(msg: impl Into<String>, subgoals: Vec<StmtResult>) -> Self {
-        Self::BuiltinRule(VerifiedByBuiltinRuleResult {
+        Self::BuiltinRule(SuccessBuiltinFactProofResult {
             msg: msg.into(),
             evidence: None,
             subgoals,
@@ -762,7 +997,7 @@ impl VerifiedByResult {
         evidence: BuiltinRuleEvidence,
         subgoals: Vec<StmtResult>,
     ) -> Self {
-        Self::BuiltinRule(VerifiedByBuiltinRuleResult {
+        Self::BuiltinRule(SuccessBuiltinFactProofResult {
             msg: msg.into(),
             evidence: Some(evidence),
             subgoals,
@@ -774,7 +1009,7 @@ impl VerifiedByResult {
     }
 
     pub fn cited_stmt(_goal: Fact, cite_what: Stmt, detail: Option<String>) -> Self {
-        Self::Fact(VerifiedByFactResult {
+        Self::Fact(SuccessFactCitationProofResult {
             detail,
             cite_what: Box::new(cite_what),
             source_fact_id: None,
@@ -788,12 +1023,12 @@ impl VerifiedByResult {
     pub fn cited_definition(
         _goal: Fact,
         definition: DefPropStmt,
-        parameter_checks: Vec<StmtResult>,
+        argument_verification: SuccessVerifyArgsSatisfyParamDefResult,
         clause_checks: Vec<(Fact, StmtResult)>,
         detail: Option<String>,
     ) -> Self {
         let (clause_facts, clause_checks) = clause_checks.into_iter().unzip();
-        Self::Fact(VerifiedByFactResult {
+        Self::Fact(SuccessFactCitationProofResult {
             detail,
             cite_what: Box::new(definition.clone().into()),
             source_fact_id: None,
@@ -801,7 +1036,7 @@ impl VerifiedByResult {
             fact_transformation: None,
             checked_function_definition_reduction: None,
             definition_reduction: Some(Rc::new(DefinitionReductionVerificationEvidence {
-                parameter_checks,
+                argument_verification,
                 clause_facts,
                 clause_checks,
             })),
@@ -816,7 +1051,7 @@ impl VerifiedByResult {
         fact_transformation: Option<FactTransformationEvidence>,
         detail: Option<String>,
     ) -> Self {
-        Self::Fact(VerifiedByFactResult {
+        Self::Fact(SuccessFactCitationProofResult {
             detail,
             cite_what: Box::new(cite_what.into_stmt()),
             source_fact_id,
@@ -831,9 +1066,9 @@ impl VerifiedByResult {
         cite_what: Fact,
         source_fact_id: Option<FactId>,
         instantiation: Vec<KnownForallInstantiationItem>,
-        requirements: Vec<KnownForallRequirementResult>,
+        requirements: Vec<SuccessVerifyKnownForallRequirementResult>,
     ) -> Self {
-        Self::KnownForallInstantiation(KnownForallInstantiationResult::new(
+        Self::KnownForallInstantiation(SuccessInstantiateKnownForallResult::new(
             cite_what.into_stmt(),
             source_fact_id,
             instantiation,
@@ -853,7 +1088,7 @@ impl VerifiedByResult {
         detail: Option<String>,
     ) -> Self {
         let cite_what = goal.clone().into_stmt();
-        Self::Fact(VerifiedByFactResult {
+        Self::Fact(SuccessFactCitationProofResult {
             detail,
             cite_what: Box::new(cite_what),
             source_fact_id: None,
@@ -866,7 +1101,7 @@ impl VerifiedByResult {
 
     pub fn cached_fact(fact: Fact, cite_fact_source: LineFile, source_fact_id: FactId) -> Self {
         let cite_what = fact.with_line_file(cite_fact_source);
-        Self::Fact(VerifiedByFactResult {
+        Self::Fact(SuccessFactCitationProofResult {
             detail: None,
             cite_what: Box::new(cite_what.into_stmt()),
             source_fact_id: Some(source_fact_id),
@@ -877,8 +1112,8 @@ impl VerifiedByResult {
         })
     }
 
-    pub fn wrap_bys(children: Vec<VerifiedBysEnum>) -> Self {
-        Self::VerifiedBys(VerifiedBysResult {
+    pub fn wrap_bys(children: Vec<SuccessCombinedFactProofItemResult>) -> Self {
+        Self::CombinedProofs(SuccessCombinedFactProofResult {
             cite_what: children,
         })
     }
@@ -886,7 +1121,7 @@ impl VerifiedByResult {
     pub fn forall_proof(
         forall_fact: ForallFact,
         then_results: Vec<StmtResult>,
-        assumption_infers: InferResult,
+        assumption_infers: SuccessInferResult,
     ) -> Self {
         let mut proves = Vec::new();
         for (stmt, result) in forall_fact
@@ -895,9 +1130,9 @@ impl VerifiedByResult {
             .cloned()
             .zip(then_results.into_iter())
         {
-            proves.push(ForallProvedFactResult::new(stmt, result));
+            proves.push(SuccessForallProvedFactResult::new(stmt, result));
         }
-        Self::ForallProof(ForallProofResult::new(
+        Self::ForallProof(SuccessForallProofResult::new(
             forall_fact,
             assumption_infers,
             proves,
@@ -906,21 +1141,26 @@ impl VerifiedByResult {
 
     pub fn tree_is_builtin_rules_only(&self) -> bool {
         match self {
-            VerifiedByResult::BuiltinRule(r) | VerifiedByResult::BuiltinStrategy(r) => {
+            SuccessFactProofResult::BuiltinRule(r) | SuccessFactProofResult::BuiltinStrategy(r) => {
                 !r.msg.is_empty()
             }
-            VerifiedByResult::Fact(_) => false,
-            VerifiedByResult::KnownForallInstantiation(_) => false,
-            VerifiedByResult::VerifiedBys(w) => {
+            SuccessFactProofResult::Fact(_) => false,
+            SuccessFactProofResult::KnownForallInstantiation(_) => false,
+            SuccessFactProofResult::CombinedProofs(w) => {
                 !w.cite_what.is_empty() && w.cite_what.iter().all(|b| b.is_builtin_rule())
             }
-            VerifiedByResult::ForallProof(_) => false,
-            VerifiedByResult::StatementMemo(source) => source.is_verified_by_builtin_rules_only(),
+            SuccessFactProofResult::ForallProof(_) => false,
+            SuccessFactProofResult::Transform(result) => {
+                result.source.proof().tree_is_builtin_rules_only()
+            }
+            SuccessFactProofResult::Reuse(result) => {
+                result.source.is_verified_by_builtin_rules_only()
+            }
         }
     }
 }
 
-impl VerifiedBysEnum {
+impl SuccessCombinedFactProofItemResult {
     pub fn builtin_rule(msg: String, verify_what: Fact, subgoals: Vec<StmtResult>) -> Self {
         Self::builtin_rule_with_evidence(msg, verify_what, None, subgoals)
     }
@@ -931,7 +1171,7 @@ impl VerifiedBysEnum {
         evidence: Option<BuiltinRuleEvidence>,
         subgoals: Vec<StmtResult>,
     ) -> Self {
-        VerifiedBysEnum::ByBuiltinRule(FactVerifiedByBuiltinRuleInVerifiedBys {
+        SuccessCombinedFactProofItemResult::ByBuiltinRule(SuccessCombinedBuiltinFactProofResult {
             msg,
             verify_what,
             evidence,
@@ -949,12 +1189,14 @@ impl VerifiedBysEnum {
         evidence: Option<BuiltinRuleEvidence>,
         subgoals: Vec<StmtResult>,
     ) -> Self {
-        VerifiedBysEnum::ByBuiltinStrategy(FactVerifiedByBuiltinRuleInVerifiedBys {
-            msg,
-            verify_what,
-            evidence,
-            subgoals,
-        })
+        SuccessCombinedFactProofItemResult::ByBuiltinStrategy(
+            SuccessCombinedBuiltinFactProofResult {
+                msg,
+                verify_what,
+                evidence,
+                subgoals,
+            },
+        )
     }
 
     pub fn cited_fact(verify_what: Fact, cite_what: Fact, detail: Option<String>) -> Self {
@@ -962,7 +1204,7 @@ impl VerifiedBysEnum {
     }
 
     pub fn cited_stmt(verify_what: Fact, cite_what: Stmt, detail: Option<String>) -> Self {
-        VerifiedBysEnum::ByFact(FactVerifiedByFactInVerifiedBys {
+        SuccessCombinedFactProofItemResult::ByFact(SuccessCombinedFactCitationProofResult {
             detail,
             verify_what,
             cite_what: Box::new(cite_what),
@@ -975,9 +1217,9 @@ impl VerifiedBysEnum {
 
     pub fn known_forall_instantiation(
         verify_what: Fact,
-        result: KnownForallInstantiationResult,
+        result: SuccessInstantiateKnownForallResult,
     ) -> Self {
-        VerifiedBysEnum::ByKnownForall(FactVerifiedByKnownForallInVerifiedBys {
+        SuccessCombinedFactProofItemResult::ByKnownForall(SuccessCombinedKnownForallProofResult {
             verify_what,
             result,
         })
@@ -988,9 +1230,12 @@ impl VerifiedBysEnum {
         Self::cited_fact(verify_what, cite_what, msg)
     }
 
-    fn from_verified_by_result(verify_what: Fact, verified_by: VerifiedByResult) -> Vec<Self> {
+    fn from_verified_by_result(
+        verify_what: Fact,
+        verified_by: SuccessFactProofResult,
+    ) -> Vec<Self> {
         match verified_by {
-            VerifiedByResult::BuiltinRule(r) => {
+            SuccessFactProofResult::BuiltinRule(r) => {
                 vec![Self::builtin_rule_with_evidence(
                     r.msg,
                     verify_what,
@@ -998,7 +1243,7 @@ impl VerifiedBysEnum {
                     r.subgoals,
                 )]
             }
-            VerifiedByResult::BuiltinStrategy(r) => {
+            SuccessFactProofResult::BuiltinStrategy(r) => {
                 vec![Self::builtin_strategy_with_evidence(
                     r.msg,
                     verify_what,
@@ -1006,41 +1251,62 @@ impl VerifiedBysEnum {
                     r.subgoals,
                 )]
             }
-            VerifiedByResult::Fact(r) => {
-                vec![VerifiedBysEnum::ByFact(FactVerifiedByFactInVerifiedBys {
-                    detail: r.detail,
-                    verify_what,
-                    cite_what: r.cite_what,
-                    source_fact_id: r.source_fact_id,
-                    equality_transport: r.equality_transport,
-                    fact_transformation: r.fact_transformation,
-                    definition_reduction: r.definition_reduction,
-                })]
+            SuccessFactProofResult::Fact(r) => {
+                vec![SuccessCombinedFactProofItemResult::ByFact(
+                    SuccessCombinedFactCitationProofResult {
+                        detail: r.detail,
+                        verify_what,
+                        cite_what: r.cite_what,
+                        source_fact_id: r.source_fact_id,
+                        equality_transport: r.equality_transport,
+                        fact_transformation: r.fact_transformation,
+                        definition_reduction: r.definition_reduction,
+                    },
+                )]
             }
-            VerifiedByResult::KnownForallInstantiation(r) => {
+            SuccessFactProofResult::KnownForallInstantiation(r) => {
                 vec![Self::known_forall_instantiation(verify_what, r)]
             }
-            VerifiedByResult::VerifiedBys(w) => w.cite_what,
-            VerifiedByResult::ForallProof(_) => {
+            SuccessFactProofResult::CombinedProofs(w) => w.cite_what,
+            SuccessFactProofResult::ForallProof(_) => {
                 vec![Self::fact_with_note(
                     verify_what,
                     Some("forall proof".to_string()),
                 )]
             }
-            VerifiedByResult::StatementMemo(source) => {
-                vec![VerifiedBysEnum::ByStatementMemo(verify_what, source)]
+            SuccessFactProofResult::Transform(result) => {
+                let source_fact = result.source.fact();
+                let mut items = vec![SuccessCombinedFactProofItemResult::Reuse(Box::new(
+                    SuccessCombinedReuseFactProofResult {
+                        statement: source_fact,
+                        source: result.source,
+                    },
+                ))];
+                items.push(Self::fact_with_note(
+                    verify_what,
+                    Some("fact transformation".to_string()),
+                ));
+                items
+            }
+            SuccessFactProofResult::Reuse(result) => {
+                vec![SuccessCombinedFactProofItemResult::Reuse(Box::new(
+                    SuccessCombinedReuseFactProofResult {
+                        statement: verify_what,
+                        source: result.source,
+                    },
+                ))]
             }
         }
     }
 
     fn is_builtin_rule(&self) -> bool {
         match self {
-            VerifiedBysEnum::ByBuiltinRule(r) | VerifiedBysEnum::ByBuiltinStrategy(r) => {
-                !r.msg.is_empty()
-            }
-            VerifiedBysEnum::ByFact(_) | VerifiedBysEnum::ByKnownForall(_) => false,
-            VerifiedBysEnum::ByStatementMemo(_, source) => {
-                source.is_verified_by_builtin_rules_only()
+            SuccessCombinedFactProofItemResult::ByBuiltinRule(r)
+            | SuccessCombinedFactProofItemResult::ByBuiltinStrategy(r) => !r.msg.is_empty(),
+            SuccessCombinedFactProofItemResult::ByFact(_)
+            | SuccessCombinedFactProofItemResult::ByKnownForall(_) => false,
+            SuccessCombinedFactProofItemResult::Reuse(result) => {
+                result.source.is_verified_by_builtin_rules_only()
             }
         }
     }
@@ -1056,9 +1322,9 @@ impl KnownForallInstantiationItem {
     }
 }
 
-impl KnownForallRequirementResult {
+impl SuccessVerifyKnownForallRequirementResult {
     pub fn new(stmt: Fact, result: StmtResult, kind: KnownForallRequirementKind) -> Self {
-        KnownForallRequirementResult {
+        SuccessVerifyKnownForallRequirementResult {
             stmt,
             result: Box::new(result),
             kind,
@@ -1066,14 +1332,14 @@ impl KnownForallRequirementResult {
     }
 }
 
-impl KnownForallInstantiationResult {
+impl SuccessInstantiateKnownForallResult {
     pub fn new(
         cite_what: Stmt,
         source_fact_id: Option<FactId>,
         instantiation: Vec<KnownForallInstantiationItem>,
-        requirements: Vec<KnownForallRequirementResult>,
+        requirements: Vec<SuccessVerifyKnownForallRequirementResult>,
     ) -> Self {
-        KnownForallInstantiationResult {
+        SuccessInstantiateKnownForallResult {
             cite_what: Box::new(cite_what),
             source_fact_id,
             instantiation,
@@ -1088,13 +1354,13 @@ impl ObjectIntroductionItem {
     }
 }
 
-impl ForallProofResult {
+impl SuccessForallProofResult {
     pub fn new(
         forall_fact: ForallFact,
-        assumption_infers: InferResult,
-        proves: Vec<ForallProvedFactResult>,
+        assumption_infers: SuccessInferResult,
+        proves: Vec<SuccessForallProvedFactResult>,
     ) -> Self {
-        ForallProofResult {
+        SuccessForallProofResult {
             forall_fact,
             assumption_infers,
             proves,
@@ -1102,18 +1368,18 @@ impl ForallProofResult {
     }
 }
 
-impl ForallProvedFactResult {
+impl SuccessForallProvedFactResult {
     pub fn new(stmt: ExistOrAndChainAtomicFact, result: StmtResult) -> Self {
-        ForallProvedFactResult {
+        SuccessForallProvedFactResult {
             stmt,
             result: Box::new(result),
         }
     }
 }
 
-impl fmt::Debug for ForallProofResult {
+impl fmt::Debug for SuccessForallProofResult {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        f.debug_struct("ForallProofResult")
+        f.debug_struct("SuccessForallProofResult")
             .field("forall_fact", &self.forall_fact.to_string())
             .field("assumption_infers", &self.assumption_infers)
             .field("proves", &self.proves)
@@ -1121,139 +1387,148 @@ impl fmt::Debug for ForallProofResult {
     }
 }
 
-impl fmt::Debug for ForallProvedFactResult {
+impl fmt::Debug for SuccessForallProvedFactResult {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        f.debug_struct("ForallProvedFactResult")
+        f.debug_struct("SuccessForallProvedFactResult")
             .field("stmt", &self.stmt.to_string())
             .field("result", &self.result)
             .finish()
     }
 }
 
-impl TheoremVerificationResult {
+impl SuccessVerifyTheoremResult {
     pub fn new(
         name: String,
         forall_fact: ForallFact,
-        assumption_infers: InferResult,
-        proof_step_count: usize,
+        well_definedness: SuccessVerifyFactWellDefinedResult,
+        proof_scope: SuccessVerifyLocalProofScopeResult,
+        proof_steps: Vec<StmtResult>,
+        conclusion_checks: Vec<StmtResult>,
     ) -> Self {
-        TheoremVerificationResult {
+        SuccessVerifyTheoremResult {
             name,
             forall_fact,
-            assumption_infers,
-            proof_step_count,
+            well_definedness,
+            proof_scope,
+            proof_steps,
+            conclusion_checks,
         }
     }
 }
 
-impl ClaimForallVerificationResult {
+impl SuccessVerifyClaimForallResult {
     pub fn new(
         forall_fact: ForallFact,
-        assumption_infers: InferResult,
-        proof_step_count: usize,
+        well_definedness: SuccessVerifyFactWellDefinedResult,
+        proof_scope: SuccessVerifyLocalProofScopeResult,
+        proof_steps: Vec<StmtResult>,
+        conclusion_checks: Vec<StmtResult>,
     ) -> Self {
-        ClaimForallVerificationResult {
+        SuccessVerifyClaimForallResult {
             forall_fact,
-            assumption_infers,
-            proof_step_count,
+            well_definedness,
+            proof_scope,
+            proof_steps,
+            conclusion_checks,
         }
     }
 }
 
-impl ClaimFactVerificationResult {
-    pub fn new(fact: Fact, proof_step_count: usize) -> Self {
-        ClaimFactVerificationResult {
-            fact,
-            proof_step_count,
-        }
-    }
-}
-
-impl From<ClaimForallVerificationResult> for ClaimVerificationResult {
-    fn from(v: ClaimForallVerificationResult) -> Self {
-        ClaimVerificationResult::Forall(v)
-    }
-}
-
-impl From<ClaimFactVerificationResult> for ClaimVerificationResult {
-    fn from(v: ClaimFactVerificationResult) -> Self {
-        ClaimVerificationResult::Fact(v)
-    }
-}
-
-impl ByCasesVerificationResult {
+impl SuccessVerifyClaimFactResult {
     pub fn new(
-        cases: Vec<AndChainAtomicFact>,
-        case_fact_ids: Vec<FactId>,
-        then_facts: Vec<Fact>,
-        proof_step_counts: Vec<usize>,
-        case_result_counts: Vec<usize>,
-        proof_scopes: Vec<LocalProofScopeVerificationResult>,
-        impossible_facts: Vec<Option<AtomicFact>>,
+        fact: Fact,
+        well_definedness: SuccessVerifyFactWellDefinedResult,
+        proof_scope: SuccessVerifyLocalProofScopeResult,
+        proof_steps: Vec<StmtResult>,
+        conclusion_check: StmtResult,
     ) -> Self {
-        ByCasesVerificationResult {
-            cases,
-            case_fact_ids,
-            then_facts,
-            proof_step_counts,
-            case_result_counts,
-            proof_scopes,
-            impossible_facts,
+        SuccessVerifyClaimFactResult {
+            fact,
+            well_definedness,
+            proof_scope,
+            proof_steps,
+            conclusion_check: Box::new(conclusion_check),
         }
     }
 }
 
-impl ByContraVerificationResult {
+impl From<SuccessVerifyClaimForallResult> for SuccessVerifyClaimResult {
+    fn from(v: SuccessVerifyClaimForallResult) -> Self {
+        SuccessVerifyClaimResult::Forall(Box::new(v))
+    }
+}
+
+impl From<SuccessVerifyClaimFactResult> for SuccessVerifyClaimResult {
+    fn from(v: SuccessVerifyClaimFactResult) -> Self {
+        SuccessVerifyClaimResult::Fact(Box::new(v))
+    }
+}
+
+impl SuccessVerifyByCasesResult {
+    pub fn new(
+        goal_well_definedness: Vec<SuccessVerifyFactWellDefinedResult>,
+        coverage_check: StmtResult,
+        then_facts: Vec<Fact>,
+        branches: Vec<SuccessVerifyByCaseBranchResult>,
+    ) -> Self {
+        SuccessVerifyByCasesResult {
+            goal_well_definedness,
+            coverage_check: Box::new(coverage_check),
+            then_facts,
+            branches,
+        }
+    }
+}
+
+impl SuccessVerifyByContraResult {
     pub fn new(
         to_prove: Fact,
         reverse_assumption: Fact,
         reverse_assumption_fact_id: FactId,
-        proof_step_count: usize,
-        proof_scope: LocalProofScopeVerificationResult,
+        proof_scope: SuccessVerifyLocalProofScopeResult,
+        proof_steps: Vec<StmtResult>,
         impossible_fact: AtomicFact,
+        contradiction: SuccessVerifyContradictionResult,
     ) -> Self {
-        ByContraVerificationResult {
+        SuccessVerifyByContraResult {
             to_prove,
             reverse_assumption,
             reverse_assumption_fact_id,
-            proof_step_count,
             proof_scope,
+            proof_steps,
             impossible_fact,
+            contradiction,
         }
     }
 }
 
-impl ByAssignmentVerificationResult {
+impl SuccessVerifyByAssignmentResult {
     pub fn new(
         assignment: Vec<(String, String)>,
         assumptions: Vec<(String, String)>,
-        domain_check_count: usize,
-        proof_step_count: usize,
-        conclusion_count: usize,
-        skipped_domain: Option<String>,
-        result_count: usize,
+        domain_checks: Vec<SuccessVerifyByAssignmentDomainResult>,
+        proof_steps: Vec<StmtResult>,
+        conclusion_checks: Vec<StmtResult>,
     ) -> Self {
-        ByAssignmentVerificationResult {
+        SuccessVerifyByAssignmentResult {
             assignment,
             assumptions,
-            domain_check_count,
-            proof_step_count,
-            conclusion_count,
-            skipped_domain,
-            result_count,
+            domain_checks,
+            proof_steps,
+            conclusion_checks,
         }
     }
 }
 
-impl ByEnumerateFiniteSetVerificationResult {
+impl SuccessVerifyByEnumerateFiniteSetResult {
     pub fn new(
         parameters: Vec<String>,
         parameter_sets: Vec<String>,
         prove_goal: String,
-        assignments: Vec<ByAssignmentVerificationResult>,
+        assignments: Vec<SuccessVerifyByAssignmentResult>,
         generated_forall: String,
     ) -> Self {
-        ByEnumerateFiniteSetVerificationResult {
+        SuccessVerifyByEnumerateFiniteSetResult {
             parameters,
             parameter_sets,
             prove_goal,
@@ -1263,16 +1538,16 @@ impl ByEnumerateFiniteSetVerificationResult {
     }
 }
 
-impl ByForVerificationResult {
+impl SuccessVerifyByForResult {
     pub fn new(
         iteration_mode: String,
         parameters: Vec<String>,
         domains: Vec<String>,
         prove_goal: String,
-        assignments: Vec<ByAssignmentVerificationResult>,
+        assignments: Vec<SuccessVerifyByAssignmentResult>,
         generated_forall: String,
     ) -> Self {
-        ByForVerificationResult {
+        SuccessVerifyByForResult {
             iteration_mode,
             parameters,
             domains,
@@ -1283,7 +1558,7 @@ impl ByForVerificationResult {
     }
 }
 
-impl ByEnumerateRangeVerificationResult {
+impl SuccessVerifyByEnumerateRangeResult {
     pub fn new(
         proof_type: String,
         element: String,
@@ -1291,120 +1566,112 @@ impl ByEnumerateRangeVerificationResult {
         membership_fact: String,
         endpoint_facts: Vec<String>,
         generated_cases: String,
+        membership_check: StmtResult,
+        endpoint_checks: Vec<StmtResult>,
     ) -> Self {
-        ByEnumerateRangeVerificationResult {
+        SuccessVerifyByEnumerateRangeResult {
             proof_type,
             element,
             range,
             membership_fact,
             endpoint_facts,
             generated_cases,
+            membership_check: Box::new(membership_check),
+            endpoint_checks,
         }
     }
 }
 
-impl ByInducVerificationResult {
+impl SuccessVerifyByInducResult {
     pub fn new(
-        strong: bool,
-        finite_set: bool,
-        structured: bool,
         parameter: String,
-        start: String,
         prove_goals: Vec<String>,
         generated_forall: String,
-        proof_step_count: usize,
-        base_assumptions: Vec<(String, String)>,
-        base_proof_step_count: usize,
-        base_result_count: usize,
-        step_assumptions: Vec<(String, String)>,
-        step_proof_step_count: usize,
-        step_result_count: usize,
+        proof: SuccessVerifyByInducProofResult,
     ) -> Self {
-        ByInducVerificationResult {
-            strong,
-            finite_set,
-            structured,
+        SuccessVerifyByInducResult {
             parameter,
-            start,
             prove_goals,
             generated_forall,
-            proof_step_count,
-            base_assumptions,
-            base_proof_step_count,
-            base_result_count,
-            step_assumptions,
-            step_proof_step_count,
-            step_result_count,
+            proof,
         }
     }
 }
 
-impl ByExtensionVerificationResult {
+impl SuccessVerifyByExtensionResult {
     pub fn new(
         left: String,
         right: String,
         prove_goal: String,
-        proof_step_count: usize,
         left_to_right_subset: String,
         right_to_left_subset: String,
+        proof_steps: Vec<StmtResult>,
+        left_to_right_check: StmtResult,
+        right_to_left_check: StmtResult,
     ) -> Self {
-        ByExtensionVerificationResult {
+        SuccessVerifyByExtensionResult {
             left,
             right,
             prove_goal,
-            proof_step_count,
             left_to_right_subset,
             right_to_left_subset,
+            proof_steps,
+            left_to_right_check: Box::new(left_to_right_check),
+            right_to_left_check: Box::new(right_to_left_check),
         }
     }
 }
 
-impl ByPropRegistrationVerificationResult {
+impl SuccessVerifyByPropRegistrationResult {
     pub fn new(
         registration_type: String,
         prop_name: String,
         forall_fact: ForallFact,
-        assumption_infers: InferResult,
-        proof_step_count: usize,
+        assumption_infers: SuccessInferResult,
+        proof_steps: Vec<StmtResult>,
+        conclusion_check: StmtResult,
     ) -> Self {
-        ByPropRegistrationVerificationResult {
+        SuccessVerifyByPropRegistrationResult {
             registration_type,
             prop_name,
             forall_fact,
             assumption_infers,
-            proof_step_count,
+            proof_steps,
+            conclusion_check: Box::new(conclusion_check),
         }
     }
 }
 
-impl ByChoiceVerificationResult {
+impl SuccessVerifyByChoiceResult {
     pub fn new(
         proof_type: String,
         target: String,
-        proof_step_count: usize,
-        obligations: Vec<(String, String, bool)>,
+        proof_steps: Vec<StmtResult>,
+        obligations: Vec<SuccessVerifyByChoiceObligationResult>,
         trusted_conclusion: String,
     ) -> Self {
-        ByChoiceVerificationResult {
+        SuccessVerifyByChoiceResult {
             proof_type,
             target,
-            proof_step_count,
+            proof_steps,
             obligations,
             trusted_conclusion,
         }
     }
 }
 
-impl ByTheoremVerificationResult {
+impl SuccessVerifyByTheoremResult {
     pub fn new(
         theorem: String,
         arguments: Vec<String>,
         domain_facts: Vec<String>,
         direct_conclusions: Vec<Fact>,
         stored_then_facts: Vec<String>,
+        argument_verification: Option<SuccessVerifyArgsSatisfyParamDefResult>,
+        domain_checks: Vec<StmtResult>,
     ) -> Self {
         let parent_stored_facts = stored_then_facts.clone();
-        ByTheoremVerificationResult {
+        SuccessVerifyByTheoremResult {
             theorem,
             theorem_source: "litex".to_string(),
             mode: "release_all".to_string(),
@@ -1417,6 +1684,10 @@ impl ByTheoremVerificationResult {
             selected_fact: None,
             parent_stored_facts,
             provenance: None,
+            argument_verification: argument_verification.map(Box::new),
+            requirement_checks: Vec::new(),
+            domain_checks,
+            selected_fact_check: None,
         }
     }
 
@@ -1427,10 +1698,11 @@ impl ByTheoremVerificationResult {
         requirement_roles: Vec<String>,
         direct_conclusions: Vec<Fact>,
         stored_then_facts: Vec<String>,
+        requirement_checks: Vec<StmtResult>,
         provenance: Option<String>,
     ) -> Self {
         let parent_stored_facts = stored_then_facts.clone();
-        ByTheoremVerificationResult {
+        SuccessVerifyByTheoremResult {
             theorem,
             theorem_source: "builtin_rule".to_string(),
             mode: "release_all".to_string(),
@@ -1443,6 +1715,10 @@ impl ByTheoremVerificationResult {
             selected_fact: None,
             parent_stored_facts,
             provenance,
+            argument_verification: None,
+            requirement_checks,
+            domain_checks: Vec::new(),
+            selected_fact_check: None,
         }
     }
 
@@ -1453,149 +1729,203 @@ impl ByTheoremVerificationResult {
         self.parent_stored_facts = vec![selected_fact.clone()];
         self.selected_fact = Some(selected_fact);
     }
+
+    pub fn retain_selected_fact_check(&mut self, result: StmtResult) {
+        self.selected_fact_check = Some(Box::new(result));
+    }
 }
 
-impl ByDefinitionVerificationResult {
+impl SuccessVerifyByDefinitionResult {
     pub fn new(
         prop: String,
+        definition: Option<DefPropStmt>,
         arguments: Vec<String>,
         definition_clauses: Vec<String>,
         stored_fact: String,
         concrete_user_prop: bool,
         definition_clause_facts: Vec<Fact>,
+        argument_verification: Option<SuccessVerifyArgsSatisfyParamDefResult>,
+        clause_checks: Vec<StmtResult>,
     ) -> Self {
-        ByDefinitionVerificationResult {
+        SuccessVerifyByDefinitionResult {
             prop,
+            definition,
             arguments,
             definition_clauses,
             stored_fact,
             concrete_user_prop,
             definition_clause_facts,
+            argument_verification: argument_verification.map(Box::new),
+            clause_checks,
         }
     }
 }
 
-impl fmt::Debug for ClaimVerificationResult {
+impl fmt::Debug for SuccessVerifyClaimResult {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         match self {
-            ClaimVerificationResult::Forall(v) => f.debug_tuple("Forall").field(v).finish(),
-            ClaimVerificationResult::Fact(v) => f.debug_tuple("Fact").field(v).finish(),
+            SuccessVerifyClaimResult::Forall(v) => f.debug_tuple("Forall").field(v).finish(),
+            SuccessVerifyClaimResult::Fact(v) => f.debug_tuple("Fact").field(v).finish(),
         }
     }
 }
 
-impl fmt::Debug for TheoremVerificationResult {
+impl fmt::Debug for SuccessVerifyTheoremResult {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        f.debug_struct("TheoremVerificationResult")
+        f.debug_struct("SuccessVerifyTheoremResult")
             .field("name", &self.name)
             .field("forall_fact", &self.forall_fact.to_string())
-            .field("assumption_infers", &self.assumption_infers)
-            .field("proof_step_count", &self.proof_step_count)
+            .field("well_definedness", &self.well_definedness)
+            .field("proof_scope", &self.proof_scope)
+            .field("proof_steps", &self.proof_steps)
+            .field("conclusion_checks", &self.conclusion_checks)
             .finish()
     }
 }
 
-impl fmt::Debug for ClaimForallVerificationResult {
+impl fmt::Debug for SuccessVerifyClaimForallResult {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        f.debug_struct("ClaimForallVerificationResult")
+        f.debug_struct("SuccessVerifyClaimForallResult")
             .field("forall_fact", &self.forall_fact.to_string())
-            .field("assumption_infers", &self.assumption_infers)
-            .field("proof_step_count", &self.proof_step_count)
+            .field("well_definedness", &self.well_definedness)
+            .field("proof_scope", &self.proof_scope)
+            .field("proof_steps", &self.proof_steps)
+            .field("conclusion_checks", &self.conclusion_checks)
             .finish()
     }
 }
 
-impl fmt::Debug for ClaimFactVerificationResult {
+impl fmt::Debug for SuccessVerifyClaimFactResult {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        f.debug_struct("ClaimFactVerificationResult")
+        f.debug_struct("SuccessVerifyClaimFactResult")
             .field("fact", &self.fact.to_string())
-            .field("proof_step_count", &self.proof_step_count)
+            .field("well_definedness", &self.well_definedness)
+            .field("proof_scope", &self.proof_scope)
+            .field("proof_steps", &self.proof_steps)
+            .field("conclusion_check", &self.conclusion_check)
             .finish()
     }
 }
 
-impl fmt::Debug for ByCasesVerificationResult {
+impl fmt::Debug for SuccessVerifyByCasesResult {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         let cases = self
-            .cases
+            .branches
             .iter()
-            .map(|case| case.to_string())
+            .map(|branch| branch.assumption.to_string())
             .collect::<Vec<_>>();
         let then_facts = self
             .then_facts
             .iter()
             .map(|fact| fact.to_string())
             .collect::<Vec<_>>();
-        let impossible_facts = self
-            .impossible_facts
-            .iter()
-            .map(|fact| fact.as_ref().map(|f| f.to_string()))
-            .collect::<Vec<_>>();
-        f.debug_struct("ByCasesVerificationResult")
+        f.debug_struct("SuccessVerifyByCasesResult")
+            .field("goal_well_definedness", &self.goal_well_definedness)
+            .field("coverage_check", &self.coverage_check)
             .field("cases", &cases)
-            .field("case_fact_ids", &self.case_fact_ids)
             .field("then_facts", &then_facts)
-            .field("proof_step_counts", &self.proof_step_counts)
-            .field("case_result_counts", &self.case_result_counts)
-            .field("proof_scopes", &self.proof_scopes)
-            .field("impossible_facts", &impossible_facts)
+            .field("branches", &self.branches)
             .finish()
     }
 }
 
-impl fmt::Debug for ByContraVerificationResult {
+impl fmt::Debug for SuccessVerifyByCaseBranchResult {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        f.debug_struct("ByContraVerificationResult")
+        f.debug_struct("SuccessVerifyByCaseBranchResult")
+            .field("assumption", &self.assumption.to_string())
+            .field("assumption_fact_id", &self.assumption_fact_id)
+            .field("proof_scope", &self.proof_scope)
+            .field("proof_steps", &self.proof_steps)
+            .field("exit", &self.exit)
+            .finish()
+    }
+}
+
+impl fmt::Debug for SuccessVerifyByCaseBranchExitResult {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        match self {
+            Self::Conclusions(result) => f.debug_tuple("Conclusions").field(result).finish(),
+            Self::Contradiction(result) => f.debug_tuple("Contradiction").field(result).finish(),
+        }
+    }
+}
+
+impl fmt::Debug for SuccessVerifyByCaseConclusionsResult {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        f.debug_struct("SuccessVerifyByCaseConclusionsResult")
+            .field("checks", &self.checks)
+            .finish()
+    }
+}
+
+impl fmt::Debug for SuccessVerifyByCaseContradictionResult {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        f.debug_struct("SuccessVerifyByCaseContradictionResult")
+            .field("impossible_fact", &self.impossible_fact.to_string())
+            .field("contradiction", &self.contradiction)
+            .finish()
+    }
+}
+
+impl fmt::Debug for SuccessVerifyByContraResult {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        f.debug_struct("SuccessVerifyByContraResult")
             .field("to_prove", &self.to_prove.to_string())
             .field("reverse_assumption", &self.reverse_assumption.to_string())
             .field(
                 "reverse_assumption_fact_id",
                 &self.reverse_assumption_fact_id,
             )
-            .field("proof_step_count", &self.proof_step_count)
             .field("proof_scope", &self.proof_scope)
+            .field("proof_steps", &self.proof_steps)
             .field("impossible_fact", &self.impossible_fact.to_string())
+            .field("contradiction", &self.contradiction)
             .finish()
     }
 }
 
-impl fmt::Debug for ByPropRegistrationVerificationResult {
+impl fmt::Debug for SuccessVerifyByPropRegistrationResult {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        f.debug_struct("ByPropRegistrationVerificationResult")
+        f.debug_struct("SuccessVerifyByPropRegistrationResult")
             .field("registration_type", &self.registration_type)
             .field("prop_name", &self.prop_name)
             .field("forall_fact", &self.forall_fact.to_string())
             .field("assumption_infers", &self.assumption_infers)
-            .field("proof_step_count", &self.proof_step_count)
+            .field("proof_steps", &self.proof_steps)
+            .field("conclusion_check", &self.conclusion_check)
             .finish()
     }
 }
 
 fn merge_verified_by_with_steps(
     _goal: Fact,
-    verified_by: VerifiedByResult,
+    verified_by: SuccessFactProofResult,
     step_results: Vec<StmtResult>,
-) -> VerifiedByResult {
+) -> SuccessFactProofResult {
     if step_results.is_empty() {
         return verified_by;
     }
-    let mut items = VerifiedBysEnum::from_verified_by_result(_goal, verified_by);
+    let mut items = SuccessCombinedFactProofItemResult::from_verified_by_result(_goal, verified_by);
     for r in step_results {
         items.extend(verified_by_items_from_stmt_result(r));
     }
-    VerifiedByResult::wrap_bys(items)
+    SuccessFactProofResult::wrap_bys(items)
 }
 
-fn verified_by_items_from_stmt_result(result: StmtResult) -> Vec<VerifiedBysEnum> {
+fn verified_by_items_from_stmt_result(
+    result: StmtResult,
+) -> Vec<SuccessCombinedFactProofItemResult> {
     match result {
-        StmtResult::Success(VerifiedStmtIr::Fact(success)) => {
-            let (fact, data) = success.into_parts();
-            VerifiedBysEnum::from_verified_by_result(fact, data.verified_by)
+        StmtResult::Success(SuccessStmtResult::Fact(success)) => {
+            vec![SuccessCombinedFactProofItemResult::Reuse(Box::new(
+                SuccessCombinedReuseFactProofResult {
+                    statement: success.fact(),
+                    source: success.verification,
+                },
+            ))]
         }
         StmtResult::Success(success) => success
-            .into_common()
-            .expect("non-factual statement IR must have common execution evidence")
-            .inside_results
+            .into_child_results()
             .into_iter()
             .flat_map(verified_by_items_from_stmt_result)
             .collect::<Vec<_>>(),

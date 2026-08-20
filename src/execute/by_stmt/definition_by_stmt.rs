@@ -22,9 +22,11 @@ impl Runtime {
             return self.finish_by_def_stmt(
                 stmt,
                 stmt.fact.key(),
+                None,
                 false,
                 Vec::new(),
                 vec![checked_definition],
+                None,
                 vec![result],
             );
         }
@@ -115,22 +117,25 @@ impl Runtime {
                 )
             })?;
 
-        if parameter_type_check.is_unknown() {
-            return Err(short_exec_error(
-                stmt.clone().into(),
-                format!(
-                    "by def `{}`: could not verify argument parameter types",
-                    predicate_name
-                ),
-                None,
-                vec![parameter_type_check],
-            ));
-        }
+        let argument_verification = match parameter_type_check {
+            VerifyArgsSatisfyParamDefResult::Success(result) => *result,
+            VerifyArgsSatisfyParamDefResult::Unknown(result) => {
+                let cause = *result.cause;
+                return Err(short_exec_error(
+                    stmt.clone().into(),
+                    format!(
+                        "by def `{}`: could not verify argument parameter types",
+                        predicate_name
+                    ),
+                    None,
+                    vec![cause],
+                ));
+            }
+        };
 
         let mut instantiated_clauses = Vec::with_capacity(clause_checks.len());
         let mut instantiated_clause_facts = Vec::with_capacity(clause_checks.len());
-        let mut inside_results = Vec::with_capacity(clause_checks.len() + 1);
-        inside_results.push(parameter_type_check);
+        let mut clause_check_results = Vec::with_capacity(clause_checks.len());
         for (clause_index, (instantiated_clause, clause_result)) in
             clause_checks.into_iter().enumerate()
         {
@@ -149,16 +154,18 @@ impl Runtime {
             }
             instantiated_clauses.push(instantiated_clause.to_string());
             instantiated_clause_facts.push(instantiated_clause);
-            inside_results.push(clause_result);
+            clause_check_results.push(clause_result);
         }
 
         self.finish_by_def_stmt(
             stmt,
             predicate_name,
+            Some(definition),
             true,
             instantiated_clause_facts,
             instantiated_clauses,
-            inside_results,
+            Some(argument_verification),
+            clause_check_results,
         )
     }
 
@@ -166,7 +173,16 @@ impl Runtime {
         &mut self,
         stmt: &ByDefStmt,
     ) -> Result<StmtResult, RuntimeError> {
-        self.finish_by_def_stmt(stmt, stmt.fact.key(), false, vec![], vec![], vec![])
+        self.finish_by_def_stmt(
+            stmt,
+            stmt.fact.key(),
+            None,
+            false,
+            vec![],
+            vec![],
+            None,
+            vec![],
+        )
     }
 
     fn verify_explicit_builtin_definition(
@@ -228,10 +244,12 @@ impl Runtime {
         &mut self,
         stmt: &ByDefStmt,
         definition_name: String,
+        definition: Option<DefPropStmt>,
         concrete_user_prop: bool,
         definition_clause_facts: Vec<Fact>,
         definition_clauses: Vec<String>,
-        inside_results: Vec<StmtResult>,
+        argument_verification: Option<SuccessVerifyArgsSatisfyParamDefResult>,
+        clause_checks: Vec<StmtResult>,
     ) -> Result<StmtResult, RuntimeError> {
         let target_fact: Fact = stmt.fact.clone().into();
         let infer_result = self.run_in_local_env_and_commit(|rt| {
@@ -240,19 +258,24 @@ impl Runtime {
                 InferReason::Other(ByDefStmt::store_reason().to_string()),
             )
         })?;
-        let by_verification = ByDefinitionVerificationResult::new(
+        let by_verification = SuccessVerifyByDefinitionResult::new(
             definition_name,
+            definition,
             stmt.fact.args().iter().map(|arg| arg.to_string()).collect(),
             definition_clauses,
             target_fact.to_string(),
             concrete_user_prop,
             definition_clause_facts,
+            argument_verification,
+            clause_checks,
         );
-        Ok(VerifiedByStmtIr::ByDefStmt {
-            statement: stmt.clone(),
-            common: VerifiedStmtCommonIr::new(infer_result, inside_results),
-            verification: Some(by_verification),
-        }
-        .into())
+        Ok(
+            SuccessByStmtResult::ByDefStmt(Box::new(SuccessByDefStmtResult {
+                statement: stmt.clone(),
+                common: SuccessStmtCommonResult::new(infer_result),
+                verification: Some(by_verification),
+            }))
+            .into(),
+        )
     }
 }

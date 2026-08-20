@@ -28,6 +28,9 @@ theorem __fact6 :
       Litex.In r Litex.R ∧ Litex.In r Litex.C ∧ Litex.Positive r := by
   intro r __h6_1
   have __i6_0 : Litex.Positive r := Litex.Rules.positiveOfInRPos (__h6_1)
-  exact ⟨Litex.Rules.inROfInRPos (__h6_1), Litex.Rules.inCOfInR (Litex.Rules.inROfInRPos (__h6_1)), __i6_0⟩
+  have __c6_0 : Litex.In r Litex.R := Litex.Rules.inROfInRPos (__h6_1)
+  have __c6_1 : Litex.In r Litex.C := Litex.Rules.inCOfInR (Litex.Rules.inROfInRPos (__h6_1))
+  have __c6_2 : Litex.Positive r := __i6_0
+  exact ⟨__c6_0, __c6_1, __c6_2⟩
 
 end __Compiler_21_PositiveRealCarrier

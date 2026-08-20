@@ -11,18 +11,18 @@ impl Runtime {
         let reason = match &fact.set {
             Obj::FnRange(fn_range) => {
                 let Some(body) = self.get_fn_range_function_body(&fn_range.function) else {
-                    return Ok(StmtUnknown::new().into());
+                    return Ok(UnknownGenericStmtResult::new().into());
                 };
                 if body.params_def_with_set.number_of_params() != 1 {
-                    return Ok(StmtUnknown::new().into());
+                    return Ok(UnknownGenericStmtResult::new().into());
                 }
                 let Some(domain) = body.params_def_with_set.first() else {
-                    return Ok(StmtUnknown::new().into());
+                    return Ok(UnknownGenericStmtResult::new().into());
                 };
                 let child = IsFiniteSetFact::new(domain.set_obj().clone(), fact.line_file.clone());
                 let result = self.verify_is_finite_set_strategy_child(&child)?;
                 if !result.is_true() {
-                    return Ok(StmtUnknown::new().into());
+                    return Ok(UnknownGenericStmtResult::new().into());
                 }
                 child_results.push(result);
                 "finite-set strategy: range of a function with finite domain"
@@ -32,7 +32,7 @@ impl Runtime {
                     IsFiniteSetFact::new(power_set.set.as_ref().clone(), fact.line_file.clone());
                 let result = self.verify_is_finite_set_strategy_child(&child)?;
                 if !result.is_true() {
-                    return Ok(StmtUnknown::new().into());
+                    return Ok(UnknownGenericStmtResult::new().into());
                 }
                 child_results.push(result);
                 "finite-set strategy: power set of a finite set"
@@ -44,7 +44,7 @@ impl Runtime {
                 );
                 let result = self.verify_is_finite_set_strategy_child(&child)?;
                 if !result.is_true() {
-                    return Ok(StmtUnknown::new().into());
+                    return Ok(UnknownGenericStmtResult::new().into());
                 }
                 child_results.push(result);
                 "finite-set strategy: set-builder over a finite base"
@@ -54,7 +54,7 @@ impl Runtime {
                     let child = IsFiniteSetFact::new(set.clone(), fact.line_file.clone());
                     let result = self.verify_is_finite_set_strategy_child(&child)?;
                     if !result.is_true() {
-                        return Ok(StmtUnknown::new().into());
+                        return Ok(UnknownGenericStmtResult::new().into());
                     }
                     child_results.push(result);
                 }
@@ -65,7 +65,7 @@ impl Runtime {
                     let child = IsFiniteSetFact::new(set.clone(), fact.line_file.clone());
                     let result = self.verify_is_finite_set_strategy_child(&child)?;
                     if !result.is_true() {
-                        return Ok(StmtUnknown::new().into());
+                        return Ok(UnknownGenericStmtResult::new().into());
                     }
                     child_results.push(result);
                 }
@@ -76,7 +76,7 @@ impl Runtime {
                     IsFiniteSetFact::new(set_minus.left.as_ref().clone(), fact.line_file.clone());
                 let result = self.verify_is_finite_set_strategy_child(&child)?;
                 if !result.is_true() {
-                    return Ok(StmtUnknown::new().into());
+                    return Ok(UnknownGenericStmtResult::new().into());
                 }
                 child_results.push(result);
                 "finite-set strategy: subset of a finite left operand"
@@ -86,17 +86,17 @@ impl Runtime {
                     let child = IsFiniteSetFact::new(set.as_ref().clone(), fact.line_file.clone());
                     let result = self.verify_is_finite_set_strategy_child(&child)?;
                     if !result.is_true() {
-                        return Ok(StmtUnknown::new().into());
+                        return Ok(UnknownGenericStmtResult::new().into());
                     }
                     child_results.push(result);
                 }
                 "finite-set strategy: finite Cartesian factors"
             }
-            _ => return Ok(StmtUnknown::new().into()),
+            _ => return Ok(UnknownGenericStmtResult::new().into()),
         };
 
         Ok(
-            VerifiedFactStmtIr::new_with_verified_by_builtin_strategy_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_strategy_recording_stmt(
                 fact.clone().into(),
                 reason.to_string(),
                 child_results,
@@ -135,10 +135,10 @@ impl Runtime {
                 .into();
                 let result = self.verify_builtin_strategy_child(&endpoint_order)?;
                 if !result.is_true() {
-                    return Ok(StmtUnknown::new().into());
+                    return Ok(UnknownGenericStmtResult::new().into());
                 }
                 Ok(
-                    VerifiedFactStmtIr::new_with_verified_by_builtin_strategy_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_strategy_recording_stmt(
                         fact.clone().into(),
                         "nonempty-set strategy: closed integer range has ordered endpoints"
                             .to_string(),
@@ -158,10 +158,10 @@ impl Runtime {
                 .into();
                 let result = self.verify_builtin_strategy_child(&endpoint_order)?;
                 if !result.is_true() {
-                    return Ok(StmtUnknown::new().into());
+                    return Ok(UnknownGenericStmtResult::new().into());
                 }
                 Ok(
-                    VerifiedFactStmtIr::new_with_verified_by_builtin_strategy_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_strategy_recording_stmt(
                         fact.clone().into(),
                         "nonempty-set strategy: half-open integer range has strictly ordered endpoints"
                             .to_string(),
@@ -192,7 +192,7 @@ impl Runtime {
                 };
                 let result = self.verify_builtin_strategy_child(&endpoint_order)?;
                 if !result.is_true() {
-                    return Ok(StmtUnknown::new().into());
+                    return Ok(UnknownGenericStmtResult::new().into());
                 }
                 let reason = if both_closed {
                     "nonempty-set strategy: closed real interval has weakly ordered endpoints"
@@ -200,7 +200,7 @@ impl Runtime {
                     "nonempty-set strategy: real interval with an open endpoint has strictly ordered endpoints"
                 };
                 Ok(
-                    VerifiedFactStmtIr::new_with_verified_by_builtin_strategy_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_strategy_recording_stmt(
                         fact.clone().into(),
                         reason.to_string(),
                         vec![result],
@@ -214,7 +214,7 @@ impl Runtime {
                     let result = self.verify_is_nonempty_set_strategy_child(&child)?;
                     if result.is_true() {
                         return Ok(
-                            VerifiedFactStmtIr::new_with_verified_by_builtin_strategy_recording_stmt(
+                            SuccessFactStmtResult::new_with_verified_by_builtin_strategy_recording_stmt(
                                 fact.clone().into(),
                                 "nonempty-set strategy: a union has a nonempty side".to_string(),
                                 vec![result],
@@ -223,7 +223,7 @@ impl Runtime {
                         );
                     }
                 }
-                Ok(StmtUnknown::new().into())
+                Ok(UnknownGenericStmtResult::new().into())
             }
             Obj::Cart(cart) => {
                 let mut results = Vec::with_capacity(cart.args.len());
@@ -232,12 +232,12 @@ impl Runtime {
                         IsNonemptySetFact::new(set.as_ref().clone(), fact.line_file.clone());
                     let result = self.verify_is_nonempty_set_strategy_child(&child)?;
                     if !result.is_true() {
-                        return Ok(StmtUnknown::new().into());
+                        return Ok(UnknownGenericStmtResult::new().into());
                     }
                     results.push(result);
                 }
                 Ok(
-                    VerifiedFactStmtIr::new_with_verified_by_builtin_strategy_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_strategy_recording_stmt(
                         fact.clone().into(),
                         "nonempty-set strategy: all Cartesian factors are nonempty".to_string(),
                         results,
@@ -270,7 +270,7 @@ impl Runtime {
                 matrix.set.as_ref(),
                 "nonempty-set strategy: matrix entry set is nonempty",
             ),
-            _ => Ok(StmtUnknown::new().into()),
+            _ => Ok(UnknownGenericStmtResult::new().into()),
         }
     }
 
@@ -283,10 +283,10 @@ impl Runtime {
         let child = IsNonemptySetFact::new(child_set.clone(), fact.line_file.clone());
         let result = self.verify_is_nonempty_set_strategy_child(&child)?;
         if !result.is_true() {
-            return Ok(StmtUnknown::new().into());
+            return Ok(UnknownGenericStmtResult::new().into());
         }
         Ok(
-            VerifiedFactStmtIr::new_with_verified_by_builtin_strategy_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_strategy_recording_stmt(
                 fact.clone().into(),
                 reason.to_string(),
                 vec![result],

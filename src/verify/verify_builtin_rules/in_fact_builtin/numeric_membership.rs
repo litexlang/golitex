@@ -24,7 +24,7 @@ impl Runtime {
             return None;
         }
         Some(
-            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                 in_fact.clone().into(),
                 format!(
                     "{name}: operation carrier {carrier} is contained in {}",
@@ -79,7 +79,7 @@ impl Runtime {
                 continue;
             }
             return Ok(Some(
-                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                     in_fact.clone().into(),
                     "refined integer carrier from known integer membership and strict sign"
                         .to_string(),
@@ -104,10 +104,10 @@ impl Runtime {
         op: &str,
     ) -> Result<StmtResult, RuntimeError> {
         let Some(Obj::StandardSet(ret_set)) = self.iterated_op_func_ret_set(func) else {
-            return Ok(StmtUnknown::new().into());
+            return Ok(UnknownGenericStmtResult::new().into());
         };
         if !ret_set.is_subset_eq(&target_set) {
-            return Ok(StmtUnknown::new().into());
+            return Ok(UnknownGenericStmtResult::new().into());
         }
         let reason = format!("{op}: iterand return set {ret_set} is contained in {target_set}");
         Ok(number_in_set_verified_by_builtin_rules_result(
@@ -143,14 +143,14 @@ impl Runtime {
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let Some(ret_set) = self.iterated_op_func_ret_set(sum.func.as_ref()) else {
-            return Ok((StmtUnknown::new()).into());
+            return Ok((UnknownGenericStmtResult::new()).into());
         };
         let Obj::StandardSet(ret_standard_set) = ret_set else {
-            return Ok((StmtUnknown::new()).into());
+            return Ok((UnknownGenericStmtResult::new()).into());
         };
         if matches!(&target_set, StandardSet::NPos) {
             if !matches!(&ret_standard_set, StandardSet::NPos) {
-                return Ok((StmtUnknown::new()).into());
+                return Ok((UnknownGenericStmtResult::new()).into());
             }
             let nonempty_fact: AtomicFact =
                 IsNonemptySetFact::new((*sum.set).clone(), in_fact.line_file.clone()).into();
@@ -162,7 +162,7 @@ impl Runtime {
                 _ => false,
             };
             if !nonempty_result.is_true() && !structurally_nonempty {
-                return Ok((StmtUnknown::new()).into());
+                return Ok((UnknownGenericStmtResult::new()).into());
             }
             return Ok(number_in_set_verified_by_builtin_rules_result(
                 in_fact,
@@ -170,7 +170,7 @@ impl Runtime {
             ));
         }
         if !ret_standard_set.is_subset_eq(&target_set) {
-            return Ok((StmtUnknown::new()).into());
+            return Ok((UnknownGenericStmtResult::new()).into());
         }
         let reason = format!(
             "finite_set_sum: summand return set {} is contained in {}",
@@ -192,14 +192,14 @@ impl Runtime {
         _builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let Some(ret_set) = self.iterated_op_func_ret_set(product.func.as_ref()) else {
-            return Ok((StmtUnknown::new()).into());
+            return Ok((UnknownGenericStmtResult::new()).into());
         };
         let Obj::StandardSet(ret_standard_set) = ret_set else {
-            return Ok((StmtUnknown::new()).into());
+            return Ok((UnknownGenericStmtResult::new()).into());
         };
         if matches!(&target_set, StandardSet::NPos) {
             if !matches!(&ret_standard_set, StandardSet::NPos) {
-                return Ok((StmtUnknown::new()).into());
+                return Ok((UnknownGenericStmtResult::new()).into());
             }
             return Ok(number_in_set_verified_by_builtin_rules_result(
                 in_fact,
@@ -207,7 +207,7 @@ impl Runtime {
             ));
         }
         if !ret_standard_set.is_subset_eq(&target_set) {
-            return Ok((StmtUnknown::new()).into());
+            return Ok((UnknownGenericStmtResult::new()).into());
         }
         let reason = format!(
             "finite_set_product: factor return set {} is contained in {}",
@@ -230,11 +230,11 @@ impl Runtime {
         op: &str,
     ) -> Result<StmtResult, RuntimeError> {
         let Some(ret_set) = self.iterated_op_func_ret_set(func) else {
-            return Ok((StmtUnknown::new()).into());
+            return Ok((UnknownGenericStmtResult::new()).into());
         };
         let n_pos_obj: Obj = StandardSet::NPos.into();
         if !objs_match_for_pattern(&ret_set, &n_pos_obj) {
-            return Ok((StmtUnknown::new()).into());
+            return Ok((UnknownGenericStmtResult::new()).into());
         }
         let reason = format!("{op}: iterand return set is N+");
         Ok(number_in_set_verified_by_builtin_rules_result(
@@ -261,13 +261,13 @@ impl Runtime {
             _ => {
                 let head_obj: Obj = (*fn_obj.head.clone()).into();
                 let Some(body) = self.get_cloned_object_in_fn_set(&head_obj) else {
-                    return Ok((StmtUnknown::new()).into());
+                    return Ok((UnknownGenericStmtResult::new()).into());
                 };
                 (head_obj, FnSet::from_body(body)?)
             }
         };
         let Some(typed_ret) = self.fn_obj_return_set_after_application(fn_obj)? else {
-            return Ok((StmtUnknown::new()).into());
+            return Ok((UnknownGenericStmtResult::new()).into());
         };
         let target = &in_fact.set;
         let ret_matches = self
@@ -307,7 +307,7 @@ impl Runtime {
             _ => false,
         };
         if !ret_matches && !ret_matches_alpha_renamed_fn_set && !ret_is_standard_subset {
-            return Ok((StmtUnknown::new()).into());
+            return Ok((UnknownGenericStmtResult::new()).into());
         }
         if objs_equal_with_nested_binder_alpha_equivalence(target, &typed_ret) {
             let head_membership: AtomicFact = InFact::new(
@@ -319,12 +319,12 @@ impl Runtime {
             let head_membership_result =
                 self.verify_atomic_fact_as_builtin_rule_premise(&head_membership, builtin_state)?;
             if !head_membership_result.is_true() {
-                return Ok((StmtUnknown::new()).into());
+                return Ok((UnknownGenericStmtResult::new()).into());
             }
             let target_fact: Fact = in_fact.clone().into();
             let head_membership_fact: Fact = head_membership.into();
             return Ok(
-                VerifiedFactStmtIr::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     target_fact.clone(),
                     "fn application in its exact instantiated declared return set".to_string(),
                     BuiltinRuleEvidence::FunctionApplicationReturnMembership(
@@ -340,7 +340,7 @@ impl Runtime {
             );
         }
         Ok(
-            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                 in_fact.clone().into(),
                 "fn application in declared return set or standard numeric superset (well-defined under typing)".to_string(),
                 Vec::new(),
@@ -371,14 +371,14 @@ impl Runtime {
         let f_right: AtomicFact = InFact::new(add.right.as_ref().clone(), n, lf.clone()).into();
         let r_left = self.verify_atomic_fact_as_builtin_rule_premise(&f_left, builtin_state)?;
         if !r_left.is_true() {
-            return Ok((StmtUnknown::new()).into());
+            return Ok((UnknownGenericStmtResult::new()).into());
         }
         let r_right = self.verify_atomic_fact_as_builtin_rule_premise(&f_right, builtin_state)?;
         if !r_right.is_true() {
-            return Ok((StmtUnknown::new()).into());
+            return Ok((UnknownGenericStmtResult::new()).into());
         }
         Ok(
-            VerifiedFactStmtIr::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 in_fact.clone().into(),
                 "N: a + b from a in N and b in N".to_string(),
                 BuiltinRuleEvidence::NaturalMembershipClosure(
@@ -418,7 +418,7 @@ impl Runtime {
                 self.verify_atomic_fact_as_builtin_rule_premise(&left_in_n_pos, builtin_state)?;
             if positive_natural_result.is_true() {
                 return Ok(
-                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                         in_fact.clone().into(),
                         "N: n - 1 from n in N+".to_string(),
                         vec![positive_natural_result],
@@ -436,7 +436,7 @@ impl Runtime {
                 self.verify_atomic_fact_as_builtin_rule_premise(&left_positive, builtin_state)?;
             if membership_result.is_true() && positive_result.is_true() {
                 return Ok(
-                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                         in_fact.clone().into(),
                         "N: n - 1 from n in N and n > 0".to_string(),
                         vec![membership_result, positive_result],
@@ -461,18 +461,18 @@ impl Runtime {
         let left_result =
             self.verify_atomic_fact_as_builtin_rule_premise(&left_in_z, builtin_state)?;
         if !left_result.is_true() {
-            return Ok((StmtUnknown::new()).into());
+            return Ok((UnknownGenericStmtResult::new()).into());
         }
         let right_result =
             self.verify_atomic_fact_as_builtin_rule_premise(&right_in_z, builtin_state)?;
         if !right_result.is_true() {
-            return Ok((StmtUnknown::new()).into());
+            return Ok((UnknownGenericStmtResult::new()).into());
         }
         let bound_result =
             self.verify_atomic_fact_as_builtin_rule_premise(&right_le_left, builtin_state)?;
         if bound_result.is_true() {
             return Ok(
-                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                     in_fact.clone().into(),
                     "N: a - b from a,b in Z and b <= a".to_string(),
                     vec![left_result, right_result, bound_result],
@@ -494,7 +494,7 @@ impl Runtime {
                 self.verify_non_equational_atomic_fact_with_known_atomic_facts(order_fact)?;
             if order_result.is_true() {
                 return Ok(
-                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                         in_fact.clone().into(),
                         "N: a - b from a,b in Z and known nonnegative difference".to_string(),
                         vec![left_result, right_result, order_result],
@@ -504,7 +504,7 @@ impl Runtime {
             }
         }
 
-        Ok((StmtUnknown::new()).into())
+        Ok((UnknownGenericStmtResult::new()).into())
     }
 
     // `a * b $in N` when `a $in N` and `b $in N` (closure under multiplication).
@@ -529,14 +529,14 @@ impl Runtime {
         let f_right: AtomicFact = InFact::new(mul.right.as_ref().clone(), n, lf.clone()).into();
         let r_left = self.verify_atomic_fact_as_builtin_rule_premise(&f_left, builtin_state)?;
         if !r_left.is_true() {
-            return Ok((StmtUnknown::new()).into());
+            return Ok((UnknownGenericStmtResult::new()).into());
         }
         let r_right = self.verify_atomic_fact_as_builtin_rule_premise(&f_right, builtin_state)?;
         if !r_right.is_true() {
-            return Ok((StmtUnknown::new()).into());
+            return Ok((UnknownGenericStmtResult::new()).into());
         }
         Ok(
-            VerifiedFactStmtIr::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 in_fact.clone().into(),
                 "N: a * b from a in N and b in N".to_string(),
                 BuiltinRuleEvidence::NaturalMembershipClosure(
@@ -578,16 +578,16 @@ impl Runtime {
         let base_result =
             self.verify_atomic_fact_as_builtin_rule_premise(&base_in_target, builtin_state)?;
         if !base_result.is_true() {
-            return Ok((StmtUnknown::new()).into());
+            return Ok((UnknownGenericStmtResult::new()).into());
         }
         let exponent_result =
             self.verify_atomic_fact_as_builtin_rule_premise(&exponent_in_n, builtin_state)?;
         if !exponent_result.is_true() {
-            return Ok((StmtUnknown::new()).into());
+            return Ok((UnknownGenericStmtResult::new()).into());
         }
 
         Ok(
-            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                 in_fact.clone().into(),
                 reason.to_string(),
                 vec![base_result, exponent_result],
@@ -614,16 +614,16 @@ impl Runtime {
         let base_result =
             self.verify_atomic_fact_as_builtin_rule_premise(&base_positive, builtin_state)?;
         if !base_result.is_true() {
-            return Ok((StmtUnknown::new()).into());
+            return Ok((UnknownGenericStmtResult::new()).into());
         }
         let exponent_result =
             self.verify_atomic_fact_as_builtin_rule_premise(&exponent_in_r, builtin_state)?;
         if !exponent_result.is_true() {
-            return Ok((StmtUnknown::new()).into());
+            return Ok((UnknownGenericStmtResult::new()).into());
         }
 
         Ok(
-            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                 in_fact.clone().into(),
                 "R+: a^x from 0 < a and x in R".to_string(),
                 vec![base_result, exponent_result],
@@ -641,7 +641,7 @@ impl Runtime {
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         if !matches!(sub.right.as_ref(), Obj::Number(number) if number.normalized_value == "1") {
-            return Ok((StmtUnknown::new()).into());
+            return Ok((UnknownGenericStmtResult::new()).into());
         }
 
         let lf = in_fact.line_file.clone();
@@ -668,11 +668,11 @@ impl Runtime {
                 self.verify_atomic_fact_as_builtin_rule_premise(&two_le_left, builtin_state)?;
         }
         if !membership_result.is_true() || !bound_result.is_true() {
-            return Ok((StmtUnknown::new()).into());
+            return Ok((UnknownGenericStmtResult::new()).into());
         }
 
         Ok(
-            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                 in_fact.clone().into(),
                 "N+: n - 1 from n in N+ and n > 1".to_string(),
                 vec![membership_result, bound_result],
@@ -718,7 +718,7 @@ impl Runtime {
                 .verify_atomic_fact_as_builtin_rule_premise(&right_n_pos_for_pair, builtin_state)?;
             if r_right_n_pos_for_pair.is_true() {
                 return Ok(
-                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                         in_fact.clone().into(),
                         "N+: a + b from a in N+ and b in N+".to_string(),
                         vec![r_left_n_pos_for_pair, r_right_n_pos_for_pair],
@@ -735,7 +735,7 @@ impl Runtime {
                 self.verify_atomic_fact_as_builtin_rule_premise(&right_n, builtin_state)?;
             if r_right_n.is_true() {
                 return Ok(
-                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                         in_fact.clone().into(),
                         "N+: a + b from a in N+ and b in N".to_string(),
                         vec![r_left_n_pos, r_right_n],
@@ -750,7 +750,7 @@ impl Runtime {
             self.verify_atomic_fact_as_builtin_rule_premise(&right_n_pos, builtin_state)?;
         if r_left_n.is_true() && r_right_n_pos.is_true() {
             return Ok(
-                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                     in_fact.clone().into(),
                     "N+: a + b from a in N and b in N+".to_string(),
                     vec![r_left_n, r_right_n_pos],
@@ -778,7 +778,7 @@ impl Runtime {
         )?;
         if premise_result.is_true() {
             return Ok(
-                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                     in_fact.clone().into(),
                     "N+: a + b from complete positive-natural carrier alternatives".to_string(),
                     vec![premise_result],
@@ -787,7 +787,7 @@ impl Runtime {
             );
         }
 
-        Ok(StmtUnknown::new().into())
+        Ok(UnknownGenericStmtResult::new().into())
     }
 
     // `a * b $in N+` when `a $in N+` and `b $in N+` (positive naturals are closed under multiplication).
@@ -812,14 +812,14 @@ impl Runtime {
         let f_right: AtomicFact = InFact::new(mul.right.as_ref().clone(), n_pos, lf.clone()).into();
         let r_left = self.verify_atomic_fact_as_builtin_rule_premise(&f_left, builtin_state)?;
         if !r_left.is_true() {
-            return Ok((StmtUnknown::new()).into());
+            return Ok((UnknownGenericStmtResult::new()).into());
         }
         let r_right = self.verify_atomic_fact_as_builtin_rule_premise(&f_right, builtin_state)?;
         if !r_right.is_true() {
-            return Ok((StmtUnknown::new()).into());
+            return Ok((UnknownGenericStmtResult::new()).into());
         }
         Ok(
-            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                 in_fact.clone().into(),
                 "N+: a * b from a in N+ and b in N+".to_string(),
                 vec![r_left, r_right],
@@ -904,7 +904,7 @@ impl Runtime {
             );
         }
 
-        Ok((StmtUnknown::new()).into())
+        Ok((UnknownGenericStmtResult::new()).into())
     }
 
     // `Q+` and `R+` are the positive elements of their base sets.
@@ -923,14 +923,14 @@ impl Runtime {
         let zero_lt_result =
             self.verify_atomic_fact_as_builtin_rule_premise(&zero_lt_elem, builtin_state)?;
         if !zero_lt_result.is_true() {
-            return Ok((StmtUnknown::new()).into());
+            return Ok((UnknownGenericStmtResult::new()).into());
         }
 
         let in_base_set: AtomicFact = InFact::new(elem.clone(), base_set.into(), lf).into();
         let in_base_result =
             self.verify_atomic_fact_as_builtin_rule_premise(&in_base_set, builtin_state)?;
         if !in_base_result.is_true() {
-            return Ok((StmtUnknown::new()).into());
+            return Ok((UnknownGenericStmtResult::new()).into());
         }
 
         Ok(
@@ -1010,7 +1010,7 @@ impl Runtime {
             );
         }
 
-        Ok((StmtUnknown::new()).into())
+        Ok((UnknownGenericStmtResult::new()).into())
     }
 
     pub(super) fn verify_in_fact_closed_range_by_order_bounds(
@@ -1051,7 +1051,7 @@ impl Runtime {
             builtin_state,
         )?
         else {
-            return Ok((StmtUnknown::new()).into());
+            return Ok((UnknownGenericStmtResult::new()).into());
         };
         let Some(mut upper_subgoals) = self.order_upper_bound_closed_from_literals(
             elem,
@@ -1060,7 +1060,7 @@ impl Runtime {
             builtin_state,
         )?
         else {
-            return Ok((StmtUnknown::new()).into());
+            return Ok((UnknownGenericStmtResult::new()).into());
         };
         subgoals.append(&mut upper_subgoals);
         Ok(
@@ -1106,7 +1106,7 @@ impl Runtime {
         let Some(mut subgoals) =
             self.order_lower_bound_from_literals(elem, range.start.as_ref(), &lf, builtin_state)?
         else {
-            return Ok((StmtUnknown::new()).into());
+            return Ok((UnknownGenericStmtResult::new()).into());
         };
         let Some(mut upper_subgoals) = self.order_upper_bound_open_from_literals(
             elem,
@@ -1115,7 +1115,7 @@ impl Runtime {
             builtin_state,
         )?
         else {
-            return Ok((StmtUnknown::new()).into());
+            return Ok((UnknownGenericStmtResult::new()).into());
         };
         subgoals.append(&mut upper_subgoals);
         Ok(
@@ -1155,7 +1155,7 @@ impl Runtime {
         let conjunction_result = self.verify_builtin_rule_premise(&conjunction, builtin_state)?;
         if conjunction_result.is_true() {
             return Ok(
-                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                     in_fact.clone().into(),
                     "in real interval from complete carrier-and-bounds conjunction".to_string(),
                     vec![conjunction_result],
@@ -1167,22 +1167,22 @@ impl Runtime {
         let mut step_results = Vec::new();
         let in_r_result = self.verify_atomic_fact_as_builtin_rule_premise(&in_r, builtin_state)?;
         if !in_r_result.is_true() {
-            return Ok((StmtUnknown::new()).into());
+            return Ok((UnknownGenericStmtResult::new()).into());
         }
         step_results.push(in_r_result);
         let lower_result = self.verify_known_interval_order_bound(&lower)?;
         if !lower_result.is_true() {
-            return Ok((StmtUnknown::new()).into());
+            return Ok((UnknownGenericStmtResult::new()).into());
         }
         step_results.push(lower_result);
         let upper_result = self.verify_known_interval_order_bound(&upper)?;
         if !upper_result.is_true() {
-            return Ok((StmtUnknown::new()).into());
+            return Ok((UnknownGenericStmtResult::new()).into());
         }
         step_results.push(upper_result);
 
         Ok(
-            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                 in_fact.clone().into(),
                 "in real interval: x in R and endpoint bounds".to_string(),
                 step_results,
@@ -1221,7 +1221,7 @@ impl Runtime {
         let conjunction_result = self.verify_builtin_rule_premise(&conjunction, builtin_state)?;
         if conjunction_result.is_true() {
             return Ok(
-                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                     in_fact.clone().into(),
                     "in half-infinite real interval from complete carrier-and-bound conjunction"
                         .to_string(),
@@ -1234,17 +1234,17 @@ impl Runtime {
         let mut step_results = Vec::new();
         let in_r_result = self.verify_atomic_fact_as_builtin_rule_premise(&in_r, builtin_state)?;
         if !in_r_result.is_true() {
-            return Ok((StmtUnknown::new()).into());
+            return Ok((UnknownGenericStmtResult::new()).into());
         }
         step_results.push(in_r_result);
         let bound_result = self.verify_known_interval_order_bound(&bound)?;
         if !bound_result.is_true() {
-            return Ok((StmtUnknown::new()).into());
+            return Ok((UnknownGenericStmtResult::new()).into());
         }
         step_results.push(bound_result);
 
         Ok(
-            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                 in_fact.clone().into(),
                 "in half-infinite real interval: x in R and endpoint bound".to_string(),
                 step_results,
@@ -1290,7 +1290,7 @@ impl Runtime {
             Some(stronger) => {
                 self.verify_non_equational_atomic_fact_with_known_atomic_facts(&stronger)
             }
-            None => Ok(StmtUnknown::new().into()),
+            None => Ok(UnknownGenericStmtResult::new().into()),
         }
     }
 
@@ -1430,7 +1430,7 @@ impl Runtime {
             ));
         };
         Ok(
-            VerifiedFactStmtIr::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 in_fact.clone().into(),
                 "complex scalar arithmetic is closed in C".to_string(),
                 BuiltinRuleEvidence::ComplexArithmeticMembershipClosure(rule),
@@ -1492,14 +1492,14 @@ impl Runtime {
             | Obj::Cot(_)
             | Obj::Sqrt(_)
             | Obj::Log(_) => (Vec::new(), None),
-            _ => return Ok(StmtUnknown::new().into()),
+            _ => return Ok(UnknownGenericStmtResult::new().into()),
         };
         let Some(subgoals) = self.verify_builtin_rule_premises(&required, builtin_state)? else {
-            return Ok(StmtUnknown::new().into());
+            return Ok(UnknownGenericStmtResult::new().into());
         };
         Ok(match evidence {
             Some(rule) => {
-                VerifiedFactStmtIr::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
                     "real arithmetic has real operands and result".to_string(),
                     BuiltinRuleEvidence::RealArithmeticMembershipClosure(rule),
@@ -1609,7 +1609,7 @@ impl Runtime {
                     )?
                 {
                     steps.push(
-                        VerifiedFactStmtIr::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                        SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             in_z.clone().into(),
                             "integer expression closure under +, -, and *".to_string(),
                             BuiltinRuleEvidence::IntegerMembershipClosure(rule),
@@ -1664,7 +1664,7 @@ impl Runtime {
                 let subset_fact =
                     SubsetFact::new(source_set, StandardSet::Z.into(), line_file.clone());
                 let subset_result =
-                    VerifiedFactStmtIr::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         subset_fact.into(),
                         "standard_set_subset".to_string(),
                         BuiltinRuleEvidence::StandardSetSubset,
@@ -1737,7 +1737,7 @@ impl Runtime {
                 {
                     if source.is_subset_eq(&carrier) {
                         let subset_result =
-                            VerifiedFactStmtIr::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                                 subset_fact.clone().into(),
                                 "standard_set_subset".to_string(),
                                 BuiltinRuleEvidence::StandardSetSubset,
@@ -1905,7 +1905,7 @@ impl Runtime {
         };
 
         let Some(subgoals) = subgoals else {
-            return Ok((StmtUnknown::new()).into());
+            return Ok((UnknownGenericStmtResult::new()).into());
         };
 
         // Integer closure is a specialized recursive certificate: the target
@@ -1921,7 +1921,7 @@ impl Runtime {
         };
         if let Some(rule) = closure_rule {
             return Ok(
-                VerifiedFactStmtIr::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
                     "Z closure: binary integer arithmetic".to_string(),
                     BuiltinRuleEvidence::IntegerMembershipClosure(rule),
@@ -1932,7 +1932,7 @@ impl Runtime {
         }
 
         Ok(
-            (VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+            (SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                 in_fact.clone().into(),
                 "Z closure: integer arithmetic; quot dividend in Z and divisor in N+; pow base in Z or N+ and exponent in N"
                     .to_string(),
@@ -1983,11 +1983,11 @@ impl Runtime {
             ],
             Obj::Abs(a) => vec![InFact::new(a.arg.as_ref().clone(), q_obj, lf.clone()).into()],
             Obj::Quot(_) => Vec::new(),
-            _ => return Ok((StmtUnknown::new()).into()),
+            _ => return Ok((UnknownGenericStmtResult::new()).into()),
         };
 
         let Some(subgoals) = self.verify_builtin_rule_premises(&required, builtin_state)? else {
-            return Ok((StmtUnknown::new()).into());
+            return Ok((UnknownGenericStmtResult::new()).into());
         };
 
         let closure_rule = match &in_fact.element {
@@ -2000,7 +2000,7 @@ impl Runtime {
         };
         if let Some(rule) = closure_rule {
             return Ok(
-                VerifiedFactStmtIr::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
                     "Q closure: binary rational arithmetic".to_string(),
                     BuiltinRuleEvidence::RationalMembershipClosure(rule),
@@ -2011,7 +2011,7 @@ impl Runtime {
         }
 
         Ok(
-            (VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+            (SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                 in_fact.clone().into(),
                 "Q closure: +-*/ operands in Q; pow base in Q and exponent in Z".to_string(),
                 subgoals,
@@ -2035,7 +2035,7 @@ impl Runtime {
         }
         let mul = match &in_fact.element {
             Obj::Mul(mul) => mul,
-            _ => return Ok((StmtUnknown::new()).into()),
+            _ => return Ok((UnknownGenericStmtResult::new()).into()),
         };
         let is_literal_neg_one =
             |obj: &Obj| matches!(obj, Obj::Number(number) if number.normalized_value == "-1");
@@ -2051,7 +2051,7 @@ impl Runtime {
                 StandardSet::ZNeg => StandardSet::NPos,
                 StandardSet::QNeg => StandardSet::QPos,
                 StandardSet::RNeg => StandardSet::RPos,
-                _ => return Ok((StmtUnknown::new()).into()),
+                _ => return Ok((UnknownGenericStmtResult::new()).into()),
             };
             let positive_membership: AtomicFact = InFact::new(
                 negated.clone(),
@@ -2063,7 +2063,7 @@ impl Runtime {
                 .verify_atomic_fact_as_builtin_rule_premise(&positive_membership, builtin_state)?;
             if positive_result.is_true() {
                 return Ok(
-                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                         in_fact.clone().into(),
                         "negation maps a positive scalar into the matching negative carrier"
                             .to_string(),
@@ -2082,7 +2082,7 @@ impl Runtime {
         let product_in_r_result =
             self.verify_atomic_fact_as_builtin_rule_premise(&product_in_r_fact, builtin_state)?;
         if !product_in_r_result.is_true() {
-            return Ok((StmtUnknown::new()).into());
+            return Ok((UnknownGenericStmtResult::new()).into());
         }
         let Some(mut sign_subgoals) = self
             .mul_product_negative_when_factors_have_strict_opposite_sign_by_non_equational_verify(
@@ -2092,13 +2092,13 @@ impl Runtime {
                 builtin_state,
             )?
         else {
-            return Ok((StmtUnknown::new()).into());
+            return Ok((UnknownGenericStmtResult::new()).into());
         };
         let mut base_subgoals = vec![product_in_r_result];
         base_subgoals.append(&mut sign_subgoals);
         match target_negative_standard_set {
             StandardSet::RNeg => Ok(
-                (VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                (SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                     in_fact.clone().into(),
                     "mul_opposite_signs_product_in_negative_reals".to_string(),
                     base_subgoals,
@@ -2119,7 +2119,7 @@ impl Runtime {
                 if product_in_q_result.is_true() {
                     base_subgoals.push(product_in_q_result);
                     Ok(
-                        (VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                        (SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                             in_fact.clone().into(),
                             "mul_opposite_signs_product_in_negative_rationals".to_string(),
                             base_subgoals,
@@ -2127,7 +2127,7 @@ impl Runtime {
                         .into(),
                     )
                 } else {
-                    Ok((StmtUnknown::new()).into())
+                    Ok((UnknownGenericStmtResult::new()).into())
                 }
             }
             StandardSet::ZNeg => {
@@ -2144,7 +2144,7 @@ impl Runtime {
                 if product_in_z_result.is_true() {
                     base_subgoals.push(product_in_z_result);
                     Ok(
-                        (VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                        (SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                             in_fact.clone().into(),
                             "mul_opposite_signs_product_in_negative_integers".to_string(),
                             base_subgoals,
@@ -2152,10 +2152,10 @@ impl Runtime {
                         .into(),
                     )
                 } else {
-                    Ok((StmtUnknown::new()).into())
+                    Ok((UnknownGenericStmtResult::new()).into())
                 }
             }
-            _ => Ok((StmtUnknown::new()).into()),
+            _ => Ok((UnknownGenericStmtResult::new()).into()),
         }
     }
 }

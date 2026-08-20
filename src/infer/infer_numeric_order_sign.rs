@@ -12,7 +12,7 @@ impl Runtime {
     pub fn infer_numeric_order_sign_from_order_atomic(
         &mut self,
         atomic_fact: &AtomicFact,
-    ) -> Result<InferResult, RuntimeError> {
+    ) -> Result<SuccessInferResult, RuntimeError> {
         let (left, right, line_file) = match atomic_fact {
             AtomicFact::GreaterEqualFact(f) => {
                 (f.left.clone(), f.right.clone(), f.line_file.clone())
@@ -20,7 +20,7 @@ impl Runtime {
             AtomicFact::GreaterFact(f) => (f.left.clone(), f.right.clone(), f.line_file.clone()),
             AtomicFact::LessEqualFact(f) => (f.left.clone(), f.right.clone(), f.line_file.clone()),
             AtomicFact::LessFact(f) => (f.left.clone(), f.right.clone(), f.line_file.clone()),
-            _ => return Ok(InferResult::new()),
+            _ => return Ok(SuccessInferResult::new()),
         };
         if self
             .verify_objects_are_known_reals(
@@ -30,14 +30,14 @@ impl Runtime {
             )?
             .is_none()
         {
-            return Ok(InferResult::new());
+            return Ok(SuccessInferResult::new());
         }
         let mut acc = match atomic_fact {
             AtomicFact::GreaterEqualFact(f) => self.infer_numeric_order_sign_greater_equal(f),
             AtomicFact::GreaterFact(f) => self.infer_numeric_order_sign_greater(f),
             AtomicFact::LessEqualFact(f) => self.infer_numeric_order_sign_less_equal(f),
             AtomicFact::LessFact(f) => self.infer_numeric_order_sign_less(f),
-            _ => Ok(InferResult::new()),
+            _ => Ok(SuccessInferResult::new()),
         }?;
         let flip = self.infer_flip_mul_minus_one_order_vs_zero(atomic_fact)?;
         acc.new_infer_result_inside(flip);
@@ -120,11 +120,11 @@ impl Runtime {
     fn infer_flip_mul_minus_one_order_vs_zero(
         &mut self,
         atomic_fact: &AtomicFact,
-    ) -> Result<InferResult, RuntimeError> {
+    ) -> Result<SuccessInferResult, RuntimeError> {
         let Some(inferred_atomic) =
             self.atomic_fact_infer_opposite_mul_minus_one_target(atomic_fact)
         else {
-            return Ok(InferResult::new());
+            return Ok(SuccessInferResult::new());
         };
         let source_operand = match atomic_fact {
             AtomicFact::LessFact(f) if self.obj_is_resolved_zero(&f.right) => f.left.clone(),
@@ -133,7 +133,7 @@ impl Runtime {
             AtomicFact::GreaterEqualFact(f) if self.obj_is_resolved_zero(&f.right) => {
                 f.left.clone()
             }
-            _ => return Ok(InferResult::new()),
+            _ => return Ok(SuccessInferResult::new()),
         };
         let source_in_r: AtomicFact = InFact::new(
             source_operand,
@@ -144,10 +144,10 @@ impl Runtime {
         let source_in_r_result =
             self.verify_non_equational_atomic_fact_with_direct_routes(&source_in_r)?;
         if !source_in_r_result.is_true() {
-            return Ok(InferResult::new());
+            return Ok(SuccessInferResult::new());
         }
         let fact_to_store: Fact = inferred_atomic.clone().into();
-        let mut infer_result = InferResult::new();
+        let mut infer_result = SuccessInferResult::new();
         infer_result.new_fact(&fact_to_store);
         // Do not run full `verify_fact_well_defined` here: well-defined for the flipped atom can re-enter
         // `verify_fn_obj_well_defined` (e.g. intermediate `… $in N`) and this infer path again,
@@ -170,11 +170,11 @@ impl Runtime {
     fn infer_numeric_order_sign_greater_equal(
         &mut self,
         f: &GreaterEqualFact,
-    ) -> Result<InferResult, RuntimeError> {
+    ) -> Result<SuccessInferResult, RuntimeError> {
         let left_num = self.resolve_obj_to_number(&f.left);
         let right_num = self.resolve_obj_to_number(&f.right);
         match (left_num, right_num) {
-            (Some(_), Some(_)) | (None, None) => Ok(InferResult::new()),
+            (Some(_), Some(_)) | (None, None) => Ok(SuccessInferResult::new()),
             (None, Some(k)) => {
                 // L >= k and k > 0 => store `0 < L`
                 if matches!(
@@ -183,7 +183,7 @@ impl Runtime {
                 ) {
                     self.infer_store_gt_zero(f.left.clone(), f.line_file.clone())
                 } else {
-                    Ok(InferResult::new())
+                    Ok(SuccessInferResult::new())
                 }
             }
             (Some(k), None) => {
@@ -194,7 +194,7 @@ impl Runtime {
                 ) {
                     self.infer_store_le_zero(f.right.clone(), f.line_file.clone())
                 } else {
-                    Ok(InferResult::new())
+                    Ok(SuccessInferResult::new())
                 }
             }
         }
@@ -203,11 +203,11 @@ impl Runtime {
     fn infer_numeric_order_sign_greater(
         &mut self,
         f: &GreaterFact,
-    ) -> Result<InferResult, RuntimeError> {
+    ) -> Result<SuccessInferResult, RuntimeError> {
         let left_num = self.resolve_obj_to_number(&f.left);
         let right_num = self.resolve_obj_to_number(&f.right);
         match (left_num, right_num) {
-            (Some(_), Some(_)) | (None, None) => Ok(InferResult::new()),
+            (Some(_), Some(_)) | (None, None) => Ok(SuccessInferResult::new()),
             (None, Some(k)) => {
                 // L > k and k > 0 => store `0 < L`. If k == 0 the premise is already `0 < L`; do not re-store (avoids infinite infer).
                 if matches!(
@@ -216,7 +216,7 @@ impl Runtime {
                 ) {
                     self.infer_store_gt_zero(f.left.clone(), f.line_file.clone())
                 } else {
-                    Ok(InferResult::new())
+                    Ok(SuccessInferResult::new())
                 }
             }
             (Some(k), None) => {
@@ -227,7 +227,7 @@ impl Runtime {
                 ) {
                     self.infer_store_le_zero(f.right.clone(), f.line_file.clone())
                 } else {
-                    Ok(InferResult::new())
+                    Ok(SuccessInferResult::new())
                 }
             }
         }
@@ -236,11 +236,11 @@ impl Runtime {
     fn infer_numeric_order_sign_less_equal(
         &mut self,
         f: &LessEqualFact,
-    ) -> Result<InferResult, RuntimeError> {
+    ) -> Result<SuccessInferResult, RuntimeError> {
         let left_num = self.resolve_obj_to_number(&f.left);
         let right_num = self.resolve_obj_to_number(&f.right);
         match (left_num, right_num) {
-            (Some(_), Some(_)) | (None, None) => Ok(InferResult::new()),
+            (Some(_), Some(_)) | (None, None) => Ok(SuccessInferResult::new()),
             (None, Some(k)) => {
                 // L <= k and k < 0 => L <= 0
                 if matches!(
@@ -249,7 +249,7 @@ impl Runtime {
                 ) {
                     self.infer_store_le_zero(f.left.clone(), f.line_file.clone())
                 } else {
-                    Ok(InferResult::new())
+                    Ok(SuccessInferResult::new())
                 }
             }
             (Some(k), None) => {
@@ -260,17 +260,20 @@ impl Runtime {
                 ) {
                     self.infer_store_gt_zero(f.right.clone(), f.line_file.clone())
                 } else {
-                    Ok(InferResult::new())
+                    Ok(SuccessInferResult::new())
                 }
             }
         }
     }
 
-    fn infer_numeric_order_sign_less(&mut self, f: &LessFact) -> Result<InferResult, RuntimeError> {
+    fn infer_numeric_order_sign_less(
+        &mut self,
+        f: &LessFact,
+    ) -> Result<SuccessInferResult, RuntimeError> {
         let left_num = self.resolve_obj_to_number(&f.left);
         let right_num = self.resolve_obj_to_number(&f.right);
         match (left_num, right_num) {
-            (Some(_), Some(_)) | (None, None) => Ok(InferResult::new()),
+            (Some(_), Some(_)) | (None, None) => Ok(SuccessInferResult::new()),
             (None, Some(k)) => {
                 // L < k and k <= 0 => L <= 0
                 if matches!(
@@ -279,7 +282,7 @@ impl Runtime {
                 ) {
                     self.infer_store_le_zero(f.left.clone(), f.line_file.clone())
                 } else {
-                    Ok(InferResult::new())
+                    Ok(SuccessInferResult::new())
                 }
             }
             (Some(k), None) => {
@@ -290,7 +293,7 @@ impl Runtime {
                 ) {
                     self.infer_store_gt_zero(f.right.clone(), f.line_file.clone())
                 } else {
-                    Ok(InferResult::new())
+                    Ok(SuccessInferResult::new())
                 }
             }
         }
@@ -300,10 +303,10 @@ impl Runtime {
         &mut self,
         x: Obj,
         line_file: LineFile,
-    ) -> Result<InferResult, RuntimeError> {
+    ) -> Result<SuccessInferResult, RuntimeError> {
         let fact_to_store =
             LessFact::new(Number::new("0".to_string()).into(), x, line_file.clone()).into();
-        let mut infer_result = InferResult::new();
+        let mut infer_result = SuccessInferResult::new();
         infer_result.new_fact(&fact_to_store);
         self.store_with_well_defined_verification_and_infer_with_default_verify_state(
             fact_to_store,
@@ -324,10 +327,10 @@ impl Runtime {
         &mut self,
         x: Obj,
         line_file: LineFile,
-    ) -> Result<InferResult, RuntimeError> {
+    ) -> Result<SuccessInferResult, RuntimeError> {
         let fact_to_store =
             LessEqualFact::new(x, Number::new("0".to_string()).into(), line_file.clone()).into();
-        let mut infer_result = InferResult::new();
+        let mut infer_result = SuccessInferResult::new();
         infer_result.new_fact(&fact_to_store);
         self.store_with_well_defined_verification_and_infer_with_default_verify_state(
             fact_to_store,

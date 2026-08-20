@@ -99,9 +99,9 @@ $unit_pair(1, 1)
             render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
         assert!(run_succeeded, "by def should succeed:\n{}", run_output);
-        assert!(run_output.contains("\"type\": \"proof by definition\""));
-        assert!(run_output.contains("\"type\": \"by definition proof\""));
-        assert!(run_output.contains("\"definition_clause_checks\":"));
+        assert!(run_output.contains("\"kind\": \"ByDefStmt\""));
+        assert!(run_output.contains("\"kind\": \"SuccessVerifyByDefinitionResult\""));
+        assert!(run_output.contains("\"definition_clause_facts\":"));
         assert!(runtime.cache_known_facts_contains("$unit_pair(1, 1)").0);
     });
 }
@@ -200,7 +200,7 @@ by def $is_zero(1)
             "by def should recheck the definition:\n{}",
             run_output
         );
-        assert!(run_output.contains("\"definition_clause_checks\": ["));
+        assert!(run_output.contains("\"definition_clause_facts\": ["));
         assert!(run_output.contains("\"statement\": \"1 = 0\""));
     });
 }
@@ -289,8 +289,9 @@ by def $fn_eq(real_identity, second_real_identity)
             run_succeeded,
             "builtin definitions should verify explicitly:\n{run_output}"
         );
-        assert!(run_output.contains("proof by definition"));
-        assert!(run_output.contains("\"role\": \"builtin definition check 1\""));
+        assert!(run_output.contains("\"kind\": \"ByDefStmt\""));
+        assert!(run_output.contains("\"kind\": \"SuccessVerifyByDefinitionResult\""));
+        assert!(run_output.contains("\"definition_clauses\": ["));
         assert!(!run_output.contains("builtin definition of `"));
     });
 }
@@ -425,7 +426,7 @@ a = c
         run_output
     );
     assert!(
-        run_output.contains("\"rule\": \"same known equality class\""),
+        run_output.contains("known-only equality: same known equality class"),
         "the transitive equality must use the direct known-equality path:\n{}",
         run_output
     );
@@ -512,7 +513,7 @@ forall a, b R+, c R:
         run_output
     );
     assert!(run_output.contains("forall iff: then=>iff and iff=>then verified"));
-    assert!(!run_output.contains("\"type\": \"cite forall iff fact\""));
+    assert!(!run_output.contains("\"kind\": \"KnownForallInstantiation\""));
 }
 
 #[test]
@@ -1345,7 +1346,7 @@ strategy use_target_strategy:
         run_output
     );
     assert!(
-        run_output.contains("cite forall fact"),
+        run_output.contains("\"kind\": \"KnownForallInstantiation\""),
         "the stopped strategy case should verify by ordinary known-forall search:\n{}",
         run_output
     );

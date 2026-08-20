@@ -15,10 +15,10 @@ theorem __fact1 : Litex.Same id ({ call := fun {__alpha} (__arg : __alpha) __arg
   unfold id
   exact Litex.Same.refl ({ call := fun {__alpha} (__arg : __alpha) __arg_in => Litex.In.rep __arg __arg_in } : Litex.Fn Litex.R Litex.R)
 
-theorem __fact2 : Litex.Same (Litex.fnApplyOwn id __fact0 (1 : ℂ) (Litex.Rules.complexRealInR 1)) (1 : ℂ) := by
+theorem __fact2 : Litex.Same (Litex.fnApplyOwn id __fact0 (1 : ℂ) (Litex.Rules.complexRealInR (1 : ℝ))) (1 : ℂ) := by
   exact (by
   unfold Litex.fnApplyOwn id
-  exact Litex.Same.symm (Litex.In.same_rep (1 : ℂ) (Litex.Rules.complexRealInR 1)))
+  exact Litex.Same.symm (Litex.In.same_rep (1 : ℂ) (Litex.Rules.complexRealInR (1 : ℝ))))
 
 noncomputable def inc : Litex.Fn Litex.R Litex.R :=
   { call := fun {__alpha} (__arg : __alpha) __arg_in => (Litex.In.rep __arg __arg_in + (1 : ℝ)) }
@@ -30,10 +30,10 @@ theorem __fact4 : Litex.Same inc ({ call := fun {__alpha} (__arg : __alpha) __ar
   unfold inc
   exact Litex.Same.refl ({ call := fun {__alpha} (__arg : __alpha) __arg_in => (Litex.In.rep __arg __arg_in + (1 : ℝ)) } : Litex.Fn Litex.R Litex.R)
 
-theorem __fact5 : Litex.Same (Litex.fnApplyOwn inc __fact3 (1 : ℂ) (Litex.Rules.complexRealInR 1)) ((1 : ℂ) + (1 : ℂ)) := by
+theorem __fact5 : Litex.Same (Litex.fnApplyOwn inc __fact3 (1 : ℂ) (Litex.Rules.complexRealInR (1 : ℝ))) ((1 : ℂ) + (1 : ℂ)) := by
   exact (by
   unfold Litex.fnApplyOwn inc
-  exact Litex.Same.realAddComplex (Litex.Same.symm (Litex.In.same_rep (1 : ℂ) (Litex.Rules.complexRealInR 1))) (Litex.Same.realComplex (1 : ℝ)))
+  exact Litex.Same.realAddComplex (Litex.Same.symm (Litex.In.same_rep (1 : ℂ) (Litex.Rules.complexRealInR (1 : ℝ)))) (Litex.Same.realComplex (1 : ℝ)))
 
 noncomputable def reciprocal : Litex.FnWhere Litex.R Litex.R (fun {__alpha} (__arg : __alpha) => ¬ Litex.Same __arg (0 : ℂ)) :=
   { call := fun {__alpha} (__arg : __alpha) __arg_in __arg_domain => ((1 : ℝ) / Litex.In.rep __arg __arg_in) }
@@ -49,9 +49,10 @@ theorem __fact8 :
     ∀ (a : ℂ) (__h8_1 : Litex.In a Litex.R) (__h8_2 : ¬ Litex.Same a (0 : ℂ)),
       Litex.Same (Litex.fnApplyWhereOwn reciprocal __fact6 a (__h8_1) (__h8_2)) ((1 : ℂ) / a) := by
   intro a __h8_1 __h8_2
-  exact (by
+  have __c8_0 : Litex.Same (Litex.fnApplyWhereOwn reciprocal __fact6 a (__h8_1) (__h8_2)) ((1 : ℂ) / a) := (by
   unfold Litex.fnApplyWhereOwn reciprocal
   exact Litex.Same.realDivComplex (Litex.Same.realComplex (1 : ℝ)) (Litex.Same.symm (Litex.In.same_rep a (__h8_1))))
+  exact __c8_0
 
 noncomputable def into_builder : Litex.FnTelescope.Carrier ((Litex.FnTelescope.parameter Litex.R (fun {__alpha1 : Type} (__arg1 : __alpha1) (__arg1_in : Litex.In __arg1 Litex.R) => (Litex.FnTelescope.done (Litex.setBuilder Litex.R (fun (z : Litex.R.Carrier) => Litex.Same z z))))) : Litex.FnTelescope.{0}) :=
   fun {__alpha1 : Type} (__arg1 : __alpha1) (__arg1_in : Litex.In __arg1 Litex.R) => ULift.up (Litex.In.rep __arg1 (Litex.Rules.inSetBuilder (Litex.In.same_rep __arg1 (__arg1_in)) (Litex.Same.refl (Litex.In.rep __arg1 (__arg1_in)))))
@@ -63,7 +64,7 @@ theorem __fact10 : Litex.Same (@into_builder) (fun {__alpha1 : Type} (__arg1 : _
   unfold into_builder
   exact Litex.Same.refl (fun {__alpha1 : Type} (__arg1 : __alpha1) (__arg1_in : Litex.In __arg1 Litex.R) => ULift.up (Litex.In.rep __arg1 (Litex.Rules.inSetBuilder (Litex.In.same_rep __arg1 (__arg1_in)) (Litex.Same.refl (Litex.In.rep __arg1 (__arg1_in))))) : Litex.FnTelescope.Carrier ((Litex.FnTelescope.parameter Litex.R (fun {__alpha1 : Type} (__arg1 : __alpha1) (__arg1_in : Litex.In __arg1 Litex.R) => (Litex.FnTelescope.done (Litex.setBuilder Litex.R (fun (z : Litex.R.Carrier) => Litex.Same z z))))) : Litex.FnTelescope.{0}))
 
-theorem __fact11 : Litex.Same (((Litex.fnTelescopeApplyOwn (@into_builder) __fact9) (1 : ℂ) (Litex.Rules.complexRealInR 1))).down (1 : ℂ) := by
+theorem __fact11 : Litex.Same (((Litex.fnTelescopeApplyOwn (@into_builder) __fact9) (1 : ℂ) (Litex.Rules.complexRealInR (1 : ℝ)))).down (1 : ℂ) := by
   exact (by
   unfold Litex.fnTelescopeApplyOwn into_builder
   apply Litex.Same.symm

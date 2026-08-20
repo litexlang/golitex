@@ -272,6 +272,25 @@ pub struct RefinedNumericMembershipBuiltinRuleEvidence {
     pub expected_premises: Vec<Fact>,
 }
 
+/// A closed numeric expression was recursively evaluated and the resulting
+/// number was checked against one standard numeric set.  The source expression
+/// remains part of `expected_target`; `evaluation` records how it reached the
+/// normalized value used by the membership decision.
+#[derive(Clone)]
+pub struct ClosedNumericMembershipBuiltinRuleEvidence {
+    pub expected_target: Fact,
+    pub target_set: StandardSet,
+    pub evaluation: SuccessEvaluateObjResult,
+}
+
+/// The negative counterpart of `ClosedNumericMembershipBuiltinRuleEvidence`.
+#[derive(Clone)]
+pub struct ClosedNumericNonmembershipBuiltinRuleEvidence {
+    pub expected_target: Fact,
+    pub target_set: StandardSet,
+    pub evaluation: SuccessEvaluateObjResult,
+}
+
 /// A closed literal numeric comparison checked by the verifier's evaluator.
 /// The Lean carrier remains contextual (for example `0 < 1` may be needed in
 /// an `ℝ` proof), so the certificate freezes the proposition without choosing a
@@ -290,6 +309,29 @@ pub struct FunctionApplicationReturnMembershipBuiltinRuleEvidence {
     pub typed_return_set: Obj,
     pub expected_target: Fact,
     pub expected_head_membership: Fact,
+}
+
+/// Exact carrier certificate for a native matrix expression. The enclosing
+/// fact's recursive well-definedness result owns the operand carrier and
+/// dimension checks; this payload records the matrix type computed by that
+/// checked constructor and the membership proposition it discharges.
+#[derive(Clone)]
+pub struct MatrixExpressionMembershipBuiltinRuleEvidence {
+    pub inferred_matrix_set: MatrixSet,
+    pub expected_target: Fact,
+}
+
+impl fmt::Debug for MatrixExpressionMembershipBuiltinRuleEvidence {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        formatter
+            .debug_struct("MatrixExpressionMembershipBuiltinRuleEvidence")
+            .field(
+                "inferred_matrix_set",
+                &Obj::from(self.inferred_matrix_set.clone()).to_string(),
+            )
+            .field("expected_target", &self.expected_target.to_string())
+            .finish()
+    }
 }
 
 /// Exact direct-equality path selected while checking one equality-class
@@ -381,6 +423,56 @@ impl fmt::Debug for FunctionApplicationReturnMembershipBuiltinRuleEvidence {
 impl ClosedNumericComparisonBuiltinRuleEvidence {
     pub fn new(expected_target: Fact) -> Self {
         Self { expected_target }
+    }
+}
+
+impl ClosedNumericMembershipBuiltinRuleEvidence {
+    pub fn new(
+        expected_target: Fact,
+        target_set: StandardSet,
+        evaluation: SuccessEvaluateObjResult,
+    ) -> Self {
+        Self {
+            expected_target,
+            target_set,
+            evaluation,
+        }
+    }
+}
+
+impl fmt::Debug for ClosedNumericMembershipBuiltinRuleEvidence {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        formatter
+            .debug_struct("ClosedNumericMembershipBuiltinRuleEvidence")
+            .field("expected_target", &self.expected_target.to_string())
+            .field("target_set", &self.target_set.to_string())
+            .field("evaluation", &self.evaluation)
+            .finish()
+    }
+}
+
+impl ClosedNumericNonmembershipBuiltinRuleEvidence {
+    pub fn new(
+        expected_target: Fact,
+        target_set: StandardSet,
+        evaluation: SuccessEvaluateObjResult,
+    ) -> Self {
+        Self {
+            expected_target,
+            target_set,
+            evaluation,
+        }
+    }
+}
+
+impl fmt::Debug for ClosedNumericNonmembershipBuiltinRuleEvidence {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        formatter
+            .debug_struct("ClosedNumericNonmembershipBuiltinRuleEvidence")
+            .field("expected_target", &self.expected_target.to_string())
+            .field("target_set", &self.target_set.to_string())
+            .field("evaluation", &self.evaluation)
+            .finish()
     }
 }
 
@@ -486,9 +578,12 @@ pub enum BuiltinRuleEvidence {
     SetBuilderMembership(SetBuilderMembershipBuiltinRuleEvidence),
     FunctionSetMembership(FunctionSetMembershipBuiltinRuleEvidence),
     RefinedNumericMembership(RefinedNumericMembershipBuiltinRuleEvidence),
+    ClosedNumericMembership(ClosedNumericMembershipBuiltinRuleEvidence),
+    ClosedNumericNonmembership(ClosedNumericNonmembershipBuiltinRuleEvidence),
     ClosedNumericComparison(ClosedNumericComparisonBuiltinRuleEvidence),
     DisjunctionIntroduction(DisjunctionIntroductionBuiltinRuleEvidence),
     FunctionApplicationReturnMembership(FunctionApplicationReturnMembershipBuiltinRuleEvidence),
+    MatrixExpressionMembership(MatrixExpressionMembershipBuiltinRuleEvidence),
     KnownEqualityPath(KnownEqualityBuiltinRuleEvidence),
     DivNotEqualZero(DivNotEqualZeroBuiltinRuleEvidence),
     Arithmetic(ArithmeticBuiltinRule),
@@ -541,6 +636,14 @@ impl fmt::Debug for BuiltinRuleEvidence {
                 .debug_tuple("RefinedNumericMembership")
                 .field(evidence)
                 .finish(),
+            BuiltinRuleEvidence::ClosedNumericMembership(evidence) => f
+                .debug_tuple("ClosedNumericMembership")
+                .field(evidence)
+                .finish(),
+            BuiltinRuleEvidence::ClosedNumericNonmembership(evidence) => f
+                .debug_tuple("ClosedNumericNonmembership")
+                .field(evidence)
+                .finish(),
             BuiltinRuleEvidence::ClosedNumericComparison(evidence) => f
                 .debug_tuple("ClosedNumericComparison")
                 .field(evidence)
@@ -551,6 +654,10 @@ impl fmt::Debug for BuiltinRuleEvidence {
                 .finish(),
             BuiltinRuleEvidence::FunctionApplicationReturnMembership(evidence) => f
                 .debug_tuple("FunctionApplicationReturnMembership")
+                .field(evidence)
+                .finish(),
+            BuiltinRuleEvidence::MatrixExpressionMembership(evidence) => f
+                .debug_tuple("MatrixExpressionMembership")
                 .field(evidence)
                 .finish(),
             BuiltinRuleEvidence::KnownEqualityPath(evidence) => {

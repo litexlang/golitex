@@ -1677,17 +1677,41 @@ fn emit_forall_fact(
     for local in render_local_statements(proof_steps, &mut context, "__step", &mut local_index)? {
         derived_lines.push(indent_lines(&local, 2));
     }
-    let conclusion_proofs = conclusions
-        .iter()
-        .map(|conclusion| render_proof(conclusion, &context))
-        .collect::<Result<Vec<_>, _>>()?;
-    let proof = if conclusion_proofs.len() == 1 {
-        format!("  exact {}", conclusion_proofs[0])
+    let single_heterogeneous_subset = conclusions.len() == 1
+        && matches!(
+            &conclusions[0].proposition,
+            Fact::AtomicFact(AtomicFact::SubsetFact(_) | AtomicFact::SupersetFact(_))
+        );
+    if single_heterogeneous_subset {
+        // Keep the proof expression under the theorem conclusion's expected
+        // type. In particular, `Litex.Subset` is a heterogeneous dependent
+        // function; first assigning its proof to a standalone local can
+        // prematurely instantiate its implicit carrier metavariable.
+        derived_lines.push(format!(
+            "  exact {}",
+            render_proof(&conclusions[0], &context)?
+        ));
     } else {
-        format!("  exact ⟨{}⟩", conclusion_proofs.join(", "))
-    };
-
-    derived_lines.push(proof);
+        let mut conclusion_names = Vec::with_capacity(conclusions.len());
+        for (conclusion_index, conclusion) in conclusions.iter().enumerate() {
+            let proposition = &conclusion_types[conclusion_index];
+            let proof = render_proof(conclusion, &context)?;
+            let name = format!("__c{theorem_index}_{conclusion_index}");
+            derived_lines.push(format!("  have {name} : {proposition} := {proof}"));
+            if let Some(fact_id) = conclusion.stored_fact_id() {
+                context.fact_names.insert(fact_id, name.clone());
+                context
+                    .fact_propositions
+                    .insert(fact_id, conclusion.proposition.clone());
+            }
+            conclusion_names.push(name);
+        }
+        if conclusion_names.len() == 1 {
+            derived_lines.push(format!("  exact {}", conclusion_names[0]));
+        } else {
+            derived_lines.push(format!("  exact ⟨{}⟩", conclusion_names.join(", ")));
+        }
+    }
     let theorem_type = if binders.is_empty() {
         conclusion_type
     } else {
@@ -2218,6 +2242,11 @@ fn render_proof(fact: &LitexToLeanFactIr, context: &RenderContext) -> Result<Str
             {
                 render_closed_standard_membership(fact, context)
             }
+            LitexToLeanProofRuleIr::ClosedNumericMembership(evidence)
+                if parameter_requirements.is_empty() && premises.is_empty() =>
+            {
+                render_closed_numeric_membership(fact, evidence, context)
+            }
             LitexToLeanProofRuleIr::StandardSetNonempty
                 if parameter_requirements.is_empty() && premises.is_empty() =>
             {
@@ -2304,6 +2333,14 @@ fn render_proof(fact: &LitexToLeanFactIr, context: &RenderContext) -> Result<Str
             LitexToLeanProofRuleIr::Builtin(LitexToLeanBuiltinRuleIr::PositiveRealMembership) => {
                 render_positive_real_membership(fact, parameter_requirements, premises, context)
             }
+            LitexToLeanProofRuleIr::Builtin(
+                LitexToLeanBuiltinRuleIr::NaturalMembershipImpliesNonnegative,
+            ) => render_natural_membership_implies_nonnegative(
+                fact,
+                parameter_requirements,
+                premises,
+                context,
+            ),
             LitexToLeanProofRuleIr::Builtin(
                 LitexToLeanBuiltinRuleIr::ComplexArithmeticMembershipClosure(rule),
             ) => render_complex_binary_membership_rule(
@@ -3495,10 +3532,14 @@ fn render_case_split(
         )?;
         let exit = match &branch.exit {
             LitexToLeanCaseBranchExitIr::Conclusion(conclusion) => {
-                if conclusion.proposition.to_string() != target.proposition.to_string() {
+                if conclusion.fact.proposition.to_string() != target.proposition.to_string() {
                     return Err("case branch conclusion changed the exported goal".into());
                 }
-                render_proof(conclusion, &nested)?
+                crate::litex_to_lean_ir::validate_litex_to_lean_well_definedness_certificate(
+                    &conclusion.well_definedness,
+                )?;
+                nested.well_definedness = Some(conclusion.well_definedness.clone());
+                render_proof(&conclusion.fact, &nested)?
             }
             LitexToLeanCaseBranchExitIr::Contradiction(contradiction) => {
                 format!(
@@ -3770,6 +3811,63 @@ fn render_closed_standard_membership(
         "Litex.Rules.{theorem} ({} : ℂ) {} (by norm_num)",
         number.normalized_value, number.normalized_value
     ))
+}
+
+fn render_closed_numeric_membership(
+    fact: &LitexToLeanFactIr,
+    evidence: &LitexToLeanClosedNumericMembershipProofIr,
+    context: &RenderContext,
+) -> Result<String, String> {
+    let (element, set) = membership_parts(&fact.proposition)?;
+    let Obj::StandardSet(target_set) = set else {
+        return Err("closed-numeric-membership certificate targets a nonstandard set".into());
+    };
+    if *target_set != evidence.target_set
+        || obj_equality_key(element) != obj_equality_key(&evidence.evaluation.expression)
+    {
+        return Err(
+            "closed-numeric-membership certificate changed its expression or target set".into(),
+        );
+    }
+    let reevaluated = evidence
+        .evaluation
+        .expression
+        .evaluate_to_normalized_decimal_number()
+        .ok_or_else(|| "closed-numeric-membership expression no longer evaluates".to_string())?;
+    if reevaluated.normalized_value != evidence.evaluation.value.normalized_value {
+        return Err("closed-numeric-membership normalized value was corrupted".into());
+    }
+    let source = render_obj(element, context)?;
+    let normalized = &evidence.evaluation.value.normalized_value;
+    match target_set {
+        StandardSet::C => Ok(format!("Litex.Rules.complexInC {source}")),
+        StandardSet::N if normalized.chars().all(|character| character.is_ascii_digit()) => {
+            Ok(format!(
+                "Litex.Rules.complexEqNatInN {source} {normalized} (by norm_num)"
+            ))
+        }
+        StandardSet::NPos
+            if normalized.chars().all(|character| character.is_ascii_digit())
+                && normalized.chars().any(|character| character != '0') =>
+        {
+            Ok(format!(
+                "Litex.Rules.complexEqNatInNPos {source} {normalized} (by norm_num) (by norm_num)"
+            ))
+        }
+        StandardSet::Z => Ok(format!(
+            "Litex.Rules.complexEqIntInZ {source} {normalized} (by norm_num)"
+        )),
+        StandardSet::Q => Ok(format!(
+            "Litex.Rules.complexEqRatInQ {source} {normalized} (by norm_num)"
+        )),
+        StandardSet::R => render_closed_real_expression_membership(element, context),
+        StandardSet::RPos => Ok(format!(
+            "Litex.Rules.complexEqRealInRPos {source} ({normalized} : ℝ) (by norm_num) (by norm_num)"
+        )),
+        _ => Err(format!(
+            "unsupported closed numeric membership in `{target_set}` with value `{normalized}`"
+        )),
+    }
 }
 
 fn render_closed_real_expression_membership(
@@ -5248,6 +5346,51 @@ fn render_positive_real_membership(
     }
     Ok(format!(
         "Litex.Rules.positiveOfInRPos ({})",
+        render_proof(&premises[0], context)?
+    ))
+}
+
+fn render_natural_membership_implies_nonnegative(
+    fact: &LitexToLeanFactIr,
+    parameter_requirements: &[LitexToLeanFactIr],
+    premises: &[LitexToLeanFactIr],
+    context: &RenderContext,
+) -> Result<String, String> {
+    if !parameter_requirements.is_empty() || premises.len() != 1 {
+        return Err(
+            "natural-membership nonnegativity requires one premise and no parameter requirements"
+                .into(),
+        );
+    }
+    let (source_element, source_set) = membership_parts(&premises[0].proposition)?;
+    if !matches!(source_set, Obj::StandardSet(StandardSet::N)) {
+        return Err(
+            "natural-membership nonnegativity retained a source carrier other than N".into(),
+        );
+    }
+    let target_element = match &fact.proposition {
+        Fact::AtomicFact(AtomicFact::GreaterEqualFact(order))
+            if matches!(&order.right, Obj::Number(number) if number.normalized_value == "0") =>
+        {
+            &order.left
+        }
+        Fact::AtomicFact(AtomicFact::LessEqualFact(order))
+            if matches!(&order.left, Obj::Number(number) if number.normalized_value == "0") =>
+        {
+            &order.right
+        }
+        _ => {
+            return Err(
+                "natural-membership nonnegativity targets a fact other than the source object being at least zero"
+                    .into(),
+            )
+        }
+    };
+    if obj_equality_key(source_element) != obj_equality_key(target_element) {
+        return Err("natural-membership nonnegativity changed its inferred object".into());
+    }
+    Ok(format!(
+        "Litex.Rules.nonnegativeOfInN ({})",
         render_proof(&premises[0], context)?
     ))
 }

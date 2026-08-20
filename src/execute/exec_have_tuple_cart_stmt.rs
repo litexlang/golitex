@@ -6,24 +6,30 @@ impl Runtime {
         stmt: &HaveTupleStmt,
     ) -> Result<StmtResult, RuntimeError> {
         self.exec_have_tuple_stmt_verify_well_definedness(stmt)?;
-        let check_results = self.exec_have_tuple_stmt_verify_process(stmt)?;
+        let verification = self.exec_have_tuple_stmt_verify_process(stmt)?;
         let infer_result = self.exec_have_tuple_stmt_affect_environment(stmt)?;
-        Ok(VerifiedDefObjStmtIr::HaveTupleStmt {
-            statement: stmt.clone(),
-            common: VerifiedStmtCommonIr::new(infer_result, check_results),
-        }
-        .into())
+        Ok(
+            SuccessDefObjStmtResult::HaveTupleStmt(Box::new(SuccessHaveTupleStmtResult {
+                statement: stmt.clone(),
+                common: SuccessStmtCommonResult::new(infer_result),
+                verification: Some(verification),
+            }))
+            .into(),
+        )
     }
 
     pub fn exec_have_cart_stmt(&mut self, stmt: &HaveCartStmt) -> Result<StmtResult, RuntimeError> {
         self.exec_have_cart_stmt_verify_well_definedness(stmt)?;
-        let check_results = self.exec_have_cart_stmt_verify_process(stmt)?;
+        let verification = self.exec_have_cart_stmt_verify_process(stmt)?;
         let infer_result = self.exec_have_cart_stmt_affect_environment(stmt)?;
-        Ok(VerifiedDefObjStmtIr::HaveCartStmt {
-            statement: stmt.clone(),
-            common: VerifiedStmtCommonIr::new(infer_result, check_results),
-        }
-        .into())
+        Ok(
+            SuccessDefObjStmtResult::HaveCartStmt(Box::new(SuccessHaveCartStmtResult {
+                statement: stmt.clone(),
+                common: SuccessStmtCommonResult::new(infer_result),
+                verification: Some(verification),
+            }))
+            .into(),
+        )
     }
 
     /// Mathematical contract: a tuple-family declaration uses a fresh name
@@ -46,7 +52,7 @@ impl Runtime {
     fn exec_have_tuple_stmt_verify_process(
         &mut self,
         stmt: &HaveTupleStmt,
-    ) -> Result<Vec<StmtResult>, RuntimeError> {
+    ) -> Result<SuccessVerifyTupleOrCartDimensionResult, RuntimeError> {
         self.verify_tuple_or_cart_dimension(
             stmt.clone().into(),
             &stmt.dimension,
@@ -57,11 +63,11 @@ impl Runtime {
     fn exec_have_tuple_stmt_affect_environment(
         &mut self,
         stmt: &HaveTupleStmt,
-    ) -> Result<InferResult, RuntimeError> {
+    ) -> Result<SuccessInferResult, RuntimeError> {
         self.store_parameter_binding(&stmt.symbol_binding, ParamObjType::Identifier)
             .map_err(|e| short_exec_error(stmt.clone().into(), String::new(), Some(e), vec![]))?;
 
-        let mut infer_result = InferResult::new();
+        let mut infer_result = SuccessInferResult::new();
         let target = self.declared_identifier_obj(stmt.name());
         infer_result.new_infer_result_inside(self.store_have_tuple_or_cart_fact(
             IsTupleFact::new(target.clone(), stmt.line_file.clone()).into(),
@@ -92,11 +98,14 @@ impl Runtime {
         stmt: &HaveTupleStmt,
     ) -> Result<StmtResult, RuntimeError> {
         let infer_result = self.exec_have_tuple_stmt_affect_environment(stmt)?;
-        Ok(VerifiedDefObjStmtIr::HaveTupleStmt {
-            statement: stmt.clone(),
-            common: VerifiedStmtCommonIr::new(infer_result, vec![]),
-        }
-        .into())
+        Ok(
+            SuccessDefObjStmtResult::HaveTupleStmt(Box::new(SuccessHaveTupleStmtResult {
+                statement: stmt.clone(),
+                common: SuccessStmtCommonResult::new(infer_result),
+                verification: None,
+            }))
+            .into(),
+        )
     }
 
     /// Mathematical contract: a Cartesian-family declaration uses a fresh
@@ -119,7 +128,7 @@ impl Runtime {
     fn exec_have_cart_stmt_verify_process(
         &mut self,
         stmt: &HaveCartStmt,
-    ) -> Result<Vec<StmtResult>, RuntimeError> {
+    ) -> Result<SuccessVerifyTupleOrCartDimensionResult, RuntimeError> {
         self.verify_tuple_or_cart_dimension(
             stmt.clone().into(),
             &stmt.dimension,
@@ -130,11 +139,11 @@ impl Runtime {
     fn exec_have_cart_stmt_affect_environment(
         &mut self,
         stmt: &HaveCartStmt,
-    ) -> Result<InferResult, RuntimeError> {
+    ) -> Result<SuccessInferResult, RuntimeError> {
         self.store_parameter_binding(&stmt.symbol_binding, ParamObjType::Identifier)
             .map_err(|e| short_exec_error(stmt.clone().into(), String::new(), Some(e), vec![]))?;
 
-        let mut infer_result = InferResult::new();
+        let mut infer_result = SuccessInferResult::new();
         let target = self.declared_identifier_obj(stmt.name());
         infer_result.new_infer_result_inside(self.store_have_tuple_or_cart_fact(
             IsSetFact::new(target.clone(), stmt.line_file.clone()).into(),
@@ -169,11 +178,14 @@ impl Runtime {
         stmt: &HaveCartStmt,
     ) -> Result<StmtResult, RuntimeError> {
         let infer_result = self.exec_have_cart_stmt_affect_environment(stmt)?;
-        Ok(VerifiedDefObjStmtIr::HaveCartStmt {
-            statement: stmt.clone(),
-            common: VerifiedStmtCommonIr::new(infer_result, vec![]),
-        }
-        .into())
+        Ok(
+            SuccessDefObjStmtResult::HaveCartStmt(Box::new(SuccessHaveCartStmtResult {
+                statement: stmt.clone(),
+                common: SuccessStmtCommonResult::new(infer_result),
+                verification: None,
+            }))
+            .into(),
+        )
     }
 
     fn verify_tuple_or_cart_name_available(
@@ -192,8 +204,7 @@ impl Runtime {
         stmt: Stmt,
         dimension: &Obj,
         line_file: LineFile,
-    ) -> Result<Vec<StmtResult>, RuntimeError> {
-        let mut check_results = Vec::new();
+    ) -> Result<SuccessVerifyTupleOrCartDimensionResult, RuntimeError> {
         let in_n_pos: AtomicFact = InFact::new(
             dimension.clone(),
             StandardSet::NPos.into(),
@@ -211,7 +222,6 @@ impl Runtime {
                 vec![in_n_pos_result],
             ));
         }
-        check_results.push(in_n_pos_result);
 
         let two: Obj = Number::new("2".to_string()).into();
         let at_least_two: AtomicFact = LessEqualFact::new(two, dimension.clone(), line_file).into();
@@ -226,8 +236,10 @@ impl Runtime {
                 vec![at_least_two_result],
             ));
         }
-        check_results.push(at_least_two_result);
-        Ok(check_results)
+        Ok(SuccessVerifyTupleOrCartDimensionResult {
+            positive_check: Box::new(in_n_pos_result),
+            at_least_two_check: Box::new(at_least_two_result),
+        })
     }
 
     fn verify_tuple_or_cart_value_before_defining_name(
@@ -251,7 +263,7 @@ impl Runtime {
         &mut self,
         fact: Fact,
         reason: &'static str,
-    ) -> Result<InferResult, RuntimeError> {
+    ) -> Result<SuccessInferResult, RuntimeError> {
         let mut infer_result =
             self.store_with_well_defined_verification_and_infer_with_default_verify_state(fact)?;
         infer_result.relabel_all_added_facts_with_store_reason(reason);

@@ -5,22 +5,22 @@ impl Runtime {
         let (fact_is_positive, predicate, args) = match atomic_fact {
             AtomicFact::NormalAtomicFact(f) => (true, &f.predicate, &f.body),
             AtomicFact::NotNormalAtomicFact(f) => (false, &f.predicate, &f.body),
-            _ => return StmtUnknown::new().into(),
+            _ => return UnknownGenericStmtResult::new().into(),
         };
         if !matches!(predicate, AtomicName::WithoutMod(name) if name == PRIME) || args.len() != 1 {
-            return StmtUnknown::new().into();
+            return UnknownGenericStmtResult::new().into();
         }
 
         let Obj::Number(number) = self.resolve_obj(&args[0]) else {
-            return StmtUnknown::new().into();
+            return UnknownGenericStmtResult::new().into();
         };
         let Ok(value) = number.normalized_value.parse::<u64>() else {
-            return StmtUnknown::new().into();
+            return UnknownGenericStmtResult::new().into();
         };
         if is_prime_u64(value) != fact_is_positive {
-            return StmtUnknown::new().into();
+            return UnknownGenericStmtResult::new().into();
         }
-        VerifiedFactStmtIr::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+        SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
             atomic_fact.clone().into(),
             "deterministic primality computation for u64".to_string(),
             BuiltinRuleEvidence::PrimeU64Reflection,

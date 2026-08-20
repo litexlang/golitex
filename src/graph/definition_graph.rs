@@ -998,13 +998,10 @@ impl DefinitionGraphBuilder {
     }
 
     fn add_one_result_provenance(&mut self, result: &StmtResult) {
-        let Some(success) = result.non_factual_ir() else {
+        let Some(success) = result.non_factual_success() else {
             return;
         };
         let source_stmt = success.statement();
-        let common = success
-            .common()
-            .expect("non-factual IR carries common execution evidence");
         match &source_stmt {
             Stmt::DefThmStmt(statement) => {
                 let previous_canonical_name = self.active_canonical_name.clone();
@@ -1012,8 +1009,8 @@ impl DefinitionGraphBuilder {
                     .canonical_name_by_source
                     .get(statement.line_file.1.as_ref())
                     .cloned();
-                let sources = self.proof_source_ids_from_results(&common.inside_results);
-                let direct_trust = stmt_results_contain_direct_trust(&common.inside_results);
+                let sources = self.proof_source_ids_from_success_children(success);
+                let direct_trust = success_children_contain_direct_trust(success);
                 let name = self.normalized_dependency_name(&statement.name);
                 let target_id = definition_id("theorem", name.as_str());
                 if self.node_is_defined(&target_id) {
@@ -1027,7 +1024,7 @@ impl DefinitionGraphBuilder {
                 self.active_canonical_name = previous_canonical_name;
             }
             Stmt::DefObjStmt(DefObjStmt::HaveFnByForallExistUniqueStmt(statement)) => {
-                self.add_selection_certificate(statement, common);
+                self.add_selection_certificate(statement, success);
             }
             Stmt::UnsafeStmt(UnsafeStmt::TrustHaveStmt(statement)) => {
                 let source_id =
@@ -1051,7 +1048,7 @@ impl DefinitionGraphBuilder {
     fn add_selection_certificate(
         &mut self,
         statement: &HaveFnByForallExistUniqueStmt,
-        common: &VerifiedStmtCommonIr,
+        success: &SuccessStmtResult,
     ) {
         let function_id = definition_id("fn", statement.fn_name());
         if !self.node_is_defined(&function_id) {
@@ -1095,10 +1092,10 @@ impl DefinitionGraphBuilder {
         }
         self.add_dependency_edges(&certificate_id, well_definedness, "well_definedness");
 
-        for source_id in self.proof_source_ids_from_results(&common.inside_results) {
+        for source_id in self.proof_source_ids_from_success_children(success) {
             self.add_edge(&source_id, &certificate_id, "proof");
         }
-        let direct_trust = stmt_results_contain_direct_trust(&common.inside_results);
+        let direct_trust = success_children_contain_direct_trust(success);
         if direct_trust {
             self.set_node_knowledge_status(&certificate_id, "trust", Some("direct"));
             self.set_node_knowledge_status(&function_id, "trust", Some("direct"));
@@ -1107,11 +1104,14 @@ impl DefinitionGraphBuilder {
         self.active_canonical_name = previous_canonical_name;
     }
 
-    fn proof_source_ids_from_results(&mut self, results: &[StmtResult]) -> Vec<String> {
-        let mut source_ids = vec![];
-        for result in results {
-            self.collect_proof_source_ids_from_result(result, &mut source_ids);
-        }
+    fn proof_source_ids_from_success_children(
+        &mut self,
+        success: &SuccessStmtResult,
+    ) -> Vec<String> {
+        let mut source_ids = Vec::new();
+        success.visit_child_results(&mut |child| {
+            self.collect_proof_source_ids_from_result(child, &mut source_ids)
+        });
         source_ids.sort();
         source_ids.dedup();
         source_ids
@@ -1123,29 +1123,27 @@ impl DefinitionGraphBuilder {
         source_ids: &mut Vec<String>,
     ) {
         if let Some(success) = result.factual_success() {
-            self.collect_verified_by_source_ids(&success.verified_by, source_ids);
+            self.collect_verified_by_source_ids(success.proof(), source_ids);
             return;
         }
-        let Some(success) = result.non_factual_ir() else {
+        let Some(success) = result.non_factual_success() else {
             return;
         };
-        if let VerifiedStmtIr::By(VerifiedByStmtIr::ByThmStmt {
-            verification: Some(verification),
-            ..
-        }) = success
-        {
-            let theorem_name = self.normalized_dependency_name(verification.theorem.as_str());
-            let source_id = definition_id("theorem", theorem_name.as_str());
-            self.ensure_node(
-                source_id.clone(),
-                "theorem",
-                "theorem",
-                theorem_name.as_str(),
-                false,
-                None,
-                None,
-            );
-            source_ids.push(source_id);
+        if let SuccessStmtResult::By(SuccessByStmtResult::ByThmStmt(result)) = success {
+            if let Some(verification) = result.verification.as_ref() {
+                let theorem_name = self.normalized_dependency_name(verification.theorem.as_str());
+                let source_id = definition_id("theorem", theorem_name.as_str());
+                self.ensure_node(
+                    source_id.clone(),
+                    "theorem",
+                    "theorem",
+                    theorem_name.as_str(),
+                    false,
+                    None,
+                    None,
+                );
+                source_ids.push(source_id);
+            }
         }
         match &success.statement() {
             Stmt::UnsafeStmt(UnsafeStmt::TrustStmt(statement)) => {
@@ -1178,29 +1176,27 @@ impl DefinitionGraphBuilder {
             }
             _ => {}
         }
-        let common = success
-            .common()
-            .expect("non-factual IR carries common execution evidence");
-        for inside in common.inside_results.iter() {
-            self.collect_proof_source_ids_from_result(inside, source_ids);
-        }
+        success.visit_child_results(&mut |child| {
+            self.collect_proof_source_ids_from_result(child, source_ids)
+        });
     }
 
     fn collect_verified_by_source_ids(
         &mut self,
-        verified_by: &VerifiedByResult,
+        verified_by: &SuccessFactProofResult,
         source_ids: &mut Vec<String>,
     ) {
         match verified_by {
-            VerifiedByResult::BuiltinRule(result) | VerifiedByResult::BuiltinStrategy(result) => {
+            SuccessFactProofResult::BuiltinRule(result)
+            | SuccessFactProofResult::BuiltinStrategy(result) => {
                 for subgoal in result.subgoals.iter() {
                     self.collect_proof_source_ids_from_result(subgoal, source_ids);
                 }
             }
-            VerifiedByResult::Fact(result) => {
+            SuccessFactProofResult::Fact(result) => {
                 self.collect_cited_stmt_source_ids(result.cite_what.as_ref(), source_ids);
             }
-            VerifiedByResult::KnownForallInstantiation(result) => {
+            SuccessFactProofResult::KnownForallInstantiation(result) => {
                 self.collect_cited_stmt_source_ids(result.cite_what.as_ref(), source_ids);
                 for requirement in result.requirements.iter() {
                     self.collect_proof_source_ids_from_result(
@@ -1209,18 +1205,18 @@ impl DefinitionGraphBuilder {
                     );
                 }
             }
-            VerifiedByResult::VerifiedBys(result) => {
+            SuccessFactProofResult::CombinedProofs(result) => {
                 for item in result.cite_what.iter() {
                     match item {
-                        VerifiedBysEnum::ByBuiltinRule(result)
-                        | VerifiedBysEnum::ByBuiltinStrategy(result) => {
+                        SuccessCombinedFactProofItemResult::ByBuiltinRule(result)
+                        | SuccessCombinedFactProofItemResult::ByBuiltinStrategy(result) => {
                             for subgoal in result.subgoals.iter() {
                                 self.collect_proof_source_ids_from_result(subgoal, source_ids);
                             }
                         }
-                        VerifiedBysEnum::ByFact(result) => self
+                        SuccessCombinedFactProofItemResult::ByFact(result) => self
                             .collect_cited_stmt_source_ids(result.cite_what.as_ref(), source_ids),
-                        VerifiedBysEnum::ByKnownForall(result) => {
+                        SuccessCombinedFactProofItemResult::ByKnownForall(result) => {
                             self.collect_cited_stmt_source_ids(
                                 result.result.cite_what.as_ref(),
                                 source_ids,
@@ -1232,19 +1228,22 @@ impl DefinitionGraphBuilder {
                                 );
                             }
                         }
-                        VerifiedBysEnum::ByStatementMemo(_, source) => {
-                            self.collect_verified_by_source_ids(&source.verified_by, source_ids);
+                        SuccessCombinedFactProofItemResult::Reuse(result) => {
+                            self.collect_verified_by_source_ids(result.source.proof(), source_ids);
                         }
                     }
                 }
             }
-            VerifiedByResult::ForallProof(result) => {
+            SuccessFactProofResult::ForallProof(result) => {
                 for proved in result.proves.iter() {
                     self.collect_proof_source_ids_from_result(proved.result.as_ref(), source_ids);
                 }
             }
-            VerifiedByResult::StatementMemo(source) => {
-                self.collect_verified_by_source_ids(&source.verified_by, source_ids);
+            SuccessFactProofResult::Transform(result) => {
+                self.collect_verified_by_source_ids(result.source.proof(), source_ids);
+            }
+            SuccessFactProofResult::Reuse(result) => {
+                self.collect_verified_by_source_ids(result.source.proof(), source_ids);
             }
         }
     }
@@ -1833,7 +1832,7 @@ fn default_definition_knowledge_status(
 
 fn stmt_results_contain_direct_trust(results: &[StmtResult]) -> bool {
     for result in results {
-        let Some(success) = result.non_factual_ir() else {
+        let Some(success) = result.non_factual_success() else {
             continue;
         };
         if matches!(
@@ -1843,14 +1842,21 @@ fn stmt_results_contain_direct_trust(results: &[StmtResult]) -> bool {
         ) {
             return true;
         }
-        let common = success
-            .common()
-            .expect("non-factual IR carries common execution evidence");
-        if stmt_results_contain_direct_trust(&common.inside_results) {
+        if success_children_contain_direct_trust(success) {
             return true;
         }
     }
     false
+}
+
+fn success_children_contain_direct_trust(success: &SuccessStmtResult) -> bool {
+    let mut contains_trust = false;
+    success.visit_child_results(&mut |child| {
+        if !contains_trust && stmt_results_contain_direct_trust(std::slice::from_ref(child)) {
+            contains_trust = true;
+        }
+    });
+    contains_trust
 }
 
 fn trust_source_id(kind: &str, name: Option<&str>, line_file: &LineFile) -> String {

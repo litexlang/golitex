@@ -15,7 +15,9 @@ theorem __fact0 :
     ∀ (a : ℂ) (__h0_1 : Litex.In a A) (b : ℂ) (__h0_2 : Litex.In b B) (__h0_3 : Litex.Same a b),
       Litex.In b A ∧ Litex.In a B := by
   intro a __h0_1 b __h0_2 __h0_3
-  exact ⟨(Litex.In.congr __h0_3 A).mp __h0_1, (Litex.In.congr __h0_3 B).mpr __h0_2⟩
+  have __c0_0 : Litex.In b A := (Litex.In.congr __h0_3 A).mp __h0_1
+  have __c0_1 : Litex.In a B := (Litex.In.congr __h0_3 B).mpr __h0_2
+  exact ⟨__c0_0, __c0_1⟩
 
 end __Sketch01
 

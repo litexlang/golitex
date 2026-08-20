@@ -25,7 +25,7 @@ example_value = 1
         run_output
     );
     assert!(
-        run_output.contains("\"type\": \"verified example\""),
+        run_output.contains("\"kind\": \"ExampleStmt\""),
         "example should retain its distinct public result kind:\n{}",
         run_output
     );
@@ -54,16 +54,17 @@ example:
 
     assert!(run_succeeded, "{run_output}");
     assert_eq!(stmt_results.len(), 1, "{run_output}");
-    let StmtResult::Success(VerifiedStmtIr::ProofBlock(VerifiedProofBlockStmtIr::ExampleStmt {
-        common,
-        verification,
-        ..
-    })) = &stmt_results[0]
+    let StmtResult::Success(SuccessStmtResult::ProofBlock(
+        SuccessProofBlockStmtResult::ExampleStmt(result),
+    )) = &stmt_results[0]
     else {
         panic!("example should retain its exact verified IR: {run_output}")
     };
-    assert!(common.infers.store_fact_outputs.is_empty(), "{run_output}");
-    assert!(verification.is_some(), "{run_output}");
+    assert!(
+        result.common.infers.store_fact_outputs.is_empty(),
+        "{run_output}"
+    );
+    assert!(result.verification.is_some(), "{run_output}");
 }
 
 #[test]
@@ -87,7 +88,7 @@ sketch:
         run_output
     );
     assert!(
-        run_output.contains("\"type\": \"proof sketch\""),
+        run_output.contains("\"kind\": \"SketchStmt\""),
         "sketch should be reported as proof sketch:\n{}",
         run_output
     );
@@ -120,7 +121,7 @@ x = 1
             run_output
         );
         assert!(
-            run_output.contains("\"type\": \"try block\""),
+            run_output.contains("\"kind\": \"TryStmt\""),
             "try should be reported as a try block:\n{}",
             run_output
         );
@@ -1360,9 +1361,9 @@ by enumerate finite_set:
         run_output
     );
     assert!(
-        run_output.contains("\"type\": \"proof by extension\"")
-            && run_output.contains("\"type\": \"proof by finite set enumeration\"")
-            && run_output.contains("\"type\": \"proof by universal introduction\""),
+        run_output.contains("\"kind\": \"ByExtensionStmt\"")
+            && run_output.contains("\"kind\": \"ByEnumerateFiniteSetStmt\"")
+            && run_output.contains("\"kind\": \"ByForStmt\""),
         "all three proof methods should retain their existing proof provenance:\n{}",
         run_output
     );
@@ -1892,7 +1893,7 @@ exist x {1, 2} st {intersect(x, {1, 2}) = {}}
                 run_output
             );
             assert!(
-                run_output.contains("\"type\": \"by regularity_axiom proof\""),
+                run_output.contains("\"kind\": \"ByRegularityAxiomStmt\""),
                 "success output should identify the regularity axiom step:\n{}",
                 run_output
             );

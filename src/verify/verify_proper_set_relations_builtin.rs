@@ -7,15 +7,15 @@ impl Runtime {
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let Some(premise) = proper_set_relation_definition_premise(atomic_fact) else {
-            return Ok(StmtUnknown::new().into());
+            return Ok(UnknownGenericStmtResult::new().into());
         };
         let premise_result = self.verify_builtin_rule_premise(&premise, builtin_state)?;
         if !premise_result.is_true() {
-            return Ok(StmtUnknown::new().into());
+            return Ok(UnknownGenericStmtResult::new().into());
         }
 
         Ok(
-            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
                 format!(
                     "{} from its complete quantifier-free definition premise",
@@ -48,7 +48,7 @@ impl Runtime {
         }
 
         Ok(Some(
-            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
                 format!(
                     "{} by its builtin proper-set-relation definition",

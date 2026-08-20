@@ -11,7 +11,7 @@ theorem __fact0 : Litex.Same S S := by
   exact Litex.Same.refl S
 
 theorem __fact1 : Litex.In (1 : ℂ) (Litex.setBuilder Litex.R (fun (x : Litex.R.Carrier) => Litex.Same x (1 : ℂ))) := by
-  exact Litex.Rules.inSetBuilder (Litex.In.same_rep (1 : ℂ) (Litex.Rules.complexRealInR 1)) (Litex.Same.trans (Litex.Same.symm (Litex.In.same_rep (1 : ℂ) (Litex.Rules.complexRealInR 1))) (Litex.Same.refl (1 : ℂ)))
+  exact Litex.Rules.inSetBuilder (Litex.In.same_rep (1 : ℂ) (Litex.Rules.complexRealInR (1 : ℝ))) (Litex.Same.trans (Litex.Same.symm (Litex.In.same_rep (1 : ℂ) (Litex.Rules.complexRealInR (1 : ℝ)))) (Litex.Same.refl (1 : ℂ)))
 
 theorem __fact2 : Litex.In (1 : ℂ) Litex.R := by
   exact Litex.Rules.inBaseOfInSetBuilder (__fact1)
@@ -30,24 +30,18 @@ theorem __fact5 : is_one (1 : ℂ) := by
   unfold is_one
   exact ⟨__fact2, __fact4⟩)
 
-theorem __fact6 : Litex.Same (1 : ℂ) (1 : ℂ) := by
-  exact (by
-  have __definition := __fact5
-  unfold is_one at __definition
-  exact __definition.2)
-
-theorem __fact7 : Litex.In (1 : ℂ) (Litex.setBuilder Litex.R (fun (x : Litex.R.Carrier) => is_one x)) := by
+theorem __fact6 : Litex.In (1 : ℂ) (Litex.setBuilder Litex.R (fun (x : Litex.R.Carrier) => is_one x)) := by
   exact Litex.Rules.inSetBuilder (Litex.In.same_rep (1 : ℂ) (__fact2)) ((by
   have __source := __fact5
   unfold is_one at __source ⊢
   exact ⟨(Litex.In.congr (Litex.In.same_rep (1 : ℂ) (__fact2)) Litex.R).mp (__source.1), Litex.Same.trans (Litex.Same.symm (Litex.In.same_rep (1 : ℂ) (__fact2))) (__source.2)⟩))
 
-theorem __fact8 : Litex.In (1 : ℂ) Litex.R := by
-  exact Litex.Rules.inBaseOfInSetBuilder (__fact7)
+theorem __fact7 : Litex.In (1 : ℂ) Litex.R := by
+  exact Litex.Rules.inBaseOfInSetBuilder (__fact6)
 
-theorem __fact9 : is_one (1 : ℂ) := by
+theorem __fact8 : is_one (1 : ℂ) := by
   exact (by
-  rcases Litex.Rules.inSetBuilder_iff.mp (__fact7) with ⟨__rep, __predicate, __same⟩
+  rcases Litex.Rules.inSetBuilder_iff.mp (__fact6) with ⟨__rep, __predicate, __same⟩
   have __selected := __predicate
   unfold is_one at __selected ⊢
   exact ⟨(Litex.In.congr __same Litex.R).mpr (__selected.1), Litex.Same.trans (Litex.Same.symm (Litex.Same.symm __same)) (__selected.2)⟩)
@@ -55,10 +49,10 @@ theorem __fact9 : is_one (1 : ℂ) := by
 noncomputable def chosen : Litex.R.Carrier :=
   Classical.choice (Litex.Rules.realNonempty)
 
-theorem __fact10 : Litex.In chosen Litex.R := by
+theorem __fact9 : Litex.In chosen Litex.R := by
   exact Litex.In.own Litex.R chosen
 
-theorem __fact11 : Litex.In chosen Litex.R := by
-  exact __fact10
+theorem __fact10 : Litex.In chosen Litex.R := by
+  exact __fact9
 
 end __Compiler_14_SetBuilderAndChoice

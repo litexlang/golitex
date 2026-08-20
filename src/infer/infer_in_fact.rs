@@ -133,9 +133,9 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         fn_set_with_dom: &FnSet,
-    ) -> Result<InferResult, RuntimeError> {
+    ) -> Result<SuccessInferResult, RuntimeError> {
         if !obj_eligible_for_known_objs_in_fn_sets(&in_fact.element) {
-            return Ok(InferResult::new());
+            return Ok(SuccessInferResult::new());
         }
 
         let lf = in_fact.line_file.clone();
@@ -149,7 +149,7 @@ impl Runtime {
             lf,
         );
 
-        let mut infer_result = InferResult::new();
+        let mut infer_result = SuccessInferResult::new();
         infer_result.new_fact(&in_fact.clone().into());
         Ok(infer_result)
     }
@@ -160,8 +160,8 @@ impl Runtime {
     fn infer_membership_in_equal_fn_set_from_in_fact(
         &mut self,
         in_fact: &InFact,
-    ) -> Result<InferResult, RuntimeError> {
-        let mut infer_result = InferResult::new();
+    ) -> Result<SuccessInferResult, RuntimeError> {
+        let mut infer_result = SuccessInferResult::new();
         for equal_set in self
             .get_all_obj_representatives_equal_to_given(&in_fact.set)
             .into_iter()
@@ -185,7 +185,7 @@ impl Runtime {
     fn infer_membership_in_equal_set_representatives_from_in_fact(
         &mut self,
         in_fact: &InFact,
-    ) -> Result<InferResult, RuntimeError> {
+    ) -> Result<SuccessInferResult, RuntimeError> {
         // A local proof binder may be tested against the same ambient carrier
         // many times while that carrier is equal to an arbitrarily deep user
         // template result. Eagerly replaying every opaque representative here
@@ -197,7 +197,7 @@ impl Runtime {
             &in_fact.element,
             Obj::Atom(AtomObj::Forall(_)) | Obj::Atom(AtomObj::Exist(_))
         );
-        let mut infer_result = InferResult::new();
+        let mut infer_result = SuccessInferResult::new();
         for equal_set in self
             .get_all_obj_representatives_equal_to_given(&in_fact.set)
             .into_iter()
@@ -231,7 +231,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         set_builder: &SetBuilder,
-    ) -> Result<InferResult, RuntimeError> {
+    ) -> Result<SuccessInferResult, RuntimeError> {
         let unfolded_membership: Fact = InFact::new(
             in_fact.element.clone(),
             set_builder.clone().into(),
@@ -245,7 +245,7 @@ impl Runtime {
         // Membership in one fixed set builder has one substitution result.
         // Example: `x $in {y S: P(y)}` infers `x $in S` and `P(x)` once.
         if self.infer_rule_firing_cached(&firing_key) {
-            return Ok(InferResult::new());
+            return Ok(SuccessInferResult::new());
         }
         self.store_infer_rule_firing(firing_key);
         let mut param_to_arg_map: HashMap<String, Obj> = HashMap::new();
@@ -262,7 +262,7 @@ impl Runtime {
         )
         .into();
 
-        let mut infer_result = InferResult::new();
+        let mut infer_result = SuccessInferResult::new();
         infer_result.new_fact(&element_in_param_set_fact);
         self.store_with_well_defined_verification_and_infer_with_default_verify_state(
             element_in_param_set_fact,
@@ -302,7 +302,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         general_cart: &GeneralCart,
-    ) -> Result<InferResult, RuntimeError> {
+    ) -> Result<SuccessInferResult, RuntimeError> {
         let fn_set_fact: Fact = InFact::new(
             in_fact.element.clone(),
             general_cart_member_fn_set(self, general_cart)?,
@@ -310,7 +310,7 @@ impl Runtime {
         )
         .into();
 
-        let mut infer_result = InferResult::new();
+        let mut infer_result = SuccessInferResult::new();
         infer_result.new_fact(&fn_set_fact);
         self.store_with_well_defined_verification_and_infer_with_default_verify_state(fn_set_fact)?;
 
@@ -332,7 +332,7 @@ impl Runtime {
     fn infer_membership_in_symbolic_cart_from_in_fact(
         &mut self,
         in_fact: &InFact,
-    ) -> Result<InferResult, RuntimeError> {
+    ) -> Result<SuccessInferResult, RuntimeError> {
         // Literal carts are handled by the dedicated `Obj::Cart` branch.  The
         // symbolic fallback requires either an exact stored `$is_cart(C)` fact
         // (the representation used by `have cart C ...`) or concrete Cartesian
@@ -345,10 +345,10 @@ impl Runtime {
             .verify_non_equational_atomic_fact_with_known_atomic_facts(&is_cart_fact)?
             .is_true();
         if !is_known_symbolic_cart && self.get_object_equal_to_cart(&in_fact.set).is_none() {
-            return Ok(InferResult::new());
+            return Ok(SuccessInferResult::new());
         }
 
-        let mut infer_result = InferResult::new();
+        let mut infer_result = SuccessInferResult::new();
         let is_tuple_fact: AtomicFact =
             IsTupleFact::new(in_fact.element.clone(), in_fact.line_file.clone()).into();
         infer_result.push_atomic_fact(&is_tuple_fact);
@@ -403,7 +403,7 @@ impl Runtime {
     pub(in crate::infer) fn infer_in_fact(
         &mut self,
         in_fact: &InFact,
-    ) -> Result<InferResult, RuntimeError> {
+    ) -> Result<SuccessInferResult, RuntimeError> {
         match &in_fact.set {
             // Function space: side table `known_objs_in_fn_sets` for typing/satisfaction later.
             Obj::FnSet(fn_set_with_dom) => {
@@ -422,7 +422,7 @@ impl Runtime {
             // Finite enum set: `a $in {1,2}` => fact `(a = 1) or (a = 2)`.
             Obj::ListSet(list_set) => {
                 if list_set.list.is_empty() {
-                    return Ok(InferResult::new());
+                    return Ok(SuccessInferResult::new());
                 }
 
                 // Singleton membership has one definite value, so expose it as
@@ -436,7 +436,7 @@ impl Runtime {
                         in_fact.line_file.clone(),
                     );
                     let equal_atomic_fact: AtomicFact = equal_fact.clone().into();
-                    let mut infer_result = InferResult::new();
+                    let mut infer_result = SuccessInferResult::new();
                     infer_result.push_atomic_fact(&equal_atomic_fact);
                     self.top_level_env()
                         .store_atomic_fact(equal_atomic_fact.clone())?;
@@ -458,7 +458,7 @@ impl Runtime {
                 }
 
                 let or_fact = OrFact::new(or_case_facts, in_fact.line_file.clone()).into();
-                let mut infer_result = InferResult::new();
+                let mut infer_result = SuccessInferResult::new();
                 infer_result.new_fact(&or_fact);
                 self.store_with_well_defined_verification_and_infer_with_default_verify_state(
                     or_fact,
@@ -485,7 +485,7 @@ impl Runtime {
                     in_fact.line_file.clone(),
                 )
                 .into();
-                let mut infer_result = InferResult::new();
+                let mut infer_result = SuccessInferResult::new();
                 infer_result.push_atomic_fact(&subset_fact);
                 infer_result.new_infer_result_inside(
                     self.store_atomic_fact_without_well_defined_verified_and_infer(subset_fact)?,
@@ -495,9 +495,9 @@ impl Runtime {
             // Cartesian product: element is an n-tuple with matching dimension; bind tuple/cart metadata.
             Obj::Cart(cart) => {
                 if cart.args.len() < 2 {
-                    return Ok(InferResult::new());
+                    return Ok(SuccessInferResult::new());
                 }
-                let mut infer_result = InferResult::new();
+                let mut infer_result = SuccessInferResult::new();
 
                 let is_cart_fact =
                     IsTupleFact::new(in_fact.element.clone(), in_fact.line_file.clone()).into();
@@ -584,7 +584,7 @@ impl Runtime {
                 let inferred_atomic_fact =
                     LessFact::new(zero_obj, in_fact.element.clone(), in_fact.line_file.clone())
                         .into();
-                let mut infer_result = InferResult::new();
+                let mut infer_result = SuccessInferResult::new();
                 infer_result.push_atomic_fact(&inferred_atomic_fact);
                 self.store_atomic_fact_without_well_defined_verified_and_infer(
                     inferred_atomic_fact.clone(),
@@ -599,7 +599,7 @@ impl Runtime {
                 let inferred_atomic_fact =
                     LessFact::new(in_fact.element.clone(), zero_obj, in_fact.line_file.clone())
                         .into();
-                let mut infer_result = InferResult::new();
+                let mut infer_result = SuccessInferResult::new();
                 infer_result.push_atomic_fact(&inferred_atomic_fact);
                 self.store_atomic_fact_without_well_defined_verified_and_infer(
                     inferred_atomic_fact.clone(),
@@ -615,7 +615,7 @@ impl Runtime {
                 let inferred_atomic_fact =
                     NotEqualFact::new(in_fact.element.clone(), zero_obj, in_fact.line_file.clone())
                         .into();
-                let mut infer_result = InferResult::new();
+                let mut infer_result = SuccessInferResult::new();
                 infer_result.push_atomic_fact(&inferred_atomic_fact);
                 self.store_atomic_fact_without_well_defined_verified_and_infer(
                     inferred_atomic_fact.clone(),
@@ -626,24 +626,34 @@ impl Runtime {
             // Example: after `k $in N`, infer stores `k >= 0` (same as an explicit second line).
             Obj::StandardSet(StandardSet::N) => {
                 let zero_obj: Obj = Number::new("0".to_string()).into();
-                let inferred_atomic_fact = GreaterEqualFact::new(
+                let inferred_atomic_fact: AtomicFact = GreaterEqualFact::new(
                     in_fact.element.clone(),
                     zero_obj,
                     in_fact.line_file.clone(),
                 )
                 .into();
-                let mut infer_result = InferResult::new();
+                let inferred_fact: Fact = inferred_atomic_fact.clone().into();
+                let mut infer_result = SuccessInferResult::new();
                 infer_result.push_atomic_fact(&inferred_atomic_fact);
-                self.store_atomic_fact_without_well_defined_verified_and_infer(
-                    inferred_atomic_fact.clone(),
-                )?;
+                let conclusion_infers = self
+                    .store_atomic_fact_without_well_defined_verified_and_infer(
+                        inferred_atomic_fact.clone(),
+                    )?;
+                infer_result.add_rule_application(
+                    InferRule::NaturalMembershipImpliesNonnegative,
+                    in_fact.clone().into(),
+                    vec![SuccessStoreFactResult::new(
+                        inferred_fact,
+                        conclusion_infers,
+                    )],
+                );
                 Ok(infer_result)
             }
             // Full `Z`, `Q`, `R`: no extra atomic facts inferred here.
             Obj::StandardSet(StandardSet::Q)
             | Obj::StandardSet(StandardSet::Z)
             | Obj::StandardSet(StandardSet::R)
-            | Obj::StandardSet(StandardSet::C) => Ok(InferResult::new()),
+            | Obj::StandardSet(StandardSet::C) => Ok(SuccessInferResult::new()),
             // Struct membership releases positional projection facts. Named
             // field syntax is parser-owned and comes only from the receiver's
             // declaration-time struct carrier.
@@ -659,7 +669,7 @@ impl Runtime {
                 // consequences. Example: repeating `p $in &Point` must not
                 // rebuild the same field memberships and equivalent facts.
                 if self.infer_rule_firing_cached(&firing_key) {
-                    return Ok(InferResult::new());
+                    return Ok(SuccessInferResult::new());
                 }
                 let (def, header_map) = self.struct_header_param_to_arg_map(
                     struct_obj,
@@ -722,7 +732,7 @@ impl Runtime {
                     .map(|declared| declared.to_string() == struct_obj.to_string())
                     .unwrap_or(false);
 
-                let mut infer_result = InferResult::new();
+                let mut infer_result = SuccessInferResult::new();
                 let tuple = match &in_fact.element {
                     Obj::Tuple(tuple) => Some(tuple),
                     _ => None,
@@ -993,7 +1003,7 @@ impl Runtime {
                     lf,
                 )
                 .into();
-                let mut infer_result = InferResult::new();
+                let mut infer_result = SuccessInferResult::new();
                 infer_result.new_fact(&union_membership_cases);
                 infer_result.new_infer_result_inside(
                     self.store_with_well_defined_verification_and_infer_with_default_verify_state(
@@ -1018,7 +1028,7 @@ impl Runtime {
                     lf.clone(),
                 )
                 .into();
-                let mut infer_result = InferResult::new();
+                let mut infer_result = SuccessInferResult::new();
                 infer_result.new_fact(&element_in_left);
                 infer_result.new_infer_result_inside(
                     self.store_with_well_defined_verification_and_infer_with_default_verify_state(
@@ -1041,7 +1051,7 @@ impl Runtime {
                     InFact::new(in_fact.element.clone(), (*sm.left).clone(), lf.clone()).into();
                 let element_not_in_right: Fact =
                     NotInFact::new(in_fact.element.clone(), (*sm.right).clone(), lf.clone()).into();
-                let mut infer_result = InferResult::new();
+                let mut infer_result = SuccessInferResult::new();
                 infer_result.new_fact(&element_in_left);
                 infer_result.new_infer_result_inside(
                     self.store_with_well_defined_verification_and_infer_with_default_verify_state(
@@ -1112,7 +1122,7 @@ impl Runtime {
                 if let Some(set_builder) = self.get_obj_equal_to_set_builder(set_obj) {
                     self.infer_membership_in_set_builder_from_in_fact(in_fact, &set_builder)
                 } else {
-                    Ok(InferResult::new())
+                    Ok(SuccessInferResult::new())
                 }
             }
         }
@@ -1122,9 +1132,9 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         fn_range: &FnRange,
-    ) -> Result<InferResult, RuntimeError> {
+    ) -> Result<SuccessInferResult, RuntimeError> {
         let Some(body) = self.get_fn_range_function_body(&fn_range.function) else {
-            return Ok(InferResult::new());
+            return Ok(SuccessInferResult::new());
         };
         let codomain_fact: AtomicFact = InFact::new(
             in_fact.element.clone(),
@@ -1132,7 +1142,7 @@ impl Runtime {
             in_fact.line_file.clone(),
         )
         .into();
-        let mut infer_result = InferResult::new();
+        let mut infer_result = SuccessInferResult::new();
         infer_result.push_atomic_fact(&codomain_fact);
         infer_result.new_infer_result_inside(
             self.store_atomic_fact_without_well_defined_verified_and_infer(codomain_fact)?,
@@ -1230,7 +1240,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         big_union: &BigUnion,
-    ) -> Result<InferResult, RuntimeError> {
+    ) -> Result<SuccessInferResult, RuntimeError> {
         let member_name = self.generate_internal_binder_name();
         let member_group = self.fresh_param_group_with_type(
             vec![member_name],
@@ -1249,7 +1259,7 @@ impl Runtime {
             in_fact.line_file.clone(),
         )?;
         let exist_fact: Fact = ExistFactEnum::ExistFact(exist_body).into();
-        let mut infer_result = InferResult::new();
+        let mut infer_result = SuccessInferResult::new();
         infer_result.new_fact(&exist_fact);
         infer_result.new_infer_result_inside(
             self.store_with_well_defined_verification_and_infer_with_default_verify_state(
@@ -1278,8 +1288,8 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         index_union: &IndexUnion,
-    ) -> Result<InferResult, RuntimeError> {
-        let mut infer_result = InferResult::new();
+    ) -> Result<SuccessInferResult, RuntimeError> {
+        let mut infer_result = SuccessInferResult::new();
         let ambient_membership: Fact = InFact::new(
             in_fact.element.clone(),
             index_union.ambient_set.as_ref().clone(),
@@ -1325,8 +1335,8 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         index_intersect: &IndexIntersect,
-    ) -> Result<InferResult, RuntimeError> {
-        let mut infer_result = InferResult::new();
+    ) -> Result<SuccessInferResult, RuntimeError> {
+        let mut infer_result = SuccessInferResult::new();
         let ambient_membership: Fact = InFact::new(
             in_fact.element.clone(),
             index_intersect.ambient_set.as_ref().clone(),
@@ -1373,7 +1383,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         replacement: &Replacement,
-    ) -> Result<InferResult, RuntimeError> {
+    ) -> Result<SuccessInferResult, RuntimeError> {
         let preimage_name = self.generate_internal_binder_name();
         let preimage_group = self.fresh_param_group_with_type(
             vec![preimage_name],
@@ -1393,7 +1403,7 @@ impl Runtime {
             in_fact.line_file.clone(),
         )?;
         let exist_fact: Fact = ExistFactEnum::ExistFact(exist_body).into();
-        let mut infer_result = InferResult::new();
+        let mut infer_result = SuccessInferResult::new();
         infer_result.new_fact(&exist_fact);
         infer_result.new_infer_result_inside(
             self.store_with_well_defined_verification_and_infer_with_default_verify_state(
@@ -1410,13 +1420,13 @@ impl Runtime {
         start: Obj,
         end: Obj,
         end_inclusive: bool,
-    ) -> Result<InferResult, RuntimeError> {
+    ) -> Result<SuccessInferResult, RuntimeError> {
         let element = in_fact.element.clone();
         let lf = in_fact.line_file.clone();
 
         let inferred_in_z_fact =
             InFact::new(element.clone(), StandardSet::Z.into(), lf.clone()).into();
-        let mut infer_result = InferResult::new();
+        let mut infer_result = SuccessInferResult::new();
         infer_result.push_atomic_fact(&inferred_in_z_fact);
         self.store_atomic_fact_without_well_defined_verified_and_infer(inferred_in_z_fact.clone())?;
 
@@ -1448,13 +1458,13 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         interval: &IntervalObj,
-    ) -> Result<InferResult, RuntimeError> {
+    ) -> Result<SuccessInferResult, RuntimeError> {
         let element = in_fact.element.clone();
         let lf = in_fact.line_file.clone();
 
         let inferred_in_r_fact =
             InFact::new(element.clone(), StandardSet::R.into(), lf.clone()).into();
-        let mut infer_result = InferResult::new();
+        let mut infer_result = SuccessInferResult::new();
         infer_result.push_atomic_fact(&inferred_in_r_fact);
         self.store_atomic_fact_without_well_defined_verified_and_infer(inferred_in_r_fact.clone())?;
 
@@ -1481,13 +1491,13 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         interval: &OneSideInfinityIntervalObj,
-    ) -> Result<InferResult, RuntimeError> {
+    ) -> Result<SuccessInferResult, RuntimeError> {
         let element = in_fact.element.clone();
         let lf = in_fact.line_file.clone();
 
         let inferred_in_r_fact =
             InFact::new(element.clone(), StandardSet::R.into(), lf.clone()).into();
-        let mut infer_result = InferResult::new();
+        let mut infer_result = SuccessInferResult::new();
         infer_result.push_atomic_fact(&inferred_in_r_fact);
         self.store_atomic_fact_without_well_defined_verified_and_infer(inferred_in_r_fact.clone())?;
 
@@ -1539,14 +1549,14 @@ impl Runtime {
     pub fn infer_is_cart_dimension_lower_bound(
         &mut self,
         is_cart_fact: &IsCartFact,
-    ) -> Result<InferResult, RuntimeError> {
+    ) -> Result<SuccessInferResult, RuntimeError> {
         let lower_bound: AtomicFact = GreaterEqualFact::new(
             CartDim::new(is_cart_fact.set.clone()).into(),
             Number::new("2".to_string()).into(),
             is_cart_fact.line_file.clone(),
         )
         .into();
-        let mut infer_result = InferResult::new();
+        let mut infer_result = SuccessInferResult::new();
         infer_result.push_atomic_fact(&lower_bound);
         self.store_atomic_fact_without_well_defined_verified_and_infer(lower_bound)?;
         Ok(infer_result)

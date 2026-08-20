@@ -9,8 +9,8 @@ use crate::fact::{AtomicFact, Fact};
 use crate::obj::{Obj, SourceObjectOccurrenceId, StandardSet};
 use crate::rational_expression::objs_equal_by_rational_expression_evaluation;
 use crate::result::{
-    WellDefinedBinderPremiseRole, WellDefinedBinderScopeId, WellDefinedFactId,
-    WellDefinedFunctionContract, WellDefinedObjChildUse, WellDefinedObjId,
+    SuccessEvaluateObjResult, WellDefinedBinderPremiseRole, WellDefinedBinderScopeId,
+    WellDefinedFactId, WellDefinedFunctionContract, WellDefinedObjChildUse, WellDefinedObjId,
     WellDefinednessRequirementRole, WellDefinednessRootObjectProofUse,
     WellDefinednessSourceObjectUse,
 };
@@ -423,8 +423,14 @@ pub struct LitexToLeanReverseAssumptionIr {
 
 #[derive(Clone, Debug)]
 pub enum LitexToLeanCaseBranchExitIr {
-    Conclusion(LitexToLeanFactIr),
+    Conclusion(LitexToLeanCaseBranchConclusionIr),
     Contradiction(LitexToLeanContradictionIr),
+}
+
+#[derive(Clone, Debug)]
+pub struct LitexToLeanCaseBranchConclusionIr {
+    pub fact: LitexToLeanFactIr,
+    pub well_definedness: LitexToLeanWellDefinednessCertificateIr,
 }
 
 #[derive(Clone, Debug)]
@@ -439,6 +445,7 @@ pub enum LitexToLeanProofRuleIr {
     RegisteredRule(LitexToLeanRegisteredRuleApplicationIr),
     ObjectReflexivity,
     ClosedStandardMembership,
+    ClosedNumericMembership(Box<LitexToLeanClosedNumericMembershipProofIr>),
     StandardSetNonempty,
     /// Litex's explicit verifier rule "Every object is a set." This evidence
     /// can be consumed structurally as a parameter/WD requirement even when no
@@ -499,6 +506,12 @@ pub enum LitexToLeanProofRuleIr {
     },
 }
 
+#[derive(Clone, Debug)]
+pub struct LitexToLeanClosedNumericMembershipProofIr {
+    pub target_set: StandardSet,
+    pub evaluation: SuccessEvaluateObjResult,
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum LitexToLeanEqualitySideIr {
     Left,
@@ -516,6 +529,10 @@ impl fmt::Debug for LitexToLeanProofRuleIr {
             LitexToLeanProofRuleIr::ClosedStandardMembership => {
                 f.write_str("ClosedStandardMembership")
             }
+            LitexToLeanProofRuleIr::ClosedNumericMembership(result) => f
+                .debug_tuple("ClosedNumericMembership")
+                .field(result)
+                .finish(),
             LitexToLeanProofRuleIr::StandardSetNonempty => f.write_str("StandardSetNonempty"),
             LitexToLeanProofRuleIr::ObjectIsSet => f.write_str("ObjectIsSet"),
             LitexToLeanProofRuleIr::SetBuilderMembership => f.write_str("SetBuilderMembership"),

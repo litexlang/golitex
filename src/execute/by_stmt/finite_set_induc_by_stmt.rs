@@ -1,6 +1,15 @@
 use crate::prelude::*;
 use std::collections::HashMap;
 
+fn completed_finite_set_induc_case_results(
+    proof_steps: &mut Vec<StmtResult>,
+    conclusion_checks: &mut Vec<StmtResult>,
+) -> Vec<StmtResult> {
+    let mut completed = std::mem::take(proof_steps);
+    completed.append(conclusion_checks);
+    completed
+}
+
 impl Runtime {
     // Finite-set structural induction: establish Phi({}) and
     // x not in S, Phi(S) => Phi(union({x}, S)), then conclude forall finite P, Phi(P).
@@ -10,18 +19,14 @@ impl Runtime {
         &mut self,
         stmt: &ByFiniteSetInducStmt,
     ) -> Result<StmtResult, RuntimeError> {
-        let mut result: StmtResult =
-            self.run_in_local_env(|rt| -> Result<StmtResult, RuntimeError> {
-                let mut inside_results = Vec::new();
-                inside_results.extend(rt.exec_finite_set_induc_base_proof(stmt)?);
-                inside_results.extend(rt.exec_finite_set_induc_step_proof(stmt)?);
-                Ok(VerifiedByStmtIr::ByFiniteSetInducStmt {
-                    statement: stmt.clone(),
-                    common: VerifiedStmtCommonIr::new(InferResult::new(), inside_results),
-                    verification: None,
-                }
-                .into())
-            })?;
+        let proof = self.run_in_local_env(
+            |rt| -> Result<SuccessVerifyByFiniteSetInducResult, RuntimeError> {
+                let (base_assumptions, step_assumptions) = rt.finite_set_induc_assumptions(stmt)?;
+                let base = rt.exec_finite_set_induc_base_proof(stmt, base_assumptions)?;
+                let step = rt.exec_finite_set_induc_step_proof(stmt, step_assumptions)?;
+                Ok(SuccessVerifyByFiniteSetInducResult { base, step })
+            },
+        )?;
 
         let corresponding_forall_fact =
             self.finite_set_induc_stored_forall_fact(stmt)
@@ -33,16 +38,20 @@ impl Runtime {
                         vec![],
                     )
                 })?;
-        let verification =
-            self.finite_set_induc_verification_result(stmt, &corresponding_forall_fact)?;
-        let Some(VerifiedStmtIr::By(VerifiedByStmtIr::ByFiniteSetInducStmt {
-            verification: result_verification,
-            ..
-        })) = result.non_factual_ir_mut()
-        else {
-            unreachable!("finite-set induction must emit its matching IR variant")
-        };
-        *result_verification = Some(verification);
+        let verification = SuccessVerifyByInducResult::new(
+            stmt.param().to_string(),
+            stmt.to_prove.iter().map(|fact| fact.to_string()).collect(),
+            corresponding_forall_fact.to_string(),
+            SuccessVerifyByInducProofResult::FiniteSet(Box::new(proof)),
+        );
+        let result: StmtResult = SuccessByStmtResult::ByFiniteSetInducStmt(Box::new(
+            SuccessByFiniteSetInducStmtResult {
+                statement: stmt.clone(),
+                common: SuccessStmtCommonResult::new(SuccessInferResult::new()),
+                verification: Some(verification),
+            },
+        ))
+        .into();
         let infer_result = self
             .store_with_well_defined_verification_and_infer_with_default_verify_state(
                 corresponding_forall_fact,
@@ -68,25 +77,31 @@ impl Runtime {
             corresponding_forall_fact,
             InferReason::VerifiedStatement,
         )?;
-        Ok(VerifiedByStmtIr::ByFiniteSetInducStmt {
-            statement: stmt.clone(),
-            common: VerifiedStmtCommonIr::new(infer_result, vec![]),
-            verification: None,
-        }
-        .into())
+        Ok(
+            SuccessByStmtResult::ByFiniteSetInducStmt(Box::new(
+                SuccessByFiniteSetInducStmtResult {
+                    statement: stmt.clone(),
+                    common: SuccessStmtCommonResult::new(infer_result),
+                    verification: None,
+                },
+            ))
+            .into(),
+        )
     }
 
     fn exec_finite_set_induc_base_proof(
         &mut self,
         stmt: &ByFiniteSetInducStmt,
-    ) -> Result<Vec<StmtResult>, RuntimeError> {
+        assumptions: Vec<(String, String)>,
+    ) -> Result<SuccessVerifyByInducCaseResult, RuntimeError> {
         self.run_in_local_env(|rt| {
             rt.exec_finite_set_induc_base_context(stmt)?;
-            let mut inside_results = rt.exec_finite_set_induc_proof_stmts(
+            let mut proof_steps = rt.exec_finite_set_induc_proof_stmts(
                 stmt,
                 &stmt.base_proof,
                 "finite-set induc base proof",
             )?;
+            let mut conclusion_checks = Vec::new();
             let empty_set: Obj = ListSet::new(vec![]).into();
             for fact in stmt.to_prove.iter() {
                 let base_fact =
@@ -101,26 +116,35 @@ impl Runtime {
                             stmt.clone().into(),
                             format!("finite-set induc: base case is not proved `{}`", base_fact),
                             Some(verify_error),
-                            std::mem::take(&mut inside_results),
+                            completed_finite_set_induc_case_results(
+                                &mut proof_steps,
+                                &mut conclusion_checks,
+                            ),
                         )
                     })?;
-                inside_results.push(result);
+                conclusion_checks.push(result);
             }
-            Ok(inside_results)
+            Ok(SuccessVerifyByInducCaseResult {
+                assumptions,
+                proof_steps,
+                conclusion_checks,
+            })
         })
     }
 
     fn exec_finite_set_induc_step_proof(
         &mut self,
         stmt: &ByFiniteSetInducStmt,
-    ) -> Result<Vec<StmtResult>, RuntimeError> {
+        assumptions: Vec<(String, String)>,
+    ) -> Result<SuccessVerifyByInducCaseResult, RuntimeError> {
         self.run_in_local_env(|rt| {
             rt.exec_finite_set_induc_step_context(stmt)?;
-            let mut inside_results = rt.exec_finite_set_induc_proof_stmts(
+            let mut proof_steps = rt.exec_finite_set_induc_proof_stmts(
                 stmt,
                 &stmt.step_proof,
                 "finite-set induc step proof",
             )?;
+            let mut conclusion_checks = Vec::new();
             let extension = rt.finite_set_induc_extension_obj(stmt);
             for fact in stmt.to_prove.iter() {
                 let extension_fact =
@@ -138,12 +162,19 @@ impl Runtime {
                                 extension_fact
                             ),
                             Some(verify_error),
-                            std::mem::take(&mut inside_results),
+                            completed_finite_set_induc_case_results(
+                                &mut proof_steps,
+                                &mut conclusion_checks,
+                            ),
                         )
                     })?;
-                inside_results.push(result);
+                conclusion_checks.push(result);
             }
-            Ok(inside_results)
+            Ok(SuccessVerifyByInducCaseResult {
+                assumptions,
+                proof_steps,
+                conclusion_checks,
+            })
         })
     }
 
@@ -364,11 +395,10 @@ impl Runtime {
         .into())
     }
 
-    fn finite_set_induc_verification_result(
+    fn finite_set_induc_assumptions(
         &mut self,
         stmt: &ByFiniteSetInducStmt,
-        generated_forall: &Fact,
-    ) -> Result<ByInducVerificationResult, RuntimeError> {
+    ) -> Result<(Vec<(String, String)>, Vec<(String, String)>), RuntimeError> {
         let param = obj_for_bound_param_in_scope(&stmt.param_binding, ParamObjType::Induc);
         let empty_set: Obj = ListSet::new(vec![]).into();
         let mut base_assumptions = vec![
@@ -439,21 +469,6 @@ impl Runtime {
             step_assumptions.push((ih.to_string(), "induction hypothesis".to_string()));
         }
 
-        Ok(ByInducVerificationResult::new(
-            false,
-            true,
-            true,
-            stmt.param().to_string(),
-            "{}".to_string(),
-            stmt.to_prove.iter().map(|fact| fact.to_string()).collect(),
-            generated_forall.to_string(),
-            0,
-            base_assumptions,
-            stmt.base_proof.len(),
-            stmt.base_proof.len() + stmt.to_prove.len(),
-            step_assumptions,
-            stmt.step_proof.len(),
-            stmt.step_proof.len() + stmt.to_prove.len(),
-        ))
+        Ok((base_assumptions, step_assumptions))
     }
 }

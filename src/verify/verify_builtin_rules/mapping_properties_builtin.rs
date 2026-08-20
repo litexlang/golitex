@@ -34,7 +34,7 @@ impl Runtime {
             }
 
             return Ok(Some(
-                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                     target.clone().into(),
                     "finite codomain of a surjection from a finite set".to_string(),
                     vec![codomain_match, domain_result, property_result],
@@ -87,7 +87,7 @@ impl Runtime {
             }
 
             return Ok(Some(
-                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                     equal_fact.clone().into(),
                     "finite injection has range cardinality equal to its source".to_string(),
                     vec![domain_match, function_match, finite_result, property_result],
@@ -151,7 +151,7 @@ impl Runtime {
             }
 
             return Ok(Some(
-                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                     equal_fact.clone().into(),
                     "finite bijection preserves cardinality".to_string(),
                     vec![domain_match, codomain_match, finite_result, property_result],
@@ -203,7 +203,7 @@ impl Runtime {
             }
 
             return Ok(Some(
-                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                     target.clone().into(),
                     "finite surjection bounds codomain cardinality by source cardinality"
                         .to_string(),
@@ -225,6 +225,23 @@ impl Runtime {
         line_file: LineFile,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<bool, RuntimeError> {
+        Ok(self
+            .known_builtin_bijection_results(domain, codomain, function, line_file, builtin_state)?
+            .is_some())
+    }
+
+    /// Return the exact proof children used to match a stored bijection.
+    /// Boolean consumers may use `has_known_builtin_bijection`; certificate
+    /// producers must retain these results instead of dropping the citation
+    /// and the three transport equalities.
+    pub(super) fn known_builtin_bijection_results(
+        &mut self,
+        domain: &Obj,
+        codomain: &Obj,
+        function: &Obj,
+        line_file: LineFile,
+        builtin_state: &UseBuiltinRuleVerifyState,
+    ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
         for property in self.known_function_property_facts(&[BIJECTIVE]) {
             let Some((candidate_domain, candidate_codomain, candidate_function)) =
                 function_property_parts(&property)
@@ -249,10 +266,21 @@ impl Runtime {
                 builtin_state,
             )?;
             if domain_match.is_true() && codomain_match.is_true() && function_match.is_true() {
-                return Ok(true);
+                let property_result = self
+                    .verify_non_equational_atomic_fact_with_known_atomic_facts(
+                        &property.clone().into(),
+                    )?;
+                if property_result.is_true() {
+                    return Ok(Some(vec![
+                        property_result,
+                        domain_match,
+                        codomain_match,
+                        function_match,
+                    ]));
+                }
             }
         }
-        Ok(false)
+        Ok(None)
     }
 
     fn verify_known_or_structurally_finite_set(
@@ -264,13 +292,13 @@ impl Runtime {
             return Ok(known);
         }
         let AtomicFact::IsFiniteSetFact(finite) = fact else {
-            return Ok(StmtUnknown::new().into());
+            return Ok(UnknownGenericStmtResult::new().into());
         };
         if !set_is_structurally_finite(&finite.set) {
-            return Ok(StmtUnknown::new().into());
+            return Ok(UnknownGenericStmtResult::new().into());
         }
         Ok(
-            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                 fact.clone().into(),
                 "literal/range finite-set structure".to_string(),
                 Vec::new(),

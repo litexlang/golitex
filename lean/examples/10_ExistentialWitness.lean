@@ -14,13 +14,14 @@ theorem member_has_witness :
     have __exist_step1 : Litex.Same a a := by
       exact Litex.Same.refl a
     exact ⟨_, a, (__h0_2), (__exist_step1)⟩)
-  exact __step1
+  have __c0_0 : ∃ (__carrier_x : Type) (x : __carrier_x), Litex.In x S ∧ Litex.Same x a := __step1
+  exact __c0_0
 
 theorem __fact1 : ∃ (x : ℂ), Litex.In x Litex.R ∧ Litex.Same x (1 : ℂ) := by
   exact (by
   have __exist_step1 : Litex.Same (1 : ℂ) (1 : ℂ) := by
     exact Litex.Same.refl (1 : ℂ)
-  exact ⟨(1 : ℂ), (Litex.Rules.complexRealInR 1), (__exist_step1)⟩)
+  exact ⟨(1 : ℂ), (Litex.Rules.complexRealInR (1 : ℝ)), (__exist_step1)⟩)
 
 noncomputable def y : ℂ := Classical.choose (__fact1)
 

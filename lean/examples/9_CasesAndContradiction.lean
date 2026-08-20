@@ -16,7 +16,8 @@ theorem cases_and_contra :
       by_contra __reverse
       exact ((__reverse : ¬ Litex.Same (2 : ℂ) (2 : ℂ)) (Litex.Same.refl (2 : ℂ))))
     exact __case1)
-  exact Litex.Same.refl (2 : ℂ)
+  have __c0_0 : Litex.Same (2 : ℂ) (2 : ℂ) := Litex.Same.refl (2 : ℂ)
+  exact __c0_0
 
 theorem __fact1 : Litex.Same (2 : ℂ) (2 : ℂ) := by
   exact (by
@@ -47,7 +48,7 @@ theorem __fact4 : Litex.Same branch_identity ({ call := fun {__alpha} (__arg : _
   unfold branch_identity
   exact Litex.Same.refl ({ call := fun {__alpha} (__arg : __alpha) __arg_in => Litex.In.rep __arg __arg_in } : Litex.Fn Litex.R Litex.R)
 
-theorem __fact5 : Litex.Same (Litex.fnApplyOwn branch_identity __fact3 (1 : ℂ) (Litex.Rules.complexRealInR 1)) (Litex.fnApplyOwn branch_identity __fact3 (1 : ℂ) (Litex.Rules.complexRealInR 1)) := by
+theorem __fact5 : Litex.Same (Litex.fnApplyOwn branch_identity __fact3 (1 : ℂ) (Litex.Rules.complexRealInR (1 : ℝ))) (Litex.fnApplyOwn branch_identity __fact3 (1 : ℂ) (Litex.Rules.complexRealInR (1 : ℝ))) := by
   exact (by
   have __case1 : Litex.Same (1 : ℂ) (1 : ℂ) := Litex.Same.refl (1 : ℂ)
   have __case1_step1 : Litex.Same (2 : ℂ) (2 : ℂ) := by
@@ -56,8 +57,8 @@ theorem __fact5 : Litex.Same (Litex.fnApplyOwn branch_identity __fact3 (1 : ℂ)
     by_contra __reverse
     exact ((__reverse : ¬ Litex.Same (2 : ℂ) (2 : ℂ)) (__fact1)))
   have __case1_step2 : Litex.In (1 : ℂ) Litex.R := by
-    exact Litex.Rules.complexRealInR 1
-  exact Litex.Same.refl (Litex.fnApplyOwn branch_identity __fact3 (1 : ℂ) (Litex.Rules.complexRealInR 1)))
+    exact Litex.Rules.complexRealInR (1 : ℝ)
+  exact Litex.Same.refl (Litex.fnApplyOwn branch_identity __fact3 (1 : ℂ) (__case1_step2)))
 
 theorem __fact6 : Litex.Same (3 : ℂ) (3 : ℂ) := by
   exact (by

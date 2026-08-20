@@ -9,60 +9,70 @@ theorem __fact0 :
     ∀ (n : ℂ) (__h0_1 : Litex.In n Litex.N),
       Litex.In n Litex.Z := by
   intro n __h0_1
-  exact Litex.Rules.inZOfInN (__h0_1)
+  have __c0_0 : Litex.In n Litex.Z := Litex.Rules.inZOfInN (__h0_1)
+  exact __c0_0
 
 theorem __fact1 :
     ∀ (n : ℂ) (__h1_1 : Litex.In n Litex.N),
       Litex.In n Litex.Q := by
   intro n __h1_1
-  exact Litex.Rules.inQOfInZ (Litex.Rules.inZOfInN (__h1_1))
+  have __c1_0 : Litex.In n Litex.Q := Litex.Rules.inQOfInZ (Litex.Rules.inZOfInN (__h1_1))
+  exact __c1_0
 
 theorem __fact2 :
     ∀ (n : ℂ) (__h2_1 : Litex.In n Litex.N),
       Litex.In n Litex.R := by
   intro n __h2_1
-  exact Litex.Rules.inROfInQ (Litex.Rules.inQOfInZ (Litex.Rules.inZOfInN (__h2_1)))
+  have __c2_0 : Litex.In n Litex.R := Litex.Rules.inROfInQ (Litex.Rules.inQOfInZ (Litex.Rules.inZOfInN (__h2_1)))
+  exact __c2_0
 
 theorem __fact3 :
     ∀ (n : ℂ) (__h3_1 : Litex.In n Litex.N),
       Litex.In n Litex.C := by
   intro n __h3_1
-  exact Litex.Rules.inCOfInR (Litex.Rules.inROfInQ (Litex.Rules.inQOfInZ (Litex.Rules.inZOfInN (__h3_1))))
+  have __c3_0 : Litex.In n Litex.C := Litex.Rules.inCOfInR (Litex.Rules.inROfInQ (Litex.Rules.inQOfInZ (Litex.Rules.inZOfInN (__h3_1))))
+  exact __c3_0
 
 theorem __fact4 :
     ∀ (z : ℂ) (__h4_1 : Litex.In z Litex.Z),
       Litex.In z Litex.Q := by
   intro z __h4_1
-  exact Litex.Rules.inQOfInZ (__h4_1)
+  have __c4_0 : Litex.In z Litex.Q := Litex.Rules.inQOfInZ (__h4_1)
+  exact __c4_0
 
 theorem __fact5 :
     ∀ (z : ℂ) (__h5_1 : Litex.In z Litex.Z),
       Litex.In z Litex.R := by
   intro z __h5_1
-  exact Litex.Rules.inROfInQ (Litex.Rules.inQOfInZ (__h5_1))
+  have __c5_0 : Litex.In z Litex.R := Litex.Rules.inROfInQ (Litex.Rules.inQOfInZ (__h5_1))
+  exact __c5_0
 
 theorem __fact6 :
     ∀ (z : ℂ) (__h6_1 : Litex.In z Litex.Z),
       Litex.In z Litex.C := by
   intro z __h6_1
-  exact Litex.Rules.inCOfInR (Litex.Rules.inROfInQ (Litex.Rules.inQOfInZ (__h6_1)))
+  have __c6_0 : Litex.In z Litex.C := Litex.Rules.inCOfInR (Litex.Rules.inROfInQ (Litex.Rules.inQOfInZ (__h6_1)))
+  exact __c6_0
 
 theorem __fact7 :
     ∀ (q : ℂ) (__h7_1 : Litex.In q Litex.Q),
       Litex.In q Litex.R := by
   intro q __h7_1
-  exact Litex.Rules.inROfInQ (__h7_1)
+  have __c7_0 : Litex.In q Litex.R := Litex.Rules.inROfInQ (__h7_1)
+  exact __c7_0
 
 theorem __fact8 :
     ∀ (q : ℂ) (__h8_1 : Litex.In q Litex.Q),
       Litex.In q Litex.C := by
   intro q __h8_1
-  exact Litex.Rules.inCOfInR (Litex.Rules.inROfInQ (__h8_1))
+  have __c8_0 : Litex.In q Litex.C := Litex.Rules.inCOfInR (Litex.Rules.inROfInQ (__h8_1))
+  exact __c8_0
 
 theorem __fact9 :
     ∀ (r : ℂ) (__h9_1 : Litex.In r Litex.R),
       Litex.In r Litex.C := by
   intro r __h9_1
-  exact Litex.Rules.inCOfInR (__h9_1)
+  have __c9_0 : Litex.In r Litex.C := Litex.Rules.inCOfInR (__h9_1)
+  exact __c9_0
 
 end __Compiler_16_StandardSetHierarchy

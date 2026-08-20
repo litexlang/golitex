@@ -170,6 +170,7 @@ pub enum LitexToLeanBuiltinRuleIr {
     NonzeroNumericMembership,
     NonzeroNumericMembershipElimination,
     PositiveRealMembership,
+    NaturalMembershipImpliesNonnegative,
 }
 
 impl LitexToLeanBuiltinRuleIr {
@@ -180,9 +181,12 @@ impl LitexToLeanBuiltinRuleIr {
             | BuiltinRuleEvidence::SetBuilderMembership(_)
             | BuiltinRuleEvidence::FunctionSetMembership(_)
             | BuiltinRuleEvidence::RefinedNumericMembership(_)
+            | BuiltinRuleEvidence::ClosedNumericMembership(_)
+            | BuiltinRuleEvidence::ClosedNumericNonmembership(_)
             | BuiltinRuleEvidence::ClosedNumericComparison(_)
             | BuiltinRuleEvidence::DisjunctionIntroduction(_)
             | BuiltinRuleEvidence::FunctionApplicationReturnMembership(_)
+            | BuiltinRuleEvidence::MatrixExpressionMembership(_)
             | BuiltinRuleEvidence::KnownEqualityPath(_) => return None,
             BuiltinRuleEvidence::DivNotEqualZero(evidence) => {
                 Self::DivNotEqualZero(match evidence.orientation {

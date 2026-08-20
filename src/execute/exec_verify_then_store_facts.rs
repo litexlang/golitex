@@ -8,7 +8,7 @@ impl Runtime {
         &mut self,
         fact: &ExistOrAndChainAtomicFact,
         verify_state: &UseContextVerifyState,
-    ) -> Result<InferResult, RuntimeError> {
+    ) -> Result<SuccessInferResult, RuntimeError> {
         self.store_exist_or_and_chain_atomic_fact_with_well_defined_verification_and_infer_with_reason(
             fact,
             verify_state,
@@ -23,7 +23,7 @@ impl Runtime {
         fact: &ExistOrAndChainAtomicFact,
         verify_state: &UseContextVerifyState,
         reason: InferReason,
-    ) -> Result<InferResult, RuntimeError> {
+    ) -> Result<SuccessInferResult, RuntimeError> {
         let stmt_for_fact_errors: Stmt = fact.clone().to_fact().into();
         self.verify_exist_or_and_chain_atomic_fact_well_defined(fact, verify_state)
             .map_err(|well_defined_error| {
@@ -48,7 +48,7 @@ impl Runtime {
         &mut self,
         fact: &QuantifierFreeFact,
         verify_state: &UseContextVerifyState,
-    ) -> Result<InferResult, RuntimeError> {
+    ) -> Result<SuccessInferResult, RuntimeError> {
         self.store_quantifier_free_fact_with_well_defined_verification_and_infer_with_reason(
             fact,
             verify_state,
@@ -63,7 +63,7 @@ impl Runtime {
         fact: &QuantifierFreeFact,
         verify_state: &UseContextVerifyState,
         reason: InferReason,
-    ) -> Result<InferResult, RuntimeError> {
+    ) -> Result<SuccessInferResult, RuntimeError> {
         let stmt_for_fact_errors: Stmt = fact.clone().to_fact().into();
         self.verify_quantifier_free_fact_well_defined(fact, verify_state)
             .map_err(|well_defined_error| {
@@ -87,7 +87,7 @@ impl Runtime {
         &mut self,
         fact: Fact,
         verify_state: &UseContextVerifyState,
-    ) -> Result<InferResult, RuntimeError> {
+    ) -> Result<SuccessInferResult, RuntimeError> {
         self.store_fact_with_well_defined_verification_and_infer_with_reason(
             fact,
             verify_state,
@@ -102,7 +102,7 @@ impl Runtime {
         fact: Fact,
         verify_state: &UseContextVerifyState,
         reason: InferReason,
-    ) -> Result<InferResult, RuntimeError> {
+    ) -> Result<SuccessInferResult, RuntimeError> {
         let stmt_for_fact_errors: Stmt = fact.clone().into();
         self.store_with_well_defined_verification_and_infer_with_reason(fact, verify_state, reason)
             .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt_for_fact_errors, e))

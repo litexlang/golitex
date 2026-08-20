@@ -23,7 +23,7 @@ impl Runtime {
             (Obj::StandardSet(declared), Obj::StandardSet(target)) if declared.is_subset_eq(target)
         );
         if !carrier_equality.is_true() && !standard_widening {
-            return Ok((StmtUnknown::new()).into());
+            return Ok((UnknownGenericStmtResult::new()).into());
         }
 
         let receiver_membership: AtomicFact = InFact::new(
@@ -35,7 +35,7 @@ impl Runtime {
         let receiver_result =
             self.verify_atomic_fact_as_builtin_rule_premise(&receiver_membership, builtin_state)?;
         if !receiver_result.is_true() {
-            return Ok((StmtUnknown::new()).into());
+            return Ok((UnknownGenericStmtResult::new()).into());
         }
 
         let mut steps = vec![receiver_result];
@@ -43,7 +43,7 @@ impl Runtime {
             steps.push(carrier_equality);
         }
         Ok(
-            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                 in_fact.clone().into(),
                 "declaration-owned struct field has its instantiated declared carrier".to_string(),
                 steps,
@@ -61,26 +61,26 @@ impl Runtime {
         let (tuple, index) = match &in_fact.element {
             Obj::Proj(projection) => {
                 let Obj::Tuple(tuple) = projection.set.as_ref() else {
-                    return Ok(StmtUnknown::new().into());
+                    return Ok(UnknownGenericStmtResult::new().into());
                 };
                 (tuple, projection.dim.as_ref())
             }
             Obj::ObjAtIndex(obj_at_index) => {
                 let Obj::Tuple(tuple) = obj_at_index.obj.as_ref() else {
-                    return Ok(StmtUnknown::new().into());
+                    return Ok(UnknownGenericStmtResult::new().into());
                 };
                 (tuple, obj_at_index.index.as_ref())
             }
-            _ => return Ok(StmtUnknown::new().into()),
+            _ => return Ok(UnknownGenericStmtResult::new().into()),
         };
         let Some(index_number) = self.resolve_obj_to_number(index) else {
-            return Ok(StmtUnknown::new().into());
+            return Ok(UnknownGenericStmtResult::new().into());
         };
         let Ok(one_based_index) = index_number.normalized_value.parse::<usize>() else {
-            return Ok(StmtUnknown::new().into());
+            return Ok(UnknownGenericStmtResult::new().into());
         };
         if one_based_index == 0 || one_based_index > tuple.args.len() {
-            return Ok(StmtUnknown::new().into());
+            return Ok(UnknownGenericStmtResult::new().into());
         }
 
         let selected = tuple.args[one_based_index - 1].as_ref().clone();
@@ -100,7 +100,7 @@ impl Runtime {
                 builtin_state,
             )? {
                 selected_result =
-                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                         selected_membership.clone().into(),
                         "selected literal tuple component has a real carrier".to_string(),
                         real_steps,
@@ -109,11 +109,11 @@ impl Runtime {
             }
         }
         if !selected_result.is_true() {
-            return Ok(StmtUnknown::new().into());
+            return Ok(UnknownGenericStmtResult::new().into());
         }
 
         Ok(
-            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                 in_fact.clone().into(),
                 "literal tuple projection inherits the selected component carrier".to_string(),
                 vec![selected_result],
@@ -140,7 +140,7 @@ impl Runtime {
         .into();
         let verify_subset_result = match (&*set_builder.param_set, base_set) {
             (Obj::StandardSet(left), Obj::StandardSet(right)) if left.is_subset_eq(right) => {
-                VerifiedFactStmtIr::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     subset_fact.clone().into(),
                     "standard_set_subset".to_string(),
                     BuiltinRuleEvidence::StandardSetSubset,
@@ -149,7 +149,7 @@ impl Runtime {
                 .into()
             }
             (left, right) if objs_equal_with_nested_binder_alpha_equivalence(left, right) => {
-                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                     subset_fact.clone().into(),
                     "subset reflexivity".to_string(),
                     Vec::new(),
@@ -159,13 +159,13 @@ impl Runtime {
             _ => self.verify_atomic_fact_as_builtin_rule_premise(&subset_fact, builtin_state)?,
         };
         if !verify_subset_result.is_true() {
-            return Ok((StmtUnknown::new()).into());
+            return Ok((UnknownGenericStmtResult::new()).into());
         }
-        let mut infer_result = InferResult::new();
+        let mut infer_result = SuccessInferResult::new();
         infer_result.new_infer_result_inside(verify_subset_result.infer_result());
         let stmt = in_fact.clone().into();
         infer_result.new_fact(&stmt);
-        Ok((VerifiedFactStmtIr::new_with_verified_by_builtin_rules_label_and_steps(
+        Ok((SuccessFactStmtResult::new_with_verified_by_builtin_rules_label_and_steps(
             stmt,
             infer_result,
             "set_builder in power_set: param_set subset of base implies builder defines a subset of base"
@@ -183,7 +183,7 @@ impl Runtime {
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let base_set = power_set.set.as_ref();
-        let mut infer_result = InferResult::new();
+        let mut infer_result = SuccessInferResult::new();
         let premises = list_set
             .list
             .iter()
@@ -197,7 +197,7 @@ impl Runtime {
             })
             .collect::<Vec<AtomicFact>>();
         let Some(subgoals) = self.verify_builtin_rule_premises(&premises, builtin_state)? else {
-            return Ok((StmtUnknown::new()).into());
+            return Ok((UnknownGenericStmtResult::new()).into());
         };
         for subgoal in &subgoals {
             infer_result.new_infer_result_inside(subgoal.infer_result());
@@ -205,7 +205,7 @@ impl Runtime {
         let stmt = in_fact.clone().into();
         infer_result.new_fact(&stmt);
         Ok(
-            (VerifiedFactStmtIr::new_with_verified_by_builtin_rules_label_and_steps(
+            (SuccessFactStmtResult::new_with_verified_by_builtin_rules_label_and_steps(
                 stmt,
                 infer_result,
                 "list_set in power_set: each element is in the base set".to_string(),
@@ -232,7 +232,7 @@ impl Runtime {
                 ));
             if equal_fact_verify_result.is_true() {
                 return Ok(
-                    (VerifiedFactStmtIr::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         in_fact.clone().into(),
                         format!(
                             "{} equals one element in list_set {}",
@@ -249,7 +249,7 @@ impl Runtime {
         }
 
         if list_set.list.is_empty() {
-            return Ok(StmtUnknown::new().into());
+            return Ok(UnknownGenericStmtResult::new().into());
         }
 
         let mut left_equalities = Vec::with_capacity(list_set.list.len());
@@ -279,7 +279,7 @@ impl Runtime {
             let premise_result = self.verify_builtin_rule_premise(&premise, builtin_state)?;
             if premise_result.is_true() {
                 return Ok(
-                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                         in_fact.clone().into(),
                         "list-set membership from equality with one listed element".to_string(),
                         vec![premise_result],
@@ -289,7 +289,7 @@ impl Runtime {
             }
         }
 
-        Ok((StmtUnknown::new()).into())
+        Ok((UnknownGenericStmtResult::new()).into())
     }
 
     pub(super) fn verify_not_in_fact_by_not_equal_to_every_element_in_list_set(
@@ -311,11 +311,11 @@ impl Runtime {
             })
             .collect::<Vec<AtomicFact>>();
         let Some(steps) = self.verify_builtin_rule_premises(&premises, builtin_state)? else {
-            return Ok((StmtUnknown::new()).into());
+            return Ok((UnknownGenericStmtResult::new()).into());
         };
 
         Ok(
-            (VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+            (SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                 not_in_fact.clone().into(),
                 format!(
                     "{} is not equal to every element in list_set {}",
@@ -335,11 +335,11 @@ impl Runtime {
         in_fact: &InFact,
     ) -> Result<StmtResult, RuntimeError> {
         let Some(stored_fn_set) = self.get_cloned_object_in_fn_set(element) else {
-            return Ok((StmtUnknown::new()).into());
+            return Ok((UnknownGenericStmtResult::new()).into());
         };
         if stored_fn_set.to_string() == expected_fn_set.to_string() {
             return Ok(
-                (VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                (SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                     in_fact.clone().into(),
                     "fn membership: stored fn signature matches RHS".to_string(),
                     Vec::new(),
@@ -352,7 +352,7 @@ impl Runtime {
         let flat_expected =
             ParamGroupWithSet::collect_param_names(&expected_fn_set.body.params_def_with_set);
         if flat_stored.len() != flat_expected.len() {
-            return Ok((StmtUnknown::new()).into());
+            return Ok((UnknownGenericStmtResult::new()).into());
         }
         let shared_names = self.generate_random_unused_names(flat_stored.len());
         let stored_norm =
@@ -361,7 +361,7 @@ impl Runtime {
             self.fn_set_alpha_renamed_for_display_compare(&expected_fn_set.body, &shared_names)?;
         if stored_norm.to_string() == expected_norm.to_string() {
             return Ok(
-                (VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                (SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                     in_fact.clone().into(),
                     "fn membership: stored fn signature matches RHS (alpha-renamed parameters)"
                         .to_string(),
@@ -370,7 +370,7 @@ impl Runtime {
                 .into(),
             );
         }
-        Ok((StmtUnknown::new()).into())
+        Ok((UnknownGenericStmtResult::new()).into())
     }
 
     /// A well-defined anonymous function belongs to a function space with the
@@ -391,7 +391,7 @@ impl Runtime {
         )?;
         if signature_from_anon.to_string() == expected_fn_set.to_string() {
             return Ok(
-                (VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                (SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                     in_fact.clone().into(),
                     "anonymous function: signature (params, dom, co-domain) matches `fn` set"
                         .to_string(),
@@ -405,7 +405,7 @@ impl Runtime {
         let flat_e =
             ParamGroupWithSet::collect_param_names(&expected_fn_set.body.params_def_with_set);
         if flat_a.len() != flat_e.len() {
-            return Ok((StmtUnknown::new()).into());
+            return Ok((UnknownGenericStmtResult::new()).into());
         }
         let shared_names = self.generate_random_unused_names(flat_a.len());
         let a_norm = self
@@ -414,7 +414,7 @@ impl Runtime {
             self.fn_set_alpha_renamed_for_display_compare(&expected_fn_set.body, &shared_names)?;
         if a_norm.to_string() == e_norm.to_string() {
             return Ok(
-                (VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                (SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                     in_fact.clone().into(),
                     "anonymous function: signature matches `fn` set (alpha-renamed parameters)"
                         .to_string(),
@@ -424,7 +424,7 @@ impl Runtime {
             );
         }
 
-        Ok((StmtUnknown::new()).into())
+        Ok((UnknownGenericStmtResult::new()).into())
     }
 
     // Function-space membership transports across propositionally equal
@@ -451,7 +451,7 @@ impl Runtime {
         )?;
         if signature_equality.is_true() {
             return Ok(
-                (VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                (SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                     in_fact.clone().into(),
                     "anonymous function: signature matches `fn` set through propositionally equal parameter sets"
                         .to_string(),
@@ -460,7 +460,7 @@ impl Runtime {
                 .into(),
             );
         }
-        Ok((StmtUnknown::new()).into())
+        Ok((UnknownGenericStmtResult::new()).into())
     }
 
     pub(crate) fn verify_anonymous_fn_in_fn_set_explicit(
@@ -507,13 +507,13 @@ impl Runtime {
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let Obj::FnObj(fn_obj) = &in_fact.element else {
-            return Ok((StmtUnknown::new()).into());
+            return Ok((UnknownGenericStmtResult::new()).into());
         };
         let FnObjHead::FiniteSeqListObj(list) = fn_obj.head.as_ref() else {
-            return Ok((StmtUnknown::new()).into());
+            return Ok((UnknownGenericStmtResult::new()).into());
         };
         if fn_obj.body.len() != 1 || fn_obj.body[0].len() != 1 {
-            return Ok((StmtUnknown::new()).into());
+            return Ok((UnknownGenericStmtResult::new()).into());
         };
 
         let index_obj = fn_obj.body[0][0].as_ref().clone();
@@ -539,11 +539,11 @@ impl Runtime {
         }
         let Some(step_results) = self.verify_builtin_rule_premises(&premises, builtin_state)?
         else {
-            return Ok((StmtUnknown::new()).into());
+            return Ok((UnknownGenericStmtResult::new()).into());
         };
 
         Ok(
-            (VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+            (SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                 in_fact.clone().into(),
                 format!(
                     "finite sequence literal application is in {}",
@@ -564,27 +564,27 @@ impl Runtime {
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let Obj::StandardSet(_) = target_set_obj else {
-            return Ok((StmtUnknown::new()).into());
+            return Ok((UnknownGenericStmtResult::new()).into());
         };
         let Obj::ObjAtIndex(obj_at_index) = &in_fact.element else {
-            return Ok((StmtUnknown::new()).into());
+            return Ok((UnknownGenericStmtResult::new()).into());
         };
         let Some(cart) = self.get_object_equal_to_cart(obj_at_index.obj.as_ref()) else {
-            return Ok((StmtUnknown::new()).into());
+            return Ok((UnknownGenericStmtResult::new()).into());
         };
         let Some(index_number) = self.resolve_obj_to_number(&obj_at_index.index) else {
-            return Ok((StmtUnknown::new()).into());
+            return Ok((UnknownGenericStmtResult::new()).into());
         };
         let Ok(one_based_index) = index_number.normalized_value.parse::<usize>() else {
-            return Ok((StmtUnknown::new()).into());
+            return Ok((UnknownGenericStmtResult::new()).into());
         };
         if one_based_index == 0 || one_based_index > cart.args.len() {
-            return Ok((StmtUnknown::new()).into());
+            return Ok((UnknownGenericStmtResult::new()).into());
         }
 
         let factor = cart.args[one_based_index - 1].as_ref();
         let Obj::ListSet(list_set) = factor else {
-            return Ok((StmtUnknown::new()).into());
+            return Ok((UnknownGenericStmtResult::new()).into());
         };
 
         let premises = list_set
@@ -601,11 +601,11 @@ impl Runtime {
             .collect::<Vec<AtomicFact>>();
         let Some(step_results) = self.verify_builtin_rule_premises(&premises, builtin_state)?
         else {
-            return Ok((StmtUnknown::new()).into());
+            return Ok((UnknownGenericStmtResult::new()).into());
         };
 
         Ok(
-            (VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+            (SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                 in_fact.clone().into(),
                 format!(
                     "cart projection list_set elements are all in {}",
@@ -623,7 +623,7 @@ impl Runtime {
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let Obj::StandardSet(target_set) = &in_fact.set else {
-            return Ok(StmtUnknown::new().into());
+            return Ok(UnknownGenericStmtResult::new().into());
         };
 
         // Membership is monotone through the standard numeric-set hierarchy.
@@ -642,7 +642,7 @@ impl Runtime {
                 self.verify_atomic_fact_as_builtin_rule_premise(&source_membership, builtin_state)?;
             if source_result.is_true() {
                 return Ok(
-                    (VerifiedFactStmtIr::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         in_fact.clone().into(),
                         format!(
                             "{} in {} implies in {} (standard subset relation)",
@@ -655,7 +655,7 @@ impl Runtime {
                 );
             }
         }
-        Ok((StmtUnknown::new()).into())
+        Ok((UnknownGenericStmtResult::new()).into())
     }
 
     /// A member of a numeric list set inherits a standard numeric carrier
@@ -666,7 +666,7 @@ impl Runtime {
         _builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let Obj::StandardSet(target_set) = &in_fact.set else {
-            return Ok((StmtUnknown::new()).into());
+            return Ok((UnknownGenericStmtResult::new()).into());
         };
         for source_set in self.known_sets_containing_obj(&in_fact.element) {
             let Obj::ListSet(list_set) = &source_set else {
@@ -713,7 +713,7 @@ impl Runtime {
             }
             if all_elements_match {
                 return Ok(
-                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                         in_fact.clone().into(),
                         "listed-set member inherits a carrier shared by every listed element"
                             .to_string(),
@@ -723,7 +723,7 @@ impl Runtime {
                 );
             }
         }
-        Ok((StmtUnknown::new()).into())
+        Ok((UnknownGenericStmtResult::new()).into())
     }
 
     pub(super) fn verify_not_in_z_for_resolved_numeric_div(

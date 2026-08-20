@@ -21,10 +21,10 @@ impl Runtime {
         let alternatives: Vec<Vec<AtomicFact>> = match &fact.set {
             Obj::Cart(cart) => {
                 let Obj::Tuple(tuple) = &fact.element else {
-                    return Ok(StmtUnknown::new().into());
+                    return Ok(UnknownGenericStmtResult::new().into());
                 };
                 if tuple.args.len() < 2 || tuple.args.len() != cart.args.len() {
-                    return Ok(StmtUnknown::new().into());
+                    return Ok(UnknownGenericStmtResult::new().into());
                 }
                 vec![tuple
                     .args
@@ -99,14 +99,14 @@ impl Runtime {
                     LessFact::new(fact.element.clone(), interval.end().clone(), lf.clone()).into()
                 },
             ]],
-            _ => return Ok(StmtUnknown::new().into()),
+            _ => return Ok(UnknownGenericStmtResult::new().into()),
         };
 
         let Some(children) = self.verify_set_strategy_alternatives(alternatives)? else {
-            return Ok(StmtUnknown::new().into());
+            return Ok(UnknownGenericStmtResult::new().into());
         };
         Ok(
-            VerifiedFactStmtIr::new_with_verified_by_builtin_strategy_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_strategy_recording_stmt(
                 fact.clone().into(),
                 "set-membership strategy: constructor membership decomposition".to_string(),
                 children,
@@ -123,7 +123,7 @@ impl Runtime {
         fact: &InFact,
     ) -> Result<StmtResult, RuntimeError> {
         let (Obj::Tuple(_), Obj::StructObj(struct_obj)) = (&fact.element, &fact.set) else {
-            return Ok(StmtUnknown::new().into());
+            return Ok(UnknownGenericStmtResult::new().into());
         };
         let final_state = UseContextVerifyState::new_with_final_round(false);
         self.verify_in_fact_by_struct_obj(fact, struct_obj, &final_state)
@@ -139,7 +139,7 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         let goal_key = fact.to_string();
         if !self.active_set_builder_membership_unfolds.is_empty() {
-            return Ok(StmtUnknown::new().into());
+            return Ok(UnknownGenericStmtResult::new().into());
         }
         self.active_set_builder_membership_unfolds
             .insert(goal_key.clone());
@@ -164,7 +164,7 @@ impl Runtime {
             Obj::SetBuilder(_) | Obj::FnObj(_) | Obj::InstantiatedTemplateObj(_)
         ) && indexed_set_builder.is_none()
         {
-            return Ok(StmtUnknown::new().into());
+            return Ok(UnknownGenericStmtResult::new().into());
         }
         let final_state = UseContextVerifyState::new_with_final_round(false);
         if let Obj::InstantiatedTemplateObj(template_obj) = &fact.set {
@@ -177,7 +177,7 @@ impl Runtime {
                 .or(indexed_set_builder),
         };
         let Some(set_builder) = set_builder else {
-            return Ok(StmtUnknown::new().into());
+            return Ok(UnknownGenericStmtResult::new().into());
         };
 
         let mut children = Vec::with_capacity(set_builder.facts.len() + 1);
@@ -190,7 +190,7 @@ impl Runtime {
         .into();
         let base_result = self.verify_builtin_strategy_child(&base)?;
         if !base_result.is_true() {
-            return Ok(StmtUnknown::new().into());
+            return Ok(UnknownGenericStmtResult::new().into());
         }
         expected_premises.push(base.clone().into());
         children.push(base_result);
@@ -229,7 +229,7 @@ impl Runtime {
                 }
             }
             if !result.is_true() {
-                return Ok(StmtUnknown::new().into());
+                return Ok(UnknownGenericStmtResult::new().into());
             }
             expected_premises.push(instantiated.clone().to_fact());
             children.push(result);
@@ -238,7 +238,7 @@ impl Runtime {
         let target: Fact = fact.clone().into();
         if matches!(fact.set, Obj::SetBuilder(_)) {
             return Ok(
-                VerifiedFactStmtIr::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
+                SuccessFactStmtResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
                     target.clone(),
                     "set-builder membership strategy: unfold one set definition and verify its atomic obligations"
                         .to_string(),
@@ -254,7 +254,7 @@ impl Runtime {
             );
         }
         Ok(
-            VerifiedFactStmtIr::new_with_verified_by_builtin_strategy_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_strategy_recording_stmt(
                 target,
                 "set-builder membership strategy: unfold one set definition and verify its atomic obligations"
                     .to_string(),
@@ -312,10 +312,10 @@ impl Runtime {
             ]);
         }
         let Some(children) = self.verify_set_strategy_alternatives(alternatives)? else {
-            return Ok(StmtUnknown::new().into());
+            return Ok(UnknownGenericStmtResult::new().into());
         };
         Ok(
-            VerifiedFactStmtIr::new_with_verified_by_builtin_strategy_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_strategy_recording_stmt(
                 fact.clone().into(),
                 "set-containment strategy: constructor containment decomposition".to_string(),
                 children,

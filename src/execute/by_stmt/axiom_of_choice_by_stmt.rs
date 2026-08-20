@@ -22,7 +22,7 @@ impl Runtime {
             )
         })?;
 
-        let (inside_results, obligations_for_output) = self.run_in_local_env(|rt| {
+        let (mut inside_results, obligations_for_output) = self.run_in_local_env(|rt| {
             let mut inside_results: Vec<StmtResult> = Vec::new();
             for proof_stmt in stmt.proof.iter() {
                 let result = rt.exec_stmt(proof_stmt).map_err(|statement_error| {
@@ -68,6 +68,24 @@ impl Runtime {
             }
             Ok::<_, RuntimeError>((inside_results, obligations_for_output))
         })?;
+        let proof_steps = inside_results.drain(..stmt.proof.len()).collect::<Vec<_>>();
+        let mut checked_obligations = inside_results.into_iter();
+        let obligations = obligations_for_output
+            .into_iter()
+            .map(
+                |(role, fact, checked)| SuccessVerifyByChoiceObligationResult {
+                    role,
+                    fact,
+                    check: checked.then(|| {
+                        Box::new(
+                            checked_obligations
+                                .next()
+                                .expect("checked choice obligation retains its result"),
+                        )
+                    }),
+                },
+            )
+            .collect();
 
         // Trusted axiom-of-choice step. The quantified selection condition is
         // exposed through a named builtin predicate, so the existential body
@@ -89,19 +107,21 @@ impl Runtime {
                 )
             })?;
 
-        let by_verification = ByChoiceVerificationResult::new(
+        let by_verification = SuccessVerifyByChoiceResult::new(
             "by axiom_of_choice proof".to_string(),
             stmt.family.to_string(),
-            stmt.proof.len(),
-            obligations_for_output,
+            proof_steps,
+            obligations,
             choice_fact_string,
         );
-        Ok(VerifiedByStmtIr::ByAxiomOfChoiceStmt {
-            statement: stmt.clone(),
-            common: VerifiedStmtCommonIr::new(infer_result, inside_results),
-            verification: Some(by_verification),
-        }
-        .into())
+        Ok(
+            SuccessByStmtResult::ByAxiomOfChoiceStmt(Box::new(SuccessByAxiomOfChoiceStmtResult {
+                statement: stmt.clone(),
+                common: SuccessStmtCommonResult::new(infer_result),
+                verification: Some(by_verification),
+            }))
+            .into(),
+        )
     }
 
     pub(crate) fn exec_by_axiom_of_choice_stmt_affect_environment_only(
@@ -114,12 +134,14 @@ impl Runtime {
             choice_fact,
             InferReason::VerifiedStatement,
         )?;
-        Ok(VerifiedByStmtIr::ByAxiomOfChoiceStmt {
-            statement: stmt.clone(),
-            common: VerifiedStmtCommonIr::new(infer_result, vec![]),
-            verification: None,
-        }
-        .into())
+        Ok(
+            SuccessByStmtResult::ByAxiomOfChoiceStmt(Box::new(SuccessByAxiomOfChoiceStmtResult {
+                statement: stmt.clone(),
+                common: SuccessStmtCommonResult::new(infer_result),
+                verification: None,
+            }))
+            .into(),
+        )
     }
 }
 

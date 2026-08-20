@@ -7,7 +7,8 @@ namespace __Compiler_8_ProofScopes
 
 theorem one_eq_one :
     Litex.Same (1 : ℂ) (1 : ℂ) := by
-  exact Litex.Same.refl (1 : ℂ)
+  have __c0_0 : Litex.Same (1 : ℂ) (1 : ℂ) := Litex.Same.refl (1 : ℂ)
+  exact __c0_0
 
 theorem __fact1 : Litex.Same (2 : ℂ) (2 : ℂ) := by
   have __step1 : Litex.Same (2 : ℂ) (2 : ℂ) := by

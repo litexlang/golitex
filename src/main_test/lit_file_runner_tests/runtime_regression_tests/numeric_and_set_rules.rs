@@ -94,7 +94,8 @@ forall a Z:
         let forall_success = stmt_results[stmt_index]
             .factual_success()
             .expect("each cold/warm tracer should have a factual result");
-        let VerifiedByResult::ForallProof(forall_proof) = forall_success.underlying_verified_by()
+        let SuccessFactProofResult::ForallProof(forall_proof) =
+            forall_success.underlying_verified_by()
         else {
             panic!("each cold/warm tracer should retain its forall proof: {forall_success:?}");
         };
@@ -102,7 +103,7 @@ forall a Z:
             .result
             .factual_success()
             .expect("each complex-membership conclusion should have a factual result");
-        let VerifiedByResult::BuiltinRule(rule) = conclusion.underlying_verified_by() else {
+        let SuccessFactProofResult::BuiltinRule(rule) = conclusion.underlying_verified_by() else {
             panic!("each complex-membership conclusion should use a builtin rule: {conclusion:?}");
         };
         assert_eq!(rule.subgoals.len(), 1);
@@ -122,7 +123,7 @@ forall a Z:
         .last()
         .and_then(StmtResult::factual_success)
         .expect("the tracer forall should have a factual result");
-    let VerifiedByResult::ForallProof(forall_proof) = forall_success.underlying_verified_by()
+    let SuccessFactProofResult::ForallProof(forall_proof) = forall_success.underlying_verified_by()
     else {
         panic!("the tracer should retain its forall proof: {forall_success:?}");
     };
@@ -130,7 +131,7 @@ forall a Z:
         .result
         .factual_success()
         .expect("the real-membership conclusion should have a factual result");
-    let VerifiedByResult::BuiltinRule(rule) = conclusion.underlying_verified_by() else {
+    let SuccessFactProofResult::BuiltinRule(rule) = conclusion.underlying_verified_by() else {
         panic!("the membership conclusion should use a builtin rule: {conclusion:?}");
     };
     assert_eq!(rule.subgoals.len(), 1);
@@ -146,7 +147,7 @@ forall a Z:
     ));
     assert!(matches!(
         source_membership.underlying_verified_by(),
-        VerifiedByResult::Fact(_)
+        SuccessFactProofResult::Fact(_)
     ));
 
     let boundary_source = "forall c C:\n    c $in R";
@@ -496,8 +497,9 @@ forall X set, a N:
         "finite deletion from an infinite set should stay infinite:\n{run_output}"
     );
     assert!(
-        run_output
-            .contains("set minus is infinite when left side is infinite and right side is finite"),
+        run_output.contains(
+            "\"diagnostic_label\": \"set_minus_is_infinite_when_left_side_is_infinite_and_right_side_is_finite\""
+        ),
         "the result should expose the finite-deletion rule:\n{run_output}"
     );
 }
@@ -774,7 +776,7 @@ forall x, n Z:
                 );
             }
             assert!(
-                run_output.matches("\"type\": \"builtin strategy\"").count() >= 2,
+                run_output.matches("\"kind\": \"BuiltinStrategy\"").count() >= 2,
                 "finite-set upper/lower bounds should use the structural strategy route:\n{run_output}"
             );
         },
@@ -980,7 +982,7 @@ thm recursive_count_successor:
                 "a provable recursive successor case should unfold directly:\n{run_output}"
             );
             assert!(
-                run_output.contains("\"type\": \"cite forall fact\"")
+                run_output.contains("\"kind\": \"KnownForallInstantiation\"")
                     && run_output.contains("recursive_count(_generated_1 - 1)"),
                 "the successor equation must retain the recursive case as provenance:\n{run_output}"
             );
@@ -1068,7 +1070,7 @@ img(1 + i) = 1
             );
             for rule in [
                 "refined integer carrier from known integer membership and strict sign",
-                "function range subset codomain",
+                "fn_range_subset_codomain",
                 "equality: (-1)^(2*m+1) = -1 for m in N",
                 "integer adjacency: a < b + 1 gives a <= b",
                 "re: coordinate of complex sum or difference",
@@ -1241,7 +1243,7 @@ forall n N+:
                 run_output
             );
             assert!(
-                run_output.contains("\"type\": \"evaluation statement\"")
+                run_output.contains("\"kind\": \"EvalStmt\"")
                     && run_output.contains("\"0 ^ 0 = 1\""),
                 "eval 0^0 should produce 1:\n{}",
                 run_output
@@ -1402,8 +1404,10 @@ fn direct_calculation_equality_is_reported_before_weak_order_fallback() {
                 "direct_calculation_equality_is_reported_before_weak_order_fallback failed:\n{}",
                 run_output
             );
-            assert!(run_output.contains("\"rule\": \"calculation\""));
-            assert!(!run_output.contains("\"rule\": \"equality from a >= b and b >= a\""));
+            assert!(run_output.contains("\"diagnostic_label\": \"calculation\""));
+            assert!(
+                !run_output.contains("\"diagnostic_label\": \"equality from a >= b and b >= a\"")
+            );
         },
     );
 }
@@ -1430,8 +1434,8 @@ fn direct_calculation_builtin_rule_output_localizes_to_zh() {
                 "Chinese direct calculation output failed:\n{}",
                 run_output
             );
-            assert!(run_output.contains("\"规则\": \"计算\""));
-            assert!(!run_output.contains("\"rule\": \"calculation\""));
+            assert!(run_output.contains("\"diagnostic_label\": \"calculation\""));
+            assert!(!run_output.contains("\"规则\": \"计算\""));
         },
     );
 }
@@ -1458,8 +1462,7 @@ forall a, b R:
         "known_equality_candidate_uses_rational_expression_simplification failed:\n{}",
         run_output
     );
-    assert!(run_output
-        .contains("\"rule\": \"exact calculation and rational expression simplification\""));
+    assert!(run_output.contains("rational expression simplification"));
     assert!(!run_output.contains("\"rule_id\""));
 }
 
@@ -1487,9 +1490,8 @@ forall a, b R:
         "Chinese rational expression simplification output failed:\n{}",
         run_output
     );
-    assert!(run_output.contains("\"规则\": \"精确计算和有理表达式化简\""));
-    assert!(!run_output
-        .contains("\"rule\": \"exact calculation and rational expression simplification\""));
+    assert!(run_output.contains("rational expression simplification"));
+    assert!(!run_output.contains("\"规则\": \"精确计算和有理表达式化简\""));
 }
 
 #[test]
@@ -1509,7 +1511,7 @@ fn builtin_rule_output_hides_internal_complement_helper_name() {
         "complementary-or fixture should verify:\n{}",
         run_output
     );
-    assert!(run_output.contains("\"rule\": \"complementary facts cover all cases\""));
+    assert!(run_output.contains("\"diagnostic_label\": \"or: complementary atomic facts\""));
     assert!(!run_output.contains("\"rule_id\""));
     assert!(
         !run_output.contains("make_reversed"),
@@ -1563,8 +1565,8 @@ forall a, b R:
         "quotient_nonzero_from_numerator_nonzero_builtin_rule failed:\n{}",
         run_output
     );
-    assert!(run_output.contains("\"rule\": \"local builtin nonzero.div\""));
-    assert!(run_output.contains("\"rule\": \"not-equality symmetry\""));
+    assert!(run_output.contains("\"diagnostic_label\": \"local builtin nonzero.div\""));
+    assert!(run_output.contains("\"diagnostic_label\": \"not-equality symmetry\""));
 }
 
 #[test]
@@ -1881,7 +1883,7 @@ forall b R:
                 "ordered finite endpoints should establish nonemptiness through bounded strategy children:\n{run_output}"
             );
             assert!(
-                run_output.matches("\"type\": \"builtin strategy\"").count() >= 4,
+                run_output.matches("\"kind\": \"BuiltinStrategy\"").count() >= 4,
                 "finite-endpoint nonemptiness should retain strategy provenance:\n{run_output}"
             );
 
@@ -2748,7 +2750,7 @@ x $in U or x $in V
         run_output
     );
     assert!(
-        run_output.contains("\"type\": \"cite disjunction fact\""),
+        run_output.contains("\"kind\": \"FactCitation\""),
         "union elimination should cite the inferred membership disjunction:\n{}",
         run_output
     );
@@ -2820,8 +2822,8 @@ forall a, b Z:
             "empty half-open integer ranges should be builtin:\n{run_output}"
         );
         assert!(
-            run_output.contains("range empty when end le start")
-                && run_output.contains("empty set equality from not nonempty"),
+            run_output.contains("range_empty_when_end_le_start")
+                && run_output.contains("empty_set_equality_from_not_nonempty"),
             "the result should expose both range-emptiness and empty-set equality provenance:\n{run_output}"
         );
     });
@@ -3270,7 +3272,7 @@ forall s, t finite_set:
             "finite-set deletion cardinality should be builtin:\n{run_output}"
         );
         assert!(
-            run_output.contains("finite set size set minus"),
+            run_output.contains("finite_set_size_set_minus"),
             "missing finite-set deletion builtin provenance:\n{run_output}"
         );
     });
@@ -3347,13 +3349,13 @@ forall a, b N:
                 "finite-set cardinality interfaces should be builtin:\n{run_output}"
             );
             for rule in [
-                "finite set size set minus finite subset",
-                "finite set size union inclusion exclusion",
-                "finite set size partition by intersection and difference",
-                "finite set size subset le",
-                "finite set size union le sum",
-                "finite set size closed range",
-                "finite set size range",
+                "finite_set_size_set_minus_finite_subset",
+                "finite_set_size_union_inclusion_exclusion",
+                "finite_set_size_partition_by_intersection_and_difference",
+                "finite_set_size_subset_le",
+                "finite_set_size_union_le_sum",
+                "finite_set_size_closed_range",
+                "finite_set_size_range",
             ] {
                 assert!(
                     run_output.contains(rule),
@@ -3391,9 +3393,9 @@ forall a, b N:
         "finite-set size and integer interval cardinalities should be builtin:\n{run_output}"
     );
     for rule in [
-        "finite set size subset le",
-        "finite set size closed range",
-        "finite set size range",
+        "finite_set_size_subset_le",
+        "finite_set_size_closed_range",
+        "finite_set_size_range",
     ] {
         assert!(
             run_output.contains(rule),
@@ -4144,7 +4146,7 @@ have fn selected_natural(upper N) N = finite_set_min({n closed_range(0, upper): 
         "filtering a finite integer range should stay finite:\n{run_output}"
     );
     assert!(
-        run_output.contains("\"type\": \"builtin strategy\""),
+        run_output.contains("\"kind\": \"BuiltinStrategy\""),
         "the proof should expose the structural finiteness route:\n{run_output}"
     );
 }

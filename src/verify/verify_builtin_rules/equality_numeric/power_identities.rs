@@ -90,7 +90,7 @@ impl Runtime {
             return Ok(None);
         }
         Ok(Some(
-            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                 equal_fact.clone().into(),
                 "equality: (-1)^(2*m+1) = -1 for m in N".to_string(),
                 vec![m_result],
@@ -261,7 +261,7 @@ impl Runtime {
         }
 
         Ok(Some(
-            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                 equal_fact.clone().into(),
                 "equality: 0^x = 0 for x > 0".to_string(),
                 positive_steps,

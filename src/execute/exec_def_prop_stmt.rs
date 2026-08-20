@@ -7,13 +7,15 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         self.exec_def_prop_stmt_verify_well_definedness(def_prop_stmt)
             .map_err(|e| exec_stmt_error_with_stmt_and_cause(def_prop_stmt.clone().into(), e))?;
-        let inside_results = self.exec_def_prop_stmt_verify_process(def_prop_stmt)?;
+        self.exec_def_prop_stmt_verify_process(def_prop_stmt)?;
         let infer_result = self.exec_def_prop_stmt_affect_environment(def_prop_stmt)?;
-        Ok(VerifiedDefPredicateStmtIr::DefPropStmt {
-            statement: def_prop_stmt.clone(),
-            common: VerifiedStmtCommonIr::new(infer_result, inside_results),
-        }
-        .into())
+        Ok(
+            SuccessDefPredicateStmtResult::DefPropStmt(Box::new(SuccessDefPropStmtResult {
+                statement: def_prop_stmt.clone(),
+                common: SuccessStmtCommonResult::new(infer_result),
+            }))
+            .into(),
+        )
     }
 
     /// Mathematical contract: a concrete proposition definition is checked in
@@ -56,7 +58,7 @@ impl Runtime {
     fn exec_def_prop_stmt_verify_process(
         &mut self,
         def_prop_stmt: &DefPropStmt,
-    ) -> Result<Vec<StmtResult>, RuntimeError> {
+    ) -> Result<(), RuntimeError> {
         let name = def_prop_stmt.name.clone();
         let env = self.top_level_env();
         if env.defined_def_props.contains_key(&name) {
@@ -65,15 +67,15 @@ impl Runtime {
         if env.defined_abstract_props.contains_key(&name) {
             return Err(def_prop_name_already_used_error(&name, "abstract_prop"));
         }
-        Ok(vec![])
+        Ok(())
     }
 
     pub(crate) fn exec_def_prop_stmt_affect_environment(
         &mut self,
         def_prop_stmt: &DefPropStmt,
-    ) -> Result<InferResult, RuntimeError> {
+    ) -> Result<SuccessInferResult, RuntimeError> {
         self.store_def_prop(def_prop_stmt)?;
-        Ok(InferResult::new())
+        Ok(SuccessInferResult::new())
     }
 
     pub(crate) fn exec_def_prop_stmt_affect_environment_only(
@@ -81,11 +83,13 @@ impl Runtime {
         def_prop_stmt: &DefPropStmt,
     ) -> Result<StmtResult, RuntimeError> {
         let infer_result = self.exec_def_prop_stmt_affect_environment(def_prop_stmt)?;
-        Ok(VerifiedDefPredicateStmtIr::DefPropStmt {
-            statement: def_prop_stmt.clone(),
-            common: VerifiedStmtCommonIr::new(infer_result, vec![]),
-        }
-        .into())
+        Ok(
+            SuccessDefPredicateStmtResult::DefPropStmt(Box::new(SuccessDefPropStmtResult {
+                statement: def_prop_stmt.clone(),
+                common: SuccessStmtCommonResult::new(infer_result),
+            }))
+            .into(),
+        )
     }
 }
 

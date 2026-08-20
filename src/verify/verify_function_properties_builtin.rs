@@ -23,7 +23,7 @@ impl Runtime {
         }
 
         Ok(Some(
-            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                 fact.clone().into(),
                 format!(
                     "{} by its builtin function-property definition",
@@ -95,7 +95,7 @@ impl Runtime {
         let domain = args[0].clone();
         let codomain = args[1].clone();
         let function = args[2].clone();
-        let mut infer_result = InferResult::new();
+        let mut infer_result = SuccessInferResult::new();
         for obj in [domain.clone(), codomain.clone()] {
             let param_type = ParamType::Set(Set::new());
             let result = self.verify_obj_satisfies_param_type(obj, &param_type, verify_state)?;
@@ -106,13 +106,13 @@ impl Runtime {
         }
 
         let Some(function_body) = self.get_fn_range_function_body(&function) else {
-            return Ok(Some(StmtUnknown::new().into()));
+            return Ok(Some(UnknownGenericStmtResult::new().into()));
         };
         if ParamGroupWithSet::number_of_params(&function_body.params_def_with_set) != 1 {
-            return Ok(Some(StmtUnknown::new().into()));
+            return Ok(Some(UnknownGenericStmtResult::new().into()));
         }
         let Some(param_group) = function_body.params_def_with_set.first() else {
-            return Ok(Some(StmtUnknown::new().into()));
+            return Ok(Some(UnknownGenericStmtResult::new().into()));
         };
 
         if function_body.dom_facts.is_empty() {
@@ -129,22 +129,22 @@ impl Runtime {
             // injective/surjective/bijective predicates without accepting other
             // restricted function domains.
             let Obj::ClosedRange(closed_range) = &domain else {
-                return Ok(Some(StmtUnknown::new().into()));
+                return Ok(Some(UnknownGenericStmtResult::new().into()));
             };
             if param_group.params.len() != 1
                 || !matches!(param_group.set_obj(), Obj::StandardSet(StandardSet::NPos))
             {
-                return Ok(Some(StmtUnknown::new().into()));
+                return Ok(Some(UnknownGenericStmtResult::new().into()));
             }
             let [QuantifierFreeFact::AtomicFact(AtomicFact::LessEqualFact(bound))] =
                 function_body.dom_facts.as_slice()
             else {
-                return Ok(Some(StmtUnknown::new().into()));
+                return Ok(Some(UnknownGenericStmtResult::new().into()));
             };
             let bound_param =
                 obj_for_bound_param_in_scope(&param_group.params[0], ParamObjType::FnSet);
             if !objs_equal_with_nested_binder_alpha_equivalence(&bound.left, &bound_param) {
-                return Ok(Some(StmtUnknown::new().into()));
+                return Ok(Some(UnknownGenericStmtResult::new().into()));
             }
 
             let one: Obj = Number::new("1".to_string()).into();
@@ -180,10 +180,10 @@ impl Runtime {
         infer_result.new_infer_result_inside(codomain_result.infer_result());
 
         Ok(Some(
-            VerifiedCommandStmtIr::DoNothingStmt {
+            SuccessCommandStmtResult::DoNothingStmt(Box::new(SuccessDoNothingStmtResult {
                 statement: DoNothingStmt::new(fact.line_file()),
-                common: VerifiedStmtCommonIr::new(infer_result, Vec::new()),
-            }
+                common: SuccessStmtCommonResult::new(infer_result),
+            }))
             .into(),
         ))
     }

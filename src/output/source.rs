@@ -138,20 +138,6 @@ pub(crate) fn source_ref_json_fields(
     fields
 }
 
-pub(crate) fn source_ref_json_value(
-    runtime: &Runtime,
-    source_line_file: &LineFile,
-    current_line_file: Option<&LineFile>,
-    output_style: OutputStyle,
-) -> JsonValue {
-    JsonValue::Object(source_ref_json_fields(
-        runtime,
-        source_line_file,
-        current_line_file,
-        output_style,
-    ))
-}
-
 pub(crate) fn stmt_text_for_json(_runtime: &Runtime, stmt: &Stmt) -> String {
     user_visible_stmt_or_msg_text(&stmt.to_string())
 }

@@ -87,8 +87,9 @@ pub use crate::fact::SupersetFact;
 pub use crate::fact::{ExistFactEnum, ExistentialSpec};
 pub use crate::graph::{
     render_definition_graph_from_stmt_results, render_fact_graph_from_stmt_results,
-    render_graph_from_stmt_results, run_definition_graph_for_code,
-    run_definition_graph_for_code_strict, run_definition_graph_for_code_strict_with_language,
+    render_graph_from_stmt_results, render_result_graph_from_stmt_results,
+    run_definition_graph_for_code, run_definition_graph_for_code_strict,
+    run_definition_graph_for_code_strict_with_language,
     run_definition_graph_for_code_with_language, run_definition_graph_for_file,
     run_definition_graph_for_file_with_strict,
     run_definition_graph_for_file_with_strict_and_language,
@@ -106,26 +107,30 @@ pub use crate::graph::{
     run_graph_for_file_with_strict_language_and_isolation, run_graph_for_repo,
     run_graph_for_repo_with_strict, run_graph_for_repo_with_strict_and_language,
 };
-pub use crate::infer::{InferReason, InferResult, StoreFactOutput};
+pub use crate::infer::{
+    InferReason, InferRule, SuccessInferPremiseResult, SuccessInferResult,
+    SuccessInferRuleApplicationResult, SuccessStoreFactOutput,
+};
 pub use crate::litex_to_lean_ir::{
     LitexToLeanAbsoluteValueBuiltinRuleIr, LitexToLeanAggregateObjectIr,
     LitexToLeanAnonymousFunctionIr, LitexToLeanArithmeticBuiltinRuleIr,
     LitexToLeanBuiltinObjectOperatorIr, LitexToLeanBuiltinRuleIr, LitexToLeanByCasesStmtIr,
     LitexToLeanByContraStmtIr, LitexToLeanByDefStmtIr, LitexToLeanByStmtIr,
     LitexToLeanCaseBranchExitIr, LitexToLeanCaseBranchIr, LitexToLeanClaimStmtIr,
-    LitexToLeanCollectionObjectIr, LitexToLeanCommandStmtIr,
-    LitexToLeanComplexArithmeticMembershipClosureBuiltinRuleIr, LitexToLeanConstantObjectIr,
-    LitexToLeanContradictionIr, LitexToLeanDefAbstractPropStmtIr, LitexToLeanDefInterfaceStmtIr,
-    LitexToLeanDefObjStmtIr, LitexToLeanDefPredicateStmtIr, LitexToLeanDefPropStmtIr,
-    LitexToLeanDefThmStmtIr, LitexToLeanDefThmStmtProofStepIr, LitexToLeanDoNothingStmtIr,
-    LitexToLeanEqualitySideIr, LitexToLeanExampleStmtIr, LitexToLeanExistentialProjectionRoleIr,
-    LitexToLeanExistentialWitnessIr, LitexToLeanFactIr, LitexToLeanFactProofIr,
-    LitexToLeanFactStatementIr, LitexToLeanFactStorageIr, LitexToLeanFiniteSetBuiltinRuleIr,
-    LitexToLeanFunctionApplicationIr, LitexToLeanFunctionParameterIr, LitexToLeanFunctionTypeIr,
-    LitexToLeanHaveFnEqualStmtIr, LitexToLeanHaveObjByExistFactsStmtIr,
-    LitexToLeanHaveObjEqualStmtIr, LitexToLeanHaveObjInNonemptySetOrParamTypeStmtIr,
-    LitexToLeanHaveTupleStmtIr, LitexToLeanIntegerMembershipClosureBuiltinRuleIr,
-    LitexToLeanLetObjStmtIr, LitexToLeanLocalPremiseIr, LitexToLeanLocalProofBlockIr,
+    LitexToLeanClosedNumericMembershipProofIr, LitexToLeanCollectionObjectIr,
+    LitexToLeanCommandStmtIr, LitexToLeanComplexArithmeticMembershipClosureBuiltinRuleIr,
+    LitexToLeanConstantObjectIr, LitexToLeanContradictionIr, LitexToLeanDefAbstractPropStmtIr,
+    LitexToLeanDefInterfaceStmtIr, LitexToLeanDefObjStmtIr, LitexToLeanDefPredicateStmtIr,
+    LitexToLeanDefPropStmtIr, LitexToLeanDefThmStmtIr, LitexToLeanDefThmStmtProofStepIr,
+    LitexToLeanDoNothingStmtIr, LitexToLeanEqualitySideIr, LitexToLeanExampleStmtIr,
+    LitexToLeanExistentialProjectionRoleIr, LitexToLeanExistentialWitnessIr, LitexToLeanFactIr,
+    LitexToLeanFactProofIr, LitexToLeanFactStatementIr, LitexToLeanFactStorageIr,
+    LitexToLeanFiniteSetBuiltinRuleIr, LitexToLeanFunctionApplicationIr,
+    LitexToLeanFunctionParameterIr, LitexToLeanFunctionTypeIr, LitexToLeanHaveFnEqualStmtIr,
+    LitexToLeanHaveObjByExistFactsStmtIr, LitexToLeanHaveObjEqualStmtIr,
+    LitexToLeanHaveObjInNonemptySetOrParamTypeStmtIr, LitexToLeanHaveTupleStmtIr,
+    LitexToLeanIntegerMembershipClosureBuiltinRuleIr, LitexToLeanLetObjStmtIr,
+    LitexToLeanLocalPremiseIr, LitexToLeanLocalProofBlockIr,
     LitexToLeanNativeConstantMembershipBuiltinRuleIr,
     LitexToLeanNaturalMembershipClosureBuiltinRuleIr, LitexToLeanNonzeroExpressionOrientationIr,
     LitexToLeanObjectChoiceIr, LitexToLeanObjectDefinitionIr, LitexToLeanObjectIr,
@@ -296,84 +301,178 @@ pub use crate::rational_expression::objs_equal_by_rational_expression_evaluation
 pub use crate::rational_expression::{
     evaluate_obj_to_exact_rational_for_eval, evaluate_obj_to_exact_rational_obj_for_eval,
 };
-pub use crate::result::AndFactUnknown;
-pub use crate::result::AtomicFactUnknown;
-pub use crate::result::ByAssignmentVerificationResult;
-pub use crate::result::ByCasesVerificationResult;
-pub use crate::result::ByChoiceVerificationResult;
-pub use crate::result::ByContraVerificationResult;
-pub use crate::result::ByDefinitionVerificationResult;
-pub use crate::result::ByEnumerateFiniteSetVerificationResult;
-pub use crate::result::ByEnumerateRangeVerificationResult;
-pub use crate::result::ByExtensionVerificationResult;
-pub use crate::result::ByForVerificationResult;
-pub use crate::result::ByInducVerificationResult;
-pub use crate::result::ByPropRegistrationVerificationResult;
-pub use crate::result::ByTheoremVerificationResult;
-pub use crate::result::ChainFactUnknown;
 pub use crate::result::CheckedFunctionDefinitionReductionEvidence;
-pub use crate::result::ClaimFactVerificationResult;
-pub use crate::result::ClaimForallVerificationResult;
-pub use crate::result::ClaimVerificationResult;
 pub use crate::result::DefinitionProjectionBuiltinRuleEvidence;
 pub use crate::result::DefinitionReductionVerificationEvidence;
 pub use crate::result::DivNotEqualZeroBuiltinRuleEvidence;
 pub use crate::result::EqualityTransportEvidence;
 pub use crate::result::EqualityTransportStep;
 pub use crate::result::ExecutionPhaseTrace;
-pub use crate::result::ExistFactUnknown;
-pub use crate::result::ExistentialEliminationVerificationResult;
 pub use crate::result::FactTransformationEvidence;
 pub use crate::result::FactTransformationRule;
 pub use crate::result::FactTransformationStep;
-pub use crate::result::FactUnknown;
-pub use crate::result::FactUnknownParam;
-pub use crate::result::FactUnknownPart;
-pub use crate::result::ForallFactUnknown;
-pub use crate::result::ForallFactWithIffUnknown;
-pub use crate::result::ForallProofResult;
-pub use crate::result::ForallProvedFactResult;
-pub use crate::result::FunctionDefinitionVerificationResult;
-pub use crate::result::KnownForallInstantiationResult;
-pub use crate::result::KnownForallRequirementResult;
-pub use crate::result::LocalProofScopeVerificationResult;
 pub use crate::result::NonzeroExpressionOrientation;
-pub use crate::result::NotForallUnknown;
-pub use crate::result::ObjectChoiceVerificationResult;
 pub use crate::result::ObjectIntroductionItem;
-pub use crate::result::OrFactUnknown;
 pub use crate::result::StatementExecutionPhase;
 pub use crate::result::StatementExecutionTrace;
 pub use crate::result::StatementPhaseStatus;
 pub use crate::result::StmtResult;
-pub use crate::result::StmtUnknown;
-pub use crate::result::TheoremVerificationResult;
-pub use crate::result::UnknownStatementResult;
-pub use crate::result::VerifiedByBuiltinRuleResult;
-pub use crate::result::VerifiedByFactResult;
-pub use crate::result::VerifiedByResult;
-pub use crate::result::VerifiedBysEnum;
-pub use crate::result::VerifiedBysResult;
-pub use crate::result::VerifiedFactStmtIr;
-pub use crate::result::VerifiedStmtIr;
-pub use crate::result::WitnessAtomicFactVerificationResult;
-pub use crate::result::WitnessExistVerificationResult;
+pub use crate::result::SuccessBuiltinFactProofResult;
+pub use crate::result::SuccessCombinedFactProofItemResult;
+pub use crate::result::SuccessCombinedFactProofResult;
+pub use crate::result::SuccessCombinedReuseFactProofResult;
+pub use crate::result::SuccessFactCitationProofResult;
+pub use crate::result::SuccessFactProofResult;
+pub use crate::result::SuccessFactStmtResult;
+pub use crate::result::SuccessForallProofResult;
+pub use crate::result::SuccessForallProvedFactResult;
+pub use crate::result::SuccessInstantiateKnownForallResult;
+pub use crate::result::SuccessReuseFactProofResult;
+pub use crate::result::SuccessStmtResult;
+pub use crate::result::SuccessTransformFactResult;
+pub use crate::result::SuccessVerifyArgsSatisfyParamDefResult;
+pub use crate::result::SuccessVerifyByAssignmentDomainResult;
+pub use crate::result::SuccessVerifyByAssignmentResult;
+pub use crate::result::SuccessVerifyByCaseBranchExitResult;
+pub use crate::result::SuccessVerifyByCaseBranchResult;
+pub use crate::result::SuccessVerifyByCaseConclusionsResult;
+pub use crate::result::SuccessVerifyByCaseContradictionResult;
+pub use crate::result::SuccessVerifyByCasesResult;
+pub use crate::result::SuccessVerifyByChoiceObligationResult;
+pub use crate::result::SuccessVerifyByChoiceResult;
+pub use crate::result::SuccessVerifyByContraResult;
+pub use crate::result::SuccessVerifyByDefinitionResult;
+pub use crate::result::SuccessVerifyByEnumerateFiniteSetResult;
+pub use crate::result::SuccessVerifyByEnumerateRangeResult;
+pub use crate::result::SuccessVerifyByExtensionResult;
+pub use crate::result::SuccessVerifyByFiniteSetInducResult;
+pub use crate::result::SuccessVerifyByForResult;
+pub use crate::result::SuccessVerifyByInducCaseResult;
+pub use crate::result::SuccessVerifyByInducGoalResult;
+pub use crate::result::SuccessVerifyByInducProofResult;
+pub use crate::result::SuccessVerifyByInducResult;
+pub use crate::result::SuccessVerifyByPropRegistrationResult;
+pub use crate::result::SuccessVerifyByStructuredIntegerInducResult;
+pub use crate::result::SuccessVerifyByTheoremResult;
+pub use crate::result::SuccessVerifyByUnstructuredIntegerInducResult;
+pub use crate::result::SuccessVerifyCaseFunctionDefinitionResult;
+pub use crate::result::SuccessVerifyClaimFactResult;
+pub use crate::result::SuccessVerifyClaimForallResult;
+pub use crate::result::SuccessVerifyClaimResult;
+pub use crate::result::SuccessVerifyContradictionResult;
+pub use crate::result::SuccessVerifyExistentialEliminationResult;
+pub use crate::result::SuccessVerifyFunctionDefinitionResult;
+pub use crate::result::SuccessVerifyFunctionFromUniqueExistenceResult;
+pub use crate::result::SuccessVerifyHaveObjEqualResult;
+pub use crate::result::SuccessVerifyIndexedFunctionDefinitionResult;
+pub use crate::result::SuccessVerifyKnownForallRequirementResult;
+pub use crate::result::SuccessVerifyLocalProofScopeResult;
+pub use crate::result::SuccessVerifyObjectChoiceGroupResult;
+pub use crate::result::SuccessVerifyObjectChoiceResult;
+pub use crate::result::SuccessVerifyPreimageResult;
+pub use crate::result::SuccessVerifyStrategyDefinitionResult;
+pub use crate::result::SuccessVerifyTheoremResult;
+pub use crate::result::SuccessVerifyTupleOrCartDimensionResult;
+pub use crate::result::SuccessVerifyWitnessAtomicFactResult;
+pub use crate::result::SuccessVerifyWitnessExistResult;
+pub use crate::result::UnknownAndFactResult;
+pub use crate::result::UnknownAtomicFactResult;
+pub use crate::result::UnknownChainFactResult;
+pub use crate::result::UnknownExistFactResult;
+pub use crate::result::UnknownFactParam;
+pub use crate::result::UnknownFactPart;
+pub use crate::result::UnknownFactResult;
+pub use crate::result::UnknownForallFactResult;
+pub use crate::result::UnknownForallFactWithIffResult;
+pub use crate::result::UnknownGenericStmtResult;
+pub use crate::result::UnknownNotForallFactResult;
+pub use crate::result::UnknownOrFactResult;
+pub use crate::result::UnknownStmtResult;
+pub use crate::result::UnknownVerifyArgsSatisfyParamDefResult;
+pub use crate::result::VerifyArgsSatisfyParamDefResult;
 pub use crate::result::{
     AbsoluteValueBuiltinRule, ArithmeticBuiltinRule, BuiltinRuleEvidence,
-    ClosedNumericComparisonBuiltinRuleEvidence, ComplexArithmeticMembershipClosureBuiltinRule,
+    ClosedNumericComparisonBuiltinRuleEvidence, ClosedNumericMembershipBuiltinRuleEvidence,
+    ClosedNumericNonmembershipBuiltinRuleEvidence, ComplexArithmeticMembershipClosureBuiltinRule,
     DisjunctionIntroductionBuiltinRuleEvidence, FiniteSetBuiltinRule,
     FunctionApplicationReturnMembershipBuiltinRuleEvidence,
     FunctionSetMembershipBuiltinRuleEvidence, IntegerMembershipClosureBuiltinRule,
     KnownEqualityBuiltinRuleEvidence, KnownEqualityBuiltinRuleStep,
-    ListSetMembershipBuiltinRuleEvidence, NativeConstantMembershipBuiltinRule,
-    NaturalMembershipClosureBuiltinRule, RationalMembershipClosureBuiltinRule,
-    RealArithmeticMembershipClosureBuiltinRule, RefinedNumericMembershipBuiltinRuleEvidence,
-    RegisteredLocalBuiltinRuleEvidence, SetBuilderMembershipBuiltinRuleEvidence, SetBuiltinRule,
-    SetRelationDualityBuiltinRule, WellDefinednessBinderScopeEvidence, WellDefinednessCertificate,
-    WellDefinednessFactEvidence, WellDefinednessObjectEvidence,
-    WellDefinednessParameterFactEvidence, WellDefinednessRequirementRole,
-    WellDefinednessRootObjectProofUse, WellDefinednessSourceObjectUse,
-    WellDefinednessTargetRequirementEvidence,
+    ListSetMembershipBuiltinRuleEvidence, MatrixExpressionMembershipBuiltinRuleEvidence,
+    NativeConstantMembershipBuiltinRule, NaturalMembershipClosureBuiltinRule,
+    RationalMembershipClosureBuiltinRule, RealArithmeticMembershipClosureBuiltinRule,
+    RefinedNumericMembershipBuiltinRuleEvidence, RegisteredLocalBuiltinRuleEvidence,
+    SetBuilderMembershipBuiltinRuleEvidence, SetBuiltinRule, SetRelationDualityBuiltinRule,
+    WellDefinednessBinderScopeEvidence, WellDefinednessCertificate, WellDefinednessFactEvidence,
+    WellDefinednessObjectEvidence, WellDefinednessParameterFactEvidence,
+    WellDefinednessRequirementRole, WellDefinednessRootObjectProofUse,
+    WellDefinednessSourceObjectUse, WellDefinednessTargetRequirementEvidence,
+};
+pub use crate::result::{
+    AtomicPredicateDomainCheckRole, SuccessAxiomStmtResult, SuccessByAntisymmetricPropStmtResult,
+    SuccessByAxiomOfChoiceStmtResult, SuccessByCasesStmtResult,
+    SuccessByClosedRangeAsCasesStmtResult, SuccessByContraStmtResult, SuccessByDefStmtResult,
+    SuccessByEnumerateFiniteSetStmtResult, SuccessByEnumerateRangeStmtResult,
+    SuccessByExtensionStmtResult, SuccessByFiniteSetInducStmtResult, SuccessByForStmtResult,
+    SuccessByInducStmtResult, SuccessByReflexivePropStmtResult, SuccessByRegularityAxiomStmtResult,
+    SuccessByStmtResult, SuccessBySymmetricPropStmtResult, SuccessByThmStmtResult,
+    SuccessByTransitivePropStmtResult, SuccessByZornLemmaStmtResult, SuccessClaimStmtResult,
+    SuccessClearStmtResult, SuccessCommandStmtResult, SuccessDefAbstractPropStmtResult,
+    SuccessDefAlgoStmtResult, SuccessDefInterfaceStmtResult, SuccessDefObjStmtResult,
+    SuccessDefPredicateStmtResult, SuccessDefPropStmtResult, SuccessDefSettingStmtResult,
+    SuccessDefStrategyStmtResult, SuccessDefStructStmtResult, SuccessDefTemplateStmtResult,
+    SuccessDefThmStmtResult, SuccessDoNothingStmtResult, SuccessEvalStmtResult,
+    SuccessExampleStmtResult, SuccessHaveByPreimageStmtResult, SuccessHaveCartStmtResult,
+    SuccessHaveFiniteSeqStmtResult, SuccessHaveFnByForallExistUniqueStmtResult,
+    SuccessHaveFnByInducStmtResult, SuccessHaveFnEqualCaseByCaseStmtResult,
+    SuccessHaveFnEqualStmtResult, SuccessHaveMatrixStmtResult,
+    SuccessHaveObjByExistFactsStmtResult, SuccessHaveObjEqualStmtResult,
+    SuccessHaveObjInNonemptySetStmtResult, SuccessHaveSeqStmtResult, SuccessHaveTupleStmtResult,
+    SuccessImportStmtResult, SuccessLetObjStmtResult, SuccessMaterializedTemplateResult,
+    SuccessObtainObjFromAtomicFactResult, SuccessObtainObjFromExistFactResult,
+    SuccessObtainObjFromThmResult, SuccessProofBlockStmtResult,
+    SuccessRecursiveObjWellDefinedResult, SuccessReuseObjWellDefinedResult,
+    SuccessReuseTemplateMaterializationResult, SuccessSketchProofResult, SuccessSketchStmtResult,
+    SuccessStmtCommonResult, SuccessStopStrategyStmtResult, SuccessStoreFactResult,
+    SuccessTrustHaveStmtResult, SuccessTrustStmtResult, SuccessTryProofResult,
+    SuccessTryStmtResult, SuccessUnsafeStmtResult, SuccessUseStrategyStmtResult,
+    SuccessVerifyAndFactResult, SuccessVerifyAndFactWellDefinedResult,
+    SuccessVerifyAnonymousFunctionWellDefinedResult, SuccessVerifyAtomicFactResult,
+    SuccessVerifyAtomicFactWellDefinedResult, SuccessVerifyAtomicPredicateDomainCheckResult,
+    SuccessVerifyAtomicPredicateWellDefinedResult, SuccessVerifyBinderObjectWellDefinedResult,
+    SuccessVerifyBinderPremiseResult, SuccessVerifyChainFactResult,
+    SuccessVerifyChainFactWellDefinedResult, SuccessVerifyChildObjWellDefinedResult,
+    SuccessVerifyDirectObjWellDefinedResult, SuccessVerifyElementwiseReduceResult,
+    SuccessVerifyEmptyFiniteAggregateResult, SuccessVerifyEmptyReduceResult,
+    SuccessVerifyEndpointIterationCoverageResult, SuccessVerifyEnumeratedIterationCoverageResult,
+    SuccessVerifyExactFiniteReduceDomainResult, SuccessVerifyExistFactResult,
+    SuccessVerifyExistFactWellDefinedResult, SuccessVerifyFactBinderResult,
+    SuccessVerifyFactForObjWellDefinedResult, SuccessVerifyFactObjectWellDefinedResult,
+    SuccessVerifyFactParameterGroupResult, SuccessVerifyFactResult,
+    SuccessVerifyFactWellDefinedProofResult, SuccessVerifyFactWellDefinedResult,
+    SuccessVerifyFiniteAggregateClosedRangeResult, SuccessVerifyFiniteAggregateElementsResult,
+    SuccessVerifyFiniteAggregateModeResult, SuccessVerifyFiniteAggregateWellDefinedResult,
+    SuccessVerifyFiniteReduceDomainCoverageResult, SuccessVerifyFiniteReduceOperationLawsResult,
+    SuccessVerifyForallFactResult, SuccessVerifyForallFactWellDefinedResult,
+    SuccessVerifyForallFactWithIffResult, SuccessVerifyForallFactWithIffWellDefinedResult,
+    SuccessVerifyFunctionSetWellDefinedResult, SuccessVerifyIntervalReduceResult,
+    SuccessVerifyIntervalSubsetCoverageResult, SuccessVerifyIterationCoverageResult,
+    SuccessVerifyIterationDomainResult, SuccessVerifyIterationIntervalResult,
+    SuccessVerifyIterationScalarReturnResult, SuccessVerifyIterationWellDefinedResult,
+    SuccessVerifyLocalFactWellDefinedResult, SuccessVerifyNotForallFactResult,
+    SuccessVerifyNotForallFactWellDefinedResult, SuccessVerifyObjTargetRequirementResult,
+    SuccessVerifyObjWellDefinedResult, SuccessVerifyObjWellDefinedStepsResult,
+    SuccessVerifyOrFactResult, SuccessVerifyOrFactWellDefinedResult, SuccessVerifyReduceModeResult,
+    SuccessVerifyReduceOperationSignatureResult, SuccessVerifyReduceWellDefinedResult,
+    SuccessVerifySetBuilderConditionResult, SuccessVerifySetBuilderWellDefinedResult,
+    SuccessVerifyStructureEquivalentFactResult, SuccessVerifyStructureFieldResult,
+    SuccessVerifyStructureHeaderArgumentResult, SuccessVerifyStructureWellDefinedResult,
+    SuccessVerifySubsetFiniteReduceDomainResult, SuccessVerifySymbolicFiniteAggregateResult,
+    SuccessVerifySymbolicReduceResult, SuccessVerifyTemplateDomainResult,
+    SuccessVerifyTemplateHeaderArgumentResult, SuccessVerifyTemplateMaterializationResult,
+    SuccessVerifyUniversalIntegerCarrierCoverageResult, SuccessVerifyWitnessNonemptySetResult,
+    SuccessWitnessAtomicFactResult, SuccessWitnessExistFactResult, SuccessWitnessNonemptySetResult,
+    SuccessWitnessStmtResult,
 };
 pub use crate::result::{
     CachedWellDefinedObj, WellDefinedBinderPremiseProof, WellDefinedBinderPremiseRole,
@@ -383,12 +482,12 @@ pub use crate::result::{
     WellDefinedTargetRequirementProof, WellDefinedTargetRequirementUse,
     WellDefinednessTargetRequirementPhase,
 };
-pub use crate::result::{KnownForallInstantiationItem, KnownForallRequirementKind};
 pub use crate::result::{
-    VerifiedByStmtIr, VerifiedCommandStmtIr, VerifiedDefInterfaceStmtIr, VerifiedDefObjStmtIr,
-    VerifiedDefPredicateStmtIr, VerifiedProofBlockStmtIr, VerifiedStmtCommonIr,
-    VerifiedUnsafeStmtIr, VerifiedWitnessStmtIr,
+    EvaluateBinaryObjOperator, EvaluateObjShapeOperator, EvaluateUnaryObjOperator,
+    SuccessEvaluateBinaryObjResult, SuccessEvaluateLiteralResult, SuccessEvaluateObjByShapeResult,
+    SuccessEvaluateObjResult, SuccessEvaluateObjStepResult, SuccessEvaluateUnaryObjResult,
 };
+pub use crate::result::{KnownForallInstantiationItem, KnownForallRequirementKind};
 pub use crate::runner::{
     resolve_litex_file_path, run_runner_for_code, run_runner_for_code_strict,
     run_runner_for_code_strict_with_language, run_runner_for_code_with_language,

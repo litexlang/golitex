@@ -25,7 +25,7 @@ impl Runtime {
                 vec![],
             ));
         }
-        let mut inside_results = vec![membership];
+        let mut endpoint_checks = Vec::new();
         let mut endpoint_facts = Vec::new();
 
         let z_set: Obj = StandardSet::Z.into();
@@ -47,7 +47,7 @@ impl Runtime {
                 ));
             }
             endpoint_facts.push(in_z.to_string());
-            inside_results.push(in_z_ok);
+            endpoint_checks.push(in_z_ok);
         }
 
         let branches = match enumerate_range_equalities(stmt) {
@@ -83,24 +83,30 @@ impl Runtime {
             )
             .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))?;
 
-        let mut infer_result = InferResult::new();
+        let mut infer_result = SuccessInferResult::new();
         infer_result.new_fact(&generated_fact);
         infer_result.new_infer_result_inside(infer_after_store);
 
-        let by_verification = ByEnumerateRangeVerificationResult::new(
+        let by_verification = SuccessVerifyByEnumerateRangeResult::new(
             format!("{} proof", stmt_name),
             stmt.element.to_string(),
             enumerated_range_set_obj(&stmt.range).to_string(),
             in_fact.to_string(),
             endpoint_facts,
             generated_fact_string,
+            membership,
+            endpoint_checks,
         );
-        Ok(VerifiedByStmtIr::ByEnumerateRangeStmt {
-            statement: stmt.clone(),
-            common: VerifiedStmtCommonIr::new(infer_result, inside_results),
-            verification: Some(by_verification),
-        }
-        .into())
+        Ok(
+            SuccessByStmtResult::ByEnumerateRangeStmt(Box::new(
+                SuccessByEnumerateRangeStmtResult {
+                    statement: stmt.clone(),
+                    common: SuccessStmtCommonResult::new(infer_result),
+                    verification: Some(by_verification),
+                },
+            ))
+            .into(),
+        )
     }
 
     pub(crate) fn exec_by_enumerate_range_stmt_affect_environment_only(
@@ -130,12 +136,16 @@ impl Runtime {
             generated_fact,
             InferReason::VerifiedStatement,
         )?;
-        Ok(VerifiedByStmtIr::ByEnumerateRangeStmt {
-            statement: stmt.clone(),
-            common: VerifiedStmtCommonIr::new(infer_result, vec![]),
-            verification: None,
-        }
-        .into())
+        Ok(
+            SuccessByStmtResult::ByEnumerateRangeStmt(Box::new(
+                SuccessByEnumerateRangeStmtResult {
+                    statement: stmt.clone(),
+                    common: SuccessStmtCommonResult::new(infer_result),
+                    verification: None,
+                },
+            ))
+            .into(),
+        )
     }
 }
 

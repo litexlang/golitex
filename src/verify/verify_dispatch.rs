@@ -80,7 +80,7 @@ impl Runtime {
                     if child_result.is_unknown() {
                         let child_result =
                             child_result.wrap_unknown_for_fact(child_fact.clone().into());
-                        return Ok(FactUnknown::and_with_failed_part(
+                        return Ok(UnknownFactResult::and_with_failed_part(
                             and_fact.clone(),
                             fact_index + 1,
                             and_fact.facts.len(),
@@ -101,7 +101,7 @@ impl Runtime {
                     if child_result.is_unknown() {
                         let child_result =
                             child_result.wrap_unknown_for_fact(child_fact.clone().into());
-                        return Ok(FactUnknown::chain_with_failed_part(
+                        return Ok(UnknownFactResult::chain_with_failed_part(
                             chain_fact.clone(),
                             fact_index + 1,
                             facts.len(),
@@ -119,7 +119,7 @@ impl Runtime {
                 if detail_lines.is_empty() {
                     Ok(result.wrap_unknown_for_fact(fact.clone()))
                 } else {
-                    Ok(FactUnknown::new_with_detail_lines(fact.clone(), detail_lines).into())
+                    Ok(UnknownFactResult::new_with_detail_lines(fact.clone(), detail_lines).into())
                 }
             }
         }

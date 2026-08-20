@@ -26,7 +26,7 @@ fn fn_set_equality_verify_error(
 
 fn fn_set_equality_verified_by_builtin_rules_result(equal_fact: &EqualFact) -> StmtResult {
     StmtResult::from(
-        VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+        SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
             equal_fact.clone().into(),
             "fnset equality: mutual implication of param sets, dom facts, and ret set".to_string(),
             Vec::new(),
@@ -41,13 +41,13 @@ impl Runtime {
         verify_state: &UseContextVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let (Obj::FnSet(left), Obj::FnSet(right)) = (&equal_fact.left, &equal_fact.right) else {
-            return Ok(StmtUnknown::new().into());
+            return Ok(UnknownGenericStmtResult::new().into());
         };
         let line_file = &equal_fact.line_file;
         if ParamGroupWithSet::number_of_params(&left.body.params_def_with_set)
             != ParamGroupWithSet::number_of_params(&right.body.params_def_with_set)
         {
-            return Ok((StmtUnknown::new()).into());
+            return Ok((UnknownGenericStmtResult::new()).into());
         }
 
         let left_implies_right = self.verify_fn_set_with_params_directionally_in_local_env(
@@ -57,7 +57,7 @@ impl Runtime {
             verify_state,
         )?;
         if !left_implies_right {
-            return Ok((StmtUnknown::new()).into());
+            return Ok((UnknownGenericStmtResult::new()).into());
         }
 
         let right_implies_left = self.verify_fn_set_with_params_directionally_in_local_env(
@@ -67,7 +67,7 @@ impl Runtime {
             verify_state,
         )?;
         if !right_implies_left {
-            return Ok((StmtUnknown::new()).into());
+            return Ok((UnknownGenericStmtResult::new()).into());
         }
 
         Ok(fn_set_equality_verified_by_builtin_rules_result(equal_fact))
@@ -224,6 +224,37 @@ impl Runtime {
             .collect::<Vec<_>>();
         let map = Self::build_param_to_generated_arg_map(&flat, &generated_bindings);
         Ok(FnSet::from_body(self.alpha_rename_fn_set_body(fn_set, &map)?)?.into())
+    }
+
+    /// Alpha-normalize a function-space signature and erase only parameter
+    /// grouping syntax. `fn(x, y S) T` and `fn(x S, y S) T` bind the same
+    /// ordered inputs; dependent carrier differences remain visible because
+    /// every singleton group retains its instantiated carrier expression.
+    pub(crate) fn fn_set_flattened_alpha_renamed_for_display_compare(
+        &self,
+        fn_set: &FnSetBody,
+        generated_flat_names: &[String],
+    ) -> Result<Obj, RuntimeError> {
+        let normalized =
+            self.fn_set_alpha_renamed_for_display_compare(fn_set, generated_flat_names)?;
+        let Obj::FnSet(normalized) = normalized else {
+            unreachable!("function-space alpha normalization returns a function space")
+        };
+        let mut singleton_groups = Vec::new();
+        for group in normalized.body.params_def_with_set.iter() {
+            for binding in group.params.iter() {
+                singleton_groups.push(ParamGroupWithSet::new(
+                    vec![binding.clone()],
+                    group.set_obj().clone(),
+                ));
+            }
+        }
+        Ok(FnSet::new(
+            singleton_groups,
+            normalized.body.dom_facts.clone(),
+            normalized.body.ret_set.as_ref().clone(),
+        )?
+        .into())
     }
 
     fn define_directional_source_fn_set_params_in_local_env(

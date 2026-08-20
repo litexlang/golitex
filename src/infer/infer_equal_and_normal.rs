@@ -16,7 +16,7 @@ impl Runtime {
         &mut self,
         inferred_fact: Fact,
         equal_fact: &EqualFact,
-        infer_result: &mut InferResult,
+        infer_result: &mut SuccessInferResult,
         infer_step_description: &str,
     ) -> Result<(), RuntimeError> {
         infer_result.new_fact(&inferred_fact);
@@ -44,7 +44,7 @@ impl Runtime {
         known_cart_obj_as_symbol: &Obj,
         target_obj: &Obj,
         equal_fact: &EqualFact,
-        infer_result: &mut InferResult,
+        infer_result: &mut SuccessInferResult,
     ) -> Result<(), RuntimeError> {
         let target_is_cart_fact =
             IsCartFact::new(target_obj.clone(), equal_fact.line_file.clone()).into();
@@ -87,7 +87,7 @@ impl Runtime {
         known_tuple_obj: &Tuple,
         target_obj: &Obj,
         equal_fact: &EqualFact,
-        infer_result: &mut InferResult,
+        infer_result: &mut SuccessInferResult,
     ) -> Result<(), RuntimeError> {
         if known_tuple_obj.args.len() < 2 {
             return Ok(());
@@ -150,8 +150,8 @@ impl Runtime {
     fn infer_equal_fact_by_finite_seq_list(
         &mut self,
         equal_fact: &EqualFact,
-    ) -> Result<InferResult, RuntimeError> {
-        let infer_result = InferResult::new();
+    ) -> Result<SuccessInferResult, RuntimeError> {
+        let infer_result = SuccessInferResult::new();
 
         if let Obj::FiniteSeqListObj(list) = &equal_fact.left {
             if !matches!(&equal_fact.right, Obj::FiniteSeqListObj(_)) {
@@ -179,8 +179,8 @@ impl Runtime {
     fn infer_equal_fact_by_matrix_list(
         &mut self,
         equal_fact: &EqualFact,
-    ) -> Result<InferResult, RuntimeError> {
-        let infer_result = InferResult::new();
+    ) -> Result<SuccessInferResult, RuntimeError> {
+        let infer_result = SuccessInferResult::new();
 
         if let Obj::MatrixListObj(m) = &equal_fact.left {
             if !matches!(&equal_fact.right, Obj::MatrixListObj(_)) {
@@ -207,8 +207,8 @@ impl Runtime {
     pub fn infer_equal_fact(
         &mut self,
         equal_fact: &EqualFact,
-    ) -> Result<InferResult, RuntimeError> {
-        let mut infer_result = InferResult::new();
+    ) -> Result<SuccessInferResult, RuntimeError> {
+        let mut infer_result = SuccessInferResult::new();
         infer_result.new_infer_result_inside(
             self.infer_equal_fact_from_subtraction_equals_zero(equal_fact)?,
         );
@@ -231,7 +231,7 @@ impl Runtime {
     fn infer_equal_fact_by_anonymous_fn(
         &mut self,
         equal_fact: &EqualFact,
-    ) -> Result<InferResult, RuntimeError> {
+    ) -> Result<SuccessInferResult, RuntimeError> {
         if let Obj::AnonymousFn(anon) = &equal_fact.right {
             if !matches!(&equal_fact.left, Obj::AnonymousFn(_)) {
                 let eq = (*anon.equal_to).clone();
@@ -260,15 +260,15 @@ impl Runtime {
                 );
             }
         }
-        Ok(InferResult::new())
+        Ok(SuccessInferResult::new())
     }
 
     // `0 = u - v` or `u - v = 0` => add `u = v` (non-trivial pair only).
     fn infer_equal_fact_from_subtraction_equals_zero(
         &mut self,
         equal_fact: &EqualFact,
-    ) -> Result<InferResult, RuntimeError> {
-        let mut infer_result = InferResult::new();
+    ) -> Result<SuccessInferResult, RuntimeError> {
+        let mut infer_result = SuccessInferResult::new();
         let (a, b) = if obj_is_infer_literal_zero(&equal_fact.left) {
             match &equal_fact.right {
                 Obj::Sub(s) => (s.left.as_ref().clone(), s.right.as_ref().clone()),
@@ -298,8 +298,8 @@ impl Runtime {
     fn infer_equal_fact_by_cart(
         &mut self,
         equal_fact: &EqualFact,
-    ) -> Result<InferResult, RuntimeError> {
-        let mut infer_result = InferResult::new();
+    ) -> Result<SuccessInferResult, RuntimeError> {
+        let mut infer_result = SuccessInferResult::new();
 
         if let Obj::Cart(cart) = &equal_fact.left {
             self.infer_equal_fact_cart_from_known_side(
@@ -343,7 +343,7 @@ impl Runtime {
     fn infer_equal_fact_by_set_builder(
         &mut self,
         equal_fact: &EqualFact,
-    ) -> Result<InferResult, RuntimeError> {
+    ) -> Result<SuccessInferResult, RuntimeError> {
         let left_set_builder = match &equal_fact.left {
             Obj::SetBuilder(set_builder) => Some(set_builder.clone()),
             _ => self.get_obj_equal_to_set_builder(&equal_fact.left),
@@ -376,14 +376,14 @@ impl Runtime {
             );
         }
 
-        Ok(InferResult::new())
+        Ok(SuccessInferResult::new())
     }
 
     fn infer_equal_fact_by_tuple(
         &mut self,
         equal_fact: &EqualFact,
-    ) -> Result<InferResult, RuntimeError> {
-        let mut infer_result = InferResult::new();
+    ) -> Result<SuccessInferResult, RuntimeError> {
+        let mut infer_result = SuccessInferResult::new();
 
         if let Obj::Tuple(tuple) = &equal_fact.left {
             self.infer_equal_fact_tuple_from_known_side(
@@ -409,7 +409,7 @@ impl Runtime {
     fn infer_equal_fact_and_give_value_to_obj(
         &mut self,
         equal_fact: &EqualFact,
-    ) -> Result<InferResult, RuntimeError> {
+    ) -> Result<SuccessInferResult, RuntimeError> {
         self.store_known_obj_value_from_equal_side(&equal_fact.left, &equal_fact.right);
         self.store_known_obj_value_from_equal_side(&equal_fact.right, &equal_fact.left);
 
@@ -419,7 +419,7 @@ impl Runtime {
             self.store_known_obj_value_from_equal_side(&derived.left, &derived.right);
         }
 
-        Ok(InferResult::new())
+        Ok(SuccessInferResult::new())
     }
 
     fn store_known_obj_value_from_equal_side(&mut self, target: &Obj, source: &Obj) {
@@ -437,8 +437,8 @@ impl Runtime {
     fn infer_equal_fact_by_positive_real_power(
         &mut self,
         equal_fact: &EqualFact,
-    ) -> Result<InferResult, RuntimeError> {
-        let mut infer_result = InferResult::new();
+    ) -> Result<SuccessInferResult, RuntimeError> {
+        let mut infer_result = SuccessInferResult::new();
         self.infer_positive_real_power_membership_to_equal_side(
             &equal_fact.left,
             &equal_fact.right,
@@ -459,7 +459,7 @@ impl Runtime {
         maybe_power: &Obj,
         target: &Obj,
         equal_fact: &EqualFact,
-        infer_result: &mut InferResult,
+        infer_result: &mut SuccessInferResult,
     ) -> Result<(), RuntimeError> {
         if maybe_power.to_string() == target.to_string() {
             return Ok(());
@@ -499,7 +499,7 @@ impl Runtime {
     pub fn infer_normal_atomic_fact(
         &mut self,
         normal_atomic_fact: &NormalAtomicFact,
-    ) -> Result<InferResult, RuntimeError> {
+    ) -> Result<SuccessInferResult, RuntimeError> {
         let predicate_name = normal_atomic_fact.predicate.to_string();
         let firing_key = format!(
             "normal predicate definition:{}",
@@ -509,7 +509,7 @@ impl Runtime {
         // arguments. Example: expanding `$is_linear_map(..., T)` twice must not
         // repeat its parameter typing and `iff` facts.
         if self.infer_rule_firing_cached(&firing_key) {
-            return Ok(InferResult::new());
+            return Ok(SuccessInferResult::new());
         }
         let proper_relation_facts = crate::verify::verify_proper_set_relations_builtin::positive_proper_set_relation_definition_facts(normal_atomic_fact);
         let builtin_definition_facts = match proper_relation_facts {
@@ -534,7 +534,7 @@ impl Runtime {
             },
         };
         if let Some(definition_facts) = builtin_definition_facts {
-            let mut infer_result = InferResult::new();
+            let mut infer_result = SuccessInferResult::new();
             let reason = InferReason::ByDefinition;
             for fact in definition_facts {
                 infer_result.add_fact_by_definition(&fact);
@@ -565,9 +565,9 @@ impl Runtime {
         }
         let predicate_definition = match self.get_prop_definition_by_name(&predicate_name) {
             Some(predicate_definition) => predicate_definition,
-            None => return Ok(InferResult::new()),
+            None => return Ok(SuccessInferResult::new()),
         };
-        let mut infer_result = InferResult::new();
+        let mut infer_result = SuccessInferResult::new();
         let by_definition_reason = InferReason::ByDefinition;
 
         let param_type_infer = self

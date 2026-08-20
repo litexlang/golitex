@@ -1,6 +1,289 @@
 use crate::prelude::*;
 
 impl Runtime {
+    pub fn verify_fact_well_defined_result(
+        &mut self,
+        fact: &Fact,
+        verify_state: &UseContextVerifyState,
+    ) -> Result<SuccessVerifyFactWellDefinedResult, RuntimeError> {
+        let verify_state = verify_state.without_known_forall_for_equality();
+        let verify_state = &verify_state;
+        let recursive =
+            match fact {
+                Fact::AtomicFact(atomic_fact) => {
+                    self.verify_atomic_fact_well_defined_result(atomic_fact, verify_state)?
+                }
+                Fact::AndFact(and_fact) => {
+                    let mut conjuncts = Vec::with_capacity(and_fact.facts.len());
+                    for atomic_fact in and_fact.facts.iter() {
+                        conjuncts.push(
+                            self.verify_atomic_fact_well_defined_result(atomic_fact, verify_state)?,
+                        );
+                    }
+                    SuccessVerifyFactWellDefinedProofResult::AndFact(Box::new(
+                        SuccessVerifyAndFactWellDefinedResult {
+                            statement: and_fact.clone(),
+                            conjuncts,
+                        },
+                    ))
+                }
+                Fact::ChainFact(chain_fact) => {
+                    let atomic_facts = chain_fact.facts()?;
+                    let mut comparisons = Vec::with_capacity(atomic_facts.len());
+                    for atomic_fact in atomic_facts.iter() {
+                        comparisons.push(
+                            self.verify_atomic_fact_well_defined_result(atomic_fact, verify_state)?,
+                        );
+                    }
+                    SuccessVerifyFactWellDefinedProofResult::ChainFact(Box::new(
+                        SuccessVerifyChainFactWellDefinedResult {
+                            statement: chain_fact.clone(),
+                            comparisons,
+                        },
+                    ))
+                }
+                Fact::OrFact(or_fact) => {
+                    let mut branches = Vec::with_capacity(or_fact.facts.len());
+                    for branch in or_fact.facts.iter() {
+                        branches.push(self.verify_and_chain_atomic_fact_well_defined_result(
+                            branch,
+                            verify_state,
+                        )?);
+                    }
+                    SuccessVerifyFactWellDefinedProofResult::OrFact(Box::new(
+                        SuccessVerifyOrFactWellDefinedResult {
+                            statement: or_fact.clone(),
+                            branches,
+                        },
+                    ))
+                }
+                Fact::ExistFact(exist_fact) => {
+                    self.verify_exist_fact_well_defined_result(exist_fact, verify_state)?
+                }
+                Fact::ForallFact(forall_fact) => {
+                    self.verify_forall_fact_well_defined_result(forall_fact, verify_state)?
+                }
+                Fact::ForallFactWithIff(forall_fact) => {
+                    let (forward, reverse) = forall_fact.to_two_forall_facts()?;
+                    let forward =
+                        self.verify_forall_fact_well_defined_result(&forward, verify_state)?;
+                    let reverse =
+                        self.verify_forall_fact_well_defined_result(&reverse, verify_state)?;
+                    SuccessVerifyFactWellDefinedProofResult::ForallFactWithIff(Box::new(
+                        SuccessVerifyForallFactWithIffWellDefinedResult {
+                            statement: forall_fact.clone(),
+                            forward: Box::new(forward),
+                            reverse: Box::new(reverse),
+                        },
+                    ))
+                }
+                Fact::NotForall(not_forall) => {
+                    let inner = self.verify_forall_fact_well_defined_result(
+                        &not_forall.forall_fact,
+                        verify_state,
+                    )?;
+                    SuccessVerifyFactWellDefinedProofResult::NotForallFact(Box::new(
+                        SuccessVerifyNotForallFactWellDefinedResult {
+                            statement: not_forall.clone(),
+                            inner: Box::new(inner),
+                        },
+                    ))
+                }
+            };
+        Ok(SuccessVerifyFactWellDefinedResult::new_recursive(recursive))
+    }
+
+    fn verify_atomic_fact_well_defined_result(
+        &mut self,
+        atomic_fact: &AtomicFact,
+        verify_state: &UseContextVerifyState,
+    ) -> Result<SuccessVerifyFactWellDefinedProofResult, RuntimeError> {
+        let arguments = atomic_fact.args_ref();
+        let mut argument_results = Vec::with_capacity(arguments.len());
+        for (argument_index, object) in arguments.iter().enumerate() {
+            argument_results.push(SuccessVerifyFactObjectWellDefinedResult::new(
+                argument_index,
+                (*object).clone(),
+                self.verify_obj_well_defined_result(object, verify_state)?,
+            ));
+        }
+        let predicate =
+            self.verify_atomic_predicate_well_defined_result(atomic_fact, verify_state)?;
+        Ok(SuccessVerifyFactWellDefinedProofResult::AtomicFact(
+            Box::new(SuccessVerifyAtomicFactWellDefinedResult::new(
+                atomic_fact.clone(),
+                argument_results,
+                predicate,
+            )),
+        ))
+    }
+
+    fn verify_and_chain_atomic_fact_well_defined_result(
+        &mut self,
+        fact: &AndChainAtomicFact,
+        verify_state: &UseContextVerifyState,
+    ) -> Result<SuccessVerifyFactWellDefinedProofResult, RuntimeError> {
+        match fact {
+            AndChainAtomicFact::AtomicFact(atomic_fact) => {
+                self.verify_atomic_fact_well_defined_result(atomic_fact, verify_state)
+            }
+            AndChainAtomicFact::AndFact(and_fact) => self
+                .verify_fact_well_defined_result(&and_fact.clone().into(), verify_state)
+                .map(|result| *result.recursive.expect("new recursive WD result")),
+            AndChainAtomicFact::ChainFact(chain_fact) => self
+                .verify_fact_well_defined_result(&chain_fact.clone().into(), verify_state)
+                .map(|result| *result.recursive.expect("new recursive WD result")),
+        }
+    }
+
+    fn verify_exist_fact_well_defined_result(
+        &mut self,
+        exist_fact: &ExistFactEnum,
+        verify_state: &UseContextVerifyState,
+    ) -> Result<SuccessVerifyFactWellDefinedProofResult, RuntimeError> {
+        let bindings = exist_fact.params_def_with_type().collect_param_bindings();
+        let rename_map =
+            self.visible_binding_conflict_rename_map(&bindings, ParamObjType::Exist)?;
+        let working = if rename_map.is_empty() {
+            exist_fact.clone()
+        } else {
+            self.alpha_rename_exist_fact(exist_fact, &rename_map)?
+        };
+        let (binder, body) = self.run_in_local_env(|runtime| -> Result<_, RuntimeError> {
+            let binder = runtime.verify_fact_binder_result(
+                working.params_def_with_type(),
+                ParamObjType::Exist,
+                verify_state,
+            )?;
+            let mut body = Vec::with_capacity(working.facts().len());
+            for fact in working.facts() {
+                body.push(runtime.verify_and_store_quantifier_free_wd_result(fact, verify_state)?);
+            }
+            Ok((binder, body))
+        })?;
+        Ok(SuccessVerifyFactWellDefinedProofResult::ExistFact(
+            Box::new(SuccessVerifyExistFactWellDefinedResult {
+                statement: exist_fact.clone(),
+                binder,
+                body,
+            }),
+        ))
+    }
+
+    fn verify_forall_fact_well_defined_result(
+        &mut self,
+        forall_fact: &ForallFact,
+        verify_state: &UseContextVerifyState,
+    ) -> Result<SuccessVerifyFactWellDefinedProofResult, RuntimeError> {
+        let (well_definedness, _) = self
+            .verify_forall_fact_well_defined_and_collect_certificate(forall_fact, verify_state)?;
+        Ok(*well_definedness
+            .recursive
+            .expect("forall precheck returns recursive WD evidence"))
+    }
+
+    fn verify_fact_binder_result(
+        &mut self,
+        parameter_definition: &ParamDefWithType,
+        binding_kind: ParamObjType,
+        verify_state: &UseContextVerifyState,
+    ) -> Result<SuccessVerifyFactBinderResult, RuntimeError> {
+        let mut parameter_groups = Vec::with_capacity(parameter_definition.len());
+        for (group_index, group) in parameter_definition.iter().enumerate() {
+            let carrier = match &group.param_type {
+                ParamType::Obj(object) => Some(self.verify_child_obj_well_defined_result(
+                    object,
+                    verify_state,
+                    WellDefinedObjChildRole::BinderParameterCarrier {
+                        parameter_group_index: group_index,
+                    },
+                )?),
+                ParamType::Set(_) | ParamType::NonemptySet(_) | ParamType::FiniteSet(_) => None,
+            };
+            let mut parameters = Vec::with_capacity(group.params.len());
+            for (parameter_index, binding) in group.params.iter().enumerate() {
+                self.store_parameter_binding(binding, binding_kind)?;
+                let proposition =
+                    self.parameter_type_fact_for_binding(binding, &group.param_type, binding_kind)?;
+                let well_definedness =
+                    self.verify_fact_well_defined_result(&proposition, verify_state)?;
+                let Fact::AtomicFact(atomic) = proposition.clone() else {
+                    unreachable!("parameter type proposition is atomic")
+                };
+                let mut infers = self
+                    .store_atomic_fact_without_well_defined_verified_and_infer_with_reason(
+                        atomic,
+                        InferReason::ParameterDefinition.store_reason(),
+                    )?;
+                self.attach_known_fact_ids_to_infer_result(&mut infers)?;
+                parameters.push(SuccessVerifyBinderPremiseResult::new(
+                    WellDefinedBinderPremiseRole::ParameterMembership {
+                        parameter_group_index: group_index,
+                        parameter_index,
+                    },
+                    Some(binding.id()),
+                    proposition,
+                    well_definedness,
+                    infers,
+                ));
+            }
+            parameter_groups.push(SuccessVerifyFactParameterGroupResult {
+                group_index,
+                parameter_type: group.param_type.clone(),
+                carrier,
+                parameters,
+            });
+        }
+        Ok(SuccessVerifyFactBinderResult { parameter_groups })
+    }
+
+    fn verify_and_store_quantifier_free_wd_result(
+        &mut self,
+        fact: &QuantifierFreeFact,
+        verify_state: &UseContextVerifyState,
+    ) -> Result<SuccessVerifyLocalFactWellDefinedResult, RuntimeError> {
+        let proposition: Fact = fact.clone().into();
+        let well_definedness = self.verify_fact_well_defined_result(&proposition, verify_state)?;
+        let mut infers =
+            self.store_quantifier_free_fact_without_well_defined_verified_and_infer(fact.clone())?;
+        self.attach_known_fact_ids_to_infer_result(&mut infers)?;
+        let fact_id = self.known_fact_id_for_fact(&proposition)?;
+        Ok(SuccessVerifyLocalFactWellDefinedResult {
+            proposition: proposition.clone(),
+            well_definedness: well_definedness
+                .recursive
+                .expect("recursive quantifier-free WD result"),
+            store: SuccessStoreFactResult {
+                fact: proposition,
+                fact_id,
+                infers,
+            },
+        })
+    }
+
+    fn verify_and_store_fact_wd_result(
+        &mut self,
+        proposition: &Fact,
+        verify_state: &UseContextVerifyState,
+    ) -> Result<SuccessVerifyLocalFactWellDefinedResult, RuntimeError> {
+        let well_definedness = self.verify_fact_well_defined_result(proposition, verify_state)?;
+        let mut infers =
+            self.store_without_well_defined_verification_and_infer(proposition.clone())?;
+        self.attach_known_fact_ids_to_infer_result(&mut infers)?;
+        let fact_id = self.known_fact_id_for_fact(proposition)?;
+        Ok(SuccessVerifyLocalFactWellDefinedResult {
+            proposition: proposition.clone(),
+            well_definedness: well_definedness
+                .recursive
+                .expect("recursive local fact WD result"),
+            store: SuccessStoreFactResult {
+                fact: proposition.clone(),
+                fact_id,
+                infers,
+            },
+        })
+    }
+
     /// Mathematical contract: a fact is well-defined when its predicate/fact
     /// form exists and every object, binder type, premise, and conclusion is
     /// meaningful in the scope introduced by that fact.
@@ -44,74 +327,46 @@ impl Runtime {
         atomic_fact: &AtomicFact,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        match atomic_fact {
-            AtomicFact::EqualFact(equal_fact) => {
-                self.verify_equal_fact_well_defined(equal_fact, verify_state)
-            }
-            _ => self.verify_non_equational_atomic_fact_well_defined(atomic_fact, verify_state),
-        }
+        self.verify_atomic_fact_well_defined_result(atomic_fact, verify_state)
+            .map(|_| ())
     }
 
-    /// Mathematical contract: `left = right` is meaningful exactly when both
-    /// sides denote well-defined objects; equality itself is untyped.
-    fn verify_equal_fact_well_defined(
-        &mut self,
-        equal_fact: &EqualFact,
-        verify_state: &UseContextVerifyState,
-    ) -> Result<(), RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(&equal_fact.left, verify_state)?;
-        self.verify_obj_well_defined_and_store_cache(&equal_fact.right, verify_state)?;
-        Ok(())
-    }
-
-    /// Mathematical contract: a non-equality predicate application is
-    /// meaningful only at its declared arity with well-defined arguments.
-    /// Builtin partial predicates additionally require their mathematical
-    /// domains, such as real operands for order, `N` for primality and
-    /// natural-number coprimality, and `Z × Z*` for divisibility.
-    fn verify_non_equational_atomic_fact_well_defined(
+    /// Records the predicate/arity gate and every proof obligation imposed by
+    /// a partial builtin predicate. Argument-object WD is owned separately by
+    /// `SuccessVerifyAtomicFactWellDefinedResult::arguments`.
+    fn verify_atomic_predicate_well_defined_result(
         &mut self,
         atomic_fact: &AtomicFact,
         verify_state: &UseContextVerifyState,
-    ) -> Result<(), RuntimeError> {
-        // 1. predicate is defined, expected args length is equal to actual args length
+    ) -> Result<SuccessVerifyAtomicPredicateWellDefinedResult, RuntimeError> {
         let name_string = atomic_fact.key();
-        if is_builtin_predicate(&name_string) {
-            let expected_len = atomic_fact.is_builtin_predicate_and_return_expected_args_len();
-            let actual_args = atomic_fact.args_ref();
-            if actual_args.len() != expected_len {
-                return Err(WellDefinedRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_line_file(
-                        format!(
-                            "fact `{}` expects {} argument(s), but got {}",
-                            name_string,
-                            expected_len,
-                            actual_args.len()
-                        ),
-                        atomic_fact.line_file(),
-                    ),
-                )
-                .into());
-            }
+        if matches!(atomic_fact, AtomicFact::EqualFact(_)) {
+            return Ok(SuccessVerifyAtomicPredicateWellDefinedResult {
+                name: name_string,
+                expected_arity: 2,
+                domain_checks: Vec::new(),
+            });
+        }
+
+        let expected_len = if is_builtin_predicate(&name_string) {
+            atomic_fact.is_builtin_predicate_and_return_expected_args_len()
+        } else if let Some(predicate_definition) = self.get_prop_definition_by_name(&name_string) {
+            predicate_definition.params_def_with_type.number_of_params()
+        } else if let Some(abstract_prop_definition) =
+            self.get_abstract_prop_definition_by_name(&name_string)
+        {
+            abstract_prop_definition.params.len()
         } else {
-            let expected_len = if let Some(predicate_definition) =
-                self.get_prop_definition_by_name(&name_string)
-            {
-                predicate_definition.params_def_with_type.number_of_params()
-            } else if let Some(abstract_prop_definition) =
-                self.get_abstract_prop_definition_by_name(&name_string)
-            {
-                abstract_prop_definition.params.len()
-            } else {
-                return Err(WellDefinedRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_line_file(
-                        format!("fact `{}` not defined", name_string),
-                        atomic_fact.line_file(),
-                    ),
-                )
-                .into());
-            };
+            return Err(
+                WellDefinedRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(
+                    format!("fact `{}` not defined", name_string),
+                    atomic_fact.line_file(),
+                ))
+                .into(),
+            );
+        };
 
+        {
             let actual_args = atomic_fact.args_ref();
             if actual_args.len() != expected_len {
                 return Err(WellDefinedRuntimeError(
@@ -129,20 +384,23 @@ impl Runtime {
             }
         }
 
-        // 2. all args are well-defined
-        for arg in atomic_fact.args_ref() {
-            self.verify_obj_well_defined_and_store_cache(arg, verify_state)?;
+        if let Some(domain_checks) =
+            crate::verify::verify_choice_function_for_arg_types(self, atomic_fact, verify_state)?
+        {
+            return Ok(SuccessVerifyAtomicPredicateWellDefinedResult {
+                name: name_string,
+                expected_arity: expected_len,
+                domain_checks,
+            });
         }
 
-        if crate::verify::verify_choice_function_for_arg_types(self, atomic_fact, verify_state)? {
-            return Ok(());
-        }
-
+        let mut domain_checks = Vec::new();
         if name_string == PRIME {
             let arg = atomic_fact.args_ref()[0];
             let in_n: AtomicFact =
                 InFact::new(arg.clone(), StandardSet::N.into(), atomic_fact.line_file()).into();
-            if self.verify_atomic_fact(&in_n, verify_state)?.is_unknown() {
+            let result = self.verify_atomic_fact(&in_n, verify_state)?;
+            if result.is_unknown() {
                 return Err(WellDefinedRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_line_file(
                         format!("{} requires its argument to belong to N", atomic_fact),
@@ -151,6 +409,10 @@ impl Runtime {
                 )
                 .into());
             }
+            domain_checks.push(SuccessVerifyAtomicPredicateDomainCheckResult {
+                role: AtomicPredicateDomainCheckRole::PrimeNaturalArgument,
+                result: Box::new(result),
+            });
         }
 
         if name_string == COPRIME {
@@ -161,7 +423,8 @@ impl Runtime {
                     atomic_fact.line_file(),
                 )
                 .into();
-                if self.verify_atomic_fact(&in_n, verify_state)?.is_unknown() {
+                let result = self.verify_atomic_fact(&in_n, verify_state)?;
+                if result.is_unknown() {
                     return Err(WellDefinedRuntimeError(
                         RuntimeErrorStruct::new_with_msg_and_line_file(
                             format!("{} requires both arguments to belong to N", atomic_fact),
@@ -170,19 +433,23 @@ impl Runtime {
                     )
                     .into());
                 }
+                domain_checks.push(SuccessVerifyAtomicPredicateDomainCheckResult {
+                    role: AtomicPredicateDomainCheckRole::CoprimeNaturalArgument,
+                    result: Box::new(result),
+                });
             }
         }
 
         if name_string == DVD {
             let expected_sets = [StandardSet::Z, StandardSet::ZStar];
-            for (arg, expected_set) in atomic_fact.args_ref().iter().zip(expected_sets) {
+            for (index, (arg, expected_set)) in
+                atomic_fact.args_ref().iter().zip(expected_sets).enumerate()
+            {
                 let membership: AtomicFact =
                     InFact::new((*arg).clone(), expected_set.into(), atomic_fact.line_file())
                         .into();
-                if self
-                    .verify_atomic_fact(&membership, verify_state)?
-                    .is_unknown()
-                {
+                let result = self.verify_atomic_fact(&membership, verify_state)?;
+                if result.is_unknown() {
                     return Err(WellDefinedRuntimeError(
                         RuntimeErrorStruct::new_with_msg_and_line_file(
                             format!(
@@ -194,6 +461,14 @@ impl Runtime {
                     )
                     .into());
                 }
+                domain_checks.push(SuccessVerifyAtomicPredicateDomainCheckResult {
+                    role: if index == 0 {
+                        AtomicPredicateDomainCheckRole::DivisibilityIntegerArgument
+                    } else {
+                        AtomicPredicateDomainCheckRole::DivisibilityNonzeroIntegerArgument
+                    },
+                    result: Box::new(result),
+                });
             }
         }
 
@@ -210,14 +485,12 @@ impl Runtime {
         ) {
             let args = atomic_fact.args_ref();
             let real_args: Vec<&Obj> = args.iter().copied().collect();
-            if self
-                .verify_objects_are_known_reals(
-                    real_args.as_slice(),
-                    &atomic_fact.line_file(),
-                    verify_state,
-                )?
-                .is_none()
-            {
+            let Some(results) = self.verify_objects_are_known_reals(
+                real_args.as_slice(),
+                &atomic_fact.line_file(),
+                verify_state,
+            )?
+            else {
                 return Err(WellDefinedRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_line_file(
                         format!(
@@ -228,6 +501,12 @@ impl Runtime {
                     ),
                 )
                 .into());
+            };
+            for result in results {
+                domain_checks.push(SuccessVerifyAtomicPredicateDomainCheckResult {
+                    role: AtomicPredicateDomainCheckRole::OrderedRealCarrierEvidence,
+                    result: Box::new(result),
+                });
             }
         }
 
@@ -246,9 +525,17 @@ impl Runtime {
                 )
                 .into());
             }
+            domain_checks.push(SuccessVerifyAtomicPredicateDomainCheckResult {
+                role: AtomicPredicateDomainCheckRole::FunctionPropertySignature,
+                result: Box::new(type_result),
+            });
         }
 
-        Ok(())
+        Ok(SuccessVerifyAtomicPredicateWellDefinedResult {
+            name: name_string,
+            expected_arity: expected_len,
+            domain_checks,
+        })
     }
 
     /// Mathematical contract: a conjunction is well-defined when every
@@ -258,10 +545,8 @@ impl Runtime {
         and_fact: &AndFact,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        for fact in and_fact.facts.iter() {
-            self.verify_atomic_fact_well_defined(fact, verify_state)?;
-        }
-        Ok(())
+        self.verify_fact_well_defined_result(&and_fact.clone().into(), verify_state)
+            .map(|_| ())
     }
 
     /// Mathematical contract: a comparison chain is well-defined when every
@@ -271,11 +556,8 @@ impl Runtime {
         chain_fact: &ChainFact,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        let facts = chain_fact.facts()?;
-        for fact in facts.iter() {
-            self.verify_atomic_fact_well_defined(fact, verify_state)?;
-        }
-        Ok(())
+        self.verify_fact_well_defined_result(&chain_fact.clone().into(), verify_state)
+            .map(|_| ())
     }
 
     /// Mathematical contract: a disjunction is well-defined only when every
@@ -285,29 +567,8 @@ impl Runtime {
         or_fact: &OrFact,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        for fact in or_fact.facts.iter() {
-            self.verify_and_chain_atomic_fact_well_defined(fact, verify_state)?;
-        }
-        Ok(())
-    }
-
-    /// Mathematical contract: this restricted compound fact is well-defined
-    /// exactly when the atomic, conjunction, or chain form it contains is.
-    fn verify_and_chain_atomic_fact_well_defined(
-        &mut self,
-        fact: &AndChainAtomicFact,
-        verify_state: &UseContextVerifyState,
-    ) -> Result<(), RuntimeError> {
-        match fact {
-            AndChainAtomicFact::AtomicFact(a) => {
-                self.verify_atomic_fact_well_defined(a, verify_state)?
-            }
-            AndChainAtomicFact::AndFact(a) => self.verify_and_fact_well_defined(a, verify_state)?,
-            AndChainAtomicFact::ChainFact(c) => {
-                self.verify_chain_fact_well_defined(c, verify_state)?
-            }
-        }
-        Ok(())
+        self.verify_fact_well_defined_result(&or_fact.clone().into(), verify_state)
+            .map(|_| ())
     }
 
     /// Mathematical contract: `exist x T st {body}` is well-defined when each
@@ -319,64 +580,8 @@ impl Runtime {
         exist_fact: &ExistFactEnum,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        let bindings = exist_fact.params_def_with_type().collect_param_bindings();
-        let rename_map =
-            self.visible_binding_conflict_rename_map(&bindings, ParamObjType::Exist)?;
-        if !rename_map.is_empty() {
-            let renamed = self.alpha_rename_exist_fact(exist_fact, &rename_map)?;
-            return self.verify_exist_fact_well_defined(&renamed, verify_state);
-        }
-
-        self.run_in_local_env(|rt| {
-            if let Err(e) = rt.define_params_with_type(
-                exist_fact.params_def_with_type(),
-                false,
-                ParamObjType::Exist,
-            ) {
-                return Err(WellDefinedRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    "failed to define parameters in exist fact".to_string(),
-                    exist_fact.line_file(),
-                    Some(e),
-                    vec![],
-                ))
-                .into());
-            }
-
-            for fact in exist_fact.facts() {
-                match fact {
-                    QuantifierFreeFact::AtomicFact(f) => {
-                        let body_fact = QuantifierFreeFact::AtomicFact(f.clone());
-                        rt.verify_quantifier_free_fact_well_defined(&body_fact, verify_state)?;
-                        rt.store_quantifier_free_fact_without_well_defined_verified_and_infer(
-                            body_fact,
-                        )?;
-                    }
-                    QuantifierFreeFact::AndFact(f) => {
-                        let body_fact = QuantifierFreeFact::AndFact(f.clone());
-                        rt.verify_quantifier_free_fact_well_defined(&body_fact, verify_state)?;
-                        rt.store_quantifier_free_fact_without_well_defined_verified_and_infer(
-                            body_fact,
-                        )?;
-                    }
-                    QuantifierFreeFact::ChainFact(f) => {
-                        let body_fact = QuantifierFreeFact::ChainFact(f.clone());
-                        rt.verify_quantifier_free_fact_well_defined(&body_fact, verify_state)?;
-                        rt.store_quantifier_free_fact_without_well_defined_verified_and_infer(
-                            body_fact,
-                        )?;
-                    }
-                    QuantifierFreeFact::OrFact(f) => {
-                        let body_fact = QuantifierFreeFact::OrFact(f.clone());
-                        rt.verify_quantifier_free_fact_well_defined(&body_fact, verify_state)?;
-                        rt.store_quantifier_free_fact_without_well_defined_verified_and_infer(
-                            body_fact,
-                        )?;
-                    }
-                }
-            }
-            Ok(())
-        })
+        self.verify_fact_well_defined_result(&exist_fact.clone().into(), verify_state)
+            .map(|_| ())
     }
 
     /// Mathematical contract: `forall x T: premises => conclusions` is
@@ -387,17 +592,8 @@ impl Runtime {
         forall_fact: &ForallFact,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        let bindings = forall_fact.params_def_with_type.collect_param_bindings();
-        let rename_map =
-            self.visible_binding_conflict_rename_map(&bindings, ParamObjType::Forall)?;
-        if !rename_map.is_empty() {
-            let renamed = self.alpha_rename_forall_fact(forall_fact, &rename_map)?;
-            return self.verify_forall_fact_well_defined(&renamed, verify_state);
-        }
-
-        self.run_in_local_env(|rt| {
-            rt.verify_forall_fact_well_defined_inner(forall_fact, verify_state)
-        })
+        self.verify_forall_fact_well_defined_and_collect_certificate(forall_fact, verify_state)
+            .map(|_| ())
     }
 
     /// Check a universal fact once and retain only sound side effects produced
@@ -408,58 +604,96 @@ impl Runtime {
         &mut self,
         forall_fact: &ForallFact,
         verify_state: &UseContextVerifyState,
-    ) -> Result<Environment, RuntimeError> {
+    ) -> Result<(SuccessVerifyFactWellDefinedResult, Environment), RuntimeError> {
         let bindings = forall_fact.params_def_with_type.collect_param_bindings();
         let rename_map =
             self.visible_binding_conflict_rename_map(&bindings, ParamObjType::Forall)?;
-        if !rename_map.is_empty() {
+        let working = if rename_map.is_empty() {
+            forall_fact.clone()
+        } else {
             let renamed = self.alpha_rename_forall_fact(forall_fact, &rename_map)?;
-            return self
-                .verify_forall_fact_well_defined_and_collect_certificate(&renamed, verify_state);
-        }
+            renamed
+        };
 
         self.run_in_local_env(|rt| {
-            rt.verify_forall_fact_params_and_dom_well_defined_inner(forall_fact, verify_state)?;
+            let binder = rt.verify_fact_binder_result(
+                &working.params_def_with_type,
+                ParamObjType::Forall,
+                verify_state,
+            )?;
+            let mut premises = Vec::with_capacity(working.dom_facts.len());
+            for premise in &working.dom_facts {
+                premises.push(rt.verify_and_store_fact_wd_result(premise, verify_state)?);
+            }
 
             let mut certificate = Environment::new_empty_env();
-            for fact in forall_fact.then_facts.iter() {
+            let mut conclusions = Vec::with_capacity(working.then_facts.len());
+            for fact in working.then_facts.iter() {
+                let proposition = fact.clone().to_fact();
                 let checked = rt.run_in_local_env_and_take(|checking_rt| {
-                    checking_rt
-                        .verify_exist_or_and_chain_atomic_fact_well_defined(fact, verify_state)
+                    checking_rt.verify_fact_well_defined_result(&proposition, verify_state)
                 });
-                let (_, checked_side_effects) = checked.map_err(|exec_stmt_error| {
-                    RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
-                        None,
-                        String::new(),
-                        fact.line_file(),
-                        Some(exec_stmt_error),
-                        vec![],
-                    )))
-                })?;
+                let (well_definedness, checked_side_effects) =
+                    checked.map_err(|exec_stmt_error| {
+                        RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
+                            None,
+                            String::new(),
+                            fact.line_file(),
+                            Some(exec_stmt_error),
+                            vec![],
+                        )))
+                    })?;
 
-                // Keep the complete checked child alive for the rest of this
-                // preflight. Only the certificate exported to the later proof
-                // scope may discard local definitions and assumptions.
-                let mut certificate_side_effects = checked_side_effects.clone();
-                certificate_side_effects.retain_only_well_definedness_certificate_data();
-                certificate.merge_committed_child(certificate_side_effects)?;
+                // The proof scope must receive the exact execution support
+                // created while checking the conclusion. In particular, a
+                // template occurrence is well-defined only after its local
+                // materialization has installed the public equality used by
+                // definition reduction. The child does not own the forall
+                // parameters or premises (it inherits them), so retaining its
+                // complete checked effects cannot leak those assumptions.
+                certificate.merge_committed_child(checked_side_effects.clone())?;
                 rt.top_level_env()
                     .merge_committed_child(checked_side_effects)?;
 
-                rt.store_exist_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
-                    fact.clone(),
-                )
-                .map_err(|exec_stmt_error| {
-                    RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
-                        None,
-                        String::new(),
-                        fact.line_file(),
-                        Some(exec_stmt_error),
-                        vec![],
-                    )))
-                })?;
+                let mut infers = rt
+                    .store_exist_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
+                        fact.clone(),
+                    )
+                    .map_err(|exec_stmt_error| {
+                        RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
+                            None,
+                            String::new(),
+                            fact.line_file(),
+                            Some(exec_stmt_error),
+                            vec![],
+                        )))
+                    })?;
+                rt.attach_known_fact_ids_to_infer_result(&mut infers)?;
+                let fact_id = rt.known_fact_id_for_fact(&proposition)?;
+                conclusions.push(SuccessVerifyLocalFactWellDefinedResult {
+                    proposition: proposition.clone(),
+                    well_definedness: well_definedness
+                        .recursive
+                        .expect("recursive quantified conclusion WD result"),
+                    store: SuccessStoreFactResult {
+                        fact: proposition,
+                        fact_id,
+                        infers,
+                    },
+                });
             }
-            Ok(certificate)
+            let recursive = SuccessVerifyFactWellDefinedProofResult::ForallFact(Box::new(
+                SuccessVerifyForallFactWellDefinedResult {
+                    statement: forall_fact.clone(),
+                    binder,
+                    premises,
+                    conclusions,
+                },
+            ));
+            Ok((
+                SuccessVerifyFactWellDefinedResult::new_recursive(recursive),
+                certificate,
+            ))
         })
     }
 
@@ -485,7 +719,7 @@ impl Runtime {
         forall_fact: &ForallFact,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        let parameter_infers = match self.define_params_with_type(
+        let _parameter_infers = match self.define_params_with_type(
             &forall_fact.params_def_with_type,
             false,
             ParamObjType::Forall,
@@ -502,11 +736,6 @@ impl Runtime {
                 .into())
             }
         };
-        self.record_well_definedness_parameter_facts(
-            &forall_fact.params_def_with_type,
-            &parameter_infers,
-        )?;
-
         for dom_fact in forall_fact.dom_facts.iter() {
             let store_result = self.store_fact_with_well_defined_verification_and_infer(
                 dom_fact.clone(),
@@ -526,34 +755,6 @@ impl Runtime {
         Ok(())
     }
 
-    /// Mathematical contract implementation: in one local scope, bind the
-    /// domain, assume its premises, then check every conclusion.
-    fn verify_forall_fact_well_defined_inner(
-        &mut self,
-        forall_fact: &ForallFact,
-        verify_state: &UseContextVerifyState,
-    ) -> Result<(), RuntimeError> {
-        self.verify_forall_fact_params_and_dom_well_defined_inner(forall_fact, verify_state)?;
-        for fact in forall_fact.then_facts.iter() {
-            if let Err(exec_stmt_error) = self
-                .store_exist_or_and_chain_atomic_fact_with_well_defined_verification_and_infer(
-                    fact,
-                    verify_state,
-                )
-            {
-                return Err(WellDefinedRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    String::new(),
-                    fact.line_file(),
-                    Some(exec_stmt_error),
-                    vec![],
-                ))
-                .into());
-            }
-        }
-        Ok(())
-    }
-
     /// Mathematical contract: this non-quantified compound fact is
     /// well-defined exactly when its selected atomic/and/chain/or form is.
     pub fn verify_quantifier_free_fact_well_defined(
@@ -561,17 +762,8 @@ impl Runtime {
         fact: &QuantifierFreeFact,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        match fact {
-            QuantifierFreeFact::AtomicFact(a) => {
-                self.verify_atomic_fact_well_defined(a, verify_state)?
-            }
-            QuantifierFreeFact::AndFact(a) => self.verify_and_fact_well_defined(a, verify_state)?,
-            QuantifierFreeFact::ChainFact(c) => {
-                self.verify_chain_fact_well_defined(c, verify_state)?
-            }
-            QuantifierFreeFact::OrFact(o) => self.verify_or_fact_well_defined(o, verify_state)?,
-        }
-        Ok(())
+        self.verify_fact_well_defined_result(&fact.clone().into(), verify_state)
+            .map(|_| ())
     }
 
     /// Mathematical contract: this compound fact is well-defined exactly when
@@ -581,24 +773,8 @@ impl Runtime {
         fact: &ExistOrAndChainAtomicFact,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        match fact {
-            ExistOrAndChainAtomicFact::AtomicFact(a) => {
-                self.verify_atomic_fact_well_defined(a, verify_state)?
-            }
-            ExistOrAndChainAtomicFact::AndFact(a) => {
-                self.verify_and_fact_well_defined(a, verify_state)?
-            }
-            ExistOrAndChainAtomicFact::ChainFact(c) => {
-                self.verify_chain_fact_well_defined(c, verify_state)?
-            }
-            ExistOrAndChainAtomicFact::OrFact(o) => {
-                self.verify_or_fact_well_defined(o, verify_state)?
-            }
-            ExistOrAndChainAtomicFact::ExistFact(e) => {
-                self.verify_exist_fact_well_defined(e, verify_state)?
-            }
-        }
-        Ok(())
+        self.verify_fact_well_defined_result(&fact.clone().to_fact(), verify_state)
+            .map(|_| ())
     }
 
     /// Mathematical contract: a universal equivalence is well-defined only
@@ -609,10 +785,8 @@ impl Runtime {
         forall_fact_with_iff: &ForallFactWithIff,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        let (forall_then_implies_iff, forall_iff_implies_then) =
-            forall_fact_with_iff.to_two_forall_facts()?;
-        self.verify_forall_fact_well_defined(&forall_then_implies_iff, verify_state)?;
-        self.verify_forall_fact_well_defined(&forall_iff_implies_then, verify_state)
+        self.verify_fact_well_defined_result(&forall_fact_with_iff.clone().into(), verify_state)
+            .map(|_| ())
     }
 
     /// Mathematical contract: negating a universal fact adds no new object
@@ -622,6 +796,7 @@ impl Runtime {
         not_forall: &NotForallFact,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        self.verify_forall_fact_well_defined(&not_forall.forall_fact, verify_state)
+        self.verify_fact_well_defined_result(&not_forall.clone().into(), verify_state)
+            .map(|_| ())
     }
 }

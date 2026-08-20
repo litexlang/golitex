@@ -36,37 +36,14 @@ impl Runtime {
         let to_prove_fact = stmt.to_prove.clone();
         let (exec_proof_inside_results, last_error, reverse_assumption_fact_id, proof_scope) = self
             .run_in_local_env(|rt| {
-                let captures_well_definedness = rt.captures_well_definedness();
-                if captures_well_definedness {
-                    rt.begin_statement_well_definedness_capture();
-                }
-                let proof_result =
-                    rt.exec_by_contra_stmt_in_local_proof_scope(stmt, &to_prove_fact);
-                match proof_result {
-                    Ok((inside_results, last_error, fact_id, assumption_infers)) => {
-                        let well_definedness = if captures_well_definedness {
-                            rt.end_statement_well_definedness_capture()?
-                        } else {
-                            WellDefinednessCertificate::default()
-                        };
-                        Ok((
-                            inside_results,
-                            last_error,
-                            fact_id,
-                            LocalProofScopeVerificationResult::new(
-                                assumption_infers,
-                                Vec::new(),
-                                well_definedness,
-                            ),
-                        ))
-                    }
-                    Err(error) => {
-                        if captures_well_definedness {
-                            rt.discard_statement_well_definedness_capture();
-                        }
-                        Err(error)
-                    }
-                }
+                let (inside_results, last_error, fact_id, assumption_infers) =
+                    rt.exec_by_contra_stmt_in_local_proof_scope(stmt, &to_prove_fact)?;
+                Ok::<_, RuntimeError>((
+                    inside_results,
+                    last_error,
+                    fact_id,
+                    SuccessVerifyLocalProofScopeResult::new(assumption_infers, Vec::new()),
+                ))
             })?;
 
         if let Some(last_error) = last_error {
@@ -79,28 +56,53 @@ impl Runtime {
         }
 
         let negated_assumption = logical_negation_for_by_contra(&stmt.to_prove)?;
-        let by_verification = ByContraVerificationResult::new(
+        let mut proof_steps = exec_proof_inside_results;
+        let contradiction_checks = proof_steps.split_off(stmt.proof.len());
+        let [impossible_check, negated_impossible_check]: [StmtResult; 2] =
+            contradiction_checks.try_into().map_err(|_| {
+                short_exec_error(
+                    stmt.clone().into(),
+                    "by contra: expected exactly two contradiction checks".to_string(),
+                    None,
+                    Vec::new(),
+                )
+            })?;
+        let by_verification = SuccessVerifyByContraResult::new(
             stmt.to_prove.clone(),
             negated_assumption,
             reverse_assumption_fact_id,
-            stmt.proof.len(),
             proof_scope,
+            proof_steps,
             stmt.impossible_fact.clone(),
+            SuccessVerifyContradictionResult {
+                impossible_check: Box::new(impossible_check),
+                negated_impossible_check: Box::new(negated_impossible_check),
+            },
         );
 
-        Ok(VerifiedByStmtIr::ByContraStmt {
-            statement: stmt.clone(),
-            common: VerifiedStmtCommonIr::new(InferResult::new(), exec_proof_inside_results),
-            verification: Some(by_verification),
-        }
-        .into())
+        Ok(
+            SuccessByStmtResult::ByContraStmt(Box::new(SuccessByContraStmtResult {
+                statement: stmt.clone(),
+                common: SuccessStmtCommonResult::new(SuccessInferResult::new()),
+                verification: Some(by_verification),
+            }))
+            .into(),
+        )
     }
 
     fn exec_by_contra_stmt_in_local_proof_scope(
         &mut self,
         stmt: &ByContraStmt,
         to_prove_fact: &Fact,
-    ) -> Result<(Vec<StmtResult>, Option<RuntimeError>, FactId, InferResult), RuntimeError> {
+    ) -> Result<
+        (
+            Vec<StmtResult>,
+            Option<RuntimeError>,
+            FactId,
+            SuccessInferResult,
+        ),
+        RuntimeError,
+    > {
         let mut inside_results: Vec<StmtResult> = Vec::new();
         let negated_to_prove_fact = logical_negation_for_by_contra(to_prove_fact)?;
         let mut assumption_infers = self
@@ -190,7 +192,7 @@ impl Runtime {
     pub(crate) fn exec_by_contra_stmt_affect_environment(
         &mut self,
         stmt: &ByContraStmt,
-    ) -> Result<InferResult, RuntimeError> {
+    ) -> Result<SuccessInferResult, RuntimeError> {
         let to_prove_fact = stmt.to_prove.clone();
         let to_prove_fact_display_string = to_prove_fact.to_string();
         if self.current_execution_is_trusted_file() {
@@ -218,12 +220,14 @@ impl Runtime {
         stmt: &ByContraStmt,
     ) -> Result<StmtResult, RuntimeError> {
         let infer_result = self.exec_by_contra_stmt_affect_environment(stmt)?;
-        Ok(VerifiedByStmtIr::ByContraStmt {
-            statement: stmt.clone(),
-            common: VerifiedStmtCommonIr::new(infer_result, vec![]),
-            verification: None,
-        }
-        .into())
+        Ok(
+            SuccessByStmtResult::ByContraStmt(Box::new(SuccessByContraStmtResult {
+                statement: stmt.clone(),
+                common: SuccessStmtCommonResult::new(infer_result),
+                verification: None,
+            }))
+            .into(),
+        )
     }
 }
 

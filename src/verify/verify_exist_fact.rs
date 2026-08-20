@@ -465,7 +465,7 @@ impl Runtime {
                 verify_state,
             )? {
                 return Ok(
-                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                         exist_fact.clone().into(),
                         "exist: real-line comparison witness".to_string(),
                         steps,
@@ -484,7 +484,7 @@ impl Runtime {
                 self.verify_atomic_fact_restricted_known_builtin(&nonempty, verify_state)?;
             if nonempty_result.is_true() {
                 return Ok(
-                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                         exist_fact.clone().into(),
                         "exist: member of a nonempty set".to_string(),
                         vec![nonempty_result],
@@ -509,7 +509,7 @@ impl Runtime {
                 self.verify_atomic_fact_restricted_known_builtin(&in_q, verify_state)?;
             if rational_membership.is_true() {
                 return Ok(
-                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                         exist_fact.clone().into(),
                         "exist: rational representation with positive integer denominator"
                             .to_string(),
@@ -534,7 +534,7 @@ impl Runtime {
                 self.verify_atomic_fact_restricted_known_builtin(&in_q, verify_state)?;
             if rational_membership.is_true() {
                 return Ok(
-                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                         exist_fact.clone().into(),
                         "exist: rational integer ratio representation".to_string(),
                         vec![rational_membership],
@@ -557,7 +557,7 @@ impl Runtime {
                 self.verify_atomic_fact_restricted_known_builtin(&divisor_in_n_pos, verify_state)?;
             if dividend_result.is_true() && divisor_result.is_true() {
                 return Ok(
-                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                         exist_fact.clone().into(),
                         "exist!: unique Euclidean quotient for an integer and positive divisor"
                             .to_string(),
@@ -609,7 +609,7 @@ impl Runtime {
                 && remainder_result.is_true()
             {
                 return Ok(
-                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                         exist_fact.clone().into(),
                         "exist: zero remainder gives an integer multiple of a nonzero modulus"
                             .to_string(),
@@ -638,7 +638,7 @@ impl Runtime {
                 self.verify_atomic_fact_restricted_known_builtin(&positive_bound, verify_state)?;
             if positive_bound_result.is_true() {
                 return Ok(
-                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                         exist_fact.clone().into(),
                         "exist: Archimedean reciprocal bound".to_string(),
                         vec![positive_bound_result],
@@ -665,7 +665,7 @@ impl Runtime {
                 if interval_result.is_true() {
                     steps.push(interval_result);
                     return Ok(
-                        VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                        SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                             exist_fact.clone().into(),
                             "exist: rational density in the real line".to_string(),
                             steps,
@@ -693,7 +693,7 @@ impl Runtime {
                 if interval_result.is_true() {
                     steps.push(interval_result);
                     return Ok(
-                        VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                        SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                             exist_fact.clone().into(),
                             "exist: real density by the midpoint principle".to_string(),
                             steps,
@@ -732,7 +732,7 @@ impl Runtime {
                         "exist: integer inside a real interval of length at least 1"
                     };
                     return Ok(
-                        VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                        SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                             exist_fact.clone().into(),
                             rule.to_string(),
                             steps,
@@ -748,14 +748,21 @@ impl Runtime {
             if result.is_true() {
                 return Ok(result);
             }
+        }
 
-            if exist_fact.is_exist_unique() {
-                if let Some(proved) = self.try_verify_exist_unique_by_exist_and_uniqueness_forall(
-                    exist_fact,
-                    verify_state,
-                )? {
-                    return Ok(proved);
-                }
+        // Composition mode: `Combine` (existence + uniqueness forall).
+        // A concrete prop definition is deliberately entered at round 1 to
+        // prevent recursive definition unfolding. The exist-unique
+        // decomposition is still safe there because both children have a
+        // strictly different fact shape; reset only those child verifications
+        // to their ordinary root state.
+        if exist_fact.is_exist_unique() && verify_state.round <= 1 {
+            let decomposition_state = UseContextVerifyState::new(0, true);
+            if let Some(proved) = self.try_verify_exist_unique_by_exist_and_uniqueness_forall(
+                exist_fact,
+                &decomposition_state,
+            )? {
+                return Ok(proved);
             }
         }
 
@@ -769,7 +776,7 @@ impl Runtime {
             return Ok(result);
         }
 
-        Ok(StmtUnknown::new().into())
+        Ok(UnknownGenericStmtResult::new().into())
     }
 
     fn verify_finite_nonempty_natural_set_has_maximum(
@@ -883,7 +890,7 @@ impl Runtime {
         }
 
         Ok(Some(
-            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                 exist_fact.clone().into(),
                 "finite nonempty natural set has a greatest member".to_string(),
                 steps,
@@ -1101,16 +1108,16 @@ impl Runtime {
             return Ok(None);
         }
 
-        let mut infers = InferResult::new();
+        let mut infers = SuccessInferResult::new();
         infers.new_fact(&exist_fact.clone().into());
         infers.new_infer_result_inside(stmt_result_infers(&plain_res));
         infers.new_infer_result_inside(stmt_result_infers(&uniq_res));
         infers.new_fact(&uniqueness_fact);
 
-        let out = VerifiedFactStmtIr::new_with_verified_by_known_fact_and_infer(
+        let out = SuccessFactStmtResult::new_with_verified_by_known_fact_and_infer(
             exist_fact.clone().into(),
             infers,
-            VerifiedByResult::cited_fact(
+            SuccessFactProofResult::cited_fact(
                 exist_fact.clone().into(),
                 uniqueness_fact.clone(),
                 Some("exist!: witness exist and uniqueness forall verified".to_string()),
@@ -1137,7 +1144,7 @@ impl Runtime {
             }
         }
 
-        Ok((StmtUnknown::new()).into())
+        Ok((UnknownGenericStmtResult::new()).into())
     }
 
     pub fn verify_exist_fact_with_known_exist_fact_with_facts_in_environment(
@@ -1176,9 +1183,9 @@ impl Runtime {
                         )))
                     })?;
                 if target_body_string == known_body_string {
-                    return Ok((VerifiedFactStmtIr::new_with_verified_by_known_fact(
+                    return Ok((SuccessFactStmtResult::new_with_verified_by_known_fact(
                         exist_fact.clone().into(),
-                        VerifiedByResult::cited_fact(
+                        SuccessFactProofResult::cited_fact(
                             exist_fact.clone().into(),
                             known_fact.clone().into(),
                             None,
@@ -1190,7 +1197,7 @@ impl Runtime {
             }
         }
 
-        Ok((StmtUnknown::new()).into())
+        Ok((UnknownGenericStmtResult::new()).into())
     }
 
     fn known_exist_lookup_keys(goal: &ExistFactEnum) -> Vec<String> {
@@ -1254,6 +1261,6 @@ impl Runtime {
     }
 }
 
-fn stmt_result_infers(result: &StmtResult) -> InferResult {
+fn stmt_result_infers(result: &StmtResult) -> SuccessInferResult {
     result.infer_result()
 }

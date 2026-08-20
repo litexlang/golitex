@@ -150,8 +150,7 @@ fn trust_before_line_reports_trusted_and_verified_statement_traces() {
     assert!(output.contains("\"verification_status\": \"trusted_prefix\""));
     assert!(output.contains("\"verification_status\": \"verified\""));
     assert!(!output.contains("\"trust_dependencies\""));
-    assert!(output.contains("\"kind\": \"trusted_prefix_environment_load\""));
-    assert!(!output.contains("\"kind\": \"trusted_environment_load\""));
+    assert!(output.contains("\"schema\": \"litex.statement-result.v2\""));
 }
 
 #[test]

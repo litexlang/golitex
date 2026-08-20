@@ -79,9 +79,9 @@ impl Runtime {
             self.cached_known_fact(&normalized_key)
         };
         cached_fact.map(|cached_fact| {
-            VerifiedFactStmtIr::new_with_verified_by_known_fact(
+            SuccessFactStmtResult::new_with_verified_by_known_fact(
                 fact.clone(),
-                VerifiedByResult::cached_fact(
+                SuccessFactProofResult::cached_fact(
                     fact.clone(),
                     cached_fact.line_file.clone(),
                     cached_fact.fact_id,
@@ -226,7 +226,7 @@ impl Runtime {
             steps.push(result);
         }
         Ok(
-            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                 and_fact.clone().into(),
                 "restricted builtin premise: each conjunct verified".to_string(),
                 steps,
@@ -264,7 +264,7 @@ impl Runtime {
                 self.verify_and_chain_atomic_fact_restricted_known_builtin(fact, verify_state)?;
             if result.is_true() {
                 return Ok(
-                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                         or_fact.clone().into(),
                         "restricted builtin premise: one branch verified".to_string(),
                         vec![result],
@@ -273,7 +273,7 @@ impl Runtime {
                 );
             }
         }
-        Ok(StmtUnknown::new().into())
+        Ok(UnknownGenericStmtResult::new().into())
     }
 
     pub(crate) fn verify_known_forall_requirements_and_build_evidence(
@@ -285,7 +285,7 @@ impl Runtime {
     ) -> Result<
         Option<(
             Vec<KnownForallInstantiationItem>,
-            Vec<KnownForallRequirementResult>,
+            Vec<SuccessVerifyKnownForallRequirementResult>,
         )>,
         RuntimeError,
     > {
@@ -331,7 +331,7 @@ impl Runtime {
             if result.is_unknown() {
                 return Ok(None);
             }
-            requirements.push(KnownForallRequirementResult::new(
+            requirements.push(SuccessVerifyKnownForallRequirementResult::new(
                 instantiated_dom_fact,
                 result,
                 KnownForallRequirementKind::Domain,
@@ -353,7 +353,7 @@ impl Runtime {
         args_for_params: &Vec<Obj>,
         goal: &Fact,
         verify_state: &UseContextVerifyState,
-        requirements: &mut Vec<KnownForallRequirementResult>,
+        requirements: &mut Vec<SuccessVerifyKnownForallRequirementResult>,
     ) -> Result<bool, RuntimeError> {
         // A matcher may synthesize a forall argument while solving an
         // arithmetic pattern, so verify every resulting argument before
@@ -386,7 +386,7 @@ impl Runtime {
             if result.is_unknown() {
                 return Ok(false);
             }
-            requirements.push(KnownForallRequirementResult::new(
+            requirements.push(SuccessVerifyKnownForallRequirementResult::new(
                 requirement_fact,
                 result,
                 KnownForallRequirementKind::ParameterType,

@@ -37,8 +37,8 @@ impl Runtime {
     fn exec_trust_stmt_affect_environment(
         &mut self,
         trust_stmt: &TrustStmt,
-    ) -> Result<InferResult, RuntimeError> {
-        let mut infer_result = InferResult::new();
+    ) -> Result<SuccessInferResult, RuntimeError> {
+        let mut infer_result = SuccessInferResult::new();
         for fact in trust_stmt.facts.iter() {
             let fact_infer_result = if self.current_execution_is_trusted_file() {
                 self.store_trusted_fact_and_infer_with_reason(
@@ -64,11 +64,13 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         self.run_in_local_env_and_commit(|rt| {
             let infer_result = rt.exec_trust_stmt_affect_environment(trust_stmt)?;
-            Ok(VerifiedUnsafeStmtIr::TrustStmt {
-                statement: trust_stmt.clone(),
-                common: VerifiedStmtCommonIr::new(infer_result, vec![]),
-            }
-            .into())
+            Ok(
+                SuccessUnsafeStmtResult::TrustStmt(Box::new(SuccessTrustStmtResult {
+                    statement: trust_stmt.clone(),
+                    common: SuccessStmtCommonResult::new(infer_result),
+                }))
+                .into(),
+            )
         })
     }
 }

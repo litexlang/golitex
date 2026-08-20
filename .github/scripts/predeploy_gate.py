@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run release-mode docs, examples, and textbook file gates."""
+"""Run release-mode docs, examples, showcases, and textbook file gates."""
 
 from __future__ import annotations
 
@@ -46,6 +46,7 @@ TEXTBOOKS = [
 GATES = (
     ("docs", "run_docs_markdown_files"),
     ("examples", "run_examples_only"),
+    ("showcases", "run_showcases"),
 )
 
 
@@ -208,7 +209,8 @@ def main() -> int:
         print(f"PREPARE CANCELLED {build.wall_seconds:.2f}s")
         print(
             f"GLOBAL TIMEOUT {args.timeout:g}s | prepare unfinished | "
-            f"docs + examples + {len(textbook_files)} textbook files not started",
+            "docs + examples + showcases + "
+            f"{len(textbook_files)} textbook files not started",
             file=sys.stderr,
         )
         return 1
@@ -273,7 +275,8 @@ def main() -> int:
 
     print(
         f"DEPLOY SUCCESS {total_wall_seconds:.2f}s | "
-        f"docs + examples + {len(TEXTBOOKS)} books / {len(file_results)} files",
+        "docs + examples + showcases + "
+        f"{len(TEXTBOOKS)} books / {len(file_results)} files",
         flush=True,
     )
     return 0
@@ -281,7 +284,9 @@ def main() -> int:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Run docs, examples, and registered textbook files in parallel."
+        description=(
+            "Run docs, examples, showcases, and registered textbook files in parallel."
+        )
     )
     parser.add_argument(
         "--jobs",

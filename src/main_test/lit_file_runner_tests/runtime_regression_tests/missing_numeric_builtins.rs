@@ -140,7 +140,7 @@ forall a, b, c R:
                 "numeric builtin rules should consume known disjunctions as complete premises:\n{run_output}"
             );
             for rule in [
-                "square sum not equal zero from nonzero component or",
+                "square_sum_not_equal_zero_from_nonzero_component_or",
                 "a <= b / c from 0 < c and (c * a <= b or a * c <= b)",
             ] {
                 assert!(

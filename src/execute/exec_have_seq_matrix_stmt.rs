@@ -16,7 +16,7 @@ impl Runtime {
             &stmt.seq_set.clone().into(),
             anonymous_fn,
         )?;
-        let inside_results = self.exec_have_indexed_fn_definition_verify_process(
+        let verification = self.exec_have_indexed_fn_definition_verify_process(
             stmt.clone().into(),
             &shape.anonymous_fn,
             HaveSeqStmt::store_reason(),
@@ -32,11 +32,14 @@ impl Runtime {
             HaveSeqStmt::store_reason(),
             stmt.line_file.clone(),
         )?;
-        Ok(VerifiedDefObjStmtIr::HaveSeqStmt {
-            statement: stmt.clone(),
-            common: VerifiedStmtCommonIr::new(infer_result, inside_results),
-        }
-        .into())
+        Ok(
+            SuccessDefObjStmtResult::HaveSeqStmt(Box::new(SuccessHaveSeqStmtResult {
+                statement: stmt.clone(),
+                common: SuccessStmtCommonResult::new(infer_result),
+                verification: Some(verification),
+            }))
+            .into(),
+        )
     }
 
     pub(crate) fn exec_have_seq_stmt_affect_environment_only(
@@ -56,11 +59,14 @@ impl Runtime {
             HaveSeqStmt::store_reason(),
             stmt.line_file.clone(),
         )?;
-        Ok(VerifiedDefObjStmtIr::HaveSeqStmt {
-            statement: stmt.clone(),
-            common: VerifiedStmtCommonIr::new(infer_result, vec![]),
-        }
-        .into())
+        Ok(
+            SuccessDefObjStmtResult::HaveSeqStmt(Box::new(SuccessHaveSeqStmtResult {
+                statement: stmt.clone(),
+                common: SuccessStmtCommonResult::new(infer_result),
+                verification: None,
+            }))
+            .into(),
+        )
     }
 
     pub fn exec_have_finite_seq_stmt(
@@ -84,7 +90,7 @@ impl Runtime {
             "have finite_seq for-bound must match finite_seq length",
             stmt.line_file.clone(),
         )?);
-        let inside_results = self.exec_have_indexed_fn_definition_verify_process(
+        let verification = self.exec_have_indexed_fn_definition_verify_process(
             stmt.clone().into(),
             &shape.anonymous_fn,
             HaveFiniteSeqStmt::store_reason(),
@@ -100,11 +106,14 @@ impl Runtime {
             HaveFiniteSeqStmt::store_reason(),
             stmt.line_file.clone(),
         )?;
-        Ok(VerifiedDefObjStmtIr::HaveFiniteSeqStmt {
-            statement: stmt.clone(),
-            common: VerifiedStmtCommonIr::new(infer_result, inside_results),
-        }
-        .into())
+        Ok(
+            SuccessDefObjStmtResult::HaveFiniteSeqStmt(Box::new(SuccessHaveFiniteSeqStmtResult {
+                statement: stmt.clone(),
+                common: SuccessStmtCommonResult::new(infer_result),
+                verification: Some(verification),
+            }))
+            .into(),
+        )
     }
 
     pub(crate) fn exec_have_finite_seq_stmt_affect_environment_only(
@@ -124,11 +133,14 @@ impl Runtime {
             HaveFiniteSeqStmt::store_reason(),
             stmt.line_file.clone(),
         )?;
-        Ok(VerifiedDefObjStmtIr::HaveFiniteSeqStmt {
-            statement: stmt.clone(),
-            common: VerifiedStmtCommonIr::new(infer_result, vec![]),
-        }
-        .into())
+        Ok(
+            SuccessDefObjStmtResult::HaveFiniteSeqStmt(Box::new(SuccessHaveFiniteSeqStmtResult {
+                statement: stmt.clone(),
+                common: SuccessStmtCommonResult::new(infer_result),
+                verification: None,
+            }))
+            .into(),
+        )
     }
 
     pub fn exec_have_matrix_stmt(
@@ -159,7 +171,7 @@ impl Runtime {
             "have matrix column for-bound must match matrix column count",
             stmt.line_file.clone(),
         )?);
-        let inside_results = self.exec_have_indexed_fn_definition_verify_process(
+        let verification = self.exec_have_indexed_fn_definition_verify_process(
             stmt.clone().into(),
             &shape.anonymous_fn,
             HaveMatrixStmt::store_reason(),
@@ -175,11 +187,14 @@ impl Runtime {
             HaveMatrixStmt::store_reason(),
             stmt.line_file.clone(),
         )?;
-        Ok(VerifiedDefObjStmtIr::HaveMatrixStmt {
-            statement: stmt.clone(),
-            common: VerifiedStmtCommonIr::new(infer_result, inside_results),
-        }
-        .into())
+        Ok(
+            SuccessDefObjStmtResult::HaveMatrixStmt(Box::new(SuccessHaveMatrixStmtResult {
+                statement: stmt.clone(),
+                common: SuccessStmtCommonResult::new(infer_result),
+                verification: Some(verification),
+            }))
+            .into(),
+        )
     }
 
     pub(crate) fn exec_have_matrix_stmt_affect_environment_only(
@@ -199,11 +214,14 @@ impl Runtime {
             HaveMatrixStmt::store_reason(),
             stmt.line_file.clone(),
         )?;
-        Ok(VerifiedDefObjStmtIr::HaveMatrixStmt {
-            statement: stmt.clone(),
-            common: VerifiedStmtCommonIr::new(infer_result, vec![]),
-        }
-        .into())
+        Ok(
+            SuccessDefObjStmtResult::HaveMatrixStmt(Box::new(SuccessHaveMatrixStmtResult {
+                statement: stmt.clone(),
+                common: SuccessStmtCommonResult::new(infer_result),
+                verification: None,
+            }))
+            .into(),
+        )
     }
 
     /// Mathematical contract: a sequence or matrix definition uses a fresh
@@ -253,16 +271,18 @@ impl Runtime {
         anonymous_fn: &AnonymousFn,
         store_reason: &'static str,
         line_file: LineFile,
-        mut check_results: Vec<StmtResult>,
-    ) -> Result<Vec<StmtResult>, RuntimeError> {
+        bound_checks: Vec<StmtResult>,
+    ) -> Result<SuccessVerifyIndexedFunctionDefinitionResult, RuntimeError> {
         let ret_set_result = self.verify_have_indexed_fn_definition_return_value(
             stmt,
             anonymous_fn,
             store_reason,
             line_file,
         )?;
-        check_results.push(ret_set_result);
-        Ok(check_results)
+        Ok(SuccessVerifyIndexedFunctionDefinitionResult {
+            bound_checks,
+            return_check: Box::new(ret_set_result),
+        })
     }
 
     fn exec_have_indexed_fn_definition_affect_environment(
@@ -274,7 +294,7 @@ impl Runtime {
         shape: HaveIndexedFnDefinitionShape,
         store_reason: &'static str,
         line_file: LineFile,
-    ) -> Result<InferResult, RuntimeError> {
+    ) -> Result<SuccessInferResult, RuntimeError> {
         self.store_parameter_binding(binding, ParamObjType::Identifier)
             .map_err(|e| short_exec_error(stmt.clone(), String::new(), Some(e), vec![]))?;
 

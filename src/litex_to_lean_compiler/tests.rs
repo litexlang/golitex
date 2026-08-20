@@ -150,7 +150,8 @@ fn top_level_atomic_equality_reuses_verified_proof_ir() {
     assert!(generated.contains("Litex.Same.refl (1 : ℂ)"));
     assert!(generated.contains("Litex.Same ((2 : ℂ) + (3 : ℂ)) (5 : ℂ)"));
     assert!(generated.contains("have __wd1_0 : Litex.In (2 : ℂ) Litex.C"));
-    assert!(generated.contains("Litex.Same.ofEq (by norm_num)"));
+    assert!(generated
+        .contains("Litex.Same.ofEq (by norm_num [Litex.tupleDim, Litex.TupleShape.dimension])"));
     assert!(generated.contains("theorem __fact2"));
     assert!(generated.contains("exact __fact1"));
     assert!(!generated.contains("sorry"));
@@ -158,12 +159,13 @@ fn top_level_atomic_equality_reuses_verified_proof_ir() {
 
 #[test]
 fn top_level_atomic_membership_emits_source_and_inferred_fact_ids() {
-    let generated = compile_on_verifier_stack("1 $in N\n", "atomic_membership.lit")
+    let generated = compile_on_verifier_stack("2 + 3 $in N\n", "atomic_membership.lit")
         .expect("compile top-level atomic membership");
-    assert!(generated.contains("Litex.In (1 : ℂ) Litex.N"));
-    assert!(generated.contains("Litex.Rules.complexEqNatInN (1 : ℂ) 1 (by norm_num)"));
-    assert!(generated.contains("Litex.Nonnegative (1 : ℂ)"));
-    assert!(generated.contains("Litex.OrderBridge.nonnegativeOfComplexReal (by norm_num)"));
+    assert!(generated.contains("Litex.In ((2 : ℂ) + (3 : ℂ)) Litex.N"));
+    assert!(generated.contains("Litex.Rules.complexEqNatInN ((2 : ℂ) + (3 : ℂ)) 5 (by norm_num)"));
+    assert!(generated.contains("Litex.Nonnegative ((2 : ℂ) + (3 : ℂ))"));
+    assert!(generated.contains("Litex.Rules.nonnegativeOfInN (__fact0)"));
+    assert!(!generated.contains("Litex.OrderBridge.nonnegativeOfComplexReal (by norm_num)"));
     assert!(!generated.contains("sorry"));
 }
 
@@ -241,7 +243,7 @@ fn positive_natural_uses_exact_subtype_and_projection() {
 
     let ir = capture_ir_debug_on_verifier_stack(SOURCE, "20_PositiveNaturalCarrier.lit")
         .expect("capture positive-natural tracer IR");
-    assert!(ir.contains("ClosedStandardMembership"), "{ir}");
+    assert!(ir.contains("ClosedNumericMembership"), "{ir}");
     assert!(ir.contains("StandardSetMembershipProjection"), "{ir}");
 
     let generated = compile_on_verifier_stack(SOURCE, "20_PositiveNaturalCarrier.lit")
@@ -282,7 +284,7 @@ fn positive_real_uses_exact_subtype_projection_and_elimination() {
     let ir = capture_ir_debug_on_verifier_stack(SOURCE, "21_PositiveRealCarrier.lit")
         .expect("capture positive-real tracer IR");
     for expected in [
-        "ClosedStandardMembership",
+        "ClosedNumericMembership",
         "EulerNumberInPositiveReal",
         "PiInPositiveReal",
         "StandardSetMembershipProjection",
@@ -440,6 +442,7 @@ fn numeric_carrier_closures_replay_exact_rules() {
     .expect_err("integer remainder needs a reviewed source-term ABI");
     assert!(
         boundary.contains("unsupported compiler object")
+            || boundary.contains("unsupported typed builtin object `Mod`")
             || boundary.contains("unsupported integer membership closure rule: Mod"),
         "unexpected boundary error: {boundary}"
     );
@@ -486,6 +489,7 @@ fn rational_and_natural_carrier_closures_replay_exact_rules() {
         .expect_err("rational power needs a reviewed source-term ABI");
     assert!(
         boundary.contains("unsupported compiler object")
+            || boundary.contains("unsupported typed builtin object `Pow`")
             || boundary.contains("unsupported rational membership closure rule: Pow"),
         "unexpected boundary error: {boundary}"
     );
@@ -530,8 +534,10 @@ fn conjunction_disjunction_and_alpha_forall_citations_replay_exact_evidence() {
     .expect("compile propositional proof spine");
     assert!(generated.contains("Litex.Same (1 : ℂ) (1 : ℂ) ∧ Litex.Same (2 : ℂ) (2 : ℂ)"));
     assert!(generated.contains("exact ⟨Litex.Same.refl (1 : ℂ), Litex.Same.refl (2 : ℂ)⟩"));
-    assert!(generated.contains("exact ⟨__h1_3, __h1_4⟩"));
-    assert!(generated.contains("exact Or.inl (__h2_3)"));
+    assert!(generated.contains("have __c1_0 : Litex.Same a a ∧ Litex.Same b b := ⟨__h1_3, __h1_4⟩"));
+    assert!(generated.contains("exact __c1_0"));
+    assert!(generated.contains("have __c2_0 : Litex.Same a a ∨ Litex.Same b b := Or.inl (__h2_3)"));
+    assert!(generated.contains("exact __c2_0"));
     assert!(generated.contains("theorem __fact4 :\n    ∀ (__p1 : Litex.Set) (__p2 : Litex.Set)"));
     assert!(generated.contains(":= __fact3"));
 }
@@ -544,7 +550,9 @@ fn conjunction_projection_replays_inferred_fact_ids() {
     )
     .expect("compile conjunction projection proof spine");
     assert!(generated.contains("have __i0_0 : ¬ Litex.Same c d := (__h0_5).2"));
-    assert!(generated.contains("exact __i0_0"));
+    assert!(generated.contains("have __c0_0"));
+    assert!(generated.contains(":= __i0_0"));
+    assert!(generated.contains("exact __c0_0"));
 }
 
 #[test]
@@ -572,7 +580,6 @@ fn multilayer_application_preserves_each_unary_source_contract() {
     let ir = capture_ir_debug_on_verifier_stack(SOURCE, "23_MultilayerApplication.lit")
         .expect("capture multi-layer application tracer IR");
     assert!(ir.contains("through_layer_index: 0"), "{ir}");
-    assert!(ir.contains("intrinsic_result_set: Some("), "{ir}");
     assert!(ir.contains("layer_index: 0"), "{ir}");
     assert!(ir.contains("layer_index: 1"), "{ir}");
 
@@ -715,7 +722,9 @@ fn function_application_without_domain_membership_is_rejected_by_litex() {
 fn unsupported_atomic_predicate_fails_closed() {
     let error = compile_on_verifier_stack("1 != 0\n", "unsupported.lit")
         .expect_err("unsupported fact must fail closed");
-    assert!(error.contains("supports positive <, >, <=, or >= facts"));
+    assert!(error.contains(
+        "closed comparison requires an order relation; closed equality and disequality use separate semantic adapters"
+    ));
 }
 
 #[test]
@@ -846,7 +855,9 @@ fn concrete_predicate_definition_and_by_def_replay_checked_components() {
     assert!(generated.contains("def is_unit_pair"));
     assert!(generated.contains("Litex.In x Litex.R ∧ Litex.In y Litex.R"));
     assert!(generated.contains("unfold is_unit_pair"));
-    assert!(generated.contains("exact __definition.1"));
+    assert!(generated.contains(
+        "exact ⟨Litex.Rules.complexRealInR (1 : ℝ), Litex.Rules.complexRealInR (1 : ℝ), __fact0, __fact0⟩"
+    ));
     assert!(!generated.contains("axiom "));
     assert!(!generated.contains("sorry"));
 }
@@ -914,7 +925,7 @@ fn builtin_strategy_ir_marks_each_selected_layer_and_replays_exact_rules() {
     const SOURCE: &str = "forall a, b, c, d R:\n    a > 0\n    b >= 0\n    c >= 0\n    d >= 0\n    =>:\n        (a + b) + (c + d) > 0\n";
     let ir = capture_ir_debug_on_verifier_stack(SOURCE, "15_BuiltinStrategy.lit")
         .expect("capture builtin-strategy tracer IR");
-    assert_eq!(ir.matches("UseBuiltinStrategy").count(), 4, "{ir}");
+    assert_eq!(ir.matches("UseBuiltinStrategy").count(), 1, "{ir}");
     assert_eq!(ir.matches("AddPositiveLeftStrict").count(), 1, "{ir}");
     assert_eq!(
         ir.matches("order.add_positive_of_positive_nonnegative")

@@ -15,6 +15,7 @@ theorem __fact2 :
     ∀ (n : ℂ) (__h2_1 : Litex.In n Litex.NPos),
       Litex.In n Litex.N := by
   intro n __h2_1
-  exact Litex.Rules.inNOfInNPos (__h2_1)
+  have __c2_0 : Litex.In n Litex.N := Litex.Rules.inNOfInNPos (__h2_1)
+  exact __c2_0
 
 end __Compiler_20_PositiveNaturalCarrier

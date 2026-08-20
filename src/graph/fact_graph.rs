@@ -372,11 +372,11 @@ impl FactGraphBuilder {
         if let Some(success) = result.factual_success() {
             self.add_fact_node(&success.fact(), "fact", None);
             self.add_infer_nodes(&success.infers);
-            self.collect_verified_by_nodes(&success.verified_by);
+            self.collect_verified_by_nodes(success.proof());
             return;
         }
 
-        let Some(success) = result.non_factual_ir() else {
+        let Some(success) = result.non_factual_success() else {
             return;
         };
         let source_stmt = success.statement();
@@ -396,87 +396,87 @@ impl FactGraphBuilder {
             Stmt::By(ByStmt::ByDefStmt(_)) => self.add_infer_nodes(&common.infers),
             _ => {}
         }
-        if let VerifiedStmtIr::DefThmStmt {
-            verification: Some(verification),
-            ..
-        } = success
-        {
-            self.add_assumption_nodes(&verification.assumption_infers);
-        }
-        if let VerifiedStmtIr::ProofBlock(
-            VerifiedProofBlockStmtIr::ClaimStmt {
-                verification: Some(ClaimVerificationResult::Forall(verification)),
-                ..
+        if let SuccessStmtResult::DefThmStmt(result) = success {
+            if let Some(verification) = result.verification.as_ref() {
+                self.add_assumption_nodes(&verification.proof_scope.assumption_infers);
             }
-            | VerifiedProofBlockStmtIr::ExampleStmt {
-                verification: Some(ClaimVerificationResult::Forall(verification)),
-                ..
-            },
-        ) = success
-        {
-            self.add_assumption_nodes(&verification.assumption_infers);
         }
-        for inside in &common.inside_results {
-            self.collect_result_nodes(inside);
+        let claim_verification = match success {
+            SuccessStmtResult::ProofBlock(SuccessProofBlockStmtResult::ClaimStmt(result)) => {
+                result.verification.as_ref()
+            }
+            SuccessStmtResult::ProofBlock(SuccessProofBlockStmtResult::ExampleStmt(result)) => {
+                result.verification.as_ref()
+            }
+            _ => None,
+        };
+        if let Some(SuccessVerifyClaimResult::Forall(verification)) = claim_verification {
+            self.add_assumption_nodes(&verification.proof_scope.assumption_infers);
         }
+        success.visit_child_results(&mut |child| self.collect_result_nodes(child));
     }
 
-    fn collect_verified_by_nodes(&mut self, verified_by: &VerifiedByResult) {
+    fn collect_verified_by_nodes(&mut self, verified_by: &SuccessFactProofResult) {
         match verified_by {
-            VerifiedByResult::BuiltinRule(result) | VerifiedByResult::BuiltinStrategy(result) => {
+            SuccessFactProofResult::BuiltinRule(result)
+            | SuccessFactProofResult::BuiltinStrategy(result) => {
                 for subgoal in &result.subgoals {
                     self.collect_result_nodes(subgoal);
                 }
             }
-            VerifiedByResult::Fact(result) => {
+            SuccessFactProofResult::Fact(result) => {
                 self.add_cited_stmt_node(result.cite_what.as_ref());
             }
-            VerifiedByResult::KnownForallInstantiation(result) => {
+            SuccessFactProofResult::KnownForallInstantiation(result) => {
                 self.add_cited_stmt_node(result.cite_what.as_ref());
                 for requirement in &result.requirements {
                     self.add_requirement_source_nodes(requirement.result.as_ref());
                 }
             }
-            VerifiedByResult::VerifiedBys(result) => {
+            SuccessFactProofResult::CombinedProofs(result) => {
                 for item in &result.cite_what {
                     self.collect_verified_bys_item_nodes(item);
                 }
             }
-            VerifiedByResult::ForallProof(result) => {
+            SuccessFactProofResult::ForallProof(result) => {
                 self.add_assumption_nodes(&result.assumption_infers);
                 for proved in &result.proves {
                     self.collect_result_nodes(proved.result.as_ref());
                 }
             }
-            VerifiedByResult::StatementMemo(source) => {
-                self.collect_verified_by_nodes(&source.verified_by);
+            SuccessFactProofResult::Transform(result) => {
+                self.collect_verified_by_nodes(result.source.proof());
+            }
+            SuccessFactProofResult::Reuse(result) => {
+                self.collect_verified_by_nodes(result.source.proof());
             }
         }
     }
 
-    fn collect_verified_bys_item_nodes(&mut self, item: &VerifiedBysEnum) {
+    fn collect_verified_bys_item_nodes(&mut self, item: &SuccessCombinedFactProofItemResult) {
         match item {
-            VerifiedBysEnum::ByBuiltinRule(result) | VerifiedBysEnum::ByBuiltinStrategy(result) => {
+            SuccessCombinedFactProofItemResult::ByBuiltinRule(result)
+            | SuccessCombinedFactProofItemResult::ByBuiltinStrategy(result) => {
                 for subgoal in &result.subgoals {
                     self.collect_result_nodes(subgoal);
                 }
             }
-            VerifiedBysEnum::ByFact(result) => {
+            SuccessCombinedFactProofItemResult::ByFact(result) => {
                 self.add_cited_stmt_node(result.cite_what.as_ref());
             }
-            VerifiedBysEnum::ByKnownForall(result) => {
+            SuccessCombinedFactProofItemResult::ByKnownForall(result) => {
                 self.add_cited_stmt_node(result.result.cite_what.as_ref());
                 for requirement in &result.result.requirements {
                     self.add_requirement_source_nodes(requirement.result.as_ref());
                 }
             }
-            VerifiedBysEnum::ByStatementMemo(_, source) => {
-                self.collect_verified_by_nodes(&source.verified_by);
+            SuccessCombinedFactProofItemResult::Reuse(result) => {
+                self.collect_verified_by_nodes(result.source.proof());
             }
         }
     }
 
-    fn add_infer_nodes(&mut self, infers: &InferResult) {
+    fn add_infer_nodes(&mut self, infers: &SuccessInferResult) {
         for output in infers.store_fact_outputs() {
             let (fact, reason) = &output.itself_and_why_itself_is_stored;
             self.add_fact_node(fact, fact_kind_from_store_reason(reason), Some(reason));
@@ -486,7 +486,7 @@ impl FactGraphBuilder {
         }
     }
 
-    fn add_assumption_nodes(&mut self, infers: &InferResult) {
+    fn add_assumption_nodes(&mut self, infers: &SuccessInferResult) {
         for output in infers.store_fact_outputs() {
             if output.itself_and_why_itself_is_stored.1 == ParamDefWithType::store_reason() {
                 continue;
@@ -499,7 +499,7 @@ impl FactGraphBuilder {
         }
     }
 
-    fn add_trust_nodes(&mut self, infers: &InferResult) {
+    fn add_trust_nodes(&mut self, infers: &SuccessInferResult) {
         for output in infers.store_fact_outputs() {
             let fact = &output.itself_and_why_itself_is_stored.0;
             let node_id = self.add_fact_node(
@@ -619,34 +619,40 @@ impl FactGraphBuilder {
         if let Some(success) = result.factual_success() {
             let target_id = self.add_fact_node(&success.fact(), "fact", None);
             self.add_infer_edges(&success.infers);
-            self.collect_verified_by_edges(&target_id, &success.verified_by);
+            self.collect_verified_by_edges(&target_id, success.proof());
             return;
         }
 
-        let Some(success) = result.non_factual_ir() else {
+        let Some(success) = result.non_factual_success() else {
             return;
         };
         let source_stmt = success.statement();
         let common = success
             .common()
             .expect("non-factual IR carries common execution evidence");
-        for inside in &common.inside_results {
-            self.collect_result_edges(inside);
-        }
-        if let Stmt::By(ByStmt::ByDefStmt(stmt)) = &source_stmt {
+        success.visit_child_results(&mut |child| self.collect_result_edges(child));
+        if let SuccessStmtResult::By(SuccessByStmtResult::ByDefStmt(result)) = success {
             self.add_infer_edges(&common.infers);
-            let target_fact: Fact = stmt.fact.clone().into();
+            let target_fact: Fact = result.statement.fact.clone().into();
             let target_id = self.add_fact_node(&target_fact, "fact", None);
-            for clause_result in common.inside_results.iter().skip(1) {
-                for source_id in self.dependency_source_ids_from_result(clause_result) {
-                    for source_id in self.main_chain_source_ids(&source_id) {
-                        self.add_edge(&source_id, &target_id, "unfolds");
+            if let Some(verification) = &result.verification {
+                for clause_result in &verification.clause_checks {
+                    for source_id in self.dependency_source_ids_from_result(clause_result) {
+                        for source_id in self.main_chain_source_ids(&source_id) {
+                            self.add_edge(&source_id, &target_id, "unfolds");
+                        }
                     }
                 }
             }
             return;
         }
-        let Some(last_fact_id) = self.last_factual_result_node_id(&common.inside_results) else {
+        let mut last_fact_id = None;
+        success.visit_child_results(&mut |child| {
+            if let Some(node_id) = self.last_factual_result_node_id(std::slice::from_ref(child)) {
+                last_fact_id = Some(node_id);
+            }
+        });
+        let Some(last_fact_id) = last_fact_id else {
             return;
         };
         match &source_stmt {
@@ -660,23 +666,24 @@ impl FactGraphBuilder {
         }
     }
 
-    fn collect_verified_by_edges(&mut self, target_id: &str, verified_by: &VerifiedByResult) {
+    fn collect_verified_by_edges(&mut self, target_id: &str, verified_by: &SuccessFactProofResult) {
         match verified_by {
-            VerifiedByResult::BuiltinRule(result) | VerifiedByResult::BuiltinStrategy(result) => {
+            SuccessFactProofResult::BuiltinRule(result)
+            | SuccessFactProofResult::BuiltinStrategy(result) => {
                 self.add_subgoal_edges(target_id, &result.subgoals);
             }
-            VerifiedByResult::Fact(result) => {
+            SuccessFactProofResult::Fact(result) => {
                 self.add_cited_stmt_edges(target_id, result.cite_what.as_ref());
             }
-            VerifiedByResult::KnownForallInstantiation(result) => {
+            SuccessFactProofResult::KnownForallInstantiation(result) => {
                 self.add_known_forall_edges(target_id, result);
             }
-            VerifiedByResult::VerifiedBys(result) => {
+            SuccessFactProofResult::CombinedProofs(result) => {
                 for item in &result.cite_what {
                     self.add_verified_bys_item_edges(target_id, item);
                 }
             }
-            VerifiedByResult::ForallProof(result) => {
+            SuccessFactProofResult::ForallProof(result) => {
                 for proved in &result.proves {
                     self.collect_result_edges(proved.result.as_ref());
                     if let Some(source_id) = self.primary_result_node_id(proved.result.as_ref()) {
@@ -684,25 +691,33 @@ impl FactGraphBuilder {
                     }
                 }
             }
-            VerifiedByResult::StatementMemo(source) => {
-                self.collect_verified_by_edges(target_id, &source.verified_by);
+            SuccessFactProofResult::Transform(result) => {
+                self.collect_verified_by_edges(target_id, result.source.proof());
+            }
+            SuccessFactProofResult::Reuse(result) => {
+                self.collect_verified_by_edges(target_id, result.source.proof());
             }
         }
     }
 
-    fn add_verified_bys_item_edges(&mut self, target_id: &str, item: &VerifiedBysEnum) {
+    fn add_verified_bys_item_edges(
+        &mut self,
+        target_id: &str,
+        item: &SuccessCombinedFactProofItemResult,
+    ) {
         match item {
-            VerifiedBysEnum::ByBuiltinRule(result) | VerifiedBysEnum::ByBuiltinStrategy(result) => {
+            SuccessCombinedFactProofItemResult::ByBuiltinRule(result)
+            | SuccessCombinedFactProofItemResult::ByBuiltinStrategy(result) => {
                 self.add_subgoal_edges(target_id, &result.subgoals);
             }
-            VerifiedBysEnum::ByFact(result) => {
+            SuccessCombinedFactProofItemResult::ByFact(result) => {
                 self.add_cited_stmt_edges(target_id, result.cite_what.as_ref());
             }
-            VerifiedBysEnum::ByKnownForall(result) => {
+            SuccessCombinedFactProofItemResult::ByKnownForall(result) => {
                 self.add_known_forall_edges(target_id, &result.result);
             }
-            VerifiedBysEnum::ByStatementMemo(_, source) => {
-                self.collect_verified_by_edges(target_id, &source.verified_by);
+            SuccessCombinedFactProofItemResult::Reuse(result) => {
+                self.collect_verified_by_edges(target_id, result.source.proof());
             }
         }
     }
@@ -747,7 +762,11 @@ impl FactGraphBuilder {
             })
     }
 
-    fn add_known_forall_edges(&mut self, target_id: &str, result: &KnownForallInstantiationResult) {
+    fn add_known_forall_edges(
+        &mut self,
+        target_id: &str,
+        result: &SuccessInstantiateKnownForallResult,
+    ) {
         if let Some(source_id) = self.add_cited_stmt_node(result.cite_what.as_ref()) {
             self.add_edge(&source_id, target_id, "instantiates");
         }
@@ -777,9 +796,9 @@ impl FactGraphBuilder {
             if self.node_index.contains_key(&direct_id) {
                 return vec![direct_id];
             }
-            return self.dependency_source_ids_from_verified_by(&success.verified_by);
+            return self.dependency_source_ids_from_verified_by(success.proof());
         }
-        let Some(success) = result.non_factual_ir() else {
+        let Some(success) = result.non_factual_success() else {
             return vec![];
         };
         match &success.statement() {
@@ -798,38 +817,39 @@ impl FactGraphBuilder {
 
     fn dependency_source_ids_from_verified_by(
         &mut self,
-        verified_by: &VerifiedByResult,
+        verified_by: &SuccessFactProofResult,
     ) -> Vec<String> {
         match verified_by {
-            VerifiedByResult::BuiltinRule(result) | VerifiedByResult::BuiltinStrategy(result) => {
+            SuccessFactProofResult::BuiltinRule(result)
+            | SuccessFactProofResult::BuiltinStrategy(result) => {
                 self.dependency_source_ids_from_results(&result.subgoals)
             }
-            VerifiedByResult::Fact(result) => self
+            SuccessFactProofResult::Fact(result) => self
                 .add_cited_stmt_node(result.cite_what.as_ref())
                 .into_iter()
                 .collect(),
-            VerifiedByResult::KnownForallInstantiation(result) => self
+            SuccessFactProofResult::KnownForallInstantiation(result) => self
                 .add_cited_stmt_node(result.cite_what.as_ref())
                 .into_iter()
                 .collect(),
-            VerifiedByResult::VerifiedBys(result) => {
+            SuccessFactProofResult::CombinedProofs(result) => {
                 let mut ids = vec![];
                 for item in &result.cite_what {
                     let mut item_ids = match item {
-                        VerifiedBysEnum::ByBuiltinRule(item)
-                        | VerifiedBysEnum::ByBuiltinStrategy(item) => {
+                        SuccessCombinedFactProofItemResult::ByBuiltinRule(item)
+                        | SuccessCombinedFactProofItemResult::ByBuiltinStrategy(item) => {
                             self.dependency_source_ids_from_results(&item.subgoals)
                         }
-                        VerifiedBysEnum::ByFact(item) => self
+                        SuccessCombinedFactProofItemResult::ByFact(item) => self
                             .add_cited_stmt_node(item.cite_what.as_ref())
                             .into_iter()
                             .collect(),
-                        VerifiedBysEnum::ByKnownForall(item) => self
+                        SuccessCombinedFactProofItemResult::ByKnownForall(item) => self
                             .add_cited_stmt_node(item.result.cite_what.as_ref())
                             .into_iter()
                             .collect(),
-                        VerifiedBysEnum::ByStatementMemo(_, source) => {
-                            self.dependency_source_ids_from_verified_by(&source.verified_by)
+                        SuccessCombinedFactProofItemResult::Reuse(result) => {
+                            self.dependency_source_ids_from_verified_by(result.source.proof())
                         }
                     };
                     ids.append(&mut item_ids);
@@ -838,13 +858,16 @@ impl FactGraphBuilder {
                 ids.dedup();
                 ids
             }
-            VerifiedByResult::ForallProof(result) => result
+            SuccessFactProofResult::ForallProof(result) => result
                 .proves
                 .iter()
                 .flat_map(|proved| self.dependency_source_ids_from_result(proved.result.as_ref()))
                 .collect(),
-            VerifiedByResult::StatementMemo(source) => {
-                self.dependency_source_ids_from_verified_by(&source.verified_by)
+            SuccessFactProofResult::Transform(result) => {
+                self.dependency_source_ids_from_verified_by(result.source.proof())
+            }
+            SuccessFactProofResult::Reuse(result) => {
+                self.dependency_source_ids_from_verified_by(result.source.proof())
             }
         }
     }
@@ -878,7 +901,7 @@ impl FactGraphBuilder {
         parents
     }
 
-    fn add_infer_edges(&mut self, infers: &InferResult) {
+    fn add_infer_edges(&mut self, infers: &SuccessInferResult) {
         for output in infers.store_fact_outputs() {
             let primary = &output.itself_and_why_itself_is_stored.0;
             let source_id = fact_node_id(primary);
@@ -896,7 +919,7 @@ impl FactGraphBuilder {
         if let Some(success) = result.factual_success() {
             return Some(self.add_fact_node(&success.fact(), "fact", None));
         }
-        let success = result.non_factual_ir()?;
+        let success = result.non_factual_success()?;
         match &success.statement() {
             Stmt::DefThmStmt(stmt) => Some(theorem_id(&stmt.name)),
             Stmt::AxiomStmt(stmt) => Some(theorem_id(&stmt.name)),
@@ -914,16 +937,21 @@ impl FactGraphBuilder {
             if let Some(success) = result.factual_success() {
                 return Some(self.add_fact_node(&success.fact(), "fact", None));
             }
-            if let Some(success) = result.non_factual_ir() {
+            if let Some(success) = result.non_factual_success() {
                 if let Stmt::By(ByStmt::ByDefStmt(stmt)) = &success.statement() {
                     let fact: Fact = stmt.fact.clone().into();
                     return Some(self.add_fact_node(&fact, "fact", None));
                 }
-                let common = success
-                    .common()
-                    .expect("non-factual IR carries common execution evidence");
-                if let Some(node_id) = self.last_factual_result_node_id(&common.inside_results) {
-                    return Some(node_id);
+                let mut last_child_id = None;
+                success.visit_child_results(&mut |child| {
+                    if let Some(node_id) =
+                        self.last_factual_result_node_id(std::slice::from_ref(child))
+                    {
+                        last_child_id = Some(node_id);
+                    }
+                });
+                if last_child_id.is_some() {
+                    return last_child_id;
                 }
             }
         }

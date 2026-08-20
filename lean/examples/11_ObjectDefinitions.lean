@@ -17,7 +17,7 @@ noncomputable def y := (1 : ℂ)
 theorem __fact1 : Litex.In y Litex.R := by
   exact (by
   unfold y
-  exact Litex.Rules.complexRealInR 1)
+  exact Litex.Rules.complexRealInR (1 : ℝ))
 
 theorem __fact2 : Litex.Same y (1 : ℂ) := by
   exact (by
@@ -33,6 +33,7 @@ theorem local_definition :
     exact Litex.Same.refl (2 : ℂ))
   have __step2 : Litex.Same z (2 : ℂ) := by
     exact __step1
-  exact Litex.Same.refl (2 : ℂ)
+  have __c3_0 : Litex.Same (2 : ℂ) (2 : ℂ) := Litex.Same.refl (2 : ℂ)
+  exact __c3_0
 
 end __Compiler_11_ObjectDefinitions

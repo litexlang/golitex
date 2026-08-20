@@ -39,18 +39,24 @@ public interface usable without changing its models.
 - **Ordinary meaning:** The subset containing exactly the points that occur in
   at least one set of a positive-natural-indexed family.
 - **Semantic role:** Set-valued construction.
-- **Ideal Litex form:** A membership `prop` plus a templated `have fn` returning
-  `power_set(Omega)`.
+- **Ideal Litex form:** The first-class builtin
+  `index_union(N+, Omega, family)` with an exact
+  `family fn(n N+) power_set(Omega)` signature.
 - **Interface sketch:**
-  `countable_union(family fn(n N+) power_set(Omega)) power_set(Omega)`.
-- **Nearest wrong alternative:** Leaving only an existential membership
-  relation would force every sigma-algebra and probability caller to rebuild
-  the resulting set.
-- **Dependencies:** Native sets, functions, existential witnesses, and set
-  builders (`signature`, `definition`).
+  `index_union(N+, Omega, fn(n N+) power_set(Omega) {events_family(n)})`.
+- **Nearest wrong alternative:** A chapter-local membership `prop` plus a
+  templated set-builder duplicates the general indexed-family construction
+  and forces proofs to fold that private representation.
+- **Dependencies:** Native sets, exact-domain functions, existential indexed
+  fiber witnesses, and the indexed-union builtin (`signature`, `builtin`).
 - **Downstream uses:** Sigma-algebra closure and the left side of countable
   additivity.
 - **Allowable hole:** None in the first checkpoint.
+
+The dual `index_intersect(N+, Omega, family)` is the intended representation
+of countable intersection. Closure under it is a derived sigma-algebra theorem,
+not an additional field in this checkpoint; proving that De Morgan consequence
+is separate from the present countable-union migration.
 
 ### Real series sum
 
@@ -190,12 +196,12 @@ appears in a parameter or return carrier; `well-definedness` justifies a
 guarded application; `proof` marks a named checked consumer.
 
 ```text
-native sets + N+ families
-  -> countable_union                              [definition]
+native sets + exact N+ set-valued families
+  -> index_union(N+, Omega, family)               [builtin]
 real arithmetic + epsilon limits
   -> partial_sum -> has_series_sum                [definition]
 
-countable_union + complement
+index_union + complement
   -> SigmaAlgebraSetting                          [law]
 SigmaAlgebraSetting + has_series_sum
   -> ProbabilitySpaceSetting                      [law]
@@ -228,7 +234,8 @@ part of the intended public file.
 
 ## Intended build order
 
-Build countable unions first, then partial sums and series convergence, then
+Use the builtin indexed union first, then build partial sums and series
+convergence, then
 the sigma-algebra setting, the probability-space setting, and its direct
 countable-additivity tracer. Next prove uniqueness of series sums and the
 two-term finite-support series, then specialize countable additivity to obtain

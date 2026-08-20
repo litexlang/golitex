@@ -276,8 +276,10 @@ fn runner_target_error_output(
     (false, render_runner_json_value(output_language, output))
 }
 
-fn render_runner_json_value(output_language: OutputLanguage, value: JsonValue) -> String {
-    let value = crate::output::localize_json_value_for_language(output_language, value);
+fn render_runner_json_value(_output_language: OutputLanguage, value: JsonValue) -> String {
+    // Runner JSON is a machine interface. JSON v2 keeps structural keys and
+    // enum names language-neutral; only human-readable diagnostic messages may
+    // still be localized before they enter this envelope.
     render_json_value(&value, 0)
 }
 

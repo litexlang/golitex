@@ -32,19 +32,25 @@ pub(super) fn section_inferred_fact(inside_results: &[StmtResult], fact: &Fact) 
 }
 
 fn stmt_result_inferred_fact(result: &StmtResult, target: &str) -> bool {
-    if let Some(success) = result.non_factual_ir() {
+    if let Some(success) = result.non_factual_success() {
         let common = success
             .common()
             .expect("non-factual IR always carries common execution evidence");
-        common
+        if common
             .infers
             .inferred_facts()
             .iter()
             .any(|fact| fact.to_string() == target)
-            || common
-                .inside_results
-                .iter()
-                .any(|inside| stmt_result_inferred_fact(inside, target))
+        {
+            return true;
+        }
+        let mut inferred_by_child = false;
+        success.visit_child_results(&mut |child| {
+            if !inferred_by_child && stmt_result_inferred_fact(child, target) {
+                inferred_by_child = true;
+            }
+        });
+        inferred_by_child
     } else if let Some(success) = result.factual_success() {
         success
             .infers

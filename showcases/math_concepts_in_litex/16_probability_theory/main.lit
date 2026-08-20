@@ -12,13 +12,8 @@
 #       -> conditional probability and independence
 #       -> measurable random variables and their distributions.
 
-# Countable unions are set-valued constructions. The membership relation keeps
-# the existential surface explicit and stable inside set builders.
-prop member_of_countable_union(Omega set, family fn(n N+) power_set(Omega), omega Omega):
-    exist n N+ st {omega $in family(n)}
-
-template<Omega set>:
-    have fn countable_union(family fn(n N+) power_set(Omega)) power_set(Omega) = {omega Omega: $member_of_countable_union(Omega, family, omega)}
+# Countable unions use the first-class indexed-family operator. Its explicit
+# ambient set also fixes the empty-family intersection convention elsewhere.
 
 # A real series sum is a relation on a candidate value, not a total selector.
 have fn partial_sum(a seq(R), k N) R by induc k from 0:
@@ -50,7 +45,7 @@ setting SigmaAlgebraSetting(Omega set, events power_set(power_set(Omega))):
     forall left_event, right_event events:
         intersect(left_event, right_event) $in events
     forall family fn(n N+) events:
-        \countable_union<Omega>(fn(n N+) power_set(Omega) {family(n)}) $in events
+        index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)}) $in events
 
 prop is_sigma_algebra([SigmaAlgebraSetting])
 
@@ -70,7 +65,7 @@ setting ProbabilitySpaceSetting([SigmaAlgebraSetting], probability fn(event even
     forall family fn(n N+) events:
         $pairwise_disjoint_event_sequence(Omega, events, family)
         =>:
-            $has_series_sum(fn(n N+) R {probability(family(n))}, probability(\countable_union<Omega>(fn(n N+) power_set(Omega) {family(n)})))
+            $has_series_sum(fn(n N+) R {probability(family(n))}, probability(index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)})))
 
 prop is_probability_space([ProbabilitySpaceSetting])
 
@@ -80,7 +75,7 @@ thm kolmogorov_countable_additivity:
     ? forall [ProbabilitySpaceSetting], event_sequence fn(n N+) events:
         $pairwise_disjoint_event_sequence(Omega, events, event_sequence)
         =>:
-            $has_series_sum(fn(n N+) R {probability(event_sequence(n))}, probability(\countable_union<Omega>(fn(n N+) power_set(Omega) {event_sequence(n)})))
+            $has_series_sum(fn(n N+) R {probability(event_sequence(n))}, probability(index_union(N+, Omega, fn(n N+) power_set(Omega) {event_sequence(n)})))
 
 # Event-level probability calculus.
 template<Omega set, events power_set(power_set(Omega)), probability fn(event events) R>:
@@ -238,14 +233,10 @@ thm two_term_series_has_sum:
 # Pad two events by empty events so the countable Kolmogorov axiom can be
 # specialized to a binary union.
 template<Omega set, events power_set(power_set(Omega))>:
-    have fn one_event_sequence(A events, n N+: {} $in events) events by cases:
-        case n = 1: A
-        case n > 1: {}
-
-template<Omega set, events power_set(power_set(Omega))>:
     have fn two_event_sequence(A, B events, n N+: {} $in events) events by cases:
         case n = 1: A
-        case n > 1: \one_event_sequence<Omega, events>(B, n - 1)
+        case n = 2: B
+        case n > 2: {}
 
 # Every event is a subset of the sample space by the exact carrier of `events`.
 thm event_is_subset_of_sample_space:
@@ -259,19 +250,19 @@ thm event_is_subset_of_sample_space:
 # Extensionality shows that the padded sequence contains exactly A, B, and then
 # empty events, so its countable union is A union B.
 thm two_event_sequence_countable_union:
-    ? forall [SigmaAlgebraSetting], A, B events:
-        \countable_union<Omega>(fn(n N+) power_set(Omega) {\two_event_sequence<Omega, events>(A, B, n)}) = union(A, B)
+    ? forall [SigmaAlgebraSetting(union_Omega, union_events)], A, B union_events:
+        index_union(N+, union_Omega, fn(n N+) power_set(union_Omega) {\two_event_sequence<union_Omega, union_events>(A, B, n)}) = union(A, B)
     by extension:
-        ? \countable_union<Omega>(fn(n N+) power_set(Omega) {\two_event_sequence<Omega, events>(A, B, n)}) = union(A, B)
+        ? index_union(N+, union_Omega, fn(n N+) power_set(union_Omega) {\two_event_sequence<union_Omega, union_events>(A, B, n)}) = union(A, B)
         claim:
-            ? forall point \countable_union<Omega>(fn(n N+) power_set(Omega) {\two_event_sequence<Omega, events>(A, B, n)}):
+            ? forall point index_union(N+, union_Omega, fn(n N+) power_set(union_Omega) {\two_event_sequence<union_Omega, union_events>(A, B, n)}):
                 point $in union(A, B)
-            obtain idx from exist idx N+ st {point $in fn(n N+) power_set(Omega) {\two_event_sequence<Omega, events>(A, B, n)}(idx)}
+            obtain idx from exist idx N+ st {point $in \two_event_sequence<union_Omega, union_events>(A, B, idx)}
             idx = 1 or idx > 1
             by cases:
                 ? point $in union(A, B)
                 case idx = 1:
-                    \two_event_sequence<Omega, events>(A, B, idx) = A
+                    \two_event_sequence<union_Omega, union_events>(A, B, idx) = A
                     point $in A
                     point $in union(A, B)
                 case idx > 1:
@@ -280,64 +271,58 @@ thm two_event_sequence_countable_union:
                     by cases:
                         ? point $in union(A, B)
                         case idx - 1 = 1:
-                            \one_event_sequence<Omega, events>(B, idx - 1) = B
-                            \two_event_sequence<Omega, events>(A, B, idx) = \one_event_sequence<Omega, events>(B, idx - 1) = B
+                            idx = (idx - 1) + 1 = 1 + 1 = 2
+                            \two_event_sequence<union_Omega, union_events>(A, B, idx) = B
                             point $in B
                             point $in union(A, B)
                         case idx - 1 > 1:
-                            \one_event_sequence<Omega, events>(B, idx - 1) = {}
-                            \two_event_sequence<Omega, events>(A, B, idx) = \one_event_sequence<Omega, events>(B, idx - 1) = {}
+                            (idx - 1) + 1 > 1 + 1
+                            idx = (idx - 1) + 1
+                            1 + 1 = 2
+                            idx > 2
+                            \two_event_sequence<union_Omega, union_events>(A, B, idx) = {}
                             point $in {}
                             impossible point $in {}
         claim:
             ? forall point union(A, B):
-                point $in \countable_union<Omega>(fn(n N+) power_set(Omega) {\two_event_sequence<Omega, events>(A, B, n)})
+                point $in index_union(N+, union_Omega, fn(n N+) power_set(union_Omega) {\two_event_sequence<union_Omega, union_events>(A, B, n)})
             point $in A or point $in B
             by cases:
-                ? point $in \countable_union<Omega>(fn(n N+) power_set(Omega) {\two_event_sequence<Omega, events>(A, B, n)})
+                ? point $in index_union(N+, union_Omega, fn(n N+) power_set(union_Omega) {\two_event_sequence<union_Omega, union_events>(A, B, n)})
                 case point $in A:
-                    by thm event_is_subset_of_sample_space(Omega, events, A) => A $subset Omega
-                    point $in Omega
-                    \two_event_sequence<Omega, events>(A, B, 1) = A
-                    point $in \two_event_sequence<Omega, events>(A, B, 1)
-                    witness exist idx N+ st {point $in fn(n N+) power_set(Omega) {\two_event_sequence<Omega, events>(A, B, n)}(idx)} from 1:
-                        fn(n N+) power_set(Omega) {\two_event_sequence<Omega, events>(A, B, n)}(1) = \two_event_sequence<Omega, events>(A, B, 1)
-                        point $in fn(n N+) power_set(Omega) {\two_event_sequence<Omega, events>(A, B, n)}(1)
-                    by def $member_of_countable_union(Omega, fn(n N+) power_set(Omega) {\two_event_sequence<Omega, events>(A, B, n)}, point)
-                    by thm set_builder_member(point, {omega Omega: $member_of_countable_union(Omega, fn(n N+) power_set(Omega) {\two_event_sequence<Omega, events>(A, B, n)}, omega)}) => point $in {omega Omega: $member_of_countable_union(Omega, fn(n N+) power_set(Omega) {\two_event_sequence<Omega, events>(A, B, n)}, omega)}
-                    point $in \countable_union<Omega>(fn(n N+) power_set(Omega) {\two_event_sequence<Omega, events>(A, B, n)})
+                    by thm event_is_subset_of_sample_space(union_Omega, union_events, A) => A $subset union_Omega
+                    point $in union_Omega
+                    \two_event_sequence<union_Omega, union_events>(A, B, 1) = A
+                    point $in \two_event_sequence<union_Omega, union_events>(A, B, 1)
+                    witness exist idx N+ st {point $in \two_event_sequence<union_Omega, union_events>(A, B, idx)} from 1
+                    point $in index_union(N+, union_Omega, fn(n N+) power_set(union_Omega) {\two_event_sequence<union_Omega, union_events>(A, B, n)})
                 case point $in B:
-                    by thm event_is_subset_of_sample_space(Omega, events, B) => B $subset Omega
-                    point $in Omega
-                    \one_event_sequence<Omega, events>(B, 1) = B
-                    \two_event_sequence<Omega, events>(A, B, 2) = \one_event_sequence<Omega, events>(B, 1) = B
-                    point $in \two_event_sequence<Omega, events>(A, B, 2)
-                    witness exist idx N+ st {point $in fn(n N+) power_set(Omega) {\two_event_sequence<Omega, events>(A, B, n)}(idx)} from 2:
-                        fn(n N+) power_set(Omega) {\two_event_sequence<Omega, events>(A, B, n)}(2) = \two_event_sequence<Omega, events>(A, B, 2)
-                        point $in fn(n N+) power_set(Omega) {\two_event_sequence<Omega, events>(A, B, n)}(2)
-                    by def $member_of_countable_union(Omega, fn(n N+) power_set(Omega) {\two_event_sequence<Omega, events>(A, B, n)}, point)
-                    by thm set_builder_member(point, {omega Omega: $member_of_countable_union(Omega, fn(n N+) power_set(Omega) {\two_event_sequence<Omega, events>(A, B, n)}, omega)}) => point $in {omega Omega: $member_of_countable_union(Omega, fn(n N+) power_set(Omega) {\two_event_sequence<Omega, events>(A, B, n)}, omega)}
-                    point $in \countable_union<Omega>(fn(n N+) power_set(Omega) {\two_event_sequence<Omega, events>(A, B, n)})
+                    by thm event_is_subset_of_sample_space(union_Omega, union_events, B) => B $subset union_Omega
+                    point $in union_Omega
+                    \two_event_sequence<union_Omega, union_events>(A, B, 2) = B
+                    point $in \two_event_sequence<union_Omega, union_events>(A, B, 2)
+                    witness exist idx N+ st {point $in \two_event_sequence<union_Omega, union_events>(A, B, idx)} from 2
+                    point $in index_union(N+, union_Omega, fn(n N+) power_set(union_Omega) {\two_event_sequence<union_Omega, union_events>(A, B, n)})
 
 # If A and B are disjoint, a finite index case split proves the padded event
 # sequence pairwise disjoint, including all empty tail terms.
 thm two_event_sequence_pairwise_disjoint:
-    ? forall [SigmaAlgebraSetting], A, B events:
+    ? forall [SigmaAlgebraSetting(disjoint_Omega, disjoint_events)], A, B disjoint_events:
         intersect(A, B) = {}
         =>:
-            $pairwise_disjoint_event_sequence(Omega, events, fn(n N+) events {\two_event_sequence<Omega, events>(A, B, n)})
+            $pairwise_disjoint_event_sequence(disjoint_Omega, disjoint_events, fn(n N+) disjoint_events {\two_event_sequence<disjoint_Omega, disjoint_events>(A, B, n)})
     claim:
         ? forall idx, j N+:
             idx != j
             =>:
-                intersect(fn(n N+) events {\two_event_sequence<Omega, events>(A, B, n)}(idx), fn(n N+) events {\two_event_sequence<Omega, events>(A, B, n)}(j)) = {}
+                intersect(fn(n N+) disjoint_events {\two_event_sequence<disjoint_Omega, disjoint_events>(A, B, n)}(idx), fn(n N+) disjoint_events {\two_event_sequence<disjoint_Omega, disjoint_events>(A, B, n)}(j)) = {}
         idx = 1 or idx > 1
         j = 1 or j > 1
         by cases:
-            ? intersect(fn(n N+) events {\two_event_sequence<Omega, events>(A, B, n)}(idx), fn(n N+) events {\two_event_sequence<Omega, events>(A, B, n)}(j)) = {}
+            ? intersect(fn(n N+) disjoint_events {\two_event_sequence<disjoint_Omega, disjoint_events>(A, B, n)}(idx), fn(n N+) disjoint_events {\two_event_sequence<disjoint_Omega, disjoint_events>(A, B, n)}(j)) = {}
             case idx = 1:
                 by cases:
-                    ? intersect(fn(n N+) events {\two_event_sequence<Omega, events>(A, B, n)}(idx), fn(n N+) events {\two_event_sequence<Omega, events>(A, B, n)}(j)) = {}
+                    ? intersect(fn(n N+) disjoint_events {\two_event_sequence<disjoint_Omega, disjoint_events>(A, B, n)}(idx), fn(n N+) disjoint_events {\two_event_sequence<disjoint_Omega, disjoint_events>(A, B, n)}(j)) = {}
                     case j = 1:
                         idx = j
                         impossible idx != j
@@ -345,80 +330,92 @@ thm two_event_sequence_pairwise_disjoint:
                         j - 1 $in N+
                         j - 1 = 1 or j - 1 > 1
                         by cases:
-                            ? intersect(fn(n N+) events {\two_event_sequence<Omega, events>(A, B, n)}(idx), fn(n N+) events {\two_event_sequence<Omega, events>(A, B, n)}(j)) = {}
+                            ? intersect(fn(n N+) disjoint_events {\two_event_sequence<disjoint_Omega, disjoint_events>(A, B, n)}(idx), fn(n N+) disjoint_events {\two_event_sequence<disjoint_Omega, disjoint_events>(A, B, n)}(j)) = {}
                             case j - 1 = 1:
-                                \two_event_sequence<Omega, events>(A, B, idx) = A
-                                \one_event_sequence<Omega, events>(B, j - 1) = B
-                                \two_event_sequence<Omega, events>(A, B, j) = \one_event_sequence<Omega, events>(B, j - 1) = B
-                                intersect(fn(n N+) events {\two_event_sequence<Omega, events>(A, B, n)}(idx), fn(n N+) events {\two_event_sequence<Omega, events>(A, B, n)}(j)) = intersect(A, B) = {}
+                                j = (j - 1) + 1 = 1 + 1 = 2
+                                \two_event_sequence<disjoint_Omega, disjoint_events>(A, B, idx) = A
+                                \two_event_sequence<disjoint_Omega, disjoint_events>(A, B, j) = B
+                                intersect(fn(n N+) disjoint_events {\two_event_sequence<disjoint_Omega, disjoint_events>(A, B, n)}(idx), fn(n N+) disjoint_events {\two_event_sequence<disjoint_Omega, disjoint_events>(A, B, n)}(j)) = intersect(A, B) = {}
                             case j - 1 > 1:
-                                \two_event_sequence<Omega, events>(A, B, idx) = A
-                                \one_event_sequence<Omega, events>(B, j - 1) = {}
-                                \two_event_sequence<Omega, events>(A, B, j) = \one_event_sequence<Omega, events>(B, j - 1) = {}
-                                intersect(fn(n N+) events {\two_event_sequence<Omega, events>(A, B, n)}(idx), fn(n N+) events {\two_event_sequence<Omega, events>(A, B, n)}(j)) = intersect(A, {}) = {}
+                                (j - 1) + 1 > 1 + 1
+                                j = (j - 1) + 1
+                                1 + 1 = 2
+                                j > 2
+                                \two_event_sequence<disjoint_Omega, disjoint_events>(A, B, idx) = A
+                                \two_event_sequence<disjoint_Omega, disjoint_events>(A, B, j) = {}
+                                intersect(fn(n N+) disjoint_events {\two_event_sequence<disjoint_Omega, disjoint_events>(A, B, n)}(idx), fn(n N+) disjoint_events {\two_event_sequence<disjoint_Omega, disjoint_events>(A, B, n)}(j)) = intersect(A, {}) = {}
             case idx > 1:
                 idx - 1 $in N+
                 idx - 1 = 1 or idx - 1 > 1
                 by cases:
-                    ? intersect(fn(n N+) events {\two_event_sequence<Omega, events>(A, B, n)}(idx), fn(n N+) events {\two_event_sequence<Omega, events>(A, B, n)}(j)) = {}
+                    ? intersect(fn(n N+) disjoint_events {\two_event_sequence<disjoint_Omega, disjoint_events>(A, B, n)}(idx), fn(n N+) disjoint_events {\two_event_sequence<disjoint_Omega, disjoint_events>(A, B, n)}(j)) = {}
                     case idx - 1 = 1:
-                        \one_event_sequence<Omega, events>(B, idx - 1) = B
-                        \two_event_sequence<Omega, events>(A, B, idx) = \one_event_sequence<Omega, events>(B, idx - 1) = B
+                        idx = (idx - 1) + 1 = 1 + 1 = 2
+                        \two_event_sequence<disjoint_Omega, disjoint_events>(A, B, idx) = B
                         by cases:
-                            ? intersect(fn(n N+) events {\two_event_sequence<Omega, events>(A, B, n)}(idx), fn(n N+) events {\two_event_sequence<Omega, events>(A, B, n)}(j)) = {}
+                            ? intersect(fn(n N+) disjoint_events {\two_event_sequence<disjoint_Omega, disjoint_events>(A, B, n)}(idx), fn(n N+) disjoint_events {\two_event_sequence<disjoint_Omega, disjoint_events>(A, B, n)}(j)) = {}
                             case j = 1:
-                                \two_event_sequence<Omega, events>(A, B, j) = A
-                                intersect(fn(n N+) events {\two_event_sequence<Omega, events>(A, B, n)}(idx), fn(n N+) events {\two_event_sequence<Omega, events>(A, B, n)}(j)) = intersect(B, A) = intersect(A, B) = {}
+                                \two_event_sequence<disjoint_Omega, disjoint_events>(A, B, j) = A
+                                intersect(fn(n N+) disjoint_events {\two_event_sequence<disjoint_Omega, disjoint_events>(A, B, n)}(idx), fn(n N+) disjoint_events {\two_event_sequence<disjoint_Omega, disjoint_events>(A, B, n)}(j)) = intersect(B, A) = intersect(A, B) = {}
                             case j > 1:
                                 j - 1 $in N+
                                 j - 1 = 1 or j - 1 > 1
                                 by cases:
-                                    ? intersect(fn(n N+) events {\two_event_sequence<Omega, events>(A, B, n)}(idx), fn(n N+) events {\two_event_sequence<Omega, events>(A, B, n)}(j)) = {}
+                                    ? intersect(fn(n N+) disjoint_events {\two_event_sequence<disjoint_Omega, disjoint_events>(A, B, n)}(idx), fn(n N+) disjoint_events {\two_event_sequence<disjoint_Omega, disjoint_events>(A, B, n)}(j)) = {}
                                     case j - 1 = 1:
                                         idx = (idx - 1) + 1 = 1 + 1 = 2
                                         j = (j - 1) + 1 = 1 + 1 = 2
                                         idx = j
                                         impossible idx != j
                                     case j - 1 > 1:
-                                        \one_event_sequence<Omega, events>(B, j - 1) = {}
-                                        \two_event_sequence<Omega, events>(A, B, j) = \one_event_sequence<Omega, events>(B, j - 1) = {}
-                                        intersect(fn(n N+) events {\two_event_sequence<Omega, events>(A, B, n)}(idx), fn(n N+) events {\two_event_sequence<Omega, events>(A, B, n)}(j)) = intersect(B, {}) = {}
+                                        (j - 1) + 1 > 1 + 1
+                                        j = (j - 1) + 1
+                                        1 + 1 = 2
+                                        j > 2
+                                        \two_event_sequence<disjoint_Omega, disjoint_events>(A, B, j) = {}
+                                        intersect(fn(n N+) disjoint_events {\two_event_sequence<disjoint_Omega, disjoint_events>(A, B, n)}(idx), fn(n N+) disjoint_events {\two_event_sequence<disjoint_Omega, disjoint_events>(A, B, n)}(j)) = intersect(B, {}) = {}
                     case idx - 1 > 1:
-                        \one_event_sequence<Omega, events>(B, idx - 1) = {}
-                        \two_event_sequence<Omega, events>(A, B, idx) = \one_event_sequence<Omega, events>(B, idx - 1) = {}
-                        intersect(fn(n N+) events {\two_event_sequence<Omega, events>(A, B, n)}(idx), fn(n N+) events {\two_event_sequence<Omega, events>(A, B, n)}(j)) = intersect({}, fn(n N+) events {\two_event_sequence<Omega, events>(A, B, n)}(j)) = {}
-    by def $pairwise_disjoint_event_sequence(Omega, events, fn(n N+) events {\two_event_sequence<Omega, events>(A, B, n)})
+                        (idx - 1) + 1 > 1 + 1
+                        idx = (idx - 1) + 1
+                        1 + 1 = 2
+                        idx > 2
+                        \two_event_sequence<disjoint_Omega, disjoint_events>(A, B, idx) = {}
+                        intersect(fn(n N+) disjoint_events {\two_event_sequence<disjoint_Omega, disjoint_events>(A, B, n)}(idx), fn(n N+) disjoint_events {\two_event_sequence<disjoint_Omega, disjoint_events>(A, B, n)}(j)) = intersect({}, fn(n N+) disjoint_events {\two_event_sequence<disjoint_Omega, disjoint_events>(A, B, n)}(j)) = {}
+    by def $pairwise_disjoint_event_sequence(disjoint_Omega, disjoint_events, fn(n N+) disjoint_events {\two_event_sequence<disjoint_Omega, disjoint_events>(A, B, n)})
 
 # Evaluate probability term by term: the first two values are P(A), P(B), and
 # every later empty-event value is zero.
 thm probability_of_two_event_sequence:
-    ? forall [ProbabilitySpaceSetting], A, B events, n N+:
-        probability(\two_event_sequence<Omega, events>(A, B, n)) = two_term_sequence(probability(A), probability(B), n)
+    ? forall [ProbabilitySpaceSetting(sequence_Omega, sequence_events, sequence_probability)], A, B sequence_events, n N+:
+        sequence_probability(\two_event_sequence<sequence_Omega, sequence_events>(A, B, n)) = two_term_sequence(sequence_probability(A), sequence_probability(B), n)
     n = 1 or n > 1
     by cases:
-        ? probability(\two_event_sequence<Omega, events>(A, B, n)) = two_term_sequence(probability(A), probability(B), n)
+        ? sequence_probability(\two_event_sequence<sequence_Omega, sequence_events>(A, B, n)) = two_term_sequence(sequence_probability(A), sequence_probability(B), n)
         case n = 1:
-            \two_event_sequence<Omega, events>(A, B, n) = A
-            two_term_sequence(probability(A), probability(B), n) = probability(A)
-            probability(\two_event_sequence<Omega, events>(A, B, n)) = probability(A) = two_term_sequence(probability(A), probability(B), n)
+            \two_event_sequence<sequence_Omega, sequence_events>(A, B, n) = A
+            two_term_sequence(sequence_probability(A), sequence_probability(B), n) = sequence_probability(A)
+            sequence_probability(\two_event_sequence<sequence_Omega, sequence_events>(A, B, n)) = sequence_probability(A) = two_term_sequence(sequence_probability(A), sequence_probability(B), n)
         case n > 1:
             n - 1 $in N+
             n - 1 = 1 or n - 1 > 1
             by cases:
-                ? probability(\two_event_sequence<Omega, events>(A, B, n)) = two_term_sequence(probability(A), probability(B), n)
+                ? sequence_probability(\two_event_sequence<sequence_Omega, sequence_events>(A, B, n)) = two_term_sequence(sequence_probability(A), sequence_probability(B), n)
                 case n - 1 = 1:
-                    \one_event_sequence<Omega, events>(B, n - 1) = B
-                    \two_event_sequence<Omega, events>(A, B, n) = \one_event_sequence<Omega, events>(B, n - 1) = B
-                    one_term_sequence(probability(B), n - 1) = probability(B)
-                    two_term_sequence(probability(A), probability(B), n) = one_term_sequence(probability(B), n - 1) = probability(B)
-                    probability(\two_event_sequence<Omega, events>(A, B, n)) = probability(B) = two_term_sequence(probability(A), probability(B), n)
+                    n = (n - 1) + 1 = 1 + 1 = 2
+                    \two_event_sequence<sequence_Omega, sequence_events>(A, B, n) = B
+                    one_term_sequence(sequence_probability(B), n - 1) = sequence_probability(B)
+                    two_term_sequence(sequence_probability(A), sequence_probability(B), n) = one_term_sequence(sequence_probability(B), n - 1) = sequence_probability(B)
+                    sequence_probability(\two_event_sequence<sequence_Omega, sequence_events>(A, B, n)) = sequence_probability(B) = two_term_sequence(sequence_probability(A), sequence_probability(B), n)
                 case n - 1 > 1:
-                    \one_event_sequence<Omega, events>(B, n - 1) = {}
-                    \two_event_sequence<Omega, events>(A, B, n) = \one_event_sequence<Omega, events>(B, n - 1) = {}
-                    probability(\two_event_sequence<Omega, events>(A, B, n)) = probability({}) = 0
-                    one_term_sequence(probability(B), n - 1) = 0
-                    two_term_sequence(probability(A), probability(B), n) = one_term_sequence(probability(B), n - 1) = 0
-                    probability(\two_event_sequence<Omega, events>(A, B, n)) = 0 = two_term_sequence(probability(A), probability(B), n)
+                    (n - 1) + 1 > 1 + 1
+                    n = (n - 1) + 1
+                    1 + 1 = 2
+                    n > 2
+                    \two_event_sequence<sequence_Omega, sequence_events>(A, B, n) = {}
+                    sequence_probability(\two_event_sequence<sequence_Omega, sequence_events>(A, B, n)) = sequence_probability({}) = 0
+                    one_term_sequence(sequence_probability(B), n - 1) = 0
+                    two_term_sequence(sequence_probability(A), sequence_probability(B), n) = one_term_sequence(sequence_probability(B), n - 1) = 0
+                    sequence_probability(\two_event_sequence<sequence_Omega, sequence_events>(A, B, n)) = 0 = two_term_sequence(sequence_probability(A), sequence_probability(B), n)
 
 # Induction transports pointwise equality through every finite partial sum.
 thm pointwise_equal_sequences_have_equal_partial_sums:
@@ -472,39 +469,39 @@ thm pointwise_equal_sequences_preserve_series_sum:
 
 # Combine termwise probability evaluation with the two-term series theorem.
 thm two_event_probability_series_has_sum:
-    ? forall [ProbabilitySpaceSetting], A, B events:
-        $has_series_sum(fn(n N+) R {probability(\two_event_sequence<Omega, events>(A, B, n))}, probability(A) + probability(B))
+    ? forall [ProbabilitySpaceSetting(series_Omega, series_events, series_probability)], A, B series_events:
+        $has_series_sum(fn(n N+) R {series_probability(\two_event_sequence<series_Omega, series_events>(A, B, n))}, series_probability(A) + series_probability(B))
     claim:
         ? forall term_index N+:
-            probability(\two_event_sequence<Omega, events>(A, B, term_index)) = two_term_sequence(probability(A), probability(B), term_index)
-        by thm probability_of_two_event_sequence(Omega, events, probability, A, B, term_index) => probability(\two_event_sequence<Omega, events>(A, B, term_index)) = two_term_sequence(probability(A), probability(B), term_index)
-    by thm two_term_series_has_sum(probability(A), probability(B)) => $has_series_sum(fn(n N+) R {two_term_sequence(probability(A), probability(B), n)}, probability(A) + probability(B))
-    by thm pointwise_equal_sequences_preserve_series_sum(fn(n N+) R {probability(\two_event_sequence<Omega, events>(A, B, n))}, fn(n N+) R {two_term_sequence(probability(A), probability(B), n)}, probability(A) + probability(B)) => $has_series_sum(fn(n N+) R {probability(\two_event_sequence<Omega, events>(A, B, n))}, probability(A) + probability(B))
+            series_probability(\two_event_sequence<series_Omega, series_events>(A, B, term_index)) = two_term_sequence(series_probability(A), series_probability(B), term_index)
+        by thm probability_of_two_event_sequence(series_Omega, series_events, series_probability, A, B, term_index) => series_probability(\two_event_sequence<series_Omega, series_events>(A, B, term_index)) = two_term_sequence(series_probability(A), series_probability(B), term_index)
+    by thm two_term_series_has_sum(series_probability(A), series_probability(B)) => $has_series_sum(fn(n N+) R {two_term_sequence(series_probability(A), series_probability(B), n)}, series_probability(A) + series_probability(B))
+    by thm pointwise_equal_sequences_preserve_series_sum(fn(n N+) R {series_probability(\two_event_sequence<series_Omega, series_events>(A, B, n))}, fn(n N+) R {two_term_sequence(series_probability(A), series_probability(B), n)}, series_probability(A) + series_probability(B)) => $has_series_sum(fn(n N+) R {series_probability(\two_event_sequence<series_Omega, series_events>(A, B, n))}, series_probability(A) + series_probability(B))
 
 thm event_countable_union_is_event:
     ? forall [SigmaAlgebraSetting], event_sequence fn(n N+) events:
-        \countable_union<Omega>(fn(n N+) power_set(Omega) {event_sequence(n)}) $in events
+        index_union(N+, Omega, fn(n N+) power_set(Omega) {event_sequence(n)}) $in events
 
 # Main tracer: binary finite additivity is derived from countable additivity;
 # it is not added as a fourth probability axiom.
 thm probability_of_disjoint_union:
-    ? forall [ProbabilitySpaceSetting], A, B events:
+    ? forall [ProbabilitySpaceSetting(union_probability_Omega, union_probability_events, union_probability)], A, B union_probability_events:
         intersect(A, B) = {}
         =>:
-            union(A, B) $in events
-            probability(union(A, B)) = probability(A) + probability(B)
-    by thm two_event_sequence_countable_union(Omega, events, A, B) => \countable_union<Omega>(fn(n N+) power_set(Omega) {\two_event_sequence<Omega, events>(A, B, n)}) = union(A, B)
-    by thm event_countable_union_is_event(Omega, events, fn(n N+) events {\two_event_sequence<Omega, events>(A, B, n)}) => \countable_union<Omega>(fn(n N+) power_set(Omega) {\two_event_sequence<Omega, events>(A, B, n)}) $in events
-    union(A, B) $in events
-    by thm two_event_sequence_pairwise_disjoint(Omega, events, A, B) => $pairwise_disjoint_event_sequence(Omega, events, fn(n N+) events {\two_event_sequence<Omega, events>(A, B, n)})
-    by thm kolmogorov_countable_additivity(Omega, events, probability, fn(n N+) events {\two_event_sequence<Omega, events>(A, B, n)})
-    by thm two_event_probability_series_has_sum(Omega, events, probability, A, B) => $has_series_sum(fn(n N+) R {probability(\two_event_sequence<Omega, events>(A, B, n))}, probability(A) + probability(B))
-    by thm series_sum_unique(fn(n N+) R {probability(\two_event_sequence<Omega, events>(A, B, n))}, probability(\countable_union<Omega>(fn(n N+) power_set(Omega) {\two_event_sequence<Omega, events>(A, B, n)})), probability(A) + probability(B)) => probability(\countable_union<Omega>(fn(n N+) power_set(Omega) {\two_event_sequence<Omega, events>(A, B, n)})) = probability(A) + probability(B)
-    probability(union(A, B)) = probability(\countable_union<Omega>(fn(n N+) power_set(Omega) {\two_event_sequence<Omega, events>(A, B, n)})) = probability(A) + probability(B)
+            union(A, B) $in union_probability_events
+            union_probability(union(A, B)) = union_probability(A) + union_probability(B)
+    by thm two_event_sequence_countable_union(union_probability_Omega, union_probability_events, A, B) => index_union(N+, union_probability_Omega, fn(n N+) power_set(union_probability_Omega) {\two_event_sequence<union_probability_Omega, union_probability_events>(A, B, n)}) = union(A, B)
+    by thm event_countable_union_is_event(union_probability_Omega, union_probability_events, fn(n N+) union_probability_events {\two_event_sequence<union_probability_Omega, union_probability_events>(A, B, n)}) => index_union(N+, union_probability_Omega, fn(n N+) power_set(union_probability_Omega) {\two_event_sequence<union_probability_Omega, union_probability_events>(A, B, n)}) $in union_probability_events
+    union(A, B) $in union_probability_events
+    by thm two_event_sequence_pairwise_disjoint(union_probability_Omega, union_probability_events, A, B) => $pairwise_disjoint_event_sequence(union_probability_Omega, union_probability_events, fn(n N+) union_probability_events {\two_event_sequence<union_probability_Omega, union_probability_events>(A, B, n)})
+    by thm kolmogorov_countable_additivity(union_probability_Omega, union_probability_events, union_probability, fn(n N+) union_probability_events {\two_event_sequence<union_probability_Omega, union_probability_events>(A, B, n)})
+    by thm two_event_probability_series_has_sum(union_probability_Omega, union_probability_events, union_probability, A, B) => $has_series_sum(fn(n N+) R {union_probability(\two_event_sequence<union_probability_Omega, union_probability_events>(A, B, n))}, union_probability(A) + union_probability(B))
+    by thm series_sum_unique(fn(n N+) R {union_probability(\two_event_sequence<union_probability_Omega, union_probability_events>(A, B, n))}, union_probability(index_union(N+, union_probability_Omega, fn(n N+) power_set(union_probability_Omega) {\two_event_sequence<union_probability_Omega, union_probability_events>(A, B, n)})), union_probability(A) + union_probability(B)) => union_probability(index_union(N+, union_probability_Omega, fn(n N+) power_set(union_probability_Omega) {\two_event_sequence<union_probability_Omega, union_probability_events>(A, B, n)})) = union_probability(A) + union_probability(B)
+    union_probability(union(A, B)) = union_probability(index_union(N+, union_probability_Omega, fn(n N+) power_set(union_probability_Omega) {\two_event_sequence<union_probability_Omega, union_probability_events>(A, B, n)})) = union_probability(A) + union_probability(B)
 
 # Complement partitions and relative complements support the ordinary event
-# probability calculus.
-# A subset and its complement inside Omega have no common element.
+# union_probability calculus.
+# A subset and its complement inside union_probability_Omega have no common element.
 thm subset_intersect_complement_is_empty:
     ? forall Omega set, A power_set(Omega):
         intersect(A, set_minus(Omega, A)) = {}

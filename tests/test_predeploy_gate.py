@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import importlib.util
 import json
 import subprocess
 import sys
@@ -12,9 +13,17 @@ from pathlib import Path
 from typing import Sequence
 
 REPOSITORY_ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(REPOSITORY_ROOT))
+PREDEPLOY_GATE_PATH = REPOSITORY_ROOT / ".github" / "scripts" / "predeploy_gate.py"
+PREDEPLOY_GATE_SPEC = importlib.util.spec_from_file_location(
+    "predeploy_gate", PREDEPLOY_GATE_PATH
+)
+if PREDEPLOY_GATE_SPEC is None or PREDEPLOY_GATE_SPEC.loader is None:
+    raise RuntimeError(f"cannot load predeploy gate from {PREDEPLOY_GATE_PATH}")
+PREDEPLOY_GATE = importlib.util.module_from_spec(PREDEPLOY_GATE_SPEC)
+sys.modules[PREDEPLOY_GATE_SPEC.name] = PREDEPLOY_GATE
+PREDEPLOY_GATE_SPEC.loader.exec_module(PREDEPLOY_GATE)
 
-from tools.predeploy_gate import (
+from predeploy_gate import (
     GATES,
     ProcessController,
     ProcessOutcome,
@@ -49,6 +58,7 @@ class PredeployGateTest(unittest.TestCase):
             (
                 ("docs", "run_docs_markdown_files"),
                 ("examples", "run_examples_only"),
+                ("showcases", "run_showcases"),
             ),
         )
         self.assertEqual(
@@ -62,31 +72,50 @@ class PredeployGateTest(unittest.TestCase):
                 "--nocapture",
             ],
         )
+        self.assertEqual(
+            cargo_test_command("run_showcases"),
+            [
+                "cargo",
+                "test",
+                "--release",
+                "run_showcases",
+                "--",
+                "--nocapture",
+            ],
+        )
 
     def test_gates_start_in_parallel_and_keep_registration_order(self) -> None:
-        barrier = threading.Barrier(2, timeout=1)
+        barrier = threading.Barrier(3, timeout=1)
 
         def fake_runner(command: Sequence[str], **_: object) -> subprocess.CompletedProcess[str]:
             barrier.wait()
             test_name = command[3]
-            time.sleep(0.01 if test_name == "run_docs_markdown_files" else 0.02)
+            delays = {
+                "run_docs_markdown_files": 0.01,
+                "run_examples_only": 0.02,
+                "run_showcases": 0.03,
+            }
+            time.sleep(delays[test_name])
             return subprocess.CompletedProcess(command, 0, stdout=f"{test_name} passed\n")
 
         results = run_gates(Path("/repo"), runner=fake_runner)
 
-        self.assertEqual([result.label for result in results], ["docs", "examples"])
+        self.assertEqual(
+            [result.label for result in results],
+            ["docs", "examples", "showcases"],
+        )
         self.assertTrue(all(result.returncode == 0 for result in results))
         self.assertTrue(all(result.wall_seconds > 0 for result in results))
 
     def test_failure_is_preserved_per_gate(self) -> None:
         def fake_runner(command: Sequence[str], **_: object) -> subprocess.CompletedProcess[str]:
-            returncode = 1 if command[3] == "run_examples_only" else 0
+            returncode = 1 if command[3] == "run_showcases" else 0
             return subprocess.CompletedProcess(command, returncode, stdout="test output\n")
 
         results = run_gates(Path("/repo"), runner=fake_runner)
 
-        self.assertEqual([result.returncode for result in results], [0, 1])
-        self.assertEqual(results[1].output, "test output\n")
+        self.assertEqual([result.returncode for result in results], [0, 0, 1])
+        self.assertEqual(results[2].output, "test output\n")
         self.assertTrue(all(result.wall_seconds >= 0 for result in results))
 
     def test_global_deadline_stops_running_processes_and_blocks_new_ones(self) -> None:

@@ -350,7 +350,7 @@ mod tests {
 
         let output_text = String::from_utf8(stdout_writer).unwrap();
         assert!(output_text.contains("... "));
-        assert!(output_text.contains("\"result\": \"success\""));
+        assert!(output_text.contains("\"outcome\": \"success\""));
         assert!(!output_text.contains("block header missing body"));
         assert!(!output_text.contains("unexpected indent"));
     }
@@ -370,7 +370,7 @@ mod tests {
         .unwrap();
 
         let output_text = String::from_utf8(stdout_writer).unwrap();
-        assert!(output_text.contains("\"result\": \"success\""));
+        assert!(output_text.contains("\"outcome\": \"success\""));
     }
 
     #[test]
@@ -433,7 +433,7 @@ mod tests {
             .expect("continue isolated REPL");
         let output = String::from_utf8(output).expect("UTF-8 REPL output");
         assert!(output.contains("Continuing isolated REPL."));
-        assert!(output.contains("\"result\": \"success\""), "{output}");
+        assert!(output.contains("\"outcome\": \"success\""), "{output}");
 
         let (_, continuation_error) = run_source_code("from_repl = 2", &mut runtime);
         assert!(continuation_error.is_none(), "{continuation_error:?}");

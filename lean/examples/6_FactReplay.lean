@@ -9,19 +9,22 @@ theorem __fact0 :
     ∀ (a : Litex.Set) (b : Litex.Set) (__h0_3 : Litex.Same a b),
       Litex.Same b a := by
   intro a b __h0_3
-  exact Litex.Same.symm (__h0_3)
+  have __c0_0 : Litex.Same b a := Litex.Same.symm (__h0_3)
+  exact __c0_0
 
 theorem __fact1 :
     ∀ (a : Litex.Set) (b : Litex.Set) (c : Litex.Set) (__h1_4 : Litex.Same a b) (__h1_5 : Litex.Same b c),
       Litex.Same a c := by
   intro a b c __h1_4 __h1_5
-  exact Litex.Same.trans (__h1_4) (__h1_5)
+  have __c1_0 : Litex.Same a c := Litex.Same.trans (__h1_4) (__h1_5)
+  exact __c1_0
 
 theorem __fact2 :
     ∀ (a : Litex.Set) (b : Litex.Set) (__h2_3 : ¬ Litex.Same a b),
       ¬ Litex.Same b a := by
   intro a b __h2_3
-  exact Litex.Rules.notSameSymm (__h2_3)
+  have __c2_0 : ¬ Litex.Same b a := Litex.Rules.notSameSymm (__h2_3)
+  exact __c2_0
 
 theorem __fact3 :
     ∀ (__p1 : Litex.Set) (__p2 : Litex.Set) (__domain1 : Litex.Same __p1 __p2), Litex.Same __p2 __p1 := __fact0

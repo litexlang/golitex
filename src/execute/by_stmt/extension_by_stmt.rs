@@ -33,9 +33,9 @@ impl Runtime {
             )
         })?;
 
-        let local_proof_result: Result<(Vec<StmtResult>, Fact, Fact), RuntimeError> = self
-            .run_in_local_env(|rt| {
-                let mut inside_results: Vec<StmtResult> = Vec::new();
+        let local_proof_result: Result<(Vec<StmtResult>, StmtResult, StmtResult), RuntimeError> =
+            self.run_in_local_env(|rt| {
+                let mut proof_steps: Vec<StmtResult> = Vec::new();
                 for proof_stmt in stmt.proof.iter() {
                     let one_proof_stmt_exec_result =
                         rt.exec_stmt(proof_stmt).map_err(|stmt_error| {
@@ -49,7 +49,7 @@ impl Runtime {
                                 vec![],
                             )
                         })?;
-                    inside_results.push(one_proof_stmt_exec_result);
+                    proof_steps.push(one_proof_stmt_exec_result);
                 }
 
                 let unused_name = rt.generate_random_unused_name();
@@ -103,7 +103,6 @@ impl Runtime {
                         )
                     })?
                 };
-                inside_results.push(left_to_right_result);
 
                 let right_to_left_subset_fact: AtomicFact = SubsetFact::new(
                     stmt.right.clone(),
@@ -154,16 +153,9 @@ impl Runtime {
                         )
                     })?
                 };
-                inside_results.push(right_to_left_result);
-
-                Ok::<_, RuntimeError>((
-                    inside_results,
-                    left_to_right_forall_fact,
-                    right_to_left_forall_fact,
-                ))
+                Ok::<_, RuntimeError>((proof_steps, left_to_right_result, right_to_left_result))
             });
-        let local_proof_result = local_proof_result?;
-        let (inside_results, _, _) = local_proof_result;
+        let (proof_steps, left_to_right_check, right_to_left_check) = local_proof_result?;
 
         let left_equal_to_right_atomic_fact = AtomicFact::EqualFact(EqualFact::new(
             stmt.left.clone(),
@@ -172,7 +164,7 @@ impl Runtime {
         ));
         let prove_goal = left_equal_to_right_atomic_fact.to_string();
 
-        let mut infer_result = InferResult::new();
+        let mut infer_result = SuccessInferResult::new();
         infer_result.new_infer_result_inside(
             self.store_atomic_fact_without_well_defined_verified_and_infer(
                 left_equal_to_right_atomic_fact,
@@ -211,21 +203,25 @@ impl Runtime {
             stmt.line_file.clone(),
         )?
         .to_string();
-        let by_verification = ByExtensionVerificationResult::new(
+        let by_verification = SuccessVerifyByExtensionResult::new(
             stmt.left.to_string(),
             stmt.right.to_string(),
             prove_goal,
-            stmt.proof.len(),
             left_to_right_subset,
             right_to_left_subset,
+            proof_steps,
+            left_to_right_check,
+            right_to_left_check,
         );
 
-        Ok(VerifiedByStmtIr::ByExtensionStmt {
-            statement: stmt.clone(),
-            common: VerifiedStmtCommonIr::new(infer_result, inside_results),
-            verification: Some(by_verification),
-        }
-        .into())
+        Ok(
+            SuccessByStmtResult::ByExtensionStmt(Box::new(SuccessByExtensionStmtResult {
+                statement: stmt.clone(),
+                common: SuccessStmtCommonResult::new(infer_result),
+                verification: Some(by_verification),
+            }))
+            .into(),
+        )
     }
 
     pub(crate) fn exec_by_extension_stmt_affect_environment_only(
@@ -242,11 +238,13 @@ impl Runtime {
             equality_fact,
             InferReason::VerifiedStatement,
         )?;
-        Ok(VerifiedByStmtIr::ByExtensionStmt {
-            statement: stmt.clone(),
-            common: VerifiedStmtCommonIr::new(infer_result, vec![]),
-            verification: None,
-        }
-        .into())
+        Ok(
+            SuccessByStmtResult::ByExtensionStmt(Box::new(SuccessByExtensionStmtResult {
+                statement: stmt.clone(),
+                common: SuccessStmtCommonResult::new(infer_result),
+                verification: None,
+            }))
+            .into(),
+        )
     }
 }

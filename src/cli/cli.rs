@@ -1398,9 +1398,9 @@ litex -session -f <file> : load the project prefix through a registered file, th
 litex -session -before <file> : load the registered project prefix before a file, then edit in that file's Runtime context
 litex -f <input.lit> -isolated -lean <output.lean> : verify every statement in one standalone file, then compile the complete result to Lean
 litex -lean-ledger <markdown> <output.lean> : freshly compile every H2 Litex fence into one namespaced Lean file
-litex -graph -f <file> <json> : run a file and save a prop/function/fact relation graph JSON object
-litex -graph -e <code> <json> : run source code and save a prop/function/fact relation graph JSON object
-litex -graph -r <project> <json> : run a project and save a prop/function/fact relation graph JSON object
+litex -graph -f <file> <json> : run a file and save a recursive result/proof/FactId graph JSON object
+litex -graph -e <code> <json> : run source code and save a recursive result/proof/FactId graph JSON object
+litex -graph -r <project> <json> : run a project and save a recursive result/proof/FactId graph JSON object
 litex -factgraph -f <file> <json> : run a file and save a fact-only verification dependency graph JSON object
 litex -factgraph -e <code> <json> : run source code and save a fact-only verification dependency graph JSON object
 litex -factgraph -r <project> <json> : run a project and save a fact-only verification dependency graph JSON object

@@ -59,18 +59,24 @@ impl Runtime {
                 )
             })?;
 
-        let by_verification = ByChoiceVerificationResult::new(
+        let by_verification = SuccessVerifyByChoiceResult::new(
             "by regularity_axiom proof".to_string(),
             stmt.set.to_string(),
-            0,
-            vec![("nonempty".to_string(), nonempty_fact.to_string(), true)],
+            Vec::new(),
+            vec![SuccessVerifyByChoiceObligationResult {
+                role: "nonempty".to_string(),
+                fact: nonempty_fact.to_string(),
+                check: Some(Box::new(nonempty_result)),
+            }],
             regularity_fact_string,
         );
-        Ok(VerifiedByStmtIr::ByRegularityAxiomStmt {
-            statement: stmt.clone(),
-            common: VerifiedStmtCommonIr::new(infer_result, vec![nonempty_result]),
-            verification: Some(by_verification),
-        }
+        Ok(SuccessByStmtResult::ByRegularityAxiomStmt(Box::new(
+            SuccessByRegularityAxiomStmtResult {
+                statement: stmt.clone(),
+                common: SuccessStmtCommonResult::new(infer_result),
+                verification: Some(by_verification),
+            },
+        ))
         .into())
     }
 
@@ -84,11 +90,13 @@ impl Runtime {
             regularity_fact,
             InferReason::VerifiedStatement,
         )?;
-        Ok(VerifiedByStmtIr::ByRegularityAxiomStmt {
-            statement: stmt.clone(),
-            common: VerifiedStmtCommonIr::new(infer_result, vec![]),
-            verification: None,
-        }
+        Ok(SuccessByStmtResult::ByRegularityAxiomStmt(Box::new(
+            SuccessByRegularityAxiomStmtResult {
+                statement: stmt.clone(),
+                common: SuccessStmtCommonResult::new(infer_result),
+                verification: None,
+            },
+        ))
         .into())
     }
 }

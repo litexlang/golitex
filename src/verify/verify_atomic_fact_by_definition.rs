@@ -15,9 +15,9 @@ impl Runtime {
                     return Ok(None);
                 };
                 Ok(Some(
-                    VerifiedFactStmtIr::new_with_verified_by_known_fact(
+                    SuccessFactStmtResult::new_with_verified_by_known_fact(
                         clause.clone(),
-                        VerifiedByResult::cached_fact(
+                        SuccessFactProofResult::cached_fact(
                             clause.clone(),
                             cached_fact.line_file.clone(),
                             cached_fact.fact_id,
@@ -56,7 +56,7 @@ impl Runtime {
             subgoals.push(result);
         }
         Ok(Some(
-            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
                 "prime by trial-division definition".to_string(),
                 subgoals,
@@ -85,7 +85,7 @@ impl Runtime {
             subgoals.push(result);
         }
         Ok(Some(
-            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
                 "coprime by natural gcd-one definition".to_string(),
                 subgoals,
@@ -114,7 +114,7 @@ impl Runtime {
             subgoals.push(result);
         }
         Ok(Some(
-            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
                 "dvd by zero-remainder and integer-multiple definition".to_string(),
                 subgoals,
@@ -145,7 +145,7 @@ impl Runtime {
             subgoals.push(result);
         }
         Ok(Some(
-            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
                 "choice function by pointwise membership definition".to_string(),
                 subgoals,
@@ -226,7 +226,7 @@ impl Runtime {
             return Ok(None);
         }
         Ok(Some(
-            (VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+            (SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                 subset_fact.clone().into(),
                 "subset by definition (forall x in left: x in right)".to_string(),
                 Vec::new(),
@@ -262,7 +262,7 @@ impl Runtime {
             return Ok(None);
         }
         Ok(Some(
-            (VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+            (SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                 superset_fact.clone().into(),
                 "superset by definition (forall x in right: x in left)".to_string(),
                 Vec::new(),
@@ -322,23 +322,11 @@ impl Runtime {
             return Ok(None);
         }
 
-        let parameter_checks = args_param_types
-            .into_non_factual_ir()
-            .ok_or_else(|| {
-                VerifyRuntimeError(RuntimeErrorStruct::new(
-                    Some(Fact::from(normal_atomic_fact.clone()).into_stmt()),
-                    "concrete prop parameter verification did not retain its checked results"
-                        .to_string(),
-                    normal_atomic_fact.line_file.clone(),
-                    None,
-                    vec![],
-                ))
-            })?
-            .into_common()
-            .expect("non-factual parameter verification carries common evidence")
-            .inside_results;
+        let argument_verification = args_param_types
+            .into_success()
+            .expect("successful concrete prop parameter verification retains its checks");
 
-        let mut infer_result = InferResult::new();
+        let mut infer_result = SuccessInferResult::new();
         for (_, clause_result) in clause_checks.iter() {
             if clause_result.is_unknown() {
                 return Ok(None);
@@ -353,13 +341,13 @@ impl Runtime {
         let fact_by_definition: Fact = normal_atomic_fact.clone().into();
         infer_result.add_fact_by_definition(&fact_by_definition);
         Ok(Some(
-            (VerifiedFactStmtIr::new_with_verified_by_known_fact_and_infer(
+            (SuccessFactStmtResult::new_with_verified_by_known_fact_and_infer(
                 normal_atomic_fact.clone().into(),
                 infer_result,
-                VerifiedByResult::cited_definition(
+                SuccessFactProofResult::cited_definition(
                     normal_atomic_fact.clone().into(),
                     definition,
-                    parameter_checks,
+                    argument_verification,
                     clause_checks,
                     Some(verified_by_text),
                 ),
@@ -374,7 +362,7 @@ impl Runtime {
         normal_atomic_fact: &NormalAtomicFact,
         definition: &DefPropStmt,
         verify_state: &UseContextVerifyState,
-    ) -> Result<(StmtResult, Vec<(Fact, StmtResult)>), RuntimeError> {
+    ) -> Result<(VerifyArgsSatisfyParamDefResult, Vec<(Fact, StmtResult)>), RuntimeError> {
         let predicate_name = normal_atomic_fact.predicate.to_string();
         let full_param_type_result = self.verify_args_satisfy_param_def_flat_types(
             &definition.params_def_with_type,

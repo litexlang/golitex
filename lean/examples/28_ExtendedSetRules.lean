@@ -9,7 +9,8 @@ theorem __fact0 :
     ∀ (A : Litex.Set) (B : Litex.Set) (__h0_3 : Litex.Subset A B),
       Litex.In A (Litex.powerSet B) := by
   intro A B __h0_3
-  exact Litex.SetRules.inPowerSetOfSubset (__h0_3)
+  have __c0_0 : Litex.In A (Litex.powerSet B) := Litex.SetRules.inPowerSetOfSubset (__h0_3)
+  exact __c0_0
 
 theorem __fact1 :
     ∀ (A : Litex.Set),
@@ -21,7 +22,12 @@ theorem __fact2 :
     ∀ (A : Litex.Set) (B : Litex.Set),
       Litex.Subset A (Litex.union A B) ∧ Litex.Subset B (Litex.union A B) ∧ Litex.Subset (Litex.intersect A B) A ∧ Litex.Subset (Litex.intersect A B) B ∧ Litex.Subset (Litex.setMinus A B) A := by
   intro A B
-  exact ⟨Litex.SetRules.subsetUnionLeft A B, Litex.SetRules.subsetUnionRight A B, Litex.SetRules.intersectSubsetLeft A B, Litex.SetRules.intersectSubsetRight A B, Litex.SetRules.setMinusSubsetLeft A B⟩
+  have __c2_0 : Litex.Subset A (Litex.union A B) := Litex.SetRules.subsetUnionLeft A B
+  have __c2_1 : Litex.Subset B (Litex.union A B) := Litex.SetRules.subsetUnionRight A B
+  have __c2_2 : Litex.Subset (Litex.intersect A B) A := Litex.SetRules.intersectSubsetLeft A B
+  have __c2_3 : Litex.Subset (Litex.intersect A B) B := Litex.SetRules.intersectSubsetRight A B
+  have __c2_4 : Litex.Subset (Litex.setMinus A B) A := Litex.SetRules.setMinusSubsetLeft A B
+  exact ⟨__c2_0, __c2_1, __c2_2, __c2_3, __c2_4⟩
 
 theorem __fact3 :
     ∀ (A : Litex.Set) (B : Litex.Set) (S : Litex.Set) (__h3_4 : Litex.Subset A S) (__h3_5 : Litex.Subset B S),
@@ -33,60 +39,74 @@ theorem __fact4 :
     ∀ (A : Litex.Set) (B : Litex.Set) (__h4_3 : Litex.Set.Finite A) (__h4_4 : Litex.Set.Finite B),
       Litex.Set.Finite (Litex.union A B) ∧ Litex.Set.Finite (Litex.intersect A B) := by
   intro A B __h4_3 __h4_4
-  exact ⟨Litex.SetRules.unionFinite A B (__h4_3) (__h4_4), Litex.SetRules.intersectFinite A B (__h4_3)⟩
+  have __c4_0 : Litex.Set.Finite (Litex.union A B) := Litex.SetRules.unionFinite A B (__h4_3) (__h4_4)
+  have __c4_1 : Litex.Set.Finite (Litex.intersect A B) := Litex.SetRules.intersectFinite A B (__h4_3)
+  exact ⟨__c4_0, __c4_1⟩
 
 theorem __fact5 :
     ∀ (A : Litex.Set) (B : Litex.Set) (__h5_3 : Litex.Set.Finite A),
       Litex.Set.Finite (Litex.setMinus A B) := by
   intro A B __h5_3
-  exact Litex.SetRules.setMinusFiniteLeft A B (__h5_3)
+  have __c5_0 : Litex.Set.Finite (Litex.setMinus A B) := Litex.SetRules.setMinusFiniteLeft A B (__h5_3)
+  exact __c5_0
 
 theorem __fact6 :
     ∀ (A : Litex.Set) (B : Litex.Set) (__h6_3 : Litex.Set.Nonempty A),
       Litex.Set.Nonempty (Litex.union A B) := by
   intro A B __h6_3
-  exact Litex.SetRules.unionNonemptyLeft A B (__h6_3)
+  have __c6_0 : Litex.Set.Nonempty (Litex.union A B) := Litex.SetRules.unionNonemptyLeft A B (__h6_3)
+  exact __c6_0
 
 theorem __fact7 :
     ∀ (A : Litex.Set) (B : Litex.Set) (__h7_3 : Litex.Set.Nonempty B),
       Litex.Set.Nonempty (Litex.union A B) := by
   intro A B __h7_3
-  exact Litex.SetRules.unionNonemptyRight A B (__h7_3)
+  have __c7_0 : Litex.Set.Nonempty (Litex.union A B) := Litex.SetRules.unionNonemptyRight A B (__h7_3)
+  exact __c7_0
 
 theorem __fact8 :
     ∀ (A : Litex.Set) (B : Litex.Set) (__h8_3 : Litex.Subset A B),
       Litex.Same (Litex.intersect A B) A := by
   intro A B __h8_3
-  exact Litex.SetRules.intersectEqLeftOfSubset (__h8_3)
+  have __c8_0 : Litex.Same (Litex.intersect A B) A := Litex.SetRules.intersectEqLeftOfSubset (__h8_3)
+  exact __c8_0
 
 theorem __fact9 :
     ∀ (A : Litex.Set) (B : Litex.Set) (__h9_3 : Litex.Subset B A),
       Litex.Same (Litex.intersect A B) B ∧ Litex.Same (Litex.setMinus A (Litex.setMinus A B)) B := by
   intro A B __h9_3
-  exact ⟨Litex.SetRules.intersectEqRightOfSubset (__h9_3), Litex.SetRules.setMinusRecoverSubset (__h9_3)⟩
+  have __c9_0 : Litex.Same (Litex.intersect A B) B := Litex.SetRules.intersectEqRightOfSubset (__h9_3)
+  have __c9_1 : Litex.Same (Litex.setMinus A (Litex.setMinus A B)) B := Litex.SetRules.setMinusRecoverSubset (__h9_3)
+  exact ⟨__c9_0, __c9_1⟩
 
 theorem __fact10 :
     ∀ (A : Litex.Set) (B : Litex.Set) (__h10_3 : Litex.Subset B A),
       Litex.Same B (Litex.setMinus A (Litex.setMinus A B)) := by
   intro A B __h10_3
-  exact Litex.Same.symm (Litex.SetRules.setMinusRecoverSubset (__h10_3))
+  have __c10_0 : Litex.Same B (Litex.setMinus A (Litex.setMinus A B)) := Litex.Same.symm (Litex.SetRules.setMinusRecoverSubset (__h10_3))
+  exact __c10_0
 
 theorem __fact11 :
     ∀ (A : Litex.Set),
       Litex.Set.Nonempty (Litex.powerSet A) := by
   intro A
-  exact Litex.SetRules.powerSetNonempty A
+  have __c11_0 : Litex.Set.Nonempty (Litex.powerSet A) := Litex.SetRules.powerSetNonempty A
+  exact __c11_0
 
 theorem __fact12 :
     ∀ (A : Litex.Set) (__h12_2 : Litex.Set.Finite A),
       Litex.Set.Finite (Litex.powerSet A) := by
   intro A __h12_2
-  exact Litex.SetRules.powerSetFinite A (__h12_2)
+  have __c12_0 : Litex.Set.Finite (Litex.powerSet A) := Litex.SetRules.powerSetFinite A (__h12_2)
+  exact __c12_0
 
 theorem __fact13 :
     ∀ (A : Litex.Set) (B : Litex.Set) (D : Litex.Set),
       Litex.Same (Litex.intersect A (Litex.union B D)) (Litex.union (Litex.intersect A B) (Litex.intersect A D)) ∧ Litex.Same (Litex.setMinus A (Litex.intersect B D)) (Litex.union (Litex.setMinus A B) (Litex.setMinus A D)) ∧ Litex.Same (Litex.setMinus A (Litex.union B D)) (Litex.intersect (Litex.setMinus A B) (Litex.setMinus A D)) := by
   intro A B D
-  exact ⟨Litex.SetRules.intersectUnionDistributive A B D, Litex.SetRules.setMinusIntersectDeMorgan A B D, Litex.SetRules.setMinusUnionDeMorgan A B D⟩
+  have __c13_0 : Litex.Same (Litex.intersect A (Litex.union B D)) (Litex.union (Litex.intersect A B) (Litex.intersect A D)) := Litex.SetRules.intersectUnionDistributive A B D
+  have __c13_1 : Litex.Same (Litex.setMinus A (Litex.intersect B D)) (Litex.union (Litex.setMinus A B) (Litex.setMinus A D)) := Litex.SetRules.setMinusIntersectDeMorgan A B D
+  have __c13_2 : Litex.Same (Litex.setMinus A (Litex.union B D)) (Litex.intersect (Litex.setMinus A B) (Litex.setMinus A D)) := Litex.SetRules.setMinusUnionDeMorgan A B D
+  exact ⟨__c13_0, __c13_1, __c13_2⟩
 
 end __Compiler_28_ExtendedSetRules

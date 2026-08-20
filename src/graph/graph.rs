@@ -1,9 +1,16 @@
+#![allow(dead_code)] // Legacy dependency collector support; main output is ResultGraph v2.
+
+use super::result_graph::ResultGraph;
 use crate::prelude::*;
 use std::collections::{HashMap, HashSet};
 
-const GRAPH_NAME: &str = "litex-relation-graph";
-const GRAPH_VERSION: &str = "0.1";
+const GRAPH_NAME: &str = "litex-result-graph";
+const GRAPH_VERSION: &str = "2";
 
+// Kept only for the definition-graph dependency collector below. The old
+// relation projection is no longer called by any public graph entry point and
+// can be deleted when the two legacy specialized graph commands are retired.
+#[allow(dead_code)]
 #[derive(Clone)]
 struct GraphNode {
     id: String,
@@ -16,6 +23,7 @@ struct GraphNode {
     statement: Option<String>,
 }
 
+#[allow(dead_code)]
 struct GraphEdge {
     from: String,
     to: String,
@@ -36,6 +44,7 @@ pub(crate) struct DepCollector {
     local_names: HashSet<String>,
 }
 
+#[allow(dead_code)]
 struct GraphBuilder {
     nodes: Vec<GraphNode>,
     node_index: HashMap<String, usize>,
@@ -226,8 +235,8 @@ fn render_graph_result(
     )
 }
 
-/// Render a relation graph from statements that have already run in one runtime.
-/// This lets interactive sessions expose their graph without replaying source.
+/// Render a result graph while a runtime is still available for error text.
+/// Successful graph semantics come only from `stmt_results`.
 pub fn render_graph_from_stmt_results(
     target_kind: &str,
     target_label: &str,
@@ -237,7 +246,46 @@ pub fn render_graph_from_stmt_results(
     runtime_error: Option<&RuntimeError>,
 ) -> (bool, String) {
     let ok = runtime_error.is_none();
-    let graph = GraphBuilder::from_stmt_results(&stmt_results);
+    let error = runtime_error.map(|error| display_runtime_error_json(runtime, error, true));
+    (
+        ok,
+        render_result_graph_document(
+            target_kind,
+            target_label,
+            hide_file_paths,
+            stmt_results,
+            !ok,
+            error,
+        ),
+    )
+}
+
+/// Render a completed successful result graph without a live `Runtime`.
+pub fn render_result_graph_from_stmt_results(
+    target_kind: &str,
+    target_label: &str,
+    hide_file_paths: bool,
+    stmt_results: &[StmtResult],
+) -> String {
+    render_result_graph_document(
+        target_kind,
+        target_label,
+        hide_file_paths,
+        stmt_results,
+        false,
+        None,
+    )
+}
+
+fn render_result_graph_document(
+    target_kind: &str,
+    target_label: &str,
+    hide_file_paths: bool,
+    stmt_results: &[StmtResult],
+    partial: bool,
+    error: Option<String>,
+) -> String {
+    let graph = ResultGraph::from_stmt_results(stmt_results);
     let mut fields = vec![
         (
             "graph".to_string(),
@@ -249,36 +297,29 @@ pub fn render_graph_from_stmt_results(
         ),
         (
             "result".to_string(),
-            JsonValue::JsonString(if ok { "success" } else { "error" }.to_string()),
+            JsonValue::JsonString(if partial { "error" } else { "success" }.to_string()),
         ),
-        ("ok".to_string(), JsonValue::Bool(ok)),
-        (
-            "partial".to_string(),
-            JsonValue::Bool(runtime_error.is_some()),
-        ),
+        ("ok".to_string(), JsonValue::Bool(!partial)),
+        ("partial".to_string(), JsonValue::Bool(partial)),
         (
             "target".to_string(),
             target_json_value(target_kind, target_label, hide_file_paths),
         ),
     ];
-    if let Some(error) = runtime_error {
-        fields.push((
-            "error".to_string(),
-            JsonValue::JsonString(display_runtime_error_json(runtime, error, true)),
-        ));
+    if let Some(error) = error {
+        fields.push(("error".to_string(), JsonValue::JsonString(error)));
     } else {
         fields.push(("error".to_string(), JsonValue::Null));
     }
     fields.push(("summary".to_string(), graph.summary_json()));
-    fields.push(("nodes".to_string(), graph.nodes_json(!hide_file_paths)));
+    fields.push(("nodes".to_string(), graph.nodes_json()));
     fields.push(("edges".to_string(), graph.edges_json()));
-    fields.push(("usage".to_string(), graph.usage_json()));
     fields.push((
         "mermaid".to_string(),
         JsonValue::JsonString(graph.mermaid()),
     ));
 
-    (ok, render_json_value(&JsonValue::Object(fields), 0))
+    render_json_value(&JsonValue::Object(fields), 0)
 }
 
 fn graph_target_error_output(
@@ -307,10 +348,12 @@ fn graph_target_error_output(
             target_json_value(target_kind, target_label, hide_file_paths),
         ),
         ("error".to_string(), JsonValue::JsonString(message)),
-        ("summary".to_string(), GraphBuilder::empty_summary_json()),
+        (
+            "summary".to_string(),
+            ResultGraph::from_stmt_results(&[]).summary_json(),
+        ),
         ("nodes".to_string(), JsonValue::Array(vec![])),
         ("edges".to_string(), JsonValue::Array(vec![])),
-        ("usage".to_string(), JsonValue::Array(vec![])),
         (
             "mermaid".to_string(),
             JsonValue::JsonString("flowchart LR".to_string()),
@@ -348,7 +391,7 @@ impl GraphBuilder {
     fn from_stmt_results(stmt_results: &[StmtResult]) -> Self {
         let mut builder = Self::new();
         for result in stmt_results.iter() {
-            if let Some(success) = result.non_factual_ir() {
+            if let Some(success) = result.non_factual_success() {
                 builder.add_stmt(&success.statement());
             } else if let Some(success) = result.factual_success() {
                 builder.add_standalone_fact(&success.fact());
@@ -1473,7 +1516,8 @@ fn mermaid_label(label: &str) -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::run_graph_for_code;
+    use super::{render_result_graph_from_stmt_results, run_graph_for_code};
+    use crate::prelude::*;
 
     fn graph_output(source: &'static str) -> String {
         std::thread::Builder::new()
@@ -1486,113 +1530,65 @@ mod tests {
     }
 
     #[test]
-    fn prop_definition_records_direct_prop_and_fn_dependencies() {
-        let output = graph_output(
-            "abstract_prop p(x)\nhave fn d(x R) R = x\nprop q(x R):\n    $p(x)\n    d(x) = x\n",
-        );
+    fn result_graph_records_statement_verification_proof_and_store_layers() {
+        let output = graph_output("2 + 3 $in N\n");
 
-        assert!(output.contains(r#""id": "prop:p""#));
-        assert!(output.contains(r#""id": "fn:d""#));
-        assert!(output.contains(r#""id": "prop:q""#));
-        assert!(output.contains(r#""from": "prop:p""#));
-        assert!(output.contains(r#""to": "prop:q""#));
-        assert!(output.contains(r#""kind": "uses_prop""#));
-        assert!(output.contains(r#""from": "fn:d""#));
-        assert!(output.contains(r#""kind": "uses_fn""#));
+        assert!(output.contains(r#""graph": "litex-result-graph""#));
+        assert!(output.contains(r#""graph_version": "2""#));
+        assert!(output.contains(r#""kind": "statement""#));
+        assert!(output.contains(r#""kind": "well_definedness""#));
+        assert!(output.contains(r#""kind": "verification""#));
+        assert!(output.contains(r#""kind": "proof""#));
+        assert!(output.contains(r#""kind": "store""#));
+        assert!(output.contains(r#""role": "AtomicFact""#));
+        assert!(output.contains(r#""role": "DirectObject""#));
+        assert!(output.contains(r#""kind": "argument""#));
+        assert!(output.contains(r#""role": "BuiltinRule""#));
+        assert!(output.contains(r#""kind": "verification""#));
+        assert!(output.contains(r#""kind": "proof""#));
     }
 
     #[test]
-    fn builtin_function_properties_are_not_reported_as_user_props() {
-        let output = graph_output(
-            "have fn graph_identity(x {1}) {1} = x\nforall x1, x2 {1}:\n    graph_identity(x1) = graph_identity(x2)\n    =>:\n        x1 = graph_identity(x1) = graph_identity(x2) = x2\n$injective({1}, {1}, graph_identity)\n",
-        );
+    fn result_graph_uses_fact_ids_for_inference_edges() {
+        let output = graph_output("2 + 3 $in N\n");
 
-        assert!(!output.contains(r#""id": "prop:injective""#));
-        assert!(output.contains(r#""id": "fn:graph_identity""#));
+        assert!(output.contains(r#""role": "NaturalMembershipImpliesNonnegative""#));
+        assert!(output.contains(r#""kind": "premise""#));
+        assert!(output.contains(r#""kind": "conclusion""#));
+        assert!(output.contains(r#""id": "fact:f"#));
+        assert!(output.contains(r#""fact_id": "f"#));
     }
 
     #[test]
-    fn graph_output_includes_summary_and_usage_counts() {
-        let output =
-            graph_output("abstract_prop p(x)\nprop q(x R):\n    $p(x)\nprop r(x R):\n    $p(x)\n");
+    fn result_graph_recurses_through_statement_children() {
+        let output = graph_output("sketch:\n    1 = 1\n");
 
-        assert!(output.contains(r#""summary""#));
-        assert!(output.contains(r#""usage""#));
-        assert!(output.contains(r#""defined_props": 3"#));
-        assert!(output.contains(r#""edges": 2"#));
-        assert!(output.contains(r#""id": "prop:p""#));
-        assert!(output.contains(r#""used_by_count": 2"#));
-        assert!(output.contains(r#""count": 1"#));
+        assert!(output.contains(r#""role": "ProofBlockStmt""#));
+        assert!(output.contains(r#""kind": "child""#));
+        assert!(output.contains(r#""id": "stmt:0/execution/child:0""#));
     }
 
     #[test]
-    fn function_domain_records_prop_dependency() {
-        let output = graph_output("abstract_prop p(x)\nhave fn f(x R: $p(x)) R = x\n");
+    fn result_graph_recurses_through_claim_binder_well_definedness() {
+        let output = graph_output("claim:\n    ? forall x R:\n        x = x\n");
 
-        assert!(output.contains(r#""from": "prop:p""#));
-        assert!(output.contains(r#""to": "fn:f""#));
-        assert!(output.contains(r#""kind": "uses_prop""#));
+        assert!(output.contains(r#""role": "ForallFact""#));
+        assert!(output.contains(r#""role": "FactBinder""#));
+        assert!(output.contains(r#""kind": "parameter_group""#));
+        assert!(output.contains(r#""kind": "well_definedness""#));
     }
 
     #[test]
-    fn anonymous_function_inside_prop_records_inner_dependencies() {
-        let output = graph_output(
-            "abstract_prop p(x)\nhave fn a(x R) R = x\nprop f():\n    fn(x R: $p(x)) R {a(x)} = fn(x R: $p(x)) R {a(x)}\n",
-        );
+    fn completed_result_graph_does_not_need_runtime() {
+        let mut runtime = Runtime::new();
+        runtime.new_file_path_new_env_new_name_scope("runtime_free_result_graph");
+        let (results, error) = run_source_code("2 + 3 $in N", &mut runtime);
+        assert!(error.is_none());
+        drop(runtime);
 
-        assert!(output.contains(r#""from": "prop:p""#));
-        assert!(output.contains(r#""to": "prop:f""#));
-        assert!(output.contains(r#""kind": "uses_prop""#));
-        assert!(output.contains(r#""from": "fn:a""#));
-        assert!(output.contains(r#""to": "prop:f""#));
-        assert!(output.contains(r#""kind": "uses_fn""#));
-    }
-
-    #[test]
-    fn anonymous_function_returned_by_fn_records_inner_dependencies() {
-        let output = graph_output(
-            "abstract_prop p(x)\nhave fn a(x R) R = x\nhave fn make(x R: $p(x)) fn(z R) R = fn(y R) R {a(y)}\n",
-        );
-
-        assert!(output.contains(r#""from": "prop:p""#));
-        assert!(output.contains(r#""to": "fn:make""#));
-        assert!(output.contains(r#""kind": "uses_prop""#));
-        assert!(output.contains(r#""from": "fn:a""#));
-        assert!(output.contains(r#""to": "fn:make""#));
-        assert!(output.contains(r#""kind": "uses_fn""#));
-    }
-
-    #[test]
-    fn theorem_statement_records_vocabulary_dependencies() {
-        let output = graph_output(
-            "abstract_prop p(x)\nthm p_fact:\n    ? forall x R:\n        $p(x)\n        =>:\n            x = x\n    x = x\n",
-        );
-
-        assert!(output.contains(r#""id": "fact:thm:p_fact""#));
-        assert!(output.contains(r#""from": "prop:p""#));
-        assert!(output.contains(r#""to": "fact:thm:p_fact""#));
-    }
-
-    #[test]
-    fn theorem_proof_records_theorem_citation_usage() {
-        let output = graph_output(
-            "thm graph_base:\n    ? forall x R:\n        x = x\n    x = x\nthm graph_use_base:\n    ? forall x R:\n        x = x\n    by thm graph_base(x)\n    x = x\n",
-        );
-
-        assert!(output.contains(r#""from": "fact:thm:graph_base""#));
-        assert!(output.contains(r#""to": "fact:thm:graph_use_base""#));
-        assert!(output.contains(r#""kind": "justified_by""#));
-        assert!(output.contains(r#""used_by_count": 1"#));
-    }
-
-    #[test]
-    fn theorem_backed_function_records_justification_fact() {
-        let output = graph_output(
-            "thm self_eq:\n    ? forall x R:\n        x = x\n    x = x\nhave fn identity by exist!:\n    ? forall x R:\n        exist! y R st {y = x}\n    trust exist! y R st {y = x}\n    by thm self_eq(x)\n    exist! y R st {y = x}\n",
-        );
-
-        assert!(output.contains(r#""from": "fact:thm:self_eq""#));
-        assert!(output.contains(r#""to": "fn:identity""#));
-        assert!(output.contains(r#""kind": "justified_by""#));
+        let output = render_result_graph_from_stmt_results("code", "dropped", true, &results);
+        assert!(output.contains(r#""graph": "litex-result-graph""#));
+        assert!(output.contains(r#""role": "NaturalMembershipImpliesNonnegative""#));
+        assert!(output.contains(r#""kind": "well_definedness""#));
     }
 }

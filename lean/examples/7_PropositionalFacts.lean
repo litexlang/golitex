@@ -12,19 +12,22 @@ theorem __fact1 :
     ∀ (a : Litex.Set) (b : Litex.Set) (__h1_3 : Litex.Same a a) (__h1_4 : Litex.Same b b),
       Litex.Same a a ∧ Litex.Same b b := by
   intro a b __h1_3 __h1_4
-  exact ⟨__h1_3, __h1_4⟩
+  have __c1_0 : Litex.Same a a ∧ Litex.Same b b := ⟨__h1_3, __h1_4⟩
+  exact __c1_0
 
 theorem __fact2 :
     ∀ (a : Litex.Set) (b : Litex.Set) (__h2_3 : Litex.Same a a),
       Litex.Same a a ∨ Litex.Same b b := by
   intro a b __h2_3
-  exact Or.inl (__h2_3)
+  have __c2_0 : Litex.Same a a ∨ Litex.Same b b := Or.inl (__h2_3)
+  exact __c2_0
 
 theorem __fact3 :
     ∀ (a : Litex.Set) (b : Litex.Set) (c : Litex.Set) (d : Litex.Set) (__h3_5 : ¬ Litex.Same a b ∧ ¬ Litex.Same c d),
       ¬ Litex.Same c d := by
   intro a b c d __h3_5
   have __i3_0 : ¬ Litex.Same c d := (__h3_5).2
-  exact __i3_0
+  have __c3_0 : ¬ Litex.Same c d := __i3_0
+  exact __c3_0
 
 end __Compiler_7_PropositionalFacts

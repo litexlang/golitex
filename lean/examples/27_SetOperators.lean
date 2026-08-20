@@ -9,66 +9,79 @@ theorem __fact0 :
     ∀ (A : Litex.Set) (B : Litex.Set),
       Litex.Same (Litex.union A B) (Litex.union B A) := by
   intro A B
-  exact Litex.SetRules.unionCommutative A B
+  have __c0_0 : Litex.Same (Litex.union A B) (Litex.union B A) := Litex.SetRules.unionCommutative A B
+  exact __c0_0
 
 theorem __fact1 :
     ∀ (A : Litex.Set) (B : Litex.Set) (D : Litex.Set),
       Litex.Same (Litex.union (Litex.union A B) D) (Litex.union A (Litex.union B D)) := by
   intro A B D
-  exact Litex.SetRules.unionAssociative A B D
+  have __c1_0 : Litex.Same (Litex.union (Litex.union A B) D) (Litex.union A (Litex.union B D)) := Litex.SetRules.unionAssociative A B D
+  exact __c1_0
 
 theorem __fact2 :
     ∀ (A : Litex.Set),
       Litex.Same (Litex.union A A) A ∧ Litex.Same (Litex.union A Litex.Set.empty) A ∧ Litex.Same (Litex.union Litex.Set.empty A) A := by
   intro A
-  exact ⟨Litex.SetRules.unionIdempotent A, Litex.SetRules.unionEmptyRight A, Litex.SetRules.unionEmptyLeft A⟩
+  have __c2_0 : Litex.Same (Litex.union A A) A := Litex.SetRules.unionIdempotent A
+  have __c2_1 : Litex.Same (Litex.union A Litex.Set.empty) A := Litex.SetRules.unionEmptyRight A
+  have __c2_2 : Litex.Same (Litex.union Litex.Set.empty A) A := Litex.SetRules.unionEmptyLeft A
+  exact ⟨__c2_0, __c2_1, __c2_2⟩
 
 theorem __fact3 :
     ∀ (A : Litex.Set) (B : Litex.Set),
       Litex.Same (Litex.intersect A B) (Litex.intersect B A) := by
   intro A B
-  exact Litex.SetRules.intersectCommutative A B
+  have __c3_0 : Litex.Same (Litex.intersect A B) (Litex.intersect B A) := Litex.SetRules.intersectCommutative A B
+  exact __c3_0
 
 theorem __fact4 :
     ∀ (A : Litex.Set) (B : Litex.Set) (D : Litex.Set),
       Litex.Same (Litex.intersect (Litex.intersect A B) D) (Litex.intersect A (Litex.intersect B D)) := by
   intro A B D
-  exact Litex.SetRules.intersectAssociative A B D
+  have __c4_0 : Litex.Same (Litex.intersect (Litex.intersect A B) D) (Litex.intersect A (Litex.intersect B D)) := Litex.SetRules.intersectAssociative A B D
+  exact __c4_0
 
 theorem __fact5 :
     ∀ (A : Litex.Set) (B : Litex.Set) {__carrier5_3 : Type} (x : __carrier5_3) (__h5_3 : Litex.In x A),
       Litex.In x (Litex.union A B) := by
   intro A B __carrier5_3 x __h5_3
-  exact Litex.SetRules.inUnionLeft (__h5_3)
+  have __c5_0 : Litex.In x (Litex.union A B) := Litex.SetRules.inUnionLeft (__h5_3)
+  exact __c5_0
 
 theorem __fact6 :
     ∀ (A : Litex.Set) (B : Litex.Set) {__carrier6_3 : Type} (x : __carrier6_3) (__h6_3 : Litex.In x B),
       Litex.In x (Litex.union A B) := by
   intro A B __carrier6_3 x __h6_3
-  exact Litex.SetRules.inUnionRight (__h6_3)
+  have __c6_0 : Litex.In x (Litex.union A B) := Litex.SetRules.inUnionRight (__h6_3)
+  exact __c6_0
 
 theorem __fact7 :
     ∀ (A : Litex.Set) (B : Litex.Set) {__carrier7_3 : Type} (x : __carrier7_3) (__h7_3 : Litex.In x A) (__h7_4 : Litex.In x B),
       Litex.In x (Litex.intersect A B) := by
   intro A B __carrier7_3 x __h7_3 __h7_4
-  exact Litex.SetRules.inIntersect (__h7_3) (__h7_4)
+  have __c7_0 : Litex.In x (Litex.intersect A B) := Litex.SetRules.inIntersect (__h7_3) (__h7_4)
+  exact __c7_0
 
 theorem __fact8 :
     ∀ (A : Litex.Set) (B : Litex.Set) {__carrier8_3 : Type} (x : __carrier8_3) (__h8_3 : Litex.In x A) (__h8_4 : ¬ Litex.In x B),
       Litex.In x (Litex.setMinus A B) := by
   intro A B __carrier8_3 x __h8_3 __h8_4
-  exact Litex.SetRules.inSetMinus (__h8_3) (__h8_4)
+  have __c8_0 : Litex.In x (Litex.setMinus A B) := Litex.SetRules.inSetMinus (__h8_3) (__h8_4)
+  exact __c8_0
 
 theorem __fact9 :
     ∀ (A : Litex.Set) (B : Litex.Set) (D : Litex.Set) {__carrier9_4 : Type} (x : __carrier9_4) (__h9_4 : Litex.In x D) (__h9_5 : ¬ Litex.In x A),
       ¬ Litex.In x (Litex.intersect A B) := by
   intro A B D __carrier9_4 x __h9_4 __h9_5
-  exact Litex.SetRules.notInIntersectOfNotInLeft (__h9_5)
+  have __c9_0 : ¬ Litex.In x (Litex.intersect A B) := Litex.SetRules.notInIntersectOfNotInLeft (__h9_5)
+  exact __c9_0
 
 theorem __fact10 :
     ∀ (A : Litex.Set) (B : Litex.Set) (D : Litex.Set) {__carrier10_4 : Type} (x : __carrier10_4) (__h10_4 : Litex.In x D) (__h10_5 : ¬ Litex.In x B),
       ¬ Litex.In x (Litex.intersect A B) := by
   intro A B D __carrier10_4 x __h10_4 __h10_5
-  exact Litex.SetRules.notInIntersectOfNotInRight (__h10_5)
+  have __c10_0 : ¬ Litex.In x (Litex.intersect A B) := Litex.SetRules.notInIntersectOfNotInRight (__h10_5)
+  exact __c10_0
 
 end __Compiler_27_SetOperators

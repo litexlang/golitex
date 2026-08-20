@@ -35,7 +35,7 @@ impl Runtime {
                 )?;
             }
 
-            let mut inside_results = vec![];
+            let mut proof_steps = vec![];
             let proof_len = stmt.prove_process.len();
             for (proof_index, proof_stmt) in stmt.prove_process.iter().enumerate() {
                 let result = rt.exec_stmt(proof_stmt)?;
@@ -56,9 +56,10 @@ impl Runtime {
                         ),
                     )));
                 }
-                inside_results.push(result);
+                proof_steps.push(result);
             }
 
+            let mut conclusion_checks = Vec::new();
             let then_count = stmt.forall_fact.then_facts.len();
             let then_verify_state = UseContextVerifyState::new(0, false);
             for (then_index, then_fact) in stmt.forall_fact.then_facts.iter().enumerate() {
@@ -90,14 +91,20 @@ impl Runtime {
                         ),
                     )));
                 }
-                inside_results.push(result);
+                conclusion_checks.push(result);
             }
 
-            Ok(VerifiedStmtIr::DefStrategyStmt {
-                statement: stmt.clone(),
-                common: VerifiedStmtCommonIr::new(InferResult::new(), inside_results),
-            }
-            .into())
+            Ok(
+                SuccessStmtResult::DefStrategyStmt(Box::new(SuccessDefStrategyStmtResult {
+                    statement: stmt.clone(),
+                    common: SuccessStmtCommonResult::new(SuccessInferResult::new()),
+                    verification: Some(SuccessVerifyStrategyDefinitionResult {
+                        proof_steps,
+                        conclusion_checks,
+                    }),
+                }))
+                .into(),
+            )
         })?;
 
         self.store_def_strategy(stmt)
@@ -129,11 +136,13 @@ impl Runtime {
                 )
             })?;
         self.activate_strategy(&strategy, &strategy_name, stmt.clone().into())?;
-        Ok(VerifiedCommandStmtIr::UseStrategyStmt {
-            statement: stmt.clone(),
-            common: VerifiedStmtCommonIr::new(InferResult::new(), vec![]),
-        }
-        .into())
+        Ok(
+            SuccessCommandStmtResult::UseStrategyStmt(Box::new(SuccessUseStrategyStmtResult {
+                statement: stmt.clone(),
+                common: SuccessStmtCommonResult::new(SuccessInferResult::new()),
+            }))
+            .into(),
+        )
     }
 
     pub fn exec_stop_strategy_stmt(
@@ -155,11 +164,13 @@ impl Runtime {
         self.top_level_env()
             .stopped_strategy_stmts
             .insert(atomic_fact_key, strategy_name);
-        Ok(VerifiedCommandStmtIr::StopStrategyStmt {
-            statement: stmt.clone(),
-            common: VerifiedStmtCommonIr::new(InferResult::new(), vec![]),
-        }
-        .into())
+        Ok(
+            SuccessCommandStmtResult::StopStrategyStmt(Box::new(SuccessStopStrategyStmtResult {
+                statement: stmt.clone(),
+                common: SuccessStmtCommonResult::new(SuccessInferResult::new()),
+            }))
+            .into(),
+        )
     }
 
     pub(crate) fn exec_def_strategy_stmt_affect_environment_only(
@@ -176,11 +187,14 @@ impl Runtime {
 
         self.activate_strategy(stmt, &stmt.name, stmt.clone().into())?;
 
-        Ok(VerifiedStmtIr::DefStrategyStmt {
-            statement: stmt.clone(),
-            common: VerifiedStmtCommonIr::new(infer_result, vec![]),
-        }
-        .into())
+        Ok(
+            SuccessStmtResult::DefStrategyStmt(Box::new(SuccessDefStrategyStmtResult {
+                statement: stmt.clone(),
+                common: SuccessStmtCommonResult::new(infer_result),
+                verification: None,
+            }))
+            .into(),
+        )
     }
 
     fn activate_strategy(

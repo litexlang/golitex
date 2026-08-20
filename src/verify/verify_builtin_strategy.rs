@@ -96,7 +96,7 @@ impl Runtime {
             AtomicFact::EqualFact(_) => {
                 unreachable!("equality has an owner-specific builtin strategy route")
             }
-            _ => Ok(StmtUnknown::new().into()),
+            _ => Ok(UnknownGenericStmtResult::new().into()),
         }?;
         Ok(self.remember_successful_atomic_fact_for_statement(atomic_fact, result))
     }

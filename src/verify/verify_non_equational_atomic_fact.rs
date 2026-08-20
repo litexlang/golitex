@@ -1,7 +1,7 @@
 use crate::prelude::*;
 use crate::verify::verify_builtin_rules::{
-    builtin_in_fact_result_for_evaluated_number_in_standard_set,
-    builtin_not_in_fact_result_for_evaluated_number_in_standard_set,
+    builtin_in_fact_result_for_evaluation_in_standard_set,
+    builtin_not_in_fact_result_for_evaluation_in_standard_set,
 };
 
 impl Runtime {
@@ -53,21 +53,27 @@ impl Runtime {
         match atomic_fact {
             AtomicFact::InFact(fact) => {
                 let Obj::StandardSet(set) = &fact.set else {
-                    return StmtUnknown::new().into();
+                    return UnknownGenericStmtResult::new().into();
                 };
-                let Some(number) = fact.element.evaluate_to_normalized_decimal_number() else {
-                    return StmtUnknown::new().into();
+                let Some(evaluation) = fact
+                    .element
+                    .evaluate_to_normalized_decimal_number_with_result()
+                else {
+                    return UnknownGenericStmtResult::new().into();
                 };
-                builtin_in_fact_result_for_evaluated_number_in_standard_set(fact, &number, set)
+                builtin_in_fact_result_for_evaluation_in_standard_set(fact, &evaluation, set)
             }
             AtomicFact::NotInFact(fact) => {
                 let Obj::StandardSet(set) = &fact.set else {
-                    return StmtUnknown::new().into();
+                    return UnknownGenericStmtResult::new().into();
                 };
-                let Some(number) = fact.element.evaluate_to_normalized_decimal_number() else {
-                    return StmtUnknown::new().into();
+                let Some(evaluation) = fact
+                    .element
+                    .evaluate_to_normalized_decimal_number_with_result()
+                else {
+                    return UnknownGenericStmtResult::new().into();
                 };
-                builtin_not_in_fact_result_for_evaluated_number_in_standard_set(fact, &number, set)
+                builtin_not_in_fact_result_for_evaluation_in_standard_set(fact, &evaluation, set)
             }
             AtomicFact::NotLessFact(_)
             | AtomicFact::NotGreaterFact(_)
@@ -78,9 +84,9 @@ impl Runtime {
             | AtomicFact::LessEqualFact(_)
             | AtomicFact::GreaterEqualFact(_) => {
                 if self.verify_number_comparison_builtin_rule(atomic_fact) != Some(true) {
-                    return StmtUnknown::new().into();
+                    return UnknownGenericStmtResult::new().into();
                 }
-                VerifiedFactStmtIr::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     atomic_fact.clone().into(),
                     "number comparison".to_string(),
                     BuiltinRuleEvidence::ClosedNumericComparison(
@@ -92,7 +98,7 @@ impl Runtime {
             }
             AtomicFact::NotEqualFact(fact) => self
                 .verify_resolved_numeric_not_equal_without_builtin_recursion(fact)
-                .unwrap_or_else(|| StmtUnknown::new().into()),
+                .unwrap_or_else(|| UnknownGenericStmtResult::new().into()),
             AtomicFact::NormalAtomicFact(_) | AtomicFact::NotNormalAtomicFact(_) => {
                 let prime_result = self.verify_prime_fact_by_computation(atomic_fact);
                 if prime_result.is_unknown() {
@@ -104,7 +110,7 @@ impl Runtime {
             AtomicFact::EqualFact(_) => {
                 unreachable!("equality has an owner-specific direct-evaluation route")
             }
-            _ => StmtUnknown::new().into(),
+            _ => UnknownGenericStmtResult::new().into(),
         }
     }
 
@@ -117,7 +123,7 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         debug_assert!(!matches!(atomic_fact, AtomicFact::EqualFact(_)));
         if !builtin_state.can_apply_builtin_rule() {
-            return Ok(StmtUnknown::new().into());
+            return Ok(UnknownGenericStmtResult::new().into());
         }
         let child_state = builtin_state.after_applying_builtin_rule();
         if let Some(result) =
@@ -190,7 +196,7 @@ impl Runtime {
             }
         }
 
-        Ok((StmtUnknown::new()).into())
+        Ok((UnknownGenericStmtResult::new()).into())
     }
 
     // If direct verification failed, try order-dual, then registered user-defined prop properties.
@@ -261,7 +267,7 @@ impl Runtime {
         for env in self.iter_environments_from_top() {
             if env.known_reflexive_props.contains_key(&prop_name) {
                 return Ok(
-                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                         atomic_fact.clone().into(),
                         "registered reflexive prop".to_string(),
                         Vec::new(),
@@ -321,12 +327,11 @@ impl Runtime {
         fallback: StmtResult,
     ) -> Result<StmtResult, RuntimeError> {
         match alternate_result {
-            StmtResult::Success(VerifiedStmtIr::Fact(inner_success)) => {
-                let (_, data) = inner_success.into_parts();
-                Ok(VerifiedFactStmtIr::new_with_verified_by_known_fact(
+            StmtResult::Success(SuccessStmtResult::Fact(inner_success)) => {
+                Ok(SuccessFactStmtResult::new_with_statement_memo(
                     original.clone().into(),
-                    data.verified_by,
-                    Vec::new(),
+                    SuccessInferResult::new(),
+                    inner_success.verification,
                 )
                 .into())
             }
@@ -338,6 +343,47 @@ impl Runtime {
 
 #[cfg(test)]
 mod tests {
+    use crate::prelude::*;
+
+    #[test]
+    fn direct_numeric_membership_retains_recursive_evaluation_evidence() {
+        let expression: Obj = Add::new(
+            Number::new("2".to_string()).into(),
+            Number::new("3".to_string()).into(),
+        )
+        .into();
+        let fact: AtomicFact =
+            InFact::new(expression, StandardSet::N.into(), default_line_file()).into();
+
+        let result = Runtime::new().verify_non_equational_atomic_fact_by_direct_evaluation(&fact);
+        let StmtResult::Success(SuccessStmtResult::Fact(success)) = result else {
+            panic!("2 + 3 in N should be a successful fact result");
+        };
+        let SuccessFactProofResult::BuiltinRule(builtin) = success.proof() else {
+            panic!("direct membership should select one builtin proof");
+        };
+        let Some(BuiltinRuleEvidence::ClosedNumericMembership(evidence)) = &builtin.evidence else {
+            panic!("direct membership should retain its numeric evaluation");
+        };
+
+        assert_eq!(evidence.expected_target.to_string(), "2 + 3 $in N");
+        assert_eq!(evidence.target_set, StandardSet::N);
+        assert_eq!(evidence.evaluation.expression.to_string(), "2 + 3");
+        assert_eq!(evidence.evaluation.value.normalized_value, "5");
+        let SuccessEvaluateObjStepResult::Binary(binary) = &evidence.evaluation.step else {
+            panic!("2 + 3 should retain the addition node");
+        };
+        assert_eq!(binary.operator, EvaluateBinaryObjOperator::Add);
+        assert!(matches!(
+            binary.left.step,
+            SuccessEvaluateObjStepResult::Literal(_)
+        ));
+        assert!(matches!(
+            binary.right.step,
+            SuccessEvaluateObjStepResult::Literal(_)
+        ));
+    }
+
     #[test]
     fn anonymous_function_membership_is_not_dispatched_by_the_generic_orchestrator() {
         let source = include_str!("verify_non_equational_atomic_fact.rs");

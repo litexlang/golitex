@@ -2,11 +2,11 @@ use crate::prelude::*;
 use std::fmt;
 
 #[derive(Debug)]
-pub struct StmtUnknown {
+pub struct UnknownGenericStmtResult {
     pub detail: Option<Vec<String>>,
 }
 
-impl fmt::Display for StmtUnknown {
+impl fmt::Display for UnknownGenericStmtResult {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "{}", UNKNOWN_COLON)?;
         if let Some(detail_lines) = &self.detail {
@@ -18,9 +18,9 @@ impl fmt::Display for StmtUnknown {
     }
 }
 
-impl StmtUnknown {
+impl UnknownGenericStmtResult {
     pub fn new() -> Self {
-        StmtUnknown { detail: None }
+        UnknownGenericStmtResult { detail: None }
     }
 
     pub fn new_with_detail(detail: String) -> Self {
@@ -29,9 +29,9 @@ impl StmtUnknown {
 
     pub fn new_with_detail_lines(detail_lines: Vec<String>) -> Self {
         if detail_lines.is_empty() {
-            return StmtUnknown { detail: None };
+            return UnknownGenericStmtResult { detail: None };
         }
-        StmtUnknown {
+        UnknownGenericStmtResult {
             detail: Some(detail_lines),
         }
     }

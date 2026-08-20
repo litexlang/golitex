@@ -1,335 +1,226 @@
 <div align="center">
-<img src="./assets/logo.PNG" alt="The Litex Logo" width="300">
-</div>
+  <img src="./assets/logo.PNG" alt="The Litex logo" width="300">
 
-<div align="center">
+# Litex
 
-# Litex: The Formal Language Where Math Verifies Itself
-
-*Created and maintained by Jiachen Shen.*
-
-*Version 0.9.110-beta*
-
-[![Website](https://img.shields.io/badge/Official%20Website-blue?logo=website)](https://litexlang.com)
-[![Github](https://img.shields.io/badge/Github-grey?logo=github)](https://github.com/litexlang/golitex)
-[![Email](https://img.shields.io/badge/Email-red?logo=email)](mailto:litexlang@outlook.com)
-[![Zulip](https://img.shields.io/badge/Zulip-blue?logo=zulip)](https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/)
-[![Manual](https://img.shields.io/badge/Manual-orange?logo=book)](https://litexlang.com/doc/Manual)
-
-**Litex is an experimental hobby project still in beta. Expect rough edges.**
-
-*VISIT [OUR WEBSITE](litexlang.com) FOR EXECUTABLE INTRODUCTION OF LITEX*
-
-</div>
-
-> **Core positioning.** Litex is a set-theory-based, fact-oriented language
-> for readable checked mathematics. Users write the mathematical facts that
-> form the proof spine; Litex reconstructs routine local justification through
-> fact matching, equality replacement, definitions, quantified rules, and
-> bounded mathematical reasoning.
->
-> **核心定位。** Litex 是一门基于集合论、以事实为导向的形式化语言，用于书写可读且可机器检查的数学。
-> 用户写下构成证明主干的数学事实；Litex 则通过事实匹配、等式替换、定义、量化规则与有界数学推理，
-> 重建常规的局部证明依据。
-
-## Start with one checked fact
-
-```litex
-have x R = 2
-
-x + 1 = 3
-x + 1 > 2
-```
-
-This is the basic loop. `have x R = 2` introduces a real object and records
-its defining fact. The next two lines are ordinary mathematical facts. Litex
-checks them from the current context, arithmetic, and equality replacement;
-accepted facts become available to the following lines.
-
-The ordinary output is evidence, not just a pass/fail signal:
-
-```text
-line 1  introduced x as a real number and stored x = 2
-line 3  verified x + 1 = 3
-line 4  verified x + 1 > 2
-```
-
-The first useful mental model has four parts:
-
-| Part | Role | Examples |
-| --- | --- | --- |
-| objects | mathematical things, not truth claims | `x + 1`, `f(x)`, `S` |
-| definitions | names and meanings | `have`, `have fn`, `prop`, `struct` |
-| facts | claims accepted in the current context | `x <= y`, `$P(x)`, `thm`, `claim` |
-| proof processes | explicit routes for a fact that needs one | `witness`, `obtain`, `by contra`, `by cases` |
-
-Common LaTeX-style notation, set theory, and basic logic stay close to ordinary
-mathematical writing. Routine consequences can be written directly as facts;
-explicit proof routes remain available when an argument needs them.
-
-## Let facts build a checked context
-
-Facts are not comments or hints. They are checked resources for the next
-mathematical step. Here equality replacement turns `b > c` into `a > c`:
-
-```litex
-forall a, b, c R:
-    a = b
-    b > c
-    =>:
-        a > c
-```
-
-Litex matches the known comparison, replaces equal expressions, and records
-that route. The author states the mathematical conclusion instead of manually
-encoding the replacement mechanics.
-
-## Open a proof process when the mathematics asks for one
-
-Direct facts are not a promise that every proof is automatic. When the next
-step has a visible proof shape, make that shape explicit. This existential
-claim needs a witness and one calculation:
-
-```litex
-witness exist x R st {x^2 = 4} from 2:
-    2^2 = 4
-```
-
-A concrete proposition whose complete definition is one existential can keep
-its public name while supplying the same witness:
-
-```litex
-prop has_copy(a R):
-    exist x R st {x = a}
-
-witness $has_copy(2) from 2:
-    2 = 2
-```
-
-This stores `$has_copy(2)` as the proved fact. Definition inference exposes its
-existential meaning afterward; the parser does not rewrite the statement. If
-the sole definition clause is `exist!`, the same form additionally requires a
-proof that any two values satisfying the body are equal.
-
-`obtain` uses an existing witness, `by contra` exposes a contradiction,
-`by cases` splits alternatives, and `by induc` handles induction. These forms
-are ways to establish a fact; they do not replace the central question of what
-mathematical fact should hold next.
-
-When a named theorem has exactly one direct `exist` or `exist!` conclusion,
-apply it and name its witnesses in one checked step:
-
-```litex
-have a Q
-obtain p, q from thm rational_has_unique_reduced_fraction(a)
-```
-
-The theorem's argument and premise checks still run. Its existential stays in
-a temporary scope; only the witness names, their types, body facts, and any
-`exist!` uniqueness interface enter the surrounding context.
-
-## Name concepts, then reuse them
-
-The same context can hold definitions as well as facts. A named predicate and
-a named function become reusable parts of a small mathematical world:
-
-```litex
-prop is_one(x R):
-    x = 1
-
-by def $is_one(1)
-
-have fn f(x R) R = x^2 + 1
-f(3) = 10
-```
-
-Larger developments use the same ingredients: definitions introduce vocabulary,
-facts state what follows, and named theorems connect reusable pieces. Litex
-textbooks can preserve the order of a lesson—define an idea, work an example,
-reuse a fact, then prove the next result—instead of hiding that route behind a
-different program structure.
-
-## Keep the verification inspectable
-
-Litex compresses the *writing* of routine mathematical reasoning; it does not
-intend to make verification a black box. Each accepted statement can report:
-
-1. what it did—introduced an object, asserted a fact, opened a local proof, or
-   supplied a witness;
-2. why it was accepted—a definition, previous fact, theorem, arithmetic rule,
-   builtin rule, or explicit assumption; and
-3. what it made available for later lines—facts, definitions, theorem names,
-   and routine inferred consequences.
-
-Use ordinary output to read successful statements, `-compact` for a small
-machine-friendly success record, and `-detail` when auditing recursive
-verification data and effects for the whole run. Any `RuntimeError` is rendered
-with the full detailed diagnostic in all three modes, so `-compact` never hides
-the available failure context.
-The same run can also generate a relation graph from a repository-owned
-example:
-
-```bash
-litex -graph -f examples/04_case_studies/gcd_from_finite_divisors.lit tmp/graphs/gcd_graph.json
-```
-
-The larger diagram below was generated from Analysis I Chapter 6 in its
-separately owned textbook workspace:
-
-<p align="center">
-  <img src="assets/knowledge_graph.svg" alt="A Litex relation graph generated from Analysis I Chapter 6, showing concepts and theorems connected by uses_prop and justified_by relationships" width="920">
-</p>
-
-The graph is one view of a checked development; source code, statement output,
-and trust assumptions remain available to inspect alongside it.
-
-## A mathematical frontend for Lean
-
-Consider a small but complete example: 1. definition of a group 2. the uniqueness of the identity in a
-group. Here is a Lean formulation:
-
-```lean
-structure Group where
-  Carrier : Type
-  mul : Carrier → Carrier → Carrier
-  one : Carrier
-  inv : Carrier → Carrier
-  mul_assoc : ∀ a b c : Carrier, mul (mul a b) c = mul a (mul b c)
-  one_mul : ∀ a : Carrier, mul one a = a
-  mul_one : ∀ a : Carrier, mul a one = a
-  mul_left_inv : ∀ a : Carrier, mul (inv a) a = one
-
-theorem one_unique
-    (G : Group)
-    (e : G.Carrier)
-    (hleft : ∀ a : G.Carrier, G.mul e a = a)
-    (hright : ∀ a : G.Carrier, G.mul a e = a) :
-    e = G.one := by
-  calc
-    e = G.mul G.one e := (G.one_mul e).symm
-    _ = G.one := hright G.one
-```
-
-Here is the corresponding Litex formulation:
-
-```litex
-struct Group<s nonempty_set>:
-    mul fn(x, y s) s
-    one s
-    inv fn(x s) s
-    <=>:
-        forall x, y, z s:
-            mul(mul(x, y), z) = mul(x, mul(y, z))
-        forall x s:
-            mul(x, one) = x
-            mul(one, x) = x
-            mul(inv(x), x) = one
-
-forall s nonempty_set, G &Group<s>, identity s:
-    forall a s:
-        G.mul(identity, a) = a
-        G.mul(a, identity) = a
-    =>:
-        identity = G.mul(G.one, identity) = G.one
-```
-
-This comparison motivates six questions that guide Litex:
-
-1. **Make source fact-oriented rather than tactic-oriented.** Can users state
-   *what should be verified*—the objects, conditions, intermediate facts, and
-   conclusions—in their natural mathematical order, while the checker
-   reconstructs and exposes *how those facts were verified*, instead of
-   requiring ordinary source to be organized primarily as commands that
-   manipulate a proof state?
-2. **Reuse the shape of a fact, not only its theorem name.** Can the checker
-   recognize and instantiate an available fact without requiring the user to
-   recall and invoke its name?
-3. **Present set-theoretic objects at the surface instead of requiring users to learn type universes first.** Can carriers, elements, functions, and
-   structures be presented directly through sets and membership?
-4. **Make the mathematical statement, rather than functional-program structure, the subject.** Can a binary operation look like a binary
-   operation, and can definitions and conclusions remain in mathematical
-   order?
-5. **Derive rigor from a checkable process, and retain a familiar appearance.** Can routine orchestration be omitted from the surface while
-   every object, fact, instantiation, and dependency is still checked?
-6. **Let relevance to a Goal be decided later.** Can a well-defined, verified
-   fact enter the current context without having to advance an active Goal, so
-   mathematical branches can be developed first and combined later?
-
-Here, *fact-oriented* and *tactic-oriented* name the centers of gravity of two
-default interfaces, not exclusive capability boundaries. Lean also supports
-declarative and forward styles, while Litex also provides goal-directed forms
-and explicit proof structure when the mathematics requires them.
-
-Litex should not promise to “omit proof.” Its intended promise is both stricter
-and more modest: let users first write the mathematical facts they actually
-mean, then let the machine expose the verification, provenance, and boundaries
-clearly. (Since Litex operates on a higher mathematical abstraction level, it usually runs faster than existing formal languages.)
-
-Litex is also developing a compilation path to Lean. The verifier produces a
-backend-facing IR with stable fact identities and checked proof evidence. The
-active Lean compiler consumes that IR and emits Litex semantic wrappers over
-native Lean and Mathlib carriers. Its supported surface remains deliberately
-narrow and unsupported routes fail instead of becoming `sorry` or implicit
-axioms. See the [compiler README](lean/README.md) for the implemented examples
-and current boundary.
-
-## Real mathematics is the pressure test
-
-Litex is developed against real mathematical translation work, not only
-isolated syntax examples. Textbooks and datasets are used to discover concrete
-gaps in language design, the standard library, verification rules, diagnostics,
-and proof organization. A failed translation is useful evidence when its first
-unsupported step and any remaining assumptions are visible.
-
-The guide
-[Write Math with Litex by AI](docs/Write_Math_With_Litex_By_AI.md)
-describes the persistent-session, transactional `try:`, proof-journal, and
-clean-checkpoint workflow used to turn those successes and failures into
-reusable writing experience.
-
-This makes four practical directions possible:
-
-| Direction | What Litex contributes today |
-| --- | --- |
-| teaching | recognizable mathematics and feedback about the exact fact the current context does—or does not—justify |
-| AI repair loops | machine-checkable local feedback, explicit assumptions, and a visible first unsupported step |
-| scientific work | a lighter path from familiar notation to an inspectable checked artifact |
-| collaboration | source-native definitions, named interfaces, explicit dependencies, and visible trust boundaries |
-
-As Terence Tao noted in his public lecture, “Mathematics in the Age of AI”,
-mathematical knowledge will shift from scarcity to abundance. The
-research process will be unbundled into distinct stages—including
-generation, verification, explanation, review, and knowledge
-integration—and the division of labor between humans and AI will be reshaped accordingly. I hope Litex can be part of this revolutionary process.
-
-Visit our website for more information: [Litexlang.com](https://litexlang.com)
-
-## What a Litex result means
-
-A successful Litex run means that the current parser, runtime, verifier,
-accepted rules, libraries, and declared context accepted that statement. It
-does **not** establish that this implementation is free of bugs or that it has
-the audit history of a mature proof-assistant foundation.
-
-Read a result relative to its trusted background:
-
-- builtin objects and builtin verification or inference rules;
-- imported standard packages, configured project packages, and source-local
-  cite packages;
-- explicit `trust` or `axiom` assumptions; and
-- the current parser, runtime, verifier, diagnostics, and test coverage.
-
-`trust` and `axiom` are assumptions, not derived facts. Tests reduce
-risk but do not remove it. The project keeps these boundaries visible so that a
-reader can distinguish checked derivations from unfinished background work and
-so that failures can guide the next audit or implementation step.
-
-## Special Thanks
-
-Hi, I am Jiachen Shen, a math PhD student in Fudan university, who loves both math and programming. Since the day when I first notice the language, Lean 4, which connects these two worlds, I am fascinated by the finding that math can be encoded into computer programs. However, it takes huge effort to be good at Lean and the mental flow of writing Lean is very different from the flow that I am very used to when I solve math problems (The challenge has always been that with great type-system power comes great proof effort. Certainly I sometimes have to spend an entire day proving really quite simple things. ). I wonder whether there is a way code math more naturally. After all, we humans learn to reason almost instinctively from a very young age — so the underlying mechanism can't be all that complicated. If it comes naturally to a child, the core principles might be simple enough to grasp? And Litex is the result of this intellectual exploration.
+### A formal language where mathematics verifies itself
 
 Created and maintained by Jiachen Shen.
 
+[Website](https://litexlang.com) · [Blueprint](docs/Litex_Blueprint.md) · [中文蓝图](docs/Litex中文蓝图.md) · [Manual](docs/Manual.md) · [Install](docs/Setup.md) · [Examples](examples/README.md) · [Zulip](https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/)
+
+**Litex is an experimental hobby project in beta. Expect rough edges.**
+</div>
+
+Litex is a **set-theory-based, fact-oriented, bottom-up, Lean-compatible**
+formal language. It is designed for writing readable mathematics that a machine
+can check while keeping the source close to the objects, facts, and proof flow a
+mathematician has in mind.
+
+Litex is not trying to replace Lean. It tests a different hypothesis: that a
+smaller, readable, fact-oriented language can make checked mathematics cheap
+enough for students, domain scientists, and AI agents to produce useful formal
+data at scale.
+
+## See the design in one fact
+
+```litex
+forall s, t, u set:
+    s $subset t
+    =>:
+        intersect(s, u) $subset intersect(t, u)
+```
+
+This is a complete statement submitted to the verifier, not a proof hole. It
+says that intersecting both sides with the same set preserves inclusion. Litex
+checks that the expressions are well-defined, unfolds the relevant membership
+facts, transports membership through `s $subset t`, and records why the result
+was accepted.
+
+The example already shows three design choices: sets and membership are visible
+at the surface; the user writes the mathematical fact that should hold; and the
+verifier reconstructs the routine local justification. The fourth choice is to
+record enough evidence for supported verification paths to be checked again by
+Lean.
+
+## The blueprint in four design choices
+
+These choices are meant to reinforce one another:
+
+| Design choice | What it changes for the author |
+| --- | --- |
+| **Based on set theory** | Start from sets, membership, functions on sets, and familiar mathematical structures. |
+| **Fact-oriented** | Write the next fact that should hold; let the verifier search for an acceptable local justification. |
+| **Bottom-up** | Let every accepted fact extend the context from which later facts can grow. |
+| **Lean-compatible** | Compile the verification paths currently supported by the backend into Lean proof terms for independent checking. |
+
+### 1. Let set-theoretic mathematics look like set theory
+
+Litex organizes its user-facing language around sets, membership, and relations
+between sets. A function can be written as a function from one set to another;
+a structure can be written as operations and laws on a carrier set. Users do
+not first have to organize the same mathematics through type universes.
+
+That is a choice of interface, not a claim that type theory is unnecessary.
+Lean's type-theoretic design provides powerful abstraction, composition, and a
+mature ecosystem. Litex chooses a narrower, membership-centered surface because
+it is often closer to the way set-theoretic mathematics is already written.
+
+### 2. Make facts the executable unit of source
+
+```litex
+have a R = 1
+have b R = 2
+
+a + b >= 0
+```
+
+The last line has no theorem name and invokes no tactic. The verifier sees the
+shape of the requested fact, finds a relevant nonnegativity rule, checks its
+premises from the current context, and accepts or rejects the fact. Successful
+facts are then available to later lines.
+
+Litex can justify a submitted fact from builtin rules, user-provided universal
+facts, concrete facts and known equalities, definitions, or an explicit proof
+process. Its central division of labor is:
+
+> The author writes **what mathematical fact should hold**. Litex searches for
+> **how that fact can be verified**, then exposes the route it used.
+
+This does not mean that names are forbidden or that every fact is automatic.
+Stable interfaces can be named as theorems, and proofs can explicitly use
+witnesses, contradiction, cases, induction, definitions, or named theorems
+when the mathematics calls for them.
+
+### 3. Grow proofs from known facts
+
+Consider membership transported through two inclusions. A common Lean tactic
+proof starts from the final goal and works backward:
+
+```lean
+example {α : Type} {A B c : Set α}
+    (hAB : A ⊆ B) (hBc : B ⊆ c)
+    {x : α} (hx : x ∈ A) :
+    x ∈ c := by
+  apply hBc
+  apply hAB
+  exact hx
+```
+
+The corresponding Litex proof grows forward from the known membership:
+
+```litex
+forall A, B, c set, x A:
+    A $subset B
+    B $subset c
+    =>:
+        x $in B
+        x $in c
+```
+
+After `x $in B` is checked, it becomes part of the context used to check
+`x $in c`. This is Litex's default bottom-up flow: derive a useful fact, keep
+it, and continue. Goal-directed blocks still exist when working backward is the
+clearer mathematical move.
+
+The distinction is about the default interface, not an exclusive capability
+boundary. Lean supports forward and declarative styles; Litex supports goals
+and explicit proof structure. Litex simply makes a verified fact that extends
+the context its ordinary unit of execution.
+
+### 4. Use Lean as an independent checking path
+
+Litex has its own parser, runtime, verifier, builtin rules, and inference rules.
+That makes it independently usable, but it also gives Litex a larger trusted
+implementation than a small proof-assistant kernel.
+
+The Litex-to-Lean compiler addresses this boundary by translating recorded
+Litex verification evidence into Lean proof terms over native Lean and Mathlib
+representations. The current compiler covers only part of the language. Covered
+routes are checked by Lean; unsupported or trusted routes fail instead of
+becoming `sorry` or hidden axioms. See the [compiler README](lean/README.md) for
+the implemented surface and current limits.
+
+“Every Litex file compiles to Lean” is a direction of work, not a capability of
+the current beta.
+
+## Why build this now?
+
+AI makes it increasingly cheap to generate candidate mathematics. The harder
+problem is to check, repair, review, reuse, and accumulate that mathematics.
+Formal languages can provide this infrastructure, but their first-contact
+experience is still usually designed for specialists.
+
+Litex explores whether a language specialized for mathematics can offer a
+different entry point:
+
+- a learner can express familiar mathematics before learning proof-assistant
+  internals;
+- a mathematician or domain scientist can keep the formal source close to the
+  argument they want to communicate;
+- an AI agent can propose the next small mathematical fact and repair it from
+  a local verification failure; and
+- a reviewer can inspect the written statement, its dependencies, and its
+  trust boundary separately.
+
+Real mathematical work is the pressure test. Textbooks and datasets are used
+to find concrete gaps in the language, standard library, verifier, inference
+rules, diagnostics, and proof organization. Successful translations become
+examples or benchmarks; failed translations become explicit blocker evidence
+rather than being hidden.
+
+## Try Litex
+
+The fastest route is the [online playground](https://litexlang.com). For a
+local installation, see the [setup guide](docs/Setup.md). On macOS and Linux
+with Homebrew:
+
+```bash
+brew install litexlang/tap/litex
+litex -version
+litex -e '1 = 1'
+```
+
+Useful next steps:
+
+- [Examples](examples/README.md) — small proof patterns, builtin mathematics,
+  language features, and case studies;
+- [Manual](docs/Manual.md) — the language and verifier reference;
+- [Blueprint](docs/Litex_Blueprint.md) / [中文蓝图](docs/Litex中文蓝图.md) — the
+  full design argument and comparisons;
+- [System map](docs/Litex_System_Map.md) — how parsing, verification, evidence,
+  and output fit together; and
+- [Contributing](docs/How_To_Contribute.md) — how to report gaps and contribute.
+
+## What a successful result means
+
+A successful run means that the current Litex parser, runtime, verifier,
+accepted rules, imported libraries, and declared context accepted the
+statement. It does **not** mean that the implementation is bug-free or has the
+audit history of a mature proof assistant.
+
+Read every result relative to its trusted background:
+
+- builtin objects, verification rules, and inference rules;
+- imported packages and source-local interfaces;
+- explicit `trust` and `axiom` assumptions; and
+- the current implementation and test coverage.
+
+`trust` and `axiom` introduce assumptions; they are not checked derivations.
+Tests reduce risk but do not eliminate it. When a verification path can also be
+compiled and accepted by Lean, that provides an additional, independent check
+for that covered path.
+
+## About
+
+I am Jiachen Shen, a mathematics PhD student at Fudan University who loves both
+mathematics and programming. Lean showed me that these worlds can meet in a
+real language. It also made me wonder whether formal source could follow more
+closely the mental flow I use when solving mathematical problems. Litex is the
+result of that exploration.
+
 The project has received support and advice from many friends and
-collaborators. Thanks especially to Wei Lin, Siqi Sun, Peng
-Sun, Yi Wang, Chenxuan Huang, Yan Lu, Sheng Xu, and Zhaoxuan Hong.
+collaborators. Special thanks to Wei Lin, Siqi Sun, Peng Sun, Yi Wang, Chenxuan
+Huang, Yan Lu, Sheng Xu, and Zhaoxuan Hong.
+
+Litex is released under the [Apache License 2.0](LICENSE).

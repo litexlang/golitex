@@ -90,7 +90,7 @@ impl Runtime {
             ));
         }
 
-        Ok((StmtUnknown::new()).into())
+        Ok((UnknownGenericStmtResult::new()).into())
     }
 
     fn verify_atomic_fact_not_equality_with_known_atomic_fact_with_2_params(
@@ -151,7 +151,7 @@ impl Runtime {
             ));
         }
 
-        Ok((StmtUnknown::new()).into())
+        Ok((UnknownGenericStmtResult::new()).into())
     }
 
     fn verify_atomic_fact_not_equality_with_known_atomic_fact_with_0_or_more_than_2_params(
@@ -211,7 +211,7 @@ impl Runtime {
             ));
         }
 
-        Ok((StmtUnknown::new()).into())
+        Ok((UnknownGenericStmtResult::new()).into())
     }
 
     pub(crate) fn all_objs_equal_to_arg_for_known_atomic_fact(
@@ -415,7 +415,7 @@ impl Runtime {
         known_fact: &AtomicFact,
         module_names: &[String],
         detail: Option<String>,
-    ) -> VerifiedByResult {
+    ) -> SuccessFactProofResult {
         let source_fact: Fact = known_fact.clone().into();
         let source_fact_id = self.fact_id_for_transport_fact(&source_fact, module_names);
         let equality_transport =
@@ -437,7 +437,7 @@ impl Runtime {
                     .and_then(|resolved| resolved.fact_transformation)
             })
             .flatten();
-        VerifiedByResult::cited_fact_with_provenance(
+        SuccessFactProofResult::cited_fact_with_provenance(
             goal.clone().into(),
             source_fact,
             source_fact_id,
@@ -685,7 +685,7 @@ impl Runtime {
         let Some(success) = result.factual_success() else {
             return result;
         };
-        let VerifiedByResult::Fact(citation) = success.underlying_verified_by() else {
+        let SuccessFactProofResult::Fact(citation) = success.underlying_verified_by() else {
             return result;
         };
 
@@ -694,9 +694,9 @@ impl Runtime {
             return result;
         }
         citation.fact_transformation = Some(fact_transformation);
-        VerifiedFactStmtIr::new_with_verified_by_known_fact(
+        SuccessFactStmtResult::new_with_verified_by_known_fact(
             goal.clone().into(),
-            VerifiedByResult::Fact(citation),
+            SuccessFactProofResult::Fact(citation),
             Vec::new(),
         )
         .into()
@@ -735,7 +735,7 @@ impl Runtime {
         {
             for obj in all_objs_equal_to_arg.iter() {
                 if let Some(known_atomic_fact) = known_facts_map.get(obj) {
-                    return Ok((VerifiedFactStmtIr::new_with_verified_by_known_fact(
+                    return Ok((SuccessFactStmtResult::new_with_verified_by_known_fact(
                         atomic_fact.clone().into(),
                         self.cited_known_atomic_fact(
                             atomic_fact,
@@ -750,7 +750,7 @@ impl Runtime {
             }
         }
 
-        Ok((StmtUnknown::new()).into())
+        Ok((UnknownGenericStmtResult::new()).into())
     }
 
     fn verify_atomic_fact_not_equality_with_known_atomic_fact_with_2_params_with_facts_in_environment(
@@ -770,7 +770,7 @@ impl Runtime {
                     if let Some(known_atomic_fact) =
                         known_facts_map.get(&(obj0.clone(), obj1.clone()))
                     {
-                        return Ok((VerifiedFactStmtIr::new_with_verified_by_known_fact(
+                        return Ok((SuccessFactStmtResult::new_with_verified_by_known_fact(
                             atomic_fact.clone().into(),
                             self.cited_known_atomic_fact(
                                 atomic_fact,
@@ -800,7 +800,7 @@ impl Runtime {
                             )
                         });
                 if args_match {
-                    return Ok((VerifiedFactStmtIr::new_with_verified_by_known_fact(
+                    return Ok((SuccessFactStmtResult::new_with_verified_by_known_fact(
                         atomic_fact.clone().into(),
                         self.cited_known_atomic_fact(
                             atomic_fact,
@@ -826,9 +826,9 @@ impl Runtime {
                         if let Some(known_atomic_fact) =
                             known_facts_map.get(&(obj0.clone(), obj1.clone()))
                         {
-                            return Ok((VerifiedFactStmtIr::new_with_verified_by_known_fact(
+                            return Ok((SuccessFactStmtResult::new_with_verified_by_known_fact(
                                 atomic_fact.clone().into(),
-                                VerifiedByResult::cited_fact(
+                                SuccessFactProofResult::cited_fact(
                                     atomic_fact.clone().into(),
                                     known_atomic_fact.clone().into(),
                                     None,
@@ -842,7 +842,7 @@ impl Runtime {
             }
         }
 
-        Ok((StmtUnknown::new()).into())
+        Ok((UnknownGenericStmtResult::new()).into())
     }
 
     fn objs_match_for_known_atomic_fact_lookup(
@@ -926,7 +926,7 @@ impl Runtime {
                     }
                 }
                 if all_args_match {
-                    return Ok((VerifiedFactStmtIr::new_with_verified_by_known_fact(
+                    return Ok((SuccessFactStmtResult::new_with_verified_by_known_fact(
                         atomic_fact.clone().into(),
                         self.cited_known_atomic_fact(atomic_fact, known_fact, module_names, None),
                         Vec::new(),
@@ -936,7 +936,7 @@ impl Runtime {
             }
         }
 
-        Ok((StmtUnknown::new()).into())
+        Ok((UnknownGenericStmtResult::new()).into())
     }
 
     fn verify_atomic_fact_with_alpha_equivalent_anonymous_fn_known_facts(
@@ -1021,9 +1021,9 @@ impl Runtime {
             }
             if all_args_match {
                 return Ok(Some(
-                    VerifiedFactStmtIr::new_with_verified_by_known_fact(
+                    SuccessFactStmtResult::new_with_verified_by_known_fact(
                         atomic_fact.clone().into(),
-                        VerifiedByResult::cited_fact(
+                        SuccessFactProofResult::cited_fact(
                             atomic_fact.clone().into(),
                             known_fact.clone().into(),
                             None,

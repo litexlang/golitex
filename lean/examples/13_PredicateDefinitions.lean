@@ -14,18 +14,9 @@ theorem __fact0 : Litex.Same (1 : ℂ) (1 : ℂ) := by
 theorem __fact1 : is_unit_pair (1 : ℂ) (1 : ℂ) := by
   exact (by
   unfold is_unit_pair
-  exact ⟨Litex.Rules.complexRealInR 1, Litex.Rules.complexRealInR 1, __fact0, __fact0⟩)
+  exact ⟨Litex.Rules.complexRealInR (1 : ℝ), Litex.Rules.complexRealInR (1 : ℝ), __fact0, __fact0⟩)
 
 theorem __fact2 : Litex.In (1 : ℂ) Litex.R := by
-  exact (by
-  have __definition := __fact1
-  unfold is_unit_pair at __definition
-  exact __definition.1)
-
-theorem __fact3 : Litex.Same (1 : ℂ) (1 : ℂ) := by
-  exact (by
-  have __definition := __fact1
-  unfold is_unit_pair at __definition
-  exact __definition.2.2.1)
+  exact Litex.Rules.complexRealInR (1 : ℝ)
 
 end __Compiler_13_PredicateDefinitions

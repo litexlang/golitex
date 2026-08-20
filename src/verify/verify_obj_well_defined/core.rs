@@ -2,6 +2,427 @@ use crate::prelude::*;
 use std::collections::HashMap;
 
 impl Runtime {
+    pub(in crate::verify) fn verify_fn_obj_well_defined_result(
+        &mut self,
+        fn_obj: &FnObj,
+        verify_state: &UseContextVerifyState,
+    ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
+        let mut head_steps = SuccessVerifyObjWellDefinedStepsResult::new();
+        let candidate_spaces = match fn_obj.head.as_ref() {
+            FnObjHead::AnonymousFnLiteral(value) => {
+                let head: Obj = value.as_ref().clone().into();
+                head_steps.push_child(
+                    self.verify_child_obj_well_defined_result(
+                        &head,
+                        verify_state,
+                        WellDefinedObjChildRole::FunctionHead,
+                    )
+                    .map_err(|error| {
+                        RuntimeError::from(WellDefinedRuntimeError(
+                            RuntimeErrorStruct::new_with_msg_and_cause(
+                                format!(
+                                    "object {fn_obj} is not well-defined: anonymous function head is not well-defined"
+                                ),
+                                error,
+                            ),
+                        ))
+                    })?,
+                );
+                vec![FnSetSpace::Anon((**value).clone())]
+            }
+            FnObjHead::FiniteSeqListObj(list) => {
+                let head: Obj = list.clone().into();
+                head_steps.push_child(self.verify_child_obj_well_defined_result(
+                    &head,
+                    verify_state,
+                    WellDefinedObjChildRole::FunctionHead,
+                )?);
+                if fn_obj.body.len() != 1 || fn_obj.body[0].len() != 1 {
+                    return Err(RuntimeError::from(WellDefinedRuntimeError(
+                        RuntimeErrorStruct::new_with_just_msg(format!(
+                            "finite sequence literal function {} expects one argument",
+                            fn_obj.head
+                        )),
+                    )));
+                }
+                let index = fn_obj.body[0][0].as_ref().clone();
+                head_steps.push_child(self.verify_child_obj_well_defined_result(
+                    &index,
+                    verify_state,
+                    WellDefinedObjChildRole::FunctionArgument {
+                        layer_index: 0,
+                        argument_index: 0,
+                    },
+                )?);
+                let positive: AtomicFact =
+                    InFact::new(index.clone(), StandardSet::NPos.into(), default_line_file())
+                        .into();
+                let result = self.verify_atomic_fact(&positive, verify_state)?;
+                if result.is_unknown() {
+                    return Err(RuntimeError::from(WellDefinedRuntimeError(
+                        RuntimeErrorStruct::new_with_just_msg(format!(
+                            "index {index} is not a positive integer"
+                        )),
+                    )));
+                }
+                head_steps.push_fact_check(super::success_obj_fact_check(result)?);
+                let length: Obj = Number::new(list.objs.len().to_string()).into();
+                let bounded: AtomicFact =
+                    LessEqualFact::new(index.clone(), length.clone(), default_line_file()).into();
+                let result = self.verify_atomic_fact(&bounded, verify_state)?;
+                if result.is_unknown() {
+                    return Err(RuntimeError::from(WellDefinedRuntimeError(
+                        RuntimeErrorStruct::new_with_just_msg(format!(
+                            "{index} <= {length} is unknown"
+                        )),
+                    )));
+                }
+                head_steps.push_fact_check(super::success_obj_fact_check(result)?);
+                return Ok(head_steps);
+            }
+            FnObjHead::MatrixOperator(matrix) => {
+                head_steps.push_child(self.verify_child_obj_well_defined_result(
+                    matrix,
+                    verify_state,
+                    WellDefinedObjChildRole::FunctionHead,
+                )?);
+                let matrix_set = self.real_matrix_type(matrix, verify_state, "entry access")?;
+                vec![FnSetSpace::Set(
+                    self.matrix_set_to_fn_set(&matrix_set, default_line_file()),
+                )]
+            }
+            FnObjHead::ObjAsStructInstanceWithFieldAccess(field_access) => {
+                let head: Obj = field_access.clone().into();
+                head_steps.push_child(self.verify_child_obj_well_defined_result(
+                    &head,
+                    verify_state,
+                    WellDefinedObjChildRole::FunctionHead,
+                )?);
+                let field_type =
+                    self.instantiated_struct_field_type_for_access(field_access, verify_state)?;
+                vec![self
+                    .fn_set_space_from_return_set_obj(field_type.clone())
+                    .map_err(|_| {
+                        RuntimeError::from(WellDefinedRuntimeError(
+                            RuntimeErrorStruct::new_with_just_msg(format!(
+                                "struct field `{}` is not callable; its declared carrier is {field_type}",
+                                field_access.field_name
+                            )),
+                        ))
+                    })?]
+            }
+            FnObjHead::InstantiatedTemplateObj(template_obj) => {
+                let head: Obj = template_obj.clone().into();
+                head_steps.push_child(self.verify_child_obj_well_defined_result(
+                    &head,
+                    verify_state,
+                    WellDefinedObjChildRole::FunctionHead,
+                )?);
+                let bodies = self.get_cloned_object_in_fn_set_candidates(&head);
+                if bodies.is_empty() {
+                    return Err(RuntimeError::from(WellDefinedRuntimeError(
+                        RuntimeErrorStruct::new_with_just_msg(format!(
+                            "function `{}` not defined",
+                            fn_obj.head
+                        )),
+                    )));
+                }
+                bodies
+                    .into_iter()
+                    .map(|body| FnSet::from_body(body).map(FnSetSpace::Set))
+                    .collect::<Result<Vec<_>, _>>()?
+            }
+            _ => {
+                let function: Obj = (*fn_obj.head).clone().into();
+                let bodies = self.get_cloned_object_in_fn_set_candidates(&function);
+                if bodies.is_empty() {
+                    return Err(RuntimeError::from(WellDefinedRuntimeError(
+                        RuntimeErrorStruct::new_with_just_msg(format!(
+                            "function `{}` not defined",
+                            fn_obj.head
+                        )),
+                    )));
+                }
+                bodies
+                    .into_iter()
+                    .map(|body| FnSet::from_body(body).map(FnSetSpace::Set))
+                    .collect::<Result<Vec<_>, _>>()?
+            }
+        };
+
+        if candidate_spaces.len() == 1 {
+            let mut selected = self.verify_fn_obj_well_defined_against_space_result(
+                fn_obj,
+                candidate_spaces[0].clone(),
+                verify_state,
+            )?;
+            head_steps.append(std::mem::take(&mut selected));
+            return Ok(head_steps);
+        }
+
+        let mut selected_space = None;
+        let mut last_error = None;
+        for space in &candidate_spaces {
+            let trial = self
+                .run_in_local_env_and_take(|runtime| {
+                    runtime.verify_fn_obj_well_defined_against_space_result(
+                        fn_obj,
+                        space.clone(),
+                        verify_state,
+                    )
+                })
+                .map(|(steps, _)| steps);
+            match trial {
+                Ok(_) => {
+                    selected_space = Some(space.clone());
+                    break;
+                }
+                Err(error) => last_error = Some(error),
+            }
+        }
+        let selected_space = selected_space.ok_or_else(|| {
+            RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
+                None,
+                format!("object {fn_obj} is not well-defined, no function domain matched."),
+                default_line_file(),
+                last_error,
+                vec![],
+            )))
+        })?;
+        let selected = self.verify_fn_obj_well_defined_against_space_result(
+            fn_obj,
+            selected_space,
+            verify_state,
+        )?;
+        head_steps.append(selected);
+        Ok(head_steps)
+    }
+
+    fn verify_fn_obj_well_defined_against_space_result(
+        &mut self,
+        fn_obj: &FnObj,
+        mut space: FnSetSpace,
+        verify_state: &UseContextVerifyState,
+    ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
+        let source_application: Obj = fn_obj.clone().into();
+        let mut steps = SuccessVerifyObjWellDefinedStepsResult::new();
+        let last_layer_index = fn_obj.body.len().checked_sub(1).ok_or_else(|| {
+            RuntimeError::from(WellDefinedRuntimeError(
+                RuntimeErrorStruct::new_with_just_msg(format!(
+                    "function application `{fn_obj}` has no argument layer"
+                )),
+            ))
+        })?;
+
+        if last_layer_index > 0 {
+            let prefix: Obj = FnObj::new_with_source_occurrence_id(
+                *fn_obj.head.clone(),
+                fn_obj.body[..last_layer_index].to_vec(),
+                None,
+            )
+            .into();
+            steps.push_child(self.verify_child_obj_well_defined_result(
+                &prefix,
+                verify_state,
+                WellDefinedObjChildRole::FunctionPrefix {
+                    through_layer_index: last_layer_index - 1,
+                },
+            )?);
+
+            for arguments in &fn_obj.body[..last_layer_index] {
+                let return_set = self.fn_set_return_set_after_args(&space, arguments)?;
+                if let Obj::InstantiatedTemplateObj(template_obj) = &return_set {
+                    self.materialize_instantiated_template_obj(template_obj, verify_state)?;
+                }
+                space = self.fn_set_space_from_return_set_obj(return_set)?;
+            }
+        }
+
+        let arguments = &fn_obj.body[last_layer_index];
+        let layer = self
+            .verify_fn_obj_well_defined_against_fn_like_space_result(
+                &source_application,
+                last_layer_index,
+                arguments,
+                space.params(),
+                space.dom(),
+                space.binding(),
+                verify_state,
+            )
+            .map_err(|error| {
+                RuntimeError::from(WellDefinedRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_cause(
+                        format!(
+                            "object {fn_obj} is not well-defined, failed to verify arguments satisfy function domain."
+                        ),
+                        error,
+                    ),
+                ))
+            })?;
+        steps.append(layer);
+        let return_set = self.fn_set_return_set_after_args(&space, arguments)?;
+        let membership: AtomicFact =
+            InFact::new(source_application, return_set, default_line_file()).into();
+        let proposition: Fact = membership.clone().into();
+        let mut infers = self
+            .store_atomic_fact_without_well_defined_verified_and_infer(membership)
+            .map_err(|error| {
+                RuntimeError::from(WellDefinedRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_cause(
+                        format!(
+                            "failed to store intermediate fn-obj membership fact while verifying `{fn_obj}`"
+                        ),
+                        error,
+                    ),
+                ))
+            })?;
+        self.attach_known_fact_ids_to_infer_result(&mut infers)?;
+        let fact_id = self.known_fact_id_for_fact(&proposition)?;
+        steps.push_store(SuccessStoreFactResult {
+            fact: proposition,
+            fact_id,
+            infers,
+        });
+        Ok(steps)
+    }
+
+    fn verify_fn_obj_well_defined_against_fn_like_space_result(
+        &mut self,
+        source_application: &Obj,
+        layer_index: usize,
+        arguments: &[Box<Obj>],
+        parameters: &ParamDefWithSet,
+        domains: &[QuantifierFreeFact],
+        parameter_binding: ParamObjType,
+        verify_state: &UseContextVerifyState,
+    ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
+        let parameter_count = parameters.number_of_params();
+        if arguments.len() != parameter_count {
+            return Err(RuntimeError::from(WellDefinedRuntimeError(
+                RuntimeErrorStruct::new_with_just_msg(format!(
+                    "number of args ({}) does not match fn set with dom param finite_set_size({parameter_count})",
+                    arguments.len()
+                )),
+            )));
+        }
+
+        let mut steps = SuccessVerifyObjWellDefinedStepsResult::new();
+        let arguments_as_objects = arguments
+            .iter()
+            .map(|argument| argument.as_ref().clone())
+            .collect::<Vec<_>>();
+        for (argument_index, argument) in arguments_as_objects.iter().enumerate() {
+            steps.push_child(self.verify_child_obj_well_defined_result(
+                argument,
+                verify_state,
+                WellDefinedObjChildRole::FunctionArgument {
+                    layer_index,
+                    argument_index,
+                },
+            )?);
+        }
+
+        let mut substitutions = HashMap::new();
+        let mut argument_index = 0;
+        for (group_index, parameter_group) in parameters.groups.iter().enumerate() {
+            let parameter_type = if !parameters
+                .cited_param_indices_for_group(group_index)
+                .is_empty()
+            {
+                ParamType::Obj(self.inst_obj(
+                    parameter_group.set_obj(),
+                    &substitutions,
+                    parameter_binding,
+                )?)
+            } else {
+                ParamType::Obj(parameter_group.set_obj().clone())
+            };
+            for parameter in &parameter_group.params {
+                let argument = arguments_as_objects[argument_index].clone();
+                let mut result = self
+                    .verify_obj_satisfies_param_type(argument.clone(), &parameter_type, verify_state)
+                    .map_err(|error| {
+                        RuntimeError::from(WellDefinedRuntimeError(
+                            RuntimeErrorStruct::new_with_msg_and_cause(
+                                format!(
+                                    "failed to verify arg `{argument}` satisfy fn parameter type {parameter_type}"
+                                ),
+                                error,
+                            ),
+                        ))
+                    })?;
+                if result.is_unknown() {
+                    let resolved = self.resolve_obj(&argument);
+                    if resolved.to_string() != argument.to_string() {
+                        result = self.verify_obj_satisfies_param_type(
+                            resolved,
+                            &parameter_type,
+                            verify_state,
+                        )?;
+                    }
+                }
+                if result.is_unknown() {
+                    return Err(RuntimeError::from(WellDefinedRuntimeError(
+                        RuntimeErrorStruct::new_with_just_msg(format!(
+                            "arg `{argument}` does not satisfy fn parameter type {parameter_type}"
+                        )),
+                    )));
+                }
+                steps.push_target_requirement(super::success_obj_target_requirement(
+                    source_application.clone(),
+                    WellDefinednessRequirementRole::FunctionArgumentMembership {
+                        layer_index,
+                        parameter_index: argument_index,
+                    },
+                    result,
+                )?);
+                insert_symbol_substitution(&mut substitutions, parameter, argument);
+                argument_index += 1;
+            }
+        }
+
+        let substitutions =
+            parameters.param_defs_and_args_to_param_to_arg_map(&arguments_as_objects);
+        for (domain_index, domain) in domains.iter().enumerate() {
+            let instantiated = self
+                .inst_quantifier_free_fact(domain, &substitutions, parameter_binding, None)
+                .map_err(|error| {
+                    RuntimeError::from(WellDefinedRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_cause(
+                            format!("failed to instantiate function domain fact: {error}"),
+                            error,
+                        ),
+                    ))
+                })?;
+            let result = self
+                .verify_quantifier_free_fact(&instantiated, verify_state)
+                .map_err(|error| {
+                    RuntimeError::from(WellDefinedRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_cause(
+                            format!("failed to verify function domain fact:\n{instantiated}"),
+                            error,
+                        ),
+                    ))
+                })?;
+            if result.is_unknown() {
+                return Err(RuntimeError::from(WellDefinedRuntimeError(
+                    RuntimeErrorStruct::new_with_just_msg(format!(
+                        "failed to verify function domain fact:\n{instantiated}"
+                    )),
+                )));
+            }
+            steps.push_target_requirement(super::success_obj_target_requirement(
+                source_application.clone(),
+                WellDefinednessRequirementRole::FunctionDomain {
+                    layer_index,
+                    domain_index,
+                },
+                result,
+            )?);
+        }
+        Ok(steps)
+    }
+
     /// Mathematical contract: an unqualified symbol denotes an object only if
     /// that identifier or struct constructor is visible in the current scope.
     pub(in crate::verify) fn verify_identifier_well_defined(
@@ -56,483 +477,5 @@ impl Runtime {
                 x.to_string()
             )),
         )))
-    }
-
-    /// Mathematical contract: a function application is well-defined when
-    /// its callable has a known function space and one candidate space accepts
-    /// every argument group, including arity, parameter carriers, and domain
-    /// predicates. Literal sequence and matrix callables obey their index laws.
-    pub(in crate::verify) fn verify_fn_obj_well_defined(
-        &mut self,
-        fn_obj: &FnObj,
-        verify_state: &UseContextVerifyState,
-    ) -> Result<(), RuntimeError> {
-        let candidate_spaces = match fn_obj.head.as_ref() {
-            FnObjHead::AnonymousFnLiteral(a) => {
-                let head: Obj = a.as_ref().clone().into();
-                self.verify_child_obj_well_defined_and_store_cache(
-                    &head,
-                    verify_state,
-                    WellDefinedObjChildRole::FunctionHead,
-                )
-                    .map_err(|well_defined_error| {
-                        RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new_with_msg_and_cause(format!(
-                                "object {} is not well-defined: anonymous function head is not well-defined",
-                                fn_obj.to_string()
-                            ), well_defined_error)))
-                    })?;
-                vec![FnSetSpace::Anon((**a).clone())]
-            }
-            FnObjHead::FiniteSeqListObj(list) => {
-                let head: Obj = list.clone().into();
-                self.verify_child_obj_well_defined_and_store_cache(
-                    &head,
-                    verify_state,
-                    WellDefinedObjChildRole::FunctionHead,
-                )?;
-                if fn_obj.body.len() != 1 || fn_obj.body[0].len() != 1 {
-                    return Err(RuntimeError::from(WellDefinedRuntimeError(
-                        RuntimeErrorStruct::new_with_just_msg(format!(
-                            "finite sequence literal function {} expects one argument",
-                            fn_obj.head
-                        )),
-                    )));
-                }
-                let index_obj = fn_obj.body[0][0].as_ref().clone();
-                self.verify_child_obj_well_defined_and_store_cache(
-                    &index_obj,
-                    verify_state,
-                    WellDefinedObjChildRole::FunctionArgument {
-                        layer_index: 0,
-                        argument_index: 0,
-                    },
-                )?;
-                let index_in_n_pos: AtomicFact = InFact::new(
-                    index_obj.clone(),
-                    StandardSet::NPos.into(),
-                    default_line_file(),
-                )
-                .into();
-                let index_in_n_pos_result =
-                    self.verify_atomic_fact(&index_in_n_pos, verify_state)?;
-                if index_in_n_pos_result.is_unknown() {
-                    return Err(RuntimeError::from(WellDefinedRuntimeError(
-                        RuntimeErrorStruct::new_with_just_msg(format!(
-                            "index {} is not a positive integer",
-                            index_obj
-                        )),
-                    )));
-                }
-                let list_len_obj: Obj = Number::new(list.objs.len().to_string()).into();
-                let index_not_larger_than_list_len: AtomicFact = LessEqualFact::new(
-                    index_obj.clone(),
-                    list_len_obj.clone(),
-                    default_line_file(),
-                )
-                .into();
-                let index_not_larger_than_list_len_result =
-                    self.verify_atomic_fact(&index_not_larger_than_list_len, verify_state)?;
-                if index_not_larger_than_list_len_result.is_unknown() {
-                    return Err(RuntimeError::from(WellDefinedRuntimeError(
-                        RuntimeErrorStruct::new_with_just_msg(format!(
-                            "{} <= {} is unknown",
-                            index_obj, list_len_obj
-                        )),
-                    )));
-                }
-                return Ok(());
-            }
-            FnObjHead::MatrixOperator(matrix) => {
-                self.verify_child_obj_well_defined_and_store_cache(
-                    matrix,
-                    verify_state,
-                    WellDefinedObjChildRole::FunctionHead,
-                )?;
-                let matrix_set = self.real_matrix_type(matrix, verify_state, "entry access")?;
-                vec![FnSetSpace::Set(
-                    self.matrix_set_to_fn_set(&matrix_set, default_line_file()),
-                )]
-            }
-            FnObjHead::ObjAsStructInstanceWithFieldAccess(field_access) => {
-                let field_access_obj: Obj = field_access.clone().into();
-                self.verify_child_obj_well_defined_and_store_cache(
-                    &field_access_obj,
-                    verify_state,
-                    WellDefinedObjChildRole::FunctionHead,
-                )?;
-                let field_type =
-                    self.instantiated_struct_field_type_for_access(field_access, verify_state)?;
-                vec![self
-                    .fn_set_space_from_return_set_obj(field_type.clone())
-                    .map_err(|_| {
-                        RuntimeError::from(WellDefinedRuntimeError(
-                            RuntimeErrorStruct::new_with_just_msg(format!(
-                                "struct field `{}` is not callable; its declared carrier is {}",
-                                field_access.field_name, field_type
-                            )),
-                        ))
-                    })?]
-            }
-            FnObjHead::InstantiatedTemplateObj(template_obj) => {
-                let function_name_obj: Obj = template_obj.clone().into();
-                self.verify_child_obj_well_defined_and_store_cache(
-                    &function_name_obj,
-                    verify_state,
-                    WellDefinedObjChildRole::FunctionHead,
-                )?;
-                let bodies = self.get_cloned_object_in_fn_set_candidates(&function_name_obj);
-                if bodies.is_empty() {
-                    return Err(RuntimeError::from(WellDefinedRuntimeError(
-                        RuntimeErrorStruct::new_with_just_msg(format!(
-                            "function `{}` not defined",
-                            fn_obj.head.to_string()
-                        )),
-                    )));
-                }
-                let mut spaces = Vec::with_capacity(bodies.len());
-                for body in bodies {
-                    spaces.push(FnSetSpace::Set(FnSet::from_body(body)?));
-                }
-                spaces
-            }
-            _ => {
-                let function_name_obj: Obj = (*fn_obj.head).clone().into();
-                let bodies = self.get_cloned_object_in_fn_set_candidates(&function_name_obj);
-                if bodies.is_empty() {
-                    return Err(RuntimeError::from(WellDefinedRuntimeError(
-                        RuntimeErrorStruct::new_with_just_msg(format!(
-                            "function `{}` not defined",
-                            fn_obj.head.to_string()
-                        )),
-                    )));
-                }
-                let mut spaces = Vec::with_capacity(bodies.len());
-                for body in bodies {
-                    spaces.push(FnSetSpace::Set(FnSet::from_body(body)?));
-                }
-                spaces
-            }
-        };
-
-        if candidate_spaces.len() == 1 {
-            return self.verify_fn_obj_well_defined_against_space(
-                fn_obj,
-                candidate_spaces[0].clone(),
-                verify_state,
-                true,
-            );
-        }
-
-        let mut last_error: Option<RuntimeError> = None;
-        for space in candidate_spaces.iter() {
-            let certificate_checkpoint = self.well_definedness_capture_checkpoint();
-            let trial = self
-                .run_in_local_env_and_take(|rt| {
-                    rt.verify_fn_obj_well_defined_against_space(
-                        fn_obj,
-                        space.clone(),
-                        verify_state,
-                        false,
-                    )
-                })
-                .map(|(value, _discarded_search_environment)| value);
-            // Candidate trials are search scopes, not selected proof scopes.
-            // The accepted candidate is rerun below in the real environment.
-            self.rollback_well_definedness_capture(certificate_checkpoint);
-            match trial {
-                Ok(()) => {
-                    return self.verify_fn_obj_well_defined_against_space(
-                        fn_obj,
-                        space.clone(),
-                        verify_state,
-                        true,
-                    );
-                }
-                Err(e) => last_error = Some(e),
-            }
-        }
-
-        Err(RuntimeError::from(WellDefinedRuntimeError(
-            RuntimeErrorStruct::new(
-                None,
-                format!(
-                    "object {} is not well-defined, no function domain matched.",
-                    fn_obj
-                ),
-                default_line_file(),
-                last_error,
-                vec![],
-            ),
-        )))
-    }
-
-    /// Mathematical contract: each successive argument group must inhabit the
-    /// current function domain; a curried continuation is meaningful only
-    /// when the instantiated return carrier is itself function-like.
-    pub(in crate::verify) fn verify_fn_obj_well_defined_against_space(
-        &mut self,
-        fn_obj: &FnObj,
-        mut space: FnSetSpace,
-        verify_state: &UseContextVerifyState,
-        capture_application_prefixes: bool,
-    ) -> Result<(), RuntimeError> {
-        let source_application: Obj = fn_obj.clone().into();
-        for (i, args) in fn_obj.body.iter().enumerate() {
-            self.verify_fn_obj_well_defined_against_fn_like_space(
-                &source_application,
-                i,
-                args,
-                space.params(),
-                space.dom(),
-                space.binding(),
-                verify_state,
-            )
-            .map_err(|well_defined_error| {
-                RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new_with_msg_and_cause(format!(
-                        "object {} is not well-defined, failed to verify arguments satisfy function domain.",
-                        fn_obj.to_string()
-                    ), well_defined_error)))
-            })?;
-
-            let set_where_the_next_fn_obj_is_in =
-                self.fn_set_return_set_after_args(&space, args)?;
-
-            // Ordinary verification exposes a checked application's return
-            // membership as a reusable well-definedness side effect.  During
-            // Litex-to-Lean construction the final membership must instead be
-            // proved by the typed application-return rule below the statement
-            // proof root.  Caching that final goal here gives it a FactId
-            // without a Lean declaration and turns the real proof into a
-            // circular known-fact citation.  Proper prefixes remain available
-            // for the next curried layer.
-            if self.captures_well_definedness() && i == fn_obj.body.len() - 1 {
-                break;
-            }
-
-            let fn_obj_prefix_body: Vec<Vec<Box<Obj>>> =
-                fn_obj.body[..=i].iter().cloned().collect();
-            let fn_obj_prefix_as_obj: Obj = FnObj::new_with_source_occurrence_id(
-                *fn_obj.head.clone(),
-                fn_obj_prefix_body,
-                fn_obj.source_occurrence_id,
-            )
-            .into();
-            let intermediate_in_fact = InFact::new(
-                fn_obj_prefix_as_obj.clone(),
-                set_where_the_next_fn_obj_is_in.clone(),
-                default_line_file(),
-            );
-            let intermediate_atomic_fact = AtomicFact::InFact(intermediate_in_fact);
-            // A checked application carries every consequence of its declared
-            // return set, not merely the raw membership spelling.  In
-            // particular, a value returned in `closed_range(1, n)` is in N+
-            // and is at most n; finite-sequence applications need both facts
-            // when that value is used as their next index.
-            self.store_atomic_fact_without_well_defined_verified_and_infer(
-                intermediate_atomic_fact,
-            )
-            .map_err(|store_fact_error| {
-                RuntimeError::from(WellDefinedRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_cause(
-                        format!(
-                        "failed to store intermediate fn-obj membership fact while verifying `{}`",
-                        fn_obj.to_string()
-                    ),
-                        store_fact_error,
-                    ),
-                ))
-            })?;
-
-            if capture_application_prefixes && i + 1 < fn_obj.body.len() {
-                self.freeze_active_fn_application_prefix(
-                    &fn_obj_prefix_as_obj,
-                    set_where_the_next_fn_obj_is_in.clone(),
-                    i,
-                )?;
-            }
-
-            if i == fn_obj.body.len() - 1 {
-                break;
-            }
-
-            if let Obj::InstantiatedTemplateObj(template_obj) = &set_where_the_next_fn_obj_is_in {
-                self.materialize_instantiated_template_obj(template_obj, verify_state)?;
-            }
-            space = self.fn_set_space_from_return_set_obj(set_where_the_next_fn_obj_is_in)?;
-        }
-
-        Ok(())
-    }
-
-    /// Mathematical contract: one application stage is meaningful when its
-    /// arguments are well-defined, match the declared parameter carriers in
-    /// dependency order, and satisfy every instantiated domain condition.
-    pub(in crate::verify) fn verify_fn_obj_well_defined_against_fn_like_space(
-        &mut self,
-        source_application: &Obj,
-        layer_index: usize,
-        args: &Vec<Box<Obj>>,
-        params_def_with_set: &ParamDefWithSet,
-        dom_facts: &Vec<QuantifierFreeFact>,
-        param_binding: ParamObjType,
-        verify_state: &UseContextVerifyState,
-    ) -> Result<(), RuntimeError> {
-        let param_count = params_def_with_set.number_of_params();
-        if args.len() != param_count {
-            return Err(RuntimeError::from(WellDefinedRuntimeError(
-                RuntimeErrorStruct::new_with_just_msg(format!(
-                    "number of args ({}) does not match fn set with dom param finite_set_size({})",
-                    args.len(),
-                    param_count
-                )),
-            )));
-        }
-
-        for (argument_index, arg) in args.iter().enumerate() {
-            self.verify_child_obj_well_defined_and_store_cache(
-                arg,
-                verify_state,
-                WellDefinedObjChildRole::FunctionArgument {
-                    layer_index,
-                    argument_index,
-                },
-            )?;
-        }
-
-        let mut args_as_obj: Vec<Obj> = Vec::with_capacity(args.len());
-        for arg in args.iter() {
-            args_as_obj.push((**arg).clone());
-        }
-
-        self.verify_args_satisfy_fn_param_groups(
-            source_application,
-            layer_index,
-            params_def_with_set,
-            &args_as_obj,
-            param_binding,
-            verify_state,
-        )?;
-
-        let param_to_arg_map =
-            params_def_with_set.param_defs_and_args_to_param_to_arg_map(&args_as_obj);
-        for (domain_index, dom_fact) in dom_facts.iter().enumerate() {
-            let instantiated_dom_fact = self
-                .inst_quantifier_free_fact(dom_fact, &param_to_arg_map, param_binding, None)
-                .map_err(|e| {
-                    RuntimeError::from(WellDefinedRuntimeError(
-                        RuntimeErrorStruct::new_with_msg_and_cause(
-                            format!("failed to instantiate function domain fact: {}", e),
-                            e,
-                        ),
-                    ))
-                })?;
-            let verify_result = self
-                .verify_quantifier_free_fact(&instantiated_dom_fact, verify_state)
-                .map_err(|verify_error| {
-                    RuntimeError::from(WellDefinedRuntimeError(
-                        RuntimeErrorStruct::new_with_msg_and_cause(
-                            format!(
-                                "failed to verify function domain fact:\n{}",
-                                instantiated_dom_fact
-                            ),
-                            verify_error,
-                        ),
-                    ))
-                })?;
-            if verify_result.is_unknown() {
-                return Err(RuntimeError::from(WellDefinedRuntimeError(
-                    RuntimeErrorStruct::new_with_just_msg(format!(
-                        "failed to verify function domain fact:\n{}",
-                        instantiated_dom_fact
-                    )),
-                )));
-            }
-            self.record_well_definedness_target_requirement(
-                source_application,
-                WellDefinednessRequirementRole::FunctionDomain {
-                    layer_index,
-                    domain_index,
-                },
-                verify_result,
-            )?;
-        }
-
-        Ok(())
-    }
-
-    /// Mathematical contract: each function argument belongs to its declared
-    /// carrier after substituting all earlier dependent parameters; resolving
-    /// an equal representative may discharge the same membership obligation.
-    pub(in crate::verify) fn verify_args_satisfy_fn_param_groups(
-        &mut self,
-        source_application: &Obj,
-        layer_index: usize,
-        params_def_with_set: &ParamDefWithSet,
-        args_as_obj: &Vec<Obj>,
-        param_binding: ParamObjType,
-        verify_state: &UseContextVerifyState,
-    ) -> Result<(), RuntimeError> {
-        let mut param_to_arg_map: HashMap<String, Obj> = HashMap::new();
-        let mut arg_index: usize = 0;
-        for (group_index, param_def) in params_def_with_set.groups.iter().enumerate() {
-            let param_type = if !params_def_with_set
-                .cited_param_indices_for_group(group_index)
-                .is_empty()
-            {
-                ParamType::Obj(self.inst_obj(
-                    param_def.set_obj(),
-                    &param_to_arg_map,
-                    param_binding,
-                )?)
-            } else {
-                ParamType::Obj(param_def.set_obj().clone())
-            };
-
-            for param_name in param_def.params.iter() {
-                let arg = args_as_obj[arg_index].clone();
-                let mut verify_result = self
-                    .verify_obj_satisfies_param_type(arg.clone(), &param_type, verify_state)
-                    .map_err(|verify_error| {
-                        RuntimeError::from(WellDefinedRuntimeError(
-                            RuntimeErrorStruct::new_with_msg_and_cause(
-                                format!(
-                                    "failed to verify arg `{}` satisfy fn parameter type {}",
-                                    arg, param_type
-                                ),
-                                verify_error,
-                            ),
-                        ))
-                    })?;
-                if verify_result.is_unknown() {
-                    let resolved_arg = self.resolve_obj(&arg);
-                    if resolved_arg.to_string() != arg.to_string() {
-                        verify_result = self.verify_obj_satisfies_param_type(
-                            resolved_arg,
-                            &param_type,
-                            verify_state,
-                        )?;
-                    }
-                }
-                if verify_result.is_unknown() {
-                    return Err(RuntimeError::from(WellDefinedRuntimeError(
-                        RuntimeErrorStruct::new_with_just_msg(format!(
-                            "arg `{}` does not satisfy fn parameter type {}",
-                            arg, param_type
-                        )),
-                    )));
-                }
-                self.record_well_definedness_target_requirement(
-                    source_application,
-                    WellDefinednessRequirementRole::FunctionArgumentMembership {
-                        layer_index,
-                        parameter_index: arg_index,
-                    },
-                    verify_result,
-                )?;
-                insert_symbol_substitution(&mut param_to_arg_map, param_name, arg);
-                arg_index += 1;
-            }
-        }
-        Ok(())
     }
 }

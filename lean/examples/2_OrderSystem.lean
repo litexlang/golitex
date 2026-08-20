@@ -11,13 +11,15 @@ theorem __fact0 :
     ∀ (a : ℂ) (__h0_1 : Litex.In a Litex.R) (b : ℂ) (__h0_2 : Litex.In b Litex.R) (__h0_3 : Litex.Lt a b),
       Litex.Le a b := by
   intro a __h0_1 b __h0_2 __h0_3
-  exact Litex.Lt.toLe __h0_3
+  have __c0_0 : Litex.Le a b := Litex.Lt.toLe __h0_3
+  exact __c0_0
 
 theorem __fact1 :
     ∀ (a : ℂ) (__h1_1 : Litex.In a Litex.R) (b : ℂ) (__h1_2 : Litex.In b Litex.R) (c : ℂ) (__h1_3 : Litex.In c Litex.R) (__h1_4 : Litex.Lt a b) (__h1_5 : Litex.Lt b c),
       Litex.Lt a c := by
   intro a __h1_1 b __h1_2 c __h1_3 __h1_4 __h1_5
-  exact Litex.Lt.trans (__h1_4) (__h1_5)
+  have __c1_0 : Litex.Lt a c := Litex.Lt.trans (__h1_4) (__h1_5)
+  exact __c1_0
 
 end __Sketch01
 

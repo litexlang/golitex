@@ -10,11 +10,16 @@ impl Runtime {
         let check_results = self.exec_have_obj_equal_stmt_verify_process(have_obj_equal_stmt)?;
         let infer_result = self.exec_have_obj_equal_stmt_affect_environment(have_obj_equal_stmt)?;
 
-        Ok(VerifiedDefObjStmtIr::HaveObjEqualStmt {
-            statement: have_obj_equal_stmt.clone(),
-            common: VerifiedStmtCommonIr::new(infer_result, check_results),
-        }
-        .into())
+        Ok(
+            SuccessDefObjStmtResult::HaveObjEqualStmt(Box::new(SuccessHaveObjEqualStmtResult {
+                statement: have_obj_equal_stmt.clone(),
+                common: SuccessStmtCommonResult::new(infer_result),
+                verification: Some(SuccessVerifyHaveObjEqualResult {
+                    type_checks: check_results,
+                }),
+            }))
+            .into(),
+        )
     }
 
     /// Mathematical contract: an equality-backed object introduction has one
@@ -196,8 +201,8 @@ impl Runtime {
     pub(crate) fn exec_have_obj_equal_stmt_affect_environment(
         &mut self,
         have_obj_equal_stmt: &HaveObjEqualStmt,
-    ) -> Result<InferResult, RuntimeError> {
-        let mut infer_result = InferResult::new();
+    ) -> Result<SuccessInferResult, RuntimeError> {
+        let mut infer_result = SuccessInferResult::new();
 
         let mut param_infer_result = if self.current_execution_is_trusted_file() {
             self.define_params_with_type_trusted(
@@ -293,10 +298,13 @@ impl Runtime {
         have_obj_equal_stmt: &HaveObjEqualStmt,
     ) -> Result<StmtResult, RuntimeError> {
         let infer_result = self.exec_have_obj_equal_stmt_affect_environment(have_obj_equal_stmt)?;
-        Ok(VerifiedDefObjStmtIr::HaveObjEqualStmt {
-            statement: have_obj_equal_stmt.clone(),
-            common: VerifiedStmtCommonIr::new(infer_result, vec![]),
-        }
-        .into())
+        Ok(
+            SuccessDefObjStmtResult::HaveObjEqualStmt(Box::new(SuccessHaveObjEqualStmtResult {
+                statement: have_obj_equal_stmt.clone(),
+                common: SuccessStmtCommonResult::new(infer_result),
+                verification: None,
+            }))
+            .into(),
+        )
     }
 }
