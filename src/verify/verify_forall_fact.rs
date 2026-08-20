@@ -22,9 +22,13 @@ impl Runtime {
             cached_fact.fact_id,
         )?;
         Ok(Some(
-            VerifiedFactStmtIr::new_with_verified_by_known_fact(
+            SuccessFactStmtResult::new_with_verified_by_known_fact(
                 fact.clone(),
-                VerifiedByResult::cached_fact(fact, cached_fact.line_file, cached_fact.fact_id),
+                SuccessFactProofResult::cached_fact(
+                    fact,
+                    cached_fact.line_file,
+                    cached_fact.fact_id,
+                ),
                 Vec::new(),
             )
             .into(),
@@ -38,7 +42,7 @@ impl Runtime {
         &mut self,
         forall_fact: &ForallFact,
         verify_state: &UseContextVerifyState,
-    ) -> Result<InferResult, RuntimeError> {
+    ) -> Result<SuccessInferResult, RuntimeError> {
         let mut assumption_infer_result = self
             .define_params_with_type(
                 &forall_fact.params_def_with_type,
@@ -89,8 +93,8 @@ impl Runtime {
         &mut self,
         forall_fact: &ForallFact,
         verify_state: &UseContextVerifyState,
-        infer_result: &mut InferResult,
-        assumption_infers: InferResult,
+        infer_result: &mut SuccessInferResult,
+        assumption_infers: SuccessInferResult,
         by_cases_case_label: Option<&str>,
     ) -> Result<StmtResult, RuntimeError> {
         let mut then_verification_results: Vec<StmtResult> = Vec::new();
@@ -147,7 +151,7 @@ impl Runtime {
                     .map(|case_s| format!("by cases: under case `{}`", case_s))
                     .into_iter()
                     .collect::<Vec<_>>();
-                return Ok(FactUnknown::forall_with_failed_prove(
+                return Ok(UnknownFactResult::forall_with_failed_prove(
                     forall_fact.clone(),
                     then_one_based,
                     then_count,
@@ -163,7 +167,7 @@ impl Runtime {
             )?;
             self.attach_known_fact_ids_to_stmt_result(&mut result)?;
 
-            if let Some(non_factual_success) = result.non_factual_ir() {
+            if let Some(non_factual_success) = result.non_factual_success() {
                 infer_result.new_infer_result_inside(
                     non_factual_success
                         .common()
@@ -182,11 +186,11 @@ impl Runtime {
         }
 
         infer_result.add_verified_statement(&forall_fact.clone().into());
-        let infer_for_success = std::mem::replace(infer_result, InferResult::new());
-        Ok((VerifiedFactStmtIr::new_with_verified_by_builtin_rules(
+        let infer_for_success = std::mem::replace(infer_result, SuccessInferResult::new());
+        Ok((SuccessFactStmtResult::new_with_verified_by_builtin_rules(
             forall_fact.clone().into(),
             infer_for_success,
-            VerifiedByResult::forall_proof(
+            SuccessFactProofResult::forall_proof(
                 forall_fact.clone(),
                 then_verification_results,
                 assumption_infers,
@@ -206,12 +210,12 @@ impl Runtime {
         }
 
         if !verify_state.is_round_0() {
-            return Ok(StmtUnknown::new().into());
+            return Ok(UnknownGenericStmtResult::new().into());
         }
 
         if Self::forall_has_literal_empty_obj_parameter_domain(forall_fact) {
             return Ok(
-                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                     forall_fact.clone().into(),
                     "forall over empty parameter set".to_string(),
                     Vec::new(),
@@ -224,7 +228,7 @@ impl Runtime {
             let mut assumption_infer_result =
                 rt.forall_assume_params_and_dom_in_current_env(forall_fact, verify_state)?;
             rt.attach_known_fact_ids_to_infer_result(&mut assumption_infer_result)?;
-            let mut infer_result = InferResult::new();
+            let mut infer_result = SuccessInferResult::new();
             rt.forall_verify_then_facts_in_current_env(
                 forall_fact,
                 verify_state,

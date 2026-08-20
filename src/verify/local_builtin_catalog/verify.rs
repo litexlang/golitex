@@ -93,13 +93,14 @@ impl Runtime {
                 bindings: substitution.bindings().to_vec(),
                 parameter_requirement_count: rule.schema().parameter_requirements.len(),
             };
-            let result = VerifiedFactStmtIr::new_with_verified_by_builtin_rule_evidence_and_steps(
-                goal.clone().into(),
-                InferResult::new(),
-                format!("local builtin {}", rule.id().as_str()),
-                BuiltinRuleEvidence::RegisteredLocal(evidence),
-                step_results,
-            );
+            let result =
+                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_and_steps(
+                    goal.clone().into(),
+                    SuccessInferResult::new(),
+                    format!("local builtin {}", rule.id().as_str()),
+                    BuiltinRuleEvidence::RegisteredLocal(evidence),
+                    step_results,
+                );
             return Ok(Some(result.into()));
         }
         Ok(None)

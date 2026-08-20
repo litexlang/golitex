@@ -41,8 +41,8 @@ pub struct RuntimeErrorOutput {
 
 #[derive(Debug)]
 pub enum RuntimeErrorUnknownResult {
-    Generic(StmtUnknown),
-    Fact(Box<FactUnknown>),
+    Generic(UnknownGenericStmtResult),
+    Fact(Box<UnknownFactResult>),
 }
 
 #[derive(Debug)]
@@ -238,7 +238,7 @@ impl RuntimeErrorUnknownResult {
             return Some(RuntimeErrorUnknownResult::Fact(Box::new(unknown.clone())));
         }
         result.as_unknown().map(|unknown| {
-            RuntimeErrorUnknownResult::Generic(StmtUnknown {
+            RuntimeErrorUnknownResult::Generic(UnknownGenericStmtResult {
                 detail: unknown.detail.clone(),
             })
         })

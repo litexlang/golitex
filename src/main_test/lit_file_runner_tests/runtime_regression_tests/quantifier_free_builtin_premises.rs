@@ -85,7 +85,7 @@ forall x R:
         "not A $proper_subset B from its complete quantifier-free definition premise",
         "sqrt: sqrt(a * b) = sqrt(a) * sqrt(b)",
         "equality: a^(m+n) = a^m * a^n",
-        "\"type\": \"builtin strategy\"",
+        "\"kind\": \"BuiltinStrategy\"",
     ] {
         assert!(
             output.contains(expected),

@@ -1,9 +1,4 @@
 pub(crate) const JSON_KEY_RESULT: &str = "result";
-pub(crate) const JSON_KEY_SUCCESS: &str = "success";
-pub(crate) const JSON_KEY_VERIFICATION: &str = "verification";
-pub(crate) const JSON_KEY_CONCLUSIONS: &str = "conclusions";
-pub(crate) const JSON_KEY_STEPS: &str = "steps";
-
 pub(crate) const JSON_KEY_ERROR_TYPE: &str = "error_type";
 pub(crate) const JSON_KEY_MESSAGE: &str = "message";
 pub(crate) const JSON_KEY_LINE: &str = "line";

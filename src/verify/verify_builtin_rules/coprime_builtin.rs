@@ -10,25 +10,25 @@ impl Runtime {
         let (fact_is_positive, predicate, args) = match atomic_fact {
             AtomicFact::NormalAtomicFact(f) => (true, &f.predicate, &f.body),
             AtomicFact::NotNormalAtomicFact(f) => (false, &f.predicate, &f.body),
-            _ => return StmtUnknown::new().into(),
+            _ => return UnknownGenericStmtResult::new().into(),
         };
         if !matches!(predicate, AtomicName::WithoutMod(name) if name == COPRIME) || args.len() != 2
         {
-            return StmtUnknown::new().into();
+            return UnknownGenericStmtResult::new().into();
         }
 
         let Obj::Number(left) = self.resolve_obj(&args[0]) else {
-            return StmtUnknown::new().into();
+            return UnknownGenericStmtResult::new().into();
         };
         let Obj::Number(right) = self.resolve_obj(&args[1]) else {
-            return StmtUnknown::new().into();
+            return UnknownGenericStmtResult::new().into();
         };
         if left.normalized_value.starts_with('-')
             || right.normalized_value.starts_with('-')
             || left.normalized_value.contains('.')
             || right.normalized_value.contains('.')
         {
-            return StmtUnknown::new().into();
+            return UnknownGenericStmtResult::new().into();
         }
         let values_are_coprime = if left.normalized_value == "0" && right.normalized_value == "0" {
             false
@@ -37,9 +37,9 @@ impl Runtime {
                 .is_some_and(|gcd| gcd == "1")
         };
         if values_are_coprime != fact_is_positive {
-            return StmtUnknown::new().into();
+            return UnknownGenericStmtResult::new().into();
         }
-        VerifiedFactStmtIr::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+        SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
             atomic_fact.clone().into(),
             "deterministic natural coprimality computation".to_string(),
             BuiltinRuleEvidence::CoprimeNaturalReflection,

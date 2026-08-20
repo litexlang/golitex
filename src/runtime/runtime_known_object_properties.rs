@@ -1,6 +1,5 @@
 use crate::prelude::*;
 use std::collections::HashSet;
-use std::rc::Rc;
 
 impl Runtime {
     pub fn iter_environments_from_top(&self) -> impl Iterator<Item = &Environment> {
@@ -85,6 +84,33 @@ impl Runtime {
 
     pub fn get_cloned_object_in_fn_set(&self, obj: &Obj) -> Option<FnSetBody> {
         self.get_object_in_fn_set(obj)
+    }
+
+    /// Return the exact stored membership that installed a callable's
+    /// function-space contract.  Unlike the structural-only lookup above,
+    /// this is suitable for a proof citation because the source `FactId`
+    /// remains attached to the same body and source location.
+    pub(crate) fn get_object_in_fn_set_with_membership_fact_id(
+        &self,
+        obj: &Obj,
+    ) -> Option<(FnSetBody, LineFile, FactId)> {
+        let from_info = |info: KnownFnInfo| {
+            let (body, line_file) = info.fn_set?;
+            Some((body, line_file, info.fn_set_membership_fact_id?))
+        };
+        if let Some(info) = self.get_known_fn_info_for_obj(obj) {
+            if let Some(found) = from_info(info) {
+                return Some(found);
+            }
+        }
+        for representative in self.get_all_obj_representatives_equal_to_given(obj) {
+            if let Some(info) = self.get_known_fn_info_for_obj(&representative) {
+                if let Some(found) = from_info(info) {
+                    return Some(found);
+                }
+            }
+        }
+        None
     }
 
     pub fn get_cloned_object_in_fn_set_candidates(&self, obj: &Obj) -> Vec<FnSetBody> {
@@ -654,37 +680,6 @@ impl Runtime {
     ) -> Option<&CachedWellDefinedObj> {
         self.iter_environments_from_top()
             .find_map(|env| env.cache_well_defined_obj.get(key))
-    }
-
-    pub(crate) fn well_defined_obj_proof(
-        &self,
-        proof_id: WellDefinedObjId,
-    ) -> Option<Rc<WellDefinedObjProof>> {
-        self.iter_environments_from_top()
-            .find_map(|env| env.well_defined_obj_proofs.get(&proof_id).cloned())
-    }
-
-    pub(crate) fn well_defined_fact_proof(
-        &self,
-        fact_id: WellDefinedFactId,
-    ) -> Option<Rc<WellDefinedFactProof>> {
-        self.iter_environments_from_top()
-            .find_map(|env| env.well_defined_fact_proofs.get(&fact_id).cloned())
-    }
-
-    pub(crate) fn well_defined_fact_id_for_proof(
-        &self,
-        proof: &Rc<VerifiedFactStmtIr>,
-    ) -> Option<WellDefinedFactId> {
-        self.iter_environments_from_top().find_map(|env| {
-            env.well_defined_fact_proofs.iter().find_map(|(id, known)| {
-                if Rc::ptr_eq(&known.proof, proof) {
-                    Some(*id)
-                } else {
-                    None
-                }
-            })
-        })
     }
 
     pub fn cache_known_facts_contains(&self, key: &str) -> (bool, LineFile) {

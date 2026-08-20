@@ -1,11 +1,9 @@
 use crate::prelude::*;
+use std::rc::Rc;
 
 impl Runtime {
     pub fn exec_stmt(&mut self, stmt: &Stmt) -> Result<StmtResult, RuntimeError> {
-        self.clear_statement_verified_atomic_facts();
-        if self.captures_well_definedness() {
-            self.begin_statement_well_definedness_capture();
-        }
+        self.clear_statement_atomic_fact_proofs();
         let trusted = self.current_execution_is_trusted_file();
         let result = if trusted {
             self.exec_stmt_affect_environment_only(stmt)
@@ -13,7 +11,7 @@ impl Runtime {
             self.exec_stmt_verified(stmt)
         };
         let result = self.finish_statement_execution(result, trusted);
-        self.clear_statement_verified_atomic_facts();
+        self.clear_statement_atomic_fact_proofs();
         result
     }
 
@@ -24,12 +22,6 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         match result {
             Ok(mut result) => {
-                let well_definedness = if self.captures_well_definedness() {
-                    self.end_statement_well_definedness_capture()?
-                } else {
-                    WellDefinednessCertificate::default()
-                };
-                result = result.with_well_definedness_certificate(well_definedness);
                 self.attach_known_fact_ids_to_stmt_result(&mut result)?;
                 let in_trusted_prefix_run = self.current_statement_is_in_trusted_prefix_run();
                 let trace = if in_trusted_prefix_run && !result.is_unknown() {
@@ -47,9 +39,6 @@ impl Runtime {
                 Ok(result)
             }
             Err(error) => {
-                if self.captures_well_definedness() {
-                    self.discard_statement_well_definedness_capture();
-                }
                 let phase = execution_phase_for_error(&error);
                 let message = error.trace_message();
                 Err(error.with_execution_trace(StatementExecutionTrace::failed(phase, message)))
@@ -71,45 +60,23 @@ impl Runtime {
                 }
             }
             self.attach_known_fact_ids_to_infer_result(&mut success.infers)?;
-            self.attach_known_fact_ids_to_verified_by(&mut success.verified_by)?;
-        } else if let Some(success) = result.non_factual_ir_mut() {
+            if let Some(verification) = Rc::get_mut(&mut success.verification) {
+                self.attach_known_fact_ids_to_verified_by(verification.proof_mut())?;
+            }
+        } else if let Some(success) = result.non_factual_success_mut() {
             let common = success
                 .common_mut()
                 .expect("non-factual IR always carries common execution evidence");
             self.attach_known_fact_ids_to_infer_result(&mut common.infers)?;
-            for inside_result in common.inside_results.iter_mut() {
-                self.attach_known_fact_ids_to_stmt_result(inside_result)?;
-            }
+            success.try_visit_child_results_mut(&mut |child| {
+                self.attach_known_fact_ids_to_stmt_result(child)
+            })?;
 
             match success {
-                VerifiedStmtIr::Witness(VerifiedWitnessStmtIr::WitnessExistFact {
-                    verification: Some(verification),
-                    ..
-                }) => {
-                    for check in verification.parameter_checks.iter_mut().flatten() {
-                        self.attach_known_fact_ids_to_stmt_result(check.as_mut())?;
-                    }
-                }
-                VerifiedStmtIr::Witness(VerifiedWitnessStmtIr::WitnessAtomicFact {
-                    verification: Some(verification),
-                    ..
-                }) => {
-                    self.attach_known_fact_ids_to_stmt_result(
-                        verification.definition_parameter_check.as_mut(),
-                    )?;
-                    for check in verification
-                        .witness_verification
-                        .parameter_checks
-                        .iter_mut()
-                        .flatten()
-                    {
-                        self.attach_known_fact_ids_to_stmt_result(check.as_mut())?;
-                    }
-                }
-                VerifiedStmtIr::DefObjStmt(VerifiedDefObjStmtIr::HaveFnEqualStmt {
-                    verification: Some(verification),
-                    ..
-                }) => {
+                SuccessStmtResult::DefObjStmt(SuccessDefObjStmtResult::HaveFnEqualStmt(result))
+                    if result.verification.is_some() =>
+                {
+                    let verification = result.verification.as_mut().unwrap();
                     self.attach_known_fact_ids_to_infer_result(
                         &mut verification.assumption_infers,
                     )?;
@@ -122,16 +89,13 @@ impl Runtime {
 
     pub(crate) fn attach_known_fact_ids_to_infer_result(
         &self,
-        infer_result: &mut InferResult,
+        infer_result: &mut SuccessInferResult,
     ) -> Result<(), RuntimeError> {
         for output in infer_result.store_fact_outputs.iter_mut() {
             if let Some(fact_id) =
                 self.known_fact_id_for_fact(&output.itself_and_why_itself_is_stored.0)?
             {
                 output.fact_id = Some(fact_id);
-            }
-            if !self.captures_well_definedness() {
-                continue;
             }
             if output.inferred_fact_ids.len() != output.inferred_facts.len() {
                 return Err(RuntimeError::from(UnknownRuntimeError(
@@ -154,20 +118,34 @@ impl Runtime {
                 }
             }
         }
+        for application in infer_result.rule_applications.iter_mut() {
+            for premise in application.premises.iter_mut() {
+                if premise.fact_id.is_none() {
+                    premise.fact_id = self.known_fact_id_for_fact(&premise.fact)?;
+                }
+            }
+            for conclusion in application.conclusions.iter_mut() {
+                if conclusion.fact_id.is_none() {
+                    conclusion.fact_id = self.known_fact_id_for_fact(&conclusion.fact)?;
+                }
+                self.attach_known_fact_ids_to_infer_result(&mut conclusion.infers)?;
+            }
+        }
         Ok(())
     }
 
-    fn attach_known_fact_ids_to_verified_by(
+    pub(crate) fn attach_known_fact_ids_to_verified_by(
         &self,
-        verified_by: &mut VerifiedByResult,
+        verified_by: &mut SuccessFactProofResult,
     ) -> Result<(), RuntimeError> {
         match verified_by {
-            VerifiedByResult::BuiltinRule(result) | VerifiedByResult::BuiltinStrategy(result) => {
+            SuccessFactProofResult::BuiltinRule(result)
+            | SuccessFactProofResult::BuiltinStrategy(result) => {
                 for subgoal in result.subgoals.iter_mut() {
                     self.attach_known_fact_ids_to_stmt_result(subgoal)?;
                 }
             }
-            VerifiedByResult::Fact(result) => {
+            SuccessFactProofResult::Fact(result) => {
                 if result.source_fact_id.is_none() {
                     if let Stmt::Fact(source_fact) = result.cite_what.as_ref() {
                         if let Some(fact_id) = self.known_fact_id_for_fact(source_fact)? {
@@ -176,19 +154,19 @@ impl Runtime {
                     }
                 }
             }
-            VerifiedByResult::KnownForallInstantiation(result) => {
+            SuccessFactProofResult::KnownForallInstantiation(result) => {
                 self.attach_known_fact_ids_to_known_forall(result)?;
             }
-            VerifiedByResult::VerifiedBys(result) => {
+            SuccessFactProofResult::CombinedProofs(result) => {
                 for step in result.cite_what.iter_mut() {
                     match step {
-                        VerifiedBysEnum::ByBuiltinRule(result)
-                        | VerifiedBysEnum::ByBuiltinStrategy(result) => {
+                        SuccessCombinedFactProofItemResult::ByBuiltinRule(result)
+                        | SuccessCombinedFactProofItemResult::ByBuiltinStrategy(result) => {
                             for subgoal in result.subgoals.iter_mut() {
                                 self.attach_known_fact_ids_to_stmt_result(subgoal)?;
                             }
                         }
-                        VerifiedBysEnum::ByFact(result) => {
+                        SuccessCombinedFactProofItemResult::ByFact(result) => {
                             if result.source_fact_id.is_none() {
                                 if let Stmt::Fact(source_fact) = result.cite_what.as_ref() {
                                     if let Some(fact_id) =
@@ -199,27 +177,32 @@ impl Runtime {
                                 }
                             }
                         }
-                        VerifiedBysEnum::ByKnownForall(result) => {
+                        SuccessCombinedFactProofItemResult::ByKnownForall(result) => {
                             self.attach_known_fact_ids_to_known_forall(&mut result.result)?;
                         }
-                        VerifiedBysEnum::ByStatementMemo(_, _) => {}
+                        SuccessCombinedFactProofItemResult::Reuse(_) => {}
                     }
                 }
             }
-            VerifiedByResult::ForallProof(result) => {
+            SuccessFactProofResult::ForallProof(result) => {
                 self.attach_known_fact_ids_to_infer_result(&mut result.assumption_infers)?;
                 for proved in result.proves.iter_mut() {
                     self.attach_known_fact_ids_to_stmt_result(proved.result.as_mut())?;
                 }
             }
-            VerifiedByResult::StatementMemo(_) => {}
+            SuccessFactProofResult::Transform(_result) => {
+                // The transform child is shared proof evidence. Its producer
+                // freezes citation identities before constructing this Rc;
+                // post-hoc mutation must not clone or flatten that child.
+            }
+            SuccessFactProofResult::Reuse(_) => {}
         }
         Ok(())
     }
 
     fn attach_known_fact_ids_to_known_forall(
         &self,
-        result: &mut KnownForallInstantiationResult,
+        result: &mut SuccessInstantiateKnownForallResult,
     ) -> Result<(), RuntimeError> {
         if let Stmt::Fact(source_fact) = result.cite_what.as_ref() {
             if let Some(fact_id) = self.known_fact_id_for_fact(source_fact)? {
@@ -280,10 +263,12 @@ impl Runtime {
             Stmt::DefInterfaceStmt(DefInterfaceStmt::DefSettingStmt(s)) => {
                 self.store_def_setting(s)
                     .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone(), e))?;
-                Ok(VerifiedDefInterfaceStmtIr::DefSettingStmt {
-                    statement: s.clone(),
-                    common: VerifiedStmtCommonIr::new(InferResult::new(), vec![]),
-                }
+                Ok(SuccessDefInterfaceStmtResult::DefSettingStmt(Box::new(
+                    SuccessDefSettingStmtResult {
+                        statement: s.clone(),
+                        common: SuccessStmtCommonResult::new(SuccessInferResult::new()),
+                    },
+                ))
                 .into())
             }
             Stmt::DefInterfaceStmt(DefInterfaceStmt::DefStructStmt(s)) => {
@@ -420,38 +405,46 @@ impl Runtime {
             Stmt::DefInterfaceStmt(DefInterfaceStmt::DefTemplateStmt(s)) => {
                 self.store_def_template(s)
                     .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone(), e))?;
-                Ok(VerifiedDefInterfaceStmtIr::DefTemplateStmt {
-                    statement: s.clone(),
-                    common: VerifiedStmtCommonIr::new(InferResult::new(), vec![]),
-                }
+                Ok(SuccessDefInterfaceStmtResult::DefTemplateStmt(Box::new(
+                    SuccessDefTemplateStmtResult {
+                        statement: s.clone(),
+                        common: SuccessStmtCommonResult::new(SuccessInferResult::new()),
+                    },
+                ))
                 .into())
             }
             Stmt::DefInterfaceStmt(DefInterfaceStmt::DefSettingStmt(s)) => {
                 self.store_def_setting(s)
                     .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone(), e))?;
-                Ok(VerifiedDefInterfaceStmtIr::DefSettingStmt {
-                    statement: s.clone(),
-                    common: VerifiedStmtCommonIr::new(InferResult::new(), vec![]),
-                }
+                Ok(SuccessDefInterfaceStmtResult::DefSettingStmt(Box::new(
+                    SuccessDefSettingStmtResult {
+                        statement: s.clone(),
+                        common: SuccessStmtCommonResult::new(SuccessInferResult::new()),
+                    },
+                ))
                 .into())
             }
             Stmt::DefInterfaceStmt(DefInterfaceStmt::DefStructStmt(s)) => {
                 self.store_def_struct(s)
                     .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone(), e))?;
-                Ok(VerifiedDefInterfaceStmtIr::DefStructStmt {
-                    statement: s.clone(),
-                    common: VerifiedStmtCommonIr::new(InferResult::new(), vec![]),
-                }
+                Ok(SuccessDefInterfaceStmtResult::DefStructStmt(Box::new(
+                    SuccessDefStructStmtResult {
+                        statement: s.clone(),
+                        common: SuccessStmtCommonResult::new(SuccessInferResult::new()),
+                    },
+                ))
                 .into())
             }
             Stmt::DefAlgoStmt(s) => {
                 self.store_def_algo(s)
                     .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone(), e))?;
-                Ok(VerifiedStmtIr::DefAlgoStmt {
-                    statement: s.clone(),
-                    common: VerifiedStmtCommonIr::new(InferResult::new(), vec![]),
-                }
-                .into())
+                Ok(
+                    SuccessStmtResult::DefAlgoStmt(Box::new(SuccessDefAlgoStmtResult {
+                        statement: s.clone(),
+                        common: SuccessStmtCommonResult::new(SuccessInferResult::new()),
+                    }))
+                    .into(),
+                )
             }
             Stmt::DefThmStmt(s) => self.exec_def_thm_stmt_affect_environment_only(s),
             Stmt::AxiomStmt(s) => self.exec_axiom_stmt_affect_environment_only(s),
@@ -464,33 +457,37 @@ impl Runtime {
             {
                 self.exec_try_stmt(s)
             }
-            Stmt::ProofBlock(ProofBlockStmt::ExampleStmt(s)) => {
-                Ok(VerifiedProofBlockStmtIr::ExampleStmt {
+            Stmt::ProofBlock(ProofBlockStmt::ExampleStmt(s)) => Ok(
+                SuccessProofBlockStmtResult::ExampleStmt(Box::new(SuccessExampleStmtResult {
                     statement: s.clone(),
-                    common: VerifiedStmtCommonIr::new(InferResult::new(), vec![]),
+                    common: SuccessStmtCommonResult::new(SuccessInferResult::new()),
                     verification: None,
-                    local_scope: None,
-                }
-                .into())
-            }
-            Stmt::ProofBlock(ProofBlockStmt::SketchStmt(s)) => {
-                Ok(VerifiedProofBlockStmtIr::SketchStmt {
+                }))
+                .into(),
+            ),
+            Stmt::ProofBlock(ProofBlockStmt::SketchStmt(s)) => Ok(
+                SuccessProofBlockStmtResult::SketchStmt(Box::new(SuccessSketchStmtResult {
                     statement: s.clone(),
-                    common: VerifiedStmtCommonIr::new(InferResult::new(), vec![]),
-                    local_scope: None,
-                }
-                .into())
-            }
-            Stmt::ProofBlock(ProofBlockStmt::TryStmt(s)) => Ok(VerifiedProofBlockStmtIr::TryStmt {
-                statement: s.clone(),
-                common: VerifiedStmtCommonIr::new(InferResult::new(), vec![]),
-            }
-            .into()),
-            Stmt::Command(CommandStmt::EvalStmt(s)) => Ok(VerifiedCommandStmtIr::EvalStmt {
-                statement: s.clone(),
-                common: VerifiedStmtCommonIr::new(InferResult::new(), vec![]),
-                reported_store_facts: vec![],
-            }
+                    common: SuccessStmtCommonResult::new(SuccessInferResult::new()),
+                    proof: None,
+                }))
+                .into(),
+            ),
+            Stmt::ProofBlock(ProofBlockStmt::TryStmt(s)) => Ok(
+                SuccessProofBlockStmtResult::TryStmt(Box::new(SuccessTryStmtResult {
+                    statement: s.clone(),
+                    common: SuccessStmtCommonResult::new(SuccessInferResult::new()),
+                    proof: None,
+                }))
+                .into(),
+            ),
+            Stmt::Command(CommandStmt::EvalStmt(s)) => Ok(SuccessCommandStmtResult::EvalStmt(
+                Box::new(SuccessEvalStmtResult {
+                    statement: s.clone(),
+                    common: SuccessStmtCommonResult::new(SuccessInferResult::new()),
+                    reported_store_facts: vec![],
+                }),
+            )
             .into()),
             Stmt::Command(CommandStmt::ImportStmt(_)) => Err(short_exec_error(
                 stmt.clone(),

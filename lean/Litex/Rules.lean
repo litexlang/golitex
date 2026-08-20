@@ -111,6 +111,15 @@ theorem complexEqNatInN
     Litex.In z Litex.N :=
   ⟨n, Litex.Same.trans (Litex.Same.ofEq h) (Litex.Same.complexNat n)⟩
 
+/-- Natural membership carries the exact nonnegativity inference used by Litex. -/
+theorem nonnegativeOfInN
+    {alpha : Type}
+    {x : alpha}
+    (hx : Litex.In x Litex.N) :
+    Litex.Nonnegative x := by
+  rcases hx with ⟨n, hxn⟩
+  exact ⟨(n : ℝ), Litex.Same.trans hxn (Litex.AsReal.nat n), Nat.cast_nonneg n⟩
+
 /-- A complex value proved equal to an integer cast belongs to `Z`. -/
 theorem complexEqIntInZ
     (z : ℂ)

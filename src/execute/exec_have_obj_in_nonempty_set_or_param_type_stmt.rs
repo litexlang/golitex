@@ -9,12 +9,14 @@ impl Runtime {
         let checks = self.exec_have_obj_in_nonempty_set_or_param_type_stmt_verify_process(stmt)?;
         let infer_result =
             self.exec_have_obj_in_nonempty_set_or_param_type_stmt_affect_environment(stmt)?;
-        let choice_verification = self.object_choice_verification_result(stmt, checks.len())?;
-        Ok(VerifiedDefObjStmtIr::HaveObjInNonemptySetStmt {
-            statement: stmt.clone(),
-            common: VerifiedStmtCommonIr::new(infer_result, checks),
-            verification: Some(choice_verification),
-        }
+        let choice_verification = self.object_choice_verification_result(stmt, checks)?;
+        Ok(SuccessDefObjStmtResult::HaveObjInNonemptySetStmt(Box::new(
+            SuccessHaveObjInNonemptySetStmtResult {
+                statement: stmt.clone(),
+                common: SuccessStmtCommonResult::new(infer_result),
+                verification: Some(choice_verification),
+            },
+        ))
         .into())
     }
 
@@ -53,7 +55,7 @@ impl Runtime {
     pub(crate) fn exec_have_obj_in_nonempty_set_or_param_type_stmt_affect_environment(
         &mut self,
         stmt: &HaveObjInNonemptySetOrParamTypeStmt,
-    ) -> Result<InferResult, RuntimeError> {
+    ) -> Result<SuccessInferResult, RuntimeError> {
         let mut infer_result = if self.current_execution_is_trusted_file() {
             self.define_params_with_type_trusted(&stmt.param_def, ParamObjType::Identifier)
         } else {
@@ -74,19 +76,21 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         let infer_result =
             self.exec_have_obj_in_nonempty_set_or_param_type_stmt_affect_environment(stmt)?;
-        Ok(VerifiedDefObjStmtIr::HaveObjInNonemptySetStmt {
-            statement: stmt.clone(),
-            common: VerifiedStmtCommonIr::new(infer_result, vec![]),
-            verification: None,
-        }
+        Ok(SuccessDefObjStmtResult::HaveObjInNonemptySetStmt(Box::new(
+            SuccessHaveObjInNonemptySetStmtResult {
+                statement: stmt.clone(),
+                common: SuccessStmtCommonResult::new(infer_result),
+                verification: None,
+            },
+        ))
         .into())
     }
 
     fn object_choice_verification_result(
         &self,
         stmt: &HaveObjInNonemptySetOrParamTypeStmt,
-        check_count: usize,
-    ) -> Result<ObjectChoiceVerificationResult, RuntimeError> {
+        checks: Vec<StmtResult>,
+    ) -> Result<SuccessVerifyObjectChoiceResult, RuntimeError> {
         let items = self.object_introduction_items_for_defined_params(
             &stmt.param_def,
             stmt.line_file.clone(),
@@ -108,23 +112,39 @@ impl Runtime {
             selected_type_facts.push(item.facts[0].clone());
         }
 
-        let mut next_check_index = 0;
-        let mut nonempty_check_indices = Vec::with_capacity(selected_type_facts.len());
+        let mut checks = checks.into_iter();
+        let mut groups = Vec::with_capacity(stmt.param_def.groups.len());
+        let mut selected_type_facts = selected_type_facts.into_iter();
         for group in stmt.param_def.groups.iter() {
-            let check_index = if matches!(group.param_type, ParamType::Obj(_)) {
-                let index = next_check_index;
-                next_check_index += 1;
-                Some(index)
+            let nonempty_check = if matches!(group.param_type, ParamType::Obj(_)) {
+                Some(Box::new(checks.next().ok_or_else(|| {
+                    exec_stmt_error_with_stmt_and_cause(
+                        stmt.clone().into(),
+                        RuntimeError::from(UnknownRuntimeError(
+                            RuntimeErrorStruct::new_with_just_msg(
+                                "object choice verification is missing nonempty evidence"
+                                    .to_string(),
+                            ),
+                        )),
+                    )
+                })?))
             } else {
                 None
             };
+            let mut group_type_facts = Vec::with_capacity(group.params.len());
             for _ in group.params.iter() {
-                nonempty_check_indices.push(check_index);
+                group_type_facts.push(
+                    selected_type_facts
+                        .next()
+                        .expect("object choice facts must match declared parameters"),
+                );
             }
+            groups.push(SuccessVerifyObjectChoiceGroupResult {
+                selected_type_facts: group_type_facts,
+                nonempty_check,
+            });
         }
-        if next_check_index != check_count
-            || nonempty_check_indices.len() != selected_type_facts.len()
-        {
+        if checks.next().is_some() || selected_type_facts.next().is_some() {
             return Err(exec_stmt_error_with_stmt_and_cause(
                 stmt.clone().into(),
                 RuntimeError::from(UnknownRuntimeError(RuntimeErrorStruct::new_with_just_msg(
@@ -133,9 +153,6 @@ impl Runtime {
             ));
         }
 
-        Ok(ObjectChoiceVerificationResult::new(
-            selected_type_facts,
-            nonempty_check_indices,
-        ))
+        Ok(SuccessVerifyObjectChoiceResult::new(groups))
     }
 }

@@ -2,12 +2,33 @@ use crate::prelude::*;
 use std::collections::HashSet;
 
 #[derive(Clone, Debug)]
-pub struct InferResult {
-    pub store_fact_outputs: Vec<StoreFactOutput>,
+pub struct SuccessInferResult {
+    pub store_fact_outputs: Vec<SuccessStoreFactOutput>,
+    /// Typed rule applications selected by inference. Store outputs retain
+    /// the ordered environment effects; these nodes retain why they follow.
+    pub rule_applications: Vec<SuccessInferRuleApplicationResult>,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum InferRule {
+    NaturalMembershipImpliesNonnegative,
 }
 
 #[derive(Clone, Debug)]
-pub struct StoreFactOutput {
+pub struct SuccessInferPremiseResult {
+    pub fact: Fact,
+    pub fact_id: Option<FactId>,
+}
+
+#[derive(Clone, Debug)]
+pub struct SuccessInferRuleApplicationResult {
+    pub rule: InferRule,
+    pub premises: Vec<SuccessInferPremiseResult>,
+    pub conclusions: Vec<SuccessStoreFactResult>,
+}
+
+#[derive(Clone, Debug)]
+pub struct SuccessStoreFactOutput {
     /// Stable identity when this output corresponds to an environment-stored
     /// fact. It remains available after a temporary proof environment is gone.
     pub fact_id: Option<FactId>,
@@ -40,10 +61,11 @@ pub enum InferReason {
     Other(String),
 }
 
-impl InferResult {
+impl SuccessInferResult {
     pub fn new() -> Self {
-        InferResult {
+        SuccessInferResult {
             store_fact_outputs: vec![],
+            rule_applications: vec![],
         }
     }
 
@@ -54,10 +76,10 @@ impl InferResult {
     }
 
     pub fn is_empty(&self) -> bool {
-        self.store_fact_outputs.is_empty()
+        self.store_fact_outputs.is_empty() && self.rule_applications.is_empty()
     }
 
-    pub fn store_fact_outputs(&self) -> &[StoreFactOutput] {
+    pub fn store_fact_outputs(&self) -> &[SuccessStoreFactOutput] {
         &self.store_fact_outputs
     }
 
@@ -130,9 +152,28 @@ impl InferResult {
         self.new_fact(&fact);
     }
 
-    pub fn new_infer_result_inside(&mut self, other_infer_result: InferResult) {
+    pub fn new_infer_result_inside(&mut self, other_infer_result: SuccessInferResult) {
         self.store_fact_outputs
             .extend(other_infer_result.store_fact_outputs);
+        self.rule_applications
+            .extend(other_infer_result.rule_applications);
+    }
+
+    pub fn add_rule_application(
+        &mut self,
+        rule: InferRule,
+        premise: Fact,
+        conclusions: Vec<SuccessStoreFactResult>,
+    ) {
+        self.rule_applications
+            .push(SuccessInferRuleApplicationResult {
+                rule,
+                premises: vec![SuccessInferPremiseResult {
+                    fact: premise,
+                    fact_id: None,
+                }],
+                conclusions,
+            });
     }
 
     pub fn add_verified_statement(&mut self, fact: &Fact) {
@@ -228,11 +269,24 @@ impl InferResult {
         reason: impl Into<String>,
         inferred_facts: Vec<Fact>,
     ) {
-        self.store_fact_outputs.push(StoreFactOutput::new(
+        self.store_fact_outputs.push(SuccessStoreFactOutput::new(
             fact.clone(),
             reason.into(),
             inferred_facts,
         ));
+    }
+
+    /// Preserve the selected typed rule applications while retaining the
+    /// existing flattened environment-effect summary for compatibility.
+    pub fn add_store_fact_output_from_nested(
+        &mut self,
+        fact: &Fact,
+        reason: impl Into<String>,
+        nested: &mut SuccessInferResult,
+    ) {
+        let inferred_facts = nested.inferred_facts();
+        self.add_store_fact_output(fact, reason, inferred_facts);
+        self.rule_applications.append(&mut nested.rule_applications);
     }
 
     fn infer_lines(&self) -> Vec<String> {
@@ -250,7 +304,7 @@ impl InferResult {
     }
 }
 
-impl StoreFactOutput {
+impl SuccessStoreFactOutput {
     pub fn new(fact: Fact, reason: String, inferred_facts: Vec<Fact>) -> Self {
         let fact_text = fact.to_string();
         let mut seen = HashSet::new();
@@ -262,7 +316,7 @@ impl StoreFactOutput {
             })
             .collect::<Vec<_>>();
         let inferred_fact_ids = vec![None; inferred_facts.len()];
-        StoreFactOutput {
+        SuccessStoreFactOutput {
             fact_id: None,
             itself_and_why_itself_is_stored: (fact, reason),
             inferred_facts,

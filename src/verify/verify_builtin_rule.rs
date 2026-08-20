@@ -46,7 +46,7 @@ impl Runtime {
         let mut branches = Vec::with_capacity(alternatives.len());
         for mut alternative in alternatives {
             if alternative.is_empty() {
-                return Ok(StmtUnknown::new().into());
+                return Ok(UnknownGenericStmtResult::new().into());
             }
             if alternative.len() == 1 {
                 branches.push(alternative.remove(0).into());
@@ -79,13 +79,13 @@ impl Runtime {
             let result =
                 self.verify_atomic_fact_as_builtin_rule_premise(atomic_fact, builtin_state)?;
             if !result.is_true() {
-                return Ok(StmtUnknown::new().into());
+                return Ok(UnknownGenericStmtResult::new().into());
             }
             child_results.push(result);
         }
-        Ok(VerifiedFactStmtIr::new_with_verified_by_known_fact(
+        Ok(SuccessFactStmtResult::new_with_verified_by_known_fact(
             and_fact.clone().into(),
-            VerifiedByResult::wrap_bys(Vec::new()),
+            SuccessFactProofResult::wrap_bys(Vec::new()),
             child_results,
         )
         .into())
@@ -108,13 +108,13 @@ impl Runtime {
             let result =
                 self.verify_atomic_fact_as_builtin_rule_premise(atomic_fact, builtin_state)?;
             if !result.is_true() {
-                return Ok(StmtUnknown::new().into());
+                return Ok(UnknownGenericStmtResult::new().into());
             }
             child_results.push(result);
         }
-        Ok(VerifiedFactStmtIr::new_with_verified_by_known_fact(
+        Ok(SuccessFactStmtResult::new_with_verified_by_known_fact(
             chain_fact.clone().into(),
-            VerifiedByResult::wrap_bys(Vec::new()),
+            SuccessFactProofResult::wrap_bys(Vec::new()),
             child_results,
         )
         .into())
@@ -160,7 +160,7 @@ impl Runtime {
                 continue;
             }
             return Ok(
-                VerifiedFactStmtIr::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     or_fact.clone().into(),
                     "builtin premise: one disjunct verified".to_string(),
                     BuiltinRuleEvidence::DisjunctionIntroduction(
@@ -175,7 +175,7 @@ impl Runtime {
                 .into(),
             );
         }
-        Ok(StmtUnknown::new().into())
+        Ok(UnknownGenericStmtResult::new().into())
     }
 
     /// Atomic leaf fast path for rules whose premises are already atomic. Keeping this borrowed
@@ -399,7 +399,7 @@ mod tests {
             .expect("finite_set_size integer evidence should be retained")
             .into_factual_success()
             .expect("finite_set_size integer evidence should be factual");
-        let VerifiedByResult::BuiltinRule(rule) = size_result.underlying_verified_by() else {
+        let SuccessFactProofResult::BuiltinRule(rule) = size_result.underlying_verified_by() else {
             panic!("finite_set_size membership should keep its builtin rule evidence");
         };
         assert_eq!(
@@ -689,9 +689,9 @@ mod tests {
             .split("pub fn verify_equal_fact(")
             .nth(1)
             .expect("full equality implementation must exist")
-            .split("fn verify_equality_after_one_checked_definition_reduction(")
+            .split("fn try_verify_equal_fact_by_transforming_known_equal_representatives(")
             .next()
-            .expect("direct checked-definition reduction must follow full equality");
+            .expect("transform composition helper must follow full equality");
         assert!(!full_equality_impl.contains("FnEqualFact"));
         assert!(!full_equality_impl.contains("EqualFact::new("));
         let round_zero_index = full_equality_impl

@@ -8,20 +8,24 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         if self.current_execution_is_trusted_file() {
             self.store_def_algo(def_algo_stmt)?;
-            return Ok(VerifiedStmtIr::DefAlgoStmt {
-                statement: def_algo_stmt.clone(),
-                common: VerifiedStmtCommonIr::new(InferResult::new(), vec![]),
-            }
-            .into());
+            return Ok(
+                SuccessStmtResult::DefAlgoStmt(Box::new(SuccessDefAlgoStmtResult {
+                    statement: def_algo_stmt.clone(),
+                    common: SuccessStmtCommonResult::new(SuccessInferResult::new()),
+                }))
+                .into(),
+            );
         }
 
         self.run_in_local_env(|rt| rt.exec_def_algo_stmt_verify_process(def_algo_stmt))?;
         self.store_def_algo(def_algo_stmt)?;
-        Ok(VerifiedStmtIr::DefAlgoStmt {
-            statement: def_algo_stmt.clone(),
-            common: VerifiedStmtCommonIr::new(InferResult::new(), vec![]),
-        }
-        .into())
+        Ok(
+            SuccessStmtResult::DefAlgoStmt(Box::new(SuccessDefAlgoStmtResult {
+                statement: def_algo_stmt.clone(),
+                common: SuccessStmtCommonResult::new(SuccessInferResult::new()),
+            }))
+            .into(),
+        )
     }
 
     fn exec_def_algo_stmt_verify_process(
@@ -79,11 +83,13 @@ impl Runtime {
             &algo_param_to_forall_obj,
         )?;
 
-        Ok(VerifiedStmtIr::DefAlgoStmt {
-            statement: def_algo_stmt.clone(),
-            common: VerifiedStmtCommonIr::new(InferResult::new(), vec![]),
-        }
-        .into())
+        Ok(
+            SuccessStmtResult::DefAlgoStmt(Box::new(SuccessDefAlgoStmtResult {
+                statement: def_algo_stmt.clone(),
+                common: SuccessStmtCommonResult::new(SuccessInferResult::new()),
+            }))
+            .into(),
+        )
     }
 
     fn def_algo_verify_exec_error_without_message(def_algo_stmt: &DefAlgoStmt) -> RuntimeError {

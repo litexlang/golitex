@@ -40,7 +40,7 @@ impl Runtime {
         }
 
         known_forall_profile::record_unknown();
-        Ok((StmtUnknown::new()).into())
+        Ok((UnknownGenericStmtResult::new()).into())
     }
 
     pub(crate) fn verify_equal_fact_with_known_forall(
@@ -88,7 +88,7 @@ impl Runtime {
         }
 
         known_forall_profile::record_unknown();
-        Ok((StmtUnknown::new()).into())
+        Ok((UnknownGenericStmtResult::new()).into())
     }
 
     /// Match one side of a stored universally quantified equality, instantiate
@@ -105,7 +105,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         verify_state: &UseContextVerifyState,
-    ) -> Result<Option<VerifiedFactStmtIr>, RuntimeError> {
+    ) -> Result<Option<SuccessFactStmtResult>, RuntimeError> {
         let target_atomic: AtomicFact = equal_fact.clone().into();
         let lookup_key = (target_atomic.key(), target_atomic.is_true());
         let candidates: Vec<(AtomicFact, Rc<KnownForallFactParamsAndDom>)> = self
@@ -196,7 +196,7 @@ impl Runtime {
         matching_target: &AtomicFact,
         given_target: &AtomicFact,
         verify_state: &UseContextVerifyState,
-    ) -> Result<Option<VerifiedFactStmtIr>, RuntimeError> {
+    ) -> Result<Option<SuccessFactStmtResult>, RuntimeError> {
         let (AtomicFact::EqualFact(candidate_equality), AtomicFact::EqualFact(matching_equality)) =
             (&candidate, matching_target)
         else {
@@ -255,7 +255,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         verify_state: &UseContextVerifyState,
-    ) -> Result<Option<VerifiedFactStmtIr>, RuntimeError> {
+    ) -> Result<Option<SuccessFactStmtResult>, RuntimeError> {
         if let Some(fact_verified) =
             self.try_verify_with_known_forall_facts_in_envs(atomic_fact, verify_state)?
         {
@@ -266,11 +266,7 @@ impl Runtime {
             if let Some(mut fact_verified) =
                 self.try_verify_with_known_forall_facts_in_envs(&resolved_fact, verify_state)?
             {
-                let (_, data) = fact_verified.into_parts();
-                fact_verified = VerifiedFactStmtIr::AtomicFact {
-                    statement: atomic_fact.clone(),
-                    data,
-                };
+                fact_verified = fact_verified.with_verified_fact(atomic_fact.clone().into());
                 return Ok(Some(fact_verified));
             }
         }
@@ -349,7 +345,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         verify_state: &UseContextVerifyState,
-    ) -> Result<Option<VerifiedFactStmtIr>, RuntimeError> {
+    ) -> Result<Option<SuccessFactStmtResult>, RuntimeError> {
         let mut iterate_from_env_index = 0;
         let mut iterate_from_known_forall_fact_index = 0;
 
@@ -392,7 +388,7 @@ impl Runtime {
         atomic_fact: &AtomicFact,
         verify_state: &UseContextVerifyState,
         module_names: &[String],
-    ) -> Result<Option<VerifiedFactStmtIr>, RuntimeError> {
+    ) -> Result<Option<SuccessFactStmtResult>, RuntimeError> {
         let lookup_key = (atomic_fact.key(), atomic_fact.is_true());
         for module_name in module_names.iter() {
             let module_local_identifiers =
@@ -432,7 +428,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         verify_state: &UseContextVerifyState,
-    ) -> Result<Option<VerifiedFactStmtIr>, RuntimeError> {
+    ) -> Result<Option<SuccessFactStmtResult>, RuntimeError> {
         let arg_shape_lookup_keys = atomic_fact_in_forall_lookup_arg_shape_keys(atomic_fact);
         if let Some(fact_verified) = self.try_verify_with_arg_shape_known_forall_facts_in_envs(
             atomic_fact,
@@ -462,7 +458,7 @@ impl Runtime {
         forall_rc: Rc<KnownForallFactParamsAndDom>,
         given_atomic_fact: &AtomicFact,
         verify_state: &UseContextVerifyState,
-    ) -> Result<Option<VerifiedFactStmtIr>, RuntimeError> {
+    ) -> Result<Option<SuccessFactStmtResult>, RuntimeError> {
         self.try_verify_known_forall_candidate_with_matching_fact(
             phase,
             atomic_fact_in_known_forall_fact,
@@ -481,7 +477,7 @@ impl Runtime {
         matching_atomic_fact: &AtomicFact,
         given_atomic_fact: &AtomicFact,
         verify_state: &UseContextVerifyState,
-    ) -> Result<Option<VerifiedFactStmtIr>, RuntimeError> {
+    ) -> Result<Option<SuccessFactStmtResult>, RuntimeError> {
         known_forall_profile::record_candidate_attempt(phase);
         let match_result = self.match_atomic_fact_args_against_known_forall_ordered_args(
             &atomic_fact_in_known_forall_fact,
@@ -510,7 +506,7 @@ impl Runtime {
         atomic_fact: &AtomicFact,
         arg_shape_lookup_keys: &[AtomicFactInForallArgShapeKey],
         verify_state: &UseContextVerifyState,
-    ) -> Result<Option<VerifiedFactStmtIr>, RuntimeError> {
+    ) -> Result<Option<SuccessFactStmtResult>, RuntimeError> {
         let lookup_key = (atomic_fact.key(), atomic_fact.is_true());
         let envs_count = self.environment_count();
         for stack_idx in 0..envs_count {
@@ -552,7 +548,7 @@ impl Runtime {
         atomic_fact: &AtomicFact,
         arg_shape_lookup_keys: &[AtomicFactInForallArgShapeKey],
         verify_state: &UseContextVerifyState,
-    ) -> Result<Option<VerifiedFactStmtIr>, RuntimeError> {
+    ) -> Result<Option<SuccessFactStmtResult>, RuntimeError> {
         let lookup_key = (atomic_fact.key(), atomic_fact.is_true());
         let envs_count = self.environment_count();
         for stack_idx in 0..envs_count {
@@ -632,7 +628,7 @@ impl Runtime {
         atomic_fact: &AtomicFact,
         verify_state: &UseContextVerifyState,
         phase: KnownForallSearchPhase,
-    ) -> Result<Option<VerifiedFactStmtIr>, RuntimeError> {
+    ) -> Result<Option<SuccessFactStmtResult>, RuntimeError> {
         let Some(bucket_count) = ({
             let env = self
                 .environment_by_top_index(stack_idx)
@@ -681,7 +677,7 @@ impl Runtime {
         atomic_fact: &AtomicFact,
         verify_state: &UseContextVerifyState,
         phase: KnownForallSearchPhase,
-    ) -> Result<Option<VerifiedFactStmtIr>, RuntimeError> {
+    ) -> Result<Option<SuccessFactStmtResult>, RuntimeError> {
         let module_local_identifiers =
             self.imported_module_identifier_to_local_obj_map(module_name);
         let matching_atomic_fact = self.inst_atomic_fact(
@@ -748,7 +744,7 @@ impl Runtime {
         mut arg_map: HashMap<String, Obj>,
         given_atomic_fact: &AtomicFact,
         verify_state: &UseContextVerifyState,
-    ) -> Result<Option<VerifiedFactStmtIr>, RuntimeError> {
+    ) -> Result<Option<SuccessFactStmtResult>, RuntimeError> {
         self.complete_known_forall_arg_map_from_known_dom_facts(
             known_forall.as_ref(),
             &mut arg_map,
@@ -772,9 +768,9 @@ impl Runtime {
         )?;
         let source_fact: Fact = verified_by_known_forall_fact.clone().into();
         let source_fact_id = self.known_fact_id_for_fact(&source_fact)?;
-        let fact_verified = VerifiedFactStmtIr::new_with_verified_by_known_fact(
+        let fact_verified = SuccessFactStmtResult::new_with_verified_by_known_fact(
             given_atomic_fact.clone().into(),
-            VerifiedByResult::known_forall_instantiation(
+            SuccessFactProofResult::known_forall_instantiation(
                 source_fact,
                 source_fact_id,
                 instantiation,

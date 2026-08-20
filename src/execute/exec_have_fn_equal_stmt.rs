@@ -6,7 +6,7 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         let fn_set_stored =
             self.exec_have_fn_equal_stmt_verify_well_definedness(have_fn_equal_stmt)?;
-        let (inside_results, assumption_infers) =
+        let (return_check, assumption_infers) =
             self.exec_have_fn_equal_stmt_verify_process(have_fn_equal_stmt)?;
         let infer_result =
             self.exec_have_fn_equal_stmt_affect_environment(have_fn_equal_stmt, &fn_set_stored)?;
@@ -24,24 +24,26 @@ impl Runtime {
             have_fn_equal_stmt.line_file.clone(),
         )
         .into();
-        Ok(VerifiedDefObjStmtIr::HaveFnEqualStmt {
-            statement: have_fn_equal_stmt.clone(),
-            common: VerifiedStmtCommonIr::new(infer_result, inside_results),
-            verification: Some(FunctionDefinitionVerificationResult::new(
-                0,
-                assumption_infers,
-                function_membership,
-                defining_equality,
-            )),
-        }
-        .into())
+        Ok(
+            SuccessDefObjStmtResult::HaveFnEqualStmt(Box::new(SuccessHaveFnEqualStmtResult {
+                statement: have_fn_equal_stmt.clone(),
+                common: SuccessStmtCommonResult::new(infer_result),
+                verification: Some(SuccessVerifyFunctionDefinitionResult::new(
+                    return_check,
+                    assumption_infers,
+                    function_membership,
+                    defining_equality,
+                )),
+            }))
+            .into(),
+        )
     }
 
     fn store_have_fn_equal_stmt_facts(
         &mut self,
         have_fn_equal_stmt: &HaveFnEqualStmt,
         fn_set_stored: &FnSet,
-    ) -> Result<InferResult, RuntimeError> {
+    ) -> Result<SuccessInferResult, RuntimeError> {
         self.store_parameter_binding(&have_fn_equal_stmt.symbol_binding, ParamObjType::Identifier)?;
 
         let function_identifier_obj = self.declared_identifier_obj(have_fn_equal_stmt.name());
@@ -118,12 +120,14 @@ impl Runtime {
             })?;
         let infer_result =
             self.exec_have_fn_equal_stmt_affect_environment(have_fn_equal_stmt, &fn_set_stored)?;
-        Ok(VerifiedDefObjStmtIr::HaveFnEqualStmt {
-            statement: have_fn_equal_stmt.clone(),
-            common: VerifiedStmtCommonIr::new(infer_result, vec![]),
-            verification: None,
-        }
-        .into())
+        Ok(
+            SuccessDefObjStmtResult::HaveFnEqualStmt(Box::new(SuccessHaveFnEqualStmtResult {
+                statement: have_fn_equal_stmt.clone(),
+                common: SuccessStmtCommonResult::new(infer_result),
+                verification: None,
+            }))
+            .into(),
+        )
     }
 
     /// Mathematical contract: an explicit function definition has a
@@ -197,7 +201,7 @@ impl Runtime {
     fn exec_have_fn_equal_stmt_verify_process(
         &mut self,
         have_fn_equal_stmt: &HaveFnEqualStmt,
-    ) -> Result<(Vec<StmtResult>, InferResult), RuntimeError> {
+    ) -> Result<(StmtResult, SuccessInferResult), RuntimeError> {
         let (verify_result, assumption_infers) =
             self.have_fn_equal_stmt_verify_return_value_in_ret_set(have_fn_equal_stmt)?;
         if verify_result.is_unknown() {
@@ -213,23 +217,23 @@ impl Runtime {
                 vec![],
             ));
         }
-        Ok((vec![verify_result], assumption_infers))
+        Ok((verify_result, assumption_infers))
     }
 
     fn exec_have_fn_equal_stmt_affect_environment(
         &mut self,
         have_fn_equal_stmt: &HaveFnEqualStmt,
         fn_set_stored: &FnSet,
-    ) -> Result<InferResult, RuntimeError> {
+    ) -> Result<SuccessInferResult, RuntimeError> {
         self.store_have_fn_equal_stmt_facts(have_fn_equal_stmt, fn_set_stored)
     }
 
     fn have_fn_equal_stmt_verify_return_value_in_ret_set(
         &mut self,
         have_fn_equal_stmt: &HaveFnEqualStmt,
-    ) -> Result<(StmtResult, InferResult), RuntimeError> {
+    ) -> Result<(StmtResult, SuccessInferResult), RuntimeError> {
         self.run_in_local_env(|rt| {
-            let mut assumption_infers = InferResult::new();
+            let mut assumption_infers = SuccessInferResult::new();
             for param_def_with_set in have_fn_equal_stmt
                 .equal_to_anonymous_fn
                 .body

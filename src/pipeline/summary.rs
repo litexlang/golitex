@@ -102,18 +102,16 @@ impl RunSummary {
         if let Some(success) = result.factual_success() {
             self.visit_fact_stmt(&success.fact(), depth);
             self.visit_infer_result(&success.infers);
-            self.visit_verified_by(&success.verified_by, depth);
+            self.visit_verified_by(success.proof(), depth);
         }
-        if let Some(success) = result.non_factual_ir() {
+        if let Some(success) = result.non_factual_success() {
             let common = success
                 .common()
                 .expect("non-factual IR carries common execution evidence");
             self.visit_stmt(&success.statement(), depth);
             self.visit_infer_result(&common.infers);
             self.visit_non_factual_verification(success);
-            for inside_result in common.inside_results.iter() {
-                self.visit_result(inside_result, depth + 1);
-            }
+            success.visit_child_results(&mut |child| self.visit_result(child, depth + 1));
         }
     }
 
@@ -220,7 +218,7 @@ impl RunSummary {
         bump_count(&mut self.proof_method_counts, label.as_str());
     }
 
-    fn visit_infer_result(&mut self, infer_result: &InferResult) {
+    fn visit_infer_result(&mut self, infer_result: &SuccessInferResult) {
         for output in infer_result.store_fact_outputs() {
             self.stored_fact_outputs += 1;
             self.inferred_fact_outputs += output.inferred_facts.len();
@@ -235,78 +233,82 @@ impl RunSummary {
         }
     }
 
-    fn visit_verified_by(&mut self, verified_by: &VerifiedByResult, depth: usize) {
+    fn visit_verified_by(&mut self, verified_by: &SuccessFactProofResult, depth: usize) {
         match verified_by {
-            VerifiedByResult::BuiltinRule(result) => {
+            SuccessFactProofResult::BuiltinRule(result) => {
                 bump_count(&mut self.proof_method_counts, "builtin rule");
                 bump_count(&mut self.builtin_rule_counts, result.msg.as_str());
                 for subgoal in result.subgoals.iter() {
                     self.visit_result(subgoal, depth + 1);
                 }
             }
-            VerifiedByResult::BuiltinStrategy(result) => {
+            SuccessFactProofResult::BuiltinStrategy(result) => {
                 bump_count(&mut self.proof_method_counts, "builtin strategy");
                 for subgoal in result.subgoals.iter() {
                     self.visit_result(subgoal, depth + 1);
                 }
             }
-            VerifiedByResult::KnownForallInstantiation(result) => {
+            SuccessFactProofResult::KnownForallInstantiation(result) => {
                 bump_count(&mut self.proof_method_counts, "known forall instantiation");
                 self.visit_known_forall_instantiation(result, depth);
             }
-            VerifiedByResult::VerifiedBys(result) => {
+            SuccessFactProofResult::CombinedProofs(result) => {
                 bump_count(&mut self.proof_method_counts, "verified by citations");
                 for item in result.cite_what.iter() {
                     self.visit_verified_by_item(item, depth);
                 }
             }
-            VerifiedByResult::ForallProof(result) => {
+            SuccessFactProofResult::ForallProof(result) => {
                 bump_count(&mut self.proof_method_counts, "forall proof");
                 self.visit_infer_result(&result.assumption_infers);
                 for proved in result.proves.iter() {
                     self.visit_result(&proved.result, depth + 1);
                 }
             }
-            VerifiedByResult::Fact(_) => {
+            SuccessFactProofResult::Fact(_) => {
                 bump_count(&mut self.proof_method_counts, "known fact");
             }
-            VerifiedByResult::StatementMemo(source) => {
-                self.visit_verified_by(&source.verified_by, depth);
+            SuccessFactProofResult::Transform(result) => {
+                bump_count(&mut self.proof_method_counts, "fact transform");
+                self.visit_verified_by(result.source.proof(), depth + 1);
+            }
+            SuccessFactProofResult::Reuse(result) => {
+                self.visit_verified_by(result.source.proof(), depth);
             }
         }
     }
 
-    fn visit_verified_by_item(&mut self, item: &VerifiedBysEnum, depth: usize) {
+    fn visit_verified_by_item(&mut self, item: &SuccessCombinedFactProofItemResult, depth: usize) {
         match item {
-            VerifiedBysEnum::ByBuiltinRule(result) => {
+            SuccessCombinedFactProofItemResult::ByBuiltinRule(result) => {
                 bump_count(&mut self.proof_method_counts, "builtin rule");
                 bump_count(&mut self.builtin_rule_counts, result.msg.as_str());
                 for subgoal in result.subgoals.iter() {
                     self.visit_result(subgoal, depth + 1);
                 }
             }
-            VerifiedBysEnum::ByBuiltinStrategy(result) => {
+            SuccessCombinedFactProofItemResult::ByBuiltinStrategy(result) => {
                 bump_count(&mut self.proof_method_counts, "builtin strategy");
                 for subgoal in result.subgoals.iter() {
                     self.visit_result(subgoal, depth + 1);
                 }
             }
-            VerifiedBysEnum::ByKnownForall(result) => {
+            SuccessCombinedFactProofItemResult::ByKnownForall(result) => {
                 bump_count(&mut self.proof_method_counts, "known forall instantiation");
                 self.visit_known_forall_instantiation(&result.result, depth);
             }
-            VerifiedBysEnum::ByFact(_) => {
+            SuccessCombinedFactProofItemResult::ByFact(_) => {
                 bump_count(&mut self.proof_method_counts, "known fact");
             }
-            VerifiedBysEnum::ByStatementMemo(_, source) => {
-                self.visit_verified_by(&source.verified_by, depth);
+            SuccessCombinedFactProofItemResult::Reuse(result) => {
+                self.visit_verified_by(result.source.proof(), depth);
             }
         }
     }
 
     fn visit_known_forall_instantiation(
         &mut self,
-        result: &KnownForallInstantiationResult,
+        result: &SuccessInstantiateKnownForallResult,
         depth: usize,
     ) {
         for requirement in result.requirements.iter() {
@@ -314,71 +316,86 @@ impl RunSummary {
         }
     }
 
-    fn visit_non_factual_verification(&mut self, success: &VerifiedStmtIr) {
+    fn visit_non_factual_verification(&mut self, success: &SuccessStmtResult) {
         match success {
-            VerifiedStmtIr::DefThmStmt {
-                verification: Some(theorem),
-                ..
-            } => {
+            SuccessStmtResult::DefThmStmt(result) if result.verification.is_some() => {
+                let theorem = result.verification.as_ref().unwrap();
                 bump_count(&mut self.proof_method_counts, "theorem proof");
-                self.visit_infer_result(&theorem.assumption_infers);
+                self.visit_infer_result(&theorem.proof_scope.assumption_infers);
             }
-            VerifiedStmtIr::ProofBlock(
-                VerifiedProofBlockStmtIr::ClaimStmt {
-                    verification: Some(claim),
-                    ..
-                }
-                | VerifiedProofBlockStmtIr::ExampleStmt {
-                    verification: Some(claim),
-                    ..
-                },
-            ) => {
+            SuccessStmtResult::ProofBlock(SuccessProofBlockStmtResult::ClaimStmt(result))
+                if result.verification.is_some() =>
+            {
+                let claim = result.verification.as_ref().unwrap();
                 bump_count(&mut self.proof_method_counts, "claim");
-                if let ClaimVerificationResult::Forall(result) = claim {
-                    self.visit_infer_result(&result.assumption_infers);
+                if let SuccessVerifyClaimResult::Forall(result) = claim {
+                    self.visit_infer_result(&result.proof_scope.assumption_infers);
                 }
             }
-            VerifiedStmtIr::By(by) => self.visit_by_ir(by),
+            SuccessStmtResult::ProofBlock(SuccessProofBlockStmtResult::ExampleStmt(result))
+                if result.verification.is_some() =>
+            {
+                let claim = result.verification.as_ref().unwrap();
+                bump_count(&mut self.proof_method_counts, "claim");
+                if let SuccessVerifyClaimResult::Forall(result) = claim {
+                    self.visit_infer_result(&result.proof_scope.assumption_infers);
+                }
+            }
+            SuccessStmtResult::By(by) => self.visit_by_ir(by),
             _ => {}
         }
     }
 
-    fn visit_by_ir(&mut self, by: &VerifiedByStmtIr) {
+    fn visit_by_ir(&mut self, by: &SuccessByStmtResult) {
         match by {
-            VerifiedByStmtIr::ByCasesStmt { .. } => self.bump_by_method("cases"),
-            VerifiedByStmtIr::ByContraStmt { .. } => self.bump_by_method("contra"),
-            VerifiedByStmtIr::ByEnumerateFiniteSetStmt { .. } => {
+            SuccessByStmtResult::ByCasesStmt(_) => self.bump_by_method("cases"),
+            SuccessByStmtResult::ByContraStmt(_) => self.bump_by_method("contra"),
+            SuccessByStmtResult::ByEnumerateFiniteSetStmt(_) => {
                 self.bump_by_method("enumerate finite set")
             }
-            VerifiedByStmtIr::ByEnumerateRangeStmt { .. }
-            | VerifiedByStmtIr::ByClosedRangeAsCasesStmt { .. } => {
+            SuccessByStmtResult::ByEnumerateRangeStmt(_)
+            | SuccessByStmtResult::ByClosedRangeAsCasesStmt(_) => {
                 self.bump_by_method("enumerate range")
             }
-            VerifiedByStmtIr::ByFiniteSetInducStmt { .. }
-            | VerifiedByStmtIr::ByInducStmt { .. } => self.bump_by_method("induc"),
-            VerifiedByStmtIr::ByForStmt { .. } => self.bump_by_method("for"),
-            VerifiedByStmtIr::ByExtensionStmt { .. } => self.bump_by_method("extension"),
-            VerifiedByStmtIr::ByTransitivePropStmt { verification, .. }
-            | VerifiedByStmtIr::BySymmetricPropStmt { verification, .. }
-            | VerifiedByStmtIr::ByReflexivePropStmt { verification, .. }
-            | VerifiedByStmtIr::ByAntisymmetricPropStmt { verification, .. } => {
-                if let Some(result) = verification {
-                    self.bump_by_method(result.registration_type.as_str());
-                    self.visit_infer_result(&result.assumption_infers);
-                }
+            SuccessByStmtResult::ByFiniteSetInducStmt(_) | SuccessByStmtResult::ByInducStmt(_) => {
+                self.bump_by_method("induc")
             }
-            VerifiedByStmtIr::ByAxiomOfChoiceStmt { .. } => self.bump_by_method("axiom of choice"),
-            VerifiedByStmtIr::ByZornLemmaStmt { .. } => self.bump_by_method("zorn lemma"),
-            VerifiedByStmtIr::ByRegularityAxiomStmt { .. } => {
+            SuccessByStmtResult::ByForStmt(_) => self.bump_by_method("for"),
+            SuccessByStmtResult::ByExtensionStmt(_) => self.bump_by_method("extension"),
+            SuccessByStmtResult::ByTransitivePropStmt(result) => {
+                self.visit_prop_registration_result(result.verification.as_ref())
+            }
+            SuccessByStmtResult::BySymmetricPropStmt(result) => {
+                self.visit_prop_registration_result(result.verification.as_ref())
+            }
+            SuccessByStmtResult::ByReflexivePropStmt(result) => {
+                self.visit_prop_registration_result(result.verification.as_ref())
+            }
+            SuccessByStmtResult::ByAntisymmetricPropStmt(result) => {
+                self.visit_prop_registration_result(result.verification.as_ref())
+            }
+            SuccessByStmtResult::ByAxiomOfChoiceStmt(_) => self.bump_by_method("axiom of choice"),
+            SuccessByStmtResult::ByZornLemmaStmt(_) => self.bump_by_method("zorn lemma"),
+            SuccessByStmtResult::ByRegularityAxiomStmt(_) => {
                 self.bump_by_method("regularity axiom")
             }
-            VerifiedByStmtIr::ByDefStmt { .. } => self.bump_by_method("def"),
-            VerifiedByStmtIr::ByThmStmt { verification, .. } => {
+            SuccessByStmtResult::ByDefStmt(_) => self.bump_by_method("def"),
+            SuccessByStmtResult::ByThmStmt(result) => {
                 self.bump_by_method("theorem");
-                if let Some(result) = verification {
-                    bump_count(&mut self.by_theorem_counts, result.theorem.as_str());
+                if let Some(verification) = &result.verification {
+                    bump_count(&mut self.by_theorem_counts, verification.theorem.as_str());
                 }
             }
+        }
+    }
+
+    fn visit_prop_registration_result(
+        &mut self,
+        result: Option<&SuccessVerifyByPropRegistrationResult>,
+    ) {
+        if let Some(result) = result {
+            self.bump_by_method(result.registration_type.as_str());
+            self.visit_infer_result(&result.assumption_infers);
         }
     }
 

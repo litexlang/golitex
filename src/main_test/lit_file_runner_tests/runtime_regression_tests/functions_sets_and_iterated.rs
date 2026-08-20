@@ -458,7 +458,7 @@ claim:
                 run_output
             );
             assert!(
-                run_output.contains("\"type\": \"object definition by existence\""),
+                run_output.contains("\"kind\": \"ObtainObjFromExistFact\""),
                 "obtain from exist should report the semantic statement type\n{}",
                 run_output
             );

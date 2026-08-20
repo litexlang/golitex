@@ -8,13 +8,14 @@ impl Runtime {
         proof: &[Stmt],
         label: &str,
     ) -> Result<StmtResult, RuntimeError> {
-        let prechecked_well_definedness =
+        let (well_definedness, prechecked_well_definedness) =
             self.verify_checked_goal_block_well_definedness(&source_stmt, fact, label)?;
         self.verify_checked_goal_block(
             source_stmt,
             fact,
             proof,
             label,
+            well_definedness,
             &prechecked_well_definedness,
         )
     }
@@ -24,7 +25,7 @@ impl Runtime {
         source_stmt: &Stmt,
         fact: &Fact,
         label: &str,
-    ) -> Result<Environment, RuntimeError> {
+    ) -> Result<(SuccessVerifyFactWellDefinedResult, Environment), RuntimeError> {
         if matches!(fact, Fact::ForallFactWithIff(_)) {
             unreachable!("checked goal block forall with iff is not supported");
         }
@@ -36,8 +37,8 @@ impl Runtime {
                     &UseContextVerifyState::new(0, false),
                 ),
             _ => self
-                .verify_fact_well_defined(fact, &UseContextVerifyState::new(0, false))
-                .map(|_| Environment::new_empty_env()),
+                .verify_fact_well_defined_result(fact, &UseContextVerifyState::new(0, false))
+                .map(|result| (result, Environment::new_empty_env())),
         };
         verify_result.map_err(|error| {
             short_exec_error(
@@ -55,6 +56,7 @@ impl Runtime {
         fact: &Fact,
         proof: &[Stmt],
         label: &str,
+        well_definedness: SuccessVerifyFactWellDefinedResult,
         prechecked_well_definedness: &Environment,
     ) -> Result<StmtResult, RuntimeError> {
         match fact {
@@ -63,11 +65,7 @@ impl Runtime {
             }
             Fact::ForallFact(forall_fact) => {
                 let result: StmtResult = self.run_in_local_env(|rt| {
-                    let captures_well_definedness = rt.captures_well_definedness();
-                    if captures_well_definedness {
-                        rt.begin_statement_well_definedness_capture();
-                    }
-                    let body_result: Result<(InferResult, Vec<StmtResult>), RuntimeError> =
+                    let body_result: Result<(SuccessInferResult, Vec<StmtResult>), RuntimeError> =
                         (|| {
                             let mut assumption_infers = rt
                                 .forall_assume_params_and_dom_in_current_env(
@@ -144,43 +142,40 @@ impl Runtime {
                         })();
 
                     match body_result {
-                        Ok((assumption_infers, inside_results)) => {
-                            let well_definedness = if captures_well_definedness {
-                                rt.end_statement_well_definedness_capture()?
-                            } else {
-                                WellDefinednessCertificate::default()
-                            };
-                            let verification = ClaimVerificationResult::Forall(
-                                ClaimForallVerificationResult::new(
-                                    forall_fact.clone(),
-                                    assumption_infers.clone(),
-                                    proof.len(),
-                                ),
-                            );
-                            let common =
-                                VerifiedStmtCommonIr::new(InferResult::new(), inside_results);
-                            let local_scope = Some(LocalProofScopeVerificationResult::new(
+                        Ok((assumption_infers, mut inside_results)) => {
+                            let conclusion_checks = inside_results.split_off(proof.len());
+                            let proof_scope = SuccessVerifyLocalProofScopeResult::new(
                                 assumption_infers,
                                 Vec::new(),
+                            );
+                            let verification = SuccessVerifyClaimForallResult::new(
+                                forall_fact.clone(),
                                 well_definedness,
-                            ));
+                                proof_scope,
+                                inside_results,
+                                conclusion_checks,
+                            )
+                            .into();
+                            let common = SuccessStmtCommonResult::new(SuccessInferResult::new());
                             match source_stmt.clone() {
                                 Stmt::ProofBlock(ProofBlockStmt::ClaimStmt(statement)) => {
-                                    Ok(VerifiedProofBlockStmtIr::ClaimStmt {
-                                        statement,
-                                        common,
-                                        verification: Some(verification),
-                                        local_scope,
-                                    }
+                                    Ok(SuccessProofBlockStmtResult::ClaimStmt(Box::new(
+                                        SuccessClaimStmtResult {
+                                            statement,
+                                            common,
+                                            verification: Some(verification),
+                                        },
+                                    ))
                                     .into())
                                 }
                                 Stmt::ProofBlock(ProofBlockStmt::ExampleStmt(statement)) => {
-                                    Ok(VerifiedProofBlockStmtIr::ExampleStmt {
-                                        statement,
-                                        common,
-                                        verification: Some(verification),
-                                        local_scope,
-                                    }
+                                    Ok(SuccessProofBlockStmtResult::ExampleStmt(Box::new(
+                                        SuccessExampleStmtResult {
+                                            statement,
+                                            common,
+                                            verification: Some(verification),
+                                        },
+                                    ))
                                     .into())
                                 }
                                 _ => unreachable!(
@@ -188,12 +183,7 @@ impl Runtime {
                                 ),
                             }
                         }
-                        Err(error) => {
-                            if captures_well_definedness {
-                                rt.discard_statement_well_definedness_capture();
-                            }
-                            Err(error)
-                        }
+                        Err(error) => Err(error),
                     }
                 })?;
                 if result.is_unknown() {
@@ -209,10 +199,6 @@ impl Runtime {
                 Ok(result)
             }
             _ => self.run_in_local_env(|rt| {
-                let captures_well_definedness = rt.captures_well_definedness();
-                if captures_well_definedness {
-                    rt.begin_statement_well_definedness_capture();
-                }
                 let body_result: Result<Vec<StmtResult>, RuntimeError> = (|| {
                     let mut inside_results = Vec::new();
                     for proof_stmt in proof.iter() {
@@ -229,49 +215,54 @@ impl Runtime {
                 })();
 
                 match body_result {
-                    Ok(inside_results) => {
-                        let well_definedness = if captures_well_definedness {
-                            rt.end_statement_well_definedness_capture()?
-                        } else {
-                            WellDefinednessCertificate::default()
-                        };
-                        let verification = ClaimVerificationResult::Fact(
-                            ClaimFactVerificationResult::new(fact.clone(), proof.len()),
-                        );
-                        let common = VerifiedStmtCommonIr::new(InferResult::new(), inside_results);
-                        let local_scope = Some(LocalProofScopeVerificationResult::new(
-                            InferResult::new(),
+                    Ok(mut inside_results) => {
+                        let conclusion_check = inside_results.pop().ok_or_else(|| {
+                            UnknownRuntimeError(RuntimeErrorStruct::new(
+                                Some(source_stmt.clone()),
+                                format!("{label} failed: missing goal check result"),
+                                fact.line_file(),
+                                None,
+                                Vec::new(),
+                            ))
+                        })?;
+                        let proof_scope = SuccessVerifyLocalProofScopeResult::new(
+                            SuccessInferResult::new(),
                             Vec::new(),
+                        );
+                        let verification = SuccessVerifyClaimFactResult::new(
+                            fact.clone(),
                             well_definedness,
-                        ));
+                            proof_scope,
+                            inside_results,
+                            conclusion_check,
+                        )
+                        .into();
+                        let common = SuccessStmtCommonResult::new(SuccessInferResult::new());
                         match source_stmt.clone() {
                             Stmt::ProofBlock(ProofBlockStmt::ClaimStmt(statement)) => {
-                                Ok(VerifiedProofBlockStmtIr::ClaimStmt {
-                                    statement,
-                                    common,
-                                    verification: Some(verification),
-                                    local_scope,
-                                }
+                                Ok(SuccessProofBlockStmtResult::ClaimStmt(Box::new(
+                                    SuccessClaimStmtResult {
+                                        statement,
+                                        common,
+                                        verification: Some(verification),
+                                    },
+                                ))
                                 .into())
                             }
                             Stmt::ProofBlock(ProofBlockStmt::ExampleStmt(statement)) => {
-                                Ok(VerifiedProofBlockStmtIr::ExampleStmt {
-                                    statement,
-                                    common,
-                                    verification: Some(verification),
-                                    local_scope,
-                                }
+                                Ok(SuccessProofBlockStmtResult::ExampleStmt(Box::new(
+                                    SuccessExampleStmtResult {
+                                        statement,
+                                        common,
+                                        verification: Some(verification),
+                                    },
+                                ))
                                 .into())
                             }
                             _ => unreachable!("checked goal block source must be claim or example"),
                         }
                     }
-                    Err(error) => {
-                        if captures_well_definedness {
-                            rt.discard_statement_well_definedness_capture();
-                        }
-                        Err(error)
-                    }
+                    Err(error) => Err(error),
                 }
             }),
         }

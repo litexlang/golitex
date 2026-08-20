@@ -236,12 +236,10 @@ impl Environment {
             known_reflexive_props,
             known_antisymmetric_props,
             cache_well_defined_obj,
-            well_defined_obj_proofs,
-            well_defined_fact_proofs,
-            well_defined_fact_order,
             cache_known_fact,
             cache_infer_rule_firing,
-            statement_verified_atomic_facts: _,
+            statement_atomic_fact_proofs: _,
+            statement_well_defined_obj_proofs: _,
             used_strategy_stmts,
             stopped_strategy_stmts,
         } = child;
@@ -378,17 +376,6 @@ impl Environment {
             self.known_antisymmetric_props.insert(name, ());
         }
 
-        for (proof_id, proof) in well_defined_obj_proofs {
-            self.well_defined_obj_proofs.insert(proof_id, proof);
-        }
-        for (fact_id, proof) in well_defined_fact_proofs {
-            self.well_defined_fact_proofs.insert(fact_id, proof);
-        }
-        for fact_id in well_defined_fact_order {
-            if !self.well_defined_fact_order.contains(&fact_id) {
-                self.well_defined_fact_order.push(fact_id);
-            }
-        }
         for (key, cached) in cache_well_defined_obj {
             self.cache_well_defined_obj.insert(key, cached);
         }

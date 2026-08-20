@@ -83,7 +83,7 @@ impl Runtime {
             return Ok(None);
         }
         Ok(Some(
-            VerifiedFactStmtIr::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
                 "abs: abs(x) = x from 0 <= x".to_string(),
                 BuiltinRuleEvidence::AbsoluteValue(AbsoluteValueBuiltinRule::NonnegativeIdentity),
@@ -131,7 +131,7 @@ impl Runtime {
             return Ok(None);
         }
         Ok(Some(
-            VerifiedFactStmtIr::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
                 "abs: abs(x) = -x from x <= 0".to_string(),
                 BuiltinRuleEvidence::AbsoluteValue(AbsoluteValueBuiltinRule::NonpositiveNegation),
@@ -165,7 +165,7 @@ impl Runtime {
             return Ok(None);
         }
         Ok(Some(
-            VerifiedFactStmtIr::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
                 "abs: abs(x * y) = abs(x) * abs(y)".to_string(),
                 BuiltinRuleEvidence::AbsoluteValue(AbsoluteValueBuiltinRule::Product),

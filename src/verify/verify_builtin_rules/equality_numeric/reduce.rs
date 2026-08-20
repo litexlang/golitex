@@ -729,12 +729,12 @@ impl Runtime {
                 let Some(source_value) =
                     rt.instantiate_reduce_function_at(&source_func, &[source_index])?
                 else {
-                    return Ok(StmtUnknown::new().into());
+                    return Ok(UnknownGenericStmtResult::new().into());
                 };
                 let Some(translated_value) =
                     rt.instantiate_reduce_function_at(&translated_func, &[index])?
                 else {
-                    return Ok(StmtUnknown::new().into());
+                    return Ok(UnknownGenericStmtResult::new().into());
                 };
                 let equality: AtomicFact =
                     EqualFact::new(source_value, translated_value, line_file.clone()).into();
@@ -1294,7 +1294,7 @@ impl Runtime {
             let Some(actual) =
                 rt.instantiate_reduce_function_at(&operation, &[x.clone(), y.clone()])?
             else {
-                return Ok(StmtUnknown::new().into());
+                return Ok(UnknownGenericStmtResult::new().into());
             };
             let expected = specialization.apply(x, y);
             let equality: AtomicFact = EqualFact::new(actual, expected, line_file.clone()).into();
@@ -1353,10 +1353,10 @@ impl Runtime {
             rt.define_params_with_type(&params, false, ParamObjType::Forall)?;
             let Some(left_value) = rt.instantiate_reduce_function_at(&left_func, &[x.clone()])?
             else {
-                return Ok(StmtUnknown::new().into());
+                return Ok(UnknownGenericStmtResult::new().into());
             };
             let Some(right_value) = rt.instantiate_reduce_function_at(&right_func, &[x])? else {
-                return Ok(StmtUnknown::new().into());
+                return Ok(UnknownGenericStmtResult::new().into());
             };
             let equality: AtomicFact =
                 EqualFact::new(left_value, right_value, line_file.clone()).into();

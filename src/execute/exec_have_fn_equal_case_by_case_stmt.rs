@@ -12,17 +12,20 @@ impl Runtime {
         let fn_set_stored = self.exec_have_fn_equal_case_by_case_stmt_verify_well_definedness(
             have_fn_equal_case_by_case_stmt,
         )?;
-        let inside_results = self
+        let verification = self
             .exec_have_fn_equal_case_by_case_stmt_verify_process(have_fn_equal_case_by_case_stmt)?;
         let infer_result = self.exec_have_fn_equal_case_by_case_stmt_affect_environment(
             have_fn_equal_case_by_case_stmt,
             &fn_set_stored,
         )?;
 
-        Ok(VerifiedDefObjStmtIr::HaveFnEqualCaseByCaseStmt {
-            statement: have_fn_equal_case_by_case_stmt.clone(),
-            common: VerifiedStmtCommonIr::new(infer_result, inside_results),
-        }
+        Ok(SuccessDefObjStmtResult::HaveFnEqualCaseByCaseStmt(Box::new(
+            SuccessHaveFnEqualCaseByCaseStmtResult {
+                statement: have_fn_equal_case_by_case_stmt.clone(),
+                common: SuccessStmtCommonResult::new(infer_result),
+                verification: Some(verification),
+            },
+        ))
         .into())
     }
 
@@ -30,7 +33,7 @@ impl Runtime {
         &mut self,
         have_fn_equal_case_by_case_stmt: &HaveFnEqualCaseByCaseStmt,
         fn_set_stored: &FnSet,
-    ) -> Result<InferResult, RuntimeError> {
+    ) -> Result<SuccessInferResult, RuntimeError> {
         self.store_parameter_binding(
             &have_fn_equal_case_by_case_stmt.symbol_binding,
             ParamObjType::Identifier,
@@ -180,8 +183,7 @@ impl Runtime {
     fn exec_have_fn_equal_case_by_case_stmt_verify_process(
         &mut self,
         have_fn_equal_case_by_case_stmt: &HaveFnEqualCaseByCaseStmt,
-    ) -> Result<Vec<StmtResult>, RuntimeError> {
-        let mut inside_results = Vec::new();
+    ) -> Result<SuccessVerifyCaseFunctionDefinitionResult, RuntimeError> {
         let partition_result = self.run_in_local_env(|rt| {
             rt.have_fn_equal_case_by_case_stmt_define_params_and_domain(
                 have_fn_equal_case_by_case_stmt,
@@ -190,7 +192,7 @@ impl Runtime {
                 have_fn_equal_case_by_case_stmt,
             )
         })?;
-        inside_results.push(partition_result);
+        let mut return_checks = Vec::new();
 
         for case_index in 0..have_fn_equal_case_by_case_stmt.cases.len() {
             let case_fact = &have_fn_equal_case_by_case_stmt.cases[case_index];
@@ -203,17 +205,20 @@ impl Runtime {
                     equal_to,
                 )
             })?;
-            inside_results.push(result);
+            return_checks.push(result);
         }
 
-        Ok(inside_results)
+        Ok(SuccessVerifyCaseFunctionDefinitionResult {
+            coverage_check: Box::new(partition_result),
+            return_checks,
+        })
     }
 
     fn exec_have_fn_equal_case_by_case_stmt_affect_environment(
         &mut self,
         have_fn_equal_case_by_case_stmt: &HaveFnEqualCaseByCaseStmt,
         fn_set_stored: &FnSet,
-    ) -> Result<InferResult, RuntimeError> {
+    ) -> Result<SuccessInferResult, RuntimeError> {
         self.store_have_fn_equal_case_by_case_stmt_facts(
             have_fn_equal_case_by_case_stmt,
             fn_set_stored,
@@ -238,10 +243,13 @@ impl Runtime {
             have_fn_equal_case_by_case_stmt,
             &fn_set_stored,
         )?;
-        Ok(VerifiedDefObjStmtIr::HaveFnEqualCaseByCaseStmt {
-            statement: have_fn_equal_case_by_case_stmt.clone(),
-            common: VerifiedStmtCommonIr::new(infer_result, vec![]),
-        }
+        Ok(SuccessDefObjStmtResult::HaveFnEqualCaseByCaseStmt(Box::new(
+            SuccessHaveFnEqualCaseByCaseStmtResult {
+                statement: have_fn_equal_case_by_case_stmt.clone(),
+                common: SuccessStmtCommonResult::new(infer_result),
+                verification: None,
+            },
+        ))
         .into())
     }
 
@@ -398,7 +406,7 @@ impl Runtime {
         &mut self,
         stmt: &HaveFnEqualCaseByCaseStmt,
         surface: &InstantiatedTemplateObj,
-    ) -> Result<(), RuntimeError> {
+    ) -> Result<Vec<SuccessStoreFactResult>, RuntimeError> {
         let (param_defs_with_type, base_forall_dom_facts, mut param_to_forall_param) =
             forall_param_defs_dom_and_map_from_have_fn_clause(self, &stmt.fn_set_clause)?;
         insert_symbol_substitution(
@@ -423,6 +431,7 @@ impl Runtime {
             .collect();
         let function_obj: Obj = FnObj::new(function_head, vec![function_args]).into();
 
+        let mut stores = Vec::with_capacity(stmt.cases.len());
         for (case_fact, equal_to) in stmt.cases.iter().zip(stmt.equal_tos.iter()) {
             let mut forall_dom_facts = base_forall_dom_facts.clone();
             forall_dom_facts.push(
@@ -447,13 +456,21 @@ impl Runtime {
                 vec![equation.into()],
                 stmt.line_file.clone(),
             )?;
-            self.store_with_well_defined_verification_and_infer_with_default_verify_state_and_reason(
-                forall.into(),
-                InferReason::FunctionDefinition,
-            )
-            .map_err(|cause| short_exec_error(stmt.clone().into(), "", Some(cause), vec![]))?;
+            let fact: Fact = forall.into();
+            let mut infers = self
+                .store_with_well_defined_verification_and_infer_with_default_verify_state_and_reason(
+                    fact.clone(),
+                    InferReason::FunctionDefinition,
+                )
+                .map_err(|cause| short_exec_error(stmt.clone().into(), "", Some(cause), vec![]))?;
+            self.attach_known_fact_ids_to_infer_result(&mut infers)?;
+            stores.push(SuccessStoreFactResult {
+                fact: fact.clone(),
+                fact_id: self.known_fact_id_for_fact(&fact)?,
+                infers,
+            });
         }
 
-        Ok(())
+        Ok(stores)
     }
 }

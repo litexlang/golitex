@@ -12,7 +12,7 @@ impl Runtime {
     pub(crate) fn exec_claim_stmt_affect_environment(
         &mut self,
         stmt: &ClaimStmt,
-    ) -> Result<InferResult, RuntimeError> {
+    ) -> Result<SuccessInferResult, RuntimeError> {
         if self.current_execution_is_trusted_file() {
             return self.store_trusted_fact_and_infer_with_reason(
                 stmt.fact.clone(),
@@ -31,12 +31,13 @@ impl Runtime {
         stmt: &ClaimStmt,
     ) -> Result<StmtResult, RuntimeError> {
         let infer_result = self.exec_claim_stmt_affect_environment(stmt)?;
-        Ok(VerifiedProofBlockStmtIr::ClaimStmt {
-            statement: stmt.clone(),
-            common: VerifiedStmtCommonIr::new(infer_result, vec![]),
-            verification: None,
-            local_scope: None,
-        }
-        .into())
+        Ok(
+            SuccessProofBlockStmtResult::ClaimStmt(Box::new(SuccessClaimStmtResult {
+                statement: stmt.clone(),
+                common: SuccessStmtCommonResult::new(infer_result),
+                verification: None,
+            }))
+            .into(),
+        )
     }
 }

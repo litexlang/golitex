@@ -1,9 +1,23 @@
 use crate::prelude::*;
 use std::collections::HashMap;
 
+struct SuccessExecByInducBodyResult {
+    infers: SuccessInferResult,
+    proof: SuccessVerifyByInducProofResult,
+}
+
+fn completed_induc_case_results(
+    proof_steps: &mut Vec<StmtResult>,
+    conclusion_checks: &mut Vec<StmtResult>,
+) -> Vec<StmtResult> {
+    let mut completed = std::mem::take(proof_steps);
+    completed.append(conclusion_checks);
+    completed
+}
+
 impl Runtime {
     pub fn exec_by_induc_stmt(&mut self, stmt: &ByInducStmt) -> Result<StmtResult, RuntimeError> {
-        let body_exec_result: Result<StmtResult, RuntimeError> = if stmt.has_structured_proof() {
+        let body = if stmt.has_structured_proof() {
             self.exec_structured_induc_stmt_body(stmt)
         } else {
             self.run_in_local_env(|rt| {
@@ -12,32 +26,37 @@ impl Runtime {
                 } else {
                     rt.exec_by_induc_stmt_assume_proof_context(stmt)?;
                 }
-                let mut infer_result = InferResult::new();
-                let mut inside_results: Vec<StmtResult> = Vec::new();
+                let mut infer_result = SuccessInferResult::new();
+                let mut proof_steps = Vec::new();
                 for proof_stmt in stmt.proof.iter() {
-                    inside_results.push(rt.exec_stmt(proof_stmt)?);
+                    proof_steps.push(rt.exec_stmt(proof_stmt)?);
                 }
+                let mut goals = Vec::new();
                 for fact in stmt.to_prove.iter() {
-                    let one_fact_infer_result = if stmt.strong {
+                    let goal_result = if stmt.strong {
                         rt.exec_strong_induc_stmt_for_one_fact(stmt, fact)?
                     } else {
                         rt.exec_by_induc_stmt_for_one_fact(stmt, fact)?
                     };
-                    infer_result.new_infer_result_inside(one_fact_infer_result);
+                    infer_result.new_infer_result_inside(goal_result.infers.clone());
+                    goals.push(goal_result);
                 }
-                Ok(VerifiedByStmtIr::ByInducStmt {
-                    statement: stmt.clone(),
-                    common: VerifiedStmtCommonIr::new(infer_result, inside_results),
-                    verification: None,
-                }
-                .into())
+                let (base_assumptions, step_assumptions) = rt.by_induc_assumptions(stmt)?;
+                Ok(SuccessExecByInducBodyResult {
+                    infers: infer_result,
+                    proof: SuccessVerifyByInducProofResult::IntegerUnstructured(Box::new(
+                        SuccessVerifyByUnstructuredIntegerInducResult {
+                            strong: stmt.strong,
+                            start: stmt.induc_from.to_string(),
+                            base_assumptions,
+                            step_assumptions,
+                            proof_steps,
+                            goals,
+                        },
+                    )),
+                })
             })
-        };
-
-        let mut non_err_after_body: StmtResult = match body_exec_result {
-            Ok(non_err_stmt_exec_result) => non_err_stmt_exec_result,
-            Err(runtime_error) => return Err(runtime_error),
-        };
+        }?;
 
         let store_err_msg = if stmt.strong {
             "strong_induc: failed to build concluding forall fact"
@@ -54,22 +73,25 @@ impl Runtime {
                         vec![],
                     )
                 })?;
-        let by_verification =
-            self.by_induc_verification_result(stmt, &corresponding_forall_fact)?;
-        let Some(VerifiedStmtIr::By(VerifiedByStmtIr::ByInducStmt {
-            verification: result_verification,
-            ..
-        })) = non_err_after_body.non_factual_ir_mut()
-        else {
-            unreachable!("induction must emit its matching IR variant")
-        };
-        *result_verification = Some(by_verification);
+        let verification = SuccessVerifyByInducResult::new(
+            stmt.param().to_string(),
+            stmt.to_prove.iter().map(|fact| fact.to_string()).collect(),
+            corresponding_forall_fact.to_string(),
+            body.proof,
+        );
+        let result: StmtResult =
+            SuccessByStmtResult::ByInducStmt(Box::new(SuccessByInducStmtResult {
+                statement: stmt.clone(),
+                common: SuccessStmtCommonResult::new(body.infers),
+                verification: Some(verification),
+            }))
+            .into();
         let infer_after_store = self
             .store_with_well_defined_verification_and_infer_with_default_verify_state(
                 corresponding_forall_fact,
             )?;
 
-        Ok(non_err_after_body.with_infers(infer_after_store))
+        Ok(result.with_infers(infer_after_store))
     }
 
     pub(crate) fn exec_by_induc_stmt_affect_environment_only(
@@ -90,12 +112,14 @@ impl Runtime {
             corresponding_forall_fact,
             InferReason::VerifiedStatement,
         )?;
-        Ok(VerifiedByStmtIr::ByInducStmt {
-            statement: stmt.clone(),
-            common: VerifiedStmtCommonIr::new(infer_result, vec![]),
-            verification: None,
-        }
-        .into())
+        Ok(
+            SuccessByStmtResult::ByInducStmt(Box::new(SuccessByInducStmtResult {
+                statement: stmt.clone(),
+                common: SuccessStmtCommonResult::new(infer_result),
+                verification: None,
+            }))
+            .into(),
+        )
     }
 }
 
@@ -255,8 +279,8 @@ impl Runtime {
         &mut self,
         stmt: &ByInducStmt,
         fact: &ExistOrAndChainAtomicFact,
-    ) -> Result<InferResult, RuntimeError> {
-        let mut infer_result = InferResult::new();
+    ) -> Result<SuccessVerifyByInducGoalResult, RuntimeError> {
+        let mut infer_result = SuccessInferResult::new();
 
         let mut base_case_param_to_arg_map: HashMap<String, Obj> = HashMap::new();
         insert_symbol_substitution(
@@ -272,18 +296,19 @@ impl Runtime {
                 None,
             )?
             .to_fact();
-        self.verify_fact_return_err_if_not_true(
-            &base_case_fact,
-            &UseContextVerifyState::new(0, false),
-        )
-        .map_err(|verify_error| {
-            short_exec_error(
-                stmt.clone().into(),
-                format!("strong_induc: base case is not proved `{}`", base_case_fact),
-                Some(verify_error),
-                vec![],
+        let base_check = self
+            .verify_fact_return_err_if_not_true(
+                &base_case_fact,
+                &UseContextVerifyState::new(0, false),
             )
-        })?;
+            .map_err(|verify_error| {
+                short_exec_error(
+                    stmt.clone().into(),
+                    format!("strong_induc: base case is not proved `{}`", base_case_fact),
+                    Some(verify_error),
+                    vec![],
+                )
+            })?;
 
         let induc_from_in_z_fact = InFact::new(
             stmt.induc_from.clone(),
@@ -309,27 +334,35 @@ impl Runtime {
                 vec![],
             ));
         }
+        let start_in_z_check = verify_induc_from_in_z_result;
 
         let corresponding_forall_fact = self.strong_induc_step_forall_fact(stmt, fact)?;
 
-        self.verify_fact_return_err_if_not_true(
-            &corresponding_forall_fact,
-            &UseContextVerifyState::new(0, false),
-        )
-        .map_err(|well_defined_error| {
-            short_exec_error(
-                stmt.clone().into(),
-                format!(
-                    "strong_induc: generated step forall is not well-defined `{}`",
-                    corresponding_forall_fact
-                ),
-                Some(well_defined_error),
-                vec![],
+        let step_check = self
+            .verify_fact_return_err_if_not_true(
+                &corresponding_forall_fact,
+                &UseContextVerifyState::new(0, false),
             )
-        })?;
+            .map_err(|well_defined_error| {
+                short_exec_error(
+                    stmt.clone().into(),
+                    format!(
+                        "strong_induc: generated step forall is not well-defined `{}`",
+                        corresponding_forall_fact
+                    ),
+                    Some(well_defined_error),
+                    vec![],
+                )
+            })?;
 
         infer_result.new_fact(&corresponding_forall_fact);
-        Ok(infer_result)
+        Ok(SuccessVerifyByInducGoalResult {
+            source_goal: fact.clone().to_fact(),
+            base_check: Box::new(base_check),
+            start_in_z_check: Box::new(start_in_z_check),
+            step_check: Box::new(step_check),
+            infers: infer_result,
+        })
     }
 
     /// `x $in Z`, `x >= induc_from`, and each `to_prove` instantiated at `x` (induction hypothesis)
@@ -424,11 +457,10 @@ impl Runtime {
         .into())
     }
 
-    fn by_induc_verification_result(
+    fn by_induc_assumptions(
         &self,
         stmt: &ByInducStmt,
-        generated_forall: &Fact,
-    ) -> Result<ByInducVerificationResult, RuntimeError> {
+    ) -> Result<(Vec<(String, String)>, Vec<(String, String)>), RuntimeError> {
         let param_obj = obj_for_bound_param_in_scope(&stmt.param_binding, ParamObjType::Induc);
         let base_assumptions = vec![
             (
@@ -493,52 +525,15 @@ impl Runtime {
             step_assumptions.push((assumption_fact.to_string(), reason.to_string()));
         }
 
-        let structured = stmt.has_structured_proof();
-        let base_proof_step_count = stmt
-            .base_proof
-            .as_ref()
-            .map(|proof| proof.len())
-            .unwrap_or(0);
-        let step_proof_step_count = stmt
-            .step_proof
-            .as_ref()
-            .map(|proof| proof.len())
-            .unwrap_or(0);
-        let base_result_count = if structured {
-            base_proof_step_count + stmt.to_prove.len()
-        } else {
-            0
-        };
-        let step_result_count = if structured {
-            step_proof_step_count + stmt.to_prove.len()
-        } else {
-            0
-        };
-
-        Ok(ByInducVerificationResult::new(
-            stmt.strong,
-            false,
-            structured,
-            stmt.param().to_string(),
-            stmt.induc_from.to_string(),
-            stmt.to_prove.iter().map(|fact| fact.to_string()).collect(),
-            generated_forall.to_string(),
-            stmt.proof.len(),
-            base_assumptions,
-            base_proof_step_count,
-            base_result_count,
-            step_assumptions,
-            step_proof_step_count,
-            step_result_count,
-        ))
+        Ok((base_assumptions, step_assumptions))
     }
 
     fn exec_by_induc_stmt_for_one_fact(
         &mut self,
         stmt: &ByInducStmt,
         fact: &ExistOrAndChainAtomicFact,
-    ) -> Result<InferResult, RuntimeError> {
-        let mut infer_result = InferResult::new();
+    ) -> Result<SuccessVerifyByInducGoalResult, RuntimeError> {
+        let mut infer_result = SuccessInferResult::new();
 
         let mut base_case_param_to_arg_map: HashMap<String, Obj> = HashMap::new();
         insert_symbol_substitution(
@@ -554,18 +549,19 @@ impl Runtime {
                 None,
             )?
             .to_fact();
-        self.verify_fact_return_err_if_not_true(
-            &base_case_fact,
-            &UseContextVerifyState::new(0, false),
-        )
-        .map_err(|verify_error| {
-            short_exec_error(
-                stmt.clone().into(),
-                format!("by induc: base case is not proved `{}`", base_case_fact),
-                Some(verify_error),
-                vec![],
+        let base_check = self
+            .verify_fact_return_err_if_not_true(
+                &base_case_fact,
+                &UseContextVerifyState::new(0, false),
             )
-        })?;
+            .map_err(|verify_error| {
+                short_exec_error(
+                    stmt.clone().into(),
+                    format!("by induc: base case is not proved `{}`", base_case_fact),
+                    Some(verify_error),
+                    vec![],
+                )
+            })?;
 
         let induc_from_in_z_fact = InFact::new(
             stmt.induc_from.clone(),
@@ -591,6 +587,7 @@ impl Runtime {
                 vec![],
             ));
         }
+        let start_in_z_check = verify_induc_from_in_z_result;
 
         let (forall_names, forall_map) = self.fresh_binder_retag_plan_for_bindings(
             std::slice::from_ref(&stmt.param_binding),
@@ -640,58 +637,72 @@ impl Runtime {
         )?
         .into();
 
-        self.verify_fact_return_err_if_not_true(
-            &corresponding_forall_fact,
-            &UseContextVerifyState::new(0, false),
-        )
-        .map_err(|well_defined_error| {
-            short_exec_error(
-                stmt.clone().into(),
-                format!(
-                    "by induc: generated step forall is not well-defined `{}`",
-                    corresponding_forall_fact
-                ),
-                Some(well_defined_error),
-                vec![],
+        let step_check = self
+            .verify_fact_return_err_if_not_true(
+                &corresponding_forall_fact,
+                &UseContextVerifyState::new(0, false),
             )
-        })?;
+            .map_err(|well_defined_error| {
+                short_exec_error(
+                    stmt.clone().into(),
+                    format!(
+                        "by induc: generated step forall is not well-defined `{}`",
+                        corresponding_forall_fact
+                    ),
+                    Some(well_defined_error),
+                    vec![],
+                )
+            })?;
 
         infer_result.new_fact(&corresponding_forall_fact);
-        Ok(infer_result)
+        Ok(SuccessVerifyByInducGoalResult {
+            source_goal: fact.clone().to_fact(),
+            base_check: Box::new(base_check),
+            start_in_z_check: Box::new(start_in_z_check),
+            step_check: Box::new(step_check),
+            infers: infer_result,
+        })
     }
 
     fn exec_structured_induc_stmt_body(
         &mut self,
         stmt: &ByInducStmt,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<SuccessExecByInducBodyResult, RuntimeError> {
         self.run_in_local_env(|rt| {
-            rt.verify_induc_from_in_z(stmt)?;
+            let start_in_z_check = rt.verify_induc_from_in_z(stmt)?;
+            let (base_assumptions, step_assumptions) = rt.by_induc_assumptions(stmt)?;
+            let base = rt.exec_structured_induc_base_proof(stmt, base_assumptions)?;
+            let step = rt.exec_structured_induc_step_proof(stmt, step_assumptions)?;
 
-            let mut inside_results: Vec<StmtResult> = Vec::new();
-            inside_results.extend(rt.exec_structured_induc_base_proof(stmt)?);
-            inside_results.extend(rt.exec_structured_induc_step_proof(stmt)?);
-
-            Ok(VerifiedByStmtIr::ByInducStmt {
-                statement: stmt.clone(),
-                common: VerifiedStmtCommonIr::new(InferResult::new(), inside_results),
-                verification: None,
-            }
-            .into())
+            Ok(SuccessExecByInducBodyResult {
+                infers: SuccessInferResult::new(),
+                proof: SuccessVerifyByInducProofResult::IntegerStructured(Box::new(
+                    SuccessVerifyByStructuredIntegerInducResult {
+                        strong: stmt.strong,
+                        start: stmt.induc_from.to_string(),
+                        start_in_z_check: Box::new(start_in_z_check),
+                        base,
+                        step,
+                    },
+                )),
+            })
         })
     }
 
     fn exec_structured_induc_base_proof(
         &mut self,
         stmt: &ByInducStmt,
-    ) -> Result<Vec<StmtResult>, RuntimeError> {
+        assumptions: Vec<(String, String)>,
+    ) -> Result<SuccessVerifyByInducCaseResult, RuntimeError> {
         let base_proof = stmt
             .base_proof
             .as_ref()
             .expect("structured induction proof must have a base proof");
         self.run_in_local_env(|rt| {
             rt.exec_structured_induc_base_context(stmt)?;
-            let mut inside_results =
+            let mut proof_steps =
                 rt.exec_structured_induc_proof_stmts(stmt, base_proof, "induc base proof")?;
+            let mut conclusion_checks = Vec::new();
 
             for fact in stmt.to_prove.iter() {
                 let base_fact = rt.induc_goal_fact_at_obj(stmt, fact, stmt.induc_from.clone())?;
@@ -709,20 +720,25 @@ impl Runtime {
                                 base_fact
                             ),
                             Some(verify_error),
-                            std::mem::take(&mut inside_results),
+                            completed_induc_case_results(&mut proof_steps, &mut conclusion_checks),
                         )
                     })?;
-                inside_results.push(result);
+                conclusion_checks.push(result);
             }
 
-            Ok(inside_results)
+            Ok(SuccessVerifyByInducCaseResult {
+                assumptions,
+                proof_steps,
+                conclusion_checks,
+            })
         })
     }
 
     fn exec_structured_induc_step_proof(
         &mut self,
         stmt: &ByInducStmt,
-    ) -> Result<Vec<StmtResult>, RuntimeError> {
+        assumptions: Vec<(String, String)>,
+    ) -> Result<SuccessVerifyByInducCaseResult, RuntimeError> {
         let step_proof = stmt
             .step_proof
             .as_ref()
@@ -734,8 +750,9 @@ impl Runtime {
                 rt.exec_by_induc_stmt_assume_proof_context(stmt)?;
             }
 
-            let mut inside_results =
+            let mut proof_steps =
                 rt.exec_structured_induc_proof_stmts(stmt, step_proof, "induc step proof")?;
+            let mut conclusion_checks = Vec::new();
             let next_obj = rt.induc_step_next_obj(stmt);
 
             for fact in stmt.to_prove.iter() {
@@ -754,13 +771,17 @@ impl Runtime {
                                 next_fact
                             ),
                             Some(verify_error),
-                            std::mem::take(&mut inside_results),
+                            completed_induc_case_results(&mut proof_steps, &mut conclusion_checks),
                         )
                     })?;
-                inside_results.push(result);
+                conclusion_checks.push(result);
             }
 
-            Ok(inside_results)
+            Ok(SuccessVerifyByInducCaseResult {
+                assumptions,
+                proof_steps,
+                conclusion_checks,
+            })
         })
     }
 
@@ -835,7 +856,7 @@ impl Runtime {
         Ok(inside_results)
     }
 
-    fn verify_induc_from_in_z(&mut self, stmt: &ByInducStmt) -> Result<(), RuntimeError> {
+    fn verify_induc_from_in_z(&mut self, stmt: &ByInducStmt) -> Result<StmtResult, RuntimeError> {
         let induc_from_in_z_fact = InFact::new(
             stmt.induc_from.clone(),
             StandardSet::Z.into(),
@@ -868,7 +889,7 @@ impl Runtime {
                 vec![],
             ));
         }
-        Ok(())
+        Ok(verify_result)
     }
 
     fn induc_goal_fact_at_obj(

@@ -463,7 +463,7 @@ impl Runtime {
                         );
                     if fn_eq_result.is_true() {
                         return Ok(Some(
-                            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                                 equal_fact.clone().into(),
                                 "equality: finite-set products from known fn_eq_in".to_string(),
                                 vec![fn_eq_result],
@@ -714,10 +714,10 @@ impl Runtime {
         let x_name = self.generate_random_unused_name();
         let (x_binding, x_obj) = self.fresh_bound_param(x_name, ParamObjType::Forall)?;
         let Some(left_inst) = self.instantiate_unary_function_at(left_func, &x_obj)? else {
-            return Ok(StmtUnknown::new().into());
+            return Ok(UnknownGenericStmtResult::new().into());
         };
         let Some(right_inst) = self.instantiate_unary_function_at(right_func, &x_obj)? else {
-            return Ok(StmtUnknown::new().into());
+            return Ok(UnknownGenericStmtResult::new().into());
         };
         let pointwise_fact: AtomicFact =
             EqualFact::new(left_inst, right_inst, equal_fact.line_file.clone()).into();

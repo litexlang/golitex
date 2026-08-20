@@ -2267,7 +2267,7 @@ a = b
         run_output
     );
     assert!(
-        run_output.contains("\"rule\": \"equality from a >= b and b >= a\""),
+        run_output.contains("\"diagnostic_label\": \"equality from a >= b and b >= a\""),
         "weak-order equality should report its builtin provenance:\n{}",
         run_output
     );
@@ -2302,13 +2302,13 @@ exist a, b R st {b <= a}
         run_output
     );
     assert!(
-        run_output.contains("\"type\": \"builtin rule\"")
+        run_output.contains("\"kind\": \"BuiltinRule\"")
             && run_output.contains("exist: real-line comparison witness"),
         "real-line comparison witnesses should expose builtin provenance:\n{}",
         run_output
     );
     assert!(
-        !run_output.contains("\"type\": \"cite forall fact\""),
+        !run_output.contains("\"kind\": \"KnownForallInstantiation\""),
         "real-line comparison witnesses must not cite a source-level forall:\n{}",
         run_output
     );
@@ -2428,7 +2428,7 @@ forall S finite_set:
         run_output
     );
     assert!(
-        run_output.contains("finite set size zero is not nonempty"),
+        run_output.contains("finite_set_size_zero_is_not_nonempty"),
         "the zero-size finite-set rule should expose builtin provenance:\n{}",
         run_output
     );
@@ -3223,7 +3223,7 @@ forall F finite_set, c set:
         "local builtin set.subset_union_left",
         "local builtin set.subset_union_right",
         "local builtin set.set_minus_subset_left",
-        "set minus recovers subset from relative complement",
+        "local builtin set.subset_eq_set_minus_recovery",
     ] {
         assert!(
             run_output.contains(rule),

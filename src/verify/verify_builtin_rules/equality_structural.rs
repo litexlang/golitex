@@ -80,7 +80,7 @@ impl Runtime {
             );
         }
 
-        StmtUnknown::new().into()
+        UnknownGenericStmtResult::new().into()
     }
 
     pub(crate) fn verify_equal_fact_by_known_equality_without_direct_evaluation(
@@ -97,7 +97,7 @@ impl Runtime {
             return direct_result;
         }
 
-        StmtUnknown::new().into()
+        UnknownGenericStmtResult::new().into()
     }
 
     fn verify_equal_fact_directly_known_only(&self, equal_fact: &EqualFact) -> StmtResult {
@@ -111,11 +111,10 @@ impl Runtime {
         }
 
         if self.equal_fact_sides_have_same_known_equality_in_some_env(equal_fact) {
-            if self.captures_well_definedness() {
-                if let Some(path) = self.compiler_known_equality_path(equal_fact) {
-                    if !path.is_empty() {
-                        let target: Fact = equal_fact.clone().into();
-                        return VerifiedFactStmtIr::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            if let Some(path) = self.compiler_known_equality_path(equal_fact) {
+                if !path.is_empty() {
+                    let target: Fact = equal_fact.clone().into();
+                    return SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             target.clone(),
                             "known-only equality: same known equality class".to_string(),
                             BuiltinRuleEvidence::KnownEqualityPath(
@@ -124,7 +123,6 @@ impl Runtime {
                             Vec::new(),
                         )
                         .into();
-                    }
                 }
             }
             return factual_equal_success_by_builtin_reason(
@@ -133,7 +131,7 @@ impl Runtime {
             );
         }
 
-        StmtUnknown::new().into()
+        UnknownGenericStmtResult::new().into()
     }
 
     pub(crate) fn equal_fact_sides_are_congruent_by_known_equalities(

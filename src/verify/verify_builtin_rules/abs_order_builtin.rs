@@ -234,7 +234,7 @@ impl Runtime {
                 || obj_is_negation_of(&f.left, abs.arg.as_ref())
             {
                 return Ok(Some(StmtResult::from(
-                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                         atomic_fact.clone().into(),
                         "abs: x <= abs(x) and -x <= abs(x)".to_string(),
                         Vec::new(),
@@ -248,7 +248,7 @@ impl Runtime {
             return Ok(None);
         }
         Ok(Some(StmtResult::from(
-            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
                 "abs: -abs(x) <= x".to_string(),
                 Vec::new(),
@@ -334,7 +334,7 @@ impl Runtime {
         }
 
         Ok(Some(StmtResult::from(
-            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
                 "abs: finite sum triangle inequality".to_string(),
                 vec![start_result, end_result, pointwise_result],
@@ -398,7 +398,7 @@ impl Runtime {
         }
 
         Ok(Some(StmtResult::from(
-            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
                 "abs: finite-set sum triangle inequality".to_string(),
                 vec![set_result, pointwise_result],
@@ -431,7 +431,7 @@ impl Runtime {
             return Ok(None);
         }
         Ok(Some(StmtResult::from(
-            VerifiedFactStmtIr::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 "abs: 0 < abs(x) from x != 0".to_string(),
                 BuiltinRuleEvidence::AbsoluteValue(AbsoluteValueBuiltinRule::PositiveFromNonzero),
@@ -483,7 +483,7 @@ impl Runtime {
             "abs: abs(x) <= b from -b <= x <= b"
         };
         Ok(Some(StmtResult::from(
-            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
                 rule.to_string(),
                 vec![r1, r2],
@@ -521,7 +521,7 @@ impl Runtime {
                         rule_suffix
                     );
                     return Ok(Some(StmtResult::from(
-                        VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                        SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                             atomic_fact.clone().into(),
                             rule,
                             vec![r],
@@ -544,7 +544,7 @@ impl Runtime {
                             rule_suffix
                         );
                         return Ok(Some(StmtResult::from(
-                            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                                 atomic_fact.clone().into(),
                                 rule,
                                 vec![r, r_sign],
@@ -564,7 +564,7 @@ impl Runtime {
                 rule_suffix
             );
             return Ok(Some(StmtResult::from(
-                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                     atomic_fact.clone().into(),
                     rule,
                     vec![r],
@@ -582,7 +582,7 @@ impl Runtime {
                     rule_suffix
                 );
                 return Ok(Some(StmtResult::from(
-                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                         atomic_fact.clone().into(),
                         rule,
                         vec![r],
@@ -610,7 +610,7 @@ impl Runtime {
                     rule_suffix
                 );
                 return Ok(Some(StmtResult::from(
-                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                         atomic_fact.clone().into(),
                         rule,
                         vec![r, r_sign],
@@ -639,7 +639,7 @@ impl Runtime {
                         rule_suffix
                     );
                     return Ok(Some(StmtResult::from(
-                        VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                        SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                             atomic_fact.clone().into(),
                             rule,
                             vec![r, r_sign],
@@ -664,7 +664,7 @@ impl Runtime {
                     rule_suffix
                 );
                 return Ok(Some(StmtResult::from(
-                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                         atomic_fact.clone().into(),
                         rule,
                         vec![r, r_sign],
@@ -698,9 +698,9 @@ impl Runtime {
                 let key = (args[0].to_string(), args[1].to_string());
                 if let Some(known_fact) = known_facts_map.get(&key) {
                     return Ok(Some(StmtResult::from(
-                        VerifiedFactStmtIr::new_with_verified_by_known_fact(
+                        SuccessFactStmtResult::new_with_verified_by_known_fact(
                             fact.clone().into(),
-                            VerifiedByResult::cited_fact(
+                            SuccessFactProofResult::cited_fact(
                                 fact.clone().into(),
                                 known_fact.clone().into(),
                                 None,
@@ -737,7 +737,7 @@ impl Runtime {
             return Ok(None);
         }
         Ok(Some(StmtResult::from(
-            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
                 "abs: triangle inequality".to_string(),
                 Vec::new(),
@@ -765,7 +765,7 @@ impl Runtime {
             return Ok(None);
         }
         Ok(Some(StmtResult::from(
-            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
                 "abs: weak reverse triangle inequality".to_string(),
                 Vec::new(),

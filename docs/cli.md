@@ -371,21 +371,20 @@ Runtime reuse.
 
 | Command | Behavior |
 |---------|----------|
-| `litex -graph -e <code> <json>` | Run a source string and save one prop/function/fact relation graph JSON object. |
-| `litex -graph -f <file> <json>` | Run a file and save one prop/function/fact relation graph JSON object. |
-| `litex -graph -r <repo> <json>` | Discover the repository module graph, run its ordered `[export]` table, and save one prop/function/fact relation graph JSON object. |
+| `litex -graph -e <code> <json>` | Run a source string and save one recursive statement-result/proof/FactId graph JSON object. |
+| `litex -graph -f <file> <json>` | Run a file and save one recursive statement-result/proof/FactId graph JSON object. |
+| `litex -graph -r <repo> <json>` | Discover the repository module graph, run its ordered `[export]` table, and save one recursive statement-result/proof/FactId graph JSON object. |
 | `litex -factgraph -e <code> <json>` | Run a source string and save a fact-only verification dependency graph. |
 | `litex -factgraph -f <file> <json>` | Run a file and save a fact-only verification dependency graph. |
 | `litex -factgraph -r <repo> <json>` | Discover the repository module graph, run its ordered `[export]` table, and save a fact-only verification dependency graph. |
 
-The graph is an MVP concept map for direct Litex vocabulary references. It
-creates nodes for `prop`, `have fn`, and facts such as `thm`, `axiom`, and
-`claim`. Edges point from the referenced dependency to the later consumer:
-`uses_prop`, `uses_fn`, and `justified_by` for theorem-backed function
-construction. The wrapper includes a `summary`, machine-readable `nodes` and
-`edges`, a sorted `usage` table, and a Mermaid `flowchart LR` string for quick
-rendering. Nodes include `uses_count` and `used_by_count`; edges include
-`count`, so UI code can rank often-cited props, functions, facts, and theorems.
+The main graph is `litex-result-graph` version 2. It walks the recursive
+`StmtResult` value directly and creates nodes for statement, well-definedness,
+verification, proof, store, store-effect, inference, and fact layers. Tree
+edges preserve result-field order; semantic citation, premise, conclusion, and
+stored-fact edges use `FactId`, while memo reuse points to the exact shared
+proof node. The wrapper includes a `summary`, machine-readable `nodes` and
+`edges`, and a Mermaid `flowchart LR` string for quick rendering.
 If the final `<json>` path is omitted, Litex prints the graph JSON to stdout for
 quick debugging. In this repository, generated graph JSON, Mermaid, SVG, or PNG
 artifacts should be written under `tmp/graphs/`; `tmp/` is ignored by git.
@@ -527,7 +526,7 @@ Run a strict CI-style check:
 litex -strict -runner -isolated -f examples/tmp.lit
 ```
 
-Generate a relation graph:
+Generate a recursive result graph:
 
 ```bash
 litex -graph -f examples/04_case_studies/gcd_from_finite_divisors.lit tmp/graphs/gcd_graph.json

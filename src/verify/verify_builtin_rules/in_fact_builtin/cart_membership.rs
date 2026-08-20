@@ -9,10 +9,10 @@ impl Runtime {
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         if tuple.args.len() < 2 {
-            return Ok((StmtUnknown::new()).into());
+            return Ok((UnknownGenericStmtResult::new()).into());
         }
         if tuple.args.len() != cart.args.len() {
-            return Ok((StmtUnknown::new()).into());
+            return Ok((UnknownGenericStmtResult::new()).into());
         }
 
         let mut component_facts = Vec::with_capacity(tuple.args.len());
@@ -31,11 +31,11 @@ impl Runtime {
         let Some(component_results) =
             self.verify_builtin_rule_premises(&component_facts, builtin_state)?
         else {
-            return Ok((StmtUnknown::new()).into());
+            return Ok((UnknownGenericStmtResult::new()).into());
         };
 
         Ok(
-            (VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+            (SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                 in_fact.clone().into(),
                 "tuple in cart: each component is in the corresponding cart factor".to_string(),
                 component_results,
@@ -106,7 +106,7 @@ impl Runtime {
         }
 
         Ok(Some(
-            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                 in_fact.clone().into(),
                 "cart membership from symbolic dimension and projections".to_string(),
                 vec![

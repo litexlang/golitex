@@ -12,9 +12,9 @@
 have first_set finite_set = {1, 2, 3}
 have second_set finite_set = {2, 3, 4}
 
-# Set equality means having the same elements. The forward direction opens
-# union membership and splits cases; the reverse direction exhausts the four
-# displayed elements.
+# Set equality means having the same elements. The forward direction contrasts
+# finite enumeration on the first operand with ordinary case analysis on the
+# second; the reverse direction exhausts the four displayed target elements.
 thm first_union_second:
     ? forall:
         union(first_set, second_set) = {1, 2, 3, 4}
@@ -27,25 +27,19 @@ thm first_union_second:
             by cases:
                 ? element $in {1, 2, 3, 4}
                 case element $in {1, 2, 3}:
-                    element = 1 or element = 2 or element = 3
-                    by cases:
-                        ? element $in {1, 2, 3, 4}
-                        case element = 1:
-                            element $in {1, 2, 3, 4}
-                        case element = 2:
-                            element $in {1, 2, 3, 4}
-                        case element = 3:
-                            element $in {1, 2, 3, 4}
+                    by enumerate finite_set:
+                        ? forall first_element {1, 2, 3}:
+                            first_element $in {1, 2, 3, 4}
                 case element $in {2, 3, 4}:
                     element = 2 or element = 3 or element = 4
                     by cases:
                         ? element $in {1, 2, 3, 4}
                         case element = 2:
-                            element $in {1, 2, 3, 4}
+                            2 $in {1, 2, 3, 4}
                         case element = 3:
-                            element $in {1, 2, 3, 4}
+                            3 $in {1, 2, 3, 4}
                         case element = 4:
-                            element $in {1, 2, 3, 4}
+                            4 $in {1, 2, 3, 4}
         by enumerate finite_set:
             ? forall target_element {1, 2, 3, 4}:
                 target_element $in union({1, 2, 3}, {2, 3, 4})

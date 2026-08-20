@@ -21,7 +21,7 @@ forall [EqualPair], z X:
 "#;
     let (succeeded, output) = run_setting_source(source, "setting_expansion");
     assert!(succeeded, "setting fixture failed:\n{}", output);
-    assert!(output.contains("\"type\": \"setting definition\""));
+    assert!(output.contains("\"kind\": \"DefSettingStmt\""));
     assert!(output.contains("forall X nonempty_set, x, y X:\\n    x = y\\n    =>:"));
     assert!(output.contains("forall X nonempty_set, x, y X, z X:"));
 }

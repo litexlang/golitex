@@ -24,7 +24,7 @@ impl Runtime {
             let result = self.verify_forall_fact(forall_step, verify_state)?;
             if result.is_unknown() {
                 let result = result.wrap_unknown_for_fact(forall_step.clone().into());
-                return Ok(FactUnknown::forall_iff_with_failed_direction(
+                return Ok(UnknownFactResult::forall_iff_with_failed_direction(
                     forall_iff.clone(),
                     direction.to_string(),
                     result.as_fact_unknown().cloned(),
@@ -35,7 +35,7 @@ impl Runtime {
         }
 
         Ok(
-            (VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+            (SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                 forall_iff.clone().into(),
                 "forall iff: then=>iff and iff=>then verified".to_string(),
                 step_results,

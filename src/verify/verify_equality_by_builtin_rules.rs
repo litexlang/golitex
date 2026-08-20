@@ -227,7 +227,7 @@ pub(crate) fn factual_equal_success_by_builtin_reason_with_subgoals(
     subgoals: Vec<StmtResult>,
 ) -> StmtResult {
     StmtResult::from(
-        VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+        SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
             equal_fact.clone().into(),
             reason.to_string(),
             subgoals,

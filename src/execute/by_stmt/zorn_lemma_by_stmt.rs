@@ -20,7 +20,7 @@ impl Runtime {
         })?;
         validate_zorn_named_properties(self, stmt)?;
 
-        let (inside_results, obligations_for_output) = self.run_in_local_env(|rt| {
+        let (mut inside_results, obligations_for_output) = self.run_in_local_env(|rt| {
             let mut inside_results: Vec<StmtResult> = Vec::new();
             for proof_stmt in stmt.proof.iter() {
                 let result = rt.exec_stmt(proof_stmt).map_err(|statement_error| {
@@ -71,6 +71,24 @@ impl Runtime {
             }
             Ok::<_, RuntimeError>((inside_results, obligations_for_output))
         })?;
+        let proof_steps = inside_results.drain(..stmt.proof.len()).collect::<Vec<_>>();
+        let mut checked_obligations = inside_results.into_iter();
+        let obligations = obligations_for_output
+            .into_iter()
+            .map(
+                |(role, fact, checked)| SuccessVerifyByChoiceObligationResult {
+                    role,
+                    fact,
+                    check: checked.then(|| {
+                        Box::new(
+                            checked_obligations
+                                .next()
+                                .expect("checked Zorn obligation retains its result"),
+                        )
+                    }),
+                },
+            )
+            .collect();
 
         // Trusted Zorn step. Both quantified conditions that occur below an
         // existential are public named props: the chain obligation concludes
@@ -94,22 +112,24 @@ impl Runtime {
                 )
             })?;
 
-        let by_verification = ByChoiceVerificationResult::new(
+        let by_verification = SuccessVerifyByChoiceResult::new(
             "by zorn_lemma proof".to_string(),
             format!(
                 "set {}, prop {}, prop {}, prop {}",
                 stmt.set, stmt.prop_name, stmt.upper_bound_prop_name, stmt.maximal_prop_name
             ),
-            stmt.proof.len(),
-            obligations_for_output,
+            proof_steps,
+            obligations,
             maximal_fact_string,
         );
-        Ok(VerifiedByStmtIr::ByZornLemmaStmt {
-            statement: stmt.clone(),
-            common: VerifiedStmtCommonIr::new(infer_result, inside_results),
-            verification: Some(by_verification),
-        }
-        .into())
+        Ok(
+            SuccessByStmtResult::ByZornLemmaStmt(Box::new(SuccessByZornLemmaStmtResult {
+                statement: stmt.clone(),
+                common: SuccessStmtCommonResult::new(infer_result),
+                verification: Some(by_verification),
+            }))
+            .into(),
+        )
     }
 
     pub(crate) fn exec_by_zorn_lemma_stmt_affect_environment_only(
@@ -127,12 +147,14 @@ impl Runtime {
             maximal_fact,
             InferReason::VerifiedStatement,
         )?;
-        Ok(VerifiedByStmtIr::ByZornLemmaStmt {
-            statement: stmt.clone(),
-            common: VerifiedStmtCommonIr::new(infer_result, vec![]),
-            verification: None,
-        }
-        .into())
+        Ok(
+            SuccessByStmtResult::ByZornLemmaStmt(Box::new(SuccessByZornLemmaStmtResult {
+                statement: stmt.clone(),
+                common: SuccessStmtCommonResult::new(infer_result),
+                verification: None,
+            }))
+            .into(),
+        )
     }
 }
 

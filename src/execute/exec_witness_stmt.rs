@@ -6,16 +6,17 @@ impl Runtime {
         stmt: &WitnessExistFact,
     ) -> Result<StmtResult, RuntimeError> {
         self.exec_witness_exist_fact_stmt_verify_well_definedness(stmt)?;
-        let (inside_results, verification) =
-            self.exec_witness_exist_fact_stmt_verify_process(stmt)?;
+        let verification = self.exec_witness_exist_fact_stmt_verify_process(stmt)?;
         let infer_result = self.exec_witness_exist_fact_stmt_affect_environment(stmt)?;
 
-        Ok(VerifiedWitnessStmtIr::WitnessExistFact {
-            statement: stmt.clone(),
-            common: VerifiedStmtCommonIr::new(infer_result, inside_results),
-            verification: Some(verification),
-        }
-        .into())
+        Ok(
+            SuccessWitnessStmtResult::WitnessExistFact(Box::new(SuccessWitnessExistFactResult {
+                statement: stmt.clone(),
+                common: SuccessStmtCommonResult::new(infer_result),
+                verification: Some(verification),
+            }))
+            .into(),
+        )
     }
 
     pub fn exec_witness_atomic_fact(
@@ -24,7 +25,7 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         let witness_stmt: Stmt = stmt.clone().into();
         let (definition, instantiated_existential) = self.resolve_witness_atomic_fact(stmt)?;
-        let definition_parameter_check =
+        let definition_parameter_verification =
             self.verify_witness_atomic_fact_definition_parameters(stmt, &definition)?;
         let expanded = WitnessExistFact::new(
             stmt.witnesses.clone(),
@@ -34,22 +35,24 @@ impl Runtime {
         );
         self.exec_witness_exist_fact_stmt_verify_well_definedness(&expanded)
             .map_err(|cause| exec_stmt_error_with_stmt_and_cause(witness_stmt.clone(), cause))?;
-        let (inside_results, witness_verification) = self
+        let witness_verification = self
             .exec_witness_exist_fact_stmt_verify_process(&expanded)
             .map_err(|cause| exec_stmt_error_with_stmt_and_cause(witness_stmt.clone(), cause))?;
         let infer_result = self.exec_witness_atomic_fact_stmt_affect_environment(stmt)?;
 
-        Ok(VerifiedWitnessStmtIr::WitnessAtomicFact {
-            statement: stmt.clone(),
-            common: VerifiedStmtCommonIr::new(infer_result, inside_results),
-            verification: Some(WitnessAtomicFactVerificationResult::new(
-                definition,
-                instantiated_existential,
-                definition_parameter_check,
-                witness_verification,
-            )),
-        }
-        .into())
+        Ok(
+            SuccessWitnessStmtResult::WitnessAtomicFact(Box::new(SuccessWitnessAtomicFactResult {
+                statement: stmt.clone(),
+                common: SuccessStmtCommonResult::new(infer_result),
+                verification: Some(SuccessVerifyWitnessAtomicFactResult::new(
+                    definition,
+                    instantiated_existential,
+                    definition_parameter_verification,
+                    witness_verification,
+                )),
+            }))
+            .into(),
+        )
     }
 
     fn resolve_witness_atomic_fact(
@@ -143,7 +146,7 @@ impl Runtime {
         &mut self,
         stmt: &WitnessAtomicFact,
         definition: &DefPropStmt,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<SuccessVerifyArgsSatisfyParamDefResult, RuntimeError> {
         self.run_in_local_env(|rt| {
             let witness_stmt: Stmt = stmt.clone().into();
             let verify_state = UseContextVerifyState::new(0, false);
@@ -158,18 +161,18 @@ impl Runtime {
                 &verify_state,
                 ParamObjType::DefHeader,
             )?;
-            if result.is_unknown() {
-                return Err(short_exec_error(
+            match result {
+                VerifyArgsSatisfyParamDefResult::Success(result) => Ok(*result),
+                VerifyArgsSatisfyParamDefResult::Unknown(result) => Err(short_exec_error(
                     witness_stmt,
                     format!(
                         "atomic fact witness arguments do not satisfy the parameter types of `{}`",
                         definition.name
                     ),
                     None,
-                    vec![result],
-                ));
+                    vec![*result.cause],
+                )),
             }
-            Ok(result)
         })
     }
 
@@ -247,7 +250,7 @@ impl Runtime {
     fn exec_witness_exist_fact_stmt_verify_process(
         &mut self,
         stmt: &WitnessExistFact,
-    ) -> Result<(Vec<StmtResult>, WitnessExistVerificationResult), RuntimeError> {
+    ) -> Result<SuccessVerifyWitnessExistResult, RuntimeError> {
         self.run_in_local_env(|rt| {
             let witness_stmt: Stmt = stmt.clone().into();
             let mut inside_results: Vec<StmtResult> = Vec::new();
@@ -360,7 +363,6 @@ impl Runtime {
             )?;
 
             let verify_state_for_proof_check = UseContextVerifyState::new(0, false);
-            let mut body_check_indices = Vec::with_capacity(instantiated_exist_fact.facts().len());
             for internal_fact_template in instantiated_exist_fact.facts().iter() {
                 let internal_fact = internal_fact_template.clone().to_fact();
                 let verification_result = rt
@@ -379,11 +381,9 @@ impl Runtime {
                             std::mem::take(&mut inside_results),
                         )
                     })?;
-                body_check_indices.push(inside_results.len());
                 inside_results.push(verification_result);
             }
 
-            let mut uniqueness_check_index = None;
             if stmt.exist_fact_in_witness.is_exist_unique() {
                 let uniqueness_forall = rt
                     .build_exist_unique_uniqueness_forall_fact(&stmt.exist_fact_in_witness)
@@ -412,18 +412,20 @@ impl Runtime {
                             std::mem::take(&mut inside_results),
                         )
                     })?;
-                uniqueness_check_index = Some(inside_results.len());
                 inside_results.push(uniqueness_result);
             }
 
-            Ok((
+            let mut body_checks = inside_results.split_off(proof_step_count);
+            let uniqueness_check = if stmt.exist_fact_in_witness.is_exist_unique() {
+                body_checks.pop()
+            } else {
+                None
+            };
+            Ok(SuccessVerifyWitnessExistResult::new(
                 inside_results,
-                WitnessExistVerificationResult::new(
-                    proof_step_count,
-                    parameter_checks,
-                    body_check_indices,
-                    uniqueness_check_index,
-                ),
+                parameter_checks,
+                body_checks,
+                uniqueness_check,
             ))
         })
     }
@@ -431,7 +433,7 @@ impl Runtime {
     pub(crate) fn exec_witness_exist_fact_stmt_affect_environment(
         &mut self,
         stmt: &WitnessExistFact,
-    ) -> Result<InferResult, RuntimeError> {
+    ) -> Result<SuccessInferResult, RuntimeError> {
         let witness_stmt = stmt.clone().into();
         let fact = stmt.exist_fact_in_witness.clone().into();
         let store_result = if self.current_execution_is_trusted_file() {
@@ -455,18 +457,20 @@ impl Runtime {
         stmt: &WitnessExistFact,
     ) -> Result<StmtResult, RuntimeError> {
         let infer_result = self.exec_witness_exist_fact_stmt_affect_environment(stmt)?;
-        Ok(VerifiedWitnessStmtIr::WitnessExistFact {
-            statement: stmt.clone(),
-            common: VerifiedStmtCommonIr::new(infer_result, vec![]),
-            verification: None,
-        }
-        .into())
+        Ok(
+            SuccessWitnessStmtResult::WitnessExistFact(Box::new(SuccessWitnessExistFactResult {
+                statement: stmt.clone(),
+                common: SuccessStmtCommonResult::new(infer_result),
+                verification: None,
+            }))
+            .into(),
+        )
     }
 
     pub(crate) fn exec_witness_atomic_fact_stmt_affect_environment(
         &mut self,
         stmt: &WitnessAtomicFact,
-    ) -> Result<InferResult, RuntimeError> {
+    ) -> Result<SuccessInferResult, RuntimeError> {
         let witness_stmt: Stmt = stmt.clone().into();
         let atomic_fact: AtomicFact = stmt.atomic_fact.clone().into();
         let fact: Fact = atomic_fact.into();
@@ -491,12 +495,14 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         self.resolve_witness_atomic_fact(stmt)?;
         let infer_result = self.exec_witness_atomic_fact_stmt_affect_environment(stmt)?;
-        Ok(VerifiedWitnessStmtIr::WitnessAtomicFact {
-            statement: stmt.clone(),
-            common: VerifiedStmtCommonIr::new(infer_result, vec![]),
-            verification: None,
-        }
-        .into())
+        Ok(
+            SuccessWitnessStmtResult::WitnessAtomicFact(Box::new(SuccessWitnessAtomicFactResult {
+                statement: stmt.clone(),
+                common: SuccessStmtCommonResult::new(infer_result),
+                verification: None,
+            }))
+            .into(),
+        )
     }
 
     pub fn exec_witness_nonempty_set(
@@ -504,13 +510,28 @@ impl Runtime {
         stmt: &WitnessNonemptySet,
     ) -> Result<StmtResult, RuntimeError> {
         self.exec_witness_nonempty_set_stmt_verify_well_definedness(stmt)?;
-        let inside_results = self.exec_witness_nonempty_set_stmt_verify_process(stmt)?;
+        let mut inside_results = self.exec_witness_nonempty_set_stmt_verify_process(stmt)?;
+        let nonempty_check = inside_results.pop().ok_or_else(|| {
+            UnknownRuntimeError(RuntimeErrorStruct::new(
+                Some(stmt.clone().into()),
+                "witness nonempty set: missing final nonemptiness check".to_string(),
+                stmt.line_file.clone(),
+                None,
+                Vec::new(),
+            ))
+        })?;
         let infer_result = self.exec_witness_nonempty_set_stmt_affect_environment(stmt)?;
 
-        Ok(VerifiedWitnessStmtIr::WitnessNonemptySet {
-            statement: stmt.clone(),
-            common: VerifiedStmtCommonIr::new(infer_result, inside_results),
-        }
+        Ok(SuccessWitnessStmtResult::WitnessNonemptySet(Box::new(
+            SuccessWitnessNonemptySetResult {
+                statement: stmt.clone(),
+                common: SuccessStmtCommonResult::new(infer_result),
+                verification: Some(SuccessVerifyWitnessNonemptySetResult {
+                    proof_steps: inside_results,
+                    nonempty_check: Box::new(nonempty_check),
+                }),
+            },
+        ))
         .into())
     }
 
@@ -612,7 +633,7 @@ impl Runtime {
     pub(crate) fn exec_witness_nonempty_set_stmt_affect_environment(
         &mut self,
         stmt: &WitnessNonemptySet,
-    ) -> Result<InferResult, RuntimeError> {
+    ) -> Result<SuccessInferResult, RuntimeError> {
         let witness_stmt = stmt.clone().into();
         let fact = IsNonemptySetFact::new(stmt.set.clone(), stmt.line_file.clone()).into();
         let store_result = if self.current_execution_is_trusted_file() {
@@ -636,10 +657,13 @@ impl Runtime {
         stmt: &WitnessNonemptySet,
     ) -> Result<StmtResult, RuntimeError> {
         let infer_result = self.exec_witness_nonempty_set_stmt_affect_environment(stmt)?;
-        Ok(VerifiedWitnessStmtIr::WitnessNonemptySet {
-            statement: stmt.clone(),
-            common: VerifiedStmtCommonIr::new(infer_result, vec![]),
-        }
+        Ok(SuccessWitnessStmtResult::WitnessNonemptySet(Box::new(
+            SuccessWitnessNonemptySetResult {
+                statement: stmt.clone(),
+                common: SuccessStmtCommonResult::new(infer_result),
+                verification: None,
+            },
+        ))
         .into())
     }
 }

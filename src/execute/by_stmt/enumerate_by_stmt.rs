@@ -51,7 +51,7 @@ impl Runtime {
                 &corresponding_forall_fact,
                 infer_result_from_stored_forall_fact,
             );
-            let by_verification = ByEnumerateFiniteSetVerificationResult::new(
+            let by_verification = SuccessVerifyByEnumerateFiniteSetResult::new(
                 params,
                 param_sets
                     .iter()
@@ -61,27 +61,26 @@ impl Runtime {
                 vec![],
                 corresponding_forall_fact.to_string(),
             );
-            return Ok(VerifiedByStmtIr::ByEnumerateFiniteSetStmt {
-                statement: stmt.clone(),
-                common: VerifiedStmtCommonIr::new(infer_result, vec![]),
-                verification: Some(by_verification),
-            }
+            return Ok(SuccessByStmtResult::ByEnumerateFiniteSetStmt(Box::new(
+                SuccessByEnumerateFiniteSetStmtResult {
+                    statement: stmt.clone(),
+                    common: SuccessStmtCommonResult::new(infer_result),
+                    verification: Some(by_verification),
+                },
+            ))
             .into());
         }
 
         let mut current_parameter_index_assignment =
             Self::by_enumerate_start_index_assignment(&param_sets);
-        let mut inside_results = Vec::new();
         let mut assignments = Vec::new();
         loop {
-            let (mut one_assignment_results, one_assignment_verification) = self
-                .exec_by_enumerate_stmt_for_one_assignment(
-                    stmt,
-                    &params,
-                    &param_sets,
-                    &current_parameter_index_assignment,
-                )?;
-            inside_results.append(&mut one_assignment_results);
+            let one_assignment_verification = self.exec_by_enumerate_stmt_for_one_assignment(
+                stmt,
+                &params,
+                &param_sets,
+                &current_parameter_index_assignment,
+            )?;
             assignments.push(one_assignment_verification);
             let next_parameter_index_assignment = Self::by_enumerate_next_index_assignment(
                 &param_sets,
@@ -116,7 +115,7 @@ impl Runtime {
             infer_result_from_stored_forall_fact,
         );
 
-        let by_verification = ByEnumerateFiniteSetVerificationResult::new(
+        let by_verification = SuccessVerifyByEnumerateFiniteSetResult::new(
             params,
             param_sets
                 .iter()
@@ -127,11 +126,13 @@ impl Runtime {
             corresponding_forall_fact.to_string(),
         );
 
-        Ok(VerifiedByStmtIr::ByEnumerateFiniteSetStmt {
-            statement: stmt.clone(),
-            common: VerifiedStmtCommonIr::new(infer_result, inside_results),
-            verification: Some(by_verification),
-        }
+        Ok(SuccessByStmtResult::ByEnumerateFiniteSetStmt(Box::new(
+            SuccessByEnumerateFiniteSetStmtResult {
+                statement: stmt.clone(),
+                common: SuccessStmtCommonResult::new(infer_result),
+                verification: Some(by_verification),
+            },
+        ))
         .into())
     }
 
@@ -146,19 +147,21 @@ impl Runtime {
             corresponding_forall_fact,
             InferReason::VerifiedStatement,
         )?;
-        Ok(VerifiedByStmtIr::ByEnumerateFiniteSetStmt {
-            statement: stmt.clone(),
-            common: VerifiedStmtCommonIr::new(infer_result, vec![]),
-            verification: None,
-        }
+        Ok(SuccessByStmtResult::ByEnumerateFiniteSetStmt(Box::new(
+            SuccessByEnumerateFiniteSetStmtResult {
+                statement: stmt.clone(),
+                common: SuccessStmtCommonResult::new(infer_result),
+                verification: None,
+            },
+        ))
         .into())
     }
 
     fn infer_result_with_generated_forall_and_store_infer(
         generated_forall_fact: &Fact,
-        infer_after_store: InferResult,
-    ) -> InferResult {
-        let mut infer_result = InferResult::new();
+        infer_after_store: SuccessInferResult,
+    ) -> SuccessInferResult {
+        let mut infer_result = SuccessInferResult::new();
         infer_result.new_fact(generated_forall_fact);
         infer_result.new_infer_result_inside(infer_after_store);
         infer_result
@@ -196,7 +199,7 @@ impl Runtime {
         params: &[String],
         param_sets: &[ListSet],
         parameter_index_assignment: &Vec<usize>,
-    ) -> Result<(Vec<StmtResult>, ByAssignmentVerificationResult), RuntimeError> {
+    ) -> Result<SuccessVerifyByAssignmentResult, RuntimeError> {
         self.run_in_local_env(|rt| {
             rt.exec_by_enumerate_stmt_for_one_assignment_body(
                 stmt,
@@ -213,8 +216,7 @@ impl Runtime {
         params: &[String],
         param_sets: &[ListSet],
         parameter_index_assignment: &Vec<usize>,
-    ) -> Result<(Vec<StmtResult>, ByAssignmentVerificationResult), RuntimeError> {
-        let mut inside_results = Vec::new();
+    ) -> Result<SuccessVerifyByAssignmentResult, RuntimeError> {
         let mut assignment = Vec::new();
         let mut assumptions = Vec::new();
         let param_bindings = stmt
@@ -244,37 +246,37 @@ impl Runtime {
         }
 
         let verify_state = UseContextVerifyState::new(0, false);
-        let mut domain_check_count = 0;
-        let mut skipped_domain = None;
+        let mut domain_checks = Vec::new();
         for dom_fact in stmt.forall_fact.dom_facts.iter() {
             let verify_dom_result = self.verify_fact_full(dom_fact, &verify_state)?;
             if verify_dom_result.is_true() {
                 self.store_with_well_defined_verification_and_infer_with_default_verify_state(
                     dom_fact.clone(),
                 )?;
-                inside_results.push(verify_dom_result);
-                domain_check_count += 1;
+                domain_checks.push(SuccessVerifyByAssignmentDomainResult {
+                    fact: dom_fact.clone(),
+                    check: Box::new(verify_dom_result),
+                    negated_check: None,
+                    satisfied: true,
+                });
             } else if verify_dom_result.is_unknown() {
-                inside_results.push(verify_dom_result);
-                domain_check_count += 1;
                 if let Some(negated_domain) = Self::negated_domain_fact_for_by_for_skip(dom_fact) {
                     let verify_negation_result =
                         self.verify_fact_full(&negated_domain, &verify_state)?;
                     if verify_negation_result.is_true() {
-                        inside_results.push(verify_negation_result);
-                        domain_check_count += 1;
-                        skipped_domain = Some(dom_fact.to_string());
-                        let result_count = inside_results.len();
-                        let verification = ByAssignmentVerificationResult::new(
+                        domain_checks.push(SuccessVerifyByAssignmentDomainResult {
+                            fact: dom_fact.clone(),
+                            check: Box::new(verify_dom_result),
+                            negated_check: Some(Box::new(verify_negation_result)),
+                            satisfied: false,
+                        });
+                        return Ok(SuccessVerifyByAssignmentResult::new(
                             assignment,
                             assumptions,
-                            domain_check_count,
-                            0,
-                            0,
-                            skipped_domain,
-                            result_count,
-                        );
-                        return Ok((inside_results, verification));
+                            domain_checks,
+                            Vec::new(),
+                            Vec::new(),
+                        ));
                     }
                 }
                 return Err(short_exec_error(
@@ -289,11 +291,11 @@ impl Runtime {
             }
         }
 
-        let proof_step_count = stmt.proof.len();
+        let mut proof_steps = Vec::with_capacity(stmt.proof.len());
         for proof_stmt in stmt.proof.iter() {
-            inside_results.push(self.exec_stmt(proof_stmt)?);
+            proof_steps.push(self.exec_stmt(proof_stmt)?);
         }
-        let mut conclusion_count = 0;
+        let mut conclusion_checks = Vec::with_capacity(stmt.forall_fact.then_facts.len());
         for fact_to_prove in stmt.forall_fact.then_facts.iter() {
             let verified_result =
                 self.verify_exist_or_and_chain_atomic_fact(fact_to_prove, &verify_state)?;
@@ -308,20 +310,15 @@ impl Runtime {
                     vec![],
                 ));
             }
-            inside_results.push(verified_result);
-            conclusion_count += 1;
+            conclusion_checks.push(verified_result);
         }
-        let result_count = inside_results.len();
-        let verification = ByAssignmentVerificationResult::new(
+        Ok(SuccessVerifyByAssignmentResult::new(
             assignment,
             assumptions,
-            domain_check_count,
-            proof_step_count,
-            conclusion_count,
-            skipped_domain,
-            result_count,
-        );
-        Ok((inside_results, verification))
+            domain_checks,
+            proof_steps,
+            conclusion_checks,
+        ))
     }
 
     fn by_enumerate_finite_set_params(

@@ -135,11 +135,13 @@ fn run_isolated_import(
         runtime.module_manager = module_manager_before;
         return Err(error);
     }
-    Ok(VerifiedCommandStmtIr::ImportStmt {
-        statement: import.clone(),
-        common: VerifiedStmtCommonIr::new(InferResult::new(), vec![]),
-    }
-    .into())
+    Ok(
+        SuccessCommandStmtResult::ImportStmt(Box::new(SuccessImportStmtResult {
+            statement: import.clone(),
+            common: SuccessStmtCommonResult::new(SuccessInferResult::new()),
+        }))
+        .into(),
+    )
 }
 
 fn run_repository_module_prefix(

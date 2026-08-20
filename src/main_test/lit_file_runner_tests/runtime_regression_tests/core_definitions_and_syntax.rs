@@ -26,11 +26,9 @@ try:
         run_output
     );
     assert!(runtime.is_name_used_for_identifier("x"));
-    assert!(run_output.contains("\"kind\": \"declare_object\""));
-    assert!(run_output.contains("\"name\": \"x\""));
-    assert!(run_output.contains("\"value\": \"1\""));
-    assert!(run_output.contains("\"name\": \"x\",\n          \"value\": \"1\""));
-    assert!(run_output.contains("\"fact\": \"x = 1\""));
+    assert!(run_output.contains("\"kind\": \"LetObjStmt\""));
+    assert!(run_output.contains("\"statement\": \"let x = 1\""));
+    assert!(run_output.contains("\"statement\": \"x = 1\""));
 }
 
 #[test]
@@ -294,9 +292,9 @@ forall i1 closed_range(1, n):
                 "have_tuple_and_have_cart_define_symbolic_coordinates failed:\n{}",
                 run_output
             );
-            assert!(run_output.contains("\"type\": \"tuple definition\""));
-            assert!(run_output.contains("\"type\": \"cart definition\""));
-            assert!(run_output.contains("\"type\": \"universal fact\""));
+            assert!(run_output.contains("\"kind\": \"HaveTupleStmt\""));
+            assert!(run_output.contains("\"kind\": \"HaveCartStmt\""));
+            assert!(run_output.contains("\"kind\": \"ForallFact\""));
         },
     );
 }
@@ -336,9 +334,9 @@ M(2, 3) = 3
                 "have_seq_finite_seq_and_matrix_define_indexed_entries failed:\n{}",
                 run_output
             );
-            assert!(run_output.contains("\"type\": \"sequence definition\""));
-            assert!(run_output.contains("\"type\": \"finite sequence definition\""));
-            assert!(run_output.contains("\"type\": \"matrix definition\""));
+            assert!(run_output.contains("\"kind\": \"HaveSeqStmt\""));
+            assert!(run_output.contains("\"kind\": \"HaveFiniteSeqStmt\""));
+            assert!(run_output.contains("\"kind\": \"HaveMatrixStmt\""));
         },
     );
 }
@@ -2142,16 +2140,14 @@ $leaf(y)
                 "obtain should expose its direct predicate body:\n{}",
                 run_output
             );
-            let StmtResult::Success(VerifiedStmtIr::DefObjStmt(
-                VerifiedDefObjStmtIr::ObtainObjFromExistFact {
-                    statement: stmt, ..
-                },
+            let StmtResult::Success(SuccessStmtResult::DefObjStmt(
+                SuccessDefObjStmtResult::ObtainObjFromExistFact(result),
             )) = &stmt_results[3]
             else {
                 panic!("literal `exist` must parse as ObtainObjFromExistFact")
             };
-            assert_eq!(stmt.equal_tos[0].name(), "y");
-            assert!(stmt.fact.is_plain_exist());
+            assert_eq!(result.statement.equal_tos[0].name(), "y");
+            assert!(result.statement.fact.is_plain_exist());
         },
     );
 }
@@ -2224,16 +2220,14 @@ unique_copy = 3
     assert!(run_output.contains("obtain copy from $has_copy(2)"));
     assert!(run_output.contains("obtain unique_copy from $has_unique_copy(3)"));
     assert!(run_output.contains("existential projection from prop definition `has_copy`"));
-    let StmtResult::Success(VerifiedStmtIr::DefObjStmt(
-        VerifiedDefObjStmtIr::ObtainObjFromAtomicFact {
-            statement: stmt, ..
-        },
+    let StmtResult::Success(SuccessStmtResult::DefObjStmt(
+        SuccessDefObjStmtResult::ObtainObjFromAtomicFact(result),
     )) = &stmt_results[3]
     else {
         panic!("prop source must parse as ObtainObjFromAtomicFact")
     };
-    assert_eq!(stmt.equal_tos[0].name(), "copy");
-    assert_eq!(stmt.fact.to_string(), "$has_copy(2)");
+    assert_eq!(result.statement.equal_tos[0].name(), "copy");
+    assert_eq!(result.statement.fact.to_string(), "$has_copy(2)");
 }
 
 #[test]
@@ -2358,26 +2352,24 @@ copy = 2
         "theorem-backed obtain should apply and eliminate in one statement:\n{}",
         run_output
     );
-    let StmtResult::Success(VerifiedStmtIr::DefObjStmt(VerifiedDefObjStmtIr::ObtainObjFromThm {
-        statement: stmt,
-        common,
-        verification: Some(elimination),
-    })) = &stmt_results[1]
+    let StmtResult::Success(SuccessStmtResult::DefObjStmt(
+        SuccessDefObjStmtResult::ObtainObjFromThm(result),
+    )) = &stmt_results[1]
     else {
         panic!("theorem-backed obtain should retain its exact IR node and elimination evidence")
     };
-    assert_eq!(stmt.equal_tos[0].name(), "copy");
-    assert_eq!(stmt.thm_name.to_string(), "self_exists");
-    assert_eq!(stmt.args[0].to_string(), "2");
-    assert_eq!(common.inside_results.len(), 1);
-    assert!(run_output.contains("\"type\": \"proof by theorem\""));
+    let elimination = result.verification.as_ref().unwrap();
+    assert_eq!(result.statement.equal_tos[0].name(), "copy");
+    assert_eq!(result.statement.thm_name.to_string(), "self_exists");
+    assert_eq!(result.statement.args[0].to_string(), "2");
+    assert!(run_output.contains("\"kind\": \"ByThmStmt\""));
+    assert!(run_output.contains("\"kind\": \"SuccessVerifyByTheoremResult\""));
     assert!(run_output.contains("\"statement\": \"by thm self_exists(2)\""));
     assert!(matches!(
-        &common.inside_results[0],
-        StmtResult::Success(VerifiedStmtIr::By(VerifiedByStmtIr::ByThmStmt {
-            verification: Some(_),
-            ..
-        }))
+        elimination.source_result.as_ref(),
+        StmtResult::Success(SuccessStmtResult::By(SuccessByStmtResult::ByThmStmt(
+            theorem_result
+        ))) if theorem_result.verification.is_some()
     ));
 
     // The application runs in a child environment: its instantiated
@@ -2572,14 +2564,15 @@ copy = 2
         "atomic fact witness should prove the prop and expose its existential meaning:\n{}",
         run_output
     );
-    let StmtResult::Success(VerifiedStmtIr::Witness(VerifiedWitnessStmtIr::WitnessAtomicFact {
-        statement: stmt,
-        common,
-        verification: Some(verification),
-    })) = &stmt_results[1]
+    let StmtResult::Success(SuccessStmtResult::Witness(
+        SuccessWitnessStmtResult::WitnessAtomicFact(result),
+    )) = &stmt_results[1]
     else {
         panic!("the parser must retain an atomic-fact witness AST node")
     };
+    let stmt = &result.statement;
+    let common = &result.common;
+    let verification = result.verification.as_ref().unwrap();
     assert_eq!(stmt.atomic_fact.to_string(), "$has_copy(2)");
     assert_eq!(stmt.witnesses.len(), 1);
     assert_eq!(verification.definition.name, "has_copy");
@@ -2679,9 +2672,9 @@ $has_unique_copy(1)
         "explicit unique existence plus `by def` should remain available:\n{}",
         run_output
     );
-    let StmtResult::Success(VerifiedStmtIr::Witness(VerifiedWitnessStmtIr::WitnessExistFact {
-        ..
-    })) = &stmt_results[1]
+    let StmtResult::Success(SuccessStmtResult::Witness(
+        SuccessWitnessStmtResult::WitnessExistFact(_),
+    )) = &stmt_results[1]
     else {
         panic!("the fallback must retain the explicit existential AST node")
     };
@@ -2923,11 +2916,15 @@ trust Ambient = \selected<R>
     let ambient_representatives = runtime.get_all_obj_representatives_equal_to_given(&ambient);
     let opaque_set = ambient_representatives
         .iter()
-        .find(|candidate| matches!(candidate, Obj::InstantiatedTemplateObj(_)))
+        // A template instance is materialized behind a symbol-bound opaque
+        // name before the equality is stored.  Use that identity-bearing
+        // representative rather than the surface alias: the surface alias is
+        // intentionally reachable by equality inference alone.
+        .find(|candidate| candidate.to_string().starts_with('#'))
         .cloned()
         .unwrap_or_else(|| {
             panic!(
-                "Ambient should be equal to the instantiated selected-set template; representatives: {}",
+                "Ambient should be equal to the named selected-set template instance; representatives: {}",
                 ambient_representatives
                     .iter()
                     .map(ToString::to_string)

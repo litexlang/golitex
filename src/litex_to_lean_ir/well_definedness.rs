@@ -866,6 +866,72 @@ fn validate_binder_scope_recipe(
     let mut expected_roles = HashSet::new();
     let mut expected_role_order = Vec::new();
     match &scope.owner_object {
+        Obj::FnSet(function) => {
+            for (parameter_group_index, group) in
+                function.body.params_def_with_set.iter().enumerate()
+            {
+                for (parameter_index, binding) in group.params.iter().enumerate() {
+                    let role = WellDefinedBinderPremiseRole::ParameterMembership {
+                        parameter_group_index,
+                        parameter_index,
+                    };
+                    expected_roles.insert(role);
+                    expected_role_order.push(role);
+                    let premise = scope
+                        .premises
+                        .iter()
+                        .find(|premise| premise.role == role)
+                        .ok_or_else(|| {
+                            format!(
+                                "WellDefinedBinderScopeId {scope_id} is missing parameter premise {role:?}"
+                            )
+                        })?;
+                    if premise.symbol_id != Some(binding.id()) {
+                        return Err(format!(
+                            "WellDefinedBinderScopeId {scope_id} parameter premise {role:?} changed SymbolId"
+                        ));
+                    }
+                    let Fact::AtomicFact(AtomicFact::InFact(membership)) = &premise.proposition
+                    else {
+                        return Err(format!(
+                            "WellDefinedBinderScopeId {scope_id} parameter premise {role:?} is not a membership"
+                        ));
+                    };
+                    let bound = obj_for_bound_param_in_scope(binding, ParamObjType::FnSet);
+                    if !objs_equal_with_nested_binder_alpha_equivalence(&membership.element, &bound)
+                        || !objs_equal_with_nested_binder_alpha_equivalence(
+                            &membership.set,
+                            group.set_obj(),
+                        )
+                    {
+                        return Err(format!(
+                            "WellDefinedBinderScopeId {scope_id} parameter premise {role:?} changed its bound object or carrier"
+                        ));
+                    }
+                }
+            }
+            for (domain_index, domain) in function.body.dom_facts.iter().enumerate() {
+                let role = WellDefinedBinderPremiseRole::Domain { domain_index };
+                expected_roles.insert(role);
+                expected_role_order.push(role);
+                let premise = scope
+                    .premises
+                    .iter()
+                    .find(|premise| premise.role == role)
+                    .ok_or_else(|| {
+                        format!(
+                            "WellDefinedBinderScopeId {scope_id} is missing domain premise {role:?}"
+                        )
+                    })?;
+                if premise.symbol_id.is_some()
+                    || premise.proposition.to_string() != Fact::from(domain.clone()).to_string()
+                {
+                    return Err(format!(
+                        "WellDefinedBinderScopeId {scope_id} domain premise {role:?} changed its exact proposition"
+                    ));
+                }
+            }
+        }
         Obj::AnonymousFn(function) => {
             for (parameter_group_index, group) in
                 function.body.params_def_with_set.iter().enumerate()

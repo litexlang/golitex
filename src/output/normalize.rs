@@ -1,8 +1,6 @@
 use crate::common::json_value::JsonValue;
-use crate::prelude::*;
+use crate::prelude::strip_free_param_numeric_tags_in_display;
 
-/// Apply [`strip_free_param_numeric_tags_in_display`] once on a finished JSON blob (CLI/REPL/file run).
-/// Nested JSON is built with `strip_free_param_tags == false` so a single final strip covers the whole tree.
 pub(crate) fn finalize_display_text_with_optional_strip(
     text: String,
     strip_free_param_tags: bool,
@@ -14,137 +12,10 @@ pub(crate) fn finalize_display_text_with_optional_strip(
     }
 }
 
-pub(crate) fn json_value_for_output_with_style(
-    runtime: &Runtime,
-    value: JsonValue,
-    output_style: OutputStyle,
-) -> JsonValue {
-    let value = match output_style {
-        OutputStyle::Compact => compact_output_value(value),
-        OutputStyle::Normal => normal_output_value(value),
-        OutputStyle::Detailed => value,
-    };
-    let value = remove_empty_json_fields(value);
-    crate::output::localize_json_value(runtime, value)
-}
-
-fn compact_output_value(value: JsonValue) -> JsonValue {
-    let JsonValue::Object(fields) = value else {
-        return value;
-    };
-
-    let is_error = fields.iter().any(|(key, value)| {
-        key == "result" && matches!(value, JsonValue::JsonString(text) if text == "error")
-    });
-    JsonValue::Object(
-        fields
-            .into_iter()
-            .filter(|(key, _)| {
-                if is_error {
-                    [
-                        "result",
-                        "error_type",
-                        "line",
-                        "type",
-                        "statement",
-                        "message",
-                    ]
-                    .contains(&key.as_str())
-                } else {
-                    ["result", "type", "line", "statement", "verification_status"]
-                        .contains(&key.as_str())
-                }
-            })
-            .collect::<Vec<_>>(),
-    )
-}
-
-fn normal_output_value(value: JsonValue) -> JsonValue {
-    match value {
-        JsonValue::Object(fields) => normal_object_value(fields),
-        JsonValue::Array(items) => JsonValue::Array(
-            items
-                .into_iter()
-                .map(normal_output_value)
-                .collect::<Vec<_>>(),
-        ),
-        other => other,
-    }
-}
-
-fn normal_object_value(fields: Vec<(String, JsonValue)>) -> JsonValue {
-    let mut output = Vec::new();
-    for (key, value) in fields {
-        match key.as_str() {
-            "phases" | "effects" | "checks" | "proof_steps" | "subgoals" | "steps"
-            | "assignments" | "instantiation" | "requirements" | "proof_step_index"
-            | "proof_step_count" | "then_clause_index" | "then_clause_count" | "path" => {}
-            "verification" => add_normal_verification_fields(&mut output, value),
-            _ => push_normal_field(&mut output, key, normal_output_value(value)),
-        }
-    }
-    JsonValue::Object(output)
-}
-
-fn add_normal_verification_fields(output: &mut Vec<(String, JsonValue)>, value: JsonValue) {
-    let JsonValue::Object(fields) = value else {
-        push_normal_field(
-            output,
-            "why_verified".to_string(),
-            normal_output_value(value),
-        );
-        return;
-    };
-
-    let mut why_verified = Vec::new();
-    for (key, value) in fields {
-        match key.as_str() {
-            "parameters" | "assumptions" | "conclusions" => {
-                push_normal_field(output, key, normal_output_value(value));
-            }
-            "type"
-            | "rule"
-            | "cite_source"
-            | "cited_statement"
-            | "prove_goal"
-            | "theorem"
-            | "theorems"
-            | "parameter_sets"
-            | "verify_what"
-            | "prop"
-            | "arguments"
-            | "parameter_type_check"
-            | "definition_clause_checks"
-            | "stored_fact" => {
-                why_verified.push((key, normal_output_value(value)));
-            }
-            _ => {}
-        }
-    }
-    if !why_verified.is_empty() {
-        push_normal_field(
-            output,
-            "why_verified".to_string(),
-            JsonValue::Object(why_verified),
-        );
-    }
-}
-
-fn push_normal_field(output: &mut Vec<(String, JsonValue)>, key: String, value: JsonValue) {
-    if let Some((_, existing)) = output
-        .iter_mut()
-        .find(|(existing_key, _)| *existing_key == key)
-    {
-        *existing = value;
-    } else {
-        output.push((key, value));
-    }
-}
-
 pub(crate) fn remove_empty_json_fields(value: JsonValue) -> JsonValue {
     match value {
         JsonValue::Object(fields) => {
-            let mut next_fields: Vec<(String, JsonValue)> = Vec::new();
+            let mut next_fields = Vec::new();
             for (key, field_value) in fields {
                 let field_value = remove_empty_json_fields(field_value);
                 if !json_value_is_empty_in_normal_output(&field_value) {
@@ -153,62 +24,19 @@ pub(crate) fn remove_empty_json_fields(value: JsonValue) -> JsonValue {
             }
             JsonValue::Object(next_fields)
         }
-        JsonValue::Array(items) => JsonValue::Array(
-            items
-                .into_iter()
-                .map(remove_empty_json_fields)
-                .collect::<Vec<_>>(),
-        ),
-        _ => value,
+        JsonValue::Array(items) => {
+            JsonValue::Array(items.into_iter().map(remove_empty_json_fields).collect())
+        }
+        other => other,
     }
 }
 
 pub(crate) fn json_value_is_empty_in_normal_output(value: &JsonValue) -> bool {
     match value {
         JsonValue::Null => true,
-        JsonValue::JsonString(s) => s.is_empty(),
+        JsonValue::JsonString(value) => value.is_empty(),
         JsonValue::Array(items) => items.is_empty(),
         JsonValue::Object(fields) => fields.is_empty(),
-        _ => false,
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn trust_before_line_status_survives_compact_and_normal_output() {
-        let input = JsonValue::Object(vec![
-            (
-                "result".to_string(),
-                JsonValue::JsonString("success".to_string()),
-            ),
-            (
-                "type".to_string(),
-                JsonValue::JsonString("theorem".to_string()),
-            ),
-            (
-                "verification_status".to_string(),
-                JsonValue::JsonString("trusted_prefix".to_string()),
-            ),
-            (
-                "phases".to_string(),
-                JsonValue::Object(vec![(
-                    "verify_process".to_string(),
-                    JsonValue::JsonString("skipped".to_string()),
-                )]),
-            ),
-        ]);
-
-        for value in [
-            compact_output_value(input.clone()),
-            normal_output_value(input),
-        ] {
-            let JsonValue::Object(fields) = value else {
-                panic!("normalized statement output must be an object");
-            };
-            assert!(fields.iter().any(|(key, _)| key == "verification_status"));
-        }
+        JsonValue::Bool(_) | JsonValue::Number(_) => false,
     }
 }

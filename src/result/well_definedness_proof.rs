@@ -69,7 +69,7 @@ pub struct WellDefinedBinderScopeProof {
     pub owner_object: Obj,
     pub ambient_scope_ids: Vec<WellDefinedBinderScopeId>,
     pub premises: Vec<WellDefinedBinderPremiseProof>,
-    pub assumption_infers: InferResult,
+    pub assumption_infers: SuccessInferResult,
 }
 
 impl std::fmt::Debug for WellDefinedBinderScopeProof {
@@ -252,7 +252,7 @@ impl CachedWellDefinedObj {
 pub struct WellDefinedFactProof {
     pub id: WellDefinedFactId,
     pub proposition: Fact,
-    pub proof: Rc<VerifiedFactStmtIr>,
+    pub proof: Rc<SuccessVerifyFactResult>,
     pub ambient_binder_scope_ids: Vec<WellDefinedBinderScopeId>,
 }
 
@@ -260,7 +260,7 @@ impl WellDefinedFactProof {
     pub fn new(
         id: WellDefinedFactId,
         proposition: Fact,
-        proof: Rc<VerifiedFactStmtIr>,
+        proof: Rc<SuccessVerifyFactResult>,
         ambient_binder_scope_ids: Vec<WellDefinedBinderScopeId>,
     ) -> Self {
         Self {

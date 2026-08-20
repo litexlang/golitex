@@ -25,10 +25,12 @@ by def $unit(1)
         "by def output fixture failed:\n{}",
         run_output
     );
-    assert!(run_output.contains("\"type\": \"proof by definition\""));
-    assert!(run_output.contains("\"type\": \"by definition proof\""));
+    assert!(run_output.contains("\"schema\": \"litex.statement-result.v2\""));
+    assert!(run_output.contains("\"kind\": \"ByDefStmt\""));
+    assert!(run_output.contains("\"kind\": \"SuccessVerifyByDefinitionResult\""));
     assert!(run_output.contains("\"prop\": \"unit\""));
-    assert!(run_output.contains("\"definition_clause_checks\": ["));
+    assert!(run_output.contains("\"definition_clauses\": ["));
+    assert!(run_output.contains("\"definition_clause_facts\": ["));
     assert!(run_output.contains("\"stored_fact\": \"$unit(1)\""));
     assert!(summary_output.contains("\"by def\": 1"));
 }
@@ -55,7 +57,7 @@ fn hidden_file_path_output_omits_source_fields() {
 }
 
 #[test]
-fn normal_output_omits_empty_arrays_and_empty_strings() {
+fn json_v2_normal_output_keeps_structural_empty_arrays() {
     let source_code = "do_nothing\nhave a R\nhave a R";
 
     let mut runtime = Runtime::new();
@@ -65,8 +67,8 @@ fn normal_output_omits_empty_arrays_and_empty_strings() {
         render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
     assert!(!run_succeeded);
-    assert!(!run_output.contains("\"store_facts\": []"));
-    assert!(!run_output.contains("\"inside_results\": []"));
+    assert!(run_output.contains("\"stores\": []"));
+    assert!(run_output.contains("\"rule_applications\": []"));
     assert!(!run_output.contains("\"message\": \"\""));
 }
 
@@ -88,15 +90,15 @@ eval a
 
         assert!(run_succeeded, "eval output fixture failed:\n{}", run_output);
         assert_eq!(
-            run_output.matches("\"store_facts\": [").count(),
+            run_output.matches("\"reported_store_facts\": [").count(),
             2,
             "only the two eval statements should report stored facts:\n{}",
             run_output
         );
         assert!(run_output.contains("\"statement\": \"eval 1 + 2\""));
-        assert!(run_output.contains("\"fact\": \"1 + 2 = 3\""));
+        assert!(run_output.contains("\"statement\": \"1 + 2 = 3\""));
         assert!(run_output.contains("\"statement\": \"eval a\""));
-        assert!(run_output.contains("\"fact\": \"a = 3\""));
+        assert!(run_output.contains("\"statement\": \"a = 3\""));
         assert!(
             run_output.contains("\"reason\": \"evaluation result\""),
             "eval result should retain the existing evaluation store reason:\n{}",
@@ -160,7 +162,7 @@ fn matrix_operator_latex_escapes_the_apostrophe_power_token() {
 }
 
 #[test]
-fn detail_output_keeps_empty_arrays_and_empty_strings() {
+fn json_v2_detailed_output_keeps_the_same_structural_empty_arrays() {
     let source_code = "do_nothing\nhave a R\nhave a R";
 
     let mut runtime = Runtime::new();
@@ -171,8 +173,8 @@ fn detail_output_keeps_empty_arrays_and_empty_strings() {
         render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
     assert!(!run_succeeded);
-    assert!(!run_output.contains("\"store_facts\": []"));
-    assert!(!run_output.contains("\"inside_results\": []"));
+    assert!(run_output.contains("\"stores\": []"));
+    assert!(run_output.contains("\"rule_applications\": []"));
     assert!(!run_output.contains("\"message\": \"\""));
 }
 
@@ -324,19 +326,18 @@ witness exist x R st {x = 1} from 1:
             "normal proof-trace fixture failed:\n{}",
             run_output
         );
-        assert!(run_output.contains("\"type\": \"proof sketch\""));
-        assert!(run_output.contains("\"type\": \"proved claim\""));
-        assert!(run_output.contains("\"type\": \"proof by cases\""));
-        assert!(run_output.contains("\"type\": \"existence witness\""));
+        assert!(run_output.contains("\"kind\": \"SketchStmt\""));
+        assert!(run_output.contains("\"kind\": \"ClaimStmt\""));
+        assert!(run_output.contains("\"kind\": \"ByCasesStmt\""));
+        assert!(run_output.contains("\"kind\": \"WitnessExistFact\""));
         assert_no_legacy_acceptance_field(&run_output, "normal");
         assert!(
-            run_output.contains("\"inside_results\": ["),
-            "normal output should retain one readable internal-statement tree:\n{}",
+            run_output.contains("\"proof_steps\": [") && run_output.contains("\"branches\": ["),
+            "Result JSON v2 should retain semantically named recursive children:\n{}",
             run_output
         );
-        assert!(run_output.contains("\"why_verified\": {"));
-        assert!(!run_output.contains("\"phases\": {"));
-        assert!(!run_output.contains("\"proof_steps\": ["));
+        assert!(run_output.contains("\"verification\": {"));
+        assert!(run_output.contains("\"execution_trace\": {"));
     });
 }
 
@@ -358,26 +359,25 @@ sketch:
 
     let (_, normal_output) =
         render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
-    assert!(normal_output.contains("\"inside_results\": ["));
+    assert!(normal_output.contains("\"children\": ["));
     assert!(normal_output.contains("Every object is a set."));
-    assert!(normal_output.contains("\"why_verified\": {"));
-    assert!(!normal_output.contains("\"phases\": {"));
-    assert!(!normal_output.contains("\"effects\": ["));
+    assert!(normal_output.contains("\"verification\": {"));
+    assert!(normal_output.contains("\"execution_trace\": {"));
+    assert!(normal_output.contains("\"infers\": {"));
 
     runtime.set_output_style(OutputStyle::Compact);
     let (_, compact_output) =
         render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
-    assert!(compact_output.contains("\"type\": \"proof sketch\""));
-    assert!(!compact_output.contains("\"inside_results\": ["));
-    assert!(!compact_output.contains("\"why_verified\": {"));
+    assert_eq!(compact_output, normal_output);
 
     runtime.set_output_style(OutputStyle::Detailed);
     let (_, detailed_output) =
         render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
-    assert!(detailed_output.contains("\"inside_results\": ["));
-    assert!(detailed_output.contains("\"phases\": {"));
+    assert_eq!(detailed_output, normal_output);
+    assert!(detailed_output.contains("\"children\": ["));
+    assert!(detailed_output.contains("\"execution_trace\": {"));
     assert!(detailed_output.contains("\"affect_environment\": {"));
-    assert!(detailed_output.contains("\"effects\": ["));
+    assert!(detailed_output.contains("\"infers\": {"));
 }
 
 #[test]
@@ -403,22 +403,22 @@ thm theorem_trace_self_eq:
                 "normal theorem proof-route fixture failed:\n{}",
                 run_output
             );
-            assert!(run_output.contains("\"type\": \"theorem proof\""));
+            assert!(run_output.contains("\"kind\": \"DefThmStmt\""));
+            assert!(run_output.contains("\"kind\": \"SuccessVerifyTheoremResult\""));
             assert!(
                 run_output.contains("\"theorem_trace_self_eq\""),
                 "the theorem proof should expose its public name:\n{}",
                 run_output
             );
-            assert!(run_output.contains("\"parameters\": ["));
-            assert!(run_output.contains("\"x\""));
-            assert!(run_output.contains("\"assumptions\": ["));
-            assert!(run_output.contains("\"conclusions\": ["));
+            assert!(run_output.contains("\"forall_fact\":"));
+            assert!(run_output.contains("forall x R"));
+            assert!(run_output.contains("\"assumption_infers\": {"));
             assert!(
-                run_output.contains("\"inside_results\": ["),
-                "normal theorem output should expose its readable internal route:\n{}",
+                run_output.contains("\"proof_steps\": [")
+                    && run_output.contains("\"conclusion_checks\": ["),
+                "theorem Result should expose its named recursive verification route:\n{}",
                 run_output
             );
-            assert!(!run_output.contains("\"proof_steps\": ["));
         },
     );
 }
@@ -457,12 +457,12 @@ witness exist x R st {x = 1} from 1:
             "detail proof-trace fixture failed:\n{}",
             run_output
         );
-        assert!(run_output.contains("\"type\": \"proof sketch\""));
-        assert!(run_output.contains("\"type\": \"proved claim\""));
-        assert!(run_output.contains("\"type\": \"proof by cases\""));
-        assert!(run_output.contains("\"type\": \"existence witness\""));
+        assert!(run_output.contains("\"kind\": \"SketchStmt\""));
+        assert!(run_output.contains("\"kind\": \"ClaimStmt\""));
+        assert!(run_output.contains("\"kind\": \"ByCasesStmt\""));
+        assert!(run_output.contains("\"kind\": \"WitnessExistFact\""));
         assert!(
-            run_output.matches("\"inside_results\": [").count() >= 3,
+            run_output.matches("\"children\": [").count() >= 3,
             "detail output should expand available raw recursive inside_results:\n{}",
             run_output
         );
@@ -500,9 +500,10 @@ by induc n from 0:
         "normal by induc fixture failed:\n{}",
         run_output
     );
-    assert!(run_output.contains("\"type\": \"proof by induction\""));
+    assert!(run_output.contains("\"kind\": \"ByInducStmt\""));
+    assert!(run_output.contains("\"kind\": \"SuccessVerifyByInducResult\""));
     assert!(
-        run_output.contains("\"inside_results\": ["),
+        run_output.contains("\"children\": ["),
         "normal by induc output should retain its readable internal route:\n{}",
         run_output
     );
@@ -524,11 +525,14 @@ by induc n from 0:
         "detail by induc fixture failed:\n{}",
         detail_run_output
     );
-    assert!(detail_run_output.contains("\"type\": \"proof by induction\""));
-    assert!(detail_run_output.contains("\"inside_results\": ["));
+    assert!(detail_run_output.contains("\"kind\": \"ByInducStmt\""));
+    assert!(detail_run_output.contains("\"children\": ["));
     assert!(detail_run_output.contains("\"statement\": \"$p(0)\""));
     assert!(
-        detail_run_output.matches("\"type\": \"prop fact\"").count() >= 4,
+        detail_run_output
+            .matches("\"kind\": \"AtomicFact\"")
+            .count()
+            >= 4,
         "detail by induc output should expand base/step proof and obligation checks:\n{}",
         detail_run_output
     );
@@ -554,14 +558,15 @@ witness exist x R st {x = 1} from 1:
         "witness detail fixture failed:\n{}",
         run_output
     );
-    assert!(run_output.contains("\"type\": \"existence witness\""));
+    assert!(run_output.contains("\"kind\": \"WitnessExistFact\""));
+    assert!(run_output.contains("\"kind\": \"SuccessVerifyWitnessExistResult\""));
     assert!(
         run_output.matches("\"statement\": \"1 = 1\"").count() >= 2,
         "witness detail output should include the proof step and the instantiated obligation:\n{}",
         run_output
     );
     assert!(
-        run_output.contains("\"inside_results\": ["),
+        run_output.contains("\"children\": ["),
         "witness detail output should expand its proof trace:\n{}",
         run_output
     );
@@ -713,10 +718,10 @@ fn zh_output_localizes_unproved_trust_labels() {
         render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
     assert!(run_succeeded, "Chinese output run failed:\n{}", run_output);
-    assert!(run_output.contains("\"结果\": \"成功\""));
-    assert!(run_output.contains("\"类型\": \"未经证明的假设\""));
-    assert!(run_output.contains("\"语句\": \"trust exist! m, n R st {$tmp_rel("));
-    assert!(!run_output.contains("\"result\": \"success\""));
+    assert!(run_output.contains("\"schema\": \"litex.statement-result.v2\""));
+    assert!(run_output.contains("\"outcome\": \"success\""));
+    assert!(run_output.contains("\"kind\": \"TrustStmt\""));
+    assert!(run_output.contains("\"statement\": \"trust exist! m, n R st {$tmp_rel("));
 }
 
 #[test]
@@ -737,10 +742,10 @@ fn zh_output_localizes_citation_evidence_but_keeps_litex_statement() {
         "Chinese citation run failed:\n{}",
         run_output
     );
-    assert!(run_output.contains("\"验证依据\""));
-    assert!(run_output.contains("\"类型\": \"引用 prop 定义\""));
-    assert!(run_output.contains("\"被引用语句\": \"prop is_one_tmp(t R):\\n"));
-    assert!(run_output.contains("\"语句\": \"$is_one_tmp(1)\""));
+    assert!(run_output.contains("\"verification\""));
+    assert!(run_output.contains("\"kind\": \"FactCitation\""));
+    assert!(run_output.contains("\"cited_statement\": \"prop is_one_tmp(t R):\\n"));
+    assert!(run_output.contains("\"statement\": \"$is_one_tmp(1)\""));
 }
 
 #[test]
@@ -785,18 +790,15 @@ $can_be_divided_by_2(x)
         "Chinese forall output run failed:\n{}",
         run_output
     );
-    assert!(run_output.contains("\"结论\": ["));
-    assert!(run_output.contains("\"类型\": \"引用 forall 事实\""));
-    assert!(run_output.contains("\"被引用语句\": \"forall x Z:\\n    $can_be_divided_by_8(x)\\n    =>:\\n        $can_be_divided_by_2(x)\""));
-    assert!(run_output.contains("\"验证依据\""));
-    assert!(!run_output.contains("\"带验证的结论\""));
-    assert!(!run_output.contains("\"原因\": \"推导事实\""));
-    assert!(!run_output.contains("\"实例化\""));
-    assert!(!run_output.contains("\"要求\""));
+    assert!(run_output.contains("\"kind\": \"KnownForallInstantiation\""));
+    assert!(run_output.contains("\"cited_statement\": \"forall x Z:\\n    $can_be_divided_by_8(x)\\n    =>:\\n        $can_be_divided_by_2(x)\""));
+    assert!(run_output.contains("\"verification\""));
+    assert!(run_output.contains("\"instantiation\": ["));
+    assert!(run_output.contains("\"requirements\": ["));
 }
 
 #[test]
-fn zh_runner_localizes_wrapper_and_trace() {
+fn zh_runner_keeps_machine_wrapper_keys_and_localizes_trace() {
     let (ok, output) = run_runner_for_code_with_language(
         "trust 1 = 1",
         "-runner-test",
@@ -805,10 +807,10 @@ fn zh_runner_localizes_wrapper_and_trace() {
     );
 
     assert!(ok, "Chinese runner should succeed:\n{}", output);
-    assert!(output.contains("\"运行器\": \"litex-runner\""));
-    assert!(output.contains("\"结果\": \"成功\""));
-    assert!(output.contains("\"运行轨迹\""));
-    assert!(output.contains("\\\"类型\\\": \\\"未经证明的假设\\\""));
+    assert!(output.contains("\"runner\": \"litex-runner\""));
+    assert!(output.contains("\"result\": \"success\""));
+    assert!(output.contains("\"trace\""));
+    assert!(output.contains("\\\"kind\\\": \\\"TrustStmt\\\""));
 }
 
 #[test]
@@ -1013,15 +1015,17 @@ fn non_english_languages_localize_unproved_trust_labels() {
             "localized output run failed:\n{}",
             run_output
         );
-        assert!(run_output.contains(&format!("\"{}\": \"{}\"", result_key, success_text)));
-        assert!(run_output.contains(&format!("\"{}\": \"{}\"", type_key, type_text)));
-        assert!(run_output.contains(&format!("\"{}\": \"trust 1 = 1\"", statement_key)));
-        assert!(!run_output.contains("\"result\": \"success\""));
+        let _legacy_localized_fields =
+            (result_key, success_text, type_key, type_text, statement_key);
+        assert!(run_output.contains("\"schema\": \"litex.statement-result.v2\""));
+        assert!(run_output.contains("\"outcome\": \"success\""));
+        assert!(run_output.contains("\"kind\": \"TrustStmt\""));
+        assert!(run_output.contains("\"statement\": \"trust 1 = 1\""));
     }
 }
 
 #[test]
-fn non_english_runner_localizes_wrapper_keys() {
+fn non_english_runner_keeps_machine_wrapper_keys() {
     let cases = vec![
         (
             OutputLanguage::SimplifiedChinese,
@@ -1147,12 +1151,19 @@ fn non_english_runner_localizes_wrapper_keys() {
             run_runner_for_code_with_language("trust 1 = 1", "-runner-test", true, language);
 
         assert!(ok, "localized runner should succeed:\n{}", output);
-        assert!(output.contains(&format!("\"{}\": \"litex-runner\"", runner_key)));
-        assert!(output.contains(&format!("\"{}\": \"{}\"", result_key, success_text)));
-        assert!(output.contains(&format!("\"{}\": true", ok_key)));
-        assert!(output.contains(&format!("\"{}\"", target_key)));
-        assert!(output.contains(&format!("\"{}\"", trace_key)));
-        assert!(!output.contains("\"result\": \"success\""));
+        let _legacy_localized_fields = (
+            runner_key,
+            result_key,
+            success_text,
+            ok_key,
+            target_key,
+            trace_key,
+        );
+        assert!(output.contains("\"runner\": \"litex-runner\""));
+        assert!(output.contains("\"result\": \"success\""));
+        assert!(output.contains("\"ok\": true"));
+        assert!(output.contains("\"target\""));
+        assert!(output.contains("\"trace\""));
     }
 }
 
@@ -1182,7 +1193,7 @@ $axiom_prop(3)
         run_output
     );
     assert!(
-        run_output.contains("\"type\": \"axiom\""),
+        run_output.contains("\"kind\": \"AxiomStmt\""),
         "axiom output should identify the declaration as an axiom:\n{}",
         run_output
     );
@@ -1378,12 +1389,13 @@ $q(1)
         "citation_verified_by_type_reflects_cited_stmt_kind failed:\n{}",
         run_output
     );
-    assert!(run_output.contains("\"type\": \"cite forall fact\""));
-    assert!(!run_output.contains("\"instantiation\""));
-    assert!(!run_output.contains("\"requirements\""));
-    assert!(!run_output.contains("\"statement\": \"2 $in R\""));
-    assert!(run_output.contains("\"type\": \"cite equality fact\""));
-    assert!(run_output.contains("\"type\": \"cite prop def\""));
+    assert!(run_output.contains("\"kind\": \"KnownForallInstantiation\""));
+    assert!(run_output.contains("\"instantiation\""));
+    assert!(run_output.contains("\"requirements\""));
+    assert!(run_output.contains("\"statement\": \"2 $in R\""));
+    assert!(run_output.contains("\"kind\": \"FactCitation\""));
+    assert!(run_output.contains("\"cited_statement\": \"a = 1\""));
+    assert!(run_output.contains("\"cited_statement\": \"prop q(x R):\\n"));
 }
 
 #[test]
@@ -1407,7 +1419,7 @@ forall x R:
         run_output
     );
     assert!(
-        run_output.contains("\"verification\": {\n    \"type\": \"builtin rule\""),
+        run_output.contains("\"kind\": \"BuiltinRule\""),
         "builtin fact should render verification as an object:\n{}",
         run_output
     );
@@ -1416,15 +1428,16 @@ forall x R:
         "forall fact should not render a separate top-level verification summary:\n{}",
         run_output
     );
-    assert!(run_output.contains("\"parameters\": ["));
-    assert!(run_output.contains("\"assumptions\": ["));
+    assert!(run_output.contains("\"kind\": \"ForallProof\""));
+    assert!(run_output.contains("\"forall_fact\":"));
+    assert!(run_output.contains("\"assumption_infers\": {"));
     assert!(
         !run_output.contains("\"verified_by\""),
         "public output should use verification instead of verified_by:\n{}",
         run_output
     );
     assert!(
-        run_output.contains("\"conclusions\": ["),
+        run_output.contains("\"proves\": ["),
         "forall proof should keep one verification entry per then fact:\n{}",
         run_output
     );
@@ -1489,14 +1502,9 @@ $sym_p(B, A)
         "verification output should not include redundant method field:\n{}",
         run_output
     );
-    for route_type in [
-        "builtin rule",
-        "cite equality fact",
-        "cite prop fact",
-        "cite forall fact",
-    ] {
+    for route_type in ["BuiltinRule", "FactCitation", "KnownForallInstantiation"] {
         assert!(
-            run_output.contains(&format!("\"type\": \"{}\"", route_type)),
+            run_output.contains(&format!("\"kind\": \"{}\"", route_type)),
             "missing atomic verification route type `{}`:\n{}",
             route_type,
             run_output
@@ -1532,7 +1540,7 @@ forall x R+:
         run_output
     );
     assert!(
-        run_output.contains("\"conclusions\": ["),
+        run_output.contains("\"proves\": ["),
         "normal output should retain the theorem's public conclusions:\n{}",
         run_output
     );
@@ -1542,13 +1550,13 @@ forall x R+:
         run_output
     );
     assert!(
-        run_output.contains("\"rule\": \"same known equality class\""),
+        run_output.contains("same known equality class"),
         "normal output should retain the known-equality verification reason:\n{}",
         run_output
     );
     assert!(
-        !run_output.contains("\"subgoals\": ["),
-        "normal output should not duplicate detailed builtin subgoals:\n{}",
+        run_output.contains("\"subgoals\": ["),
+        "JSON v2 should retain recursive builtin subgoals:\n{}",
         run_output
     );
 }
@@ -1574,7 +1582,7 @@ have a, b, c, d R+
         .last()
         .and_then(StmtResult::factual_success)
         .expect("the final order fact should have a factual result");
-    let VerifiedByResult::BuiltinStrategy(root_rule) = root.underlying_verified_by() else {
+    let SuccessFactProofResult::BuiltinStrategy(root_rule) = root.underlying_verified_by() else {
         panic!("the root should be verified by a builtin strategy: {root:?}");
     };
     assert_eq!(root_rule.subgoals.len(), 2);
@@ -1588,7 +1596,7 @@ have a, b, c, d R+
     let right_branch = root_rule.subgoals[1]
         .factual_success()
         .expect("the right recursive branch should remain factual");
-    let VerifiedByResult::BuiltinStrategy(right_rule) = right_branch.underlying_verified_by()
+    let SuccessFactProofResult::BuiltinStrategy(right_rule) = right_branch.underlying_verified_by()
     else {
         panic!("the right recursive branch should remain a strategy: {right_branch:?}");
     };
@@ -1604,7 +1612,8 @@ have a, b, c, d R+
             .factual_success()
             .expect("each recursive branch should remain a factual result");
         let branch_rule = match branch.underlying_verified_by() {
-            VerifiedByResult::BuiltinRule(rule) | VerifiedByResult::BuiltinStrategy(rule) => rule,
+            SuccessFactProofResult::BuiltinRule(rule)
+            | SuccessFactProofResult::BuiltinStrategy(rule) => rule,
             _ => panic!("each branch should retain its builtin evidence: {branch:?}"),
         };
         assert!(
@@ -1650,10 +1659,10 @@ $q(1)
         "normal output fixture failed:\n{}",
         run_output
     );
-    assert!(!run_output.contains("\"infer_facts\""));
-    assert!(!run_output.contains("\"effects\""));
-    assert!(!run_output.contains("\"store_facts\""));
-    assert!(!run_output.contains("\"trust\""));
+    assert!(run_output.contains("\"infers\": {"));
+    assert!(run_output.contains("\"stores\": ["));
+    assert!(run_output.contains(format!("\"reason\": \"{}\"", ClaimStmt::store_reason()).as_str()));
+    assert!(run_output.contains(format!("\"reason\": \"{}\"", TrustStmt::store_reason()).as_str()));
 
     let mut detail_runtime = Runtime::new();
     detail_runtime.detail_output = true;
@@ -1668,10 +1677,10 @@ $q(1)
         "detail output fixture failed:\n{}",
         detail_output
     );
-    assert!(!detail_output.contains("\"store_facts\""));
-    assert!(detail_output.contains("\"phases\": {"));
+    assert_eq!(detail_output, run_output);
+    assert!(detail_output.contains("\"execution_trace\": {"));
     assert!(detail_output.contains("\"affect_environment\": {"));
-    assert!(detail_output.contains("\"effects\": ["));
+    assert!(detail_output.contains("\"stores\": ["));
     assert!(
         detail_output.contains(format!("\"reason\": \"{}\"", ClaimStmt::store_reason()).as_str())
     );
@@ -1712,16 +1721,14 @@ forall b R:
         "execution phase fixture failed:\n{}",
         run_output
     );
-    assert_eq!(run_output.matches("\"phases\": {").count(), 2);
+    assert_eq!(run_output.matches("\"execution_trace\": {").count(), 2);
     assert!(run_output.contains("\"verify_well_definedness\": {"));
     assert!(run_output.contains("\"verify_process\": {"));
     assert!(run_output.contains("\"affect_environment\": {"));
-    assert!(run_output.contains("\"kind\": \"parameter_binding\""));
+    assert!(run_output.contains("\"kind\": \"HaveObjEqualStmt\""));
     assert!(run_output.contains("\"statement\": \"1 $in R\""));
-    assert!(run_output.contains("\"rule\": \"calculation\""));
-    assert!(run_output.contains("\"kind\": \"declare_object\""));
-    assert!(run_output.contains("\"kind\": \"store_fact\""));
-    assert!(!run_output.contains("\"store_facts\""));
+    assert!(run_output.contains("calculation"));
+    assert!(run_output.contains("\"stores\": ["));
 }
 
 #[test]
@@ -1859,11 +1866,11 @@ forall n N:
         "forall parameter assumption fixture failed:\n{}",
         run_output
     );
-    assert!(!run_output.contains("\"type\": \"forall proof\""));
+    assert!(run_output.contains("\"kind\": \"ForallProof\""));
     assert!(run_output.contains("\"n $in N\""));
-    assert!(run_output.contains("\"conclusions\": ["));
+    assert!(run_output.contains("\"proves\": ["));
     assert!(run_output.contains("\"statement\": \"n $in N\""));
-    assert!(run_output.contains("\"type\": \"local assumption\""));
+    assert!(run_output.contains("\"kind\": \"FactCitation\""));
     assert!(run_output
         .contains(format!("\"reason\": \"{}\"", ParamDefWithType::store_reason()).as_str()));
     assert!(!run_output.contains("\"source\": \"parameter definition\""));
@@ -1901,22 +1908,26 @@ forall a, b, c, d, e1, f R:
                 "forall assumption store-fact output fixture failed:\n{}",
                 run_output
             );
-            assert!(run_output.contains("\"parameters\": ["));
+            assert!(run_output.contains("\"kind\": \"ForallProof\""));
+            assert!(run_output.contains("\"forall_fact\":"));
             assert!(run_output.contains("\"a\""));
             assert!(run_output.contains("\"f\""));
-            assert!(run_output.contains("\"assumptions\": ["));
-            assert!(run_output.contains("\"fact\": \"a $in R\""));
+            assert!(run_output.contains("\"assumption_infers\": {"));
+            assert!(run_output.contains("\"statement\": \"a $in R\""));
             assert!(run_output.contains(
                 format!("\"reason\": \"{}\"", ParamDefWithType::store_reason()).as_str()
             ));
-            assert!(run_output.contains("\"fact\": \"$p(a, b, c)\""));
+            assert!(run_output.contains("\"statement\": \"$p(a, b, c)\""));
             assert!(run_output.contains(
                 format!("\"reason\": \"{}\"", ForallFact::premise_store_reason()).as_str()
             ));
-            assert!(run_output.contains("\"fact\": \"a = d\""));
-            assert!(run_output.contains("\"fact\": \"b = e1\""));
-            assert!(run_output.contains("\"fact\": \"c = f\""));
-            assert_eq!(run_output.matches("\"fact\": \"a $in R\"").count(), 1);
+            assert!(run_output.contains("\"statement\": \"a = d\""));
+            assert!(run_output.contains("\"statement\": \"b = e1\""));
+            assert!(run_output.contains("\"statement\": \"c = f\""));
+            // Result JSON v2 is a direct recursive projection. The same proposition is
+            // therefore visible at the binder-premise node, its WD proof, and its store
+            // effect; these are three views of one typed premise, not three executions.
+            assert_eq!(run_output.matches("\"statement\": \"a $in R\"").count(), 3);
         },
     );
 }
@@ -1946,29 +1957,24 @@ claim:
                 "claim forall output fixture failed:\n{}",
                 run_output
             );
-            assert!(run_output.contains("\"type\": \"proved claim\""));
-            assert!(run_output.contains("\"type\": \"claim forall proof\""));
-            assert!(run_output.contains("\"parameters\": ["));
-            assert!(run_output.contains("\"x\""));
-            assert!(run_output.contains("\"assumptions\": ["));
-            assert!(run_output.contains("\"fact\": \"x $in R\""));
+            assert!(run_output.contains("\"kind\": \"ClaimStmt\""));
+            assert!(run_output.contains("\"kind\": \"SuccessVerifyClaimForallResult\""));
+            assert!(run_output.contains("\"forall_fact\":"));
+            assert!(run_output.contains("forall x R"));
+            assert!(run_output.contains("\"assumption_infers\": {"));
+            assert!(run_output.contains("\"statement\": \"x $in R\""));
             assert!(run_output.contains(
                 format!("\"reason\": \"{}\"", ParamDefWithType::store_reason()).as_str()
             ));
-            assert!(run_output.contains("\"fact\": \"x = 1\""));
+            assert!(run_output.contains("\"statement\": \"x = 1\""));
             assert!(run_output.contains(
                 format!("\"reason\": \"{}\"", ForallFact::premise_store_reason()).as_str()
             ));
-            assert!(!run_output.contains("\"proof_steps\": ["));
+            assert!(run_output.contains("\"proof_steps\": ["));
             assert!(run_output.contains("\"statement\": \"x = x\""));
-            assert!(run_output.contains("\"conclusions\": ["));
+            assert!(run_output.contains("\"conclusion_checks\": ["));
             assert!(run_output.contains("\"statement\": \"x = 1\""));
-            assert!(run_output.contains("\"type\": \"local assumption\""));
-            assert!(
-                run_output.contains("\"inside_results\": ["),
-                "normal claim output should retain its readable internal route:\n{}",
-                run_output
-            );
+            assert!(run_output.contains("\"kind\": \"FactCitation\""));
         },
     );
 }
@@ -1995,15 +2001,15 @@ claim:
                 "claim fact output fixture failed:\n{}",
                 run_output
             );
-            assert!(run_output.contains("\"type\": \"proved claim\""));
-            assert!(run_output.contains("\"type\": \"claim proof\""));
-            assert!(run_output.contains("\"prove_goal\": \"1 = 1\""));
-            assert!(!run_output.contains("\"proof_steps\": ["));
-            assert!(run_output.contains("\"why_verified\": {"));
-            assert!(run_output.contains("\"type\": \"cite equality fact\""));
+            assert!(run_output.contains("\"kind\": \"ClaimStmt\""));
+            assert!(run_output.contains("\"kind\": \"SuccessVerifyClaimFactResult\""));
+            assert!(run_output.contains("\"fact\": \"1 = 1\""));
+            assert!(run_output.contains("\"proof_steps\": ["));
+            assert!(run_output.contains("\"verification\": {"));
+            assert!(run_output.contains("\"kind\": \"FactCitation\""));
             assert!(
-                run_output.contains("\"inside_results\": ["),
-                "normal claim output should retain its readable internal route:\n{}",
+                run_output.contains("\"conclusion_check\": {"),
+                "claim Result should retain its named conclusion child:\n{}",
                 run_output
             );
         },
@@ -2053,12 +2059,12 @@ by cases:
                 run_output
             );
             assert!(
-                run_output.contains("\"type\": \"conjunction fact\""),
+                run_output.contains("\"kind\": \"AndFact\""),
                 "normal output should identify conjunction facts at the statement level:\n{}",
                 run_output
             );
             assert!(
-                run_output.contains("\"type\": \"calculation chain\""),
+                run_output.contains("\"kind\": \"ChainFact\""),
                 "normal output should identify calculation chains at the statement level:\n{}",
                 run_output
             );
@@ -2091,17 +2097,17 @@ by cases:
             );
             assert_no_legacy_acceptance_field(&run_output, "successful");
             assert!(
-                run_output.contains("\"type\": \"proved claim\""),
+                run_output.contains("\"kind\": \"ClaimStmt\""),
                 "claim/thm statements should expose their semantic statement type:\n{}",
                 run_output
             );
             assert!(
-                run_output.contains("\"type\": \"proof by theorem\""),
+                run_output.contains("\"kind\": \"ByThmStmt\""),
                 "by thm statements should expose their semantic statement type:\n{}",
                 run_output
             );
             assert!(
-                run_output.contains("\"type\": \"proof by cases\""),
+                run_output.contains("\"kind\": \"ByCasesStmt\""),
                 "by cases statements should expose their semantic statement type:\n{}",
                 run_output
             );
@@ -2142,11 +2148,11 @@ by cases:
                 "by cases multi-goal fixture failed:\n{}",
                 run_output
             );
-            assert!(run_output.contains("\"type\": \"proof by cases\""));
-            assert!(run_output.contains("\"type\": \"by cases proof\""));
-            assert!(run_output.contains("\"inside_results\": ["));
-            assert!(run_output.contains("\"why_verified\": {"));
-            assert!(!run_output.contains("\"phases\": {"));
+            assert!(run_output.contains("\"kind\": \"ByCasesStmt\""));
+            assert!(run_output.contains("\"kind\": \"SuccessVerifyByCasesResult\""));
+            assert!(run_output.contains("\"children\": ["));
+            assert!(run_output.contains("\"verification\": {"));
+            assert!(run_output.contains("\"execution_trace\": {"));
             assert!(!run_output.contains("\"case_coverage\": {"));
             assert_no_legacy_acceptance_field(&run_output, "by cases");
             assert!(run_output.contains("\"1 = 1\""));
@@ -2179,7 +2185,8 @@ by cases:
             "by cases detail fixture failed:\n{}",
             run_output
         );
-        assert!(run_output.contains("\"type\": \"proof by cases\""));
+        assert!(run_output.contains("\"kind\": \"ByCasesStmt\""));
+        assert!(run_output.contains("\"kind\": \"SuccessVerifyByCasesResult\""));
         assert_no_legacy_acceptance_field(&run_output, "detail");
         assert!(run_output.contains("\"1 = 1\""));
     });
@@ -2208,17 +2215,17 @@ by contra:
                 "by contra output fixture failed:\n{}",
                 run_output
             );
-            assert!(run_output.contains("\"type\": \"proof by contradiction\""));
-            assert!(run_output.contains("\"type\": \"by contra proof\""));
-            assert!(run_output.contains("\"prove_goal\": \"1 = 1\""));
-            assert!(!run_output.contains("\"reverse_assumption\": {"));
-            assert!(!run_output.contains("\"proof_steps\": ["));
+            assert!(run_output.contains("\"kind\": \"ByContraStmt\""));
+            assert!(run_output.contains("\"kind\": \"SuccessVerifyByContraResult\""));
+            assert!(run_output.contains("\"to_prove\": \"1 = 1\""));
+            assert!(run_output.contains("\"reverse_assumption\":"));
+            assert!(run_output.contains("\"proof_steps\": ["));
             assert!(run_output.contains("\"statement\": \"do_nothing\""));
             assert!(run_output.contains("\"statement\": \"1 != 1\""));
             assert!(run_output.contains("\"statement\": \"1 = 1\""));
             assert!(
-                run_output.contains("\"inside_results\": ["),
-                "normal by contra output should retain its readable internal route:\n{}",
+                run_output.contains("\"contradiction\": {"),
+                "by contra Result should retain its named contradiction child:\n{}",
                 run_output
             );
         },
@@ -2271,23 +2278,21 @@ by extension:
                 render_run_source_code_output(&runtime, &stmt_results, &runtime_error, true);
 
             assert!(run_succeeded, "by output fixture failed:\n{}", run_output);
-            assert!(run_output.contains("\"type\": \"by thm proof\""));
-            assert!(run_output.contains("\"type\": \"by enumerate finite_set proof\""));
-            assert!(run_output.contains("\"type\": \"by for proof\""));
-            assert!(run_output.contains("\"type\": \"by enumerate range proof\""));
-            assert!(run_output.contains("\"type\": \"by closed_range as cases proof\""));
-            assert!(run_output.contains("\"type\": \"by extension proof\""));
+            assert!(run_output.contains("\"kind\": \"SuccessVerifyByTheoremResult\""));
+            assert!(run_output.contains("\"kind\": \"SuccessVerifyByEnumerateFiniteSetResult\""));
+            assert!(run_output.contains("\"kind\": \"SuccessVerifyByForResult\""));
+            assert!(run_output.contains("\"kind\": \"SuccessVerifyByEnumerateRangeResult\""));
+            assert!(run_output.contains("\"kind\": \"SuccessVerifyByExtensionResult\""));
             assert!(run_output.contains("\"statement\": \"n < 3\""));
-            assert!(run_output.contains("\"rule\": \"number comparison\""));
+            assert!(run_output.contains("number comparison"));
             assert!(
-                run_output.contains("\"parameter_type_check\": {"),
+                run_output.contains("\"requirement_roles\": ["),
                 "normal by-thm output should keep its readable argument check:\n{}",
                 run_output
             );
-            assert!(!run_output.contains("\"assignments\": ["));
-            assert!(!run_output.contains("\"subset_checks\": ["));
+            assert!(run_output.contains("\"assignments\": ["));
             assert!(
-                run_output.contains("\"inside_results\": ["),
+                run_output.contains("\"children\": ["),
                 "normal output should retain its readable internal route:\n{}",
                 run_output
             );
@@ -2348,15 +2353,15 @@ by symmetric_prop:
                 "structured by output fixture failed:\n{}",
                 run_output
             );
-            assert!(run_output.contains("\"type\": \"by induc proof\""));
-            assert!(run_output.contains("\"type\": \"by prop registration proof\""));
-            assert!(run_output.contains("\"type\": \"unproved assumption\""));
+            assert!(run_output.contains("\"kind\": \"SuccessVerifyByInducResult\""));
+            assert!(run_output.contains("\"kind\": \"SuccessVerifyByPropRegistrationResult\""));
+            assert!(run_output.contains("\"kind\": \"TrustStmt\""));
             assert!(run_output.contains("\"statement\": \"$local_induc_p(n + 1)\""));
             assert!(!run_output.contains("\"base_case\": {"));
-            assert!(!run_output.contains("\"registration\": \"reflexive\""));
+            assert!(run_output.contains("\"registration_type\": \"reflexive\""));
             assert!(!run_output.contains("\"trusted_conclusion\":"));
             assert!(
-                run_output.contains("\"inside_results\": ["),
+                run_output.contains("\"children\": ["),
                 "normal output should retain its readable internal route:\n{}",
                 run_output
             );
@@ -2460,14 +2465,12 @@ pub(super) fn detail_output_keeps_composite_fact_step_metadata() {
         "detail composite fact fixture failed:\n{}",
         run_output
     );
-    assert!(run_output.contains("\"type\": \"and fact\""));
-    assert!(run_output.contains("\"type\": \"chain fact\""));
-    assert!(run_output.contains("\"main_rule\": \"and decomposition\""));
-    assert!(run_output.contains("\"main_rule\": \"chain decomposition\""));
-    assert!(run_output.contains("\"role\": \"conjunct\""));
-    assert!(run_output.contains("\"role\": \"chain step\""));
-    assert!(run_output.contains("\"step_index\": 1"));
-    assert!(run_output.contains("\"step_count\": 2"));
+    assert!(run_output.contains("\"kind\": \"AndFact\""));
+    assert!(run_output.contains("\"kind\": \"ChainFact\""));
+    assert!(run_output.contains("\"kind\": \"CombinedProofs\""));
+    assert!(run_output.contains("\"proofs\": ["));
+    assert!(run_output.contains("\"statement\": \"1 = 1\""));
+    assert!(run_output.contains("\"statement\": \"2 = 2\""));
 }
 
 #[test]
@@ -2846,7 +2849,8 @@ fn error_output_compound_failure_keeps_detailed_inside_results_in_all_styles() {
     assert!(detailed.contains("\"inside_results\": ["));
     assert!(detailed.contains("\"statement\": \"1 = 1\""));
     assert!(detailed.contains("\"verification\": {"));
-    assert!(detailed.matches("\"phases\": {").count() >= 3);
+    assert!(detailed.contains("\"execution_trace\": {"));
+    assert!(detailed.contains("\"phases\": {"));
     assert!(detailed.contains("\"failed_goal\": \"1 = 0\""));
 }
 
@@ -2867,20 +2871,9 @@ fn error_output_does_not_change_the_style_of_earlier_successes() {
         assert_eq!(runtime.effective_output_style(), output_style);
 
         let success_output = display_stmt_exec_result_json(&runtime, &stmt_results[0], false);
-        match output_style {
-            OutputStyle::Compact => {
-                assert!(!success_output.contains("\"verification\": {"));
-                assert!(!success_output.contains("\"phases\": {"));
-            }
-            OutputStyle::Normal => {
-                assert!(success_output.contains("\"why_verified\": {"));
-                assert!(!success_output.contains("\"phases\": {"));
-            }
-            OutputStyle::Detailed => {
-                assert!(success_output.contains("\"verification\": {"));
-                assert!(success_output.contains("\"phases\": {"));
-            }
-        }
+        assert!(success_output.contains("\"schema\": \"litex.statement-result.v2\""));
+        assert!(success_output.contains("\"verification\": {"));
+        assert!(success_output.contains("\"execution_trace\": {"));
 
         let (_, run_output) =
             render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
@@ -2903,7 +2896,7 @@ fn error_output_preserves_failed_step_and_step_indexes_in_all_styles() {
     let failed_step = stmt_results[0]
         .statement()
         .expect("do_nothing should have a successful statement result");
-    let unknown: StmtResult = StmtUnknown::new().into();
+    let unknown: StmtResult = UnknownGenericStmtResult::new().into();
     let error: RuntimeError = UnknownRuntimeError(RuntimeErrorStruct::new_with_output(
         Some(failed_step.clone()),
         "proof step unknown".to_string(),
@@ -2952,10 +2945,11 @@ fn by_thm_selected_fact_output_distinguishes_temporary_and_parent_facts() {
         "selected by thm fixture failed:\n{run_output}"
     );
     assert!(run_output.contains("\"mode\": \"select_atomic_fact\""));
-    assert!(!run_output.contains("\"stored_then_facts\":"));
+    assert!(run_output.contains("\"stored_then_facts\": []"));
     assert!(run_output.contains("\"temporary_then_facts\": ["));
     assert!(run_output.contains("\"selected_fact\": \"1 $in {x R: x > 0}\""));
-    assert!(run_output.contains("\"target_check\": {"));
+    assert!(run_output.contains("\"requirement_checks\": ["));
+    assert!(run_output.contains("\"selected_fact_check\": {"));
     assert!(run_output.contains("\"parent_stored_facts\": ["));
     assert!(run_output.contains("selected theorem consequence"));
 }

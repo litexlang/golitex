@@ -330,7 +330,7 @@ Basic behavior:
 | `-r <project>` | Run a module's complete recursive `[export]` tree, or the root prefix through a selected submodule. |
 | `-runner -e/-f/-r ...` | Run the verifier and return one wrapper JSON object with a meaningful process exit code. |
 | `-session` | Start a framed, machine-readable persistent verifier session; use `-f <file>` to include a registered target or `-before <file>` to load only its predecessors and work in the target file environment. |
-| `-graph -e/-f/-r ... [json]` | Produce a prop/function/fact relation graph. |
+| `-graph -e/-f/-r ... [json]` | Produce a recursive statement-result/proof/FactId graph. |
 | `-factgraph -e/-f/-r ... [json]` | Produce a fact-only verification dependency graph. |
 | `-defgraph -e/-f/-r ... [json]` | Produce an environment-backed definition dependency graph. |
 | `-latex -e/-f/-r ...` | Compile Litex source to LaTeX; `-latex` alone starts its interactive REPL. |

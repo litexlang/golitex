@@ -3,8 +3,8 @@ use crate::prelude::*;
 
 impl Runtime {
     pub fn exec_by_cases_stmt(&mut self, stmt: &ByCasesStmt) -> Result<StmtResult, RuntimeError> {
-        self.exec_by_cases_stmt_verify_well_definedness(stmt)?;
-        let result = self.exec_by_cases_stmt_verify_process(stmt)?;
+        let goal_well_definedness = self.exec_by_cases_stmt_verify_well_definedness(stmt)?;
+        let result = self.exec_by_cases_stmt_verify_process(stmt, goal_well_definedness)?;
         let infer_result = self.exec_by_cases_stmt_affect_environment(stmt)?;
 
         Ok(result.with_infers(infer_result))
@@ -16,17 +16,20 @@ impl Runtime {
     fn exec_by_cases_stmt_verify_well_definedness(
         &mut self,
         stmt: &ByCasesStmt,
-    ) -> Result<(), RuntimeError> {
+    ) -> Result<Vec<SuccessVerifyFactWellDefinedResult>, RuntimeError> {
+        let mut goal_well_definedness = Vec::with_capacity(stmt.then_facts.len());
         for fact in stmt.then_facts.iter() {
-            self.verify_fact_well_defined(fact, &UseContextVerifyState::new(0, false))
-                .map_err(|verify_error| {
-                    short_exec_error(
-                        stmt.clone().into(),
-                        format!("by cases: failed to prove `{}`", fact),
-                        Some(verify_error),
-                        vec![],
-                    )
-                })?;
+            goal_well_definedness.push(
+                self.verify_fact_well_defined_result(fact, &UseContextVerifyState::new(0, false))
+                    .map_err(|verify_error| {
+                        short_exec_error(
+                            stmt.clone().into(),
+                            format!("by cases: failed to prove `{}`", fact),
+                            Some(verify_error),
+                            vec![],
+                        )
+                    })?,
+            );
         }
 
         if stmt
@@ -88,90 +91,45 @@ impl Runtime {
             ));
         }
 
-        Ok(())
+        Ok(goal_well_definedness)
     }
 
     fn exec_by_cases_stmt_verify_process(
         &mut self,
         stmt: &ByCasesStmt,
+        goal_well_definedness: Vec<SuccessVerifyFactWellDefinedResult>,
     ) -> Result<StmtResult, RuntimeError> {
-        let mut inside_results =
-            vec![self.exec_by_cases_stmt_verify_cases_cover_all_situations(stmt)?];
-        let mut case_result_counts = Vec::new();
-        let mut case_fact_ids = Vec::new();
-        let mut proof_scopes = Vec::new();
+        let coverage_check = self.exec_by_cases_stmt_verify_cases_cover_all_situations(stmt)?;
+        let mut branches = Vec::with_capacity(stmt.cases.len());
 
         for case_index in 0..stmt.cases.len() {
-            let (case_fact_id, mut case_results, proof_scope) = self.run_in_local_env(|rt| {
-                let captures_well_definedness = rt.captures_well_definedness();
-                if captures_well_definedness {
-                    rt.begin_statement_well_definedness_capture();
-                }
-                let branch_result = rt.exec_by_cases_stmt_for_one_case(stmt, case_index);
-                match branch_result {
-                    Ok((
-                        case_fact_id,
-                        case_assumption_infers,
-                        assumption_components,
-                        case_results,
-                    )) => {
-                        let well_definedness = if captures_well_definedness {
-                            rt.end_statement_well_definedness_capture()?
-                        } else {
-                            WellDefinednessCertificate::default()
-                        };
-                        Ok((
-                            case_fact_id,
-                            case_results,
-                            LocalProofScopeVerificationResult::new(
-                                case_assumption_infers,
-                                assumption_components,
-                                well_definedness,
-                            ),
-                        ))
-                    }
-                    Err(error) => {
-                        if captures_well_definedness {
-                            rt.discard_statement_well_definedness_capture();
-                        }
-                        Err(error)
-                    }
-                }
-            })?;
-            case_fact_ids.push(case_fact_id);
-            case_result_counts.push(case_results.len());
-            proof_scopes.push(proof_scope);
-            inside_results.append(&mut case_results);
+            branches.push(
+                self.run_in_local_env(|rt| rt.exec_by_cases_stmt_for_one_case(stmt, case_index))?,
+            );
         }
 
-        let proof_step_counts = stmt
-            .proofs
-            .iter()
-            .map(|proof| proof.len())
-            .collect::<Vec<_>>();
-        let by_verification = ByCasesVerificationResult::new(
-            stmt.cases.clone(),
-            case_fact_ids,
+        let by_verification = SuccessVerifyByCasesResult::new(
+            goal_well_definedness,
+            coverage_check,
             stmt.then_facts.clone(),
-            proof_step_counts,
-            case_result_counts,
-            proof_scopes,
-            stmt.impossible_facts.clone(),
+            branches,
         );
 
-        Ok(VerifiedByStmtIr::ByCasesStmt {
-            statement: stmt.clone(),
-            common: VerifiedStmtCommonIr::new(InferResult::new(), inside_results),
-            verification: Some(by_verification),
-        }
-        .into())
+        Ok(
+            SuccessByStmtResult::ByCasesStmt(Box::new(SuccessByCasesStmtResult {
+                statement: stmt.clone(),
+                common: SuccessStmtCommonResult::new(SuccessInferResult::new()),
+                verification: Some(by_verification),
+            }))
+            .into(),
+        )
     }
 
     pub(crate) fn exec_by_cases_stmt_affect_environment(
         &mut self,
         stmt: &ByCasesStmt,
-    ) -> Result<InferResult, RuntimeError> {
-        let mut infer_result = InferResult::new();
+    ) -> Result<SuccessInferResult, RuntimeError> {
+        let mut infer_result = SuccessInferResult::new();
         for then_fact in stmt.then_facts.iter() {
             let one_then_fact_infer_result = if self.current_execution_is_trusted_file() {
                 self.store_trusted_fact_and_infer_with_reason(
@@ -201,12 +159,14 @@ impl Runtime {
         stmt: &ByCasesStmt,
     ) -> Result<StmtResult, RuntimeError> {
         let infer_result = self.exec_by_cases_stmt_affect_environment(stmt)?;
-        Ok(VerifiedByStmtIr::ByCasesStmt {
-            statement: stmt.clone(),
-            common: VerifiedStmtCommonIr::new(infer_result, vec![]),
-            verification: None,
-        }
-        .into())
+        Ok(
+            SuccessByStmtResult::ByCasesStmt(Box::new(SuccessByCasesStmtResult {
+                statement: stmt.clone(),
+                common: SuccessStmtCommonResult::new(infer_result),
+                verification: None,
+            }))
+            .into(),
+        )
     }
 
     fn exec_by_cases_stmt_verify_cases_cover_all_situations(
@@ -247,10 +207,13 @@ impl Runtime {
         &mut self,
         stmt: &ByCasesStmt,
         case_index: usize,
-        inside_results: &mut Vec<StmtResult>,
-    ) -> Result<(), RuntimeError> {
+        proof_steps: &mut Vec<StmtResult>,
+    ) -> Result<Vec<StmtResult>, RuntimeError> {
+        let mut conclusion_checks = Vec::with_capacity(stmt.then_facts.len());
         for then_fact in stmt.then_facts.iter() {
             let exec_fact_result = self.exec_fact(then_fact).map_err(|statement_error| {
+                let mut diagnostics = std::mem::take(proof_steps);
+                diagnostics.append(&mut conclusion_checks);
                 short_exec_error(
                     stmt.clone().into(),
                     format!(
@@ -258,23 +221,23 @@ impl Runtime {
                         then_fact, stmt.cases[case_index]
                     ),
                     Some(statement_error),
-                    std::mem::take(inside_results),
+                    diagnostics,
                 )
             })?;
-            inside_results.push(exec_fact_result);
+            conclusion_checks.push(exec_fact_result);
         }
-        Ok(())
+        Ok(conclusion_checks)
     }
 
     fn exec_by_cases_stmt_for_one_case(
         &mut self,
         stmt: &ByCasesStmt,
         case_index: usize,
-    ) -> Result<(FactId, InferResult, Vec<(FactId, Fact)>, Vec<StmtResult>), RuntimeError> {
+    ) -> Result<SuccessVerifyByCaseBranchResult, RuntimeError> {
         let case_fact = &stmt.cases[case_index];
         let case_fact_as_fact: Fact = case_fact.clone().into();
         let case_label = case_fact.to_string();
-        let mut inside_results: Vec<StmtResult> = Vec::new();
+        let mut proof_steps: Vec<StmtResult> = Vec::new();
         let vs = UseContextVerifyState::new(0, false);
 
         if let Some(Fact::ForallFact(ff)) = stmt.then_facts.first() {
@@ -291,7 +254,7 @@ impl Runtime {
                         vec![],
                     )
                 })?;
-            let mut infer_acc = InferResult::new();
+            let mut infer_acc = SuccessInferResult::new();
 
             let mut case_assumption_infers = self
                 .store_and_chain_atomic_fact_without_well_defined_verified_and_infer(
@@ -321,7 +284,7 @@ impl Runtime {
             for proof_stmt in stmt.proofs[case_index].iter() {
                 let exec_stmt_result = self.exec_stmt(proof_stmt);
                 match exec_stmt_result {
-                    Ok(result) => inside_results.push(result),
+                    Ok(result) => proof_steps.push(result),
                     Err(statement_error) => {
                         return Err(short_exec_error(
                             stmt.clone().into(),
@@ -330,7 +293,7 @@ impl Runtime {
                                 case_fact
                             ),
                             Some(statement_error),
-                            inside_results,
+                            proof_steps,
                         ));
                     }
                 }
@@ -344,7 +307,7 @@ impl Runtime {
                 Some(&case_label),
             )?;
             if !forall_then_result.is_true() {
-                inside_results.push(forall_then_result);
+                proof_steps.push(forall_then_result);
                 return Err(short_exec_error(
                     stmt.clone().into(),
                     format!(
@@ -352,10 +315,10 @@ impl Runtime {
                         case_fact
                     ),
                     None,
-                    inside_results,
+                    proof_steps,
                 ));
             }
-            inside_results.push(forall_then_result);
+            let mut conclusion_checks = vec![forall_then_result];
 
             for then_fact in stmt.then_facts.iter().skip(1) {
                 let exec_fact_result = self.exec_fact(then_fact).map_err(|statement_error| {
@@ -366,18 +329,30 @@ impl Runtime {
                             then_fact, case_fact
                         ),
                         Some(statement_error),
-                        std::mem::take(&mut inside_results),
+                        {
+                            let mut diagnostics = std::mem::take(&mut proof_steps);
+                            diagnostics.append(&mut conclusion_checks);
+                            diagnostics
+                        },
                     )
                 })?;
-                inside_results.push(exec_fact_result);
+                conclusion_checks.push(exec_fact_result);
             }
 
-            return Ok((
-                case_fact_id,
-                case_assumption_infers,
-                assumption_components,
-                inside_results,
-            ));
+            return Ok(SuccessVerifyByCaseBranchResult {
+                assumption: case_fact.clone(),
+                assumption_fact_id: case_fact_id,
+                proof_scope: SuccessVerifyLocalProofScopeResult::new(
+                    case_assumption_infers,
+                    assumption_components,
+                ),
+                proof_steps,
+                exit: SuccessVerifyByCaseBranchExitResult::Conclusions(Box::new(
+                    SuccessVerifyByCaseConclusionsResult {
+                        checks: conclusion_checks,
+                    },
+                )),
+            });
         }
 
         let mut case_assumption_infers = self
@@ -406,7 +381,7 @@ impl Runtime {
         for proof_stmt in stmt.proofs[case_index].iter() {
             let exec_stmt_result = self.exec_stmt(proof_stmt);
             match exec_stmt_result {
-                Ok(result) => inside_results.push(result),
+                Ok(result) => proof_steps.push(result),
                 Err(statement_error) => {
                     return Err(short_exec_error(
                         stmt.clone().into(),
@@ -415,7 +390,7 @@ impl Runtime {
                             case_fact
                         ),
                         Some(statement_error),
-                        inside_results,
+                        proof_steps,
                     ));
                 }
             }
@@ -483,36 +458,47 @@ impl Runtime {
                 ));
             }
 
-            inside_results.push(
-                VerifiedByStmtIr::ByCasesStmt {
-                    statement: stmt.clone(),
-                    common: VerifiedStmtCommonIr::new(
-                        InferResult::new(),
-                        vec![
-                            verify_impossible_fact_result,
-                            verify_negated_impossible_fact_result,
-                        ],
-                    ),
-                    verification: None,
-                }
-                .into(),
-            );
-
-            return Ok((
-                case_fact_id,
-                case_assumption_infers,
-                assumption_components,
-                inside_results,
-            ));
+            return Ok(SuccessVerifyByCaseBranchResult {
+                assumption: case_fact.clone(),
+                assumption_fact_id: case_fact_id,
+                proof_scope: SuccessVerifyLocalProofScopeResult::new(
+                    case_assumption_infers,
+                    assumption_components,
+                ),
+                proof_steps,
+                exit: SuccessVerifyByCaseBranchExitResult::Contradiction(Box::new(
+                    SuccessVerifyByCaseContradictionResult {
+                        impossible_fact: impossible_fact.clone(),
+                        contradiction: SuccessVerifyContradictionResult {
+                            impossible_check: Box::new(verify_impossible_fact_result),
+                            negated_impossible_check: Box::new(
+                                verify_negated_impossible_fact_result,
+                            ),
+                        },
+                    },
+                )),
+            });
         }
 
-        self.exec_by_cases_stmt_prove_then_facts_under_case(stmt, case_index, &mut inside_results)?;
-        Ok((
-            case_fact_id,
-            case_assumption_infers,
-            assumption_components,
-            inside_results,
-        ))
+        let conclusion_checks = self.exec_by_cases_stmt_prove_then_facts_under_case(
+            stmt,
+            case_index,
+            &mut proof_steps,
+        )?;
+        Ok(SuccessVerifyByCaseBranchResult {
+            assumption: case_fact.clone(),
+            assumption_fact_id: case_fact_id,
+            proof_scope: SuccessVerifyLocalProofScopeResult::new(
+                case_assumption_infers,
+                assumption_components,
+            ),
+            proof_steps,
+            exit: SuccessVerifyByCaseBranchExitResult::Conclusions(Box::new(
+                SuccessVerifyByCaseConclusionsResult {
+                    checks: conclusion_checks,
+                },
+            )),
+        })
     }
 }
 

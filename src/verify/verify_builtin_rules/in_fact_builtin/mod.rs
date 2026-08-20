@@ -25,7 +25,9 @@ pub(crate) use general_cart::{
 };
 pub(crate) use numeric_values::{
     builtin_in_fact_result_for_evaluated_number_in_standard_set,
+    builtin_in_fact_result_for_evaluation_in_standard_set,
     builtin_not_in_fact_result_for_evaluated_number_in_standard_set,
+    builtin_not_in_fact_result_for_evaluation_in_standard_set,
 };
 use numeric_values::{
     not_in_fact_verified_by_builtin_rules_result, number_in_set_verified_by_builtin_rules_result,

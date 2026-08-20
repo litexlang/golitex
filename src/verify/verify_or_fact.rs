@@ -449,7 +449,7 @@ impl Runtime {
                 &verify_state_for_children,
             )? {
                 return Ok(
-                    (VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                    (SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                         or_fact.clone().into(),
                         reason.to_string(),
                         steps,
@@ -468,7 +468,7 @@ impl Runtime {
                 if let Ok(negated_first) = first_atomic.logical_negation() {
                     if negated_first.to_string() == second_atomic.to_string() {
                         return Ok(
-                            (VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                            (SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                                 or_fact.clone().into(),
                                 "or: complementary atomic facts".to_string(),
                                 Vec::new(),
@@ -487,7 +487,7 @@ impl Runtime {
                         &verify_state_for_children,
                     )? {
                         return Ok(
-                            (VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                            (SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                                 or_fact.clone().into(),
                                 "or: complementary order relations (strict vs non-strict) on the same real terms"
                                     .to_string(),
@@ -506,9 +506,9 @@ impl Runtime {
                         .verify_atomic_fact_restricted_known_builtin(&weak_bound, verify_state)?;
                     if weak_result.is_true() {
                         return Ok(
-                            (VerifiedFactStmtIr::new_with_verified_by_builtin_rules_label_and_steps(
+                            (SuccessFactStmtResult::new_with_verified_by_builtin_rules_label_and_steps(
                                 or_fact.clone().into(),
-                                InferResult::new(),
+                                SuccessInferResult::new(),
                                 "or: equality plus strict order covers a known weak order".to_string(),
                                 vec![weak_result],
                             ))
@@ -520,7 +520,7 @@ impl Runtime {
                     || abs_sign_split_or_is_exhaustive_pair(second_atomic, first_atomic)
                 {
                     return Ok(
-                        (VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                        (SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                             or_fact.clone().into(),
                             "or: abs(x) is x or -x".to_string(),
                             Vec::new(),
@@ -533,7 +533,7 @@ impl Runtime {
 
         if mod_positive_integer_residue_or_is_exhaustive(or_fact) {
             return Ok(
-                (VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                (SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                     or_fact.clone().into(),
                     "or: complete residue classes modulo a positive integer".to_string(),
                     Vec::new(),
@@ -567,9 +567,8 @@ impl Runtime {
         for (selected_index, fact) in or_fact.facts.iter().enumerate() {
             let result = self.verify_and_chain_atomic_fact(fact, &verify_state_for_children)?;
             if result.is_true() {
-                if self.captures_well_definedness() {
-                    return Ok(
-                        (VerifiedFactStmtIr::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                return Ok(
+                    (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             or_fact.clone().into(),
                             "or: selected verified disjunct".to_string(),
                             BuiltinRuleEvidence::DisjunctionIntroduction(
@@ -582,18 +581,7 @@ impl Runtime {
                             vec![result],
                         ))
                         .into(),
-                    );
-                }
-                return Ok((VerifiedFactStmtIr::new_with_verified_by_known_fact(
-                    or_fact.clone().into(),
-                    VerifiedByResult::wrap_bys(vec![VerifiedBysEnum::cited_fact(
-                        or_fact.clone().into(),
-                        fact.clone().into(),
-                        None,
-                    )]),
-                    Vec::new(),
-                ))
-                .into());
+                );
             }
         }
 
@@ -613,7 +601,7 @@ impl Runtime {
             return Ok(result);
         }
 
-        Ok(StmtUnknown::new().into())
+        Ok(UnknownGenericStmtResult::new().into())
     }
 
     // Package an implication as a classical disjunction.
@@ -649,9 +637,9 @@ impl Runtime {
             })?;
             if conclusion_result.is_true() {
                 return Ok(Some(
-                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_label_and_steps(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_label_and_steps(
                         or_fact.clone().into(),
-                        InferResult::new(),
+                        SuccessInferResult::new(),
                         format!(
                             "or: classical implication packaging; `{}` follows under `{}`",
                             conclusion, assumed_opposite
@@ -696,9 +684,9 @@ impl Runtime {
         }
 
         Ok(Some(
-            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_label_and_steps(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rules_label_and_steps(
                 or_fact.clone().into(),
-                InferResult::new(),
+                SuccessInferResult::new(),
                 "or: integer lower bound split into finite successors and strict tail".to_string(),
                 steps,
             )
@@ -756,9 +744,9 @@ impl Runtime {
             if product_zero_result.is_true() {
                 steps.push(product_zero_result);
                 return Ok(Some(
-                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_label_and_steps(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_label_and_steps(
                         or_fact.clone().into(),
-                        InferResult::new(),
+                        SuccessInferResult::new(),
                         "zero_product_split: a * b = 0 gives a = 0 or b = 0".to_string(),
                         steps,
                     )
@@ -820,9 +808,9 @@ impl Runtime {
                 self.verify_non_equational_atomic_fact_with_known_atomic_facts(&candidate)?;
             if result.is_true() {
                 return Ok(Some(
-                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_label_and_steps(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_label_and_steps(
                         or_fact.clone().into(),
-                        InferResult::new(),
+                        SuccessInferResult::new(),
                         "or: square sum nonzero implies one component nonzero".to_string(),
                         vec![result],
                     )
@@ -859,7 +847,7 @@ impl Runtime {
             }
         }
 
-        Ok((StmtUnknown::new()).into())
+        Ok((UnknownGenericStmtResult::new()).into())
     }
 
     pub fn verify_or_fact_with_known_or_facts_with_facts_in_environment(
@@ -888,13 +876,15 @@ impl Runtime {
                 }
 
                 if all_args_match {
-                    return Ok((VerifiedFactStmtIr::new_with_verified_by_known_fact(
+                    return Ok((SuccessFactStmtResult::new_with_verified_by_known_fact(
                         or_fact.clone().into(),
-                        VerifiedByResult::wrap_bys(vec![VerifiedBysEnum::cited_fact(
-                            or_fact.clone().into(),
-                            known_or_fact.clone().into(),
-                            None,
-                        )]),
+                        SuccessFactProofResult::wrap_bys(vec![
+                            SuccessCombinedFactProofItemResult::cited_fact(
+                                or_fact.clone().into(),
+                                known_or_fact.clone().into(),
+                                None,
+                            ),
+                        ]),
                         Vec::new(),
                     ))
                     .into());
@@ -902,6 +892,6 @@ impl Runtime {
             }
         }
 
-        return Ok((StmtUnknown::new()).into());
+        return Ok((UnknownGenericStmtResult::new()).into());
     }
 }

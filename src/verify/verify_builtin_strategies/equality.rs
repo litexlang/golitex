@@ -27,7 +27,7 @@ impl Runtime {
         let (Obj::ProductOfFiniteSet(left), Obj::ProductOfFiniteSet(right)) =
             (&fact.left, &fact.right)
         else {
-            return Ok(StmtUnknown::new().into());
+            return Ok(UnknownGenericStmtResult::new().into());
         };
         let set_goal: AtomicFact = EqualFact::new(
             left.set.as_ref().clone(),
@@ -37,18 +37,18 @@ impl Runtime {
         .into();
         let set_result = self.verify_builtin_strategy_child(&set_goal)?;
         if !set_result.is_true() {
-            return Ok(StmtUnknown::new().into());
+            return Ok(UnknownGenericStmtResult::new().into());
         }
 
         let x_name = self.generate_random_unused_name();
         let (x_binding, x_obj) = self.fresh_bound_param(x_name, ParamObjType::Forall)?;
         let Some(left_at_x) = self.instantiate_unary_function_at(left.func.as_ref(), &x_obj)?
         else {
-            return Ok(StmtUnknown::new().into());
+            return Ok(UnknownGenericStmtResult::new().into());
         };
         let Some(right_at_x) = self.instantiate_unary_function_at(right.func.as_ref(), &x_obj)?
         else {
-            return Ok(StmtUnknown::new().into());
+            return Ok(UnknownGenericStmtResult::new().into());
         };
         let pointwise_goal: AtomicFact =
             EqualFact::new(left_at_x, right_at_x, fact.line_file.clone()).into();
@@ -61,11 +61,11 @@ impl Runtime {
             rt.verify_builtin_strategy_child(&pointwise_goal)
         })?;
         if !pointwise_result.is_true() {
-            return Ok(StmtUnknown::new().into());
+            return Ok(UnknownGenericStmtResult::new().into());
         }
 
         Ok(
-            VerifiedFactStmtIr::new_with_verified_by_builtin_strategy_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_strategy_recording_stmt(
                 fact.clone().into(),
                 "finite-set product congruence strategy: prove pointwise factor equality"
                     .to_string(),
@@ -89,7 +89,7 @@ impl Runtime {
                 | (_, Obj::FiniteSetMax(_) | Obj::FiniteSetMin(_))
         );
         if !has_extremum {
-            return Ok(StmtUnknown::new().into());
+            return Ok(UnknownGenericStmtResult::new().into());
         }
 
         let required: [AtomicFact; 2] = [
@@ -110,13 +110,13 @@ impl Runtime {
         for child in &required {
             let result = self.verify_builtin_strategy_child(child)?;
             if !result.is_true() {
-                return Ok(StmtUnknown::new().into());
+                return Ok(UnknownGenericStmtResult::new().into());
             }
             steps.push(result);
         }
 
         Ok(
-            VerifiedFactStmtIr::new_with_verified_by_builtin_strategy_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_strategy_recording_stmt(
                 fact.clone().into(),
                 "finite-extremum equality strategy: prove both weak-order directions".to_string(),
                 steps,
@@ -134,7 +134,7 @@ impl Runtime {
         fact: &EqualFact,
     ) -> Result<StmtResult, RuntimeError> {
         let (Obj::Mod(left_mod), Obj::Mod(right_mod)) = (&fact.left, &fact.right) else {
-            return Ok(StmtUnknown::new().into());
+            return Ok(UnknownGenericStmtResult::new().into());
         };
 
         let modulus_goal = EqualFact::new(
@@ -144,7 +144,7 @@ impl Runtime {
         );
         let modulus_result = self.verify_equal_fact_with_direct_routes(&modulus_goal)?;
         if !modulus_result.is_true() {
-            return Ok(StmtUnknown::new().into());
+            return Ok(UnknownGenericStmtResult::new().into());
         }
 
         let pairs = match (left_mod.left.as_ref(), right_mod.left.as_ref()) {
@@ -160,7 +160,7 @@ impl Runtime {
                 (left.left.as_ref(), right.left.as_ref()),
                 (left.right.as_ref(), right.right.as_ref()),
             ],
-            _ => return Ok(StmtUnknown::new().into()),
+            _ => return Ok(UnknownGenericStmtResult::new().into()),
         };
 
         let mut subgoals = vec![modulus_result];
@@ -185,13 +185,13 @@ impl Runtime {
                 self.verify_mod_congruence_with_builtin_strategy(&child)?
             };
             if !result.is_true() {
-                return Ok(StmtUnknown::new().into());
+                return Ok(UnknownGenericStmtResult::new().into());
             }
             subgoals.push(result);
         }
 
         Ok(
-            VerifiedFactStmtIr::new_with_verified_by_builtin_strategy_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_strategy_recording_stmt(
                 fact.clone().into(),
                 "mod-congruence strategy: reduce immediate binary operands modulo m".to_string(),
                 subgoals,

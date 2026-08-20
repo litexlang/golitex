@@ -5,13 +5,13 @@ impl Runtime {
     pub(crate) fn infer_not_forall_fact(
         &mut self,
         not_forall: &NotForallFact,
-    ) -> Result<InferResult, RuntimeError> {
+    ) -> Result<SuccessInferResult, RuntimeError> {
         let Some(exist_fact) = self.build_not_forall_counterexample_exist_fact(not_forall)? else {
-            return Ok(InferResult::new());
+            return Ok(SuccessInferResult::new());
         };
 
         let inferred_fact: Fact = exist_fact.into();
-        let mut out = InferResult::new();
+        let mut out = SuccessInferResult::new();
         out.new_fact(&inferred_fact);
         out.new_infer_result_inside(
             self.store_fact_without_forall_coverage_check_and_infer(inferred_fact)?,

@@ -1,6 +1,275 @@
 use crate::prelude::*;
 
 impl Runtime {
+    fn verify_indexed_set_family_operator_well_defined_result(
+        &mut self,
+        index_set: &Obj,
+        ambient_set: &Obj,
+        family_fn: &Obj,
+        operator_display: &str,
+        verify_state: &UseContextVerifyState,
+    ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
+        let mut steps = SuccessVerifyObjWellDefinedStepsResult::new();
+        for (argument_index, child) in [index_set, ambient_set, family_fn].into_iter().enumerate() {
+            steps.push_child(self.verify_child_obj_well_defined_result(
+                child,
+                verify_state,
+                WellDefinedObjChildRole::ConstructorArgument { argument_index },
+            )?);
+        }
+
+        for set in [index_set, ambient_set] {
+            let is_set: Fact = IsSetFact::new(set.clone(), default_line_file()).into();
+            let result = self
+                .verify_fact_return_err_if_not_true(&is_set, verify_state)
+                .map_err(|error| {
+                    RuntimeError::from(WellDefinedRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_cause(
+                            format!("failed to verify well-defined of {operator_display}"),
+                            error,
+                        ),
+                    ))
+                })?;
+            steps.push_fact_check(super::success_obj_fact_check(result)?);
+        }
+
+        let family_param_name = self.generate_internal_binder_name();
+        let family_fn_set: Obj = FnSet::new(
+            vec![self.fresh_param_group_with_set(vec![family_param_name], index_set.clone())?],
+            vec![],
+            PowerSet::new(ambient_set.clone()).into(),
+        )?
+        .into();
+        let family_fn_type: Fact =
+            InFact::new(family_fn.clone(), family_fn_set, default_line_file()).into();
+        let result = self
+            .verify_fact_return_err_if_not_true(&family_fn_type, verify_state)
+            .map_err(|error| {
+                RuntimeError::from(WellDefinedRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_cause(
+                        format!("failed to verify well-defined of {operator_display}"),
+                        error,
+                    ),
+                ))
+            })?;
+        steps.push_fact_check(super::success_obj_fact_check(result)?);
+        Ok(steps)
+    }
+
+    pub(in crate::verify) fn verify_index_union_well_defined_result(
+        &mut self,
+        value: &IndexUnion,
+        verify_state: &UseContextVerifyState,
+    ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
+        self.verify_indexed_set_family_operator_well_defined_result(
+            &value.index_set,
+            &value.ambient_set,
+            &value.family_fn,
+            &value.to_string(),
+            verify_state,
+        )
+    }
+
+    pub(in crate::verify) fn verify_index_intersect_well_defined_result(
+        &mut self,
+        value: &IndexIntersect,
+        verify_state: &UseContextVerifyState,
+    ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
+        self.verify_indexed_set_family_operator_well_defined_result(
+            &value.index_set,
+            &value.ambient_set,
+            &value.family_fn,
+            &value.to_string(),
+            verify_state,
+        )
+    }
+
+    pub(in crate::verify) fn verify_power_set_well_defined_result(
+        &mut self,
+        value: &PowerSet,
+        verify_state: &UseContextVerifyState,
+    ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
+        let mut steps = SuccessVerifyObjWellDefinedStepsResult::new();
+        steps.push_child(self.verify_child_obj_well_defined_result(
+            &value.set,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 0 },
+        )?);
+        Ok(steps)
+    }
+
+    pub(in crate::verify) fn verify_general_cart_well_defined_result(
+        &mut self,
+        value: &GeneralCart,
+        verify_state: &UseContextVerifyState,
+    ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
+        let mut steps = SuccessVerifyObjWellDefinedStepsResult::new();
+        for (argument_index, child) in [&value.index_set, &value.family_set, &value.family_fn]
+            .into_iter()
+            .enumerate()
+        {
+            steps.push_child(self.verify_child_obj_well_defined_result(
+                child,
+                verify_state,
+                WellDefinedObjChildRole::ConstructorArgument { argument_index },
+            )?);
+        }
+
+        let index_is_set: Fact =
+            IsSetFact::new((*value.index_set).clone(), default_line_file()).into();
+        let index_result = self
+            .verify_fact_return_err_if_not_true(&index_is_set, verify_state)
+            .map_err(|error| {
+                RuntimeError::from(WellDefinedRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_cause(
+                        format!("failed to verify well-defined of {value}"),
+                        error,
+                    ),
+                ))
+            })?;
+        steps.push_fact_check(super::success_obj_fact_check(index_result)?);
+
+        let family_is_nonempty: Fact =
+            IsNonemptySetFact::new((*value.family_set).clone(), default_line_file()).into();
+        let family_result = self
+            .verify_fact_return_err_if_not_true(&family_is_nonempty, verify_state)
+            .map_err(|error| {
+                RuntimeError::from(WellDefinedRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_cause(
+                        format!("failed to verify well-defined of {value}"),
+                        error,
+                    ),
+                ))
+            })?;
+        steps.push_fact_check(super::success_obj_fact_check(family_result)?);
+
+        let family_param_name = self.generate_internal_binder_name();
+        let family_fn_set: Obj = FnSet::new(
+            vec![self
+                .fresh_param_group_with_set(vec![family_param_name], (*value.index_set).clone())?],
+            vec![],
+            (*value.family_set).clone(),
+        )?
+        .into();
+        let family_fn_type: Fact = InFact::new(
+            (*value.family_fn).clone(),
+            family_fn_set,
+            default_line_file(),
+        )
+        .into();
+        let function_result = self
+            .verify_fact_return_err_if_not_true(&family_fn_type, verify_state)
+            .map_err(|error| {
+                RuntimeError::from(WellDefinedRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_cause(
+                        format!("failed to verify well-defined of {value}"),
+                        error,
+                    ),
+                ))
+            })?;
+        steps.push_fact_check(super::success_obj_fact_check(function_result)?);
+        Ok(steps)
+    }
+
+    pub(in crate::verify) fn verify_obj_at_index_well_defined_result(
+        &mut self,
+        value: &ObjAtIndex,
+        verify_state: &UseContextVerifyState,
+    ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
+        let mut steps = SuccessVerifyObjWellDefinedStepsResult::new();
+        for (argument_index, child) in [&value.obj, &value.index].into_iter().enumerate() {
+            steps.push_child(self.verify_child_obj_well_defined_result(
+                child,
+                verify_state,
+                WellDefinedObjChildRole::ConstructorArgument { argument_index },
+            )?);
+        }
+
+        let calculated_index: Obj = self
+            .resolve_obj_to_number(&value.index)
+            .map(|number| Number::new(number.normalized_value).into())
+            .unwrap_or_else(|| (*value.index).clone());
+        let positive: AtomicFact = InFact::new(
+            calculated_index.clone(),
+            StandardSet::NPos.into(),
+            default_line_file(),
+        )
+        .into();
+        let positive_result = self.verify_atomic_fact(&positive, verify_state)?;
+        if positive_result.is_unknown() {
+            return Err(RuntimeError::from(WellDefinedRuntimeError(
+                RuntimeErrorStruct::new_with_just_msg(format!(
+                    "index {calculated_index} is not a positive integer"
+                )),
+            )));
+        }
+        steps.push_fact_check(super::success_obj_fact_check(positive_result)?);
+
+        self.store_fn_obj_cart_return_facts_if_available(&value.obj, default_line_file())?;
+        let default_struct_view = match value.obj.as_ref() {
+            Obj::Atom(atom) => atom
+                .symbol_ref()
+                .and_then(|symbol| self.default_struct_view_for_symbol(symbol)),
+            _ => None,
+        };
+        if let Some(struct_obj) = default_struct_view {
+            let struct_membership: AtomicFact = InFact::new(
+                (*value.obj).clone(),
+                struct_obj.clone().into(),
+                default_line_file(),
+            )
+            .into();
+            let membership_result = self.verify_atomic_fact(&struct_membership, verify_state)?;
+            if membership_result.is_true() {
+                steps.push_fact_check(super::success_obj_fact_check(membership_result)?);
+                let field_types =
+                    self.instantiated_struct_field_types(&struct_obj, verify_state)?;
+                if field_types.len() > 1 {
+                    let cart_membership: AtomicFact = InFact::new(
+                        (*value.obj).clone(),
+                        Cart::new(field_types).into(),
+                        default_line_file(),
+                    )
+                    .into();
+                    self.store_atomic_fact_without_well_defined_verified_and_infer(
+                        cart_membership,
+                    )?;
+                }
+            }
+        }
+
+        let is_tuple: AtomicFact =
+            IsTupleFact::new((*value.obj).clone(), default_line_file()).into();
+        let tuple_result = self.verify_atomic_fact(&is_tuple, verify_state)?;
+        if tuple_result.is_unknown() {
+            return Err(RuntimeError::from(WellDefinedRuntimeError(
+                RuntimeErrorStruct::new_with_just_msg(format!(
+                    "index target {} is not a tuple",
+                    value.obj
+                )),
+            )));
+        }
+        steps.push_fact_check(super::success_obj_fact_check(tuple_result)?);
+
+        let tuple_dim: Obj = TupleDim::new((*value.obj).clone()).into();
+        let bounded: AtomicFact = LessEqualFact::new(
+            calculated_index.clone(),
+            tuple_dim.clone(),
+            default_line_file(),
+        )
+        .into();
+        let bounded_result = self.verify_atomic_fact(&bounded, verify_state)?;
+        if bounded_result.is_unknown() {
+            return Err(RuntimeError::from(WellDefinedRuntimeError(
+                RuntimeErrorStruct::new_with_just_msg(format!(
+                    "{calculated_index} <= {tuple_dim} is unknown"
+                )),
+            )));
+        }
+        steps.push_fact_check(super::success_obj_fact_check(bounded_result)?);
+        Ok(steps)
+    }
+
     fn verify_indexed_set_family_operator_well_defined(
         &mut self,
         index_set: &Obj,

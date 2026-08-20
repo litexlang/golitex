@@ -6,222 +6,396 @@ use crate::rational_expression::evaluate_div::safe_div;
 
 impl Obj {
     pub fn evaluate_to_normalized_decimal_number(&self) -> Option<Number> {
-        let result = match self {
-            Obj::Number(number) => Some(number.clone()),
+        self.evaluate_to_normalized_decimal_number_with_result()
+            .map(|result| result.value)
+    }
+
+    pub fn evaluate_to_normalized_decimal_number_with_result(
+        &self,
+    ) -> Option<SuccessEvaluateObjResult> {
+        let (value, step) = match self {
+            Obj::Number(number) => return Some(SuccessEvaluateObjResult::literal(number.clone())),
             Obj::Add(add) => {
-                let left_number = add.left.evaluate_to_normalized_decimal_number();
-                let right_number = add.right.evaluate_to_normalized_decimal_number();
-                if let (Some(left_number), Some(right_number)) = (left_number, right_number) {
-                    let a = &left_number.normalized_value;
-                    let b = &right_number.normalized_value;
-                    let sum = if normalized_decimal_str_is_non_negative(a)
-                        && normalized_decimal_str_is_non_negative(b)
-                    {
-                        // This helper expects both operands to be non-negative.
-                        add_decimal_str_and_normalize(a, b)
-                    } else {
-                        add_signed_decimal_str(a, b)
-                    };
-                    Some(Number::new(sum))
+                let left = add
+                    .left
+                    .evaluate_to_normalized_decimal_number_with_result()?;
+                let right = add
+                    .right
+                    .evaluate_to_normalized_decimal_number_with_result()?;
+                let a = &left.value.normalized_value;
+                let b = &right.value.normalized_value;
+                let sum = if normalized_decimal_str_is_non_negative(a)
+                    && normalized_decimal_str_is_non_negative(b)
+                {
+                    // This helper expects both operands to be non-negative.
+                    add_decimal_str_and_normalize(a, b)
                 } else {
-                    None
-                }
+                    add_signed_decimal_str(a, b)
+                };
+                (
+                    Number::new(sum),
+                    binary_evaluation_step(EvaluateBinaryObjOperator::Add, left, right),
+                )
             }
             Obj::Sub(sub) => {
-                let left_number = sub.left.evaluate_to_normalized_decimal_number();
-                let right_number = sub.right.evaluate_to_normalized_decimal_number();
-                if let (Some(left_number), Some(right_number)) = (left_number, right_number) {
-                    let a = &left_number.normalized_value;
-                    let b = &right_number.normalized_value;
-                    let diff = if normalized_decimal_str_is_non_negative(a)
-                        && normalized_decimal_str_is_non_negative(b)
-                    {
-                        // This helper compares magnitudes and expects non-negative operands.
-                        sub_decimal_str_and_normalize(a, b)
-                    } else {
-                        sub_signed_decimal_str(a, b)
-                    };
-                    Some(Number::new(diff))
+                let left = sub
+                    .left
+                    .evaluate_to_normalized_decimal_number_with_result()?;
+                let right = sub
+                    .right
+                    .evaluate_to_normalized_decimal_number_with_result()?;
+                let a = &left.value.normalized_value;
+                let b = &right.value.normalized_value;
+                let difference = if normalized_decimal_str_is_non_negative(a)
+                    && normalized_decimal_str_is_non_negative(b)
+                {
+                    // This helper compares magnitudes and expects non-negative operands.
+                    sub_decimal_str_and_normalize(a, b)
                 } else {
-                    None
-                }
+                    sub_signed_decimal_str(a, b)
+                };
+                (
+                    Number::new(difference),
+                    binary_evaluation_step(EvaluateBinaryObjOperator::Sub, left, right),
+                )
             }
             Obj::Mul(mul) => {
-                let left_number = mul.left.evaluate_to_normalized_decimal_number();
-                let right_number = mul.right.evaluate_to_normalized_decimal_number();
-                if let (Some(left_number), Some(right_number)) = (left_number, right_number) {
-                    Some(Number::new(mul_signed_decimal_str(
-                        &left_number.normalized_value,
-                        &right_number.normalized_value,
-                    )))
-                } else {
-                    None
-                }
+                let left = mul
+                    .left
+                    .evaluate_to_normalized_decimal_number_with_result()?;
+                let right = mul
+                    .right
+                    .evaluate_to_normalized_decimal_number_with_result()?;
+                let value = Number::new(mul_signed_decimal_str(
+                    &left.value.normalized_value,
+                    &right.value.normalized_value,
+                ));
+                (
+                    value,
+                    binary_evaluation_step(EvaluateBinaryObjOperator::Mul, left, right),
+                )
             }
             Obj::Mod(mod_obj) => {
-                let left_number = mod_obj.left.evaluate_to_normalized_decimal_number();
-                let right_number = mod_obj.right.evaluate_to_normalized_decimal_number();
-                if let (Some(left_number), Some(right_number)) = (left_number, right_number) {
-                    Some(Number::new(mod_decimal_str_and_normalize(
-                        &left_number.normalized_value,
-                        &right_number.normalized_value,
-                    )))
-                } else {
-                    None
-                }
+                let left = mod_obj
+                    .left
+                    .evaluate_to_normalized_decimal_number_with_result()?;
+                let right = mod_obj
+                    .right
+                    .evaluate_to_normalized_decimal_number_with_result()?;
+                let value = Number::new(mod_decimal_str_and_normalize(
+                    &left.value.normalized_value,
+                    &right.value.normalized_value,
+                ));
+                (
+                    value,
+                    binary_evaluation_step(EvaluateBinaryObjOperator::Mod, left, right),
+                )
             }
             Obj::Quot(quot) => {
-                let left_number = quot.left.evaluate_to_normalized_decimal_number();
-                let right_number = quot.right.evaluate_to_normalized_decimal_number();
-                if let (Some(left_number), Some(right_number)) = (left_number, right_number) {
-                    Some(Number::new(quot_decimal_str_and_normalize(
-                        &left_number.normalized_value,
-                        &right_number.normalized_value,
-                    )))
-                } else {
-                    None
-                }
+                let left = quot
+                    .left
+                    .evaluate_to_normalized_decimal_number_with_result()?;
+                let right = quot
+                    .right
+                    .evaluate_to_normalized_decimal_number_with_result()?;
+                let value = Number::new(quot_decimal_str_and_normalize(
+                    &left.value.normalized_value,
+                    &right.value.normalized_value,
+                ));
+                (
+                    value,
+                    binary_evaluation_step(EvaluateBinaryObjOperator::Quot, left, right),
+                )
             }
             Obj::Gcd(gcd) => {
-                let left = gcd.left.evaluate_to_normalized_decimal_number()?;
-                let right = gcd.right.evaluate_to_normalized_decimal_number()?;
-                gcd_decimal_str_and_normalize(&left.normalized_value, &right.normalized_value)
-                    .map(Number::new)
+                let left = gcd
+                    .left
+                    .evaluate_to_normalized_decimal_number_with_result()?;
+                let right = gcd
+                    .right
+                    .evaluate_to_normalized_decimal_number_with_result()?;
+                let value = gcd_decimal_str_and_normalize(
+                    &left.value.normalized_value,
+                    &right.value.normalized_value,
+                )
+                .map(Number::new)?;
+                (
+                    value,
+                    binary_evaluation_step(EvaluateBinaryObjOperator::Gcd, left, right),
+                )
             }
             Obj::Lcm(lcm) => {
-                let left = lcm.left.evaluate_to_normalized_decimal_number()?;
-                let right = lcm.right.evaluate_to_normalized_decimal_number()?;
-                lcm_decimal_str_and_normalize(&left.normalized_value, &right.normalized_value)
-                    .map(Number::new)
+                let left = lcm
+                    .left
+                    .evaluate_to_normalized_decimal_number_with_result()?;
+                let right = lcm
+                    .right
+                    .evaluate_to_normalized_decimal_number_with_result()?;
+                let value = lcm_decimal_str_and_normalize(
+                    &left.value.normalized_value,
+                    &right.value.normalized_value,
+                )
+                .map(Number::new)?;
+                (
+                    value,
+                    binary_evaluation_step(EvaluateBinaryObjOperator::Lcm, left, right),
+                )
             }
             Obj::Floor(floor) => {
-                let arg = floor.arg.evaluate_to_normalized_decimal_number()?;
-                Some(Number::new(floor_decimal_str(&arg.normalized_value)))
+                let argument = floor
+                    .arg
+                    .evaluate_to_normalized_decimal_number_with_result()?;
+                let value = Number::new(floor_decimal_str(&argument.value.normalized_value));
+                (
+                    value,
+                    unary_evaluation_step(EvaluateUnaryObjOperator::Floor, argument),
+                )
             }
             Obj::Ceil(ceil) => {
-                let arg = ceil.arg.evaluate_to_normalized_decimal_number()?;
-                Some(Number::new(ceil_decimal_str(&arg.normalized_value)))
+                let argument = ceil
+                    .arg
+                    .evaluate_to_normalized_decimal_number_with_result()?;
+                let value = Number::new(ceil_decimal_str(&argument.value.normalized_value));
+                (
+                    value,
+                    unary_evaluation_step(EvaluateUnaryObjOperator::Ceil, argument),
+                )
             }
             Obj::Min(min) => {
-                evaluate_numeric_min_or_max(min.left.as_ref(), min.right.as_ref(), false)
+                let left = min
+                    .left
+                    .evaluate_to_normalized_decimal_number_with_result()?;
+                let right = min
+                    .right
+                    .evaluate_to_normalized_decimal_number_with_result()?;
+                let value = evaluated_min_or_max_value(&left, &right, false);
+                (
+                    value,
+                    binary_evaluation_step(EvaluateBinaryObjOperator::Min, left, right),
+                )
             }
             Obj::Max(max) => {
-                evaluate_numeric_min_or_max(max.left.as_ref(), max.right.as_ref(), true)
+                let left = max
+                    .left
+                    .evaluate_to_normalized_decimal_number_with_result()?;
+                let right = max
+                    .right
+                    .evaluate_to_normalized_decimal_number_with_result()?;
+                let value = evaluated_min_or_max_value(&left, &right, true);
+                (
+                    value,
+                    binary_evaluation_step(EvaluateBinaryObjOperator::Max, left, right),
+                )
             }
             Obj::Exp(exp) => {
-                let arg = exp.arg.evaluate_to_normalized_decimal_number()?;
-                (arg.normalized_value == "0").then(|| Number::new("1".to_string()))
+                let argument = exp
+                    .arg
+                    .evaluate_to_normalized_decimal_number_with_result()?;
+                if argument.value.normalized_value != "0" {
+                    return None;
+                }
+                (
+                    Number::new("1".to_string()),
+                    unary_evaluation_step(EvaluateUnaryObjOperator::Exp, argument),
+                )
             }
             Obj::Ln(ln) => {
-                let arg = ln.arg.evaluate_to_normalized_decimal_number()?;
-                (arg.normalized_value == "1").then(|| Number::new("0".to_string()))
+                let argument = ln.arg.evaluate_to_normalized_decimal_number_with_result()?;
+                if argument.value.normalized_value != "1" {
+                    return None;
+                }
+                (
+                    Number::new("0".to_string()),
+                    unary_evaluation_step(EvaluateUnaryObjOperator::Ln, argument),
+                )
             }
             Obj::Sign(sign) => {
-                let arg = sign.arg.evaluate_to_normalized_decimal_number()?;
-                let value = if arg.normalized_value == "0" {
+                let argument = sign
+                    .arg
+                    .evaluate_to_normalized_decimal_number_with_result()?;
+                let value = if argument.value.normalized_value == "0" {
                     "0"
-                } else if arg.normalized_value.starts_with('-') {
+                } else if argument.value.normalized_value.starts_with('-') {
                     "-1"
                 } else {
                     "1"
                 };
-                Some(Number::new(value.to_string()))
+                (
+                    Number::new(value.to_string()),
+                    unary_evaluation_step(EvaluateUnaryObjOperator::Sign, argument),
+                )
             }
             Obj::Factorial(factorial) => {
-                let arg = factorial.arg.evaluate_to_normalized_decimal_number()?;
-                factorial_decimal_str_and_normalize(&arg.normalized_value).map(Number::new)
+                let argument = factorial
+                    .arg
+                    .evaluate_to_normalized_decimal_number_with_result()?;
+                let value = factorial_decimal_str_and_normalize(&argument.value.normalized_value)
+                    .map(Number::new)?;
+                (
+                    value,
+                    unary_evaluation_step(EvaluateUnaryObjOperator::Factorial, argument),
+                )
             }
             Obj::Pow(pow_obj) => {
-                let base_number = pow_obj.base.evaluate_to_normalized_decimal_number();
-                let exponent_number = pow_obj.exponent.evaluate_to_normalized_decimal_number();
-                if let (Some(base_number), Some(exponent_number)) = (base_number, exponent_number) {
-                    pow_decimal_str_and_normalize(
-                        &base_number.normalized_value,
-                        &exponent_number.normalized_value,
-                    )
-                    .map(Number::new)
-                } else {
-                    None
-                }
+                let left = pow_obj
+                    .base
+                    .evaluate_to_normalized_decimal_number_with_result()?;
+                let right = pow_obj
+                    .exponent
+                    .evaluate_to_normalized_decimal_number_with_result()?;
+                let value = pow_decimal_str_and_normalize(
+                    &left.value.normalized_value,
+                    &right.value.normalized_value,
+                )
+                .map(Number::new)?;
+                (
+                    value,
+                    binary_evaluation_step(EvaluateBinaryObjOperator::Pow, left, right),
+                )
             }
             Obj::Div(div) => {
-                let left_number = div.left.evaluate_to_normalized_decimal_number();
-                let right_number = div.right.evaluate_to_normalized_decimal_number();
-                if let (Some(left_number), Some(right_number)) = (left_number, right_number) {
-                    let exact_quotient_string = safe_div(
-                        &left_number.normalized_value,
-                        &right_number.normalized_value,
-                    );
-
-                    if let Some(exact_quotient_string) = exact_quotient_string {
-                        Some(Number::new(exact_quotient_string))
-                    } else {
-                        None
-                    }
-                } else {
-                    return None;
-                }
+                let left = div
+                    .left
+                    .evaluate_to_normalized_decimal_number_with_result()?;
+                let right = div
+                    .right
+                    .evaluate_to_normalized_decimal_number_with_result()?;
+                let value = safe_div(&left.value.normalized_value, &right.value.normalized_value)
+                    .map(Number::new)?;
+                (
+                    value,
+                    binary_evaluation_step(EvaluateBinaryObjOperator::Div, left, right),
+                )
             }
-            Obj::Abs(a) => match a.arg.evaluate_to_normalized_decimal_number() {
-                Some(inner) => {
-                    let s = inner.normalized_value.trim();
-                    if let Some(rest) = s.strip_prefix('-') {
-                        Some(Number::new(rest.trim().to_string()))
+            Obj::Abs(abs) => {
+                let argument = abs
+                    .arg
+                    .evaluate_to_normalized_decimal_number_with_result()?;
+                let value =
+                    if let Some(rest) = argument.value.normalized_value.trim().strip_prefix('-') {
+                        Number::new(rest.trim().to_string())
                     } else {
-                        Some(inner)
-                    }
-                }
-                None => None,
-            },
+                        argument.value.clone()
+                    };
+                (
+                    value,
+                    unary_evaluation_step(EvaluateUnaryObjOperator::Abs, argument),
+                )
+            }
             Obj::CartDim(cart_dim) => match &*cart_dim.set {
-                Obj::Cart(cart) => Some(Number::new(cart.args.len().to_string())),
-                _ => None,
+                Obj::Cart(cart) => (
+                    Number::new(cart.args.len().to_string()),
+                    shape_evaluation_step(
+                        EvaluateObjShapeOperator::CartDim,
+                        vec![(*cart_dim.set).clone()],
+                        vec![],
+                    ),
+                ),
+                _ => return None,
             },
             Obj::TupleDim(tuple_dim) => match &*tuple_dim.arg {
-                Obj::Tuple(tuple) => Some(Number::new(tuple.args.len().to_string())),
-                _ => None,
+                Obj::Tuple(tuple) => (
+                    Number::new(tuple.args.len().to_string()),
+                    shape_evaluation_step(
+                        EvaluateObjShapeOperator::TupleDim,
+                        vec![(*tuple_dim.arg).clone()],
+                        vec![],
+                    ),
+                ),
+                _ => return None,
             },
             Obj::FiniteSetSize(finite_set_size) => match &*finite_set_size.set {
-                Obj::ListSet(list_set) => Some(Number::new(list_set.list.len().to_string())),
+                Obj::ListSet(list_set) => (
+                    Number::new(list_set.list.len().to_string()),
+                    shape_evaluation_step(
+                        EvaluateObjShapeOperator::ListSetSize,
+                        list_set.list.iter().map(|item| (**item).clone()).collect(),
+                        vec![],
+                    ),
+                ),
                 Obj::ClosedRange(cr) => {
-                    let a = cr.start.evaluate_to_normalized_decimal_number()?;
-                    let b = cr.end.evaluate_to_normalized_decimal_number()?;
-                    count_closed_range_integer_endpoints(&a, &b)
+                    let start = cr
+                        .start
+                        .evaluate_to_normalized_decimal_number_with_result()?;
+                    let end = cr.end.evaluate_to_normalized_decimal_number_with_result()?;
+                    let value = count_closed_range_integer_endpoints(&start.value, &end.value)?;
+                    (
+                        value,
+                        shape_evaluation_step(
+                            EvaluateObjShapeOperator::ClosedRangeSize,
+                            vec![],
+                            vec![start, end],
+                        ),
+                    )
                 }
                 Obj::Range(r) => {
-                    let a = r.start.evaluate_to_normalized_decimal_number()?;
-                    let b = r.end.evaluate_to_normalized_decimal_number()?;
-                    count_half_open_range_integer_endpoints(&a, &b)
+                    let start = r
+                        .start
+                        .evaluate_to_normalized_decimal_number_with_result()?;
+                    let end = r.end.evaluate_to_normalized_decimal_number_with_result()?;
+                    let value = count_half_open_range_integer_endpoints(&start.value, &end.value)?;
+                    (
+                        value,
+                        shape_evaluation_step(
+                            EvaluateObjShapeOperator::RangeSize,
+                            vec![],
+                            vec![start, end],
+                        ),
+                    )
                 }
                 // |A_1 × ... × A_n| = |A_1| * ... * |A_n|; empty product is 1.
                 Obj::Cart(cart) => {
                     let mut acc = "1".to_string();
+                    let mut evaluated_children = Vec::new();
                     for arg in cart.args.iter() {
                         let factor_finite_set_size =
                             Obj::FiniteSetSize(FiniteSetSize::new((**arg).clone()))
-                                .evaluate_to_normalized_decimal_number()?;
+                                .evaluate_to_normalized_decimal_number_with_result()?;
                         acc = mul_signed_decimal_str(
                             acc.trim(),
-                            factor_finite_set_size.normalized_value.trim(),
+                            factor_finite_set_size.value.normalized_value.trim(),
                         );
+                        evaluated_children.push(factor_finite_set_size);
                     }
-                    Some(Number::new(acc))
+                    (
+                        Number::new(acc),
+                        shape_evaluation_step(
+                            EvaluateObjShapeOperator::CartSize,
+                            cart.args.iter().map(|arg| (**arg).clone()).collect(),
+                            evaluated_children,
+                        ),
+                    )
                 }
-                _ => None,
+                _ => return None,
             },
             Obj::FiniteSetMax(extremum) => {
-                evaluate_nonempty_numeric_list_set(extremum.set.as_ref(), true)
+                let (value, inputs, evaluated_children) =
+                    evaluate_nonempty_numeric_list_set_with_result(extremum.set.as_ref(), true)?;
+                (
+                    value,
+                    shape_evaluation_step(
+                        EvaluateObjShapeOperator::FiniteSetMax,
+                        inputs,
+                        evaluated_children,
+                    ),
+                )
             }
             Obj::FiniteSetMin(extremum) => {
-                evaluate_nonempty_numeric_list_set(extremum.set.as_ref(), false)
+                let (value, inputs, evaluated_children) =
+                    evaluate_nonempty_numeric_list_set_with_result(extremum.set.as_ref(), false)?;
+                (
+                    value,
+                    shape_evaluation_step(
+                        EvaluateObjShapeOperator::FiniteSetMin,
+                        inputs,
+                        evaluated_children,
+                    ),
+                )
             }
-            _ => None,
+            _ => return None,
         };
 
-        match result {
-            Some(number) => Some(number),
-            None => None,
-        }
+        Some(SuccessEvaluateObjResult::new(self.clone(), value, step))
     }
 
     pub fn two_objs_can_be_calculated_and_equal_by_calculation(&self, other: &Obj) -> bool {
@@ -316,37 +490,82 @@ fn ceil_decimal_str(value: &str) -> String {
     add_decimal_str_and_normalize(integer, "1")
 }
 
-fn evaluate_numeric_min_or_max(left: &Obj, right: &Obj, take_maximum: bool) -> Option<Number> {
-    let left = left.evaluate_to_normalized_decimal_number()?;
-    let right = right.evaluate_to_normalized_decimal_number()?;
-    let difference =
-        sub_signed_decimal_str(right.normalized_value.trim(), left.normalized_value.trim());
+fn unary_evaluation_step(
+    operator: EvaluateUnaryObjOperator,
+    argument: SuccessEvaluateObjResult,
+) -> SuccessEvaluateObjStepResult {
+    SuccessEvaluateObjStepResult::Unary(Box::new(SuccessEvaluateUnaryObjResult::new(
+        operator, argument,
+    )))
+}
+
+fn binary_evaluation_step(
+    operator: EvaluateBinaryObjOperator,
+    left: SuccessEvaluateObjResult,
+    right: SuccessEvaluateObjResult,
+) -> SuccessEvaluateObjStepResult {
+    SuccessEvaluateObjStepResult::Binary(Box::new(SuccessEvaluateBinaryObjResult::new(
+        operator, left, right,
+    )))
+}
+
+fn shape_evaluation_step(
+    operator: EvaluateObjShapeOperator,
+    inputs: Vec<Obj>,
+    evaluated_children: Vec<SuccessEvaluateObjResult>,
+) -> SuccessEvaluateObjStepResult {
+    SuccessEvaluateObjStepResult::Shape(Box::new(SuccessEvaluateObjByShapeResult::new(
+        operator,
+        inputs,
+        evaluated_children,
+    )))
+}
+
+fn evaluated_min_or_max_value(
+    left: &SuccessEvaluateObjResult,
+    right: &SuccessEvaluateObjResult,
+    take_maximum: bool,
+) -> Number {
+    let difference = sub_signed_decimal_str(
+        right.value.normalized_value.trim(),
+        left.value.normalized_value.trim(),
+    );
     let right_is_larger = !difference.trim().starts_with('-') && difference.trim() != "0";
     if right_is_larger == take_maximum {
-        Some(right)
+        right.value.clone()
     } else {
-        Some(left)
+        left.value.clone()
     }
 }
 
-fn evaluate_nonempty_numeric_list_set(set: &Obj, take_maximum: bool) -> Option<Number> {
+fn evaluate_nonempty_numeric_list_set_with_result(
+    set: &Obj,
+    take_maximum: bool,
+) -> Option<(Number, Vec<Obj>, Vec<SuccessEvaluateObjResult>)> {
     let Obj::ListSet(list_set) = set else {
         return None;
     };
-    let mut elements = list_set.list.iter();
-    let mut result = elements.next()?.evaluate_to_normalized_decimal_number()?;
-    for element in elements {
-        let candidate = element.evaluate_to_normalized_decimal_number()?;
+    let inputs = list_set
+        .list
+        .iter()
+        .map(|element| (**element).clone())
+        .collect::<Vec<_>>();
+    let mut evaluated_children = Vec::new();
+    for element in list_set.list.iter() {
+        evaluated_children.push(element.evaluate_to_normalized_decimal_number_with_result()?);
+    }
+    let mut result = evaluated_children.first()?.value.clone();
+    for candidate in evaluated_children.iter().skip(1) {
         let difference = sub_signed_decimal_str(
-            candidate.normalized_value.trim(),
+            candidate.value.normalized_value.trim(),
             result.normalized_value.trim(),
         );
         let candidate_is_larger = !difference.trim().starts_with('-') && difference.trim() != "0";
         if candidate_is_larger == take_maximum {
-            result = candidate;
+            result = candidate.value.clone();
         }
     }
-    Some(result)
+    Some((result, inputs, evaluated_children))
 }
 
 /// Returns whether a normalized decimal string is non-negative.
@@ -969,6 +1188,38 @@ fn parse_decimal_parts(s: &str) -> (Vec<u8>, Vec<u8>) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn evaluation_result_retains_the_recursive_addition_tree() {
+        let expression: Obj = Add::new(
+            Number::new("2".to_string()).into(),
+            Number::new("3".to_string()).into(),
+        )
+        .into();
+
+        let result = expression
+            .evaluate_to_normalized_decimal_number_with_result()
+            .expect("2 + 3 should evaluate");
+
+        assert_eq!(result.expression.to_string(), "2 + 3");
+        assert_eq!(result.value.normalized_value, "5");
+        let SuccessEvaluateObjStepResult::Binary(binary) = result.step else {
+            panic!("2 + 3 should retain a binary evaluation step");
+        };
+        assert_eq!(binary.operator, EvaluateBinaryObjOperator::Add);
+        assert_eq!(binary.left.expression.to_string(), "2");
+        assert_eq!(binary.left.value.normalized_value, "2");
+        assert!(matches!(
+            binary.left.step,
+            SuccessEvaluateObjStepResult::Literal(_)
+        ));
+        assert_eq!(binary.right.expression.to_string(), "3");
+        assert_eq!(binary.right.value.normalized_value, "3");
+        assert!(matches!(
+            binary.right.step,
+            SuccessEvaluateObjStepResult::Literal(_)
+        ));
+    }
 
     #[test]
     fn huge_power_is_left_unevaluated() {

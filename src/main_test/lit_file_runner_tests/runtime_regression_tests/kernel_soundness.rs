@@ -167,7 +167,7 @@ eval h(0)
                 run_output
             );
             assert!(
-                !run_output.contains("complementary facts cover all cases"),
+                !run_output.contains("or: complementary atomic facts"),
                 "{} should not cite excluded middle for transposed function equality:\n{}",
                 label,
                 run_output
@@ -200,7 +200,7 @@ x = 0 or x != 0
             run_output
         );
         assert!(
-            run_output.contains("complementary facts cover all cases"),
+            run_output.contains("or: complementary atomic facts"),
             "ordinary excluded middle should retain its proof explanation:\n{}",
             run_output
         );

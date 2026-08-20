@@ -140,7 +140,7 @@ impl Runtime {
             || (obj_is_native_i(&not_equal_fact.right) && obj_is_literal_zero(&not_equal_fact.left))
         {
             return Some(
-                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                     not_equal_fact.clone().into(),
                     "native imaginary unit is nonzero".to_string(),
                     Vec::new(),
@@ -231,7 +231,7 @@ impl Runtime {
             return Ok(None);
         }
         Ok(Some(
-            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                 not_equal_fact.clone().into(),
                 "complex modulus is nonzero for a nonzero argument".to_string(),
                 vec![result],
@@ -664,7 +664,7 @@ fn complex_equality_result_with_steps(
     reason: &str,
     steps: Vec<StmtResult>,
 ) -> StmtResult {
-    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+    SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
         equal_fact.clone().into(),
         reason.to_string(),
         steps,
@@ -677,7 +677,7 @@ fn complex_order_result(
     reason: &str,
     steps: Vec<StmtResult>,
 ) -> StmtResult {
-    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+    SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
         atomic_fact.clone().into(),
         reason.to_string(),
         steps,

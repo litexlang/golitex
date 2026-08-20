@@ -1,10 +1,10 @@
-use crate::prelude::{InferResult, StmtResult, VerifiedByResult, VerifiedBysEnum, SUCCESS_COLON};
+use crate::prelude::{SuccessInferResult, StmtResult, SuccessFactProofResult, SuccessCombinedFactProofItemResult, SUCCESS_COLON};
 
 const VERIFIED_BY: &str = "verified by";
 const STORE_FACTS_COLON: &str = "store facts:";
 
 pub(crate) fn stmt_result_body_string(result: &StmtResult) -> String {
-    if let Some(x) = result.non_factual_ir() {
+    if let Some(x) = result.non_factual_success() {
         let common = x
             .common()
             .expect("non-factual IR carries common execution evidence");
@@ -20,7 +20,7 @@ pub(crate) fn stmt_result_body_string(result: &StmtResult) -> String {
             SUCCESS_COLON,
             x.fact(),
             VERIFIED_BY,
-            verified_by_display_line(&x.verified_by),
+            verified_by_display_line(x.proof()),
             infer_block_string(&x.infers)
         )
     } else if let Some(x) = result.as_unknown() {
@@ -32,7 +32,7 @@ pub(crate) fn stmt_result_body_string(result: &StmtResult) -> String {
     }
 }
 
-fn infer_block_string(infer_result: &InferResult) -> String {
+fn infer_block_string(infer_result: &SuccessInferResult) -> String {
     if infer_result.is_empty() {
         return String::new();
     }
@@ -43,12 +43,12 @@ fn infer_block_string(infer_result: &InferResult) -> String {
     )
 }
 
-fn verified_bys_display_line(item: &VerifiedBysEnum) -> String {
+fn verified_bys_display_line(item: &SuccessCombinedFactProofItemResult) -> String {
     match item {
-        VerifiedBysEnum::ByBuiltinRule(r) | VerifiedBysEnum::ByBuiltinStrategy(r) => {
+        SuccessCombinedFactProofItemResult::ByBuiltinRule(r) | SuccessCombinedFactProofItemResult::ByBuiltinStrategy(r) => {
             r.msg.clone()
         }
-        VerifiedBysEnum::ByFact(r) => {
+        SuccessCombinedFactProofItemResult::ByFact(r) => {
             if let Some(d) = &r.detail {
                 if !d.is_empty() {
                     return d.clone();
@@ -59,11 +59,11 @@ fn verified_bys_display_line(item: &VerifiedBysEnum) -> String {
     }
 }
 
-fn verified_by_display_line(verified_by: &VerifiedByResult) -> String {
+fn verified_by_display_line(verified_by: &SuccessFactProofResult) -> String {
     match verified_by {
-        VerifiedByResult::BuiltinRule(r) => r.msg.clone(),
-        VerifiedByResult::BuiltinStrategy(r) => r.msg.clone(),
-        VerifiedByResult::Fact(r) => {
+        SuccessFactProofResult::BuiltinRule(r) => r.msg.clone(),
+        SuccessFactProofResult::BuiltinStrategy(r) => r.msg.clone(),
+        SuccessFactProofResult::Fact(r) => {
             if let Some(d) = &r.detail {
                 if !d.is_empty() {
                     return d.clone();
@@ -71,7 +71,7 @@ fn verified_by_display_line(verified_by: &VerifiedByResult) -> String {
             }
             r.cite_what.to_string()
         }
-        VerifiedByResult::VerifiedBys(w) => {
+        SuccessFactProofResult::CombinedProofs(w) => {
             if w.cite_what.is_empty() {
                 return String::new();
             }
@@ -81,6 +81,6 @@ fn verified_by_display_line(verified_by: &VerifiedByResult) -> String {
                 .collect::<Vec<_>>()
                 .join("; ")
         }
-        VerifiedByResult::ForallProof(_) => "forall proof".to_string(),
+        SuccessFactProofResult::ForallProof(_) => "forall proof".to_string(),
     }
 }

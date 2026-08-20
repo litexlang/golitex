@@ -37,7 +37,8 @@ $finite_set_induction_test({1, 2})
                 run_output
             );
             assert!(
-                run_output.contains("by finite-set induction proof"),
+                run_output.contains("\"kind\": \"ByFiniteSetInducStmt\"")
+                    && run_output.contains("\"kind\": \"SuccessVerifyByInducResult\""),
                 "finite-set induction should identify its proof rule:\n{}",
                 run_output
             );

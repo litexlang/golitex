@@ -367,17 +367,17 @@ impl Runtime {
                 continue;
             }
 
-            let uniquely_covers_target = match &map_y {
+            let unique_coverage_results = match &map_y {
                 Obj::FnObj(map_call) => {
                     let map: Obj = map_call.head.as_ref().clone().into();
-                    if self.has_known_builtin_bijection(
+                    if let Some(results) = self.known_builtin_bijection_results(
                         pullback_sum.set.as_ref(),
                         source_sum.set.as_ref(),
                         &map,
                         line_file.clone(),
                         builtin_state,
                     )? {
-                        true
+                        Some(results)
                     } else {
                         let shape = FiniteSetEnumerationSummand {
                             outer_function: source_sum.func.as_ref().clone(),
@@ -385,23 +385,37 @@ impl Runtime {
                             index_set: pullback_sum.set.as_ref().clone(),
                             target_set: source_sum.set.as_ref().clone(),
                         };
-                        self.verify_unique_preimage_enumerator_fact(
+                        if self.verify_unique_preimage_enumerator_fact(
                             &shape,
                             line_file.clone(),
                             builtin_state,
-                        )?
+                        )? {
+                            // This legacy existential route still exposes only
+                            // a boolean. Keep it available for execution
+                            // compatibility, but do not claim a child citation.
+                            Some(Vec::new())
+                        } else {
+                            None
+                        }
                     }
                 }
-                _ => false,
+                _ => None,
             };
-            if !uniquely_covers_target {
+            let Some(mut unique_coverage_results) = unique_coverage_results else {
                 continue;
-            }
+            };
 
-            return Ok(Some(factual_equal_success_by_builtin_reason(
-                equal_fact,
-                "equality: finite-set sum substitution along a uniquely-covered index set",
-            )));
+            let mut subgoals = vec![pointwise_result];
+            subgoals.append(&mut unique_coverage_results);
+            return Ok(Some(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                    equal_fact.clone().into(),
+                    "equality: finite-set sum substitution along a uniquely-covered index set"
+                        .to_string(),
+                    subgoals,
+                )
+                .into(),
+            ));
         }
         Ok(None)
     }

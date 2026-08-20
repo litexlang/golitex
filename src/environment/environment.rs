@@ -82,16 +82,15 @@ pub struct Environment {
     pub known_antisymmetric_props: HashMap<String, ()>,
 
     pub cache_well_defined_obj: HashMap<WellDefinedCacheKey, CachedWellDefinedObj>,
-    /// Compiler-only proof DAG. These propositions are intentionally absent
-    /// from Litex's ordinary known-fact indexes.
-    pub well_defined_obj_proofs: HashMap<WellDefinedObjId, Rc<WellDefinedObjProof>>,
-    pub well_defined_fact_proofs: HashMap<WellDefinedFactId, Rc<WellDefinedFactProof>>,
-    /// Creation order within this environment; Lean emission preserves it.
-    pub well_defined_fact_order: Vec<WellDefinedFactId>,
     pub cache_known_fact: HashMap<FactString, CachedKnownFact>,
     pub cache_infer_rule_firing: HashMap<String, ()>,
     /// Successful atomic subgoals reusable only while the current statement executes.
-    pub statement_verified_atomic_facts: HashMap<FactString, Rc<VerifiedFactStmtIr>>,
+    pub statement_atomic_fact_proofs: HashMap<FactString, Rc<SuccessVerifyFactResult>>,
+    /// Successful object WD nodes reusable only while the current statement executes.
+    /// A reuse result owns an `Rc` to the exact source, so no scope path must
+    /// be reconstructed after this transient map is cleared.
+    pub statement_well_defined_obj_proofs:
+        HashMap<WellDefinedCacheKey, Rc<SuccessVerifyObjWellDefinedResult>>,
 
     pub used_strategy_stmts: HashMap<(PropName, bool), StrategyName>,
     pub stopped_strategy_stmts: HashMap<(PropName, bool), StrategyName>,
@@ -139,7 +138,7 @@ impl Environment {
         self.known_symmetric_props.clear();
         self.known_reflexive_props.clear();
         self.known_antisymmetric_props.clear();
-        self.statement_verified_atomic_facts.clear();
+        self.statement_atomic_fact_proofs.clear();
         self.cache_infer_rule_firing.clear();
         self.used_strategy_stmts.clear();
         self.stopped_strategy_stmts.clear();
@@ -244,12 +243,10 @@ impl Environment {
                     )
                 })
                 .collect(),
-            well_defined_obj_proofs: HashMap::new(),
-            well_defined_fact_proofs: HashMap::new(),
-            well_defined_fact_order: Vec::new(),
             cache_known_fact,
             cache_infer_rule_firing: HashMap::new(),
-            statement_verified_atomic_facts: HashMap::new(),
+            statement_atomic_fact_proofs: HashMap::new(),
+            statement_well_defined_obj_proofs: HashMap::new(),
             used_strategy_stmts: HashMap::new(),
             stopped_strategy_stmts: HashMap::new(),
         }

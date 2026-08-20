@@ -54,11 +54,11 @@ impl Runtime {
         args: &Vec<Obj>,
         verify_state: &UseContextVerifyState,
         to_inst_param_type: ParamObjType,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<VerifyArgsSatisfyParamDefResult, RuntimeError> {
         let instantiated_types =
             self.inst_param_def_with_type_one_by_one(param_defs, args, to_inst_param_type)?;
         let flat_types = param_defs.flat_instantiated_types_for_args(&instantiated_types);
-        let mut infer_result = InferResult::new();
+        let mut infer_result = SuccessInferResult::new();
         let mut check_results = Vec::with_capacity(args.len());
         for (arg, param_type) in args.iter().zip(flat_types.iter()) {
             let result = self.verify_obj_satisfies_param_type_known_or_builtin_only(
@@ -67,16 +67,15 @@ impl Runtime {
                 verify_state,
             )?;
             if result.is_unknown() {
-                return Ok(result);
+                return Ok(VerifyArgsSatisfyParamDefResult::unknown(result));
             }
             infer_result.new_infer_result_inside(result.infer_result());
             check_results.push(result);
         }
-        Ok(VerifiedCommandStmtIr::DoNothingStmt {
-            statement: DoNothingStmt::new(default_line_file()),
-            common: VerifiedStmtCommonIr::new(infer_result, check_results),
-        }
-        .into())
+        Ok(VerifyArgsSatisfyParamDefResult::success(
+            check_results,
+            infer_result,
+        ))
     }
 
     pub fn verify_obj_satisfies_param_type(
@@ -154,25 +153,24 @@ impl Runtime {
         args: &Vec<Obj>,
         verify_state: &UseContextVerifyState,
         to_inst_param_type: ParamObjType,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<VerifyArgsSatisfyParamDefResult, RuntimeError> {
         let instantiated_types =
             self.inst_param_def_with_type_one_by_one(param_defs, args, to_inst_param_type)?;
         let flat_types = param_defs.flat_instantiated_types_for_args(&instantiated_types);
-        let mut infer_result = InferResult::new();
+        let mut infer_result = SuccessInferResult::new();
         let mut check_results = Vec::with_capacity(args.len());
         for (arg, param_type) in args.iter().zip(flat_types.iter()) {
             let verify_result =
                 self.verify_obj_satisfies_param_type(arg.clone(), param_type, verify_state)?;
             if verify_result.is_unknown() {
-                return Ok(verify_result);
+                return Ok(VerifyArgsSatisfyParamDefResult::unknown(verify_result));
             }
             infer_result.new_infer_result_inside(verify_result.infer_result());
             check_results.push(verify_result);
         }
-        Ok(VerifiedCommandStmtIr::DoNothingStmt {
-            statement: DoNothingStmt::new(default_line_file()),
-            common: VerifiedStmtCommonIr::new(infer_result, check_results),
-        }
-        .into())
+        Ok(VerifyArgsSatisfyParamDefResult::success(
+            check_results,
+            infer_result,
+        ))
     }
 }

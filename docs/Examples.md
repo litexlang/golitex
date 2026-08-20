@@ -141,16 +141,15 @@ start with [Start Here](#start-here), then come back here when you need a
 specific move.
 
 If you know the shape of the goal but not which interface to try first, use
-the [Goal-Shape Routing Table](cheatsheet.md#goal-shape-routing-table). It
+the [goal-shape routing table](Manual.md#goal-shape-routing). It
 distinguishes direct facts, definition folding, theorem interfaces, explicit
 builtin theorem calls, and native proof-control surfaces before manual proof
 expansion.
 
 If the goal shape is clear but the object still has the wrong carrier,
-representation, field surface, or recursive index, use the
-[Object Proof Playbook](Object_Proof_Playbook.md). It covers refined numeric
-values, set-valued constructions, finite aggregates, dependent records, and
-recursive callables with current executable probes.
+representation, field surface, or recursive index, continue with the Manual's
+[well-defined objects](Manual.md#well-defined-objects) section before choosing
+a proof route.
 
 Small proof moves come up again and again: conjunctions, cases, contradiction,
 witnesses, induction, theorem reuse, and named facts.
@@ -3261,11 +3260,9 @@ This is a reference page for Litex object syntax and statement behavior. It is
 best after [00_start_here.md](#start-here), when you want to look up how a
 particular expression or statement form behaves.
 
-The object entries say what the notation means mathematically.  The statement
-entries mirror `docs/cheatsheet.md`: first the well-definedness or structural
-checks, then the proof obligation, then the environment effect.
-
-Each `litex` block is intended to run on its own.
+The object entries say what the notation means mathematically. Each `litex`
+block is intended to run on its own. For the canonical statement contracts,
+use the Manual's [statement index](Manual.md#statement-index).
 
 ### Object Examples
 
@@ -3529,12 +3526,6 @@ directly in that carrier when the other interface is needed.
 
 Purpose: assert a mathematical fact and make it available later.
 
-- Well-definedness / structural checks: the fact and every object inside it
-  must be well-defined.
-- Truth verification: Litex proves the fact from builtin rules, known facts,
-  theorem instances, and local context.
-- Environment effects: stores the proved fact and any inferred consequences.
-
 ```litex
 1 + 1 = 2
 
@@ -3547,11 +3538,6 @@ forall x R:
 Purpose: introduce an assumption without proof, usually for explicit proof debt
 or a background interface.
 
-- Well-definedness / structural checks: rejected in strict mode; every assumed
-  fact must be well-defined.
-- Truth verification: none.
-- Environment effects: stores the unsafe assumption and runs inference.
-
 ```litex
 abstract_prop p(x)
 trust $p(0)
@@ -3561,12 +3547,6 @@ $p(0)
 #### 3. Trusted Local Names With `trust have`
 
 Purpose: introduce local names together with assumed facts about them.
-
-- Well-definedness / structural checks: rejected in strict mode; parameter
-  declarations are checked, and attached facts must be well-defined.
-- Truth verification: none for the attached facts.
-- Environment effects: stores the names, their type facts, the attached facts,
-  and inferred consequences.
 
 ```litex
 trust have a R:
@@ -3580,12 +3560,6 @@ a = 1
 
 Purpose: introduce an arbitrary object of a nonempty type or set.
 
-- Well-definedness / structural checks: the name must be unused and the type
-  object must be well-defined.
-- Truth verification: Litex verifies the type or set is nonempty.
-- Environment effects: stores the new name, its membership fact, and inferred
-  facts.
-
 ```litex
 have x R
 x $in R
@@ -3594,13 +3568,6 @@ x $in R
 #### 5. Definitional `have`
 
 Purpose: introduce a name for a specific object.
-
-- Well-definedness / structural checks: the name, declared type, and assigned
-  object must be well-defined.
-- Truth verification: Litex verifies the assigned object belongs to the
-  declared type.
-- Environment effects: stores the name, its type fact, the defining equality,
-  and any value caches for sequence-like objects.
 
 ```litex
 have a R = 1
@@ -3611,12 +3578,6 @@ a = 1
 #### 6. Opening An Existential With `obtain`
 
 Purpose: name witnesses from an already known existential fact.
-
-- Well-definedness / structural checks: the existential shape and requested
-  witness count must match.
-- Truth verification: verifies the source existential fact.
-- Environment effects: stores witness names, witness type facts, body facts,
-  and inferred consequences.
 
 ```litex
 witness exist x R st {x = 1} from 1:
@@ -3631,13 +3592,6 @@ a = 1
 
 Purpose: name a preimage witness from a function-image membership fact.
 
-- Well-definedness / structural checks: the source must be a supported range,
-  replacement, or restricted-range membership fact, and the witness count must
-  match.
-- Truth verification: verifies the source membership fact.
-- Environment effects: stores preimage names, domain facts, side conditions,
-  and the equality connecting the value to the function application.
-
 ```litex
 have fn shift(x R) R = x + 1
 
@@ -3651,13 +3605,6 @@ shift(2) = shift(x)
 
 Purpose: define a function by a single expression over its domain.
 
-- Well-definedness / structural checks: checks the function set, parameter
-  declarations, body, return set, and function name.
-- Truth verification: verifies the body value belongs to the return set for
-  every allowed input.
-- Environment effects: stores the function name, function type, body data,
-  equality to the anonymous function, and inferred facts.
-
 ```litex
 have fn f(x R) R = x + 1
 f $in fn(x R) R
@@ -3667,13 +3614,6 @@ f(2) = 3
 #### 9. Case Function Definition
 
 Purpose: define a function by cases on its input domain.
-
-- Well-definedness / structural checks: checks the function set, cases,
-  returned expressions, and function name.
-- Truth verification: verifies each case returns a value in the return set and
-  that the cases cover the declared domain and are pairwise mutually exclusive.
-- Environment effects: stores the function name, function type, and generated
-  case facts.
 
 Function equality currently has no negated atomic form. In particular,
 `$fn_eq(f, g)` and `$fn_eq(g, f)` are symmetric statements, not complementary
@@ -3691,13 +3631,6 @@ is_zero_indicator(0) = 1
 
 Purpose: define a function by induction over a decreasing integer-valued
 measure.
-
-- Well-definedness / structural checks: checks the function signature,
-  induction measure, base and step cases, and recursive calls.
-- Truth verification: proves the measure and lower bound belong to `Z`, then
-  verifies the lower bound, case partition, return values, and every recursive
-  call's strict decrease.
-- Environment effects: stores the recursive function definition facts.
 
 ```litex
 have fn count_from_zero(n Z: n >= 0) R by induc n from 0:
@@ -3717,12 +3650,6 @@ not unfolded.
 
 Purpose: attach an executable implementation to a function so Litex can evaluate
 calls.
-
-- Well-definedness / structural checks: the target function must already exist
-  and the implementation parameters must match the function set.
-- Truth verification: verifies each return expression is valid; if no default
-  return exists, verifies case coverage.
-- Environment effects: stores the implementation for later `eval`.
 
 ```litex
 have fn f(x R) R = x + 1
@@ -3747,13 +3674,6 @@ id_real(3) = 3
 
 Purpose: define a function when every input has a unique output satisfying a
 property.
-
-- Well-definedness / structural checks: the source `forall` must have the
-  expected unique-existence shape.
-- Truth verification: verifies the source `forall` or the proof block that
-  establishes it.
-- Environment effects: stores the function name, function type, property
-  `forall`, and uniqueness fact.
 
 ```litex
 have A set = R
@@ -3780,14 +3700,6 @@ forall x A:
 #### 13. Symbolic Tuple, Cart, And Matrix Definitions
 
 Purpose: define structured objects by coordinate or projection rules.
-
-- Well-definedness / structural checks: the name must be unused, dimensions
-  and coordinate expressions must be well-defined, and the left side must
-  describe the object being defined.
-- Truth verification: verifies the dimensions are positive and at least two
-  when needed, and verifies entry values belong to the declared sets.
-- Environment effects: stores tuple/cart/matrix markers, dimension facts, and
-  coordinate or projection facts.
 
 ```litex
 have n N+ = 3
@@ -3816,12 +3728,6 @@ M(1, 2) = 2
 
 Purpose: introduce named predicates for reusable mathematical properties.
 
-- Well-definedness / structural checks: parameter declarations and definition
-  facts must be well-defined; names must not conflict.
-- Truth verification: `prop` definitions do not prove their body facts, and
-  `abstract_prop` has no body to prove.
-- Environment effects: stores the concrete or abstract predicate definition.
-
 ```litex
 prop is_one(x R):
     x = 1
@@ -3838,13 +3744,6 @@ $related(1, 1)
 Purpose: define a record-like structure with typed fields and optional
 equivalent facts.
 
-- Well-definedness / structural checks: parameter domains, field types, and
-  equivalent facts must be well-defined; the struct name must be unused.
-- Truth verification: does not prove the equivalent facts at declaration time.
-- Environment effects: stores the struct definition and enables membership,
-  positional projections, and declaration-owned named fields. A later
-  membership fact does not add named fields to an existing symbol.
-
 ```litex
 struct Point:
     x R
@@ -3859,11 +3758,6 @@ p.y = 2
 #### 16. Parameterized Families With `template`
 
 Purpose: define a parameterized object or function family.
-
-- Well-definedness / structural checks: template parameters and domains must
-  be well-defined, and the body must execute in a local environment.
-- Truth verification: the body is verified like ordinary Litex code.
-- Environment effects: stores the template definition for later instantiation.
 
 ```litex
 template<S set>:
@@ -3881,14 +3775,6 @@ template<S set, z S>:
 
 Purpose: store a reusable theorem and instantiate it later.
 
-- Well-definedness / structural checks: the theorem statement must be
-  well-defined; the theorem name must be unique; theorem-call arguments must
-  satisfy parameter types.
-- Truth verification: the theorem proof verifies the target, and `by thm`
-  verifies instantiated domain facts.
-- Environment effects: stores the theorem definition, stores the theorem fact,
-  and later stores instantiated conclusions.
-
 ```litex
 thm add_zero_right:
     ? forall x R:
@@ -3902,13 +3788,6 @@ by thm add_zero_right(2)
 #### 17a. Explicit Definition Checks With `by def` (Preview)
 
 Purpose: instantiate a concrete prop definition and verify all of its clauses.
-
-- Well-definedness / structural checks: the prop must have a nonempty concrete
-  definition, and arguments must match its parameters.
-- Truth verification: substitutes the arguments and verifies every definition
-  clause; an already-known target does not bypass these checks.
-- Environment effects: stores the target prop fact only after every check
-  succeeds.
 
 ```litex
 prop is_unit_pair(x R, y R):
@@ -3928,11 +3807,6 @@ a supported positive builtin definition.
 
 Purpose: prove a local target and store it in the current environment.
 
-- Well-definedness / structural checks: the claimed fact must be well-defined.
-- Truth verification: the proof block must verify the claimed target or
-  then-clauses.
-- Environment effects: stores the claimed fact and runs inference.
-
 ```litex
 claim:
     ? 1 + 1 = 2
@@ -3942,12 +3816,6 @@ claim:
 #### 19. Giving Witnesses
 
 Purpose: prove an existential statement by giving explicit witnesses.
-
-- Well-definedness / structural checks: witness count and witness types must
-  match the existential target.
-- Truth verification: verifies the existential body under the proposed
-  witnesses.
-- Environment effects: stores the existential fact and inferred consequences.
 
 ```litex
 witness exist x, y R st {x > y} from 1, 0:
@@ -3960,12 +3828,6 @@ exist a, b R st {a > b}
 
 Purpose: run checked exploratory code without committing it, or run a checked
 batch that commits only if every nested statement succeeds.
-
-- Well-definedness / structural checks: each nested statement performs its own
-  checks; `try` rejects control statements such as `clear` and `import`.
-- Truth verification: nested statements verify normally.
-- Environment effects: `sketch` has no outer effect; `try` commits the child
-  environment into the parent environment on success.
 
 ```litex
 sketch:
@@ -3982,12 +3844,6 @@ committed_value = 2
 #### 21. Proof-By Statements
 
 Purpose: tell Litex which proof shape to use for a local target.
-
-- Well-definedness / structural checks: the proof statement checks the target,
-  the shape-specific parameters, and any nested statements.
-- Truth verification: verifies the shape-specific proof obligations, such as
-  case coverage, contradiction, or both directions of extension.
-- Environment effects: stores the target fact or generated `forall` fact.
 
 ```litex
 by cases:
@@ -4027,12 +3883,6 @@ by extension:
 
 Purpose: compute an evaluable object and store the resulting equality.
 
-- Well-definedness / structural checks: the object must be evaluable.
-- Truth verification: no separate proof of the original expression is needed;
-  evaluation supplies the equality.
-- Environment effects: stores the expression-value equality with an evaluation
-  reason.
-
 ```litex
 eval 1 + 2
 1 + 2 = 3
@@ -4041,10 +3891,6 @@ eval 1 + 2
 #### 23. Empty Proof Steps
 
 Purpose: make an explicit empty proof step.
-
-- Well-definedness / structural checks: none.
-- Truth verification: none.
-- Environment effects: none.
 
 ```litex
 do_nothing
@@ -4055,18 +3901,6 @@ do_nothing
 Purpose: cite configured project sources by canonical name, or clear the
 current environment.
 These examples are syntax only because they depend on local project files.
-
-- Well-definedness / structural checks: `[hierarchy]`, module-only `[import]`
-  and `[import std]`, direct-child `[export]` entries, and complete configured
-  folder contents are validated during discovery; `clear` has no structural
-  checks.
-- Truth verification: `-r` verifies the complete ordered `[export]` tree.
-  `-f` trusts earlier exports needed as project context and verifies its target.
-  `[import]` and `[import std]` are trusted by default; Litex reports each
-  trusted dependency as an `unverified_import`, while `-strict` verifies every
-  loaded dependency.
-- Environment effects: configured imports update the module manager; `clear`
-  removes the current user environment. Configured packages remain registered.
 
 <!-- litex:skip-test -->
 ```litex

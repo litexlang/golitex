@@ -12,15 +12,15 @@ impl Runtime {
         }
 
         let Some(strategy_name) = self.active_strategy_name_for_atomic_fact(atomic_fact) else {
-            return Ok(StmtUnknown::new().into());
+            return Ok(UnknownGenericStmtResult::new().into());
         };
         let Some(strategy) = self.get_strategy_definition_by_name(&strategy_name) else {
-            return Ok(StmtUnknown::new().into());
+            return Ok(UnknownGenericStmtResult::new().into());
         };
         let Some(ExistOrAndChainAtomicFact::AtomicFact(then_atomic_fact)) =
             strategy.forall_fact.then_facts.first()
         else {
-            return Ok(StmtUnknown::new().into());
+            return Ok(UnknownGenericStmtResult::new().into());
         };
 
         let then_args = then_atomic_fact.args_ref();
@@ -32,7 +32,7 @@ impl Runtime {
             None,
         )?
         else {
-            return Ok(StmtUnknown::new().into());
+            return Ok(UnknownGenericStmtResult::new().into());
         };
 
         let result = self.verify_atomic_fact_with_strategy_args(
@@ -84,13 +84,13 @@ impl Runtime {
             .iter()
             .all(|param_name| arg_map.contains_key(param_name))
         {
-            return Ok(StmtUnknown::new().into());
+            return Ok(UnknownGenericStmtResult::new().into());
         }
 
         let mut args_for_params: Vec<Obj> = Vec::new();
         for param_name in param_names.iter() {
             let Some(obj) = arg_map.get(param_name) else {
-                return Ok(StmtUnknown::new().into());
+                return Ok(UnknownGenericStmtResult::new().into());
             };
             args_for_params.push(obj.clone());
         }
@@ -112,7 +112,7 @@ impl Runtime {
                 )))
             })?;
         if args_param_types.is_unknown() {
-            return Ok(StmtUnknown::new().into());
+            return Ok(UnknownGenericStmtResult::new().into());
         }
 
         let Some(param_to_arg_map) = strategy
@@ -120,7 +120,7 @@ impl Runtime {
             .params_def_with_type
             .param_def_params_to_arg_map(&arg_map)
         else {
-            return Ok(StmtUnknown::new().into());
+            return Ok(UnknownGenericStmtResult::new().into());
         };
 
         for dom_fact in strategy.forall_fact.dom_facts.iter() {
@@ -147,13 +147,13 @@ impl Runtime {
                     )))
                 })?;
             if result.is_unknown() {
-                return Ok(StmtUnknown::new().into());
+                return Ok(UnknownGenericStmtResult::new().into());
             }
         }
 
-        Ok(VerifiedFactStmtIr::new_with_verified_by_known_fact(
+        Ok(SuccessFactStmtResult::new_with_verified_by_known_fact(
             atomic_fact.clone().into(),
-            VerifiedByResult::cited_stmt(
+            SuccessFactProofResult::cited_stmt(
                 atomic_fact.clone().into(),
                 strategy.clone().into(),
                 Some(format!("strategy `{}`", strategy_name)),

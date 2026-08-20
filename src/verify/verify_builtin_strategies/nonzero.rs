@@ -21,10 +21,10 @@ impl Runtime {
         } else if self.obj_represents_zero_for_not_equal_builtin_rules(&fact.left) {
             &fact.right
         } else {
-            return Ok(StmtUnknown::new().into());
+            return Ok(UnknownGenericStmtResult::new().into());
         };
         let Obj::Mul(product) = expression else {
-            return Ok(StmtUnknown::new().into());
+            return Ok(UnknownGenericStmtResult::new().into());
         };
 
         let zero: Obj = Number::new("0".to_string()).into();
@@ -41,13 +41,13 @@ impl Runtime {
         for child in &required {
             let result = self.verify_builtin_strategy_child(child)?;
             if !result.is_true() {
-                return Ok(StmtUnknown::new().into());
+                return Ok(UnknownGenericStmtResult::new().into());
             }
             children.push(result);
         }
 
         Ok(
-            VerifiedFactStmtIr::new_with_verified_by_builtin_strategy_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_strategy_recording_stmt(
                 fact.clone().into(),
                 "nonzero-product strategy: all immediate factors are nonzero".to_string(),
                 children,

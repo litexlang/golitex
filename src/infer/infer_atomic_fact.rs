@@ -5,13 +5,13 @@ impl Runtime {
     pub fn infer_atomic_fact(
         &mut self,
         atomic_fact: &AtomicFact,
-    ) -> Result<InferResult, RuntimeError> {
+    ) -> Result<SuccessInferResult, RuntimeError> {
         let fact_key = nested_obj_binder_normalized_fact_key(&atomic_fact.clone().into());
         // Recursive inference may return to the same membership through an
         // alpha-renamed set builder. This is a DFS back-edge guard, not an
         // inference-depth limit: distinct nested facts still expand normally.
         if !self.active_atomic_fact_inferences.insert(fact_key.clone()) {
-            return Ok(InferResult::new());
+            return Ok(SuccessInferResult::new());
         }
 
         let result = match atomic_fact {
@@ -54,7 +54,7 @@ impl Runtime {
                 self.infer_numeric_order_sign_from_order_atomic(atomic_fact)
             }
             // e.g. negated atoms and `$is_set`: no inference on this path.
-            _ => Ok(InferResult::new()),
+            _ => Ok(SuccessInferResult::new()),
         };
 
         self.active_atomic_fact_inferences.remove(&fact_key);

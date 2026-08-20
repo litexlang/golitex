@@ -7,4 +7,7 @@ mod infer_numeric_order_sign;
 mod infer_result;
 mod infer_set_relations;
 
-pub use infer_result::{InferReason, InferResult, StoreFactOutput};
+pub use infer_result::{
+    InferReason, InferRule, SuccessInferPremiseResult, SuccessInferResult,
+    SuccessInferRuleApplicationResult, SuccessStoreFactOutput,
+};

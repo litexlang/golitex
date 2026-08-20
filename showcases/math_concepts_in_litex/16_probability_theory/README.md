@@ -30,6 +30,9 @@ lake env lean ../showcases/math_concepts_in_litex/16_probability_theory/same_mat
 
 - `SigmaAlgebraSetting` carries a sample space, its measurable events, and
   empty, universe, complement, binary-intersection, and countable-union laws.
+  Countable union is the native
+  `index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)})`; the module
+  no longer maintains a parallel set-builder implementation.
 - `ProbabilitySpaceSetting` adds a real-valued probability function, empty
   mass zero, total mass one, nonnegativity, and countable additivity.
 - `has_series_sum` defines the right side of countable additivity by ordinary
@@ -47,7 +50,8 @@ lake env lean ../showcases/math_concepts_in_litex/16_probability_theory/same_mat
 
 The primary derived tracer is `probability_of_disjoint_union`. It constructs
 the sequence `(A, B, empty, empty, ...)`, proves that its countable union is
-`A union B`, proves the corresponding probability series sums to
+`A union B` through indexed-union membership witnesses, proves the
+corresponding probability series sums to
 `P(A) + P(B)`, and uses uniqueness of real-series sums together with
 `kolmogorov_countable_additivity`. Thus finite additivity is visibly a theorem,
 not an extra probability axiom. Checked consumers then recover the familiar
@@ -73,6 +77,11 @@ variance, almost-sure reasoning, laws of large numbers, and central limit
 theorems. Those require later measure/integration layers rather than a finite
 weighted-sum surrogate.
 
-The registered Litex file runner and module runner both return top-level
-`ok: true`, and the Lean analogy compiles without `axiom`, `sorry`, or `admit`.
-See `math_collections.md` for the interface rationale and dependency graph.
+The indexed-union sigma-algebra signature and padded two-event tracer pass
+focused persistent-session checks. In the current parent working tree, the
+registered file and module gates remain blocked later by a pre-existing
+`NameAlreadyUsedError` while committing the `two_event_sequence` template;
+the same failure was present before this migration. The handwritten Lean
+analogy is unchanged because its native `Set.iUnion` already expresses the
+same mathematics. See `math_collections.md` for the interface rationale and
+dependency graph.

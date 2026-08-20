@@ -62,7 +62,7 @@ impl Runtime {
             let membership_fact: Fact =
                 InFact::new(value_fn.clone().into(), declared_return_set, line_file).into();
             return Ok(
-                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                     membership_fact,
                     format!(
                         "anonymous fn satisfies a declared return set through an equal {}",
@@ -153,7 +153,7 @@ impl Runtime {
             )
             .into();
             return Ok(Some(
-                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                     membership_fact,
                     "indexed result inherits its carrier from a symbolic Cartesian projection"
                         .to_string(),
@@ -176,6 +176,38 @@ impl Runtime {
         in_fact: &InFact,
         verify_state: &UseContextVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let stored_membership = self.get_object_in_fn_set_with_membership_fact_id(element);
+        if let Some((known_body, source_line_file, source_fact_id)) = stored_membership {
+            let expected_names = Self::collect_fn_param_names(&expected_fn_set.body);
+            let known_names = Self::collect_fn_param_names(&known_body);
+            if expected_names.len() == known_names.len() {
+                let shared_names = self.generate_random_unused_names(expected_names.len());
+                let known_normalized = self.fn_set_flattened_alpha_renamed_for_display_compare(
+                    &known_body,
+                    &shared_names,
+                )?;
+                let expected_normalized = self.fn_set_flattened_alpha_renamed_for_display_compare(
+                    &expected_fn_set.body,
+                    &shared_names,
+                )?;
+                if known_normalized.to_string() == expected_normalized.to_string() {
+                    let target: Fact = in_fact.clone().into();
+                    return Ok(Some(
+                        SuccessFactStmtResult::new_with_verified_by_known_fact(
+                            target.clone(),
+                            SuccessFactProofResult::cached_fact(
+                                target,
+                                source_line_file,
+                                source_fact_id,
+                            ),
+                            Vec::new(),
+                        )
+                        .into(),
+                    ));
+                }
+            }
+        }
+
         let Some(flow) = self.build_fn_membership_proof_flow(element, expected_fn_set, in_fact)?
         else {
             return Ok(None);
@@ -204,7 +236,7 @@ impl Runtime {
         let pointwise: Fact = forall.into();
 
         Ok(Some(
-            (VerifiedFactStmtIr::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 target.clone(),
                 "fn membership: same input domain and pointwise values lie in the target return set"
                     .to_string(),
@@ -358,9 +390,11 @@ impl Runtime {
             expected_fn_set.body.dom_facts.clone(),
             shared_return_set,
         );
-        let known_norm = self
-            .fn_set_alpha_renamed_for_display_compare(&known_with_expected_return, &shared_names)?;
-        let expected_norm = self.fn_set_alpha_renamed_for_display_compare(
+        let known_norm = self.fn_set_flattened_alpha_renamed_for_display_compare(
+            &known_with_expected_return,
+            &shared_names,
+        )?;
+        let expected_norm = self.fn_set_flattened_alpha_renamed_for_display_compare(
             &expected_with_shared_return,
             &shared_names,
         )?;

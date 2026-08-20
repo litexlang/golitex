@@ -22,7 +22,7 @@ $is_nonempty_set(finite_seq({}, 0))
         succeeded,
         "zero- and positive-length finite sequences should both be valid:\n{output}"
     );
-    assert!(output.contains("finite seq set is nonempty when length is zero"));
+    assert!(output.contains("finite_seq_set_is_nonempty_when_length_is_zero"));
     assert!(output.contains("finite_seq list: length equals n and each entry in co-domain"));
 }
 

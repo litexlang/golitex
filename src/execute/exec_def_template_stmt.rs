@@ -11,11 +11,15 @@ impl Runtime {
                 exec_stmt_error_with_stmt_and_cause(def_template_stmt.clone().into(), e)
             })?;
         self.store_def_template(def_template_stmt)?;
-        Ok(VerifiedDefInterfaceStmtIr::DefTemplateStmt {
-            statement: def_template_stmt.clone(),
-            common: VerifiedStmtCommonIr::new(InferResult::new(), vec![]),
-        }
-        .into())
+        Ok(
+            SuccessDefInterfaceStmtResult::DefTemplateStmt(Box::new(
+                SuccessDefTemplateStmtResult {
+                    statement: def_template_stmt.clone(),
+                    common: SuccessStmtCommonResult::new(SuccessInferResult::new()),
+                },
+            ))
+            .into(),
+        )
     }
 
     /// Mathematical contract: a template declaration has meaningful typed
@@ -49,9 +53,20 @@ impl Runtime {
         template_obj: &InstantiatedTemplateObj,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
+        self.materialize_instantiated_template_obj_result(template_obj, verify_state)
+            .map(|_| ())
+    }
+
+    pub fn materialize_instantiated_template_obj_result(
+        &mut self,
+        template_obj: &InstantiatedTemplateObj,
+        verify_state: &UseContextVerifyState,
+    ) -> Result<SuccessVerifyTemplateMaterializationResult, RuntimeError> {
         let instance_name = template_obj.surface_name();
         if self.is_name_used_for_identifier(&instance_name) {
-            return Ok(());
+            return Ok(SuccessVerifyTemplateMaterializationResult::Reuse(Box::new(
+                SuccessReuseTemplateMaterializationResult { instance_name },
+            )));
         }
         let template_name = template_obj.template_name.to_string();
         let def = self
@@ -77,29 +92,51 @@ impl Runtime {
         }
 
         for arg in template_obj.args.iter() {
-            self.verify_obj_well_defined_and_store_cache(arg, verify_state)?;
+            self.verify_obj_well_defined_result(arg, verify_state)?;
         }
 
-        let verify_args_result = self.verify_args_satisfy_param_def_flat_types(
+        let instantiated_types = self.inst_param_def_with_type_one_by_one(
             &def.template_arg_def,
             &template_obj.args,
-            verify_state,
             ParamObjType::DefHeader,
         )?;
-        if verify_args_result.is_unknown() {
-            return Err(RuntimeError::from(WellDefinedRuntimeError(
-                RuntimeErrorStruct::new_with_just_msg(format!(
-                    "failed to verify template `{}` arguments satisfy parameter types",
-                    template_obj.template_name
-                )),
-            )));
+        let flat_types = def
+            .template_arg_def
+            .flat_instantiated_types_for_args(&instantiated_types);
+        let mut header_arguments = Vec::with_capacity(template_obj.args.len());
+        for (argument_index, (argument, expected_type)) in template_obj
+            .args
+            .iter()
+            .zip(flat_types.into_iter())
+            .enumerate()
+        {
+            let result = self.verify_obj_satisfies_param_type(
+                argument.clone(),
+                &expected_type,
+                verify_state,
+            )?;
+            if result.is_unknown() {
+                return Err(RuntimeError::from(WellDefinedRuntimeError(
+                    RuntimeErrorStruct::new_with_just_msg(format!(
+                        "failed to verify template `{}` arguments satisfy parameter types",
+                        template_obj.template_name
+                    )),
+                )));
+            }
+            header_arguments.push(SuccessVerifyTemplateHeaderArgumentResult {
+                argument_index,
+                argument: argument.clone(),
+                expected_type,
+                verification: success_template_fact_check(result)?,
+            });
         }
 
         let param_to_arg_map = def
             .template_arg_def
             .param_defs_and_args_to_param_to_arg_map(&template_obj.args);
 
-        for dom_fact in def.template_arg_dom.iter() {
+        let mut header_domains = Vec::with_capacity(def.template_arg_dom.len());
+        for (domain_index, dom_fact) in def.template_arg_dom.iter().enumerate() {
             let instantiated_dom_fact = self.inst_quantifier_free_fact(
                 dom_fact,
                 &param_to_arg_map,
@@ -116,9 +153,22 @@ impl Runtime {
                     )),
                 )));
             }
-            self.store_quantifier_free_fact_without_well_defined_verified_and_infer(
-                instantiated_dom_fact,
-            )?;
+            let proof = success_template_fact_check(verify_result)?;
+            let fact: Fact = instantiated_dom_fact.clone().into();
+            let mut infers = self
+                .store_quantifier_free_fact_without_well_defined_verified_and_infer(
+                    instantiated_dom_fact,
+                )?;
+            self.attach_known_fact_ids_to_infer_result(&mut infers)?;
+            header_domains.push(SuccessVerifyTemplateDomainResult {
+                domain_index,
+                proof,
+                store: SuccessStoreFactResult {
+                    fact: fact.clone(),
+                    fact_id: self.known_fact_id_for_fact(&fact)?,
+                    infers,
+                },
+            });
         }
 
         let stmt = self.inst_template_body_stmt(
@@ -134,19 +184,28 @@ impl Runtime {
         // this lets its unique-existence property normalize directly to calls
         // such as `\selected<T>(x)` instead of remaining attached only to the
         // hidden materialized identifier.
-        self.store_atomic_fact_without_well_defined_verified_and_infer(
-            EqualFact::new(
-                template_obj.clone().into(),
-                instance_identifier.clone(),
-                def.line_file.clone(),
-            )
-            .into(),
-        )?;
+        let surface_equality_fact: Fact = AtomicFact::EqualFact(EqualFact::new(
+            template_obj.clone().into(),
+            instance_identifier.clone(),
+            def.line_file.clone(),
+        ))
+        .into();
+        let Fact::AtomicFact(surface_equality_atomic) = surface_equality_fact.clone() else {
+            unreachable!("template surface equality is atomic")
+        };
+        let mut surface_equality_infers = self
+            .store_atomic_fact_without_well_defined_verified_and_infer(surface_equality_atomic)?;
+        self.attach_known_fact_ids_to_infer_result(&mut surface_equality_infers)?;
+        let surface_equality = SuccessStoreFactResult {
+            fact: surface_equality_fact.clone(),
+            fact_id: self.known_fact_id_for_fact(&surface_equality_fact)?,
+            infers: surface_equality_infers,
+        };
         // The template body was verified once with symbolic parameters when the
         // template was declared. Header validation above plus capture-avoiding
         // substitution preserves that result, so only commit the instantiated
         // statement's environment effects here.
-        self.exec_preverified_stmt_affect_environment_only(&stmt)?;
+        let body_execution = self.exec_preverified_stmt_affect_environment_only(&stmt)?;
         let mut public_values = match &stmt {
             Stmt::DefObjStmt(DefObjStmt::HaveObjEqualStmt(value_stmt)) => {
                 value_stmt.objs_equal_to.clone()
@@ -169,35 +228,68 @@ impl Runtime {
         // Preserve body values directly at the public template application.
         // This makes declaration-owned projection a local definitional
         // reduction instead of a transitive hop through the hidden identifier.
+        let mut public_value_equalities = Vec::with_capacity(public_values.len());
         for value in public_values {
-            self.store_atomic_fact_without_well_defined_verified_and_infer(
-                EqualFact::new(template_obj.clone().into(), value, def.line_file.clone()).into(),
-            )?;
+            let fact: Fact = AtomicFact::EqualFact(EqualFact::new(
+                template_obj.clone().into(),
+                value,
+                def.line_file.clone(),
+            ))
+            .into();
+            let Fact::AtomicFact(atomic) = fact.clone() else {
+                unreachable!("template public-value equality is atomic")
+            };
+            let mut infers =
+                self.store_atomic_fact_without_well_defined_verified_and_infer(atomic)?;
+            self.attach_known_fact_ids_to_infer_result(&mut infers)?;
+            public_value_equalities.push(SuccessStoreFactResult {
+                fact: fact.clone(),
+                fact_id: self.known_fact_id_for_fact(&fact)?,
+                infers,
+            });
         }
+        let mut supplemental_stores = Vec::new();
         if let Stmt::DefObjStmt(DefObjStmt::HaveFnEqualCaseByCaseStmt(case_stmt)) = &stmt {
-            self.store_template_surface_case_equations(case_stmt, template_obj)?;
+            supplemental_stores
+                .extend(self.store_template_surface_case_equations(case_stmt, template_obj)?);
         }
         if let Stmt::DefObjStmt(DefObjStmt::HaveFnByInducStmt(recursive_stmt)) = &stmt {
             let flat = recursive_stmt.to_have_fn_equal_case_by_case_stmt();
-            self.store_template_surface_case_equations(&flat, template_obj)?;
+            supplemental_stores
+                .extend(self.store_template_surface_case_equations(&flat, template_obj)?);
         }
         if let Stmt::DefObjStmt(DefObjStmt::HaveFnByForallExistUniqueStmt(choice_stmt)) = &stmt {
             // The generic choice theorem was checked at template declaration.
             // Register its instantiated property under the public template
             // application as well as the hidden materialized identifier.
-            self.store_instantiated_template_choice_property(choice_stmt, template_obj)?;
+            supplemental_stores
+                .push(self.store_instantiated_template_choice_property(choice_stmt, template_obj)?);
         }
-        if let Some(set_builder) = self.get_obj_equal_to_set_builder(&instance_identifier) {
+        let registered_set_builder = self.get_obj_equal_to_set_builder(&instance_identifier);
+        if let Some(set_builder) = &registered_set_builder {
             // Keep the template surface object connected to a materialized
             // set-builder value. Example: after `template<T>: have selected =
             // {x T: P(x)}`, membership in `\selected<T>` can expose `P(x)`.
             self.store_known_set_builder_obj(
                 &template_obj.to_string(),
-                set_builder,
+                set_builder.clone(),
                 def.line_file.clone(),
             );
         }
-        Ok(())
+        Ok(SuccessVerifyTemplateMaterializationResult::Materialized(
+            Box::new(SuccessMaterializedTemplateResult {
+                template_name,
+                instance_name,
+                header_arguments,
+                header_domains,
+                surface_equality,
+                body_statement: stmt,
+                body_execution: Box::new(body_execution),
+                public_value_equalities,
+                supplemental_stores,
+                registered_set_builder,
+            }),
+        ))
     }
 
     fn inst_template_body_stmt(
@@ -1001,4 +1093,20 @@ impl Runtime {
             };
         Ok(HaveFnByInducCase::new(case_fact, body))
     }
+}
+
+fn success_template_fact_check(
+    result: StmtResult,
+) -> Result<SuccessVerifyFactForObjWellDefinedResult, RuntimeError> {
+    let success = result.into_factual_success().ok_or_else(|| {
+        RuntimeError::from(WellDefinedRuntimeError(
+            RuntimeErrorStruct::new_with_just_msg(
+                "template contract check has no successful factual result".to_string(),
+            ),
+        ))
+    })?;
+    Ok(SuccessVerifyFactForObjWellDefinedResult::new(
+        success.fact(),
+        success.verification,
+    ))
 }

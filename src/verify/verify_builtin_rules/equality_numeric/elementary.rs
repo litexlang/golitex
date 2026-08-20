@@ -80,7 +80,7 @@ impl Runtime {
             return Ok(calculation_result);
         }
 
-        Ok(StmtUnknown::new().into())
+        Ok(UnknownGenericStmtResult::new().into())
     }
 
     pub(crate) fn try_verify_zero_equals_product_implies_other_factor_zero(
@@ -141,7 +141,7 @@ impl Runtime {
                         self.verify_builtin_rule_premises(&premises, builtin_state)?
                     {
                         return Ok(Some(
-                            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                                 equal_fact.clone().into(),
                                 reason.to_string(),
                                 results,
@@ -168,7 +168,7 @@ impl Runtime {
                     )?;
                     if right_nonzero_result.is_true() {
                         return Ok(Some(
-                            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                                 equal_fact.clone().into(),
                                 "equality: b = 0 from a * b = 0 and a != 0".to_string(),
                                 vec![left_target_result, right_nonzero_result],
@@ -193,7 +193,7 @@ impl Runtime {
                         .verify_atomic_fact_as_builtin_rule_premise(&left_nonzero, builtin_state)?;
                     if left_nonzero_result.is_true() {
                         return Ok(Some(
-                            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                                 equal_fact.clone().into(),
                                 "equality: a = 0 from a * b = 0 and b != 0".to_string(),
                                 vec![right_target_result, left_nonzero_result],
@@ -366,7 +366,7 @@ impl Runtime {
         }
 
         Ok(Some(
-            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                 equal_fact.clone().into(),
                 "equality: 1 % k = 1 for k >= 2".to_string(),
                 vec![modulus_result],
@@ -427,7 +427,7 @@ impl Runtime {
         };
 
         Ok(Some(
-            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                 equal_fact.clone().into(),
                 "equality: (a - a % b) % b = 0 for a in Z and b in N+".to_string(),
                 results,
@@ -493,7 +493,7 @@ impl Runtime {
         };
 
         Ok(Some(
-            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                 equal_fact.clone().into(),
                 "equality: Euclidean quotient decomposition a = d * quot(a, d) + a % d".to_string(),
                 premises,
@@ -557,7 +557,7 @@ impl Runtime {
                 self.verify_builtin_rule_premises(&complete_premises, builtin_state)?
             {
                 return Ok(Some(
-                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                         equal_fact.clone().into(),
                         "equality: Euclidean remainder uniqueness from a = m * q + r and 0 <= r < m"
                             .to_string(),
@@ -599,7 +599,7 @@ impl Runtime {
                 decomposition_result,
             ]);
             return Ok(Some(
-                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                     equal_fact.clone().into(),
                     "equality: Euclidean remainder uniqueness from a = m * q + r and 0 <= r < m"
                         .to_string(),

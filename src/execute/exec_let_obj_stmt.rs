@@ -9,17 +9,19 @@ impl Runtime {
         .map_err(|error| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), error))?;
 
         let infer_result = self.exec_let_obj_stmt_affect_environment(stmt)?;
-        Ok(VerifiedDefObjStmtIr::LetObjStmt {
-            statement: stmt.clone(),
-            common: VerifiedStmtCommonIr::new(infer_result, vec![]),
-        }
-        .into())
+        Ok(
+            SuccessDefObjStmtResult::LetObjStmt(Box::new(SuccessLetObjStmtResult {
+                statement: stmt.clone(),
+                common: SuccessStmtCommonResult::new(infer_result),
+            }))
+            .into(),
+        )
     }
 
     fn exec_let_obj_stmt_affect_environment(
         &mut self,
         stmt: &LetObjStmt,
-    ) -> Result<InferResult, RuntimeError> {
+    ) -> Result<SuccessInferResult, RuntimeError> {
         self.store_parameter_binding(&stmt.symbol_binding, ParamObjType::Identifier)
             .map_err(|error| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), error))?;
 
@@ -45,10 +47,12 @@ impl Runtime {
         stmt: &LetObjStmt,
     ) -> Result<StmtResult, RuntimeError> {
         let infer_result = self.exec_let_obj_stmt_affect_environment(stmt)?;
-        Ok(VerifiedDefObjStmtIr::LetObjStmt {
-            statement: stmt.clone(),
-            common: VerifiedStmtCommonIr::new(infer_result, vec![]),
-        }
-        .into())
+        Ok(
+            SuccessDefObjStmtResult::LetObjStmt(Box::new(SuccessLetObjStmtResult {
+                statement: stmt.clone(),
+                common: SuccessStmtCommonResult::new(infer_result),
+            }))
+            .into(),
+        )
     }
 }

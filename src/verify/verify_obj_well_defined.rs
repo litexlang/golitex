@@ -1,4 +1,5 @@
 use crate::prelude::*;
+use std::rc::Rc;
 
 mod advanced;
 mod core;
@@ -9,6 +10,326 @@ mod sets;
 mod structs;
 
 impl Runtime {
+    /// Compositional WD entry point. Every object family returns its exact
+    /// recursive children, fact checks, binder body, or materialization.
+    pub fn verify_obj_well_defined_result(
+        &mut self,
+        obj: &Obj,
+        verify_state: &UseContextVerifyState,
+    ) -> Result<Rc<SuccessVerifyObjWellDefinedResult>, RuntimeError> {
+        let verify_state = verify_state.without_known_forall_for_equality();
+        let verify_state = &verify_state;
+        let reusable_cache_key = self.well_defined_cache_key_for_obj(obj);
+        if let Some(source) = reusable_cache_key.as_ref().and_then(|key| {
+            self.iter_environments_from_top().find_map(|environment| {
+                environment
+                    .statement_well_defined_obj_proofs
+                    .get(key)
+                    .cloned()
+            })
+        }) {
+            return Ok(Rc::new(SuccessVerifyObjWellDefinedResult::Reuse(Box::new(
+                SuccessReuseObjWellDefinedResult::new(obj.clone(), source),
+            ))));
+        }
+        let cache_key = reusable_cache_key
+            .clone()
+            .unwrap_or_else(|| WellDefinedCacheKey::without_function_contract(obj.to_string()));
+        let active_key = obj_equality_key(obj);
+        if !self.active_well_defined_objects.insert(active_key.clone()) {
+            return Ok(Rc::new(
+                SuccessVerifyObjWellDefinedResult::RecursiveReference(Box::new(
+                    SuccessRecursiveObjWellDefinedResult::new(obj.clone(), active_key),
+                )),
+            ));
+        }
+
+        let steps = match obj {
+            Obj::Atom(AtomObj::Identifier(identifier)) => self
+                .verify_identifier_well_defined(identifier)
+                .map(|_| Some(SuccessVerifyObjWellDefinedStepsResult::new())),
+            Obj::Atom(AtomObj::IdentifierWithMod(identifier)) => self
+                .verify_identifier_with_mod_well_defined(identifier)
+                .map(|_| Some(SuccessVerifyObjWellDefinedStepsResult::new())),
+            Obj::FnObj(value) => self
+                .verify_fn_obj_well_defined_result(value, verify_state)
+                .map(Some),
+            Obj::Atom(AtomObj::Forall(_))
+            | Obj::Atom(AtomObj::Def(_))
+            | Obj::Atom(AtomObj::Exist(_))
+            | Obj::Atom(AtomObj::SetBuilder(_))
+            | Obj::Atom(AtomObj::FnSet(_))
+            | Obj::Atom(AtomObj::Induc(_))
+            | Obj::Atom(AtomObj::DefAlgo(_))
+            | Obj::Atom(AtomObj::DefStructField(_))
+            | Obj::Atom(AtomObj::TupleIndex(_))
+            | Obj::Atom(AtomObj::CartIndex(_))
+            | Obj::Number(_)
+            | Obj::ImaginaryUnit(_)
+            | Obj::EulerNumber(_)
+            | Obj::Pi(_)
+            | Obj::StandardSet(_) => Ok(Some(SuccessVerifyObjWellDefinedStepsResult::new())),
+            Obj::Add(add) => self
+                .verify_add_well_defined_result(add, verify_state)
+                .map(Some),
+            Obj::Sub(sub) => self
+                .verify_sub_well_defined_result(sub, verify_state)
+                .map(Some),
+            Obj::Mul(mul) => self
+                .verify_mul_well_defined_result(mul, verify_state)
+                .map(Some),
+            Obj::Div(div) => self
+                .verify_div_well_defined_result(div, verify_state)
+                .map(Some),
+            Obj::Mod(value) => self
+                .verify_mod_well_defined_result(value, verify_state)
+                .map(Some),
+            Obj::Quot(value) => self
+                .verify_quot_well_defined_result(value, verify_state)
+                .map(Some),
+            Obj::Gcd(value) => self
+                .verify_gcd_well_defined_result(value, verify_state)
+                .map(Some),
+            Obj::Lcm(value) => self
+                .verify_lcm_well_defined_result(value, verify_state)
+                .map(Some),
+            Obj::Abs(value) => self
+                .verify_abs_well_defined_result(value, verify_state)
+                .map(Some),
+            Obj::Floor(value) => self
+                .verify_floor_well_defined_result(value, verify_state)
+                .map(Some),
+            Obj::Ceil(value) => self
+                .verify_ceil_well_defined_result(value, verify_state)
+                .map(Some),
+            Obj::Min(value) => self
+                .verify_min_well_defined_result(value, verify_state)
+                .map(Some),
+            Obj::Max(value) => self
+                .verify_max_well_defined_result(value, verify_state)
+                .map(Some),
+            Obj::Exp(value) => self
+                .verify_exp_well_defined_result(value, verify_state)
+                .map(Some),
+            Obj::Ln(value) => self
+                .verify_ln_well_defined_result(value, verify_state)
+                .map(Some),
+            Obj::Sign(value) => self
+                .verify_sign_well_defined_result(value, verify_state)
+                .map(Some),
+            Obj::Factorial(value) => self
+                .verify_factorial_well_defined_result(value, verify_state)
+                .map(Some),
+            Obj::Pow(value) => self
+                .verify_pow_well_defined_result(value, verify_state)
+                .map(Some),
+            Obj::Sin(value) => self
+                .verify_sin_well_defined_result(value, verify_state)
+                .map(Some),
+            Obj::Cos(value) => self
+                .verify_cos_well_defined_result(value, verify_state)
+                .map(Some),
+            Obj::Tan(value) => self
+                .verify_tan_well_defined_result(value, verify_state)
+                .map(Some),
+            Obj::Cot(value) => self
+                .verify_cot_well_defined_result(value, verify_state)
+                .map(Some),
+            Obj::RealPart(value) => self
+                .verify_real_part_well_defined_result(value, verify_state)
+                .map(Some),
+            Obj::ImaginaryPart(value) => self
+                .verify_imaginary_part_well_defined_result(value, verify_state)
+                .map(Some),
+            Obj::ComplexAbs(value) => self
+                .verify_complex_abs_well_defined_result(value, verify_state)
+                .map(Some),
+            Obj::Sqrt(value) => self
+                .verify_sqrt_well_defined_result(value, verify_state)
+                .map(Some),
+            Obj::Log(value) => self
+                .verify_log_well_defined_result(value, verify_state)
+                .map(Some),
+            Obj::Union(value) => self
+                .verify_union_well_defined_result(value, verify_state)
+                .map(Some),
+            Obj::Intersect(value) => self
+                .verify_intersect_well_defined_result(value, verify_state)
+                .map(Some),
+            Obj::SetMinus(value) => self
+                .verify_set_minus_well_defined_result(value, verify_state)
+                .map(Some),
+            Obj::BigUnion(value) => self
+                .verify_big_union_well_defined_result(value, verify_state)
+                .map(Some),
+            Obj::BigIntersect(value) => self
+                .verify_big_intersect_well_defined_result(value, verify_state)
+                .map(Some),
+            Obj::IndexUnion(value) => self
+                .verify_index_union_well_defined_result(value, verify_state)
+                .map(Some),
+            Obj::IndexIntersect(value) => self
+                .verify_index_intersect_well_defined_result(value, verify_state)
+                .map(Some),
+            Obj::ListSet(value) => self
+                .verify_list_set_well_defined_result(value, verify_state)
+                .map(Some),
+            Obj::Cart(value) => self
+                .verify_cart_well_defined_result(value, verify_state)
+                .map(Some),
+            Obj::CartDim(value) => self
+                .verify_cart_dim_well_defined_result(value, verify_state)
+                .map(Some),
+            Obj::Proj(value) => self
+                .verify_proj_well_defined_result(value, verify_state)
+                .map(Some),
+            Obj::TupleDim(value) => self
+                .verify_tuple_dim_well_defined_result(value, verify_state)
+                .map(Some),
+            Obj::Tuple(value) => self
+                .verify_tuple_well_defined_result(value, verify_state)
+                .map(Some),
+            Obj::FiniteSetSize(value) => self
+                .verify_finite_set_size_well_defined_result(value, verify_state)
+                .map(Some),
+            Obj::FiniteSetMax(value) => self
+                .verify_finite_set_max_well_defined_result(value, verify_state)
+                .map(Some),
+            Obj::FiniteSetMin(value) => self
+                .verify_finite_set_min_well_defined_result(value, verify_state)
+                .map(Some),
+            Obj::FnRange(value) => self
+                .verify_fn_range_well_defined_result(value, verify_state)
+                .map(Some),
+            Obj::Replacement(value) => self
+                .verify_replacement_well_defined_result(value, verify_state)
+                .map(Some),
+            Obj::PowerSet(value) => self
+                .verify_power_set_well_defined_result(value, verify_state)
+                .map(Some),
+            Obj::GeneralCart(value) => self
+                .verify_general_cart_well_defined_result(value, verify_state)
+                .map(Some),
+            Obj::ObjAtIndex(value) => self
+                .verify_obj_at_index_well_defined_result(value, verify_state)
+                .map(Some),
+            Obj::IntervalObj(value) => self
+                .verify_interval_obj_well_defined_result(value, verify_state)
+                .map(Some),
+            Obj::OneSideInfinityIntervalObj(value) => self
+                .verify_one_side_infinity_interval_obj_well_defined_result(value, verify_state)
+                .map(Some),
+            Obj::FiniteSeqSet(value) => self
+                .verify_finite_seq_set_well_defined_result(value, verify_state)
+                .map(Some),
+            Obj::SeqSet(value) => self
+                .verify_seq_set_well_defined_result(value, verify_state)
+                .map(Some),
+            Obj::FiniteSeqListObj(value) => self
+                .verify_finite_seq_list_obj_well_defined_result(value, verify_state)
+                .map(Some),
+            Obj::Range(value) => self
+                .verify_range_well_defined_result(value, verify_state)
+                .map(Some),
+            Obj::ClosedRange(value) => self
+                .verify_closed_range_well_defined_result(value, verify_state)
+                .map(Some),
+            Obj::Sum(value) => self
+                .verify_sum_obj_well_defined_result(value, verify_state)
+                .map(Some),
+            Obj::SumOfFiniteSet(value) => self
+                .verify_finite_set_sum_obj_well_defined_result(value, verify_state)
+                .map(Some),
+            Obj::Product(value) => self
+                .verify_product_obj_well_defined_result(value, verify_state)
+                .map(Some),
+            Obj::ProductOfFiniteSet(value) => self
+                .verify_finite_set_product_obj_well_defined_result(value, verify_state)
+                .map(Some),
+            Obj::Reduce(value) => self
+                .verify_reduce_obj_well_defined_result(value, verify_state)
+                .map(Some),
+            Obj::FiniteSetReduce(value) => self
+                .verify_finite_set_reduce_obj_well_defined_result(value, verify_state)
+                .map(Some),
+            Obj::MatrixSet(value) => self
+                .verify_matrix_set_well_defined_result(value, verify_state)
+                .map(Some),
+            Obj::MatrixListObj(value) => self
+                .verify_matrix_list_obj_well_defined_result(value, verify_state)
+                .map(Some),
+            Obj::MatrixAdd(value) => self
+                .verify_matrix_add_well_defined_result(value, verify_state)
+                .map(Some),
+            Obj::MatrixSub(value) => self
+                .verify_matrix_sub_well_defined_result(value, verify_state)
+                .map(Some),
+            Obj::MatrixMul(value) => self
+                .verify_matrix_mul_well_defined_result(value, verify_state)
+                .map(Some),
+            Obj::MatrixScalarMul(value) => self
+                .verify_matrix_scalar_mul_well_defined_result(value, verify_state)
+                .map(Some),
+            Obj::MatrixPow(value) => self
+                .verify_matrix_pow_well_defined_result(value, verify_state)
+                .map(Some),
+            Obj::SetBuilder(value) => self
+                .verify_set_builder_well_defined_result(value, verify_state)
+                .map(Some),
+            Obj::FnSet(value) => self
+                .verify_fn_set_well_defined_result(value, verify_state)
+                .map(Some),
+            Obj::AnonymousFn(value) => self
+                .verify_anonymous_fn_well_defined_result(value, verify_state)
+                .map(Some),
+            Obj::StructObj(value) => self
+                .verify_struct_obj_well_defined_result(value, verify_state)
+                .map(Some),
+            Obj::ObjAsStructInstanceWithFieldAccess(value) => self
+                .verify_obj_as_struct_instance_with_field_access_well_defined_result(
+                    value,
+                    verify_state,
+                )
+                .map(Some),
+            Obj::InstantiatedTemplateObj(value) => self
+                .verify_instantiated_template_obj_well_defined_result(value, verify_state)
+                .map(Some),
+        };
+
+        self.active_well_defined_objects.remove(&active_key);
+        let steps = steps?.expect("every Obj variant returns compositional WD steps");
+        let intrinsic_result_set = intrinsic_well_definedness_result_set(obj, &steps);
+        let result = Rc::new(SuccessVerifyObjWellDefinedResult::Direct(Box::new(
+            SuccessVerifyDirectObjWellDefinedResult::new(
+                obj.clone(),
+                cache_key.clone(),
+                steps,
+                intrinsic_result_set,
+            ),
+        )));
+        if let Some(reusable_cache_key) = reusable_cache_key {
+            self.top_level_env()
+                .statement_well_defined_obj_proofs
+                .entry(reusable_cache_key)
+                .or_insert_with(|| result.clone());
+        }
+        Ok(result)
+    }
+
+    pub(crate) fn verify_child_obj_well_defined_result(
+        &mut self,
+        obj: &Obj,
+        verify_state: &UseContextVerifyState,
+        role: WellDefinedObjChildRole,
+    ) -> Result<SuccessVerifyChildObjWellDefinedResult, RuntimeError> {
+        let result = self.verify_obj_well_defined_result(obj, verify_state)?;
+        Ok(SuccessVerifyChildObjWellDefinedResult::new(
+            role,
+            obj.clone(),
+            result,
+        ))
+    }
+
     /// Mathematical contract support: reuse a successful
     /// check of the same rendered object; absence from the cache proves
     /// nothing and falls through to the constructor-specific obligations.
@@ -21,7 +342,7 @@ impl Runtime {
         obj: &Obj,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache_with_role(obj, verify_state, None)
+        self.verify_obj_well_defined_result(obj, verify_state)
             .map(|_| ())
     }
 
@@ -31,7 +352,8 @@ impl Runtime {
         verify_state: &UseContextVerifyState,
         role: WellDefinedObjChildRole,
     ) -> Result<Option<WellDefinedObjId>, RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache_with_role(obj, verify_state, Some(role))
+        self.verify_child_obj_well_defined_result(obj, verify_state, role)
+            .map(|_| None)
     }
 
     /// Verify an object visited only while discharging another object's
@@ -42,239 +364,75 @@ impl Runtime {
         obj: &Obj,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache_with_role(obj, verify_state, None)
+        self.verify_obj_well_defined_result(obj, verify_state)
             .map(|_| ())
     }
+}
 
-    fn verify_obj_well_defined_and_store_cache_with_role(
-        &mut self,
-        obj: &Obj,
-        verify_state: &UseContextVerifyState,
-        child_role: Option<WellDefinedObjChildRole>,
-    ) -> Result<Option<WellDefinedObjId>, RuntimeError> {
-        let verify_state = verify_state.without_known_forall_for_equality();
-        let verify_state = &verify_state;
-        let compiler_reusable_cache_key = self.well_defined_cache_key_for_obj(obj);
-        // Binder-owning objects keep Litex's historical boolean cache so a
-        // later store phase need not reopen a parameter scope that has already
-        // closed. That proofless entry is never sufficient for To-Lean: only
-        // the contract-sensitive key above may carry a reusable proof DAG.
-        let ordinary_cache_key = compiler_reusable_cache_key
-            .clone()
-            .unwrap_or_else(|| WellDefinedCacheKey::without_function_contract(obj.to_string()));
-        let captures_evidence = self
-            .well_defined_capture
-            .as_ref()
-            .is_some_and(|capture| !capture.frames.is_empty());
-        let cached = if captures_evidence {
-            compiler_reusable_cache_key
-                .as_ref()
-                .and_then(|key| self.well_defined_cache_entry(key))
-        } else {
-            self.well_defined_cache_entry(&ordinary_cache_key)
-        };
-        if let Some(cached) = cached {
-            if !captures_evidence {
-                return Ok(None);
-            }
-            if let Some(proof_id) = cached.obj_id {
-                self.record_well_defined_obj_proof_use(obj, proof_id, child_role)?;
-                return Ok(Some(proof_id));
-            }
-        }
+pub(super) fn success_obj_target_requirement(
+    source_object: Obj,
+    role: WellDefinednessRequirementRole,
+    result: StmtResult,
+) -> Result<SuccessVerifyObjTargetRequirementResult, RuntimeError> {
+    let success = result.into_factual_success().ok_or_else(|| {
+        RuntimeError::from(WellDefinedRuntimeError(
+            RuntimeErrorStruct::new_with_just_msg(format!(
+                "well-definedness requirement {role:?} for `{source_object}` has no successful factual result"
+            )),
+        ))
+    })?;
+    Ok(SuccessVerifyObjTargetRequirementResult::new(
+        source_object,
+        role,
+        success.fact(),
+        success.verification,
+    ))
+}
 
-        let active_key = obj_equality_key(obj);
-        // A nested parameter check can return to the same alpha-equivalent
-        // object before the outer check has completed. Ordinary Litex
-        // verification historically suppresses that recursive recheck. A
-        // To-Lean capture cannot do the same: success without a completed
-        // WellDefinedObjId would leave the frozen construction graph with no
-        // evidence edge for this use.
-        if !self.active_well_defined_objects.insert(active_key.clone()) {
-            if captures_evidence {
-                return Err(RuntimeError::from(UnknownRuntimeError(
-                    RuntimeErrorStruct::new_with_just_msg(format!(
-                        "cannot freeze recursive well-definedness re-entry for `{obj}` before its active WellDefinedObjId is complete"
-                    )),
-                )));
-            }
-            return Ok(None);
-        }
-
-        if captures_evidence {
-            self.begin_well_definedness_object_capture(
-                obj,
-                ordinary_cache_key.clone(),
-                compiler_reusable_cache_key.is_some(),
-            );
-        }
-        let result = match obj {
-            Obj::Atom(AtomObj::Identifier(identifier)) => {
-                self.verify_identifier_well_defined(identifier)
-            }
-            Obj::Atom(AtomObj::IdentifierWithMod(x)) => {
-                self.verify_identifier_with_mod_well_defined(x)
-            }
-            Obj::FnObj(fn_obj) => self.verify_fn_obj_well_defined(fn_obj, verify_state),
-            Obj::Number(_) => Ok(()),
-            Obj::ImaginaryUnit(_) => Ok(()),
-            Obj::EulerNumber(_) | Obj::Pi(_) => Ok(()),
-            Obj::Add(add) => self.verify_add_well_defined(add, verify_state),
-            Obj::Sub(sub) => self.verify_sub_well_defined(sub, verify_state),
-            Obj::Mul(mul) => self.verify_mul_well_defined(mul, verify_state),
-            Obj::Div(div) => self.verify_div_well_defined(div, verify_state),
-            Obj::Mod(m) => self.verify_mod_well_defined(m, verify_state),
-            Obj::Quot(x) => self.verify_quot_well_defined(x, verify_state),
-            Obj::Gcd(g) => self.verify_gcd_well_defined(g, verify_state),
-            Obj::Lcm(x) => self.verify_lcm_well_defined(x, verify_state),
-            Obj::Floor(x) => self.verify_floor_well_defined(x, verify_state),
-            Obj::Ceil(x) => self.verify_ceil_well_defined(x, verify_state),
-            Obj::Min(x) => self.verify_min_well_defined(x, verify_state),
-            Obj::Max(x) => self.verify_max_well_defined(x, verify_state),
-            Obj::Exp(x) => self.verify_exp_well_defined(x, verify_state),
-            Obj::Ln(x) => self.verify_ln_well_defined(x, verify_state),
-            Obj::Sign(x) => self.verify_sign_well_defined(x, verify_state),
-            Obj::Factorial(x) => self.verify_factorial_well_defined(x, verify_state),
-            Obj::Pow(pow) => self.verify_pow_well_defined(pow, verify_state),
-            Obj::Abs(abs) => self.verify_abs_well_defined(abs, verify_state),
-            Obj::Sin(x) => self.verify_sin_well_defined(x, verify_state),
-            Obj::Cos(x) => self.verify_cos_well_defined(x, verify_state),
-            Obj::Tan(x) => self.verify_tan_well_defined(x, verify_state),
-            Obj::Cot(x) => self.verify_cot_well_defined(x, verify_state),
-            Obj::RealPart(real_part) => self.verify_real_part_well_defined(real_part, verify_state),
-            Obj::ImaginaryPart(imaginary_part) => {
-                self.verify_imaginary_part_well_defined(imaginary_part, verify_state)
-            }
-            Obj::ComplexAbs(complex_abs) => {
-                self.verify_complex_abs_well_defined(complex_abs, verify_state)
-            }
-            Obj::Sqrt(sqrt) => self.verify_sqrt_well_defined(sqrt, verify_state),
-            Obj::Log(log) => self.verify_log_well_defined(log, verify_state),
-            Obj::Union(x) => self.verify_union_well_defined(x, verify_state),
-            Obj::Intersect(x) => self.verify_intersect_well_defined(x, verify_state),
-            Obj::SetMinus(x) => self.verify_set_minus_well_defined(x, verify_state),
-            Obj::BigUnion(x) => self.verify_big_union_well_defined(x, verify_state),
-            Obj::BigIntersect(x) => self.verify_big_intersect_well_defined(x, verify_state),
-            Obj::IndexUnion(x) => self.verify_index_union_well_defined(x, verify_state),
-            Obj::IndexIntersect(x) => self.verify_index_intersect_well_defined(x, verify_state),
-            Obj::ListSet(x) => self.verify_list_set_well_defined(x, verify_state),
-            Obj::SetBuilder(x) => {
-                self.run_in_local_env(|rt| rt.verify_set_builder_well_defined(x, verify_state))
-            }
-            Obj::FnSet(x) => {
-                self.run_in_local_env(|rt| rt.verify_fn_set_well_defined(x, verify_state))
-            }
-            Obj::AnonymousFn(x) => self.verify_anonymous_fn_well_defined(x, verify_state),
-            Obj::StandardSet(StandardSet::NPos) => self.verify_n_pos_obj_well_defined(),
-            Obj::StandardSet(StandardSet::N) => self.verify_n_obj_well_defined(),
-            Obj::StandardSet(StandardSet::Q) => self.verify_q_obj_well_defined(),
-            Obj::StandardSet(StandardSet::Z) => self.verify_z_obj_well_defined(),
-            Obj::StandardSet(StandardSet::R) => self.verify_r_obj_well_defined(),
-            Obj::StandardSet(StandardSet::C) => self.verify_c_obj_well_defined(),
-            Obj::Cart(x) => self.verify_cart_well_defined(x, verify_state),
-            Obj::CartDim(x) => self.verify_cart_dim_well_defined(x, verify_state),
-            Obj::Proj(x) => self.verify_proj_well_defined(x, verify_state),
-            Obj::TupleDim(x) => self.verify_dim_well_defined(x, verify_state),
-            Obj::Tuple(x) => self.verify_tuple_well_defined(x, verify_state),
-            Obj::FiniteSetSize(x) => self.verify_finite_set_size_well_defined(x, verify_state),
-            Obj::FiniteSetMax(x) => self.verify_finite_set_max_well_defined(x, verify_state),
-            Obj::FiniteSetMin(x) => self.verify_finite_set_min_well_defined(x, verify_state),
-            Obj::FnRange(x) => self.verify_fn_range_well_defined(x, verify_state),
-            Obj::Replacement(x) => self.verify_replacement_well_defined(x, verify_state),
-            Obj::Sum(x) => self.verify_sum_obj_well_defined(x, verify_state),
-            Obj::SumOfFiniteSet(x) => self.verify_finite_set_sum_obj_well_defined(x, verify_state),
-            Obj::Product(x) => self.verify_product_obj_well_defined(x, verify_state),
-            Obj::ProductOfFiniteSet(x) => {
-                self.verify_finite_set_product_obj_well_defined(x, verify_state)
-            }
-            Obj::Reduce(x) => self.verify_reduce_obj_well_defined(x, verify_state),
-            Obj::FiniteSetReduce(x) => {
-                self.verify_finite_set_reduce_obj_well_defined(x, verify_state)
-            }
-            Obj::Range(x) => self.verify_range_well_defined(x, verify_state),
-            Obj::ClosedRange(x) => self.verify_closed_range_well_defined(x, verify_state),
-            Obj::IntervalObj(x) => self.verify_interval_obj_well_defined(x, verify_state),
-            Obj::OneSideInfinityIntervalObj(x) => {
-                self.verify_one_side_infinity_interval_obj_well_defined(x, verify_state)
-            }
-            Obj::FiniteSeqSet(x) => self.verify_finite_seq_set_well_defined(x, verify_state),
-            Obj::SeqSet(x) => self.verify_seq_set_well_defined(x, verify_state),
-            Obj::FiniteSeqListObj(x) => {
-                self.verify_finite_seq_list_obj_well_defined(x, verify_state)
-            }
-            Obj::MatrixSet(x) => self.verify_matrix_set_well_defined(x, verify_state),
-            Obj::MatrixListObj(x) => self.verify_matrix_list_obj_well_defined(x, verify_state),
-            Obj::MatrixAdd(x) => self.verify_matrix_add_well_defined(x, verify_state),
-            Obj::MatrixSub(x) => self.verify_matrix_sub_well_defined(x, verify_state),
-            Obj::MatrixMul(x) => self.verify_matrix_mul_well_defined(x, verify_state),
-            Obj::MatrixScalarMul(x) => self.verify_matrix_scalar_mul_well_defined(x, verify_state),
-            Obj::MatrixPow(x) => self.verify_matrix_pow_well_defined(x, verify_state),
-            Obj::PowerSet(x) => self.verify_power_set_well_defined(x, verify_state),
-            Obj::GeneralCart(x) => self.verify_general_cart_well_defined(x, verify_state),
-            Obj::ObjAtIndex(x) => self.verify_obj_at_index_well_defined(x, verify_state),
-            Obj::StandardSet(StandardSet::QPos) => self.verify_q_pos_well_defined(),
-            Obj::StandardSet(StandardSet::RPos) => self.verify_r_pos_well_defined(),
-            Obj::StandardSet(StandardSet::QNeg) => self.verify_q_neg_well_defined(),
-            Obj::StandardSet(StandardSet::ZNeg) => self.verify_z_neg_well_defined(),
-            Obj::StandardSet(StandardSet::RNeg) => self.verify_r_neg_well_defined(),
-            Obj::StandardSet(StandardSet::QStar) => self.verify_q_star_well_defined(),
-            Obj::StandardSet(StandardSet::ZStar) => self.verify_z_star_well_defined(),
-            Obj::StandardSet(StandardSet::RStar) => self.verify_r_star_well_defined(),
-            Obj::StandardSet(StandardSet::CStar) => self.verify_c_star_well_defined(),
-            Obj::StructObj(struct_obj) => {
-                self.verify_struct_obj_well_defined(struct_obj, verify_state)
-            }
-            Obj::ObjAsStructInstanceWithFieldAccess(field_access) => self
-                .verify_obj_as_struct_instance_with_field_access_well_defined(
-                    field_access,
-                    verify_state,
-                ),
-            Obj::InstantiatedTemplateObj(template_obj) => {
-                self.verify_instantiated_template_obj_well_defined(template_obj, verify_state)
-            }
-            Obj::Atom(AtomObj::Forall(_)) => Ok(()),
-            Obj::Atom(AtomObj::Def(_)) => Ok(()),
-            Obj::Atom(AtomObj::Exist(_)) => Ok(()),
-            Obj::Atom(AtomObj::SetBuilder(_)) => Ok(()),
-            Obj::Atom(AtomObj::FnSet(_)) => Ok(()),
-            Obj::Atom(AtomObj::Induc(_)) => Ok(()),
-            Obj::Atom(AtomObj::DefAlgo(_)) => Ok(()),
-            Obj::Atom(AtomObj::DefStructField(_)) => Ok(()),
-            Obj::Atom(AtomObj::TupleIndex(_)) => Ok(()),
-            Obj::Atom(AtomObj::CartIndex(_)) => Ok(()),
-        };
-
-        if captures_evidence {
-            let captured_obj_id = self.end_well_definedness_object_capture(
-                result.is_ok(),
-                intrinsic_well_definedness_result_set(obj),
-            );
-            self.active_well_defined_objects.remove(&active_key);
-            let captured_obj_id = captured_obj_id?;
-            result?;
-            if let Some(obj_id) = captured_obj_id {
-                self.record_well_defined_obj_proof_use(obj, obj_id, child_role)?;
-                return Ok(Some(obj_id));
-            }
-        } else {
-            self.active_well_defined_objects.remove(&active_key);
-            result?;
-        }
-
-        if !captures_evidence {
-            self.top_level_env()
-                .cache_well_defined_obj
-                .entry(ordinary_cache_key)
-                .or_insert_with(CachedWellDefinedObj::ordinary);
-        }
-
-        Ok(None)
-    }
+pub(crate) fn success_obj_fact_check(
+    result: StmtResult,
+) -> Result<SuccessVerifyFactForObjWellDefinedResult, RuntimeError> {
+    let success = result.into_factual_success().ok_or_else(|| {
+        RuntimeError::from(WellDefinedRuntimeError(
+            RuntimeErrorStruct::new_with_just_msg(
+                "well-definedness fact check has no successful factual result".to_string(),
+            ),
+        ))
+    })?;
+    Ok(SuccessVerifyFactForObjWellDefinedResult::new(
+        success.fact(),
+        success.verification,
+    ))
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn compositional_well_definedness_cache_returns_exact_reuse_source() {
+        let mut runtime = Runtime::new();
+        runtime.new_file_path_new_env_new_name_scope("compositional-wd-reuse.lit");
+        let object: Obj = Number::new("1".to_string()).into();
+        let verify_state = UseContextVerifyState::new(0, false);
+
+        let first = runtime
+            .verify_obj_well_defined_result(&object, &verify_state)
+            .expect("first object check succeeds");
+        assert!(matches!(
+            first.as_ref(),
+            SuccessVerifyObjWellDefinedResult::Direct(_)
+        ));
+
+        let second = runtime
+            .verify_obj_well_defined_result(&object, &verify_state)
+            .expect("second object check reuses the first proof");
+        let SuccessVerifyObjWellDefinedResult::Reuse(reuse) = second.as_ref() else {
+            panic!("second object check must be an explicit Reuse node");
+        };
+        assert!(Rc::ptr_eq(&reuse.source, &first));
+        assert_eq!(reuse.object.to_string(), object.to_string());
+    }
 
     #[test]
     fn ordinary_well_definedness_keeps_historical_active_reentry_suppression() {
@@ -289,38 +447,25 @@ mod tests {
             .verify_obj_well_defined_and_store_cache(&object, &UseContextVerifyState::new(0, false))
             .expect("ordinary Litex verification should retain active-object suppression");
     }
-
-    #[test]
-    fn to_lean_capture_rejects_active_reentry_without_a_frozen_edge() {
-        let mut runtime = Runtime::new();
-        runtime.new_file_path_new_env_new_name_scope("to-lean-active-wd-reentry.lit");
-        runtime.start_well_defined_capture();
-        runtime.begin_statement_well_definedness_capture();
-        let object: Obj = Number::new("1".to_string()).into();
-        runtime
-            .active_well_defined_objects
-            .insert(obj_equality_key(&object));
-
-        let error = runtime
-            .verify_obj_well_defined_and_store_cache(&object, &UseContextVerifyState::new(0, false))
-            .expect_err("To-Lean must not accept recursive WD success without an object edge");
-        assert!(
-            error
-                .trace_message()
-                .contains("cannot freeze recursive well-definedness re-entry"),
-            "unexpected active-reentry rejection: {}",
-            error.trace_message()
-        );
-    }
 }
 
 /// Constructor-owned result carriers are part of the checked object contract,
 /// not guesses from surrounding Lean syntax. Example: Litex remainder is an
 /// integer operation even when both operands are closed numerals.
-fn intrinsic_well_definedness_result_set(obj: &Obj) -> Option<Obj> {
+fn intrinsic_well_definedness_result_set(
+    obj: &Obj,
+    steps: &SuccessVerifyObjWellDefinedStepsResult,
+) -> Option<Obj> {
     match obj {
         Obj::Add(_) | Obj::Sub(_) | Obj::Mul(_) | Obj::Div(_) => Some(StandardSet::C.into()),
         Obj::Mod(_) | Obj::Quot(_) => Some(StandardSet::Z.into()),
+        Obj::FnObj(_) => steps.stores.iter().rev().find_map(|store| {
+            let Fact::AtomicFact(AtomicFact::InFact(membership)) = &store.fact else {
+                return None;
+            };
+            (obj_equality_key(&membership.element) == obj_equality_key(obj))
+                .then(|| membership.set.clone())
+        }),
         _ => None,
     }
 }

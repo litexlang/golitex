@@ -49,7 +49,7 @@ impl Runtime {
                 self.verify_order_atomic_fact_numeric_builtin_only(atomic_fact, builtin_state)
             }
             AtomicFact::IsSetFact(is_set_fact) => Ok(
-                (VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                (SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                     is_set_fact.clone().into(),
                     "Every object is a set.".to_string(),
                     Vec::new(),
@@ -89,7 +89,7 @@ impl Runtime {
                     builtin_state,
                 )
             }
-            _ => Ok((StmtUnknown::new()).into()),
+            _ => Ok((UnknownGenericStmtResult::new()).into()),
         }
     }
 }

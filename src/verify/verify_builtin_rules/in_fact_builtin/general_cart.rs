@@ -116,18 +116,18 @@ pub(crate) fn verify_choice_function_for_arg_types(
     runtime: &mut Runtime,
     atomic_fact: &AtomicFact,
     verify_state: &UseContextVerifyState,
-) -> Result<bool, RuntimeError> {
+) -> Result<Option<Vec<SuccessVerifyAtomicPredicateDomainCheckResult>>, RuntimeError> {
     let (predicate, args, line_file) = match atomic_fact {
         AtomicFact::NormalAtomicFact(fact) => (&fact.predicate, &fact.body, &fact.line_file),
         AtomicFact::NotNormalAtomicFact(fact) => (&fact.predicate, &fact.body, &fact.line_file),
-        _ => return Ok(false),
+        _ => return Ok(None),
     };
     if !matches!(predicate, AtomicName::WithoutMod(name) if name == crate::common::keywords::IS_CHOICE_FUNCTION_FOR)
     {
-        return Ok(false);
+        return Ok(None);
     }
     let [index_set, family_set, family_fn, member] = args.as_slice() else {
-        return Ok(true);
+        return Ok(Some(Vec::new()));
     };
 
     let family_param_name = runtime.generate_internal_binder_name();
@@ -144,17 +144,28 @@ pub(crate) fn verify_choice_function_for_arg_types(
         BigUnion::new(family_set.clone()).into(),
     )?
     .into();
-    let requirements: Vec<AtomicFact> = vec![
-        IsSetFact::new(index_set.clone(), line_file.clone()).into(),
-        IsSetFact::new(family_set.clone(), line_file.clone()).into(),
-        InFact::new(family_fn.clone(), family_fn_set, line_file.clone()).into(),
-        InFact::new(member.clone(), member_fn_set, line_file.clone()).into(),
+    let requirements = vec![
+        (
+            AtomicPredicateDomainCheckRole::ChoiceFunctionIndexSet,
+            IsSetFact::new(index_set.clone(), line_file.clone()).into(),
+        ),
+        (
+            AtomicPredicateDomainCheckRole::ChoiceFunctionFamilySet,
+            IsSetFact::new(family_set.clone(), line_file.clone()).into(),
+        ),
+        (
+            AtomicPredicateDomainCheckRole::ChoiceFunctionFamily,
+            InFact::new(family_fn.clone(), family_fn_set, line_file.clone()).into(),
+        ),
+        (
+            AtomicPredicateDomainCheckRole::ChoiceFunctionMember,
+            InFact::new(member.clone(), member_fn_set, line_file.clone()).into(),
+        ),
     ];
-    for requirement in requirements {
-        if runtime
-            .verify_atomic_fact(&requirement, verify_state)?
-            .is_unknown()
-        {
+    let mut results = Vec::with_capacity(requirements.len());
+    for (role, requirement) in requirements {
+        let result = runtime.verify_atomic_fact(&requirement, verify_state)?;
+        if result.is_unknown() {
             return Err(WellDefinedRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
                     format!(
@@ -166,8 +177,12 @@ pub(crate) fn verify_choice_function_for_arg_types(
             )
             .into());
         }
+        results.push(SuccessVerifyAtomicPredicateDomainCheckResult {
+            role,
+            result: Box::new(result),
+        });
     }
-    Ok(true)
+    Ok(Some(results))
 }
 
 fn choice_function_for_parts(normal_fact: &NormalAtomicFact) -> Option<(Obj, Obj, Obj, Obj)> {

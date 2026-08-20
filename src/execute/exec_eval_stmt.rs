@@ -1870,12 +1870,14 @@ impl Runtime {
             )?;
 
         let reported_store_facts = infer_result.store_fact_outputs().to_vec();
-        Ok(VerifiedCommandStmtIr::EvalStmt {
-            statement: stmt.clone(),
-            common: VerifiedStmtCommonIr::new(infer_result, vec![]),
-            reported_store_facts,
-        }
-        .into())
+        Ok(
+            SuccessCommandStmtResult::EvalStmt(Box::new(SuccessEvalStmtResult {
+                statement: stmt.clone(),
+                common: SuccessStmtCommonResult::new(infer_result),
+                reported_store_facts,
+            }))
+            .into(),
+        )
     }
 }
 

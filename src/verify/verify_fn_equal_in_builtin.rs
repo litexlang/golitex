@@ -35,10 +35,10 @@ impl Runtime {
         // `forall` parameters, so `verify_equal` can match `f(x) = g(x)` from stored `forall` facts.
         let x: Obj = param_binding_element_obj_for_store(&x_group.params[0], ParamObjType::Forall);
         let Some(left_ap) = fn_obj_apply_one_arg(&f.left, x.clone()) else {
-            return Ok(StmtUnknown::new().into());
+            return Ok(UnknownGenericStmtResult::new().into());
         };
         let Some(right_ap) = fn_obj_apply_one_arg(&f.right, x) else {
-            return Ok(StmtUnknown::new().into());
+            return Ok(UnknownGenericStmtResult::new().into());
         };
         let param_def = ParamDefWithType::new(vec![x_group]);
         let forall_f = ForallFact::new_canonical_forall(
@@ -53,7 +53,7 @@ impl Runtime {
         }
         let recorded: Fact = f.clone().into();
         Ok(
-            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                 recorded,
                 "fn_eq_in: pointwise equality on the given set (forall x in S, f(x)=g(x))"
                     .to_string(),
@@ -72,11 +72,11 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         let left_t = match fn_set_type_of_function_value(self, &f.left) {
             Some(fs) => fs,
-            None => return Ok(StmtUnknown::new().into()),
+            None => return Ok(UnknownGenericStmtResult::new().into()),
         };
         let right_t = match fn_set_type_of_function_value(self, &f.right) {
             Some(fs) => fs,
-            None => return Ok(StmtUnknown::new().into()),
+            None => return Ok(UnknownGenericStmtResult::new().into()),
         };
 
         // Function extensionality may consume an already checked pointwise forall directly
@@ -90,11 +90,11 @@ impl Runtime {
                 forall_binders_dom_and_curried_layers_from_fn_set_clause(self, &clause)?;
             let left_ap = match build_curried_fn_value_apply_for_fn_eq(&f.left, &layers) {
                 Some(o) => o,
-                None => return Ok(StmtUnknown::new().into()),
+                None => return Ok(UnknownGenericStmtResult::new().into()),
             };
             let right_ap = match build_curried_fn_value_apply_for_fn_eq(&f.right, &layers) {
                 Some(o) => o,
-                None => return Ok(StmtUnknown::new().into()),
+                None => return Ok(UnknownGenericStmtResult::new().into()),
             };
             let pointwise = ForallFact::new_canonical_forall(
                 param_def,
@@ -105,7 +105,7 @@ impl Runtime {
             let pointwise_result = self.verify_forall_fact(&pointwise, verify_state)?;
             if pointwise_result.is_true() {
                 return Ok(
-                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                         f.clone().into(),
                         "fn_eq: exact known pointwise forall over alpha-equivalent function carriers"
                             .to_string(),
@@ -126,7 +126,7 @@ impl Runtime {
             .verify_function_value_in_fn_set_explicit(&f.left, &right_t, &in_left, verify_state)?
             .is_true()
         {
-            return Ok(StmtUnknown::new().into());
+            return Ok(UnknownGenericStmtResult::new().into());
         }
         let in_right: AtomicFact = InFact::new(
             f.right.clone(),
@@ -138,7 +138,7 @@ impl Runtime {
             .verify_function_value_in_fn_set_explicit(&f.right, &left_t, &in_right, verify_state)?
             .is_true()
         {
-            return Ok(StmtUnknown::new().into());
+            return Ok(UnknownGenericStmtResult::new().into());
         }
 
         let clause = fn_set_to_fn_set_clause(&left_t);
@@ -146,11 +146,11 @@ impl Runtime {
             forall_binders_dom_and_curried_layers_from_fn_set_clause(self, &clause)?;
         let left_ap = match build_curried_fn_value_apply_for_fn_eq(&f.left, &layers) {
             Some(o) => o,
-            None => return Ok(StmtUnknown::new().into()),
+            None => return Ok(UnknownGenericStmtResult::new().into()),
         };
         let right_ap = match build_curried_fn_value_apply_for_fn_eq(&f.right, &layers) {
             Some(o) => o,
-            None => return Ok(StmtUnknown::new().into()),
+            None => return Ok(UnknownGenericStmtResult::new().into()),
         };
         let forall_f = ForallFact::new_canonical_forall(
             param_def,
@@ -164,7 +164,7 @@ impl Runtime {
         }
         let recorded: Fact = f.clone().into();
         Ok(
-            VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                 recorded,
                 "fn_eq: mutual function-space membership and pointwise equality (forall+dom)"
                     .to_string(),
@@ -182,7 +182,7 @@ impl Runtime {
         verify_state: &UseContextVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let AtomicFact::InFact(in_fact) = membership else {
-            return Ok(StmtUnknown::new().into());
+            return Ok(UnknownGenericStmtResult::new().into());
         };
         let known = self.verify_non_equational_atomic_fact_with_known_atomic_facts(membership)?;
         if known.is_true() {
@@ -218,9 +218,9 @@ impl Runtime {
         }
         let shared_names = self.generate_random_unused_names(left_names.len());
         let left_normalized =
-            self.fn_set_alpha_renamed_for_display_compare(&left.body, &shared_names)?;
+            self.fn_set_flattened_alpha_renamed_for_display_compare(&left.body, &shared_names)?;
         let right_normalized =
-            self.fn_set_alpha_renamed_for_display_compare(&right.body, &shared_names)?;
+            self.fn_set_flattened_alpha_renamed_for_display_compare(&right.body, &shared_names)?;
         Ok(left_normalized.to_string() == right_normalized.to_string())
     }
 }

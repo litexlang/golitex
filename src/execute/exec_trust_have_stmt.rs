@@ -40,7 +40,7 @@ impl Runtime {
     fn exec_trust_have_stmt_affect_environment(
         &mut self,
         trust_have_stmt: &TrustHaveStmt,
-    ) -> Result<InferResult, RuntimeError> {
+    ) -> Result<SuccessInferResult, RuntimeError> {
         let mut infer_result = if self.current_execution_is_trusted_file() {
             self.define_params_with_type_trusted(
                 &trust_have_stmt.param_def,
@@ -81,11 +81,13 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         self.run_in_local_env_and_commit(|rt| {
             let infer_result = rt.exec_trust_have_stmt_affect_environment(trust_have_stmt)?;
-            Ok(VerifiedUnsafeStmtIr::TrustHaveStmt {
-                statement: trust_have_stmt.clone(),
-                common: VerifiedStmtCommonIr::new(infer_result, vec![]),
-            }
-            .into())
+            Ok(
+                SuccessUnsafeStmtResult::TrustHaveStmt(Box::new(SuccessTrustHaveStmtResult {
+                    statement: trust_have_stmt.clone(),
+                    common: SuccessStmtCommonResult::new(infer_result),
+                }))
+                .into(),
+            )
         })
     }
 }

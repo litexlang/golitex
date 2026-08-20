@@ -6,7 +6,7 @@ impl Runtime {
     pub fn infer_subset_fact(
         &mut self,
         subset_fact: &SubsetFact,
-    ) -> Result<InferResult, RuntimeError> {
+    ) -> Result<SuccessInferResult, RuntimeError> {
         let left_set = subset_fact.left.clone();
         let left_is_set_builder = matches!(&left_set, Obj::SetBuilder(_))
             || matches!(
@@ -42,7 +42,7 @@ impl Runtime {
             // that parameter rechecks the builder filter before its domain fact
             // is in scope.  The same applies to a symbolic set already equal to
             // a builder. Example: `C = {y E: P(y)}`, `C $subset R`.
-            return Ok(InferResult::new());
+            return Ok(SuccessInferResult::new());
         }
         let generated_param_name = self.generate_random_unused_name();
         let parameter_definition = self.fresh_param_group_with_type(
@@ -63,7 +63,7 @@ impl Runtime {
         )?
         .into();
 
-        let mut infer_result = InferResult::new();
+        let mut infer_result = SuccessInferResult::new();
         infer_result.new_fact(&inferred_forall_fact);
         self.store_with_well_defined_verification_and_infer_with_default_verify_state(
             inferred_forall_fact,
@@ -88,7 +88,7 @@ impl Runtime {
     pub fn infer_superset_fact(
         &mut self,
         superset_fact: &SupersetFact,
-    ) -> Result<InferResult, RuntimeError> {
+    ) -> Result<SuccessInferResult, RuntimeError> {
         let generated_param_name = self.generate_random_unused_name();
         let parameter_definition = self.fresh_param_group_with_type(
             vec![generated_param_name.clone()],
@@ -108,7 +108,7 @@ impl Runtime {
         )?
         .into();
 
-        let mut infer_result = InferResult::new();
+        let mut infer_result = SuccessInferResult::new();
         infer_result.new_fact(&inferred_forall_fact);
         self.store_with_well_defined_verification_and_infer_with_default_verify_state(
             inferred_forall_fact,

@@ -44,34 +44,36 @@ impl Runtime {
             }
         }
 
-        let (inside_results, assumption_infer_result) = self.run_in_local_env(|rt| {
-            let verify_state = UseContextVerifyState::new(0, false);
-            let assumption_infer_result =
-                rt.forall_assume_params_and_dom_in_current_env(&stmt.forall_fact, &verify_state)?;
-            let verification_assumption_infer_result = assumption_infer_result.clone();
-            let mut infer_result = InferResult::new();
-            let mut inside_results: Vec<StmtResult> = Vec::new();
-            for proof_stmt in stmt.proof.iter() {
-                inside_results.push(rt.exec_stmt(proof_stmt)?);
-            }
-            let result = rt.forall_verify_then_facts_in_current_env(
-                &stmt.forall_fact,
-                &verify_state,
-                &mut infer_result,
-                assumption_infer_result,
-                None,
-            )?;
-            if result.is_unknown() {
-                return Err(short_exec_error(
-                    stmt.clone().into(),
-                    format!("by symmetric_prop: failed to prove `{}`", stmt.forall_fact),
+        let (proof_steps, conclusion_check, assumption_infer_result) =
+            self.run_in_local_env(|rt| {
+                let verify_state = UseContextVerifyState::new(0, false);
+                let assumption_infer_result = rt.forall_assume_params_and_dom_in_current_env(
+                    &stmt.forall_fact,
+                    &verify_state,
+                )?;
+                let verification_assumption_infer_result = assumption_infer_result.clone();
+                let mut infer_result = SuccessInferResult::new();
+                let mut proof_steps: Vec<StmtResult> = Vec::new();
+                for proof_stmt in stmt.proof.iter() {
+                    proof_steps.push(rt.exec_stmt(proof_stmt)?);
+                }
+                let result = rt.forall_verify_then_facts_in_current_env(
+                    &stmt.forall_fact,
+                    &verify_state,
+                    &mut infer_result,
+                    assumption_infer_result,
                     None,
-                    inside_results,
-                ));
-            }
-            inside_results.push(result);
-            Ok((inside_results, verification_assumption_infer_result))
-        })?;
+                )?;
+                if result.is_unknown() {
+                    return Err(short_exec_error(
+                        stmt.clone().into(),
+                        format!("by symmetric_prop: failed to prove `{}`", stmt.forall_fact),
+                        None,
+                        proof_steps,
+                    ));
+                }
+                Ok((proof_steps, result, verification_assumption_infer_result))
+            })?;
 
         self.top_level_env().store_symmetric_prop_permutation(
             prop_name.clone(),
@@ -79,24 +81,27 @@ impl Runtime {
             stmt.line_file.clone(),
         )?;
 
-        let mut infer_result = InferResult::new();
+        let mut infer_result = SuccessInferResult::new();
         infer_result.new_with_msg(format!(
             "registered symmetric permutation {:?} for `{}`",
             gather, prop_name
         ));
-        let by_verification = ByPropRegistrationVerificationResult::new(
+        let by_verification = SuccessVerifyByPropRegistrationResult::new(
             "symmetric".to_string(),
             prop_name,
             stmt.forall_fact.clone(),
             assumption_infer_result,
-            stmt.proof.len(),
+            proof_steps,
+            conclusion_check,
         );
-        Ok(VerifiedByStmtIr::BySymmetricPropStmt {
-            statement: stmt.clone(),
-            common: VerifiedStmtCommonIr::new(infer_result, inside_results),
-            verification: Some(by_verification),
-        }
-        .into())
+        Ok(
+            SuccessByStmtResult::BySymmetricPropStmt(Box::new(SuccessBySymmetricPropStmtResult {
+                statement: stmt.clone(),
+                common: SuccessStmtCommonResult::new(infer_result),
+                verification: Some(by_verification),
+            }))
+            .into(),
+        )
     }
 
     pub(crate) fn exec_by_symmetric_prop_stmt_affect_environment_only(
@@ -146,16 +151,18 @@ impl Runtime {
             gather.clone(),
             stmt.line_file.clone(),
         )?;
-        let mut infer_result = InferResult::new();
+        let mut infer_result = SuccessInferResult::new();
         infer_result.new_with_msg(format!(
             "registered symmetric permutation {:?} for `{}`",
             gather, prop_name
         ));
-        Ok(VerifiedByStmtIr::BySymmetricPropStmt {
-            statement: stmt.clone(),
-            common: VerifiedStmtCommonIr::new(infer_result, vec![]),
-            verification: None,
-        }
-        .into())
+        Ok(
+            SuccessByStmtResult::BySymmetricPropStmt(Box::new(SuccessBySymmetricPropStmtResult {
+                statement: stmt.clone(),
+                common: SuccessStmtCommonResult::new(infer_result),
+                verification: None,
+            }))
+            .into(),
+        )
     }
 }

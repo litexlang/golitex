@@ -2,9 +2,10 @@ use crate::prelude::*;
 
 impl Runtime {
     pub fn exec_def_thm_stmt(&mut self, stmt: &DefThmStmt) -> Result<StmtResult, RuntimeError> {
-        let prechecked_well_definedness = self.exec_def_thm_stmt_verify_well_definedness(stmt)?;
+        let (well_definedness, execution_support) =
+            self.exec_def_thm_stmt_verify_well_definedness(stmt)?;
         let body_exec_result =
-            self.exec_def_thm_stmt_verify_process(stmt, &prechecked_well_definedness)?;
+            self.exec_def_thm_stmt_verify_process(stmt, well_definedness, &execution_support)?;
         let infer_result_after_store = self.exec_def_thm_stmt_affect_environment(stmt)?;
 
         Ok(body_exec_result.with_infers(infer_result_after_store))
@@ -15,7 +16,7 @@ impl Runtime {
     fn exec_def_thm_stmt_verify_well_definedness(
         &mut self,
         stmt: &DefThmStmt,
-    ) -> Result<Environment, RuntimeError> {
+    ) -> Result<(SuccessVerifyFactWellDefinedResult, Environment), RuntimeError> {
         self.verify_forall_fact_well_defined_and_collect_certificate(
             &stmt.forall_fact,
             &UseContextVerifyState::new(0, false),
@@ -33,6 +34,7 @@ impl Runtime {
     fn exec_def_thm_stmt_verify_process(
         &mut self,
         stmt: &DefThmStmt,
+        well_definedness: SuccessVerifyFactWellDefinedResult,
         prechecked_well_definedness: &Environment,
     ) -> Result<StmtResult, RuntimeError> {
         let thm_name = stmt.name.clone();
@@ -58,6 +60,12 @@ impl Runtime {
                 assumption_infers.new_infer_result_inside(dom_infers);
             }
 
+            // Conclusion well-definedness may materialize template objects or
+            // other checked definitions needed by an explicit proof step.
+            // Install those exact prechecked effects after recreating the
+            // theorem assumptions, before executing the proof body.
+            rt.install_prechecked_well_definedness_certificate(prechecked_well_definedness)?;
+
             let mut inside_results = vec![];
             let proof_len = stmt.prove_process.len();
             for (proof_index, proof_stmt) in stmt.prove_process.iter().enumerate() {
@@ -82,7 +90,6 @@ impl Runtime {
                 inside_results.push(result);
             }
 
-            rt.install_prechecked_well_definedness_certificate(prechecked_well_definedness)?;
             let then_count = stmt.forall_fact.then_facts.len();
             let then_verify_state = UseContextVerifyState::new(0, true);
             for (then_index, then_fact) in stmt.forall_fact.then_facts.iter().enumerate() {
@@ -125,26 +132,31 @@ impl Runtime {
                 rt.attach_known_fact_ids_to_stmt_result(result)?;
             }
 
-            let theorem_verification = TheoremVerificationResult::new(
+            let conclusion_checks = inside_results.split_off(proof_len);
+            let theorem_verification = SuccessVerifyTheoremResult::new(
                 stmt.name.clone(),
                 stmt.forall_fact.clone(),
-                assumption_infers,
-                proof_len,
+                well_definedness,
+                SuccessVerifyLocalProofScopeResult::new(assumption_infers, Vec::new()),
+                inside_results,
+                conclusion_checks,
             );
 
-            Ok(VerifiedStmtIr::DefThmStmt {
-                statement: stmt.clone(),
-                common: VerifiedStmtCommonIr::new(InferResult::new(), inside_results),
-                verification: Some(theorem_verification),
-            }
-            .into())
+            Ok(
+                SuccessStmtResult::DefThmStmt(Box::new(SuccessDefThmStmtResult {
+                    statement: stmt.clone(),
+                    common: SuccessStmtCommonResult::new(SuccessInferResult::new()),
+                    verification: Some(theorem_verification),
+                }))
+                .into(),
+            )
         })
     }
 
     pub(crate) fn exec_def_thm_stmt_affect_environment(
         &mut self,
         stmt: &DefThmStmt,
-    ) -> Result<InferResult, RuntimeError> {
+    ) -> Result<SuccessInferResult, RuntimeError> {
         self.store_def_thm(stmt)
             .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))?;
 
@@ -166,11 +178,13 @@ impl Runtime {
         stmt: &DefThmStmt,
     ) -> Result<StmtResult, RuntimeError> {
         let infer_result = self.exec_def_thm_stmt_affect_environment(stmt)?;
-        Ok(VerifiedStmtIr::DefThmStmt {
-            statement: stmt.clone(),
-            common: VerifiedStmtCommonIr::new(infer_result, vec![]),
-            verification: None,
-        }
-        .into())
+        Ok(
+            SuccessStmtResult::DefThmStmt(Box::new(SuccessDefThmStmtResult {
+                statement: stmt.clone(),
+                common: SuccessStmtCommonResult::new(infer_result),
+                verification: None,
+            }))
+            .into(),
+        )
     }
 }

@@ -7,7 +7,7 @@ impl Runtime {
         args: &Vec<Obj>,
         _line_file: LineFile,
         param_obj_type: ParamObjType,
-    ) -> Result<InferResult, RuntimeError> {
+    ) -> Result<SuccessInferResult, RuntimeError> {
         self.store_args_satisfy_param_type_when_not_defining_new_identifiers_with_reason(
             param_defs,
             args,
@@ -24,11 +24,11 @@ impl Runtime {
         _line_file: LineFile,
         param_obj_type: ParamObjType,
         reason: InferReason,
-    ) -> Result<InferResult, RuntimeError> {
+    ) -> Result<SuccessInferResult, RuntimeError> {
         let instantiated_types =
             self.inst_param_def_with_type_one_by_one(param_defs, args, param_obj_type)?;
 
-        let mut infer_result = InferResult::new();
+        let mut infer_result = SuccessInferResult::new();
         for (arg, param_type) in args.iter().zip(instantiated_types.iter()) {
             let new_fact: Fact = match param_type {
                 ParamType::Set(_) => IsSetFact::new(arg.clone(), _line_file.clone()).into(),

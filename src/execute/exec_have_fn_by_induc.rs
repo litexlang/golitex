@@ -8,20 +8,22 @@ impl Runtime {
         stmt: &HaveFnByInducStmt,
     ) -> Result<StmtResult, RuntimeError> {
         self.exec_have_fn_by_induc_verify_well_definedness(stmt)?;
-        let inside_results = self.exec_have_fn_by_induc_verify_process(stmt)?;
+        self.exec_have_fn_by_induc_verify_process(stmt)?;
         let infer_result = self.exec_have_fn_by_induc_affect_environment(stmt)?;
 
-        Ok(VerifiedDefObjStmtIr::HaveFnByInducStmt {
-            statement: stmt.clone(),
-            common: VerifiedStmtCommonIr::new(infer_result, inside_results),
-        }
-        .into())
+        Ok(
+            SuccessDefObjStmtResult::HaveFnByInducStmt(Box::new(SuccessHaveFnByInducStmtResult {
+                statement: stmt.clone(),
+                common: SuccessStmtCommonResult::new(infer_result),
+            }))
+            .into(),
+        )
     }
 
     pub(crate) fn exec_have_fn_by_induc_affect_environment(
         &mut self,
         stmt: &HaveFnByInducStmt,
-    ) -> Result<InferResult, RuntimeError> {
+    ) -> Result<SuccessInferResult, RuntimeError> {
         let flat = stmt.to_have_fn_equal_case_by_case_stmt();
         let fn_set_stored = self
             .fn_set_from_fn_set_clause(&flat.fn_set_clause)
@@ -35,11 +37,13 @@ impl Runtime {
         stmt: &HaveFnByInducStmt,
     ) -> Result<StmtResult, RuntimeError> {
         let infer_result = self.exec_have_fn_by_induc_affect_environment(stmt)?;
-        Ok(VerifiedDefObjStmtIr::HaveFnByInducStmt {
-            statement: stmt.clone(),
-            common: VerifiedStmtCommonIr::new(infer_result, vec![]),
-        }
-        .into())
+        Ok(
+            SuccessDefObjStmtResult::HaveFnByInducStmt(Box::new(SuccessHaveFnByInducStmtResult {
+                statement: stmt.clone(),
+                common: SuccessStmtCommonResult::new(infer_result),
+            }))
+            .into(),
+        )
     }
 
     fn have_fn_by_induc_err(stmt: &HaveFnByInducStmt, cause: RuntimeError) -> RuntimeError {
@@ -49,9 +53,9 @@ impl Runtime {
     fn exec_have_fn_by_induc_verify_process(
         &mut self,
         stmt: &HaveFnByInducStmt,
-    ) -> Result<Vec<StmtResult>, RuntimeError> {
+    ) -> Result<(), RuntimeError> {
         self.run_in_local_env(|rt| rt.exec_have_fn_by_induc_verify_process_body(stmt))?;
-        Ok(vec![])
+        Ok(())
     }
 
     fn exec_have_fn_by_induc_verify_process_body(

@@ -11,31 +11,35 @@ impl Runtime {
             ));
         }
 
-        self.verify_forall_fact_well_defined_and_collect_certificate(
-            &stmt.forall_fact,
-            &UseContextVerifyState::new(0, false),
-        )
-        .map_err(|error| {
-            short_exec_error(
-                stmt.clone().into(),
-                "axiom: forall fact is not well defined".to_string(),
-                Some(error),
-                vec![],
+        let (well_definedness, _) = self
+            .verify_forall_fact_well_defined_and_collect_certificate(
+                &stmt.forall_fact,
+                &UseContextVerifyState::new(0, false),
             )
-        })?;
+            .map_err(|error| {
+                short_exec_error(
+                    stmt.clone().into(),
+                    "axiom: forall fact is not well defined".to_string(),
+                    Some(error),
+                    vec![],
+                )
+            })?;
 
         let infer_result = self.exec_axiom_stmt_affect_environment(stmt)?;
-        Ok(VerifiedStmtIr::AxiomStmt {
-            statement: stmt.clone(),
-            common: VerifiedStmtCommonIr::new(infer_result, vec![]),
-        }
-        .into())
+        Ok(
+            SuccessStmtResult::AxiomStmt(Box::new(SuccessAxiomStmtResult {
+                statement: stmt.clone(),
+                common: SuccessStmtCommonResult::new(infer_result),
+                well_definedness: Some(well_definedness),
+            }))
+            .into(),
+        )
     }
 
     pub(crate) fn exec_axiom_stmt_affect_environment(
         &mut self,
         stmt: &AxiomStmt,
-    ) -> Result<InferResult, RuntimeError> {
+    ) -> Result<SuccessInferResult, RuntimeError> {
         self.store_axiom(stmt)
             .map_err(|error| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), error))?;
 
@@ -55,10 +59,13 @@ impl Runtime {
             Fact::ForallFact(stmt.forall_fact.clone()),
             InferReason::Other(AxiomStmt::store_reason().to_string()),
         )?;
-        Ok(VerifiedStmtIr::AxiomStmt {
-            statement: stmt.clone(),
-            common: VerifiedStmtCommonIr::new(infer_result, vec![]),
-        }
-        .into())
+        Ok(
+            SuccessStmtResult::AxiomStmt(Box::new(SuccessAxiomStmtResult {
+                statement: stmt.clone(),
+                common: SuccessStmtCommonResult::new(infer_result),
+                well_definedness: None,
+            }))
+            .into(),
+        )
     }
 }

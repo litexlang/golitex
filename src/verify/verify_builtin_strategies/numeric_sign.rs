@@ -9,14 +9,14 @@ impl Runtime {
         atomic_fact: &AtomicFact,
     ) -> Result<StmtResult, RuntimeError> {
         let Some(normalized) = normalize_positive_order_atomic_fact(atomic_fact) else {
-            return Ok(StmtUnknown::new().into());
+            return Ok(UnknownGenericStmtResult::new().into());
         };
         if normalized.to_string() != atomic_fact.to_string() {
             let normalized_result =
                 self.verify_non_equational_atomic_fact_with_direct_routes(&normalized)?;
             if normalized_result.is_true() {
                 return Ok(
-                    VerifiedFactStmtIr::new_with_verified_by_builtin_strategy_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_strategy_recording_stmt(
                         atomic_fact.clone().into(),
                         "additive sign strategy: normalized order goal".to_string(),
                         vec![normalized_result],
@@ -29,14 +29,14 @@ impl Runtime {
             let strategy_label =
                 "numeric-order strategy: structurally smaller order goals".to_string();
             let success = match structural_order_strategy_rule_evidence(&normalized, &children) {
-                Some(evidence) => VerifiedFactStmtIr::
+                Some(evidence) => SuccessFactStmtResult::
                     new_with_verified_by_builtin_strategy_evidence_recording_stmt(
                         atomic_fact.clone().into(),
                         strategy_label,
                         evidence,
                         children,
                     ),
-                None => VerifiedFactStmtIr::new_with_verified_by_builtin_strategy_recording_stmt(
+                None => SuccessFactStmtResult::new_with_verified_by_builtin_strategy_recording_stmt(
                     atomic_fact.clone().into(),
                     strategy_label,
                     children,
@@ -47,7 +47,7 @@ impl Runtime {
         match normalized {
             AtomicFact::LessEqualFact(fact) if fact.left.to_string() == "0" => {
                 let Obj::Add(add) = &fact.right else {
-                    return Ok(StmtUnknown::new().into());
+                    return Ok(UnknownGenericStmtResult::new().into());
                 };
                 let left = self.verify_additive_sign_strategy_child(
                     add.left.as_ref(),
@@ -55,7 +55,7 @@ impl Runtime {
                     &fact.line_file,
                 )?;
                 if !left.is_true() {
-                    return Ok(StmtUnknown::new().into());
+                    return Ok(UnknownGenericStmtResult::new().into());
                 }
                 let right = self.verify_additive_sign_strategy_child(
                     add.right.as_ref(),
@@ -63,10 +63,10 @@ impl Runtime {
                     &fact.line_file,
                 )?;
                 if !right.is_true() {
-                    return Ok(StmtUnknown::new().into());
+                    return Ok(UnknownGenericStmtResult::new().into());
                 }
                 Ok(
-                    VerifiedFactStmtIr::new_with_verified_by_builtin_strategy_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_strategy_recording_stmt(
                         atomic_fact.clone().into(),
                         "additive sign strategy: nonnegative summands".to_string(),
                         vec![left, right],
@@ -76,7 +76,7 @@ impl Runtime {
             }
             AtomicFact::LessFact(fact) if fact.left.to_string() == "0" => {
                 let Obj::Add(add) = &fact.right else {
-                    return Ok(StmtUnknown::new().into());
+                    return Ok(UnknownGenericStmtResult::new().into());
                 };
                 if let Some(children) = self.verify_strict_additive_strategy_children(
                     add.left.as_ref(),
@@ -84,7 +84,7 @@ impl Runtime {
                     &fact.line_file,
                 )? {
                     return Ok(
-                        VerifiedFactStmtIr::new_with_verified_by_builtin_strategy_recording_stmt(
+                        SuccessFactStmtResult::new_with_verified_by_builtin_strategy_recording_stmt(
                             atomic_fact.clone().into(),
                             "additive sign strategy: one positive and one nonnegative summand"
                                 .to_string(),
@@ -93,9 +93,9 @@ impl Runtime {
                         .into(),
                     );
                 }
-                Ok(StmtUnknown::new().into())
+                Ok(UnknownGenericStmtResult::new().into())
             }
-            _ => Ok(StmtUnknown::new().into()),
+            _ => Ok(UnknownGenericStmtResult::new().into()),
         }
     }
 

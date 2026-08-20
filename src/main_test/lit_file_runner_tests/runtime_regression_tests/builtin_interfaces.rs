@@ -94,9 +94,9 @@ by thm sum_over_bijective_finite_set_enumerations(sum(1, finite_set_size({1}), f
             "exist idx finite_seq({}, finite_set_size({})) st {$bijective(closed_range(1, finite_set_size({})), {}, idx)}"
         ));
         assert!(output.contains("\"theorem_source\": \"builtin_rule\""));
-        assert!(output.contains("\"requirement_checks\":"));
-        assert!(output.contains("\"role\": \"function signature matches the target function set\""));
-        assert!(!output.contains("\"role\": \"requirement\""));
+        assert!(output.contains("\"requirement_roles\":"));
+        assert!(output.contains("function signature matches the target function set"));
+        assert!(!output.contains("\"requirement_roles\": [\n        \"requirement\""));
         assert!(!output
             .contains("\"statement\": \"function signature matches the target function set\""));
         assert!(output.contains("\"provenance\": \"axiom_of_choice\""));
@@ -357,7 +357,7 @@ $positive(1)
         succeeded,
         "a positive concrete prop should fold from all checked clauses:\n{output}"
     );
-    assert!(output.contains("cite prop def"));
+    assert!(output.contains("\"kind\": \"FactCitation\""));
 
     let missing_clause = r#"
 prop positive_and_large(x R):
@@ -405,7 +405,7 @@ fn finite_set_strategy_is_structural_and_has_no_legacy_node_budget() {
             succeeded,
             "strictly smaller finite-set strategy goals should keep descending structurally:\n{output}"
         );
-        assert!(output.contains("\"type\": \"builtin strategy\""));
+        assert!(output.contains("\"kind\": \"BuiltinStrategy\""));
     });
 }
 
@@ -449,7 +449,7 @@ forall n Z:
         succeeded,
         "shared subtraction should be a structural order strategy:\n{output}"
     );
-    assert!(output.contains("\"type\": \"builtin strategy\""));
+    assert!(output.contains("\"kind\": \"BuiltinStrategy\""));
 }
 
 #[test]
@@ -470,7 +470,7 @@ forall x, y R:
         succeeded,
         "absolute-value order should structurally reduce to real carriers and square order:\n{output}"
     );
-    assert!(output.contains("\"type\": \"builtin strategy\""));
+    assert!(output.contains("\"kind\": \"BuiltinStrategy\""));
     assert!(output.contains("numeric-order strategy: structurally smaller order goals"));
 }
 
@@ -488,7 +488,7 @@ forall n Z:
         succeeded,
         "integer interval membership should decompose into carrier and bound leaves:\n{output}"
     );
-    assert!(output.contains("\"type\": \"builtin strategy\""));
+    assert!(output.contains("\"kind\": \"BuiltinStrategy\""));
     assert!(output.contains("set-membership strategy: constructor membership decomposition"));
 }
 

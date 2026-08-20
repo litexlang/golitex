@@ -9,7 +9,7 @@ impl Runtime {
         fact: &InFact,
     ) -> Result<StmtResult, RuntimeError> {
         let Obj::StandardSet(target) = &fact.set else {
-            return Ok(StmtUnknown::new().into());
+            return Ok(UnknownGenericStmtResult::new().into());
         };
         let lf = fact.line_file.clone();
         let extremum_set = match &fact.element {
@@ -28,10 +28,10 @@ impl Runtime {
                 ))];
                 let Some(children) = self.verify_numeric_carrier_strategy_children(&required)?
                 else {
-                    return Ok(StmtUnknown::new().into());
+                    return Ok(UnknownGenericStmtResult::new().into());
                 };
                 return Ok(
-                    VerifiedFactStmtIr::new_with_verified_by_builtin_strategy_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_strategy_recording_stmt(
                         fact.clone().into(),
                         "numeric-carrier strategy: cardinality of a structurally finite set"
                             .to_string(),
@@ -44,10 +44,10 @@ impl Runtime {
                 let Some(children) =
                     self.verify_set_elements_in_numeric_carrier_strategy(set, target, &lf)?
                 else {
-                    return Ok(StmtUnknown::new().into());
+                    return Ok(UnknownGenericStmtResult::new().into());
                 };
                 return Ok(
-                    VerifiedFactStmtIr::new_with_verified_by_builtin_strategy_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_strategy_recording_stmt(
                         fact.clone().into(),
                         "numeric-carrier strategy: finite extremum source is real-valued"
                             .to_string(),
@@ -59,10 +59,10 @@ impl Runtime {
         }
         if let Some(required) = self.refined_numeric_carrier_children(fact, target, &lf) {
             let Some(children) = self.verify_numeric_carrier_strategy_children(&required)? else {
-                return Ok(StmtUnknown::new().into());
+                return Ok(UnknownGenericStmtResult::new().into());
             };
             return Ok(
-                VerifiedFactStmtIr::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
+                SuccessFactStmtResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
                     fact.clone().into(),
                     format!(
                         "numeric-carrier strategy: base carrier and sign conditions for {target}"
@@ -89,13 +89,13 @@ impl Runtime {
             _ => None,
         };
         let Some(required) = required else {
-            return Ok(StmtUnknown::new().into());
+            return Ok(UnknownGenericStmtResult::new().into());
         };
         let Some(children) = self.verify_numeric_carrier_strategy_children(&required)? else {
-            return Ok(StmtUnknown::new().into());
+            return Ok(UnknownGenericStmtResult::new().into());
         };
         Ok(
-            VerifiedFactStmtIr::new_with_verified_by_builtin_strategy_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_strategy_recording_stmt(
                 fact.clone().into(),
                 format!("numeric-carrier strategy: structural closure in {target}"),
                 children,
@@ -343,13 +343,13 @@ impl Runtime {
                 )
                 .into(),
             ]],
-            _ => return Ok(StmtUnknown::new().into()),
+            _ => return Ok(UnknownGenericStmtResult::new().into()),
         };
 
         for required in alternatives {
             if let Some(children) = self.verify_numeric_carrier_strategy_children(&required)? {
                 return Ok(
-                    VerifiedFactStmtIr::new_with_verified_by_builtin_strategy_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_strategy_recording_stmt(
                         fact.clone().into(),
                         "numeric-carrier strategy: structural closure in N+".to_string(),
                         children,
@@ -358,7 +358,7 @@ impl Runtime {
                 );
             }
         }
-        Ok(StmtUnknown::new().into())
+        Ok(UnknownGenericStmtResult::new().into())
     }
 
     fn verify_numeric_carrier_strategy_children(

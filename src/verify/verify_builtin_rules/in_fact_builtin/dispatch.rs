@@ -80,7 +80,7 @@ impl Runtime {
                 }
                 if evidence.is_some() {
                     Ok(
-                        VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                        SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                             not_in_fact.clone().into(),
                             "set-minus membership excludes the right operand".to_string(),
                             Vec::new(),
@@ -88,7 +88,7 @@ impl Runtime {
                         .into(),
                     )
                 } else {
-                    Ok((StmtUnknown::new()).into())
+                    Ok((UnknownGenericStmtResult::new()).into())
                 }
             }
         }
@@ -99,6 +99,44 @@ impl Runtime {
         in_fact: &InFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
+        if let Obj::MatrixSet(expected_matrix_set) = &in_fact.set {
+            if matches!(
+                &in_fact.element,
+                Obj::MatrixAdd(_)
+                    | Obj::MatrixSub(_)
+                    | Obj::MatrixMul(_)
+                    | Obj::MatrixScalarMul(_)
+                    | Obj::MatrixPow(_)
+            ) {
+                if let Ok(inferred_matrix_set) = self.real_matrix_type(
+                    &in_fact.element,
+                    &UseContextVerifyState::new_with_final_round(true),
+                    "membership",
+                ) {
+                    let inferred_obj: Obj = inferred_matrix_set.clone().into();
+                    let expected_obj: Obj = expected_matrix_set.clone().into();
+                    if objs_equal_with_nested_binder_alpha_equivalence(&inferred_obj, &expected_obj)
+                    {
+                        let target: Fact = in_fact.clone().into();
+                        return Ok(
+                            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                                target.clone(),
+                                "native matrix expression has its checked result carrier"
+                                    .to_string(),
+                                BuiltinRuleEvidence::MatrixExpressionMembership(
+                                    MatrixExpressionMembershipBuiltinRuleEvidence {
+                                        inferred_matrix_set,
+                                        expected_target: target,
+                                    },
+                                ),
+                                Vec::new(),
+                            )
+                            .into(),
+                        );
+                    }
+                }
+            }
+        }
         if let Obj::FnSet(fn_set) = &in_fact.set {
             if let Some(result) = self.verify_in_fact_element_in_fn_set_by_pointwise_values(
                 &in_fact.element,
@@ -239,7 +277,7 @@ impl Runtime {
             (Obj::ImaginaryUnit(_), Obj::StandardSet(StandardSet::C))
         ) {
             return Ok(
-                VerifiedFactStmtIr::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
                     "native imaginary unit is in C".to_string(),
                     BuiltinRuleEvidence::NativeConstantMembership(
@@ -267,7 +305,7 @@ impl Runtime {
                     _ => unreachable!(),
                 };
                 return Ok(
-                    VerifiedFactStmtIr::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         in_fact.clone().into(),
                         "native mathematical constant is a real".to_string(),
                         BuiltinRuleEvidence::NativeConstantMembership(rule),
@@ -501,7 +539,7 @@ impl Runtime {
                 }
                 if let Some(evidence) = evidence {
                     Ok(
-                        VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                        SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                             in_fact.clone().into(),
                             "absolute value of a known nonzero integer is a positive natural"
                                 .to_string(),
@@ -510,7 +548,7 @@ impl Runtime {
                         .into(),
                     )
                 } else {
-                    Ok((StmtUnknown::new()).into())
+                    Ok((UnknownGenericStmtResult::new()).into())
                 }
             }
             (Obj::Sub(sub), Obj::StandardSet(StandardSet::NPos)) => self
@@ -543,7 +581,7 @@ impl Runtime {
                     | StandardSet::RPos,
                 ),
             ) => Ok(
-                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                     in_fact.clone().into(),
                     "gcd of a non-all-zero integer pair is a positive integer".to_string(),
                     Vec::new(),
@@ -560,7 +598,7 @@ impl Runtime {
                     | StandardSet::C,
                 ),
             ) => Ok(
-                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                     in_fact.clone().into(),
                     "lcm of two integers is a nonnegative integer".to_string(),
                     Vec::new(),
@@ -571,7 +609,7 @@ impl Runtime {
                 Obj::Floor(_) | Obj::Ceil(_),
                 Obj::StandardSet(StandardSet::Z | StandardSet::Q | StandardSet::R | StandardSet::C),
             ) => Ok(
-                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                     in_fact.clone().into(),
                     "floor and ceil return integers".to_string(),
                     Vec::new(),
@@ -579,7 +617,7 @@ impl Runtime {
                 .into(),
             ),
             (Obj::Min(_) | Obj::Max(_), Obj::StandardSet(StandardSet::R | StandardSet::C)) => Ok(
-                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                     in_fact.clone().into(),
                     "minimum and maximum of real arguments are real".to_string(),
                     Vec::new(),
@@ -590,7 +628,7 @@ impl Runtime {
                 Obj::Exp(_),
                 Obj::StandardSet(StandardSet::RPos | StandardSet::R | StandardSet::C),
             ) => Ok(
-                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                     in_fact.clone().into(),
                     "real exponential values are positive reals".to_string(),
                     Vec::new(),
@@ -598,7 +636,7 @@ impl Runtime {
                 .into(),
             ),
             (Obj::Ln(_), Obj::StandardSet(StandardSet::R | StandardSet::C)) => Ok(
-                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                     in_fact.clone().into(),
                     "natural logarithm of a positive real is real".to_string(),
                     Vec::new(),
@@ -609,7 +647,7 @@ impl Runtime {
                 Obj::Sign(_),
                 Obj::StandardSet(StandardSet::Z | StandardSet::Q | StandardSet::R | StandardSet::C),
             ) => Ok(
-                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                     in_fact.clone().into(),
                     "the real sign function returns an integer".to_string(),
                     Vec::new(),
@@ -629,7 +667,7 @@ impl Runtime {
                     | StandardSet::RPos,
                 ),
             ) => Ok(
-                VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                     in_fact.clone().into(),
                     "factorial of a natural number is a positive integer".to_string(),
                     Vec::new(),
@@ -899,7 +937,7 @@ impl Runtime {
                 ) =>
             {
                 Ok(
-                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                         in_fact.clone().into(),
                         "index_union is contained in its explicit ambient set".to_string(),
                         Vec::new(),
@@ -914,7 +952,7 @@ impl Runtime {
                 ) =>
             {
                 Ok(
-                    VerifiedFactStmtIr::new_with_verified_by_builtin_rules_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                         in_fact.clone().into(),
                         "index_intersect is contained in its explicit ambient set".to_string(),
                         Vec::new(),
@@ -940,7 +978,7 @@ impl Runtime {
                 }
                 let Some(subgoals) = self.verify_builtin_rule_premises(&premises, builtin_state)?
                 else {
-                    return Ok((StmtUnknown::new()).into());
+                    return Ok((UnknownGenericStmtResult::new()).into());
                 };
                 Ok(
                     number_in_set_verified_by_builtin_rules_result_with_subgoals(
@@ -971,7 +1009,7 @@ impl Runtime {
                 }
                 let Some(subgoals) = self.verify_builtin_rule_premises(&premises, builtin_state)?
                 else {
-                    return Ok((StmtUnknown::new()).into());
+                    return Ok((UnknownGenericStmtResult::new()).into());
                 };
                 Ok(
                     number_in_set_verified_by_builtin_rules_result_with_subgoals(
@@ -1041,7 +1079,7 @@ impl Runtime {
                 if list_set_carrier_result.is_true() {
                     return Ok(list_set_carrier_result);
                 }
-                Ok((StmtUnknown::new()).into())
+                Ok((UnknownGenericStmtResult::new()).into())
             }
         }
     }
