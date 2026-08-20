@@ -7,7 +7,7 @@
 
 Created and maintained by Jiachen Shen.
 
-[Website](https://litexlang.com) · [Blueprint](docs/Litex_Blueprint.md) · [中文蓝图](docs/Litex中文蓝图.md) · [Manual](docs/Manual.md) · [Install](docs/Setup.md) · [Examples](examples/README.md) · [Zulip](https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/)
+[Website](https://litexlang.com) · [Blueprint](docs/Litex_Blueprint.md) · [中文蓝图](docs/Litex中文蓝图.md) · [Manual](docs/Manual.md) · [Cheat Sheet](docs/cheatsheet.md) · [Install](docs/Setup.md) · [Examples](examples/README.md) · [Zulip](https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/)
 
 **Litex is an experimental hobby project in beta. Expect rough edges.**
 </div>
@@ -185,6 +185,8 @@ Useful next steps:
 
 - [Examples](examples/README.md) — small proof patterns, builtin mathematics,
   language features, and case studies;
+- [Cheat Sheet](docs/cheatsheet.md) — a compact choose-the-next-authoring-action
+  reference;
 - [Manual](docs/Manual.md) — the language and verifier reference;
 - [Blueprint](docs/Litex_Blueprint.md) / [中文蓝图](docs/Litex中文蓝图.md) — the
   full design argument and comparisons;

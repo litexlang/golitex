@@ -77,11 +77,10 @@ variance, almost-sure reasoning, laws of large numbers, and central limit
 theorems. Those require later measure/integration layers rather than a finite
 weighted-sum surrogate.
 
-The indexed-union sigma-algebra signature and padded two-event tracer pass
-focused persistent-session checks. In the current parent working tree, the
-registered file and module gates remain blocked later by a pre-existing
-`NameAlreadyUsedError` while committing the `two_event_sequence` template;
-the same failure was present before this migration. The handwritten Lean
-analogy is unchanged because its native `Set.iUnion` already expresses the
-same mathematics. See `math_collections.md` for the interface rationale and
+The indexed-union sigma-algebra signature and padded two-event tracer pass the
+registered file runner. The direct three-case event sequence avoids nested
+template materialization, while theorem-local sequence names keep generated
+instances out of child proof environments. The handwritten Lean analogy is
+unchanged because its native `Set.iUnion` already expresses the same
+mathematics. See `math_collections.md` for the interface rationale and
 dependency graph.

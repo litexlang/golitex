@@ -141,10 +141,10 @@ start with [Start Here](#start-here), then come back here when you need a
 specific move.
 
 If you know the shape of the goal but not which interface to try first, use
-the [goal-shape routing table](Manual.md#goal-shape-routing). It
-distinguishes direct facts, definition folding, theorem interfaces, explicit
-builtin theorem calls, and native proof-control surfaces before manual proof
-expansion.
+the [Cheat Sheet's proof-action table](cheatsheet.md#choose-the-proof-action).
+It distinguishes direct facts, definition folding, theorem interfaces,
+explicit builtin theorem calls, and native proof-control surfaces before
+manual proof expansion.
 
 If the goal shape is clear but the object still has the wrong carrier,
 representation, field surface, or recursive index, continue with the Manual's
