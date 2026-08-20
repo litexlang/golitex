@@ -341,6 +341,7 @@ impl Runtime {
             Stmt::By(ByStmt::ByAxiomOfChoiceStmt(s)) => self.exec_by_axiom_of_choice_stmt(s),
             Stmt::By(ByStmt::ByRegularityAxiomStmt(s)) => self.exec_by_regularity_axiom_stmt(s),
             Stmt::By(ByStmt::ByDefStmt(s)) => self.exec_by_def_stmt(s),
+            Stmt::By(ByStmt::ByStructDefStmt(s)) => self.exec_by_struct_def_stmt(s),
             Stmt::By(ByStmt::ByThmStmt(s)) => self.exec_by_thm_stmt(s),
         }
     }
@@ -575,6 +576,9 @@ impl Runtime {
                 self.exec_by_regularity_axiom_stmt_affect_environment_only(s)
             }
             Stmt::By(ByStmt::ByDefStmt(s)) => self.exec_by_def_stmt_affect_environment_only(s),
+            Stmt::By(ByStmt::ByStructDefStmt(s)) => {
+                self.exec_by_struct_def_stmt_affect_environment_only(s)
+            }
             Stmt::By(ByStmt::ByThmStmt(s)) => self.exec_by_thm_stmt_affect_environment_only(s),
         }
     }

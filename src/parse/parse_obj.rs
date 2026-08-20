@@ -2075,7 +2075,7 @@ impl Runtime {
         Ok(struct_obj.into())
     }
 
-    fn struct_view_for_field_access_receiver(
+    pub(crate) fn struct_view_for_field_access_receiver(
         &mut self,
         obj: &Obj,
         line_file: LineFile,

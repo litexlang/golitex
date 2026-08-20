@@ -61,6 +61,15 @@ impl Runtime {
                     ), store_fact_error)))
                 })?;
             infer_result.new_infer_result_inside(fact_infer_result);
+            if let Obj::StructObj(struct_obj) = param_set {
+                let parameter = param_binding_element_obj_for_store(binding, binding_scope);
+                infer_result.new_infer_result_inside(self.release_one_struct_definition_layer(
+                    &parameter,
+                    struct_obj,
+                    default_line_file(),
+                    InferReason::ParameterDefinition.store_reason(),
+                )?);
+            }
         }
         Ok(infer_result)
     }
@@ -103,6 +112,15 @@ impl Runtime {
                     ))
                 })?;
             infer_result.new_infer_result_inside(fact_infer_result);
+            if let Obj::StructObj(struct_obj) = param_def.set_obj() {
+                let parameter = param_binding_element_obj_for_store(binding, binding_scope);
+                infer_result.new_infer_result_inside(self.release_one_struct_definition_layer(
+                    &parameter,
+                    struct_obj,
+                    default_line_file(),
+                    InferReason::ParameterDefinition.store_reason(),
+                )?);
+            }
         }
         Ok(infer_result)
     }

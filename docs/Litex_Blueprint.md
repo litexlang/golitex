@@ -192,6 +192,16 @@ forall s nonempty_set, G &Group<s>, identity s:
 
 Litex starts from `s nonempty_set` and models a group directly as a structure on the nonempty set `s`. `mul fn(x, y s) s` directly denotes a binary operation that takes two elements of `s` and returns an element of `s`; the structural laws are written as ordinary mathematical facts inside `<=>:`. Users can begin with the mathematical materials—a set, an operation, an identity, inverses, and laws—and watch the group take shape one layer at a time. The uniqueness result is written directly as `identity = G.mul(G.one, identity) = G.one`, and the kernel searches for the corresponding instances of the identity laws and the needed equality directions. Litex does not forbid names: theorems worth citing over the long term and public interfaces can still be written as named `thm` declarations, but ordinary structural laws and local facts need not each enter a naming interface that authors must remember before those facts can be used.
 
+The release of those structural facts is nevertheless bounded and explicit. A
+field path such as `G.mul` is well-defined from the struct carrier written in
+the declaration; checking that path does not itself add the group laws to the
+context. The direct binder `G &Group<s>` above opens exactly one struct layer
+automatically. For a function result or a nested struct-valued field, authors
+write `by struct def expression`, which first verifies the expression's
+declaration-owned struct membership and then releases only that layer. A later
+standalone fact `expression $in &Group<s>` remains opaque and cannot select a
+field view or release the laws by itself.
+
 The Lean fragment itself shows that Lean can certainly define a group without relying on Mathlib's existing group interface. The real difference is not whether this is possible, but which experience is designed as the default path. For the authoring experience Litex seeks, set theory is especially suitable because sets, membership, functions, and relations form a cross-domain language close to everyday mathematics. Litex still depends on its own kernel, builtin rules, and standard library. Here, “building from the ground up” means that source dependencies in analysis, abstract algebra, or linear algebra should primarily reflect the theory's own mathematical structure, with external libraries serving as optional accelerators rather than boundaries on what can be expressed.
 
 This example naturally leads into the next section. If users do not first have to say “I want to invoke `one_mul`,” but can instead write “this is what the expression should equal,” then the source no longer centers on theorem names and proof commands. It centers on mathematical facts themselves.

@@ -56,9 +56,40 @@ have fn empty_family(k {}) power_set(N) = {}
 index_union({}, N, empty_family) = {}
 index_intersect({}, N, empty_family) = N
 
+# The algebra rules remain ordinary one-step builtins. They match the exact
+# displayed family transformation and consume only an explicit direct premise
+# when the mathematics needs one.
+have fn algebra_A(k {1, 2}) power_set(N) = {1}
+have fn algebra_B(k {1, 2}) power_set(N) = {2}
+
+algebra_A(1) $subset index_union({1, 2}, N, algebra_A)
+index_intersect({1, 2}, N, algebra_A) $subset algebra_A(2)
+
+# Before (the algebraic family transformation was well-defined but unknown):
+# set_minus(N, index_union({1, 2}, N, algebra_A)) = index_intersect({1, 2}, N, fn(k {1, 2}) power_set(N) {set_minus(N, algebra_A(k))})
+# Former behavior: verification ended in `UnknownError` after well-definedness.
+
+# Now (verified): indexed De Morgan and the corrected external set-difference
+# law are exact leaf builtins.
+set_minus(N, index_union({1, 2}, N, algebra_A)) = index_intersect({1, 2}, N, fn(k {1, 2}) power_set(N) {set_minus(N, algebra_A(k))})
+set_minus(R, index_intersect({1, 2}, N, algebra_A)) = union(set_minus(R, N), index_union({1, 2}, R, fn(k {1, 2}) power_set(R) {set_minus(R, algebra_A(k))}))
+
+# Pointwise union commutes with indexed union. Pointwise intersection under an
+# indexed union is intentionally only an inclusion (covered by negative Rust
+# regression when strengthened to equality).
+index_union({1, 2}, N, fn(k {1, 2}) power_set(N) {union(algebra_A(k), algebra_B(k))}) = union(index_union({1, 2}, N, algebra_A), index_union({1, 2}, N, algebra_B))
+index_union({1, 2}, N, fn(k {1, 2}) power_set(N) {intersect(algebra_A(k), algebra_B(k))}) $subset intersect(index_union({1, 2}, N, algebra_A), index_union({1, 2}, N, algebra_B))
+
+# Common adapters use the same exact leaf-matcher discipline.
+have fn algebra_value(k {1, 2}) N = 1
+index_union({1, 2}, N, fn(k {1, 2}) power_set(N) {{algebra_value(k)}}) = fn_range(algebra_value)
+power_set(index_intersect({1, 2}, N, algebra_A)) = index_intersect({1, 2}, power_set(N), fn(k {1, 2}) power_set(power_set(N)) {power_set(algebra_A(k))})
+cart(Z, set_minus(N, {1})) = set_minus(cart(Z, N), cart(Z, {1}))
+
 # Boundary: a family returning N instead of power_set(N), a family with a
-# different exact index domain, or a non-restriction branch body is rejected by
-# the executable Rust regression.
+# different exact index domain, a non-restriction branch body, a changed fixed
+# Cartesian coordinate, or a false equality strengthening is rejected by the
+# executable Rust regression.
 #
 # Evidence:
 # target/release/litex -compact -isolated -runner -f examples/02_builtin_math/indexed_set_family_operators.lit

@@ -98,11 +98,14 @@ struct OrderedContainer<S set>:
     order &PartialOrder<S>
     marker R
 
-forall container &OrderedContainer<R>, x, y, z R:
-    (x, y) $in container.order.le_rel
-    (y, z) $in container.order.le_rel
-    =>:
-        (x, z) $in container.order.le_rel
+claim:
+    ? forall container &OrderedContainer<R>, x, y, z R:
+        (x, y) $in container.order.le_rel
+        (y, z) $in container.order.le_rel
+        =>:
+            (x, z) $in container.order.le_rel
+    by struct def container.order
+    (x, z) $in container.order.le_rel
 "#;
             let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope(
@@ -114,6 +117,12 @@ forall container &OrderedContainer<R>, x, y, z R:
             assert!(
                 run_succeeded,
                 "a one-field struct should retain its field carrier, identity projection, and laws through a nested field:\n{run_output}"
+            );
+            assert!(
+                !runtime.top_level_env().cache_known_fact.keys().any(|fact| {
+                    fact.contains("$is_tuple(metric)") || fact.contains("tuple_dim(metric)")
+                }),
+                "a one-field identity view must not invent tuple shape"
             );
 
             let mut empty_runtime = Runtime::new();
@@ -669,7 +678,7 @@ p[1] $in R
 }
 
 #[test]
-fn tuple_struct_membership_still_materializes_tuple_view() {
+fn generic_struct_membership_keeps_tuple_view_opaque() {
     let source_code = r#"
 struct Pair<S set>:
     first S
@@ -679,24 +688,239 @@ trust (1, 2) $in &Pair<R>
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope("tuple_struct_membership_materializes_tuple_view");
+    runtime
+        .new_file_path_new_env_new_name_scope("generic_struct_membership_keeps_tuple_view_opaque");
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
     let (run_succeeded, run_output) =
         render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
     assert!(
         run_succeeded,
-        "tuple struct membership must still check and expose tuple components:\n{}",
+        "tuple struct membership must still verify the named membership itself:\n{}",
         run_output
     );
 
     assert!(
-        runtime
+        !runtime
             .top_level_env()
             .cache_known_fact
             .keys()
             .any(|fact| fact.contains("(1, 2) $in cart(")),
-        "tuple struct membership must retain its cart membership view"
+        "generic struct membership must not release a Cartesian carrier"
     );
+    assert!(
+        !runtime.top_level_env().cache_known_fact.keys().any(|fact| {
+            fact.contains("$is_tuple((1, 2))") || fact.contains("tuple_dim((1, 2))")
+        }),
+        "generic struct membership must not store tuple shape or dimension facts"
+    );
+}
+
+#[test]
+fn by_struct_def_releases_one_verified_layer_and_direct_bindings_open_automatically() {
+    run_with_large_stack(
+        "by_struct_def_releases_one_verified_layer_and_direct_bindings_open_automatically",
+        || {
+            let source_code = r#"
+struct Pair:
+    first R
+    second R
+    <=>:
+        first >= 0
+
+have fn make_pair(x N) &Pair = (x, 0)
+
+# Declaration-owned paths are well-defined before any release.
+make_pair(1).first = make_pair(1).first
+
+by struct def make_pair(1)
+$is_tuple(make_pair(1))
+tuple_dim(make_pair(1)) = 2
+make_pair(1) $in cart(R, R)
+make_pair(1).first = make_pair(1)[1]
+make_pair(1).first $in R
+make_pair(1).first >= 0
+by struct def make_pair(1)
+
+forall direct &Pair:
+    $is_tuple(direct)
+    tuple_dim(direct) = 2
+    direct.first = direct[1]
+    direct.first $in R
+    direct.first >= 0
+"#;
+
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "by_struct_def_releases_one_verified_layer_and_direct_bindings_open_automatically",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            assert!(
+                run_succeeded,
+                "explicit and automatic releases should verify:\n{run_output}"
+            );
+            assert!(
+        run_output.contains("\"kind\": \"ByStructDefStmt\"")
+            && run_output.contains("\"reason\": \"by struct def\"")
+            && run_output.contains("\"membership_check\":"),
+        "the result must expose explicit membership evidence and release provenance:\n{run_output}"
+    );
+        },
+    );
+}
+
+#[test]
+fn by_struct_def_boundaries_are_explicit_and_atomic() {
+    run_with_large_stack("by_struct_def_boundaries_are_explicit_and_atomic", || {
+        let wd_only = r#"
+struct Inner:
+    value R
+    tag R
+    <=>:
+        value >= 0
+
+struct Outer:
+    inner &Inner
+    marker R
+
+have fn make_outer(x N) &Outer = ((x, 0), 0)
+make_outer(1).inner.value = make_outer(1).inner.value
+$is_tuple(make_outer(1).inner)
+"#;
+        let mut wd_only_runtime = Runtime::new();
+        wd_only_runtime.new_file_path_new_env_new_name_scope("field_path_wd_releases_no_facts");
+        let (results, error) = run_source_code(wd_only, &mut wd_only_runtime);
+        let (succeeded, output) =
+            render_run_source_code_output(&wd_only_runtime, &results, &error, false);
+        assert!(
+            !succeeded,
+            "checking a deep field path for WD must not release the nested struct layer:\n{output}"
+        );
+        assert!(
+            !wd_only_runtime
+                .top_level_env()
+                .cache_known_fact
+                .keys()
+                .any(|fact| fact.contains("$is_tuple(make_outer(1).inner)")),
+            "field-path WD must not store tuple facts"
+        );
+
+        let without_release = r#"
+struct Pair:
+    first R
+    second R
+
+have fn make_pair(first, second R) &Pair = (first, second)
+make_pair(1, 2).first = 1
+"#;
+        let mut without_release_runtime = Runtime::new();
+        without_release_runtime
+            .new_file_path_new_env_new_name_scope("function_result_struct_facts_require_release");
+        let (results, error) = run_source_code(without_release, &mut without_release_runtime);
+        let (succeeded, output) =
+            render_run_source_code_output(&without_release_runtime, &results, &error, false);
+        assert!(
+        !succeeded,
+        "a function-result field must not acquire its tuple bridge before `by struct def`:\n{output}"
+    );
+
+        let raw_membership = r#"
+struct Pair:
+    first R
+    second R
+
+have raw cart(R, R) = (1, 2)
+trust raw $in &Pair
+by struct def raw
+"#;
+        let mut raw_runtime = Runtime::new();
+        raw_runtime.new_file_path_new_env_new_name_scope("raw_membership_has_no_struct_view");
+        let (results, error) = run_source_code(raw_membership, &mut raw_runtime);
+        let (succeeded, output) =
+            render_run_source_code_output(&raw_runtime, &results, &error, false);
+        assert!(
+            !succeeded && output.contains("declaration-time struct carrier"),
+            "membership alone must not supply the struct selected by `by struct def`:\n{output}"
+        );
+
+        let as_form = r#"
+struct Pair:
+    first R
+    second R
+
+have fn make_pair(first, second R) &Pair = (first, second)
+by struct def make_pair(1, 2) as &Pair
+"#;
+        let mut as_form_runtime = Runtime::new();
+        as_form_runtime.new_file_path_new_env_new_name_scope("by_struct_def_has_no_as_form");
+        let (results, error) = run_source_code(as_form, &mut as_form_runtime);
+        let (succeeded, output) =
+            render_run_source_code_output(&as_form_runtime, &results, &error, false);
+        assert!(
+            !succeeded && output.contains("no `as &Struct` form"),
+            "`by struct def` must reject caller-selected struct views:\n{output}"
+        );
+
+        let non_recursive = r#"
+struct Inner:
+    value R
+    tag R
+
+struct Outer:
+    inner &Inner
+    marker R
+
+forall outer &Outer:
+    $is_tuple(outer.inner)
+"#;
+        let mut non_recursive_runtime = Runtime::new();
+        non_recursive_runtime
+            .new_file_path_new_env_new_name_scope("struct_release_is_non_recursive");
+        let (results, error) = run_source_code(non_recursive, &mut non_recursive_runtime);
+        let (succeeded, output) =
+            render_run_source_code_output(&non_recursive_runtime, &results, &error, false);
+        assert!(
+        !succeeded,
+        "opening the direct outer binder must not recursively open its inner struct field:\n{output}"
+    );
+
+        let setup = r#"
+struct Pair:
+    first R
+    second R
+
+have fn make_pair(x R) &Pair = (x, x)
+have A set
+"#;
+        let mut atomic_runtime = Runtime::new();
+        atomic_runtime.new_file_path_new_env_new_name_scope("failed_struct_release_is_atomic");
+        let (setup_results, setup_error) = run_source_code(setup, &mut atomic_runtime);
+        let (setup_succeeded, setup_output) =
+            render_run_source_code_output(&atomic_runtime, &setup_results, &setup_error, false);
+        assert!(
+            setup_succeeded,
+            "atomicity setup must succeed:\n{setup_output}"
+        );
+        let (failed_results, failed_error) =
+            run_source_code("by struct def make_pair(A)", &mut atomic_runtime);
+        let (failed_succeeded, failed_output) =
+            render_run_source_code_output(&atomic_runtime, &failed_results, &failed_error, false);
+        assert!(
+        !failed_succeeded,
+        "the release must reject an ill-defined application before committing:\n{failed_output}"
+    );
+        assert!(
+            !atomic_runtime
+                .top_level_env()
+                .cache_known_fact
+                .keys()
+                .any(|fact| {
+                    fact.contains("$is_tuple(make_pair(A))") || fact.contains("make_pair(A).first")
+                }),
+            "a failed `by struct def` must store none of its release bundle"
+        );
+    });
 }
 
 #[test]
@@ -959,6 +1183,7 @@ template<n N>:
 template<n N>:
     have fn template_make_pair(value R) &Pair = (value, n)
 
+by struct def \template_make_pair<1>(2)
 \template_make_pair<1>(2).second = 1
 
 struct IndexedValue:
@@ -1391,6 +1616,7 @@ thm local_struct_return_projection:
     claim:
         ? n = n
         have fn local_pair(k N) &NaturalPair = (k, k)
+        by struct def local_pair(1)
         local_pair(1).left = 1
         n = n
     n = n

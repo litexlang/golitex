@@ -7,6 +7,12 @@ impl Runtime {
         subset_fact: &SubsetFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
+        if let Some(result) =
+            self.try_verify_indexed_set_family_algebra_subset(subset_fact, builtin_state)?
+        {
+            return Ok(result);
+        }
+
         // Fundamental set containments follow directly from membership definitions.
         // Examples: `intersect(A, B) $subset A`, `A $subset union(A, B)`.
         let elementary_set_subset_reason = match (&subset_fact.left, &subset_fact.right) {
@@ -38,6 +44,147 @@ impl Runtime {
                 ))
                 .into(),
             );
+        }
+
+        // Binary union is monotone componentwise. This direct leaf is also
+        // what lets a checked anonymous family certify
+        // `union(C, A(i)) subset union(C, X)` from `A(i) subset X` without
+        // adding another builtin hop or weakening its declared return set.
+        if let (Obj::Union(left_union), Obj::Union(right_union)) =
+            (&subset_fact.left, &subset_fact.right)
+        {
+            for ((left_first, right_first), (left_second, right_second)) in [
+                (
+                    (left_union.left.as_ref(), right_union.left.as_ref()),
+                    (left_union.right.as_ref(), right_union.right.as_ref()),
+                ),
+                (
+                    (left_union.left.as_ref(), right_union.right.as_ref()),
+                    (left_union.right.as_ref(), right_union.left.as_ref()),
+                ),
+            ] {
+                let premises = [(left_first, right_first), (left_second, right_second)]
+                    .into_iter()
+                    .filter(|(left, right)| {
+                        !objs_equal_with_nested_binder_alpha_equivalence(left, right)
+                    })
+                    .map(|(left, right)| {
+                        SubsetFact::new(left.clone(), right.clone(), subset_fact.line_file.clone())
+                            .into()
+                    })
+                    .collect::<Vec<AtomicFact>>();
+                if let Some(steps) = self.verify_builtin_rule_premises(&premises, builtin_state)? {
+                    return Ok(
+                        SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                            subset_fact.clone().into(),
+                            "binary union subset from componentwise subsets".to_string(),
+                            steps,
+                        )
+                        .into(),
+                    );
+                }
+            }
+        }
+
+        // An intersection is contained in every known upper bound of either
+        // operand. This is the one-premise form of the elementary
+        // `intersect(A, B) subset A` rule.
+        if let Obj::Intersect(intersection) = &subset_fact.left {
+            for operand in [intersection.left.as_ref(), intersection.right.as_ref()] {
+                let premise: AtomicFact = SubsetFact::new(
+                    operand.clone(),
+                    subset_fact.right.clone(),
+                    subset_fact.line_file.clone(),
+                )
+                .into();
+                let result =
+                    self.verify_atomic_fact_as_builtin_rule_premise(&premise, builtin_state)?;
+                if result.is_true() {
+                    return Ok(
+                        SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                            subset_fact.clone().into(),
+                            "intersection subset from an operand upper bound".to_string(),
+                            vec![result],
+                        )
+                        .into(),
+                    );
+                }
+            }
+        }
+
+        if let Obj::SetMinus(set_minus) = &subset_fact.left {
+            let premise: AtomicFact = SubsetFact::new(
+                set_minus.left.as_ref().clone(),
+                subset_fact.right.clone(),
+                subset_fact.line_file.clone(),
+            )
+            .into();
+            let result =
+                self.verify_atomic_fact_as_builtin_rule_premise(&premise, builtin_state)?;
+            if result.is_true() {
+                return Ok(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                        subset_fact.clone().into(),
+                        "set difference subset from left-operand upper bound".to_string(),
+                        vec![result],
+                    )
+                    .into(),
+                );
+            }
+        }
+
+        // Power set is monotone: `A subset B` implies
+        // `power_set(A) subset power_set(B)`.
+        if let (Obj::PowerSet(left_power), Obj::PowerSet(right_power)) =
+            (&subset_fact.left, &subset_fact.right)
+        {
+            let premise: AtomicFact = SubsetFact::new(
+                left_power.set.as_ref().clone(),
+                right_power.set.as_ref().clone(),
+                subset_fact.line_file.clone(),
+            )
+            .into();
+            let result =
+                self.verify_atomic_fact_as_builtin_rule_premise(&premise, builtin_state)?;
+            if result.is_true() {
+                return Ok(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                        subset_fact.clone().into(),
+                        "power set subset from base-set subset".to_string(),
+                        vec![result],
+                    )
+                    .into(),
+                );
+            }
+        }
+
+        // Removing the same set preserves inclusion on the left operand.
+        if let (Obj::SetMinus(left_minus), Obj::SetMinus(right_minus)) =
+            (&subset_fact.left, &subset_fact.right)
+        {
+            if objs_equal_with_nested_binder_alpha_equivalence(
+                left_minus.right.as_ref(),
+                right_minus.right.as_ref(),
+            ) {
+                let premise: AtomicFact = SubsetFact::new(
+                    left_minus.left.as_ref().clone(),
+                    right_minus.left.as_ref().clone(),
+                    subset_fact.line_file.clone(),
+                )
+                .into();
+                let result =
+                    self.verify_atomic_fact_as_builtin_rule_premise(&premise, builtin_state)?;
+                if result.is_true() {
+                    return Ok(
+                        SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                            subset_fact.clone().into(),
+                            "set difference subset from common-right left subset".to_string(),
+                            vec![result],
+                        )
+                        .into(),
+                    );
+                }
+            }
         }
 
         // A union is contained in a set when both operands are already known
@@ -107,6 +254,12 @@ impl Runtime {
                     .args
                     .iter()
                     .zip(right_cart.args.iter())
+                    .filter(|(left_factor, right_factor)| {
+                        !objs_equal_with_nested_binder_alpha_equivalence(
+                            left_factor.as_ref(),
+                            right_factor.as_ref(),
+                        )
+                    })
                     .map(|(left_factor, right_factor)| {
                         SubsetFact::new(
                             left_factor.as_ref().clone(),

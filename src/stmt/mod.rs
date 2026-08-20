@@ -24,6 +24,7 @@ pub use axiom_stmt::AxiomStmt;
 pub use by_stmt::ByClosedRangeAsCasesStmt;
 pub use by_stmt::ByDefStmt;
 pub use by_stmt::ByEnumerateRangeStmt;
+pub use by_stmt::ByStructDefStmt;
 pub use by_stmt::ByThmStmt;
 pub use stmt::ByStmt;
 pub use stmt::CommandStmt;

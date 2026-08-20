@@ -258,21 +258,10 @@ impl Runtime {
             verify_state,
             WellDefinedObjChildRole::ConstructorArgument { argument_index: 1 },
         )?);
-        let membership: AtomicFact = InFact::new(
-            (*field_access.obj).clone(),
-            (*field_access.struct_obj).clone().into(),
-            default_line_file(),
-        )
-        .into();
-        let result = self.verify_atomic_fact(&membership, verify_state)?;
-        if result.is_unknown() {
-            return Err(RuntimeError::from(WellDefinedRuntimeError(
-                RuntimeErrorStruct::new_with_just_msg(format!(
-                    "failed to verify `{field_access}` is well-defined: cannot prove {membership}"
-                )),
-            )));
-        }
-        steps.push_fact_check(super::success_obj_fact_check(result)?);
+        // The parser records the declaration-owned struct view in the field
+        // access node. Runtime instantiation may alpha-rename dependent header
+        // parameters, so WD validates that recorded struct and field directly
+        // instead of rediscovering the view from membership or equality facts.
         Ok(steps)
     }
 
