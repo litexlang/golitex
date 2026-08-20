@@ -37,14 +37,21 @@ impl Runtime {
         }
 
         match &is_nonempty_set_fact.set {
-            Obj::StandardSet(_) => Ok(
-                (SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
-                    is_nonempty_set_fact.clone().into(),
+            Obj::StandardSet(target_set) => {
+                let expected_target: Fact = is_nonempty_set_fact.clone().into();
+                Ok(SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    expected_target.clone(),
                     "standard_nonempty_set".to_string(),
+                    BuiltinRuleEvidence::StandardSetNonempty(
+                        StandardSetNonemptyBuiltinRuleEvidence {
+                            expected_target,
+                            target_set: *target_set,
+                        },
+                    ),
                     Vec::new(),
-                ))
-                .into(),
-            ),
+                )
+                .into())
+            }
             Obj::ListSet(list_set) => {
                 if list_set.list.is_empty() {
                     Ok((UnknownGenericStmtResult::new()).into())

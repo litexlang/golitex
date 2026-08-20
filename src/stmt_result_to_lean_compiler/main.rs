@@ -1,4 +1,6 @@
-use litex::litex_to_lean_compiler::{compile_litex_file_to_lean, compile_source};
+use litex::stmt_result_to_lean_compiler::{
+    compile_litex_file_to_lean_file, compile_litex_source_to_lean_source,
+};
 use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -6,7 +8,7 @@ use std::process::Command;
 
 fn main() {
     if let Err(message) = run() {
-        eprintln!("compiler: {message}");
+        eprintln!("StmtResult-to-Lean compiler: {message}");
         std::process::exit(1);
     }
 }
@@ -28,18 +30,18 @@ fn run() -> Result<(), String> {
         }
         [command, directory] if command == "generate" => {
             let count = generate_directory(Path::new(directory))?;
-            println!("generated {count} compiler example pair(s)");
+            println!("generated {count} StmtResult-to-Lean example pair(s)");
             Ok(())
         }
         [command, directory] if command == "check" => {
             let count = check_directory(Path::new(directory))?;
             println!(
-                "checked {count} compiler example pair(s): no drift and Lean kernel accepted"
+                "checked {count} StmtResult-to-Lean example pair(s): no drift and Lean kernel accepted"
             );
             Ok(())
         }
         _ => Err(
-            "usage: compiler compile <input.lit> [output.lean] | generate <examples-dir> | check <examples-dir>"
+            "usage: stmt_result_to_lean_compiler compile <input.lit> [output.lean] | generate <examples-dir> | check <examples-dir>"
                 .to_string(),
         ),
     }
@@ -56,7 +58,7 @@ fn paired_output_path(input: &Path) -> Result<PathBuf, String> {
 }
 
 fn compile_file(input: &Path, output: &Path) -> Result<(), String> {
-    compile_litex_file_to_lean(input, output)
+    compile_litex_file_to_lean_file(input, output)
 }
 
 fn generate_directory(directory: &Path) -> Result<usize, String> {
@@ -78,7 +80,7 @@ fn check_directory(directory: &Path) -> Result<usize, String> {
             .file_name()
             .and_then(|name| name.to_str())
             .ok_or_else(|| format!("invalid source name: {}", source_path.display()))?;
-        let generated = compile_source(&source, label)?;
+        let generated = compile_litex_source_to_lean_source(&source, label)?;
         let checked_in = fs::read_to_string(&output_path).map_err(|error| {
             format!(
                 "missing generated pair {} for {}: {error}",
@@ -88,7 +90,7 @@ fn check_directory(directory: &Path) -> Result<usize, String> {
         })?;
         if generated != checked_in {
             return Err(format!(
-                "generated Lean drifted for {}; run `./compiler.sh generate examples`",
+                "generated Lean drifted for {}; run `./stmt_result_to_lean_compiler.sh generate examples`",
                 source_path.display()
             ));
         }

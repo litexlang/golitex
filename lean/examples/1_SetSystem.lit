@@ -1,14 +1,12 @@
 # Tracer: compiler set membership transport
 #
-# Before (retired interface):
-# ./compiler2.sh compile examples/1_SetSystem.lit
-# The active Rust module was named `litex_to_lean_compiler2`, while the older
-# universal-object emitter still supplied shared IR capture and the main CLI.
+# Before: named-set statements were first copied into a mirrored statement IR
+# and only then translated by a separate output stage.
 #
-# Now: `./compiler.sh` and both main CLI Lean commands use the sole active
-# `litex_to_lean_compiler`. The generic verifier-owned builder lives in
-# `litex_to_lean_ir`; A and B are verified Litex definitions, and the equality
-# rewrite is the only source for the paired 1_SetSystem.lean theorem.
+# Now: `StmtResultToLeanCompiler` reads the recursive statement Result. The
+# `have A set = R` and `have B set = C` parent Results install A and B in the
+# compiler environment; the equality rewrite Result is the only proof source
+# for the paired theorem.
 #
 # Boundary: this first named-set route supports checked aliases of R/C. A bare
 # `have A set` still has no verifier-backed inhabitant choice, and richer set
@@ -16,7 +14,7 @@
 #
 # Evidence:
 # target/release/litex -compact -strict -runner -f lean/examples/1_SetSystem.lit
-# cd lean && ./compiler.sh check examples && lake env lean examples/1_SetSystem.lean
+# cd lean && ./stmt_result_to_lean_compiler.sh check examples && lake env lean examples/1_SetSystem.lean
 
 sketch:
     have A set = R

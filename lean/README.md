@@ -1,11 +1,11 @@
-# Litex-to-Lean Compiler
+# StmtResult-to-Lean Compiler
 
-Compiler is the only active Litex-to-Lean implementation. Its
+`StmtResultToLeanCompiler` is the only active Litex-to-Lean implementation. Its
 Rust implementation is the root-crate module and binary under
-`../src/litex_to_lean_compiler/`; this directory owns the Lean ABI, generated
-examples, and the stable `compiler.sh` entrypoint. Compiler reuses the
-verifier's checked IR capture, but it does not use the old universal-object
-emitter. The legacy emitter is archived under
+`../src/stmt_result_to_lean_compiler/`; this directory owns the Lean ABI, generated
+examples, and the stable `stmt_result_to_lean_compiler.sh` entrypoint. The compiler reads
+the kernel's recursive `StmtResult`; it does not use the old universal-object
+output stage. That legacy implementation is archived under
 `../tmp/compile_to_lean_legacy/` and is not part of the Rust build. Both
 `litex -lean` and `litex -lean-ledger` route through the active compiler.
 Source-level migration from that archive is tracked explicitly in
@@ -74,23 +74,24 @@ examples/<name>.lit   authoritative verified Litex source
 examples/<name>.lean  generated compiler output; never hand-edited
 ```
 
-`./compiler.sh generate examples` verifies every source, captures its
-verifier-produced IR, and refreshes the paired Lean file. `./compiler.sh check
+`./stmt_result_to_lean_compiler.sh generate examples` executes every source, reads its
+recursive Result, and refreshes the paired Lean file. `./stmt_result_to_lean_compiler.sh check
 examples` recompiles each source in memory, rejects checked-in drift, and
 submits every generated file to the real Lean kernel.
 
 Library callers that need diagnostics without a partial proof artifact use
-`compile_source_with_report`. Successful whole-file emission returns
-`Complete`; an emitter gap returns `Incomplete` with one structured diagnostic
+`compile_litex_source_to_stmt_result_to_lean_compilation_report`. Successful
+whole-file construction returns `Complete`; an unsupported Result route returns
+`Incomplete` with one structured diagnostic
 and an import-only Lean file marked unusable as a proof artifact. Verification
-or IR-construction failure remains an error, and file commands continue to
+or Result-to-Lean construction failure remains an error, and file commands continue to
 preserve any existing output on failure.
 
 To refresh one pair after editing its Litex source, pass only the source path;
 compiler infers the same-name `.lean` output:
 
 ```sh
-./compiler.sh compile examples/1_SetSystem.lit
+./stmt_result_to_lean_compiler.sh compile examples/1_SetSystem.lit
 ```
 
 The first executable example translates the intended source shape
@@ -274,11 +275,11 @@ Example 22 adds exact nonzero numeric carriers for `Z*`, `Q*`, `R*`, and
 base-set membership and `¬ Litex.Same source 0` certificates. The four
 constructors consume the verifier's ordered base-membership and `!= 0`
 premises; projections recover both nonzero and base/supercarrier facts; and
-adjacent widening composes `Z* → Q* → R* → C*`. The forall emitter
+adjacent widening composes `Z* → Q* → R* → C*`. Forall construction
 materializes each verifier-inferred nonzero FactId as a local proved `have`.
 No `RealCoherence` premise or new `Same` edge is introduced. Standalone closed
 reflection such as `1 $in Z*` remains fail-closed because closed `!=` replay is
-still outside the reviewed comparison emitter.
+still outside the reviewed comparison proof constructor.
 
 Example 23 adds exact multi-layer unary application. Source `g(a)(b)` remains
 two application layers in IR and generated Lean. The first layer consumes the
@@ -286,13 +287,13 @@ stored membership of `g` plus `a $in S`, then binds its exact result once as
 `__fn_layer1`. The verifier-owned prefix node certifies that this result has
 carrier `Litex.Fn T U`; the second layer calls `fnApplyOwn` with
 `In.own (fnSet T U) __fn_layer1` and the separate proof of `b $in T`. The
-emitter follows the same prefix DAG recursively, so a three-layer Rust
+compiler follows the same prefix DAG recursively, so a three-layer Rust
 regression is accepted without a two-layer special case. A single source
 layer with multiple parameters, such as `f(a, b)`, remains fail-closed and is
 never translated as Lean currying.
 
 Sketch is a real source scope, not an example-file wrapper. Each top-level
-sketch is emitted as `__Sketch01`, `__Sketch02`, and so on. Its emitter context
+sketch is constructed as `__Sketch01`, `__Sketch02`, and so on. Its compiler environment
 starts with the facts and symbols visible outside the sketch, but definitions
 and FactIds created inside it do not leak back out. Facts written directly at
 file level, including the function tracer above, remain direct declarations in
@@ -302,8 +303,8 @@ Build and audit with:
 
 ```sh
 lake build
-./compiler.sh compile examples/1_SetSystem.lit
-./compiler.sh check examples
+./stmt_result_to_lean_compiler.sh compile examples/1_SetSystem.lit
+./stmt_result_to_lean_compiler.sh check examples
 ```
 
 Generated files contain no `sorry`. The compiler Rust tests also pass a
@@ -325,10 +326,10 @@ This does not prevent higher-order sets: `Litex.Set.{0}` lives in `Type 1`, so
 it can be the carrier of `Litex.Set.{1}`. Only the real-comparison layer is
 confined to ordinary `Type`, since its representatives are Mathlib values in
 universe zero. A generated example for higher-order set construction is
-deferred until the IR and compiler emitter support its Litex statement form; it is
+deferred until the Result reader and Lean-source constructor support its Litex statement form; it is
 not represented by hand-written code under `examples/`.
 
-The compiler currently emits only the reviewed IR routes exercised by the
+The compiler currently constructs Lean source only for the reviewed Result routes exercised by the
 twenty-two numbered examples. Checked named aliases of `R` and `C`, top-level atomic
 equality, nonnegative integer numerals, addition, arbitrary set parameters,
 unary function sets, named unary application, basic proof scopes,

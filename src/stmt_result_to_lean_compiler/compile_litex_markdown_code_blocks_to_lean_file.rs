@@ -1,54 +1,58 @@
-use super::compile_source;
+use super::compile_litex_source_to_lean_source;
 use std::collections::HashSet;
 use std::fs;
 use std::path::Path;
 
-pub(super) struct LitexLedgerExample {
+pub(super) struct LitexMarkdownCodeBlock {
     pub(super) label: String,
     pub(super) source: String,
 }
 
-struct CompiledLedgerExample {
+struct CompiledLitexMarkdownCodeBlock {
     label: String,
     imports: Vec<String>,
     body: String,
 }
 
-pub fn compile_markdown_ledger_file_to_lean(
-    ledger_path: &Path,
+pub fn compile_litex_markdown_code_blocks_to_lean_file(
+    markdown_path: &Path,
     output_path: &Path,
 ) -> Result<usize, String> {
-    reject_same_input_and_output(ledger_path, output_path)?;
+    reject_same_input_and_output(markdown_path, output_path)?;
 
-    let markdown = fs::read_to_string(ledger_path)
-        .map_err(|error| format!("failed to read {}: {error}", ledger_path.display()))?;
-    let examples = parse_litex_ledger_examples(&markdown)?;
-    let mut compiled = Vec::with_capacity(examples.len());
+    let markdown = fs::read_to_string(markdown_path)
+        .map_err(|error| format!("failed to read {}: {error}", markdown_path.display()))?;
+    let code_blocks = parse_litex_markdown_code_blocks(&markdown)?;
+    let mut compiled_code_blocks = Vec::with_capacity(code_blocks.len());
 
-    for example in examples {
-        let source_label = format!("{}#{}", ledger_path.display(), example.label);
-        let generated = compile_source(&example.source, &source_label).map_err(|error| {
-            format!(
-                "ledger entry {} failed to compile from {}: {error}",
-                example.label,
-                ledger_path.display()
-            )
-        })?;
+    for code_block in code_blocks {
+        let source_label = format!("{}#{}", markdown_path.display(), code_block.label);
+        let generated = compile_litex_source_to_lean_source(&code_block.source, &source_label)
+            .map_err(|error| {
+                format!(
+                    "Litex Markdown code block {} failed to compile from {}: {error}",
+                    code_block.label,
+                    markdown_path.display()
+                )
+            })?;
         let (imports, body) = split_generated_lean(&generated).map_err(|message| {
             format!(
-                "ledger entry {} produced an invalid complete Lean file: {message}",
-                example.label
+                "Litex Markdown code block {} produced an invalid complete Lean file: {message}",
+                code_block.label
             )
         })?;
-        compiled.push(CompiledLedgerExample {
-            label: example.label,
+        compiled_code_blocks.push(CompiledLitexMarkdownCodeBlock {
+            label: code_block.label,
             imports,
             body,
         });
     }
 
-    let count = compiled.len();
-    let output = render_compiled_ledger(ledger_path, &compiled);
+    let count = compiled_code_blocks.len();
+    let output = render_compiled_litex_markdown_code_blocks_as_lean_file(
+        markdown_path,
+        &compiled_code_blocks,
+    );
     if let Some(parent) = output_path.parent() {
         if !parent.as_os_str().is_empty() {
             fs::create_dir_all(parent).map_err(|error| {
@@ -64,16 +68,16 @@ pub fn compile_markdown_ledger_file_to_lean(
     Ok(count)
 }
 
-pub(super) fn parse_litex_ledger_examples(
+pub(super) fn parse_litex_markdown_code_blocks(
     markdown: &str,
-) -> Result<Vec<LitexLedgerExample>, String> {
+) -> Result<Vec<LitexMarkdownCodeBlock>, String> {
     let mut heading: Option<String> = None;
     let mut active_label: Option<String> = None;
     let mut litex_fence_line = None;
     let mut in_other_fence = false;
     let mut source = String::new();
     let mut labels = HashSet::new();
-    let mut examples = Vec::new();
+    let mut code_blocks = Vec::new();
 
     for (line_index, line) in markdown.lines().enumerate() {
         let line_number = line_index + 1;
@@ -91,9 +95,9 @@ pub(super) fn parse_litex_ledger_examples(
                     ));
                 }
                 if !labels.insert(label.clone()) {
-                    return Err(format!("duplicate Litex ledger heading: {label}"));
+                    return Err(format!("duplicate Litex Markdown heading: {label}"));
                 }
-                examples.push(LitexLedgerExample {
+                code_blocks.push(LitexMarkdownCodeBlock {
                     label,
                     source: source.clone(),
                 });
@@ -143,12 +147,10 @@ pub(super) fn parse_litex_ledger_examples(
             litex_fence_line.unwrap_or(markdown.lines().count())
         ));
     }
-    if examples.is_empty() {
-        return Err(
-            "Markdown ledger contains no Litex fences under level-two headings".to_string(),
-        );
+    if code_blocks.is_empty() {
+        return Err("Markdown contains no Litex code fences under level-two headings".to_string());
     }
-    Ok(examples)
+    Ok(code_blocks)
 }
 
 fn split_generated_lean(generated: &str) -> Result<(Vec<String>, String), String> {
@@ -161,7 +163,9 @@ fn split_generated_lean(generated: &str) -> Result<(Vec<String>, String), String
             if line.trim().is_empty() {
                 continue;
             }
-            if line.starts_with("-- Generated by compiler from ") {
+            if line.starts_with("-- Generated by StmtResultToLeanCompiler from ")
+                || line.starts_with("-- Generated by compiler from ")
+            {
                 continue;
             }
             if line.starts_with("import ") {
@@ -180,22 +184,25 @@ fn split_generated_lean(generated: &str) -> Result<(Vec<String>, String), String
     Ok((imports, body))
 }
 
-fn render_compiled_ledger(ledger_path: &Path, examples: &[CompiledLedgerExample]) -> String {
+fn render_compiled_litex_markdown_code_blocks_as_lean_file(
+    markdown_path: &Path,
+    code_blocks: &[CompiledLitexMarkdownCodeBlock],
+) -> String {
     let mut imports = Vec::new();
-    for example in examples {
-        for import in &example.imports {
+    for code_block in code_blocks {
+        for import in &code_block.imports {
             if !imports.contains(import) {
                 imports.push(import.clone());
             }
         }
     }
 
-    let source_label = ledger_path
+    let source_label = markdown_path
         .display()
         .to_string()
         .replace('\r', " ")
         .replace('\n', " ");
-    let entry_width = examples.len().to_string().len().max(2);
+    let entry_width = code_blocks.len().to_string().len().max(2);
     let mut output = String::new();
     for import in imports {
         output.push_str(&import);
@@ -204,44 +211,44 @@ fn render_compiled_ledger(ledger_path: &Path, examples: &[CompiledLedgerExample]
     if !output.is_empty() {
         output.push('\n');
     }
-    output.push_str("-- Generated by litex -lean-ledger from fresh Litex compilation.\n");
-    output.push_str(&format!("-- Source ledger: {source_label}\n"));
-    output.push_str(&format!("-- Entries: {}\n\n", examples.len()));
-    output.push_str("namespace LitexLedger\n\n");
+    output.push_str("-- Generated from Litex Markdown code blocks.\n");
+    output.push_str(&format!("-- Source Markdown file: {source_label}\n"));
+    output.push_str(&format!("-- Code blocks: {}\n\n", code_blocks.len()));
+    output.push_str("namespace LitexMarkdownCodeBlocks\n\n");
 
-    for (index, example) in examples.iter().enumerate() {
+    for (index, code_block) in code_blocks.iter().enumerate() {
         let entry_number = index + 1;
         let namespace = format!("Entry{:0entry_width$}", entry_number);
         output.push_str(&format!(
             "-- BEGIN ENTRY {entry_number:0entry_width$}: {}\n",
-            example.label
+            code_block.label
         ));
         output.push_str(&format!("namespace {namespace}\n\n"));
-        output.push_str(example.body.trim_end());
+        output.push_str(code_block.body.trim_end());
         output.push_str("\n\n");
         output.push_str(&format!("end {namespace}\n"));
         output.push_str(&format!(
             "-- END ENTRY {entry_number:0entry_width$}: {}\n\n",
-            example.label
+            code_block.label
         ));
     }
 
-    output.push_str("end LitexLedger\n");
+    output.push_str("end LitexMarkdownCodeBlocks\n");
     output
 }
 
-fn reject_same_input_and_output(ledger_path: &Path, output_path: &Path) -> Result<(), String> {
-    if ledger_path == output_path {
-        return Err("the Markdown ledger and Lean output paths must be different".to_string());
+fn reject_same_input_and_output(markdown_path: &Path, output_path: &Path) -> Result<(), String> {
+    if markdown_path == output_path {
+        return Err("the Markdown input and Lean output paths must be different".to_string());
     }
 
-    let canonical_ledger = fs::canonicalize(ledger_path)
-        .map_err(|error| format!("failed to resolve {}: {error}", ledger_path.display()))?;
+    let canonical_markdown = fs::canonicalize(markdown_path)
+        .map_err(|error| format!("failed to resolve {}: {error}", markdown_path.display()))?;
     if output_path.exists() {
         let canonical_output = fs::canonicalize(output_path)
             .map_err(|error| format!("failed to resolve {}: {error}", output_path.display()))?;
-        if canonical_ledger == canonical_output {
-            return Err("the Markdown ledger and Lean output paths must be different".to_string());
+        if canonical_markdown == canonical_output {
+            return Err("the Markdown input and Lean output paths must be different".to_string());
         }
     }
     Ok(())

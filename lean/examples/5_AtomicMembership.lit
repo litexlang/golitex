@@ -3,7 +3,7 @@
 # Before (not in the persistent compiler ledger):
 # 1 $in N
 # Former limitation: this route was exercised only by transient probes and a
-# Rust regression, so `./compiler.sh check examples` did not protect its
+# Rust regression, so `./stmt_result_to_lean_compiler.sh check examples` did not protect its
 # generated Lean output.
 #
 # Now: each verified top-level membership is emitted as an explicit Litex.In
@@ -17,8 +17,8 @@
 #
 # Evidence:
 # target/release/litex -compact -strict -runner -f lean/examples/5_AtomicMembership.lit
-# cd lean && ./compiler.sh compile examples/5_AtomicMembership.lit
-# cd lean && ./compiler.sh check examples
+# cd lean && ./stmt_result_to_lean_compiler.sh compile examples/5_AtomicMembership.lit
+# cd lean && ./stmt_result_to_lean_compiler.sh check examples
 
 1 $in N
 1 $in Z

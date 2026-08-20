@@ -3,9 +3,9 @@ use std::io::Write;
 use std::path::PathBuf;
 use std::time::Instant;
 
-use crate::litex_to_lean_compiler::compile_source;
 use crate::pipeline::{render_run_source_code_output, run_source_code};
 use crate::prelude::*;
+use crate::stmt_result_to_lean_compiler::compile_litex_source_to_lean_source;
 
 use super::helper::{run_with_large_stack, source_has_isolated_import};
 
@@ -77,7 +77,7 @@ fn compile_tmp_to_lean() {
         .to_str()
         .unwrap_or_else(|| panic!("{:?} must be valid UTF-8", lit_path));
     let normalized_source = remove_windows_carriage_return(lit_source);
-    let generated_lean = compile_source(normalized_source.as_str(), path_str)
+    let generated_lean = compile_litex_source_to_lean_source(normalized_source.as_str(), path_str)
         .unwrap_or_else(|error| panic!("failed to generate Lean from {path_str}:\n{error}"));
 
     let output = render_tmp_translation(source_path, lit_source, &generated_lean);

@@ -283,6 +283,42 @@ pub struct ClosedNumericMembershipBuiltinRuleEvidence {
     pub evaluation: SuccessEvaluateObjResult,
 }
 
+/// Zero-premise equality certificate whose two source objects are exactly the
+/// same object after parser-owned binding identity is taken into account.
+#[derive(Clone)]
+pub struct ObjectReflexivityBuiltinRuleEvidence {
+    pub expected_target: Fact,
+}
+
+/// Zero-premise equality certificate for two closed numeric expressions. Both
+/// recursive evaluation trees are retained so a backend never has to infer
+/// the normal form from a diagnostic label.
+#[derive(Clone)]
+pub struct RationalNormalizationBuiltinRuleEvidence {
+    pub expected_target: Fact,
+    pub left_evaluation: SuccessEvaluateObjResult,
+    pub right_evaluation: SuccessEvaluateObjResult,
+}
+
+/// A standard carrier is inhabited by its reviewed canonical witness. The
+/// target is retained explicitly so consumers never recover this rule from a
+/// diagnostic label.
+#[derive(Clone)]
+pub struct StandardSetNonemptyBuiltinRuleEvidence {
+    pub expected_target: Fact,
+    pub target_set: StandardSet,
+}
+
+impl fmt::Debug for StandardSetNonemptyBuiltinRuleEvidence {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        formatter
+            .debug_struct("StandardSetNonemptyBuiltinRuleEvidence")
+            .field("expected_target", &self.expected_target.to_string())
+            .field("target_set", &self.target_set)
+            .finish()
+    }
+}
+
 /// The negative counterpart of `ClosedNumericMembershipBuiltinRuleEvidence`.
 #[derive(Clone)]
 pub struct ClosedNumericNonmembershipBuiltinRuleEvidence {
@@ -440,6 +476,26 @@ impl ClosedNumericMembershipBuiltinRuleEvidence {
     }
 }
 
+impl ObjectReflexivityBuiltinRuleEvidence {
+    pub fn new(expected_target: Fact) -> Self {
+        Self { expected_target }
+    }
+}
+
+impl RationalNormalizationBuiltinRuleEvidence {
+    pub fn new(
+        expected_target: Fact,
+        left_evaluation: SuccessEvaluateObjResult,
+        right_evaluation: SuccessEvaluateObjResult,
+    ) -> Self {
+        Self {
+            expected_target,
+            left_evaluation,
+            right_evaluation,
+        }
+    }
+}
+
 impl fmt::Debug for ClosedNumericMembershipBuiltinRuleEvidence {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         formatter
@@ -447,6 +503,26 @@ impl fmt::Debug for ClosedNumericMembershipBuiltinRuleEvidence {
             .field("expected_target", &self.expected_target.to_string())
             .field("target_set", &self.target_set.to_string())
             .field("evaluation", &self.evaluation)
+            .finish()
+    }
+}
+
+impl fmt::Debug for ObjectReflexivityBuiltinRuleEvidence {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        formatter
+            .debug_struct("ObjectReflexivityBuiltinRuleEvidence")
+            .field("expected_target", &self.expected_target.to_string())
+            .finish()
+    }
+}
+
+impl fmt::Debug for RationalNormalizationBuiltinRuleEvidence {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        formatter
+            .debug_struct("RationalNormalizationBuiltinRuleEvidence")
+            .field("expected_target", &self.expected_target.to_string())
+            .field("left_evaluation", &self.left_evaluation)
+            .field("right_evaluation", &self.right_evaluation)
             .finish()
     }
 }
@@ -581,6 +657,9 @@ pub enum BuiltinRuleEvidence {
     ClosedNumericMembership(ClosedNumericMembershipBuiltinRuleEvidence),
     ClosedNumericNonmembership(ClosedNumericNonmembershipBuiltinRuleEvidence),
     ClosedNumericComparison(ClosedNumericComparisonBuiltinRuleEvidence),
+    ObjectReflexivity(ObjectReflexivityBuiltinRuleEvidence),
+    RationalNormalization(RationalNormalizationBuiltinRuleEvidence),
+    StandardSetNonempty(StandardSetNonemptyBuiltinRuleEvidence),
     DisjunctionIntroduction(DisjunctionIntroductionBuiltinRuleEvidence),
     FunctionApplicationReturnMembership(FunctionApplicationReturnMembershipBuiltinRuleEvidence),
     MatrixExpressionMembership(MatrixExpressionMembershipBuiltinRuleEvidence),
@@ -646,6 +725,17 @@ impl fmt::Debug for BuiltinRuleEvidence {
                 .finish(),
             BuiltinRuleEvidence::ClosedNumericComparison(evidence) => f
                 .debug_tuple("ClosedNumericComparison")
+                .field(evidence)
+                .finish(),
+            BuiltinRuleEvidence::ObjectReflexivity(evidence) => {
+                f.debug_tuple("ObjectReflexivity").field(evidence).finish()
+            }
+            BuiltinRuleEvidence::RationalNormalization(evidence) => f
+                .debug_tuple("RationalNormalization")
+                .field(evidence)
+                .finish(),
+            BuiltinRuleEvidence::StandardSetNonempty(evidence) => f
+                .debug_tuple("StandardSetNonempty")
                 .field(evidence)
                 .finish(),
             BuiltinRuleEvidence::DisjunctionIntroduction(evidence) => f

@@ -1,7 +1,7 @@
 # Compiler examples
 
 This directory is the canonical generated ledger for examples targeting the
-`litex_to_lean_compiler` ABI. Every example has one authoritative `.lit`
+`stmt_result_to_lean_compiler` ABI. Every example has one authoritative `.lit`
 source and one same-name generated `.lean` output. It must not import or depend
 on the archived universal-`Litex.Object` ABI.
 
@@ -13,21 +13,21 @@ Refresh every pair from fresh Litex verification and verifier-owned IR:
 
 ```sh
 cd lean
-./compiler.sh generate examples
+./stmt_result_to_lean_compiler.sh generate examples
 ```
 
 After editing one source, refresh only its same-name output:
 
 ```sh
 cd lean
-./compiler.sh compile examples/1_SetSystem.lit
+./stmt_result_to_lean_compiler.sh compile examples/1_SetSystem.lit
 ```
 
 Check byte-for-byte freshness and run every output through Lean:
 
 ```sh
 cd lean
-./compiler.sh check examples
+./stmt_result_to_lean_compiler.sh check examples
 ```
 
 Compiler preserves source sketch scope. A top-level `sketch:` becomes an

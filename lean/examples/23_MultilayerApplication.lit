@@ -47,4 +47,4 @@ first(1, 1) = 1
 # Litex rejects that application before the compiler and Lean currying never
 # repairs it.
 # Evidence: target/release/litex -compact -strict -runner -f lean/examples/23_MultilayerApplication.lit
-# and cargo test --release --test litex_to_lean_compiler_tracers
+# and cargo test --release --test stmt_result_to_lean_compiler_tracers

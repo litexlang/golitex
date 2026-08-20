@@ -21,8 +21,8 @@
 #
 # Evidence:
 # target/release/litex -compact -strict -runner -f lean/examples/4_FunctionSet.lit
-# cd lean && ./compiler.sh compile examples/4_FunctionSet.lit
-# cd lean && ./compiler.sh check examples && lake env lean examples/4_FunctionSet.lean
+# cd lean && ./stmt_result_to_lean_compiler.sh compile examples/4_FunctionSet.lit
+# cd lean && ./stmt_result_to_lean_compiler.sh check examples && lake env lean examples/4_FunctionSet.lean
 
 forall s, S set, x s, f fn(y s) S:
     f(x) = f(x)

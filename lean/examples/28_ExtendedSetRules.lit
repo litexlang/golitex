@@ -19,7 +19,7 @@ forall A, B set:
 # Boundary: unknown rule IDs, stale fingerprints, or changed ordered premises
 # are rejected; no target-side theorem search or project axiom is permitted.
 # Evidence: target/release/litex -compact -strict -runner -f lean/examples/28_ExtendedSetRules.lit
-# and cargo test --release --test litex_to_lean_compiler_tracers extended_set_rules_use_exact_power_set_and_subset_certificates
+# and cargo test --release --test stmt_result_to_lean_compiler_tracers extended_set_rules_use_exact_power_set_and_subset_certificates
 
 forall A set:
     {} $subset A

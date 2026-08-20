@@ -120,6 +120,31 @@ impl Runtime {
         &self,
         equal_fact: &EqualFact,
     ) -> StmtResult {
+        if let (Some(left_evaluation), Some(right_evaluation)) = (
+            equal_fact
+                .left
+                .evaluate_to_normalized_decimal_number_with_result(),
+            equal_fact
+                .right
+                .evaluate_to_normalized_decimal_number_with_result(),
+        ) {
+            if left_evaluation.value.normalized_value == right_evaluation.value.normalized_value {
+                let target: Fact = equal_fact.clone().into();
+                return SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    target.clone(),
+                    "calculation".to_string(),
+                    BuiltinRuleEvidence::RationalNormalization(
+                        RationalNormalizationBuiltinRuleEvidence::new(
+                            target,
+                            left_evaluation,
+                            right_evaluation,
+                        ),
+                    ),
+                    Vec::new(),
+                )
+                .into();
+            }
+        }
         let left_resolved = self.resolve_obj(&equal_fact.left);
         let right_resolved = self.resolve_obj(&equal_fact.right);
         let reason = if equal_fact

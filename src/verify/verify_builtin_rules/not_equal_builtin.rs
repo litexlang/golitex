@@ -1535,9 +1535,9 @@ impl Runtime {
 
 #[cfg(test)]
 mod tests {
-    use crate::litex_to_lean_compiler::compile_source;
     use crate::pipeline::{render_run_source_code_output, run_source_code};
     use crate::prelude::*;
+    use crate::stmt_result_to_lean_compiler::compile_litex_source_to_lean_source;
 
     const SYMMETRY_SOURCE: &str = r#"
 forall a set, b set:
@@ -1606,8 +1606,9 @@ y != x
 
     #[test]
     fn not_equal_symmetry_remains_an_explicit_compiler_boundary() {
-        let error = compile_source(SYMMETRY_SOURCE, "not-equality-symmetry-compiler")
-            .expect_err("the wrapper compiler has no reviewed non-equality adapter yet");
+        let error =
+            compile_litex_source_to_lean_source(SYMMETRY_SOURCE, "not-equality-symmetry-compiler")
+                .expect_err("the wrapper compiler has no reviewed non-equality adapter yet");
         assert!(error.contains("unsupported compiler"), "{error}");
     }
 }

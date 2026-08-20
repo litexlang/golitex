@@ -86,4 +86,4 @@ forall a, b R:
 # `SubNonnegativeFromLessEqual` is a separate certificate family and remains
 # executable as the nearest negative Rust regression until its adapter lands.
 # Evidence: target/release/litex -compact -strict -runner -f lean/examples/15_BuiltinStrategy.lit
-# and cargo test --release --test litex_to_lean_compiler_tracers
+# and cargo test --release --test stmt_result_to_lean_compiler_tracers

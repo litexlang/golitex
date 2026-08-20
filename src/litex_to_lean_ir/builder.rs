@@ -61,29 +61,9 @@ impl LitexToLeanIrBuilder {
         result: &StmtResult,
     ) -> Result<LitexToLeanStatementIr, RuntimeError> {
         if let Some(success) = result.factual_success() {
-            let source_fact = success.fact();
-            ensure_fact_objects_supported_by_litex_to_lean_ir(&source_fact)?;
-            let fact = self.build_litex_to_lean_ir_fact_from_success(success)?;
-            let well_definedness_context =
-                self.well_definedness_context_for_factual_success(success);
-            let excluded = HashSet::from([source_fact.to_string()]);
-            if success.fact_id.is_none() {
-                return self
-                    .build_litex_to_lean_ir_projected_forall_statement(success, fact, excluded);
-            }
-            let recursive_well_definedness =
-                crate::result::project_compositional_well_definedness(&success.well_definedness)
-                    .map_err(|message| litex_to_lean_ir_error(&source_fact.line_file(), message))?;
-            return Ok(LitexToLeanStatementIr::Fact(LitexToLeanFactStatementIr {
-                source: fact,
-                stored_projections: Vec::new(),
-                inferred_facts: self
-                    .build_litex_to_lean_ir_inferred_facts(&success.infers, &excluded)?,
-                well_definedness: self.build_litex_to_lean_ir_well_definedness_certificate(
-                    &recursive_well_definedness,
-                    &well_definedness_context,
-                )?,
-            }));
+            return Ok(LitexToLeanStatementIr::Fact(
+                self.compile_fact_stmt_result(success)?,
+            ));
         }
 
         let Some(success) = result.non_factual_success() else {
@@ -345,6 +325,71 @@ impl LitexToLeanIrBuilder {
                 ),
             ))}
         }
+    }
+
+    /// Transitional fact-family adapter used while the statement-level IR is
+    /// being removed. It deliberately returns only the payload needed by the
+    /// fact renderer, never a second top-level statement enum.
+    pub(crate) fn compile_fact_stmt_result(
+        &self,
+        success: &SuccessFactStmtResult,
+    ) -> Result<LitexToLeanFactStatementIr, RuntimeError> {
+        let source_fact = success.fact();
+        ensure_fact_objects_supported_by_litex_to_lean_ir(&source_fact)?;
+        let fact = self.build_litex_to_lean_ir_fact_from_success(success)?;
+        let well_definedness_context = self.well_definedness_context_for_factual_success(success);
+        let excluded = HashSet::from([source_fact.to_string()]);
+        if success.fact_id.is_none() {
+            let projected =
+                self.build_litex_to_lean_ir_projected_forall_statement(success, fact, excluded)?;
+            let LitexToLeanStatementIr::Fact(projected) = projected else {
+                unreachable!("forall projection builder always returns a fact statement")
+            };
+            return Ok(projected);
+        }
+        let recursive_well_definedness =
+            crate::result::project_compositional_well_definedness(&success.well_definedness)
+                .map_err(|message| litex_to_lean_ir_error(&source_fact.line_file(), message))?;
+        Ok(LitexToLeanFactStatementIr {
+            source: fact,
+            stored_projections: Vec::new(),
+            inferred_facts: self
+                .build_litex_to_lean_ir_inferred_facts(&success.infers, &excluded)?,
+            well_definedness: self.build_litex_to_lean_ir_well_definedness_certificate(
+                &recursive_well_definedness,
+                &well_definedness_context,
+            )?,
+        })
+    }
+
+    /// Transitional nested-proof adapter. Unlike a statement compilation, a
+    /// verifier child Result is intentionally anonymous and therefore has no
+    /// stored FactId. The StmtResult-to-Lean compiler uses this only until the
+    /// remaining fact-proof renderers consume `SuccessFactProofResult`
+    /// directly.
+    pub(crate) fn compile_nested_fact_result_without_requiring_storage(
+        &self,
+        success: &SuccessFactStmtResult,
+    ) -> Result<(LitexToLeanFactIr, LitexToLeanWellDefinednessCertificateIr), RuntimeError> {
+        let source_fact = success.fact();
+        ensure_fact_objects_supported_by_litex_to_lean_ir(&source_fact)?;
+        let fact = self.build_litex_to_lean_ir_fact_from_success(success)?;
+        let well_definedness_context = self.well_definedness_context_for_factual_success(success);
+        let recursive_well_definedness = if success.well_definedness.recursive.is_some() {
+            crate::result::project_compositional_well_definedness(&success.well_definedness)
+                .map_err(|message| litex_to_lean_ir_error(&source_fact.line_file(), message))?
+        } else {
+            // A nested verification-only fact predates compositional WD
+            // capture. Its parent statement owns the value's WD stage; this
+            // compatibility proof adapter therefore has no separate object
+            // certificate to project.
+            WellDefinednessCertificate::default()
+        };
+        let well_definedness = self.build_litex_to_lean_ir_well_definedness_certificate(
+            &recursive_well_definedness,
+            &well_definedness_context,
+        )?;
+        Ok((fact, well_definedness))
     }
 
     fn build_litex_to_lean_ir_let_object_statement(
@@ -3817,6 +3862,99 @@ impl LitexToLeanIrBuilder {
         if let Some(BuiltinRuleEvidence::KnownEqualityPath(evidence)) = evidence {
             return self
                 .build_litex_to_lean_ir_known_equality_path(goal, evidence, subgoals, context);
+        }
+        if let Some(BuiltinRuleEvidence::ObjectReflexivity(evidence)) = evidence {
+            let Fact::AtomicFact(AtomicFact::EqualFact(equality)) = goal else {
+                return Err(litex_to_lean_ir_error(
+                    &goal.line_file(),
+                    "object-reflexivity evidence targets a non-equality fact",
+                ));
+            };
+            if evidence.expected_target.to_string() != goal.to_string()
+                || !subgoals.is_empty()
+                || obj_equality_key(&equality.left) != obj_equality_key(&equality.right)
+            {
+                return Err(litex_to_lean_ir_error(
+                    &goal.line_file(),
+                    "object-reflexivity evidence changed its target or children",
+                ));
+            }
+            return Ok(LitexToLeanFactProofIr::RuleApplication {
+                rule: LitexToLeanProofRuleIr::ObjectReflexivity,
+                parameter_requirements: Vec::new(),
+                premises: Vec::new(),
+            });
+        }
+        if let Some(BuiltinRuleEvidence::RationalNormalization(evidence)) = evidence {
+            let Fact::AtomicFact(AtomicFact::EqualFact(equality)) = goal else {
+                return Err(litex_to_lean_ir_error(
+                    &goal.line_file(),
+                    "rational-normalization evidence targets a non-equality fact",
+                ));
+            };
+            let left = equality
+                .left
+                .evaluate_to_normalized_decimal_number()
+                .ok_or_else(|| {
+                    litex_to_lean_ir_error(
+                        &goal.line_file(),
+                        "rational-normalization left side no longer evaluates",
+                    )
+                })?;
+            let right = equality
+                .right
+                .evaluate_to_normalized_decimal_number()
+                .ok_or_else(|| {
+                    litex_to_lean_ir_error(
+                        &goal.line_file(),
+                        "rational-normalization right side no longer evaluates",
+                    )
+                })?;
+            if evidence.expected_target.to_string() != goal.to_string()
+                || !subgoals.is_empty()
+                || obj_equality_key(&equality.left)
+                    != obj_equality_key(&evidence.left_evaluation.expression)
+                || obj_equality_key(&equality.right)
+                    != obj_equality_key(&evidence.right_evaluation.expression)
+                || left.normalized_value != evidence.left_evaluation.value.normalized_value
+                || right.normalized_value != evidence.right_evaluation.value.normalized_value
+                || left.normalized_value != right.normalized_value
+            {
+                return Err(litex_to_lean_ir_error(
+                    &goal.line_file(),
+                    "rational-normalization evidence changed its target or normal forms",
+                ));
+            }
+            return Ok(LitexToLeanFactProofIr::RuleApplication {
+                rule: LitexToLeanProofRuleIr::RationalNormalization,
+                parameter_requirements: Vec::new(),
+                premises: Vec::new(),
+            });
+        }
+        if let Some(BuiltinRuleEvidence::StandardSetNonempty(evidence)) = evidence {
+            let Fact::AtomicFact(AtomicFact::IsNonemptySetFact(nonempty)) = goal else {
+                return Err(litex_to_lean_ir_error(
+                    &goal.line_file(),
+                    "standard-set nonempty evidence targets another fact family",
+                ));
+            };
+            if evidence.expected_target.to_string() != goal.to_string()
+                || !subgoals.is_empty()
+                || !matches!(
+                    &nonempty.set,
+                    Obj::StandardSet(target_set) if *target_set == evidence.target_set
+                )
+            {
+                return Err(litex_to_lean_ir_error(
+                    &goal.line_file(),
+                    "standard-set nonempty evidence changed its target or children",
+                ));
+            }
+            return Ok(LitexToLeanFactProofIr::RuleApplication {
+                rule: LitexToLeanProofRuleIr::StandardSetNonempty,
+                parameter_requirements: Vec::new(),
+                premises: Vec::new(),
+            });
         }
         if let Some(BuiltinRuleEvidence::FunctionApplicationReturnMembership(evidence)) = evidence {
             if evidence.expected_target.to_string() != goal.to_string() {

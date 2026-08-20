@@ -39,5 +39,5 @@ forall a, b N:
 #
 # Evidence:
 # target/release/litex -compact -strict -runner -f lean/examples/18_RationalNaturalClosures.lit
-# cargo test --release --test litex_to_lean_compiler_tracers rational_and_natural_carrier_closures
-# cd lean && ./compiler.sh check examples
+# cargo test --release --test stmt_result_to_lean_compiler_tracers rational_and_natural_carrier_closures
+# cd lean && ./stmt_result_to_lean_compiler.sh check examples

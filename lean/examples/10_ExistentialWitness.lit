@@ -5,19 +5,22 @@
 # witness exist x R st {x = 1} from 1:
 #     1 = 1
 #
-# Now: an existential over a standard numeric set uses a native `x : C` term
-# plus explicit `Litex.In x R`. For an arbitrary source set S, both the input
-# `a` and the existential witness retain independent Lean carriers; membership,
-# not Lean typing, is the authority. Elimination selects the native witness and
-# projects its membership/body facts from the cited existential FactId.
+# Now: `SuccessWitnessExistFactResult` is read directly. Its proof steps,
+# parameter check, body check, and outer FactId are combined in one inherited
+# StmtResult-to-Lean compiler environment. An existential over a standard
+# numeric set uses a native `x : C` term plus explicit `Litex.In x R`. For an
+# arbitrary source set S, both the input `a` and the existential witness retain
+# independent Lean carriers; membership, not Lean typing, is the authority.
+# Elimination selects the native witness and projects its membership/body facts
+# from the cited existential FactId.
 #
 # Boundary: one positive witness with one body fact is supported. `exist!`,
 # `not exist`, multiple witnesses, and inverse transport remain fail-closed.
 #
 # Evidence:
 # target/release/litex -compact -strict -runner -f lean/examples/10_ExistentialWitness.lit
-# cd lean && ./compiler.sh compile examples/10_ExistentialWitness.lit
-# cd lean && ./compiler.sh check examples
+# cd lean && ./stmt_result_to_lean_compiler.sh compile examples/10_ExistentialWitness.lit
+# cd lean && ./stmt_result_to_lean_compiler.sh check examples
 
 thm member_has_witness:
     ? forall S set, a S:

@@ -92,10 +92,13 @@ impl Runtime {
         infer_result: &mut SuccessInferResult,
     ) -> Result<(), RuntimeError> {
         for output in infer_result.store_fact_outputs.iter_mut() {
-            if let Some(fact_id) =
-                self.known_fact_id_for_fact(&output.itself_and_why_itself_is_stored.0)?
-            {
-                output.fact_id = Some(fact_id);
+            // A local proof environment may already have frozen the exact
+            // identity of this store before that environment was popped.
+            // Only fill missing identities; an ambient fact with the same
+            // proposition is not the same store operation.
+            if output.fact_id.is_none() {
+                output.fact_id =
+                    self.known_fact_id_for_fact(&output.itself_and_why_itself_is_stored.0)?;
             }
             if output.inferred_fact_ids.len() != output.inferred_facts.len() {
                 return Err(RuntimeError::from(UnknownRuntimeError(
@@ -113,8 +116,8 @@ impl Runtime {
                 .iter()
                 .zip(output.inferred_fact_ids.iter_mut())
             {
-                if let Some(known_fact_id) = self.known_fact_id_for_fact(fact)? {
-                    *fact_id = Some(known_fact_id);
+                if fact_id.is_none() {
+                    *fact_id = self.known_fact_id_for_fact(fact)?;
                 }
             }
         }

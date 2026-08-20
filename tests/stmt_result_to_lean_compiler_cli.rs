@@ -116,7 +116,7 @@ fn lean_command_rejects_imports_in_single_file_mode() {
 
     assert!(!output.status.success());
     assert!(String::from_utf8_lossy(&output.stderr)
-        .contains("single-file Litex-to-Lean does not support `import`"));
+        .contains("single-file StmtResult-to-Lean compilation does not support `import`"));
     assert!(!output_path.exists());
 }
 

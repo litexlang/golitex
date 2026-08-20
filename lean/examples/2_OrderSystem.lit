@@ -15,7 +15,7 @@
 #
 # Evidence:
 # target/release/litex -compact -strict -runner -f lean/examples/2_OrderSystem.lit
-# cd lean && ./compiler.sh check examples && lake env lean examples/2_OrderSystem.lean
+# cd lean && ./stmt_result_to_lean_compiler.sh check examples && lake env lean examples/2_OrderSystem.lean
 
 sketch:
     forall a, b R:

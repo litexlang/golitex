@@ -4,21 +4,21 @@ use std::process::Command;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 #[test]
-fn lean_ledger_command_freshly_compiles_all_entries() {
+fn stmt_result_to_lean_markdown_code_blocks_command_freshly_compiles_all_code_blocks() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
     let mut scratch = ScratchFiles::new("success");
-    let ledger_path = scratch.new_path("md");
+    let markdown_path = scratch.new_path("md");
     let output_path = scratch.new_path("lean");
     fs::write(
-        &ledger_path,
+        &markdown_path,
         "## reflexivity\n\n```litex\n1 = 1\n```\n\n## arithmetic\n\n```litex\n2 + 3 = 5\n```\n",
     )
-    .expect("write compiler ledger");
+    .expect("write Litex Markdown code blocks");
 
     let output = Command::new(env!("CARGO_BIN_EXE_litex"))
         .current_dir(root)
         .arg("-lean-ledger")
-        .arg(&ledger_path)
+        .arg(&markdown_path)
         .arg(&output_path)
         .output()
         .expect("run -lean-ledger");
@@ -46,31 +46,30 @@ fn lean_ledger_command_freshly_compiles_all_entries() {
 }
 
 #[test]
-fn lean_ledger_command_does_not_replace_output_when_an_entry_fails() {
+fn stmt_result_to_lean_markdown_code_blocks_command_preserves_output_when_a_code_block_fails() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
     let mut scratch = ScratchFiles::new("failure");
-    let ledger_path = scratch.new_path("md");
+    let markdown_path = scratch.new_path("md");
     let output_path = scratch.new_path("lean");
     let sentinel = "existing output must survive\n";
     fs::write(
-        &ledger_path,
+        &markdown_path,
         "## broken\n\n```litex\nabstract_prop p(x)\n\n$p(1)\n```\n",
     )
-    .expect("write broken ledger");
+    .expect("write broken Litex Markdown code block");
     fs::write(&output_path, sentinel).expect("write existing output");
 
     let output = Command::new(env!("CARGO_BIN_EXE_litex"))
         .current_dir(root)
         .arg("-lean-ledger")
-        .arg(&ledger_path)
+        .arg(&markdown_path)
         .arg(&output_path)
         .output()
         .expect("run failing -lean-ledger");
 
     assert!(!output.status.success());
-    assert!(
-        String::from_utf8_lossy(&output.stderr).contains("ledger entry broken failed to compile")
-    );
+    assert!(String::from_utf8_lossy(&output.stderr)
+        .contains("Litex Markdown code block broken failed to compile"));
     assert_eq!(
         fs::read_to_string(&output_path).expect("read preserved output"),
         sentinel
@@ -78,27 +77,27 @@ fn lean_ledger_command_does_not_replace_output_when_an_entry_fails() {
 }
 
 #[test]
-fn lean_ledger_command_rejects_the_markdown_file_as_its_output() {
+fn stmt_result_to_lean_markdown_code_blocks_command_rejects_the_input_as_its_output() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
     let mut scratch = ScratchFiles::new("same-path");
-    let ledger_path = scratch.new_path("md");
-    let ledger = "## reflexivity\n\n```litex\n1 = 1\n```\n";
-    fs::write(&ledger_path, ledger).expect("write ledger");
+    let markdown_path = scratch.new_path("md");
+    let markdown = "## reflexivity\n\n```litex\n1 = 1\n```\n";
+    fs::write(&markdown_path, markdown).expect("write Litex Markdown code block");
 
     let output = Command::new(env!("CARGO_BIN_EXE_litex"))
         .current_dir(root)
         .arg("-lean-ledger")
-        .arg(&ledger_path)
-        .arg(&ledger_path)
+        .arg(&markdown_path)
+        .arg(&markdown_path)
         .output()
         .expect("run same-path -lean-ledger");
 
     assert!(!output.status.success());
     assert!(String::from_utf8_lossy(&output.stderr)
-        .contains("Markdown ledger and Lean output paths must be different"));
+        .contains("the Markdown input and Lean output paths must be different"));
     assert_eq!(
-        fs::read_to_string(&ledger_path).expect("read preserved ledger"),
-        ledger
+        fs::read_to_string(&markdown_path).expect("read preserved Markdown"),
+        markdown
     );
 }
 
@@ -117,7 +116,7 @@ impl ScratchFiles {
             .as_nanos();
         Self {
             prefix: private.join(format!(
-                "litex-to-lean-compiler-ledger-cli-{label}-{}-{nonce}",
+                "stmt-result-to-lean-markdown-code-blocks-cli-{label}-{}-{nonce}",
                 std::process::id()
             )),
             paths: Vec::new(),

@@ -2525,7 +2525,7 @@ thm self_exists:
 obtain copy from thm self_exists(2)
 "#;
 
-    let error = crate::litex_to_lean_compiler::compile_source(
+    let error = crate::stmt_result_to_lean_compiler::compile_litex_source_to_lean_source(
         source_code,
         "litex_to_lean_rejects_theorem_backed_obtain_explicitly",
     )

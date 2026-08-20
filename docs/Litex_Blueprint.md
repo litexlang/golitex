@@ -13,7 +13,7 @@ Chinese version: https://litexlang.com/doc/Litex中文蓝图
 - [Litex Blueprint Overview](#overview)
 - [Background: The AI Era Needs Formal Languages](#background)
 - [1. Based on Set Theory: Let Set-Theoretic Knowledge Look Like Set Theory](#set-theory)
-  - [Groups: From a Typed Carrier to a Mathematical Structure on a Set](#group-comparison)
+  - [Two Ways to Define a Group: Building a Mathematical Theory from the Ground Up](#group-comparison)
 - [2. Fact-Oriented: Starting from the Everyday Mathematical Workflow—Definitions, Theorems, and Proofs](#fact-oriented)
 - [3. Building Proof Flow Bottom-Up](#bottom-up)
   - [Two Directions for Developing the Same Proof: Top-Down and Bottom-Up](#two-directions)
@@ -31,9 +31,9 @@ Chinese version: https://litexlang.com/doc/Litex中文蓝图
 3. Building proof flow bottom-up: A mathematical proof can start from known conditions, derive new facts, and eventually converge on the conclusion. It can also start from the final Goal and reduce it backward to known conditions. Litex defaults to the former workflow, in which the context grows forward with verified facts; common Lean tactic interactions usually adopt the latter. Neither system excludes the other direction from what it can express.
 4. Lean-compatible: The goal of the Litex-to-Lean compiler is to translate verification paths already found by the Litex kernel into Lean proof terms, which the Lean kernel can then check independently. The current compiler covers only some verification paths. “Every Litex source file can be compiled to Lean” is an unfinished direction, not a capability already delivered by the beta release.
 
-When using Litex, users can focus on mathematical objects, conditions, intermediate facts, and conclusions while receiving fast, local, and traceable verification feedback from the kernel. This matters for AI as well: a generative system can make small-step suggestions around “the next mathematical fact that should hold,” then revise them in response to the kernel's concrete justification or failure boundary. It need not immediately lower the entire mathematical intent into the details of elaboration, type classes, namespaces, and tactic calls. Those mechanisms are important sources of Lean's expressiveness and compositionality, and they are necessary for Lean as a general-purpose programming language. Litex was designed from the outset as a language specialized for mathematics; its syntax and interaction contract are closer to mathematics itself than to the abstractions of a general-purpose programming language. *The hope is that Litex will make it easier for non-specialists across many fields to enter the world of formal mathematics.*
+The hope is that using Litex can feel like doing informal mathematics: users can keep their attention on mathematical objects, conditions, intermediate facts, and conclusions without first having to confront abstract mathematical theories, unfamiliar formal syntax, or vast external libraries. Litex acts as their copilot, providing fast, local, and traceable verification feedback. *The hope is that Litex will make it easier for non-specialists across many fields to enter the world of formal mathematics.*
 
-The rest of this blueprint first gives the background, then explains the four terms in the summary: **based on set theory, fact-oriented, building proof flow bottom-up, and Lean-compatible**.
+I will first provide the background, then address the four key terms in this summary in turn: **based on set theory, fact-oriented, building proof flow bottom-up, and Lean-compatible**. I hope this highly condensed, subjective, and exploratory blueprint will give readers an overall impression of Litex's design philosophy and goals, allowing them to follow the author's line of thought and “reinvent Litex” along the way.
 
 <a id="background"></a>
 
@@ -133,9 +133,11 @@ The same choice extends to mathematical structures such as groups. A structure s
 
 <a id="group-comparison"></a>
 
-### Two Ways to Define the Same Mathematical Structure: The Example of a Group
+### Two Ways to Define a Group: Building a Mathematical Theory from the Ground Up
 
-The definition of a group makes the preceding foundational choice more concrete. The following two fragments express the same familiar mathematical structure and the same uniqueness result for the identity, but they provide different default interfaces for “what the carrier is,” “what a binary operation is,” and “how structural laws enter later proofs.”
+One important reason Litex chooses set theory is not merely to make sets, membership, and functions look like everyday mathematics. Set theory also provides different mathematical theories with a small, uniform starting point. Sets, functions, relations, and operations are the familiar language in which textbooks organize analysis, abstract algebra, and linear algebra. Starting from them, a field's definitions and theorems can grow mainly along its own mathematical dependencies rather than first conforming to an existing encoding imposed by a large external library. We call this capacity **bootstrapping a mathematical theory**, or **self-contained theory construction**.
+
+External libraries can supply reusable results and shorten the construction process, but they should not determine which mathematics can be expressed and developed. A group is small enough to make this design choice concrete. The following two fragments express the same familiar structure and the same uniqueness result for the identity, but provide different default interfaces for “what the carrier is,” “what a binary operation is,” and “how structural laws enter later proofs.”
 
 #### Lean: A Record over `Type` and Curried Functions
 
@@ -161,9 +163,7 @@ theorem one_unique
     _ = G.one := hright G.one
 ```
 
-This Lean record begins with `Carrier : Type`: the carrier of the group is placed inside Lean's type system, and its elements, operations, and laws all depend on that carrier type. The binary operation is written `Carrier → Carrier → Carrier`. By the associativity convention for function types, this means `Carrier → (Carrier → Carrier)`: given the first input, it returns a function that is still waiting for the second. This curried interface is part of Lean's functional, type-theoretic design and offers strong abstraction and composition. It also exposes one more layer of functional-program construction than the everyday mathematical phrase “a binary operation `mul(x, y)` on a set `s`.”
-
-In this record definition, every structural law must also become a named, projectable field, such as `mul_assoc`, `one_mul`, `mul_one`, and `mul_left_inv`. Named fields make interfaces precise and easy to reuse and search with tools. The cost is that, as structures and theorem libraries grow, authors must remember or look up more names and know which variant and equality direction they currently need. The uniqueness proof above explicitly writes `G.one_mul`.
+This Lean record begins with `Carrier : Type`: the group's elements, operations, and laws all depend on that carrier type. By the associativity convention for function types, the binary operation `Carrier → Carrier → Carrier` means `Carrier → (Carrier → Carrier)`, while structural laws become named, projectable fields such as `mul_assoc` and `one_mul`. This functional, type-theoretic interface offers strong abstraction and composition and supports precise reuse in large libraries. At the same time, authors interact with the host language's function constructions and the library's naming interface, and must know which theorem variant and equality direction they need. The uniqueness proof above explicitly writes `G.one_mul`.
 
 #### Litex: Operations on a Set and Structural Facts Written Directly
 
@@ -188,9 +188,9 @@ forall s nonempty_set, G &Group<s>, identity s:
         identity = G.mul(G.one, identity) = G.one
 ```
 
-Litex starts from `s nonempty_set` and models a group directly as a structure on the nonempty set `s`. `mul fn(x, y s) s` directly denotes a binary operation that takes two elements of `s` and returns an element of `s`; the structural laws are written as ordinary mathematical facts inside `<=>:`. They do not first need separate field names such as `mul_assoc`, `one_mul`, `mul_one`, and `mul_left_inv`. The uniqueness result is written directly as `identity = G.mul(G.one, identity) = G.one`; based on predicates, arguments, and the structural facts currently in scope, the kernel searches for the appropriate instances of the identity laws and the needed equality directions.
+Litex starts from `s nonempty_set` and models a group directly as a structure on the nonempty set `s`. `mul fn(x, y s) s` directly denotes a binary operation that takes two elements of `s` and returns an element of `s`; the structural laws are written as ordinary mathematical facts inside `<=>:`. Users can begin with the mathematical materials—a set, an operation, an identity, inverses, and laws—and watch the group take shape one layer at a time. The uniqueness result is written directly as `identity = G.mul(G.one, identity) = G.one`, and the kernel searches for the corresponding instances of the identity laws and the needed equality directions. Litex does not forbid names: theorems worth citing over the long term and public interfaces can still be written as named `thm` declarations, but ordinary structural laws and local facts need not each enter a naming interface that authors must remember before those facts can be used.
 
-This does not mean that Litex forbids names. Theorems worth citing over the long term, public interfaces, and dependencies an author wants to display explicitly can still be written as named `thm` declarations. The difference is the default burden: ordinary structural laws and local facts do not each have to enter a naming interface that the author must remember before the kernel can use them.
+The Lean fragment itself shows that Lean can certainly define a group without relying on Mathlib's existing group interface. The real difference is not whether this is possible, but which experience is designed as the default path. For the authoring experience Litex seeks, set theory is especially suitable because sets, membership, functions, and relations form a cross-domain language close to everyday mathematics. Litex still depends on its own kernel, builtin rules, and standard library. Here, “building from the ground up” means that source dependencies in analysis, abstract algebra, or linear algebra should primarily reflect the theory's own mathematical structure, with external libraries serving as optional accelerators rather than boundaries on what can be expressed.
 
 This example naturally leads into the next section. If users do not first have to say “I want to invoke `one_mul`,” but can instead write “this is what the expression should equal,” then the source no longer centers on theorem names and proof commands. It centers on mathematical facts themselves.
 
@@ -566,7 +566,9 @@ end __Compiler_4_FunctionSet
 
 ```
 
-Each Litex keyword, such as `R`, `$in`, and `set`, is given a Lean representation. Each verified fact receives an ID and is retained so that the compiler can reproduce the recorded evidence in Lean.
+The compiler first faces a theoretical problem: how to represent Litex mathematics in Lean and Mathlib. The same mathematical object or statement can often be expressed by several Lean formulations with the same mathematical meaning, but the choice has long-term consequences for whether generated code can reuse Mathlib naturally, how later Litex features can be extended, and how well the Litex and Lean ecosystems can work together. Foundational concepts such as functions, sets, membership, and well-definedness therefore need a consistent and sustainable representation—not merely one that makes today's examples pass.
+
+The second problem is practical: how to turn the information produced by successful Litex kernel execution into Lean proofs. Litex verification decomposes a goal into smaller subgoals along a search tree; a successful branch must return structured information from the leaves to the root, recording the rules, facts, mathematical objects, subproofs, and well-definedness results involved. Declarations, objects, facts, and scope changes produced during statement execution must be preserved as well, allowing the compiler to replay the verification route Litex already found deterministically instead of reconstructing a proof from display text or asking Lean to search for another one.
 
 </details>
 

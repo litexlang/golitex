@@ -48,5 +48,5 @@ forall r R:
 #
 # Evidence:
 # target/release/litex -compact -strict -runner -f lean/examples/16_StandardSetHierarchy.lit
-# cargo test --release --test litex_to_lean_compiler_tracers standard_set_hierarchy
-# cd lean && ./compiler.sh check examples
+# cargo test --release --test stmt_result_to_lean_compiler_tracers standard_set_hierarchy
+# cd lean && ./stmt_result_to_lean_compiler.sh check examples

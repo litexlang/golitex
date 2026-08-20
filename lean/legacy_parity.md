@@ -127,8 +127,8 @@ use the current versions of these gates:
 
 ```sh
 target/release/litex -compact -strict -runner -f lean/examples/<tracer>.lit
-cargo test --release --test litex_to_lean_compiler_tracers
-cd lean && ./compiler.sh check examples
+cargo test --release --test stmt_result_to_lean_compiler_tracers
+cd lean && ./stmt_result_to_lean_compiler.sh check examples
 cd lean && lake build
 ```
 

@@ -2231,6 +2231,27 @@ impl StmtResultJsonV2 {
                 string_field("kind", "ClosedNumericComparison"),
                 string_field("expected_target", result.expected_target.to_string()),
             ]),
+            BuiltinRuleEvidence::ObjectReflexivity(result) => object(vec![
+                string_field("kind", "ObjectReflexivity"),
+                string_field("expected_target", result.expected_target.to_string()),
+            ]),
+            BuiltinRuleEvidence::RationalNormalization(result) => object(vec![
+                string_field("kind", "RationalNormalization"),
+                string_field("expected_target", result.expected_target.to_string()),
+                (
+                    "left_evaluation".to_string(),
+                    evaluation_value(&result.left_evaluation),
+                ),
+                (
+                    "right_evaluation".to_string(),
+                    evaluation_value(&result.right_evaluation),
+                ),
+            ]),
+            BuiltinRuleEvidence::StandardSetNonempty(result) => object(vec![
+                string_field("kind", "StandardSetNonempty"),
+                string_field("expected_target", result.expected_target.to_string()),
+                string_field("target_set", result.target_set.to_string()),
+            ]),
             BuiltinRuleEvidence::DisjunctionIntroduction(result) => object(vec![
                 string_field("kind", "DisjunctionIntroduction"),
                 string_field("expected_target", result.expected_target.to_string()),
@@ -3064,6 +3085,7 @@ fn by_theorem_verification_value(
         string_field("kind", "SuccessVerifyByTheoremResult"),
         string_field("theorem", result.theorem.clone()),
         string_field("theorem_source", result.theorem_source.clone()),
+        optional_fact_id_field("source_fact_id", result.source_fact_id),
         string_field("mode", result.mode.clone()),
         ("arguments".to_string(), strings(&result.arguments)),
         ("domain_facts".to_string(), strings(&result.domain_facts)),
@@ -3980,6 +4002,50 @@ mod tests {
         assert!(json.contains("\"statement\": \"2 + 3 >= 0\""));
         assert!(json.contains("\"rule\": \"NaturalMembershipImpliesNonnegative\""));
         assert!(!json.contains("LegacyPassThrough"));
+    }
+
+    #[test]
+    fn object_choice_json_v2_retains_typed_standard_set_nonempty_child_evidence() {
+        let mut runtime = Runtime::new();
+        runtime.new_file_path_new_env_new_name_scope("object_choice_json_v2");
+        let tokenizer = Tokenizer::new();
+        let mut blocks = tokenizer
+            .parse_blocks("have chosen R", Rc::from("object_choice_json_v2.lit"))
+            .expect("object choice tokenizes");
+        let stmt = runtime
+            .parse_stmt(&mut blocks[0])
+            .expect("object choice parses");
+        let result = runtime.exec_stmt(&stmt).expect("object choice verifies");
+
+        let StmtResult::Success(SuccessStmtResult::DefObjStmt(
+            SuccessDefObjStmtResult::HaveObjInNonemptySetStmt(choice),
+        )) = &result
+        else {
+            panic!("object choice returns its named result variant")
+        };
+        let nonempty = choice
+            .verification
+            .as_ref()
+            .expect("object choice retains verification")
+            .groups[0]
+            .nonempty_check
+            .as_deref()
+            .expect("standard carrier retains nonempty child")
+            .factual_success()
+            .expect("nonempty child is factual");
+        let SuccessFactProofResult::BuiltinRule(proof) = nonempty.proof() else {
+            panic!("standard carrier nonempty child is builtin")
+        };
+        let Some(BuiltinRuleEvidence::StandardSetNonempty(evidence)) = &proof.evidence else {
+            panic!("standard carrier nonempty child retains typed evidence")
+        };
+        assert_eq!(evidence.target_set, StandardSet::R);
+        assert_eq!(evidence.expected_target.to_string(), "$is_nonempty_set(R)");
+
+        let json = display_stmt_result_json_v2(&result);
+        assert!(json.contains("\"kind\": \"StandardSetNonempty\""));
+        assert!(json.contains("\"target_set\": \"R\""));
+        assert!(json.contains("\"expected_target\": \"$is_nonempty_set(R)\""));
     }
 
     #[test]

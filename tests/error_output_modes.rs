@@ -24,7 +24,7 @@ fn error_output_cli_modes_emit_the_same_detailed_runtime_error() {
 }
 
 #[test]
-fn error_output_cli_modes_keep_their_selected_success_projection() {
+fn success_output_cli_modes_all_print_the_same_statement_result_json_v2() {
     let compact = run_litex(&["-compact", "-e", "1 = 1"]);
     let normal = run_litex(&["-e", "1 = 1"]);
     let detailed = run_litex(&["-detail", "-e", "1 = 1"]);
@@ -38,12 +38,15 @@ fn error_output_cli_modes_keep_their_selected_success_projection() {
     let detailed_stdout =
         String::from_utf8(detailed.stdout).expect("detailed output must be UTF-8");
 
-    assert!(!compact_stdout.contains("\"verification\": {"));
-    assert!(!compact_stdout.contains("\"phases\": {"));
-    assert!(normal_stdout.contains("\"why_verified\": {"));
-    assert!(!normal_stdout.contains("\"phases\": {"));
+    assert_eq!(compact_stdout.trim(), normal_stdout.trim());
+    assert_eq!(normal_stdout.trim(), detailed_stdout.trim());
+    assert!(compact_stdout.contains("\"schema\": \"litex.statement-result.v2\""));
+    assert!(compact_stdout.contains("\"outcome\": \"success\""));
+    assert!(compact_stdout.contains("\"verification\": {"));
+    assert!(compact_stdout.contains("\"well_definedness\": {"));
+    assert!(compact_stdout.contains("\"store\": {"));
     assert!(detailed_stdout.contains("\"verification\": {"));
-    assert!(detailed_stdout.contains("\"phases\": {"));
+    assert!(detailed_stdout.contains("\"execution_trace\": {"));
 }
 
 fn run_litex(args: &[&str]) -> Output {
