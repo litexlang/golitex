@@ -22,10 +22,11 @@ pub use builtin_rule_evidence::{
     KnownEqualityBuiltinRuleEvidence, KnownEqualityBuiltinRuleStep,
     ListSetMembershipBuiltinRuleEvidence, MatrixExpressionMembershipBuiltinRuleEvidence,
     NativeConstantMembershipBuiltinRule, NaturalMembershipClosureBuiltinRule,
-    NonzeroExpressionOrientation, RationalMembershipClosureBuiltinRule,
+    NonzeroExpressionOrientation, ObjectReflexivityBuiltinRuleEvidence,
+    RationalMembershipClosureBuiltinRule, RationalNormalizationBuiltinRuleEvidence,
     RealArithmeticMembershipClosureBuiltinRule, RefinedNumericMembershipBuiltinRuleEvidence,
     RegisteredLocalBuiltinRuleEvidence, SetBuilderMembershipBuiltinRuleEvidence, SetBuiltinRule,
-    SetRelationDualityBuiltinRule,
+    SetRelationDualityBuiltinRule, StandardSetNonemptyBuiltinRuleEvidence,
 };
 pub(crate) use compositional_well_definedness_projection::{
     project_compositional_well_definedness, project_compositional_well_definedness_many,

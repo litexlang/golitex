@@ -1,4 +1,4 @@
-# The Two Hard Problems in the Litex-to-Lean Compiler
+# The Two Hard Problems in the StmtResult-to-Lean Compiler
 
 1. *Represent Litex mathematics in Lean, which is a theoretical problem.* The compiler must choose a representation for each mathematical concept that is consistent with Lean and Mathlib, and that will remain natural and usable in ordinary Lean developments.
 
@@ -124,24 +124,162 @@ Litex source
             -> attach execution trace
   -> one completed StmtResult
        |-> JSON v2 / result graph
-       `-> LitexToLeanIrBuilder
-            -> target-specific LitexToLeanStatementIr
-            -> Lean emitter
-            -> generated Lean declarations and proof terms
+       `-> StmtResultToLeanCompiler
+            -> match the SuccessStmtResult family
+            -> enter named recursive child Result fields
+            -> push/pop compiler environments at lexical boundaries
+            -> construct Lean declarations and proof terms directly
             -> Lean kernel
 ```
 
 The completed `StmtResult` is the single semantic source for consumers. JSON,
-graphs, summaries, and the Litex-to-Lean compiler traverse its fields; they do
+graphs, summaries, and the StmtResult-to-Lean compiler traverse its fields; they do
 not reconstruct successful execution by diffing a `Runtime` or by parsing
 diagnostic text.
 
-The Litex-to-Lean capture path in
-[`capture.rs`](../litex_to_lean_ir/capture.rs) intentionally executes the whole
-source, keeps the ordered `Vec<StmtResult>`, drops the execution `Runtime`, and
-only then lowers the results. `LitexToLeanIrBuilder` owns a fresh,
-environment-less runtime only as a substitution utility. It is not allowed to
-obtain semantic proof evidence from an executed environment.
+[`compile_litex_source_to_lean_source.rs`](compile_litex_source_to_lean_source.rs) intentionally executes the whole source, keeps the
+ordered `Vec<StmtResult>`, drops the execution `Runtime`, and only then creates
+`StmtResultToLeanCompiler`. Consequently the compiler cannot read facts,
+definitions, WD caches, or names back out of the execution environment. If a
+piece of evidence is absent from Result, compilation fails closed.
+
+The public entry point has the same explicit input/output name:
+`compile_litex_source_to_lean_source`. File and Markdown entry points are
+`compile_litex_file_to_lean_file` and
+`compile_litex_markdown_code_blocks_to_lean_file`. There is no ambiguous
+`compile_source`, `emitter`, or `ledger` layer in the public API.
+
+## `StmtResultToLeanCompiler` and Its Environment Stack
+
+`Runtime` is the executor whose structured source is Litex syntax. It owns
+Litex execution state such as environments, active strategies, name scopes,
+and memo tables. `StmtResultToLeanCompiler` is a second executor whose
+structured source is the already completed recursive Result. Its state is
+only target-generation state:
+
+```rust
+pub struct StmtResultToLeanCompiler {
+    source_label: String,
+    environment_stack: StmtResultToLeanCompilerEnvironmentStack,
+    declarations: Vec<String>,
+    next_fact_name_index: usize,
+    next_sketch_namespace_index: usize,
+}
+```
+
+Each compiler environment records names that already exist in the current
+Lean scope: `SymbolId -> Lean name`, `FactId -> theorem name`, predicate and
+function bindings, and the few representation bridges needed by the Lean
+ABI. It never stores proof truth; proof truth remains in Result.
+The stack and its frame bindings live in the explicitly named
+[`stmt_result_to_lean_compiler_environment_stack.rs`](stmt_result_to_lean_compiler_environment_stack.rs),
+separate from proof-construction functions.
+
+The stack follows Result ownership. A top-level statement uses the root
+environment. A `sketch` pushes an inherited child environment, recursively
+compiles its `proof_steps`, emits those declarations inside a namespace, then
+pops the child. A successful `try` recursively compiles its committed children
+in the current environment. Forall, existential, case, and function bodies
+use the same rule: the Result field that owns the body determines where the
+compiler environment is pushed and popped. `run_in_local_env` in the kernel is
+therefore not a compiler problem; its returned children are already nested in
+the parent Result.
+
+The local-layer helper restores the outer environment, declarations, and name
+counters before propagating an error. Therefore a rejected inner Result cannot
+leave half of a Lean scope in compiler state. The compiler does not publish
+partial output when construction fails.
+
+For example, `have chosen R` is compiled by reading its nested Result directly:
+
+```text
+SuccessHaveObjInNonemptySetStmtResult
+  verification
+    SuccessVerifyObjectChoiceResult
+      nonempty_check
+        Fact: $is_nonempty_set(R)
+          BuiltinRuleEvidence::StandardSetNonempty
+            target_set: R
+  common.infers
+    store: chosen $in R, FactId F_chosen
+```
+
+The child evidence selects `Litex.Rules.realNonempty`. The parent layer creates
+the Lean object with `Classical.choice`, then registers `F_chosen` in the current
+compiler environment. Changing the builtin diagnostic label cannot change the
+generated Lean source.
+
+An equality-backed object definition is another direct `Combine`. For
+`have y R = 1`, `SuccessHaveObjEqualStmtResult` owns the checked source value,
+the nested `type_checks` fact Result, and the ordered store effects for
+`y $in R` and `y = 1`. The compiler constructs `y`, then registers the two exact
+FactIds in that order. It does not first copy the statement into a mirrored
+`LitexToLeanStatementIr::HaveObjEqualStmt` node. Checked set aliases use the
+same parent Result to install their names in a child compiler environment, so
+leaving a `sketch` removes those bindings automatically.
+
+An ordinary `claim` or `example` now uses the environment stack for its proof
+body directly. `SuccessVerifyClaimFactResult.proof_steps` are compiled in
+source order into local Lean `have` declarations. Each local fact registers
+its own frozen `FactId` only in the inherited child compiler environment, and
+`conclusion_check` must cite that exact ID. The child environment is popped
+before a claim publishes its distinct outer store FactId; an `example`
+publishes no outer fact at all. The compiler rejects a Result that retargets a
+local store to a later ambient fact merely because both propositions render
+the same way.
+
+A named theorem uses the same composition rule. Its recursive forall
+well-definedness Result establishes the binder and conclusion shape; its
+proof-scope parameter stores provide the exact local FactIds; its ordered
+`proof_steps` run in an inherited compiler environment; and its
+`conclusion_checks` Results construct the final Lean proof. Popping that child
+environment removes parameter and proof-step facts before the theorem's
+distinct outer FactId is registered under the source theorem name. The direct
+route currently covers no-binder theorems, ordinary object binders over
+reviewed standard-set carriers, heterogeneous object binders over a preceding
+set binder, atomic conclusions, and the reviewed one-witness existential
+conclusion. Dependent/refined binders, domain premises, the other non-atomic
+conclusion families, and exported theorem projections remain on the explicit
+compatibility path.
+
+The matching direct `by thm` route closes the reference loop. Execution stores
+the exact source theorem `FactId` in `SuccessVerifyByTheoremResult`; the
+compiler resolves only that ID, combines the recursively retained argument
+membership checks, applies the Lean theorem, and registers each direct
+conclusion under its own store FactId. A theorem name or proposition string is
+display information, never a substitute for the source identity.
+
+A positive one-witness existential introduction is also a direct `Combine`.
+`SuccessWitnessExistFactResult` owns its ordered local `proof_steps`, the
+witness `parameter_checks`, the instantiated `body_checks`, and the outer
+existential store. The compiler pushes an inherited environment for the local
+steps, registers their exact FactIds, constructs the Lean witness tuple from
+the two checked child proofs, then pops that environment before registering
+the existential's outer FactId. The current direct slice deliberately retains
+the existing one-witness, one-body-fact boundary; multiple witnesses,
+`exist!`, and `not exist` still fail closed or use an explicitly identified
+compatibility route.
+
+The matching `obtain y from exist ...` elimination reads the recursively
+retained source fact Result and resolves its exact `FactId`. It validates the
+source existential binder in a temporary compiler environment, then discards
+that template-only environment. The environment visible to following Results
+contains only the selected Lean object `y` and the two exact projection
+FactIds: the witness-type fact and the instantiated body fact. Their Lean
+proofs are the corresponding projections of `Classical.choose_spec`; no
+proposition-string search and no live `Runtime` lookup is involved.
+
+The compiler dispatcher does not create a node. It only selects one of these
+composition actions:
+
+- compile a leaf from typed evidence;
+- wrap one recursively compiled child;
+- combine several named or ordered children;
+- pass a child through unchanged;
+- resolve an exact `FactId`/shared-result reuse.
+
+This is why no enum mirroring every Rust helper or every compiler function is
+needed.
 
 ## Every Function Has a Composition Mode
 
@@ -210,7 +348,7 @@ combined proof, a transformation, or an exact shared reuse node.
 Diagnostic labels remain available for human output, but the target design is
 that they are not semantic compiler input. New compiler-ready builtin routes
 carry a typed `BuiltinRuleEvidence` payload whose target and children validate.
-The current builder still has an allowlisted label-and-goal compatibility path
+The temporary compatibility adapter still has an allowlisted label-and-goal path
 for older builtin routes; that transitional boundary is recorded below and
 must not be used for new routes.
 
@@ -329,7 +467,8 @@ evaluation certificate that connects the source expression to `5`. The store
 node owns the source `FactId`, and the typed inference application cites that
 same ID as the premise of the nonnegativity conclusion.
 
-This is enough for the Lean backend to emit proof terms along the same route:
+This is enough for the Result-to-Lean compiler to construct proof terms along
+the same route:
 
 ```lean
 theorem __fact0 : Litex.In ((2 : ℂ) + (3 : ℂ)) Litex.N := by
@@ -346,28 +485,29 @@ returned the exact closed evaluation certificate with normal value `5`. The
 second theorem is not reproved independently: its result came from the typed
 inference edge whose premise is the stored membership fact.
 
-The focused Result and runtime-drop regressions live in
-[`capture.rs`](../litex_to_lean_ir/capture.rs), and the generated Lean
-assertions live in [`tests.rs`](tests.rs).
+The focused direct-compiler and corruption regressions live in
+[`stmt_result_to_lean_compiler.rs`](stmt_result_to_lean_compiler.rs), and the generated Lean assertions live in
+[`stmt_result_to_lean_compiler_tests.rs`](stmt_result_to_lean_compiler_tests.rs).
 
-## Why There Is Still a Lean Backend IR
+## Why There Is No Full Mirrored Statement IR
 
-`SuccessStmtResult` is the canonical source-execution result.
-`LitexToLeanStatementIr` is a derived, target-specific backend IR. They have
-different responsibilities:
+`SuccessStmtResult` already is a typed, recursive source tree. Constructing a
+second `LitexToLeanStatementIr` with the same statement variants and the same
+proof nesting adds copying and creates two places that can disagree. The
+target architecture therefore compiles Result directly.
 
-- Result records what Litex execution did and why it succeeded, independently
-  of any backend.
-- The Lean backend IR records the chosen Lean representation, validated
-  wrapper rule, declaration order, and emitter-ready proof adapter.
+Small target-side helper structures are still legitimate when they describe
+a real Lean-only choice—for example a generated binder name or the native Lean
+representation selected for one Litex object. They are compiler environment
+bindings, not another statement/proof tree. They must not rediscover a rule,
+FactId, premise, scope, or normal form that Result was responsible for
+returning.
 
-The backend IR is not a second semantic source of truth. It must be rebuilt
-deterministically from Result, without the execution runtime. The target
-contract is that an unsupported object, statement, proof rule, WD shape,
-missing evidence payload, or dangling `FactId` causes lowering to fail closed,
-never a guessed proof or `sorry`. Fully migrated routes, including the numeric
-tracer above, follow this contract; the older compatibility paths listed below
-still need to be removed route by route.
+An unsupported object, statement, proof rule, WD shape, missing evidence
+payload, or dangling `FactId` causes compilation to fail closed, never a
+guessed proof or `sorry`. The numeric tracer above is already on the direct
+path: it validates the recursive WD and evaluation Result, uses the source
+FactId, follows the typed infer edge, and creates no old statement/fact IR.
 
 This separation also preserves the Litex execution contract: a Litex program
 may execute successfully even when the Lean backend does not yet implement
@@ -398,7 +538,9 @@ consumes the Rust Result structures directly.
 - Not every existing builtin or inference route carries a compiler-ready typed
   certificate yet. Litex execution may succeed while Lean lowering rejects
   that route.
-- [`builder.rs`](../litex_to_lean_ir/builder.rs) still contains a legacy
+- [`builder.rs`](../litex_to_lean_ir/builder.rs) is a temporary compatibility
+  adapter for statement/proof families not yet moved to direct Result
+  traversal. It still contains a legacy
   `try_from_verified_builtin_label` fallback for an allowlisted set of older
   builtin routes. New routes must return typed evidence; removing this fallback
   requires migrating each remaining producer first.
@@ -406,15 +548,21 @@ consumes the Rust Result structures directly.
   [`compositional_well_definedness_projection.rs`](../result/compositional_well_definedness_projection.rs)
   currently projects it into the older Lean-backend certificate with allocated
   WD node IDs and ambient scope paths. Those IDs are backend-local and are not
-  canonical statement-result identity.
-- The Lean builder still keeps a rendered-proposition index for a few local
+  canonical statement-result identity. The compiler environment holds this
+  compatibility view only while an unmigrated object renderer constructs one
+  proposition or proof term, then restores the surrounding frame. New compiler
+  paths read the recursive WD Result directly and must not add another
+  persistent scope-ID table.
+- The compatibility adapter still keeps a rendered-proposition index for a few local
   already-stored effects. Canonical citations carry `FactId`; the remaining
   index is a backend migration debt and must not be extended as an identity
   mechanism.
-- Final `FactId` and execution-trace attachment happens at the statement
-  boundary while the runtime is still alive. After `exec_stmt` returns, the
-  Result is self-contained for JSON, graph, and compiler consumers.
-- The Lean emitter may use tactics only inside reviewed fixed adapters after
+- Missing `FactId` and execution-trace attachment happens at the statement
+  boundary while the runtime is still alive. Already frozen local FactIds are
+  never overwritten by a later ambient fact with the same proposition. After
+  `exec_stmt` returns, the Result is self-contained for JSON, graph, and
+  compiler consumers.
+- Lean-source construction may use tactics only inside reviewed fixed adapters after
   validating verifier-owned evidence. It may not launch open-ended target-side
   proof search.
 - Generated Lean must contain no compiler-invented axioms, `sorry`, or

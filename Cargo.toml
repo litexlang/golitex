@@ -26,11 +26,11 @@ name = "litex"
 path = "src/main.rs"
 
 [[bin]]
-name = "litex_to_lean_compiler"
-path = "src/litex_to_lean_compiler/main.rs"
+name = "stmt_result_to_lean_compiler"
+path = "src/stmt_result_to_lean_compiler/main.rs"
 
 [[test]]
-name = "litex_to_lean_compiler_tracers"
-path = "src/litex_to_lean_compiler/tests.rs"
+name = "stmt_result_to_lean_compiler_tracers"
+path = "src/stmt_result_to_lean_compiler/stmt_result_to_lean_compiler_tests.rs"
 
 [dependencies]

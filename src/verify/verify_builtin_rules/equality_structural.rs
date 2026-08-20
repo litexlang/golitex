@@ -104,10 +104,16 @@ impl Runtime {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         if objs_match_for_pattern(left, right) {
-            return factual_equal_success_by_builtin_reason(
-                equal_fact,
-                "known-only equality: they are the same",
-            );
+            let target: Fact = equal_fact.clone().into();
+            return SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                target.clone(),
+                "known-only equality: they are the same".to_string(),
+                BuiltinRuleEvidence::ObjectReflexivity(
+                    ObjectReflexivityBuiltinRuleEvidence::new(target),
+                ),
+                Vec::new(),
+            )
+            .into();
         }
 
         if self.equal_fact_sides_have_same_known_equality_in_some_env(equal_fact) {

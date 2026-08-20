@@ -1,14 +1,15 @@
-use litex::litex_to_lean_compiler::compile_source;
-use litex::litex_to_lean_compiler::{
-    compile_source_with_report, CompilationPhase, CompilationStatus,
-};
 use litex::litex_to_lean_ir::capture_litex_to_lean_ir_from_source;
+use litex::stmt_result_to_lean_compiler::compile_litex_source_to_lean_source;
+use litex::stmt_result_to_lean_compiler::{
+    compile_litex_source_to_stmt_result_to_lean_compilation_report,
+    StmtResultToLeanCompilationPhase, StmtResultToLeanCompilationStatus,
+};
 
 fn compile_on_verifier_stack(source: &'static str, label: &'static str) -> Result<String, String> {
     std::thread::Builder::new()
         .name(format!("compiler-test-{label}"))
         .stack_size(32 * 1024 * 1024)
-        .spawn(move || compile_source(source, label))
+        .spawn(move || compile_litex_source_to_lean_source(source, label))
         .expect("spawn compiler verifier thread")
         .join()
         .expect("compiler verifier thread panicked")
@@ -81,22 +82,33 @@ fn compiler_core_keeps_representation_registry_closed() {
 }
 
 #[test]
-fn compilation_report_is_transactional_and_marks_emission_gaps() {
-    let complete = compile_source_with_report("1 = 1\n", "complete_report.lit")
-        .expect("capture and emit a complete report");
-    assert_eq!(complete.status, CompilationStatus::Complete);
+fn compilation_report_is_transactional_and_marks_unsupported_result_routes() {
+    let complete = compile_litex_source_to_stmt_result_to_lean_compilation_report(
+        "1 = 1\n",
+        "complete_report.lit",
+    )
+    .expect("capture and emit a complete report");
+    assert_eq!(complete.status, StmtResultToLeanCompilationStatus::Complete);
     assert!(complete.is_complete());
     assert!(complete.unsupported.is_empty());
     assert!(complete.lean_code.contains("theorem __fact0"));
 
-    let incomplete = compile_source_with_report("1 != 0\n", "incomplete_report.lit")
-        .expect("verified IR with an unsupported emitter route returns a report");
-    assert_eq!(incomplete.status, CompilationStatus::Incomplete);
+    let incomplete = compile_litex_source_to_stmt_result_to_lean_compilation_report(
+        "1 != 0\n",
+        "incomplete_report.lit",
+    )
+    .expect(
+        "successful Result with an unsupported Lean-source construction route returns a report",
+    );
+    assert_eq!(
+        incomplete.status,
+        StmtResultToLeanCompilationStatus::Incomplete
+    );
     assert!(!incomplete.is_complete());
     assert_eq!(incomplete.unsupported.len(), 1);
     assert_eq!(
         incomplete.unsupported[0].phase,
-        CompilationPhase::LeanEmission
+        StmtResultToLeanCompilationPhase::LeanSourceConstruction
     );
     assert!(incomplete.lean_code.contains("Litex-to-Lean incomplete"));
     assert!(!incomplete.lean_code.contains("theorem __fact0"));
@@ -143,13 +155,12 @@ fn order_tracer_consumes_registered_rule_certificate() {
 }
 
 #[test]
-fn top_level_atomic_equality_reuses_verified_proof_ir() {
+fn top_level_atomic_equality_compiles_typed_result_evidence() {
     let generated =
         compile_on_verifier_stack("1 = 1\n2 + 3 = 5\n2 + 3 = 5\n", "3_AtomicEquality.lit")
             .expect("compile top-level atomic equality tracer");
     assert!(generated.contains("Litex.Same.refl (1 : ℂ)"));
     assert!(generated.contains("Litex.Same ((2 : ℂ) + (3 : ℂ)) (5 : ℂ)"));
-    assert!(generated.contains("have __wd1_0 : Litex.In (2 : ℂ) Litex.C"));
     assert!(generated
         .contains("Litex.Same.ofEq (by norm_num [Litex.tupleDim, Litex.TupleShape.dimension])"));
     assert!(generated.contains("theorem __fact2"));

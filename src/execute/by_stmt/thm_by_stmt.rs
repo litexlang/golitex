@@ -19,6 +19,7 @@ impl Runtime {
                     vec![],
                 )
             })?;
+        let source_fact_id = self.known_fact_id_for_fact(&forall_fact.clone().into())?;
 
         let verify_state = UseContextVerifyState::new(0, false);
         let arg_type_result = self
@@ -155,6 +156,7 @@ impl Runtime {
 
         let by_verification = SuccessVerifyByTheoremResult::new(
             thm_name,
+            source_fact_id,
             stmt.args.iter().map(|arg| arg.to_string()).collect(),
             domain_facts,
             direct_conclusions,
@@ -193,6 +195,7 @@ impl Runtime {
                     vec![],
                 )
             })?;
+        let source_fact_id = self.known_fact_id_for_fact(&forall_fact.clone().into())?;
 
         let param_to_arg_map = forall_fact
             .params_def_with_type
@@ -243,6 +246,7 @@ impl Runtime {
 
         let by_verification = SuccessVerifyByTheoremResult::new(
             thm_name,
+            source_fact_id,
             stmt.args.iter().map(|arg| arg.to_string()).collect(),
             vec![],
             direct_conclusions,

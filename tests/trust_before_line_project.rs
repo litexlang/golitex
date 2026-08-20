@@ -279,7 +279,7 @@ target = "./target.lit"
         String::from_utf8(flagless_output.stdout).expect("Litex output should be UTF-8");
     assert!(!flagless_stdout.contains("\"type\": \"trusted_prefix\""));
     assert!(!flagless_stdout.contains("\"output_type\": \"run summary\""));
-    assert!(!flagless_stdout.contains("\"verification_status\""));
+    assert!(flagless_stdout.contains("\"verification_status\": null"));
 }
 
 #[test]

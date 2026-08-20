@@ -215,7 +215,7 @@ for that covered path.
 
 ## About
 
-I am Jiachen Shen, a mathematics PhD student at Fudan University who loves both
+I am Jiachen Shen (沈嘉辰), a mathematics PhD student at Fudan University who loves both
 mathematics and programming. Lean showed me that these worlds can meet in a
 real language. It also made me wonder whether formal source could follow more
 closely the mental flow I use when solving mathematical problems. Litex is the

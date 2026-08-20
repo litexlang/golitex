@@ -1,7 +1,7 @@
-use crate::litex_to_lean_compiler::{
-    compile_litex_file_to_lean, compile_markdown_ledger_file_to_lean,
-};
 use crate::prelude::*;
+use crate::stmt_result_to_lean_compiler::{
+    compile_litex_file_to_lean_file, compile_litex_markdown_code_blocks_to_lean_file,
+};
 use crate::to_latex::{to_latex_from_file, to_latex_from_repository, to_latex_from_source};
 use crate::to_python::{to_python_from_file, to_python_from_repository, to_python_from_source};
 use std::env;
@@ -158,8 +158,10 @@ pub fn run_cli() {
                         print_help_message();
                         process::exit(2);
                     }
-                    match compile_litex_file_to_lean(Path::new(&file_path), Path::new(&output_path))
-                    {
+                    match compile_litex_file_to_lean_file(
+                        Path::new(&file_path),
+                        Path::new(&output_path),
+                    ) {
                         Ok(()) => println!("wrote freshly generated Lean to {}", output_path),
                         Err(message) => {
                             eprintln!("{}", message);
@@ -385,7 +387,7 @@ pub fn run_cli() {
             }
             "-lean-ledger" => {
                 index += 1;
-                let ledger_path =
+                let markdown_path =
                     match read_non_flag_value_after_flag(&args, &mut index, "-lean-ledger") {
                         Ok(value) => value,
                         Err(message) => {
@@ -411,8 +413,8 @@ pub fn run_cli() {
                     print_help_message();
                     process::exit(2);
                 }
-                match compile_markdown_ledger_file_to_lean(
-                    Path::new(&ledger_path),
+                match compile_litex_markdown_code_blocks_to_lean_file(
+                    Path::new(&markdown_path),
                     Path::new(&output_path),
                 ) {
                     Ok(count) => {

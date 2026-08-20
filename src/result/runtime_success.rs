@@ -329,6 +329,10 @@ pub struct SuccessVerifyByChoiceObligationResult {
 pub struct SuccessVerifyByTheoremResult {
     pub theorem: String,
     pub theorem_source: String,
+    /// Exact stored identity of the Litex theorem/axiom being instantiated.
+    /// Builtin registered rules deliberately retain `None` and use their
+    /// typed rule certificate instead.
+    pub source_fact_id: Option<FactId>,
     pub mode: String,
     pub arguments: Vec<String>,
     pub domain_facts: Vec<String>,
@@ -1663,6 +1667,7 @@ impl SuccessVerifyByChoiceResult {
 impl SuccessVerifyByTheoremResult {
     pub fn new(
         theorem: String,
+        source_fact_id: Option<FactId>,
         arguments: Vec<String>,
         domain_facts: Vec<String>,
         direct_conclusions: Vec<Fact>,
@@ -1674,6 +1679,7 @@ impl SuccessVerifyByTheoremResult {
         SuccessVerifyByTheoremResult {
             theorem,
             theorem_source: "litex".to_string(),
+            source_fact_id,
             mode: "release_all".to_string(),
             arguments,
             domain_facts,
@@ -1705,6 +1711,7 @@ impl SuccessVerifyByTheoremResult {
         SuccessVerifyByTheoremResult {
             theorem,
             theorem_source: "builtin_rule".to_string(),
+            source_fact_id: None,
             mode: "release_all".to_string(),
             arguments,
             domain_facts: requirement_facts,

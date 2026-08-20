@@ -1,0 +1,46 @@
+name: Conservative issue triage
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: issue-triage-${{ github.event.issue.number }}
+  cancel-in-progress: false
+
+jobs:
+  triage:
+    if: >-
+      ${{ vars.ISSUE_BOT_ENABLED == 'true' &&
+          github.event.issue.user.type != 'Bot' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Check private configuration
+        id: configuration
+        env:
+          ISSUE_BOT_OPENAI_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          if [[ -n "${ISSUE_BOT_OPENAI_KEY}" ]]; then
+            echo "enabled=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "::warning::OPENAI_API_KEY is not configured; issue triage is disabled."
+            echo "enabled=false" >> "${GITHUB_OUTPUT}"
+          fi
+
+      - uses: actions/checkout@v4
+        if: steps.configuration.outputs.enabled == 'true'
+        with:
+          persist-credentials: false
+
+      - name: Classify and route issue
+        if: steps.configuration.outputs.enabled == 'true'
+        env:
+          ISSUE_BOT_GITHUB_TOKEN: ${{ github.token }}
+          ISSUE_BOT_OPENAI_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ISSUE_BOT_MODEL: ${{ vars.ISSUE_BOT_MODEL }}
+        run: python3 .github/scripts/issue_triage.py

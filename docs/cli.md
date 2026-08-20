@@ -138,7 +138,7 @@ litex -lean \
   lean/examples/1_SetSystem.lit \
   lean/examples/1_SetSystem.lean
 
-./lean/compiler.sh compile lean/examples/1_SetSystem.lit
+./lean/stmt_result_to_lean_compiler.sh compile lean/examples/1_SetSystem.lit
 ```
 
 Declaration-bearing `sketch` blocks compile into isolated Lean namespaces.

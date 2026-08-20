@@ -1,19 +1,24 @@
-use super::compile_source;
+use super::compile_litex_source_to_lean_source;
 use std::fs;
 use std::path::Path;
 
-pub fn compile_litex_file_to_lean(source_path: &Path, output_path: &Path) -> Result<(), String> {
+pub fn compile_litex_file_to_lean_file(
+    source_path: &Path,
+    output_path: &Path,
+) -> Result<(), String> {
     reject_same_input_and_output(source_path, output_path)?;
 
     let source = fs::read_to_string(source_path)
         .map_err(|error| format!("failed to read {}: {error}", source_path.display()))?;
     let generated =
-        compile_source(&source, &source_path.display().to_string()).map_err(|error| {
-            format!(
-                "failed to compile {} to Lean: {error}",
-                source_path.display()
-            )
-        })?;
+        compile_litex_source_to_lean_source(&source, &source_path.display().to_string()).map_err(
+            |error| {
+                format!(
+                    "failed to compile {} to Lean: {error}",
+                    source_path.display()
+                )
+            },
+        )?;
 
     if let Some(parent) = output_path.parent() {
         if !parent.as_os_str().is_empty() {
