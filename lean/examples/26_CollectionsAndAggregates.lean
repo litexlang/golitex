@@ -65,8 +65,8 @@ theorem __fact14 : Litex.Same (Litex.tupleDim (Litex.HCons.mk (1 : ℂ) (Litex.H
 theorem __fact15 : Litex.Same (Litex.SequenceLiteral.mk (Litex.HCons.mk (1 : ℂ) (Litex.HCons.mk (2 : ℂ) (Litex.HCons.mk (3 : ℂ) Litex.HNil.nil)))) (Litex.SequenceLiteral.mk (Litex.HCons.mk (1 : ℂ) (Litex.HCons.mk (2 : ℂ) (Litex.HCons.mk (3 : ℂ) Litex.HNil.nil)))) := by
   exact Litex.Same.refl (Litex.SequenceLiteral.mk (Litex.HCons.mk (1 : ℂ) (Litex.HCons.mk (2 : ℂ) (Litex.HCons.mk (3 : ℂ) Litex.HNil.nil))))
 
-theorem __fact16 : Litex.Same (Litex.finiteSequenceSet Litex.Z (3 : Nat)) (Litex.finiteSequenceSet Litex.Z (3 : Nat)) := by
-  exact Litex.Same.refl (Litex.finiteSequenceSet Litex.Z (3 : Nat))
+theorem __fact16 : Litex.Same (Litex.finiteSequenceSet.{0} Litex.Z (3 : Nat)) (Litex.finiteSequenceSet.{0} Litex.Z (3 : Nat)) := by
+  exact Litex.Same.refl (Litex.finiteSequenceSet.{0} Litex.Z (3 : Nat))
 
 theorem __fact17 : Litex.Same (Litex.sequenceSet Litex.Z) (Litex.sequenceSet Litex.Z) := by
   exact Litex.Same.refl (Litex.sequenceSet Litex.Z)

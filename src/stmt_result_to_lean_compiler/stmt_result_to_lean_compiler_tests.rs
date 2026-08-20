@@ -110,7 +110,9 @@ fn compilation_report_is_transactional_and_marks_unsupported_result_routes() {
         incomplete.unsupported[0].phase,
         StmtResultToLeanCompilationPhase::LeanSourceConstruction
     );
-    assert!(incomplete.lean_code.contains("Litex-to-Lean incomplete"));
+    assert!(incomplete
+        .lean_code
+        .contains("StmtResult-to-Lean compilation incomplete"));
     assert!(!incomplete.lean_code.contains("theorem __fact0"));
     assert!(!incomplete.lean_code.contains("axiom "));
 }
@@ -626,7 +628,7 @@ fn multilayer_application_preserves_each_unary_source_contract() {
     assert!(!same_layer.contains("Litex.Object"));
     assert!(!same_layer.contains("sorry"));
 
-    const SAME_LAYER_DOMAIN: &str = "forall f fn(x, y R: x > 0, y > 0) R:\n    forall a, b R:\n        a > 0\n        b > 0\n        =>:\n            f(a, b) = f(a, b)\n";
+    const SAME_LAYER_DOMAIN: &str = "forall f fn(x, y R: x > 0, y > 0) R, a, b R:\n    a > 0\n    b > 0\n    =>:\n        f(a, b) = f(a, b)\n";
     let same_layer_domain =
         compile_on_verifier_stack(SAME_LAYER_DOMAIN, "23_MultilayerApplication.lit")
             .expect("compile same-layer ordered domain clauses");
@@ -768,12 +770,18 @@ fn cases_and_contradiction_replay_branch_local_fact_ids() {
 }
 
 #[test]
-fn structured_and_nested_case_scopes_match_legacy_coverage() {
+fn structured_and_nested_case_scopes_compile_recursive_result_fields() {
     const STRUCTURED: &str = "by cases:\n    ? 2 = 2\n    case 1 = 1 and 2 = 2:\n        1 = 1\nby contra:\n    ? not 2 < 1\n    impossible 2 < 1\n";
     let structured = compile_on_verifier_stack(STRUCTURED, "9_CasesAndContradiction.lit")
         .expect("compile conjunction assumptions and a negative contradiction goal");
-    assert!(structured.contains("have __case1_step1"), "{structured}");
-    assert!(structured.contains("have __case1_step2"), "{structured}");
+    assert!(
+        structured.contains("have __case1_component1"),
+        "{structured}"
+    );
+    assert!(
+        structured.contains("have __case1_component2"),
+        "{structured}"
+    );
     assert!(
         structured.contains("Classical.byContradiction"),
         "{structured}"
@@ -794,7 +802,7 @@ fn structured_and_nested_case_scopes_match_legacy_coverage() {
         "reused_by_contra_goal.lit",
     )
     .expect("compile an explicit proof whose already-known goal receives no new FactId");
-    assert_eq!(reused.matches("theorem __fact").count(), 2, "{reused}");
+    assert_eq!(reused.matches("theorem __fact").count(), 1, "{reused}");
 }
 
 #[test]
@@ -810,6 +818,51 @@ fn existential_intro_and_elim_use_native_carrier_and_exact_projections() {
     assert!(!generated.contains("Litex.Object"));
     assert!(!generated.contains("LitexObject"));
     assert!(!generated.contains("sorry"));
+}
+
+#[test]
+fn existential_elimination_statement_adapters_share_recursive_result_compilation() {
+    let generated_from_object_definition = compile_on_verifier_stack(
+        "witness exist x R st {x = 1} from 1:\n    1 = 1\nhave selected R:\n    selected = 1\nselected = 1\n",
+        "object_by_existential_elimination_adapter.lit",
+    )
+    .expect("compile the direct object-by-existential Result adapter");
+    assert!(
+        generated_from_object_definition.contains("noncomputable def selected"),
+        "{generated_from_object_definition}"
+    );
+    assert!(generated_from_object_definition.contains("Classical.choose_spec"));
+    assert!(!generated_from_object_definition.contains("sorry"));
+
+    let generated_from_predicate = compile_on_verifier_stack(
+        "prop has_copy(a R):\n    exist x R st {x = a}\nwitness exist x R st {x = 2} from 2:\n    2 = 2\nby def $has_copy(2)\nobtain copy from $has_copy(2)\ncopy = 2\n",
+        "predicate_backed_existential_elimination_adapter.lit",
+    )
+    .expect("compile the direct predicate-backed obtain Result adapter");
+    assert!(
+        generated_from_predicate.contains("noncomputable def copy"),
+        "{generated_from_predicate}"
+    );
+    assert!(generated_from_predicate.contains("unfold has_copy at __definition"));
+    assert!(generated_from_predicate.contains("Classical.choose_spec"));
+    assert!(!generated_from_predicate.contains("Litex.Object"));
+    assert!(!generated_from_predicate.contains("LitexObject"));
+    assert!(!generated_from_predicate.contains("sorry"));
+
+    let generated_from_theorem = compile_on_verifier_stack(
+        "thm self_exists:\n    ? forall a R:\n        exist x R st {x = a}\n    witness exist x R st {x = a} from a:\n        a = a\nobtain theorem_copy from thm self_exists(3)\n",
+        "theorem_backed_existential_elimination_adapter.lit",
+    )
+    .expect("compile the direct theorem-backed obtain Result adapter");
+    assert!(
+        generated_from_theorem.contains("noncomputable def theorem_copy"),
+        "{generated_from_theorem}"
+    );
+    assert!(generated_from_theorem.contains("self_exists (3 : ℂ)"));
+    assert!(generated_from_theorem.contains("Classical.choose_spec"));
+    assert!(!generated_from_theorem.contains("Litex.Object"));
+    assert!(!generated_from_theorem.contains("LitexObject"));
+    assert!(!generated_from_theorem.contains("sorry"));
 }
 
 #[test]
@@ -1136,6 +1189,69 @@ fn multi_parameter_named_function_uses_the_same_telescope_contract() {
     assert!(generated.contains("Litex.fnTelescopeApplyOwn first"));
     assert!(generated.contains("ULift.up"));
     assert!(!generated.contains("Litex.Object"));
+    assert!(!generated.contains("sorry"));
+}
+
+#[test]
+fn indexed_tuple_definition_uses_the_recursive_result_environment() {
+    const SOURCE: &str = include_str!("../../lean/examples/29_IndexedTupleCompilerEnvironment.lit");
+    let generated = compile_on_verifier_stack(SOURCE, "29_IndexedTupleCompilerEnvironment.lit")
+        .expect("compile indexed tuple from its recursive statement Result");
+    assert!(generated.contains("noncomputable def coordinates : Litex.IndexedTuple 3 ℂ"));
+    assert!(generated.contains("fun __index"));
+    assert!(generated.contains("Litex.IsTuple coordinates"));
+    assert!(generated.contains("Litex.tupleDim coordinates"));
+    assert!(generated.contains("Litex.indexedTupleAt coordinates"));
+    assert!(!generated.contains("LitexToLeanHaveTupleStmtIr"));
+    assert!(!generated.contains("axiom "));
+    assert!(!generated.contains("sorry"));
+}
+
+#[test]
+fn indexed_sequence_definition_uses_the_recursive_result_environment() {
+    const SOURCE: &str =
+        include_str!("../../lean/examples/30_IndexedSequenceCompilerEnvironment.lit");
+    let generated = compile_on_verifier_stack(SOURCE, "30_IndexedSequenceCompilerEnvironment.lit")
+        .expect("compile indexed sequence from its recursive statement Result");
+    assert!(generated.contains("noncomputable def shifted_sequence : Litex.Fn Litex.NPos Litex.R"));
+    assert!(generated.contains("Litex.sequenceSet Litex.R"));
+    assert!(generated.contains("Litex.fnSet Litex.NPos Litex.R"));
+    assert!(generated.contains("Litex.In.rep __arg __arg_in"));
+    assert!(generated.contains("Litex.fnApplyOwn shifted_sequence"));
+    assert!(!generated.contains("LitexToLeanHaveSeqStmtIr"));
+    assert!(!generated.contains("axiom "));
+    assert!(!generated.contains("sorry"));
+}
+
+#[test]
+fn finite_sequence_definition_uses_the_recursive_result_environment() {
+    const SOURCE: &str =
+        include_str!("../../lean/examples/31_FiniteSequenceCompilerEnvironment.lit");
+    let generated = compile_on_verifier_stack(SOURCE, "31_FiniteSequenceCompilerEnvironment.lit")
+        .expect("compile finite sequence from its recursive statement Result");
+    assert!(generated.contains("noncomputable def bounded_sequence : Litex.FnTelescope.Carrier"));
+    assert!(generated.contains("Litex.finiteSequenceSet.{0} Litex.R (3 : Nat)"));
+    assert!(generated.contains("Litex.FnTelescope.requirement"));
+    assert!(generated.contains("fun __arg_domain => ULift.up"));
+    assert!(generated.contains("Litex.fnTelescopeApplyOwn bounded_sequence"));
+    assert!(!generated.contains("LitexToLeanHaveFiniteSeqStmtIr"));
+    assert!(!generated.contains("axiom "));
+    assert!(!generated.contains("sorry"));
+}
+
+#[test]
+fn matrix_definition_uses_the_recursive_result_environment() {
+    const SOURCE: &str = include_str!("../../lean/examples/32_MatrixCompilerEnvironment.lit");
+    let generated = compile_on_verifier_stack(SOURCE, "32_MatrixCompilerEnvironment.lit")
+        .expect("compile matrix from its recursive statement Result");
+    assert!(generated.contains("noncomputable def entry_matrix : Litex.FnTelescope.Carrier"));
+    assert!(generated.contains("Litex.matrixSet.{0} Litex.R (2 : Nat) (3 : Nat)"));
+    assert!(generated.contains("Litex.positiveNaturalParameterLessEqualNaturalBound __arg1"));
+    assert!(generated.contains("Litex.positiveNaturalParameterLessEqualNaturalBound __arg2"));
+    assert!(generated.contains("fun __arg_domain => ULift.up"));
+    assert!(generated.contains("Litex.fnTelescopeApplyOwn (@entry_matrix)"));
+    assert!(!generated.contains("LitexToLeanHaveMatrixStmtIr"));
+    assert!(!generated.contains("axiom "));
     assert!(!generated.contains("sorry"));
 }
 

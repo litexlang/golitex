@@ -3,6 +3,9 @@
 # Litex source:
 # Canonical module: scripts/Analysis2/textbook
 #
+# Current runnable layer: this introduction only. All mathematical chapters
+# are preserved in the source workspace's todo_textbook_chapters/.
+#
 # This project is an ongoing Litex formalization inspired by Terence Tao's
 # Analysis II. It follows the book's development from metric spaces and
 # continuity through Fourier analysis, multivariable calculus, measure, and

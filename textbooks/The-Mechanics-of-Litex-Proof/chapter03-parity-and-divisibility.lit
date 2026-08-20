@@ -705,8 +705,7 @@ sketch:
         obtain y from exist y Z st {b - c = n * y}
         witness $mod_eq(a, c, n) from x + y:
             a - c = (a - b) + (b - c) = n * x + n * y = n * (x + y)
-        by def:
-            ? $mod_eq_trans(a, b, c, n)
+        by def $mod_eq_trans(a, b, c, n)
 
     claim:
         ? forall a, b, n Z:

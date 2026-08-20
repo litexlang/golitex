@@ -29,7 +29,7 @@
     },
     {
       "id": "same_layer_domain",
-      "source": "forall f fn(x, y R: x > 0, y > 0) R:\n    forall a, b R:\n        a > 0\n        b > 0\n        =>:\n            f(a, b) = f(a, b)",
+      "source": "forall f fn(x, y R: x > 0, y > 0) R, a, b R:\n    a > 0\n    b > 0\n    =>:\n        f(a, b) = f(a, b)",
       "evidence": "persistent -session -before block event ok=true",
       "lesson": "Domain requirements follow the complete parameter telescope and preserve their checked order."
     },

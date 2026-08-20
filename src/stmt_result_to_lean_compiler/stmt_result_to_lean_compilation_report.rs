@@ -40,12 +40,12 @@ impl StmtResultToLeanCompilationReport {
         let compact_reason = reason.replace(['\n', '\r'], " ");
         Self {
             lean_code: format!(
-                "-- Litex-to-Lean incomplete for {source_label}. DO NOT USE AS A PROOF ARTIFACT.\nimport Litex\n\n-- Lean emission: {compact_reason}\n"
+                "-- StmtResult-to-Lean compilation incomplete for {source_label}. DO NOT USE AS A PROOF ARTIFACT.\nimport Litex\n\n-- Lean source construction: {compact_reason}\n"
             ),
             status: StmtResultToLeanCompilationStatus::Incomplete,
             unsupported: vec![UnsupportedStmtResultToLeanCompilationItem {
                 statement_index: 1,
-                statement: "native-carrier IR emission".into(),
+                statement: "Lean source construction from StmtResult".into(),
                 line: 0,
                 source_path: source_label.into(),
                 phase: StmtResultToLeanCompilationPhase::LeanSourceConstruction,

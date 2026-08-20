@@ -190,6 +190,50 @@ counters before propagating an error. Therefore a rejected inner Result cannot
 leave half of a Lean scope in compiler state. The compiler does not publish
 partial output when construction fails.
 
+Finite-sequence definitions show why this stack belongs to the compiler rather
+than in another proof IR. A `SuccessHaveFiniteSeqStmtResult` has two checked
+bound children at statement scope. Its verification child then owns one local
+parameter store, one local domain-premise store, and one recursive return check:
+
+```text
+SuccessHaveFiniteSeqStmtResult
+  verification
+    bound_checks
+      bound in N+
+      bound = finite_sequence_length
+    well_definedness
+      surface_set
+      anonymous_function
+      function_set
+    assumption_infers
+      store index in N+       -> local FactId F_parameter
+      store index <= bound    -> local FactId F_domain
+    return_check
+      body in return_set
+  common.infers
+    store named value in finite_seq(...) -> persistent FactId F_surface
+    infer named value in fn(...)         -> persistent FactId F_function
+    store named value = anonymous fn     -> persistent FactId F_definition
+```
+
+`compile_have_finite_sequence_stmt_result_to_lean_source` first consumes the
+two outer checks, then pushes an inherited compiler environment. It binds the
+index name, maps `F_parameter` to the Lean membership argument, maps `F_domain`
+to the Lean domain argument, and recursively consumes `return_check`. It pops
+that environment before registering the three persistent FactIds. Thus the
+nesting is expressed once by Result fields and executed once by the compiler
+stack; neither `run_in_local_env` nor a separate scoped-fact IR needs to be
+reconstructed.
+
+The matrix path applies exactly the same rule with larger named collections:
+four `bound_checks` belong to statement verification; two parameter stores,
+two domain stores, and `return_check` belong to one child environment. The
+compiler does not invent nested row/column scope records. It enters the one
+Result-owned function layer, installs all four local FactIds in source order,
+compiles the body, and pops once. This is the intended scaling law: Result
+field nesting determines scope depth, while ordered sibling vectors determine
+work inside one scope.
+
 For example, `have chosen R` is compiled by reading its nested Result directly:
 
 ```text
@@ -217,6 +261,118 @@ FactIds in that order. It does not first copy the statement into a mirrored
 `LitexToLeanStatementIr::HaveObjEqualStmt` node. Checked set aliases use the
 same parent Result to install their names in a child compiler environment, so
 leaving a `sketch` removes those bindings automatically.
+
+A reviewed native-real function definition now follows the same rule all the
+way through. For `have fn reciprocal(x R: x != 0) R = 1 / x`, the compiler
+reads this ownership tree:
+
+```text
+SuccessHaveFnEqualStmtResult
+  verification: SuccessVerifyFunctionDefinitionResult
+    assumption_infers
+      store x $in R, temporary FactId F_parameter
+      store x != 0, temporary FactId F_domain
+    return_check
+      Fact: 1 / x $in R
+        BuiltinRuleEvidence::RealArithmeticMembershipClosure(Div)
+          subgoal
+            Fact: 1 $in R and x $in R
+  common.infers
+    store reciprocal $in fn(...), persistent FactId F_membership
+    store reciprocal = fn(...), persistent FactId F_definition
+```
+
+`compile_have_fn_equal_stmt_result_to_lean_source` pushes an inherited
+compiler environment for `verification`, binds `x` to the generated Lean
+argument name, binds `F_parameter` and `F_domain` to the corresponding local
+hypotheses, and consumes the recursive `return_check`. It then pops that
+environment before emitting and registering the two persistent outer facts.
+Consequently the temporary binder facts cannot escape, while later function
+applications cite `F_membership` and `F_definition` exactly. Unary functions,
+domain-constrained functions, and multi-parameter real telescopes use this
+direct path. A non-real return carrier still uses the explicit compatibility
+return-selection adapter until that Result family is migrated.
+
+The compiler keeps `LitexToLeanFunctionTypeIr` and `LitexToLeanObjectIr` here
+because they describe target-representation choices. It does not construct a
+duplicate `LitexToLeanHaveFnEqualStmtIr` on this path. The short-lived
+`CompiledNamedRealFunctionDefinitionBody` contains only the Lean construction
+output that the parent Result method needs to emit its declarations; it is not
+a second semantic statement tree.
+
+Cross-statement reuse can make the child proof richer than a fresh isolated
+run. In the complete named-function tracer, the later proof of `1 $in R` may
+cite the earlier WD store `id(1) $in R` and retain the equality edge
+`id(1) = 1`. Before compiling the enclosing equality, the compiler therefore
+walks the atomic fact's recursive object-WD Result and installs its exact
+intrinsic-result store FactIds. A later citation then reads its ordered
+`EqualityTransportEvidence.steps`; each step must carry the exact equality
+FactId and orientation, and is emitted through `Litex.In.congr`. No
+proposition lookup or equality search is performed. This is a concrete reason
+that WD stores and proof transforms must travel upward inside Result rather
+than live only in a `Runtime` side table.
+
+An indexed tuple makes the same ownership rule visible for an object-WD child
+rather than a fact-proof child. `SuccessHaveTupleStmtResult.verification` is a
+`SuccessVerifyTupleOrCartDefinitionResult`: it owns the recursive
+`value_well_definedness` returned while the source index is locally bound, and
+a named `dimension` result owning the positive and at-least-two fact Results.
+The compiler validates both ambient dimension proofs, pushes an inherited
+environment for the source index, validates and renders the coordinate value
+from its recursive WD Result, then pops that environment. Only afterward does
+it publish the exact ordered `IsTuple`, dimension, and coordinate-forall
+FactIds. No `LitexToLeanHaveTupleStmtIr` is constructed on this path. The
+persistent pair is
+[`29_IndexedTupleCompilerEnvironment.lit`](../../lean/examples/29_IndexedTupleCompilerEnvironment.lit)
+and its generated Lean file.
+
+An indexed sequence extends the same rule from one local object check to a
+whole local function-verification layer. `SuccessHaveSeqStmtResult` owns a
+`SuccessVerifyIndexedFunctionDefinitionResult`. Its `well_definedness` field
+is a `SuccessVerifyIndexedFunctionDefinitionWellDefinedResult` with three
+named recursive children: `surface_set`, `anonymous_function`, and
+`function_set`. Its `assumption_infers` field retains the local
+`index $in N+` Store and exact `FactId`; `return_check` retains the proof that
+the source body belongs to the result set.
+
+`compile_have_sequence_stmt_result_to_lean_source` therefore performs this
+composition directly:
+
+```text
+SuccessHaveSeqStmtResult
+  -> validate surface_set / anonymous_function / function_set WD Results
+  -> push inherited StmtResultToLeanCompilerEnvironment
+       install index SymbolId -> __arg
+       install local index-membership FactId -> __arg_in
+       consume recursive return_check
+       compile the real-valued function body
+     pop local environment
+  -> publish surface-membership FactId
+  -> publish inferred function-membership FactId
+  -> publish defining-equality FactId
+```
+
+The local index and its temporary FactIds cannot be observed after the pop.
+The callable contract deliberately keeps the surface membership FactId chosen
+by Runtime; the separate inferred function-membership FactId is also
+published, but is not substituted for the verifier-selected identity. Lean's
+`sequenceSet values` is definitionally `fnSet NPos values`, so both facts
+refer to the same exact function carrier without a universal object box. The
+persistent pair is
+[`30_IndexedSequenceCompilerEnvironment.lit`](../../lean/examples/30_IndexedSequenceCompilerEnvironment.lit)
+and its generated Lean file. Its following function application checks that
+the parent compiler environment retained only the three intended outer facts.
+
+Concrete `by def` is also a direct `Combine`.
+`SuccessVerifyByDefinitionResult` retains the selected `DefPropStmt`, ordered
+argument-check Results, instantiated clause facts, and ordered clause-check
+Results. `CompiledByDefinitionProofBody` keeps the target proof separate from
+the component proofs. The target is emitted by unfolding the active predicate
+and combining those exact children. The outer store effect then determines
+which component facts became environment-visible: every new inferred FactId
+must match a recursive child Result with the same retained FactId, while an
+already-visible FactId is reused without a duplicate declaration. Builtin
+definition families remain on the explicit compatibility route.
 
 An ordinary `claim` or `example` now uses the environment stack for its proof
 body directly. `SuccessVerifyClaimFactResult.proof_steps` are compiled in
@@ -260,14 +416,71 @@ the existing one-witness, one-body-fact boundary; multiple witnesses,
 `exist!`, and `not exist` still fail closed or use an explicitly identified
 compatibility route.
 
-The matching `obtain y from exist ...` elimination reads the recursively
-retained source fact Result and resolves its exact `FactId`. It validates the
-source existential binder in a temporary compiler environment, then discards
-that template-only environment. The environment visible to following Results
-contains only the selected Lean object `y` and the two exact projection
-FactIds: the witness-type fact and the instantiated body fact. Their Lean
-proofs are the corresponding projections of `Classical.choose_spec`; no
-proposition-string search and no live `Runtime` lookup is involved.
+The matching existential-elimination family shares one direct `Combine`.
+Four statement adapters cover explicit `obtain y from exist ...`, an object
+definition with a fact body such as `have y R: ...`,
+`obtain y from $concrete_predicate(...)`, and `obtain y from thm ...`. Each
+adapter validates only how its statement formed the common
+`SuccessVerifyExistentialEliminationResult`; one shared compiler method then
+reads the recursively retained source proof, introduces the selected object,
+and publishes the two projection effects.
+
+For a concrete predicate source, the nested fact Result contains
+`BuiltinRuleEvidence::DefinitionProjection` and its exact predicate-proof
+child. The compiler verifies the retained `DefPropStmt` against the active
+predicate binding, unfolds that child proof, and selects the matching
+existential clause. It does not ask `Runtime` to instantiate the definition
+again. For all three adapters the source is resolved by exact `FactId`, the
+source existential binder is validated in a temporary compiler environment,
+and only the selected Lean object plus the witness-type/body projection
+FactIds remain visible afterward. Alpha-renamed existential binders attached
+to the same `FactId` are checked structurally rather than compared as display
+strings. The projection proofs come from `Classical.choose_spec`; no
+proposition-string fact lookup or live `Runtime` lookup is involved.
+
+The theorem-backed adapter demonstrates proof construction versus
+publication more explicitly. A named
+`CompiledLitexTheoremInstantiationConclusionProofBody` is constructed from
+the nested `SuccessByThmStmtResult`. A top-level `by thm` requires and
+publishes each conclusion's retained FactId. Inside `obtain from thm`, the
+temporary conclusion may intentionally have no publishable FactId after its
+execution-local environment is popped; the parent consumes its exact proof
+body and publishes only the witness projections. No compiler environment
+binding escapes merely because the nested Result was compiled.
+
+`by cases` and `by contra` use the same environment discipline directly.
+`SuccessVerifyByCasesResult` combines its coverage child, ordered branches,
+branch assumption FactIds, structural assumption-component FactIds, local
+proof-step Results, and either conclusion or contradiction exits. Each branch
+runs in a separate inherited compiler environment. `SuccessVerifyByContraResult`
+installs its exact reverse-assumption FactId in another inherited environment,
+compiles its ordered local steps, and combines the two complementary factual
+children in `SuccessVerifyContradictionResult`. Neither direct route first
+constructs `LitexToLeanCaseBranchIr` or `LitexToLeanReverseAssumptionIr`.
+
+Proof construction and publication are separate operations. A
+`CompiledFactProofBody` contains the proposition and its Lean proof but does
+not invent a FactId. If the statement Result contains a matching store output,
+the compiler publishes the proof under that exact FactId. If execution
+returned no store output because the fact was already known, the compiler
+requires the same fact to be visible in the current environment and emits no
+duplicate top-level theorem. A branch conclusion may itself retain local
+store/infer children; those children are validated as part of that recursive
+fact check and disappear when the branch environment is popped.
+
+Function applications additionally need the verifier-selected WD object-use
+context while their Lean term is rendered. During this migration the compiler
+projects only the relevant recursive WD Result into a temporary rendering
+certificate. It does not construct a mirrored statement or fact-proof IR, and
+the previous compiler WD context is restored immediately after rendering.
+
+One local source statement may establish several facts. Therefore the local
+composition function returns ordered Lean proof lines rather than pretending
+that every proof step has one output. A reused branch-component FactId is an
+alias in the current compiler environment, while a newly stored proof-step
+FactId is installed from its own store Result. This distinction is determined
+by the recursive Result effects together with the facts already visible in the
+current compiler environment; it never allocates a replacement FactId.
 
 The compiler dispatcher does not create a node. It only selects one of these
 composition actions:

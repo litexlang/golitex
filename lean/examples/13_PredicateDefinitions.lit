@@ -1,6 +1,12 @@
-# Concrete predicates keep their parameter-membership requirements together
-# with their defining clauses. Both direct use and `by def` replay the exact
-# verifier-selected definition components.
+# Tracer: recursive concrete-predicate definition reduction
+#
+# Before: `by def` converted `SuccessVerifyByDefinitionResult` into a mirrored
+# `LitexToLeanByDefStmtIr` before Lean proof construction.
+#
+# Now: StmtResultToLeanCompiler reads the parameter checks, instantiated clause
+# facts, clause-check Results, target store, and inferred FactIds directly. It
+# folds the ordered child proofs into the predicate target, then publishes each
+# newly inferred component under the exact FactId retained by execution.
 prop is_unit_pair(x R, y R):
     x = 1
     y = 1

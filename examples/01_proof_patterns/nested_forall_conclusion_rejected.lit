@@ -1,0 +1,25 @@
+# Tracer: forall conclusions require one flat parameter header.
+#
+# Before (the removed preview syntax was accepted and normalized):
+# forall x R:
+#     x > 0
+#     =>:
+#         forall y R:
+#             y > 0
+#             =>:
+#                 x + y > 0
+# Former behavior: the parser rewrote this as one forall over x and y.
+#
+# Now (verified):
+forall x, y R:
+    x > 0
+    y > 0
+    =>:
+        x + y > 0
+# Current behavior: every quantified parameter is declared in one forall header.
+#
+# Boundary: the commented nested form is rejected by the executable parser regression
+# block_forall_then_rejects_nested_forall in src/parse/parse_fact.rs.
+# Evidence: this flat tracer verifies, and the named parser regression rejects the
+# corresponding nested spelling.
+# Implementation: src/parse/parse_fact.rs and src/fact/forall_fact.rs

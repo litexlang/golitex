@@ -408,13 +408,13 @@ pub struct SuccessHaveFnByForallExistUniqueStmtResult {
 pub struct SuccessHaveTupleStmtResult {
     pub statement: HaveTupleStmt,
     pub common: SuccessStmtCommonResult,
-    pub verification: Option<SuccessVerifyTupleOrCartDimensionResult>,
+    pub verification: Option<SuccessVerifyTupleOrCartDefinitionResult>,
 }
 
 pub struct SuccessHaveCartStmtResult {
     pub statement: HaveCartStmt,
     pub common: SuccessStmtCommonResult,
-    pub verification: Option<SuccessVerifyTupleOrCartDimensionResult>,
+    pub verification: Option<SuccessVerifyTupleOrCartDefinitionResult>,
 }
 
 pub struct SuccessHaveSeqStmtResult {
@@ -2134,34 +2134,34 @@ impl SuccessDefObjStmtResult {
 }
 
 fn visit_tuple_or_cart_children(
-    verification: Option<&SuccessVerifyTupleOrCartDimensionResult>,
+    verification: Option<&SuccessVerifyTupleOrCartDefinitionResult>,
     visitor: &mut impl FnMut(&StmtResult),
 ) {
     if let Some(verification) = verification {
-        visitor(&verification.positive_check);
-        visitor(&verification.at_least_two_check);
+        visitor(&verification.dimension.positive_check);
+        visitor(&verification.dimension.at_least_two_check);
     }
 }
 
 fn try_visit_tuple_or_cart_children_mut<E>(
-    verification: Option<&mut SuccessVerifyTupleOrCartDimensionResult>,
+    verification: Option<&mut SuccessVerifyTupleOrCartDefinitionResult>,
     visitor: &mut impl FnMut(&mut StmtResult) -> Result<(), E>,
 ) -> Result<(), E> {
     if let Some(verification) = verification {
-        visitor(&mut verification.positive_check)?;
-        visitor(&mut verification.at_least_two_check)?;
+        visitor(&mut verification.dimension.positive_check)?;
+        visitor(&mut verification.dimension.at_least_two_check)?;
     }
     Ok(())
 }
 
 fn into_tuple_or_cart_children(
     _common: SuccessStmtCommonResult,
-    verification: Option<SuccessVerifyTupleOrCartDimensionResult>,
+    verification: Option<SuccessVerifyTupleOrCartDefinitionResult>,
 ) -> Vec<StmtResult> {
     let mut children = Vec::new();
     if let Some(verification) = verification {
-        children.push(*verification.positive_check);
-        children.push(*verification.at_least_two_check);
+        children.push(*verification.dimension.positive_check);
+        children.push(*verification.dimension.at_least_two_check);
     }
     children
 }

@@ -202,8 +202,7 @@ thm positive_index_divides_factorial:
                         j = 0
                         j != 0
                         impossible j != 0
-                by def:
-                    ? $_all_positive_indices_divide_factorial(k)
+                by def $_all_positive_indices_divide_factorial(k)
                 $_all_positive_indices_divide_factorial(k)
             ? induc:
                 $_all_positive_indices_divide_factorial(k)
@@ -228,8 +227,7 @@ thm positive_index_divides_factorial:
                                 ? exist q1 Z st {factorial(k + 1) = j * q1}
                                 witness exist q1 Z st {factorial(k + 1) = j * q1} from (k + 1) * q:
                                     factorial(k + 1) = j * ((k + 1) * q)
-                            by def:
-                                ? $MILAlternative::chap2_struct::divides(j, factorial(k + 1))
+                            by def $MILAlternative::chap2_struct::divides(j, factorial(k + 1))
                             $MILAlternative::chap2_struct::divides(j, factorial(k + 1))
                         case j > k:
                             j >= k + 1
@@ -240,11 +238,9 @@ thm positive_index_divides_factorial:
                                 ? exist q1 Z st {factorial(k + 1) = j * q1}
                                 witness exist q1 Z st {factorial(k + 1) = j * q1} from factorial(k):
                                     factorial(k + 1) = j * factorial(k)
-                            by def:
-                                ? $MILAlternative::chap2_struct::divides(j, factorial(k + 1))
+                            by def $MILAlternative::chap2_struct::divides(j, factorial(k + 1))
                             $MILAlternative::chap2_struct::divides(j, factorial(k + 1))
-                by def:
-                    ? $_all_positive_indices_divide_factorial(k + 1)
+                by def $_all_positive_indices_divide_factorial(k + 1)
                 $_all_positive_indices_divide_factorial(k + 1)
     $_all_positive_indices_divide_factorial(n)
 
@@ -453,8 +449,7 @@ thm exists_prime_factor:
     by strong_induc n from 2:
         ? exist p N+ st {$prime(p), $MILAlternative::chap2_struct::divides(p, n)}
         ? from n = 2:
-            by def:
-                ? $prime(2)
+            by def $prime(2)
             witness $MILAlternative::chap2_struct::divides(2, 2) from 1:
                 2 = 2 * 1
             witness exist p N+ st {$prime(p), $MILAlternative::chap2_struct::divides(p, 2)} from 2
@@ -478,13 +473,11 @@ thm exists_prime_factor:
                             ? exist d range(2, n + 1) st {(n + 1) % d = 0}
                             forall d range(2, n + 1):
                                 (n + 1) % d != 0
-                            by def:
-                                ? $prime(n + 1)
+                            by def $prime(n + 1)
                             impossible not $prime(n + 1)
                     obtain d from exist d range(2, n + 1) st {(n + 1) % d = 0}
                     obtain k from exist k Z st {n + 1 = d * k}
-                    by def:
-                        ? $MILAlternative::chap2_struct::divides(d, n + 1)
+                    by def $MILAlternative::chap2_struct::divides(d, n + 1)
                     d <= (n + 1) - 1 = n
                     obtain p from exist p N+ st {$prime(p), $MILAlternative::chap2_struct::divides(p, d)}
                     obtain a from exist a Z st {d = p * a}
@@ -684,8 +677,7 @@ thm fib_eq:
             ? from k = 0:
                 fibonacci(0) = 0 = binet(0)
                 fibonacci(0 + 1) = fibonacci(1) = 1 = binet(1) = binet(0 + 1)
-                by def:
-                    ? $_fibonacci_binet_pair(0)
+                by def $_fibonacci_binet_pair(0)
                 $_fibonacci_binet_pair(0)
                 $_fibonacci_binet_pair(k)
             ? induc:
@@ -696,8 +688,7 @@ thm fib_eq:
                 fibonacci(k + 2) = fibonacci(k) + fibonacci(k + 1) = binet(k) + binet(k + 1) = binet(k + 2)
                 fibonacci((k + 1) + 1) = fibonacci(k + 2) = binet(k + 2) = binet((k + 1) + 1)
                 fibonacci(k + 1) = binet(k + 1)
-                by def:
-                    ? $_fibonacci_binet_pair(k + 1)
+                by def $_fibonacci_binet_pair(k + 1)
                 $_fibonacci_binet_pair(k + 1)
     $_fibonacci_binet_pair(n)
     fibonacci(n) = binet(n) = (phi^n - phi_conjugate^n) / sqrt(5)
@@ -760,8 +751,7 @@ thm fib_coprime_fib_succ:
             by thm MILAlternative::chap2_struct::gcd_euclidean_base(1)
             gcd(1, 0) = abs(1) = 1
             gcd(fibonacci(n), fibonacci(n + 1)) = gcd(0, 1) = 1
-            by def:
-                ? $coprime(fibonacci(n), fibonacci(n + 1))
+            by def $coprime(fibonacci(n), fibonacci(n + 1))
         ? induc:
             $coprime(fibonacci(n), fibonacci(n + 1))
             by thm _fibonacci_successor_positive(n)
@@ -779,8 +769,7 @@ thm fib_coprime_fib_succ:
             gcd(fibonacci(n + 1), fibonacci(n)) = gcd(fibonacci(n + 1), fibonacci(n + 1) + fibonacci(n))
             gcd(fibonacci(n + 1), fibonacci((n + 1) + 1)) = gcd(fibonacci(n + 1), fibonacci(n + 1) + fibonacci(n)) = 1
             fibonacci(n + 1) != 0 or fibonacci((n + 1) + 1) != 0
-            by def:
-                ? $coprime(fibonacci(n + 1), fibonacci((n + 1) + 1))
+            by def $coprime(fibonacci(n + 1), fibonacci((n + 1) + 1))
 
 # Source definition: fib'. This tail-recursive state machine is a callable
 # construction, not merely a second proof script.
@@ -820,8 +809,7 @@ thm fibonacci_fast_aux_eq:
                     ? forall j N:
                         fibonacci_fast_aux(k, fibonacci(j), fibonacci(j + 1)) = fibonacci(k + j)
                     fibonacci_fast_aux(k, fibonacci(j), fibonacci(j + 1)) = fibonacci(j) = fibonacci(k + j)
-                by def:
-                    ? $_fibonacci_fast_invariant(k)
+                by def $_fibonacci_fast_invariant(k)
                 $_fibonacci_fast_invariant(k)
             ? induc:
                 $_fibonacci_fast_invariant(k)
@@ -839,8 +827,7 @@ thm fibonacci_fast_aux_eq:
                     fibonacci_fast_aux(k + 1, fibonacci(j), fibonacci(j + 1)) = fibonacci_fast_aux(k, fibonacci(j + 1), fibonacci(j) + fibonacci(j + 1))
                     fibonacci_fast_aux(k, fibonacci(j + 1), fibonacci((j + 1) + 1)) = fibonacci(k + (j + 1))
                     fibonacci(k + (j + 1)) = fibonacci((k + 1) + j)
-                by def:
-                    ? $_fibonacci_fast_invariant(k + 1)
+                by def $_fibonacci_fast_invariant(k + 1)
                 $_fibonacci_fast_invariant(k + 1)
     $_fibonacci_fast_invariant(n)
 
@@ -877,8 +864,7 @@ thm fib_add:
                     fibonacci(k + 1) = fibonacci(1) = 1
                     fibonacci(j + k + 1) = fibonacci(j + 1)
                     fibonacci(j) * fibonacci(k) + fibonacci(j + 1) * fibonacci(k + 1) = fibonacci(j) * 0 + fibonacci(j + 1) * 1 = fibonacci(j + 1)
-                by def:
-                    ? $_fibonacci_addition_at(k)
+                by def $_fibonacci_addition_at(k)
                 $_fibonacci_addition_at(k)
             ? induc:
                 $_fibonacci_addition_at(k)
@@ -896,8 +882,7 @@ thm fib_add:
                     fibonacci(j + 1) * fibonacci(k) + fibonacci((j + 1) + 1) * fibonacci(k + 1) = fibonacci(j + 1) * fibonacci(k) + (fibonacci(j) + fibonacci(j + 1)) * fibonacci(k + 1)
                     fibonacci(j + 1) * fibonacci(k) + (fibonacci(j) + fibonacci(j + 1)) * fibonacci(k + 1) = fibonacci(j) * fibonacci(k + 1) + fibonacci(j + 1) * (fibonacci(k) + fibonacci(k + 1))
                     fibonacci(j) * fibonacci(k + 1) + fibonacci(j + 1) * (fibonacci(k) + fibonacci(k + 1)) = fibonacci(j) * fibonacci(k + 1) + fibonacci(j + 1) * fibonacci((k + 1) + 1)
-                by def:
-                    ? $_fibonacci_addition_at(k + 1)
+                by def $_fibonacci_addition_at(k + 1)
                 $_fibonacci_addition_at(k + 1)
     $_fibonacci_addition_at(n)
 

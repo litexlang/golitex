@@ -3,6 +3,9 @@
 # Litex source:
 # Canonical module: scripts/Analysis/textbook
 #
+# Current runnable layer: Introduction, Chapters 1--4, and Appendix A. Later
+# chapters are preserved in the source workspace's todo_textbook_chapters/.
+#
 # This project is an ongoing Litex formalization inspired by Terence Tao's
 # Analysis I. It follows the mathematical development of the book in source
 # order while expressing its definitions, constructions, and theorems through

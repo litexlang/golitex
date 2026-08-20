@@ -1,32 +1,39 @@
 use crate::prelude::*;
+use std::rc::Rc;
 
 impl Runtime {
     pub fn exec_have_tuple_stmt(
         &mut self,
         stmt: &HaveTupleStmt,
     ) -> Result<StmtResult, RuntimeError> {
-        self.exec_have_tuple_stmt_verify_well_definedness(stmt)?;
-        let verification = self.exec_have_tuple_stmt_verify_process(stmt)?;
+        let value_well_definedness = self.exec_have_tuple_stmt_verify_well_definedness(stmt)?;
+        let dimension = self.exec_have_tuple_stmt_verify_process(stmt)?;
         let infer_result = self.exec_have_tuple_stmt_affect_environment(stmt)?;
         Ok(
             SuccessDefObjStmtResult::HaveTupleStmt(Box::new(SuccessHaveTupleStmtResult {
                 statement: stmt.clone(),
                 common: SuccessStmtCommonResult::new(infer_result),
-                verification: Some(verification),
+                verification: Some(SuccessVerifyTupleOrCartDefinitionResult {
+                    value_well_definedness,
+                    dimension,
+                }),
             }))
             .into(),
         )
     }
 
     pub fn exec_have_cart_stmt(&mut self, stmt: &HaveCartStmt) -> Result<StmtResult, RuntimeError> {
-        self.exec_have_cart_stmt_verify_well_definedness(stmt)?;
-        let verification = self.exec_have_cart_stmt_verify_process(stmt)?;
+        let value_well_definedness = self.exec_have_cart_stmt_verify_well_definedness(stmt)?;
+        let dimension = self.exec_have_cart_stmt_verify_process(stmt)?;
         let infer_result = self.exec_have_cart_stmt_affect_environment(stmt)?;
         Ok(
             SuccessDefObjStmtResult::HaveCartStmt(Box::new(SuccessHaveCartStmtResult {
                 statement: stmt.clone(),
                 common: SuccessStmtCommonResult::new(infer_result),
-                verification: Some(verification),
+                verification: Some(SuccessVerifyTupleOrCartDefinitionResult {
+                    value_well_definedness,
+                    dimension,
+                }),
             }))
             .into(),
         )
@@ -38,7 +45,7 @@ impl Runtime {
     fn exec_have_tuple_stmt_verify_well_definedness(
         &mut self,
         stmt: &HaveTupleStmt,
-    ) -> Result<(), RuntimeError> {
+    ) -> Result<Rc<SuccessVerifyObjWellDefinedResult>, RuntimeError> {
         self.verify_tuple_or_cart_name_available(stmt.clone().into(), &stmt.symbol_binding)?;
         self.verify_tuple_or_cart_value_before_defining_name(
             stmt.clone().into(),
@@ -114,7 +121,7 @@ impl Runtime {
     fn exec_have_cart_stmt_verify_well_definedness(
         &mut self,
         stmt: &HaveCartStmt,
-    ) -> Result<(), RuntimeError> {
+    ) -> Result<Rc<SuccessVerifyObjWellDefinedResult>, RuntimeError> {
         self.verify_tuple_or_cart_name_available(stmt.clone().into(), &stmt.symbol_binding)?;
         self.verify_tuple_or_cart_value_before_defining_name(
             stmt.clone().into(),
@@ -249,12 +256,12 @@ impl Runtime {
         index_binding: &SymbolBinding,
         dimension: &Obj,
         value: &Obj,
-    ) -> Result<(), RuntimeError> {
+    ) -> Result<Rc<SuccessVerifyObjWellDefinedResult>, RuntimeError> {
         self.run_in_local_env(|rt| {
             let index_params = tuple_or_cart_index_param_def(index_binding, dimension.clone());
             rt.define_params_with_type(&index_params, true, index_kind)
                 .map_err(|e| short_exec_error(stmt.clone(), String::new(), Some(e), vec![]))?;
-            rt.verify_obj_well_defined_and_store_cache(value, &UseContextVerifyState::new(0, false))
+            rt.verify_obj_well_defined_result(value, &UseContextVerifyState::new(0, false))
                 .map_err(|e| short_exec_error(stmt, String::new(), Some(e), vec![]))
         })
     }

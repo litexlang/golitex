@@ -1,0 +1,4 @@
+# The tuple verifier returns the coordinate value's recursive WD Result from
+# its local index scope. StmtResultToLeanCompiler recreates that scope while
+# compiling the value, pops it, then publishes the three outer tuple facts.
+have tuple coordinates for index <= 3, coordinates[index] = index + 1

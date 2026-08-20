@@ -244,12 +244,14 @@ thm bezout_identity:
                 euclid_bezout_l(u, v) = 1
                 euclid_bezout_r(u, v) = 0
                 abs(u) = u
+                gcd(u, v) = gcd(u, 0) = abs(u)
                 euclid_bezout_l(u, v) * u + euclid_bezout_r(u, v) * v = 1 * u + 0 * v = u = abs(u) = gcd(u, v)
             case u < 0:
                 euclid_bezout_pair(u, v) = (-1, 0)
                 euclid_bezout_l(u, v) = -1
                 euclid_bezout_r(u, v) = 0
                 abs(u) = -u
+                gcd(u, v) = gcd(u, 0) = abs(u)
                 euclid_bezout_l(u, v) * u + euclid_bezout_r(u, v) * v = -1 * u + 0 * v = -u = abs(u) = gcd(u, v)
     $euclid_bezout_identity_at_measure(0)
 

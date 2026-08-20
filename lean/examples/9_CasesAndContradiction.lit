@@ -1,10 +1,13 @@
 # Tracer: verifier-owned case and contradiction scopes
 #
-# Before: `by cases` and `by contra` had structured IR but no native-carrier
-# proof adapter.
+# Before: StmtResultToLeanCompiler converted `SuccessVerifyByCasesResult` and
+# `SuccessVerifyByContraResult` into the legacy mirrored Litex-to-Lean IR
+# before constructing their Lean proof scopes.
 #
-# Now: each case assumption and reverse assumption is installed only in its
-# cloned Lean proof context, and every conclusion replays exact FactId evidence.
+# Now: it reads coverage, branches, proof steps, exits, reverse assumptions,
+# and contradiction checks directly from the recursive Result fields. Each
+# case assumption and reverse assumption is installed only in its inherited
+# compiler environment, and every conclusion replays exact FactId evidence.
 #
 # The same tracer also covers structured conjunction assumptions, a negated
 # order goal introduced by classical double negation, nested case/contra

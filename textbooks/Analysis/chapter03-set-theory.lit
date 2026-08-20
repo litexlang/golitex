@@ -352,8 +352,7 @@ claim:
             x $in B
         =>:
             A $subset B
-    by def:
-        ? A $subset B
+    by def A $subset B
 
 forall A set:
     A $subset A
@@ -364,8 +363,7 @@ claim:
         B $subset set_C
         =>:
             A $subset set_C
-    by def:
-        ? A $subset set_C
+    by def A $subset set_C
 
 claim:
     ? forall A, B set:
@@ -575,8 +573,7 @@ sketch:
     4 $in intersect({1, 2, 4}, {2, 3, 4})
     $is_finite_set(intersect({1, 2, 4}, {2, 3, 4}))
     $is_finite_set({1, 2, 4})
-    by def:
-        ? intersect({1, 2, 4}, {2, 3, 4}) $subset {1, 2, 4}
+    by def intersect({1, 2, 4}, {2, 3, 4}) $subset {1, 2, 4}
     finite_set_size(intersect({1, 2, 4}, {2, 3, 4})) <= finite_set_size({1, 2, 4})
     by extension:
         ? intersect({1, 2, 4}, {2, 3, 4}) = {2, 4}
@@ -645,8 +642,7 @@ forall A, B set, x set:
 
 $is_finite_set(set_minus({1, 2, 3}, {2}))
 $is_finite_set({1, 2, 3})
-by def:
-    ? set_minus({1, 2, 3}, {2}) $subset {1, 2, 3}
+by def set_minus({1, 2, 3}, {2}) $subset {1, 2, 3}
 finite_set_size(set_minus({1, 2, 3}, {2})) <= finite_set_size({1, 2, 3})
 
 forall A, B set:
@@ -886,8 +882,7 @@ sketch:
         ? forall x X_example:
             exist! y Y_example st {$P_example(x, y)}
         witness exist! y Y_example st {$P_example(x, y)} from x:
-            by def:
-                ? $P_example(x, x)
+            by def $P_example(x, x)
             forall y1, y2 Y_example:
                 $P_example(x, y1)
                 $P_example(x, y2)
@@ -1041,8 +1036,7 @@ sketch:
     forall x R:
         poly1(x) = x^2 + 2 * x + 1 = (x + 1)^2 = poly2(x)
 
-    by def:
-        ? $fn_eq(poly1, poly2)
+    by def $fn_eq(poly1, poly2)
 
 """
 Example 3.3.8. The functions x |-> x^2+2x+1 and x |-> (x+1)^2 are equal on
@@ -1062,8 +1056,7 @@ sketch:
     forall x N+:
         abs_on_positive_naturals(x) = abs(x) = x = id_on_positive_naturals(x)
 
-    by def:
-        ? $fn_eq(id_on_positive_naturals, abs_on_positive_naturals)
+    by def $fn_eq(id_on_positive_naturals, abs_on_positive_naturals)
 
     have fn id_R(x R) R = x
     have fn abs_R(x R) R = abs(x)
@@ -1089,8 +1082,7 @@ sketch:
     forall x {}:
         empty_to_N(x) = empty_to_N_alt(x)
 
-    by def:
-        ? $fn_eq(empty_to_N, empty_to_N_alt)
+    by def $fn_eq(empty_to_N, empty_to_N_alt)
 
 
 
@@ -1131,14 +1123,12 @@ sketch:
     claim:
         ? forall X0, Y0, Z0, W0 set, f fn(z Z0) W0, g fn(y Y0) Z0, h fn(x X0) Y0:
             $fn_eq(fn(t X0) W0 {f(g(h(t)))}, fn(t X0) W0 {fn(u Y0) W0 {f(g(u))}(h(t))})
-        by def:
-            ? $fn_eq(fn(t X0) W0 {f(g(h(t)))}, fn(t X0) W0 {fn(u Y0) W0 {f(g(u))}(h(t))})
+        by def $fn_eq(fn(t X0) W0 {f(g(h(t)))}, fn(t X0) W0 {fn(u Y0) W0 {f(g(u))}(h(t))})
 
     claim:
         ? forall X0, Y0, Z0, W0 set, f fn(z Z0) W0, g fn(y Y0) Z0, h fn(x X0) Y0:
             $fn_eq(fn(t X0) W0 {f(g(h(t)))}, fn(t X0) W0 {f(fn(u X0) Z0 {g(h(u))}(t))})
-        by def:
-            ? $fn_eq(fn(t X0) W0 {f(g(h(t)))}, fn(t X0) W0 {f(fn(u X0) Z0 {g(h(u))}(t))})
+        by def $fn_eq(fn(t X0) W0 {f(g(h(t)))}, fn(t X0) W0 {f(fn(u X0) Z0 {g(h(u))}(t))})
 
 """
 Remark 3.3.13. In g o f, the right-hand function f is applied first.
@@ -1190,8 +1180,7 @@ sketch:
         =>:
             x1^2 = square_N(x1) = square_N(x2) = x2^2
             x1 = sqrt(x1^2) = sqrt(x2^2) = x2
-    by def:
-        ? $is_injective_fn(N, Z, square_N)
+    by def $is_injective_fn(N, Z, square_N)
 
 """
 Remark 3.3.16. A non-injective function is two-to-one in the sense that two
@@ -1309,8 +1298,7 @@ sketch:
             finite_bijection(x1) = finite_bijection(x2)
             =>:
                 x1 = x2
-    by def:
-        ? $is_injective_fn({0, 1, 2}, {3, 4, 5}, finite_bijection)
+    by def $is_injective_fn({0, 1, 2}, {3, 4, 5}, finite_bijection)
 
     by cases:
         ? forall y {3, 4, 5}:
@@ -1321,11 +1309,9 @@ sketch:
             witness exist x {0, 1, 2} st {y = finite_bijection(x)} from 1
         case y = 5:
             witness exist x {0, 1, 2} st {y = finite_bijection(x)} from 2
-    by def:
-        ? $is_surjective_fn({0, 1, 2}, {3, 4, 5}, finite_bijection)
+    by def $is_surjective_fn({0, 1, 2}, {3, 4, 5}, finite_bijection)
 
-    by def:
-        ? $is_bijective_fn({0, 1, 2}, {3, 4, 5}, finite_bijection)
+    by def $is_bijective_fn({0, 1, 2}, {3, 4, 5}, finite_bijection)
 
 """
 Example 3.3.22. The successor formula is a bijection N->N+, but the same
@@ -1345,19 +1331,16 @@ sketch:
         succ_bijection(x1) = succ_bijection(x2)
         =>:
             x1 = (x1 + 1) - 1 = succ_bijection(x1) - 1 = succ_bijection(x2) - 1 = (x2 + 1) - 1 = x2
-    by def:
-        ? $is_injective_fn(N, N+, succ_bijection)
+    by def $is_injective_fn(N, N+, succ_bijection)
 
     claim:
         ? forall y N+:
             exist x N st {y = succ_bijection(x)}
         witness exist x N st {y = succ_bijection(x)} from y - 1:
             y = (y - 1) + 1 = succ_bijection(y - 1)
-    by def:
-        ? $is_surjective_fn(N, N+, succ_bijection)
+    by def $is_surjective_fn(N, N+, succ_bijection)
 
-    by def:
-        ? $is_bijective_fn(N, N+, succ_bijection)
+    by def $is_bijective_fn(N, N+, succ_bijection)
 
     have fn succ_to_N(n N) N = n + 1
 
@@ -1494,8 +1477,7 @@ sketch:
                 witness exist x {1, 2, 3} st {y = double_on_three(x)} from 2
             case y = 6:
                 witness exist x {1, 2, 3} st {y = double_on_three(x)} from 3
-    by def:
-        ? $is_forward_image_of({1, 2, 3}, {2, 4, 6}, double_on_three, {1, 2, 3}, {2, 4, 6})
+    by def $is_forward_image_of({1, 2, 3}, {2, 4, 6}, double_on_three, {1, 2, 3}, {2, 4, 6})
 
     witness $has_preimage_in_subset(N, N, {1, 2, 3}, double_nat, double_nat(1)) from 1
     \restricted_image<N, N, double_nat, {1, 2, 3}> = {y N: $has_preimage_in_subset(N, N, {1, 2, 3}, double_nat, y)}
@@ -1544,8 +1526,7 @@ sketch:
                 witness exist z {-1, 0, 1, 2} st {y = square_on_example(z)} from -1
             case y = 4:
                 witness exist z {-1, 0, 1, 2} st {y = square_on_example(z)} from 2
-    by def:
-        ? $is_forward_image_of({-1, 0, 1, 2}, {0, 1, 4}, square_on_example, {-1, 0, 1, 2}, {0, 1, 4})
+    by def $is_forward_image_of({-1, 0, 1, 2}, {0, 1, 4}, square_on_example, {-1, 0, 1, 2}, {0, 1, 4})
 
     claim:
         ? forall y {0, 1, 4}:
@@ -1627,8 +1608,7 @@ sketch:
             case double_nat(x) = 3:
                 x = (2 * x) / 2 = double_nat(x) / 2 = 3 / 2
                 impossible not 3 / 2 $in N
-    by def:
-        ? $is_inverse_image_of(N, N, double_nat, {1, 2, 3}, {1})
+    by def $is_inverse_image_of(N, N, double_nat, {1, 2, 3}, {1})
 
     double_on_one(1) = 2
     {2} != {1, 2, 3}
@@ -1710,8 +1690,7 @@ sketch:
         case z = 2:
             square_Z(z) = 4
             square_Z(z) $in {0, 1, 4}
-    by def:
-        ? $is_inverse_image_of(Z, Z, square_Z, {0, 1, 4}, {-2, -1, 0, 1, 2})
+    by def $is_inverse_image_of(Z, Z, square_Z, {0, 1, 4}, {-2, -1, 0, 1, 2})
 
     -2 $in {-2, -1, 0, 1, 2}
     not -2 $in {-1, 0, 1, 2}
@@ -1741,8 +1720,7 @@ sketch:
             obtain a from exist a A st {f(x) = f(a)}
             a $in S
             x = a
-        by def:
-            ? $is_inverse_image_of(S, T, f, B, A)
+        by def $is_inverse_image_of(S, T, f, B, A)
 
 
 
@@ -1847,13 +1825,8 @@ inside a common universe Y, then the union over i in I contains exactly the
 objects that lie in at least one A_i.
 """
 
-# The family is a function `A fn(i I) power_set(Y)`, and the indexed
-# union is the subset of Y whose members have some index witness.
-prop is_in_indexed_union(I set, Y set, A fn(i_index I) power_set(Y), z Y):
-    exist i_index I st {z $in A(i_index)}
-
-template<I set, Y set, A fn(i_index I) power_set(Y)>:
-    have indexed_union set = {z Y: $is_in_indexed_union(I, Y, A, z)}
+# The native object checks `A fn(i I) power_set(Y)` and packages the witness
+# membership and ambient carrier directly.
 
 # Indexed unions first form the family `{A_i : i in I}` and then take its union.
 # The definition above states the same membership
@@ -1869,27 +1842,16 @@ sketch:
     A(1) = {2, 3}
     2 $in {2, 3}
     2 $in A(1)
-    witness $is_in_indexed_union({1, 2, 3}, N, A, 2) from 1
-    \indexed_union<{1, 2, 3}, N, A> = {z N: $is_in_indexed_union({1, 2, 3}, N, A, z)}
-    by thm set_builder_member(2, {z N: $is_in_indexed_union({1, 2, 3}, N, A, z)})
-    2 $in \indexed_union<{1, 2, 3}, N, A>
+    2 $in index_union({1, 2, 3}, N, A)
 
 """
-Indexed family intersections.  If I is non-empty and each i in I labels a set
+Indexed family intersections.  If I is an index set and each i in I labels a set
 A_i inside a common universe Y, then the intersection over i in I contains
-exactly the objects that lie in every A_i.
+exactly the objects of Y that lie in every A_i.  For empty I it is Y.
 """
-
-# The ambient universe `Y` is explicit, while the index set remains nonempty.
-prop is_in_indexed_intersection(I nonempty_set, Y set, A fn(i_index I) power_set(Y), z Y):
-    forall i_index I:
-        z $in A(i_index)
-
-template<I nonempty_set, Y set, A fn(i_index I) power_set(Y)>:
-    have indexed_intersection set = {z Y: $is_in_indexed_intersection(I, Y, A, z)}
 
 # Using the common ambient set `Y` makes the intersection independent of a
-# chosen base index.
+# chosen base index and fixes the empty-index value.
 sketch:
     have fn A(i_index {1, 2, 3}) power_set(N) by cases:
         case i_index = 1: {2, 3}
@@ -1908,11 +1870,7 @@ sketch:
     by enumerate finite_set:
         ? forall i_index {1, 2, 3}:
             3 $in A(i_index)
-    by def:
-        ? $is_in_indexed_intersection({1, 2, 3}, N, A, 3)
-    \indexed_intersection<{1, 2, 3}, N, A> = {z N: $is_in_indexed_intersection({1, 2, 3}, N, A, z)}
-    by thm set_builder_member(3, {z N: $is_in_indexed_intersection({1, 2, 3}, N, A, z)})
-    3 $in \indexed_intersection<{1, 2, 3}, N, A>
+    3 $in index_intersect({1, 2, 3}, N, A)
 
 """
 Example 3.4.11. The union of {{2,3},{3,4},{4,5}} is {2,3,4,5}.
@@ -2301,8 +2259,7 @@ sketch:
             shift_0_to_3(x2) = x2 + 3
             x1 + 3 = x2 + 3
             x1 = x1 + 3 - 3 = x2 + 3 - 3 = x2
-    by def:
-        ? $is_injective_fn({0, 1, 2}, {3, 4, 5}, shift_0_to_3)
+    by def $is_injective_fn({0, 1, 2}, {3, 4, 5}, shift_0_to_3)
 
     by cases:
         ? forall y {3, 4, 5}:
@@ -2316,11 +2273,9 @@ sketch:
         case y = 5:
             witness exist x {0, 1, 2} st {y = shift_0_to_3(x)} from 2:
                 y = 5 = shift_0_to_3(2)
-    by def:
-        ? $is_surjective_fn({0, 1, 2}, {3, 4, 5}, shift_0_to_3)
+    by def $is_surjective_fn({0, 1, 2}, {3, 4, 5}, shift_0_to_3)
 
-    by def:
-        ? $is_bijective_fn({0, 1, 2}, {3, 4, 5}, shift_0_to_3)
+    by def $is_bijective_fn({0, 1, 2}, {3, 4, 5}, shift_0_to_3)
     witness $has_equal_cardinality({0, 1, 2}, {3, 4, 5}) from shift_0_to_3
 
 """
@@ -2357,8 +2312,7 @@ sketch:
             double_to_even(x2) = 2 * x2
             2 * x1 = 2 * x2
             x1 = (2 * x1) / 2 = (2 * x2) / 2 = x2
-    by def:
-        ? $is_injective_fn(N, even_N, double_to_even)
+    by def $is_injective_fn(N, even_N, double_to_even)
 
     claim:
         ? forall y even_N:
@@ -2368,11 +2322,9 @@ sketch:
             double_to_even(k) = 2 * k
             y = 2 * k
             y = double_to_even(k)
-    by def:
-        ? $is_surjective_fn(N, even_N, double_to_even)
+    by def $is_surjective_fn(N, even_N, double_to_even)
 
-    by def:
-        ? $is_bijective_fn(N, even_N, double_to_even)
+    by def $is_bijective_fn(N, even_N, double_to_even)
     witness $has_equal_cardinality(N, even_N) from double_to_even
 
     by contra:
@@ -2401,18 +2353,15 @@ sketch:
                 id_X(x1) = x1
                 id_X(x2) = x2
                 x1 = id_X(x1) = id_X(x2) = x2
-        by def:
-            ? $is_injective_fn(X, X, id_X)
+        by def $is_injective_fn(X, X, id_X)
         claim:
             ? forall y X:
                 exist x X st {y = id_X(x)}
             witness exist x X st {y = id_X(x)} from y:
                 id_X(y) = y
                 y = id_X(y)
-        by def:
-            ? $is_surjective_fn(X, X, id_X)
-        by def:
-            ? $is_bijective_fn(X, X, id_X)
+        by def $is_surjective_fn(X, X, id_X)
+        by def $is_bijective_fn(X, X, id_X)
         witness $has_equal_cardinality(X, X) from id_X
 
 """
@@ -2457,8 +2406,7 @@ sketch:
             shift_zero_to_one(x2) = x2 + 1
             x1 + 1 = x2 + 1
             x1 = x1 + 1 - 1 = x2 + 1 - 1 = x2
-    by def:
-        ? $is_injective_fn({0, 1, 2, 3}, {1, 2, 3, 4}, shift_zero_to_one)
+    by def $is_injective_fn({0, 1, 2, 3}, {1, 2, 3, 4}, shift_zero_to_one)
 
     by cases:
         ? forall y {1, 2, 3, 4}:
@@ -2475,11 +2423,9 @@ sketch:
         case y = 4:
             witness exist x {0, 1, 2, 3} st {y = shift_zero_to_one(x)} from 3:
                 y = 4 = shift_zero_to_one(3)
-    by def:
-        ? $is_surjective_fn({0, 1, 2, 3}, {1, 2, 3, 4}, shift_zero_to_one)
+    by def $is_surjective_fn({0, 1, 2, 3}, {1, 2, 3, 4}, shift_zero_to_one)
 
-    by def:
-        ? $is_bijective_fn({0, 1, 2, 3}, {1, 2, 3, 4}, shift_zero_to_one)
+    by def $is_bijective_fn({0, 1, 2, 3}, {1, 2, 3, 4}, shift_zero_to_one)
     witness $has_equal_cardinality({0, 1, 2, 3}, {1, 2, 3, 4}) from shift_zero_to_one
 
 """
@@ -2590,8 +2536,7 @@ sketch:
         finite_set_size(N) $in N
         $is_finite_set(0...finite_set_size(N))
         finite_set_size(0...finite_set_size(N)) = finite_set_size(N) - 0 + 1 = finite_set_size(N) + 1
-        by def:
-            ? 0...finite_set_size(N) $subset N
+        by def 0...finite_set_size(N) $subset N
         finite_set_size(0...finite_set_size(N)) <= finite_set_size(N)
         finite_set_size(N) + 1 <= finite_set_size(N)
         impossible finite_set_size(N) + 1 <= finite_set_size(N)

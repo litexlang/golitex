@@ -294,6 +294,8 @@ forall i1 closed_range(1, n):
             );
             assert!(run_output.contains("\"kind\": \"HaveTupleStmt\""));
             assert!(run_output.contains("\"kind\": \"HaveCartStmt\""));
+            assert!(run_output.contains("\"kind\": \"SuccessVerifyTupleOrCartDefinitionResult\""));
+            assert!(run_output.contains("\"value_well_definedness\""));
             assert!(run_output.contains("\"kind\": \"ForallFact\""));
         },
     );
@@ -337,6 +339,20 @@ M(2, 3) = 3
             assert!(run_output.contains("\"kind\": \"HaveSeqStmt\""));
             assert!(run_output.contains("\"kind\": \"HaveFiniteSeqStmt\""));
             assert!(run_output.contains("\"kind\": \"HaveMatrixStmt\""));
+            assert!(
+                run_output.contains("\"kind\": \"SuccessVerifyIndexedFunctionDefinitionResult\"")
+            );
+            assert!(run_output
+                .contains("\"kind\": \"SuccessVerifyIndexedFunctionDefinitionWellDefinedResult\""));
+            for field in [
+                "\"surface_set\"",
+                "\"anonymous_function\"",
+                "\"function_set\"",
+                "\"assumption_infers\"",
+                "\"return_check\"",
+            ] {
+                assert!(run_output.contains(field), "missing Result field {field}");
+            }
         },
     );
 }
@@ -2515,7 +2531,7 @@ obtain chosen from thm eligible_copy(1)
 }
 
 #[test]
-fn litex_to_lean_rejects_theorem_backed_obtain_explicitly() {
+fn stmt_result_to_lean_compiles_theorem_backed_obtain_from_its_nested_result() {
     let source_code = r#"
 thm self_exists:
     ? forall a R:
@@ -2525,16 +2541,19 @@ thm self_exists:
 obtain copy from thm self_exists(2)
 "#;
 
-    let error = crate::stmt_result_to_lean_compiler::compile_litex_source_to_lean_source(
+    let generated = crate::stmt_result_to_lean_compiler::compile_litex_source_to_lean_source(
         source_code,
-        "litex_to_lean_rejects_theorem_backed_obtain_explicitly",
+        "stmt_result_to_lean_compiles_theorem_backed_obtain_from_its_nested_result",
     )
-    .expect_err("theorem-backed obtain must fail closed until theorem-call IR exists");
+    .expect("theorem-backed obtain consumes its nested by-thm conclusion proof");
     assert!(
-        error.contains("does not yet support theorem-backed `obtain`"),
-        "the compiler boundary should be explicit:\n{}",
-        error
+        generated.contains("noncomputable def copy : ℂ := Classical.choose"),
+        "the selected witness should be defined from the theorem application:\n{}",
+        generated
     );
+    assert!(generated.contains("self_exists (2 : ℂ)"), "{generated}");
+    assert!(generated.contains("Classical.choose_spec"), "{generated}");
+    assert!(!generated.contains("sorry"), "{generated}");
 }
 
 #[test]

@@ -25,9 +25,9 @@ Euclid's incidence and metric commitments are interpreted inside a concrete
 model rather than introduced as primitive geometric axioms. The actual base
 assumptions are Litex's set theory, the real-number ordered-field surface, and
 square-root facts. Euclid's numbered propositions are source-facing theorems
-in that model. The I.1--I.4 slice now has no local trust boundary; future
-proof gaps must remain narrow and visible rather than replacing a geometric
-definition.
+in that model. The I.1--I.4 chapter is checked by the current release verifier;
+future proof gaps must remain narrow and visible rather than replacing a
+geometric definition.
 
 The public `points` alias is useful as mathematical vocabulary, but the first
 implementation found that it does not preserve the Cartesian projection
@@ -126,7 +126,7 @@ have already been exposed as checked public theorems.
 - **Nearest wrong alternative:** Encoding each result as an abstract proposition would hide the construction and the omitted Euclidean dependencies.
 - **Dependencies:** Coordinate operations, congruence, betweenness where applicable, and real algebra by proof.
 - **Downstream uses:** Euclid I.5 onward and reusable olympiad geometry constructions.
-- **Current proof boundary:** I.1--I.4 and all analytic support lemmas are checked without local `trust`. The next boundary is new geometry for I.5 onward, not unfinished debt inside these four propositions.
+- **Current proof boundary:** the coordinate foundation, analytic support laws, and the I.1--I.4 chapter are checked. Later Book I constructions and a broader synthetic interface remain future work.
 
 ## Dependency map
 

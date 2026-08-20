@@ -46,6 +46,11 @@ pub enum LitexToLeanObjectIr {
         values: Box<LitexToLeanObjectIr>,
         length: Option<Box<LitexToLeanObjectIr>>,
     },
+    MatrixSet {
+        values: Box<LitexToLeanObjectIr>,
+        row_count: Box<LitexToLeanObjectIr>,
+        column_count: Box<LitexToLeanObjectIr>,
+    },
     Aggregate {
         semantic_key: String,
         kind: LitexToLeanAggregateObjectIr,
@@ -268,6 +273,11 @@ impl LitexToLeanObjectIr {
             Obj::SeqSet(sequence) => Ok(LitexToLeanObjectIr::SequenceSet {
                 values: Box::new(LitexToLeanObjectIr::lower(sequence.set.as_ref())?),
                 length: None,
+            }),
+            Obj::MatrixSet(matrix) => Ok(LitexToLeanObjectIr::MatrixSet {
+                values: Box::new(LitexToLeanObjectIr::lower(matrix.set.as_ref())?),
+                row_count: Box::new(LitexToLeanObjectIr::lower(matrix.row_len.as_ref())?),
+                column_count: Box::new(LitexToLeanObjectIr::lower(matrix.col_len.as_ref())?),
             }),
             Obj::Sum(value) => aggregate(
                 obj,

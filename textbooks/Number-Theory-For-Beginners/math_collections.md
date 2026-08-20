@@ -1,5 +1,9 @@
 # Mathematical collections and interfaces
 
+> Publication status (2026-08-20): the runnable module currently contains only
+> the introduction. The mathematical cards below remain a design manual for
+> sections preserved in `../todo_textbook_chapters/`, not current APIs.
+
 ## 2026-08-01 verifier-boundary note
 
 The current verifier checks the well-definedness of a finite product over

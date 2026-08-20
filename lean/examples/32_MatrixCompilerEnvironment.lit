@@ -1,0 +1,7 @@
+# A matrix definition keeps four bound-check Results outside one local
+# row/column function layer. Inside that layer, two N+ parameter FactIds, two
+# domain FactIds, and the recursive return check are compiled before the
+# compiler environment is popped. The next statement exercises every retained
+# argument and domain proof through the persistent surface-membership FactId.
+have matrix entry_matrix matrix(R, 2, 3) for row <= 2, column <= 3, entry_matrix(row, column) = row + column
+entry_matrix(2, 3) = 2 + 3

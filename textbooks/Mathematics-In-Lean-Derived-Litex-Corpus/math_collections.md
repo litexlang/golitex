@@ -1,5 +1,9 @@
 # MIL-derived Litex mathematical interface map
 
+> Publication status (2026-08-20): the runnable module exports only Chapters
+> 1, 3, 5, 6, and 7 plus the introduction. Other cards describe preserved
+> chapters in `../todo_textbook_chapters/`, not current published interfaces.
+
 This is the design manual for the independent Litex translation pressure-test
 corpus in this directory. It records the mathematical nodes that organize the
 executable chapters; it is not an alternative edition of *Mathematics in Lean*
@@ -138,12 +142,12 @@ structure-first law predicates.
 independent structure-oriented chapter. The main module imports its containing
 module as `MILAlternative` only because later chapters retain first-class
 structure signatures. At a deliberate boundary between the two styles, the
-call must name the struct view explicitly:
+parameter's direct struct declaration supplies the fields:
 
 ```litex
 chap2::add_neg_cancel(
     A,
-    unfold &MILAlternative::chap2_struct::AdditiveCommutativeGroup<A>{group},
+    unfold group,
     a)
 ```
 
@@ -284,10 +288,9 @@ parameterized structure object
 natural-scalar action are all explicit coordinate formulas. The tuple's
 `AdditiveMonoidWithNSmul<cart(A,B)>` membership is currently one trusted law
 package. A proposition-only replacement was rejected because callers need the
-three structure fields. Direct field projection from the symbolic template
-application currently reports that the projected function is undefined; that
-caller-level verifier issue is tracked separately from the mathematical law
-proof.
+three structure fields. The template body's direct struct declaration now
+propagates those fields to a fixed template application, so its callable
+projections use the same declaration-owned interface as an ordinary binding.
 
 Chapter 8's `Module<Scalar,M>` follows the same flat-data rule. It exposes the
 five scalar-ring operations, the three additive operations on `M`, and scalar

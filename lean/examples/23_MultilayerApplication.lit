@@ -30,12 +30,11 @@ forall S, T, U set, a S, b T, f fn(x S, y T) U:
 
 # Ordered domain clauses are stored after both parameter nodes and consume the
 # exact premise proofs selected by the verifier.
-forall f fn(x, y R: x > 0, y > 0) R:
-    forall a, b R:
-        a > 0
-        b > 0
-        =>:
-            f(a, b) = f(a, b)
+forall f fn(x, y R: x > 0, y > 0) R, a, b R:
+    a > 0
+    b > 0
+    =>:
+        f(a, b) = f(a, b)
 
 # Named functions use the same one-layer telescope; Lean does not silently
 # reinterpret first(x, y) as a curried first(x)(y).

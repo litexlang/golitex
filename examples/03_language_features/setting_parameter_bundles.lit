@@ -55,9 +55,8 @@ struct GroupAction<[GroupSetting(G, mul_G, one_G, inv_G)], V nonempty_set>:
         forall v V:
             act(one_G, v) = v
 
-forall G nonempty_set, mul_G fn(x, y G) G, one_G G, inv_G fn(x G) G, V nonempty_set, action &GroupAction<G, mul_G, one_G, inv_G, V>:
-    forall u, v, w G:
-        mul_G(mul_G(u, v), w) = mul_G(u, mul_G(v, w))
+forall G nonempty_set, mul_G fn(x, y G) G, one_G G, inv_G fn(x G) G, V nonempty_set, action &GroupAction<G, mul_G, one_G, inv_G, V>, u, v, w G:
+    mul_G(mul_G(u, v), w) = mul_G(u, mul_G(v, w))
 
 forall [GroupSetting]:
     mul(one, one) = one

@@ -1,0 +1,6 @@
+# The sequence verifier returns three named WD Results, the local index
+# assumption Store/FactId, and the recursive return check. The compiler enters
+# that exact Result scope, compiles the body, pops it, and publishes only the
+# sequence membership, function membership, and defining equality FactIds.
+have seq shifted_sequence seq(R) for index, shifted_sequence(index) = index + 1
+shifted_sequence(2) = 2 + 1

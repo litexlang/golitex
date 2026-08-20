@@ -423,9 +423,32 @@ pub struct SuccessVerifyTupleOrCartDimensionResult {
     pub at_least_two_check: Box<StmtResult>,
 }
 
+/// Successful verification output shared by `have tuple` and `have cart`.
+/// The value check is performed in the locally bound index environment, so
+/// its recursive object result must be returned by that child layer before
+/// the dimension checks are wrapped by the statement verifier.
+pub struct SuccessVerifyTupleOrCartDefinitionResult {
+    pub value_well_definedness: Rc<SuccessVerifyObjWellDefinedResult>,
+    pub dimension: SuccessVerifyTupleOrCartDimensionResult,
+}
+
 pub struct SuccessVerifyIndexedFunctionDefinitionResult {
+    pub well_definedness: SuccessVerifyIndexedFunctionDefinitionWellDefinedResult,
     pub bound_checks: Vec<StmtResult>,
+    /// Parameter-membership and domain facts installed while checking the
+    /// indexed body, with their temporary FactIds frozen before that local
+    /// Runtime environment closes.
+    pub assumption_infers: SuccessInferResult,
     pub return_check: Box<StmtResult>,
+}
+
+/// The three object checks performed by the shared sequence/finite-sequence/
+/// matrix definition layer. Keeping them named prevents the statement result
+/// from collapsing constructor-specific WD work into an untyped vector.
+pub struct SuccessVerifyIndexedFunctionDefinitionWellDefinedResult {
+    pub surface_set: Rc<SuccessVerifyObjWellDefinedResult>,
+    pub anonymous_function: Rc<SuccessVerifyObjWellDefinedResult>,
+    pub function_set: Rc<SuccessVerifyObjWellDefinedResult>,
 }
 
 pub struct SuccessVerifyCaseFunctionDefinitionResult {

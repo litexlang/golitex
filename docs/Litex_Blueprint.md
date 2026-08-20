@@ -45,6 +45,8 @@ From Arabic numerals, to Leibniz's notation for calculus, to TeX and LaTeX, impo
 
 Litex aims to bring this technology closer to ordinary learners and users of mathematics. Its ideal is: **whatever mathematics you want to express, you should be able to express in a formal language.** For example, someone who already knows secondary-school mathematics should be able to learn quickly how to express that mathematics in Litex without first becoming an expert in proof assistants.
 
+> This is a design target, not a claim about current language or library coverage.
+
 To understand why this goal calls for a different language design, first consider the relationship between formal proof and the workflows common in everyday mathematics.
 
 > **Note.** Lean remains the main comparison throughout this blueprint because it makes the

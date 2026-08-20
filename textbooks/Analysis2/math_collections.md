@@ -1,5 +1,9 @@
 # Mathematical Collections
 
+> Publication status (2026-08-20): the runnable module currently contains only
+> the introduction. The mathematical cards below remain the design manual for
+> chapters preserved in `../todo_textbook_chapters/`; they are not current APIs.
+
 ## Purpose and scope
 
 This module formalizes Terence Tao's *Analysis II*, fourth edition, from the
@@ -44,10 +48,10 @@ diagnostic gaps.
   of the underlying object or relation.
 
 The explicit `(X, dist)` presentation is preferred to a `struct` in Chapter 1.
-Every source theorem applies the distance directly, while current Litex
-function signatures cannot use a struct view object as a function-domain
-carrier. Bundling would therefore add projection and retyping work without a
-downstream consumer that needs the package as a single value.
+Every source theorem applies the distance directly, and no downstream consumer
+needs the package as a single value. Litex signatures can now use `&Struct`
+carriers directly; keeping `(X, dist)` here is therefore a mathematical
+interface choice rather than a parser limitation.
 
 ## Mathematical spine
 
@@ -578,9 +582,11 @@ downstream consumer that needs the package as a single value.
 - **Downstream uses:** The real-line interval characterization, preservation
   under continuous maps, the intermediate value theorem, and later
   path-connected and component exercises.
-- **Allowable hole:** The real-line theorem contains a substantial supremum
-  argument, and the preservation/IVT proofs are exercise-deferred. Their
-  source-facing conclusions may remain explicit theorem-level debt.
+- **Allowable hole:** The real-line theorem's connectedness equivalence
+  contains separation and supremum arguments, and the preservation/IVT proofs
+  are exercise-deferred. Those source-facing conclusions may remain explicit
+  theorem-level debt. The equivalence between closed-interval containment and
+  real order-convexity is checked in both directions and is no longer debt.
 - **Concrete probe:** Example 2.4.2 should expose the actual subset
   `[1,2] union [3,4]` as named data and conclude disconnectedness under the
   restricted usual real metric. An arbitrary supplied disconnected set, or a
@@ -874,6 +880,9 @@ downstream consumer that needs the package as a single value.
   conjugation's equality/fixed-point equivalences, both directions of the
   zero-modulus criterion, and the sum, difference, scalar-product, product,
   conjugate, and quotient limit laws.
+  The zero-modulus converse is now checked by combining the norm-square
+  identity with an explicit indexed-to-named coordinate reconstruction chain;
+  direct arbitrary named-struct eta remains outside this local interface.
   The trigonometric layer keeps both Euler formulas and the defining
   consequences `sin(pi)=0`, `cos(pi)=-1`, and `exp(pi i)=-1` visible.
 
@@ -907,7 +916,18 @@ downstream consumer that needs the package as a single value.
   relations are selected interfaces. `ComplexNumber` has concrete
   `real_part` and `im` fields and concrete addition, negation, multiplication, conjugation,
   modulus, reciprocal/quotient, distance, powers, and exponential
-  constructions. Algebraic, metric, and limit laws remain trusted.
+  constructions. One-level projection theorems for addition, negation,
+  multiplication, and conjugation support shallow nested calculations.
+  Addition/multiplication associativity and conjugation over all three
+  operations are checked by calculating between explicit constructor
+  endpoints. Modulus nonnegativity, conjugation invariance, multiplicativity,
+  the product-with-conjugate identity, coordinate bounds, and the triangle
+  inequality are checked from square-root and polynomial rules; the triangle
+  proof derives its two-dimensional Cauchy--Schwarz step from the second
+  nonnegative square instead of assuming a separate Euclidean norm theorem.
+  Laws ending at an arbitrary `ComplexNumber` retain localized named-struct
+  eta/extensionality boundaries; metric and analytic laws remain explicit
+  proof debt.
 
 ### Trigonometric functions and pi
 
@@ -1026,7 +1046,16 @@ downstream consumer that needs the package as a single value.
 - **Current implementation:** Vector operations, linearity, matrices,
   derivative relations, contractions, strict contractions, and fixed points
   are concrete. The ordinary and strict contraction predicates are distinct;
-  the fixed-point theorems consume only the strict predicate.
+  the fixed-point theorems consume only the strict predicate. Translation
+  distance preservation is one named checked theorem reused by its
+  nonexpansive and non-strict classifications; halving strictness is checked
+  through its callable map and real distance, while at-most-one fixed-point
+  uniqueness is checked from the displayed strict factor. The quadratic
+  interval construction and both classifications are checked: closure uses
+  `x-x^2=x(1-x)`, nonexpansiveness uses
+  `f(x)-f(y)=(x-y)(1-x-y)`, and non-strictness tests
+  `y=(1-alpha)/2`. Only the iteration/completeness existence half remains
+  proof debt in this contraction slice.
   `is_zero_row_vector` and `vector_neg` expose the canonical additive data.
   `column_vector_space` is the tagged carrier
   `cart({1}, row_vector_space<n>)`, and `is_transpose_row_vector` gives its
@@ -1108,6 +1137,11 @@ downstream consumer that needs the package as a single value.
   source classifications—translation is nonexpansive but not strict, halving
   is strict, and the quadratic interval map is nonexpansive but not
   strict—should use the same general contraction predicates as Theorem 6.6.4.
+  Translation's exact distance preservation should be one reusable theorem,
+  because both its nonexpansive and non-strict classifications consume it.
+  For the interval map, restrict `real_distance` to a function whose two
+  parameters have carrier `[0,1]`; passing the broader real function directly
+  parses but cannot be folded through the carrier-exact contraction predicate.
   Replacing them by isolated inequalities would make the examples unusable as
   probes of the strict/non-strict distinction introduced in Definition 6.6.1.
   Example 6.8.3 should expose the callable scalar function
@@ -1137,9 +1171,10 @@ downstream consumer that needs the package as a single value.
   neighborhoods, two-sided local inverse laws, and the inverse-derivative
   formula. The implicit function theorem now uses `k` free coordinates and
   one dependent coordinate and exposes the local zero-set graph and the
-  coordinate derivative formula. A callable coordinate-combination map is
-  still blocked by nested function-return alias unfolding, so the checked
-  interface uses the concrete `is_coordinate_extension` graph relation.
+  coordinate derivative formula. A callable coordinate-combination map would
+  return a named carrier alias rather than a directly declared `&Struct`, so it
+  intentionally has no declaration-owned fields; the checked interface uses
+  the concrete `is_coordinate_extension` graph relation.
 
 ### Outer measure and measurable sets
 
@@ -1635,7 +1670,9 @@ downstream consumer that needs the package as a single value.
   `is_total_derivative_assembled_from_partials` binds the whole row vector
   `L(v)` to the finite coordinate sum. This coordinate presentation avoids
   the current nested-call limitation for a function returning the templated
-  `row_vector_space<m>` while preserving the source formula exactly.
+  `row_vector_space<m>` while preserving the source formula exactly. A direct
+  `&Struct` return would carry fields, but this named set alias deliberately
+  does not.
 - **Allowable hole:** The telescoping/error proof may remain one localized
   trust; the neighborhood, partial family, continuity, and derivative formula
   must be explicit.
@@ -1730,8 +1767,9 @@ downstream consumer that needs the package as a single value.
   `f(x + k*L) = f(x)` for `k Z`; do not encode only positive natural
   translations. Keep algebra outputs as supplied pointwise functions so
   closure statements say which function is accepted. Keep
-  `has_periodic_inner_product(f,g,value)` as the coordinate-integral graph and
-  add `periodic_inner_product(f,g)` through `have fn ... by exist!` on
+  `has_periodic_inner_product(f,g,value)` as the coordinate-integral graph,
+  expose its unique existence once as `periodic_inner_product_exists_unique`,
+  and add `periodic_inner_product(f,g)` through `have fn ... by exist!` on
   continuous one-periodic inputs. Model the source-defined `L2` norm and
   metric the same way: concrete candidate relations followed by callable
   `periodic_l2_norm(f)` and `periodic_l2_distance(f,g)` selections.
@@ -1757,11 +1795,12 @@ downstream consumer that needs the package as a single value.
   predicates are concrete. Boundedness, algebra closure, and uniform-limit
   closure are bundled over supplied functions. The integer-translation
   theorem is explicit. `has_periodic_inner_product` is the concrete
-  coordinate-integral graph and `periodic_inner_product` is its callable
+  coordinate-integral graph, `periodic_inner_product_exists_unique` is its
+  shared construction theorem, and `periodic_inner_product` is its callable
   selected value. The `L2` norm and distance also follow the same
   relation/selection split, with checked graph theorems for all three selected
   values.
-  Examples 5.1.2 and 5.1.4 should additionally bind their supplied functions
+  Examples 5.1.2 and 5.1.4 additionally bind their supplied functions
   to the displayed sine, cosine, complex-exponential, identity, constant,
   integer-frequency, and square-wave formulas before asserting periodicity or
   its failure. Their semantic role is concrete function data plus theorem
@@ -1769,24 +1808,34 @@ downstream consumer that needs the package as a single value.
   functions and assuming the desired periodicity, or a list of periodicity
   facts disconnected from the displayed formulas. These examples depend on
   Chapter 4 trigonometric and exponential functions by `definition/import`
-  and on their period laws by `proof/trust-source`. They feed the character
-  family and the intuition for functions on `R/Z`; their background
-  trigonometric-period calculations may remain localized proof debt.
+  and on their period laws by `proof/trust-source`. Example 5.1.2 now checks
+  its three two-pi periods from those interfaces, rules out a positive identity
+  period by indexed tuple projection, and proves the constant case directly.
+  Example 5.1.4 models the square wave by a separate unit-cell classification
+  clause and two dependent half-interval carrier value clauses. Reuse of
+  Example 5.1.2 and integer-period translation checks its cosine, sine, and
+  exponential conclusions; only the square-wave conclusion retains one
+  localized trust because the stored dependent-carrier universals do not yet
+  instantiate at typed carrier values in this caller. Both examples feed the
+  character family and the intuition for functions on `R/Z`.
 
-The character of frequency `n` should be defined from the complex exponential
+The character of frequency `n` is defined from the complex exponential
 `exp(2*pi*i*n*x)`, with its cosine/sine coordinates exposed as a derived
 Euler-formula theorem. Its membership in the continuous one-periodic function
 space is a theorem, not a consequence to leave implicit. A detached
 `is_character_value` relation that only repeats the coordinate formula and has
-no consumers is not part of the intended public interface.
+no consumers is not part of the intended public interface. The implemented
+theorem checks period one through the unit exponential and integer-period
+translation; only metric continuity remains trusted.
 
 A trigonometric-polynomial presentation lives in `C(R/Z;C)` and must retain
 that continuous one-periodic condition alongside its finite character
 expansion. Fourier coefficients repeat the inner-product pattern:
 `has_fourier_coefficient(f,n,value)` is the candidate graph, while
-`fourier_coefficient(f,n)` is the canonical selected value. Leaving only the
-graph does not represent the source notation `f_hat(n)` as a callable
-construction.
+`fourier_coefficient(f,n)` is the canonical selected value. Its selector uses
+`periodic_inner_product_exists_unique`, witnesses the selected inner product,
+and transfers uniqueness through the graph definition. Leaving only the graph
+does not represent the source notation `f_hat(n)` as a callable construction.
 
 Periodic convolution is likewise a source-defined function, not merely a
 pointwise relation supplied by the caller. Keep
@@ -2101,10 +2150,11 @@ downstream.
   later complex analysis consumes `.real_part` and `.im` directly. The nearest wrong
   form is an opaque equality predicate or an abstract complex-number carrier:
   either would hide coordinate computation. Addition and multiplication
-  commutativity are checked from their formulas. Nested function returns do
-  not always retain enough struct/alias type information for later projection
-  or application; Chapters 4--6 therefore use explicit coordinate relations
-  and record the verifier behavior rather than changing the kernel.
+  commutativity are checked from their formulas. Functions declared to return
+  `&ComplexNumber` retain their declaration-owned projections, including after
+  calls. Named set aliases do not acquire struct fields, so Chapters 4--6 still
+  use explicit coordinate relations where their public carrier is an alias
+  rather than a direct struct set.
 - Riemann integration and differentiation use concrete local
   tagged-partition and epsilon--delta definitions. A future stable cross-book
   dependency may replace these definitions only after the Analysis I project
