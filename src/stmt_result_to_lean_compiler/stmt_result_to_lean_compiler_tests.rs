@@ -161,6 +161,13 @@ fn set_extension_combines_two_typed_subset_reflexivity_child_results() {
     assert!(generated.contains("Litex.Same.setExt"), "{generated}");
     assert_eq!(
         generated
+            .matches("Litex.Set.subsetFromComplexMembershipImplication")
+            .count(),
+        2,
+        "{generated}"
+    );
+    assert_eq!(
+        generated
             .matches("fun _x __membership => __membership")
             .count(),
         2,
@@ -201,6 +208,11 @@ fn integer_range_iteration_compiles_evaluated_values_and_assignment_fact_ids() {
         generated.contains("rcases __assignment_cases"),
         "{generated}"
     );
+    assert!(
+        generated.contains("⟨__range_value_case1, __assignment1⟩"),
+        "{generated}"
+    );
+    assert!(generated.contains("Litex.In.congr"), "{generated}");
     assert!(!generated.contains("axiom "), "{generated}");
     assert!(!generated.contains("sorry"), "{generated}");
 }
@@ -234,6 +246,10 @@ fn set_extension_compiles_nested_finite_enumeration_proof_steps() {
     )
     .expect("compile set extension whose local proof steps are finite enumerations");
     assert!(generated.contains("Litex.Same.setExt"), "{generated}");
+    assert!(
+        generated.contains("Litex.Set.coproductEveryCarrierValueHasComplexRepresentative"),
+        "{generated}"
+    );
     assert!(generated.contains("have __step1"), "{generated}");
     assert!(generated.contains("have __step2"), "{generated}");
     assert!(!generated.contains("axiom "), "{generated}");
@@ -367,6 +383,19 @@ fn top_level_atomic_membership_emits_source_and_inferred_fact_ids() {
     assert!(generated.contains("Litex.Rules.nonnegativeOfInN (__fact0)"));
     assert!(!generated.contains("Litex.OrderBridge.nonnegativeOfComplexReal (by norm_num)"));
     assert!(!generated.contains("sorry"));
+}
+
+#[test]
+fn top_level_recursive_inference_theorems_close_over_earlier_inference_steps() {
+    let generated = compile_on_verifier_stack("1 $in N\n", "recursive_membership_inference.lit")
+        .expect("compile recursive top-level membership inference");
+    assert!(generated.contains("theorem __fact2"), "{generated}");
+    assert!(generated.contains("have __infer1_0"), "{generated}");
+    assert!(
+        generated.contains("Litex.Rules.complexNegativeOneMulNonpositive (__infer1_0)"),
+        "{generated}"
+    );
+    assert!(!generated.contains("sorry"), "{generated}");
 }
 
 #[test]
@@ -1274,6 +1303,8 @@ fn builtin_strategy_result_marks_each_selected_layer_and_replays_exact_rules() {
     );
     assert!(generated.contains("Litex.Positive.congr (Litex.Same.trans"));
     assert!(generated.contains("Litex.Nonnegative.congr (Litex.Same.trans"));
+    assert!(generated.contains("Litex.Rules.complexNegativeOneMulNegative ((Litex.Positive.congr"));
+    assert!(generated.contains("Litex.Negative.toNonpositive (__infer"));
     assert!(generated.contains("Litex.In.same_rep a"));
     assert!(generated.contains("Litex.Same.realComplex (Litex.In.rep a"));
     assert!(!generated.contains("sorry"));

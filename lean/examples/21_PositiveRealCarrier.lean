@@ -8,17 +8,20 @@ namespace __Compiler_21_PositiveRealCarrier
 theorem __fact0 : Litex.In (1 : ℂ) Litex.RPos := by
   exact Litex.Rules.complexEqRealInRPos (1 : ℂ) (1 : ℝ) (by norm_num) (by norm_num)
 
-theorem __fact1 : Litex.Positive (1 : ℂ) := Litex.Rules.positiveOfInRPos (__fact0)
+theorem __fact1 : Litex.Positive (1 : ℂ) := by
+  exact Litex.Rules.positiveOfInRPos (__fact0)
 
 theorem __fact2 : Litex.In ((Real.exp 1 : ℝ) : ℂ) Litex.RPos := by
   exact Litex.Rules.eInRPos
 
-theorem __fact3 : Litex.Positive ((Real.exp 1 : ℝ) : ℂ) := Litex.Rules.positiveOfInRPos (__fact2)
+theorem __fact3 : Litex.Positive ((Real.exp 1 : ℝ) : ℂ) := by
+  exact Litex.Rules.positiveOfInRPos (__fact2)
 
 theorem __fact4 : Litex.In ((Real.pi : ℝ) : ℂ) Litex.RPos := by
   exact Litex.Rules.piInRPos
 
-theorem __fact5 : Litex.Positive ((Real.pi : ℝ) : ℂ) := Litex.Rules.positiveOfInRPos (__fact4)
+theorem __fact5 : Litex.Positive ((Real.pi : ℝ) : ℂ) := by
+  exact Litex.Rules.positiveOfInRPos (__fact4)
 
 theorem __fact6 :
     ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.RPos), Litex.In __p1 Litex.R ∧ Litex.In __p1 Litex.C ∧ Litex.Positive __p1 := by

@@ -49,6 +49,8 @@ theorem __fact0 : Litex.Same (Litex.Set.coproduct (Litex.Set.singleton (1 : ℂ)
       exact ⟨Sum.inr (Sum.inl (Litex.SingletonCarrier.element)), Litex.Same.trans (__assignment1) (Litex.Same.trans (Litex.Same.trans (Litex.Same.singleton (2 : ℂ)) (Litex.Same.sumLeft (Litex.SingletonCarrier.element))) (Litex.Same.sumRight (Sum.inl (Litex.SingletonCarrier.element))))⟩
     ·
       exact ⟨Sum.inl (Litex.SingletonCarrier.element), Litex.Same.trans (__assignment2) (Litex.Same.trans (Litex.Same.singleton (1 : ℂ)) (Litex.Same.sumLeft (Litex.SingletonCarrier.element)))⟩
-  exact Litex.Same.setExt (__step1) (__step2))
+  exact Litex.Same.setExt
+    (Litex.Set.subsetFromComplexMembershipImplication (Litex.Set.coproductEveryCarrierValueHasComplexRepresentative (Litex.Set.singletonEveryCarrierValueHasComplexRepresentative (1 : ℂ)) (Litex.Set.coproductEveryCarrierValueHasComplexRepresentative (Litex.Set.singletonEveryCarrierValueHasComplexRepresentative (2 : ℂ)) (Litex.Set.emptyEveryCarrierValueHasComplexRepresentative))) (__step1))
+    (Litex.Set.subsetFromComplexMembershipImplication (Litex.Set.coproductEveryCarrierValueHasComplexRepresentative (Litex.Set.singletonEveryCarrierValueHasComplexRepresentative (2 : ℂ)) (Litex.Set.coproductEveryCarrierValueHasComplexRepresentative (Litex.Set.singletonEveryCarrierValueHasComplexRepresentative (1 : ℂ)) (Litex.Set.emptyEveryCarrierValueHasComplexRepresentative))) (__step2)))
 
 end __Compiler_50_SetExtensionResultComposition

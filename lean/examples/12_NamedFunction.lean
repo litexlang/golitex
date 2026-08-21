@@ -30,10 +30,10 @@ theorem __fact4 : Litex.Same inc ({ call := fun {__alpha} (__arg : __alpha) __ar
   unfold inc
   exact Litex.Same.refl ({ call := fun {__alpha} (__arg : __alpha) __arg_in => (Litex.In.rep __arg __arg_in + (1 : ℝ)) } : Litex.Fn Litex.R Litex.R)
 
-theorem __fact5 : Litex.Same (Litex.fnApplyOwn inc __fact3 (1 : ℂ) (Litex.Rules.complexRealInR (1 : ℝ))) ((1 : ℂ) + (1 : ℂ)) := by
+theorem __fact5 : Litex.Same (Litex.fnApplyOwn inc __fact3 (1 : ℂ) ((Litex.In.congr (__fact2) Litex.R).mp (Litex.In.own Litex.R (Litex.fnApplyOwn id __fact0 (1 : ℂ) (Litex.Rules.complexRealInR (1 : ℝ)))))) ((1 : ℂ) + (1 : ℂ)) := by
   exact (by
   unfold Litex.fnApplyOwn inc
-  exact Litex.Same.realAddComplex (Litex.Same.symm (Litex.In.same_rep (1 : ℂ) (Litex.Rules.complexRealInR (1 : ℝ)))) (Litex.Same.realComplex (1 : ℝ)))
+  exact Litex.Same.realAddComplex (Litex.Same.symm (Litex.In.same_rep (1 : ℂ) ((Litex.In.congr (__fact2) Litex.R).mp (Litex.In.own Litex.R (Litex.fnApplyOwn id __fact0 (1 : ℂ) (Litex.Rules.complexRealInR (1 : ℝ))))))) (Litex.Same.realComplex (1 : ℝ)))
 
 noncomputable def reciprocal : Litex.FnWhere Litex.R Litex.R (fun {__alpha} (__arg : __alpha) => ¬ Litex.Same __arg (0 : ℂ)) :=
   { call := fun {__alpha} (__arg : __alpha) __arg_in __arg_domain => ((1 : ℝ) / Litex.In.rep __arg __arg_in) }
@@ -63,7 +63,7 @@ theorem __fact10 : Litex.Same (@into_builder) (fun {__alpha1 : Type} (__arg1 : _
   unfold into_builder
   exact Litex.Same.refl (fun {__alpha1 : Type} (__arg1 : __alpha1) (__arg1_in : Litex.In __arg1 Litex.R) => ULift.up (Litex.In.rep __arg1 (Litex.Rules.inSetBuilder (Litex.In.same_rep __arg1 (__arg1_in)) (Litex.Same.refl (Litex.In.rep __arg1 (__arg1_in))))) : Litex.FnTelescope.Carrier ((Litex.FnTelescope.parameter Litex.R (fun {__alpha1 : Type} (__arg1 : __alpha1) (__arg1_in : Litex.In __arg1 Litex.R) => (Litex.FnTelescope.done (Litex.setBuilder Litex.R (fun (z : Litex.R.Carrier) => Litex.Same z z))))) : Litex.FnTelescope.{0}))
 
-theorem __fact11 : Litex.Same (((Litex.fnTelescopeApplyOwn (@into_builder) __fact9) (1 : ℂ) (Litex.Rules.complexRealInR (1 : ℝ)))).down (1 : ℂ) := by
+theorem __fact11 : Litex.Same (((Litex.fnTelescopeApplyOwn (@into_builder) __fact9) (1 : ℂ) ((Litex.In.congr (__fact2) Litex.R).mp (Litex.In.own Litex.R (Litex.fnApplyOwn id __fact0 (1 : ℂ) (Litex.Rules.complexRealInR (1 : ℝ))))))).down (1 : ℂ) := by
   exact (by
   unfold Litex.fnTelescopeApplyOwn into_builder
   apply Litex.Same.symm

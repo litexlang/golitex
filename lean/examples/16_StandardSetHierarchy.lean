@@ -9,6 +9,7 @@ theorem __fact0 :
     ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.N), Litex.In __p1 Litex.Z := by
   intro n __h0_1
   have __infer0_0 : Litex.Nonnegative n := Litex.Rules.nonnegativeOfInN (__h0_1)
+  have __infer0_1 : Litex.Nonpositive ((-1 : ℂ) * (((Litex.In.rep n __h0_1 : ℕ)) : ℂ)) := Litex.Rules.complexNegativeOneMulNonpositive ((Litex.Nonnegative.congr (Litex.Same.trans (Litex.In.same_rep n (__h0_1)) (Litex.Same.natComplex (Litex.In.rep n __h0_1)))).mp (__infer0_0))
   have __c0_0 : Litex.In n Litex.Z := Litex.Rules.inZOfInN (__h0_1)
   exact __c0_0
 
@@ -16,6 +17,7 @@ theorem __fact1 :
     ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.N), Litex.In __p1 Litex.Q := by
   intro n __h1_1
   have __infer1_0 : Litex.Nonnegative n := Litex.Rules.nonnegativeOfInN (__h1_1)
+  have __infer1_1 : Litex.Nonpositive ((-1 : ℂ) * (((Litex.In.rep n __h1_1 : ℕ)) : ℂ)) := Litex.Rules.complexNegativeOneMulNonpositive ((Litex.Nonnegative.congr (Litex.Same.trans (Litex.In.same_rep n (__h1_1)) (Litex.Same.natComplex (Litex.In.rep n __h1_1)))).mp (__infer1_0))
   have __c1_0 : Litex.In n Litex.Q := Litex.Rules.inQOfInZ (Litex.Rules.inZOfInN (__h1_1))
   exact __c1_0
 
@@ -23,6 +25,7 @@ theorem __fact2 :
     ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.N), Litex.In __p1 Litex.R := by
   intro n __h2_1
   have __infer2_0 : Litex.Nonnegative n := Litex.Rules.nonnegativeOfInN (__h2_1)
+  have __infer2_1 : Litex.Nonpositive ((-1 : ℂ) * (((Litex.In.rep n __h2_1 : ℕ)) : ℂ)) := Litex.Rules.complexNegativeOneMulNonpositive ((Litex.Nonnegative.congr (Litex.Same.trans (Litex.In.same_rep n (__h2_1)) (Litex.Same.natComplex (Litex.In.rep n __h2_1)))).mp (__infer2_0))
   have __c2_0 : Litex.In n Litex.R := Litex.Rules.inROfInQ (Litex.Rules.inQOfInZ (Litex.Rules.inZOfInN (__h2_1)))
   exact __c2_0
 
@@ -30,6 +33,7 @@ theorem __fact3 :
     ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.N), Litex.In __p1 Litex.C := by
   intro n __h3_1
   have __infer3_0 : Litex.Nonnegative n := Litex.Rules.nonnegativeOfInN (__h3_1)
+  have __infer3_1 : Litex.Nonpositive ((-1 : ℂ) * (((Litex.In.rep n __h3_1 : ℕ)) : ℂ)) := Litex.Rules.complexNegativeOneMulNonpositive ((Litex.Nonnegative.congr (Litex.Same.trans (Litex.In.same_rep n (__h3_1)) (Litex.Same.natComplex (Litex.In.rep n __h3_1)))).mp (__infer3_0))
   have __c3_0 : Litex.In n Litex.C := Litex.Rules.inCOfInR (Litex.Rules.inROfInQ (Litex.Rules.inQOfInZ (Litex.Rules.inZOfInN (__h3_1))))
   exact __c3_0
 

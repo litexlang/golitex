@@ -1,7 +1,7 @@
 [book]
 Analysis
 verified subset
-"Introduction, Chapters 1-9, and Appendix A are published; Chapters 8 and 9 pass the requested registered source and formal -f gates, while Chapters 10-11 remain quarantined."
+"Introduction, Chapters 1-10, and Appendix A are published; Chapters 8-10 pass the requested registered source and formal -f gates, while Chapter 11 remains quarantined."
 
 [book]
 Analysis2

@@ -26,6 +26,10 @@ theorem __fact2 :
 theorem __fact3 :
     ∀ {__carrier1 : Type 1} (__p1 : __carrier1) (__type1 : Litex.In __p1 (Litex.fnTelescopeSet ((Litex.FnTelescope.parameter Litex.R (fun {__alpha1 : Type} (__arg1 : __alpha1) (__arg1_in : Litex.In __arg1 Litex.R) => (Litex.FnTelescope.parameter Litex.R (fun {__alpha2 : Type} (__arg2 : __alpha2) (__arg2_in : Litex.In __arg2 Litex.R) => (Litex.FnTelescope.requirement (Litex.Positive __arg1 ∧ Litex.Positive __arg2) (fun __domain => (Litex.FnTelescope.done Litex.R))))))) : Litex.FnTelescope.{0}))) (__p2 : ℂ) (__type2 : Litex.In __p2 Litex.R) (__p3 : ℂ) (__type3 : Litex.In __p3 Litex.R) (__domain1 : Litex.Positive __p2) (__domain2 : Litex.Positive __p3), Litex.Same (((((Litex.fnTelescopeApply __p1 __type1) __p2 (__type2)) __p3 (__type3)) (⟨__domain1, __domain2⟩))).down (((((Litex.fnTelescopeApply __p1 __type1) __p2 (__type2)) __p3 (__type3)) (⟨__domain1, __domain2⟩))).down := by
   intro __carrier1 f __h3_1 a __h3_2 b __h3_3 __domain1 __domain2
+  have __infer3_0 : Litex.Negative ((-1 : ℂ) * (((Litex.In.rep a __h3_2 : ℝ)) : ℂ)) := Litex.Rules.complexNegativeOneMulNegative ((Litex.Positive.congr (Litex.Same.trans (Litex.In.same_rep a (__h3_2)) (Litex.Same.realComplex (Litex.In.rep a __h3_2)))).mp (__domain1))
+  have __infer3_1 : Litex.Nonpositive ((-1 : ℂ) * (((Litex.In.rep a __h3_2 : ℝ)) : ℂ)) := Litex.Negative.toNonpositive (__infer3_0)
+  have __infer3_2 : Litex.Negative ((-1 : ℂ) * (((Litex.In.rep b __h3_3 : ℝ)) : ℂ)) := Litex.Rules.complexNegativeOneMulNegative ((Litex.Positive.congr (Litex.Same.trans (Litex.In.same_rep b (__h3_3)) (Litex.Same.realComplex (Litex.In.rep b __h3_3)))).mp (__domain2))
+  have __infer3_3 : Litex.Nonpositive ((-1 : ℂ) * (((Litex.In.rep b __h3_3 : ℝ)) : ℂ)) := Litex.Negative.toNonpositive (__infer3_2)
   have __c3_0 : Litex.Same (((((Litex.fnTelescopeApply f __h3_1) a (__h3_2)) b (__h3_3)) (⟨__domain1, __domain2⟩))).down (((((Litex.fnTelescopeApply f __h3_1) a (__h3_2)) b (__h3_3)) (⟨__domain1, __domain2⟩))).down := Litex.Same.refl (((((Litex.fnTelescopeApply f __h3_1) a (__h3_2)) b (__h3_3)) (⟨__domain1, __domain2⟩))).down
   exact __c3_0
 
