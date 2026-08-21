@@ -53,10 +53,7 @@ impl Runtime {
             );
             let by_verification = SuccessVerifyByEnumerateFiniteSetResult::new(
                 params,
-                param_sets
-                    .iter()
-                    .map(|param_set| param_set.to_string())
-                    .collect(),
+                param_sets.clone(),
                 stmt.forall_fact.to_string(),
                 vec![],
                 corresponding_forall_fact.to_string(),
@@ -117,10 +114,7 @@ impl Runtime {
 
         let by_verification = SuccessVerifyByEnumerateFiniteSetResult::new(
             params,
-            param_sets
-                .iter()
-                .map(|param_set| param_set.to_string())
-                .collect(),
+            param_sets,
             stmt.forall_fact.to_string(),
             assignments,
             corresponding_forall_fact.to_string(),
@@ -236,13 +230,16 @@ impl Runtime {
                 stmt.line_file.clone(),
             )
             .into();
-            assumptions.push((
-                parameter_equal_to_assigned_obj_atomic_fact.to_string(),
-                "enumerated assignment".to_string(),
-            ));
-            self.store_atomic_fact_without_well_defined_verified_and_infer(
-                parameter_equal_to_assigned_obj_atomic_fact,
-            )?;
+            let assumption_fact: Fact = parameter_equal_to_assigned_obj_atomic_fact.clone().into();
+            let assumption_infers = self
+                .store_atomic_fact_without_well_defined_verified_and_infer(
+                    parameter_equal_to_assigned_obj_atomic_fact,
+                )?;
+            assumptions.push(self.freeze_by_assignment_assumption_result(
+                assumption_fact,
+                "enumerated assignment",
+                assumption_infers,
+            )?);
         }
 
         let verify_state = UseContextVerifyState::new(0, false);
@@ -250,14 +247,17 @@ impl Runtime {
         for dom_fact in stmt.forall_fact.dom_facts.iter() {
             let verify_dom_result = self.verify_fact_full(dom_fact, &verify_state)?;
             if verify_dom_result.is_true() {
-                self.store_with_well_defined_verification_and_infer_with_default_verify_state(
-                    dom_fact.clone(),
-                )?;
+                let mut satisfied_infers = self
+                    .store_with_well_defined_verification_and_infer_with_default_verify_state(
+                        dom_fact.clone(),
+                    )?;
+                self.attach_known_fact_ids_to_infer_result(&mut satisfied_infers)?;
                 domain_checks.push(SuccessVerifyByAssignmentDomainResult {
                     fact: dom_fact.clone(),
                     check: Box::new(verify_dom_result),
                     negated_check: None,
                     satisfied: true,
+                    satisfied_infers: Some(satisfied_infers),
                 });
             } else if verify_dom_result.is_unknown() {
                 if let Some(negated_domain) = Self::negated_domain_fact_for_by_for_skip(dom_fact) {
@@ -269,6 +269,7 @@ impl Runtime {
                             check: Box::new(verify_dom_result),
                             negated_check: Some(Box::new(verify_negation_result)),
                             satisfied: false,
+                            satisfied_infers: None,
                         });
                         return Ok(SuccessVerifyByAssignmentResult::new(
                             assignment,

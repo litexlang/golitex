@@ -859,7 +859,16 @@ impl Runtime {
                 ParamType::Obj(set),
             )]);
             rt.define_params_with_type(&params_def, false, ParamObjType::Forall)?;
-            rt.verify_atomic_fact_as_builtin_rule_premise(then_fact, builtin_state)
+            let direct = rt.verify_atomic_fact_as_builtin_rule_premise(then_fact, builtin_state)?;
+            if direct.is_true() {
+                return Ok(direct);
+            }
+
+            // A stored pointwise theorem can mention a function obtained from
+            // an existential and then restricted to the current finite set.
+            // Try only bounded known-forall instantiation here; do not reopen
+            // the full equality dispatcher or its finite-set-sum rule.
+            rt.verify_atomic_fact_with_known_forall(then_fact, &UseContextVerifyState::new(0, true))
         })
     }
 

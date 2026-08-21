@@ -1,5 +1,4 @@
 mod builtin_rule_evidence;
-mod compositional_well_definedness_projection;
 mod execution_trace;
 mod runtime_success;
 mod stmt_result;
@@ -8,7 +7,6 @@ mod success_stmt_result;
 mod success_well_defined_result;
 mod unknown_fact_result;
 mod unknown_stmt_result;
-mod well_definedness_certificate;
 mod well_definedness_proof;
 
 pub use builtin_rule_evidence::{
@@ -32,9 +30,6 @@ pub use builtin_rule_evidence::{
     RuntimeResolvedNumericComparisonBuiltinRuleEvidence, SetBuilderMembershipBuiltinRuleEvidence,
     SetBuiltinRule, SetRelationDualityBuiltinRule, StandardSetNonemptyBuiltinRuleEvidence,
 };
-pub(crate) use compositional_well_definedness_projection::{
-    project_compositional_well_definedness, project_compositional_well_definedness_many,
-};
 pub use execution_trace::{
     ExecutionPhaseTrace, StatementExecutionPhase, StatementExecutionTrace, StatementPhaseStatus,
 };
@@ -45,18 +40,20 @@ pub use runtime_success::{
     KnownForallRequirementKind, ObjectIntroductionItem, SuccessBuiltinFactProofResult,
     SuccessCombinedFactProofItemResult, SuccessCombinedFactProofResult,
     SuccessCombinedReuseFactProofResult, SuccessFactCitationProofResult, SuccessFactProofResult,
-    SuccessForallProofResult, SuccessForallProvedFactResult, SuccessInstantiateKnownForallResult,
-    SuccessReuseFactProofResult, SuccessTransformFactResult,
-    SuccessVerifyArgsSatisfyParamDefResult, SuccessVerifyByAssignmentDomainResult,
-    SuccessVerifyByAssignmentResult, SuccessVerifyByCaseBranchExitResult,
-    SuccessVerifyByCaseBranchResult, SuccessVerifyByCaseConclusionsResult,
-    SuccessVerifyByCaseContradictionResult, SuccessVerifyByCasesResult,
-    SuccessVerifyByChoiceObligationResult, SuccessVerifyByChoiceResult,
+    SuccessForallAssumptionFactResult, SuccessForallProofResult, SuccessForallProvedFactResult,
+    SuccessInstantiateKnownForallResult, SuccessReuseFactProofResult, SuccessTransformFactResult,
+    SuccessVerifyArgsSatisfyParamDefResult, SuccessVerifyByAssignmentAssumptionResult,
+    SuccessVerifyByAssignmentDomainResult, SuccessVerifyByAssignmentResult,
+    SuccessVerifyByCaseBranchExitResult, SuccessVerifyByCaseBranchResult,
+    SuccessVerifyByCaseConclusionsResult, SuccessVerifyByCaseContradictionResult,
+    SuccessVerifyByCasesResult, SuccessVerifyByChoiceObligationResult, SuccessVerifyByChoiceResult,
     SuccessVerifyByContraResult, SuccessVerifyByDefinitionResult,
-    SuccessVerifyByEnumerateFiniteSetResult, SuccessVerifyByEnumerateRangeResult,
-    SuccessVerifyByExtensionResult, SuccessVerifyByFiniteSetInducResult, SuccessVerifyByForResult,
-    SuccessVerifyByInducCaseResult, SuccessVerifyByInducGoalResult,
-    SuccessVerifyByInducProofResult, SuccessVerifyByInducResult,
+    SuccessVerifyByEnumerateFiniteSetResult, SuccessVerifyByEnumerateRangeEndpointPosition,
+    SuccessVerifyByEnumerateRangeEndpointResult, SuccessVerifyByEnumerateRangeResult,
+    SuccessVerifyByExtensionResult, SuccessVerifyByFiniteSetInducResult,
+    SuccessVerifyByForCartesianProductOfListSetsResult, SuccessVerifyByForRangeParameterResult,
+    SuccessVerifyByForRangesResult, SuccessVerifyByForResult, SuccessVerifyByInducCaseResult,
+    SuccessVerifyByInducGoalResult, SuccessVerifyByInducProofResult, SuccessVerifyByInducResult,
     SuccessVerifyByPropRegistrationResult, SuccessVerifyByStructuredIntegerInducResult,
     SuccessVerifyByTheoremResult, SuccessVerifyByUnstructuredIntegerInducResult,
     SuccessVerifyCaseFunctionDefinitionResult, SuccessVerifyClaimFactResult,
@@ -120,12 +117,6 @@ pub use unknown_fact_result::{
     UnknownForallFactWithIffResult, UnknownNotForallFactResult, UnknownOrFactResult,
 };
 pub use unknown_stmt_result::UnknownGenericStmtResult;
-pub use well_definedness_certificate::{
-    WellDefinednessBinderScopeEvidence, WellDefinednessCertificate, WellDefinednessFactEvidence,
-    WellDefinednessObjectEvidence, WellDefinednessParameterFactEvidence,
-    WellDefinednessRequirementRole, WellDefinednessRootObjectProofUse,
-    WellDefinednessSourceObjectUse, WellDefinednessTargetRequirementEvidence,
-};
 pub use well_definedness_proof::{
     CachedWellDefinedObj, WellDefinedBinderPremiseProof, WellDefinedBinderPremiseRole,
     WellDefinedBinderScopeId, WellDefinedBinderScopeProof, WellDefinedCacheKey, WellDefinedFactId,

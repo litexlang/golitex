@@ -26,12 +26,22 @@ impl Runtime {
             ));
         }
         let mut endpoint_checks = Vec::new();
-        let mut endpoint_facts = Vec::new();
 
         let z_set: Obj = StandardSet::Z.into();
         let lf = stmt.line_file.clone();
         let (start, end) = enumerated_range_endpoints(&stmt.range);
-        for (side, endpoint) in [("left", start), ("right", end)] {
+        for (position, side, endpoint) in [
+            (
+                SuccessVerifyByEnumerateRangeEndpointPosition::Start,
+                "left",
+                start,
+            ),
+            (
+                SuccessVerifyByEnumerateRangeEndpointPosition::End,
+                "right",
+                end,
+            ),
+        ] {
             let in_z: AtomicFact =
                 InFact::new((*endpoint).clone(), z_set.clone(), lf.clone()).into();
             let in_z_ok = self.verify_atomic_fact(&in_z, &verify_state)?;
@@ -46,8 +56,12 @@ impl Runtime {
                     vec![],
                 ));
             }
-            endpoint_facts.push(in_z.to_string());
-            endpoint_checks.push(in_z_ok);
+            endpoint_checks.push(SuccessVerifyByEnumerateRangeEndpointResult::new(
+                position,
+                (*endpoint).clone(),
+                in_z.clone().into(),
+                in_z_ok,
+            ));
         }
 
         let branches = match enumerate_range_equalities(stmt) {
@@ -76,7 +90,6 @@ impl Runtime {
         } else {
             OrFact::new(branches, stmt.line_file.clone()).into()
         };
-        let generated_fact_string = generated_fact.to_string();
         let infer_after_store = self
             .store_with_well_defined_verification_and_infer_with_default_verify_state(
                 generated_fact.clone(),
@@ -88,12 +101,10 @@ impl Runtime {
         infer_result.new_infer_result_inside(infer_after_store);
 
         let by_verification = SuccessVerifyByEnumerateRangeResult::new(
-            format!("{} proof", stmt_name),
-            stmt.element.to_string(),
-            enumerated_range_set_obj(&stmt.range).to_string(),
-            in_fact.to_string(),
-            endpoint_facts,
-            generated_fact_string,
+            stmt.element.clone(),
+            stmt.range.clone(),
+            in_fact.clone().into(),
+            generated_fact,
             membership,
             endpoint_checks,
         );

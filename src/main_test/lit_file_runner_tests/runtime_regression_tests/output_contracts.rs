@@ -2280,7 +2280,8 @@ by extension:
             assert!(run_succeeded, "by output fixture failed:\n{}", run_output);
             assert!(run_output.contains("\"kind\": \"SuccessVerifyByTheoremResult\""));
             assert!(run_output.contains("\"kind\": \"SuccessVerifyByEnumerateFiniteSetResult\""));
-            assert!(run_output.contains("\"kind\": \"SuccessVerifyByForResult\""));
+            assert!(run_output.contains("\"kind\": \"SuccessVerifyByForRangesResult\""));
+            assert!(run_output.contains("\"kind\": \"SuccessVerifyByForRangeParameterResult\""));
             assert!(run_output.contains("\"kind\": \"SuccessVerifyByEnumerateRangeResult\""));
             assert!(run_output.contains("\"kind\": \"SuccessVerifyByExtensionResult\""));
             assert!(run_output.contains("\"statement\": \"n < 3\""));

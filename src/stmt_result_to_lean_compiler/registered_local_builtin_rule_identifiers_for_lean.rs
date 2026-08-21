@@ -1,6 +1,7 @@
-use crate::verify::rule_schema::{RuleFingerprint, RuleId};
-
-use super::{LitexToLeanObjectIr, LitexToLeanParameterTypeIr};
+//! Stable verifier rule identifiers accepted by the direct Result compiler.
+//!
+//! These constants validate typed `RegisteredLocalBuiltinRuleEvidence`; they
+//! are not an intermediate representation.
 
 pub(crate) const LESS_EQUAL_OF_LESS_RULE_ID: &str = "order.less_equal_of_less";
 pub(crate) const LESS_EQUAL_OF_LESS_FINGERPRINT: &str =
@@ -134,16 +135,3 @@ pub(crate) const SET_UNION_NONEMPTY_RIGHT_FINGERPRINT: &str =
 pub(crate) const SET_UNION_SUBSET_RULE_ID: &str = "set.union_subset";
 pub(crate) const SET_UNION_SUBSET_FINGERPRINT: &str =
     "a5e4907694209f659903e84f55b46d7c5a1e320c7d4daf5c56ecc913ee9cb77c";
-
-#[derive(Clone, Debug)]
-pub struct LitexToLeanTypedBoundObjectIr {
-    pub object: LitexToLeanObjectIr,
-    pub param_type: LitexToLeanParameterTypeIr,
-}
-
-#[derive(Clone, Debug)]
-pub struct LitexToLeanRegisteredRuleApplicationIr {
-    pub rule_id: RuleId,
-    pub semantic_fingerprint: RuleFingerprint,
-    pub bindings: Vec<LitexToLeanTypedBoundObjectIr>,
-}

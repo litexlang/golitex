@@ -2718,6 +2718,89 @@ thm finite_set_sum_triangle_tmp:
 }
 
 #[test]
+fn finite_set_sum_pointwise_equality_uses_obtained_function_on_subset() {
+    run_with_large_stack(
+        "finite_set_sum_pointwise_equality_uses_obtained_function_on_subset",
+        || {
+            let source_code = r#"
+have ambient finite_set = {1, 2}
+have selected finite_set = intersect(ambient, {1})
+intersect(ambient, {1}) $subset ambient
+selected $subset ambient
+
+have fn source_term(x ambient) R = x
+have fn restricted_term(x ambient) R = x + 0
+
+prop agrees_on_ambient(E finite_set, f, g fn(x E) R):
+    forall x E:
+        g(x) = f(x)
+
+claim:
+    ? exist rect fn(x ambient) R st {$agrees_on_ambient(ambient, source_term, rect)}
+    witness exist rect fn(x ambient) R st {$agrees_on_ambient(ambient, source_term, rect)} from restricted_term:
+        forall x ambient:
+            restricted_term(x) = x + 0 = x = source_term(x)
+        by def $agrees_on_ambient(ambient, source_term, restricted_term)
+obtain rect from exist rect fn(x ambient) R st {$agrees_on_ambient(ambient, source_term, rect)}
+by def $agrees_on_ambient(ambient, source_term, rect)
+
+claim:
+    ? forall x selected:
+        fn(y selected) R {source_term(y)}(x) = fn(y selected) R {rect(y)}(x)
+    x $in ambient
+    rect(x) = source_term(x)
+    source_term(x) = rect(x)
+
+by thm finite_set_sum_substitution(finite_set_sum(selected, fn(x selected) R {source_term(x)}), finite_set_sum(selected, fn(x selected) R {rect(x)}))
+"#;
+
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "finite_set_sum_pointwise_equality_uses_obtained_function_on_subset",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "pointwise equality should transport through an obtained function restricted to a proved subset:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
+fn finite_set_sum_dependent_restriction_still_requires_subset() {
+    let source_code = r#"
+have ambient finite_set = {1, 2}
+have selected finite_set
+have fn source_term(x ambient) R = x
+finite_set_sum(selected, fn(x selected) R {source_term(x)}) $in R
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "finite_set_sum_dependent_restriction_still_requires_subset",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        !run_succeeded,
+        "a restricted summand must remain ill-defined without a subset fact:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("source_term") && run_output.contains("selected"),
+        "the boundary diagnostic should identify the missing dependent application domain:\n{}",
+        run_output
+    );
+}
+
+#[test]
 fn restricting_a_function_from_a_union_domain_is_well_defined() {
     run_with_large_stack(
         "restricting_a_function_from_a_union_domain_is_well_defined",

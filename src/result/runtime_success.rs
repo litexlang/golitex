@@ -187,10 +187,21 @@ impl SuccessVerifyLocalProofScopeResult {
 #[derive(Debug)]
 pub struct SuccessVerifyByAssignmentResult {
     pub assignment: Vec<(String, String)>,
-    pub assumptions: Vec<(String, String)>,
+    pub assumptions: Vec<SuccessVerifyByAssignmentAssumptionResult>,
     pub domain_checks: Vec<SuccessVerifyByAssignmentDomainResult>,
     pub proof_steps: Vec<StmtResult>,
     pub conclusion_checks: Vec<StmtResult>,
+}
+
+/// One exact fact introduced by a finite assignment branch. The complete
+/// inference Result stays with the assumption because later proof children
+/// may cite either its source FactId or one of its typed consequences.
+#[derive(Debug)]
+pub struct SuccessVerifyByAssignmentAssumptionResult {
+    pub fact: Fact,
+    pub fact_id: FactId,
+    pub reason: String,
+    pub infers: SuccessInferResult,
 }
 
 #[derive(Debug)]
@@ -199,37 +210,166 @@ pub struct SuccessVerifyByAssignmentDomainResult {
     pub check: Box<StmtResult>,
     pub negated_check: Option<Box<StmtResult>>,
     pub satisfied: bool,
+    /// Exact store/inference effects published only by a satisfied branch.
+    /// A skipped assignment retains `None` and its checked negation instead.
+    pub satisfied_infers: Option<SuccessInferResult>,
 }
 
-#[derive(Debug)]
 pub struct SuccessVerifyByEnumerateFiniteSetResult {
     pub parameters: Vec<String>,
-    pub parameter_sets: Vec<String>,
+    /// Exact list-set values selected by execution, including named source
+    /// types that were resolved through equality before enumeration.
+    pub parameter_sets: Vec<ListSet>,
     pub prove_goal: String,
     pub assignments: Vec<SuccessVerifyByAssignmentResult>,
     pub generated_forall: String,
 }
 
-#[derive(Debug)]
-pub struct SuccessVerifyByForResult {
-    pub iteration_mode: String,
-    pub parameters: Vec<String>,
-    pub domains: Vec<String>,
+impl fmt::Debug for SuccessVerifyByEnumerateFiniteSetResult {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        f.debug_struct("SuccessVerifyByEnumerateFiniteSetResult")
+            .field("parameters", &self.parameters)
+            .field(
+                "parameter_sets",
+                &self
+                    .parameter_sets
+                    .iter()
+                    .map(ToString::to_string)
+                    .collect::<Vec<_>>(),
+            )
+            .field("prove_goal", &self.prove_goal)
+            .field("assignments", &self.assignments)
+            .field("generated_forall", &self.generated_forall)
+            .finish()
+    }
+}
+
+pub struct SuccessVerifyByForRangesResult {
+    pub parameters: Vec<SuccessVerifyByForRangeParameterResult>,
     pub prove_goal: String,
     pub assignments: Vec<SuccessVerifyByAssignmentResult>,
     pub generated_forall: String,
 }
 
-#[derive(Debug)]
+pub struct SuccessVerifyByForRangeParameterResult {
+    pub parameter: String,
+    pub range: ClosedRangeOrRange,
+    pub evaluated_start: String,
+    pub evaluated_end: String,
+    pub enumerated_values: Vec<String>,
+}
+
+pub struct SuccessVerifyByForCartesianProductOfListSetsResult {
+    pub parameter: String,
+    pub factors: Vec<ListSet>,
+    pub prove_goal: String,
+    pub assignments: Vec<SuccessVerifyByAssignmentResult>,
+    pub generated_forall: String,
+}
+
+pub enum SuccessVerifyByForResult {
+    Ranges(Box<SuccessVerifyByForRangesResult>),
+    CartesianProductOfListSets(Box<SuccessVerifyByForCartesianProductOfListSetsResult>),
+}
+
+impl fmt::Debug for SuccessVerifyByForRangesResult {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        f.debug_struct("SuccessVerifyByForRangesResult")
+            .field("parameters", &self.parameters)
+            .field("prove_goal", &self.prove_goal)
+            .field("assignments", &self.assignments)
+            .field("generated_forall", &self.generated_forall)
+            .finish()
+    }
+}
+
+impl fmt::Debug for SuccessVerifyByForRangeParameterResult {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        f.debug_struct("SuccessVerifyByForRangeParameterResult")
+            .field("parameter", &self.parameter)
+            .field("range", &self.range.to_string())
+            .field("evaluated_start", &self.evaluated_start)
+            .field("evaluated_end", &self.evaluated_end)
+            .field("enumerated_values", &self.enumerated_values)
+            .finish()
+    }
+}
+
+impl fmt::Debug for SuccessVerifyByForCartesianProductOfListSetsResult {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        f.debug_struct("SuccessVerifyByForCartesianProductOfListSetsResult")
+            .field("parameter", &self.parameter)
+            .field(
+                "factors",
+                &self
+                    .factors
+                    .iter()
+                    .map(ToString::to_string)
+                    .collect::<Vec<_>>(),
+            )
+            .field("prove_goal", &self.prove_goal)
+            .field("assignments", &self.assignments)
+            .field("generated_forall", &self.generated_forall)
+            .finish()
+    }
+}
+
+impl fmt::Debug for SuccessVerifyByForResult {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        match self {
+            Self::Ranges(result) => result.fmt(f),
+            Self::CartesianProductOfListSets(result) => result.fmt(f),
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum SuccessVerifyByEnumerateRangeEndpointPosition {
+    Start,
+    End,
+}
+
+pub struct SuccessVerifyByEnumerateRangeEndpointResult {
+    pub position: SuccessVerifyByEnumerateRangeEndpointPosition,
+    pub endpoint: Obj,
+    pub integer_membership_fact: Fact,
+    pub verification: Box<StmtResult>,
+}
+
 pub struct SuccessVerifyByEnumerateRangeResult {
-    pub proof_type: String,
-    pub element: String,
-    pub range: String,
-    pub membership_fact: String,
-    pub endpoint_facts: Vec<String>,
-    pub generated_cases: String,
+    pub element: Obj,
+    pub range: ClosedRangeOrRange,
+    pub membership_fact: Fact,
+    pub generated_cases: Fact,
     pub membership_check: Box<StmtResult>,
-    pub endpoint_checks: Vec<StmtResult>,
+    pub endpoint_checks: Vec<SuccessVerifyByEnumerateRangeEndpointResult>,
+}
+
+impl fmt::Debug for SuccessVerifyByEnumerateRangeEndpointResult {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        f.debug_struct("SuccessVerifyByEnumerateRangeEndpointResult")
+            .field("position", &self.position)
+            .field("endpoint", &self.endpoint.to_string())
+            .field(
+                "integer_membership_fact",
+                &self.integer_membership_fact.to_string(),
+            )
+            .field("verification", &self.verification)
+            .finish()
+    }
+}
+
+impl fmt::Debug for SuccessVerifyByEnumerateRangeResult {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        f.debug_struct("SuccessVerifyByEnumerateRangeResult")
+            .field("element", &self.element.to_string())
+            .field("range", &self.range.to_string())
+            .field("membership_fact", &self.membership_fact.to_string())
+            .field("generated_cases", &self.generated_cases.to_string())
+            .field("membership_check", &self.membership_check)
+            .field("endpoint_checks", &self.endpoint_checks)
+            .finish()
+    }
 }
 
 #[derive(Debug)]
@@ -827,8 +967,20 @@ pub struct SuccessCombinedFactProofResult {
 
 pub struct SuccessForallProofResult {
     pub forall_fact: ForallFact,
+    /// Exact parameter facts visible in the proof-owned lexical environment.
+    /// These are proof-scope identities, not the sibling WD check identities.
+    pub parameter_assumptions: Vec<SuccessForallAssumptionFactResult>,
+    /// Exact source-domain facts visible after the parameters. A repeated
+    /// domain premise intentionally reuses the earlier parameter FactId.
+    pub domain_assumptions: Vec<SuccessForallAssumptionFactResult>,
     pub assumption_infers: SuccessInferResult,
     pub proves: Vec<SuccessForallProvedFactResult>,
+}
+
+#[derive(Clone, Debug)]
+pub struct SuccessForallAssumptionFactResult {
+    pub fact: Fact,
+    pub fact_id: FactId,
 }
 
 pub struct SuccessForallProvedFactResult {
@@ -1175,6 +1327,8 @@ impl SuccessFactProofResult {
     pub fn forall_proof(
         forall_fact: ForallFact,
         then_results: Vec<StmtResult>,
+        parameter_assumptions: Vec<SuccessForallAssumptionFactResult>,
+        domain_assumptions: Vec<SuccessForallAssumptionFactResult>,
         assumption_infers: SuccessInferResult,
     ) -> Self {
         let mut proves = Vec::new();
@@ -1188,6 +1342,8 @@ impl SuccessFactProofResult {
         }
         Self::ForallProof(SuccessForallProofResult::new(
             forall_fact,
+            parameter_assumptions,
+            domain_assumptions,
             assumption_infers,
             proves,
         ))
@@ -1219,7 +1375,7 @@ impl SuccessCombinedFactProofItemResult {
         Self::builtin_rule_with_evidence(msg, verify_what, None, subgoals)
     }
 
-    fn builtin_rule_with_evidence(
+    pub(crate) fn builtin_rule_with_evidence(
         msg: String,
         verify_what: Fact,
         evidence: Option<BuiltinRuleEvidence>,
@@ -1411,11 +1567,15 @@ impl ObjectIntroductionItem {
 impl SuccessForallProofResult {
     pub fn new(
         forall_fact: ForallFact,
+        parameter_assumptions: Vec<SuccessForallAssumptionFactResult>,
+        domain_assumptions: Vec<SuccessForallAssumptionFactResult>,
         assumption_infers: SuccessInferResult,
         proves: Vec<SuccessForallProvedFactResult>,
     ) -> Self {
         SuccessForallProofResult {
             forall_fact,
+            parameter_assumptions,
+            domain_assumptions,
             assumption_infers,
             proves,
         }
@@ -1435,6 +1595,8 @@ impl fmt::Debug for SuccessForallProofResult {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         f.debug_struct("SuccessForallProofResult")
             .field("forall_fact", &self.forall_fact.to_string())
+            .field("parameter_assumptions", &self.parameter_assumptions)
+            .field("domain_assumptions", &self.domain_assumptions)
             .field("assumption_infers", &self.assumption_infers)
             .field("proves", &self.proves)
             .finish()
@@ -1559,7 +1721,7 @@ impl SuccessVerifyByContraResult {
 impl SuccessVerifyByAssignmentResult {
     pub fn new(
         assignment: Vec<(String, String)>,
-        assumptions: Vec<(String, String)>,
+        assumptions: Vec<SuccessVerifyByAssignmentAssumptionResult>,
         domain_checks: Vec<SuccessVerifyByAssignmentDomainResult>,
         proof_steps: Vec<StmtResult>,
         conclusion_checks: Vec<StmtResult>,
@@ -1577,7 +1739,7 @@ impl SuccessVerifyByAssignmentResult {
 impl SuccessVerifyByEnumerateFiniteSetResult {
     pub fn new(
         parameters: Vec<String>,
-        parameter_sets: Vec<String>,
+        parameter_sets: Vec<ListSet>,
         prove_goal: String,
         assignments: Vec<SuccessVerifyByAssignmentResult>,
         generated_forall: String,
@@ -1593,45 +1755,92 @@ impl SuccessVerifyByEnumerateFiniteSetResult {
 }
 
 impl SuccessVerifyByForResult {
-    pub fn new(
-        iteration_mode: String,
-        parameters: Vec<String>,
-        domains: Vec<String>,
+    pub fn assignments(&self) -> &[SuccessVerifyByAssignmentResult] {
+        match self {
+            Self::Ranges(result) => &result.assignments,
+            Self::CartesianProductOfListSets(result) => &result.assignments,
+        }
+    }
+
+    pub fn assignments_mut(&mut self) -> &mut Vec<SuccessVerifyByAssignmentResult> {
+        match self {
+            Self::Ranges(result) => &mut result.assignments,
+            Self::CartesianProductOfListSets(result) => &mut result.assignments,
+        }
+    }
+
+    pub fn into_assignments(self) -> Vec<SuccessVerifyByAssignmentResult> {
+        match self {
+            Self::Ranges(result) => result.assignments,
+            Self::CartesianProductOfListSets(result) => result.assignments,
+        }
+    }
+
+    pub fn ranges(
+        parameters: Vec<SuccessVerifyByForRangeParameterResult>,
         prove_goal: String,
         assignments: Vec<SuccessVerifyByAssignmentResult>,
         generated_forall: String,
     ) -> Self {
-        SuccessVerifyByForResult {
-            iteration_mode,
+        Self::Ranges(Box::new(SuccessVerifyByForRangesResult {
             parameters,
-            domains,
             prove_goal,
             assignments,
             generated_forall,
-        }
+        }))
+    }
+
+    pub fn cartesian_product_of_list_sets(
+        parameter: String,
+        factors: Vec<ListSet>,
+        prove_goal: String,
+        assignments: Vec<SuccessVerifyByAssignmentResult>,
+        generated_forall: String,
+    ) -> Self {
+        Self::CartesianProductOfListSets(Box::new(
+            SuccessVerifyByForCartesianProductOfListSetsResult {
+                parameter,
+                factors,
+                prove_goal,
+                assignments,
+                generated_forall,
+            },
+        ))
     }
 }
 
 impl SuccessVerifyByEnumerateRangeResult {
     pub fn new(
-        proof_type: String,
-        element: String,
-        range: String,
-        membership_fact: String,
-        endpoint_facts: Vec<String>,
-        generated_cases: String,
+        element: Obj,
+        range: ClosedRangeOrRange,
+        membership_fact: Fact,
+        generated_cases: Fact,
         membership_check: StmtResult,
-        endpoint_checks: Vec<StmtResult>,
+        endpoint_checks: Vec<SuccessVerifyByEnumerateRangeEndpointResult>,
     ) -> Self {
         SuccessVerifyByEnumerateRangeResult {
-            proof_type,
             element,
             range,
             membership_fact,
-            endpoint_facts,
             generated_cases,
             membership_check: Box::new(membership_check),
             endpoint_checks,
+        }
+    }
+}
+
+impl SuccessVerifyByEnumerateRangeEndpointResult {
+    pub fn new(
+        position: SuccessVerifyByEnumerateRangeEndpointPosition,
+        endpoint: Obj,
+        integer_membership_fact: Fact,
+        verification: StmtResult,
+    ) -> Self {
+        Self {
+            position,
+            endpoint,
+            integer_membership_fact,
+            verification: Box::new(verification),
         }
     }
 }

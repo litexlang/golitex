@@ -62,9 +62,29 @@ impl Runtime {
         params: &[String],
         param_sets: &[ClosedRangeOrRange],
     ) -> Result<StmtResult, RuntimeError> {
-        let param_value_strings_of_each_param = self
+        let evaluated_parameters = self
             .by_for_param_value_strings_of_each_param(stmt, param_sets)
             .map_err(|msg| short_exec_error(stmt.clone().into(), msg, None, vec![]))?;
+        let param_value_strings_of_each_param = evaluated_parameters
+            .iter()
+            .map(|(_, _, values)| values.clone())
+            .collect::<Vec<_>>();
+        let retained_parameter_results = params
+            .iter()
+            .zip(param_sets.iter())
+            .zip(evaluated_parameters.iter())
+            .map(
+                |((parameter, range), (evaluated_start, evaluated_end, enumerated_values))| {
+                    SuccessVerifyByForRangeParameterResult {
+                        parameter: parameter.clone(),
+                        range: range.clone(),
+                        evaluated_start: evaluated_start.clone(),
+                        evaluated_end: evaluated_end.clone(),
+                        enumerated_values: enumerated_values.clone(),
+                    }
+                },
+            )
+            .collect::<Vec<_>>();
         let for_cartesian_product_is_empty = param_value_strings_of_each_param
             .iter()
             .any(|one_param_value_strings| one_param_value_strings.is_empty());
@@ -84,13 +104,8 @@ impl Runtime {
                         vec![],
                     )
                 })?;
-            let by_verification = SuccessVerifyByForResult::new(
-                "ranges".to_string(),
-                params.to_vec(),
-                param_sets
-                    .iter()
-                    .map(|param_set| param_set.to_string())
-                    .collect(),
+            let by_verification = SuccessVerifyByForResult::ranges(
+                retained_parameter_results,
                 stmt.forall_fact.to_string(),
                 vec![],
                 corresponding_forall_fact.to_string(),
@@ -145,13 +160,8 @@ impl Runtime {
                 )
             })?;
 
-        let by_verification = SuccessVerifyByForResult::new(
-            "ranges".to_string(),
-            params.to_vec(),
-            param_sets
-                .iter()
-                .map(|param_set| param_set.to_string())
-                .collect(),
+        let by_verification = SuccessVerifyByForResult::ranges(
+            retained_parameter_results,
             stmt.forall_fact.to_string(),
             assignments,
             corresponding_forall_fact.to_string(),
@@ -191,10 +201,9 @@ impl Runtime {
                         vec![],
                     )
                 })?;
-            let by_verification = SuccessVerifyByForResult::new(
-                "cart_of_list_sets".to_string(),
-                vec![param.to_string()],
-                factors.iter().map(|factor| factor.to_string()).collect(),
+            let by_verification = SuccessVerifyByForResult::cartesian_product_of_list_sets(
+                param.to_string(),
+                factors.to_vec(),
                 stmt.forall_fact.to_string(),
                 vec![],
                 corresponding_forall_fact.to_string(),
@@ -237,10 +246,9 @@ impl Runtime {
                 )
             })?;
 
-        let by_verification = SuccessVerifyByForResult::new(
-            "cart_of_list_sets".to_string(),
-            vec![param.to_string()],
-            factors.iter().map(|factor| factor.to_string()).collect(),
+        let by_verification = SuccessVerifyByForResult::cartesian_product_of_list_sets(
+            param.to_string(),
+            factors.to_vec(),
             stmt.forall_fact.to_string(),
             assignments,
             corresponding_forall_fact.to_string(),
@@ -303,11 +311,15 @@ impl Runtime {
             )
             .into();
             let assignment = vec![(param.to_string(), tuple_obj.to_string())];
-            let assumptions = vec![(
-                parameter_equal_to_tuple.to_string(),
-                "for assignment".to_string(),
-            )];
-            rt.store_atomic_fact_without_well_defined_verified_and_infer(parameter_equal_to_tuple)?;
+            let assumption_fact: Fact = parameter_equal_to_tuple.clone().into();
+            let assumption_infers = rt.store_atomic_fact_without_well_defined_verified_and_infer(
+                parameter_equal_to_tuple,
+            )?;
+            let assumptions = vec![rt.freeze_by_assignment_assumption_result(
+                assumption_fact,
+                "for assignment",
+                assumption_infers,
+            )?];
             let (domain_checks, proof_steps, conclusion_checks) =
                 rt.exec_by_for_stmt_dom_proof_then(stmt)?;
             Ok(SuccessVerifyByAssignmentResult::new(
@@ -390,8 +402,8 @@ impl Runtime {
         self: &Self,
         stmt: &ByForStmt,
         param_sets: &[ClosedRangeOrRange],
-    ) -> Result<Vec<Vec<String>>, String> {
-        let mut param_value_strings_of_each_param: Vec<Vec<String>> = Vec::new();
+    ) -> Result<Vec<(String, String, Vec<String>)>, String> {
+        let mut evaluated_parameters = Vec::new();
         for param_set in param_sets.iter() {
             let (start_obj, end_obj, is_closed_range) = match param_set {
                 ClosedRangeOrRange::ClosedRange(closed_range) => {
@@ -435,9 +447,13 @@ impl Runtime {
                     }
                 }
             }
-            param_value_strings_of_each_param.push(one_param_value_strings);
+            evaluated_parameters.push((
+                start_integer_string,
+                end_integer_string,
+                one_param_value_strings,
+            ));
         }
-        Ok(param_value_strings_of_each_param)
+        Ok(evaluated_parameters)
     }
 
     fn by_for_start_index_assignment(param_count: usize) -> Vec<usize> {
@@ -508,13 +524,16 @@ impl Runtime {
                 StandardSet::Z.into(),
                 stmt.line_file.clone(),
             ));
-            assumptions.push((
-                parameter_in_z_atomic_fact.to_string(),
-                "for range parameter".to_string(),
-            ));
-            self.store_atomic_fact_without_well_defined_verified_and_infer(
-                parameter_in_z_atomic_fact,
-            )?;
+            let parameter_in_z_fact: Fact = parameter_in_z_atomic_fact.clone().into();
+            let parameter_in_z_infers = self
+                .store_atomic_fact_without_well_defined_verified_and_infer(
+                    parameter_in_z_atomic_fact,
+                )?;
+            assumptions.push(self.freeze_by_assignment_assumption_result(
+                parameter_in_z_fact,
+                "for range parameter",
+                parameter_in_z_infers,
+            )?);
 
             let parameter_equal_to_assigned_obj_atomic_fact =
                 AtomicFact::EqualFact(EqualFact::new(
@@ -522,13 +541,17 @@ impl Runtime {
                     Number::new(assigned_integer_string).into(),
                     stmt.line_file.clone(),
                 ));
-            assumptions.push((
-                parameter_equal_to_assigned_obj_atomic_fact.to_string(),
-                "for assignment".to_string(),
-            ));
-            self.store_atomic_fact_without_well_defined_verified_and_infer(
-                parameter_equal_to_assigned_obj_atomic_fact,
-            )?;
+            let parameter_equal_to_assigned_obj_fact: Fact =
+                parameter_equal_to_assigned_obj_atomic_fact.clone().into();
+            let parameter_equal_to_assigned_obj_infers = self
+                .store_atomic_fact_without_well_defined_verified_and_infer(
+                    parameter_equal_to_assigned_obj_atomic_fact,
+                )?;
+            assumptions.push(self.freeze_by_assignment_assumption_result(
+                parameter_equal_to_assigned_obj_fact,
+                "for assignment",
+                parameter_equal_to_assigned_obj_infers,
+            )?);
         }
 
         let (domain_checks, proof_steps, conclusion_checks) =
@@ -558,14 +581,17 @@ impl Runtime {
         for dom_fact in stmt.forall_fact.dom_facts.iter() {
             let verify_dom_result = self.verify_fact_full(dom_fact, &verify_state)?;
             if verify_dom_result.is_true() {
-                self.store_with_well_defined_verification_and_infer_with_default_verify_state(
-                    dom_fact.clone(),
-                )?;
+                let mut satisfied_infers = self
+                    .store_with_well_defined_verification_and_infer_with_default_verify_state(
+                        dom_fact.clone(),
+                    )?;
+                self.attach_known_fact_ids_to_infer_result(&mut satisfied_infers)?;
                 domain_checks.push(SuccessVerifyByAssignmentDomainResult {
                     fact: dom_fact.clone(),
                     check: Box::new(verify_dom_result),
                     negated_check: None,
                     satisfied: true,
+                    satisfied_infers: Some(satisfied_infers),
                 });
             } else if verify_dom_result.is_unknown() {
                 if let Some(negated_domain) = Self::negated_domain_fact_for_by_for_skip(dom_fact) {
@@ -577,6 +603,7 @@ impl Runtime {
                             check: Box::new(verify_dom_result),
                             negated_check: Some(Box::new(verify_negation_result)),
                             satisfied: false,
+                            satisfied_infers: None,
                         });
                         return Ok((domain_checks, Vec::new(), Vec::new()));
                     }

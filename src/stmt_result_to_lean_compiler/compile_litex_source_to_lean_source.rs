@@ -10,22 +10,6 @@ pub fn compile_litex_source_to_lean_source(
     StmtResultToLeanCompiler::new(source_label).compile_stmt_results_to_lean_source(&results)
 }
 
-/// Migration audit entry point. It executes Litex normally, drops `Runtime`,
-/// and then requires every statement family to compile directly from its
-/// recursive `StmtResult`. Reaching the old `LitexToLeanIrBuilder` adapter is
-/// reported as an error naming the first statement that still depends on it.
-pub fn compile_litex_source_to_lean_source_rejecting_compatibility_adapter_for_audit(
-    source: &str,
-    source_label: &str,
-) -> Result<String, String> {
-    let results = execute_litex_source_to_stmt_results(source, source_label)
-        .map_err(|error| format!("Litex execution failed before Lean compilation: {error:?}"))?;
-    StmtResultToLeanCompiler::new_rejecting_compatibility_adapter_for_direct_result_compilation_audit(
-        source_label,
-    )
-    .compile_stmt_results_to_lean_source(&results)
-}
-
 pub fn compile_litex_source_to_stmt_result_to_lean_compilation_report(
     source: &str,
     source_label: &str,

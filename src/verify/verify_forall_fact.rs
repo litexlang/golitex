@@ -97,6 +97,8 @@ impl Runtime {
         assumption_infers: SuccessInferResult,
         by_cases_case_label: Option<&str>,
     ) -> Result<StmtResult, RuntimeError> {
+        let (parameter_assumptions, domain_assumptions) =
+            self.capture_forall_proof_scope_assumption_fact_results(forall_fact)?;
         let mut then_verification_results: Vec<StmtResult> = Vec::new();
 
         let then_count = forall_fact.then_facts.len();
@@ -193,10 +195,64 @@ impl Runtime {
             SuccessFactProofResult::forall_proof(
                 forall_fact.clone(),
                 then_verification_results,
+                parameter_assumptions,
+                domain_assumptions,
                 assumption_infers,
             ),
         ))
         .into())
+    }
+
+    /// Freeze the exact proof-scope identities while the forall's local
+    /// Runtime environment is still alive. The compiler must not reconstruct
+    /// these identities from proposition text after this environment is
+    /// popped; repeated domain premises deliberately reuse an earlier FactId.
+    fn capture_forall_proof_scope_assumption_fact_results(
+        &mut self,
+        forall_fact: &ForallFact,
+    ) -> Result<
+        (
+            Vec<SuccessForallAssumptionFactResult>,
+            Vec<SuccessForallAssumptionFactResult>,
+        ),
+        RuntimeError,
+    > {
+        let missing_fact_id_error = |role: &str, fact: &Fact| {
+            RuntimeError::from(UnknownRuntimeError(RuntimeErrorStruct::new(
+                Some(Fact::from(forall_fact.clone()).into_stmt()),
+                format!("forall {role} `{fact}` has no FactId in its proof scope"),
+                forall_fact.line_file.clone(),
+                None,
+                vec![],
+            )))
+        };
+
+        let mut parameter_assumptions = Vec::new();
+        for parameter_group in &forall_fact.params_def_with_type.groups {
+            for binding in &parameter_group.params {
+                let fact = self.parameter_type_fact_for_binding(
+                    binding,
+                    &parameter_group.param_type,
+                    ParamObjType::Forall,
+                )?;
+                let fact_id = self
+                    .known_fact_id_for_fact(&fact)?
+                    .ok_or_else(|| missing_fact_id_error("parameter assumption", &fact))?;
+                parameter_assumptions.push(SuccessForallAssumptionFactResult { fact, fact_id });
+            }
+        }
+
+        let mut domain_assumptions = Vec::with_capacity(forall_fact.dom_facts.len());
+        for fact in &forall_fact.dom_facts {
+            let fact_id = self
+                .known_fact_id_for_fact(fact)?
+                .ok_or_else(|| missing_fact_id_error("domain assumption", fact))?;
+            domain_assumptions.push(SuccessForallAssumptionFactResult {
+                fact: fact.clone(),
+                fact_id,
+            });
+        }
+        Ok((parameter_assumptions, domain_assumptions))
     }
 
     /// Declare params, assume dom facts hold, then verify each then_fact.

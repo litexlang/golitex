@@ -152,7 +152,7 @@ impl Runtime {
         // Do not run full `verify_fact_well_defined` here: well-defined for the flipped atom can re-enter
         // `verify_fn_obj_well_defined` (e.g. intermediate `… $in N`) and this infer path again,
         // causing mutual recursion / stack overflow (see `examples/_internal/regression/opaque_euler_phi_interface.lit`).
-        let inner = self
+        let conclusion_infers = self
             .store_atomic_fact_without_well_defined_verified_and_infer(inferred_atomic)
             .map_err(|previous_error| {
                 RuntimeError::from(InferRuntimeError(RuntimeErrorStruct::new(
@@ -163,7 +163,14 @@ impl Runtime {
                     vec![],
                 )))
             })?;
-        infer_result.new_infer_result_inside(inner);
+        infer_result.add_rule_application_preserving_conclusion_result_structure(
+            InferRule::MultiplicationByNegativeOneReversesOrderAgainstZero,
+            vec![atomic_fact.clone().into()],
+            vec![SuccessStoreFactResult::new(
+                fact_to_store,
+                conclusion_infers,
+            )],
+        );
         Ok(infer_result)
     }
 
@@ -278,7 +285,12 @@ impl Runtime {
                 // L < k and k <= 0 => L <= 0
                 if matches!(
                     compare_normalized_number_str_to_zero(&k.normalized_value),
-                    NumberCompareResult::Less | NumberCompareResult::Equal
+                    NumberCompareResult::Equal
+                ) {
+                    self.infer_strict_order_compared_to_zero_implies_weak_order(f)
+                } else if matches!(
+                    compare_normalized_number_str_to_zero(&k.normalized_value),
+                    NumberCompareResult::Less
                 ) {
                     self.infer_store_le_zero(f.left.clone(), f.line_file.clone())
                 } else {
@@ -297,6 +309,34 @@ impl Runtime {
                 }
             }
         }
+    }
+
+    fn infer_strict_order_compared_to_zero_implies_weak_order(
+        &mut self,
+        source: &LessFact,
+    ) -> Result<SuccessInferResult, RuntimeError> {
+        let conclusion_atomic: AtomicFact = LessEqualFact::new(
+            source.left.clone(),
+            Number::new("0".to_string()).into(),
+            source.line_file.clone(),
+        )
+        .into();
+        let conclusion_fact: Fact = conclusion_atomic.clone().into();
+        let mut infer_result = SuccessInferResult::new();
+        infer_result.new_fact(&conclusion_fact);
+        let conclusion_infers = self
+            .store_with_well_defined_verification_and_infer_with_default_verify_state(
+                conclusion_fact.clone(),
+            )?;
+        infer_result.add_rule_application_preserving_conclusion_result_structure(
+            InferRule::StrictOrderComparedToZeroImpliesWeakOrder,
+            vec![source.clone().into()],
+            vec![SuccessStoreFactResult::new(
+                conclusion_fact,
+                conclusion_infers,
+            )],
+        );
+        Ok(infer_result)
     }
 
     fn infer_store_gt_zero(

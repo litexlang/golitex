@@ -1,3 +1,4 @@
+use super::represent_litex_function_contracts_in_lean::*;
 use crate::prelude::*;
 
 /// A structural compiler representation of one Litex object.
@@ -6,7 +7,7 @@ use crate::prelude::*;
 /// a universal target carrier. Compiler selects Mathlib-native carriers while
 /// retaining numeric, user-set, and function membership as explicit evidence.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub enum LitexToLeanObjectIr {
+pub enum LeanTargetObjectRepresentation {
     Symbol {
         symbol_id: SymbolId,
         name: String,
@@ -14,52 +15,52 @@ pub enum LitexToLeanObjectIr {
     Number {
         normalized_value: String,
     },
-    Constant(LitexToLeanConstantObjectIr),
-    StandardSet(LitexToLeanStandardSetIr),
+    Constant(LeanTargetConstantObject),
+    StandardSet(LeanTargetStandardSet),
     /// A Litex function set carries an exact source application contract; a
     /// backend decides its native carrier representation.
     FunctionSet {
-        function: Box<LitexToLeanFunctionTypeIr>,
+        function: Box<LeanTargetFunctionTypeRepresentation>,
     },
     /// A source set-builder object. The binder stays owned by this node; its
     /// identity must not leak into the surrounding context.
-    SetBuilder(Box<LitexToLeanSetBuilderIr>),
+    SetBuilder(Box<LeanTargetSetBuilderRepresentation>),
     /// An anonymous source function object. Its application contract and
     /// output-membership certificate remain explicit proof evidence.
-    AnonymousFunction(Box<LitexToLeanAnonymousFunctionIr>),
+    AnonymousFunction(Box<LeanTargetAnonymousFunctionRepresentation>),
     /// Exact Litex application layers; target currying must not erase them.
-    FunctionApplication(LitexToLeanFunctionApplicationIr),
+    FunctionApplication(LeanTargetFunctionApplicationRepresentation),
     ClosedRange {
-        start: Box<LitexToLeanObjectIr>,
-        end: Box<LitexToLeanObjectIr>,
+        start: Box<LeanTargetObjectRepresentation>,
+        end: Box<LeanTargetObjectRepresentation>,
     },
     Range {
-        start: Box<LitexToLeanObjectIr>,
-        end: Box<LitexToLeanObjectIr>,
+        start: Box<LeanTargetObjectRepresentation>,
+        end: Box<LeanTargetObjectRepresentation>,
     },
     GeneralCartesianProduct {
-        index_set: Box<LitexToLeanObjectIr>,
-        family_set: Box<LitexToLeanObjectIr>,
-        family_function: Box<LitexToLeanObjectIr>,
+        index_set: Box<LeanTargetObjectRepresentation>,
+        family_set: Box<LeanTargetObjectRepresentation>,
+        family_function: Box<LeanTargetObjectRepresentation>,
     },
     SequenceSet {
-        values: Box<LitexToLeanObjectIr>,
-        length: Option<Box<LitexToLeanObjectIr>>,
+        values: Box<LeanTargetObjectRepresentation>,
+        length: Option<Box<LeanTargetObjectRepresentation>>,
     },
     MatrixSet {
-        values: Box<LitexToLeanObjectIr>,
-        row_count: Box<LitexToLeanObjectIr>,
-        column_count: Box<LitexToLeanObjectIr>,
+        values: Box<LeanTargetObjectRepresentation>,
+        row_count: Box<LeanTargetObjectRepresentation>,
+        column_count: Box<LeanTargetObjectRepresentation>,
     },
     Aggregate {
         semantic_key: String,
-        kind: LitexToLeanAggregateObjectIr,
-        arguments: Vec<LitexToLeanObjectIr>,
+        kind: LeanTargetAggregateObjectConstructor,
+        arguments: Vec<LeanTargetObjectRepresentation>,
     },
-    TupleDimension(Box<LitexToLeanObjectIr>),
+    TupleDimension(Box<LeanTargetObjectRepresentation>),
     IndexedAccess {
-        object: Box<LitexToLeanObjectIr>,
-        index: Box<LitexToLeanObjectIr>,
+        object: Box<LeanTargetObjectRepresentation>,
+        index: Box<LeanTargetObjectRepresentation>,
     },
     BuiltinApp {
         /// Parser-owned identity used to join a proof-carrying syntax node to
@@ -69,40 +70,40 @@ pub enum LitexToLeanObjectIr {
         /// Structural identity used only to validate that the cited WD node
         /// still represents the same object; it is not used for selection.
         semantic_key: String,
-        operator: LitexToLeanBuiltinObjectOperatorIr,
-        arguments: Vec<LitexToLeanObjectIr>,
+        operator: LeanTargetBuiltinObjectOperator,
+        arguments: Vec<LeanTargetObjectRepresentation>,
     },
     Collection {
         /// Parser-owned identity used to select the exact constructor WD use.
         source_occurrence_id: Option<SourceObjectOccurrenceId>,
         /// Structural identity used only for post-selection validation.
         semantic_key: String,
-        constructor: LitexToLeanCollectionObjectIr,
-        items: Vec<LitexToLeanObjectIr>,
+        constructor: LeanTargetCollectionObjectConstructor,
+        items: Vec<LeanTargetObjectRepresentation>,
     },
 }
 
 #[derive(Clone)]
-pub struct LitexToLeanSetBuilderIr {
+pub struct LeanTargetSetBuilderRepresentation {
     pub semantic_key: String,
     pub symbol_id: SymbolId,
     pub name: String,
-    pub set: Box<LitexToLeanObjectIr>,
+    pub set: Box<LeanTargetObjectRepresentation>,
     pub facts: Vec<Fact>,
 }
 
-impl PartialEq for LitexToLeanSetBuilderIr {
+impl PartialEq for LeanTargetSetBuilderRepresentation {
     fn eq(&self, other: &Self) -> bool {
         self.semantic_key == other.semantic_key
     }
 }
 
-impl Eq for LitexToLeanSetBuilderIr {}
+impl Eq for LeanTargetSetBuilderRepresentation {}
 
-impl std::fmt::Debug for LitexToLeanSetBuilderIr {
+impl std::fmt::Debug for LeanTargetSetBuilderRepresentation {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         formatter
-            .debug_struct("LitexToLeanSetBuilderIr")
+            .debug_struct("LeanTargetSetBuilderRepresentation")
             .field("semantic_key", &self.semantic_key)
             .field("symbol_id", &self.symbol_id)
             .field("name", &self.name)
@@ -120,24 +121,24 @@ impl std::fmt::Debug for LitexToLeanSetBuilderIr {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct LitexToLeanAnonymousFunctionIr {
+pub struct LeanTargetAnonymousFunctionRepresentation {
     pub source_occurrence_id: Option<SourceObjectOccurrenceId>,
     /// Structural identity used only after occurrence selection to detect a
-    /// retargeted IR node; it is never a certificate-selection key.
+    /// retargeted representation node; it is never a certificate-selection key.
     pub semantic_key: String,
-    pub function: LitexToLeanFunctionTypeIr,
-    pub body: Box<LitexToLeanObjectIr>,
+    pub function: LeanTargetFunctionTypeRepresentation,
+    pub body: Box<LeanTargetObjectRepresentation>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum LitexToLeanConstantObjectIr {
+pub enum LeanTargetConstantObject {
     ImaginaryUnit,
     EulerNumber,
     Pi,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum LitexToLeanStandardSetIr {
+pub enum LeanTargetStandardSet {
     PositiveNatural,
     Natural,
     Rational,
@@ -156,7 +157,7 @@ pub enum LitexToLeanStandardSetIr {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum LitexToLeanBuiltinObjectOperatorIr {
+pub enum LeanTargetBuiltinObjectOperator {
     Add,
     Sub,
     Mul,
@@ -192,14 +193,14 @@ pub enum LitexToLeanBuiltinObjectOperatorIr {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum LitexToLeanCollectionObjectIr {
+pub enum LeanTargetCollectionObjectConstructor {
     ListSet,
     Tuple,
     SequenceLiteral,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum LitexToLeanAggregateObjectIr {
+pub enum LeanTargetAggregateObjectConstructor {
     Sum,
     Product,
     FiniteSetSum,
@@ -208,30 +209,30 @@ pub enum LitexToLeanAggregateObjectIr {
     FiniteSetReduce,
 }
 
-impl LitexToLeanObjectIr {
+impl LeanTargetObjectRepresentation {
     pub fn lower(obj: &Obj) -> Result<Self, String> {
         match obj {
             Obj::Atom(atom) => lower_atom(atom),
-            Obj::Number(number) => Ok(LitexToLeanObjectIr::Number {
+            Obj::Number(number) => Ok(LeanTargetObjectRepresentation::Number {
                 normalized_value: number.normalized_value.clone(),
             }),
-            Obj::ImaginaryUnit(_) => Ok(LitexToLeanObjectIr::Constant(
-                LitexToLeanConstantObjectIr::ImaginaryUnit,
+            Obj::ImaginaryUnit(_) => Ok(LeanTargetObjectRepresentation::Constant(
+                LeanTargetConstantObject::ImaginaryUnit,
             )),
-            Obj::EulerNumber(_) => Ok(LitexToLeanObjectIr::Constant(
-                LitexToLeanConstantObjectIr::EulerNumber,
+            Obj::EulerNumber(_) => Ok(LeanTargetObjectRepresentation::Constant(
+                LeanTargetConstantObject::EulerNumber,
             )),
-            Obj::Pi(_) => Ok(LitexToLeanObjectIr::Constant(
-                LitexToLeanConstantObjectIr::Pi,
+            Obj::Pi(_) => Ok(LeanTargetObjectRepresentation::Constant(
+                LeanTargetConstantObject::Pi,
             )),
-            Obj::StandardSet(set) => Ok(LitexToLeanObjectIr::StandardSet(set.into())),
-            Obj::FnSet(function_set) => Ok(LitexToLeanObjectIr::FunctionSet {
-                function: Box::new(LitexToLeanFunctionTypeIr::lower(function_set)?),
+            Obj::StandardSet(set) => Ok(LeanTargetObjectRepresentation::StandardSet(set.into())),
+            Obj::FnSet(function_set) => Ok(LeanTargetObjectRepresentation::FunctionSet {
+                function: Box::new(LeanTargetFunctionTypeRepresentation::lower(function_set)?),
             }),
             Obj::SetBuilder(set_builder) => {
-                let set = LitexToLeanObjectIr::lower(set_builder.param_set.as_ref())?;
-                Ok(LitexToLeanObjectIr::SetBuilder(Box::new(
-                    LitexToLeanSetBuilderIr {
+                let set = LeanTargetObjectRepresentation::lower(set_builder.param_set.as_ref())?;
+                Ok(LeanTargetObjectRepresentation::SetBuilder(Box::new(
+                    LeanTargetSetBuilderRepresentation {
                         semantic_key: obj_equality_key(&set_builder.clone().into()),
                         symbol_id: set_builder.param_binding.id(),
                         name: set_builder.param_binding.name().to_string(),
@@ -244,44 +245,44 @@ impl LitexToLeanObjectIr {
                     },
                 )))
             }
-            Obj::AnonymousFn(function) => Ok(LitexToLeanObjectIr::AnonymousFunction(Box::new(
-                LitexToLeanAnonymousFunctionIr {
+            Obj::AnonymousFn(function) => Ok(LeanTargetObjectRepresentation::AnonymousFunction(Box::new(
+                LeanTargetAnonymousFunctionRepresentation {
                     source_occurrence_id: function.source_occurrence_id,
                     semantic_key: obj_equality_key(obj),
-                    function: LitexToLeanFunctionTypeIr::lower_anonymous(function)?,
-                    body: Box::new(LitexToLeanObjectIr::lower(function.equal_to.as_ref())?),
+                    function: LeanTargetFunctionTypeRepresentation::lower_anonymous(function)?,
+                    body: Box::new(LeanTargetObjectRepresentation::lower(function.equal_to.as_ref())?),
                 },
             ))),
             Obj::FnObj(application) => lower_function_application(application),
-            Obj::ClosedRange(range) => Ok(LitexToLeanObjectIr::ClosedRange {
-                start: Box::new(LitexToLeanObjectIr::lower(range.start.as_ref())?),
-                end: Box::new(LitexToLeanObjectIr::lower(range.end.as_ref())?),
+            Obj::ClosedRange(range) => Ok(LeanTargetObjectRepresentation::ClosedRange {
+                start: Box::new(LeanTargetObjectRepresentation::lower(range.start.as_ref())?),
+                end: Box::new(LeanTargetObjectRepresentation::lower(range.end.as_ref())?),
             }),
-            Obj::Range(range) => Ok(LitexToLeanObjectIr::Range {
-                start: Box::new(LitexToLeanObjectIr::lower(range.start.as_ref())?),
-                end: Box::new(LitexToLeanObjectIr::lower(range.end.as_ref())?),
+            Obj::Range(range) => Ok(LeanTargetObjectRepresentation::Range {
+                start: Box::new(LeanTargetObjectRepresentation::lower(range.start.as_ref())?),
+                end: Box::new(LeanTargetObjectRepresentation::lower(range.end.as_ref())?),
             }),
-            Obj::GeneralCart(product) => Ok(LitexToLeanObjectIr::GeneralCartesianProduct {
-                index_set: Box::new(LitexToLeanObjectIr::lower(product.index_set.as_ref())?),
-                family_set: Box::new(LitexToLeanObjectIr::lower(product.family_set.as_ref())?),
-                family_function: Box::new(LitexToLeanObjectIr::lower(product.family_fn.as_ref())?),
+            Obj::GeneralCart(product) => Ok(LeanTargetObjectRepresentation::GeneralCartesianProduct {
+                index_set: Box::new(LeanTargetObjectRepresentation::lower(product.index_set.as_ref())?),
+                family_set: Box::new(LeanTargetObjectRepresentation::lower(product.family_set.as_ref())?),
+                family_function: Box::new(LeanTargetObjectRepresentation::lower(product.family_fn.as_ref())?),
             }),
-            Obj::FiniteSeqSet(sequence) => Ok(LitexToLeanObjectIr::SequenceSet {
-                values: Box::new(LitexToLeanObjectIr::lower(sequence.set.as_ref())?),
-                length: Some(Box::new(LitexToLeanObjectIr::lower(sequence.n.as_ref())?)),
+            Obj::FiniteSeqSet(sequence) => Ok(LeanTargetObjectRepresentation::SequenceSet {
+                values: Box::new(LeanTargetObjectRepresentation::lower(sequence.set.as_ref())?),
+                length: Some(Box::new(LeanTargetObjectRepresentation::lower(sequence.n.as_ref())?)),
             }),
-            Obj::SeqSet(sequence) => Ok(LitexToLeanObjectIr::SequenceSet {
-                values: Box::new(LitexToLeanObjectIr::lower(sequence.set.as_ref())?),
+            Obj::SeqSet(sequence) => Ok(LeanTargetObjectRepresentation::SequenceSet {
+                values: Box::new(LeanTargetObjectRepresentation::lower(sequence.set.as_ref())?),
                 length: None,
             }),
-            Obj::MatrixSet(matrix) => Ok(LitexToLeanObjectIr::MatrixSet {
-                values: Box::new(LitexToLeanObjectIr::lower(matrix.set.as_ref())?),
-                row_count: Box::new(LitexToLeanObjectIr::lower(matrix.row_len.as_ref())?),
-                column_count: Box::new(LitexToLeanObjectIr::lower(matrix.col_len.as_ref())?),
+            Obj::MatrixSet(matrix) => Ok(LeanTargetObjectRepresentation::MatrixSet {
+                values: Box::new(LeanTargetObjectRepresentation::lower(matrix.set.as_ref())?),
+                row_count: Box::new(LeanTargetObjectRepresentation::lower(matrix.row_len.as_ref())?),
+                column_count: Box::new(LeanTargetObjectRepresentation::lower(matrix.col_len.as_ref())?),
             }),
             Obj::Sum(value) => aggregate(
                 obj,
-                LitexToLeanAggregateObjectIr::Sum,
+                LeanTargetAggregateObjectConstructor::Sum,
                 [
                     value.start.as_ref(),
                     value.end.as_ref(),
@@ -290,7 +291,7 @@ impl LitexToLeanObjectIr {
             ),
             Obj::Product(value) => aggregate(
                 obj,
-                LitexToLeanAggregateObjectIr::Product,
+                LeanTargetAggregateObjectConstructor::Product,
                 [
                     value.start.as_ref(),
                     value.end.as_ref(),
@@ -299,17 +300,17 @@ impl LitexToLeanObjectIr {
             ),
             Obj::SumOfFiniteSet(value) => aggregate(
                 obj,
-                LitexToLeanAggregateObjectIr::FiniteSetSum,
+                LeanTargetAggregateObjectConstructor::FiniteSetSum,
                 [value.set.as_ref(), value.func.as_ref()],
             ),
             Obj::ProductOfFiniteSet(value) => aggregate(
                 obj,
-                LitexToLeanAggregateObjectIr::FiniteSetProduct,
+                LeanTargetAggregateObjectConstructor::FiniteSetProduct,
                 [value.set.as_ref(), value.func.as_ref()],
             ),
             Obj::Reduce(value) => aggregate(
                 obj,
-                LitexToLeanAggregateObjectIr::Reduce,
+                LeanTargetAggregateObjectConstructor::Reduce,
                 [
                     value.start.as_ref(),
                     value.end.as_ref(),
@@ -320,7 +321,7 @@ impl LitexToLeanObjectIr {
             ),
             Obj::FiniteSetReduce(value) => aggregate(
                 obj,
-                LitexToLeanAggregateObjectIr::FiniteSetReduce,
+                LeanTargetAggregateObjectConstructor::FiniteSetReduce,
                 [
                     value.set.as_ref(),
                     value.func.as_ref(),
@@ -328,183 +329,183 @@ impl LitexToLeanObjectIr {
                     value.seed.as_ref(),
                 ],
             ),
-            Obj::TupleDim(dimension) => Ok(LitexToLeanObjectIr::TupleDimension(Box::new(
-                LitexToLeanObjectIr::lower(dimension.arg.as_ref())?,
+            Obj::TupleDim(dimension) => Ok(LeanTargetObjectRepresentation::TupleDimension(Box::new(
+                LeanTargetObjectRepresentation::lower(dimension.arg.as_ref())?,
             ))),
-            Obj::ObjAtIndex(access) => Ok(LitexToLeanObjectIr::IndexedAccess {
-                object: Box::new(LitexToLeanObjectIr::lower(access.obj.as_ref())?),
-                index: Box::new(LitexToLeanObjectIr::lower(access.index.as_ref())?),
+            Obj::ObjAtIndex(access) => Ok(LeanTargetObjectRepresentation::IndexedAccess {
+                object: Box::new(LeanTargetObjectRepresentation::lower(access.obj.as_ref())?),
+                index: Box::new(LeanTargetObjectRepresentation::lower(access.index.as_ref())?),
             }),
             Obj::Add(value) => binary(
                 obj,
-                LitexToLeanBuiltinObjectOperatorIr::Add,
+                LeanTargetBuiltinObjectOperator::Add,
                 value.left.as_ref(),
                 value.right.as_ref(),
             ),
             Obj::Sub(value) => binary(
                 obj,
-                LitexToLeanBuiltinObjectOperatorIr::Sub,
+                LeanTargetBuiltinObjectOperator::Sub,
                 value.left.as_ref(),
                 value.right.as_ref(),
             ),
             Obj::Mul(value) => binary(
                 obj,
-                LitexToLeanBuiltinObjectOperatorIr::Mul,
+                LeanTargetBuiltinObjectOperator::Mul,
                 value.left.as_ref(),
                 value.right.as_ref(),
             ),
             Obj::Div(value) => binary(
                 obj,
-                LitexToLeanBuiltinObjectOperatorIr::Div,
+                LeanTargetBuiltinObjectOperator::Div,
                 value.left.as_ref(),
                 value.right.as_ref(),
             ),
             Obj::Mod(value) => binary(
                 obj,
-                LitexToLeanBuiltinObjectOperatorIr::Mod,
+                LeanTargetBuiltinObjectOperator::Mod,
                 value.left.as_ref(),
                 value.right.as_ref(),
             ),
             Obj::Quot(_) => Err(
-                "Litex-to-Lean Obj IR does not yet support the builtin `quot` object".to_string(),
+                "Litex-to-Lean object representation does not yet support the builtin `quot` object".to_string(),
             ),
             Obj::Gcd(value) => binary(
                 obj,
-                LitexToLeanBuiltinObjectOperatorIr::Gcd,
+                LeanTargetBuiltinObjectOperator::Gcd,
                 value.left.as_ref(),
                 value.right.as_ref(),
             ),
             Obj::Lcm(value) => binary(
                 obj,
-                LitexToLeanBuiltinObjectOperatorIr::Lcm,
+                LeanTargetBuiltinObjectOperator::Lcm,
                 value.left.as_ref(),
                 value.right.as_ref(),
             ),
             Obj::Floor(value) => unary(
                 obj,
-                LitexToLeanBuiltinObjectOperatorIr::Floor,
+                LeanTargetBuiltinObjectOperator::Floor,
                 value.arg.as_ref(),
             ),
             Obj::Ceil(value) => unary(
                 obj,
-                LitexToLeanBuiltinObjectOperatorIr::Ceil,
+                LeanTargetBuiltinObjectOperator::Ceil,
                 value.arg.as_ref(),
             ),
             Obj::Min(value) => binary(
                 obj,
-                LitexToLeanBuiltinObjectOperatorIr::Min,
+                LeanTargetBuiltinObjectOperator::Min,
                 value.left.as_ref(),
                 value.right.as_ref(),
             ),
             Obj::Max(value) => binary(
                 obj,
-                LitexToLeanBuiltinObjectOperatorIr::Max,
+                LeanTargetBuiltinObjectOperator::Max,
                 value.left.as_ref(),
                 value.right.as_ref(),
             ),
             Obj::Exp(value) => unary(
                 obj,
-                LitexToLeanBuiltinObjectOperatorIr::Exp,
+                LeanTargetBuiltinObjectOperator::Exp,
                 value.arg.as_ref(),
             ),
             Obj::Ln(value) => unary(
                 obj,
-                LitexToLeanBuiltinObjectOperatorIr::Ln,
+                LeanTargetBuiltinObjectOperator::Ln,
                 value.arg.as_ref(),
             ),
             Obj::Sign(value) => unary(
                 obj,
-                LitexToLeanBuiltinObjectOperatorIr::Sign,
+                LeanTargetBuiltinObjectOperator::Sign,
                 value.arg.as_ref(),
             ),
             Obj::Factorial(value) => unary(
                 obj,
-                LitexToLeanBuiltinObjectOperatorIr::Factorial,
+                LeanTargetBuiltinObjectOperator::Factorial,
                 value.arg.as_ref(),
             ),
             Obj::Pow(value) => binary(
                 obj,
-                LitexToLeanBuiltinObjectOperatorIr::Pow,
+                LeanTargetBuiltinObjectOperator::Pow,
                 value.base.as_ref(),
                 value.exponent.as_ref(),
             ),
             Obj::Abs(value) => unary(
                 obj,
-                LitexToLeanBuiltinObjectOperatorIr::Abs,
+                LeanTargetBuiltinObjectOperator::Abs,
                 value.arg.as_ref(),
             ),
             Obj::Sin(value) => unary(
                 obj,
-                LitexToLeanBuiltinObjectOperatorIr::Sin,
+                LeanTargetBuiltinObjectOperator::Sin,
                 value.arg.as_ref(),
             ),
             Obj::Cos(value) => unary(
                 obj,
-                LitexToLeanBuiltinObjectOperatorIr::Cos,
+                LeanTargetBuiltinObjectOperator::Cos,
                 value.arg.as_ref(),
             ),
             Obj::Tan(value) => unary(
                 obj,
-                LitexToLeanBuiltinObjectOperatorIr::Tan,
+                LeanTargetBuiltinObjectOperator::Tan,
                 value.arg.as_ref(),
             ),
             Obj::Cot(value) => unary(
                 obj,
-                LitexToLeanBuiltinObjectOperatorIr::Cot,
+                LeanTargetBuiltinObjectOperator::Cot,
                 value.arg.as_ref(),
             ),
             Obj::RealPart(value) => unary(
                 obj,
-                LitexToLeanBuiltinObjectOperatorIr::RealPart,
+                LeanTargetBuiltinObjectOperator::RealPart,
                 value.arg.as_ref(),
             ),
             Obj::ImaginaryPart(value) => unary(
                 obj,
-                LitexToLeanBuiltinObjectOperatorIr::ImaginaryPart,
+                LeanTargetBuiltinObjectOperator::ImaginaryPart,
                 value.arg.as_ref(),
             ),
             Obj::ComplexAbs(value) => unary(
                 obj,
-                LitexToLeanBuiltinObjectOperatorIr::ComplexAbs,
+                LeanTargetBuiltinObjectOperator::ComplexAbs,
                 value.arg.as_ref(),
             ),
             Obj::Sqrt(value) => unary(
                 obj,
-                LitexToLeanBuiltinObjectOperatorIr::Sqrt,
+                LeanTargetBuiltinObjectOperator::Sqrt,
                 value.arg.as_ref(),
             ),
             Obj::Log(value) => binary(
                 obj,
-                LitexToLeanBuiltinObjectOperatorIr::Log,
+                LeanTargetBuiltinObjectOperator::Log,
                 value.base.as_ref(),
                 value.arg.as_ref(),
             ),
             Obj::Union(value) => binary(
                 obj,
-                LitexToLeanBuiltinObjectOperatorIr::Union,
+                LeanTargetBuiltinObjectOperator::Union,
                 value.left.as_ref(),
                 value.right.as_ref(),
             ),
             Obj::Intersect(value) => binary(
                 obj,
-                LitexToLeanBuiltinObjectOperatorIr::Intersect,
+                LeanTargetBuiltinObjectOperator::Intersect,
                 value.left.as_ref(),
                 value.right.as_ref(),
             ),
             Obj::SetMinus(value) => binary(
                 obj,
-                LitexToLeanBuiltinObjectOperatorIr::SetMinus,
+                LeanTargetBuiltinObjectOperator::SetMinus,
                 value.left.as_ref(),
                 value.right.as_ref(),
             ),
             Obj::BigUnion(value) => unary(
                 obj,
-                LitexToLeanBuiltinObjectOperatorIr::BigUnion,
+                LeanTargetBuiltinObjectOperator::BigUnion,
                 value.left.as_ref(),
             ),
             Obj::BigIntersect(value) => unary(
                 obj,
-                LitexToLeanBuiltinObjectOperatorIr::BigIntersect,
+                LeanTargetBuiltinObjectOperator::BigIntersect,
                 value.left.as_ref(),
             ),
             Obj::IndexUnion(_) => Err(
@@ -517,41 +518,41 @@ impl LitexToLeanObjectIr {
             ),
             Obj::PowerSet(value) => unary(
                 obj,
-                LitexToLeanBuiltinObjectOperatorIr::PowerSet,
+                LeanTargetBuiltinObjectOperator::PowerSet,
                 value.set.as_ref(),
             ),
-            Obj::ListSet(value) => Ok(LitexToLeanObjectIr::Collection {
+            Obj::ListSet(value) => Ok(LeanTargetObjectRepresentation::Collection {
                 source_occurrence_id: value.source_occurrence_id,
                 semantic_key: obj_equality_key(obj),
-                constructor: LitexToLeanCollectionObjectIr::ListSet,
+                constructor: LeanTargetCollectionObjectConstructor::ListSet,
                 items: value
                     .list
                     .iter()
-                    .map(|item| LitexToLeanObjectIr::lower(item.as_ref()))
+                    .map(|item| LeanTargetObjectRepresentation::lower(item.as_ref()))
                     .collect::<Result<Vec<_>, _>>()?,
             }),
-            Obj::Tuple(value) => Ok(LitexToLeanObjectIr::Collection {
+            Obj::Tuple(value) => Ok(LeanTargetObjectRepresentation::Collection {
                 source_occurrence_id: None,
                 semantic_key: obj_equality_key(obj),
-                constructor: LitexToLeanCollectionObjectIr::Tuple,
+                constructor: LeanTargetCollectionObjectConstructor::Tuple,
                 items: value
                     .args
                     .iter()
-                    .map(|item| LitexToLeanObjectIr::lower(item.as_ref()))
+                    .map(|item| LeanTargetObjectRepresentation::lower(item.as_ref()))
                     .collect::<Result<Vec<_>, _>>()?,
             }),
-            Obj::FiniteSeqListObj(value) => Ok(LitexToLeanObjectIr::Collection {
+            Obj::FiniteSeqListObj(value) => Ok(LeanTargetObjectRepresentation::Collection {
                 source_occurrence_id: None,
                 semantic_key: obj_equality_key(obj),
-                constructor: LitexToLeanCollectionObjectIr::SequenceLiteral,
+                constructor: LeanTargetCollectionObjectConstructor::SequenceLiteral,
                 items: value
                     .objs
                     .iter()
-                    .map(|item| LitexToLeanObjectIr::lower(item.as_ref()))
+                    .map(|item| LeanTargetObjectRepresentation::lower(item.as_ref()))
                     .collect::<Result<Vec<_>, _>>()?,
             }),
             other => Err(format!(
-                "Litex-to-Lean Obj IR does not support {:?} object `{}`",
+                "Litex-to-Lean object representation does not support {:?} object `{}`",
                 other.kind(),
                 other
             )),
@@ -559,7 +560,9 @@ impl LitexToLeanObjectIr {
     }
 }
 
-fn lower_function_application(application: &FnObj) -> Result<LitexToLeanObjectIr, String> {
+fn lower_function_application(
+    application: &FnObj,
+) -> Result<LeanTargetObjectRepresentation, String> {
     let source_occurrence_id = application.source_occurrence_id.ok_or_else(|| {
         format!(
             "Litex-to-Lean requires parser-owned occurrence identity for application `{}`",
@@ -567,14 +570,14 @@ fn lower_function_application(application: &FnObj) -> Result<LitexToLeanObjectIr
         )
     })?;
     let head_obj: Obj = (*application.head).clone().into();
-    let head = LitexToLeanObjectIr::lower(&head_obj)?;
+    let head = LeanTargetObjectRepresentation::lower(&head_obj)?;
     let argument_layers = application
         .body
         .iter()
         .map(|layer| {
             layer
                 .iter()
-                .map(|argument| LitexToLeanObjectIr::lower(argument.as_ref()))
+                .map(|argument| LeanTargetObjectRepresentation::lower(argument.as_ref()))
                 .collect::<Result<Vec<_>, _>>()
         })
         .collect::<Result<Vec<_>, _>>()?;
@@ -588,8 +591,8 @@ fn lower_function_application(application: &FnObj) -> Result<LitexToLeanObjectIr
                 .collect::<Vec<_>>()
         })
         .collect();
-    Ok(LitexToLeanObjectIr::FunctionApplication(
-        LitexToLeanFunctionApplicationIr {
+    Ok(LeanTargetObjectRepresentation::FunctionApplication(
+        LeanTargetFunctionApplicationRepresentation {
             head: Box::new(head),
             source_occurrence_id,
             source_application: application.clone().into(),
@@ -599,14 +602,14 @@ fn lower_function_application(application: &FnObj) -> Result<LitexToLeanObjectIr
     ))
 }
 
-fn lower_atom(atom: &AtomObj) -> Result<LitexToLeanObjectIr, String> {
+fn lower_atom(atom: &AtomObj) -> Result<LeanTargetObjectRepresentation, String> {
     let Some(symbol) = atom.symbol_ref() else {
         return Err(format!(
-            "Litex-to-Lean Obj IR requires a resolved SymbolId for atom `{}`",
+            "Litex-to-Lean object representation requires a resolved SymbolId for atom `{}`",
             atom
         ));
     };
-    Ok(LitexToLeanObjectIr::Symbol {
+    Ok(LeanTargetObjectRepresentation::Symbol {
         symbol_id: symbol.id(),
         name: symbol.display_name().to_string(),
     })
@@ -614,67 +617,67 @@ fn lower_atom(atom: &AtomObj) -> Result<LitexToLeanObjectIr, String> {
 
 fn unary(
     source: &Obj,
-    operator: LitexToLeanBuiltinObjectOperatorIr,
+    operator: LeanTargetBuiltinObjectOperator,
     argument: &Obj,
-) -> Result<LitexToLeanObjectIr, String> {
-    Ok(LitexToLeanObjectIr::BuiltinApp {
+) -> Result<LeanTargetObjectRepresentation, String> {
+    Ok(LeanTargetObjectRepresentation::BuiltinApp {
         source_occurrence_id: source.source_occurrence_id(),
         semantic_key: obj_equality_key(source),
         operator,
-        arguments: vec![LitexToLeanObjectIr::lower(argument)?],
+        arguments: vec![LeanTargetObjectRepresentation::lower(argument)?],
     })
 }
 
 fn binary(
     source: &Obj,
-    operator: LitexToLeanBuiltinObjectOperatorIr,
+    operator: LeanTargetBuiltinObjectOperator,
     left: &Obj,
     right: &Obj,
-) -> Result<LitexToLeanObjectIr, String> {
-    Ok(LitexToLeanObjectIr::BuiltinApp {
+) -> Result<LeanTargetObjectRepresentation, String> {
+    Ok(LeanTargetObjectRepresentation::BuiltinApp {
         source_occurrence_id: source.source_occurrence_id(),
         semantic_key: obj_equality_key(source),
         operator,
         arguments: vec![
-            LitexToLeanObjectIr::lower(left)?,
-            LitexToLeanObjectIr::lower(right)?,
+            LeanTargetObjectRepresentation::lower(left)?,
+            LeanTargetObjectRepresentation::lower(right)?,
         ],
     })
 }
 
 fn aggregate<'a, const N: usize>(
     source: &Obj,
-    kind: LitexToLeanAggregateObjectIr,
+    kind: LeanTargetAggregateObjectConstructor,
     arguments: [&'a Obj; N],
-) -> Result<LitexToLeanObjectIr, String> {
-    Ok(LitexToLeanObjectIr::Aggregate {
+) -> Result<LeanTargetObjectRepresentation, String> {
+    Ok(LeanTargetObjectRepresentation::Aggregate {
         semantic_key: obj_equality_key(source),
         kind,
         arguments: arguments
             .into_iter()
-            .map(LitexToLeanObjectIr::lower)
+            .map(LeanTargetObjectRepresentation::lower)
             .collect::<Result<Vec<_>, _>>()?,
     })
 }
 
-impl From<&StandardSet> for LitexToLeanStandardSetIr {
+impl From<&StandardSet> for LeanTargetStandardSet {
     fn from(value: &StandardSet) -> Self {
         match value {
-            StandardSet::NPos => LitexToLeanStandardSetIr::PositiveNatural,
-            StandardSet::N => LitexToLeanStandardSetIr::Natural,
-            StandardSet::Q => LitexToLeanStandardSetIr::Rational,
-            StandardSet::Z => LitexToLeanStandardSetIr::Integer,
-            StandardSet::R => LitexToLeanStandardSetIr::Real,
-            StandardSet::C => LitexToLeanStandardSetIr::Complex,
-            StandardSet::QPos => LitexToLeanStandardSetIr::PositiveRational,
-            StandardSet::RPos => LitexToLeanStandardSetIr::PositiveReal,
-            StandardSet::QNeg => LitexToLeanStandardSetIr::NegativeRational,
-            StandardSet::ZNeg => LitexToLeanStandardSetIr::NegativeInteger,
-            StandardSet::RNeg => LitexToLeanStandardSetIr::NegativeReal,
-            StandardSet::QStar => LitexToLeanStandardSetIr::NonzeroRational,
-            StandardSet::ZStar => LitexToLeanStandardSetIr::NonzeroInteger,
-            StandardSet::RStar => LitexToLeanStandardSetIr::NonzeroReal,
-            StandardSet::CStar => LitexToLeanStandardSetIr::NonzeroComplex,
+            StandardSet::NPos => LeanTargetStandardSet::PositiveNatural,
+            StandardSet::N => LeanTargetStandardSet::Natural,
+            StandardSet::Q => LeanTargetStandardSet::Rational,
+            StandardSet::Z => LeanTargetStandardSet::Integer,
+            StandardSet::R => LeanTargetStandardSet::Real,
+            StandardSet::C => LeanTargetStandardSet::Complex,
+            StandardSet::QPos => LeanTargetStandardSet::PositiveRational,
+            StandardSet::RPos => LeanTargetStandardSet::PositiveReal,
+            StandardSet::QNeg => LeanTargetStandardSet::NegativeRational,
+            StandardSet::ZNeg => LeanTargetStandardSet::NegativeInteger,
+            StandardSet::RNeg => LeanTargetStandardSet::NegativeReal,
+            StandardSet::QStar => LeanTargetStandardSet::NonzeroRational,
+            StandardSet::ZStar => LeanTargetStandardSet::NonzeroInteger,
+            StandardSet::RStar => LeanTargetStandardSet::NonzeroReal,
+            StandardSet::CStar => LeanTargetStandardSet::NonzeroComplex,
         }
     }
 }
@@ -694,17 +697,17 @@ mod tests {
 
         let union: Obj = Union::new(left.clone(), right.clone()).into();
         assert_eq!(
-            LitexToLeanObjectIr::lower(&union).unwrap(),
-            LitexToLeanObjectIr::BuiltinApp {
+            LeanTargetObjectRepresentation::lower(&union).unwrap(),
+            LeanTargetObjectRepresentation::BuiltinApp {
                 source_occurrence_id: None,
                 semantic_key: obj_equality_key(&union),
-                operator: LitexToLeanBuiltinObjectOperatorIr::Union,
+                operator: LeanTargetBuiltinObjectOperator::Union,
                 arguments: vec![
-                    LitexToLeanObjectIr::Symbol {
+                    LeanTargetObjectRepresentation::Symbol {
                         symbol_id: left_binding.id(),
                         name: "left".to_string(),
                     },
-                    LitexToLeanObjectIr::Symbol {
+                    LeanTargetObjectRepresentation::Symbol {
                         symbol_id: right_binding.id(),
                         name: "right".to_string(),
                     },
@@ -714,17 +717,17 @@ mod tests {
 
         let list: Obj = ListSet::new(vec![right, left]).into();
         assert_eq!(
-            LitexToLeanObjectIr::lower(&list).unwrap(),
-            LitexToLeanObjectIr::Collection {
+            LeanTargetObjectRepresentation::lower(&list).unwrap(),
+            LeanTargetObjectRepresentation::Collection {
                 source_occurrence_id: None,
                 semantic_key: obj_equality_key(&list),
-                constructor: LitexToLeanCollectionObjectIr::ListSet,
+                constructor: LeanTargetCollectionObjectConstructor::ListSet,
                 items: vec![
-                    LitexToLeanObjectIr::Symbol {
+                    LeanTargetObjectRepresentation::Symbol {
                         symbol_id: right_binding.id(),
                         name: "right".to_string(),
                     },
-                    LitexToLeanObjectIr::Symbol {
+                    LeanTargetObjectRepresentation::Symbol {
                         symbol_id: left_binding.id(),
                         name: "left".to_string(),
                     },
@@ -739,7 +742,7 @@ mod tests {
         let right: Obj = Identifier::new("right".to_string()).into();
         let unresolved: Obj = Union::new(left, right).into();
 
-        let error = LitexToLeanObjectIr::lower(&unresolved).unwrap_err();
+        let error = LeanTargetObjectRepresentation::lower(&unresolved).unwrap_err();
         assert!(error.contains("resolved SymbolId"));
     }
 
@@ -751,11 +754,11 @@ mod tests {
 
         let union: Obj =
             IndexUnion::new(index_set.clone(), ambient_set.clone(), family.clone()).into();
-        let union_error = LitexToLeanObjectIr::lower(&union).unwrap_err();
+        let union_error = LeanTargetObjectRepresentation::lower(&union).unwrap_err();
         assert!(union_error.contains("does not yet support `index_union`"));
 
         let intersection: Obj = IndexIntersect::new(index_set, ambient_set, family).into();
-        let intersection_error = LitexToLeanObjectIr::lower(&intersection).unwrap_err();
+        let intersection_error = LeanTargetObjectRepresentation::lower(&intersection).unwrap_err();
         assert!(intersection_error.contains("does not yet support `index_intersect`"));
     }
 
@@ -771,16 +774,16 @@ mod tests {
         .expect("test set-builder should be well formed")
         .into();
 
-        let lowered = LitexToLeanObjectIr::lower(&builder)
+        let lowered = LeanTargetObjectRepresentation::lower(&builder)
             .expect("a set-builder has no target carrier to resolve");
-        let LitexToLeanObjectIr::SetBuilder(lowered) = lowered else {
-            panic!("expected an explicit set-builder IR node")
+        let LeanTargetObjectRepresentation::SetBuilder(lowered) = lowered else {
+            panic!("expected an explicit set-builder representation node")
         };
         assert_eq!(lowered.symbol_id, binding.id());
         assert_eq!(lowered.name, "x");
         assert_eq!(
             lowered.set.as_ref(),
-            &LitexToLeanObjectIr::StandardSet(LitexToLeanStandardSetIr::Real)
+            &LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Real)
         );
         assert_eq!(lowered.facts.len(), 1);
         assert_eq!(lowered.facts[0].to_string(), "#7#x = #7#x");

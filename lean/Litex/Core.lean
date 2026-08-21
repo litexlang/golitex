@@ -983,6 +983,18 @@ strict-positivity proof. This is not an alias of `N`: membership retains the
 refining predicate in the carrier. -/
 abbrev NPos : Litex.Set := setBuilder N (fun n => 0 < n)
 
+/-- Positive rationals retain their exact native rational representative and
+strict-positivity certificate. -/
+abbrev QPos : Litex.Set := setBuilder Q (fun q => 0 < q)
+
+/-- Negative integers retain their exact native integer representative and
+strict-negativity certificate. -/
+abbrev ZNeg : Litex.Set := setBuilder Z (fun z => z < 0)
+
+/-- Negative rationals retain their exact native rational representative and
+strict-negativity certificate. -/
+abbrev QNeg : Litex.Set := setBuilder Q (fun q => q < 0)
+
 /-- Half-open integer range with its exact Mathlib finite carrier. -/
 def range (start finish : ℤ) : Litex.Set :=
   Set.ofType {z : ℤ // z ∈ Finset.Ico start finish}
@@ -1141,6 +1153,10 @@ def finiteSetReduce (set : alpha) (function : beta) (operation : gamma) (seed : 
 strict-positivity proof. -/
 abbrev RPos : Litex.Set := setBuilder R (fun r => 0 < r)
 
+/-- Negative reals retain their exact native real representative and
+strict-negativity certificate. -/
+abbrev RNeg : Litex.Set := setBuilder R (fun r => r < 0)
+
 /-- Nonzero integers retain a complex source representative together with the
 exact integer-membership and semantic-nonzero certificates used by Litex. -/
 abbrev ZStar : Litex.Set :=
@@ -1250,6 +1266,22 @@ def Nonnegative
     (x : α) : Prop :=
   ∃ r : ℝ, AsReal x r ∧ 0 ≤ r
 
+/-- Canonical lowering of a source comparison `x ≤ 0`. Like
+`Nonnegative`, this owns the one real representative selected for `x`; it is
+not reconstructed from an unrelated `Complex.re` observation. -/
+def Nonpositive
+    {α : Type}
+    (x : α) : Prop :=
+  ∃ r : ℝ, AsReal x r ∧ r ≤ 0
+
+/-- Canonical lowering of a source comparison `x < 0`. Like `Positive`, this
+owns one selected real representative and therefore transports soundly across
+Litex semantic equality. -/
+def Negative
+    {α : Type}
+    (x : α) : Prop :=
+  ∃ r : ℝ, AsReal x r ∧ r < 0
+
 namespace Positive
 
 theorem intro
@@ -1307,6 +1339,56 @@ theorem congr
     exact ⟨r, (AsReal.congr hxy).mpr hyr, hr⟩
 
 end Nonnegative
+
+namespace Nonpositive
+
+theorem intro
+    {α : Type}
+    {x : α}
+    {r : ℝ}
+    (hxr : AsReal x r)
+    (hr : r ≤ 0) :
+    Nonpositive x :=
+  ⟨r, hxr, hr⟩
+
+theorem congr
+    {α β : Type}
+    {x : α}
+    {y : β}
+    (hxy : Same x y) :
+    Nonpositive x ↔ Nonpositive y := by
+  constructor
+  · rintro ⟨r, hxr, hr⟩
+    exact ⟨r, (AsReal.congr hxy).mp hxr, hr⟩
+  · rintro ⟨r, hyr, hr⟩
+    exact ⟨r, (AsReal.congr hxy).mpr hyr, hr⟩
+
+end Nonpositive
+
+namespace Negative
+
+theorem intro
+    {α : Type}
+    {x : α}
+    {r : ℝ}
+    (hxr : AsReal x r)
+    (hr : r < 0) :
+    Negative x :=
+  ⟨r, hxr, hr⟩
+
+theorem congr
+    {α β : Type}
+    {x : α}
+    {y : β}
+    (hxy : Same x y) :
+    Negative x ↔ Negative y := by
+  constructor
+  · rintro ⟨r, hxr, hr⟩
+    exact ⟨r, (AsReal.congr hxy).mp hxr, hr⟩
+  · rintro ⟨r, hyr, hr⟩
+    exact ⟨r, (AsReal.congr hxy).mpr hyr, hr⟩
+
+end Negative
 
 /-- The canonical Mathlib-ordered observation of a compiled Litex numeric
 object. Source admission into the ordered-real fragment is verifier-owned;

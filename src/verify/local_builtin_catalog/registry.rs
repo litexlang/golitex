@@ -27,6 +27,7 @@ impl RegisteredLocalBuiltinRule {
         rule_id
     }
 
+    #[cfg(test)]
     pub fn semantic_fingerprint(&self) -> &RuleFingerprint {
         let RuleSourceRef::LocalBuiltin {
             semantic_fingerprint,
