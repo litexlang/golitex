@@ -58,17 +58,36 @@ fn compile_registered_local_builtin_rules() -> Result<Vec<RegisteredLocalBuiltin
 {
     GENERATED_LOCAL_BUILTIN_RULES
         .iter()
-        .map(|source| {
-            let id = RuleId::new(source.id).map_err(registry_error)?;
-            let fingerprint =
-                RuleFingerprint::from_hex(source.semantic_fingerprint).map_err(registry_error)?;
-            let schema = compile_local_builtin_schema(source.litex_source, id, fingerprint)?;
-            Ok(RegisteredLocalBuiltinRule {
-                schema,
-                _lean_theorem_name: source.lean_theorem_name,
-            })
-        })
+        .map(compile_registered_local_builtin_rule)
         .collect()
+}
+
+fn compile_registered_local_builtin_rule(
+    source: &GeneratedLocalBuiltinRuleSource,
+) -> Result<RegisteredLocalBuiltinRule, RuntimeError> {
+    let id = RuleId::new(source.id).map_err(registry_error)?;
+    let fingerprint =
+        RuleFingerprint::from_hex(source.semantic_fingerprint).map_err(registry_error)?;
+    let schema = compile_local_builtin_schema(source.litex_source, id, fingerprint)?;
+    Ok(RegisteredLocalBuiltinRule {
+        schema,
+        _lean_theorem_name: source.lean_theorem_name,
+    })
+}
+
+/// Read the generated semantic fingerprint without parsing the Litex schema.
+/// Result consumers use this narrow metadata lookup to reject stale
+/// certificates without rebuilding the verifier catalog.
+pub(crate) fn registered_local_builtin_fingerprint_by_id(
+    rule_id: &RuleId,
+) -> Result<Option<RuleFingerprint>, RuntimeError> {
+    GENERATED_LOCAL_BUILTIN_RULES
+        .iter()
+        .find(|source| source.id == rule_id.as_str())
+        .map(|source| {
+            RuleFingerprint::from_hex(source.semantic_fingerprint).map_err(registry_error)
+        })
+        .transpose()
 }
 
 thread_local! {

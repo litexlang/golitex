@@ -1,0 +1,21 @@
+# Tracer: trusted object declarations and their exact Result effects
+#
+# Before: `trust have` was executable by Litex but had no
+# StmtResult-to-Lean statement route.
+#
+# Now: each trusted object is emitted as an explicit Lean axiom at the same
+# source trust boundary. Its parameter-membership store keeps the Runtime
+# FactId, and attached trusted facts are emitted in their retained store order.
+# The later application resolves the function contract and WD-produced return
+# membership through those exact FactIds.
+#
+# Boundary: this tracer covers ordinary object carriers with no inferred
+# sibling facts. Trusted set/refined-set declarations and parameter stores
+# with inference children remain fail-closed.
+
+trust have f fn(x R) R
+
+trust have a R:
+    a = a
+
+f(a) $in R

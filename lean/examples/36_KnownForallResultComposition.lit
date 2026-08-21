@@ -1,0 +1,18 @@
+# Before: KnownForallInstantiation reached Lean through the compatibility
+# statement/proof IR, even though its Result already retained the exact source
+# FactId, ordered arguments, and recursive parameter/domain requirement Results.
+#
+# Now: the compiler resolves the source forall only by FactId, compiles the
+# `2 in R` requirement from its child Result, checks the instantiated conclusion,
+# and combines both layers into the Lean theorem application directly.
+#
+# Boundary: this tracer has one object parameter and no explicit domain fact.
+# Reclassifying the parameter requirement as a domain requirement is rejected
+# by a focused Rust corruption test.
+abstract_prop known_forall_target(x)
+
+axiom known_forall_real_source:
+    ? forall x R:
+        $known_forall_target(x)
+
+$known_forall_target(2)

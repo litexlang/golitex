@@ -1,7 +1,7 @@
 # MIL-derived Litex mathematical interface map
 
-> Publication status (2026-08-20): the runnable module exports only Chapters
-> 1, 3, 5, 6, and 7 plus the introduction. Other cards describe preserved
+> Publication status (2026-08-21): the runnable module exports Chapters
+> 1--9 plus the introduction. Other cards describe preserved
 > chapters in `../todo_textbook_chapters/`, not current published interfaces.
 
 This is the design manual for the independent Litex translation pressure-test
@@ -279,6 +279,12 @@ Chapter 8 retains `TwoSidedGroup` under a distinct name because that source
 hierarchy assumes right identity as a primitive law, unlike Chapter 2's
 left-facing `Group`.
 
+The inherited-submonoid object keeps the source-facing name but uses a typed,
+declaration-owned `inherited_submonoid_mul` internally. A checked intermediate
+theorem establishes the exact `Monoid<carrier>` tuple before the object
+template consumes it; this avoids storing an anonymous restricted function as
+part of a theorem conclusion.
+
 The integer natural-scalar instance is likewise an actual
 `AdditiveMonoidWithNSmul<Z>` object. Its action is `(n,x) |-> n*x`, so the zero
 and successor laws normalize directly. The generic recursive natural-scalar
@@ -505,11 +511,18 @@ surjectivity and it being a right inverse.
 Chapter 4 also exposes the source-ordered `sb_aux`, `sb_set`, and `sb_fun`
 constructions. The right-inverse lemma, closure of `sb_set` under `g o f`, and
 the injective and surjective branches of `sb_fun` lead to the final explicit
-Schröder–Bernstein bijection witness. The exact zero, successor, and two
-piecewise computation equations currently form a visible four-trust
-`kernel_problem` boundary because template computation facts are not exported
-to later verification. Thus the source family is fully translated and
-executable, but it is not checkable until those four equations are discharged.
+Schröder–Bernstein bijection witness. The zero and two piecewise computation
+equations are checked; the successor equation retains one localized trust
+because equality at `(n + 1) - 1` is not transported through both selected
+image objects to the normalized index `n`.
+
+Chapter 4 is published with that explicit source debt unchanged. On the
+2026-08-21 current release, `inverse_fiber_nonempty` and the remainder of the
+chapter pass both the canonical registered-file gate and the complete source
+module gate. Child-environment commit now reuses the identical parent
+`inverse_fiber<S,T,default,f>` object. The set-valued `have fn` remains the
+correct model because choice and downstream membership consume the actual
+fiber set; a proposition wrapper remains rejected as a semantic change.
 
 ## Finite and inductive mathematics
 

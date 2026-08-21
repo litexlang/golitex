@@ -46,6 +46,83 @@ The following sections describe the compiler's design for these two problems.
 
 # Representation of Litex Mathematics in Lean
 
+## Confirmed Input-Binder and Numeric-View ABI
+
+Status: confirmed on 2026-08-21; this is the target ABI and the active forall
+emitter has not yet been migrated.
+
+Every Litex input-value binder must use its own implicit Lean host carrier.
+The host type represents and transports the source value but carries no Litex
+mathematical classification. For example, the target shape of:
+
+```litex
+forall a R, b C:
+    a + b = b + a
+```
+
+is:
+
+```lean
+∀ {α β : Type}
+  (a : α) (haR : Litex.In a Litex.R)
+  (b : β) (hbC : Litex.In b Litex.C),
+  Litex.Same
+    ((Litex.In.rep a haR : ℝ) + (Litex.In.rep b hbC : ℂ))
+    ((Litex.In.rep b hbC : ℂ) + (Litex.In.rep a haR : ℝ))
+```
+
+Thus Lean typing is the host representation layer, `Litex.In` is the source
+mathematical-classification layer, and `Litex.In.rep` is the proved route from
+one visible membership fact to the exact native carrier required by an
+operation. Proving another membership for `a` never changes `α`; it supplies
+another independently usable representative. The compiler must select the
+membership FactId retained for the exact source occurrence and must fail
+closed when the required membership evidence is absent.
+
+This policy applies to universally quantified values and function inputs. It
+does not hide Litex set parameters, erase the fixed Mathlib carriers of native
+constants, or re-box compiler results that already inhabit an exact
+`S.Carrier`. Existential and `have` outputs may use the exact carrier of the
+set from which the compiler constructs their representative. In short:
+
+```text
+input value  = implicit host carrier + explicit Litex.In evidence
+output value = exact target-set carrier
+operation    = verifier-selected evidence + Litex.In.rep
+```
+
+Nearest rejected forms are binding `forall a R` directly as `a : ℝ`, binding
+all standard numeric inputs as `a : ℂ`, or choosing a representative from an
+unrelated membership merely because it elaborates to the desired Lean type.
+
+When a verifier-selected membership proof supplies an exact real
+representative and the surrounding native arithmetic expression unambiguously
+has carrier `ℂ`, generated Lean should rely on Lean's standard `ℝ → ℂ`
+coercion instead of printing a redundant explicit outer cast. The preferred
+surface form is:
+
+```lean
+(Litex.In.rep a haR : ℝ) + (Litex.In.rep b hbC : ℂ)
+```
+
+rather than:
+
+```lean
+((Litex.In.rep a haR : ℝ) : ℂ) + (Litex.In.rep b hbC : ℂ)
+```
+
+This is only a generated-source readability decision. The IR and proof
+adapters must still retain that `haR : Litex.In a Litex.R` first selects an
+exact `ℝ` representative and that Lean then embeds that value into `ℂ` for
+the addition. It does not permit `(Litex.In.rep a haR : ℂ)`: the result type
+of `In.rep` is fixed by the set in its membership proof, so `haR` selects
+`Litex.R.Carrier = ℝ`, not `Litex.C.Carrier = ℂ`. It also does not permit
+omitting `In.rep` or substituting an unrelated `C`-membership proof.
+
+When the target carrier is not forced unambiguously by the operator, another
+operand, or an expected type, the emitter must retain an explicit coercion or
+fail closed rather than rely on unstable elaboration.
+
 # Turn Litex Kernel Execution Information into Lean Proofs
 
 ## Design Goal
@@ -175,6 +252,145 @@ The stack and its frame bindings live in the explicitly named
 [`stmt_result_to_lean_compiler_environment_stack.rs`](stmt_result_to_lean_compiler_environment_stack.rs),
 separate from proof-construction functions.
 
+The two recursive mechanisms have different jobs:
+
+```text
+SuccessStmtResult fields        StmtResultToLeanCompilerEnvironmentStack
+------------------------        ----------------------------------------
+say which child was executed    says which generated Lean names are visible
+own proof/WD/rule evidence      maps exact SymbolId and FactId identities
+define lexical body nesting     pushes on body entry and pops on body exit
+remain after Runtime is dropped contains no independent truth or proof search
+```
+
+The compiler does not push merely because one Rust helper calls another.
+It pushes exactly when the Result owns a target-language lexical body. A
+dispatcher is `PassThrough`; a proof rule usually constructs a term in the
+current frame; `forall`, function, existential, case, and isolated proof-block
+bodies are `Combine` layers whose named child field creates a frame. Thus the
+Rust call graph may be reorganized without changing Lean scope semantics.
+
+The recursive compilation algorithm is therefore deliberately small:
+
+```text
+compile(result, current_environment)
+  -> match the concrete SuccessStmtResult
+  -> validate this layer against its named child Results
+  -> if this layer owns a Lean lexical body:
+       push an environment inherited from the current environment
+       bind the body's parameters, assumptions, and local FactIds
+       recursively compile the body's child Results in source order
+       construct the enclosing Lean term/declaration while the frame is active
+       pop the local environment
+  -> otherwise recursively compile or cite children in the current environment
+  -> publish only this layer's surviving SymbolId/FactId bindings
+```
+
+Every execution or verification function declares one composition mode; it
+does not automatically require a Result enum variant:
+
+```text
+Leaf        construct evidence without successful children
+Wrap        retain one named child and add this layer's evidence
+Combine     retain multiple named or ordered children and add this layer's evidence
+PassThrough return the exact child's result unchanged
+Reuse       cite an earlier frozen proof node or FactId
+```
+
+### Concrete compiler-environment-stack example
+
+Consider this source statement:
+
+```litex
+forall r R+:
+    r $in R
+    r $in C
+    r > 0
+```
+
+Its `ForallProof` Result owns the parameter-membership store, the typed
+`PositiveStandardSetMembershipImpliesPositive` inference application, and the
+three ordered conclusion Results. The compiler handles that ownership as one
+lexical layer:
+
+```text
+compile outer SuccessFactStmtResult
+  push inherited compiler environment
+    bind parameter SymbolId       -> r
+    bind parameter FactId         -> __h6_1
+    compile typed infer Result
+      have __infer6_0 : Litex.Positive r :=
+        Litex.Rules.positiveOfInRPos (__h6_1)
+    bind inferred FactId          -> __infer6_0
+    compile conclusion 1          -> Litex.In r Litex.R
+    compile conclusion 2          -> Litex.In r Litex.C
+    compile conclusion 3          -> cite inferred FactId
+    finish the forall proposition and proof while these bindings are visible
+  pop local compiler environment
+  publish only the completed forall theorem in the parent environment
+```
+
+There is no `ScopedBinderIr` or `ScopedFactIr` to reconstruct. The recursive
+Result fields already say which facts belong to the forall body; the compiler
+environment stack only gives those exact `SymbolId` and `FactId` values Lean
+names for the lifetime of that body. The generated pair is
+[`21_PositiveRealCarrier.lit`](../../lean/examples/21_PositiveRealCarrier.lit)
+and
+[`21_PositiveRealCarrier.lean`](../../lean/examples/21_PositiveRealCarrier.lean).
+
+The environment frame is intentionally narrower than a kernel `Environment`.
+It may contain `SymbolId -> Lean name`, `FactId -> Lean proof name`, source
+propositions used to validate those exact IDs, and target-representation
+bindings for functions and predicates. It must not contain an alternative
+proof tree, verifier labels interpreted as rules, a cache used to rediscover a
+proof, or a reference to `Runtime`. Those belong in the recursive Result or
+are not legitimate compiler inputs.
+
+The current Rust implementation represents a child frame as an inherited
+snapshot of all bindings visible at entry plus that child's local additions.
+This makes lookup and the migration from the old compiler straightforward:
+insertions affect only the top frame, and `pop_local_environment` discards the
+whole local layer. A future implementation may store only per-frame deltas and
+walk parent frames during lookup, but that is an internal space/time tradeoff;
+it must not change the Result structure, lexical push/pop boundaries, exact
+`FactId` resolution, or generated Lean.
+
+For example, a successful fact statement is compiled as one statement layer:
+
+```text
+SuccessFactStmtResult
+  well_definedness -> recursively compiled WD checks
+  proof            -> recursively compiled selected verification route
+  store            -> publish the source FactId
+    infers         -> recursively compile typed inference Results and publish their FactIds
+```
+
+The compiler stack answers whether each cited identifier is visible at the
+point where that layer is translated. It does not answer why any of those
+facts are true.
+
+An `eval` statement follows the same rule. Ordinary execution returns a named
+`SuccessEvaluatedEvalStmtResult` containing the exact source object, evaluated
+object, and an optional recursive numeric computation. A closed numeric
+computation is compiler-ready: the compiler validates the tree, emits the
+equality proof, and publishes the equality store's final `FactId` in the
+current environment. The JSON `reported_store_facts` view is projected from
+that canonical store after IDs are attached; it is not a second snapshot.
+An evaluation performed by a runtime algorithm without typed computation
+evidence remains explicit in Result and fails closed at the standalone compiler
+boundary.
+
+`clear` is the non-lexical counterpart. Its successful Result has no proof
+child and no mathematical effect, but it explicitly replaces the current
+compiler environment with an empty frame. Previously generated Lean text
+cannot be deleted, so the compiler opens `__AfterClearNN` for subsequent
+declarations; this permits a later Litex definition to reuse a source spelling
+without colliding with the earlier Lean name. Successful `do_nothing` and
+strategy activation/deactivation commands are true `PassThrough` layers: they
+validate that no mathematical effects were published and emit no Lean
+declaration. A Result stream containing only such commands still compiles to a
+valid declaration-free Lean namespace.
+
 The stack follows Result ownership. A top-level statement uses the root
 environment. A `sketch` pushes an inherited child environment, recursively
 compiles its `proof_steps`, emits those declarations inside a namespace, then
@@ -189,6 +405,113 @@ The local-layer helper restores the outer environment, declarations, and name
 counters before propagating an error. Therefore a rejected inner Result cannot
 leave half of a Lean scope in compiler state. The compiler does not publish
 partial output when construction fails.
+
+Predicate-property registration is a concrete example of a compiler binding
+that belongs in this stack but is not a Litex fact. A successful
+`by reflexive_prop` Result has this shape:
+
+```text
+SuccessByReflexivePropStmtResult
+  verification: SuccessVerifyByPropRegistrationResult
+    well_definedness
+      recursive forall binder, premises, and conclusions
+    assumption_infers
+      parameter/domain stores with frozen local FactIds
+    proof_steps
+      ordered statement Results executed in that binder
+    forall_check
+      complete SuccessFactStmtResult for verify_forall_fact
+        ForallProof
+          assumption_infers
+          proves
+            one Result per checked conclusion
+```
+
+The field is called `forall_check`, not `conclusion_check`, because it owns the
+whole recursive `verify_forall_fact` output. The compiler validates that its
+nested assumptions and conclusions agree with the registration wrapper,
+pushes an inherited environment, compiles those children, and pops it. It then
+publishes a `RegisteredPredicatePropertyTheoremBinding` only in the current
+outer compiler environment. Later typed builtin evidence cites the predicate
+name and resolves this target-side binding; it does not search Runtime facts
+or parse the verifier's diagnostic label.
+
+The same Combine function compiles symmetric, transitive, and antisymmetric
+registrations. Their `dom_facts` become ordered Lean hypotheses such as
+`__domain1` and `__domain2` in the same frame. When assuming a concrete
+predicate also infers one of its defining clauses, the assumption store owns
+that inferred FactId; the compiler projects the exact clause from the named
+domain hypothesis and installs the projection under that ID. No proposition
+lookup crosses the frame boundary.
+
+Later uses exercise three different composition modes. Registered reflexivity
+is a leaf. Registered symmetry is a `Wrap` whose sole child is the reordered
+predicate premise; the compiler may apply the registered permutation theorem
+more than once when the permutation is not an involution. Registered
+antisymmetry is a `Combine` with two ordered predicate-premise children.
+Registered transitivity appears in the store/infer Result rather than the
+verifier proof Result: storing a relation chain returns one typed closure
+application for every object interval. Each application owns its predicate
+name, start/end object indices, ordered adjacent premise facts with exact
+FactIds, and its stored conclusion with an exact FactId.
+
+The transitive-chain compiler first publishes the theorem for the whole source
+chain. It then maps each adjacent premise FactId to the corresponding `.1` /
+`.2...` projection of that theorem in the current compiler environment. For
+each typed closure application it resolves the previously registered
+transitivity theorem from the environment stack, folds that theorem over the
+ordered premise projections, and publishes the conclusion under the Result's
+FactId. A later statement can therefore cite the inferred fact by FactId in
+the ordinary way. The compiler never asks Runtime whether the predicate was
+transitive and never searches for two propositions that happen to have the
+right text.
+
+Ordinary concrete-predicate inference now follows the same rule instead of
+remaining a flattened side effect. Execution returns one named application
+for every parameter requirement and definition clause:
+
+```rust
+pub enum InferRule {
+    DefinedPredicateParameterRequirementProjection(
+        DefinedPredicateParameterRequirementProjectionInferRule,
+    ),
+    DefinedPredicateDefinitionClauseProjection(
+        DefinedPredicateDefinitionClauseProjectionInferRule,
+    ),
+    // ...
+}
+```
+
+Each application owns the predicate name, exact component index, one source
+premise with its `FactId`, and one recursive `SuccessStoreFactResult`
+conclusion. The conclusion may itself contain further typed inference Results.
+The parent keeps only an ordered compatibility summary of store effects;
+nested rule applications are reached through the conclusion field and are not
+flattened into a second proof list.
+
+This family also shows why the compiler needs an environment stack. At top
+level, a conclusion such as `R = C` becomes a persistent Lean theorem and its
+`FactId` is added to the current root frame. Inside a forall proof, the same
+projection becomes a local proof expression derived from `__domain1`; its
+`FactId` is added only to the inherited child frame and disappears at pop.
+The semantic Result is identical in both cases. Only the target-language
+publication policy differs with the active compiler environment. The complete
+source/Lean pair is
+[`47_DefinedPredicateInferenceCompilerEnvironment.lit`](../../lean/examples/47_DefinedPredicateInferenceCompilerEnvironment.lit).
+
+For a source binder `x set`, the Result deliberately still contains the
+checked `$is_set(x)` premise and its FactId. Lean already expresses that fact
+by the type `x : Litex.Set`, so the compiler's explicit proposition/proof
+bridge is `True` / `True.intro`. This preserves the child Result and its exact
+identity without inventing a fictitious membership carrier.
+
+A child layer returns every target fragment that still depends on its local
+bindings before the environment is popped. For example, direct forall
+compilation returns both its rendered Lean proposition and its proof
+expression. The parent publishes that pair as a theorem; it does not
+re-render the proposition after the parameter/domain FactIds have disappeared.
+This is the compiler analogue of an `exec_*` or `verify_*` child returning its
+completed Result for the caller to wrap.
 
 Finite-sequence definitions show why this stack belongs to the compiler rather
 than in another proof IR. A `SuccessHaveFiniteSeqStmtResult` has two checked
@@ -262,8 +585,21 @@ FactIds in that order. It does not first copy the statement into a mirrored
 same parent Result to install their names in a child compiler environment, so
 leaving a `sketch` removes those bindings automatically.
 
-A reviewed native-real function definition now follows the same rule all the
-way through. For `have fn reciprocal(x R: x != 0) R = 1 / x`, the compiler
+An ordinary-carrier `trust have` is an explicit trust-boundary `Combine`.
+`SuccessTrustHaveStmtResult` owns the source-ordered parameter groups followed
+by any attached facts, while `common.infers.store_fact_outputs` owns their
+exact environment identities in the same order. The compiler emits each
+trusted object as an explicit Lean axiom, proves its `Litex.In` wrapper from
+the exact declared carrier, registers the retained membership `FactId`, and
+then emits attached facts as explicit axioms. A trusted function carrier also
+installs its callable contract under that same FactId, so a later application
+uses the ordinary compiler environment lookup. This slice intentionally
+fails closed for set/refined-set bindings and parameter stores with inferred
+siblings; it never silently broadens an object trust boundary into a generic
+universal carrier.
+
+A reviewed named-function definition now follows the same rule all the way
+through. For `have fn reciprocal(x R: x != 0) R = 1 / x`, the compiler
 reads this ownership tree:
 
 ```text
@@ -289,16 +625,28 @@ hypotheses, and consumes the recursive `return_check`. It then pops that
 environment before emitting and registering the two persistent outer facts.
 Consequently the temporary binder facts cannot escape, while later function
 applications cite `F_membership` and `F_definition` exactly. Unary functions,
-domain-constrained functions, and multi-parameter real telescopes use this
-direct path. A non-real return carrier still uses the explicit compatibility
-return-selection adapter until that Result family is migrated.
+domain-constrained functions, and multi-parameter telescopes use this direct
+path. A native-real return renders its checked real body directly. A non-real
+return such as `{z R: z = z}` consumes the recursive membership proof and
+constructs `Litex.In.rep source_body return_proof` while the parameter frame is
+active. Function reduction later needs only the stored definition `FactId` and
+the source body under exact argument substitution; it does not retain a second
+compatibility return-selection proof tree.
 
 The compiler keeps `LitexToLeanFunctionTypeIr` and `LitexToLeanObjectIr` here
 because they describe target-representation choices. It does not construct a
 duplicate `LitexToLeanHaveFnEqualStmtIr` on this path. The short-lived
-`CompiledNamedRealFunctionDefinitionBody` contains only the Lean construction
+`CompiledNamedFunctionDefinitionBody` contains only the Lean construction
 output that the parent Result method needs to emit its declarations; it is not
 a second semantic statement tree.
+
+A local object definition inside a theorem demonstrates the same stack rule
+without a mathematical binder. When a proof step is `let z = 2`, the compiler
+inserts `SymbolId(z)` and the defining equality's exact `FactId` into the
+current theorem frame and emits a local Lean `let` plus `have`. The following
+`z = 2` Result resolves those bindings normally. Popping the theorem frame
+removes both; no `run_in_local_env` marker or scoped-fact wrapper is required
+in the Result.
 
 Cross-statement reuse can make the child proof richer than a fresh isolated
 run. In the complete named-function tracer, the later proof of `1 $in R` may
@@ -473,6 +821,33 @@ context while their Lean term is rendered. During this migration the compiler
 projects only the relevant recursive WD Result into a temporary rendering
 certificate. It does not construct a mirrored statement or fact-proof IR, and
 the previous compiler WD context is restored immediately after rendering.
+For an exact declared return carrier, the WD subtree owns
+`FunctionApplicationReturnMembership` and its head-contract child. The outer
+fact proof normally does not duplicate that rule: it cites the WD-produced
+membership by its exact `FactId`. The compiler activates that statement's WD
+tree, resolves the citation in the same environment layer, and renders
+`Litex.In.own` for the retained application occurrence. A memo-shared builtin
+with the same typed evidence uses the same constructor; neither path searches
+for a function declaration by proposition text.
+
+`FactTransformationEvidence` is consumed as the recursive `Wrap` that its
+Result shape describes. The compiler first constructs the cited/source proof,
+then walks `steps` in source-to-target order. Rational normalization validates
+the complete atomic-fact shape before emitting Lean `convert`; equality
+rewrite validates every retained equality `FactId`, orientation, and current
+endpoint. The final intermediate fact must equal the enclosing target exactly.
+There is no target-side search for a replacement equality and no flattening of
+the ordered steps into a diagnostic label.
+
+Checked named-function reduction is a different `Leaf`, not an implicit
+transformation search. `CheckedFunctionDefinitionReductionEvidence` records
+the defining equality's exact `FactId`, which side of the goal is the
+application, the one-step reduced object, and the other side that it matched.
+The compiler resolves that FactId through its current environment stack,
+checks the retained orientation and alpha-equivalent result, then unfolds only
+the recorded named function. A stale FactId or changed reduced object is a
+compiler error; the compiler never scans available definitions for another
+route.
 
 One local source statement may establish several facts. Therefore the local
 composition function returns ordered Lean proof lines rather than pretending
@@ -511,6 +886,15 @@ This classification follows semantic work, not function names or call-stack
 depth. A helper that only dispatches is `PassThrough`; a helper that proves a
 new obligation is `Leaf`, `Wrap`, or `Combine`. Consequently, refactoring a
 Rust helper does not automatically change the stable result schema.
+
+`DefSettingStmt` is a statement-level `PassThrough` without a child. A setting
+only guides Litex elaboration; every later use has already become ordinary
+fresh binders and premise facts in that later statement's Result. The compiler
+therefore checks that `SuccessDefSettingStmtResult` has no mathematical
+effects and emits no Lean declaration or environment binding. Keeping a
+setting table in the compiler would duplicate parser state and would violate
+the rule that compiler environments contain only names needed by generated
+Lean scopes.
 
 Child results are never flattened into a generic `inside_results` list.
 Statement-specific fields state what each child means: `proof_steps`,
@@ -698,9 +1082,171 @@ returned the exact closed evaluation certificate with normal value `5`. The
 second theorem is not reproved independently: its result came from the typed
 inference edge whose premise is the stored membership fact.
 
+Set-builder inference follows the same contract. A successful
+`value $in {x S: P(x)}` Result records one
+`SetBuilderBaseMembershipProjection` and then one
+`SetBuilderPredicateProjection { clause_index }` for every defining clause.
+Each node cites the source membership `FactId` and owns the projected fact's
+`FactId`. The compiler can therefore emit the base and clause projections in
+their retained order without searching stored propositions or reconstructing
+the clause index.
+
+Registered set builtins follow the same contract. A direct compiler layer
+validates the retained `RuleId`, semantic fingerprint, target-matched bindings,
+parameter checks, and ordered semantic child Results. Only then does it
+construct the corresponding `Litex.SetRules` proof in the current compiler
+environment. The registry certificate is semantic Result input, not a
+diagnostic label and not a request to rerun verifier search.
+
+Registered sign and strict-to-weak order rules use the same layer. The
+compiler reads only the generated registry fingerprint metadata for the
+retained `RuleId`; it does not parse a rule schema or run its matcher again.
+The target-specific compiler method then checks the exact real-valued
+bindings, parameter requirements, target operands, and ordered child Results
+before constructing the Lean rule application. Ordinary typed
+`BuiltinRuleEvidence::Arithmetic` sign rules share the same target-side
+constructor after their own Result shape has been validated.
+
+Integer remainder demonstrates a target representation that legitimately
+belongs in the compiler environment stack. Runtime returns
+`IntegerMembershipClosure::Mod` with one conjunction child proving the left
+and right operands are in `Z`. While compiling a binder, the corresponding
+membership proofs select exact Lean `ℤ` representatives and install
+`SymbolId -> integer representative` only in that lexical compiler frame. The
+remainder layer validates both ordered membership components, recursively
+checks the conjunction proof, computes `%` on those representatives, casts the
+result to the ordinary Complex observation, and applies
+`Litex.Rules.complexIntInZ`. It neither invents a Complex remainder operation
+nor stores integer membership truth in the compiler environment.
+
+Rational integer power uses the same separation. Its conjunction child proves
+`base ∈ Q` followed by `exponent ∈ Z`. The active frame maps the two binder
+`SymbolId`s to the exact `ℚ` and `ℤ` representatives selected by those visible
+membership proofs. The power layer validates the two child facts in order,
+constructs native rational `base ^ exponent`, casts that value to the Litex
+complex observation, and applies `Litex.Rules.complexRatInQ`. Both target
+representations vanish with the enclosing forall frame; neither is a new
+proof fact or an alternative execution environment.
+
+Typed order transitivity is a larger `Combine`. Its leading children are the
+verifier-owned numeric carrier checks; its final two children are the ordered
+comparison path. The compiler validates that the first left endpoint is the
+target left, the middle endpoints coincide, the second right endpoint is the
+target right, and at least one premise is strict when the target is strict.
+It then selects only the corresponding fixed `Litex.Le`/`Litex.Lt`
+transitivity constructor. Child order is semantic data, not display order.
+
+Order reflexivity and closed numeric comparison are deliberately different
+leaf Results. `x <= x` owns
+`OrderReflexivityBuiltinRuleEvidence { expected_target, repeated_object }` and
+is compiled as `Litex.Le.refl x` while the enclosing forall Result's compiler
+environment is active. `2 + 3 < 6` owns
+`ClosedNumericComparisonBuiltinRuleEvidence` with separate left and right
+`SuccessEvaluateObjResult` children; the left child records the recursive
+`2 + 3 -> 5` computation. A `RuntimeResolvedNumericComparison` is retained for
+execution compatibility when old verification substitutes environment values,
+but the standalone compiler rejects it until each substitution has an exact
+source `FactId`. This keeps execution behavior unchanged without allowing the
+compiler to silently rediscover missing provenance.
+
+Exact `FactId` citation remains a separate compiler layer. Litex permits dual
+surface spellings such as `a >= 0` and `0 <= a`. A citation may pass through
+that layer unchanged only when the verifier-retained source and target are the
+exact comparison-notation duals and both render to the identical Lean
+proposition. This is a checked `PassThrough`, not proposition lookup: the Lean
+proof name still comes exclusively from the retained source `FactId` in the
+current compiler environment.
+
+Known-forall instantiation is a direct `Combine` above those two layers. Its
+Result retains the source forall `FactId`, ordered argument objects, and one
+recursive Result for every parameter-type and domain requirement. The compiler
+resolves the source theorem in its current environment, compiles those child
+proofs in order, performs stateless source-syntax substitution to check the
+single instantiated conclusion, and emits the Lean application. It never asks
+the execution Runtime which forall might prove the target. This application
+does not introduce a lexical scope; a separate forall-introduction Result owns
+the binder body and therefore owns the corresponding compiler-environment
+push/pop.
+
+Basic forall introduction is now that direct lexical `Combine`. The compiler
+projects the one parent-owned recursive WD tree only as a temporary rendering
+view, pushes one inherited compiler environment, and keeps that view active for
+the complete binder frame. Each parameter then installs its exact `SymbolId`
+and stored premise `FactId`; function parameters also install the exact
+membership contract consumed by nested applications. A source `A set` check is
+validated but creates no separate Lean proof term because the generated binder
+already has type `A : Litex.Set`. Heterogeneous object and function parameters
+introduce their generated carrier binder before the source value and membership
+hypothesis.
+
+Each ordered conclusion proof reads the matching
+`SuccessVerifyForallFactWellDefinedResult::conclusions[index]` child while the
+same binder environment is active. Multi-layer function calls can therefore
+follow parent-owned `FunctionPrefix` edges such as `g(a)(b) -> g(a)` without
+inventing a parser occurrence ID for the verifier-generated prefix. The local
+conclusion FactIds disappear when the environment is popped, but the compiler
+retains their typed projection bindings to the emitted outer Lean theorem. A
+forall statement may intentionally have no outer `FactId`; in that case the
+outer no-ID store Result is validated, one Lean theorem is emitted, and only
+the exact conclusion FactIds are published to later compiler layers. Explicit
+domain premises whose stores introduce no additional inferred facts use the
+same environment: their ordered store FactIds are installed after the
+parameter FactIds, remain visible to every conclusion
+child, and are retained as premises of the conclusion projection after the
+local frame is popped. Refined-set binders use that binder frame too; their
+exact nonempty/finite property FactIds are installed alongside ordinary set
+parameters. Domain/parameter stores with additional
+assumption-inference children remain the next forall-introduction tranche.
+
 The focused direct-compiler and corruption regressions live in
 [`stmt_result_to_lean_compiler.rs`](stmt_result_to_lean_compiler.rs), and the generated Lean assertions live in
 [`stmt_result_to_lean_compiler_tests.rs`](stmt_result_to_lean_compiler_tests.rs).
+
+## Strategy Definition as a Result-Owned Compiler Environment
+
+A verified strategy demonstrates why the compiler environment stack follows
+Result fields rather than Rust call depth. Its successful verification result
+is explicit:
+
+```rust
+pub struct SuccessVerifyStrategyDefinitionResult {
+    pub name: String,
+    pub forall_fact: ForallFact,
+    pub well_definedness: SuccessVerifyFactWellDefinedResult,
+    pub proof_scope: SuccessVerifyLocalProofScopeResult,
+    pub proof_steps: Vec<StmtResult>,
+    pub conclusion_checks: Vec<StmtResult>,
+}
+```
+
+The enclosing `SuccessDefStrategyStmtResult` owns the final outer store. The
+fields above own the inner verification procedure. Compilation therefore has
+one direct structural flow:
+
+```text
+SuccessDefStrategyStmtResult
+  -> validate recursive forall well-definedness
+  -> push inherited compiler environment for proof_scope
+       -> install parameter and premise FactIds
+       -> compile proof_steps in source order
+       -> compile conclusion_checks in source order
+  -> pop compiler environment
+  -> emit the proved forall as a Lean theorem
+  -> publish only the outer stored forall FactId
+```
+
+The theorem and strategy statement families share this shape through
+`NamedForallStatementResultCompilationInput`. That type is only a borrowed
+compiler function argument: every field points into the canonical Result, so
+it is not a second IR and owns no copied proof data. A missing local parameter
+store, wrong FactId, changed conclusion, or reordered child is rejected before
+Lean source is published.
+
+Strategy activation has no Lean analogue. The successful definition proves
+and stores the forall theorem; later `use strategy` and `stop strategy` affect
+only Litex Runtime proof search. Their Results validate as pass-through layers
+and emit no declaration. The persistent example is
+[`43_StrategyDefinitionCompilerEnvironment.lit`](../../lean/examples/43_StrategyDefinitionCompilerEnvironment.lit).
 
 ## Why There Is No Full Mirrored Statement IR
 
@@ -757,6 +1303,12 @@ consumes the Rust Result structures directly.
   `try_from_verified_builtin_label` fallback for an allowlisted set of older
   builtin routes. New routes must return typed evidence; removing this fallback
   requires migrating each remaining producer first.
+- `stmt_result_to_lean_compiler audit-direct-result-compilation lean/examples`
+  runs every persistent example with the compatibility adapter disabled. The
+  current 49 example pairs all pass this gate. This proves that the documented
+  common examples traverse recursive Results and the compiler environment
+  stack directly; it does not claim that every statement shape accepted by
+  the full Litex language has already removed its explicit migration fallback.
 - The canonical WD Result owns binder scope recursively, but
   [`compositional_well_definedness_projection.rs`](../result/compositional_well_definedness_projection.rs)
   currently projects it into the older Lean-backend certificate with allocated

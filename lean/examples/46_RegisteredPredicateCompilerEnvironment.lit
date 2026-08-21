@@ -1,0 +1,40 @@
+# A predicate-property Result owns one complete recursive forall check. The
+# compiler enters that Result-owned binder environment, compiles the local
+# proof, leaves the binder environment, and publishes only the generated
+# predicate-property theorem binding in the surrounding compiler environment.
+prop same_set(x set, y set):
+    x = y
+
+by reflexive_prop:
+    ? forall x set:
+        $same_set(x, x)
+    x = x
+    by def $same_set(x, x)
+
+by symmetric_prop:
+    ? forall x, y set:
+        $same_set(x, y)
+        =>:
+            $same_set(y, x)
+    x = y
+    y = x
+    by def $same_set(y, x)
+
+by transitive_prop:
+    ? forall x, y, z set:
+        $same_set(x, y)
+        $same_set(y, z)
+        =>:
+            $same_set(x, z)
+    x = y
+    y = z
+    x = z
+    by def $same_set(x, z)
+
+by antisymmetric_prop:
+    ? forall x, y set:
+        $same_set(x, y)
+        $same_set(y, x)
+        =>:
+            x = y
+    x = y

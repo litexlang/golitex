@@ -6,9 +6,8 @@ set_option linter.style.nameCheck false
 namespace __Compiler_4_FunctionSet
 
 theorem __fact0 :
-    ∀ (s : Litex.Set) (S : Litex.Set) {__carrier0_3 : Type} (x : __carrier0_3) (__h0_3 : Litex.In x s) {__carrier0_4 : Type 1} (f : __carrier0_4) (__h0_4 : Litex.In f (Litex.fnSet (s : Litex.Set.{0}) (S : Litex.Set.{0}))),
-      Litex.Same (Litex.fnApply f __h0_4 x (__h0_3)) (Litex.fnApply f __h0_4 x (__h0_3)) := by
-  intro s S __carrier0_3 x __h0_3 __carrier0_4 f __h0_4
+    ∀ (__p1 : Litex.Set) (__p2 : Litex.Set) {__carrier3 : Type} (__p3 : __carrier3) (__type3 : Litex.In __p3 __p1) {__carrier4 : Type 1} (__p4 : __carrier4) (__type4 : Litex.In __p4 (Litex.fnSet (__p1 : Litex.Set.{0}) (__p2 : Litex.Set.{0}))), Litex.Same (Litex.fnApply __p4 __type4 __p3 (__type3)) (Litex.fnApply __p4 __type4 __p3 (__type3)) := by
+  intro s S __carrier3 x __h0_3 __carrier4 f __h0_4
   have __c0_0 : Litex.Same (Litex.fnApply f __h0_4 x (__h0_3)) (Litex.fnApply f __h0_4 x (__h0_3)) := Litex.Same.refl (Litex.fnApply f __h0_4 x (__h0_3))
   exact __c0_0
 

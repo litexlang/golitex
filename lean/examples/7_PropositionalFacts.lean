@@ -9,17 +9,15 @@ theorem __fact0 : Litex.Same (1 : ℂ) (1 : ℂ) ∧ Litex.Same (2 : ℂ) (2 : �
   exact ⟨Litex.Same.refl (1 : ℂ), Litex.Same.refl (2 : ℂ)⟩
 
 theorem __fact1 :
-    ∀ (a : Litex.Set) (b : Litex.Set) (__h1_3 : Litex.Same a a) (__h1_4 : Litex.Same b b),
-      Litex.Same a a ∧ Litex.Same b b := by
-  intro a b __h1_3 __h1_4
-  have __c1_0 : Litex.Same a a ∧ Litex.Same b b := ⟨__h1_3, __h1_4⟩
+    ∀ (__p1 : Litex.Set) (__p2 : Litex.Set) (__domain1 : Litex.Same __p1 __p1) (__domain2 : Litex.Same __p2 __p2), Litex.Same __p1 __p1 ∧ Litex.Same __p2 __p2 := by
+  intro a b __domain1 __domain2
+  have __c1_0 : Litex.Same a a ∧ Litex.Same b b := ⟨__domain1, __domain2⟩
   exact __c1_0
 
 theorem __fact2 :
-    ∀ (a : Litex.Set) (b : Litex.Set) (__h2_3 : Litex.Same a a),
-      Litex.Same a a ∨ Litex.Same b b := by
-  intro a b __h2_3
-  have __c2_0 : Litex.Same a a ∨ Litex.Same b b := Or.inl (__h2_3)
+    ∀ (__p1 : Litex.Set) (__p2 : Litex.Set) (__domain1 : Litex.Same __p1 __p1), Litex.Same __p1 __p1 ∨ Litex.Same __p2 __p2 := by
+  intro a b __domain1
+  have __c2_0 : Litex.Same a a ∨ Litex.Same b b := Or.inl (__domain1)
   exact __c2_0
 
 theorem __fact3 :

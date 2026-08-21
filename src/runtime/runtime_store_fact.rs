@@ -1,6 +1,12 @@
 use crate::prelude::*;
 use std::collections::HashSet;
 
+struct RegisteredTransitivePredicateChainClosureInference {
+    rule: RegisteredTransitivePredicateChainClosureInferRule,
+    premises: Vec<Fact>,
+    conclusion: AtomicFact,
+}
+
 impl Runtime {
     /// Mathematical contract: outside an explicitly trusted source boundary,
     /// a fact is stored and used for inference only after central
@@ -329,7 +335,8 @@ impl Runtime {
         };
         self.top_level_env().store_fact(fact)?;
         self.store_chain_atomic_facts_to_cache(chain_atomic_facts)?;
-        self.store_transitive_prop_chain_atomic_facts(transitive_chain_facts)?;
+        let mut transitive_chain_infers =
+            self.store_transitive_prop_chain_atomic_facts(transitive_chain_facts)?;
 
         let fact_id = self.store_fact_cache_keys_with_nested_obj_binders(&fact_for_infer)?;
         if let Some(alpha_key) = alpha_normalized_forall_key {
@@ -339,7 +346,8 @@ impl Runtime {
             }
         }
 
-        Ok(self.infer(&fact_for_infer)?)
+        transitive_chain_infers.new_infer_result_inside(self.infer(&fact_for_infer)?);
+        Ok(transitive_chain_infers)
     }
 
     pub fn store_and_chain_atomic_fact_without_well_defined_verified_and_infer(
@@ -373,11 +381,13 @@ impl Runtime {
         };
         self.top_level_env().store_and_chain_atomic_fact(fact)?;
         self.store_chain_atomic_facts_to_cache(chain_atomic_facts)?;
-        self.store_transitive_prop_chain_atomic_facts(transitive_chain_facts)?;
+        let mut transitive_chain_infers =
+            self.store_transitive_prop_chain_atomic_facts(transitive_chain_facts)?;
 
         self.store_fact_cache_keys_with_nested_obj_binders(&fact_for_infer)?;
 
-        let mut nested_infer_result = self.infer(&fact_for_infer)?;
+        transitive_chain_infers.new_infer_result_inside(self.infer(&fact_for_infer)?);
+        let mut nested_infer_result = transitive_chain_infers;
         let mut infer_result = SuccessInferResult::new();
         infer_result.add_store_fact_output_from_nested(
             &fact_for_infer,
@@ -466,11 +476,14 @@ impl Runtime {
         self.top_level_env()
             .store_exist_or_and_chain_atomic_fact(fact)?;
         self.store_chain_atomic_facts_to_cache(chain_atomic_facts)?;
-        self.store_transitive_prop_chain_atomic_facts(transitive_chain_facts)?;
+        let mut transitive_chain_infers =
+            self.store_transitive_prop_chain_atomic_facts(transitive_chain_facts)?;
 
         let output_fact = fact_for_infer.clone().to_fact();
         self.store_fact_cache_keys_with_nested_obj_binders(&output_fact)?;
-        let mut nested_infer_result = self.infer_exist_or_and_chain_atomic_fact(&fact_for_infer)?;
+        transitive_chain_infers
+            .new_infer_result_inside(self.infer_exist_or_and_chain_atomic_fact(&fact_for_infer)?);
+        let mut nested_infer_result = transitive_chain_infers;
         let mut infer_result = SuccessInferResult::new();
         infer_result.add_store_fact_output_from_nested(
             &output_fact,
@@ -511,11 +524,14 @@ impl Runtime {
         };
         self.top_level_env().store_quantifier_free_fact(fact)?;
         self.store_chain_atomic_facts_to_cache(chain_atomic_facts)?;
-        self.store_transitive_prop_chain_atomic_facts(transitive_chain_facts)?;
+        let mut transitive_chain_infers =
+            self.store_transitive_prop_chain_atomic_facts(transitive_chain_facts)?;
 
         let output_fact = fact_for_infer.clone().to_fact();
         self.store_fact_cache_keys_with_nested_obj_binders(&output_fact)?;
-        let mut nested_infer_result = self.infer_quantifier_free_fact(&fact_for_infer)?;
+        transitive_chain_infers
+            .new_infer_result_inside(self.infer_quantifier_free_fact(&fact_for_infer)?);
+        let mut nested_infer_result = transitive_chain_infers;
         let mut infer_result = SuccessInferResult::new();
         infer_result.add_store_fact_output_from_nested(
             &output_fact,
@@ -527,14 +543,25 @@ impl Runtime {
 
     fn store_transitive_prop_chain_atomic_facts(
         &mut self,
-        facts: Vec<AtomicFact>,
-    ) -> Result<(), RuntimeError> {
-        for atomic_fact in facts {
-            self.top_level_env()
-                .store_atomic_fact(atomic_fact.clone())?;
-            self.store_fact_cache_keys_with_nested_obj_binders(&atomic_fact.into())?;
+        inferences: Vec<RegisteredTransitivePredicateChainClosureInference>,
+    ) -> Result<SuccessInferResult, RuntimeError> {
+        let mut result = SuccessInferResult::new();
+        for inference in inferences {
+            let conclusion_fact: Fact = inference.conclusion.clone().into();
+            let conclusion_infers = self.store_derived_atomic_fact_without_infer(
+                inference.conclusion,
+                InferReason::InferredFact.store_reason(),
+            )?;
+            let conclusion =
+                SuccessStoreFactResult::new(conclusion_fact, conclusion_infers.clone());
+            result.new_infer_result_inside(conclusion_infers);
+            result.add_rule_application_with_premises(
+                InferRule::RegisteredTransitivePredicateChainClosure(inference.rule),
+                inference.premises,
+                vec![conclusion],
+            );
         }
-        Ok(())
+        Ok(result)
     }
 
     fn store_chain_atomic_facts_to_cache(
@@ -653,7 +680,7 @@ impl Runtime {
     fn transitive_prop_chain_closure_facts(
         &self,
         chain_fact: &ChainFact,
-    ) -> Result<Vec<AtomicFact>, RuntimeError> {
+    ) -> Result<Vec<RegisteredTransitivePredicateChainClosureInference>, RuntimeError> {
         if chain_fact.prop_names.is_empty() || chain_fact.objs.len() < 3 {
             return Ok(Vec::new());
         }
@@ -668,20 +695,31 @@ impl Runtime {
             return Ok(Vec::new());
         }
 
-        let mut facts = Vec::new();
+        let adjacent_facts = chain_fact.facts()?;
+        let mut inferences = Vec::new();
         for i in 0..chain_fact.objs.len() {
             for j in i + 2..chain_fact.objs.len() {
-                facts.push(
-                    NormalAtomicFact::new(
+                inferences.push(RegisteredTransitivePredicateChainClosureInference {
+                    rule: RegisteredTransitivePredicateChainClosureInferRule {
+                        predicate_name: prop_name.clone(),
+                        start_object_index: i,
+                        end_object_index: j,
+                    },
+                    premises: adjacent_facts[i..j]
+                        .iter()
+                        .cloned()
+                        .map(Fact::from)
+                        .collect(),
+                    conclusion: NormalAtomicFact::new(
                         chain_fact.prop_names[0].clone(),
                         vec![chain_fact.objs[i].clone(), chain_fact.objs[j].clone()],
                         chain_fact.line_file.clone(),
                     )
                     .into(),
-                );
+                });
             }
         }
-        Ok(facts)
+        Ok(inferences)
     }
 
     fn is_transitive_prop_name_known(&self, prop_name: &str) -> bool {
@@ -691,5 +729,83 @@ impl Runtime {
             }
         }
         false
+    }
+}
+
+#[cfg(test)]
+mod registered_transitive_predicate_chain_result_tests {
+    use crate::output::display_stmt_result_json_v2;
+    use crate::prelude::*;
+
+    #[test]
+    fn registered_transitive_predicate_chain_store_returns_typed_closure_inference() {
+        let mut runtime = Runtime::new();
+        runtime.new_file_path_new_env_new_name_scope(
+            "registered_transitive_predicate_chain_result_test.lit",
+        );
+        let (_, setup_error) = run_source_code(
+            "prop same_set(x set, y set):\n    x = y\ntrust R $same_set C\ntrust C $same_set N",
+            &mut runtime,
+        );
+        assert!(setup_error.is_none(), "{setup_error:?}");
+        runtime
+            .top_level_env()
+            .store_transitive_prop_name("same_set".to_string());
+
+        let (mut results, error) = run_source_code("R $same_set C $same_set N", &mut runtime);
+        assert!(error.is_none(), "{error:?}");
+        let result = results.pop().expect("chain execution returns one Result");
+        let success = result
+            .factual_success()
+            .expect("registered transitive chain should succeed");
+        let [application] = success.store.infers.rule_applications.as_slice() else {
+            panic!("three-object chain should retain exactly one transitive application")
+        };
+        let InferRule::RegisteredTransitivePredicateChainClosure(rule) = &application.rule else {
+            panic!("chain closure should retain its typed transitive rule")
+        };
+        assert_eq!(rule.predicate_name, "same_set");
+        assert_eq!(rule.start_object_index, 0);
+        assert_eq!(rule.end_object_index, 2);
+        assert_eq!(
+            application
+                .premises
+                .iter()
+                .map(|premise| premise.fact.to_string())
+                .collect::<Vec<_>>(),
+            vec!["$same_set(R, C)", "$same_set(C, N)"]
+        );
+        assert!(
+            application
+                .premises
+                .iter()
+                .all(|premise| premise.fact_id.is_some()),
+            "every transitive premise must freeze its exact FactId"
+        );
+        let [conclusion] = application.conclusions.as_slice() else {
+            panic!("transitive application should retain exactly one stored conclusion")
+        };
+        assert_eq!(conclusion.fact.to_string(), "$same_set(R, N)");
+        assert!(conclusion.fact_id.is_some());
+        assert!(success
+            .store
+            .infers
+            .store_fact_outputs
+            .iter()
+            .any(|output| {
+                output
+                    .inferred_facts
+                    .iter()
+                    .zip(output.inferred_fact_ids.iter())
+                    .any(|(fact, fact_id)| {
+                        fact.to_string() == conclusion.fact.to_string()
+                            && *fact_id == conclusion.fact_id
+                    })
+            }));
+        let json = display_stmt_result_json_v2(&result);
+        assert!(json.contains("\"rule\": \"RegisteredTransitivePredicateChainClosure\""));
+        assert!(json.contains("\"predicate_name\": \"same_set\""));
+        assert!(json.contains("\"start_object_index\": 0"));
+        assert!(json.contains("\"end_object_index\": 2"));
     }
 }

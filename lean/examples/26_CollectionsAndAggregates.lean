@@ -6,15 +6,13 @@ set_option linter.style.nameCheck false
 namespace __Compiler_26_CollectionsAndAggregates
 
 theorem __fact0 :
-    ∀ (F : Litex.Set),
-      Litex.Same (Litex.bigUnion F) (Litex.bigUnion F) := by
+    ∀ (__p1 : Litex.Set), Litex.Same (Litex.bigUnion __p1) (Litex.bigUnion __p1) := by
   intro F
   have __c0_0 : Litex.Same (Litex.bigUnion F) (Litex.bigUnion F) := Litex.Same.refl (Litex.bigUnion F)
   exact __c0_0
 
 theorem __fact1 :
-    ∀ (F : Litex.Set),
-      Litex.Same (Litex.bigIntersect F) (Litex.bigIntersect F) := by
+    ∀ (__p1 : Litex.Set), Litex.Same (Litex.bigIntersect __p1) (Litex.bigIntersect __p1) := by
   intro F
   have __c1_0 : Litex.Same (Litex.bigIntersect F) (Litex.bigIntersect F) := Litex.Same.refl (Litex.bigIntersect F)
   exact __c1_0
@@ -23,9 +21,8 @@ theorem __fact2 : Litex.Same (Litex.powerSet Litex.R) (Litex.powerSet Litex.R) :
   exact Litex.Same.refl (Litex.powerSet Litex.R)
 
 theorem __fact3 :
-    ∀ (I : Litex.Set) (S : Litex.Set) (__h3_2 : Litex.Set.Nonempty S) {__carrier3_3 : Type 1} (g : __carrier3_3) (__h3_3 : Litex.In g (Litex.fnSet (I : Litex.Set.{0}) (S : Litex.Set.{0}))),
-      Litex.Same (Litex.generalCart I S g) (Litex.generalCart I S g) := by
-  intro I S __h3_2 __carrier3_3 g __h3_3
+    ∀ (__p1 : Litex.Set) (__p2 : Litex.Set) (__type2 : Litex.Set.Nonempty __p2) {__carrier3 : Type 1} (__p3 : __carrier3) (__type3 : Litex.In __p3 (Litex.fnSet (__p1 : Litex.Set.{0}) (__p2 : Litex.Set.{0}))), Litex.Same (Litex.generalCart __p1 __p2 __p3) (Litex.generalCart __p1 __p2 __p3) := by
+  intro I S __type2 __carrier3 g __h3_3
   have __c3_0 : Litex.Same (Litex.generalCart I S g) (Litex.generalCart I S g) := Litex.Same.refl (Litex.generalCart I S g)
   exact __c3_0
 

@@ -58,7 +58,10 @@ theorem __fact7 : has_copy (2 : ℂ) := by
   exact ⟨Litex.Rules.complexRealInR (2 : ℝ), __fact6⟩)
 
 theorem __fact8 : Litex.In (2 : ℂ) Litex.R := by
-  exact Litex.Rules.complexRealInR (2 : ℝ)
+  exact (by
+  have __definition := __fact7
+  unfold has_copy at __definition
+  exact __definition.1)
 
 noncomputable def copy : ℂ := Classical.choose ((show ∃ (x : ℂ), Litex.In x Litex.R ∧ Litex.Same x (2 : ℂ) from (by
   have __definition := __fact7

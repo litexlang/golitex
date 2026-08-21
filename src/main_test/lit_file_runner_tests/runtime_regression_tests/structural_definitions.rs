@@ -544,7 +544,8 @@ $marked(x)
 
 #[test]
 fn deterministic_infer_rule_firings_are_cached() {
-    let setup = r#"
+    run_with_large_stack("deterministic_infer_rule_firings_are_cached", || {
+        let setup = r#"
 struct Box<S set>:
     value S
     tag N
@@ -555,53 +556,54 @@ prop accepts(S set, b &Box<S>):
 have b &Box<R> = (0, 0)
 "#;
 
-    let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope("deterministic_infer_rule_firings_are_cached");
-    let (stmt_results, runtime_error) = run_source_code(setup, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
-    assert!(
-        run_succeeded,
-        "cached infer-rule setup failed:\n{}",
-        run_output
-    );
+        let mut runtime = Runtime::new();
+        runtime.new_file_path_new_env_new_name_scope("deterministic_infer_rule_firings_are_cached");
+        let (stmt_results, runtime_error) = run_source_code(setup, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+        assert!(
+            run_succeeded,
+            "cached infer-rule setup failed:\n{}",
+            run_output
+        );
 
-    let (stmt_results, runtime_error) = run_source_code("trust $accepts(R, b)", &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
-    assert!(
-        run_succeeded,
-        "the first predicate inference failed:\n{}",
-        run_output
-    );
-    let counts_after_first = {
-        let environment = runtime.top_level_env();
-        (
-            environment.cache_known_fact.len(),
-            environment.cache_infer_rule_firing.len(),
-        )
-    };
+        let (stmt_results, runtime_error) = run_source_code("trust $accepts(R, b)", &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+        assert!(
+            run_succeeded,
+            "the first predicate inference failed:\n{}",
+            run_output
+        );
+        let counts_after_first = {
+            let environment = runtime.top_level_env();
+            (
+                environment.cache_known_fact.len(),
+                environment.cache_infer_rule_firing.len(),
+            )
+        };
 
-    let (stmt_results, runtime_error) = run_source_code("trust $accepts(R, b)", &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
-    assert!(
-        run_succeeded,
-        "the cached predicate inference failed:\n{}",
-        run_output
-    );
-    let counts_after_second = {
-        let environment = runtime.top_level_env();
-        (
-            environment.cache_known_fact.len(),
-            environment.cache_infer_rule_firing.len(),
-        )
-    };
+        let (stmt_results, runtime_error) = run_source_code("trust $accepts(R, b)", &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+        assert!(
+            run_succeeded,
+            "the cached predicate inference failed:\n{}",
+            run_output
+        );
+        let counts_after_second = {
+            let environment = runtime.top_level_env();
+            (
+                environment.cache_known_fact.len(),
+                environment.cache_infer_rule_firing.len(),
+            )
+        };
 
-    assert_eq!(
+        assert_eq!(
         counts_after_second, counts_after_first,
         "repeating a known predicate fact must not store facts or fire deterministic infer rules again"
     );
+    });
 }
 
 #[test]

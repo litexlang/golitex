@@ -35,6 +35,49 @@ isolated `__SketchNN` namespace nested inside the file namespace; declarations
 and FactIds created there do not become later file-level bindings. Ordinary
 top-level facts are emitted directly in the file namespace.
 
+`37_TrustedObjectResultComposition.lit` covers parameter-only and
+fact-attached `trust have` statements over ordinary object carriers. Each
+binding becomes an explicit Lean axiom because the source statement itself is
+an explicit trust boundary; its membership and attached fact keep the exact
+Runtime-assigned FactIds. A later function application checks that the
+compiler environment retained the callable contract and WD return-membership
+edge without searching propositions.
+
+`38_FactTransformationResultComposition.lit` covers a known-fact citation
+followed by an ordered rational-normalization transformation. The compiler
+starts from the exact cited FactId, validates the retained source/result of
+each step, and emits a Lean `convert`; removing the step makes compilation fail
+closed instead of silently reproving the target.
+
+`39_CheckedNamedFunctionReductionResultComposition.lit` covers one checked
+named-function unfolding. Its equality Result retains the defining equality's
+exact FactId, the selected application side, and the reduced object. The
+compiler resolves that FactId in its own environment stack and unfolds only
+the recorded function; changing the FactId or reduced object fails before Lean
+source is emitted.
+
+`40_RegisteredOrderResultComposition.lit` covers the six registered additive
+order rules. Each enclosing forall Result owns the parameter and premise
+scope; the compiler environment stack makes those exact FactIds visible only
+while compiling its conclusion. The arithmetic proof method then validates
+the retained RuleId, semantic fingerprint, target operands, and ordered child
+Results before applying one fixed `Litex.Rules` theorem. Swapped children or a
+stale fingerprint fail closed instead of falling back to rule-name or label
+matching.
+
+`41_ClearCompilerEnvironmentLayer.lit` covers a command whose meaning exists
+only in the two state machines. Runtime forgets the current Litex environment;
+the compiler clears its matching SymbolId/FactId frame and opens a fresh Lean
+namespace so the same source spelling can be declared again. The earlier Lean
+declaration remains in source history but is no longer reachable through the
+compiler environment.
+
+`42_OrderTransitivityResultComposition.lit` covers weak/weak, strict/weak,
+and weak/strict transitivity. The typed arithmetic Result retains carrier
+evidence followed by the exact two-edge path; the compiler validates their
+shared middle endpoint and applies `Litex.Le.trans`, `Litex.Lt.transLe`, or
+`Litex.Le.transLt`. Reversing the child order is a corruption error.
+
 `1_SetSystem.lit` is the tracer for checked named set aliases, `Same`, and
 heterogeneous `In`: `have A set = R` becomes an `abbrev A : Litex.Set`, while
 verifier equality-rewrite evidence becomes a `Litex.In.congr` proof. A bare
@@ -121,17 +164,18 @@ adjacent membership bridges and retain each complex-valued binder's original
 being collapsed into this base hierarchy.
 
 `17_NumericCarrierClosures.lit` traces complex `+`, `-`, `*`, `/` closure and
-integer `+`, `-`, `*` closure. The integer proofs consume the exact ordered
-conjunction retained by verifier IR and construct native integer result
-witnesses. Verified integer `%` is the paired negative boundary because the
-current complex-valued source representation has no native remainder term.
+integer `+`, `-`, `*`, `%` closure. The modulo theorem makes the compiler
+environment stack's target-only role concrete: the recursive Result proves
+both operands are in `Z`; the active binder frame selects their exact `ℤ`
+representatives, computes `%` there, and casts the result back to the Litex
+complex observation. Popping the forall body removes those representatives.
 
-`18_RationalNaturalClosures.lit` traces rational `+`, `-`, `*`, `/` closure
-and natural `+`, `*` closure. The verifier emits operator-specific evidence,
-and generated proofs construct native `ℚ` or `ℕ` result witnesses without
-retyping the complex-valued source binders. Verified rational integer power is
-the paired negative boundary: its `Pow` certificate is retained, but compiler
-still has no reviewed native power-term contract.
+`18_RationalNaturalClosures.lit` traces rational `+`, `-`, `*`, `/`, integer
+power closure and natural `+`, `*` closure. Ordinary binary rules consume their
+ordered recursive children. Integer power consumes `base ∈ Q` and
+`exponent ∈ Z`, selects the exact `ℚ`/`ℤ` representatives in the active forall
+compiler frame, and casts the native rational power back to the Litex complex
+observation. Those representatives disappear when the frame is popped.
 
 `19_NativeConstants.lit` traces native `i`, `e`, and `pi` terms together with
 their base numeric memberships. Generated equality uses `Complex.I`,
@@ -222,6 +266,101 @@ parameters, two ordered domain premises, and one return check. The generated
 two-parameter `FnTelescope` consumes the two verifier-owned domain proofs as a
 conjunction, and the following application proves that both local index
 bindings disappeared while the persistent matrix contract remained callable.
+
+`33_NonemptySetWitnessCompilerEnvironment.lit` traces a missing statement and
+builtin family together. `WitnessNonemptySet` pushes one inherited compiler
+environment, consumes its ordered local proof-step Results, and then compiles
+the retained membership check. `ListSetMembership` uses the verifier-owned
+selected index and its exact equality child to construct the nested coproduct
+witness. Popping the child layer discards every local name; only the outer
+`$is_nonempty_set({1, 2})` FactId is published. Function-set witnesses retain a
+different return-set check and remain the paired fail-closed boundary.
+
+`34_PredicateBackedWitnessResultComposition.lit` traces the concrete
+`witness $P(args)` shorthand that the previous compiler never implemented.
+The statement reuses its nested ordinary existential verification, combines
+the predicate argument-membership proofs with that existential proof, folds
+the result through the compiled predicate definition, and publishes the
+primary predicate, parameter membership, and instantiated existential under
+the three exact FactIds retained by execution. Multiple-witness and `exist!`
+definitions remain separate fail-closed Result families.
+
+`35_SourceAxiomResultBoundary.lit` traces an explicit Litex source axiom. The
+compiler validates its recursive forall WD and exact stored FactId, preserves
+the declared name as a Lean axiom, and lets the next statement cite that
+FactId. Unsupported Results never acquire compiler-invented axioms.
+
+`36_KnownForallResultComposition.lit` traces direct recursive compilation of a
+known-forall application. The source axiom publishes one exact forall FactId;
+the final fact Result owns one argument and its recursive `2 $in R` parameter
+requirement. The compiler checks both, substitutes the retained argument into
+the single conclusion, and applies the source Lean theorem without constructing
+a mirrored proof IR or searching the execution Runtime.
+
+`43_StrategyDefinitionCompilerEnvironment.lit` makes the compiler-stack rule
+explicit for a verified user strategy. `SuccessVerifyStrategyDefinitionResult`
+owns the forall WD Result, the parameter-assumption store with its exact local
+`FactId`, two ordered proof-step Results, and the final conclusion check. The
+compiler pushes one inherited environment for that Result-owned forall body,
+compiles `x = x` and `by def $reflexive(x)` there, pops the local identities,
+then publishes only the stored outer forall theorem. `stop strategy` and
+`use strategy` are checked pass-through Results and emit no Lean declaration.
+
+`44_SettingElaborationResult.lit` records the complementary pass-through case.
+A `setting` is consumed by Litex elaboration, so later statement Results already
+contain its fresh binders and premise facts. The compiler validates that the
+setting Result published no mathematical effects, emits nothing for it, and
+compiles the following expanded forall without storing a duplicate setting in
+the compiler environment stack.
+
+`45_OrderReflexivityAndNumericComparisonResults.lit` separates two verifier
+routes that were previously collapsed into one label-only “number comparison”.
+The symbolic theorem owns `OrderReflexivityBuiltinRuleEvidence`, so its forall
+Result pushes the binder compiler environment and emits `Litex.Le.refl x`.
+The closed comparison owns two recursive `SuccessEvaluateObjResult` children,
+including the exact `2 + 3 -> 5` tree. Neither route is selected from a label
+or by rerunning verification in the compiler.
+
+`46_RegisteredPredicateCompilerEnvironment.lit` exercises four compiler-only
+property bindings whose lifetimes follow successful Results. Each registration
+owns its complete recursive `forall_check`, local parameter/domain stores,
+proof steps, and checked conclusion. The compiler pushes one inherited
+environment, represents `$is_set(x)` as `True.intro` because `x : Litex.Set`
+already carries sethood in Lean, and installs domain facts such as
+`same_set x y` only in that frame. Definition-projected equalities keep their
+exact inferred FactIds. After emitting the reflexive, symmetric, transitive,
+or antisymmetric theorem, the compiler pops every binder-local SymbolId and
+FactId and publishes only the registered theorem binding in the surrounding
+compiler environment.
+
+`47_DefinedPredicateInferenceCompilerEnvironment.lit` makes ordinary
+predicate inference recursive and environment-sensitive. Each trusted
+`same_set` fact owns typed parameter-requirement and definition-clause
+projection Results with exact premise/conclusion FactIds. Top-level projections
+become persistent Lean theorems. The same projections inside the registered
+transitivity forall are bound to local proof expressions and disappear when
+the compiler pops that inherited environment. The source chain then publishes
+its exact adjacent-edge projections, folds the visible transitivity theorem,
+and lets the final statement cite the inferred conclusion by FactId.
+
+`48_NumericEvalResultComposition.lit` turns a common `eval` command into a
+real compositional compiler input. `SuccessEvalStmtResult` owns the exact
+source object, evaluated object, and recursive numeric evaluation tree. Its
+store effect publishes the final attached equality FactId into the compiler
+environment; the following fact cites that ID. JSON v2 projects its reported
+store from the canonical common store result, so it no longer prints the stale
+pre-attachment `None` FactId formerly held by a duplicated snapshot. Runtime
+algorithm evaluations without a recursive computation Result remain the
+paired fail-closed boundary.
+
+`49_RegisteredSubtractionAndOrderResultComposition.lit` covers three common
+registered arithmetic/order procedures that now consume their recursive
+Result certificates directly. The compiler validates the current `RuleId`
+fingerprint, the two real-parameter checks, the exact ordered comparison
+child, the subtraction operand reversal, and strictness before selecting the
+Lean adapter for `v <= u -> 0 <= u - v`, `v < u -> 0 < u - v`, or the
+strict-to-weak `a > b -> a >= b` conversion. Reordering a parameter child with
+the semantic comparison fails closed.
 
 Generated `.lean` files are review artifacts, not editing surfaces. A new
 compiler feature must add the next numbered same-name pair. Unsupported

@@ -24,13 +24,12 @@ theorem __fact5 : Litex.Positive ((Real.pi : ℝ) : ℂ) := by
   exact Litex.Rules.positiveOfInRPos (__fact4)
 
 theorem __fact6 :
-    ∀ (r : ℂ) (__h6_1 : Litex.In r Litex.RPos),
-      Litex.In r Litex.R ∧ Litex.In r Litex.C ∧ Litex.Positive r := by
+    ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.RPos), Litex.In __p1 Litex.R ∧ Litex.In __p1 Litex.C ∧ Litex.Positive __p1 := by
   intro r __h6_1
-  have __i6_0 : Litex.Positive r := Litex.Rules.positiveOfInRPos (__h6_1)
+  have __infer6_0 : Litex.Positive r := Litex.Rules.positiveOfInRPos (__h6_1)
   have __c6_0 : Litex.In r Litex.R := Litex.Rules.inROfInRPos (__h6_1)
   have __c6_1 : Litex.In r Litex.C := Litex.Rules.inCOfInR (Litex.Rules.inROfInRPos (__h6_1))
-  have __c6_2 : Litex.Positive r := __i6_0
+  have __c6_2 : Litex.Positive r := __infer6_0
   exact ⟨__c6_0, __c6_1, __c6_2⟩
 
 end __Compiler_21_PositiveRealCarrier

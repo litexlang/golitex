@@ -9,6 +9,7 @@ pub use compile_litex_file_to_lean_file::compile_litex_file_to_lean_file;
 pub use compile_litex_markdown_code_blocks_to_lean_file::compile_litex_markdown_code_blocks_to_lean_file;
 pub use compile_litex_source_to_lean_source::{
     compile_litex_source_to_lean_source,
+    compile_litex_source_to_lean_source_rejecting_compatibility_adapter_for_audit,
     compile_litex_source_to_stmt_result_to_lean_compilation_report,
 };
 pub use stmt_result_to_lean_compilation_report::{

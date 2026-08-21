@@ -1,0 +1,103 @@
+# High School Mathematics
+# Sets and Logic
+# Source unit: scripts/high_school_book/knowledge_core_json/required-1.json (required-1.sets_and_logic).
+# This chapter formalizes the source paraphrase; standalone exercises are omitted.
+
+1 $in {1, 2}
+{1} $subset {1, 2}
+$is_finite_set({1, 2})
+finite_set_size({1, 2}) = 2
+2 $in {1, 2}
+not 2 $in {1}
+claim:
+    ? {1} != {1, 2}
+    by contra:
+        ? {1} != {1, 2}
+        {1} = {1, 2}
+        2 $in {1}
+        impossible not 2 $in {1}
+by def {1} $proper_subset {1, 2}
+
+1 $in {x R: 0 <= x <= 2}
+3 $in {x R: x > 2}
+
+{1, 2} $subset {1, 2}
+
+claim:
+    ? forall A, B set:
+        intersect(A, B) = intersect(B, A)
+        union(A, B) = union(B, A)
+    by thm HighSchoolCite::sets::set_commutativity(A, B)
+
+claim:
+    ? forall A, B, D set:
+        intersect(intersect(A, B), D) = intersect(A, intersect(B, D))
+        union(union(A, B), D) = union(A, union(B, D))
+        intersect(A, union(B, D)) = union(intersect(A, B), intersect(A, D))
+        union(A, intersect(B, D)) = intersect(union(A, B), union(A, D))
+    by thm HighSchoolCite::sets::set_lattice_identities(A, B, D)
+
+claim:
+    ? forall U, A, B set:
+        set_minus(U, union(A, B)) = intersect(set_minus(U, A), set_minus(U, B))
+        set_minus(U, intersect(A, B)) = union(set_minus(U, A), set_minus(U, B))
+    by thm HighSchoolCite::sets::set_difference_identities(U, A, B)
+
+by extension:
+    ? {1, 2} = {2, 1}
+    by enumerate finite_set:
+        ? forall x {1, 2}:
+            x $in {2, 1}
+    by enumerate finite_set:
+        ? forall y {2, 1}:
+            y $in {1, 2}
+
+{1, 2} = {2, 1}
+
+forall:
+    $HighSchoolCite::logic::hs_P()
+    =>:
+        $HighSchoolCite::logic::hs_P() or $HighSchoolCite::logic::hs_Q()
+
+forall:
+    $HighSchoolCite::logic::hs_P()
+    $HighSchoolCite::logic::hs_Q()
+    =>:
+        $HighSchoolCite::logic::hs_Q()
+        $HighSchoolCite::logic::hs_P() and $HighSchoolCite::logic::hs_Q()
+
+claim:
+    ? forall:
+        $HighSchoolCite::logic::hs_P() or $HighSchoolCite::logic::hs_P()
+        =>:
+            $HighSchoolCite::logic::hs_P()
+    by cases:
+        ? $HighSchoolCite::logic::hs_P()
+        case $HighSchoolCite::logic::hs_P():
+            do_nothing
+        case $HighSchoolCite::logic::hs_P():
+            do_nothing
+
+forall:
+    =>:
+        $HighSchoolCite::logic::hs_P() or $HighSchoolCite::logic::hs_P()
+    <=>:
+        $HighSchoolCite::logic::hs_P()
+
+claim:
+    ? forall:
+        $HighSchoolCite::logic::hs_P()
+        $HighSchoolCite::logic::hs_Q() or $HighSchoolCite::logic::hs_R()
+        =>:
+            $HighSchoolCite::logic::hs_P() and $HighSchoolCite::logic::hs_Q() or $HighSchoolCite::logic::hs_P() and $HighSchoolCite::logic::hs_R()
+    by cases:
+        ? $HighSchoolCite::logic::hs_P() and $HighSchoolCite::logic::hs_Q() or $HighSchoolCite::logic::hs_P() and $HighSchoolCite::logic::hs_R()
+        case $HighSchoolCite::logic::hs_Q():
+            $HighSchoolCite::logic::hs_P() and $HighSchoolCite::logic::hs_Q()
+        case $HighSchoolCite::logic::hs_R():
+            $HighSchoolCite::logic::hs_P() and $HighSchoolCite::logic::hs_R()
+
+by contra:
+    ? not exist x R st {x != x}
+    obtain a from exist x R st {x != x}
+    impossible a = a

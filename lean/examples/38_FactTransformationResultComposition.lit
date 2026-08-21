@@ -1,0 +1,19 @@
+# Tracer: ordered FactTransformationEvidence replay
+#
+# Before: known-fact lookup could verify the second comparison by normalizing
+# its operands to the first fact, but direct Result compilation rejected the
+# retained `fact_transformation` and fell back to the mirrored proof IR.
+#
+# Now: the citation resolves the first fact by its exact FactId. The compiler
+# starts at `2 < 3`, consumes the ordered RationalNormalization step retained
+# by the second Result, validates that the step ends at `1 + 1 < 3`, and emits
+# a checked Lean conversion.
+#
+# Boundary: direct equality-rewrite transformations currently cover membership
+# elements and equality endpoints. Other predicate congruence families remain
+# fail-closed until they have target-specific Lean rules.
+
+trust:
+    2 < 3
+
+1 + 1 < 3

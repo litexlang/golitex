@@ -1,7 +1,7 @@
 # Mathematical Collections for Tao Analysis I
 
-> Publication status (2026-08-20): only Introduction, Chapters 1--4, and
-> Appendix A are in the runnable module. Later concept cards describe preserved
+> Publication status (2026-08-21): Introduction, Chapters 1--7, and Appendix A
+> are in the runnable module. Later concept cards describe preserved
 > work in `../todo_textbook_chapters/`, not current published interfaces.
 
 ## Concept-card convention
@@ -262,6 +262,30 @@ rational-Cauchy construction through two explicit compatibility axioms rather
 than unfinished theorem proofs.  Generated artifacts should preserve that
 axiom provenance.  The proof edges above remain part of this human contract
 when an execution mode does not expose the checked bodies that establish them.
+
+## Chapter 7: series
+
+Chapter 7 lifts the Chapter 6 sequence-limit interface to finite partial sums
+and infinite series.  The core callable construction is `partial_sum(a,n)`;
+convergence and a specified sum remain propositions because they describe a
+sequence of partial sums rather than selecting a value prematurely.
+
+~~~litex
+prop is_convergent_series(a seq(R)):
+    $chap6::is_convergent_sequence(fn(n N+) R {partial_sum(a, n)})
+
+prop has_series_sum(a seq(R), L R):
+    $chap6::has_limit(fn(n N+) R {partial_sum(a, n)}, L)
+~~~
+
+The main dependency route is `partial_sum -> has_series_sum ->
+is_convergent_series`, with comparison, absolute-convergence, condensation,
+and ratio/root tests as downstream consumers.  Finite geometric sums and
+alternating signs expose a current verifier style boundary: inner equalities
+must sometimes be lifted through subtraction, quotient, or function
+application one constructor at a time.  The published file retains 31
+localized executable `trust` sites and no `abstract_prop`; this promotion adds
+no trust and does not claim those retained boundaries are checked proofs.
 
 ## Chapter 8: infinite sets
 

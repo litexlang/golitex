@@ -1,8 +1,9 @@
 # Mathematical Collections
 
-> Publication status (2026-08-20): only the shared `pi > 0` foundation is in
-> the runnable module. The curriculum cards below describe quarantined chapter
-> work and are not current published interfaces.
+> Publication status (2026-08-21): the runnable module exports the recovered
+> shared cite interfaces and all Chapters 1--20. The sequence, derivative,
+> counting, distribution, regression, and independence cards below are current
+> registered interfaces rather than quarantined drafts.
 
 ## Purpose and scope
 

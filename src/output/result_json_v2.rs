@@ -129,6 +129,16 @@ impl StmtResultJsonV2 {
                     .map(|verification| {
                         object(vec![
                             string_field("kind", "SuccessVerifyStrategyDefinitionResult"),
+                            string_field("name", verification.name.clone()),
+                            string_field("forall_fact", verification.forall_fact.to_string()),
+                            (
+                                "well_definedness".to_string(),
+                                self.fact_well_definedness(&verification.well_definedness),
+                            ),
+                            (
+                                "proof_scope".to_string(),
+                                self.local_proof_scope(&verification.proof_scope),
+                            ),
                             (
                                 "proof_steps".to_string(),
                                 self.stmt_results(&verification.proof_steps),
@@ -863,16 +873,24 @@ impl StmtResultJsonV2 {
                 "EvalStmt",
                 result.statement.to_string(),
                 &result.common,
-                vec![(
-                    "reported_store_facts".to_string(),
-                    array(
-                        result
-                            .reported_store_facts
-                            .iter()
-                            .map(store_fact_output_value)
-                            .collect(),
+                vec![
+                    (
+                        "execution".to_string(),
+                        eval_stmt_execution_result_value(&result.execution),
                     ),
-                )],
+                    (
+                        "reported_store_facts".to_string(),
+                        array(
+                            result
+                                .common
+                                .infers
+                                .store_fact_outputs
+                                .iter()
+                                .map(store_fact_output_value)
+                                .collect(),
+                        ),
+                    ),
+                ],
             ),
             SuccessCommandStmtResult::UseStrategyStmt(result) => self.non_fact_stmt(
                 "UseStrategyStmt",
@@ -2280,6 +2298,51 @@ impl StmtResultJsonV2 {
             BuiltinRuleEvidence::ClosedNumericComparison(result) => object(vec![
                 string_field("kind", "ClosedNumericComparison"),
                 string_field("expected_target", result.expected_target.to_string()),
+                (
+                    "left_evaluation".to_string(),
+                    evaluation_value(&result.left_evaluation),
+                ),
+                (
+                    "right_evaluation".to_string(),
+                    evaluation_value(&result.right_evaluation),
+                ),
+            ]),
+            BuiltinRuleEvidence::OrderReflexivity(result) => object(vec![
+                string_field("kind", "OrderReflexivity"),
+                string_field("expected_target", result.expected_target.to_string()),
+                string_field("repeated_object", result.repeated_object.to_string()),
+            ]),
+            BuiltinRuleEvidence::RuntimeResolvedNumericComparison(result) => object(vec![
+                string_field("kind", "RuntimeResolvedNumericComparison"),
+                string_field("expected_target", result.expected_target.to_string()),
+                string_field("normalized_left", result.normalized_left.to_string()),
+                string_field("normalized_right", result.normalized_right.to_string()),
+            ]),
+            BuiltinRuleEvidence::RegisteredReflexivePredicate(result) => object(vec![
+                string_field("kind", "RegisteredReflexivePredicate"),
+                string_field("expected_target", result.expected_target.to_string()),
+                string_field("predicate_name", result.predicate_name.clone()),
+            ]),
+            BuiltinRuleEvidence::RegisteredSymmetricPredicate(result) => object(vec![
+                string_field("kind", "RegisteredSymmetricPredicate"),
+                string_field("expected_target", result.expected_target.to_string()),
+                string_field("predicate_name", result.predicate_name.clone()),
+                (
+                    "gather".to_string(),
+                    JsonValue::Array(
+                        result
+                            .gather
+                            .iter()
+                            .map(|index| JsonValue::Number(*index))
+                            .collect(),
+                    ),
+                ),
+                string_field("expected_alternate", result.expected_alternate.to_string()),
+            ]),
+            BuiltinRuleEvidence::RegisteredAntisymmetricPredicate(result) => object(vec![
+                string_field("kind", "RegisteredAntisymmetricPredicate"),
+                string_field("expected_target", result.expected_target.to_string()),
+                string_field("predicate_name", result.predicate_name.clone()),
             ]),
             BuiltinRuleEvidence::ObjectReflexivity(result) => object(vec![
                 string_field("kind", "ObjectReflexivity"),
@@ -3056,6 +3119,10 @@ fn prop_registration_verification_value(
         string_field("prop_name", result.prop_name.clone()),
         string_field("forall_fact", result.forall_fact.to_string()),
         (
+            "well_definedness".to_string(),
+            renderer.fact_well_definedness(&result.well_definedness),
+        ),
+        (
             "assumption_infers".to_string(),
             infer_result_value(&result.assumption_infers),
         ),
@@ -3064,8 +3131,8 @@ fn prop_registration_verification_value(
             renderer.stmt_results(&result.proof_steps),
         ),
         (
-            "conclusion_check".to_string(),
-            renderer.stmt_result(&result.conclusion_check),
+            "forall_check".to_string(),
+            renderer.stmt_result(&result.forall_check),
         ),
     ])
 }
@@ -3342,12 +3409,40 @@ fn infer_result_value(result: &SuccessInferResult) -> JsonValue {
 }
 
 fn infer_rule_application_value(result: &SuccessInferRuleApplicationResult) -> JsonValue {
-    object(vec![
+    let mut fields = vec![
         string_field(
             "rule",
-            match result.rule {
+            match &result.rule {
                 InferRule::NaturalMembershipImpliesNonnegative => {
                     "NaturalMembershipImpliesNonnegative"
+                }
+                InferRule::PositiveStandardSetMembershipImpliesPositive(_) => {
+                    "PositiveStandardSetMembershipImpliesPositive"
+                }
+                InferRule::NegativeStandardSetMembershipImpliesNegative(_) => {
+                    "NegativeStandardSetMembershipImpliesNegative"
+                }
+                InferRule::NonzeroStandardSetMembershipImpliesNonzero(_) => {
+                    "NonzeroStandardSetMembershipImpliesNonzero"
+                }
+                InferRule::SetBuilderBaseMembershipProjection => {
+                    "SetBuilderBaseMembershipProjection"
+                }
+                InferRule::SetBuilderPredicateProjection { .. } => "SetBuilderPredicateProjection",
+                InferRule::DefinedPredicateParameterRequirementProjection(_) => {
+                    "DefinedPredicateParameterRequirementProjection"
+                }
+                InferRule::DefinedPredicateDefinitionClauseProjection(_) => {
+                    "DefinedPredicateDefinitionClauseProjection"
+                }
+                InferRule::RegisteredTransitivePredicateChainClosure(_) => {
+                    "RegisteredTransitivePredicateChainClosure"
+                }
+                InferRule::TupleEqualityWithKnownTupleImpliesTupleShape(_) => {
+                    "TupleEqualityWithKnownTupleImpliesTupleShape"
+                }
+                InferRule::ListSetMembershipImpliesEqualityAlternatives(_) => {
+                    "ListSetMembershipImpliesEqualityAlternatives"
                 }
             },
         ),
@@ -3376,7 +3471,52 @@ fn infer_rule_application_value(result: &SuccessInferRuleApplicationResult) -> J
                     .collect(),
             ),
         ),
-    ])
+    ];
+    if let InferRule::SetBuilderPredicateProjection { clause_index } = &result.rule {
+        fields.insert(1, number_field("clause_index", *clause_index));
+    }
+    let source_set = match &result.rule {
+        InferRule::PositiveStandardSetMembershipImpliesPositive(rule) => Some(rule.source_set),
+        InferRule::NegativeStandardSetMembershipImpliesNegative(rule) => Some(rule.source_set),
+        InferRule::NonzeroStandardSetMembershipImpliesNonzero(rule) => Some(rule.source_set),
+        _ => None,
+    };
+    if let Some(source_set) = source_set {
+        fields.insert(1, string_field("source_set", source_set.to_string()));
+    }
+    if let InferRule::DefinedPredicateParameterRequirementProjection(rule) = &result.rule {
+        fields.insert(1, string_field("predicate_name", &rule.predicate_name));
+        fields.insert(2, number_field("parameter_index", rule.parameter_index));
+    }
+    if let InferRule::DefinedPredicateDefinitionClauseProjection(rule) = &result.rule {
+        fields.insert(1, string_field("predicate_name", &rule.predicate_name));
+        fields.insert(2, number_field("clause_index", rule.clause_index));
+    }
+    if let InferRule::RegisteredTransitivePredicateChainClosure(rule) = &result.rule {
+        fields.insert(1, string_field("predicate_name", &rule.predicate_name));
+        fields.insert(
+            2,
+            number_field("start_object_index", rule.start_object_index),
+        );
+        fields.insert(3, number_field("end_object_index", rule.end_object_index));
+    }
+    if let InferRule::TupleEqualityWithKnownTupleImpliesTupleShape(rule) = &result.rule {
+        fields.insert(
+            1,
+            string_field(
+                "known_side",
+                match rule.known_side {
+                    KnownTupleEqualitySide::Left => "left",
+                    KnownTupleEqualitySide::Right => "right",
+                },
+            ),
+        );
+        fields.insert(2, number_field("tuple_length", rule.tuple_length));
+    }
+    if let InferRule::ListSetMembershipImpliesEqualityAlternatives(rule) = &result.rule {
+        fields.insert(1, number_field("element_count", rule.element_count));
+    }
+    object(fields)
 }
 
 fn success_store_fact_value(result: &SuccessStoreFactResult) -> JsonValue {
@@ -3461,6 +3601,27 @@ fn evaluation_value(result: &SuccessEvaluateObjResult) -> JsonValue {
         string_field("value", result.value.to_string()),
         ("step".to_string(), step),
     ])
+}
+
+fn eval_stmt_execution_result_value(result: &SuccessEvalStmtExecutionResult) -> JsonValue {
+    match result {
+        SuccessEvalStmtExecutionResult::SkippedByTrustedPrefix => {
+            object(vec![string_field("kind", "SkippedByTrustedPrefix")])
+        }
+        SuccessEvalStmtExecutionResult::Evaluated(result) => object(vec![
+            string_field("kind", "Evaluated"),
+            string_field("source_object", result.source_object.to_string()),
+            string_field("evaluated_object", result.evaluated_object.to_string()),
+            (
+                "recursive_numeric_evaluation".to_string(),
+                result
+                    .recursive_numeric_evaluation
+                    .as_ref()
+                    .map(evaluation_value)
+                    .unwrap_or(JsonValue::Null),
+            ),
+        ]),
+    }
 }
 
 fn optional_trace(trace: Option<&StatementExecutionTrace>) -> JsonValue {
@@ -3642,6 +3803,12 @@ fn native_constant_membership_rule_name(rule: NativeConstantMembershipBuiltinRul
         NativeConstantMembershipBuiltinRule::ImaginaryUnitInComplex => "ImaginaryUnitInComplex",
         NativeConstantMembershipBuiltinRule::EulerNumberInReal => "EulerNumberInReal",
         NativeConstantMembershipBuiltinRule::PiInReal => "PiInReal",
+        NativeConstantMembershipBuiltinRule::EulerNumberInPositiveReal => {
+            "EulerNumberInPositiveReal"
+        }
+        NativeConstantMembershipBuiltinRule::PiInPositiveReal => "PiInPositiveReal",
+        NativeConstantMembershipBuiltinRule::EulerNumberInComplex => "EulerNumberInComplex",
+        NativeConstantMembershipBuiltinRule::PiInComplex => "PiInComplex",
     }
 }
 
@@ -4052,6 +4219,63 @@ mod tests {
         assert!(json.contains("\"statement\": \"2 + 3 >= 0\""));
         assert!(json.contains("\"rule\": \"NaturalMembershipImpliesNonnegative\""));
         assert!(!json.contains("LegacyPassThrough"));
+    }
+
+    #[test]
+    fn refined_standard_set_infer_json_v2_retains_typed_source_carrier() {
+        for (source, expected_rule, expected_set) in [
+            (
+                "1 $in R+",
+                "PositiveStandardSetMembershipImpliesPositive",
+                StandardSet::RPos,
+            ),
+            (
+                "-1 $in R-",
+                "NegativeStandardSetMembershipImpliesNegative",
+                StandardSet::RNeg,
+            ),
+            (
+                "1 $in C*",
+                "NonzeroStandardSetMembershipImpliesNonzero",
+                StandardSet::CStar,
+            ),
+        ] {
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope("refined_standard_set_infer_json_v2");
+            let tokenizer = Tokenizer::new();
+            let mut blocks = tokenizer
+                .parse_blocks(source, Rc::from("refined_standard_set_infer_json_v2.lit"))
+                .expect("refined standard-set membership tokenizes");
+            let stmt = runtime
+                .parse_stmt(&mut blocks[0])
+                .expect("refined standard-set membership parses");
+            let result = runtime
+                .exec_stmt(&stmt)
+                .expect("refined standard-set membership verifies");
+            let fact = result
+                .factual_success()
+                .expect("refined standard-set membership is factual");
+            let [application] = fact.store.infers.rule_applications.as_slice() else {
+                panic!("{source} must retain exactly one typed inference application");
+            };
+            let retained_source_set = match &application.rule {
+                InferRule::PositiveStandardSetMembershipImpliesPositive(rule) => rule.source_set,
+                InferRule::NegativeStandardSetMembershipImpliesNegative(rule) => rule.source_set,
+                InferRule::NonzeroStandardSetMembershipImpliesNonzero(rule) => rule.source_set,
+                other => panic!("{source} retained unexpected rule {other:?}"),
+            };
+            assert_eq!(retained_source_set, expected_set);
+
+            let json = display_stmt_result_json_v2(&result);
+            assert!(
+                json.contains(&format!("\"rule\": \"{expected_rule}\"")),
+                "{json}"
+            );
+            assert!(
+                json.contains(&format!("\"source_set\": \"{expected_set}\"")),
+                "{json}"
+            );
+        }
     }
 
     #[test]

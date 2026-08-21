@@ -490,6 +490,79 @@ theorem complexDivPositive
   rcases hb with ⟨rb, hrb, hbOrder⟩
   exact ⟨ra / rb, complexDivAsReal hra hrb, div_pos haOrder hbOrder⟩
 
+/-- Subtracting a smaller real observation from a larger one produces the
+exact nonnegative complex-carrier expression retained by registered rule
+`order.sub_nonnegative_of_less_equal`. -/
+theorem complexSubNonnegativeOfLessEqual
+    {u v : ℝ}
+    (hvu : Litex.Le (v : ℂ) (u : ℂ)) :
+    Litex.Nonnegative ((u : ℂ) - (v : ℂ)) := by
+  exact ⟨u - v, complexSubAsReal (Litex.AsReal.complex u) (Litex.AsReal.complex v), by
+    simpa [Litex.Le, Litex.OrderValue] using hvu⟩
+
+/-- Strict subtraction counterpart for registered rule
+`order.sub_positive_of_less`. -/
+theorem complexSubPositiveOfLess
+    {u v : ℝ}
+    (hvu : Litex.Lt (v : ℂ) (u : ℂ)) :
+    Litex.Positive ((u : ℂ) - (v : ℂ)) := by
+  exact ⟨u - v, complexSubAsReal (Litex.AsReal.complex u) (Litex.AsReal.complex v), by
+    simpa [Litex.Lt, Litex.OrderValue] using hvu⟩
+
+/-- Adding one common complex term preserves Litex non-strict order.
+This is the Lean adapter for registered rule `order.add_le_add_left`. -/
+theorem complexAddPreservesLessEqualWithCommonLeft
+    {u a b : ℂ}
+    (hab : Litex.Le a b) :
+    Litex.Le (u + a) (u + b) := by
+  simpa [Litex.Le, Litex.OrderValue] using add_le_add_left hab u.re
+
+/-- Componentwise addition preserves Litex non-strict order.
+This is the Lean adapter for registered rule `order.add_le_add`. -/
+theorem complexAddPreservesLessEqualComponentwise
+    {a b c d : ℂ}
+    (hab : Litex.Le a b)
+    (hcd : Litex.Le c d) :
+    Litex.Le (a + c) (b + d) := by
+  simpa [Litex.Le, Litex.OrderValue] using add_le_add hab hcd
+
+/-- Adding one common complex term preserves Litex strict order.
+This is the Lean adapter for registered rule `order.add_lt_add_left`. -/
+theorem complexAddPreservesLessWithCommonLeft
+    {u a b : ℂ}
+    (hab : Litex.Lt a b) :
+    Litex.Lt (u + a) (u + b) := by
+  simpa [Litex.Lt, Litex.OrderValue] using add_lt_add_left hab u.re
+
+/-- Componentwise addition preserves Litex strict order.
+This is the Lean adapter for registered rule `order.add_lt_add`. -/
+theorem complexAddPreservesLessComponentwise
+    {a b c d : ℂ}
+    (hab : Litex.Lt a b)
+    (hcd : Litex.Lt c d) :
+    Litex.Lt (a + c) (b + d) := by
+  simpa [Litex.Lt, Litex.OrderValue] using add_lt_add hab hcd
+
+/-- A strict left comparison and weak right comparison give a strict
+componentwise sum comparison. This is the Lean adapter for registered rule
+`order.add_lt_add_of_lt_of_le`. -/
+theorem complexAddPreservesLessOfLessAndLessEqual
+    {a b c d : ℂ}
+    (hab : Litex.Lt a b)
+    (hcd : Litex.Le c d) :
+    Litex.Lt (a + c) (b + d) := by
+  simpa [Litex.Lt, Litex.Le, Litex.OrderValue] using add_lt_add_of_lt_of_le hab hcd
+
+/-- A weak left comparison and strict right comparison give a strict
+componentwise sum comparison. This is the Lean adapter for registered rule
+`order.add_lt_add_of_le_of_lt`. -/
+theorem complexAddPreservesLessOfLessEqualAndLess
+    {a b c d : ℂ}
+    (hab : Litex.Le a b)
+    (hcd : Litex.Lt c d) :
+    Litex.Lt (a + c) (b + d) := by
+  simpa [Litex.Lt, Litex.Le, Litex.OrderValue] using add_lt_add_of_le_of_lt hab hcd
+
 /-- Introduce membership in a predicate-defined set from a semantically equal
 base representative satisfying the predicate. -/
 theorem inSetBuilder
@@ -550,6 +623,17 @@ theorem inNOfInNPos
     (h : Litex.In x Litex.NPos) :
     Litex.In x Litex.N :=
   inBaseOfInSetBuilder h
+
+/-- Exact `N+` membership exposes strict positivity through the retained
+natural representative and its canonical real observation. -/
+theorem positiveOfInNPos
+    {alpha : Type}
+    {x : alpha}
+    (h : Litex.In x Litex.NPos) :
+    Litex.Positive x := by
+  rcases (inSetBuilder_iff.mp h) with ⟨n, hn, hxn⟩
+  refine Litex.Positive.intro (Litex.Same.trans hxn (Litex.AsReal.nat n)) ?_
+  exact_mod_cast hn
 
 /-- A checked positive real numeral constructs the exact `R+` subtype
 carrier from its native real representative. -/

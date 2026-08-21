@@ -8,17 +8,15 @@ namespace __Compiler_2_OrderSystem
 namespace __Sketch01
 
 theorem __fact0 :
-    ∀ (a : ℂ) (__h0_1 : Litex.In a Litex.R) (b : ℂ) (__h0_2 : Litex.In b Litex.R) (__h0_3 : Litex.Lt a b),
-      Litex.Le a b := by
-  intro a __h0_1 b __h0_2 __h0_3
-  have __c0_0 : Litex.Le a b := Litex.Lt.toLe __h0_3
+    ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.R) (__p2 : ℂ) (__type2 : Litex.In __p2 Litex.R) (__domain1 : Litex.Lt (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ)), Litex.Le (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ) := by
+  intro a __h0_1 b __h0_2 __domain1
+  have __c0_0 : Litex.Le (((Litex.In.rep a __h0_1 : ℝ)) : ℂ) (((Litex.In.rep b __h0_2 : ℝ)) : ℂ) := Litex.Lt.toLe (__domain1)
   exact __c0_0
 
 theorem __fact1 :
-    ∀ (a : ℂ) (__h1_1 : Litex.In a Litex.R) (b : ℂ) (__h1_2 : Litex.In b Litex.R) (c : ℂ) (__h1_3 : Litex.In c Litex.R) (__h1_4 : Litex.Lt a b) (__h1_5 : Litex.Lt b c),
-      Litex.Lt a c := by
-  intro a __h1_1 b __h1_2 c __h1_3 __h1_4 __h1_5
-  have __c1_0 : Litex.Lt a c := Litex.Lt.trans (__h1_4) (__h1_5)
+    ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.R) (__p2 : ℂ) (__type2 : Litex.In __p2 Litex.R) (__p3 : ℂ) (__type3 : Litex.In __p3 Litex.R) (__domain1 : Litex.Lt (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ)) (__domain2 : Litex.Lt (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ) (((Litex.In.rep __p3 __type3 : ℝ)) : ℂ)), Litex.Lt (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) (((Litex.In.rep __p3 __type3 : ℝ)) : ℂ) := by
+  intro a __h1_1 b __h1_2 c __h1_3 __domain1 __domain2
+  have __c1_0 : Litex.Lt (((Litex.In.rep a __h1_1 : ℝ)) : ℂ) (((Litex.In.rep c __h1_3 : ℝ)) : ℂ) := Litex.Lt.trans (__domain1) (__domain2)
   exact __c1_0
 
 end __Sketch01

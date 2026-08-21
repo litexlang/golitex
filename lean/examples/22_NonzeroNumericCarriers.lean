@@ -5,80 +5,75 @@ set_option linter.style.nameCheck false
 
 namespace __Compiler_22_NonzeroNumericCarriers
 
-theorem __fact0 :
-    ∀ (z : ℂ) (__h0_1 : Litex.In z Litex.Z) (__h0_2 : ¬ Litex.Same z (0 : ℂ)),
-      Litex.In z Litex.ZStar := by
-  intro z __h0_1 __h0_2
-  have __c0_0 : Litex.In z Litex.ZStar := Litex.Rules.inZStarOfInZNotSameZero (__h0_1) (__h0_2)
-  exact __c0_0
+theorem __fact0 : ¬ Litex.In (0 : ℂ) Litex.CStar := by
+  exact (fun __membership => (Litex.Rules.notSameZeroOfInCStar (__membership)) (Litex.Same.refl (0 : ℂ)))
 
 theorem __fact1 :
-    ∀ (q : ℂ) (__h1_1 : Litex.In q Litex.Q) (__h1_2 : ¬ Litex.Same q (0 : ℂ)),
-      Litex.In q Litex.QStar := by
-  intro q __h1_1 __h1_2
-  have __c1_0 : Litex.In q Litex.QStar := Litex.Rules.inQStarOfInQNotSameZero (__h1_1) (__h1_2)
+    ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.Z) (__domain1 : ¬ Litex.Same __p1 (0 : ℂ)), Litex.In __p1 Litex.ZStar := by
+  intro z __h1_1 __domain1
+  have __c1_0 : Litex.In z Litex.ZStar := Litex.Rules.inZStarOfInZNotSameZero (__h1_1) (__domain1)
   exact __c1_0
 
 theorem __fact2 :
-    ∀ (r : ℂ) (__h2_1 : Litex.In r Litex.R) (__h2_2 : ¬ Litex.Same r (0 : ℂ)),
-      Litex.In r Litex.RStar := by
-  intro r __h2_1 __h2_2
-  have __c2_0 : Litex.In r Litex.RStar := Litex.Rules.inRStarOfInRNotSameZero (__h2_1) (__h2_2)
+    ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.Q) (__domain1 : ¬ Litex.Same __p1 (0 : ℂ)), Litex.In __p1 Litex.QStar := by
+  intro q __h2_1 __domain1
+  have __c2_0 : Litex.In q Litex.QStar := Litex.Rules.inQStarOfInQNotSameZero (__h2_1) (__domain1)
   exact __c2_0
 
 theorem __fact3 :
-    ∀ (c : ℂ) (__h3_1 : Litex.In c Litex.C) (__h3_2 : ¬ Litex.Same c (0 : ℂ)),
-      Litex.In c Litex.CStar := by
-  intro c __h3_1 __h3_2
-  have __c3_0 : Litex.In c Litex.CStar := Litex.Rules.inCStarOfInCNotSameZero (__h3_1) (__h3_2)
+    ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.R) (__domain1 : ¬ Litex.Same __p1 (0 : ℂ)), Litex.In __p1 Litex.RStar := by
+  intro r __h3_1 __domain1
+  have __c3_0 : Litex.In r Litex.RStar := Litex.Rules.inRStarOfInRNotSameZero (__h3_1) (__domain1)
   exact __c3_0
 
 theorem __fact4 :
-    ∀ (z : ℂ) (__h4_1 : Litex.In z Litex.ZStar),
-      ¬ Litex.Same z (0 : ℂ) ∧ Litex.In z Litex.Z ∧ Litex.In z Litex.Q ∧ Litex.In z Litex.R ∧ Litex.In z Litex.C ∧ Litex.In z Litex.QStar ∧ Litex.In z Litex.RStar ∧ Litex.In z Litex.CStar := by
-  intro z __h4_1
-  have __i4_0 : ¬ Litex.Same z (0 : ℂ) := Litex.Rules.notSameZeroOfInZStar (__h4_1)
-  have __c4_0 : ¬ Litex.Same z (0 : ℂ) := __i4_0
-  have __c4_1 : Litex.In z Litex.Z := Litex.Rules.inZOfInZStar (__h4_1)
-  have __c4_2 : Litex.In z Litex.Q := Litex.Rules.inQOfInZ (Litex.Rules.inZOfInZStar (__h4_1))
-  have __c4_3 : Litex.In z Litex.R := Litex.Rules.inROfInQ (Litex.Rules.inQOfInZ (Litex.Rules.inZOfInZStar (__h4_1)))
-  have __c4_4 : Litex.In z Litex.C := Litex.Rules.inCOfInR (Litex.Rules.inROfInQ (Litex.Rules.inQOfInZ (Litex.Rules.inZOfInZStar (__h4_1))))
-  have __c4_5 : Litex.In z Litex.QStar := Litex.Rules.inQStarOfInZStar (__h4_1)
-  have __c4_6 : Litex.In z Litex.RStar := Litex.Rules.inRStarOfInQStar (Litex.Rules.inQStarOfInZStar (__h4_1))
-  have __c4_7 : Litex.In z Litex.CStar := Litex.Rules.inCStarOfInRStar (Litex.Rules.inRStarOfInQStar (Litex.Rules.inQStarOfInZStar (__h4_1)))
-  exact ⟨__c4_0, __c4_1, __c4_2, __c4_3, __c4_4, __c4_5, __c4_6, __c4_7⟩
+    ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.C) (__domain1 : ¬ Litex.Same __p1 (0 : ℂ)), Litex.In __p1 Litex.CStar := by
+  intro c __h4_1 __domain1
+  have __c4_0 : Litex.In c Litex.CStar := Litex.Rules.inCStarOfInCNotSameZero (__h4_1) (__domain1)
+  exact __c4_0
 
 theorem __fact5 :
-    ∀ (q : ℂ) (__h5_1 : Litex.In q Litex.QStar),
-      ¬ Litex.Same q (0 : ℂ) ∧ Litex.In q Litex.Q ∧ Litex.In q Litex.R ∧ Litex.In q Litex.C ∧ Litex.In q Litex.RStar ∧ Litex.In q Litex.CStar := by
-  intro q __h5_1
-  have __i5_0 : ¬ Litex.Same q (0 : ℂ) := Litex.Rules.notSameZeroOfInQStar (__h5_1)
-  have __c5_0 : ¬ Litex.Same q (0 : ℂ) := __i5_0
-  have __c5_1 : Litex.In q Litex.Q := Litex.Rules.inQOfInQStar (__h5_1)
-  have __c5_2 : Litex.In q Litex.R := Litex.Rules.inROfInQ (Litex.Rules.inQOfInQStar (__h5_1))
-  have __c5_3 : Litex.In q Litex.C := Litex.Rules.inCOfInR (Litex.Rules.inROfInQ (Litex.Rules.inQOfInQStar (__h5_1)))
-  have __c5_4 : Litex.In q Litex.RStar := Litex.Rules.inRStarOfInQStar (__h5_1)
-  have __c5_5 : Litex.In q Litex.CStar := Litex.Rules.inCStarOfInRStar (Litex.Rules.inRStarOfInQStar (__h5_1))
-  exact ⟨__c5_0, __c5_1, __c5_2, __c5_3, __c5_4, __c5_5⟩
+    ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.ZStar), ¬ Litex.Same __p1 (0 : ℂ) ∧ Litex.In __p1 Litex.Z ∧ Litex.In __p1 Litex.Q ∧ Litex.In __p1 Litex.R ∧ Litex.In __p1 Litex.C ∧ Litex.In __p1 Litex.QStar ∧ Litex.In __p1 Litex.RStar ∧ Litex.In __p1 Litex.CStar := by
+  intro z __h5_1
+  have __infer5_0 : ¬ Litex.Same z (0 : ℂ) := Litex.Rules.notSameZeroOfInZStar (__h5_1)
+  have __c5_0 : ¬ Litex.Same z (0 : ℂ) := __infer5_0
+  have __c5_1 : Litex.In z Litex.Z := Litex.Rules.inZOfInZStar (__h5_1)
+  have __c5_2 : Litex.In z Litex.Q := Litex.Rules.inQOfInZ (Litex.Rules.inZOfInZStar (__h5_1))
+  have __c5_3 : Litex.In z Litex.R := Litex.Rules.inROfInQ (Litex.Rules.inQOfInZ (Litex.Rules.inZOfInZStar (__h5_1)))
+  have __c5_4 : Litex.In z Litex.C := Litex.Rules.inCOfInR (Litex.Rules.inROfInQ (Litex.Rules.inQOfInZ (Litex.Rules.inZOfInZStar (__h5_1))))
+  have __c5_5 : Litex.In z Litex.QStar := Litex.Rules.inQStarOfInZStar (__h5_1)
+  have __c5_6 : Litex.In z Litex.RStar := Litex.Rules.inRStarOfInQStar (Litex.Rules.inQStarOfInZStar (__h5_1))
+  have __c5_7 : Litex.In z Litex.CStar := Litex.Rules.inCStarOfInRStar (Litex.Rules.inRStarOfInQStar (Litex.Rules.inQStarOfInZStar (__h5_1)))
+  exact ⟨__c5_0, __c5_1, __c5_2, __c5_3, __c5_4, __c5_5, __c5_6, __c5_7⟩
 
 theorem __fact6 :
-    ∀ (r : ℂ) (__h6_1 : Litex.In r Litex.RStar),
-      ¬ Litex.Same r (0 : ℂ) ∧ Litex.In r Litex.R ∧ Litex.In r Litex.C ∧ Litex.In r Litex.CStar := by
-  intro r __h6_1
-  have __i6_0 : ¬ Litex.Same r (0 : ℂ) := Litex.Rules.notSameZeroOfInRStar (__h6_1)
-  have __c6_0 : ¬ Litex.Same r (0 : ℂ) := __i6_0
-  have __c6_1 : Litex.In r Litex.R := Litex.Rules.inROfInRStar (__h6_1)
-  have __c6_2 : Litex.In r Litex.C := Litex.Rules.inCOfInR (Litex.Rules.inROfInRStar (__h6_1))
-  have __c6_3 : Litex.In r Litex.CStar := Litex.Rules.inCStarOfInRStar (__h6_1)
-  exact ⟨__c6_0, __c6_1, __c6_2, __c6_3⟩
+    ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.QStar), ¬ Litex.Same __p1 (0 : ℂ) ∧ Litex.In __p1 Litex.Q ∧ Litex.In __p1 Litex.R ∧ Litex.In __p1 Litex.C ∧ Litex.In __p1 Litex.RStar ∧ Litex.In __p1 Litex.CStar := by
+  intro q __h6_1
+  have __infer6_0 : ¬ Litex.Same q (0 : ℂ) := Litex.Rules.notSameZeroOfInQStar (__h6_1)
+  have __c6_0 : ¬ Litex.Same q (0 : ℂ) := __infer6_0
+  have __c6_1 : Litex.In q Litex.Q := Litex.Rules.inQOfInQStar (__h6_1)
+  have __c6_2 : Litex.In q Litex.R := Litex.Rules.inROfInQ (Litex.Rules.inQOfInQStar (__h6_1))
+  have __c6_3 : Litex.In q Litex.C := Litex.Rules.inCOfInR (Litex.Rules.inROfInQ (Litex.Rules.inQOfInQStar (__h6_1)))
+  have __c6_4 : Litex.In q Litex.RStar := Litex.Rules.inRStarOfInQStar (__h6_1)
+  have __c6_5 : Litex.In q Litex.CStar := Litex.Rules.inCStarOfInRStar (Litex.Rules.inRStarOfInQStar (__h6_1))
+  exact ⟨__c6_0, __c6_1, __c6_2, __c6_3, __c6_4, __c6_5⟩
 
 theorem __fact7 :
-    ∀ (c : ℂ) (__h7_1 : Litex.In c Litex.CStar),
-      ¬ Litex.Same c (0 : ℂ) ∧ Litex.In c Litex.C := by
-  intro c __h7_1
-  have __i7_0 : ¬ Litex.Same c (0 : ℂ) := Litex.Rules.notSameZeroOfInCStar (__h7_1)
-  have __c7_0 : ¬ Litex.Same c (0 : ℂ) := __i7_0
-  have __c7_1 : Litex.In c Litex.C := Litex.Rules.inCOfInCStar (__h7_1)
-  exact ⟨__c7_0, __c7_1⟩
+    ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.RStar), ¬ Litex.Same __p1 (0 : ℂ) ∧ Litex.In __p1 Litex.R ∧ Litex.In __p1 Litex.C ∧ Litex.In __p1 Litex.CStar := by
+  intro r __h7_1
+  have __infer7_0 : ¬ Litex.Same r (0 : ℂ) := Litex.Rules.notSameZeroOfInRStar (__h7_1)
+  have __c7_0 : ¬ Litex.Same r (0 : ℂ) := __infer7_0
+  have __c7_1 : Litex.In r Litex.R := Litex.Rules.inROfInRStar (__h7_1)
+  have __c7_2 : Litex.In r Litex.C := Litex.Rules.inCOfInR (Litex.Rules.inROfInRStar (__h7_1))
+  have __c7_3 : Litex.In r Litex.CStar := Litex.Rules.inCStarOfInRStar (__h7_1)
+  exact ⟨__c7_0, __c7_1, __c7_2, __c7_3⟩
+
+theorem __fact8 :
+    ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.CStar), ¬ Litex.Same __p1 (0 : ℂ) ∧ Litex.In __p1 Litex.C := by
+  intro c __h8_1
+  have __infer8_0 : ¬ Litex.Same c (0 : ℂ) := Litex.Rules.notSameZeroOfInCStar (__h8_1)
+  have __c8_0 : ¬ Litex.Same c (0 : ℂ) := __infer8_0
+  have __c8_1 : Litex.In c Litex.C := Litex.Rules.inCOfInCStar (__h8_1)
+  exact ⟨__c8_0, __c8_1⟩
 
 end __Compiler_22_NonzeroNumericCarriers

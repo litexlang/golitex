@@ -6,9 +6,11 @@
 # Former compiler behavior: fail closed at
 # `Builtin(IntegerMembershipClosure(Mul))`.
 #
-# Now: complex `+`, `-`, `*`, `/` and integer `+`, `-`, `*` replay the exact
-# verifier-selected closure certificates through proved native-carrier rules.
-# Source binders stay complex-valued and retain independent Litex.In evidence.
+# Now: complex `+`, `-`, `*`, `/` and integer `+`, `-`, `*`, `%` replay the
+# exact verifier-selected closure certificates through proved native-carrier
+# rules. Ordinary arithmetic keeps the complex source view. Integer remainder
+# selects the exact `ℤ` representatives carried by the two visible `Z`
+# membership proofs, computes `%` there, and returns the result to Litex `Z`.
 forall a, b C:
     a + b $in C
 
@@ -32,16 +34,7 @@ forall a, b Z:
 forall a, b Z:
     a * b $in Z
 
-# Boundary (Litex verifies; compiler remains fail-closed):
-# forall a, b Z:
-#     b != 0
-#     =>:
-#         a % b $in Z
-# Integer remainder has verifier evidence and structural IR, but the current
-# numeric source representation is ℂ and has no reviewed native `%` term ABI.
-# This batch must not invent a remainder operation or retype the source binder.
-#
-# Evidence:
-# target/release/litex -compact -strict -runner -f lean/examples/17_NumericCarrierClosures.lit
-# cargo test --release --test stmt_result_to_lean_compiler_tracers numeric_carrier_closures
-# cd lean && ./stmt_result_to_lean_compiler.sh check examples
+forall a, b Z:
+    b != 0
+    =>:
+        a % b $in Z

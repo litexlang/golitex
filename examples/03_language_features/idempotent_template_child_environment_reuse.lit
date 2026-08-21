@@ -1,0 +1,30 @@
+# Tracer: an interned template instance may be reused across nested checked
+# environments without becoming a duplicate declaration.
+#
+# Before: larger theorem and case-proof consumers could collect the same
+# materialized template object in separate well-definedness children. Merging
+# those children rejected the second copy solely because its canonical name was
+# already present, even though both copies owned the exact same SymbolId, role,
+# and identifier kind.
+#
+# Now: exact-identity declaration commits are idempotent. The template-backed
+# set is checked in the proposition body, theorem preflight, explicit
+# definition proof, and final theorem conclusion without a name collision.
+#
+# Boundary: this does not permit two independently declared objects with the
+# same spelling. A focused Rust regression keeps distinct SymbolIds rejected.
+
+template<X set>:
+    have fn child_reused_set(x X) power_set(X) = {y X: y = y}
+
+prop child_reuse_law(X set, x X):
+    forall y X:
+        y $in \child_reused_set<X>(x)
+        =>:
+            y $in \child_reused_set<X>(x)
+
+thm child_reuse_law_is_available:
+    ? forall X nonempty_set, x X:
+        $child_reuse_law(X, x)
+    by def:
+        ? $child_reuse_law(X, x)

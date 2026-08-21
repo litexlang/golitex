@@ -106,17 +106,29 @@ thm add_left_cancel:
     y = space.add(\vector_neg<K, V, space>(x), space.add(x, y)) = space.add(\vector_neg<K, V, space>(x), space.add(x, z)) = z
 
 # Compare 0*x with 0*x + 0*x and cancel to derive the zero-scalar law.
+thm vector_space_scalar_constants_in_carrier:
+    ? forall K, V nonempty_set, space &VectorSpace<K, V>:
+        space.field.zero $in K
+        space.field.one $in K
+    space.field $in &Field<K>
+    space.field.zero $in K
+    space.field.one $in K
+
 thm zero_scalar_times_vector:
     ? forall K, V nonempty_set, space &VectorSpace<K, V>, x V:
         space.smul(space.field.zero, x) = space.zero
+    have scalar_field &Field<K> = space.field
     have p V = space.smul(space.field.zero, x)
-    space.field.add(space.field.zero, space.field.zero) = space.field.zero
+    scalar_field.add(scalar_field.zero, scalar_field.zero) = scalar_field.zero
+    space.field.add(space.field.zero, space.field.zero) = scalar_field.add(scalar_field.zero, scalar_field.zero) = scalar_field.zero = space.field.zero
+    space.smul(space.field.add(space.field.zero, space.field.zero), x) = space.add(space.smul(space.field.zero, x), space.smul(space.field.zero, x))
     space.smul(space.field.add(space.field.zero, space.field.zero), x) = space.smul(space.field.zero, x) = p
-    space.smul(space.field.add(space.field.zero, space.field.zero), x) = space.add(space.smul(space.field.zero, x), space.smul(space.field.zero, x)) = space.add(p, p)
+    space.add(space.smul(space.field.zero, x), space.smul(space.field.zero, x)) = space.add(p, p)
     p = space.add(p, p)
     space.add(p, space.zero) = space.add(space.zero, p) = p
     space.add(p, p) = space.add(p, space.zero)
-    by thm add_left_cancel(K, V, space, p, p, space.zero) => p = space.zero
+    by thm add_left_cancel(K, V, space, p, p, space.zero)
+    p = space.zero
 
 # Distribute a scalar over 0+0, then cancel the repeated term.
 thm scalar_times_zero_vector:

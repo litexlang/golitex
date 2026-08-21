@@ -6,53 +6,57 @@ set_option linter.style.nameCheck false
 namespace __Compiler_18_RationalNaturalClosures
 
 theorem __fact0 :
-    ∀ (a : ℂ) (__h0_1 : Litex.In a Litex.Q) (b : ℂ) (__h0_2 : Litex.In b Litex.Q),
-      Litex.In (a + b) Litex.Q := by
+    ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.Q) (__p2 : ℂ) (__type2 : Litex.In __p2 Litex.Q), Litex.In ((((Litex.In.rep __p1 __type1 : ℚ)) : ℂ) + (((Litex.In.rep __p2 __type2 : ℚ)) : ℂ)) Litex.Q := by
   intro a __h0_1 b __h0_2
-  have __c0_0 : Litex.In (a + b) Litex.Q := (by
-  have __components : Litex.In a Litex.Q ∧ Litex.In b Litex.Q := ⟨__h0_1, __h0_2⟩
-  exact Litex.Rules.complexAddInQ (__components.1) (__components.2))
+  have __c0_0 : Litex.In ((((Litex.In.rep a __h0_1 : ℚ)) : ℂ) + (((Litex.In.rep b __h0_2 : ℚ)) : ℂ)) Litex.Q := (by
+    have __components : Litex.In a Litex.Q ∧ Litex.In b Litex.Q := ⟨__h0_1, __h0_2⟩
+    exact Litex.Rules.complexAddInQ (Litex.Rules.complexEqRatInQ (((Litex.In.rep a __h0_1 : ℚ) : ℂ)) (Litex.In.rep a __h0_1 : ℚ) (by rfl)) (Litex.Rules.complexEqRatInQ (((Litex.In.rep b __h0_2 : ℚ) : ℂ)) (Litex.In.rep b __h0_2 : ℚ) (by rfl)))
   exact __c0_0
 
 theorem __fact1 :
-    ∀ (a : ℂ) (__h1_1 : Litex.In a Litex.Q) (b : ℂ) (__h1_2 : Litex.In b Litex.Q),
-      Litex.In (a - b) Litex.Q := by
+    ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.Q) (__p2 : ℂ) (__type2 : Litex.In __p2 Litex.Q), Litex.In ((((Litex.In.rep __p1 __type1 : ℚ)) : ℂ) - (((Litex.In.rep __p2 __type2 : ℚ)) : ℂ)) Litex.Q := by
   intro a __h1_1 b __h1_2
-  have __c1_0 : Litex.In (a - b) Litex.Q := (by
-  have __components : Litex.In a Litex.Q ∧ Litex.In b Litex.Q := ⟨__h1_1, __h1_2⟩
-  exact Litex.Rules.complexSubInQ (__components.1) (__components.2))
+  have __c1_0 : Litex.In ((((Litex.In.rep a __h1_1 : ℚ)) : ℂ) - (((Litex.In.rep b __h1_2 : ℚ)) : ℂ)) Litex.Q := (by
+    have __components : Litex.In a Litex.Q ∧ Litex.In b Litex.Q := ⟨__h1_1, __h1_2⟩
+    exact Litex.Rules.complexSubInQ (Litex.Rules.complexEqRatInQ (((Litex.In.rep a __h1_1 : ℚ) : ℂ)) (Litex.In.rep a __h1_1 : ℚ) (by rfl)) (Litex.Rules.complexEqRatInQ (((Litex.In.rep b __h1_2 : ℚ) : ℂ)) (Litex.In.rep b __h1_2 : ℚ) (by rfl)))
   exact __c1_0
 
 theorem __fact2 :
-    ∀ (a : ℂ) (__h2_1 : Litex.In a Litex.Q) (b : ℂ) (__h2_2 : Litex.In b Litex.Q),
-      Litex.In (a * b) Litex.Q := by
+    ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.Q) (__p2 : ℂ) (__type2 : Litex.In __p2 Litex.Q), Litex.In ((((Litex.In.rep __p1 __type1 : ℚ)) : ℂ) * (((Litex.In.rep __p2 __type2 : ℚ)) : ℂ)) Litex.Q := by
   intro a __h2_1 b __h2_2
-  have __c2_0 : Litex.In (a * b) Litex.Q := (by
-  have __components : Litex.In a Litex.Q ∧ Litex.In b Litex.Q := ⟨__h2_1, __h2_2⟩
-  exact Litex.Rules.complexMulInQ (__components.1) (__components.2))
+  have __c2_0 : Litex.In ((((Litex.In.rep a __h2_1 : ℚ)) : ℂ) * (((Litex.In.rep b __h2_2 : ℚ)) : ℂ)) Litex.Q := (by
+    have __components : Litex.In a Litex.Q ∧ Litex.In b Litex.Q := ⟨__h2_1, __h2_2⟩
+    exact Litex.Rules.complexMulInQ (Litex.Rules.complexEqRatInQ (((Litex.In.rep a __h2_1 : ℚ) : ℂ)) (Litex.In.rep a __h2_1 : ℚ) (by rfl)) (Litex.Rules.complexEqRatInQ (((Litex.In.rep b __h2_2 : ℚ) : ℂ)) (Litex.In.rep b __h2_2 : ℚ) (by rfl)))
   exact __c2_0
 
 theorem __fact3 :
-    ∀ (a : ℂ) (__h3_1 : Litex.In a Litex.Q) (b : ℂ) (__h3_2 : Litex.In b Litex.Q) (__h3_3 : ¬ Litex.Same b (0 : ℂ)),
-      Litex.In (a / b) Litex.Q := by
-  intro a __h3_1 b __h3_2 __h3_3
-  have __c3_0 : Litex.In (a / b) Litex.Q := (by
-  have __components : Litex.In a Litex.Q ∧ Litex.In b Litex.Q := ⟨__h3_1, __h3_2⟩
-  exact Litex.Rules.complexDivInQ (__components.1) (__components.2))
+    ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.Q) (__p2 : ℂ) (__type2 : Litex.In __p2 Litex.Q) (__domain1 : ¬ Litex.Same __p2 (0 : ℂ)), Litex.In ((((Litex.In.rep __p1 __type1 : ℚ)) : ℂ) / (((Litex.In.rep __p2 __type2 : ℚ)) : ℂ)) Litex.Q := by
+  intro a __h3_1 b __h3_2 __domain1
+  have __c3_0 : Litex.In ((((Litex.In.rep a __h3_1 : ℚ)) : ℂ) / (((Litex.In.rep b __h3_2 : ℚ)) : ℂ)) Litex.Q := (by
+    have __components : Litex.In a Litex.Q ∧ Litex.In b Litex.Q := ⟨__h3_1, __h3_2⟩
+    exact Litex.Rules.complexDivInQ (Litex.Rules.complexEqRatInQ (((Litex.In.rep a __h3_1 : ℚ) : ℂ)) (Litex.In.rep a __h3_1 : ℚ) (by rfl)) (Litex.Rules.complexEqRatInQ (((Litex.In.rep b __h3_2 : ℚ) : ℂ)) (Litex.In.rep b __h3_2 : ℚ) (by rfl)))
   exact __c3_0
 
 theorem __fact4 :
-    ∀ (a : ℂ) (__h4_1 : Litex.In a Litex.N) (b : ℂ) (__h4_2 : Litex.In b Litex.N),
-      Litex.In (a + b) Litex.N := by
+    ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.N) (__p2 : ℂ) (__type2 : Litex.In __p2 Litex.N), Litex.In ((((Litex.In.rep __p1 __type1 : ℕ)) : ℂ) + (((Litex.In.rep __p2 __type2 : ℕ)) : ℂ)) Litex.N := by
   intro a __h4_1 b __h4_2
-  have __c4_0 : Litex.In (a + b) Litex.N := Litex.Rules.complexAddInN (__h4_1) (__h4_2)
+  have __infer4_0 : Litex.Nonnegative a := Litex.Rules.nonnegativeOfInN (__h4_1)
+  have __infer4_1 : Litex.Nonnegative b := Litex.Rules.nonnegativeOfInN (__h4_2)
+  have __c4_0 : Litex.In ((((Litex.In.rep a __h4_1 : ℕ)) : ℂ) + (((Litex.In.rep b __h4_2 : ℕ)) : ℂ)) Litex.N := Litex.Rules.complexAddInN (Litex.Rules.complexEqNatInN (((Litex.In.rep a __h4_1 : ℕ) : ℂ)) (Litex.In.rep a __h4_1 : ℕ) (by rfl)) (Litex.Rules.complexEqNatInN (((Litex.In.rep b __h4_2 : ℕ) : ℂ)) (Litex.In.rep b __h4_2 : ℕ) (by rfl))
   exact __c4_0
 
 theorem __fact5 :
-    ∀ (a : ℂ) (__h5_1 : Litex.In a Litex.N) (b : ℂ) (__h5_2 : Litex.In b Litex.N),
-      Litex.In (a * b) Litex.N := by
+    ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.N) (__p2 : ℂ) (__type2 : Litex.In __p2 Litex.N), Litex.In ((((Litex.In.rep __p1 __type1 : ℕ)) : ℂ) * (((Litex.In.rep __p2 __type2 : ℕ)) : ℂ)) Litex.N := by
   intro a __h5_1 b __h5_2
-  have __c5_0 : Litex.In (a * b) Litex.N := Litex.Rules.complexMulInN (__h5_1) (__h5_2)
+  have __infer5_0 : Litex.Nonnegative a := Litex.Rules.nonnegativeOfInN (__h5_1)
+  have __infer5_1 : Litex.Nonnegative b := Litex.Rules.nonnegativeOfInN (__h5_2)
+  have __c5_0 : Litex.In ((((Litex.In.rep a __h5_1 : ℕ)) : ℂ) * (((Litex.In.rep b __h5_2 : ℕ)) : ℂ)) Litex.N := Litex.Rules.complexMulInN (Litex.Rules.complexEqNatInN (((Litex.In.rep a __h5_1 : ℕ) : ℂ)) (Litex.In.rep a __h5_1 : ℕ) (by rfl)) (Litex.Rules.complexEqNatInN (((Litex.In.rep b __h5_2 : ℕ) : ℂ)) (Litex.In.rep b __h5_2 : ℕ) (by rfl))
   exact __c5_0
+
+theorem __fact6 :
+    ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.Q) (__p2 : ℂ) (__type2 : Litex.In __p2 Litex.Z) (__domain1 : ¬ Litex.Same __p1 (0 : ℂ)), Litex.In (((Litex.In.rep __p1 __type1 : ℚ) ^ (Litex.In.rep __p2 __type2 : ℤ) : ℚ) : ℂ) Litex.Q := by
+  intro a __h6_1 z __h6_2 __domain1
+  have __c6_0 : Litex.In (((Litex.In.rep a __h6_1 : ℚ) ^ (Litex.In.rep z __h6_2 : ℤ) : ℚ) : ℂ) Litex.Q := Litex.Rules.complexRatInQ ((Litex.In.rep a __h6_1 : ℚ) ^ (Litex.In.rep z __h6_2 : ℤ))
+  exact __c6_0
 
 end __Compiler_18_RationalNaturalClosures

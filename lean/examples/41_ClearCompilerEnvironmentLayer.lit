@@ -1,0 +1,14 @@
+# Tracer: `clear` is a compiler-environment layer operation.
+#
+# Before: Litex execution could clear its Runtime environment and reuse a
+# source name, but StmtResultToLeanCompiler rejected the command.
+#
+# Now: the successful ClearStmt Result clears the compiler's current SymbolId
+# and FactId frame. Generated declarations already emitted remain earlier in
+# the Lean file, so later source declarations enter a fresh namespace.
+have A set = R
+clear
+have A set = C
+
+# Boundary: `clear` inside a local proof/body Result is still rejected until
+# its surrounding declaration wrapper owns a corresponding target namespace.

@@ -12,7 +12,11 @@
 # A base membership plus the source `!= 0` premise constructs that carrier;
 # membership projects both the base-set certificate and the retained semantic
 # nonzero certificate, and widens along `Z* -> Q* -> R* -> C*` without adding a
-# global coherence premise.
+# global coherence premise. Closed evaluation also records why `0` is excluded
+# from an exact nonzero carrier, so that leaf now compiles without a label
+# lookup or target-side membership search.
+not 0 $in C*
+
 forall z Z:
     z != 0
     =>:
@@ -63,8 +67,9 @@ forall c C*:
 
 # Boundary (Litex verifies; compiler remains fail-closed):
 # 1 $in Z*
-# Star construction and elimination are replayed, but standalone closed `!=`
-# reflection is still outside the compiler's reviewed numeric-comparison rules.
+# Star construction, elimination, and closed zero exclusion are replayed, but
+# standalone closed positive star construction still depends on a broader
+# closed nonzero certificate adapter.
 #
 # Evidence:
 # target/release/litex -compact -strict -runner -f lean/examples/22_NonzeroNumericCarriers.lit

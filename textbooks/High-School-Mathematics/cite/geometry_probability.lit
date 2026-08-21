@@ -1,0 +1,65 @@
+# High-school volume, event, and data-partition interfaces.
+
+prop has_same_cross_section_areas(a, b R, area1, area2 fn(h R) R):
+    a <= b
+    forall h R:
+        a <= h <= b
+        =>:
+            area1(h) = area2(h)
+
+# A full definition of volume from cross sections requires integration.
+abstract_prop has_volume_from_cross_sections(a, b, area, volume)
+
+prop high_school_sphere_volume_formula(radius, volume R):
+    radius > 0
+    volume = 4 * pi * radius^3 / 3
+
+prop mutually_exclusive_events(A, B set):
+    intersect(A, B) = {}
+
+prop complete_partition_of_data(A, B, D set):
+    A $subset D
+    B $subset D
+    intersect(A, B) = {}
+    union(A, B) = D
+
+# Cavalieri's principle compares two solids whose cross-section area functions
+# agree at every height. Only the integration-to-volume implication is deferred.
+thm cavalieri_principle:
+    ? forall a, b R, area1, area2 fn(h R) R, volume1, volume2 R:
+        $has_volume_from_cross_sections(a, b, area1, volume1)
+        $has_volume_from_cross_sections(a, b, area2, volume2)
+        $has_same_cross_section_areas(a, b, area1, area2)
+        =>:
+            volume1 = volume2
+    # trust: third-pass retained; proving this requires a definition of volume from cross-section integration.
+    trust volume1 = volume2
+
+thm sphere_volume:
+    ? forall radius, volume R:
+        radius > 0
+        volume = 4 * pi * radius^3 / 3
+        =>:
+            $high_school_sphere_volume_formula(radius, volume)
+    radius > 0
+    volume = 4 * pi * radius^3 / 3
+
+thm mutually_exclusive_event:
+    ? forall A, B set:
+        intersect(A, B) = {}
+        =>:
+            $mutually_exclusive_events(A, B)
+    intersect(A, B) = {}
+
+thm complete_partition:
+    ? forall A, B, D set:
+        A $subset D
+        B $subset D
+        intersect(A, B) = {}
+        union(A, B) = D
+        =>:
+            $complete_partition_of_data(A, B, D)
+    A $subset D
+    B $subset D
+    intersect(A, B) = {}
+    union(A, B) = D

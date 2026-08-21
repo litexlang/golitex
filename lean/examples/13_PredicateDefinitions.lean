@@ -17,6 +17,9 @@ theorem __fact1 : is_unit_pair (1 : ℂ) (1 : ℂ) := by
   exact ⟨Litex.Rules.complexRealInR (1 : ℝ), Litex.Rules.complexRealInR (1 : ℝ), __fact0, __fact0⟩)
 
 theorem __fact2 : Litex.In (1 : ℂ) Litex.R := by
-  exact Litex.Rules.complexRealInR (1 : ℝ)
+  exact (by
+  have __definition := __fact1
+  unfold is_unit_pair at __definition
+  exact __definition.1)
 
 end __Compiler_13_PredicateDefinitions

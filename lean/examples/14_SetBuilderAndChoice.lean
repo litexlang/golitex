@@ -17,7 +17,10 @@ theorem __fact2 : Litex.In (1 : ℂ) Litex.R := by
   exact Litex.Rules.inBaseOfInSetBuilder (__fact1)
 
 theorem __fact3 : Litex.Same (1 : ℂ) (1 : ℂ) := by
-  exact Litex.Same.refl (1 : ℂ)
+  exact (by
+  rcases Litex.Rules.inSetBuilder_iff.mp (__fact1) with ⟨__rep, __predicate, __same⟩
+  have __selected := __predicate
+  exact Litex.Same.trans (Litex.Same.symm (Litex.Same.symm __same)) (__selected))
 
 def is_one {__carrier1 : Type} (x : __carrier1) : Prop :=
   Litex.In x Litex.R ∧ Litex.Same x (1 : ℂ)

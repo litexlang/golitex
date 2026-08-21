@@ -1,0 +1,14 @@
+# Before: the Result captured this successful witness statement, but the new
+# StmtResult-to-Lean compiler rejected the whole WitnessNonemptySet family and
+# its ListSetMembership builtin certificate.
+#
+# Now: the statement combines its ordered local proof-step Results with its
+# final membership Result inside one inherited compiler environment. The
+# membership proof wraps the exact equality child selected by index 0; only
+# the outer nonempty-set FactId is published after the environment is popped.
+#
+# Boundary: a function-set witness has a different final nonempty-return-set
+# check and stays fail-closed until that separate Result shape is implemented.
+# An out-of-range selected list index is rejected by a focused Rust test.
+witness $is_nonempty_set({1, 2}) from 1:
+    do_nothing

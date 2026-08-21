@@ -1,0 +1,14 @@
+# A verified strategy is a recursive named-forall Result. Its parameter
+# membership, proof statements, and conclusion check live in one local Result
+# layer; stop/use only change later Runtime search and emit no Lean proof.
+prop reflexive(x R):
+    x = x
+
+strategy prove_reflexive:
+    ? forall x R:
+        $reflexive(x)
+    x = x
+    by def $reflexive(x)
+
+stop strategy prove_reflexive
+use strategy prove_reflexive

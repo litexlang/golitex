@@ -83,15 +83,13 @@ impl Runtime {
             | AtomicFact::GreaterFact(_)
             | AtomicFact::LessEqualFact(_)
             | AtomicFact::GreaterEqualFact(_) => {
-                if self.verify_number_comparison_builtin_rule(atomic_fact) != Some(true) {
+                let Some(evidence) = self.verify_number_comparison_builtin_rule(atomic_fact) else {
                     return UnknownGenericStmtResult::new().into();
-                }
+                };
                 SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     atomic_fact.clone().into(),
                     "number comparison".to_string(),
-                    BuiltinRuleEvidence::ClosedNumericComparison(
-                        ClosedNumericComparisonBuiltinRuleEvidence::new(atomic_fact.clone().into()),
-                    ),
+                    evidence,
                     Vec::new(),
                 )
                 .into()
@@ -266,10 +264,17 @@ impl Runtime {
         let prop_name = f.predicate.to_string();
         for env in self.iter_environments_from_top() {
             if env.known_reflexive_props.contains_key(&prop_name) {
+                let target: Fact = atomic_fact.clone().into();
                 return Ok(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
-                        atomic_fact.clone().into(),
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                        target.clone(),
                         "registered reflexive prop".to_string(),
+                        BuiltinRuleEvidence::RegisteredReflexivePredicate(
+                            RegisteredReflexivePredicateBuiltinRuleEvidence::new(
+                                target,
+                                prop_name,
+                            ),
+                        ),
                         Vec::new(),
                     )
                     .into(),
@@ -310,15 +315,46 @@ impl Runtime {
             };
             let alt_result = self.verify_non_equational_atomic_fact(&alt, verify_state, false)?;
             if alt_result.is_true() {
-                return Self::wrap_post_process_alternate_fact_result(
+                return Ok(Self::wrap_registered_symmetric_prop_result(
                     atomic_fact,
+                    prop_name,
+                    gather,
+                    alt,
                     alt_result,
-                    result,
-                );
+                ));
             }
         }
 
         Ok(result)
+    }
+
+    /// `Wrap`: retain the exact reordered child Result and the permutation
+    /// selected by the registered predicate property. Verification owns the
+    /// child; this layer only records how it is lifted to the requested target.
+    fn wrap_registered_symmetric_prop_result(
+        target: &AtomicFact,
+        predicate_name: String,
+        gather: Vec<usize>,
+        alternate: AtomicFact,
+        alternate_result: StmtResult,
+    ) -> StmtResult {
+        debug_assert!(alternate_result.is_true());
+        let target: Fact = target.clone().into();
+        let alternate: Fact = alternate.into();
+        SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            target.clone(),
+            "registered symmetric prop".to_string(),
+            BuiltinRuleEvidence::RegisteredSymmetricPredicate(
+                RegisteredSymmetricPredicateBuiltinRuleEvidence::new(
+                    target,
+                    predicate_name,
+                    gather,
+                    alternate,
+                ),
+            ),
+            vec![alternate_result],
+        )
+        .into()
     }
 
     fn wrap_post_process_alternate_fact_result(
@@ -344,6 +380,7 @@ impl Runtime {
 #[cfg(test)]
 mod tests {
     use crate::prelude::*;
+    use std::rc::Rc;
 
     #[test]
     fn direct_numeric_membership_retains_recursive_evaluation_evidence() {
@@ -391,5 +428,65 @@ mod tests {
 
         assert!(!implementation.contains("Obj::AnonymousFn"));
         assert!(!implementation.contains("verify_in_fact_anonymous_fn_signature_matches_fn_set"));
+    }
+
+    #[test]
+    fn registered_symmetric_predicate_verifier_wraps_the_exact_reordered_child_result() {
+        let mut runtime = Runtime::new();
+        runtime.new_file_path_new_env_new_name_scope("registered_symmetric_result_test.lit");
+        let (_, setup_error) =
+            run_source_code("prop any_set(x set, y set):\n    x = x", &mut runtime);
+        assert!(setup_error.is_none(), "{setup_error:?}");
+        let mut parse_atomic = |source: &str| {
+            let mut blocks = Tokenizer::new()
+                .parse_blocks(source, Rc::from("registered_symmetric_result_test.lit"))
+                .expect("property fact tokenizes");
+            let statement = runtime
+                .parse_stmt(&mut blocks[0])
+                .expect("property fact parses");
+            let Stmt::Fact(Fact::AtomicFact(fact)) = statement else {
+                panic!("property fact should be atomic")
+            };
+            fact
+        };
+        let target = parse_atomic("$any_set(C, R)");
+        let alternate = parse_atomic("$any_set(R, C)");
+        let alternate_result: StmtResult = SuccessFactStmtResult::new(
+            alternate.clone().into(),
+            SuccessInferResult::new(),
+            SuccessFactProofResult::builtin_rule("fixture child"),
+        )
+        .into();
+        let result = Runtime::wrap_registered_symmetric_prop_result(
+            &target,
+            "any_set".to_string(),
+            vec![1, 0],
+            alternate,
+            alternate_result,
+        );
+        let success = result
+            .factual_success()
+            .expect("registered symmetry proves its target");
+        let SuccessFactProofResult::BuiltinRule(builtin) = success.proof() else {
+            panic!("registered symmetry should be an explicit builtin wrapper")
+        };
+        let Some(BuiltinRuleEvidence::RegisteredSymmetricPredicate(evidence)) = &builtin.evidence
+        else {
+            panic!("registered symmetry should retain typed evidence")
+        };
+        assert_eq!(evidence.expected_target.to_string(), "$any_set(C, R)");
+        assert_eq!(evidence.expected_alternate.to_string(), "$any_set(R, C)");
+        assert_eq!(evidence.gather, vec![1, 0]);
+        let [child] = builtin.subgoals.as_slice() else {
+            panic!("registered symmetry should retain exactly one child Result")
+        };
+        assert_eq!(
+            child
+                .factual_success()
+                .expect("symmetry child is factual")
+                .fact()
+                .to_string(),
+            "$any_set(R, C)"
+        );
     }
 }

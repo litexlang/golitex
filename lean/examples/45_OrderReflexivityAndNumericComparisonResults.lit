@@ -1,0 +1,8 @@
+# One verifier function used to collapse these two routes into the same
+# label-only "number comparison" proof. Their successful Results now retain
+# different semantic children for the compiler.
+thm weak_order_is_reflexive:
+    ? forall x R:
+        x <= x
+
+2 + 3 < 6

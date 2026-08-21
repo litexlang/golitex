@@ -1,0 +1,27 @@
+# A concrete predicate application returns typed parameter-requirement and
+# definition-clause inference children. At top level the compiler publishes
+# their FactIds as Lean theorems. Inside the transitivity registration it binds
+# the same child Results to local proof expressions in the inherited compiler
+# environment, so no local theorem escapes its forall layer.
+prop same_set(x set, y set):
+    x = y
+
+by transitive_prop:
+    ? forall x, y, z set:
+        $same_set(x, y)
+        $same_set(y, z)
+        =>:
+            $same_set(x, z)
+    x = y
+    y = z
+    x = z
+    by def $same_set(x, z)
+
+trust R $same_set C
+trust C $same_set N
+
+# The chain Result owns one registered-transitivity application. Its adjacent
+# premise FactIds resolve to projections of this source-chain theorem; the
+# inferred conclusion is then available to the final exact FactId citation.
+R $same_set C $same_set N
+R $same_set N

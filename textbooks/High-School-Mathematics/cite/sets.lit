@@ -1,0 +1,50 @@
+# High-school set-algebra identities shared by isolated source files.
+
+thm set_commutativity:
+    ? forall A, B set:
+        intersect(A, B) = intersect(B, A)
+        union(A, B) = union(B, A)
+    intersect(A, B) = intersect(B, A)
+    union(A, B) = union(B, A)
+
+thm set_lattice_identities:
+    ? forall A, B, D set:
+        intersect(intersect(A, B), D) = intersect(A, intersect(B, D))
+        union(union(A, B), D) = union(A, union(B, D))
+        intersect(A, union(B, D)) = union(intersect(A, B), intersect(A, D))
+        union(A, intersect(B, D)) = intersect(union(A, B), union(A, D))
+    intersect(intersect(A, B), D) = intersect(A, intersect(B, D))
+    union(union(A, B), D) = union(A, union(B, D))
+    intersect(A, union(B, D)) = union(intersect(A, B), intersect(A, D))
+    by extension:
+        ? union(A, intersect(B, D)) = intersect(union(A, B), union(A, D))
+        claim:
+            ? forall x union(A, intersect(B, D)):
+                x $in intersect(union(A, B), union(A, D))
+            by cases:
+                ? x $in intersect(union(A, B), union(A, D))
+                case x $in A:
+                    do_nothing
+                case x $in intersect(B, D):
+                    do_nothing
+        claim:
+            ? forall x intersect(union(A, B), union(A, D)):
+                x $in union(A, intersect(B, D))
+            by cases:
+                ? x $in union(A, intersect(B, D))
+                case x $in A:
+                    do_nothing
+                case x $in B:
+                    by cases:
+                        ? x $in union(A, intersect(B, D))
+                        case x $in A:
+                            do_nothing
+                        case x $in D:
+                            do_nothing
+
+thm set_difference_identities:
+    ? forall U, A, B set:
+        set_minus(U, union(A, B)) = intersect(set_minus(U, A), set_minus(U, B))
+        set_minus(U, intersect(A, B)) = union(set_minus(U, A), set_minus(U, B))
+    set_minus(U, union(A, B)) = intersect(set_minus(U, A), set_minus(U, B))
+    set_minus(U, intersect(A, B)) = union(set_minus(U, A), set_minus(U, B))

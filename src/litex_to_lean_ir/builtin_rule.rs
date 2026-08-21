@@ -78,6 +78,8 @@ pub enum LitexToLeanNativeConstantMembershipBuiltinRuleIr {
     PiInReal,
     EulerNumberInPositiveReal,
     PiInPositiveReal,
+    EulerNumberInComplex,
+    PiInComplex,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -184,6 +186,11 @@ impl LitexToLeanBuiltinRuleIr {
             | BuiltinRuleEvidence::ClosedNumericMembership(_)
             | BuiltinRuleEvidence::ClosedNumericNonmembership(_)
             | BuiltinRuleEvidence::ClosedNumericComparison(_)
+            | BuiltinRuleEvidence::OrderReflexivity(_)
+            | BuiltinRuleEvidence::RuntimeResolvedNumericComparison(_)
+            | BuiltinRuleEvidence::RegisteredReflexivePredicate(_)
+            | BuiltinRuleEvidence::RegisteredSymmetricPredicate(_)
+            | BuiltinRuleEvidence::RegisteredAntisymmetricPredicate(_)
             | BuiltinRuleEvidence::ObjectReflexivity(_)
             | BuiltinRuleEvidence::RationalNormalization(_)
             | BuiltinRuleEvidence::StandardSetNonempty(_)
@@ -356,6 +363,18 @@ impl LitexToLeanBuiltinRuleIr {
                     }
                     NativeConstantMembershipBuiltinRule::PiInReal => {
                         LitexToLeanNativeConstantMembershipBuiltinRuleIr::PiInReal
+                    }
+                    NativeConstantMembershipBuiltinRule::EulerNumberInPositiveReal => {
+                        LitexToLeanNativeConstantMembershipBuiltinRuleIr::EulerNumberInPositiveReal
+                    }
+                    NativeConstantMembershipBuiltinRule::PiInPositiveReal => {
+                        LitexToLeanNativeConstantMembershipBuiltinRuleIr::PiInPositiveReal
+                    }
+                    NativeConstantMembershipBuiltinRule::EulerNumberInComplex => {
+                        LitexToLeanNativeConstantMembershipBuiltinRuleIr::EulerNumberInComplex
+                    }
+                    NativeConstantMembershipBuiltinRule::PiInComplex => {
+                        LitexToLeanNativeConstantMembershipBuiltinRuleIr::PiInComplex
                     }
                 })
             }

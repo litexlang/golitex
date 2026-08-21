@@ -1,8 +1,15 @@
 # Mathematical collections and interfaces
 
-> Publication status (2026-08-20): the runnable module currently contains only
-> the introduction. The mathematical cards below remain a design manual for
-> sections preserved in `../todo_textbook_chapters/`, not current APIs.
+> Publication status (2026-08-21): the runnable module contains the
+> introduction, Sections I--IX, and Section VIII's finite-product support
+> module. Its current APIs include divisibility,
+> Euclidean division, gcd, relative primality, prime-factor interfaces,
+> congruence and residue-class arithmetic, linear congruences, Euler's
+> function, the residue-field criterion, generated subgroups, and signed group
+> powers, coset counting, Lagrange's theorem, Euler's theorem, and Fermat's
+> little theorem, finite-support polynomials, convolution multiplication, and
+> leading-term subtraction. Later cards describe Sections X--XIII preserved in
+> `../todo_textbook_chapters/`.
 
 ## 2026-08-01 verifier-boundary note
 
@@ -214,6 +221,13 @@ transporting cardinality remain open. The cyclic-classification dependency
 chain still contains trust and is translated rather than checkable. Euler's
 theorem no longer depends on that chain: its checked proof uses the
 reduced-residue permutation directly.
+
+The 2026-08-21 current release accepts the complete canonical Section VII and
+the I--VII source module. Its theorem child environment now reuses the already
+materialized identical `exponent_kernel<G,mul,one>` object, so the theorem
+above verifies without replacing the real set-valued kernel with a wrapper
+proposition. The exact historical frame, zero-exponent proof compatibility
+repair, and promotion gates are retained in the source-owned proof journal.
 
 The nearest rejected form is a circular `generated_subgroup`/power pair that
 asserts the desired theorem by definition. These nodes support Lagrange,

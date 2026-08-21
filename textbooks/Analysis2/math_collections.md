@@ -1,8 +1,8 @@
 # Mathematical Collections
 
-> Publication status (2026-08-20): the runnable module currently contains only
-> the introduction. The mathematical cards below remain the design manual for
-> chapters preserved in `../todo_textbook_chapters/`; they are not current APIs.
+> Publication status (2026-08-21): the runnable module exports the introduction
+> and Chapters 1--3. The cards for those chapters describe current APIs; cards
+> for Chapters 4--8 remain design/translation records for quarantined sources.
 
 ## Purpose and scope
 
@@ -14,9 +14,9 @@ measure, and Lebesgue integration.
 
 Standalone exercises are excluded. A named non-exercise result whose proof is
 delegated to an exercise remains a source-facing theorem with an explicit
-proof-debt boundary until the proof is supplied. Chapter 1 is implemented and
-Chapter 2 is the active implementation scope; later chapters appear below only
-where their dependency direction constrains the foundational interfaces.
+proof-debt boundary until the proof is supplied. Chapters 1--3 are the current
+release-verified prefix. Chapter 4 is the active repair boundary; later
+chapters appear below where their dependency direction constrains interfaces.
 
 The intended readers are Litex users learning analysis and contributors using
 the translation to discover genuine language, library, inference, kernel, and

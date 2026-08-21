@@ -1284,7 +1284,7 @@ impl ResultGraph {
             self.ensure_node(
                 application_id.clone(),
                 "inference",
-                infer_rule_role(application.rule),
+                infer_rule_role(&application.rule),
                 "inference rule",
                 None,
             );
@@ -1531,9 +1531,35 @@ fn transform_role(rule: &FactTransformationRule) -> &'static str {
     }
 }
 
-fn infer_rule_role(rule: InferRule) -> &'static str {
+fn infer_rule_role(rule: &InferRule) -> &'static str {
     match rule {
         InferRule::NaturalMembershipImpliesNonnegative => "NaturalMembershipImpliesNonnegative",
+        InferRule::PositiveStandardSetMembershipImpliesPositive(_) => {
+            "PositiveStandardSetMembershipImpliesPositive"
+        }
+        InferRule::NegativeStandardSetMembershipImpliesNegative(_) => {
+            "NegativeStandardSetMembershipImpliesNegative"
+        }
+        InferRule::NonzeroStandardSetMembershipImpliesNonzero(_) => {
+            "NonzeroStandardSetMembershipImpliesNonzero"
+        }
+        InferRule::SetBuilderBaseMembershipProjection => "SetBuilderBaseMembershipProjection",
+        InferRule::SetBuilderPredicateProjection { .. } => "SetBuilderPredicateProjection",
+        InferRule::DefinedPredicateParameterRequirementProjection(_) => {
+            "DefinedPredicateParameterRequirementProjection"
+        }
+        InferRule::DefinedPredicateDefinitionClauseProjection(_) => {
+            "DefinedPredicateDefinitionClauseProjection"
+        }
+        InferRule::RegisteredTransitivePredicateChainClosure(_) => {
+            "RegisteredTransitivePredicateChainClosure"
+        }
+        InferRule::TupleEqualityWithKnownTupleImpliesTupleShape(_) => {
+            "TupleEqualityWithKnownTupleImpliesTupleShape"
+        }
+        InferRule::ListSetMembershipImpliesEqualityAlternatives(_) => {
+            "ListSetMembershipImpliesEqualityAlternatives"
+        }
     }
 }
 

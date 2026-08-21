@@ -13,14 +13,12 @@ theorem __fact0 :
   exact __c0_0
 
 theorem __fact1 :
-    ∀ (A : Litex.Set),
-      Litex.Subset Litex.Set.empty A := by
+    ∀ (__p1 : Litex.Set), Litex.Subset Litex.Set.empty __p1 := by
   intro A
   exact Litex.SetRules.emptySubset A
 
 theorem __fact2 :
-    ∀ (A : Litex.Set) (B : Litex.Set),
-      Litex.Subset A (Litex.union A B) ∧ Litex.Subset B (Litex.union A B) ∧ Litex.Subset (Litex.intersect A B) A ∧ Litex.Subset (Litex.intersect A B) B ∧ Litex.Subset (Litex.setMinus A B) A := by
+    ∀ (__p1 : Litex.Set) (__p2 : Litex.Set), Litex.Subset __p1 (Litex.union __p1 __p2) ∧ Litex.Subset __p2 (Litex.union __p1 __p2) ∧ Litex.Subset (Litex.intersect __p1 __p2) __p1 ∧ Litex.Subset (Litex.intersect __p1 __p2) __p2 ∧ Litex.Subset (Litex.setMinus __p1 __p2) __p1 := by
   intro A B
   have __c2_0 : Litex.Subset A (Litex.union A B) := Litex.SetRules.subsetUnionLeft A B
   have __c2_1 : Litex.Subset B (Litex.union A B) := Litex.SetRules.subsetUnionRight A B
@@ -36,32 +34,28 @@ theorem __fact3 :
   exact Litex.SetRules.unionSubset (__h3_4) (__h3_5)
 
 theorem __fact4 :
-    ∀ (A : Litex.Set) (B : Litex.Set) (__h4_3 : Litex.Set.Finite A) (__h4_4 : Litex.Set.Finite B),
-      Litex.Set.Finite (Litex.union A B) ∧ Litex.Set.Finite (Litex.intersect A B) := by
-  intro A B __h4_3 __h4_4
-  have __c4_0 : Litex.Set.Finite (Litex.union A B) := Litex.SetRules.unionFinite A B (__h4_3) (__h4_4)
-  have __c4_1 : Litex.Set.Finite (Litex.intersect A B) := Litex.SetRules.intersectFinite A B (__h4_3)
+    ∀ (__p1 : Litex.Set) (__p2 : Litex.Set) (__domain1 : Litex.Set.Finite __p1) (__domain2 : Litex.Set.Finite __p2), Litex.Set.Finite (Litex.union __p1 __p2) ∧ Litex.Set.Finite (Litex.intersect __p1 __p2) := by
+  intro A B __domain1 __domain2
+  have __c4_0 : Litex.Set.Finite (Litex.union A B) := Litex.SetRules.unionFinite A B (__domain1) (__domain2)
+  have __c4_1 : Litex.Set.Finite (Litex.intersect A B) := Litex.SetRules.intersectFinite A B (__domain1)
   exact ⟨__c4_0, __c4_1⟩
 
 theorem __fact5 :
-    ∀ (A : Litex.Set) (B : Litex.Set) (__h5_3 : Litex.Set.Finite A),
-      Litex.Set.Finite (Litex.setMinus A B) := by
-  intro A B __h5_3
-  have __c5_0 : Litex.Set.Finite (Litex.setMinus A B) := Litex.SetRules.setMinusFiniteLeft A B (__h5_3)
+    ∀ (__p1 : Litex.Set) (__p2 : Litex.Set) (__domain1 : Litex.Set.Finite __p1), Litex.Set.Finite (Litex.setMinus __p1 __p2) := by
+  intro A B __domain1
+  have __c5_0 : Litex.Set.Finite (Litex.setMinus A B) := Litex.SetRules.setMinusFiniteLeft A B (__domain1)
   exact __c5_0
 
 theorem __fact6 :
-    ∀ (A : Litex.Set) (B : Litex.Set) (__h6_3 : Litex.Set.Nonempty A),
-      Litex.Set.Nonempty (Litex.union A B) := by
-  intro A B __h6_3
-  have __c6_0 : Litex.Set.Nonempty (Litex.union A B) := Litex.SetRules.unionNonemptyLeft A B (__h6_3)
+    ∀ (__p1 : Litex.Set) (__p2 : Litex.Set) (__domain1 : Litex.Set.Nonempty __p1), Litex.Set.Nonempty (Litex.union __p1 __p2) := by
+  intro A B __domain1
+  have __c6_0 : Litex.Set.Nonempty (Litex.union A B) := Litex.SetRules.unionNonemptyLeft A B (__domain1)
   exact __c6_0
 
 theorem __fact7 :
-    ∀ (A : Litex.Set) (B : Litex.Set) (__h7_3 : Litex.Set.Nonempty B),
-      Litex.Set.Nonempty (Litex.union A B) := by
-  intro A B __h7_3
-  have __c7_0 : Litex.Set.Nonempty (Litex.union A B) := Litex.SetRules.unionNonemptyRight A B (__h7_3)
+    ∀ (__p1 : Litex.Set) (__p2 : Litex.Set) (__domain1 : Litex.Set.Nonempty __p2), Litex.Set.Nonempty (Litex.union __p1 __p2) := by
+  intro A B __domain1
+  have __c7_0 : Litex.Set.Nonempty (Litex.union A B) := Litex.SetRules.unionNonemptyRight A B (__domain1)
   exact __c7_0
 
 theorem __fact8 :
@@ -87,22 +81,19 @@ theorem __fact10 :
   exact __c10_0
 
 theorem __fact11 :
-    ∀ (A : Litex.Set),
-      Litex.Set.Nonempty (Litex.powerSet A) := by
+    ∀ (__p1 : Litex.Set), Litex.Set.Nonempty (Litex.powerSet __p1) := by
   intro A
   have __c11_0 : Litex.Set.Nonempty (Litex.powerSet A) := Litex.SetRules.powerSetNonempty A
   exact __c11_0
 
 theorem __fact12 :
-    ∀ (A : Litex.Set) (__h12_2 : Litex.Set.Finite A),
-      Litex.Set.Finite (Litex.powerSet A) := by
-  intro A __h12_2
-  have __c12_0 : Litex.Set.Finite (Litex.powerSet A) := Litex.SetRules.powerSetFinite A (__h12_2)
+    ∀ (__p1 : Litex.Set) (__domain1 : Litex.Set.Finite __p1), Litex.Set.Finite (Litex.powerSet __p1) := by
+  intro A __domain1
+  have __c12_0 : Litex.Set.Finite (Litex.powerSet A) := Litex.SetRules.powerSetFinite A (__domain1)
   exact __c12_0
 
 theorem __fact13 :
-    ∀ (A : Litex.Set) (B : Litex.Set) (D : Litex.Set),
-      Litex.Same (Litex.intersect A (Litex.union B D)) (Litex.union (Litex.intersect A B) (Litex.intersect A D)) ∧ Litex.Same (Litex.setMinus A (Litex.intersect B D)) (Litex.union (Litex.setMinus A B) (Litex.setMinus A D)) ∧ Litex.Same (Litex.setMinus A (Litex.union B D)) (Litex.intersect (Litex.setMinus A B) (Litex.setMinus A D)) := by
+    ∀ (__p1 : Litex.Set) (__p2 : Litex.Set) (__p3 : Litex.Set), Litex.Same (Litex.intersect __p1 (Litex.union __p2 __p3)) (Litex.union (Litex.intersect __p1 __p2) (Litex.intersect __p1 __p3)) ∧ Litex.Same (Litex.setMinus __p1 (Litex.intersect __p2 __p3)) (Litex.union (Litex.setMinus __p1 __p2) (Litex.setMinus __p1 __p3)) ∧ Litex.Same (Litex.setMinus __p1 (Litex.union __p2 __p3)) (Litex.intersect (Litex.setMinus __p1 __p2) (Litex.setMinus __p1 __p3)) := by
   intro A B D
   have __c13_0 : Litex.Same (Litex.intersect A (Litex.union B D)) (Litex.union (Litex.intersect A B) (Litex.intersect A D)) := Litex.SetRules.intersectUnionDistributive A B D
   have __c13_1 : Litex.Same (Litex.setMinus A (Litex.intersect B D)) (Litex.union (Litex.setMinus A B) (Litex.setMinus A D)) := Litex.SetRules.setMinusIntersectDeMorgan A B D

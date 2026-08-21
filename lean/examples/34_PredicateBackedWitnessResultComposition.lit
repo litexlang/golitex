@@ -1,0 +1,19 @@
+# Before: ordinary existential witnesses compiled, but the convenient
+# `witness $P(args)` statement was rejected even though its Result retained the
+# concrete definition, argument checks, instantiated existential, and ordinary
+# witness verification.
+#
+# Now: the statement compiles the ordinary witness verification in a child
+# environment, folds that proof through the already compiled predicate, and
+# publishes three exact results: `$has_copy(2)`, `2 $in R`, and
+# `exist x R st {x = 2}` under their retained FactIds.
+#
+# Boundary: this tracer uses one ordinary witness and one existential body
+# fact. `exist!`, multiple witnesses, and non-object predicate parameters stay
+# fail-closed until their distinct Result shapes have reviewed adapters. A
+# focused Rust test rejects a missing inferred existential FactId.
+prop has_copy(a R):
+    exist x R st {x = a}
+
+witness $has_copy(2) from 2:
+    2 = 2

@@ -1,0 +1,3 @@
+have fn inc(x R) R = x + 1
+
+inc(2) = 2 + 1

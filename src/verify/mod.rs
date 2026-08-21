@@ -35,7 +35,9 @@ pub(crate) use verify_builtin_rules::{
     general_cart_member_choice_fact, general_cart_member_fn_set,
     verify_choice_function_for_arg_types,
 };
-pub use verify_builtin_rules::{compare_normalized_number_str_to_zero, NumberCompareResult};
+pub use verify_builtin_rules::{
+    compare_normalized_number_str_to_zero, compare_number_strings, NumberCompareResult,
+};
 mod use_context_verify_state;
 mod verify_arg_satisfy_param_def;
 mod verify_fn_membership_by_definition;

@@ -1,4 +1,5 @@
 use crate::prelude::*;
+use crate::result::RuntimeResolvedNumericComparisonBuiltinRuleEvidence;
 use crate::verify::verify_number_in_standard_set::is_integer_after_simplification;
 
 impl Runtime {
@@ -255,13 +256,37 @@ impl Runtime {
         if left_number.normalized_value == right_number.normalized_value {
             return None;
         }
+        let target: Fact = not_equal_fact.clone().into();
+        let evidence = match (
+            not_equal_fact
+                .left
+                .evaluate_to_normalized_decimal_number_with_result(),
+            not_equal_fact
+                .right
+                .evaluate_to_normalized_decimal_number_with_result(),
+        ) {
+            (Some(left_evaluation), Some(right_evaluation)) => {
+                BuiltinRuleEvidence::ClosedNumericComparison(
+                    ClosedNumericComparisonBuiltinRuleEvidence::new(
+                        target.clone(),
+                        left_evaluation,
+                        right_evaluation,
+                    ),
+                )
+            }
+            _ => BuiltinRuleEvidence::RuntimeResolvedNumericComparison(
+                RuntimeResolvedNumericComparisonBuiltinRuleEvidence::new(
+                    target.clone(),
+                    left_number.into(),
+                    right_number.into(),
+                ),
+            ),
+        };
         Some(
             SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
-                not_equal_fact.clone().into(),
+                target,
                 "not_equal_numeric_resolved_or_equal_class_calculation".to_string(),
-                BuiltinRuleEvidence::ClosedNumericComparison(
-                    ClosedNumericComparisonBuiltinRuleEvidence::new(not_equal_fact.clone().into()),
-                ),
+                evidence,
                 Vec::new(),
             )
             .into(),

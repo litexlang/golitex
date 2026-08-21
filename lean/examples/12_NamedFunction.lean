@@ -46,12 +46,11 @@ theorem __fact7 : Litex.Same reciprocal ({ call := fun {__alpha} (__arg : __alph
   exact Litex.Same.refl ({ call := fun {__alpha} (__arg : __alpha) __arg_in __arg_domain => ((1 : ℝ) / Litex.In.rep __arg __arg_in) } : Litex.FnWhere Litex.R Litex.R (fun {__alpha} (__arg : __alpha) => ¬ Litex.Same __arg (0 : ℂ)))
 
 theorem __fact8 :
-    ∀ (a : ℂ) (__h8_1 : Litex.In a Litex.R) (__h8_2 : ¬ Litex.Same a (0 : ℂ)),
-      Litex.Same (Litex.fnApplyWhereOwn reciprocal __fact6 a (__h8_1) (__h8_2)) ((1 : ℂ) / a) := by
-  intro a __h8_1 __h8_2
-  have __c8_0 : Litex.Same (Litex.fnApplyWhereOwn reciprocal __fact6 a (__h8_1) (__h8_2)) ((1 : ℂ) / a) := (by
-  unfold Litex.fnApplyWhereOwn reciprocal
-  exact Litex.Same.realDivComplex (Litex.Same.realComplex (1 : ℝ)) (Litex.Same.symm (Litex.In.same_rep a (__h8_1))))
+    ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.R) (__domain1 : ¬ Litex.Same __p1 (0 : ℂ)), Litex.Same (Litex.fnApplyWhereOwn reciprocal __fact6 __p1 (__type1) (__domain1)) ((1 : ℂ) / (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ)) := by
+  intro a __h8_1 __domain1
+  have __c8_0 : Litex.Same (Litex.fnApplyWhereOwn reciprocal __fact6 a (__h8_1) (__domain1)) ((1 : ℂ) / (((Litex.In.rep a __h8_1 : ℝ)) : ℂ)) := (by
+    unfold Litex.fnApplyWhereOwn reciprocal
+    exact Litex.Same.realDivComplex (Litex.Same.realComplex (1 : ℝ)) (Litex.Same.realComplex ((Litex.In.rep a __h8_1 : ℝ))))
   exact __c8_0
 
 noncomputable def into_builder : Litex.FnTelescope.Carrier ((Litex.FnTelescope.parameter Litex.R (fun {__alpha1 : Type} (__arg1 : __alpha1) (__arg1_in : Litex.In __arg1 Litex.R) => (Litex.FnTelescope.done (Litex.setBuilder Litex.R (fun (z : Litex.R.Carrier) => Litex.Same z z))))) : Litex.FnTelescope.{0}) :=

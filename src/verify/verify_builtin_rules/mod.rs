@@ -33,5 +33,7 @@ pub(crate) use in_fact_builtin::{
     verify_choice_function_for_arg_types,
 };
 pub(crate) use number_compare::normalized_decimal_string_is_even_integer;
-pub use number_compare::{compare_normalized_number_str_to_zero, NumberCompareResult};
+pub use number_compare::{
+    compare_normalized_number_str_to_zero, compare_number_strings, NumberCompareResult,
+};
 pub(crate) use order_normalize::normalize_positive_order_atomic_fact;

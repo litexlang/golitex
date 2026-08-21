@@ -8,6 +8,13 @@ mod infer_result;
 mod infer_set_relations;
 
 pub use infer_result::{
-    InferReason, InferRule, SuccessInferPremiseResult, SuccessInferResult,
-    SuccessInferRuleApplicationResult, SuccessStoreFactOutput,
+    DefinedPredicateDefinitionClauseProjectionInferRule,
+    DefinedPredicateParameterRequirementProjectionInferRule, InferReason, InferRule,
+    KnownTupleEqualitySide, ListSetMembershipImpliesEqualityAlternativesInferRule,
+    NegativeStandardSetMembershipImpliesNegativeInferRule,
+    NonzeroStandardSetMembershipImpliesNonzeroInferRule,
+    PositiveStandardSetMembershipImpliesPositiveInferRule,
+    RegisteredTransitivePredicateChainClosureInferRule, SuccessInferPremiseResult,
+    SuccessInferResult, SuccessInferRuleApplicationResult, SuccessStoreFactOutput,
+    TupleEqualityWithKnownTupleImpliesTupleShapeInferRule,
 };

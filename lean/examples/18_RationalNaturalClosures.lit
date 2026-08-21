@@ -6,9 +6,11 @@
 # Former compiler behavior: the verifier kept only a generic builtin-rule
 # label, so the compiler had no exact rational-closure certificate to replay.
 #
-# Now: rational `+`, `-`, `*`, `/` and natural `+`, `*` replay exact
-# verifier-selected closure certificates through proved native-carrier rules.
-# Source binders stay complex-valued and retain independent Litex.In evidence.
+# Now: rational `+`, `-`, `*`, `/`, integer power, and natural `+`, `*` replay
+# exact verifier-selected closure certificates through proved native-carrier
+# rules. Integer power selects the exact `ℚ` base and `ℤ` exponent carried by
+# the visible memberships, computes `^` there, and returns the observation to
+# Litex `Q`.
 forall a, b Q:
     a + b $in Q
 
@@ -29,15 +31,7 @@ forall a, b N:
 forall a, b N:
     a * b $in N
 
-# Boundary (Litex verifies; compiler remains fail-closed):
-# forall a Q, z Z:
-#     a != 0
-#     =>:
-#         a^z $in Q
-# Rational power has verifier closure evidence, but the current compiler has no
-# reviewed native power term/evidence adapter. This batch must not invent one.
-#
-# Evidence:
-# target/release/litex -compact -strict -runner -f lean/examples/18_RationalNaturalClosures.lit
-# cargo test --release --test stmt_result_to_lean_compiler_tracers rational_and_natural_carrier_closures
-# cd lean && ./stmt_result_to_lean_compiler.sh check examples
+forall a Q, z Z:
+    a != 0
+    =>:
+        a^z $in Q

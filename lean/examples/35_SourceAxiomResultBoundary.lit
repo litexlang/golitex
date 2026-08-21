@@ -1,0 +1,15 @@
+# Before: the kernel returned a successful `AxiomStmt` Result, but the
+# StmtResult-to-Lean dispatcher rejected that statement family.
+#
+# Now: the compiler validates the recursive forall well-definedness and exact
+# store FactId, emits the source axiom under its declared name, and makes that
+# FactId available to the following ordinary fact citation.
+#
+# Boundary: this is an explicit source trust boundary. The compiler never
+# invents an axiom for an unsupported statement or proof Result.
+axiom source_real_reflexivity:
+    ? forall x R:
+        x = x
+
+forall x R:
+    x = x

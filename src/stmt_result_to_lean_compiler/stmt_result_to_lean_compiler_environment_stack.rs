@@ -1,5 +1,5 @@
 use crate::litex_to_lean_ir::{
-    LitexToLeanFactIr, LitexToLeanFunctionTypeIr, LitexToLeanLocalPremiseIr, LitexToLeanObjectIr,
+    LitexToLeanFunctionTypeIr, LitexToLeanLocalPremiseIr, LitexToLeanObjectIr,
     LitexToLeanWellDefinednessCertificateIr,
 };
 use crate::prelude::*;
@@ -58,6 +58,21 @@ impl StmtResultToLeanCompilerEnvironmentStack {
         );
         self.environments.pop();
     }
+
+    /// Match Litex `clear` at the target-generation boundary. The current
+    /// lexical layer forgets every source identity that execution forgot;
+    /// parent layers, when one exists, remain owned by their enclosing Result.
+    pub(super) fn clear_current_environment(&mut self) {
+        let current = self
+            .environments
+            .last_mut()
+            .expect("compiler environment stack must retain its top-level environment");
+        *current = StmtResultToLeanCompilerEnvironment::default();
+    }
+
+    pub(super) fn is_top_level(&self) -> bool {
+        self.environments.len() == 1
+    }
 }
 
 /// Names and target-representation choices visible in one Lean lexical scope.
@@ -68,8 +83,22 @@ pub(super) struct StmtResultToLeanCompilerEnvironment {
     /// Canonical complex observations for numeric symbols whose Lean carrier
     /// is locally heterogeneous (for example a dependent function binder).
     pub(super) numeric_representations: HashMap<SymbolId, String>,
+    /// Exact semantic-equality bridge from the source symbol to the numeric
+    /// Complex observation selected by its visible membership proof. Proof
+    /// consumers use this to transport source-domain sign facts into the same
+    /// representative used when their target expression is rendered.
+    pub(super) numeric_representation_equalities: HashMap<SymbolId, String>,
     pub(super) numeric_representation_memberships: HashMap<SymbolId, String>,
     pub(super) numeric_real_values: HashMap<SymbolId, String>,
+    /// Exact integer representatives selected by visible `N+`/`N`/`Z`
+    /// membership proofs. Integer-only source operators such as `%` consume
+    /// this target representation instead of pretending Complex has a native
+    /// remainder operation.
+    pub(super) numeric_integer_values: HashMap<SymbolId, String>,
+    /// Exact rational representatives selected by visible `N+`/`N`/`Z`/`Q`
+    /// memberships. Rational integer powers are rendered in `ℚ` and then
+    /// observed through the ordinary Litex complex carrier.
+    pub(super) numeric_rational_values: HashMap<SymbolId, String>,
     pub(super) exact_tuple_indices: HashMap<SymbolId, String>,
     pub(super) indexed_tuple_bindings: HashMap<SymbolId, IndexedTupleBinding>,
     pub(super) existential_names: HashMap<String, String>,
@@ -79,6 +108,14 @@ pub(super) struct StmtResultToLeanCompilerEnvironment {
     pub(super) function_bindings: HashMap<FactId, FunctionBinding>,
     pub(super) named_function_definitions: HashMap<FactId, NamedFunctionDefinitionBinding>,
     pub(super) predicate_bindings: HashMap<String, PredicateBinding>,
+    pub(super) registered_reflexive_predicate_theorem_bindings:
+        HashMap<String, RegisteredPredicatePropertyTheoremBinding>,
+    pub(super) registered_symmetric_predicate_theorem_bindings:
+        HashMap<String, Vec<RegisteredPredicatePropertyTheoremBinding>>,
+    pub(super) registered_transitive_predicate_theorem_bindings:
+        HashMap<String, RegisteredPredicatePropertyTheoremBinding>,
+    pub(super) registered_antisymmetric_predicate_theorem_bindings:
+        HashMap<String, RegisteredPredicatePropertyTheoremBinding>,
     pub(super) well_definedness: Option<LitexToLeanWellDefinednessCertificateIr>,
 }
 
@@ -106,6 +143,14 @@ pub(super) struct PredicateBinding {
     pub(super) definition: Option<DefPropStmt>,
 }
 
+/// A theorem introduced by one successful `by *_prop` Result and visible only
+/// in the compiler environment corresponding to that Result scope.
+#[derive(Clone)]
+pub(super) struct RegisteredPredicatePropertyTheoremBinding {
+    pub(super) theorem_name: String,
+    pub(super) forall_fact: ForallFact,
+}
+
 #[derive(Clone)]
 pub(super) struct FunctionBinding {
     pub(super) symbol_id: SymbolId,
@@ -124,17 +169,5 @@ pub(super) struct NamedFunctionDefinitionBinding {
     pub(super) uses_native_real_body: bool,
     pub(super) parameter_premises: Vec<LitexToLeanLocalPremiseIr>,
     pub(super) domain_premises: Vec<LitexToLeanLocalPremiseIr>,
-    /// Only non-native return carriers need the old representative-selection
-    /// recipe. Native real functions are constructed directly from the
-    /// recursive return-check Result and deliberately retain no duplicate
-    /// mirrored statement/fact compiler representation here.
-    pub(super) compatibility_return_selection:
-        Option<CompatibilityNamedFunctionReturnSelectionBinding>,
     pub(super) well_definedness: LitexToLeanWellDefinednessCertificateIr,
-}
-
-#[derive(Clone)]
-pub(super) struct CompatibilityNamedFunctionReturnSelectionBinding {
-    pub(super) inferred_premises: Vec<LitexToLeanFactIr>,
-    pub(super) return_check: LitexToLeanFactIr,
 }
