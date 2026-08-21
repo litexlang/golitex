@@ -355,6 +355,65 @@ does not retype the source value. -/
 def Subset (left right : Litex.Set.{u}) : Prop :=
   ∀ {alpha : Litex.u.{u}} (x : alpha), In x left → In x right
 
+namespace Set
+
+/-- Evidence that every value in one exact set carrier has a reviewed
+semantic representation as a complex value. This is the bridge required
+when a Litex `forall x S` Result was checked with a complex source binder but
+is consumed as the heterogeneous `Subset S T` contract. -/
+def EveryCarrierValueHasComplexRepresentative (set : Litex.Set) : Prop :=
+  ∀ value : set.Carrier, ∃ complexValue : ℂ, Same value complexValue
+
+theorem emptyEveryCarrierValueHasComplexRepresentative :
+    EveryCarrierValueHasComplexRepresentative empty := by
+  intro value
+  exact PEmpty.elim value
+
+theorem singletonEveryCarrierValueHasComplexRepresentative
+    (value : ℂ) :
+    EveryCarrierValueHasComplexRepresentative (singleton value) := by
+  intro singletonValue
+  cases singletonValue
+  exact ⟨value, Same.symm (Same.singleton value)⟩
+
+theorem coproductEveryCarrierValueHasComplexRepresentative
+    {left right : Litex.Set}
+    (leftEvidence : EveryCarrierValueHasComplexRepresentative left)
+    (rightEvidence : EveryCarrierValueHasComplexRepresentative right) :
+    EveryCarrierValueHasComplexRepresentative (coproduct left right) := by
+  intro value
+  cases value with
+  | inl leftValue =>
+      rcases leftEvidence leftValue with ⟨complexValue, representation⟩
+      exact ⟨complexValue,
+        Same.trans (Same.symm (Same.sumLeft leftValue)) representation⟩
+  | inr rightValue =>
+      rcases rightEvidence rightValue with ⟨complexValue, representation⟩
+      exact ⟨complexValue,
+        Same.trans (Same.symm (Same.sumRight rightValue)) representation⟩
+
+/-- Turn a complex-binder membership implication retained by a recursive
+statement Result into the fully heterogeneous subset contract. The source
+carrier evidence is explicit; no universal boxing or unreviewed cast is used.
+-/
+theorem subsetFromComplexMembershipImplication
+    {left right : Litex.Set}
+    (leftEvidence : EveryCarrierValueHasComplexRepresentative left)
+    (implication : ∀ value : ℂ, In value left → In value right) :
+    Subset left right := by
+  intro alpha value membership
+  rcases membership with ⟨leftValue, valueToLeftValue⟩
+  rcases leftEvidence leftValue with ⟨complexValue, leftValueToComplexValue⟩
+  have complexMembershipInLeft : In complexValue left :=
+    ⟨leftValue, Same.symm leftValueToComplexValue⟩
+  rcases implication complexValue complexMembershipInLeft with
+    ⟨rightValue, complexValueToRightValue⟩
+  exact ⟨rightValue,
+    Same.trans valueToLeftValue
+      (Same.trans leftValueToComplexValue complexValueToRightValue)⟩
+
+end Set
+
 /-- A power-set member is represented by its exact membership predicate on
 the base carrier. Unlike a carrier of arbitrary `Litex.Set` syntax values,
 this representation remains finite when the base carrier is finite. -/
@@ -1373,8 +1432,16 @@ theorem intro
     {r : ℝ}
     (hxr : AsReal x r)
     (hr : r < 0) :
-    Negative x :=
+  Negative x :=
   ⟨r, hxr, hr⟩
+
+theorem toNonpositive
+    {α : Type}
+    {x : α}
+    (hx : Negative x) :
+    Nonpositive x := by
+  rcases hx with ⟨r, hxr, hr⟩
+  exact ⟨r, hxr, le_of_lt hr⟩
 
 theorem congr
     {α β : Type}

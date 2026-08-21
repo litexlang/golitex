@@ -471,6 +471,32 @@ theorem complexNegativeOneMulNonpositive
       (Litex.AsReal.complex (-1 : ℝ))
   exact ⟨-1 * ra, complexMulAsReal minusOneAsReal hra, by linarith⟩
 
+/-- Multiplication by negative one reverses a positive source value into the
+exact strict negative expression retained by Litex inference. -/
+theorem complexNegativeOneMulNegative
+    {a : ℂ}
+    (ha : Litex.Positive a) :
+    Litex.Negative ((-1 : ℂ) * a) := by
+  rcases ha with ⟨ra, hra, haOrder⟩
+  have minusOneAsReal : Litex.AsReal (-1 : ℂ) (-1 : ℝ) :=
+    Litex.Same.trans
+      (Litex.Same.ofEq (by norm_num : (-1 : ℂ) = ((-1 : ℝ) : ℂ)))
+      (Litex.AsReal.complex (-1 : ℝ))
+  exact ⟨-1 * ra, complexMulAsReal minusOneAsReal hra, by linarith⟩
+
+/-- Multiplication by negative one reverses a nonpositive source value into
+the exact nonnegative expression retained by Litex inference. -/
+theorem complexNegativeOneMulNonnegative
+    {a : ℂ}
+    (ha : Litex.Nonpositive a) :
+    Litex.Nonnegative ((-1 : ℂ) * a) := by
+  rcases ha with ⟨ra, hra, haOrder⟩
+  have minusOneAsReal : Litex.AsReal (-1 : ℂ) (-1 : ℝ) :=
+    Litex.Same.trans
+      (Litex.Same.ofEq (by norm_num : (-1 : ℂ) = ((-1 : ℝ) : ℂ)))
+      (Litex.AsReal.complex (-1 : ℝ))
+  exact ⟨-1 * ra, complexMulAsReal minusOneAsReal hra, by linarith⟩
+
 /-- Positive real representatives are closed under multiplication. -/
 theorem complexMulPositive
     {a b : ℂ}

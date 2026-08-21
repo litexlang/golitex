@@ -5165,11 +5165,21 @@ impl StmtResultToLeanCompiler {
             else {
                 return Ok(None);
             };
+            let left_carrier_evidence =
+                render_proof_that_every_set_carrier_value_has_a_complex_representative(
+                    &statement.left,
+                    &self.environment_stack,
+                )?;
+            let right_carrier_evidence =
+                render_proof_that_every_set_carrier_value_has_a_complex_representative(
+                    &statement.right,
+                    &self.environment_stack,
+                )?;
             let proposition = render_fact(&equality, &self.environment_stack)?;
             let mut proof_lines = vec!["by".to_string()];
             proof_lines.extend(local_lines.into_iter().map(|line| indent_lines(&line, 2)));
             proof_lines.push(format!(
-                "  exact Litex.Same.setExt ({forward}) ({backward})"
+                "  exact Litex.Same.setExt\n    (Litex.Set.subsetFromComplexMembershipImplication ({left_carrier_evidence}) ({forward}))\n    (Litex.Set.subsetFromComplexMembershipImplication ({right_carrier_evidence}) ({backward}))"
             ));
             Ok(Some(CompiledFactProofBody {
                 fact: equality,
@@ -5735,6 +5745,7 @@ impl StmtResultToLeanCompiler {
         if obj_equality_key(source_range) != obj_equality_key(&retained_range) {
             return Err("by-for Result changed its exact source range".into());
         }
+        let lowered_range = LeanTargetObjectRepresentation::lower(&retained_range)?;
         validate_by_for_range_parameter_result(parameter_result)?;
         if verification.assignments.len() != parameter_result.enumerated_values.len() {
             return Err("by-for Result changed its evaluated assignment count".into());
@@ -5751,19 +5762,14 @@ impl StmtResultToLeanCompiler {
             {
                 return Err("by-for parameter reused its SymbolId".into());
             }
-            let range_value = format!("(Litex.In.rep {parameter_name} __type1)");
-            self.environment_stack
-                .numeric_integer_values
-                .insert(binding.id(), format!("(({range_value}).val : ℤ)"));
-            self.environment_stack
-                .numeric_representations
-                .insert(binding.id(), format!("(((({range_value}).val : ℤ)) : ℂ)"));
-            self.environment_stack.numeric_representation_memberships.insert(
+            install_numeric_representations_from_membership(
                 binding.id(),
-                format!(
-                    "Litex.Rules.complexEqIntInZ (((({range_value}).val : ℤ) : ℂ)) (({range_value}).val : ℤ) (by rfl)"
-                ),
+                &lowered_range,
+                &parameter_name,
+                "__type1",
+                &mut self.environment_stack,
             );
+            let range_value = format!("(Litex.In.rep {parameter_name} __type1)");
 
             let proposition = render_fact(&target, &self.environment_stack)?;
             let mut proof_lines = vec![
@@ -5803,21 +5809,6 @@ impl StmtResultToLeanCompiler {
                     )))
                 })
                 .collect::<Vec<_>>();
-            let assignment_alternatives = if assignment_equalities.len() == 1 {
-                assignment_equalities[0].clone()
-            } else {
-                OrFact::new(
-                    assignment_equalities
-                        .iter()
-                        .map(|fact| match fact {
-                            Fact::AtomicFact(fact) => AndChainAtomicFact::AtomicFact(fact.clone()),
-                            _ => unreachable!("range assignment equality is atomic"),
-                        })
-                        .collect(),
-                    statement.line_file.clone(),
-                )
-                .into()
-            };
             proof_lines.push(format!(
                 "  have __range_value_cases : {} := by omega",
                 values
@@ -5826,13 +5817,29 @@ impl StmtResultToLeanCompiler {
                     .collect::<Vec<_>>()
                     .join(" ∨ ")
             ));
+            let rendered_assignment_equalities = assignment_equalities
+                .iter()
+                .map(|equality| render_fact(equality, &self.environment_stack))
+                .collect::<Result<Vec<_>, _>>()?;
             proof_lines.push(format!(
                 "  have __assignment_cases : {} := by",
-                render_fact(&assignment_alternatives, &self.environment_stack)?
+                values
+                    .iter()
+                    .zip(rendered_assignment_equalities.iter())
+                    .map(|(value, equality)| {
+                        format!("(({range_value}).val = ({value} : ℤ) ∧ {equality})")
+                    })
+                    .collect::<Vec<_>>()
+                    .join(" ∨ ")
             ));
-            let range_same = format!(
-                "Litex.Same.trans (Litex.In.same_rep {parameter_name} __type1) (Litex.Same.subtype {range_value})"
-            );
+            let range_numeric_same = self
+                .environment_stack
+                .numeric_representation_equalities
+                .get(&binding.id())
+                .cloned()
+                .ok_or_else(|| {
+                    "by-for range parameter has no exact numeric equality bridge".to_string()
+                })?;
             if values.len() == 1 {
                 proof_lines.push("    have __range_value_case := __range_value_cases".into());
             } else {
@@ -5851,10 +5858,11 @@ impl StmtResultToLeanCompiler {
                     format!("__range_value_case{}", value_index + 1)
                 };
                 let equality_proof = format!(
-                    "Litex.Same.trans ({range_same}) (by simpa [{case_name}] using Litex.Same.intComplex ({range_value}).val)"
+                    "Litex.Same.trans ({range_numeric_same}) (Litex.Same.ofEq (by exact_mod_cast {case_name}))"
                 );
+                let case_with_assignment = format!("⟨{case_name}, {equality_proof}⟩");
                 let injected = right_associated_disjunction_injection(
-                    equality_proof,
+                    case_with_assignment,
                     value_index,
                     values.len(),
                 )?;
@@ -5866,12 +5874,16 @@ impl StmtResultToLeanCompiler {
                 }
             }
             if assignment_equalities.len() == 1 {
-                proof_lines.push("  have __assignment1 := __assignment_cases".into());
+                proof_lines.push(
+                    "  rcases __assignment_cases with ⟨__range_value_case, __assignment1⟩".into(),
+                );
             } else {
                 proof_lines.push(format!(
                     "  rcases __assignment_cases with {}",
                     (1..=assignment_equalities.len())
-                        .map(|index| format!("__assignment{index}"))
+                        .map(|index| {
+                            format!("⟨__range_value_case{index}, __assignment{index}⟩")
+                        })
                         .collect::<Vec<_>>()
                         .join(" | ")
                 ));
@@ -5987,10 +5999,26 @@ impl StmtResultToLeanCompiler {
                 .fact_propositions
                 .insert(assumption.fact_id, assumption.fact.clone());
             if assumption_index == 0 {
-                let range_value =
-                    format!("(Litex.In.rep {} __type1)", lean_identifier(binding.name()));
+                let numeric_equality = self
+                    .environment_stack
+                    .numeric_representation_equalities
+                    .get(&binding.id())
+                    .ok_or_else(|| {
+                        format!(
+                            "by-for assignment {assignment_index} lost its range numeric equality"
+                        )
+                    })?;
+                let numeric_membership = self
+                    .environment_stack
+                    .numeric_representation_memberships
+                    .get(&binding.id())
+                    .ok_or_else(|| {
+                        format!(
+                            "by-for assignment {assignment_index} lost its range integer membership"
+                        )
+                    })?;
                 local_lines.push(format!(
-                    "have {name} : {} := Litex.Rules.complexEqIntInZ (((({range_value}).val : ℤ) : ℂ)) (({range_value}).val : ℤ) (by rfl)",
+                    "have {name} : {} := (Litex.In.congr ({numeric_equality}) Litex.Z).mpr ({numeric_membership})",
                     render_fact(expected, &self.environment_stack)?
                 ));
             }
@@ -9067,13 +9095,21 @@ impl StmtResultToLeanCompiler {
             &mut local_have_lines,
             result_layer,
         )?;
+        let mut preceding_local_have_lines: Vec<String> = Vec::new();
         for local_have in local_have_lines {
-            let local_have = local_have.strip_prefix("have ").ok_or_else(|| {
+            let local_have_without_keyword = local_have.strip_prefix("have ").ok_or_else(|| {
                 format!("{result_layer} produced an unexpected local proof shape")
             })?;
-            let Some((temporary_name, theorem_body)) = local_have.split_once(" : ") else {
+            let Some((temporary_name, theorem_body)) = local_have_without_keyword.split_once(" : ")
+            else {
                 return Err(format!(
                     "{result_layer} produced a local proof without a proposition"
+                ));
+            };
+            let Some((conclusion_proposition, conclusion_proof)) = theorem_body.split_once(" := ")
+            else {
+                return Err(format!(
+                    "{result_layer} produced a local proof without an exact proof expression"
                 ));
             };
             let conclusion_fact_id = self
@@ -9085,12 +9121,22 @@ impl StmtResultToLeanCompiler {
                     format!("{result_layer} local proof `{temporary_name}` has no retained FactId")
                 })?;
             let theorem_name = format!("__fact{}", self.next_fact_name_index);
-            self.declarations
-                .push(format!("theorem {theorem_name} : {theorem_body}"));
+            let mut proof_lines = vec!["by".to_string()];
+            proof_lines.extend(
+                preceding_local_have_lines
+                    .iter()
+                    .map(|line| indent_lines(line, 2)),
+            );
+            proof_lines.push(indent_lines(&format!("exact {conclusion_proof}"), 2));
+            self.declarations.push(format!(
+                "theorem {theorem_name} : {conclusion_proposition} := {}",
+                proof_lines.join("\n")
+            ));
             self.environment_stack
                 .fact_names
                 .insert(conclusion_fact_id, theorem_name);
             self.next_fact_name_index += 1;
+            preceding_local_have_lines.push(local_have);
         }
         Ok(())
     }
@@ -9374,16 +9420,54 @@ impl StmtResultToLeanCompiler {
                         &premise.fact,
                         &self.environment_stack,
                     )?;
+                    let transported_premise =
+                        transport_zero_ended_order_fact_proof_to_current_numeric_representation(
+                            &premise.fact,
+                            &premise_name,
+                            &self.environment_stack,
+                        )?;
                     let conclusion_proposition =
                         render_fact(&conclusion.fact, &self.environment_stack)?;
                     let conclusion_name =
                         format!("__infer{}_{}", self.next_fact_name_index, proof_lines.len());
                     let proof = match application.rule {
                         InferRule::StrictOrderComparedToZeroImpliesWeakOrder => {
-                            format!("Litex.Lt.toLe ({premise_name})")
+                            let (source_left, source_right, _) =
+                                order_relation_parts(&premise.fact)?;
+                            if is_literal_zero(source_left) {
+                                format!("Litex.Positive.toNonnegative ({transported_premise})")
+                            } else if is_literal_zero(source_right) {
+                                format!("Litex.Negative.toNonpositive ({transported_premise})")
+                            } else {
+                                return Err(format!(
+                                    "{result_layer} application {application_index} strict-to-weak premise is not compared with zero"
+                                ));
+                            }
                         }
                         InferRule::MultiplicationByNegativeOneReversesOrderAgainstZero => {
-                            format!("Litex.Rules.complexNegativeOneMulNonpositive ({premise_name})")
+                            let (source_left, source_right, source_is_strict) =
+                                order_relation_parts(&premise.fact)?;
+                            if is_literal_zero(source_left) {
+                                let theorem = if source_is_strict {
+                                    "complexNegativeOneMulNegative"
+                                } else {
+                                    "complexNegativeOneMulNonpositive"
+                                };
+                                format!("Litex.Rules.{theorem} ({transported_premise})")
+                            } else if is_literal_zero(source_right) {
+                                let nonpositive_premise = if source_is_strict {
+                                    format!("Litex.Negative.toNonpositive ({transported_premise})")
+                                } else {
+                                    transported_premise
+                                };
+                                format!(
+                                    "Litex.Rules.complexNegativeOneMulNonnegative ({nonpositive_premise})"
+                                )
+                            } else {
+                                return Err(format!(
+                                    "{result_layer} application {application_index} negative-one premise is not compared with zero"
+                                ));
+                            }
                         }
                         _ => unreachable!("order-sign inference was matched above"),
                     };
@@ -20904,6 +20988,66 @@ fn transport_zero_ended_order_proof_to_rendered_numeric_operand(
     ))
 }
 
+/// Transport the exact sign proposition retained by one typed infer premise
+/// from its source object to the numeric representative selected in the
+/// current compiler frame. Both zero orientations are supported because
+/// Litex stores positive/nonnegative and negative/nonpositive facts as
+/// distinct source comparisons.
+fn transport_zero_ended_order_fact_proof_to_current_numeric_representation(
+    source_fact: &Fact,
+    source_proof: &str,
+    context: &StmtResultToLeanCompilerEnvironmentStack,
+) -> Result<String, String> {
+    let (source_left, source_right, strict) = order_relation_parts(source_fact)?;
+    let (source_operand, predicate) = if is_literal_zero(source_left) {
+        (
+            source_right,
+            if strict {
+                "Litex.Positive"
+            } else {
+                "Litex.Nonnegative"
+            },
+        )
+    } else if is_literal_zero(source_right) {
+        (
+            source_left,
+            if strict {
+                "Litex.Negative"
+            } else {
+                "Litex.Nonpositive"
+            },
+        )
+    } else {
+        return Err(format!(
+            "typed zero-order inference retained a nonzero-ended premise `{source_fact}`"
+        ));
+    };
+
+    let rendered_source = render_obj(source_operand, context)?;
+    let rendered_target = render_numeric_obj(source_operand, context)?;
+    if rendered_source == rendered_target {
+        return Ok(source_proof.to_string());
+    }
+    let LeanTargetObjectRepresentation::Symbol { symbol_id, .. } =
+        LeanTargetObjectRepresentation::lower(source_operand)?
+    else {
+        return Err(format!(
+            "zero-order proof changed `{rendered_source}` to unrelated numeric target `{rendered_target}`"
+        ));
+    };
+    let equality = context
+        .numeric_representation_equalities
+        .get(&symbol_id)
+        .ok_or_else(|| {
+            format!(
+                "zero-order proof for `{rendered_source}` has no visible exact numeric equality bridge"
+            )
+        })?;
+    Ok(format!(
+        "({predicate}.congr ({equality})).mp ({source_proof})"
+    ))
+}
+
 fn render_real_operand_membership(
     object: &Obj,
     fallback: &str,
@@ -21852,6 +21996,10 @@ fn exact_set_integer_value(set: &LeanTargetObjectRepresentation, value: &str) ->
         LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::NegativeInteger) => {
             Some(format!("(({value}).val : ℤ)"))
         }
+        LeanTargetObjectRepresentation::Range { .. }
+        | LeanTargetObjectRepresentation::ClosedRange { .. } => {
+            Some(format!("(({value}).val : ℤ)"))
+        }
         LeanTargetObjectRepresentation::SetBuilder(builder) => {
             exact_set_integer_value(builder.set.as_ref(), &format!("({value}).val"))
         }
@@ -21911,6 +22059,10 @@ fn exact_set_numeric_value(set: &LeanTargetObjectRepresentation, value: &str) ->
             Some(format!("(((({value}).val : ℚ)) : ℂ)"))
         }
         LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::NegativeInteger) => {
+            Some(format!("(((({value}).val : ℤ)) : ℂ)"))
+        }
+        LeanTargetObjectRepresentation::Range { .. }
+        | LeanTargetObjectRepresentation::ClosedRange { .. } => {
             Some(format!("(((({value}).val : ℤ)) : ℂ)"))
         }
         LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::PositiveReal)
@@ -22005,6 +22157,10 @@ fn exact_set_numeric_equality(set: &LeanTargetObjectRepresentation, value: &str)
                 "Litex.Same.trans (Litex.Same.subtype ({value})) (Litex.Same.intComplex (({value}).val))"
             ))
         }
+        LeanTargetObjectRepresentation::Range { .. }
+        | LeanTargetObjectRepresentation::ClosedRange { .. } => Some(format!(
+            "Litex.Same.trans (Litex.Same.subtype ({value})) (Litex.Same.intComplex (({value}).val))"
+        )),
         LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::PositiveReal)
         | LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::NegativeReal) => {
             Some(format!(
@@ -22063,6 +22219,10 @@ fn exact_set_numeric_proof(set: &LeanTargetObjectRepresentation, value: &str) ->
                 "Litex.Rules.complexEqIntInZNeg (((({value}).val : ℤ) : ℂ)) (({value}).val : ℤ) (by rfl) (({value}).property)"
             ))
         }
+        LeanTargetObjectRepresentation::Range { .. }
+        | LeanTargetObjectRepresentation::ClosedRange { .. } => Some(format!(
+            "Litex.Rules.complexEqIntInZ (((({value}).val : ℤ) : ℂ)) (({value}).val : ℤ) (by rfl)"
+        )),
         LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::NegativeRational) => {
             Some(format!(
                 "Litex.Rules.complexEqRatInQNeg (((({value}).val : ℚ) : ℂ)) (({value}).val : ℚ) (by rfl) (({value}).property)"
@@ -23250,6 +23410,58 @@ fn render_list_set(
     Ok(set)
 }
 
+/// Build the exact carrier bridge needed to consume a complex-binder forall
+/// Result as a heterogeneous Lean `Subset`. This first reviewed constructor
+/// is deliberately limited to finite source list sets whose elements already
+/// have direct Complex representations in the active compiler environment.
+fn render_proof_that_every_set_carrier_value_has_a_complex_representative(
+    set: &Obj,
+    context: &StmtResultToLeanCompilerEnvironmentStack,
+) -> Result<String, String> {
+    let Obj::ListSet(list_set) = set else {
+        return Err(format!(
+            "by-extension set `{set}` has no reviewed carrier-to-complex representation proof"
+        ));
+    };
+    let mut proof = "Litex.Set.emptyEveryCarrierValueHasComplexRepresentative".to_string();
+    for item in list_set.list.iter().rev() {
+        let rendered_item =
+            render_source_object_as_direct_complex_value_for_set_carrier(item.as_ref(), context)?;
+        proof = format!(
+            "Litex.Set.coproductEveryCarrierValueHasComplexRepresentative (Litex.Set.singletonEveryCarrierValueHasComplexRepresentative {rendered_item}) ({proof})"
+        );
+    }
+    Ok(proof)
+}
+
+fn render_source_object_as_direct_complex_value_for_set_carrier(
+    object: &Obj,
+    context: &StmtResultToLeanCompilerEnvironmentStack,
+) -> Result<String, String> {
+    if let Ok(LeanTargetObjectRepresentation::Symbol { symbol_id, .. }) =
+        LeanTargetObjectRepresentation::lower(object)
+    {
+        if context.numeric_representations.contains_key(&symbol_id) {
+            return render_numeric_obj(object, context);
+        }
+    }
+    match object {
+        Obj::Number(_)
+        | Obj::ImaginaryUnit(_)
+        | Obj::EulerNumber(_)
+        | Obj::Pi(_)
+        | Obj::Add(_)
+        | Obj::Sub(_)
+        | Obj::Mul(_)
+        | Obj::Div(_)
+        | Obj::Mod(_)
+        | Obj::Pow(_) => render_obj(object, context),
+        _ => Err(format!(
+            "set carrier item `{object}` has no direct Complex representation in the current compiler environment"
+        )),
+    }
+}
+
 fn render_list_set_finiteness(
     items: &[LeanTargetObjectRepresentation],
     context: &StmtResultToLeanCompilerEnvironmentStack,
@@ -23667,6 +23879,10 @@ fn order_relation_parts(fact: &Fact) -> Result<(&Obj, &Obj, bool), String> {
             "expected positive ordered relation, found `{fact}`"
         )),
     }
+}
+
+fn is_literal_zero(object: &Obj) -> bool {
+    matches!(object, Obj::Number(number) if number.normalized_value == "0")
 }
 
 fn addition_parts(object: &Obj) -> Result<(&Obj, &Obj), String> {
