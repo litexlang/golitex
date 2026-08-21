@@ -1,0 +1,26 @@
+# High School Mathematics
+# Space Vectors
+# Source unit: scripts/high_school_book/knowledge_core_json/optional-1.json (optional-1.space_vectors).
+# This chapter formalizes the source paraphrase; standalone exercises are omitted.
+
+have fn add3(u, v cart(R, R, R)) cart(R, R, R) = (u[1] + v[1], u[2] + v[2], u[3] + v[3])
+
+have fn smul3(k R, u cart(R, R, R)) cart(R, R, R) = (k * u[1], k * u[2], k * u[3])
+
+prop parallel3(u, v cart(R, R, R)):
+    exist k R st {u[1] = k * v[1], u[2] = k * v[2], u[3] = k * v[3]}
+
+prop perpendicular3(u, v cart(R, R, R)):
+    chap09::dot3(u, v) = 0
+
+add3((1, 2, 3), (4, 5, 6)) = (5, 7, 9)
+smul3(2, (1, 2, 3)) = (2, 4, 6)
+
+chap09::dot3((1, 2, 3), (4, 5, 6)) = 1 * 4 + 2 * 5 + 3 * 6 = 32
+chap09::norm3_sq((1, 2, 2)) = chap09::dot3((1, 2, 2), (1, 2, 2)) = 1^2 + 2^2 + 2^2 = 9
+
+chap09::dot3((1, 0, 0), (0, 1, 0)) = 0
+$perpendicular3((1, 0, 0), (0, 1, 0))
+
+witness exist k R st {(2, 4, 6)[1] = k * (1, 2, 3)[1], (2, 4, 6)[2] = k * (1, 2, 3)[2], (2, 4, 6)[3] = k * (1, 2, 3)[3]} from 2
+$parallel3((2, 4, 6), (1, 2, 3))

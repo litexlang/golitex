@@ -1,0 +1,46 @@
+# High School Mathematics
+# Complex Numbers
+# Source unit: scripts/high_school_book/knowledge_core_json/required-2.json (required-2.complex_numbers).
+# This chapter formalizes the source paraphrase; standalone exercises are omitted.
+
+have fn complex_conjugate(z C) C = re(z) - img(z) * i
+
+i $in C
+i^2 = -1
+re(3 + 4 * i) = 3
+img(3 + 4 * i) = 4
+C_abs(3 + 4 * i) = sqrt(re(3 + 4 * i)^2 + img(3 + 4 * i)^2)
+re(3 + 4 * i)^2 + img(3 + 4 * i)^2 = 3^2 + 4^2
+C_abs(3 + 4 * i) = sqrt(re(3 + 4 * i)^2 + img(3 + 4 * i)^2) = sqrt(3^2 + 4^2) = sqrt(25) = 5
+
+have sample_z C = 1 + 2 * i
+have sample_w C = 3 + 4 * i
+re(sample_z) = re(1 + 2 * i) = 1
+img(sample_z) = img(1 + 2 * i) = 2
+re(sample_w) = re(3 + 4 * i) = 3
+img(sample_w) = img(3 + 4 * i) = 4
+re(sample_z + sample_w) = re(sample_z) + re(sample_w) = 1 + 3 = 4
+img(sample_z + sample_w) = img(sample_z) + img(sample_w) = 2 + 4 = 6
+re(sample_z * sample_w) = re(sample_z) * re(sample_w) - img(sample_z) * img(sample_w) = 1 * 3 - 2 * 4 = -5
+img(sample_z * sample_w) = re(sample_z) * img(sample_w) + img(sample_z) * re(sample_w) = 1 * 4 + 2 * 3 = 10
+
+forall z C:
+    z = re(z) + img(z) * i
+    complex_conjugate(z) = re(z) - img(z) * i = re(z) + (-img(z)) * i
+    re(complex_conjugate(z)) = re(re(z) + (-img(z)) * i) = re(z)
+    img(complex_conjugate(z)) = img(re(z) + (-img(z)) * i) = -img(z)
+    complex_conjugate(complex_conjugate(z)) = re(complex_conjugate(z)) - img(complex_conjugate(z)) * i
+    re(complex_conjugate(z)) - img(complex_conjugate(z)) * i = re(z) - img(complex_conjugate(z)) * i
+    re(z) - img(complex_conjugate(z)) * i = re(z) - (-img(z)) * i = re(z) + img(z) * i = z
+    C_abs(z) = sqrt(re(z)^2 + img(z)^2)
+    0 <= C_abs(z)
+
+forall a, b R:
+    re(a + b * i) = a
+    img(a + b * i) = b
+
+forall z, w C:
+    re(z + w) = re(z) + re(w)
+    img(z + w) = img(z) + img(w)
+    re(z * w) = re(z) * re(w) - img(z) * img(w)
+    img(z * w) = re(z) * img(w) + img(z) * re(w)

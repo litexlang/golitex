@@ -1,0 +1,46 @@
+# High School Mathematics
+# Counting and the Binomial Theorem
+# Source unit: scripts/high_school_book/knowledge_core_json/optional-2.json (optional-2.counting_and_binomial).
+# This chapter formalizes the source paraphrase; standalone exercises are omitted.
+
+have fn binomial_square(a, b R) R = a^2 + 2 * a * b + b^2
+
+forall a, b R:
+    (a + b)^2 = a^2 + 2 * a * b + b^2
+    binomial_square(a, b) = a^2 + 2 * a * b + b^2
+
+HighSchoolCite::combinatorics_probability::permutation_count(5, 3) = product(1, 3, fn(k N+) R {5 - 3 + k})
+
+finite_set_size({1, 2, 3}) = 3
+finite_set_size({4, 5}) = 2
+finite_set_size({14, 15, 24, 25, 34, 35}) = 6
+
+claim:
+    ? forall A, B set:
+        intersect(A, B) = {}
+        $is_finite_set(A)
+        $is_finite_set(B)
+        =>:
+            finite_set_size(union(A, B)) = finite_set_size(A) + finite_set_size(B)
+    by thm HighSchoolCite::analysis::finite_union_cardinality(A, B)
+
+claim:
+    ? forall n, r N+, value R:
+        r <= n
+        value * factorial(r) = HighSchoolCite::combinatorics_probability::permutation_count(n, r)
+        =>:
+            $HighSchoolCite::combinatorics_probability::has_combination_count(n, r, value)
+    by thm HighSchoolCite::combinatorics_probability::combination_count_from_permutations(n, r, value)
+
+claim:
+    ? forall n, r N+:
+        r < n
+        r > 1
+        =>:
+            $HighSchoolCite::combinatorics_probability::pascal_identity_for_combination_counts(n, r)
+    by thm HighSchoolCite::combinatorics_probability::pascal_identity(n, r)
+
+claim:
+    ? forall n N+:
+        $HighSchoolCite::combinatorics_probability::sum_of_binomial_coefficients(n)
+    by thm HighSchoolCite::combinatorics_probability::binomial_sum(n)

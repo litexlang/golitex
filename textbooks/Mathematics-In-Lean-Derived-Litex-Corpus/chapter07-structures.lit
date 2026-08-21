@@ -298,29 +298,61 @@ thm gauss_mul_def:
     ? forall x, y &GaussInt:
         gauss_mul(x, y) = (x.real * y.real - x.im * y.im, x.real * y.im + x.im * y.real)
 
+thm gauss_add_re_from_result:
+    ? forall x, y, result &GaussInt:
+        result = gauss_add(x, y)
+        =>:
+            result.real = x.real + y.real
+    gauss_add(x, y) = (x.real + y.real, x.im + y.im)
+    result = gauss_add(x, y) = (x.real + y.real, x.im + y.im)
+    result.real = result[1] = x.real + y.real
+
 thm gauss_add_re:
     ? forall x, y &GaussInt:
         gauss_add(x, y).real = x.real + y.real
+    by thm gauss_add_re_from_result(x, y, gauss_add(x, y))
+
+thm gauss_add_im_from_result:
+    ? forall x, y, result &GaussInt:
+        result = gauss_add(x, y)
+        =>:
+            result.im = x.im + y.im
     gauss_add(x, y) = (x.real + y.real, x.im + y.im)
-    gauss_add(x, y).real = gauss_add(x, y)[1] = x.real + y.real
+    result = gauss_add(x, y) = (x.real + y.real, x.im + y.im)
+    result.im = result[2] = x.im + y.im
 
 thm gauss_add_im:
     ? forall x, y &GaussInt:
         gauss_add(x, y).im = x.im + y.im
-    gauss_add(x, y) = (x.real + y.real, x.im + y.im)
-    gauss_add(x, y).im = gauss_add(x, y)[2] = x.im + y.im
+    by thm gauss_add_im_from_result(x, y, gauss_add(x, y))
+
+thm gauss_mul_re_from_result:
+    ? forall x, y, result &GaussInt:
+        result = gauss_mul(x, y)
+        =>:
+            result.real = x.real * y.real - x.im * y.im
+    gauss_mul(x, y) = (x.real * y.real - x.im * y.im, x.real * y.im + x.im * y.real)
+    result = gauss_mul(x, y) = (x.real * y.real - x.im * y.im, x.real * y.im + x.im * y.real)
+    result.real = result[1] = x.real * y.real - x.im * y.im
 
 thm gauss_mul_re:
     ? forall x, y &GaussInt:
         gauss_mul(x, y).real = x.real * y.real - x.im * y.im
+    by thm gauss_mul_re_from_result(x, y, gauss_mul(x, y))
+
+thm gauss_mul_im_from_result:
+    ? forall x, y, result &GaussInt:
+        result = gauss_mul(x, y)
+        =>:
+            result.im = x.real * y.im + x.im * y.real
     gauss_mul(x, y) = (x.real * y.real - x.im * y.im, x.real * y.im + x.im * y.real)
-    gauss_mul(x, y).real = gauss_mul(x, y)[1] = x.real * y.real - x.im * y.im
+    result = gauss_mul(x, y) = (x.real * y.real - x.im * y.im, x.real * y.im + x.im * y.real)
+    result.im = result[2] = x.real * y.im + x.im * y.real
 
 thm gauss_mul_im:
     ? forall x, y &GaussInt:
         gauss_mul(x, y).im = x.real * y.im + x.im * y.real
-    gauss_mul(x, y) = (x.real * y.real - x.im * y.im, x.real * y.im + x.im * y.real)
-    gauss_mul(x, y).im = gauss_mul(x, y)[2] = x.real * y.im + x.im * y.real
+    by thm gauss_mul_im_from_result(x, y, gauss_mul(x, y))
 
 prop is_commutative_ring(s nonempty_set, add fn(x, y s) s, zero s, neg fn(x s) s, mul fn(x, y s) s, one s):
     $MILAlternative::chap2_struct::ring_laws(s, add, zero, neg, mul, one)
@@ -502,15 +534,42 @@ thm gauss_conj_closed:
 
 have fn gauss_conj(x &GaussInt) &GaussInt = (x.real, -x.im)
 
+thm gauss_conj_re_from_result:
+    ? forall x, result &GaussInt:
+        result = gauss_conj(x)
+        =>:
+            result.real = x.real
+    gauss_conj(x) = (x.real, -x.im)
+    result = gauss_conj(x) = (x.real, -x.im)
+    result.real = result[1] = x.real
+
+thm gauss_conj_re:
+    ? forall x &GaussInt:
+        gauss_conj(x).real = x.real
+    by thm gauss_conj_re_from_result(x, gauss_conj(x))
+
+thm gauss_conj_im_from_result:
+    ? forall x, result &GaussInt:
+        result = gauss_conj(x)
+        =>:
+            result.im = -x.im
+    gauss_conj(x) = (x.real, -x.im)
+    result = gauss_conj(x) = (x.real, -x.im)
+    result.im = result[2] = -x.im
+
+thm gauss_conj_im:
+    ? forall x &GaussInt:
+        gauss_conj(x).im = -x.im
+    by thm gauss_conj_im_from_result(x, gauss_conj(x))
+
 thm gauss_norm_conj:
     ? forall x &GaussInt:
         gauss_norm(gauss_conj(x)) = gauss_norm(x)
     gauss_conj(x) $in &GaussInt
     gauss_conj(x).real $in Z
     gauss_conj(x).im $in Z
-    gauss_conj(x) = (x.real, -x.im)
-    gauss_conj(x).real = gauss_conj(x)[1] = x.real
-    gauss_conj(x).im = gauss_conj(x)[2] = -x.im
+    by thm gauss_conj_re(x)
+    by thm gauss_conj_im(x)
     gauss_norm(gauss_conj(x)) = gauss_conj(x).real^2 + gauss_conj(x).im^2
     gauss_conj(x).real^2 + gauss_conj(x).im^2 = x.real^2 + (-x.im)^2
     gauss_norm(gauss_conj(x)) = x.real^2 + (-x.im)^2 = x.real^2 + x.im^2 = gauss_norm(x)

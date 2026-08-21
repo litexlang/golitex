@@ -510,7 +510,7 @@ impl Runtime {
                 Box::new(SuccessEvalStmtResult {
                     statement: s.clone(),
                     common: SuccessStmtCommonResult::new(SuccessInferResult::new()),
-                    reported_store_facts: vec![],
+                    execution: SuccessEvalStmtExecutionResult::SkippedByTrustedPrefix,
                 }),
             )
             .into()),

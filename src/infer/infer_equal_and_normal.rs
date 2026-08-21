@@ -18,24 +18,27 @@ impl Runtime {
         equal_fact: &EqualFact,
         infer_result: &mut SuccessInferResult,
         infer_step_description: &str,
-    ) -> Result<(), RuntimeError> {
+    ) -> Result<SuccessStoreFactResult, RuntimeError> {
         infer_result.new_fact(&inferred_fact);
-        self.store_with_well_defined_verification_and_infer_with_default_verify_state(
-            inferred_fact,
-        )
-        .map_err(|previous_error| {
-            RuntimeError::from(InferRuntimeError(RuntimeErrorStruct::new(
-                None,
-                format!(
-                    "failed to store inferred {} while inferring `{}`",
-                    infer_step_description, equal_fact
-                ),
-                equal_fact.line_file.clone(),
-                Some(previous_error),
-                vec![],
-            )))
-        })?;
-        Ok(())
+        let conclusion_fact = inferred_fact.clone();
+        let conclusion_infers = self
+            .store_with_well_defined_verification_and_infer_with_default_verify_state(inferred_fact)
+            .map_err(|previous_error| {
+                RuntimeError::from(InferRuntimeError(RuntimeErrorStruct::new(
+                    None,
+                    format!(
+                        "failed to store inferred {} while inferring `{}`",
+                        infer_step_description, equal_fact
+                    ),
+                    equal_fact.line_file.clone(),
+                    Some(previous_error),
+                    vec![],
+                )))
+            })?;
+        Ok(SuccessStoreFactResult::new(
+            conclusion_fact,
+            conclusion_infers,
+        ))
     }
 
     fn infer_equal_fact_cart_from_known_side(
@@ -48,7 +51,7 @@ impl Runtime {
     ) -> Result<(), RuntimeError> {
         let target_is_cart_fact =
             IsCartFact::new(target_obj.clone(), equal_fact.line_file.clone()).into();
-        self.store_inferred_fact_and_record_result(
+        let _ = self.store_inferred_fact_and_record_result(
             target_is_cart_fact,
             equal_fact,
             infer_result,
@@ -63,7 +66,7 @@ impl Runtime {
             equal_fact.line_file.clone(),
         )
         .into();
-        self.store_inferred_fact_and_record_result(
+        let _ = self.store_inferred_fact_and_record_result(
             cart_dim_equal_fact,
             equal_fact,
             infer_result,
@@ -88,13 +91,14 @@ impl Runtime {
         target_obj: &Obj,
         equal_fact: &EqualFact,
         infer_result: &mut SuccessInferResult,
+        known_side: KnownTupleEqualitySide,
     ) -> Result<(), RuntimeError> {
         if known_tuple_obj.args.len() < 2 {
             return Ok(());
         }
         let target_is_tuple_fact =
             IsTupleFact::new(target_obj.clone(), equal_fact.line_file.clone()).into();
-        self.store_inferred_fact_and_record_result(
+        let tuple_conclusion = self.store_inferred_fact_and_record_result(
             target_is_tuple_fact,
             equal_fact,
             infer_result,
@@ -109,12 +113,23 @@ impl Runtime {
             equal_fact.line_file.clone(),
         )
         .into();
-        self.store_inferred_fact_and_record_result(
+        let dimension_conclusion = self.store_inferred_fact_and_record_result(
             tuple_dim_equal_fact,
             equal_fact,
             infer_result,
             "tuple_dim fact",
         )?;
+
+        infer_result.add_rule_application(
+            InferRule::TupleEqualityWithKnownTupleImpliesTupleShape(
+                TupleEqualityWithKnownTupleImpliesTupleShapeInferRule {
+                    known_side,
+                    tuple_length: known_tuple_obj.args.len(),
+                },
+            ),
+            equal_fact.clone().into(),
+            vec![tuple_conclusion, dimension_conclusion],
+        );
 
         self.store_tuple_obj_and_cart(
             &target_obj.to_string(),
@@ -286,7 +301,7 @@ impl Runtime {
             return Ok(infer_result);
         }
         let derived: Fact = EqualFact::new(a, b, equal_fact.line_file.clone()).into();
-        self.store_inferred_fact_and_record_result(
+        let _ = self.store_inferred_fact_and_record_result(
             derived,
             equal_fact,
             &mut infer_result,
@@ -391,16 +406,20 @@ impl Runtime {
                 &equal_fact.right,
                 equal_fact,
                 &mut infer_result,
+                KnownTupleEqualitySide::Left,
             )?;
         }
 
-        if let Obj::Tuple(tuple) = &equal_fact.right {
-            self.infer_equal_fact_tuple_from_known_side(
-                tuple,
-                &equal_fact.left,
-                equal_fact,
-                &mut infer_result,
-            )?;
+        if !matches!(&equal_fact.left, Obj::Tuple(_)) {
+            if let Obj::Tuple(tuple) = &equal_fact.right {
+                self.infer_equal_fact_tuple_from_known_side(
+                    tuple,
+                    &equal_fact.left,
+                    equal_fact,
+                    &mut infer_result,
+                    KnownTupleEqualitySide::Right,
+                )?;
+            }
         }
 
         Ok(infer_result)
@@ -569,20 +588,20 @@ impl Runtime {
         };
         let mut infer_result = SuccessInferResult::new();
         let by_definition_reason = InferReason::ByDefinition;
+        let source_fact: Fact = normal_atomic_fact.clone().into();
 
-        let param_type_infer = self
-            .store_args_satisfy_param_type_when_not_defining_new_identifiers_with_reason(
+        let parameter_requirement_facts = self
+            .instantiate_argument_parameter_requirement_facts(
                 &predicate_definition.params_def_with_type,
                 &normal_atomic_fact.body,
                 normal_atomic_fact.line_file.clone(),
                 ParamObjType::DefHeader,
-                by_definition_reason.clone(),
             )
             .map_err(|previous_error| {
                 RuntimeError::from(InferRuntimeError(RuntimeErrorStruct::new(
                     None,
                     format!(
-                        "failed to verify parameter types for `{}`",
+                        "failed to instantiate parameter requirements for `{}`",
                         normal_atomic_fact
                     ),
                     normal_atomic_fact.line_file.clone(),
@@ -590,14 +609,47 @@ impl Runtime {
                     vec![],
                 )))
             })?;
-        infer_result.new_infer_result_inside(param_type_infer);
+        for (parameter_index, parameter_requirement_fact) in
+            parameter_requirement_facts.into_iter().enumerate()
+        {
+            let stored_parameter_requirement = self
+                .store_with_well_defined_verification_and_infer_with_default_verify_state_and_reason(
+                    parameter_requirement_fact.clone(),
+                    by_definition_reason.clone(),
+                )
+                .map_err(|previous_error| {
+                    RuntimeError::from(InferRuntimeError(RuntimeErrorStruct::new(
+                        None,
+                        format!(
+                            "failed to verify parameter type {} for `{}`",
+                            parameter_index, normal_atomic_fact
+                        ),
+                        normal_atomic_fact.line_file.clone(),
+                        Some(previous_error),
+                        vec![],
+                    )))
+                })?;
+            infer_result.add_rule_application_preserving_conclusion_result_structure(
+                InferRule::DefinedPredicateParameterRequirementProjection(
+                    DefinedPredicateParameterRequirementProjectionInferRule {
+                        predicate_name: predicate_name.clone(),
+                        parameter_index,
+                    },
+                ),
+                vec![source_fact.clone()],
+                vec![SuccessStoreFactResult::new(
+                    parameter_requirement_fact,
+                    stored_parameter_requirement,
+                )],
+            );
+        }
 
         let param_to_arg_map = self.params_to_arg_map(
             &predicate_definition.params_def_with_type,
             &normal_atomic_fact.body,
         )?;
 
-        for iff_fact in predicate_definition.iff_facts.iter() {
+        for (clause_index, iff_fact) in predicate_definition.iff_facts.iter().enumerate() {
             let instantiated_iff_fact = self
                 .inst_fact(
                     iff_fact,
@@ -618,7 +670,6 @@ impl Runtime {
                     )))
                 })?;
             let fact_to_store = instantiated_iff_fact;
-            infer_result.add_fact_by_definition(&fact_to_store);
             // A positive user prop recursively exposes positive user props in
             // its definition. Example: `Outer(x) := Inner(x)` and
             // `Inner(x) := x >= 0`, so `Outer(x)` infers `x >= 0`.
@@ -628,25 +679,118 @@ impl Runtime {
             // formal parameter facts when the prop was declared, typed,
             // capture-avoiding substitution preserves well-definedness.
             // The active-fact guard and firing cache stop cyclic definitions.
-            let store_result = self.store_without_well_defined_verification_and_infer_with_reason(
-                fact_to_store,
-                by_definition_reason.clone(),
+            let stored_clause = self
+                .store_without_well_defined_verification_and_infer_with_reason(
+                    fact_to_store.clone(),
+                    by_definition_reason.clone(),
+                )
+                .map_err(|previous_error| {
+                    RuntimeError::from(InferRuntimeError(RuntimeErrorStruct::new(
+                        None,
+                        format!(
+                            "failed to store instantiated iff fact while inferring `{}`",
+                            normal_atomic_fact
+                        ),
+                        normal_atomic_fact.line_file.clone(),
+                        Some(previous_error),
+                        vec![],
+                    )))
+                })?;
+            infer_result.add_rule_application_preserving_conclusion_result_structure(
+                InferRule::DefinedPredicateDefinitionClauseProjection(
+                    DefinedPredicateDefinitionClauseProjectionInferRule {
+                        predicate_name: predicate_name.clone(),
+                        clause_index,
+                    },
+                ),
+                vec![source_fact.clone()],
+                vec![SuccessStoreFactResult::new(fact_to_store, stored_clause)],
             );
-            store_result.map_err(|previous_error| {
-                RuntimeError::from(InferRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    format!(
-                        "failed to store instantiated iff fact while inferring `{}`",
-                        normal_atomic_fact
-                    ),
-                    normal_atomic_fact.line_file.clone(),
-                    Some(previous_error),
-                    vec![],
-                )))
-            })?;
         }
 
         self.store_infer_rule_firing(firing_key);
         Ok(infer_result)
+    }
+}
+
+#[cfg(test)]
+mod defined_predicate_inference_result_tests {
+    use crate::output::display_stmt_result_json_v2;
+    use crate::prelude::*;
+
+    #[test]
+    fn defined_predicate_inference_retains_parameter_and_clause_projection_results() {
+        let mut runtime = Runtime::new();
+        runtime.new_file_path_new_env_new_name_scope("defined_predicate_inference_result_test.lit");
+        let (results, error) = run_source_code(
+            "prop same_set(x set, y set):\n    x = y\ntrust R $same_set C",
+            &mut runtime,
+        );
+        assert!(error.is_none(), "{error:?}");
+        let [_, trust_result] = results.as_slice() else {
+            panic!("expected predicate definition followed by one trust Result")
+        };
+        let StmtResult::Success(SuccessStmtResult::UnsafeStmt(SuccessUnsafeStmtResult::TrustStmt(
+            trust,
+        ))) = trust_result
+        else {
+            panic!("expected a successful trust Result")
+        };
+        let [source_output] = trust.common.infers.store_fact_outputs.as_slice() else {
+            panic!("trust must retain one source store output")
+        };
+        let source_fact_id = source_output.fact_id.expect("source trust FactId");
+        assert_eq!(trust.common.infers.rule_applications.len(), 3);
+        for application in &trust.common.infers.rule_applications {
+            let [premise] = application.premises.as_slice() else {
+                panic!("defined-predicate projection must retain one premise")
+            };
+            assert_eq!(premise.fact.to_string(), "$same_set(R, C)");
+            assert_eq!(premise.fact_id, Some(source_fact_id));
+            let [conclusion] = application.conclusions.as_slice() else {
+                panic!("defined-predicate projection must retain one conclusion")
+            };
+            assert!(conclusion.fact_id.is_some());
+        }
+        assert!(matches!(
+            trust.common.infers.rule_applications[0].rule,
+            InferRule::DefinedPredicateParameterRequirementProjection(
+                DefinedPredicateParameterRequirementProjectionInferRule {
+                    parameter_index: 0,
+                    ..
+                }
+            )
+        ));
+        assert!(matches!(
+            trust.common.infers.rule_applications[1].rule,
+            InferRule::DefinedPredicateParameterRequirementProjection(
+                DefinedPredicateParameterRequirementProjectionInferRule {
+                    parameter_index: 1,
+                    ..
+                }
+            )
+        ));
+        assert!(matches!(
+            trust.common.infers.rule_applications[2].rule,
+            InferRule::DefinedPredicateDefinitionClauseProjection(
+                DefinedPredicateDefinitionClauseProjectionInferRule {
+                    clause_index: 0,
+                    ..
+                }
+            )
+        ));
+        assert_eq!(
+            trust.common.infers.rule_applications[2].conclusions[0]
+                .fact
+                .to_string(),
+            "R = C"
+        );
+
+        let json = display_stmt_result_json_v2(trust_result);
+        assert!(json.contains("DefinedPredicateParameterRequirementProjection"));
+        assert!(json.contains("DefinedPredicateDefinitionClauseProjection"));
+        assert!(json.contains("\"predicate_name\": \"same_set\""));
+        assert!(json.contains("\"parameter_index\": 0"));
+        assert!(json.contains("\"clause_index\": 0"));
     }
 }

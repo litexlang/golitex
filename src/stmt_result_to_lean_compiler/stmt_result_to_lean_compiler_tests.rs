@@ -1,6 +1,7 @@
 use litex::litex_to_lean_ir::capture_litex_to_lean_ir_from_source;
 use litex::stmt_result_to_lean_compiler::compile_litex_source_to_lean_source;
 use litex::stmt_result_to_lean_compiler::{
+    compile_litex_source_to_lean_source_rejecting_compatibility_adapter_for_audit,
     compile_litex_source_to_stmt_result_to_lean_compilation_report,
     StmtResultToLeanCompilationPhase, StmtResultToLeanCompilationStatus,
 };
@@ -13,6 +14,23 @@ fn compile_on_verifier_stack(source: &'static str, label: &'static str) -> Resul
         .expect("spawn compiler verifier thread")
         .join()
         .expect("compiler verifier thread panicked")
+}
+
+fn compile_direct_result_only_on_verifier_stack(
+    source: &'static str,
+    label: &'static str,
+) -> Result<String, String> {
+    std::thread::Builder::new()
+        .name(format!("direct-result-compiler-test-{label}"))
+        .stack_size(32 * 1024 * 1024)
+        .spawn(move || {
+            compile_litex_source_to_lean_source_rejecting_compatibility_adapter_for_audit(
+                source, label,
+            )
+        })
+        .expect("spawn direct Result compiler verifier thread")
+        .join()
+        .expect("direct Result compiler verifier thread panicked")
 }
 
 fn capture_ir_debug_on_verifier_stack(
@@ -30,6 +48,44 @@ fn capture_ir_debug_on_verifier_stack(
         .expect("spawn compiler IR verifier thread")
         .join()
         .expect("compiler IR verifier thread panicked")
+}
+
+#[test]
+fn nonempty_set_witness_compiles_its_local_result_and_membership_evidence() {
+    let generated = compile_direct_result_only_on_verifier_stack(
+        "witness $is_nonempty_set({1, 2}) from 1:\n    do_nothing\n",
+        "nonempty_set_witness_result.lit",
+    )
+    .expect("compile a nonempty-set witness from recursive Results");
+    assert!(generated.contains("Litex.Set.Nonempty"), "{generated}");
+    assert!(generated.contains("Litex.Set.coproduct"), "{generated}");
+    assert!(generated.contains("__nonempty_witness"), "{generated}");
+    assert!(generated.contains("Litex.Same.sumLeft"), "{generated}");
+    assert!(!generated.contains("axiom "), "{generated}");
+    assert!(!generated.contains("sorry"), "{generated}");
+}
+
+#[test]
+fn predicate_backed_witness_compiles_all_retained_fact_ids() {
+    let generated = compile_on_verifier_stack(
+        "prop has_copy(a R):\n    exist x R st {x = a}\nwitness $has_copy(2) from 2:\n    2 = 2\n",
+        "predicate_backed_witness_result.lit",
+    )
+    .expect("compile a concrete-predicate witness from recursive Results");
+    assert!(generated.contains("def has_copy"), "{generated}");
+    assert!(generated.contains("unfold has_copy"), "{generated}");
+    assert_eq!(
+        generated.matches("theorem __fact").count(),
+        3,
+        "{generated}"
+    );
+    assert!(
+        generated.contains("Litex.In (2 : ℂ) Litex.R"),
+        "{generated}"
+    );
+    assert!(generated.contains("∃ (x : ℂ)"), "{generated}");
+    assert!(!generated.contains("axiom "), "{generated}");
+    assert!(!generated.contains("sorry"), "{generated}");
 }
 
 #[test]
@@ -61,8 +117,8 @@ fn nested_forall_premises_replay_parameter_aliases_and_normalization() {
         "nested_forall_probe.lit",
     )
     .expect("compile a nested forall premise");
-    assert!(generated.contains("(__h0_2 : ∀"), "{generated}");
-    assert!(generated.contains("convert (__h0_2"), "{generated}");
+    assert!(generated.contains("(__domain1 : ∀"), "{generated}");
+    assert!(generated.contains("convert (__domain1"), "{generated}");
     assert!(
         generated.contains("Litex.Rules.complexAddInR"),
         "{generated}"
@@ -141,10 +197,11 @@ fn order_tracer_consumes_registered_rule_certificate() {
         "2_OrderSystem.lit",
     )
     .expect("compile order tracer");
-    assert!(generated.contains("Litex.Lt.toLe __h0_3"));
-    assert!(generated.contains("Litex.Le a b"));
-    assert!(generated.contains("Litex.Lt.trans (__h1_4) (__h1_5)"));
-    assert!(generated.contains("Litex.Lt a c"));
+    assert!(generated.contains("Litex.Lt.toLe (__domain1)"));
+    assert!(generated.contains("Litex.In.rep a"));
+    assert!(generated.contains("Litex.In.rep b"));
+    assert!(generated.contains("Litex.Lt.trans (__domain1) (__domain2)"));
+    assert!(generated.contains("Litex.In.rep c"));
     assert!(!generated.contains("RealCoherence"));
     assert!(!generated.contains("sorry"));
 
@@ -265,6 +322,8 @@ fn positive_natural_uses_exact_subtype_and_projection() {
         "Litex.In (1 : ℂ) Litex.NPos",
         "Litex.Rules.complexEqNatInNPos (1 : ℂ) 1 (by norm_num) (by norm_num)",
         "Litex.Rules.inNOfInNPos",
+        "have __infer",
+        "Litex.Rules.positiveOfInNPos (__h",
     ] {
         assert!(
             generated.contains(expected),
@@ -315,6 +374,8 @@ fn positive_real_uses_exact_subtype_projection_and_elimination() {
         "Litex.Rules.inROfInRPos",
         "Litex.Rules.inCOfInR",
         "Litex.Rules.positiveOfInRPos",
+        "have __infer",
+        "Litex.Rules.positiveOfInRPos (__h",
     ] {
         assert!(
             generated.contains(expected),
@@ -359,20 +420,6 @@ fn nonzero_numeric_carriers_replay_exact_constructors_and_widening() {
         );
     }
 
-    let ir = capture_ir_debug_on_verifier_stack(SOURCE, "22_NonzeroNumericCarriers.lit")
-        .expect("capture nonzero numeric-carrier tracer IR");
-    assert_eq!(ir.matches("NonzeroNumericMembership,\n").count(), 4, "{ir}");
-    assert_eq!(
-        ir.matches("NonzeroNumericMembershipElimination").count(),
-        4,
-        "{ir}"
-    );
-    assert_eq!(
-        ir.matches("StandardSetMembershipProjection").count(),
-        22,
-        "{ir}"
-    );
-
     let generated = compile_on_verifier_stack(SOURCE, "22_NonzeroNumericCarriers.lit")
         .expect("compile nonzero numeric-carrier tracer");
     for theorem in [
@@ -397,6 +444,20 @@ fn nonzero_numeric_carriers_replay_exact_constructors_and_widening() {
             "missing {theorem}: {generated}"
         );
     }
+    assert!(
+        generated.contains(
+            "(Litex.Rules.notSameZeroOfInCStar (__membership)) (Litex.Same.refl (0 : ℂ))"
+        ),
+        "closed C* nonmembership did not compile from its direct Result evidence: {generated}"
+    );
+    assert!(generated.contains("have __infer"), "{generated}");
+    assert!(
+        generated.contains("Litex.Rules.notSameZeroOfInZStar (__h")
+            && generated.contains("Litex.Rules.notSameZeroOfInQStar (__h")
+            && generated.contains("Litex.Rules.notSameZeroOfInRStar (__h")
+            && generated.contains("Litex.Rules.notSameZeroOfInCStar (__h"),
+        "nonzero inference did not stay inside its forall frames: {generated}"
+    );
     assert!(!generated.contains("LitexObject"));
     assert!(!generated.contains("Litex.Object"));
     assert!(!generated.contains("Set.univ"));
@@ -416,7 +477,7 @@ fn nonzero_numeric_carriers_replay_exact_constructors_and_widening() {
 
 #[test]
 fn numeric_carrier_closures_replay_exact_rules() {
-    const SOURCE: &str = "forall a, b C:\n    a + b $in C\n\nforall a, b C:\n    a - b $in C\n\nforall a, b C:\n    a * b $in C\n\nforall a, b C:\n    b != 0\n    =>:\n        a / b $in C\n\nforall a, b Z:\n    a + b $in Z\n\nforall a, b Z:\n    a - b $in Z\n\nforall a, b Z:\n    a * b $in Z\n";
+    const SOURCE: &str = "forall a, b C:\n    a + b $in C\n\nforall a, b C:\n    a - b $in C\n\nforall a, b C:\n    a * b $in C\n\nforall a, b C:\n    b != 0\n    =>:\n        a / b $in C\n\nforall a, b Z:\n    a + b $in Z\n\nforall a, b Z:\n    a - b $in Z\n\nforall a, b Z:\n    a * b $in Z\n\nforall a, b Z:\n    b != 0\n    =>:\n        a % b $in Z\n";
     let ir = capture_ir_debug_on_verifier_stack(SOURCE, "17_NumericCarrierClosures.lit")
         .expect("capture numeric carrier-closure tracer IR");
     assert_eq!(
@@ -424,7 +485,7 @@ fn numeric_carrier_closures_replay_exact_rules() {
         4,
         "{ir}"
     );
-    assert_eq!(ir.matches("IntegerMembershipClosure").count(), 3, "{ir}");
+    assert_eq!(ir.matches("IntegerMembershipClosure").count(), 4, "{ir}");
 
     let generated = compile_on_verifier_stack(SOURCE, "17_NumericCarrierClosures.lit")
         .expect("compile numeric carrier-closure tracer");
@@ -436,6 +497,7 @@ fn numeric_carrier_closures_replay_exact_rules() {
         "complexAddInZ",
         "complexSubInZ",
         "complexMulInZ",
+        "complexIntInZ",
     ] {
         assert!(
             generated.contains(&format!("Litex.Rules.{theorem}")),
@@ -447,26 +509,20 @@ fn numeric_carrier_closures_replay_exact_rules() {
     assert!(!generated.contains("Set.univ"));
     assert!(!generated.contains("axiom "));
     assert!(!generated.contains("sorry"));
-
-    let boundary = compile_on_verifier_stack(
-        "forall a, b Z:\n    b != 0\n    =>:\n        a % b $in Z\n",
-        "unsupported_integer_remainder_closure.lit",
-    )
-    .expect_err("integer remainder needs a reviewed source-term ABI");
     assert!(
-        boundary.contains("unsupported compiler object")
-            || boundary.contains("unsupported typed builtin object `Mod`")
-            || boundary.contains("unsupported integer membership closure rule: Mod"),
-        "unexpected boundary error: {boundary}"
+        generated.contains("Litex.In.rep a __h7_1")
+            && generated.contains("Litex.In.rep b __h7_2")
+            && generated.contains(" % "),
+        "integer remainder did not consume its two exact visible representatives: {generated}"
     );
 }
 
 #[test]
 fn rational_and_natural_carrier_closures_replay_exact_rules() {
-    const SOURCE: &str = "forall a, b Q:\n    a + b $in Q\n\nforall a, b Q:\n    a - b $in Q\n\nforall a, b Q:\n    a * b $in Q\n\nforall a, b Q:\n    b != 0\n    =>:\n        a / b $in Q\n\nforall a, b N:\n    a + b $in N\n\nforall a, b N:\n    a * b $in N\n";
+    const SOURCE: &str = "forall a, b Q:\n    a + b $in Q\n\nforall a, b Q:\n    a - b $in Q\n\nforall a, b Q:\n    a * b $in Q\n\nforall a, b Q:\n    b != 0\n    =>:\n        a / b $in Q\n\nforall a, b N:\n    a + b $in N\n\nforall a, b N:\n    a * b $in N\n\nforall a Q, z Z:\n    a != 0\n    =>:\n        a^z $in Q\n";
     let ir = capture_ir_debug_on_verifier_stack(SOURCE, "18_RationalNaturalClosures.lit")
         .expect("capture rational/natural carrier-closure tracer IR");
-    assert_eq!(ir.matches("RationalMembershipClosure").count(), 4, "{ir}");
+    assert_eq!(ir.matches("RationalMembershipClosure").count(), 5, "{ir}");
     assert_eq!(ir.matches("NaturalMembershipClosure").count(), 2, "{ir}");
 
     let generated = compile_on_verifier_stack(SOURCE, "18_RationalNaturalClosures.lit")
@@ -489,22 +545,18 @@ fn rational_and_natural_carrier_closures_replay_exact_rules() {
     assert!(!generated.contains("Set.univ"));
     assert!(!generated.contains("axiom "));
     assert!(!generated.contains("sorry"));
-
-    const BOUNDARY: &str = "forall a Q, z Z:\n    a != 0\n    =>:\n        a^z $in Q\n";
-    let boundary_ir =
-        capture_ir_debug_on_verifier_stack(BOUNDARY, "unsupported_rational_power_closure.lit")
-            .expect("rational power boundary must verify and retain exact evidence");
+    assert_eq!(generated.matches("have __infer4_").count(), 2);
+    assert_eq!(generated.matches("have __infer5_").count(), 2);
+    assert!(generated.contains("Litex.Rules.nonnegativeOfInN (__h4_1)"));
+    assert!(generated.contains("Litex.Rules.complexEqNatInN"));
+    assert!(!generated.contains("complexAddInN (__h4_1)"));
+    assert!(!generated.contains("complexMulInN (__h5_1)"));
     assert!(
-        boundary_ir.contains("RationalMembershipClosure") && boundary_ir.contains("Pow"),
-        "unexpected boundary IR: {boundary_ir}"
-    );
-    let boundary = compile_on_verifier_stack(BOUNDARY, "unsupported_rational_power_closure.lit")
-        .expect_err("rational power needs a reviewed source-term ABI");
-    assert!(
-        boundary.contains("unsupported compiler object")
-            || boundary.contains("unsupported typed builtin object `Pow`")
-            || boundary.contains("unsupported rational membership closure rule: Pow"),
-        "unexpected boundary error: {boundary}"
+        generated.contains("Litex.In.rep a __h6_1")
+            && generated.contains("Litex.In.rep z __h6_2")
+            && generated.contains("Litex.Rules.complexRatInQ")
+            && generated.contains(" ^ "),
+        "rational power did not consume its exact Q/Z representatives: {generated}"
     );
 }
 
@@ -520,8 +572,8 @@ fn known_equality_paths_replay_same_symmetry_and_transitivity() {
 
     let generated = compile_on_verifier_stack(SOURCE, "known_equality.lit")
         .expect("compile exact known-equality paths");
-    assert!(generated.contains("Litex.Same.symm (__h0_3)"));
-    assert!(generated.contains("Litex.Same.trans (__h1_4) (__h1_5)"));
+    assert!(generated.contains("Litex.Same.symm (__domain1)"));
+    assert!(generated.contains("Litex.Same.trans (__domain1) (__domain2)"));
     assert!(!generated.contains("Eq.symm"));
     assert!(!generated.contains("Eq.trans"));
 }
@@ -533,9 +585,9 @@ fn not_equal_symmetry_negates_heterogeneous_same() {
         "not_equal_symmetry.lit",
     )
     .expect("compile not-equality symmetry");
-    assert!(generated.contains("(__h0_3 : ¬ Litex.Same a b)"));
+    assert!(generated.contains("(__domain1 : ¬ Litex.Same __p1 __p2)"));
     assert!(generated.contains("¬ Litex.Same b a"));
-    assert!(generated.contains("Litex.Rules.notSameSymm (__h0_3)"));
+    assert!(generated.contains("Litex.Rules.notSameSymm (__domain1)"));
 }
 
 #[test]
@@ -547,9 +599,12 @@ fn conjunction_disjunction_and_alpha_forall_citations_replay_exact_evidence() {
     .expect("compile propositional proof spine");
     assert!(generated.contains("Litex.Same (1 : ℂ) (1 : ℂ) ∧ Litex.Same (2 : ℂ) (2 : ℂ)"));
     assert!(generated.contains("exact ⟨Litex.Same.refl (1 : ℂ), Litex.Same.refl (2 : ℂ)⟩"));
-    assert!(generated.contains("have __c1_0 : Litex.Same a a ∧ Litex.Same b b := ⟨__h1_3, __h1_4⟩"));
+    assert!(generated
+        .contains("have __c1_0 : Litex.Same a a ∧ Litex.Same b b := ⟨__domain1, __domain2⟩"));
     assert!(generated.contains("exact __c1_0"));
-    assert!(generated.contains("have __c2_0 : Litex.Same a a ∨ Litex.Same b b := Or.inl (__h2_3)"));
+    assert!(
+        generated.contains("have __c2_0 : Litex.Same a a ∨ Litex.Same b b := Or.inl (__domain1)")
+    );
     assert!(generated.contains("exact __c2_0"));
     assert!(generated.contains("theorem __fact4 :\n    ∀ (__p1 : Litex.Set) (__p2 : Litex.Set)"));
     assert!(generated.contains(":= __fact3"));
@@ -577,10 +632,13 @@ fn unary_function_set_application_consumes_both_memberships() {
     .expect("compile unary function-set tracer");
     assert!(generated.contains("import Litex\n"));
     assert!(!generated.contains("import Litex.Rules\n"));
-    assert!(generated.contains("(s : Litex.Set)"));
-    assert!(generated.contains("(S : Litex.Set)"));
-    assert!(generated.contains("Litex.In x s"));
-    assert!(generated.contains("Litex.In f (Litex.fnSet (s : Litex.Set.{0}) (S : Litex.Set.{0}))"));
+    assert!(generated.contains("(__p1 : Litex.Set)"));
+    assert!(generated.contains("(__p2 : Litex.Set)"));
+    assert!(generated.contains("Litex.In __p3 __p1"), "{generated}");
+    assert!(
+        generated.contains("__type4 : Litex.In __p4 (Litex.fnSet"),
+        "{generated}"
+    );
     assert!(generated.contains("Litex.fnApply f __h0_4 x (__h0_3)"));
     assert!(!generated.contains("namespace __Sketch"));
     assert!(!generated.contains("sorry"));
@@ -598,7 +656,7 @@ fn multilayer_application_preserves_each_unary_source_contract() {
 
     let generated = compile_on_verifier_stack(SOURCE, "23_MultilayerApplication.lit")
         .expect("compile multi-layer application tracer");
-    assert!(generated.contains("Litex.In g (Litex.fnSet"));
+    assert!(generated.contains("Litex.In __p6 (Litex.fnSet"));
     assert!(generated.contains("let __fn_layer1 := (Litex.fnApply g __h0_6 a (__h0_4))"));
     assert!(generated.contains("Litex.fnApplyOwn __fn_layer1"));
     assert!(generated.contains("(Litex.In.own (Litex.fnSet"));
@@ -867,7 +925,7 @@ fn existential_elimination_statement_adapters_share_recursive_result_compilation
 
 #[test]
 fn object_definitions_emit_native_values_and_replay_definition_evidence() {
-    let generated = compile_on_verifier_stack(
+    let generated = compile_direct_result_only_on_verifier_stack(
         "let x = 1\nx = 1\nhave y R = 1\ny $in R\ny = 1\nthm local_definition:\n    ? forall:\n        2 = 2\n    let z = 2\n    z = 2\n",
         "11_ObjectDefinitions.lit",
     )
@@ -885,7 +943,7 @@ fn object_definitions_emit_native_values_and_replay_definition_evidence() {
 
 #[test]
 fn named_real_functions_compile_compound_bodies_and_domain_clauses() {
-    let generated = compile_on_verifier_stack(
+    let generated = compile_direct_result_only_on_verifier_stack(
         "have fn id(x R) R = x\nid(1) = 1\nhave fn inc(x R) R = x + 1\ninc(1) = 1 + 1\nhave fn reciprocal(x R: x != 0) R = 1 / x\nforall a R:\n    a != 0\n    =>:\n        reciprocal(a) = 1 / a\nhave fn into_builder(x R) {z R: z = z} = x\ninto_builder(1) = 1\n",
         "12_NamedFunction.lit",
     )
@@ -900,6 +958,8 @@ fn named_real_functions_compile_compound_bodies_and_domain_clauses() {
     assert!(generated.contains("Litex.fnSetWhere Litex.R Litex.R"));
     assert!(generated.contains("Litex.fnApplyWhereOwn reciprocal"));
     assert!(generated.contains("Litex.Same.realDivComplex"));
+    assert!(generated.contains("Litex.Same.realComplex ((Litex.In.rep a "));
+    assert!(!generated.contains("Litex.Same.symm (Litex.In.same_rep a (__h8_1))"));
     assert!(generated.contains("noncomputable def into_builder : Litex.FnTelescope.Carrier"));
     assert!(generated.contains("Litex.setBuilder Litex.R"));
     assert!(generated.contains("Litex.Rules.inSetBuilder"));
@@ -1014,6 +1074,10 @@ fn builtin_strategy_ir_marks_each_selected_layer_and_replays_exact_rules() {
             .count(),
         1
     );
+    assert!(generated.contains("Litex.Positive.congr (Litex.Same.trans"));
+    assert!(generated.contains("Litex.Nonnegative.congr (Litex.Same.trans"));
+    assert!(generated.contains("Litex.In.same_rep a"));
+    assert!(generated.contains("Litex.Same.realComplex (Litex.In.rep a"));
     assert!(!generated.contains("UseBuiltinStrategy"));
     assert!(!generated.contains("sorry"));
 
@@ -1032,6 +1096,8 @@ fn builtin_strategy_ir_marks_each_selected_layer_and_replays_exact_rules() {
         compile_on_verifier_stack(REAL_ADDITION_CARRIER_SOURCE, "15_BuiltinStrategy.lit")
             .expect("compile real-addition carrier tracer");
     assert!(carrier_generated.contains("Litex.Rules.complexAddInR"));
+    assert!(carrier_generated.contains("Litex.Rules.complexRealInR ((Litex.In.rep a"));
+    assert!(carrier_generated.contains("Litex.Rules.complexRealInR ((Litex.In.rep b"));
 
     const RIGHT_STRICT_SOURCE: &str = "forall a, b, c, d R:\n    a >= 0\n    b >= 0\n    c >= 0\n    d > 0\n    =>:\n        (a + b) + (c + d) > 0\n";
     let right_ir =

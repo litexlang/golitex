@@ -714,7 +714,25 @@ pub struct SuccessClearStmtResult {
 pub struct SuccessEvalStmtResult {
     pub statement: EvalStmt,
     pub common: SuccessStmtCommonResult,
-    pub reported_store_facts: Vec<SuccessStoreFactOutput>,
+    /// The execution layer selected for this `eval`. A trusted-prefix pass can
+    /// deliberately skip evaluation; ordinary execution owns the exact source
+    /// and resulting object and, when available, the recursive numeric
+    /// computation selected by the evaluator.
+    pub execution: SuccessEvalStmtExecutionResult,
+}
+
+pub enum SuccessEvalStmtExecutionResult {
+    SkippedByTrustedPrefix,
+    Evaluated(Box<SuccessEvaluatedEvalStmtResult>),
+}
+
+pub struct SuccessEvaluatedEvalStmtResult {
+    pub source_object: Obj,
+    pub evaluated_object: Obj,
+    /// Closed numeric evaluation already has a complete recursive result.
+    /// Other runtime algorithms remain explicit but fail closed in the
+    /// standalone compiler until they gain their own typed computation tree.
+    pub recursive_numeric_evaluation: Option<SuccessEvaluateObjResult>,
 }
 
 pub struct SuccessUseStrategyStmtResult {
@@ -1404,7 +1422,7 @@ fn visit_prop_registration_children(
         for step in &verification.proof_steps {
             visitor(step);
         }
-        visitor(&verification.conclusion_check);
+        visitor(&verification.forall_check);
     }
 }
 
@@ -1416,7 +1434,7 @@ fn try_visit_prop_registration_children_mut<E>(
         for step in &mut verification.proof_steps {
             visitor(step)?;
         }
-        visitor(&mut verification.conclusion_check)?;
+        visitor(&mut verification.forall_check)?;
     }
     Ok(())
 }
@@ -1428,7 +1446,7 @@ fn into_prop_registration_children(
     let mut children = Vec::new();
     if let Some(verification) = verification {
         children.extend(verification.proof_steps);
-        children.push(*verification.conclusion_check);
+        children.push(*verification.forall_check);
     }
     children
 }

@@ -6,33 +6,39 @@ impl Runtime {
         stmt: &DefStrategyStmt,
     ) -> Result<StmtResult, RuntimeError> {
         let strategy_name = stmt.name.clone();
-        self.verify_fact_well_defined(
-            &Fact::ForallFact(stmt.forall_fact.clone()),
-            &UseContextVerifyState::new(0, false),
-        )
-        .map_err(|e| {
-            short_exec_error(
-                stmt.clone().into(),
-                "strategy: forall fact is not well defined".to_string(),
-                Some(e),
-                vec![],
+        let well_definedness = self
+            .verify_fact_well_defined_result(
+                &Fact::ForallFact(stmt.forall_fact.clone()),
+                &UseContextVerifyState::new(0, false),
             )
-        })?;
-
-        let body_exec_result: StmtResult = self.run_in_local_env(|rt| {
-            rt.define_params_with_type(
-                &stmt.forall_fact.params_def_with_type,
-                false,
-                ParamObjType::Forall,
-            )
-            .map_err(|define_params_error| {
-                exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), define_params_error)
+            .map_err(|e| {
+                short_exec_error(
+                    stmt.clone().into(),
+                    "strategy: forall fact is not well defined".to_string(),
+                    Some(e),
+                    vec![],
+                )
             })?;
 
+        let body_exec_result: StmtResult = self.run_in_local_env(|rt| {
+            let mut assumption_infers = rt
+                .define_params_with_type(
+                    &stmt.forall_fact.params_def_with_type,
+                    false,
+                    ParamObjType::Forall,
+                )
+                .map_err(|define_params_error| {
+                    exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), define_params_error)
+                })?;
+
             for dom_fact in stmt.forall_fact.dom_facts.iter() {
-                rt.store_with_well_defined_verification_and_infer_with_default_verify_state(
-                    dom_fact.clone(),
-                )?;
+                let mut dom_infers = rt
+                    .store_with_well_defined_verification_and_infer_with_default_verify_state(
+                        dom_fact.clone(),
+                    )?;
+                dom_infers
+                    .relabel_all_added_facts_with_store_reason(ForallFact::premise_store_reason());
+                assumption_infers.new_infer_result_inside(dom_infers);
             }
 
             let mut proof_steps = vec![];
@@ -94,14 +100,29 @@ impl Runtime {
                 conclusion_checks.push(result);
             }
 
+            // These assumptions and proof children belong to the strategy's
+            // temporary forall scope. Freeze their exact identities before
+            // `run_in_local_env` removes that Runtime environment.
+            rt.attach_known_fact_ids_to_infer_result(&mut assumption_infers)?;
+            for result in proof_steps.iter_mut() {
+                rt.attach_known_fact_ids_to_stmt_result(result)?;
+            }
+            for result in conclusion_checks.iter_mut() {
+                rt.attach_known_fact_ids_to_stmt_result(result)?;
+            }
+
             Ok(
                 SuccessStmtResult::DefStrategyStmt(Box::new(SuccessDefStrategyStmtResult {
                     statement: stmt.clone(),
                     common: SuccessStmtCommonResult::new(SuccessInferResult::new()),
-                    verification: Some(SuccessVerifyStrategyDefinitionResult {
+                    verification: Some(SuccessVerifyStrategyDefinitionResult::new(
+                        stmt.name.clone(),
+                        stmt.forall_fact.clone(),
+                        well_definedness,
+                        SuccessVerifyLocalProofScopeResult::new(assumption_infers, Vec::new()),
                         proof_steps,
                         conclusion_checks,
-                    }),
+                    )),
                 }))
                 .into(),
             )

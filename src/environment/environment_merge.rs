@@ -18,6 +18,9 @@ impl Environment {
     fn merge_defined_names(&mut self, child: &Environment) -> Result<(), RuntimeError> {
         for (name, definition) in child.symbols.iter() {
             if let Some(existing) = self.symbols.get(name) {
+                if same_symbol_definition(existing, definition) {
+                    continue;
+                }
                 return Err(merge_name_conflict_error(
                     name,
                     existing.role().description(),
@@ -29,7 +32,10 @@ impl Environment {
         }
 
         for (name, kind) in child.defined_identifiers.iter() {
-            if self.defined_identifiers.contains_key(name) {
+            if let Some(existing_kind) = self.defined_identifiers.get(name) {
+                if existing_kind == kind && self.has_same_symbol_definition_as_child(child, name) {
+                    continue;
+                }
                 return Err(merge_name_conflict_error(name, "identifier"));
             }
             self.defined_identifiers.insert(name.clone(), kind.clone());
@@ -398,8 +404,11 @@ impl Environment {
     }
 
     fn validate_committed_child(&self, child: &Environment) -> Result<(), RuntimeError> {
-        for (name, _) in child.symbols.iter() {
+        for (name, child_definition) in child.symbols.iter() {
             if let Some(existing) = self.symbols.get(name) {
+                if same_symbol_definition(existing, child_definition) {
+                    continue;
+                }
                 return Err(merge_name_conflict_error(
                     name,
                     existing.role().description(),
@@ -407,8 +416,13 @@ impl Environment {
             }
         }
 
-        for name in child.defined_identifiers.keys() {
-            if self.defined_identifiers.contains_key(name) {
+        for (name, child_kind) in child.defined_identifiers.iter() {
+            if let Some(parent_kind) = self.defined_identifiers.get(name) {
+                if parent_kind == child_kind
+                    && self.has_same_symbol_definition_as_child(child, name)
+                {
+                    continue;
+                }
                 return Err(merge_name_conflict_error(name, "identifier"));
             }
         }
@@ -492,6 +506,17 @@ impl Environment {
 
         Ok(())
     }
+
+    fn has_same_symbol_definition_as_child(&self, child: &Environment, name: &str) -> bool {
+        self.symbols
+            .get(name)
+            .zip(child.symbols.get(name))
+            .is_some_and(|(parent, child)| same_symbol_definition(parent, child))
+    }
+}
+
+fn same_symbol_definition(left: &SymbolDefinition, right: &SymbolDefinition) -> bool {
+    left.binding().id() == right.binding().id() && left.role() == right.role()
 }
 
 fn merge_name_conflict_error(name: &str, existing_namespace: &str) -> RuntimeError {
@@ -629,5 +654,119 @@ fn merge_known_fn_info_map_entry(
     }
     if let Some(equal_to) = child_info.equal_to {
         parent_info.equal_to = Some(equal_to);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn insert_object(
+        environment: &mut Environment,
+        name: &str,
+        symbol_id: u64,
+        kind: ParamObjType,
+    ) {
+        insert_symbol(environment, name, symbol_id, SymbolRole::Object);
+        environment
+            .defined_identifiers
+            .insert(name.to_string(), kind);
+    }
+
+    fn insert_symbol(environment: &mut Environment, name: &str, symbol_id: u64, role: SymbolRole) {
+        let binding =
+            SymbolBinding::new(SymbolId::new(symbol_id), name.to_string(), name.to_string());
+        environment
+            .symbols
+            .insert(SymbolDefinition::new(binding, role))
+            .expect("test symbol name should be fresh");
+    }
+
+    #[test]
+    fn committed_child_reuses_exact_symbol_identity_idempotently() {
+        let mut parent = Environment::new_empty_env();
+        let mut child = Environment::new_empty_env();
+        insert_object(
+            &mut parent,
+            "\\template_instance<X>",
+            17,
+            ParamObjType::Identifier,
+        );
+        insert_object(
+            &mut child,
+            "\\template_instance<X>",
+            17,
+            ParamObjType::Identifier,
+        );
+
+        parent
+            .merge_committed_child(child)
+            .expect("the exact interned template instance is an idempotent commit");
+
+        assert_eq!(
+            parent
+                .symbols
+                .get("\\template_instance<X>")
+                .expect("parent symbol remains present")
+                .binding()
+                .id(),
+            SymbolId::new(17)
+        );
+        assert_eq!(
+            parent.defined_identifiers.get("\\template_instance<X>"),
+            Some(&ParamObjType::Identifier)
+        );
+    }
+
+    #[test]
+    fn committed_child_still_rejects_same_name_with_distinct_symbol_identity() {
+        let mut parent = Environment::new_empty_env();
+        let mut child = Environment::new_empty_env();
+        insert_object(
+            &mut parent,
+            "\\template_instance<X>",
+            17,
+            ParamObjType::Identifier,
+        );
+        insert_object(
+            &mut child,
+            "\\template_instance<X>",
+            18,
+            ParamObjType::Identifier,
+        );
+
+        let error = parent
+            .merge_committed_child(child)
+            .expect_err("same spelling with a distinct identity must remain a conflict");
+
+        assert!(matches!(error, RuntimeError::NameAlreadyUsedError(_)));
+    }
+
+    #[test]
+    fn committed_child_still_rejects_same_symbol_identity_with_distinct_role() {
+        let mut parent = Environment::new_empty_env();
+        let mut child = Environment::new_empty_env();
+        insert_symbol(&mut parent, "shared", 17, SymbolRole::Object);
+        insert_symbol(&mut child, "shared", 17, SymbolRole::Predicate);
+
+        let error = parent
+            .merge_committed_child(child)
+            .expect_err("one symbol identity cannot change declaration role during commit");
+
+        assert!(matches!(error, RuntimeError::NameAlreadyUsedError(_)));
+    }
+
+    #[test]
+    fn committed_child_still_rejects_same_symbol_identity_with_distinct_identifier_kind() {
+        let mut parent = Environment::new_empty_env();
+        let mut child = Environment::new_empty_env();
+        insert_object(&mut parent, "shared", 17, ParamObjType::Identifier);
+        insert_object(&mut child, "shared", 17, ParamObjType::Forall);
+
+        let error = parent
+            .merge_committed_child(child)
+            .expect_err("one symbol identity cannot change identifier kind during commit");
+
+        assert!(matches!(error, RuntimeError::NameAlreadyUsedError(_)));
     }
 }

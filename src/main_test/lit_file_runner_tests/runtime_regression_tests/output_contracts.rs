@@ -2355,6 +2355,11 @@ by symmetric_prop:
             );
             assert!(run_output.contains("\"kind\": \"SuccessVerifyByInducResult\""));
             assert!(run_output.contains("\"kind\": \"SuccessVerifyByPropRegistrationResult\""));
+            assert!(
+                run_output.contains("\"forall_check\": {"),
+                "predicate registration JSON v2 should expose its complete recursive forall Result:\n{}",
+                run_output
+            );
             assert!(run_output.contains("\"kind\": \"TrustStmt\""));
             assert!(run_output.contains("\"statement\": \"$local_induc_p(n + 1)\""));
             assert!(!run_output.contains("\"base_case\": {"));

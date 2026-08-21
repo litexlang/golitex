@@ -9,9 +9,86 @@ pub struct SuccessInferResult {
     pub rule_applications: Vec<SuccessInferRuleApplicationResult>,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum InferRule {
     NaturalMembershipImpliesNonnegative,
+    PositiveStandardSetMembershipImpliesPositive(
+        PositiveStandardSetMembershipImpliesPositiveInferRule,
+    ),
+    NegativeStandardSetMembershipImpliesNegative(
+        NegativeStandardSetMembershipImpliesNegativeInferRule,
+    ),
+    NonzeroStandardSetMembershipImpliesNonzero(NonzeroStandardSetMembershipImpliesNonzeroInferRule),
+    SetBuilderBaseMembershipProjection,
+    SetBuilderPredicateProjection {
+        clause_index: usize,
+    },
+    DefinedPredicateParameterRequirementProjection(
+        DefinedPredicateParameterRequirementProjectionInferRule,
+    ),
+    DefinedPredicateDefinitionClauseProjection(DefinedPredicateDefinitionClauseProjectionInferRule),
+    RegisteredTransitivePredicateChainClosure(RegisteredTransitivePredicateChainClosureInferRule),
+    TupleEqualityWithKnownTupleImpliesTupleShape(
+        TupleEqualityWithKnownTupleImpliesTupleShapeInferRule,
+    ),
+    ListSetMembershipImpliesEqualityAlternatives(
+        ListSetMembershipImpliesEqualityAlternativesInferRule,
+    ),
+}
+
+/// `x $in {a_1, ..., a_n}` exposes exactly the ordered alternatives
+/// `x = a_1 or ... or x = a_n`. For a singleton the conclusion is the one
+/// equality itself. The source list remains in the premise Fact; this field
+/// freezes the arity so consumers reject a truncated or extended conclusion.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ListSetMembershipImpliesEqualityAlternativesInferRule {
+    pub element_count: usize,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum KnownTupleEqualitySide {
+    Left,
+    Right,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct TupleEqualityWithKnownTupleImpliesTupleShapeInferRule {
+    pub known_side: KnownTupleEqualitySide,
+    pub tuple_length: usize,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct PositiveStandardSetMembershipImpliesPositiveInferRule {
+    pub source_set: StandardSet,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct NegativeStandardSetMembershipImpliesNegativeInferRule {
+    pub source_set: StandardSet,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct NonzeroStandardSetMembershipImpliesNonzeroInferRule {
+    pub source_set: StandardSet,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct DefinedPredicateParameterRequirementProjectionInferRule {
+    pub predicate_name: String,
+    pub parameter_index: usize,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct DefinedPredicateDefinitionClauseProjectionInferRule {
+    pub predicate_name: String,
+    pub clause_index: usize,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct RegisteredTransitivePredicateChainClosureInferRule {
+    pub predicate_name: String,
+    pub start_object_index: usize,
+    pub end_object_index: usize,
 }
 
 #[derive(Clone, Debug)]
@@ -165,15 +242,44 @@ impl SuccessInferResult {
         premise: Fact,
         conclusions: Vec<SuccessStoreFactResult>,
     ) {
+        self.add_rule_application_with_premises(rule, vec![premise], conclusions);
+    }
+
+    pub fn add_rule_application_with_premises(
+        &mut self,
+        rule: InferRule,
+        premises: Vec<Fact>,
+        conclusions: Vec<SuccessStoreFactResult>,
+    ) {
         self.rule_applications
             .push(SuccessInferRuleApplicationResult {
                 rule,
-                premises: vec![SuccessInferPremiseResult {
-                    fact: premise,
-                    fact_id: None,
-                }],
+                premises: premises
+                    .into_iter()
+                    .map(|fact| SuccessInferPremiseResult {
+                        fact,
+                        fact_id: None,
+                    })
+                    .collect(),
                 conclusions,
             });
+    }
+
+    /// `Combine`: retain each conclusion's recursive infer Result under the
+    /// typed application while projecting only its ordered store effects into
+    /// this level's compatibility summary. Nested rule applications are not
+    /// flattened into the parent; consumers reach them through `conclusions`.
+    pub fn add_rule_application_preserving_conclusion_result_structure(
+        &mut self,
+        rule: InferRule,
+        premises: Vec<Fact>,
+        conclusions: Vec<SuccessStoreFactResult>,
+    ) {
+        for conclusion in &conclusions {
+            self.store_fact_outputs
+                .extend(conclusion.infers.store_fact_outputs.iter().cloned());
+        }
+        self.add_rule_application_with_premises(rule, premises, conclusions);
     }
 
     pub fn add_verified_statement(&mut self, fact: &Fact) {

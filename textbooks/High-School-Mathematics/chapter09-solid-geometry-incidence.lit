@@ -1,0 +1,199 @@
+# High School Mathematics
+# Incidence in Solid Geometry
+# Source unit: scripts/high_school_book/knowledge_core_json/required-3.json (required-3.solid_geometry_incidence).
+# This chapter formalizes the source paraphrase; standalone exercises are omitted.
+
+# Reading guide. A point in space is written as a triple (x, y, z).
+# `cart(R, R, R)` is the set of all real-coordinate triples, while p[1],
+# p[2], and p[3] are the x-, y-, and z-coordinates of p. The chapter starts
+# with coordinate calculations, turns familiar lines and planes into sets of
+# points, and then proves geometric relations from those concrete definitions.
+
+# The three-dimensional dot product multiplies matching coordinates and adds
+# the results. Its value detects perpendicular directions: a zero dot product
+# means that the two directions meet at a right angle.
+
+have fn dot3(u, v cart(R, R, R)) R = u[1] * v[1] + u[2] * v[2] + u[3] * v[3]
+
+# The squared length of u is u dotted with itself. We keep the square because
+# it is enough for comparisons and avoids introducing a square root.
+have fn norm3_sq(u cart(R, R, R)) R = dot3(u, u)
+
+# These two predicates translate the usual coordinate tests. Perpendicular
+# directions have dot product zero; parallel directions are scalar multiples,
+# so one real number k scales every coordinate of v into the matching
+# coordinate of u.
+prop perpendicular_direction(u, v cart(R, R, R)):
+    dot3(u, v) = 0
+
+prop parallel_direction(u, v cart(R, R, R)):
+    exist k R st {u[1] = k * v[1], u[2] = k * v[2], u[3] = k * v[3]}
+
+# A plane or line is represented by the set of points satisfying its coordinate
+# equations. For example, `horizontal_plane(0)` is the xy-plane z=0, and
+# `x_direction_line(0, 1)` is the line parallel to the x-axis at y=0, z=1.
+have fn horizontal_plane(z R) power_set(cart(R, R, R)) = {p cart(R, R, R): p[3] = z}
+have fn vertical_plane_x(x R) power_set(cart(R, R, R)) = {p cart(R, R, R): p[1] = x}
+have fn x_axis_line(zero R) power_set(cart(R, R, R)) = {p cart(R, R, R): p[2] = zero and p[3] = zero}
+have fn y_axis_line(zero R) power_set(cart(R, R, R)) = {p cart(R, R, R): p[1] = zero and p[3] = zero}
+have fn z_axis_line(zero R) power_set(cart(R, R, R)) = {p cart(R, R, R): p[1] = zero and p[2] = zero}
+have fn x_direction_line(y0, z0 R) power_set(cart(R, R, R)) = {p cart(R, R, R): p[2] = y0 and p[3] = z0}
+
+# Incidence is ordinary set membership: a point lies on a plane when it belongs
+# to that plane's point set, and a line lies in a plane when every point of the
+# line belongs to the plane. In these coordinate examples, a line is parallel
+# to a plane when their point sets do not meet.
+prop point_on_plane(p cart(R, R, R), P set):
+    p $in P
+
+prop line_lies_in_plane(L, P set):
+    L $subset P
+
+prop line_parallel_to_plane(L, P set):
+    intersect(L, P) = {}
+
+# When basis1 and basis2 are chosen as independent directions in a plane, a
+# direction orthogonal to both is perpendicular to that plane. This predicate
+# checks the two dot products; the caller is responsible for choosing a real
+# plane basis. Two coordinate planes of the same orientation are parallel here
+# when their point sets are disjoint.
+prop line_direction_perpendicular_to_plane_basis(direction, basis1, basis2 cart(R, R, R)):
+    dot3(direction, basis1) = 0
+    dot3(direction, basis2) = 0
+
+prop parallel_coordinate_planes(P, P2 set):
+    intersect(P, P2) = {}
+
+# First examples: read each line as a coordinate substitution. The point
+# (2,-3,0), for instance, belongs to z=0 because its third coordinate is 0.
+(0, 0, 0) $in horizontal_plane(0)
+(2, -3, 0) $in horizontal_plane(0)
+(0, 5, 7) $in vertical_plane_x(0)
+(4, 0, 0) $in x_axis_line(0)
+(0, 5, 0) $in y_axis_line(0)
+(0, 0, 6) $in z_axis_line(0)
+
+claim:
+    ? forall p x_axis_line(0):
+        p $in horizontal_plane(0)
+    p[3] = 0
+    by thm set_builder_member(p, {q cart(R, R, R): q[3] = 0})
+x_axis_line(0) $subset horizontal_plane(0)
+
+claim:
+    ? forall p y_axis_line(0):
+        p $in horizontal_plane(0)
+    p[3] = 0
+    by thm set_builder_member(p, {q cart(R, R, R): q[3] = 0})
+y_axis_line(0) $subset horizontal_plane(0)
+
+claim:
+    ? forall p y_axis_line(0):
+        p $in vertical_plane_x(0)
+    p[1] = 0
+    by thm set_builder_member(p, {q cart(R, R, R): q[1] = 0})
+y_axis_line(0) $subset vertical_plane_x(0)
+
+claim:
+    ? forall p z_axis_line(0):
+        p $in vertical_plane_x(0)
+    p[1] = 0
+    by thm set_builder_member(p, {q cart(R, R, R): q[1] = 0})
+z_axis_line(0) $subset vertical_plane_x(0)
+
+$line_lies_in_plane(y_axis_line(0), horizontal_plane(0))
+$line_lies_in_plane(y_axis_line(0), vertical_plane_x(0))
+
+# Worked example: z=0 and x=0 intersect exactly in the y-axis. `by extension`
+# proves equality of sets in two directions. A point in both planes has x=0
+# and z=0, hence lies on the y-axis; conversely, every y-axis point satisfies
+# both plane equations.
+by extension:
+    ? intersect(horizontal_plane(0), vertical_plane_x(0)) = y_axis_line(0)
+
+    claim:
+        ? forall p intersect(horizontal_plane(0), vertical_plane_x(0)):
+            p $in y_axis_line(0)
+        p $in horizontal_plane(0)
+        p $in vertical_plane_x(0)
+        p[3] = 0
+        p[1] = 0
+        by thm set_builder_member(p, {q cart(R, R, R): q[1] = 0 and q[3] = 0})
+
+    claim:
+        ? forall p y_axis_line(0):
+            p $in intersect(horizontal_plane(0), vertical_plane_x(0))
+        p[1] = 0
+        p[3] = 0
+        by thm set_builder_member(p, {q cart(R, R, R): q[3] = 0})
+        by thm set_builder_member(p, {q cart(R, R, R): q[1] = 0})
+
+# Direction examples. The x- and y-axis directions are perpendicular because
+# their dot product is 0. The vector (2,0,0) is parallel to (1,0,0) because
+# the witness k=2 scales the second vector into the first.
+dot3((1, 0, 0), (0, 1, 0)) = 0
+$perpendicular_direction((1, 0, 0), (0, 1, 0))
+
+witness exist k R st {(2, 0, 0)[1] = k * (1, 0, 0)[1], (2, 0, 0)[2] = k * (1, 0, 0)[2], (2, 0, 0)[3] = k * (1, 0, 0)[3]} from 2
+$parallel_direction((2, 0, 0), (1, 0, 0))
+
+# Worked example: a line at z=1 is disjoint from the horizontal plane z=0.
+# If a point belonged to both, its z-coordinate would have to be both 1 and 0,
+# which is impossible. The reverse inclusion is automatic because the empty
+# set has no points.
+claim:
+    ? intersect(x_direction_line(0, 1), horizontal_plane(0)) = {}
+    by extension:
+        ? intersect(x_direction_line(0, 1), horizontal_plane(0)) = {}
+        claim:
+            ? forall p intersect(x_direction_line(0, 1), horizontal_plane(0)):
+                p $in {}
+            by contra:
+                ? p $in {}
+                p $in x_direction_line(0, 1)
+                p $in horizontal_plane(0)
+                p[3] = 1
+                p[3] = 0
+                impossible 1 = 0
+        claim:
+            ? forall p {}:
+                p $in intersect(x_direction_line(0, 1), horizontal_plane(0))
+            by contra:
+                ? p $in intersect(x_direction_line(0, 1), horizontal_plane(0))
+                impossible p $in {}
+
+by def:
+    ? $line_parallel_to_plane(x_direction_line(0, 1), horizontal_plane(0))
+
+# The vertical direction (0,0,1) is orthogonal to the two basic directions
+# (1,0,0) and (0,1,0) inside z=0, so it is perpendicular to that plane.
+dot3((0, 0, 1), (1, 0, 0)) = 0
+dot3((0, 0, 1), (0, 1, 0)) = 0
+by def:
+    ? $line_direction_perpendicular_to_plane_basis((0, 0, 1), (1, 0, 0), (0, 1, 0))
+
+# Final example: the coordinate planes z=0 and z=1 are disjoint for the same
+# elementary reason. No point can have two different z-coordinates at once.
+claim:
+    ? intersect(horizontal_plane(0), horizontal_plane(1)) = {}
+    by extension:
+        ? intersect(horizontal_plane(0), horizontal_plane(1)) = {}
+        claim:
+            ? forall p intersect(horizontal_plane(0), horizontal_plane(1)):
+                p $in {}
+            by contra:
+                ? p $in {}
+                p $in horizontal_plane(0)
+                p $in horizontal_plane(1)
+                p[3] = 0
+                p[3] = 1
+                impossible 0 = 1
+        claim:
+            ? forall p {}:
+                p $in intersect(horizontal_plane(0), horizontal_plane(1))
+            by contra:
+                ? p $in intersect(horizontal_plane(0), horizontal_plane(1))
+                impossible p $in {}
+
+by def:
+    ? $parallel_coordinate_planes(horizontal_plane(0), horizontal_plane(1))

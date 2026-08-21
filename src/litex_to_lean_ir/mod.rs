@@ -467,6 +467,10 @@ pub enum LitexToLeanProofRuleIr {
     /// standalone Lean proof term.
     FunctionApplicationReturnMembership,
     ClosedNumericComparison,
+    /// A weak order on one repeated object, or the negation of a strict order
+    /// on that repeated object. Unlike `ClosedNumericComparison`, this remains
+    /// valid for symbolic objects introduced by an enclosing Lean binder.
+    OrderReflexivity,
     EqualityRewrite,
     KnownEqualityPath,
     /// The verifier cited the same ordered relation through Litex's dual
@@ -549,6 +553,7 @@ impl fmt::Debug for LitexToLeanProofRuleIr {
             LitexToLeanProofRuleIr::ClosedNumericComparison => {
                 f.write_str("ClosedNumericComparison")
             }
+            LitexToLeanProofRuleIr::OrderReflexivity => f.write_str("OrderReflexivity"),
             LitexToLeanProofRuleIr::EqualityRewrite => f.write_str("EqualityRewrite"),
             LitexToLeanProofRuleIr::KnownEqualityPath => f.write_str("KnownEqualityPath"),
             LitexToLeanProofRuleIr::ComparisonNotationDuality => {

@@ -1,0 +1,225 @@
+# High-school function interfaces shared by isolated source files.
+
+prop even_fn(f fn(x R) R):
+    forall x R:
+        f(-x) = f(x)
+
+prop odd_fn(f fn(x R) R):
+    forall x R:
+        f(-x) = -f(x)
+
+prop increasing_fn(f fn(x R) R):
+    forall x, y R:
+        x <= y
+        =>:
+            f(x) <= f(y)
+
+prop decreasing_fn(f fn(x R) R):
+    forall x, y R:
+        x <= y
+        =>:
+            f(y) <= f(x)
+
+prop strictly_increasing_fn(f fn(x R) R):
+    forall x, y R:
+        x < y
+        =>:
+            f(x) < f(y)
+
+prop strictly_decreasing_fn(f fn(x R) R):
+    forall x, y R:
+        x < y
+        =>:
+            f(y) < f(x)
+
+prop injective_real_fn(f fn(x R) R):
+    forall x, y R:
+        f(x) = f(y)
+        =>:
+            x = y
+
+prop zero_of(f fn(x R) R, x0 R):
+    f(x0) = 0
+
+prop maximum_at(f fn(x R) R, x0 R):
+    forall x R:
+        f(x) <= f(x0)
+
+prop minimum_at(f fn(x R) R, x0 R):
+    forall x R:
+        f(x0) <= f(x)
+
+prop inverse_functions(f fn(x R) R, g fn(x R) R):
+    forall x R:
+        g(f(x)) = x
+        f(g(x)) = x
+
+prop left_inverse_on_range(f fn(x R) R, g fn(y fn_range(f)) R):
+    forall x R:
+        g(f(x)) = x
+
+prop continuous_at_on_closed_interval(f fn(x R) R, a, b, x, epsilon R, delta R+):
+    forall y R:
+        a <= y <= b
+        abs(y - x) < delta
+        =>:
+            abs(f(y) - f(x)) < epsilon
+
+prop continuous_on_closed_interval(f fn(x R) R, a, b R):
+    a <= b
+    forall x R, epsilon R+:
+        a <= x <= b
+        =>:
+            exist delta R+ st {$continuous_at_on_closed_interval(f, a, b, x, epsilon, delta)}
+
+have fn graph_of(f fn(x R) R) power_set(cart(R, R)) = {p cart(R, R): p[2] = f(p[1])}
+have fn reflected_graph(G power_set(cart(R, R))) power_set(cart(R, R)) = {p cart(R, R): (p[2], p[1]) $in G}
+
+thm strictly_increasing_implies_injective:
+    ? forall f fn(x R) R:
+        $strictly_increasing_fn(f)
+        =>:
+            $injective_real_fn(f)
+    $strictly_increasing_fn(f)
+    claim:
+        ? forall x, y R:
+            f(x) = f(y)
+            =>:
+                x = y
+        by cases:
+            ? x = y
+            case x = y:
+                do_nothing
+            case x < y:
+                f(x) < f(y)
+                impossible f(x) = f(y)
+            case x > y:
+                f(y) < f(x)
+                impossible f(x) = f(y)
+
+thm strictly_decreasing_implies_injective:
+    ? forall f fn(x R) R:
+        $strictly_decreasing_fn(f)
+        =>:
+            $injective_real_fn(f)
+    $strictly_decreasing_fn(f)
+    claim:
+        ? forall x, y R:
+            f(x) = f(y)
+            =>:
+                x = y
+        by cases:
+            ? x = y
+            case x = y:
+                do_nothing
+            case x < y:
+                f(y) < f(x)
+                impossible f(x) = f(y)
+            case x > y:
+                f(x) < f(y)
+                impossible f(x) = f(y)
+
+thm inverse_on_range_exists:
+    ? forall f fn(x R) R:
+        $injective_real_fn(f)
+        =>:
+            exist g fn(y fn_range(f)) R st {$left_inverse_on_range(f, g)}
+    $injective_real_fn(f)
+
+    have fn g by exist!:
+        ? forall y fn_range(f):
+            exist! x R st {y = f(x)}
+        have by preimage x from y $in fn_range(f)
+        witness exist x0 R st {y = f(x0)} from x
+        claim:
+            ? forall x1, x2 R:
+                y = f(x1)
+                y = f(x2)
+                =>:
+                    x1 = x2
+            f(x1) = y = f(x2)
+
+    claim:
+        ? forall x R:
+            g(f(x)) = x
+        f(x) = f(g(f(x)))
+        x = g(f(x))
+
+    witness exist h fn(y fn_range(f)) R st {$left_inverse_on_range(f, h)} from g:
+        by def:
+            ? $left_inverse_on_range(f, g)
+
+thm inverse_graph_reflection:
+    ? forall f, g fn(x R) R:
+        $inverse_functions(f, g)
+        =>:
+            graph_of(g) = reflected_graph(graph_of(f))
+    $inverse_functions(f, g)
+    graph_of(g) = {q cart(R, R): q[2] = g(q[1])}
+    graph_of(f) = {q cart(R, R): q[2] = f(q[1])}
+    reflected_graph(graph_of(f)) = {q cart(R, R): (q[2], q[1]) $in graph_of(f)}
+    by extension:
+        ? graph_of(g) = reflected_graph(graph_of(f))
+        claim:
+            ? forall p graph_of(g):
+                p $in reflected_graph(graph_of(f))
+            p $in {q cart(R, R): q[2] = g(q[1])}
+            p[2] = g(p[1])
+            f(g(p[1])) = p[1]
+            f(p[2]) = f(g(p[1])) = p[1]
+            p[1] = f(p[2])
+            by thm set_builder_member((p[2], p[1]), {q cart(R, R): q[2] = f(q[1])})
+            (p[2], p[1]) $in graph_of(f)
+            by thm set_builder_member(p, {q cart(R, R): (q[2], q[1]) $in graph_of(f)})
+            p $in reflected_graph(graph_of(f))
+        claim:
+            ? forall p reflected_graph(graph_of(f)):
+                p $in graph_of(g)
+            p $in {q cart(R, R): (q[2], q[1]) $in graph_of(f)}
+            (p[2], p[1]) $in graph_of(f)
+            (p[2], p[1]) $in {q cart(R, R): q[2] = f(q[1])}
+            p[1] = f(p[2])
+            g(f(p[2])) = p[2]
+            g(p[1]) = g(f(p[2])) = p[2]
+            p[2] = g(p[1])
+            by thm set_builder_member(p, {q cart(R, R): q[2] = g(q[1])})
+            p $in graph_of(g)
+
+thm intermediate_value_zero:
+    ? forall f fn(x R) R, a, b R:
+        a < b
+        $continuous_on_closed_interval(f, a, b)
+        f(a) <= 0
+        0 <= f(b)
+        =>:
+            exist c R st {a <= c <= b, f(c) = 0}
+    # trust: second-pass retained; the intermediate-value theorem requires a reusable completeness/continuity argument.
+    trust exist c R st {a <= c <= b, f(c) = 0}
+
+thm shifted_zero_continuity_on_closed_interval:
+    ? forall f fn(x R) R, a, b R:
+        forall t R:
+            f(t) = t - 2
+        a <= b
+        =>:
+            $continuous_on_closed_interval(f, a, b)
+    forall t R:
+        f(t) = t - 2
+    a <= b
+    claim:
+        ? forall x R, epsilon R+:
+            a <= x <= b
+            =>:
+                exist delta R+ st {$continuous_at_on_closed_interval(f, a, b, x, epsilon, delta)}
+        witness exist delta R+ st {$continuous_at_on_closed_interval(f, a, b, x, epsilon, delta)} from epsilon:
+            forall y R:
+                a <= y <= b
+                abs(y - x) < epsilon
+                =>:
+                    f(y) = y - 2
+                    f(x) = x - 2
+                    abs(f(y) - f(x)) = abs((y - 2) - (x - 2)) = abs(y - x) < epsilon
+            by def:
+                ? $continuous_at_on_closed_interval(f, a, b, x, epsilon, epsilon)
+    by def:
+        ? $continuous_on_closed_interval(f, a, b)

@@ -264,11 +264,20 @@ impl Runtime {
 
         let mut infer_result = SuccessInferResult::new();
         infer_result.new_fact(&element_in_param_set_fact);
-        self.store_with_well_defined_verification_and_infer_with_default_verify_state(
-            element_in_param_set_fact,
-        )?;
+        let element_in_param_set_infers = self
+            .store_with_well_defined_verification_and_infer_with_default_verify_state(
+                element_in_param_set_fact.clone(),
+            )?;
+        infer_result.add_rule_application(
+            InferRule::SetBuilderBaseMembershipProjection,
+            unfolded_membership.clone(),
+            vec![SuccessStoreFactResult::new(
+                element_in_param_set_fact,
+                element_in_param_set_infers,
+            )],
+        );
 
-        for fact_in_set_builder in set_builder.facts.iter() {
+        for (clause_index, fact_in_set_builder) in set_builder.facts.iter().enumerate() {
             let instantiated_fact_in_set_builder = self
                 .inst_quantifier_free_fact(
                     fact_in_set_builder,
@@ -291,9 +300,18 @@ impl Runtime {
             let fact_to_store = instantiated_fact_in_set_builder.to_fact();
 
             infer_result.new_fact(&fact_to_store);
-            self.store_with_well_defined_verification_and_infer_with_default_verify_state(
-                fact_to_store,
-            )?;
+            let conclusion_infers = self
+                .store_with_well_defined_verification_and_infer_with_default_verify_state(
+                    fact_to_store.clone(),
+                )?;
+            infer_result.add_rule_application(
+                InferRule::SetBuilderPredicateProjection { clause_index },
+                unfolded_membership.clone(),
+                vec![SuccessStoreFactResult::new(
+                    fact_to_store,
+                    conclusion_infers,
+                )],
+            );
         }
         Ok(infer_result)
     }
@@ -437,11 +455,24 @@ impl Runtime {
                     );
                     let equal_atomic_fact: AtomicFact = equal_fact.clone().into();
                     let mut infer_result = SuccessInferResult::new();
+                    let equal_fact_for_result: Fact = equal_atomic_fact.clone().into();
                     infer_result.push_atomic_fact(&equal_atomic_fact);
                     self.top_level_env()
                         .store_atomic_fact(equal_atomic_fact.clone())?;
                     self.store_fact_cache_keys_with_nested_obj_binders(&equal_atomic_fact.into())?;
-                    infer_result.new_infer_result_inside(self.infer_equal_fact(&equal_fact)?);
+                    let conclusion_infers = self.infer_equal_fact(&equal_fact)?;
+                    infer_result.add_rule_application_preserving_conclusion_result_structure(
+                        InferRule::ListSetMembershipImpliesEqualityAlternatives(
+                            ListSetMembershipImpliesEqualityAlternativesInferRule {
+                                element_count: 1,
+                            },
+                        ),
+                        in_fact.clone().into(),
+                        vec![SuccessStoreFactResult::new(
+                            equal_fact_for_result,
+                            conclusion_infers,
+                        )],
+                    );
                     return Ok(infer_result);
                 }
 
@@ -460,9 +491,19 @@ impl Runtime {
                 let or_fact = OrFact::new(or_case_facts, in_fact.line_file.clone()).into();
                 let mut infer_result = SuccessInferResult::new();
                 infer_result.new_fact(&or_fact);
-                self.store_with_well_defined_verification_and_infer_with_default_verify_state(
-                    or_fact,
-                )?;
+                let conclusion_infers = self
+                    .store_with_well_defined_verification_and_infer_with_default_verify_state(
+                        or_fact.clone(),
+                    )?;
+                infer_result.add_rule_application_preserving_conclusion_result_structure(
+                    InferRule::ListSetMembershipImpliesEqualityAlternatives(
+                        ListSetMembershipImpliesEqualityAlternativesInferRule {
+                            element_count: list_set.list.len(),
+                        },
+                    ),
+                    in_fact.clone().into(),
+                    vec![SuccessStoreFactResult::new(or_fact, conclusion_infers)],
+                );
                 Ok(infer_result)
             }
             // Set comprehension: membership in parameter domain plus instantiated filter facts.
@@ -577,49 +618,93 @@ impl Runtime {
                 self.infer_in_fact_element_in_one_side_infinity_interval(in_fact, interval)
             }
             // Strictly positive number sets: `x $in R+` (etc.) => `0 < x`.
-            Obj::StandardSet(StandardSet::QPos)
-            | Obj::StandardSet(StandardSet::RPos)
-            | Obj::StandardSet(StandardSet::NPos) => {
+            Obj::StandardSet(
+                source_set @ (StandardSet::QPos | StandardSet::RPos | StandardSet::NPos),
+            ) => {
                 let zero_obj: Obj = Number::new("0".to_string()).into();
-                let inferred_atomic_fact =
+                let inferred_atomic_fact: AtomicFact =
                     LessFact::new(zero_obj, in_fact.element.clone(), in_fact.line_file.clone())
                         .into();
+                let inferred_fact: Fact = inferred_atomic_fact.clone().into();
                 let mut infer_result = SuccessInferResult::new();
                 infer_result.push_atomic_fact(&inferred_atomic_fact);
-                self.store_atomic_fact_without_well_defined_verified_and_infer(
-                    inferred_atomic_fact.clone(),
-                )?;
+                let conclusion_infers = self
+                    .store_atomic_fact_without_well_defined_verified_and_infer(
+                        inferred_atomic_fact.clone(),
+                    )?;
+                infer_result.add_rule_application(
+                    InferRule::PositiveStandardSetMembershipImpliesPositive(
+                        PositiveStandardSetMembershipImpliesPositiveInferRule {
+                            source_set: *source_set,
+                        },
+                    ),
+                    in_fact.clone().into(),
+                    vec![SuccessStoreFactResult::new(
+                        inferred_fact,
+                        conclusion_infers,
+                    )],
+                );
                 Ok(infer_result)
             }
             // Strictly negative rays: `x $in R-` (etc.) => `x < 0`.
-            Obj::StandardSet(StandardSet::QNeg)
-            | Obj::StandardSet(StandardSet::ZNeg)
-            | Obj::StandardSet(StandardSet::RNeg) => {
+            Obj::StandardSet(
+                source_set @ (StandardSet::QNeg | StandardSet::ZNeg | StandardSet::RNeg),
+            ) => {
                 let zero_obj: Obj = Number::new("0".to_string()).into();
-                let inferred_atomic_fact =
+                let inferred_atomic_fact: AtomicFact =
                     LessFact::new(in_fact.element.clone(), zero_obj, in_fact.line_file.clone())
                         .into();
+                let inferred_fact: Fact = inferred_atomic_fact.clone().into();
                 let mut infer_result = SuccessInferResult::new();
                 infer_result.push_atomic_fact(&inferred_atomic_fact);
-                self.store_atomic_fact_without_well_defined_verified_and_infer(
-                    inferred_atomic_fact.clone(),
-                )?;
+                let conclusion_infers = self
+                    .store_atomic_fact_without_well_defined_verified_and_infer(
+                        inferred_atomic_fact.clone(),
+                    )?;
+                infer_result.add_rule_application(
+                    InferRule::NegativeStandardSetMembershipImpliesNegative(
+                        NegativeStandardSetMembershipImpliesNegativeInferRule {
+                            source_set: *source_set,
+                        },
+                    ),
+                    in_fact.clone().into(),
+                    vec![SuccessStoreFactResult::new(
+                        inferred_fact,
+                        conclusion_infers,
+                    )],
+                );
                 Ok(infer_result)
             }
             // Nonzero: `x $in R*` or `x $in C*` (etc.) => `x != 0`.
-            Obj::StandardSet(StandardSet::QStar)
-            | Obj::StandardSet(StandardSet::ZStar)
-            | Obj::StandardSet(StandardSet::RStar)
-            | Obj::StandardSet(StandardSet::CStar) => {
+            Obj::StandardSet(
+                source_set @ (StandardSet::QStar
+                | StandardSet::ZStar
+                | StandardSet::RStar
+                | StandardSet::CStar),
+            ) => {
                 let zero_obj: Obj = Number::new("0".to_string()).into();
-                let inferred_atomic_fact =
+                let inferred_atomic_fact: AtomicFact =
                     NotEqualFact::new(in_fact.element.clone(), zero_obj, in_fact.line_file.clone())
                         .into();
+                let inferred_fact: Fact = inferred_atomic_fact.clone().into();
                 let mut infer_result = SuccessInferResult::new();
                 infer_result.push_atomic_fact(&inferred_atomic_fact);
-                self.store_atomic_fact_without_well_defined_verified_and_infer(
-                    inferred_atomic_fact.clone(),
-                )?;
+                let conclusion_infers = self
+                    .store_atomic_fact_without_well_defined_verified_and_infer(
+                        inferred_atomic_fact.clone(),
+                    )?;
+                infer_result.add_rule_application(
+                    InferRule::NonzeroStandardSetMembershipImpliesNonzero(
+                        NonzeroStandardSetMembershipImpliesNonzeroInferRule {
+                            source_set: *source_set,
+                        },
+                    ),
+                    in_fact.clone().into(),
+                    vec![SuccessStoreFactResult::new(
+                        inferred_fact,
+                        conclusion_infers,
+                    )],
+                );
                 Ok(infer_result)
             }
             // `N` = {0,1,2,…}: store `n >= 0` so numeric resolution and order checks match `forall n N:`.

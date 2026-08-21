@@ -1,0 +1,61 @@
+# High School Mathematics
+# Conics, Parametric Equations, and Polar Coordinates
+# Source unit: scripts/high_school_book/knowledge_core_json/optional-1.json (optional-1.conics_parametric_polar).
+# This chapter formalizes the source paraphrase; standalone exercises are omitted.
+
+have fn ellipse(a, b R+) power_set(cart(R, R)) = {x cart(R, R): x[1]^2 / a^2 + x[2]^2 / b^2 = 1}
+
+have fn ellipse_by_foci(a, c R+: c < a) power_set(cart(R, R)) = {x cart(R, R): sqrt((x[1] - c)^2 + x[2]^2) + sqrt((x[1] + c)^2 + x[2]^2) = 2 * a}
+
+have fn hyperbola(a, b R+) power_set(cart(R, R)) = {x cart(R, R): x[1]^2 / a^2 - x[2]^2 / b^2 = 1}
+
+have fn parabola(p R+) power_set(cart(R, R)) = {x cart(R, R): x[2]^2 = 4 * p * x[1]}
+
+have fn eccentricity_ellipse(a, c R+: c < a) R = c / a
+have fn eccentricity_hyperbola(a, c R+: a < c) R = c / a
+
+have fn param_line(p, v cart(R, R), t R) cart(R, R) = (p[1] + t * v[1], p[2] + t * v[2])
+
+have fn polar_like(r, cos_value, sin_value R) cart(R, R) = (r * cos_value, r * sin_value)
+
+(3, 0) $in ellipse(3, 2)
+
+(3, 0) $in hyperbola(3, 2)
+
+(1, 2) $in parabola(1)
+
+forall a, c R+:
+    c < a
+    =>:
+        eccentricity_ellipse(a, c) = c / a < a / a = 1
+
+forall a, c R+:
+    a < c
+    =>:
+        eccentricity_hyperbola(a, c) = c / a > a / a = 1
+
+param_line((1, 2), (3, 4), 2) = (7, 10)
+polar_like(5, 3 / 5, 4 / 5) = (3, 4)
+
+sqrt(5) $in R+
+sqrt(5)^2 = 5
+
+(3, 0) $in ellipse(3, sqrt(5))
+sqrt(1) = 1
+sqrt(25) = 5
+sqrt(((3, 0)[1] - 2)^2 + (3, 0)[2]^2) = sqrt(1) = 1
+sqrt(((3, 0)[1] + 2)^2 + (3, 0)[2]^2) = sqrt(25) = 5
+sqrt(((3, 0)[1] - 2)^2 + (3, 0)[2]^2) + sqrt(((3, 0)[1] + 2)^2 + (3, 0)[2]^2) = 1 + 5 = 2 * 3
+ellipse_by_foci(3, 2) = {x cart(R, R): sqrt((x[1] - 2)^2 + x[2]^2) + sqrt((x[1] + 2)^2 + x[2]^2) = 2 * 3}
+claim:
+    ? (3, 0) $in ellipse_by_foci(3, 2)
+    have focal_point_claim cart(R, R) = (3, 0)
+    focal_point_claim[1] = (3, 0)[1] = 3
+    focal_point_claim[2] = (3, 0)[2] = 0
+    sqrt((focal_point_claim[1] - 2)^2 + focal_point_claim[2]^2) = sqrt((3 - 2)^2 + 0^2) = sqrt(1) = 1
+    sqrt((focal_point_claim[1] + 2)^2 + focal_point_claim[2]^2) = sqrt((3 + 2)^2 + 0^2) = sqrt(25) = 5
+    sqrt((focal_point_claim[1] - 2)^2 + focal_point_claim[2]^2) + sqrt((focal_point_claim[1] + 2)^2 + focal_point_claim[2]^2) = 1 + 5 = 2 * 3
+    by thm set_builder_member(focal_point_claim, {x cart(R, R): sqrt((x[1] - 2)^2 + x[2]^2) + sqrt((x[1] + 2)^2 + x[2]^2) = 2 * 3})
+    focal_point_claim $in {x cart(R, R): sqrt((x[1] - 2)^2 + x[2]^2) + sqrt((x[1] + 2)^2 + x[2]^2) = 2 * 3}
+    (3, 0) $in {x cart(R, R): sqrt((x[1] - 2)^2 + x[2]^2) + sqrt((x[1] + 2)^2 + x[2]^2) = 2 * 3}
+    (3, 0) $in ellipse_by_foci(3, 2)

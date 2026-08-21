@@ -382,11 +382,27 @@ thm add_right_cancel:
 # `space.scalars`.
 # Result 1.30. Scalar zero times every vector equals the vector zero.  As in
 # the source, distribute 0+0 and cancel with the unique additive inverse.
+thm vector_space_scalar_constants_in_carrier:
+    ? forall s nonempty_set, v nonempty_set, space &VectorSpace<s, v>:
+        space.scalars.zero $in s
+        space.scalars.one $in s
+    space.scalars $in &chap1a::ScalarSystem<s>
+    space.scalars.zero $in s
+    space.scalars.one $in s
+
+thm vector_space_scalar_neg_in_carrier:
+    ? forall s nonempty_set, v nonempty_set, space &VectorSpace<s, v>, a s:
+        space.scalars.neg(a) $in s
+    space.scalars $in &chap1a::ScalarSystem<s>
+    space.scalars.neg(a) $in s
+
 thm zero_scalar_times_vector:
     ? forall s nonempty_set, v nonempty_set, space &VectorSpace<s, v>, x v:
         space.smul(space.scalars.zero, x) = space.zero
+    have scalar_system &chap1a::ScalarSystem<s> = space.scalars
     have p v = space.smul(space.scalars.zero, x)
-    space.scalars.add(space.scalars.zero, space.scalars.zero) = space.scalars.zero
+    scalar_system.add(scalar_system.zero, scalar_system.zero) = scalar_system.zero
+    space.scalars.add(space.scalars.zero, space.scalars.zero) = scalar_system.add(scalar_system.zero, scalar_system.zero) = scalar_system.zero = space.scalars.zero
     space.smul(space.scalars.add(space.scalars.zero, space.scalars.zero), x) = space.add(space.smul(space.scalars.zero, x), space.smul(space.scalars.zero, x))
     space.smul(space.scalars.add(space.scalars.zero, space.scalars.zero), x) = space.smul(space.scalars.zero, x) = p
     space.add(space.smul(space.scalars.zero, x), space.smul(space.scalars.zero, x)) = space.add(p, p)
@@ -416,8 +432,10 @@ thm scalar_times_zero_vector:
 thm minus_one_times_vector:
     ? forall s nonempty_set, v nonempty_set, space &VectorSpace<s, v>, x v:
         space.smul(space.scalars.neg(space.scalars.one), x) = \vector_neg<s, v, space>(x)
+    have scalar_system &chap1a::ScalarSystem<s> = space.scalars
     by thm vector_neg_spec(s, v, space, x)
-    space.scalars.add(space.scalars.one, space.scalars.neg(space.scalars.one)) = space.scalars.zero
+    scalar_system.add(scalar_system.one, scalar_system.neg(scalar_system.one)) = scalar_system.zero
+    space.scalars.add(space.scalars.one, space.scalars.neg(space.scalars.one)) = scalar_system.add(scalar_system.one, scalar_system.neg(scalar_system.one)) = scalar_system.zero = space.scalars.zero
     space.smul(space.scalars.add(space.scalars.one, space.scalars.neg(space.scalars.one)), x) = space.add(space.smul(space.scalars.one, x), space.smul(space.scalars.neg(space.scalars.one), x))
     space.smul(space.scalars.zero, x) = space.zero
     space.smul(space.scalars.one, x) = x

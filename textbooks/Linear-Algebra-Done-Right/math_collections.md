@@ -1,7 +1,7 @@
 # Mathematical Collections
 
-> Publication status (2026-08-20): the runnable module currently stops after
-> Chapters 1A--1B. Later cards describe chapters preserved in
+> Publication status (2026-08-21): the runnable module currently stops after
+> Chapter 2C. Later cards describe chapters preserved in
 > `../todo_textbook_chapters/`, not current published interfaces.
 
 ## Purpose and scope
@@ -226,7 +226,7 @@ concepts and intermediate nodes that determine later interfaces.
   finite recursion by `existence` and `uniqueness`.
 - **Downstream uses:** Bases and dimension.
 - **Allowable hole:** The Chapter 2 linear-combination, span, exchange, and
-  deletion interfaces are present and runnable, but 35 localized direct trust
+  deletion interfaces are present and runnable, but 33 localized direct trust
   boundaries remain across Chapter 2. Current verifier performance still
   benefits from the typed selected `span_carrier` plus its checked equality
   bridge when a structural predicate would otherwise expand the recursive

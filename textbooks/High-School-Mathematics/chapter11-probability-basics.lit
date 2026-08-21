@@ -1,0 +1,151 @@
+# High School Mathematics
+# Probability Basics
+# Source unit: scripts/high_school_book/knowledge_core_json/required-3.json (required-3.probability_basics).
+# This chapter formalizes the source paraphrase; standalone exercises are omitted.
+
+# Reading guide. Think of a sample space as the list of all possible outcomes
+# and an event as some of those outcomes. In a uniform model, every outcome is
+# equally likely, so probability is simply `number favorable / number total`.
+# The chapter starts with a two-outcome example, distinguishes mutually
+# exclusive events from independent events, and ends with a fully explicit
+# four-outcome independence example.
+
+# A finite sample space must contain finitely many outcomes and at least one
+# outcome. An event is valid when it is a subset of that sample space.
+prop finite_sample_space(S set):
+    $is_finite_set(S)
+    finite_set_size(S) > 0
+
+prop event_in_sample_space(E, S set):
+    E $subset S
+
+# Classical probability divides favorable outcomes by all outcomes. Relative
+# frequency uses the same arithmetic after an experiment: observed successes
+# divided by the number of trials. The nonzero condition prevents division by
+# zero.
+have fn classical_probability(favorable, total R: total != 0) R = favorable / total
+have fn relative_frequency(successes, trials R: trials != 0) R = successes / trials
+
+# Uniform probability counts actual finite sets. `power_set(R)` means a set of
+# real-valued outcomes, while `A power_set(S)` says that event A is a subset of
+# S. Every `finite_set_size` call carries a local proof that its set is finite.
+have fn uniform_probability(S power_set(R), A power_set(S): $is_finite_set(S), $is_finite_set(A), finite_set_size(S) > 0) R = finite_set_size(A) / finite_set_size(S)
+
+# Independence means that the probability of both events occurring equals the
+# product of their separate probabilities: P(A intersection B)=P(A)P(B).
+# The four finiteness clauses make every count in that equation well-defined.
+prop independent_uniform_events(S power_set(R), A, B power_set(S)):
+    $is_finite_set(S)
+    $is_finite_set(A)
+    $is_finite_set(B)
+    $is_finite_set(intersect(A, B))
+    finite_set_size(S) > 0
+    uniform_probability(S, intersect(A, B)) = uniform_probability(S, A) * uniform_probability(S, B)
+
+# Theorem. Once the predicate above is known, its final equation is exactly the
+# multiplication rule. The proof only unfolds the definition; it adds no
+# assumption and contains no `trust`.
+thm uniform_probability_multiplication:
+    ? forall S power_set(R), A, B power_set(S):
+        $independent_uniform_events(S, A, B)
+        =>:
+            uniform_probability(S, intersect(A, B)) = uniform_probability(S, A) * uniform_probability(S, B)
+    $independent_uniform_events(S, A, B)
+    $is_finite_set(S)
+    $is_finite_set(A)
+    $is_finite_set(B)
+    $is_finite_set(intersect(A, B))
+    finite_set_size(S) > 0
+    uniform_probability(S, intersect(A, B)) = uniform_probability(S, A) * uniform_probability(S, B)
+
+# First experiment: choose uniformly from {0,1}. The event {1} has one
+# favorable outcome among two possible outcomes, so its probability is 1/2.
+finite_set_size({0, 1}) = 2
+finite_set_size({1}) = 1
+{1} $subset {0, 1}
+{0} $subset {0, 1}
+$finite_sample_space({0, 1})
+$event_in_sample_space({1}, {0, 1})
+
+classical_probability(finite_set_size({1}), finite_set_size({0, 1})) = finite_set_size({1}) / finite_set_size({0, 1}) = 1 / 2
+
+# The events {0} and {1} cannot occur together. The set proof checks that their
+# intersection is empty: a shared outcome would have to equal both 0 and 1.
+claim:
+    ? intersect({0}, {1}) = {}
+    by extension:
+        ? intersect({0}, {1}) = {}
+        claim:
+            ? forall x intersect({0}, {1}):
+                x $in {}
+            by contra:
+                ? x $in {}
+                x = 0
+                x = 1
+                impossible 0 = 1
+        claim:
+            ? forall x {}:
+                x $in intersect({0}, {1})
+            by contra:
+                ? x $in intersect({0}, {1})
+                impossible x $in {}
+by thm HighSchoolCite::geometry_probability::mutually_exclusive_event({0}, {1})
+classical_probability(finite_set_size({0}), finite_set_size({0, 1})) = finite_set_size({0}) / finite_set_size({0, 1}) = 1 / 2
+classical_probability(finite_set_size({0}), finite_set_size({0, 1})) + classical_probability(finite_set_size({1}), finite_set_size({0, 1})) = 1
+
+# Relative frequency example: 12 successes in 20 trials gives 12/20=3/5.
+relative_frequency(12, 20) = 12 / 20 = 3 / 5
+
+# Worked independence example. Choose one number uniformly from {0,1,2,3}.
+# Let A mean "the result is 0 or 1" and B mean "the result is 0 or 2".
+# Each event has two of the four outcomes, so P(A)=P(B)=1/2. Both happen only
+# when the result is 0, so P(A intersection B)=1/4=(1/2)*(1/2).
+#
+# This also explains an easy confusion: the earlier singleton events {0} and
+# {1} are mutually exclusive, not independent. Disjoint nonempty events have
+# intersection probability 0, while their probability product is positive.
+claim:
+    ? intersect({0, 1}, {0, 2}) = {0}
+    by extension:
+        ? intersect({0, 1}, {0, 2}) = {0}
+        claim:
+            ? forall x intersect({0, 1}, {0, 2}):
+                x $in {0}
+            x = 0 or x = 1
+            x = 0 or x = 2
+            by cases:
+                ? x $in {0}
+                case x = 0:
+                    do_nothing
+                case x = 1:
+                    by cases:
+                        ? x $in {0}
+                        case x = 0:
+                            do_nothing
+                        case x = 2:
+                            impossible 1 = 2
+        by enumerate finite_set:
+            ? forall x {0}:
+                x $in intersect({0, 1}, {0, 2})
+
+finite_set_size({0, 1, 2, 3}) = 4
+finite_set_size({0, 1}) = 2
+finite_set_size({0, 2}) = 2
+finite_set_size({0}) = 1
+{0, 1} $subset {0, 1, 2, 3}
+{0, 2} $subset {0, 1, 2, 3}
+finite_set_size(intersect({0, 1}, {0, 2})) = finite_set_size({0}) = 1
+
+# Now calculate the three probabilities from the counts just established.
+uniform_probability({0, 1, 2, 3}, {0, 1}) = 2 / 4 = 1 / 2
+uniform_probability({0, 1, 2, 3}, {0, 2}) = 2 / 4 = 1 / 2
+uniform_probability({0, 1, 2, 3}, intersect({0, 1}, {0, 2})) = 1 / 4
+uniform_probability({0, 1, 2, 3}, {0, 1}) * uniform_probability({0, 1, 2, 3}, {0, 2}) = 1 / 4
+
+# `by def` packages those checked counts as the independence predicate. The
+# theorem call then extracts the familiar multiplication rule as the final
+# conclusion of the example.
+by def:
+    ? $independent_uniform_events({0, 1, 2, 3}, {0, 1}, {0, 2})
+
+by thm uniform_probability_multiplication({0, 1, 2, 3}, {0, 1}, {0, 2})

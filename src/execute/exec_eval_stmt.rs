@@ -1855,10 +1855,13 @@ impl Runtime {
     }
 
     pub fn exec_eval_stmt(&mut self, stmt: &EvalStmt) -> Result<StmtResult, RuntimeError> {
+        let recursive_numeric_evaluation = stmt
+            .obj_to_eval
+            .evaluate_to_normalized_decimal_number_with_result();
         let evaluated_obj = self.evaluate_obj_for_eval_stmt(stmt)?;
         let evaluated_equal_fact = EqualFact::new(
             stmt.obj_to_eval.clone(),
-            evaluated_obj,
+            evaluated_obj.clone(),
             stmt.line_file.clone(),
         )
         .into();
@@ -1869,12 +1872,17 @@ impl Runtime {
                 InferReason::Evaluation,
             )?;
 
-        let reported_store_facts = infer_result.store_fact_outputs().to_vec();
         Ok(
             SuccessCommandStmtResult::EvalStmt(Box::new(SuccessEvalStmtResult {
                 statement: stmt.clone(),
                 common: SuccessStmtCommonResult::new(infer_result),
-                reported_store_facts,
+                execution: SuccessEvalStmtExecutionResult::Evaluated(Box::new(
+                    SuccessEvaluatedEvalStmtResult {
+                        source_object: stmt.obj_to_eval.clone(),
+                        evaluated_object: evaluated_obj,
+                        recursive_numeric_evaluation,
+                    },
+                )),
             }))
             .into(),
         )

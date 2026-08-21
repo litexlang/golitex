@@ -168,6 +168,10 @@ pub enum NativeConstantMembershipBuiltinRule {
     ImaginaryUnitInComplex,
     EulerNumberInReal,
     PiInReal,
+    EulerNumberInPositiveReal,
+    PiInPositiveReal,
+    EulerNumberInComplex,
+    PiInComplex,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -334,6 +338,60 @@ pub struct ClosedNumericNonmembershipBuiltinRuleEvidence {
 #[derive(Clone)]
 pub struct ClosedNumericComparisonBuiltinRuleEvidence {
     pub expected_target: Fact,
+    pub left_evaluation: SuccessEvaluateObjResult,
+    pub right_evaluation: SuccessEvaluateObjResult,
+}
+
+/// A weak order on one object, or the negation of a strict order on that same
+/// object, discharged by reflexivity/irreflexivity rather than calculation.
+///
+/// Keeping this separate from `ClosedNumericComparisonBuiltinRuleEvidence`
+/// matters for compositional consumers: `x <= x` is valid in a local binder
+/// environment even though `x` is not a closed numeric expression.
+#[derive(Clone)]
+pub struct OrderReflexivityBuiltinRuleEvidence {
+    pub expected_target: Fact,
+    pub repeated_object: Obj,
+}
+
+/// Compatibility evidence for a comparison decided only after `Runtime`
+/// substituted known object values. The resolved operands are retained so the
+/// execution Result says what was compared, but a standalone compiler must
+/// reject this route until the substitutions themselves carry cited FactIds.
+#[derive(Clone)]
+pub struct RuntimeResolvedNumericComparisonBuiltinRuleEvidence {
+    pub expected_target: Fact,
+    pub normalized_left: Obj,
+    pub normalized_right: Obj,
+}
+
+/// Exact use of a previously proved and registered reflexivity theorem for a
+/// user-defined binary predicate.
+#[derive(Clone)]
+pub struct RegisteredReflexivePredicateBuiltinRuleEvidence {
+    pub expected_target: Fact,
+    pub predicate_name: String,
+}
+
+/// Exact use of a previously proved and registered permutation theorem for a
+/// user-defined predicate. The enclosing builtin proof owns exactly one child
+/// Result proving `expected_alternate`; `gather` records how the target's
+/// arguments were reordered to obtain that premise.
+#[derive(Clone)]
+pub struct RegisteredSymmetricPredicateBuiltinRuleEvidence {
+    pub expected_target: Fact,
+    pub predicate_name: String,
+    pub gather: Vec<usize>,
+    pub expected_alternate: Fact,
+}
+
+/// Exact use of a previously proved and registered antisymmetry theorem for a
+/// user-defined binary predicate. The enclosing builtin proof owns the two
+/// ordered predicate-premise child Results.
+#[derive(Clone)]
+pub struct RegisteredAntisymmetricPredicateBuiltinRuleEvidence {
+    pub expected_target: Fact,
+    pub predicate_name: String,
 }
 
 /// Exact dependent-elimination certificate for membership of a checked
@@ -457,8 +515,69 @@ impl fmt::Debug for FunctionApplicationReturnMembershipBuiltinRuleEvidence {
 }
 
 impl ClosedNumericComparisonBuiltinRuleEvidence {
-    pub fn new(expected_target: Fact) -> Self {
-        Self { expected_target }
+    pub fn new(
+        expected_target: Fact,
+        left_evaluation: SuccessEvaluateObjResult,
+        right_evaluation: SuccessEvaluateObjResult,
+    ) -> Self {
+        Self {
+            expected_target,
+            left_evaluation,
+            right_evaluation,
+        }
+    }
+}
+
+impl OrderReflexivityBuiltinRuleEvidence {
+    pub fn new(expected_target: Fact, repeated_object: Obj) -> Self {
+        Self {
+            expected_target,
+            repeated_object,
+        }
+    }
+}
+
+impl RuntimeResolvedNumericComparisonBuiltinRuleEvidence {
+    pub fn new(expected_target: Fact, normalized_left: Obj, normalized_right: Obj) -> Self {
+        Self {
+            expected_target,
+            normalized_left,
+            normalized_right,
+        }
+    }
+}
+
+impl RegisteredReflexivePredicateBuiltinRuleEvidence {
+    pub fn new(expected_target: Fact, predicate_name: String) -> Self {
+        Self {
+            expected_target,
+            predicate_name,
+        }
+    }
+}
+
+impl RegisteredSymmetricPredicateBuiltinRuleEvidence {
+    pub fn new(
+        expected_target: Fact,
+        predicate_name: String,
+        gather: Vec<usize>,
+        expected_alternate: Fact,
+    ) -> Self {
+        Self {
+            expected_target,
+            predicate_name,
+            gather,
+            expected_alternate,
+        }
+    }
+}
+
+impl RegisteredAntisymmetricPredicateBuiltinRuleEvidence {
+    pub fn new(expected_target: Fact, predicate_name: String) -> Self {
+        Self {
+            expected_target,
+            predicate_name,
+        }
     }
 }
 
@@ -557,6 +676,61 @@ impl fmt::Debug for ClosedNumericComparisonBuiltinRuleEvidence {
         formatter
             .debug_struct("ClosedNumericComparisonBuiltinRuleEvidence")
             .field("expected_target", &self.expected_target.to_string())
+            .field("left_evaluation", &self.left_evaluation)
+            .field("right_evaluation", &self.right_evaluation)
+            .finish()
+    }
+}
+
+impl fmt::Debug for OrderReflexivityBuiltinRuleEvidence {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        formatter
+            .debug_struct("OrderReflexivityBuiltinRuleEvidence")
+            .field("expected_target", &self.expected_target.to_string())
+            .field("repeated_object", &self.repeated_object.to_string())
+            .finish()
+    }
+}
+
+impl fmt::Debug for RuntimeResolvedNumericComparisonBuiltinRuleEvidence {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        formatter
+            .debug_struct("RuntimeResolvedNumericComparisonBuiltinRuleEvidence")
+            .field("expected_target", &self.expected_target.to_string())
+            .field("normalized_left", &self.normalized_left.to_string())
+            .field("normalized_right", &self.normalized_right.to_string())
+            .finish()
+    }
+}
+
+impl fmt::Debug for RegisteredReflexivePredicateBuiltinRuleEvidence {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        formatter
+            .debug_struct("RegisteredReflexivePredicateBuiltinRuleEvidence")
+            .field("expected_target", &self.expected_target.to_string())
+            .field("predicate_name", &self.predicate_name)
+            .finish()
+    }
+}
+
+impl fmt::Debug for RegisteredSymmetricPredicateBuiltinRuleEvidence {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        formatter
+            .debug_struct("RegisteredSymmetricPredicateBuiltinRuleEvidence")
+            .field("expected_target", &self.expected_target.to_string())
+            .field("predicate_name", &self.predicate_name)
+            .field("gather", &self.gather)
+            .field("expected_alternate", &self.expected_alternate.to_string())
+            .finish()
+    }
+}
+
+impl fmt::Debug for RegisteredAntisymmetricPredicateBuiltinRuleEvidence {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        formatter
+            .debug_struct("RegisteredAntisymmetricPredicateBuiltinRuleEvidence")
+            .field("expected_target", &self.expected_target.to_string())
+            .field("predicate_name", &self.predicate_name)
             .finish()
     }
 }
@@ -657,6 +831,11 @@ pub enum BuiltinRuleEvidence {
     ClosedNumericMembership(ClosedNumericMembershipBuiltinRuleEvidence),
     ClosedNumericNonmembership(ClosedNumericNonmembershipBuiltinRuleEvidence),
     ClosedNumericComparison(ClosedNumericComparisonBuiltinRuleEvidence),
+    OrderReflexivity(OrderReflexivityBuiltinRuleEvidence),
+    RuntimeResolvedNumericComparison(RuntimeResolvedNumericComparisonBuiltinRuleEvidence),
+    RegisteredReflexivePredicate(RegisteredReflexivePredicateBuiltinRuleEvidence),
+    RegisteredSymmetricPredicate(RegisteredSymmetricPredicateBuiltinRuleEvidence),
+    RegisteredAntisymmetricPredicate(RegisteredAntisymmetricPredicateBuiltinRuleEvidence),
     ObjectReflexivity(ObjectReflexivityBuiltinRuleEvidence),
     RationalNormalization(RationalNormalizationBuiltinRuleEvidence),
     StandardSetNonempty(StandardSetNonemptyBuiltinRuleEvidence),
@@ -725,6 +904,25 @@ impl fmt::Debug for BuiltinRuleEvidence {
                 .finish(),
             BuiltinRuleEvidence::ClosedNumericComparison(evidence) => f
                 .debug_tuple("ClosedNumericComparison")
+                .field(evidence)
+                .finish(),
+            BuiltinRuleEvidence::OrderReflexivity(evidence) => {
+                f.debug_tuple("OrderReflexivity").field(evidence).finish()
+            }
+            BuiltinRuleEvidence::RuntimeResolvedNumericComparison(evidence) => f
+                .debug_tuple("RuntimeResolvedNumericComparison")
+                .field(evidence)
+                .finish(),
+            BuiltinRuleEvidence::RegisteredReflexivePredicate(evidence) => f
+                .debug_tuple("RegisteredReflexivePredicate")
+                .field(evidence)
+                .finish(),
+            BuiltinRuleEvidence::RegisteredSymmetricPredicate(evidence) => f
+                .debug_tuple("RegisteredSymmetricPredicate")
+                .field(evidence)
+                .finish(),
+            BuiltinRuleEvidence::RegisteredAntisymmetricPredicate(evidence) => f
+                .debug_tuple("RegisteredAntisymmetricPredicate")
                 .field(evidence)
                 .finish(),
             BuiltinRuleEvidence::ObjectReflexivity(evidence) => {

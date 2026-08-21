@@ -1,0 +1,136 @@
+# High School Mathematics
+# Statistics Basics
+# Source unit: scripts/high_school_book/knowledge_core_json/required-3.json (required-3.statistics_basics).
+# This chapter formalizes the source paraphrase; standalone exercises are omitted.
+
+# Reading guide. The running dataset is {2,4,6}. We first define the most common
+# summaries of three numbers, then split the data into two groups, and finally
+# calculate mean, variance, standard deviation, range, relative frequencies,
+# and percentile rank. Every displayed value is derived from the definitions.
+# This elementary set-valued example has three distinct observations; data with
+# repeated values should instead retain multiplicity in a finite sequence or a
+# frequency table.
+
+# A finite dataset contains finitely many observations and is not empty.
+prop finite_dataset(D set):
+    $is_finite_set(D)
+    finite_set_size(D) > 0
+
+# For three observations, the mean is their sum divided by 3. Variance is the
+# average squared distance from that mean, standard deviation is the square
+# root of variance, and range is maximum minus minimum.
+have fn mean3(a, b, c R) R = (a + b + c) / 3
+have fn variance3(a, b, c R) R = ((a - mean3(a, b, c))^2 + (b - mean3(a, b, c))^2 + (c - mean3(a, b, c))^2) / 3
+have fn standard_deviation3(a, b, c R: variance3(a, b, c) >= 0) R = sqrt(variance3(a, b, c))
+have fn range3(minimum, maximum R) R = maximum - minimum
+
+# A two-group frequency table is valid when the group counts add to the total
+# and each relative frequency is its group count divided by that total.
+prop two_group_relative_frequency_table(first_count, second_count, total, first_frequency, second_frequency R):
+    total != 0
+    first_count + second_count = total
+    first_frequency = first_count / total
+    second_frequency = second_count / total
+
+# Percentile-rank convention. We count observations at or below the selected
+# value, divide by the total, and multiply by 100. This inclusive convention is
+# stated explicitly because textbooks sometimes use different conventions.
+have fn percentile_rank(count_at_or_below, total R: total != 0) R = 100 * count_at_or_below / total
+
+# Theorem. Two group frequencies sum to 1 when the groups account for the whole
+# dataset. The proof substitutes count/total for each frequency, combines the
+# numerators, and uses `first_count + second_count = total`.
+thm two_group_relative_frequencies_sum_to_one:
+    ? forall first_count, second_count, total, first_frequency, second_frequency R:
+        $two_group_relative_frequency_table(first_count, second_count, total, first_frequency, second_frequency)
+        =>:
+            first_frequency + second_frequency = 1
+    $two_group_relative_frequency_table(first_count, second_count, total, first_frequency, second_frequency)
+    total != 0
+    first_count + second_count = total
+    first_frequency = first_count / total
+    second_frequency = second_count / total
+    first_frequency + second_frequency = first_count / total + second_count / total = (first_count + second_count) / total = total / total = 1
+
+# Dataset and partition. The set {2,4,6} has three observations. We split it
+# into {2,4} and {6}, prove that both groups stay inside the dataset, that they
+# do not overlap, and that their union recovers every observation.
+$finite_dataset({2, 4, 6})
+finite_set_size({2, 4, 6}) = 3
+by enumerate finite_set:
+    ? forall x {2, 4}:
+        x $in {2, 4, 6}
+by enumerate finite_set:
+    ? forall x {6}:
+        x $in {2, 4, 6}
+claim:
+    ? intersect({2, 4}, {6}) = {}
+    by extension:
+        ? intersect({2, 4}, {6}) = {}
+        claim:
+            ? forall x intersect({2, 4}, {6}):
+                x $in {}
+            x = 2 or x = 4
+            x = 6
+            by cases:
+                ? x $in {}
+                case x = 2:
+                    impossible 2 = 6
+                case x = 4:
+                    impossible 4 = 6
+        claim:
+            ? forall x {}:
+                x $in intersect({2, 4}, {6})
+            by contra:
+                ? x $in intersect({2, 4}, {6})
+                impossible x $in {}
+by extension:
+    ? union({2, 4}, {6}) = {2, 4, 6}
+    claim:
+        ? forall x union({2, 4}, {6}):
+            x $in {2, 4, 6}
+        x $in {2, 4} or x $in {6}
+        by cases:
+            ? x $in {2, 4, 6}
+            case x $in {2, 4}:
+                by enumerate finite_set:
+                    ? forall y {2, 4}:
+                        y $in {2, 4, 6}
+            case x $in {6}:
+                do_nothing
+    by enumerate finite_set:
+        ? forall x {2, 4, 6}:
+            x $in union({2, 4}, {6})
+by thm HighSchoolCite::geometry_probability::complete_partition({2, 4}, {6}, {2, 4, 6})
+
+# The two groups therefore have relative frequencies 2/3 and 1/3. The equality
+# chain at the end confirms that these proportions account for the full data.
+finite_set_size({2, 4}) = 2
+finite_set_size({6}) = 1
+chap11::classical_probability(finite_set_size({2, 4}), finite_set_size({2, 4, 6})) = finite_set_size({2, 4}) / finite_set_size({2, 4, 6}) = 2 / 3
+chap11::classical_probability(finite_set_size({6}), finite_set_size({2, 4, 6})) = finite_set_size({6}) / finite_set_size({2, 4, 6}) = 1 / 3
+chap11::classical_probability(finite_set_size({2, 4}), finite_set_size({2, 4, 6})) + chap11::classical_probability(finite_set_size({6}), finite_set_size({2, 4, 6})) = 1
+
+# Numerical summaries for {2,4,6}. Its mean is 4, its squared deviations are
+# 4, 0, and 4, so its variance is 8/3; its range is 6-2=4.
+mean3(2, 4, 6) = (2 + 4 + 6) / 3 = 4
+variance3(2, 4, 6) = ((2 - 4)^2 + (4 - 4)^2 + (6 - 4)^2) / 3 = 8 / 3
+mean3(4, 4, 4) = (4 + 4 + 4) / 3 = 4
+variance3(4, 4, 4) = ((4 - mean3(4, 4, 4))^2 + (4 - mean3(4, 4, 4))^2 + (4 - mean3(4, 4, 4))^2) / 3
+variance3(4, 4, 4) = ((4 - 4)^2 + (4 - 4)^2 + (4 - 4)^2) / 3 = 0
+variance3(4, 4, 4) >= 0
+standard_deviation3(4, 4, 4) = sqrt(variance3(4, 4, 4)) = sqrt(0) = 0
+range3(2, 6) = 6 - 2 = 4
+
+# A second check packages the same group counts as a frequency table, then uses
+# the theorem above to derive that 2/3+1/3=1.
+by def:
+    ? $two_group_relative_frequency_table(2, 1, 3, 2 / 3, 1 / 3)
+
+by thm two_group_relative_frequencies_sum_to_one(2, 1, 3, 2 / 3, 1 / 3)
+
+2 / 3 + 1 / 3 = 1
+
+# Percentile example. Two of the three observations are at or below 4, so the
+# inclusive percentile rank is 100*(2/3)=200/3, or about 66.7 percent.
+percentile_rank(2, 3) = 100 * 2 / 3 = 200 / 3

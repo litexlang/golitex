@@ -1,0 +1,163 @@
+# High School Mathematics
+# Lines and Circles
+# Source unit: scripts/high_school_book/knowledge_core_json/optional-1.json (optional-1.lines_and_circles).
+# This chapter formalizes the source paraphrase; standalone exercises are omitted.
+
+have fn slope_from_points(x1, y1, x2, y2 R: x1 != x2) R = (y2 - y1) / (x2 - x1)
+
+have fn point_slope_line(x0, y0, m R) power_set(cart(R, R)) = {p cart(R, R): p[2] - y0 = m * (p[1] - x0)}
+
+have fn slope_intercept_line(m, b R) power_set(cart(R, R)) = {p cart(R, R): p[2] = m * p[1] + b}
+
+have fn vertical_line(x0 R) power_set(cart(R, R)) = {p cart(R, R): p[1] = x0}
+
+have fn circle(r R+) power_set(cart(R, R)) = {x cart(R, R): x[1]^2 + x[2]^2 = r^2}
+
+have fn circle_center(h, k R, r R+) power_set(cart(R, R)) = {x cart(R, R): (x[1] - h)^2 + (x[2] - k)^2 = r^2}
+
+have fn line(a, b, c R: a != 0 or b != 0) power_set(cart(R, R)) = {x cart(R, R): a * x[1] + b * x[2] = c}
+
+prop is_line(l power_set(cart(R, R))):
+    exist a, b, c R st {a != 0 or b != 0, l = line(a, b, c)}
+
+have lines set = {l power_set(cart(R, R)): $is_line(l)}
+
+have fn line_slope(a, b R: b != 0) R = -a / b
+
+have fn line_through_origin_with_slope(m R) power_set(cart(R, R)) = line(-m, 1, 0)
+
+have fn point_line_distance_sq(p cart(R, R), a, b, c R: a^2 + b^2 != 0) R = (a * p[1] + b * p[2] - c)^2 / (a^2 + b^2)
+
+prop line_has_slope(L power_set(cart(R, R)), m R):
+    $is_line(L)
+    exist a, b, c R st {b != 0, L = line(a, b, c), m = line_slope(a, b)}
+
+prop line_passes_through_origin(L power_set(cart(R, R))):
+    $is_line(L)
+    (0, 0) $in L
+
+prop tangent_value_for_angle_between_nonvertical_lines(L1, L2 power_set(cart(R, R)), m1, m2, t R):
+    $line_has_slope(L1, m1)
+    $line_has_slope(L2, m2)
+    1 + m1 * m2 != 0
+    t = abs((m2 - m1) / (1 + m1 * m2))
+
+prop circle_has_center(circle_set power_set(cart(R, R)), O cart(R, R)):
+    exist r R+ st {circle_set = circle_center(O[1], O[2], r)}
+
+prop is_circle(circle_set power_set(cart(R, R))):
+    exist O cart(R, R) st {$circle_has_center(circle_set, O)}
+
+prop circle_has_unique_center(circle_set power_set(cart(R, R))):
+    exist! O cart(R, R) st {$circle_has_center(circle_set, O)}
+
+have circles set = {circle_set power_set(cart(R, R)): $circle_has_unique_center(circle_set)}
+
+have fn center_of_circle by exist!:
+    ? forall circle_set circles:
+        exist! O cart(R, R) st {$circle_has_center(circle_set, O)}
+    $circle_has_unique_center(circle_set)
+    exist! O cart(R, R) st {$circle_has_center(circle_set, O)}
+
+forall circle_set circles:
+    $circle_has_center(circle_set, center_of_circle(circle_set))
+
+prop is_intersection_point(A, B power_set(cart(R, R)), p cart(R, R)):
+    p $in A
+    p $in B
+
+prop is_unique_intersection_point(A, B power_set(cart(R, R)), p cart(R, R)):
+    $is_intersection_point(A, B, p)
+    forall q cart(R, R):
+        q $in A
+        q $in B
+        =>:
+            q = p
+
+prop tangent_line_circle(L, circle_set power_set(cart(R, R))):
+    $is_line(L)
+    $is_circle(circle_set)
+    exist p cart(R, R) st {$is_unique_intersection_point(L, circle_set, p)}
+
+chap07::dot2((1, 2), (3, 4)) = 1 * 3 + 2 * 4 = 11
+chap07::norm2_sq((3, 4)) = chap07::dot2((3, 4), (3, 4)) = 25
+
+slope_from_points(0, 0, 2, 4) = (4 - 0) / (2 - 0) = 2
+
+(3, 8) $in point_slope_line(1, 2, 3)
+
+(1, 5) $in slope_intercept_line(3, 2)
+
+(2, 7) $in vertical_line(2)
+
+(2, 2) $in line(1, -1, 0)
+
+(2, 7) $in line(1, 0, 2)
+
+witness exist a, b, c R st {a != 0 or b != 0, line(1, -1, 0) = line(a, b, c)} from 1, -1, 0
+$is_line(line(1, -1, 0))
+
+line_slope(-1, 1) = -(-1) / 1 = 1
+line_slope(-2, 2) = -(-2) / 2 = 1
+
+line_slope(-1, 1) = line_slope(-2, 2)
+
+line_through_origin_with_slope(1) = line(-1, 1, 0)
+witness exist a, b, c R st {a != 0 or b != 0, line_through_origin_with_slope(1) = line(a, b, c)} from -1, 1, 0
+$is_line(line_through_origin_with_slope(1))
+(0, 0) $in line(-1, 1, 0)
+(0, 0) $in line_through_origin_with_slope(1)
+(2, 2) $in line(-1, 1, 0)
+witness exist a, b, c R st {b != 0, line_through_origin_with_slope(1) = line(a, b, c), 1 = line_slope(a, b)} from -1, 1, 0
+$line_has_slope(line_through_origin_with_slope(1), 1)
+$line_passes_through_origin(line_through_origin_with_slope(1))
+
+(3, 4) $in circle(5)
+
+(4, 6) $in circle_center(1, 2, 5)
+witness exist r R+ st {circle_center(1, 2, 5) = circle_center((1, 2)[1], (1, 2)[2], r)} from 5
+$circle_has_center(circle_center(1, 2, 5), (1, 2))
+witness exist O cart(R, R) st {$circle_has_center(circle_center(1, 2, 5), O)} from (1, 2)
+$is_circle(circle_center(1, 2, 5))
+
+point_line_distance_sq((0, 0), 1, 0, 3) = (1 * 0 + 0 * 0 - 3)^2 / (1^2 + 0^2) = 9
+
+(2 - 1) / (1 + 1 * 2) = 1 / 3
+1 / 3 > 0
+abs((2 - 1) / (1 + 1 * 2)) = abs(1 / 3) = 1 / 3
+
+line_through_origin_with_slope(2) = line(-2, 1, 0)
+witness exist a, b, c R st {a != 0 or b != 0, line_through_origin_with_slope(2) = line(a, b, c)} from -2, 1, 0
+$is_line(line_through_origin_with_slope(2))
+witness exist a, b, c R st {b != 0, line_through_origin_with_slope(2) = line(a, b, c), 2 = line_slope(a, b)} from -2, 1, 0
+$line_has_slope(line_through_origin_with_slope(2), 2)
+$tangent_value_for_angle_between_nonvertical_lines(line_through_origin_with_slope(1), line_through_origin_with_slope(2), 1, 2, 1 / 3)
+
+point_line_distance_sq((0, 0), 1, 0, 3) = 3^2
+
+witness exist a, b, c R st {a != 0 or b != 0, line(1, 0, 3) = line(a, b, c)} from 1, 0, 3
+$is_line(line(1, 0, 3))
+witness exist r R+ st {circle_center(0, 0, 3) = circle_center((0, 0)[1], (0, 0)[2], r)} from 3
+$circle_has_center(circle_center(0, 0, 3), (0, 0))
+witness exist O cart(R, R) st {$circle_has_center(circle_center(0, 0, 3), O)} from (0, 0)
+$is_circle(circle_center(0, 0, 3))
+(3, 0) $in line(1, 0, 3)
+(3, 0) $in circle_center(0, 0, 3)
+$is_intersection_point(line(1, 0, 3), circle_center(0, 0, 3), (3, 0))
+
+forall q cart(R, R):
+    q $in line(1, 0, 3)
+    q $in circle_center(0, 0, 3)
+    =>:
+        q[1] = 3
+        (q[1] - 0)^2 + (q[2] - 0)^2 = 3^2
+        q[1]^2 + q[2]^2 = (q[1] - 0)^2 + (q[2] - 0)^2 = 3^2 = 9
+        q[1]^2 = 9
+        q[2]^2 = (q[1]^2 + q[2]^2) - q[1]^2 = 9 - 9 = 0
+        q[2] = 0
+        q = (q[1], q[2]) = (3, 0)
+
+by def:
+    ? $is_unique_intersection_point(line(1, 0, 3), circle_center(0, 0, 3), (3, 0))
+witness exist p cart(R, R) st {$is_unique_intersection_point(line(1, 0, 3), circle_center(0, 0, 3), p)} from (3, 0)
+$tangent_line_circle(line(1, 0, 3), circle_center(0, 0, 3))

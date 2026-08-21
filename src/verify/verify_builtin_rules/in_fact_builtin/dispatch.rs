@@ -298,22 +298,27 @@ impl Runtime {
                     | Obj::StandardSet(StandardSet::C)
             )
         {
-            if matches!(&in_fact.set, Obj::StandardSet(StandardSet::R)) {
-                let rule = match &in_fact.element {
-                    Obj::EulerNumber(_) => NativeConstantMembershipBuiltinRule::EulerNumberInReal,
-                    Obj::Pi(_) => NativeConstantMembershipBuiltinRule::PiInReal,
-                    _ => unreachable!(),
-                };
-                return Ok(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
-                        in_fact.clone().into(),
-                        "native mathematical constant is a real".to_string(),
-                        BuiltinRuleEvidence::NativeConstantMembership(rule),
-                        Vec::new(),
-                    )
-                    .into(),
-                );
-            }
+            let rule = match (&in_fact.element, &in_fact.set) {
+                (Obj::EulerNumber(_), Obj::StandardSet(StandardSet::RPos)) => {
+                    NativeConstantMembershipBuiltinRule::EulerNumberInPositiveReal
+                }
+                (Obj::Pi(_), Obj::StandardSet(StandardSet::RPos)) => {
+                    NativeConstantMembershipBuiltinRule::PiInPositiveReal
+                }
+                (Obj::EulerNumber(_), Obj::StandardSet(StandardSet::R)) => {
+                    NativeConstantMembershipBuiltinRule::EulerNumberInReal
+                }
+                (Obj::Pi(_), Obj::StandardSet(StandardSet::R)) => {
+                    NativeConstantMembershipBuiltinRule::PiInReal
+                }
+                (Obj::EulerNumber(_), Obj::StandardSet(StandardSet::C)) => {
+                    NativeConstantMembershipBuiltinRule::EulerNumberInComplex
+                }
+                (Obj::Pi(_), Obj::StandardSet(StandardSet::C)) => {
+                    NativeConstantMembershipBuiltinRule::PiInComplex
+                }
+                _ => unreachable!(),
+            };
             let reason = match &in_fact.set {
                 Obj::StandardSet(StandardSet::RPos) => {
                     "native mathematical constant is a positive real"
@@ -324,9 +329,15 @@ impl Runtime {
                 }
                 _ => unreachable!(),
             };
-            return Ok(number_in_set_verified_by_builtin_rules_result(
-                in_fact, reason,
-            ));
+            return Ok(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    in_fact.clone().into(),
+                    reason.to_string(),
+                    BuiltinRuleEvidence::NativeConstantMembership(rule),
+                    Vec::new(),
+                )
+                .into(),
+            );
         }
         // Real and imaginary coordinates and complex modulus map a complex argument into R.
         // Example: `z $in C` implies `re(z) $in R`.

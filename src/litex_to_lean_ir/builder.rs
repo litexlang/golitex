@@ -394,6 +394,30 @@ impl LitexToLeanIrBuilder {
         )
     }
 
+    /// Transitional WD-only adapter for a complete factual Result. Unlike
+    /// `compile_fact_stmt_result`, this does not lower the fact proof or create
+    /// a mirrored statement payload; it only supplies the contextual FactId
+    /// information needed by the remaining WD renderer.
+    pub(crate) fn compile_fact_stmt_well_definedness_for_lean_rendering(
+        &self,
+        success: &SuccessFactStmtResult,
+    ) -> Result<LitexToLeanWellDefinednessCertificateIr, RuntimeError> {
+        let source_fact = success.fact();
+        let recursive_well_definedness =
+            crate::result::project_compositional_well_definedness(&success.well_definedness)
+                .map_err(|message| litex_to_lean_ir_error(&source_fact.line_file(), message))?;
+        self.build_litex_to_lean_ir_well_definedness_certificate(
+            &recursive_well_definedness,
+            &self.well_definedness_context_for_factual_success(success),
+        )
+        .map_err(|error| {
+            litex_to_lean_ir_error(
+                &source_fact.line_file(),
+                format!("complete factual WD rendering projection failed: {error}"),
+            )
+        })
+    }
+
     fn build_litex_to_lean_ir_let_object_statement(
         &self,
         stmt: &LetObjStmt,
@@ -2760,11 +2784,21 @@ impl LitexToLeanIrBuilder {
     ) -> Result<LitexToLeanWellDefinednessCertificateIr, RuntimeError> {
         let mut facts = Vec::with_capacity(certificate.facts.len());
         for evidence in certificate.facts.iter() {
-            let fact = self.build_litex_to_lean_ir_fact_from_verification_with_context(
-                evidence.proof.as_ref(),
-                None,
-                context,
-            )?;
+            let fact = self
+                .build_litex_to_lean_ir_fact_from_verification_with_context(
+                    evidence.proof.as_ref(),
+                    None,
+                    context,
+                )
+                .map_err(|error| {
+                    litex_to_lean_ir_error(
+                        &evidence.proof.fact().line_file(),
+                        format!(
+                            "well-definedness fact `{}` failed to lower: {error}",
+                            evidence.proof.fact()
+                        ),
+                    )
+                })?;
             let proof_fact = evidence.proof.fact();
             if fact.proposition.to_string() != proof_fact.to_string() {
                 return Err(litex_to_lean_ir_error(
@@ -2827,7 +2861,24 @@ impl LitexToLeanIrBuilder {
             objects.push(LitexToLeanWellDefinednessObjectIr {
                 well_defined_obj_id: evidence.well_defined_obj_id,
                 source_object: evidence.object.clone(),
-                function_contracts: evidence.function_contracts.clone(),
+                function_contracts: evidence
+                    .function_contracts
+                    .iter()
+                    .map(|contract| match contract {
+                        WellDefinedFunctionContract::StoredMembershipFact(fact_id) => {
+                            WellDefinedFunctionContract::StoredMembershipFact(
+                                context
+                                    .fact_id_aliases
+                                    .get(fact_id)
+                                    .copied()
+                                    .unwrap_or(*fact_id),
+                            )
+                        }
+                        WellDefinedFunctionContract::Structural(key) => {
+                            WellDefinedFunctionContract::Structural(key.clone())
+                        }
+                    })
+                    .collect(),
                 intrinsic_result_set,
                 child_uses: evidence.child_uses.clone(),
                 well_defined_fact_ids: evidence.well_defined_fact_ids.clone(),
@@ -2938,7 +2989,11 @@ impl LitexToLeanIrBuilder {
                 .iter()
                 .map(|evidence| LitexToLeanWellDefinednessParameterFactIr {
                     symbol_id: evidence.symbol_id,
-                    fact_id: evidence.fact_id,
+                    fact_id: context
+                        .fact_id_aliases
+                        .get(&evidence.fact_id)
+                        .copied()
+                        .unwrap_or(evidence.fact_id),
                     proposition: evidence.proposition.clone(),
                 })
                 .collect(),
@@ -4015,20 +4070,29 @@ impl LitexToLeanIrBuilder {
                     "function-application return membership evidence changed its application head or typed return set",
                 ));
             }
-            let source_application = LitexToLeanObjectIr::lower(&expected_target.element)
-                .map_err(|message| litex_to_lean_ir_error(&goal.line_file(), message))?;
-            let function_set = LitexToLeanObjectIr::lower(&expected_head_membership.set)
-                .map_err(|message| litex_to_lean_ir_error(&goal.line_file(), message))?;
-            LitexToLeanObjectIr::lower(&evidence.typed_return_set)
-                .map_err(|message| litex_to_lean_ir_error(&goal.line_file(), message))?;
-            if !matches!(
-                source_application,
-                LitexToLeanObjectIr::FunctionApplication(_)
-            ) || !matches!(function_set, LitexToLeanObjectIr::FunctionSet { .. })
-            {
+            let function_set =
+                LitexToLeanObjectIr::lower(&expected_head_membership.set).map_err(|message| {
+                    litex_to_lean_ir_error(
+                        &goal.line_file(),
+                        format!("function-application head carrier lowering failed: {message}"),
+                    )
+                })?;
+            LitexToLeanObjectIr::lower(&evidence.typed_return_set).map_err(|message| {
+                litex_to_lean_ir_error(
+                    &goal.line_file(),
+                    format!("function-application return carrier lowering failed: {message}"),
+                )
+            })?;
+            // The verifier may synthesize an intermediate prefix such as
+            // `g(a)` while checking the source occurrence `g(a)(b)`. That
+            // internal child deliberately has no parser-owned occurrence ID;
+            // its structural application shape and exact parent/child WD edge
+            // are already validated above. Do not invent a source identity
+            // merely to lower this proof-rule tag.
+            if !matches!(function_set, LitexToLeanObjectIr::FunctionSet { .. }) {
                 return Err(litex_to_lean_ir_error(
                     &goal.line_file(),
-                    "function-application return membership evidence lowered to the wrong object constructors",
+                    "function-application return membership evidence lowered a non-function head carrier",
                 ));
             }
             return Ok(LitexToLeanFactProofIr::RuleApplication {
@@ -4143,6 +4207,46 @@ impl LitexToLeanIrBuilder {
             }
             return Ok(LitexToLeanFactProofIr::RuleApplication {
                 rule: LitexToLeanProofRuleIr::ClosedNumericComparison,
+                parameter_requirements: Vec::new(),
+                premises: Vec::new(),
+            });
+        }
+        if let Some(BuiltinRuleEvidence::OrderReflexivity(evidence)) = evidence {
+            if evidence.expected_target.to_string() != goal.to_string() || !subgoals.is_empty() {
+                return Err(litex_to_lean_ir_error(
+                    &goal.line_file(),
+                    "order-reflexivity evidence changed its checked target or gained premises",
+                ));
+            }
+            let Fact::AtomicFact(goal) = goal else {
+                return Err(litex_to_lean_ir_error(
+                    &evidence.expected_target.line_file(),
+                    "order-reflexivity evidence targets a non-atomic fact",
+                ));
+            };
+            let (left, right) = match goal {
+                AtomicFact::LessEqualFact(order) => (&order.left, &order.right),
+                AtomicFact::GreaterEqualFact(order) => (&order.left, &order.right),
+                AtomicFact::NotLessFact(order) => (&order.left, &order.right),
+                AtomicFact::NotGreaterFact(order) => (&order.left, &order.right),
+                _ => {
+                    return Err(litex_to_lean_ir_error(
+                        &evidence.expected_target.line_file(),
+                        "order-reflexivity evidence retained an unsupported relation",
+                    ));
+                }
+            };
+            if crate::obj::obj_equality_key(left) != crate::obj::obj_equality_key(right)
+                || crate::obj::obj_equality_key(left)
+                    != crate::obj::obj_equality_key(&evidence.repeated_object)
+            {
+                return Err(litex_to_lean_ir_error(
+                    &evidence.expected_target.line_file(),
+                    "order-reflexivity evidence changed its repeated object",
+                ));
+            }
+            return Ok(LitexToLeanFactProofIr::RuleApplication {
+                rule: LitexToLeanProofRuleIr::OrderReflexivity,
                 parameter_requirements: Vec::new(),
                 premises: Vec::new(),
             });
@@ -5131,7 +5235,7 @@ fn build_typed_infer_rule_proof(
     if application.premises.len() != 1 || application.conclusions.len() != 1 {
         return Err(litex_to_lean_ir_error(
             &inferred_fact.line_file(),
-            "natural-membership inference changed its one-premise/one-conclusion contract",
+            "typed inference changed its one-premise/one-conclusion contract",
         ));
     }
     let premise = &application.premises[0];
@@ -5158,9 +5262,60 @@ fn build_typed_infer_rule_proof(
             "typed inference conclusion does not match the retained inferred fact and FactId",
         ));
     }
-    let rule = match application.rule {
+    let rule = match &application.rule {
         InferRule::NaturalMembershipImpliesNonnegative => {
             LitexToLeanBuiltinRuleIr::NaturalMembershipImpliesNonnegative
+        }
+        InferRule::PositiveStandardSetMembershipImpliesPositive(_)
+        | InferRule::NegativeStandardSetMembershipImpliesNegative(_)
+        | InferRule::NonzeroStandardSetMembershipImpliesNonzero(_) => {
+            // Refined-carrier inference is consumed directly by
+            // `StmtResultToLeanCompiler`; the compatibility backend IR does
+            // not mirror these new Result-owned proof layers.
+            return Ok(None);
+        }
+        InferRule::SetBuilderBaseMembershipProjection => {
+            return Ok(Some(LitexToLeanFactProofIr::RuleApplication {
+                rule: LitexToLeanProofRuleIr::SetBuilderBaseMembershipProjection,
+                parameter_requirements: Vec::new(),
+                premises: vec![LitexToLeanFactIr {
+                    storage: LitexToLeanFactStorageIr::Stored(source_fact_id),
+                    proposition: source_fact.clone(),
+                    proof: LitexToLeanFactProofIr::KnownFactCitation { source_fact_id },
+                }],
+            }));
+        }
+        InferRule::SetBuilderPredicateProjection { clause_index } => {
+            return Ok(Some(LitexToLeanFactProofIr::RuleApplication {
+                rule: LitexToLeanProofRuleIr::SetBuilderPredicateProjection {
+                    clause_index: *clause_index,
+                },
+                parameter_requirements: Vec::new(),
+                premises: vec![LitexToLeanFactIr {
+                    storage: LitexToLeanFactStorageIr::Stored(source_fact_id),
+                    proposition: source_fact.clone(),
+                    proof: LitexToLeanFactProofIr::KnownFactCitation { source_fact_id },
+                }],
+            }));
+        }
+        InferRule::DefinedPredicateParameterRequirementProjection(_)
+        | InferRule::DefinedPredicateDefinitionClauseProjection(_) => {
+            return Err(litex_to_lean_ir_error(
+                &inferred_fact.line_file(),
+                "defined-predicate inference must be compiled directly from StmtResult",
+            ));
+        }
+        InferRule::RegisteredTransitivePredicateChainClosure(_) => {
+            return Err(litex_to_lean_ir_error(
+                &inferred_fact.line_file(),
+                "registered transitive-predicate inference must be compiled directly from StmtResult",
+            ));
+        }
+        InferRule::TupleEqualityWithKnownTupleImpliesTupleShape(_) => {
+            return Ok(None);
+        }
+        InferRule::ListSetMembershipImpliesEqualityAlternatives(_) => {
+            LitexToLeanBuiltinRuleIr::ListSetMembershipElimination
         }
     };
     Ok(Some(LitexToLeanFactProofIr::RuleApplication {

@@ -1,37 +1,37 @@
 [book]
 Analysis
 verified subset
-"Introduction, Chapters 1-4, and Appendix A; Chapters 5-11 are quarantined in the source workspace."
+"Introduction, Chapters 1-7, and Appendix A pass the current release runner; Chapters 8-11 remain quarantined."
 
 [book]
 Analysis2
-verified entrypoint
-"Introduction only; every mathematical chapter is quarantined pending repair of Chapter 1 and the Chapter 4 timeout."
+verified subset
+"Introduction and Chapters 1-3 pass the current release runner; Chapters 4-8 remain quarantined, beginning with a struct-result projection blocker in Chapter 4."
 
 [book]
-Euclidean-Geometry
-verified foundation
-"Book Zero and analytic laws only; both pass the current release runner."
+Concrete-Mathematics-A-Foundation-For-Computer-Science
+verified prefix
+"Chapter 1 passes the current release runner and retains 29 explicitly disclosed trust markers; Chapter 2 onward remains quarantined."
 
 [book]
 High-School-Mathematics
-verified foundation
-"The shared pi foundation only; the cite package and Chapters 1-20 are quarantined."
+verified book
+"The recovered cite package and all Chapters 1-20 pass the current release runner."
 
 [book]
 Linear-Algebra-Done-Right
 verified subset
-"Introduction and Chapters 1A-1B; Chapter 1C onward is quarantined with dependency evidence."
+"Introduction, Chapters 1A-1C, and Chapters 2A-2C pass the current release runner; Chapter 3A onward remains quarantined."
 
 [book]
 Mathematics-In-Lean-Derived-Litex-Corpus
 verified subset
-"Introduction and Chapters 1, 3, 5, 6, and 7, plus the verified structured-basics submodule."
+"The bundled alternative submodule and the Introduction plus Chapters 1-10 pass the current release runner."
 
 [book]
 Number-Theory-For-Beginners
-verified entrypoint
-"Introduction only; all mathematical sections and the finite-product toolkit are quarantined."
+verified prefix
+"Introduction, Sections 1-9, and the Section 8 finite-product toolkit pass the current release runner; Section 10 onward remains quarantined."
 
 [book]
 The-Mechanics-of-Litex-Proof

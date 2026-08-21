@@ -1,5 +1,8 @@
 use super::order_normalize::normalize_positive_order_atomic_fact;
 use crate::prelude::*;
+use crate::result::{
+    OrderReflexivityBuiltinRuleEvidence, RuntimeResolvedNumericComparisonBuiltinRuleEvidence,
+};
 use crate::verify::verify_equality_by_builtin_rules::objs_match_for_pattern;
 
 impl Runtime {
@@ -397,57 +400,73 @@ impl Runtime {
     pub(in crate::verify) fn verify_number_comparison_builtin_rule(
         &self,
         atomic_fact: &AtomicFact,
-    ) -> Option<bool> {
+    ) -> Option<BuiltinRuleEvidence> {
         let normalized = normalize_positive_order_atomic_fact(atomic_fact)?;
-        match normalized {
-            AtomicFact::LessFact(less_fact) => {
-                if objs_match_for_pattern(&less_fact.left, &less_fact.right) {
-                    return Some(false);
-                }
-                if let Some(calculated_number_string_pair) =
-                    self.calculate_obj_pair_to_number_strings(&less_fact.left, &less_fact.right)
-                {
-                    return Some(matches!(
-                        compare_number_strings(
-                            &calculated_number_string_pair.0,
-                            &calculated_number_string_pair.1
-                        ),
-                        NumberCompareResult::Less
-                    ));
-                }
-                self.try_verify_numeric_order_via_div_elimination(
-                    &less_fact.left,
-                    &less_fact.right,
-                    false,
-                )
-            }
-            AtomicFact::LessEqualFact(less_equal_fact) => {
-                if objs_match_for_pattern(&less_equal_fact.left, &less_equal_fact.right) {
-                    return Some(true);
-                }
-                if let Some(calculated_number_string_pair) = self
-                    .calculate_obj_pair_to_number_strings(
-                        &less_equal_fact.left,
-                        &less_equal_fact.right,
-                    )
-                {
-                    let compare_result = compare_number_strings(
-                        &calculated_number_string_pair.0,
-                        &calculated_number_string_pair.1,
-                    );
-                    return Some(matches!(
-                        compare_result,
-                        NumberCompareResult::Less | NumberCompareResult::Equal
-                    ));
-                }
-                self.try_verify_numeric_order_via_div_elimination(
-                    &less_equal_fact.left,
-                    &less_equal_fact.right,
-                    true,
-                )
-            }
-            _ => None,
+        let (left, right, allow_equal) = match &normalized {
+            AtomicFact::LessFact(fact) => (&fact.left, &fact.right, false),
+            AtomicFact::LessEqualFact(fact) => (&fact.left, &fact.right, true),
+            _ => return None,
+        };
+
+        if objs_match_for_pattern(left, right) {
+            return allow_equal.then(|| {
+                BuiltinRuleEvidence::OrderReflexivity(OrderReflexivityBuiltinRuleEvidence::new(
+                    atomic_fact.clone().into(),
+                    left.clone(),
+                ))
+            });
         }
+
+        if let (Some(left_evaluation), Some(right_evaluation)) = (
+            left.evaluate_to_normalized_decimal_number_with_result(),
+            right.evaluate_to_normalized_decimal_number_with_result(),
+        ) {
+            let comparison = compare_number_strings(
+                &left_evaluation.value.normalized_value,
+                &right_evaluation.value.normalized_value,
+            );
+            let succeeds = matches!(comparison, NumberCompareResult::Less)
+                || (allow_equal && matches!(comparison, NumberCompareResult::Equal));
+            return succeeds.then(|| {
+                BuiltinRuleEvidence::ClosedNumericComparison(
+                    ClosedNumericComparisonBuiltinRuleEvidence::new(
+                        atomic_fact.clone().into(),
+                        left_evaluation,
+                        right_evaluation,
+                    ),
+                )
+            });
+        }
+
+        if let Some((left_value, right_value)) =
+            self.calculate_obj_pair_to_number_strings(left, right)
+        {
+            let comparison = compare_number_strings(&left_value, &right_value);
+            let succeeds = matches!(comparison, NumberCompareResult::Less)
+                || (allow_equal && matches!(comparison, NumberCompareResult::Equal));
+            return succeeds.then(|| {
+                BuiltinRuleEvidence::RuntimeResolvedNumericComparison(
+                    RuntimeResolvedNumericComparisonBuiltinRuleEvidence::new(
+                        atomic_fact.clone().into(),
+                        Number::new(left_value).into(),
+                        Number::new(right_value).into(),
+                    ),
+                )
+            });
+        }
+
+        self.try_verify_numeric_order_via_div_elimination(left, right, allow_equal)
+            .and_then(|succeeds| {
+                succeeds.then(|| {
+                    BuiltinRuleEvidence::RuntimeResolvedNumericComparison(
+                        RuntimeResolvedNumericComparisonBuiltinRuleEvidence::new(
+                            atomic_fact.clone().into(),
+                            self.resolve_obj(left),
+                            self.resolve_obj(right),
+                        ),
+                    )
+                })
+            })
     }
 }
 
