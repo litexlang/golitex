@@ -1,6 +1,5 @@
 use litex::stmt_result_to_lean_compiler::{
     compile_litex_file_to_lean_file, compile_litex_source_to_lean_source,
-    compile_litex_source_to_lean_source_rejecting_compatibility_adapter_for_audit,
 };
 use std::env;
 use std::fs;
@@ -41,15 +40,8 @@ fn run() -> Result<(), String> {
             );
             Ok(())
         }
-        [command, directory] if command == "audit-direct-result-compilation" => {
-            let count = audit_directory_for_direct_stmt_result_compilation(Path::new(directory))?;
-            println!(
-                "audited {count} StmtResult-to-Lean example pair(s): no compatibility adapter was used"
-            );
-            Ok(())
-        }
         _ => Err(
-            "usage: stmt_result_to_lean_compiler compile <input.lit> [output.lean] | generate <examples-dir> | check <examples-dir> | audit-direct-result-compilation <examples-dir>"
+            "usage: stmt_result_to_lean_compiler compile <input.lit> [output.lean] | generate <examples-dir> | check <examples-dir>"
                 .to_string(),
         ),
     }
@@ -108,34 +100,6 @@ fn check_directory(directory: &Path) -> Result<usize, String> {
         check_with_lean(output)?;
     }
     Ok(sources.len())
-}
-
-fn audit_directory_for_direct_stmt_result_compilation(directory: &Path) -> Result<usize, String> {
-    let sources = example_sources(directory)?;
-    let mut compatibility_dependencies = Vec::new();
-    for source_path in &sources {
-        let source = fs::read_to_string(source_path)
-            .map_err(|error| format!("failed to read {}: {error}", source_path.display()))?;
-        let label = source_path
-            .file_name()
-            .and_then(|name| name.to_str())
-            .ok_or_else(|| format!("invalid source name: {}", source_path.display()))?;
-        if let Err(error) =
-            compile_litex_source_to_lean_source_rejecting_compatibility_adapter_for_audit(
-                &source, label,
-            )
-        {
-            compatibility_dependencies.push(format!("{}: {error}", source_path.display()));
-        }
-    }
-    if compatibility_dependencies.is_empty() {
-        return Ok(sources.len());
-    }
-    Err(format!(
-        "{} example(s) still depend on the compatibility adapter:\n{}",
-        compatibility_dependencies.len(),
-        compatibility_dependencies.join("\n")
-    ))
 }
 
 fn check_with_lean(output: &Path) -> Result<(), String> {

@@ -1,0 +1,13 @@
+# Tracer: finite enumeration is compiled from exact assignment Results.
+#
+# Each branch retains its equality FactId and complete assumption inference
+# Result before the local Runtime environment disappears. The compiler derives
+# the ordered alternatives from the parameter membership, opens one inherited
+# environment per branch, and compiles each conclusion child there.
+by enumerate finite_set:
+    ? forall x {1, 2}:
+        x = 1 or x = 2
+    do_nothing
+
+# Boundary: a changed assignment FactId, reordered list element, missing
+# domain store Result, or mismatched conclusion child fails before emission.

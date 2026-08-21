@@ -1,0 +1,14 @@
+# Tracer: prior definition Results extend the compiler environment stack.
+#
+# Each successful object definition publishes its exact Litex object,
+# SymbolId and Lean declaration name to the current compiler environment.
+# The later fact Result retains the runtime-resolved comparison evidence;
+# StmtResultToLeanCompiler recomputes 0 <= 1 + 2 from those visible bindings.
+have a R = 1
+have b R = 2
+a + b >= 0
+
+# The comparison Result also owns the typed infer child deriving
+# -1 * (a + b) <= 0 from the stored source FactId. Corrupting a defining
+# FactId, a visible binding, either retained normal form, or the infer premise
+# is rejected before Lean source is emitted.

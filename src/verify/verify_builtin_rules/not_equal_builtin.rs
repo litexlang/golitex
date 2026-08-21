@@ -1630,10 +1630,14 @@ y != x
     }
 
     #[test]
-    fn not_equal_symmetry_remains_an_explicit_compiler_boundary() {
-        let error =
+    fn not_equal_symmetry_compiles_from_recursive_forall_results() {
+        let generated =
             compile_litex_source_to_lean_source(SYMMETRY_SOURCE, "not-equality-symmetry-compiler")
-                .expect_err("the wrapper compiler has no reviewed non-equality adapter yet");
-        assert!(error.contains("unsupported compiler"), "{error}");
+                .expect("the recursive forall Result retains every proof-scope FactId");
+        assert!(generated.contains("Litex.Rules.notSameSymm"), "{generated}");
+        assert!(
+            generated.contains("__domain3 : ¬ Litex.Same"),
+            "{generated}"
+        );
     }
 }

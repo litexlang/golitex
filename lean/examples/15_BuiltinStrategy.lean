@@ -38,45 +38,39 @@ theorem __fact3 :
   exact __c3_0
 
 theorem __fact4 :
-    ∀ (a : ℂ) (__h4_1 : Litex.In a Litex.R) (b : ℂ) (__h4_2 : Litex.In b Litex.R) (c : ℂ) (__h4_3 : Litex.In c Litex.R) (d : ℂ) (__h4_4 : Litex.In d Litex.R) (__h4_5 : Litex.Positive a) (__h4_6 : Litex.Nonnegative b) (__h4_7 : Litex.Nonnegative c) (__h4_8 : Litex.Nonnegative d),
-      Litex.Positive (((((Litex.In.rep a __h4_1 : ℝ)) : ℂ) + (((Litex.In.rep b __h4_2 : ℝ)) : ℂ)) + ((((Litex.In.rep c __h4_3 : ℝ)) : ℂ) + (((Litex.In.rep d __h4_4 : ℝ)) : ℂ))) := by
-  intro a __h4_1 b __h4_2 c __h4_3 d __h4_4 __h4_5 __h4_6 __h4_7 __h4_8
-  have __c4_0 : Litex.Positive (((((Litex.In.rep a __h4_1 : ℝ)) : ℂ) + (((Litex.In.rep b __h4_2 : ℝ)) : ℂ)) + ((((Litex.In.rep c __h4_3 : ℝ)) : ℂ) + (((Litex.In.rep d __h4_4 : ℝ)) : ℂ))) := Litex.Rules.complexAddPositiveLeftStrict (Litex.Rules.complexAddPositiveLeftStrict ((Litex.Positive.congr (Litex.Same.trans (Litex.In.same_rep a (__h4_1)) (Litex.Same.realComplex (Litex.In.rep a __h4_1)))).mp (__h4_5)) ((Litex.Nonnegative.congr (Litex.Same.trans (Litex.In.same_rep b (__h4_2)) (Litex.Same.realComplex (Litex.In.rep b __h4_2)))).mp (__h4_6))) (Litex.Rules.complexAddNonnegative ((Litex.Nonnegative.congr (Litex.Same.trans (Litex.In.same_rep c (__h4_3)) (Litex.Same.realComplex (Litex.In.rep c __h4_3)))).mp (__h4_7)) ((Litex.Nonnegative.congr (Litex.Same.trans (Litex.In.same_rep d (__h4_4)) (Litex.Same.realComplex (Litex.In.rep d __h4_4)))).mp (__h4_8)))
+    ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.R) (__p2 : ℂ) (__type2 : Litex.In __p2 Litex.R) (__p3 : ℂ) (__type3 : Litex.In __p3 Litex.R) (__p4 : ℂ) (__type4 : Litex.In __p4 Litex.R) (__domain1 : Litex.Positive __p1) (__domain2 : Litex.Nonnegative __p2) (__domain3 : Litex.Nonnegative __p3) (__domain4 : Litex.Nonnegative __p4), Litex.Positive (((((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) + (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ)) + ((((Litex.In.rep __p3 __type3 : ℝ)) : ℂ) + (((Litex.In.rep __p4 __type4 : ℝ)) : ℂ))) := by
+  intro a __h4_1 b __h4_2 c __h4_3 d __h4_4 __domain1 __domain2 __domain3 __domain4
+  have __c4_0 : Litex.Positive (((((Litex.In.rep a __h4_1 : ℝ)) : ℂ) + (((Litex.In.rep b __h4_2 : ℝ)) : ℂ)) + ((((Litex.In.rep c __h4_3 : ℝ)) : ℂ) + (((Litex.In.rep d __h4_4 : ℝ)) : ℂ))) := Litex.Rules.complexAddPositiveLeftStrict (Litex.Rules.complexAddPositiveLeftStrict ((Litex.Positive.congr (Litex.Same.trans (Litex.In.same_rep a (__h4_1)) (Litex.Same.realComplex (Litex.In.rep a __h4_1)))).mp (__domain1)) ((Litex.Nonnegative.congr (Litex.Same.trans (Litex.In.same_rep b (__h4_2)) (Litex.Same.realComplex (Litex.In.rep b __h4_2)))).mp (__domain2))) (Litex.Rules.complexAddNonnegative ((Litex.Nonnegative.congr (Litex.Same.trans (Litex.In.same_rep c (__h4_3)) (Litex.Same.realComplex (Litex.In.rep c __h4_3)))).mp (__domain3)) ((Litex.Nonnegative.congr (Litex.Same.trans (Litex.In.same_rep d (__h4_4)) (Litex.Same.realComplex (Litex.In.rep d __h4_4)))).mp (__domain4)))
   exact __c4_0
 
 theorem __fact5 :
-    ∀ (a : ℂ) (__h5_1 : Litex.In a Litex.R) (b : ℂ) (__h5_2 : Litex.In b Litex.R) (c : ℂ) (__h5_3 : Litex.In c Litex.R) (d : ℂ) (__h5_4 : Litex.In d Litex.R) (__h5_5 : Litex.Nonnegative a) (__h5_6 : Litex.Nonnegative b) (__h5_7 : Litex.Nonnegative c) (__h5_8 : Litex.Positive d),
-      Litex.Positive (((((Litex.In.rep a __h5_1 : ℝ)) : ℂ) + (((Litex.In.rep b __h5_2 : ℝ)) : ℂ)) + ((((Litex.In.rep c __h5_3 : ℝ)) : ℂ) + (((Litex.In.rep d __h5_4 : ℝ)) : ℂ))) := by
-  intro a __h5_1 b __h5_2 c __h5_3 d __h5_4 __h5_5 __h5_6 __h5_7 __h5_8
-  have __c5_0 : Litex.Positive (((((Litex.In.rep a __h5_1 : ℝ)) : ℂ) + (((Litex.In.rep b __h5_2 : ℝ)) : ℂ)) + ((((Litex.In.rep c __h5_3 : ℝ)) : ℂ) + (((Litex.In.rep d __h5_4 : ℝ)) : ℂ))) := Litex.Rules.complexAddPositiveRightStrict (Litex.Rules.complexAddNonnegative ((Litex.Nonnegative.congr (Litex.Same.trans (Litex.In.same_rep a (__h5_1)) (Litex.Same.realComplex (Litex.In.rep a __h5_1)))).mp (__h5_5)) ((Litex.Nonnegative.congr (Litex.Same.trans (Litex.In.same_rep b (__h5_2)) (Litex.Same.realComplex (Litex.In.rep b __h5_2)))).mp (__h5_6))) (Litex.Rules.complexAddPositiveRightStrict ((Litex.Nonnegative.congr (Litex.Same.trans (Litex.In.same_rep c (__h5_3)) (Litex.Same.realComplex (Litex.In.rep c __h5_3)))).mp (__h5_7)) ((Litex.Positive.congr (Litex.Same.trans (Litex.In.same_rep d (__h5_4)) (Litex.Same.realComplex (Litex.In.rep d __h5_4)))).mp (__h5_8)))
+    ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.R) (__p2 : ℂ) (__type2 : Litex.In __p2 Litex.R) (__p3 : ℂ) (__type3 : Litex.In __p3 Litex.R) (__p4 : ℂ) (__type4 : Litex.In __p4 Litex.R) (__domain1 : Litex.Nonnegative __p1) (__domain2 : Litex.Nonnegative __p2) (__domain3 : Litex.Nonnegative __p3) (__domain4 : Litex.Positive __p4), Litex.Positive (((((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) + (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ)) + ((((Litex.In.rep __p3 __type3 : ℝ)) : ℂ) + (((Litex.In.rep __p4 __type4 : ℝ)) : ℂ))) := by
+  intro a __h5_1 b __h5_2 c __h5_3 d __h5_4 __domain1 __domain2 __domain3 __domain4
+  have __c5_0 : Litex.Positive (((((Litex.In.rep a __h5_1 : ℝ)) : ℂ) + (((Litex.In.rep b __h5_2 : ℝ)) : ℂ)) + ((((Litex.In.rep c __h5_3 : ℝ)) : ℂ) + (((Litex.In.rep d __h5_4 : ℝ)) : ℂ))) := Litex.Rules.complexAddPositiveRightStrict (Litex.Rules.complexAddNonnegative ((Litex.Nonnegative.congr (Litex.Same.trans (Litex.In.same_rep a (__h5_1)) (Litex.Same.realComplex (Litex.In.rep a __h5_1)))).mp (__domain1)) ((Litex.Nonnegative.congr (Litex.Same.trans (Litex.In.same_rep b (__h5_2)) (Litex.Same.realComplex (Litex.In.rep b __h5_2)))).mp (__domain2))) (Litex.Rules.complexAddPositiveRightStrict ((Litex.Nonnegative.congr (Litex.Same.trans (Litex.In.same_rep c (__h5_3)) (Litex.Same.realComplex (Litex.In.rep c __h5_3)))).mp (__domain3)) ((Litex.Positive.congr (Litex.Same.trans (Litex.In.same_rep d (__h5_4)) (Litex.Same.realComplex (Litex.In.rep d __h5_4)))).mp (__domain4)))
   exact __c5_0
 
 theorem __fact6 :
-    ∀ (a : ℂ) (__h6_1 : Litex.In a Litex.R) (b : ℂ) (__h6_2 : Litex.In b Litex.R) (__h6_3 : Litex.Nonnegative a) (__h6_4 : Litex.Nonnegative b),
-      Litex.Nonnegative ((((Litex.In.rep a __h6_1 : ℝ)) : ℂ) * (((Litex.In.rep b __h6_2 : ℝ)) : ℂ)) := by
-  intro a __h6_1 b __h6_2 __h6_3 __h6_4
-  have __c6_0 : Litex.Nonnegative ((((Litex.In.rep a __h6_1 : ℝ)) : ℂ) * (((Litex.In.rep b __h6_2 : ℝ)) : ℂ)) := Litex.Rules.complexMulNonnegative ((Litex.Nonnegative.congr (Litex.Same.trans (Litex.In.same_rep a (__h6_1)) (Litex.Same.realComplex (Litex.In.rep a __h6_1)))).mp (__h6_3)) ((Litex.Nonnegative.congr (Litex.Same.trans (Litex.In.same_rep b (__h6_2)) (Litex.Same.realComplex (Litex.In.rep b __h6_2)))).mp (__h6_4))
+    ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.R) (__p2 : ℂ) (__type2 : Litex.In __p2 Litex.R) (__domain1 : Litex.Nonnegative __p1) (__domain2 : Litex.Nonnegative __p2), Litex.Nonnegative ((((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) * (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ)) := by
+  intro a __h6_1 b __h6_2 __domain1 __domain2
+  have __c6_0 : Litex.Nonnegative ((((Litex.In.rep a __h6_1 : ℝ)) : ℂ) * (((Litex.In.rep b __h6_2 : ℝ)) : ℂ)) := Litex.Rules.complexMulNonnegative ((Litex.Nonnegative.congr (Litex.Same.trans (Litex.In.same_rep a (__h6_1)) (Litex.Same.realComplex (Litex.In.rep a __h6_1)))).mp (__domain1)) ((Litex.Nonnegative.congr (Litex.Same.trans (Litex.In.same_rep b (__h6_2)) (Litex.Same.realComplex (Litex.In.rep b __h6_2)))).mp (__domain2))
   exact __c6_0
 
 theorem __fact7 :
-    ∀ (a : ℂ) (__h7_1 : Litex.In a Litex.R) (b : ℂ) (__h7_2 : Litex.In b Litex.R) (__h7_3 : Litex.Positive a) (__h7_4 : Litex.Positive b),
-      Litex.Positive ((((Litex.In.rep a __h7_1 : ℝ)) : ℂ) * (((Litex.In.rep b __h7_2 : ℝ)) : ℂ)) := by
-  intro a __h7_1 b __h7_2 __h7_3 __h7_4
-  have __c7_0 : Litex.Positive ((((Litex.In.rep a __h7_1 : ℝ)) : ℂ) * (((Litex.In.rep b __h7_2 : ℝ)) : ℂ)) := Litex.Rules.complexMulPositive ((Litex.Positive.congr (Litex.Same.trans (Litex.In.same_rep a (__h7_1)) (Litex.Same.realComplex (Litex.In.rep a __h7_1)))).mp (__h7_3)) ((Litex.Positive.congr (Litex.Same.trans (Litex.In.same_rep b (__h7_2)) (Litex.Same.realComplex (Litex.In.rep b __h7_2)))).mp (__h7_4))
+    ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.R) (__p2 : ℂ) (__type2 : Litex.In __p2 Litex.R) (__domain1 : Litex.Positive __p1) (__domain2 : Litex.Positive __p2), Litex.Positive ((((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) * (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ)) := by
+  intro a __h7_1 b __h7_2 __domain1 __domain2
+  have __c7_0 : Litex.Positive ((((Litex.In.rep a __h7_1 : ℝ)) : ℂ) * (((Litex.In.rep b __h7_2 : ℝ)) : ℂ)) := Litex.Rules.complexMulPositive ((Litex.Positive.congr (Litex.Same.trans (Litex.In.same_rep a (__h7_1)) (Litex.Same.realComplex (Litex.In.rep a __h7_1)))).mp (__domain1)) ((Litex.Positive.congr (Litex.Same.trans (Litex.In.same_rep b (__h7_2)) (Litex.Same.realComplex (Litex.In.rep b __h7_2)))).mp (__domain2))
   exact __c7_0
 
 theorem __fact8 :
-    ∀ (a : ℂ) (__h8_1 : Litex.In a Litex.R) (b : ℂ) (__h8_2 : Litex.In b Litex.R) (__h8_3 : Litex.Nonnegative a) (__h8_4 : Litex.Positive b),
-      Litex.Nonnegative ((((Litex.In.rep a __h8_1 : ℝ)) : ℂ) / (((Litex.In.rep b __h8_2 : ℝ)) : ℂ)) := by
-  intro a __h8_1 b __h8_2 __h8_3 __h8_4
-  have __c8_0 : Litex.Nonnegative ((((Litex.In.rep a __h8_1 : ℝ)) : ℂ) / (((Litex.In.rep b __h8_2 : ℝ)) : ℂ)) := Litex.Rules.complexDivNonnegative ((Litex.Nonnegative.congr (Litex.Same.trans (Litex.In.same_rep a (__h8_1)) (Litex.Same.realComplex (Litex.In.rep a __h8_1)))).mp (__h8_3)) ((Litex.Positive.congr (Litex.Same.trans (Litex.In.same_rep b (__h8_2)) (Litex.Same.realComplex (Litex.In.rep b __h8_2)))).mp (__h8_4))
+    ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.R) (__p2 : ℂ) (__type2 : Litex.In __p2 Litex.R) (__domain1 : Litex.Nonnegative __p1) (__domain2 : Litex.Positive __p2), Litex.Nonnegative ((((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) / (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ)) := by
+  intro a __h8_1 b __h8_2 __domain1 __domain2
+  have __c8_0 : Litex.Nonnegative ((((Litex.In.rep a __h8_1 : ℝ)) : ℂ) / (((Litex.In.rep b __h8_2 : ℝ)) : ℂ)) := Litex.Rules.complexDivNonnegative ((Litex.Nonnegative.congr (Litex.Same.trans (Litex.In.same_rep a (__h8_1)) (Litex.Same.realComplex (Litex.In.rep a __h8_1)))).mp (__domain1)) ((Litex.Positive.congr (Litex.Same.trans (Litex.In.same_rep b (__h8_2)) (Litex.Same.realComplex (Litex.In.rep b __h8_2)))).mp (__domain2))
   exact __c8_0
 
 theorem __fact9 :
-    ∀ (a : ℂ) (__h9_1 : Litex.In a Litex.R) (b : ℂ) (__h9_2 : Litex.In b Litex.R) (__h9_3 : Litex.Positive a) (__h9_4 : Litex.Positive b),
-      Litex.Positive ((((Litex.In.rep a __h9_1 : ℝ)) : ℂ) / (((Litex.In.rep b __h9_2 : ℝ)) : ℂ)) := by
-  intro a __h9_1 b __h9_2 __h9_3 __h9_4
-  have __c9_0 : Litex.Positive ((((Litex.In.rep a __h9_1 : ℝ)) : ℂ) / (((Litex.In.rep b __h9_2 : ℝ)) : ℂ)) := Litex.Rules.complexDivPositive ((Litex.Positive.congr (Litex.Same.trans (Litex.In.same_rep a (__h9_1)) (Litex.Same.realComplex (Litex.In.rep a __h9_1)))).mp (__h9_3)) ((Litex.Positive.congr (Litex.Same.trans (Litex.In.same_rep b (__h9_2)) (Litex.Same.realComplex (Litex.In.rep b __h9_2)))).mp (__h9_4))
+    ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.R) (__p2 : ℂ) (__type2 : Litex.In __p2 Litex.R) (__domain1 : Litex.Positive __p1) (__domain2 : Litex.Positive __p2), Litex.Positive ((((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) / (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ)) := by
+  intro a __h9_1 b __h9_2 __domain1 __domain2
+  have __c9_0 : Litex.Positive ((((Litex.In.rep a __h9_1 : ℝ)) : ℂ) / (((Litex.In.rep b __h9_2 : ℝ)) : ℂ)) := Litex.Rules.complexDivPositive ((Litex.Positive.congr (Litex.Same.trans (Litex.In.same_rep a (__h9_1)) (Litex.Same.realComplex (Litex.In.rep a __h9_1)))).mp (__domain1)) ((Litex.Positive.congr (Litex.Same.trans (Litex.In.same_rep b (__h9_2)) (Litex.Same.realComplex (Litex.In.rep b __h9_2)))).mp (__domain2))
   exact __c9_0
 
 end __Compiler_15_BuiltinStrategy

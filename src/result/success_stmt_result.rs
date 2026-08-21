@@ -756,6 +756,9 @@ pub enum SuccessCommandStmtResult {
 
 impl fmt::Debug for SuccessStmtResult {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        if let Self::Fact(result) = self {
+            return f.debug_tuple("Fact").field(result).finish();
+        }
         f.debug_struct("SuccessStmtResult")
             .field("statement", &self.statement())
             .field("common", &self.common())
@@ -1004,7 +1007,7 @@ impl SuccessByStmtResult {
             }
             Self::ByForStmt(result) => {
                 if let Some(verification) = &result.verification {
-                    for assignment in &verification.assignments {
+                    for assignment in verification.assignments() {
                         visit_assignment_children(assignment, visitor);
                     }
                 }
@@ -1013,7 +1016,7 @@ impl SuccessByStmtResult {
                 if let Some(verification) = &result.verification {
                     visitor(&verification.membership_check);
                     for check in &verification.endpoint_checks {
-                        visitor(check);
+                        visitor(&check.verification);
                     }
                 }
             }
@@ -1021,7 +1024,7 @@ impl SuccessByStmtResult {
                 if let Some(verification) = &result.verification {
                     visitor(&verification.membership_check);
                     for check in &verification.endpoint_checks {
-                        visitor(check);
+                        visitor(&check.verification);
                     }
                 }
             }
@@ -1143,7 +1146,7 @@ impl SuccessByStmtResult {
             }
             Self::ByForStmt(result) => {
                 if let Some(verification) = &mut result.verification {
-                    for assignment in &mut verification.assignments {
+                    for assignment in verification.assignments_mut() {
                         try_visit_assignment_children_mut(assignment, visitor)?;
                     }
                 }
@@ -1152,7 +1155,7 @@ impl SuccessByStmtResult {
                 if let Some(verification) = &mut result.verification {
                     visitor(&mut verification.membership_check)?;
                     for check in &mut verification.endpoint_checks {
-                        visitor(check)?;
+                        visitor(&mut check.verification)?;
                     }
                 }
             }
@@ -1160,7 +1163,7 @@ impl SuccessByStmtResult {
                 if let Some(verification) = &mut result.verification {
                     visitor(&mut verification.membership_check)?;
                     for check in &mut verification.endpoint_checks {
-                        visitor(check)?;
+                        visitor(&mut check.verification)?;
                     }
                 }
             }
@@ -1279,7 +1282,7 @@ impl SuccessByStmtResult {
             Self::ByForStmt(result) => {
                 let mut children = Vec::new();
                 if let Some(verification) = result.verification {
-                    for assignment in verification.assignments {
+                    for assignment in verification.into_assignments() {
                         children.extend(into_assignment_children(assignment));
                     }
                 }
@@ -1289,7 +1292,12 @@ impl SuccessByStmtResult {
                 let mut children = Vec::new();
                 if let Some(verification) = result.verification {
                     children.push(*verification.membership_check);
-                    children.extend(verification.endpoint_checks);
+                    children.extend(
+                        verification
+                            .endpoint_checks
+                            .into_iter()
+                            .map(|check| *check.verification),
+                    );
                 }
                 children
             }
@@ -1297,7 +1305,12 @@ impl SuccessByStmtResult {
                 let mut children = Vec::new();
                 if let Some(verification) = result.verification {
                     children.push(*verification.membership_check);
-                    children.extend(verification.endpoint_checks);
+                    children.extend(
+                        verification
+                            .endpoint_checks
+                            .into_iter()
+                            .map(|check| *check.verification),
+                    );
                 }
                 children
             }

@@ -184,6 +184,8 @@ pub enum SetRelationDualityBuiltinRule {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum SetBuiltinRule {
+    SubsetReflexivity,
+    SupersetReflexivity,
     UnionCommutative,
     UnionAssociative,
     UnionIdempotent,

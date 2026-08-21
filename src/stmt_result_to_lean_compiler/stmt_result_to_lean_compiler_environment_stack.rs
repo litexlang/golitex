@@ -1,10 +1,10 @@
-use crate::litex_to_lean_ir::{
-    LitexToLeanFunctionTypeIr, LitexToLeanLocalPremiseIr, LitexToLeanObjectIr,
-    LitexToLeanWellDefinednessCertificateIr,
-};
+use super::lean_compilation_types::LeanLocalFactPremise;
+use super::represent_litex_function_contracts_in_lean::LeanTargetFunctionTypeRepresentation;
+use super::represent_litex_objects_in_lean::LeanTargetObjectRepresentation;
 use crate::prelude::*;
 use std::collections::HashMap;
 use std::ops::{Deref, DerefMut};
+use std::rc::Rc;
 
 /// Lexical Lean-generation environments owned by `StmtResultToLeanCompiler`.
 ///
@@ -99,6 +99,16 @@ pub(super) struct StmtResultToLeanCompilerEnvironment {
     /// memberships. Rational integer powers are rendered in `ℚ` and then
     /// observed through the ordinary Litex complex carrier.
     pub(super) numeric_rational_values: HashMap<SymbolId, String>,
+    /// Native integer equalities introduced by an enclosing finite iteration
+    /// Result. Runtime-resolved numeric child Results may use them only while
+    /// that exact assignment frame is active.
+    pub(super) runtime_resolved_numeric_comparison_rewrites: Vec<String>,
+    /// Exact source substitutions installed by enclosing successful object
+    /// definition or finite-assignment Results. They are used only to validate
+    /// Runtime-resolved numeric evidence; Lean still receives the named
+    /// definitions/equalities owned by those Results.
+    pub(super) runtime_resolved_numeric_substitutions: HashMap<String, Obj>,
+    pub(super) runtime_resolved_numeric_definition_names: Vec<String>,
     pub(super) exact_tuple_indices: HashMap<SymbolId, String>,
     pub(super) indexed_tuple_bindings: HashMap<SymbolId, IndexedTupleBinding>,
     pub(super) existential_names: HashMap<String, String>,
@@ -116,7 +126,85 @@ pub(super) struct StmtResultToLeanCompilerEnvironment {
         HashMap<String, RegisteredPredicatePropertyTheoremBinding>,
     pub(super) registered_antisymmetric_predicate_theorem_bindings:
         HashMap<String, RegisteredPredicatePropertyTheoremBinding>,
-    pub(super) well_definedness: Option<LitexToLeanWellDefinednessCertificateIr>,
+    /// Result-owned evidence needed while one source object is rendered.
+    ///
+    /// This is a compiler index over the canonical recursive Result. It is not
+    /// a second WD certificate: object/fact proof nodes remain shared through
+    /// `Rc`, and the index exists only for the lifetime of a lexical compiler
+    /// environment.
+    pub(super) well_definedness: Option<StmtResultWellDefinednessToLeanCompilationContext>,
+}
+
+#[derive(Clone, Default)]
+pub(super) struct StmtResultWellDefinednessToLeanCompilationContext {
+    pub(super) parameter_fact_aliases: Vec<StmtResultWellDefinednessParameterFactAlias>,
+    pub(super) function_applications: HashMap<
+        SourceObjectOccurrenceId,
+        StmtResultFunctionApplicationWellDefinednessToLeanCompilationContext,
+    >,
+    pub(super) anonymous_functions: HashMap<
+        SourceObjectOccurrenceId,
+        StmtResultAnonymousFunctionWellDefinednessToLeanCompilationContext,
+    >,
+}
+
+#[derive(Clone)]
+pub(super) struct StmtResultWellDefinednessParameterFactAlias {
+    pub(super) symbol_id: SymbolId,
+    pub(super) fact_id: FactId,
+    pub(super) proposition: Fact,
+}
+
+#[derive(Clone)]
+pub(super) struct StmtResultFunctionApplicationWellDefinednessToLeanCompilationContext {
+    pub(super) source_application: Obj,
+    pub(super) function_contracts: Vec<WellDefinedFunctionContract>,
+    pub(super) anonymous_function_head: Option<Obj>,
+    pub(super) layers:
+        Vec<StmtResultFunctionApplicationLayerWellDefinednessToLeanCompilationContext>,
+}
+
+#[derive(Clone)]
+pub(super) struct StmtResultFunctionApplicationLayerWellDefinednessToLeanCompilationContext {
+    pub(super) source_prefix: Obj,
+    pub(super) function_contracts: Vec<WellDefinedFunctionContract>,
+    pub(super) intrinsic_result_set: Option<Obj>,
+    pub(super) requirements: Vec<StmtResultFunctionApplicationRequirementToLeanCompilationContext>,
+}
+
+#[derive(Clone)]
+pub(super) struct StmtResultFunctionApplicationRequirementToLeanCompilationContext {
+    pub(super) role: WellDefinednessRequirementRole,
+    pub(super) expected_proposition: Fact,
+    pub(super) verification: Rc<SuccessVerifyFactResult>,
+    pub(super) proof_expression: Option<String>,
+}
+
+#[derive(Clone)]
+pub(super) struct StmtResultAnonymousFunctionWellDefinednessToLeanCompilationContext {
+    pub(super) source_function: Obj,
+    pub(super) parameters: Vec<StmtResultWellDefinednessBinderPremiseToLeanCompilationContext>,
+    pub(super) domains: Vec<StmtResultWellDefinednessBinderPremiseToLeanCompilationContext>,
+    pub(super) assumption_infers: SuccessInferResult,
+    pub(super) inferred_proof_lines: Vec<String>,
+    pub(super) inferred_fact_bindings: Vec<(FactId, Fact, String)>,
+    pub(super) closure: StmtResultAnonymousFunctionClosureToLeanCompilationContext,
+}
+
+#[derive(Clone)]
+pub(super) struct StmtResultWellDefinednessBinderPremiseToLeanCompilationContext {
+    pub(super) role: WellDefinedBinderPremiseRole,
+    pub(super) symbol_id: Option<SymbolId>,
+    pub(super) fact_id: FactId,
+    pub(super) proposition: Fact,
+}
+
+#[derive(Clone)]
+pub(super) struct StmtResultAnonymousFunctionClosureToLeanCompilationContext {
+    pub(super) role: WellDefinednessRequirementRole,
+    pub(super) expected_proposition: Fact,
+    pub(super) verification: Rc<SuccessVerifyFactResult>,
+    pub(super) proof_expression: Option<String>,
 }
 
 #[derive(Clone)]
@@ -128,8 +216,8 @@ pub(super) struct IndexedTupleBinding {
 pub(super) struct ForallConclusionBinding {
     pub(super) theorem_name: String,
     pub(super) forall: ForallFact,
-    pub(super) parameter_premises: Vec<LitexToLeanLocalPremiseIr>,
-    pub(super) premises: Vec<LitexToLeanLocalPremiseIr>,
+    pub(super) parameter_premises: Vec<LeanLocalFactPremise>,
+    pub(super) premises: Vec<LeanLocalFactPremise>,
     pub(super) conclusion_index: usize,
     pub(super) conclusion_count: usize,
 }
@@ -154,7 +242,7 @@ pub(super) struct RegisteredPredicatePropertyTheoremBinding {
 #[derive(Clone)]
 pub(super) struct FunctionBinding {
     pub(super) symbol_id: SymbolId,
-    pub(super) function: LitexToLeanFunctionTypeIr,
+    pub(super) function: LeanTargetFunctionTypeRepresentation,
     pub(super) membership_proof_name: String,
     pub(super) direct: bool,
 }
@@ -163,11 +251,11 @@ pub(super) struct FunctionBinding {
 pub(super) struct NamedFunctionDefinitionBinding {
     pub(super) symbol_id: SymbolId,
     pub(super) name: String,
-    pub(super) function: LitexToLeanFunctionTypeIr,
+    pub(super) function: LeanTargetFunctionTypeRepresentation,
     pub(super) source_body: Obj,
-    pub(super) body: LitexToLeanObjectIr,
+    pub(super) body: LeanTargetObjectRepresentation,
     pub(super) uses_native_real_body: bool,
-    pub(super) parameter_premises: Vec<LitexToLeanLocalPremiseIr>,
-    pub(super) domain_premises: Vec<LitexToLeanLocalPremiseIr>,
-    pub(super) well_definedness: LitexToLeanWellDefinednessCertificateIr,
+    pub(super) parameter_premises: Vec<LeanLocalFactPremise>,
+    pub(super) domain_premises: Vec<LeanLocalFactPremise>,
+    pub(super) well_definedness: StmtResultWellDefinednessToLeanCompilationContext,
 }

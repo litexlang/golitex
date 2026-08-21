@@ -458,6 +458,19 @@ theorem complexMulNonnegative
   rcases hb with ⟨rb, hrb, hbOrder⟩
   exact ⟨ra * rb, complexMulAsReal hra hrb, mul_nonneg haOrder hbOrder⟩
 
+/-- Multiplication by negative one reverses a nonnegative source value into
+the exact nonpositive expression retained by Litex inference. -/
+theorem complexNegativeOneMulNonpositive
+    {a : ℂ}
+    (ha : Litex.Nonnegative a) :
+    Litex.Nonpositive ((-1 : ℂ) * a) := by
+  rcases ha with ⟨ra, hra, haOrder⟩
+  have minusOneAsReal : Litex.AsReal (-1 : ℂ) (-1 : ℝ) :=
+    Litex.Same.trans
+      (Litex.Same.ofEq (by norm_num : (-1 : ℂ) = ((-1 : ℝ) : ℂ)))
+      (Litex.AsReal.complex (-1 : ℝ))
+  exact ⟨-1 * ra, complexMulAsReal minusOneAsReal hra, by linarith⟩
+
 /-- Positive real representatives are closed under multiplication. -/
 theorem complexMulPositive
     {a b : ℂ}
@@ -635,6 +648,27 @@ theorem positiveOfInNPos
   refine Litex.Positive.intro (Litex.Same.trans hxn (Litex.AsReal.nat n)) ?_
   exact_mod_cast hn
 
+/-- A checked positive rational constructs the exact `Q+` subtype carrier. -/
+theorem complexEqRatInQPos
+    (z : ℂ)
+    (q : ℚ)
+    (hz : z = (q : ℂ))
+    (h : 0 < q) :
+    Litex.In z Litex.QPos :=
+  inSetBuilder
+    (Litex.Same.trans (Litex.Same.ofEq hz) (Litex.Same.complexRat q))
+    h
+
+/-- Exact `Q+` membership exposes strict positivity through its retained
+rational representative. -/
+theorem positiveOfInQPos
+    {alpha : Type}
+    {x : alpha}
+    (h : Litex.In x Litex.QPos) :
+    Litex.Positive x := by
+  rcases (inSetBuilder_iff.mp h) with ⟨q, hq, hxq⟩
+  exact Litex.Positive.intro (Litex.Same.trans hxq (Litex.AsReal.rat q)) (by exact_mod_cast hq)
+
 /-- A checked positive real numeral constructs the exact `R+` subtype
 carrier from its native real representative. -/
 theorem complexEqRealInRPos
@@ -671,6 +705,65 @@ theorem positiveOfInRPos
     Litex.Positive x := by
   rcases (inSetBuilder_iff.mp h) with ⟨r, hr, hxr⟩
   exact Litex.Positive.intro hxr hr
+
+/-- Checked negative integer/rational/real numerals construct the exact
+refined carrier retained by their successful Result. -/
+theorem complexEqIntInZNeg
+    (z : ℂ)
+    (n : ℤ)
+    (hz : z = (n : ℂ))
+    (h : n < 0) :
+    Litex.In z Litex.ZNeg :=
+  inSetBuilder
+    (Litex.Same.trans (Litex.Same.ofEq hz) (Litex.Same.complexInt n))
+    h
+
+theorem complexEqRatInQNeg
+    (z : ℂ)
+    (q : ℚ)
+    (hz : z = (q : ℂ))
+    (h : q < 0) :
+    Litex.In z Litex.QNeg :=
+  inSetBuilder
+    (Litex.Same.trans (Litex.Same.ofEq hz) (Litex.Same.complexRat q))
+    h
+
+theorem complexEqRealInRNeg
+    (z : ℂ)
+    (r : ℝ)
+    (hz : z = (r : ℂ))
+    (h : r < 0) :
+    Litex.In z Litex.RNeg :=
+  inSetBuilder
+    (Litex.Same.trans (Litex.Same.ofEq hz) (Litex.Same.complexReal r))
+    h
+
+/-- Exact negative-carrier memberships expose one selected real
+representative, so the conclusion remains valid for heterogeneous source
+objects and not only for a freshly reconstructed complex numeral. -/
+theorem negativeOfInZNeg
+    {alpha : Type}
+    {x : alpha}
+    (h : Litex.In x Litex.ZNeg) :
+    Litex.Negative x := by
+  rcases (inSetBuilder_iff.mp h) with ⟨z, hz, hxz⟩
+  exact Litex.Negative.intro (Litex.Same.trans hxz (Litex.AsReal.int z)) (by exact_mod_cast hz)
+
+theorem negativeOfInQNeg
+    {alpha : Type}
+    {x : alpha}
+    (h : Litex.In x Litex.QNeg) :
+    Litex.Negative x := by
+  rcases (inSetBuilder_iff.mp h) with ⟨q, hq, hxq⟩
+  exact Litex.Negative.intro (Litex.Same.trans hxq (Litex.AsReal.rat q)) (by exact_mod_cast hq)
+
+theorem negativeOfInRNeg
+    {alpha : Type}
+    {x : alpha}
+    (h : Litex.In x Litex.RNeg) :
+    Litex.Negative x := by
+  rcases (inSetBuilder_iff.mp h) with ⟨r, hr, hxr⟩
+  exact Litex.Negative.intro hxr hr
 
 /-- Construct exact nonzero-integer membership from the verifier's base
 membership and heterogeneous non-equality premises. -/

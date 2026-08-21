@@ -2081,6 +2081,36 @@ impl StmtResultJsonV2 {
                 string_field("kind", "ForallProof"),
                 string_field("forall_fact", result.forall_fact.to_string()),
                 (
+                    "parameter_assumptions".to_string(),
+                    array(
+                        result
+                            .parameter_assumptions
+                            .iter()
+                            .map(|assumption| {
+                                object(vec![
+                                    string_field("fact", assumption.fact.to_string()),
+                                    string_field("fact_id", fact_id(assumption.fact_id)),
+                                ])
+                            })
+                            .collect(),
+                    ),
+                ),
+                (
+                    "domain_assumptions".to_string(),
+                    array(
+                        result
+                            .domain_assumptions
+                            .iter()
+                            .map(|assumption| {
+                                object(vec![
+                                    string_field("fact", assumption.fact.to_string()),
+                                    string_field("fact_id", fact_id(assumption.fact_id)),
+                                ])
+                            })
+                            .collect(),
+                    ),
+                ),
+                (
                     "assumption_infers".to_string(),
                     infer_result_value(&result.assumption_infers),
                 ),
@@ -2860,7 +2890,23 @@ fn by_assignment_verification_value(
 ) -> JsonValue {
     object(vec![
         ("assignment".to_string(), string_pairs(&result.assignment)),
-        ("assumptions".to_string(), string_pairs(&result.assumptions)),
+        (
+            "assumptions".to_string(),
+            array(
+                result
+                    .assumptions
+                    .iter()
+                    .map(|assumption| {
+                        object(vec![
+                            string_field("fact", assumption.fact.to_string()),
+                            string_field("fact_id", fact_id(assumption.fact_id)),
+                            string_field("reason", assumption.reason.clone()),
+                            ("infers".to_string(), infer_result_value(&assumption.infers)),
+                        ])
+                    })
+                    .collect(),
+            ),
+        ),
         (
             "domain_checks".to_string(),
             array(
@@ -2880,6 +2926,14 @@ fn by_assignment_verification_value(
                                     .unwrap_or(JsonValue::Null),
                             ),
                             ("satisfied".to_string(), JsonValue::Bool(domain.satisfied)),
+                            (
+                                "satisfied_infers".to_string(),
+                                domain
+                                    .satisfied_infers
+                                    .as_ref()
+                                    .map(infer_result_value)
+                                    .unwrap_or(JsonValue::Null),
+                            ),
                         ])
                     })
                     .collect(),
@@ -2905,7 +2959,13 @@ fn by_enumerate_finite_set_verification_value(
         ("parameters".to_string(), strings(&result.parameters)),
         (
             "parameter_sets".to_string(),
-            strings(&result.parameter_sets),
+            strings(
+                &result
+                    .parameter_sets
+                    .iter()
+                    .map(ToString::to_string)
+                    .collect::<Vec<_>>(),
+            ),
         ),
         string_field("prove_goal", result.prove_goal.clone()),
         (
@@ -2926,24 +2986,71 @@ fn by_for_verification_value(
     renderer: &mut StmtResultJsonV2,
     result: &SuccessVerifyByForResult,
 ) -> JsonValue {
-    object(vec![
-        string_field("kind", "SuccessVerifyByForResult"),
-        string_field("iteration_mode", result.iteration_mode.clone()),
-        ("parameters".to_string(), strings(&result.parameters)),
-        ("domains".to_string(), strings(&result.domains)),
-        string_field("prove_goal", result.prove_goal.clone()),
-        (
-            "assignments".to_string(),
-            array(
-                result
-                    .assignments
-                    .iter()
-                    .map(|assignment| by_assignment_verification_value(renderer, assignment))
-                    .collect(),
+    match result {
+        SuccessVerifyByForResult::Ranges(result) => object(vec![
+            string_field("kind", "SuccessVerifyByForRangesResult"),
+            (
+                "parameters".to_string(),
+                array(
+                    result
+                        .parameters
+                        .iter()
+                        .map(|parameter| {
+                            object(vec![
+                                string_field("kind", "SuccessVerifyByForRangeParameterResult"),
+                                string_field("parameter", parameter.parameter.clone()),
+                                string_field("range", parameter.range.to_string()),
+                                string_field("evaluated_start", parameter.evaluated_start.clone()),
+                                string_field("evaluated_end", parameter.evaluated_end.clone()),
+                                (
+                                    "enumerated_values".to_string(),
+                                    strings(&parameter.enumerated_values),
+                                ),
+                            ])
+                        })
+                        .collect(),
+                ),
             ),
-        ),
-        string_field("generated_forall", result.generated_forall.clone()),
-    ])
+            string_field("prove_goal", result.prove_goal.clone()),
+            (
+                "assignments".to_string(),
+                array(
+                    result
+                        .assignments
+                        .iter()
+                        .map(|assignment| by_assignment_verification_value(renderer, assignment))
+                        .collect(),
+                ),
+            ),
+            string_field("generated_forall", result.generated_forall.clone()),
+        ]),
+        SuccessVerifyByForResult::CartesianProductOfListSets(result) => object(vec![
+            string_field("kind", "SuccessVerifyByForCartesianProductOfListSetsResult"),
+            string_field("parameter", result.parameter.clone()),
+            (
+                "factors".to_string(),
+                strings(
+                    &result
+                        .factors
+                        .iter()
+                        .map(ToString::to_string)
+                        .collect::<Vec<_>>(),
+                ),
+            ),
+            string_field("prove_goal", result.prove_goal.clone()),
+            (
+                "assignments".to_string(),
+                array(
+                    result
+                        .assignments
+                        .iter()
+                        .map(|assignment| by_assignment_verification_value(renderer, assignment))
+                        .collect(),
+                ),
+            ),
+            string_field("generated_forall", result.generated_forall.clone()),
+        ]),
+    }
 }
 
 fn by_enumerate_range_verification_value(
@@ -2952,22 +3059,43 @@ fn by_enumerate_range_verification_value(
 ) -> JsonValue {
     object(vec![
         string_field("kind", "SuccessVerifyByEnumerateRangeResult"),
-        string_field("proof_type", result.proof_type.clone()),
-        string_field("element", result.element.clone()),
-        string_field("range", result.range.clone()),
-        string_field("membership_fact", result.membership_fact.clone()),
-        (
-            "endpoint_facts".to_string(),
-            strings(&result.endpoint_facts),
-        ),
-        string_field("generated_cases", result.generated_cases.clone()),
+        string_field("element", result.element.to_string()),
+        string_field("range", result.range.to_string()),
+        string_field("membership_fact", result.membership_fact.to_string()),
+        string_field("generated_cases", result.generated_cases.to_string()),
         (
             "membership_check".to_string(),
             renderer.stmt_result(&result.membership_check),
         ),
         (
             "endpoint_checks".to_string(),
-            renderer.stmt_results(&result.endpoint_checks),
+            array(
+                result
+                    .endpoint_checks
+                    .iter()
+                    .map(|check| {
+                        object(vec![
+                            string_field("kind", "SuccessVerifyByEnumerateRangeEndpointResult"),
+                            string_field(
+                                "position",
+                                match check.position {
+                                    SuccessVerifyByEnumerateRangeEndpointPosition::Start => "Start",
+                                    SuccessVerifyByEnumerateRangeEndpointPosition::End => "End",
+                                },
+                            ),
+                            string_field("endpoint", check.endpoint.to_string()),
+                            string_field(
+                                "integer_membership_fact",
+                                check.integer_membership_fact.to_string(),
+                            ),
+                            (
+                                "verification".to_string(),
+                                renderer.stmt_result(&check.verification),
+                            ),
+                        ])
+                    })
+                    .collect(),
+            ),
         ),
     ])
 }
@@ -3444,6 +3572,22 @@ fn infer_rule_application_value(result: &SuccessInferRuleApplicationResult) -> J
                 InferRule::ListSetMembershipImpliesEqualityAlternatives(_) => {
                     "ListSetMembershipImpliesEqualityAlternatives"
                 }
+                InferRule::MultiplicationByNegativeOneReversesOrderAgainstZero => {
+                    "MultiplicationByNegativeOneReversesOrderAgainstZero"
+                }
+                InferRule::StrictOrderComparedToZeroImpliesWeakOrder => {
+                    "StrictOrderComparedToZeroImpliesWeakOrder"
+                }
+                InferRule::MembershipInSetWithKnownEqualityImpliesMembershipInEqualSet(_) => {
+                    "MembershipInSetWithKnownEqualityImpliesMembershipInEqualSet"
+                }
+                InferRule::SubsetImpliesElementwiseMembershipForall(_) => {
+                    "SubsetImpliesElementwiseMembershipForall"
+                }
+                InferRule::SupersetImpliesElementwiseMembershipForall(_) => {
+                    "SupersetImpliesElementwiseMembershipForall"
+                }
+                InferRule::ConjunctionImpliesComponent(_) => "ConjunctionImpliesComponent",
             },
         ),
         (
@@ -3515,6 +3659,38 @@ fn infer_rule_application_value(result: &SuccessInferRuleApplicationResult) -> J
     }
     if let InferRule::ListSetMembershipImpliesEqualityAlternatives(rule) = &result.rule {
         fields.insert(1, number_field("element_count", rule.element_count));
+    }
+    if let InferRule::MembershipInSetWithKnownEqualityImpliesMembershipInEqualSet(rule) =
+        &result.rule
+    {
+        fields.insert(
+            1,
+            string_field(
+                "equality_orientation",
+                match rule.equality_orientation {
+                    KnownSetEqualityOrientation::SourceSetOnLeft => "source_set_on_left",
+                    KnownSetEqualityOrientation::SourceSetOnRight => "source_set_on_right",
+                },
+            ),
+        );
+    }
+    let binder_symbol_id = match &result.rule {
+        InferRule::SubsetImpliesElementwiseMembershipForall(rule) => Some(rule.binder_symbol_id),
+        InferRule::SupersetImpliesElementwiseMembershipForall(rule) => Some(rule.binder_symbol_id),
+        _ => None,
+    };
+    if let Some(binder_symbol_id) = binder_symbol_id {
+        fields.insert(
+            1,
+            string_field(
+                "binder_symbol_id",
+                format!("symbol-{}", binder_symbol_id.value()),
+            ),
+        );
+    }
+    if let InferRule::ConjunctionImpliesComponent(rule) = &result.rule {
+        fields.insert(1, number_field("component_index", rule.component_index));
+        fields.insert(2, number_field("component_count", rule.component_count));
     }
     object(fields)
 }
@@ -3823,6 +3999,8 @@ fn set_relation_duality_rule_name(rule: SetRelationDualityBuiltinRule) -> &'stat
 
 fn set_builtin_rule_name(rule: SetBuiltinRule) -> &'static str {
     match rule {
+        SetBuiltinRule::SubsetReflexivity => "SubsetReflexivity",
+        SetBuiltinRule::SupersetReflexivity => "SupersetReflexivity",
         SetBuiltinRule::UnionCommutative => "UnionCommutative",
         SetBuiltinRule::UnionAssociative => "UnionAssociative",
         SetBuiltinRule::UnionIdempotent => "UnionIdempotent",

@@ -108,53 +108,19 @@ pub use crate::graph::{
     run_graph_for_repo_with_strict, run_graph_for_repo_with_strict_and_language,
 };
 pub use crate::infer::{
-    DefinedPredicateDefinitionClauseProjectionInferRule,
+    ConjunctionImpliesComponentInferRule, DefinedPredicateDefinitionClauseProjectionInferRule,
     DefinedPredicateParameterRequirementProjectionInferRule, InferReason, InferRule,
-    KnownTupleEqualitySide, ListSetMembershipImpliesEqualityAlternativesInferRule,
+    KnownSetEqualityOrientation, KnownTupleEqualitySide,
+    ListSetMembershipImpliesEqualityAlternativesInferRule,
+    MembershipInSetWithKnownEqualityImpliesMembershipInEqualSetInferRule,
     NegativeStandardSetMembershipImpliesNegativeInferRule,
     NonzeroStandardSetMembershipImpliesNonzeroInferRule,
     PositiveStandardSetMembershipImpliesPositiveInferRule,
-    RegisteredTransitivePredicateChainClosureInferRule, SuccessInferPremiseResult,
+    RegisteredTransitivePredicateChainClosureInferRule,
+    SubsetImpliesElementwiseMembershipForallInferRule, SuccessInferPremiseResult,
     SuccessInferResult, SuccessInferRuleApplicationResult, SuccessStoreFactOutput,
+    SupersetImpliesElementwiseMembershipForallInferRule,
     TupleEqualityWithKnownTupleImpliesTupleShapeInferRule,
-};
-pub use crate::litex_to_lean_ir::{
-    LitexToLeanAbsoluteValueBuiltinRuleIr, LitexToLeanAggregateObjectIr,
-    LitexToLeanAnonymousFunctionIr, LitexToLeanArithmeticBuiltinRuleIr,
-    LitexToLeanBuiltinObjectOperatorIr, LitexToLeanBuiltinRuleIr, LitexToLeanByCasesStmtIr,
-    LitexToLeanByContraStmtIr, LitexToLeanByDefStmtIr, LitexToLeanByStmtIr,
-    LitexToLeanCaseBranchExitIr, LitexToLeanCaseBranchIr, LitexToLeanClaimStmtIr,
-    LitexToLeanClosedNumericMembershipProofIr, LitexToLeanCollectionObjectIr,
-    LitexToLeanCommandStmtIr, LitexToLeanComplexArithmeticMembershipClosureBuiltinRuleIr,
-    LitexToLeanConstantObjectIr, LitexToLeanContradictionIr, LitexToLeanDefAbstractPropStmtIr,
-    LitexToLeanDefInterfaceStmtIr, LitexToLeanDefObjStmtIr, LitexToLeanDefPredicateStmtIr,
-    LitexToLeanDefPropStmtIr, LitexToLeanDefThmStmtIr, LitexToLeanDefThmStmtProofStepIr,
-    LitexToLeanDoNothingStmtIr, LitexToLeanEqualitySideIr, LitexToLeanExampleStmtIr,
-    LitexToLeanExistentialProjectionRoleIr, LitexToLeanExistentialWitnessIr, LitexToLeanFactIr,
-    LitexToLeanFactProofIr, LitexToLeanFactStatementIr, LitexToLeanFactStorageIr,
-    LitexToLeanFiniteSetBuiltinRuleIr, LitexToLeanFunctionApplicationIr,
-    LitexToLeanFunctionParameterIr, LitexToLeanFunctionTypeIr, LitexToLeanHaveFnEqualStmtIr,
-    LitexToLeanHaveObjByExistFactsStmtIr, LitexToLeanHaveObjEqualStmtIr,
-    LitexToLeanHaveObjInNonemptySetOrParamTypeStmtIr, LitexToLeanHaveTupleStmtIr,
-    LitexToLeanIntegerMembershipClosureBuiltinRuleIr, LitexToLeanLetObjStmtIr,
-    LitexToLeanLocalPremiseIr, LitexToLeanLocalProofBlockIr,
-    LitexToLeanNativeConstantMembershipBuiltinRuleIr,
-    LitexToLeanNaturalMembershipClosureBuiltinRuleIr, LitexToLeanNonzeroExpressionOrientationIr,
-    LitexToLeanObjectChoiceIr, LitexToLeanObjectDefinitionIr, LitexToLeanObjectIr,
-    LitexToLeanObtainObjFromAtomicFactIr, LitexToLeanObtainObjFromExistFactIr,
-    LitexToLeanParameterGroupIr, LitexToLeanParameterTypeIr, LitexToLeanProofBlockStmtIr,
-    LitexToLeanProofRuleIr, LitexToLeanRationalMembershipClosureBuiltinRuleIr,
-    LitexToLeanRealArithmeticMembershipClosureBuiltinRuleIr,
-    LitexToLeanReverseAssumptionIntroductionIr, LitexToLeanReverseAssumptionIr,
-    LitexToLeanSetBuilderIr, LitexToLeanSetBuiltinRuleIr,
-    LitexToLeanSetRelationDualityBuiltinRuleIr, LitexToLeanSketchStmtIr, LitexToLeanStandardSetIr,
-    LitexToLeanStatementIr, LitexToLeanStoredFunctionFactIr, LitexToLeanStoredTupleFactIr,
-    LitexToLeanStoredTupleFactRoleIr, LitexToLeanTrustStmtIr, LitexToLeanUnsafeStmtIr,
-    LitexToLeanWellDefinednessBinderPremiseIr, LitexToLeanWellDefinednessBinderScopeIr,
-    LitexToLeanWellDefinednessCertificateIr, LitexToLeanWellDefinednessFactIr,
-    LitexToLeanWellDefinednessObjectIr, LitexToLeanWellDefinednessObjectRequirementIr,
-    LitexToLeanWellDefinednessParameterFactIr, LitexToLeanWellDefinednessTargetRequirementIr,
-    LitexToLeanWitnessAtomicFactIr, LitexToLeanWitnessExistFactIr, LitexToLeanWitnessStmtIr,
 };
 pub use crate::module_manager::{
     discover_isolated_module_import, discover_isolated_std_import, discover_repository,
@@ -331,6 +297,7 @@ pub use crate::result::SuccessCombinedReuseFactProofResult;
 pub use crate::result::SuccessFactCitationProofResult;
 pub use crate::result::SuccessFactProofResult;
 pub use crate::result::SuccessFactStmtResult;
+pub use crate::result::SuccessForallAssumptionFactResult;
 pub use crate::result::SuccessForallProofResult;
 pub use crate::result::SuccessForallProvedFactResult;
 pub use crate::result::SuccessInstantiateKnownForallResult;
@@ -338,6 +305,7 @@ pub use crate::result::SuccessReuseFactProofResult;
 pub use crate::result::SuccessStmtResult;
 pub use crate::result::SuccessTransformFactResult;
 pub use crate::result::SuccessVerifyArgsSatisfyParamDefResult;
+pub use crate::result::SuccessVerifyByAssignmentAssumptionResult;
 pub use crate::result::SuccessVerifyByAssignmentDomainResult;
 pub use crate::result::SuccessVerifyByAssignmentResult;
 pub use crate::result::SuccessVerifyByCaseBranchExitResult;
@@ -350,9 +318,14 @@ pub use crate::result::SuccessVerifyByChoiceResult;
 pub use crate::result::SuccessVerifyByContraResult;
 pub use crate::result::SuccessVerifyByDefinitionResult;
 pub use crate::result::SuccessVerifyByEnumerateFiniteSetResult;
+pub use crate::result::SuccessVerifyByEnumerateRangeEndpointPosition;
+pub use crate::result::SuccessVerifyByEnumerateRangeEndpointResult;
 pub use crate::result::SuccessVerifyByEnumerateRangeResult;
 pub use crate::result::SuccessVerifyByExtensionResult;
 pub use crate::result::SuccessVerifyByFiniteSetInducResult;
+pub use crate::result::SuccessVerifyByForCartesianProductOfListSetsResult;
+pub use crate::result::SuccessVerifyByForRangeParameterResult;
+pub use crate::result::SuccessVerifyByForRangesResult;
 pub use crate::result::SuccessVerifyByForResult;
 pub use crate::result::SuccessVerifyByInducCaseResult;
 pub use crate::result::SuccessVerifyByInducGoalResult;
@@ -417,10 +390,7 @@ pub use crate::result::{
     RegisteredSymmetricPredicateBuiltinRuleEvidence,
     RuntimeResolvedNumericComparisonBuiltinRuleEvidence, SetBuilderMembershipBuiltinRuleEvidence,
     SetBuiltinRule, SetRelationDualityBuiltinRule, StandardSetNonemptyBuiltinRuleEvidence,
-    WellDefinednessBinderScopeEvidence, WellDefinednessCertificate, WellDefinednessFactEvidence,
-    WellDefinednessObjectEvidence, WellDefinednessParameterFactEvidence,
-    WellDefinednessRequirementRole, WellDefinednessRootObjectProofUse,
-    WellDefinednessSourceObjectUse, WellDefinednessTargetRequirementEvidence,
+    WellDefinednessRequirementRole,
 };
 pub use crate::result::{
     AtomicPredicateDomainCheckRole, SuccessAxiomStmtResult, SuccessByAntisymmetricPropStmtResult,

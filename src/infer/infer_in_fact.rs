@@ -209,7 +209,7 @@ impl Runtime {
             }
             let expanded_fact: AtomicFact = InFact::new(
                 in_fact.element.clone(),
-                equal_set,
+                equal_set.clone(),
                 in_fact.line_file.clone(),
             )
             .into();
@@ -219,8 +219,48 @@ impl Runtime {
             {
                 continue;
             }
-            infer_result.new_infer_result_inside(
-                self.store_atomic_fact_without_well_defined_verified_and_infer(expanded_fact)?,
+            let source_on_left: Fact = EqualFact::new(
+                in_fact.set.clone(),
+                equal_set.clone(),
+                in_fact.line_file.clone(),
+            )
+            .into();
+            let source_on_right: Fact = EqualFact::new(
+                equal_set.clone(),
+                in_fact.set.clone(),
+                in_fact.line_file.clone(),
+            )
+            .into();
+            let (equality, equality_orientation) = if self
+                .known_fact_id_for_fact(&source_on_left)?
+                .is_some()
+            {
+                (source_on_left, KnownSetEqualityOrientation::SourceSetOnLeft)
+            } else if self.known_fact_id_for_fact(&source_on_right)?.is_some() {
+                (
+                    source_on_right,
+                    KnownSetEqualityOrientation::SourceSetOnRight,
+                )
+            } else {
+                infer_result.new_infer_result_inside(
+                    self.store_atomic_fact_without_well_defined_verified_and_infer(expanded_fact)?,
+                );
+                continue;
+            };
+            let conclusion_fact: Fact = expanded_fact.clone().into();
+            let conclusion_infers =
+                self.store_atomic_fact_without_well_defined_verified_and_infer(expanded_fact)?;
+            infer_result.add_rule_application_preserving_conclusion_result_structure(
+                InferRule::MembershipInSetWithKnownEqualityImpliesMembershipInEqualSet(
+                    MembershipInSetWithKnownEqualityImpliesMembershipInEqualSetInferRule {
+                        equality_orientation,
+                    },
+                ),
+                vec![in_fact.clone().into(), equality],
+                vec![SuccessStoreFactResult::new(
+                    conclusion_fact,
+                    conclusion_infers,
+                )],
             );
         }
         Ok(infer_result)
@@ -467,7 +507,7 @@ impl Runtime {
                                 element_count: 1,
                             },
                         ),
-                        in_fact.clone().into(),
+                        vec![in_fact.clone().into()],
                         vec![SuccessStoreFactResult::new(
                             equal_fact_for_result,
                             conclusion_infers,
@@ -501,7 +541,7 @@ impl Runtime {
                             element_count: list_set.list.len(),
                         },
                     ),
-                    in_fact.clone().into(),
+                    vec![in_fact.clone().into()],
                     vec![SuccessStoreFactResult::new(or_fact, conclusion_infers)],
                 );
                 Ok(infer_result)

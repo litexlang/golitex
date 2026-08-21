@@ -349,9 +349,10 @@ impl Runtime {
         // sets such as `fn(x X) X $subset fn(y X) X`.
         if objs_equal_with_nested_binder_alpha_equivalence(&subset_fact.left, &subset_fact.right) {
             return Ok(
-                (SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     subset_fact.clone().into(),
                     "subset_superset_duality".to_string(),
+                    BuiltinRuleEvidence::Set(SetBuiltinRule::SubsetReflexivity),
                     Vec::new(),
                 ))
                 .into(),
@@ -463,9 +464,10 @@ impl Runtime {
             &superset_fact.right,
         ) {
             return Ok(
-                (SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     superset_fact.clone().into(),
                     "subset_superset_duality".to_string(),
+                    BuiltinRuleEvidence::Set(SetBuiltinRule::SupersetReflexivity),
                     Vec::new(),
                 ))
                 .into(),

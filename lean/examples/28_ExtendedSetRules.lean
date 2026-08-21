@@ -6,10 +6,9 @@ set_option linter.style.nameCheck false
 namespace __Compiler_28_ExtendedSetRules
 
 theorem __fact0 :
-    ∀ (A : Litex.Set) (B : Litex.Set) (__h0_3 : Litex.Subset A B),
-      Litex.In A (Litex.powerSet B) := by
-  intro A B __h0_3
-  have __c0_0 : Litex.In A (Litex.powerSet B) := Litex.SetRules.inPowerSetOfSubset (__h0_3)
+    ∀ (__p1 : Litex.Set) (__p2 : Litex.Set) (__domain1 : Litex.Subset __p1 __p2), Litex.In __p1 (Litex.powerSet __p2) := by
+  intro A B __domain1
+  have __c0_0 : Litex.In A (Litex.powerSet B) := Litex.SetRules.inPowerSetOfSubset (__domain1)
   exact __c0_0
 
 theorem __fact1 :
@@ -28,10 +27,9 @@ theorem __fact2 :
   exact ⟨__c2_0, __c2_1, __c2_2, __c2_3, __c2_4⟩
 
 theorem __fact3 :
-    ∀ (A : Litex.Set) (B : Litex.Set) (S : Litex.Set) (__h3_4 : Litex.Subset A S) (__h3_5 : Litex.Subset B S),
-      Litex.Subset (Litex.union A B) S := by
-  intro A B S __h3_4 __h3_5
-  exact Litex.SetRules.unionSubset (__h3_4) (__h3_5)
+    ∀ (__p1 : Litex.Set) (__p2 : Litex.Set) (__p3 : Litex.Set) (__domain1 : Litex.Subset __p1 __p3) (__domain2 : Litex.Subset __p2 __p3), Litex.Subset (Litex.union __p1 __p2) __p3 := by
+  intro A B S __domain1 __domain2
+  exact Litex.SetRules.unionSubset (__domain1) (__domain2)
 
 theorem __fact4 :
     ∀ (__p1 : Litex.Set) (__p2 : Litex.Set) (__domain1 : Litex.Set.Finite __p1) (__domain2 : Litex.Set.Finite __p2), Litex.Set.Finite (Litex.union __p1 __p2) ∧ Litex.Set.Finite (Litex.intersect __p1 __p2) := by
@@ -59,25 +57,22 @@ theorem __fact7 :
   exact __c7_0
 
 theorem __fact8 :
-    ∀ (A : Litex.Set) (B : Litex.Set) (__h8_3 : Litex.Subset A B),
-      Litex.Same (Litex.intersect A B) A := by
-  intro A B __h8_3
-  have __c8_0 : Litex.Same (Litex.intersect A B) A := Litex.SetRules.intersectEqLeftOfSubset (__h8_3)
+    ∀ (__p1 : Litex.Set) (__p2 : Litex.Set) (__domain1 : Litex.Subset __p1 __p2), Litex.Same (Litex.intersect __p1 __p2) __p1 := by
+  intro A B __domain1
+  have __c8_0 : Litex.Same (Litex.intersect A B) A := Litex.SetRules.intersectEqLeftOfSubset (__domain1)
   exact __c8_0
 
 theorem __fact9 :
-    ∀ (A : Litex.Set) (B : Litex.Set) (__h9_3 : Litex.Subset B A),
-      Litex.Same (Litex.intersect A B) B ∧ Litex.Same (Litex.setMinus A (Litex.setMinus A B)) B := by
-  intro A B __h9_3
-  have __c9_0 : Litex.Same (Litex.intersect A B) B := Litex.SetRules.intersectEqRightOfSubset (__h9_3)
-  have __c9_1 : Litex.Same (Litex.setMinus A (Litex.setMinus A B)) B := Litex.SetRules.setMinusRecoverSubset (__h9_3)
+    ∀ (__p1 : Litex.Set) (__p2 : Litex.Set) (__domain1 : Litex.Subset __p2 __p1), Litex.Same (Litex.intersect __p1 __p2) __p2 ∧ Litex.Same (Litex.setMinus __p1 (Litex.setMinus __p1 __p2)) __p2 := by
+  intro A B __domain1
+  have __c9_0 : Litex.Same (Litex.intersect A B) B := Litex.SetRules.intersectEqRightOfSubset (__domain1)
+  have __c9_1 : Litex.Same (Litex.setMinus A (Litex.setMinus A B)) B := Litex.SetRules.setMinusRecoverSubset (__domain1)
   exact ⟨__c9_0, __c9_1⟩
 
 theorem __fact10 :
-    ∀ (A : Litex.Set) (B : Litex.Set) (__h10_3 : Litex.Subset B A),
-      Litex.Same B (Litex.setMinus A (Litex.setMinus A B)) := by
-  intro A B __h10_3
-  have __c10_0 : Litex.Same B (Litex.setMinus A (Litex.setMinus A B)) := Litex.Same.symm (Litex.SetRules.setMinusRecoverSubset (__h10_3))
+    ∀ (__p1 : Litex.Set) (__p2 : Litex.Set) (__domain1 : Litex.Subset __p2 __p1), Litex.Same __p2 (Litex.setMinus __p1 (Litex.setMinus __p1 __p2)) := by
+  intro A B __domain1
+  have __c10_0 : Litex.Same B (Litex.setMinus A (Litex.setMinus A B)) := Litex.Same.symm (Litex.SetRules.setMinusRecoverSubset (__domain1))
   exact __c10_0
 
 theorem __fact11 :

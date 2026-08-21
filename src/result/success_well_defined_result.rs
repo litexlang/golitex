@@ -2,6 +2,33 @@ use crate::prelude::*;
 use std::fmt;
 use std::rc::Rc;
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub enum WellDefinednessRequirementRole {
+    BuiltinArgumentMembership {
+        argument_index: usize,
+    },
+    BuiltinArgumentNonzero {
+        argument_index: usize,
+    },
+    ConstructorPairwiseDistinct {
+        left_index: usize,
+        right_index: usize,
+    },
+    FunctionArgumentMembership {
+        layer_index: usize,
+        parameter_index: usize,
+    },
+    FunctionDomain {
+        layer_index: usize,
+        domain_index: usize,
+    },
+    AnonymousFunctionBodyMembership,
+    AnonymousFunctionBoundParameterSubset {
+        parameter_group_index: usize,
+        parameter_index: usize,
+    },
+}
+
 /// Successful output of checking one object for well-definedness.
 /// Direct checks own their recursively returned children; cache hits retain
 /// the current source occurrence and cite the exact earlier proof node.

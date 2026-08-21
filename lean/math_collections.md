@@ -438,25 +438,26 @@ real/complex operation bridges, and reconstruct a `ℚ` result witness. Natural
 `+` and `*` do the same with `ℕ`; natural subtraction is deliberately not
 inferred from this closure family. The verifier records
 `RationalMembershipClosure` and `NaturalMembershipClosure` with their ordered
-operand facts, so emitter validates the target operator, set, and operands
+operand facts, so Lean source construction validates the target operator, set, and operands
 instead of rediscovering a theorem.
 
 Nearest rejected rational form: `a^z $in Q` for `a $in Q`, `z $in Z`. Its
-operator-specific `Pow` certificate reaches IR, but the complex-valued source
+operator-specific `Pow` certificate reaches the recursive Result, but the complex-valued source
 power term and native exponent semantics have not received a reviewed compiler
 contract. It therefore remains fail-closed.
 
 ## Generated example contract
 
-The `.lit` file is authoritative. Compiler first verifies it and captures the
-exact `LitexToLeanStatementIr`; its native-carrier emitter validates and
-consumes that IR. It does not reparse display text or search for a Lean proof.
+The `.lit` file is authoritative. Compiler first executes it and receives the
+exact recursive `StmtResult`; its native-carrier source construction validates
+and consumes that Result directly. It does not reparse display text or search
+for a Lean proof.
 A same-name `.lean` file is committed so reviewers can inspect the translation
 without running the tool. Every generated file imports the public `Litex`
 umbrella exactly once.
 
 The drift gate recompiles each `.lit` in memory, compares the output byte for
-byte, and invokes Lean on the checked-in result. Unsupported verified IR fails
+byte, and invokes Lean on the checked-in result. Unsupported successful Results fail
 closed. The initial reviewed routes are equality-based membership transport,
 the fingerprinted `order.less_equal_of_less` registered rule, and top-level
 closed numeric equality through verifier-selected reflexivity or rational

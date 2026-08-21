@@ -1090,6 +1090,16 @@ impl ResultGraph {
                     result.forall_fact.to_string(),
                     None,
                 );
+                for (index, assumption) in result.parameter_assumptions.iter().enumerate() {
+                    let fact_id =
+                        self.ensure_fact_node(assumption.fact_id, assumption.fact.to_string());
+                    self.add_edge(&id, &fact_id, "parameter_assumption", index);
+                }
+                for (index, assumption) in result.domain_assumptions.iter().enumerate() {
+                    let fact_id =
+                        self.ensure_fact_node(assumption.fact_id, assumption.fact.to_string());
+                    self.add_edge(&id, &fact_id, "domain_assumption", index);
+                }
                 self.add_infers(&id, &result.assumption_infers, format!("{id}/assumption"));
                 for (index, proved) in result.proves.iter().enumerate() {
                     let child_id = format!("{id}/prove:{index}");
@@ -1560,6 +1570,22 @@ fn infer_rule_role(rule: &InferRule) -> &'static str {
         InferRule::ListSetMembershipImpliesEqualityAlternatives(_) => {
             "ListSetMembershipImpliesEqualityAlternatives"
         }
+        InferRule::MultiplicationByNegativeOneReversesOrderAgainstZero => {
+            "MultiplicationByNegativeOneReversesOrderAgainstZero"
+        }
+        InferRule::StrictOrderComparedToZeroImpliesWeakOrder => {
+            "StrictOrderComparedToZeroImpliesWeakOrder"
+        }
+        InferRule::MembershipInSetWithKnownEqualityImpliesMembershipInEqualSet(_) => {
+            "MembershipInSetWithKnownEqualityImpliesMembershipInEqualSet"
+        }
+        InferRule::SubsetImpliesElementwiseMembershipForall(_) => {
+            "SubsetImpliesElementwiseMembershipForall"
+        }
+        InferRule::SupersetImpliesElementwiseMembershipForall(_) => {
+            "SupersetImpliesElementwiseMembershipForall"
+        }
+        InferRule::ConjunctionImpliesComponent(_) => "ConjunctionImpliesComponent",
     }
 }
 

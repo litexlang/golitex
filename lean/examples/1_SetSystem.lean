@@ -9,15 +9,26 @@ namespace __Sketch01
 
 abbrev A : Litex.Set := Litex.R
 
+theorem __fact0 : True := by
+  exact True.intro
+
+theorem __fact1 : Litex.Same A Litex.R := by
+  exact Litex.Same.refl Litex.R
+
 abbrev B : Litex.Set := Litex.C
 
-theorem __fact0 :
-    ∀ (a : ℂ) (__h0_1 : Litex.In a A) (b : ℂ) (__h0_2 : Litex.In b B) (__h0_3 : Litex.Same a b),
-      Litex.In b A ∧ Litex.In a B := by
-  intro a __h0_1 b __h0_2 __h0_3
-  have __c0_0 : Litex.In b A := (Litex.In.congr __h0_3 A).mp __h0_1
-  have __c0_1 : Litex.In a B := (Litex.In.congr __h0_3 B).mpr __h0_2
-  exact ⟨__c0_0, __c0_1⟩
+theorem __fact2 : True := by
+  exact True.intro
+
+theorem __fact3 : Litex.Same B Litex.C := by
+  exact Litex.Same.refl Litex.C
+
+theorem __fact4 :
+    ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 A) (__p2 : ℂ) (__type2 : Litex.In __p2 B) (__domain1 : Litex.Same __p1 __p2), Litex.In __p2 A ∧ Litex.In __p1 B := by
+  intro a __h4_1 b __h4_2 __domain1
+  have __c4_0 : Litex.In b A := (Litex.In.congr (__domain1) A).mp (__h4_1)
+  have __c4_1 : Litex.In a B := (Litex.In.congr (__domain1) B).mpr (__h4_2)
+  exact ⟨__c4_0, __c4_1⟩
 
 end __Sketch01
 

@@ -8,8 +8,7 @@ namespace __Compiler_5_AtomicMembership
 theorem __fact0 : Litex.In (1 : ℂ) Litex.N := by
   exact Litex.Rules.complexEqNatInN (1 : ℂ) 1 (by norm_num)
 
-theorem __fact1 : Litex.Nonnegative (1 : ℂ) := by
-  exact Litex.Rules.nonnegativeOfInN (__fact0)
+theorem __fact1 : Litex.Nonnegative (1 : ℂ) := Litex.Rules.nonnegativeOfInN (__fact0)
 
 theorem __fact2 : Litex.In (1 : ℂ) Litex.Z := by
   exact Litex.Rules.complexEqIntInZ (1 : ℂ) 1 (by norm_num)

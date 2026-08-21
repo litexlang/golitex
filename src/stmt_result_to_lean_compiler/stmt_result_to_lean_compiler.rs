@@ -1,51 +1,15 @@
+use super::lean_compilation_types::*;
+use super::registered_local_builtin_rule_identifiers_for_lean::*;
+use super::represent_litex_function_contracts_in_lean::*;
+use super::represent_litex_objects_in_lean::*;
 use super::stmt_result_to_lean_compiler_environment_stack::*;
-use crate::litex_to_lean_ir::{
-    LitexToLeanIrBuilder, ADD_NONNEGATIVE_FINGERPRINT, ADD_NONNEGATIVE_RULE_ID,
-    ADD_POSITIVE_FINGERPRINT, ADD_POSITIVE_OF_NONNEGATIVE_POSITIVE_FINGERPRINT,
-    ADD_POSITIVE_OF_NONNEGATIVE_POSITIVE_RULE_ID, ADD_POSITIVE_OF_POSITIVE_NONNEGATIVE_FINGERPRINT,
-    ADD_POSITIVE_OF_POSITIVE_NONNEGATIVE_RULE_ID, ADD_POSITIVE_RULE_ID,
-    DIV_NONNEGATIVE_FINGERPRINT, DIV_NONNEGATIVE_RULE_ID, DIV_POSITIVE_FINGERPRINT,
-    DIV_POSITIVE_RULE_ID, LESS_EQUAL_OF_LESS_FINGERPRINT, LESS_EQUAL_OF_LESS_RULE_ID,
-    MUL_NONNEGATIVE_FINGERPRINT, MUL_NONNEGATIVE_RULE_ID, MUL_POSITIVE_FINGERPRINT,
-    MUL_POSITIVE_RULE_ID, SET_EMPTY_SUBSET_FINGERPRINT, SET_EMPTY_SUBSET_RULE_ID,
-    SET_INTERSECT_ASSOCIATIVE_FINGERPRINT, SET_INTERSECT_ASSOCIATIVE_RULE_ID,
-    SET_INTERSECT_COMMUTATIVE_FINGERPRINT, SET_INTERSECT_COMMUTATIVE_RULE_ID,
-    SET_INTERSECT_EQ_LEFT_OF_SUBSET_FINGERPRINT, SET_INTERSECT_EQ_LEFT_OF_SUBSET_RULE_ID,
-    SET_INTERSECT_EQ_RIGHT_OF_SUBSET_FINGERPRINT, SET_INTERSECT_EQ_RIGHT_OF_SUBSET_RULE_ID,
-    SET_INTERSECT_FINITE_FINGERPRINT, SET_INTERSECT_FINITE_RULE_ID,
-    SET_INTERSECT_MEMBERSHIP_FINGERPRINT, SET_INTERSECT_MEMBERSHIP_RULE_ID,
-    SET_INTERSECT_SUBSET_LEFT_FINGERPRINT, SET_INTERSECT_SUBSET_LEFT_RULE_ID,
-    SET_INTERSECT_SUBSET_RIGHT_FINGERPRINT, SET_INTERSECT_SUBSET_RIGHT_RULE_ID,
-    SET_INTERSECT_UNION_DISTRIBUTIVE_FINGERPRINT, SET_INTERSECT_UNION_DISTRIBUTIVE_RULE_ID,
-    SET_MINUS_FINITE_LEFT_FINGERPRINT, SET_MINUS_FINITE_LEFT_RULE_ID,
-    SET_MINUS_INTERSECT_DE_MORGAN_FINGERPRINT, SET_MINUS_INTERSECT_DE_MORGAN_RULE_ID,
-    SET_MINUS_MEMBERSHIP_FINGERPRINT, SET_MINUS_MEMBERSHIP_RULE_ID,
-    SET_MINUS_RECOVER_SUBSET_FINGERPRINT, SET_MINUS_RECOVER_SUBSET_RULE_ID,
-    SET_MINUS_SUBSET_LEFT_FINGERPRINT, SET_MINUS_SUBSET_LEFT_RULE_ID,
-    SET_MINUS_UNION_DE_MORGAN_FINGERPRINT, SET_MINUS_UNION_DE_MORGAN_RULE_ID,
-    SET_POWER_SET_FINITE_FINGERPRINT, SET_POWER_SET_FINITE_RULE_ID,
-    SET_POWER_SET_MEMBERSHIP_OF_SUBSET_FINGERPRINT, SET_POWER_SET_MEMBERSHIP_OF_SUBSET_RULE_ID,
-    SET_POWER_SET_NONEMPTY_FINGERPRINT, SET_POWER_SET_NONEMPTY_RULE_ID,
-    SET_SUBSET_EQ_SET_MINUS_RECOVERY_FINGERPRINT, SET_SUBSET_EQ_SET_MINUS_RECOVERY_RULE_ID,
-    SET_SUBSET_UNION_LEFT_FINGERPRINT, SET_SUBSET_UNION_LEFT_RULE_ID,
-    SET_SUBSET_UNION_RIGHT_FINGERPRINT, SET_SUBSET_UNION_RIGHT_RULE_ID,
-    SET_UNION_ASSOCIATIVE_FINGERPRINT, SET_UNION_ASSOCIATIVE_RULE_ID,
-    SET_UNION_COMMUTATIVE_FINGERPRINT, SET_UNION_COMMUTATIVE_RULE_ID,
-    SET_UNION_EMPTY_LEFT_FINGERPRINT, SET_UNION_EMPTY_LEFT_RULE_ID,
-    SET_UNION_EMPTY_RIGHT_FINGERPRINT, SET_UNION_EMPTY_RIGHT_RULE_ID, SET_UNION_FINITE_FINGERPRINT,
-    SET_UNION_FINITE_RULE_ID, SET_UNION_IDEMPOTENT_FINGERPRINT, SET_UNION_IDEMPOTENT_RULE_ID,
-    SET_UNION_MEMBERSHIP_LEFT_FINGERPRINT, SET_UNION_MEMBERSHIP_LEFT_RULE_ID,
-    SET_UNION_MEMBERSHIP_RIGHT_FINGERPRINT, SET_UNION_MEMBERSHIP_RIGHT_RULE_ID,
-    SET_UNION_NONEMPTY_LEFT_FINGERPRINT, SET_UNION_NONEMPTY_LEFT_RULE_ID,
-    SET_UNION_NONEMPTY_RIGHT_FINGERPRINT, SET_UNION_NONEMPTY_RIGHT_RULE_ID,
-    SET_UNION_SUBSET_FINGERPRINT, SET_UNION_SUBSET_RULE_ID,
-};
 use crate::prelude::*;
 use crate::verify::local_builtin_catalog::registered_local_builtin_fingerprint_by_id;
 use crate::verify::rule_schema::{canonical_objs_equal, MatchLimits, RuleFingerprint, RuleId};
 use std::collections::{HashMap, HashSet};
 use std::mem;
 use std::path::Path;
+use std::rc::Rc;
 
 /// Compiles the recursive output of Litex statement execution into Lean source.
 ///
@@ -60,13 +24,6 @@ pub struct StmtResultToLeanCompiler {
     next_sketch_namespace_index: usize,
     next_clear_namespace_index: usize,
     open_clear_namespace: Option<String>,
-    compatibility_adapter_policy: StmtResultToLeanCompatibilityAdapterPolicy,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum StmtResultToLeanCompatibilityAdapterPolicy {
-    AllowDuringMigration,
-    RejectForDirectResultCompilationAudit,
 }
 
 struct CompiledOrdinaryFactGoalProofBody {
@@ -131,9 +88,21 @@ struct CompiledFactProofBody {
 struct CompiledDirectForallProofBody {
     proposition: String,
     proof_expression: String,
-    parameter_premises: Vec<LitexToLeanLocalPremiseIr>,
-    premises: Vec<LitexToLeanLocalPremiseIr>,
+    parameter_premises: Vec<LeanLocalFactPremise>,
+    premises: Vec<LeanLocalFactPremise>,
     conclusions: Vec<(FactId, Fact)>,
+}
+
+/// One exact theorem publication selected from a successful `ForallProof`
+/// store Result. Runtime may store the complete source forall, or one theorem
+/// per conclusion with source binders that the conclusion does not use
+/// removed. This is a short-lived compiler selection over Result-owned data,
+/// not another proof or statement IR.
+struct DirectForallResultPublicationSelection {
+    forall_fact: ForallFact,
+    stored_fact_id: Option<FactId>,
+    source_parameter_indices: Vec<usize>,
+    source_conclusion_indices: Vec<usize>,
 }
 
 struct CompiledByDefinitionComponentProofBody {
@@ -155,18 +124,23 @@ struct CompiledLitexTheoremInstantiationConclusionProofBody {
     proof_expression: String,
 }
 
+struct CompiledFiniteAssignmentBranch {
+    local_lines: Vec<String>,
+    exit_proof: String,
+}
+
 /// Target-language construction output for one reviewed native-real function
 /// Result. This is not another statement IR: it exists only while the parent
 /// `SuccessHaveFnEqualStmtResult` method wraps its child-scope compilation in
 /// persistent Lean declarations.
 struct CompiledNamedFunctionDefinitionBody {
-    function: LitexToLeanFunctionTypeIr,
+    function: LeanTargetFunctionTypeRepresentation,
     source_body: Obj,
-    lowered_body: LitexToLeanObjectIr,
+    lowered_body: LeanTargetObjectRepresentation,
     value: String,
     uses_native_real_body: bool,
-    parameter_premises: Vec<LitexToLeanLocalPremiseIr>,
-    domain_premises: Vec<LitexToLeanLocalPremiseIr>,
+    parameter_premises: Vec<LeanLocalFactPremise>,
+    domain_premises: Vec<LeanLocalFactPremise>,
 }
 
 /// Exact target-side views retained while replaying one checked named-function
@@ -178,7 +152,7 @@ struct CheckedNamedFunctionReductionArgumentEvidence {
     source_argument: Obj,
     rendered_source_argument: String,
     membership_proof: String,
-    parameter_set: LitexToLeanObjectIr,
+    parameter_set: LeanTargetObjectRepresentation,
 }
 
 /// Target-language construction output returned from the tuple index scope.
@@ -197,12 +171,12 @@ struct CompiledIndexedTupleDefinitionBody {
 /// parent compiler consumes one common shape instead of three parallel
 /// temporary structures.
 struct CompiledIndexedFunctionDefinitionBody {
-    function: LitexToLeanFunctionTypeIr,
+    function: LeanTargetFunctionTypeRepresentation,
     source_body: Obj,
-    lowered_body: LitexToLeanObjectIr,
+    lowered_body: LeanTargetObjectRepresentation,
     value: String,
-    parameter_premises: Vec<LitexToLeanLocalPremiseIr>,
-    domain_premises: Vec<LitexToLeanLocalPremiseIr>,
+    parameter_premises: Vec<LeanLocalFactPremise>,
+    domain_premises: Vec<LeanLocalFactPremise>,
 }
 
 #[derive(Clone, Copy)]
@@ -213,25 +187,6 @@ enum DefinedPredicateInferenceConclusionPublication {
 
 impl StmtResultToLeanCompiler {
     pub fn new(source_label: &str) -> Self {
-        Self::new_with_compatibility_adapter_policy(
-            source_label,
-            StmtResultToLeanCompatibilityAdapterPolicy::AllowDuringMigration,
-        )
-    }
-
-    pub fn new_rejecting_compatibility_adapter_for_direct_result_compilation_audit(
-        source_label: &str,
-    ) -> Self {
-        Self::new_with_compatibility_adapter_policy(
-            source_label,
-            StmtResultToLeanCompatibilityAdapterPolicy::RejectForDirectResultCompilationAudit,
-        )
-    }
-
-    fn new_with_compatibility_adapter_policy(
-        source_label: &str,
-        compatibility_adapter_policy: StmtResultToLeanCompatibilityAdapterPolicy,
-    ) -> Self {
         Self {
             source_label: source_label.to_string(),
             environment_stack: StmtResultToLeanCompilerEnvironmentStack::default(),
@@ -240,8 +195,260 @@ impl StmtResultToLeanCompiler {
             next_sketch_namespace_index: 0,
             next_clear_namespace_index: 0,
             open_clear_namespace: None,
-            compatibility_adapter_policy,
         }
+    }
+
+    /// Build the temporary Lean-rendering index directly from the recursive
+    /// WD Result, then compile every retained argument/domain verification
+    /// through the ordinary direct fact-result compiler.
+    fn construct_well_definedness_to_lean_compilation_context(
+        &mut self,
+        result: &SuccessVerifyFactWellDefinedResult,
+    ) -> Result<StmtResultWellDefinednessToLeanCompilationContext, String> {
+        let mut context = StmtResultWellDefinednessToLeanCompilationContext::default();
+        let recursive = result
+            .recursive
+            .as_deref()
+            .ok_or_else(|| "successful fact WD result has no recursive proof".to_string())?;
+        collect_well_definedness_to_lean_context_from_fact_result(recursive, &mut context)?;
+
+        let previous = self.environment_stack.well_definedness.replace(context);
+        let requirement_locations = self
+            .environment_stack
+            .well_definedness
+            .as_ref()
+            .expect("WD compilation context was just installed")
+            .function_applications
+            .iter()
+            .flat_map(|(occurrence_id, application)| {
+                application
+                    .layers
+                    .iter()
+                    .enumerate()
+                    .flat_map(move |(layer_index, layer)| {
+                        layer.requirements.iter().enumerate().map(
+                            move |(requirement_index, requirement)| {
+                                (
+                                    *occurrence_id,
+                                    layer_index,
+                                    requirement_index,
+                                    requirement.verification.clone(),
+                                )
+                            },
+                        )
+                    })
+            })
+            .collect::<Vec<_>>();
+
+        let compilation_result: Result<(), String> = (|| {
+            for (occurrence_id, layer_index, requirement_index, verification) in
+                requirement_locations
+            {
+                let proof_expression = match self
+                    .construct_lean_proof_from_shared_verify_fact_result(verification.as_ref())
+                {
+                    Ok(Some(proof_expression)) => Some(proof_expression),
+                    // A requirement nested below a forall binder can cite a
+                    // parameter FactId that is intentionally unavailable in
+                    // this outer environment. Retain the recursive Result and
+                    // construct its proof only when the renderer enters that
+                    // binder and installs its exact aliases.
+                    Err(error) if error.contains("unavailable cited fact") => None,
+                    Ok(None) => {
+                        return Err(format!(
+                            "function application occurrence {} layer {} requirement {} has no direct fact-result proof compiler",
+                            occurrence_id.value(),
+                            layer_index,
+                            requirement_index,
+                        ));
+                    }
+                    Err(error) => return Err(error),
+                };
+                self.environment_stack
+                    .well_definedness
+                    .as_mut()
+                    .expect("WD compilation context remains active")
+                    .function_applications
+                    .get_mut(&occurrence_id)
+                    .expect("collected function application remains indexed")
+                    .layers[layer_index]
+                    .requirements[requirement_index]
+                    .proof_expression = proof_expression;
+            }
+            let anonymous_function_occurrences = self
+                .environment_stack
+                .well_definedness
+                .as_ref()
+                .expect("WD compilation context remains active")
+                .anonymous_functions
+                .keys()
+                .copied()
+                .collect::<Vec<_>>();
+            for occurrence_id in anonymous_function_occurrences {
+                self.compile_anonymous_function_well_definedness_context(occurrence_id)?;
+            }
+            Ok(())
+        })();
+        let completed = self
+            .environment_stack
+            .well_definedness
+            .take()
+            .expect("WD compilation context remains active");
+        self.environment_stack.well_definedness = previous;
+        compilation_result?;
+        Ok(completed)
+    }
+
+    fn compile_anonymous_function_well_definedness_context(
+        &mut self,
+        occurrence_id: SourceObjectOccurrenceId,
+    ) -> Result<(), String> {
+        let anonymous_context = self
+            .environment_stack
+            .well_definedness
+            .as_ref()
+            .and_then(|context| context.anonymous_functions.get(&occurrence_id))
+            .cloned()
+            .ok_or_else(|| {
+                format!(
+                    "anonymous function occurrence {} disappeared from its WD Result context",
+                    occurrence_id.value()
+                )
+            })?;
+        let Obj::AnonymousFn(source_function) = &anonymous_context.source_function else {
+            return Err("anonymous-function compilation context retained another object".into());
+        };
+        let function = LeanTargetFunctionTypeRepresentation::lower_anonymous(source_function)?;
+        if function.parameters.len() != anonymous_context.parameters.len()
+            || function.domain_facts.len() != anonymous_context.domains.len()
+        {
+            return Err("anonymous-function WD Result changed its binder arity".into());
+        }
+
+        self.environment_stack.push_inherited_environment();
+        let compilation: Result<_, String> = (|| {
+            let uses_telescope = function_uses_telescope(&function);
+            let mut allowed_sources = Vec::new();
+            for (parameter_index, (parameter, premise)) in function
+                .parameters
+                .iter()
+                .zip(anonymous_context.parameters.iter())
+                .enumerate()
+            {
+                if premise.symbol_id != Some(parameter.symbol_id)
+                    || !matches!(
+                        premise.role,
+                        WellDefinedBinderPremiseRole::ParameterMembership { .. }
+                    )
+                {
+                    return Err(format!(
+                        "anonymous function parameter {parameter_index} changed its Result-owned premise"
+                    ));
+                }
+                let suffix = if uses_telescope {
+                    (parameter_index + 1).to_string()
+                } else {
+                    String::new()
+                };
+                let argument = format!("__arg{suffix}");
+                let membership = format!("__arg{suffix}_in");
+                self.environment_stack
+                    .symbol_names
+                    .insert(parameter.symbol_id, argument.clone());
+                self.environment_stack
+                    .fact_names
+                    .insert(premise.fact_id, membership.clone());
+                self.environment_stack
+                    .fact_propositions
+                    .insert(premise.fact_id, premise.proposition.clone());
+                install_numeric_representations_from_membership(
+                    parameter.symbol_id,
+                    &parameter.set,
+                    &argument,
+                    &membership,
+                    &mut self.environment_stack,
+                );
+                allowed_sources.push((premise.fact_id, premise.proposition.clone()));
+            }
+            for (domain_index, premise) in anonymous_context.domains.iter().enumerate() {
+                if !matches!(premise.role, WellDefinedBinderPremiseRole::Domain { .. }) {
+                    return Err(format!(
+                        "anonymous function domain {domain_index} changed its Result-owned role"
+                    ));
+                }
+                let selector = conjunction_selector(domain_index, anonymous_context.domains.len())?;
+                let name = if anonymous_context.domains.len() == 1 {
+                    "__arg_domain".to_string()
+                } else {
+                    format!("__arg_domain{selector}")
+                };
+                self.environment_stack
+                    .fact_names
+                    .insert(premise.fact_id, name);
+                self.environment_stack
+                    .fact_propositions
+                    .insert(premise.fact_id, premise.proposition.clone());
+                allowed_sources.push((premise.fact_id, premise.proposition.clone()));
+            }
+
+            let mut inferred_proof_lines = Vec::new();
+            if !anonymous_context.assumption_infers.is_empty() {
+                self.compile_typed_inference_results_in_current_compiler_environment(
+                    &anonymous_context.assumption_infers,
+                    &allowed_sources,
+                    &mut inferred_proof_lines,
+                    "anonymous-function binder inference Result",
+                )?;
+            }
+            let allowed_fact_ids = allowed_sources
+                .iter()
+                .map(|(fact_id, _)| *fact_id)
+                .collect::<HashSet<_>>();
+            let inferred_fact_bindings = self
+                .environment_stack
+                .fact_propositions
+                .iter()
+                .filter(|(fact_id, _)| !allowed_fact_ids.contains(fact_id))
+                .filter_map(|(fact_id, fact)| {
+                    self.environment_stack
+                        .fact_names
+                        .get(fact_id)
+                        .map(|name| (*fact_id, fact.clone(), name.clone()))
+                })
+                .collect::<Vec<_>>();
+            let closure_proof = match anonymous_context.closure.role {
+                WellDefinednessRequirementRole::AnonymousFunctionBodyMembership => Some(
+                    self.construct_lean_proof_from_shared_verify_fact_result(
+                        anonymous_context.closure.verification.as_ref(),
+                    )?
+                    .ok_or_else(|| {
+                        "anonymous function body-membership Result has no direct proof compiler"
+                            .to_string()
+                    })?,
+                ),
+                WellDefinednessRequirementRole::AnonymousFunctionBoundParameterSubset {
+                    ..
+                } => None,
+                role => {
+                    return Err(format!(
+                        "anonymous function retained unsupported closure role {role:?}"
+                    ));
+                }
+            };
+            Ok((inferred_proof_lines, inferred_fact_bindings, closure_proof))
+        })();
+        self.environment_stack.pop_local_environment();
+        let (inferred_proof_lines, inferred_fact_bindings, closure_proof) = compilation?;
+        let retained = self
+            .environment_stack
+            .well_definedness
+            .as_mut()
+            .and_then(|context| context.anonymous_functions.get_mut(&occurrence_id))
+            .expect("anonymous function remains in active WD Result context");
+        retained.inferred_proof_lines = inferred_proof_lines;
+        retained.inferred_fact_bindings = inferred_fact_bindings;
+        retained.closure.proof_expression = closure_proof;
+        Ok(())
     }
 
     /// Transitional direct entry point. It consumes one completed result at a
@@ -267,7 +474,7 @@ impl StmtResultToLeanCompiler {
     fn compile_stmt_result_to_lean_source(&mut self, result: &StmtResult) -> Result<(), String> {
         match result {
             StmtResult::Success(success) => {
-                self.compile_success_stmt_result_to_lean_source(success, result)
+                self.compile_success_stmt_result_to_lean_source(success)
             }
             StmtResult::Unknown(result) => Err(format!(
                 "StmtResult-to-Lean compiler cannot compile unknown result: {result:?}"
@@ -285,7 +492,6 @@ impl StmtResultToLeanCompiler {
     fn compile_success_stmt_result_to_lean_source(
         &mut self,
         success: &SuccessStmtResult,
-        complete_result: &StmtResult,
     ) -> Result<(), String> {
         match success {
             SuccessStmtResult::Fact(result) => self.compile_fact_stmt_result_to_lean_source(result),
@@ -293,7 +499,7 @@ impl StmtResultToLeanCompiler {
                 if self.compile_trust_stmt_result_to_lean_source(result)? {
                     Ok(())
                 } else {
-                    self.compile_compatibility_statement_result_to_lean_source(complete_result)
+                    self.unsupported_success_stmt_result(success)
                 }
             }
             SuccessStmtResult::UnsafeStmt(SuccessUnsafeStmtResult::TrustHaveStmt(result)) => {
@@ -317,14 +523,14 @@ impl StmtResultToLeanCompiler {
                     if self.compile_obtain_obj_from_exist_fact_stmt_result_to_lean_source(result)? {
                         Ok(())
                     } else {
-                        self.compile_compatibility_statement_result_to_lean_source(complete_result)
+                        self.unsupported_success_stmt_result(success)
                     }
                 }
                 SuccessDefObjStmtResult::HaveObjByExistFactsStmt(result) => {
                     if self.compile_have_obj_by_exist_facts_stmt_result_to_lean_source(result)? {
                         Ok(())
                     } else {
-                        self.compile_compatibility_statement_result_to_lean_source(complete_result)
+                        self.unsupported_success_stmt_result(success)
                     }
                 }
                 SuccessDefObjStmtResult::ObtainObjFromAtomicFact(result) => {
@@ -333,42 +539,42 @@ impl StmtResultToLeanCompiler {
                     {
                         Ok(())
                     } else {
-                        self.compile_compatibility_statement_result_to_lean_source(complete_result)
+                        self.unsupported_success_stmt_result(success)
                     }
                 }
                 SuccessDefObjStmtResult::HaveFnEqualStmt(result) => {
                     if self.compile_have_fn_equal_stmt_result_to_lean_source(result)? {
                         Ok(())
                     } else {
-                        self.compile_compatibility_statement_result_to_lean_source(complete_result)
+                        self.unsupported_success_stmt_result(success)
                     }
                 }
                 SuccessDefObjStmtResult::HaveTupleStmt(result) => {
                     if self.compile_have_tuple_stmt_result_to_lean_source(result)? {
                         Ok(())
                     } else {
-                        self.compile_compatibility_statement_result_to_lean_source(complete_result)
+                        self.unsupported_success_stmt_result(success)
                     }
                 }
                 SuccessDefObjStmtResult::HaveSeqStmt(result) => {
                     if self.compile_have_sequence_stmt_result_to_lean_source(result)? {
                         Ok(())
                     } else {
-                        self.compile_compatibility_statement_result_to_lean_source(complete_result)
+                        self.unsupported_success_stmt_result(success)
                     }
                 }
                 SuccessDefObjStmtResult::HaveFiniteSeqStmt(result) => {
                     if self.compile_have_finite_sequence_stmt_result_to_lean_source(result)? {
                         Ok(())
                     } else {
-                        self.compile_compatibility_statement_result_to_lean_source(complete_result)
+                        self.unsupported_success_stmt_result(success)
                     }
                 }
                 SuccessDefObjStmtResult::HaveMatrixStmt(result) => {
                     if self.compile_have_matrix_stmt_result_to_lean_source(result)? {
                         Ok(())
                     } else {
-                        self.compile_compatibility_statement_result_to_lean_source(complete_result)
+                        self.unsupported_success_stmt_result(success)
                     }
                 }
                 SuccessDefObjStmtResult::ObtainObjFromThm(result) => {
@@ -411,7 +617,7 @@ impl StmtResultToLeanCompiler {
                 if self.compile_named_theorem_stmt_result_to_lean_source(result)? {
                     Ok(())
                 } else {
-                    self.compile_compatibility_statement_result_to_lean_source(complete_result)
+                    self.unsupported_success_stmt_result(success)
                 }
             }
             SuccessStmtResult::DefStrategyStmt(result) => {
@@ -422,21 +628,21 @@ impl StmtResultToLeanCompiler {
                     if self.compile_by_cases_stmt_result_to_lean_source(result)? {
                         Ok(())
                     } else {
-                        self.compile_compatibility_statement_result_to_lean_source(complete_result)
+                        self.unsupported_success_stmt_result(success)
                     }
                 }
                 SuccessByStmtResult::ByContraStmt(result) => {
                     if self.compile_by_contra_stmt_result_to_lean_source(result)? {
                         Ok(())
                     } else {
-                        self.compile_compatibility_statement_result_to_lean_source(complete_result)
+                        self.unsupported_success_stmt_result(success)
                     }
                 }
                 SuccessByStmtResult::ByDefStmt(result) => {
                     if self.compile_by_definition_stmt_result_to_lean_source(result)? {
                         Ok(())
                     } else {
-                        self.compile_compatibility_statement_result_to_lean_source(complete_result)
+                        self.unsupported_success_stmt_result(success)
                     }
                 }
                 SuccessByStmtResult::ByThmStmt(result) => {
@@ -480,13 +686,55 @@ impl StmtResultToLeanCompiler {
                         result.verification.as_ref(),
                         RegisteredPredicatePropertyCompilationKind::Antisymmetric,
                     ),
-                _ => self.unsupported_success_stmt_result(success),
+                SuccessByStmtResult::ByExtensionStmt(result) => {
+                    if self.compile_by_extension_stmt_result_to_lean_source(result)? {
+                        Ok(())
+                    } else {
+                        self.unsupported_success_stmt_result(success)
+                    }
+                }
+                SuccessByStmtResult::ByEnumerateFiniteSetStmt(result) => {
+                    if self.compile_by_enumerate_finite_set_stmt_result_to_lean_source(result)? {
+                        Ok(())
+                    } else {
+                        self.unsupported_success_stmt_result(success)
+                    }
+                }
+                SuccessByStmtResult::ByForStmt(result) => {
+                    if self.compile_by_for_stmt_result_to_lean_source(result)? {
+                        Ok(())
+                    } else {
+                        self.unsupported_success_stmt_result(success)
+                    }
+                }
+                SuccessByStmtResult::ByEnumerateRangeStmt(result) => {
+                    if self.compile_by_enumerate_range_stmt_result_to_lean_source(result)? {
+                        Ok(())
+                    } else {
+                        self.unsupported_success_stmt_result(success)
+                    }
+                }
+                SuccessByStmtResult::ByClosedRangeAsCasesStmt(result) => {
+                    if self.compile_by_closed_range_as_cases_stmt_result_to_lean_source(result)? {
+                        Ok(())
+                    } else {
+                        self.unsupported_success_stmt_result(success)
+                    }
+                }
+                SuccessByStmtResult::ByFiniteSetInducStmt(_)
+                | SuccessByStmtResult::ByInducStmt(_)
+                | SuccessByStmtResult::ByZornLemmaStmt(_)
+                | SuccessByStmtResult::ByAxiomOfChoiceStmt(_)
+                | SuccessByStmtResult::ByRegularityAxiomStmt(_)
+                | SuccessByStmtResult::ByStructDefStmt(_) => {
+                    self.unsupported_success_stmt_result(success)
+                }
             },
             SuccessStmtResult::Witness(SuccessWitnessStmtResult::WitnessExistFact(result)) => {
                 if self.compile_witness_exist_fact_stmt_result_to_lean_source(result)? {
                     Ok(())
                 } else {
-                    self.compile_compatibility_statement_result_to_lean_source(complete_result)
+                    self.unsupported_success_stmt_result(success)
                 }
             }
             SuccessStmtResult::Witness(SuccessWitnessStmtResult::WitnessAtomicFact(result)) => {
@@ -508,14 +756,14 @@ impl StmtResultToLeanCompiler {
                     if self.compile_claim_stmt_result_to_lean_source(result)? {
                         Ok(())
                     } else {
-                        self.compile_compatibility_statement_result_to_lean_source(complete_result)
+                        self.unsupported_success_stmt_result(success)
                     }
                 }
                 SuccessProofBlockStmtResult::ExampleStmt(result) => {
                     if self.compile_example_stmt_result_to_lean_source(result)? {
                         Ok(())
                     } else {
-                        self.compile_compatibility_statement_result_to_lean_source(complete_result)
+                        self.unsupported_success_stmt_result(success)
                     }
                 }
                 SuccessProofBlockStmtResult::SketchStmt(result) => {
@@ -752,7 +1000,7 @@ impl StmtResultToLeanCompiler {
 
             let lean_name = lean_identifier(binding.name());
             if matches!(param_type, ParamType::Set(_)) {
-                let lowered_value = LitexToLeanObjectIr::lower(value)?;
+                let lowered_value = LeanTargetObjectRepresentation::lower(value)?;
                 let rendered_value =
                     render_set_definition_value(&lowered_value, &self.environment_stack)?;
                 if self
@@ -769,6 +1017,41 @@ impl StmtResultToLeanCompiler {
                 self.declarations.push(format!(
                     "abbrev {lean_name} : Litex.Set := {rendered_value}"
                 ));
+
+                // A set alias is a real Result layer, not only a target-side
+                // abbreviation. Publish both frozen store identities so a
+                // recursive child may cite the set classification or the
+                // defining equality from the current compiler environment.
+                let stored_type_fact = expected_stored_facts[index * 2].clone();
+                let stored_equality = expected_stored_facts[index * 2 + 1].clone();
+                let stored_type_fact_id = stored_fact_ids[index * 2];
+                let stored_equality_fact_id = stored_fact_ids[index * 2 + 1];
+                let rendered_type_fact = render_fact(&stored_type_fact, &self.environment_stack)?;
+                let rendered_equality = render_fact(&stored_equality, &self.environment_stack)?;
+
+                let type_theorem_name = format!("__fact{}", self.next_fact_name_index);
+                self.declarations.push(format!(
+                    "theorem {type_theorem_name} : {rendered_type_fact} := by\n  exact True.intro"
+                ));
+                self.environment_stack
+                    .fact_names
+                    .insert(stored_type_fact_id, type_theorem_name);
+                self.environment_stack
+                    .fact_propositions
+                    .insert(stored_type_fact_id, stored_type_fact);
+                self.next_fact_name_index += 1;
+
+                let equality_theorem_name = format!("__fact{}", self.next_fact_name_index);
+                self.declarations.push(format!(
+                    "theorem {equality_theorem_name} : {rendered_equality} := by\n  exact Litex.Same.refl {rendered_value}"
+                ));
+                self.environment_stack
+                    .fact_names
+                    .insert(stored_equality_fact_id, equality_theorem_name);
+                self.environment_stack
+                    .fact_propositions
+                    .insert(stored_equality_fact_id, stored_equality);
+                self.next_fact_name_index += 1;
                 continue;
             }
 
@@ -783,8 +1066,11 @@ impl StmtResultToLeanCompiler {
                     "native have-object definitions currently require exactly one object".into(),
                 );
             }
-            let lowered_value = LitexToLeanObjectIr::lower(value)?;
-            let rendered_value = render_native_object_ir(&lowered_value, &self.environment_stack)?;
+            let lowered_value = LeanTargetObjectRepresentation::lower(value)?;
+            let rendered_value = render_lean_source_for_native_target_object_representation(
+                &lowered_value,
+                &self.environment_stack,
+            )?;
             if self
                 .environment_stack
                 .symbol_names
@@ -833,6 +1119,12 @@ impl StmtResultToLeanCompiler {
             self.environment_stack
                 .fact_propositions
                 .insert(stored_equality_fact_id, stored_equality);
+            self.environment_stack
+                .runtime_resolved_numeric_substitutions
+                .insert(binding.substitution_key(), value.clone());
+            self.environment_stack
+                .runtime_resolved_numeric_definition_names
+                .push(lean_name);
             self.next_fact_name_index += 1;
         }
         Ok(())
@@ -858,9 +1150,9 @@ impl StmtResultToLeanCompiler {
         let statement = &result.statement;
         let function_set = FnSet::from_body(statement.equal_to_anonymous_fn.body.clone())
             .map_err(|error| error.to_string())?;
-        let function = LitexToLeanFunctionTypeIr::lower(&function_set)?;
+        let function = LeanTargetFunctionTypeRepresentation::lower(&function_set)?;
         let source_body = statement.equal_to_anonymous_fn.equal_to.as_ref().clone();
-        let lowered_body = LitexToLeanObjectIr::lower(&source_body)?;
+        let lowered_body = LeanTargetObjectRepresentation::lower(&source_body)?;
         let source_return_set = statement
             .equal_to_anonymous_fn
             .body
@@ -1028,7 +1320,7 @@ impl StmtResultToLeanCompiler {
                         .numeric_representation_memberships
                         .insert(parameter.symbol_id, proof);
                 }
-                parameter_premises.push(LitexToLeanLocalPremiseIr::new(*fact_id, fact.clone()));
+                parameter_premises.push(LeanLocalFactPremise::new(*fact_id, fact.clone()));
             }
 
             let mut domain_premises = Vec::with_capacity(expected_domain_facts.len());
@@ -1049,7 +1341,7 @@ impl StmtResultToLeanCompiler {
                 self.environment_stack
                     .fact_propositions
                     .insert(*fact_id, fact.clone());
-                domain_premises.push(LitexToLeanLocalPremiseIr::new(*fact_id, fact.clone()));
+                domain_premises.push(LeanLocalFactPremise::new(*fact_id, fact.clone()));
             }
 
             let return_check = verification
@@ -1166,7 +1458,7 @@ impl StmtResultToLeanCompiler {
                 uses_native_real_body: compiled_body.uses_native_real_body,
                 parameter_premises: compiled_body.parameter_premises,
                 domain_premises: compiled_body.domain_premises,
-                well_definedness: LitexToLeanWellDefinednessCertificateIr::default(),
+                well_definedness: StmtResultWellDefinednessToLeanCompilationContext::default(),
             },
         );
         self.next_fact_name_index += 1;
@@ -1185,8 +1477,8 @@ impl StmtResultToLeanCompiler {
             return Ok(false);
         };
         let statement = &result.statement;
-        let lowered_dimension = LitexToLeanObjectIr::lower(&statement.dimension)?;
-        let LitexToLeanObjectIr::Number {
+        let lowered_dimension = LeanTargetObjectRepresentation::lower(&statement.dimension)?;
+        let LeanTargetObjectRepresentation::Number {
             normalized_value: normalized_dimension,
         } = &lowered_dimension
         else {
@@ -1249,7 +1541,7 @@ impl StmtResultToLeanCompiler {
             return Ok(false);
         };
 
-        let lowered_value = LitexToLeanObjectIr::lower(&statement.value)?;
+        let lowered_value = LeanTargetObjectRepresentation::lower(&statement.value)?;
         if !indexed_tuple_value_is_complex(&lowered_value, statement.index_binding.id()) {
             return Ok(false);
         }
@@ -1281,7 +1573,10 @@ impl StmtResultToLeanCompiler {
                 &mut self.environment_stack,
                 &mut installed_well_definedness_nodes,
             )?;
-            let value = render_numeric_object_ir(&lowered_value, &self.environment_stack)?;
+            let value = render_lean_source_for_numeric_target_object_representation(
+                &lowered_value,
+                &self.environment_stack,
+            )?;
             Ok::<_, String>(CompiledIndexedTupleDefinitionBody {
                 dimension,
                 value,
@@ -1441,13 +1736,13 @@ impl StmtResultToLeanCompiler {
         let Obj::ClosedRange(range) = parameter_set(param_type)? else {
             return Err("indexed tuple coordinate binder is not a closed range".into());
         };
-        let lowered_start = LitexToLeanObjectIr::lower(range.start.as_ref())?;
-        let lowered_end = LitexToLeanObjectIr::lower(range.end.as_ref())?;
+        let lowered_start = LeanTargetObjectRepresentation::lower(range.start.as_ref())?;
+        let lowered_end = LeanTargetObjectRepresentation::lower(range.end.as_ref())?;
         if lowered_start
-            != (LitexToLeanObjectIr::Number {
+            != (LeanTargetObjectRepresentation::Number {
                 normalized_value: "1".into(),
             })
-            || lowered_end != LitexToLeanObjectIr::lower(&statement.dimension)?
+            || lowered_end != LeanTargetObjectRepresentation::lower(&statement.dimension)?
         {
             return Err("indexed tuple coordinate range changed its one-based dimension".into());
         }
@@ -1484,12 +1779,14 @@ impl StmtResultToLeanCompiler {
         source_value_context
             .numeric_representations
             .insert(statement.index_binding.id(), numeric_index);
-        let expected_value = render_numeric_object_ir(
-            &LitexToLeanObjectIr::lower(&statement.value)?,
+        let expected_value = render_lean_source_for_numeric_target_object_representation(
+            &LeanTargetObjectRepresentation::lower(&statement.value)?,
             &source_value_context,
         )?;
-        let retained_value =
-            render_numeric_object_ir(&LitexToLeanObjectIr::lower(&equality.right)?, &nested)?;
+        let retained_value = render_lean_source_for_numeric_target_object_representation(
+            &LeanTargetObjectRepresentation::lower(&equality.right)?,
+            &nested,
+        )?;
         if retained_value != expected_value {
             return Err("indexed tuple coordinate store changed its value expression".into());
         }
@@ -1540,14 +1837,16 @@ impl StmtResultToLeanCompiler {
         .map_err(|error| error.to_string())?;
         let function_set =
             FnSet::from_body(anonymous_function.body.clone()).map_err(|error| error.to_string())?;
-        let function = LitexToLeanFunctionTypeIr::lower(&function_set)?;
+        let function = LeanTargetFunctionTypeRepresentation::lower(&function_set)?;
         if function.parameters.len() != 1
             || function.parameters[0].symbol_id != statement.index_binding.id()
             || function.parameters[0].set
-                != LitexToLeanObjectIr::StandardSet(LitexToLeanStandardSetIr::PositiveNatural)
+                != LeanTargetObjectRepresentation::StandardSet(
+                    LeanTargetStandardSet::PositiveNatural,
+                )
             || !function.domain_facts.is_empty()
             || function.return_set.as_ref()
-                != &LitexToLeanObjectIr::StandardSet(LitexToLeanStandardSetIr::Real)
+                != &LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Real)
         {
             return Ok(false);
         }
@@ -1578,9 +1877,9 @@ impl StmtResultToLeanCompiler {
             .rule_applications
             .iter()
             .any(|application| {
-                !infer_rule_can_compile_in_standard_numeric_binder(&application.rule)
+                !infer_rule_has_direct_compiler_environment_consumer(&application.rule)
             })
-            || !standard_numeric_infer_result_is_fully_typed_and_supported(
+            || !infer_result_effects_are_fully_owned_by_direct_compiler_rules(
                 &verification.assumption_infers,
             )
         {
@@ -1621,7 +1920,7 @@ impl StmtResultToLeanCompiler {
         }
 
         let source_body = statement.value.clone();
-        let lowered_body = LitexToLeanObjectIr::lower(&source_body)?;
+        let lowered_body = LeanTargetObjectRepresentation::lower(&source_body)?;
         let expected_return_check: Fact = InFact::new(
             source_body.clone(),
             statement.seq_set.set.as_ref().clone(),
@@ -1709,7 +2008,7 @@ impl StmtResultToLeanCompiler {
                 value: format!(
                     "{{ call := fun {{__alpha}} (__arg : __alpha) __arg_in => {rendered_body} }}"
                 ),
-                parameter_premises: vec![LitexToLeanLocalPremiseIr::new(
+                parameter_premises: vec![LeanLocalFactPremise::new(
                     parameter_fact_id,
                     expected_parameter_fact.clone(),
                 )],
@@ -1772,7 +2071,7 @@ impl StmtResultToLeanCompiler {
         let Obj::FnSet(inferred_function_set) = inferred_function_set else {
             return Err("sequence inferred membership does not retain a function set".into());
         };
-        let inferred_function = LitexToLeanFunctionTypeIr::lower(inferred_function_set)?;
+        let inferred_function = LeanTargetFunctionTypeRepresentation::lower(inferred_function_set)?;
         if inferred_function.parameters.len() != 1
             || inferred_function.parameters[0].set != compiled_body.function.parameters[0].set
             || !inferred_function.domain_facts.is_empty()
@@ -1899,7 +2198,7 @@ impl StmtResultToLeanCompiler {
                 uses_native_real_body: true,
                 parameter_premises: compiled_body.parameter_premises,
                 domain_premises: compiled_body.domain_premises,
-                well_definedness: LitexToLeanWellDefinednessCertificateIr::default(),
+                well_definedness: StmtResultWellDefinednessToLeanCompilationContext::default(),
             },
         );
         self.next_fact_name_index += 1;
@@ -1991,14 +2290,16 @@ impl StmtResultToLeanCompiler {
         .map_err(|error| error.to_string())?;
         let function_set =
             FnSet::from_body(anonymous_function.body.clone()).map_err(|error| error.to_string())?;
-        let function = LitexToLeanFunctionTypeIr::lower(&function_set)?;
+        let function = LeanTargetFunctionTypeRepresentation::lower(&function_set)?;
         if function.parameters.len() != 1
             || function.parameters[0].symbol_id != statement.index_binding.id()
             || function.parameters[0].set
-                != LitexToLeanObjectIr::StandardSet(LitexToLeanStandardSetIr::PositiveNatural)
+                != LeanTargetObjectRepresentation::StandardSet(
+                    LeanTargetStandardSet::PositiveNatural,
+                )
             || function.domain_facts.len() != 1
             || function.return_set.as_ref()
-                != &LitexToLeanObjectIr::StandardSet(LitexToLeanStandardSetIr::Real)
+                != &LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Real)
             || !function_uses_telescope(&function)
         {
             return Ok(false);
@@ -2006,7 +2307,8 @@ impl StmtResultToLeanCompiler {
         // The target `finiteSequenceSet` ABI currently requires a closed
         // natural length. Validate this support boundary before mutating any
         // compiler environment.
-        let lowered_length = LitexToLeanObjectIr::lower(statement.finite_seq_set.n.as_ref())?;
+        let lowered_length =
+            LeanTargetObjectRepresentation::lower(statement.finite_seq_set.n.as_ref())?;
         render_natural_endpoint(&lowered_length)?;
 
         let mut visited_well_definedness_results = HashSet::new();
@@ -2035,9 +2337,9 @@ impl StmtResultToLeanCompiler {
             .rule_applications
             .iter()
             .any(|application| {
-                !infer_rule_can_compile_in_standard_numeric_binder(&application.rule)
+                !infer_rule_has_direct_compiler_environment_consumer(&application.rule)
             })
-            || !standard_numeric_infer_result_is_fully_typed_and_supported(
+            || !infer_result_effects_are_fully_owned_by_direct_compiler_rules(
                 &verification.assumption_infers,
             )
         {
@@ -2098,7 +2400,7 @@ impl StmtResultToLeanCompiler {
         }
 
         let source_body = statement.value.clone();
-        let lowered_body = LitexToLeanObjectIr::lower(&source_body)?;
+        let lowered_body = LeanTargetObjectRepresentation::lower(&source_body)?;
         let expected_return_check: Fact = InFact::new(
             source_body.clone(),
             statement.finite_seq_set.set.as_ref().clone(),
@@ -2196,11 +2498,11 @@ impl StmtResultToLeanCompiler {
                 value: format!(
                     "fun {{__alpha1 : Type}} (__arg1 : __alpha1) (__arg1_in : Litex.In __arg1 Litex.NPos) => fun __arg_domain => ULift.up ({rendered_body})"
                 ),
-                parameter_premises: vec![LitexToLeanLocalPremiseIr::new(
+                parameter_premises: vec![LeanLocalFactPremise::new(
                     parameter_fact_id,
                     expected_parameter_fact.clone(),
                 )],
-                domain_premises: vec![LitexToLeanLocalPremiseIr::new(
+                domain_premises: vec![LeanLocalFactPremise::new(
                     domain_fact_id,
                     expected_domain_fact.clone(),
                 )],
@@ -2270,7 +2572,7 @@ impl StmtResultToLeanCompiler {
                 "finite-sequence inferred membership does not retain a function set".into(),
             );
         };
-        let inferred_function = LitexToLeanFunctionTypeIr::lower(inferred_function_set)?;
+        let inferred_function = LeanTargetFunctionTypeRepresentation::lower(inferred_function_set)?;
         if inferred_function.parameters.len() != 1
             || inferred_function.parameters[0].set != compiled_body.function.parameters[0].set
             || inferred_function.domain_facts.len() != 1
@@ -2430,7 +2732,7 @@ impl StmtResultToLeanCompiler {
                 uses_native_real_body: true,
                 parameter_premises: compiled_body.parameter_premises,
                 domain_premises: compiled_body.domain_premises,
-                well_definedness: LitexToLeanWellDefinednessCertificateIr::default(),
+                well_definedness: StmtResultWellDefinednessToLeanCompilationContext::default(),
             },
         );
         self.next_fact_name_index += 1;
@@ -2545,17 +2847,19 @@ impl StmtResultToLeanCompiler {
         .map_err(|error| error.to_string())?;
         let function_set =
             FnSet::from_body(anonymous_function.body.clone()).map_err(|error| error.to_string())?;
-        let function = LitexToLeanFunctionTypeIr::lower(&function_set)?;
+        let function = LeanTargetFunctionTypeRepresentation::lower(&function_set)?;
         if function.parameters.len() != 2
             || function.parameters[0].symbol_id != statement.row_index_binding.id()
             || function.parameters[1].symbol_id != statement.col_index_binding.id()
             || function.parameters.iter().any(|parameter| {
                 parameter.set
-                    != LitexToLeanObjectIr::StandardSet(LitexToLeanStandardSetIr::PositiveNatural)
+                    != LeanTargetObjectRepresentation::StandardSet(
+                        LeanTargetStandardSet::PositiveNatural,
+                    )
             })
             || function.domain_facts.len() != 2
             || function.return_set.as_ref()
-                != &LitexToLeanObjectIr::StandardSet(LitexToLeanStandardSetIr::Real)
+                != &LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Real)
             || !function_uses_telescope(&function)
         {
             return Ok(false);
@@ -2564,7 +2868,7 @@ impl StmtResultToLeanCompiler {
             statement.matrix_set.row_len.as_ref(),
             statement.matrix_set.col_len.as_ref(),
         ] {
-            render_natural_endpoint(&LitexToLeanObjectIr::lower(count)?)?;
+            render_natural_endpoint(&LeanTargetObjectRepresentation::lower(count)?)?;
         }
 
         let mut visited_well_definedness_results = HashSet::new();
@@ -2596,9 +2900,9 @@ impl StmtResultToLeanCompiler {
             .rule_applications
             .iter()
             .any(|application| {
-                !infer_rule_can_compile_in_standard_numeric_binder(&application.rule)
+                !infer_rule_has_direct_compiler_environment_consumer(&application.rule)
             })
-            || !standard_numeric_infer_result_is_fully_typed_and_supported(
+            || !infer_result_effects_are_fully_owned_by_direct_compiler_rules(
                 &verification.assumption_infers,
             )
         {
@@ -2673,7 +2977,7 @@ impl StmtResultToLeanCompiler {
         }
 
         let source_body = statement.value.clone();
-        let lowered_body = LitexToLeanObjectIr::lower(&source_body)?;
+        let lowered_body = LeanTargetObjectRepresentation::lower(&source_body)?;
         let expected_return_check: Fact = InFact::new(
             source_body.clone(),
             statement.matrix_set.set.as_ref().clone(),
@@ -2717,7 +3021,7 @@ impl StmtResultToLeanCompiler {
                     .numeric_real_values
                     .insert(binding.id(), numeric_real.clone());
                 parameter_real_representations.insert(binding.id(), numeric_real);
-                parameter_premises.push(LitexToLeanLocalPremiseIr::new(
+                parameter_premises.push(LeanLocalFactPremise::new(
                     fact_id,
                     expected_parameter_facts[parameter_index].clone(),
                 ));
@@ -2736,7 +3040,7 @@ impl StmtResultToLeanCompiler {
                 self.environment_stack
                     .fact_propositions
                     .insert(fact_id, expected_domain_facts[domain_index].clone());
-                domain_premises.push(LitexToLeanLocalPremiseIr::new(
+                domain_premises.push(LeanLocalFactPremise::new(
                     fact_id,
                     expected_domain_facts[domain_index].clone(),
                 ));
@@ -2861,7 +3165,7 @@ impl StmtResultToLeanCompiler {
         let Obj::FnSet(inferred_function_set) = inferred_function_set else {
             return Err("matrix inferred membership does not retain a function set".into());
         };
-        let inferred_function = LitexToLeanFunctionTypeIr::lower(inferred_function_set)?;
+        let inferred_function = LeanTargetFunctionTypeRepresentation::lower(inferred_function_set)?;
         if inferred_function.parameters.len() != 2
             || inferred_function.domain_facts.len() != 2
             || inferred_function.return_set != compiled_body.function.return_set
@@ -3024,7 +3328,7 @@ impl StmtResultToLeanCompiler {
                 uses_native_real_body: true,
                 parameter_premises: compiled_body.parameter_premises,
                 domain_premises: compiled_body.domain_premises,
-                well_definedness: LitexToLeanWellDefinednessCertificateIr::default(),
+                well_definedness: StmtResultWellDefinednessToLeanCompilationContext::default(),
             },
         );
         self.next_fact_name_index += 1;
@@ -3563,7 +3867,9 @@ impl StmtResultToLeanCompiler {
             let name = lean_identifier(binding.name());
             let rendered_carrier = render_obj(carrier, &self.environment_stack)?;
             let function = match carrier {
-                Obj::FnSet(function_set) => Some(LitexToLeanFunctionTypeIr::lower(function_set)?),
+                Obj::FnSet(function_set) => {
+                    Some(LeanTargetFunctionTypeRepresentation::lower(function_set)?)
+                }
                 _ => None,
             };
             let declared_type = if let Some(function) = &function {
@@ -3751,6 +4057,15 @@ impl StmtResultToLeanCompiler {
         self.environment_stack
             .fact_propositions
             .insert(defining_equality_fact_id, defining_equality);
+        self.environment_stack
+            .runtime_resolved_numeric_substitutions
+            .insert(
+                statement.symbol_binding.substitution_key(),
+                statement.value.clone(),
+            );
+        self.environment_stack
+            .runtime_resolved_numeric_definition_names
+            .push(lean_name);
         self.next_fact_name_index += 1;
         Ok(())
     }
@@ -4078,11 +4393,16 @@ impl StmtResultToLeanCompiler {
             || existential.facts().len() != 1
             || witness_objects.len() != 1
         {
-            return Ok(None);
+            return Err(
+                "StmtResultToLeanCompiler currently requires one positive witness and one body fact"
+                    .into(),
+            );
         }
         let group = &existential.params_def_with_type().groups[0];
         if group.params.len() != 1 || !matches!(group.param_type, ParamType::Obj(_)) {
-            return Ok(None);
+            return Err(
+                "StmtResultToLeanCompiler currently requires one membership witness".into(),
+            );
         }
         if verification.proof_steps.len() != source_proof_step_count
             || verification.parameter_checks.len() != 1
@@ -4747,6 +5067,1275 @@ impl StmtResultToLeanCompiler {
         Ok(true)
     }
 
+    fn compile_by_extension_stmt_result_to_lean_source(
+        &mut self,
+        result: &SuccessByExtensionStmtResult,
+    ) -> Result<bool, String> {
+        let Some(proof) = self.construct_lean_proof_from_by_extension_stmt_result(result)? else {
+            return Ok(false);
+        };
+        let [fact_id] = validate_compiled_fact_proof_effects(
+            &result.common.infers,
+            std::slice::from_ref(&proof),
+            &self.environment_stack,
+            "by-extension exported equality",
+        )?
+        .try_into()
+        .map_err(|_| "by-extension effect validation changed its output arity".to_string())?;
+        let Some(fact_id) = fact_id else {
+            return Ok(true);
+        };
+        let theorem_name = format!("__fact{}", self.next_fact_name_index);
+        self.declarations.push(format!(
+            "theorem {theorem_name} : {} := by\n  exact {}",
+            proof.proposition, proof.proof_expression
+        ));
+        self.environment_stack
+            .fact_names
+            .insert(fact_id, theorem_name);
+        self.environment_stack
+            .fact_propositions
+            .insert(fact_id, proof.fact);
+        self.next_fact_name_index += 1;
+        Ok(true)
+    }
+
+    /// `Combine`: compile the ordered proof-step Results in one inherited
+    /// compiler environment, then combine the exact left-to-right and
+    /// right-to-left subset child Results with the target ABI's set
+    /// extensionality constructor.
+    fn construct_lean_proof_from_by_extension_stmt_result(
+        &mut self,
+        result: &SuccessByExtensionStmtResult,
+    ) -> Result<Option<CompiledFactProofBody>, String> {
+        let Some(verification) = &result.verification else {
+            return Ok(None);
+        };
+        let statement = &result.statement;
+        let equality: Fact = EqualFact::new(
+            statement.left.clone(),
+            statement.right.clone(),
+            statement.line_file.clone(),
+        )
+        .into();
+        if verification.left != statement.left.to_string()
+            || verification.right != statement.right.to_string()
+            || verification.prove_goal != equality.to_string()
+            || verification.proof_steps.len() != statement.proof.len()
+        {
+            return Err("by-extension Result changed its sets, goal, or proof-step order".into());
+        }
+        let forward_fact: Fact = SubsetFact::new(
+            statement.left.clone(),
+            statement.right.clone(),
+            statement.line_file.clone(),
+        )
+        .into();
+        let backward_fact: Fact = SubsetFact::new(
+            statement.right.clone(),
+            statement.left.clone(),
+            statement.line_file.clone(),
+        )
+        .into();
+
+        self.environment_stack.push_inherited_environment();
+        let compilation = (|| {
+            let mut local_lines = Vec::new();
+            for (proof_step_index, proof_step) in verification.proof_steps.iter().enumerate() {
+                let Some(lines) = self
+                    .compile_stmt_result_as_local_proof_steps(proof_step, proof_step_index + 1)?
+                else {
+                    return Ok(None);
+                };
+                local_lines.extend(lines);
+            }
+            let Some(forward) = self.construct_lean_direct_subset_child_for_by_extension(
+                &verification.left_to_right_check,
+                &forward_fact,
+                "left-to-right",
+            )?
+            else {
+                return Ok(None);
+            };
+            let Some(backward) = self.construct_lean_direct_subset_child_for_by_extension(
+                &verification.right_to_left_check,
+                &backward_fact,
+                "right-to-left",
+            )?
+            else {
+                return Ok(None);
+            };
+            let proposition = render_fact(&equality, &self.environment_stack)?;
+            let mut proof_lines = vec!["by".to_string()];
+            proof_lines.extend(local_lines.into_iter().map(|line| indent_lines(&line, 2)));
+            proof_lines.push(format!(
+                "  exact Litex.Same.setExt ({forward}) ({backward})"
+            ));
+            Ok(Some(CompiledFactProofBody {
+                fact: equality,
+                proposition,
+                proof_expression: format!("({})", proof_lines.join("\n")),
+            }))
+        })();
+        self.environment_stack.pop_local_environment();
+        compilation
+    }
+
+    fn construct_lean_direct_subset_child_for_by_extension(
+        &mut self,
+        child: &StmtResult,
+        expected: &Fact,
+        direction: &str,
+    ) -> Result<Option<String>, String> {
+        let child = child
+            .factual_success()
+            .ok_or_else(|| format!("by-extension {direction} child is not factual"))?;
+        if child.fact().to_string() != expected.to_string() {
+            return self
+                .construct_lean_subset_proof_from_alpha_equivalent_forall_citation(
+                    child, expected, direction,
+                )
+                .map(Some);
+        }
+        validate_scoped_fact_check_result(
+            child,
+            expected,
+            &format!("by-extension {direction} subset child"),
+        )?;
+        self.construct_lean_proof_from_direct_fact_result(child)
+    }
+
+    /// `Reuse`: extension verification may request an alpha-fresh forall
+    /// spelling of a subset already proved by a local statement. The exact
+    /// source FactId selects the theorem; both the requested and stored forall
+    /// structures are independently checked against the expected subset.
+    fn construct_lean_subset_proof_from_alpha_equivalent_forall_citation(
+        &self,
+        child: &SuccessFactStmtResult,
+        expected_subset: &Fact,
+        direction: &str,
+    ) -> Result<String, String> {
+        if !child.store.infers.is_empty() || child.store.fact_id.is_some() {
+            return Err(format!(
+                "by-extension {direction} forall check unexpectedly published effects"
+            ));
+        }
+        validate_forall_fact_as_subset(&child.fact(), expected_subset)
+            .map_err(|error| format!("by-extension {direction} requested forall: {error}"))?;
+        let SuccessFactProofResult::Fact(citation) = child.proof() else {
+            return Err(format!(
+                "by-extension {direction} generated forall is not an exact FactId citation"
+            ));
+        };
+        let source_fact_id = citation.source_fact_id.ok_or_else(|| {
+            format!("by-extension {direction} generated forall citation has no FactId")
+        })?;
+        let stored = self
+            .environment_stack
+            .fact_propositions
+            .get(&source_fact_id)
+            .ok_or_else(|| {
+                format!(
+                    "by-extension {direction} cites unavailable local FactId `{source_fact_id}`"
+                )
+            })?;
+        validate_forall_fact_as_subset(stored, expected_subset)
+            .map_err(|error| format!("by-extension {direction} stored forall: {error}"))?;
+        self.environment_stack
+            .fact_names
+            .get(&source_fact_id)
+            .cloned()
+            .ok_or_else(|| {
+                format!(
+                    "by-extension {direction} local FactId `{source_fact_id}` has no Lean binding"
+                )
+            })
+    }
+
+    fn compile_by_enumerate_finite_set_stmt_result_to_lean_source(
+        &mut self,
+        result: &SuccessByEnumerateFiniteSetStmtResult,
+    ) -> Result<bool, String> {
+        let Some(proof) =
+            self.construct_lean_proof_from_by_enumerate_finite_set_stmt_result(result)?
+        else {
+            return Ok(false);
+        };
+        let fact_id = validate_generated_fact_publication_effects(
+            &result.common.infers,
+            &proof.fact,
+            "by-enumerate generated forall",
+        )?;
+        let theorem_name = format!("__fact{}", self.next_fact_name_index);
+        self.declarations.push(format!(
+            "theorem {theorem_name} :\n    {} := {}",
+            proof.proposition, proof.proof_expression
+        ));
+        self.environment_stack
+            .fact_names
+            .insert(fact_id, theorem_name);
+        self.environment_stack
+            .fact_propositions
+            .insert(fact_id, proof.fact);
+        self.next_fact_name_index += 1;
+        Ok(true)
+    }
+
+    /// `Combine`: a one-parameter finite enumeration consumes the exact
+    /// resolved list-set, every frozen assignment assumption, the ordered
+    /// domain/proof/conclusion children, and publishes one forall theorem.
+    /// Multi-parameter products stay fail-closed until their nested branch
+    /// composer uses the same assignment Result contract recursively.
+    fn construct_lean_proof_from_by_enumerate_finite_set_stmt_result(
+        &mut self,
+        result: &SuccessByEnumerateFiniteSetStmtResult,
+    ) -> Result<Option<CompiledFactProofBody>, String> {
+        let Some(verification) = &result.verification else {
+            return Ok(None);
+        };
+        let statement = &result.statement;
+        let source_forall = &statement.forall_fact;
+        let target: Fact = source_forall.clone().into();
+        let parameters = source_forall
+            .params_def_with_type
+            .collect_param_bindings_with_types();
+        if parameters.len() != 1
+            || verification.parameters.len() != 1
+            || verification.parameter_sets.len() != 1
+        {
+            return Ok(None);
+        }
+        if verification.prove_goal != source_forall.to_string()
+            || verification.generated_forall != target.to_string()
+            || verification.parameters[0] != parameters[0].0.name()
+        {
+            return Err("by-enumerate Result changed its parameter or generated forall".into());
+        }
+        let (binding, parameter_type) = &parameters[0];
+        let ParamType::Obj(source_parameter_set) = parameter_type else {
+            return Ok(None);
+        };
+        let resolved_list_set = &verification.parameter_sets[0];
+        let resolved_parameter_set: Obj = resolved_list_set.clone().into();
+        if obj_equality_key(source_parameter_set) != obj_equality_key(&resolved_parameter_set) {
+            // A named set resolved by equality needs that exact equality
+            // FactId in this Result before membership may be transported.
+            return Ok(None);
+        }
+        if verification.assignments.len() != resolved_list_set.list.len() {
+            return Err("by-enumerate Result changed its finite assignment count".into());
+        }
+
+        self.environment_stack.push_inherited_environment();
+        let compilation = (|| {
+            let parameter_name = lean_identifier(binding.name());
+            if self
+                .environment_stack
+                .symbol_names
+                .insert(binding.id(), parameter_name.clone())
+                .is_some()
+            {
+                return Err("by-enumerate parameter reused its SymbolId".into());
+            }
+            let parameter_object = obj_for_bound_param_in_scope(binding, ParamObjType::Forall);
+            let parameter_membership: Fact = InFact::new(
+                parameter_object.clone(),
+                resolved_parameter_set.clone(),
+                statement.line_file.clone(),
+            )
+            .into();
+            let proposition = render_fact(&target, &self.environment_stack)?;
+            let mut proof_lines = vec![
+                "by".to_string(),
+                format!(
+                    "  intro {parameter_name} __type1{}",
+                    render_forall_domain_intro_suffix(source_forall)
+                ),
+            ];
+
+            if resolved_list_set.list.is_empty() {
+                proof_lines.push("  rcases __type1 with ⟨__member, _⟩".into());
+                proof_lines.push("  exact PEmpty.elim __member".into());
+                return Ok(Some(CompiledFactProofBody {
+                    fact: target,
+                    proposition,
+                    proof_expression: proof_lines.join("\n"),
+                }));
+            }
+
+            let assignment_equalities = resolved_list_set
+                .list
+                .iter()
+                .map(|item| {
+                    Fact::from(AtomicFact::EqualFact(EqualFact::new(
+                        parameter_object.clone(),
+                        item.as_ref().clone(),
+                        statement.line_file.clone(),
+                    )))
+                })
+                .collect::<Vec<_>>();
+            let assignment_alternatives = if assignment_equalities.len() == 1 {
+                assignment_equalities[0].clone()
+            } else {
+                OrFact::new(
+                    assignment_equalities
+                        .iter()
+                        .map(|fact| match fact {
+                            Fact::AtomicFact(fact) => AndChainAtomicFact::AtomicFact(fact.clone()),
+                            _ => unreachable!("assignment equality is atomic"),
+                        })
+                        .collect(),
+                    statement.line_file.clone(),
+                )
+                .into()
+            };
+            let alternatives_proof = render_list_set_membership_elimination_from_fact_and_proof(
+                &assignment_alternatives,
+                &parameter_membership,
+                "__type1",
+                &self.environment_stack,
+            )?;
+            proof_lines.push(format!(
+                "  have __assignment_cases : {} := {alternatives_proof}",
+                render_fact(&assignment_alternatives, &self.environment_stack)?
+            ));
+            if assignment_equalities.len() == 1 {
+                proof_lines.push("  have __assignment1 := __assignment_cases".into());
+            } else {
+                let names = (1..=assignment_equalities.len())
+                    .map(|index| format!("__assignment{index}"))
+                    .collect::<Vec<_>>();
+                proof_lines.push(format!(
+                    "  rcases __assignment_cases with {}",
+                    names.join(" | ")
+                ));
+            }
+
+            for (assignment_index, assignment) in verification.assignments.iter().enumerate() {
+                self.environment_stack.push_inherited_environment();
+                let branch = self.compile_one_by_enumerate_assignment_result(
+                    source_forall,
+                    assignment,
+                    &assignment_equalities[assignment_index],
+                    assignment_index,
+                );
+                self.environment_stack.pop_local_environment();
+                let branch = branch?;
+                if assignment_equalities.len() == 1 {
+                    for line in branch.local_lines {
+                        proof_lines.push(indent_lines(&line, 2));
+                    }
+                    proof_lines.push(format!("  exact {}", branch.exit_proof));
+                } else {
+                    proof_lines.push("  ·".into());
+                    for line in branch.local_lines {
+                        proof_lines.push(indent_lines(&line, 4));
+                    }
+                    proof_lines.push(format!("    exact {}", branch.exit_proof));
+                }
+            }
+            Ok(Some(CompiledFactProofBody {
+                fact: target,
+                proposition,
+                proof_expression: proof_lines.join("\n"),
+            }))
+        })();
+        self.environment_stack.pop_local_environment();
+        compilation
+    }
+
+    fn compile_one_by_enumerate_assignment_result(
+        &mut self,
+        source_forall: &ForallFact,
+        assignment: &SuccessVerifyByAssignmentResult,
+        expected_equality: &Fact,
+        assignment_index: usize,
+    ) -> Result<CompiledFiniteAssignmentBranch, String> {
+        if assignment.assignment.len() != 1 || assignment.assumptions.len() != 1 {
+            return Err(format!(
+                "by-enumerate assignment {assignment_index} changed its source arity"
+            ));
+        }
+        let retained_assumption = &assignment.assumptions[0];
+        if retained_assumption.fact.to_string() != expected_equality.to_string() {
+            return Err(format!(
+                "by-enumerate assignment {assignment_index} changed its equality assumption"
+            ));
+        }
+        let [source_store] = retained_assumption.infers.store_fact_outputs.as_slice() else {
+            return Err(format!(
+                "by-enumerate assignment {assignment_index} lost its assumption store"
+            ));
+        };
+        if source_store.fact_id != Some(retained_assumption.fact_id)
+            || source_store.itself_and_why_itself_is_stored.0.to_string()
+                != retained_assumption.fact.to_string()
+        {
+            return Err(format!(
+                "by-enumerate assignment {assignment_index} changed its assumption FactId"
+            ));
+        }
+        let assignment_name = format!("__assignment{}", assignment_index + 1);
+        self.environment_stack
+            .fact_names
+            .insert(retained_assumption.fact_id, assignment_name);
+        self.environment_stack.fact_propositions.insert(
+            retained_assumption.fact_id,
+            retained_assumption.fact.clone(),
+        );
+        let mut local_lines = Vec::new();
+        self.compile_typed_inference_results_in_current_compiler_environment(
+            &retained_assumption.infers,
+            &[(
+                retained_assumption.fact_id,
+                retained_assumption.fact.clone(),
+            )],
+            &mut local_lines,
+            &format!("by-enumerate assignment {assignment_index} assumption"),
+        )?;
+
+        self.compile_finite_assignment_domain_proof_and_conclusion_children(
+            source_forall,
+            assignment,
+            assignment_index,
+            local_lines,
+            "by-enumerate",
+        )
+    }
+
+    fn compile_finite_assignment_domain_proof_and_conclusion_children(
+        &mut self,
+        source_forall: &ForallFact,
+        assignment: &SuccessVerifyByAssignmentResult,
+        assignment_index: usize,
+        mut local_lines: Vec<String>,
+        procedure_name: &str,
+    ) -> Result<CompiledFiniteAssignmentBranch, String> {
+        if assignment.domain_checks.len() != source_forall.dom_facts.len() {
+            return Err(format!(
+                "{procedure_name} assignment {assignment_index} changed its domain arity"
+            ));
+        }
+        for (domain_index, (domain, expected)) in assignment
+            .domain_checks
+            .iter()
+            .zip(source_forall.dom_facts.iter())
+            .enumerate()
+        {
+            if domain.fact.to_string() != expected.to_string() {
+                return Err(format!(
+                    "{procedure_name} assignment {assignment_index} changed domain {domain_index}"
+                ));
+            }
+            if !domain.satisfied {
+                let negated = domain.negated_check.as_ref().ok_or_else(|| {
+                    format!(
+                        "{procedure_name} assignment {assignment_index} skipped without a negated domain child"
+                    )
+                })?;
+                if domain.satisfied_infers.is_some() {
+                    return Err(format!(
+                        "skipped {procedure_name} domain retained store effects"
+                    ));
+                }
+                let negated = negated.factual_success().ok_or_else(|| {
+                    format!("{procedure_name} negated domain child is not factual")
+                })?;
+                let Some(negated_proof) =
+                    self.construct_lean_proof_from_direct_fact_result(negated)?
+                else {
+                    return Err(format!(
+                        "unsupported {procedure_name} negated domain proof Result"
+                    ));
+                };
+                return Ok(CompiledFiniteAssignmentBranch {
+                    local_lines,
+                    exit_proof: format!(
+                        "False.elim (({negated_proof}) __domain{})",
+                        domain_index + 1
+                    ),
+                });
+            }
+            if domain.negated_check.is_some() {
+                return Err(format!(
+                    "satisfied {procedure_name} domain retained a negated child"
+                ));
+            }
+            let checked = domain
+                .check
+                .factual_success()
+                .ok_or_else(|| format!("satisfied {procedure_name} domain is not factual"))?;
+            validate_scoped_fact_check_result(
+                checked,
+                expected,
+                &format!("{procedure_name} assignment {assignment_index} domain {domain_index}"),
+            )?;
+            let Some(domain_proof) = self.construct_lean_proof_from_direct_fact_result(checked)?
+            else {
+                return Err(format!("unsupported {procedure_name} domain proof Result"));
+            };
+            let infers = domain.satisfied_infers.as_ref().ok_or_else(|| {
+                format!("satisfied {procedure_name} domain lost its store Result")
+            })?;
+            let [store] = infers.store_fact_outputs.as_slice() else {
+                return Err(format!(
+                    "{procedure_name} domain store changed its source arity"
+                ));
+            };
+            let fact_id = store
+                .fact_id
+                .ok_or_else(|| format!("{procedure_name} domain store has no FactId"))?;
+            if store.itself_and_why_itself_is_stored.0.to_string() != expected.to_string() {
+                return Err(format!(
+                    "{procedure_name} domain store changed its proposition"
+                ));
+            }
+            let domain_name = format!(
+                "__assignment{}_domain{}",
+                assignment_index + 1,
+                domain_index + 1
+            );
+            local_lines.push(format!(
+                "have {domain_name} : {} := {domain_proof}",
+                render_fact(expected, &self.environment_stack)?
+            ));
+            self.environment_stack
+                .fact_names
+                .insert(fact_id, domain_name);
+            self.environment_stack
+                .fact_propositions
+                .insert(fact_id, expected.clone());
+            self.compile_typed_inference_results_in_current_compiler_environment(
+                infers,
+                &[(fact_id, expected.clone())],
+                &mut local_lines,
+                &format!("{procedure_name} assignment {assignment_index} domain {domain_index}"),
+            )?;
+        }
+
+        for (proof_step_index, proof_step) in assignment.proof_steps.iter().enumerate() {
+            let Some(lines) =
+                self.compile_stmt_result_as_local_proof_steps(proof_step, proof_step_index + 1)?
+            else {
+                return Err(format!(
+                    "unsupported {procedure_name} proof-step Result at index {proof_step_index}"
+                ));
+            };
+            local_lines.extend(lines);
+        }
+        if assignment.conclusion_checks.len() != source_forall.then_facts.len() {
+            return Err(format!(
+                "{procedure_name} assignment {assignment_index} changed its conclusion arity"
+            ));
+        }
+        let mut conclusion_proofs = Vec::with_capacity(assignment.conclusion_checks.len());
+        for (conclusion_index, (check, expected)) in assignment
+            .conclusion_checks
+            .iter()
+            .zip(source_forall.then_facts.iter())
+            .enumerate()
+        {
+            let expected = expected.clone().to_fact();
+            let check = check.factual_success().ok_or_else(|| {
+                format!(
+                    "{procedure_name} assignment {assignment_index} conclusion {conclusion_index} is not factual"
+                )
+            })?;
+            validate_scoped_fact_check_result(
+                check,
+                &expected,
+                &format!(
+                    "{procedure_name} assignment {assignment_index} conclusion {conclusion_index}"
+                ),
+            )?;
+            let Some(proof) = self.construct_lean_proof_from_direct_fact_result(check)? else {
+                return Err(format!(
+                    "unsupported {procedure_name} conclusion Result at index {conclusion_index}"
+                ));
+            };
+            conclusion_proofs.push(proof);
+        }
+        let exit_proof = if conclusion_proofs.len() == 1 {
+            conclusion_proofs.remove(0)
+        } else {
+            format!("⟨{}⟩", conclusion_proofs.join(", "))
+        };
+        Ok(CompiledFiniteAssignmentBranch {
+            local_lines,
+            exit_proof,
+        })
+    }
+
+    fn compile_by_for_stmt_result_to_lean_source(
+        &mut self,
+        result: &SuccessByForStmtResult,
+    ) -> Result<bool, String> {
+        let Some(proof) = self.construct_lean_proof_from_by_for_stmt_result(result)? else {
+            return Ok(false);
+        };
+        let fact_id = validate_generated_fact_publication_effects(
+            &result.common.infers,
+            &proof.fact,
+            "by-for generated forall",
+        )?;
+        let theorem_name = format!("__fact{}", self.next_fact_name_index);
+        self.declarations.push(format!(
+            "theorem {theorem_name} :\n    {} := {}",
+            proof.proposition, proof.proof_expression
+        ));
+        self.environment_stack
+            .fact_names
+            .insert(fact_id, theorem_name);
+        self.environment_stack
+            .fact_propositions
+            .insert(fact_id, proof.fact);
+        self.next_fact_name_index += 1;
+        Ok(true)
+    }
+
+    /// `Combine`: one exact range-membership child is eliminated into the
+    /// evaluated integer assignments retained by `SuccessVerifyByForResult`.
+    /// Every assignment then installs its own Z-membership/equality FactIds
+    /// before its domain, proof-step and conclusion children are compiled.
+    fn construct_lean_proof_from_by_for_stmt_result(
+        &mut self,
+        result: &SuccessByForStmtResult,
+    ) -> Result<Option<CompiledFactProofBody>, String> {
+        let Some(SuccessVerifyByForResult::Ranges(verification)) = &result.verification else {
+            // Cartesian products and multi-parameter ranges need their own
+            // exact nested eliminators; they remain fail-closed for now.
+            return Ok(None);
+        };
+        let statement = &result.statement;
+        let source_forall = &statement.forall_fact;
+        let target: Fact = source_forall.clone().into();
+        let parameters = source_forall
+            .params_def_with_type
+            .collect_param_bindings_with_types();
+        if parameters.len() != 1 || verification.parameters.len() != 1 {
+            return Ok(None);
+        }
+        if verification.prove_goal != source_forall.to_string()
+            || verification.generated_forall != target.to_string()
+        {
+            return Err("by-for Result changed its goal or generated forall".into());
+        }
+        let (binding, parameter_type) = &parameters[0];
+        let parameter_result = &verification.parameters[0];
+        if parameter_result.parameter != binding.name() {
+            return Err("by-for Result changed its range parameter".into());
+        }
+        let ParamType::Obj(source_range) = parameter_type else {
+            return Ok(None);
+        };
+        let retained_range: Obj = match &parameter_result.range {
+            ClosedRangeOrRange::Range(range) => range.clone().into(),
+            ClosedRangeOrRange::ClosedRange(range) => range.clone().into(),
+        };
+        if obj_equality_key(source_range) != obj_equality_key(&retained_range) {
+            return Err("by-for Result changed its exact source range".into());
+        }
+        validate_by_for_range_parameter_result(parameter_result)?;
+        if verification.assignments.len() != parameter_result.enumerated_values.len() {
+            return Err("by-for Result changed its evaluated assignment count".into());
+        }
+
+        self.environment_stack.push_inherited_environment();
+        let compilation = (|| {
+            let parameter_name = lean_identifier(binding.name());
+            if self
+                .environment_stack
+                .symbol_names
+                .insert(binding.id(), parameter_name.clone())
+                .is_some()
+            {
+                return Err("by-for parameter reused its SymbolId".into());
+            }
+            let range_value = format!("(Litex.In.rep {parameter_name} __type1)");
+            self.environment_stack
+                .numeric_integer_values
+                .insert(binding.id(), format!("(({range_value}).val : ℤ)"));
+            self.environment_stack
+                .numeric_representations
+                .insert(binding.id(), format!("(((({range_value}).val : ℤ)) : ℂ)"));
+            self.environment_stack.numeric_representation_memberships.insert(
+                binding.id(),
+                format!(
+                    "Litex.Rules.complexEqIntInZ (((({range_value}).val : ℤ) : ℂ)) (({range_value}).val : ℤ) (by rfl)"
+                ),
+            );
+
+            let proposition = render_fact(&target, &self.environment_stack)?;
+            let mut proof_lines = vec![
+                "by".to_string(),
+                format!(
+                    "  intro {parameter_name} __type1{}",
+                    render_forall_domain_intro_suffix(source_forall)
+                ),
+            ];
+            let values = &parameter_result.enumerated_values;
+            let range_membership = format!("({range_value}).property");
+            proof_lines.push(format!("  have __range_bounds := {range_membership}"));
+            let bound_shape = match parameter_result.range {
+                ClosedRangeOrRange::Range(_) => "Finset.mem_Ico",
+                ClosedRangeOrRange::ClosedRange(_) => "Finset.mem_Icc",
+            };
+            proof_lines.push(format!("  simp only [{bound_shape}] at __range_bounds"));
+
+            if values.is_empty() {
+                proof_lines.push("  exfalso".into());
+                proof_lines.push("  omega".into());
+                return Ok(Some(CompiledFactProofBody {
+                    fact: target,
+                    proposition,
+                    proof_expression: proof_lines.join("\n"),
+                }));
+            }
+
+            let parameter_object = obj_for_bound_param_in_scope(binding, ParamObjType::Forall);
+            let assignment_equalities = values
+                .iter()
+                .map(|value| {
+                    Fact::from(AtomicFact::EqualFact(EqualFact::new(
+                        parameter_object.clone(),
+                        Number::new(value.clone()).into(),
+                        statement.line_file.clone(),
+                    )))
+                })
+                .collect::<Vec<_>>();
+            let assignment_alternatives = if assignment_equalities.len() == 1 {
+                assignment_equalities[0].clone()
+            } else {
+                OrFact::new(
+                    assignment_equalities
+                        .iter()
+                        .map(|fact| match fact {
+                            Fact::AtomicFact(fact) => AndChainAtomicFact::AtomicFact(fact.clone()),
+                            _ => unreachable!("range assignment equality is atomic"),
+                        })
+                        .collect(),
+                    statement.line_file.clone(),
+                )
+                .into()
+            };
+            proof_lines.push(format!(
+                "  have __range_value_cases : {} := by omega",
+                values
+                    .iter()
+                    .map(|value| format!("({range_value}).val = ({value} : ℤ)"))
+                    .collect::<Vec<_>>()
+                    .join(" ∨ ")
+            ));
+            proof_lines.push(format!(
+                "  have __assignment_cases : {} := by",
+                render_fact(&assignment_alternatives, &self.environment_stack)?
+            ));
+            let range_same = format!(
+                "Litex.Same.trans (Litex.In.same_rep {parameter_name} __type1) (Litex.Same.subtype {range_value})"
+            );
+            if values.len() == 1 {
+                proof_lines.push("    have __range_value_case := __range_value_cases".into());
+            } else {
+                proof_lines.push(format!(
+                    "    rcases __range_value_cases with {}",
+                    (1..=values.len())
+                        .map(|index| format!("__range_value_case{index}"))
+                        .collect::<Vec<_>>()
+                        .join(" | ")
+                ));
+            }
+            for (value_index, _) in values.iter().enumerate() {
+                let case_name = if values.len() == 1 {
+                    "__range_value_case".to_string()
+                } else {
+                    format!("__range_value_case{}", value_index + 1)
+                };
+                let equality_proof = format!(
+                    "Litex.Same.trans ({range_same}) (by simpa [{case_name}] using Litex.Same.intComplex ({range_value}).val)"
+                );
+                let injected = right_associated_disjunction_injection(
+                    equality_proof,
+                    value_index,
+                    values.len(),
+                )?;
+                if values.len() == 1 {
+                    proof_lines.push(format!("    exact {injected}"));
+                } else {
+                    proof_lines.push("    ·".into());
+                    proof_lines.push(format!("      exact {injected}"));
+                }
+            }
+            if assignment_equalities.len() == 1 {
+                proof_lines.push("  have __assignment1 := __assignment_cases".into());
+            } else {
+                proof_lines.push(format!(
+                    "  rcases __assignment_cases with {}",
+                    (1..=assignment_equalities.len())
+                        .map(|index| format!("__assignment{index}"))
+                        .collect::<Vec<_>>()
+                        .join(" | ")
+                ));
+            }
+            for (assignment_index, assignment) in verification.assignments.iter().enumerate() {
+                self.environment_stack.push_inherited_environment();
+                let branch = self.compile_one_by_for_range_assignment_result(
+                    source_forall,
+                    assignment,
+                    &assignment_equalities[assignment_index],
+                    &parameter_result.enumerated_values[assignment_index],
+                    assignment_index,
+                    binding,
+                    if values.len() == 1 {
+                        "__range_value_case".to_string()
+                    } else {
+                        format!("__range_value_case{}", assignment_index + 1)
+                    },
+                );
+                self.environment_stack.pop_local_environment();
+                let branch = branch?;
+                if assignment_equalities.len() == 1 {
+                    for line in branch.local_lines {
+                        proof_lines.push(indent_lines(&line, 2));
+                    }
+                    proof_lines.push(format!("  exact {}", branch.exit_proof));
+                } else {
+                    proof_lines.push("  ·".into());
+                    for line in branch.local_lines {
+                        proof_lines.push(indent_lines(&line, 4));
+                    }
+                    proof_lines.push(format!("    exact {}", branch.exit_proof));
+                }
+            }
+            Ok(Some(CompiledFactProofBody {
+                fact: target,
+                proposition,
+                proof_expression: proof_lines.join("\n"),
+            }))
+        })();
+        self.environment_stack.pop_local_environment();
+        compilation
+    }
+
+    fn compile_one_by_for_range_assignment_result(
+        &mut self,
+        source_forall: &ForallFact,
+        assignment: &SuccessVerifyByAssignmentResult,
+        expected_equality: &Fact,
+        expected_value: &str,
+        assignment_index: usize,
+        binding: &SymbolBinding,
+        native_range_value_equality_name: String,
+    ) -> Result<CompiledFiniteAssignmentBranch, String> {
+        if assignment.assignment != vec![(binding.name().to_string(), expected_value.to_string())]
+            || assignment.assumptions.len() != 2
+        {
+            return Err(format!(
+                "by-for assignment {assignment_index} changed its parameter value or assumption arity"
+            ));
+        }
+        let parameter_object = obj_for_bound_param_in_scope(binding, ParamObjType::Forall);
+        let expected_integer_membership: Fact = InFact::new(
+            parameter_object,
+            StandardSet::Z.into(),
+            source_forall.line_file.clone(),
+        )
+        .into();
+        let expected = [expected_integer_membership, expected_equality.clone()];
+        let names = [
+            format!("__assignment{}_in_z", assignment_index + 1),
+            format!("__assignment{}", assignment_index + 1),
+        ];
+        self.environment_stack
+            .runtime_resolved_numeric_comparison_rewrites
+            .push(native_range_value_equality_name);
+        self.environment_stack
+            .runtime_resolved_numeric_substitutions
+            .insert(
+                binding.substitution_key(),
+                Number::new(expected_value.to_string()).into(),
+            );
+        let mut local_lines = Vec::new();
+        for (assumption_index, ((assumption, expected), name)) in assignment
+            .assumptions
+            .iter()
+            .zip(expected.iter())
+            .zip(names.iter())
+            .enumerate()
+        {
+            if assumption.fact.to_string() != expected.to_string() {
+                return Err(format!(
+                    "by-for assignment {assignment_index} changed assumption {assumption_index}"
+                ));
+            }
+            let [store] = assumption.infers.store_fact_outputs.as_slice() else {
+                return Err(format!(
+                    "by-for assignment {assignment_index} assumption {assumption_index} lost its source store"
+                ));
+            };
+            if store.fact_id != Some(assumption.fact_id)
+                || store.itself_and_why_itself_is_stored.0.to_string()
+                    != assumption.fact.to_string()
+            {
+                return Err(format!(
+                    "by-for assignment {assignment_index} changed assumption {assumption_index} FactId"
+                ));
+            }
+            self.environment_stack
+                .fact_names
+                .insert(assumption.fact_id, name.clone());
+            self.environment_stack
+                .fact_propositions
+                .insert(assumption.fact_id, assumption.fact.clone());
+            if assumption_index == 0 {
+                let range_value =
+                    format!("(Litex.In.rep {} __type1)", lean_identifier(binding.name()));
+                local_lines.push(format!(
+                    "have {name} : {} := Litex.Rules.complexEqIntInZ (((({range_value}).val : ℤ) : ℂ)) (({range_value}).val : ℤ) (by rfl)",
+                    render_fact(expected, &self.environment_stack)?
+                ));
+            }
+            self.compile_typed_inference_results_in_current_compiler_environment(
+                &assumption.infers,
+                &[(assumption.fact_id, assumption.fact.clone())],
+                &mut local_lines,
+                &format!("by-for assignment {assignment_index} assumption {assumption_index}"),
+            )?;
+        }
+        self.compile_finite_assignment_domain_proof_and_conclusion_children(
+            source_forall,
+            assignment,
+            assignment_index,
+            local_lines,
+            "by-for",
+        )
+    }
+
+    fn compile_by_enumerate_range_stmt_result_to_lean_source(
+        &mut self,
+        result: &SuccessByEnumerateRangeStmtResult,
+    ) -> Result<bool, String> {
+        self.compile_integer_range_membership_cases_result_to_lean_source(
+            &result.statement.element,
+            &result.statement.range,
+            &result.statement.line_file,
+            &result.common,
+            result.verification.as_ref(),
+            "by-enumerate-range",
+        )
+    }
+
+    fn compile_by_closed_range_as_cases_stmt_result_to_lean_source(
+        &mut self,
+        result: &SuccessByClosedRangeAsCasesStmtResult,
+    ) -> Result<bool, String> {
+        self.compile_integer_range_membership_cases_result_to_lean_source(
+            &result.statement.element,
+            &ClosedRangeOrRange::ClosedRange(result.statement.closed_range.clone()),
+            &result.statement.line_file,
+            &result.common,
+            result.verification.as_ref(),
+            "by-closed-range-as-cases",
+        )
+    }
+
+    /// `Combine`: exact membership and endpoint verification children are
+    /// eliminated into the typed equality-disjunction retained by this Result.
+    /// The current compiler environment supplies only names for cited facts;
+    /// all range, endpoint, case-order and publication semantics remain owned
+    /// by the recursive Result.
+    fn compile_integer_range_membership_cases_result_to_lean_source(
+        &mut self,
+        source_element: &Obj,
+        source_range: &ClosedRangeOrRange,
+        line_file: &LineFile,
+        common: &SuccessStmtCommonResult,
+        verification: Option<&SuccessVerifyByEnumerateRangeResult>,
+        result_layer: &str,
+    ) -> Result<bool, String> {
+        let Some(verification) = verification else {
+            return Ok(false);
+        };
+        let source_range_obj = obj_from_closed_or_half_open_range(source_range);
+        let retained_range_obj = obj_from_closed_or_half_open_range(&verification.range);
+        if obj_equality_key(source_element) != obj_equality_key(&verification.element)
+            || obj_equality_key(&source_range_obj) != obj_equality_key(&retained_range_obj)
+        {
+            return Err(format!(
+                "{result_layer} Result changed its element or exact range"
+            ));
+        }
+
+        let expected_membership: Fact =
+            InFact::new(source_element.clone(), source_range_obj, line_file.clone()).into();
+        if verification.membership_fact.to_string() != expected_membership.to_string() {
+            return Err(format!(
+                "{result_layer} Result changed its source membership fact"
+            ));
+        }
+        let membership_check = verification
+            .membership_check
+            .factual_success()
+            .ok_or_else(|| format!("{result_layer} membership child is not factual"))?;
+        validate_scoped_fact_check_result(
+            membership_check,
+            &expected_membership,
+            &format!("{result_layer} membership child"),
+        )?;
+        let membership_proof = self
+            .construct_lean_proof_from_direct_fact_result(membership_check)?
+            .ok_or_else(|| format!("unsupported {result_layer} membership proof Result"))?;
+
+        let (start, end) = closed_or_half_open_range_endpoints(source_range);
+        let expected_endpoints = [
+            (SuccessVerifyByEnumerateRangeEndpointPosition::Start, start),
+            (SuccessVerifyByEnumerateRangeEndpointPosition::End, end),
+        ];
+        if verification.endpoint_checks.len() != expected_endpoints.len() {
+            return Err(format!(
+                "{result_layer} Result changed its endpoint-check arity"
+            ));
+        }
+        for (endpoint_index, (retained, (expected_position, expected_endpoint))) in verification
+            .endpoint_checks
+            .iter()
+            .zip(expected_endpoints)
+            .enumerate()
+        {
+            let expected_fact: Fact = InFact::new(
+                expected_endpoint.clone(),
+                StandardSet::Z.into(),
+                line_file.clone(),
+            )
+            .into();
+            if retained.position != expected_position
+                || obj_equality_key(&retained.endpoint) != obj_equality_key(expected_endpoint)
+                || retained.integer_membership_fact.to_string() != expected_fact.to_string()
+            {
+                return Err(format!(
+                    "{result_layer} Result changed endpoint {endpoint_index}"
+                ));
+            }
+            let checked = retained.verification.factual_success().ok_or_else(|| {
+                format!("{result_layer} endpoint {endpoint_index} child is not factual")
+            })?;
+            validate_scoped_fact_check_result(
+                checked,
+                &expected_fact,
+                &format!("{result_layer} endpoint {endpoint_index}"),
+            )?;
+            self.construct_lean_proof_from_direct_fact_result(checked)?
+                .ok_or_else(|| {
+                    format!("unsupported {result_layer} endpoint {endpoint_index} proof Result")
+                })?;
+        }
+
+        let Some(values) = literal_integer_values_for_range(source_range)? else {
+            // Symbolic endpoints need their own retained evaluation Results;
+            // strings or a compiler-side Runtime lookup are not substitutes.
+            return Ok(false);
+        };
+        if values.is_empty() {
+            return Err(format!("{result_layer} retained an empty successful range"));
+        }
+        let equality_branches = values
+            .iter()
+            .map(|value| {
+                AndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+                    source_element.clone(),
+                    Number::new(value.clone()).into(),
+                    line_file.clone(),
+                )))
+            })
+            .collect::<Vec<_>>();
+        let expected_cases: Fact = if equality_branches.len() == 1 {
+            equality_branches[0].clone().into()
+        } else {
+            OrFact::new(equality_branches, line_file.clone()).into()
+        };
+        if verification.generated_cases.to_string() != expected_cases.to_string() {
+            return Err(format!(
+                "{result_layer} Result changed its ordered generated cases"
+            ));
+        }
+        let fact_id = validate_generated_fact_publication_effects(
+            &common.infers,
+            &expected_cases,
+            &format!("{result_layer} generated cases"),
+        )?;
+
+        let rendered_element = render_obj(source_element, &self.environment_stack)?;
+        let rendered_cases = render_fact(&expected_cases, &self.environment_stack)?;
+        let member_name = "__range_member";
+        let mut proof_lines = vec![
+            "by".to_string(),
+            format!("  let {member_name} := Litex.In.rep {rendered_element} ({membership_proof})"),
+            format!("  have __range_bounds := ({member_name}).property"),
+            format!(
+                "  simp only [{}] at __range_bounds",
+                match source_range {
+                    ClosedRangeOrRange::Range(_) => "Finset.mem_Ico",
+                    ClosedRangeOrRange::ClosedRange(_) => "Finset.mem_Icc",
+                }
+            ),
+            format!(
+                "  have __range_value_cases : {} := by omega",
+                values
+                    .iter()
+                    .map(|value| format!("({member_name}).val = ({value} : ℤ)"))
+                    .collect::<Vec<_>>()
+                    .join(" ∨ ")
+            ),
+        ];
+        if values.len() == 1 {
+            proof_lines.push("  have __range_value_case := __range_value_cases".into());
+        } else {
+            proof_lines.push(format!(
+                "  rcases __range_value_cases with {}",
+                (1..=values.len())
+                    .map(|index| format!("__range_value_case{index}"))
+                    .collect::<Vec<_>>()
+                    .join(" | ")
+            ));
+        }
+        let range_same = format!(
+            "Litex.Same.trans (Litex.In.same_rep {rendered_element} ({membership_proof})) (Litex.Same.subtype {member_name})"
+        );
+        for value_index in 0..values.len() {
+            let case_name = if values.len() == 1 {
+                "__range_value_case".to_string()
+            } else {
+                format!("__range_value_case{}", value_index + 1)
+            };
+            let equality_proof = format!(
+                "Litex.Same.trans ({range_same}) (by simpa [{case_name}] using Litex.Same.intComplex ({member_name}).val)"
+            );
+            let injected =
+                right_associated_disjunction_injection(equality_proof, value_index, values.len())?;
+            if values.len() == 1 {
+                proof_lines.push(format!("  exact {injected}"));
+            } else {
+                proof_lines.push("  ·".into());
+                proof_lines.push(format!("    exact {injected}"));
+            }
+        }
+
+        let theorem_name = format!("__fact{}", self.next_fact_name_index);
+        self.declarations.push(format!(
+            "theorem {theorem_name} : {rendered_cases} := {}",
+            proof_lines.join("\n")
+        ));
+        self.environment_stack
+            .fact_names
+            .insert(fact_id, theorem_name);
+        self.environment_stack
+            .fact_propositions
+            .insert(fact_id, expected_cases);
+        self.next_fact_name_index += 1;
+        Ok(true)
+    }
+
+    fn construct_lean_runtime_resolved_numeric_comparison_from_assignment_result(
+        &self,
+        target: &Fact,
+        evidence: &RuntimeResolvedNumericComparisonBuiltinRuleEvidence,
+    ) -> Result<String, String> {
+        if evidence.expected_target.to_string() != target.to_string() {
+            return Err("Runtime-resolved comparison evidence changed its target".into());
+        }
+        let Fact::AtomicFact(target_atomic) = target else {
+            return Err("Runtime-resolved comparison targets a non-atomic fact".into());
+        };
+        let Some((source_left, source_right, allow_equal)) =
+            normalized_positive_order_operands(target_atomic)
+        else {
+            return Err(
+                "Runtime-resolved assignment compiler currently supports order comparisons only"
+                    .into(),
+            );
+        };
+        let left = evidence
+            .normalized_left
+            .evaluate_to_normalized_decimal_number_with_result()
+            .ok_or_else(|| {
+                "Runtime-resolved comparison left result is not a closed number".to_string()
+            })?;
+        let right = evidence
+            .normalized_right
+            .evaluate_to_normalized_decimal_number_with_result()
+            .ok_or_else(|| {
+                "Runtime-resolved comparison right result is not a closed number".to_string()
+            })?;
+        let comparison = crate::verify::compare_number_strings(
+            &left.value.normalized_value,
+            &right.value.normalized_value,
+        );
+        if !matches!(comparison, crate::verify::NumberCompareResult::Less)
+            && !(allow_equal && matches!(comparison, crate::verify::NumberCompareResult::Equal))
+        {
+            return Err("Runtime-resolved comparison retained a false numeric result".into());
+        }
+        let substitutions = &self
+            .environment_stack
+            .runtime_resolved_numeric_substitutions;
+        let substitution_runtime = Runtime::new();
+        let evaluate_substituted = |source: &Obj| -> Result<String, String> {
+            let substituted = substitution_runtime
+                .inst_obj(source, substitutions, ParamObjType::Forall)
+                .map_err(|error| {
+                    format!("Runtime-resolved comparison substitution failed: {error:?}")
+                })?;
+            substituted
+                .evaluate_to_normalized_decimal_number_with_result()
+                .map(|result| result.value.normalized_value)
+                .ok_or_else(|| {
+                    format!(
+                        "Runtime-resolved comparison operand `{source}` is not explained by the enclosing Result substitutions"
+                    )
+                })
+        };
+        if evaluate_substituted(source_left)? != left.value.normalized_value
+            || evaluate_substituted(source_right)? != right.value.normalized_value
+        {
+            return Err(
+                "Runtime-resolved comparison normal forms disagree with enclosing Result substitutions"
+                    .into(),
+            );
+        }
+        let mut rewrites = self
+            .environment_stack
+            .runtime_resolved_numeric_definition_names
+            .clone();
+        rewrites.extend(
+            self.environment_stack
+                .runtime_resolved_numeric_comparison_rewrites
+                .iter()
+                .cloned(),
+        );
+        if rewrites.is_empty() {
+            return Err(
+                "Runtime-resolved comparison is outside a definition or assignment Result"
+                    .to_string(),
+            );
+        }
+        render_fact(target, &self.environment_stack)?;
+        let rewrites = rewrites.join(", ");
+        if source_left.to_string() == "0" {
+            let (predicate, theorem) = if allow_equal {
+                ("Nonnegative", "nonnegativeOfComplexReal")
+            } else {
+                ("Positive", "positiveOfComplexReal")
+            };
+            let rendered_operand = render_obj(source_right, &self.environment_stack)?;
+            let normalized_value = &right.value.normalized_value;
+            return Ok(format!(
+                "(by\n  exact (Litex.{predicate}.congr (Litex.Same.ofEq (by norm_num [{rewrites}] : {rendered_operand} = ((({normalized_value} : ℝ)) : ℂ)))).mpr (Litex.OrderBridge.{theorem} (r := ({normalized_value} : ℝ)) (by norm_num)))"
+            ));
+        }
+        Ok(format!(
+            "(by\n  norm_num [Litex.Lt, Litex.Le, Litex.OrderValue, {rewrites}])"
+        ))
+    }
+
     /// `Combine`: one coverage proof is replayed in every exported goal;
     /// every branch receives its own inherited compiler environment.
     fn construct_lean_proofs_from_by_cases_stmt_result(
@@ -4841,21 +6430,6 @@ impl StmtResultToLeanCompiler {
                 self.environment_stack.push_inherited_environment();
                 let branch_compilation = (|| {
                     let case_fact: Fact = branch.assumption.clone().into();
-                    let stored_assumption_fact_id = validate_single_fact_store_output(
-                        &branch.proof_scope.assumption_infers,
-                        &case_fact,
-                        "by-cases branch assumption",
-                    )?;
-                    if stored_assumption_fact_id != branch.assumption_fact_id {
-                        return Err("by-cases branch assumption FactIds disagree".into());
-                    }
-                    self.environment_stack
-                        .fact_names
-                        .insert(branch.assumption_fact_id, case_names[branch_index].clone());
-                    self.environment_stack
-                        .fact_propositions
-                        .insert(branch.assumption_fact_id, case_fact.clone());
-
                     let expected_components = match &branch.assumption {
                         AndChainAtomicFact::AtomicFact(_) => Vec::new(),
                         AndChainAtomicFact::AndFact(and_fact) => and_fact
@@ -4871,6 +6445,44 @@ impl StmtResultToLeanCompiler {
                             .map(Fact::from)
                             .collect::<Vec<_>>(),
                     };
+                    let stored_assumption_fact_id =
+                        if matches!(&branch.assumption, AndChainAtomicFact::AndFact(_)) {
+                            let (source_fact_id, component_fact_ids) =
+                                validate_conjunction_store_and_component_inference_results(
+                                    &branch.proof_scope.assumption_infers,
+                                    &case_fact,
+                                    &expected_components,
+                                    "by-cases branch assumption",
+                                )?;
+                            let retained_component_fact_ids = branch
+                                .proof_scope
+                                .assumption_components
+                                .iter()
+                                .map(|(fact_id, _)| *fact_id)
+                                .collect::<Vec<_>>();
+                            if component_fact_ids != retained_component_fact_ids {
+                                return Err(
+                                    "by-cases branch component Result FactIds disagree".into()
+                                );
+                            }
+                            source_fact_id
+                        } else {
+                            validate_single_fact_store_output(
+                                &branch.proof_scope.assumption_infers,
+                                &case_fact,
+                                "by-cases branch assumption",
+                            )?
+                        };
+                    if stored_assumption_fact_id != branch.assumption_fact_id {
+                        return Err("by-cases branch assumption FactIds disagree".into());
+                    }
+                    self.environment_stack
+                        .fact_names
+                        .insert(branch.assumption_fact_id, case_names[branch_index].clone());
+                    self.environment_stack
+                        .fact_propositions
+                        .insert(branch.assumption_fact_id, case_fact.clone());
+
                     if expected_components.len() != branch.proof_scope.assumption_components.len() {
                         return Err("by-cases branch lost a structural assumption component".into());
                     }
@@ -5243,8 +6855,20 @@ impl StmtResultToLeanCompiler {
             return Ok(());
         }
         if self
+            .compile_direct_conjunction_fact_with_component_inference(result)
+            .map_err(|error| format!("conjunction-component inference route: {error}"))?
+        {
+            return Ok(());
+        }
+        if self
             .compile_direct_forall_fact_result(result)
             .map_err(|error| format!("forall route: {error}"))?
+        {
+            return Ok(());
+        }
+        if self
+            .compile_direct_fact_with_typed_inference(result)
+            .map_err(|error| format!("generic typed-inference fact route: {error}"))?
         {
             return Ok(());
         }
@@ -5254,24 +6878,157 @@ impl StmtResultToLeanCompiler {
         {
             return Ok(());
         }
-        if self.compatibility_adapter_policy
-            == StmtResultToLeanCompatibilityAdapterPolicy::RejectForDirectResultCompilationAudit
-        {
-            return Err(format!(
-                "direct StmtResult compilation audit reached the compatibility fact builder for `{}` ({})",
-                result.fact(),
-                describe_success_fact_result_for_direct_compilation_audit(result),
-            ));
+        Err(format!(
+            "StmtResult-to-Lean compiler has no direct fact consumer for `{}` ({})",
+            result.fact(),
+            describe_success_fact_result_for_direct_compilation_audit(result),
+        ))
+    }
+
+    /// `Combine`: publish an otherwise-direct fact proof, then consume every
+    /// typed inference child from that source FactId in its retained order.
+    /// Specialized fact families run before this method; this is the common
+    /// path for proof evidence such as a Runtime-resolved numeric comparison
+    /// whose ordinary store also owns supported inference Results.
+    fn compile_direct_fact_with_typed_inference(
+        &mut self,
+        result: &SuccessFactStmtResult,
+    ) -> Result<bool, String> {
+        if result.store.infers.rule_applications.is_empty() {
+            return Ok(false);
         }
-        let fact = LitexToLeanIrBuilder::new()
-            .compile_fact_stmt_result(result)
-            .map_err(|error| format!("StmtResult-to-Lean fact compilation failed: {error:?}"))?;
-        construct_lean_declarations_for_compatibility_fact_result(
-            &fact,
-            &mut self.declarations,
-            &mut self.next_fact_name_index,
-            &mut self.environment_stack,
-        )
+        let source_fact = result.fact();
+        if result.store.fact.to_string() != source_fact.to_string() {
+            return Err("typed-inference fact changed between verification and store".into());
+        }
+        let source_fact_id = result
+            .store
+            .fact_id
+            .ok_or_else(|| "typed-inference fact store has no FactId".to_string())?;
+        let source_outputs = result
+            .store
+            .infers
+            .store_fact_outputs
+            .iter()
+            .filter(|output| {
+                output.fact_id == Some(source_fact_id)
+                    && output.itself_and_why_itself_is_stored.0.to_string()
+                        == source_fact.to_string()
+            })
+            .collect::<Vec<_>>();
+        let [source_output] = source_outputs.as_slice() else {
+            return Err("typed-inference fact must retain one exact source store output".into());
+        };
+        if source_output.inferred_facts.len() != source_output.inferred_fact_ids.len() {
+            return Err("typed-inference fact changed its inferred FactId arity".into());
+        }
+        let Some(proof) = self.construct_lean_proof_from_direct_fact_result(result)? else {
+            return Ok(false);
+        };
+        if matches!(source_fact, Fact::AtomicFact(_)) {
+            validate_atomic_fact_well_definedness_result(&result.well_definedness, &source_fact)?;
+        }
+        let proposition = render_fact(&source_fact, &self.environment_stack)?;
+        let theorem_name = format!("__fact{}", self.next_fact_name_index);
+        self.declarations.push(format!(
+            "theorem {theorem_name} : {proposition} := by\n  exact {proof}"
+        ));
+        self.environment_stack
+            .fact_names
+            .insert(source_fact_id, theorem_name);
+        self.environment_stack
+            .fact_propositions
+            .insert(source_fact_id, source_fact.clone());
+        self.next_fact_name_index += 1;
+        self.compile_standard_numeric_membership_infer_result_as_top_level_declarations(
+            &source_fact,
+            source_fact_id,
+            &result.store.infers,
+            "typed-inference fact Result",
+        )?;
+        Ok(true)
+    }
+
+    /// `Combine`: publish the proved conjunction once, then bind every exact
+    /// inferred component FactId to its structural Lean projection. Later
+    /// Results cite those identities through the ordinary compiler stack.
+    fn compile_direct_conjunction_fact_with_component_inference(
+        &mut self,
+        result: &SuccessFactStmtResult,
+    ) -> Result<bool, String> {
+        let source_fact = result.fact();
+        let Fact::AndFact(source_conjunction) = &source_fact else {
+            return Ok(false);
+        };
+        if result.store.infers.rule_applications.is_empty()
+            || result
+                .store
+                .infers
+                .rule_applications
+                .iter()
+                .any(|application| {
+                    !matches!(application.rule, InferRule::ConjunctionImpliesComponent(_))
+                })
+        {
+            return Ok(false);
+        }
+        if result.store.fact.to_string() != source_fact.to_string() {
+            return Err("conjunction changed between verification and store".into());
+        }
+        let components = source_conjunction
+            .facts
+            .iter()
+            .cloned()
+            .map(Fact::from)
+            .collect::<Vec<_>>();
+        let (source_fact_id, component_fact_ids) =
+            validate_conjunction_store_and_component_inference_results(
+                &result.store.infers,
+                &source_fact,
+                &components,
+                "conjunction fact store",
+            )?;
+        let Some(source_proof) =
+            self.construct_lean_proof_from_direct_fact_result_using_its_well_definedness(result)?
+        else {
+            return Ok(false);
+        };
+        let source_proposition = render_fact(&source_fact, &self.environment_stack)?;
+        let source_theorem_name = format!("__fact{}", self.next_fact_name_index);
+        self.declarations.push(format!(
+            "theorem {source_theorem_name} : {source_proposition} := by\n  exact {source_proof}"
+        ));
+        self.environment_stack
+            .fact_names
+            .insert(source_fact_id, source_theorem_name.clone());
+        self.environment_stack
+            .fact_propositions
+            .insert(source_fact_id, source_fact);
+        self.next_fact_name_index += 1;
+
+        for (component_index, (component, component_fact_id)) in components
+            .iter()
+            .zip(component_fact_ids.into_iter())
+            .enumerate()
+        {
+            let projection = conjunction_projection(
+                &format!("({source_theorem_name})"),
+                component_index,
+                components.len(),
+            )?;
+            self.environment_stack
+                .fact_names
+                .insert(component_fact_id, projection);
+            self.environment_stack
+                .fact_propositions
+                .insert(component_fact_id, component.clone());
+        }
+        validate_flattened_inferred_fact_ids_are_visible(
+            &result.store.infers,
+            &self.environment_stack,
+            "conjunction fact store",
+        )?;
+        Ok(true)
     }
 
     /// `Combine`: publish the exact proved predicate application, then consume
@@ -5860,8 +7617,9 @@ impl StmtResultToLeanCompiler {
     /// parameter SymbolIds and FactIds in one inherited compiler environment,
     /// install any zero-extra-inference domain FactIds, compile the ordered
     /// conclusion Results there, then pop before publishing the outer forall
-    /// theorem. Typed standard-numeric-carrier inference is compiled as local
-    /// `have` declarations in this same binder environment.
+    /// theorem. Typed inference children are validated and either compiled as
+    /// local `have` declarations or installed as exact target bindings in the
+    /// same binder environment.
     fn compile_direct_forall_fact_result(
         &mut self,
         result: &SuccessFactStmtResult,
@@ -5880,53 +7638,22 @@ impl StmtResultToLeanCompiler {
             .rule_applications
             .iter()
             .any(|application| {
-                !infer_rule_can_compile_in_standard_numeric_binder(&application.rule)
+                !infer_rule_has_direct_compiler_environment_consumer(&application.rule)
             })
         {
             return self.direct_forall_result_is_not_yet_supported(
-                "its assumption inference contains a non-standard-numeric typed rule",
+                "its assumption inference contains a typed rule without a direct compiler-environment consumer",
             );
         }
-        if !standard_numeric_infer_result_is_fully_typed_and_supported(&proof.assumption_infers) {
-            if self.compatibility_adapter_policy
-                == StmtResultToLeanCompatibilityAdapterPolicy::RejectForDirectResultCompilationAudit
-            {
-                return Err(format!(
-                    "direct ForallProof compiler found flattened assumption effects without matching typed rules: {:?}",
-                    proof.assumption_infers.store_fact_outputs
-                ));
-            }
-            return self.direct_forall_result_is_not_yet_supported(
-                "its assumption inference has flattened effects without matching typed rules",
-            );
-        }
-        if fact_result_contains_inferred_facts(result)
-            || !result.store.infers.rule_applications.is_empty()
+        if !infer_result_effects_are_fully_owned_by_direct_compiler_rules(&proof.assumption_infers)
         {
-            return self.direct_forall_result_is_not_yet_supported(
-                "the outer forall store contains inference effects",
-            );
+            return Err(format!(
+                "direct ForallProof compiler found flattened assumption effects without matching typed rules: {:?}",
+                proof.assumption_infers.store_fact_outputs
+            ));
         }
-        if result.store.fact_id.is_none()
-            && !matches!(
-                result.store.infers.store_fact_outputs.as_slice(),
-                [output]
-                    if output.fact_id.is_none()
-                        && output.itself_and_why_itself_is_stored.0.to_string()
-                            == result.fact().to_string()
-                        && output.inferred_facts.is_empty()
-                        && output.inferred_fact_ids.is_empty()
-            )
-        {
-            // A conclusion that omits one or more independent binders causes
-            // Runtime to store one or more reduced-binder forall projections.
-            // Their direct recursive compiler layer is still pending, so keep
-            // this exact Result shape on the compatibility adapter instead of
-            // misclassifying it as a single unstored forall.
-            return self.direct_forall_result_is_not_yet_supported(
-                "Runtime published reduced-binder forall projections instead of one outer FactId",
-            );
-        }
+        let publication_selections =
+            direct_forall_result_publication_selections(result, &source_forall)?;
         let Some(SuccessVerifyFactWellDefinedProofResult::ForallFact(well_definedness)) =
             result.well_definedness.recursive.as_deref()
         else {
@@ -5943,15 +7670,13 @@ impl StmtResultToLeanCompiler {
         // premise/conclusion child. Keep that whole tree active while a child
         // proof is rendered; projecting a conclusion in isolation would lose
         // the parent-owned function-prefix and binder context.
-        let forall_well_definedness = LitexToLeanIrBuilder::new()
-            .compile_fact_stmt_well_definedness_for_lean_rendering(result)
-            .map_err(|error| error.to_string())?;
-        let publication_well_definedness = forall_well_definedness.clone();
+        let forall_well_definedness =
+            self.construct_well_definedness_to_lean_compilation_context(&result.well_definedness)?;
 
-        let parameters = source_forall
+        let source_parameters = source_forall
             .params_def_with_type
             .collect_param_bindings_with_types();
-        let well_defined_parameters = well_definedness
+        let source_well_defined_parameters = well_definedness
             .binder
             .parameter_groups
             .iter()
@@ -5962,147 +7687,211 @@ impl StmtResultToLeanCompiler {
                     .map(move |parameter| (group, parameter))
             })
             .collect::<Vec<_>>();
-        if well_defined_parameters.len() != parameters.len() {
+        if source_well_defined_parameters.len() != source_parameters.len() {
             return Err("ForallProof binder changed its parameter arity".into());
         }
-        let parameter_facts = well_defined_parameters
+        let source_parameter_facts = source_well_defined_parameters
             .iter()
             .map(|(_, parameter)| parameter.proposition.clone())
             .collect::<Vec<_>>();
-        let mut assumption_facts = parameter_facts.clone();
-        assumption_facts.extend(source_forall.dom_facts.iter().cloned());
-        let assumption_fact_ids = exact_ordered_fact_ids_from_store_results(
-            &proof.assumption_infers,
-            &assumption_facts,
-            "ForallProof assumptions",
-        )?;
-        let (parameter_fact_ids, premise_fact_ids) =
-            assumption_fact_ids.split_at(parameter_facts.len());
-
-        self.environment_stack.push_inherited_environment();
-        self.environment_stack.well_definedness = Some(forall_well_definedness);
-        let compilation: Result<Option<CompiledDirectForallProofBody>, String> = (|| {
-            let mut intro_names = Vec::new();
-            let mut parameter_premises = Vec::with_capacity(parameters.len());
-            // The whole binder Result is visible at once. Install every exact
-            // domain identity before rendering parameter aliases because a
-            // parameter-associated function application in the WD tree may
-            // already cite one of these domain facts.
-            for (premise_index, ((source_premise, well_defined_premise), fact_id)) in source_forall
-                .dom_facts
-                .iter()
-                .zip(well_definedness.premises.iter())
-                .zip(premise_fact_ids.iter())
-                .enumerate()
-            {
-                if well_defined_premise.proposition.to_string() != source_premise.to_string()
-                    || well_defined_premise.store.fact.to_string() != source_premise.to_string()
-                {
-                    return Err(format!(
-                        "ForallProof domain premise {premise_index} changed its source proposition"
-                    ));
-                }
-                let premise_name = format!("__domain{}", premise_index + 1);
-                self.environment_stack
-                    .fact_names
-                    .insert(*fact_id, premise_name.clone());
-                self.environment_stack
-                    .fact_propositions
-                    .insert(*fact_id, source_premise.clone());
-                let well_definedness_fact_id =
-                    well_defined_premise.store.fact_id.ok_or_else(|| {
-                        format!(
-                            "ForallProof WD domain premise {premise_index} has no frozen FactId"
-                        )
-                    })?;
-                self.environment_stack
-                    .fact_names
-                    .insert(well_definedness_fact_id, premise_name);
-                self.environment_stack
-                    .fact_propositions
-                    .insert(well_definedness_fact_id, source_premise.clone());
+        // The proof Result, not the flat inference-effect list or the sibling
+        // WD Result, owns the identities installed in this lexical frame.
+        // A repeated domain premise therefore carries the same exact FactId
+        // as its earlier parameter assumption without creating another store
+        // output.
+        if proof.parameter_assumptions.len() != source_parameter_facts.len()
+            || proof.domain_assumptions.len() != source_forall.dom_facts.len()
+        {
+            return Err("ForallProof changed its proof-scope assumption arity".into());
+        }
+        let mut source_parameter_fact_ids = Vec::with_capacity(source_parameter_facts.len());
+        for (parameter_index, (expected, retained)) in source_parameter_facts
+            .iter()
+            .zip(proof.parameter_assumptions.iter())
+            .enumerate()
+        {
+            if retained.fact.to_string() != expected.to_string() {
+                return Err(format!(
+                    "ForallProof parameter assumption {parameter_index} changed its fact"
+                ));
             }
-            for (
-                parameter_index,
-                ((((binding, parameter_type), (group, parameter)), fact), fact_id),
-            ) in parameters
-                .iter()
-                .zip(well_defined_parameters.iter())
-                .zip(parameter_facts.iter())
-                .zip(parameter_fact_ids.iter())
-                .enumerate()
+            source_parameter_fact_ids.push(retained.fact_id);
+        }
+        let mut source_premise_fact_ids = Vec::with_capacity(source_forall.dom_facts.len());
+        for (premise_index, ((source_premise, retained), well_defined_premise)) in source_forall
+            .dom_facts
+            .iter()
+            .zip(proof.domain_assumptions.iter())
+            .zip(well_definedness.premises.iter())
+            .enumerate()
+        {
+            if retained.fact.to_string() != source_premise.to_string()
+                || well_defined_premise.proposition.to_string() != source_premise.to_string()
+                || well_defined_premise.store.fact.to_string() != source_premise.to_string()
             {
-                if group.parameter_type.to_string() != parameter_type.to_string()
-                    || parameter.symbol_id != Some(binding.id())
-                    || parameter.proposition.to_string() != fact.to_string()
+                return Err(format!(
+                    "ForallProof domain premise {premise_index} changed its source proposition"
+                ));
+            }
+            source_premise_fact_ids.push(retained.fact_id);
+        }
+        for (fact, fact_id) in source_parameter_facts
+            .iter()
+            .zip(source_parameter_fact_ids.iter())
+            .chain(
+                source_forall
+                    .dom_facts
+                    .iter()
+                    .zip(source_premise_fact_ids.iter()),
+            )
+        {
+            if !infer_result_retains_fact_id(&proof.assumption_infers, fact, *fact_id) {
+                return Err(format!(
+                    "ForallProof assumption effects do not retain exact FactId `{fact_id}` for `{fact}`"
+                ));
+            }
+        }
+
+        for publication_selection in publication_selections {
+            let parameters = publication_selection
+                .source_parameter_indices
+                .iter()
+                .map(|source_index| source_parameters[*source_index].clone())
+                .collect::<Vec<_>>();
+            let well_defined_parameters = publication_selection
+                .source_parameter_indices
+                .iter()
+                .map(|source_index| source_well_defined_parameters[*source_index])
+                .collect::<Vec<_>>();
+            let parameter_facts = publication_selection
+                .source_parameter_indices
+                .iter()
+                .map(|source_index| source_parameter_facts[*source_index].clone())
+                .collect::<Vec<_>>();
+            let parameter_fact_ids = publication_selection
+                .source_parameter_indices
+                .iter()
+                .map(|source_index| source_parameter_fact_ids[*source_index])
+                .collect::<Vec<_>>();
+            let premise_fact_ids = source_premise_fact_ids.clone();
+
+            self.environment_stack.push_inherited_environment();
+            self.environment_stack.well_definedness = Some(forall_well_definedness.clone());
+            let compilation: Result<Option<CompiledDirectForallProofBody>, String> = (|| {
+                let mut intro_names = Vec::new();
+                let mut parameter_premises = Vec::with_capacity(parameters.len());
+                // The whole binder Result is visible at once. Install every exact
+                // domain identity before rendering parameter aliases because a
+                // parameter-associated function application in the WD tree may
+                // already cite one of these domain facts.
+                for (premise_index, ((source_premise, well_defined_premise), fact_id)) in
+                    source_forall
+                        .dom_facts
+                        .iter()
+                        .zip(well_definedness.premises.iter())
+                        .zip(premise_fact_ids.iter())
+                        .enumerate()
                 {
-                    return Err(format!(
+                    let premise_name = format!("__domain{}", premise_index + 1);
+                    self.environment_stack
+                        .fact_names
+                        .insert(*fact_id, premise_name.clone());
+                    self.environment_stack
+                        .fact_propositions
+                        .insert(*fact_id, source_premise.clone());
+                    let well_definedness_fact_id = well_defined_premise
+                        .store
+                        .fact_id
+                        .expect("validated before entering the compiler environment");
+                    self.environment_stack
+                        .fact_names
+                        .insert(well_definedness_fact_id, premise_name);
+                    self.environment_stack
+                        .fact_propositions
+                        .insert(well_definedness_fact_id, source_premise.clone());
+                }
+                for (
+                    parameter_index,
+                    ((((binding, parameter_type), (group, parameter)), fact), fact_id),
+                ) in parameters
+                    .iter()
+                    .zip(well_defined_parameters.iter())
+                    .zip(parameter_facts.iter())
+                    .zip(parameter_fact_ids.iter())
+                    .enumerate()
+                {
+                    if group.parameter_type.to_string() != parameter_type.to_string()
+                        || parameter.symbol_id != Some(binding.id())
+                        || parameter.proposition.to_string() != fact.to_string()
+                    {
+                        return Err(format!(
                         "ForallProof parameter {parameter_index} changed its type, SymbolId, or proposition"
                     ));
-                }
-                let parameter_name = lean_identifier(binding.name());
-                if self
-                    .environment_stack
-                    .symbol_names
-                    .insert(binding.id(), parameter_name.clone())
-                    .is_some()
-                {
-                    return Err(format!(
-                        "ForallProof parameter {parameter_index} reused its SymbolId"
-                    ));
-                }
-                if matches!(parameter_type, ParamType::Obj(set) if matches!(set, Obj::FnSet(_)) || set_requires_heterogeneous_carrier(set))
-                {
-                    // `render_forall_fact_type` represents these source
-                    // objects with an implicit carrier followed by the value.
-                    // Tactic `intro` also consumes implicit binders, so the
-                    // proof layer must name that carrier before introducing
-                    // the source parameter itself.
-                    intro_names.push(format!("__carrier{}", parameter_index + 1));
-                }
-                intro_names.push(parameter_name.clone());
-                parameter_premises.push(LitexToLeanLocalPremiseIr::new(*fact_id, fact.clone()));
-
-                match parameter_type {
-                    ParamType::Set(_) => {
-                        validate_set_parameter_premise(binding.id(), fact)?;
                     }
-                    ParamType::Obj(set) => {
-                        validate_object_parameter_premise(binding.id(), set, fact)?;
-                        let proposition = render_fact(fact, &self.environment_stack).map_err(
+                    let parameter_name = lean_identifier(binding.name());
+                    if self
+                        .environment_stack
+                        .symbol_names
+                        .insert(binding.id(), parameter_name.clone())
+                        .is_some()
+                    {
+                        return Err(format!(
+                            "ForallProof parameter {parameter_index} reused its SymbolId"
+                        ));
+                    }
+                    if matches!(parameter_type, ParamType::Obj(set) if matches!(set, Obj::FnSet(_)) || set_requires_heterogeneous_carrier(set))
+                    {
+                        // `render_forall_fact_type` represents these source
+                        // objects with an implicit carrier followed by the value.
+                        // Tactic `intro` also consumes implicit binders, so the
+                        // proof layer must name that carrier before introducing
+                        // the source parameter itself.
+                        intro_names.push(format!("__carrier{}", parameter_index + 1));
+                    }
+                    intro_names.push(parameter_name.clone());
+                    parameter_premises.push(LeanLocalFactPremise::new(*fact_id, fact.clone()));
+
+                    match parameter_type {
+                        ParamType::Set(_) => {
+                            validate_set_parameter_premise(binding.id(), fact)?;
+                        }
+                        ParamType::Obj(set) => {
+                            validate_object_parameter_premise(binding.id(), set, fact)?;
+                            let proposition = render_fact(fact, &self.environment_stack).map_err(
                             |error| {
                                 format!(
                                     "ForallProof parameter {parameter_index} failed to render: {error}"
                                 )
                             },
                         )?;
-                        let hypothesis =
-                            format!("__h{}_{}", self.next_fact_name_index, parameter_index + 1);
-                        intro_names.push(hypothesis.clone());
-                        self.environment_stack
-                            .fact_names
-                            .insert(*fact_id, hypothesis.clone());
-                        self.environment_stack
-                            .fact_propositions
-                            .insert(*fact_id, fact.clone());
-                        let well_definedness_fact_ids = exact_ordered_fact_ids_from_store_results(
-                            &parameter.infers,
-                            std::slice::from_ref(fact),
-                            &format!("ForallProof WD parameter {parameter_index}"),
-                        )?;
-                        let [well_definedness_fact_id] = well_definedness_fact_ids.as_slice()
-                        else {
-                            return Err(format!(
+                            let hypothesis =
+                                format!("__h{}_{}", self.next_fact_name_index, parameter_index + 1);
+                            intro_names.push(hypothesis.clone());
+                            self.environment_stack
+                                .fact_names
+                                .insert(*fact_id, hypothesis.clone());
+                            self.environment_stack
+                                .fact_propositions
+                                .insert(*fact_id, fact.clone());
+                            let well_definedness_fact_ids =
+                                exact_ordered_fact_ids_from_store_results(
+                                    &parameter.infers,
+                                    std::slice::from_ref(fact),
+                                    &format!("ForallProof WD parameter {parameter_index}"),
+                                )?;
+                            let [well_definedness_fact_id] = well_definedness_fact_ids.as_slice()
+                            else {
+                                return Err(format!(
                                 "ForallProof WD parameter {parameter_index} retained the wrong store arity"
                             ));
-                        };
-                        self.environment_stack
-                            .fact_names
-                            .insert(*well_definedness_fact_id, hypothesis.clone());
-                        self.environment_stack
-                            .fact_propositions
-                            .insert(*well_definedness_fact_id, fact.clone());
-                        install_parameter_fact_aliases(
+                            };
+                            self.environment_stack
+                                .fact_names
+                                .insert(*well_definedness_fact_id, hypothesis.clone());
+                            self.environment_stack
+                                .fact_propositions
+                                .insert(*well_definedness_fact_id, fact.clone());
+                            install_parameter_fact_aliases(
                             binding.id(),
                             fact,
                             &hypothesis,
@@ -6114,320 +7903,373 @@ impl StmtResultToLeanCompiler {
                                 "ForallProof parameter {parameter_index} aliases failed to install: {error}"
                             )
                         })?;
-                        let expected = format!(
-                            "Litex.In {parameter_name} {}",
-                            render_obj(set, &self.environment_stack)?
-                        );
-                        if proposition != expected {
-                            return Err(format!(
+                            let expected = format!(
+                                "Litex.In {parameter_name} {}",
+                                render_obj(set, &self.environment_stack)?
+                            );
+                            if proposition != expected {
+                                return Err(format!(
                                 "ForallProof parameter {parameter_index} rendered `{proposition}` instead of `{expected}`"
                             ));
+                            }
                         }
-                    }
-                    ParamType::NonemptySet(_) | ParamType::FiniteSet(_) => {
-                        validate_refined_set_parameter_premise(binding.id(), parameter_type, fact)?;
-                        let proposition = render_fact(fact, &self.environment_stack)?;
-                        let hypothesis = format!("__type{}", parameter_index + 1);
-                        intro_names.push(hypothesis.clone());
-                        self.environment_stack
-                            .fact_names
-                            .insert(*fact_id, hypothesis.clone());
-                        self.environment_stack
-                            .fact_propositions
-                            .insert(*fact_id, fact.clone());
-                        let well_definedness_fact_ids = exact_ordered_fact_ids_from_store_results(
-                            &parameter.infers,
-                            std::slice::from_ref(fact),
-                            &format!("ForallProof WD parameter {parameter_index}"),
-                        )?;
-                        let [well_definedness_fact_id] = well_definedness_fact_ids.as_slice()
-                        else {
-                            return Err(format!(
+                        ParamType::NonemptySet(_) | ParamType::FiniteSet(_) => {
+                            validate_refined_set_parameter_premise(
+                                binding.id(),
+                                parameter_type,
+                                fact,
+                            )?;
+                            let proposition = render_fact(fact, &self.environment_stack)?;
+                            let hypothesis = format!("__type{}", parameter_index + 1);
+                            intro_names.push(hypothesis.clone());
+                            self.environment_stack
+                                .fact_names
+                                .insert(*fact_id, hypothesis.clone());
+                            self.environment_stack
+                                .fact_propositions
+                                .insert(*fact_id, fact.clone());
+                            let well_definedness_fact_ids =
+                                exact_ordered_fact_ids_from_store_results(
+                                    &parameter.infers,
+                                    std::slice::from_ref(fact),
+                                    &format!("ForallProof WD parameter {parameter_index}"),
+                                )?;
+                            let [well_definedness_fact_id] = well_definedness_fact_ids.as_slice()
+                            else {
+                                return Err(format!(
                                 "ForallProof WD parameter {parameter_index} retained the wrong store arity"
                             ));
-                        };
-                        self.environment_stack
-                            .fact_names
-                            .insert(*well_definedness_fact_id, hypothesis.clone());
-                        self.environment_stack
-                            .fact_propositions
-                            .insert(*well_definedness_fact_id, fact.clone());
-                        install_rendered_parameter_aliases(
-                            binding.id(),
-                            &proposition,
-                            &hypothesis,
-                            None,
-                            &mut self.environment_stack,
-                        )?;
+                            };
+                            self.environment_stack
+                                .fact_names
+                                .insert(*well_definedness_fact_id, hypothesis.clone());
+                            self.environment_stack
+                                .fact_propositions
+                                .insert(*well_definedness_fact_id, fact.clone());
+                            install_rendered_parameter_aliases(
+                                binding.id(),
+                                &proposition,
+                                &hypothesis,
+                                None,
+                                &mut self.environment_stack,
+                            )?;
+                        }
                     }
                 }
-            }
 
-            let mut premises = Vec::with_capacity(source_forall.dom_facts.len());
-            for (premise_index, ((source_premise, _well_defined_premise), fact_id)) in source_forall
-                .dom_facts
-                .iter()
-                .zip(well_definedness.premises.iter())
-                .zip(premise_fact_ids.iter())
-                .enumerate()
-            {
-                let source_premise = source_premise.clone();
-                let premise_name = format!("__domain{}", premise_index + 1);
-                render_fact(&source_premise, &self.environment_stack).map_err(|error| {
+                let mut premises = Vec::with_capacity(source_forall.dom_facts.len());
+                for (premise_index, ((source_premise, _well_defined_premise), fact_id)) in
+                    source_forall
+                        .dom_facts
+                        .iter()
+                        .zip(well_definedness.premises.iter())
+                        .zip(premise_fact_ids.iter())
+                        .enumerate()
+                {
+                    let source_premise = source_premise.clone();
+                    let premise_name = format!("__domain{}", premise_index + 1);
+                    render_fact(&source_premise, &self.environment_stack).map_err(|error| {
                     format!(
                         "ForallProof domain premise {premise_index} failed before installation: {error}"
                     )
                 })?;
-                intro_names.push(premise_name.clone());
-                premises.push(LitexToLeanLocalPremiseIr::new(*fact_id, source_premise));
-            }
+                    intro_names.push(premise_name.clone());
+                    premises.push(LeanLocalFactPremise::new(*fact_id, source_premise));
+                }
 
-            let mut proof_lines = Vec::with_capacity(
-                proof.proves.len() + proof.assumption_infers.rule_applications.len() + 2,
-            );
-            let allowed_assumption_sources = assumption_facts
-                .iter()
-                .cloned()
-                .zip(assumption_fact_ids.iter().copied())
-                .map(|(fact, fact_id)| (fact_id, fact))
-                .collect::<Vec<_>>();
-            self.compile_standard_numeric_membership_inference_results_in_current_environment(
-                &proof.assumption_infers,
-                &allowed_assumption_sources,
-                &mut proof_lines,
-                "ForallProof assumption inference",
-            )?;
-            let mut conclusion_names = Vec::with_capacity(proof.proves.len());
-            let mut conclusions = Vec::with_capacity(proof.proves.len());
-            let mut direct_single_heterogeneous_subset_proof = None;
-            for (conclusion_index, (proved, expected)) in proof
-                .proves
-                .iter()
-                .zip(source_forall.then_facts.iter())
-                .enumerate()
-            {
-                let expected = expected.clone().to_fact();
-                if proved.stmt.clone().to_fact().to_string() != expected.to_string() {
-                    return Err(format!(
-                        "ForallProof conclusion {conclusion_index} changed its retained statement"
-                    ));
-                }
-                let child = proved.result.factual_success().ok_or_else(|| {
-                    format!("ForallProof conclusion {conclusion_index} is not factual")
-                })?;
-                if child.fact().to_string() != expected.to_string()
-                    || child.store.fact.to_string() != expected.to_string()
-                {
-                    return Err(format!(
-                        "ForallProof conclusion {conclusion_index} changed its target"
-                    ));
-                }
-                if child
-                    .store
-                    .infers
-                    .rule_applications
+                let mut proof_lines = Vec::with_capacity(
+                    publication_selection.source_conclusion_indices.len()
+                        + proof.assumption_infers.rule_applications.len()
+                        + 2,
+                );
+                let visible_assumption_sources = parameter_facts
                     .iter()
-                    .any(|application| {
-                        !infer_rule_can_compile_in_standard_numeric_binder(&application.rule)
-                    })
-                {
-                    if self.compatibility_adapter_policy
-                        == StmtResultToLeanCompatibilityAdapterPolicy::RejectForDirectResultCompilationAudit
+                    .cloned()
+                    .zip(parameter_fact_ids.iter().copied())
+                    .chain(
+                        source_forall
+                            .dom_facts
+                            .iter()
+                            .cloned()
+                            .zip(premise_fact_ids.iter().copied()),
+                    )
+                    .map(|(fact, fact_id)| (fact_id, fact))
+                    .collect::<Vec<_>>();
+                let complete_assumption_sources = source_parameter_facts
+                    .iter()
+                    .cloned()
+                    .zip(source_parameter_fact_ids.iter().copied())
+                    .chain(
+                        source_forall
+                            .dom_facts
+                            .iter()
+                            .cloned()
+                            .zip(source_premise_fact_ids.iter().copied()),
+                    )
+                    .map(|(fact, fact_id)| (fact_id, fact))
+                    .collect::<Vec<_>>();
+                let visible_assumption_infers =
+                    select_typed_inference_results_for_visible_forall_sources(
+                        &proof.assumption_infers,
+                        &complete_assumption_sources,
+                        &visible_assumption_sources,
+                        "ForallProof assumption inference",
+                    )?;
+                self.compile_typed_inference_results_in_current_compiler_environment(
+                    &visible_assumption_infers,
+                    &visible_assumption_sources,
+                    &mut proof_lines,
+                    "ForallProof assumption inference",
+                )?;
+                let mut conclusion_names =
+                    Vec::with_capacity(publication_selection.source_conclusion_indices.len());
+                let mut conclusions =
+                    Vec::with_capacity(publication_selection.source_conclusion_indices.len());
+                let mut direct_single_heterogeneous_subset_proof = None;
+                let selected_conclusion_indices = publication_selection
+                    .source_conclusion_indices
+                    .iter()
+                    .copied()
+                    .collect::<HashSet<_>>();
+                let last_selected_conclusion_index = publication_selection
+                    .source_conclusion_indices
+                    .iter()
+                    .copied()
+                    .max()
+                    .ok_or_else(|| "ForallProof publication retained no conclusion".to_string())?;
+                let mut projected_conclusion_index = 0;
+                // Runtime verifies source conclusions in order, so a later
+                // conclusion may cite the exact FactId of an earlier one. A
+                // projected stored forall still has to replay those preceding
+                // child Results locally even when only the later conclusion is
+                // published by the outer theorem.
+                for source_conclusion_index in 0..=last_selected_conclusion_index {
+                    let conclusion_is_published =
+                        selected_conclusion_indices.contains(&source_conclusion_index);
+                    let proved = &proof.proves[source_conclusion_index];
+                    let expected = &source_forall.then_facts[source_conclusion_index];
+                    let expected = expected.clone().to_fact();
+                    if proved.stmt.clone().to_fact().to_string() != expected.to_string() {
+                        return Err(format!(
+                        "ForallProof conclusion {source_conclusion_index} changed its retained statement"
+                    ));
+                    }
+                    let child = proved.result.factual_success().ok_or_else(|| {
+                        format!("ForallProof conclusion {source_conclusion_index} is not factual")
+                    })?;
+                    if child.fact().to_string() != expected.to_string()
+                        || child.store.fact.to_string() != expected.to_string()
                     {
                         return Err(format!(
-                            "ForallProof conclusion {conclusion_index} contains a typed inference rule that the binder compiler does not support"
+                            "ForallProof conclusion {source_conclusion_index} changed its target"
                         ));
                     }
-                    return Ok(None);
-                }
-                if !standard_numeric_infer_result_is_fully_typed_and_supported(&child.store.infers)
-                {
-                    if self.compatibility_adapter_policy
-                        == StmtResultToLeanCompatibilityAdapterPolicy::RejectForDirectResultCompilationAudit
+                    if child
+                        .store
+                        .infers
+                        .rule_applications
+                        .iter()
+                        .any(|application| {
+                            !infer_rule_has_direct_compiler_environment_consumer(&application.rule)
+                        })
                     {
                         return Err(format!(
-                            "ForallProof conclusion {conclusion_index} has flattened inference effects without matching typed rules"
+                            "ForallProof conclusion {source_conclusion_index} contains a typed inference rule that the binder compiler does not support"
                         ));
                     }
-                    return Ok(None);
-                }
-                let conclusion_fact_id = child.store.fact_id.ok_or_else(|| {
-                    format!("ForallProof conclusion {conclusion_index} has no frozen FactId")
-                })?;
-                // The conclusion is a real child Result layer. Its proof may
-                // render objects (notably function applications) whose exact
-                // verifier-selected contracts live in the corresponding
-                // named WD child. The complete parent-owned WD tree is active
-                // for this binder frame; install only this child's intrinsic
-                // stores before constructing the child proof.
-                let conclusion_well_definedness = &well_definedness.conclusions[conclusion_index];
-                install_fact_well_definedness_proof_store_results_in_active_environment(
+                    if !infer_result_effects_are_fully_owned_by_direct_compiler_rules(
+                        &child.store.infers,
+                    ) {
+                        return Err(format!(
+                            "ForallProof conclusion {source_conclusion_index} has flattened inference effects without matching typed rules"
+                        ));
+                    }
+                    let conclusion_fact_id = child.store.fact_id.ok_or_else(|| {
+                        format!(
+                            "ForallProof conclusion {source_conclusion_index} has no frozen FactId"
+                        )
+                    })?;
+                    // The conclusion is a real child Result layer. Its proof may
+                    // render objects (notably function applications) whose exact
+                    // verifier-selected contracts live in the corresponding
+                    // named WD child. The complete parent-owned WD tree is active
+                    // for this binder frame; install only this child's intrinsic
+                    // stores before constructing the child proof.
+                    let conclusion_well_definedness =
+                        &well_definedness.conclusions[source_conclusion_index];
+                    install_fact_well_definedness_proof_store_results_in_active_environment(
                     conclusion_well_definedness.well_definedness.as_ref(),
                     &mut self.environment_stack,
                 )
                 .map_err(|error| {
+                    let preceding_fact_ids = proof
+                        .proves
+                        .iter()
+                        .take(source_conclusion_index)
+                        .filter_map(|proved| proved.result.factual_success())
+                        .filter_map(|proved| proved.store.fact_id)
+                        .map(|fact_id| fact_id.to_string())
+                        .collect::<Vec<_>>()
+                        .join(", ");
                     format!(
-                        "ForallProof conclusion {conclusion_index} WD stores failed to install: {error}"
+                        "ForallProof conclusion {source_conclusion_index} WD stores failed to install after preceding FactIds [{preceding_fact_ids}]: {error}"
                     )
                 })?;
-                let Some(conclusion_proof) = self
+                    let Some(conclusion_proof) = self
                     .construct_lean_proof_from_direct_fact_result(child)
                     .map_err(|error| {
-                        format!("ForallProof conclusion {conclusion_index} proof failed: {error}")
+                        format!("ForallProof conclusion {source_conclusion_index} proof failed: {error}")
                     })?
                 else {
-                    if self.compatibility_adapter_policy
-                        == StmtResultToLeanCompatibilityAdapterPolicy::RejectForDirectResultCompilationAudit
-                    {
                         return Err(format!(
-                            "ForallProof conclusion {conclusion_index} proof constructor does not yet consume its Result shape: {:?}",
+                            "ForallProof conclusion {source_conclusion_index} proof constructor does not yet consume its Result shape: {:?}",
                             child.proof()
                         ));
-                    }
-                    return Ok(None);
                 };
-                if proof.proves.len() == 1
-                    && matches!(
-                        &expected,
-                        Fact::AtomicFact(AtomicFact::SubsetFact(_) | AtomicFact::SupersetFact(_))
-                    )
-                {
-                    // `Litex.Subset` is heterogeneous. Keeping the proof
-                    // directly under the enclosing theorem goal prevents a
-                    // standalone local `have` from prematurely choosing its
-                    // implicit carrier (notably for `empty subset A`).
-                    direct_single_heterogeneous_subset_proof = Some(conclusion_proof);
-                    conclusions.push((conclusion_fact_id, expected));
-                    continue;
+                    if conclusion_is_published
+                        && publication_selection.source_conclusion_indices.len() == 1
+                        && matches!(
+                            &expected,
+                            Fact::AtomicFact(
+                                AtomicFact::SubsetFact(_) | AtomicFact::SupersetFact(_)
+                            )
+                        )
+                    {
+                        // `Litex.Subset` is heterogeneous. Keeping the proof
+                        // directly under the enclosing theorem goal prevents a
+                        // standalone local `have` from prematurely choosing its
+                        // implicit carrier (notably for `empty subset A`).
+                        direct_single_heterogeneous_subset_proof = Some(conclusion_proof);
+                        conclusions.push((conclusion_fact_id, expected));
+                        continue;
+                    }
+                    let proposition = render_fact(&expected, &self.environment_stack)?;
+                    let conclusion_name = if conclusion_is_published {
+                        format!(
+                            "__c{}_{}",
+                            self.next_fact_name_index, projected_conclusion_index
+                        )
+                    } else {
+                        format!(
+                            "__prior{}_{}",
+                            self.next_fact_name_index, source_conclusion_index
+                        )
+                    };
+                    proof_lines.push(format!(
+                        "have {conclusion_name} : {proposition} := {conclusion_proof}"
+                    ));
+                    self.environment_stack
+                        .fact_names
+                        .insert(conclusion_fact_id, conclusion_name.clone());
+                    self.environment_stack
+                        .fact_propositions
+                        .insert(conclusion_fact_id, expected.clone());
+                    // WD verifies and stores each conclusion before the proof
+                    // phase verifies and stores it again. Both identities are
+                    // frozen in the recursive Result, and a later conclusion's
+                    // WD proof may cite the earlier WD-stage identity exactly.
+                    // They denote the same proposition and are discharged by
+                    // the same local Lean `have`, so retain both exact IDs
+                    // instead of falling back to proposition lookup.
+                    let well_definedness_conclusion_fact_id = conclusion_well_definedness
+                        .store
+                        .fact_id
+                        .ok_or_else(|| {
+                            format!(
+                                "ForallProof WD conclusion {source_conclusion_index} has no frozen FactId"
+                            )
+                        })?;
+                    self.environment_stack
+                        .fact_names
+                        .insert(well_definedness_conclusion_fact_id, conclusion_name.clone());
+                    self.environment_stack
+                        .fact_propositions
+                        .insert(well_definedness_conclusion_fact_id, expected.clone());
+                    self.compile_typed_inference_results_in_current_compiler_environment(
+                        &child.store.infers,
+                        &[(conclusion_fact_id, expected.clone())],
+                        &mut proof_lines,
+                        &format!("ForallProof conclusion {source_conclusion_index} inference"),
+                    )?;
+                    if conclusion_is_published {
+                        conclusion_names.push(conclusion_name);
+                        conclusions.push((conclusion_fact_id, expected));
+                        projected_conclusion_index += 1;
+                    }
                 }
-                let proposition = render_fact(&expected, &self.environment_stack)?;
-                let conclusion_name =
-                    format!("__c{}_{}", self.next_fact_name_index, conclusion_index);
-                proof_lines.push(format!(
-                    "have {conclusion_name} : {proposition} := {conclusion_proof}"
-                ));
+                if conclusion_names.is_empty() {
+                    let direct = direct_single_heterogeneous_subset_proof.ok_or_else(|| {
+                        "ForallProof retained no compiled conclusion proof".to_string()
+                    })?;
+                    proof_lines.push(format!("exact {direct}"));
+                } else if conclusion_names.len() == 1 {
+                    proof_lines.push(format!("exact {}", conclusion_names[0]));
+                } else {
+                    proof_lines.push(format!("exact ⟨{}⟩", conclusion_names.join(", ")));
+                }
+                let projected_fact: Fact = publication_selection.forall_fact.clone().into();
+                let proposition =
+                    render_fact(&projected_fact, &self.environment_stack).map_err(|error| {
+                        format!("ForallProof target failed to render in its binder: {error}")
+                    })?;
+                let mut lines = vec!["by".to_string()];
+                if !intro_names.is_empty() {
+                    lines.push(format!("  intro {}", intro_names.join(" ")));
+                }
+                lines.extend(proof_lines.into_iter().map(|line| indent_lines(&line, 2)));
+                Ok(Some(CompiledDirectForallProofBody {
+                    proposition,
+                    proof_expression: lines.join("\n"),
+                    parameter_premises,
+                    premises,
+                    conclusions,
+                }))
+            })(
+            );
+            self.environment_stack.pop_local_environment();
+            let Some(compiled) = compilation? else {
+                return Ok(false);
+            };
+
+            let theorem_name = format!("__fact{}", self.next_fact_name_index);
+            self.declarations.push(format!(
+                "theorem {theorem_name} :\n    {} := {}",
+                compiled.proposition, compiled.proof_expression
+            ));
+            if let Some(stored_fact_id) = publication_selection.stored_fact_id {
+                let published_fact: Fact = publication_selection.forall_fact.clone().into();
                 self.environment_stack
                     .fact_names
-                    .insert(conclusion_fact_id, conclusion_name.clone());
+                    .insert(stored_fact_id, theorem_name.clone());
                 self.environment_stack
                     .fact_propositions
-                    .insert(conclusion_fact_id, expected.clone());
-                conclusion_names.push(conclusion_name);
-                self.compile_standard_numeric_membership_inference_results_in_current_environment(
-                    &child.store.infers,
-                    &[(conclusion_fact_id, expected.clone())],
-                    &mut proof_lines,
-                    &format!("ForallProof conclusion {conclusion_index} inference"),
-                )?;
-                conclusions.push((conclusion_fact_id, expected));
+                    .insert(stored_fact_id, published_fact);
             }
-            if conclusion_names.is_empty() {
-                let direct = direct_single_heterogeneous_subset_proof.ok_or_else(|| {
-                    "ForallProof retained no compiled conclusion proof".to_string()
-                })?;
-                proof_lines.push(format!("exact {direct}"));
-            } else if conclusion_names.len() == 1 {
-                proof_lines.push(format!("exact {}", conclusion_names[0]));
-            } else {
-                proof_lines.push(format!("exact ⟨{}⟩", conclusion_names.join(", ")));
+            self.next_fact_name_index += 1;
+            for (conclusion_index, (fact_id, fact)) in compiled.conclusions.iter().enumerate() {
+                self.environment_stack
+                    .fact_propositions
+                    .insert(*fact_id, fact.clone());
+                self.environment_stack.forall_conclusion_bindings.insert(
+                    *fact_id,
+                    ForallConclusionBinding {
+                        theorem_name: theorem_name.clone(),
+                        forall: publication_selection.forall_fact.clone(),
+                        parameter_premises: compiled.parameter_premises.clone(),
+                        premises: compiled.premises.clone(),
+                        conclusion_index,
+                        conclusion_count: compiled.conclusions.len(),
+                    },
+                );
             }
-            let proposition =
-                render_fact(&result.fact(), &self.environment_stack).map_err(|error| {
-                    format!("ForallProof target failed to render in its binder: {error}")
-                })?;
-            let mut lines = vec!["by".to_string()];
-            if !intro_names.is_empty() {
-                lines.push(format!("  intro {}", intro_names.join(" ")));
-            }
-            lines.extend(proof_lines.into_iter().map(|line| indent_lines(&line, 2)));
-            Ok(Some(CompiledDirectForallProofBody {
-                proposition,
-                proof_expression: lines.join("\n"),
-                parameter_premises,
-                premises,
-                conclusions,
-            }))
-        })();
-        self.environment_stack.pop_local_environment();
-        let Some(compiled) = compilation? else {
-            return Ok(false);
-        };
-
-        let theorem_name = format!("__fact{}", self.next_fact_name_index);
-        let parent_well_definedness = self
-            .environment_stack
-            .well_definedness
-            .replace(publication_well_definedness);
-        let publication = (|| {
-            if result.store.fact_id.is_some() {
-                self.compile_stored_fact_without_inference_with_pre_rendered_proposition(
-                    result,
-                    compiled.proof_expression,
-                    compiled.proposition,
-                )
-            } else {
-                // A forall statement publishes its instantiated conclusion
-                // projections under the child FactIds below. The enclosing
-                // forall theorem is still emitted as their common Lean proof
-                // source, but Runtime assigns no separate outer FactId.
-                if result.store.fact.to_string() != result.fact().to_string()
-                    || !result.store.infers.rule_applications.is_empty()
-                {
-                    return Err("unstored ForallProof changed its target or infer rules".into());
-                }
-                match result.store.infers.store_fact_outputs.as_slice() {
-                    [output]
-                        if output.fact_id.is_none()
-                            && output.itself_and_why_itself_is_stored.0.to_string()
-                                == result.fact().to_string()
-                            && output.inferred_facts.is_empty()
-                            && output.inferred_fact_ids.is_empty() => {}
-                    _ => {
-                        return Err(
-                            "unstored ForallProof lost its exact no-FactId outer store result"
-                                .into(),
-                        );
-                    }
-                }
-                self.declarations.push(format!(
-                    "theorem {theorem_name} :\n    {} := {}",
-                    compiled.proposition, compiled.proof_expression
-                ));
-                self.next_fact_name_index += 1;
-                Ok(())
-            }
-        })();
-        self.environment_stack.well_definedness = parent_well_definedness;
-        publication?;
-        for (conclusion_index, (fact_id, fact)) in compiled.conclusions.iter().enumerate() {
-            self.environment_stack
-                .fact_propositions
-                .insert(*fact_id, fact.clone());
-            self.environment_stack.forall_conclusion_bindings.insert(
-                *fact_id,
-                ForallConclusionBinding {
-                    theorem_name: theorem_name.clone(),
-                    forall: source_forall.clone(),
-                    parameter_premises: compiled.parameter_premises.clone(),
-                    premises: compiled.premises.clone(),
-                    conclusion_index,
-                    conclusion_count: compiled.conclusions.len(),
-                },
-            );
         }
         Ok(true)
     }
 
     fn direct_forall_result_is_not_yet_supported(&self, reason: &str) -> Result<bool, String> {
-        if self.compatibility_adapter_policy
-            == StmtResultToLeanCompatibilityAdapterPolicy::RejectForDirectResultCompilationAudit
-        {
-            Err(format!(
-                "direct ForallProof compiler rejected this Result because {reason}"
-            ))
-        } else {
-            Ok(false)
-        }
+        Err(format!(
+            "direct ForallProof compiler rejected this Result because {reason}"
+        ))
     }
 
     /// `Combine`: publish a directly constructed standard numeric membership
@@ -6745,7 +8587,7 @@ impl StmtResultToLeanCompiler {
     fn install_fact_well_definedness_store_results(
         &mut self,
         well_definedness: &SuccessVerifyFactWellDefinedResult,
-        source_fact: &Fact,
+        _source_fact: &Fact,
     ) -> Result<(), String> {
         let Some(recursive) = well_definedness.recursive.as_deref() else {
             return Ok(());
@@ -6758,9 +8600,8 @@ impl StmtResultToLeanCompiler {
         }) {
             return Ok(());
         }
-        let certificate = LitexToLeanIrBuilder::new()
-            .compile_fact_well_definedness_result_for_lean_rendering(well_definedness, source_fact)
-            .map_err(|error| format!("{error:?}"))?;
+        let certificate =
+            self.construct_well_definedness_to_lean_compilation_context(well_definedness)?;
         let previous_well_definedness =
             self.environment_stack.well_definedness.replace(certificate);
         let installation = install_fact_well_definedness_proof_store_results_in_active_environment(
@@ -6897,12 +8738,8 @@ impl StmtResultToLeanCompiler {
         result: &SuccessFactStmtResult,
         object: &Obj,
     ) -> Result<String, String> {
-        let certificate = LitexToLeanIrBuilder::new()
-            .compile_fact_well_definedness_result_for_lean_rendering(
-                &result.well_definedness,
-                &result.fact(),
-            )
-            .map_err(|error| error.to_string())?;
+        let certificate =
+            self.construct_well_definedness_to_lean_compilation_context(&result.well_definedness)?;
         let previous_well_definedness =
             self.environment_stack.well_definedness.replace(certificate);
         let rendered = render_obj(object, &self.environment_stack);
@@ -6915,9 +8752,7 @@ impl StmtResultToLeanCompiler {
         result: &SuccessVerifyFactWellDefinedResult,
         fact: &Fact,
     ) -> Result<String, String> {
-        let certificate = LitexToLeanIrBuilder::new()
-            .compile_fact_well_definedness_result_for_lean_rendering(result, fact)
-            .map_err(|error| error.to_string())?;
+        let certificate = self.construct_well_definedness_to_lean_compilation_context(result)?;
         let previous_well_definedness =
             self.environment_stack.well_definedness.replace(certificate);
         let rendered = render_fact(fact, &self.environment_stack);
@@ -6939,19 +8774,15 @@ impl StmtResultToLeanCompiler {
         let proposition = match render_fact(&source_fact, &self.environment_stack) {
             Ok(proposition) => proposition,
             Err(initial_render_error) if matches!(source_fact, Fact::AtomicFact(_)) => {
-                let certificate = LitexToLeanIrBuilder::new()
-                    .compile_fact_stmt_result(result)
-                    .map_err(|error| {
-                        format!(
-                            "{initial_render_error}; WD rendering projection also failed: {error:?}"
-                        )
-                    })?
-                    .well_definedness;
-                let previous_well_definedness =
-                    self.environment_stack.well_definedness.replace(certificate);
-                let rendered = render_fact(&source_fact, &self.environment_stack);
-                self.environment_stack.well_definedness = previous_well_definedness;
-                rendered?
+                self.render_fact_using_well_definedness_result(
+                    &result.well_definedness,
+                    &source_fact,
+                )
+                .map_err(|wd_render_error| {
+                    format!(
+                        "{initial_render_error}; Result-owned WD rendering also failed: {wd_render_error}"
+                    )
+                })?
             }
             Err(error) => return Err(error),
         };
@@ -7230,39 +9061,29 @@ impl StmtResultToLeanCompiler {
         }
 
         let mut local_have_lines = Vec::new();
-        self.compile_standard_numeric_membership_inference_results_in_current_environment(
+        self.compile_typed_inference_results_in_current_compiler_environment(
             infers,
             &[(source_fact_id, source_fact.clone())],
             &mut local_have_lines,
             result_layer,
         )?;
-        if local_have_lines.len() != infers.rule_applications.len() {
-            return Err(format!(
-                "{result_layer} changed its typed inference/declaration arity"
-            ));
-        }
-
-        for (application, local_have) in infers
-            .rule_applications
-            .iter()
-            .zip(local_have_lines.into_iter())
-        {
-            let [conclusion] = application.conclusions.as_slice() else {
-                return Err(format!("{result_layer} conclusion arity changed"));
-            };
-            let conclusion_fact_id = conclusion
-                .fact_id
-                .ok_or_else(|| format!("{result_layer} conclusion has no FactId"))?;
-            let temporary_name = self
-                .environment_stack
-                .fact_names
-                .get(&conclusion_fact_id)
-                .ok_or_else(|| format!("{result_layer} did not install its conclusion FactId"))?
-                .clone();
-            let expected_prefix = format!("have {temporary_name} : ");
-            let theorem_body = local_have.strip_prefix(&expected_prefix).ok_or_else(|| {
+        for local_have in local_have_lines {
+            let local_have = local_have.strip_prefix("have ").ok_or_else(|| {
                 format!("{result_layer} produced an unexpected local proof shape")
             })?;
+            let Some((temporary_name, theorem_body)) = local_have.split_once(" : ") else {
+                return Err(format!(
+                    "{result_layer} produced a local proof without a proposition"
+                ));
+            };
+            let conclusion_fact_id = self
+                .environment_stack
+                .fact_names
+                .iter()
+                .find_map(|(fact_id, fact_name)| (fact_name == temporary_name).then_some(*fact_id))
+                .ok_or_else(|| {
+                    format!("{result_layer} local proof `{temporary_name}` has no retained FactId")
+                })?;
             let theorem_name = format!("__fact{}", self.next_fact_name_index);
             self.declarations
                 .push(format!("theorem {theorem_name} : {theorem_body}"));
@@ -7404,7 +9225,7 @@ impl StmtResultToLeanCompiler {
     /// Compile the typed inference children owned by one active Result scope.
     /// These declarations are local to the current Lean binder and disappear
     /// when its compiler environment frame is popped.
-    fn compile_standard_numeric_membership_inference_results_in_current_environment(
+    fn compile_typed_inference_results_in_current_compiler_environment(
         &mut self,
         infers: &SuccessInferResult,
         allowed_sources: &[(FactId, Fact)],
@@ -7449,12 +9270,20 @@ impl StmtResultToLeanCompiler {
 
         let mut compiled_conclusions = HashSet::new();
         for (application_index, application) in infers.rule_applications.iter().enumerate() {
-            if !infer_rule_can_compile_in_standard_numeric_binder(&application.rule)
-                || application.premises.len() != 1
+            let expected_premise_count = if matches!(
+                application.rule,
+                InferRule::MembershipInSetWithKnownEqualityImpliesMembershipInEqualSet(_)
+            ) {
+                2
+            } else {
+                1
+            };
+            if !infer_rule_has_direct_compiler_environment_consumer(&application.rule)
+                || application.premises.len() != expected_premise_count
                 || application.conclusions.len() != 1
             {
                 return Err(format!(
-                    "{result_layer} application {application_index} is not one supported standard-numeric-carrier implication"
+                    "{result_layer} application {application_index} has no supported direct compiler-environment consumer"
                 ));
             }
             let premise = &application.premises[0];
@@ -7470,11 +9299,6 @@ impl StmtResultToLeanCompiler {
             }
 
             let conclusion = &application.conclusions[0];
-            let lean_theorem_name = validate_standard_numeric_membership_inference_target(
-                &application.rule,
-                &premise.fact,
-                &conclusion.fact,
-            )?;
             let conclusion_fact_id = conclusion.fact_id.ok_or_else(|| {
                 format!("{result_layer} application {application_index} conclusion has no FactId")
             })?;
@@ -7489,40 +9313,177 @@ impl StmtResultToLeanCompiler {
                     "{result_layer} application {application_index} repeats an inferred conclusion"
                 ));
             }
-            let conclusion_store_is_retained =
-                conclusion.infers.store_fact_outputs.iter().any(|output| {
-                    output.fact_id == Some(conclusion_fact_id)
-                        && output.itself_and_why_itself_is_stored.0.to_string()
-                            == conclusion.fact.to_string()
-                });
-            if !conclusion_store_is_retained {
-                return Err(format!(
-                    "{result_layer} application {application_index} conclusion lost its recursive store Result"
-                ));
-            }
-
-            let premise_name =
-                resolve_fact_citation(&premise_fact_id, &premise.fact, &self.environment_stack)?;
-            let conclusion_proposition = render_fact(&conclusion.fact, &self.environment_stack)?;
-            let conclusion_name =
-                format!("__infer{}_{}", self.next_fact_name_index, proof_lines.len());
-            proof_lines.push(format!(
-                "have {conclusion_name} : {conclusion_proposition} := Litex.Rules.{lean_theorem_name} ({premise_name})"
-            ));
-            if self
+            let conclusion_already_visible = if self
                 .environment_stack
-                .fact_names
-                .insert(conclusion_fact_id, conclusion_name)
-                .is_some()
-                || self
-                    .environment_stack
-                    .fact_propositions
-                    .insert(conclusion_fact_id, conclusion.fact.clone())
-                    .is_some()
+                .fact_propositions
+                .contains_key(&conclusion_fact_id)
             {
-                return Err(format!(
-                    "{result_layer} reused inferred FactId `{conclusion_fact_id}`"
-                ));
+                resolve_fact_citation(
+                    &conclusion_fact_id,
+                    &conclusion.fact,
+                    &self.environment_stack,
+                )?;
+                true
+            } else {
+                false
+            };
+            if let InferRule::ConjunctionImpliesComponent(rule) = &application.rule {
+                validate_conjunction_component_inference_target(
+                    rule,
+                    &premise.fact,
+                    &conclusion.fact,
+                )?;
+                if !conclusion_already_visible {
+                    let premise_name = resolve_fact_citation(
+                        &premise_fact_id,
+                        &premise.fact,
+                        &self.environment_stack,
+                    )?;
+                    let conclusion_proposition =
+                        render_fact(&conclusion.fact, &self.environment_stack)?;
+                    let conclusion_name =
+                        format!("__infer{}_{}", self.next_fact_name_index, proof_lines.len());
+                    let projection = conjunction_projection(
+                        &format!("({premise_name})"),
+                        rule.component_index,
+                        rule.component_count,
+                    )?;
+                    proof_lines.push(format!(
+                        "have {conclusion_name} : {conclusion_proposition} := {projection}"
+                    ));
+                    self.environment_stack
+                        .fact_names
+                        .insert(conclusion_fact_id, conclusion_name);
+                    self.environment_stack
+                        .fact_propositions
+                        .insert(conclusion_fact_id, conclusion.fact.clone());
+                }
+            } else if matches!(
+                application.rule,
+                InferRule::MultiplicationByNegativeOneReversesOrderAgainstZero
+                    | InferRule::StrictOrderComparedToZeroImpliesWeakOrder
+            ) {
+                validate_order_sign_inference_target(
+                    &application.rule,
+                    &premise.fact,
+                    &conclusion.fact,
+                )?;
+                if !conclusion_already_visible {
+                    let premise_name = resolve_fact_citation(
+                        &premise_fact_id,
+                        &premise.fact,
+                        &self.environment_stack,
+                    )?;
+                    let conclusion_proposition =
+                        render_fact(&conclusion.fact, &self.environment_stack)?;
+                    let conclusion_name =
+                        format!("__infer{}_{}", self.next_fact_name_index, proof_lines.len());
+                    let proof = match application.rule {
+                        InferRule::StrictOrderComparedToZeroImpliesWeakOrder => {
+                            format!("Litex.Lt.toLe ({premise_name})")
+                        }
+                        InferRule::MultiplicationByNegativeOneReversesOrderAgainstZero => {
+                            format!("Litex.Rules.complexNegativeOneMulNonpositive ({premise_name})")
+                        }
+                        _ => unreachable!("order-sign inference was matched above"),
+                    };
+                    proof_lines.push(format!(
+                        "have {conclusion_name} : {conclusion_proposition} := {proof}"
+                    ));
+                    self.environment_stack
+                        .fact_names
+                        .insert(conclusion_fact_id, conclusion_name);
+                    self.environment_stack
+                        .fact_propositions
+                        .insert(conclusion_fact_id, conclusion.fact.clone());
+                }
+            } else if matches!(
+                application.rule,
+                InferRule::MembershipInSetWithKnownEqualityImpliesMembershipInEqualSet(_)
+                    | InferRule::SubsetImpliesElementwiseMembershipForall(_)
+                    | InferRule::SupersetImpliesElementwiseMembershipForall(_)
+            ) {
+                // These runtime search accelerators are local to this binder.
+                // Validate their complete typed shape, but do not publish an
+                // unreviewed Lean proof. If a later Result actually cites one,
+                // exact FactId resolution fails closed instead of silently
+                // recreating the inference in Lean.
+                if let InferRule::MembershipInSetWithKnownEqualityImpliesMembershipInEqualSet(
+                    rule,
+                ) = &application.rule
+                {
+                    let equality_premise = &application.premises[1];
+                    let equality_fact_id = equality_premise.fact_id.ok_or_else(|| {
+                        format!(
+                            "{result_layer} application {application_index} set equality has no FactId"
+                        )
+                    })?;
+                    resolve_fact_citation(
+                        &equality_fact_id,
+                        &equality_premise.fact,
+                        &self.environment_stack,
+                    )?;
+                    validate_membership_in_equal_set_inference_target(
+                        rule,
+                        &premise.fact,
+                        &equality_premise.fact,
+                        &conclusion.fact,
+                    )?;
+                } else if matches!(
+                    application.rule,
+                    InferRule::SubsetImpliesElementwiseMembershipForall(_)
+                        | InferRule::SupersetImpliesElementwiseMembershipForall(_)
+                ) {
+                    validate_set_inclusion_elementwise_forall_inference_target(
+                        &application.rule,
+                        &premise.fact,
+                        &conclusion.fact,
+                    )?;
+                }
+            } else {
+                let lean_theorem_name = validate_standard_numeric_membership_inference_target(
+                    &application.rule,
+                    &premise.fact,
+                    &conclusion.fact,
+                )?;
+                if !conclusion_already_visible {
+                    let premise_name = resolve_fact_citation(
+                        &premise_fact_id,
+                        &premise.fact,
+                        &self.environment_stack,
+                    )?;
+                    let conclusion_proposition =
+                        render_fact(&conclusion.fact, &self.environment_stack)?;
+                    let conclusion_name =
+                        format!("__infer{}_{}", self.next_fact_name_index, proof_lines.len());
+                    proof_lines.push(format!(
+                        "have {conclusion_name} : {conclusion_proposition} := Litex.Rules.{lean_theorem_name} ({premise_name})"
+                    ));
+                    self.environment_stack
+                        .fact_names
+                        .insert(conclusion_fact_id, conclusion_name);
+                    self.environment_stack
+                        .fact_propositions
+                        .insert(conclusion_fact_id, conclusion.fact.clone());
+                }
+            }
+            if !conclusion.infers.is_empty() {
+                self.compile_typed_inference_results_in_current_compiler_environment(
+                    &conclusion.infers,
+                    &[(conclusion_fact_id, conclusion.fact.clone())],
+                    proof_lines,
+                    &format!("{result_layer} application {application_index} conclusion"),
+                )?;
+                let mut recursively_compiled = HashSet::new();
+                collect_supported_typed_infer_conclusions(
+                    &conclusion.infers,
+                    &mut recursively_compiled,
+                );
+                compiled_conclusions.extend(
+                    recursively_compiled
+                        .into_iter()
+                        .filter(|conclusion| advertised_conclusions.contains(conclusion)),
+                );
             }
         }
 
@@ -7545,8 +9506,19 @@ impl StmtResultToLeanCompiler {
         allowed_sources: &[(FactId, Fact)],
         result_layer: &str,
     ) -> Result<(), String> {
+        let already_visible_conclusion_ids = infers
+            .rule_applications
+            .iter()
+            .filter_map(|application| application.conclusions.first())
+            .filter_map(|conclusion| conclusion.fact_id)
+            .filter(|fact_id| {
+                self.environment_stack
+                    .fact_propositions
+                    .contains_key(fact_id)
+            })
+            .collect::<HashSet<_>>();
         let mut unused_local_have_lines = Vec::new();
-        self.compile_standard_numeric_membership_inference_results_in_current_environment(
+        self.compile_typed_inference_results_in_current_compiler_environment(
             infers,
             allowed_sources,
             &mut unused_local_have_lines,
@@ -7562,6 +9534,14 @@ impl StmtResultToLeanCompiler {
             let conclusion_fact_id = conclusion
                 .fact_id
                 .ok_or_else(|| format!("{result_layer} conclusion has no FactId"))?;
+            if already_visible_conclusion_ids.contains(&conclusion_fact_id) {
+                resolve_fact_citation(
+                    &conclusion_fact_id,
+                    &conclusion.fact,
+                    &self.environment_stack,
+                )?;
+                continue;
+            }
             let premise_name =
                 resolve_fact_citation(&premise_fact_id, &premise.fact, &self.environment_stack)?;
             let lean_theorem_name = validate_standard_numeric_membership_inference_target(
@@ -8694,6 +10674,50 @@ impl StmtResultToLeanCompiler {
                     proof_step_index,
                 );
             }
+            if let SuccessByStmtResult::ByEnumerateFiniteSetStmt(result) = by_result {
+                let Some(proof) =
+                    self.construct_lean_proof_from_by_enumerate_finite_set_stmt_result(result)?
+                else {
+                    return Ok(None);
+                };
+                let fact_id = validate_generated_fact_publication_effects(
+                    &result.common.infers,
+                    &proof.fact,
+                    "local by-enumerate generated forall",
+                )?;
+                let name = format!("__step{proof_step_index}");
+                self.environment_stack
+                    .fact_names
+                    .insert(fact_id, name.clone());
+                self.environment_stack
+                    .fact_propositions
+                    .insert(fact_id, proof.fact);
+                return Ok(Some(vec![format!(
+                    "have {name} : {} := {}",
+                    proof.proposition, proof.proof_expression
+                )]));
+            }
+            if let SuccessByStmtResult::ByForStmt(result) = by_result {
+                let Some(proof) = self.construct_lean_proof_from_by_for_stmt_result(result)? else {
+                    return Ok(None);
+                };
+                let fact_id = validate_generated_fact_publication_effects(
+                    &result.common.infers,
+                    &proof.fact,
+                    "local by-for generated forall",
+                )?;
+                let name = format!("__step{proof_step_index}");
+                self.environment_stack
+                    .fact_names
+                    .insert(fact_id, name.clone());
+                self.environment_stack
+                    .fact_propositions
+                    .insert(fact_id, proof.fact);
+                return Ok(Some(vec![format!(
+                    "have {name} : {} := {}",
+                    proof.proposition, proof.proof_expression
+                )]));
+            }
             let (proofs, effects) = match by_result {
                 SuccessByStmtResult::ByCasesStmt(result) => (
                     self.construct_lean_proofs_from_by_cases_stmt_result(result)?,
@@ -8701,6 +10725,11 @@ impl StmtResultToLeanCompiler {
                 ),
                 SuccessByStmtResult::ByContraStmt(result) => (
                     self.construct_lean_proof_from_by_contra_stmt_result(result)?
+                        .map(|proof| vec![proof]),
+                    &result.common.infers,
+                ),
+                SuccessByStmtResult::ByExtensionStmt(result) => (
+                    self.construct_lean_proof_from_by_extension_stmt_result(result)?
                         .map(|proof| vec![proof]),
                     &result.common.infers,
                 ),
@@ -8983,9 +11012,15 @@ impl StmtResultToLeanCompiler {
                     builtin.evidence,
                     Some(BuiltinRuleEvidence::DisjunctionIntroduction(_))
                 ) {
+                    let Some(BuiltinRuleEvidence::DisjunctionIntroduction(evidence)) =
+                        &builtin.evidence
+                    else {
+                        unreachable!("disjunction evidence checked above")
+                    };
                     return self.construct_lean_disjunction_introduction_from_result(
                         &source_fact,
-                        builtin,
+                        evidence,
+                        &builtin.subgoals,
                     );
                 }
                 if let Some(BuiltinRuleEvidence::DefinitionProjection(evidence)) = &builtin.evidence
@@ -8999,6 +11034,15 @@ impl StmtResultToLeanCompiler {
                 if let Some(BuiltinRuleEvidence::SetBuilderMembership(evidence)) = &builtin.evidence
                 {
                     return self.construct_lean_set_builder_membership_from_result(
+                        &source_fact,
+                        evidence,
+                        &builtin.subgoals,
+                    );
+                }
+                if let Some(BuiltinRuleEvidence::FunctionSetMembership(evidence)) =
+                    &builtin.evidence
+                {
+                    return self.construct_lean_function_set_membership_from_result(
                         &source_fact,
                         evidence,
                         &builtin.subgoals,
@@ -9124,6 +11168,11 @@ impl StmtResultToLeanCompiler {
                         evidence,
                         &builtin.subgoals,
                     );
+                }
+                if let Some(evidence) = &builtin.evidence {
+                    if let Some(limitation) = direct_builtin_rule_compiler_limitation(evidence) {
+                        return Err(limitation.to_string());
+                    }
                 }
                 if !builtin.subgoals.is_empty() {
                     return Ok(None);
@@ -9262,10 +11311,12 @@ impl StmtResultToLeanCompiler {
                             &self.environment_stack,
                         )?,
                     )),
-                    Some(BuiltinRuleEvidence::RuntimeResolvedNumericComparison(_)) => Err(
-                        "standalone Result compiler cannot use Runtime-resolved numeric comparison evidence until every substitution cites its source FactId"
-                            .into(),
-                    ),
+                    Some(BuiltinRuleEvidence::RuntimeResolvedNumericComparison(evidence)) => self
+                        .construct_lean_runtime_resolved_numeric_comparison_from_assignment_result(
+                            &source_fact,
+                            evidence,
+                        )
+                        .map(Some),
                     Some(BuiltinRuleEvidence::StandardSetNonempty(evidence)) => Ok(Some(
                         self.construct_lean_standard_set_nonempty_from_result(
                             &source_fact,
@@ -9305,7 +11356,10 @@ impl StmtResultToLeanCompiler {
                     Some(BuiltinRuleEvidence::TupleLiteralShape) => Ok(Some(
                         self.construct_lean_tuple_literal_shape_from_result(&source_fact)?,
                     )),
-                    _ => Ok(None),
+                    None => Ok(None),
+                    Some(evidence) => unreachable!(
+                        "typed builtin evidence must be handled before the terminal direct compiler dispatch: {evidence:?}"
+                    ),
                 }
             }
             SuccessFactProofResult::CombinedProofs(combined) => {
@@ -9321,7 +11375,10 @@ impl StmtResultToLeanCompiler {
             SuccessFactProofResult::Reuse(reuse) => {
                 self.construct_lean_proof_from_shared_verify_fact_result(reuse.source.as_ref())
             }
-            _ => Ok(None),
+            // A statement-level `ForallProof` owns a compiler environment and
+            // is consumed by `compile_direct_forall_fact_result`, not by this
+            // proof-expression constructor.
+            SuccessFactProofResult::ForallProof(_) => Ok(None),
         }
     }
 
@@ -9338,9 +11395,8 @@ impl StmtResultToLeanCompiler {
             return self.construct_lean_proof_from_direct_fact_result(result);
         }
 
-        let certificate = LitexToLeanIrBuilder::new()
-            .compile_fact_stmt_well_definedness_for_lean_rendering(result)
-            .map_err(|error| format!("direct fact WD rendering projection failed: {error:?}"))?;
+        let certificate =
+            self.construct_well_definedness_to_lean_compilation_context(&result.well_definedness)?;
         self.environment_stack.well_definedness = Some(certificate);
         let construction = self.construct_lean_proof_from_direct_fact_result(result);
         self.environment_stack.well_definedness = None;
@@ -9740,7 +11796,7 @@ impl StmtResultToLeanCompiler {
                 &list_set
                     .list
                     .iter()
-                    .map(|item| LitexToLeanObjectIr::lower(item.as_ref()))
+                    .map(|item| LeanTargetObjectRepresentation::lower(item.as_ref()))
                     .collect::<Result<Vec<_>, _>>()?,
                 &self.environment_stack,
             ),
@@ -10167,28 +12223,28 @@ impl StmtResultToLeanCompiler {
     ) -> Result<Option<String>, String> {
         let sign_rule = match rule {
             ArithmeticBuiltinRule::AddNonnegative => {
-                Some(LitexToLeanArithmeticBuiltinRuleIr::AddNonnegative)
+                Some(LeanArithmeticBuiltinCompilationKind::AddNonnegative)
             }
             ArithmeticBuiltinRule::AddPositive => {
-                Some(LitexToLeanArithmeticBuiltinRuleIr::AddPositive)
+                Some(LeanArithmeticBuiltinCompilationKind::AddPositive)
             }
             ArithmeticBuiltinRule::AddPositiveLeftStrict => {
-                Some(LitexToLeanArithmeticBuiltinRuleIr::AddPositiveLeftStrict)
+                Some(LeanArithmeticBuiltinCompilationKind::AddPositiveLeftStrict)
             }
             ArithmeticBuiltinRule::AddPositiveRightStrict => {
-                Some(LitexToLeanArithmeticBuiltinRuleIr::AddPositiveRightStrict)
+                Some(LeanArithmeticBuiltinCompilationKind::AddPositiveRightStrict)
             }
             ArithmeticBuiltinRule::MulNonnegative => {
-                Some(LitexToLeanArithmeticBuiltinRuleIr::MulNonnegative)
+                Some(LeanArithmeticBuiltinCompilationKind::MulNonnegative)
             }
             ArithmeticBuiltinRule::MulPositive => {
-                Some(LitexToLeanArithmeticBuiltinRuleIr::MulPositive)
+                Some(LeanArithmeticBuiltinCompilationKind::MulPositive)
             }
             ArithmeticBuiltinRule::DivNonnegative => {
-                Some(LitexToLeanArithmeticBuiltinRuleIr::DivNonnegative)
+                Some(LeanArithmeticBuiltinCompilationKind::DivNonnegative)
             }
             ArithmeticBuiltinRule::DivPositive => {
-                Some(LitexToLeanArithmeticBuiltinRuleIr::DivPositive)
+                Some(LeanArithmeticBuiltinCompilationKind::DivPositive)
             }
             _ => None,
         };
@@ -10530,12 +12586,12 @@ impl StmtResultToLeanCompiler {
         }
 
         let proof = match set_rule {
-            LitexToLeanSetBuiltinRuleIr::UnionCommutative
-            | LitexToLeanSetBuiltinRuleIr::UnionAssociative
-            | LitexToLeanSetBuiltinRuleIr::UnionIdempotent
-            | LitexToLeanSetBuiltinRuleIr::UnionEmptyIdentity
-            | LitexToLeanSetBuiltinRuleIr::IntersectCommutative
-            | LitexToLeanSetBuiltinRuleIr::IntersectAssociative => {
+            LeanSetBuiltinCompilationKind::UnionCommutative
+            | LeanSetBuiltinCompilationKind::UnionAssociative
+            | LeanSetBuiltinCompilationKind::UnionIdempotent
+            | LeanSetBuiltinCompilationKind::UnionEmptyIdentity
+            | LeanSetBuiltinCompilationKind::IntersectCommutative
+            | LeanSetBuiltinCompilationKind::IntersectAssociative => {
                 if !semantic_premises.is_empty() {
                     return Err(
                         "registered structural set equality retained semantic premises".into(),
@@ -10543,21 +12599,21 @@ impl StmtResultToLeanCompiler {
                 }
                 render_structural_set_equality(target, set_rule, &self.environment_stack)?
             }
-            LitexToLeanSetBuiltinRuleIr::UnionMembershipLeft
-            | LitexToLeanSetBuiltinRuleIr::UnionMembershipRight
-            | LitexToLeanSetBuiltinRuleIr::IntersectMembershipBoth
-            | LitexToLeanSetBuiltinRuleIr::SetMinusMembership => {
+            LeanSetBuiltinCompilationKind::UnionMembershipLeft
+            | LeanSetBuiltinCompilationKind::UnionMembershipRight
+            | LeanSetBuiltinCompilationKind::IntersectMembershipBoth
+            | LeanSetBuiltinCompilationKind::SetMinusMembership => {
                 let direct_rule = match set_rule {
-                    LitexToLeanSetBuiltinRuleIr::UnionMembershipLeft => {
+                    LeanSetBuiltinCompilationKind::UnionMembershipLeft => {
                         SetBuiltinRule::UnionMembershipLeft
                     }
-                    LitexToLeanSetBuiltinRuleIr::UnionMembershipRight => {
+                    LeanSetBuiltinCompilationKind::UnionMembershipRight => {
                         SetBuiltinRule::UnionMembershipRight
                     }
-                    LitexToLeanSetBuiltinRuleIr::IntersectMembershipBoth => {
+                    LeanSetBuiltinCompilationKind::IntersectMembershipBoth => {
                         SetBuiltinRule::IntersectMembershipBoth
                     }
-                    LitexToLeanSetBuiltinRuleIr::SetMinusMembership => {
+                    LeanSetBuiltinCompilationKind::SetMinusMembership => {
                         SetBuiltinRule::SetMinusMembership
                     }
                     _ => unreachable!("matched registered base set rule"),
@@ -10597,7 +12653,7 @@ impl StmtResultToLeanCompiler {
         enum RegisteredArithmeticRule {
             WeakOrderFromStrictOrder,
             SubtractionSign { strict: bool },
-            Sign(LitexToLeanArithmeticBuiltinRuleIr),
+            Sign(LeanArithmeticBuiltinCompilationKind),
             AdditiveOrder(ArithmeticBuiltinRule),
         }
 
@@ -10617,33 +12673,33 @@ impl StmtResultToLeanCompiler {
                 if fingerprint == ADD_POSITIVE_OF_POSITIVE_NONNEGATIVE_FINGERPRINT =>
             {
                 RegisteredArithmeticRule::Sign(
-                    LitexToLeanArithmeticBuiltinRuleIr::AddPositiveLeftStrict,
+                    LeanArithmeticBuiltinCompilationKind::AddPositiveLeftStrict,
                 )
             }
             ADD_POSITIVE_OF_NONNEGATIVE_POSITIVE_RULE_ID
                 if fingerprint == ADD_POSITIVE_OF_NONNEGATIVE_POSITIVE_FINGERPRINT =>
             {
                 RegisteredArithmeticRule::Sign(
-                    LitexToLeanArithmeticBuiltinRuleIr::AddPositiveRightStrict,
+                    LeanArithmeticBuiltinCompilationKind::AddPositiveRightStrict,
                 )
             }
             ADD_NONNEGATIVE_RULE_ID if fingerprint == ADD_NONNEGATIVE_FINGERPRINT => {
-                RegisteredArithmeticRule::Sign(LitexToLeanArithmeticBuiltinRuleIr::AddNonnegative)
+                RegisteredArithmeticRule::Sign(LeanArithmeticBuiltinCompilationKind::AddNonnegative)
             }
             ADD_POSITIVE_RULE_ID if fingerprint == ADD_POSITIVE_FINGERPRINT => {
-                RegisteredArithmeticRule::Sign(LitexToLeanArithmeticBuiltinRuleIr::AddPositive)
+                RegisteredArithmeticRule::Sign(LeanArithmeticBuiltinCompilationKind::AddPositive)
             }
             MUL_NONNEGATIVE_RULE_ID if fingerprint == MUL_NONNEGATIVE_FINGERPRINT => {
-                RegisteredArithmeticRule::Sign(LitexToLeanArithmeticBuiltinRuleIr::MulNonnegative)
+                RegisteredArithmeticRule::Sign(LeanArithmeticBuiltinCompilationKind::MulNonnegative)
             }
             MUL_POSITIVE_RULE_ID if fingerprint == MUL_POSITIVE_FINGERPRINT => {
-                RegisteredArithmeticRule::Sign(LitexToLeanArithmeticBuiltinRuleIr::MulPositive)
+                RegisteredArithmeticRule::Sign(LeanArithmeticBuiltinCompilationKind::MulPositive)
             }
             DIV_NONNEGATIVE_RULE_ID if fingerprint == DIV_NONNEGATIVE_FINGERPRINT => {
-                RegisteredArithmeticRule::Sign(LitexToLeanArithmeticBuiltinRuleIr::DivNonnegative)
+                RegisteredArithmeticRule::Sign(LeanArithmeticBuiltinCompilationKind::DivNonnegative)
             }
             DIV_POSITIVE_RULE_ID if fingerprint == DIV_POSITIVE_FINGERPRINT => {
-                RegisteredArithmeticRule::Sign(LitexToLeanArithmeticBuiltinRuleIr::DivPositive)
+                RegisteredArithmeticRule::Sign(LeanArithmeticBuiltinCompilationKind::DivPositive)
             }
             "order.add_le_add_left" => RegisteredArithmeticRule::AdditiveOrder(
                 ArithmeticBuiltinRule::AddCommonLeftLessEqual,
@@ -10849,10 +12905,10 @@ impl StmtResultToLeanCompiler {
         }
         let membership_parameter_count = usize::from(matches!(
             set_rule,
-            LitexToLeanSetBuiltinRuleIr::UnionMembershipLeft
-                | LitexToLeanSetBuiltinRuleIr::UnionMembershipRight
-                | LitexToLeanSetBuiltinRuleIr::IntersectMembershipBoth
-                | LitexToLeanSetBuiltinRuleIr::SetMinusMembership
+            LeanSetBuiltinCompilationKind::UnionMembershipLeft
+                | LeanSetBuiltinCompilationKind::UnionMembershipRight
+                | LeanSetBuiltinCompilationKind::IntersectMembershipBoth
+                | LeanSetBuiltinCompilationKind::SetMinusMembership
         ));
         let expected_child_count =
             expected_binding_count + expected_semantic_premise_count - membership_parameter_count;
@@ -10870,6 +12926,19 @@ impl StmtResultToLeanCompiler {
     ) -> Result<Option<String>, String> {
         if matches!(
             rule,
+            SetBuiltinRule::SubsetReflexivity | SetBuiltinRule::SupersetReflexivity
+        ) {
+            if !subgoals.is_empty() {
+                return Err("set-relation reflexivity unexpectedly gained child Results".into());
+            }
+            return Ok(Some(render_set_relation_reflexivity(
+                target,
+                rule == SetBuiltinRule::SubsetReflexivity,
+                &self.environment_stack,
+            )?));
+        }
+        if matches!(
+            rule,
             SetBuiltinRule::UnionCommutative
                 | SetBuiltinRule::UnionAssociative
                 | SetBuiltinRule::UnionIdempotent
@@ -10881,17 +12950,17 @@ impl StmtResultToLeanCompiler {
                 return Err("structural set equality unexpectedly gained child Results".into());
             }
             let compatibility_rule = match rule {
-                SetBuiltinRule::UnionCommutative => LitexToLeanSetBuiltinRuleIr::UnionCommutative,
-                SetBuiltinRule::UnionAssociative => LitexToLeanSetBuiltinRuleIr::UnionAssociative,
-                SetBuiltinRule::UnionIdempotent => LitexToLeanSetBuiltinRuleIr::UnionIdempotent,
+                SetBuiltinRule::UnionCommutative => LeanSetBuiltinCompilationKind::UnionCommutative,
+                SetBuiltinRule::UnionAssociative => LeanSetBuiltinCompilationKind::UnionAssociative,
+                SetBuiltinRule::UnionIdempotent => LeanSetBuiltinCompilationKind::UnionIdempotent,
                 SetBuiltinRule::UnionEmptyIdentity => {
-                    LitexToLeanSetBuiltinRuleIr::UnionEmptyIdentity
+                    LeanSetBuiltinCompilationKind::UnionEmptyIdentity
                 }
                 SetBuiltinRule::IntersectCommutative => {
-                    LitexToLeanSetBuiltinRuleIr::IntersectCommutative
+                    LeanSetBuiltinCompilationKind::IntersectCommutative
                 }
                 SetBuiltinRule::IntersectAssociative => {
-                    LitexToLeanSetBuiltinRuleIr::IntersectAssociative
+                    LeanSetBuiltinCompilationKind::IntersectAssociative
                 }
                 _ => unreachable!("matched structural set rule"),
             };
@@ -11053,7 +13122,7 @@ impl StmtResultToLeanCompiler {
         let mut proof =
             resolve_fact_citation(&source_fact_id, source_fact, &self.environment_stack)?;
         if equality_transport_has_no_steps(equality_transport) {
-            if crate::litex_to_lean_ir::facts_are_comparison_notation_duals(source_fact, target)
+            if facts_are_comparison_notation_duals(source_fact, target)
                 && render_fact(source_fact, &self.environment_stack)?
                     == render_fact(target, &self.environment_stack)?
             {
@@ -11225,16 +13294,14 @@ impl StmtResultToLeanCompiler {
             );
         }
         let application_side = if reduction.application_is_left {
-            LitexToLeanEqualitySideIr::Left
+            LeanEqualityApplicationSide::Left
         } else {
-            LitexToLeanEqualitySideIr::Right
+            LeanEqualityApplicationSide::Right
         };
         render_checked_identity_function_reduction_from_fact(
             target,
             reduction.defining_equality_fact_id,
             application_side,
-            &[],
-            &[],
             &self.environment_stack,
         )
     }
@@ -11812,11 +13879,9 @@ impl StmtResultToLeanCompiler {
     fn construct_lean_disjunction_introduction_from_result(
         &mut self,
         target: &Fact,
-        builtin: &SuccessBuiltinFactProofResult,
+        evidence: &DisjunctionIntroductionBuiltinRuleEvidence,
+        subgoals: &[StmtResult],
     ) -> Result<Option<String>, String> {
-        let Some(BuiltinRuleEvidence::DisjunctionIntroduction(evidence)) = &builtin.evidence else {
-            return Ok(None);
-        };
         if evidence.expected_target.to_string() != target.to_string() {
             return Err("disjunction-introduction evidence changed its target".into());
         }
@@ -11827,7 +13892,7 @@ impl StmtResultToLeanCompiler {
         if selected.to_string() != evidence.expected_selected.to_string() {
             return Err("disjunction-introduction evidence changed its selected branch".into());
         }
-        let [selected_result] = builtin.subgoals.as_slice() else {
+        let [selected_result] = subgoals else {
             return Err(
                 "disjunction-introduction evidence must retain one selected child Result".into(),
             );
@@ -11972,6 +14037,74 @@ impl StmtResultToLeanCompiler {
         )?))
     }
 
+    /// `Wrap`: validate the exact pointwise forall child retained by the
+    /// verifier, then package the compiler-constructed function value in the
+    /// exact Lean carrier of its function set. The pointwise child is not
+    /// discarded: its recursive `ForallProof` shape must agree with the
+    /// evidence. The final `In.own` is possible only because rendering the
+    /// function value already consumes its Result-owned WD/body evidence and
+    /// constructs a value of that exact carrier.
+    fn construct_lean_function_set_membership_from_result(
+        &mut self,
+        target: &Fact,
+        evidence: &FunctionSetMembershipBuiltinRuleEvidence,
+        subgoals: &[StmtResult],
+    ) -> Result<Option<String>, String> {
+        if evidence.expected_target.to_string() != target.to_string() {
+            return Err("function-set membership evidence changed its target".into());
+        }
+        let Fact::AtomicFact(AtomicFact::InFact(target_membership)) = target else {
+            return Err("function-set membership evidence targets a non-membership".into());
+        };
+        if !matches!(&target_membership.set, Obj::FnSet(_)) {
+            return Err("function-set membership evidence retained a non-function set".into());
+        }
+        let [pointwise_result] = subgoals else {
+            return Err(
+                "function-set membership evidence requires one pointwise forall child Result"
+                    .into(),
+            );
+        };
+        let pointwise_result = pointwise_result
+            .factual_success()
+            .ok_or_else(|| "function-set membership pointwise child is not factual".to_string())?;
+        if pointwise_result.fact().to_string() != evidence.expected_pointwise.to_string()
+            || pointwise_result.store.fact.to_string() != evidence.expected_pointwise.to_string()
+        {
+            return Err("function-set membership changed its pointwise proposition".into());
+        }
+        let Fact::ForallFact(expected_pointwise) = &evidence.expected_pointwise else {
+            return Err(
+                "function-set membership retained a non-forall pointwise proposition".into(),
+            );
+        };
+        let SuccessFactProofResult::ForallProof(pointwise_proof) = pointwise_result.proof() else {
+            return Err(
+                "function-set membership pointwise child lost its ForallProof Result".into(),
+            );
+        };
+        if pointwise_proof.forall_fact.to_string() != expected_pointwise.to_string()
+            || pointwise_proof.proves.len() != expected_pointwise.then_facts.len()
+        {
+            return Err(
+                "function-set membership pointwise ForallProof changed its binder or conclusions"
+                    .into(),
+            );
+        }
+
+        let rendered_function = render_obj(&target_membership.element, &self.environment_stack)?;
+        let rendered_function_set = render_obj(&target_membership.set, &self.environment_stack)?;
+        let rendered_target = render_fact(target, &self.environment_stack)?;
+        let expected_rendered_target =
+            format!("Litex.In {rendered_function} {rendered_function_set}");
+        if rendered_target != expected_rendered_target {
+            return Err("function-set membership changed its rendered target".into());
+        }
+        Ok(Some(format!(
+            "Litex.In.own {rendered_function_set} {rendered_function}"
+        )))
+    }
+
     /// `Wrap`: validate the verifier-selected head-membership child and use
     /// the exact WD application layer to construct membership in the
     /// instantiated declared return carrier. No function search or return-set
@@ -12077,7 +14210,32 @@ impl StmtResultToLeanCompiler {
                         citation.fact_transformation.as_ref(),
                     )?
                 }
-                _ => None,
+                SuccessCombinedFactProofItemResult::ByBuiltinRule(builtin)
+                | SuccessCombinedFactProofItemResult::ByBuiltinStrategy(builtin) => {
+                    if builtin.verify_what.to_string() != component.to_string() {
+                        return Err("combined builtin proof changed its component".into());
+                    }
+                    self.construct_lean_builtin_fact_proof_from_borrowed_result_parts(
+                        component,
+                        builtin.evidence.as_ref(),
+                        &builtin.subgoals,
+                    )?
+                }
+                SuccessCombinedFactProofItemResult::ByKnownForall(instantiation) => {
+                    if instantiation.verify_what.to_string() != component.to_string() {
+                        return Err("combined known-forall proof changed its component".into());
+                    }
+                    self.construct_lean_known_forall_instantiation_from_result(
+                        component,
+                        &instantiation.result,
+                    )?
+                }
+                SuccessCombinedFactProofItemResult::ByFact(citation) => {
+                    if citation.verify_what.to_string() != component.to_string() {
+                        return Err("combined citation proof changed its component".into());
+                    }
+                    None
+                }
             };
             let Some(proof) = proof else {
                 return Ok(None);
@@ -12085,6 +14243,240 @@ impl StmtResultToLeanCompiler {
             proofs.push(proof);
         }
         Ok(Some(right_associated_conjunction_proof(&proofs)?))
+    }
+
+    /// Compile one builtin proof payload borrowed from a combined proof item.
+    /// This is the same semantic Result layer as an ordinary/shared builtin;
+    /// the enclosing conjunction only supplies its exact target component.
+    /// Typed evidence with inconsistent children is an error. `None` remains
+    /// reserved for the legacy label-only compatibility boundary.
+    fn construct_lean_builtin_fact_proof_from_borrowed_result_parts(
+        &mut self,
+        target: &Fact,
+        evidence: Option<&BuiltinRuleEvidence>,
+        subgoals: &[StmtResult],
+    ) -> Result<Option<String>, String> {
+        match evidence {
+            Some(BuiltinRuleEvidence::ListSetMembership(evidence)) => {
+                return self
+                    .construct_lean_list_set_membership_from_result(target, evidence, subgoals);
+            }
+            Some(BuiltinRuleEvidence::RefinedNumericMembership(evidence)) => {
+                return self.construct_lean_refined_numeric_membership_from_result(
+                    target, evidence, subgoals,
+                );
+            }
+            Some(BuiltinRuleEvidence::NotEqualSymmetry) => {
+                return self.construct_lean_not_equal_symmetry_from_result(target, subgoals);
+            }
+            Some(BuiltinRuleEvidence::DisjunctionIntroduction(evidence)) => {
+                return self.construct_lean_disjunction_introduction_from_result(
+                    target, evidence, subgoals,
+                );
+            }
+            Some(BuiltinRuleEvidence::DefinitionProjection(evidence)) => {
+                return self
+                    .construct_lean_definition_projection_from_result(target, evidence, subgoals);
+            }
+            Some(BuiltinRuleEvidence::SetBuilderMembership(evidence)) => {
+                return self
+                    .construct_lean_set_builder_membership_from_result(target, evidence, subgoals);
+            }
+            Some(BuiltinRuleEvidence::FunctionSetMembership(evidence)) => {
+                return self.construct_lean_function_set_membership_from_result(
+                    target, evidence, subgoals,
+                );
+            }
+            Some(BuiltinRuleEvidence::FunctionApplicationReturnMembership(evidence)) => {
+                return self.construct_lean_function_application_return_membership_from_result(
+                    target, evidence, subgoals,
+                );
+            }
+            Some(BuiltinRuleEvidence::RegisteredLocal(evidence)) => {
+                return self.construct_lean_registered_local_builtin_from_result(
+                    target, evidence, subgoals,
+                );
+            }
+            Some(BuiltinRuleEvidence::Arithmetic(rule)) => {
+                return self.construct_lean_arithmetic_builtin_from_result(target, *rule, subgoals);
+            }
+            Some(BuiltinRuleEvidence::StandardSetMembershipProjection) => {
+                return self.construct_lean_standard_set_membership_projection_from_result(
+                    target, subgoals,
+                );
+            }
+            Some(BuiltinRuleEvidence::RealArithmeticMembershipClosure(rule)) => {
+                return self.construct_lean_real_arithmetic_membership_closure_from_result(
+                    target, *rule, subgoals,
+                );
+            }
+            Some(BuiltinRuleEvidence::IntegerMembershipClosure(rule)) => {
+                return self.construct_lean_integer_membership_closure_from_result(
+                    target, *rule, subgoals,
+                );
+            }
+            Some(BuiltinRuleEvidence::NaturalMembershipClosure(rule)) => {
+                return self.construct_lean_natural_membership_closure_from_result(
+                    target, *rule, subgoals,
+                );
+            }
+            Some(BuiltinRuleEvidence::RationalMembershipClosure(rule)) => {
+                return self.construct_lean_rational_membership_closure_from_result(
+                    target, *rule, subgoals,
+                );
+            }
+            Some(BuiltinRuleEvidence::Set(rule)) => {
+                return self.construct_lean_set_builtin_from_result(target, *rule, subgoals);
+            }
+            Some(BuiltinRuleEvidence::KnownEqualityPath(evidence)) => {
+                return self
+                    .construct_lean_known_equality_path_from_result(target, evidence, subgoals)
+                    .map(Some);
+            }
+            Some(BuiltinRuleEvidence::SetRelationDuality(rule)) => {
+                return self
+                    .construct_lean_set_relation_duality_from_result(target, *rule, subgoals);
+            }
+            Some(BuiltinRuleEvidence::RegisteredReflexivePredicate(evidence)) => {
+                if !subgoals.is_empty() {
+                    return Err(
+                        "combined registered reflexive-predicate proof retained child Results"
+                            .into(),
+                    );
+                }
+                return construct_lean_registered_reflexive_predicate_from_result(
+                    target,
+                    evidence,
+                    &self.environment_stack,
+                )
+                .map(Some);
+            }
+            Some(BuiltinRuleEvidence::RegisteredSymmetricPredicate(evidence)) => {
+                return self.construct_lean_registered_symmetric_predicate_from_result(
+                    target, evidence, subgoals,
+                );
+            }
+            Some(BuiltinRuleEvidence::RegisteredAntisymmetricPredicate(evidence)) => {
+                return self.construct_lean_registered_antisymmetric_predicate_from_result(
+                    target, evidence, subgoals,
+                );
+            }
+            Some(evidence) => {
+                if let Some(limitation) = direct_builtin_rule_compiler_limitation(evidence) {
+                    return Err(limitation.to_string());
+                }
+            }
+            None => {}
+        }
+
+        if !subgoals.is_empty() {
+            return Ok(None);
+        }
+        match evidence {
+            Some(BuiltinRuleEvidence::ObjectReflexivity(evidence)) => {
+                if evidence.expected_target.to_string() != target.to_string() {
+                    return Err("combined object-reflexivity evidence changed its target".into());
+                }
+                let Fact::AtomicFact(AtomicFact::EqualFact(equality)) = target else {
+                    return Err(
+                        "combined object-reflexivity evidence targets a non-equality fact".into(),
+                    );
+                };
+                if obj_equality_key(&equality.left) != obj_equality_key(&equality.right) {
+                    return Err(
+                        "combined object-reflexivity evidence changed its equality endpoints"
+                            .into(),
+                    );
+                }
+                Ok(Some(format!(
+                    "Litex.Same.refl {}",
+                    render_obj(&equality.left, &self.environment_stack)?
+                )))
+            }
+            Some(BuiltinRuleEvidence::RationalNormalization(evidence)) => {
+                if evidence.expected_target.to_string() != target.to_string() {
+                    return Err(
+                        "combined rational-normalization evidence changed its target".into(),
+                    );
+                }
+                validate_success_evaluate_obj_result(&evidence.left_evaluation)?;
+                validate_success_evaluate_obj_result(&evidence.right_evaluation)?;
+                if evidence.left_evaluation.value.normalized_value
+                    != evidence.right_evaluation.value.normalized_value
+                {
+                    return Err(
+                        "combined rational-normalization retained unequal normal forms".into(),
+                    );
+                }
+                Ok(Some(
+                    "Litex.Same.ofEq (by norm_num [Litex.tupleDim, Litex.TupleShape.dimension])"
+                        .into(),
+                ))
+            }
+            Some(BuiltinRuleEvidence::ClosedNumericComparison(evidence)) => {
+                validate_closed_numeric_comparison_builtin_rule_evidence(target, evidence)?;
+                render_closed_numeric_comparison_fact(target, &self.environment_stack).map(Some)
+            }
+            Some(BuiltinRuleEvidence::OrderReflexivity(evidence)) => {
+                construct_lean_order_reflexivity_from_result(
+                    target,
+                    evidence,
+                    &self.environment_stack,
+                )
+                .map(Some)
+            }
+            Some(BuiltinRuleEvidence::RuntimeResolvedNumericComparison(evidence)) => self
+                .construct_lean_runtime_resolved_numeric_comparison_from_assignment_result(
+                    target, evidence,
+                )
+                .map(Some),
+            Some(BuiltinRuleEvidence::ClosedNumericMembership(evidence)) => {
+                if evidence.expected_target.to_string() != target.to_string() {
+                    return Err(
+                        "combined closed-numeric-membership changed its target".into(),
+                    );
+                }
+                validate_success_evaluate_obj_result(&evidence.evaluation)?;
+                render_closed_numeric_membership_from_result(
+                    target,
+                    evidence.target_set,
+                    &evidence.evaluation,
+                    &self.environment_stack,
+                )
+                .map(Some)
+            }
+            Some(BuiltinRuleEvidence::ClosedNumericNonmembership(evidence)) => {
+                self.construct_lean_closed_numeric_nonmembership_from_result(target, evidence)
+            }
+            Some(BuiltinRuleEvidence::StandardSetNonempty(evidence)) => self
+                .construct_lean_standard_set_nonempty_from_result(target, evidence)
+                .map(Some),
+            Some(BuiltinRuleEvidence::NativeConstantMembership(rule)) => self
+                .construct_lean_native_constant_membership_from_result(target, *rule)
+                .map(Some),
+            Some(BuiltinRuleEvidence::StandardSetSubset) => self
+                .construct_lean_standard_set_subset_from_result(target)
+                .map(Some),
+            Some(BuiltinRuleEvidence::PrimeU64Reflection) => self
+                .construct_lean_number_theory_reflection_from_result(target, true)
+                .map(Some),
+            Some(BuiltinRuleEvidence::CoprimeNaturalReflection) => self
+                .construct_lean_number_theory_reflection_from_result(target, false)
+                .map(Some),
+            Some(BuiltinRuleEvidence::FiniteSet(rule)) => self
+                .construct_lean_finite_set_from_result(target, *rule)
+                .map(Some),
+            Some(BuiltinRuleEvidence::ComplexArithmeticMembershipClosure(rule)) => self
+                .construct_lean_complex_membership_closure_from_result(target, *rule)
+                .map(Some),
+            Some(BuiltinRuleEvidence::TupleLiteralShape) => self
+                .construct_lean_tuple_literal_shape_from_result(target)
+                .map(Some),
+            None => Ok(None),
+            Some(evidence) => unreachable!(
+                "typed combined builtin evidence must be handled before the terminal dispatch: {evidence:?}"
+            ),
+        }
     }
 
     fn construct_lean_proof_from_shared_verify_fact_result(
@@ -12127,9 +14519,15 @@ impl StmtResultToLeanCompiler {
                     builtin.evidence,
                     Some(BuiltinRuleEvidence::DisjunctionIntroduction(_))
                 ) {
+                    let Some(BuiltinRuleEvidence::DisjunctionIntroduction(evidence)) =
+                        &builtin.evidence
+                    else {
+                        unreachable!("disjunction evidence checked above")
+                    };
                     return self.construct_lean_disjunction_introduction_from_result(
                         &source_fact,
-                        builtin,
+                        evidence,
+                        &builtin.subgoals,
                     );
                 }
                 if let Some(BuiltinRuleEvidence::DefinitionProjection(evidence)) = &builtin.evidence
@@ -12143,6 +14541,15 @@ impl StmtResultToLeanCompiler {
                 if let Some(BuiltinRuleEvidence::SetBuilderMembership(evidence)) = &builtin.evidence
                 {
                     return self.construct_lean_set_builder_membership_from_result(
+                        &source_fact,
+                        evidence,
+                        &builtin.subgoals,
+                    );
+                }
+                if let Some(BuiltinRuleEvidence::FunctionSetMembership(evidence)) =
+                    &builtin.evidence
+                {
+                    return self.construct_lean_function_set_membership_from_result(
                         &source_fact,
                         evidence,
                         &builtin.subgoals,
@@ -12270,6 +14677,11 @@ impl StmtResultToLeanCompiler {
                         &builtin.subgoals,
                     );
                 }
+                if let Some(evidence) = &builtin.evidence {
+                    if let Some(limitation) = direct_builtin_rule_compiler_limitation(evidence) {
+                        return Err(limitation.to_string());
+                    }
+                }
                 if !builtin.subgoals.is_empty() {
                     return Ok(None);
                 }
@@ -12331,10 +14743,12 @@ impl StmtResultToLeanCompiler {
                             &self.environment_stack,
                         )?,
                     )),
-                    Some(BuiltinRuleEvidence::RuntimeResolvedNumericComparison(_)) => Err(
-                        "standalone Result compiler cannot reuse Runtime-resolved numeric comparison evidence until every substitution cites its source FactId"
-                            .into(),
-                    ),
+                    Some(BuiltinRuleEvidence::RuntimeResolvedNumericComparison(evidence)) => self
+                        .construct_lean_runtime_resolved_numeric_comparison_from_assignment_result(
+                            &source_fact,
+                            evidence,
+                        )
+                        .map(Some),
                     Some(BuiltinRuleEvidence::ClosedNumericMembership(evidence)) => {
                         if evidence.expected_target.to_string() != source_fact.to_string() {
                             return Err(
@@ -12393,7 +14807,10 @@ impl StmtResultToLeanCompiler {
                     Some(BuiltinRuleEvidence::TupleLiteralShape) => Ok(Some(
                         self.construct_lean_tuple_literal_shape_from_result(&source_fact)?,
                     )),
-                    _ => Ok(None),
+                    None => Ok(None),
+                    Some(evidence) => unreachable!(
+                        "typed shared builtin evidence must be handled before the terminal direct compiler dispatch: {evidence:?}"
+                    ),
                 }
             }
             SuccessFactProofResult::CombinedProofs(combined) => {
@@ -12409,7 +14826,7 @@ impl StmtResultToLeanCompiler {
             SuccessFactProofResult::Reuse(reuse) => {
                 self.construct_lean_proof_from_shared_verify_fact_result(reuse.source.as_ref())
             }
-            _ => Ok(None),
+            SuccessFactProofResult::ForallProof(_) => Ok(None),
         }
     }
 
@@ -12626,8 +15043,7 @@ impl StmtResultToLeanCompiler {
     }
 
     /// Construct one child fact proof without publishing its store effect.
-    /// Direct Result evidence is always attempted first. The old fact IR is a
-    /// migration-only fallback and is forbidden by the strict audit mode.
+    /// Direct Result evidence is the only accepted proof source.
     fn construct_lean_proof_from_fact_result_without_storing(
         &mut self,
         result: &StmtResult,
@@ -12651,46 +15067,9 @@ impl StmtResultToLeanCompiler {
         {
             return Ok(proof);
         }
-        if self.compatibility_adapter_policy
-            == StmtResultToLeanCompatibilityAdapterPolicy::RejectForDirectResultCompilationAudit
-        {
-            return Err(format!(
-                "direct StmtResult compilation audit reached the compatibility fact-proof builder for `{expected_fact}`"
-            ));
-        }
-        construct_lean_proof_for_compatibility_fact_result_without_storing(
-            result,
-            expected_fact,
-            &self.environment_stack,
-        )
-    }
-
-    fn compile_compatibility_statement_result_to_lean_source(
-        &mut self,
-        result: &StmtResult,
-    ) -> Result<(), String> {
-        if self.compatibility_adapter_policy
-            == StmtResultToLeanCompatibilityAdapterPolicy::RejectForDirectResultCompilationAudit
-        {
-            let statement = result
-                .statement()
-                .map(|statement| statement.to_string())
-                .unwrap_or_else(|| "<statement unavailable>".to_string());
-            return Err(format!(
-                "direct StmtResult compilation audit reached the compatibility adapter for `{}`",
-                statement
-            ));
-        }
-        let statement = LitexToLeanIrBuilder::new()
-            .compile_statement(result)
-            .map_err(|error| format!("StmtResult-to-Lean compilation failed: {error:?}"))?;
-        construct_lean_declarations_for_compatibility_statement_result(
-            &statement,
-            &mut self.declarations,
-            &mut self.next_fact_name_index,
-            &mut self.next_sketch_namespace_index,
-            &mut self.environment_stack,
-        )
+        Err(format!(
+            "StmtResult-to-Lean compiler has no direct proof consumer for `{expected_fact}`"
+        ))
     }
 
     fn finish_lean_source(mut self) -> Result<String, String> {
@@ -12879,6 +15258,22 @@ fn infer_rule_name(rule: &InferRule) -> &'static str {
         InferRule::ListSetMembershipImpliesEqualityAlternatives(_) => {
             "ListSetMembershipImpliesEqualityAlternatives"
         }
+        InferRule::MultiplicationByNegativeOneReversesOrderAgainstZero => {
+            "MultiplicationByNegativeOneReversesOrderAgainstZero"
+        }
+        InferRule::StrictOrderComparedToZeroImpliesWeakOrder => {
+            "StrictOrderComparedToZeroImpliesWeakOrder"
+        }
+        InferRule::MembershipInSetWithKnownEqualityImpliesMembershipInEqualSet(_) => {
+            "MembershipInSetWithKnownEqualityImpliesMembershipInEqualSet"
+        }
+        InferRule::SubsetImpliesElementwiseMembershipForall(_) => {
+            "SubsetImpliesElementwiseMembershipForall"
+        }
+        InferRule::SupersetImpliesElementwiseMembershipForall(_) => {
+            "SupersetImpliesElementwiseMembershipForall"
+        }
+        InferRule::ConjunctionImpliesComponent(_) => "ConjunctionImpliesComponent",
     }
 }
 
@@ -13051,6 +15446,169 @@ fn validate_compiled_fact_proof_effects(
     Ok(fact_ids)
 }
 
+fn validate_generated_fact_publication_effects(
+    infers: &SuccessInferResult,
+    expected: &Fact,
+    result_layer: &str,
+) -> Result<FactId, String> {
+    if !infers.rule_applications.is_empty() || infers.store_fact_outputs.is_empty() {
+        return Err(format!(
+            "{result_layer} must retain only its generated-fact stores"
+        ));
+    }
+    let mut exact_fact_id = None;
+    for (store_index, store) in infers.store_fact_outputs.iter().enumerate() {
+        if store.itself_and_why_itself_is_stored.0.to_string() != expected.to_string()
+            || !store.inferred_facts.is_empty()
+            || !store.inferred_fact_ids.is_empty()
+        {
+            return Err(format!(
+                "{result_layer} store {store_index} changed its generated fact or retained inferred children"
+            ));
+        }
+        let fact_id = store
+            .fact_id
+            .ok_or_else(|| format!("{result_layer} store {store_index} has no FactId"))?;
+        if exact_fact_id.is_some_and(|retained| retained != fact_id) {
+            return Err(format!(
+                "{result_layer} assigned multiple FactIds to one generated fact"
+            ));
+        }
+        exact_fact_id = Some(fact_id);
+    }
+    exact_fact_id.ok_or_else(|| format!("{result_layer} retained no FactId"))
+}
+
+fn render_forall_domain_intro_suffix(forall: &ForallFact) -> String {
+    (1..=forall.dom_facts.len())
+        .map(|index| format!(" __domain{index}"))
+        .collect::<String>()
+}
+
+fn obj_from_closed_or_half_open_range(range: &ClosedRangeOrRange) -> Obj {
+    match range {
+        ClosedRangeOrRange::Range(range) => range.clone().into(),
+        ClosedRangeOrRange::ClosedRange(range) => range.clone().into(),
+    }
+}
+
+fn closed_or_half_open_range_endpoints(range: &ClosedRangeOrRange) -> (&Obj, &Obj) {
+    match range {
+        ClosedRangeOrRange::Range(range) => (range.start.as_ref(), range.end.as_ref()),
+        ClosedRangeOrRange::ClosedRange(range) => (range.start.as_ref(), range.end.as_ref()),
+    }
+}
+
+fn literal_integer_values_for_range(
+    range: &ClosedRangeOrRange,
+) -> Result<Option<Vec<String>>, String> {
+    let (start, end) = closed_or_half_open_range_endpoints(range);
+    let (Obj::Number(start), Obj::Number(end)) = (start, end) else {
+        return Ok(None);
+    };
+    let start = start
+        .normalized_value
+        .parse::<i128>()
+        .map_err(|_| "integer-range start is not a literal integer".to_string())?;
+    let end = end
+        .normalized_value
+        .parse::<i128>()
+        .map_err(|_| "integer-range end is not a literal integer".to_string())?;
+    let closed = matches!(range, ClosedRangeOrRange::ClosedRange(_));
+    if (closed && start > end) || (!closed && start >= end) {
+        return Ok(Some(Vec::new()));
+    }
+    let final_value = if closed {
+        end
+    } else {
+        end.checked_sub(1)
+            .ok_or_else(|| "half-open integer-range boundary underflowed i128".to_string())?
+    };
+    let mut values = Vec::new();
+    let mut current = start;
+    loop {
+        values.push(current.to_string());
+        if current == final_value {
+            break;
+        }
+        current = current
+            .checked_add(1)
+            .ok_or_else(|| "integer-range enumeration overflowed i128".to_string())?;
+    }
+    Ok(Some(values))
+}
+
+fn validate_by_for_range_parameter_result(
+    result: &SuccessVerifyByForRangeParameterResult,
+) -> Result<(), String> {
+    let (source_start, source_end, closed) = match &result.range {
+        ClosedRangeOrRange::Range(range) => (range.start.as_ref(), range.end.as_ref(), false),
+        ClosedRangeOrRange::ClosedRange(range) => (range.start.as_ref(), range.end.as_ref(), true),
+    };
+    let expected_start = LeanTargetObjectRepresentation::Number {
+        normalized_value: result.evaluated_start.clone(),
+    };
+    let expected_end = LeanTargetObjectRepresentation::Number {
+        normalized_value: result.evaluated_end.clone(),
+    };
+    if LeanTargetObjectRepresentation::lower(source_start)? != expected_start
+        || LeanTargetObjectRepresentation::lower(source_end)? != expected_end
+    {
+        return Err(format!(
+            "by-for parameter `{}` needs retained endpoint-normalization evidence before a non-literal range may be compiled",
+            result.parameter
+        ));
+    }
+    let start = result
+        .evaluated_start
+        .parse::<i128>()
+        .map_err(|_| "by-for evaluated start is not an integer".to_string())?;
+    let end = result
+        .evaluated_end
+        .parse::<i128>()
+        .map_err(|_| "by-for evaluated end is not an integer".to_string())?;
+    let is_empty = if closed { start > end } else { start >= end };
+    if is_empty {
+        if result.enumerated_values.is_empty() {
+            return Ok(());
+        }
+        return Err("by-for empty range retained assignments".into());
+    }
+    let right_boundary = if closed {
+        end
+    } else {
+        end.checked_sub(1)
+            .ok_or_else(|| "by-for half-open range boundary underflowed i128".to_string())?
+    };
+    let mut expected_value = start;
+    for retained in &result.enumerated_values {
+        if retained.parse::<i128>().ok() != Some(expected_value) {
+            return Err(format!(
+                "by-for parameter `{}` changed its ordered evaluated values",
+                result.parameter
+            ));
+        }
+        if expected_value == right_boundary {
+            break;
+        }
+        expected_value = expected_value
+            .checked_add(1)
+            .ok_or_else(|| "by-for evaluated range overflowed i128".to_string())?;
+    }
+    if result
+        .enumerated_values
+        .last()
+        .and_then(|value| value.parse::<i128>().ok())
+        != Some(right_boundary)
+    {
+        return Err(format!(
+            "by-for parameter `{}` lost one or more evaluated values",
+            result.parameter
+        ));
+    }
+    Ok(())
+}
+
 fn validate_single_fact_store_output(
     infer_result: &SuccessInferResult,
     expected_fact: &Fact,
@@ -13077,6 +15635,108 @@ fn validate_single_fact_store_output(
     output
         .fact_id
         .ok_or_else(|| format!("{result_layer} store has no FactId"))
+}
+
+fn validate_conjunction_store_and_component_inference_results(
+    infer_result: &SuccessInferResult,
+    source_fact: &Fact,
+    expected_components: &[Fact],
+    result_layer: &str,
+) -> Result<(FactId, Vec<FactId>), String> {
+    let [source_output] = infer_result.store_fact_outputs.as_slice() else {
+        return Err(format!(
+            "{result_layer} must retain exactly one source store"
+        ));
+    };
+    let source_fact_id = source_output
+        .fact_id
+        .ok_or_else(|| format!("{result_layer} source store has no FactId"))?;
+    if source_output.itself_and_why_itself_is_stored.0.to_string() != source_fact.to_string()
+        || source_output.inferred_facts.len() != expected_components.len()
+        || source_output.inferred_fact_ids.len() != expected_components.len()
+        || infer_result.rule_applications.len() != expected_components.len()
+    {
+        return Err(format!(
+            "{result_layer} changed its source or component inference arity"
+        ));
+    }
+
+    let mut component_fact_ids = Vec::with_capacity(expected_components.len());
+    for (component_index, ((expected_component, advertised_fact), advertised_fact_id)) in
+        expected_components
+            .iter()
+            .zip(source_output.inferred_facts.iter())
+            .zip(source_output.inferred_fact_ids.iter())
+            .enumerate()
+    {
+        let component_fact_id = advertised_fact_id.ok_or_else(|| {
+            format!("{result_layer} component {component_index} has no advertised FactId")
+        })?;
+        if advertised_fact.to_string() != expected_component.to_string() {
+            return Err(format!(
+                "{result_layer} changed advertised component {component_index}"
+            ));
+        }
+        let application = &infer_result.rule_applications[component_index];
+        let InferRule::ConjunctionImpliesComponent(rule) = &application.rule else {
+            return Err(format!(
+                "{result_layer} component {component_index} retained another infer rule"
+            ));
+        };
+        if rule.component_index != component_index
+            || rule.component_count != expected_components.len()
+        {
+            return Err(format!(
+                "{result_layer} changed component {component_index}'s structural position"
+            ));
+        }
+        let [premise] = application.premises.as_slice() else {
+            return Err(format!(
+                "{result_layer} component {component_index} must retain one premise"
+            ));
+        };
+        if premise.fact_id != Some(source_fact_id)
+            || premise.fact.to_string() != source_fact.to_string()
+        {
+            return Err(format!(
+                "{result_layer} component {component_index} changed its conjunction premise"
+            ));
+        }
+        let [conclusion] = application.conclusions.as_slice() else {
+            return Err(format!(
+                "{result_layer} component {component_index} must retain one conclusion"
+            ));
+        };
+        validate_conjunction_component_inference_target(rule, &premise.fact, &conclusion.fact)?;
+        if conclusion.fact_id != Some(component_fact_id)
+            || conclusion.fact.to_string() != expected_component.to_string()
+            || conclusion.infers.rule_applications.len() > 0
+        {
+            return Err(format!(
+                "{result_layer} component {component_index} changed its conclusion Result"
+            ));
+        }
+        let [component_store] = conclusion.infers.store_fact_outputs.as_slice() else {
+            return Err(format!(
+                "{result_layer} component {component_index} lost its recursive store"
+            ));
+        };
+        if component_store.fact_id != Some(component_fact_id)
+            || component_store
+                .itself_and_why_itself_is_stored
+                .0
+                .to_string()
+                != expected_component.to_string()
+            || !component_store.inferred_facts.is_empty()
+            || !component_store.inferred_fact_ids.is_empty()
+        {
+            return Err(format!(
+                "{result_layer} component {component_index} recursive store changed"
+            ));
+        }
+        component_fact_ids.push(component_fact_id);
+    }
+    Ok((source_fact_id, component_fact_ids))
 }
 
 fn validate_success_store_fact_result(
@@ -13194,6 +15854,92 @@ fn validate_typed_infer_result_identity_completeness(
     Ok(())
 }
 
+/// Select the inference children whose source assumptions remain visible in
+/// one reduced-binder forall publication. The complete Result is validated
+/// first; the returned value is only a short-lived compiler work value used
+/// by the existing typed-inference consumer.
+fn select_typed_inference_results_for_visible_forall_sources(
+    result: &SuccessInferResult,
+    complete_sources: &[(FactId, Fact)],
+    visible_sources: &[(FactId, Fact)],
+    result_layer: &str,
+) -> Result<SuccessInferResult, String> {
+    validate_typed_infer_result_identity_completeness(result, result_layer)?;
+    let complete_source_keys = complete_sources
+        .iter()
+        .map(|(fact_id, fact)| (*fact_id, fact.to_string()))
+        .collect::<HashSet<_>>();
+    let visible_source_keys = visible_sources
+        .iter()
+        .map(|(fact_id, fact)| (*fact_id, fact.to_string()))
+        .collect::<HashSet<_>>();
+
+    for (store_index, output) in result.store_fact_outputs.iter().enumerate() {
+        let source_key = (
+            output
+                .fact_id
+                .expect("identity completeness validated above"),
+            output.itself_and_why_itself_is_stored.0.to_string(),
+        );
+        if !complete_source_keys.contains(&source_key) {
+            return Err(format!(
+                "{result_layer} store {store_index} is not owned by its complete forall assumption Result"
+            ));
+        }
+    }
+    for (application_index, application) in result.rule_applications.iter().enumerate() {
+        let Some(source_premise) = application.premises.first() else {
+            return Err(format!(
+                "{result_layer} application {application_index} has no source premise"
+            ));
+        };
+        let source_key = (
+            source_premise
+                .fact_id
+                .expect("identity completeness validated above"),
+            source_premise.fact.to_string(),
+        );
+        if !complete_source_keys.contains(&source_key) {
+            return Err(format!(
+                "{result_layer} application {application_index} cites a source outside its complete forall assumption Result"
+            ));
+        }
+    }
+
+    Ok(SuccessInferResult {
+        store_fact_outputs: result
+            .store_fact_outputs
+            .iter()
+            .filter(|output| {
+                visible_source_keys.contains(&(
+                    output
+                        .fact_id
+                        .expect("identity completeness validated above"),
+                    output.itself_and_why_itself_is_stored.0.to_string(),
+                ))
+            })
+            .cloned()
+            .collect(),
+        rule_applications: result
+            .rule_applications
+            .iter()
+            .filter(|application| {
+                let source_premise = application
+                    .premises
+                    .first()
+                    .expect("source premise validated above");
+                visible_source_keys.contains(&(
+                    source_premise
+                        .fact_id
+                        .expect("identity completeness validated above"),
+                    source_premise.fact.to_string(),
+                ))
+            })
+            .cloned()
+            .collect(),
+    })
+}
+
 fn describe_success_fact_result_for_direct_compilation_audit(
     result: &SuccessFactStmtResult,
 ) -> String {
@@ -13271,6 +16017,64 @@ fn describe_success_fact_result_for_direct_compilation_audit(
     )
 }
 
+/// Keep direct builtin coverage compile-time exhaustive. Returning `None`
+/// means the evidence has a direct Result consumer above. A named limitation
+/// is an intentional fail-closed boundary, never permission to fall through
+/// to the compatibility builder. Adding a new `BuiltinRuleEvidence` variant
+/// therefore requires an explicit compiler decision here.
+fn direct_builtin_rule_compiler_limitation(evidence: &BuiltinRuleEvidence) -> Option<&'static str> {
+    match evidence {
+        BuiltinRuleEvidence::MatrixExpressionMembership(_) => Some(
+            "StmtResultToLeanCompiler does not yet represent native matrix expressions in the Lean target ABI",
+        ),
+        BuiltinRuleEvidence::DivNotEqualZero(_) => Some(
+            "StmtResultToLeanCompiler cannot yet replay division nonzero until Litex.Same has a reviewed numeric-observation elimination theorem",
+        ),
+        BuiltinRuleEvidence::NotEqualFromStrictOrder => Some(
+            "StmtResultToLeanCompiler cannot yet replay strict-order inequality until Litex.Same has a reviewed numeric-observation elimination theorem",
+        ),
+        BuiltinRuleEvidence::AbsoluteValue(_) => Some(
+            "StmtResultToLeanCompiler does not yet have a reviewed absolute-value representation and proof adapter in the Lean target ABI",
+        ),
+        BuiltinRuleEvidence::RegisteredLocal(_)
+        | BuiltinRuleEvidence::DefinitionProjection(_)
+        | BuiltinRuleEvidence::SetBuilderMembership(_)
+        | BuiltinRuleEvidence::FunctionSetMembership(_)
+        | BuiltinRuleEvidence::RefinedNumericMembership(_)
+        | BuiltinRuleEvidence::ClosedNumericMembership(_)
+        | BuiltinRuleEvidence::ClosedNumericNonmembership(_)
+        | BuiltinRuleEvidence::ClosedNumericComparison(_)
+        | BuiltinRuleEvidence::OrderReflexivity(_)
+        | BuiltinRuleEvidence::RuntimeResolvedNumericComparison(_)
+        | BuiltinRuleEvidence::RegisteredReflexivePredicate(_)
+        | BuiltinRuleEvidence::RegisteredSymmetricPredicate(_)
+        | BuiltinRuleEvidence::RegisteredAntisymmetricPredicate(_)
+        | BuiltinRuleEvidence::ObjectReflexivity(_)
+        | BuiltinRuleEvidence::RationalNormalization(_)
+        | BuiltinRuleEvidence::StandardSetNonempty(_)
+        | BuiltinRuleEvidence::DisjunctionIntroduction(_)
+        | BuiltinRuleEvidence::FunctionApplicationReturnMembership(_)
+        | BuiltinRuleEvidence::KnownEqualityPath(_)
+        | BuiltinRuleEvidence::Arithmetic(_)
+        | BuiltinRuleEvidence::IntegerMembershipClosure(_)
+        | BuiltinRuleEvidence::NaturalMembershipClosure(_)
+        | BuiltinRuleEvidence::RationalMembershipClosure(_)
+        | BuiltinRuleEvidence::ComplexArithmeticMembershipClosure(_)
+        | BuiltinRuleEvidence::RealArithmeticMembershipClosure(_)
+        | BuiltinRuleEvidence::NativeConstantMembership(_)
+        | BuiltinRuleEvidence::NotEqualSymmetry
+        | BuiltinRuleEvidence::SetRelationDuality(_)
+        | BuiltinRuleEvidence::Set(_)
+        | BuiltinRuleEvidence::FiniteSet(_)
+        | BuiltinRuleEvidence::ListSetMembership(_)
+        | BuiltinRuleEvidence::TupleLiteralShape
+        | BuiltinRuleEvidence::PrimeU64Reflection
+        | BuiltinRuleEvidence::CoprimeNaturalReflection
+        | BuiltinRuleEvidence::StandardSetMembershipProjection
+        | BuiltinRuleEvidence::StandardSetSubset => None,
+    }
+}
+
 fn validate_scoped_fact_check_result(
     result: &SuccessFactStmtResult,
     expected_fact: &Fact,
@@ -13298,31 +16102,6 @@ fn validate_scoped_fact_check_result(
         }
     }
     Ok(())
-}
-
-fn construct_lean_proof_for_compatibility_fact_result_without_storing(
-    result: &StmtResult,
-    expected_fact: &Fact,
-    environment_stack: &StmtResultToLeanCompilerEnvironmentStack,
-) -> Result<String, String> {
-    let success = result
-        .factual_success()
-        .ok_or_else(|| "compatibility proof child is not a successful fact Result".to_string())?;
-    if success.fact().to_string() != expected_fact.to_string() {
-        return Err(format!(
-            "compatibility proof child changed `{expected_fact}` to `{}`",
-            success.fact()
-        ));
-    }
-    let (compiled_fact, compiled_well_definedness) = LitexToLeanIrBuilder::new()
-        .compile_nested_fact_result_without_requiring_storage(success)
-        .map_err(|error| format!("compatibility fact-proof construction failed: {error:?}"))?;
-    if compiled_fact.proposition.to_string() != expected_fact.to_string() {
-        return Err("compatibility fact proof changed its proposition".into());
-    }
-    let mut local_environment = environment_stack.clone();
-    local_environment.well_definedness = Some(compiled_well_definedness);
-    render_proof(&compiled_fact, &local_environment)
 }
 
 fn fact_is_supported_by_direct_named_theorem(fact: &Fact) -> bool {
@@ -13501,6 +16280,197 @@ fn fact_result_contains_inferred_facts(result: &SuccessFactStmtResult) -> bool {
             .any(|output| !output.inferred_facts.is_empty() || !output.inferred_fact_ids.is_empty())
 }
 
+fn direct_forall_result_publication_selections(
+    result: &SuccessFactStmtResult,
+    source_forall: &ForallFact,
+) -> Result<Vec<DirectForallResultPublicationSelection>, String> {
+    if result.store.fact.to_string() != Fact::from(source_forall.clone()).to_string() {
+        return Err("ForallProof store changed its source proposition".into());
+    }
+    if !result.store.infers.rule_applications.is_empty() {
+        return Err(
+            "ForallProof store mixed theorem publication with typed inference rules".into(),
+        );
+    }
+    if result
+        .store
+        .infers
+        .store_fact_outputs
+        .iter()
+        .any(|output| !output.inferred_facts.is_empty() || !output.inferred_fact_ids.is_empty())
+    {
+        return Err(
+            "ForallProof projection publication must use exact top-level store outputs".into(),
+        );
+    }
+
+    let source_fact: Fact = source_forall.clone().into();
+    let source_parameters = source_forall
+        .params_def_with_type
+        .collect_param_bindings_with_types();
+    let source_conclusion_keys = source_forall
+        .then_facts
+        .iter()
+        .map(|fact| fact.clone().to_fact().to_string())
+        .collect::<Vec<_>>();
+
+    if let Some(stored_fact_id) = result.store.fact_id {
+        let matching_outputs = result
+            .store
+            .infers
+            .store_fact_outputs
+            .iter()
+            .filter(|output| {
+                output.fact_id == Some(stored_fact_id)
+                    && output.itself_and_why_itself_is_stored.0.to_string()
+                        == source_fact.to_string()
+            })
+            .count();
+        if matching_outputs != 1 || result.store.infers.store_fact_outputs.len() != 1 {
+            return Err(
+                "stored ForallProof did not retain exactly one matching source store output".into(),
+            );
+        }
+        return Ok(vec![DirectForallResultPublicationSelection {
+            forall_fact: source_forall.clone(),
+            stored_fact_id: Some(stored_fact_id),
+            source_parameter_indices: (0..source_parameters.len()).collect(),
+            source_conclusion_indices: (0..source_forall.then_facts.len()).collect(),
+        }]);
+    }
+
+    let mut saw_transient_source = false;
+    let mut selections = Vec::new();
+    let mut selected_source_conclusions = HashSet::new();
+    for output in &result.store.infers.store_fact_outputs {
+        let proposition = &output.itself_and_why_itself_is_stored.0;
+        if proposition.to_string() == source_fact.to_string() {
+            if output.fact_id.is_some() || saw_transient_source {
+                return Err(
+                    "unstored ForallProof retained an invalid or duplicate source store output"
+                        .into(),
+                );
+            }
+            saw_transient_source = true;
+            continue;
+        }
+
+        let Fact::ForallFact(projected) = proposition else {
+            return Err(format!(
+                "ForallProof store published a non-forall side effect `{proposition}`"
+            ));
+        };
+        let stored_fact_id = output.fact_id.ok_or_else(|| {
+            "stored ForallProof projection reached the compiler without a FactId".to_string()
+        })?;
+        if projected
+            .dom_facts
+            .iter()
+            .map(ToString::to_string)
+            .ne(source_forall.dom_facts.iter().map(ToString::to_string))
+        {
+            return Err("stored ForallProof projection changed its domain premises".into());
+        }
+
+        let projected_parameters = projected
+            .params_def_with_type
+            .collect_param_bindings_with_types();
+        let mut source_parameter_indices = Vec::with_capacity(projected_parameters.len());
+        let mut last_source_parameter_index = None;
+        for (projected_binding, projected_type) in projected_parameters {
+            let Some((source_index, (_, source_type))) = source_parameters
+                .iter()
+                .enumerate()
+                .find(|(_, (source_binding, _))| source_binding.id() == projected_binding.id())
+            else {
+                return Err("stored ForallProof projection introduced a new binder".into());
+            };
+            if last_source_parameter_index.is_some_and(|last| source_index <= last)
+                || !direct_forall_parameter_types_match_for_projection(source_type, &projected_type)
+            {
+                return Err(
+                    "stored ForallProof projection changed binder order or parameter type".into(),
+                );
+            }
+            source_parameter_indices.push(source_index);
+            last_source_parameter_index = Some(source_index);
+        }
+
+        if projected.then_facts.is_empty() {
+            return Err("stored ForallProof projection has no conclusion".into());
+        }
+        let mut source_conclusion_indices = Vec::with_capacity(projected.then_facts.len());
+        let mut used_inside_projection = HashSet::new();
+        for projected_conclusion in &projected.then_facts {
+            let projected_key = projected_conclusion.clone().to_fact().to_string();
+            let Some(source_index) = source_conclusion_keys
+                .iter()
+                .enumerate()
+                .find(|(index, source_key)| {
+                    !used_inside_projection.contains(index) && **source_key == projected_key
+                })
+                .map(|(index, _)| index)
+            else {
+                return Err("stored ForallProof projection introduced a new conclusion".into());
+            };
+            if !selected_source_conclusions.insert(source_index) {
+                return Err("stored ForallProof projections duplicated a conclusion".into());
+            }
+            used_inside_projection.insert(source_index);
+            source_conclusion_indices.push(source_index);
+        }
+        selections.push(DirectForallResultPublicationSelection {
+            forall_fact: projected.clone(),
+            stored_fact_id: Some(stored_fact_id),
+            source_parameter_indices,
+            source_conclusion_indices,
+        });
+    }
+
+    if !saw_transient_source {
+        return Err("unstored ForallProof lost its transient source store output".into());
+    }
+    if selections.is_empty() {
+        if result.store.infers.store_fact_outputs.len() != 1 {
+            return Err("unstored ForallProof retained unexplained store outputs".into());
+        }
+        return Ok(vec![DirectForallResultPublicationSelection {
+            forall_fact: source_forall.clone(),
+            stored_fact_id: None,
+            source_parameter_indices: (0..source_parameters.len()).collect(),
+            source_conclusion_indices: (0..source_forall.then_facts.len()).collect(),
+        }]);
+    }
+    if selected_source_conclusions.len() != source_forall.then_facts.len() {
+        return Err(
+            "stored ForallProof projections did not publish every source conclusion".into(),
+        );
+    }
+    selections.sort_by_key(|selection| {
+        selection
+            .source_conclusion_indices
+            .first()
+            .copied()
+            .unwrap_or(usize::MAX)
+    });
+    Ok(selections)
+}
+
+fn direct_forall_parameter_types_match_for_projection(
+    source: &ParamType,
+    projected: &ParamType,
+) -> bool {
+    match (source, projected) {
+        (ParamType::Set(_), ParamType::Set(_))
+        | (ParamType::NonemptySet(_), ParamType::NonemptySet(_))
+        | (ParamType::FiniteSet(_), ParamType::FiniteSet(_)) => true,
+        (ParamType::Obj(source), ParamType::Obj(projected)) => {
+            obj_equality_key(source) == obj_equality_key(projected)
+        }
+        _ => false,
+    }
+}
+
 fn validate_success_obj_well_defined_result(
     result: &SuccessVerifyObjWellDefinedResult,
     expected_object: &Obj,
@@ -13550,6 +16520,554 @@ fn validate_success_obj_well_defined_result(
         }
         SuccessVerifyObjWellDefinedResult::RecursiveReference(_) => {
             return Err("object WD result retained an unresolved recursive reference".into());
+        }
+    }
+    Ok(())
+}
+
+fn collect_well_definedness_to_lean_context_from_fact_result(
+    result: &SuccessVerifyFactWellDefinedProofResult,
+    context: &mut StmtResultWellDefinednessToLeanCompilationContext,
+) -> Result<(), String> {
+    match result {
+        SuccessVerifyFactWellDefinedProofResult::AtomicFact(result) => {
+            for argument in &result.arguments {
+                let mut visited = HashSet::new();
+                collect_well_definedness_to_lean_context_from_object_result(
+                    &argument.source_object,
+                    &argument.result,
+                    context,
+                    &mut visited,
+                )?;
+            }
+        }
+        SuccessVerifyFactWellDefinedProofResult::AndFact(result) => {
+            for child in &result.conjuncts {
+                collect_well_definedness_to_lean_context_from_fact_result(child, context)?;
+            }
+        }
+        SuccessVerifyFactWellDefinedProofResult::ChainFact(result) => {
+            for child in &result.comparisons {
+                collect_well_definedness_to_lean_context_from_fact_result(child, context)?;
+            }
+        }
+        SuccessVerifyFactWellDefinedProofResult::OrFact(result) => {
+            for child in &result.branches {
+                collect_well_definedness_to_lean_context_from_fact_result(child, context)?;
+            }
+        }
+        SuccessVerifyFactWellDefinedProofResult::ExistFact(result) => {
+            collect_well_definedness_to_lean_context_from_fact_binder(&result.binder, context)?;
+            for child in &result.body {
+                collect_well_definedness_to_lean_context_from_fact_result(
+                    &child.well_definedness,
+                    context,
+                )?;
+            }
+        }
+        SuccessVerifyFactWellDefinedProofResult::ForallFact(result) => {
+            collect_well_definedness_to_lean_context_from_fact_binder(&result.binder, context)?;
+            for child in result.premises.iter().chain(result.conclusions.iter()) {
+                collect_well_definedness_to_lean_context_from_fact_result(
+                    &child.well_definedness,
+                    context,
+                )?;
+            }
+        }
+        SuccessVerifyFactWellDefinedProofResult::ForallFactWithIff(result) => {
+            collect_well_definedness_to_lean_context_from_fact_result(&result.forward, context)?;
+            collect_well_definedness_to_lean_context_from_fact_result(&result.reverse, context)?;
+        }
+        SuccessVerifyFactWellDefinedProofResult::NotForallFact(result) => {
+            collect_well_definedness_to_lean_context_from_fact_result(&result.inner, context)?;
+        }
+    }
+    Ok(())
+}
+
+fn success_verify_fact_result_is_deferred_plain_citation(
+    verification: &SuccessVerifyFactResult,
+) -> bool {
+    match verification.proof() {
+        SuccessFactProofResult::Fact(citation) => {
+            citation.source_fact_id.is_some()
+                && citation.equality_transport.is_none()
+                && citation.fact_transformation.is_none()
+                && citation.checked_function_definition_reduction.is_none()
+                && citation.definition_reduction.is_none()
+                && matches!(citation.cite_what.as_ref(), Stmt::Fact(_))
+        }
+        SuccessFactProofResult::Reuse(reuse) => {
+            success_verify_fact_result_is_deferred_plain_citation(reuse.source.as_ref())
+        }
+        _ => false,
+    }
+}
+
+fn render_deferred_plain_fact_result_citation(
+    verification: &SuccessVerifyFactResult,
+    context: &StmtResultToLeanCompilerEnvironmentStack,
+) -> Result<String, String> {
+    match verification.proof() {
+        SuccessFactProofResult::Fact(citation)
+            if success_verify_fact_result_is_deferred_plain_citation(verification) =>
+        {
+            let Stmt::Fact(source) = citation.cite_what.as_ref() else {
+                unreachable!("plain citation shape checked above")
+            };
+            let source: Fact = source.clone();
+            if source.to_string() != verification.fact().to_string() {
+                return Err("deferred WD citation changed its target proposition".into());
+            }
+            resolve_fact_citation(
+                &citation
+                    .source_fact_id
+                    .expect("plain citation shape checked above"),
+                &source,
+                context,
+            )
+        }
+        SuccessFactProofResult::Reuse(reuse) => {
+            render_deferred_plain_fact_result_citation(reuse.source.as_ref(), context)
+        }
+        _ => Err("WD requirement is not a deferred plain FactId citation".into()),
+    }
+}
+
+fn render_function_application_requirement_proof(
+    requirement: &StmtResultFunctionApplicationRequirementToLeanCompilationContext,
+    context: &StmtResultToLeanCompilerEnvironmentStack,
+) -> Result<String, String> {
+    match &requirement.proof_expression {
+        Some(proof_expression) => Ok(proof_expression.clone()),
+        None => match render_deferred_plain_fact_result_citation(
+            requirement.verification.as_ref(),
+            context,
+        ) {
+            Ok(proof_expression) => Ok(proof_expression),
+            Err(_) => {
+                // This is a lexical recursive read of the canonical Result,
+                // not a second lowering IR. No top-level declarations may be
+                // created while constructing a local requirement proof.
+                let mut nested_compiler = StmtResultToLeanCompiler::new("nested WD Result");
+                nested_compiler.environment_stack = context.clone();
+                let proof_expression = nested_compiler
+                    .construct_lean_proof_from_shared_verify_fact_result(
+                        requirement.verification.as_ref(),
+                    )?
+                    .ok_or_else(|| {
+                        "nested WD requirement Result has no direct Lean proof constructor"
+                            .to_string()
+                    })?;
+                if !nested_compiler.declarations.is_empty() {
+                    return Err(
+                        "nested WD requirement attempted to emit a top-level Lean declaration"
+                            .into(),
+                    );
+                }
+                Ok(proof_expression)
+            }
+        },
+    }
+}
+
+fn collect_well_definedness_to_lean_context_from_fact_binder(
+    binder: &SuccessVerifyFactBinderResult,
+    context: &mut StmtResultWellDefinednessToLeanCompilationContext,
+) -> Result<(), String> {
+    for group in &binder.parameter_groups {
+        if let Some(carrier) = &group.carrier {
+            let mut visited = HashSet::new();
+            collect_well_definedness_to_lean_context_from_object_result(
+                &carrier.source_object,
+                &carrier.result,
+                context,
+                &mut visited,
+            )?;
+        }
+        for premise in &group.parameters {
+            collect_well_definedness_parameter_fact_alias(premise, context)?;
+            if let Some(recursive) = premise.well_definedness.recursive.as_deref() {
+                collect_well_definedness_to_lean_context_from_fact_result(recursive, context)?;
+            }
+        }
+    }
+    Ok(())
+}
+
+fn collect_well_definedness_parameter_fact_alias(
+    premise: &SuccessVerifyBinderPremiseResult,
+    context: &mut StmtResultWellDefinednessToLeanCompilationContext,
+) -> Result<(), String> {
+    let Some(symbol_id) = premise.symbol_id else {
+        return Ok(());
+    };
+    let fact_id = fact_id_for_well_definedness_binder_premise(premise)?;
+    if !context.parameter_fact_aliases.iter().any(|alias| {
+        alias.symbol_id == symbol_id
+            && alias.fact_id == fact_id
+            && alias.proposition.to_string() == premise.proposition.to_string()
+    }) {
+        context
+            .parameter_fact_aliases
+            .push(StmtResultWellDefinednessParameterFactAlias {
+                symbol_id,
+                fact_id,
+                proposition: premise.proposition.clone(),
+            });
+    }
+    Ok(())
+}
+
+fn fact_id_for_well_definedness_binder_premise(
+    premise: &SuccessVerifyBinderPremiseResult,
+) -> Result<FactId, String> {
+    premise
+        .infers
+        .store_fact_outputs
+        .iter()
+        .find(|output| {
+            output.itself_and_why_itself_is_stored.0.to_string() == premise.proposition.to_string()
+        })
+        .and_then(|output| output.fact_id)
+        .ok_or_else(|| {
+            format!(
+                "binder premise `{}` has no frozen ordinary FactId",
+                premise.proposition
+            )
+        })
+}
+
+fn direct_object_well_definedness_result(
+    result: &SuccessVerifyObjWellDefinedResult,
+) -> Result<&SuccessVerifyDirectObjWellDefinedResult, String> {
+    match result {
+        SuccessVerifyObjWellDefinedResult::Direct(result) => Ok(result),
+        SuccessVerifyObjWellDefinedResult::Reuse(result) => {
+            direct_object_well_definedness_result(result.source.as_ref())
+        }
+        SuccessVerifyObjWellDefinedResult::RecursiveReference(result) => Err(format!(
+            "object WD recursive reference `{}` has no concrete compiler node",
+            result.object
+        )),
+    }
+}
+
+fn collect_well_definedness_to_lean_context_from_object_result(
+    source_object: &Obj,
+    result: &Rc<SuccessVerifyObjWellDefinedResult>,
+    context: &mut StmtResultWellDefinednessToLeanCompilationContext,
+    visited: &mut HashSet<usize>,
+) -> Result<(), String> {
+    let result_address = Rc::as_ptr(result) as usize;
+    if !visited.insert(result_address) {
+        if matches!(source_object, Obj::FnObj(_)) {
+            collect_function_application_well_definedness_to_lean_context(
+                source_object,
+                direct_object_well_definedness_result(result.as_ref())?,
+                context,
+            )?;
+        }
+        return Ok(());
+    }
+    let direct = direct_object_well_definedness_result(result.as_ref())?;
+    if obj_equality_key(source_object) != obj_equality_key(&direct.object) {
+        return Err(format!(
+            "object WD Result changed `{source_object}` to `{}`",
+            direct.object
+        ));
+    }
+    if matches!(source_object, Obj::FnObj(_)) {
+        collect_function_application_well_definedness_to_lean_context(
+            source_object,
+            direct,
+            context,
+        )?;
+    }
+    for child in &direct.steps.children {
+        collect_well_definedness_to_lean_context_from_object_result(
+            &child.source_object,
+            &child.result,
+            context,
+            visited,
+        )?;
+    }
+    if let Some(binder) = &direct.steps.binder {
+        collect_well_definedness_to_lean_context_from_object_binder(
+            source_object,
+            binder,
+            context,
+            visited,
+        )?;
+    }
+    Ok(())
+}
+
+fn collect_well_definedness_to_lean_context_from_object_child(
+    child: &SuccessVerifyChildObjWellDefinedResult,
+    context: &mut StmtResultWellDefinednessToLeanCompilationContext,
+    visited: &mut HashSet<usize>,
+) -> Result<(), String> {
+    collect_well_definedness_to_lean_context_from_object_result(
+        &child.source_object,
+        &child.result,
+        context,
+        visited,
+    )
+}
+
+fn collect_well_definedness_to_lean_context_from_object_binder(
+    owner_object: &Obj,
+    binder: &SuccessVerifyBinderObjectWellDefinedResult,
+    context: &mut StmtResultWellDefinednessToLeanCompilationContext,
+    visited: &mut HashSet<usize>,
+) -> Result<(), String> {
+    match binder {
+        SuccessVerifyBinderObjectWellDefinedResult::SetBuilder(result) => {
+            collect_well_definedness_to_lean_context_from_object_child(
+                &result.parameter_carrier,
+                context,
+                visited,
+            )?;
+            collect_well_definedness_to_lean_context_from_binder_premises(
+                std::slice::from_ref(&result.parameter),
+                context,
+            )?;
+            for condition in &result.conditions {
+                if let Some(recursive) = condition.well_definedness.recursive.as_deref() {
+                    collect_well_definedness_to_lean_context_from_fact_result(recursive, context)?;
+                }
+            }
+        }
+        SuccessVerifyBinderObjectWellDefinedResult::FunctionSet(result) => {
+            for child in &result.parameter_carriers {
+                collect_well_definedness_to_lean_context_from_object_child(
+                    child, context, visited,
+                )?;
+            }
+            collect_well_definedness_to_lean_context_from_binder_premises(
+                &result.parameters,
+                context,
+            )?;
+            collect_well_definedness_to_lean_context_from_binder_premises(
+                &result.domains,
+                context,
+            )?;
+            collect_well_definedness_to_lean_context_from_object_child(
+                &result.return_carrier,
+                context,
+                visited,
+            )?;
+        }
+        SuccessVerifyBinderObjectWellDefinedResult::AnonymousFunction(result) => {
+            for child in &result.parameter_carriers {
+                collect_well_definedness_to_lean_context_from_object_child(
+                    child, context, visited,
+                )?;
+            }
+            collect_well_definedness_to_lean_context_from_binder_premises(
+                &result.parameters,
+                context,
+            )?;
+            collect_well_definedness_to_lean_context_from_binder_premises(
+                &result.domains,
+                context,
+            )?;
+            collect_well_definedness_to_lean_context_from_object_child(
+                &result.return_carrier,
+                context,
+                visited,
+            )?;
+            collect_well_definedness_to_lean_context_from_object_child(
+                &result.body,
+                context,
+                visited,
+            )?;
+            collect_anonymous_function_well_definedness_to_lean_context(
+                owner_object,
+                result,
+                context,
+            )?;
+        }
+        // These constructor-specific binders already publish every object
+        // dependency through `steps.children`; they do not introduce
+        // parameter aliases consumed by the v1 Lean surface.
+        SuccessVerifyBinderObjectWellDefinedResult::Iteration(_)
+        | SuccessVerifyBinderObjectWellDefinedResult::FiniteAggregate(_)
+        | SuccessVerifyBinderObjectWellDefinedResult::Reduce(_)
+        | SuccessVerifyBinderObjectWellDefinedResult::Structure(_) => {}
+    }
+    Ok(())
+}
+
+fn collect_well_definedness_to_lean_context_from_binder_premises(
+    premises: &[SuccessVerifyBinderPremiseResult],
+    context: &mut StmtResultWellDefinednessToLeanCompilationContext,
+) -> Result<(), String> {
+    for premise in premises {
+        collect_well_definedness_parameter_fact_alias(premise, context)?;
+        if let Some(recursive) = premise.well_definedness.recursive.as_deref() {
+            collect_well_definedness_to_lean_context_from_fact_result(recursive, context)?;
+        }
+    }
+    Ok(())
+}
+
+fn well_definedness_binder_premise_to_lean_compilation_context(
+    premise: &SuccessVerifyBinderPremiseResult,
+) -> Result<StmtResultWellDefinednessBinderPremiseToLeanCompilationContext, String> {
+    Ok(
+        StmtResultWellDefinednessBinderPremiseToLeanCompilationContext {
+            role: premise.role,
+            symbol_id: premise.symbol_id,
+            fact_id: fact_id_for_well_definedness_binder_premise(premise)?,
+            proposition: premise.proposition.clone(),
+        },
+    )
+}
+
+fn collect_anonymous_function_well_definedness_to_lean_context(
+    owner_object: &Obj,
+    result: &SuccessVerifyAnonymousFunctionWellDefinedResult,
+    context: &mut StmtResultWellDefinednessToLeanCompilationContext,
+) -> Result<(), String> {
+    let Obj::AnonymousFn(source_function) = owner_object else {
+        return Err("anonymous-function WD binder changed its owner object".into());
+    };
+    let occurrence_id = source_function.source_occurrence_id.ok_or_else(|| {
+        "anonymous function WD Result has no parser-owned occurrence id".to_string()
+    })?;
+    let parameters = result
+        .parameters
+        .iter()
+        .map(well_definedness_binder_premise_to_lean_compilation_context)
+        .collect::<Result<Vec<_>, _>>()?;
+    let domains = result
+        .domains
+        .iter()
+        .map(well_definedness_binder_premise_to_lean_compilation_context)
+        .collect::<Result<Vec<_>, _>>()?;
+    let mut assumption_infers = SuccessInferResult::new();
+    for premise in result.parameters.iter().chain(result.domains.iter()) {
+        assumption_infers.new_infer_result_inside(premise.infers.clone());
+    }
+    context.anonymous_functions.insert(
+        occurrence_id,
+        StmtResultAnonymousFunctionWellDefinednessToLeanCompilationContext {
+            source_function: owner_object.clone(),
+            parameters,
+            domains,
+            assumption_infers,
+            inferred_proof_lines: Vec::new(),
+            inferred_fact_bindings: Vec::new(),
+            closure: StmtResultAnonymousFunctionClosureToLeanCompilationContext {
+                role: result.body_membership.role,
+                expected_proposition: result.body_membership.expected_proposition.clone(),
+                verification: result.body_membership.verification.clone(),
+                proof_expression: None,
+            },
+        },
+    );
+    Ok(())
+}
+
+fn collect_function_application_well_definedness_to_lean_context(
+    source_object: &Obj,
+    root: &SuccessVerifyDirectObjWellDefinedResult,
+    context: &mut StmtResultWellDefinednessToLeanCompilationContext,
+) -> Result<(), String> {
+    let Obj::FnObj(source_application) = source_object else {
+        return Ok(());
+    };
+    let Some(occurrence_id) = source_application.source_occurrence_id else {
+        // Multi-layer WD Results contain synthetic prefix nodes such as
+        // `g(a)` underneath the one parser-owned `g(a)(b)` occurrence. The
+        // outer Result collects every layer from its FunctionPrefix edges;
+        // the synthetic child therefore has no independent context key.
+        return Ok(());
+    };
+    let layer_count = source_application.body.len();
+    if layer_count == 0 {
+        return Err("function application retained no argument layers".into());
+    }
+    let mut layer_results = vec![None; layer_count];
+    let mut current = root;
+    for layer_index in (0..layer_count).rev() {
+        let source_prefix: Obj = source_application.prefix_obj(layer_index + 1);
+        if obj_equality_key(&current.object) != obj_equality_key(&source_prefix) {
+            return Err(format!(
+                "function application layer {layer_index} changed its Result-owned source prefix"
+            ));
+        }
+        layer_results[layer_index] = Some(current);
+        if layer_index == 0 {
+            continue;
+        }
+        let prefix_children = current
+            .steps
+            .children
+            .iter()
+            .filter(|child| {
+                child.role
+                    == (WellDefinedObjChildRole::FunctionPrefix {
+                        through_layer_index: layer_index - 1,
+                    })
+            })
+            .collect::<Vec<_>>();
+        let [prefix_child] = prefix_children.as_slice() else {
+            return Err(format!(
+                "function application layer {layer_index} requires one exact FunctionPrefix child Result"
+            ));
+        };
+        current = direct_object_well_definedness_result(prefix_child.result.as_ref())?;
+    }
+    let first_layer = layer_results[0].expect("every application layer was retained");
+    let anonymous_function_head = first_layer
+        .steps
+        .children
+        .iter()
+        .find(|child| child.role == WellDefinedObjChildRole::FunctionHead)
+        .map(|child| child.source_object.clone());
+    let layers = layer_results
+        .into_iter()
+        .map(|layer| {
+            let layer = layer.expect("every application layer was retained");
+            StmtResultFunctionApplicationLayerWellDefinednessToLeanCompilationContext {
+                source_prefix: layer.object.clone(),
+                function_contracts: layer.cache_key.function_contracts.clone(),
+                intrinsic_result_set: layer.intrinsic_result_set.clone(),
+                requirements: layer
+                    .steps
+                    .target_requirements
+                    .iter()
+                    .map(|requirement| {
+                        StmtResultFunctionApplicationRequirementToLeanCompilationContext {
+                            role: requirement.role,
+                            expected_proposition: requirement.expected_proposition.clone(),
+                            verification: requirement.verification.clone(),
+                            proof_expression: None,
+                        }
+                    })
+                    .collect(),
+            }
+        })
+        .collect();
+    let application_context =
+        StmtResultFunctionApplicationWellDefinednessToLeanCompilationContext {
+            source_application: source_object.clone(),
+            function_contracts: root.cache_key.function_contracts.clone(),
+            anonymous_function_head,
+            layers,
+        };
+    if let Some(previous) = context
+        .function_applications
+        .insert(occurrence_id, application_context)
+    {
+        if obj_equality_key(&previous.source_application) != obj_equality_key(source_object) {
+            return Err(format!(
+                "function application occurrence {} was reused for another source object",
+                occurrence_id.value()
+            ));
         }
     }
     Ok(())
@@ -13935,444 +17453,6 @@ fn compare_success_evaluate_obj_results(
     }
 }
 
-fn construct_lean_declarations_for_compatibility_statement_result(
-    statement: &LitexToLeanStatementIr,
-    declarations: &mut Vec<String>,
-    fact_index: &mut usize,
-    sketch_namespace_index: &mut usize,
-    context: &mut StmtResultToLeanCompilerEnvironmentStack,
-) -> Result<(), String> {
-    match statement {
-        LitexToLeanStatementIr::ProofBlock(LitexToLeanProofBlockStmtIr::SketchStmt(sketch)) => {
-            crate::litex_to_lean_ir::validate_litex_to_lean_well_definedness_certificate(
-                &sketch.block.well_definedness,
-            )?;
-            let mut nested_declarations = Vec::new();
-            let mut nested_fact_index = 0;
-            let mut nested_sketch_namespace_index = 0;
-            let mut nested_context = context.clone();
-            for step in &sketch.block.steps {
-                construct_lean_declarations_for_compatibility_statement_result(
-                    step,
-                    &mut nested_declarations,
-                    &mut nested_fact_index,
-                    &mut nested_sketch_namespace_index,
-                    &mut nested_context,
-                )?;
-            }
-            *sketch_namespace_index += 1;
-            let namespace = format!("__Sketch{:02}", sketch_namespace_index);
-            declarations.push(format!(
-                "namespace {namespace}\n\n{}\n\nend {namespace}",
-                nested_declarations.join("\n\n")
-            ));
-        }
-        LitexToLeanStatementIr::DefObjStmt(LitexToLeanDefObjStmtIr::HaveObjEqualStmt(
-            definition,
-        )) => construct_lean_declarations_for_compatibility_have_object_equal_result(
-            definition,
-            declarations,
-            fact_index,
-            context,
-        )?,
-        LitexToLeanStatementIr::DefObjStmt(LitexToLeanDefObjStmtIr::LetObjStmt(definition)) => {
-            construct_lean_declarations_for_compatibility_let_object_result(
-                definition,
-                declarations,
-                fact_index,
-                context,
-            )?;
-        }
-        LitexToLeanStatementIr::DefObjStmt(LitexToLeanDefObjStmtIr::HaveObjInNonemptySetStmt(
-            statement,
-        )) => construct_lean_declarations_for_compatibility_object_choices_result(
-            statement,
-            declarations,
-            fact_index,
-            context,
-        )?,
-        LitexToLeanStatementIr::DefObjStmt(LitexToLeanDefObjStmtIr::HaveFnEqualStmt(
-            definition,
-        )) => construct_lean_declarations_for_compatibility_named_function_result(
-            definition,
-            declarations,
-            fact_index,
-            context,
-        )?,
-        LitexToLeanStatementIr::DefObjStmt(LitexToLeanDefObjStmtIr::HaveTupleStmt(definition)) => {
-            construct_lean_declarations_for_compatibility_indexed_tuple_result(
-                definition,
-                declarations,
-                fact_index,
-                context,
-            )?
-        }
-        LitexToLeanStatementIr::DefPredicateStmt(LitexToLeanDefPredicateStmtIr::DefPropStmt(_)) => {
-            return Err(
-                "concrete `prop` must be compiled directly from SuccessDefPropStmtResult".into(),
-            );
-        }
-        LitexToLeanStatementIr::DefPredicateStmt(
-            LitexToLeanDefPredicateStmtIr::DefAbstractPropStmt(definition),
-        ) => construct_lean_declaration_for_abstract_predicate_definition(
-            definition,
-            declarations,
-            context,
-        )?,
-        LitexToLeanStatementIr::UnsafeStmt(LitexToLeanUnsafeStmtIr::TrustStmt(statement)) => {
-            construct_lean_declarations_for_compatibility_trust_result(
-                statement,
-                declarations,
-                fact_index,
-                context,
-            )?;
-        }
-        LitexToLeanStatementIr::DefThmStmt(theorem) => {
-            crate::litex_to_lean_ir::validate_litex_to_lean_well_definedness_certificate(
-                &theorem.well_definedness,
-            )?;
-            let theorem_name = lean_identifier(&theorem.name);
-            let proof_steps = theorem
-                .proof_steps
-                .iter()
-                .map(|step| step.statement.clone())
-                .collect::<Vec<_>>();
-            declarations.push(construct_lean_declaration_for_forall_fact(
-                &theorem.theorem,
-                &theorem.well_definedness,
-                *fact_index,
-                &format!("theorem {theorem_name}"),
-                &proof_steps,
-                context,
-            )?);
-            if let Some(fact_id) = theorem.theorem.stored_fact_id() {
-                context.fact_names.insert(fact_id, theorem_name);
-                context
-                    .fact_propositions
-                    .insert(fact_id, theorem.theorem.proposition.clone());
-            }
-            *fact_index += 1;
-            construct_lean_declarations_for_stored_fact_effects(
-                theorem
-                    .stored_projections
-                    .iter()
-                    .chain(theorem.inferred_facts.iter())
-                    .collect(),
-                &theorem.well_definedness,
-                declarations,
-                fact_index,
-                context,
-            )?;
-        }
-        LitexToLeanStatementIr::ProofBlock(LitexToLeanProofBlockStmtIr::ClaimStmt(claim)) => {
-            construct_lean_declaration_for_compatibility_claim_result(
-                claim,
-                declarations,
-                fact_index,
-                context,
-            )?;
-        }
-        LitexToLeanStatementIr::ProofBlock(LitexToLeanProofBlockStmtIr::ExampleStmt(example)) => {
-            construct_lean_declaration_for_compatibility_example_result(
-                example,
-                declarations,
-                fact_index,
-                context,
-            )?;
-        }
-        LitexToLeanStatementIr::Fact(fact) => {
-            construct_lean_declarations_for_compatibility_fact_result(
-                fact,
-                declarations,
-                fact_index,
-                context,
-            )?;
-        }
-        LitexToLeanStatementIr::By(LitexToLeanByStmtIr::ByCasesStmt(statement)) => {
-            construct_lean_declarations_for_stored_fact_effects(
-                statement
-                    .facts
-                    .iter()
-                    .chain(statement.inferred_facts.iter())
-                    .collect::<Vec<_>>(),
-                &statement.well_definedness,
-                declarations,
-                fact_index,
-                context,
-            )?;
-        }
-        LitexToLeanStatementIr::By(LitexToLeanByStmtIr::ByContraStmt(statement)) => {
-            construct_lean_declarations_for_stored_fact_effects(
-                statement
-                    .facts
-                    .iter()
-                    .chain(statement.inferred_facts.iter())
-                    .collect::<Vec<_>>(),
-                &statement.well_definedness,
-                declarations,
-                fact_index,
-                context,
-            )?;
-        }
-        LitexToLeanStatementIr::By(LitexToLeanByStmtIr::ByDefStmt(statement)) => {
-            construct_lean_declarations_for_stored_fact_effects(
-                statement
-                    .facts
-                    .iter()
-                    .chain(statement.inferred_facts.iter())
-                    .collect::<Vec<_>>(),
-                &statement.well_definedness,
-                declarations,
-                fact_index,
-                context,
-            )?;
-        }
-        LitexToLeanStatementIr::Witness(LitexToLeanWitnessStmtIr::WitnessExistFact(statement)) => {
-            construct_lean_declarations_for_stored_fact_effects(
-                statement
-                    .facts
-                    .iter()
-                    .chain(statement.inferred_facts.iter())
-                    .collect::<Vec<_>>(),
-                &statement.well_definedness,
-                declarations,
-                fact_index,
-                context,
-            )?;
-        }
-        LitexToLeanStatementIr::DefObjStmt(LitexToLeanDefObjStmtIr::ObtainObjFromExistFact(
-            statement,
-        )) => {
-            construct_lean_declarations_for_existential_elimination(
-                &statement.source,
-                &statement.witnesses,
-                &statement.projections,
-                declarations,
-                fact_index,
-                context,
-            )?;
-        }
-        LitexToLeanStatementIr::DefObjStmt(LitexToLeanDefObjStmtIr::ObtainObjFromAtomicFact(
-            statement,
-        )) => {
-            construct_lean_declarations_for_existential_elimination(
-                &statement.source,
-                &statement.witnesses,
-                &statement.projections,
-                declarations,
-                fact_index,
-                context,
-            )?;
-        }
-        LitexToLeanStatementIr::DefObjStmt(LitexToLeanDefObjStmtIr::HaveObjByExistFactsStmt(
-            statement,
-        )) => {
-            construct_lean_declarations_for_existential_elimination(
-                &statement.source,
-                &statement.witnesses,
-                &statement.projections,
-                declarations,
-                fact_index,
-                context,
-            )?;
-        }
-        other => {
-            return Err(format!(
-                "unsupported compiler statement outside the current fact/set slice: {other:?}"
-            ));
-        }
-    }
-    Ok(())
-}
-
-fn construct_lean_declarations_for_compatibility_fact_result(
-    fact: &LitexToLeanFactStatementIr,
-    declarations: &mut Vec<String>,
-    fact_index: &mut usize,
-    context: &mut StmtResultToLeanCompilerEnvironmentStack,
-) -> Result<(), String> {
-    let mut facts = Vec::new();
-    if fact.stored_projections.is_empty() || fact.source.stored_fact_id().is_some() {
-        facts.push(&fact.source);
-    }
-    let mut projections = fact.stored_projections.iter().collect::<Vec<_>>();
-    if let Fact::ForallFact(source_forall) = &fact.source.proposition {
-        projections.sort_by_key(|projection| {
-            let Fact::ForallFact(projected) = &projection.proposition else {
-                return usize::MAX;
-            };
-            let Some(projected_conclusion) = projected.then_facts.first() else {
-                return usize::MAX;
-            };
-            source_forall
-                .then_facts
-                .iter()
-                .position(|source_conclusion| {
-                    source_conclusion.clone().to_fact().to_string()
-                        == projected_conclusion.clone().to_fact().to_string()
-                })
-                .unwrap_or(usize::MAX)
-        });
-    }
-    facts.extend(projections);
-    facts.extend(fact.inferred_facts.iter());
-    construct_lean_declarations_for_stored_fact_effects(
-        facts,
-        &fact.well_definedness,
-        declarations,
-        fact_index,
-        context,
-    )
-}
-
-fn construct_lean_declarations_for_stored_fact_effects(
-    facts: Vec<&LitexToLeanFactIr>,
-    well_definedness: &LitexToLeanWellDefinednessCertificateIr,
-    declarations: &mut Vec<String>,
-    fact_index: &mut usize,
-    context: &mut StmtResultToLeanCompilerEnvironmentStack,
-) -> Result<(), String> {
-    crate::litex_to_lean_ir::validate_litex_to_lean_well_definedness_certificate(well_definedness)?;
-    let mut seen_fact_ids = HashMap::new();
-    for fact in facts {
-        if let Some(fact_id) = fact.stored_fact_id() {
-            if let Some(previous) = seen_fact_ids.insert(fact_id, fact.proposition.to_string()) {
-                if previous != fact.proposition.to_string() {
-                    return Err(format!(
-                        "FactId `{fact_id}` changed proposition inside one statement emission"
-                    ));
-                }
-                continue;
-            }
-            if let Some(previous) = context.fact_propositions.get(&fact_id) {
-                let same = previous.to_string() == fact.proposition.to_string()
-                    || match (previous, &fact.proposition) {
-                        (Fact::ForallFact(previous), Fact::ForallFact(current)) => {
-                            render_forall_fact_type(previous, context)?
-                                == render_forall_fact_type(current, context)?
-                        }
-                        _ => false,
-                    };
-                if !same {
-                    return Err(format!(
-                        "FactId `{fact_id}` was reused for `{previous}` and `{}`",
-                        fact.proposition
-                    ));
-                }
-            }
-        }
-        let theorem_name = format!("__fact{fact_index}");
-        declarations.push(construct_lean_declaration_for_stored_fact(
-            fact,
-            well_definedness,
-            *fact_index,
-            context,
-        )?);
-        if let Some(fact_id) = fact.stored_fact_id() {
-            context.fact_names.insert(fact_id, theorem_name.clone());
-            context
-                .fact_propositions
-                .insert(fact_id, fact.proposition.clone());
-        }
-        register_forall_conclusion_bindings(fact, &theorem_name, context)?;
-        *fact_index += 1;
-    }
-    Ok(())
-}
-
-fn register_forall_conclusion_bindings(
-    fact: &LitexToLeanFactIr,
-    theorem_name: &str,
-    context: &mut StmtResultToLeanCompilerEnvironmentStack,
-) -> Result<(), String> {
-    let (
-        Fact::ForallFact(forall),
-        LitexToLeanFactProofIr::ForallIntroduction {
-            parameter_premises,
-            premises,
-            conclusions,
-            ..
-        },
-    ) = (&fact.proposition, &fact.proof)
-    else {
-        return Ok(());
-    };
-    for (conclusion_index, conclusion) in conclusions.iter().enumerate() {
-        let Some(fact_id) = conclusion.stored_fact_id() else {
-            continue;
-        };
-        if let Some(previous) = context.fact_propositions.get(&fact_id) {
-            if previous.to_string() != conclusion.proposition.to_string() {
-                return Err(format!(
-                    "forall conclusion FactId `{fact_id}` changed from `{previous}` to `{}`",
-                    conclusion.proposition
-                ));
-            }
-        }
-        context
-            .fact_propositions
-            .insert(fact_id, conclusion.proposition.clone());
-        context.forall_conclusion_bindings.insert(
-            fact_id,
-            ForallConclusionBinding {
-                theorem_name: theorem_name.to_string(),
-                forall: forall.clone(),
-                parameter_premises: parameter_premises.clone(),
-                premises: premises.clone(),
-                conclusion_index,
-                conclusion_count: conclusions.len(),
-            },
-        );
-    }
-    Ok(())
-}
-
-fn construct_lean_declarations_for_compatibility_let_object_result(
-    definition: &LitexToLeanLetObjStmtIr,
-    declarations: &mut Vec<String>,
-    fact_index: &mut usize,
-    context: &mut StmtResultToLeanCompilerEnvironmentStack,
-) -> Result<(), String> {
-    crate::litex_to_lean_ir::validate_litex_to_lean_well_definedness_certificate(
-        &definition.well_definedness,
-    )?;
-    let name = lean_identifier(&definition.name);
-    let value = render_native_object_ir(&definition.value, context)?;
-    if context
-        .symbol_names
-        .insert(definition.symbol_id, name.clone())
-        .is_some()
-    {
-        return Err(format!(
-            "duplicate compiler symbol identity for `{}`",
-            definition.name
-        ));
-    }
-    declarations.push(format!("noncomputable def {name} := {value}"));
-    construct_lean_declarations_for_stored_fact_effects(
-        std::iter::once(&definition.defining_equality)
-            .chain(definition.inferred_facts.iter())
-            .collect(),
-        &definition.well_definedness,
-        declarations,
-        fact_index,
-        context,
-    )
-}
-
-fn construct_lean_declaration_for_abstract_predicate_definition(
-    definition: &LitexToLeanDefAbstractPropStmtIr,
-    declarations: &mut Vec<String>,
-    context: &mut StmtResultToLeanCompilerEnvironmentStack,
-) -> Result<(), String> {
-    construct_lean_source_parts_for_abstract_predicate_definition(
-        &definition.name,
-        &definition.params,
-        declarations,
-        context,
-    )
-}
-
 fn construct_lean_source_parts_for_abstract_predicate_definition(
     source_name: &str,
     parameter_names: &[String],
@@ -14422,313 +17502,28 @@ fn construct_lean_source_parts_for_abstract_predicate_definition(
     Ok(())
 }
 
-fn construct_lean_declarations_for_compatibility_trust_result(
-    statement: &LitexToLeanTrustStmtIr,
-    declarations: &mut Vec<String>,
-    fact_index: &mut usize,
-    context: &mut StmtResultToLeanCompilerEnvironmentStack,
-) -> Result<(), String> {
-    if statement.facts.is_empty() {
-        return Err("explicit source `trust` retained no propositions".into());
-    }
-    for fact in &statement.facts {
-        if !matches!(fact.proof, LitexToLeanFactProofIr::Trusted) {
-            return Err("explicit source `trust` lost its Trusted IR marker".into());
-        }
-        let fact_id = fact.stored_fact_id().ok_or_else(|| {
-            "explicit source `trust` requires one stored source FactId".to_string()
-        })?;
-        let name = format!("__fact{fact_index}");
-        let proposition = match &fact.proposition {
-            Fact::ForallFact(forall) => render_forall_fact_type(forall, context)?,
-            _ => render_fact(&fact.proposition, context)?,
-        };
-        declarations.push(format!("axiom {name} : {proposition}"));
-        context.fact_names.insert(fact_id, name);
-        context
-            .fact_propositions
-            .insert(fact_id, fact.proposition.clone());
-        *fact_index += 1;
-    }
-    for inferred in &statement.inferred_facts {
-        if matches!(inferred.proof, LitexToLeanFactProofIr::Trusted) {
-            return Err("a trust-inferred fact may not create another Lean axiom".into());
-        }
-        let name = format!("__fact{fact_index}");
-        let proposition = render_fact(&inferred.proposition, context)?;
-        let proof = render_proof(inferred, context)?;
-        declarations.push(format!(
-            "theorem {name} : {proposition} := by\n  exact {proof}"
-        ));
-        if let Some(fact_id) = inferred.stored_fact_id() {
-            context.fact_names.insert(fact_id, name);
-            context
-                .fact_propositions
-                .insert(fact_id, inferred.proposition.clone());
-        }
-        *fact_index += 1;
-    }
-    Ok(())
-}
-
-fn construct_lean_declarations_for_compatibility_object_choices_result(
-    statement: &LitexToLeanHaveObjInNonemptySetOrParamTypeStmtIr,
-    declarations: &mut Vec<String>,
-    fact_index: &mut usize,
-    context: &mut StmtResultToLeanCompilerEnvironmentStack,
-) -> Result<(), String> {
-    if statement.choices.is_empty() {
-        return Err("compiler object choice retained no selected objects".into());
-    }
-    for choice in &statement.choices {
-        let name = lean_identifier(&choice.name);
-        let carrier = render_set_ir(&choice.carrier, context)?;
-        let nonempty_type = render_fact(&choice.nonempty_proof.proposition, context)?;
-        let expected_nonempty = format!("Litex.Set.Nonempty {carrier}");
-        if nonempty_type != expected_nonempty {
-            return Err(format!(
-                "object choice expected `{expected_nonempty}`, retained `{nonempty_type}`"
-            ));
-        }
-        let nonempty_proof = render_proof(&choice.nonempty_proof, context)?;
-        if context
-            .symbol_names
-            .insert(choice.symbol_id, name.clone())
-            .is_some()
-        {
-            return Err(format!(
-                "duplicate compiler symbol identity for `{}`",
-                choice.name
-            ));
-        }
-        declarations.push(format!(
-            "noncomputable def {name} : {carrier}.Carrier :=\n  Classical.choice ({nonempty_proof})"
-        ));
-
-        let proposition = render_fact(&choice.membership.proposition, context)?;
-        let proof = render_proof(&choice.membership, context)?;
-        let theorem_name = format!("__fact{fact_index}");
-        declarations.push(format!(
-            "theorem {theorem_name} : {proposition} := by\n  exact {proof}"
-        ));
-        if let Some(fact_id) = choice.membership.stored_fact_id() {
-            context.fact_names.insert(fact_id, theorem_name);
-            context
-                .fact_propositions
-                .insert(fact_id, choice.membership.proposition.clone());
-        }
-        *fact_index += 1;
-    }
-    Ok(())
-}
-
-fn construct_lean_declarations_for_compatibility_indexed_tuple_result(
-    definition: &LitexToLeanHaveTupleStmtIr,
-    declarations: &mut Vec<String>,
-    fact_index: &mut usize,
-    context: &mut StmtResultToLeanCompilerEnvironmentStack,
-) -> Result<(), String> {
-    let LitexToLeanObjectIr::Number { normalized_value } = &definition.dimension else {
-        return Err("indexed tuple dimension must be a closed natural numeral".into());
-    };
-    let dimension = normalized_value
-        .parse::<usize>()
-        .map_err(|_| "indexed tuple dimension is not a machine natural".to_string())?;
-    if dimension < 2 || definition.dimension_checks.len() != 2 {
-        return Err("indexed tuple requires its positive-dimension and at-least-two checks".into());
-    }
-    if !indexed_tuple_value_is_complex(&definition.value, definition.index_symbol_id) {
-        return Err(
-            "indexed tuple coordinate expression has no reviewed uniform complex carrier".into(),
-        );
-    }
-
-    let name = lean_identifier(&definition.name);
-    let mut body_context = context.clone();
-    body_context
-        .symbol_names
-        .insert(definition.index_symbol_id, "__index".into());
-    body_context.numeric_representations.insert(
-        definition.index_symbol_id,
-        "(((__index.val : ℤ) : ℂ))".into(),
-    );
-    let value = render_numeric_object_ir(&definition.value, &body_context)?;
-
-    for (check_index, check) in definition.dimension_checks.iter().enumerate() {
-        let proposition = render_fact(&check.proposition, context)?;
-        let proof = render_proof(check, context)?;
-        declarations.push(format!(
-            "theorem __{name}_dimension_check{} : {proposition} := by\n  exact {proof}",
-            check_index + 1
-        ));
-    }
-    declarations.push(format!(
-        "noncomputable def {name} : Litex.IndexedTuple {dimension} ℂ :=\n  ⟨fun __index => {value}⟩"
-    ));
-    if context
-        .symbol_names
-        .insert(definition.symbol_id, name.clone())
-        .is_some()
-    {
-        return Err(format!(
-            "duplicate compiler symbol identity for indexed tuple `{}`",
-            definition.name
-        ));
-    }
-    context
-        .indexed_tuple_bindings
-        .insert(definition.symbol_id, IndexedTupleBinding { dimension });
-
-    let mut is_tuple = None;
-    let mut dimension_fact = None;
-    let mut coordinate = None;
-    for fact in &definition.stored_facts {
-        let slot = match fact.role {
-            LitexToLeanStoredTupleFactRoleIr::IsTuple => &mut is_tuple,
-            LitexToLeanStoredTupleFactRoleIr::Dimension => &mut dimension_fact,
-            LitexToLeanStoredTupleFactRoleIr::Coordinate => &mut coordinate,
-        };
-        if slot.replace(fact).is_some() {
-            return Err("indexed tuple retained a duplicate stored-effect role".into());
-        }
-    }
-    let (Some(is_tuple), Some(dimension_fact), Some(coordinate)) =
-        (is_tuple, dimension_fact, coordinate)
-    else {
-        return Err("indexed tuple requires three ordered stored-effect roles".into());
-    };
-
-    let Fact::AtomicFact(AtomicFact::IsTupleFact(tuple_fact)) = &is_tuple.proposition else {
-        return Err("indexed tuple IsTuple effect changed proposition shape".into());
-    };
-    if !object_is_symbol(&tuple_fact.set, definition.symbol_id) {
-        return Err("indexed tuple IsTuple effect changed its declared object".into());
-    }
-    let theorem_name = format!("__fact{fact_index}");
-    declarations.push(format!(
-        "theorem {theorem_name} : {} := by\n  exact ⟨inferInstance⟩",
-        render_fact(&is_tuple.proposition, context)?
-    ));
-    context.fact_names.insert(is_tuple.fact_id, theorem_name);
-    context
-        .fact_propositions
-        .insert(is_tuple.fact_id, is_tuple.proposition.clone());
-    *fact_index += 1;
-
-    let (left, right) = equality_parts(&dimension_fact.proposition)?;
-    let Obj::TupleDim(tuple_dimension) = left else {
-        return Err("indexed tuple dimension effect lost tuple_dim".into());
-    };
-    if !object_is_symbol(tuple_dimension.arg.as_ref(), definition.symbol_id)
-        || LitexToLeanObjectIr::lower(right)? != definition.dimension
-    {
-        return Err("indexed tuple dimension effect changed its object or dimension".into());
-    }
-    let theorem_name = format!("__fact{fact_index}");
-    declarations.push(format!(
-        "theorem {theorem_name} : {} := by\n  exact Litex.Same.ofEq (by rfl)",
-        render_fact(&dimension_fact.proposition, context)?
-    ));
-    context
-        .fact_names
-        .insert(dimension_fact.fact_id, theorem_name);
-    context
-        .fact_propositions
-        .insert(dimension_fact.fact_id, dimension_fact.proposition.clone());
-    *fact_index += 1;
-
-    construct_lean_declaration_for_indexed_tuple_coordinate(
-        definition,
-        coordinate,
-        declarations,
-        fact_index,
-        context,
-    )
-}
-
-fn construct_lean_declaration_for_indexed_tuple_coordinate(
-    definition: &LitexToLeanHaveTupleStmtIr,
-    coordinate: &LitexToLeanStoredTupleFactIr,
-    declarations: &mut Vec<String>,
-    fact_index: &mut usize,
-    context: &mut StmtResultToLeanCompilerEnvironmentStack,
-) -> Result<(), String> {
-    let Fact::ForallFact(forall) = &coordinate.proposition else {
-        return Err("indexed tuple coordinate effect is not a forall".into());
-    };
-    let parameters = forall
-        .params_def_with_type
-        .collect_param_bindings_with_types();
-    let [(binding, param_type)] = parameters.as_slice() else {
-        return Err("indexed tuple coordinate effect changed its one-index binder".into());
-    };
-    if !forall.dom_facts.is_empty() || forall.then_facts.len() != 1 {
-        return Err(
-            "indexed tuple coordinate effect changed its domain or conclusion arity".into(),
-        );
-    }
-    let Obj::ClosedRange(range) = parameter_set(param_type)? else {
-        return Err("indexed tuple coordinate binder is not the checked closed range".into());
-    };
-    let expected_start = LitexToLeanObjectIr::Number {
-        normalized_value: "1".into(),
-    };
-    if LitexToLeanObjectIr::lower(range.start.as_ref())? != expected_start
-        || LitexToLeanObjectIr::lower(range.end.as_ref())? != definition.dimension
-    {
-        return Err("indexed tuple coordinate range changed its one-based dimension".into());
-    }
-
-    let index = "__tuple_index";
-    let membership = "__tuple_index_in";
-    let exact_index = format!("(Litex.In.rep {index} {membership})");
-    let mut nested = context.clone();
-    nested.symbol_names.insert(binding.id(), index.into());
-    nested
-        .exact_tuple_indices
-        .insert(binding.id(), exact_index.clone());
-    nested
-        .numeric_representations
-        .insert(binding.id(), format!("((({exact_index}).val : ℤ) : ℂ)"));
-    let conclusion = forall.then_facts[0].clone().to_fact();
-    let rendered_conclusion = render_fact(&conclusion, &nested)?;
-    let range = format!(
-        "(Litex.closedRange (1 : ℤ) ({} : ℤ))",
-        match &definition.dimension {
-            LitexToLeanObjectIr::Number { normalized_value } => normalized_value,
-            _ => unreachable!("dimension was validated before coordinate emission"),
-        }
-    );
-    let theorem_name = format!("__fact{fact_index}");
-    declarations.push(format!(
-        "theorem {theorem_name} :\n    ∀ {{__tuple_index_carrier : Type}} ({index} : __tuple_index_carrier) ({membership} : Litex.In {index} {range}),\n      {rendered_conclusion} := by\n  intro __tuple_index_carrier {index} {membership}\n  exact Litex.Same.ofEq (by rfl)"
-    ));
-    context.fact_names.insert(coordinate.fact_id, theorem_name);
-    context
-        .fact_propositions
-        .insert(coordinate.fact_id, coordinate.proposition.clone());
-    *fact_index += 1;
-    Ok(())
-}
-
 fn object_is_symbol(object: &Obj, symbol_id: SymbolId) -> bool {
     matches!(object, Obj::Atom(atom) if atom.symbol_ref().is_some_and(|symbol| symbol.id() == symbol_id))
 }
 
-fn indexed_tuple_value_is_complex(object: &LitexToLeanObjectIr, index: SymbolId) -> bool {
+fn indexed_tuple_value_is_complex(
+    object: &LeanTargetObjectRepresentation,
+    index: SymbolId,
+) -> bool {
     match object {
-        LitexToLeanObjectIr::Number { .. } | LitexToLeanObjectIr::Constant(_) => true,
-        LitexToLeanObjectIr::Symbol { symbol_id, .. } => *symbol_id == index,
-        LitexToLeanObjectIr::BuiltinApp {
+        LeanTargetObjectRepresentation::Number { .. }
+        | LeanTargetObjectRepresentation::Constant(_) => true,
+        LeanTargetObjectRepresentation::Symbol { symbol_id, .. } => *symbol_id == index,
+        LeanTargetObjectRepresentation::BuiltinApp {
             operator,
             arguments,
             ..
         } if matches!(
             operator,
-            LitexToLeanBuiltinObjectOperatorIr::Add
-                | LitexToLeanBuiltinObjectOperatorIr::Sub
-                | LitexToLeanBuiltinObjectOperatorIr::Mul
-                | LitexToLeanBuiltinObjectOperatorIr::Div
+            LeanTargetBuiltinObjectOperator::Add
+                | LeanTargetBuiltinObjectOperator::Sub
+                | LeanTargetBuiltinObjectOperator::Mul
+                | LeanTargetBuiltinObjectOperator::Div
         ) =>
         {
             arguments
@@ -14739,874 +17534,24 @@ fn indexed_tuple_value_is_complex(object: &LitexToLeanObjectIr, index: SymbolId)
     }
 }
 
-fn construct_lean_declarations_for_compatibility_named_function_result(
-    definition: &LitexToLeanHaveFnEqualStmtIr,
-    declarations: &mut Vec<String>,
-    fact_index: &mut usize,
-    context: &mut StmtResultToLeanCompilerEnvironmentStack,
-) -> Result<(), String> {
-    crate::litex_to_lean_ir::validate_litex_to_lean_well_definedness_certificate(
-        &definition.well_definedness,
-    )?;
-    validate_function_type(&definition.function)?;
-    if definition.parameter_premises.len() != definition.function.parameters.len() {
-        return Err(
-            "compiler named-function construction changed its parameter-membership premise count"
-                .into(),
-        );
-    }
-    if definition.domain_premises.len() != definition.function.domain_facts.len() {
-        return Err(
-            "compiler named-function construction changed its domain-clause premise count".into(),
-        );
-    }
-    let mut local = context.clone();
-    for (index, (parameter, premise)) in definition
-        .function
-        .parameters
-        .iter()
-        .zip(definition.parameter_premises.iter())
-        .enumerate()
-    {
-        let suffix = if !function_uses_telescope(&definition.function) {
-            String::new()
-        } else {
-            (index + 1).to_string()
-        };
-        local
-            .symbol_names
-            .insert(parameter.symbol_id, format!("__arg{suffix}"));
-        local
-            .fact_names
-            .insert(premise.fact_id, format!("__arg{suffix}_in"));
-        local
-            .fact_propositions
-            .insert(premise.fact_id, premise.fact.clone());
-        let argument = format!("__arg{suffix}");
-        let membership = format!("__arg{suffix}_in");
-        if let Some(real) = membership_real_value(&parameter.set, &argument, &membership) {
-            local.numeric_real_values.insert(parameter.symbol_id, real);
-        }
-        if let Some(integer) = membership_integer_value(&parameter.set, &argument, &membership) {
-            local
-                .numeric_integer_values
-                .insert(parameter.symbol_id, integer);
-        }
-        if let Some(rational) = membership_rational_value(&parameter.set, &argument, &membership) {
-            local
-                .numeric_rational_values
-                .insert(parameter.symbol_id, rational);
-        }
-        if let Some(representation) =
-            membership_numeric_value(&parameter.set, &argument, &membership)
-        {
-            local
-                .numeric_representations
-                .insert(parameter.symbol_id, representation);
-        }
-        if let Some(proof) = membership_numeric_proof(&parameter.set, &argument, &membership) {
-            local
-                .numeric_representation_memberships
-                .insert(parameter.symbol_id, proof);
-        }
-    }
-    for (index, domain) in definition.domain_premises.iter().enumerate() {
-        let selector = conjunction_selector(index, definition.domain_premises.len())?;
-        local.fact_names.insert(
-            domain.fact_id,
-            if definition.domain_premises.len() == 1 {
-                "__arg_domain".into()
-            } else {
-                format!("__arg_domain{selector}")
-            },
-        );
-        local
-            .fact_propositions
-            .insert(domain.fact_id, domain.fact.clone());
-    }
-    local.well_definedness = Some(definition.well_definedness.clone());
-
-    let name = lean_identifier(&definition.name);
-    // A telescope carrier starts with implicit heterogeneous carrier binders.
-    // Lean otherwise eagerly inserts the first implicit argument when the
-    // named function is used as a value, silently turning the whole source
-    // layer into a partially applied function. `@name` preserves the exact
-    // one-layer carrier object.
-    let function_value_name = if !function_uses_telescope(&definition.function) {
-        name.clone()
-    } else {
-        format!("(@{name})")
-    };
-    if context
-        .symbol_names
-        .insert(definition.symbol_id, function_value_name.clone())
-        .is_some()
-    {
-        return Err(format!(
-            "duplicate compiler symbol identity for `{}`",
-            definition.name
-        ));
-    }
-    let (value, uses_native_real_body) = render_named_function_value(definition, &local)?;
-    let function_type = render_function_type(&definition.function, context)?;
-    let function_set = render_function_set(&definition.function, context)?;
-    declarations.push(format!(
-        "noncomputable def {name} : {function_type} :=\n  {value}"
-    ));
-
-    let membership_proposition = render_fact(&definition.membership.proposition, context)?;
-    let membership_name = format!("__fact{fact_index}");
-    declarations.push(format!(
-        "theorem {membership_name} : {membership_proposition} := by\n  exact Litex.In.own {function_set} {function_value_name}"
-    ));
-    context
-        .fact_names
-        .insert(definition.membership.fact_id, membership_name.clone());
-    context.fact_propositions.insert(
-        definition.membership.fact_id,
-        definition.membership.proposition.clone(),
-    );
-    context.function_bindings.insert(
-        definition.membership.fact_id,
-        FunctionBinding {
-            symbol_id: definition.symbol_id,
-            function: definition.function.clone(),
-            membership_proof_name: membership_name,
-            direct: true,
-        },
-    );
-    *fact_index += 1;
-
-    let equality_proposition =
-        format!("Litex.Same {function_value_name} ({value} : {function_type})");
-    let equality_name = format!("__fact{fact_index}");
-    declarations.push(format!(
-        "theorem {equality_name} : {equality_proposition} := by\n  unfold {name}\n  exact Litex.Same.refl ({value} : {function_type})"
-    ));
-    context
-        .fact_names
-        .insert(definition.defining_equality.fact_id, equality_name);
-    context.fact_propositions.insert(
-        definition.defining_equality.fact_id,
-        definition.defining_equality.proposition.clone(),
-    );
-    context.named_function_definitions.insert(
-        definition.defining_equality.fact_id,
-        NamedFunctionDefinitionBinding {
-            symbol_id: definition.symbol_id,
-            name,
-            function: definition.function.clone(),
-            source_body: definition.source_body.clone(),
-            body: definition.body.clone(),
-            uses_native_real_body,
-            parameter_premises: definition.parameter_premises.clone(),
-            domain_premises: definition.domain_premises.clone(),
-            well_definedness: definition.well_definedness.clone(),
-        },
-    );
-    *fact_index += 1;
-    Ok(())
-}
-
-fn construct_lean_declarations_for_existential_elimination(
-    source: &LitexToLeanFactIr,
-    witnesses: &[LitexToLeanExistentialWitnessIr],
-    projections: &[LitexToLeanFactIr],
-    declarations: &mut Vec<String>,
-    fact_index: &mut usize,
-    context: &mut StmtResultToLeanCompilerEnvironmentStack,
-) -> Result<(), String> {
-    let Fact::ExistFact(existential) = &source.proposition else {
-        return Err("existential elimination retained a non-existential source".into());
-    };
-    if !existential.is_plain_exist()
-        || existential.params_def_with_type().number_of_params() != 1
-        || existential.facts().len() != 1
-        || witnesses.len() != 1
-        || projections.len() != 2
-    {
-        return Err(
-            "compiler existential elimination supports one positive witness and one body fact"
-                .into(),
-        );
-    }
-    let group = &existential.params_def_with_type().groups[0];
-    if group.params.len() != 1 {
-        return Err("existential elimination requires one singleton parameter group".into());
-    }
-    let LitexToLeanParameterTypeIr::MemberOf { set } = &witnesses[0].param_type else {
-        return Err("existential elimination currently requires a membership witness".into());
-    };
-    let source_proof = render_proof(source, context)?;
-    let witness_name = lean_identifier(&witnesses[0].name);
-    let source_set = parameter_set(&group.param_type)?;
-    if LitexToLeanObjectIr::lower(source_set)? != *set {
-        return Err("existential witness changed its retained source set".into());
-    }
-    let dynamic_carrier = set_requires_heterogeneous_carrier(source_set);
-    let function_carrier = matches!(source_set, Obj::FnSet(_));
-    let carrier_name = format!("__carrier_{witness_name}");
-    let specification = if dynamic_carrier || function_carrier {
-        declarations.push(format!(
-            "noncomputable def {carrier_name} : {} := Classical.choose ({source_proof})",
-            if function_carrier { "Type 1" } else { "Type" }
-        ));
-        declarations.push(format!(
-            "noncomputable def {witness_name} : {carrier_name} :=\n  Classical.choose (Classical.choose_spec ({source_proof}))"
-        ));
-        format!("Classical.choose_spec (Classical.choose_spec ({source_proof}))")
-    } else {
-        declarations.push(format!(
-            "noncomputable def {witness_name} : ℂ := Classical.choose ({source_proof})"
-        ));
-        format!("Classical.choose_spec ({source_proof})")
-    };
-    context
-        .symbol_names
-        .insert(witnesses[0].symbol_id, witness_name.clone());
-    context
-        .symbol_names
-        .insert(group.params[0].id(), witness_name.clone());
-    context
-        .existential_names
-        .insert(group.params[0].name().to_string(), witness_name.clone());
-
-    let expected_requirement = format!(
-        "Litex.In {witness_name} {}",
-        render_obj(source_set, context)?
-    );
-    let expected_body = render_fact(&existential.facts()[0].from_ref_to_cloned_fact(), context)?;
-    let mut saw_requirement = false;
-    let mut saw_body = false;
-    for projection in projections {
-        let LitexToLeanFactProofIr::ExistentialElimination { role } = &projection.proof else {
-            return Err("existential projection has malformed proof evidence".into());
-        };
-        let (expected, selector) = match role {
-            LitexToLeanExistentialProjectionRoleIr::ParameterType { witness_index: 0 } => {
-                saw_requirement = true;
-                (&expected_requirement, ".1")
-            }
-            LitexToLeanExistentialProjectionRoleIr::BodyFact { body_index: 0 } => {
-                saw_body = true;
-                (&expected_body, ".2")
-            }
-            _ => return Err("existential projection role is outside the one-witness slice".into()),
-        };
-        let proposition = render_fact(&projection.proposition, context)?;
-        if &proposition != expected {
-            return Err("existential projection does not match its retained role".into());
-        }
-        let theorem_name = format!("__fact{fact_index}");
-        let unfold = if dynamic_carrier || function_carrier {
-            format!("{witness_name} {carrier_name}")
-        } else {
-            witness_name.clone()
-        };
-        declarations.push(format!(
-            "theorem {theorem_name} : {proposition} := by\n  unfold {unfold}\n  exact ({specification}){selector}"
-        ));
-        if let Some(fact_id) = projection.stored_fact_id() {
-            context.fact_names.insert(fact_id, theorem_name);
-            context
-                .fact_propositions
-                .insert(fact_id, projection.proposition.clone());
-        }
-        *fact_index += 1;
-    }
-    if !saw_requirement || !saw_body {
-        return Err("existential elimination lost a required projection".into());
-    }
-    Ok(())
-}
-
-fn construct_lean_declaration_for_compatibility_claim_result(
-    claim: &LitexToLeanClaimStmtIr,
-    declarations: &mut Vec<String>,
-    fact_index: &mut usize,
-    context: &mut StmtResultToLeanCompilerEnvironmentStack,
-) -> Result<(), String> {
-    crate::litex_to_lean_ir::validate_litex_to_lean_well_definedness_certificate(
-        &claim.well_definedness,
-    )?;
-    if !claim.inferred_facts.is_empty() {
-        return Err("compiler claim MVP does not yet emit inferred outer facts".into());
-    }
-    let mut nested = context.clone();
-    let mut local_index = 0;
-    let mut lines =
-        render_local_proof_block(&claim.block, &mut nested, "__step", &mut local_index)?;
-    let proposition = render_fact(&claim.target.proposition, &nested)?;
-    lines.push(format!("exact {}", render_proof(&claim.target, &nested)?));
-    declarations.push(format!(
-        "theorem __fact{fact_index} : {proposition} := by\n{}",
-        indent_lines(&lines.join("\n"), 2)
-    ));
-    if let Some(fact_id) = claim.target.stored_fact_id() {
-        context
-            .fact_names
-            .insert(fact_id, format!("__fact{fact_index}"));
-        context
-            .fact_propositions
-            .insert(fact_id, claim.target.proposition.clone());
-    }
-    *fact_index += 1;
-    Ok(())
-}
-
-fn construct_lean_declaration_for_compatibility_example_result(
-    example: &LitexToLeanExampleStmtIr,
-    declarations: &mut Vec<String>,
-    fact_index: &mut usize,
-    context: &StmtResultToLeanCompilerEnvironmentStack,
-) -> Result<(), String> {
-    crate::litex_to_lean_ir::validate_litex_to_lean_well_definedness_certificate(
-        &example.well_definedness,
-    )?;
-    if matches!(
-        (&example.target.proposition, &example.target.proof),
-        (
-            Fact::ForallFact(_),
-            LitexToLeanFactProofIr::ForallIntroduction { .. }
-        )
-    ) {
-        crate::litex_to_lean_ir::validate_litex_to_lean_well_definedness_certificate(
-            &example.block.well_definedness,
-        )?;
-        if !example.block.premise_aliases.is_empty()
-            || !example.block.assumption_inferred_facts.is_empty()
-        {
-            return Err("forall example retained unsupported local assumption effects".into());
-        }
-        declarations.push(construct_lean_declaration_for_forall_fact(
-            &example.target,
-            &example.well_definedness,
-            *fact_index,
-            "example",
-            &example.block.steps,
-            context,
-        )?);
-        *fact_index += 1;
-        return Ok(());
-    }
-    let mut nested = context.clone();
-    let mut local_index = 0;
-    let mut lines =
-        render_local_proof_block(&example.block, &mut nested, "__step", &mut local_index)?;
-    let proposition = render_fact(&example.target.proposition, &nested)?;
-    lines.push(format!("exact {}", render_proof(&example.target, &nested)?));
-    declarations.push(format!(
-        "example : {proposition} := by\n{}",
-        indent_lines(&lines.join("\n"), 2)
-    ));
-    *fact_index += 1;
-    Ok(())
-}
-
-fn construct_lean_declaration_for_stored_fact(
-    source: &LitexToLeanFactIr,
-    well_definedness: &LitexToLeanWellDefinednessCertificateIr,
-    theorem_index: usize,
-    context: &StmtResultToLeanCompilerEnvironmentStack,
-) -> Result<String, String> {
-    match (&source.proposition, &source.proof) {
-        (Fact::ForallFact(_), LitexToLeanFactProofIr::ForallIntroduction { .. }) => {
-            construct_lean_declaration_for_forall_fact(
-                source,
-                well_definedness,
-                theorem_index,
-                &format!("theorem __fact{theorem_index}"),
-                &[],
-                context,
-            )
-        }
-        (Fact::ForallFact(forall), LitexToLeanFactProofIr::KnownFactCitation { .. }) => {
-            Ok(format!(
-                "theorem __fact{theorem_index} :\n    {} := {}",
-                render_forall_fact_type(forall, context)?,
-                render_proof(source, context)?
-            ))
-        }
-        (Fact::AtomicFact(_), _)
-        | (Fact::ExistFact(_), _)
-        | (Fact::AndFact(_), _)
-        | (Fact::OrFact(_), _)
-        | (Fact::ChainFact(_), _) => construct_lean_declaration_for_direct_fact(
-            source,
-            well_definedness,
-            theorem_index,
-            context,
-        ),
-        other => Err(format!(
-            "compiler currently cannot emit stored fact shape `{other:?}`"
-        )),
-    }
-}
-
-fn construct_lean_declaration_for_direct_fact(
-    source: &LitexToLeanFactIr,
-    well_definedness: &LitexToLeanWellDefinednessCertificateIr,
-    theorem_index: usize,
-    context: &StmtResultToLeanCompilerEnvironmentStack,
-) -> Result<String, String> {
-    let mut local = context.clone();
-    local.well_definedness = Some(well_definedness.clone());
-    let proposition = render_fact(&source.proposition, &local)?;
-    let mut proof_lines = if proof_requires_closed_numeric_well_definedness(&source.proof) {
-        construct_lean_proof_lines_for_closed_numeric_well_definedness(
-            well_definedness,
-            theorem_index,
-            &local,
-        )?
-    } else {
-        Vec::new()
-    };
-    proof_lines.push(format!("  exact {}", render_proof(source, &local)?));
-    Ok(format!(
-        "theorem __fact{theorem_index} : {proposition} := by\n{}",
-        proof_lines.join("\n")
-    ))
-}
-
-fn construct_lean_proof_lines_for_closed_numeric_well_definedness(
-    certificate: &LitexToLeanWellDefinednessCertificateIr,
-    theorem_index: usize,
-    context: &StmtResultToLeanCompilerEnvironmentStack,
-) -> Result<Vec<String>, String> {
-    if !certificate.target_requirements.is_empty()
-        || !certificate.parameter_facts.is_empty()
-        || !certificate.binder_scopes.is_empty()
-    {
-        return Err(
-            "atomic equality has unsupported target, parameter, or binder WD evidence".into(),
-        );
-    }
-    for root_use in &certificate.root_proof_uses {
-        if !certificate
-            .objects
-            .iter()
-            .any(|object| object.well_defined_obj_id == root_use.well_defined_obj_id)
-        {
-            return Err(format!(
-                "WD proof use references unavailable object `{:?}`",
-                root_use.well_defined_obj_id
-            ));
-        }
-    }
-    for source_use in &certificate.source_object_uses {
-        let object = certificate
-            .objects
-            .iter()
-            .find(|object| object.well_defined_obj_id == source_use.well_defined_obj_id)
-            .ok_or_else(|| {
-                format!(
-                    "WD source use references unavailable object `{:?}`",
-                    source_use.well_defined_obj_id
-                )
-            })?;
-        if obj_equality_key(&source_use.source_object) != obj_equality_key(&object.source_object) {
-            return Err("WD source use changed its retained object".into());
-        }
-    }
-    for object in &certificate.objects {
-        if !object.function_contracts.is_empty()
-            || !object.ambient_binder_scope_ids.is_empty()
-            || object.owned_binder_scope_id.is_some()
-        {
-            return Err(format!(
-                "closed numeric WD object `{}` gained function or binder evidence",
-                object.source_object
-            ));
-        }
-        if object.intrinsic_result_set.as_ref().is_some_and(|set| {
-            !matches!(
-                set,
-                LitexToLeanObjectIr::StandardSet(LitexToLeanStandardSetIr::Complex)
-            )
-        }) {
-            return Err("closed numeric WD object has an unsupported intrinsic result set".into());
-        }
-        render_obj(&object.source_object, context)?;
-        for child_use in &object.child_uses {
-            let child = certificate
-                .objects
-                .iter()
-                .find(|candidate| candidate.well_defined_obj_id == child_use.obj_id)
-                .ok_or_else(|| {
-                    format!(
-                        "WD child references unavailable object `{:?}`",
-                        child_use.obj_id
-                    )
-                })?;
-            if obj_equality_key(&child.source_object) != obj_equality_key(&child_use.source_object)
-            {
-                return Err("WD child use changed its retained object".into());
-            }
-        }
-        for fact_id in &object.well_defined_fact_ids {
-            if !certificate
-                .facts
-                .iter()
-                .any(|fact| fact.well_defined_fact_id == *fact_id)
-            {
-                return Err(format!(
-                    "WD object references unavailable fact `{fact_id:?}`"
-                ));
-            }
-        }
-        for requirement in &object.target_requirements {
-            let fact = certificate
-                .facts
-                .iter()
-                .find(|fact| fact.well_defined_fact_id == requirement.well_defined_fact_id)
-                .ok_or_else(|| {
-                    format!(
-                        "WD requirement references unavailable fact `{:?}`",
-                        requirement.well_defined_fact_id
-                    )
-                })?;
-            let _ = fact;
-        }
-    }
-
-    let mut lines = Vec::new();
-    for (index, fact) in certificate.facts.iter().enumerate() {
-        if !fact.ambient_binder_scope_ids.is_empty() {
-            return Err("closed numeric WD fact changed scope".into());
-        }
-        let proposition = render_fact(&fact.fact.proposition, context)?;
-        let proof = render_proof(&fact.fact, context)?;
-        lines.push(format!(
-            "  have __wd{theorem_index}_{index} : {proposition} := {proof}"
-        ));
-    }
-    Ok(lines)
-}
-
-fn construct_lean_declarations_for_named_set_aliases(
-    source: &crate::litex_to_lean_ir::LitexToLeanHaveObjEqualStmtIr,
-    context: &mut StmtResultToLeanCompilerEnvironmentStack,
-) -> Result<Vec<String>, String> {
-    if source.definitions.is_empty() || source.facts.len() != source.definitions.len() * 2 {
-        return Err("named set definition has unsupported certificate shape".into());
-    }
-    let mut declarations = Vec::new();
-    for definition in &source.definitions {
-        if definition.param_type != LitexToLeanParameterTypeIr::Set {
-            return Err(format!(
-                "compiler named object `{}` is not declared as a set",
-                definition.name
-            ));
-        }
-        let value = render_set_definition_value(&definition.value, context)?;
-        let name = lean_identifier(&definition.name);
-        if context
-            .symbol_names
-            .insert(definition.symbol_id, name.clone())
-            .is_some()
-        {
-            return Err(format!(
-                "duplicate compiler symbol identity for `{}`",
-                definition.name
-            ));
-        }
-        declarations.push(format!("abbrev {name} : Litex.Set := {value}"));
-    }
-    Ok(declarations)
-}
-
-fn construct_lean_declarations_for_compatibility_have_object_equal_result(
-    source: &LitexToLeanHaveObjEqualStmtIr,
-    declarations: &mut Vec<String>,
-    fact_index: &mut usize,
-    context: &mut StmtResultToLeanCompilerEnvironmentStack,
-) -> Result<(), String> {
-    crate::litex_to_lean_ir::validate_litex_to_lean_well_definedness_certificate(
-        &source.well_definedness,
-    )?;
-    if source
-        .definitions
-        .iter()
-        .all(|definition| definition.param_type == LitexToLeanParameterTypeIr::Set)
-    {
-        declarations.extend(construct_lean_declarations_for_named_set_aliases(
-            source, context,
-        )?);
-        return Ok(());
-    }
-    if source.definitions.len() != 1 || source.facts.len() != 2 {
-        return Err(
-            "compiler native object definition supports one membership-constrained object".into(),
-        );
-    }
-    let definition = &source.definitions[0];
-    if !matches!(
-        definition.param_type,
-        LitexToLeanParameterTypeIr::MemberOf { .. }
-    ) {
-        return Err(format!(
-            "compiler native object `{}` requires an exact membership type",
-            definition.name
-        ));
-    }
-    let name = lean_identifier(&definition.name);
-    let value = render_native_object_ir(&definition.value, context)?;
-    if context
-        .symbol_names
-        .insert(definition.symbol_id, name.clone())
-        .is_some()
-    {
-        return Err(format!(
-            "duplicate compiler symbol identity for `{}`",
-            definition.name
-        ));
-    }
-    declarations.push(format!("noncomputable def {name} := {value}"));
-    construct_lean_declarations_for_stored_fact_effects(
-        source.facts.iter().collect(),
-        &source.well_definedness,
-        declarations,
-        fact_index,
-        context,
-    )
-}
-
 fn render_set_definition_value(
-    value: &LitexToLeanObjectIr,
+    value: &LeanTargetObjectRepresentation,
     context: &StmtResultToLeanCompilerEnvironmentStack,
 ) -> Result<String, String> {
     match value {
-        LitexToLeanObjectIr::StandardSet(LitexToLeanStandardSetIr::Real) => Ok("Litex.R".into()),
-        LitexToLeanObjectIr::StandardSet(LitexToLeanStandardSetIr::Complex) => Ok("Litex.C".into()),
-        LitexToLeanObjectIr::SetBuilder(_) => render_set_ir(value, context),
+        LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Real) => {
+            Ok("Litex.R".into())
+        }
+        LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Complex) => {
+            Ok("Litex.C".into())
+        }
+        LeanTargetObjectRepresentation::SetBuilder(_) => {
+            render_lean_source_for_target_set_representation(value, context)
+        }
         _ => Err(format!(
             "unsupported compiler named set definition value `{value:?}`"
         )),
     }
-}
-
-fn construct_lean_declaration_for_forall_fact(
-    source: &LitexToLeanFactIr,
-    well_definedness: &LitexToLeanWellDefinednessCertificateIr,
-    theorem_index: usize,
-    declaration: &str,
-    proof_steps: &[LitexToLeanStatementIr],
-    outer_context: &StmtResultToLeanCompilerEnvironmentStack,
-) -> Result<String, String> {
-    let Fact::ForallFact(forall) = &source.proposition else {
-        return Err("compiler currently emits `forall` facts only".into());
-    };
-    let LitexToLeanFactProofIr::ForallIntroduction {
-        parameter_premises,
-        premises,
-        inferred_premises,
-        conclusions,
-    } = &source.proof
-    else {
-        return Err("verified forall is missing ForallIntroduction evidence".into());
-    };
-    let params = forall
-        .params_def_with_type
-        .collect_param_bindings_with_types();
-    if params.len() != parameter_premises.len() {
-        return Err("forall parameter evidence count does not match source binders".into());
-    }
-    if forall.dom_facts.len() != premises.len() {
-        return Err("forall domain evidence count does not match source premises".into());
-    }
-    if forall.then_facts.len() != conclusions.len() {
-        return Err("forall conclusion evidence count does not match source conclusions".into());
-    }
-
-    let mut context = outer_context.clone();
-    context.well_definedness = Some(well_definedness.clone());
-    let mut binders = Vec::new();
-    let mut intro_names = Vec::new();
-    for (parameter_index, ((binding, param_type), premise)) in
-        params.iter().zip(parameter_premises.iter()).enumerate()
-    {
-        let name = lean_identifier(binding.name());
-        context.symbol_names.insert(binding.id(), name.clone());
-        if matches!(param_type, ParamType::Set(_)) {
-            validate_set_parameter_premise(binding.id(), &premise.fact)?;
-            binders.push(format!("({name} : Litex.Set)"));
-            intro_names.push(name);
-            continue;
-        }
-        if matches!(
-            param_type,
-            ParamType::NonemptySet(_) | ParamType::FiniteSet(_)
-        ) {
-            validate_refined_set_parameter_premise(binding.id(), param_type, &premise.fact)?;
-            binders.push(format!("({name} : Litex.Set)"));
-            intro_names.push(name.clone());
-            let actual = render_fact(&premise.fact, &context)?;
-            let hypothesis = format!("__h{theorem_index}_{}", parameter_index + 1);
-            binders.push(format!("({hypothesis} : {actual})"));
-            intro_names.push(hypothesis.clone());
-            context.fact_names.insert(premise.fact_id, hypothesis);
-            context
-                .fact_propositions
-                .insert(premise.fact_id, premise.fact.clone());
-            continue;
-        }
-
-        let set = parameter_set(param_type)?;
-        let carrier_name = format!("__carrier{theorem_index}_{}", parameter_index + 1);
-        match set {
-            Obj::FnSet(_) => {
-                binders.push(format!("{{{carrier_name} : Type 1}}"));
-                intro_names.push(carrier_name.clone());
-                binders.push(format!("({name} : {carrier_name})"));
-            }
-            set if set_requires_heterogeneous_carrier(set) => {
-                binders.push(format!("{{{carrier_name} : Type}}"));
-                intro_names.push(carrier_name.clone());
-                binders.push(format!("({name} : {carrier_name})"));
-            }
-            _ => binders.push(format!("({name} : ℂ)")),
-        }
-        intro_names.push(name.clone());
-
-        let expected = format!("Litex.In {name} {}", render_obj(set, &context)?);
-        let actual = render_fact(&premise.fact, &context)?;
-        if actual != expected {
-            return Err(format!(
-                "parameter evidence mismatch: expected `{expected}`, found `{actual}`"
-            ));
-        }
-        let hypothesis = format!("__h{theorem_index}_{}", parameter_index + 1);
-        binders.push(format!("({hypothesis} : {actual})"));
-        intro_names.push(hypothesis.clone());
-        context.fact_names.insert(premise.fact_id, hypothesis);
-        context
-            .fact_propositions
-            .insert(premise.fact_id, premise.fact.clone());
-        if let Obj::FnSet(function_set) = set {
-            let function = LitexToLeanFunctionTypeIr::lower(function_set)?;
-            validate_function_type(&function)?;
-            context.function_bindings.insert(
-                premise.fact_id,
-                FunctionBinding {
-                    symbol_id: binding.id(),
-                    function,
-                    membership_proof_name: format!("__h{theorem_index}_{}", parameter_index + 1),
-                    direct: false,
-                },
-            );
-        }
-        install_parameter_fact_aliases(
-            binding.id(),
-            &premise.fact,
-            &format!("__h{theorem_index}_{}", parameter_index + 1),
-            set,
-            &mut context,
-        )?;
-    }
-
-    for (premise_index, premise) in premises.iter().enumerate() {
-        let actual = render_fact(&premise.fact, &context)?;
-        let hypothesis = format!(
-            "__h{theorem_index}_{}",
-            parameter_premises.len() + premise_index + 1
-        );
-        binders.push(format!("({hypothesis} : {actual})"));
-        intro_names.push(hypothesis.clone());
-        context.fact_names.insert(premise.fact_id, hypothesis);
-        context
-            .fact_propositions
-            .insert(premise.fact_id, premise.fact.clone());
-    }
-
-    // Inferred premises are verifier-owned consequences of the explicit
-    // binders above. Materialize only inference routes with reviewed proof
-    // adapters so later exact FactId citations can resolve them.
-    let mut derived_lines = Vec::new();
-    for (inferred_index, inferred) in inferred_premises.iter().enumerate() {
-        let proposition = render_fact(&inferred.proposition, &context)?;
-        let supported = matches!(
-            &inferred.proof,
-            LitexToLeanFactProofIr::RuleApplication {
-                rule: LitexToLeanProofRuleIr::ConjunctionProjection { .. }
-                    | LitexToLeanProofRuleIr::Builtin(
-                        LitexToLeanBuiltinRuleIr::PositiveRealMembership
-                            | LitexToLeanBuiltinRuleIr::NonzeroNumericMembershipElimination
-                    ),
-                ..
-            }
-        );
-        if !supported {
-            continue;
-        }
-        let proof = render_proof(inferred, &context)?;
-        let name = format!("__i{theorem_index}_{inferred_index}");
-        derived_lines.push(format!("  have {name} : {proposition} := {proof}"));
-        if let Some(fact_id) = inferred.stored_fact_id() {
-            context.fact_names.insert(fact_id, name);
-            context
-                .fact_propositions
-                .insert(fact_id, inferred.proposition.clone());
-        }
-    }
-
-    let conclusion_types = conclusions
-        .iter()
-        .map(|conclusion| render_fact(&conclusion.proposition, &context))
-        .collect::<Result<Vec<_>, _>>()?;
-    let conclusion_type = conjunction(&conclusion_types);
-    let mut local_index = 0;
-    for local in render_local_statements(proof_steps, &mut context, "__step", &mut local_index)? {
-        derived_lines.push(indent_lines(&local, 2));
-    }
-    let single_heterogeneous_subset = conclusions.len() == 1
-        && matches!(
-            &conclusions[0].proposition,
-            Fact::AtomicFact(AtomicFact::SubsetFact(_) | AtomicFact::SupersetFact(_))
-        );
-    if single_heterogeneous_subset {
-        // Keep the proof expression under the theorem conclusion's expected
-        // type. In particular, `Litex.Subset` is a heterogeneous dependent
-        // function; first assigning its proof to a standalone local can
-        // prematurely instantiate its implicit carrier metavariable.
-        derived_lines.push(format!(
-            "  exact {}",
-            render_proof(&conclusions[0], &context)?
-        ));
-    } else {
-        let mut conclusion_names = Vec::with_capacity(conclusions.len());
-        for (conclusion_index, conclusion) in conclusions.iter().enumerate() {
-            let proposition = &conclusion_types[conclusion_index];
-            let proof = render_proof(conclusion, &context)?;
-            let name = format!("__c{theorem_index}_{conclusion_index}");
-            derived_lines.push(format!("  have {name} : {proposition} := {proof}"));
-            if let Some(fact_id) = conclusion.stored_fact_id() {
-                context.fact_names.insert(fact_id, name.clone());
-                context
-                    .fact_propositions
-                    .insert(fact_id, conclusion.proposition.clone());
-            }
-            conclusion_names.push(name);
-        }
-        if conclusion_names.len() == 1 {
-            derived_lines.push(format!("  exact {}", conclusion_names[0]));
-        } else {
-            derived_lines.push(format!("  exact ⟨{}⟩", conclusion_names.join(", ")));
-        }
-    }
-    let theorem_type = if binders.is_empty() {
-        conclusion_type
-    } else {
-        format!("∀ {},\n      {conclusion_type}", binders.join(" "))
-    };
-    let intro = if intro_names.is_empty() {
-        String::new()
-    } else {
-        format!("  intro {}\n", intro_names.join(" "))
-    };
-    Ok(format!(
-        "{declaration} :\n    {theorem_type} := by\n{intro}{}",
-        derived_lines.join("\n")
-    ))
 }
 
 fn render_forall_fact_type(
@@ -15652,6 +17597,12 @@ fn render_forall_fact_type(
                 None,
                 &mut context,
             )?;
+            install_result_owned_forall_parameter_fact_alias(
+                binding.id(),
+                &expected,
+                &format!("__type{}", index + 1),
+                &mut context,
+            )?;
             continue;
         }
 
@@ -15679,12 +17630,20 @@ fn render_forall_fact_type(
             &expected,
             &format!("__type{}", index + 1),
             match set {
-                Obj::FnSet(function) => Some(LitexToLeanFunctionTypeIr::lower(function)?),
+                Obj::FnSet(function) => {
+                    Some(LeanTargetFunctionTypeRepresentation::lower(function)?)
+                }
                 _ => None,
             },
             &mut context,
         )?;
-        let lowered_set = LitexToLeanObjectIr::lower(set)?;
+        install_result_owned_forall_parameter_fact_alias(
+            binding.id(),
+            &expected,
+            &format!("__type{}", index + 1),
+            &mut context,
+        )?;
+        let lowered_set = LeanTargetObjectRepresentation::lower(set)?;
         if let Some(real) =
             membership_real_value(&lowered_set, &name, &format!("__type{}", index + 1))
         {
@@ -15746,6 +17705,46 @@ fn render_forall_fact_type(
     ))
 }
 
+/// While rendering a nested forall type, connect the textual binder
+/// hypothesis to the exact parameter FactId retained by the recursive WD
+/// Result. The Result context can contain aliases from several lexical
+/// binders, so SymbolId is the structural discriminator; no proposition-based
+/// environment lookup is performed.
+fn install_result_owned_forall_parameter_fact_alias(
+    symbol_id: SymbolId,
+    expected_rendered_proposition: &str,
+    proof_name: &str,
+    context: &mut StmtResultToLeanCompilerEnvironmentStack,
+) -> Result<(), String> {
+    let aliases = context
+        .well_definedness
+        .as_ref()
+        .map(|well_definedness| {
+            well_definedness
+                .parameter_fact_aliases
+                .iter()
+                .filter(|alias| alias.symbol_id == symbol_id)
+                .cloned()
+                .collect::<Vec<_>>()
+        })
+        .unwrap_or_default();
+    for alias in aliases {
+        let rendered = render_fact(&alias.proposition, context)?;
+        if rendered != expected_rendered_proposition {
+            return Err(format!(
+                "forall parameter SymbolId `{symbol_id:?}` changed its Result-owned proposition from `{rendered}` to `{expected_rendered_proposition}`"
+            ));
+        }
+        context
+            .fact_names
+            .insert(alias.fact_id, proof_name.to_string());
+        context
+            .fact_propositions
+            .insert(alias.fact_id, alias.proposition);
+    }
+    Ok(())
+}
+
 fn install_parameter_fact_aliases(
     symbol_id: SymbolId,
     proposition: &Fact,
@@ -15754,7 +17753,7 @@ fn install_parameter_fact_aliases(
     context: &mut StmtResultToLeanCompilerEnvironmentStack,
 ) -> Result<(), String> {
     let function = match set {
-        Obj::FnSet(function) => Some(LitexToLeanFunctionTypeIr::lower(function)?),
+        Obj::FnSet(function) => Some(LeanTargetFunctionTypeRepresentation::lower(function)?),
         _ => None,
     };
     let expected = render_fact(proposition, context)?;
@@ -15764,7 +17763,7 @@ fn install_parameter_fact_aliases(
     // Complex view used by Litex arithmetic. Retain the exact representative
     // selected by this parameter's membership proof in the current compiler
     // frame; child lexical frames inherit it and pop discards it.
-    let lowered_set = LitexToLeanObjectIr::lower(set)?;
+    let lowered_set = LeanTargetObjectRepresentation::lower(set)?;
     let source_name = context
         .symbol_names
         .get(&symbol_id)
@@ -15797,17 +17796,50 @@ fn install_parameter_fact_aliases(
     Ok(())
 }
 
+fn install_numeric_representations_from_membership(
+    symbol_id: SymbolId,
+    set: &LeanTargetObjectRepresentation,
+    source_name: &str,
+    proof_name: &str,
+    context: &mut StmtResultToLeanCompilerEnvironmentStack,
+) {
+    if let Some(real) = membership_real_value(set, source_name, proof_name) {
+        context.numeric_real_values.insert(symbol_id, real);
+    }
+    if let Some(integer) = membership_integer_value(set, source_name, proof_name) {
+        context.numeric_integer_values.insert(symbol_id, integer);
+    }
+    if let Some(rational) = membership_rational_value(set, source_name, proof_name) {
+        context.numeric_rational_values.insert(symbol_id, rational);
+    }
+    if let Some(representation) = membership_numeric_value(set, source_name, proof_name) {
+        context
+            .numeric_representations
+            .insert(symbol_id, representation);
+    }
+    if let Some(equality) = membership_numeric_equality(set, source_name, proof_name) {
+        context
+            .numeric_representation_equalities
+            .insert(symbol_id, equality);
+    }
+    if let Some(proof) = membership_numeric_proof(set, source_name, proof_name) {
+        context
+            .numeric_representation_memberships
+            .insert(symbol_id, proof);
+    }
+}
+
 fn install_rendered_parameter_aliases(
     symbol_id: SymbolId,
     expected: &str,
     proof_name: &str,
-    function: Option<LitexToLeanFunctionTypeIr>,
+    function: Option<LeanTargetFunctionTypeRepresentation>,
     context: &mut StmtResultToLeanCompilerEnvironmentStack,
 ) -> Result<(), String> {
     let aliases = context
         .well_definedness
         .as_ref()
-        .map(|certificate| certificate.parameter_facts.clone())
+        .map(|result_context| result_context.parameter_fact_aliases.clone())
         .unwrap_or_default();
     for alias in aliases {
         if alias.symbol_id != symbol_id || render_fact(&alias.proposition, context)? != expected {
@@ -15832,598 +17864,6 @@ fn install_rendered_parameter_aliases(
         }
     }
     Ok(())
-}
-
-fn render_local_proof_block(
-    block: &LitexToLeanLocalProofBlockIr,
-    context: &mut StmtResultToLeanCompilerEnvironmentStack,
-    prefix: &str,
-    local_index: &mut usize,
-) -> Result<Vec<String>, String> {
-    crate::litex_to_lean_ir::validate_litex_to_lean_well_definedness_certificate(
-        &block.well_definedness,
-    )?;
-    for alias in &block.premise_aliases {
-        let proposition = context
-            .fact_propositions
-            .get(&alias.parent_fact_id)
-            .cloned()
-            .ok_or_else(|| {
-                format!(
-                    "local alias references unavailable parent FactId `{}`",
-                    alias.parent_fact_id
-                )
-            })?;
-        let parent_name = resolve_fact_citation(&alias.parent_fact_id, &proposition, context)?;
-        context.fact_names.insert(alias.local_fact_id, parent_name);
-        context
-            .fact_propositions
-            .insert(alias.local_fact_id, proposition);
-    }
-    let mut lines = Vec::new();
-    for inferred in &block.assumption_inferred_facts {
-        lines.push(render_local_fact(
-            inferred,
-            &block.well_definedness,
-            context,
-            prefix,
-            local_index,
-        )?);
-    }
-    lines.extend(render_local_statements(
-        &block.steps,
-        context,
-        prefix,
-        local_index,
-    )?);
-    Ok(lines)
-}
-
-fn render_local_statements(
-    statements: &[LitexToLeanStatementIr],
-    context: &mut StmtResultToLeanCompilerEnvironmentStack,
-    prefix: &str,
-    local_index: &mut usize,
-) -> Result<Vec<String>, String> {
-    let mut lines = Vec::new();
-    for statement in statements {
-        if let LitexToLeanStatementIr::DefObjStmt(LitexToLeanDefObjStmtIr::LetObjStmt(definition)) =
-            statement
-        {
-            crate::litex_to_lean_ir::validate_litex_to_lean_well_definedness_certificate(
-                &definition.well_definedness,
-            )?;
-            let name = lean_identifier(&definition.name);
-            let value = render_native_object_ir(&definition.value, context)?;
-            if context
-                .symbol_names
-                .insert(definition.symbol_id, name.clone())
-                .is_some()
-            {
-                return Err(format!(
-                    "duplicate local compiler symbol identity for `{}`",
-                    definition.name
-                ));
-            }
-            lines.push(format!("let {name} := {value}"));
-            for fact in std::iter::once(&definition.defining_equality)
-                .chain(definition.inferred_facts.iter())
-            {
-                lines.push(render_local_fact(
-                    fact,
-                    &definition.well_definedness,
-                    context,
-                    prefix,
-                    local_index,
-                )?);
-            }
-            continue;
-        }
-        let (facts, well_definedness) = match statement {
-            LitexToLeanStatementIr::Fact(statement) => {
-                if !statement.stored_projections.is_empty() {
-                    return Err(
-                        "compiler local proof does not yet emit stored forall projections".into(),
-                    );
-                }
-                (
-                    std::iter::once(&statement.source)
-                        .chain(statement.inferred_facts.iter())
-                        .collect::<Vec<_>>(),
-                    &statement.well_definedness,
-                )
-            }
-            LitexToLeanStatementIr::By(LitexToLeanByStmtIr::ByCasesStmt(statement)) => (
-                statement
-                    .facts
-                    .iter()
-                    .chain(statement.inferred_facts.iter())
-                    .collect::<Vec<_>>(),
-                &statement.well_definedness,
-            ),
-            LitexToLeanStatementIr::By(LitexToLeanByStmtIr::ByContraStmt(statement)) => (
-                statement
-                    .facts
-                    .iter()
-                    .chain(statement.inferred_facts.iter())
-                    .collect::<Vec<_>>(),
-                &statement.well_definedness,
-            ),
-            LitexToLeanStatementIr::By(LitexToLeanByStmtIr::ByDefStmt(statement)) => (
-                statement
-                    .facts
-                    .iter()
-                    .chain(statement.inferred_facts.iter())
-                    .collect::<Vec<_>>(),
-                &statement.well_definedness,
-            ),
-            LitexToLeanStatementIr::Witness(LitexToLeanWitnessStmtIr::WitnessExistFact(
-                statement,
-            )) => (
-                statement
-                    .facts
-                    .iter()
-                    .chain(statement.inferred_facts.iter())
-                    .collect::<Vec<_>>(),
-                &statement.well_definedness,
-            ),
-            other => {
-                return Err(format!(
-                    "unsupported local proof statement in compiler MVP: {other:?}"
-                ));
-            }
-        };
-        crate::litex_to_lean_ir::validate_litex_to_lean_well_definedness_certificate(
-            well_definedness,
-        )?;
-        for fact in facts {
-            lines.push(render_local_fact(
-                fact,
-                well_definedness,
-                context,
-                prefix,
-                local_index,
-            )?);
-        }
-    }
-    Ok(lines)
-}
-
-fn render_local_fact(
-    fact: &LitexToLeanFactIr,
-    well_definedness: &LitexToLeanWellDefinednessCertificateIr,
-    context: &mut StmtResultToLeanCompilerEnvironmentStack,
-    prefix: &str,
-    local_index: &mut usize,
-) -> Result<String, String> {
-    *local_index += 1;
-    let name = format!("{prefix}{local_index}");
-    let proposition = render_fact(&fact.proposition, context)?;
-    let mut proof_lines = if proof_requires_closed_numeric_well_definedness(&fact.proof) {
-        construct_lean_proof_lines_for_closed_numeric_well_definedness(
-            well_definedness,
-            *local_index,
-            context,
-        )?
-    } else {
-        Vec::new()
-    };
-    proof_lines.push(format!("  exact {}", render_proof(fact, context)?));
-    if let Some(fact_id) = fact.stored_fact_id() {
-        context.fact_names.insert(fact_id, name.clone());
-        context
-            .fact_propositions
-            .insert(fact_id, fact.proposition.clone());
-    }
-    Ok(format!(
-        "have {name} : {proposition} := by\n{}",
-        proof_lines.join("\n")
-    ))
-}
-
-fn render_proof(
-    fact: &LitexToLeanFactIr,
-    context: &StmtResultToLeanCompilerEnvironmentStack,
-) -> Result<String, String> {
-    match &fact.proof {
-        LitexToLeanFactProofIr::UseBuiltinStrategy { proof } => {
-            let unwrapped = LitexToLeanFactIr {
-                storage: fact.storage,
-                proposition: fact.proposition.clone(),
-                proof: proof.as_ref().clone(),
-            };
-            render_proof(&unwrapped, context)
-        }
-        LitexToLeanFactProofIr::KnownFactCitation { source_fact_id } => {
-            resolve_fact_citation(source_fact_id, &fact.proposition, context)
-        }
-        LitexToLeanFactProofIr::ExistentialAlphaRenameCitation { source_fact_id } => {
-            let stored = context
-                .fact_propositions
-                .get(source_fact_id)
-                .ok_or_else(|| {
-                    format!("existential citation references unavailable FactId `{source_fact_id}`")
-                })?;
-            if !one_witness_existentials_are_alpha_equal(stored, &fact.proposition, context)? {
-                return Err(
-                    "existential citation changed its retained source or alpha-equivalent target"
-                        .into(),
-                );
-            }
-            context
-                .fact_names
-                .get(source_fact_id)
-                .cloned()
-                .ok_or_else(|| {
-                    format!("existential citation FactId `{source_fact_id}` has no Lean name")
-                })
-        }
-        LitexToLeanFactProofIr::ObjectDefinitionEquality => {
-            render_object_definition_equality(fact, context)
-        }
-        LitexToLeanFactProofIr::ObjectDefinitionMembership { value_check } => {
-            render_object_definition_membership(fact, value_check, context)
-        }
-        LitexToLeanFactProofIr::ObjectChoice => render_object_choice(fact, context),
-        LitexToLeanFactProofIr::CaseSplit { coverage, branches } => {
-            render_case_split(fact, coverage, branches, context)
-        }
-        LitexToLeanFactProofIr::ByContradiction {
-            reverse_assumption,
-            block,
-            contradiction,
-        } => render_by_contradiction(fact, reverse_assumption, block, contradiction, context),
-        LitexToLeanFactProofIr::RuleApplication {
-            rule,
-            parameter_requirements,
-            premises,
-        } => match rule {
-            LitexToLeanProofRuleIr::ObjectReflexivity
-                if parameter_requirements.is_empty() && premises.is_empty() =>
-            {
-                let (left, right) = equality_parts(&fact.proposition)?;
-                if obj_equality_key(left) != obj_equality_key(right) {
-                    return Err("object-reflexivity certificate changed its equality".into());
-                }
-                Ok(format!("Litex.Same.refl {}", render_obj(left, context)?))
-            }
-            LitexToLeanProofRuleIr::RationalNormalization
-                if parameter_requirements.is_empty() && premises.is_empty() =>
-            {
-                let (left, right) = equality_parts(&fact.proposition)?;
-                if !objs_equal_by_rational_expression_evaluation(left, right) {
-                    return Err(
-                        "rational-normalization certificate does not match its equality".into(),
-                    );
-                }
-                render_obj(left, context)?;
-                render_obj(right, context)?;
-                Ok(
-                    "Litex.Same.ofEq (by norm_num [Litex.tupleDim, Litex.TupleShape.dimension])"
-                        .into(),
-                )
-            }
-            LitexToLeanProofRuleIr::RationalNormalization
-                if parameter_requirements.is_empty() && premises.len() == 1 =>
-            {
-                let (target_left, target_right) = equality_parts(&fact.proposition)?;
-                let (source_left, source_right) = equality_parts(&premises[0].proposition)?;
-                if !objects_match_after_rational_normalization(target_left, source_left)
-                    || !objects_match_after_rational_normalization(target_right, source_right)
-                {
-                    return Err(
-                        "premise-backed rational normalization changed its equality endpoints"
-                            .into(),
-                    );
-                }
-                let source_proof = render_proof(&premises[0], context)?;
-                render_fact(&fact.proposition, context)?;
-                Ok(format!(
-                    "(by\n  convert {source_proof} using 1 <;> norm_num)"
-                ))
-            }
-            LitexToLeanProofRuleIr::ClosedStandardMembership
-                if parameter_requirements.is_empty() && premises.is_empty() =>
-            {
-                render_closed_standard_membership(fact, context)
-            }
-            LitexToLeanProofRuleIr::ClosedNumericMembership(evidence)
-                if parameter_requirements.is_empty() && premises.is_empty() =>
-            {
-                render_closed_numeric_membership(fact, evidence, context)
-            }
-            LitexToLeanProofRuleIr::StandardSetNonempty
-                if parameter_requirements.is_empty() && premises.is_empty() =>
-            {
-                render_standard_set_nonempty(fact, context)
-            }
-            LitexToLeanProofRuleIr::ClosedNumericComparison => {
-                render_closed_numeric_comparison(fact, parameter_requirements, premises, context)
-            }
-            LitexToLeanProofRuleIr::OrderReflexivity
-                if parameter_requirements.is_empty() && premises.is_empty() =>
-            {
-                construct_lean_order_reflexivity_from_typed_target(&fact.proposition, context)
-            }
-            LitexToLeanProofRuleIr::Builtin(LitexToLeanBuiltinRuleIr::NotEqualSymmetry) => {
-                render_not_equal_symmetry(fact, parameter_requirements, premises, context)
-            }
-            LitexToLeanProofRuleIr::Builtin(
-                LitexToLeanBuiltinRuleIr::StandardSetMembershipProjection,
-            ) => render_standard_set_membership_projection(
-                fact,
-                parameter_requirements,
-                premises,
-                context,
-            ),
-            LitexToLeanProofRuleIr::Builtin(LitexToLeanBuiltinRuleIr::StandardSetSubset) => {
-                render_standard_set_subset(fact, parameter_requirements, premises, context)
-            }
-            LitexToLeanProofRuleIr::Builtin(LitexToLeanBuiltinRuleIr::Set(rule)) => {
-                render_set_builtin_rule(fact, *rule, parameter_requirements, premises, context)
-            }
-            LitexToLeanProofRuleIr::Builtin(LitexToLeanBuiltinRuleIr::FiniteSet(rule)) => {
-                render_finite_set_constructor(
-                    fact,
-                    *rule,
-                    parameter_requirements,
-                    premises,
-                    context,
-                )
-            }
-            LitexToLeanProofRuleIr::Builtin(LitexToLeanBuiltinRuleIr::ListSetMembership {
-                selected_index,
-            }) => render_list_set_membership(
-                fact,
-                *selected_index,
-                parameter_requirements,
-                premises,
-                context,
-            ),
-            LitexToLeanProofRuleIr::Builtin(
-                LitexToLeanBuiltinRuleIr::ListSetMembershipElimination,
-            ) => render_list_set_membership_elimination(
-                fact,
-                parameter_requirements,
-                premises,
-                context,
-            ),
-            LitexToLeanProofRuleIr::Builtin(LitexToLeanBuiltinRuleIr::TupleLiteralShape) => {
-                render_tuple_literal_shape(fact, parameter_requirements, premises, context)
-            }
-            LitexToLeanProofRuleIr::Builtin(
-                rule @ (LitexToLeanBuiltinRuleIr::PrimeU64Reflection
-                | LitexToLeanBuiltinRuleIr::CoprimeNaturalReflection),
-            ) => render_number_theory_reflection(
-                fact,
-                rule,
-                parameter_requirements,
-                premises,
-                context,
-            ),
-            LitexToLeanProofRuleIr::Builtin(LitexToLeanBuiltinRuleIr::NonzeroNumericMembership) => {
-                render_nonzero_numeric_membership(fact, parameter_requirements, premises, context)
-            }
-            LitexToLeanProofRuleIr::Builtin(
-                LitexToLeanBuiltinRuleIr::NonzeroNumericMembershipElimination,
-            ) => render_nonzero_numeric_membership_elimination(
-                fact,
-                parameter_requirements,
-                premises,
-                context,
-            ),
-            LitexToLeanProofRuleIr::Builtin(
-                LitexToLeanBuiltinRuleIr::NativeConstantMembership(rule),
-            ) => render_native_constant_membership_rule(
-                fact,
-                *rule,
-                parameter_requirements,
-                premises,
-            ),
-            LitexToLeanProofRuleIr::Builtin(LitexToLeanBuiltinRuleIr::PositiveRealMembership) => {
-                render_positive_real_membership(fact, parameter_requirements, premises, context)
-            }
-            LitexToLeanProofRuleIr::Builtin(
-                LitexToLeanBuiltinRuleIr::NaturalMembershipImpliesNonnegative,
-            ) => render_natural_membership_implies_nonnegative(
-                fact,
-                parameter_requirements,
-                premises,
-                context,
-            ),
-            LitexToLeanProofRuleIr::Builtin(
-                LitexToLeanBuiltinRuleIr::ComplexArithmeticMembershipClosure(rule),
-            ) => render_complex_binary_membership_rule(
-                fact,
-                *rule,
-                parameter_requirements,
-                premises,
-                context,
-            ),
-            LitexToLeanProofRuleIr::Builtin(
-                LitexToLeanBuiltinRuleIr::IntegerMembershipClosure(rule),
-            ) => render_integer_binary_membership_rule(
-                fact,
-                *rule,
-                parameter_requirements,
-                premises,
-                context,
-            ),
-            LitexToLeanProofRuleIr::Builtin(
-                LitexToLeanBuiltinRuleIr::NaturalMembershipClosure(rule),
-            ) => render_natural_binary_membership_rule(
-                fact,
-                *rule,
-                parameter_requirements,
-                premises,
-                context,
-            ),
-            LitexToLeanProofRuleIr::Builtin(
-                LitexToLeanBuiltinRuleIr::RationalMembershipClosure(rule),
-            ) => render_rational_binary_membership_rule(
-                fact,
-                *rule,
-                parameter_requirements,
-                premises,
-                context,
-            ),
-            LitexToLeanProofRuleIr::Builtin(
-                LitexToLeanBuiltinRuleIr::RealArithmeticMembershipClosure(
-                    rule @ (LitexToLeanRealArithmeticMembershipClosureBuiltinRuleIr::Add
-                    | LitexToLeanRealArithmeticMembershipClosureBuiltinRuleIr::Sub
-                    | LitexToLeanRealArithmeticMembershipClosureBuiltinRuleIr::Mul
-                    | LitexToLeanRealArithmeticMembershipClosureBuiltinRuleIr::Div),
-                ),
-            ) => render_real_binary_membership_rule(
-                fact,
-                *rule,
-                parameter_requirements,
-                premises,
-                context,
-            ),
-            LitexToLeanProofRuleIr::Builtin(LitexToLeanBuiltinRuleIr::Arithmetic(
-                LitexToLeanArithmeticBuiltinRuleIr::OrderTransitivity,
-            )) => render_order_transitivity(fact, parameter_requirements, premises, context),
-            LitexToLeanProofRuleIr::Builtin(LitexToLeanBuiltinRuleIr::Arithmetic(
-                rule @ (LitexToLeanArithmeticBuiltinRuleIr::AddNonnegative
-                | LitexToLeanArithmeticBuiltinRuleIr::AddPositive
-                | LitexToLeanArithmeticBuiltinRuleIr::AddPositiveLeftStrict
-                | LitexToLeanArithmeticBuiltinRuleIr::AddPositiveRightStrict
-                | LitexToLeanArithmeticBuiltinRuleIr::MulNonnegative
-                | LitexToLeanArithmeticBuiltinRuleIr::MulPositive
-                | LitexToLeanArithmeticBuiltinRuleIr::DivNonnegative
-                | LitexToLeanArithmeticBuiltinRuleIr::DivPositive),
-            )) => render_additive_sign_rule(fact, *rule, parameter_requirements, premises, context),
-            LitexToLeanProofRuleIr::ComparisonNotationDuality => {
-                render_comparison_notation_duality(fact, parameter_requirements, premises, context)
-            }
-            LitexToLeanProofRuleIr::EqualityRewrite => {
-                construct_lean_proof_for_membership_equality_rewrite(
-                    fact,
-                    parameter_requirements,
-                    premises,
-                    context,
-                )
-            }
-            LitexToLeanProofRuleIr::KnownEqualityPath => {
-                render_known_equality_path(fact, parameter_requirements, premises, context)
-            }
-            LitexToLeanProofRuleIr::KnownForallInstantiation {
-                source_fact_id,
-                arguments,
-            } => render_known_forall_instantiation(
-                fact,
-                *source_fact_id,
-                arguments,
-                parameter_requirements,
-                premises,
-                context,
-            ),
-            LitexToLeanProofRuleIr::AndIntroduction => {
-                render_and_introduction(fact, parameter_requirements, premises, context)
-            }
-            LitexToLeanProofRuleIr::DisjunctionIntroduction { selected_index } => {
-                render_disjunction_introduction(
-                    fact,
-                    *selected_index,
-                    parameter_requirements,
-                    premises,
-                    context,
-                )
-            }
-            LitexToLeanProofRuleIr::ConjunctionProjection { index } => {
-                render_conjunction_projection(
-                    fact,
-                    *index,
-                    parameter_requirements,
-                    premises,
-                    context,
-                )
-            }
-            LitexToLeanProofRuleIr::DefinitionReduction => {
-                render_definition_reduction(fact, parameter_requirements, premises, context)
-            }
-            LitexToLeanProofRuleIr::DefinitionProjection => {
-                render_definition_projection(fact, parameter_requirements, premises, context)
-            }
-            LitexToLeanProofRuleIr::DefinitionIntroduction => {
-                render_definition_introduction(fact, parameter_requirements, premises, context)
-            }
-            LitexToLeanProofRuleIr::CheckedFunctionDefinitionReduction {
-                defining_equality_fact_id,
-                application_side,
-            } => render_checked_identity_function_reduction(
-                fact,
-                *defining_equality_fact_id,
-                *application_side,
-                parameter_requirements,
-                premises,
-                context,
-            ),
-            LitexToLeanProofRuleIr::SetBuilderMembership => {
-                render_set_builder_membership(fact, parameter_requirements, premises, context)
-            }
-            LitexToLeanProofRuleIr::SetBuilderBaseMembershipProjection => {
-                render_set_builder_base_membership_projection(
-                    fact,
-                    parameter_requirements,
-                    premises,
-                    context,
-                )
-            }
-            LitexToLeanProofRuleIr::SetBuilderPredicateProjection { clause_index } => {
-                render_set_builder_predicate_projection(
-                    fact,
-                    *clause_index,
-                    parameter_requirements,
-                    premises,
-                    context,
-                )
-            }
-            LitexToLeanProofRuleIr::ExistIntroduction { witnesses, steps } => {
-                render_exist_introduction(
-                    fact,
-                    witnesses,
-                    steps,
-                    parameter_requirements,
-                    premises,
-                    context,
-                )
-            }
-            LitexToLeanProofRuleIr::RegisteredRule(rule) => {
-                construct_lean_proof_for_registered_rule(
-                    fact,
-                    rule,
-                    parameter_requirements,
-                    premises,
-                    context,
-                )
-            }
-            other => Err(format!("unsupported verified proof rule: {other:?}")),
-        },
-        other => Err(format!("unsupported verified proof evidence: {other:?}")),
-    }
-}
-
-fn objects_match_after_rational_normalization(left: &Obj, right: &Obj) -> bool {
-    if objs_equal_by_rational_expression_evaluation(left, right) {
-        return true;
-    }
-    let (Obj::FnObj(left), Obj::FnObj(right)) = (left, right) else {
-        return false;
-    };
-    left.head.to_string() == right.head.to_string()
-        && left.body.len() == right.body.len()
-        && left
-            .body
-            .iter()
-            .zip(right.body.iter())
-            .all(|(left, right)| {
-                left.len() == right.len()
-                    && left.iter().zip(right.iter()).all(|(left, right)| {
-                        objects_match_after_rational_normalization(left, right)
-                    })
-            })
 }
 
 fn facts_align_by_nested_rational_normalization_for_result_compiler(
@@ -16469,245 +17909,12 @@ fn objects_align_by_nested_rational_normalization_for_result_compiler(
     comparison.unwrap_or(false)
 }
 
-fn proof_requires_closed_numeric_well_definedness(proof: &LitexToLeanFactProofIr) -> bool {
-    match proof {
-        LitexToLeanFactProofIr::UseBuiltinStrategy { proof } => {
-            proof_requires_closed_numeric_well_definedness(proof)
-        }
-        LitexToLeanFactProofIr::RuleApplication {
-            rule: LitexToLeanProofRuleIr::RationalNormalization,
-            ..
-        } => true,
-        _ => false,
-    }
-}
-
-fn render_object_definition_membership(
-    target: &LitexToLeanFactIr,
-    value_check: &LitexToLeanFactIr,
-    context: &StmtResultToLeanCompilerEnvironmentStack,
-) -> Result<String, String> {
-    let (target_element, target_set) = membership_parts(&target.proposition)?;
-    let (source_element, source_set) = membership_parts(&value_check.proposition)?;
-    if !matches!(
-        LitexToLeanObjectIr::lower(target_element)?,
-        LitexToLeanObjectIr::Symbol { .. }
-    ) {
-        return Err("object-definition membership target is not the declared symbol".into());
-    }
-    let name = render_obj(target_element, context)?;
-    if obj_equality_key(target_set) != obj_equality_key(source_set) {
-        return Err("object definition changed its retained membership check".into());
-    }
-    render_obj(source_element, context)?;
-    Ok(format!(
-        "(by\n  unfold {name}\n  exact {})",
-        render_proof(value_check, context)?
-    ))
-}
-
-fn render_object_definition_equality(
-    target: &LitexToLeanFactIr,
-    context: &StmtResultToLeanCompilerEnvironmentStack,
-) -> Result<String, String> {
-    let (left, right) = equality_parts(&target.proposition)?;
-    if !matches!(
-        LitexToLeanObjectIr::lower(left)?,
-        LitexToLeanObjectIr::Symbol { .. }
-    ) {
-        return Err("object-definition equality target is not the declared symbol".into());
-    }
-    let name = render_obj(left, context)?;
-    let rendered_value = render_obj(right, context)?;
-    Ok(format!(
-        "(by\n  unfold {name}\n  exact Litex.Same.refl {rendered_value})"
-    ))
-}
-
-fn render_object_choice(
-    target: &LitexToLeanFactIr,
-    context: &StmtResultToLeanCompilerEnvironmentStack,
-) -> Result<String, String> {
-    let (element, target_set) = membership_parts(&target.proposition)?;
-    if !matches!(
-        LitexToLeanObjectIr::lower(element)?,
-        LitexToLeanObjectIr::Symbol { .. }
-    ) {
-        return Err("object-choice membership target is not the chosen symbol".into());
-    }
-    let name = render_obj(element, context)?;
-    let carrier = LitexToLeanObjectIr::lower(target_set)?;
-    Ok(format!(
-        "Litex.In.own {} {name}",
-        render_set_ir(&carrier, context)?
-    ))
-}
-
-fn render_standard_set_nonempty(
-    target: &LitexToLeanFactIr,
-    context: &StmtResultToLeanCompilerEnvironmentStack,
-) -> Result<String, String> {
-    let Fact::AtomicFact(AtomicFact::IsNonemptySetFact(fact)) = &target.proposition else {
-        return Err("standard-set nonemptiness proof targets another proposition".into());
-    };
-    let theorem = match &fact.set {
-        Obj::StandardSet(StandardSet::N) => "Litex.Rules.naturalNonempty",
-        Obj::StandardSet(StandardSet::Z) => "Litex.Rules.integerNonempty",
-        Obj::StandardSet(StandardSet::Q) => "Litex.Rules.rationalNonempty",
-        Obj::StandardSet(StandardSet::R) => "Litex.Rules.realNonempty",
-        Obj::StandardSet(StandardSet::C) => "Litex.Rules.complexNonempty",
-        _ => {
-            return Err(format!("unsupported nonempty-set carrier `{}`", fact.set));
-        }
-    };
-    let expected = format!("Litex.Set.Nonempty {}", render_obj(&fact.set, context)?);
-    if render_fact(&target.proposition, context)? != expected {
-        return Err("standard-set nonemptiness changed its rendered target".into());
-    }
-    Ok(theorem.into())
-}
-
-fn render_definition_reduction(
-    target: &LitexToLeanFactIr,
-    parameter_requirements: &[LitexToLeanFactIr],
-    premises: &[LitexToLeanFactIr],
-    context: &StmtResultToLeanCompilerEnvironmentStack,
-) -> Result<String, String> {
-    let Fact::AtomicFact(AtomicFact::NormalAtomicFact(predicate)) = &target.proposition else {
-        return Err("concrete predicate reduction targets a non-predicate fact".into());
-    };
-    let definition = predicate.predicate.to_string();
-    let binding = context
-        .predicate_bindings
-        .get(&definition)
-        .ok_or_else(|| format!("unavailable concrete predicate definition `{definition}`"))?;
-    if predicate.body.len() != binding.parameter_count
-        || parameter_requirements.len() != binding.requirement_count
-        || premises.len() != binding.clause_count
-    {
-        return Err("concrete predicate reduction changed its definition contract".into());
-    }
-    let expected_components =
-        instantiated_predicate_components(&target.proposition, binding, context)?;
-    for (actual, expected) in parameter_requirements
-        .iter()
-        .chain(premises.iter())
-        .zip(expected_components.iter())
-    {
-        if render_fact(&actual.proposition, context)? != *expected {
-            return Err("concrete predicate reduction changed a parameter requirement".into());
-        }
-    }
-    let proofs = parameter_requirements
-        .iter()
-        .chain(premises.iter())
-        .map(|proof| render_proof(proof, context))
-        .collect::<Result<Vec<_>, _>>()?;
-    if proofs.is_empty() {
-        return Err("concrete predicate reduction retained no proof components".into());
-    }
-    Ok(format!(
-        "(by\n  unfold {}\n  exact ⟨{}⟩)",
-        binding.lean_name,
-        proofs.join(", ")
-    ))
-}
-
-fn render_definition_projection(
-    target: &LitexToLeanFactIr,
-    parameter_requirements: &[LitexToLeanFactIr],
-    premises: &[LitexToLeanFactIr],
-    context: &StmtResultToLeanCompilerEnvironmentStack,
-) -> Result<String, String> {
-    if !parameter_requirements.is_empty() || premises.len() != 1 {
-        return Err("concrete predicate projection changed its source or target".into());
-    }
-    let Fact::AtomicFact(AtomicFact::NormalAtomicFact(source)) = &premises[0].proposition else {
-        return Err("concrete predicate projection source is not a predicate fact".into());
-    };
-    let definition = source.predicate.to_string();
-    let binding = context
-        .predicate_bindings
-        .get(&definition)
-        .ok_or_else(|| format!("unavailable concrete predicate definition `{definition}`"))?;
-    let components = instantiated_predicate_components(&premises[0].proposition, binding, context)?;
-    let rendered_target = render_fact(&target.proposition, context)?;
-    let indices = components
-        .iter()
-        .enumerate()
-        .filter_map(|(index, component)| (component == &rendered_target).then_some(index))
-        .collect::<Vec<_>>();
-    let Some(index) = indices.first() else {
-        return Err("concrete predicate projection target is not a definition component".into());
-    };
-    let selector = conjunction_selector(*index, components.len())?;
-    Ok(format!(
-        "(by\n  have __definition := {}\n  unfold {} at __definition\n  exact __definition{selector})",
-        render_proof(&premises[0], context)?,
-        binding.lean_name
-    ))
-}
-
-fn render_definition_introduction(
-    target: &LitexToLeanFactIr,
-    parameter_requirements: &[LitexToLeanFactIr],
-    premises: &[LitexToLeanFactIr],
-    context: &StmtResultToLeanCompilerEnvironmentStack,
-) -> Result<String, String> {
-    if !parameter_requirements.is_empty() || premises.len() != 1 {
-        return Err("concrete predicate introduction changed its source or target".into());
-    }
-    let Fact::AtomicFact(AtomicFact::NormalAtomicFact(predicate)) = &target.proposition else {
-        return Err("concrete predicate introduction target is not a predicate fact".into());
-    };
-    let definition = predicate.predicate.to_string();
-    let binding = context
-        .predicate_bindings
-        .get(&definition)
-        .ok_or_else(|| format!("unavailable concrete predicate definition `{definition}`"))?;
-    let components = instantiated_predicate_components(&target.proposition, binding, context)?;
-    if components.len() != 1 || components[0] != render_fact(&premises[0].proposition, context)? {
-        return Err(
-            "concrete predicate introduction currently requires one exact definition component"
-                .into(),
-        );
-    }
-    Ok(format!(
-        "(by\n  unfold {}\n  exact {})",
-        binding.lean_name,
-        render_proof(&premises[0], context)?
-    ))
-}
-
-fn render_checked_identity_function_reduction(
-    target: &LitexToLeanFactIr,
-    defining_equality_fact_id: crate::common::fact_id::FactId,
-    application_side: LitexToLeanEqualitySideIr,
-    parameter_requirements: &[LitexToLeanFactIr],
-    premises: &[LitexToLeanFactIr],
-    context: &StmtResultToLeanCompilerEnvironmentStack,
-) -> Result<String, String> {
-    render_checked_identity_function_reduction_from_fact(
-        &target.proposition,
-        defining_equality_fact_id,
-        application_side,
-        parameter_requirements,
-        premises,
-        context,
-    )
-}
-
 fn render_checked_identity_function_reduction_from_fact(
     target: &Fact,
     defining_equality_fact_id: crate::common::fact_id::FactId,
-    application_side: LitexToLeanEqualitySideIr,
-    parameter_requirements: &[LitexToLeanFactIr],
-    premises: &[LitexToLeanFactIr],
+    application_side: LeanEqualityApplicationSide,
     context: &StmtResultToLeanCompilerEnvironmentStack,
 ) -> Result<String, String> {
-    if !parameter_requirements.is_empty() || !premises.is_empty() {
-        return Err("checked function reduction changed its verifier certificate".into());
-    }
     let binding = context
         .named_function_definitions
         .get(&defining_equality_fact_id)
@@ -16718,11 +17925,11 @@ fn render_checked_identity_function_reduction_from_fact(
         })?;
     let (target_left, target_right) = equality_parts(target)?;
     let application_object = match application_side {
-        LitexToLeanEqualitySideIr::Left => target_left,
-        LitexToLeanEqualitySideIr::Right => target_right,
+        LeanEqualityApplicationSide::Left => target_left,
+        LeanEqualityApplicationSide::Right => target_right,
     };
-    let LitexToLeanObjectIr::FunctionApplication(application) =
-        LitexToLeanObjectIr::lower(application_object)?
+    let LeanTargetObjectRepresentation::FunctionApplication(application) =
+        LeanTargetObjectRepresentation::lower(application_object)?
     else {
         return Err("checked function reduction retained a non-application side".into());
     };
@@ -16733,7 +17940,7 @@ fn render_checked_identity_function_reduction_from_fact(
     {
         return Err("checked function reduction changed its one-layer parameter telescope".into());
     }
-    let LitexToLeanObjectIr::Symbol {
+    let LeanTargetObjectRepresentation::Symbol {
         symbol_id: head_symbol_id,
         ..
     } = application.head.as_ref()
@@ -16744,15 +17951,22 @@ fn render_checked_identity_function_reduction_from_fact(
         return Err("checked function reduction changed its checked substitution".into());
     }
 
-    let certificate = context
-        .well_definedness
-        .as_ref()
-        .ok_or_else(|| "checked function reduction has no active WD certificate".to_string())?;
-    let requirements = certificate
-        .target_requirements
-        .iter()
-        .filter(|requirement| requirement.source_occurrence_id == application.source_occurrence_id)
-        .collect::<Vec<_>>();
+    let result_context = context.well_definedness.as_ref().ok_or_else(|| {
+        "checked function reduction has no active Result-owned WD context".to_string()
+    })?;
+    let application_context = result_context
+        .function_applications
+        .get(&application.source_occurrence_id)
+        .ok_or_else(|| {
+            "checked function reduction has no exact function-application Result context"
+                .to_string()
+        })?;
+    let [application_layer] = application_context.layers.as_slice() else {
+        return Err(
+            "checked function reduction requires one Result-owned application layer".into(),
+        );
+    };
+    let requirements = &application_layer.requirements;
     if requirements.len() != binding.function.parameters.len() + binding.function.domain_facts.len()
     {
         return Err(
@@ -16785,22 +17999,14 @@ fn render_checked_identity_function_reduction_from_fact(
                 "checked function reduction requires one argument-membership WD edge for parameter {parameter_index}"
             ));
         };
-        let argument_fact = certificate
-            .facts
-            .iter()
-            .find(|fact| fact.well_defined_fact_id == argument_requirement.well_defined_fact_id)
-            .ok_or_else(|| {
-                format!(
-                    "checked function reduction lost argument-membership proof {parameter_index}"
-                )
-            })?;
         let argument = render_obj(source_argument, context)?;
-        let argument_membership = render_proof(&argument_fact.fact, context)?;
+        let argument_membership =
+            render_function_application_requirement_proof(argument_requirement, context)?;
         let expected_membership = format!(
             "Litex.In {argument} {}",
-            render_set_ir(&parameter.set, &definition_context)?
+            render_lean_source_for_target_set_representation(&parameter.set, &definition_context)?
         );
-        let retained_membership = render_fact(&argument_fact.fact.proposition, context)?;
+        let retained_membership = render_fact(&argument_requirement.expected_proposition, context)?;
         if retained_membership != expected_membership {
             return Err(format!(
                 "checked function reduction parameter {parameter_index} expected `{expected_membership}`, retained `{retained_membership}`"
@@ -16886,15 +18092,8 @@ fn render_checked_identity_function_reduction_from_fact(
                 "checked function reduction requires one domain WD edge for clause {domain_index}"
             ));
         };
-        let domain_fact = certificate
-            .facts
-            .iter()
-            .find(|fact| fact.well_defined_fact_id == domain_requirement.well_defined_fact_id)
-            .ok_or_else(|| {
-                format!("checked function reduction lost domain proof {domain_index}")
-            })?;
         let expected_domain = render_fact(source_fact, &source_domain_definition_context)?;
-        let retained_domain = render_fact(&domain_fact.fact.proposition, context)?;
+        let retained_domain = render_fact(&domain_requirement.expected_proposition, context)?;
         if retained_domain != expected_domain {
             return Err(format!(
                 "checked function reduction domain {domain_index} expected `{expected_domain}`, retained `{retained_domain}`"
@@ -16902,7 +18101,7 @@ fn render_checked_identity_function_reduction_from_fact(
         }
         definition_context.fact_names.insert(
             local_premise.fact_id,
-            render_proof(&domain_fact.fact, context)?,
+            render_function_application_requirement_proof(domain_requirement, context)?,
         );
         definition_context
             .fact_propositions
@@ -16926,7 +18125,7 @@ fn render_checked_identity_function_reduction_from_fact(
             &argument_evidence,
             context,
         )?;
-        let proof = if application_side == LitexToLeanEqualitySideIr::Left {
+        let proof = if application_side == LeanEqualityApplicationSide::Left {
             body_same
         } else {
             format!("Litex.Same.symm ({body_same})")
@@ -16942,8 +18141,8 @@ fn render_checked_identity_function_reduction_from_fact(
     // compatibility statement IR.
     let source_body = render_obj(&binding.source_body, &definition_context)?;
     let other_object = match application_side {
-        LitexToLeanEqualitySideIr::Left => target_right,
-        LitexToLeanEqualitySideIr::Right => target_left,
+        LeanEqualityApplicationSide::Left => target_right,
+        LeanEqualityApplicationSide::Right => target_left,
     };
     let rendered_other = render_obj(other_object, context)?;
     if rendered_other != source_body {
@@ -16951,7 +18150,7 @@ fn render_checked_identity_function_reduction_from_fact(
             "checked function reduction changed the substituted source body: expected `{source_body}`, retained `{rendered_other}`"
         ));
     }
-    let proof = if application_side == LitexToLeanEqualitySideIr::Left {
+    let proof = if application_side == LeanEqualityApplicationSide::Left {
         "apply Litex.Same.symm\n  apply Litex.In.same_rep"
     } else {
         "apply Litex.In.same_rep"
@@ -16963,12 +18162,12 @@ fn render_checked_identity_function_reduction_from_fact(
 }
 
 fn render_real_function_body_same_with_parameters(
-    body: &LitexToLeanObjectIr,
+    body: &LeanTargetObjectRepresentation,
     argument_evidence: &HashMap<SymbolId, CheckedNamedFunctionReductionArgumentEvidence>,
     context: &StmtResultToLeanCompilerEnvironmentStack,
 ) -> Result<String, String> {
     match body {
-        LitexToLeanObjectIr::Symbol { symbol_id, .. }
+        LeanTargetObjectRepresentation::Symbol { symbol_id, .. }
             if argument_evidence.contains_key(symbol_id) =>
         {
             let evidence = &argument_evidence[symbol_id];
@@ -16989,7 +18188,7 @@ fn render_real_function_body_same_with_parameters(
                 ));
             }
             match &evidence.parameter_set {
-                LitexToLeanObjectIr::StandardSet(LitexToLeanStandardSetIr::Real) => {
+                LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Real) => {
                     if target_uses_selected_representation {
                         let selected_real = membership_real_value(
                             &evidence.parameter_set,
@@ -17007,8 +18206,8 @@ fn render_real_function_body_same_with_parameters(
                         ))
                     }
                 }
-                LitexToLeanObjectIr::StandardSet(
-                    LitexToLeanStandardSetIr::PositiveNatural,
+                LeanTargetObjectRepresentation::StandardSet(
+                    LeanTargetStandardSet::PositiveNatural,
                 ) => {
                     let representative =
                         format!("(Litex.In.rep {argument} ({argument_membership}))");
@@ -17027,7 +18226,7 @@ fn render_real_function_body_same_with_parameters(
                 )),
             }
         }
-        LitexToLeanObjectIr::Number { normalized_value }
+        LeanTargetObjectRepresentation::Number { normalized_value }
             if !normalized_value.is_empty()
                 && normalized_value
                     .chars()
@@ -17035,17 +18234,17 @@ fn render_real_function_body_same_with_parameters(
         {
             Ok(format!("Litex.Same.realComplex ({normalized_value} : ℝ)"))
         }
-        LitexToLeanObjectIr::BuiltinApp {
+        LeanTargetObjectRepresentation::BuiltinApp {
             operator,
             arguments,
             ..
         } if arguments.len() == 2
             && matches!(
                 operator,
-                LitexToLeanBuiltinObjectOperatorIr::Add
-                    | LitexToLeanBuiltinObjectOperatorIr::Sub
-                    | LitexToLeanBuiltinObjectOperatorIr::Mul
-                    | LitexToLeanBuiltinObjectOperatorIr::Div
+                LeanTargetBuiltinObjectOperator::Add
+                    | LeanTargetBuiltinObjectOperator::Sub
+                    | LeanTargetBuiltinObjectOperator::Mul
+                    | LeanTargetBuiltinObjectOperator::Div
             ) =>
         {
             let left = render_real_function_body_same_with_parameters(
@@ -17059,10 +18258,10 @@ fn render_real_function_body_same_with_parameters(
                 context,
             )?;
             let theorem = match operator {
-                LitexToLeanBuiltinObjectOperatorIr::Add => "Litex.Same.realAddComplex",
-                LitexToLeanBuiltinObjectOperatorIr::Sub => "Litex.Same.realSubComplex",
-                LitexToLeanBuiltinObjectOperatorIr::Mul => "Litex.Same.realMulComplex",
-                LitexToLeanBuiltinObjectOperatorIr::Div => "Litex.Same.realDivComplex",
+                LeanTargetBuiltinObjectOperator::Add => "Litex.Same.realAddComplex",
+                LeanTargetBuiltinObjectOperator::Sub => "Litex.Same.realSubComplex",
+                LeanTargetBuiltinObjectOperator::Mul => "Litex.Same.realMulComplex",
+                LeanTargetBuiltinObjectOperator::Div => "Litex.Same.realDivComplex",
                 _ => unreachable!("guarded real binary operator"),
             };
             Ok(format!("{theorem} ({left}) ({right})"))
@@ -17146,34 +18345,14 @@ fn conjunction_selector(index: usize, count: usize) -> Result<String, String> {
     Ok(format!("{}.1", ".2".repeat(index)))
 }
 
-fn render_set_builder_membership(
-    target: &LitexToLeanFactIr,
-    parameter_requirements: &[LitexToLeanFactIr],
-    premises: &[LitexToLeanFactIr],
-    context: &StmtResultToLeanCompilerEnvironmentStack,
-) -> Result<String, String> {
-    if !parameter_requirements.is_empty() {
-        return Err("set-builder membership changed its checked constructor premises".into());
-    }
-    let compiled_premises = premises
-        .iter()
-        .map(|premise| Ok((premise.proposition.clone(), render_proof(premise, context)?)))
-        .collect::<Result<Vec<_>, String>>()?;
-    render_set_builder_membership_from_fact_and_proofs(
-        &target.proposition,
-        &compiled_premises,
-        context,
-    )
-}
-
 fn render_set_builder_membership_from_fact_and_proofs(
     target: &Fact,
     premises: &[(Fact, String)],
     context: &StmtResultToLeanCompilerEnvironmentStack,
 ) -> Result<String, String> {
     let (_, target_set) = membership_parts(target)?;
-    let set_builder = LitexToLeanObjectIr::lower(target_set)?;
-    let LitexToLeanObjectIr::SetBuilder(builder) = set_builder else {
+    let set_builder = LeanTargetObjectRepresentation::lower(target_set)?;
+    let LeanTargetObjectRepresentation::SetBuilder(builder) = set_builder else {
         return Err("set-builder membership retained a non-builder object".into());
     };
     if premises.len() != builder.facts.len() + 1 {
@@ -17182,7 +18361,7 @@ fn render_set_builder_membership_from_fact_and_proofs(
     let (element, _) = membership_parts(target)?;
     let (base_element, base_set) = membership_parts(&premises[0].0)?;
     if obj_equality_key(element) != obj_equality_key(base_element)
-        || LitexToLeanObjectIr::lower(base_set)? != *builder.set
+        || LeanTargetObjectRepresentation::lower(base_set)? != *builder.set
     {
         return Err("set-builder membership changed its base-membership premise".into());
     }
@@ -17351,53 +18530,6 @@ fn render_equality_across_representative(
     }
 }
 
-fn render_set_builder_base_membership_projection(
-    target: &LitexToLeanFactIr,
-    parameter_requirements: &[LitexToLeanFactIr],
-    premises: &[LitexToLeanFactIr],
-    context: &StmtResultToLeanCompilerEnvironmentStack,
-) -> Result<String, String> {
-    if !parameter_requirements.is_empty() || premises.len() != 1 {
-        return Err("set-builder base projection changed its checked source or target".into());
-    }
-    let (source_element, source_set) = membership_parts(&premises[0].proposition)?;
-    let set_builder = LitexToLeanObjectIr::lower(source_set)?;
-    let LitexToLeanObjectIr::SetBuilder(builder) = set_builder else {
-        return Err("set-builder base projection retained a non-builder object".into());
-    };
-    let (target_element, target_set) = membership_parts(&target.proposition)?;
-    if obj_equality_key(source_element) != obj_equality_key(target_element)
-        || LitexToLeanObjectIr::lower(target_set)? != *builder.set
-    {
-        return Err("set-builder base projection changed its element or base set".into());
-    }
-    Ok(format!(
-        "Litex.Rules.inBaseOfInSetBuilder ({})",
-        render_proof(&premises[0], context)?
-    ))
-}
-
-#[allow(clippy::too_many_arguments)]
-fn render_set_builder_predicate_projection(
-    target: &LitexToLeanFactIr,
-    clause_index: usize,
-    parameter_requirements: &[LitexToLeanFactIr],
-    premises: &[LitexToLeanFactIr],
-    context: &StmtResultToLeanCompilerEnvironmentStack,
-) -> Result<String, String> {
-    if !parameter_requirements.is_empty() || premises.len() != 1 {
-        return Err("set-builder predicate projection changed its checked source or target".into());
-    }
-    let source_proof = render_proof(&premises[0], context)?;
-    render_set_builder_predicate_projection_from_fact_and_proof(
-        &target.proposition,
-        clause_index,
-        &premises[0].proposition,
-        &source_proof,
-        context,
-    )
-}
-
 fn render_set_builder_predicate_projection_from_fact_and_proof(
     target: &Fact,
     clause_index: usize,
@@ -17406,8 +18538,8 @@ fn render_set_builder_predicate_projection_from_fact_and_proof(
     context: &StmtResultToLeanCompilerEnvironmentStack,
 ) -> Result<String, String> {
     let (_, source_set) = membership_parts(source)?;
-    let set_builder = LitexToLeanObjectIr::lower(source_set)?;
-    let LitexToLeanObjectIr::SetBuilder(builder) = set_builder else {
+    let set_builder = LeanTargetObjectRepresentation::lower(source_set)?;
+    let LeanTargetObjectRepresentation::SetBuilder(builder) = set_builder else {
         return Err("set-builder predicate projection retained a non-builder object".into());
     };
     let clause = builder
@@ -17520,262 +18652,6 @@ fn render_set_builder_predicate_projection_from_fact_and_proof(
         binding.lean_name,
         component_proofs.join(", ")
     ))
-}
-
-fn render_exist_introduction(
-    target: &LitexToLeanFactIr,
-    witnesses: &[Obj],
-    steps: &[LitexToLeanStatementIr],
-    parameter_requirements: &[LitexToLeanFactIr],
-    premises: &[LitexToLeanFactIr],
-    context: &StmtResultToLeanCompilerEnvironmentStack,
-) -> Result<String, String> {
-    let Fact::ExistFact(existential) = &target.proposition else {
-        return Err("existential introduction targets a non-existential proposition".into());
-    };
-    if !existential.is_plain_exist()
-        || existential.params_def_with_type().number_of_params() != 1
-        || existential.facts().len() != 1
-        || witnesses.len() != 1
-        || parameter_requirements.len() != 1
-        || premises.len() != 1
-    {
-        return Err(
-            "compiler existential introduction supports one membership witness and one body fact"
-                .into(),
-        );
-    }
-    let group = &existential.params_def_with_type().groups[0];
-    if group.params.len() != 1 {
-        return Err("existential introduction requires one singleton parameter group".into());
-    }
-    let set = parameter_set(&group.param_type)?;
-    let witness = render_obj(&witnesses[0], context)?;
-    let mut instantiated = context.clone();
-    instantiated
-        .symbol_names
-        .insert(group.params[0].id(), witness.clone());
-    instantiated
-        .existential_names
-        .insert(group.params[0].name().to_string(), witness.clone());
-    let expected_requirement = format!("Litex.In {witness} {}", render_obj(set, &instantiated)?);
-    let expected_body = render_fact(
-        &existential.facts()[0].from_ref_to_cloned_fact(),
-        &instantiated,
-    )?;
-    if render_fact(&parameter_requirements[0].proposition, context)? != expected_requirement
-        || render_fact(&premises[0].proposition, context)? != expected_body
-    {
-        return Err(
-            "existential introduction witness does not instantiate its retained target facts"
-                .into(),
-        );
-    }
-
-    let mut nested = context.clone();
-    let mut local_index = 0;
-    let mut lines = vec!["by".to_string()];
-    for local in render_local_statements(steps, &mut nested, "__exist_step", &mut local_index)? {
-        lines.push(indent_lines(&local, 2));
-    }
-    let requirement_proof = render_proof(&parameter_requirements[0], &nested)?;
-    let body_proof = render_proof(&premises[0], &nested)?;
-    let carrier = if matches!(set, Obj::FnSet(_)) || set_requires_heterogeneous_carrier(set) {
-        "_, "
-    } else {
-        ""
-    };
-    lines.push(format!(
-        "  exact ⟨{carrier}{witness}, ({requirement_proof}), ({body_proof})⟩"
-    ));
-    Ok(format!("({})", lines.join("\n")))
-}
-
-fn render_case_split(
-    target: &LitexToLeanFactIr,
-    coverage: &LitexToLeanFactIr,
-    branches: &[LitexToLeanCaseBranchIr],
-    context: &StmtResultToLeanCompilerEnvironmentStack,
-) -> Result<String, String> {
-    let Fact::OrFact(disjunction) = &coverage.proposition else {
-        return Err("case split retained non-disjunctive coverage".into());
-    };
-    if disjunction.facts.is_empty() || disjunction.facts.len() != branches.len() {
-        return Err("case split coverage and branch counts do not match".into());
-    }
-    let coverage_proof = render_proof(coverage, context)?;
-    let case_names = (0..branches.len())
-        .map(|index| format!("__case{}", index + 1))
-        .collect::<Vec<_>>();
-    let mut lines = vec!["by".to_string()];
-    if case_names.len() == 1 {
-        let case_type = render_fact(&branches[0].assumption.fact, context)?;
-        lines.push(format!(
-            "  have {} : {case_type} := {coverage_proof}",
-            case_names[0]
-        ));
-    } else {
-        lines.push(format!(
-            "  rcases ({coverage_proof}) with {}",
-            case_names.join(" | ")
-        ));
-    }
-
-    for (index, branch) in branches.iter().enumerate() {
-        let expected: Fact = disjunction.facts[index].clone().into();
-        if expected.to_string() != branch.assumption.fact.to_string() {
-            return Err("case branch assumption changed its coverage position".into());
-        }
-        let mut nested = context.clone();
-        nested
-            .fact_names
-            .insert(branch.assumption.fact_id, case_names[index].clone());
-        nested
-            .fact_propositions
-            .insert(branch.assumption.fact_id, branch.assumption.fact.clone());
-        let mut local_index = 0;
-        let local_lines = render_local_proof_block(
-            &branch.block,
-            &mut nested,
-            &format!("__case{}_step", index + 1),
-            &mut local_index,
-        )?;
-        let exit = match &branch.exit {
-            LitexToLeanCaseBranchExitIr::Conclusion(conclusion) => {
-                if conclusion.fact.proposition.to_string() != target.proposition.to_string() {
-                    return Err("case branch conclusion changed the exported goal".into());
-                }
-                crate::litex_to_lean_ir::validate_litex_to_lean_well_definedness_certificate(
-                    &conclusion.well_definedness,
-                )?;
-                nested.well_definedness = Some(conclusion.well_definedness.clone());
-                render_proof(&conclusion.fact, &nested)?
-            }
-            LitexToLeanCaseBranchExitIr::Contradiction(contradiction) => {
-                format!(
-                    "False.elim ({})",
-                    render_contradiction(contradiction, &nested)?
-                )
-            }
-        };
-        if branches.len() == 1 {
-            for local in local_lines {
-                lines.push(indent_lines(&local, 2));
-            }
-            lines.push(format!("  exact {exit}"));
-        } else {
-            lines.push("  ·".into());
-            for local in local_lines {
-                lines.push(indent_lines(&local, 4));
-            }
-            lines.push(format!("    exact {exit}"));
-        }
-    }
-    Ok(format!("({})", lines.join("\n")))
-}
-
-fn render_by_contradiction(
-    target: &LitexToLeanFactIr,
-    reverse_assumption: &LitexToLeanReverseAssumptionIr,
-    block: &LitexToLeanLocalProofBlockIr,
-    contradiction: &LitexToLeanContradictionIr,
-    context: &StmtResultToLeanCompilerEnvironmentStack,
-) -> Result<String, String> {
-    let Fact::AtomicFact(target_atomic) = &target.proposition else {
-        return Err("by-contradiction currently requires an atomic target".into());
-    };
-    let target_is_negated = matches!(
-        target_atomic,
-        AtomicFact::NotNormalAtomicFact(_)
-            | AtomicFact::NotEqualFact(_)
-            | AtomicFact::NotLessFact(_)
-            | AtomicFact::NotGreaterFact(_)
-            | AtomicFact::NotLessEqualFact(_)
-            | AtomicFact::NotGreaterEqualFact(_)
-            | AtomicFact::NotIsSetFact(_)
-            | AtomicFact::NotIsNonemptySetFact(_)
-            | AtomicFact::NotIsFiniteSetFact(_)
-            | AtomicFact::NotInFact(_)
-            | AtomicFact::NotIsCartFact(_)
-            | AtomicFact::NotIsTupleFact(_)
-            | AtomicFact::NotSubsetFact(_)
-            | AtomicFact::NotSupersetFact(_)
-    );
-    let expected_introduction = if target_is_negated {
-        LitexToLeanReverseAssumptionIntroductionIr::ClassicalDoubleNegation
-    } else {
-        LitexToLeanReverseAssumptionIntroductionIr::DirectNegation
-    };
-    if reverse_assumption.introduction != expected_introduction {
-        return Err("by-contradiction changed target polarity".into());
-    }
-    let expected_reverse: Fact = target_atomic
-        .logical_negation()
-        .map_err(|_| "by-contradiction target has no atomic negation".to_string())?
-        .into();
-    if expected_reverse.to_string() != reverse_assumption.premise.fact.to_string() {
-        return Err("by-contradiction reverse assumption is not the negated target".into());
-    }
-
-    let mut nested = context.clone();
-    nested
-        .fact_names
-        .insert(reverse_assumption.premise.fact_id, "__reverse".into());
-    nested.fact_propositions.insert(
-        reverse_assumption.premise.fact_id,
-        reverse_assumption.premise.fact.clone(),
-    );
-    let mut local_index = 0;
-    let local_lines =
-        render_local_proof_block(block, &mut nested, "__contra_step", &mut local_index)?;
-    let contradiction = render_contradiction(contradiction, &nested)?;
-    let mut lines = vec!["by".to_string(), "  classical".to_string()];
-    match reverse_assumption.introduction {
-        LitexToLeanReverseAssumptionIntroductionIr::DirectNegation => {
-            lines.push("  by_contra __reverse".into());
-            for local in local_lines {
-                lines.push(indent_lines(&local, 2));
-            }
-            lines.push(format!("  exact {contradiction}"));
-        }
-        LitexToLeanReverseAssumptionIntroductionIr::ClassicalDoubleNegation => {
-            let reverse_type = render_fact(&reverse_assumption.premise.fact, context)?;
-            lines.push("  exact Classical.byContradiction (fun __negated_goal => by".into());
-            lines.push(format!(
-                "    have __reverse : {reverse_type} := Classical.byContradiction (fun __not_reverse => __negated_goal __not_reverse)"
-            ));
-            for local in local_lines {
-                lines.push(indent_lines(&local, 4));
-            }
-            lines.push(format!("    exact {contradiction})"));
-        }
-    }
-    Ok(format!("({})", lines.join("\n")))
-}
-
-fn render_contradiction(
-    contradiction: &LitexToLeanContradictionIr,
-    context: &StmtResultToLeanCompilerEnvironmentStack,
-) -> Result<String, String> {
-    let Fact::AtomicFact(positive) = &contradiction.fact.proposition else {
-        return Err("contradiction retained a non-atomic fact".into());
-    };
-    let expected_negation: Fact = positive
-        .logical_negation()
-        .map_err(|_| "contradiction fact has no atomic negation".to_string())?
-        .into();
-    if expected_negation.to_string() != contradiction.negated_fact.proposition.to_string() {
-        return Err("contradiction facts are not logical complements".into());
-    }
-    let fact = render_proof(&contradiction.fact, context)?;
-    let negated = render_proof(&contradiction.negated_fact, context)?;
-    if matches!(positive, AtomicFact::NotEqualFact(_)) {
-        let function_type = render_fact(&contradiction.fact.proposition, context)?;
-        Ok(format!("(({fact} : {function_type}) ({negated}))"))
-    } else {
-        let function_type = render_fact(&contradiction.negated_fact.proposition, context)?;
-        Ok(format!("(({negated} : {function_type}) ({fact}))"))
-    }
 }
 
 fn resolve_fact_citation(
@@ -17893,84 +18769,6 @@ fn render_forall_conclusion_citation(
     )
 }
 
-fn render_closed_standard_membership(
-    fact: &LitexToLeanFactIr,
-    context: &StmtResultToLeanCompilerEnvironmentStack,
-) -> Result<String, String> {
-    let (element, set) = membership_parts(&fact.proposition)?;
-    let Obj::StandardSet(set) = set else {
-        return Err("closed-standard-membership certificate targets a nonstandard set".into());
-    };
-    if *set == StandardSet::C {
-        return Ok(format!(
-            "Litex.Rules.complexInC {}",
-            render_obj(element, context)?
-        ));
-    }
-    if *set == StandardSet::R {
-        return render_closed_real_expression_membership(element, context);
-    }
-    let Obj::Number(number) = element else {
-        return Err(
-            "compiler closed N/Z/Q/R membership currently requires a natural numeral".into(),
-        );
-    };
-    if number.normalized_value.is_empty()
-        || !number
-            .normalized_value
-            .chars()
-            .all(|character| character.is_ascii_digit())
-    {
-        return Err(
-            "compiler closed N/Z/Q/R membership currently requires a natural numeral".into(),
-        );
-    }
-    if *set == StandardSet::NPos {
-        if !number
-            .normalized_value
-            .chars()
-            .any(|character| character != '0')
-        {
-            return Err(
-                "compiler closed N+ membership requires a strictly positive natural numeral".into(),
-            );
-        }
-        return Ok(format!(
-            "Litex.Rules.complexEqNatInNPos ({} : ℂ) {} (by norm_num) (by norm_num)",
-            number.normalized_value, number.normalized_value
-        ));
-    }
-    if *set == StandardSet::RPos {
-        return Ok(format!(
-            "Litex.Rules.complexEqRealInRPos ({} : ℂ) ({} : ℝ) (by norm_num) (by norm_num)",
-            number.normalized_value, number.normalized_value
-        ));
-    }
-    let theorem = match set {
-        StandardSet::N => "complexEqNatInN",
-        StandardSet::Z => "complexEqIntInZ",
-        StandardSet::Q => "complexEqRatInQ",
-        _ => return Err(format!("unsupported closed standard membership in `{set}`")),
-    };
-    Ok(format!(
-        "Litex.Rules.{theorem} ({} : ℂ) {} (by norm_num)",
-        number.normalized_value, number.normalized_value
-    ))
-}
-
-fn render_closed_numeric_membership(
-    fact: &LitexToLeanFactIr,
-    evidence: &LitexToLeanClosedNumericMembershipProofIr,
-    context: &StmtResultToLeanCompilerEnvironmentStack,
-) -> Result<String, String> {
-    render_closed_numeric_membership_from_result(
-        &fact.proposition,
-        evidence.target_set,
-        &evidence.evaluation,
-        context,
-    )
-}
-
 fn render_closed_numeric_membership_from_result(
     proposition: &Fact,
     evidence_target_set: StandardSet,
@@ -18024,9 +18822,21 @@ fn render_closed_numeric_membership_from_result(
         StandardSet::Q => Ok(format!(
             "Litex.Rules.complexEqRatInQ {source} {normalized} (by norm_num)"
         )),
+        StandardSet::QPos => Ok(format!(
+            "Litex.Rules.complexEqRatInQPos {source} ({normalized} : ℚ) (by norm_num) (by norm_num)"
+        )),
+        StandardSet::ZNeg => Ok(format!(
+            "Litex.Rules.complexEqIntInZNeg {source} ({normalized} : ℤ) (by norm_num) (by norm_num)"
+        )),
+        StandardSet::QNeg => Ok(format!(
+            "Litex.Rules.complexEqRatInQNeg {source} ({normalized} : ℚ) (by norm_num) (by norm_num)"
+        )),
         StandardSet::R => render_closed_real_expression_membership(element, context),
         StandardSet::RPos => Ok(format!(
             "Litex.Rules.complexEqRealInRPos {source} ({normalized} : ℝ) (by norm_num) (by norm_num)"
+        )),
+        StandardSet::RNeg => Ok(format!(
+            "Litex.Rules.complexEqRealInRNeg {source} ({normalized} : ℝ) (by norm_num) (by norm_num)"
         )),
         _ => Err(format!(
             "unsupported closed numeric membership in `{target_set}` with value `{normalized}`"
@@ -18084,28 +18894,11 @@ fn render_closed_real_expression_membership(
     ))
 }
 
-fn render_closed_numeric_comparison(
-    fact: &LitexToLeanFactIr,
-    parameter_requirements: &[LitexToLeanFactIr],
-    premises: &[LitexToLeanFactIr],
-    context: &StmtResultToLeanCompilerEnvironmentStack,
-) -> Result<String, String> {
-    if !parameter_requirements.is_empty()
-        || !premises.is_empty()
-        || !crate::litex_to_lean_ir::is_closed_numeric_relation(&fact.proposition)
-    {
-        return Err(
-            "closed numeric comparison changed its target or retained unexpected premises".into(),
-        );
-    }
-    render_closed_numeric_comparison_fact(&fact.proposition, context)
-}
-
 fn render_closed_numeric_comparison_fact(
     fact: &Fact,
     context: &StmtResultToLeanCompilerEnvironmentStack,
 ) -> Result<String, String> {
-    if !crate::litex_to_lean_ir::is_closed_numeric_relation(fact) {
+    if !fact_is_closed_numeric_relation(fact) {
         return Err("closed numeric comparison changed its target".into());
     }
     let (left, right, theorem, strict, negated) = match fact {
@@ -18751,105 +19544,6 @@ fn normalized_positive_order_operands(
     }
 }
 
-fn render_number_theory_reflection(
-    fact: &LitexToLeanFactIr,
-    rule: &LitexToLeanBuiltinRuleIr,
-    parameter_requirements: &[LitexToLeanFactIr],
-    premises: &[LitexToLeanFactIr],
-    context: &StmtResultToLeanCompilerEnvironmentStack,
-) -> Result<String, String> {
-    if !parameter_requirements.is_empty() || !premises.is_empty() {
-        return Err("number-theory reflection retained unexpected child proofs".into());
-    }
-    let (predicate, arguments, negated) = match &fact.proposition {
-        Fact::AtomicFact(AtomicFact::NormalAtomicFact(value)) => {
-            (value.predicate.to_string(), value.body.as_slice(), false)
-        }
-        Fact::AtomicFact(AtomicFact::NotNormalAtomicFact(value)) => {
-            (value.predicate.to_string(), value.body.as_slice(), true)
-        }
-        _ => return Err("number-theory reflection retained a non-predicate target".into()),
-    };
-    let (expected_predicate, expected_arity) = match rule {
-        LitexToLeanBuiltinRuleIr::PrimeU64Reflection => (PRIME, 1),
-        LitexToLeanBuiltinRuleIr::CoprimeNaturalReflection => (COPRIME, 2),
-        _ => return Err("non-reflection rule reached number-theory renderer".into()),
-    };
-    if predicate != expected_predicate || arguments.len() != expected_arity {
-        return Err("number-theory reflection changed its predicate or arity".into());
-    }
-    for argument in arguments {
-        let Obj::Number(number) = argument else {
-            return Err("number-theory reflection changed a closed numeric argument".into());
-        };
-        if number.normalized_value.starts_with('-') || number.normalized_value.contains('.') {
-            return Err("number-theory reflection retained a non-natural argument".into());
-        }
-        if matches!(rule, LitexToLeanBuiltinRuleIr::PrimeU64Reflection)
-            && number.normalized_value.parse::<u64>().is_err()
-        {
-            return Err("prime reflection retained a value outside its u64 certificate".into());
-        }
-    }
-    render_fact(&fact.proposition, context)?;
-    let values = arguments
-        .iter()
-        .map(|argument| match argument {
-            Obj::Number(number) => Ok(number.normalized_value.as_str()),
-            _ => Err("number-theory reflection changed a numeric argument".to_string()),
-        })
-        .collect::<Result<Vec<_>, _>>()?;
-    Ok(match rule {
-        LitexToLeanBuiltinRuleIr::PrimeU64Reflection => {
-            let theorem = if negated {
-                "notPrimeOfNat"
-            } else {
-                "primeOfNat"
-            };
-            format!(
-                "(by simpa using (Litex.{theorem} {} (by norm_num)))",
-                values[0]
-            )
-        }
-        LitexToLeanBuiltinRuleIr::CoprimeNaturalReflection => {
-            let theorem = if negated {
-                "notCoprimeOfNat"
-            } else {
-                "coprimeOfNat"
-            };
-            format!(
-                "(by simpa using (Litex.{theorem} {} {} (by norm_num)))",
-                values[0], values[1]
-            )
-        }
-        _ => unreachable!("validated reflection rule"),
-    })
-}
-
-fn render_not_equal_symmetry(
-    fact: &LitexToLeanFactIr,
-    parameter_requirements: &[LitexToLeanFactIr],
-    premises: &[LitexToLeanFactIr],
-    context: &StmtResultToLeanCompilerEnvironmentStack,
-) -> Result<String, String> {
-    if !parameter_requirements.is_empty() || premises.len() != 1 {
-        return Err(
-            "not-equality symmetry requires one premise and no parameter requirements".into(),
-        );
-    }
-    let (target_left, target_right) = not_equal_parts(&fact.proposition)?;
-    let (source_left, source_right) = not_equal_parts(&premises[0].proposition)?;
-    if obj_equality_key(source_left) != obj_equality_key(target_right)
-        || obj_equality_key(source_right) != obj_equality_key(target_left)
-    {
-        return Err("not-equality symmetry premise does not reverse the target objects".into());
-    }
-    Ok(format!(
-        "Litex.Rules.notSameSymm ({})",
-        render_proof(&premises[0], context)?
-    ))
-}
-
 fn standard_set_membership_projection_theorem_chain(
     source_set: StandardSet,
     target_set: StandardSet,
@@ -18906,136 +19600,6 @@ fn standard_set_membership_projection_theorem_chain(
     }
 }
 
-fn render_standard_set_membership_projection(
-    fact: &LitexToLeanFactIr,
-    parameter_requirements: &[LitexToLeanFactIr],
-    premises: &[LitexToLeanFactIr],
-    context: &StmtResultToLeanCompilerEnvironmentStack,
-) -> Result<String, String> {
-    if !parameter_requirements.is_empty() || premises.len() != 1 {
-        return Err(
-            "standard-set membership projection requires one premise and no parameter requirements"
-                .into(),
-        );
-    }
-    let (target_element, target_set) = membership_parts(&fact.proposition)?;
-    let (source_element, source_set) = membership_parts(&premises[0].proposition)?;
-    if obj_equality_key(target_element) != obj_equality_key(source_element) {
-        return Err("standard-set membership projection changed its source element".into());
-    }
-    let (Obj::StandardSet(source_set), Obj::StandardSet(target_set)) = (source_set, target_set)
-    else {
-        return Err("standard-set membership projection retained a nonstandard set".into());
-    };
-    let theorem_chain = standard_set_membership_projection_theorem_chain(*source_set, *target_set)?;
-    let mut proof = render_proof(&premises[0], context)?;
-    for theorem in theorem_chain {
-        proof = format!("Litex.Rules.{theorem} ({proof})");
-    }
-    Ok(proof)
-}
-
-fn render_standard_set_subset(
-    fact: &LitexToLeanFactIr,
-    parameter_requirements: &[LitexToLeanFactIr],
-    premises: &[LitexToLeanFactIr],
-    context: &StmtResultToLeanCompilerEnvironmentStack,
-) -> Result<String, String> {
-    if !parameter_requirements.is_empty() || !premises.is_empty() {
-        return Err("standard-set subset requires no retained premises".into());
-    }
-    let Fact::AtomicFact(AtomicFact::SubsetFact(subset)) = &fact.proposition else {
-        return Err("standard-set subset evidence retained a non-subset target".into());
-    };
-    let (Obj::StandardSet(source), Obj::StandardSet(target)) = (&subset.left, &subset.right) else {
-        return Err("standard-set subset evidence retained a nonstandard endpoint".into());
-    };
-    render_fact(&fact.proposition, context)?;
-    if source == target {
-        return Ok("(fun _x hx => hx)".into());
-    }
-    let theorem_chain: &[&str] = match (source, target) {
-        (StandardSet::NPos, StandardSet::N) => &["inNOfInNPos"],
-        (StandardSet::RPos, StandardSet::R) => &["inROfInRPos"],
-        (StandardSet::RPos, StandardSet::C) => &["inROfInRPos", "inCOfInR"],
-        (StandardSet::ZStar, StandardSet::Z) => &["inZOfInZStar"],
-        (StandardSet::ZStar, StandardSet::Q) => &["inZOfInZStar", "inQOfInZ"],
-        (StandardSet::ZStar, StandardSet::R) => &["inZOfInZStar", "inQOfInZ", "inROfInQ"],
-        (StandardSet::ZStar, StandardSet::C) => {
-            &["inZOfInZStar", "inQOfInZ", "inROfInQ", "inCOfInR"]
-        }
-        (StandardSet::QStar, StandardSet::Q) => &["inQOfInQStar"],
-        (StandardSet::QStar, StandardSet::R) => &["inQOfInQStar", "inROfInQ"],
-        (StandardSet::QStar, StandardSet::C) => &["inQOfInQStar", "inROfInQ", "inCOfInR"],
-        (StandardSet::RStar, StandardSet::R) => &["inROfInRStar"],
-        (StandardSet::RStar, StandardSet::C) => &["inROfInRStar", "inCOfInR"],
-        (StandardSet::CStar, StandardSet::C) => &["inCOfInCStar"],
-        (StandardSet::ZStar, StandardSet::QStar) => &["inQStarOfInZStar"],
-        (StandardSet::ZStar, StandardSet::RStar) => &["inQStarOfInZStar", "inRStarOfInQStar"],
-        (StandardSet::ZStar, StandardSet::CStar) => {
-            &["inQStarOfInZStar", "inRStarOfInQStar", "inCStarOfInRStar"]
-        }
-        (StandardSet::QStar, StandardSet::RStar) => &["inRStarOfInQStar"],
-        (StandardSet::QStar, StandardSet::CStar) => &["inRStarOfInQStar", "inCStarOfInRStar"],
-        (StandardSet::RStar, StandardSet::CStar) => &["inCStarOfInRStar"],
-        (StandardSet::N, StandardSet::Z) => &["inZOfInN"],
-        (StandardSet::N, StandardSet::Q) => &["inZOfInN", "inQOfInZ"],
-        (StandardSet::N, StandardSet::R) => &["inZOfInN", "inQOfInZ", "inROfInQ"],
-        (StandardSet::N, StandardSet::C) => &["inZOfInN", "inQOfInZ", "inROfInQ", "inCOfInR"],
-        (StandardSet::Z, StandardSet::Q) => &["inQOfInZ"],
-        (StandardSet::Z, StandardSet::R) => &["inQOfInZ", "inROfInQ"],
-        (StandardSet::Z, StandardSet::C) => &["inQOfInZ", "inROfInQ", "inCOfInR"],
-        (StandardSet::Q, StandardSet::R) => &["inROfInQ"],
-        (StandardSet::Q, StandardSet::C) => &["inROfInQ", "inCOfInR"],
-        (StandardSet::R, StandardSet::C) => &["inCOfInR"],
-        _ => {
-            return Err(format!(
-                "unsupported standard-set subset `{source}` to `{target}`"
-            ));
-        }
-    };
-    let mut proof = "hx".to_string();
-    for theorem in theorem_chain {
-        proof = format!("Litex.Rules.{theorem} ({proof})");
-    }
-    Ok(format!("(fun _x hx => {proof})"))
-}
-
-fn render_finite_set_constructor(
-    fact: &LitexToLeanFactIr,
-    rule: LitexToLeanFiniteSetBuiltinRuleIr,
-    parameter_requirements: &[LitexToLeanFactIr],
-    premises: &[LitexToLeanFactIr],
-    context: &StmtResultToLeanCompilerEnvironmentStack,
-) -> Result<String, String> {
-    if !parameter_requirements.is_empty() || !premises.is_empty() {
-        return Err("finite-set constructor reflection requires no retained premises".into());
-    }
-    let Fact::AtomicFact(AtomicFact::IsFiniteSetFact(target)) = &fact.proposition else {
-        return Err("finite-set reflection retained a non-finiteness target".into());
-    };
-    render_fact(&fact.proposition, context)?;
-    match (rule, &target.set) {
-        (LitexToLeanFiniteSetBuiltinRuleIr::Range, Obj::Range(_)) => {
-            Ok("(by unfold Litex.Set.Finite Litex.range; infer_instance)".into())
-        }
-        (LitexToLeanFiniteSetBuiltinRuleIr::ClosedRange, Obj::ClosedRange(_)) => {
-            Ok("(by unfold Litex.Set.Finite Litex.closedRange; infer_instance)".into())
-        }
-        (LitexToLeanFiniteSetBuiltinRuleIr::ListSet, Obj::ListSet(list_set)) => {
-            render_list_set_finiteness(
-                &list_set
-                    .list
-                    .iter()
-                    .map(|item| LitexToLeanObjectIr::lower(item.as_ref()))
-                    .collect::<Result<Vec<_>, _>>()?,
-                context,
-            )
-        }
-        _ => Err("finite-set reflection changed its exact constructor family".into()),
-    }
-}
-
 fn render_base_set_builtin_rule_from_compiled_children(
     target: &Fact,
     rule: SetBuiltinRule,
@@ -19044,6 +19608,16 @@ fn render_base_set_builtin_rule_from_compiled_children(
 ) -> Result<String, String> {
     render_fact(target, context)?;
     match rule {
+        SetBuiltinRule::SubsetReflexivity | SetBuiltinRule::SupersetReflexivity => {
+            if !children.is_empty() {
+                return Err("set-relation reflexivity retained child proofs".into());
+            }
+            render_set_relation_reflexivity(
+                target,
+                rule == SetBuiltinRule::SubsetReflexivity,
+                context,
+            )
+        }
         SetBuiltinRule::UnionMembershipLeft | SetBuiltinRule::UnionMembershipRight => {
             let [(premise, proof)] = children else {
                 return Err("union membership requires one selected child Result".into());
@@ -19135,194 +19709,31 @@ fn render_base_set_builtin_rule_from_compiled_children(
     }
 }
 
-fn render_set_builtin_rule(
-    fact: &LitexToLeanFactIr,
-    rule: LitexToLeanSetBuiltinRuleIr,
-    parameter_requirements: &[LitexToLeanFactIr],
-    premises: &[LitexToLeanFactIr],
+fn render_set_relation_reflexivity(
+    fact: &Fact,
+    expected_subset_spelling: bool,
     context: &StmtResultToLeanCompilerEnvironmentStack,
 ) -> Result<String, String> {
-    if !parameter_requirements.is_empty() {
-        return Err("set builtin retained unexpected parameter requirements".into());
+    let (source, target, negated, subset_spelling) = normalized_set_relation_parts(fact)?;
+    if negated
+        || subset_spelling != expected_subset_spelling
+        || obj_equality_key(source) != obj_equality_key(target)
+    {
+        return Err("set-relation reflexivity changed its spelling or endpoints".into());
     }
-    match rule {
-        LitexToLeanSetBuiltinRuleIr::UnionCommutative
-        | LitexToLeanSetBuiltinRuleIr::UnionAssociative
-        | LitexToLeanSetBuiltinRuleIr::UnionIdempotent
-        | LitexToLeanSetBuiltinRuleIr::UnionEmptyIdentity
-        | LitexToLeanSetBuiltinRuleIr::IntersectCommutative
-        | LitexToLeanSetBuiltinRuleIr::IntersectAssociative => {
-            if !premises.is_empty() {
-                return Err("structural set equality unexpectedly retained premises".into());
-            }
-            render_structural_set_equality(&fact.proposition, rule, context)
-        }
-        LitexToLeanSetBuiltinRuleIr::UnionMembershipLeft
-        | LitexToLeanSetBuiltinRuleIr::UnionMembershipRight => {
-            if premises.len() != 1 {
-                return Err("union membership requires one selected side premise".into());
-            }
-            let (element, target_set) = membership_parts(&fact.proposition)?;
-            let Obj::Union(union) = target_set else {
-                return Err("union membership certificate targets another constructor".into());
-            };
-            let expected_side = if rule == LitexToLeanSetBuiltinRuleIr::UnionMembershipLeft {
-                union.left.as_ref()
-            } else {
-                union.right.as_ref()
-            };
-            let (premise_element, premise_set) = membership_parts(&premises[0].proposition)?;
-            if obj_equality_key(element) != obj_equality_key(premise_element)
-                || obj_equality_key(expected_side) != obj_equality_key(premise_set)
-            {
-                return Err("union membership changed its selected side or element".into());
-            }
-            let theorem = if rule == LitexToLeanSetBuiltinRuleIr::UnionMembershipLeft {
-                "inUnionLeft"
-            } else {
-                "inUnionRight"
-            };
-            render_fact(&fact.proposition, context)?;
-            Ok(format!(
-                "Litex.SetRules.{theorem} ({})",
-                render_proof(&premises[0], context)?
-            ))
-        }
-        LitexToLeanSetBuiltinRuleIr::IntersectMembershipBoth => {
-            if premises.len() != 2 {
-                return Err("intersection membership requires two ordered side premises".into());
-            }
-            let (element, target_set) = membership_parts(&fact.proposition)?;
-            let Obj::Intersect(intersection) = target_set else {
-                return Err(
-                    "intersection membership certificate targets another constructor".into(),
-                );
-            };
-            for (premise, expected_set) in premises
-                .iter()
-                .zip([intersection.left.as_ref(), intersection.right.as_ref()])
-            {
-                let (premise_element, premise_set) = membership_parts(&premise.proposition)?;
-                if obj_equality_key(element) != obj_equality_key(premise_element)
-                    || obj_equality_key(expected_set) != obj_equality_key(premise_set)
-                {
-                    return Err("intersection membership changed its ordered side premises".into());
-                }
-            }
-            render_fact(&fact.proposition, context)?;
-            Ok(format!(
-                "Litex.SetRules.inIntersect ({}) ({})",
-                render_proof(&premises[0], context)?,
-                render_proof(&premises[1], context)?
-            ))
-        }
-        LitexToLeanSetBuiltinRuleIr::IntersectNonMembershipLeft
-        | LitexToLeanSetBuiltinRuleIr::IntersectNonMembershipRight => {
-            if premises.len() != 1 {
-                return Err(
-                    "intersection non-membership requires one selected side premise".into(),
-                );
-            }
-            let (element, target_set) = nonmembership_parts(&fact.proposition)?;
-            let Obj::Intersect(intersection) = target_set else {
-                return Err(
-                    "intersection non-membership certificate targets another constructor".into(),
-                );
-            };
-            let expected_side = if rule == LitexToLeanSetBuiltinRuleIr::IntersectNonMembershipLeft {
-                intersection.left.as_ref()
-            } else {
-                intersection.right.as_ref()
-            };
-            let (premise_element, premise_set) = nonmembership_parts(&premises[0].proposition)?;
-            if obj_equality_key(element) != obj_equality_key(premise_element)
-                || obj_equality_key(expected_side) != obj_equality_key(premise_set)
-            {
-                return Err("intersection non-membership changed its selected side".into());
-            }
-            let theorem = if rule == LitexToLeanSetBuiltinRuleIr::IntersectNonMembershipLeft {
-                "notInIntersectOfNotInLeft"
-            } else {
-                "notInIntersectOfNotInRight"
-            };
-            render_fact(&fact.proposition, context)?;
-            Ok(format!(
-                "Litex.SetRules.{theorem} ({})",
-                render_proof(&premises[0], context)?
-            ))
-        }
-        LitexToLeanSetBuiltinRuleIr::SetMinusMembership => {
-            if premises.len() != 2 {
-                return Err(
-                    "set-minus membership requires left membership and right non-membership".into(),
-                );
-            }
-            let (element, target_set) = membership_parts(&fact.proposition)?;
-            let Obj::SetMinus(difference) = target_set else {
-                return Err("set-minus membership certificate targets another constructor".into());
-            };
-            let (left_element, left_set) = membership_parts(&premises[0].proposition)?;
-            let (right_element, right_set) = nonmembership_parts(&premises[1].proposition)?;
-            if obj_equality_key(element) != obj_equality_key(left_element)
-                || obj_equality_key(element) != obj_equality_key(right_element)
-                || obj_equality_key(difference.left.as_ref()) != obj_equality_key(left_set)
-                || obj_equality_key(difference.right.as_ref()) != obj_equality_key(right_set)
-            {
-                return Err("set-minus membership changed its ordered premises".into());
-            }
-            render_fact(&fact.proposition, context)?;
-            Ok(format!(
-                "Litex.SetRules.inSetMinus ({}) ({})",
-                render_proof(&premises[0], context)?,
-                render_proof(&premises[1], context)?
-            ))
-        }
-        rule @ (LitexToLeanSetBuiltinRuleIr::EmptySubset
-        | LitexToLeanSetBuiltinRuleIr::IntersectEqLeftOfSubset
-        | LitexToLeanSetBuiltinRuleIr::IntersectEqRightOfSubset
-        | LitexToLeanSetBuiltinRuleIr::IntersectFinite
-        | LitexToLeanSetBuiltinRuleIr::IntersectSubsetLeft
-        | LitexToLeanSetBuiltinRuleIr::IntersectSubsetRight
-        | LitexToLeanSetBuiltinRuleIr::IntersectUnionDistributive
-        | LitexToLeanSetBuiltinRuleIr::PowerSetFinite
-        | LitexToLeanSetBuiltinRuleIr::PowerSetMembershipOfSubset
-        | LitexToLeanSetBuiltinRuleIr::PowerSetNonempty
-        | LitexToLeanSetBuiltinRuleIr::SetMinusFiniteLeft
-        | LitexToLeanSetBuiltinRuleIr::SetMinusIntersectDeMorgan
-        | LitexToLeanSetBuiltinRuleIr::SetMinusRecoverSubset
-        | LitexToLeanSetBuiltinRuleIr::SetMinusSubsetLeft
-        | LitexToLeanSetBuiltinRuleIr::SetMinusUnionDeMorgan
-        | LitexToLeanSetBuiltinRuleIr::SubsetEqSetMinusRecovery
-        | LitexToLeanSetBuiltinRuleIr::SubsetUnionLeft
-        | LitexToLeanSetBuiltinRuleIr::SubsetUnionRight
-        | LitexToLeanSetBuiltinRuleIr::UnionFinite
-        | LitexToLeanSetBuiltinRuleIr::UnionNonemptyLeft
-        | LitexToLeanSetBuiltinRuleIr::UnionNonemptyRight
-        | LitexToLeanSetBuiltinRuleIr::UnionSubset) => {
-            let compiled_premises = premises
-                .iter()
-                .map(|premise| {
-                    Ok(CompiledFactProofBody {
-                        fact: premise.proposition.clone(),
-                        proposition: render_fact(&premise.proposition, context)?,
-                        proof_expression: render_proof(premise, context)?,
-                    })
-                })
-                .collect::<Result<Vec<_>, String>>()?;
-            render_extended_set_rule(&fact.proposition, rule, &compiled_premises, context)
-        }
-    }
+    render_fact(fact, context)?;
+    Ok("(fun _x __membership => __membership)".into())
 }
 
 fn render_extended_set_rule(
     fact: &Fact,
-    rule: LitexToLeanSetBuiltinRuleIr,
+    rule: LeanSetBuiltinCompilationKind,
     premises: &[CompiledFactProofBody],
     context: &StmtResultToLeanCompilerEnvironmentStack,
 ) -> Result<String, String> {
     render_fact(fact, context)?;
     match rule {
-        LitexToLeanSetBuiltinRuleIr::EmptySubset => {
+        LeanSetBuiltinCompilationKind::EmptySubset => {
             if !premises.is_empty() {
                 return Err("empty-subset rule retained premises".into());
             }
@@ -19335,8 +19746,8 @@ fn render_extended_set_rule(
                 render_obj(target, context)?
             ))
         }
-        LitexToLeanSetBuiltinRuleIr::SubsetUnionLeft
-        | LitexToLeanSetBuiltinRuleIr::SubsetUnionRight => {
+        LeanSetBuiltinCompilationKind::SubsetUnionLeft
+        | LeanSetBuiltinCompilationKind::SubsetUnionRight => {
             if !premises.is_empty() {
                 return Err("subset-union inclusion retained premises".into());
             }
@@ -19344,7 +19755,7 @@ fn render_extended_set_rule(
             let Obj::Union(union) = target else {
                 return Err("subset-union inclusion changed its target constructor".into());
             };
-            let (expected, theorem) = if rule == LitexToLeanSetBuiltinRuleIr::SubsetUnionLeft {
+            let (expected, theorem) = if rule == LeanSetBuiltinCompilationKind::SubsetUnionLeft {
                 (union.left.as_ref(), "subsetUnionLeft")
             } else {
                 (union.right.as_ref(), "subsetUnionRight")
@@ -19358,7 +19769,7 @@ fn render_extended_set_rule(
                 render_obj(union.right.as_ref(), context)?
             ))
         }
-        LitexToLeanSetBuiltinRuleIr::UnionSubset => {
+        LeanSetBuiltinCompilationKind::UnionSubset => {
             if premises.len() != 2 {
                 return Err("union-subset rule requires two ordered subset premises".into());
             }
@@ -19379,27 +19790,27 @@ fn render_extended_set_rule(
                 premises[0].proof_expression, premises[1].proof_expression
             ))
         }
-        LitexToLeanSetBuiltinRuleIr::IntersectSubsetLeft
-        | LitexToLeanSetBuiltinRuleIr::IntersectSubsetRight
-        | LitexToLeanSetBuiltinRuleIr::SetMinusSubsetLeft => {
+        LeanSetBuiltinCompilationKind::IntersectSubsetLeft
+        | LeanSetBuiltinCompilationKind::IntersectSubsetRight
+        | LeanSetBuiltinCompilationKind::SetMinusSubsetLeft => {
             if !premises.is_empty() {
                 return Err("constructor-subset rule retained premises".into());
             }
             let (source, target) = subset_parts(fact)?;
             let (left, right, expected, theorem) = match (rule, source) {
-                (LitexToLeanSetBuiltinRuleIr::IntersectSubsetLeft, Obj::Intersect(value)) => (
+                (LeanSetBuiltinCompilationKind::IntersectSubsetLeft, Obj::Intersect(value)) => (
                     value.left.as_ref(),
                     value.right.as_ref(),
                     value.left.as_ref(),
                     "intersectSubsetLeft",
                 ),
-                (LitexToLeanSetBuiltinRuleIr::IntersectSubsetRight, Obj::Intersect(value)) => (
+                (LeanSetBuiltinCompilationKind::IntersectSubsetRight, Obj::Intersect(value)) => (
                     value.left.as_ref(),
                     value.right.as_ref(),
                     value.right.as_ref(),
                     "intersectSubsetRight",
                 ),
-                (LitexToLeanSetBuiltinRuleIr::SetMinusSubsetLeft, Obj::SetMinus(value)) => (
+                (LeanSetBuiltinCompilationKind::SetMinusSubsetLeft, Obj::SetMinus(value)) => (
                     value.left.as_ref(),
                     value.right.as_ref(),
                     value.left.as_ref(),
@@ -19416,21 +19827,21 @@ fn render_extended_set_rule(
                 render_obj(right, context)?
             ))
         }
-        LitexToLeanSetBuiltinRuleIr::UnionFinite
-        | LitexToLeanSetBuiltinRuleIr::IntersectFinite
-        | LitexToLeanSetBuiltinRuleIr::SetMinusFiniteLeft => {
+        LeanSetBuiltinCompilationKind::UnionFinite
+        | LeanSetBuiltinCompilationKind::IntersectFinite
+        | LeanSetBuiltinCompilationKind::SetMinusFiniteLeft => {
             let target = finite_set_parts(fact)?;
             let (left, right, theorem, expected_premises) = match (rule, target) {
-                (LitexToLeanSetBuiltinRuleIr::UnionFinite, Obj::Union(value)) => {
+                (LeanSetBuiltinCompilationKind::UnionFinite, Obj::Union(value)) => {
                     (value.left.as_ref(), value.right.as_ref(), "unionFinite", 2)
                 }
-                (LitexToLeanSetBuiltinRuleIr::IntersectFinite, Obj::Intersect(value)) => (
+                (LeanSetBuiltinCompilationKind::IntersectFinite, Obj::Intersect(value)) => (
                     value.left.as_ref(),
                     value.right.as_ref(),
                     "intersectFinite",
                     2,
                 ),
-                (LitexToLeanSetBuiltinRuleIr::SetMinusFiniteLeft, Obj::SetMinus(value)) => (
+                (LeanSetBuiltinCompilationKind::SetMinusFiniteLeft, Obj::SetMinus(value)) => (
                     value.left.as_ref(),
                     value.right.as_ref(),
                     "setMinusFiniteLeft",
@@ -19452,13 +19863,13 @@ fn render_extended_set_rule(
                 render_obj(right, context)?,
                 format!("({})", premises[0].proof_expression),
             ];
-            if expected_premises == 2 && rule == LitexToLeanSetBuiltinRuleIr::UnionFinite {
+            if expected_premises == 2 && rule == LeanSetBuiltinCompilationKind::UnionFinite {
                 terms.push(format!("({})", premises[1].proof_expression));
             }
             Ok(terms.join(" "))
         }
-        LitexToLeanSetBuiltinRuleIr::UnionNonemptyLeft
-        | LitexToLeanSetBuiltinRuleIr::UnionNonemptyRight => {
+        LeanSetBuiltinCompilationKind::UnionNonemptyLeft
+        | LeanSetBuiltinCompilationKind::UnionNonemptyRight => {
             if premises.len() != 1 {
                 return Err("union nonemptiness requires one selected premise".into());
             }
@@ -19466,7 +19877,7 @@ fn render_extended_set_rule(
             let Obj::Union(union) = target else {
                 return Err("union nonemptiness changed its target constructor".into());
             };
-            let (expected, theorem) = if rule == LitexToLeanSetBuiltinRuleIr::UnionNonemptyLeft {
+            let (expected, theorem) = if rule == LeanSetBuiltinCompilationKind::UnionNonemptyLeft {
                 (union.left.as_ref(), "unionNonemptyLeft")
             } else {
                 (union.right.as_ref(), "unionNonemptyRight")
@@ -19483,7 +19894,7 @@ fn render_extended_set_rule(
                 premises[0].proof_expression
             ))
         }
-        LitexToLeanSetBuiltinRuleIr::PowerSetMembershipOfSubset => {
+        LeanSetBuiltinCompilationKind::PowerSetMembershipOfSubset => {
             if premises.len() != 1 {
                 return Err("power-set membership requires one subset premise".into());
             }
@@ -19502,7 +19913,7 @@ fn render_extended_set_rule(
                 premises[0].proof_expression
             ))
         }
-        LitexToLeanSetBuiltinRuleIr::PowerSetNonempty => {
+        LeanSetBuiltinCompilationKind::PowerSetNonempty => {
             if !premises.is_empty() {
                 return Err("power-set nonemptiness retained premises".into());
             }
@@ -19514,7 +19925,7 @@ fn render_extended_set_rule(
                 render_obj(power.set.as_ref(), context)?
             ))
         }
-        LitexToLeanSetBuiltinRuleIr::PowerSetFinite => {
+        LeanSetBuiltinCompilationKind::PowerSetFinite => {
             if premises.len() != 1 {
                 return Err("power-set finiteness requires one base finiteness premise".into());
             }
@@ -19532,8 +19943,8 @@ fn render_extended_set_rule(
                 premises[0].proof_expression
             ))
         }
-        LitexToLeanSetBuiltinRuleIr::IntersectEqLeftOfSubset
-        | LitexToLeanSetBuiltinRuleIr::IntersectEqRightOfSubset => {
+        LeanSetBuiltinCompilationKind::IntersectEqLeftOfSubset
+        | LeanSetBuiltinCompilationKind::IntersectEqRightOfSubset => {
             if premises.len() != 1 {
                 return Err("intersection absorption requires one subset premise".into());
             }
@@ -19543,7 +19954,7 @@ fn render_extended_set_rule(
             };
             let (premise_left, premise_right) = subset_parts(&premises[0].fact)?;
             let (expected_result, expected_left, expected_right, theorem) =
-                if rule == LitexToLeanSetBuiltinRuleIr::IntersectEqLeftOfSubset {
+                if rule == LeanSetBuiltinCompilationKind::IntersectEqLeftOfSubset {
                     (
                         intersection.left.as_ref(),
                         intersection.left.as_ref(),
@@ -19569,23 +19980,23 @@ fn render_extended_set_rule(
                 premises[0].proof_expression
             ))
         }
-        LitexToLeanSetBuiltinRuleIr::IntersectUnionDistributive
-        | LitexToLeanSetBuiltinRuleIr::SetMinusIntersectDeMorgan
-        | LitexToLeanSetBuiltinRuleIr::SetMinusUnionDeMorgan => {
+        LeanSetBuiltinCompilationKind::IntersectUnionDistributive
+        | LeanSetBuiltinCompilationKind::SetMinusIntersectDeMorgan
+        | LeanSetBuiltinCompilationKind::SetMinusUnionDeMorgan => {
             if !premises.is_empty() {
                 return Err("structural three-set equality retained premises".into());
             }
             render_three_set_equality(fact, rule, context)
         }
-        LitexToLeanSetBuiltinRuleIr::SetMinusRecoverSubset
-        | LitexToLeanSetBuiltinRuleIr::SubsetEqSetMinusRecovery => {
+        LeanSetBuiltinCompilationKind::SetMinusRecoverSubset
+        | LeanSetBuiltinCompilationKind::SubsetEqSetMinusRecovery => {
             if premises.len() != 1 {
                 return Err("set-minus recovery requires one subset premise".into());
             }
             let (subset, left) = subset_parts(&premises[0].fact)?;
             let (equality_left, equality_right) = equality_parts(fact)?;
             let (difference, plain, reverse) =
-                if rule == LitexToLeanSetBuiltinRuleIr::SetMinusRecoverSubset {
+                if rule == LeanSetBuiltinCompilationKind::SetMinusRecoverSubset {
                     (equality_left, equality_right, false)
                 } else {
                     (equality_right, equality_left, true)
@@ -19619,12 +20030,12 @@ fn render_extended_set_rule(
 
 fn render_three_set_equality(
     fact: &Fact,
-    rule: LitexToLeanSetBuiltinRuleIr,
+    rule: LeanSetBuiltinCompilationKind,
     context: &StmtResultToLeanCompilerEnvironmentStack,
 ) -> Result<String, String> {
     let (left, right) = equality_parts(fact)?;
     let (first, second, third, theorem) = match rule {
-        LitexToLeanSetBuiltinRuleIr::IntersectUnionDistributive => {
+        LeanSetBuiltinCompilationKind::IntersectUnionDistributive => {
             let Obj::Intersect(left_intersection) = left else {
                 return Err("intersection distributivity changed its left constructor".into());
             };
@@ -19651,7 +20062,7 @@ fn render_three_set_equality(
             }
             (first, second, third, "intersectUnionDistributive")
         }
-        LitexToLeanSetBuiltinRuleIr::SetMinusIntersectDeMorgan => {
+        LeanSetBuiltinCompilationKind::SetMinusIntersectDeMorgan => {
             let Obj::SetMinus(left_difference) = left else {
                 return Err("intersection De Morgan changed its left difference".into());
             };
@@ -19678,7 +20089,7 @@ fn render_three_set_equality(
             }
             (first, second, third, "setMinusIntersectDeMorgan")
         }
-        LitexToLeanSetBuiltinRuleIr::SetMinusUnionDeMorgan => {
+        LeanSetBuiltinCompilationKind::SetMinusUnionDeMorgan => {
             let Obj::SetMinus(left_difference) = left else {
                 return Err("union De Morgan changed its left difference".into());
             };
@@ -19717,14 +20128,14 @@ fn render_three_set_equality(
 
 fn render_structural_set_equality(
     fact: &Fact,
-    rule: LitexToLeanSetBuiltinRuleIr,
+    rule: LeanSetBuiltinCompilationKind,
     context: &StmtResultToLeanCompilerEnvironmentStack,
 ) -> Result<String, String> {
     let (left, right) = equality_parts(fact)?;
     render_fact(fact, context)?;
     let symmetric = |proof: String| format!("Litex.Same.symm ({proof})");
     match rule {
-        LitexToLeanSetBuiltinRuleIr::UnionCommutative => {
+        LeanSetBuiltinCompilationKind::UnionCommutative => {
             let (Obj::Union(left_union), Obj::Union(right_union)) = (left, right) else {
                 return Err("union commutativity changed its constructors".into());
             };
@@ -19741,7 +20152,7 @@ fn render_structural_set_equality(
                 render_obj(left_union.right.as_ref(), context)?
             ))
         }
-        LitexToLeanSetBuiltinRuleIr::UnionAssociative => {
+        LeanSetBuiltinCompilationKind::UnionAssociative => {
             if let (Obj::Union(left_outer), Obj::Union(right_outer)) = (left, right) {
                 if let Obj::Union(left_inner) = left_outer.left.as_ref() {
                     if obj_equality_key(left_inner.left.as_ref())
@@ -19770,7 +20181,7 @@ fn render_structural_set_equality(
                 &reversed, rule, context,
             )?))
         }
-        LitexToLeanSetBuiltinRuleIr::UnionIdempotent => {
+        LeanSetBuiltinCompilationKind::UnionIdempotent => {
             if let Obj::Union(union) = left {
                 if obj_equality_key(union.left.as_ref()) == obj_equality_key(union.right.as_ref())
                     && obj_equality_key(union.left.as_ref()) == obj_equality_key(right)
@@ -19793,7 +20204,7 @@ fn render_structural_set_equality(
             }
             Err("union idempotence changed its repeated operand".into())
         }
-        LitexToLeanSetBuiltinRuleIr::UnionEmptyIdentity => {
+        LeanSetBuiltinCompilationKind::UnionEmptyIdentity => {
             for (union_side, plain_side, reverse) in [(left, right, false), (right, left, true)] {
                 let Obj::Union(union) = union_side else {
                     continue;
@@ -19825,7 +20236,7 @@ fn render_structural_set_equality(
             }
             Err("union empty identity changed its empty or retained operand".into())
         }
-        LitexToLeanSetBuiltinRuleIr::IntersectCommutative => {
+        LeanSetBuiltinCompilationKind::IntersectCommutative => {
             let (Obj::Intersect(left_intersection), Obj::Intersect(right_intersection)) =
                 (left, right)
             else {
@@ -19844,7 +20255,7 @@ fn render_structural_set_equality(
                 render_obj(left_intersection.right.as_ref(), context)?
             ))
         }
-        LitexToLeanSetBuiltinRuleIr::IntersectAssociative => {
+        LeanSetBuiltinCompilationKind::IntersectAssociative => {
             if let (Obj::Intersect(left_outer), Obj::Intersect(right_outer)) = (left, right) {
                 if let Obj::Intersect(left_inner) = left_outer.left.as_ref() {
                     if obj_equality_key(left_inner.left.as_ref())
@@ -19875,64 +20286,6 @@ fn render_structural_set_equality(
         }
         _ => Err("non-equality set rule reached structural equality renderer".into()),
     }
-}
-
-fn render_list_set_membership(
-    fact: &LitexToLeanFactIr,
-    selected_index: usize,
-    parameter_requirements: &[LitexToLeanFactIr],
-    premises: &[LitexToLeanFactIr],
-    context: &StmtResultToLeanCompilerEnvironmentStack,
-) -> Result<String, String> {
-    if !parameter_requirements.is_empty() || premises.len() != 1 {
-        return Err(
-            "list-set membership requires one selected equality and no parameter requirements"
-                .into(),
-        );
-    }
-    let (element, set) = membership_parts(&fact.proposition)?;
-    let Obj::ListSet(list_set) = set else {
-        return Err("list-set membership certificate targets another set constructor".into());
-    };
-    let selected = list_set
-        .list
-        .get(selected_index)
-        .ok_or_else(|| "list-set membership certificate has an out-of-range index".to_string())?;
-    let (equality_left, equality_right) = equality_parts(&premises[0].proposition)?;
-    if obj_equality_key(equality_left) != obj_equality_key(element)
-        || obj_equality_key(equality_right) != obj_equality_key(selected.as_ref())
-    {
-        return Err("list-set membership equality changed its selected source element".into());
-    }
-    let selected_term = render_obj(selected.as_ref(), context)?;
-    let equality = render_proof(&premises[0], context)?;
-    let (witness, representation) =
-        render_list_set_representation_bridge(&selected_term, selected_index);
-    render_obj(set, context)?;
-    Ok(format!(
-        "⟨{witness}, Litex.Same.trans ({equality}) ({representation})⟩"
-    ))
-}
-
-fn render_list_set_membership_elimination(
-    fact: &LitexToLeanFactIr,
-    parameter_requirements: &[LitexToLeanFactIr],
-    premises: &[LitexToLeanFactIr],
-    context: &StmtResultToLeanCompilerEnvironmentStack,
-) -> Result<String, String> {
-    if !parameter_requirements.is_empty() || premises.len() != 1 {
-        return Err(
-            "list-set membership elimination requires one membership and no parameter requirements"
-                .into(),
-        );
-    }
-    let source_proof = render_proof(&premises[0], context)?;
-    render_list_set_membership_elimination_from_fact_and_proof(
-        &fact.proposition,
-        &premises[0].proposition,
-        &source_proof,
-        context,
-    )
 }
 
 fn render_list_set_membership_elimination_from_fact_and_proof(
@@ -20047,262 +20400,44 @@ fn render_list_set_representation_bridge(
     (witness, representation)
 }
 
-fn render_tuple_literal_shape(
-    fact: &LitexToLeanFactIr,
-    parameter_requirements: &[LitexToLeanFactIr],
-    premises: &[LitexToLeanFactIr],
-    context: &StmtResultToLeanCompilerEnvironmentStack,
-) -> Result<String, String> {
-    if !parameter_requirements.is_empty() || !premises.is_empty() {
-        return Err("tuple-literal shape reflection requires no retained premises".into());
-    }
-    let Fact::AtomicFact(AtomicFact::IsTupleFact(target)) = &fact.proposition else {
-        return Err("tuple-literal shape evidence retained a non-tuple target".into());
-    };
-    let Obj::Tuple(tuple) = &target.set else {
-        return Err("tuple-literal shape evidence changed its exact object".into());
-    };
-    if tuple.args.len() < 2 {
-        return Err("tuple-literal shape evidence retained fewer than two items".into());
-    }
-    render_fact(&fact.proposition, context)?;
-    Ok("⟨inferInstance⟩".into())
-}
-
-fn render_nonzero_numeric_membership(
-    fact: &LitexToLeanFactIr,
-    parameter_requirements: &[LitexToLeanFactIr],
-    premises: &[LitexToLeanFactIr],
-    context: &StmtResultToLeanCompilerEnvironmentStack,
-) -> Result<String, String> {
-    if !parameter_requirements.is_empty() || premises.len() != 2 {
-        return Err(
-            "nonzero numeric membership requires two premises and no parameter requirements".into(),
-        );
-    }
-    let (target_element, target_set) = membership_parts(&fact.proposition)?;
-    let (base_element, base_set) = membership_parts(&premises[0].proposition)?;
-    let (nonzero_left, nonzero_right) = not_equal_parts(&premises[1].proposition)?;
-    if obj_equality_key(target_element) != obj_equality_key(base_element)
-        || obj_equality_key(target_element) != obj_equality_key(nonzero_left)
-        || !matches!(nonzero_right, Obj::Number(number) if number.normalized_value == "0")
-    {
-        return Err("nonzero numeric membership changed its retained source element".into());
-    }
-    let theorem = match (target_set, base_set) {
-        (Obj::StandardSet(StandardSet::ZStar), Obj::StandardSet(StandardSet::Z)) => {
-            "inZStarOfInZNotSameZero"
-        }
-        (Obj::StandardSet(StandardSet::QStar), Obj::StandardSet(StandardSet::Q)) => {
-            "inQStarOfInQNotSameZero"
-        }
-        (Obj::StandardSet(StandardSet::RStar), Obj::StandardSet(StandardSet::R)) => {
-            "inRStarOfInRNotSameZero"
-        }
-        (Obj::StandardSet(StandardSet::CStar), Obj::StandardSet(StandardSet::C)) => {
-            "inCStarOfInCNotSameZero"
-        }
-        _ => {
-            return Err(
-                "nonzero numeric membership changed its exact base or refined carrier".into(),
-            );
-        }
-    };
-    Ok(format!(
-        "Litex.Rules.{theorem} ({}) ({})",
-        render_proof(&premises[0], context)?,
-        render_proof(&premises[1], context)?
-    ))
-}
-
-fn render_nonzero_numeric_membership_elimination(
-    fact: &LitexToLeanFactIr,
-    parameter_requirements: &[LitexToLeanFactIr],
-    premises: &[LitexToLeanFactIr],
-    context: &StmtResultToLeanCompilerEnvironmentStack,
-) -> Result<String, String> {
-    if !parameter_requirements.is_empty() || premises.len() != 1 {
-        return Err(
-            "nonzero numeric membership elimination requires one premise and no parameter requirements"
-                .into(),
-        );
-    }
-    let (source_element, source_set) = membership_parts(&premises[0].proposition)?;
-    let (target_left, target_right) = not_equal_parts(&fact.proposition)?;
-    if obj_equality_key(source_element) != obj_equality_key(target_left)
-        || !matches!(target_right, Obj::Number(number) if number.normalized_value == "0")
-    {
-        return Err(
-            "nonzero numeric membership elimination changed its retained source element or zero orientation"
-                .into(),
-        );
-    }
-    let theorem = match source_set {
-        Obj::StandardSet(StandardSet::ZStar) => "notSameZeroOfInZStar",
-        Obj::StandardSet(StandardSet::QStar) => "notSameZeroOfInQStar",
-        Obj::StandardSet(StandardSet::RStar) => "notSameZeroOfInRStar",
-        Obj::StandardSet(StandardSet::CStar) => "notSameZeroOfInCStar",
-        _ => {
-            return Err(
-                "nonzero numeric membership elimination retained a non-star source carrier".into(),
-            );
-        }
-    };
-    Ok(format!(
-        "Litex.Rules.{theorem} ({})",
-        render_proof(&premises[0], context)?
-    ))
-}
-
-fn render_native_constant_membership_rule(
-    fact: &LitexToLeanFactIr,
-    rule: LitexToLeanNativeConstantMembershipBuiltinRuleIr,
-    parameter_requirements: &[LitexToLeanFactIr],
-    premises: &[LitexToLeanFactIr],
-) -> Result<String, String> {
-    if !parameter_requirements.is_empty() || !premises.is_empty() {
-        return Err("native constant membership retained unexpected premises".into());
-    }
-    let (element, set) = membership_parts(&fact.proposition)?;
-    let theorem = match (rule, element, set) {
-        (
-            LitexToLeanNativeConstantMembershipBuiltinRuleIr::ImaginaryUnitInComplex,
-            Obj::ImaginaryUnit(_),
-            Obj::StandardSet(StandardSet::C),
-        ) => "imaginaryUnitInC",
-        (
-            LitexToLeanNativeConstantMembershipBuiltinRuleIr::EulerNumberInReal,
-            Obj::EulerNumber(_),
-            Obj::StandardSet(StandardSet::R),
-        ) => "eInR",
-        (
-            LitexToLeanNativeConstantMembershipBuiltinRuleIr::PiInReal,
-            Obj::Pi(_),
-            Obj::StandardSet(StandardSet::R),
-        ) => "piInR",
-        (
-            LitexToLeanNativeConstantMembershipBuiltinRuleIr::EulerNumberInPositiveReal,
-            Obj::EulerNumber(_),
-            Obj::StandardSet(StandardSet::RPos),
-        ) => "eInRPos",
-        (
-            LitexToLeanNativeConstantMembershipBuiltinRuleIr::PiInPositiveReal,
-            Obj::Pi(_),
-            Obj::StandardSet(StandardSet::RPos),
-        ) => "piInRPos",
-        (
-            LitexToLeanNativeConstantMembershipBuiltinRuleIr::EulerNumberInComplex,
-            Obj::EulerNumber(_),
-            Obj::StandardSet(StandardSet::C),
-        ) => "inCOfInR (Litex.Rules.eInR)",
-        (
-            LitexToLeanNativeConstantMembershipBuiltinRuleIr::PiInComplex,
-            Obj::Pi(_),
-            Obj::StandardSet(StandardSet::C),
-        ) => "inCOfInR (Litex.Rules.piInR)",
-        _ => return Err("native constant membership changed its constant or carrier".into()),
-    };
-    Ok(format!("Litex.Rules.{theorem}"))
-}
-
-fn render_positive_real_membership(
-    fact: &LitexToLeanFactIr,
-    parameter_requirements: &[LitexToLeanFactIr],
-    premises: &[LitexToLeanFactIr],
-    context: &StmtResultToLeanCompilerEnvironmentStack,
-) -> Result<String, String> {
-    if !parameter_requirements.is_empty() || premises.len() != 1 {
-        return Err(
-            "positive-real membership elimination requires one premise and no parameter requirements"
-                .into(),
-        );
-    }
-    let (source_element, source_set) = membership_parts(&premises[0].proposition)?;
-    if !matches!(source_set, Obj::StandardSet(StandardSet::RPos)) {
-        return Err("positive-real membership retained a source carrier other than R+".into());
-    }
-    let target_element = match &fact.proposition {
-        Fact::AtomicFact(AtomicFact::LessFact(order)) if order.left.to_string() == "0" => {
-            &order.right
-        }
-        Fact::AtomicFact(AtomicFact::GreaterFact(order)) if order.right.to_string() == "0" => {
-            &order.left
-        }
-        _ => {
-            return Err(
-                "positive-real membership targets a fact other than strict positivity".into(),
-            );
-        }
-    };
-    if obj_equality_key(source_element) != obj_equality_key(target_element) {
-        return Err("positive-real membership changed its inferred object".into());
-    }
-    Ok(format!(
-        "Litex.Rules.positiveOfInRPos ({})",
-        render_proof(&premises[0], context)?
-    ))
-}
-
-fn render_natural_membership_implies_nonnegative(
-    fact: &LitexToLeanFactIr,
-    parameter_requirements: &[LitexToLeanFactIr],
-    premises: &[LitexToLeanFactIr],
-    context: &StmtResultToLeanCompilerEnvironmentStack,
-) -> Result<String, String> {
-    if !parameter_requirements.is_empty() || premises.len() != 1 {
-        return Err(
-            "natural-membership nonnegativity requires one premise and no parameter requirements"
-                .into(),
-        );
-    }
-    let (source_element, source_set) = membership_parts(&premises[0].proposition)?;
-    if !matches!(source_set, Obj::StandardSet(StandardSet::N)) {
-        return Err(
-            "natural-membership nonnegativity retained a source carrier other than N".into(),
-        );
-    }
-    let target_element = match &fact.proposition {
-        Fact::AtomicFact(AtomicFact::GreaterEqualFact(order))
-            if matches!(&order.right, Obj::Number(number) if number.normalized_value == "0") =>
-        {
-            &order.left
-        }
-        Fact::AtomicFact(AtomicFact::LessEqualFact(order))
-            if matches!(&order.left, Obj::Number(number) if number.normalized_value == "0") =>
-        {
-            &order.right
-        }
-        _ => {
-            return Err(
-                "natural-membership nonnegativity targets a fact other than the source object being at least zero"
-                    .into(),
-            )
-        }
-    };
-    if obj_equality_key(source_element) != obj_equality_key(target_element) {
-        return Err("natural-membership nonnegativity changed its inferred object".into());
-    }
-    Ok(format!(
-        "Litex.Rules.nonnegativeOfInN ({})",
-        render_proof(&premises[0], context)?
-    ))
-}
-
-fn infer_rule_can_compile_in_standard_numeric_binder(rule: &InferRule) -> bool {
+fn infer_rule_has_direct_compiler_environment_consumer(rule: &InferRule) -> bool {
     match rule {
         InferRule::NaturalMembershipImpliesNonnegative => true,
         InferRule::PositiveStandardSetMembershipImpliesPositive(rule) => {
-            matches!(rule.source_set, StandardSet::NPos | StandardSet::RPos)
+            matches!(
+                rule.source_set,
+                StandardSet::NPos | StandardSet::QPos | StandardSet::RPos
+            )
+        }
+        InferRule::NegativeStandardSetMembershipImpliesNegative(rule) => {
+            matches!(
+                rule.source_set,
+                StandardSet::ZNeg | StandardSet::QNeg | StandardSet::RNeg
+            )
         }
         InferRule::NonzeroStandardSetMembershipImpliesNonzero(rule) => matches!(
             rule.source_set,
             StandardSet::ZStar | StandardSet::QStar | StandardSet::RStar | StandardSet::CStar
         ),
-        _ => false,
+        InferRule::MultiplicationByNegativeOneReversesOrderAgainstZero
+        | InferRule::StrictOrderComparedToZeroImpliesWeakOrder => true,
+        InferRule::MembershipInSetWithKnownEqualityImpliesMembershipInEqualSet(_) => true,
+        InferRule::SubsetImpliesElementwiseMembershipForall(_)
+        | InferRule::SupersetImpliesElementwiseMembershipForall(_)
+        | InferRule::ConjunctionImpliesComponent(_) => true,
+        InferRule::SetBuilderBaseMembershipProjection
+        | InferRule::SetBuilderPredicateProjection { .. }
+        | InferRule::DefinedPredicateParameterRequirementProjection(_)
+        | InferRule::DefinedPredicateDefinitionClauseProjection(_)
+        | InferRule::RegisteredTransitivePredicateChainClosure(_)
+        | InferRule::TupleEqualityWithKnownTupleImpliesTupleShape(_)
+        | InferRule::ListSetMembershipImpliesEqualityAlternatives(_) => false,
     }
 }
 
-fn standard_numeric_infer_result_is_fully_typed_and_supported(result: &SuccessInferResult) -> bool {
+fn infer_result_effects_are_fully_owned_by_direct_compiler_rules(
+    result: &SuccessInferResult,
+) -> bool {
     let advertised = result
         .store_fact_outputs
         .iter()
@@ -20314,18 +20449,182 @@ fn standard_numeric_infer_result_is_fully_typed_and_supported(result: &SuccessIn
                 .filter_map(|(fact, fact_id)| fact_id.map(|fact_id| (fact_id, fact.to_string())))
         })
         .collect::<HashSet<_>>();
-    let typed = result
-        .rule_applications
-        .iter()
-        .filter(|application| infer_rule_can_compile_in_standard_numeric_binder(&application.rule))
-        .flat_map(|application| application.conclusions.iter())
-        .filter_map(|conclusion| {
-            conclusion
-                .fact_id
-                .map(|fact_id| (fact_id, conclusion.fact.to_string()))
-        })
-        .collect::<HashSet<_>>();
+    let mut typed = HashSet::new();
+    collect_supported_typed_infer_conclusions(result, &mut typed);
+    typed.retain(|conclusion| advertised.contains(conclusion));
     advertised == typed
+}
+
+fn collect_supported_typed_infer_conclusions(
+    result: &SuccessInferResult,
+    conclusions: &mut HashSet<(FactId, String)>,
+) {
+    for application in &result.rule_applications {
+        if !infer_rule_has_direct_compiler_environment_consumer(&application.rule) {
+            continue;
+        }
+        for conclusion in &application.conclusions {
+            if let Some(fact_id) = conclusion.fact_id {
+                conclusions.insert((fact_id, conclusion.fact.to_string()));
+            }
+            collect_supported_typed_infer_conclusions(&conclusion.infers, conclusions);
+        }
+    }
+}
+
+fn validate_order_sign_inference_target(
+    rule: &InferRule,
+    source: &Fact,
+    target: &Fact,
+) -> Result<(), String> {
+    let (source_left, source_right, source_strict) = order_relation_parts(source)?;
+    let (target_left, target_right, target_strict) = order_relation_parts(target)?;
+    let zero =
+        |object: &Obj| matches!(object, Obj::Number(number) if number.normalized_value == "0");
+    match rule {
+        InferRule::MultiplicationByNegativeOneReversesOrderAgainstZero => {
+            let (source_expression, source_expression_is_left) = if zero(source_right) {
+                (source_left, true)
+            } else if zero(source_left) {
+                (source_right, false)
+            } else {
+                return Err("negative-one order inference source is not compared with zero".into());
+            };
+            let (target_expression, target_expression_is_left) = if zero(target_right) {
+                (target_left, true)
+            } else if zero(target_left) {
+                (target_right, false)
+            } else {
+                return Err("negative-one order inference target is not compared with zero".into());
+            };
+            let Obj::Mul(multiplication) = target_expression else {
+                return Err("negative-one order inference target is not a multiplication".into());
+            };
+            if !matches!(multiplication.left.as_ref(), Obj::Number(number) if number.normalized_value == "-1")
+                || obj_equality_key(multiplication.right.as_ref())
+                    != obj_equality_key(source_expression)
+                || source_expression_is_left == target_expression_is_left
+            {
+                return Err(
+                    "negative-one order inference changed its operand or reversal orientation"
+                        .into(),
+                );
+            }
+            let expected_target_strict = source_strict && !source_expression_is_left;
+            if target_strict != expected_target_strict {
+                return Err("negative-one order inference changed its strictness contract".into());
+            }
+            Ok(())
+        }
+        InferRule::StrictOrderComparedToZeroImpliesWeakOrder => {
+            if !source_strict
+                || target_strict
+                || obj_equality_key(source_left) != obj_equality_key(target_left)
+                || obj_equality_key(source_right) != obj_equality_key(target_right)
+                || !zero(source_right)
+            {
+                return Err("strict-to-weak zero-order inference changed its endpoints".into());
+            }
+            Ok(())
+        }
+        _ => Err("non-order inference reached order-sign validation".into()),
+    }
+}
+
+fn validate_membership_in_equal_set_inference_target(
+    rule: &MembershipInSetWithKnownEqualityImpliesMembershipInEqualSetInferRule,
+    source: &Fact,
+    equality: &Fact,
+    target: &Fact,
+) -> Result<(), String> {
+    let (source_element, source_set) = membership_parts(source)?;
+    let (target_element, target_set) = membership_parts(target)?;
+    let (equality_left, equality_right) = equality_parts(equality)?;
+    if obj_equality_key(source_element) != obj_equality_key(target_element) {
+        return Err("equal-set membership inference changed its element".into());
+    }
+    let (expected_left, expected_right) = match rule.equality_orientation {
+        KnownSetEqualityOrientation::SourceSetOnLeft => (source_set, target_set),
+        KnownSetEqualityOrientation::SourceSetOnRight => (target_set, source_set),
+    };
+    if obj_equality_key(equality_left) != obj_equality_key(expected_left)
+        || obj_equality_key(equality_right) != obj_equality_key(expected_right)
+    {
+        return Err("equal-set membership inference changed its retained equality".into());
+    }
+    Ok(())
+}
+
+fn validate_set_inclusion_elementwise_forall_inference_target(
+    rule: &InferRule,
+    source: &Fact,
+    target: &Fact,
+) -> Result<(), String> {
+    let (expected_parameter_set, expected_target_set, binder_symbol_id) = match (rule, source) {
+        (
+            InferRule::SubsetImpliesElementwiseMembershipForall(rule),
+            Fact::AtomicFact(AtomicFact::SubsetFact(source)),
+        ) => (&source.left, &source.right, rule.binder_symbol_id),
+        (
+            InferRule::SupersetImpliesElementwiseMembershipForall(rule),
+            Fact::AtomicFact(AtomicFact::SupersetFact(source)),
+        ) => (&source.right, &source.left, rule.binder_symbol_id),
+        (InferRule::SubsetImpliesElementwiseMembershipForall(_), _) => {
+            return Err("subset elementwise inference retained a non-subset premise".into());
+        }
+        (InferRule::SupersetImpliesElementwiseMembershipForall(_), _) => {
+            return Err("superset elementwise inference retained a non-superset premise".into());
+        }
+        _ => return Err("non-inclusion inference reached elementwise-forall validation".into()),
+    };
+    let Fact::ForallFact(target) = target else {
+        return Err("set-inclusion inference conclusion is not a forall fact".into());
+    };
+    let [parameter_group] = target.params_def_with_type.groups.as_slice() else {
+        return Err("set-inclusion inference conclusion changed its parameter-group arity".into());
+    };
+    let [parameter] = parameter_group.params.as_slice() else {
+        return Err("set-inclusion inference conclusion changed its binder arity".into());
+    };
+    let ParamType::Obj(parameter_set) = &parameter_group.param_type else {
+        return Err("set-inclusion inference conclusion binder is not object-valued".into());
+    };
+    if parameter.id() != binder_symbol_id
+        || obj_equality_key(parameter_set) != obj_equality_key(expected_parameter_set)
+        || !target.dom_facts.is_empty()
+        || target.then_facts.len() != 1
+    {
+        return Err(
+            "set-inclusion inference changed its binder identity, carrier, or forall shape".into(),
+        );
+    }
+    let target_membership = target.then_facts[0].clone().to_fact();
+    let (target_element, target_set) = membership_parts(&target_membership)?;
+    let expected_element = obj_for_bound_param_in_scope(parameter, ParamObjType::Forall);
+    if obj_equality_key(target_element) != obj_equality_key(&expected_element)
+        || obj_equality_key(target_set) != obj_equality_key(expected_target_set)
+    {
+        return Err("set-inclusion inference changed its elementwise membership target".into());
+    }
+    Ok(())
+}
+
+fn validate_conjunction_component_inference_target(
+    rule: &ConjunctionImpliesComponentInferRule,
+    source: &Fact,
+    target: &Fact,
+) -> Result<(), String> {
+    let Fact::AndFact(source) = source else {
+        return Err("conjunction-component inference retained a non-conjunction premise".into());
+    };
+    if rule.component_count != source.facts.len() || rule.component_index >= rule.component_count {
+        return Err("conjunction-component inference changed its component bounds".into());
+    }
+    let expected: Fact = source.facts[rule.component_index].clone().into();
+    if expected.to_string() != target.to_string() {
+        return Err("conjunction-component inference changed its selected component".into());
+    }
+    Ok(())
 }
 
 fn validate_standard_numeric_membership_inference_target(
@@ -20377,10 +20676,44 @@ fn validate_standard_numeric_membership_inference_target(
             };
             let lean_theorem_name = match rule.source_set {
                 StandardSet::NPos => "positiveOfInNPos",
+                StandardSet::QPos => "positiveOfInQPos",
                 StandardSet::RPos => "positiveOfInRPos",
                 _ => {
                     return Err(format!(
                         "positive-carrier inference from {} has no direct Lean theorem",
+                        rule.source_set
+                    ));
+                }
+            };
+            (target_element, lean_theorem_name)
+        }
+        InferRule::NegativeStandardSetMembershipImpliesNegative(rule) => {
+            if !matches!(source_set, Obj::StandardSet(set) if *set == rule.source_set) {
+                return Err(
+                    "negative-carrier inference source does not match its typed source set".into(),
+                );
+            }
+            let target_element = match target {
+                Fact::AtomicFact(AtomicFact::LessFact(order)) if matches!(&order.right, Obj::Number(number) if number.normalized_value == "0") => {
+                    &order.left
+                }
+                Fact::AtomicFact(AtomicFact::GreaterFact(order)) if matches!(&order.left, Obj::Number(number) if number.normalized_value == "0") => {
+                    &order.right
+                }
+                _ => {
+                    return Err(
+                        "negative-carrier inference target is not strict negativity of its source object"
+                            .into(),
+                    );
+                }
+            };
+            let lean_theorem_name = match rule.source_set {
+                StandardSet::ZNeg => "negativeOfInZNeg",
+                StandardSet::QNeg => "negativeOfInQNeg",
+                StandardSet::RNeg => "negativeOfInRNeg",
+                _ => {
+                    return Err(format!(
+                        "negative-carrier inference from {} has no direct Lean theorem",
                         rule.source_set
                     ));
                 }
@@ -20426,143 +20759,13 @@ fn validate_standard_numeric_membership_inference_target(
     Ok(lean_theorem_name)
 }
 
-fn render_complex_binary_membership_rule(
-    fact: &LitexToLeanFactIr,
-    rule: LitexToLeanComplexArithmeticMembershipClosureBuiltinRuleIr,
-    parameter_requirements: &[LitexToLeanFactIr],
-    premises: &[LitexToLeanFactIr],
-    context: &StmtResultToLeanCompilerEnvironmentStack,
-) -> Result<String, String> {
-    if !parameter_requirements.is_empty() || !premises.is_empty() {
-        return Err("complex binary membership closure retained unexpected proof premises".into());
-    }
-    let (target_element, target_set) = membership_parts(&fact.proposition)?;
-    if !matches!(target_set, Obj::StandardSet(StandardSet::C)) {
-        return Err("complex binary membership target is not C".into());
-    }
-    let (left, right, theorem) = match (rule, target_element) {
-        (LitexToLeanComplexArithmeticMembershipClosureBuiltinRuleIr::Add, Obj::Add(operation)) => (
-            operation.left.as_ref(),
-            operation.right.as_ref(),
-            "complexAddInC",
-        ),
-        (LitexToLeanComplexArithmeticMembershipClosureBuiltinRuleIr::Sub, Obj::Sub(operation)) => (
-            operation.left.as_ref(),
-            operation.right.as_ref(),
-            "complexSubInC",
-        ),
-        (LitexToLeanComplexArithmeticMembershipClosureBuiltinRuleIr::Mul, Obj::Mul(operation)) => (
-            operation.left.as_ref(),
-            operation.right.as_ref(),
-            "complexMulInC",
-        ),
-        (LitexToLeanComplexArithmeticMembershipClosureBuiltinRuleIr::Div, Obj::Div(operation)) => (
-            operation.left.as_ref(),
-            operation.right.as_ref(),
-            "complexDivInC",
-        ),
-        _ => return Err("complex binary membership target changed its operator".into()),
-    };
-    Ok(format!(
-        "Litex.Rules.{theorem} {} {}",
-        render_obj(left, context)?,
-        render_obj(right, context)?
-    ))
-}
-
-fn render_integer_binary_membership_rule(
-    fact: &LitexToLeanFactIr,
-    rule: LitexToLeanIntegerMembershipClosureBuiltinRuleIr,
-    parameter_requirements: &[LitexToLeanFactIr],
-    premises: &[LitexToLeanFactIr],
-    context: &StmtResultToLeanCompilerEnvironmentStack,
-) -> Result<String, String> {
-    if !parameter_requirements.is_empty() || premises.len() != 1 {
-        return Err(
-            "integer binary membership closure requires one ordered conjunction and no parameter requirements"
-                .into(),
-        );
-    }
-    let components = conjunction_components(&premises[0].proposition)?;
-    if components.len() != 2 {
-        return Err("integer binary membership premise is not a binary conjunction".into());
-    }
-    let (target_element, target_set) = membership_parts(&fact.proposition)?;
-    if !matches!(target_set, Obj::StandardSet(StandardSet::Z)) {
-        return Err("integer binary membership target is not Z".into());
-    }
-    let (left, right, theorem) = match (rule, target_element) {
-        (LitexToLeanIntegerMembershipClosureBuiltinRuleIr::Add, Obj::Add(operation)) => (
-            operation.left.as_ref(),
-            operation.right.as_ref(),
-            "complexAddInZ",
-        ),
-        (LitexToLeanIntegerMembershipClosureBuiltinRuleIr::Sub, Obj::Sub(operation)) => (
-            operation.left.as_ref(),
-            operation.right.as_ref(),
-            "complexSubInZ",
-        ),
-        (LitexToLeanIntegerMembershipClosureBuiltinRuleIr::Mul, Obj::Mul(operation)) => (
-            operation.left.as_ref(),
-            operation.right.as_ref(),
-            "complexMulInZ",
-        ),
-        _ => {
-            return Err(format!(
-                "unsupported integer membership closure rule: {rule:?}"
-            ));
-        }
-    };
-    let (premise_left, premise_left_set) = membership_parts(&components[0])?;
-    let (premise_right, premise_right_set) = membership_parts(&components[1])?;
-    if !matches!(premise_left_set, Obj::StandardSet(StandardSet::Z))
-        || !matches!(premise_right_set, Obj::StandardSet(StandardSet::Z))
-        || obj_equality_key(left) != obj_equality_key(premise_left)
-        || obj_equality_key(right) != obj_equality_key(premise_right)
-    {
-        return Err("integer binary membership premises changed its ordered operands".into());
-    }
-    let uses_local_numeric_view = [left, right].iter().any(|object| {
-        matches!(object, Obj::Atom(atom) if atom
-            .symbol_ref()
-            .is_some_and(|symbol| context
-                .numeric_representation_memberships
-                .contains_key(&symbol.id())))
-    });
-    if !uses_local_numeric_view {
-        let pair = render_proof(&premises[0], context)?;
-        let pair_type = render_fact(&premises[0].proposition, context)?;
-        return Ok(format!(
-            "(by\n  have __components : {pair_type} := {pair}\n  exact Litex.Rules.{theorem} (__components.1) (__components.2))"
-        ));
-    }
-    let LitexToLeanFactProofIr::RuleApplication {
-        rule: LitexToLeanProofRuleIr::AndIntroduction,
-        parameter_requirements: conjunction_parameters,
-        premises: conjunction_premises,
-    } = &premises[0].proof
-    else {
-        return Err("integer binary membership conjunction lost its introduction proof".into());
-    };
-    if !conjunction_parameters.is_empty() || conjunction_premises.len() != 2 {
-        return Err("integer binary membership conjunction changed its proof components".into());
-    }
-    let left_fallback = render_proof(&conjunction_premises[0], context)?;
-    let right_fallback = render_proof(&conjunction_premises[1], context)?;
-    let left_proof = render_numeric_operand_membership(left, &left_fallback, context);
-    let right_proof = render_numeric_operand_membership(right, &right_fallback, context);
-    Ok(format!(
-        "Litex.Rules.{theorem} ({left_proof}) ({right_proof})"
-    ))
-}
-
 fn render_numeric_operand_membership(
     object: &Obj,
     fallback: &str,
     context: &StmtResultToLeanCompilerEnvironmentStack,
 ) -> String {
-    let proof = match LitexToLeanObjectIr::lower(object) {
-        Ok(LitexToLeanObjectIr::Symbol { symbol_id, .. }) => {
+    let proof = match LeanTargetObjectRepresentation::lower(object) {
+        Ok(LeanTargetObjectRepresentation::Symbol { symbol_id, .. }) => {
             context.numeric_representation_memberships.get(&symbol_id)
         }
         _ => None,
@@ -20570,144 +20773,9 @@ fn render_numeric_operand_membership(
     proof.map_or_else(|| fallback.to_string(), Clone::clone)
 }
 
-fn render_natural_binary_membership_rule(
-    fact: &LitexToLeanFactIr,
-    rule: LitexToLeanNaturalMembershipClosureBuiltinRuleIr,
-    parameter_requirements: &[LitexToLeanFactIr],
-    premises: &[LitexToLeanFactIr],
-    context: &StmtResultToLeanCompilerEnvironmentStack,
-) -> Result<String, String> {
-    if !parameter_requirements.is_empty() || premises.len() != 2 {
-        return Err(
-            "natural binary membership closure requires two ordered premises and no parameter requirements"
-                .into(),
-        );
-    }
-    let (target_element, target_set) = membership_parts(&fact.proposition)?;
-    if !matches!(target_set, Obj::StandardSet(StandardSet::N)) {
-        return Err("natural binary membership target is not N".into());
-    }
-    let (left, right, theorem) = match (rule, target_element) {
-        (LitexToLeanNaturalMembershipClosureBuiltinRuleIr::Add, Obj::Add(operation)) => (
-            operation.left.as_ref(),
-            operation.right.as_ref(),
-            "complexAddInN",
-        ),
-        (LitexToLeanNaturalMembershipClosureBuiltinRuleIr::Mul, Obj::Mul(operation)) => (
-            operation.left.as_ref(),
-            operation.right.as_ref(),
-            "complexMulInN",
-        ),
-        _ => return Err("natural binary membership target changed its operator".into()),
-    };
-    let (premise_left, premise_left_set) = membership_parts(&premises[0].proposition)?;
-    let (premise_right, premise_right_set) = membership_parts(&premises[1].proposition)?;
-    if !matches!(premise_left_set, Obj::StandardSet(StandardSet::N))
-        || !matches!(premise_right_set, Obj::StandardSet(StandardSet::N))
-        || obj_equality_key(left) != obj_equality_key(premise_left)
-        || obj_equality_key(right) != obj_equality_key(premise_right)
-    {
-        return Err("natural binary membership premises changed its ordered operands".into());
-    }
-    let left_proof = render_proof(&premises[0], context)?;
-    let right_proof = render_proof(&premises[1], context)?;
-    Ok(format!(
-        "Litex.Rules.{theorem} ({left_proof}) ({right_proof})"
-    ))
-}
-
-fn render_rational_binary_membership_rule(
-    fact: &LitexToLeanFactIr,
-    rule: LitexToLeanRationalMembershipClosureBuiltinRuleIr,
-    parameter_requirements: &[LitexToLeanFactIr],
-    premises: &[LitexToLeanFactIr],
-    context: &StmtResultToLeanCompilerEnvironmentStack,
-) -> Result<String, String> {
-    if !parameter_requirements.is_empty() || premises.len() != 1 {
-        return Err(
-            "rational binary membership closure requires one ordered conjunction and no parameter requirements"
-                .into(),
-        );
-    }
-    let components = conjunction_components(&premises[0].proposition)?;
-    if components.len() != 2 {
-        return Err("rational binary membership premise is not a binary conjunction".into());
-    }
-    let (target_element, target_set) = membership_parts(&fact.proposition)?;
-    if !matches!(target_set, Obj::StandardSet(StandardSet::Q)) {
-        return Err("rational binary membership target is not Q".into());
-    }
-    let (left, right, theorem) = match (rule, target_element) {
-        (LitexToLeanRationalMembershipClosureBuiltinRuleIr::Add, Obj::Add(operation)) => (
-            operation.left.as_ref(),
-            operation.right.as_ref(),
-            "complexAddInQ",
-        ),
-        (LitexToLeanRationalMembershipClosureBuiltinRuleIr::Sub, Obj::Sub(operation)) => (
-            operation.left.as_ref(),
-            operation.right.as_ref(),
-            "complexSubInQ",
-        ),
-        (LitexToLeanRationalMembershipClosureBuiltinRuleIr::Mul, Obj::Mul(operation)) => (
-            operation.left.as_ref(),
-            operation.right.as_ref(),
-            "complexMulInQ",
-        ),
-        (LitexToLeanRationalMembershipClosureBuiltinRuleIr::Div, Obj::Div(operation)) => (
-            operation.left.as_ref(),
-            operation.right.as_ref(),
-            "complexDivInQ",
-        ),
-        _ => {
-            return Err(format!(
-                "unsupported rational membership closure rule: {rule:?}"
-            ));
-        }
-    };
-    let (premise_left, premise_left_set) = membership_parts(&components[0])?;
-    let (premise_right, premise_right_set) = membership_parts(&components[1])?;
-    if !matches!(premise_left_set, Obj::StandardSet(StandardSet::Q))
-        || !matches!(premise_right_set, Obj::StandardSet(StandardSet::Q))
-        || obj_equality_key(left) != obj_equality_key(premise_left)
-        || obj_equality_key(right) != obj_equality_key(premise_right)
-    {
-        return Err("rational binary membership premises changed its ordered operands".into());
-    }
-    let pair = render_proof(&premises[0], context)?;
-    let pair_type = render_fact(&premises[0].proposition, context)?;
-    Ok(format!(
-        "(by\n  have __components : {pair_type} := {pair}\n  exact Litex.Rules.{theorem} (__components.1) (__components.2))"
-    ))
-}
-
-fn render_additive_sign_rule(
-    fact: &LitexToLeanFactIr,
-    rule: LitexToLeanArithmeticBuiltinRuleIr,
-    parameter_requirements: &[LitexToLeanFactIr],
-    premises: &[LitexToLeanFactIr],
-    context: &StmtResultToLeanCompilerEnvironmentStack,
-) -> Result<String, String> {
-    if !parameter_requirements.is_empty() || premises.len() != 2 {
-        return Err(
-            "additive sign rule requires two premises and no parameter requirements".into(),
-        );
-    }
-    let premises = premises
-        .iter()
-        .map(|premise| {
-            Ok(CompiledFactProofBody {
-                fact: premise.proposition.clone(),
-                proposition: render_fact(&premise.proposition, context)?,
-                proof_expression: render_proof(premise, context)?,
-            })
-        })
-        .collect::<Result<Vec<_>, String>>()?;
-    render_additive_sign_rule_from_compiled_children(&fact.proposition, rule, &premises, context)
-}
-
 fn render_additive_sign_rule_from_compiled_children(
     fact: &Fact,
-    rule: LitexToLeanArithmeticBuiltinRuleIr,
+    rule: LeanArithmeticBuiltinCompilationKind,
     premises: &[CompiledFactProofBody],
     context: &StmtResultToLeanCompilerEnvironmentStack,
 ) -> Result<String, String> {
@@ -20715,44 +20783,49 @@ fn render_additive_sign_rule_from_compiled_children(
         return Err("additive sign rule requires two ordered child Results".into());
     }
     let (target_is_strict, left_is_strict, right_is_strict, theorem) = match rule {
-        LitexToLeanArithmeticBuiltinRuleIr::AddNonnegative => {
+        LeanArithmeticBuiltinCompilationKind::AddNonnegative => {
             (false, false, false, "complexAddNonnegative")
         }
-        LitexToLeanArithmeticBuiltinRuleIr::AddPositive => (true, true, true, "complexAddPositive"),
-        LitexToLeanArithmeticBuiltinRuleIr::AddPositiveLeftStrict => {
+        LeanArithmeticBuiltinCompilationKind::AddPositive => {
+            (true, true, true, "complexAddPositive")
+        }
+        LeanArithmeticBuiltinCompilationKind::AddPositiveLeftStrict => {
             (true, true, false, "complexAddPositiveLeftStrict")
         }
-        LitexToLeanArithmeticBuiltinRuleIr::AddPositiveRightStrict => {
+        LeanArithmeticBuiltinCompilationKind::AddPositiveRightStrict => {
             (true, false, true, "complexAddPositiveRightStrict")
         }
-        LitexToLeanArithmeticBuiltinRuleIr::MulNonnegative => {
+        LeanArithmeticBuiltinCompilationKind::MulNonnegative => {
             (false, false, false, "complexMulNonnegative")
         }
-        LitexToLeanArithmeticBuiltinRuleIr::MulPositive => (true, true, true, "complexMulPositive"),
-        LitexToLeanArithmeticBuiltinRuleIr::DivNonnegative => {
+        LeanArithmeticBuiltinCompilationKind::MulPositive => {
+            (true, true, true, "complexMulPositive")
+        }
+        LeanArithmeticBuiltinCompilationKind::DivNonnegative => {
             (false, false, true, "complexDivNonnegative")
         }
-        LitexToLeanArithmeticBuiltinRuleIr::DivPositive => (true, true, true, "complexDivPositive"),
-        _ => return Err(format!("unsupported sign builtin rule: {rule:?}")),
+        LeanArithmeticBuiltinCompilationKind::DivPositive => {
+            (true, true, true, "complexDivPositive")
+        }
     };
 
     let (target_zero, target_expression) = positive_order_parts(fact, target_is_strict)?;
     let (target_left, target_right) = match (rule, target_expression) {
         (
-            LitexToLeanArithmeticBuiltinRuleIr::AddNonnegative
-            | LitexToLeanArithmeticBuiltinRuleIr::AddPositive
-            | LitexToLeanArithmeticBuiltinRuleIr::AddPositiveLeftStrict
-            | LitexToLeanArithmeticBuiltinRuleIr::AddPositiveRightStrict,
+            LeanArithmeticBuiltinCompilationKind::AddNonnegative
+            | LeanArithmeticBuiltinCompilationKind::AddPositive
+            | LeanArithmeticBuiltinCompilationKind::AddPositiveLeftStrict
+            | LeanArithmeticBuiltinCompilationKind::AddPositiveRightStrict,
             Obj::Add(operation),
         ) => (operation.left.as_ref(), operation.right.as_ref()),
         (
-            LitexToLeanArithmeticBuiltinRuleIr::MulNonnegative
-            | LitexToLeanArithmeticBuiltinRuleIr::MulPositive,
+            LeanArithmeticBuiltinCompilationKind::MulNonnegative
+            | LeanArithmeticBuiltinCompilationKind::MulPositive,
             Obj::Mul(operation),
         ) => (operation.left.as_ref(), operation.right.as_ref()),
         (
-            LitexToLeanArithmeticBuiltinRuleIr::DivNonnegative
-            | LitexToLeanArithmeticBuiltinRuleIr::DivPositive,
+            LeanArithmeticBuiltinCompilationKind::DivNonnegative
+            | LeanArithmeticBuiltinCompilationKind::DivPositive,
             Obj::Div(operation),
         ) => (operation.left.as_ref(), operation.right.as_ref()),
         _ => {
@@ -20806,7 +20879,8 @@ fn transport_zero_ended_order_proof_to_rendered_numeric_operand(
     if rendered_source == rendered_target {
         return Ok(source_proof.to_string());
     }
-    let LitexToLeanObjectIr::Symbol { symbol_id, .. } = LitexToLeanObjectIr::lower(source_operand)?
+    let LeanTargetObjectRepresentation::Symbol { symbol_id, .. } =
+        LeanTargetObjectRepresentation::lower(source_operand)?
     else {
         return Err(format!(
             "sign proof changed `{rendered_source}` to unrelated numeric target `{rendered_target}`"
@@ -20830,175 +20904,13 @@ fn transport_zero_ended_order_proof_to_rendered_numeric_operand(
     ))
 }
 
-fn render_order_transitivity(
-    fact: &LitexToLeanFactIr,
-    parameter_requirements: &[LitexToLeanFactIr],
-    premises: &[LitexToLeanFactIr],
-    context: &StmtResultToLeanCompilerEnvironmentStack,
-) -> Result<String, String> {
-    if !parameter_requirements.is_empty() || premises.len() < 3 {
-        return Err(
-            "order transitivity requires carrier evidence followed by two ordered premises".into(),
-        );
-    }
-    let (carrier_evidence, ordered_premises) = premises.split_at(premises.len() - 2);
-    let [first, second] = ordered_premises else {
-        unreachable!("split retained exactly two ordered premises")
-    };
-    for evidence in carrier_evidence {
-        let components = match &evidence.proposition {
-            Fact::AndFact(_) | Fact::ChainFact(_) => conjunction_components(&evidence.proposition)?,
-            _ => vec![evidence.proposition.clone()],
-        };
-        for component in components {
-            let (_object, set) = membership_parts(&component)?;
-            if !matches!(set, Obj::StandardSet(StandardSet::R | StandardSet::Z)) {
-                return Err(
-                    "order transitivity carrier evidence changed from the verified R/Z fragment"
-                        .into(),
-                );
-            }
-        }
-        render_proof(evidence, context)?;
-    }
-
-    let (target_left, target_right, target_strict) = order_relation_parts(&fact.proposition)?;
-    let (first_left, middle, first_strict) = order_relation_parts(&first.proposition)?;
-    let (second_left, second_right, second_strict) = order_relation_parts(&second.proposition)?;
-    if obj_equality_key(target_left) != obj_equality_key(first_left)
-        || obj_equality_key(middle) != obj_equality_key(second_left)
-        || obj_equality_key(target_right) != obj_equality_key(second_right)
-        || (target_strict && !first_strict && !second_strict)
-    {
-        return Err("order transitivity changed its endpoints, middle term, or strictness".into());
-    }
-
-    // Zero-ended relations deliberately use Positive/Nonnegative and have a
-    // different one-representative contract. Keep that mixed bridge closed
-    // until the verifier exposes a dedicated certificate for it.
-    if target_left.to_string() == "0"
-        || first_left.to_string() == "0"
-        || second_left.to_string() == "0"
-    {
-        return Err("mixed zero-ended order transitivity has no reviewed Lean adapter".into());
-    }
-
-    let first_proof = render_proof(first, context)?;
-    let second_proof = render_proof(second, context)?;
-    if target_strict {
-        return Ok(match (first_strict, second_strict) {
-            (true, true) => format!("Litex.Lt.trans ({first_proof}) ({second_proof})"),
-            (true, false) => format!("Litex.Lt.transLe ({first_proof}) ({second_proof})"),
-            (false, true) => format!("Litex.Le.transLt ({first_proof}) ({second_proof})"),
-            (false, false) => unreachable!("strict target validation rejected two weak premises"),
-        });
-    }
-
-    let first_le = if first_strict {
-        format!("Litex.Lt.toLe ({first_proof})")
-    } else {
-        format!("({first_proof})")
-    };
-    let second_le = if second_strict {
-        format!("Litex.Lt.toLe ({second_proof})")
-    } else {
-        format!("({second_proof})")
-    };
-    Ok(format!("Litex.Le.trans {first_le} {second_le}"))
-}
-
-fn render_real_binary_membership_rule(
-    fact: &LitexToLeanFactIr,
-    rule: LitexToLeanRealArithmeticMembershipClosureBuiltinRuleIr,
-    parameter_requirements: &[LitexToLeanFactIr],
-    premises: &[LitexToLeanFactIr],
-    context: &StmtResultToLeanCompilerEnvironmentStack,
-) -> Result<String, String> {
-    if !parameter_requirements.is_empty() || premises.len() != 1 {
-        return Err(
-            "real binary membership requires one conjunction premise and no parameter requirements"
-                .into(),
-        );
-    }
-    let components = conjunction_components(&premises[0].proposition)?;
-    if components.len() != 2 {
-        return Err("real binary membership premise is not a binary conjunction".into());
-    }
-    let (target_element, target_set) = membership_parts(&fact.proposition)?;
-    let (target_left, target_right, theorem) = match (rule, target_element) {
-        (LitexToLeanRealArithmeticMembershipClosureBuiltinRuleIr::Add, Obj::Add(operation)) => (
-            operation.left.as_ref(),
-            operation.right.as_ref(),
-            "complexAddInR",
-        ),
-        (LitexToLeanRealArithmeticMembershipClosureBuiltinRuleIr::Sub, Obj::Sub(operation)) => (
-            operation.left.as_ref(),
-            operation.right.as_ref(),
-            "complexSubInR",
-        ),
-        (LitexToLeanRealArithmeticMembershipClosureBuiltinRuleIr::Mul, Obj::Mul(operation)) => (
-            operation.left.as_ref(),
-            operation.right.as_ref(),
-            "complexMulInR",
-        ),
-        (LitexToLeanRealArithmeticMembershipClosureBuiltinRuleIr::Div, Obj::Div(operation)) => (
-            operation.left.as_ref(),
-            operation.right.as_ref(),
-            "complexDivInR",
-        ),
-        _ => return Err("real binary membership target changed its operator".into()),
-    };
-    if !matches!(target_set, Obj::StandardSet(StandardSet::R)) {
-        return Err("real binary membership target is not R".into());
-    }
-    let (left_element, left_set) = membership_parts(&components[0])?;
-    let (right_element, right_set) = membership_parts(&components[1])?;
-    if !matches!(left_set, Obj::StandardSet(StandardSet::R))
-        || !matches!(right_set, Obj::StandardSet(StandardSet::R))
-        || obj_equality_key(target_left) != obj_equality_key(left_element)
-        || obj_equality_key(target_right) != obj_equality_key(right_element)
-    {
-        return Err("real binary membership premises changed its ordered operands".into());
-    }
-    let uses_local_numeric_view = [target_left, target_right].iter().any(|object| {
-        matches!(object, Obj::Atom(atom) if atom
-            .symbol_ref()
-            .is_some_and(|symbol| context.numeric_real_values.contains_key(&symbol.id())))
-    });
-    if !uses_local_numeric_view {
-        let pair = render_proof(&premises[0], context)?;
-        let pair_type = render_fact(&premises[0].proposition, context)?;
-        return Ok(format!(
-            "(by\n  have __components : {pair_type} := {pair}\n  exact Litex.Rules.{theorem} (__components.1) (__components.2))"
-        ));
-    }
-    let LitexToLeanFactProofIr::RuleApplication {
-        rule: LitexToLeanProofRuleIr::AndIntroduction,
-        parameter_requirements: conjunction_parameters,
-        premises: conjunction_premises,
-    } = &premises[0].proof
-    else {
-        return Err("real binary membership conjunction lost its introduction proof".into());
-    };
-    if !conjunction_parameters.is_empty() || conjunction_premises.len() != 2 {
-        return Err("real binary membership conjunction changed its proof components".into());
-    }
-    let left_fallback = render_proof(&conjunction_premises[0], context)?;
-    let right_fallback = render_proof(&conjunction_premises[1], context)?;
-    let left_proof = render_real_operand_membership(target_left, &left_fallback, context);
-    let right_proof = render_real_operand_membership(target_right, &right_fallback, context);
-    Ok(format!(
-        "Litex.Rules.{theorem} ({left_proof}) ({right_proof})"
-    ))
-}
-
 fn render_real_operand_membership(
     object: &Obj,
     fallback: &str,
     context: &StmtResultToLeanCompilerEnvironmentStack,
 ) -> String {
-    let real = match LitexToLeanObjectIr::lower(object) {
-        Ok(LitexToLeanObjectIr::Symbol { symbol_id, .. }) => {
+    let real = match LeanTargetObjectRepresentation::lower(object) {
+        Ok(LeanTargetObjectRepresentation::Symbol { symbol_id, .. }) => {
             context.numeric_real_values.get(&symbol_id)
         }
         _ => None,
@@ -21009,611 +20921,159 @@ fn render_real_operand_membership(
     )
 }
 
-fn render_comparison_notation_duality(
-    fact: &LitexToLeanFactIr,
-    parameter_requirements: &[LitexToLeanFactIr],
-    premises: &[LitexToLeanFactIr],
-    context: &StmtResultToLeanCompilerEnvironmentStack,
-) -> Result<String, String> {
-    if !parameter_requirements.is_empty()
-        || premises.len() != 1
-        || !crate::litex_to_lean_ir::facts_are_comparison_notation_duals(
-            &premises[0].proposition,
-            &fact.proposition,
-        )
-        || render_fact(&premises[0].proposition, context)?
-            != render_fact(&fact.proposition, context)?
-    {
-        return Err("comparison-notation duality changed its source or target".into());
-    }
-    render_proof(&premises[0], context)
-}
-
-fn render_known_equality_path(
-    fact: &LitexToLeanFactIr,
-    parameter_requirements: &[LitexToLeanFactIr],
-    premises: &[LitexToLeanFactIr],
-    context: &StmtResultToLeanCompilerEnvironmentStack,
-) -> Result<String, String> {
-    if !parameter_requirements.is_empty() || premises.is_empty() {
-        return Err("known-equality path has invalid premise arity".into());
-    }
-    let (target_left, target_right) = equality_parts(&fact.proposition)?;
-    let mut current_key = obj_equality_key(target_left);
-    let target_key = obj_equality_key(target_right);
-    let mut accumulated = None;
-    for premise in premises {
-        if !matches!(
-            premise.proof,
-            LitexToLeanFactProofIr::KnownFactCitation { .. }
-        ) {
-            return Err("known-equality path lost an exact FactId citation".into());
-        }
-        let (premise_left, premise_right) = equality_parts(&premise.proposition)?;
-        let left_key = obj_equality_key(premise_left);
-        let right_key = obj_equality_key(premise_right);
-        let (to_key, reverse) = if current_key == left_key {
-            (right_key, false)
-        } else if current_key == right_key {
-            (left_key, true)
-        } else {
-            return Err("known-equality path contains disconnected steps".into());
-        };
-        let proof = render_proof(premise, context)?;
-        let oriented = if reverse {
-            format!("Litex.Same.symm ({proof})")
-        } else {
-            proof
-        };
-        accumulated = Some(match accumulated {
-            None => oriented,
-            Some(previous) => format!("Litex.Same.trans ({previous}) ({oriented})"),
-        });
-        current_key = to_key;
-    }
-    if current_key != target_key {
-        return Err("known-equality path does not end at the target right-hand side".into());
-    }
-    accumulated.ok_or_else(|| "known-equality path retained no steps".into())
-}
-
-fn render_known_forall_instantiation(
-    _fact: &LitexToLeanFactIr,
-    source_fact_id: FactId,
-    arguments: &[Obj],
-    parameter_requirements: &[LitexToLeanFactIr],
-    premises: &[LitexToLeanFactIr],
-    context: &StmtResultToLeanCompilerEnvironmentStack,
-) -> Result<String, String> {
-    let theorem = context
-        .fact_names
-        .get(&source_fact_id)
-        .ok_or_else(|| format!("known forall cites unavailable FactId `{source_fact_id}`"))?;
-    let source = context
-        .fact_propositions
-        .get(&source_fact_id)
-        .ok_or_else(|| format!("known forall FactId `{source_fact_id}` has no proposition"))?;
-    let Fact::ForallFact(source) = source else {
-        return Err(format!(
-            "known forall FactId `{source_fact_id}` does not name a forall fact"
-        ));
-    };
-    let source_parameters = source
-        .params_def_with_type
-        .collect_param_bindings_with_types();
-    if source_parameters.len() != arguments.len()
-        || arguments.len() != parameter_requirements.len()
-        || source.dom_facts.len() != premises.len()
-        || source.then_facts.len() != 1
-    {
-        return Err(
-            "known forall changed its argument, requirement, domain, or result arity".into(),
-        );
-    }
-
-    let mut terms = vec![theorem.clone()];
-    for (((binding, source_type), argument), requirement) in source_parameters
-        .iter()
-        .zip(arguments.iter())
-        .zip(parameter_requirements.iter())
-    {
-        let _ = binding;
-        terms.push(render_obj(argument, context)?);
-        match source_type {
-            ParamType::Set(_) => {
-                let Fact::AtomicFact(AtomicFact::IsSetFact(sethood)) = &requirement.proposition
-                else {
-                    return Err("known forall set argument retained a non-set requirement".into());
-                };
-                if obj_equality_key(&sethood.set) != obj_equality_key(argument) {
-                    return Err("known forall set requirement changed its argument".into());
-                }
-            }
-            ParamType::NonemptySet(_) | ParamType::FiniteSet(_) => {
-                validate_refined_set_argument_requirement(source_type, argument, requirement)?;
-                terms.push(format!("({})", render_proof(requirement, context)?));
-            }
-            ParamType::Obj(_) => {
-                terms.push(format!("({})", render_proof(requirement, context)?));
-            }
-        }
-    }
-    for premise in premises {
-        terms.push(format!("({})", render_proof(premise, context)?));
-    }
-    Ok(format!("({})", terms.join(" ")))
-}
-
-fn render_and_introduction(
-    fact: &LitexToLeanFactIr,
-    parameter_requirements: &[LitexToLeanFactIr],
-    premises: &[LitexToLeanFactIr],
-    context: &StmtResultToLeanCompilerEnvironmentStack,
-) -> Result<String, String> {
-    if !parameter_requirements.is_empty() {
-        return Err("conjunction introduction retained parameter requirements".into());
-    }
-    let components = conjunction_components(&fact.proposition)?;
-    if components.len() != premises.len()
-        || components
-            .iter()
-            .zip(premises.iter())
-            .any(|(expected, actual)| expected.to_string() != actual.proposition.to_string())
-    {
-        return Err("conjunction introduction changed its ordered component proofs".into());
-    }
-    let proofs = premises
-        .iter()
-        .map(|premise| render_proof(premise, context))
-        .collect::<Result<Vec<_>, _>>()?;
-    right_associated_conjunction_proof(&proofs)
-}
-
-fn render_disjunction_introduction(
-    fact: &LitexToLeanFactIr,
-    selected_index: usize,
-    parameter_requirements: &[LitexToLeanFactIr],
-    premises: &[LitexToLeanFactIr],
-    context: &StmtResultToLeanCompilerEnvironmentStack,
-) -> Result<String, String> {
-    if !parameter_requirements.is_empty() || premises.len() != 1 {
-        return Err(
-            "disjunction introduction changed its target, selected proof, or premise arity".into(),
-        );
-    }
-    let branches = disjunction_components(&fact.proposition)?;
-    if branches.get(selected_index).map(ToString::to_string)
-        != Some(premises[0].proposition.to_string())
-    {
-        return Err("disjunction introduction selected a different branch proposition".into());
-    }
-    right_associated_disjunction_injection(
-        render_proof(&premises[0], context)?,
-        selected_index,
-        branches.len(),
-    )
-}
-
-fn render_conjunction_projection(
-    fact: &LitexToLeanFactIr,
-    index: usize,
-    parameter_requirements: &[LitexToLeanFactIr],
-    premises: &[LitexToLeanFactIr],
-    context: &StmtResultToLeanCompilerEnvironmentStack,
-) -> Result<String, String> {
-    if !parameter_requirements.is_empty() || premises.len() != 1 {
-        return Err("conjunction projection changed its source, target, or premise arity".into());
-    }
-    let components = conjunction_components(&premises[0].proposition)?;
-    if components.get(index).map(ToString::to_string) != Some(fact.proposition.to_string()) {
-        return Err("conjunction projection changed its retained component position".into());
-    }
-    let source = render_proof(&premises[0], context)?;
-    conjunction_projection(&format!("({source})"), index, components.len())
-}
-
-fn construct_lean_proof_for_membership_equality_rewrite(
-    target: &LitexToLeanFactIr,
-    parameter_requirements: &[LitexToLeanFactIr],
-    premises: &[LitexToLeanFactIr],
-    context: &StmtResultToLeanCompilerEnvironmentStack,
-) -> Result<String, String> {
-    if !parameter_requirements.is_empty() || premises.len() != 2 {
-        return Err("membership equality rewrite has unsupported certificate shape".into());
-    }
-    let (target_element, target_set) = membership_parts(&target.proposition)?;
-    let (source_element, source_set) = membership_parts(&premises[0].proposition)?;
-    if obj_equality_key(target_set) != obj_equality_key(source_set) {
-        return Err("membership rewrite changed the set object".into());
-    }
-    let (left, right) = equality_parts(&premises[1].proposition)?;
-    let source_key = obj_equality_key(source_element);
-    let target_key = obj_equality_key(target_element);
-    let left_key = obj_equality_key(left);
-    let right_key = obj_equality_key(right);
-    let direction = if source_key == left_key && target_key == right_key {
-        "mp"
-    } else if source_key == right_key && target_key == left_key {
-        "mpr"
-    } else {
-        return Err("membership rewrite operands do not match equality evidence".into());
-    };
-    let membership = render_proof(&premises[0], context)?;
-    let equality = render_proof(&premises[1], context)?;
-    let set = render_obj(target_set, context)?;
-    Ok(format!(
-        "(Litex.In.congr {equality} {set}).{direction} {membership}"
-    ))
-}
-
-fn construct_lean_proof_for_registered_rule(
-    target: &LitexToLeanFactIr,
-    rule: &crate::litex_to_lean_ir::LitexToLeanRegisteredRuleApplicationIr,
-    parameter_requirements: &[LitexToLeanFactIr],
-    premises: &[LitexToLeanFactIr],
-    context: &StmtResultToLeanCompilerEnvironmentStack,
-) -> Result<String, String> {
-    if let Some((set_rule, expected_bindings, expected_semantic_premises)) =
-        registered_set_rule(&rule.rule_id, &rule.semantic_fingerprint)
-    {
-        if rule.bindings.len() != expected_bindings
-            || parameter_requirements.len() != rule.bindings.len()
-        {
-            return Err(format!(
-                "registered set rule `{}` changed its binding or requirement arity: expected {expected_bindings} bindings but retained {}/{}",
-                rule.rule_id.as_str(),
-                rule.bindings.len(),
-                parameter_requirements.len()
-            ));
-        }
-        if rule.bindings.iter().any(|binding| {
-            !matches!(
-                binding.param_type,
-                LitexToLeanParameterTypeIr::Set | LitexToLeanParameterTypeIr::MemberOf { .. }
-            )
-        }) {
-            return Err(format!(
-                "registered set rule `{}` changed its parameter types",
-                rule.rule_id.as_str()
-            ));
-        }
-        let mut semantic_premises = Vec::new();
-        for (binding, requirement) in rule.bindings.iter().zip(parameter_requirements.iter()) {
-            match &binding.param_type {
-                LitexToLeanParameterTypeIr::Set => {
-                    let Fact::AtomicFact(AtomicFact::IsSetFact(sethood)) = &requirement.proposition
-                    else {
-                        return Err("registered set parameter retained non-set evidence".into());
-                    };
-                    if LitexToLeanObjectIr::lower(&sethood.set)? != binding.object {
-                        return Err(
-                            "registered set parameter evidence changed its exact binding".into(),
-                        );
-                    }
-                }
-                LitexToLeanParameterTypeIr::MemberOf { set } => {
-                    let (element, actual_set) = membership_parts(&requirement.proposition)?;
-                    if LitexToLeanObjectIr::lower(element)? != binding.object
-                        || LitexToLeanObjectIr::lower(actual_set)? != *set
-                    {
-                        return Err(
-                            "registered member parameter evidence changed its exact binding".into(),
-                        );
-                    }
-                    semantic_premises.push(requirement.clone());
-                }
-                _ => {
-                    return Err(
-                        "registered set rule retained a refined-set parameter unexpectedly".into(),
-                    );
-                }
-            }
-        }
-        semantic_premises.extend_from_slice(premises);
-        if semantic_premises.len() != expected_semantic_premises {
-            return Err(format!(
-                "registered set rule `{}` changed its semantic premise count",
-                rule.rule_id.as_str()
-            ));
-        }
-        return render_set_builtin_rule(target, set_rule, &[], &semantic_premises, context);
-    }
-    match rule.rule_id.as_str() {
-        LESS_EQUAL_OF_LESS_RULE_ID
-            if rule.semantic_fingerprint.as_hex() == LESS_EQUAL_OF_LESS_FINGERPRINT => {}
-        ADD_POSITIVE_OF_POSITIVE_NONNEGATIVE_RULE_ID
-            if rule.semantic_fingerprint.as_hex()
-                == ADD_POSITIVE_OF_POSITIVE_NONNEGATIVE_FINGERPRINT =>
-        {
-            validate_registered_binary_real_rule(rule, parameter_requirements, premises, context)?;
-            return render_additive_sign_rule(
-                target,
-                LitexToLeanArithmeticBuiltinRuleIr::AddPositiveLeftStrict,
-                &[],
-                premises,
-                context,
-            );
-        }
-        ADD_POSITIVE_OF_NONNEGATIVE_POSITIVE_RULE_ID
-            if rule.semantic_fingerprint.as_hex()
-                == ADD_POSITIVE_OF_NONNEGATIVE_POSITIVE_FINGERPRINT =>
-        {
-            validate_registered_binary_real_rule(rule, parameter_requirements, premises, context)?;
-            return render_additive_sign_rule(
-                target,
-                LitexToLeanArithmeticBuiltinRuleIr::AddPositiveRightStrict,
-                &[],
-                premises,
-                context,
-            );
-        }
-        ADD_NONNEGATIVE_RULE_ID
-            if rule.semantic_fingerprint.as_hex() == ADD_NONNEGATIVE_FINGERPRINT =>
-        {
-            validate_registered_binary_real_rule(rule, parameter_requirements, premises, context)?;
-            return render_additive_sign_rule(
-                target,
-                LitexToLeanArithmeticBuiltinRuleIr::AddNonnegative,
-                &[],
-                premises,
-                context,
-            );
-        }
-        ADD_POSITIVE_RULE_ID if rule.semantic_fingerprint.as_hex() == ADD_POSITIVE_FINGERPRINT => {
-            validate_registered_binary_real_rule(rule, parameter_requirements, premises, context)?;
-            return render_additive_sign_rule(
-                target,
-                LitexToLeanArithmeticBuiltinRuleIr::AddPositive,
-                &[],
-                premises,
-                context,
-            );
-        }
-        MUL_NONNEGATIVE_RULE_ID
-            if rule.semantic_fingerprint.as_hex() == MUL_NONNEGATIVE_FINGERPRINT =>
-        {
-            validate_registered_binary_real_rule(rule, parameter_requirements, premises, context)?;
-            return render_additive_sign_rule(
-                target,
-                LitexToLeanArithmeticBuiltinRuleIr::MulNonnegative,
-                &[],
-                premises,
-                context,
-            );
-        }
-        MUL_POSITIVE_RULE_ID if rule.semantic_fingerprint.as_hex() == MUL_POSITIVE_FINGERPRINT => {
-            validate_registered_binary_real_rule(rule, parameter_requirements, premises, context)?;
-            return render_additive_sign_rule(
-                target,
-                LitexToLeanArithmeticBuiltinRuleIr::MulPositive,
-                &[],
-                premises,
-                context,
-            );
-        }
-        DIV_NONNEGATIVE_RULE_ID
-            if rule.semantic_fingerprint.as_hex() == DIV_NONNEGATIVE_FINGERPRINT =>
-        {
-            validate_registered_binary_real_rule(rule, parameter_requirements, premises, context)?;
-            return render_additive_sign_rule(
-                target,
-                LitexToLeanArithmeticBuiltinRuleIr::DivNonnegative,
-                &[],
-                premises,
-                context,
-            );
-        }
-        DIV_POSITIVE_RULE_ID if rule.semantic_fingerprint.as_hex() == DIV_POSITIVE_FINGERPRINT => {
-            validate_registered_binary_real_rule(rule, parameter_requirements, premises, context)?;
-            return render_additive_sign_rule(
-                target,
-                LitexToLeanArithmeticBuiltinRuleIr::DivPositive,
-                &[],
-                premises,
-                context,
-            );
-        }
-        _ => {
-            return Err(format!(
-                "unsupported or changed registered rule certificate `{}`",
-                rule.rule_id.as_str()
-            ));
-        }
-    }
-    if rule.bindings.len() != 2 || parameter_requirements.len() != 2 || premises.len() != 1 {
-        return Err("less-to-less-equal registered rule changed its certificate shape".into());
-    }
-    for requirement in parameter_requirements {
-        render_proof(requirement, context)?;
-    }
-    let (less_left, less_right) = less_parts(&premises[0].proposition)?;
-    let (le_left, le_right) = less_equal_parts(&target.proposition)?;
-    if obj_equality_key(less_left) != obj_equality_key(le_left)
-        || obj_equality_key(less_right) != obj_equality_key(le_right)
-    {
-        return Err("less-to-less-equal rule changed its operands".into());
-    }
-    if less_left.to_string() == "0" {
-        return Ok(format!(
-            "Litex.Positive.toNonnegative {}",
-            render_proof(&premises[0], context)?
-        ));
-    }
-    Ok(format!(
-        "Litex.Lt.toLe {}",
-        render_proof(&premises[0], context)?
-    ))
-}
-
 fn registered_set_rule(
     rule_id: &RuleId,
     semantic_fingerprint: &RuleFingerprint,
-) -> Option<(LitexToLeanSetBuiltinRuleIr, usize, usize)> {
+) -> Option<(LeanSetBuiltinCompilationKind, usize, usize)> {
     let fingerprint = semantic_fingerprint.as_hex();
     Some(match rule_id.as_str() {
         SET_EMPTY_SUBSET_RULE_ID if fingerprint == SET_EMPTY_SUBSET_FINGERPRINT => {
-            (LitexToLeanSetBuiltinRuleIr::EmptySubset, 1, 0)
+            (LeanSetBuiltinCompilationKind::EmptySubset, 1, 0)
         }
         SET_UNION_ASSOCIATIVE_RULE_ID if fingerprint == SET_UNION_ASSOCIATIVE_FINGERPRINT => {
-            (LitexToLeanSetBuiltinRuleIr::UnionAssociative, 3, 0)
+            (LeanSetBuiltinCompilationKind::UnionAssociative, 3, 0)
         }
         SET_UNION_COMMUTATIVE_RULE_ID if fingerprint == SET_UNION_COMMUTATIVE_FINGERPRINT => {
-            (LitexToLeanSetBuiltinRuleIr::UnionCommutative, 2, 0)
+            (LeanSetBuiltinCompilationKind::UnionCommutative, 2, 0)
         }
         SET_UNION_EMPTY_LEFT_RULE_ID if fingerprint == SET_UNION_EMPTY_LEFT_FINGERPRINT => {
-            (LitexToLeanSetBuiltinRuleIr::UnionEmptyIdentity, 1, 0)
+            (LeanSetBuiltinCompilationKind::UnionEmptyIdentity, 1, 0)
         }
         SET_UNION_EMPTY_RIGHT_RULE_ID if fingerprint == SET_UNION_EMPTY_RIGHT_FINGERPRINT => {
-            (LitexToLeanSetBuiltinRuleIr::UnionEmptyIdentity, 1, 0)
+            (LeanSetBuiltinCompilationKind::UnionEmptyIdentity, 1, 0)
         }
         SET_UNION_IDEMPOTENT_RULE_ID if fingerprint == SET_UNION_IDEMPOTENT_FINGERPRINT => {
-            (LitexToLeanSetBuiltinRuleIr::UnionIdempotent, 1, 0)
+            (LeanSetBuiltinCompilationKind::UnionIdempotent, 1, 0)
         }
         SET_UNION_MEMBERSHIP_LEFT_RULE_ID
             if fingerprint == SET_UNION_MEMBERSHIP_LEFT_FINGERPRINT =>
         {
-            (LitexToLeanSetBuiltinRuleIr::UnionMembershipLeft, 3, 1)
+            (LeanSetBuiltinCompilationKind::UnionMembershipLeft, 3, 1)
         }
         SET_UNION_MEMBERSHIP_RIGHT_RULE_ID
             if fingerprint == SET_UNION_MEMBERSHIP_RIGHT_FINGERPRINT =>
         {
-            (LitexToLeanSetBuiltinRuleIr::UnionMembershipRight, 3, 1)
+            (LeanSetBuiltinCompilationKind::UnionMembershipRight, 3, 1)
         }
         SET_INTERSECT_ASSOCIATIVE_RULE_ID
             if fingerprint == SET_INTERSECT_ASSOCIATIVE_FINGERPRINT =>
         {
-            (LitexToLeanSetBuiltinRuleIr::IntersectAssociative, 3, 0)
+            (LeanSetBuiltinCompilationKind::IntersectAssociative, 3, 0)
         }
         SET_INTERSECT_COMMUTATIVE_RULE_ID
             if fingerprint == SET_INTERSECT_COMMUTATIVE_FINGERPRINT =>
         {
-            (LitexToLeanSetBuiltinRuleIr::IntersectCommutative, 2, 0)
+            (LeanSetBuiltinCompilationKind::IntersectCommutative, 2, 0)
         }
         SET_INTERSECT_MEMBERSHIP_RULE_ID if fingerprint == SET_INTERSECT_MEMBERSHIP_FINGERPRINT => {
-            (LitexToLeanSetBuiltinRuleIr::IntersectMembershipBoth, 3, 2)
+            (LeanSetBuiltinCompilationKind::IntersectMembershipBoth, 3, 2)
         }
         SET_MINUS_MEMBERSHIP_RULE_ID if fingerprint == SET_MINUS_MEMBERSHIP_FINGERPRINT => {
-            (LitexToLeanSetBuiltinRuleIr::SetMinusMembership, 3, 2)
+            (LeanSetBuiltinCompilationKind::SetMinusMembership, 3, 2)
         }
         SET_INTERSECT_EQ_LEFT_OF_SUBSET_RULE_ID
             if fingerprint == SET_INTERSECT_EQ_LEFT_OF_SUBSET_FINGERPRINT =>
         {
-            (LitexToLeanSetBuiltinRuleIr::IntersectEqLeftOfSubset, 2, 1)
+            (LeanSetBuiltinCompilationKind::IntersectEqLeftOfSubset, 2, 1)
         }
         SET_INTERSECT_EQ_RIGHT_OF_SUBSET_RULE_ID
             if fingerprint == SET_INTERSECT_EQ_RIGHT_OF_SUBSET_FINGERPRINT =>
         {
-            (LitexToLeanSetBuiltinRuleIr::IntersectEqRightOfSubset, 2, 1)
+            (
+                LeanSetBuiltinCompilationKind::IntersectEqRightOfSubset,
+                2,
+                1,
+            )
         }
         SET_INTERSECT_FINITE_RULE_ID if fingerprint == SET_INTERSECT_FINITE_FINGERPRINT => {
-            (LitexToLeanSetBuiltinRuleIr::IntersectFinite, 2, 2)
+            (LeanSetBuiltinCompilationKind::IntersectFinite, 2, 2)
         }
         SET_INTERSECT_SUBSET_LEFT_RULE_ID
             if fingerprint == SET_INTERSECT_SUBSET_LEFT_FINGERPRINT =>
         {
-            (LitexToLeanSetBuiltinRuleIr::IntersectSubsetLeft, 2, 0)
+            (LeanSetBuiltinCompilationKind::IntersectSubsetLeft, 2, 0)
         }
         SET_INTERSECT_SUBSET_RIGHT_RULE_ID
             if fingerprint == SET_INTERSECT_SUBSET_RIGHT_FINGERPRINT =>
         {
-            (LitexToLeanSetBuiltinRuleIr::IntersectSubsetRight, 2, 0)
+            (LeanSetBuiltinCompilationKind::IntersectSubsetRight, 2, 0)
         }
         SET_INTERSECT_UNION_DISTRIBUTIVE_RULE_ID
             if fingerprint == SET_INTERSECT_UNION_DISTRIBUTIVE_FINGERPRINT =>
         {
             (
-                LitexToLeanSetBuiltinRuleIr::IntersectUnionDistributive,
+                LeanSetBuiltinCompilationKind::IntersectUnionDistributive,
                 3,
                 0,
             )
         }
         SET_POWER_SET_FINITE_RULE_ID if fingerprint == SET_POWER_SET_FINITE_FINGERPRINT => {
-            (LitexToLeanSetBuiltinRuleIr::PowerSetFinite, 1, 1)
+            (LeanSetBuiltinCompilationKind::PowerSetFinite, 1, 1)
         }
         SET_POWER_SET_MEMBERSHIP_OF_SUBSET_RULE_ID
             if fingerprint == SET_POWER_SET_MEMBERSHIP_OF_SUBSET_FINGERPRINT =>
         {
             (
-                LitexToLeanSetBuiltinRuleIr::PowerSetMembershipOfSubset,
+                LeanSetBuiltinCompilationKind::PowerSetMembershipOfSubset,
                 2,
                 1,
             )
         }
         SET_POWER_SET_NONEMPTY_RULE_ID if fingerprint == SET_POWER_SET_NONEMPTY_FINGERPRINT => {
-            (LitexToLeanSetBuiltinRuleIr::PowerSetNonempty, 1, 0)
+            (LeanSetBuiltinCompilationKind::PowerSetNonempty, 1, 0)
         }
         SET_MINUS_FINITE_LEFT_RULE_ID if fingerprint == SET_MINUS_FINITE_LEFT_FINGERPRINT => {
-            (LitexToLeanSetBuiltinRuleIr::SetMinusFiniteLeft, 2, 1)
+            (LeanSetBuiltinCompilationKind::SetMinusFiniteLeft, 2, 1)
         }
         SET_MINUS_INTERSECT_DE_MORGAN_RULE_ID
             if fingerprint == SET_MINUS_INTERSECT_DE_MORGAN_FINGERPRINT =>
         {
-            (LitexToLeanSetBuiltinRuleIr::SetMinusIntersectDeMorgan, 3, 0)
+            (
+                LeanSetBuiltinCompilationKind::SetMinusIntersectDeMorgan,
+                3,
+                0,
+            )
         }
         SET_MINUS_RECOVER_SUBSET_RULE_ID if fingerprint == SET_MINUS_RECOVER_SUBSET_FINGERPRINT => {
-            (LitexToLeanSetBuiltinRuleIr::SetMinusRecoverSubset, 2, 1)
+            (LeanSetBuiltinCompilationKind::SetMinusRecoverSubset, 2, 1)
         }
         SET_MINUS_SUBSET_LEFT_RULE_ID if fingerprint == SET_MINUS_SUBSET_LEFT_FINGERPRINT => {
-            (LitexToLeanSetBuiltinRuleIr::SetMinusSubsetLeft, 2, 0)
+            (LeanSetBuiltinCompilationKind::SetMinusSubsetLeft, 2, 0)
         }
         SET_MINUS_UNION_DE_MORGAN_RULE_ID
             if fingerprint == SET_MINUS_UNION_DE_MORGAN_FINGERPRINT =>
         {
-            (LitexToLeanSetBuiltinRuleIr::SetMinusUnionDeMorgan, 3, 0)
+            (LeanSetBuiltinCompilationKind::SetMinusUnionDeMorgan, 3, 0)
         }
         SET_SUBSET_EQ_SET_MINUS_RECOVERY_RULE_ID
             if fingerprint == SET_SUBSET_EQ_SET_MINUS_RECOVERY_FINGERPRINT =>
         {
-            (LitexToLeanSetBuiltinRuleIr::SubsetEqSetMinusRecovery, 2, 1)
+            (
+                LeanSetBuiltinCompilationKind::SubsetEqSetMinusRecovery,
+                2,
+                1,
+            )
         }
         SET_SUBSET_UNION_LEFT_RULE_ID if fingerprint == SET_SUBSET_UNION_LEFT_FINGERPRINT => {
-            (LitexToLeanSetBuiltinRuleIr::SubsetUnionLeft, 2, 0)
+            (LeanSetBuiltinCompilationKind::SubsetUnionLeft, 2, 0)
         }
         SET_SUBSET_UNION_RIGHT_RULE_ID if fingerprint == SET_SUBSET_UNION_RIGHT_FINGERPRINT => {
-            (LitexToLeanSetBuiltinRuleIr::SubsetUnionRight, 2, 0)
+            (LeanSetBuiltinCompilationKind::SubsetUnionRight, 2, 0)
         }
         SET_UNION_FINITE_RULE_ID if fingerprint == SET_UNION_FINITE_FINGERPRINT => {
-            (LitexToLeanSetBuiltinRuleIr::UnionFinite, 2, 2)
+            (LeanSetBuiltinCompilationKind::UnionFinite, 2, 2)
         }
         SET_UNION_NONEMPTY_LEFT_RULE_ID if fingerprint == SET_UNION_NONEMPTY_LEFT_FINGERPRINT => {
-            (LitexToLeanSetBuiltinRuleIr::UnionNonemptyLeft, 2, 1)
+            (LeanSetBuiltinCompilationKind::UnionNonemptyLeft, 2, 1)
         }
         SET_UNION_NONEMPTY_RIGHT_RULE_ID if fingerprint == SET_UNION_NONEMPTY_RIGHT_FINGERPRINT => {
-            (LitexToLeanSetBuiltinRuleIr::UnionNonemptyRight, 2, 1)
+            (LeanSetBuiltinCompilationKind::UnionNonemptyRight, 2, 1)
         }
         SET_UNION_SUBSET_RULE_ID if fingerprint == SET_UNION_SUBSET_FINGERPRINT => {
-            (LitexToLeanSetBuiltinRuleIr::UnionSubset, 3, 2)
+            (LeanSetBuiltinCompilationKind::UnionSubset, 3, 2)
         }
         _ => return None,
     })
-}
-
-fn validate_registered_binary_real_rule(
-    rule: &crate::litex_to_lean_ir::LitexToLeanRegisteredRuleApplicationIr,
-    parameter_requirements: &[LitexToLeanFactIr],
-    premises: &[LitexToLeanFactIr],
-    context: &StmtResultToLeanCompilerEnvironmentStack,
-) -> Result<(), String> {
-    if rule.bindings.len() != 2 || parameter_requirements.len() != 2 || premises.len() != 2 {
-        return Err("binary real registered rule changed its certificate shape".into());
-    }
-    for (binding, requirement) in rule.bindings.iter().zip(parameter_requirements.iter()) {
-        let LitexToLeanParameterTypeIr::MemberOf { set: binding_set } = &binding.param_type else {
-            return Err("binary real registered rule retained a non-membership binder".into());
-        };
-        if *binding_set != LitexToLeanObjectIr::StandardSet(LitexToLeanStandardSetIr::Real) {
-            return Err("binary real registered rule changed a binder carrier".into());
-        }
-        let (element, set) = membership_parts(&requirement.proposition)?;
-        if LitexToLeanObjectIr::lower(element)? != binding.object
-            || LitexToLeanObjectIr::lower(set)?
-                != LitexToLeanObjectIr::StandardSet(LitexToLeanStandardSetIr::Real)
-        {
-            return Err("binary real registered rule changed its parameter evidence".into());
-        }
-        render_proof(requirement, context)?;
-    }
-    Ok(())
 }
 
 fn render_fact(
@@ -21811,6 +21271,14 @@ fn render_order_fact(
         };
         return Ok(format!("{predicate} {}", render_obj(right, context)?));
     }
+    if right.to_string() == "0" {
+        let predicate = if strict {
+            "Litex.Negative"
+        } else {
+            "Litex.Nonpositive"
+        };
+        return Ok(format!("{predicate} {}", render_obj(left, context)?));
+    }
     let predicate = if strict { "Litex.Lt" } else { "Litex.Le" };
     Ok(format!(
         "{predicate} {} {}",
@@ -21826,7 +21294,9 @@ fn render_numeric_obj(
     // Bound identifiers are not all stored as the same `Atom` constructor.
     // Lowering supplies their canonical SymbolId, which is the identity used
     // by the compiler environment regardless of the source atom shape.
-    if let Ok(LitexToLeanObjectIr::Symbol { symbol_id, .. }) = LitexToLeanObjectIr::lower(obj) {
+    if let Ok(LeanTargetObjectRepresentation::Symbol { symbol_id, .. }) =
+        LeanTargetObjectRepresentation::lower(obj)
+    {
         if let Some(representation) = context.numeric_representations.get(&symbol_id) {
             return Ok(representation.clone());
         }
@@ -21871,7 +21341,9 @@ fn render_integer_obj(
     obj: &Obj,
     context: &StmtResultToLeanCompilerEnvironmentStack,
 ) -> Result<String, String> {
-    if let Ok(LitexToLeanObjectIr::Symbol { symbol_id, .. }) = LitexToLeanObjectIr::lower(obj) {
+    if let Ok(LeanTargetObjectRepresentation::Symbol { symbol_id, .. }) =
+        LeanTargetObjectRepresentation::lower(obj)
+    {
         if let Some(integer) = context.numeric_integer_values.get(&symbol_id) {
             return Ok(integer.clone());
         }
@@ -21922,7 +21394,9 @@ fn render_rational_obj(
     obj: &Obj,
     context: &StmtResultToLeanCompilerEnvironmentStack,
 ) -> Result<String, String> {
-    if let Ok(LitexToLeanObjectIr::Symbol { symbol_id, .. }) = LitexToLeanObjectIr::lower(obj) {
+    if let Ok(LeanTargetObjectRepresentation::Symbol { symbol_id, .. }) =
+        LeanTargetObjectRepresentation::lower(obj)
+    {
         if let Some(rational) = context.numeric_rational_values.get(&symbol_id) {
             return Ok(rational.clone());
         }
@@ -22071,15 +21545,7 @@ fn render_obj(
             .and_then(|symbol| context.symbol_names.get(&symbol.id()))
             .cloned()
             .ok_or_else(|| format!("unbound compiler symbol `{obj}`")),
-        Obj::Number(number)
-            if !number.normalized_value.is_empty()
-                && number
-                    .normalized_value
-                    .chars()
-                    .all(|character| character.is_ascii_digit()) =>
-        {
-            Ok(format!("({} : ℂ)", number.normalized_value))
-        }
+        Obj::Number(number) => render_normalized_complex_number(&number.normalized_value),
         Obj::ImaginaryUnit(_) => Ok("Complex.I".into()),
         Obj::EulerNumber(_) => Ok("((Real.exp 1 : ℝ) : ℂ)".into()),
         Obj::Pi(_) => Ok("((Real.pi : ℝ) : ℂ)".into()),
@@ -22114,30 +21580,34 @@ fn render_obj(
             render_integer_obj(power.exponent.as_ref(), context)?
         )),
         Obj::FnSet(function_set) => {
-            let function = LitexToLeanFunctionTypeIr::lower(function_set)?;
+            let function = LeanTargetFunctionTypeRepresentation::lower(function_set)?;
             render_function_set(&function, context)
         }
         Obj::SetBuilder(_) => {
-            let lowered = LitexToLeanObjectIr::lower(obj)?;
-            render_set_ir(&lowered, context)
+            let lowered = LeanTargetObjectRepresentation::lower(obj)?;
+            render_lean_source_for_target_set_representation(&lowered, context)
         }
         Obj::AnonymousFn(_) => {
-            let LitexToLeanObjectIr::AnonymousFunction(function) = LitexToLeanObjectIr::lower(obj)?
+            let LeanTargetObjectRepresentation::AnonymousFunction(function) =
+                LeanTargetObjectRepresentation::lower(obj)?
             else {
                 return Err("anonymous function lowered to another object".into());
             };
             render_anonymous_function(&function, context)
         }
         Obj::FnObj(application) => {
-            let LitexToLeanObjectIr::FunctionApplication(application) =
-                LitexToLeanObjectIr::lower(&application.clone().into())?
+            let LeanTargetObjectRepresentation::FunctionApplication(application) =
+                LeanTargetObjectRepresentation::lower(&application.clone().into())?
             else {
                 return Err("function application lowered to a non-application object".into());
             };
             render_function_application(&application, context)
         }
         Obj::StandardSet(set) => render_standard_set(*set).map(str::to_string),
-        _ => render_object_ir(&LitexToLeanObjectIr::lower(obj)?, context),
+        _ => render_lean_source_for_target_object_representation(
+            &LeanTargetObjectRepresentation::lower(obj)?,
+            context,
+        ),
     }
 }
 
@@ -22204,64 +21674,40 @@ fn validate_refined_set_parameter_premise(
     Ok(())
 }
 
-fn validate_refined_set_argument_requirement(
-    param_type: &ParamType,
-    argument: &Obj,
-    requirement: &LitexToLeanFactIr,
-) -> Result<(), String> {
-    let target = match (param_type, &requirement.proposition) {
-        (ParamType::NonemptySet(_), Fact::AtomicFact(AtomicFact::IsNonemptySetFact(property))) => {
-            &property.set
-        }
-        (ParamType::FiniteSet(_), Fact::AtomicFact(AtomicFact::IsFiniteSetFact(property))) => {
-            &property.set
-        }
-        (ParamType::NonemptySet(_), _) => {
-            return Err("known forall nonempty-set argument retained different evidence".into());
-        }
-        (ParamType::FiniteSet(_), _) => {
-            return Err("known forall finite-set argument retained different evidence".into());
-        }
-        _ => return Err("refined-set argument validator received another parameter type".into()),
-    };
-    if obj_equality_key(target) != obj_equality_key(argument) {
-        return Err("known forall refined-set requirement changed its argument".into());
-    }
-    Ok(())
-}
-
 fn set_requires_heterogeneous_carrier(set: &Obj) -> bool {
     matches!(set, Obj::Atom(AtomObj::Forall(_)))
 }
 
-fn validate_unary_function_type(function: &LitexToLeanFunctionTypeIr) -> Result<(), String> {
+fn validate_unary_function_type(
+    function: &LeanTargetFunctionTypeRepresentation,
+) -> Result<(), String> {
     if function.parameters.len() != 1 {
         return Err("compiler function-set MVP supports exactly one parameter".into());
     }
-    if let LitexToLeanObjectIr::FunctionSet { function } = function.return_set.as_ref() {
+    if let LeanTargetObjectRepresentation::FunctionSet { function } = function.return_set.as_ref() {
         validate_unary_function_type(function)?;
     }
     Ok(())
 }
 
-fn validate_function_type(function: &LitexToLeanFunctionTypeIr) -> Result<(), String> {
+fn validate_function_type(function: &LeanTargetFunctionTypeRepresentation) -> Result<(), String> {
     if function.parameters.is_empty() {
         return Err("compiler function set retained an empty source parameter layer".into());
     }
-    if let LitexToLeanObjectIr::FunctionSet { function } = function.return_set.as_ref() {
+    if let LeanTargetObjectRepresentation::FunctionSet { function } = function.return_set.as_ref() {
         validate_function_type(function)?;
     }
     Ok(())
 }
 
-fn function_uses_telescope(function: &LitexToLeanFunctionTypeIr) -> bool {
+fn function_uses_telescope(function: &LeanTargetFunctionTypeRepresentation) -> bool {
     if function.parameters.len() != 1 {
         return true;
     }
     if !function.domain_facts.is_empty()
         && matches!(
             function.parameters[0].set,
-            LitexToLeanObjectIr::StandardSet(LitexToLeanStandardSetIr::PositiveNatural)
+            LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::PositiveNatural)
         )
     {
         // The finite-sequence bound depends on the natural representative
@@ -22283,19 +21729,19 @@ fn function_uses_telescope(function: &LitexToLeanFunctionTypeIr) -> bool {
 }
 
 fn object_ir_is_independent_of_symbols(
-    object: &LitexToLeanObjectIr,
+    object: &LeanTargetObjectRepresentation,
     symbol_ids: &HashSet<SymbolId>,
 ) -> bool {
     match object {
-        LitexToLeanObjectIr::Symbol { symbol_id, .. } => !symbol_ids.contains(symbol_id),
-        LitexToLeanObjectIr::FunctionSet { function } => {
+        LeanTargetObjectRepresentation::Symbol { symbol_id, .. } => !symbol_ids.contains(symbol_id),
+        LeanTargetObjectRepresentation::FunctionSet { function } => {
             function
                 .parameters
                 .iter()
                 .all(|parameter| object_ir_is_independent_of_symbols(&parameter.set, symbol_ids))
                 && object_ir_is_independent_of_symbols(function.return_set.as_ref(), symbol_ids)
         }
-        LitexToLeanObjectIr::FunctionApplication(application) => {
+        LeanTargetObjectRepresentation::FunctionApplication(application) => {
             object_ir_is_independent_of_symbols(application.head.as_ref(), symbol_ids)
                 && application.argument_layers.iter().all(|layer| {
                     layer
@@ -22303,12 +21749,12 @@ fn object_ir_is_independent_of_symbols(
                         .all(|argument| object_ir_is_independent_of_symbols(argument, symbol_ids))
                 })
         }
-        LitexToLeanObjectIr::ClosedRange { start, end }
-        | LitexToLeanObjectIr::Range { start, end } => {
+        LeanTargetObjectRepresentation::ClosedRange { start, end }
+        | LeanTargetObjectRepresentation::Range { start, end } => {
             object_ir_is_independent_of_symbols(start, symbol_ids)
                 && object_ir_is_independent_of_symbols(end, symbol_ids)
         }
-        LitexToLeanObjectIr::GeneralCartesianProduct {
+        LeanTargetObjectRepresentation::GeneralCartesianProduct {
             index_set,
             family_set,
             family_function,
@@ -22317,13 +21763,13 @@ fn object_ir_is_independent_of_symbols(
                 && object_ir_is_independent_of_symbols(family_set, symbol_ids)
                 && object_ir_is_independent_of_symbols(family_function, symbol_ids)
         }
-        LitexToLeanObjectIr::SequenceSet { values, length } => {
+        LeanTargetObjectRepresentation::SequenceSet { values, length } => {
             object_ir_is_independent_of_symbols(values, symbol_ids)
                 && length
                     .as_ref()
                     .is_none_or(|length| object_ir_is_independent_of_symbols(length, symbol_ids))
         }
-        LitexToLeanObjectIr::MatrixSet {
+        LeanTargetObjectRepresentation::MatrixSet {
             values,
             row_count,
             column_count,
@@ -22332,18 +21778,18 @@ fn object_ir_is_independent_of_symbols(
                 && object_ir_is_independent_of_symbols(row_count, symbol_ids)
                 && object_ir_is_independent_of_symbols(column_count, symbol_ids)
         }
-        LitexToLeanObjectIr::Aggregate { arguments, .. } => arguments
+        LeanTargetObjectRepresentation::Aggregate { arguments, .. } => arguments
             .iter()
             .all(|argument| object_ir_is_independent_of_symbols(argument, symbol_ids)),
-        LitexToLeanObjectIr::TupleDimension(object) => {
+        LeanTargetObjectRepresentation::TupleDimension(object) => {
             object_ir_is_independent_of_symbols(object, symbol_ids)
         }
-        LitexToLeanObjectIr::IndexedAccess { object, index } => {
+        LeanTargetObjectRepresentation::IndexedAccess { object, index } => {
             object_ir_is_independent_of_symbols(object, symbol_ids)
                 && object_ir_is_independent_of_symbols(index, symbol_ids)
         }
-        LitexToLeanObjectIr::BuiltinApp { arguments, .. }
-        | LitexToLeanObjectIr::Collection {
+        LeanTargetObjectRepresentation::BuiltinApp { arguments, .. }
+        | LeanTargetObjectRepresentation::Collection {
             items: arguments, ..
         } => arguments
             .iter()
@@ -22351,88 +21797,127 @@ fn object_ir_is_independent_of_symbols(
         // Binder-owning objects are kept on the dependent telescope path. The
         // owned binder itself may hide a reference to an outer parameter in
         // one of its source facts, which the flattened IR does not erase.
-        LitexToLeanObjectIr::SetBuilder(_) | LitexToLeanObjectIr::AnonymousFunction(_) => false,
-        LitexToLeanObjectIr::Number { .. }
-        | LitexToLeanObjectIr::Constant(_)
-        | LitexToLeanObjectIr::StandardSet(_) => true,
+        LeanTargetObjectRepresentation::SetBuilder(_)
+        | LeanTargetObjectRepresentation::AnonymousFunction(_) => false,
+        LeanTargetObjectRepresentation::Number { .. }
+        | LeanTargetObjectRepresentation::Constant(_)
+        | LeanTargetObjectRepresentation::StandardSet(_) => true,
     }
 }
 
-fn exact_set_real_value(set: &LitexToLeanObjectIr, value: &str) -> Option<String> {
+fn exact_set_real_value(set: &LeanTargetObjectRepresentation, value: &str) -> Option<String> {
     match set {
-        LitexToLeanObjectIr::StandardSet(LitexToLeanStandardSetIr::PositiveNatural) => {
+        LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::PositiveNatural) => {
             Some(format!("(((({value}).val : ℕ)) : ℝ)"))
         }
-        LitexToLeanObjectIr::StandardSet(LitexToLeanStandardSetIr::Real) => {
+        LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Natural) => {
+            Some(format!("(({value} : ℕ) : ℝ)"))
+        }
+        LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Integer) => {
+            Some(format!("(({value} : ℤ) : ℝ)"))
+        }
+        LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Rational) => {
+            Some(format!("(({value} : ℚ) : ℝ)"))
+        }
+        LeanTargetObjectRepresentation::StandardSet(
+            LeanTargetStandardSet::PositiveRational | LeanTargetStandardSet::NegativeRational,
+        ) => Some(format!("((({value}).val : ℚ) : ℝ)")),
+        LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::NegativeInteger) => {
+            Some(format!("((({value}).val : ℤ) : ℝ)"))
+        }
+        LeanTargetObjectRepresentation::StandardSet(
+            LeanTargetStandardSet::PositiveReal | LeanTargetStandardSet::NegativeReal,
+        ) => Some(format!("(({value}).val : ℝ)")),
+        LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Real) => {
             Some(format!("({value} : ℝ)"))
         }
-        LitexToLeanObjectIr::SetBuilder(builder) => {
+        LeanTargetObjectRepresentation::SetBuilder(builder) => {
             exact_set_real_value(builder.set.as_ref(), &format!("({value}).val"))
         }
         _ => None,
     }
 }
 
-fn exact_set_integer_value(set: &LitexToLeanObjectIr, value: &str) -> Option<String> {
+fn exact_set_integer_value(set: &LeanTargetObjectRepresentation, value: &str) -> Option<String> {
     match set {
-        LitexToLeanObjectIr::StandardSet(LitexToLeanStandardSetIr::PositiveNatural) => {
+        LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::PositiveNatural) => {
             Some(format!("((({value}).val : ℕ) : ℤ)"))
         }
-        LitexToLeanObjectIr::StandardSet(LitexToLeanStandardSetIr::Natural) => {
+        LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Natural) => {
             Some(format!("(({value} : ℕ) : ℤ)"))
         }
-        LitexToLeanObjectIr::StandardSet(LitexToLeanStandardSetIr::Integer) => {
+        LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Integer) => {
             Some(format!("({value} : ℤ)"))
         }
-        LitexToLeanObjectIr::SetBuilder(builder) => {
+        LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::NegativeInteger) => {
+            Some(format!("(({value}).val : ℤ)"))
+        }
+        LeanTargetObjectRepresentation::SetBuilder(builder) => {
             exact_set_integer_value(builder.set.as_ref(), &format!("({value}).val"))
         }
         _ => None,
     }
 }
 
-fn exact_set_rational_value(set: &LitexToLeanObjectIr, value: &str) -> Option<String> {
+fn exact_set_rational_value(set: &LeanTargetObjectRepresentation, value: &str) -> Option<String> {
     match set {
-        LitexToLeanObjectIr::StandardSet(LitexToLeanStandardSetIr::PositiveNatural) => {
+        LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::PositiveNatural) => {
             Some(format!("((({value}).val : ℕ) : ℚ)"))
         }
-        LitexToLeanObjectIr::StandardSet(LitexToLeanStandardSetIr::Natural) => {
+        LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Natural) => {
             Some(format!("(({value} : ℕ) : ℚ)"))
         }
-        LitexToLeanObjectIr::StandardSet(LitexToLeanStandardSetIr::Integer) => {
+        LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Integer) => {
             Some(format!("(({value} : ℤ) : ℚ)"))
         }
-        LitexToLeanObjectIr::StandardSet(LitexToLeanStandardSetIr::Rational) => {
+        LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Rational) => {
             Some(format!("({value} : ℚ)"))
         }
-        LitexToLeanObjectIr::SetBuilder(builder) => {
+        LeanTargetObjectRepresentation::StandardSet(
+            LeanTargetStandardSet::PositiveRational | LeanTargetStandardSet::NegativeRational,
+        ) => Some(format!("(({value}).val : ℚ)")),
+        LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::NegativeInteger) => {
+            Some(format!("((({value}).val : ℤ) : ℚ)"))
+        }
+        LeanTargetObjectRepresentation::SetBuilder(builder) => {
             exact_set_rational_value(builder.set.as_ref(), &format!("({value}).val"))
         }
         _ => None,
     }
 }
 
-fn exact_set_numeric_value(set: &LitexToLeanObjectIr, value: &str) -> Option<String> {
+fn exact_set_numeric_value(set: &LeanTargetObjectRepresentation, value: &str) -> Option<String> {
     match set {
-        LitexToLeanObjectIr::StandardSet(LitexToLeanStandardSetIr::PositiveNatural) => {
+        LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::PositiveNatural) => {
             Some(format!("(((({value}).val : ℕ)) : ℂ)"))
         }
-        LitexToLeanObjectIr::StandardSet(LitexToLeanStandardSetIr::Natural) => {
+        LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Natural) => {
             Some(format!("((({value} : ℕ)) : ℂ)"))
         }
-        LitexToLeanObjectIr::StandardSet(LitexToLeanStandardSetIr::Integer) => {
+        LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Integer) => {
             Some(format!("((({value} : ℤ)) : ℂ)"))
         }
-        LitexToLeanObjectIr::StandardSet(LitexToLeanStandardSetIr::Rational) => {
+        LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Rational) => {
             Some(format!("((({value} : ℚ)) : ℂ)"))
         }
-        LitexToLeanObjectIr::StandardSet(LitexToLeanStandardSetIr::Real) => {
+        LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Real) => {
             Some(format!("((({value} : ℝ)) : ℂ)"))
         }
-        LitexToLeanObjectIr::StandardSet(LitexToLeanStandardSetIr::Complex) => {
+        LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Complex) => {
             Some(format!("({value} : ℂ)"))
         }
-        LitexToLeanObjectIr::SetBuilder(builder) => {
+        LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::PositiveRational)
+        | LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::NegativeRational) => {
+            Some(format!("(((({value}).val : ℚ)) : ℂ)"))
+        }
+        LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::NegativeInteger) => {
+            Some(format!("(((({value}).val : ℤ)) : ℂ)"))
+        }
+        LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::PositiveReal)
+        | LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::NegativeReal) => {
+            Some(format!("(((({value}).val : ℝ)) : ℂ)"))
+        }
+        LeanTargetObjectRepresentation::SetBuilder(builder) => {
             exact_set_numeric_value(builder.set.as_ref(), &format!("({value}).val"))
         }
         _ => None,
@@ -22440,7 +21925,7 @@ fn exact_set_numeric_value(set: &LitexToLeanObjectIr, value: &str) -> Option<Str
 }
 
 fn membership_real_value(
-    set: &LitexToLeanObjectIr,
+    set: &LeanTargetObjectRepresentation,
     value: &str,
     membership: &str,
 ) -> Option<String> {
@@ -22448,7 +21933,7 @@ fn membership_real_value(
 }
 
 fn membership_integer_value(
-    set: &LitexToLeanObjectIr,
+    set: &LeanTargetObjectRepresentation,
     value: &str,
     membership: &str,
 ) -> Option<String> {
@@ -22456,7 +21941,7 @@ fn membership_integer_value(
 }
 
 fn membership_rational_value(
-    set: &LitexToLeanObjectIr,
+    set: &LeanTargetObjectRepresentation,
     value: &str,
     membership: &str,
 ) -> Option<String> {
@@ -22464,7 +21949,7 @@ fn membership_rational_value(
 }
 
 fn membership_numeric_value(
-    set: &LitexToLeanObjectIr,
+    set: &LeanTargetObjectRepresentation,
     value: &str,
     membership: &str,
 ) -> Option<String> {
@@ -22476,7 +21961,7 @@ fn membership_numeric_value(
 /// not a new proof search: every step is determined by the carrier and the
 /// same `Litex.In.rep` expression used by `membership_numeric_value`.
 fn membership_numeric_equality(
-    set: &LitexToLeanObjectIr,
+    set: &LeanTargetObjectRepresentation,
     value: &str,
     membership: &str,
 ) -> Option<String> {
@@ -22487,29 +21972,46 @@ fn membership_numeric_equality(
     ))
 }
 
-fn exact_set_numeric_equality(set: &LitexToLeanObjectIr, value: &str) -> Option<String> {
+fn exact_set_numeric_equality(set: &LeanTargetObjectRepresentation, value: &str) -> Option<String> {
     match set {
-        LitexToLeanObjectIr::StandardSet(LitexToLeanStandardSetIr::PositiveNatural) => {
+        LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::PositiveNatural) => {
             Some(format!(
                 "Litex.Same.trans (Litex.Same.subtype ({value})) (Litex.Same.natComplex (({value}).val))"
             ))
         }
-        LitexToLeanObjectIr::StandardSet(LitexToLeanStandardSetIr::Natural) => {
+        LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Natural) => {
             Some(format!("Litex.Same.natComplex ({value})"))
         }
-        LitexToLeanObjectIr::StandardSet(LitexToLeanStandardSetIr::Integer) => {
+        LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Integer) => {
             Some(format!("Litex.Same.intComplex ({value})"))
         }
-        LitexToLeanObjectIr::StandardSet(LitexToLeanStandardSetIr::Rational) => {
+        LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Rational) => {
             Some(format!("Litex.Same.ratComplex ({value})"))
         }
-        LitexToLeanObjectIr::StandardSet(LitexToLeanStandardSetIr::Real) => {
+        LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Real) => {
             Some(format!("Litex.Same.realComplex ({value})"))
         }
-        LitexToLeanObjectIr::StandardSet(LitexToLeanStandardSetIr::Complex) => {
+        LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Complex) => {
             Some(format!("Litex.Same.refl ({value})"))
         }
-        LitexToLeanObjectIr::SetBuilder(builder) => {
+        LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::PositiveRational)
+        | LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::NegativeRational) => {
+            Some(format!(
+                "Litex.Same.trans (Litex.Same.subtype ({value})) (Litex.Same.ratComplex (({value}).val))"
+            ))
+        }
+        LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::NegativeInteger) => {
+            Some(format!(
+                "Litex.Same.trans (Litex.Same.subtype ({value})) (Litex.Same.intComplex (({value}).val))"
+            ))
+        }
+        LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::PositiveReal)
+        | LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::NegativeReal) => {
+            Some(format!(
+                "Litex.Same.trans (Litex.Same.subtype ({value})) (Litex.Same.realComplex (({value}).val))"
+            ))
+        }
+        LeanTargetObjectRepresentation::SetBuilder(builder) => {
             let base_value = format!("({value}).val");
             let base_equality = exact_set_numeric_equality(builder.set.as_ref(), &base_value)?;
             Some(format!(
@@ -22521,7 +22023,7 @@ fn exact_set_numeric_equality(set: &LitexToLeanObjectIr, value: &str) -> Option<
 }
 
 fn membership_numeric_proof(
-    set: &LitexToLeanObjectIr,
+    set: &LeanTargetObjectRepresentation,
     value: &str,
     membership: &str,
 ) -> Option<String> {
@@ -22529,29 +22031,54 @@ fn membership_numeric_proof(
     exact_set_numeric_proof(set, &representative)
 }
 
-fn exact_set_numeric_proof(set: &LitexToLeanObjectIr, value: &str) -> Option<String> {
+fn exact_set_numeric_proof(set: &LeanTargetObjectRepresentation, value: &str) -> Option<String> {
     match set {
-        LitexToLeanObjectIr::StandardSet(LitexToLeanStandardSetIr::PositiveNatural) => {
+        LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::PositiveNatural) => {
             Some(format!(
                 "Litex.Rules.complexEqNatInNPos (((({value}).val : ℕ) : ℂ)) (({value}).val : ℕ) (by rfl) (({value}).property)"
             ))
         }
-        LitexToLeanObjectIr::StandardSet(LitexToLeanStandardSetIr::Natural) => Some(format!(
+        LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Natural) => Some(format!(
             "Litex.Rules.complexEqNatInN ((({value} : ℕ) : ℂ)) ({value} : ℕ) (by rfl)"
         )),
-        LitexToLeanObjectIr::StandardSet(LitexToLeanStandardSetIr::Integer) => Some(format!(
+        LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Integer) => Some(format!(
             "Litex.Rules.complexEqIntInZ ((({value} : ℤ) : ℂ)) ({value} : ℤ) (by rfl)"
         )),
-        LitexToLeanObjectIr::StandardSet(LitexToLeanStandardSetIr::Rational) => Some(format!(
+        LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Rational) => Some(format!(
             "Litex.Rules.complexEqRatInQ ((({value} : ℚ) : ℂ)) ({value} : ℚ) (by rfl)"
         )),
-        LitexToLeanObjectIr::StandardSet(LitexToLeanStandardSetIr::Real) => {
+        LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Real) => {
             Some(format!("Litex.Rules.complexRealInR ({value} : ℝ)"))
         }
-        LitexToLeanObjectIr::StandardSet(LitexToLeanStandardSetIr::Complex) => {
+        LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Complex) => {
             Some(format!("Litex.Rules.complexInC ({value} : ℂ)"))
         }
-        LitexToLeanObjectIr::SetBuilder(builder) => {
+        LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::PositiveRational) => {
+            Some(format!(
+                "Litex.Rules.complexEqRatInQPos (((({value}).val : ℚ) : ℂ)) (({value}).val : ℚ) (by rfl) (({value}).property)"
+            ))
+        }
+        LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::NegativeInteger) => {
+            Some(format!(
+                "Litex.Rules.complexEqIntInZNeg (((({value}).val : ℤ) : ℂ)) (({value}).val : ℤ) (by rfl) (({value}).property)"
+            ))
+        }
+        LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::NegativeRational) => {
+            Some(format!(
+                "Litex.Rules.complexEqRatInQNeg (((({value}).val : ℚ) : ℂ)) (({value}).val : ℚ) (by rfl) (({value}).property)"
+            ))
+        }
+        LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::PositiveReal) => {
+            Some(format!(
+                "Litex.Rules.complexEqRealInRPos (((({value}).val : ℝ) : ℂ)) (({value}).val : ℝ) (by rfl) (({value}).property)"
+            ))
+        }
+        LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::NegativeReal) => {
+            Some(format!(
+                "Litex.Rules.complexEqRealInRNeg (((({value}).val : ℝ) : ℂ)) (({value}).val : ℝ) (by rfl) (({value}).property)"
+            ))
+        }
+        LeanTargetObjectRepresentation::SetBuilder(builder) => {
             exact_set_numeric_proof(builder.set.as_ref(), &format!("({value}).val"))
         }
         _ => None,
@@ -22559,14 +22086,14 @@ fn exact_set_numeric_proof(set: &LitexToLeanObjectIr, value: &str) -> Option<Str
 }
 
 fn render_telescope_signature(
-    function: &LitexToLeanFunctionTypeIr,
+    function: &LeanTargetFunctionTypeRepresentation,
     context: &StmtResultToLeanCompilerEnvironmentStack,
 ) -> Result<String, String> {
     validate_function_type(function)?;
     let mut nested = context.clone();
     let mut prefixes = Vec::with_capacity(function.parameters.len() + 1);
     for (index, parameter) in function.parameters.iter().enumerate() {
-        let domain = render_set_ir(&parameter.set, &nested)?;
+        let domain = render_lean_source_for_target_set_representation(&parameter.set, &nested)?;
         let alpha = format!("__alpha{}", index + 1);
         let argument = format!("__arg{}", index + 1);
         let membership = format!("__arg{}_in", index + 1);
@@ -22619,10 +22146,11 @@ fn render_telescope_signature(
             conjunction(&requirements)
         ));
     }
-    let codomain = render_set_ir(function.return_set.as_ref(), &nested)?;
+    let codomain =
+        render_lean_source_for_target_set_representation(function.return_set.as_ref(), &nested)?;
     let universe = if matches!(
         function.return_set.as_ref(),
-        LitexToLeanObjectIr::FunctionSet { .. }
+        LeanTargetObjectRepresentation::FunctionSet { .. }
     ) {
         1
     } else {
@@ -22641,7 +22169,7 @@ fn render_telescope_signature(
 /// requirement retains that comparison through an existential complex
 /// observation instead of silently comparing a chosen carrier value.
 fn render_telescope_domain_requirement(
-    function: &LitexToLeanFunctionTypeIr,
+    function: &LeanTargetFunctionTypeRepresentation,
     fact: &Fact,
     context: &StmtResultToLeanCompilerEnvironmentStack,
 ) -> Result<String, String> {
@@ -22660,25 +22188,26 @@ fn render_telescope_domain_requirement(
 }
 
 fn positive_natural_parameter_less_equal_natural_bound(
-    function: &LitexToLeanFunctionTypeIr,
+    function: &LeanTargetFunctionTypeRepresentation,
     fact: &Fact,
 ) -> Result<Option<(SymbolId, String)>, String> {
     let Fact::AtomicFact(AtomicFact::LessEqualFact(comparison)) = fact else {
         return Ok(None);
     };
     let Some(parameter) = function.parameters.iter().find(|parameter| {
-        parameter.set == LitexToLeanObjectIr::StandardSet(LitexToLeanStandardSetIr::PositiveNatural)
+        parameter.set
+            == LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::PositiveNatural)
             && object_is_symbol(&comparison.left, parameter.symbol_id)
     }) else {
         return Ok(None);
     };
-    let lowered_bound = LitexToLeanObjectIr::lower(&comparison.right)?;
+    let lowered_bound = LeanTargetObjectRepresentation::lower(&comparison.right)?;
     let natural_bound = render_natural_endpoint(&lowered_bound)?;
     Ok(Some((parameter.symbol_id, natural_bound)))
 }
 
 fn render_function_requirement(
-    function: &LitexToLeanFunctionTypeIr,
+    function: &LeanTargetFunctionTypeRepresentation,
     context: &StmtResultToLeanCompilerEnvironmentStack,
 ) -> Result<String, String> {
     if function.domain_facts.is_empty() {
@@ -22700,7 +22229,7 @@ fn render_function_requirement(
 }
 
 fn render_function_type(
-    function: &LitexToLeanFunctionTypeIr,
+    function: &LeanTargetFunctionTypeRepresentation,
     context: &StmtResultToLeanCompilerEnvironmentStack,
 ) -> Result<String, String> {
     if function_uses_telescope(function) {
@@ -22710,8 +22239,10 @@ fn render_function_type(
         ));
     }
     validate_unary_function_type(function)?;
-    let domain = render_set_ir(&function.parameters[0].set, context)?;
-    let codomain = render_set_ir(function.return_set.as_ref(), context)?;
+    let domain =
+        render_lean_source_for_target_set_representation(&function.parameters[0].set, context)?;
+    let codomain =
+        render_lean_source_for_target_set_representation(function.return_set.as_ref(), context)?;
     if function.domain_facts.is_empty() {
         Ok(format!("Litex.Fn {domain} {codomain}"))
     } else {
@@ -22723,7 +22254,7 @@ fn render_function_type(
 }
 
 fn render_function_set(
-    function: &LitexToLeanFunctionTypeIr,
+    function: &LeanTargetFunctionTypeRepresentation,
     context: &StmtResultToLeanCompilerEnvironmentStack,
 ) -> Result<String, String> {
     if function_uses_telescope(function) {
@@ -22733,9 +22264,9 @@ fn render_function_set(
         ));
     }
     validate_unary_function_type(function)?;
-    let render_base_set = |set: &LitexToLeanObjectIr| -> Result<String, String> {
-        let rendered = render_set_ir(set, context)?;
-        if matches!(set, LitexToLeanObjectIr::Symbol { .. }) {
+    let render_base_set = |set: &LeanTargetObjectRepresentation| -> Result<String, String> {
+        let rendered = render_lean_source_for_target_set_representation(set, context)?;
+        if matches!(set, LeanTargetObjectRepresentation::Symbol { .. }) {
             Ok(format!("({rendered} : Litex.Set.{{0}})"))
         } else {
             Ok(rendered)
@@ -22743,7 +22274,7 @@ fn render_function_set(
     };
     let domain = render_base_set(&function.parameters[0].set)?;
     let codomain = match function.return_set.as_ref() {
-        LitexToLeanObjectIr::FunctionSet { function } => {
+        LeanTargetObjectRepresentation::FunctionSet { function } => {
             render_nested_function_set(function, context)?
         }
         return_set => render_base_set(return_set)?,
@@ -22759,7 +22290,7 @@ fn render_function_set(
 }
 
 fn render_nested_function_set(
-    function: &LitexToLeanFunctionTypeIr,
+    function: &LeanTargetFunctionTypeRepresentation,
     context: &StmtResultToLeanCompilerEnvironmentStack,
 ) -> Result<String, String> {
     if function_uses_telescope(function) {
@@ -22769,9 +22300,9 @@ fn render_nested_function_set(
         ));
     }
     validate_unary_function_type(function)?;
-    let render_base_set = |set: &LitexToLeanObjectIr| -> Result<String, String> {
-        let rendered = render_set_ir(set, context)?;
-        if matches!(set, LitexToLeanObjectIr::Symbol { .. }) {
+    let render_base_set = |set: &LeanTargetObjectRepresentation| -> Result<String, String> {
+        let rendered = render_lean_source_for_target_set_representation(set, context)?;
+        if matches!(set, LeanTargetObjectRepresentation::Symbol { .. }) {
             Ok(format!("({rendered} : Litex.Set.{{0}})"))
         } else {
             Ok(rendered)
@@ -22779,7 +22310,7 @@ fn render_nested_function_set(
     };
     let domain = render_base_set(&function.parameters[0].set)?;
     let codomain = match function.return_set.as_ref() {
-        LitexToLeanObjectIr::FunctionSet { function } => {
+        LeanTargetObjectRepresentation::FunctionSet { function } => {
             render_nested_function_set(function, context)?
         }
         return_set => render_base_set(return_set)?,
@@ -22794,94 +22325,6 @@ fn render_nested_function_set(
     }
 }
 
-fn render_named_function_value(
-    definition: &LitexToLeanHaveFnEqualStmtIr,
-    context: &StmtResultToLeanCompilerEnvironmentStack,
-) -> Result<(String, bool), String> {
-    let function = &definition.function;
-    let real_signature = function.parameters.iter().all(|parameter| {
-        parameter.set == LitexToLeanObjectIr::StandardSet(LitexToLeanStandardSetIr::Real)
-    }) && function.return_set.as_ref()
-        == &LitexToLeanObjectIr::StandardSet(LitexToLeanStandardSetIr::Real);
-
-    if function_uses_telescope(function) {
-        validate_function_type(function)?;
-        let mut binders = Vec::with_capacity(function.parameters.len());
-        let mut real_representations = HashMap::new();
-        for (index, parameter) in function.parameters.iter().enumerate() {
-            let suffix = index + 1;
-            let alpha = format!("__alpha{suffix}");
-            let argument = format!("__arg{suffix}");
-            let membership = format!("__arg{suffix}_in");
-            let domain = render_set_ir(&parameter.set, context)?;
-            binders.push(format!(
-                "fun {{{alpha} : Type}} ({argument} : {alpha}) ({membership} : Litex.In {argument} {domain}) => "
-            ));
-            real_representations.insert(
-                parameter.symbol_id,
-                format!("Litex.In.rep {argument} {membership}"),
-            );
-        }
-        if !function.domain_facts.is_empty() {
-            binders.push("fun __arg_domain => ".into());
-        }
-        if real_signature {
-            let body = render_real_function_body_with_parameters(
-                &definition.body,
-                &real_representations,
-                context,
-            )?;
-            return Ok((format!("{}ULift.up ({body})", binders.concat()), true));
-        }
-        let (_, _, _, selected_return) = render_function_return_selection(
-            &definition.source_body,
-            &definition.inferred_premises,
-            &definition.return_check,
-            context,
-        )?;
-        return Ok((
-            format!("{}ULift.up ({selected_return})", binders.concat()),
-            false,
-        ));
-    }
-    validate_unary_function_type(function)?;
-    let (body, uses_native_real_body) = if real_signature {
-        (
-            render_real_function_body(
-                &definition.body,
-                function.parameters[0].symbol_id,
-                "Litex.In.rep __arg __arg_in",
-                context,
-            )?,
-            true,
-        )
-    } else {
-        (
-            render_function_return_selection(
-                &definition.source_body,
-                &definition.inferred_premises,
-                &definition.return_check,
-                context,
-            )?
-            .3,
-            false,
-        )
-    };
-    if function.domain_facts.is_empty() {
-        Ok((
-            format!("{{ call := fun {{__alpha}} (__arg : __alpha) __arg_in => {body} }}"),
-            uses_native_real_body,
-        ))
-    } else {
-        Ok((
-            format!(
-                "{{ call := fun {{__alpha}} (__arg : __alpha) __arg_in __arg_domain => {body} }}"
-            ),
-            uses_native_real_body,
-        ))
-    }
-}
-
 /// Render the target value for a direct named-function Result.
 /// Binder names are the same names installed by the parent Result compiler's
 /// child environment, so the nesting of the generated Lean term mirrors the
@@ -22889,16 +22332,16 @@ fn render_named_function_value(
 /// can be represented directly; every other return carrier is selected from
 /// the exact recursive membership proof retained by that Result.
 fn render_named_function_value_from_result(
-    function: &LitexToLeanFunctionTypeIr,
-    body: &LitexToLeanObjectIr,
+    function: &LeanTargetFunctionTypeRepresentation,
+    body: &LeanTargetObjectRepresentation,
     source_body: &Obj,
     return_proof: &str,
     context: &StmtResultToLeanCompilerEnvironmentStack,
 ) -> Result<(String, bool), String> {
     let real_signature = function.parameters.iter().all(|parameter| {
-        parameter.set == LitexToLeanObjectIr::StandardSet(LitexToLeanStandardSetIr::Real)
+        parameter.set == LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Real)
     }) && function.return_set.as_ref()
-        == &LitexToLeanObjectIr::StandardSet(LitexToLeanStandardSetIr::Real);
+        == &LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Real);
     if function_uses_telescope(function) {
         validate_function_type(function)?;
         let mut binders = Vec::with_capacity(function.parameters.len() + 1);
@@ -22908,7 +22351,7 @@ fn render_named_function_value_from_result(
             let alpha = format!("__alpha{suffix}");
             let argument = format!("__arg{suffix}");
             let membership = format!("__arg{suffix}_in");
-            let domain = render_set_ir(&parameter.set, context)?;
+            let domain = render_lean_source_for_target_set_representation(&parameter.set, context)?;
             binders.push(format!(
                 "fun {{{alpha} : Type}} ({argument} : {alpha}) ({membership} : Litex.In {argument} {domain}) => "
             ));
@@ -22959,35 +22402,8 @@ fn render_named_function_value_from_result(
     }
 }
 
-fn render_function_return_selection(
-    source_body: &Obj,
-    inferred_premises: &[LitexToLeanFactIr],
-    return_check: &LitexToLeanFactIr,
-    context: &StmtResultToLeanCompilerEnvironmentStack,
-) -> Result<(String, String, String, String), String> {
-    let mut proof_context = context.clone();
-    let mut inferred_lets = Vec::new();
-    for (index, inferred) in inferred_premises.iter().enumerate() {
-        let proposition = render_fact(&inferred.proposition, &proof_context)?;
-        let proof = render_proof(inferred, &proof_context)?;
-        let name = format!("__fn_inferred{index}");
-        inferred_lets.push(format!("let {name} : {proposition} := ({proof}); "));
-        if let Some(fact_id) = inferred.stored_fact_id() {
-            proof_context.fact_names.insert(fact_id, name);
-            proof_context
-                .fact_propositions
-                .insert(fact_id, inferred.proposition.clone());
-        }
-    }
-    let source_body = render_obj(source_body, &proof_context)?;
-    let return_proof = render_proof(return_check, &proof_context)?;
-    let prefix = inferred_lets.concat();
-    let selected_return = format!("{prefix}Litex.In.rep {source_body} ({return_proof})");
-    Ok((source_body, return_proof, prefix, selected_return))
-}
-
 fn render_real_function_body(
-    body: &LitexToLeanObjectIr,
+    body: &LeanTargetObjectRepresentation,
     parameter_symbol_id: SymbolId,
     parameter_representation: &str,
     context: &StmtResultToLeanCompilerEnvironmentStack,
@@ -23000,17 +22416,17 @@ fn render_real_function_body(
 }
 
 fn render_real_function_body_with_parameters(
-    body: &LitexToLeanObjectIr,
+    body: &LeanTargetObjectRepresentation,
     parameter_representations: &HashMap<SymbolId, String>,
     context: &StmtResultToLeanCompilerEnvironmentStack,
 ) -> Result<String, String> {
     match body {
-        LitexToLeanObjectIr::Symbol { symbol_id, .. }
+        LeanTargetObjectRepresentation::Symbol { symbol_id, .. }
             if parameter_representations.contains_key(symbol_id) =>
         {
             Ok(parameter_representations[symbol_id].clone())
         }
-        LitexToLeanObjectIr::Number { normalized_value }
+        LeanTargetObjectRepresentation::Number { normalized_value }
             if !normalized_value.is_empty()
                 && normalized_value
                     .chars()
@@ -23018,17 +22434,17 @@ fn render_real_function_body_with_parameters(
         {
             Ok(format!("({normalized_value} : ℝ)"))
         }
-        LitexToLeanObjectIr::BuiltinApp {
+        LeanTargetObjectRepresentation::BuiltinApp {
             operator,
             arguments,
             ..
         } if arguments.len() == 2
             && matches!(
                 operator,
-                LitexToLeanBuiltinObjectOperatorIr::Add
-                    | LitexToLeanBuiltinObjectOperatorIr::Sub
-                    | LitexToLeanBuiltinObjectOperatorIr::Mul
-                    | LitexToLeanBuiltinObjectOperatorIr::Div
+                LeanTargetBuiltinObjectOperator::Add
+                    | LeanTargetBuiltinObjectOperator::Sub
+                    | LeanTargetBuiltinObjectOperator::Mul
+                    | LeanTargetBuiltinObjectOperator::Div
             ) =>
         {
             let left = render_real_function_body_with_parameters(
@@ -23042,15 +22458,15 @@ fn render_real_function_body_with_parameters(
                 context,
             )?;
             let operator = match operator {
-                LitexToLeanBuiltinObjectOperatorIr::Add => "+",
-                LitexToLeanBuiltinObjectOperatorIr::Sub => "-",
-                LitexToLeanBuiltinObjectOperatorIr::Mul => "*",
-                LitexToLeanBuiltinObjectOperatorIr::Div => "/",
+                LeanTargetBuiltinObjectOperator::Add => "+",
+                LeanTargetBuiltinObjectOperator::Sub => "-",
+                LeanTargetBuiltinObjectOperator::Mul => "*",
+                LeanTargetBuiltinObjectOperator::Div => "/",
                 _ => unreachable!("guarded real binary operator"),
             };
             Ok(format!("({left} {operator} {right})"))
         }
-        LitexToLeanObjectIr::Symbol { .. } => render_ir_symbol(body, context),
+        LeanTargetObjectRepresentation::Symbol { .. } => render_ir_symbol(body, context),
         other => Err(format!(
             "compiler real named-function body does not support {other:?}"
         )),
@@ -23058,51 +22474,39 @@ fn render_real_function_body_with_parameters(
 }
 
 fn render_anonymous_function(
-    function: &LitexToLeanAnonymousFunctionIr,
+    function: &LeanTargetAnonymousFunctionRepresentation,
     context: &StmtResultToLeanCompilerEnvironmentStack,
 ) -> Result<String, String> {
     validate_function_type(&function.function)?;
     let occurrence = function.source_occurrence_id.ok_or_else(|| {
         "anonymous function has no parser-owned source occurrence identity".to_string()
     })?;
-    let certificate = context
+    let result_context = context
         .well_definedness
         .as_ref()
-        .ok_or_else(|| "anonymous function has no active WD certificate".to_string())?;
-    let source_use = certificate
-        .source_object_uses
-        .iter()
-        .find(|source_use| source_use.source_occurrence_id == occurrence)
+        .ok_or_else(|| "anonymous function has no active Result-owned WD context".to_string())?;
+    let anonymous_context = result_context
+        .anonymous_functions
+        .get(&occurrence)
         .ok_or_else(|| {
             format!(
-                "anonymous function occurrence {} has no exact WD object use",
+                "anonymous function occurrence {} has no exact recursive Result context",
                 occurrence.value()
             )
         })?;
-    let object = certificate
-        .objects
-        .iter()
-        .find(|object| object.well_defined_obj_id == source_use.well_defined_obj_id)
-        .ok_or_else(|| "anonymous function WD object is missing".to_string())?;
-    if obj_equality_key(&object.source_object) != function.semantic_key {
-        return Err("anonymous function WD object changed its source body or signature".into());
+    if obj_equality_key(&anonymous_context.source_function) != function.semantic_key {
+        return Err(
+            "anonymous function Result context changed its source body or signature".into(),
+        );
     }
-    let scope_id = object
-        .owned_binder_scope_id
-        .ok_or_else(|| "anonymous function WD object has no owned binder scope".to_string())?;
-    let scope = certificate
-        .binder_scopes
-        .iter()
-        .find(|scope| scope.scope_id == scope_id)
-        .ok_or_else(|| "anonymous function owned binder scope is missing".to_string())?;
 
     let mut nested = context.clone();
     let uses_telescope = function_uses_telescope(&function.function);
     let mut binders = Vec::with_capacity(function.function.parameters.len());
     let mut parameter_values = HashMap::new();
     for (parameter_index, parameter) in function.function.parameters.iter().enumerate() {
-        let matches = scope
-            .premises
+        let matches = anonymous_context
+            .parameters
             .iter()
             .filter(|premise| {
                 matches!(
@@ -23123,7 +22527,7 @@ fn render_anonymous_function(
         };
         let argument = format!("__arg{suffix}");
         let membership = format!("__arg{suffix}_in");
-        let domain = render_set_ir(&parameter.set, &nested)?;
+        let domain = render_lean_source_for_target_set_representation(&parameter.set, &nested)?;
         if uses_telescope {
             binders.push(format!(
                 "fun {{__alpha{} : Type}} ({argument} : __alpha{}) ({membership} : Litex.In {argument} {domain}) => ",
@@ -23169,11 +22573,7 @@ fn render_anonymous_function(
         parameter_values.insert(parameter.symbol_id, (argument, membership));
     }
 
-    let domain_premises = scope
-        .premises
-        .iter()
-        .filter(|premise| matches!(premise.role, WellDefinedBinderPremiseRole::Domain { .. }))
-        .collect::<Vec<_>>();
+    let domain_premises = &anonymous_context.domains;
     if domain_premises.len() != function.function.domain_facts.len() {
         return Err("anonymous function binder scope changed its domain-premise count".into());
     }
@@ -23194,32 +22594,22 @@ fn render_anonymous_function(
     }
 
     let mut inferred_lets = Vec::new();
-    for (index, inferred) in scope.inferred_premises.iter().enumerate() {
-        let proposition = render_fact(&inferred.proposition, &nested)?;
-        let proof = render_proof(inferred, &nested)?;
-        let name = format!("__anonymous_inferred{index}");
-        inferred_lets.push(format!("let {name} : {proposition} := ({proof}); "));
-        if let Some(fact_id) = inferred.stored_fact_id() {
-            nested.fact_names.insert(fact_id, name);
-            nested
-                .fact_propositions
-                .insert(fact_id, inferred.proposition.clone());
-        }
+    for line in &anonymous_context.inferred_proof_lines {
+        let local = line.replacen("have ", "let ", 1);
+        inferred_lets.push(format!("{local}; "));
+    }
+    for (fact_id, fact, name) in &anonymous_context.inferred_fact_bindings {
+        nested.fact_names.insert(*fact_id, name.clone());
+        nested.fact_propositions.insert(*fact_id, fact.clone());
     }
 
-    let [closure] = object.target_requirements.as_slice() else {
-        return Err("anonymous function requires one exact return-closure requirement".into());
-    };
+    let closure = &anonymous_context.closure;
     let selected_return = match closure.role {
         WellDefinednessRequirementRole::AnonymousFunctionBodyMembership => {
-            let closure_fact = certificate
-                .facts
-                .iter()
-                .find(|fact| fact.well_defined_fact_id == closure.well_defined_fact_id)
-                .ok_or_else(|| "anonymous function body-membership proof is missing".to_string())?;
-            let (body, return_set) = membership_parts(&closure_fact.fact.proposition)?;
-            if LitexToLeanObjectIr::lower(body)? != *function.body
-                || LitexToLeanObjectIr::lower(return_set)? != *function.function.return_set
+            let (body, return_set) = membership_parts(&closure.expected_proposition)?;
+            if LeanTargetObjectRepresentation::lower(body)? != *function.body
+                || LeanTargetObjectRepresentation::lower(return_set)?
+                    != *function.function.return_set
             {
                 return Err(
                     "anonymous function return closure changed its exact body or carrier".into(),
@@ -23228,7 +22618,9 @@ fn render_anonymous_function(
             format!(
                 "Litex.In.rep {} ({})",
                 render_obj(body, &nested)?,
-                render_proof(&closure_fact.fact, &nested)?
+                closure.proof_expression.as_ref().ok_or_else(|| {
+                    "anonymous function body-membership Result was not compiled".to_string()
+                })?
             )
         }
         WellDefinednessRequirementRole::AnonymousFunctionBoundParameterSubset {
@@ -23266,19 +22658,22 @@ fn render_anonymous_function(
     ))
 }
 
-fn render_set_ir(
-    object: &LitexToLeanObjectIr,
+fn render_lean_source_for_target_set_representation(
+    object: &LeanTargetObjectRepresentation,
     context: &StmtResultToLeanCompilerEnvironmentStack,
 ) -> Result<String, String> {
     match object {
-        LitexToLeanObjectIr::Symbol { symbol_id, name } => context
+        LeanTargetObjectRepresentation::Symbol { symbol_id, name } => context
             .symbol_names
             .get(symbol_id)
             .cloned()
             .ok_or_else(|| format!("unbound compiler set symbol `{name}`")),
-        LitexToLeanObjectIr::StandardSet(set) => render_standard_set_ir(*set),
-        LitexToLeanObjectIr::SetBuilder(builder) => {
-            let base = render_set_ir(builder.set.as_ref(), context)?;
+        LeanTargetObjectRepresentation::StandardSet(set) => {
+            render_lean_source_for_standard_set_representation(*set)
+        }
+        LeanTargetObjectRepresentation::SetBuilder(builder) => {
+            let base =
+                render_lean_source_for_target_set_representation(builder.set.as_ref(), context)?;
             let parameter = lean_identifier(&builder.name);
             let mut nested = context.clone();
             nested
@@ -23321,7 +22716,9 @@ fn render_set_ir(
                 conjunction(&facts)
             ))
         }
-        LitexToLeanObjectIr::FunctionSet { function } => render_function_set(function, context),
+        LeanTargetObjectRepresentation::FunctionSet { function } => {
+            render_function_set(function, context)
+        }
         other => Err(format!(
             "unsupported compiler function domain/codomain `{other:?}`"
         )),
@@ -23329,7 +22726,7 @@ fn render_set_ir(
 }
 
 fn render_function_application(
-    application: &LitexToLeanFunctionApplicationIr,
+    application: &LeanTargetFunctionApplicationRepresentation,
     context: &StmtResultToLeanCompilerEnvironmentStack,
 ) -> Result<String, String> {
     if application.argument_layers.is_empty()
@@ -23349,79 +22746,49 @@ fn render_function_application(
     let Obj::FnObj(source_application) = &application.source_application else {
         return Err("function application retained a non-application source object".into());
     };
-    let certificate = context
+    let result_context = context
         .well_definedness
         .as_ref()
-        .ok_or_else(|| "function application has no active WD certificate".to_string())?;
-    let source_use = certificate
-        .source_object_uses
-        .iter()
-        .find(|source_use| source_use.source_occurrence_id == application.source_occurrence_id)
+        .ok_or_else(|| "function application has no active Result-owned WD context".to_string())?;
+    let application_context = result_context
+        .function_applications
+        .get(&application.source_occurrence_id)
         .ok_or_else(|| {
-            let available_occurrences = certificate
-                .source_object_uses
-                .iter()
-                .map(|source_use| source_use.source_occurrence_id.value().to_string())
+            let available_occurrences = result_context
+                .function_applications
+                .keys()
+                .map(|source_occurrence_id| source_occurrence_id.value().to_string())
                 .collect::<Vec<_>>()
                 .join(", ");
             format!(
-                "function application occurrence {} has no exact WD object use; active child WD occurrences are [{}]",
+                "function application occurrence {} has no exact recursive Result context; active child occurrences are [{}]",
                 application.source_occurrence_id.value(),
                 available_occurrences,
             )
         })?;
-    let object = certificate
-        .objects
-        .iter()
-        .find(|object| object.well_defined_obj_id == source_use.well_defined_obj_id)
-        .ok_or_else(|| "function application WD object is missing".to_string())?;
-    if obj_equality_key(&object.source_object) != obj_equality_key(&application.source_application)
+    if obj_equality_key(&application_context.source_application)
+        != obj_equality_key(&application.source_application)
     {
-        return Err("function application WD object changed its source occurrence".into());
+        return Err("function application Result context changed its source occurrence".into());
     }
 
     let layer_count = application.argument_layers.len();
-    let mut layer_objects = vec![None; layer_count];
-    let mut layer_object = object;
-    for layer_index in (0..layer_count).rev() {
+    if application_context.layers.len() != layer_count {
+        return Err("function application Result context changed its layer count".into());
+    }
+    for (layer_index, layer_context) in application_context.layers.iter().enumerate() {
         let source_prefix = source_application.prefix_obj(layer_index + 1);
-        if obj_equality_key(&layer_object.source_object) != obj_equality_key(&source_prefix) {
+        if obj_equality_key(&layer_context.source_prefix) != obj_equality_key(&source_prefix) {
             return Err(format!(
                 "application layer {layer_index} changed its verifier-owned source prefix"
             ));
         }
-        layer_objects[layer_index] = Some(layer_object);
-        if layer_index == 0 {
-            continue;
-        }
-        let prefix_uses = layer_object
-            .child_uses
-            .iter()
-            .filter(|child| {
-                child.role
-                    == (WellDefinedObjChildRole::FunctionPrefix {
-                        through_layer_index: layer_index - 1,
-                    })
-            })
-            .collect::<Vec<_>>();
-        let [prefix_use] = prefix_uses.as_slice() else {
-            return Err(format!(
-                "application layer {layer_index} requires one exact WD prefix child"
-            ));
-        };
-        layer_object = certificate
-            .objects
-            .iter()
-            .find(|candidate| candidate.well_defined_obj_id == prefix_use.obj_id)
-            .ok_or_else(|| {
-                format!("application layer {layer_index} references a missing WD prefix object")
-            })?;
     }
 
-    let root_contracts = object.function_contracts.clone();
+    let root_contracts = application_context.function_contracts.clone();
     let (mut function, mut head, mut membership_proof, mut direct) = match application.head.as_ref()
     {
-        LitexToLeanObjectIr::Symbol {
+        LeanTargetObjectRepresentation::Symbol {
             symbol_id: head_symbol_id,
             ..
         } => {
@@ -23448,27 +22815,17 @@ fn render_function_application(
                 binding.direct,
             )
         }
-        LitexToLeanObjectIr::AnonymousFunction(anonymous) => {
+        LeanTargetObjectRepresentation::AnonymousFunction(anonymous) => {
             if !root_contracts.is_empty() {
                 return Err("anonymous application retained an unexpected named contract".into());
             }
-            let head_uses = layer_objects[0]
-                .ok_or_else(|| "anonymous application lost its first WD layer".to_string())?
-                .child_uses
-                .iter()
-                .filter(|child| child.role == WellDefinedObjChildRole::FunctionHead)
-                .collect::<Vec<_>>();
-            let [head_use] = head_uses.as_slice() else {
-                return Err(
-                    "anonymous application requires one exact verifier-owned head child".into(),
-                );
-            };
-            let head_object = certificate
-                .objects
-                .iter()
-                .find(|candidate| candidate.well_defined_obj_id == head_use.obj_id)
-                .ok_or_else(|| "anonymous application WD head object is missing".to_string())?;
-            if obj_equality_key(&head_object.source_object) != anonymous.semantic_key {
+            let head_object = application_context
+                .anonymous_function_head
+                .as_ref()
+                .ok_or_else(|| {
+                    "anonymous application requires one exact FunctionHead child Result".to_string()
+                })?;
+            if obj_equality_key(head_object) != anonymous.semantic_key {
                 return Err("anonymous application changed its verifier-owned head".into());
             }
             let head = render_anonymous_function(anonymous, context)?;
@@ -23485,9 +22842,8 @@ fn render_function_application(
     let mut layer_lets = Vec::new();
     for layer_index in 0..layer_count {
         validate_function_type(&function)?;
-        let layer_object = layer_objects[layer_index]
-            .ok_or_else(|| format!("application layer {layer_index} lost its WD object"))?;
-        if layer_object.function_contracts != root_contracts {
+        let layer_context = &application_context.layers[layer_index];
+        if layer_context.function_contracts != root_contracts {
             return Err(format!(
                 "application layer {layer_index} changed its root function contract"
             ));
@@ -23503,7 +22859,7 @@ fn render_function_application(
             .iter()
             .zip(application.argument_layers[layer_index].iter())
         {
-            if LitexToLeanObjectIr::lower(source_argument)? != *retained_argument {
+            if LeanTargetObjectRepresentation::lower(source_argument)? != *retained_argument {
                 return Err(format!(
                     "application layer {layer_index} changed its retained argument IR"
                 ));
@@ -23512,7 +22868,7 @@ fn render_function_application(
 
         let mut argument_requirements = vec![None; function.parameters.len()];
         let mut domain_requirements = vec![None; function.domain_facts.len()];
-        for requirement in &layer_object.target_requirements {
+        for requirement in &layer_context.requirements {
             match requirement.role {
                 WellDefinednessRequirementRole::FunctionArgumentMembership {
                     layer_index: retained_layer_index,
@@ -23569,7 +22925,7 @@ fn render_function_application(
         let mut source_domain_nested = context.clone();
         let mut arguments = Vec::with_capacity(function.parameters.len());
         let mut argument_memberships = Vec::with_capacity(function.parameters.len());
-        for (parameter_index, ((parameter, source_argument), requirement)) in function
+        for (_parameter_index, ((parameter, source_argument), requirement)) in function
             .parameters
             .iter()
             .zip(application.source_argument_layers[layer_index].iter())
@@ -23577,28 +22933,20 @@ fn render_function_application(
             .enumerate()
         {
             let requirement = requirement.expect("argument requirements checked above");
-            let argument_fact = certificate
-                .facts
-                .iter()
-                .find(|fact| fact.well_defined_fact_id == requirement.well_defined_fact_id)
-                .ok_or_else(|| {
-                    format!(
-                        "application layer {layer_index} argument-membership proof {parameter_index} is missing"
-                    )
-                })?;
             let argument = render_obj(source_argument, context)?;
             let expected_argument_membership = format!(
                 "Litex.In {argument} {}",
-                render_set_ir(&parameter.set, &nested)?
+                render_lean_source_for_target_set_representation(&parameter.set, &nested)?
             );
             let retained_argument_membership =
-                render_fact(&argument_fact.fact.proposition, context)?;
+                render_fact(&requirement.expected_proposition, context)?;
             if retained_argument_membership != expected_argument_membership {
                 return Err(format!(
                     "application layer {layer_index} expected `{expected_argument_membership}`, retained `{retained_argument_membership}`"
                 ));
             }
-            let argument_membership = render_proof(&argument_fact.fact, context)?;
+            let argument_membership =
+                render_function_application_requirement_proof(requirement, context)?;
             arguments.push(argument.clone());
             argument_memberships.push(argument_membership.clone());
             nested
@@ -23655,30 +23003,22 @@ fn render_function_application(
             }
         }
         let mut domain_proofs = Vec::with_capacity(domain_requirements.len());
-        for (domain_index, (source_fact, requirement)) in function
+        for (_domain_index, (source_fact, requirement)) in function
             .domain_facts
             .iter()
             .zip(domain_requirements.into_iter())
             .enumerate()
         {
             let requirement = requirement.expect("domain requirements checked above");
-            let domain_fact = certificate
-                .facts
-                .iter()
-                .find(|fact| fact.well_defined_fact_id == requirement.well_defined_fact_id)
-                .ok_or_else(|| {
-                    format!(
-                        "application layer {layer_index} domain proof {domain_index} is missing"
-                    )
-                })?;
             let expected = render_fact(source_fact, &source_domain_nested)?;
-            let retained = render_fact(&domain_fact.fact.proposition, context)?;
+            let retained = render_fact(&requirement.expected_proposition, context)?;
             if expected != retained {
                 return Err(format!(
                     "application layer {layer_index} expected domain clause {expected}, retained {retained}"
                 ));
             }
-            let retained_proof = render_proof(&domain_fact.fact, context)?;
+            let retained_proof =
+                render_function_application_requirement_proof(requirement, context)?;
             if positive_natural_parameter_less_equal_natural_bound(&function, source_fact)?
                 .is_some()
             {
@@ -23737,7 +23077,7 @@ fn render_function_application(
             head = application_term;
             continue;
         }
-        let LitexToLeanObjectIr::FunctionSet {
+        let LeanTargetObjectRepresentation::FunctionSet {
             function: next_function,
         } = function.return_set.as_ref()
         else {
@@ -23745,7 +23085,10 @@ fn render_function_application(
                 "application layer {layer_index} does not return the next function set"
             ));
         };
-        if layer_object.intrinsic_result_set.as_ref() != Some(function.return_set.as_ref()) {
+        let retained_result_set = layer_context.intrinsic_result_set.as_ref().ok_or_else(|| {
+            format!("application layer {layer_index} lost its Result-owned intrinsic result set")
+        })?;
+        if LeanTargetObjectRepresentation::lower(retained_result_set)? != *function.return_set {
             return Err(format!(
                 "application layer {layer_index} lost its exact verifier-owned result set"
             ));
@@ -23767,10 +23110,10 @@ fn render_function_application(
 }
 
 fn render_ir_symbol(
-    object: &LitexToLeanObjectIr,
+    object: &LeanTargetObjectRepresentation,
     context: &StmtResultToLeanCompilerEnvironmentStack,
 ) -> Result<String, String> {
-    let LitexToLeanObjectIr::Symbol { symbol_id, name } = object else {
+    let LeanTargetObjectRepresentation::Symbol { symbol_id, name } = object else {
         return Err("expected a compiler symbol".into());
     };
     context
@@ -23780,143 +23123,141 @@ fn render_ir_symbol(
         .ok_or_else(|| format!("unbound compiler symbol `{name}`"))
 }
 
-fn render_native_object_ir(
-    object: &LitexToLeanObjectIr,
+fn render_lean_source_for_native_target_object_representation(
+    object: &LeanTargetObjectRepresentation,
     context: &StmtResultToLeanCompilerEnvironmentStack,
 ) -> Result<String, String> {
-    render_object_ir(object, context)
+    render_lean_source_for_target_object_representation(object, context)
 }
 
-fn render_object_ir(
-    object: &LitexToLeanObjectIr,
+fn render_lean_source_for_target_object_representation(
+    object: &LeanTargetObjectRepresentation,
     context: &StmtResultToLeanCompilerEnvironmentStack,
 ) -> Result<String, String> {
     match object {
-        LitexToLeanObjectIr::Symbol { .. } => render_ir_symbol(object, context),
-        LitexToLeanObjectIr::Number { normalized_value }
-            if !normalized_value.is_empty()
-                && normalized_value
-                    .chars()
-                    .all(|character| character.is_ascii_digit()) =>
-        {
-            Ok(format!("({normalized_value} : ℂ)"))
+        LeanTargetObjectRepresentation::Symbol { .. } => render_ir_symbol(object, context),
+        LeanTargetObjectRepresentation::Number { normalized_value } => {
+            render_normalized_complex_number(normalized_value)
         }
-        LitexToLeanObjectIr::Constant(constant) => Ok(match constant {
-            LitexToLeanConstantObjectIr::ImaginaryUnit => "Complex.I".into(),
-            LitexToLeanConstantObjectIr::EulerNumber => "((Real.exp 1 : ℝ) : ℂ)".into(),
-            LitexToLeanConstantObjectIr::Pi => "((Real.pi : ℝ) : ℂ)".into(),
+        LeanTargetObjectRepresentation::Constant(constant) => Ok(match constant {
+            LeanTargetConstantObject::ImaginaryUnit => "Complex.I".into(),
+            LeanTargetConstantObject::EulerNumber => "((Real.exp 1 : ℝ) : ℂ)".into(),
+            LeanTargetConstantObject::Pi => "((Real.pi : ℝ) : ℂ)".into(),
         }),
-        LitexToLeanObjectIr::StandardSet(set) => render_standard_set_ir(*set),
-        LitexToLeanObjectIr::FunctionSet { function } => render_function_set(function, context),
-        LitexToLeanObjectIr::SetBuilder(_) => render_set_ir(object, context),
-        LitexToLeanObjectIr::AnonymousFunction(function) => {
+        LeanTargetObjectRepresentation::StandardSet(set) => {
+            render_lean_source_for_standard_set_representation(*set)
+        }
+        LeanTargetObjectRepresentation::FunctionSet { function } => {
+            render_function_set(function, context)
+        }
+        LeanTargetObjectRepresentation::SetBuilder(_) => {
+            render_lean_source_for_target_set_representation(object, context)
+        }
+        LeanTargetObjectRepresentation::AnonymousFunction(function) => {
             render_anonymous_function(function, context)
         }
-        LitexToLeanObjectIr::FunctionApplication(application) => {
+        LeanTargetObjectRepresentation::FunctionApplication(application) => {
             render_function_application(application, context)
         }
-        LitexToLeanObjectIr::Range { start, end } => Ok(format!(
+        LeanTargetObjectRepresentation::Range { start, end } => Ok(format!(
             "(Litex.range {} {})",
             render_integer_endpoint(start, context)?,
             render_integer_endpoint(end, context)?
         )),
-        LitexToLeanObjectIr::ClosedRange { start, end } => Ok(format!(
+        LeanTargetObjectRepresentation::ClosedRange { start, end } => Ok(format!(
             "(Litex.closedRange {} {})",
             render_integer_endpoint(start, context)?,
             render_integer_endpoint(end, context)?
         )),
-        LitexToLeanObjectIr::GeneralCartesianProduct {
+        LeanTargetObjectRepresentation::GeneralCartesianProduct {
             index_set,
             family_set,
             family_function,
         } => Ok(format!(
             "(Litex.generalCart {} {} {})",
-            render_object_ir(index_set, context)?,
-            render_object_ir(family_set, context)?,
-            render_object_ir(family_function, context)?
+            render_lean_source_for_target_object_representation(index_set, context)?,
+            render_lean_source_for_target_object_representation(family_set, context)?,
+            render_lean_source_for_target_object_representation(family_function, context)?
         )),
-        LitexToLeanObjectIr::SequenceSet { values, length } => match length {
+        LeanTargetObjectRepresentation::SequenceSet { values, length } => match length {
             Some(length) => Ok(format!(
                 "(Litex.finiteSequenceSet.{{0}} {} {})",
-                render_set_ir(values, context)?,
+                render_lean_source_for_target_set_representation(values, context)?,
                 render_natural_endpoint(length)?
             )),
             None => Ok(format!(
                 "(Litex.sequenceSet {})",
-                render_set_ir(values, context)?
+                render_lean_source_for_target_set_representation(values, context)?
             )),
         },
-        LitexToLeanObjectIr::MatrixSet {
+        LeanTargetObjectRepresentation::MatrixSet {
             values,
             row_count,
             column_count,
         } => Ok(format!(
             "(Litex.matrixSet.{{0}} {} {} {})",
-            render_set_ir(values, context)?,
+            render_lean_source_for_target_set_representation(values, context)?,
             render_natural_endpoint(row_count)?,
             render_natural_endpoint(column_count)?,
         )),
-        LitexToLeanObjectIr::Aggregate {
+        LeanTargetObjectRepresentation::Aggregate {
             kind, arguments, ..
         } => render_aggregate_object(*kind, arguments, context),
-        LitexToLeanObjectIr::TupleDimension(tuple) => Ok(format!(
+        LeanTargetObjectRepresentation::TupleDimension(tuple) => Ok(format!(
             "(Litex.tupleDim {})",
-            render_object_ir(tuple, context)?
+            render_lean_source_for_target_object_representation(tuple, context)?
         )),
-        LitexToLeanObjectIr::IndexedAccess { object, index } => {
+        LeanTargetObjectRepresentation::IndexedAccess { object, index } => {
             render_literal_indexed_access(object, index, context)
         }
-        LitexToLeanObjectIr::BuiltinApp {
+        LeanTargetObjectRepresentation::BuiltinApp {
             operator,
             arguments,
             ..
         } => render_builtin_object(*operator, arguments, context),
-        LitexToLeanObjectIr::Collection {
-            constructor: LitexToLeanCollectionObjectIr::Tuple,
+        LeanTargetObjectRepresentation::Collection {
+            constructor: LeanTargetCollectionObjectConstructor::Tuple,
             items,
             ..
         } => render_typed_spine(items, context),
-        LitexToLeanObjectIr::Collection {
-            constructor: LitexToLeanCollectionObjectIr::SequenceLiteral,
+        LeanTargetObjectRepresentation::Collection {
+            constructor: LeanTargetCollectionObjectConstructor::SequenceLiteral,
             items,
             ..
         } => Ok(format!(
             "(Litex.SequenceLiteral.mk {})",
             render_typed_spine(items, context)?
         )),
-        LitexToLeanObjectIr::Collection {
-            constructor: LitexToLeanCollectionObjectIr::ListSet,
+        LeanTargetObjectRepresentation::Collection {
+            constructor: LeanTargetCollectionObjectConstructor::ListSet,
             items,
             ..
         } => render_list_set(items, context),
-        other => Err(format!(
-            "unsupported native object definition value `{other:?}`"
-        )),
     }
 }
 
 fn render_list_set(
-    items: &[LitexToLeanObjectIr],
+    items: &[LeanTargetObjectRepresentation],
     context: &StmtResultToLeanCompilerEnvironmentStack,
 ) -> Result<String, String> {
     let mut set = "Litex.Set.empty".to_string();
     for item in items.iter().rev() {
         set = format!(
             "(Litex.Set.coproduct (Litex.Set.singleton {}) {set})",
-            render_object_ir(item, context)?
+            render_lean_source_for_target_object_representation(item, context)?
         );
     }
     Ok(set)
 }
 
 fn render_list_set_finiteness(
-    items: &[LitexToLeanObjectIr],
+    items: &[LeanTargetObjectRepresentation],
     context: &StmtResultToLeanCompilerEnvironmentStack,
 ) -> Result<String, String> {
     let mut set = "Litex.Set.empty".to_string();
     let mut proof = "Litex.Set.empty_finite".to_string();
     for item in items.iter().rev() {
-        let item = render_object_ir(item, context)?;
+        let item = render_lean_source_for_target_object_representation(item, context)?;
         proof = format!(
             "Litex.Set.coproduct_finite (Litex.Set.singleton {item}) {set} (Litex.Set.singleton_finite {item}) ({proof})"
         );
@@ -23926,10 +23267,10 @@ fn render_list_set_finiteness(
 }
 
 fn render_integer_endpoint(
-    object: &LitexToLeanObjectIr,
+    object: &LeanTargetObjectRepresentation,
     _context: &StmtResultToLeanCompilerEnvironmentStack,
 ) -> Result<String, String> {
-    let LitexToLeanObjectIr::Number { normalized_value } = object else {
+    let LeanTargetObjectRepresentation::Number { normalized_value } = object else {
         return Err("integer range endpoints currently require closed integer numerals".into());
     };
     if normalized_value.parse::<i128>().is_err() {
@@ -23940,8 +23281,8 @@ fn render_integer_endpoint(
     Ok(format!("({normalized_value} : ℤ)"))
 }
 
-fn render_natural_endpoint(object: &LitexToLeanObjectIr) -> Result<String, String> {
-    let LitexToLeanObjectIr::Number { normalized_value } = object else {
+fn render_natural_endpoint(object: &LeanTargetObjectRepresentation) -> Result<String, String> {
+    let LeanTargetObjectRepresentation::Number { normalized_value } = object else {
         return Err("finite sequence length currently requires a closed natural numeral".into());
     };
     if normalized_value.is_empty()
@@ -23957,31 +23298,31 @@ fn render_natural_endpoint(object: &LitexToLeanObjectIr) -> Result<String, Strin
 }
 
 fn render_typed_spine(
-    items: &[LitexToLeanObjectIr],
+    items: &[LeanTargetObjectRepresentation],
     context: &StmtResultToLeanCompilerEnvironmentStack,
 ) -> Result<String, String> {
     let mut tail = "Litex.HNil.nil".to_string();
     for item in items.iter().rev() {
         tail = format!(
             "(Litex.HCons.mk {} {tail})",
-            render_object_ir(item, context)?
+            render_lean_source_for_target_object_representation(item, context)?
         );
     }
     Ok(tail)
 }
 
 fn render_aggregate_object(
-    kind: LitexToLeanAggregateObjectIr,
-    arguments: &[LitexToLeanObjectIr],
+    kind: LeanTargetAggregateObjectConstructor,
+    arguments: &[LeanTargetObjectRepresentation],
     context: &StmtResultToLeanCompilerEnvironmentStack,
 ) -> Result<String, String> {
     let (name, arity) = match kind {
-        LitexToLeanAggregateObjectIr::Sum => ("Litex.sum", 3),
-        LitexToLeanAggregateObjectIr::Product => ("Litex.product", 3),
-        LitexToLeanAggregateObjectIr::FiniteSetSum => ("Litex.finiteSetSum", 2),
-        LitexToLeanAggregateObjectIr::FiniteSetProduct => ("Litex.finiteSetProduct", 2),
-        LitexToLeanAggregateObjectIr::Reduce => ("Litex.reduce", 5),
-        LitexToLeanAggregateObjectIr::FiniteSetReduce => ("Litex.finiteSetReduce", 4),
+        LeanTargetAggregateObjectConstructor::Sum => ("Litex.sum", 3),
+        LeanTargetAggregateObjectConstructor::Product => ("Litex.product", 3),
+        LeanTargetAggregateObjectConstructor::FiniteSetSum => ("Litex.finiteSetSum", 2),
+        LeanTargetAggregateObjectConstructor::FiniteSetProduct => ("Litex.finiteSetProduct", 2),
+        LeanTargetAggregateObjectConstructor::Reduce => ("Litex.reduce", 5),
+        LeanTargetAggregateObjectConstructor::FiniteSetReduce => ("Litex.finiteSetReduce", 4),
     };
     if arguments.len() != arity {
         return Err(format!(
@@ -23990,21 +23331,21 @@ fn render_aggregate_object(
     }
     let rendered = arguments
         .iter()
-        .map(|argument| render_object_ir(argument, context))
+        .map(|argument| render_lean_source_for_target_object_representation(argument, context))
         .collect::<Result<Vec<_>, _>>()?;
     Ok(format!("({name} {})", rendered.join(" ")))
 }
 
 fn render_literal_indexed_access(
-    object: &LitexToLeanObjectIr,
-    index: &LitexToLeanObjectIr,
+    object: &LeanTargetObjectRepresentation,
+    index: &LeanTargetObjectRepresentation,
     context: &StmtResultToLeanCompilerEnvironmentStack,
 ) -> Result<String, String> {
-    if let LitexToLeanObjectIr::Symbol { symbol_id, .. } = object {
+    if let LeanTargetObjectRepresentation::Symbol { symbol_id, .. } = object {
         if let Some(binding) = context.indexed_tuple_bindings.get(symbol_id) {
-            let tuple = render_object_ir(object, context)?;
+            let tuple = render_lean_source_for_target_object_representation(object, context)?;
             let exact_index = match index {
-                LitexToLeanObjectIr::Symbol {
+                LeanTargetObjectRepresentation::Symbol {
                     symbol_id: index_symbol_id,
                     ..
                 } => context
@@ -24015,7 +23356,7 @@ fn render_literal_indexed_access(
                         "indexed tuple projection has no exact checked index representative"
                             .to_string()
                     })?,
-                LitexToLeanObjectIr::Number { normalized_value } => {
+                LeanTargetObjectRepresentation::Number { normalized_value } => {
                     let value = normalized_value.parse::<usize>().map_err(|_| {
                         "indexed tuple projection index is not a natural numeral".to_string()
                     })?;
@@ -24036,13 +23377,13 @@ fn render_literal_indexed_access(
             return Ok(format!("(Litex.indexedTupleAt {tuple} {exact_index})"));
         }
     }
-    let LitexToLeanObjectIr::Number { normalized_value } = index else {
+    let LeanTargetObjectRepresentation::Number { normalized_value } = index else {
         return Err("literal tuple access requires a closed natural index".into());
     };
     let index = normalized_value
         .parse::<usize>()
         .map_err(|_| "literal tuple access has an invalid natural index".to_string())?;
-    let LitexToLeanObjectIr::Collection { items, .. } = object else {
+    let LeanTargetObjectRepresentation::Collection { items, .. } = object else {
         return Err(
             "generic heterogeneous indexed access needs a checked projection recipe".into(),
         );
@@ -24050,19 +23391,19 @@ fn render_literal_indexed_access(
     let item = items.get(index.saturating_sub(1)).ok_or_else(|| {
         "literal tuple access index is outside the retained source arity".to_string()
     })?;
-    render_object_ir(item, context)
+    render_lean_source_for_target_object_representation(item, context)
 }
 
 fn render_builtin_object(
-    operator: LitexToLeanBuiltinObjectOperatorIr,
-    arguments: &[LitexToLeanObjectIr],
+    operator: LeanTargetBuiltinObjectOperator,
+    arguments: &[LeanTargetObjectRepresentation],
     context: &StmtResultToLeanCompilerEnvironmentStack,
 ) -> Result<String, String> {
     let binary_symbol = match operator {
-        LitexToLeanBuiltinObjectOperatorIr::Add => Some("+"),
-        LitexToLeanBuiltinObjectOperatorIr::Sub => Some("-"),
-        LitexToLeanBuiltinObjectOperatorIr::Mul => Some("*"),
-        LitexToLeanBuiltinObjectOperatorIr::Div => Some("/"),
+        LeanTargetBuiltinObjectOperator::Add => Some("+"),
+        LeanTargetBuiltinObjectOperator::Sub => Some("-"),
+        LeanTargetBuiltinObjectOperator::Mul => Some("*"),
+        LeanTargetBuiltinObjectOperator::Div => Some("/"),
         _ => None,
     };
     if let Some(symbol) = binary_symbol {
@@ -24071,37 +23412,37 @@ fn render_builtin_object(
         };
         return Ok(format!(
             "({} {symbol} {})",
-            render_numeric_object_ir(left, context)?,
-            render_numeric_object_ir(right, context)?
+            render_lean_source_for_numeric_target_object_representation(left, context)?,
+            render_lean_source_for_numeric_target_object_representation(right, context)?
         ));
     }
     match (operator, arguments) {
-        (LitexToLeanBuiltinObjectOperatorIr::Union, [left, right]) => Ok(format!(
+        (LeanTargetBuiltinObjectOperator::Union, [left, right]) => Ok(format!(
             "(Litex.union {} {})",
-            render_object_ir(left, context)?,
-            render_object_ir(right, context)?
+            render_lean_source_for_target_object_representation(left, context)?,
+            render_lean_source_for_target_object_representation(right, context)?
         )),
-        (LitexToLeanBuiltinObjectOperatorIr::Intersect, [left, right]) => Ok(format!(
+        (LeanTargetBuiltinObjectOperator::Intersect, [left, right]) => Ok(format!(
             "(Litex.intersect {} {})",
-            render_object_ir(left, context)?,
-            render_object_ir(right, context)?
+            render_lean_source_for_target_object_representation(left, context)?,
+            render_lean_source_for_target_object_representation(right, context)?
         )),
-        (LitexToLeanBuiltinObjectOperatorIr::SetMinus, [left, right]) => Ok(format!(
+        (LeanTargetBuiltinObjectOperator::SetMinus, [left, right]) => Ok(format!(
             "(Litex.setMinus {} {})",
-            render_object_ir(left, context)?,
-            render_object_ir(right, context)?
+            render_lean_source_for_target_object_representation(left, context)?,
+            render_lean_source_for_target_object_representation(right, context)?
         )),
-        (LitexToLeanBuiltinObjectOperatorIr::BigUnion, [family]) => Ok(format!(
+        (LeanTargetBuiltinObjectOperator::BigUnion, [family]) => Ok(format!(
             "(Litex.bigUnion {})",
-            render_object_ir(family, context)?
+            render_lean_source_for_target_object_representation(family, context)?
         )),
-        (LitexToLeanBuiltinObjectOperatorIr::BigIntersect, [family]) => Ok(format!(
+        (LeanTargetBuiltinObjectOperator::BigIntersect, [family]) => Ok(format!(
             "(Litex.bigIntersect {})",
-            render_object_ir(family, context)?
+            render_lean_source_for_target_object_representation(family, context)?
         )),
-        (LitexToLeanBuiltinObjectOperatorIr::PowerSet, [base]) => Ok(format!(
+        (LeanTargetBuiltinObjectOperator::PowerSet, [base]) => Ok(format!(
             "(Litex.powerSet {})",
-            render_object_ir(base, context)?
+            render_lean_source_for_target_object_representation(base, context)?
         )),
         _ => Err(format!(
             "unsupported typed builtin object `{operator:?}` with {} arguments",
@@ -24110,16 +23451,16 @@ fn render_builtin_object(
     }
 }
 
-fn render_numeric_object_ir(
-    object: &LitexToLeanObjectIr,
+fn render_lean_source_for_numeric_target_object_representation(
+    object: &LeanTargetObjectRepresentation,
     context: &StmtResultToLeanCompilerEnvironmentStack,
 ) -> Result<String, String> {
-    if let LitexToLeanObjectIr::Symbol { symbol_id, .. } = object {
+    if let LeanTargetObjectRepresentation::Symbol { symbol_id, .. } = object {
         if let Some(value) = context.numeric_representations.get(symbol_id) {
             return Ok(value.clone());
         }
     }
-    render_object_ir(object, context)
+    render_lean_source_for_target_object_representation(object, context)
 }
 
 fn parameter_set(param_type: &ParamType) -> Result<&Obj, String> {
@@ -24131,22 +23472,48 @@ fn parameter_set(param_type: &ParamType) -> Result<&Obj, String> {
     }
 }
 
-fn render_standard_set_ir(set: LitexToLeanStandardSetIr) -> Result<String, String> {
+fn render_lean_source_for_standard_set_representation(
+    set: LeanTargetStandardSet,
+) -> Result<String, String> {
     let name = match set {
-        LitexToLeanStandardSetIr::PositiveNatural => "Litex.NPos",
-        LitexToLeanStandardSetIr::Natural => "Litex.N",
-        LitexToLeanStandardSetIr::Integer => "Litex.Z",
-        LitexToLeanStandardSetIr::Rational => "Litex.Q",
-        LitexToLeanStandardSetIr::Real => "Litex.R",
-        LitexToLeanStandardSetIr::Complex => "Litex.C",
-        LitexToLeanStandardSetIr::PositiveReal => "Litex.RPos",
-        LitexToLeanStandardSetIr::NonzeroInteger => "Litex.ZStar",
-        LitexToLeanStandardSetIr::NonzeroRational => "Litex.QStar",
-        LitexToLeanStandardSetIr::NonzeroReal => "Litex.RStar",
-        LitexToLeanStandardSetIr::NonzeroComplex => "Litex.CStar",
-        other => return Err(format!("unsupported compiler standard set `{other:?}`")),
+        LeanTargetStandardSet::PositiveNatural => "Litex.NPos",
+        LeanTargetStandardSet::Natural => "Litex.N",
+        LeanTargetStandardSet::Integer => "Litex.Z",
+        LeanTargetStandardSet::Rational => "Litex.Q",
+        LeanTargetStandardSet::Real => "Litex.R",
+        LeanTargetStandardSet::Complex => "Litex.C",
+        LeanTargetStandardSet::PositiveRational => "Litex.QPos",
+        LeanTargetStandardSet::PositiveReal => "Litex.RPos",
+        LeanTargetStandardSet::NegativeInteger => "Litex.ZNeg",
+        LeanTargetStandardSet::NegativeRational => "Litex.QNeg",
+        LeanTargetStandardSet::NegativeReal => "Litex.RNeg",
+        LeanTargetStandardSet::NonzeroInteger => "Litex.ZStar",
+        LeanTargetStandardSet::NonzeroRational => "Litex.QStar",
+        LeanTargetStandardSet::NonzeroReal => "Litex.RStar",
+        LeanTargetStandardSet::NonzeroComplex => "Litex.CStar",
     };
     Ok(name.into())
+}
+
+fn render_normalized_complex_number(normalized_value: &str) -> Result<String, String> {
+    let unsigned = normalized_value
+        .strip_prefix('-')
+        .unwrap_or(normalized_value);
+    let mut decimal_parts = unsigned.split('.');
+    let integer = decimal_parts.next().unwrap_or_default();
+    let fractional = decimal_parts.next();
+    let is_normalized_decimal = !integer.is_empty()
+        && integer.chars().all(|character| character.is_ascii_digit())
+        && fractional.is_none_or(|digits| {
+            !digits.is_empty() && digits.chars().all(|character| character.is_ascii_digit())
+        })
+        && decimal_parts.next().is_none();
+    if !is_normalized_decimal {
+        return Err(format!(
+            "compiler received invalid normalized numeric literal `{normalized_value}`"
+        ));
+    }
+    Ok(format!("({normalized_value} : ℂ)"))
 }
 
 fn render_standard_set(set: StandardSet) -> Result<&'static str, String> {
@@ -24156,13 +23523,16 @@ fn render_standard_set(set: StandardSet) -> Result<&'static str, String> {
         StandardSet::Z => Ok("Litex.Z"),
         StandardSet::ZStar => Ok("Litex.ZStar"),
         StandardSet::Q => Ok("Litex.Q"),
+        StandardSet::QPos => Ok("Litex.QPos"),
+        StandardSet::QNeg => Ok("Litex.QNeg"),
         StandardSet::QStar => Ok("Litex.QStar"),
         StandardSet::R => Ok("Litex.R"),
         StandardSet::RPos => Ok("Litex.RPos"),
+        StandardSet::RNeg => Ok("Litex.RNeg"),
         StandardSet::RStar => Ok("Litex.RStar"),
         StandardSet::C => Ok("Litex.C"),
         StandardSet::CStar => Ok("Litex.CStar"),
-        _ => Err(format!("unsupported compiler standard set `{set}`")),
+        StandardSet::ZNeg => Ok("Litex.ZNeg"),
     }
 }
 
@@ -24179,6 +23549,37 @@ fn subset_parts(fact: &Fact) -> Result<(&Obj, &Obj), String> {
         Fact::AtomicFact(AtomicFact::SupersetFact(fact)) => Ok((&fact.right, &fact.left)),
         _ => Err(format!("expected subset fact, found `{fact}`")),
     }
+}
+
+fn validate_forall_fact_as_subset(candidate: &Fact, expected_subset: &Fact) -> Result<(), String> {
+    let Fact::ForallFact(candidate) = candidate else {
+        return Err("child is neither the expected subset nor a forall spelling".into());
+    };
+    let (expected_source, expected_target) = subset_parts(expected_subset)?;
+    let parameters = candidate
+        .params_def_with_type
+        .collect_param_bindings_with_types();
+    let [parameter] = parameters.as_slice() else {
+        return Err("subset forall must retain exactly one parameter".into());
+    };
+    let ParamType::Obj(ref parameter_set) = parameter.1 else {
+        return Err("subset forall parameter has no object-set type".into());
+    };
+    if obj_equality_key(parameter_set) != obj_equality_key(expected_source)
+        || !candidate.dom_facts.is_empty()
+        || candidate.then_facts.len() != 1
+    {
+        return Err("subset forall changed its source, domains, or conclusion arity".into());
+    }
+    let conclusion = candidate.then_facts[0].clone().to_fact();
+    let (element, target_set) = membership_parts(&conclusion)?;
+    let expected_element = obj_for_bound_param_in_scope(&parameter.0, ParamObjType::Forall);
+    if obj_equality_key(element) != obj_equality_key(&expected_element)
+        || obj_equality_key(target_set) != obj_equality_key(expected_target)
+    {
+        return Err("subset forall changed its bound element or target set".into());
+    }
+    Ok(())
 }
 
 /// Returns the semantic subset orientation `(source, target)`, whether the
@@ -24234,20 +23635,6 @@ fn not_equal_parts(fact: &Fact) -> Result<(&Obj, &Obj), String> {
     match fact {
         Fact::AtomicFact(AtomicFact::NotEqualFact(fact)) => Ok((&fact.left, &fact.right)),
         _ => Err(format!("expected not-equality fact, found `{fact}`")),
-    }
-}
-
-fn less_parts(fact: &Fact) -> Result<(&Obj, &Obj), String> {
-    match fact {
-        Fact::AtomicFact(AtomicFact::LessFact(fact)) => Ok((&fact.left, &fact.right)),
-        _ => Err(format!("expected less-than fact, found `{fact}`")),
-    }
-}
-
-fn less_equal_parts(fact: &Fact) -> Result<(&Obj, &Obj), String> {
-    match fact {
-        Fact::AtomicFact(AtomicFact::LessEqualFact(fact)) => Ok((&fact.left, &fact.right)),
-        _ => Err(format!("expected less-equal fact, found `{fact}`")),
     }
 }
 
@@ -24395,7 +23782,84 @@ fn indent_lines(text: &str, spaces: usize) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::output::display_stmt_result_json_v2;
     use crate::verify::rule_schema::{RuleFingerprint, RuleId};
+
+    #[test]
+    fn combined_builtin_items_retain_and_compile_their_typed_component_evidence() {
+        let results = crate::stmt_result_to_lean_compiler::compile_litex_source_to_lean_source::execute_litex_source_to_stmt_results(
+            "1 = 1 and 2 = 2\n",
+            "combined_builtin_items.lit",
+        )
+        .expect("execute conjunction fixture");
+        let [StmtResult::Success(SuccessStmtResult::Fact(result))] = results.as_slice() else {
+            panic!("expected one successful conjunction Result")
+        };
+        let target = result.fact();
+        let components = conjunction_components(&target).expect("split conjunction components");
+        let combined = SuccessCombinedFactProofResult {
+            cite_what: components
+                .iter()
+                .map(|component| {
+                    SuccessCombinedFactProofItemResult::builtin_rule_with_evidence(
+                        "diagnostic text is not semantic input".into(),
+                        component.clone(),
+                        Some(BuiltinRuleEvidence::ObjectReflexivity(
+                            ObjectReflexivityBuiltinRuleEvidence {
+                                expected_target: component.clone(),
+                            },
+                        )),
+                        Vec::new(),
+                    )
+                })
+                .collect(),
+        };
+
+        let proof = StmtResultToLeanCompiler::new("combined_builtin_items.lit")
+            .construct_lean_combined_fact_proof_from_result(&target, &combined)
+            .expect("compile typed combined builtin items")
+            .expect("typed combined builtin items are direct");
+        assert_eq!(proof, "⟨Litex.Same.refl (1 : ℂ), Litex.Same.refl (2 : ℂ)⟩");
+    }
+
+    #[test]
+    fn forall_result_retains_exact_parameter_and_domain_fact_ids_for_compiler_scope() {
+        let source = "forall a set, b set:\n    $is_set(a)\n    $is_set(b)\n    a != b\n    =>:\n        b != a\n";
+        let results = crate::stmt_result_to_lean_compiler::compile_litex_source_to_lean_source::execute_litex_source_to_stmt_results(
+            source,
+            "direct_forall_scope_fact_ids.lit",
+        )
+        .expect("execute forall before dropping Runtime");
+        let [StmtResult::Success(SuccessStmtResult::Fact(result))] = results.as_slice() else {
+            panic!("expected one successful forall Result")
+        };
+        let SuccessFactProofResult::ForallProof(proof) = result.proof() else {
+            panic!("expected recursive ForallProof Result")
+        };
+        assert_eq!(proof.parameter_assumptions.len(), 2);
+        assert_eq!(proof.domain_assumptions.len(), 3);
+        assert_eq!(
+            proof.parameter_assumptions[0].fact_id,
+            proof.domain_assumptions[0].fact_id
+        );
+        assert_eq!(
+            proof.parameter_assumptions[1].fact_id,
+            proof.domain_assumptions[1].fact_id
+        );
+        assert_ne!(
+            proof.domain_assumptions[2].fact_id,
+            proof.parameter_assumptions[0].fact_id
+        );
+
+        let json = display_stmt_result_json_v2(&results[0]);
+        assert!(json.contains("\"parameter_assumptions\""), "{json}");
+        assert!(json.contains("\"domain_assumptions\""), "{json}");
+
+        let generated = StmtResultToLeanCompiler::new("direct_forall_scope_fact_ids.lit")
+            .compile_stmt_results_to_lean_source(&results)
+            .expect("compile only from the frozen recursive Result");
+        assert!(generated.contains("Litex.Rules.notSameSymm"), "{generated}");
+    }
 
     #[test]
     fn nested_compiler_environment_inherits_outer_bindings_without_leaking_back() {
@@ -24479,6 +23943,78 @@ mod tests {
             compiler.environment_stack.fact_names.get(&outer_fact_id),
             Some(&"__outer".to_string())
         );
+    }
+
+    #[test]
+    fn direct_compiler_rejects_a_conjunction_component_result_with_changed_position() {
+        let mut results = crate::stmt_result_to_lean_compiler::compile_litex_source_to_lean_source::execute_litex_source_to_stmt_results(
+            "1 = 1 and 2 = 2",
+            "corrupted_conjunction_component_result.lit",
+        )
+        .expect("execute conjunction before corrupting its Result");
+        let [StmtResult::Success(SuccessStmtResult::Fact(result))] = results.as_mut_slice() else {
+            panic!("expected one successful conjunction Result")
+        };
+        let InferRule::ConjunctionImpliesComponent(rule) =
+            &mut result.store.infers.rule_applications[0].rule
+        else {
+            panic!("expected typed conjunction-component inference")
+        };
+        rule.component_index = 1;
+
+        let error = StmtResultToLeanCompiler::new("corrupted_conjunction_component_result.lit")
+            .compile_stmt_results_to_lean_source(&results)
+            .expect_err("changed component position must fail closed");
+        assert!(error.contains("structural position"), "{error}");
+    }
+
+    #[test]
+    fn finite_enumeration_rejects_a_corrupted_assignment_fact_id() {
+        let mut results = crate::stmt_result_to_lean_compiler::compile_litex_source_to_lean_source::execute_litex_source_to_stmt_results(
+            "by enumerate finite_set:\n    ? forall x {1, 2}:\n        x = 1 or x = 2\n",
+            "corrupted_finite_enumeration_assignment.lit",
+        )
+        .expect("execute finite enumeration before corrupting its Result");
+        let [StmtResult::Success(SuccessStmtResult::By(
+            SuccessByStmtResult::ByEnumerateFiniteSetStmt(result),
+        ))] = results.as_mut_slice()
+        else {
+            panic!("expected one successful finite enumeration Result")
+        };
+        let verification = result
+            .verification
+            .as_mut()
+            .expect("verified enumeration has assignment children");
+        verification.assignments[0].assumptions[0].fact_id = FactId::new(u64::MAX - 7);
+
+        let error = StmtResultToLeanCompiler::new("corrupted_finite_enumeration_assignment.lit")
+            .compile_stmt_results_to_lean_source(&results)
+            .expect_err("changed assignment FactId must fail closed");
+        assert!(error.contains("assumption FactId"), "{error}");
+    }
+
+    #[test]
+    fn integer_range_iteration_rejects_a_corrupted_evaluated_value() {
+        let mut results = crate::stmt_result_to_lean_compiler::compile_litex_source_to_lean_source::execute_litex_source_to_stmt_results(
+            "by for:\n    ? forall n range(0, 3):\n        n < 3\n",
+            "corrupted_integer_range_iteration.lit",
+        )
+        .expect("execute range iteration before corrupting its Result");
+        let [StmtResult::Success(SuccessStmtResult::By(SuccessByStmtResult::ByForStmt(result)))] =
+            results.as_mut_slice()
+        else {
+            panic!("expected one successful by-for Result")
+        };
+        let Some(SuccessVerifyByForResult::Ranges(verification)) = result.verification.as_mut()
+        else {
+            panic!("expected the exact range verification Result")
+        };
+        verification.parameters[0].enumerated_values[1] = "7".into();
+
+        let error = StmtResultToLeanCompiler::new("corrupted_integer_range_iteration.lit")
+            .compile_stmt_results_to_lean_source(&results)
+            .expect_err("changed evaluated value must fail closed");
+        assert!(error.contains("ordered evaluated values"), "{error}");
     }
 
     fn execute_closed_natural_membership() -> Vec<StmtResult> {
@@ -24768,7 +24304,7 @@ mod tests {
             .compile_stmt_results_to_lean_source(&results)
             .expect_err("corrupted infer citation must fail closed");
         assert!(
-            error.contains("exact FactId"),
+            error.contains("FactId"),
             "unexpected corruption error: {error}"
         );
     }
@@ -24983,7 +24519,7 @@ mod tests {
     }
 
     #[test]
-    fn forall_proof_rejects_a_parameter_store_without_fact_id() {
+    fn forall_proof_rejects_a_parameter_assumption_with_the_wrong_fact_id() {
         let mut results = execute_direct_forall_proof();
         let [StmtResult::Success(SuccessStmtResult::Fact(result))] = results.as_mut_slice() else {
             panic!("expected one forall fact Result")
@@ -24993,12 +24529,12 @@ mod tests {
         let SuccessFactProofResult::ForallProof(proof) = verification.proof_mut() else {
             panic!("expected ForallProof Result")
         };
-        proof.assumption_infers.store_fact_outputs[0].fact_id = None;
+        proof.parameter_assumptions[0].fact_id = FactId::new(999_991);
 
         let error = StmtResultToLeanCompiler::new("direct_forall_proof.lit")
             .compile_stmt_results_to_lean_source(&results)
-            .expect_err("forall parameter without FactId must fail closed");
-        assert!(error.contains("ForallProof assumptions store 0"));
+            .expect_err("forall parameter with a forged FactId must fail closed");
+        assert!(error.contains("retain exact FactId"), "{error}");
     }
 
     #[test]
@@ -25033,7 +24569,7 @@ mod tests {
             .declarations
             .last()
             .expect("natural forall emits one theorem");
-        assert_eq!(declaration.matches("have __infer0_").count(), 2);
+        assert_eq!(declaration.matches("have __infer0_").count(), 4);
         assert!(declaration.contains("Litex.Rules.nonnegativeOfInN (__h0_1)"));
         assert!(declaration.contains("Litex.Rules.complexEqNatInN"));
         assert!(!declaration.contains("complexAddInN (__h0_1)"));
@@ -25067,7 +24603,7 @@ mod tests {
             .compile_stmt_results_to_lean_source(&results)
             .expect_err("retargeted natural inference must fail closed");
         assert!(
-            error.contains("cites a source outside this Result layer"),
+            error.contains("cites a source outside its complete forall assumption Result"),
             "{error}"
         );
     }
@@ -25207,7 +24743,7 @@ mod tests {
     }
 
     #[test]
-    fn forall_proof_rejects_an_explicit_domain_without_fact_id() {
+    fn forall_proof_rejects_an_explicit_domain_with_the_wrong_fact_id() {
         run_registered_rule_test(|| {
             let mut results = execute_direct_forall_proof_with_domain();
             let [StmtResult::Success(SuccessStmtResult::Fact(result))] = results.as_mut_slice()
@@ -25219,17 +24755,12 @@ mod tests {
             let SuccessFactProofResult::ForallProof(proof) = verification.proof_mut() else {
                 panic!("expected ForallProof Result")
             };
-            proof
-                .assumption_infers
-                .store_fact_outputs
-                .last_mut()
-                .expect("forall retains its domain store")
-                .fact_id = None;
+            proof.domain_assumptions[0].fact_id = FactId::new(999_992);
 
             let error = StmtResultToLeanCompiler::new("direct_forall_domain.lit")
                 .compile_stmt_results_to_lean_source(&results)
-                .expect_err("forall domain without FactId must fail closed");
-            assert!(error.contains("ForallProof assumptions store 1"), "{error}");
+                .expect_err("forall domain with a forged FactId must fail closed");
+            assert!(error.contains("retain exact FactId"), "{error}");
         });
     }
 
@@ -26908,14 +26439,11 @@ mod tests {
 
     #[test]
     fn registered_set_rule_rejects_stale_fingerprint() {
-        let rule = crate::litex_to_lean_ir::LitexToLeanRegisteredRuleApplicationIr {
-            rule_id: RuleId::new(SET_POWER_SET_MEMBERSHIP_OF_SUBSET_RULE_ID)
-                .expect("valid stable rule id"),
-            semantic_fingerprint: RuleFingerprint::from_hex("0".repeat(64))
-                .expect("valid forged fingerprint shape"),
-            bindings: Vec::new(),
-        };
-        assert!(registered_set_rule(&rule.rule_id, &rule.semantic_fingerprint).is_none());
+        let rule_id =
+            RuleId::new(SET_POWER_SET_MEMBERSHIP_OF_SUBSET_RULE_ID).expect("valid stable rule id");
+        let stale_fingerprint =
+            RuleFingerprint::from_hex("0".repeat(64)).expect("valid forged fingerprint shape");
+        assert!(registered_set_rule(&rule_id, &stale_fingerprint).is_none());
     }
 
     fn execute_registered_power_set_membership() -> Vec<StmtResult> {

@@ -55,7 +55,8 @@ impl Runtime {
             subset_fact.line_file.clone(),
         )
         .into();
-        let inferred_forall_fact = ForallFact::new_canonical_forall(
+        let binder_symbol_id = parameter_definition.params[0].id();
+        let inferred_forall_fact: Fact = ForallFact::new_canonical_forall(
             ParamDefWithType::new(vec![parameter_definition]),
             vec![],
             vec![in_fact_for_forall_then],
@@ -64,22 +65,32 @@ impl Runtime {
         .into();
 
         let mut infer_result = SuccessInferResult::new();
-        infer_result.new_fact(&inferred_forall_fact);
-        self.store_with_well_defined_verification_and_infer_with_default_verify_state(
-            inferred_forall_fact,
-        )
-        .map_err(|previous_error| {
-            RuntimeError::from(InferRuntimeError(RuntimeErrorStruct::new(
-                None,
-                format!(
-                    "failed to store inferred forall fact while inferring `{}`",
-                    subset_fact
-                ),
-                subset_fact.line_file.clone(),
-                Some(previous_error),
-                vec![],
-            )))
-        })?;
+        let conclusion_infers = self
+            .store_with_well_defined_verification_and_infer_with_default_verify_state(
+                inferred_forall_fact.clone(),
+            )
+            .map_err(|previous_error| {
+                RuntimeError::from(InferRuntimeError(RuntimeErrorStruct::new(
+                    None,
+                    format!(
+                        "failed to store inferred forall fact while inferring `{}`",
+                        subset_fact
+                    ),
+                    subset_fact.line_file.clone(),
+                    Some(previous_error),
+                    vec![],
+                )))
+            })?;
+        infer_result.add_rule_application_preserving_conclusion_result_structure(
+            InferRule::SubsetImpliesElementwiseMembershipForall(
+                SubsetImpliesElementwiseMembershipForallInferRule { binder_symbol_id },
+            ),
+            vec![subset_fact.clone().into()],
+            vec![SuccessStoreFactResult::new(
+                inferred_forall_fact,
+                conclusion_infers,
+            )],
+        );
         Ok(infer_result)
     }
 
@@ -100,7 +111,8 @@ impl Runtime {
             superset_fact.line_file.clone(),
         )
         .into();
-        let inferred_forall_fact = ForallFact::new_canonical_forall(
+        let binder_symbol_id = parameter_definition.params[0].id();
+        let inferred_forall_fact: Fact = ForallFact::new_canonical_forall(
             ParamDefWithType::new(vec![parameter_definition]),
             vec![],
             vec![in_fact_for_forall_then],
@@ -109,22 +121,32 @@ impl Runtime {
         .into();
 
         let mut infer_result = SuccessInferResult::new();
-        infer_result.new_fact(&inferred_forall_fact);
-        self.store_with_well_defined_verification_and_infer_with_default_verify_state(
-            inferred_forall_fact,
-        )
-        .map_err(|previous_error| {
-            RuntimeError::from(InferRuntimeError(RuntimeErrorStruct::new(
-                None,
-                format!(
-                    "failed to store inferred forall fact while inferring `{}`",
-                    superset_fact
-                ),
-                superset_fact.line_file.clone(),
-                Some(previous_error),
-                vec![],
-            )))
-        })?;
+        let conclusion_infers = self
+            .store_with_well_defined_verification_and_infer_with_default_verify_state(
+                inferred_forall_fact.clone(),
+            )
+            .map_err(|previous_error| {
+                RuntimeError::from(InferRuntimeError(RuntimeErrorStruct::new(
+                    None,
+                    format!(
+                        "failed to store inferred forall fact while inferring `{}`",
+                        superset_fact
+                    ),
+                    superset_fact.line_file.clone(),
+                    Some(previous_error),
+                    vec![],
+                )))
+            })?;
+        infer_result.add_rule_application_preserving_conclusion_result_structure(
+            InferRule::SupersetImpliesElementwiseMembershipForall(
+                SupersetImpliesElementwiseMembershipForallInferRule { binder_symbol_id },
+            ),
+            vec![superset_fact.clone().into()],
+            vec![SuccessStoreFactResult::new(
+                inferred_forall_fact,
+                conclusion_infers,
+            )],
+        );
         Ok(infer_result)
     }
 }

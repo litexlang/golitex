@@ -21,11 +21,11 @@ theorem __fact2 :
   exact __c2_0
 
 theorem __fact3 :
-    ∀ (a : Litex.Set) (b : Litex.Set) (c : Litex.Set) (d : Litex.Set) (__h3_5 : ¬ Litex.Same a b ∧ ¬ Litex.Same c d),
-      ¬ Litex.Same c d := by
-  intro a b c d __h3_5
-  have __i3_0 : ¬ Litex.Same c d := (__h3_5).2
-  have __c3_0 : ¬ Litex.Same c d := __i3_0
+    ∀ (__p1 : Litex.Set) (__p2 : Litex.Set) (__p3 : Litex.Set) (__p4 : Litex.Set) (__domain1 : ¬ Litex.Same __p1 __p2 ∧ ¬ Litex.Same __p3 __p4), ¬ Litex.Same __p3 __p4 := by
+  intro a b c d __domain1
+  have __infer3_0 : ¬ Litex.Same a b := (__domain1).1
+  have __infer3_1 : ¬ Litex.Same c d := (__domain1).2
+  have __c3_0 : ¬ Litex.Same c d := __infer3_1
   exact __c3_0
 
 end __Compiler_7_PropositionalFacts

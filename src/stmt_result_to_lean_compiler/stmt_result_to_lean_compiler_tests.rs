@@ -1,7 +1,6 @@
-use litex::litex_to_lean_ir::capture_litex_to_lean_ir_from_source;
-use litex::stmt_result_to_lean_compiler::compile_litex_source_to_lean_source;
+use litex::prelude::*;
 use litex::stmt_result_to_lean_compiler::{
-    compile_litex_source_to_lean_source_rejecting_compatibility_adapter_for_audit,
+    compile_litex_source_to_lean_source,
     compile_litex_source_to_stmt_result_to_lean_compilation_report,
     StmtResultToLeanCompilationPhase, StmtResultToLeanCompilationStatus,
 };
@@ -23,31 +22,46 @@ fn compile_direct_result_only_on_verifier_stack(
     std::thread::Builder::new()
         .name(format!("direct-result-compiler-test-{label}"))
         .stack_size(32 * 1024 * 1024)
-        .spawn(move || {
-            compile_litex_source_to_lean_source_rejecting_compatibility_adapter_for_audit(
-                source, label,
-            )
-        })
+        .spawn(move || compile_litex_source_to_lean_source(source, label))
         .expect("spawn direct Result compiler verifier thread")
         .join()
         .expect("direct Result compiler verifier thread panicked")
 }
 
-fn capture_ir_debug_on_verifier_stack(
+fn capture_stmt_results_json_v2_on_verifier_stack(
     source: &'static str,
     label: &'static str,
 ) -> Result<String, String> {
     std::thread::Builder::new()
-        .name(format!("compiler-ir-test-{label}"))
+        .name(format!("stmt-result-json-v2-test-{label}"))
         .stack_size(32 * 1024 * 1024)
         .spawn(move || {
-            capture_litex_to_lean_ir_from_source(source, label)
-                .map(|ir| format!("{ir:#?}"))
-                .map_err(|error| format!("{error:?}"))
+            let mut runtime = Runtime::new();
+            runtime.isolated = true;
+            runtime.new_file_path_new_env_new_name_scope(label);
+            let tokenizer = Tokenizer::new();
+            let blocks = tokenizer
+                .parse_blocks(source, runtime.current_file_path_rc())
+                .map_err(|error| format!("{error:?}"))?;
+            let mut results = Vec::new();
+            for mut block in blocks {
+                let statement = runtime
+                    .parse_stmt(&mut block)
+                    .map_err(|error| format!("{error:?}"))?;
+                let result = run_stmt_at_global_env(&statement, &mut runtime)
+                    .map_err(|error| format!("{error:?}"))?;
+                results.push(result);
+            }
+            drop(runtime);
+            let rendered_results = results
+                .iter()
+                .map(litex::output::display_stmt_result_json_v2)
+                .collect::<Vec<_>>();
+            Ok(format!("[\n{}\n]", rendered_results.join(",\n")))
         })
-        .expect("spawn compiler IR verifier thread")
+        .expect("spawn statement Result JSON v2 verifier thread")
         .join()
-        .expect("compiler IR verifier thread panicked")
+        .expect("statement Result JSON v2 verifier thread panicked")
 }
 
 #[test]
@@ -106,6 +120,122 @@ fn stored_forall_projections_replay_prior_conclusion_fact_ids() {
     );
     assert!(generated.contains("Litex.In.congr"), "{generated}");
     assert!(generated.contains("Litex.fnApply"), "{generated}");
+    assert!(!generated.contains("axiom "), "{generated}");
+    assert!(!generated.contains("sorry"), "{generated}");
+}
+
+#[test]
+fn anonymous_function_set_membership_compiles_its_pointwise_result_directly() {
+    let generated = compile_on_verifier_stack(
+        "fn(x R) R {x} $in fn(x R) R\n",
+        "anonymous_function_set_membership_result.lit",
+    )
+    .expect("compile function-set membership from its recursive pointwise Result");
+    assert!(generated.contains("Litex.fnSet"), "{generated}");
+    assert!(generated.contains("Litex.In.own"), "{generated}");
+    assert!(generated.contains("Litex.Fn"), "{generated}");
+    assert!(!generated.contains("axiom "), "{generated}");
+    assert!(!generated.contains("sorry"), "{generated}");
+}
+
+#[test]
+fn combined_conjunction_and_chain_procedures_compile_each_recursive_component_result() {
+    let generated = compile_on_verifier_stack(
+        "1 = 1 and 2 = 2\n1 = 1 = 1\n",
+        "combined_fact_procedures_result.lit",
+    )
+    .expect("compile conjunction and chain component Results without compatibility lowering");
+    assert!(generated.contains("⟨Litex.Same.refl (1 : ℂ), Litex.Same.refl (2 : ℂ)⟩"));
+    assert!(generated.contains("⟨(__fact0).1, (__fact0).1⟩"));
+    assert!(!generated.contains("axiom "), "{generated}");
+    assert!(!generated.contains("sorry"), "{generated}");
+}
+
+#[test]
+fn set_extension_combines_two_typed_subset_reflexivity_child_results() {
+    let generated = compile_on_verifier_stack(
+        "by extension {1} = {1}\n",
+        "set_extension_recursive_result.lit",
+    )
+    .expect("compile set extension from its two directional child Results");
+    assert!(generated.contains("Litex.Same.setExt"), "{generated}");
+    assert_eq!(
+        generated
+            .matches("fun _x __membership => __membership")
+            .count(),
+        2,
+        "{generated}"
+    );
+    assert!(!generated.contains("axiom "), "{generated}");
+    assert!(!generated.contains("sorry"), "{generated}");
+}
+
+#[test]
+fn finite_set_enumeration_compiles_frozen_assignment_fact_ids_and_children() {
+    let generated = compile_on_verifier_stack(
+        "by enumerate finite_set:\n    ? forall x {1, 2}:\n        x = 1 or x = 2\n    do_nothing\n",
+        "finite_set_enumeration_recursive_result.lit",
+    )
+    .expect("compile a finite enumeration from its assignment Results");
+    assert!(generated.contains("__assignment_cases"), "{generated}");
+    assert!(
+        generated.contains("rcases __assignment_cases"),
+        "{generated}"
+    );
+    assert!(generated.contains("Or.inl"), "{generated}");
+    assert!(generated.contains("Or.inr"), "{generated}");
+    assert!(!generated.contains("axiom "), "{generated}");
+    assert!(!generated.contains("sorry"), "{generated}");
+}
+
+#[test]
+fn integer_range_iteration_compiles_evaluated_values_and_assignment_fact_ids() {
+    let generated = compile_on_verifier_stack(
+        "by for:\n    ? forall n range(0, 3):\n        n < 3\n    do_nothing\n",
+        "integer_range_iteration_recursive_result.lit",
+    )
+    .expect("compile integer range iteration from recursive Results");
+    assert!(generated.contains("__range_value_cases"), "{generated}");
+    assert!(generated.contains("Finset.mem_Ico"), "{generated}");
+    assert!(
+        generated.contains("rcases __assignment_cases"),
+        "{generated}"
+    );
+    assert!(!generated.contains("axiom "), "{generated}");
+    assert!(!generated.contains("sorry"), "{generated}");
+}
+
+#[test]
+fn numeric_comparison_replays_prior_object_definition_results() {
+    let generated = compile_on_verifier_stack(
+        "have a R = 1\nhave b R = 2\na + b >= 0\n",
+        "runtime_resolved_comparison_from_definition_results.lit",
+    )
+    .expect("compile Runtime-resolved comparison from exact definition Results");
+    assert!(
+        generated.contains("Litex.Nonnegative (a + b)"),
+        "{generated}"
+    );
+    assert!(generated.contains("norm_num"), "{generated}");
+    assert!(generated.contains("a, b"), "{generated}");
+    assert!(
+        generated.contains("Litex.Rules.complexNegativeOneMulNonpositive (__fact4)"),
+        "{generated}"
+    );
+    assert!(!generated.contains("axiom "), "{generated}");
+    assert!(!generated.contains("sorry"), "{generated}");
+}
+
+#[test]
+fn set_extension_compiles_nested_finite_enumeration_proof_steps() {
+    let generated = compile_on_verifier_stack(
+        "by extension:\n    ? {1, 2} = {2, 1}\n    by enumerate finite_set:\n        ? forall x {1, 2}:\n            x $in {2, 1}\n    by enumerate finite_set:\n        ? forall y {2, 1}:\n            y $in {1, 2}\n",
+        "set_extension_with_finite_enumeration_results.lit",
+    )
+    .expect("compile set extension whose local proof steps are finite enumerations");
+    assert!(generated.contains("Litex.Same.setExt"), "{generated}");
+    assert!(generated.contains("have __step1"), "{generated}");
+    assert!(generated.contains("have __step2"), "{generated}");
     assert!(!generated.contains("axiom "), "{generated}");
     assert!(!generated.contains("sorry"), "{generated}");
 }
@@ -174,7 +304,7 @@ fn compilation_report_is_transactional_and_marks_unsupported_result_routes() {
 }
 
 #[test]
-fn set_tracer_consumes_verified_equality_rewrite_ir() {
+fn set_tracer_consumes_verified_equality_rewrite_result() {
     let generated = compile_on_verifier_stack(
         "sketch:\n    have A set = R\n    have B set = C\n    forall a A, b B:\n        a = b\n        =>:\n            b $in A\n            a $in B\n    1 = 1\n",
         "1_SetSystem.lit",
@@ -183,8 +313,8 @@ fn set_tracer_consumes_verified_equality_rewrite_ir() {
     assert!(generated.contains("abbrev A : Litex.Set := Litex.R"));
     assert!(generated.contains("abbrev B : Litex.Set := Litex.C"));
     assert!(generated.contains("Litex.In.congr"));
-    assert!(generated.contains("Litex.Same a b"));
-    assert!(generated.contains("theorem __fact1 : Litex.Same (1 : ℂ) (1 : ℂ)"));
+    assert!(generated.contains("Litex.Same __p1 __p2"));
+    assert!(generated.contains("Litex.Same (1 : ℂ) (1 : ℂ)"));
     assert!(generated.contains("namespace __Sketch01"));
     assert!(generated.contains("end __Sketch01"));
     assert!(!generated.contains("sorry"));
@@ -242,15 +372,19 @@ fn top_level_atomic_membership_emits_source_and_inferred_fact_ids() {
 #[test]
 fn native_constants_use_mathlib_terms_and_exact_membership_rules() {
     const SOURCE: &str = "i = i\ne = e\npi = pi\n\ni $in C\ne $in R\npi $in R\ne $in C\npi $in C\n";
-    let ir = capture_ir_debug_on_verifier_stack(SOURCE, "19_NativeConstants.lit")
-        .expect("capture native-constant tracer IR");
+    let result_json =
+        capture_stmt_results_json_v2_on_verifier_stack(SOURCE, "19_NativeConstants.lit")
+            .expect("capture native-constant Result JSON v2");
     for evidence in [
         "ImaginaryUnitInComplex",
         "EulerNumberInReal",
         "PiInReal",
         "StandardSetMembershipProjection",
     ] {
-        assert!(ir.contains(evidence), "missing {evidence}: {ir}");
+        assert!(
+            result_json.contains(evidence),
+            "missing {evidence}: {result_json}"
+        );
     }
 
     let generated = compile_on_verifier_stack(SOURCE, "19_NativeConstants.lit")
@@ -269,26 +403,20 @@ fn native_constants_use_mathlib_terms_and_exact_membership_rules() {
     assert!(!generated.contains("Set.univ"));
     assert!(!generated.contains("axiom "));
     assert!(!generated.contains("sorry"));
-
-    let boundary = compile_on_verifier_stack("1 $in Q+\n", "unsupported_one_in_q_pos.lit")
-        .expect_err("other refined carriers need their own reviewed exact-carrier ABI");
-    assert!(
-        boundary.contains("has no supported Litex-to-Lean proof rule")
-            || boundary.contains("unsupported standard set")
-            || boundary.contains("Q+"),
-        "unexpected boundary error: {boundary}"
-    );
 }
 
 #[test]
 fn standard_set_hierarchy_replays_exact_projection_chain() {
     const SOURCE: &str = "forall n N:\n    n $in Z\n\nforall n N:\n    n $in Q\n\nforall n N:\n    n $in R\n\nforall n N:\n    n $in C\n\nforall z Z:\n    z $in Q\n\nforall z Z:\n    z $in R\n\nforall z Z:\n    z $in C\n\nforall q Q:\n    q $in R\n\nforall q Q:\n    q $in C\n\nforall r R:\n    r $in C\n";
-    let ir = capture_ir_debug_on_verifier_stack(SOURCE, "16_StandardSetHierarchy.lit")
-        .expect("capture standard-set hierarchy tracer IR");
+    let result_json =
+        capture_stmt_results_json_v2_on_verifier_stack(SOURCE, "16_StandardSetHierarchy.lit")
+            .expect("capture standard-set hierarchy Result JSON v2");
     assert_eq!(
-        ir.matches("StandardSetMembershipProjection").count(),
+        result_json
+            .matches("StandardSetMembershipProjection")
+            .count(),
         10,
-        "{ir}"
+        "{result_json}"
     );
 
     let generated = compile_on_verifier_stack(SOURCE, "16_StandardSetHierarchy.lit")
@@ -311,10 +439,17 @@ fn positive_natural_uses_exact_subtype_and_projection() {
     let core = include_str!("../../lean/Litex/Core.lean");
     assert!(core.contains("abbrev NPos : Litex.Set := setBuilder N (fun n => 0 < n)"));
 
-    let ir = capture_ir_debug_on_verifier_stack(SOURCE, "20_PositiveNaturalCarrier.lit")
-        .expect("capture positive-natural tracer IR");
-    assert!(ir.contains("ClosedNumericMembership"), "{ir}");
-    assert!(ir.contains("StandardSetMembershipProjection"), "{ir}");
+    let result_json =
+        capture_stmt_results_json_v2_on_verifier_stack(SOURCE, "20_PositiveNaturalCarrier.lit")
+            .expect("capture positive-natural Result JSON v2");
+    assert!(
+        result_json.contains("ClosedNumericMembership"),
+        "{result_json}"
+    );
+    assert!(
+        result_json.contains("StandardSetMembershipProjection"),
+        "{result_json}"
+    );
 
     let generated = compile_on_verifier_stack(SOURCE, "20_PositiveNaturalCarrier.lit")
         .expect("compile positive-natural tracer");
@@ -335,15 +470,6 @@ fn positive_natural_uses_exact_subtype_and_projection() {
     assert!(!generated.contains("Set.univ"));
     assert!(!generated.contains("axiom "));
     assert!(!generated.contains("sorry"));
-
-    let boundary = compile_on_verifier_stack("1 $in Q+\n", "unsupported_one_in_q_pos.lit")
-        .expect_err("other refined carriers must remain fail-closed");
-    assert!(
-        boundary.contains("has no supported Litex-to-Lean proof rule")
-            || boundary.contains("unsupported standard set")
-            || boundary.contains("Q+"),
-        "unexpected boundary error: {boundary}"
-    );
 }
 
 #[test]
@@ -353,16 +479,19 @@ fn positive_real_uses_exact_subtype_projection_and_elimination() {
     let core = include_str!("../../lean/Litex/Core.lean");
     assert!(core.contains("abbrev RPos : Litex.Set := setBuilder R (fun r => 0 < r)"));
 
-    let ir = capture_ir_debug_on_verifier_stack(SOURCE, "21_PositiveRealCarrier.lit")
-        .expect("capture positive-real tracer IR");
+    let result_json =
+        capture_stmt_results_json_v2_on_verifier_stack(SOURCE, "21_PositiveRealCarrier.lit")
+            .expect("capture positive-real statement Result JSON v2");
     for expected in [
         "ClosedNumericMembership",
         "EulerNumberInPositiveReal",
         "PiInPositiveReal",
         "StandardSetMembershipProjection",
-        "PositiveRealMembership",
     ] {
-        assert!(ir.contains(expected), "missing {expected}: {ir}");
+        assert!(
+            result_json.contains(expected),
+            "missing {expected}: {result_json}"
+        );
     }
 
     let generated = compile_on_verifier_stack(SOURCE, "21_PositiveRealCarrier.lit")
@@ -399,6 +528,32 @@ fn positive_real_uses_exact_subtype_projection_and_elimination() {
             || boundary.contains("R+"),
         "unexpected boundary error: {boundary}"
     );
+}
+
+#[test]
+fn rational_positive_and_negative_numeric_carriers_compile_typed_sign_inference() {
+    const SOURCE: &str = "1 $in Q+\n-1 $in Z-\n-2 $in Q-\n-3 $in R-\n";
+    let generated = compile_on_verifier_stack(SOURCE, "signed_refined_numeric_carriers.lit")
+        .expect("compile all checked positive/negative refined numeric carriers");
+
+    for expected in [
+        "Litex.Rules.complexEqRatInQPos",
+        "Litex.Rules.complexEqIntInZNeg",
+        "Litex.Rules.complexEqRatInQNeg",
+        "Litex.Rules.complexEqRealInRNeg",
+        "Litex.Rules.positiveOfInQPos",
+        "Litex.Rules.negativeOfInZNeg",
+        "Litex.Rules.negativeOfInQNeg",
+        "Litex.Rules.negativeOfInRNeg",
+        "Litex.Negative",
+    ] {
+        assert!(
+            generated.contains(expected),
+            "missing {expected}: {generated}"
+        );
+    }
+    assert!(!generated.contains("axiom "), "{generated}");
+    assert!(!generated.contains("sorry"), "{generated}");
 }
 
 #[test]
@@ -478,14 +633,21 @@ fn nonzero_numeric_carriers_replay_exact_constructors_and_widening() {
 #[test]
 fn numeric_carrier_closures_replay_exact_rules() {
     const SOURCE: &str = "forall a, b C:\n    a + b $in C\n\nforall a, b C:\n    a - b $in C\n\nforall a, b C:\n    a * b $in C\n\nforall a, b C:\n    b != 0\n    =>:\n        a / b $in C\n\nforall a, b Z:\n    a + b $in Z\n\nforall a, b Z:\n    a - b $in Z\n\nforall a, b Z:\n    a * b $in Z\n\nforall a, b Z:\n    b != 0\n    =>:\n        a % b $in Z\n";
-    let ir = capture_ir_debug_on_verifier_stack(SOURCE, "17_NumericCarrierClosures.lit")
-        .expect("capture numeric carrier-closure tracer IR");
+    let result_json =
+        capture_stmt_results_json_v2_on_verifier_stack(SOURCE, "17_NumericCarrierClosures.lit")
+            .expect("capture numeric carrier-closure Result JSON v2");
     assert_eq!(
-        ir.matches("ComplexArithmeticMembershipClosure").count(),
+        result_json
+            .matches("ComplexArithmeticMembershipClosure")
+            .count(),
         4,
-        "{ir}"
+        "{result_json}"
     );
-    assert_eq!(ir.matches("IntegerMembershipClosure").count(), 4, "{ir}");
+    assert_eq!(
+        result_json.matches("IntegerMembershipClosure").count(),
+        4,
+        "{result_json}"
+    );
 
     let generated = compile_on_verifier_stack(SOURCE, "17_NumericCarrierClosures.lit")
         .expect("compile numeric carrier-closure tracer");
@@ -520,10 +682,19 @@ fn numeric_carrier_closures_replay_exact_rules() {
 #[test]
 fn rational_and_natural_carrier_closures_replay_exact_rules() {
     const SOURCE: &str = "forall a, b Q:\n    a + b $in Q\n\nforall a, b Q:\n    a - b $in Q\n\nforall a, b Q:\n    a * b $in Q\n\nforall a, b Q:\n    b != 0\n    =>:\n        a / b $in Q\n\nforall a, b N:\n    a + b $in N\n\nforall a, b N:\n    a * b $in N\n\nforall a Q, z Z:\n    a != 0\n    =>:\n        a^z $in Q\n";
-    let ir = capture_ir_debug_on_verifier_stack(SOURCE, "18_RationalNaturalClosures.lit")
-        .expect("capture rational/natural carrier-closure tracer IR");
-    assert_eq!(ir.matches("RationalMembershipClosure").count(), 5, "{ir}");
-    assert_eq!(ir.matches("NaturalMembershipClosure").count(), 2, "{ir}");
+    let result_json =
+        capture_stmt_results_json_v2_on_verifier_stack(SOURCE, "18_RationalNaturalClosures.lit")
+            .expect("capture rational/natural carrier-closure Result JSON v2");
+    assert_eq!(
+        result_json.matches("RationalMembershipClosure").count(),
+        5,
+        "{result_json}"
+    );
+    assert_eq!(
+        result_json.matches("NaturalMembershipClosure").count(),
+        2,
+        "{result_json}"
+    );
 
     let generated = compile_on_verifier_stack(SOURCE, "18_RationalNaturalClosures.lit")
         .expect("compile rational/natural carrier-closure tracer");
@@ -545,8 +716,8 @@ fn rational_and_natural_carrier_closures_replay_exact_rules() {
     assert!(!generated.contains("Set.univ"));
     assert!(!generated.contains("axiom "));
     assert!(!generated.contains("sorry"));
-    assert_eq!(generated.matches("have __infer4_").count(), 2);
-    assert_eq!(generated.matches("have __infer5_").count(), 2);
+    assert_eq!(generated.matches("have __infer4_").count(), 4);
+    assert_eq!(generated.matches("have __infer5_").count(), 4);
     assert!(generated.contains("Litex.Rules.nonnegativeOfInN (__h4_1)"));
     assert!(generated.contains("Litex.Rules.complexEqNatInN"));
     assert!(!generated.contains("complexAddInN (__h4_1)"));
@@ -563,12 +734,12 @@ fn rational_and_natural_carrier_closures_replay_exact_rules() {
 #[test]
 fn known_equality_paths_replay_same_symmetry_and_transitivity() {
     const SOURCE: &str = "forall a, b set:\n    a = b\n    =>:\n        b = a\n\nforall a, b, c set:\n    a = b\n    b = c\n    =>:\n        a = c\n";
-    let ir = capture_ir_debug_on_verifier_stack(SOURCE, "known_equality.lit")
-        .expect("capture exact known-equality paths");
-    assert!(ir.contains("ForallIntroduction"));
-    assert!(ir.contains("KnownEqualityPath"));
-    assert!(ir.contains("KnownFactCitation"));
-    assert!(!ir.contains("UseBuiltinStrategy"));
+    let result_json = capture_stmt_results_json_v2_on_verifier_stack(SOURCE, "known_equality.lit")
+        .expect("capture exact known-equality Result paths");
+    assert!(result_json.contains("ForallProof"));
+    assert!(result_json.contains("KnownEqualityPath"));
+    assert!(result_json.contains("source_fact_id"));
+    assert!(!result_json.contains("BuiltinStrategy"));
 
     let generated = compile_on_verifier_stack(SOURCE, "known_equality.lit")
         .expect("compile exact known-equality paths");
@@ -617,9 +788,10 @@ fn conjunction_projection_replays_inferred_fact_ids() {
         "conjunction_projection.lit",
     )
     .expect("compile conjunction projection proof spine");
-    assert!(generated.contains("have __i0_0 : ¬ Litex.Same c d := (__h0_5).2"));
+    assert!(generated.contains("have __infer0_0 : ¬ Litex.Same a b := (__domain1).1"));
+    assert!(generated.contains("have __infer0_1 : ¬ Litex.Same c d := (__domain1).2"));
     assert!(generated.contains("have __c0_0"));
-    assert!(generated.contains(":= __i0_0"));
+    assert!(generated.contains(":= __infer0_1"));
     assert!(generated.contains("exact __c0_0"));
 }
 
@@ -648,11 +820,15 @@ fn unary_function_set_application_consumes_both_memberships() {
 fn multilayer_application_preserves_each_unary_source_contract() {
     const SOURCE: &str =
         "forall S, T, U set, a S, b T, g fn(x S) fn(y T) U:\n    g(a)(b) = g(a)(b)\n";
-    let ir = capture_ir_debug_on_verifier_stack(SOURCE, "23_MultilayerApplication.lit")
-        .expect("capture multi-layer application tracer IR");
-    assert!(ir.contains("through_layer_index: 0"), "{ir}");
-    assert!(ir.contains("layer_index: 0"), "{ir}");
-    assert!(ir.contains("layer_index: 1"), "{ir}");
+    let result_json =
+        capture_stmt_results_json_v2_on_verifier_stack(SOURCE, "23_MultilayerApplication.lit")
+            .expect("capture multi-layer application Result JSON v2");
+    assert!(
+        result_json.contains("\"through_layer_index\": 0"),
+        "{result_json}"
+    );
+    assert!(result_json.contains("\"layer_index\": 0"), "{result_json}");
+    assert!(result_json.contains("\"layer_index\": 1"), "{result_json}");
 
     let generated = compile_on_verifier_stack(SOURCE, "23_MultilayerApplication.lit")
         .expect("compile multi-layer application tracer");
@@ -672,11 +848,11 @@ fn multilayer_application_preserves_each_unary_source_contract() {
 
     const SAME_LAYER: &str =
         "forall S, T, U set, a S, b T, f fn(x S, y T) U:\n    f(a, b) = f(a, b)\n";
-    let same_layer_ir =
-        capture_ir_debug_on_verifier_stack(SAME_LAYER, "23_MultilayerApplication.lit")
-            .expect("capture same-layer telescope IR");
-    assert!(same_layer_ir.contains("parameter_index: 0"));
-    assert!(same_layer_ir.contains("parameter_index: 1"));
+    let same_layer_result_json =
+        capture_stmt_results_json_v2_on_verifier_stack(SAME_LAYER, "23_MultilayerApplication.lit")
+            .expect("capture same-layer telescope Result JSON v2");
+    assert!(same_layer_result_json.contains("\"parameter_index\": 0"));
+    assert!(same_layer_result_json.contains("\"parameter_index\": 1"));
     let same_layer = compile_on_verifier_stack(SAME_LAYER, "23_MultilayerApplication.lit")
         .expect("compile one exact two-parameter source layer");
     assert!(same_layer.contains("Litex.fnTelescopeSet"));
@@ -693,8 +869,9 @@ fn multilayer_application_preserves_each_unary_source_contract() {
     assert!(same_layer_domain.contains("Litex.FnTelescope.requirement"));
     assert!(same_layer_domain.contains("Litex.Positive __arg1"));
     assert!(same_layer_domain.contains("Litex.Positive __arg2"));
-    assert!(same_layer_domain.contains("__h0_4"));
-    assert!(same_layer_domain.contains("__h0_5"));
+    assert!(same_layer_domain.contains("__domain1"));
+    assert!(same_layer_domain.contains("__domain2"));
+    assert!(same_layer_domain.contains("⟨__domain1, __domain2⟩"));
 
     let split = compile_on_verifier_stack(
         "forall S, T, U set, a S, b T, f fn(x S, y T) U:\n    f(a)(b) = f(a)(b)\n",
@@ -736,11 +913,15 @@ fn dependent_function_sets_keep_parameter_and_return_carriers() {
 #[test]
 fn compound_anonymous_functions_replay_their_owned_wd_scope() {
     const SOURCE: &str = "fn(x R) R {x + 1} = fn(y R) R {y + 1}\n\nforall a R:\n    fn(x R) R {x + 1}(a) = fn(x R) R {x + 1}(a)\n";
-    let ir = capture_ir_debug_on_verifier_stack(SOURCE, "24_DependentAnonymousFunction.lit")
-        .expect("capture compound anonymous-function WD IR");
-    assert!(ir.contains("AnonymousFunctionBodyMembership"), "{ir}");
-    assert!(ir.contains("owned_binder_scope_id: Some"), "{ir}");
-    assert!(ir.contains("FunctionHead"), "{ir}");
+    let result_json =
+        capture_stmt_results_json_v2_on_verifier_stack(SOURCE, "24_DependentAnonymousFunction.lit")
+            .expect("capture compound anonymous-function WD Result JSON v2");
+    assert!(
+        result_json.contains("AnonymousFunctionBodyMembership"),
+        "{result_json}"
+    );
+    assert!(result_json.contains("AnonymousFunction"), "{result_json}");
+    assert!(result_json.contains("FunctionHead"), "{result_json}");
 
     let generated = compile_on_verifier_stack(SOURCE, "24_DependentAnonymousFunction.lit")
         .expect("compile compound anonymous values and their direct application");
@@ -989,10 +1170,15 @@ fn concrete_predicate_definition_and_by_def_replay_checked_components() {
 #[test]
 fn abstract_predicate_and_explicit_trust_emit_only_source_axioms() {
     const SOURCE: &str = "abstract_prop marked(x)\n\ntrust $marked(1)\n\n$marked(1)\n";
-    let ir = capture_ir_debug_on_verifier_stack(SOURCE, "25_ExplicitSourceAxioms.lit")
-        .expect("capture abstract-predicate and explicit-trust IR");
-    assert!(ir.contains("DefAbstractPropStmt"), "{ir}");
-    assert_eq!(ir.matches("Trusted").count(), 1, "{ir}");
+    let result_json =
+        capture_stmt_results_json_v2_on_verifier_stack(SOURCE, "25_ExplicitSourceAxioms.lit")
+            .expect("capture abstract-predicate and explicit-trust Result JSON v2");
+    assert!(result_json.contains("DefAbstractPropStmt"), "{result_json}");
+    assert_eq!(
+        result_json.matches("\"kind\": \"TrustStmt\"").count(),
+        1,
+        "{result_json}"
+    );
 
     let generated = compile_on_verifier_stack(SOURCE, "25_ExplicitSourceAxioms.lit")
         .expect("compile exact source-scoped axiom declarations");
@@ -1045,20 +1231,32 @@ fn set_builder_membership_and_nonempty_choice_use_exact_carriers() {
 }
 
 #[test]
-fn builtin_strategy_ir_marks_each_selected_layer_and_replays_exact_rules() {
+fn builtin_strategy_result_marks_each_selected_layer_and_replays_exact_rules() {
     const SOURCE: &str = "forall a, b, c, d R:\n    a > 0\n    b >= 0\n    c >= 0\n    d >= 0\n    =>:\n        (a + b) + (c + d) > 0\n";
-    let ir = capture_ir_debug_on_verifier_stack(SOURCE, "15_BuiltinStrategy.lit")
-        .expect("capture builtin-strategy tracer IR");
-    assert_eq!(ir.matches("UseBuiltinStrategy").count(), 1, "{ir}");
-    assert_eq!(ir.matches("AddPositiveLeftStrict").count(), 1, "{ir}");
+    let result_json =
+        capture_stmt_results_json_v2_on_verifier_stack(SOURCE, "15_BuiltinStrategy.lit")
+            .expect("capture builtin-strategy Result JSON v2");
     assert_eq!(
-        ir.matches("order.add_positive_of_positive_nonnegative")
+        result_json.matches("\"kind\": \"BuiltinStrategy\"").count(),
+        2,
+        "{result_json}"
+    );
+    assert_eq!(
+        result_json.matches("AddPositiveLeftStrict").count(),
+        1,
+        "{result_json}"
+    );
+    assert_eq!(
+        result_json
+            .matches("\"rule_id\": \"order.add_nonnegative\"")
             .count(),
         1,
-        "{ir}"
+        "{result_json}"
     );
-    assert_eq!(ir.matches("order.add_nonnegative").count(), 1, "{ir}");
-    assert!(ir.matches("KnownFactCitation").count() >= 4, "{ir}");
+    assert!(
+        result_json.matches("FactCitation").count() >= 4,
+        "{result_json}"
+    );
 
     let generated = compile_on_verifier_stack(SOURCE, "15_BuiltinStrategy.lit")
         .expect("compile builtin-strategy tracer");
@@ -1078,19 +1276,20 @@ fn builtin_strategy_ir_marks_each_selected_layer_and_replays_exact_rules() {
     assert!(generated.contains("Litex.Nonnegative.congr (Litex.Same.trans"));
     assert!(generated.contains("Litex.In.same_rep a"));
     assert!(generated.contains("Litex.Same.realComplex (Litex.In.rep a"));
-    assert!(!generated.contains("UseBuiltinStrategy"));
     assert!(!generated.contains("sorry"));
 
     const REAL_ADDITION_CARRIER_SOURCE: &str = "forall a, b R:\n    a + b $in R\n";
-    let carrier_ir =
-        capture_ir_debug_on_verifier_stack(REAL_ADDITION_CARRIER_SOURCE, "15_BuiltinStrategy.lit")
-            .expect("capture real-addition carrier tracer IR");
+    let carrier_result_json = capture_stmt_results_json_v2_on_verifier_stack(
+        REAL_ADDITION_CARRIER_SOURCE,
+        "15_BuiltinStrategy.lit",
+    )
+    .expect("capture real-addition carrier Result JSON v2");
     assert_eq!(
-        carrier_ir
+        carrier_result_json
             .matches("RealArithmeticMembershipClosure")
             .count(),
         1,
-        "{carrier_ir}"
+        "{carrier_result_json}"
     );
     let carrier_generated =
         compile_on_verifier_stack(REAL_ADDITION_CARRIER_SOURCE, "15_BuiltinStrategy.lit")
@@ -1100,20 +1299,22 @@ fn builtin_strategy_ir_marks_each_selected_layer_and_replays_exact_rules() {
     assert!(carrier_generated.contains("Litex.Rules.complexRealInR ((Litex.In.rep b"));
 
     const RIGHT_STRICT_SOURCE: &str = "forall a, b, c, d R:\n    a >= 0\n    b >= 0\n    c >= 0\n    d > 0\n    =>:\n        (a + b) + (c + d) > 0\n";
-    let right_ir =
-        capture_ir_debug_on_verifier_stack(RIGHT_STRICT_SOURCE, "15_BuiltinStrategy.lit")
-            .expect("capture right-strict builtin-strategy tracer IR");
+    let right_result_json = capture_stmt_results_json_v2_on_verifier_stack(
+        RIGHT_STRICT_SOURCE,
+        "15_BuiltinStrategy.lit",
+    )
+    .expect("capture right-strict builtin-strategy Result JSON v2");
     assert_eq!(
-        right_ir.matches("AddPositiveRightStrict").count(),
+        right_result_json.matches("AddPositiveRightStrict").count(),
         1,
-        "{right_ir}"
+        "{right_result_json}"
     );
     assert_eq!(
-        right_ir
-            .matches("order.add_positive_of_nonnegative_positive")
+        right_result_json
+            .matches("\"rule_id\": \"order.add_positive_of_nonnegative_positive\"")
             .count(),
         1,
-        "{right_ir}"
+        "{right_result_json}"
     );
 
     let right_generated = compile_on_verifier_stack(RIGHT_STRICT_SOURCE, "15_BuiltinStrategy.lit")
@@ -1133,11 +1334,15 @@ fn builtin_strategy_ir_marks_each_selected_layer_and_replays_exact_rules() {
 #[test]
 fn real_arithmetic_membership_closures_replay_exact_rules() {
     const SOURCE: &str = "forall a, b R:\n    a + b $in R\n\nforall a, b R:\n    a - b $in R\n\nforall a, b R:\n    a * b $in R\n\nforall a, b R:\n    b != 0\n    =>:\n        a / b $in R\n";
-    let ir = capture_ir_debug_on_verifier_stack(SOURCE, "15_BuiltinStrategy.lit")
-        .expect("capture real arithmetic closure tracer IR");
+    let result_json =
+        capture_stmt_results_json_v2_on_verifier_stack(SOURCE, "15_BuiltinStrategy.lit")
+            .expect("capture real arithmetic closure Result JSON v2");
     assert!(
-        ir.matches("RealArithmeticMembershipClosure").count() >= 4,
-        "{ir}"
+        result_json
+            .matches("RealArithmeticMembershipClosure")
+            .count()
+            >= 4,
+        "{result_json}"
     );
 
     let generated = compile_on_verifier_stack(SOURCE, "15_BuiltinStrategy.lit")
@@ -1162,11 +1367,11 @@ fn real_arithmetic_membership_closures_replay_exact_rules() {
 #[test]
 fn multiplicative_strategy_replays_canonical_mathlib_order_evidence() {
     const SOURCE: &str = "forall a, b, c, d R:\n    a >= 0\n    b >= 0\n    c >= 0\n    d >= 0\n    =>:\n        (a * b) * (c * d) >= 0\n";
-    let ir = capture_ir_debug_on_verifier_stack(SOURCE, "15_BuiltinStrategy.lit")
-        .expect("capture nested multiplicative strategy IR");
-    assert!(ir.contains("UseBuiltinStrategy"), "{ir}");
-    assert!(ir.contains("MulNonnegative"), "{ir}");
-    assert!(ir.contains("order.mul_nonnegative"), "{ir}");
+    let result_json =
+        capture_stmt_results_json_v2_on_verifier_stack(SOURCE, "15_BuiltinStrategy.lit")
+            .expect("capture nested multiplicative strategy Result JSON v2");
+    assert!(result_json.contains("BuiltinStrategy"), "{result_json}");
+    assert!(result_json.contains("MulNonnegative"), "{result_json}");
 
     let generated = compile_on_verifier_stack(SOURCE, "15_BuiltinStrategy.lit")
         .expect("compile nested multiplicative signs through canonical zero order");
@@ -1186,15 +1391,16 @@ fn multiplicative_strategy_replays_canonical_mathlib_order_evidence() {
 #[test]
 fn direct_multiplicative_and_divisive_sign_rules_all_compile() {
     const SOURCE: &str = "forall a, b R:\n    a >= 0\n    b >= 0\n    =>:\n        a * b >= 0\n\nforall a, b R:\n    a > 0\n    b > 0\n    =>:\n        a * b > 0\n\nforall a, b R:\n    a >= 0\n    b > 0\n    =>:\n        a / b >= 0\n\nforall a, b R:\n    a > 0\n    b > 0\n    =>:\n        a / b > 0\n";
-    let ir = capture_ir_debug_on_verifier_stack(SOURCE, "15_BuiltinStrategy.lit")
-        .expect("capture direct multiplication/division sign IR");
+    let result_json =
+        capture_stmt_results_json_v2_on_verifier_stack(SOURCE, "15_BuiltinStrategy.lit")
+            .expect("capture direct multiplication/division sign Result JSON v2");
     for rule in [
         "MulNonnegative",
         "MulPositive",
         "DivNonnegative",
         "DivPositive",
     ] {
-        assert!(ir.contains(rule), "missing {rule}: {ir}");
+        assert!(result_json.contains(rule), "missing {rule}: {result_json}");
     }
 
     let generated = compile_on_verifier_stack(SOURCE, "15_BuiltinStrategy.lit")
@@ -1268,7 +1474,6 @@ fn indexed_tuple_definition_uses_the_recursive_result_environment() {
     assert!(generated.contains("Litex.IsTuple coordinates"));
     assert!(generated.contains("Litex.tupleDim coordinates"));
     assert!(generated.contains("Litex.indexedTupleAt coordinates"));
-    assert!(!generated.contains("LitexToLeanHaveTupleStmtIr"));
     assert!(!generated.contains("axiom "));
     assert!(!generated.contains("sorry"));
 }
@@ -1284,7 +1489,6 @@ fn indexed_sequence_definition_uses_the_recursive_result_environment() {
     assert!(generated.contains("Litex.fnSet Litex.NPos Litex.R"));
     assert!(generated.contains("Litex.In.rep __arg __arg_in"));
     assert!(generated.contains("Litex.fnApplyOwn shifted_sequence"));
-    assert!(!generated.contains("LitexToLeanHaveSeqStmtIr"));
     assert!(!generated.contains("axiom "));
     assert!(!generated.contains("sorry"));
 }
@@ -1300,7 +1504,6 @@ fn finite_sequence_definition_uses_the_recursive_result_environment() {
     assert!(generated.contains("Litex.FnTelescope.requirement"));
     assert!(generated.contains("fun __arg_domain => ULift.up"));
     assert!(generated.contains("Litex.fnTelescopeApplyOwn bounded_sequence"));
-    assert!(!generated.contains("LitexToLeanHaveFiniteSeqStmtIr"));
     assert!(!generated.contains("axiom "));
     assert!(!generated.contains("sorry"));
 }
@@ -1316,7 +1519,6 @@ fn matrix_definition_uses_the_recursive_result_environment() {
     assert!(generated.contains("Litex.positiveNaturalParameterLessEqualNaturalBound __arg2"));
     assert!(generated.contains("fun __arg_domain => ULift.up"));
     assert!(generated.contains("Litex.fnTelescopeApplyOwn (@entry_matrix)"));
-    assert!(!generated.contains("LitexToLeanHaveMatrixStmtIr"));
     assert!(!generated.contains("axiom "));
     assert!(!generated.contains("sorry"));
 }
@@ -1338,11 +1540,12 @@ fn multiple_existential_witnesses_fail_closed() {
 #[test]
 fn collections_and_aggregates_use_exact_typed_carriers() {
     const SOURCE: &str = include_str!("../../lean/examples/26_CollectionsAndAggregates.lit");
-    let ir = capture_ir_debug_on_verifier_stack(SOURCE, "26_CollectionsAndAggregates.lit")
-        .expect("capture collection and aggregate tracer IR");
-    for evidence in ["FiniteSet(", "ListSetMembership", "TupleLiteralShape"] {
+    let result_json =
+        capture_stmt_results_json_v2_on_verifier_stack(SOURCE, "26_CollectionsAndAggregates.lit")
+            .expect("capture collection and aggregate Result JSON v2");
+    for evidence in ["\"kind\": \"FiniteSet\"", "ListSetMembership"] {
         assert!(
-            ir.contains(evidence),
+            result_json.contains(evidence),
             "missing collection evidence {evidence}"
         );
     }
@@ -1371,8 +1574,8 @@ fn collections_and_aggregates_use_exact_typed_carriers() {
 #[test]
 fn set_operators_replay_registered_certificates_through_exact_carriers() {
     const SOURCE: &str = include_str!("../../lean/examples/27_SetOperators.lit");
-    let ir = capture_ir_debug_on_verifier_stack(SOURCE, "27_SetOperators.lit")
-        .expect("capture set-operator tracer IR");
+    let result_json = capture_stmt_results_json_v2_on_verifier_stack(SOURCE, "27_SetOperators.lit")
+        .expect("capture set-operator Result JSON v2");
     for rule in [
         "set.union_commutative",
         "set.union_associative",
@@ -1380,7 +1583,7 @@ fn set_operators_replay_registered_certificates_through_exact_carriers() {
         "set.intersect_associative",
         "set.set_minus_membership",
     ] {
-        assert!(ir.contains(rule), "missing {rule}: {ir}");
+        assert!(result_json.contains(rule), "missing {rule}: {result_json}");
     }
 
     let generated = compile_on_verifier_stack(SOURCE, "27_SetOperators.lit")
@@ -1406,8 +1609,9 @@ fn set_operators_replay_registered_certificates_through_exact_carriers() {
 #[test]
 fn extended_set_rules_use_exact_power_set_and_subset_certificates() {
     const SOURCE: &str = include_str!("../../lean/examples/28_ExtendedSetRules.lit");
-    let ir = capture_ir_debug_on_verifier_stack(SOURCE, "28_ExtendedSetRules.lit")
-        .expect("capture extended set-rule certificates");
+    let result_json =
+        capture_stmt_results_json_v2_on_verifier_stack(SOURCE, "28_ExtendedSetRules.lit")
+            .expect("capture extended set-rule certificates");
     for rule in [
         "set.empty_subset",
         "set.union_finite",
@@ -1416,7 +1620,10 @@ fn extended_set_rules_use_exact_power_set_and_subset_certificates() {
         "set.power_set_finite",
         "set.set_minus_union_de_morgan",
     ] {
-        assert!(ir.contains(rule), "missing registered certificate {rule}");
+        assert!(
+            result_json.contains(rule),
+            "missing registered certificate {rule}"
+        );
     }
 
     let generated = compile_on_verifier_stack(SOURCE, "28_ExtendedSetRules.lit")
