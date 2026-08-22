@@ -1,0 +1,23 @@
+# Tracer: replay exact complex algebraic normalization in Lean
+#
+# Before (did not work):
+# 2 * i + 1 = i * i + 2 + 2 * i
+# Former behavior: Litex rejected the equality, so no verifier-owned proof
+# certificate could reach the compiler.
+#
+# Now (verified and compiled):
+2 * i + 1 = i * i + 2 + 2 * i
+(1 + i) * (1 - i) = 2
+1 / i = -1 * i
+
+forall z C:
+    (z + i) * (z - i) = z * z + 1
+
+# Current behavior: compiler validates ComplexAlgebraicNormalization evidence
+# against the exact equality and emits a fixed native-complex proof adapter.
+#
+# Boundary: powers and symbolic denominators such as
+# (z + i) / (z + i) remain fail-closed in this Lean adapter even when Litex
+# verifies the source equality under a nonzero premise.
+# Evidence: target/release/litex -compact -strict -isolated -runner -f lean/examples/54_ComplexAlgebraicCalculation.lit
+# Compiler: target/release/stmt_result_to_lean_compiler compile lean/examples/54_ComplexAlgebraicCalculation.lit

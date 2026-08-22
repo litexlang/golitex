@@ -97,7 +97,7 @@ pub struct SuccessVerifyObjWellDefinedStepsResult {
     pub target_requirements: Vec<SuccessVerifyObjTargetRequirementResult>,
     pub stores: Vec<SuccessStoreFactResult>,
     pub binder: Option<Box<SuccessVerifyBinderObjectWellDefinedResult>>,
-    pub template_materialization: Option<Box<SuccessVerifyTemplateMaterializationResult>>,
+    pub template_instantiation: Option<Box<SuccessTemplateInstantiationResult>>,
 }
 
 impl SuccessVerifyObjWellDefinedStepsResult {
@@ -133,8 +133,8 @@ impl SuccessVerifyObjWellDefinedStepsResult {
         if self.binder.is_none() {
             self.binder = other.binder;
         }
-        if self.template_materialization.is_none() {
-            self.template_materialization = other.template_materialization;
+        if self.template_instantiation.is_none() {
+            self.template_instantiation = other.template_instantiation;
         }
     }
 }
@@ -507,24 +507,21 @@ pub struct SuccessVerifyStructureEquivalentFactResult {
 }
 
 #[derive(Debug)]
-pub enum SuccessVerifyTemplateMaterializationResult {
-    Reuse(Box<SuccessReuseTemplateMaterializationResult>),
-    Materialized(Box<SuccessMaterializedTemplateResult>),
+pub enum SuccessTemplateInstantiationResult {
+    Reused(Box<SuccessReusedTemplateInstanceResult>),
+    Created(Box<SuccessCreatedTemplateInstanceResult>),
 }
 
-#[derive(Debug)]
-pub struct SuccessReuseTemplateMaterializationResult {
-    pub instance_name: String,
+pub struct SuccessReusedTemplateInstanceResult {
+    pub application: InstantiatedTemplateObj,
 }
 
-pub struct SuccessMaterializedTemplateResult {
-    pub template_name: String,
-    pub instance_name: String,
-    pub header_arguments: Vec<SuccessVerifyTemplateHeaderArgumentResult>,
-    pub header_domains: Vec<SuccessVerifyTemplateDomainResult>,
+pub struct SuccessCreatedTemplateInstanceResult {
+    pub application: InstantiatedTemplateObj,
+    pub template_argument_results: Vec<SuccessVerifyTemplateHeaderArgumentResult>,
+    pub template_domain_results: Vec<SuccessVerifyTemplateDomainResult>,
     pub surface_equality: SuccessStoreFactResult,
-    pub body_statement: Stmt,
-    pub body_execution: Box<StmtResult>,
+    pub body_statement_result: Box<SuccessStmtResult>,
     pub public_value_equalities: Vec<SuccessStoreFactResult>,
     pub supplemental_stores: Vec<SuccessStoreFactResult>,
     pub registered_set_builder: Option<SetBuilder>,
@@ -633,17 +630,15 @@ impl fmt::Debug for SuccessVerifyStructureHeaderArgumentResult {
     }
 }
 
-impl fmt::Debug for SuccessMaterializedTemplateResult {
+impl fmt::Debug for SuccessCreatedTemplateInstanceResult {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         formatter
-            .debug_struct("SuccessMaterializedTemplateResult")
-            .field("template_name", &self.template_name)
-            .field("instance_name", &self.instance_name)
-            .field("header_arguments", &self.header_arguments)
-            .field("header_domains", &self.header_domains)
+            .debug_struct("SuccessCreatedTemplateInstanceResult")
+            .field("application", &self.application.to_string())
+            .field("template_argument_results", &self.template_argument_results)
+            .field("template_domain_results", &self.template_domain_results)
             .field("surface_equality", &self.surface_equality)
-            .field("body_statement", &self.body_statement.to_string())
-            .field("body_execution", &self.body_execution)
+            .field("body_statement_result", &self.body_statement_result)
             .field("public_value_equalities", &self.public_value_equalities)
             .field("supplemental_stores", &self.supplemental_stores)
             .field(
@@ -653,6 +648,15 @@ impl fmt::Debug for SuccessMaterializedTemplateResult {
                     .as_ref()
                     .map(ToString::to_string),
             )
+            .finish()
+    }
+}
+
+impl fmt::Debug for SuccessReusedTemplateInstanceResult {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter
+            .debug_struct("SuccessReusedTemplateInstanceResult")
+            .field("application", &self.application.to_string())
             .finish()
     }
 }

@@ -77,12 +77,28 @@ impl StmtResultJsonV2 {
                     &result.common,
                     vec![],
                 ),
-                SuccessDefInterfaceStmtResult::DefTemplateStmt(result) => self.non_fact_stmt(
-                    "DefTemplateStmt",
-                    result.statement.to_string(),
-                    &result.common,
-                    vec![],
-                ),
+                SuccessDefInterfaceStmtResult::DefTemplateStmt(result) => object(vec![
+                    string_field("kind", "DefTemplateStmt"),
+                    string_field("statement", result.statement.to_string()),
+                    (
+                        "template_parameter_groups".to_string(),
+                        self.fact_parameter_groups(&result.template_parameter_groups),
+                    ),
+                    (
+                        "template_domain_results".to_string(),
+                        array(
+                            result
+                                .template_domain_results
+                                .iter()
+                                .map(|domain| self.local_fact_wd_result(domain))
+                                .collect(),
+                        ),
+                    ),
+                    (
+                        "body_statement_result".to_string(),
+                        self.success_stmt(&result.body_statement_result),
+                    ),
+                ]),
                 SuccessDefInterfaceStmtResult::DefStructStmt(result) => self.non_fact_stmt(
                     "DefStructStmt",
                     result.statement.to_string(),
@@ -1123,40 +1139,44 @@ impl StmtResultJsonV2 {
             string_field("kind", "SuccessVerifyFactBinderResult"),
             (
                 "parameter_groups".to_string(),
-                array(
-                    result
-                        .parameter_groups
-                        .iter()
-                        .map(|group| {
-                            object(vec![
-                                number_field("group_index", group.group_index),
-                                string_field("parameter_type", group.parameter_type.to_string()),
-                                (
-                                    "carrier".to_string(),
-                                    group
-                                        .carrier
-                                        .as_ref()
-                                        .map(|carrier| self.wd_child_result(carrier))
-                                        .unwrap_or(JsonValue::Null),
-                                ),
-                                (
-                                    "parameters".to_string(),
-                                    array(
-                                        group
-                                            .parameters
-                                            .iter()
-                                            .map(|parameter| {
-                                                self.wd_binder_premise_result(parameter)
-                                            })
-                                            .collect(),
-                                    ),
-                                ),
-                            ])
-                        })
-                        .collect(),
-                ),
+                self.fact_parameter_groups(&result.parameter_groups),
             ),
         ])
+    }
+
+    fn fact_parameter_groups(
+        &mut self,
+        groups: &[SuccessVerifyFactParameterGroupResult],
+    ) -> JsonValue {
+        array(
+            groups
+                .iter()
+                .map(|group| {
+                    object(vec![
+                        number_field("group_index", group.group_index),
+                        string_field("parameter_type", group.parameter_type.to_string()),
+                        (
+                            "carrier".to_string(),
+                            group
+                                .carrier
+                                .as_ref()
+                                .map(|carrier| self.wd_child_result(carrier))
+                                .unwrap_or(JsonValue::Null),
+                        ),
+                        (
+                            "parameters".to_string(),
+                            array(
+                                group
+                                    .parameters
+                                    .iter()
+                                    .map(|parameter| self.wd_binder_premise_result(parameter))
+                                    .collect(),
+                            ),
+                        ),
+                    ])
+                })
+                .collect(),
+        )
     }
 
     fn local_fact_wd_result(
@@ -1269,12 +1289,12 @@ impl StmtResultJsonV2 {
                         .unwrap_or(JsonValue::Null),
                 ),
                 (
-                    "template_materialization".to_string(),
+                    "template_instantiation".to_string(),
                     result
                         .steps
-                        .template_materialization
+                        .template_instantiation
                         .as_ref()
-                        .map(|materialization| self.template_materialization(materialization))
+                        .map(|instantiation| self.template_instantiation(instantiation))
                         .unwrap_or(JsonValue::Null),
                 ),
             ]),
@@ -1291,24 +1311,20 @@ impl StmtResultJsonV2 {
         }
     }
 
-    fn template_materialization(
-        &mut self,
-        result: &SuccessVerifyTemplateMaterializationResult,
-    ) -> JsonValue {
+    fn template_instantiation(&mut self, result: &SuccessTemplateInstantiationResult) -> JsonValue {
         match result {
-            SuccessVerifyTemplateMaterializationResult::Reuse(result) => object(vec![
-                string_field("kind", "Reuse"),
-                string_field("instance_name", result.instance_name.clone()),
+            SuccessTemplateInstantiationResult::Reused(result) => object(vec![
+                string_field("kind", "Reused"),
+                string_field("application", result.application.to_string()),
             ]),
-            SuccessVerifyTemplateMaterializationResult::Materialized(result) => object(vec![
-                string_field("kind", "Materialized"),
-                string_field("template_name", result.template_name.clone()),
-                string_field("instance_name", result.instance_name.clone()),
+            SuccessTemplateInstantiationResult::Created(result) => object(vec![
+                string_field("kind", "Created"),
+                string_field("application", result.application.to_string()),
                 (
-                    "header_arguments".to_string(),
+                    "template_argument_results".to_string(),
                     array(
                         result
-                            .header_arguments
+                            .template_argument_results
                             .iter()
                             .map(|argument| {
                                 object(vec![
@@ -1328,10 +1344,10 @@ impl StmtResultJsonV2 {
                     ),
                 ),
                 (
-                    "header_domains".to_string(),
+                    "template_domain_results".to_string(),
                     array(
                         result
-                            .header_domains
+                            .template_domain_results
                             .iter()
                             .map(|domain| {
                                 object(vec![
@@ -1347,10 +1363,9 @@ impl StmtResultJsonV2 {
                     "surface_equality".to_string(),
                     self.store_fact(&result.surface_equality),
                 ),
-                string_field("body_statement", result.body_statement.to_string()),
                 (
-                    "body_execution".to_string(),
-                    self.stmt_result(&result.body_execution),
+                    "body_statement_result".to_string(),
+                    self.success_stmt(&result.body_statement_result),
                 ),
                 (
                     "public_value_equalities".to_string(),
@@ -2389,6 +2404,10 @@ impl StmtResultJsonV2 {
                     "right_evaluation".to_string(),
                     evaluation_value(&result.right_evaluation),
                 ),
+            ]),
+            BuiltinRuleEvidence::ComplexAlgebraicNormalization(result) => object(vec![
+                string_field("kind", "ComplexAlgebraicNormalization"),
+                string_field("expected_target", result.expected_target.to_string()),
             ]),
             BuiltinRuleEvidence::StandardSetNonempty(result) => object(vec![
                 string_field("kind", "StandardSetNonempty"),

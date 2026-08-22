@@ -170,13 +170,9 @@ impl Runtime {
             self.attach_known_fact_ids_to_stmt_result(&mut result)?;
 
             if let Some(non_factual_success) = result.non_factual_success() {
-                infer_result.new_infer_result_inside(
-                    non_factual_success
-                        .common()
-                        .expect("non-factual IR carries common evidence")
-                        .infers
-                        .clone(),
-                );
+                if let Some(common) = non_factual_success.common() {
+                    infer_result.new_infer_result_inside(common.infers.clone());
+                }
             } else if result.factual_success().is_some() {
                 // Do not merge then-fact verification `infers` into `infer_result` (e.g. instantiated
                 // `finite_set_min(S) <= a` from a known forall). Each then proof is attached as Steps under

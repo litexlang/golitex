@@ -168,7 +168,7 @@ impl Runtime {
         }
         let final_state = UseContextVerifyState::new_with_final_round(false);
         if let Obj::InstantiatedTemplateObj(template_obj) = &fact.set {
-            self.materialize_instantiated_template_obj(template_obj, &final_state)?;
+            self.instantiate_template_obj(template_obj, &final_state)?;
         }
         let set_builder = match &fact.set {
             Obj::SetBuilder(set_builder) => Some(set_builder.clone()),

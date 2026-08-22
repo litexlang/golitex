@@ -1885,6 +1885,13 @@ i^2 = -1
 i^4 = 1
 i^(-1) = -i
 
+2 * i + 1 = i * i + 2 + 2 * i
+(1 + i) * (1 - i) = 2
+1 / i = -i
+
+forall z C:
+    (z + i) * (z - i) = z^2 + 1
+
 forall z C, n N:
     z^n $in C
 

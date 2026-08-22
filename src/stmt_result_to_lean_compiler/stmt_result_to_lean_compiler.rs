@@ -607,8 +607,10 @@ impl StmtResultToLeanCompiler {
                 SuccessDefInterfaceStmtResult::DefSettingStmt(result) => {
                     self.compile_setting_definition_stmt_result_to_lean_source(result)
                 }
-                SuccessDefInterfaceStmtResult::DefTemplateStmt(_)
-                | SuccessDefInterfaceStmtResult::DefStructStmt(_) => {
+                SuccessDefInterfaceStmtResult::DefTemplateStmt(result) => {
+                    self.compile_template_definition_stmt_result_to_lean_source(result)
+                }
+                SuccessDefInterfaceStmtResult::DefStructStmt(_) => {
                     self.unsupported_success_stmt_result(success)
                 }
             },
@@ -6841,6 +6843,12 @@ impl StmtResultToLeanCompiler {
             return Ok(());
         }
         if self
+            .compile_complex_algebraic_normalization_fact_result(result)
+            .map_err(|error| format!("complex-algebraic-normalization route: {error}"))?
+        {
+            return Ok(());
+        }
+        if self
             .compile_exact_fact_citation_result(result)
             .map_err(|error| format!("exact-citation route: {error}"))?
         {
@@ -8761,6 +8769,38 @@ impl StmtResultToLeanCompiler {
         Ok(true)
     }
 
+    fn compile_complex_algebraic_normalization_fact_result(
+        &mut self,
+        result: &SuccessFactStmtResult,
+    ) -> Result<bool, String> {
+        let SuccessFactProofResult::BuiltinRule(builtin) = result.proof() else {
+            return Ok(false);
+        };
+        let Some(BuiltinRuleEvidence::ComplexAlgebraicNormalization(evidence)) = &builtin.evidence
+        else {
+            return Ok(false);
+        };
+        if fact_result_contains_inferred_facts(result) {
+            return Ok(false);
+        }
+        if !builtin.subgoals.is_empty() {
+            return Err("complex algebraic normalization gained unexpected proof children".into());
+        }
+        let source_fact = result.fact();
+        validate_complex_algebraic_normalization_builtin_rule_evidence(&source_fact, evidence)?;
+        let Fact::AtomicFact(AtomicFact::EqualFact(equality)) = &source_fact else {
+            unreachable!();
+        };
+        validate_atomic_fact_well_definedness_result(&result.well_definedness, &source_fact)?;
+        self.render_object_using_well_definedness_from_fact_result(result, &equality.left)?;
+        self.render_object_using_well_definedness_from_fact_result(result, &equality.right)?;
+        self.compile_stored_fact_without_inference(
+            result,
+            complex_algebraic_normalization_lean_proof(),
+        )?;
+        Ok(true)
+    }
+
     fn render_object_using_well_definedness_from_fact_result(
         &mut self,
         result: &SuccessFactStmtResult,
@@ -8853,11 +8893,21 @@ impl StmtResultToLeanCompiler {
                 .environment_stack
                 .fact_propositions
                 .get(&fact_id)
-                .is_some_and(|stored| stored.to_string() == source_fact.to_string()) => {}
+                .is_some_and(|stored| {
+                    stored.to_string() == source_fact.to_string()
+                        || equality_facts_are_equal_up_to_nested_binder_alpha(stored, &source_fact)
+                }) => {}
             _ => {
-                return Err(
-                    "zero-inference fact store output disagrees with the statement store".into(),
-                );
+                let installed = self
+                    .environment_stack
+                    .fact_propositions
+                    .get(&fact_id)
+                    .map(ToString::to_string);
+                return Err(format!(
+                    "zero-inference fact store output disagrees with the statement store: FactId `{fact_id}`, statement `{source_fact}`, store outputs {}, installed proposition {:?}",
+                    result.store.infers.store_fact_outputs.len(),
+                    installed,
+                ));
             }
         }
         let theorem_name = format!("__fact{}", self.next_fact_name_index);
@@ -9850,6 +9900,210 @@ impl StmtResultToLeanCompiler {
         if result.statement.name.is_empty() {
             return Err("setting definition retained an empty source name".into());
         }
+        Ok(())
+    }
+
+    fn compile_template_definition_stmt_result_to_lean_source(
+        &mut self,
+        result: &SuccessDefTemplateStmtResult,
+    ) -> Result<(), String> {
+        if !result.statement.template_arg_dom.is_empty()
+            || !result.template_domain_results.is_empty()
+        {
+            return Err(
+                "direct Template compiler currently supports no template domain clauses".into(),
+            );
+        }
+        let source_parameters = result
+            .statement
+            .template_arg_def
+            .collect_param_bindings_with_types();
+        if source_parameters.is_empty()
+            || source_parameters
+                .iter()
+                .any(|(_, parameter_type)| !matches!(parameter_type, ParamType::Set(_)))
+        {
+            return Err(
+                "direct Template compiler currently supports only one or more `set` parameters"
+                    .into(),
+            );
+        }
+        if result.template_parameter_groups.len() != result.statement.template_arg_def.len() {
+            return Err("Template Result changed its parameter-group count".into());
+        }
+
+        self.environment_stack.push_inherited_environment();
+        let compilation = (|| {
+            let mut parameter_binders = Vec::with_capacity(source_parameters.len());
+            for (group_index, (source_group, retained_group)) in result
+                .statement
+                .template_arg_def
+                .iter()
+                .zip(result.template_parameter_groups.iter())
+                .enumerate()
+            {
+                if retained_group.group_index != group_index
+                    || !matches!(source_group.param_type, ParamType::Set(_))
+                    || !matches!(retained_group.parameter_type, ParamType::Set(_))
+                    || retained_group.carrier.is_some()
+                    || retained_group.parameters.len() != source_group.params.len()
+                {
+                    return Err(format!(
+                        "Template parameter group {group_index} changed its set-binder Result shape"
+                    ));
+                }
+                for (parameter_index, (binding, premise)) in source_group
+                    .params
+                    .iter()
+                    .zip(retained_group.parameters.iter())
+                    .enumerate()
+                {
+                    if premise.symbol_id != Some(binding.id())
+                        || !matches!(
+                            premise.role,
+                            WellDefinedBinderPremiseRole::ParameterMembership {
+                                parameter_group_index,
+                                parameter_index: retained_parameter_index,
+                            } if parameter_group_index == group_index
+                                && retained_parameter_index == parameter_index
+                        )
+                    {
+                        return Err(format!(
+                            "Template parameter {group_index}:{parameter_index} changed its Result-owned identity or role"
+                        ));
+                    }
+                    validate_set_parameter_premise(binding.id(), &premise.proposition)?;
+                    let fact_id = fact_id_for_well_definedness_binder_premise(premise)?;
+                    let lean_name = lean_identifier(binding.name());
+                    self.environment_stack
+                        .symbol_names
+                        .insert(binding.id(), lean_name.clone());
+                    self.environment_stack
+                        .fact_names
+                        .insert(fact_id, "True.intro".into());
+                    self.environment_stack
+                        .fact_propositions
+                        .insert(fact_id, premise.proposition.clone());
+                    parameter_binders.push(format!("({lean_name} : Litex.Set)"));
+                }
+            }
+
+            let SuccessStmtResult::DefObjStmt(SuccessDefObjStmtResult::HaveObjEqualStmt(body)) =
+                result.body_statement_result.as_ref()
+            else {
+                return Err(
+                    "direct Template compiler currently supports only a `have <name> set = <value>` body"
+                        .into(),
+                );
+            };
+            let bindings = body.statement.param_def.collect_param_bindings_with_types();
+            let [(defined_binding, defined_type @ ParamType::Set(_))] = bindings.as_slice() else {
+                return Err(
+                    "direct Template compiler requires its body to define exactly one set alias"
+                        .into(),
+                );
+            };
+            let [value] = body.statement.objs_equal_to.as_slice() else {
+                return Err("direct Template compiler requires exactly one set-alias value".into());
+            };
+            if defined_binding.name() != result.statement.template_name {
+                return Err("Template name changed between its header and body Result".into());
+            }
+            let verification = body.verification.as_ref().ok_or_else(|| {
+                "Template body has no structured set-value type-check Result".to_string()
+            })?;
+            let [type_check] = verification.type_checks.as_slice() else {
+                return Err("Template set-alias body changed its type-check count".into());
+            };
+            let expected_type = object_type_fact_for_compiler_definition(
+                value.clone(),
+                defined_type,
+                body.statement.line_file.clone(),
+            );
+            let factual_type_check = type_check.factual_success().ok_or_else(|| {
+                "Template set-alias body type check is not a successful fact Result".to_string()
+            })?;
+            if factual_type_check.fact().to_string() != expected_type.to_string() {
+                return Err("Template set-alias body changed its value type-check fact".into());
+            }
+            let SuccessFactProofResult::BuiltinRule(type_check_proof) = factual_type_check.proof()
+            else {
+                return Err(
+                    "Template set-alias body type check changed from its direct builtin Result"
+                        .into(),
+                );
+            };
+            if type_check_proof.evidence.is_some()
+                || !type_check_proof.subgoals.is_empty()
+                || factual_type_check.fact_id.is_some()
+                || !factual_type_check.infers.is_empty()
+            {
+                return Err(
+                    "Template set-alias body type check retained unexpected evidence, children, or stores"
+                        .into(),
+                );
+            }
+
+            let defined_object: Obj =
+                Identifier::new_bound(defined_binding.name().to_string(), defined_binding.as_ref())
+                    .into();
+            let expected_stores = vec![
+                object_type_fact_for_compiler_definition(
+                    defined_object.clone(),
+                    defined_type,
+                    body.statement.line_file.clone(),
+                ),
+                EqualFact::new(
+                    defined_object,
+                    value.clone(),
+                    body.statement.line_file.clone(),
+                )
+                .into(),
+            ];
+            exact_ordered_fact_ids_from_store_results(
+                &body.common.infers,
+                &expected_stores,
+                "Template set-alias body",
+            )?;
+            if body.common.infers.store_fact_outputs.iter().any(|output| {
+                !output.inferred_facts.is_empty() || !output.inferred_fact_ids.is_empty()
+            }) {
+                return Err(
+                    "Template set-alias body retained unsupported inferred consequences".into(),
+                );
+            }
+            let lowered_value = LeanTargetObjectRepresentation::lower(value)?;
+            let rendered_value =
+                render_set_definition_value(&lowered_value, &self.environment_stack)?;
+            Ok((
+                parameter_binders,
+                lean_identifier(&result.statement.template_name),
+                rendered_value,
+            ))
+        })();
+        self.environment_stack.pop_local_environment();
+        let (parameter_binders, lean_name, rendered_value) = compilation?;
+        if self
+            .environment_stack
+            .template_set_alias_bindings
+            .insert(
+                result.statement.template_name.clone(),
+                TemplateSetAliasBinding {
+                    lean_name: lean_name.clone(),
+                    parameter_count: source_parameters.len(),
+                },
+            )
+            .is_some()
+        {
+            return Err(format!(
+                "duplicate compiler Template binding `{}`",
+                result.statement.template_name
+            ));
+        }
+        self.declarations.push(format!(
+            "abbrev {lean_name} {} := {rendered_value}",
+            parameter_binders.join(" ")
+        ));
         Ok(())
     }
 
@@ -11345,6 +11599,33 @@ impl StmtResultToLeanCompiler {
                             "Litex.Same.ofEq (by norm_num [Litex.tupleDim, Litex.TupleShape.dimension])"
                                 .into(),
                         ))
+                    }
+                    Some(BuiltinRuleEvidence::ComplexAlgebraicNormalization(evidence)) => {
+                        validate_complex_algebraic_normalization_builtin_rule_evidence(
+                            &source_fact,
+                            evidence,
+                        )?;
+                        let Fact::AtomicFact(AtomicFact::EqualFact(equality)) = &source_fact else {
+                            unreachable!();
+                        };
+                        if result.well_definedness.recursive.is_some() {
+                            validate_atomic_fact_well_definedness_result(
+                                &result.well_definedness,
+                                &source_fact,
+                            )?;
+                            self.render_object_using_well_definedness_from_fact_result(
+                                result,
+                                &equality.left,
+                            )?;
+                            self.render_object_using_well_definedness_from_fact_result(
+                                result,
+                                &equality.right,
+                            )?;
+                        } else {
+                            render_obj(&equality.left, &self.environment_stack)?;
+                            render_obj(&equality.right, &self.environment_stack)?;
+                        }
+                        Ok(Some(complex_algebraic_normalization_lean_proof()))
                     }
                     Some(BuiltinRuleEvidence::ClosedNumericMembership(evidence)) => {
                         if evidence.expected_target.to_string() != source_fact.to_string() {
@@ -14497,6 +14778,10 @@ impl StmtResultToLeanCompiler {
                         .into(),
                 ))
             }
+            Some(BuiltinRuleEvidence::ComplexAlgebraicNormalization(evidence)) => {
+                validate_complex_algebraic_normalization_builtin_rule_evidence(target, evidence)?;
+                Ok(Some(complex_algebraic_normalization_lean_proof()))
+            }
             Some(BuiltinRuleEvidence::ClosedNumericComparison(evidence)) => {
                 validate_closed_numeric_comparison_builtin_rule_evidence(target, evidence)?;
                 render_closed_numeric_comparison_fact(target, &self.environment_stack).map(Some)
@@ -14809,6 +15094,13 @@ impl StmtResultToLeanCompiler {
                             "Litex.Same.ofEq (by norm_num [Litex.tupleDim, Litex.TupleShape.dimension])"
                                 .into(),
                         ))
+                    }
+                    Some(BuiltinRuleEvidence::ComplexAlgebraicNormalization(evidence)) => {
+                        validate_complex_algebraic_normalization_builtin_rule_evidence(
+                            &source_fact,
+                            evidence,
+                        )?;
+                        Ok(Some(complex_algebraic_normalization_lean_proof()))
                     }
                     Some(BuiltinRuleEvidence::ClosedNumericComparison(evidence)) => {
                         validate_closed_numeric_comparison_builtin_rule_evidence(
@@ -16135,6 +16427,7 @@ fn direct_builtin_rule_compiler_limitation(evidence: &BuiltinRuleEvidence) -> Op
         | BuiltinRuleEvidence::RegisteredAntisymmetricPredicate(_)
         | BuiltinRuleEvidence::ObjectReflexivity(_)
         | BuiltinRuleEvidence::RationalNormalization(_)
+        | BuiltinRuleEvidence::ComplexAlgebraicNormalization(_)
         | BuiltinRuleEvidence::StandardSetNonempty(_)
         | BuiltinRuleEvidence::DisjunctionIntroduction(_)
         | BuiltinRuleEvidence::FunctionApplicationReturnMembership(_)
@@ -16156,6 +16449,73 @@ fn direct_builtin_rule_compiler_limitation(evidence: &BuiltinRuleEvidence) -> Op
         | BuiltinRuleEvidence::CoprimeNaturalReflection
         | BuiltinRuleEvidence::StandardSetMembershipProjection
         | BuiltinRuleEvidence::StandardSetSubset => None,
+    }
+}
+
+fn validate_complex_algebraic_normalization_builtin_rule_evidence(
+    target: &Fact,
+    evidence: &ComplexAlgebraicNormalizationBuiltinRuleEvidence,
+) -> Result<(), String> {
+    if evidence.expected_target.to_string() != target.to_string() {
+        return Err("complex-algebraic-normalization evidence changed its target".into());
+    }
+    let Fact::AtomicFact(AtomicFact::EqualFact(equality)) = target else {
+        return Err("complex-algebraic-normalization evidence targets a non-equality fact".into());
+    };
+    if !objs_equal_by_complex_rational_expression_evaluation(&equality.left, &equality.right) {
+        return Err(
+            "complex-algebraic-normalization evidence does not reproduce its exact equality".into(),
+        );
+    }
+    if !complex_algebraic_normalization_lean_adapter_supports_object(&equality.left)
+        || !complex_algebraic_normalization_lean_adapter_supports_object(&equality.right)
+    {
+        return Err("complex-algebraic-normalization Lean adapter supports only +, -, *, and closed denominators; powers and symbolic denominators remain unsupported".into());
+    }
+    Ok(())
+}
+
+fn complex_algebraic_normalization_lean_proof() -> String {
+    "Litex.Same.ofEq (by\n  ring_nf <;> norm_num [Complex.I_mul_I] <;> ring)".into()
+}
+
+fn complex_algebraic_normalization_lean_adapter_supports_object(object: &Obj) -> bool {
+    match object {
+        Obj::Add(add) => {
+            complex_algebraic_normalization_lean_adapter_supports_object(&add.left)
+                && complex_algebraic_normalization_lean_adapter_supports_object(&add.right)
+        }
+        Obj::Sub(sub) => {
+            complex_algebraic_normalization_lean_adapter_supports_object(&sub.left)
+                && complex_algebraic_normalization_lean_adapter_supports_object(&sub.right)
+        }
+        Obj::Mul(mul) => {
+            complex_algebraic_normalization_lean_adapter_supports_object(&mul.left)
+                && complex_algebraic_normalization_lean_adapter_supports_object(&mul.right)
+        }
+        Obj::Div(div) => {
+            complex_algebraic_normalization_lean_adapter_supports_object(&div.left)
+                && complex_algebraic_normalization_lean_adapter_supports_closed_denominator(
+                    &div.right,
+                )
+        }
+        Obj::Pow(_) => false,
+        _ => true,
+    }
+}
+
+fn complex_algebraic_normalization_lean_adapter_supports_closed_denominator(
+    denominator: &Obj,
+) -> bool {
+    match denominator {
+        Obj::Number(number) => number.normalized_value != "0",
+        Obj::ImaginaryUnit(_) => true,
+        Obj::Pow(pow) if matches!(pow.base.as_ref(), Obj::ImaginaryUnit(_)) => pow
+            .exponent
+            .evaluate_to_normalized_decimal_number()
+            .and_then(|number| number.normalized_value.parse::<i128>().ok())
+            .is_some(),
+        _ => false,
     }
 }
 
@@ -17266,6 +17626,13 @@ fn install_object_well_definedness_store_results(
                     .fact_propositions
                     .insert(fact_id, expected);
             }
+            if let Some(instantiation) = direct.steps.template_instantiation.as_deref() {
+                install_template_instantiation_result(
+                    &direct.object,
+                    instantiation,
+                    environment_stack,
+                )?;
+            }
             Ok(())
         }
         SuccessVerifyObjWellDefinedResult::Reuse(reuse) => {
@@ -17284,7 +17651,8 @@ fn object_well_definedness_result_contains_intrinsic_store(
 ) -> bool {
     match result {
         SuccessVerifyObjWellDefinedResult::Direct(direct) => {
-            !direct.steps.stores.is_empty()
+            direct.steps.template_instantiation.is_some()
+                || !direct.steps.stores.is_empty()
                 || direct.steps.children.iter().any(|child| {
                     object_well_definedness_result_contains_intrinsic_store(child.result.as_ref())
                 })
@@ -17294,6 +17662,233 @@ fn object_well_definedness_result_contains_intrinsic_store(
         }
         SuccessVerifyObjWellDefinedResult::RecursiveReference(_) => false,
     }
+}
+
+fn install_template_instantiation_result(
+    expected_object: &Obj,
+    result: &SuccessTemplateInstantiationResult,
+    environment_stack: &mut StmtResultToLeanCompilerEnvironmentStack,
+) -> Result<(), String> {
+    let application = match result {
+        SuccessTemplateInstantiationResult::Reused(result) => &result.application,
+        SuccessTemplateInstantiationResult::Created(result) => &result.application,
+    };
+    let Obj::InstantiatedTemplateObj(expected_application) = expected_object else {
+        return Err("Template instantiation Result is attached to a non-Template object".into());
+    };
+    if expected_application.template_name.to_string() != application.template_name.to_string()
+        || expected_application.symbol.id() != application.symbol.id()
+        || expected_application.args.len() != application.args.len()
+        || expected_application
+            .args
+            .iter()
+            .zip(application.args.iter())
+            .any(|(expected, retained)| obj_equality_key(expected) != obj_equality_key(retained))
+    {
+        return Err("Template instantiation Result changed its exact application identity".into());
+    }
+    let template_name = application.template_name.to_string();
+    let binding = environment_stack
+        .template_set_alias_bindings
+        .get(&template_name)
+        .cloned()
+        .ok_or_else(|| {
+            format!("Template application `{application}` has no compiled definition")
+        })?;
+    if application.args.len() != binding.parameter_count {
+        return Err(format!(
+            "Template application `{application}` changed its compiled argument count"
+        ));
+    }
+    let arguments = application
+        .args
+        .iter()
+        .map(|argument| render_obj(argument, environment_stack))
+        .collect::<Result<Vec<_>, _>>()?;
+    let rendered_application = format!("({} {})", binding.lean_name, arguments.join(" "));
+    if let Some(previous) = environment_stack
+        .symbol_names
+        .insert(application.symbol.id(), rendered_application.clone())
+    {
+        if previous != rendered_application {
+            return Err(format!(
+                "Template application `{application}` changed its compiled binding"
+            ));
+        }
+    }
+
+    let SuccessTemplateInstantiationResult::Created(created) = result else {
+        return Ok(());
+    };
+    if created.template_argument_results.len() != application.args.len()
+        || !created.template_domain_results.is_empty()
+    {
+        return Err(
+            "created Template instance changed its argument or unsupported domain Result count"
+                .into(),
+        );
+    }
+    for (argument_index, (argument, argument_result)) in application
+        .args
+        .iter()
+        .zip(created.template_argument_results.iter())
+        .enumerate()
+    {
+        if argument_result.argument_index != argument_index
+            || obj_equality_key(&argument_result.argument) != obj_equality_key(argument)
+            || !matches!(argument_result.expected_type, ParamType::Set(_))
+        {
+            return Err(format!(
+                "Template argument Result {argument_index} changed its identity or set type"
+            ));
+        }
+        validate_success_obj_fact_check(&argument_result.verification)?;
+        let expected: Fact = IsSetFact::new(
+            argument.clone(),
+            argument_result
+                .verification
+                .expected_proposition
+                .line_file(),
+        )
+        .into();
+        if expected.to_string()
+            != argument_result
+                .verification
+                .expected_proposition
+                .to_string()
+        {
+            return Err(format!(
+                "Template argument Result {argument_index} changed its set proposition"
+            ));
+        }
+    }
+
+    let SuccessStmtResult::DefObjStmt(SuccessDefObjStmtResult::HaveObjEqualStmt(body)) =
+        created.body_statement_result.as_ref()
+    else {
+        return Err("created Template instance retained a non-set-alias body Result".into());
+    };
+    let body_bindings = body.statement.param_def.collect_param_bindings_with_types();
+    let [(defined_binding, defined_type @ ParamType::Set(_))] = body_bindings.as_slice() else {
+        return Err("created Template instance body no longer defines one set alias".into());
+    };
+    let [value] = body.statement.objs_equal_to.as_slice() else {
+        return Err("created Template instance body changed its one value".into());
+    };
+    if let Some(previous) = environment_stack
+        .symbol_names
+        .insert(defined_binding.id(), rendered_application.clone())
+    {
+        if previous != rendered_application {
+            return Err("created Template body changed its application SymbolId binding".into());
+        }
+    }
+    let defined_object: Obj =
+        Identifier::new_bound(defined_binding.name().to_string(), defined_binding.as_ref()).into();
+    let expected_stores = vec![
+        object_type_fact_for_compiler_definition(
+            defined_object.clone(),
+            defined_type,
+            body.statement.line_file.clone(),
+        ),
+        EqualFact::new(
+            defined_object,
+            value.clone(),
+            body.statement.line_file.clone(),
+        )
+        .into(),
+    ];
+    if body.common.infers.store_fact_outputs.len() != expected_stores.len()
+        || body
+            .common
+            .infers
+            .store_fact_outputs
+            .iter()
+            .zip(expected_stores.iter())
+            .any(|(stored, expected)| {
+                stored.itself_and_why_itself_is_stored.0.to_string() != expected.to_string()
+                    || stored.fact_id.is_some()
+                    || !stored.inferred_facts.is_empty()
+                    || !stored.inferred_fact_ids.is_empty()
+            })
+    {
+        return Err(
+            "created Template instance body changed its preverified, non-public store Results"
+                .into(),
+        );
+    }
+    let rendered_value = render_set_definition_value(
+        &LeanTargetObjectRepresentation::lower(value)?,
+        environment_stack,
+    )?;
+
+    let Fact::AtomicFact(AtomicFact::EqualFact(surface_equality)) = &created.surface_equality.fact
+    else {
+        return Err("Template surface equality changed to a non-equality fact".into());
+    };
+    let hidden_identifier = if matches!(surface_equality.left, Obj::InstantiatedTemplateObj(_)) {
+        &surface_equality.right
+    } else if matches!(surface_equality.right, Obj::InstantiatedTemplateObj(_)) {
+        &surface_equality.left
+    } else {
+        return Err("Template surface equality lost its public application endpoint".into());
+    };
+    let Obj::Atom(_) = hidden_identifier else {
+        return Err("Template surface equality hidden endpoint is not an identifier".into());
+    };
+    if !hidden_identifier
+        .to_string()
+        .ends_with(&application.surface_name())
+    {
+        return Err("Template surface equality changed its hidden instance name".into());
+    }
+    let surface_fact_id = created
+        .surface_equality
+        .fact_id
+        .ok_or_else(|| "Template surface equality has no frozen FactId".to_string())?;
+    if !created
+        .surface_equality
+        .infers
+        .store_fact_outputs
+        .iter()
+        .any(|output| {
+            output.fact_id == Some(surface_fact_id)
+                && output.itself_and_why_itself_is_stored.0.to_string()
+                    == created.surface_equality.fact.to_string()
+        })
+    {
+        return Err("Template surface equality lost its exact store Result".into());
+    }
+
+    for store in &created.public_value_equalities {
+        let role = "public value equality";
+        let fact_id = store
+            .fact_id
+            .ok_or_else(|| format!("Template {role} has no frozen FactId"))?;
+        let Fact::AtomicFact(AtomicFact::EqualFact(equality)) = &store.fact else {
+            return Err(format!("Template {role} changed to a non-equality fact"));
+        };
+        let rendered_left = render_obj(&equality.left, environment_stack)?;
+        let rendered_right = render_obj(&equality.right, environment_stack)?;
+        if rendered_left != rendered_application && rendered_right != rendered_application {
+            return Err(format!(
+                "Template {role} no longer mentions its exact compiled application"
+            ));
+        }
+        environment_stack
+            .fact_names
+            .insert(fact_id, format!("Litex.Same.refl {rendered_value}"));
+        environment_stack
+            .fact_propositions
+            .insert(fact_id, store.fact.clone());
+    }
+    if !created.supplemental_stores.is_empty() || created.registered_set_builder.is_some() {
+        return Err(
+            "direct Template set-alias compiler does not support supplemental stores or set builders"
+                .into(),
+        );
+    }
+    Ok(())
 }
 
 fn validate_success_obj_binder_well_defined_result(
@@ -17630,6 +18225,9 @@ fn render_set_definition_value(
             Ok("Litex.C".into())
         }
         LeanTargetObjectRepresentation::SetBuilder(_) => {
+            render_lean_source_for_target_set_representation(value, context)
+        }
+        LeanTargetObjectRepresentation::FunctionSet { .. } => {
             render_lean_source_for_target_set_representation(value, context)
         }
         _ => Err(format!(
@@ -18766,6 +19364,8 @@ fn resolve_fact_citation(
         true
     } else if membership_facts_are_equal_up_to_nested_binder_alpha(retained, expected) {
         true
+    } else if equality_facts_are_equal_up_to_nested_binder_alpha(retained, expected) {
+        true
     } else if let (Fact::ForallFact(retained), Fact::ForallFact(expected)) = (retained, expected) {
         render_forall_fact_type(retained, context)? == render_forall_fact_type(expected, context)?
     } else if matches!(
@@ -18789,6 +19389,19 @@ fn resolve_fact_citation(
         .get(source_fact_id)
         .ok_or_else(|| format!("cited FactId `{source_fact_id}` has no emitted Lean proof"))?;
     render_forall_conclusion_citation(binding, context)
+}
+
+fn equality_facts_are_equal_up_to_nested_binder_alpha(left: &Fact, right: &Fact) -> bool {
+    match (left, right) {
+        (
+            Fact::AtomicFact(AtomicFact::EqualFact(left)),
+            Fact::AtomicFact(AtomicFact::EqualFact(right)),
+        ) => {
+            objs_equal_with_nested_binder_alpha_equivalence(&left.left, &right.left)
+                && objs_equal_with_nested_binder_alpha_equivalence(&left.right, &right.right)
+        }
+        _ => false,
+    }
 }
 
 fn membership_facts_are_equal_up_to_nested_binder_alpha(left: &Fact, right: &Fact) -> bool {
@@ -21746,6 +22359,26 @@ fn render_obj(
                 return Err("function application lowered to a non-application object".into());
             };
             render_function_application(&application, context)
+        }
+        Obj::InstantiatedTemplateObj(application) => {
+            if let Some(rendered) = context.symbol_names.get(&application.symbol.id()) {
+                return Ok(rendered.clone());
+            }
+            let binding = context
+                .template_set_alias_bindings
+                .get(&application.template_name.to_string())
+                .ok_or_else(|| format!("unbound compiler Template application `{obj}`"))?;
+            if application.args.len() != binding.parameter_count {
+                return Err(format!(
+                    "Template application `{obj}` changed its compiled argument count"
+                ));
+            }
+            let arguments = application
+                .args
+                .iter()
+                .map(|argument| render_obj(argument, context))
+                .collect::<Result<Vec<_>, _>>()?;
+            Ok(format!("({} {})", binding.lean_name, arguments.join(" ")))
         }
         Obj::StandardSet(set) => render_standard_set(*set).map(str::to_string),
         _ => render_lean_source_for_target_object_representation(

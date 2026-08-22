@@ -1382,6 +1382,10 @@ const ZH_TEXTS: &[(&str, &str)] = &[
         "精确计算和有理表达式化简",
     ),
     (
+        "exact complex algebraic normalization",
+        "精确复数代数正规化",
+    ),
+    (
         "product of opposite-sign factors is in R-",
         "异号因子的乘积属于 R-",
     ),
@@ -1484,6 +1488,10 @@ const ZH_HANS_TEXTS: &[(&str, &str)] = &[
         "exact calculation and rational expression simplification",
         "精確計算和有理表達式化簡",
     ),
+    (
+        "exact complex algebraic normalization",
+        "精確複數代數正規化",
+    ),
 ];
 
 const AR_TEXTS: &[(&str, &str)] = &[
@@ -1575,6 +1583,10 @@ const AR_TEXTS: &[(&str, &str)] = &[
         "exact calculation and rational expression simplification",
         "حساب دقيق وتبسيط تعبير كسري",
     ),
+    (
+        "exact complex algebraic normalization",
+        "التطبيع الجبري الدقيق للأعداد المركبة",
+    ),
 ];
 
 const HI_TEXTS: &[(&str, &str)] = &[
@@ -1665,6 +1677,10 @@ const HI_TEXTS: &[(&str, &str)] = &[
     (
         "exact calculation and rational expression simplification",
         "सटीक गणना और rational expression सरलीकरण",
+    ),
+    (
+        "exact complex algebraic normalization",
+        "सटीक सम्मिश्र बीजीय सामान्यीकरण",
     ),
 ];
 
@@ -1762,6 +1778,10 @@ const VI_TEXTS: &[(&str, &str)] = &[
     (
         "exact calculation and rational expression simplification",
         "tính toán chính xác và rút gọn biểu thức hữu tỉ",
+    ),
+    (
+        "exact complex algebraic normalization",
+        "chuẩn hóa đại số phức chính xác",
     ),
 ];
 
@@ -1863,6 +1883,10 @@ const ID_TEXTS: &[(&str, &str)] = &[
         "exact calculation and rational expression simplification",
         "perhitungan eksak dan penyederhanaan ekspresi rasional",
     ),
+    (
+        "exact complex algebraic normalization",
+        "normalisasi aljabar kompleks eksak",
+    ),
 ];
 
 const JA_TEXTS: &[(&str, &str)] = &[
@@ -1957,6 +1981,10 @@ const JA_TEXTS: &[(&str, &str)] = &[
         "exact calculation and rational expression simplification",
         "厳密計算と有理式簡約",
     ),
+    (
+        "exact complex algebraic normalization",
+        "厳密な複素代数正規化",
+    ),
 ];
 
 const KO_TEXTS: &[(&str, &str)] = &[
@@ -2047,6 +2075,10 @@ const KO_TEXTS: &[(&str, &str)] = &[
     (
         "exact calculation and rational expression simplification",
         "정확한 계산과 유리식 단순화",
+    ),
+    (
+        "exact complex algebraic normalization",
+        "정확한 복소 대수 정규화",
     ),
 ];
 
@@ -2148,6 +2180,10 @@ const ES_TEXTS: &[(&str, &str)] = &[
         "exact calculation and rational expression simplification",
         "cálculo exacto y simplificación racional",
     ),
+    (
+        "exact complex algebraic normalization",
+        "normalización algebraica compleja exacta",
+    ),
 ];
 
 const FR_TEXTS: &[(&str, &str)] = &[
@@ -2244,6 +2280,10 @@ const FR_TEXTS: &[(&str, &str)] = &[
     (
         "exact calculation and rational expression simplification",
         "calcul exact et simplification rationnelle",
+    ),
+    (
+        "exact complex algebraic normalization",
+        "normalisation algébrique complexe exacte",
     ),
 ];
 
@@ -2345,6 +2385,10 @@ const DE_TEXTS: &[(&str, &str)] = &[
         "exact calculation and rational expression simplification",
         "exakte Rechnung und rationale Vereinfachung",
     ),
+    (
+        "exact complex algebraic normalization",
+        "exakte komplexe algebraische Normalisierung",
+    ),
 ];
 
 const PT_TEXTS: &[(&str, &str)] = &[
@@ -2444,6 +2488,10 @@ const PT_TEXTS: &[(&str, &str)] = &[
     (
         "exact calculation and rational expression simplification",
         "cálculo exato e simplificação racional",
+    ),
+    (
+        "exact complex algebraic normalization",
+        "normalização algébrica complexa exata",
     ),
 ];
 
@@ -2547,5 +2595,9 @@ const RU_TEXTS: &[(&str, &str)] = &[
     (
         "exact calculation and rational expression simplification",
         "точное вычисление и упрощение рационального выражения",
+    ),
+    (
+        "exact complex algebraic normalization",
+        "точная алгебраическая нормализация комплексных выражений",
     ),
 ];

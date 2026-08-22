@@ -105,13 +105,33 @@ impl RunSummary {
             self.visit_verified_by(success.proof(), depth);
         }
         if let Some(success) = result.non_factual_success() {
-            let common = success
-                .common()
-                .expect("non-factual IR carries common execution evidence");
             self.visit_stmt(&success.statement(), depth);
-            self.visit_infer_result(&common.infers);
+            if let Some(common) = success.common() {
+                self.visit_infer_result(&common.infers);
+            }
             self.visit_non_factual_verification(success);
             success.visit_child_results(&mut |child| self.visit_result(child, depth + 1));
+            success.visit_success_child_results(&mut |child| {
+                self.visit_success_result(child, depth + 1)
+            });
+        }
+    }
+
+    fn visit_success_result(&mut self, success: &SuccessStmtResult, depth: usize) {
+        if let Some(fact) = success.fact() {
+            self.visit_fact_stmt(&fact.fact(), depth);
+            self.visit_infer_result(&fact.infers);
+            self.visit_verified_by(fact.proof(), depth);
+        } else {
+            self.visit_stmt(&success.statement(), depth);
+            if let Some(common) = success.common() {
+                self.visit_infer_result(&common.infers);
+            }
+            self.visit_non_factual_verification(success);
+            success.visit_child_results(&mut |child| self.visit_result(child, depth + 1));
+            success.visit_success_child_results(&mut |child| {
+                self.visit_success_result(child, depth + 1)
+            });
         }
     }
 

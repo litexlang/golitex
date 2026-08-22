@@ -1,12 +1,12 @@
 # Mathematical Collections for Tao Analysis I
 
-> Publication status (2026-08-21): Introduction, Chapters 1--10, and Appendix A
-> are in the source module. Chapters 8--10 have green persistent replay and
+> Publication status (2026-08-21): Introduction, Chapters 1--11, and Appendix A
+> are in the source module. Chapters 8--11 have green persistent replay and
 > registered canonical `-f` results with exit 0 and top-level `ok=true`. The
-> synchronized formal mirror passes the same Chapter 10 `-f` boundary. The
+> synchronized formal mirror passes the same Chapter 11 `-f` boundary. The
 > user-selected acceptance boundary does not require a whole-module `-r`.
-> The later Chapter 11 concept card describes preserved work in
-> `../todo_textbook_chapters/`, not a current published interface.
+> Chapter 11's Riemann and Riemann--Stieltjes interfaces are current published
+> interfaces rather than quarantined concept drafts.
 
 ## Concept-card convention
 

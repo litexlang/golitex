@@ -117,6 +117,7 @@ pub(super) struct StmtResultToLeanCompilerEnvironment {
     pub(super) forall_conclusion_bindings: HashMap<FactId, ForallConclusionBinding>,
     pub(super) function_bindings: HashMap<FactId, FunctionBinding>,
     pub(super) named_function_definitions: HashMap<FactId, NamedFunctionDefinitionBinding>,
+    pub(super) template_set_alias_bindings: HashMap<String, TemplateSetAliasBinding>,
     pub(super) predicate_bindings: HashMap<String, PredicateBinding>,
     pub(super) registered_reflexive_predicate_theorem_bindings:
         HashMap<String, RegisteredPredicatePropertyTheoremBinding>,
@@ -258,4 +259,10 @@ pub(super) struct NamedFunctionDefinitionBinding {
     pub(super) parameter_premises: Vec<LeanLocalFactPremise>,
     pub(super) domain_premises: Vec<LeanLocalFactPremise>,
     pub(super) well_definedness: StmtResultWellDefinednessToLeanCompilationContext,
+}
+
+#[derive(Clone)]
+pub(super) struct TemplateSetAliasBinding {
+    pub(super) lean_name: String,
+    pub(super) parameter_count: usize,
 }

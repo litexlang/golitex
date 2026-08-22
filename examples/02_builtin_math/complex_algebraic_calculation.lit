@@ -1,0 +1,22 @@
+# Tracer: exact complex algebraic calculation
+#
+# Before (did not work):
+# 2 * i + 1 = i * i + 2 + 2 * i
+# Former behavior: well-definedness succeeded, but equality verification failed.
+#
+# Now (verified):
+2 * i + 1 = i * i + 2 + 2 * i
+(1 + i) * (1 - i) = 2
+1 / i = -1 * i
+i ^ -1 = -1 * i
+
+forall z C:
+    (z + i) * (z - i) = z ^ 2 + 1
+
+# Current behavior: bounded exact algebraic normalization reduces i * i to -1,
+# expands supported integer powers, and preserves denominator well-definedness.
+#
+# Boundary: i * i = 1 remains rejected; complex order and approximate evaluation
+# are not introduced by this rule.
+# Evidence: target/release/litex -compact -isolated -runner -f examples/02_builtin_math/complex_algebraic_calculation.lit
+# Implementation: src/rational_expression/algebraic_normalization.rs

@@ -5,14 +5,15 @@ const STORE_FACTS_COLON: &str = "store facts:";
 
 pub(crate) fn stmt_result_body_string(result: &StmtResult) -> String {
     if let Some(x) = result.non_factual_success() {
-        let common = x
+        let infer_block = x
             .common()
-            .expect("non-factual IR carries common execution evidence");
+            .map(|common| infer_block_string(&common.infers))
+            .unwrap_or_default();
         format!(
             "{}\n{}{}",
             SUCCESS_COLON,
             x.statement(),
-            infer_block_string(&common.infers)
+            infer_block
         )
     } else if let Some(x) = result.factual_success() {
         format!(

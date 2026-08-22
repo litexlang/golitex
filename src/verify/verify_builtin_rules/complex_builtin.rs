@@ -3,9 +3,9 @@ use crate::prelude::*;
 use crate::verify::verify_equality_by_builtin_rules::objs_match_for_pattern;
 
 impl Runtime {
-    /// Native complex equalities use dedicated AST nodes and intentionally normalize only the
-    /// imaginary unit and the first coordinate/modulus interfaces.
-    /// Example: `i^2 = -1`, while an arbitrary `(a + b*i) * (c + d*i)` stays opaque.
+    /// Native complex equalities use dedicated AST nodes for coordinate and
+    /// modulus interfaces. Exact arithmetic with `i` is owned by the
+    /// zero-premise algebraic normalizer before this rule is reached.
     pub(super) fn try_verify_native_complex_equality(
         &mut self,
         equal_fact: &EqualFact,
@@ -14,17 +14,6 @@ impl Runtime {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
-        if let Some((expected, reason)) = native_i_normal_form(left) {
-            if native_normal_form_matches(&expected, right) {
-                return Ok(Some(complex_equality_result(equal_fact, reason)));
-            }
-        }
-        if let Some((expected, reason)) = native_i_normal_form(right) {
-            if native_normal_form_matches(&expected, left) {
-                return Ok(Some(complex_equality_result(equal_fact, reason)));
-            }
-        }
-
         if let Some((reason, steps)) =
             self.try_collect_native_coordinate_equality_steps(equal_fact, builtin_state)?
         {
@@ -639,10 +628,6 @@ impl Runtime {
     }
 }
 
-fn complex_equality_result(equal_fact: &EqualFact, reason: &str) -> StmtResult {
-    complex_equality_result_with_steps(equal_fact, reason, Vec::new())
-}
-
 fn complex_successor_power_base_and_exponent(obj: &Obj) -> Option<(&Obj, &Obj)> {
     let Obj::Pow(power) = obj else {
         return None;
@@ -724,52 +709,6 @@ fn complex_reverse_triangle_shape(left: &Obj, right: &Obj) -> bool {
     };
     objs_match_for_pattern(&left_abs.arg, &bound_difference.left)
         && objs_match_for_pattern(&right_abs.arg, &bound_difference.right)
-}
-
-fn native_i_normal_form(obj: &Obj) -> Option<(Obj, &'static str)> {
-    if let Obj::Mul(mul) = obj {
-        if obj_is_native_i(mul.left.as_ref()) && obj_is_native_i(mul.right.as_ref()) {
-            return Some((
-                Number::new("-1".to_string()).into(),
-                "native imaginary unit multiplication",
-            ));
-        }
-    }
-    let Obj::Pow(pow) = obj else {
-        return None;
-    };
-    if !obj_is_native_i(pow.base.as_ref()) {
-        return None;
-    }
-    let exponent = pow.exponent.evaluate_to_normalized_decimal_number()?;
-    let exponent = exponent.normalized_value.parse::<i128>().ok()?;
-    let normalized = match exponent.rem_euclid(4) {
-        0 => Number::new("1".to_string()).into(),
-        1 => ImaginaryUnit::new().into(),
-        2 => Number::new("-1".to_string()).into(),
-        3 => Mul::new(
-            Number::new("-1".to_string()).into(),
-            ImaginaryUnit::new().into(),
-        )
-        .into(),
-        _ => unreachable!(),
-    };
-    Some((normalized, "native imaginary unit integer-power cycle"))
-}
-
-fn native_normal_form_matches(expected: &Obj, target: &Obj) -> bool {
-    if objs_match_for_pattern(expected, target) {
-        return true;
-    }
-    match (
-        expected.evaluate_to_normalized_decimal_number(),
-        target.evaluate_to_normalized_decimal_number(),
-    ) {
-        (Some(expected_number), Some(target_number)) => {
-            expected_number.normalized_value == target_number.normalized_value
-        }
-        _ => false,
-    }
 }
 
 fn native_reconstruction_pair(obj: &Obj) -> (&Obj, Obj) {

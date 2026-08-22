@@ -75,7 +75,7 @@ impl ResultGraph {
             return;
         }
 
-        if let Some(common) = success.common() {
+        let child_parent = if let Some(common) = success.common() {
             let execution_id = format!("{id}/execution");
             self.ensure_node(
                 execution_id.clone(),
@@ -91,13 +91,31 @@ impl ResultGraph {
                 format!("{execution_id}/infer"),
             );
             self.add_non_fact_well_definedness(success, &execution_id);
-            let mut index = 0;
-            success.visit_child_results(&mut |child| {
-                let child_id = format!("{execution_id}/child:{index}");
-                self.add_stmt_result(child, child_id.clone());
-                self.add_edge(&execution_id, &child_id, "child", index);
-                index += 1;
-            });
+            execution_id
+        } else {
+            id.clone()
+        };
+        let mut index = 0;
+        success.visit_child_results(&mut |child| {
+            let child_id = format!("{child_parent}/child:{index}");
+            self.add_stmt_result(child, child_id.clone());
+            self.add_edge(&child_parent, &child_id, "child", index);
+            index += 1;
+        });
+        success.visit_success_child_results(&mut |child| {
+            let child_id = format!("{child_parent}/success_child:{index}");
+            self.add_success_stmt(child, child_id.clone());
+            self.add_edge(&child_parent, &child_id, "body_statement_result", index);
+            index += 1;
+        });
+        if let SuccessStmtResult::DefInterfaceStmt(
+            SuccessDefInterfaceStmtResult::DefTemplateStmt(result),
+        ) = success
+        {
+            self.add_fact_parameter_groups(&id, &result.template_parameter_groups);
+            for (domain_index, domain) in result.template_domain_results.iter().enumerate() {
+                self.add_local_fact_wd(&id, "template_domain", domain_index, domain);
+            }
         }
     }
 
@@ -386,8 +404,16 @@ impl ResultGraph {
             None,
         );
         self.add_edge(parent, &binder_id, "binder", 0);
-        for (index, group) in binder.parameter_groups.iter().enumerate() {
-            let group_id = format!("{binder_id}/group:{index}");
+        self.add_fact_parameter_groups(&binder_id, &binder.parameter_groups);
+    }
+
+    fn add_fact_parameter_groups(
+        &mut self,
+        parent: &str,
+        parameter_groups: &[SuccessVerifyFactParameterGroupResult],
+    ) {
+        for (index, group) in parameter_groups.iter().enumerate() {
+            let group_id = format!("{parent}/group:{index}");
             self.ensure_node(
                 group_id.clone(),
                 "well_definedness",
@@ -395,7 +421,7 @@ impl ResultGraph {
                 group.parameter_type.to_string(),
                 None,
             );
-            self.add_edge(&binder_id, &group_id, "parameter_group", index);
+            self.add_edge(parent, &group_id, "parameter_group", index);
             if let Some(carrier) = group.carrier.as_ref() {
                 self.add_wd_child(&group_id, "carrier", 0, carrier);
             }
@@ -507,8 +533,8 @@ impl ResultGraph {
         if let Some(binder) = steps.binder.as_ref() {
             self.add_wd_object_binder(parent, binder);
         }
-        if let Some(materialization) = steps.template_materialization.as_ref() {
-            self.add_wd_template_materialization(parent, materialization);
+        if let Some(instantiation) = steps.template_instantiation.as_ref() {
+            self.add_wd_template_instantiation(parent, instantiation);
         }
     }
 
@@ -947,45 +973,45 @@ impl ResultGraph {
         }
     }
 
-    fn add_wd_template_materialization(
+    fn add_wd_template_instantiation(
         &mut self,
         parent: &str,
-        materialization: &SuccessVerifyTemplateMaterializationResult,
+        instantiation: &SuccessTemplateInstantiationResult,
     ) {
-        let id = format!("{parent}/template_materialization");
-        match materialization {
-            SuccessVerifyTemplateMaterializationResult::Reuse(result) => {
+        let id = format!("{parent}/template_instantiation");
+        match instantiation {
+            SuccessTemplateInstantiationResult::Reused(result) => {
                 self.ensure_node(
                     id.clone(),
                     "well_definedness",
-                    "ReuseTemplateMaterialization",
-                    result.instance_name.clone(),
+                    "ReusedTemplateInstance",
+                    result.application.to_string(),
                     None,
                 );
             }
-            SuccessVerifyTemplateMaterializationResult::Materialized(result) => {
+            SuccessTemplateInstantiationResult::Created(result) => {
                 self.ensure_node(
                     id.clone(),
                     "well_definedness",
-                    "MaterializedTemplate",
-                    result.instance_name.clone(),
+                    "CreatedTemplateInstance",
+                    result.application.to_string(),
                     None,
                 );
-                for (index, argument) in result.header_arguments.iter().enumerate() {
-                    self.add_wd_fact_check(&id, "header_argument", index, &argument.verification);
+                for (index, argument) in result.template_argument_results.iter().enumerate() {
+                    self.add_wd_fact_check(&id, "template_argument", index, &argument.verification);
                 }
-                for (index, domain) in result.header_domains.iter().enumerate() {
-                    self.add_wd_fact_check(&id, "header_domain", index, &domain.proof);
-                    let store_id = format!("{id}/header_domain_store:{index}");
+                for (index, domain) in result.template_domain_results.iter().enumerate() {
+                    self.add_wd_fact_check(&id, "template_domain", index, &domain.proof);
+                    let store_id = format!("{id}/template_domain_store:{index}");
                     self.add_store_fact_result(&domain.store, store_id.clone());
-                    self.add_edge(&id, &store_id, "header_domain_store", index);
+                    self.add_edge(&id, &store_id, "template_domain_store", index);
                 }
                 let equality_id = format!("{id}/surface_equality");
                 self.add_store_fact_result(&result.surface_equality, equality_id.clone());
                 self.add_edge(&id, &equality_id, "surface_equality", 0);
-                let body_id = format!("{id}/body_execution");
-                self.add_stmt_result(&result.body_execution, body_id.clone());
-                self.add_edge(&id, &body_id, "body_execution", 0);
+                let body_id = format!("{id}/body_statement_result");
+                self.add_success_stmt(&result.body_statement_result, body_id.clone());
+                self.add_edge(&id, &body_id, "body_statement_result", 0);
                 for (index, store) in result.public_value_equalities.iter().enumerate() {
                     let store_id = format!("{id}/public_value_equality:{index}");
                     self.add_store_fact_result(store, store_id.clone());
@@ -998,7 +1024,7 @@ impl ResultGraph {
                 }
             }
         }
-        self.add_edge(parent, &id, "template_materialization", 0);
+        self.add_edge(parent, &id, "template_instantiation", 0);
     }
 
     fn add_verify_fact_result(&mut self, result: &SuccessVerifyFactResult, id: String) {

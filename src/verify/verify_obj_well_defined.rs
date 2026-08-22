@@ -11,7 +11,7 @@ mod structs;
 
 impl Runtime {
     /// Compositional WD entry point. Every object family returns its exact
-    /// recursive children, fact checks, binder body, or materialization.
+    /// recursive children, fact checks, binder body, or Template instantiation.
     pub fn verify_obj_well_defined_result(
         &mut self,
         obj: &Obj,

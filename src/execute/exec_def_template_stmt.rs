@@ -6,7 +6,8 @@ impl Runtime {
         &mut self,
         def_template_stmt: &DefTemplateStmt,
     ) -> Result<StmtResult, RuntimeError> {
-        self.run_in_local_env(|rt| rt.def_template_stmt_check_well_defined(def_template_stmt))
+        let (template_parameter_groups, template_domain_results, body_statement_result) = self
+            .run_in_local_env(|rt| rt.def_template_stmt_check_well_defined(def_template_stmt))
             .map_err(|e| {
                 exec_stmt_error_with_stmt_and_cause(def_template_stmt.clone().into(), e)
             })?;
@@ -15,7 +16,9 @@ impl Runtime {
             SuccessDefInterfaceStmtResult::DefTemplateStmt(Box::new(
                 SuccessDefTemplateStmtResult {
                     statement: def_template_stmt.clone(),
-                    common: SuccessStmtCommonResult::new(SuccessInferResult::new()),
+                    template_parameter_groups,
+                    template_domain_results,
+                    body_statement_result: Box::new(body_statement_result),
                 },
             ))
             .into(),
@@ -28,54 +31,78 @@ impl Runtime {
     fn def_template_stmt_check_well_defined(
         &mut self,
         def_template_stmt: &DefTemplateStmt,
-    ) -> Result<(), RuntimeError> {
+    ) -> Result<
+        (
+            Vec<SuccessVerifyFactParameterGroupResult>,
+            Vec<SuccessVerifyLocalFactWellDefinedResult>,
+            SuccessStmtResult,
+        ),
+        RuntimeError,
+    > {
         let verify_state = UseContextVerifyState::new(0, false);
-        self.define_params_with_type(
+        let binder = self.verify_fact_binder_result(
             &def_template_stmt.template_arg_def,
-            false,
             ParamObjType::DefHeader,
+            &verify_state,
         )?;
 
+        let mut template_domain_results =
+            Vec::with_capacity(def_template_stmt.template_arg_dom.len());
         for dom_fact in def_template_stmt.template_arg_dom.iter() {
-            self.store_quantifier_free_fact_with_well_defined_verification_and_infer(
-                dom_fact,
-                &verify_state,
-            )?;
+            template_domain_results
+                .push(self.verify_and_store_quantifier_free_wd_result(dom_fact, &verify_state)?);
         }
 
         let template_body_stmt = def_template_stmt.template_def_stmt.to_stmt();
-        self.exec_stmt(&template_body_stmt)?;
-        Ok(())
+        let mut body_statement_result = self.exec_stmt(&template_body_stmt)?;
+        if body_statement_result.is_unknown() {
+            return Err(short_exec_error(
+                template_body_stmt,
+                "template body statement is unknown",
+                None,
+                vec![body_statement_result],
+            ));
+        }
+        self.attach_known_fact_ids_to_stmt_result(&mut body_statement_result)?;
+        let StmtResult::Success(body_statement_result) = body_statement_result else {
+            unreachable!("unknown template body returned above")
+        };
+        Ok((
+            binder.parameter_groups,
+            template_domain_results,
+            body_statement_result,
+        ))
     }
 
-    pub fn materialize_instantiated_template_obj(
+    pub fn instantiate_template_obj(
         &mut self,
         template_obj: &InstantiatedTemplateObj,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        self.materialize_instantiated_template_obj_result(template_obj, verify_state)
+        self.instantiate_template_obj_result(template_obj, verify_state)
             .map(|_| ())
     }
 
-    pub fn materialize_instantiated_template_obj_result(
+    pub fn instantiate_template_obj_result(
         &mut self,
         template_obj: &InstantiatedTemplateObj,
         verify_state: &UseContextVerifyState,
-    ) -> Result<SuccessVerifyTemplateMaterializationResult, RuntimeError> {
+    ) -> Result<SuccessTemplateInstantiationResult, RuntimeError> {
         let instance_name = template_obj.surface_name();
         if self.is_name_used_for_identifier(&instance_name) {
-            return Ok(SuccessVerifyTemplateMaterializationResult::Reuse(Box::new(
-                SuccessReuseTemplateMaterializationResult { instance_name },
+            return Ok(SuccessTemplateInstantiationResult::Reused(Box::new(
+                SuccessReusedTemplateInstanceResult {
+                    application: template_obj.clone(),
+                },
             )));
         }
-        let template_name = template_obj.template_name.to_string();
         let def = self
-            .get_template_definition_by_name(&template_name)
+            .get_template_definition_by_name(&template_obj.template_name.to_string())
             .ok_or_else(|| {
                 RuntimeError::from(WellDefinedRuntimeError(
                     RuntimeErrorStruct::new_with_just_msg(format!(
                         "template `{}` is not defined",
-                        template_name
+                        template_obj.template_name
                     )),
                 ))
             })?;
@@ -205,7 +232,15 @@ impl Runtime {
         // template was declared. Header validation above plus capture-avoiding
         // substitution preserves that result, so only commit the instantiated
         // statement's environment effects here.
-        let body_execution = self.exec_preverified_stmt_affect_environment_only(&stmt)?;
+        let body_result = self.exec_preverified_stmt_affect_environment_only(&stmt)?;
+        let StmtResult::Success(body_statement_result) = body_result else {
+            return Err(short_exec_error(
+                stmt,
+                "preverified template instance body unexpectedly became unknown",
+                None,
+                vec![body_result],
+            ));
+        };
         let mut public_values = match &stmt {
             Stmt::DefObjStmt(DefObjStmt::HaveObjEqualStmt(value_stmt)) => {
                 value_stmt.objs_equal_to.clone()
@@ -276,20 +311,18 @@ impl Runtime {
                 def.line_file.clone(),
             );
         }
-        Ok(SuccessVerifyTemplateMaterializationResult::Materialized(
-            Box::new(SuccessMaterializedTemplateResult {
-                template_name,
-                instance_name,
-                header_arguments,
-                header_domains,
+        Ok(SuccessTemplateInstantiationResult::Created(Box::new(
+            SuccessCreatedTemplateInstanceResult {
+                application: template_obj.clone(),
+                template_argument_results: header_arguments,
+                template_domain_results: header_domains,
                 surface_equality,
-                body_statement: stmt,
-                body_execution: Box::new(body_execution),
+                body_statement_result: Box::new(body_statement_result),
                 public_value_equalities,
                 supplemental_stores,
                 registered_set_builder,
-            }),
-        ))
+            },
+        )))
     }
 
     fn inst_template_body_stmt(

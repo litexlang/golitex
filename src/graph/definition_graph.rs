@@ -1112,6 +1112,9 @@ impl DefinitionGraphBuilder {
         success.visit_child_results(&mut |child| {
             self.collect_proof_source_ids_from_result(child, &mut source_ids)
         });
+        success.visit_success_child_results(&mut |child| {
+            self.collect_proof_source_ids_from_success(child, &mut source_ids)
+        });
         source_ids.sort();
         source_ids.dedup();
         source_ids
@@ -1122,13 +1125,21 @@ impl DefinitionGraphBuilder {
         result: &StmtResult,
         source_ids: &mut Vec<String>,
     ) {
-        if let Some(success) = result.factual_success() {
+        let StmtResult::Success(success) = result else {
+            return;
+        };
+        self.collect_proof_source_ids_from_success(success, source_ids);
+    }
+
+    fn collect_proof_source_ids_from_success(
+        &mut self,
+        success: &SuccessStmtResult,
+        source_ids: &mut Vec<String>,
+    ) {
+        if let Some(success) = success.fact() {
             self.collect_verified_by_source_ids(success.proof(), source_ids);
             return;
         }
-        let Some(success) = result.non_factual_success() else {
-            return;
-        };
         if let SuccessStmtResult::By(SuccessByStmtResult::ByThmStmt(result)) = success {
             if let Some(verification) = result.verification.as_ref() {
                 let theorem_name = self.normalized_dependency_name(verification.theorem.as_str());
@@ -1178,6 +1189,9 @@ impl DefinitionGraphBuilder {
         }
         success.visit_child_results(&mut |child| {
             self.collect_proof_source_ids_from_result(child, source_ids)
+        });
+        success.visit_success_child_results(&mut |child| {
+            self.collect_proof_source_ids_from_success(child, source_ids)
         });
     }
 
@@ -1856,7 +1870,22 @@ fn success_children_contain_direct_trust(success: &SuccessStmtResult) -> bool {
             contains_trust = true;
         }
     });
+    success.visit_success_child_results(&mut |child| {
+        if !contains_trust && success_result_contains_direct_trust(child) {
+            contains_trust = true;
+        }
+    });
     contains_trust
+}
+
+fn success_result_contains_direct_trust(success: &SuccessStmtResult) -> bool {
+    if matches!(
+        &success.statement(),
+        Stmt::UnsafeStmt(UnsafeStmt::TrustStmt(_)) | Stmt::UnsafeStmt(UnsafeStmt::TrustHaveStmt(_))
+    ) {
+        return true;
+    }
+    success_children_contain_direct_trust(success)
 }
 
 fn trust_source_id(kind: &str, name: Option<&str>, line_file: &LineFile) -> String {

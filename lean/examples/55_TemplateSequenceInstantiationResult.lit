@@ -1,0 +1,23 @@
+# Tracer: Template-defined one-based sequence family
+#
+# Before (did not work):
+# template<S set>:
+#     have sequence set = fn(n N+) S
+# \sequence<R> = fn(n N+) R
+# Former behavior: Litex verified the source, but the direct Result-to-Lean compiler rejected DefTemplateStmt.
+#
+# Now (verified):
+template<S set>:
+    have sequence set = fn(n N+) S
+
+\sequence<R> = fn(n N+) R
+\sequence<R> = \sequence<R>
+# Current behavior: the Template definition, first Created instance, Reused instance, and
+# exact public equality all verify; the generated Lean family is Litex.fnSet Litex.NPos S.
+# The runtime-only boundary probe `0 ∉ N+` is recorded in the adjacent proof journal.
+#
+# Boundary: this compiler slice rejects template domains, non-set parameters, and non-set-alias bodies.
+# It also preserves N+ as the index carrier; it does not translate the family to Lean's zero-based Seq.
+# Evidence: target/release/litex -compact -runner -f lean/examples/55_TemplateSequenceInstantiationResult.lit
+# Compiler: target/release/stmt_result_to_lean_compiler compile lean/examples/55_TemplateSequenceInstantiationResult.lit
+# Lean: cd lean && lake env lean examples/55_TemplateSequenceInstantiationResult.lean

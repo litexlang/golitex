@@ -684,12 +684,19 @@ This is also why complex equality does not add a complex order. The relations
 `log` still require real operands. `C_abs` is the separate complex modulus,
 with a nonnegative real result.
 
-The native complex layer is symbolic in this release. Verification supports
-the builtin imaginary unit, coordinates, modulus interface, legal integer
-powers, and finite aggregation, but `eval` and Python extraction do not acquire
-a complex runtime representation. The current Litex-to-Lean compiler still has no
-checked complex-number proof view or complex-operation backend and therefore
-does not accept complex expressions.
+The native complex layer remains symbolic in this release. Verification now
+also performs bounded exact polynomial/rational normalization with
+`i * i = -1`, so identities such as
+`2 * i + 1 = i * i + 2 + 2 * i` and
+`(1 + i) * (1 - i) = 2` verify directly. Division still needs its ordinary
+nonzero well-definedness proof. `eval` and Python extraction do not acquire a
+complex runtime representation.
+
+The Litex-to-Lean compiler replays the typed complex-normalization certificate
+for `+`, `-`, `*`, and reviewed closed denominators using native `Complex.I`.
+Complex powers and symbolic denominators remain fail-closed in that backend;
+successful Litex verification alone does not widen the compiler's supported
+target shapes.
 Existing sources that used `C`, `i`, `re`, `img`, or `C_abs` as ordinary
 identifiers must migrate; see
 [Complex Scalar Migration](Complex_Scalar_Migration.md).
