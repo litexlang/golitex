@@ -8783,22 +8783,111 @@ impl StmtResultToLeanCompiler {
         if fact_result_contains_inferred_facts(result) {
             return Ok(false);
         }
-        if !builtin.subgoals.is_empty() {
-            return Err("complex algebraic normalization gained unexpected proof children".into());
-        }
         let source_fact = result.fact();
-        validate_complex_algebraic_normalization_builtin_rule_evidence(&source_fact, evidence)?;
+        let Some(proof) = self.construct_lean_complex_algebraic_normalization_from_result(
+            &source_fact,
+            evidence,
+            &builtin.subgoals,
+        )?
+        else {
+            return Ok(false);
+        };
         let Fact::AtomicFact(AtomicFact::EqualFact(equality)) = &source_fact else {
             unreachable!();
         };
         validate_atomic_fact_well_definedness_result(&result.well_definedness, &source_fact)?;
         self.render_object_using_well_definedness_from_fact_result(result, &equality.left)?;
         self.render_object_using_well_definedness_from_fact_result(result, &equality.right)?;
-        self.compile_stored_fact_without_inference(
-            result,
-            complex_algebraic_normalization_lean_proof(),
-        )?;
+        self.compile_stored_fact_without_inference(result, proof)?;
         Ok(true)
+    }
+
+    /// Compile the exact nonzero child Results retained by complex calculate,
+    /// bridge each semantic `!= 0` proof to native Complex nonzero, and feed
+    /// only those named proofs to the fixed field/ring adapter.
+    fn construct_lean_complex_algebraic_normalization_from_result(
+        &mut self,
+        target: &Fact,
+        evidence: &ComplexAlgebraicNormalizationBuiltinRuleEvidence,
+        subgoals: &[StmtResult],
+    ) -> Result<Option<String>, String> {
+        validate_complex_algebraic_normalization_builtin_rule_evidence(target, evidence)?;
+        let Fact::AtomicFact(AtomicFact::EqualFact(_)) = target else {
+            unreachable!("complex normalization validator requires an equality")
+        };
+        if subgoals.len() != evidence.expected_nonzero_premises.len() {
+            return Err(
+                "complex-algebraic-normalization proof lost an ordered nonzero child Result".into(),
+            );
+        }
+
+        let mut declarations = Vec::with_capacity(subgoals.len());
+        let mut native_nonzero_names = Vec::with_capacity(subgoals.len());
+        for (index, (expected, subgoal)) in evidence
+            .expected_nonzero_premises
+            .iter()
+            .zip(subgoals.iter())
+            .enumerate()
+        {
+            let subgoal = subgoal
+                .factual_success()
+                .ok_or_else(|| format!("complex nonzero child {index} is not a factual Result"))?;
+            if subgoal.fact().to_string() != expected.to_string()
+                || subgoal.store.fact.to_string() != expected.to_string()
+            {
+                return Err(format!(
+                    "complex nonzero child {index} changed its exact premise"
+                ));
+            }
+            let Fact::AtomicFact(AtomicFact::NotEqualFact(nonzero)) = expected else {
+                return Err(format!(
+                    "complex nonzero premise {index} is not a disequality"
+                ));
+            };
+            if !matches!(
+                &nonzero.right,
+                Obj::Number(number) if number.normalized_value == "0"
+            ) {
+                return Err(format!(
+                    "complex nonzero premise {index} changed its zero endpoint"
+                ));
+            }
+            let left = render_numeric_obj(&nonzero.left, &self.environment_stack)?;
+            let right = render_numeric_obj(&nonzero.right, &self.environment_stack)?;
+            let name = format!("__calculate_nonzero{}", index + 1);
+            let native_proof = match self.construct_lean_proof_from_direct_fact_result(subgoal)? {
+                Some(semantic_proof) => format!(
+                    "by\n    intro __native_eq\n    exact ({semantic_proof}) (Litex.Same.ofEq __native_eq)"
+                ),
+                None => {
+                    // A few closed native constants still have legacy
+                    // label-only nonzero Results. The target is independently
+                    // checked here by Lean; symbolic premises never use this
+                    // fallback because `norm_num` cannot manufacture them.
+                    "by\n    norm_num [Complex.I_mul_I]".to_string()
+                }
+            };
+            declarations.push(format!(
+                "  have {name} : {left} ≠ {right} := {native_proof}"
+            ));
+            native_nonzero_names.push(name);
+        }
+
+        let mut proof = "by\n".to_string();
+        if !declarations.is_empty() {
+            proof.push_str(&declarations.join("\n"));
+            proof.push('\n');
+        }
+        proof.push_str("  apply Litex.Same.ofEq\n");
+        if native_nonzero_names.is_empty() {
+            proof.push_str("  ring_nf <;> norm_num [Complex.I_mul_I] <;> ring");
+        } else {
+            proof.push_str(&format!(
+                "  field_simp [{}] <;> ring_nf <;> norm_num [Complex.I_mul_I] <;> ring",
+                native_nonzero_names.join(", ")
+            ));
+        }
+        Ok(Some(format!("({proof})")))
     }
 
     fn render_object_using_well_definedness_from_fact_result(
@@ -11507,6 +11596,15 @@ impl StmtResultToLeanCompiler {
                         &builtin.subgoals,
                     );
                 }
+                if let Some(BuiltinRuleEvidence::ComplexAlgebraicNormalization(evidence)) =
+                    &builtin.evidence
+                {
+                    return self.construct_lean_complex_algebraic_normalization_from_result(
+                        &source_fact,
+                        evidence,
+                        &builtin.subgoals,
+                    );
+                }
                 if let Some(evidence) = &builtin.evidence {
                     if let Some(limitation) = direct_builtin_rule_compiler_limitation(evidence) {
                         return Err(limitation.to_string());
@@ -11601,31 +11699,11 @@ impl StmtResultToLeanCompiler {
                         ))
                     }
                     Some(BuiltinRuleEvidence::ComplexAlgebraicNormalization(evidence)) => {
-                        validate_complex_algebraic_normalization_builtin_rule_evidence(
+                        self.construct_lean_complex_algebraic_normalization_from_result(
                             &source_fact,
                             evidence,
-                        )?;
-                        let Fact::AtomicFact(AtomicFact::EqualFact(equality)) = &source_fact else {
-                            unreachable!();
-                        };
-                        if result.well_definedness.recursive.is_some() {
-                            validate_atomic_fact_well_definedness_result(
-                                &result.well_definedness,
-                                &source_fact,
-                            )?;
-                            self.render_object_using_well_definedness_from_fact_result(
-                                result,
-                                &equality.left,
-                            )?;
-                            self.render_object_using_well_definedness_from_fact_result(
-                                result,
-                                &equality.right,
-                            )?;
-                        } else {
-                            render_obj(&equality.left, &self.environment_stack)?;
-                            render_obj(&equality.right, &self.environment_stack)?;
-                        }
-                        Ok(Some(complex_algebraic_normalization_lean_proof()))
+                            &builtin.subgoals,
+                        )
                     }
                     Some(BuiltinRuleEvidence::ClosedNumericMembership(evidence)) => {
                         if evidence.expected_target.to_string() != source_fact.to_string() {
@@ -14726,6 +14804,11 @@ impl StmtResultToLeanCompiler {
                     target, evidence, subgoals,
                 );
             }
+            Some(BuiltinRuleEvidence::ComplexAlgebraicNormalization(evidence)) => {
+                return self.construct_lean_complex_algebraic_normalization_from_result(
+                    target, evidence, subgoals,
+                );
+            }
             Some(evidence) => {
                 if let Some(limitation) = direct_builtin_rule_compiler_limitation(evidence) {
                     return Err(limitation.to_string());
@@ -14779,8 +14862,9 @@ impl StmtResultToLeanCompiler {
                 ))
             }
             Some(BuiltinRuleEvidence::ComplexAlgebraicNormalization(evidence)) => {
-                validate_complex_algebraic_normalization_builtin_rule_evidence(target, evidence)?;
-                Ok(Some(complex_algebraic_normalization_lean_proof()))
+                self.construct_lean_complex_algebraic_normalization_from_result(
+                    target, evidence, subgoals,
+                )
             }
             Some(BuiltinRuleEvidence::ClosedNumericComparison(evidence)) => {
                 validate_closed_numeric_comparison_builtin_rule_evidence(target, evidence)?;
@@ -15046,6 +15130,15 @@ impl StmtResultToLeanCompiler {
                         &builtin.subgoals,
                     );
                 }
+                if let Some(BuiltinRuleEvidence::ComplexAlgebraicNormalization(evidence)) =
+                    &builtin.evidence
+                {
+                    return self.construct_lean_complex_algebraic_normalization_from_result(
+                        &source_fact,
+                        evidence,
+                        &builtin.subgoals,
+                    );
+                }
                 if let Some(evidence) = &builtin.evidence {
                     if let Some(limitation) = direct_builtin_rule_compiler_limitation(evidence) {
                         return Err(limitation.to_string());
@@ -15096,11 +15189,11 @@ impl StmtResultToLeanCompiler {
                         ))
                     }
                     Some(BuiltinRuleEvidence::ComplexAlgebraicNormalization(evidence)) => {
-                        validate_complex_algebraic_normalization_builtin_rule_evidence(
+                        self.construct_lean_complex_algebraic_normalization_from_result(
                             &source_fact,
                             evidence,
-                        )?;
-                        Ok(Some(complex_algebraic_normalization_lean_proof()))
+                            &builtin.subgoals,
+                        )
                     }
                     Some(BuiltinRuleEvidence::ClosedNumericComparison(evidence)) => {
                         validate_closed_numeric_comparison_builtin_rule_evidence(
@@ -16467,56 +16560,29 @@ fn validate_complex_algebraic_normalization_builtin_rule_evidence(
             "complex-algebraic-normalization evidence does not reproduce its exact equality".into(),
         );
     }
-    if !complex_algebraic_normalization_lean_adapter_supports_object(&equality.left)
-        || !complex_algebraic_normalization_lean_adapter_supports_object(&equality.right)
+    let zero: Obj = Number::new("0".to_string()).into();
+    let reproduced_nonzero_premises =
+        complex_algebraic_normalization_nonzero_requirements(&equality.left, &equality.right)
+            .into_iter()
+            .map(|object| {
+                Fact::from(AtomicFact::NotEqualFact(NotEqualFact::new(
+                    object,
+                    zero.clone(),
+                    equality.line_file.clone(),
+                )))
+            })
+            .collect::<Vec<_>>();
+    if reproduced_nonzero_premises.len() != evidence.expected_nonzero_premises.len()
+        || reproduced_nonzero_premises
+            .iter()
+            .zip(evidence.expected_nonzero_premises.iter())
+            .any(|(reproduced, retained)| reproduced.to_string() != retained.to_string())
     {
-        return Err("complex-algebraic-normalization Lean adapter supports only +, -, *, and closed denominators; powers and symbolic denominators remain unsupported".into());
+        return Err(
+            "complex-algebraic-normalization evidence changed its ordered nonzero premises".into(),
+        );
     }
     Ok(())
-}
-
-fn complex_algebraic_normalization_lean_proof() -> String {
-    "Litex.Same.ofEq (by\n  ring_nf <;> norm_num [Complex.I_mul_I] <;> ring)".into()
-}
-
-fn complex_algebraic_normalization_lean_adapter_supports_object(object: &Obj) -> bool {
-    match object {
-        Obj::Add(add) => {
-            complex_algebraic_normalization_lean_adapter_supports_object(&add.left)
-                && complex_algebraic_normalization_lean_adapter_supports_object(&add.right)
-        }
-        Obj::Sub(sub) => {
-            complex_algebraic_normalization_lean_adapter_supports_object(&sub.left)
-                && complex_algebraic_normalization_lean_adapter_supports_object(&sub.right)
-        }
-        Obj::Mul(mul) => {
-            complex_algebraic_normalization_lean_adapter_supports_object(&mul.left)
-                && complex_algebraic_normalization_lean_adapter_supports_object(&mul.right)
-        }
-        Obj::Div(div) => {
-            complex_algebraic_normalization_lean_adapter_supports_object(&div.left)
-                && complex_algebraic_normalization_lean_adapter_supports_closed_denominator(
-                    &div.right,
-                )
-        }
-        Obj::Pow(_) => false,
-        _ => true,
-    }
-}
-
-fn complex_algebraic_normalization_lean_adapter_supports_closed_denominator(
-    denominator: &Obj,
-) -> bool {
-    match denominator {
-        Obj::Number(number) => number.normalized_value != "0",
-        Obj::ImaginaryUnit(_) => true,
-        Obj::Pow(pow) if matches!(pow.base.as_ref(), Obj::ImaginaryUnit(_)) => pow
-            .exponent
-            .evaluate_to_normalized_decimal_number()
-            .and_then(|number| number.normalized_value.parse::<i128>().ok())
-            .is_some(),
-        _ => false,
-    }
 }
 
 fn validate_scoped_fact_check_result(
@@ -22331,11 +22397,7 @@ fn render_obj(
             render_integer_obj(remainder.left.as_ref(), context)?,
             render_integer_obj(remainder.right.as_ref(), context)?
         )),
-        Obj::Pow(power) => Ok(format!(
-            "(({} ^ {} : ℚ) : ℂ)",
-            render_rational_obj(power.base.as_ref(), context)?,
-            render_integer_obj(power.exponent.as_ref(), context)?
-        )),
+        Obj::Pow(power) => render_numeric_power(power, context),
         Obj::FnSet(function_set) => {
             let function = LeanTargetFunctionTypeRepresentation::lower(function_set)?;
             render_function_set(&function, context)
@@ -22385,6 +22447,39 @@ fn render_obj(
             &LeanTargetObjectRepresentation::lower(obj)?,
             context,
         ),
+    }
+}
+
+/// Preserve the existing exact-rational power representation whenever both
+/// operands have visible rational/integer views. Complex calculate adds the
+/// complementary representation for a literal integral exponent whose base
+/// is only available as a native complex value.
+fn render_numeric_power(
+    power: &Pow,
+    context: &StmtResultToLeanCompilerEnvironmentStack,
+) -> Result<String, String> {
+    if let (Ok(base), Ok(exponent)) = (
+        render_rational_obj(power.base.as_ref(), context),
+        render_integer_obj(power.exponent.as_ref(), context),
+    ) {
+        return Ok(format!("(({base} ^ {exponent} : ℚ) : ℂ)"));
+    }
+
+    let exponent = power
+        .exponent
+        .evaluate_to_normalized_decimal_number()
+        .and_then(|number| number.normalized_value.parse::<i128>().ok())
+        .ok_or_else(|| {
+            format!(
+                "complex power `{}` requires a literal integral exponent in the Lean target",
+                Obj::from(power.clone())
+            )
+        })?;
+    let base = render_numeric_obj(power.base.as_ref(), context)?;
+    if exponent >= 0 {
+        Ok(format!("({base} ^ ({exponent} : ℕ))"))
+    } else {
+        Ok(format!("({base} ^ ({exponent} : ℤ))"))
     }
 }
 

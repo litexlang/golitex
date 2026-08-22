@@ -306,11 +306,14 @@ pub struct RationalNormalizationBuiltinRuleEvidence {
     pub right_evaluation: SuccessEvaluateObjResult,
 }
 
-/// Zero-premise equality certificate selected only after exact bounded
-/// polynomial/rational normalization with the relation `i * i = -1`.
+/// Equality certificate selected only after exact bounded polynomial/rational
+/// normalization with the relation `i * i = -1`. Every denominator or
+/// negative-power base needed by that normalization is retained as an exact
+/// nonzero premise; an empty list records a genuinely zero-premise identity.
 #[derive(Clone)]
 pub struct ComplexAlgebraicNormalizationBuiltinRuleEvidence {
     pub expected_target: Fact,
+    pub expected_nonzero_premises: Vec<Fact>,
 }
 
 /// A standard carrier is inhabited by its reviewed canonical witness. The
@@ -625,8 +628,11 @@ impl RationalNormalizationBuiltinRuleEvidence {
 }
 
 impl ComplexAlgebraicNormalizationBuiltinRuleEvidence {
-    pub fn new(expected_target: Fact) -> Self {
-        Self { expected_target }
+    pub fn new(expected_target: Fact, expected_nonzero_premises: Vec<Fact>) -> Self {
+        Self {
+            expected_target,
+            expected_nonzero_premises,
+        }
     }
 }
 
@@ -666,6 +672,14 @@ impl fmt::Debug for ComplexAlgebraicNormalizationBuiltinRuleEvidence {
         formatter
             .debug_struct("ComplexAlgebraicNormalizationBuiltinRuleEvidence")
             .field("expected_target", &self.expected_target.to_string())
+            .field(
+                "expected_nonzero_premises",
+                &self
+                    .expected_nonzero_premises
+                    .iter()
+                    .map(ToString::to_string)
+                    .collect::<Vec<_>>(),
+            )
             .finish()
     }
 }

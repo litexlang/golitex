@@ -375,7 +375,7 @@ fn top_level_atomic_equality_compiles_typed_result_evidence() {
 
 #[test]
 fn complex_algebraic_normalization_compiles_typed_result_evidence() {
-    const SOURCE: &str = "2 * i + 1 = i * i + 2 + 2 * i\n(1 + i) * (1 - i) = 2\n1 / i = -1 * i\n\nforall z C:\n    (z + i) * (z - i) = z * z + 1\n";
+    const SOURCE: &str = "2 * i + 1 = i * i + 2 + 2 * i\n(1 + i) * (1 - i) = 2\n1 / i = -1 * i\ni ^ -1 = -1 * i\n\nforall z C:\n    (z + i) * (z - i) = z * z + 1\n\nforall z C:\n    z + i != 0\n    =>:\n        (z + i) ^ 2 / (z + i) = z + i\n";
     let result_json = capture_stmt_results_json_v2_on_verifier_stack(
         SOURCE,
         "54_ComplexAlgebraicCalculation.lit",
@@ -383,7 +383,7 @@ fn complex_algebraic_normalization_compiles_typed_result_evidence() {
     .expect("capture complex-algebraic-normalization Result JSON v2");
     assert_eq!(
         result_json.matches("ComplexAlgebraicNormalization").count(),
-        4,
+        6,
         "{result_json}"
     );
 
@@ -391,6 +391,14 @@ fn complex_algebraic_normalization_compiles_typed_result_evidence() {
         .expect("compile exact complex algebraic normalization");
     assert!(generated.contains("Complex.I_mul_I"), "{generated}");
     assert!(generated.contains("ring_nf"), "{generated}");
+    assert!(generated.contains("field_simp"), "{generated}");
+    assert!(generated.contains("__calculate_nonzero1"), "{generated}");
+    assert!(
+        generated.contains("Litex.Same.ofEq __native_eq"),
+        "{generated}"
+    );
+    assert!(generated.contains("^ (2 : ℕ)"), "{generated}");
+    assert!(generated.contains("^ (-1 : ℤ)"), "{generated}");
     assert!(generated.contains("Litex.In.rep z"), "{generated}");
     assert!(!generated.contains("LitexObject"), "{generated}");
     assert!(!generated.contains("Litex.Object"), "{generated}");
@@ -400,16 +408,14 @@ fn complex_algebraic_normalization_compiles_typed_result_evidence() {
 }
 
 #[test]
-fn complex_algebraic_normalization_compiler_rejects_symbolic_denominators() {
+fn complex_algebraic_normalization_keeps_missing_nonzero_premise_fail_closed() {
     let error = compile_on_verifier_stack(
-        "forall z C:\n    z + i != 0\n    =>:\n        (z + i) / (z + i) = 1\n",
-        "complex_symbolic_denominator_boundary.lit",
+        "forall z C:\n    (z + i) ^ 2 / (z + i) = z + i\n",
+        "complex_missing_nonzero_premise.lit",
     )
-    .expect_err("symbolic denominator proof replay must remain fail-closed");
-    assert!(
-        error.contains("symbolic denominators remain unsupported"),
-        "{error}"
-    );
+    .expect_err("division without a nonzero premise must remain ill-defined");
+    assert!(error.contains("divisor `"), "{error}");
+    assert!(error.contains("z + i` must be non-zero"), "{error}");
 }
 
 #[test]

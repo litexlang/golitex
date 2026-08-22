@@ -1,0 +1,11 @@
+# Before this fix, selecting this later file rejected the preceding declaration:
+# template<S set>:
+#     have copied set = S
+# with "a template declaration cannot be replayed as a preverified template body".
+
+# Now the trusted prefix reconstructs the template's checked generic Result,
+# and the verified target can instantiate it normally.
+\prefix::copied<R> = R
+
+# Boundary: preverified template instance bodies still cannot introduce a
+# nested template declaration, and duplicate template names still fail.

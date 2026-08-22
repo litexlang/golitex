@@ -145,14 +145,28 @@ impl Runtime {
                 .into();
             }
         }
-        if objs_equal_by_complex_rational_expression_evaluation(&equal_fact.left, &equal_fact.right)
-        {
+        let complex_normalization_succeeds = objs_equal_by_complex_rational_expression_evaluation(
+            &equal_fact.left,
+            &equal_fact.right,
+        );
+        if complex_normalization_succeeds {
+            let nonzero_requirements = complex_algebraic_normalization_nonzero_requirements(
+                &equal_fact.left,
+                &equal_fact.right,
+            );
+            if !nonzero_requirements.is_empty() {
+                // This identity is computationally valid only under retained
+                // nonzero premises. Leave it to the bounded premise-producing
+                // phase below instead of erasing those dependencies through
+                // the ordinary rational-normalization fallback.
+                return UnknownGenericStmtResult::new().into();
+            }
             let target: Fact = equal_fact.clone().into();
             return SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 target.clone(),
                 "exact complex algebraic normalization".to_string(),
                 BuiltinRuleEvidence::ComplexAlgebraicNormalization(
-                    ComplexAlgebraicNormalizationBuiltinRuleEvidence::new(target),
+                    ComplexAlgebraicNormalizationBuiltinRuleEvidence::new(target, Vec::new()),
                 ),
                 Vec::new(),
             )
@@ -250,6 +264,14 @@ impl Runtime {
         }
         let child_state = builtin_state.after_applying_builtin_rule();
         let goal: AtomicFact = equal_fact.clone().into();
+        if let Some(result) = self
+            .try_verify_equal_fact_by_complex_algebraic_normalization_with_nonzero_premises(
+                equal_fact,
+                &child_state,
+            )?
+        {
+            return Ok(self.remember_successful_atomic_fact_for_statement(&goal, result));
+        }
         if let Some(result) =
             self.try_verify_atomic_fact_with_local_builtin_catalog(&goal, &child_state)?
         {
@@ -262,6 +284,66 @@ impl Runtime {
         }
         let result = self.verify_equal_fact_by_builtin_rules(equal_fact, &child_state)?;
         Ok(self.remember_successful_atomic_fact_for_statement(&goal, result))
+    }
+
+    fn try_verify_equal_fact_by_complex_algebraic_normalization_with_nonzero_premises(
+        &mut self,
+        equal_fact: &EqualFact,
+        builtin_state: &UseBuiltinRuleVerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        if !objs_equal_by_complex_rational_expression_evaluation(
+            &equal_fact.left,
+            &equal_fact.right,
+        ) {
+            return Ok(None);
+        }
+        let required_objects = complex_algebraic_normalization_nonzero_requirements(
+            &equal_fact.left,
+            &equal_fact.right,
+        );
+        if required_objects.is_empty() {
+            return Ok(None);
+        }
+
+        let zero: Obj = Number::new("0".to_string()).into();
+        let required_facts = required_objects
+            .into_iter()
+            .map(|object| {
+                AtomicFact::NotEqualFact(NotEqualFact::new(
+                    object,
+                    zero.clone(),
+                    equal_fact.line_file.clone(),
+                ))
+            })
+            .collect::<Vec<_>>();
+        let mut subgoals = Vec::with_capacity(required_facts.len());
+        for premise in &required_facts {
+            let result = self.verify_atomic_fact_as_builtin_rule_premise(premise, builtin_state)?;
+            if !result.is_true() {
+                return Ok(None);
+            }
+            subgoals.push(result);
+        }
+
+        let target: Fact = equal_fact.clone().into();
+        let expected_nonzero_premises = required_facts
+            .into_iter()
+            .map(Fact::from)
+            .collect::<Vec<_>>();
+        Ok(Some(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                target.clone(),
+                "exact complex algebraic normalization with nonzero premises".to_string(),
+                BuiltinRuleEvidence::ComplexAlgebraicNormalization(
+                    ComplexAlgebraicNormalizationBuiltinRuleEvidence::new(
+                        target,
+                        expected_nonzero_premises,
+                    ),
+                ),
+                subgoals,
+            )
+            .into(),
+        ))
     }
 
     pub fn verify_equal_fact(

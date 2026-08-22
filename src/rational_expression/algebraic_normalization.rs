@@ -2,6 +2,7 @@ use crate::prelude::*;
 use crate::rational_expression::collect_monomials::collect_monomials_in_obj;
 use crate::rational_expression::monomial::MonomialWithNonZeroScalarAndOrderedOperands;
 use crate::rational_expression::process_division_after_polynomial_simplification::collect_rational_expression_monomials_after_denominator_clearing_process;
+use std::collections::HashSet;
 
 const MAX_DENOMINATOR_CLEARING_ROUNDS: usize = 16;
 
@@ -29,6 +30,61 @@ pub fn objs_equal_by_complex_rational_expression_evaluation(left: &Obj, right: &
         right,
         AlgebraicNormalizationMode::ComplexImaginaryUnit,
     )
+}
+
+/// Returns the ordered, de-duplicated nonzero obligations whose truth makes
+/// complex rational normalization sound. Division contributes its
+/// denominator, while a negative integral power contributes its base. The
+/// verifier freezes proofs of these exact objects into the normalization
+/// Result so downstream consumers never have to rediscover them from ambient
+/// facts or from a diagnostic label.
+pub fn complex_algebraic_normalization_nonzero_requirements(left: &Obj, right: &Obj) -> Vec<Obj> {
+    fn collect(object: &Obj, requirements: &mut Vec<Obj>, seen: &mut HashSet<String>) {
+        match object {
+            Obj::Add(add) => {
+                collect(&add.left, requirements, seen);
+                collect(&add.right, requirements, seen);
+            }
+            Obj::Sub(sub) => {
+                collect(&sub.left, requirements, seen);
+                collect(&sub.right, requirements, seen);
+            }
+            Obj::Mul(mul) => {
+                collect(&mul.left, requirements, seen);
+                collect(&mul.right, requirements, seen);
+            }
+            Obj::Div(div) => {
+                collect(&div.left, requirements, seen);
+                collect(&div.right, requirements, seen);
+                let denominator = div.right.as_ref().clone();
+                if seen.insert(obj_equality_key(&denominator)) {
+                    requirements.push(denominator);
+                }
+            }
+            Obj::Pow(pow) => {
+                collect(&pow.base, requirements, seen);
+                collect(&pow.exponent, requirements, seen);
+                let exponent_is_negative_integer = pow
+                    .exponent
+                    .evaluate_to_normalized_decimal_number()
+                    .and_then(|number| number.normalized_value.parse::<i128>().ok())
+                    .is_some_and(|exponent| exponent < 0);
+                if exponent_is_negative_integer {
+                    let base = pow.base.as_ref().clone();
+                    if seen.insert(obj_equality_key(&base)) {
+                        requirements.push(base);
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+
+    let mut requirements = Vec::new();
+    let mut seen = HashSet::new();
+    collect(left, &mut requirements, &mut seen);
+    collect(right, &mut requirements, &mut seen);
+    requirements
 }
 
 fn obj_contains_normalizable_imaginary_unit(obj: &Obj) -> bool {
