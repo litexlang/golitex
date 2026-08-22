@@ -444,6 +444,22 @@ fn top_level_recursive_inference_theorems_close_over_earlier_inference_steps() {
 }
 
 #[test]
+fn inference_compilation_does_not_parse_rendered_lean_statements() {
+    const COMPILER_SOURCE: &str = include_str!("stmt_result_to_lean_compiler.rs");
+    for forbidden_parser in [
+        "strip_prefix(\"have \")",
+        "split_once(\" : \")",
+        "split_once(\" := \")",
+    ] {
+        assert!(
+            !COMPILER_SOURCE.contains(forbidden_parser),
+            "compiler must keep inference identity and proof fields structured instead of using `{forbidden_parser}`"
+        );
+    }
+    assert!(COMPILER_SOURCE.contains("CompiledInferenceFactProofStep"));
+}
+
+#[test]
 fn native_constants_use_mathlib_terms_and_exact_membership_rules() {
     const SOURCE: &str = "i = i\ne = e\npi = pi\n\ni $in C\ne $in R\npi $in R\ne $in C\npi $in C\n";
     let result_json =

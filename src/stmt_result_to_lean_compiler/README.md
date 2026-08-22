@@ -1,5 +1,20 @@
 # Turn Litex Kernel Execution Information into Lean Proofs
 
+## Start with one checked path
+
+The Litex example `2 * i + 1 = i * i + 2 + 2 * i` records `ComplexAlgebraicNormalization` evidence and compiles that exact route into Lean code.
+
+```text
+verified Litex StmtResult
+  -> validate the recorded target and child Results
+  -> represent each Litex object with its Lean carrier/evidence contract
+  -> compile the recorded proof constructor
+  -> emit Lean declarations in source order
+  -> fail closed on an unsupported Result instead of emitting `sorry`
+```
+
+The runnable pair is [`lean/examples/54_ComplexAlgebraicCalculation.lit`](../../lean/examples/54_ComplexAlgebraicCalculation.lit) plus its generated Lean check; the nearby boundary is the same division example without `z + i != 0`.
+
 ## The Two Hard Problems in the StmtResult-to-Lean Compiler
 
 1. *Represent Litex mathematics in Lean, which is a theoretical problem.* The compiler must choose a representation for each mathematical concept that is consistent with Lean and Mathlib, and that will remain natural and usable in ordinary Lean developments.
@@ -810,6 +825,7 @@ pub struct StmtResultToLeanCompiler {
     environment_stack: StmtResultToLeanCompilerEnvironmentStack,
     declarations: Vec<String>,
     next_fact_name_index: usize,
+    next_local_inference_name_index: usize,
     next_sketch_namespace_index: usize,
 }
 ```
@@ -903,6 +919,83 @@ push inherited compiler environment
 pop compiler environment
 publish only the enclosing theorem/definition in the parent environment
 ```
+
+### Compiler-private compiled results are not another IR
+
+`StmtResult` is the only semantic input to the compiler. Nevertheless, a
+compiler function sometimes has to return several target-language pieces to
+its parent. Those pieces should also be named and structured until the final
+Lean rendering boundary. They must not be packed into one `String` and then
+parsed by another compiler function.
+
+Typed inference uses the following compiler-private result:
+
+```rust
+struct CompiledInferenceFactProofStep {
+    fact_id: FactId,
+    fact: Fact,
+    local_lean_name: String,
+    proposition: String,
+    proof_expression: String,
+}
+```
+
+This type is deliberately not named `IR`. It does not record new proof truth,
+mirror an inference rule, or survive compilation. `fact_id` and `fact` are
+copied from the canonical Result; `local_lean_name`, `proposition`, and
+`proof_expression` are target-source construction outputs. One instance can
+be rendered in three places without recovering fields from Lean text:
+
+```text
+local proof body       -> have <name> : <proposition> := <proof>
+anonymous-function body -> let <name> : <proposition> := <proof>
+top-level publication -> theorem <published name> : <proposition> := ...
+```
+
+While compiling the next recursive step, the current compiler environment
+must also know how the preceding proof can be cited. That target-only choice
+is explicit:
+
+```rust
+enum CompiledInferenceFactAvailabilityInLeanEnvironment {
+    LocalProofName,
+    InlineProofExpression,
+}
+```
+
+Proof blocks, anonymous functions, and top-level theorem publication use a
+local name because their enclosing syntax can render the returned step.
+Function-body construction can have no surrounding tactic block, so it
+installs the proof expression itself. The same choice is passed recursively;
+therefore a future nested inference never accidentally cites a local name that
+its enclosing Lean term did not declare.
+
+For `1 $in N`, execution returns the stored membership fact and its recursive
+inference children. The compiler first produces a step for
+`1 >= 0`; the next recursive step proves `(-1) * 1 <= 0` and its
+`proof_expression` cites the first step's `local_lean_name`. When publishing
+the second top-level theorem, the compiler renders the preceding structured
+step inside its proof closure. It never performs the former reverse operation
+of splitting `"have ... : ... := ..."` to rediscover the temporary name,
+FactId, proposition, or proof.
+
+The extension rule is intentionally small:
+
+1. a new inference rule is validated against its typed Result fields;
+2. its compiler method constructs one `CompiledInferenceFactProofStep` for
+   each newly available fact, in dependency order;
+3. the surrounding Result scope chooses how to render those steps;
+4. an unsupported rule returns a compiler error before publishing a step.
+
+This does not require another enum variant for every compiler helper. A helper
+still declares one composition behavior: construct a target fragment, wrap or
+combine child fragments, pass a child through, or reject an unsupported Result
+shape. More compiler-private structs should be introduced only when two or
+more fields must stay associated across a function boundary. Plain `String`
+remains appropriate for a final Lean identifier, proposition, proof
+expression, declaration, or already ordered source line. It is not
+appropriate for carrying a FactId, source fact, child identity, scope, or rule
+selection implicitly.
 
 For a `ForallProof`, the proof-owned frame identities are explicit rather
 than inferred from a flat store summary:

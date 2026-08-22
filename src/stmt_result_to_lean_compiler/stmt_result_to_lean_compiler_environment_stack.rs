@@ -1,4 +1,4 @@
-use super::lean_compilation_types::LeanLocalFactPremise;
+use super::lean_compilation_types::{CompiledInferenceFactProofStep, LeanLocalFactPremise};
 use super::represent_litex_function_contracts_in_lean::LeanTargetFunctionTypeRepresentation;
 use super::represent_litex_objects_in_lean::LeanTargetObjectRepresentation;
 use crate::prelude::*;
@@ -187,8 +187,7 @@ pub(super) struct StmtResultAnonymousFunctionWellDefinednessToLeanCompilationCon
     pub(super) parameters: Vec<StmtResultWellDefinednessBinderPremiseToLeanCompilationContext>,
     pub(super) domains: Vec<StmtResultWellDefinednessBinderPremiseToLeanCompilationContext>,
     pub(super) assumption_infers: SuccessInferResult,
-    pub(super) inferred_proof_lines: Vec<String>,
-    pub(super) inferred_fact_bindings: Vec<(FactId, Fact, String)>,
+    pub(super) compiled_inference_fact_proof_steps: Vec<CompiledInferenceFactProofStep>,
     pub(super) closure: StmtResultAnonymousFunctionClosureToLeanCompilationContext,
 }
 

@@ -69,6 +69,69 @@ impl LeanLocalFactPremise {
     }
 }
 
+/// One short-lived target-language result produced while compiling a typed
+/// inference application.
+///
+/// This is not another semantic IR. `fact_id` and `fact` come from the
+/// canonical recursive `StmtResult`; the remaining fields are the exact Lean
+/// names and source fragments constructed for that fact. Keeping them
+/// together lets local proof blocks, anonymous-function bodies, and top-level
+/// theorem publication consume the same compiled result without parsing a
+/// rendered `have` statement back into semantic pieces.
+#[derive(Clone, Debug)]
+pub(super) struct CompiledInferenceFactProofStep {
+    pub(super) fact_id: FactId,
+    pub(super) fact: Fact,
+    pub(super) local_lean_name: String,
+    pub(super) proposition: String,
+    pub(super) proof_expression: String,
+}
+
+/// How a compiled inference conclusion becomes available to later compiler
+/// steps in the current Lean scope.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(super) enum CompiledInferenceFactAvailabilityInLeanEnvironment {
+    /// Later proof expressions cite a local `have`/`let` name. The enclosing
+    /// caller is responsible for rendering the returned step first.
+    LocalProofName,
+    /// Later proof expressions directly contain the earlier proof expression.
+    /// This is used while constructing terms that have no surrounding tactic
+    /// block in which a local proof name could be declared.
+    InlineProofExpression,
+}
+
+impl CompiledInferenceFactProofStep {
+    pub(super) fn new(
+        fact_id: FactId,
+        fact: Fact,
+        local_lean_name: String,
+        proposition: String,
+        proof_expression: String,
+    ) -> Self {
+        Self {
+            fact_id,
+            fact,
+            local_lean_name,
+            proposition,
+            proof_expression,
+        }
+    }
+
+    pub(super) fn render_as_local_have_statement(&self) -> String {
+        format!(
+            "have {} : {} := {}",
+            self.local_lean_name, self.proposition, self.proof_expression
+        )
+    }
+
+    pub(super) fn render_as_local_let_statement(&self) -> String {
+        format!(
+            "let {} : {} := {}",
+            self.local_lean_name, self.proposition, self.proof_expression
+        )
+    }
+}
+
 pub(super) fn facts_are_comparison_notation_duals(source: &Fact, target: &Fact) -> bool {
     let (Fact::AtomicFact(source), Fact::AtomicFact(target)) = (source, target) else {
         return false;
