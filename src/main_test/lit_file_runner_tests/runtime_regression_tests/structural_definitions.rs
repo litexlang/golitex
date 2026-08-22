@@ -13,7 +13,6 @@ forall candidate &NonzeroRealView:
     candidate.value != 0
 "#;
     let mut runtime = Runtime::new();
-    runtime.isolated = true;
     runtime.new_file_path_new_env_new_name_scope(
         "struct_equivalent_facts_provide_sequential_well_definedness_context",
     );
@@ -47,7 +46,6 @@ struct ReversedNonzeroRealView:
         ),
     ] {
         let mut boundary_runtime = Runtime::new();
-        boundary_runtime.isolated = true;
         boundary_runtime.new_file_path_new_env_new_name_scope(name);
         let (boundary_results, boundary_error) = run_source_code(source, &mut boundary_runtime);
         let (boundary_succeeded, boundary_output) = render_run_source_code_output(

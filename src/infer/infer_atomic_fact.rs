@@ -10,7 +10,7 @@ impl Runtime {
         // Recursive inference may return to the same membership through an
         // alpha-renamed set builder. This is a DFS back-edge guard, not an
         // inference-depth limit: distinct nested facts still expand normally.
-        if !self.active_atomic_fact_inferences.insert(fact_key.clone()) {
+        if !self.begin_atomic_fact_inference(&fact_key) {
             return Ok(SuccessInferResult::new());
         }
 
@@ -57,7 +57,7 @@ impl Runtime {
             _ => Ok(SuccessInferResult::new()),
         };
 
-        self.active_atomic_fact_inferences.remove(&fact_key);
+        self.end_atomic_fact_inference(&fact_key);
         result
     }
 }

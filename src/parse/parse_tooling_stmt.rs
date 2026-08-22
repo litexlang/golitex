@@ -10,7 +10,7 @@ impl Runtime {
     }
 
     pub fn parse_import_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
-        if !self.isolated {
+        if !self.current_source_allows_inline_imports() {
             return Err(ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(
                 "source import is only available in an isolated REPL or an isolated .lit file; module files must declare dependencies in litex.config"
                     .to_string(),

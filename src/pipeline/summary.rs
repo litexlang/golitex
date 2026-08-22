@@ -76,7 +76,7 @@ impl RunSummary {
     ) -> RunSummary {
         let mut summary = Self::from_run(stmt_results, runtime_error);
         summary.unverified_imports = runtime
-            .unverified_imports
+            .unverified_imports()
             .iter()
             .map(|entry| UnverifiedImportSummary {
                 kind: entry.kind.clone(),

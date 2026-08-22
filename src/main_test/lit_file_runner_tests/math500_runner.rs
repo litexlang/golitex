@@ -111,7 +111,9 @@ fn run_math500_tmp() {
         }
 
         let normalized_source = remove_windows_carriage_return(snippet.source.as_str());
-        runtime.isolated = source_has_isolated_import(normalized_source.as_str());
+        runtime.set_current_source_allows_inline_imports(source_has_isolated_import(
+            normalized_source.as_str(),
+        ));
         let start_time = Instant::now();
         let (stmt_results, runtime_error) =
             run_source_code(normalized_source.as_str(), &mut runtime);
@@ -261,7 +263,9 @@ fn run_math500_litex_lit_dir(base_dir: &Path) {
         }
 
         let normalized_source = remove_windows_carriage_return(litex_code);
-        runtime.isolated = source_has_isolated_import(normalized_source.as_str());
+        runtime.set_current_source_allows_inline_imports(source_has_isolated_import(
+            normalized_source.as_str(),
+        ));
 
         if total_count % 25 == 0 || total_count + 1 == lit_paths.len() {
             println!(

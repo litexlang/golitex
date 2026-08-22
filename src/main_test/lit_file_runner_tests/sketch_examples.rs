@@ -29,7 +29,9 @@ fn run_example_lit_file(relative_path: &str) {
     let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope(path_str);
     let normalized_source = remove_windows_carriage_return(lit_content.as_str());
-    runtime.isolated = source_has_isolated_import(normalized_source.as_str());
+    runtime.set_current_source_allows_inline_imports(source_has_isolated_import(
+        normalized_source.as_str(),
+    ));
 
     let start_time = Instant::now();
     let (stmt_results, runtime_error) = run_source_code(normalized_source.as_str(), &mut runtime);

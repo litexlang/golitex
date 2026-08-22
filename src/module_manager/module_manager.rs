@@ -2,6 +2,13 @@ use crate::prelude::*;
 use std::collections::HashMap;
 use std::rc::Rc;
 
+#[derive(Clone, Debug)]
+pub struct UnverifiedImport {
+    pub kind: String,
+    pub name: String,
+    pub line_file: LineFile,
+}
+
 /// Owns every module participating in one top-level Runtime.
 ///
 /// Module runners refer to dependencies by `ModuleId`; they never hold Runtime
@@ -19,6 +26,8 @@ pub struct ModuleManager {
     pub next_module_id: usize,
     pub entry_module_id: Option<ModuleId>,
     pub entry_path_rc: Rc<str>,
+    pub parsed_struct_definitions: HashMap<String, DefStructStmt>,
+    pub unverified_imports: Vec<UnverifiedImport>,
 }
 
 impl ModuleManager {
@@ -34,6 +43,8 @@ impl ModuleManager {
             next_module_id: 0,
             entry_module_id: None,
             entry_path_rc: Rc::from(""),
+            parsed_struct_definitions: HashMap::new(),
+            unverified_imports: vec![],
         }
     }
 

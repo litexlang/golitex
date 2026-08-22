@@ -126,11 +126,7 @@ impl Runtime {
     /// recover a callable carrier directly from the bound symbol's declared
     /// struct view without storing membership, tuple bridges, or struct laws.
     fn declaration_owned_one_field_callable_body(&self, obj: &Obj) -> Option<FnSetBody> {
-        let symbol = match obj {
-            Obj::Atom(atom) => atom.symbol_ref(),
-            _ => None,
-        }?;
-        let struct_obj = self.default_struct_view_for_symbol(symbol)?;
+        let struct_obj = self.known_struct_carrier_for_obj(obj)?;
         let def = self.get_struct_definition_by_name(&struct_obj.name.to_string())?;
         if def.fields.len() != 1 {
             return None;
@@ -158,6 +154,20 @@ impl Runtime {
             FnSetSpace::Set(fn_set) => Some(fn_set.body),
             FnSetSpace::Anon(anonymous_fn) => Some(anonymous_fn.body),
         }
+    }
+
+    pub(crate) fn known_struct_carrier_for_obj(&self, obj: &Obj) -> Option<StructObj> {
+        let key = obj_equality_key(obj);
+        self.iter_environments_from_top().find_map(|environment| {
+            environment
+                .known_owner_sets
+                .get(&key)?
+                .values()
+                .find_map(|in_fact| match &in_fact.set {
+                    Obj::StructObj(struct_obj) => Some(struct_obj.clone()),
+                    _ => None,
+                })
+        })
     }
 
     pub fn get_fn_range_function_body(&self, function: &Obj) -> Option<FnSetBody> {

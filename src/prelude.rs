@@ -128,7 +128,7 @@ pub use crate::module_manager::{
     ConfigBareSymbolSource, ConfigImport, ConfigImportKind, ExportEntry, FileId, FileRunner,
     FileStatus, ImportTarget, ModuleId, ModuleManager, ModuleRunner, ModuleStatus, ProjectBareName,
     ProjectConfig, ProjectExport, ProjectHierarchy, ProjectImport, ProjectStdImport,
-    RepositoryFileTarget,
+    RepositoryFileTarget, UnverifiedImport,
 };
 pub use crate::obj::nested_obj_binder_normalized_key;
 pub use crate::obj::obj_equality_key;
@@ -489,11 +489,9 @@ pub use crate::runner::{
 pub use crate::runtime::ExecutionMode;
 pub use crate::runtime::FreeParamCollection;
 pub use crate::runtime::ParseContext;
-pub use crate::runtime::RunMode;
 pub use crate::runtime::ScopeFrame;
 pub use crate::runtime::{
-    BareSymbol, ExecutionFrame, ExecutionLayer, OutputStyle, Runtime, TrustedPrefixPolicy,
-    TrustedPrefixReport, TrustedPrefixStatementContext,
+    BareSymbol, ExecutionFrame, ExecutionLayer, OutputStyle, Runtime, TrustedPrefixReport,
 };
 pub use crate::stmt::by_stmt::ByAntisymmetricPropStmt;
 pub use crate::stmt::by_stmt::ByAxiomOfChoiceStmt;

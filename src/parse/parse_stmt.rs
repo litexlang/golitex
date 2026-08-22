@@ -151,7 +151,8 @@ mod parse_stmt_diagnostic_tests {
         );
 
         let mut runtime = Runtime::new();
-        runtime.isolated = true;
+        runtime.new_file_path_new_env_new_name_scope("isolated_import_test.lit");
+        runtime.set_current_source_allows_inline_imports(true);
         let tokenizer = Tokenizer::new();
         let mut blocks = tokenizer
             .parse_blocks(

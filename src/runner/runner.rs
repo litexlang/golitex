@@ -88,7 +88,11 @@ pub fn run_runner_for_file_with_strict_language_and_isolation(
     };
 
     let mut runtime = Runtime::new();
-    runtime.detail_output = !hide_file_paths;
+    runtime.set_output_style(if hide_file_paths {
+        OutputStyle::Normal
+    } else {
+        OutputStyle::Detailed
+    });
     runtime.strict_mode = strict_mode;
     runtime.output_language = output_language;
     let (stmt_results, runtime_error) = crate::pipeline::run_file_with_project_context(
@@ -179,7 +183,11 @@ fn run_runner_on_source(
     let normalized_source = remove_windows_carriage_return(source_code);
     let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope(target_label);
-    runtime.detail_output = !hide_file_paths;
+    runtime.set_output_style(if hide_file_paths {
+        OutputStyle::Normal
+    } else {
+        OutputStyle::Detailed
+    });
     runtime.strict_mode = strict_mode;
     runtime.output_language = output_language;
 

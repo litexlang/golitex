@@ -1,26 +1,13 @@
 use crate::prelude::*;
 use std::cell::RefCell;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::rc::Rc;
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum RunMode {
-    File,
-    Repository,
-}
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum OutputStyle {
     Compact,
     Normal,
     Detailed,
-}
-
-#[derive(Clone, Debug)]
-pub struct UnverifiedImport {
-    pub kind: String,
-    pub name: String,
-    pub line_file: LineFile,
 }
 
 impl OutputStyle {
@@ -34,43 +21,14 @@ pub struct Runtime {
     /// this Runtime and are selected by `execution_stack` frames.
     pub module_manager: Box<ModuleManager>,
     pub execution_stack: Vec<ExecutionFrame>,
-    pub run_mode: RunMode,
     /// Monotone runtime-wide allocator. Local environments may disappear, but
     /// a fact ID is never reused during the run.
     pub(crate) next_fact_id: u64,
-    /// Parameters that the active recursive fact matcher may instantiate.
-    /// Captured parameters of the same object kind must remain rigid.
-    pub(crate) active_arg_match_bindings: Vec<(ParamObjType, String)>,
-    /// Atomic facts currently being expanded by the recursive inference cascade.
-    pub(crate) active_atomic_fact_inferences: HashSet<FactString>,
-    /// Objects currently being checked for well-definedness.
-    pub(crate) active_well_defined_objects: HashSet<ObjString>,
-    /// Named set-membership goals currently being unfolded to set builders.
-    pub(crate) active_set_builder_membership_unfolds: HashSet<FactString>,
-    /// Prevents set-builder definition transport from recursively selecting itself
-    /// while unfolding a named definition or checking a chosen theorem's requirements.
-    pub(crate) active_set_builder_forall_transport: bool,
     pub(crate) symbol_id_allocator: Rc<SymbolIdAllocator>,
     pub(crate) template_instance_interner: RefCell<HashMap<String, SymbolBinding>>,
-    /// Parser-only notation metadata. A source binder written as `a &Struct`
-    /// records the struct view used to lower later `a.field` expressions.
-    pub(crate) default_struct_views: HashMap<SymbolId, StructObj>,
-    /// Parser-only argument-spread metadata. A binder declared in a finite
-    /// Cartesian carrier records its compile-time tuple arity for `unfold a`.
-    pub(crate) default_tuple_views: HashMap<SymbolId, Cart>,
-    /// Struct declarations retained by parse-only consumers such as LaTeX output.
-    /// These declarations never enter the verified environment.
-    pub(crate) parsed_struct_definitions: HashMap<String, DefStructStmt>,
-    pub detail_output: bool,
     pub output_style: OutputStyle,
     pub strict_mode: bool,
-    pub isolated: bool,
     pub output_language: OutputLanguage,
-    pub unverified_imports: Vec<UnverifiedImport>,
-    pub(crate) trusted_prefix_policy: Option<TrustedPrefixPolicy>,
-    pub(crate) trusted_prefix_statement_context: Option<TrustedPrefixStatementContext>,
-    pub trusted_prefix_report: Option<TrustedPrefixReport>,
-    pub trusted_prefix_setup_error: Option<String>,
 }
 
 impl Runtime {
@@ -78,28 +36,12 @@ impl Runtime {
         Runtime {
             module_manager: Box::new(ModuleManager::new()),
             execution_stack: vec![],
-            run_mode: RunMode::File,
             next_fact_id: 1,
-            active_arg_match_bindings: vec![],
-            active_atomic_fact_inferences: HashSet::new(),
-            active_well_defined_objects: HashSet::new(),
-            active_set_builder_membership_unfolds: HashSet::new(),
-            active_set_builder_forall_transport: false,
             symbol_id_allocator: Rc::new(SymbolIdAllocator::new()),
             template_instance_interner: RefCell::new(HashMap::new()),
-            default_struct_views: HashMap::new(),
-            default_tuple_views: HashMap::new(),
-            parsed_struct_definitions: HashMap::new(),
-            detail_output: false,
             output_style: OutputStyle::Normal,
             strict_mode: false,
-            isolated: false,
             output_language: OutputLanguage::English,
-            unverified_imports: vec![],
-            trusted_prefix_policy: None,
-            trusted_prefix_statement_context: None,
-            trusted_prefix_report: None,
-            trusted_prefix_setup_error: None,
         }
     }
 }
@@ -117,15 +59,10 @@ impl Runtime {
 
     pub fn set_output_style(&mut self, output_style: OutputStyle) {
         self.output_style = output_style;
-        self.detail_output = output_style == OutputStyle::Detailed;
     }
 
     pub fn effective_output_style(&self) -> OutputStyle {
-        if self.detail_output {
-            OutputStyle::Detailed
-        } else {
-            self.output_style
-        }
+        self.output_style
     }
 
     pub fn is_compact_output(&self) -> bool {
@@ -292,19 +229,39 @@ impl Runtime {
         self.current_execution_mode() == ExecutionMode::Trusted
     }
 
+    pub fn current_source_allows_inline_imports(&self) -> bool {
+        self.execution_stack
+            .last()
+            .is_some_and(|frame| frame.allows_inline_imports)
+    }
+
+    pub fn set_current_source_allows_inline_imports(&mut self, allows_inline_imports: bool) {
+        self.execution_stack
+            .last_mut()
+            .expect("an execution frame should exist while configuring source imports")
+            .allows_inline_imports = allows_inline_imports;
+    }
+
     pub fn record_unverified_import(&mut self, kind: &str, name: String, line_file: LineFile) {
         if self
+            .module_manager
             .unverified_imports
             .iter()
             .any(|entry| entry.kind == kind && entry.name == name && entry.line_file == line_file)
         {
             return;
         }
-        self.unverified_imports.push(UnverifiedImport {
-            kind: kind.to_string(),
-            name,
-            line_file,
-        });
+        self.module_manager
+            .unverified_imports
+            .push(UnverifiedImport {
+                kind: kind.to_string(),
+                name,
+                line_file,
+            });
+    }
+
+    pub fn unverified_imports(&self) -> &[UnverifiedImport] {
+        &self.module_manager.unverified_imports
     }
 
     fn current_execution_target(&self) -> (ModuleId, ExecutionLayer) {
@@ -313,55 +270,6 @@ impl Runtime {
             .last()
             .expect("an execution frame should always exist");
         (frame.module_id, frame.layer)
-    }
-
-    pub(crate) fn configure_trusted_prefix(
-        &mut self,
-        module_id: ModuleId,
-        layer: ExecutionLayer,
-        before_line: usize,
-    ) {
-        self.trusted_prefix_policy = Some(TrustedPrefixPolicy::new(module_id, layer, before_line));
-        self.trusted_prefix_statement_context = None;
-    }
-
-    pub(crate) fn clear_trusted_prefix_execution_policy(&mut self) {
-        self.trusted_prefix_policy = None;
-        self.trusted_prefix_statement_context = None;
-    }
-
-    pub(crate) fn trusted_prefix_before_line_for_current_target(&self) -> Option<usize> {
-        let (module_id, layer) = self.current_execution_target();
-        self.trusted_prefix_policy
-            .as_ref()
-            .filter(|policy| policy.matches(module_id, layer))
-            .map(|policy| policy.before_line)
-    }
-
-    pub(crate) fn begin_trusted_prefix_statement(&mut self, is_trusted: bool) {
-        let (module_id, layer) = self.current_execution_target();
-        self.trusted_prefix_statement_context = Some(TrustedPrefixStatementContext::new(
-            module_id, layer, is_trusted,
-        ));
-    }
-
-    pub(crate) fn end_trusted_prefix_statement(&mut self) {
-        self.trusted_prefix_statement_context = None;
-    }
-
-    pub(crate) fn current_statement_is_in_trusted_prefix_run(&self) -> bool {
-        let (module_id, layer) = self.current_execution_target();
-        self.trusted_prefix_statement_context
-            .as_ref()
-            .is_some_and(|context| context.matches(module_id, layer))
-    }
-
-    pub(crate) fn current_statement_is_cli_trusted_prefix(&self) -> bool {
-        let (module_id, layer) = self.current_execution_target();
-        self.trusted_prefix_statement_context
-            .as_ref()
-            .filter(|context| context.matches(module_id, layer))
-            .is_some_and(|context| context.is_trusted)
     }
 
     pub(crate) fn replace_current_execution_mode(
@@ -439,7 +347,6 @@ impl Runtime {
 
 impl Runtime {
     pub fn new_file_path_new_env_new_name_scope(&mut self, path: &str) {
-        self.run_mode = RunMode::File;
         let module_id = self.module_manager.create_entry_module(path);
         self.execution_stack
             .push(ExecutionFrame::new(module_id, ExecutionLayer::Main, path));
@@ -450,7 +357,6 @@ impl Runtime {
         repository_root: String,
         main_file_path: String,
     ) -> Result<ModuleId, String> {
-        self.run_mode = RunMode::Repository;
         let module_id = self
             .module_manager
             .create_repository_entry_module(repository_root, main_file_path.clone())?;
@@ -500,14 +406,6 @@ impl Runtime {
         let path = self.current_file_path_rc().to_string();
         self.module_manager = Box::new(ModuleManager::new());
         self.execution_stack.clear();
-        self.unverified_imports.clear();
-        self.parsed_struct_definitions.clear();
-        self.active_atomic_fact_inferences.clear();
-        self.active_well_defined_objects.clear();
-        self.trusted_prefix_policy = None;
-        self.trusted_prefix_statement_context = None;
-        self.trusted_prefix_report = None;
-        self.trusted_prefix_setup_error = None;
         self.new_file_path_new_env_new_name_scope(path.as_str());
     }
 }
@@ -585,7 +483,7 @@ impl Runtime {
             }
         }
         self.current_parse_context_mut().clear();
-        self.parsed_struct_definitions.clear();
+        self.module_manager.parsed_struct_definitions.clear();
     }
 
     /// Runs a closure in a temporary child environment and pops it on normal return.
@@ -637,23 +535,34 @@ impl Runtime {
             .and_then(|frame| frame.local_environment_stack.pop())
             .expect("local environment should exist after push_env");
 
-        *self.current_parse_context_mut() = parse_context_before;
+        if result.is_ok() {
+            self.current_parse_context_mut()
+                .restore_scoped_state(parse_context_before);
+        } else {
+            *self.current_parse_context_mut() = parse_context_before;
+        }
 
         let value = result?;
         self.top_level_env().merge_committed_child(*child)?;
         Ok(value)
     }
 
-    /// Restores the current frame's [`ParseContext`] after `f` so parse-time bindings (e.g.
+    /// Restores the current frame's scoped parsing state after `f` so parse-time bindings (e.g.
     /// `have x …` without `=`) do not leak across sibling `?` goal blocks or out of nested parses
-    /// that use this wrapper (`forall`, `exist`, goal blocks, `prop` bodies, etc.).
+    /// that use this wrapper (`forall`, `exist`, goal blocks, `prop` bodies, etc.). Successful
+    /// parses retain SymbolId-indexed notation metadata owned by the source frame.
     pub fn run_in_local_parsing_time_name_scope<T, E, F>(&mut self, f: F) -> Result<T, E>
     where
         F: FnOnce(&mut Self) -> Result<T, E>,
     {
         let saved_parse_context = self.current_parse_context().clone();
         let result = f(self);
-        *self.current_parse_context_mut() = saved_parse_context;
+        if result.is_ok() {
+            self.current_parse_context_mut()
+                .restore_scoped_state(saved_parse_context);
+        } else {
+            *self.current_parse_context_mut() = saved_parse_context;
+        }
         result
     }
 

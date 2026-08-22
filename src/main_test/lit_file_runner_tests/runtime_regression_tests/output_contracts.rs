@@ -167,7 +167,7 @@ fn json_v2_detailed_output_keeps_the_same_structural_empty_arrays() {
 
     let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope("detail_output_keeps_empty_fields");
-    runtime.detail_output = true;
+    runtime.set_output_style(OutputStyle::Detailed);
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
     let (run_succeeded, run_output) =
         render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
@@ -447,7 +447,7 @@ witness exist x R st {x = 1} from 1:
 
         let mut runtime = Runtime::new();
         runtime.new_file_path_new_env_new_name_scope("detail_output_expands_proof_trace");
-        runtime.detail_output = true;
+        runtime.set_output_style(OutputStyle::Detailed);
         let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
         let (run_succeeded, run_output) =
             render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
@@ -510,7 +510,7 @@ by induc n from 0:
 
     let mut detail_runtime = Runtime::new();
     detail_runtime.new_file_path_new_env_new_name_scope("by_induc_detail_trace");
-    detail_runtime.detail_output = true;
+    detail_runtime.set_output_style(OutputStyle::Detailed);
     let (detail_stmt_results, detail_runtime_error) =
         run_source_code(source_code, &mut detail_runtime);
     let (detail_run_succeeded, detail_run_output) = render_run_source_code_output(
@@ -548,7 +548,7 @@ witness exist x R st {x = 1} from 1:
 
     let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope("witness_detail_output_keeps_trace");
-    runtime.detail_output = true;
+    runtime.set_output_style(OutputStyle::Detailed);
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
     let (run_succeeded, run_output) =
         render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
@@ -1408,7 +1408,7 @@ forall x R:
 
     let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope("factual_verified_by_stable_shape");
-    runtime.detail_output = true;
+    runtime.set_output_style(OutputStyle::Detailed);
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
     let (run_succeeded, run_output) =
         render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
@@ -1665,7 +1665,7 @@ $q(1)
     assert!(run_output.contains(format!("\"reason\": \"{}\"", TrustStmt::store_reason()).as_str()));
 
     let mut detail_runtime = Runtime::new();
-    detail_runtime.detail_output = true;
+    detail_runtime.set_output_style(OutputStyle::Detailed);
     detail_runtime.new_file_path_new_env_new_name_scope(
         "detail_output_moves_store_facts_into_environment_effects_detail",
     );
@@ -1709,7 +1709,7 @@ forall b R:
         b^2 = 4
 "#;
     let mut runtime = Runtime::new();
-    runtime.detail_output = true;
+    runtime.set_output_style(OutputStyle::Detailed);
     runtime
         .new_file_path_new_env_new_name_scope("detail_output_exposes_statement_execution_phases");
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
@@ -1741,7 +1741,7 @@ fn detail_output_marks_failed_phase_and_does_not_claim_environment_effects() {
 
 fn detail_output_marks_failed_phase_and_does_not_claim_environment_effects_impl() {
     let mut runtime = Runtime::new();
-    runtime.detail_output = true;
+    runtime.set_output_style(OutputStyle::Detailed);
     runtime.new_file_path_new_env_new_name_scope(
         "detail_output_marks_failed_phase_and_does_not_claim_environment_effects",
     );
@@ -1810,7 +1810,7 @@ obtain c from exist x R st {x = x}
 "#;
 
             let mut runtime = Runtime::new();
-            runtime.detail_output = true;
+            runtime.set_output_style(OutputStyle::Detailed);
             runtime.new_file_path_new_env_new_name_scope(
                 "object_definition_output_exposes_checks_and_defined_facts",
             );
@@ -2175,7 +2175,7 @@ by cases:
 
         let mut runtime = Runtime::new();
         runtime.new_file_path_new_env_new_name_scope("by_cases_detail_output_expands_cases");
-        runtime.detail_output = true;
+        runtime.set_output_style(OutputStyle::Detailed);
         let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
         let (run_succeeded, run_output) =
             render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
@@ -2461,7 +2461,7 @@ pub(super) fn detail_output_keeps_composite_fact_step_metadata() {
     let mut runtime = Runtime::new();
     runtime
         .new_file_path_new_env_new_name_scope("detail_output_keeps_composite_fact_step_metadata");
-    runtime.detail_output = true;
+    runtime.set_output_style(OutputStyle::Detailed);
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
     let (run_succeeded, run_output) =
         render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
@@ -2627,7 +2627,7 @@ forall x R:
     runtime.new_file_path_new_env_new_name_scope(
         "detail_unknown_output_keeps_failed_part_position_metadata",
     );
-    runtime.detail_output = true;
+    runtime.set_output_style(OutputStyle::Detailed);
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
     let (run_succeeded, run_output) =
         render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
@@ -2717,7 +2717,7 @@ claim:
     runtime.new_file_path_new_env_new_name_scope(
         "detail_proof_block_failure_keeps_then_clause_position_metadata",
     );
-    runtime.detail_output = true;
+    runtime.set_output_style(OutputStyle::Detailed);
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
     let (run_succeeded, run_output) =
         render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);

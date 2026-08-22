@@ -380,7 +380,9 @@ fn run_examples_phase1_sequential_with_runtime(
             }
 
             let normalized_source = remove_windows_carriage_return(item.source.as_str());
-            runtime.isolated = source_has_isolated_import(normalized_source.as_str());
+            runtime.set_current_source_allows_inline_imports(source_has_isolated_import(
+                normalized_source.as_str(),
+            ));
 
             let start_time_for_one_file = Instant::now();
             let (stmt_results, runtime_error) =
@@ -706,7 +708,9 @@ fn run_litex_run_group(group: LitexRunGroup) -> LitexRunGroupSummary {
         }
 
         let normalized_source = remove_windows_carriage_return(item.source.as_str());
-        runtime.isolated = source_has_isolated_import(normalized_source.as_str());
+        runtime.set_current_source_allows_inline_imports(source_has_isolated_import(
+            normalized_source.as_str(),
+        ));
         let start_time_for_one_file = Instant::now();
         let run_result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
             run_source_code(normalized_source.as_str(), &mut runtime)

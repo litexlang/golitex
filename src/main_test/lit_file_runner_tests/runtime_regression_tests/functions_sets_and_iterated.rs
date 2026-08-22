@@ -447,7 +447,7 @@ claim:
             runtime.new_file_path_new_env_new_name_scope(
                 "obtain_body_well_defined_can_use_forall_domain_fact",
             );
-            runtime.detail_output = true;
+            runtime.set_output_style(OutputStyle::Detailed);
             let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
             let (run_succeeded, run_output) =
                 render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
@@ -2378,7 +2378,7 @@ thm builtin_bijective_unfolds:
         let mut runtime = Runtime::new();
         runtime
             .new_file_path_new_env_new_name_scope("builtin_function_properties_verify_and_unfold");
-        runtime.detail_output = true;
+        runtime.set_output_style(OutputStyle::Detailed);
         let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
         let (run_succeeded, run_output) =
             render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
@@ -2494,7 +2494,7 @@ thm finite_bijection_preserves_size:
 
         let mut runtime = Runtime::new();
         runtime.new_file_path_new_env_new_name_scope("finite_source_function_property_rules");
-        runtime.detail_output = true;
+        runtime.set_output_style(OutputStyle::Detailed);
         let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
         let (run_succeeded, run_output) =
             render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);

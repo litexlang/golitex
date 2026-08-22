@@ -44,19 +44,20 @@ target = "./target.lit"
 
             let target_path = path_string(&target_source);
             let mut runtime = Runtime::new();
-            let (stmt_results, runtime_error) = run_file_with_project_context_and_trusted_prefix(
-                target_path.as_str(),
-                &mut runtime,
-                false,
-                Some(3),
-            );
+            let (stmt_results, runtime_error, report, setup_rejected) =
+                run_file_with_project_context_and_trusted_prefix(
+                    target_path.as_str(),
+                    &mut runtime,
+                    false,
+                    Some(3),
+                );
 
             assert!(
                 runtime_error.is_none(),
                 "registered trusted-prefix fixture failed: {runtime_error:?}"
             );
-            let report = runtime
-                .trusted_prefix_report
+            assert!(!setup_rejected);
+            let report = report
                 .as_ref()
                 .expect("the selected file should produce a trusted-prefix report");
             assert_eq!(report.file, target_path);
@@ -103,11 +104,11 @@ target = "./target.lit"
                 Some("verified")
             );
             assert!(runtime
-                .unverified_imports
+                .unverified_imports()
                 .iter()
                 .any(|entry| entry.kind == "project_import"));
             assert!(runtime
-                .unverified_imports
+                .unverified_imports()
                 .iter()
                 .any(|entry| entry.kind == "project_export"));
         },
@@ -146,8 +147,6 @@ target = "./target.lit"
                 runtime_error.is_some(),
                 "without the flag, the invalid first proof must still be verified"
             );
-            assert!(runtime.trusted_prefix_report.is_none());
-            assert!(runtime.trusted_prefix_setup_error.is_none());
             assert!(!output.contains("trusted_prefix"));
             assert!(!output.contains("cli_trusted_prefix"));
             assert!(!output.contains("\"verification_status\""));
@@ -175,17 +174,18 @@ target = "./target.lit"
     write_file(&target_source, "1 = 1\n\n2 = 2\n");
 
     let mut runtime = Runtime::new();
-    let (stmt_results, runtime_error) = run_file_with_project_context_and_trusted_prefix(
-        path_string(&target_source).as_str(),
-        &mut runtime,
-        false,
-        Some(2),
-    );
+    let (stmt_results, runtime_error, report, setup_rejected) =
+        run_file_with_project_context_and_trusted_prefix(
+            path_string(&target_source).as_str(),
+            &mut runtime,
+            false,
+            Some(2),
+        );
 
     assert!(stmt_results.is_empty());
     assert!(runtime_error.is_some());
-    assert!(runtime.trusted_prefix_report.is_none());
-    assert!(runtime.trusted_prefix_setup_error.is_some());
+    assert!(report.is_none());
+    assert!(setup_rejected);
 
     let (probe_results, probe_error) = run_source_code("7 = 8", &mut runtime);
     assert!(

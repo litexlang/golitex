@@ -1,6 +1,6 @@
 use super::known_fn::KnownFnInfo;
 use crate::prelude::*;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::fmt;
 use std::rc::Rc;
 
@@ -9,6 +9,35 @@ pub type AtomicFactInForallArgShapeIndex = HashMap<
     (AtomicFactKey, bool),
     HashMap<AtomicFactInForallArgShapeKey, Vec<(AtomicFact, Rc<KnownForallFactParamsAndDom>)>>,
 >;
+
+/// In-progress proof-search keys owned by one environment scope.
+///
+/// This state prevents recursive back-edges while a statement is being
+/// checked. It is deliberately absent from environment snapshots and merges:
+/// cloning an environment starts with no active search, and statement cleanup
+/// clears every active scope.
+#[derive(Default)]
+pub(crate) struct ProofSearchState {
+    pub(crate) active_atomic_fact_inferences: HashSet<FactString>,
+    pub(crate) active_well_defined_objects: HashSet<ObjString>,
+    pub(crate) active_set_builder_membership_unfolds: HashSet<FactString>,
+    pub(crate) active_set_builder_forall_transport: bool,
+}
+
+impl Clone for ProofSearchState {
+    fn clone(&self) -> Self {
+        Self::default()
+    }
+}
+
+impl ProofSearchState {
+    pub(crate) fn clear(&mut self) {
+        self.active_atomic_fact_inferences.clear();
+        self.active_well_defined_objects.clear();
+        self.active_set_builder_membership_unfolds.clear();
+        self.active_set_builder_forall_transport = false;
+    }
+}
 
 /// The mutable mathematical context for a runtime environment.
 ///
@@ -91,6 +120,7 @@ pub struct Environment {
     /// be reconstructed after this transient map is cleared.
     pub statement_well_defined_obj_proofs:
         HashMap<WellDefinedCacheKey, Rc<SuccessVerifyObjWellDefinedResult>>,
+    pub(crate) proof_search_state: ProofSearchState,
 
     pub used_strategy_stmts: HashMap<(PropName, bool), StrategyName>,
     pub stopped_strategy_stmts: HashMap<(PropName, bool), StrategyName>,
@@ -139,6 +169,7 @@ impl Environment {
         self.known_reflexive_props.clear();
         self.known_antisymmetric_props.clear();
         self.statement_atomic_fact_proofs.clear();
+        self.proof_search_state.clear();
         self.cache_infer_rule_firing.clear();
         self.used_strategy_stmts.clear();
         self.stopped_strategy_stmts.clear();
@@ -247,6 +278,7 @@ impl Environment {
             cache_infer_rule_firing: HashMap::new(),
             statement_atomic_fact_proofs: HashMap::new(),
             statement_well_defined_obj_proofs: HashMap::new(),
+            proof_search_state: ProofSearchState::default(),
             used_strategy_stmts: HashMap::new(),
             stopped_strategy_stmts: HashMap::new(),
         }

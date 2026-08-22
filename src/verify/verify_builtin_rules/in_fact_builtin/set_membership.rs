@@ -7,14 +7,14 @@ impl Runtime {
         obj: &Obj,
         verify_state: &UseContextVerifyState,
     ) -> Result<Option<Obj>, RuntimeError> {
-        if self.active_set_builder_forall_transport {
+        if self.set_builder_forall_transport_is_active() {
             return Ok(None);
         }
-        self.active_set_builder_forall_transport = true;
+        self.set_set_builder_forall_transport_active(true);
         let result = self
             .unfold_known_fn_application_to_set_builder(obj, verify_state)
             .map(|set_builder| set_builder.map(Obj::from));
-        self.active_set_builder_forall_transport = false;
+        self.set_set_builder_forall_transport_active(false);
         result
     }
 
@@ -68,7 +68,7 @@ impl Runtime {
             ));
         }
 
-        if self.active_set_builder_forall_transport {
+        if self.set_builder_forall_transport_is_active() {
             return Ok(None);
         }
         let forall_memberships: Vec<(InFact, Rc<KnownForallFactParamsAndDom>)> = self
@@ -140,7 +140,7 @@ impl Runtime {
             }
             let requirement_state = UseContextVerifyState::new_with_final_round(true)
                 .without_known_forall_for_equality();
-            self.active_set_builder_forall_transport = true;
+            self.set_set_builder_forall_transport_active(true);
             let membership_result = self.verify_args_satisfy_forall_requirements(
                 &membership_pattern_atomic,
                 &forall_context,
@@ -148,7 +148,7 @@ impl Runtime {
                 &instantiated,
                 &requirement_state,
             );
-            self.active_set_builder_forall_transport = false;
+            self.set_set_builder_forall_transport_active(false);
             let Some(membership_success) = membership_result? else {
                 continue;
             };
@@ -170,7 +170,8 @@ impl Runtime {
         &mut self,
         goal: &AtomicFact,
     ) -> Result<Option<StmtResult>, RuntimeError> {
-        if !matches!(goal, AtomicFact::InFact(_)) && !self.active_set_builder_forall_transport {
+        if !matches!(goal, AtomicFact::InFact(_)) && !self.set_builder_forall_transport_is_active()
+        {
             let forall_memberships: Vec<(InFact, Rc<KnownForallFactParamsAndDom>)> = self
                 .iter_environments_from_top()
                 .flat_map(|environment| {
@@ -240,7 +241,7 @@ impl Runtime {
                     )?;
                     let requirement_state = UseContextVerifyState::new_with_final_round(true)
                         .without_known_forall_for_equality();
-                    self.active_set_builder_forall_transport = true;
+                    self.set_set_builder_forall_transport_active(true);
                     let membership_result = self.verify_args_satisfy_forall_requirements(
                         &membership_pattern_atomic,
                         &forall_context,
@@ -248,7 +249,7 @@ impl Runtime {
                         &instantiated_membership,
                         &requirement_state,
                     );
-                    self.active_set_builder_forall_transport = false;
+                    self.set_set_builder_forall_transport_active(false);
                     let Some(membership_success) = membership_result? else {
                         continue;
                     };
@@ -1380,15 +1381,12 @@ impl Runtime {
         verify_state: &UseContextVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let goal_key = in_fact.to_string();
-        if !self
-            .active_set_builder_membership_unfolds
-            .insert(goal_key.clone())
-        {
+        if !self.begin_set_builder_membership_unfold(&goal_key) {
             return Ok(None);
         }
         let result =
             self.maybe_verify_in_fact_in_unfolded_user_defined_set_once(in_fact, verify_state);
-        self.active_set_builder_membership_unfolds.remove(&goal_key);
+        self.end_set_builder_membership_unfold(&goal_key);
         result
     }
 

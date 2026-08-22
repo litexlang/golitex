@@ -15,7 +15,7 @@ try:
     runtime.new_file_path_new_env_new_name_scope(
         "let_defines_an_untyped_object_and_stores_its_equality",
     );
-    runtime.detail_output = true;
+    runtime.set_output_style(OutputStyle::Detailed);
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
     let (run_succeeded, run_output) =
         render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);

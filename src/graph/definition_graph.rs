@@ -137,7 +137,11 @@ pub fn run_definition_graph_for_file_with_strict_language_and_isolation(
     };
 
     let mut runtime = Runtime::new();
-    runtime.detail_output = !hide_file_paths;
+    runtime.set_output_style(if hide_file_paths {
+        OutputStyle::Normal
+    } else {
+        OutputStyle::Detailed
+    });
     runtime.strict_mode = strict_mode;
     let (stmt_results, runtime_error) = crate::pipeline::run_file_with_project_context(
         resolved_path.as_str(),
@@ -184,7 +188,11 @@ pub fn run_definition_graph_for_repo_with_strict_and_language(
     _output_language: OutputLanguage,
 ) -> (bool, String) {
     let mut runtime = Runtime::new();
-    runtime.detail_output = !hide_file_paths;
+    runtime.set_output_style(if hide_file_paths {
+        OutputStyle::Normal
+    } else {
+        OutputStyle::Detailed
+    });
     runtime.strict_mode = strict_mode;
     let target = match discover_repository(&mut runtime, repo_path) {
         Ok(target) => target,
@@ -223,7 +231,11 @@ fn run_definition_graph_on_source(
     let normalized_source = remove_windows_carriage_return(source_code);
     let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope(target_label);
-    runtime.detail_output = !hide_file_paths;
+    runtime.set_output_style(if hide_file_paths {
+        OutputStyle::Normal
+    } else {
+        OutputStyle::Detailed
+    });
     runtime.strict_mode = strict_mode;
     let (stmt_results, runtime_error) = run_source_code(normalized_source.as_str(), &mut runtime);
     render_definition_graph_result(
@@ -961,7 +973,7 @@ impl DefinitionGraphBuilder {
             return;
         }
         let unverified = runtime
-            .unverified_imports
+            .unverified_imports()
             .iter()
             .find(|entry| entry.name == canonical_name);
         let source_kind = unverified

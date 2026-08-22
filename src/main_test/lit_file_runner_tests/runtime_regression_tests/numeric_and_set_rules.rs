@@ -1767,7 +1767,6 @@ forall center R, radius R+:
     center $in '(center - radius, center + radius)
 "#;
     let mut positive_runtime = Runtime::new();
-    positive_runtime.isolated = true;
     positive_runtime.new_file_path_new_env_new_name_scope(
         "symmetric_interval_center_membership_uses_positive_radius",
     );
@@ -1785,7 +1784,6 @@ forall center, radius R:
     center $in '(center - radius, center + radius)
 "#;
     let mut boundary_runtime = Runtime::new();
-    boundary_runtime.isolated = true;
     boundary_runtime.new_file_path_new_env_new_name_scope(
         "symmetric_interval_center_membership_rejects_unrestricted_radius",
     );
@@ -1871,7 +1869,6 @@ forall b R:
     $is_nonempty_set('[b, b])
 "#;
             let mut runtime = Runtime::new();
-            runtime.isolated = true;
             runtime.new_file_path_new_env_new_name_scope(
                 "finite_endpoint_nonempty_strategies_use_order_children",
             );
@@ -1911,7 +1908,6 @@ forall b R:
             ];
             for (name, source) in negative_sources {
                 let mut boundary_runtime = Runtime::new();
-                boundary_runtime.isolated = true;
                 boundary_runtime.new_file_path_new_env_new_name_scope(name);
                 let (boundary_results, boundary_error) =
                     run_source_code(source, &mut boundary_runtime);
@@ -3518,7 +3514,6 @@ thm finite_set_extrema_have_defining_properties:
             finite_set_min(S) <= x
 "#;
     let mut runtime = Runtime::new();
-    runtime.isolated = true;
     runtime.new_file_path_new_env_new_name_scope("finite_set_extrema_builtin_interfaces");
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
     let (run_succeeded, run_output) =
@@ -3548,7 +3543,6 @@ forall n1, n2 N+:
     finite_set_max(union({n1}, {n2})) $in N+
 "#;
     let mut positive_runtime = Runtime::new();
-    positive_runtime.isolated = true;
     positive_runtime.new_file_path_new_env_new_name_scope(
         "finite_set_extrema_inherit_positive_natural_carriers_in_one_rule",
     );
@@ -3570,7 +3564,6 @@ forall n N:
     finite_set_max({n}) $in N+
 "#;
     let mut boundary_runtime = Runtime::new();
-    boundary_runtime.isolated = true;
     boundary_runtime.new_file_path_new_env_new_name_scope(
         "finite_set_extrema_do_not_invent_positive_natural_carriers",
     );
@@ -3593,7 +3586,6 @@ forall a, b R:
         (a - b) / 2 $in R+
 "#;
     let mut positive_runtime = Runtime::new();
-    positive_runtime.isolated = true;
     positive_runtime.new_file_path_new_env_new_name_scope(
         "positive_quotient_strategy_descends_through_a_positive_difference",
     );
@@ -3613,7 +3605,6 @@ forall a, b R:
         (a - b) / (-2) $in R+
 "#;
     let mut boundary_runtime = Runtime::new();
-    boundary_runtime.isolated = true;
     boundary_runtime.new_file_path_new_env_new_name_scope(
         "positive_quotient_strategy_rejects_a_negative_denominator",
     );
@@ -3635,7 +3626,6 @@ prop has_positive_index_reciprocal_square(u fn(n N+) R):
         u(n) = 1 / n^2
 "#;
     let mut positive_runtime = Runtime::new();
-    positive_runtime.isolated = true;
     positive_runtime.new_file_path_new_env_new_name_scope(
         "positive_base_power_is_nonzero_during_definition_well_definedness",
     );
@@ -3654,7 +3644,6 @@ prop has_natural_index_reciprocal_square(u fn(n N) R):
         u(n) = 1 / n^2
 "#;
     let mut boundary_runtime = Runtime::new();
-    boundary_runtime.isolated = true;
     boundary_runtime.new_file_path_new_env_new_name_scope(
         "natural_base_power_may_be_zero_during_definition_well_definedness",
     );
@@ -3676,7 +3665,6 @@ prop reciprocal_on_positive_interval(a, b R+):
         1 / x $in R
 "#;
     let mut positive_runtime = Runtime::new();
-    positive_runtime.isolated = true;
     positive_runtime.new_file_path_new_env_new_name_scope(
         "positive_interval_lower_bound_keeps_reciprocal_well_defined",
     );
@@ -3695,7 +3683,6 @@ prop reciprocal_on_arbitrary_interval(a, b R):
         1 / x $in R
 "#;
     let mut boundary_runtime = Runtime::new();
-    boundary_runtime.isolated = true;
     boundary_runtime.new_file_path_new_env_new_name_scope(
         "arbitrary_interval_lower_bound_does_not_prove_nonzero",
     );

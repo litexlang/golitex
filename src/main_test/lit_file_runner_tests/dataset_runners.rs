@@ -255,7 +255,9 @@ fn run_finished_litex_jsonl_dataset(dataset_label: &str, jsonl_path: &Path, labe
         });
 
         let normalized_source = remove_windows_carriage_return(litex_code.as_str());
-        runtime.isolated = source_has_isolated_import(normalized_source.as_str());
+        runtime.set_current_source_allows_inline_imports(source_has_isolated_import(
+            normalized_source.as_str(),
+        ));
         let start_time_for_one_solution = Instant::now();
         let (stmt_results, runtime_error) =
             run_source_code(normalized_source.as_str(), &mut runtime);

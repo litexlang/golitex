@@ -854,15 +854,16 @@ fn main_flag_file(
     runtime.set_output_style(output_style);
     runtime.strict_mode = strict_mode;
     runtime.output_language = output_language;
-    let (stmt_results, runtime_error) = run_file_with_project_context_and_trusted_prefix(
-        path_string.as_str(),
-        &mut runtime,
-        force_isolated,
-        trust_before_line,
-    );
+    let (stmt_results, runtime_error, trusted_prefix_report, trusted_prefix_setup_rejected) =
+        run_file_with_project_context_and_trusted_prefix(
+            path_string.as_str(),
+            &mut runtime,
+            force_isolated,
+            trust_before_line,
+        );
     let (ok, mut output) =
         render_run_source_code_output(&runtime, &stmt_results, &runtime_error, true);
-    if let Some(report) = runtime.trusted_prefix_report.as_ref() {
+    if let Some(report) = trusted_prefix_report.as_ref() {
         let mut trusted_prefix_output = display_trusted_prefix_report_json(report);
         if !output.trim().is_empty() {
             trusted_prefix_output.push('\n');
@@ -888,10 +889,10 @@ fn main_flag_file(
         output.push('\n');
     }
     println!("{}", string_with_trimmed_outer_newlines(output.as_str()));
-    if runtime.trusted_prefix_setup_error.is_some() {
+    if trusted_prefix_setup_rejected {
         process::exit(2);
     }
-    if ok && runtime.isolated && trust_before_line.is_none() {
+    if ok && runtime.current_source_allows_inline_imports() && trust_before_line.is_none() {
         run_isolated_repl_with_runtime(VERSION, &mut runtime);
     }
 }

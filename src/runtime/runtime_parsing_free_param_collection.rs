@@ -11,7 +11,6 @@ pub struct FreeParamCollection {
 pub struct FreeParamTypeAndLineFile {
     pub kind: ParamObjType,
     pub binding: SymbolBinding,
-    pub line_file: LineFile,
 }
 
 impl FreeParamCollection {
@@ -61,7 +60,6 @@ impl FreeParamCollection {
                 .push(FreeParamTypeAndLineFile {
                     kind,
                     binding: binding.clone(),
-                    line_file: line_file.clone(),
                 });
         }
         Ok(())
