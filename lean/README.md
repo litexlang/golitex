@@ -292,6 +292,13 @@ regression is accepted without a two-layer special case. A single source
 layer with multiple parameters, such as `f(a, b)`, remains fail-closed and is
 never translated as Lean currying.
 
+Example 54 adds an exact complex-algebraic equality adapter. Source `i` remains
+native `Complex.I`; the verifier-owned certificate fixes the exact equality,
+and generated Lean closes the corresponding native equality before lifting it
+with `Litex.Same.ofEq`. The reviewed surface covers `+`, `-`, `*`, and closed
+denominators such as `1 / i`. Powers and symbolic denominators remain
+fail-closed; no new `Same` edge, axiom, or semantic header theorem is added.
+
 Sketch is a real source scope, not an example-file wrapper. Each top-level
 sketch is constructed as `__Sketch01`, `__Sketch02`, and so on. Its compiler environment
 starts with the facts and symbols visible outside the sketch, but definitions

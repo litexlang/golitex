@@ -3,243 +3,212 @@
 ## Purpose and scope
 
 This showcase follows the conceptual order of *Linear Algebra Done Right*:
-first a scalar field, then a vector space over that field, and only then
-subspaces, linear maps, kernels, and concrete coordinate examples. The module
-remains standalone; it does not import the repository's full LADR translation
-or another showcase.
+first a scalar field, then vector spaces indexed by that field, and only then
+linear maps, subspaces, kernels, and concrete coordinates. The public generic
+interfaces do not depend on `R` or `cart(R,R)`.
 
-The checked first gate must preserve the former kernel-zero/injectivity
-endpoint while replacing its `cart(R,R)`-specific public interfaces with
-carrier-generic ones. `R`, `R^2`, and x-axis projection are
-instances at the end of the reader path, not the definitions of linear
-algebra.
+The current gate covers unique additive inverses, derived vector negation and
+subtraction, zero and negation preservation by linear maps, kernels as
+subspaces, the trivial-kernel criterion for injectivity, and the real-plane
+projection example. Bases, dimension, matrices, quotients, and rank-nullity
+remain later work.
 
-## Modeling conventions
+## Modeling decisions
 
-- A field and a vector space are first-class structures because later
-  mathematics projects and applies their operations.
-- A condition on supplied data, such as being a subspace or a linear map, is a
-  `prop`.
-- A constructed set, such as a kernel, is a set-valued `have` declaration
-  inside a `template` because callers use it as a set.
-- Vector negation is selected only after additive-inverse existence and
-  uniqueness are proved. It is not an extra primitive vector-space field.
-- The inverse operation of a field is total as a Litex function; the field law
-  constrains it only on nonzero scalars.
-- `trust`, `axiom`, and verifier acceptance are epistemic statuses, never
-  substitutes for a mathematical concept.
+- `Field<K>` is a first-class `struct` because scalar operations are coherent
+  data that later objects must retain, pass, and project.
+- `VectorSpace<K, field, V>` is a first-class `struct` family indexed by one
+  concrete `field &Field<K>`. With `K`, `field`, and `V` fixed,
+  `&VectorSpace<K, field, V>` is the carrier set of those vector-space objects.
+- A `VectorSpace` value stores only `zero`, `add`, and `smul`; its scalar field
+  is already fixed by the struct header and is not duplicated as a record
+  field.
+- `is_linear_map` and `is_subspace` are `prop`s: they are judgments on already
+  supplied functions, subsets, and struct values. This gate does not introduce
+  `LinearMap` or `Subspace` structs.
+- `linear_kernel` and `zero_subspace` are set-valued `have` declarations in
+  templates because callers use the resulting sets as mathematical objects.
+- Vector negation is selected by `have fn ... by exist!` only after existence
+  and uniqueness are proved. It is not stored as an unexplained vector-space
+  field.
+- `Setting` names recurring binders and assumptions. It does not define a
+  second field/vector-space ontology and does not repeat laws already supplied
+  by struct membership.
+- `trust`, `axiom`, and verifier acceptance are epistemic statuses, not forms
+  for mathematical concepts.
 
-## Parallel setting-first presentation
+## Struct-backed Setting layer
 
-`main2.lit` supplies a second checked interface without changing the
-first-class design of `main.lit`. Its central forms are:
+The core context spine in `main.lit` is:
 
-- `FieldSetting`: one scalar carrier, its operations, and the field laws as an
-  ambient binder prefix;
-- `VectorSpaceSetting`: the field prefix plus one vector carrier and its laws;
-- `VectorSpacesSetting`: one shared field plus source and target vector-space
-  operations;
-- `LinearMapSetting`: the two-space prefix plus a map and its preservation
-  laws;
-- ordinary props `is_field_in_setting`, `is_vector_space_in_setting`,
-  `is_linear_map_in_setting`, and `is_subspace_in_setting` for judgments that
-  concrete examples can assert.
+```litex
+setting FieldSetting(K nonempty_set, field &Field<K>)
 
-A setting is not a competing kind of field or vector-space value. It cannot be
-stored, returned, or projected; theorem bodies consume its operations directly
-as `add_V(u,v)` and `smul_V(a,v)`. This makes it a good LADR-style presentation
-when the goal is to state theorems in a fixed ambient algebra. The struct form
-remains preferable when spaces themselves must be passed around as data.
+setting VectorSpaceSetting(
+    [FieldSetting(K, field)],
+    V nonempty_set,
+    space &VectorSpace<K, field, V>
+)
 
-The paired setting is intentional. Explicit setting references introduce fresh
-binders, so two nested `VectorSpaceSetting` references cannot currently identify
-their scalar field binders. `VectorSpacesSetting` binds one field once and then
-checks both vector-space law predicates over it.
-
-The setting-first dependency spine is:
-
-```text
-FieldSetting
-  -> VectorSpaceSetting
-  -> VectorSpacesSetting
-  -> LinearMapSetting
-  -> T(0) = 0
-  -> setting_linear_kernel
-  -> kernel is a subspace
-  -> real plane and x-axis projection instance
+setting VectorSpacesSetting(
+    [FieldSetting(K, field)],
+    V, W nonempty_set,
+    source &VectorSpace<K, field, V>,
+    target &VectorSpace<K, field, W>
+)
 ```
+
+These binders retain the declaration-owned views of `field`, `space`,
+`source`, and `target`, so theorem bodies use `field.mul`, `space.add`,
+`source.smul`, and `target.zero`. The shared field index in both vector-space
+carriers expresses scalar compatibility before a linear-map proposition is
+stated; there is no `source.field = target.field` premise to transport later.
+
+`LinearMapSetting` adds exactly one contextual assumption:
+
+```litex
+setting LinearMapSetting([VectorSpacesSetting], T fn(v V) W):
+    $is_linear_map(K, field, V, W, source, target, T)
+```
+
+`main2.lit` is deliberately a small consumer-facing overlay over the exported
+`main::Field`, `main::VectorSpace`, propositions, templates, and theorems. It
+does not redeclare raw scalar/vector operations, field laws, the real field,
+the real plane, or the projection proof. Its tracer theorem demonstrates that
+the Setting expands to the correct declaration-typed objects:
+
+```litex
+thm setting_linear_map_sends_zero_to_zero:
+    ? forall [LinearMapSetting]:
+        T(source.zero) = target.zero
+```
+
+This separation is intentional:
+
+- a struct value can be stored, returned, passed to another theorem, and used
+  through its declaration-owned fields;
+- a Setting is a reusable theorem-context prefix over such values;
+- later membership of an untyped symbol in a struct carrier does not give that
+  symbol another declaration-owned field view.
 
 ## Core interface cards
 
 ### Field
 
-- **Ordinary meaning:** a nonempty scalar carrier with distinct zero and one,
-  commutative addition and multiplication, additive inverses, distributivity,
-  and multiplicative inverses for nonzero elements.
-- **Semantic role and Litex form:** `struct Field<K>` containing `zero`, `one`,
-  `add`, `neg`, `mul`, and `inv`, together with the field laws.
-- **Representative interface:** `field &Field<K>` followed by
-  `field.add(a,b)` and `field.mul(a,b)`.
-- **Nearest rejected form:** a lone `prop is_field(...)`. It can test supplied
-  operations but cannot give later code a coherent value whose operations can
-  be projected and applied.
-- **Dependencies:** only the carrier `K`, functions on `K`, equality, and
-  ordinary logic.
-- **Downstream use:** every vector-space scalar law and every linear-map scalar
-  law.
-- **Checked-use target:** construct `real_field &Field<R>` and evaluate its
-  projected operations as ordinary real arithmetic.
+- **Ordinary meaning:** a nonempty scalar carrier with zero, one, commutative
+  addition and multiplication, additive inverses, distributivity, and
+  multiplicative inverses for nonzero scalars.
+- **Litex form:** `struct Field<K>` with `zero`, `one`, `add`, `neg`, `mul`,
+  `inv`, and their laws.
+- **Representative use:** `field &Field<K>`, followed by `field.add(a,b)` and
+  `field.mul(a,b)`.
+- **Rejected nearby form:** only a predicate over anonymous operations. Such a
+  predicate can judge supplied data but cannot supply a coherent value whose
+  operations are later projected.
+- **Checked instance:** `real_field &Field<R>`.
 
-### Vector space over a field
+### Vector space over one concrete field
 
 - **Ordinary meaning:** a nonempty carrier `V` with vector zero, addition, and
-  scalar multiplication by one selected `Field<K>`, satisfying the LADR
-  vector-space axioms.
-- **Semantic role and Litex form:** `struct VectorSpace<K,V>` containing the
-  field object, vector zero, vector addition, and scalar multiplication.
-- **Representative interface:** `space &VectorSpace<K,V>` followed by
+  scalar multiplication by one selected field.
+- **Litex form:**
+  `struct VectorSpace<K, field &Field<K>, V>` with `zero`, `add`, `smul`, and
+  the vector-space laws.
+- **Representative use:** `space &VectorSpace<K, field, V>`, followed by
   `space.add(u,v)` and `space.smul(a,v)`.
-- **Nearest rejected form:** a real-only `RealVectorSpace<V>` or a predicate
-  over anonymous operations. The former hides the scalar abstraction; the
-  latter makes ordinary operation use awkward and incoherent.
-- **Dependencies:** `Field<K>` by signature and the field operations by law.
-- **Downstream use:** additive inverse selection, subspaces, linear maps,
-  kernels, and all later finite-dimensional concepts.
-- **Checked-use target:** construct
-  `real_plane &VectorSpace<R,cart(R,R)>` over `real_field`. The mathematically
-  valid `VectorSpace<R,R>` assembly is recorded as a verifier-gap probe rather
-  than published through trust.
+- **Rejected nearby forms:** a real-only `RealVectorSpace<V>`; a raw predicate
+  that flattens every operation into every theorem; or a record field that
+  duplicates the already-fixed `field` index.
+- **Checked instance:**
+  `real_plane &VectorSpace<R, real_field, cart(R,R)>`.
 
 ### Derived vector negation and subtraction
 
-- **Ordinary meaning:** every vector has a unique additive inverse; subtraction
-  is addition of that inverse.
-- **Semantic role and Litex form:** an existence-and-uniqueness theorem,
-  followed by template-scoped `have fn vector_neg by exist!` and formula-defined
-  `have fn vector_sub`.
-- **Nearest rejected form:** storing negation as an unexplained primitive field
-  or choosing an inverse before uniqueness is established.
-- **Dependencies:** vector-space additive laws by existence and uniqueness.
-- **Downstream use:** cancellation, preservation of negation, and the reverse
-  kernel-zero/injectivity argument.
+- **Ordinary meaning:** every vector has a unique additive inverse;
+  subtraction adds that inverse.
+- **Litex form:** an existence-and-uniqueness theorem, then template-scoped
+  `have fn vector_neg by exist!` and formula-defined `have fn vector_sub`.
+- **Dependencies:** the additive laws of the indexed vector-space object.
+- **Downstream use:** cancellation, zero-scalar lemmas, preservation of
+  negation, and the reverse kernel-zero/injectivity argument.
 
 ### Linear map
 
-- **Ordinary meaning:** a function between vector spaces over the same field
-  that preserves vector addition and scalar multiplication.
-- **Semantic role and Litex form:**
-  `prop is_linear_map(K,V,W,source,target,T)`.
-- **Representative interface:** the predicate requires
-  `source.field = target.field` and the two preservation laws.
-- **Nearest rejected form:** `is_linear_map_R2_to_R`; that concrete predicate
-  mistakes one example for the mathematical concept.
-- **Dependencies:** both vector-space structures by signature and their common
-  field by law.
-- **Downstream use:** zero preservation, kernels, composition, range, and
-  finite-dimensional results.
-- **Checked-use target:** prove the x-axis projection endomorphism linear only
-  after constructing the real plane as a vector space.
+- **Ordinary meaning:** a function between two vector spaces over the same
+  scalar field that preserves addition and scalar multiplication.
+- **Litex form:**
+  `prop is_linear_map([VectorSpacesSetting], T fn(v V) W)`.
+- **Carrier invariant:** `source` and `target` are already indexed by the same
+  `field`; equality between two stored field projections is neither present
+  nor needed.
+- **Checked instance:** `projection_x_axis` on `real_plane`.
 
 ### Subspace
 
-- **Ordinary meaning:** a subset containing vector zero and closed under vector
+- **Ordinary meaning:** a subset containing vector zero and closed under
   addition and scalar multiplication.
-- **Semantic role and Litex form:**
-  `prop is_subspace(K,V,space,U)` on a supplied subset `U`.
-- **Nearest rejected form:** only a packaged subspace structure. Kernel proofs
-  naturally establish a property of an already supplied set.
-- **Dependencies:** `VectorSpace<K,V>` by signature and law.
-- **Downstream use:** kernels now; induced spaces, ranges, sums, and quotients
-  later.
+- **Litex form:** `prop is_subspace([VectorSpaceSetting], U power_set(V))`.
+- **Reason it remains a prop:** kernel proofs establish a property of a set
+  already supplied or constructed; they do not yet need a packaged subspace
+  value with additional data.
 
 ### Kernel and zero subspace
 
-- **Ordinary meaning:** the kernel consists of vectors sent to target zero;
-  the zero subspace contains exactly source zero.
-- **Semantic role and Litex form:** template-scoped set-valued constructions
-  `linear_kernel` and `zero_subspace`.
-- **Nearest rejected form:** membership predicates only. The flagship theorem
-  compares the two sets by equality.
-- **Dependencies:** the function and target zero by definition; the source
-  zero for the zero subspace.
+- **Ordinary meaning:** the kernel contains vectors sent to target zero; the
+  zero subspace contains exactly source zero.
+- **Litex form:** template-scoped set constructions `linear_kernel` and
+  `zero_subspace`.
 - **Downstream use:** kernel-is-subspace and injective iff zero kernel.
-
-### Basis, coordinates, and dimension (later gate)
-
-- **Ordinary meaning:** a basis is independent and spanning; coordinates are
-  uniquely determined relative to a basis; dimension is the common length of
-  finite bases.
-- **Ideal forms:** basis and candidate-coordinate relations as `prop`, the
-  coordinate map as `have fn ... by exist!`, and dimension as a selected
-  natural only after basis-length uniqueness.
-- **Nearest rejected forms:** arbitrary basis choice, nonunique coordinate
-  selection, or an axiom-valued dimension function.
-- **Dependencies:** finite sequences, finite sums, basis existence/extension,
-  and basis-length uniqueness.
-- **Boundary:** none of these interfaces is part of the current checked gate.
 
 ## Typed dependency DAG
 
-Edge legend: `signature` names a carrier or structure in an interface;
-`law` consumes structure laws; `definition` unfolds a construction;
-`existence`, `uniqueness`, and `selection` expose canonical vector negation;
-`proof` cites a prior mathematical result.
+Edge labels describe why the dependency is present.
 
 ```text
 K nonempty_set
-  -> Field<K>                                      [signature, law]
-  -> VectorSpace<K,V> / VectorSpace<K,W>           [signature, law]
-  -> additive inverse exists uniquely              [existence, uniqueness]
+  -> Field<K>                                      [signature, laws]
+  -> VectorSpace<K, field, V/W>                    [field index, laws]
+  -> FieldSetting / VectorSpaceSetting             [context]
+  -> unique additive inverses                      [existence, uniqueness]
   -> vector_neg / vector_sub                       [selection, definition]
   -> cancellation and scalar-zero lemmas           [proof]
 
-VectorSpace<K,V> + VectorSpace<K,W>
-  -> is_linear_map                                 [signature, law]
-  -> linear maps preserve zero and negation        [proof]
+VectorSpace<K, field, V> + VectorSpace<K, field, W>
+  -> VectorSpacesSetting                           [shared field index]
+  -> is_linear_map                                 [judgment]
+  -> LinearMapSetting                              [contextual assumption]
+  -> maps preserve zero and negation               [proof]
   -> linear_kernel                                 [definition]
   -> kernel is a subspace                          [proof]
   -> injective iff kernel = zero_subspace          [proof]
 
 builtin R
-  -> real_field                                    [law]
-  -> real_plane                                    [law]
+  -> real_field                                    [checked struct value]
+  -> real_plane                                    [checked indexed struct value]
   -> projection_x_axis is linear                   [proof]
-  -> projection kernel is nontrivial               [definition, proof]
-  -> projection_x_axis is not injective            [proof]
-
-finite sequences + finite sums
-  -> span / independence / basis                   [definition]
-  -> coordinate existence and uniqueness           [existence, uniqueness]
-  -> coordinate map                                [selection]
-  -> basis-length uniqueness -> dimension          [proof, selection]
-  -> rank-nullity and matrices                      [proof, definition]
+  -> concrete Setting tracer                       [reuse]
 ```
 
-The graph is acyclic. In particular, vector negation follows unique additive
-inverses, kernels follow linear maps, and dimension follows basis-length
-uniqueness rather than defining it.
+The graph is acyclic. In particular, vector negation follows uniqueness,
+kernels follow the linear-map judgment, and concrete coordinates consume the
+generic interfaces rather than defining them.
 
 ## Source-aware implementation order
 
-1. Define `Field<K>` and its direct field-operation use surface.
-2. Define `VectorSpace<K,V>` with one owned field value.
-3. Prove unique additive inverses, select vector negation, and prove
-   cancellation and zero-scalar lemmas.
-4. Define abstract linear maps, subspaces, kernels, and the zero subspace.
-5. Prove zero preservation, kernel closure, and both injectivity directions.
-6. Construct `real_field` and `R^2` as checked instances.
-7. Reintroduce x-axis projection only as a consumer of the abstract
-   interfaces. Keep the direct `R` vector-space assembly probe in the journal
-   until the nested `K = V` structure-membership gap is resolved.
-
-This deliberately departs from the former coordinate-first file order. The
-departure is required by the confirmed reader promise: concrete coordinates
-must illustrate the abstract definitions rather than define them.
+1. Define `Field<K>`.
+2. Define `VectorSpace<K, field, V>` with `field` in the struct header.
+3. Add struct-backed Settings for one field, one space, two spaces, and a
+   linear map assumption.
+4. Derive vector negation, subtraction, cancellation, and scalar-zero facts.
+5. Define linear-map and subspace judgments plus kernel constructions.
+6. Prove zero preservation, kernel closure, and both injectivity directions.
+7. Construct `real_field`, `real_plane`, and the x-axis projection.
+8. Reuse the exported ontology through the small `main2.lit` Setting overlay.
 
 ## Verification and trust boundary
 
-The current gate is accepted only when the registered release file and module
-runners report top-level `ok: true`, the published Litex source contains no
-direct `trust` or local `axiom`, and the concrete projection consumes the
-generic interfaces. Builtin arithmetic and logic remain part of Litex's
-ordinary verifier boundary; no kernel behavior is changed by this showcase.
+Acceptance requires the release Litex runner to report top-level `ok: true`
+for `main.lit`, `main2.lit`, and the registered module directory. The published
+Litex files must add no direct `trust` or local `axiom`. Builtin arithmetic,
+logic, and registered prior-module imports remain inside Litex's ordinary
+verifier boundary; this showcase changes no kernel rule.

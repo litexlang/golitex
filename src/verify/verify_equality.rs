@@ -145,6 +145,19 @@ impl Runtime {
                 .into();
             }
         }
+        if objs_equal_by_complex_rational_expression_evaluation(&equal_fact.left, &equal_fact.right)
+        {
+            let target: Fact = equal_fact.clone().into();
+            return SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                target.clone(),
+                "exact complex algebraic normalization".to_string(),
+                BuiltinRuleEvidence::ComplexAlgebraicNormalization(
+                    ComplexAlgebraicNormalizationBuiltinRuleEvidence::new(target),
+                ),
+                Vec::new(),
+            )
+            .into();
+        }
         let left_resolved = self.resolve_obj(&equal_fact.left);
         let right_resolved = self.resolve_obj(&equal_fact.right);
         let reason = if equal_fact

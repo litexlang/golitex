@@ -448,6 +448,159 @@ template<S set>:
 }
 
 #[test]
+fn template_result_separates_header_parameters_from_body_declaration_parameters() {
+    let source_code = r#"
+template<S set>:
+    have sequence set = fn(n N+) S
+
+\sequence<R> = fn(n N+) R
+\sequence<R> = \sequence<R>
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "template_result_separates_header_parameters_from_body_declaration_parameters",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    assert!(
+        run_succeeded,
+        "the Template declaration and Created/Reused applications must verify:\n{run_output}"
+    );
+    assert_eq!(
+        stmt_results.len(),
+        3,
+        "unexpected Result count: {run_output}"
+    );
+
+    let StmtResult::Success(template_success) = &stmt_results[0] else {
+        panic!("first Result is not a successful Template definition: {run_output}");
+    };
+    assert!(
+        template_success.common().is_none(),
+        "Template must not fabricate a generic common result"
+    );
+    let SuccessStmtResult::DefInterfaceStmt(SuccessDefInterfaceStmtResult::DefTemplateStmt(
+        template,
+    )) = template_success
+    else {
+        panic!("first Result is not a successful Template definition: {run_output}");
+    };
+    let [template_parameter_group] = template.template_parameter_groups.as_slice() else {
+        panic!("Template must retain its one header parameter group");
+    };
+    let [template_parameter] = template_parameter_group.parameters.as_slice() else {
+        panic!("Template header group must retain exactly parameter S");
+    };
+    let template_parameter_id = template_parameter
+        .symbol_id
+        .expect("Template header parameter S must retain its SymbolId");
+
+    let SuccessStmtResult::DefObjStmt(SuccessDefObjStmtResult::HaveObjEqualStmt(body)) =
+        template.body_statement_result.as_ref()
+    else {
+        panic!("Template body must retain its own successful set-alias statement Result");
+    };
+    let body_bindings = body.statement.param_def.collect_param_bindings_with_types();
+    let [(defined_binding, ParamType::Set(_))] = body_bindings.as_slice() else {
+        panic!("Template body must define exactly the set alias `sequence`");
+    };
+    assert_eq!(defined_binding.name(), "sequence");
+    let [Obj::FnSet(function_set)] = body.statement.objs_equal_to.as_slice() else {
+        panic!("Template body value must remain the function set `fn(n N+) S`");
+    };
+    let body_parameters = function_set.get_param_bindings();
+    let [body_parameter] = body_parameters.as_slice() else {
+        panic!("function-set body must retain exactly parameter n");
+    };
+    assert_eq!(body_parameter.name(), "n");
+    assert_ne!(
+        template_parameter_id,
+        body_parameter.id(),
+        "Template parameter S and body-declaration parameter n are different binders"
+    );
+    assert!(
+        body.common
+            .infers
+            .store_fact_outputs
+            .iter()
+            .all(|store| store.fact_id.is_some()),
+        "the declaration-time body Result must freeze its local FactIds before the local environment is popped"
+    );
+
+    let created_fact = stmt_results[1]
+        .factual_success()
+        .expect("first application statement must be a successful fact");
+    let Some(SuccessVerifyFactWellDefinedProofResult::AtomicFact(created_wd)) =
+        created_fact.well_definedness.recursive.as_deref()
+    else {
+        panic!("first application fact must retain atomic WD Results");
+    };
+    let SuccessVerifyObjWellDefinedResult::Direct(created_application_wd) =
+        created_wd.arguments[0].result.as_ref()
+    else {
+        panic!("first Template application must be checked directly");
+    };
+    let Some(created) = created_application_wd
+        .steps
+        .template_instantiation
+        .as_deref()
+    else {
+        panic!("first Template application must retain instantiation evidence");
+    };
+    let SuccessTemplateInstantiationResult::Created(created) = created else {
+        panic!("first exact Template application must be Created");
+    };
+    assert_eq!(created.template_argument_results.len(), 1);
+    assert!(created.template_domain_results.is_empty());
+    assert_eq!(created.public_value_equalities.len(), 1);
+    assert!(created.public_value_equalities[0].fact_id.is_some());
+    let SuccessStmtResult::DefObjStmt(SuccessDefObjStmtResult::HaveObjEqualStmt(created_body)) =
+        created.body_statement_result.as_ref()
+    else {
+        panic!("Created instance must retain its preverified body Result");
+    };
+    assert!(
+        created_body
+            .common
+            .infers
+            .store_fact_outputs
+            .iter()
+            .all(|store| store.fact_id.is_none()),
+        "the Created body's local preverified stores must not masquerade as public facts"
+    );
+
+    let reused_fact = stmt_results[2]
+        .factual_success()
+        .expect("second application statement must be a successful fact");
+    let Some(SuccessVerifyFactWellDefinedProofResult::AtomicFact(reused_wd)) =
+        reused_fact.well_definedness.recursive.as_deref()
+    else {
+        panic!("second application fact must retain atomic WD Results");
+    };
+    let SuccessVerifyObjWellDefinedResult::Direct(reused_application_wd) =
+        reused_wd.arguments[0].result.as_ref()
+    else {
+        panic!("second Template application must retain its direct application node");
+    };
+    let Some(reused) = reused_application_wd
+        .steps
+        .template_instantiation
+        .as_deref()
+    else {
+        panic!("second Template application must retain reuse evidence");
+    };
+    let SuccessTemplateInstantiationResult::Reused(reused) = reused else {
+        panic!("second exact Template application must be Reused");
+    };
+    assert_eq!(
+        reused.application.to_string(),
+        created.application.to_string()
+    );
+}
+
+#[test]
 fn template_application_still_checks_its_header() {
     let cases = [
         ("wrong_arity", r#"\guarded<R> = R"#, "expects"),

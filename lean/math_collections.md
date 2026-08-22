@@ -446,6 +446,26 @@ operator-specific `Pow` certificate reaches the recursive Result, but the comple
 power term and native exponent semantics have not received a reviewed compiler
 contract. It therefore remains fail-closed.
 
+## Exact complex algebraic equality
+
+Example 54 consumes `ComplexAlgebraicNormalization` evidence for an exact
+source equality. Both source sides are represented by ordinary native complex
+terms, including `Complex.I`; the compiler reruns the bounded verifier
+normalizer and then lifts the checked native equality through
+`Litex.Same.ofEq`. This matters because the backend follows a typed verifier
+route instead of recognizing a diagnostic label or launching open-ended Lean
+search.
+
+Immediate use: `2 * i + 1 = i * i + 2 + 2 * i`, closed reciprocal identities,
+and polynomial identities in a `C` binder.
+
+Nearest rejected form: `(z + i) / (z + i) = 1` for symbolic complex `z`.
+Litex can verify it after establishing `z + i != 0`, but the current Lean
+adapter has no reviewed conversion from that semantic non-equality evidence to
+the native denominator proof used by field normalization. Powers are also
+outside this adapter because the general compiler still gives `Pow` a narrower
+rational representation.
+
 ## Generated example contract
 
 The `.lit` file is authoritative. Compiler first executes it and receives the

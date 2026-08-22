@@ -5,9 +5,66 @@ use crate::rational_expression::process_division_after_polynomial_simplification
 
 const MAX_DENOMINATOR_CLEARING_ROUNDS: usize = 16;
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum AlgebraicNormalizationMode {
+    Ordinary,
+    ComplexImaginaryUnit,
+}
+
 pub fn objs_equal_by_rational_expression_evaluation(left: &Obj, right: &Obj) -> bool {
-    let mut left_monomials = collect_monomials_in_obj(left);
-    let mut right_monomials = collect_monomials_in_obj(right);
+    objs_equal_by_algebraic_normalization(left, right, AlgebraicNormalizationMode::Ordinary)
+}
+
+/// Proves exact polynomial/rational identities after reducing every pair of
+/// imaginary-unit factors by `i * i = -1`.
+/// Example: `(1 + i) * (1 - i) = 2`.
+pub fn objs_equal_by_complex_rational_expression_evaluation(left: &Obj, right: &Obj) -> bool {
+    if !obj_contains_normalizable_imaginary_unit(left)
+        && !obj_contains_normalizable_imaginary_unit(right)
+    {
+        return false;
+    }
+    objs_equal_by_algebraic_normalization(
+        left,
+        right,
+        AlgebraicNormalizationMode::ComplexImaginaryUnit,
+    )
+}
+
+fn obj_contains_normalizable_imaginary_unit(obj: &Obj) -> bool {
+    match obj {
+        Obj::ImaginaryUnit(_) => true,
+        Obj::Add(add) => {
+            obj_contains_normalizable_imaginary_unit(&add.left)
+                || obj_contains_normalizable_imaginary_unit(&add.right)
+        }
+        Obj::Sub(sub) => {
+            obj_contains_normalizable_imaginary_unit(&sub.left)
+                || obj_contains_normalizable_imaginary_unit(&sub.right)
+        }
+        Obj::Mul(mul) => {
+            obj_contains_normalizable_imaginary_unit(&mul.left)
+                || obj_contains_normalizable_imaginary_unit(&mul.right)
+        }
+        Obj::Div(div) => {
+            obj_contains_normalizable_imaginary_unit(&div.left)
+                || obj_contains_normalizable_imaginary_unit(&div.right)
+        }
+        Obj::Pow(pow) => {
+            obj_contains_normalizable_imaginary_unit(&pow.base)
+                || obj_contains_normalizable_imaginary_unit(&pow.exponent)
+        }
+        _ => false,
+    }
+}
+
+fn objs_equal_by_algebraic_normalization(
+    left: &Obj,
+    right: &Obj,
+    mode: AlgebraicNormalizationMode,
+) -> bool {
+    let mut left_monomials = collect_monomials_in_obj(left, mode);
+    let mut right_monomials = collect_monomials_in_obj(right, mode);
 
     for _ in 0..MAX_DENOMINATOR_CLEARING_ROUNDS {
         if monomial_vectors_are_equal(left_monomials.clone(), right_monomials.clone()) {
@@ -20,6 +77,7 @@ pub fn objs_equal_by_rational_expression_evaluation(left: &Obj, right: &Obj) -> 
             collect_rational_expression_monomials_after_denominator_clearing_process(
                 left_monomials,
                 right_monomials,
+                mode,
             );
         let next_left_key = canonical_monomial_vector_key(&next_left_monomials);
         let next_right_key = canonical_monomial_vector_key(&next_right_monomials);
@@ -139,6 +197,42 @@ mod algebraic_identity_tests {
         assert!(objs_equal_by_rational_expression_evaluation(
             &nested_left,
             &nested_right
+        ));
+    }
+
+    #[test]
+    fn complex_mode_reduces_imaginary_unit_products() {
+        let i: Obj = ImaginaryUnit::new().into();
+        let one: Obj = Number::new("1".to_string()).into();
+        let two: Obj = Number::new("2".to_string()).into();
+
+        let left: Obj = Add::new(Mul::new(two.clone(), i.clone()).into(), one.clone()).into();
+        let right: Obj = Add::new(
+            Add::new(Mul::new(i.clone(), i.clone()).into(), two.clone()).into(),
+            Mul::new(two, i.clone()).into(),
+        )
+        .into();
+        assert!(objs_equal_by_complex_rational_expression_evaluation(
+            &left, &right
+        ));
+
+        let wrong: Obj = Number::new("1".to_string()).into();
+        assert!(!objs_equal_by_complex_rational_expression_evaluation(
+            &Mul::new(i.clone(), i).into(),
+            &wrong,
+        ));
+    }
+
+    #[test]
+    fn complex_mode_clears_imaginary_denominators() {
+        let i: Obj = ImaginaryUnit::new().into();
+        let one: Obj = Number::new("1".to_string()).into();
+        let minus_one: Obj = Number::new("-1".to_string()).into();
+        let left: Obj = Div::new(one, i.clone()).into();
+        let right: Obj = Mul::new(minus_one, i).into();
+
+        assert!(objs_equal_by_complex_rational_expression_evaluation(
+            &left, &right
         ));
     }
 }

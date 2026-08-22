@@ -278,8 +278,8 @@ impl Runtime {
                 WellDefinedObjChildRole::ConstructorArgument { argument_index },
             )?);
         }
-        steps.template_materialization = Some(Box::new(
-            self.materialize_instantiated_template_obj_result(template_obj, verify_state)?,
+        steps.template_instantiation = Some(Box::new(
+            self.instantiate_template_obj_result(template_obj, verify_state)?,
         ));
         Ok(steps)
     }

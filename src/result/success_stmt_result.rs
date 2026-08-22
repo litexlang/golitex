@@ -477,7 +477,9 @@ pub struct SuccessDefSettingStmtResult {
 
 pub struct SuccessDefTemplateStmtResult {
     pub statement: DefTemplateStmt,
-    pub common: SuccessStmtCommonResult,
+    pub template_parameter_groups: Vec<SuccessVerifyFactParameterGroupResult>,
+    pub template_domain_results: Vec<SuccessVerifyLocalFactWellDefinedResult>,
+    pub body_statement_result: Box<SuccessStmtResult>,
 }
 
 pub struct SuccessDefStructStmtResult {
@@ -845,6 +847,24 @@ impl SuccessStmtResult {
         Ok(())
     }
 
+    pub fn visit_success_child_results(&self, visitor: &mut impl FnMut(&SuccessStmtResult)) {
+        if let Self::DefInterfaceStmt(SuccessDefInterfaceStmtResult::DefTemplateStmt(result)) = self
+        {
+            visitor(&result.body_statement_result);
+        }
+    }
+
+    pub fn try_visit_success_child_results_mut<E>(
+        &mut self,
+        visitor: &mut impl FnMut(&mut SuccessStmtResult) -> Result<(), E>,
+    ) -> Result<(), E> {
+        if let Self::DefInterfaceStmt(SuccessDefInterfaceStmtResult::DefTemplateStmt(result)) = self
+        {
+            visitor(&mut result.body_statement_result)?;
+        }
+        Ok(())
+    }
+
     pub fn statement(&self) -> Stmt {
         match self {
             Self::Fact(statement) => statement.fact().into(),
@@ -883,7 +903,7 @@ impl SuccessStmtResult {
             Self::UnsafeStmt(statement) => Some(statement.common()),
             Self::DefObjStmt(statement) => Some(statement.common()),
             Self::DefPredicateStmt(statement) => Some(statement.common()),
-            Self::DefInterfaceStmt(statement) => Some(statement.common()),
+            Self::DefInterfaceStmt(statement) => statement.common(),
             Self::DefAlgoStmt(result) => Some(&result.common),
             Self::DefThmStmt(result) => Some(&result.common),
             Self::AxiomStmt(result) => Some(&result.common),
@@ -901,7 +921,7 @@ impl SuccessStmtResult {
             Self::UnsafeStmt(statement) => Some(statement.common_mut()),
             Self::DefObjStmt(statement) => Some(statement.common_mut()),
             Self::DefPredicateStmt(statement) => Some(statement.common_mut()),
-            Self::DefInterfaceStmt(statement) => Some(statement.common_mut()),
+            Self::DefInterfaceStmt(statement) => statement.common_mut(),
             Self::DefAlgoStmt(result) => Some(&mut result.common),
             Self::DefThmStmt(result) => Some(&mut result.common),
             Self::AxiomStmt(result) => Some(&mut result.common),
@@ -919,7 +939,7 @@ impl SuccessStmtResult {
             Self::UnsafeStmt(statement) => Some(statement.into_common()),
             Self::DefObjStmt(statement) => Some(statement.into_common()),
             Self::DefPredicateStmt(statement) => Some(statement.into_common()),
-            Self::DefInterfaceStmt(statement) => Some(statement.into_common()),
+            Self::DefInterfaceStmt(statement) => statement.into_common(),
             Self::DefAlgoStmt(result) => Some(result.common),
             Self::DefThmStmt(result) => Some(result.common),
             Self::AxiomStmt(result) => Some(result.common),
@@ -936,6 +956,9 @@ impl SuccessStmtResult {
             Self::Fact(_) => Vec::new(),
             Self::ProofBlock(proof_block) => proof_block.into_child_results(),
             Self::DefObjStmt(def_obj) => def_obj.into_child_results(),
+            Self::DefInterfaceStmt(SuccessDefInterfaceStmtResult::DefTemplateStmt(result)) => {
+                vec![(*result.body_statement_result).into()]
+            }
             Self::DefThmStmt(result) => result
                 .verification
                 .map(|verification| {
@@ -2407,11 +2430,11 @@ impl SuccessDefPredicateStmtResult {
 }
 
 impl SuccessDefInterfaceStmtResult {
-    fn into_common(self) -> SuccessStmtCommonResult {
+    fn into_common(self) -> Option<SuccessStmtCommonResult> {
         match self {
-            Self::DefSettingStmt(result) => result.common,
-            Self::DefTemplateStmt(result) => result.common,
-            Self::DefStructStmt(result) => result.common,
+            Self::DefSettingStmt(result) => Some(result.common),
+            Self::DefTemplateStmt(_) => None,
+            Self::DefStructStmt(result) => Some(result.common),
         }
     }
 
@@ -2423,19 +2446,19 @@ impl SuccessDefInterfaceStmtResult {
         }
     }
 
-    fn common(&self) -> &SuccessStmtCommonResult {
+    fn common(&self) -> Option<&SuccessStmtCommonResult> {
         match self {
-            Self::DefSettingStmt(result) => &result.common,
-            Self::DefTemplateStmt(result) => &result.common,
-            Self::DefStructStmt(result) => &result.common,
+            Self::DefSettingStmt(result) => Some(&result.common),
+            Self::DefTemplateStmt(_) => None,
+            Self::DefStructStmt(result) => Some(&result.common),
         }
     }
 
-    fn common_mut(&mut self) -> &mut SuccessStmtCommonResult {
+    fn common_mut(&mut self) -> Option<&mut SuccessStmtCommonResult> {
         match self {
-            Self::DefSettingStmt(result) => &mut result.common,
-            Self::DefTemplateStmt(result) => &mut result.common,
-            Self::DefStructStmt(result) => &mut result.common,
+            Self::DefSettingStmt(result) => Some(&mut result.common),
+            Self::DefTemplateStmt(_) => None,
+            Self::DefStructStmt(result) => Some(&mut result.common),
         }
     }
 }

@@ -50,7 +50,17 @@ impl Runtime {
         &self,
         result: &mut StmtResult,
     ) -> Result<(), RuntimeError> {
-        if let Some(success) = result.factual_success_mut() {
+        if let StmtResult::Success(success) = result {
+            self.attach_known_fact_ids_to_success_stmt_result(success)?;
+        }
+        Ok(())
+    }
+
+    fn attach_known_fact_ids_to_success_stmt_result(
+        &self,
+        success: &mut SuccessStmtResult,
+    ) -> Result<(), RuntimeError> {
+        if let SuccessStmtResult::Fact(success) = success {
             // A nested proof result may already carry the exact FactId from a
             // local environment that has since been popped. Never retarget it
             // to a later ambient fact with the same proposition.
@@ -63,13 +73,15 @@ impl Runtime {
             if let Some(verification) = Rc::get_mut(&mut success.verification) {
                 self.attach_known_fact_ids_to_verified_by(verification.proof_mut())?;
             }
-        } else if let Some(success) = result.non_factual_success_mut() {
-            let common = success
-                .common_mut()
-                .expect("non-factual IR always carries common execution evidence");
-            self.attach_known_fact_ids_to_infer_result(&mut common.infers)?;
+        } else {
+            if let Some(common) = success.common_mut() {
+                self.attach_known_fact_ids_to_infer_result(&mut common.infers)?;
+            }
             success.try_visit_child_results_mut(&mut |child| {
                 self.attach_known_fact_ids_to_stmt_result(child)
+            })?;
+            success.try_visit_success_child_results_mut(&mut |child| {
+                self.attach_known_fact_ids_to_success_stmt_result(child)
             })?;
 
             match success {
@@ -427,17 +439,12 @@ impl Runtime {
             Stmt::DefPredicateStmt(DefPredicateStmt::DefAbstractPropStmt(s)) => {
                 self.exec_def_abstract_prop_stmt_affect_environment_only(s)
             }
-            Stmt::DefInterfaceStmt(DefInterfaceStmt::DefTemplateStmt(s)) => {
-                self.store_def_template(s)
-                    .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone(), e))?;
-                Ok(SuccessDefInterfaceStmtResult::DefTemplateStmt(Box::new(
-                    SuccessDefTemplateStmtResult {
-                        statement: s.clone(),
-                        common: SuccessStmtCommonResult::new(SuccessInferResult::new()),
-                    },
-                ))
-                .into())
-            }
+            Stmt::DefInterfaceStmt(DefInterfaceStmt::DefTemplateStmt(s)) => Err(short_exec_error(
+                s.clone().into(),
+                "a template declaration cannot be replayed as a preverified template body",
+                None,
+                vec![],
+            )),
             Stmt::DefInterfaceStmt(DefInterfaceStmt::DefSettingStmt(s)) => {
                 self.store_def_setting(s)
                     .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone(), e))?;

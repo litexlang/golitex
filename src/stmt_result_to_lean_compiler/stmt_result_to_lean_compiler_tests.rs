@@ -374,6 +374,45 @@ fn top_level_atomic_equality_compiles_typed_result_evidence() {
 }
 
 #[test]
+fn complex_algebraic_normalization_compiles_typed_result_evidence() {
+    const SOURCE: &str = "2 * i + 1 = i * i + 2 + 2 * i\n(1 + i) * (1 - i) = 2\n1 / i = -1 * i\n\nforall z C:\n    (z + i) * (z - i) = z * z + 1\n";
+    let result_json = capture_stmt_results_json_v2_on_verifier_stack(
+        SOURCE,
+        "54_ComplexAlgebraicCalculation.lit",
+    )
+    .expect("capture complex-algebraic-normalization Result JSON v2");
+    assert_eq!(
+        result_json.matches("ComplexAlgebraicNormalization").count(),
+        4,
+        "{result_json}"
+    );
+
+    let generated = compile_on_verifier_stack(SOURCE, "54_ComplexAlgebraicCalculation.lit")
+        .expect("compile exact complex algebraic normalization");
+    assert!(generated.contains("Complex.I_mul_I"), "{generated}");
+    assert!(generated.contains("ring_nf"), "{generated}");
+    assert!(generated.contains("Litex.In.rep z"), "{generated}");
+    assert!(!generated.contains("LitexObject"), "{generated}");
+    assert!(!generated.contains("Litex.Object"), "{generated}");
+    assert!(!generated.contains("Set.univ"), "{generated}");
+    assert!(!generated.contains("axiom "), "{generated}");
+    assert!(!generated.contains("sorry"), "{generated}");
+}
+
+#[test]
+fn complex_algebraic_normalization_compiler_rejects_symbolic_denominators() {
+    let error = compile_on_verifier_stack(
+        "forall z C:\n    z + i != 0\n    =>:\n        (z + i) / (z + i) = 1\n",
+        "complex_symbolic_denominator_boundary.lit",
+    )
+    .expect_err("symbolic denominator proof replay must remain fail-closed");
+    assert!(
+        error.contains("symbolic denominators remain unsupported"),
+        "{error}"
+    );
+}
+
+#[test]
 fn top_level_atomic_membership_emits_source_and_inferred_fact_ids() {
     let generated = compile_on_verifier_stack("2 + 3 $in N\n", "atomic_membership.lit")
         .expect("compile top-level atomic membership");
@@ -1522,6 +1561,81 @@ fn indexed_sequence_definition_uses_the_recursive_result_environment() {
     assert!(generated.contains("Litex.fnApplyOwn shifted_sequence"));
     assert!(!generated.contains("axiom "));
     assert!(!generated.contains("sorry"));
+}
+
+#[test]
+fn template_sequence_alias_compiles_from_recursive_results_without_index_shift() {
+    const SOURCE: &str =
+        include_str!("../../lean/examples/55_TemplateSequenceInstantiationResult.lit");
+    let result_json = capture_stmt_results_json_v2_on_verifier_stack(
+        SOURCE,
+        "55_TemplateSequenceInstantiationResult.lit",
+    )
+    .expect("capture Template declaration and Created/Reused Result JSON v2");
+    for retained_field in [
+        "\"template_parameter_groups\"",
+        "\"body_statement_result\"",
+        "\"kind\": \"Created\"",
+        "\"kind\": \"Reused\"",
+        "\"template_argument_results\"",
+        "\"public_value_equalities\"",
+    ] {
+        assert!(
+            result_json.contains(retained_field),
+            "missing {retained_field}: {result_json}"
+        );
+    }
+
+    let generated = compile_on_verifier_stack(SOURCE, "55_TemplateSequenceInstantiationResult.lit")
+        .expect("compile Template sequence alias directly from recursive statement Results");
+    assert!(
+        generated.contains(
+            "abbrev sequence (S : Litex.Set) := (Litex.fnSet Litex.NPos (S : Litex.Set.{0}))"
+        ),
+        "{generated}"
+    );
+    assert!(
+        generated.contains("Litex.Same (sequence Litex.R) (Litex.fnSet Litex.NPos Litex.R)"),
+        "{generated}"
+    );
+    assert!(!generated.contains("Nat ->"), "{generated}");
+    assert!(!generated.contains("+ 1"), "{generated}");
+    assert!(!generated.contains("- 1"), "{generated}");
+    assert!(!generated.contains("axiom "), "{generated}");
+    assert!(!generated.contains("sorry"), "{generated}");
+    assert_eq!(
+        generated,
+        include_str!("../../lean/examples/55_TemplateSequenceInstantiationResult.lean"),
+        "the checked-in Template tracer must not drift from direct Result compilation"
+    );
+}
+
+#[test]
+fn unsupported_template_compiler_shapes_remain_fail_closed() {
+    for (label, source, expected_error) in [
+        (
+            "template_domain_is_not_yet_compiled.lit",
+            "template<S set: S = S>:\n    have guarded set = S\n\n\\guarded<R> = R\n",
+            "no template domain clauses",
+        ),
+        (
+            "template_non_set_parameter_is_not_yet_compiled.lit",
+            "template<n N+>:\n    have naturals set = N\n\n\\naturals<1> = N\n",
+            "only one or more `set` parameters",
+        ),
+        (
+            "template_non_set_alias_body_is_not_yet_compiled.lit",
+            "template<S set>:\n    have fn identity(x S) S = x\n",
+            "only a `have <name> set = <value>` body",
+        ),
+    ] {
+        let error = compile_on_verifier_stack(source, label)
+            .expect_err("unsupported Template shape must remain outside the direct compiler slice");
+        assert!(
+            error.contains(expected_error),
+            "unexpected error for {label}: {error}"
+        );
+    }
 }
 
 #[test]

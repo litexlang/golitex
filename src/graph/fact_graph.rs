@@ -369,20 +369,20 @@ impl FactGraphBuilder {
     }
 
     fn collect_result_nodes(&mut self, result: &StmtResult) {
-        if let Some(success) = result.factual_success() {
+        if let StmtResult::Success(success) = result {
+            self.collect_success_nodes(success);
+        }
+    }
+
+    fn collect_success_nodes(&mut self, success: &SuccessStmtResult) {
+        if let Some(success) = success.fact() {
             self.add_fact_node(&success.fact(), "fact", None);
             self.add_infer_nodes(&success.infers);
             self.collect_verified_by_nodes(success.proof());
             return;
         }
 
-        let Some(success) = result.non_factual_success() else {
-            return;
-        };
         let source_stmt = success.statement();
-        let common = success
-            .common()
-            .expect("non-factual IR carries common execution evidence");
         match &source_stmt {
             Stmt::DefThmStmt(stmt) => self.add_theorem_nodes(stmt, &source_stmt),
             Stmt::AxiomStmt(stmt) => self.add_axiom_nodes(stmt, &source_stmt),
@@ -391,10 +391,14 @@ impl FactGraphBuilder {
             }
             Stmt::UnsafeStmt(UnsafeStmt::TrustStmt(_))
             | Stmt::UnsafeStmt(UnsafeStmt::TrustHaveStmt(_)) => {
-                self.add_trust_nodes(&common.infers)
+                if let Some(common) = success.common() {
+                    self.add_trust_nodes(&common.infers)
+                }
             }
             Stmt::By(ByStmt::ByDefStmt(_)) | Stmt::By(ByStmt::ByStructDefStmt(_)) => {
-                self.add_infer_nodes(&common.infers)
+                if let Some(common) = success.common() {
+                    self.add_infer_nodes(&common.infers)
+                }
             }
             _ => {}
         }
@@ -416,6 +420,7 @@ impl FactGraphBuilder {
             self.add_assumption_nodes(&verification.proof_scope.assumption_infers);
         }
         success.visit_child_results(&mut |child| self.collect_result_nodes(child));
+        success.visit_success_child_results(&mut |child| self.collect_success_nodes(child));
     }
 
     fn collect_verified_by_nodes(&mut self, verified_by: &SuccessFactProofResult) {
@@ -618,22 +623,26 @@ impl FactGraphBuilder {
     }
 
     fn collect_result_edges(&mut self, result: &StmtResult) {
-        if let Some(success) = result.factual_success() {
+        if let StmtResult::Success(success) = result {
+            self.collect_success_edges(success);
+        }
+    }
+
+    fn collect_success_edges(&mut self, success: &SuccessStmtResult) {
+        if let Some(success) = success.fact() {
             let target_id = self.add_fact_node(&success.fact(), "fact", None);
             self.add_infer_edges(&success.infers);
             self.collect_verified_by_edges(&target_id, success.proof());
             return;
         }
 
-        let Some(success) = result.non_factual_success() else {
-            return;
-        };
         let source_stmt = success.statement();
-        let common = success
-            .common()
-            .expect("non-factual IR carries common execution evidence");
         success.visit_child_results(&mut |child| self.collect_result_edges(child));
+        success.visit_success_child_results(&mut |child| self.collect_success_edges(child));
         if let SuccessStmtResult::By(SuccessByStmtResult::ByDefStmt(result)) = success {
+            let common = success
+                .common()
+                .expect("by-definition result carries common execution evidence");
             self.add_infer_edges(&common.infers);
             let target_fact: Fact = result.statement.fact.clone().into();
             let target_id = self.add_fact_node(&target_fact, "fact", None);
@@ -649,6 +658,9 @@ impl FactGraphBuilder {
             return;
         }
         if let SuccessStmtResult::By(SuccessByStmtResult::ByStructDefStmt(result)) = success {
+            let common = success
+                .common()
+                .expect("by-struct-definition result carries common execution evidence");
             self.add_infer_edges(&common.infers);
             let membership: Fact = InFact::new(
                 result.statement.obj.clone(),
@@ -670,6 +682,11 @@ impl FactGraphBuilder {
         let mut last_fact_id = None;
         success.visit_child_results(&mut |child| {
             if let Some(node_id) = self.last_factual_result_node_id(std::slice::from_ref(child)) {
+                last_fact_id = Some(node_id);
+            }
+        });
+        success.visit_success_child_results(&mut |child| {
+            if let Some(node_id) = self.last_factual_success_node_id(child) {
                 last_fact_id = Some(node_id);
             }
         });
@@ -971,12 +988,39 @@ impl FactGraphBuilder {
                         last_child_id = Some(node_id);
                     }
                 });
+                success.visit_success_child_results(&mut |child| {
+                    if let Some(node_id) = self.last_factual_success_node_id(child) {
+                        last_child_id = Some(node_id);
+                    }
+                });
                 if last_child_id.is_some() {
                     return last_child_id;
                 }
             }
         }
         None
+    }
+
+    fn last_factual_success_node_id(&mut self, success: &SuccessStmtResult) -> Option<String> {
+        if let Some(fact) = success.fact() {
+            return Some(self.add_fact_node(&fact.fact(), "fact", None));
+        }
+        if let Stmt::By(ByStmt::ByDefStmt(stmt)) = &success.statement() {
+            let fact: Fact = stmt.fact.clone().into();
+            return Some(self.add_fact_node(&fact, "fact", None));
+        }
+        let mut last_child_id = None;
+        success.visit_child_results(&mut |child| {
+            if let Some(node_id) = self.last_factual_result_node_id(std::slice::from_ref(child)) {
+                last_child_id = Some(node_id);
+            }
+        });
+        success.visit_success_child_results(&mut |child| {
+            if let Some(node_id) = self.last_factual_success_node_id(child) {
+                last_child_id = Some(node_id);
+            }
+        });
+        last_child_id
     }
 
     fn add_fact_node(&mut self, fact: &Fact, fact_kind: &str, reason: Option<&String>) -> String {

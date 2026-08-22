@@ -314,6 +314,24 @@ forall z C:
     0 <= C_abs(z)
 ```
 
+Equality calculation also has a bounded exact complex-algebraic mode. It uses
+the ordinary polynomial/rational normalizer, with the additional relation
+`i * i = -1`:
+
+```litex
+2 * i + 1 = i * i + 2 + 2 * i
+(1 + i) * (1 - i) = 2
+1 / i = -i
+
+forall z C:
+    (z + i) * (z - i) = z^2 + 1
+```
+
+This route is exact and zero-premise: division side conditions are still
+checked by well-definedness, and a successful equality reports
+`exact complex algebraic normalization`. It does not introduce approximate
+complex evaluation or an order on `C`.
+
 `re(z)`, `img(z)`, and `C_abs(z)` are dedicated unary builtin expression
 forms with domain `C` and result set `R`, at the same object-model level as
 `abs(z)`. Their bare names are not first-class function values; higher-order

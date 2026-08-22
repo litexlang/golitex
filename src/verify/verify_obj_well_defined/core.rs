@@ -232,7 +232,7 @@ impl Runtime {
             for arguments in &fn_obj.body[..last_layer_index] {
                 let return_set = self.fn_set_return_set_after_args(&space, arguments)?;
                 if let Obj::InstantiatedTemplateObj(template_obj) = &return_set {
-                    self.materialize_instantiated_template_obj(template_obj, verify_state)?;
+                    self.instantiate_template_obj(template_obj, verify_state)?;
                 }
                 space = self.fn_set_space_from_return_set_obj(return_set)?;
             }

@@ -248,7 +248,7 @@ impl Runtime {
                 if !self.is_name_used_for_identifier(&template_obj.surface_name()) {
                     if !allow_indirect_lookup
                         || self
-                            .materialize_instantiated_template_obj(template_obj, verify_state)
+                            .instantiate_template_obj(template_obj, verify_state)
                             .is_err()
                     {
                         return Ok(None);
@@ -310,7 +310,7 @@ impl Runtime {
             if !self.is_name_used_for_identifier(&template_obj.surface_name()) {
                 if !allow_indirect_lookup
                     || self
-                        .materialize_instantiated_template_obj(template_obj, verify_state)
+                        .instantiate_template_obj(template_obj, verify_state)
                         .is_err()
                 {
                     return Ok(None);

@@ -182,7 +182,7 @@ impl Runtime {
             .expect("forall precheck returns recursive WD evidence"))
     }
 
-    fn verify_fact_binder_result(
+    pub(crate) fn verify_fact_binder_result(
         &mut self,
         parameter_definition: &ParamDefWithType,
         binding_kind: ParamObjType,
@@ -237,7 +237,7 @@ impl Runtime {
         Ok(SuccessVerifyFactBinderResult { parameter_groups })
     }
 
-    fn verify_and_store_quantifier_free_wd_result(
+    pub(crate) fn verify_and_store_quantifier_free_wd_result(
         &mut self,
         fact: &QuantifierFreeFact,
         verify_state: &UseContextVerifyState,
@@ -647,7 +647,7 @@ impl Runtime {
                 // The proof scope must receive the exact execution support
                 // created while checking the conclusion. In particular, a
                 // template occurrence is well-defined only after its local
-                // materialization has installed the public equality used by
+                // instantiation has installed the public equality used by
                 // definition reduction. The child does not own the forall
                 // parameters or premises (it inherits them), so retaining its
                 // complete checked effects cannot leak those assumptions.

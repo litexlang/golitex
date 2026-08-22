@@ -1398,7 +1398,7 @@ impl Runtime {
         verify_state: &UseContextVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         if let Obj::InstantiatedTemplateObj(template_obj) = &in_fact.set {
-            self.materialize_instantiated_template_obj(template_obj, verify_state)?;
+            self.instantiate_template_obj(template_obj, verify_state)?;
         }
         let set_builder = self
             .unfold_known_fn_application_to_set_builder(&in_fact.set, verify_state)?

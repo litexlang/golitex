@@ -1,55 +1,64 @@
 # Linear Algebra over a Field
 
 This standalone showcase follows the conceptual order of *Linear Algebra Done
-Right* in two parallel presentations:
+Right*: a scalar field, vector spaces over that field, linear maps, subspaces,
+kernels, and finally concrete coordinate examples.
 
-- `main.lit` uses first-class `Field<K>` and `VectorSpace<K,V>` structures;
-- `main2.lit` uses `FieldSetting`, `VectorSpaceSetting`, and
-  `LinearMapSetting` as ambient theorem contexts and contains no `struct`.
+The two Litex exports now share one mathematical ontology:
 
-Both presentations begin with:
+- `main.lit` defines the first-class structures, propositions, constructions,
+  proofs, and concrete values;
+- `main2.lit` adds a small Setting-facing layer over those same values. It does
+  not flatten operations or rebuild the mathematics a second time.
 
-- `Field<K>` packages scalar zero, one, addition, negation, multiplication,
-  inversion, and the field laws;
-- `VectorSpace<K,V>` owns one `Field<K>` value and packages vector zero,
-  addition, scalar multiplication, and the vector-space laws;
-- vector negation and subtraction are derived from unique additive inverses;
-- linear maps, subspaces, kernels, and the zero subspace are carrier-generic;
-- kernels of linear maps are subspaces; and
-- a linear map is injective exactly when its kernel is the zero subspace.
+`Field<K>` packages scalar operations and their laws. A vector-space object has
+the carrier
 
-Only after that abstract spine does either presentation introduce real scalar
-operations, the coordinate plane, and the x-axis projection. In `main2.lit`,
-the projection is checked against the setting-derived linear-map judgment, its
-kernel is obtained from the carrier-generic theorem, and `(0,7)` is exhibited
-as a kernel element. Thus `cart(R,R)` is an instance of the interfaces, not
-their definition.
-
-Run it from the repository root with:
-
-```bash
-target/release/litex -compact -runner -r showcases/math_concepts_in_litex/5_linear_algebra
+```litex
+&VectorSpace<K, field, V>
 ```
 
-The module contains no `trust` or local axiom. It intentionally stops before
-bases, dimension, rank-nullity, matrices, and quotients. A direct `R`-as-a-
-vector-space instance is also deferred: every required law verifies, but the
-current verifier does not assemble the `K = V = R` nested structure value via
-`struct_member`. The checked `R^2` instance avoids that representation boundary
-without weakening the public generic interface; the failed probes remain in
-the ignored proof journal.
+so the concrete `field &Field<K>` is fixed when the object is declared. The
+vector-space record itself therefore needs only `zero`, `add`, and `smul`.
+Two spaces used by one linear map carry the same `field` in their types; no
+later `source.field = target.field` compatibility premise is required.
 
-The two Litex files make a deliberate modeling tradeoff visible. A `struct` is
-a mathematical value that can be stored, returned, and projected. A `setting`
-is a reusable binder-and-assumption prefix for theorem contexts; its operations
-are used directly as `add_V(u,v)` and `smul_V(a,v)`. The paired
-`VectorSpacesSetting` binds one field and two spaces because setting references
-currently introduce fresh binders rather than reusing an outer field binder.
+Settings name recurring theorem contexts without creating another kind of
+field or vector space:
 
-`same_math_in_lean.lean` is a handwritten Prelude-only analogy with the same
-generic field, vector-space, linear-map, subspace, kernel, and injectivity
-semantics. It also constructs the coordinate plane and x-axis projection.
-Run it with:
+```litex
+setting VectorSpaceSetting(
+    [FieldSetting(K, field)],
+    V nonempty_set,
+    space &VectorSpace<K, field, V>
+)
+```
+
+Inside such a context, `field.mul`, `space.zero`, `space.add`, and `space.smul`
+come from the struct types attached to those binders. Mere later membership of
+an unrelated symbol in a struct carrier does not install a second field view on
+that symbol.
+
+The checked development derives vector negation and subtraction, proves that
+linear maps preserve zero and negation, proves that kernels are subspaces, and
+establishes the trivial-kernel criterion for injectivity. Only then does it
+construct `real_field`, the coordinate plane `real_plane`, and projection onto
+the x-axis. `main2.lit` reuses those concrete values through its Settings.
+
+Run the registered module from the repository root with:
+
+```bash
+target/release/litex -compact -runner -r showcases/math_concepts_in_litex/5_linear_algebra -summarize
+```
+
+The published Litex source contains no direct `trust` or local `axiom`. The
+module intentionally stops before bases, dimension, rank-nullity, matrices,
+and quotients. `LinearMap` and `Subspace` also remain propositions in this
+gate; they have not been promoted to structures.
+
+`same_math_in_lean.lean` is a handwritten Prelude-only comparison covering the
+same generic field, vector-space, linear-map, subspace, kernel, injectivity, and
+coordinate-plane mathematics. Run it separately with:
 
 ```sh
 lean showcases/math_concepts_in_litex/5_linear_algebra/same_math_in_lean.lean

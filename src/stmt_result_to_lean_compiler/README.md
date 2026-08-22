@@ -892,6 +892,28 @@ persistent pair is
 and its generated Lean file. Its following function application checks that
 the parent compiler environment retained only the three intended outer facts.
 
+A Template definition is another nested statement composition, not a new IR.
+`SuccessDefTemplateStmtResult.template_parameter_groups` owns only the
+Template header binders, while `body_statement_result` owns the parameters of
+the declaration inside the Template body. For example, in
+`template<S set>: have sequence set = fn(n N+) S`, `S` belongs to the outer
+Template Result and `n` belongs to the nested function-set value. The box
+around `body_statement_result` breaks the recursive Rust type size; it does
+not mean that the local environment executed an unrelated generic statement.
+
+The initial direct compiler slice accepts one or more `set` Template
+parameters, no Template domains, and exactly one body of the form
+`have <name> set = <value>`. Instantiating an exact application retains either
+`SuccessTemplateInstantiationResult::Created`, with argument checks, the
+preverified body Result, and public equality stores, or `Reused`, with the
+same application identity. A sequence-family Template therefore compiles to
+`Litex.fnSet Litex.NPos S`; it does not use Lean's zero-based sequence types
+and performs no index shift. Template domains, non-set parameters, and other
+body families fail closed until they receive their own Result-driven
+compiler route. The persistent pair is
+[`55_TemplateSequenceInstantiationResult.lit`](../../lean/examples/55_TemplateSequenceInstantiationResult.lit)
+and its generated Lean file.
+
 Concrete `by def` is also a direct `Combine`.
 `SuccessVerifyByDefinitionResult` retains the selected `DefPropStmt`, ordered
 argument-check Results, instantiated clause facts, and ordered clause-check
@@ -1564,8 +1586,16 @@ consumes the Rust Result structures directly.
 - Generated Lean must contain no compiler-invented axioms, `sorry`, or
   resurrection of the deprecated universal `LitexObject` representation.
 
+Example 54 adds exact complex algebraic normalization. The verifier returns a
+typed `ComplexAlgebraicNormalization` certificate containing the exact target;
+the compiler independently reruns the bounded normalizer, validates the
+recursive well-definedness result, and then uses a fixed native-complex
+`ring_nf`/`norm_num` adapter. It supports `+`, `-`, `*`, and reviewed closed
+denominators. Powers and symbolic denominators fail closed rather than asking
+Lean to discover a different proof route.
+
 The persistent compiler examples currently extend through
-[`53_RuntimeResolvedComparisonFromDefinitionResults.lit`](../../lean/examples/53_RuntimeResolvedComparisonFromDefinitionResults.lit).
+[`54_ComplexAlgebraicCalculation.lit`](../../lean/examples/54_ComplexAlgebraicCalculation.lit).
 They exercise the direct Result reader and compiler environment stack; they do
 not claim that every statement accepted by the full Litex kernel is already a
 supported Lean target.

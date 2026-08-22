@@ -306,6 +306,13 @@ pub struct RationalNormalizationBuiltinRuleEvidence {
     pub right_evaluation: SuccessEvaluateObjResult,
 }
 
+/// Zero-premise equality certificate selected only after exact bounded
+/// polynomial/rational normalization with the relation `i * i = -1`.
+#[derive(Clone)]
+pub struct ComplexAlgebraicNormalizationBuiltinRuleEvidence {
+    pub expected_target: Fact,
+}
+
 /// A standard carrier is inhabited by its reviewed canonical witness. The
 /// target is retained explicitly so consumers never recover this rule from a
 /// diagnostic label.
@@ -617,6 +624,12 @@ impl RationalNormalizationBuiltinRuleEvidence {
     }
 }
 
+impl ComplexAlgebraicNormalizationBuiltinRuleEvidence {
+    pub fn new(expected_target: Fact) -> Self {
+        Self { expected_target }
+    }
+}
+
 impl fmt::Debug for ClosedNumericMembershipBuiltinRuleEvidence {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         formatter
@@ -644,6 +657,15 @@ impl fmt::Debug for RationalNormalizationBuiltinRuleEvidence {
             .field("expected_target", &self.expected_target.to_string())
             .field("left_evaluation", &self.left_evaluation)
             .field("right_evaluation", &self.right_evaluation)
+            .finish()
+    }
+}
+
+impl fmt::Debug for ComplexAlgebraicNormalizationBuiltinRuleEvidence {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        formatter
+            .debug_struct("ComplexAlgebraicNormalizationBuiltinRuleEvidence")
+            .field("expected_target", &self.expected_target.to_string())
             .finish()
     }
 }
@@ -840,6 +862,7 @@ pub enum BuiltinRuleEvidence {
     RegisteredAntisymmetricPredicate(RegisteredAntisymmetricPredicateBuiltinRuleEvidence),
     ObjectReflexivity(ObjectReflexivityBuiltinRuleEvidence),
     RationalNormalization(RationalNormalizationBuiltinRuleEvidence),
+    ComplexAlgebraicNormalization(ComplexAlgebraicNormalizationBuiltinRuleEvidence),
     StandardSetNonempty(StandardSetNonemptyBuiltinRuleEvidence),
     DisjunctionIntroduction(DisjunctionIntroductionBuiltinRuleEvidence),
     FunctionApplicationReturnMembership(FunctionApplicationReturnMembershipBuiltinRuleEvidence),
@@ -932,6 +955,10 @@ impl fmt::Debug for BuiltinRuleEvidence {
             }
             BuiltinRuleEvidence::RationalNormalization(evidence) => f
                 .debug_tuple("RationalNormalization")
+                .field(evidence)
+                .finish(),
+            BuiltinRuleEvidence::ComplexAlgebraicNormalization(evidence) => f
+                .debug_tuple("ComplexAlgebraicNormalization")
                 .field(evidence)
                 .finish(),
             BuiltinRuleEvidence::StandardSetNonempty(evidence) => f

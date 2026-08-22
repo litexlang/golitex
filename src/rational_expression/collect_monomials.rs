@@ -1,16 +1,20 @@
 use crate::prelude::*;
+use crate::rational_expression::algebraic_normalization::AlgebraicNormalizationMode;
 use crate::rational_expression::evaluate::{
     add_signed_decimal_str, mul_signed_decimal_str, sub_signed_decimal_str,
 };
 use crate::rational_expression::monomial::MonomialWithNonZeroScalarAndOrderedOperands;
 
-pub fn collect_monomials_in_obj(obj: &Obj) -> Vec<MonomialWithNonZeroScalarAndOrderedOperands> {
+pub fn collect_monomials_in_obj(
+    obj: &Obj,
+    mode: AlgebraicNormalizationMode,
+) -> Vec<MonomialWithNonZeroScalarAndOrderedOperands> {
     match obj {
         Obj::Number(number) => from_number_obj_to_monomial(number),
-        Obj::Add(add) => collect_monomials_in_add(add),
-        Obj::Mul(mul) => collect_monomials_in_mul(mul),
-        Obj::Pow(pow) => collect_monomials_in_pow(pow),
-        Obj::Sub(sub) => collect_monomials_in_sub(sub),
+        Obj::Add(add) => collect_monomials_in_add(add, mode),
+        Obj::Mul(mul) => collect_monomials_in_mul(mul, mode),
+        Obj::Pow(pow) => collect_monomials_in_pow(pow, mode),
+        Obj::Sub(sub) => collect_monomials_in_sub(sub, mode),
         obj => {
             if let Some(m) =
                 MonomialWithNonZeroScalarAndOrderedOperands::new_and_check_scalar_is_not_zero(
@@ -26,15 +30,18 @@ pub fn collect_monomials_in_obj(obj: &Obj) -> Vec<MonomialWithNonZeroScalarAndOr
     }
 }
 
-pub fn collect_monomials_in_sub(sub: &Sub) -> Vec<MonomialWithNonZeroScalarAndOrderedOperands> {
+fn collect_monomials_in_sub(
+    sub: &Sub,
+    mode: AlgebraicNormalizationMode,
+) -> Vec<MonomialWithNonZeroScalarAndOrderedOperands> {
     if let Some(normalized_calculated_value) =
         Obj::from(sub.clone()).evaluate_to_normalized_decimal_number()
     {
         return from_number_obj_to_monomial(&normalized_calculated_value);
     }
 
-    let left_monomial_collections = collect_monomials_in_obj(&sub.left);
-    let right_monomial_collections = collect_monomials_in_obj(&sub.right);
+    let left_monomial_collections = collect_monomials_in_obj(&sub.left, mode);
+    let right_monomial_collections = collect_monomials_in_obj(&sub.right, mode);
 
     let mut processed_right_indexes: Vec<usize> =
         Vec::with_capacity(right_monomial_collections.len());
@@ -90,15 +97,18 @@ pub fn collect_monomials_in_sub(sub: &Sub) -> Vec<MonomialWithNonZeroScalarAndOr
     result
 }
 
-pub fn collect_monomials_in_add(add: &Add) -> Vec<MonomialWithNonZeroScalarAndOrderedOperands> {
+fn collect_monomials_in_add(
+    add: &Add,
+    mode: AlgebraicNormalizationMode,
+) -> Vec<MonomialWithNonZeroScalarAndOrderedOperands> {
     if let Some(normalized_calculated_value) =
         Obj::from(add.clone()).evaluate_to_normalized_decimal_number()
     {
         return from_number_obj_to_monomial(&normalized_calculated_value);
     }
 
-    let left_monomial_collections = collect_monomials_in_obj(&add.left);
-    let right_monomial_collections = collect_monomials_in_obj(&add.right);
+    let left_monomial_collections = collect_monomials_in_obj(&add.left, mode);
+    let right_monomial_collections = collect_monomials_in_obj(&add.right, mode);
 
     let mut processed_right_indexes: Vec<usize> =
         Vec::with_capacity(right_monomial_collections.len());
@@ -146,7 +156,10 @@ pub fn collect_monomials_in_add(add: &Add) -> Vec<MonomialWithNonZeroScalarAndOr
     result
 }
 
-fn collect_monomials_in_mul(mul: &Mul) -> Vec<MonomialWithNonZeroScalarAndOrderedOperands> {
+fn collect_monomials_in_mul(
+    mul: &Mul,
+    mode: AlgebraicNormalizationMode,
+) -> Vec<MonomialWithNonZeroScalarAndOrderedOperands> {
     if let Some(normalized_calculated_value) =
         Obj::from(mul.clone()).evaluate_to_normalized_decimal_number()
     {
@@ -155,7 +168,7 @@ fn collect_monomials_in_mul(mul: &Mul) -> Vec<MonomialWithNonZeroScalarAndOrdere
 
     if let Some(normalized_calculated_value) = &mul.left.evaluate_to_normalized_decimal_number() {
         let left = normalized_calculated_value.normalized_value.clone();
-        let collected_monomials_of_right = collect_monomials_in_obj(&mul.right);
+        let collected_monomials_of_right = collect_monomials_in_obj(&mul.right, mode);
         let mut result: Vec<MonomialWithNonZeroScalarAndOrderedOperands> =
             Vec::with_capacity(collected_monomials_of_right.len());
         for right in collected_monomials_of_right.iter() {
@@ -169,7 +182,7 @@ fn collect_monomials_in_mul(mul: &Mul) -> Vec<MonomialWithNonZeroScalarAndOrdere
 
     if let Some(normalized_calculated_value) = &mul.right.evaluate_to_normalized_decimal_number() {
         let right = normalized_calculated_value.normalized_value.clone();
-        let collected_monomials_of_left = collect_monomials_in_obj(&mul.left);
+        let collected_monomials_of_left = collect_monomials_in_obj(&mul.left, mode);
         let mut result: Vec<MonomialWithNonZeroScalarAndOrderedOperands> =
             Vec::with_capacity(collected_monomials_of_left.len());
         for left in collected_monomials_of_left.iter() {
@@ -181,21 +194,22 @@ fn collect_monomials_in_mul(mul: &Mul) -> Vec<MonomialWithNonZeroScalarAndOrdere
         return result;
     }
 
-    let collections_of_left = collect_monomials_in_obj(&mul.left);
-    let collections_of_right = collect_monomials_in_obj(&mul.right);
+    let collections_of_left = collect_monomials_in_obj(&mul.left, mode);
+    let collections_of_right = collect_monomials_in_obj(&mul.right, mode);
 
-    collect_monomials_of_mul_of_monomial_vec(collections_of_left, collections_of_right)
+    collect_monomials_of_mul_of_monomial_vec(collections_of_left, collections_of_right, mode)
 }
 
 fn collect_monomials_of_mul_of_monomial_vec(
     collections_of_left: Vec<MonomialWithNonZeroScalarAndOrderedOperands>,
     collections_of_right: Vec<MonomialWithNonZeroScalarAndOrderedOperands>,
+    mode: AlgebraicNormalizationMode,
 ) -> Vec<MonomialWithNonZeroScalarAndOrderedOperands> {
     let mut collect_monomials_after_mul: Vec<MonomialWithNonZeroScalarAndOrderedOperands> =
         Vec::with_capacity(collections_of_left.len() * collections_of_right.len());
     for left in collections_of_left.iter() {
         for right in collections_of_right.iter() {
-            let multiplied = multiply_two_non_zero_monomials_with_operands(left, right);
+            let multiplied = multiply_two_non_zero_monomials_with_operands(left, right, mode);
             collect_monomials_after_mul.push(multiplied);
         }
     }
@@ -235,11 +249,26 @@ fn collect_monomials_of_mul_of_monomial_vec(
     result
 }
 
-fn collect_monomials_in_pow(pow: &Pow) -> Vec<MonomialWithNonZeroScalarAndOrderedOperands> {
+fn collect_monomials_in_pow(
+    pow: &Pow,
+    mode: AlgebraicNormalizationMode,
+) -> Vec<MonomialWithNonZeroScalarAndOrderedOperands> {
     if let Some(normalized_calculated_value) =
         Obj::from(pow.clone()).evaluate_to_normalized_decimal_number()
     {
         return from_number_obj_to_monomial(&normalized_calculated_value);
+    }
+
+    if mode == AlgebraicNormalizationMode::ComplexImaginaryUnit
+        && matches!(pow.base.as_ref(), Obj::ImaginaryUnit(_))
+    {
+        if let Some(exponent) = pow.exponent.evaluate_to_normalized_decimal_number() {
+            if is_number_string_literally_integer_without_dot(exponent.normalized_value.clone()) {
+                if let Ok(exponent) = exponent.normalized_value.parse::<i128>() {
+                    return imaginary_unit_integer_power_monomials(exponent);
+                }
+            }
+        }
     }
 
     // Accept only literal non-negative integer exponents.
@@ -282,10 +311,10 @@ fn collect_monomials_in_pow(pow: &Pow) -> Vec<MonomialWithNonZeroScalarAndOrdere
         Some(n) => n,
         None => return default_pow_fallback(pow),
     };
-    let base_monomials = collect_monomials_in_obj(&pow.base);
+    let base_monomials = collect_monomials_in_obj(&pow.base, mode);
     let mut result = base_monomials.clone();
     for _ in 0..(n - 1) {
-        result = collect_monomials_of_mul_of_monomial_vec(result, base_monomials.clone());
+        result = collect_monomials_of_mul_of_monomial_vec(result, base_monomials.clone(), mode);
     }
 
     result
@@ -316,6 +345,7 @@ fn multiply_numbers_to_monomial(
 fn multiply_two_non_zero_monomials_with_operands(
     left: &MonomialWithNonZeroScalarAndOrderedOperands,
     right: &MonomialWithNonZeroScalarAndOrderedOperands,
+    mode: AlgebraicNormalizationMode,
 ) -> MonomialWithNonZeroScalarAndOrderedOperands {
     let left_operand_count = left
         .ordered_operands
@@ -326,7 +356,7 @@ fn multiply_two_non_zero_monomials_with_operands(
         .as_ref()
         .map_or(0, |ordered_operands| ordered_operands.len());
     let mut new_operands = Vec::with_capacity(left_operand_count + right_operand_count);
-    let new_scalar = mul_signed_decimal_str(&left.non_zero_scalar, &right.non_zero_scalar);
+    let mut new_scalar = mul_signed_decimal_str(&left.non_zero_scalar, &right.non_zero_scalar);
     if let Some(operands) = left.ordered_operands.as_ref() {
         for operand in operands.iter() {
             let obj = operand.0.clone();
@@ -341,9 +371,54 @@ fn multiply_two_non_zero_monomials_with_operands(
             new_operands.push((obj, obj_string));
         }
     }
+    if mode == AlgebraicNormalizationMode::ComplexImaginaryUnit {
+        let mut imaginary_unit_count = 0;
+        new_operands.retain(|(obj, _)| {
+            if matches!(obj, Obj::ImaginaryUnit(_)) {
+                imaginary_unit_count += 1;
+                false
+            } else {
+                true
+            }
+        });
+        if (imaginary_unit_count / 2) % 2 == 1 {
+            new_scalar = mul_signed_decimal_str(&new_scalar, "-1");
+        }
+        if imaginary_unit_count % 2 == 1 {
+            let imaginary_unit: Obj = ImaginaryUnit::new().into();
+            new_operands.push((imaginary_unit.clone(), imaginary_unit.to_string()));
+        }
+    }
     new_operands.sort_by(|a, b| a.1.cmp(&b.1));
 
-    MonomialWithNonZeroScalarAndOrderedOperands::new(new_scalar, Some(new_operands))
+    let ordered_operands = if new_operands.is_empty() {
+        None
+    } else {
+        Some(new_operands)
+    };
+    MonomialWithNonZeroScalarAndOrderedOperands::new(new_scalar, ordered_operands)
+}
+
+fn imaginary_unit_integer_power_monomials(
+    exponent: i128,
+) -> Vec<MonomialWithNonZeroScalarAndOrderedOperands> {
+    let (scalar, include_imaginary_unit) = match exponent.rem_euclid(4) {
+        0 => ("1", false),
+        1 => ("1", true),
+        2 => ("-1", false),
+        3 => ("-1", true),
+        _ => unreachable!(),
+    };
+    let ordered_operands = if include_imaginary_unit {
+        let imaginary_unit: Obj = ImaginaryUnit::new().into();
+        Some(vec![(imaginary_unit.clone(), imaginary_unit.to_string())])
+    } else {
+        None
+    };
+    vec![MonomialWithNonZeroScalarAndOrderedOperands::new(
+        scalar.to_string(),
+        ordered_operands,
+    )]
 }
 
 fn from_number_obj_to_monomial(

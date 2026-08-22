@@ -33,20 +33,24 @@ pub(super) fn section_inferred_fact(inside_results: &[StmtResult], fact: &Fact) 
 
 fn stmt_result_inferred_fact(result: &StmtResult, target: &str) -> bool {
     if let Some(success) = result.non_factual_success() {
-        let common = success
-            .common()
-            .expect("non-factual IR always carries common execution evidence");
-        if common
-            .infers
-            .inferred_facts()
-            .iter()
-            .any(|fact| fact.to_string() == target)
-        {
-            return true;
+        if let Some(common) = success.common() {
+            if common
+                .infers
+                .inferred_facts()
+                .iter()
+                .any(|fact| fact.to_string() == target)
+            {
+                return true;
+            }
         }
         let mut inferred_by_child = false;
         success.visit_child_results(&mut |child| {
             if !inferred_by_child && stmt_result_inferred_fact(child, target) {
+                inferred_by_child = true;
+            }
+        });
+        success.visit_success_child_results(&mut |child| {
+            if !inferred_by_child && success_stmt_result_inferred_fact(child, target) {
                 inferred_by_child = true;
             }
         });
@@ -60,6 +64,38 @@ fn stmt_result_inferred_fact(result: &StmtResult, target: &str) -> bool {
     } else {
         false
     }
+}
+
+fn success_stmt_result_inferred_fact(result: &SuccessStmtResult, target: &str) -> bool {
+    if let Some(fact) = result.fact() {
+        return fact
+            .infers
+            .inferred_facts()
+            .iter()
+            .any(|fact| fact.to_string() == target);
+    }
+    if let Some(common) = result.common() {
+        if common
+            .infers
+            .inferred_facts()
+            .iter()
+            .any(|fact| fact.to_string() == target)
+        {
+            return true;
+        }
+    }
+    let mut inferred = false;
+    result.visit_child_results(&mut |child| {
+        if !inferred && stmt_result_inferred_fact(child, target) {
+            inferred = true;
+        }
+    });
+    result.visit_success_child_results(&mut |child| {
+        if !inferred && success_stmt_result_inferred_fact(child, target) {
+            inferred = true;
+        }
+    });
+    inferred
 }
 
 pub(super) fn or_branches_integer_closed_range_equalities(

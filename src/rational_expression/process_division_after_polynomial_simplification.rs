@@ -1,10 +1,12 @@
 use crate::prelude::*;
+use crate::rational_expression::algebraic_normalization::AlgebraicNormalizationMode;
 use crate::rational_expression::collect_monomials::collect_monomials_in_obj;
 use crate::rational_expression::monomial::MonomialWithNonZeroScalarAndOrderedOperands;
 
 pub fn collect_rational_expression_monomials_after_denominator_clearing_process(
     left_monomials: Vec<MonomialWithNonZeroScalarAndOrderedOperands>,
     right_monomials: Vec<MonomialWithNonZeroScalarAndOrderedOperands>,
+    mode: AlgebraicNormalizationMode,
 ) -> (
     Vec<MonomialWithNonZeroScalarAndOrderedOperands>,
     Vec<MonomialWithNonZeroScalarAndOrderedOperands>,
@@ -40,11 +42,16 @@ pub fn collect_rational_expression_monomials_after_denominator_clearing_process(
     }
 
     let left_monomials_after_denominator_clearing =
-        multiply_fraction_denominators_and_get_side_monomials(&all_monomial_fraction_entries, true);
+        multiply_fraction_denominators_and_get_side_monomials(
+            &all_monomial_fraction_entries,
+            true,
+            mode,
+        );
     let right_monomials_after_denominator_clearing =
         multiply_fraction_denominators_and_get_side_monomials(
             &all_monomial_fraction_entries,
             false,
+            mode,
         );
 
     (
@@ -56,6 +63,7 @@ pub fn collect_rational_expression_monomials_after_denominator_clearing_process(
 fn multiply_fraction_denominators_and_get_side_monomials(
     all_monomial_fraction_entries: &Vec<((bool, usize), (Vec<Obj>, Vec<Obj>))>,
     target_side_is_left: bool,
+    mode: AlgebraicNormalizationMode,
 ) -> Vec<MonomialWithNonZeroScalarAndOrderedOperands> {
     // Build the "new" monomials for one side (left or right).
     //
@@ -103,7 +111,7 @@ fn multiply_fraction_denominators_and_get_side_monomials(
     }
 
     let rebuilt_rational_expression = add_obj_list(rebuilt_monomial_objs);
-    let collected_monomials = collect_monomials_in_obj(&rebuilt_rational_expression);
+    let collected_monomials = collect_monomials_in_obj(&rebuilt_rational_expression, mode);
     collected_monomials
 }
 

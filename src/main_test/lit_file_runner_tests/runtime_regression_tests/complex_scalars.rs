@@ -248,6 +248,40 @@ finite_set_product({1, 2}, fn(k N) N {k}) $in N
 }
 
 #[test]
+fn exact_complex_algebraic_normalization_is_bounded_and_sound() {
+    let accepted = r#"
+2 * i + 1 = i * i + 2 + 2 * i
+(1 + i) * (1 - i) = 2
+1 / i = -1 * i
+i ^ -1 = -1 * i
+
+forall z C:
+    (z + i) * (z - i) = z ^ 2 + 1
+"#;
+    let (run_succeeded, run_output) = run_complex_source(
+        accepted,
+        "exact_complex_algebraic_normalization_is_bounded_and_sound",
+    );
+    assert!(
+        run_succeeded,
+        "exact complex identities should normalize:\n{run_output}"
+    );
+    assert!(
+        run_output.contains("exact complex algebraic normalization"),
+        "complex normalization should expose stable provenance:\n{run_output}"
+    );
+
+    let (negative_succeeded, negative_output) = run_complex_source(
+        "i * i = 1",
+        "exact_complex_algebraic_normalization_rejects_false_identity",
+    );
+    assert!(
+        !negative_succeeded,
+        "i * i = 1 must remain rejected:\n{negative_output}"
+    );
+}
+
+#[test]
 fn native_complex_congruence_composes_with_structural_beta_reduction() {
     run_with_large_stack(
         "native_complex_congruence_composes_with_structural_beta_reduction",
