@@ -1,0 +1,34 @@
+# Machine runner envelope
+
+`litex -runner -e '1 + 1 = 2'` returns one wrapper JSON object whose top-level `ok` is `true`.
+
+```json
+{
+  "runner": "litex-runner",
+  "runner_version": "0.1",
+  "result": "success",
+  "ok": true,
+  "target": {"kind": "code", "label": "-runner -e"},
+  "error": null,
+  "trace": "...statement-result JSON..."
+}
+```
+
+## Examples and boundaries
+
+| Command | Contract |
+| --- | --- |
+| `litex -runner -e '1 = 1'` | `ok: true` and process exit code `0`. |
+| `litex -runner -e '1 = 2'` | `ok: false` and a nonzero process exit code. |
+| `litex -runner -f missing.lit` | A target error appears in `error`; `trace` is empty. |
+| A successful wrapper with diagnostic text inside `trace` | Success is decided from top-level `ok`, not by searching the nested string. |
+
+```text
+run target
+  -> collect (ok, statement-result trace)
+  -> wrap target metadata, error, and trace once
+  -> return wrapper JSON and the same boolean as the process status
+```
+
+Start with [`runner.rs`](runner.rs); for example, `runner_output_from_trace` constructs the wrapper shown above.
+

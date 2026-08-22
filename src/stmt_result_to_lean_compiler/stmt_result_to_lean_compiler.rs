@@ -21,6 +21,7 @@ pub struct StmtResultToLeanCompiler {
     environment_stack: StmtResultToLeanCompilerEnvironmentStack,
     declarations: Vec<String>,
     next_fact_name_index: usize,
+    next_local_inference_name_index: usize,
     next_sketch_namespace_index: usize,
     next_clear_namespace_index: usize,
     open_clear_namespace: Option<String>,
@@ -77,6 +78,11 @@ impl RegisteredPredicatePropertyCompilationKind {
 struct CompiledExistentialWitnessProofBody {
     proposition: String,
     proof_expression: String,
+}
+
+struct CompiledNonemptySetWitnessProofBody {
+    proposition: String,
+    local_proof_lines: Vec<String>,
 }
 
 struct CompiledFactProofBody {
@@ -192,6 +198,7 @@ impl StmtResultToLeanCompiler {
             environment_stack: StmtResultToLeanCompilerEnvironmentStack::default(),
             declarations: Vec::new(),
             next_fact_name_index: 0,
+            next_local_inference_name_index: 0,
             next_sketch_namespace_index: 0,
             next_clear_namespace_index: 0,
             open_clear_namespace: None,
@@ -391,31 +398,17 @@ impl StmtResultToLeanCompiler {
                 allowed_sources.push((premise.fact_id, premise.proposition.clone()));
             }
 
-            let mut inferred_proof_lines = Vec::new();
-            if !anonymous_context.assumption_infers.is_empty() {
-                self.compile_typed_inference_results_in_current_compiler_environment(
-                    &anonymous_context.assumption_infers,
-                    &allowed_sources,
-                    &mut inferred_proof_lines,
-                    "anonymous-function binder inference Result",
-                )?;
-            }
-            let allowed_fact_ids = allowed_sources
-                .iter()
-                .map(|(fact_id, _)| *fact_id)
-                .collect::<HashSet<_>>();
-            let inferred_fact_bindings = self
-                .environment_stack
-                .fact_propositions
-                .iter()
-                .filter(|(fact_id, _)| !allowed_fact_ids.contains(fact_id))
-                .filter_map(|(fact_id, fact)| {
-                    self.environment_stack
-                        .fact_names
-                        .get(fact_id)
-                        .map(|name| (*fact_id, fact.clone(), name.clone()))
-                })
-                .collect::<Vec<_>>();
+            let compiled_inference_fact_proof_steps =
+                if anonymous_context.assumption_infers.is_empty() {
+                    Vec::new()
+                } else {
+                    self.compile_typed_inference_results_in_current_compiler_environment(
+                        &anonymous_context.assumption_infers,
+                        &allowed_sources,
+                        CompiledInferenceFactAvailabilityInLeanEnvironment::LocalProofName,
+                        "anonymous-function binder inference Result",
+                    )?
+                };
             let closure_proof = match anonymous_context.closure.role {
                 WellDefinednessRequirementRole::AnonymousFunctionBodyMembership => Some(
                     self.construct_lean_proof_from_shared_verify_fact_result(
@@ -435,18 +428,17 @@ impl StmtResultToLeanCompiler {
                     ));
                 }
             };
-            Ok((inferred_proof_lines, inferred_fact_bindings, closure_proof))
+            Ok((compiled_inference_fact_proof_steps, closure_proof))
         })();
         self.environment_stack.pop_local_environment();
-        let (inferred_proof_lines, inferred_fact_bindings, closure_proof) = compilation?;
+        let (compiled_inference_fact_proof_steps, closure_proof) = compilation?;
         let retained = self
             .environment_stack
             .well_definedness
             .as_mut()
             .and_then(|context| context.anonymous_functions.get_mut(&occurrence_id))
             .expect("anonymous function remains in active WD Result context");
-        retained.inferred_proof_lines = inferred_proof_lines;
-        retained.inferred_fact_bindings = inferred_fact_bindings;
+        retained.compiled_inference_fact_proof_steps = compiled_inference_fact_proof_steps;
         retained.closure.proof_expression = closure_proof;
         Ok(())
     }
@@ -4287,7 +4279,7 @@ impl StmtResultToLeanCompiler {
         )?;
 
         self.environment_stack.push_inherited_environment();
-        let compilation: Result<Option<(String, Vec<String>)>, String> = (|| {
+        let compilation: Result<Option<CompiledNonemptySetWitnessProofBody>, String> = (|| {
             let mut proof_lines = Vec::new();
             for (proof_step_index, proof_step) in verification.proof_steps.iter().enumerate() {
                 let Some(lines) = self
@@ -4341,17 +4333,21 @@ impl StmtResultToLeanCompiler {
                 "rcases __nonempty_membership with ⟨__nonempty_witness, __nonempty_same⟩".into(),
             );
             proof_lines.push("exact ⟨__nonempty_witness⟩".into());
-            Ok(Some((proposition, proof_lines)))
+            Ok(Some(CompiledNonemptySetWitnessProofBody {
+                proposition,
+                local_proof_lines: proof_lines,
+            }))
         })();
         self.environment_stack.pop_local_environment();
-        let Some((proposition, proof_lines)) = compilation? else {
+        let Some(compiled_body) = compilation? else {
             return Ok(false);
         };
 
         let theorem_name = format!("__fact{}", self.next_fact_name_index);
         self.declarations.push(format!(
-            "theorem {theorem_name} : {proposition} := by\n{}",
-            indent_lines(&proof_lines.join("\n"), 2)
+            "theorem {theorem_name} : {} := by\n{}",
+            compiled_body.proposition,
+            indent_lines(&compiled_body.local_proof_lines.join("\n"), 2)
         ));
         self.environment_stack
             .fact_names
@@ -5496,7 +5492,7 @@ impl StmtResultToLeanCompiler {
             retained_assumption.fact.clone(),
         );
         let mut local_lines = Vec::new();
-        self.compile_typed_inference_results_in_current_compiler_environment(
+        self.compile_typed_inference_results_as_local_have_statements(
             &retained_assumption.infers,
             &[(
                 retained_assumption.fact_id,
@@ -5617,7 +5613,7 @@ impl StmtResultToLeanCompiler {
             self.environment_stack
                 .fact_propositions
                 .insert(fact_id, expected.clone());
-            self.compile_typed_inference_results_in_current_compiler_environment(
+            self.compile_typed_inference_results_as_local_have_statements(
                 infers,
                 &[(fact_id, expected.clone())],
                 &mut local_lines,
@@ -6024,7 +6020,7 @@ impl StmtResultToLeanCompiler {
                     render_fact(expected, &self.environment_stack)?
                 ));
             }
-            self.compile_typed_inference_results_in_current_compiler_environment(
+            self.compile_typed_inference_results_as_local_have_statements(
                 &assumption.infers,
                 &[(assumption.fact_id, assumption.fact.clone())],
                 &mut local_lines,
@@ -8051,7 +8047,7 @@ impl StmtResultToLeanCompiler {
                         &visible_assumption_sources,
                         "ForallProof assumption inference",
                     )?;
-                self.compile_typed_inference_results_in_current_compiler_environment(
+                self.compile_typed_inference_results_as_local_have_statements(
                     &visible_assumption_infers,
                     &visible_assumption_sources,
                     &mut proof_lines,
@@ -8221,7 +8217,7 @@ impl StmtResultToLeanCompiler {
                     self.environment_stack
                         .fact_propositions
                         .insert(well_definedness_conclusion_fact_id, expected.clone());
-                    self.compile_typed_inference_results_in_current_compiler_environment(
+                    self.compile_typed_inference_results_as_local_have_statements(
                         &child.store.infers,
                         &[(conclusion_fact_id, expected.clone())],
                         &mut proof_lines,
@@ -9205,10 +9201,10 @@ impl StmtResultToLeanCompiler {
     }
 
     /// Publish typed standard-numeric inference children as top-level Lean
-    /// theorems. The shared validator first installs each conclusion in the
-    /// current compiler environment as a local `have`; this wrapper turns the
-    /// exact same checked proof expression into a persistent theorem and
-    /// replaces the temporary target name under the retained FactId.
+    /// theorems. The shared compiler first returns each conclusion as one
+    /// structured local proof step; this wrapper renders earlier steps as the
+    /// local closure of later proofs and publishes the current step under its
+    /// exact retained FactId.
     fn compile_standard_numeric_membership_infer_result_as_top_level_declarations(
         &mut self,
         source_fact: &Fact,
@@ -9227,55 +9223,36 @@ impl StmtResultToLeanCompiler {
             ));
         }
 
-        let mut local_have_lines = Vec::new();
-        self.compile_typed_inference_results_in_current_compiler_environment(
+        let compiled_steps = self.compile_typed_inference_results_in_current_compiler_environment(
             infers,
             &[(source_fact_id, source_fact.clone())],
-            &mut local_have_lines,
+            CompiledInferenceFactAvailabilityInLeanEnvironment::LocalProofName,
             result_layer,
         )?;
-        let mut preceding_local_have_lines: Vec<String> = Vec::new();
-        for local_have in local_have_lines {
-            let local_have_without_keyword = local_have.strip_prefix("have ").ok_or_else(|| {
-                format!("{result_layer} produced an unexpected local proof shape")
-            })?;
-            let Some((temporary_name, theorem_body)) = local_have_without_keyword.split_once(" : ")
-            else {
-                return Err(format!(
-                    "{result_layer} produced a local proof without a proposition"
-                ));
-            };
-            let Some((conclusion_proposition, conclusion_proof)) = theorem_body.split_once(" := ")
-            else {
-                return Err(format!(
-                    "{result_layer} produced a local proof without an exact proof expression"
-                ));
-            };
-            let conclusion_fact_id = self
-                .environment_stack
-                .fact_names
-                .iter()
-                .find_map(|(fact_id, fact_name)| (fact_name == temporary_name).then_some(*fact_id))
-                .ok_or_else(|| {
-                    format!("{result_layer} local proof `{temporary_name}` has no retained FactId")
-                })?;
+        let mut preceding_steps: Vec<CompiledInferenceFactProofStep> = Vec::new();
+        for step in compiled_steps {
             let theorem_name = format!("__fact{}", self.next_fact_name_index);
             let mut proof_lines = vec!["by".to_string()];
             proof_lines.extend(
-                preceding_local_have_lines
+                preceding_steps
                     .iter()
-                    .map(|line| indent_lines(line, 2)),
+                    .map(CompiledInferenceFactProofStep::render_as_local_have_statement)
+                    .map(|line| indent_lines(&line, 2)),
             );
-            proof_lines.push(indent_lines(&format!("exact {conclusion_proof}"), 2));
+            proof_lines.push(indent_lines(&format!("exact {}", step.proof_expression), 2));
             self.declarations.push(format!(
-                "theorem {theorem_name} : {conclusion_proposition} := {}",
+                "theorem {theorem_name} : {} := {}",
+                step.proposition,
                 proof_lines.join("\n")
             ));
             self.environment_stack
                 .fact_names
-                .insert(conclusion_fact_id, theorem_name);
+                .insert(step.fact_id, theorem_name);
+            self.environment_stack
+                .fact_propositions
+                .insert(step.fact_id, step.fact.clone());
             self.next_fact_name_index += 1;
-            preceding_local_have_lines.push(local_have);
+            preceding_steps.push(step);
         }
         Ok(())
     }
@@ -9407,18 +9384,54 @@ impl StmtResultToLeanCompiler {
         )
     }
 
+    fn next_local_inference_fact_proof_name(&mut self) -> String {
+        let name = format!(
+            "__infer{}_{}",
+            self.next_fact_name_index, self.next_local_inference_name_index
+        );
+        self.next_local_inference_name_index += 1;
+        name
+    }
+
+    fn retain_compiled_inference_fact_proof_step_in_current_environment(
+        &mut self,
+        compiled_steps: &mut Vec<CompiledInferenceFactProofStep>,
+        step: CompiledInferenceFactProofStep,
+        availability: CompiledInferenceFactAvailabilityInLeanEnvironment,
+    ) {
+        let lean_reference = match availability {
+            CompiledInferenceFactAvailabilityInLeanEnvironment::LocalProofName => {
+                step.local_lean_name.clone()
+            }
+            CompiledInferenceFactAvailabilityInLeanEnvironment::InlineProofExpression => {
+                format!("({})", step.proof_expression)
+            }
+        };
+        self.environment_stack
+            .fact_names
+            .insert(step.fact_id, lean_reference);
+        self.environment_stack
+            .fact_propositions
+            .insert(step.fact_id, step.fact.clone());
+        compiled_steps.push(step);
+    }
+
     /// Compile the typed inference children owned by one active Result scope.
-    /// These declarations are local to the current Lean binder and disappear
-    /// when its compiler environment frame is popped.
+    ///
+    /// The returned records retain identity, proposition, name, and proof as
+    /// separate fields. Callers decide whether those records become local
+    /// `have`s, anonymous-function `let`s, or top-level theorems. No caller is
+    /// permitted to recover semantic fields by parsing rendered Lean source.
     fn compile_typed_inference_results_in_current_compiler_environment(
         &mut self,
         infers: &SuccessInferResult,
         allowed_sources: &[(FactId, Fact)],
-        proof_lines: &mut Vec<String>,
+        availability: CompiledInferenceFactAvailabilityInLeanEnvironment,
         result_layer: &str,
-    ) -> Result<(), String> {
+    ) -> Result<Vec<CompiledInferenceFactProofStep>, String> {
         validate_typed_infer_result_identity_completeness(infers, result_layer)?;
 
+        let mut compiled_inference_fact_proof_steps = Vec::new();
         let mut advertised_conclusions = HashSet::new();
         for (store_index, output) in infers.store_fact_outputs.iter().enumerate() {
             let source_fact_id = output.fact_id.ok_or_else(|| {
@@ -9526,22 +9539,23 @@ impl StmtResultToLeanCompiler {
                     )?;
                     let conclusion_proposition =
                         render_fact(&conclusion.fact, &self.environment_stack)?;
-                    let conclusion_name =
-                        format!("__infer{}_{}", self.next_fact_name_index, proof_lines.len());
+                    let conclusion_name = self.next_local_inference_fact_proof_name();
                     let projection = conjunction_projection(
                         &format!("({premise_name})"),
                         rule.component_index,
                         rule.component_count,
                     )?;
-                    proof_lines.push(format!(
-                        "have {conclusion_name} : {conclusion_proposition} := {projection}"
-                    ));
-                    self.environment_stack
-                        .fact_names
-                        .insert(conclusion_fact_id, conclusion_name);
-                    self.environment_stack
-                        .fact_propositions
-                        .insert(conclusion_fact_id, conclusion.fact.clone());
+                    self.retain_compiled_inference_fact_proof_step_in_current_environment(
+                        &mut compiled_inference_fact_proof_steps,
+                        CompiledInferenceFactProofStep::new(
+                            conclusion_fact_id,
+                            conclusion.fact.clone(),
+                            conclusion_name,
+                            conclusion_proposition,
+                            projection,
+                        ),
+                        availability,
+                    );
                 }
             } else if matches!(
                 application.rule,
@@ -9567,8 +9581,7 @@ impl StmtResultToLeanCompiler {
                         )?;
                     let conclusion_proposition =
                         render_fact(&conclusion.fact, &self.environment_stack)?;
-                    let conclusion_name =
-                        format!("__infer{}_{}", self.next_fact_name_index, proof_lines.len());
+                    let conclusion_name = self.next_local_inference_fact_proof_name();
                     let proof = match application.rule {
                         InferRule::StrictOrderComparedToZeroImpliesWeakOrder => {
                             let (source_left, source_right, _) =
@@ -9610,15 +9623,17 @@ impl StmtResultToLeanCompiler {
                         }
                         _ => unreachable!("order-sign inference was matched above"),
                     };
-                    proof_lines.push(format!(
-                        "have {conclusion_name} : {conclusion_proposition} := {proof}"
-                    ));
-                    self.environment_stack
-                        .fact_names
-                        .insert(conclusion_fact_id, conclusion_name);
-                    self.environment_stack
-                        .fact_propositions
-                        .insert(conclusion_fact_id, conclusion.fact.clone());
+                    self.retain_compiled_inference_fact_proof_step_in_current_environment(
+                        &mut compiled_inference_fact_proof_steps,
+                        CompiledInferenceFactProofStep::new(
+                            conclusion_fact_id,
+                            conclusion.fact.clone(),
+                            conclusion_name,
+                            conclusion_proposition,
+                            proof,
+                        ),
+                        availability,
+                    );
                 }
             } else if matches!(
                 application.rule,
@@ -9677,26 +9692,29 @@ impl StmtResultToLeanCompiler {
                     )?;
                     let conclusion_proposition =
                         render_fact(&conclusion.fact, &self.environment_stack)?;
-                    let conclusion_name =
-                        format!("__infer{}_{}", self.next_fact_name_index, proof_lines.len());
-                    proof_lines.push(format!(
-                        "have {conclusion_name} : {conclusion_proposition} := Litex.Rules.{lean_theorem_name} ({premise_name})"
-                    ));
-                    self.environment_stack
-                        .fact_names
-                        .insert(conclusion_fact_id, conclusion_name);
-                    self.environment_stack
-                        .fact_propositions
-                        .insert(conclusion_fact_id, conclusion.fact.clone());
+                    let conclusion_name = self.next_local_inference_fact_proof_name();
+                    self.retain_compiled_inference_fact_proof_step_in_current_environment(
+                        &mut compiled_inference_fact_proof_steps,
+                        CompiledInferenceFactProofStep::new(
+                            conclusion_fact_id,
+                            conclusion.fact.clone(),
+                            conclusion_name,
+                            conclusion_proposition,
+                            format!("Litex.Rules.{lean_theorem_name} ({premise_name})"),
+                        ),
+                        availability,
+                    );
                 }
             }
             if !conclusion.infers.is_empty() {
-                self.compile_typed_inference_results_in_current_compiler_environment(
-                    &conclusion.infers,
-                    &[(conclusion_fact_id, conclusion.fact.clone())],
-                    proof_lines,
-                    &format!("{result_layer} application {application_index} conclusion"),
-                )?;
+                compiled_inference_fact_proof_steps.extend(
+                    self.compile_typed_inference_results_in_current_compiler_environment(
+                        &conclusion.infers,
+                        &[(conclusion_fact_id, conclusion.fact.clone())],
+                        availability,
+                        &format!("{result_layer} application {application_index} conclusion"),
+                    )?,
+                );
                 let mut recursively_compiled = HashSet::new();
                 collect_supported_typed_infer_conclusions(
                     &conclusion.infers,
@@ -9715,6 +9733,30 @@ impl StmtResultToLeanCompiler {
                 "{result_layer} contains inferred store effects without typed proof applications"
             ));
         }
+        Ok(compiled_inference_fact_proof_steps)
+    }
+
+    /// Final target-source rendering for callers that already own a Lean
+    /// tactic block. The structured compilation above remains the only place
+    /// that creates or installs an inferred fact.
+    fn compile_typed_inference_results_as_local_have_statements(
+        &mut self,
+        infers: &SuccessInferResult,
+        allowed_sources: &[(FactId, Fact)],
+        proof_lines: &mut Vec<String>,
+        result_layer: &str,
+    ) -> Result<(), String> {
+        let compiled_steps = self.compile_typed_inference_results_in_current_compiler_environment(
+            infers,
+            allowed_sources,
+            CompiledInferenceFactAvailabilityInLeanEnvironment::LocalProofName,
+            result_layer,
+        )?;
+        proof_lines.extend(
+            compiled_steps
+                .iter()
+                .map(CompiledInferenceFactProofStep::render_as_local_have_statement),
+        );
         Ok(())
     }
 
@@ -9729,54 +9771,13 @@ impl StmtResultToLeanCompiler {
         allowed_sources: &[(FactId, Fact)],
         result_layer: &str,
     ) -> Result<(), String> {
-        let already_visible_conclusion_ids = infers
-            .rule_applications
-            .iter()
-            .filter_map(|application| application.conclusions.first())
-            .filter_map(|conclusion| conclusion.fact_id)
-            .filter(|fact_id| {
-                self.environment_stack
-                    .fact_propositions
-                    .contains_key(fact_id)
-            })
-            .collect::<HashSet<_>>();
-        let mut unused_local_have_lines = Vec::new();
-        self.compile_typed_inference_results_in_current_compiler_environment(
-            infers,
-            allowed_sources,
-            &mut unused_local_have_lines,
-            result_layer,
-        )?;
-
-        for application in &infers.rule_applications {
-            let premise = &application.premises[0];
-            let conclusion = &application.conclusions[0];
-            let premise_fact_id = premise
-                .fact_id
-                .ok_or_else(|| format!("{result_layer} premise has no FactId"))?;
-            let conclusion_fact_id = conclusion
-                .fact_id
-                .ok_or_else(|| format!("{result_layer} conclusion has no FactId"))?;
-            if already_visible_conclusion_ids.contains(&conclusion_fact_id) {
-                resolve_fact_citation(
-                    &conclusion_fact_id,
-                    &conclusion.fact,
-                    &self.environment_stack,
-                )?;
-                continue;
-            }
-            let premise_name =
-                resolve_fact_citation(&premise_fact_id, &premise.fact, &self.environment_stack)?;
-            let lean_theorem_name = validate_standard_numeric_membership_inference_target(
-                &application.rule,
-                &premise.fact,
-                &conclusion.fact,
+        let _compiled_steps = self
+            .compile_typed_inference_results_in_current_compiler_environment(
+                infers,
+                allowed_sources,
+                CompiledInferenceFactAvailabilityInLeanEnvironment::InlineProofExpression,
+                result_layer,
             )?;
-            self.environment_stack.fact_names.insert(
-                conclusion_fact_id,
-                format!("(Litex.Rules.{lean_theorem_name} ({premise_name}))"),
-            );
-        }
         Ok(())
     }
 
@@ -17401,7 +17402,7 @@ fn collect_well_definedness_to_lean_context_from_object_binder(
         }
         // These constructor-specific binders already publish every object
         // dependency through `steps.children`; they do not introduce
-        // parameter aliases consumed by the v1 Lean surface.
+        // parameter aliases consumed by the current Lean surface.
         SuccessVerifyBinderObjectWellDefinedResult::Iteration(_)
         | SuccessVerifyBinderObjectWellDefinedResult::FiniteAggregate(_)
         | SuccessVerifyBinderObjectWellDefinedResult::Reduce(_)
@@ -17468,8 +17469,7 @@ fn collect_anonymous_function_well_definedness_to_lean_context(
             parameters,
             domains,
             assumption_infers,
-            inferred_proof_lines: Vec::new(),
-            inferred_fact_bindings: Vec::new(),
+            compiled_inference_fact_proof_steps: Vec::new(),
             closure: StmtResultAnonymousFunctionClosureToLeanCompilationContext {
                 role: result.body_membership.role,
                 expected_proposition: result.body_membership.expected_proposition.clone(),
@@ -23482,13 +23482,14 @@ fn render_anonymous_function(
     }
 
     let mut inferred_lets = Vec::new();
-    for line in &anonymous_context.inferred_proof_lines {
-        let local = line.replacen("have ", "let ", 1);
-        inferred_lets.push(format!("{local}; "));
-    }
-    for (fact_id, fact, name) in &anonymous_context.inferred_fact_bindings {
-        nested.fact_names.insert(*fact_id, name.clone());
-        nested.fact_propositions.insert(*fact_id, fact.clone());
+    for step in &anonymous_context.compiled_inference_fact_proof_steps {
+        inferred_lets.push(format!("{}; ", step.render_as_local_let_statement()));
+        nested
+            .fact_names
+            .insert(step.fact_id, step.local_lean_name.clone());
+        nested
+            .fact_propositions
+            .insert(step.fact_id, step.fact.clone());
     }
 
     let closure = &anonymous_context.closure;
