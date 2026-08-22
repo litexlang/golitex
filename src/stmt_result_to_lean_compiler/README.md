@@ -315,6 +315,487 @@ The public entry point has the same explicit input/output name:
 `compile_litex_markdown_code_blocks_to_lean_file`. There is no ambiguous
 `compile_source`, `emitter`, or `ledger` layer in the public API.
 
+## Worked Data-Structure Trace: a `claim` with child statements
+
+The smallest useful tracer is the first claim in
+[`lean/examples/8_ProofScopes.lit`](../../lean/examples/8_ProofScopes.lit):
+
+```litex
+claim:
+    ? 2 = 2
+    2 = 2
+```
+
+For a programming-language implementation reader, the useful model is a pair
+of stateful big-step interpreters:
+
+```text
+Litex execution:  <RuntimeEnv, Stmt>      ⇓ <RuntimeEnv', StmtResult>
+Lean compilation: <CompilerEnv, StmtResult> ⇓ <CompilerEnv', LeanDecl*>
+```
+
+`StmtResult` is the proof-relevant handoff between the two. It is not merely a
+success flag, a copy of the AST, a diagnostic trace, or a snapshot diff of the
+runtime environment. Its recursive algebraic-data-type shape records the
+successful control-flow branch, the verifier-selected evidence, ordered child
+executions, exact identities, and which effects outlive a lexical scope. The
+second interpreter consumes that value after the first interpreter and its
+`Runtime` have been dropped.
+
+This source contains one outer `ClaimStmt` and one user-written child
+`FactStmt`. Execution also creates a second, synthetic child result for the
+final conclusion check. That check is not another source statement: it is the
+executor asking, after all proof steps have run, whether the claim target is
+now known in the claim-local environment.
+
+### 1. Execution constructs the recursive Result
+
+For an ordinary, non-`forall` claim,
+[`exec_goal_proof_block.rs`](../execute/exec_goal_proof_block.rs) performs these
+operations in order:
+
+1. Check that the target fact is well-defined.
+2. Enter `run_in_local_env`.
+3. Execute every source proof statement with `exec_stmt`, retaining one
+   `StmtResult` per statement in `proof_steps`.
+4. Verify the target once more and retain that synthetic `StmtResult` as
+   `conclusion_check`.
+5. While the local execution environment still exists, freeze all temporary
+   `FactId`s into the recursive results.
+6. Leave the local environment.
+7. For a `claim` (but not an `example`), store the proved target in the parent
+   environment and put that surviving store/inference effect in
+   `SuccessClaimStmtResult.common.infers`.
+
+Here is Rust-shaped pseudocode for the producer side. Bracketed comments name
+the exact Result field written by each operation; error wrapping and trusted
+file branches are omitted, but the ordering and ownership boundaries match the
+current implementation in [`exec_stmt.rs`](../execute/exec_stmt.rs),
+[`exec_claim_stmt.rs`](../execute/exec_claim_stmt.rs),
+[`exec_goal_proof_block.rs`](../execute/exec_goal_proof_block.rs), and
+[`exec_fact_stmt.rs`](../execute/exec_fact_stmt.rs).
+
+```rust
+fn exec_stmt(runtime, stmt) -> StmtResult {
+    // Dispatches ClaimStmt to exec_claim_stmt and a child FactStmt to exec_fact.
+    let mut result = exec_stmt_verified(runtime, stmt)?;
+
+    // Recurses through every named child Result. It fills only missing IDs,
+    // so an ID frozen before a local environment was popped is never retargeted.
+    attach_known_fact_ids_to_stmt_result(runtime, &mut result)?;
+    // [writes nested store.fact_id, citation.source_fact_id, infer FactIds]
+
+    result = result.with_execution_trace(trace_for_this_statement());
+    // [writes claim.common.execution_trace, or child_fact.execution_trace]
+    result
+}
+
+fn exec_claim_stmt(runtime, stmt: ClaimStmt) -> StmtResult {
+    let result = exec_checked_goal_block(
+        runtime,
+        stmt.clone().into(),
+        &stmt.fact,
+        &stmt.proof,
+    )?;
+    // [exec_checked_goal_block constructs statement + verification]
+
+    let outer_infers = exec_claim_stmt_affect_environment(runtime, &stmt)?;
+    // [produces the store of the proved target in the parent RuntimeEnv]
+
+    result.with_infers(outer_infers)
+    // [merges outer_infers into claim.common.infers]
+}
+```
+
+The ordinary, non-`forall` branch of `exec_checked_goal_block` is the important
+lexical-scope transition:
+
+```rust
+fn exec_checked_goal_block(runtime, source_stmt, target, source_proof)
+    -> StmtResult
+{
+    let wd = verify_fact_well_defined_result(runtime, target)?;
+    // [becomes verification.well_definedness]
+
+    run_in_local_env(runtime, |local| {
+        let mut proof_steps = Vec::new();
+        for child_stmt in source_proof {
+            proof_steps.push(exec_stmt(local, child_stmt)?);
+            // [each complete child StmtResult becomes verification.proof_steps[i]]
+        }
+
+        proof_steps.push(verify_fact_return_err_if_not_true(local, target)?);
+        // [becomes verification.conclusion_check]
+        // This is a proof-only fact Result, not another source_proof element.
+
+        for child in &mut proof_steps {
+            attach_known_fact_ids_to_stmt_result(local, child)?;
+            // [freezes local FactIds while local RuntimeEnv is still alive]
+        }
+        let conclusion_check = proof_steps.pop()?;
+
+        let proof_scope = SuccessVerifyLocalProofScopeResult::new(
+            SuccessInferResult::new(),
+            Vec::new(),
+        );
+        // [becomes verification.proof_scope; empty for this atomic branch]
+
+        let verification = SuccessVerifyClaimFactResult {
+            fact: target.clone(),                 // [verification.fact]
+            well_definedness: wd,                 // [verification.well_definedness]
+            proof_scope,                          // [verification.proof_scope]
+            proof_steps,                          // [verification.proof_steps]
+            conclusion_check: Box::new(conclusion_check),
+                                                    // [verification.conclusion_check]
+        };
+
+        SuccessClaimStmtResult {
+            statement: source_stmt.into_claim(),  // [claim.statement]
+            common: SuccessStmtCommonResult::new(empty_infers()),
+                                                    // [claim.common, initially empty]
+            verification: Some(Fact(Box::new(verification))),
+                                                    // [claim.verification]
+        }
+    })
+    // run_in_local_env pops the local RuntimeEnv before returning.
+}
+```
+
+The child line `2 = 2` itself goes through the ordinary fact pipeline. This is
+why a claim does not need a second, claim-specific representation of factual
+proof evidence:
+
+```rust
+fn exec_fact(runtime, fact) -> StmtResult {
+    let wd = verify_fact_well_defined_result(runtime, fact)?;
+    // [child.well_definedness]
+
+    let result = verify_fact_return_err_if_not_true(runtime, fact)?;
+    // [constructs child.verification: Rc<SuccessVerifyFactResult>]
+    // For 2 = 2, its proof is BuiltinRule(ObjectReflexivity(...)).
+
+    let infers = store_without_well_defined_verification_and_infer(runtime, fact)?;
+    // [child.store.infers; the actual local store/inference effects]
+
+    result
+        .with_fact_well_definedness(wd)
+        .with_infers(infers)
+    // finish_statement_execution later writes child.store.fact_id and
+    // child.execution_trace.
+}
+```
+
+The producer-to-field correspondence is therefore:
+
+| Producer operation | Field in the outer claim Result | Meaning |
+| --- | --- | --- |
+| Claim AST cloning in `exec_checked_goal_block` | `statement` | What the user wrote: target and source proof statements. |
+| `verify_fact_well_defined_result(target)` | `verification.well_definedness` | Evidence that the target can be formed before entering its proof scope. |
+| `SuccessVerifyLocalProofScopeResult::new(...)` | `verification.proof_scope` | Assumptions intentionally installed at entry to the local proof environment. Empty in this tracer. |
+| `exec_stmt(child_stmt)` | `verification.proof_steps[i]` | One complete, recursively typed execution result per user-written child, in source order. |
+| Final `verify_fact_return_err_if_not_true(target)` | `verification.conclusion_check` | Synthetic proof-only Result showing that the target is known after all source proof steps. |
+| Local `attach_known_fact_ids_to_stmt_result` | Fields inside `proof_steps` and `conclusion_check` | Freezes exact local store and citation identities before the Runtime scope disappears. |
+| `exec_claim_stmt_affect_environment` followed by `with_infers` | `common.infers` | Effects exported by the claim to its parent environment. |
+| Outer `finish_statement_execution` | `common.execution_trace` | Execution/trust provenance for this outer statement. |
+
+Notice what does **not** happen: `run_in_local_env` does not return a generic
+`local_scope: Box<StmtResult>`. It runs one precise semantic phase whose
+outputs are already named `proof_scope`, `proof_steps`, and
+`conclusion_check`. The Result follows the execution vocabulary instead of
+wrapping the whole phase in an unrelated extra statement node.
+
+The relevant named structures are defined in
+[`success_stmt_result.rs`](../result/success_stmt_result.rs) and
+[`runtime_success.rs`](../result/runtime_success.rs):
+
+```rust
+pub struct SuccessClaimStmtResult {
+    pub statement: ClaimStmt,
+    pub common: SuccessStmtCommonResult,
+    pub verification: Option<SuccessVerifyClaimResult>,
+}
+
+pub struct SuccessStmtCommonResult {
+    pub infers: SuccessInferResult,
+    pub execution_trace: Option<StatementExecutionTrace>,
+}
+
+pub struct SuccessVerifyClaimFactResult {
+    pub fact: Fact,
+    pub well_definedness: SuccessVerifyFactWellDefinedResult,
+    pub proof_scope: SuccessVerifyLocalProofScopeResult,
+    pub proof_steps: Vec<StmtResult>,
+    pub conclusion_check: Box<StmtResult>,
+}
+```
+
+For the tracer above, the completed result has the following shape. The names
+`f_local` and `f_claim` stand for two distinct allocated `FactId`s; their
+numeric values are deliberately not part of this contract.
+
+```text
+StmtResult::Success
+└─ SuccessStmtResult::ProofBlock
+   └─ SuccessProofBlockStmtResult::ClaimStmt
+      └─ SuccessClaimStmtResult
+         ├─ statement: ClaimStmt
+         │  ├─ target: 2 = 2
+         │  └─ proof: [FactStmt(2 = 2)]
+         ├─ common
+         │  ├─ infers
+         │  │  └─ parent store: (2 = 2, FactId = f_claim)
+         │  └─ execution_trace: ...
+         └─ verification: Some(Fact(...))
+            └─ SuccessVerifyClaimFactResult
+               ├─ fact: 2 = 2
+               ├─ well_definedness: ...
+               ├─ proof_scope
+               │  ├─ assumption_infers: empty
+               │  └─ assumption_components: empty
+               ├─ proof_steps
+               │  └─ StmtResult::Success(Fact)
+               │     └─ SuccessFactStmtResult
+               │        ├─ verification
+               │        │  └─ proof: BuiltinRule(ObjectReflexivity(2 = 2))
+               │        ├─ well_definedness: ...
+               │        ├─ store
+               │        │  ├─ fact: 2 = 2
+               │        │  ├─ fact_id: Some(f_local)
+               │        │  └─ infers: one local store output
+               │        └─ execution_trace: verified
+               └─ conclusion_check
+                  └─ StmtResult::Success(Fact)
+                     └─ SuccessFactStmtResult
+                        ├─ verification
+                        │  └─ proof: FactCitation(source_fact_id = Some(f_local))
+                        ├─ well_definedness: ...
+                        └─ store
+                           ├─ fact: 2 = 2
+                           ├─ fact_id: Some(f_local)
+                           └─ infers: empty
+```
+
+The conclusion check retains `store.fact_id` because it is still a uniform
+factual Result, but it publishes no new effect. Its decisive proof edge is
+`verification.proof.FactCitation.source_fact_id = f_local`; that is what the
+compiler resolves to the previously emitted local `have`.
+
+Three boundaries in this tree are intentional:
+
+- `statement` is the parsed source AST. It tells consumers what the user
+  wrote, but not why execution succeeded.
+- `verification` records the claim-local execution flow. Its `proof_steps`
+  are exactly the user-written child statements, in source order;
+  `conclusion_check` is the executor-created final check.
+- `common` records effects of the outer claim statement that survive in the
+  parent environment, plus its execution trace. Recursive child results do
+  not belong in `common`.
+
+`Box<StmtResult>` on `conclusion_check` is only the Rust indirection needed for
+a single recursive child. `Vec<StmtResult>` expresses ordered sibling
+children. Neither means that a generic, unrelated statement was added to the
+claim: both fields name precise steps of `exec_checked_goal_block`.
+
+### 2. The compiler executes that Result tree
+
+The compiler does not re-run the Litex claim and does not consult the old
+`Runtime`. It matches `SuccessClaimStmtResult`, then consumes the fields above
+in their execution order:
+
+| Result field | Compiler action | Scope/lifetime |
+| --- | --- | --- |
+| `statement.fact` and `verification.fact` | Validate that the retained verification belongs to this source target; render its Lean proposition. | Claim declaration |
+| `verification.well_definedness` | Validate the evidence required to form the target proposition. | Claim declaration |
+| `verification.proof_scope` | Validate that the current ordinary-fact route retained no local assumptions. A nonempty value is rejected rather than silently installed. | Claim-local frame |
+| `verification.proof_steps` | Recursively compile each child `StmtResult` into local Lean proof steps. | Claim-local frame |
+| `verification.conclusion_check` | Construct the final proof term from its recorded evidence and exact `FactId` citations. | Claim-local frame |
+| `common.infers` | Validate the outer store and bind the parent `FactId` to the emitted theorem name. | Parent frame |
+| `common.execution_trace` | Not consumed by the Lean compiler today. It remains available to JSON, graph, and audit consumers and is never proof search input. | Result metadata |
+
+Rust-shaped pseudocode for that consumer path makes the producer/consumer
+duality explicit. It follows
+[`stmt_result_to_lean_compiler.rs`](stmt_result_to_lean_compiler.rs):
+
+```rust
+fn compile_all(results: &[StmtResult]) -> LeanSource {
+    // The Litex Runtime has already been dropped here.
+    let mut compiler = StmtResultToLeanCompiler::new();
+    for result in results {
+        compile_stmt_result(&mut compiler, result)?;
+    }
+    compiler.finish_lean_source()
+}
+
+fn compile_stmt_result(compiler, result) {
+    match result {
+        Unknown(_) => error("unknown Result cannot be compiled"),
+        Success(ProofBlock(ClaimStmt(claim))) => compile_claim(compiler, claim),
+        Success(other_family) => compile_that_result_family(compiler, other_family),
+    }
+}
+
+fn compile_claim(compiler, claim: &SuccessClaimStmtResult) {
+    let Fact(verification) = claim.verification.as_ref()
+        .or_unsupported("ordinary claim needs retained Fact verification")?;
+
+    let mut body = compile_ordinary_fact_goal_proof_body(
+        compiler,
+        &claim.statement.fact,
+        claim.statement.proof.len(),
+        verification,
+    )?;
+
+    // Consume claim.common.infers only after the local body has compiled.
+    let f_claim = validate_exactly_one_outer_store(
+        &claim.common.infers,
+        &verification.fact,
+    )?;
+
+    body.local_proof_lines.push("exact " + body.conclusion_proof);
+    let theorem_name = fresh_fact_name();
+    emit_theorem(theorem_name, body.proposition, body.local_proof_lines);
+
+    compiler.parent_env.fact_names[f_claim] = theorem_name;
+    compiler.parent_env.fact_propositions[f_claim] = verification.fact;
+}
+
+fn compile_ordinary_fact_goal_proof_body(compiler, source_fact, n, verification) {
+    require(verification.fact == source_fact);
+    require(verification.proof_steps.len() == n);
+    require(verification.proof_scope is empty); // current ordinary-fact contract
+    validate(verification.well_definedness, source_fact)?;
+
+    compiler.env.push_inherited_environment();
+    let result = try {
+        let lines = verification.proof_steps.enumerate().flat_map(|i, child| {
+            compile_stmt_result_as_local_proof_steps(compiler, child, i + 1)
+        })?;
+
+        let conclusion = verification.conclusion_check.factual_success()?;
+        require(conclusion.fact() == source_fact);
+        require(conclusion.store.infers is empty);
+
+        let final_proof = construct_lean_proof_from_direct_fact_result(
+            compiler,
+            conclusion,
+        )?;
+        let proposition = render_fact(source_fact, compiler.env)?;
+        (lines, proposition, final_proof)
+    };
+    compiler.env.pop_local_environment();
+    result
+}
+```
+
+For the nested `FactStmt`, local compilation is another typed dispatch rather
+than a recursive call to the top-level declaration emitter:
+
+```rust
+fn compile_fact_stmt_result_as_local_proof_step(
+    compiler,
+    child: &SuccessFactStmtResult,
+    step_index,
+) {
+    require(child.store.fact == child.verification.fact());
+    let f_local = child.store.fact_id
+        .or_error("local fact needs a frozen FactId")?;
+    validate_local_store_shape(&child.store.infers, f_local)?;
+
+    let proof = construct_lean_proof_from_direct_fact_result(compiler, child)?;
+    // Reads child.verification.proof():
+    //   ObjectReflexivity     -> Litex.Same.refl ...
+    //   Fact citation(f_local) -> resolve exact f_local in compiler.env
+
+    // The selected proof adapter validates/uses child.well_definedness where
+    // its object rendering requires it; the proposition is rendered in the
+    // same active compiler environment.
+    let proposition = render_fact(child.verification.fact(), compiler.env)?;
+    let name = "__step" + step_index;
+    compiler.env.fact_names[f_local] = name;
+    compiler.env.fact_propositions[f_local] = child.verification.fact();
+    emit_local_have(name, proposition, proof)
+}
+```
+
+This compiler-side table states exactly which claim field is observed and
+whether it contributes validation, proof construction, scope, or output:
+
+| Result field | Read by | Concrete behavior |
+| --- | --- | --- |
+| `statement.fact` | `compile_claim_stmt_result_to_lean_source` and `compile_ordinary_fact_goal_proof_body` | Source-side target used for coherence checks and Lean proposition rendering. |
+| `statement.proof.len()` | `compile_ordinary_fact_goal_proof_body` | Checks that execution neither lost nor invented a source proof step. |
+| `verification` | `compile_claim_stmt_result_to_lean_source` | Must currently be `Some(SuccessVerifyClaimResult::Fact(...))`; another shape is unsupported, not guessed. |
+| `verification.fact` | Claim/body compiler | Must equal `statement.fact`; also checked against the fact exported by `common.infers`. |
+| `verification.well_definedness` | Body compiler and object renderer | Validates the target's retained WD tree before rendering proof terms that depend on it. |
+| `verification.proof_scope` | Body compiler | Must be empty for the current ordinary atomic claim route; nonempty unexpected assumptions are rejected. |
+| `verification.proof_steps[i]` | `compile_stmt_result_as_local_proof_steps` | Dispatches by the child's actual `SuccessStmtResult` variant and emits ordered local declarations. |
+| Child fact `verification.proof()` | `construct_lean_proof_from_direct_fact_result` | Selects the exact Lean proof adapter recorded by Litex verification; no tactic search chooses a replacement route. |
+| Child fact `well_definedness` | Local fact compiler/object renderer | Validates and renders objects in the proposition/proof. |
+| Child fact `store.fact_id` | Local fact compiler | Creates the exact `FactId -> __stepN` binding used by later citations. |
+| Child fact `store.infers` | Local fact compiler | Validates the local publication and compiles any supported typed inference children. |
+| `verification.conclusion_check` | Body compiler | Must be a factual, effect-free check of the same target; its retained proof becomes the final `exact ...`. |
+| Conclusion citation `source_fact_id` | Citation proof constructor | Resolves that exact ID in the active compiler frame; proposition matching or Lean `assumption` is not used as a substitute. |
+| `common.infers` | Claim compiler | Must contain exactly the supported outer store; its persistent `FactId` is bound to the emitted theorem in the parent frame. |
+| `common.execution_trace` | No Lean compiler method currently | Intentionally has no effect on generated proof terms. |
+
+For this tracer, the compiler scope transition is:
+
+```text
+parent compiler frame
+  push claim-local frame
+    compile proof step
+      f_local -> __step1
+    compile conclusion check
+      citation of f_local -> exact __step1
+    finish the Lean proof body
+  pop claim-local frame              # f_local is no longer visible
+  emit theorem __fact3
+  bind f_claim -> __fact3 in parent  # the proved claim remains visible
+```
+
+The corresponding maintained Lean output in
+[`lean/examples/8_ProofScopes.lean`](../../lean/examples/8_ProofScopes.lean) is:
+
+```lean
+theorem __fact3 : Litex.Same (2 : ℂ) (2 : ℂ) := by
+  have __step1 : Litex.Same (2 : ℂ) (2 : ℂ) := by
+    exact Litex.Same.refl (2 : ℂ)
+  exact __step1
+```
+
+This is direct recursive Result-to-Lean compilation. Helpers may temporarily
+hold rendered Lean source fragments, but there is no second statement/proof IR
+that mirrors `StmtResult` between these structures and the Lean source.
+
+### Invariants and the nearest unsupported branch
+
+The design is easiest to understand as an executable certificate with six
+cross-checked invariants:
+
+1. **Shape:** a source `ClaimStmt` must arrive through the matching successful
+   enum path; an `Unknown` Result cannot be compiled.
+2. **Arity and order:** `proof_steps.len()` must equal the AST proof length,
+   and children are consumed in their retained order.
+3. **Target coherence:** `statement.fact`, `verification.fact`, the
+   `conclusion_check` target, and the outer exported fact must agree.
+4. **Identity:** citations resolve an exact frozen `FactId`; equal rendered
+   propositions do not make two stores interchangeable.
+5. **Lifetime:** `f_local` is visible only while the claim compiler frame is
+   pushed; `f_claim` is installed only after the theorem has been emitted into
+   the parent frame.
+6. **Evidence ownership:** the verifier selects the proof route and stores it
+   under the factual child's `verification.proof`; the compiler validates and
+   replays that route instead of rediscovering it.
+
+The nearest structural branch is a `forall` claim. Its Result uses
+`SuccessVerifyClaimResult::Forall`, a possibly nonempty `proof_scope`, and
+`conclusion_checks: Vec<StmtResult>` rather than one `conclusion_check`.
+Those fields already model the executor flow, but the current
+`compile_claim_stmt_result_to_lean_source` direct path accepts only the
+ordinary `Fact` variant and fails closed for the `Forall` variant. This section
+therefore documents a real implemented vertical slice, not a claim that every
+possible claim Result is already compilable.
+
 ## `StmtResultToLeanCompiler` and Its Environment Stack
 
 `Runtime` is the executor whose structured source is Litex syntax. It owns
@@ -1587,12 +2068,16 @@ consumes the Rust Result structures directly.
   resurrection of the deprecated universal `LitexObject` representation.
 
 Example 54 adds exact complex algebraic normalization. The verifier returns a
-typed `ComplexAlgebraicNormalization` certificate containing the exact target;
-the compiler independently reruns the bounded normalizer, validates the
-recursive well-definedness result, and then uses a fixed native-complex
-`ring_nf`/`norm_num` adapter. It supports `+`, `-`, `*`, and reviewed closed
-denominators. Powers and symbolic denominators fail closed rather than asking
-Lean to discover a different proof route.
+typed `ComplexAlgebraicNormalization` certificate containing the exact target
+and the ordered nonzero premises required by every division or negative power.
+The compiler independently reruns the bounded normalizer, reproduces that
+premise list, consumes the corresponding child Results (including frozen
+FactId citations for ambient premises), and bridges each semantic disequality
+to native Complex nonzero before using a fixed
+`field_simp`/`ring_nf`/`norm_num` adapter. Literal integral powers fall back to
+native Complex exponentiation only when the existing exact-rational power
+representation is unavailable. A missing symbolic nonzero premise still fails
+in Litex well-definedness rather than becoming target-side proof search.
 
 The persistent compiler examples currently extend through
 [`54_ComplexAlgebraicCalculation.lit`](../../lean/examples/54_ComplexAlgebraicCalculation.lit).

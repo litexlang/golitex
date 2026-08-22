@@ -271,11 +271,12 @@ pub use crate::rational_expression::gcd_decimal_str_and_normalize;
 pub use crate::rational_expression::mul_signed_decimal_str;
 pub use crate::rational_expression::normalize_decimal_number_string;
 pub use crate::rational_expression::{
-    evaluate_obj_to_exact_rational_for_eval, evaluate_obj_to_exact_rational_obj_for_eval,
-};
-pub use crate::rational_expression::{
+    complex_algebraic_normalization_nonzero_requirements,
     objs_equal_by_complex_rational_expression_evaluation,
     objs_equal_by_rational_expression_evaluation,
+};
+pub use crate::rational_expression::{
+    evaluate_obj_to_exact_rational_for_eval, evaluate_obj_to_exact_rational_obj_for_eval,
 };
 pub use crate::result::CheckedFunctionDefinitionReductionEvidence;
 pub use crate::result::DefinitionProjectionBuiltinRuleEvidence;

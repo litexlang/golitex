@@ -2408,6 +2408,16 @@ impl StmtResultJsonV2 {
             BuiltinRuleEvidence::ComplexAlgebraicNormalization(result) => object(vec![
                 string_field("kind", "ComplexAlgebraicNormalization"),
                 string_field("expected_target", result.expected_target.to_string()),
+                (
+                    "expected_nonzero_premises".to_string(),
+                    array(
+                        result
+                            .expected_nonzero_premises
+                            .iter()
+                            .map(|fact| JsonValue::JsonString(fact.to_string()))
+                            .collect(),
+                    ),
+                ),
             ]),
             BuiltinRuleEvidence::StandardSetNonempty(result) => object(vec![
                 string_field("kind", "StandardSetNonempty"),

@@ -362,6 +362,14 @@ impl Runtime {
         &mut self,
         stmt: &Stmt,
     ) -> Result<StmtResult, RuntimeError> {
+        if let Stmt::DefInterfaceStmt(DefInterfaceStmt::DefTemplateStmt(s)) = stmt {
+            return Err(short_exec_error(
+                s.clone().into(),
+                "a template declaration cannot be replayed as a preverified template body",
+                None,
+                vec![],
+            ));
+        }
         // Reuse the no-verification environment path for a statement whose
         // generic form was already checked before capture-avoiding substitution.
         let previous_execution_mode = self.replace_current_execution_mode(ExecutionMode::Trusted);
@@ -439,12 +447,18 @@ impl Runtime {
             Stmt::DefPredicateStmt(DefPredicateStmt::DefAbstractPropStmt(s)) => {
                 self.exec_def_abstract_prop_stmt_affect_environment_only(s)
             }
-            Stmt::DefInterfaceStmt(DefInterfaceStmt::DefTemplateStmt(s)) => Err(short_exec_error(
-                s.clone().into(),
-                "a template declaration cannot be replayed as a preverified template body",
-                None,
-                vec![],
-            )),
+            // A trusted file still reconstructs the retained verification
+            // evidence for a public template declaration. Template instances
+            // consume that generic evidence after capture-avoiding
+            // substitution, so storing only the syntax would make the Result
+            // contract incomplete.
+            Stmt::DefInterfaceStmt(DefInterfaceStmt::DefTemplateStmt(s)) => {
+                let previous_execution_mode =
+                    self.replace_current_execution_mode(ExecutionMode::Verified);
+                let result = self.exec_def_template_stmt(s);
+                self.replace_current_execution_mode(previous_execution_mode);
+                result
+            }
             Stmt::DefInterfaceStmt(DefInterfaceStmt::DefSettingStmt(s)) => {
                 self.store_def_setting(s)
                     .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone(), e))?;

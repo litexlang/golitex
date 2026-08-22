@@ -9,15 +9,23 @@
 2 * i + 1 = i * i + 2 + 2 * i
 (1 + i) * (1 - i) = 2
 1 / i = -1 * i
+i ^ -1 = -1 * i
 
 forall z C:
     (z + i) * (z - i) = z * z + 1
 
-# Current behavior: compiler validates ComplexAlgebraicNormalization evidence
-# against the exact equality and emits a fixed native-complex proof adapter.
+forall z C:
+    z + i != 0
+    =>:
+        (z + i) ^ 2 / (z + i) = z + i
+
+# Current behavior: the compiler validates ComplexAlgebraicNormalization
+# evidence against the exact equality, consumes its ordered nonzero child
+# Results (with exact FactId citations for ambient premises), bridges semantic
+# nonzero to native Complex nonzero, and emits the fixed field/ring adapter.
+# Powers use native Complex exponentiation only when the existing
+# exact-rational representation is unavailable.
 #
-# Boundary: powers and symbolic denominators such as
-# (z + i) / (z + i) remain fail-closed in this Lean adapter even when Litex
-# verifies the source equality under a nonzero premise.
+# Boundary: removing `z + i != 0` above remains a well-definedness error.
 # Evidence: target/release/litex -compact -strict -isolated -runner -f lean/examples/54_ComplexAlgebraicCalculation.lit
 # Compiler: target/release/stmt_result_to_lean_compiler compile lean/examples/54_ComplexAlgebraicCalculation.lit

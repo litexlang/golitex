@@ -8,6 +8,7 @@ mod process_division_after_polynomial_simplification;
 mod evaluate_div;
 
 pub use algebraic_normalization::{
+    complex_algebraic_normalization_nonzero_requirements,
     objs_equal_by_complex_rational_expression_evaluation,
     objs_equal_by_rational_expression_evaluation,
 };

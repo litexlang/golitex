@@ -696,6 +696,33 @@ $marked(x)
 }
 
 #[test]
+fn preverified_template_body_still_rejects_a_template_declaration() {
+    let source_code = r#"
+template<S set>:
+    have copied set = S
+"#;
+    let tokenizer = Tokenizer::new();
+    let mut blocks = tokenizer
+        .parse_blocks(
+            source_code,
+            std::rc::Rc::from("preverified_nested_template_boundary"),
+        )
+        .expect("tokenize nested-template boundary fixture");
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope("preverified_nested_template_boundary");
+    let stmt = runtime
+        .parse_stmt(&mut blocks[0])
+        .expect("parse template declaration");
+    let error = runtime
+        .exec_preverified_stmt_affect_environment_only(&stmt)
+        .expect_err("a template instance body must not become a nested template declaration");
+
+    assert!(error
+        .trace_message()
+        .contains("cannot be replayed as a preverified template body"));
+}
+
+#[test]
 fn deterministic_infer_rule_firings_are_cached() {
     run_with_large_stack("deterministic_infer_rule_firings_are_cached", || {
         let setup = r#"

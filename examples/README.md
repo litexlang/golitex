@@ -19,6 +19,9 @@ corresponding Litex source close to that description.
    from several interfaces.
 5. [`08_module_repository/`](08_module_repository/) is a configured module
    project that demonstrates ordered exports and submodules.
+6. [`09_trusted_template_prefix/`](09_trusted_template_prefix/) checks that a
+   template declared by an earlier trusted export retains its verified generic
+   result when a later file instantiates it.
 
 The Litex-to-Lean source/generated pairs live with their target package in
 [`lean/examples/`](../lean/examples/).

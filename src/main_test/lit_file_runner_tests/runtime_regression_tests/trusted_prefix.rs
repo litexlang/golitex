@@ -129,6 +129,59 @@ have duplicate_object R
 }
 
 #[test]
+fn trust_before_line_reconstructs_template_verification_before_later_use() {
+    let fixture = TrustedPrefixFixture::new(
+        "template_definition",
+        r#"template<S set>:
+    have copied set = S
+
+\copied<R> = R
+"#,
+    );
+    let mut runtime = Runtime::new();
+    let (results, error) = run_trusted_prefix(&fixture, &mut runtime, 4);
+
+    assert!(
+        error.is_none(),
+        "a trusted template declaration must remain usable by the verified suffix: {error:?}"
+    );
+    assert_eq!(results.len(), 2);
+    let report = runtime
+        .trusted_prefix_report
+        .as_ref()
+        .expect("a valid template boundary should produce a report");
+    assert_eq!(report.trusted_top_level_statements, 1);
+    assert_trace(&results[1], "verified");
+}
+
+#[test]
+fn trust_before_line_still_rejects_duplicate_template_declarations() {
+    let fixture = TrustedPrefixFixture::new(
+        "duplicate_template_definition",
+        r#"template<S set>:
+    have copied set = S
+
+template<S set>:
+    have copied set = S
+
+1 = 1
+"#,
+    );
+    let mut runtime = Runtime::new();
+    let (results, error) = run_trusted_prefix(&fixture, &mut runtime, 7);
+
+    assert_eq!(results.len(), 1);
+    let message = format!(
+        "{:?}",
+        error.expect("a duplicate trusted template declaration must fail")
+    );
+    assert!(
+        message.contains("already active") && message.contains("cannot be rebound"),
+        "unexpected error: {message}"
+    );
+}
+
+#[test]
 fn trust_before_line_reports_trusted_and_verified_statement_traces() {
     let fixture = TrustedPrefixFixture::new(
         "trace_status",
