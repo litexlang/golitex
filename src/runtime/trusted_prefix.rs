@@ -25,14 +25,14 @@ impl TrustedPrefixReport {
 }
 
 #[derive(Clone, Debug)]
-pub struct TrustedPrefixPolicy {
+pub(crate) struct TrustedPrefixPolicy {
     pub module_id: ModuleId,
     pub layer: ExecutionLayer,
     pub before_line: usize,
 }
 
 impl TrustedPrefixPolicy {
-    pub fn new(module_id: ModuleId, layer: ExecutionLayer, before_line: usize) -> Self {
+    pub(crate) fn new(module_id: ModuleId, layer: ExecutionLayer, before_line: usize) -> Self {
         TrustedPrefixPolicy {
             module_id,
             layer,
@@ -40,28 +40,7 @@ impl TrustedPrefixPolicy {
         }
     }
 
-    pub fn matches(&self, module_id: ModuleId, layer: ExecutionLayer) -> bool {
-        self.module_id == module_id && self.layer == layer
-    }
-}
-
-#[derive(Clone, Debug)]
-pub struct TrustedPrefixStatementContext {
-    pub module_id: ModuleId,
-    pub layer: ExecutionLayer,
-    pub is_trusted: bool,
-}
-
-impl TrustedPrefixStatementContext {
-    pub fn new(module_id: ModuleId, layer: ExecutionLayer, is_trusted: bool) -> Self {
-        TrustedPrefixStatementContext {
-            module_id,
-            layer,
-            is_trusted,
-        }
-    }
-
-    pub fn matches(&self, module_id: ModuleId, layer: ExecutionLayer) -> bool {
+    pub(crate) fn matches(&self, module_id: ModuleId, layer: ExecutionLayer) -> bool {
         self.module_id == module_id && self.layer == layer
     }
 }

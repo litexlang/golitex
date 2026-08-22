@@ -1,5 +1,6 @@
-use crate::pipeline::run_source_code;
+use crate::pipeline::pipeline::run_source_code_with_failure_kind_and_trusted_prefix;
 use crate::prelude::*;
+use crate::runtime::TrustedPrefixPolicy;
 use std::fs;
 use std::rc::Rc;
 use std::time::Instant;
@@ -17,18 +18,42 @@ pub fn run_stmt_at_global_env(
     }
 }
 
+pub(crate) fn run_stmt_at_global_env_in_trusted_prefix_run(
+    stmt: &Stmt,
+    runtime: &mut Runtime,
+) -> Result<StmtResult, RuntimeError> {
+    match stmt {
+        Stmt::Command(CommandStmt::ImportStmt(import)) => {
+            let result = run_isolated_import(import, runtime);
+            runtime.finish_statement_execution_in_trusted_prefix_run(result, false)
+        }
+        _ => runtime.exec_stmt_in_trusted_prefix_run(stmt),
+    }
+}
+
 pub fn run_repository_file_target(
     runtime: &mut Runtime,
     target: RepositoryFileTarget,
 ) -> (Vec<StmtResult>, Option<RuntimeError>) {
-    let isolated_before = runtime.isolated;
-    runtime.isolated = false;
-    let result = match target {
+    match target {
         RepositoryFileTarget::Module(module_id) => run_repository_module_prefix(runtime, module_id),
-        RepositoryFileTarget::File { .. } => run_repository_prefix(runtime, target, true),
-    };
-    runtime.isolated = isolated_before;
-    result
+        RepositoryFileTarget::File { .. } => run_repository_prefix(runtime, target, true, None),
+    }
+}
+
+pub(crate) fn run_repository_file_target_with_trusted_prefix(
+    runtime: &mut Runtime,
+    target: RepositoryFileTarget,
+    trusted_prefix: &TrustedPrefixPolicy,
+) -> (Vec<StmtResult>, Option<RuntimeError>) {
+    match target {
+        RepositoryFileTarget::Module(module_id) => {
+            run_repository_module_prefix_with_trusted_prefix(runtime, module_id, trusted_prefix)
+        }
+        RepositoryFileTarget::File { .. } => {
+            run_repository_prefix(runtime, target, true, Some(trusted_prefix))
+        }
+    }
 }
 
 pub fn run_repository_before_file_target(
@@ -57,10 +82,8 @@ pub fn run_repository_before_file_target(
         );
     };
 
-    let isolated_before = runtime.isolated;
-    runtime.isolated = false;
     let execution_mode = runtime.current_execution_mode();
-    let result = run_repository_prefix(runtime, target, false);
+    let result = run_repository_prefix(runtime, target, false, None);
     if result.1.is_none() {
         runtime.push_file_execution_frame_with_mode(
             module_id,
@@ -70,11 +93,9 @@ pub fn run_repository_before_file_target(
         );
         if let Err(error) = runtime.refresh_current_bare_symbol_index() {
             runtime.pop_execution_frame();
-            runtime.isolated = isolated_before;
             return (result.0, Some(error));
         }
     }
-    runtime.isolated = isolated_before;
     result
 }
 
@@ -82,7 +103,7 @@ fn run_isolated_import(
     import: &ImportStmt,
     runtime: &mut Runtime,
 ) -> Result<StmtResult, RuntimeError> {
-    if !runtime.isolated {
+    if !runtime.current_source_allows_inline_imports() {
         return Err(short_exec_error(
             import.clone().into(),
             "source import is only available in an isolated terminal".to_string(),
@@ -126,11 +147,8 @@ fn run_isolated_import(
         runtime.record_unverified_import(kind, name, import.line_file());
         ExecutionMode::Trusted
     };
-    let isolated_before = runtime.isolated;
-    runtime.isolated = false;
     let (_, runtime_error) =
-        run_repository_module_target_with_mode(runtime, module_id, execution_mode);
-    runtime.isolated = isolated_before;
+        run_repository_module_target_with_mode(runtime, module_id, execution_mode, None);
     if let Some(error) = runtime_error {
         runtime.module_manager = module_manager_before;
         return Err(error);
@@ -159,6 +177,33 @@ fn run_repository_module_prefix(
         runtime,
         RepositoryFileTarget::Module(target_module_id),
         true,
+        None,
+    )
+}
+
+fn run_repository_module_prefix_with_trusted_prefix(
+    runtime: &mut Runtime,
+    target_module_id: ModuleId,
+    trusted_prefix: &TrustedPrefixPolicy,
+) -> (Vec<StmtResult>, Option<RuntimeError>) {
+    let root_module_id = runtime
+        .module_manager
+        .entry_module_id
+        .unwrap_or(target_module_id);
+    if root_module_id == target_module_id {
+        let execution_mode = runtime.current_execution_mode();
+        return run_repository_module_target_with_mode(
+            runtime,
+            root_module_id,
+            execution_mode,
+            Some(trusted_prefix),
+        );
+    }
+    run_repository_prefix(
+        runtime,
+        RepositoryFileTarget::Module(target_module_id),
+        true,
+        Some(trusted_prefix),
     )
 }
 
@@ -166,6 +211,7 @@ fn run_repository_prefix(
     runtime: &mut Runtime,
     target: RepositoryFileTarget,
     include_selected_target: bool,
+    trusted_prefix: Option<&TrustedPrefixPolicy>,
 ) -> (Vec<StmtResult>, Option<RuntimeError>) {
     let execution_mode = runtime.current_execution_mode();
     let target_module_id = match target {
@@ -190,6 +236,7 @@ fn run_repository_prefix(
         execution_mode,
         target,
         include_selected_target,
+        trusted_prefix,
     )
 }
 
@@ -198,13 +245,14 @@ fn run_repository_module_target(
     module_id: ModuleId,
 ) -> (Vec<StmtResult>, Option<RuntimeError>) {
     let execution_mode = runtime.current_execution_mode();
-    run_repository_module_target_with_mode(runtime, module_id, execution_mode)
+    run_repository_module_target_with_mode(runtime, module_id, execution_mode, None)
 }
 
 fn run_repository_module_target_with_mode(
     runtime: &mut Runtime,
     module_id: ModuleId,
     execution_mode: ExecutionMode,
+    trusted_prefix: Option<&TrustedPrefixPolicy>,
 ) -> (Vec<StmtResult>, Option<RuntimeError>) {
     let Some(module) = runtime.module_manager.module(module_id) else {
         return (
@@ -215,7 +263,7 @@ fn run_repository_module_target_with_mode(
         );
     };
     if runtime.current_module_id() == module_id {
-        return run_repository_module_plan(runtime, module_id, execution_mode);
+        return run_repository_module_plan(runtime, module_id, execution_mode, trusted_prefix);
     }
     if module.status == ModuleStatus::Loaded {
         if execution_mode == ExecutionMode::Verified
@@ -258,7 +306,7 @@ fn run_repository_module_target_with_mode(
         .expect("registered project module should exist")
         .execution_mode = execution_mode;
     runtime.push_module_execution_frame_with_mode(module_id, module_path.as_str(), execution_mode);
-    let result = run_repository_module_plan(runtime, module_id, execution_mode);
+    let result = run_repository_module_plan(runtime, module_id, execution_mode, trusted_prefix);
     runtime.pop_execution_frame();
     if result.1.is_some() {
         runtime.module_manager = module_manager_before;
@@ -279,6 +327,7 @@ fn run_repository_module_prefix_with_mode(
     execution_mode: ExecutionMode,
     target: RepositoryFileTarget,
     include_selected_target: bool,
+    trusted_prefix: Option<&TrustedPrefixPolicy>,
 ) -> (Vec<StmtResult>, Option<RuntimeError>) {
     let Some(module) = runtime.module_manager.module(module_id) else {
         return (
@@ -295,6 +344,7 @@ fn run_repository_module_prefix_with_mode(
             execution_mode,
             target,
             include_selected_target,
+            trusted_prefix,
         );
     }
     if module.status == ModuleStatus::Loaded {
@@ -333,6 +383,7 @@ fn run_repository_module_prefix_with_mode(
         execution_mode,
         target,
         include_selected_target,
+        trusted_prefix,
     );
     runtime.pop_execution_frame();
     if result.1.is_some() {
@@ -354,6 +405,7 @@ fn run_repository_module_plan_to_target(
     execution_mode: ExecutionMode,
     selected_target: RepositoryFileTarget,
     include_selected_target: bool,
+    trusted_prefix: Option<&TrustedPrefixPolicy>,
 ) -> (Vec<StmtResult>, Option<RuntimeError>) {
     let (mut results, import_error) = run_config_imports(runtime, module_id);
     if let Some(error) = import_error {
@@ -373,7 +425,7 @@ fn run_repository_module_plan_to_target(
     let source_path = module.main_file_path.clone();
     if source_path.ends_with(".lit") {
         let (mut source_results, source_error) =
-            run_repository_source_file(runtime, source_path.as_str());
+            run_repository_source_file(runtime, source_path.as_str(), trusted_prefix);
         results.append(&mut source_results);
         return (results, source_error);
     }
@@ -404,9 +456,15 @@ fn run_repository_module_plan_to_target(
                 target_execution_mode,
                 selected_target,
                 include_selected_target,
+                trusted_prefix,
             )
         } else {
-            run_repository_import_target(runtime, target, target_execution_mode)
+            run_repository_import_target(
+                runtime,
+                target,
+                target_execution_mode,
+                if target_matches { trusted_prefix } else { None },
+            )
         };
         results.append(&mut target_results);
         if let Some(error) = runtime_error {
@@ -431,6 +489,7 @@ fn run_repository_module_plan(
     runtime: &mut Runtime,
     module_id: ModuleId,
     execution_mode: ExecutionMode,
+    trusted_prefix: Option<&TrustedPrefixPolicy>,
 ) -> (Vec<StmtResult>, Option<RuntimeError>) {
     let (mut results, import_error) = run_config_imports(runtime, module_id);
     if let Some(error) = import_error {
@@ -450,14 +509,14 @@ fn run_repository_module_plan(
     let source_path = module.main_file_path.clone();
     if source_path.ends_with(".lit") {
         let (mut source_results, source_error) =
-            run_repository_source_file(runtime, source_path.as_str());
+            run_repository_source_file(runtime, source_path.as_str(), trusted_prefix);
         results.append(&mut source_results);
         return (results, source_error);
     }
     let run_targets = module.run_targets.clone();
     for target in run_targets {
         let (mut target_results, runtime_error) =
-            run_repository_import_target(runtime, target, execution_mode);
+            run_repository_import_target(runtime, target, execution_mode, None);
         results.append(&mut target_results);
         if let Some(error) = runtime_error {
             return (results, Some(error));
@@ -473,6 +532,7 @@ fn run_repository_import_target(
     runtime: &mut Runtime,
     target: ImportTarget,
     execution_mode: ExecutionMode,
+    trusted_prefix: Option<&TrustedPrefixPolicy>,
 ) -> (Vec<StmtResult>, Option<RuntimeError>) {
     match target {
         ImportTarget::File { module_id, file_id } => run_repository_exported_file_target_with_mode(
@@ -480,10 +540,14 @@ fn run_repository_import_target(
             module_id,
             file_id,
             execution_mode,
+            trusted_prefix,
         ),
-        ImportTarget::Module(module_id) => {
-            run_repository_module_target_with_mode(runtime, module_id, execution_mode)
-        }
+        ImportTarget::Module(module_id) => run_repository_module_target_with_mode(
+            runtime,
+            module_id,
+            execution_mode,
+            trusted_prefix,
+        ),
     }
 }
 
@@ -559,6 +623,7 @@ fn run_config_imports(
             runtime,
             config_import.module_id,
             import_execution_mode,
+            None,
         );
         results.append(&mut import_results);
         if let Some(error) = import_error {
@@ -616,6 +681,7 @@ fn run_repository_exported_file_target_with_mode(
     module_id: ModuleId,
     file_id: FileId,
     execution_mode: ExecutionMode,
+    trusted_prefix: Option<&TrustedPrefixPolicy>,
 ) -> (Vec<StmtResult>, Option<RuntimeError>) {
     let Some(file) = runtime
         .module_manager
@@ -671,7 +737,7 @@ fn run_repository_exported_file_target_with_mode(
         return (vec![], Some(error));
     }
     let execution_start = profile_repository_run.then(Instant::now);
-    let result = run_repository_source_file(runtime, source_path.as_str());
+    let result = run_repository_source_file(runtime, source_path.as_str(), trusted_prefix);
     let execution_duration = execution_start.map(|start| start.elapsed());
     runtime.pop_execution_frame();
     if let (Some(snapshot_duration), Some(execution_duration)) =
@@ -707,6 +773,7 @@ fn run_repository_exported_file_target_with_mode(
 fn run_repository_source_file(
     runtime: &mut Runtime,
     source_path: &str,
+    trusted_prefix: Option<&TrustedPrefixPolicy>,
 ) -> (Vec<StmtResult>, Option<RuntimeError>) {
     let source_code = match fs::read_to_string(source_path) {
         Ok(content) => content,
@@ -723,10 +790,17 @@ fn run_repository_source_file(
             )
         }
     };
-    run_source_code(
+    let trust_before_line = runtime.execution_stack.last().and_then(|frame| {
+        trusted_prefix
+            .filter(|policy| policy.matches(frame.module_id, frame.layer))
+            .map(|policy| policy.before_line)
+    });
+    let (stmt_results, runtime_error, _) = run_source_code_with_failure_kind_and_trusted_prefix(
         remove_windows_carriage_return(source_code.as_str()).as_str(),
         runtime,
-    )
+        trust_before_line,
+    );
+    (stmt_results, runtime_error)
 }
 
 fn repository_target_error(message: &str) -> RuntimeError {

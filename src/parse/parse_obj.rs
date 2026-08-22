@@ -2084,7 +2084,8 @@ impl Runtime {
             if let Some(struct_obj) =
                 self.direct_struct_carrier_for_instantiated_template(template_obj)?
             {
-                self.default_struct_views
+                self.current_parse_context_mut()
+                    .default_struct_views
                     .entry(template_obj.symbol.id())
                     .or_insert_with(|| struct_obj.clone());
                 return Ok(struct_obj);

@@ -1,8 +1,12 @@
 use crate::common::json_value::{render_json_value, JsonValue};
 use crate::pipeline::display::{display_runtime_error_json, display_stmt_exec_result_json};
+use crate::pipeline::pipeline_run_stmt_globally::{
+    run_repository_file_target_with_trusted_prefix, run_stmt_at_global_env_in_trusted_prefix_run,
+};
 use crate::pipeline::summary::display_run_summary_json_with_runtime;
 use crate::pipeline::{run_repository_file_target, run_stmt_at_global_env};
 use crate::prelude::*;
+use crate::runtime::TrustedPrefixPolicy;
 use std::fs;
 use std::path::Path;
 use std::rc::Rc;
@@ -179,7 +183,6 @@ pub fn run_repository_with_output_style(
     summarize: bool,
 ) -> (bool, String) {
     let mut runtime = Runtime::new();
-    runtime.isolated = false;
     runtime.set_output_style(output_style);
     runtime.strict_mode = strict_mode;
     runtime.output_language = output_language;
@@ -241,7 +244,13 @@ pub fn run_file_with_project_context(
     runtime: &mut Runtime,
     force_isolated: bool,
 ) -> (Vec<StmtResult>, Option<RuntimeError>) {
-    run_file_with_project_context_and_trusted_prefix(entry_file_path, runtime, force_isolated, None)
+    let (stmt_results, runtime_error, _, _) = run_file_with_project_context_and_trusted_prefix(
+        entry_file_path,
+        runtime,
+        force_isolated,
+        None,
+    );
+    (stmt_results, runtime_error)
 }
 
 pub fn run_file_with_project_context_and_trusted_prefix(
@@ -249,11 +258,12 @@ pub fn run_file_with_project_context_and_trusted_prefix(
     runtime: &mut Runtime,
     force_isolated: bool,
     trust_before_line: Option<usize>,
-) -> (Vec<StmtResult>, Option<RuntimeError>) {
-    runtime.isolated = false;
-    runtime.clear_trusted_prefix_execution_policy();
-    runtime.trusted_prefix_report = None;
-    runtime.trusted_prefix_setup_error = None;
+) -> (
+    Vec<StmtResult>,
+    Option<RuntimeError>,
+    Option<TrustedPrefixReport>,
+    bool,
+) {
     let path = Path::new(entry_file_path);
     let file_name = path.file_name().and_then(|name| name.to_str());
     if file_name == Some("litex.config") {
@@ -263,8 +273,11 @@ pub fn run_file_with_project_context_and_trusted_prefix(
                 entry_file_path,
                 "litex.config is project configuration, not executable Litex source",
             )),
+            None,
+            false,
         );
     }
+    let mut trusted_prefix_report = None;
     if let Some(before_line) = trust_before_line {
         let source_code = match fs::read_to_string(entry_file_path) {
             Ok(content) => content,
@@ -275,6 +288,8 @@ pub fn run_file_with_project_context_and_trusted_prefix(
                         entry_file_path,
                         format!("could not read file: {}", error).as_str(),
                     )),
+                    None,
+                    false,
                 )
             }
         };
@@ -282,7 +297,7 @@ pub fn run_file_with_project_context_and_trusted_prefix(
         let blocks =
             match Tokenizer::new().parse_blocks(source_code.as_str(), Rc::from(entry_file_path)) {
                 Ok(blocks) => blocks,
-                Err(error) => return (vec![], Some(error)),
+                Err(error) => return (vec![], Some(error), None, false),
             };
         let statement_lines = blocks
             .iter()
@@ -294,7 +309,6 @@ pub fn run_file_with_project_context_and_trusted_prefix(
                 before_line,
                 &statement_lines,
             );
-            runtime.trusted_prefix_setup_error = Some(message.clone());
             return (
                 vec![],
                 Some(
@@ -304,13 +318,15 @@ pub fn run_file_with_project_context_and_trusted_prefix(
                     ))
                     .into(),
                 ),
+                None,
+                true,
             );
         }
         let trusted_top_level_statements = statement_lines
             .iter()
             .filter(|line| **line < before_line)
             .count();
-        runtime.trusted_prefix_report = Some(TrustedPrefixReport::new(
+        trusted_prefix_report = Some(TrustedPrefixReport::new(
             entry_file_path.to_string(),
             before_line,
             trusted_top_level_statements,
@@ -320,7 +336,7 @@ pub fn run_file_with_project_context_and_trusted_prefix(
     if !force_isolated {
         match discover_repository_for_file(runtime, entry_file_path) {
             Ok(Some(target)) => {
-                if let Some(before_line) = trust_before_line {
+                let (stmt_results, runtime_error) = if let Some(before_line) = trust_before_line {
                     let (module_id, layer) = match target {
                         RepositoryFileTarget::Module(module_id) => {
                             (module_id, ExecutionLayer::Main)
@@ -329,11 +345,12 @@ pub fn run_file_with_project_context_and_trusted_prefix(
                             (module_id, ExecutionLayer::File(file_id))
                         }
                     };
-                    runtime.configure_trusted_prefix(module_id, layer, before_line);
-                }
-                let result = run_repository_file_target(runtime, target);
-                runtime.clear_trusted_prefix_execution_policy();
-                return result;
+                    let policy = TrustedPrefixPolicy::new(module_id, layer, before_line);
+                    run_repository_file_target_with_trusted_prefix(runtime, target, &policy)
+                } else {
+                    run_repository_file_target(runtime, target)
+                };
+                return (stmt_results, runtime_error, trusted_prefix_report, false);
             }
             Ok(None) => {
                 return (
@@ -342,13 +359,13 @@ pub fn run_file_with_project_context_and_trusted_prefix(
                         entry_file_path,
                         "litex -f requires a litex.config in the same folder; use `litex -isolated -f <file>` for an isolated file",
                     )),
+                    trusted_prefix_report,
+                    false,
                 )
             }
-            Err(error) => return (vec![], Some(error)),
+            Err(error) => return (vec![], Some(error), trusted_prefix_report, false),
         }
     }
-
-    runtime.isolated = true;
 
     let source_code = match fs::read_to_string(entry_file_path) {
         Ok(content) => content,
@@ -359,23 +376,19 @@ pub fn run_file_with_project_context_and_trusted_prefix(
                     entry_file_path,
                     format!("could not read file: {}", error).as_str(),
                 )),
+                trusted_prefix_report,
+                false,
             )
         }
     };
     runtime.new_file_path_new_env_new_name_scope(entry_file_path);
-    if let Some(before_line) = trust_before_line {
-        runtime.configure_trusted_prefix(
-            runtime.current_module_id(),
-            ExecutionLayer::Main,
-            before_line,
-        );
-    }
-    let result = run_source_code(
+    runtime.set_current_source_allows_inline_imports(true);
+    let (stmt_results, runtime_error, _) = run_source_code_with_failure_kind_and_trusted_prefix(
         remove_windows_carriage_return(source_code.as_str()).as_str(),
         runtime,
+        trust_before_line,
     );
-    runtime.clear_trusted_prefix_execution_policy();
-    result
+    (stmt_results, runtime_error, trusted_prefix_report, false)
 }
 
 fn file_target_error(entry_file_path: &str, message: &str) -> RuntimeError {
@@ -403,6 +416,18 @@ pub fn run_source_code(
 pub(crate) fn run_source_code_with_failure_kind(
     source_code: &str,
     runtime: &mut Runtime,
+) -> (
+    Vec<StmtResult>,
+    Option<RuntimeError>,
+    Option<RunSourceFailureKind>,
+) {
+    run_source_code_with_failure_kind_and_trusted_prefix(source_code, runtime, None)
+}
+
+pub(crate) fn run_source_code_with_failure_kind_and_trusted_prefix(
+    source_code: &str,
+    runtime: &mut Runtime,
+    trust_before_line: Option<usize>,
 ) -> (
     Vec<StmtResult>,
     Option<RuntimeError>,
@@ -439,7 +464,6 @@ pub(crate) fn run_source_code_with_failure_kind(
             return (vec![], Some(e), Some(failure_kind));
         }
     };
-    let trust_before_line = runtime.trusted_prefix_before_line_for_current_target();
     if let Some(before_line) = trust_before_line {
         let statement_lines = blocks
             .iter()
@@ -451,7 +475,6 @@ pub(crate) fn run_source_code_with_failure_kind(
                 before_line,
                 &statement_lines,
             );
-            runtime.trusted_prefix_setup_error = Some(message.clone());
             return (
                 vec![],
                 Some(
@@ -464,16 +487,6 @@ pub(crate) fn run_source_code_with_failure_kind(
                 Some(RunSourceFailureKind::Other),
             );
         }
-        let trusted_top_level_statements = statement_lines
-            .iter()
-            .filter(|line| **line < before_line)
-            .count();
-        runtime.trusted_prefix_report = Some(TrustedPrefixReport::new(
-            runtime.current_file_path_rc().to_string(),
-            before_line,
-            trusted_top_level_statements,
-            before_line,
-        ));
     }
 
     let profile_repository_run = std::env::var_os("LITEX_PROFILE_REPOSITORY").is_some();
@@ -497,18 +510,18 @@ pub(crate) fn run_source_code_with_failure_kind(
         let executing_try_stmt = matches!(&stmt, Stmt::ProofBlock(ProofBlockStmt::TryStmt(_)));
         let trusted_prefix_statement =
             trust_before_line.is_some_and(|before_line| stmt.line_file().0 < before_line);
-        if trust_before_line.is_some() {
-            runtime.begin_trusted_prefix_statement(trusted_prefix_statement);
-        }
         let previous_execution_mode = trusted_prefix_statement
             .then(|| runtime.replace_current_execution_mode(ExecutionMode::Trusted));
-        let result = match run_stmt_at_global_env(&stmt, runtime) {
+        let result = match if trust_before_line.is_some() {
+            run_stmt_at_global_env_in_trusted_prefix_run(&stmt, runtime)
+        } else {
+            run_stmt_at_global_env(&stmt, runtime)
+        } {
             Ok(r) => r,
             Err(e) => {
                 if let Some(previous_execution_mode) = previous_execution_mode {
                     runtime.replace_current_execution_mode(previous_execution_mode);
                 }
-                runtime.end_trusted_prefix_statement();
                 let failure_kind = if executing_try_stmt {
                     RunSourceFailureKind::TryStmt
                 } else {
@@ -520,7 +533,6 @@ pub(crate) fn run_source_code_with_failure_kind(
         if let Some(previous_execution_mode) = previous_execution_mode {
             runtime.replace_current_execution_mode(previous_execution_mode);
         }
-        runtime.end_trusted_prefix_statement();
         if let Some(statement_start) = statement_start {
             let line_file = stmt.line_file();
             eprintln!(
@@ -622,7 +634,7 @@ pub fn render_run_source_code_output(
         output_text.push('\n');
     }
 
-    if ok && !runtime.unverified_imports.is_empty() {
+    if ok && !runtime.unverified_imports().is_empty() {
         output_text.push('\n');
         output_text.push_str(unverified_import_warning_json(runtime).as_str());
         output_text.push('\n');
@@ -639,7 +651,7 @@ pub fn render_run_source_code_output(
 
 fn unverified_import_warning_json(runtime: &Runtime) -> String {
     let imports = runtime
-        .unverified_imports
+        .unverified_imports()
         .iter()
         .map(|entry| {
             JsonValue::Object(vec![

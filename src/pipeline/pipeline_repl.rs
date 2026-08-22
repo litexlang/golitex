@@ -315,8 +315,8 @@ fn run_repl_source_if_not_empty(
 }
 
 fn initialize_isolated_repl_runtime(runtime: &mut Runtime) {
-    runtime.isolated = true;
     runtime.new_file_path_new_env_new_name_scope("repl");
+    runtime.set_current_source_allows_inline_imports(true);
 }
 
 fn repl_line_starts_block(line: &str) -> bool {
@@ -425,7 +425,7 @@ mod tests {
             true,
         );
         assert!(file_error.is_none(), "{file_error:?}");
-        assert!(runtime.isolated);
+        assert!(runtime.current_source_allows_inline_imports());
 
         let mut input = Cursor::new(b"from_file = 1\nhave from_repl R = 2\n".as_slice());
         let mut output = Vec::new();

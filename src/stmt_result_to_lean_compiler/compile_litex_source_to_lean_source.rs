@@ -35,8 +35,8 @@ pub(crate) fn execute_litex_source_to_stmt_results(
 ) -> Result<Vec<StmtResult>, RuntimeError> {
     let normalized = source.replace('\r', "");
     let mut runtime = Runtime::new();
-    runtime.isolated = true;
     runtime.new_file_path_new_env_new_name_scope(source_label);
+    runtime.set_current_source_allows_inline_imports(true);
     let tokenizer = Tokenizer::new();
     let blocks = tokenizer.parse_blocks(&normalized, runtime.current_file_path_rc())?;
     let mut results = Vec::new();

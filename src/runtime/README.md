@@ -1,6 +1,8 @@
 # Runtime state
 
-One `litex -runner -e '1 = 1'` run owns one module world, one execution-frame stack, one monotone FactId allocator, and one set of recursion guards.
+`Runtime` is the coordinator for one Litex run. It owns only state whose
+lifetime really spans that run: the module world, execution-frame stack,
+monotone IDs and symbol interners, plus output/strictness configuration.
 
 ```text
 Runtime::new()
@@ -14,15 +16,19 @@ run source `1 = 1`
   pop local frames when their scopes end
 ```
 
-## Examples and boundaries
+## Ownership boundaries
 
-| Runtime state | Concrete example |
+| Owner | State and concrete example |
 | --- | --- |
-| Execution frame | Parsing `forall x R:` followed by indented `x = x` tracks `x` in the current frame. |
-| Shared module manager | An imported module and its parent update the same cycle/status table. |
-| FactId allocator | Stored facts receive `f1`, then `f2`; popped local facts do not cause ID reuse. |
-| Recursion guard | Re-entering the same well-definedness object stops an infinite cycle. |
-| Output mode | `-compact`, normal, and `-detail` select different render detail from the same result. |
-| Strict mode | `-strict -e 'trust 1 = 2'` rejects the trusted statement. |
+| `Runtime` | Stored facts receive `f1`, then `f2`; popped local facts do not cause ID reuse. `-compact`, `-detail`, and `-strict` are run-wide configuration. |
+| `ExecutionFrame` | The active module/file and whether that source permits inline imports. Repository files default to no inline imports; isolated source and REPL frames opt in. |
+| `ParseContext` | Free binders and parser-only struct/tuple views. A source binder such as `a &Pair` records how later `a.left` syntax lowers, without changing the verified environment. |
+| `Environment` | Checked declarations/facts/caches and statement-local `ProofSearchState`. Re-entering the same well-definedness object is suppressed in the visible environment chain; clone and child merge do not persist an in-progress search. |
+| `ModuleManager` | Repository/module lifecycle plus parse-only struct declarations and unverified-import diagnostics shared by files in that module world. |
+| Local matcher/runner values | Recursive forall-argument bindings and trusted-prefix policy/report live only for the operation using them; they are not ambient `Runtime` state. |
 
-Start with [`runtime.rs`](runtime.rs) for run-wide state and [`execution_frame.rs`](execution_frame.rs) for examples such as module, file, and local proof scopes.
+Start with [`runtime.rs`](runtime.rs) for run-wide state,
+[`execution_frame.rs`](execution_frame.rs) for source scopes,
+[`parse_context.rs`](parse_context.rs) for parser metadata, and
+[`../environment/environment.rs`](../environment/environment.rs) for checked
+and statement-local proof state.

@@ -3,15 +3,34 @@ use std::rc::Rc;
 
 impl Runtime {
     pub fn exec_stmt(&mut self, stmt: &Stmt) -> Result<StmtResult, RuntimeError> {
-        self.clear_statement_atomic_fact_proofs();
+        self.exec_stmt_with_trusted_prefix_context(stmt, false)
+    }
+
+    pub(crate) fn exec_stmt_in_trusted_prefix_run(
+        &mut self,
+        stmt: &Stmt,
+    ) -> Result<StmtResult, RuntimeError> {
+        self.exec_stmt_with_trusted_prefix_context(stmt, true)
+    }
+
+    fn exec_stmt_with_trusted_prefix_context(
+        &mut self,
+        stmt: &Stmt,
+        in_trusted_prefix_run: bool,
+    ) -> Result<StmtResult, RuntimeError> {
+        self.clear_statement_proof_state();
         let trusted = self.current_execution_is_trusted_file();
         let result = if trusted {
-            self.exec_stmt_affect_environment_only(stmt)
+            self.exec_stmt_affect_environment_only(stmt, in_trusted_prefix_run)
         } else {
             self.exec_stmt_verified(stmt)
         };
-        let result = self.finish_statement_execution(result, trusted);
-        self.clear_statement_atomic_fact_proofs();
+        let result = self.finish_statement_execution_with_trusted_prefix_context(
+            result,
+            trusted,
+            in_trusted_prefix_run,
+        );
+        self.clear_statement_proof_state();
         result
     }
 
@@ -20,12 +39,28 @@ impl Runtime {
         result: Result<StmtResult, RuntimeError>,
         trusted: bool,
     ) -> Result<StmtResult, RuntimeError> {
+        self.finish_statement_execution_with_trusted_prefix_context(result, trusted, false)
+    }
+
+    pub(crate) fn finish_statement_execution_in_trusted_prefix_run(
+        &mut self,
+        result: Result<StmtResult, RuntimeError>,
+        trusted: bool,
+    ) -> Result<StmtResult, RuntimeError> {
+        self.finish_statement_execution_with_trusted_prefix_context(result, trusted, true)
+    }
+
+    fn finish_statement_execution_with_trusted_prefix_context(
+        &mut self,
+        result: Result<StmtResult, RuntimeError>,
+        trusted: bool,
+        in_trusted_prefix_run: bool,
+    ) -> Result<StmtResult, RuntimeError> {
         match result {
             Ok(mut result) => {
                 self.attach_known_fact_ids_to_stmt_result(&mut result)?;
-                let in_trusted_prefix_run = self.current_statement_is_in_trusted_prefix_run();
                 let trace = if in_trusted_prefix_run && !result.is_unknown() {
-                    if self.current_statement_is_cli_trusted_prefix() {
+                    if trusted {
                         StatementExecutionTrace::trusted_prefix()
                     } else {
                         StatementExecutionTrace::verified(false).with_verified_status()
@@ -373,7 +408,7 @@ impl Runtime {
         // Reuse the no-verification environment path for a statement whose
         // generic form was already checked before capture-avoiding substitution.
         let previous_execution_mode = self.replace_current_execution_mode(ExecutionMode::Trusted);
-        let result = self.exec_stmt_affect_environment_only(stmt);
+        let result = self.exec_stmt_affect_environment_only(stmt, false);
         self.replace_current_execution_mode(previous_execution_mode);
         result
     }
@@ -381,6 +416,7 @@ impl Runtime {
     fn exec_stmt_affect_environment_only(
         &mut self,
         stmt: &Stmt,
+        in_trusted_prefix_run: bool,
     ) -> Result<StmtResult, RuntimeError> {
         match stmt {
             Stmt::Fact(fact) => self.exec_fact_stmt_affect_environment_only(fact),
@@ -498,9 +534,7 @@ impl Runtime {
             Stmt::ProofBlock(ProofBlockStmt::ClaimStmt(s)) => {
                 self.exec_claim_stmt_affect_environment_only(s)
             }
-            Stmt::ProofBlock(ProofBlockStmt::TryStmt(s))
-                if self.current_statement_is_cli_trusted_prefix() =>
-            {
+            Stmt::ProofBlock(ProofBlockStmt::TryStmt(s)) if in_trusted_prefix_run => {
                 self.exec_try_stmt(s)
             }
             Stmt::ProofBlock(ProofBlockStmt::ExampleStmt(s)) => Ok(

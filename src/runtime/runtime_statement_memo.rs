@@ -2,6 +2,112 @@ use crate::prelude::*;
 use std::rc::Rc;
 
 impl Runtime {
+    pub(crate) fn begin_atomic_fact_inference(&mut self, key: &FactString) -> bool {
+        if self.iter_environments_from_top().any(|environment| {
+            environment
+                .proof_search_state
+                .active_atomic_fact_inferences
+                .contains(key)
+        }) {
+            return false;
+        }
+        self.top_level_env()
+            .proof_search_state
+            .active_atomic_fact_inferences
+            .insert(key.clone());
+        true
+    }
+
+    pub(crate) fn end_atomic_fact_inference(&mut self, key: &FactString) {
+        self.for_each_current_environment_mut(|environment| {
+            environment
+                .proof_search_state
+                .active_atomic_fact_inferences
+                .remove(key);
+        });
+    }
+
+    pub(crate) fn begin_well_defined_object(&mut self, key: &ObjString) -> bool {
+        if self.iter_environments_from_top().any(|environment| {
+            environment
+                .proof_search_state
+                .active_well_defined_objects
+                .contains(key)
+        }) {
+            return false;
+        }
+        self.top_level_env()
+            .proof_search_state
+            .active_well_defined_objects
+            .insert(key.clone());
+        true
+    }
+
+    pub(crate) fn end_well_defined_object(&mut self, key: &ObjString) {
+        self.for_each_current_environment_mut(|environment| {
+            environment
+                .proof_search_state
+                .active_well_defined_objects
+                .remove(key);
+        });
+    }
+
+    pub(crate) fn has_active_set_builder_membership_unfold(&self) -> bool {
+        self.iter_environments_from_top().any(|environment| {
+            !environment
+                .proof_search_state
+                .active_set_builder_membership_unfolds
+                .is_empty()
+        })
+    }
+
+    pub(crate) fn begin_set_builder_membership_unfold(&mut self, key: &FactString) -> bool {
+        if self.iter_environments_from_top().any(|environment| {
+            environment
+                .proof_search_state
+                .active_set_builder_membership_unfolds
+                .contains(key)
+        }) {
+            return false;
+        }
+        self.top_level_env()
+            .proof_search_state
+            .active_set_builder_membership_unfolds
+            .insert(key.clone());
+        true
+    }
+
+    pub(crate) fn end_set_builder_membership_unfold(&mut self, key: &FactString) {
+        self.for_each_current_environment_mut(|environment| {
+            environment
+                .proof_search_state
+                .active_set_builder_membership_unfolds
+                .remove(key);
+        });
+    }
+
+    pub(crate) fn set_builder_forall_transport_is_active(&self) -> bool {
+        self.iter_environments_from_top().any(|environment| {
+            environment
+                .proof_search_state
+                .active_set_builder_forall_transport
+        })
+    }
+
+    pub(crate) fn set_set_builder_forall_transport_active(&mut self, active: bool) {
+        if active {
+            self.top_level_env()
+                .proof_search_state
+                .active_set_builder_forall_transport = true;
+            return;
+        }
+        self.for_each_current_environment_mut(|environment| {
+            environment
+                .proof_search_state
+                .active_set_builder_forall_transport = false;
+        });
+    }
+
     /// Reuse a completed proof visible in the current environment chain.
     pub(crate) fn verify_atomic_fact_from_statement_memo(
         &self,
@@ -60,98 +166,31 @@ impl Runtime {
         result
     }
 
-    // Compatibility shims for legacy, unreachable `Result<()>` verifier
-    // implementations. Canonical WD evidence is returned recursively by the
-    // matching `*_well_defined_result` functions; these functions retain no
-    // Runtime or Environment state.
-    pub(crate) fn begin_well_definedness_binder_scope(
-        &mut self,
-        _owner_object: &Obj,
-    ) -> Result<Option<WellDefinedBinderScopeId>, RuntimeError> {
-        Ok(None)
-    }
-
-    pub(crate) fn record_well_definedness_binder_parameter_group(
-        &mut self,
-        _scope_id: Option<WellDefinedBinderScopeId>,
-        _parameter_group_index: usize,
-        _group: &ParamGroupWithSet,
-        _infer_result: &SuccessInferResult,
-    ) -> Result<(), RuntimeError> {
-        Ok(())
-    }
-
-    pub(crate) fn record_well_definedness_binder_domain(
-        &mut self,
-        _scope_id: Option<WellDefinedBinderScopeId>,
-        _domain_index: usize,
-        _expected: Fact,
-        _infer_result: &SuccessInferResult,
-    ) -> Result<(), RuntimeError> {
-        Ok(())
-    }
-
-    pub(crate) fn record_well_definedness_set_builder_parameter(
-        &mut self,
-        _scope_id: Option<WellDefinedBinderScopeId>,
-        _binding: &SymbolBinding,
-        _expected: Fact,
-        _infer_result: &SuccessInferResult,
-    ) -> Result<(), RuntimeError> {
-        Ok(())
-    }
-
-    pub(crate) fn record_well_definedness_set_builder_condition(
-        &mut self,
-        _scope_id: Option<WellDefinedBinderScopeId>,
-        _condition_index: usize,
-        _expected: Fact,
-        _infer_result: &SuccessInferResult,
-    ) -> Result<(), RuntimeError> {
-        Ok(())
-    }
-
-    pub(crate) fn end_well_definedness_binder_scope(
-        &mut self,
-        _scope_id: Option<WellDefinedBinderScopeId>,
-        _succeeded: bool,
-    ) -> Result<(), RuntimeError> {
-        Ok(())
-    }
-
-    pub(crate) fn record_well_definedness_target_requirement(
-        &mut self,
-        _source_object: &Obj,
-        _role: WellDefinednessRequirementRole,
-        _result: StmtResult,
-    ) -> Result<(), RuntimeError> {
-        Ok(())
-    }
-
     /// End the statement-local lifetime on every active scope of the current execution frame.
-    pub(crate) fn clear_statement_atomic_fact_proofs(&mut self) {
+    pub(crate) fn clear_statement_proof_state(&mut self) {
+        self.for_each_current_environment_mut(|environment| {
+            environment.statement_atomic_fact_proofs.clear();
+            environment.statement_well_defined_obj_proofs.clear();
+            environment.proof_search_state.clear();
+        });
+    }
+
+    fn for_each_current_environment_mut(&mut self, mut visit: impl FnMut(&mut Environment)) {
         let Some(frame) = self.execution_stack.last_mut() else {
             return;
         };
         let module_id = frame.module_id;
         let layer = frame.layer;
         for environment in frame.local_environment_stack.iter_mut() {
-            environment.statement_atomic_fact_proofs.clear();
-            environment.statement_well_defined_obj_proofs.clear();
+            visit(environment);
         }
-
         let Some(module) = self.module_manager.module_mut(module_id) else {
             return;
         };
-        module.main_environment.statement_atomic_fact_proofs.clear();
-        module
-            .main_environment
-            .statement_well_defined_obj_proofs
-            .clear();
+        visit(&mut module.main_environment);
         if let ExecutionLayer::File(file_id) = layer {
             if let Some(file) = module.file_mut(file_id) {
-                file.environment.statement_atomic_fact_proofs.clear();
-                file.environment.statement_well_defined_obj_proofs.clear();
+                visit(&mut file.environment);
             }
         }
     }
@@ -192,7 +231,7 @@ mod tests {
         assert!(output.contains("number comparison"), "{output}");
         assert!(!output.contains("statement memo"), "{output}");
 
-        runtime.clear_statement_atomic_fact_proofs();
+        runtime.clear_statement_proof_state();
         assert!(runtime
             .top_level_env()
             .statement_atomic_fact_proofs
@@ -213,7 +252,7 @@ mod tests {
             .statement_atomic_fact_proofs
             .contains_key(&fact.to_string()));
 
-        runtime.clear_statement_atomic_fact_proofs();
+        runtime.clear_statement_proof_state();
         let stmt = parse_stmt(&mut runtime, "1 = 2");
         assert!(runtime.exec_stmt(&stmt).is_err());
         assert!(runtime

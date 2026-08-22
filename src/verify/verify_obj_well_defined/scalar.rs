@@ -973,19 +973,8 @@ impl Runtime {
             verify_state,
             WellDefinedObjChildRole::BuiltinArgument { argument_index: 1 },
         )?;
-        let parent: Obj = add.clone().into();
-        let left = self.require_obj_in_c(&add.left, verify_state)?;
-        self.record_well_definedness_target_requirement(
-            &parent,
-            WellDefinednessRequirementRole::BuiltinArgumentMembership { argument_index: 0 },
-            left,
-        )?;
-        let right = self.require_obj_in_c(&add.right, verify_state)?;
-        self.record_well_definedness_target_requirement(
-            &parent,
-            WellDefinednessRequirementRole::BuiltinArgumentMembership { argument_index: 1 },
-            right,
-        )?;
+        self.require_obj_in_c(&add.left, verify_state)?;
+        self.require_obj_in_c(&add.right, verify_state)?;
         Ok(())
     }
 
@@ -1006,19 +995,8 @@ impl Runtime {
             verify_state,
             WellDefinedObjChildRole::BuiltinArgument { argument_index: 1 },
         )?;
-        let parent: Obj = sub.clone().into();
-        let left = self.require_obj_in_c(&sub.left, verify_state)?;
-        self.record_well_definedness_target_requirement(
-            &parent,
-            WellDefinednessRequirementRole::BuiltinArgumentMembership { argument_index: 0 },
-            left,
-        )?;
-        let right = self.require_obj_in_c(&sub.right, verify_state)?;
-        self.record_well_definedness_target_requirement(
-            &parent,
-            WellDefinednessRequirementRole::BuiltinArgumentMembership { argument_index: 1 },
-            right,
-        )?;
+        self.require_obj_in_c(&sub.left, verify_state)?;
+        self.require_obj_in_c(&sub.right, verify_state)?;
         Ok(())
     }
 
@@ -1039,19 +1017,8 @@ impl Runtime {
             verify_state,
             WellDefinedObjChildRole::BuiltinArgument { argument_index: 1 },
         )?;
-        let parent: Obj = mul.clone().into();
-        let left = self.require_obj_in_c(&mul.left, verify_state)?;
-        self.record_well_definedness_target_requirement(
-            &parent,
-            WellDefinednessRequirementRole::BuiltinArgumentMembership { argument_index: 0 },
-            left,
-        )?;
-        let right = self.require_obj_in_c(&mul.right, verify_state)?;
-        self.record_well_definedness_target_requirement(
-            &parent,
-            WellDefinednessRequirementRole::BuiltinArgumentMembership { argument_index: 1 },
-            right,
-        )?;
+        self.require_obj_in_c(&mul.left, verify_state)?;
+        self.require_obj_in_c(&mul.right, verify_state)?;
         Ok(())
     }
 
@@ -1085,24 +1052,8 @@ impl Runtime {
                 )),
             )));
         }
-        let parent: Obj = div.clone().into();
-        self.record_well_definedness_target_requirement(
-            &parent,
-            WellDefinednessRequirementRole::BuiltinArgumentNonzero { argument_index: 1 },
-            result,
-        )?;
-        let left = self.require_obj_in_c(&div.left, verify_state)?;
-        self.record_well_definedness_target_requirement(
-            &parent,
-            WellDefinednessRequirementRole::BuiltinArgumentMembership { argument_index: 0 },
-            left,
-        )?;
-        let right = self.require_obj_in_c(&div.right, verify_state)?;
-        self.record_well_definedness_target_requirement(
-            &parent,
-            WellDefinednessRequirementRole::BuiltinArgumentMembership { argument_index: 1 },
-            right,
-        )?;
+        self.require_obj_in_c(&div.left, verify_state)?;
+        self.require_obj_in_c(&div.right, verify_state)?;
         Ok(())
     }
 

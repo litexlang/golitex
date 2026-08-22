@@ -246,6 +246,7 @@ impl Environment {
             cache_infer_rule_firing,
             statement_atomic_fact_proofs: _,
             statement_well_defined_obj_proofs: _,
+            proof_search_state: _,
             used_strategy_stmts,
             stopped_strategy_stmts,
         } = child;

@@ -267,8 +267,8 @@ try:
 "#;
 
         let mut runtime = Runtime::new();
-        runtime.isolated = true;
         runtime.new_file_path_new_env_new_name_scope("try_stmt_rejects_import_control_statement");
+        runtime.set_current_source_allows_inline_imports(true);
         let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
         let (run_succeeded, run_output) =
             render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);

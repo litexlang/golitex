@@ -138,13 +138,12 @@ impl Runtime {
         fact: &InFact,
     ) -> Result<StmtResult, RuntimeError> {
         let goal_key = fact.to_string();
-        if !self.active_set_builder_membership_unfolds.is_empty() {
+        if self.has_active_set_builder_membership_unfold() {
             return Ok(UnknownGenericStmtResult::new().into());
         }
-        self.active_set_builder_membership_unfolds
-            .insert(goal_key.clone());
+        self.begin_set_builder_membership_unfold(&goal_key);
         let result = self.verify_one_layer_set_builder_membership_with_builtin_strategy_once(fact);
-        self.active_set_builder_membership_unfolds.remove(&goal_key);
+        self.end_set_builder_membership_unfold(&goal_key);
         result
     }
 

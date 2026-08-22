@@ -21,7 +21,8 @@ fn trust_before_line_trusts_only_statements_before_the_exact_boundary() {
 "#,
     );
     let mut runtime = Runtime::new();
-    let (results, error) = run_trusted_prefix(&fixture, &mut runtime, 3);
+    let (results, error, report, setup_rejected) =
+        run_trusted_prefix_with_report(&fixture, &mut runtime, 3);
 
     assert_eq!(results.len(), 1);
     assert!(
@@ -29,8 +30,8 @@ fn trust_before_line_trusts_only_statements_before_the_exact_boundary() {
         "the false fact starting at the boundary must fail"
     );
     assert_trace(&results[0], "trusted_prefix");
-    let report = runtime
-        .trusted_prefix_report
+    assert!(!setup_rejected);
+    let report = report
         .as_ref()
         .expect("a valid boundary should produce a report");
     assert_eq!(report.before_line, 3);
@@ -49,14 +50,16 @@ fn trust_before_line_rejects_a_non_header_before_execution() {
 "#,
     );
     let mut runtime = Runtime::new();
-    let (results, error) = run_trusted_prefix(&fixture, &mut runtime, 2);
+    let (results, error, report, setup_rejected) =
+        run_trusted_prefix_with_report(&fixture, &mut runtime, 2);
 
     assert!(results.is_empty());
     let message = format!("{:?}", error.expect("a blank-line boundary must fail"));
     assert!(message.contains("must be the header line of a top-level statement"));
     assert!(message.contains("previous top-level statement starts at line 1"));
     assert!(message.contains("next top-level statement starts at line 3"));
-    assert!(runtime.trusted_prefix_report.is_none());
+    assert!(report.is_none());
+    assert!(setup_rejected);
 
     let (probe_results, probe_error) = run_source_code("2 = 3", &mut runtime);
     assert!(
@@ -79,14 +82,16 @@ fn trust_before_line_rejects_a_nested_proof_line_as_the_boundary() {
 "#,
     );
     let mut runtime = Runtime::new();
-    let (results, error) = run_trusted_prefix(&fixture, &mut runtime, 2);
+    let (results, error, report, setup_rejected) =
+        run_trusted_prefix_with_report(&fixture, &mut runtime, 2);
 
     assert!(results.is_empty());
     let message = format!("{:?}", error.expect("a nested proof boundary must fail"));
     assert!(message.contains("must be the header line of a top-level statement"));
     assert!(message.contains("previous top-level statement starts at line 1"));
     assert!(message.contains("next top-level statement starts at line 6"));
-    assert!(runtime.trusted_prefix_report.is_none());
+    assert!(report.is_none());
+    assert!(setup_rejected);
 }
 
 #[test]
@@ -139,15 +144,16 @@ fn trust_before_line_reconstructs_template_verification_before_later_use() {
 "#,
     );
     let mut runtime = Runtime::new();
-    let (results, error) = run_trusted_prefix(&fixture, &mut runtime, 4);
+    let (results, error, report, setup_rejected) =
+        run_trusted_prefix_with_report(&fixture, &mut runtime, 4);
 
     assert!(
         error.is_none(),
         "a trusted template declaration must remain usable by the verified suffix: {error:?}"
     );
     assert_eq!(results.len(), 2);
-    let report = runtime
-        .trusted_prefix_report
+    assert!(!setup_rejected);
+    let report = report
         .as_ref()
         .expect("a valid template boundary should produce a report");
     assert_eq!(report.trusted_top_level_statements, 1);
@@ -210,14 +216,15 @@ fn trust_before_line_reports_trusted_and_verified_statement_traces() {
 fn trust_before_line_reports_a_suffix_trust_as_verified_execution() {
     let fixture = TrustedPrefixFixture::new("suffix_trust", "trust 1 = 2\n");
     let mut runtime = Runtime::new();
-    let (results, error) = run_trusted_prefix(&fixture, &mut runtime, 1);
+    let (results, error, report, setup_rejected) =
+        run_trusted_prefix_with_report(&fixture, &mut runtime, 1);
 
     assert!(error.is_none());
     assert_eq!(results.len(), 1);
     assert_trace(&results[0], "verified");
 
-    let report = runtime
-        .trusted_prefix_report
+    assert!(!setup_rejected);
+    let report = report
         .as_ref()
         .expect("the first statement is a valid zero-prefix boundary");
     let summary = display_run_summary_json_with_runtime_and_trusted_prefix(
@@ -513,6 +520,20 @@ fn run_trusted_prefix(
     runtime: &mut Runtime,
     before_line: usize,
 ) -> (Vec<StmtResult>, Option<RuntimeError>) {
+    let (results, error, _, _) = run_trusted_prefix_with_report(fixture, runtime, before_line);
+    (results, error)
+}
+
+fn run_trusted_prefix_with_report(
+    fixture: &TrustedPrefixFixture,
+    runtime: &mut Runtime,
+    before_line: usize,
+) -> (
+    Vec<StmtResult>,
+    Option<RuntimeError>,
+    Option<TrustedPrefixReport>,
+    bool,
+) {
     run_file_with_project_context_and_trusted_prefix(
         fixture
             .file

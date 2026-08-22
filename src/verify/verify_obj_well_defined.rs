@@ -36,7 +36,7 @@ impl Runtime {
             .clone()
             .unwrap_or_else(|| WellDefinedCacheKey::without_function_contract(obj.to_string()));
         let active_key = obj_equality_key(obj);
-        if !self.active_well_defined_objects.insert(active_key.clone()) {
+        if !self.begin_well_defined_object(&active_key) {
             return Ok(Rc::new(
                 SuccessVerifyObjWellDefinedResult::RecursiveReference(Box::new(
                     SuccessRecursiveObjWellDefinedResult::new(obj.clone(), active_key),
@@ -296,7 +296,7 @@ impl Runtime {
                 .map(Some),
         };
 
-        self.active_well_defined_objects.remove(&active_key);
+        self.end_well_defined_object(&active_key);
         let steps = steps?.expect("every Obj variant returns compositional WD steps");
         let intrinsic_result_set = intrinsic_well_definedness_result_set(obj, &steps);
         let result = Rc::new(SuccessVerifyObjWellDefinedResult::Direct(Box::new(
@@ -439,9 +439,7 @@ mod tests {
         let mut runtime = Runtime::new();
         runtime.new_file_path_new_env_new_name_scope("ordinary-active-wd-reentry.lit");
         let object: Obj = Number::new("1".to_string()).into();
-        runtime
-            .active_well_defined_objects
-            .insert(obj_equality_key(&object));
+        runtime.begin_well_defined_object(&obj_equality_key(&object));
 
         runtime
             .verify_obj_well_defined_and_store_cache(&object, &UseContextVerifyState::new(0, false))

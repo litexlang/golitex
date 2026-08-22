@@ -875,15 +875,14 @@ impl Runtime {
         given_fact: &AtomicFact,
         known_forall_params: &ParamDefWithType,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
-        let previous_bindings = std::mem::replace(
-            &mut self.active_arg_match_bindings,
+        let mut matcher = ArgMatcher::new(
+            self,
             arg_match_bindings_for_params(known_forall_params, None),
         );
-        let result = self.match_atomic_fact_args_in_active_binding_scope(
+        let result = matcher.match_atomic_fact_args_in_active_binding_scope(
             atomic_fact_in_known_forall,
             given_fact,
         );
-        self.active_arg_match_bindings = previous_bindings;
         let Some(raw_arg_map) = result? else {
             return Ok(None);
         };
@@ -894,6 +893,79 @@ impl Runtime {
         )))
     }
 
+    pub(crate) fn match_args_in_fact_with_known_forall_bindings(
+        &mut self,
+        fact_args_in_known_forall: &[&Obj],
+        given_fact_args: &[&Obj],
+        known_forall_params: &ParamDefWithType,
+        known_exist_params: Option<&ParamDefWithType>,
+    ) -> Result<Option<(HashMap<String, Obj>, HashMap<String, Obj>)>, RuntimeError> {
+        let mut matcher = ArgMatcher::new(
+            self,
+            arg_match_bindings_for_params(known_forall_params, known_exist_params),
+        );
+        let result =
+            matcher.match_args_in_active_binding_scope(fact_args_in_known_forall, given_fact_args);
+        let Some(raw_arg_map) = result? else {
+            return Ok(None);
+        };
+        let forall_arg_map =
+            arg_match_map_for_params(&raw_arg_map, known_forall_params, ParamObjType::Forall);
+        let exist_arg_map = known_exist_params
+            .map(|params| arg_match_map_for_params(&raw_arg_map, params, ParamObjType::Exist))
+            .unwrap_or_default();
+        Ok(Some((forall_arg_map, exist_arg_map)))
+    }
+
+    /// Merge `from` into `into`. Returns `false` when a key is already bound to a different object.
+    fn merge_arg_match_map_into(
+        &mut self,
+        into: &mut HashMap<String, Obj>,
+        from: HashMap<String, Obj>,
+    ) -> bool {
+        for (k, v) in from {
+            if let Some(existing) = into.get(&k) {
+                if obj_equality_key(existing) != obj_equality_key(&v)
+                    && !existing.two_objs_can_be_calculated_and_equal_by_calculation(&v)
+                {
+                    return false;
+                }
+            }
+            into.insert(k, v);
+        }
+        true
+    }
+}
+
+struct ArgMatcher<'runtime> {
+    runtime: &'runtime mut Runtime,
+    active_bindings: Vec<(ParamObjType, String)>,
+}
+
+impl<'runtime> ArgMatcher<'runtime> {
+    fn new(runtime: &'runtime mut Runtime, active_bindings: Vec<(ParamObjType, String)>) -> Self {
+        Self {
+            runtime,
+            active_bindings,
+        }
+    }
+}
+
+impl std::ops::Deref for ArgMatcher<'_> {
+    type Target = Runtime;
+
+    fn deref(&self) -> &Self::Target {
+        self.runtime
+    }
+}
+
+impl std::ops::DerefMut for ArgMatcher<'_> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        self.runtime
+    }
+}
+
+impl ArgMatcher<'_> {
     fn match_atomic_fact_args_in_active_binding_scope(
         &mut self,
         atomic_fact_in_known_forall: &AtomicFact,
@@ -951,31 +1023,6 @@ impl Runtime {
         }
 
         Ok(Some(None))
-    }
-
-    pub(crate) fn match_args_in_fact_with_known_forall_bindings(
-        &mut self,
-        fact_args_in_known_forall: &[&Obj],
-        given_fact_args: &[&Obj],
-        known_forall_params: &ParamDefWithType,
-        known_exist_params: Option<&ParamDefWithType>,
-    ) -> Result<Option<(HashMap<String, Obj>, HashMap<String, Obj>)>, RuntimeError> {
-        let previous_bindings = std::mem::replace(
-            &mut self.active_arg_match_bindings,
-            arg_match_bindings_for_params(known_forall_params, known_exist_params),
-        );
-        let result =
-            self.match_args_in_active_binding_scope(fact_args_in_known_forall, given_fact_args);
-        self.active_arg_match_bindings = previous_bindings;
-        let Some(raw_arg_map) = result? else {
-            return Ok(None);
-        };
-        let forall_arg_map =
-            arg_match_map_for_params(&raw_arg_map, known_forall_params, ParamObjType::Forall);
-        let exist_arg_map = known_exist_params
-            .map(|params| arg_match_map_for_params(&raw_arg_map, params, ParamObjType::Exist))
-            .unwrap_or_default();
-        Ok(Some((forall_arg_map, exist_arg_map)))
     }
 
     fn match_args_in_active_binding_scope(
@@ -1479,7 +1526,7 @@ impl Runtime {
     }
 
     fn arg_match_binding_is_active(&self, kind: ParamObjType, name: &str) -> bool {
-        self.active_arg_match_bindings
+        self.active_bindings
             .iter()
             .any(|(active_kind, active_name)| *active_kind == kind && active_name == name)
     }
@@ -2025,25 +2072,6 @@ impl Runtime {
         Ok(Some(merged))
     }
 
-    /// Merge `from` into `into`. Returns `false` when a key is already bound to a different object.
-    fn merge_arg_match_map_into(
-        &mut self,
-        into: &mut HashMap<String, Obj>,
-        from: HashMap<String, Obj>,
-    ) -> bool {
-        for (k, v) in from {
-            if let Some(existing) = into.get(&k) {
-                if obj_equality_key(existing) != obj_equality_key(&v)
-                    && !existing.two_objs_can_be_calculated_and_equal_by_calculation(&v)
-                {
-                    return false;
-                }
-            }
-            into.insert(k, v);
-        }
-        true
-    }
-
     fn merge_arg_match_maps(
         &mut self,
         mut map1: HashMap<String, Obj>,
@@ -2140,7 +2168,7 @@ impl Runtime {
         left: &QuantifierFreeFact,
         given: &QuantifierFreeFact,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
-        if !Self::_verify_quantifier_free_facts_the_same_type_ref(left, given)? {
+        if !Runtime::_verify_quantifier_free_facts_the_same_type_ref(left, given)? {
             return Ok(None);
         }
 
@@ -2250,7 +2278,7 @@ impl Runtime {
         if left_param_count != given_param_count {
             return Ok(None);
         }
-        let alpha_names = Self::anonymous_fn_alpha_param_names(left_param_count);
+        let alpha_names = Runtime::anonymous_fn_alpha_param_names(left_param_count);
         let Obj::FnSet(left) =
             self.fn_set_alpha_renamed_for_display_compare(&left.body, &alpha_names)?
         else {
@@ -2343,7 +2371,7 @@ impl Runtime {
         // function value.  Rename both sides to the same internal names before
         // matching their domains and bodies.  For example, `fn(k R) R {k}` and
         // `fn(i R) R {i}` must match here.
-        let alpha_names = Self::anonymous_fn_alpha_param_names(left_param_count);
+        let alpha_names = Runtime::anonymous_fn_alpha_param_names(left_param_count);
         let left = self.anonymous_fn_with_alpha_renamed_params(left, &alpha_names)?;
         let given = self.anonymous_fn_with_alpha_renamed_params(given, &alpha_names)?;
         self.match_alpha_renamed_anonymous_fn_with_params(&left, &given)
@@ -2437,7 +2465,9 @@ impl Runtime {
         }
         Ok(Some(merged))
     }
+}
 
+impl Runtime {
     pub(crate) fn objs_match_for_fact_lookup(
         &self,
         known_arg: &Obj,
@@ -2509,7 +2539,9 @@ impl Runtime {
         }
         self.alpha_rename_anonymous_fn(anonymous_fn, &param_to_alpha_name)
     }
+}
 
+impl ArgMatcher<'_> {
     fn match_arg_in_anonymous_fn_body_with_given_arg(
         &mut self,
         known_arg: &Obj,

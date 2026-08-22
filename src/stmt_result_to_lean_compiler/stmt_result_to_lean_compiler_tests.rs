@@ -37,8 +37,8 @@ fn capture_stmt_results_json_v2_on_verifier_stack(
         .stack_size(32 * 1024 * 1024)
         .spawn(move || {
             let mut runtime = Runtime::new();
-            runtime.isolated = true;
             runtime.new_file_path_new_env_new_name_scope(label);
+            runtime.set_current_source_allows_inline_imports(true);
             let tokenizer = Tokenizer::new();
             let blocks = tokenizer
                 .parse_blocks(source, runtime.current_file_path_rc())

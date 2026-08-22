@@ -110,26 +110,34 @@ impl Runtime {
         struct_obj: &StructObj,
     ) {
         for binding in bindings {
-            self.default_struct_views
+            self.current_parse_context_mut()
+                .default_struct_views
                 .entry(binding.id())
                 .or_insert_with(|| struct_obj.clone());
         }
     }
 
     pub(crate) fn default_struct_view_for_symbol(&self, symbol: &SymbolRef) -> Option<StructObj> {
-        self.default_struct_views.get(&symbol.id()).cloned()
+        self.current_parse_context()
+            .default_struct_views
+            .get(&symbol.id())
+            .cloned()
     }
 
     pub(crate) fn register_default_tuple_view(&mut self, bindings: &[SymbolBinding], cart: &Cart) {
         for binding in bindings {
-            self.default_tuple_views
+            self.current_parse_context_mut()
+                .default_tuple_views
                 .entry(binding.id())
                 .or_insert_with(|| cart.clone());
         }
     }
 
     pub(crate) fn default_tuple_view_for_symbol(&self, symbol: &SymbolRef) -> Option<Cart> {
-        self.default_tuple_views.get(&symbol.id()).cloned()
+        self.current_parse_context()
+            .default_tuple_views
+            .get(&symbol.id())
+            .cloned()
     }
 
     pub(crate) fn register_parsed_struct_definition(&mut self, def: &DefStructStmt) {
@@ -137,24 +145,24 @@ impl Runtime {
             .current_parse_namespace()
             .map(|owner| format!("{}{}{}", owner, MOD_SIGN, def.name))
             .unwrap_or_else(|| def.name.clone());
-        self.parsed_struct_definitions
+        self.module_manager
+            .parsed_struct_definitions
             .entry(name)
             .or_insert_with(|| def.clone());
     }
 
     pub(crate) fn parsed_struct_definition_by_name(&self, name: &str) -> Option<DefStructStmt> {
-        self.parsed_struct_definitions.get(name).cloned()
+        self.module_manager
+            .parsed_struct_definitions
+            .get(name)
+            .cloned()
     }
 
     pub(crate) fn template_instance_symbol_binding(
         &mut self,
         surface_name: &str,
     ) -> Result<SymbolBinding, RuntimeError> {
-        let binding = self.intern_template_instance_symbol_binding(surface_name)?;
-        self.current_parse_context_mut()
-            .template_instance_bindings
-            .insert(surface_name.to_string(), binding.clone());
-        Ok(binding)
+        self.intern_template_instance_symbol_binding(surface_name)
     }
 
     pub(crate) fn intern_template_instance_symbol_binding(

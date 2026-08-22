@@ -2144,6 +2144,7 @@ main = "./main.lit"
         run_repository_test_with_large_stack("isolated-source-import", || {
             let fixture = Fixture::new("isolated-source-import");
             let module_root = fixture.path("external-module");
+            let broken_module_root = fixture.path("broken-module");
             let std_root = fixture.path("std");
             let file_path = fixture.path("scratch/session.lit");
             write_file(
@@ -2156,6 +2157,16 @@ api = "./api.lit"
 "#,
             );
             write_file(&module_root.join("api.lit"), "have value R = 7\n");
+            write_file(
+                &broken_module_root.join("litex.config"),
+                r#"[hierarchy]
+module
+
+[export]
+main = "./main.lit"
+"#,
+            );
+            write_file(&broken_module_root.join("main.lit"), "have broken R =\n");
             write_file(
                 &std_root.join("basics/litex.config"),
                 r#"[hierarchy]
@@ -2177,14 +2188,21 @@ main = "./main.lit"
                 let (_, file_error) =
                     run_file_with_project_context(file.as_str(), &mut runtime, true);
                 assert!(file_error.is_none(), "{file_error:?}");
-                assert!(runtime.isolated);
+                assert!(runtime.current_source_allows_inline_imports());
 
-                let (_, failed_import) =
-                    run_source_code("import \"./missing\" as broken", &mut runtime);
-                assert!(failed_import.is_some(), "missing module import must fail");
+                let broken_module_path = path_string_for_test(&broken_module_root);
+                let (_, failed_import) = run_source_code(
+                    format!("import \"{}\" as broken", broken_module_path).as_str(),
+                    &mut runtime,
+                );
+                assert!(failed_import.is_some(), "invalid module import must fail");
                 assert!(
                     runtime.module_manager.module_id_by_name("broken").is_none(),
                     "a failed isolated import must not leave its alias registered"
+                );
+                assert!(
+                    runtime.unverified_imports().is_empty(),
+                    "a failed isolated import must roll back its unverified-import diagnostic"
                 );
 
                 let module_path = path_string_for_test(&module_root);

@@ -328,7 +328,7 @@ fn initialize_session_runtime(
         if let Some(error) = runtime_error {
             return Err((stmt_results, error));
         }
-        if runtime.isolated {
+        if runtime.current_source_allows_inline_imports() {
             return Ok(("isolated", stmt_results));
         }
         if let Err(error) = runtime
@@ -378,13 +378,12 @@ fn initialize_session_runtime(
     }
 
     if force_isolated || !directory.join("litex.config").is_file() {
-        runtime.isolated = true;
         runtime.new_file_path_new_env_new_name_scope("session");
+        runtime.set_current_source_allows_inline_imports(true);
         return Ok(("isolated", vec![]));
     }
 
     let root = directory.to_string_lossy().into_owned();
-    runtime.isolated = false;
     if let Err(error) = discover_repository(runtime, root.as_str()) {
         return Err((vec![], error));
     }

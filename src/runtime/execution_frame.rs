@@ -20,6 +20,7 @@ pub struct ExecutionFrame {
     pub layer: ExecutionLayer,
     pub source_path: Rc<str>,
     pub execution_mode: ExecutionMode,
+    pub allows_inline_imports: bool,
     pub local_environment_stack: Vec<Box<Environment>>,
     pub parse_context: ParseContext,
     /// A per-source, validated unique index. Qualified names and field names
@@ -43,6 +44,7 @@ impl ExecutionFrame {
             layer,
             source_path: Rc::from(source_path),
             execution_mode,
+            allows_inline_imports: false,
             local_environment_stack: vec![],
             parse_context: ParseContext::new(),
             bare_symbols: HashMap::new(),

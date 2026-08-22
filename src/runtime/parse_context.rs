@@ -28,7 +28,8 @@ pub struct ParseContext {
     pub free_params: FreeParamCollection,
     pub local_binding_scope_depth: usize,
     pub scope_frames: Vec<ScopeFrame>,
-    pub template_instance_bindings: HashMap<String, SymbolBinding>,
+    pub default_struct_views: HashMap<SymbolId, StructObj>,
+    pub default_tuple_views: HashMap<SymbolId, Cart>,
 }
 
 impl ParseContext {
@@ -37,7 +38,8 @@ impl ParseContext {
             free_params: FreeParamCollection::new(),
             local_binding_scope_depth: 0,
             scope_frames: vec![],
-            template_instance_bindings: HashMap::new(),
+            default_struct_views: HashMap::new(),
+            default_tuple_views: HashMap::new(),
         }
     }
 
@@ -45,7 +47,14 @@ impl ParseContext {
         self.free_params.clear();
         self.local_binding_scope_depth = 0;
         self.scope_frames.clear();
-        self.template_instance_bindings.clear();
+        self.default_struct_views.clear();
+        self.default_tuple_views.clear();
+    }
+
+    pub fn restore_scoped_state(&mut self, saved: ParseContext) {
+        self.free_params = saved.free_params;
+        self.local_binding_scope_depth = saved.local_binding_scope_depth;
+        self.scope_frames = saved.scope_frames;
     }
 
     pub fn active_binding(&self, name: &str) -> Option<&SymbolBinding> {
