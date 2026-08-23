@@ -191,7 +191,9 @@ Useful next steps:
 - [Blueprint](docs/Litex_Blueprint.md) / [中文蓝图](docs/Litex中文蓝图.md) — the
   full design argument and comparisons;
 - [System map](docs/Litex_System_Map.md) — how parsing, verification, evidence,
-  and output fit together; and
+  and output fit together;
+- [Repository layout](docs/Repository_Layout.md) — source, test, Lean,
+  translation-workspace, and Git ownership boundaries; and
 - [Contributing](docs/How_To_Contribute.md) — how to report gaps and contribute.
 
 ## What a successful result means

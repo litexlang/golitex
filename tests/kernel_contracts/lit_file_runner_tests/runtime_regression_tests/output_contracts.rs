@@ -1502,7 +1502,11 @@ $sym_p(B, A)
         "verification output should not include redundant method field:\n{}",
         run_output
     );
-    for route_type in ["BuiltinRule", "StoredFactCitation", "KnownForallInstantiation"] {
+    for route_type in [
+        "BuiltinRule",
+        "StoredFactCitation",
+        "KnownForallInstantiation",
+    ] {
         assert!(
             run_output.contains(&format!("\"kind\": \"{}\"", route_type)),
             "missing atomic verification route type `{}`:\n{}",

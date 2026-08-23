@@ -1,9 +1,9 @@
 use crate::common::json_value::{render_json_value, JsonValue};
-use crate::pipeline::display::{display_runtime_error_json, display_stmt_exec_result_json};
 use crate::pipeline::pipeline_run_stmt_globally::{
     run_repository_file_target_with_trusted_prefix, run_stmt_at_global_env_in_trusted_prefix_run,
 };
 use crate::pipeline::summary::display_run_summary_json_with_runtime;
+use crate::pipeline::{display_runtime_error_json, display_stmt_exec_result_json};
 use crate::pipeline::{run_repository_file_target, run_stmt_at_global_env};
 use crate::prelude::*;
 use crate::runtime::TrustedPrefixPolicy;

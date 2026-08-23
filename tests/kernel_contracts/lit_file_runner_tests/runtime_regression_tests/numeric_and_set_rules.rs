@@ -168,7 +168,7 @@ forall a Z:
 #[test]
 fn standard_set_membership_lifting_does_not_enumerate_stored_owner_sets() {
     let source = include_str!(
-        "../../../verify/verify_builtin_rules/in_fact_builtin/structured_membership.rs"
+        "../../../../src/verify/verify_builtin_rules/in_fact_builtin/structured_membership.rs"
     );
     let implementation = source
         .split("fn verify_in_fact_by_standard_subset_membership(")
