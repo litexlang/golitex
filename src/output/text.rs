@@ -1,4 +1,4 @@
-use crate::prelude::{SuccessInferResult, StmtResult, SuccessFactProofResult, SuccessCombinedFactProofItemResult, SUCCESS_COLON};
+use crate::prelude::{SuccessFactProofResult, SuccessInferResult, StmtResult, SUCCESS_COLON};
 
 const VERIFIED_BY: &str = "verified by";
 const STORE_FACTS_COLON: &str = "store facts:";
@@ -44,44 +44,50 @@ fn infer_block_string(infer_result: &SuccessInferResult) -> String {
     )
 }
 
-fn verified_bys_display_line(item: &SuccessCombinedFactProofItemResult) -> String {
-    match item {
-        SuccessCombinedFactProofItemResult::ByBuiltinRule(r) | SuccessCombinedFactProofItemResult::ByBuiltinStrategy(r) => {
-            r.msg.clone()
-        }
-        SuccessCombinedFactProofItemResult::ByFact(r) => {
-            if let Some(d) = &r.detail {
-                if !d.is_empty() {
-                    return d.clone();
-                }
-            }
-            r.cite_what.to_string()
-        }
-    }
-}
-
 fn verified_by_display_line(verified_by: &SuccessFactProofResult) -> String {
     match verified_by {
         SuccessFactProofResult::BuiltinRule(r) => r.msg.clone(),
         SuccessFactProofResult::BuiltinStrategy(r) => r.msg.clone(),
-        SuccessFactProofResult::Fact(r) => {
+        SuccessFactProofResult::StoredFactCitation(r) => {
             if let Some(d) = &r.detail {
                 if !d.is_empty() {
                     return d.clone();
                 }
             }
-            r.cite_what.to_string()
+            r.source_fact.to_string()
         }
+        SuccessFactProofResult::Strategy(r) => r
+            .detail
+            .clone()
+            .unwrap_or_else(|| r.strategy.to_string()),
+        SuccessFactProofResult::KnownForallInstantiation(r) => r.source_fact.to_string(),
+        SuccessFactProofResult::DefinitionReduction(r) => r
+            .detail
+            .clone()
+            .unwrap_or_else(|| r.definition.to_string()),
+        SuccessFactProofResult::CheckedFunctionDefinitionReduction(r) => r
+            .detail
+            .clone()
+            .unwrap_or_else(|| "checked function definition reduction".to_string()),
+        SuccessFactProofResult::DiagnosticOnly(r) => r.detail.clone(),
         SuccessFactProofResult::CombinedProofs(w) => {
-            if w.cite_what.is_empty() {
-                return String::new();
+            let mut parts = Vec::new();
+            if let Some(primary) = w.primary.as_ref() {
+                parts.push(verified_by_display_line(primary.proof()));
             }
-            w.cite_what
-                .iter()
-                .map(verified_bys_display_line)
-                .collect::<Vec<_>>()
-                .join("; ")
+            for step in w.steps.iter() {
+                if let Some(factual) = step.factual_success() {
+                    parts.push(verified_by_display_line(factual.proof()));
+                } else {
+                    parts.push("statement result".to_string());
+                }
+            }
+            parts.join("; ")
         }
         SuccessFactProofResult::ForallProof(_) => "forall proof".to_string(),
+        SuccessFactProofResult::Transform(result) => {
+            format!("fact transform after {}", verified_by_display_line(result.source.proof()))
+        }
+        SuccessFactProofResult::Reuse(result) => verified_by_display_line(result.source.proof()),
     }
 }

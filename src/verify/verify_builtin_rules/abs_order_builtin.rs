@@ -697,12 +697,15 @@ impl Runtime {
                 let args = fact.args_ref();
                 let key = (args[0].to_string(), args[1].to_string());
                 if let Some(known_fact) = known_facts_map.get(&key) {
+                    let source_fact: Fact = known_fact.clone().into();
+                    let source_fact_id =
+                        self.require_known_fact_id_for_success_result(&source_fact)?;
                     return Ok(Some(StmtResult::from(
                         SuccessFactStmtResult::new_with_verified_by_known_fact(
                             fact.clone().into(),
-                            SuccessFactProofResult::cited_fact(
-                                fact.clone().into(),
-                                known_fact.clone().into(),
+                            SuccessFactProofResult::stored_fact_citation(
+                                source_fact,
+                                source_fact_id,
                                 None,
                             ),
                             Vec::new(),

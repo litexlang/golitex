@@ -4,6 +4,18 @@ namespace Litex.Rules
 
 universe u
 
+/-- Ordinary upward induction over the exact integer observation selected by
+the statement-result compiler. The compiler remains responsible for proving
+that the Litex `Z` binder and lower-bound Result render to these native integer
+premises; this theorem only packages Mathlib's reviewed induction principle. -/
+theorem integerInductionFrom
+    {motive : ℤ → Prop}
+    {start : ℤ}
+    (base : motive start)
+    (step : ∀ value : ℤ, start ≤ value → motive value → motive (value + 1)) :
+    ∀ value : ℤ, start ≤ value → motive value :=
+  Int.leInduction base step
+
 theorem complexInC (z : ℂ) : Litex.In z Litex.C :=
   Litex.In.own Litex.C z
 

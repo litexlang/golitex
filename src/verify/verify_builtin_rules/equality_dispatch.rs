@@ -3167,7 +3167,7 @@ mod registered_antisymmetric_predicate_result_tests {
             panic!("registered antisymmetry should be an explicit builtin combine")
         };
         let Some(BuiltinRuleEvidence::RegisteredAntisymmetricPredicate(evidence)) =
-            &builtin.evidence
+            builtin.evidence.typed()
         else {
             panic!("registered antisymmetry should retain typed evidence")
         };

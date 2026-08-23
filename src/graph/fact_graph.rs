@@ -443,18 +443,36 @@ impl FactGraphBuilder {
                     self.collect_result_nodes(subgoal);
                 }
             }
-            SuccessFactProofResult::Fact(result) => {
-                self.add_cited_stmt_node(result.cite_what.as_ref());
+            SuccessFactProofResult::StoredFactCitation(result) => {
+                self.add_cited_stmt_node(&result.source_fact.clone().into_stmt());
+            }
+            SuccessFactProofResult::Strategy(result) => {
+                self.add_cited_stmt_node(&result.strategy.clone().into());
             }
             SuccessFactProofResult::KnownForallInstantiation(result) => {
-                self.add_cited_stmt_node(result.cite_what.as_ref());
+                self.add_cited_stmt_node(&result.source_fact.clone().into_stmt());
                 for requirement in &result.requirements {
                     self.add_requirement_source_nodes(requirement.result.as_ref());
                 }
             }
+            SuccessFactProofResult::DefinitionReduction(result) => {
+                self.add_cited_stmt_node(&result.definition.clone().into());
+                for check in result.verification.clause_checks.iter() {
+                    self.collect_result_nodes(check);
+                }
+            }
+            SuccessFactProofResult::CheckedFunctionDefinitionReduction(result) => {
+                self.add_cited_stmt_node(
+                    &result.verification.defining_equality.clone().into_stmt(),
+                );
+            }
+            SuccessFactProofResult::DiagnosticOnly(_) => {}
             SuccessFactProofResult::CombinedProofs(result) => {
-                for item in &result.cite_what {
-                    self.collect_verified_bys_item_nodes(item);
+                if let Some(primary) = result.primary.as_ref() {
+                    self.collect_verified_by_nodes(primary.proof());
+                }
+                for step in result.steps.iter() {
+                    self.collect_result_nodes(step);
                 }
             }
             SuccessFactProofResult::ForallProof(result) => {
@@ -467,29 +485,6 @@ impl FactGraphBuilder {
                 self.collect_verified_by_nodes(result.source.proof());
             }
             SuccessFactProofResult::Reuse(result) => {
-                self.collect_verified_by_nodes(result.source.proof());
-            }
-        }
-    }
-
-    fn collect_verified_bys_item_nodes(&mut self, item: &SuccessCombinedFactProofItemResult) {
-        match item {
-            SuccessCombinedFactProofItemResult::ByBuiltinRule(result)
-            | SuccessCombinedFactProofItemResult::ByBuiltinStrategy(result) => {
-                for subgoal in &result.subgoals {
-                    self.collect_result_nodes(subgoal);
-                }
-            }
-            SuccessCombinedFactProofItemResult::ByFact(result) => {
-                self.add_cited_stmt_node(result.cite_what.as_ref());
-            }
-            SuccessCombinedFactProofItemResult::ByKnownForall(result) => {
-                self.add_cited_stmt_node(result.result.cite_what.as_ref());
-                for requirement in &result.result.requirements {
-                    self.add_requirement_source_nodes(requirement.result.as_ref());
-                }
-            }
-            SuccessCombinedFactProofItemResult::Reuse(result) => {
                 self.collect_verified_by_nodes(result.source.proof());
             }
         }
@@ -722,15 +717,36 @@ impl FactGraphBuilder {
             | SuccessFactProofResult::BuiltinStrategy(result) => {
                 self.add_subgoal_edges(target_id, &result.subgoals);
             }
-            SuccessFactProofResult::Fact(result) => {
-                self.add_cited_stmt_edges(target_id, result.cite_what.as_ref());
+            SuccessFactProofResult::StoredFactCitation(result) => {
+                self.add_cited_stmt_edges(target_id, &result.source_fact.clone().into_stmt())
+            }
+            SuccessFactProofResult::Strategy(result) => {
+                self.add_cited_stmt_edges(target_id, &result.strategy.clone().into())
             }
             SuccessFactProofResult::KnownForallInstantiation(result) => {
                 self.add_known_forall_edges(target_id, result);
             }
+            SuccessFactProofResult::DefinitionReduction(result) => {
+                self.add_cited_stmt_edges(target_id, &result.definition.clone().into());
+                for check in result.verification.clause_checks.iter() {
+                    self.collect_result_edges(check);
+                }
+            }
+            SuccessFactProofResult::CheckedFunctionDefinitionReduction(result) => self
+                .add_cited_stmt_edges(
+                    target_id,
+                    &result.verification.defining_equality.clone().into_stmt(),
+                ),
+            SuccessFactProofResult::DiagnosticOnly(_) => {}
             SuccessFactProofResult::CombinedProofs(result) => {
-                for item in &result.cite_what {
-                    self.add_verified_bys_item_edges(target_id, item);
+                if let Some(primary) = result.primary.as_ref() {
+                    self.collect_verified_by_edges(target_id, primary.proof());
+                }
+                for step in result.steps.iter() {
+                    self.collect_result_edges(step);
+                    if let Some(source_id) = self.primary_result_node_id(step) {
+                        self.add_edge(&source_id, target_id, "proves");
+                    }
                 }
             }
             SuccessFactProofResult::ForallProof(result) => {
@@ -745,28 +761,6 @@ impl FactGraphBuilder {
                 self.collect_verified_by_edges(target_id, result.source.proof());
             }
             SuccessFactProofResult::Reuse(result) => {
-                self.collect_verified_by_edges(target_id, result.source.proof());
-            }
-        }
-    }
-
-    fn add_verified_bys_item_edges(
-        &mut self,
-        target_id: &str,
-        item: &SuccessCombinedFactProofItemResult,
-    ) {
-        match item {
-            SuccessCombinedFactProofItemResult::ByBuiltinRule(result)
-            | SuccessCombinedFactProofItemResult::ByBuiltinStrategy(result) => {
-                self.add_subgoal_edges(target_id, &result.subgoals);
-            }
-            SuccessCombinedFactProofItemResult::ByFact(result) => {
-                self.add_cited_stmt_edges(target_id, result.cite_what.as_ref());
-            }
-            SuccessCombinedFactProofItemResult::ByKnownForall(result) => {
-                self.add_known_forall_edges(target_id, &result.result);
-            }
-            SuccessCombinedFactProofItemResult::Reuse(result) => {
                 self.collect_verified_by_edges(target_id, result.source.proof());
             }
         }
@@ -817,7 +811,7 @@ impl FactGraphBuilder {
         target_id: &str,
         result: &SuccessInstantiateKnownForallResult,
     ) {
-        if let Some(source_id) = self.add_cited_stmt_node(result.cite_what.as_ref()) {
+        if let Some(source_id) = self.add_cited_stmt_node(&result.source_fact.clone().into_stmt()) {
             self.add_edge(&source_id, target_id, "instantiates");
         }
         for requirement in &result.requirements {
@@ -874,35 +868,40 @@ impl FactGraphBuilder {
             | SuccessFactProofResult::BuiltinStrategy(result) => {
                 self.dependency_source_ids_from_results(&result.subgoals)
             }
-            SuccessFactProofResult::Fact(result) => self
-                .add_cited_stmt_node(result.cite_what.as_ref())
+            SuccessFactProofResult::StoredFactCitation(result) => self
+                .add_cited_stmt_node(&result.source_fact.clone().into_stmt())
+                .into_iter()
+                .collect(),
+            SuccessFactProofResult::Strategy(result) => self
+                .add_cited_stmt_node(&result.strategy.clone().into())
                 .into_iter()
                 .collect(),
             SuccessFactProofResult::KnownForallInstantiation(result) => self
-                .add_cited_stmt_node(result.cite_what.as_ref())
+                .add_cited_stmt_node(&result.source_fact.clone().into_stmt())
                 .into_iter()
                 .collect(),
+            SuccessFactProofResult::DefinitionReduction(result) => {
+                let mut ids = self
+                    .add_cited_stmt_node(&result.definition.clone().into())
+                    .into_iter()
+                    .collect::<Vec<_>>();
+                for check in result.verification.clause_checks.iter() {
+                    ids.extend(self.dependency_source_ids_from_result(check));
+                }
+                ids
+            }
+            SuccessFactProofResult::CheckedFunctionDefinitionReduction(result) => self
+                .add_cited_stmt_node(&result.verification.defining_equality.clone().into_stmt())
+                .into_iter()
+                .collect(),
+            SuccessFactProofResult::DiagnosticOnly(_) => Vec::new(),
             SuccessFactProofResult::CombinedProofs(result) => {
                 let mut ids = vec![];
-                for item in &result.cite_what {
-                    let mut item_ids = match item {
-                        SuccessCombinedFactProofItemResult::ByBuiltinRule(item)
-                        | SuccessCombinedFactProofItemResult::ByBuiltinStrategy(item) => {
-                            self.dependency_source_ids_from_results(&item.subgoals)
-                        }
-                        SuccessCombinedFactProofItemResult::ByFact(item) => self
-                            .add_cited_stmt_node(item.cite_what.as_ref())
-                            .into_iter()
-                            .collect(),
-                        SuccessCombinedFactProofItemResult::ByKnownForall(item) => self
-                            .add_cited_stmt_node(item.result.cite_what.as_ref())
-                            .into_iter()
-                            .collect(),
-                        SuccessCombinedFactProofItemResult::Reuse(result) => {
-                            self.dependency_source_ids_from_verified_by(result.source.proof())
-                        }
-                    };
-                    ids.append(&mut item_ids);
+                if let Some(primary) = result.primary.as_ref() {
+                    ids.extend(self.dependency_source_ids_from_verified_by(primary.proof()));
+                }
+                for step in result.steps.iter() {
+                    ids.extend(self.dependency_source_ids_from_result(step));
                 }
                 ids.sort();
                 ids.dedup();

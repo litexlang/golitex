@@ -294,11 +294,10 @@ pub use crate::result::StatementExecutionPhase;
 pub use crate::result::StatementExecutionTrace;
 pub use crate::result::StatementPhaseStatus;
 pub use crate::result::StmtResult;
-pub use crate::result::SuccessBuiltinFactProofResult;
-pub use crate::result::SuccessCombinedFactProofItemResult;
+pub use crate::result::SuccessCheckedFunctionDefinitionReductionFactProofResult;
 pub use crate::result::SuccessCombinedFactProofResult;
-pub use crate::result::SuccessCombinedReuseFactProofResult;
-pub use crate::result::SuccessFactCitationProofResult;
+pub use crate::result::SuccessDefinitionReductionFactProofResult;
+pub use crate::result::SuccessDiagnosticFactProofResult;
 pub use crate::result::SuccessFactProofResult;
 pub use crate::result::SuccessFactStmtResult;
 pub use crate::result::SuccessForallAssumptionFactResult;
@@ -307,6 +306,8 @@ pub use crate::result::SuccessForallProvedFactResult;
 pub use crate::result::SuccessInstantiateKnownForallResult;
 pub use crate::result::SuccessReuseFactProofResult;
 pub use crate::result::SuccessStmtResult;
+pub use crate::result::SuccessStoredFactCitationProofResult;
+pub use crate::result::SuccessStrategyFactProofResult;
 pub use crate::result::SuccessTransformFactResult;
 pub use crate::result::SuccessVerifyArgsSatisfyParamDefResult;
 pub use crate::result::SuccessVerifyByAssignmentAssumptionResult;
@@ -331,11 +332,15 @@ pub use crate::result::SuccessVerifyByForCartesianProductOfListSetsResult;
 pub use crate::result::SuccessVerifyByForRangeParameterResult;
 pub use crate::result::SuccessVerifyByForRangesResult;
 pub use crate::result::SuccessVerifyByForResult;
+pub use crate::result::SuccessVerifyByInducAssumptionResult;
+pub use crate::result::SuccessVerifyByInducAssumptionRole;
 pub use crate::result::SuccessVerifyByInducCaseResult;
+pub use crate::result::SuccessVerifyByInducConclusionResult;
 pub use crate::result::SuccessVerifyByInducGoalResult;
 pub use crate::result::SuccessVerifyByInducProofResult;
 pub use crate::result::SuccessVerifyByInducResult;
 pub use crate::result::SuccessVerifyByPropRegistrationResult;
+pub use crate::result::SuccessVerifyByStructuredIntegerInducCaseResult;
 pub use crate::result::SuccessVerifyByStructuredIntegerInducResult;
 pub use crate::result::SuccessVerifyByTheoremResult;
 pub use crate::result::SuccessVerifyByUnstructuredIntegerInducResult;
@@ -478,6 +483,7 @@ pub use crate::result::{
     SuccessEvaluateObjResult, SuccessEvaluateObjStepResult, SuccessEvaluateUnaryObjResult,
 };
 pub use crate::result::{KnownForallInstantiationItem, KnownForallRequirementKind};
+pub use crate::result::{SuccessBuiltinFactProofEvidenceResult, SuccessBuiltinFactProofResult};
 pub use crate::runner::{
     resolve_litex_file_path, run_runner_for_code, run_runner_for_code_strict,
     run_runner_for_code_strict_with_language, run_runner_for_code_with_language,

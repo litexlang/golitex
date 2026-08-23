@@ -135,6 +135,11 @@ struct CompiledFiniteAssignmentBranch {
     exit_proof: String,
 }
 
+enum StructuredIntegerInductionConclusionPosition {
+    Base,
+    Step,
+}
+
 /// Target-language construction output for one reviewed native-real function
 /// Result. This is not another statement IR: it exists only while the parent
 /// `SuccessHaveFnEqualStmtResult` method wraps its child-scope compilation in
@@ -715,9 +720,19 @@ impl StmtResultToLeanCompiler {
                         self.unsupported_success_stmt_result(success)
                     }
                 }
-                SuccessByStmtResult::ByFiniteSetInducStmt(_)
-                | SuccessByStmtResult::ByInducStmt(_)
-                | SuccessByStmtResult::ByZornLemmaStmt(_)
+                SuccessByStmtResult::ByInducStmt(result) => {
+                    if self
+                        .compile_structured_integer_induction_stmt_result_to_lean_source(result)?
+                    {
+                        Ok(())
+                    } else {
+                        self.unsupported_success_stmt_result(success)
+                    }
+                }
+                SuccessByStmtResult::ByFiniteSetInducStmt(_) => {
+                    Err("finite-set induction Result compilation is not supported yet".into())
+                }
+                SuccessByStmtResult::ByZornLemmaStmt(_)
                 | SuccessByStmtResult::ByAxiomOfChoiceStmt(_)
                 | SuccessByStmtResult::ByRegularityAxiomStmt(_)
                 | SuccessByStmtResult::ByStructDefStmt(_) => {
@@ -4772,7 +4787,8 @@ impl StmtResultToLeanCompiler {
         let SuccessFactProofResult::BuiltinRule(source_builtin) = source_result.proof() else {
             return Ok(false);
         };
-        let Some(BuiltinRuleEvidence::DefinitionProjection(evidence)) = &source_builtin.evidence
+        let Some(BuiltinRuleEvidence::DefinitionProjection(evidence)) =
+            source_builtin.evidence.typed()
         else {
             return Ok(false);
         };
@@ -5230,14 +5246,12 @@ impl StmtResultToLeanCompiler {
         }
         validate_forall_fact_as_subset(&child.fact(), expected_subset)
             .map_err(|error| format!("by-extension {direction} requested forall: {error}"))?;
-        let SuccessFactProofResult::Fact(citation) = child.proof() else {
+        let SuccessFactProofResult::StoredFactCitation(citation) = child.proof() else {
             return Err(format!(
                 "by-extension {direction} generated forall is not an exact FactId citation"
             ));
         };
-        let source_fact_id = citation.source_fact_id.ok_or_else(|| {
-            format!("by-extension {direction} generated forall citation has no FactId")
-        })?;
+        let source_fact_id = citation.source_fact_id;
         let stored = self
             .environment_stack
             .fact_propositions
@@ -5258,6 +5272,562 @@ impl StmtResultToLeanCompiler {
                     "by-extension {direction} local FactId `{source_fact_id}` has no Lean binding"
                 )
             })
+    }
+
+    /// `Combine`: replay one ordinary structured integer-induction Result.
+    /// The base and step cases each own an inherited compiler environment;
+    /// only the generated outer forall and its exact FactId survive those
+    /// scopes. Strong and finite-set induction deliberately remain separate
+    /// fail-closed statement families.
+    fn compile_structured_integer_induction_stmt_result_to_lean_source(
+        &mut self,
+        result: &SuccessByInducStmtResult,
+    ) -> Result<bool, String> {
+        let Some(proof) =
+            self.construct_lean_proof_from_structured_integer_induction_stmt_result(result)?
+        else {
+            return Ok(false);
+        };
+        let fact_id = validate_generated_fact_publication_effects(
+            &result.common.infers,
+            &proof.fact,
+            "structured integer induction generated forall",
+        )?;
+        let theorem_name = format!("__fact{}", self.next_fact_name_index);
+        self.declarations.push(format!(
+            "theorem {theorem_name} :\n    {} := {}",
+            proof.proposition, proof.proof_expression
+        ));
+        self.environment_stack
+            .fact_names
+            .insert(fact_id, theorem_name);
+        self.environment_stack
+            .fact_propositions
+            .insert(fact_id, proof.fact);
+        self.next_fact_name_index += 1;
+        Ok(true)
+    }
+
+    fn construct_lean_proof_from_structured_integer_induction_stmt_result(
+        &mut self,
+        result: &SuccessByInducStmtResult,
+    ) -> Result<Option<CompiledFactProofBody>, String> {
+        let Some(verification) = &result.verification else {
+            return Ok(None);
+        };
+        let SuccessVerifyByInducProofResult::IntegerStructured(proof) = &verification.proof else {
+            return Ok(None);
+        };
+        if result.statement.strong || proof.strong {
+            return Err(
+                "structured integer-induction compiler does not yet support strong induction"
+                    .into(),
+            );
+        }
+        if is_literal_zero(&proof.start) {
+            return Err(
+                "structured integer induction from zero requires a sound Litex nonnegative-value to native-integer order bridge"
+                    .into(),
+            );
+        }
+        if result.statement.base_proof.is_none() || result.statement.step_proof.is_none() {
+            return Err("structured integer-induction Result lost its base or step body".into());
+        }
+        if verification.parameter_binding != result.statement.param_binding
+            || verification.parameter.to_string()
+                != obj_for_bound_param_in_scope(
+                    &result.statement.param_binding,
+                    ParamObjType::Induc,
+                )
+                .to_string()
+            || verification.prove_goals.len() != result.statement.to_prove.len()
+            || verification.prove_goals.is_empty()
+            || verification
+                .prove_goals
+                .iter()
+                .zip(result.statement.to_prove.iter())
+                .any(|(retained, source)| {
+                    retained.to_string() != source.clone().to_fact().to_string()
+                })
+            || proof.start.to_string() != result.statement.induc_from.to_string()
+            || proof.base.proof_steps.len()
+                != result
+                    .statement
+                    .base_proof
+                    .as_ref()
+                    .expect("checked above")
+                    .len()
+            || proof.step.proof_steps.len()
+                != result
+                    .statement
+                    .step_proof
+                    .as_ref()
+                    .expect("checked above")
+                    .len()
+        {
+            return Err(
+                "structured integer-induction Result changed its parameter, goals, start, or proof-step order"
+                    .into(),
+            );
+        }
+
+        self.validate_structured_integer_induction_generated_forall(verification)?;
+        let target: Fact = verification.generated_forall.clone().into();
+        let expected_start_membership: Fact = InFact::new(
+            proof.start.clone(),
+            StandardSet::Z.into(),
+            result.statement.line_file.clone(),
+        )
+        .into();
+        let start_membership_check = proof.start_in_z_check.factual_success().ok_or_else(|| {
+            "structured induction start membership child is not factual".to_string()
+        })?;
+        if start_membership_check.fact().to_string() != expected_start_membership.to_string()
+            || !start_membership_check.store.infers.is_empty()
+        {
+            return Err(
+                "structured induction start membership child changed its target or published effects"
+                    .into(),
+            );
+        }
+        let Some(_start_membership_proof) = self
+            .construct_lean_proof_from_direct_fact_result_using_its_well_definedness(
+                start_membership_check,
+            )?
+        else {
+            return Err(
+                "structured induction start membership has no direct recursive Result proof consumer"
+                    .into(),
+            );
+        };
+        let start_integer =
+            render_integer_obj(&proof.start, &self.environment_stack).map_err(|error| {
+                format!("structured induction start has no exact integer representation: {error}")
+            })?;
+
+        let motive =
+            self.render_structured_integer_induction_motive(verification, "__induction_value")?;
+        let Some(base) = self.compile_structured_integer_induction_base_case(
+            result,
+            verification,
+            proof,
+            &start_integer,
+        )?
+        else {
+            return Ok(None);
+        };
+        let Some(step) = self.compile_structured_integer_induction_step_case(
+            result,
+            verification,
+            proof,
+            &start_integer,
+        )?
+        else {
+            return Ok(None);
+        };
+
+        let proposition =
+            render_forall_fact_type(&verification.generated_forall, &self.environment_stack)?;
+        let proof_expression = format!(
+            "by\n  intro __p1 __type1 __domain1\n  let __target_value : ℤ := Litex.In.rep __p1 __type1\n  have __target_ge_start_real : (({start_integer}) : ℝ) ≤ (__target_value : ℝ) := by\n    simpa [Litex.Le, Litex.OrderValue, __target_value] using __domain1\n  have __target_ge_start : {start_integer} ≤ __target_value := by\n    exact_mod_cast __target_ge_start_real\n  exact Litex.Rules.integerInductionFrom (motive := fun __induction_value : ℤ => {motive}) ({base}) ({step}) __target_value __target_ge_start"
+        );
+        Ok(Some(CompiledFactProofBody {
+            fact: target,
+            proposition,
+            proof_expression,
+        }))
+    }
+
+    fn validate_structured_integer_induction_generated_forall(
+        &self,
+        verification: &SuccessVerifyByInducResult,
+    ) -> Result<(), String> {
+        let parameters = verification
+            .generated_forall
+            .params_def_with_type
+            .collect_param_bindings_with_types();
+        let [(generated_binding, generated_type)] = parameters.as_slice() else {
+            return Err("structured induction generated forall must own one parameter".into());
+        };
+        if generated_type.to_string() != ParamType::Obj(StandardSet::Z.into()).to_string()
+            || verification.generated_forall.dom_facts.len() != 1
+            || verification.generated_forall.then_facts.len() != verification.prove_goals.len()
+        {
+            return Err(
+                "structured induction generated forall changed its integer binder, domain, or conclusion arity"
+                    .into(),
+            );
+        }
+        let mut retained_context = self.environment_stack.clone();
+        install_structured_induction_shape_symbol(
+            generated_binding.id(),
+            "__induction_shape",
+            &mut retained_context,
+        );
+        let mut source_context = self.environment_stack.clone();
+        install_structured_induction_shape_symbol(
+            verification.parameter_binding.id(),
+            "__induction_shape",
+            &mut source_context,
+        );
+        let generated_domain = render_fact(
+            &verification.generated_forall.dom_facts[0],
+            &retained_context,
+        )?;
+        let expected_domain: Fact = GreaterEqualFact::new(
+            verification.parameter.clone(),
+            match &verification.proof {
+                SuccessVerifyByInducProofResult::IntegerStructured(proof) => proof.start.clone(),
+                _ => return Err("structured induction retained another proof family".into()),
+            },
+            verification.generated_forall.line_file.clone(),
+        )
+        .into();
+        if generated_domain != render_fact(&expected_domain, &source_context)? {
+            return Err("structured induction generated forall changed its lower bound".into());
+        }
+        for (index, (generated, expected)) in verification
+            .generated_forall
+            .then_facts
+            .iter()
+            .zip(verification.prove_goals.iter())
+            .enumerate()
+        {
+            if render_fact(&generated.clone().to_fact(), &retained_context)?
+                != render_fact(expected, &source_context)?
+            {
+                return Err(format!(
+                    "structured induction generated forall changed conclusion {index}"
+                ));
+            }
+        }
+        Ok(())
+    }
+
+    fn render_structured_integer_induction_motive(
+        &self,
+        verification: &SuccessVerifyByInducResult,
+        native_integer_name: &str,
+    ) -> Result<String, String> {
+        let mut context = self.environment_stack.clone();
+        install_structured_induction_native_integer_symbol(
+            verification.parameter_binding.id(),
+            native_integer_name,
+            &mut context,
+        );
+        let goals = verification
+            .prove_goals
+            .iter()
+            .map(|goal| render_fact(goal, &context))
+            .collect::<Result<Vec<_>, _>>()?;
+        Ok(conjunction(&goals))
+    }
+
+    fn compile_structured_integer_induction_base_case(
+        &mut self,
+        result: &SuccessByInducStmtResult,
+        verification: &SuccessVerifyByInducResult,
+        proof: &SuccessVerifyByStructuredIntegerInducResult,
+        start_integer: &str,
+    ) -> Result<Option<String>, String> {
+        let [parameter_assumption, equality_assumption] = proof.base.assumptions.as_slice() else {
+            return Err(
+                "structured induction base case must retain parameter and equality assumptions"
+                    .into(),
+            );
+        };
+        if parameter_assumption.role != SuccessVerifyByInducAssumptionRole::ParameterType
+            || parameter_assumption.goal_index.is_some()
+            || equality_assumption.role != SuccessVerifyByInducAssumptionRole::BaseCaseEquality
+            || equality_assumption.goal_index.is_some()
+        {
+            return Err(
+                "structured induction base assumptions changed their semantic roles".into(),
+            );
+        }
+        let expected_parameter: Fact = InFact::new(
+            verification.parameter.clone(),
+            StandardSet::Z.into(),
+            result.statement.line_file.clone(),
+        )
+        .into();
+        let expected_equality: Fact = EqualFact::new(
+            verification.parameter.clone(),
+            proof.start.clone(),
+            result.statement.line_file.clone(),
+        )
+        .into();
+        if parameter_assumption.fact.to_string() != expected_parameter.to_string()
+            || equality_assumption.fact.to_string() != expected_equality.to_string()
+            || !infer_result_retains_fact_id(
+                &proof.base.assumption_infers,
+                &parameter_assumption.fact,
+                parameter_assumption.fact_id,
+            )
+            || !infer_result_retains_fact_id(
+                &proof.base.assumption_infers,
+                &equality_assumption.fact,
+                equality_assumption.fact_id,
+            )
+        {
+            return Err(
+                "structured induction base assumptions changed their propositions or FactIds"
+                    .into(),
+            );
+        }
+
+        self.environment_stack.push_inherited_environment();
+        let compilation = (|| {
+            install_structured_induction_native_integer_symbol(
+                verification.parameter_binding.id(),
+                start_integer,
+                &mut self.environment_stack,
+            );
+            let parameter_proof = format!("Litex.Rules.complexIntInZ ({start_integer})");
+            self.environment_stack
+                .fact_names
+                .insert(parameter_assumption.fact_id, parameter_proof.clone());
+            self.environment_stack.fact_propositions.insert(
+                parameter_assumption.fact_id,
+                parameter_assumption.fact.clone(),
+            );
+            let equality_proof =
+                format!("(by simpa using (Litex.Same.refl ((({start_integer}) : ℂ))))");
+            self.environment_stack
+                .fact_names
+                .insert(equality_assumption.fact_id, equality_proof);
+            self.environment_stack.fact_propositions.insert(
+                equality_assumption.fact_id,
+                equality_assumption.fact.clone(),
+            );
+            let sources = vec![
+                (
+                    parameter_assumption.fact_id,
+                    parameter_assumption.fact.clone(),
+                ),
+                (
+                    equality_assumption.fact_id,
+                    equality_assumption.fact.clone(),
+                ),
+            ];
+            let mut lines = Vec::new();
+            self.compile_typed_inference_results_as_local_have_statements(
+                &proof.base.assumption_infers,
+                &sources,
+                &mut lines,
+                "structured induction base assumptions",
+            )?;
+            for (index, proof_step) in proof.base.proof_steps.iter().enumerate() {
+                let Some(step_lines) =
+                    self.compile_stmt_result_as_local_proof_steps(proof_step, index + 1)?
+                else {
+                    return Err(format!(
+                        "structured induction base proof step {index} has no recursive Result compiler"
+                    ));
+                };
+                lines.extend(step_lines);
+            }
+            let Some(conclusion) = self.compile_structured_integer_induction_conclusions(
+                &proof.base,
+                verification,
+                StructuredIntegerInductionConclusionPosition::Base,
+            )?
+            else {
+                return Ok(None);
+            };
+            lines.push(format!("exact {conclusion}"));
+            Ok(Some(format!("by\n{}", indent_lines(&lines.join("\n"), 2))))
+        })();
+        self.environment_stack.pop_local_environment();
+        compilation
+    }
+
+    fn compile_structured_integer_induction_step_case(
+        &mut self,
+        _result: &SuccessByInducStmtResult,
+        verification: &SuccessVerifyByInducResult,
+        proof: &SuccessVerifyByStructuredIntegerInducResult,
+        start_integer: &str,
+    ) -> Result<Option<String>, String> {
+        if proof.step.assumptions.len() != verification.prove_goals.len() + 2 {
+            return Err(
+                "structured induction step lost its parameter, domain, or hypothesis assumptions"
+                    .into(),
+            );
+        }
+        let parameter_assumption = &proof.step.assumptions[0];
+        let domain_assumption = &proof.step.assumptions[1];
+        if parameter_assumption.role != SuccessVerifyByInducAssumptionRole::ParameterType
+            || parameter_assumption.goal_index.is_some()
+            || domain_assumption.role != SuccessVerifyByInducAssumptionRole::DomainLowerBound
+            || domain_assumption.goal_index.is_some()
+        {
+            return Err(
+                "structured induction step assumptions changed their semantic roles".into(),
+            );
+        }
+        let hypotheses = &proof.step.assumptions[2..];
+        for (goal_index, hypothesis) in hypotheses.iter().enumerate() {
+            if hypothesis.role != SuccessVerifyByInducAssumptionRole::InductionHypothesis
+                || hypothesis.goal_index != Some(goal_index)
+            {
+                return Err(format!(
+                    "structured induction hypothesis {goal_index} changed its role or goal index"
+                ));
+            }
+        }
+        for assumption in &proof.step.assumptions {
+            if !infer_result_retains_fact_id(
+                &proof.step.assumption_infers,
+                &assumption.fact,
+                assumption.fact_id,
+            ) {
+                return Err(format!(
+                    "structured induction step assumption `{}` lost FactId `{}`",
+                    assumption.fact, assumption.fact_id
+                ));
+            }
+        }
+
+        self.environment_stack.push_inherited_environment();
+        let compilation = (|| {
+            install_structured_induction_native_integer_symbol(
+                verification.parameter_binding.id(),
+                "__induction_value",
+                &mut self.environment_stack,
+            );
+            self.environment_stack.fact_names.insert(
+                parameter_assumption.fact_id,
+                "Litex.Rules.complexIntInZ __induction_value".into(),
+            );
+            self.environment_stack.fact_propositions.insert(
+                parameter_assumption.fact_id,
+                parameter_assumption.fact.clone(),
+            );
+            self.environment_stack.fact_names.insert(
+                domain_assumption.fact_id,
+                format!(
+                    "(by\n  have __induction_ge_start_real : (({start_integer}) : ℝ) ≤ (__induction_value : ℝ) := by\n    exact_mod_cast __induction_ge_start\n  simpa [Litex.Le, Litex.OrderValue] using __induction_ge_start_real)"
+                ),
+            );
+            self.environment_stack
+                .fact_propositions
+                .insert(domain_assumption.fact_id, domain_assumption.fact.clone());
+            for (goal_index, hypothesis) in hypotheses.iter().enumerate() {
+                let projection =
+                    conjunction_projection("__induction_hypotheses", goal_index, hypotheses.len())?;
+                self.environment_stack
+                    .fact_names
+                    .insert(hypothesis.fact_id, projection);
+                self.environment_stack
+                    .fact_propositions
+                    .insert(hypothesis.fact_id, hypothesis.fact.clone());
+            }
+            let sources = proof
+                .step
+                .assumptions
+                .iter()
+                .map(|assumption| (assumption.fact_id, assumption.fact.clone()))
+                .collect::<Vec<_>>();
+            let mut lines = Vec::new();
+            self.compile_typed_inference_results_as_local_have_statements(
+                &proof.step.assumption_infers,
+                &sources,
+                &mut lines,
+                "structured induction step assumptions",
+            )?;
+            for (index, proof_step) in proof.step.proof_steps.iter().enumerate() {
+                let Some(step_lines) =
+                    self.compile_stmt_result_as_local_proof_steps(proof_step, index + 1)?
+                else {
+                    return Err(format!(
+                        "structured induction step proof step {index} has no recursive Result compiler"
+                    ));
+                };
+                lines.extend(step_lines);
+            }
+            let Some(conclusion) = self.compile_structured_integer_induction_conclusions(
+                &proof.step,
+                verification,
+                StructuredIntegerInductionConclusionPosition::Step,
+            )?
+            else {
+                return Ok(None);
+            };
+            lines.push(format!("exact {conclusion}"));
+            Ok(Some(format!(
+                "fun (__induction_value : ℤ) (__induction_ge_start : {start_integer} ≤ __induction_value) (__induction_hypotheses : {}) => by\n{}",
+                self.render_structured_integer_induction_motive(
+                    verification,
+                    "__induction_value",
+                )?,
+                indent_lines(&lines.join("\n"), 2),
+            )))
+        })();
+        self.environment_stack.pop_local_environment();
+        compilation
+    }
+
+    fn compile_structured_integer_induction_conclusions(
+        &mut self,
+        case: &SuccessVerifyByStructuredIntegerInducCaseResult,
+        verification: &SuccessVerifyByInducResult,
+        position: StructuredIntegerInductionConclusionPosition,
+    ) -> Result<Option<String>, String> {
+        if case.conclusions.len() != verification.prove_goals.len() {
+            return Err("structured induction case changed its conclusion arity".into());
+        }
+        let replacement = match &position {
+            StructuredIntegerInductionConclusionPosition::Base => match &verification.proof {
+                SuccessVerifyByInducProofResult::IntegerStructured(proof) => proof.start.clone(),
+                _ => return Err("structured induction retained another proof family".into()),
+            },
+            StructuredIntegerInductionConclusionPosition::Step => Add::new(
+                verification.parameter.clone(),
+                Number::new("1".to_string()).into(),
+            )
+            .into(),
+        };
+        let mut proofs = Vec::with_capacity(case.conclusions.len());
+        for (index, (conclusion, source_goal)) in case
+            .conclusions
+            .iter()
+            .zip(verification.prove_goals.iter())
+            .enumerate()
+        {
+            let retained = conclusion
+                .check
+                .factual_success()
+                .ok_or_else(|| format!("structured induction conclusion {index} is not factual"))?;
+            if retained.fact().to_string() != conclusion.goal.to_string()
+                || !retained.store.infers.is_empty()
+            {
+                return Err(format!(
+                    "structured induction conclusion {index} changed its checked goal or published effects"
+                ));
+            }
+            if !fact_matches_structured_induction_goal_substitution(
+                source_goal,
+                &conclusion.goal,
+                verification.parameter_binding.id(),
+                &replacement,
+            ) {
+                return Err(format!(
+                    "structured induction conclusion {index} is not the retained goal after the exact induction substitution"
+                ));
+            }
+            let Some(proof) = self.construct_lean_proof_from_direct_fact_result(retained)? else {
+                return Err(format!(
+                    "structured induction conclusion {index} has no direct recursive Result proof consumer"
+                ));
+            };
+            proofs.push(format!("(by simpa using ({proof}))"));
+        }
+        Ok(Some(if proofs.len() == 1 {
+            proofs.remove(0)
+        } else {
+            format!("⟨{}⟩", proofs.join(", "))
+        }))
     }
 
     fn compile_by_enumerate_finite_set_stmt_result_to_lean_source(
@@ -8651,7 +9221,8 @@ impl StmtResultToLeanCompiler {
         let SuccessFactProofResult::BuiltinRule(builtin) = result.proof() else {
             return Ok(false);
         };
-        let Some(BuiltinRuleEvidence::ObjectReflexivity(evidence)) = &builtin.evidence else {
+        let Some(BuiltinRuleEvidence::ObjectReflexivity(evidence)) = builtin.evidence.typed()
+        else {
             return Ok(false);
         };
         if !builtin.subgoals.is_empty() {
@@ -8724,7 +9295,8 @@ impl StmtResultToLeanCompiler {
         let SuccessFactProofResult::BuiltinRule(builtin) = result.proof() else {
             return Ok(false);
         };
-        let Some(BuiltinRuleEvidence::RationalNormalization(evidence)) = &builtin.evidence else {
+        let Some(BuiltinRuleEvidence::RationalNormalization(evidence)) = builtin.evidence.typed()
+        else {
             return Ok(false);
         };
         if fact_result_contains_inferred_facts(result) {
@@ -8772,7 +9344,8 @@ impl StmtResultToLeanCompiler {
         let SuccessFactProofResult::BuiltinRule(builtin) = result.proof() else {
             return Ok(false);
         };
-        let Some(BuiltinRuleEvidence::ComplexAlgebraicNormalization(evidence)) = &builtin.evidence
+        let Some(BuiltinRuleEvidence::ComplexAlgebraicNormalization(evidence)) =
+            builtin.evidence.typed()
         else {
             return Ok(false);
         };
@@ -9016,19 +9589,10 @@ impl StmtResultToLeanCompiler {
         &mut self,
         result: &SuccessFactStmtResult,
     ) -> Result<bool, String> {
-        let SuccessFactProofResult::Fact(citation) = result.proof() else {
+        let SuccessFactProofResult::StoredFactCitation(citation) = result.proof() else {
             return Ok(false);
         };
-        if citation.equality_transport.is_some()
-            || citation.fact_transformation.is_some()
-            || citation.checked_function_definition_reduction.is_some()
-            || citation.definition_reduction.is_some()
-        {
-            return Ok(false);
-        }
-        let Some(source_fact_id) = citation.source_fact_id else {
-            return Ok(false);
-        };
+        let source_fact_id = citation.source_fact_id;
         if fact_result_contains_inferred_facts(result) {
             return Ok(false);
         }
@@ -9036,7 +9600,11 @@ impl StmtResultToLeanCompiler {
         // FactId is the citation identity. `resolve_fact_citation` additionally
         // checks that the retained proposition is unchanged, including
         // alpha-equivalent forall binders, before exposing its Lean name.
-        let proof = resolve_fact_citation(&source_fact_id, &source_fact, &self.environment_stack)?;
+        let proof = resolve_fact_citation(
+            &source_fact_id,
+            &citation.source_fact,
+            &self.environment_stack,
+        )?;
         if matches!(source_fact, Fact::AtomicFact(_)) {
             validate_atomic_fact_well_definedness_result(&result.well_definedness, &source_fact)?;
         }
@@ -9055,7 +9623,8 @@ impl StmtResultToLeanCompiler {
         let SuccessFactProofResult::BuiltinRule(builtin) = result.proof() else {
             return Ok(false);
         };
-        let Some(BuiltinRuleEvidence::ClosedNumericMembership(evidence)) = &builtin.evidence else {
+        let Some(BuiltinRuleEvidence::ClosedNumericMembership(evidence)) = builtin.evidence.typed()
+        else {
             return Ok(false);
         };
         if !builtin.subgoals.is_empty() {
@@ -10123,7 +10692,7 @@ impl StmtResultToLeanCompiler {
                         .into(),
                 );
             };
-            if type_check_proof.evidence.is_some()
+            if type_check_proof.evidence.is_typed()
                 || !type_check_proof.subgoals.is_empty()
                 || factual_type_check.fact_id.is_some()
                 || !factual_type_check.infers.is_empty()
@@ -11397,21 +11966,33 @@ impl StmtResultToLeanCompiler {
         )))
     }
 
-    /// Returns `None` when the factual proof family still belongs to the
-    /// compatibility migration backlog. A matched typed certificate that is
-    /// internally inconsistent is an error, never a fallback.
+    /// Returns `None` when the factual proof family explicitly carries a
+    /// diagnostic-only Result or has no implemented Lean consumer. A matched
+    /// typed certificate that is internally inconsistent is an error, never a
+    /// fallback selected from its label.
     fn construct_lean_proof_from_direct_fact_result(
         &mut self,
         result: &SuccessFactStmtResult,
     ) -> Result<Option<String>, String> {
         let source_fact = result.fact();
         match result.proof() {
-            SuccessFactProofResult::Fact(citation) => {
-                self.construct_lean_fact_citation_proof_from_result(&source_fact, citation)
+            SuccessFactProofResult::StoredFactCitation(citation) => {
+                self.construct_lean_stored_fact_citation_proof_from_result(&source_fact, citation)
             }
+            SuccessFactProofResult::CheckedFunctionDefinitionReduction(result) => self
+                .construct_lean_checked_function_definition_reduction_from_result(
+                    &source_fact,
+                    &result.verification,
+                )
+                .map(Some),
+            SuccessFactProofResult::Strategy(_)
+            | SuccessFactProofResult::DefinitionReduction(_)
+            | SuccessFactProofResult::DiagnosticOnly(_) => Ok(None),
             SuccessFactProofResult::BuiltinRule(builtin)
             | SuccessFactProofResult::BuiltinStrategy(builtin) => {
-                if let Some(BuiltinRuleEvidence::ListSetMembership(evidence)) = &builtin.evidence {
+                if let Some(BuiltinRuleEvidence::ListSetMembership(evidence)) =
+                    builtin.evidence.typed()
+                {
                     return self.construct_lean_list_set_membership_from_result(
                         &source_fact,
                         evidence,
@@ -11419,7 +12000,7 @@ impl StmtResultToLeanCompiler {
                     );
                 }
                 if let Some(BuiltinRuleEvidence::RefinedNumericMembership(evidence)) =
-                    &builtin.evidence
+                    builtin.evidence.typed()
                 {
                     return self.construct_lean_refined_numeric_membership_from_result(
                         &source_fact,
@@ -11428,7 +12009,7 @@ impl StmtResultToLeanCompiler {
                     );
                 }
                 if matches!(
-                    builtin.evidence,
+                    builtin.evidence.typed(),
                     Some(BuiltinRuleEvidence::NotEqualSymmetry)
                 ) {
                     return self.construct_lean_not_equal_symmetry_from_result(
@@ -11437,11 +12018,11 @@ impl StmtResultToLeanCompiler {
                     );
                 }
                 if matches!(
-                    builtin.evidence,
+                    builtin.evidence.typed(),
                     Some(BuiltinRuleEvidence::DisjunctionIntroduction(_))
                 ) {
                     let Some(BuiltinRuleEvidence::DisjunctionIntroduction(evidence)) =
-                        &builtin.evidence
+                        builtin.evidence.typed()
                     else {
                         unreachable!("disjunction evidence checked above")
                     };
@@ -11451,7 +12032,8 @@ impl StmtResultToLeanCompiler {
                         &builtin.subgoals,
                     );
                 }
-                if let Some(BuiltinRuleEvidence::DefinitionProjection(evidence)) = &builtin.evidence
+                if let Some(BuiltinRuleEvidence::DefinitionProjection(evidence)) =
+                    builtin.evidence.typed()
                 {
                     return self.construct_lean_definition_projection_from_result(
                         &source_fact,
@@ -11459,7 +12041,8 @@ impl StmtResultToLeanCompiler {
                         &builtin.subgoals,
                     );
                 }
-                if let Some(BuiltinRuleEvidence::SetBuilderMembership(evidence)) = &builtin.evidence
+                if let Some(BuiltinRuleEvidence::SetBuilderMembership(evidence)) =
+                    builtin.evidence.typed()
                 {
                     return self.construct_lean_set_builder_membership_from_result(
                         &source_fact,
@@ -11468,7 +12051,7 @@ impl StmtResultToLeanCompiler {
                     );
                 }
                 if let Some(BuiltinRuleEvidence::FunctionSetMembership(evidence)) =
-                    &builtin.evidence
+                    builtin.evidence.typed()
                 {
                     return self.construct_lean_function_set_membership_from_result(
                         &source_fact,
@@ -11477,7 +12060,7 @@ impl StmtResultToLeanCompiler {
                     );
                 }
                 if let Some(BuiltinRuleEvidence::FunctionApplicationReturnMembership(evidence)) =
-                    &builtin.evidence
+                    builtin.evidence.typed()
                 {
                     return self.construct_lean_function_application_return_membership_from_result(
                         &source_fact,
@@ -11485,14 +12068,16 @@ impl StmtResultToLeanCompiler {
                         &builtin.subgoals,
                     );
                 }
-                if let Some(BuiltinRuleEvidence::RegisteredLocal(evidence)) = &builtin.evidence {
+                if let Some(BuiltinRuleEvidence::RegisteredLocal(evidence)) =
+                    builtin.evidence.typed()
+                {
                     return self.construct_lean_registered_local_builtin_from_result(
                         &source_fact,
                         evidence,
                         &builtin.subgoals,
                     );
                 }
-                if let Some(BuiltinRuleEvidence::Arithmetic(rule)) = &builtin.evidence {
+                if let Some(BuiltinRuleEvidence::Arithmetic(rule)) = builtin.evidence.typed() {
                     return self.construct_lean_arithmetic_builtin_from_result(
                         &source_fact,
                         *rule,
@@ -11500,7 +12085,7 @@ impl StmtResultToLeanCompiler {
                     );
                 }
                 if let Some(BuiltinRuleEvidence::RealArithmeticMembershipClosure(rule)) =
-                    &builtin.evidence
+                    builtin.evidence.typed()
                 {
                     return self.construct_lean_real_arithmetic_membership_closure_from_result(
                         &source_fact,
@@ -11508,7 +12093,8 @@ impl StmtResultToLeanCompiler {
                         &builtin.subgoals,
                     );
                 }
-                if let Some(BuiltinRuleEvidence::IntegerMembershipClosure(rule)) = &builtin.evidence
+                if let Some(BuiltinRuleEvidence::IntegerMembershipClosure(rule)) =
+                    builtin.evidence.typed()
                 {
                     return self.construct_lean_integer_membership_closure_from_result(
                         &source_fact,
@@ -11516,7 +12102,8 @@ impl StmtResultToLeanCompiler {
                         &builtin.subgoals,
                     );
                 }
-                if let Some(BuiltinRuleEvidence::NaturalMembershipClosure(rule)) = &builtin.evidence
+                if let Some(BuiltinRuleEvidence::NaturalMembershipClosure(rule)) =
+                    builtin.evidence.typed()
                 {
                     return self.construct_lean_natural_membership_closure_from_result(
                         &source_fact,
@@ -11525,7 +12112,7 @@ impl StmtResultToLeanCompiler {
                     );
                 }
                 if let Some(BuiltinRuleEvidence::RationalMembershipClosure(rule)) =
-                    &builtin.evidence
+                    builtin.evidence.typed()
                 {
                     return self.construct_lean_rational_membership_closure_from_result(
                         &source_fact,
@@ -11533,21 +12120,25 @@ impl StmtResultToLeanCompiler {
                         &builtin.subgoals,
                     );
                 }
-                if let Some(BuiltinRuleEvidence::Set(rule)) = &builtin.evidence {
+                if let Some(BuiltinRuleEvidence::Set(rule)) = builtin.evidence.typed() {
                     return self.construct_lean_set_builtin_from_result(
                         &source_fact,
                         *rule,
                         &builtin.subgoals,
                     );
                 }
-                if let Some(BuiltinRuleEvidence::KnownEqualityPath(evidence)) = &builtin.evidence {
+                if let Some(BuiltinRuleEvidence::KnownEqualityPath(evidence)) =
+                    builtin.evidence.typed()
+                {
                     return Ok(Some(self.construct_lean_known_equality_path_from_result(
                         &source_fact,
                         evidence,
                         &builtin.subgoals,
                     )?));
                 }
-                if let Some(BuiltinRuleEvidence::SetRelationDuality(rule)) = &builtin.evidence {
+                if let Some(BuiltinRuleEvidence::SetRelationDuality(rule)) =
+                    builtin.evidence.typed()
+                {
                     return self.construct_lean_set_relation_duality_from_result(
                         &source_fact,
                         *rule,
@@ -11555,7 +12146,7 @@ impl StmtResultToLeanCompiler {
                     );
                 }
                 if matches!(
-                    builtin.evidence,
+                    builtin.evidence.typed(),
                     Some(BuiltinRuleEvidence::StandardSetMembershipProjection)
                 ) {
                     return self.construct_lean_standard_set_membership_projection_from_result(
@@ -11564,7 +12155,7 @@ impl StmtResultToLeanCompiler {
                     );
                 }
                 if let Some(BuiltinRuleEvidence::RegisteredReflexivePredicate(evidence)) =
-                    &builtin.evidence
+                    builtin.evidence.typed()
                 {
                     if !builtin.subgoals.is_empty() {
                         return Err(
@@ -11580,7 +12171,7 @@ impl StmtResultToLeanCompiler {
                     ));
                 }
                 if let Some(BuiltinRuleEvidence::RegisteredSymmetricPredicate(evidence)) =
-                    &builtin.evidence
+                    builtin.evidence.typed()
                 {
                     return self.construct_lean_registered_symmetric_predicate_from_result(
                         &source_fact,
@@ -11589,7 +12180,7 @@ impl StmtResultToLeanCompiler {
                     );
                 }
                 if let Some(BuiltinRuleEvidence::RegisteredAntisymmetricPredicate(evidence)) =
-                    &builtin.evidence
+                    builtin.evidence.typed()
                 {
                     return self.construct_lean_registered_antisymmetric_predicate_from_result(
                         &source_fact,
@@ -11598,7 +12189,7 @@ impl StmtResultToLeanCompiler {
                     );
                 }
                 if let Some(BuiltinRuleEvidence::ComplexAlgebraicNormalization(evidence)) =
-                    &builtin.evidence
+                    builtin.evidence.typed()
                 {
                     return self.construct_lean_complex_algebraic_normalization_from_result(
                         &source_fact,
@@ -11606,7 +12197,7 @@ impl StmtResultToLeanCompiler {
                         &builtin.subgoals,
                     );
                 }
-                if let Some(evidence) = &builtin.evidence {
+                if let Some(evidence) = builtin.evidence.typed() {
                     if let Some(limitation) = direct_builtin_rule_compiler_limitation(evidence) {
                         return Err(limitation.to_string());
                     }
@@ -11614,7 +12205,7 @@ impl StmtResultToLeanCompiler {
                 if !builtin.subgoals.is_empty() {
                     return Ok(None);
                 }
-                match &builtin.evidence {
+                match builtin.evidence.typed() {
                     Some(BuiltinRuleEvidence::ObjectReflexivity(evidence)) => {
                         if evidence.expected_target.to_string() != source_fact.to_string() {
                             return Err("object-reflexivity evidence changed its target".into());
@@ -13611,9 +14202,7 @@ impl StmtResultToLeanCompiler {
                 ));
             };
             let equality_fact: Fact = AtomicFact::EqualFact(step.equality.clone()).into();
-            let equality_fact_id = step.equality_fact_id.ok_or_else(|| {
-                format!("equality transport step {step_index} has no equality FactId")
-            })?;
+            let equality_fact_id = step.equality_fact_id;
             let equality_proof =
                 resolve_fact_citation(&equality_fact_id, &equality_fact, &self.environment_stack)?;
             proof =
@@ -13626,52 +14215,16 @@ impl StmtResultToLeanCompiler {
         Ok(Some(proof))
     }
 
-    /// One citation Result has exactly one semantic composition route. Plain
-    /// citations may wrap equality transport and ordered transformations;
-    /// checked function-definition reduction is its own retained leaf. A
-    /// concrete predicate definition remains on the compatibility route until
-    /// its argument-inference children have a direct compiler consumer.
-    fn construct_lean_fact_citation_proof_from_result(
-        &mut self,
+    fn construct_lean_stored_fact_citation_proof_from_result(
+        &self,
         target: &Fact,
-        citation: &SuccessFactCitationProofResult,
+        citation: &SuccessStoredFactCitationProofResult,
     ) -> Result<Option<String>, String> {
-        if citation.checked_function_definition_reduction.is_some()
-            && citation.definition_reduction.is_some()
-        {
-            return Err("fact citation retained two definition-reduction routes".into());
-        }
-        if let Some(reduction) = citation.checked_function_definition_reduction.as_ref() {
-            if citation.source_fact_id.is_some()
-                || citation.equality_transport.is_some()
-                || citation.fact_transformation.is_some()
-            {
-                return Err(
-                    "checked function-definition reduction retained an unrelated citation edge"
-                        .into(),
-                );
-            }
-            let Stmt::Fact(cited_target) = citation.cite_what.as_ref() else {
-                return Err(
-                    "checked function-definition reduction cites a non-fact statement".into(),
-                );
-            };
-            if cited_target.to_string() != target.to_string() {
-                return Err("checked function-definition reduction changed its target".into());
-            }
-            return self
-                .construct_lean_checked_function_definition_reduction_from_result(target, reduction)
-                .map(Some);
-        }
-        if citation.definition_reduction.is_some() {
-            return Ok(None);
-        }
-        self.construct_lean_fact_citation_with_transformations_from_result(
+        self.construct_lean_fact_citation_with_equality_transport_from_result(
             target,
-            citation.cite_what.as_ref(),
-            citation.source_fact_id,
-            citation.equality_transport.as_ref(),
-            citation.fact_transformation.as_ref(),
+            &citation.source_fact.clone().into_stmt(),
+            Some(citation.source_fact_id),
+            None,
         )
     }
 
@@ -13748,54 +14301,6 @@ impl StmtResultToLeanCompiler {
             application_side,
             &self.environment_stack,
         )
-    }
-
-    /// `Wrap` / `Combine`: cite the exact retained source, apply any citation
-    /// equality transport up to the transformation source, then replay each
-    /// explicitly retained transformation step in order.
-    fn construct_lean_fact_citation_with_transformations_from_result(
-        &self,
-        target: &Fact,
-        cited_statement: &Stmt,
-        source_fact_id: Option<FactId>,
-        equality_transport: Option<&EqualityTransportEvidence>,
-        transformation: Option<&FactTransformationEvidence>,
-    ) -> Result<Option<String>, String> {
-        let transformation_source = transformation
-            .map(|transformation| &transformation.source)
-            .unwrap_or(target);
-        let Some(mut proof) = self
-            .construct_lean_fact_citation_with_equality_transport_from_result(
-                transformation_source,
-                cited_statement,
-                source_fact_id,
-                equality_transport,
-            )?
-        else {
-            return Ok(None);
-        };
-        let mut current = transformation_source.clone();
-        if let Some(transformation) = transformation {
-            if transformation.source.to_string() != current.to_string() {
-                return Err("fact transformation changed its retained source".into());
-            }
-            for (index, step) in transformation.steps.iter().enumerate() {
-                proof = self.construct_lean_fact_transformation_step_from_result(
-                    &current,
-                    &step.result,
-                    proof,
-                    &step.rule,
-                    index,
-                )?;
-                current = step.result.clone();
-            }
-        }
-        if current.to_string() != target.to_string() {
-            return Err(format!(
-                "fact transformations ended at `{current}` instead of `{target}`"
-            ));
-        }
-        Ok(Some(proof))
     }
 
     fn construct_lean_single_fact_transformation_from_result(
@@ -13961,9 +14466,7 @@ impl StmtResultToLeanCompiler {
         rewrite_index: usize,
     ) -> Result<(String, bool), String> {
         let equality_fact: Fact = AtomicFact::EqualFact(rewrite.equality.clone()).into();
-        let fact_id = rewrite.equality_fact_id.ok_or_else(|| {
-            format!("fact transformation equality rewrite {rewrite_index} has no FactId")
-        })?;
+        let fact_id = rewrite.equality_fact_id;
         let proof = resolve_fact_citation(&fact_id, &equality_fact, &self.environment_stack)?;
         let left = obj_equality_key(&rewrite.equality.left);
         let right = obj_equality_key(&rewrite.equality.right);
@@ -14035,15 +14538,11 @@ impl StmtResultToLeanCompiler {
         target: &Fact,
         result: &SuccessInstantiateKnownForallResult,
     ) -> Result<Option<String>, String> {
-        let Stmt::Fact(source_fact) = result.cite_what.as_ref() else {
-            return Err("known-forall Result cited a non-fact statement".into());
-        };
+        let source_fact = &result.source_fact;
         let Fact::ForallFact(source_forall) = source_fact else {
             return Err("known-forall Result cited a non-forall fact".into());
         };
-        let source_fact_id = result
-            .source_fact_id
-            .ok_or_else(|| "known-forall Result has no source FactId".to_string())?;
+        let source_fact_id = result.source_fact_id;
         let source_theorem =
             resolve_fact_citation(&source_fact_id, source_fact, &self.environment_stack)?;
         let source_parameters = source_forall
@@ -14627,60 +15126,37 @@ impl StmtResultToLeanCompiler {
         target: &Fact,
         combined: &SuccessCombinedFactProofResult,
     ) -> Result<Option<String>, String> {
+        if let Some(primary) = combined.primary.as_ref() {
+            if primary.fact().to_string() != target.to_string() {
+                return Err("combined primary proof changed its target".into());
+            }
+            for (index, step) in combined.steps.iter().enumerate() {
+                let Some(factual) = step.factual_success() else {
+                    return Err(format!("combined proof step {index} is not factual"));
+                };
+                if self
+                    .construct_lean_proof_from_direct_fact_result(factual)?
+                    .is_none()
+                {
+                    return Ok(None);
+                }
+            }
+            return self.construct_lean_proof_from_shared_verify_fact_result(primary);
+        }
+
         let components = conjunction_components(target)?;
-        if components.len() != combined.cite_what.len() {
+        if components.len() != combined.steps.len() {
             return Err("combined fact proof changed its component arity".into());
         }
         let mut proofs = Vec::with_capacity(components.len());
-        for (component, item) in components.iter().zip(combined.cite_what.iter()) {
-            let proof = match item {
-                SuccessCombinedFactProofItemResult::Reuse(reuse) => {
-                    if reuse.statement.to_string() != component.to_string()
-                        || reuse.source.fact().to_string() != component.to_string()
-                    {
-                        return Err("combined proof reuse changed its component".into());
-                    }
-                    self.construct_lean_proof_from_shared_verify_fact_result(reuse.source.as_ref())?
-                }
-                SuccessCombinedFactProofItemResult::ByFact(citation)
-                    if citation.verify_what.to_string() == component.to_string()
-                        && citation.definition_reduction.is_none() =>
-                {
-                    self.construct_lean_fact_citation_with_transformations_from_result(
-                        component,
-                        citation.cite_what.as_ref(),
-                        citation.source_fact_id,
-                        citation.equality_transport.as_ref(),
-                        citation.fact_transformation.as_ref(),
-                    )?
-                }
-                SuccessCombinedFactProofItemResult::ByBuiltinRule(builtin)
-                | SuccessCombinedFactProofItemResult::ByBuiltinStrategy(builtin) => {
-                    if builtin.verify_what.to_string() != component.to_string() {
-                        return Err("combined builtin proof changed its component".into());
-                    }
-                    self.construct_lean_builtin_fact_proof_from_borrowed_result_parts(
-                        component,
-                        builtin.evidence.as_ref(),
-                        &builtin.subgoals,
-                    )?
-                }
-                SuccessCombinedFactProofItemResult::ByKnownForall(instantiation) => {
-                    if instantiation.verify_what.to_string() != component.to_string() {
-                        return Err("combined known-forall proof changed its component".into());
-                    }
-                    self.construct_lean_known_forall_instantiation_from_result(
-                        component,
-                        &instantiation.result,
-                    )?
-                }
-                SuccessCombinedFactProofItemResult::ByFact(citation) => {
-                    if citation.verify_what.to_string() != component.to_string() {
-                        return Err("combined citation proof changed its component".into());
-                    }
-                    None
-                }
-            };
+        for (component, step) in components.iter().zip(combined.steps.iter()) {
+            let factual = step
+                .factual_success()
+                .ok_or_else(|| "combined proof child is not factual".to_string())?;
+            if factual.fact().to_string() != component.to_string() {
+                return Err("combined proof child changed its component".into());
+            }
+            let proof = self.construct_lean_proof_from_direct_fact_result(factual)?;
             let Some(proof) = proof else {
                 return Ok(None);
             };
@@ -14689,262 +15165,29 @@ impl StmtResultToLeanCompiler {
         Ok(Some(right_associated_conjunction_proof(&proofs)?))
     }
 
-    /// Compile one builtin proof payload borrowed from a combined proof item.
-    /// This is the same semantic Result layer as an ordinary/shared builtin;
-    /// the enclosing conjunction only supplies its exact target component.
-    /// Typed evidence with inconsistent children is an error. `None` remains
-    /// reserved for the legacy label-only compatibility boundary.
-    fn construct_lean_builtin_fact_proof_from_borrowed_result_parts(
-        &mut self,
-        target: &Fact,
-        evidence: Option<&BuiltinRuleEvidence>,
-        subgoals: &[StmtResult],
-    ) -> Result<Option<String>, String> {
-        match evidence {
-            Some(BuiltinRuleEvidence::ListSetMembership(evidence)) => {
-                return self
-                    .construct_lean_list_set_membership_from_result(target, evidence, subgoals);
-            }
-            Some(BuiltinRuleEvidence::RefinedNumericMembership(evidence)) => {
-                return self.construct_lean_refined_numeric_membership_from_result(
-                    target, evidence, subgoals,
-                );
-            }
-            Some(BuiltinRuleEvidence::NotEqualSymmetry) => {
-                return self.construct_lean_not_equal_symmetry_from_result(target, subgoals);
-            }
-            Some(BuiltinRuleEvidence::DisjunctionIntroduction(evidence)) => {
-                return self.construct_lean_disjunction_introduction_from_result(
-                    target, evidence, subgoals,
-                );
-            }
-            Some(BuiltinRuleEvidence::DefinitionProjection(evidence)) => {
-                return self
-                    .construct_lean_definition_projection_from_result(target, evidence, subgoals);
-            }
-            Some(BuiltinRuleEvidence::SetBuilderMembership(evidence)) => {
-                return self
-                    .construct_lean_set_builder_membership_from_result(target, evidence, subgoals);
-            }
-            Some(BuiltinRuleEvidence::FunctionSetMembership(evidence)) => {
-                return self.construct_lean_function_set_membership_from_result(
-                    target, evidence, subgoals,
-                );
-            }
-            Some(BuiltinRuleEvidence::FunctionApplicationReturnMembership(evidence)) => {
-                return self.construct_lean_function_application_return_membership_from_result(
-                    target, evidence, subgoals,
-                );
-            }
-            Some(BuiltinRuleEvidence::RegisteredLocal(evidence)) => {
-                return self.construct_lean_registered_local_builtin_from_result(
-                    target, evidence, subgoals,
-                );
-            }
-            Some(BuiltinRuleEvidence::Arithmetic(rule)) => {
-                return self.construct_lean_arithmetic_builtin_from_result(target, *rule, subgoals);
-            }
-            Some(BuiltinRuleEvidence::StandardSetMembershipProjection) => {
-                return self.construct_lean_standard_set_membership_projection_from_result(
-                    target, subgoals,
-                );
-            }
-            Some(BuiltinRuleEvidence::RealArithmeticMembershipClosure(rule)) => {
-                return self.construct_lean_real_arithmetic_membership_closure_from_result(
-                    target, *rule, subgoals,
-                );
-            }
-            Some(BuiltinRuleEvidence::IntegerMembershipClosure(rule)) => {
-                return self.construct_lean_integer_membership_closure_from_result(
-                    target, *rule, subgoals,
-                );
-            }
-            Some(BuiltinRuleEvidence::NaturalMembershipClosure(rule)) => {
-                return self.construct_lean_natural_membership_closure_from_result(
-                    target, *rule, subgoals,
-                );
-            }
-            Some(BuiltinRuleEvidence::RationalMembershipClosure(rule)) => {
-                return self.construct_lean_rational_membership_closure_from_result(
-                    target, *rule, subgoals,
-                );
-            }
-            Some(BuiltinRuleEvidence::Set(rule)) => {
-                return self.construct_lean_set_builtin_from_result(target, *rule, subgoals);
-            }
-            Some(BuiltinRuleEvidence::KnownEqualityPath(evidence)) => {
-                return self
-                    .construct_lean_known_equality_path_from_result(target, evidence, subgoals)
-                    .map(Some);
-            }
-            Some(BuiltinRuleEvidence::SetRelationDuality(rule)) => {
-                return self
-                    .construct_lean_set_relation_duality_from_result(target, *rule, subgoals);
-            }
-            Some(BuiltinRuleEvidence::RegisteredReflexivePredicate(evidence)) => {
-                if !subgoals.is_empty() {
-                    return Err(
-                        "combined registered reflexive-predicate proof retained child Results"
-                            .into(),
-                    );
-                }
-                return construct_lean_registered_reflexive_predicate_from_result(
-                    target,
-                    evidence,
-                    &self.environment_stack,
-                )
-                .map(Some);
-            }
-            Some(BuiltinRuleEvidence::RegisteredSymmetricPredicate(evidence)) => {
-                return self.construct_lean_registered_symmetric_predicate_from_result(
-                    target, evidence, subgoals,
-                );
-            }
-            Some(BuiltinRuleEvidence::RegisteredAntisymmetricPredicate(evidence)) => {
-                return self.construct_lean_registered_antisymmetric_predicate_from_result(
-                    target, evidence, subgoals,
-                );
-            }
-            Some(BuiltinRuleEvidence::ComplexAlgebraicNormalization(evidence)) => {
-                return self.construct_lean_complex_algebraic_normalization_from_result(
-                    target, evidence, subgoals,
-                );
-            }
-            Some(evidence) => {
-                if let Some(limitation) = direct_builtin_rule_compiler_limitation(evidence) {
-                    return Err(limitation.to_string());
-                }
-            }
-            None => {}
-        }
-
-        if !subgoals.is_empty() {
-            return Ok(None);
-        }
-        match evidence {
-            Some(BuiltinRuleEvidence::ObjectReflexivity(evidence)) => {
-                if evidence.expected_target.to_string() != target.to_string() {
-                    return Err("combined object-reflexivity evidence changed its target".into());
-                }
-                let Fact::AtomicFact(AtomicFact::EqualFact(equality)) = target else {
-                    return Err(
-                        "combined object-reflexivity evidence targets a non-equality fact".into(),
-                    );
-                };
-                if obj_equality_key(&equality.left) != obj_equality_key(&equality.right) {
-                    return Err(
-                        "combined object-reflexivity evidence changed its equality endpoints"
-                            .into(),
-                    );
-                }
-                Ok(Some(format!(
-                    "Litex.Same.refl {}",
-                    render_obj(&equality.left, &self.environment_stack)?
-                )))
-            }
-            Some(BuiltinRuleEvidence::RationalNormalization(evidence)) => {
-                if evidence.expected_target.to_string() != target.to_string() {
-                    return Err(
-                        "combined rational-normalization evidence changed its target".into(),
-                    );
-                }
-                validate_success_evaluate_obj_result(&evidence.left_evaluation)?;
-                validate_success_evaluate_obj_result(&evidence.right_evaluation)?;
-                if evidence.left_evaluation.value.normalized_value
-                    != evidence.right_evaluation.value.normalized_value
-                {
-                    return Err(
-                        "combined rational-normalization retained unequal normal forms".into(),
-                    );
-                }
-                Ok(Some(
-                    "Litex.Same.ofEq (by norm_num [Litex.tupleDim, Litex.TupleShape.dimension])"
-                        .into(),
-                ))
-            }
-            Some(BuiltinRuleEvidence::ComplexAlgebraicNormalization(evidence)) => {
-                self.construct_lean_complex_algebraic_normalization_from_result(
-                    target, evidence, subgoals,
-                )
-            }
-            Some(BuiltinRuleEvidence::ClosedNumericComparison(evidence)) => {
-                validate_closed_numeric_comparison_builtin_rule_evidence(target, evidence)?;
-                render_closed_numeric_comparison_fact(target, &self.environment_stack).map(Some)
-            }
-            Some(BuiltinRuleEvidence::OrderReflexivity(evidence)) => {
-                construct_lean_order_reflexivity_from_result(
-                    target,
-                    evidence,
-                    &self.environment_stack,
-                )
-                .map(Some)
-            }
-            Some(BuiltinRuleEvidence::RuntimeResolvedNumericComparison(evidence)) => self
-                .construct_lean_runtime_resolved_numeric_comparison_from_assignment_result(
-                    target, evidence,
-                )
-                .map(Some),
-            Some(BuiltinRuleEvidence::ClosedNumericMembership(evidence)) => {
-                if evidence.expected_target.to_string() != target.to_string() {
-                    return Err(
-                        "combined closed-numeric-membership changed its target".into(),
-                    );
-                }
-                validate_success_evaluate_obj_result(&evidence.evaluation)?;
-                render_closed_numeric_membership_from_result(
-                    target,
-                    evidence.target_set,
-                    &evidence.evaluation,
-                    &self.environment_stack,
-                )
-                .map(Some)
-            }
-            Some(BuiltinRuleEvidence::ClosedNumericNonmembership(evidence)) => {
-                self.construct_lean_closed_numeric_nonmembership_from_result(target, evidence)
-            }
-            Some(BuiltinRuleEvidence::StandardSetNonempty(evidence)) => self
-                .construct_lean_standard_set_nonempty_from_result(target, evidence)
-                .map(Some),
-            Some(BuiltinRuleEvidence::NativeConstantMembership(rule)) => self
-                .construct_lean_native_constant_membership_from_result(target, *rule)
-                .map(Some),
-            Some(BuiltinRuleEvidence::StandardSetSubset) => self
-                .construct_lean_standard_set_subset_from_result(target)
-                .map(Some),
-            Some(BuiltinRuleEvidence::PrimeU64Reflection) => self
-                .construct_lean_number_theory_reflection_from_result(target, true)
-                .map(Some),
-            Some(BuiltinRuleEvidence::CoprimeNaturalReflection) => self
-                .construct_lean_number_theory_reflection_from_result(target, false)
-                .map(Some),
-            Some(BuiltinRuleEvidence::FiniteSet(rule)) => self
-                .construct_lean_finite_set_from_result(target, *rule)
-                .map(Some),
-            Some(BuiltinRuleEvidence::ComplexArithmeticMembershipClosure(rule)) => self
-                .construct_lean_complex_membership_closure_from_result(target, *rule)
-                .map(Some),
-            Some(BuiltinRuleEvidence::TupleLiteralShape) => self
-                .construct_lean_tuple_literal_shape_from_result(target)
-                .map(Some),
-            None => Ok(None),
-            Some(evidence) => unreachable!(
-                "typed combined builtin evidence must be handled before the terminal dispatch: {evidence:?}"
-            ),
-        }
-    }
-
     fn construct_lean_proof_from_shared_verify_fact_result(
         &mut self,
         verification: &SuccessVerifyFactResult,
     ) -> Result<Option<String>, String> {
         let source_fact = verification.fact();
         match verification.proof() {
-            SuccessFactProofResult::Fact(citation) => {
-                self.construct_lean_fact_citation_proof_from_result(&source_fact, citation)
+            SuccessFactProofResult::StoredFactCitation(citation) => {
+                self.construct_lean_stored_fact_citation_proof_from_result(&source_fact, citation)
             }
+            SuccessFactProofResult::CheckedFunctionDefinitionReduction(result) => self
+                .construct_lean_checked_function_definition_reduction_from_result(
+                    &source_fact,
+                    &result.verification,
+                )
+                .map(Some),
+            SuccessFactProofResult::Strategy(_)
+            | SuccessFactProofResult::DefinitionReduction(_)
+            | SuccessFactProofResult::DiagnosticOnly(_) => Ok(None),
             SuccessFactProofResult::BuiltinRule(builtin)
             | SuccessFactProofResult::BuiltinStrategy(builtin) => {
-                if let Some(BuiltinRuleEvidence::ListSetMembership(evidence)) = &builtin.evidence {
+                if let Some(BuiltinRuleEvidence::ListSetMembership(evidence)) =
+                    builtin.evidence.typed()
+                {
                     return self.construct_lean_list_set_membership_from_result(
                         &source_fact,
                         evidence,
@@ -14952,7 +15195,7 @@ impl StmtResultToLeanCompiler {
                     );
                 }
                 if let Some(BuiltinRuleEvidence::RefinedNumericMembership(evidence)) =
-                    &builtin.evidence
+                    builtin.evidence.typed()
                 {
                     return self.construct_lean_refined_numeric_membership_from_result(
                         &source_fact,
@@ -14961,7 +15204,7 @@ impl StmtResultToLeanCompiler {
                     );
                 }
                 if matches!(
-                    builtin.evidence,
+                    builtin.evidence.typed(),
                     Some(BuiltinRuleEvidence::NotEqualSymmetry)
                 ) {
                     return self.construct_lean_not_equal_symmetry_from_result(
@@ -14970,11 +15213,11 @@ impl StmtResultToLeanCompiler {
                     );
                 }
                 if matches!(
-                    builtin.evidence,
+                    builtin.evidence.typed(),
                     Some(BuiltinRuleEvidence::DisjunctionIntroduction(_))
                 ) {
                     let Some(BuiltinRuleEvidence::DisjunctionIntroduction(evidence)) =
-                        &builtin.evidence
+                        builtin.evidence.typed()
                     else {
                         unreachable!("disjunction evidence checked above")
                     };
@@ -14984,7 +15227,8 @@ impl StmtResultToLeanCompiler {
                         &builtin.subgoals,
                     );
                 }
-                if let Some(BuiltinRuleEvidence::DefinitionProjection(evidence)) = &builtin.evidence
+                if let Some(BuiltinRuleEvidence::DefinitionProjection(evidence)) =
+                    builtin.evidence.typed()
                 {
                     return self.construct_lean_definition_projection_from_result(
                         &source_fact,
@@ -14992,7 +15236,8 @@ impl StmtResultToLeanCompiler {
                         &builtin.subgoals,
                     );
                 }
-                if let Some(BuiltinRuleEvidence::SetBuilderMembership(evidence)) = &builtin.evidence
+                if let Some(BuiltinRuleEvidence::SetBuilderMembership(evidence)) =
+                    builtin.evidence.typed()
                 {
                     return self.construct_lean_set_builder_membership_from_result(
                         &source_fact,
@@ -15001,7 +15246,7 @@ impl StmtResultToLeanCompiler {
                     );
                 }
                 if let Some(BuiltinRuleEvidence::FunctionSetMembership(evidence)) =
-                    &builtin.evidence
+                    builtin.evidence.typed()
                 {
                     return self.construct_lean_function_set_membership_from_result(
                         &source_fact,
@@ -15010,7 +15255,7 @@ impl StmtResultToLeanCompiler {
                     );
                 }
                 if let Some(BuiltinRuleEvidence::FunctionApplicationReturnMembership(evidence)) =
-                    &builtin.evidence
+                    builtin.evidence.typed()
                 {
                     return self.construct_lean_function_application_return_membership_from_result(
                         &source_fact,
@@ -15018,14 +15263,16 @@ impl StmtResultToLeanCompiler {
                         &builtin.subgoals,
                     );
                 }
-                if let Some(BuiltinRuleEvidence::RegisteredLocal(evidence)) = &builtin.evidence {
+                if let Some(BuiltinRuleEvidence::RegisteredLocal(evidence)) =
+                    builtin.evidence.typed()
+                {
                     return self.construct_lean_registered_local_builtin_from_result(
                         &source_fact,
                         evidence,
                         &builtin.subgoals,
                     );
                 }
-                if let Some(BuiltinRuleEvidence::Arithmetic(rule)) = &builtin.evidence {
+                if let Some(BuiltinRuleEvidence::Arithmetic(rule)) = builtin.evidence.typed() {
                     return self.construct_lean_arithmetic_builtin_from_result(
                         &source_fact,
                         *rule,
@@ -15033,7 +15280,7 @@ impl StmtResultToLeanCompiler {
                     );
                 }
                 if matches!(
-                    builtin.evidence,
+                    builtin.evidence.typed(),
                     Some(BuiltinRuleEvidence::StandardSetMembershipProjection)
                 ) {
                     return self.construct_lean_standard_set_membership_projection_from_result(
@@ -15042,7 +15289,7 @@ impl StmtResultToLeanCompiler {
                     );
                 }
                 if let Some(BuiltinRuleEvidence::RealArithmeticMembershipClosure(rule)) =
-                    &builtin.evidence
+                    builtin.evidence.typed()
                 {
                     return self.construct_lean_real_arithmetic_membership_closure_from_result(
                         &source_fact,
@@ -15050,7 +15297,8 @@ impl StmtResultToLeanCompiler {
                         &builtin.subgoals,
                     );
                 }
-                if let Some(BuiltinRuleEvidence::IntegerMembershipClosure(rule)) = &builtin.evidence
+                if let Some(BuiltinRuleEvidence::IntegerMembershipClosure(rule)) =
+                    builtin.evidence.typed()
                 {
                     return self.construct_lean_integer_membership_closure_from_result(
                         &source_fact,
@@ -15058,7 +15306,8 @@ impl StmtResultToLeanCompiler {
                         &builtin.subgoals,
                     );
                 }
-                if let Some(BuiltinRuleEvidence::NaturalMembershipClosure(rule)) = &builtin.evidence
+                if let Some(BuiltinRuleEvidence::NaturalMembershipClosure(rule)) =
+                    builtin.evidence.typed()
                 {
                     return self.construct_lean_natural_membership_closure_from_result(
                         &source_fact,
@@ -15067,7 +15316,7 @@ impl StmtResultToLeanCompiler {
                     );
                 }
                 if let Some(BuiltinRuleEvidence::RationalMembershipClosure(rule)) =
-                    &builtin.evidence
+                    builtin.evidence.typed()
                 {
                     return self.construct_lean_rational_membership_closure_from_result(
                         &source_fact,
@@ -15075,21 +15324,25 @@ impl StmtResultToLeanCompiler {
                         &builtin.subgoals,
                     );
                 }
-                if let Some(BuiltinRuleEvidence::Set(rule)) = &builtin.evidence {
+                if let Some(BuiltinRuleEvidence::Set(rule)) = builtin.evidence.typed() {
                     return self.construct_lean_set_builtin_from_result(
                         &source_fact,
                         *rule,
                         &builtin.subgoals,
                     );
                 }
-                if let Some(BuiltinRuleEvidence::KnownEqualityPath(evidence)) = &builtin.evidence {
+                if let Some(BuiltinRuleEvidence::KnownEqualityPath(evidence)) =
+                    builtin.evidence.typed()
+                {
                     return Ok(Some(self.construct_lean_known_equality_path_from_result(
                         &source_fact,
                         evidence,
                         &builtin.subgoals,
                     )?));
                 }
-                if let Some(BuiltinRuleEvidence::SetRelationDuality(rule)) = &builtin.evidence {
+                if let Some(BuiltinRuleEvidence::SetRelationDuality(rule)) =
+                    builtin.evidence.typed()
+                {
                     return self.construct_lean_set_relation_duality_from_result(
                         &source_fact,
                         *rule,
@@ -15097,7 +15350,7 @@ impl StmtResultToLeanCompiler {
                     );
                 }
                 if let Some(BuiltinRuleEvidence::RegisteredReflexivePredicate(evidence)) =
-                    &builtin.evidence
+                    builtin.evidence.typed()
                 {
                     if !builtin.subgoals.is_empty() {
                         return Err(
@@ -15114,7 +15367,7 @@ impl StmtResultToLeanCompiler {
                     ));
                 }
                 if let Some(BuiltinRuleEvidence::RegisteredSymmetricPredicate(evidence)) =
-                    &builtin.evidence
+                    builtin.evidence.typed()
                 {
                     return self.construct_lean_registered_symmetric_predicate_from_result(
                         &source_fact,
@@ -15123,7 +15376,7 @@ impl StmtResultToLeanCompiler {
                     );
                 }
                 if let Some(BuiltinRuleEvidence::RegisteredAntisymmetricPredicate(evidence)) =
-                    &builtin.evidence
+                    builtin.evidence.typed()
                 {
                     return self.construct_lean_registered_antisymmetric_predicate_from_result(
                         &source_fact,
@@ -15132,7 +15385,7 @@ impl StmtResultToLeanCompiler {
                     );
                 }
                 if let Some(BuiltinRuleEvidence::ComplexAlgebraicNormalization(evidence)) =
-                    &builtin.evidence
+                    builtin.evidence.typed()
                 {
                     return self.construct_lean_complex_algebraic_normalization_from_result(
                         &source_fact,
@@ -15140,7 +15393,7 @@ impl StmtResultToLeanCompiler {
                         &builtin.subgoals,
                     );
                 }
-                if let Some(evidence) = &builtin.evidence {
+                if let Some(evidence) = builtin.evidence.typed() {
                     if let Some(limitation) = direct_builtin_rule_compiler_limitation(evidence) {
                         return Err(limitation.to_string());
                     }
@@ -15148,7 +15401,7 @@ impl StmtResultToLeanCompiler {
                 if !builtin.subgoals.is_empty() {
                     return Ok(None);
                 }
-                match &builtin.evidence {
+                match builtin.evidence.typed() {
                     Some(BuiltinRuleEvidence::ObjectReflexivity(evidence)) => {
                         let Fact::AtomicFact(AtomicFact::EqualFact(equality)) = &source_fact else {
                             return Err(
@@ -15596,7 +15849,7 @@ fn compile_standard_set_nonempty_fact_proof_from_result(
     let SuccessFactProofResult::BuiltinRule(builtin) = success.proof() else {
         return Err("object choice nonemptiness child is not a builtin leaf".into());
     };
-    let Some(BuiltinRuleEvidence::StandardSetNonempty(evidence)) = &builtin.evidence else {
+    let Some(BuiltinRuleEvidence::StandardSetNonempty(evidence)) = builtin.evidence.typed() else {
         return Err("object choice nonemptiness child has no typed standard-set evidence".into());
     };
     let Obj::StandardSet(target_set) = expected_carrier else {
@@ -16424,12 +16677,22 @@ fn describe_success_fact_result_for_direct_compilation_audit(
             proof.evidence,
             proof.subgoals.len()
         ),
-        SuccessFactProofResult::Fact(_) => "FactCitation".to_string(),
+        SuccessFactProofResult::StoredFactCitation(_) => "StoredFactCitation".to_string(),
+        SuccessFactProofResult::Strategy(_) => "Strategy".to_string(),
         SuccessFactProofResult::KnownForallInstantiation(_) => {
             "KnownForallInstantiation".to_string()
         }
+        SuccessFactProofResult::DefinitionReduction(_) => "DefinitionReduction".to_string(),
+        SuccessFactProofResult::CheckedFunctionDefinitionReduction(_) => {
+            "CheckedFunctionDefinitionReduction".to_string()
+        }
+        SuccessFactProofResult::DiagnosticOnly(_) => "DiagnosticOnly".to_string(),
         SuccessFactProofResult::CombinedProofs(proof) => {
-            format!("CombinedProofs items={}", proof.cite_what.len())
+            format!(
+                "CombinedProofs primary={}, steps={}",
+                proof.primary.is_some(),
+                proof.steps.len()
+            )
         }
         SuccessFactProofResult::ForallProof(proof) => {
             let assumption_rules = proof
@@ -16456,12 +16719,28 @@ fn describe_success_fact_result_for_direct_compilation_audit(
                                 proof.evidence,
                                 proof.subgoals.len()
                             ),
-                            SuccessFactProofResult::Fact(_) => "FactCitation".to_string(),
+                            SuccessFactProofResult::StoredFactCitation(_) => {
+                                "StoredFactCitation".to_string()
+                            }
+                            SuccessFactProofResult::Strategy(_) => "Strategy".to_string(),
                             SuccessFactProofResult::KnownForallInstantiation(_) => {
                                 "KnownForallInstantiation".to_string()
                             }
+                            SuccessFactProofResult::DefinitionReduction(_) => {
+                                "DefinitionReduction".to_string()
+                            }
+                            SuccessFactProofResult::CheckedFunctionDefinitionReduction(_) => {
+                                "CheckedFunctionDefinitionReduction".to_string()
+                            }
+                            SuccessFactProofResult::DiagnosticOnly(_) => {
+                                "DiagnosticOnly".to_string()
+                            }
                             SuccessFactProofResult::CombinedProofs(proof) => {
-                                format!("CombinedProofs(items={})", proof.cite_what.len())
+                                format!(
+                                    "CombinedProofs(primary={}, steps={})",
+                                    proof.primary.is_some(),
+                                    proof.steps.len()
+                                )
                             }
                             SuccessFactProofResult::ForallProof(_) => {
                                 "NestedForallProof".to_string()
@@ -17100,14 +17379,7 @@ fn success_verify_fact_result_is_deferred_plain_citation(
     verification: &SuccessVerifyFactResult,
 ) -> bool {
     match verification.proof() {
-        SuccessFactProofResult::Fact(citation) => {
-            citation.source_fact_id.is_some()
-                && citation.equality_transport.is_none()
-                && citation.fact_transformation.is_none()
-                && citation.checked_function_definition_reduction.is_none()
-                && citation.definition_reduction.is_none()
-                && matches!(citation.cite_what.as_ref(), Stmt::Fact(_))
-        }
+        SuccessFactProofResult::StoredFactCitation(_) => true,
         SuccessFactProofResult::Reuse(reuse) => {
             success_verify_fact_result_is_deferred_plain_citation(reuse.source.as_ref())
         }
@@ -17120,23 +17392,14 @@ fn render_deferred_plain_fact_result_citation(
     context: &StmtResultToLeanCompilerEnvironmentStack,
 ) -> Result<String, String> {
     match verification.proof() {
-        SuccessFactProofResult::Fact(citation)
+        SuccessFactProofResult::StoredFactCitation(citation)
             if success_verify_fact_result_is_deferred_plain_citation(verification) =>
         {
-            let Stmt::Fact(source) = citation.cite_what.as_ref() else {
-                unreachable!("plain citation shape checked above")
-            };
-            let source: Fact = source.clone();
+            let source = citation.source_fact.clone();
             if source.to_string() != verification.fact().to_string() {
                 return Err("deferred WD citation changed its target proposition".into());
             }
-            resolve_fact_citation(
-                &citation
-                    .source_fact_id
-                    .expect("plain citation shape checked above"),
-                &source,
-                context,
-            )
+            resolve_fact_citation(&citation.source_fact_id, &source, context)
         }
         SuccessFactProofResult::Reuse(reuse) => {
             render_deferred_plain_fact_result_citation(reuse.source.as_ref(), context)
@@ -22157,6 +22420,105 @@ fn render_numeric_obj(
     }
 }
 
+fn install_structured_induction_shape_symbol(
+    symbol_id: SymbolId,
+    rendered: &str,
+    context: &mut StmtResultToLeanCompilerEnvironmentStack,
+) {
+    let rendered = rendered.to_string();
+    context.symbol_names.insert(symbol_id, rendered.clone());
+    context
+        .numeric_representations
+        .insert(symbol_id, rendered.clone());
+    context
+        .numeric_integer_values
+        .insert(symbol_id, rendered.clone());
+    context
+        .numeric_rational_values
+        .insert(symbol_id, rendered.clone());
+    context.numeric_real_values.insert(symbol_id, rendered);
+}
+
+fn install_structured_induction_native_integer_symbol(
+    symbol_id: SymbolId,
+    native_integer: &str,
+    context: &mut StmtResultToLeanCompilerEnvironmentStack,
+) {
+    let complex = format!("((({native_integer}) : ℂ))");
+    context.symbol_names.insert(symbol_id, complex.clone());
+    context.numeric_representations.insert(symbol_id, complex);
+    context
+        .numeric_integer_values
+        .insert(symbol_id, native_integer.to_string());
+    context
+        .numeric_rational_values
+        .insert(symbol_id, format!("((({native_integer}) : ℚ))"));
+    context
+        .numeric_real_values
+        .insert(symbol_id, format!("((({native_integer}) : ℝ))"));
+}
+
+fn fact_matches_structured_induction_goal_substitution(
+    source: &Fact,
+    target: &Fact,
+    parameter_symbol_id: SymbolId,
+    replacement: &Obj,
+) -> bool {
+    let argument_pairs = match (source, target) {
+        (Fact::AtomicFact(source), Fact::AtomicFact(target)) => {
+            Runtime::_verify_atomic_fact_the_same_type_and_return_matched_args(source, target)
+        }
+        (Fact::AndFact(source), Fact::AndFact(target)) => {
+            Runtime::_verify_and_fact_the_same_type_and_return_matched_args(source, target)
+        }
+        (Fact::ChainFact(source), Fact::ChainFact(target)) => {
+            Runtime::_verify_chain_fact_the_same_type_and_return_matched_args(source, target)
+        }
+        _ => return false,
+    };
+    let Some(argument_pairs) = argument_pairs.ok().flatten() else {
+        return false;
+    };
+    argument_pairs.iter().all(|(source, target)| {
+        object_matches_structured_induction_substitution(
+            source,
+            target,
+            parameter_symbol_id,
+            replacement,
+        )
+    })
+}
+
+fn object_matches_structured_induction_substitution(
+    source: &Obj,
+    target: &Obj,
+    parameter_symbol_id: SymbolId,
+    replacement: &Obj,
+) -> bool {
+    if object_is_symbol(source, parameter_symbol_id) {
+        return objects_align_by_nested_rational_normalization_for_result_compiler(
+            replacement,
+            target,
+        );
+    }
+    if obj_equality_key(source) == obj_equality_key(target) {
+        return true;
+    }
+    let comparison: Result<bool, ()> = Runtime::same_shape_and_corresponding_args_match(
+        source,
+        target,
+        &mut |source_argument, target_argument| {
+            Ok(object_matches_structured_induction_substitution(
+                source_argument,
+                target_argument,
+                parameter_symbol_id,
+                replacement,
+            ))
+        },
+    );
+    comparison.unwrap_or(false)
+}
+
 /// Render one source object in the exact integer view selected by visible
 /// membership evidence. `%` is an integer-only source constructor; silently
 /// applying a made-up Complex remainder operation would change its semantics.
@@ -24741,30 +25103,209 @@ mod tests {
             panic!("expected one successful conjunction Result")
         };
         let target = result.fact();
-        let components = conjunction_components(&target).expect("split conjunction components");
-        let combined = SuccessCombinedFactProofResult {
-            cite_what: components
-                .iter()
-                .map(|component| {
-                    SuccessCombinedFactProofItemResult::builtin_rule_with_evidence(
-                        "diagnostic text is not semantic input".into(),
-                        component.clone(),
-                        Some(BuiltinRuleEvidence::ObjectReflexivity(
-                            ObjectReflexivityBuiltinRuleEvidence {
-                                expected_target: component.clone(),
-                            },
-                        )),
-                        Vec::new(),
-                    )
-                })
-                .collect(),
+        let SuccessFactProofResult::CombinedProofs(combined) = result.proof() else {
+            panic!("expected recursive combined proof Result")
         };
 
         let proof = StmtResultToLeanCompiler::new("combined_builtin_items.lit")
-            .construct_lean_combined_fact_proof_from_result(&target, &combined)
+            .construct_lean_combined_fact_proof_from_result(&target, combined)
             .expect("compile typed combined builtin items")
             .expect("typed combined builtin items are direct");
         assert_eq!(proof, "⟨Litex.Same.refl (1 : ℂ), Litex.Same.refl (2 : ℂ)⟩");
+    }
+
+    fn execute_structured_integer_induction_from(start: &str) -> Vec<StmtResult> {
+        let source = format!(
+            "by induc n from {start}:\n    ? n + 1 = n + 1\n    ? from n = {start}:\n        do_nothing\n    ? induc:\n        do_nothing\n"
+        );
+        crate::stmt_result_to_lean_compiler::compile_litex_source_to_lean_source::execute_litex_source_to_stmt_results(
+            &source,
+            "structured_integer_induction_result.lit",
+        )
+        .expect("execute structured integer induction")
+    }
+
+    fn structured_integer_induction_result_mut(
+        results: &mut [StmtResult],
+    ) -> &mut SuccessByInducStmtResult {
+        let [StmtResult::Success(SuccessStmtResult::By(SuccessByStmtResult::ByInducStmt(result)))] =
+            results
+        else {
+            panic!("expected one successful structured induction Result")
+        };
+        result
+    }
+
+    #[test]
+    fn structured_integer_induction_retains_named_recursive_results_and_exact_fact_ids() {
+        let mut results = execute_structured_integer_induction_from("-1");
+        let result = structured_integer_induction_result_mut(&mut results);
+        let verification = result
+            .verification
+            .as_ref()
+            .expect("structured induction retains its verification Result");
+        let SuccessVerifyByInducProofResult::IntegerStructured(proof) = &verification.proof else {
+            panic!("expected typed structured integer-induction proof")
+        };
+
+        assert_eq!(
+            proof.start.to_string(),
+            result.statement.induc_from.to_string()
+        );
+        assert_eq!(proof.base.proof_steps.len(), 1);
+        assert_eq!(proof.step.proof_steps.len(), 1);
+        assert_eq!(proof.base.conclusions.len(), 1);
+        assert_eq!(proof.step.conclusions.len(), 1);
+
+        let [base_parameter, base_equality] = proof.base.assumptions.as_slice() else {
+            panic!("base case must retain its two named assumptions")
+        };
+        assert_eq!(
+            base_parameter.role,
+            SuccessVerifyByInducAssumptionRole::ParameterType
+        );
+        assert_eq!(
+            base_equality.role,
+            SuccessVerifyByInducAssumptionRole::BaseCaseEquality
+        );
+        assert_ne!(base_parameter.fact_id, base_equality.fact_id);
+
+        let [step_parameter, step_domain, step_hypothesis] = proof.step.assumptions.as_slice()
+        else {
+            panic!("step case must retain parameter, domain, and hypothesis assumptions")
+        };
+        assert_eq!(
+            step_parameter.role,
+            SuccessVerifyByInducAssumptionRole::ParameterType
+        );
+        assert_eq!(
+            step_domain.role,
+            SuccessVerifyByInducAssumptionRole::DomainLowerBound
+        );
+        assert_eq!(
+            step_hypothesis.role,
+            SuccessVerifyByInducAssumptionRole::InductionHypothesis
+        );
+        assert_eq!(step_hypothesis.goal_index, Some(0));
+        assert_ne!(step_parameter.fact_id, step_domain.fact_id);
+        assert_ne!(step_domain.fact_id, step_hypothesis.fact_id);
+        for assumption in proof
+            .base
+            .assumptions
+            .iter()
+            .chain(proof.step.assumptions.iter())
+        {
+            let case_infers = if proof
+                .base
+                .assumptions
+                .iter()
+                .any(|candidate| candidate.fact_id == assumption.fact_id)
+            {
+                &proof.base.assumption_infers
+            } else {
+                &proof.step.assumption_infers
+            };
+            assert!(infer_result_retains_fact_id(
+                case_infers,
+                &assumption.fact,
+                assumption.fact_id
+            ));
+        }
+        assert_eq!(
+            proof.base.conclusions[0].goal.to_string(),
+            proof.base.conclusions[0]
+                .check
+                .factual_success()
+                .expect("base conclusion check is factual")
+                .fact()
+                .to_string()
+        );
+        assert_eq!(
+            proof.step.conclusions[0].goal.to_string(),
+            proof.step.conclusions[0]
+                .check
+                .factual_success()
+                .expect("step conclusion check is factual")
+                .fact()
+                .to_string()
+        );
+    }
+
+    #[test]
+    fn structured_integer_induction_compiler_follows_result_scopes_and_balances_its_stack() {
+        let results = execute_structured_integer_induction_from("-1");
+        let mut compiler = StmtResultToLeanCompiler::new("structured_integer_induction_result.lit");
+        for result in &results {
+            compiler
+                .compile_stmt_result_to_lean_source(result)
+                .expect("compile recursive structured induction Result");
+        }
+        assert!(compiler.environment_stack.is_top_level());
+        let generated = compiler.finish_lean_source().expect("finish Lean source");
+        assert!(
+            generated.contains("Litex.Rules.integerInductionFrom"),
+            "{generated}"
+        );
+    }
+
+    #[test]
+    fn structured_integer_induction_rejects_a_retargeted_hypothesis_fact_id() {
+        let mut results = execute_structured_integer_induction_from("-1");
+        let result = structured_integer_induction_result_mut(&mut results);
+        let verification = result
+            .verification
+            .as_mut()
+            .expect("structured induction retains verification");
+        let SuccessVerifyByInducProofResult::IntegerStructured(proof) = &mut verification.proof
+        else {
+            panic!("expected structured integer induction")
+        };
+        proof.step.assumptions[2].fact_id = proof.step.assumptions[1].fact_id;
+
+        let error = StmtResultToLeanCompiler::new("corrupted_structured_induction.lit")
+            .compile_stmt_results_to_lean_source(&results)
+            .expect_err("retargeted local FactId must fail closed");
+        assert!(error.contains("lost FactId"), "{error}");
+    }
+
+    #[test]
+    fn structured_integer_induction_rejects_a_changed_conclusion_result() {
+        let mut results = execute_structured_integer_induction_from("-1");
+        let result = structured_integer_induction_result_mut(&mut results);
+        let verification = result
+            .verification
+            .as_mut()
+            .expect("structured induction retains verification");
+        let SuccessVerifyByInducProofResult::IntegerStructured(proof) = &mut verification.proof
+        else {
+            panic!("expected structured integer induction")
+        };
+        proof.step.conclusions[0].goal = proof.step.assumptions[1].fact.clone();
+
+        let error = StmtResultToLeanCompiler::new("corrupted_structured_induction.lit")
+            .compile_stmt_results_to_lean_source(&results)
+            .expect_err("changed conclusion must fail closed");
+        assert!(error.contains("changed its checked goal"), "{error}");
+    }
+
+    #[test]
+    fn structured_integer_induction_zero_and_strong_boundaries_fail_closed() {
+        let zero_results = execute_structured_integer_induction_from("0");
+        let zero_error = StmtResultToLeanCompiler::new("zero_structured_induction.lit")
+            .compile_stmt_results_to_lean_source(&zero_results)
+            .expect_err("zero-ended order lowering must fail closed");
+        assert!(zero_error.contains("nonnegative-value"), "{zero_error}");
+
+        let strong_source = "by strong_induc n from -1:\n    ? n + 1 = n + 1\n    ? from n = -1:\n        do_nothing\n    ? strong_induc:\n        do_nothing\n";
+        let strong_results = crate::stmt_result_to_lean_compiler::compile_litex_source_to_lean_source::execute_litex_source_to_stmt_results(
+            strong_source,
+            "strong_structured_induction.lit",
+        )
+        .expect("execute structured strong induction");
+        let strong_error = StmtResultToLeanCompiler::new("strong_structured_induction.lit")
+            .compile_stmt_results_to_lean_source(&strong_results)
+            .expect_err("strong induction must fail closed until its Result compiler lands");
+        assert!(strong_error.contains("strong induction"), "{strong_error}");
     }
 
     #[test]
@@ -25105,7 +25646,7 @@ mod tests {
             let mut results = execute_integer_remainder_membership();
             let builtin = integer_remainder_builtin_mut(&mut results);
             assert!(matches!(
-                builtin.evidence,
+                builtin.evidence.typed(),
                 Some(BuiltinRuleEvidence::IntegerMembershipClosure(
                     IntegerMembershipClosureBuiltinRule::Mod
                 ))
@@ -25129,9 +25670,11 @@ mod tests {
         run_registered_rule_test(|| {
             let mut results = execute_integer_remainder_membership();
             let builtin = integer_remainder_builtin_mut(&mut results);
-            builtin.evidence = Some(BuiltinRuleEvidence::IntegerMembershipClosure(
-                IntegerMembershipClosureBuiltinRule::Add,
-            ));
+            builtin.evidence = SuccessBuiltinFactProofEvidenceResult::Typed(
+                BuiltinRuleEvidence::IntegerMembershipClosure(
+                    IntegerMembershipClosureBuiltinRule::Add,
+                ),
+            );
             let error = StmtResultToLeanCompiler::new("corrupted_integer_remainder_membership.lit")
                 .compile_stmt_results_to_lean_source(&results)
                 .expect_err("retargeted integer closure certificate must fail closed");
@@ -25182,7 +25725,7 @@ mod tests {
             let mut results = execute_rational_power_membership();
             let builtin = rational_power_builtin_mut(&mut results);
             assert!(matches!(
-                builtin.evidence,
+                builtin.evidence.typed(),
                 Some(BuiltinRuleEvidence::RationalMembershipClosure(
                     RationalMembershipClosureBuiltinRule::Pow
                 ))
@@ -25205,9 +25748,11 @@ mod tests {
         run_registered_rule_test(|| {
             let mut results = execute_rational_power_membership();
             let builtin = rational_power_builtin_mut(&mut results);
-            builtin.evidence = Some(BuiltinRuleEvidence::RationalMembershipClosure(
-                RationalMembershipClosureBuiltinRule::Div,
-            ));
+            builtin.evidence = SuccessBuiltinFactProofEvidenceResult::Typed(
+                BuiltinRuleEvidence::RationalMembershipClosure(
+                    RationalMembershipClosureBuiltinRule::Div,
+                ),
+            );
             let error = StmtResultToLeanCompiler::new("corrupted_rational_power_membership.lit")
                 .compile_stmt_results_to_lean_source(&results)
                 .expect_err("retargeted rational closure certificate must fail closed");
@@ -25227,7 +25772,8 @@ mod tests {
         let SuccessFactProofResult::BuiltinRule(proof) = verification.proof_mut() else {
             panic!("expected builtin proof")
         };
-        let Some(BuiltinRuleEvidence::ClosedNumericMembership(evidence)) = &mut proof.evidence
+        let Some(BuiltinRuleEvidence::ClosedNumericMembership(evidence)) =
+            proof.evidence.typed_mut()
         else {
             panic!("expected closed membership evidence")
         };
@@ -25321,10 +25867,6 @@ mod tests {
                 .last()
                 .and_then(StmtResult::factual_success)
                 .expect("function-return membership is factual");
-            let SuccessFactProofResult::Fact(citation) = result.underlying_verified_by() else {
-                panic!("expected exact WD fact citation, got {:#?}", result.proof())
-            };
-            assert!(citation.source_fact_id.is_some());
             assert!(result.well_definedness.recursive.is_some());
 
             let generated =
@@ -25375,10 +25917,20 @@ mod tests {
                 .last()
                 .and_then(StmtResult::factual_success)
                 .expect("normalized citation is factual");
-            let SuccessFactProofResult::Fact(citation) = result.underlying_verified_by() else {
-                panic!("expected known-fact citation, got {:#?}", result.proof())
+            let SuccessFactProofResult::Transform(transformation) = result.proof() else {
+                panic!(
+                    "expected recursive fact transformation, got {:#?}",
+                    result.proof()
+                )
             };
-            assert!(citation.fact_transformation.is_some());
+            assert!(matches!(
+                transformation.rule,
+                FactTransformationRule::RationalNormalization
+            ));
+            assert!(matches!(
+                transformation.source.proof(),
+                SuccessFactProofResult::StoredFactCitation(_)
+            ));
 
             let generated = StmtResultToLeanCompiler::new("direct_fact_transformation.lit")
                 .compile_stmt_results_to_lean_source(&results)
@@ -25401,20 +25953,23 @@ mod tests {
                 .expect("normalized citation is factual");
             let verification = std::rc::Rc::get_mut(&mut result.verification)
                 .expect("test citation has one verification owner");
-            let SuccessFactProofResult::Fact(citation) = verification.proof_mut() else {
-                panic!("expected known-fact citation")
+            let SuccessFactProofResult::Transform(transformation) = verification.proof_mut() else {
+                panic!("expected recursive fact transformation")
             };
-            citation
-                .fact_transformation
-                .as_mut()
-                .expect("citation retains transformation")
-                .steps
-                .clear();
+            let source = std::rc::Rc::get_mut(&mut transformation.source)
+                .expect("test owns the nested transformation source");
+            *source.proof_mut() =
+                SuccessFactProofResult::DiagnosticOnly(SuccessDiagnosticFactProofResult {
+                    detail: "corrupted nested source".to_string(),
+                });
 
             let error = StmtResultToLeanCompiler::new("direct_fact_transformation.lit")
                 .compile_stmt_results_to_lean_source(&results)
                 .expect_err("removed transformation step must fail closed");
-            assert!(error.contains("transformations ended"), "{error}");
+            assert!(
+                error.contains("does not support") || error.contains("no direct"),
+                "{error}"
+            );
         });
     }
 
@@ -25767,7 +26322,8 @@ mod tests {
         let SuccessFactProofResult::BuiltinRule(proof) = verification.proof_mut() else {
             panic!("expected builtin membership proof")
         };
-        let Some(BuiltinRuleEvidence::ListSetMembership(evidence)) = &mut proof.evidence else {
+        let Some(BuiltinRuleEvidence::ListSetMembership(evidence)) = proof.evidence.typed_mut()
+        else {
             panic!("expected list-set membership evidence")
         };
         evidence.selected_index = 10;
@@ -26005,7 +26561,7 @@ mod tests {
             panic!("duality must retain builtin proof")
         };
         assert!(matches!(
-            &proof.evidence,
+            proof.evidence.typed(),
             Some(BuiltinRuleEvidence::SetRelationDuality(
                 SetRelationDualityBuiltinRule::SubsetFromSuperset
             ))
@@ -26016,12 +26572,11 @@ mod tests {
         let source_result = source_result
             .factual_success()
             .expect("duality source must be factual");
-        let SuccessFactProofResult::Fact(source_citation) = source_result.proof() else {
+        let SuccessFactProofResult::StoredFactCitation(source_citation) = source_result.proof()
+        else {
             panic!("duality source must cite the preceding relation")
         };
-        let trusted_fact_id = source_citation
-            .source_fact_id
-            .expect("duality source citation must retain its FactId");
+        let trusted_fact_id = source_citation.source_fact_id;
         let mut compiler = StmtResultToLeanCompiler::new("direct_set_relation_duality.lit");
         compiler
             .compile_stmt_result_to_lean_source(set_a)
@@ -26224,10 +26779,11 @@ mod tests {
             .source_result
             .factual_success()
             .expect("elimination source is factual");
-        let SuccessFactProofResult::Fact(source_citation) = source_citation.proof() else {
+        let SuccessFactProofResult::StoredFactCitation(source_citation) = source_citation.proof()
+        else {
             panic!("elimination source cites the stored existential")
         };
-        assert_eq!(source_citation.source_fact_id, Some(source_fact_id));
+        assert_eq!(source_citation.source_fact_id, source_fact_id);
 
         let mut compiler = StmtResultToLeanCompiler::new("direct_existential_elimination.lit");
         assert!(compiler
@@ -26515,7 +27071,7 @@ mod tests {
             local.store.infers.store_fact_outputs[0].fact_id,
             Some(local_fact_id)
         );
-        let SuccessFactProofResult::Fact(citation) = verification
+        let SuccessFactProofResult::StoredFactCitation(citation) = verification
             .conclusion_check
             .factual_success()
             .expect("claim conclusion is factual")
@@ -26523,7 +27079,7 @@ mod tests {
         else {
             panic!("claim conclusion cites its local proof step")
         };
-        assert_eq!(citation.source_fact_id, Some(local_fact_id));
+        assert_eq!(citation.source_fact_id, local_fact_id);
     }
 
     #[test]
@@ -26948,13 +27504,11 @@ mod tests {
         let reduction_result = results[1]
             .factual_success()
             .expect("second statement is a factual reduction");
-        let SuccessFactProofResult::Fact(citation) = reduction_result.proof() else {
-            panic!("checked definition reduction must retain a fact proof")
+        let SuccessFactProofResult::CheckedFunctionDefinitionReduction(reduction) =
+            reduction_result.proof()
+        else {
+            panic!("checked definition reduction must retain typed evidence")
         };
-        let reduction = citation
-            .checked_function_definition_reduction
-            .as_ref()
-            .expect("checked definition reduction retains typed evidence");
         let StmtResult::Success(SuccessStmtResult::DefObjStmt(
             SuccessDefObjStmtResult::HaveFnEqualStmt(definition),
         )) = &results[0]
@@ -26962,7 +27516,7 @@ mod tests {
             panic!("first statement is the named-function definition")
         };
         assert_eq!(
-            Some(reduction.defining_equality_fact_id),
+            Some(reduction.verification.defining_equality_fact_id),
             definition.common.infers.store_fact_outputs[1].fact_id
         );
 
@@ -26985,14 +27539,12 @@ mod tests {
             .expect("outer reduction result retains a FactId");
         let verification = std::rc::Rc::get_mut(&mut reduction_result.verification)
             .expect("executed Result uniquely owns its verification in this corruption test");
-        let SuccessFactProofResult::Fact(citation) = verification.proof_mut() else {
-            panic!("checked definition reduction must retain a fact proof")
+        let SuccessFactProofResult::CheckedFunctionDefinitionReduction(reduction) =
+            verification.proof_mut()
+        else {
+            panic!("checked definition reduction must retain typed evidence")
         };
-        citation
-            .checked_function_definition_reduction
-            .as_mut()
-            .expect("checked definition reduction retains typed evidence")
-            .defining_equality_fact_id = wrong_fact_id;
+        reduction.verification.defining_equality_fact_id = wrong_fact_id;
 
         let error = StmtResultToLeanCompiler::new("direct_named_real_function.lit")
             .compile_stmt_results_to_lean_source(&results)
@@ -27434,15 +27986,10 @@ mod tests {
                 let child = child
                     .factual_success()
                     .expect("registered set child is factual");
-                let SuccessFactProofResult::Fact(citation) = child.proof() else {
+                let SuccessFactProofResult::StoredFactCitation(citation) = child.proof() else {
                     panic!("registered set child must cite an exact source fact")
                 };
-                let source_fact_id = citation
-                    .source_fact_id
-                    .expect("registered set child citation retains its FactId");
-                let Stmt::Fact(cited_fact) = citation.cite_what.as_ref() else {
-                    panic!("registered set child cites a non-fact statement")
-                };
+                let source_fact_id = citation.source_fact_id;
                 compiler
                     .environment_stack
                     .fact_names
@@ -27450,7 +27997,7 @@ mod tests {
                 compiler
                     .environment_stack
                     .fact_propositions
-                    .insert(source_fact_id, cited_fact.clone());
+                    .insert(source_fact_id, citation.source_fact.clone());
             }
             let generated = compiler
                 .construct_lean_proof_from_direct_fact_result(result)
@@ -27475,7 +28022,8 @@ mod tests {
             let SuccessFactProofResult::BuiltinRule(proof) = verification.proof_mut() else {
                 panic!("expected registered builtin proof")
             };
-            let Some(BuiltinRuleEvidence::RegisteredLocal(evidence)) = &mut proof.evidence else {
+            let Some(BuiltinRuleEvidence::RegisteredLocal(evidence)) = proof.evidence.typed_mut()
+            else {
                 panic!("expected registered local certificate")
             };
             evidence.semantic_fingerprint =
@@ -27506,7 +28054,7 @@ mod tests {
                 panic!("expected builtin sign proof")
             };
             assert!(matches!(
-                &builtin.evidence,
+                builtin.evidence.typed(),
                 Some(BuiltinRuleEvidence::Arithmetic(
                     ArithmeticBuiltinRule::AddNonnegative
                 ))
@@ -27519,15 +28067,10 @@ mod tests {
                 let child = child
                     .factual_success()
                     .expect("arithmetic premise is factual");
-                let SuccessFactProofResult::Fact(citation) = child.proof() else {
+                let SuccessFactProofResult::StoredFactCitation(citation) = child.proof() else {
                     panic!("arithmetic premise must cite an exact source fact")
                 };
-                let fact_id = citation
-                    .source_fact_id
-                    .expect("arithmetic premise citation retains FactId");
-                let Stmt::Fact(cited_fact) = citation.cite_what.as_ref() else {
-                    panic!("arithmetic premise cites a non-fact statement")
-                };
+                let fact_id = citation.source_fact_id;
                 compiler
                     .environment_stack
                     .fact_names
@@ -27535,7 +28078,7 @@ mod tests {
                 compiler
                     .environment_stack
                     .fact_propositions
-                    .insert(fact_id, cited_fact.clone());
+                    .insert(fact_id, citation.source_fact.clone());
             }
             let proof = compiler
                 .construct_lean_proof_from_direct_fact_result(result)
@@ -27655,7 +28198,8 @@ mod tests {
         run_registered_rule_test(|| {
             let mut results = execute_registered_componentwise_order_addition();
             let builtin = registered_componentwise_order_addition_builtin_mut(&mut results);
-            let Some(BuiltinRuleEvidence::RegisteredLocal(evidence)) = &mut builtin.evidence else {
+            let Some(BuiltinRuleEvidence::RegisteredLocal(evidence)) = builtin.evidence.typed_mut()
+            else {
                 panic!("expected registered local builtin evidence")
             };
             evidence.semantic_fingerprint =
@@ -27785,7 +28329,7 @@ mod tests {
             panic!("expected builtin transitivity proof")
         };
         assert!(matches!(
-            builtin.evidence,
+            builtin.evidence.typed(),
             Some(BuiltinRuleEvidence::Arithmetic(
                 ArithmeticBuiltinRule::OrderTransitivity
             ))
@@ -27929,7 +28473,8 @@ mod tests {
         let SuccessFactProofResult::BuiltinRule(builtin) = verification.proof_mut() else {
             panic!("expected builtin order-reflexivity proof")
         };
-        let Some(BuiltinRuleEvidence::OrderReflexivity(evidence)) = &mut builtin.evidence else {
+        let Some(BuiltinRuleEvidence::OrderReflexivity(evidence)) = builtin.evidence.typed_mut()
+        else {
             panic!("expected typed order-reflexivity evidence")
         };
         evidence
@@ -27982,7 +28527,8 @@ mod tests {
         let SuccessFactProofResult::BuiltinRule(builtin) = verification.proof_mut() else {
             panic!("expected builtin closed-comparison proof")
         };
-        let Some(BuiltinRuleEvidence::ClosedNumericComparison(evidence)) = &mut builtin.evidence
+        let Some(BuiltinRuleEvidence::ClosedNumericComparison(evidence)) =
+            builtin.evidence.typed_mut()
         else {
             panic!("expected typed closed numeric comparison evidence")
         };
@@ -28058,16 +28604,21 @@ mod tests {
         *verification.proof_mut() =
             SuccessFactProofResult::BuiltinRule(SuccessBuiltinFactProofResult {
                 msg: "registered reflexive predicate".to_string(),
-                evidence: Some(BuiltinRuleEvidence::RegisteredReflexivePredicate(
-                    RegisteredReflexivePredicateBuiltinRuleEvidence::new(target, "rel".to_string()),
-                )),
+                evidence: SuccessBuiltinFactProofEvidenceResult::Typed(
+                    BuiltinRuleEvidence::RegisteredReflexivePredicate(
+                        RegisteredReflexivePredicateBuiltinRuleEvidence::new(
+                            target,
+                            "rel".to_string(),
+                        ),
+                    ),
+                ),
                 subgoals: Vec::new(),
             });
         let SuccessFactProofResult::BuiltinRule(builtin) = verification.proof_mut() else {
             unreachable!("test just installed a builtin proof")
         };
         let Some(BuiltinRuleEvidence::RegisteredReflexivePredicate(evidence)) =
-            &mut builtin.evidence
+            builtin.evidence.typed_mut()
         else {
             panic!("expected typed registered-reflexivity evidence")
         };
@@ -28353,15 +28904,8 @@ mod tests {
         let fact = result.fact();
         let verification = std::rc::Rc::get_mut(&mut result.verification)
             .expect("test owns the embedded child verification Result");
-        *verification.proof_mut() = SuccessFactProofResult::Fact(SuccessFactCitationProofResult {
-            detail: None,
-            cite_what: Box::new(fact.into()),
-            source_fact_id: Some(source_fact_id),
-            equality_transport: None,
-            fact_transformation: None,
-            checked_function_definition_reduction: None,
-            definition_reduction: None,
-        });
+        *verification.proof_mut() =
+            SuccessFactProofResult::stored_fact_citation(fact, source_fact_id, None);
     }
 
     fn exact_visible_stored_fact_id(results: &[StmtResult], fact: &Fact) -> Option<FactId> {
@@ -28442,21 +28986,23 @@ mod tests {
         *verification.proof_mut() =
             SuccessFactProofResult::BuiltinRule(SuccessBuiltinFactProofResult {
                 msg: "registered symmetric predicate".to_string(),
-                evidence: Some(BuiltinRuleEvidence::RegisteredSymmetricPredicate(
-                    RegisteredSymmetricPredicateBuiltinRuleEvidence::new(
-                        target,
-                        "any_set".to_string(),
-                        vec![1, 0],
-                        alternate,
+                evidence: SuccessBuiltinFactProofEvidenceResult::Typed(
+                    BuiltinRuleEvidence::RegisteredSymmetricPredicate(
+                        RegisteredSymmetricPredicateBuiltinRuleEvidence::new(
+                            target,
+                            "any_set".to_string(),
+                            vec![1, 0],
+                            alternate,
+                        ),
                     ),
-                )),
+                ),
                 subgoals: vec![alternate_result],
             });
         let SuccessFactProofResult::BuiltinRule(builtin) = verification.proof_mut() else {
             unreachable!("test just installed a builtin proof")
         };
         let Some(BuiltinRuleEvidence::RegisteredSymmetricPredicate(evidence)) =
-            &mut builtin.evidence
+            builtin.evidence.typed_mut()
         else {
             unreachable!("test just installed symmetric evidence")
         };
@@ -28580,19 +29126,21 @@ mod tests {
         *verification.proof_mut() =
             SuccessFactProofResult::BuiltinRule(SuccessBuiltinFactProofResult {
                 msg: "registered antisymmetric predicate".to_string(),
-                evidence: Some(BuiltinRuleEvidence::RegisteredAntisymmetricPredicate(
-                    RegisteredAntisymmetricPredicateBuiltinRuleEvidence::new(
-                        target,
-                        "same_set".to_string(),
+                evidence: SuccessBuiltinFactProofEvidenceResult::Typed(
+                    BuiltinRuleEvidence::RegisteredAntisymmetricPredicate(
+                        RegisteredAntisymmetricPredicateBuiltinRuleEvidence::new(
+                            target,
+                            "same_set".to_string(),
+                        ),
                     ),
-                )),
+                ),
                 subgoals: vec![first_premise, second_premise],
             });
         let SuccessFactProofResult::BuiltinRule(builtin) = verification.proof_mut() else {
             unreachable!("test just installed a builtin proof")
         };
         let Some(BuiltinRuleEvidence::RegisteredAntisymmetricPredicate(evidence)) =
-            &mut builtin.evidence
+            builtin.evidence.typed_mut()
         else {
             unreachable!("test just installed antisymmetric evidence")
         };

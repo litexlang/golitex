@@ -273,9 +273,12 @@ impl RunSummary {
                 self.visit_known_forall_instantiation(result, depth);
             }
             SuccessFactProofResult::CombinedProofs(result) => {
-                bump_count(&mut self.proof_method_counts, "verified by citations");
-                for item in result.cite_what.iter() {
-                    self.visit_verified_by_item(item, depth);
+                bump_count(&mut self.proof_method_counts, "combined proof");
+                if let Some(primary) = result.primary.as_ref() {
+                    self.visit_verified_by(primary.proof(), depth + 1);
+                }
+                for step in result.steps.iter() {
+                    self.visit_result(step, depth + 1);
                 }
             }
             SuccessFactProofResult::ForallProof(result) => {
@@ -285,42 +288,29 @@ impl RunSummary {
                     self.visit_result(&proved.result, depth + 1);
                 }
             }
-            SuccessFactProofResult::Fact(_) => {
+            SuccessFactProofResult::StoredFactCitation(_) => {
                 bump_count(&mut self.proof_method_counts, "known fact");
+            }
+            SuccessFactProofResult::Strategy(_) => {
+                bump_count(&mut self.proof_method_counts, "strategy");
+            }
+            SuccessFactProofResult::DefinitionReduction(_) => {
+                bump_count(&mut self.proof_method_counts, "definition reduction");
+            }
+            SuccessFactProofResult::CheckedFunctionDefinitionReduction(_) => {
+                bump_count(
+                    &mut self.proof_method_counts,
+                    "checked function definition reduction",
+                );
+            }
+            SuccessFactProofResult::DiagnosticOnly(_) => {
+                bump_count(&mut self.proof_method_counts, "diagnostic-only proof");
             }
             SuccessFactProofResult::Transform(result) => {
                 bump_count(&mut self.proof_method_counts, "fact transform");
                 self.visit_verified_by(result.source.proof(), depth + 1);
             }
             SuccessFactProofResult::Reuse(result) => {
-                self.visit_verified_by(result.source.proof(), depth);
-            }
-        }
-    }
-
-    fn visit_verified_by_item(&mut self, item: &SuccessCombinedFactProofItemResult, depth: usize) {
-        match item {
-            SuccessCombinedFactProofItemResult::ByBuiltinRule(result) => {
-                bump_count(&mut self.proof_method_counts, "builtin rule");
-                bump_count(&mut self.builtin_rule_counts, result.msg.as_str());
-                for subgoal in result.subgoals.iter() {
-                    self.visit_result(subgoal, depth + 1);
-                }
-            }
-            SuccessCombinedFactProofItemResult::ByBuiltinStrategy(result) => {
-                bump_count(&mut self.proof_method_counts, "builtin strategy");
-                for subgoal in result.subgoals.iter() {
-                    self.visit_result(subgoal, depth + 1);
-                }
-            }
-            SuccessCombinedFactProofItemResult::ByKnownForall(result) => {
-                bump_count(&mut self.proof_method_counts, "known forall instantiation");
-                self.visit_known_forall_instantiation(&result.result, depth);
-            }
-            SuccessCombinedFactProofItemResult::ByFact(_) => {
-                bump_count(&mut self.proof_method_counts, "known fact");
-            }
-            SuccessCombinedFactProofItemResult::Reuse(result) => {
                 self.visit_verified_by(result.source.proof(), depth);
             }
         }

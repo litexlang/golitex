@@ -93,10 +93,8 @@ pub struct FileRunner {
     pub source_path: String,
     pub canonical_name: String,
     pub environment: Box<Environment>,
-    pub imported_modules: Vec<ModuleId>,
     pub status: FileStatus,
     pub execution_mode: ExecutionMode,
-    pub strictly_verified: bool,
 }
 
 impl FileRunner {
@@ -106,10 +104,8 @@ impl FileRunner {
             source_path,
             canonical_name,
             environment: Box::new(Environment::new_empty_env()),
-            imported_modules: vec![],
             status: FileStatus::Unloaded,
             execution_mode: ExecutionMode::Verified,
-            strictly_verified: false,
         }
     }
 }
@@ -134,10 +130,8 @@ pub struct ModuleRunner {
     /// without a module head. Stored in stable diagnostic order: export, std,
     /// then path import.
     pub bare_symbol_sources: Vec<ConfigBareSymbolSource>,
-    pub imports: Vec<ModuleId>,
     pub status: ModuleStatus,
     pub execution_mode: ExecutionMode,
-    pub strictly_verified: bool,
 }
 
 impl ModuleRunner {
@@ -166,10 +160,8 @@ impl ModuleRunner {
             run_target_lines: HashMap::new(),
             config_imports: vec![],
             bare_symbol_sources: vec![],
-            imports: vec![],
             status,
             execution_mode: ExecutionMode::Verified,
-            strictly_verified: false,
         }
     }
 
@@ -193,11 +185,5 @@ impl ModuleRunner {
 
     pub fn file_mut(&mut self, id: FileId) -> Option<&mut FileRunner> {
         self.files.get_mut(id.0)
-    }
-
-    pub fn record_import(&mut self, module_id: ModuleId) {
-        if !self.imports.contains(&module_id) {
-            self.imports.push(module_id);
-        }
     }
 }

@@ -19,9 +19,7 @@ pub struct ModuleManager {
     pub modules: HashMap<ModuleId, ModuleRunner>,
     pub module_by_name: HashMap<String, ModuleId>,
     pub module_by_path: HashMap<String, ModuleId>,
-    pub root_exports: HashMap<String, ImportTarget>,
     pub exported_files_by_name: HashMap<String, ImportTarget>,
-    pub exported_file_by_path: HashMap<String, ImportTarget>,
     pub loading_module_stack: Vec<ModuleId>,
     pub next_module_id: usize,
     pub entry_module_id: Option<ModuleId>,
@@ -36,9 +34,7 @@ impl ModuleManager {
             modules: HashMap::new(),
             module_by_name: HashMap::new(),
             module_by_path: HashMap::new(),
-            root_exports: HashMap::new(),
             exported_files_by_name: HashMap::new(),
-            exported_file_by_path: HashMap::new(),
             loading_module_stack: vec![],
             next_module_id: 0,
             entry_module_id: None,
@@ -142,21 +138,9 @@ impl ModuleManager {
         Ok(module_id)
     }
 
-    pub fn register_root_export(
-        &mut self,
-        name: String,
-        target: ImportTarget,
-    ) -> Result<(), String> {
-        if self.root_exports.insert(name.clone(), target).is_some() {
-            return Err(format!("duplicate root export name `{}`", name));
-        }
-        Ok(())
-    }
-
     pub fn register_exported_file(
         &mut self,
         canonical_name: String,
-        source_path: String,
         target: ImportTarget,
     ) -> Result<(), String> {
         if self
@@ -169,16 +153,7 @@ impl ModuleManager {
                 canonical_name
             ));
         }
-        // A source file may be mounted more than once.  Its canonical package
-        // name, rather than its physical path, is the public identity.
-        self.exported_file_by_path
-            .entry(source_path)
-            .or_insert(target);
         Ok(())
-    }
-
-    pub fn root_export(&self, name: &str) -> Option<ImportTarget> {
-        self.root_exports.get(name).copied()
     }
 
     pub fn import_target_by_canonical_name(&self, name: &str) -> Option<ImportTarget> {
@@ -304,15 +279,6 @@ impl ModuleManager {
             .status = ModuleStatus::Loading;
         self.loading_module_stack.push(module_id);
         Ok(())
-    }
-
-    pub fn record_import_dependency(&mut self, importing: ModuleId, imported: ModuleId) {
-        if importing == imported {
-            return;
-        }
-        if let Some(module) = self.modules.get_mut(&importing) {
-            module.record_import(imported);
-        }
     }
 
     fn allocate_module_id(&mut self) -> ModuleId {

@@ -132,159 +132,6 @@ pub enum KnownObjValue {
     SimplifiedFraction(Div),  // when a = 1/3, store a = 1/3
 }
 
-impl Environment {
-    /// Remove declarations and proof-control state from a temporary
-    /// well-definedness environment while retaining directly checked atomic
-    /// consequences, the universal atomic rules created while materializing
-    /// their objects, and reusable verification caches. A cached template
-    /// application cannot be reduced without those materialized equations.
-    pub fn retain_only_well_definedness_certificate_data(&mut self) {
-        self.symbols = SymbolTable::new();
-        self.defined_identifiers.clear();
-        self.defined_def_props.clear();
-        self.defined_abstract_props.clear();
-        self.defined_algorithms.clear();
-        self.defined_structs.clear();
-        self.defined_templates.clear();
-        self.defined_settings.clear();
-        self.defined_thm_stmts.clear();
-        self.defined_axiom_stmts.clear();
-        self.defined_strategy_stmts.clear();
-        self.known_equality = KnownEquality::new();
-        self.known_exist_facts.clear();
-        self.known_or_facts.clear();
-        self.known_exist_facts_in_forall_facts.clear();
-        self.known_and_facts_in_forall_facts.clear();
-        self.known_or_facts_in_forall_facts.clear();
-        self.known_objs_equal_to_tuple.clear();
-        self.known_objs_equal_to_cart.clear();
-        self.known_objs_equal_to_finite_seq_list.clear();
-        self.known_objs_equal_to_matrix_list.clear();
-        self.known_objs_in_matrix_sets.clear();
-        self.known_obj_values.clear();
-        self.known_objs_equal_to_set_builder.clear();
-        self.known_objs_in_fn_sets.clear();
-        self.known_transitive_props.clear();
-        self.known_symmetric_props.clear();
-        self.known_reflexive_props.clear();
-        self.known_antisymmetric_props.clear();
-        self.statement_atomic_fact_proofs.clear();
-        self.proof_search_state.clear();
-        self.cache_infer_rule_firing.clear();
-        self.used_strategy_stmts.clear();
-        self.stopped_strategy_stmts.clear();
-    }
-
-    pub fn new(
-        objs: HashMap<IdentifierName, ParamObjType>,
-        def_props: HashMap<PropName, DefPropStmt>,
-        abstract_props: HashMap<AbstractPropName, DefAbstractPropStmt>,
-        algorithms: HashMap<AlgoName, DefAlgoStmt>,
-        structs: HashMap<StructName, DefStructStmt>,
-        templates: HashMap<TemplateName, DefTemplateStmt>,
-        defined_thm_stmts: HashMap<ThmName, DefThmStmt>,
-        defined_axiom_stmts: HashMap<ThmName, AxiomStmt>,
-        known_equality: KnownEquality,
-        known_fn_in_fn_set: HashMap<ObjString, KnownFnInfo>,
-        known_atomic_facts_with_0_or_more_than_2_args: HashMap<
-            (AtomicFactKey, bool),
-            Vec<AtomicFact>,
-        >,
-        known_atomic_facts_with_1_arg: HashMap<
-            (AtomicFactKey, bool),
-            HashMap<ObjString, AtomicFact>,
-        >,
-        known_atomic_facts_with_2_args: HashMap<
-            (AtomicFactKey, bool),
-            HashMap<(ObjString, ObjString), AtomicFact>,
-        >,
-        known_exist_facts: HashMap<ExistFactKey, Vec<ExistFactEnum>>,
-        known_atomic_facts_in_forall_facts: HashMap<
-            (AtomicFactKey, bool),
-            Vec<(AtomicFact, Rc<KnownForallFactParamsAndDom>)>,
-        >,
-        known_exist_facts_in_forall_facts: HashMap<
-            ExistFactKey,
-            Vec<(ExistFactEnum, Rc<KnownForallFactParamsAndDom>)>,
-        >,
-        known_and_facts_in_forall_facts: HashMap<
-            AndFactKey,
-            Vec<(AndFact, Rc<KnownForallFactParamsAndDom>)>,
-        >,
-        known_or_facts: HashMap<OrFactKey, Vec<OrFact>>,
-        known_or_facts_in_forall_facts: HashMap<
-            OrFactKey,
-            Vec<(OrFact, Rc<KnownForallFactParamsAndDom>)>,
-        >,
-        known_tuple_objs: HashMap<ObjString, (Option<Tuple>, Option<Cart>, LineFile)>,
-        known_cart_objs: HashMap<ObjString, (Cart, LineFile)>,
-        known_finite_seq_list_objs: HashMap<
-            ObjString,
-            (FiniteSeqListObj, Option<FiniteSeqSet>, LineFile),
-        >,
-        known_matrix_list_objs: HashMap<ObjString, (MatrixListObj, Option<MatrixSet>, LineFile)>,
-        known_obj_values: HashMap<ObjString, KnownObjValue>,
-        known_set_builder_objs: HashMap<ObjString, (SetBuilder, LineFile)>,
-        cache_known_valid_obj: HashMap<ObjString, ()>,
-        cache_known_fact: HashMap<FactString, CachedKnownFact>,
-    ) -> Self {
-        Environment {
-            symbols: SymbolTable::new(),
-            defined_identifiers: objs,
-            defined_def_props: def_props,
-            defined_abstract_props: abstract_props,
-            defined_algorithms: algorithms,
-            defined_structs: structs,
-            defined_templates: templates,
-            defined_settings: HashMap::new(),
-            defined_thm_stmts,
-            defined_axiom_stmts,
-            defined_strategy_stmts: HashMap::new(),
-            known_equality,
-            known_objs_in_fn_sets: known_fn_in_fn_set,
-            known_atomic_facts_with_0_or_more_than_2_args,
-            known_atomic_facts_with_1_arg: known_atomic_facts_with_1_arg,
-            known_atomic_facts_with_2_args: known_atomic_facts_with_2_args,
-            known_owner_sets: HashMap::new(),
-            known_direct_supersets: HashMap::new(),
-            known_exist_facts,
-            known_atomic_facts_in_forall_facts,
-            known_atomic_facts_in_forall_facts_by_arg_shape: HashMap::new(),
-            known_exist_facts_in_forall_facts,
-            known_and_facts_in_forall_facts,
-            known_or_facts,
-            known_or_facts_in_forall_facts,
-            known_objs_equal_to_tuple: known_tuple_objs,
-            known_objs_equal_to_cart: known_cart_objs,
-            known_objs_equal_to_finite_seq_list: known_finite_seq_list_objs,
-            known_objs_equal_to_matrix_list: known_matrix_list_objs,
-            known_objs_in_matrix_sets: HashMap::new(),
-            known_obj_values,
-            known_objs_equal_to_set_builder: known_set_builder_objs,
-            known_transitive_props: HashMap::new(),
-            known_symmetric_props: HashMap::new(),
-            known_reflexive_props: HashMap::new(),
-            known_antisymmetric_props: HashMap::new(),
-            cache_well_defined_obj: cache_known_valid_obj
-                .into_keys()
-                .map(|key| {
-                    (
-                        WellDefinedCacheKey::without_function_contract(key),
-                        CachedWellDefinedObj::ordinary(),
-                    )
-                })
-                .collect(),
-            cache_known_fact,
-            cache_infer_rule_firing: HashMap::new(),
-            statement_atomic_fact_proofs: HashMap::new(),
-            statement_well_defined_obj_proofs: HashMap::new(),
-            proof_search_state: ProofSearchState::default(),
-            used_strategy_stmts: HashMap::new(),
-            stopped_strategy_stmts: HashMap::new(),
-        }
-    }
-}
-
 impl fmt::Display for Environment {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "Environment {{\n")?;
@@ -772,35 +619,52 @@ impl Environment {
 
 impl Environment {
     pub fn new_empty_env() -> Self {
-        Environment::new(
-            HashMap::new(),
-            HashMap::new(),
-            HashMap::new(),
-            HashMap::new(),
-            HashMap::new(),
-            HashMap::new(),
-            HashMap::new(),
-            HashMap::new(),
-            KnownEquality::new(),
-            HashMap::new(),
-            HashMap::new(),
-            HashMap::new(),
-            HashMap::new(),
-            HashMap::new(),
-            HashMap::new(),
-            HashMap::new(),
-            HashMap::new(),
-            HashMap::new(),
-            HashMap::new(),
-            HashMap::new(),
-            HashMap::new(),
-            HashMap::new(),
-            HashMap::new(),
-            HashMap::new(),
-            HashMap::new(),
-            HashMap::new(),
-            HashMap::new(),
-        )
+        Environment {
+            symbols: SymbolTable::new(),
+            defined_identifiers: HashMap::new(),
+            defined_def_props: HashMap::new(),
+            defined_abstract_props: HashMap::new(),
+            defined_algorithms: HashMap::new(),
+            defined_structs: HashMap::new(),
+            defined_templates: HashMap::new(),
+            defined_settings: HashMap::new(),
+            defined_thm_stmts: HashMap::new(),
+            defined_axiom_stmts: HashMap::new(),
+            defined_strategy_stmts: HashMap::new(),
+            known_equality: KnownEquality::new(),
+            known_atomic_facts_with_0_or_more_than_2_args: HashMap::new(),
+            known_atomic_facts_with_1_arg: HashMap::new(),
+            known_atomic_facts_with_2_args: HashMap::new(),
+            known_owner_sets: HashMap::new(),
+            known_direct_supersets: HashMap::new(),
+            known_exist_facts: HashMap::new(),
+            known_or_facts: HashMap::new(),
+            known_atomic_facts_in_forall_facts: HashMap::new(),
+            known_atomic_facts_in_forall_facts_by_arg_shape: HashMap::new(),
+            known_exist_facts_in_forall_facts: HashMap::new(),
+            known_and_facts_in_forall_facts: HashMap::new(),
+            known_or_facts_in_forall_facts: HashMap::new(),
+            known_objs_equal_to_tuple: HashMap::new(),
+            known_objs_equal_to_cart: HashMap::new(),
+            known_objs_equal_to_finite_seq_list: HashMap::new(),
+            known_objs_equal_to_matrix_list: HashMap::new(),
+            known_objs_in_matrix_sets: HashMap::new(),
+            known_obj_values: HashMap::new(),
+            known_objs_equal_to_set_builder: HashMap::new(),
+            known_objs_in_fn_sets: HashMap::new(),
+            known_transitive_props: HashMap::new(),
+            known_symmetric_props: HashMap::new(),
+            known_reflexive_props: HashMap::new(),
+            known_antisymmetric_props: HashMap::new(),
+            cache_well_defined_obj: HashMap::new(),
+            cache_known_fact: HashMap::new(),
+            cache_infer_rule_firing: HashMap::new(),
+            statement_atomic_fact_proofs: HashMap::new(),
+            statement_well_defined_obj_proofs: HashMap::new(),
+            proof_search_state: ProofSearchState::default(),
+            used_strategy_stmts: HashMap::new(),
+            stopped_strategy_stmts: HashMap::new(),
+        }
     }
 }
 

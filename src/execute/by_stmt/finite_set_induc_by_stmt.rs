@@ -38,10 +38,17 @@ impl Runtime {
                         vec![],
                     )
                 })?;
+        let Fact::ForallFact(generated_forall) = &corresponding_forall_fact else {
+            unreachable!("finite-set induction conclusion is constructed as a forall fact")
+        };
         let verification = SuccessVerifyByInducResult::new(
-            stmt.param().to_string(),
-            stmt.to_prove.iter().map(|fact| fact.to_string()).collect(),
-            corresponding_forall_fact.to_string(),
+            stmt.param_binding.clone(),
+            obj_for_bound_param_in_scope(&stmt.param_binding, ParamObjType::Induc),
+            stmt.to_prove
+                .iter()
+                .map(|fact| fact.clone().to_fact())
+                .collect(),
+            generated_forall.clone(),
             SuccessVerifyByInducProofResult::FiniteSet(Box::new(proof)),
         );
         let result: StmtResult = SuccessByStmtResult::ByFiniteSetInducStmt(Box::new(

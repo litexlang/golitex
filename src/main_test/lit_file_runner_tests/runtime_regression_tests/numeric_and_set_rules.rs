@@ -147,7 +147,7 @@ forall a Z:
     ));
     assert!(matches!(
         source_membership.underlying_verified_by(),
-        SuccessFactProofResult::Fact(_)
+        SuccessFactProofResult::StoredFactCitation(_)
     ));
 
     let boundary_source = "forall c C:\n    c $in R";
@@ -2746,7 +2746,7 @@ x $in U or x $in V
         run_output
     );
     assert!(
-        run_output.contains("\"kind\": \"FactCitation\""),
+        run_output.contains("\"kind\": \"StoredFactCitation\""),
         "union elimination should cite the inferred membership disjunction:\n{}",
         run_output
     );

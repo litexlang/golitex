@@ -1557,13 +1557,25 @@ fn visit_induc_children(
         }
         SuccessVerifyByInducProofResult::IntegerStructured(proof) => {
             visitor(&proof.start_in_z_check);
-            visit_induc_case_children(&proof.base, visitor);
-            visit_induc_case_children(&proof.step, visitor);
+            visit_structured_integer_induc_case_children(&proof.base, visitor);
+            visit_structured_integer_induc_case_children(&proof.step, visitor);
         }
         SuccessVerifyByInducProofResult::FiniteSet(proof) => {
             visit_induc_case_children(&proof.base, visitor);
             visit_induc_case_children(&proof.step, visitor);
         }
+    }
+}
+
+fn visit_structured_integer_induc_case_children(
+    result: &SuccessVerifyByStructuredIntegerInducCaseResult,
+    visitor: &mut impl FnMut(&StmtResult),
+) {
+    for step in &result.proof_steps {
+        visitor(step);
+    }
+    for conclusion in &result.conclusions {
+        visitor(&conclusion.check);
     }
 }
 
@@ -1599,13 +1611,26 @@ fn try_visit_induc_children_mut<E>(
         }
         SuccessVerifyByInducProofResult::IntegerStructured(proof) => {
             visitor(&mut proof.start_in_z_check)?;
-            try_visit_induc_case_children_mut(&mut proof.base, visitor)?;
-            try_visit_induc_case_children_mut(&mut proof.step, visitor)?;
+            try_visit_structured_integer_induc_case_children_mut(&mut proof.base, visitor)?;
+            try_visit_structured_integer_induc_case_children_mut(&mut proof.step, visitor)?;
         }
         SuccessVerifyByInducProofResult::FiniteSet(proof) => {
             try_visit_induc_case_children_mut(&mut proof.base, visitor)?;
             try_visit_induc_case_children_mut(&mut proof.step, visitor)?;
         }
+    }
+    Ok(())
+}
+
+fn try_visit_structured_integer_induc_case_children_mut<E>(
+    result: &mut SuccessVerifyByStructuredIntegerInducCaseResult,
+    visitor: &mut impl FnMut(&mut StmtResult) -> Result<(), E>,
+) -> Result<(), E> {
+    for step in &mut result.proof_steps {
+        visitor(step)?;
+    }
+    for conclusion in &mut result.conclusions {
+        visitor(&mut conclusion.check)?;
     }
     Ok(())
 }
@@ -1642,14 +1667,27 @@ fn into_induc_children(
         }
         SuccessVerifyByInducProofResult::IntegerStructured(proof) => {
             children.push(*proof.start_in_z_check);
-            children.extend(into_induc_case_children(proof.base));
-            children.extend(into_induc_case_children(proof.step));
+            children.extend(into_structured_integer_induc_case_children(proof.base));
+            children.extend(into_structured_integer_induc_case_children(proof.step));
         }
         SuccessVerifyByInducProofResult::FiniteSet(proof) => {
             children.extend(into_induc_case_children(proof.base));
             children.extend(into_induc_case_children(proof.step));
         }
     }
+    children
+}
+
+fn into_structured_integer_induc_case_children(
+    result: SuccessVerifyByStructuredIntegerInducCaseResult,
+) -> Vec<StmtResult> {
+    let mut children = result.proof_steps;
+    children.extend(
+        result
+            .conclusions
+            .into_iter()
+            .map(|conclusion| *conclusion.check),
+    );
     children
 }
 

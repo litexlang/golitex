@@ -372,11 +372,11 @@ impl fmt::Debug for SuccessVerifyByEnumerateRangeResult {
     }
 }
 
-#[derive(Debug)]
 pub struct SuccessVerifyByInducResult {
-    pub parameter: String,
-    pub prove_goals: Vec<String>,
-    pub generated_forall: String,
+    pub parameter_binding: SymbolBinding,
+    pub parameter: Obj,
+    pub prove_goals: Vec<Fact>,
+    pub generated_forall: ForallFact,
     pub proof: SuccessVerifyByInducProofResult,
 }
 
@@ -406,13 +406,74 @@ pub struct SuccessVerifyByInducGoalResult {
     pub infers: SuccessInferResult,
 }
 
-#[derive(Debug)]
 pub struct SuccessVerifyByStructuredIntegerInducResult {
     pub strong: bool,
-    pub start: String,
+    pub start: Obj,
     pub start_in_z_check: Box<StmtResult>,
-    pub base: SuccessVerifyByInducCaseResult,
-    pub step: SuccessVerifyByInducCaseResult,
+    pub base: SuccessVerifyByStructuredIntegerInducCaseResult,
+    pub step: SuccessVerifyByStructuredIntegerInducCaseResult,
+}
+
+impl fmt::Debug for SuccessVerifyByInducResult {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        f.debug_struct("SuccessVerifyByInducResult")
+            .field("parameter_binding", &self.parameter_binding)
+            .field("parameter", &self.parameter.to_string())
+            .field(
+                "prove_goals",
+                &self
+                    .prove_goals
+                    .iter()
+                    .map(ToString::to_string)
+                    .collect::<Vec<_>>(),
+            )
+            .field("generated_forall", &self.generated_forall.to_string())
+            .field("proof", &self.proof)
+            .finish()
+    }
+}
+
+impl fmt::Debug for SuccessVerifyByStructuredIntegerInducResult {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        f.debug_struct("SuccessVerifyByStructuredIntegerInducResult")
+            .field("strong", &self.strong)
+            .field("start", &self.start.to_string())
+            .field("start_in_z_check", &self.start_in_z_check)
+            .field("base", &self.base)
+            .field("step", &self.step)
+            .finish()
+    }
+}
+
+#[derive(Debug)]
+pub struct SuccessVerifyByStructuredIntegerInducCaseResult {
+    pub assumptions: Vec<SuccessVerifyByInducAssumptionResult>,
+    pub assumption_infers: SuccessInferResult,
+    pub proof_steps: Vec<StmtResult>,
+    pub conclusions: Vec<SuccessVerifyByInducConclusionResult>,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum SuccessVerifyByInducAssumptionRole {
+    ParameterType,
+    BaseCaseEquality,
+    DomainLowerBound,
+    InductionHypothesis,
+    StrongInductionHypothesis,
+}
+
+#[derive(Debug)]
+pub struct SuccessVerifyByInducAssumptionResult {
+    pub fact: Fact,
+    pub fact_id: FactId,
+    pub role: SuccessVerifyByInducAssumptionRole,
+    pub goal_index: Option<usize>,
+}
+
+#[derive(Debug)]
+pub struct SuccessVerifyByInducConclusionResult {
+    pub goal: Fact,
+    pub check: Box<StmtResult>,
 }
 
 #[derive(Debug)]
@@ -753,10 +814,34 @@ impl SuccessVerifyExistentialEliminationResult {
 #[derive(Debug)]
 pub struct SuccessBuiltinFactProofResult {
     pub msg: String,
-    /// Structured verifier-side bindings retained for compiler backends.
-    /// `None` means this rule still has only its diagnostic label.
-    pub evidence: Option<BuiltinRuleEvidence>,
+    pub evidence: SuccessBuiltinFactProofEvidenceResult,
     pub subgoals: Vec<StmtResult>,
+}
+
+#[derive(Debug)]
+pub enum SuccessBuiltinFactProofEvidenceResult {
+    Typed(BuiltinRuleEvidence),
+    DiagnosticOnly,
+}
+
+impl SuccessBuiltinFactProofEvidenceResult {
+    pub fn typed(&self) -> Option<&BuiltinRuleEvidence> {
+        match self {
+            Self::Typed(evidence) => Some(evidence),
+            Self::DiagnosticOnly => None,
+        }
+    }
+
+    pub fn typed_mut(&mut self) -> Option<&mut BuiltinRuleEvidence> {
+        match self {
+            Self::Typed(evidence) => Some(evidence),
+            Self::DiagnosticOnly => None,
+        }
+    }
+
+    pub fn is_typed(&self) -> bool {
+        matches!(self, Self::Typed(_))
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -775,13 +860,11 @@ pub struct EqualityTransportStep {
     pub from: Obj,
     pub to: Obj,
     pub equality: EqualFact,
-    /// `None` means verification used an equality whose compiler proof
-    /// provenance is not represented yet.
-    pub equality_fact_id: Option<FactId>,
+    pub equality_fact_id: FactId,
 }
 
 impl EqualityTransportStep {
-    pub fn new(from: Obj, to: Obj, equality: EqualFact, equality_fact_id: Option<FactId>) -> Self {
+    pub fn new(from: Obj, to: Obj, equality: EqualFact, equality_fact_id: FactId) -> Self {
         Self {
             from,
             to,
@@ -859,28 +942,54 @@ impl fmt::Debug for EqualityTransportStep {
 }
 
 #[derive(Clone, Debug)]
-pub struct SuccessFactCitationProofResult {
+pub struct SuccessStoredFactCitationProofResult {
     pub detail: Option<String>,
-    pub cite_what: Box<Stmt>,
-    /// Captured while the cited fact's environment is still alive.
-    pub source_fact_id: Option<FactId>,
-    /// `Some` means the verifier reached the goal by rewriting the cited fact
-    /// along these checked equality edges. `None` means no structured
-    /// transport evidence was recorded for this citation route.
-    pub equality_transport: Option<EqualityTransportEvidence>,
-    /// Additional checked transformations discovered while resolving the
-    /// requested fact to the cited fact. These are stored source-to-goal even
-    /// though the verifier searched goal-to-source.
-    pub fact_transformation: Option<FactTransformationEvidence>,
-    /// Exact source retained when equality verification unfolded one checked
-    /// named function definition. This is distinct from an ordinary citation:
-    /// the goal itself may only exist in a temporary forall scope.
-    pub checked_function_definition_reduction: Option<CheckedFunctionDefinitionReductionEvidence>,
-    /// Exact parameter and clause checks used when a concrete `prop` was
-    /// folded. Keeping the successful child results here lets compiler
-    /// backends replay the verifier-selected route instead of proving the
-    /// definition body again in the target.
-    pub definition_reduction: Option<Rc<DefinitionReductionVerificationEvidence>>,
+    pub source_fact: Fact,
+    pub source_fact_id: FactId,
+}
+
+#[derive(Clone)]
+pub struct SuccessStrategyFactProofResult {
+    pub detail: Option<String>,
+    pub strategy: DefStrategyStmt,
+}
+
+pub struct SuccessDefinitionReductionFactProofResult {
+    pub detail: Option<String>,
+    pub definition: DefPropStmt,
+    pub verification: Rc<DefinitionReductionVerificationEvidence>,
+}
+
+impl fmt::Debug for SuccessStrategyFactProofResult {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        formatter
+            .debug_struct("SuccessStrategyFactProofResult")
+            .field("detail", &self.detail)
+            .field("strategy", &self.strategy.to_string())
+            .finish()
+    }
+}
+
+impl fmt::Debug for SuccessDefinitionReductionFactProofResult {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        formatter
+            .debug_struct("SuccessDefinitionReductionFactProofResult")
+            .field("detail", &self.detail)
+            .field("definition", &self.definition.to_string())
+            .field("verification", &self.verification)
+            .finish()
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct SuccessCheckedFunctionDefinitionReductionFactProofResult {
+    pub detail: Option<String>,
+    pub verification: CheckedFunctionDefinitionReductionEvidence,
+}
+
+#[derive(Clone, Debug)]
+pub struct SuccessDiagnosticFactProofResult {
+    pub detail: String,
 }
 
 #[derive(Debug)]
@@ -953,16 +1062,16 @@ pub enum KnownForallRequirementKind {
 
 #[derive(Debug)]
 pub struct SuccessInstantiateKnownForallResult {
-    pub cite_what: Box<Stmt>,
-    /// Captured while the source forall's environment is still alive.
-    pub source_fact_id: Option<FactId>,
+    pub source_fact: Fact,
+    pub source_fact_id: FactId,
     pub instantiation: Vec<KnownForallInstantiationItem>,
     pub requirements: Vec<SuccessVerifyKnownForallRequirementResult>,
 }
 
 #[derive(Debug)]
 pub struct SuccessCombinedFactProofResult {
-    pub cite_what: Vec<SuccessCombinedFactProofItemResult>,
+    pub primary: Option<Rc<SuccessVerifyFactResult>>,
+    pub steps: Vec<StmtResult>,
 }
 
 pub struct SuccessForallProofResult {
@@ -989,57 +1098,20 @@ pub struct SuccessForallProvedFactResult {
 }
 
 #[derive(Debug)]
-pub struct SuccessCombinedBuiltinFactProofResult {
-    pub msg: String,
-    pub verify_what: Fact,
-    pub evidence: Option<BuiltinRuleEvidence>,
-    pub subgoals: Vec<StmtResult>,
-}
-
-#[derive(Debug)]
-pub struct SuccessCombinedFactCitationProofResult {
-    pub detail: Option<String>,
-    pub verify_what: Fact,
-    pub cite_what: Box<Stmt>,
-    pub source_fact_id: Option<FactId>,
-    pub equality_transport: Option<EqualityTransportEvidence>,
-    pub fact_transformation: Option<FactTransformationEvidence>,
-    pub definition_reduction: Option<Rc<DefinitionReductionVerificationEvidence>>,
-}
-
-#[derive(Debug)]
-pub struct SuccessCombinedKnownForallProofResult {
-    pub verify_what: Fact,
-    pub result: SuccessInstantiateKnownForallResult,
-}
-
-#[derive(Debug)]
-pub struct SuccessCombinedReuseFactProofResult {
-    pub statement: Fact,
-    pub source: Rc<SuccessVerifyFactResult>,
-}
-
-#[derive(Debug)]
 pub struct SuccessReuseFactProofResult {
     pub source: Rc<SuccessVerifyFactResult>,
-}
-
-#[derive(Debug)]
-pub enum SuccessCombinedFactProofItemResult {
-    ByBuiltinRule(SuccessCombinedBuiltinFactProofResult),
-    ByBuiltinStrategy(SuccessCombinedBuiltinFactProofResult),
-    ByFact(SuccessCombinedFactCitationProofResult),
-    ByKnownForall(SuccessCombinedKnownForallProofResult),
-    /// Internal proof sharing; output and dependency analysis expose the source proof.
-    Reuse(Box<SuccessCombinedReuseFactProofResult>),
 }
 
 #[derive(Debug)]
 pub enum SuccessFactProofResult {
     BuiltinRule(SuccessBuiltinFactProofResult),
     BuiltinStrategy(SuccessBuiltinFactProofResult),
-    Fact(SuccessFactCitationProofResult),
+    StoredFactCitation(SuccessStoredFactCitationProofResult),
+    Strategy(SuccessStrategyFactProofResult),
     KnownForallInstantiation(SuccessInstantiateKnownForallResult),
+    DefinitionReduction(SuccessDefinitionReductionFactProofResult),
+    CheckedFunctionDefinitionReduction(SuccessCheckedFunctionDefinitionReductionFactProofResult),
+    DiagnosticOnly(SuccessDiagnosticFactProofResult),
     CombinedProofs(SuccessCombinedFactProofResult),
     ForallProof(SuccessForallProofResult),
     Transform(Box<SuccessTransformFactResult>),
@@ -1074,7 +1146,7 @@ impl SuccessFactStmtResult {
     ) -> Self {
         let verified_by = SuccessFactProofResult::BuiltinStrategy(SuccessBuiltinFactProofResult {
             msg: strategy_label,
-            evidence: None,
+            evidence: SuccessBuiltinFactProofEvidenceResult::DiagnosticOnly,
             subgoals: step_results,
         });
         Self::new_with_verified_by_builtin_rules(stmt, SuccessInferResult::new(), verified_by)
@@ -1088,7 +1160,7 @@ impl SuccessFactStmtResult {
     ) -> Self {
         let verified_by = SuccessFactProofResult::BuiltinStrategy(SuccessBuiltinFactProofResult {
             msg: strategy_label,
-            evidence: Some(evidence),
+            evidence: SuccessBuiltinFactProofEvidenceResult::Typed(evidence),
             subgoals: step_results,
         });
         Self::new_with_verified_by_builtin_rules(stmt, SuccessInferResult::new(), verified_by)
@@ -1174,6 +1246,7 @@ impl SuccessFactStmtResult {
         self.proof().tree_is_builtin_rules_only()
     }
 
+    #[cfg(test)]
     pub(crate) fn underlying_verified_by(&self) -> &SuccessFactProofResult {
         let mut proof = self.proof();
         loop {
@@ -1193,7 +1266,7 @@ impl SuccessFactProofResult {
     pub fn builtin_rule_with_subgoals(msg: impl Into<String>, subgoals: Vec<StmtResult>) -> Self {
         Self::BuiltinRule(SuccessBuiltinFactProofResult {
             msg: msg.into(),
-            evidence: None,
+            evidence: SuccessBuiltinFactProofEvidenceResult::DiagnosticOnly,
             subgoals,
         })
     }
@@ -1205,25 +1278,25 @@ impl SuccessFactProofResult {
     ) -> Self {
         Self::BuiltinRule(SuccessBuiltinFactProofResult {
             msg: msg.into(),
-            evidence: Some(evidence),
+            evidence: SuccessBuiltinFactProofEvidenceResult::Typed(evidence),
             subgoals,
         })
     }
 
-    pub fn cited_fact(_goal: Fact, cite_what: Fact, detail: Option<String>) -> Self {
-        Self::cited_stmt(_goal, cite_what.into_stmt(), detail)
+    pub fn stored_fact_citation(
+        source_fact: Fact,
+        source_fact_id: FactId,
+        detail: Option<String>,
+    ) -> Self {
+        Self::StoredFactCitation(SuccessStoredFactCitationProofResult {
+            detail,
+            source_fact,
+            source_fact_id,
+        })
     }
 
-    pub fn cited_stmt(_goal: Fact, cite_what: Stmt, detail: Option<String>) -> Self {
-        Self::Fact(SuccessFactCitationProofResult {
-            detail,
-            cite_what: Box::new(cite_what),
-            source_fact_id: None,
-            equality_transport: None,
-            fact_transformation: None,
-            checked_function_definition_reduction: None,
-            definition_reduction: None,
-        })
+    pub fn strategy(strategy: DefStrategyStmt, detail: Option<String>) -> Self {
+        Self::Strategy(SuccessStrategyFactProofResult { detail, strategy })
     }
 
     pub fn cited_definition(
@@ -1234,93 +1307,118 @@ impl SuccessFactProofResult {
         detail: Option<String>,
     ) -> Self {
         let (clause_facts, clause_checks) = clause_checks.into_iter().unzip();
-        Self::Fact(SuccessFactCitationProofResult {
+        Self::DefinitionReduction(SuccessDefinitionReductionFactProofResult {
             detail,
-            cite_what: Box::new(definition.clone().into()),
-            source_fact_id: None,
-            equality_transport: None,
-            fact_transformation: None,
-            checked_function_definition_reduction: None,
-            definition_reduction: Some(Rc::new(DefinitionReductionVerificationEvidence {
+            definition,
+            verification: Rc::new(DefinitionReductionVerificationEvidence {
                 argument_verification,
                 clause_facts,
                 clause_checks,
-            })),
+            }),
         })
     }
 
     pub fn cited_fact_with_provenance(
-        _goal: Fact,
-        cite_what: Fact,
-        source_fact_id: Option<FactId>,
+        goal: Fact,
+        source_fact: Fact,
+        source_fact_id: FactId,
         equality_transport: Option<EqualityTransportEvidence>,
         fact_transformation: Option<FactTransformationEvidence>,
         detail: Option<String>,
-    ) -> Self {
-        Self::Fact(SuccessFactCitationProofResult {
-            detail,
-            cite_what: Box::new(cite_what.into_stmt()),
-            source_fact_id,
-            equality_transport,
-            fact_transformation,
-            checked_function_definition_reduction: None,
-            definition_reduction: None,
-        })
+    ) -> Result<Self, String> {
+        if equality_transport
+            .as_ref()
+            .map(|result| result.steps.is_empty())
+            .unwrap_or(true)
+            && fact_transformation.is_none()
+        {
+            return Ok(Self::stored_fact_citation(
+                source_fact,
+                source_fact_id,
+                detail,
+            ));
+        }
+        let transformation_source = fact_transformation
+            .as_ref()
+            .map(|result| result.source.clone())
+            .unwrap_or_else(|| goal.clone());
+        let mut current = SuccessVerifyFactResult::new(
+            source_fact.clone(),
+            Self::stored_fact_citation(source_fact, source_fact_id, detail),
+        );
+        if let Some(transport) = equality_transport {
+            if !transport.steps.is_empty() {
+                current = SuccessVerifyFactResult::new(
+                    transformation_source.clone(),
+                    Self::Transform(Box::new(SuccessTransformFactResult::new(
+                        FactTransformationRule::EqualityRewrite(transport),
+                        current,
+                    ))),
+                );
+            }
+        }
+        if let Some(transformation) = fact_transformation {
+            for step in transformation.steps {
+                current = SuccessVerifyFactResult::new(
+                    step.result,
+                    Self::Transform(Box::new(SuccessTransformFactResult::new(
+                        step.rule, current,
+                    ))),
+                );
+            }
+        }
+        let (result_fact, proof) = current.into_parts();
+        if result_fact.to_string() == goal.to_string() {
+            Ok(proof)
+        } else {
+            Err(format!(
+                "fact provenance ended at `{}` instead of `{}`",
+                result_fact, goal
+            ))
+        }
     }
 
     pub fn known_forall_instantiation(
         cite_what: Fact,
-        source_fact_id: Option<FactId>,
+        source_fact_id: FactId,
         instantiation: Vec<KnownForallInstantiationItem>,
         requirements: Vec<SuccessVerifyKnownForallRequirementResult>,
     ) -> Self {
         Self::KnownForallInstantiation(SuccessInstantiateKnownForallResult::new(
-            cite_what.into_stmt(),
+            cite_what,
             source_fact_id,
             instantiation,
             requirements,
         ))
     }
 
-    /// Same statement as goal and citation; optional human note in `msg`.
-    pub fn fact_with_note(goal: Fact, msg: Option<String>) -> Self {
-        let cite_what = goal.clone();
-        Self::cited_fact(goal, cite_what, msg)
+    pub fn diagnostic(detail: impl Into<String>) -> Self {
+        Self::DiagnosticOnly(SuccessDiagnosticFactProofResult {
+            detail: detail.into(),
+        })
     }
 
     pub fn fact_with_checked_function_definition_reduction(
-        goal: Fact,
+        _goal: Fact,
         evidence: CheckedFunctionDefinitionReductionEvidence,
         detail: Option<String>,
     ) -> Self {
-        let cite_what = goal.clone().into_stmt();
-        Self::Fact(SuccessFactCitationProofResult {
-            detail,
-            cite_what: Box::new(cite_what),
-            source_fact_id: None,
-            equality_transport: None,
-            fact_transformation: None,
-            checked_function_definition_reduction: Some(evidence),
-            definition_reduction: None,
-        })
+        Self::CheckedFunctionDefinitionReduction(
+            SuccessCheckedFunctionDefinitionReductionFactProofResult {
+                detail,
+                verification: evidence,
+            },
+        )
     }
 
     pub fn cached_fact(fact: Fact, cite_fact_source: LineFile, source_fact_id: FactId) -> Self {
-        let cite_what = fact.with_line_file(cite_fact_source);
-        Self::Fact(SuccessFactCitationProofResult {
-            detail: None,
-            cite_what: Box::new(cite_what.into_stmt()),
-            source_fact_id: Some(source_fact_id),
-            equality_transport: None,
-            fact_transformation: None,
-            checked_function_definition_reduction: None,
-            definition_reduction: None,
-        })
+        Self::stored_fact_citation(fact.with_line_file(cite_fact_source), source_fact_id, None)
     }
 
-    pub fn wrap_bys(children: Vec<SuccessCombinedFactProofItemResult>) -> Self {
+    pub fn combined_steps(steps: Vec<StmtResult>) -> Self {
         Self::CombinedProofs(SuccessCombinedFactProofResult {
-            cite_what: children,
+            primary: None,
+            steps,
         })
     }
 
@@ -1354,168 +1452,31 @@ impl SuccessFactProofResult {
             SuccessFactProofResult::BuiltinRule(r) | SuccessFactProofResult::BuiltinStrategy(r) => {
                 !r.msg.is_empty()
             }
-            SuccessFactProofResult::Fact(_) => false,
-            SuccessFactProofResult::KnownForallInstantiation(_) => false,
+            SuccessFactProofResult::StoredFactCitation(_)
+            | SuccessFactProofResult::Strategy(_)
+            | SuccessFactProofResult::KnownForallInstantiation(_)
+            | SuccessFactProofResult::DefinitionReduction(_)
+            | SuccessFactProofResult::CheckedFunctionDefinitionReduction(_)
+            | SuccessFactProofResult::DiagnosticOnly(_) => false,
             SuccessFactProofResult::CombinedProofs(w) => {
-                !w.cite_what.is_empty() && w.cite_what.iter().all(|b| b.is_builtin_rule())
+                let primary_is_builtin = w
+                    .primary
+                    .as_ref()
+                    .map(|result| result.proof().tree_is_builtin_rules_only())
+                    .unwrap_or(true);
+                primary_is_builtin
+                    && !w.steps.is_empty()
+                    && w.steps.iter().all(|step| {
+                        step.factual_success()
+                            .map(SuccessFactStmtResult::is_verified_by_builtin_rules_only)
+                            .unwrap_or(false)
+                    })
             }
             SuccessFactProofResult::ForallProof(_) => false,
             SuccessFactProofResult::Transform(result) => {
                 result.source.proof().tree_is_builtin_rules_only()
             }
             SuccessFactProofResult::Reuse(result) => {
-                result.source.is_verified_by_builtin_rules_only()
-            }
-        }
-    }
-}
-
-impl SuccessCombinedFactProofItemResult {
-    pub fn builtin_rule(msg: String, verify_what: Fact, subgoals: Vec<StmtResult>) -> Self {
-        Self::builtin_rule_with_evidence(msg, verify_what, None, subgoals)
-    }
-
-    pub(crate) fn builtin_rule_with_evidence(
-        msg: String,
-        verify_what: Fact,
-        evidence: Option<BuiltinRuleEvidence>,
-        subgoals: Vec<StmtResult>,
-    ) -> Self {
-        SuccessCombinedFactProofItemResult::ByBuiltinRule(SuccessCombinedBuiltinFactProofResult {
-            msg,
-            verify_what,
-            evidence,
-            subgoals,
-        })
-    }
-
-    pub fn builtin_strategy(msg: String, verify_what: Fact, subgoals: Vec<StmtResult>) -> Self {
-        Self::builtin_strategy_with_evidence(msg, verify_what, None, subgoals)
-    }
-
-    fn builtin_strategy_with_evidence(
-        msg: String,
-        verify_what: Fact,
-        evidence: Option<BuiltinRuleEvidence>,
-        subgoals: Vec<StmtResult>,
-    ) -> Self {
-        SuccessCombinedFactProofItemResult::ByBuiltinStrategy(
-            SuccessCombinedBuiltinFactProofResult {
-                msg,
-                verify_what,
-                evidence,
-                subgoals,
-            },
-        )
-    }
-
-    pub fn cited_fact(verify_what: Fact, cite_what: Fact, detail: Option<String>) -> Self {
-        Self::cited_stmt(verify_what, cite_what.into_stmt(), detail)
-    }
-
-    pub fn cited_stmt(verify_what: Fact, cite_what: Stmt, detail: Option<String>) -> Self {
-        SuccessCombinedFactProofItemResult::ByFact(SuccessCombinedFactCitationProofResult {
-            detail,
-            verify_what,
-            cite_what: Box::new(cite_what),
-            source_fact_id: None,
-            equality_transport: None,
-            fact_transformation: None,
-            definition_reduction: None,
-        })
-    }
-
-    pub fn known_forall_instantiation(
-        verify_what: Fact,
-        result: SuccessInstantiateKnownForallResult,
-    ) -> Self {
-        SuccessCombinedFactProofItemResult::ByKnownForall(SuccessCombinedKnownForallProofResult {
-            verify_what,
-            result,
-        })
-    }
-
-    pub fn fact_with_note(verify_what: Fact, msg: Option<String>) -> Self {
-        let cite_what = verify_what.clone();
-        Self::cited_fact(verify_what, cite_what, msg)
-    }
-
-    fn from_verified_by_result(
-        verify_what: Fact,
-        verified_by: SuccessFactProofResult,
-    ) -> Vec<Self> {
-        match verified_by {
-            SuccessFactProofResult::BuiltinRule(r) => {
-                vec![Self::builtin_rule_with_evidence(
-                    r.msg,
-                    verify_what,
-                    r.evidence,
-                    r.subgoals,
-                )]
-            }
-            SuccessFactProofResult::BuiltinStrategy(r) => {
-                vec![Self::builtin_strategy_with_evidence(
-                    r.msg,
-                    verify_what,
-                    r.evidence,
-                    r.subgoals,
-                )]
-            }
-            SuccessFactProofResult::Fact(r) => {
-                vec![SuccessCombinedFactProofItemResult::ByFact(
-                    SuccessCombinedFactCitationProofResult {
-                        detail: r.detail,
-                        verify_what,
-                        cite_what: r.cite_what,
-                        source_fact_id: r.source_fact_id,
-                        equality_transport: r.equality_transport,
-                        fact_transformation: r.fact_transformation,
-                        definition_reduction: r.definition_reduction,
-                    },
-                )]
-            }
-            SuccessFactProofResult::KnownForallInstantiation(r) => {
-                vec![Self::known_forall_instantiation(verify_what, r)]
-            }
-            SuccessFactProofResult::CombinedProofs(w) => w.cite_what,
-            SuccessFactProofResult::ForallProof(_) => {
-                vec![Self::fact_with_note(
-                    verify_what,
-                    Some("forall proof".to_string()),
-                )]
-            }
-            SuccessFactProofResult::Transform(result) => {
-                let source_fact = result.source.fact();
-                let mut items = vec![SuccessCombinedFactProofItemResult::Reuse(Box::new(
-                    SuccessCombinedReuseFactProofResult {
-                        statement: source_fact,
-                        source: result.source,
-                    },
-                ))];
-                items.push(Self::fact_with_note(
-                    verify_what,
-                    Some("fact transformation".to_string()),
-                ));
-                items
-            }
-            SuccessFactProofResult::Reuse(result) => {
-                vec![SuccessCombinedFactProofItemResult::Reuse(Box::new(
-                    SuccessCombinedReuseFactProofResult {
-                        statement: verify_what,
-                        source: result.source,
-                    },
-                ))]
-            }
-        }
-    }
-
-    fn is_builtin_rule(&self) -> bool {
-        match self {
-            SuccessCombinedFactProofItemResult::ByBuiltinRule(r)
-            | SuccessCombinedFactProofItemResult::ByBuiltinStrategy(r) => !r.msg.is_empty(),
-            SuccessCombinedFactProofItemResult::ByFact(_)
-            | SuccessCombinedFactProofItemResult::ByKnownForall(_) => false,
-            SuccessCombinedFactProofItemResult::Reuse(result) => {
                 result.source.is_verified_by_builtin_rules_only()
             }
         }
@@ -1544,13 +1505,13 @@ impl SuccessVerifyKnownForallRequirementResult {
 
 impl SuccessInstantiateKnownForallResult {
     pub fn new(
-        cite_what: Stmt,
-        source_fact_id: Option<FactId>,
+        source_fact: Fact,
+        source_fact_id: FactId,
         instantiation: Vec<KnownForallInstantiationItem>,
         requirements: Vec<SuccessVerifyKnownForallRequirementResult>,
     ) -> Self {
         SuccessInstantiateKnownForallResult {
-            cite_what: Box::new(cite_what),
+            source_fact,
             source_fact_id,
             instantiation,
             requirements,
@@ -1847,12 +1808,14 @@ impl SuccessVerifyByEnumerateRangeEndpointResult {
 
 impl SuccessVerifyByInducResult {
     pub fn new(
-        parameter: String,
-        prove_goals: Vec<String>,
-        generated_forall: String,
+        parameter_binding: SymbolBinding,
+        parameter: Obj,
+        prove_goals: Vec<Fact>,
+        generated_forall: ForallFact,
         proof: SuccessVerifyByInducProofResult,
     ) -> Self {
         SuccessVerifyByInducResult {
+            parameter_binding,
             parameter,
             prove_goals,
             generated_forall,
@@ -2167,37 +2130,22 @@ impl fmt::Debug for SuccessVerifyByPropRegistrationResult {
 }
 
 fn merge_verified_by_with_steps(
-    _goal: Fact,
+    goal: Fact,
     verified_by: SuccessFactProofResult,
     step_results: Vec<StmtResult>,
 ) -> SuccessFactProofResult {
     if step_results.is_empty() {
         return verified_by;
     }
-    let mut items = SuccessCombinedFactProofItemResult::from_verified_by_result(_goal, verified_by);
-    for r in step_results {
-        items.extend(verified_by_items_from_stmt_result(r));
+    if matches!(
+        &verified_by,
+        SuccessFactProofResult::CombinedProofs(result)
+            if result.primary.is_none() && result.steps.is_empty()
+    ) {
+        return SuccessFactProofResult::combined_steps(step_results);
     }
-    SuccessFactProofResult::wrap_bys(items)
-}
-
-fn verified_by_items_from_stmt_result(
-    result: StmtResult,
-) -> Vec<SuccessCombinedFactProofItemResult> {
-    match result {
-        StmtResult::Success(SuccessStmtResult::Fact(success)) => {
-            vec![SuccessCombinedFactProofItemResult::Reuse(Box::new(
-                SuccessCombinedReuseFactProofResult {
-                    statement: success.fact(),
-                    source: success.verification,
-                },
-            ))]
-        }
-        StmtResult::Success(success) => success
-            .into_child_results()
-            .into_iter()
-            .flat_map(verified_by_items_from_stmt_result)
-            .collect::<Vec<_>>(),
-        StmtResult::Unknown(_) => Vec::new(),
-    }
+    SuccessFactProofResult::CombinedProofs(SuccessCombinedFactProofResult {
+        primary: Some(Rc::new(SuccessVerifyFactResult::new(goal, verified_by))),
+        steps: step_results,
+    })
 }

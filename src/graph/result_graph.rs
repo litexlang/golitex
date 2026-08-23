@@ -1051,45 +1051,68 @@ impl ResultGraph {
             SuccessFactProofResult::BuiltinStrategy(result) => {
                 self.add_builtin_proof(result, id, "BuiltinStrategy");
             }
-            SuccessFactProofResult::Fact(result) => {
+            SuccessFactProofResult::StoredFactCitation(result) => {
                 self.ensure_node(
                     id.clone(),
                     "proof",
-                    "FactCitation",
-                    result.cite_what.to_string(),
+                    "StoredFactCitation",
+                    result.source_fact.to_string(),
                     None,
                 );
                 self.add_cited_fact(
                     &id,
-                    result.source_fact_id,
-                    result.cite_what.to_string(),
+                    Some(result.source_fact_id),
+                    result.source_fact.to_string(),
                     "citation",
                     0,
                 );
-                if let Some(transport) = result.equality_transport.as_ref() {
-                    for (index, step) in transport.steps.iter().enumerate() {
-                        self.add_cited_fact(
-                            &id,
-                            step.equality_fact_id,
-                            step.equality.to_string(),
-                            "equality",
-                            index,
-                        );
-                    }
+            }
+            SuccessFactProofResult::Strategy(result) => {
+                self.ensure_node(id, "proof", "Strategy", result.strategy.to_string(), None);
+            }
+            SuccessFactProofResult::DefinitionReduction(result) => {
+                self.ensure_node(
+                    id.clone(),
+                    "proof",
+                    "DefinitionReduction",
+                    result.definition.to_string(),
+                    None,
+                );
+                for (index, child) in result
+                    .verification
+                    .argument_verification
+                    .checks
+                    .iter()
+                    .enumerate()
+                {
+                    let child_id = format!("{id}/parameter:{index}");
+                    self.add_stmt_result(child, child_id.clone());
+                    self.add_edge(&id, &child_id, "parameter_check", index);
                 }
-                if let Some(reduction) = result.definition_reduction.as_ref() {
-                    for (index, child) in reduction.argument_verification.checks.iter().enumerate()
-                    {
-                        let child_id = format!("{id}/parameter:{index}");
-                        self.add_stmt_result(child, child_id.clone());
-                        self.add_edge(&id, &child_id, "parameter_check", index);
-                    }
-                    for (index, child) in reduction.clause_checks.iter().enumerate() {
-                        let child_id = format!("{id}/clause:{index}");
-                        self.add_stmt_result(child, child_id.clone());
-                        self.add_edge(&id, &child_id, "clause_check", index);
-                    }
+                for (index, child) in result.verification.clause_checks.iter().enumerate() {
+                    let child_id = format!("{id}/clause:{index}");
+                    self.add_stmt_result(child, child_id.clone());
+                    self.add_edge(&id, &child_id, "clause_check", index);
                 }
+            }
+            SuccessFactProofResult::CheckedFunctionDefinitionReduction(result) => {
+                self.ensure_node(
+                    id.clone(),
+                    "proof",
+                    "CheckedFunctionDefinitionReduction",
+                    result.verification.defining_equality.to_string(),
+                    None,
+                );
+                self.add_cited_fact(
+                    &id,
+                    Some(result.verification.defining_equality_fact_id),
+                    result.verification.defining_equality.to_string(),
+                    "definition",
+                    0,
+                );
+            }
+            SuccessFactProofResult::DiagnosticOnly(result) => {
+                self.ensure_node(id, "proof", "DiagnosticOnly", result.detail.clone(), None);
             }
             SuccessFactProofResult::KnownForallInstantiation(result) => {
                 self.add_known_forall_proof(result, id, "KnownForallInstantiation");
@@ -1102,10 +1125,15 @@ impl ResultGraph {
                     "combined proof",
                     None,
                 );
-                for (index, item) in result.cite_what.iter().enumerate() {
-                    let item_id = format!("{id}/item:{index}");
-                    self.add_combined_proof_item(item, item_id.clone());
-                    self.add_edge(&id, &item_id, "proof_part", index);
+                if let Some(primary) = result.primary.as_ref() {
+                    let primary_id = format!("{id}/primary");
+                    self.add_verify_fact_result(primary, primary_id.clone());
+                    self.add_edge(&id, &primary_id, "primary", 0);
+                }
+                for (index, step) in result.steps.iter().enumerate() {
+                    let step_id = format!("{id}/step:{index}");
+                    self.add_stmt_result(step, step_id.clone());
+                    self.add_edge(&id, &step_id, "step", index);
                 }
             }
             SuccessFactProofResult::ForallProof(result) => {
@@ -1144,6 +1172,17 @@ impl ResultGraph {
                 let source_id = format!("{id}/source");
                 self.add_verify_fact_result(&result.source, source_id.clone());
                 self.add_edge(&id, &source_id, "source", 0);
+                if let FactTransformationRule::EqualityRewrite(transport) = &result.rule {
+                    for (index, step) in transport.steps.iter().enumerate() {
+                        self.add_cited_fact(
+                            &id,
+                            Some(step.equality_fact_id),
+                            step.equality.to_string(),
+                            "equality",
+                            index,
+                        );
+                    }
+                }
             }
             SuccessFactProofResult::Reuse(result) => {
                 self.ensure_node(id.clone(), "proof", "Reuse", "shared proof", None);
@@ -1177,13 +1216,13 @@ impl ResultGraph {
             id.clone(),
             "proof",
             role,
-            result.cite_what.to_string(),
+            result.source_fact.to_string(),
             None,
         );
         self.add_cited_fact(
             &id,
-            result.source_fact_id,
-            result.cite_what.to_string(),
+            Some(result.source_fact_id),
+            result.source_fact.to_string(),
             "citation",
             0,
         );
@@ -1191,57 +1230,6 @@ impl ResultGraph {
             let child_id = format!("{id}/requirement:{index}");
             self.add_stmt_result(&requirement.result, child_id.clone());
             self.add_edge(&id, &child_id, "requirement", index);
-        }
-    }
-
-    fn add_combined_proof_item(&mut self, item: &SuccessCombinedFactProofItemResult, id: String) {
-        match item {
-            SuccessCombinedFactProofItemResult::ByBuiltinRule(result) => {
-                self.ensure_node(id.clone(), "proof", "BuiltinRule", result.msg.clone(), None);
-                for (index, subgoal) in result.subgoals.iter().enumerate() {
-                    let child_id = format!("{id}/subgoal:{index}");
-                    self.add_stmt_result(subgoal, child_id.clone());
-                    self.add_edge(&id, &child_id, "subgoal", index);
-                }
-            }
-            SuccessCombinedFactProofItemResult::ByBuiltinStrategy(result) => {
-                self.ensure_node(
-                    id.clone(),
-                    "proof",
-                    "BuiltinStrategy",
-                    result.msg.clone(),
-                    None,
-                );
-                for (index, subgoal) in result.subgoals.iter().enumerate() {
-                    let child_id = format!("{id}/subgoal:{index}");
-                    self.add_stmt_result(subgoal, child_id.clone());
-                    self.add_edge(&id, &child_id, "subgoal", index);
-                }
-            }
-            SuccessCombinedFactProofItemResult::ByFact(result) => {
-                self.ensure_node(
-                    id.clone(),
-                    "proof",
-                    "FactCitation",
-                    result.cite_what.to_string(),
-                    None,
-                );
-                self.add_cited_fact(
-                    &id,
-                    result.source_fact_id,
-                    result.cite_what.to_string(),
-                    "citation",
-                    0,
-                );
-            }
-            SuccessCombinedFactProofItemResult::ByKnownForall(result) => {
-                self.add_known_forall_proof(&result.result, id, "KnownForallInstantiation");
-            }
-            SuccessCombinedFactProofItemResult::Reuse(result) => {
-                self.ensure_node(id.clone(), "proof", "Reuse", "shared proof", None);
-                let source_id = self.add_shared_fact_result(&result.source);
-                self.add_edge(&id, &source_id, "reuses", 0);
-            }
         }
     }
 

@@ -216,43 +216,22 @@ impl Runtime {
                     self.attach_known_fact_ids_to_stmt_result(subgoal)?;
                 }
             }
-            SuccessFactProofResult::Fact(result) => {
-                if result.source_fact_id.is_none() {
-                    if let Stmt::Fact(source_fact) = result.cite_what.as_ref() {
-                        if let Some(fact_id) = self.known_fact_id_for_fact(source_fact)? {
-                            result.source_fact_id = Some(fact_id);
-                        }
-                    }
-                }
-            }
+            SuccessFactProofResult::StoredFactCitation(_)
+            | SuccessFactProofResult::Strategy(_)
+            | SuccessFactProofResult::DefinitionReduction(_)
+            | SuccessFactProofResult::CheckedFunctionDefinitionReduction(_)
+            | SuccessFactProofResult::DiagnosticOnly(_) => {}
             SuccessFactProofResult::KnownForallInstantiation(result) => {
                 self.attach_known_fact_ids_to_known_forall(result)?;
             }
             SuccessFactProofResult::CombinedProofs(result) => {
-                for step in result.cite_what.iter_mut() {
-                    match step {
-                        SuccessCombinedFactProofItemResult::ByBuiltinRule(result)
-                        | SuccessCombinedFactProofItemResult::ByBuiltinStrategy(result) => {
-                            for subgoal in result.subgoals.iter_mut() {
-                                self.attach_known_fact_ids_to_stmt_result(subgoal)?;
-                            }
-                        }
-                        SuccessCombinedFactProofItemResult::ByFact(result) => {
-                            if result.source_fact_id.is_none() {
-                                if let Stmt::Fact(source_fact) = result.cite_what.as_ref() {
-                                    if let Some(fact_id) =
-                                        self.known_fact_id_for_fact(source_fact)?
-                                    {
-                                        result.source_fact_id = Some(fact_id);
-                                    }
-                                }
-                            }
-                        }
-                        SuccessCombinedFactProofItemResult::ByKnownForall(result) => {
-                            self.attach_known_fact_ids_to_known_forall(&mut result.result)?;
-                        }
-                        SuccessCombinedFactProofItemResult::Reuse(_) => {}
+                if let Some(primary) = result.primary.as_mut() {
+                    if let Some(primary) = Rc::get_mut(primary) {
+                        self.attach_known_fact_ids_to_verified_by(primary.proof_mut())?;
                     }
+                }
+                for step in result.steps.iter_mut() {
+                    self.attach_known_fact_ids_to_stmt_result(step)?;
                 }
             }
             SuccessFactProofResult::ForallProof(result) => {
@@ -275,11 +254,6 @@ impl Runtime {
         &self,
         result: &mut SuccessInstantiateKnownForallResult,
     ) -> Result<(), RuntimeError> {
-        if let Stmt::Fact(source_fact) = result.cite_what.as_ref() {
-            if let Some(fact_id) = self.known_fact_id_for_fact(source_fact)? {
-                result.source_fact_id = Some(fact_id);
-            }
-        }
         for requirement in result.requirements.iter_mut() {
             self.attach_known_fact_ids_to_stmt_result(requirement.result.as_mut())?;
         }
