@@ -1,5 +1,6 @@
 use crate::prelude::*;
 use std::collections::{HashMap, HashSet};
+use std::rc::Rc;
 
 struct ResolvedAtomicFactLookup {
     fact: AtomicFact,
@@ -333,8 +334,11 @@ impl Runtime {
         if let Some(path) = equalities.proof_path(&equal_fact.left, &equal_fact.right) {
             for proof_step in path {
                 let equality_fact: Fact = AtomicFact::EqualFact(proof_step.equality.clone()).into();
-                let equality_fact_id =
-                    self.fact_id_for_transport_fact(&equality_fact, module_names);
+                let Some(equality_fact_id) =
+                    self.fact_id_for_transport_fact(&equality_fact, module_names)
+                else {
+                    return false;
+                };
                 steps.push(EqualityTransportStep::new(
                     proof_step.from,
                     proof_step.to,
@@ -415,9 +419,19 @@ impl Runtime {
         known_fact: &AtomicFact,
         module_names: &[String],
         detail: Option<String>,
-    ) -> SuccessFactProofResult {
+    ) -> Result<SuccessFactProofResult, RuntimeError> {
         let source_fact: Fact = known_fact.clone().into();
-        let source_fact_id = self.fact_id_for_transport_fact(&source_fact, module_names);
+        let source_fact_id = self
+            .fact_id_for_transport_fact(&source_fact, module_names)
+            .ok_or_else(|| {
+                UnknownRuntimeError(RuntimeErrorStruct::new(
+                    Some(Fact::from(goal.clone()).into_stmt()),
+                    format!("successful known-fact citation has no FactId: `{source_fact}`"),
+                    goal.line_file(),
+                    None,
+                    vec![],
+                ))
+            })?;
         let equality_transport =
             self.equality_transport_for_known_atomic_fact(known_fact, goal, module_names);
         // The fast structural lookup can descend through an object such as
@@ -445,6 +459,16 @@ impl Runtime {
             fact_transformation,
             detail,
         )
+        .map_err(|message| {
+            UnknownRuntimeError(RuntimeErrorStruct::new(
+                Some(Fact::from(goal.clone()).into_stmt()),
+                message,
+                goal.line_file(),
+                None,
+                vec![],
+            ))
+            .into()
+        })
     }
 
     fn atomic_fact_with_resolved_unary_operand(fact: &AtomicFact, x: Obj) -> AtomicFact {
@@ -562,6 +586,7 @@ impl Runtime {
         let mut substitutions = HashMap::new();
         let mut substituted_symbols = HashSet::new();
         let mut source_to_goal_equality_steps = Vec::new();
+        let mut equality_steps_have_fact_ids = true;
 
         for equality in equalities.direct_equalities().iter() {
             for candidate in [&equality.left, &equality.right] {
@@ -602,11 +627,17 @@ impl Runtime {
                 for proof_step in path.into_iter().rev() {
                     let equality_fact: Fact =
                         AtomicFact::EqualFact(proof_step.equality.clone()).into();
+                    let Some(equality_fact_id) =
+                        self.fact_id_for_transport_fact(&equality_fact, &module_names)
+                    else {
+                        equality_steps_have_fact_ids = false;
+                        continue;
+                    };
                     source_to_goal_equality_steps.push(EqualityTransportStep::new(
                         proof_step.to,
                         proof_step.from,
                         proof_step.equality,
-                        self.fact_id_for_transport_fact(&equality_fact, &module_names),
+                        equality_fact_id,
                     ));
                 }
             }
@@ -637,7 +668,7 @@ impl Runtime {
         }
 
         let mut transformations = Vec::new();
-        let mut transformations_are_replayable = true;
+        let mut transformations_are_replayable = equality_steps_have_fact_ids;
         if resolved_fact.to_string() != equality_rewritten_fact.to_string() {
             if atomic_facts_align_by_nested_rational_normalization(
                 &resolved_fact,
@@ -685,18 +716,24 @@ impl Runtime {
         let Some(success) = result.factual_success() else {
             return result;
         };
-        let SuccessFactProofResult::Fact(citation) = success.underlying_verified_by() else {
-            return result;
-        };
-
-        let mut citation = citation.clone();
-        if citation.fact_transformation.is_some() {
+        if fact_transformation.steps.is_empty() {
             return result;
         }
-        citation.fact_transformation = Some(fact_transformation);
+        let mut source = success.verification.clone();
+        for step in fact_transformation.steps {
+            source = Rc::new(SuccessVerifyFactResult::new(
+                step.result,
+                SuccessFactProofResult::Transform(Box::new(
+                    SuccessTransformFactResult::from_shared(step.rule, source),
+                )),
+            ));
+        }
+        if source.fact().to_string() != goal.to_string() {
+            return result;
+        }
         SuccessFactStmtResult::new_with_verified_by_known_fact(
             goal.clone().into(),
-            SuccessFactProofResult::Fact(citation),
+            SuccessFactProofResult::Reuse(Box::new(SuccessReuseFactProofResult { source })),
             Vec::new(),
         )
         .into()
@@ -742,7 +779,7 @@ impl Runtime {
                             known_atomic_fact,
                             module_names,
                             None,
-                        ),
+                        )?,
                         Vec::new(),
                     ))
                     .into());
@@ -777,7 +814,7 @@ impl Runtime {
                                 known_atomic_fact,
                                 module_names,
                                 None,
-                            ),
+                            )?,
                             Vec::new(),
                         ))
                         .into());
@@ -807,7 +844,7 @@ impl Runtime {
                             known_atomic_fact,
                             module_names,
                             Some("corresponding arguments are known equal".to_string()),
-                        ),
+                        )?,
                         Vec::new(),
                     ))
                     .into());
@@ -826,11 +863,14 @@ impl Runtime {
                         if let Some(known_atomic_fact) =
                             known_facts_map.get(&(obj0.clone(), obj1.clone()))
                         {
+                            let source_fact: Fact = known_atomic_fact.clone().into();
+                            let source_fact_id =
+                                self.require_known_fact_id_for_success_result(&source_fact)?;
                             return Ok((SuccessFactStmtResult::new_with_verified_by_known_fact(
                                 atomic_fact.clone().into(),
-                                SuccessFactProofResult::cited_fact(
-                                    atomic_fact.clone().into(),
-                                    known_atomic_fact.clone().into(),
+                                SuccessFactProofResult::stored_fact_citation(
+                                    source_fact,
+                                    source_fact_id,
                                     None,
                                 ),
                                 Vec::new(),
@@ -928,7 +968,7 @@ impl Runtime {
                 if all_args_match {
                     return Ok((SuccessFactStmtResult::new_with_verified_by_known_fact(
                         atomic_fact.clone().into(),
-                        self.cited_known_atomic_fact(atomic_fact, known_fact, module_names, None),
+                        self.cited_known_atomic_fact(atomic_fact, known_fact, module_names, None)?,
                         Vec::new(),
                     ))
                     .into());
@@ -1020,12 +1060,14 @@ impl Runtime {
                 }
             }
             if all_args_match {
+                let source_fact: Fact = known_fact.clone().into();
+                let source_fact_id = self.require_known_fact_id_for_success_result(&source_fact)?;
                 return Ok(Some(
                     SuccessFactStmtResult::new_with_verified_by_known_fact(
                         atomic_fact.clone().into(),
-                        SuccessFactProofResult::cited_fact(
-                            atomic_fact.clone().into(),
-                            known_fact.clone().into(),
+                        SuccessFactProofResult::stored_fact_citation(
+                            source_fact,
+                            source_fact_id,
                             None,
                         ),
                         Vec::new(),

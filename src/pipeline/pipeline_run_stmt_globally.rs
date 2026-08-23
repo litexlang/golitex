@@ -313,11 +313,6 @@ fn run_repository_module_target_with_mode(
         return result;
     }
     runtime.module_manager.finish_loading_module(module_id);
-    runtime
-        .module_manager
-        .module_mut(module_id)
-        .expect("registered project module should exist")
-        .strictly_verified = runtime.strict_mode && execution_mode == ExecutionMode::Verified;
     result
 }
 
@@ -391,11 +386,6 @@ fn run_repository_module_prefix_with_mode(
         return result;
     }
     runtime.module_manager.finish_loading_module(module_id);
-    runtime
-        .module_manager
-        .module_mut(module_id)
-        .expect("registered project module should exist")
-        .strictly_verified = runtime.strict_mode && execution_mode == ExecutionMode::Verified;
     result
 }
 
@@ -629,9 +619,6 @@ fn run_config_imports(
         if let Some(error) = import_error {
             return (results, Some(error));
         }
-        runtime
-            .module_manager
-            .record_import_dependency(module_id, config_import.module_id);
     }
     (results, None)
 }
@@ -761,12 +748,6 @@ fn run_repository_exported_file_target_with_mode(
         .and_then(|module| module.file_mut(file_id))
         .expect("registered project file should exist")
         .status = FileStatus::Loaded;
-    runtime
-        .module_manager
-        .module_mut(module_id)
-        .and_then(|module| module.file_mut(file_id))
-        .expect("registered project file should exist")
-        .strictly_verified = runtime.strict_mode && execution_mode == ExecutionMode::Verified;
     result
 }
 

@@ -456,7 +456,7 @@ impl Runtime {
                             step.from,
                             step.to,
                             step.equality,
-                            Some(step.source_fact_id),
+                            step.source_fact_id,
                         )
                     }));
                 }
@@ -473,7 +473,7 @@ impl Runtime {
                             step.from,
                             step.to,
                             step.equality,
-                            Some(step.source_fact_id),
+                            step.source_fact_id,
                         )
                     }));
                 }
@@ -886,7 +886,7 @@ fn checked_definition_reduction_success(
                 Some(msg),
             )
         }
-        None => SuccessFactProofResult::fact_with_note(fact.clone(), Some(msg)),
+        None => SuccessFactProofResult::diagnostic(msg),
     };
     SuccessFactStmtResult::new_with_verified_by_known_fact(fact, verified_by, Vec::new()).into()
 }

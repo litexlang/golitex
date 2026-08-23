@@ -85,7 +85,7 @@ impl Runtime {
         }
         Ok(SuccessFactStmtResult::new_with_verified_by_known_fact(
             and_fact.clone().into(),
-            SuccessFactProofResult::wrap_bys(Vec::new()),
+            SuccessFactProofResult::combined_steps(Vec::new()),
             child_results,
         )
         .into())
@@ -114,7 +114,7 @@ impl Runtime {
         }
         Ok(SuccessFactStmtResult::new_with_verified_by_known_fact(
             chain_fact.clone().into(),
-            SuccessFactProofResult::wrap_bys(Vec::new()),
+            SuccessFactProofResult::combined_steps(Vec::new()),
             child_results,
         )
         .into())

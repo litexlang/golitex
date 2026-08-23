@@ -1714,17 +1714,48 @@ pub struct SuccessStoreFactResult {
 
 `SuccessVerifyFactResult` recursively mirrors the semantic split of `Fact`:
 atomic, existential, disjunction, conjunction, chain, universal, universal
-iff, and negated universal. Each proof node then records the successful proof
-route in `SuccessFactProofResult`, for example a builtin certificate, an exact
-`FactId` citation, a known-forall instantiation with checked requirements, a
-combined proof, a transformation, or an exact shared reuse node.
+iff, and negated universal. `SuccessFactProofResult` then names the semantic
+proof operation instead of hiding several unrelated operations in one struct:
 
-Diagnostic labels remain available for human output, but the target design is
-that they are not semantic compiler input. New compiler-ready builtin routes
-carry a typed `BuiltinRuleEvidence` payload whose target and children validate.
-The temporary compatibility adapter still has an allowlisted label-and-goal path
-for older builtin routes; that transitional boundary is recorded below and
-must not be used for new routes.
+```rust
+pub enum SuccessFactProofResult {
+    BuiltinRule(SuccessBuiltinFactProofResult),
+    BuiltinStrategy(SuccessBuiltinFactProofResult),
+    StoredFactCitation(SuccessStoredFactCitationProofResult),
+    Strategy(SuccessStrategyFactProofResult),
+    KnownForallInstantiation(SuccessInstantiateKnownForallResult),
+    DefinitionReduction(SuccessDefinitionReductionFactProofResult),
+    CheckedFunctionDefinitionReduction(
+        SuccessCheckedFunctionDefinitionReductionFactProofResult,
+    ),
+    DiagnosticOnly(SuccessDiagnosticFactProofResult),
+    CombinedProofs(SuccessCombinedFactProofResult),
+    ForallProof(SuccessForallProofResult),
+    Transform(Box<SuccessTransformFactResult>),
+    Reuse(Box<SuccessReuseFactProofResult>),
+}
+```
+
+A stored citation owns a non-optional `source_fact_id`. A transform owns the
+exact recursively proved source plus one transformation rule. A combined proof
+owns either one exact primary proof and its checked steps or the ordered child
+Results for the target conjunction; it never extracts and flattens only the
+children's `proof` fields.
+
+Builtin evidence is also an explicit sum rather than `Option`:
+
+```rust
+pub enum SuccessBuiltinFactProofEvidenceResult {
+    Typed(BuiltinRuleEvidence),
+    DiagnosticOnly,
+}
+```
+
+Diagnostic labels remain available for human output, but they are never
+semantic compiler input. A `Typed` route is validated against its target and
+child Results. `DiagnosticOnly` means that execution succeeded but this proof
+route does not provide a compiler certificate; the Lean compiler fails closed.
+There is no label-and-goal compatibility adapter.
 
 ## Well-Definedness, Binder Scope, and Identity
 
@@ -1858,6 +1889,74 @@ inside the fixed `complexEqNatInN` adapter only after Litex has selected and
 returned the exact closed evaluation certificate with normal value `5`. The
 second theorem is not reproved independently: its result came from the typed
 inference edge whose premise is the stored membership fact.
+
+## Structured Integer Induction as Nested Result Scope
+
+The persistent vertical-slice tracer is
+[`56_StructuredIntegerInductionResult.lit`](../../lean/examples/56_StructuredIntegerInductionResult.lit).
+Its ordinary induction proof returns this shape:
+
+```text
+SuccessByInducStmtResult
+  statement
+  common
+    final generated-forall store/infer effects
+  verification: SuccessVerifyByInducResult
+    parameter_binding
+    parameter
+    prove_goals
+    generated_forall
+    proof: IntegerStructured
+      start
+      start_in_z_check: StmtResult
+      base
+        assumptions
+          - ParameterType { fact, fact_id }
+          - BaseCaseEquality { fact, fact_id }
+        assumption_infers
+        proof_steps: Vec<StmtResult>
+        conclusions
+          - { goal, check: StmtResult }
+      step
+        assumptions
+          - ParameterType { fact, fact_id }
+          - DomainLowerBound { fact, fact_id }
+          - InductionHypothesis { goal_index, fact, fact_id }
+        assumption_infers
+        proof_steps: Vec<StmtResult>
+        conclusions
+          - { goal, check: StmtResult }
+```
+
+`run_in_local_env` does not require a parallel scope-ID model. Execution pops
+the temporary Runtime environment only after the base or step has returned its
+owned case Result. The compiler then follows exactly that nesting:
+
+```text
+compile ByInduc Result
+  push inherited compiler environment for base
+    install exact base assumption FactIds
+    compile typed assumption infers
+    compile proof-step child Results
+    compile conclusion-check child Results
+  pop base environment
+  push inherited compiler environment for step
+    install parameter/domain/IH FactIds
+    compile typed assumption infers
+    compile proof-step child Results
+    compile conclusion-check child Results
+  pop step environment
+  publish the generated forall FactId
+```
+
+The generated Lean uses the proved
+`Litex.Rules.integerInductionFrom` adapter. The ordinary nonzero-start slice is
+implemented and checked by Lean. Strong induction and finite-set induction
+return successful Litex Results but currently fail closed in this compiler.
+Induction from literal zero also fails closed: Litex normalizes its domain to
+the heterogeneous `Nonnegative` predicate, and the current wrapper ABI has no
+sound theorem transporting that observation to order on the selected native
+integer representative. The compiler must not guess that bridge.
 
 ## Finite Proof Methods as Nested Result Composition
 
@@ -2140,8 +2239,9 @@ consumes the Rust Result structures directly.
   a new statement transaction model or an Error Result tree.
 - Unknown and failed statements are never lowered to Lean.
 - Not every existing builtin or inference route carries a compiler-ready typed
-  certificate yet. Litex execution may succeed while Lean lowering rejects
-  that route.
+  certificate yet. Such a route is represented explicitly as
+  `DiagnosticOnly`; Litex execution may succeed while Lean lowering rejects
+  it.
 - There is no compatibility builder, mirrored statement/proof tree, or
   diagnostic-label-to-rule fallback. New compiler support must consume typed
   Result evidence directly rather than reintroducing one of those paths.
@@ -2173,7 +2273,7 @@ representation is unavailable. A missing symbolic nonzero premise still fails
 in Litex well-definedness rather than becoming target-side proof search.
 
 The persistent compiler examples currently extend through
-[`54_ComplexAlgebraicCalculation.lit`](../../lean/examples/54_ComplexAlgebraicCalculation.lit).
+[`56_StructuredIntegerInductionResult.lit`](../../lean/examples/56_StructuredIntegerInductionResult.lit).
 They exercise the direct Result reader and compiler environment stack; they do
 not claim that every statement accepted by the full Litex kernel is already a
 supported Lean target.

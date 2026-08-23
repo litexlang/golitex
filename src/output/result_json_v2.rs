@@ -2064,30 +2064,98 @@ impl StmtResultJsonV2 {
             SuccessFactProofResult::BuiltinStrategy(result) => {
                 self.builtin_proof("BuiltinStrategy", result)
             }
-            SuccessFactProofResult::Fact(result) => object(vec![
-                string_field("kind", "FactCitation"),
+            SuccessFactProofResult::StoredFactCitation(result) => object(vec![
+                string_field("kind", "StoredFactCitation"),
                 optional_string_field("detail", result.detail.as_deref()),
-                string_field("cited_statement", result.cite_what.to_string()),
-                optional_fact_id_field("source_fact_id", result.source_fact_id),
+                string_field("source_fact", result.source_fact.to_string()),
+                string_field("source_fact_id", fact_id(result.source_fact_id)),
+            ]),
+            SuccessFactProofResult::Strategy(result) => object(vec![
+                string_field("kind", "Strategy"),
+                optional_string_field("detail", result.detail.as_deref()),
+                string_field("strategy", result.strategy.to_string()),
+            ]),
+            SuccessFactProofResult::DefinitionReduction(result) => object(vec![
+                string_field("kind", "DefinitionReduction"),
+                optional_string_field("detail", result.detail.as_deref()),
+                string_field("definition", result.definition.to_string()),
                 (
-                    "equality_transport".to_string(),
-                    equality_transport_value(result.equality_transport.as_ref()),
+                    "argument_verification".to_string(),
+                    args_satisfy_param_def_verification_value(
+                        self,
+                        &result.verification.argument_verification,
+                    ),
                 ),
                 (
-                    "fact_transformation".to_string(),
-                    fact_transformation_value(result.fact_transformation.as_ref()),
+                    "clause_checks".to_string(),
+                    array(
+                        result
+                            .verification
+                            .clause_facts
+                            .iter()
+                            .zip(result.verification.clause_checks.iter())
+                            .map(|(fact, check)| {
+                                object(vec![
+                                    string_field("fact", fact.to_string()),
+                                    ("result".to_string(), self.stmt_result(check)),
+                                ])
+                            })
+                            .collect(),
+                    ),
                 ),
+            ]),
+            SuccessFactProofResult::CheckedFunctionDefinitionReduction(result) => object(vec![
+                string_field("kind", "CheckedFunctionDefinitionReduction"),
+                optional_string_field("detail", result.detail.as_deref()),
+                string_field(
+                    "definition_object",
+                    result.verification.definition_object.to_string(),
+                ),
+                string_field(
+                    "defining_equality",
+                    result.verification.defining_equality.to_string(),
+                ),
+                string_field(
+                    "defining_equality_fact_id",
+                    fact_id(result.verification.defining_equality_fact_id),
+                ),
+                string_field(
+                    "application_side",
+                    result.verification.application_side.to_string(),
+                ),
+                string_field("reduced", result.verification.reduced.to_string()),
+                string_field("other_side", result.verification.other_side.to_string()),
+                (
+                    "application_is_left".to_string(),
+                    JsonValue::Bool(result.verification.application_is_left),
+                ),
+                (
+                    "reduced_matches_other_by_alpha".to_string(),
+                    JsonValue::Bool(result.verification.reduced_matches_other_by_alpha),
+                ),
+            ]),
+            SuccessFactProofResult::DiagnosticOnly(result) => object(vec![
+                string_field("kind", "DiagnosticOnly"),
+                string_field("detail", result.detail.clone()),
             ]),
             SuccessFactProofResult::KnownForallInstantiation(result) => self.known_forall(result),
             SuccessFactProofResult::CombinedProofs(result) => object(vec![
                 string_field("kind", "CombinedProofs"),
                 (
-                    "proofs".to_string(),
+                    "primary".to_string(),
+                    result
+                        .primary
+                        .as_ref()
+                        .map(|proof| self.verify_fact(proof))
+                        .unwrap_or(JsonValue::Null),
+                ),
+                (
+                    "steps".to_string(),
                     array(
                         result
-                            .cite_what
+                            .steps
                             .iter()
-                            .map(|proof| self.combined_fact_proof(proof))
+                            .map(|step| self.stmt_result(step))
                             .collect(),
                     ),
                 ),
@@ -2166,11 +2234,15 @@ impl StmtResultJsonV2 {
             string_field("diagnostic_label", result.msg.clone()),
             (
                 "evidence".to_string(),
-                result
-                    .evidence
-                    .as_ref()
-                    .map(|evidence| self.builtin_evidence(evidence))
-                    .unwrap_or(JsonValue::Null),
+                match &result.evidence {
+                    SuccessBuiltinFactProofEvidenceResult::Typed(evidence) => object(vec![
+                        string_field("kind", "Typed"),
+                        ("value".to_string(), self.builtin_evidence(evidence)),
+                    ]),
+                    SuccessBuiltinFactProofEvidenceResult::DiagnosticOnly => {
+                        object(vec![string_field("kind", "DiagnosticOnly")])
+                    }
+                },
             ),
             (
                 "subgoals".to_string(),
@@ -2185,63 +2257,11 @@ impl StmtResultJsonV2 {
         ])
     }
 
-    fn combined_fact_proof(&mut self, proof: &SuccessCombinedFactProofItemResult) -> JsonValue {
-        match proof {
-            SuccessCombinedFactProofItemResult::ByBuiltinRule(result)
-            | SuccessCombinedFactProofItemResult::ByBuiltinStrategy(result) => object(vec![
-                string_field(
-                    "kind",
-                    if matches!(proof, SuccessCombinedFactProofItemResult::ByBuiltinRule(_)) {
-                        "BuiltinRule"
-                    } else {
-                        "BuiltinStrategy"
-                    },
-                ),
-                string_field("statement", result.verify_what.to_string()),
-                string_field("diagnostic_label", result.msg.clone()),
-                (
-                    "evidence".to_string(),
-                    result
-                        .evidence
-                        .as_ref()
-                        .map(|evidence| self.builtin_evidence(evidence))
-                        .unwrap_or(JsonValue::Null),
-                ),
-                (
-                    "subgoals".to_string(),
-                    array(
-                        result
-                            .subgoals
-                            .iter()
-                            .map(|result| self.stmt_result(result))
-                            .collect(),
-                    ),
-                ),
-            ]),
-            SuccessCombinedFactProofItemResult::ByFact(result) => object(vec![
-                string_field("kind", "FactCitation"),
-                string_field("statement", result.verify_what.to_string()),
-                string_field("cited_statement", result.cite_what.to_string()),
-                optional_fact_id_field("source_fact_id", result.source_fact_id),
-            ]),
-            SuccessCombinedFactProofItemResult::ByKnownForall(result) => object(vec![
-                string_field("kind", "KnownForallInstantiation"),
-                string_field("statement", result.verify_what.to_string()),
-                ("result".to_string(), self.known_forall(&result.result)),
-            ]),
-            SuccessCombinedFactProofItemResult::Reuse(result) => object(vec![
-                string_field("kind", "Reuse"),
-                string_field("statement", result.statement.to_string()),
-                ("source".to_string(), self.shared_fact(&result.source)),
-            ]),
-        }
-    }
-
     fn known_forall(&mut self, result: &SuccessInstantiateKnownForallResult) -> JsonValue {
         object(vec![
             string_field("kind", "KnownForallInstantiation"),
-            string_field("cited_statement", result.cite_what.to_string()),
-            optional_fact_id_field("source_fact_id", result.source_fact_id),
+            string_field("source_fact", result.source_fact.to_string()),
+            string_field("source_fact_id", fact_id(result.source_fact_id)),
             (
                 "instantiation".to_string(),
                 array(
@@ -3164,18 +3184,18 @@ fn by_induc_verification_value(
         SuccessVerifyByInducProofResult::IntegerStructured(proof) => object(vec![
             string_field("kind", "IntegerStructured"),
             ("strong".to_string(), JsonValue::Bool(proof.strong)),
-            string_field("start", proof.start.clone()),
+            string_field("start", proof.start.to_string()),
             (
                 "start_in_z_check".to_string(),
                 renderer.stmt_result(&proof.start_in_z_check),
             ),
             (
                 "base".to_string(),
-                by_induc_case_value(renderer, &proof.base),
+                structured_integer_induc_case_value(renderer, &proof.base),
             ),
             (
                 "step".to_string(),
-                by_induc_case_value(renderer, &proof.step),
+                structured_integer_induc_case_value(renderer, &proof.step),
             ),
         ]),
         SuccessVerifyByInducProofResult::FiniteSet(proof) => object(vec![
@@ -3192,9 +3212,19 @@ fn by_induc_verification_value(
     };
     object(vec![
         string_field("kind", "SuccessVerifyByInducResult"),
-        string_field("parameter", result.parameter.clone()),
-        ("prove_goals".to_string(), strings(&result.prove_goals)),
-        string_field("generated_forall", result.generated_forall.clone()),
+        string_field("parameter_binding", result.parameter_binding.to_string()),
+        string_field("parameter", result.parameter.to_string()),
+        (
+            "prove_goals".to_string(),
+            strings(
+                &result
+                    .prove_goals
+                    .iter()
+                    .map(ToString::to_string)
+                    .collect::<Vec<_>>(),
+            ),
+        ),
+        string_field("generated_forall", result.generated_forall.to_string()),
         ("proof".to_string(), proof),
     ])
 }
@@ -3236,6 +3266,88 @@ fn by_induc_case_value(
         (
             "conclusion_checks".to_string(),
             renderer.stmt_results(&result.conclusion_checks),
+        ),
+    ])
+}
+
+fn structured_integer_induc_case_value(
+    renderer: &mut StmtResultJsonV2,
+    result: &SuccessVerifyByStructuredIntegerInducCaseResult,
+) -> JsonValue {
+    object(vec![
+        string_field(
+            "kind",
+            "SuccessVerifyByStructuredIntegerInducCaseResult",
+        ),
+        (
+            "assumptions".to_string(),
+            array(
+                result
+                    .assumptions
+                    .iter()
+                    .map(|assumption| {
+                        object(vec![
+                            string_field("kind", "SuccessVerifyByInducAssumptionResult"),
+                            string_field("fact", assumption.fact.to_string()),
+                            string_field("fact_id", assumption.fact_id.to_string()),
+                            string_field(
+                                "role",
+                                match assumption.role {
+                                    SuccessVerifyByInducAssumptionRole::ParameterType => {
+                                        "ParameterType"
+                                    }
+                                    SuccessVerifyByInducAssumptionRole::BaseCaseEquality => {
+                                        "BaseCaseEquality"
+                                    }
+                                    SuccessVerifyByInducAssumptionRole::DomainLowerBound => {
+                                        "DomainLowerBound"
+                                    }
+                                    SuccessVerifyByInducAssumptionRole::InductionHypothesis => {
+                                        "InductionHypothesis"
+                                    }
+                                    SuccessVerifyByInducAssumptionRole::StrongInductionHypothesis => {
+                                        "StrongInductionHypothesis"
+                                    }
+                                },
+                            ),
+                            (
+                                "goal_index".to_string(),
+                                assumption
+                                    .goal_index
+                                    .map(JsonValue::Number)
+                                    .unwrap_or(JsonValue::Null),
+                            ),
+                        ])
+                    })
+                    .collect(),
+            ),
+        ),
+        (
+            "assumption_infers".to_string(),
+            infer_result_value(&result.assumption_infers),
+        ),
+        (
+            "proof_steps".to_string(),
+            renderer.stmt_results(&result.proof_steps),
+        ),
+        (
+            "conclusions".to_string(),
+            array(
+                result
+                    .conclusions
+                    .iter()
+                    .map(|conclusion| {
+                        object(vec![
+                            string_field("kind", "SuccessVerifyByInducConclusionResult"),
+                            string_field("goal", conclusion.goal.to_string()),
+                            (
+                                "check".to_string(),
+                                renderer.stmt_result(&conclusion.check),
+                            ),
+                        ])
+                    })
+                    .collect(),
+            ),
         ),
     ])
 }
@@ -3870,39 +3982,11 @@ fn equality_transport_value(result: Option<&EqualityTransportEvidence>) -> JsonV
                             string_field("from", step.from.to_string()),
                             string_field("to", step.to.to_string()),
                             string_field("equality", step.equality.to_string()),
-                            optional_fact_id_field("equality_fact_id", step.equality_fact_id),
+                            string_field("equality_fact_id", fact_id(step.equality_fact_id)),
                         ])
                     })
                     .collect(),
             )
-        })
-        .unwrap_or(JsonValue::Null)
-}
-
-fn fact_transformation_value(result: Option<&FactTransformationEvidence>) -> JsonValue {
-    result
-        .map(|result| {
-            object(vec![
-                string_field("source", result.source.to_string()),
-                (
-                    "steps".to_string(),
-                    array(
-                        result
-                            .steps
-                            .iter()
-                            .map(|step| {
-                                object(vec![
-                                    string_field("result", step.result.to_string()),
-                                    (
-                                        "rule".to_string(),
-                                        fact_transformation_rule_value(&step.rule),
-                                    ),
-                                ])
-                            })
-                            .collect(),
-                    ),
-                ),
-            ])
         })
         .unwrap_or(JsonValue::Null)
 }
@@ -4383,7 +4467,8 @@ mod tests {
         let SuccessFactProofResult::BuiltinRule(proof) = success.proof() else {
             panic!("closed numeric membership must retain its builtin proof");
         };
-        let Some(BuiltinRuleEvidence::ClosedNumericMembership(evidence)) = &proof.evidence else {
+        let Some(BuiltinRuleEvidence::ClosedNumericMembership(evidence)) = proof.evidence.typed()
+        else {
             panic!("closed numeric membership must retain its evaluation evidence");
         };
         assert_eq!(evidence.evaluation.expression.to_string(), "2 + 3");
@@ -4420,6 +4505,7 @@ mod tests {
 
         let json = display_stmt_result_json_v2(&result);
         assert!(json.contains("\"schema\": \"litex.statement-result.v2\""));
+        assert!(json.contains("\"kind\": \"Typed\""));
         assert!(json.contains("\"kind\": \"ClosedNumericMembership\""));
         assert!(json.contains("\"operator\": \"Add\""));
         assert!(json.contains("\"value\": \"5\""));
@@ -4517,7 +4603,8 @@ mod tests {
         let SuccessFactProofResult::BuiltinRule(proof) = nonempty.proof() else {
             panic!("standard carrier nonempty child is builtin")
         };
-        let Some(BuiltinRuleEvidence::StandardSetNonempty(evidence)) = &proof.evidence else {
+        let Some(BuiltinRuleEvidence::StandardSetNonempty(evidence)) = proof.evidence.typed()
+        else {
             panic!("standard carrier nonempty child retains typed evidence")
         };
         assert_eq!(evidence.target_set, StandardSet::R);

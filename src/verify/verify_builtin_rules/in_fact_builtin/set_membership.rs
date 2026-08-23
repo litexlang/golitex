@@ -54,10 +54,10 @@ impl Runtime {
                 continue;
             }
 
-            let membership_result = Self::stmt_result_for_indexed_fact(
+            let membership_result = self.stmt_result_for_indexed_fact(
                 membership.clone().into(),
                 "known membership in an equal one-layer set-builder definition",
-            );
+            )?;
             return Ok(Some(
                 SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                     goal.clone().into(),
@@ -329,10 +329,10 @@ impl Runtime {
                 }
 
                 let membership_atomic: AtomicFact = membership.clone().into();
-                let membership_result = Self::stmt_result_for_indexed_fact(
+                let membership_result = self.stmt_result_for_indexed_fact(
                     membership_atomic,
                     "known membership in a set-builder or its one-layer named definition",
-                );
+                )?;
                 return Ok(Some(
                     SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                         goal.clone().into(),
@@ -1773,9 +1773,9 @@ impl Runtime {
                 continue;
             };
             let membership_result =
-                Self::stmt_result_for_indexed_fact(owner_atomic_fact, "known owner membership");
+                self.stmt_result_for_indexed_fact(owner_atomic_fact, "known owner membership")?;
             let inclusion_result =
-                Self::stmt_result_for_indexed_fact(inclusion_fact, "known direct set inclusion");
+                self.stmt_result_for_indexed_fact(inclusion_fact, "known direct set inclusion")?;
             return Ok(
                 SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                     in_fact.clone().into(),
@@ -1834,13 +1834,22 @@ impl Runtime {
         }
     }
 
-    fn stmt_result_for_indexed_fact(indexed_fact: AtomicFact, detail: &str) -> StmtResult {
+    fn stmt_result_for_indexed_fact(
+        &self,
+        indexed_fact: AtomicFact,
+        detail: &str,
+    ) -> Result<StmtResult, RuntimeError> {
         let fact: Fact = indexed_fact.into();
-        SuccessFactStmtResult::new_with_verified_by_known_fact(
+        let source_fact_id = self.require_known_fact_id_for_success_result(&fact)?;
+        Ok(SuccessFactStmtResult::new_with_verified_by_known_fact(
             fact.clone(),
-            SuccessFactProofResult::cited_fact(fact.clone(), fact, Some(detail.to_string())),
+            SuccessFactProofResult::stored_fact_citation(
+                fact,
+                source_fact_id,
+                Some(detail.to_string()),
+            ),
             Vec::new(),
         )
-        .into()
+        .into())
     }
 }

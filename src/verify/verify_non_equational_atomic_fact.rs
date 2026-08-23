@@ -399,7 +399,8 @@ mod tests {
         let SuccessFactProofResult::BuiltinRule(builtin) = success.proof() else {
             panic!("direct membership should select one builtin proof");
         };
-        let Some(BuiltinRuleEvidence::ClosedNumericMembership(evidence)) = &builtin.evidence else {
+        let Some(BuiltinRuleEvidence::ClosedNumericMembership(evidence)) = builtin.evidence.typed()
+        else {
             panic!("direct membership should retain its numeric evaluation");
         };
 
@@ -470,7 +471,8 @@ mod tests {
         let SuccessFactProofResult::BuiltinRule(builtin) = success.proof() else {
             panic!("registered symmetry should be an explicit builtin wrapper")
         };
-        let Some(BuiltinRuleEvidence::RegisteredSymmetricPredicate(evidence)) = &builtin.evidence
+        let Some(BuiltinRuleEvidence::RegisteredSymmetricPredicate(evidence)) =
+            builtin.evidence.typed()
         else {
             panic!("registered symmetry should retain typed evidence")
         };

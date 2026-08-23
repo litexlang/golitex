@@ -1,0 +1,17 @@
+# Before: closed numeric membership discarded the normalization provenance,
+# and structured integer induction survived only as flat display strings.
+# Now: the successful Result retains WD, normalization, exact FactIds,
+# base/step assumptions, proof children, conclusion checks, and outer storage.
+# Boundary: strong/finite-set induction and zero-ended sign-domain lowering
+# still fail closed in the StmtResult-to-Lean compiler.
+# Evidence: this paired tracer is checked by both the Rust compiler suite and
+# the Lean example ledger.
+
+2 + 3 $in N
+
+by induc n from -1:
+    ? n + 1 = n + 1
+    ? from n = -1:
+        do_nothing
+    ? induc:
+        do_nothing

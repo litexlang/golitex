@@ -1117,12 +1117,10 @@ impl Runtime {
         let out = SuccessFactStmtResult::new_with_verified_by_known_fact_and_infer(
             exist_fact.clone().into(),
             infers,
-            SuccessFactProofResult::cited_fact(
-                exist_fact.clone().into(),
-                uniqueness_fact.clone(),
-                Some("exist!: witness exist and uniqueness forall verified".to_string()),
+            SuccessFactProofResult::diagnostic(
+                "exist!: witness exist and uniqueness forall verified",
             ),
-            vec![],
+            vec![plain_res, uniq_res],
         );
         Ok(Some(out.into()))
     }
@@ -1183,11 +1181,14 @@ impl Runtime {
                         )))
                     })?;
                 if target_body_string == known_body_string {
+                    let source_fact: Fact = known_fact.clone().into();
+                    let source_fact_id =
+                        runtime.require_known_fact_id_for_success_result(&source_fact)?;
                     return Ok((SuccessFactStmtResult::new_with_verified_by_known_fact(
                         exist_fact.clone().into(),
-                        SuccessFactProofResult::cited_fact(
-                            exist_fact.clone().into(),
-                            known_fact.clone().into(),
+                        SuccessFactProofResult::stored_fact_citation(
+                            source_fact,
+                            source_fact_id,
                             None,
                         ),
                         Vec::new(),

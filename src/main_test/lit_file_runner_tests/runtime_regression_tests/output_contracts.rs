@@ -743,7 +743,7 @@ fn zh_output_localizes_citation_evidence_but_keeps_litex_statement() {
         run_output
     );
     assert!(run_output.contains("\"verification\""));
-    assert!(run_output.contains("\"kind\": \"FactCitation\""));
+    assert!(run_output.contains("\"kind\": \"StoredFactCitation\""));
     assert!(run_output.contains("\"cited_statement\": \"prop is_one_tmp(t R):\\n"));
     assert!(run_output.contains("\"statement\": \"$is_one_tmp(1)\""));
 }
@@ -1393,7 +1393,7 @@ $q(1)
     assert!(run_output.contains("\"instantiation\""));
     assert!(run_output.contains("\"requirements\""));
     assert!(run_output.contains("\"statement\": \"2 $in R\""));
-    assert!(run_output.contains("\"kind\": \"FactCitation\""));
+    assert!(run_output.contains("\"kind\": \"StoredFactCitation\""));
     assert!(run_output.contains("\"cited_statement\": \"a = 1\""));
     assert!(run_output.contains("\"cited_statement\": \"prop q(x R):\\n"));
 }
@@ -1502,7 +1502,7 @@ $sym_p(B, A)
         "verification output should not include redundant method field:\n{}",
         run_output
     );
-    for route_type in ["BuiltinRule", "FactCitation", "KnownForallInstantiation"] {
+    for route_type in ["BuiltinRule", "StoredFactCitation", "KnownForallInstantiation"] {
         assert!(
             run_output.contains(&format!("\"kind\": \"{}\"", route_type)),
             "missing atomic verification route type `{}`:\n{}",
@@ -1587,7 +1587,7 @@ have a, b, c, d R+
     };
     assert_eq!(root_rule.subgoals.len(), 2);
     assert!(matches!(
-        root_rule.evidence.as_ref(),
+        root_rule.evidence.typed(),
         Some(BuiltinRuleEvidence::Arithmetic(
             ArithmeticBuiltinRule::AddPositiveLeftStrict
         ))
@@ -1601,7 +1601,7 @@ have a, b, c, d R+
         panic!("the right recursive branch should remain a strategy: {right_branch:?}");
     };
     assert!(matches!(
-        right_rule.evidence.as_ref(),
+        right_rule.evidence.typed(),
         Some(BuiltinRuleEvidence::Arithmetic(
             ArithmeticBuiltinRule::AddNonnegative
         ))
@@ -1870,7 +1870,7 @@ forall n N:
     assert!(run_output.contains("\"n $in N\""));
     assert!(run_output.contains("\"proves\": ["));
     assert!(run_output.contains("\"statement\": \"n $in N\""));
-    assert!(run_output.contains("\"kind\": \"FactCitation\""));
+    assert!(run_output.contains("\"kind\": \"StoredFactCitation\""));
     assert!(run_output
         .contains(format!("\"reason\": \"{}\"", ParamDefWithType::store_reason()).as_str()));
     assert!(!run_output.contains("\"source\": \"parameter definition\""));
@@ -1974,7 +1974,7 @@ claim:
             assert!(run_output.contains("\"statement\": \"x = x\""));
             assert!(run_output.contains("\"conclusion_checks\": ["));
             assert!(run_output.contains("\"statement\": \"x = 1\""));
-            assert!(run_output.contains("\"kind\": \"FactCitation\""));
+            assert!(run_output.contains("\"kind\": \"StoredFactCitation\""));
         },
     );
 }
@@ -2006,7 +2006,7 @@ claim:
             assert!(run_output.contains("\"fact\": \"1 = 1\""));
             assert!(run_output.contains("\"proof_steps\": ["));
             assert!(run_output.contains("\"verification\": {"));
-            assert!(run_output.contains("\"kind\": \"FactCitation\""));
+            assert!(run_output.contains("\"kind\": \"StoredFactCitation\""));
             assert!(
                 run_output.contains("\"conclusion_check\": {"),
                 "claim Result should retain its named conclusion child:\n{}",

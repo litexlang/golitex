@@ -777,6 +777,22 @@ impl Runtime {
         Ok(None)
     }
 
+    pub(crate) fn require_known_fact_id_for_success_result(
+        &self,
+        fact: &Fact,
+    ) -> Result<FactId, RuntimeError> {
+        self.known_fact_id_for_fact(fact)?.ok_or_else(|| {
+            UnknownRuntimeError(RuntimeErrorStruct::new(
+                Some(fact.clone().into_stmt()),
+                format!("successful fact reference has no stored FactId: `{fact}`"),
+                fact.line_file(),
+                None,
+                vec![],
+            ))
+            .into()
+        })
+    }
+
     pub(crate) fn alpha_normalized_exist_fact_id_key(
         &self,
         exist_fact: &ExistFactEnum,

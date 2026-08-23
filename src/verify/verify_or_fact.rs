@@ -876,15 +876,42 @@ impl Runtime {
                 }
 
                 if all_args_match {
-                    return Ok((SuccessFactStmtResult::new_with_verified_by_known_fact(
-                        or_fact.clone().into(),
-                        SuccessFactProofResult::wrap_bys(vec![
-                            SuccessCombinedFactProofItemResult::cited_fact(
-                                or_fact.clone().into(),
-                                known_or_fact.clone().into(),
+                    let source_fact: Fact = known_or_fact.clone().into();
+                    let source_fact_key = source_fact.to_string();
+                    let source_fact_id = environment
+                        .cache_known_fact
+                        .get(&source_fact_key)
+                        .or_else(|| {
+                            environment
+                                .cache_known_fact
+                                .get(&nested_obj_binder_normalized_fact_key(&source_fact))
+                        })
+                        .map(|fact| fact.fact_id)
+                        .ok_or_else(|| {
+                            UnknownRuntimeError(RuntimeErrorStruct::new(
+                                Some(Fact::from(or_fact.clone()).into_stmt()),
+                                format!(
+                                    "successful known-or citation has no FactId: `{source_fact}`"
+                                ),
+                                or_fact.line_file.clone(),
+                                None,
+                                vec![],
+                            ))
+                        })?;
+                    let source_result: StmtResult =
+                        SuccessFactStmtResult::new_with_verified_by_known_fact(
+                            source_fact.clone(),
+                            SuccessFactProofResult::stored_fact_citation(
+                                source_fact,
+                                source_fact_id,
                                 None,
                             ),
-                        ]),
+                            Vec::new(),
+                        )
+                        .into();
+                    return Ok((SuccessFactStmtResult::new_with_verified_by_known_fact(
+                        or_fact.clone().into(),
+                        SuccessFactProofResult::combined_steps(vec![source_result]),
                         Vec::new(),
                     ))
                     .into());

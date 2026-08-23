@@ -48,7 +48,7 @@ impl Runtime {
         }
         Ok((SuccessFactStmtResult::new_with_verified_by_known_fact(
             and_fact.clone().into(),
-            SuccessFactProofResult::wrap_bys(Vec::new()),
+            SuccessFactProofResult::combined_steps(Vec::new()),
             child_results,
         ))
         .into())
@@ -138,7 +138,7 @@ impl Runtime {
             known_forall.line_file.clone(),
         )?;
         let source_fact: Fact = verified_by_known_forall_fact.into();
-        let source_fact_id = self.known_fact_id_for_fact(&source_fact)?;
+        let source_fact_id = self.require_known_fact_id_for_success_result(&source_fact)?;
         let fact_verified = SuccessFactStmtResult::new_with_verified_by_known_fact(
             given_and_fact.clone().into(),
             SuccessFactProofResult::known_forall_instantiation(
@@ -204,7 +204,7 @@ impl Runtime {
         }
         Ok((SuccessFactStmtResult::new_with_verified_by_known_fact(
             chain_fact.clone().into(),
-            SuccessFactProofResult::wrap_bys(Vec::new()),
+            SuccessFactProofResult::combined_steps(Vec::new()),
             child_results,
         ))
         .into())

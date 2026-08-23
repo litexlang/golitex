@@ -153,9 +153,8 @@ impl Runtime {
 
         Ok(SuccessFactStmtResult::new_with_verified_by_known_fact(
             atomic_fact.clone().into(),
-            SuccessFactProofResult::cited_stmt(
-                atomic_fact.clone().into(),
-                strategy.clone().into(),
+            SuccessFactProofResult::strategy(
+                strategy.clone(),
                 Some(format!("strategy `{}`", strategy_name)),
             ),
             Vec::new(),

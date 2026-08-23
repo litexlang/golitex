@@ -1219,11 +1219,16 @@ impl DefinitionGraphBuilder {
                     self.collect_proof_source_ids_from_result(subgoal, source_ids);
                 }
             }
-            SuccessFactProofResult::Fact(result) => {
-                self.collect_cited_stmt_source_ids(result.cite_what.as_ref(), source_ids);
+            SuccessFactProofResult::StoredFactCitation(result) => self
+                .collect_cited_stmt_source_ids(&result.source_fact.clone().into_stmt(), source_ids),
+            SuccessFactProofResult::Strategy(result) => {
+                self.collect_cited_stmt_source_ids(&result.strategy.clone().into(), source_ids)
             }
             SuccessFactProofResult::KnownForallInstantiation(result) => {
-                self.collect_cited_stmt_source_ids(result.cite_what.as_ref(), source_ids);
+                self.collect_cited_stmt_source_ids(
+                    &result.source_fact.clone().into_stmt(),
+                    source_ids,
+                );
                 for requirement in result.requirements.iter() {
                     self.collect_proof_source_ids_from_result(
                         requirement.result.as_ref(),
@@ -1231,33 +1236,24 @@ impl DefinitionGraphBuilder {
                     );
                 }
             }
+            SuccessFactProofResult::DefinitionReduction(result) => {
+                self.collect_cited_stmt_source_ids(&result.definition.clone().into(), source_ids);
+                for check in result.verification.clause_checks.iter() {
+                    self.collect_proof_source_ids_from_result(check, source_ids);
+                }
+            }
+            SuccessFactProofResult::CheckedFunctionDefinitionReduction(result) => self
+                .collect_cited_stmt_source_ids(
+                    &result.verification.defining_equality.clone().into_stmt(),
+                    source_ids,
+                ),
+            SuccessFactProofResult::DiagnosticOnly(_) => {}
             SuccessFactProofResult::CombinedProofs(result) => {
-                for item in result.cite_what.iter() {
-                    match item {
-                        SuccessCombinedFactProofItemResult::ByBuiltinRule(result)
-                        | SuccessCombinedFactProofItemResult::ByBuiltinStrategy(result) => {
-                            for subgoal in result.subgoals.iter() {
-                                self.collect_proof_source_ids_from_result(subgoal, source_ids);
-                            }
-                        }
-                        SuccessCombinedFactProofItemResult::ByFact(result) => self
-                            .collect_cited_stmt_source_ids(result.cite_what.as_ref(), source_ids),
-                        SuccessCombinedFactProofItemResult::ByKnownForall(result) => {
-                            self.collect_cited_stmt_source_ids(
-                                result.result.cite_what.as_ref(),
-                                source_ids,
-                            );
-                            for requirement in result.result.requirements.iter() {
-                                self.collect_proof_source_ids_from_result(
-                                    requirement.result.as_ref(),
-                                    source_ids,
-                                );
-                            }
-                        }
-                        SuccessCombinedFactProofItemResult::Reuse(result) => {
-                            self.collect_verified_by_source_ids(result.source.proof(), source_ids);
-                        }
-                    }
+                if let Some(primary) = result.primary.as_ref() {
+                    self.collect_verified_by_source_ids(primary.proof(), source_ids);
+                }
+                for step in result.steps.iter() {
+                    self.collect_proof_source_ids_from_result(step, source_ids);
                 }
             }
             SuccessFactProofResult::ForallProof(result) => {

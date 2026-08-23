@@ -156,9 +156,6 @@ pub fn discover_isolated_module_import(
     reject_unauthorized_project_references(runtime)?;
     let import_edges = config_import_edges(runtime);
     reject_cyclic_module_imports(runtime, &import_edges)?;
-    runtime
-        .module_manager
-        .record_import_dependency(importing_module_id, module_id);
     Ok(module_id)
 }
 
@@ -182,9 +179,6 @@ pub fn discover_isolated_std_import(
     reject_unauthorized_project_references(runtime)?;
     let import_edges = config_import_edges(runtime);
     reject_cyclic_module_imports(runtime, &import_edges)?;
-    runtime
-        .module_manager
-        .record_import_dependency(importing_module_id, module_id);
     Ok(module_id)
 }
 
@@ -771,7 +765,7 @@ fn discover_config_export(
     export: ProjectExport,
     mount_stack: &mut Vec<ModuleId>,
 ) -> Result<ImportTarget, RuntimeError> {
-    let (owner_root, owner_name, is_root) = {
+    let (owner_root, owner_name) = {
         let owner = runtime
             .module_manager
             .module(owner_module_id)
@@ -779,7 +773,6 @@ fn discover_config_export(
         (
             PathBuf::from(&owner.module_root_path),
             owner.module_name.clone(),
-            runtime.module_manager.entry_module_id == Some(owner_module_id),
         )
     };
     if runtime
@@ -838,7 +831,7 @@ fn discover_config_export(
         };
         runtime
             .module_manager
-            .register_exported_file(canonical_name, source_path, target)
+            .register_exported_file(canonical_name, target)
             .map_err(|message| {
                 repository_error(message, &config_path.to_string_lossy(), export.line)
             })?;
@@ -854,14 +847,6 @@ fn discover_config_export(
                     file_id,
                 },
             );
-        if is_root {
-            runtime
-                .module_manager
-                .register_root_export(export.name, target)
-                .map_err(|message| {
-                    repository_error(message, &config_path.to_string_lossy(), export.line)
-                })?;
-        }
         return Ok(target);
     } else if target_path.is_dir() {
         let canonical_root = canonical_directory(
@@ -928,14 +913,6 @@ fn discover_config_export(
                     module_id: child_module_id,
                 },
             );
-        if is_root {
-            runtime
-                .module_manager
-                .register_root_export(export.name, target)
-                .map_err(|message| {
-                    repository_error(message, &config_path.to_string_lossy(), export.line)
-                })?;
-        }
         mount_stack.push(child_module_id);
         let discovery = discover_module_config(
             runtime,
@@ -959,7 +936,7 @@ fn discover_config_export(
     }
 }
 
-fn config_import_edges(runtime: &mut Runtime) -> HashMap<ModuleId, Vec<ModuleId>> {
+fn config_import_edges(runtime: &Runtime) -> HashMap<ModuleId, Vec<ModuleId>> {
     let mut module_import_edges = HashMap::new();
     let module_ids = runtime
         .module_manager
@@ -979,14 +956,7 @@ fn config_import_edges(runtime: &mut Runtime) -> HashMap<ModuleId, Vec<ModuleId>
         if imported_modules.is_empty() {
             continue;
         }
-        module_import_edges.insert(module_id, imported_modules.clone());
-        let module = runtime
-            .module_manager
-            .module_mut(module_id)
-            .expect("discovered module should exist");
-        for imported_module in imported_modules {
-            module.record_import(imported_module);
-        }
+        module_import_edges.insert(module_id, imported_modules);
     }
     module_import_edges
 }
