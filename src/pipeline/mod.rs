@@ -1,11 +1,10 @@
-mod display;
 pub mod pipeline;
 pub mod pipeline_repl;
 pub mod pipeline_run_stmt_globally;
 pub mod pipeline_session;
 mod summary;
 
-pub use display::{display_runtime_error_json, display_stmt_exec_result_json};
+pub use crate::output::{display_runtime_error_json, display_stmt_exec_result_json};
 pub use pipeline::{
     display_trusted_prefix_report_json, render_run_source_code_output,
     run_file_with_project_context, run_file_with_project_context_and_trusted_prefix,

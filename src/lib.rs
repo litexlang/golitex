@@ -1,3 +1,4 @@
+pub mod api;
 pub mod cli;
 pub mod common;
 pub mod environment;
@@ -6,7 +7,9 @@ pub mod execute;
 pub mod fact;
 pub mod graph;
 pub mod infer;
-pub mod main_test;
+#[cfg(test)]
+#[path = "../tests/kernel_contracts/mod.rs"]
+mod kernel_contracts;
 pub mod module_manager;
 pub mod obj;
 pub mod output;

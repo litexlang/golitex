@@ -275,7 +275,7 @@ fn nested_forall_premises_replay_parameter_aliases_and_normalization() {
 
 #[test]
 fn compiler_core_keeps_representation_registry_closed() {
-    let core = include_str!("../../lean/Litex/Core.lean");
+    let core = include_str!("../lean/Litex/Core.lean");
     assert!(core.contains("private class PrimitiveRule"));
     assert!(core.contains("private class DerivedRule"));
     assert!(!core.contains("class BridgeRule"));
@@ -445,18 +445,64 @@ fn top_level_recursive_inference_theorems_close_over_earlier_inference_steps() {
 
 #[test]
 fn inference_compilation_does_not_parse_rendered_lean_statements() {
-    const COMPILER_SOURCE: &str = include_str!("stmt_result_to_lean_compiler.rs");
+    const COMPILER_SOURCES: &[&str] = &[
+        include_str!("../src/stmt_result_to_lean_compiler/compile_litex_file_to_lean_file.rs"),
+        include_str!(
+            "../src/stmt_result_to_lean_compiler/compile_litex_markdown_code_blocks_to_lean_file.rs"
+        ),
+        include_str!("../src/stmt_result_to_lean_compiler/compile_litex_source_to_lean_source.rs"),
+        include_str!("../src/stmt_result_to_lean_compiler/lean_compilation_types.rs"),
+        include_str!(
+            "../src/stmt_result_to_lean_compiler/registered_local_builtin_rule_identifiers_for_lean.rs"
+        ),
+        include_str!(
+            "../src/stmt_result_to_lean_compiler/represent_litex_function_contracts_in_lean.rs"
+        ),
+        include_str!("../src/stmt_result_to_lean_compiler/represent_litex_objects_in_lean.rs"),
+        include_str!(
+            "../src/stmt_result_to_lean_compiler/stmt_result_to_lean_compilation_report.rs"
+        ),
+        include_str!("../src/stmt_result_to_lean_compiler/stmt_result_to_lean_compiler.rs"),
+        include_str!(
+            "../src/stmt_result_to_lean_compiler/stmt_result_to_lean_compiler/fact_compilation.rs"
+        ),
+        include_str!(
+            "../src/stmt_result_to_lean_compiler/stmt_result_to_lean_compiler/object_statements.rs"
+        ),
+        include_str!(
+            "../src/stmt_result_to_lean_compiler/stmt_result_to_lean_compiler/proof_rendering.rs"
+        ),
+        include_str!(
+            "../src/stmt_result_to_lean_compiler/stmt_result_to_lean_compiler/source_rendering.rs"
+        ),
+        include_str!(
+            "../src/stmt_result_to_lean_compiler/stmt_result_to_lean_compiler/structured_proofs.rs"
+        ),
+        include_str!(
+            "../src/stmt_result_to_lean_compiler/stmt_result_to_lean_compiler/theorem_compilation.rs"
+        ),
+        include_str!(
+            "../src/stmt_result_to_lean_compiler/stmt_result_to_lean_compiler/validation.rs"
+        ),
+        include_str!(
+            "../src/stmt_result_to_lean_compiler/stmt_result_to_lean_compiler_environment_stack.rs"
+        ),
+    ];
     for forbidden_parser in [
         "strip_prefix(\"have \")",
         "split_once(\" : \")",
         "split_once(\" := \")",
     ] {
         assert!(
-            !COMPILER_SOURCE.contains(forbidden_parser),
+            COMPILER_SOURCES
+                .iter()
+                .all(|source| !source.contains(forbidden_parser)),
             "compiler must keep inference identity and proof fields structured instead of using `{forbidden_parser}`"
         );
     }
-    assert!(COMPILER_SOURCE.contains("CompiledInferenceFactProofStep"));
+    assert!(COMPILER_SOURCES
+        .iter()
+        .any(|source| source.contains("CompiledInferenceFactProofStep")));
 }
 
 #[test]
@@ -526,7 +572,7 @@ fn standard_set_hierarchy_replays_exact_projection_chain() {
 #[test]
 fn positive_natural_uses_exact_subtype_and_projection() {
     const SOURCE: &str = "1 $in N+\n\nforall n N+:\n    n $in N\n";
-    let core = include_str!("../../lean/Litex/Core.lean");
+    let core = include_str!("../lean/Litex/Core.lean");
     assert!(core.contains("abbrev NPos : Litex.Set := setBuilder N (fun n => 0 < n)"));
 
     let result_json =
@@ -566,7 +612,7 @@ fn positive_natural_uses_exact_subtype_and_projection() {
 fn positive_real_uses_exact_subtype_projection_and_elimination() {
     const SOURCE: &str =
         "1 $in R+\ne $in R+\npi $in R+\n\nforall r R+:\n    r $in R\n    r $in C\n    r > 0\n";
-    let core = include_str!("../../lean/Litex/Core.lean");
+    let core = include_str!("../lean/Litex/Core.lean");
     assert!(core.contains("abbrev RPos : Litex.Set := setBuilder R (fun r => 0 < r)"));
 
     let result_json =
@@ -648,8 +694,8 @@ fn rational_positive_and_negative_numeric_carriers_compile_typed_sign_inference(
 
 #[test]
 fn nonzero_numeric_carriers_replay_exact_constructors_and_widening() {
-    const SOURCE: &str = include_str!("../../lean/examples/22_NonzeroNumericCarriers.lit");
-    let core = include_str!("../../lean/Litex/Core.lean");
+    const SOURCE: &str = include_str!("../lean/examples/22_NonzeroNumericCarriers.lit");
+    let core = include_str!("../lean/Litex/Core.lean");
     for (carrier, base) in [
         ("ZStar", "Z"),
         ("QStar", "Q"),
@@ -1558,7 +1604,7 @@ fn multi_parameter_named_function_uses_the_same_telescope_contract() {
 
 #[test]
 fn indexed_tuple_definition_uses_the_recursive_result_environment() {
-    const SOURCE: &str = include_str!("../../lean/examples/29_IndexedTupleCompilerEnvironment.lit");
+    const SOURCE: &str = include_str!("../lean/examples/29_IndexedTupleCompilerEnvironment.lit");
     let generated = compile_on_verifier_stack(SOURCE, "29_IndexedTupleCompilerEnvironment.lit")
         .expect("compile indexed tuple from its recursive statement Result");
     assert!(generated.contains("noncomputable def coordinates : Litex.IndexedTuple 3 ℂ"));
@@ -1572,8 +1618,7 @@ fn indexed_tuple_definition_uses_the_recursive_result_environment() {
 
 #[test]
 fn indexed_sequence_definition_uses_the_recursive_result_environment() {
-    const SOURCE: &str =
-        include_str!("../../lean/examples/30_IndexedSequenceCompilerEnvironment.lit");
+    const SOURCE: &str = include_str!("../lean/examples/30_IndexedSequenceCompilerEnvironment.lit");
     let generated = compile_on_verifier_stack(SOURCE, "30_IndexedSequenceCompilerEnvironment.lit")
         .expect("compile indexed sequence from its recursive statement Result");
     assert!(generated.contains("noncomputable def shifted_sequence : Litex.Fn Litex.NPos Litex.R"));
@@ -1588,7 +1633,7 @@ fn indexed_sequence_definition_uses_the_recursive_result_environment() {
 #[test]
 fn template_sequence_alias_compiles_from_recursive_results_without_index_shift() {
     const SOURCE: &str =
-        include_str!("../../lean/examples/55_TemplateSequenceInstantiationResult.lit");
+        include_str!("../lean/examples/55_TemplateSequenceInstantiationResult.lit");
     let result_json = capture_stmt_results_json_v2_on_verifier_stack(
         SOURCE,
         "55_TemplateSequenceInstantiationResult.lit",
@@ -1627,7 +1672,7 @@ fn template_sequence_alias_compiles_from_recursive_results_without_index_shift()
     assert!(!generated.contains("sorry"), "{generated}");
     assert_eq!(
         generated,
-        include_str!("../../lean/examples/55_TemplateSequenceInstantiationResult.lean"),
+        include_str!("../lean/examples/55_TemplateSequenceInstantiationResult.lean"),
         "the checked-in Template tracer must not drift from direct Result compilation"
     );
 }
@@ -1662,8 +1707,7 @@ fn unsupported_template_compiler_shapes_remain_fail_closed() {
 
 #[test]
 fn finite_sequence_definition_uses_the_recursive_result_environment() {
-    const SOURCE: &str =
-        include_str!("../../lean/examples/31_FiniteSequenceCompilerEnvironment.lit");
+    const SOURCE: &str = include_str!("../lean/examples/31_FiniteSequenceCompilerEnvironment.lit");
     let generated = compile_on_verifier_stack(SOURCE, "31_FiniteSequenceCompilerEnvironment.lit")
         .expect("compile finite sequence from its recursive statement Result");
     assert!(generated.contains("noncomputable def bounded_sequence : Litex.FnTelescope.Carrier"));
@@ -1677,7 +1721,7 @@ fn finite_sequence_definition_uses_the_recursive_result_environment() {
 
 #[test]
 fn matrix_definition_uses_the_recursive_result_environment() {
-    const SOURCE: &str = include_str!("../../lean/examples/32_MatrixCompilerEnvironment.lit");
+    const SOURCE: &str = include_str!("../lean/examples/32_MatrixCompilerEnvironment.lit");
     let generated = compile_on_verifier_stack(SOURCE, "32_MatrixCompilerEnvironment.lit")
         .expect("compile matrix from its recursive statement Result");
     assert!(generated.contains("noncomputable def entry_matrix : Litex.FnTelescope.Carrier"));
@@ -1706,7 +1750,7 @@ fn multiple_existential_witnesses_fail_closed() {
 
 #[test]
 fn collections_and_aggregates_use_exact_typed_carriers() {
-    const SOURCE: &str = include_str!("../../lean/examples/26_CollectionsAndAggregates.lit");
+    const SOURCE: &str = include_str!("../lean/examples/26_CollectionsAndAggregates.lit");
     let result_json =
         capture_stmt_results_json_v2_on_verifier_stack(SOURCE, "26_CollectionsAndAggregates.lit")
             .expect("capture collection and aggregate Result JSON v2");
@@ -1740,7 +1784,7 @@ fn collections_and_aggregates_use_exact_typed_carriers() {
 
 #[test]
 fn set_operators_replay_registered_certificates_through_exact_carriers() {
-    const SOURCE: &str = include_str!("../../lean/examples/27_SetOperators.lit");
+    const SOURCE: &str = include_str!("../lean/examples/27_SetOperators.lit");
     let result_json = capture_stmt_results_json_v2_on_verifier_stack(SOURCE, "27_SetOperators.lit")
         .expect("capture set-operator Result JSON v2");
     for rule in [
@@ -1775,7 +1819,7 @@ fn set_operators_replay_registered_certificates_through_exact_carriers() {
 
 #[test]
 fn extended_set_rules_use_exact_power_set_and_subset_certificates() {
-    const SOURCE: &str = include_str!("../../lean/examples/28_ExtendedSetRules.lit");
+    const SOURCE: &str = include_str!("../lean/examples/28_ExtendedSetRules.lit");
     let result_json =
         capture_stmt_results_json_v2_on_verifier_stack(SOURCE, "28_ExtendedSetRules.lit")
             .expect("capture extended set-rule certificates");

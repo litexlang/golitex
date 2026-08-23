@@ -59,8 +59,8 @@ fn every_nonempty_top_level_source_subsystem_has_an_example_readme() {
 
     documented_subsystems.sort();
     assert!(
-        documented_subsystems.len() >= 24,
-        "expected the current 24 nonempty source subsystems, found {documented_subsystems:?}"
+        documented_subsystems.len() >= 23,
+        "expected the current 23 nonempty source subsystems, found {documented_subsystems:?}"
     );
 
     for important_subsystem in [

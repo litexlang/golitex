@@ -9,7 +9,6 @@ mod exec_def_template_stmt;
 mod exec_def_thm_stmt;
 mod exec_define_params_with_set;
 mod exec_eval_stmt;
-mod exec_example_stmt;
 mod exec_fact_stmt;
 mod exec_goal_proof_block;
 mod exec_have_by_preimage_stmt;

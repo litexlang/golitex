@@ -31,7 +31,7 @@ path = "src/stmt_result_to_lean_compiler/main.rs"
 
 [[test]]
 name = "stmt_result_to_lean_compiler_tracers"
-path = "src/stmt_result_to_lean_compiler/stmt_result_to_lean_compiler_tests.rs"
+path = "tests/stmt_result_to_lean_compiler_tracers.rs"
 
 [dependencies]
 

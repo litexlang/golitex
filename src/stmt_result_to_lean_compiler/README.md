@@ -61,6 +61,10 @@ and proof terms.
 
 The following sections describe the compiler's design for these two problems. 
 
+## Rust implementation boundaries
+
+[`stmt_result_to_lean_compiler.rs`](stmt_result_to_lean_compiler.rs) now owns only the compiler state, well-definedness context construction, and top-level Result dispatch. Its private implementation modules are grouped by responsibility under [`stmt_result_to_lean_compiler/`](stmt_result_to_lean_compiler/): object/statement compilation, structured proofs, fact compilation, theorem/local-proof compilation, validation, proof rendering, and source rendering. This keeps the public `StmtResultToLeanCompiler` type unchanged while preventing one source file from becoming the ownership boundary for every compiler concern.
+
 ## Representation of Litex Mathematics in Lean
 
 ## System-Wide Implicit Host-Type Convention
@@ -2143,8 +2147,8 @@ parameters. Domain/parameter stores with additional
 assumption-inference children remain the next forall-introduction tranche.
 
 The focused direct-compiler and corruption regressions live in
-[`stmt_result_to_lean_compiler.rs`](stmt_result_to_lean_compiler.rs), and the generated Lean assertions live in
-[`stmt_result_to_lean_compiler_tests.rs`](stmt_result_to_lean_compiler_tests.rs).
+[`tests/kernel_contracts/stmt_result_to_lean_compiler.rs`](../../tests/kernel_contracts/stmt_result_to_lean_compiler.rs), loaded as a private child module of the compiler, and the generated Lean assertions live in
+[`stmt_result_to_lean_compiler_tracers.rs`](../../tests/stmt_result_to_lean_compiler_tracers.rs).
 
 ## Strategy Definition as a Result-Owned Compiler Environment
 
