@@ -104,13 +104,15 @@ thm add_left_cancel:
         space.add(x, y) = space.add(x, z)
         =>:
             y = z
+    let nx = \vector_neg<K, field, V, space>(x)
     by thm vector_neg_spec(K, field, V, space, x) => space.add(x, \vector_neg<K, field, V, space>(x)) = space.zero
-    space.add(\vector_neg<K, field, V, space>(x), x) = space.add(x, \vector_neg<K, field, V, space>(x)) = space.zero
-    space.add(\vector_neg<K, field, V, space>(x), space.add(x, y)) = space.add(space.add(\vector_neg<K, field, V, space>(x), x), y)
-    space.add(space.add(\vector_neg<K, field, V, space>(x), x), y) = space.add(space.zero, y) = y
-    space.add(\vector_neg<K, field, V, space>(x), space.add(x, z)) = space.add(space.add(\vector_neg<K, field, V, space>(x), x), z)
-    space.add(space.add(\vector_neg<K, field, V, space>(x), x), z) = space.add(space.zero, z) = z
-    y = space.add(\vector_neg<K, field, V, space>(x), space.add(x, y)) = space.add(\vector_neg<K, field, V, space>(x), space.add(x, z)) = z
+    space.add(x, nx) = space.add(x, \vector_neg<K, field, V, space>(x)) = space.zero
+    space.add(nx, x) = space.add(x, nx) = space.zero
+    space.add(nx, space.add(x, y)) = space.add(space.add(nx, x), y)
+    space.add(space.add(nx, x), y) = space.add(space.zero, y) = y
+    space.add(nx, space.add(x, z)) = space.add(space.add(nx, x), z)
+    space.add(space.add(nx, x), z) = space.add(space.zero, z) = z
+    y = space.add(nx, space.add(x, y)) = space.add(nx, space.add(x, z)) = z
 
 # Compare 0*x with 0*x + 0*x and cancel to derive the zero-scalar law.
 thm vector_space_scalar_constants_in_carrier:

@@ -112,6 +112,9 @@ fn compiler_and_test_directories_follow_the_repository_layout() {
     let runner = root.join("src/runner");
     assert!(runner.join("target_execution.rs").is_file());
     assert!(!runner.join("runner.rs").exists());
+    assert!(root
+        .join("src/pipeline/source_execution/compatibility.rs")
+        .is_file());
     let compiler = root.join("src/stmt_result_to_lean_compiler");
     assert!(root
         .join("src/bin/stmt_result_to_lean_compiler.rs")
@@ -163,6 +166,59 @@ fn compiler_and_test_directories_follow_the_repository_layout() {
     let runtime = root.join("src/runtime");
     assert!(runtime.join("runtime_state.rs").is_file());
     assert!(!runtime.join("runtime.rs").exists());
+    let parser = root.join("src/parse");
+    assert!(parser.join("statement_parsing.rs").is_file());
+    assert!(!parser.join("parse_stmt.rs").exists());
+    assert!(root.join("tests/unit/parse/statement_parsing").is_dir());
+    assert!(root
+        .join("tests/unit/parse/statement_parsing/diagnostics.rs")
+        .is_file());
+    assert!(!root.join("tests/unit/parse/parse_stmt").exists());
+    let execute = root.join("src/execute");
+    let object_introduction = execute.join("object_introduction");
+    assert!(object_introduction.is_dir());
+    for responsibility in [
+        "function_cases.rs",
+        "function_equality.rs",
+        "function_equality_support.rs",
+        "function_induction.rs",
+        "function_unique_existence.rs",
+        "introduction_support.rs",
+        "let_binding.rs",
+        "object_equality.rs",
+        "object_membership.rs",
+        "obtain.rs",
+        "preimage.rs",
+        "sequence_and_matrix.rs",
+        "tuple_and_cartesian.rs",
+        "witness.rs",
+    ] {
+        assert!(object_introduction.join(responsibility).is_file());
+    }
+    for retired_root_file in [
+        "exec_have_by_preimage_stmt.rs",
+        "exec_have_fn_by_forall_exist_unique.rs",
+        "exec_have_fn_by_induc.rs",
+        "exec_have_fn_equal_case_by_case_stmt.rs",
+        "exec_have_fn_equal_shared.rs",
+        "exec_have_fn_equal_stmt.rs",
+        "exec_have_obj_equal_stmt.rs",
+        "exec_have_obj_in_nonempty_set_or_param_type_stmt.rs",
+        "exec_have_seq_matrix_stmt.rs",
+        "exec_have_tuple_cart_stmt.rs",
+        "exec_let_obj_stmt.rs",
+        "exec_object_introduction_helper.rs",
+        "exec_obtain_obj.rs",
+        "exec_witness_stmt.rs",
+    ] {
+        assert!(!execute.join(retired_root_file).exists());
+    }
+    let execute_module =
+        fs::read_to_string(execute.join("mod.rs")).expect("execute module should be readable");
+    assert!(execute_module.contains("pub use object_introduction::function_equality_support;"));
+    assert!(execute_module.contains(
+        "pub use object_introduction::function_equality_support as exec_have_fn_equal_shared;"
+    ));
     assert!(root.join("tests/unit").is_dir());
     assert!(root.join("tests/integration").is_dir());
     assert!(root.join("tests/tooling").is_dir());
@@ -177,6 +233,9 @@ fn cli_dispatch_delegates_execution_and_path_resolution_to_their_owners() {
         .expect("CLI handler source should be readable");
     let source_execution = fs::read_to_string(root.join("src/pipeline/source_execution.rs"))
         .expect("source execution source should be readable");
+    let source_execution_compatibility =
+        fs::read_to_string(root.join("src/pipeline/source_execution/compatibility.rs"))
+            .expect("source execution compatibility source should be readable");
     let runner_execution = fs::read_to_string(root.join("src/runner/target_execution.rs"))
         .expect("runner execution source should be readable");
     let runner_module = fs::read_to_string(root.join("src/runner/mod.rs"))
@@ -187,10 +246,40 @@ fn cli_dispatch_delegates_execution_and_path_resolution_to_their_owners() {
     assert!(!handlers.contains("command_dispatch::"));
     assert!(handlers.contains("resolve_source_file_path(file_flag)"));
     assert!(source_execution.contains("pub fn resolve_source_file_path("));
+    let source_entry = source_execution
+        .find("pub fn run_source_code(")
+        .expect("canonical source entry should remain present");
+    let structured_source_entry = source_execution
+        .find("pub fn run_source_code_with_options(")
+        .expect("structured source entry should remain present");
+    let file_entry = source_execution
+        .find("pub fn run_file(")
+        .expect("canonical file entry should remain present");
+    assert!(source_entry < structured_source_entry);
+    assert!(structured_source_entry < file_entry);
+    assert!(source_execution.contains("runtime.parse_statement(&mut block)"));
+    assert!(!source_execution.contains("pub fn run_source_code_in_file_for_cli_with_"));
+    assert!(source_execution_compatibility
+        .contains("pub fn run_source_code_in_file_for_cli_with_strict("));
     assert!(runner_execution.contains("resolve_source_file_path(file_path)"));
     assert!(!runner_execution.contains("fn resolve_litex_file_path("));
     assert!(runner_module
         .contains("pub use crate::pipeline::resolve_source_file_path as resolve_litex_file_path;"));
+
+    let abbreviated_parser_call = [".parse_", "stmt("].concat();
+    let abbreviated_callers: Vec<_> = [root.join("src"), root.join("tests")]
+        .into_iter()
+        .flat_map(|directory| rust_files_below(&directory))
+        .filter(|path| {
+            fs::read_to_string(path)
+                .expect("Rust source should be readable")
+                .contains(&abbreviated_parser_call)
+        })
+        .collect();
+    assert!(
+        abbreviated_callers.is_empty(),
+        "repository callers must use parse_statement: {abbreviated_callers:#?}"
+    );
 }
 
 #[test]

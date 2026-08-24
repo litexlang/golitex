@@ -69,7 +69,7 @@ pub fn compile_local_builtin_schema(
             rule_id.as_str()
         )));
     }
-    let statement = runtime.parse_stmt(&mut blocks[0])?;
+    let statement = runtime.parse_statement(&mut blocks[0])?;
     let Stmt::Fact(Fact::ForallFact(forall)) = statement else {
         return Err(schema_error(format!(
             "local builtin `{}` must be one ordinary forall fact",

@@ -7,7 +7,7 @@ impl Runtime {
         let result = self.run_in_local_proof_parsing_scope(|this| {
             let mut proof = Vec::with_capacity(tb.body.len());
             for block in tb.body.iter_mut() {
-                proof.push(this.parse_stmt(block)?);
+                proof.push(this.parse_statement(block)?);
             }
             Ok(proof)
         });

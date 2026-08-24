@@ -653,7 +653,7 @@ impl Runtime {
         &mut self,
         tb: &mut TokenBlock,
     ) -> Result<TemplateDefEnum, RuntimeError> {
-        let stmt = self.parse_stmt(tb)?;
+        let stmt = self.parse_statement(tb)?;
         match stmt {
             Stmt::DefObjStmt(DefObjStmt::HaveObjInNonemptySetStmt(stmt)) => {
                 Ok(TemplateDefEnum::HaveObjInNonemptySetStmt(stmt))

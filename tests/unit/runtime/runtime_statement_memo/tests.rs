@@ -196,7 +196,7 @@ fn parse_stmt(runtime: &mut Runtime, source: &str) -> Stmt {
         .expect("test statement should tokenize");
     assert_eq!(blocks.len(), 1);
     runtime
-        .parse_stmt(&mut blocks[0])
+        .parse_statement(&mut blocks[0])
         .expect("test statement should parse")
 }
 

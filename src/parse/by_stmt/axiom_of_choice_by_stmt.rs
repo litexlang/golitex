@@ -23,7 +23,7 @@ impl Runtime {
         let proof = if has_proof_body {
             tb.body
                 .iter_mut()
-                .map(|block| self.parse_stmt(block))
+                .map(|block| self.parse_statement(block))
                 .collect::<Result<_, _>>()?
         } else {
             vec![]

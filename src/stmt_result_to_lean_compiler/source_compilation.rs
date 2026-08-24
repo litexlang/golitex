@@ -41,7 +41,7 @@ pub fn execute_litex_source_to_stmt_results(
     let blocks = tokenizer.parse_blocks(&normalized, runtime.current_file_path_rc())?;
     let mut results = Vec::new();
     for mut block in blocks {
-        let statement = runtime.parse_stmt(&mut block)?;
+        let statement = runtime.parse_statement(&mut block)?;
         if matches!(statement, Stmt::Command(CommandStmt::ImportStmt(_))) {
             return Err(stmt_result_to_lean_compilation_error(
                 &statement.line_file(),

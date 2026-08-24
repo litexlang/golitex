@@ -172,12 +172,12 @@ impl Runtime {
                 if inline_proof_start > 0 {
                     if let Some(goal_block) = tb.body.get_mut(0) {
                         for block in goal_block.body.iter_mut().skip(inline_proof_start) {
-                            proof.push(this.parse_stmt(block)?);
+                            proof.push(this.parse_statement(block)?);
                         }
                     }
                 }
                 for block in tb.body.iter_mut().skip(1) {
-                    proof.push(this.parse_stmt(block)?);
+                    proof.push(this.parse_statement(block)?);
                 }
                 Ok(proof)
             },

@@ -1,4 +1,4 @@
-use crate::execute::exec_have_fn_equal_shared::{
+use crate::execute::function_equality_support::{
     build_curried_fn_value_apply_for_fn_eq, fn_set_to_fn_set_clause,
     forall_binders_dom_and_curried_layers_from_fn_set_clause,
 };
@@ -64,7 +64,7 @@ impl Runtime {
     }
 
     // $fn_eq(f,g): mutual $in, then Forall with params+dom from FnSet and then f(..)=g(..). Name `f(x)` uses
-    // Forall binders in the curried apply (see exec_have_fn_equal_shared) so it cites user foralls.
+    // Forall binders in the curried apply (see function_equality_support) so it cites user foralls.
     pub fn verify_fn_equal_fact_with_builtin_rules(
         &mut self,
         f: &FnEqualFact,

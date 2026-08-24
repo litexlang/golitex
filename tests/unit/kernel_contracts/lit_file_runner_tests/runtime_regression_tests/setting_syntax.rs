@@ -168,11 +168,15 @@ forall S nonempty_set, left, right S, item &EqualPairWitness<S, left, right>:
         .expect("tokenize struct setting bundle fixture");
     let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope("struct_header_bundle_shape");
-    let setting_stmt = runtime.parse_stmt(&mut blocks[0]).expect("parse setting");
+    let setting_stmt = runtime
+        .parse_statement(&mut blocks[0])
+        .expect("parse setting");
     runtime
         .execute_statement(&setting_stmt)
         .expect("store setting");
-    let struct_stmt = runtime.parse_stmt(&mut blocks[1]).expect("parse struct");
+    let struct_stmt = runtime
+        .parse_statement(&mut blocks[1])
+        .expect("parse struct");
     let Stmt::DefInterfaceStmt(DefInterfaceStmt::DefStructStmt(struct_def)) = struct_stmt else {
         panic!("expected struct definition");
     };
@@ -265,16 +269,20 @@ forall [OneElement]:
     let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope("setting_freshness");
 
-    let setting_stmt = runtime.parse_stmt(&mut blocks[0]).expect("parse setting");
+    let setting_stmt = runtime
+        .parse_statement(&mut blocks[0])
+        .expect("parse setting");
     runtime
         .execute_statement(&setting_stmt)
         .expect("store setting");
-    let first = runtime.parse_stmt(&mut blocks[1]).expect("parse first use");
+    let first = runtime
+        .parse_statement(&mut blocks[1])
+        .expect("parse first use");
     runtime
         .execute_statement(&first)
         .expect("execute first use");
     let second = runtime
-        .parse_stmt(&mut blocks[2])
+        .parse_statement(&mut blocks[2])
         .expect("parse second use");
 
     let Stmt::Fact(Fact::ForallFact(first)) = first else {
@@ -310,16 +318,20 @@ forall [OneElement(Y, y)]:
     let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope("setting_explicit_freshness");
 
-    let setting_stmt = runtime.parse_stmt(&mut blocks[0]).expect("parse setting");
+    let setting_stmt = runtime
+        .parse_statement(&mut blocks[0])
+        .expect("parse setting");
     runtime
         .execute_statement(&setting_stmt)
         .expect("store setting");
-    let first = runtime.parse_stmt(&mut blocks[1]).expect("parse first use");
+    let first = runtime
+        .parse_statement(&mut blocks[1])
+        .expect("parse first use");
     runtime
         .execute_statement(&first)
         .expect("execute first use");
     let second = runtime
-        .parse_stmt(&mut blocks[2])
+        .parse_statement(&mut blocks[2])
         .expect("parse second use");
 
     let Stmt::Fact(Fact::ForallFact(first)) = first else {

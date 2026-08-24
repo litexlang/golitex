@@ -11,7 +11,7 @@ fn numeric_fact_json_v2_retains_normalization_store_and_infer() {
         .parse_blocks("2 + 3 $in N", Rc::from("numeric_fact_json_v2.lit"))
         .expect("numeric membership tokenizes");
     let stmt = runtime
-        .parse_stmt(&mut blocks[0])
+        .parse_statement(&mut blocks[0])
         .expect("numeric membership parses");
     let result = runtime
         .execute_statement(&stmt)
@@ -126,7 +126,7 @@ fn refined_standard_set_infer_json_v2_retains_typed_source_carrier() {
             .parse_blocks(source, Rc::from("refined_standard_set_infer_json_v2.lit"))
             .expect("refined standard-set membership tokenizes");
         let stmt = runtime
-            .parse_stmt(&mut blocks[0])
+            .parse_statement(&mut blocks[0])
             .expect("refined standard-set membership parses");
         let result = runtime
             .execute_statement(&stmt)
@@ -166,7 +166,7 @@ fn object_choice_json_v2_retains_typed_standard_set_nonempty_child_evidence() {
         .parse_blocks("have chosen R", Rc::from("object_choice_json_v2.lit"))
         .expect("object choice tokenizes");
     let stmt = runtime
-        .parse_stmt(&mut blocks[0])
+        .parse_statement(&mut blocks[0])
         .expect("object choice parses");
     let result = runtime
         .execute_statement(&stmt)
@@ -214,7 +214,9 @@ fn claim_json_v2_serializes_named_verification_fields_and_children() {
             Rc::from("claim_json_v2.lit"),
         )
         .expect("claim tokenizes");
-    let stmt = runtime.parse_stmt(&mut blocks[0]).expect("claim parses");
+    let stmt = runtime
+        .parse_statement(&mut blocks[0])
+        .expect("claim parses");
     let result = runtime.execute_statement(&stmt).expect("claim verifies");
 
     let StmtResult::Success(SuccessStmtResult::ProofBlock(SuccessProofBlockStmtResult::ClaimStmt(
@@ -257,7 +259,7 @@ fn set_builder_wd_scope_is_owned_by_recursive_binder_fields() {
         )
         .expect("set-builder equality tokenizes");
     let stmt = runtime
-        .parse_stmt(&mut blocks[0])
+        .parse_statement(&mut blocks[0])
         .expect("set-builder equality parses");
     let result = runtime
         .execute_statement(&stmt)
@@ -321,7 +323,7 @@ fn anonymous_function_wd_keeps_each_body_inside_its_own_binder_result() {
         )
         .expect("anonymous-function equality tokenizes");
     let stmt = runtime
-        .parse_stmt(&mut blocks[0])
+        .parse_statement(&mut blocks[0])
         .expect("anonymous-function equality parses");
     let result = runtime
         .execute_statement(&stmt)
@@ -392,7 +394,9 @@ fn forall_wd_returns_binder_premise_and_conclusion_layers() {
             Rc::from("forall_recursive_wd.lit"),
         )
         .expect("forall tokenizes");
-    let stmt = runtime.parse_stmt(&mut blocks[0]).expect("forall parses");
+    let stmt = runtime
+        .parse_statement(&mut blocks[0])
+        .expect("forall parses");
     let result = runtime.execute_statement(&stmt).expect("forall verifies");
     let fact = result.factual_success().expect("result is factual");
     let SuccessVerifyFactWellDefinedProofResult::ForallFact(wd) = fact
@@ -425,7 +429,7 @@ fn partial_predicate_wd_retains_its_domain_proof_result() {
         .parse_blocks("$prime(2)", Rc::from("partial_predicate_recursive_wd.lit"))
         .expect("prime fact tokenizes");
     let stmt = runtime
-        .parse_stmt(&mut blocks[0])
+        .parse_statement(&mut blocks[0])
         .expect("prime fact parses");
     let result = runtime
         .execute_statement(&stmt)

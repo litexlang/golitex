@@ -32,7 +32,7 @@ impl Runtime {
                 let mut proof = Vec::new();
                 if 1 < proof_hi {
                     for block in tb.body[1..proof_hi].iter_mut() {
-                        proof.push(this.parse_stmt(block)?);
+                        proof.push(this.parse_statement(block)?);
                     }
                 }
                 let last_block = tb.body.last_mut().ok_or_else(|| {

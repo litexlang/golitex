@@ -24,6 +24,7 @@ when stating the target directly is not enough.
 | What later code needs | Use | Remember |
 |---|---|---|
 | An arbitrary object in a nonempty set | `have x S` | Introduces `x` and `x $in S` |
+| A local abbreviation for an already well-defined object | `let name = value` | Stores `name = value`; it does not declare a carrier |
 | A name for a specific value | `have x S = value` | Checks the carrier and stores the equality |
 | A callable value | `have fn f(x S) T = body` | Use a function, not a predicate encoding its graph |
 | A concrete named property | `prop P(x S): ...` | Gives a definition that `by def` can fold |
@@ -36,6 +37,16 @@ Use `have` when later code must cite a value, `have fn` when it must call a
 value, `prop` when it must assert `$P(args)`, and `thm` when the result deserves
 a reusable mathematical name. Do not promote a one-proof helper without a real
 second consumer.
+
+Name a repeated nontrivial object when the proof treats it as one mathematical
+atom, and choose a role-based name such as `event_union` or
+`probability_terms`. Use `let` for a pure local abbreviation and typed `have`
+when the carrier is itself useful evidence. Do not name by character count:
+keep one-use transparent calculations expanded, use `prop` for long facts, and
+improve a shared `setting`, `struct`, template, or function interface when the
+same parameter bundle recurs across independent proofs. If an inner alias
+would require repeated transport under a larger constructor, name that outer
+mathematical object instead.
 
 ## Write The Fact Shape
 

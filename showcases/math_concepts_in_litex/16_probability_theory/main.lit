@@ -878,14 +878,17 @@ thm probability_of_disjoint_union:
         =>:
             union(A, B) $in union_probability_events
             union_probability(union(A, B)) = union_probability(A) + union_probability(B)
+    let event_union = index_union(N+, union_probability_Omega, fn(n N+) power_set(union_probability_Omega) {\two_event_sequence<union_probability_Omega, union_probability_events>(A, B, n)})
+    have probability_terms seq(R) = fn(n N+) R {union_probability(\two_event_sequence<union_probability_Omega, union_probability_events>(A, B, n))}
     by thm two_event_sequence_countable_union(union_probability_Omega, union_probability_events, A, B) => index_union(N+, union_probability_Omega, fn(n N+) power_set(union_probability_Omega) {\two_event_sequence<union_probability_Omega, union_probability_events>(A, B, n)}) = union(A, B)
+    event_union = union(A, B)
     by thm event_countable_union_is_event(union_probability_Omega, union_probability_events, fn(n N+) union_probability_events {\two_event_sequence<union_probability_Omega, union_probability_events>(A, B, n)}) => index_union(N+, union_probability_Omega, fn(n N+) power_set(union_probability_Omega) {\two_event_sequence<union_probability_Omega, union_probability_events>(A, B, n)}) $in union_probability_events
     union(A, B) $in union_probability_events
     by thm two_event_sequence_pairwise_disjoint(union_probability_Omega, union_probability_events, A, B) => $pairwise_disjoint_event_sequence(union_probability_Omega, union_probability_events, fn(n N+) union_probability_events {\two_event_sequence<union_probability_Omega, union_probability_events>(A, B, n)})
     by thm kolmogorov_countable_additivity(union_probability_Omega, union_probability_events, union_probability, fn(n N+) union_probability_events {\two_event_sequence<union_probability_Omega, union_probability_events>(A, B, n)})
     by thm two_event_probability_series_has_sum(union_probability_Omega, union_probability_events, union_probability, A, B) => $has_series_sum(fn(n N+) R {union_probability(\two_event_sequence<union_probability_Omega, union_probability_events>(A, B, n))}, union_probability(A) + union_probability(B))
-    by thm series_sum_unique(fn(n N+) R {union_probability(\two_event_sequence<union_probability_Omega, union_probability_events>(A, B, n))}, union_probability(index_union(N+, union_probability_Omega, fn(n N+) power_set(union_probability_Omega) {\two_event_sequence<union_probability_Omega, union_probability_events>(A, B, n)})), union_probability(A) + union_probability(B)) => union_probability(index_union(N+, union_probability_Omega, fn(n N+) power_set(union_probability_Omega) {\two_event_sequence<union_probability_Omega, union_probability_events>(A, B, n)})) = union_probability(A) + union_probability(B)
-    union_probability(union(A, B)) = union_probability(index_union(N+, union_probability_Omega, fn(n N+) power_set(union_probability_Omega) {\two_event_sequence<union_probability_Omega, union_probability_events>(A, B, n)})) = union_probability(A) + union_probability(B)
+    by thm series_sum_unique(probability_terms, union_probability(event_union), union_probability(A) + union_probability(B)) => union_probability(event_union) = union_probability(A) + union_probability(B)
+    union_probability(union(A, B)) = union_probability(event_union) = union_probability(A) + union_probability(B)
 
 # Complement partitions and relative complements support the ordinary event
 # probability calculus.

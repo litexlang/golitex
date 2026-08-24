@@ -9,7 +9,7 @@ fn parse_one_stmt_error_message(source_code: &str) -> String {
         .parse_blocks(source_code, Rc::from("parse_stmt_diagnostic_test.lit"))
         .expect("tokenize statement");
     assert_eq!(blocks.len(), 1, "{source_code:?}");
-    let err = runtime.parse_stmt(&mut blocks[0]).unwrap_err();
+    let err = runtime.parse_statement(&mut blocks[0]).unwrap_err();
     let RuntimeError::ParseError(parse_error) = err else {
         panic!("expected parse error, got {err:?}");
     };
@@ -23,7 +23,7 @@ fn parse_one_stmt(source_code: &str) -> Result<Stmt, RuntimeError> {
         .parse_blocks(source_code, Rc::from("parse_stmt_diagnostic_test.lit"))
         .expect("tokenize statement");
     assert_eq!(blocks.len(), 1, "{source_code:?}");
-    runtime.parse_stmt(&mut blocks[0])
+    runtime.parse_statement(&mut blocks[0])
 }
 
 #[test]
@@ -72,8 +72,8 @@ fn trust_forms_and_import_boundaries_parse_as_expected() {
             Rc::from("isolated_import_test.lit"),
         )
         .expect("tokenize imports");
-    assert!(runtime.parse_stmt(&mut blocks[0]).is_ok());
-    assert!(runtime.parse_stmt(&mut blocks[1]).is_ok());
+    assert!(runtime.parse_statement(&mut blocks[0]).is_ok());
+    assert!(runtime.parse_statement(&mut blocks[1]).is_ok());
 }
 
 #[test]

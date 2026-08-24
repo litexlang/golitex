@@ -46,7 +46,7 @@ fn capture_stmt_results_json_v2_on_verifier_stack(
             let mut results = Vec::new();
             for mut block in blocks {
                 let statement = runtime
-                    .parse_stmt(&mut block)
+                    .parse_statement(&mut block)
                     .map_err(|error| format!("{error:?}"))?;
                 let result = run_stmt_at_global_env(&statement, &mut runtime)
                     .map_err(|error| format!("{error:?}"))?;

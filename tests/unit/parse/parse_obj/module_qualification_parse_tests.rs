@@ -26,7 +26,7 @@ fn parse_one_stmt_line_with_runtime(rt: &mut Runtime, line: &str) -> Stmt {
         .parse_blocks(line, Rc::from("test.lit"))
         .expect("tokenize stmt line");
     assert_eq!(blocks.len(), 1, "{line:?}");
-    rt.parse_stmt(&mut blocks[0]).expect("parse stmt line")
+    rt.parse_statement(&mut blocks[0]).expect("parse stmt line")
 }
 
 fn set_test_module_name(rt: &mut Runtime, module_name: &str) {
@@ -225,7 +225,7 @@ fn backtick_infix_function_syntax_is_rejected() {
         .parse_blocks("a ` f b = c", Rc::from("test.lit"))
         .expect("tokenize stmt line");
     assert_eq!(blocks.len(), 1);
-    assert!(rt.parse_stmt(&mut blocks[0]).is_err());
+    assert!(rt.parse_statement(&mut blocks[0]).is_err());
 }
 
 #[test]
@@ -254,7 +254,7 @@ fn native_constants_are_hard_reserved_only_as_exact_names() {
             .expect("tokenize reserved-name statement");
         assert_eq!(blocks.len(), 1, "{source:?}");
         assert!(
-            Runtime::new().parse_stmt(&mut blocks[0]).is_err(),
+            Runtime::new().parse_statement(&mut blocks[0]).is_err(),
             "{source:?} should reject the reserved binding"
         );
     }
@@ -398,13 +398,13 @@ fn standard_library_namespace_is_valid_only_as_a_qualified_module_root() {
         .parse_blocks("by thm std(a)", Rc::from("test.lit"))
         .expect("tokenize theorem reference");
     assert_eq!(blocks.len(), 1);
-    assert!(rt.parse_stmt(&mut blocks[0]).is_err());
+    assert!(rt.parse_statement(&mut blocks[0]).is_err());
 
     let mut blocks = tokenizer
         .parse_blocks("by thm Other::std::T(a)", Rc::from("test.lit"))
         .expect("tokenize nested module reference");
     assert_eq!(blocks.len(), 1);
-    assert!(rt.parse_stmt(&mut blocks[0]).is_err());
+    assert!(rt.parse_statement(&mut blocks[0]).is_err());
 }
 
 #[test]

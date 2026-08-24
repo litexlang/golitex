@@ -1,7 +1,7 @@
 use crate::prelude::*;
 
 impl Runtime {
-    pub fn parse_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
+    pub fn parse_statement(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         self.ensure_execution_frame_for_parse();
         let saved_parse_context = self.current_parse_context().clone();
         let result = self.parse_statement_from_leading_token(tb);
@@ -9,6 +9,11 @@ impl Runtime {
             *self.current_parse_context_mut() = saved_parse_context;
         }
         result
+    }
+
+    /// Compatibility spelling retained for existing Rust API consumers.
+    pub fn parse_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
+        self.parse_statement(tb)
     }
 
     fn parse_statement_from_leading_token(
@@ -91,5 +96,5 @@ fn statement_dispatch_error(tb: &TokenBlock, msg: &str) -> RuntimeError {
 }
 
 #[cfg(test)]
-#[path = "../../tests/unit/parse/parse_stmt/parse_stmt_diagnostic_tests.rs"]
-mod parse_stmt_diagnostic_tests;
+#[path = "../../tests/unit/parse/statement_parsing/diagnostics.rs"]
+mod diagnostic_tests;

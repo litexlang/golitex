@@ -24,7 +24,7 @@ source `1 + 1 = 2`
 
 | Rule | Example |
 | --- | --- |
-| Every nonempty top-level source subsystem has one README. | `parse/README.md` documents `src/parse/*.rs`; the empty local `src/bin/` directory has no Rust subsystem to document. |
+| Every nonempty top-level source subsystem has one README. | `parse/README.md` documents parsing, while `bin/README.md` documents the standalone compiler-maintenance binary. |
 | Start with an observable input and result. | `verify/README.md` starts from `1 + 1 = 2`, not from a list of Rust types. |
 | Put every capability beside its nearest boundary. | `rational_expression/README.md` pairs `x ^ 2 / x = x` with the required premise `x != 0`. |
 | Add pseudocode only for an important control flow or algorithm. | `pipeline/README.md` shows the parse/execute loop; `common/README.md` only shows concrete helpers. |
@@ -34,6 +34,7 @@ source `1 + 1 = 2`
 
 | Directory | Concrete example |
 | --- | --- |
+| [`bin/`](bin/README.md) | `stmt_result_to_lean_compiler check lean/examples` checks generated-source drift and invokes Lean. |
 | [`cli/`](cli/README.md) | `litex -runner -e '1 + 1 = 2'` selects the runner command. |
 | [`common/`](common/README.md) | `FactId::new(12)` displays as `f12`. |
 | [`environment/`](environment/README.md) | After checking `a = 1`, later statements can reuse that equality. |
