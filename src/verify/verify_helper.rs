@@ -131,7 +131,7 @@ impl Runtime {
                 _ => {
                     let nonempty_fact =
                         IsNonemptySetFact::new(param_set.clone(), default_line_file());
-                    let ret = self.verify_fact_full(
+                    let ret = self.verify_fact_allow_unknown(
                         &nonempty_fact.into(),
                         &UseContextVerifyState::new(0, false),
                     )?;
@@ -278,7 +278,7 @@ impl Runtime {
 
     pub fn verify_known_forall_requirements_and_build_evidence(
         &mut self,
-        known_forall: &KnownForallFactParamsAndDom,
+        known_forall: &StoredForallConclusionReference,
         arg_map: &HashMap<String, Obj>,
         goal: Fact,
         verify_state: &UseContextVerifyState,
@@ -326,7 +326,7 @@ impl Runtime {
                 .inst_fact(dom_fact, &param_to_arg_map, ParamObjType::Forall, None)
                 .map_err(|e| known_forall_requirement_error(goal.clone(), e))?;
             let result = self
-                .verify_fact_full(&instantiated_dom_fact, verify_state)
+                .verify_fact_allow_unknown(&instantiated_dom_fact, verify_state)
                 .map_err(|e| known_forall_requirement_error(goal.clone(), e))?;
             if result.is_unknown() {
                 return Ok(None);
@@ -349,7 +349,7 @@ impl Runtime {
 
     fn verify_known_forall_param_type_requirements(
         &mut self,
-        known_forall: &KnownForallFactParamsAndDom,
+        known_forall: &StoredForallConclusionReference,
         args_for_params: &Vec<Obj>,
         goal: &Fact,
         verify_state: &UseContextVerifyState,
@@ -518,6 +518,47 @@ impl Runtime {
             if !found_numeric_subcarrier {
                 return Ok(None);
             }
+        }
+        Ok(Some(steps))
+    }
+
+    /// Checks that every operand belongs to one of the native scalar fields
+    /// `R` or `C`.  Real subcarriers are handled by the existing real-carrier
+    /// proof, while genuinely complex operands must have a provable `C`
+    /// membership.  This deliberately excludes arbitrary user-defined
+    /// multiplication operations.
+    pub fn verify_objects_are_known_real_or_complex_scalars(
+        &mut self,
+        objs: &[&Obj],
+        line_file: &LineFile,
+        verify_state: &UseContextVerifyState,
+    ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
+        let mut seen = Vec::new();
+        let mut steps = Vec::new();
+        for obj in objs {
+            let key = obj.to_string();
+            if seen.contains(&key) {
+                continue;
+            }
+            seen.push(key);
+
+            if let Some(real_steps) =
+                self.verify_objects_are_known_reals(&[*obj], line_file, verify_state)?
+            {
+                steps.extend(real_steps);
+                continue;
+            }
+
+            let in_c: AtomicFact =
+                InFact::new((*obj).clone(), StandardSet::C.into(), line_file.clone()).into();
+            let mut result = self.verify_non_equational_atomic_fact_with_direct_routes(&in_c)?;
+            if !result.is_true() {
+                result = self.verify_atomic_fact_with_builtin_strategy(&in_c)?;
+            }
+            if !result.is_true() {
+                return Ok(None);
+            }
+            steps.push(result);
         }
         Ok(Some(steps))
     }

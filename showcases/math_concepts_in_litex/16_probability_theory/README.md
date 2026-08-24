@@ -6,11 +6,12 @@ that precedes the finite calculations in
 
 ```text
 sigma-algebra + real series convergence
+  -> generated sigma algebras and Borel(R)
   -> Kolmogorov probability space
   -> countable additivity
   -> finite additivity and the ordinary event-probability calculus
   -> conditional probability and independence
-  -> measurable random variables and pushforward distributions
+  -> measurable random variables and constructed pushforward measures
 ```
 
 Run the checked Litex module from the repository root:
@@ -33,6 +34,12 @@ lake env lean ../showcases/math_concepts_in_litex/16_probability_theory/same_mat
   Countable union is the native
   `index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)})`; the module
   no longer maintains a parallel set-builder implementation.
+- `generated_sigma_algebra<X>(generators)` is the intersection of all sigma
+  algebras on `X` containing `generators`. The module proves both generator
+  inclusion and every sigma-algebra closure law for the constructed family.
+- `borel_sigma_algebra_on_R` specializes that construction to all bounded real
+  open intervals. `real_open_interval_is_borel` is its immediate membership
+  consumer; bounded open intervals generate the standard Borel sigma algebra.
 - `ProbabilitySpaceSetting` adds a real-valued probability function, empty
   mass zero, total mass one, nonnegativity, and countable additivity.
 - `has_series_sum` defines the right side of countable additivity by ordinary
@@ -45,8 +52,9 @@ lake env lean ../showcases/math_concepts_in_litex/16_probability_theory/same_mat
 - `conditional_probability` is guarded by positive evidence probability, and
   `are_independent` states factorization of intersection probability.
 - `is_measurable_map` and `is_random_variable` use measurable preimages.
-  `is_distribution_of` relates a supplied pushforward distribution to those
-  preimages rather than postulating a selected distribution constructor.
+  `pushforward_probability` constructs `B |-> P(X^{-1}(B))` on the exact target
+  event carrier. The module proves that this function is both the distribution
+  of `X` and a probability space on the target sigma algebra.
 
 The primary derived tracer is `probability_of_disjoint_union`. It constructs
 the sequence `(A, B, empty, empty, ...)`, proves that its countable union is
@@ -70,17 +78,14 @@ the same derivations. Binary finite additivity and every event-probability
 formula listed above are proved after that boundary.
 
 The public Litex file contains no direct `trust`, global `axiom`, or
-`abstract_prop`. The settings assume supplied sigma-algebra and probability
-data; the module does not construct a probability measure on every measurable
-space. It also stops before Borel generation, integration, expectation,
-variance, almost-sure reasoning, laws of large numbers, and central limit
-theorems. Those require later measure/integration layers rather than a finite
-weighted-sum surrogate.
+`abstract_prop`. The settings assume source probability data, while the new
+construction derives its pushforward probability measure on any explicit
+target sigma algebra. It does not claim that every measurable space admits an
+unrelated probability measure, nor does it implement Caratheodory extension
+from a premeasure or outer measure. Integration, expectation, variance,
+almost-sure reasoning, laws of large numbers, and central limit theorems remain
+later layers.
 
-The indexed-union sigma-algebra signature and padded two-event tracer pass the
-registered file runner. The direct three-case event sequence avoids nested
-template materialization, while theorem-local sequence names keep generated
-instances out of child proof environments. The handwritten Lean analogy is
-unchanged because its native `Set.iUnion` already expresses the same
-mathematics. See `math_collections.md` for the interface rationale and
-dependency graph.
+The generated-sigma construction, Borel specialization, pushforward laws, and
+the padded two-event finite-additivity tracer all pass the registered runner.
+See `math_collections.md` for the interface rationale and dependency graph.

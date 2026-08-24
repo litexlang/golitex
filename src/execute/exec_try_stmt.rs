@@ -25,7 +25,7 @@ impl Runtime {
         let mut results = Vec::new();
         let proof_len = stmt.proof.len();
         for (proof_index, proof_stmt) in stmt.proof.iter().enumerate() {
-            match self.exec_stmt(proof_stmt) {
+            match self.execute_statement(proof_stmt) {
                 Ok(result) => {
                     if result.is_unknown() {
                         return Err(UnknownRuntimeError(RuntimeErrorStruct::new_with_output(

@@ -19,4 +19,6 @@ forall x R:
 | The `forall x R:` example above | `Fact::ForallFact`. |
 | `exist x R st {x = 0}` | `Fact::ExistFact`. |
 
-[`fact.rs`](fact.rs) owns the top-level variants; for example, [`forall_fact.rs`](forall_fact.rs) stores the binder and body of the universal above, while [`atomic_fact.rs`](atomic_fact.rs) stores `1 = 1`.
+[`fact_types.rs`](fact_types.rs) owns the top-level variants; for example,
+[`forall_fact.rs`](forall_fact.rs) stores the binder and body of the universal
+above, while [`atomic_fact.rs`](atomic_fact.rs) stores `1 = 1`.

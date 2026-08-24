@@ -11,6 +11,18 @@ forall a, b R:
     =>:
         a != 0 and b != 0
 
+# The zero-product and product-nonzero laws are field laws, so the same native
+# rules apply to C. This is not a rule for arbitrary user-defined products.
+forall z, w C:
+    z * w = 0
+    =>:
+        z = 0 or w = 0
+
+forall z, w C:
+    z * w != 0
+    =>:
+        z != 0 and w != 0
+
 forall a R+, b R*:
     b $in R
     1 / b $in R

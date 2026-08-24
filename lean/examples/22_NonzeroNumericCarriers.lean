@@ -49,8 +49,8 @@ theorem __fact5 :
 theorem __fact6 :
     ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.QStar), ¬ Litex.Same __p1 (0 : ℂ) ∧ Litex.In __p1 Litex.Q ∧ Litex.In __p1 Litex.R ∧ Litex.In __p1 Litex.C ∧ Litex.In __p1 Litex.RStar ∧ Litex.In __p1 Litex.CStar := by
   intro q __h6_1
-  have __infer6_0 : ¬ Litex.Same q (0 : ℂ) := Litex.Rules.notSameZeroOfInQStar (__h6_1)
-  have __c6_0 : ¬ Litex.Same q (0 : ℂ) := __infer6_0
+  have __infer6_1 : ¬ Litex.Same q (0 : ℂ) := Litex.Rules.notSameZeroOfInQStar (__h6_1)
+  have __c6_0 : ¬ Litex.Same q (0 : ℂ) := __infer6_1
   have __c6_1 : Litex.In q Litex.Q := Litex.Rules.inQOfInQStar (__h6_1)
   have __c6_2 : Litex.In q Litex.R := Litex.Rules.inROfInQ (Litex.Rules.inQOfInQStar (__h6_1))
   have __c6_3 : Litex.In q Litex.C := Litex.Rules.inCOfInR (Litex.Rules.inROfInQ (Litex.Rules.inQOfInQStar (__h6_1)))
@@ -61,8 +61,8 @@ theorem __fact6 :
 theorem __fact7 :
     ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.RStar), ¬ Litex.Same __p1 (0 : ℂ) ∧ Litex.In __p1 Litex.R ∧ Litex.In __p1 Litex.C ∧ Litex.In __p1 Litex.CStar := by
   intro r __h7_1
-  have __infer7_0 : ¬ Litex.Same r (0 : ℂ) := Litex.Rules.notSameZeroOfInRStar (__h7_1)
-  have __c7_0 : ¬ Litex.Same r (0 : ℂ) := __infer7_0
+  have __infer7_2 : ¬ Litex.Same r (0 : ℂ) := Litex.Rules.notSameZeroOfInRStar (__h7_1)
+  have __c7_0 : ¬ Litex.Same r (0 : ℂ) := __infer7_2
   have __c7_1 : Litex.In r Litex.R := Litex.Rules.inROfInRStar (__h7_1)
   have __c7_2 : Litex.In r Litex.C := Litex.Rules.inCOfInR (Litex.Rules.inROfInRStar (__h7_1))
   have __c7_3 : Litex.In r Litex.CStar := Litex.Rules.inCStarOfInRStar (__h7_1)
@@ -71,8 +71,8 @@ theorem __fact7 :
 theorem __fact8 :
     ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.CStar), ¬ Litex.Same __p1 (0 : ℂ) ∧ Litex.In __p1 Litex.C := by
   intro c __h8_1
-  have __infer8_0 : ¬ Litex.Same c (0 : ℂ) := Litex.Rules.notSameZeroOfInCStar (__h8_1)
-  have __c8_0 : ¬ Litex.Same c (0 : ℂ) := __infer8_0
+  have __infer8_3 : ¬ Litex.Same c (0 : ℂ) := Litex.Rules.notSameZeroOfInCStar (__h8_1)
+  have __c8_0 : ¬ Litex.Same c (0 : ℂ) := __infer8_3
   have __c8_1 : Litex.In c Litex.C := Litex.Rules.inCOfInCStar (__h8_1)
   exact ⟨__c8_0, __c8_1⟩
 

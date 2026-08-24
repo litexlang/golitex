@@ -83,7 +83,7 @@ impl Runtime {
                     )
                 })?;
             let dom_result = self
-                .verify_fact_full(&instantiated_dom, &verify_state)
+                .verify_fact_allow_unknown(&instantiated_dom, &verify_state)
                 .map_err(|e| {
                     short_exec_error(
                         stmt.clone().into(),

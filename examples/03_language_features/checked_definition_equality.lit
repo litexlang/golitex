@@ -23,4 +23,3 @@ selected = f(a, 0) = f(1, 0)
 # Boundary: `selected = f(1, 0)` alone remains rejected. Definition reduction
 # does not enumerate equality representatives, instantiate known forall facts,
 # or recursively unfold a second named definition.
-# Evidence: target/release/litex -compact -isolated -runner -f examples/03_language_features/checked_definition_equality.lit

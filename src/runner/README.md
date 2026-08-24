@@ -30,5 +30,8 @@ run target
   -> return wrapper JSON and the same boolean as the process status
 ```
 
-Start with [`runner.rs`](runner.rs); for example, `runner_output_from_trace` constructs the wrapper shown above.
-
+Start with [`target_execution.rs`](target_execution.rs); for example,
+`run_runner_on_source` executes one target and `runner_output_from_trace`
+constructs the wrapper shown above. File targets use the pipeline-owned
+`resolve_source_file_path`; `runner::resolve_litex_file_path` remains only as a
+compatibility name for that same function.

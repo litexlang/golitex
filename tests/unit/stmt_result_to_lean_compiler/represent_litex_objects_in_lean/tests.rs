@@ -61,6 +61,26 @@ fn unresolved_symbol_is_rejected() {
 }
 
 #[test]
+fn arcsin_has_an_explicit_lean_target_object_node() {
+    let binding = SymbolBinding::new(SymbolId::new(13), "x".to_string(), "x".to_string());
+    let argument: Obj = Identifier::new_bound("x".to_string(), binding.as_ref()).into();
+    let arcsin: Obj = Arcsin::new(argument).into();
+
+    assert_eq!(
+        LeanTargetObjectRepresentation::lower(&arcsin).unwrap(),
+        LeanTargetObjectRepresentation::BuiltinApp {
+            source_occurrence_id: None,
+            semantic_key: obj_equality_key(&arcsin),
+            operator: LeanTargetBuiltinObjectOperator::Arcsin,
+            arguments: vec![LeanTargetObjectRepresentation::Symbol {
+                symbol_id: binding.id(),
+                name: "x".to_string(),
+            }],
+        }
+    );
+}
+
+#[test]
 fn indexed_set_family_operators_fail_closed_until_lean_semantics_are_added() {
     let index_set: Obj = ListSet::new(vec![]).into();
     let ambient_set: Obj = StandardSet::N.into();

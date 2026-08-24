@@ -63,7 +63,9 @@ The following sections describe the compiler's design for these two problems.
 
 ## Rust implementation boundaries
 
-[`stmt_result_to_lean_compiler.rs`](stmt_result_to_lean_compiler.rs) owns only the compiler state, well-definedness context construction, and top-level Result dispatch. Its private implementation modules are grouped by responsibility under [`implementation/`](implementation/): object/statement compilation, structured proofs, fact compilation, theorem/local-proof compilation, validation, proof rendering, and source rendering. The responsibility name avoids repeating the parent module name while keeping the public `StmtResultToLeanCompiler` type unchanged.
+[`compiler_state.rs`](compiler_state.rs) owns the compiler state and well-definedness context construction. [`implementation/result_dispatch.rs`](implementation/result_dispatch.rs) is the single top-level map from `StmtResult` families to their focused compilers. The other private implementation modules are grouped by responsibility under [`implementation/`](implementation/): object/statement compilation, structured proofs, fact publication, theorem/local-proof compilation, direct fact-proof dispatch, typed builtin-evidence replay, FactId/provenance replay, compiler transaction lifecycle, validation, proof rendering, and source rendering. The responsibility names avoid repeating the parent module name while keeping the public `StmtResultToLeanCompiler` type unchanged.
+
+The standalone maintenance CLI is a Cargo binary entry at [`../bin/stmt_result_to_lean_compiler.rs`](../bin/stmt_result_to_lean_compiler.rs). It owns only command-line dispatch for `compile`, `generate`, and `check`; it is not part of the compiler state module hierarchy. Its private unit tests live under [`../../tests/unit/stmt_result_to_lean_compiler/compiler_cli/`](../../tests/unit/stmt_result_to_lean_compiler/compiler_cli/).
 
 ## Representation of Litex Mathematics in Lean
 
@@ -332,7 +334,7 @@ graphs, summaries, and the StmtResult-to-Lean compiler traverse its fields; they
 not reconstruct successful execution by diffing a `Runtime` or by parsing
 diagnostic text.
 
-[`compile_litex_source_to_lean_source.rs`](compile_litex_source_to_lean_source.rs) intentionally executes the whole source, keeps the
+[`source_compilation.rs`](source_compilation.rs) intentionally executes the whole source, keeps the
 ordered `Vec<StmtResult>`, drops the execution `Runtime`, and only then creates
 `StmtResultToLeanCompiler`. Consequently the compiler cannot read facts,
 definitions, WD caches, or names back out of the execution environment. If a
@@ -399,13 +401,13 @@ operations in order:
 Here is Rust-shaped pseudocode for the producer side. Bracketed comments name
 the exact Result field written by each operation; error wrapping and trusted
 file branches are omitted, but the ordering and ownership boundaries match the
-current implementation in [`exec_stmt.rs`](../execute/exec_stmt.rs),
+current implementation in [`statement_execution.rs`](../execute/statement_execution.rs),
 [`exec_claim_stmt.rs`](../execute/exec_claim_stmt.rs),
 [`exec_goal_proof_block.rs`](../execute/exec_goal_proof_block.rs), and
-[`exec_fact_stmt.rs`](../execute/exec_fact_stmt.rs).
+[`submitted_fact_execution.rs`](../execute/submitted_fact_execution.rs).
 
 ```rust
-fn exec_stmt(runtime, stmt) -> StmtResult {
+fn execute_statement(runtime, stmt) -> StmtResult {
     // Dispatches ClaimStmt to exec_claim_stmt and a child FactStmt to exec_fact.
     let mut result = exec_stmt_verified(runtime, stmt)?;
 
@@ -449,7 +451,7 @@ fn exec_checked_goal_block(runtime, source_stmt, target, source_proof)
     run_in_local_env(runtime, |local| {
         let mut proof_steps = Vec::new();
         for child_stmt in source_proof {
-            proof_steps.push(exec_stmt(local, child_stmt)?);
+            proof_steps.push(execute_statement(local, child_stmt)?);
             // [each complete child StmtResult becomes verification.proof_steps[i]]
         }
 
@@ -521,7 +523,7 @@ The producer-to-field correspondence is therefore:
 | Claim AST cloning in `exec_checked_goal_block` | `statement` | What the user wrote: target and source proof statements. |
 | `verify_fact_well_defined_result(target)` | `verification.well_definedness` | Evidence that the target can be formed before entering its proof scope. |
 | `SuccessVerifyLocalProofScopeResult::new(...)` | `verification.proof_scope` | Assumptions intentionally installed at entry to the local proof environment. Empty in this tracer. |
-| `exec_stmt(child_stmt)` | `verification.proof_steps[i]` | One complete, recursively typed execution result per user-written child, in source order. |
+| `execute_statement(child_stmt)` | `verification.proof_steps[i]` | One complete, recursively typed execution result per user-written child, in source order. |
 | Final `verify_fact_return_err_if_not_true(target)` | `verification.conclusion_check` | Synthetic proof-only Result showing that the target is known after all source proof steps. |
 | Local `attach_known_fact_ids_to_stmt_result` | Fields inside `proof_steps` and `conclusion_check` | Freezes exact local store and citation identities before the Runtime scope disappears. |
 | `exec_claim_stmt_affect_environment` followed by `with_infers` | `common.infers` | Effects exported by the claim to its parent environment. |
@@ -643,7 +645,7 @@ in their execution order:
 
 Rust-shaped pseudocode for that consumer path makes the producer/consumer
 duality explicit. It follows
-[`stmt_result_to_lean_compiler.rs`](stmt_result_to_lean_compiler.rs):
+[`compiler_state.rs`](compiler_state.rs):
 
 ```rust
 fn compile_all(results: &[StmtResult]) -> LeanSource {
@@ -717,7 +719,7 @@ fn compile_ordinary_fact_goal_proof_body(compiler, source_fact, n, verification)
 ```
 
 For the nested `FactStmt`, local compilation is another typed dispatch rather
-than a recursive call to the top-level declaration emitter:
+than a recursive call to the top-level Lean declaration rendering function:
 
 ```rust
 fn compile_fact_stmt_result_as_local_proof_step(
@@ -849,7 +851,7 @@ Lean scope: `SymbolId -> Lean name`, `FactId -> theorem name`, predicate and
 function bindings, and the few representation bridges needed by the Lean
 ABI. It never stores proof truth; proof truth remains in Result.
 The stack and its frame bindings live in the explicitly named
-[`stmt_result_to_lean_compiler_environment_stack.rs`](stmt_result_to_lean_compiler_environment_stack.rs),
+[`compiler_environment.rs`](compiler_environment.rs),
 separate from proof-construction functions.
 
 The two recursive mechanisms have different jobs:
@@ -941,6 +943,18 @@ A known universal citation is not identified by rebuilding a smaller forall
 from the matched leaf. Its Result retains three pieces together:
 
 ```rust
+struct StoredForallConclusionReference {
+    source_forall: Rc<ForallFact>,
+    source_fact_id: FactId,
+    conclusion_location: ForallConclusionLocation,
+    // cached parameter/domain views used by verifier matching
+}
+```
+
+This is persistent Runtime indexing data, not a compiler IR. Verification
+copies its exact identity and location into the successful recursive Result:
+
+```rust
 struct SuccessInstantiateKnownForallResult {
     source_fact: Fact,              // the complete stored forall
     source_fact_id: FactId,         // its exact environment identity
@@ -955,7 +969,10 @@ component of an `and` fact, or an adjacent component of a chain. The compiler
 resolves `source_fact_id`, applies the complete source theorem to the retained
 parameter/domain requirement Results, and then emits the corresponding Lean
 conjunction projections. It fails closed if the location does not select the
-target fact. The persistent tracer is
+target fact. A requirement child may contain stores and inferences scoped to
+that verification call; the compiler validates and consumes its proof in the
+current application without publishing those scoped effects as top-level
+bindings. The persistent tracer is
 [`57_KnownForallFactIdProvenance.lit`](../../lean/examples/57_KnownForallFactIdProvenance.lit).
 
 For a binder-owning Result, the operational order is exact:
@@ -1084,6 +1101,14 @@ A conjunction illustrates the same rule one level deeper. Storing
 binds their exact FactIds to the target projections `h.1` and `h.2` in the
 current frame. A conclusion that cites `q` resolves that FactId; the compiler
 does not search the current propositions for text equal to `q`.
+
+If a projected component is itself a concrete predicate application, that
+component's typed definition-inference Result is compiled recursively after
+the projection is installed. Its parameter-membership and definition-clause
+FactIds therefore become visible before a later sibling Result needs them.
+The source conjunction may advertise the complete recursively inferred FactId
+set, but the compiler accepts it only when every advertised identity is
+reachable through those exact component child Results.
 
 There is deliberately no full `StmtResultToLeanIr` between this traversal and
 Lean source. Each compiler method may create a short-lived Lean source
@@ -1732,14 +1757,13 @@ from vector lengths, source strings, or traversal positions.
 
 ## Fact Statement Composition
 
-[`exec_fact`](../execute/exec_fact_stmt.rs) makes the three major fact stages
+[`execute_submitted_fact`](../execute/submitted_fact_execution.rs) makes the three major fact stages
 explicit:
 
 ```rust
-let well_definedness = self.exec_fact_stmt_verify_well_definedness(fact)?;
-let result = self.exec_fact_stmt_verify_process(fact)?;
-let infers =
-    self.exec_fact_stmt_affect_environment(fact, &result, &well_definedness)?;
+let well_definedness = self.verify_fact_well_defined_for_execution(fact)?;
+let result = self.verify_fact_for_execution(fact)?;
+let infers = self.store_executed_fact_and_infer(fact, &result, &well_definedness)?;
 
 Ok(result
     .with_fact_well_definedness(well_definedness)

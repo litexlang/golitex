@@ -476,11 +476,9 @@ fn top_level_recursive_inference_theorems_close_over_earlier_inference_steps() {
 #[test]
 fn inference_compilation_does_not_parse_rendered_lean_statements() {
     const COMPILER_SOURCES: &[&str] = &[
-        include_str!("../../src/stmt_result_to_lean_compiler/compile_litex_file_to_lean_file.rs"),
-        include_str!(
-            "../../src/stmt_result_to_lean_compiler/compile_litex_markdown_code_blocks_to_lean_file.rs"
-        ),
-        include_str!("../../src/stmt_result_to_lean_compiler/compile_litex_source_to_lean_source.rs"),
+        include_str!("../../src/stmt_result_to_lean_compiler/file_compilation.rs"),
+        include_str!("../../src/stmt_result_to_lean_compiler/markdown_compilation.rs"),
+        include_str!("../../src/stmt_result_to_lean_compiler/source_compilation.rs"),
         include_str!("../../src/stmt_result_to_lean_compiler/lean_compilation_types.rs"),
         include_str!(
             "../../src/stmt_result_to_lean_compiler/registered_local_builtin_rule_identifiers_for_lean.rs"
@@ -489,10 +487,8 @@ fn inference_compilation_does_not_parse_rendered_lean_statements() {
             "../../src/stmt_result_to_lean_compiler/represent_litex_function_contracts_in_lean.rs"
         ),
         include_str!("../../src/stmt_result_to_lean_compiler/represent_litex_objects_in_lean.rs"),
-        include_str!(
-            "../../src/stmt_result_to_lean_compiler/stmt_result_to_lean_compilation_report.rs"
-        ),
-        include_str!("../../src/stmt_result_to_lean_compiler/stmt_result_to_lean_compiler.rs"),
+        include_str!("../../src/stmt_result_to_lean_compiler/compilation_report.rs"),
+        include_str!("../../src/stmt_result_to_lean_compiler/compiler_state.rs"),
         include_str!(
             "../../src/stmt_result_to_lean_compiler/implementation/fact_compilation.rs"
         ),
@@ -514,9 +510,7 @@ fn inference_compilation_does_not_parse_rendered_lean_statements() {
         include_str!(
             "../../src/stmt_result_to_lean_compiler/implementation/validation.rs"
         ),
-        include_str!(
-            "../../src/stmt_result_to_lean_compiler/stmt_result_to_lean_compiler_environment_stack.rs"
-        ),
+        include_str!("../../src/stmt_result_to_lean_compiler/compiler_environment.rs"),
     ];
     for forbidden_parser in [
         "strip_prefix(\"have \")",

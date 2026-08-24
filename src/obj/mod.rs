@@ -5,9 +5,9 @@ mod fn_obj_head;
 mod fn_set;
 mod free_param_obj;
 mod helper;
-mod obj;
 mod obj_alpha_key;
 mod obj_contrain_free_params;
+mod object_types;
 mod source_object_occurrence_id;
 mod standard_set;
 pub use atom::{
@@ -24,8 +24,12 @@ pub use free_param_obj::{
     DefHeaderFreeParamObj, DefStructFieldFreeParamObj, ExistFreeParamObj, FnSetFreeParamObj,
     ForallFreeParamObj, ParamObjType, SetBuilderFreeParamObj, TupleIndexFreeParamObj,
 };
-pub use obj::{
-    fn_obj_to_string, Abs, Add, BigIntersect, BigUnion, Cart, CartDim, Ceil, ClosedRange,
+pub use obj_alpha_key::{
+    nested_obj_binder_normalized_key, obj_equality_key,
+    objs_equal_with_nested_binder_alpha_equivalence,
+};
+pub use object_types::{
+    fn_obj_to_string, Abs, Add, Arcsin, BigIntersect, BigUnion, Cart, CartDim, Ceil, ClosedRange,
     ComplexAbs, Cos, Cot, Div, EulerNumber, Exp, Factorial, FiniteSeqListObj, FiniteSeqSet,
     FiniteSetMax, FiniteSetMin, FiniteSetReduce, FiniteSetSize, Floor, FnObj, FnRange, Gcd,
     GeneralCart, ImaginaryPart, ImaginaryUnit, IndexIntersect, IndexUnion, InstantiatedTemplateObj,
@@ -35,10 +39,6 @@ pub use obj::{
     OneSideInfinityIntervalObjStruct, Pi, Pow, PowerSet, Product, ProductOfFiniteSet, Proj, Quot,
     Range, RealPart, Reduce, Replacement, SeqSet, SetBuilder, SetMinus, Sign, Sin, Sqrt, StructObj,
     Sub, Sum, SumOfFiniteSet, Tan, Tuple, TupleDim, Union,
-};
-pub use obj_alpha_key::{
-    nested_obj_binder_normalized_key, obj_equality_key,
-    objs_equal_with_nested_binder_alpha_equivalence,
 };
 pub use source_object_occurrence_id::SourceObjectOccurrenceId;
 pub use standard_set::StandardSet;

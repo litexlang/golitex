@@ -60,7 +60,7 @@ pub fn compile_local_builtin_schema(
     semantic_fingerprint: RuleFingerprint,
 ) -> Result<CompiledRuleSchema, RuntimeError> {
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(&format!("local_builtin::{}", rule_id.as_str()));
+    runtime.start_isolated_source(&format!("local_builtin::{}", rule_id.as_str()));
     let mut blocks =
         Tokenizer::new().parse_blocks(source, Rc::from(format!("{}.lit", rule_id.as_str())))?;
     if blocks.len() != 1 {

@@ -4,14 +4,17 @@ impl Runtime {
     pub fn parse_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         self.ensure_execution_frame_for_parse();
         let saved_parse_context = self.current_parse_context().clone();
-        let result = self.parse_stmt_inner(tb);
+        let result = self.parse_statement_from_leading_token(tb);
         if result.is_err() {
             *self.current_parse_context_mut() = saved_parse_context;
         }
         result
     }
 
-    fn parse_stmt_inner(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
+    fn parse_statement_from_leading_token(
+        &mut self,
+        tb: &mut TokenBlock,
+    ) -> Result<Stmt, RuntimeError> {
         match tb.current()? {
             PROP => self.parse_def_prop_stmt(tb),
             ABSTRACT_PROP => self.parse_def_abstract_prop_stmt(tb),
@@ -19,7 +22,10 @@ impl Runtime {
             HAVE => match tb.token_at_add_index(1) {
                 ALGO => match tb.token_at_add_index(2) {
                     FOR => self.parse_have_algo_for_stmt(tb),
-                    _ => Err(parse_stmt_error(tb, "have algo: expected `for f(...)`")),
+                    _ => Err(statement_dispatch_error(
+                        tb,
+                        "have algo: expected `for f(...)`",
+                    )),
                 },
                 TUPLE => self.parse_have_tuple_stmt(tb),
                 CART => self.parse_have_cart_stmt(tb),
@@ -29,9 +35,9 @@ impl Runtime {
                 FN_LOWER_CASE => self.parse_have_fn_stmt(tb),
                 BY => match tb.token_at_add_index(2) {
                     PREIMAGE => self.parse_have_preimage(tb),
-                    _ => Err(parse_stmt_error(tb, "have by: expected `preimage`")),
+                    _ => Err(statement_dispatch_error(tb, "have by: expected `preimage`")),
                 },
-                "" => Err(parse_stmt_error(
+                "" => Err(statement_dispatch_error(
                     tb,
                     "have: expected object definition, `fn`, or `by preimage`",
                 )),
@@ -47,7 +53,7 @@ impl Runtime {
             USE => self.parse_use_strategy_stmt(tb),
             STOP => match tb.token_at_add_index(1) {
                 STRATEGY => self.parse_stop_strategy_stmt(tb),
-                _ => Err(parse_stmt_error(tb, "stop: expected `strategy`")),
+                _ => Err(statement_dispatch_error(tb, "stop: expected `strategy`")),
             },
             SKETCH => self.parse_sketch_stmt(tb),
             TRY => self.parse_try_stmt(tb),
@@ -65,7 +71,7 @@ impl Runtime {
             STRUCT => self.parse_def_struct_stmt(tb),
             TEMPLATE => self.parse_def_template_stmt(tb),
             SETTING => self.parse_def_setting_stmt(tb),
-            STRONG_INDUC => Err(parse_stmt_error(
+            STRONG_INDUC => Err(statement_dispatch_error(
                 tb,
                 "strong_induc is only valid after `by`",
             )),
@@ -78,7 +84,7 @@ impl Runtime {
     }
 }
 
-fn parse_stmt_error(tb: &TokenBlock, msg: &str) -> RuntimeError {
+fn statement_dispatch_error(tb: &TokenBlock, msg: &str) -> RuntimeError {
     RuntimeError::from(ParseRuntimeError(
         RuntimeErrorStruct::new_with_msg_and_line_file(msg.to_string(), tb.line_file.clone()),
     ))

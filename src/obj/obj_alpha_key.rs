@@ -75,6 +75,7 @@ fn collect_obj_binder_bindings(
         Obj::Sign(x) => collect_obj_binder_bindings(&x.arg, bindings, seen, depth),
         Obj::Factorial(x) => collect_obj_binder_bindings(&x.arg, bindings, seen, depth),
         Obj::Sin(x) => collect_obj_binder_bindings(&x.arg, bindings, seen, depth),
+        Obj::Arcsin(x) => collect_obj_binder_bindings(&x.arg, bindings, seen, depth),
         Obj::Cos(x) => collect_obj_binder_bindings(&x.arg, bindings, seen, depth),
         Obj::Tan(x) => collect_obj_binder_bindings(&x.arg, bindings, seen, depth),
         Obj::Cot(x) => collect_obj_binder_bindings(&x.arg, bindings, seen, depth),

@@ -332,7 +332,7 @@ impl Runtime {
             }
 
             for proof_stmt in stmt.proof.iter() {
-                match rt.exec_stmt(proof_stmt) {
+                match rt.execute_statement(proof_stmt) {
                     Ok(result) => inside_results.push(result),
                     Err(proof_exec_error) => {
                         return Err(short_exec_error(
@@ -366,7 +366,7 @@ impl Runtime {
             for internal_fact_template in instantiated_exist_fact.facts().iter() {
                 let internal_fact = internal_fact_template.clone().to_fact();
                 let verification_result = rt
-                    .verify_fact_return_err_if_not_true(
+                    .verify_fact_or_error(
                         &internal_fact,
                         &verify_state_for_proof_check,
                     )
@@ -397,7 +397,7 @@ impl Runtime {
                     })?;
                 let uniqueness_fact: Fact = uniqueness_forall.into();
                 let uniqueness_result = rt
-                    .verify_fact_return_err_if_not_true(
+                    .verify_fact_or_error(
                         &uniqueness_fact,
                         &verify_state_for_proof_check,
                     )
@@ -581,7 +581,7 @@ impl Runtime {
             let mut inside_results: Vec<StmtResult> = Vec::new();
 
             for proof_stmt in stmt.proof.iter() {
-                match rt.exec_stmt(proof_stmt) {
+                match rt.execute_statement(proof_stmt) {
                     Ok(result) => inside_results.push(result),
                     Err(proof_exec_error) => {
                         return Err(short_exec_error(
@@ -612,7 +612,7 @@ impl Runtime {
                 InFact::new(stmt.obj.clone(), stmt.set.clone(), stmt.line_file.clone()).into();
             let verify_state_for_proof_check = UseContextVerifyState::new(0, false);
             let membership_result = rt
-                .verify_fact_return_err_if_not_true(&membership_fact, &verify_state_for_proof_check)
+                .verify_fact_or_error(&membership_fact, &verify_state_for_proof_check)
                 .map_err(|verify_error| {
                     short_exec_error(
                         witness_stmt.clone(),

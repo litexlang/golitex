@@ -28,7 +28,7 @@ impl Runtime {
         (
             (usize, usize),
             Option<(HashMap<String, Obj>, HashMap<String, Obj>)>,
-            Option<(OrFact, Rc<KnownForallFactParamsAndDom>)>,
+            Option<(OrFact, Rc<StoredForallConclusionReference>)>,
         ),
         RuntimeError,
     > {
@@ -124,7 +124,7 @@ impl Runtime {
     fn verify_or_fact_args_satisfy_forall_requirements(
         &mut self,
         _or_fact_in_known_forall: &OrFact,
-        known_forall: &Rc<KnownForallFactParamsAndDom>,
+        known_forall: &Rc<StoredForallConclusionReference>,
         arg_map: HashMap<String, Obj>,
         given_or_fact: &OrFact,
         verify_state: &UseContextVerifyState,

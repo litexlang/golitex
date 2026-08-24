@@ -31,4 +31,6 @@ discover litex.config
 | An export path outside the recursive tree | Rejected instead of running an unregistered file as a project prefix. |
 | `A` imports `B` and `B` imports `A` | Rejected through `Loading` cycle state. |
 
-Start with [`project_config.rs`](project_config.rs) for the TOML-like tables and [`module_manager.rs`](module_manager.rs) / [`module_runner.rs`](module_runner.rs) for the execution graph.
+Start with [`project_config.rs`](project_config.rs) for the TOML-like tables,
+[`manager_state.rs`](manager_state.rs) for the per-run module registry, and
+[`module_runner.rs`](module_runner.rs) for the execution graph.

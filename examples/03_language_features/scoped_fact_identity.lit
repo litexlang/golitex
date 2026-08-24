@@ -12,7 +12,6 @@
 # but a FactId may never be redirected to a different proposition. The latter
 # fail-closed boundary is covered by the paired Rust regression test.
 #
-# Evidence: target/release/litex -compact -isolated -runner -f examples/03_language_features/scoped_fact_identity.lit
 abstract_prop first_property(x)
 abstract_prop second_property(x)
 

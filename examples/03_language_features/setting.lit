@@ -17,7 +17,6 @@ setting PairedElements(X, Y nonempty_set, x X, y Y):
 #
 # Boundary: legacy `setting Name:` headers remain rejected. A setting without
 # shared assumptions omits the colon, as in `setting OneElement(X set, x X)`.
-# Evidence: target/release/litex -compact -isolated -runner -f examples/03_language_features/setting.lit
 # Implementation: src/parse/parse_def_stmt.rs
 
 forall [PairedElements]:

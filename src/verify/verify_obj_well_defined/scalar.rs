@@ -659,6 +659,49 @@ impl Runtime {
         self.verify_unary_scalar_carrier_result(&value.arg, StandardSet::R, "sin", verify_state)
     }
 
+    pub(in crate::verify) fn verify_arcsin_well_defined_result(
+        &mut self,
+        value: &Arcsin,
+        verify_state: &UseContextVerifyState,
+    ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
+        let line_file = default_line_file();
+        self.verify_scalar_constructor_steps_result(
+            &[(*value.arg).clone()],
+            vec![
+                scalar_membership_requirement(
+                    &value.arg,
+                    StandardSet::R,
+                    "arcsin argument must belong to R",
+                ),
+                (
+                    LessEqualFact::new(
+                        Number::new("-1".to_string()).into(),
+                        (*value.arg).clone(),
+                        line_file.clone(),
+                    )
+                    .into(),
+                    format!(
+                        "arcsin argument `{}` must satisfy -1 <= {}",
+                        value.arg, value.arg
+                    ),
+                ),
+                (
+                    LessEqualFact::new(
+                        (*value.arg).clone(),
+                        Number::new("1".to_string()).into(),
+                        line_file,
+                    )
+                    .into(),
+                    format!(
+                        "arcsin argument `{}` must satisfy {} <= 1",
+                        value.arg, value.arg
+                    ),
+                ),
+            ],
+            verify_state,
+        )
+    }
+
     pub(in crate::verify) fn verify_cos_well_defined_result(
         &mut self,
         value: &Cos,

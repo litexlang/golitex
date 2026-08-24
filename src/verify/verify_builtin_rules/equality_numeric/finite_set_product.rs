@@ -1049,7 +1049,7 @@ impl Runtime {
             line_file,
         )?;
         let fact: Fact = forall_fact.into();
-        let result = self.verify_fact_full(&fact, &UseContextVerifyState::new(0, true))?;
+        let result = self.verify_fact_allow_unknown(&fact, &UseContextVerifyState::new(0, true))?;
         let _ = builtin_state;
         Ok(result.is_true())
     }

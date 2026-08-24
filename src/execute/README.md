@@ -3,7 +3,7 @@
 For `1 + 1 = 2`, execution checks the expression, verifies the equality, stores the fact, and attaches a statement trace.
 
 ```text
-exec_stmt(Stmt::Fact(1 + 1 = 2))
+execute_statement(Stmt::Fact(1 + 1 = 2))
   clear statement-local proof caches
   verify both sides are well-defined
   verify 1 + 1 = 2
@@ -27,7 +27,10 @@ exec_stmt(Stmt::Fact(1 + 1 = 2))
 
 | File | Example |
 | --- | --- |
-| [`exec_stmt.rs`](exec_stmt.rs) | Dispatches every `Stmt` and attaches the final execution trace. |
-| [`exec_fact_stmt.rs`](exec_fact_stmt.rs) | Executes a submitted fact such as `1 + 1 = 2`. |
+| [`statement_execution.rs`](statement_execution.rs) | Owns statement lifecycle, chooses verified or trusted execution, and attaches the final execution trace. |
+| [`verified_statement_execution.rs`](verified_statement_execution.rs) | Dispatches every verified `Stmt` family to its executor. |
+| [`trusted_statement_execution.rs`](trusted_statement_execution.rs) | Replays trusted and preverified statements into the environment. |
+| [`attach_fact_ids_to_stmt_result.rs`](attach_fact_ids_to_stmt_result.rs) | Fills missing FactIds in the completed recursive Result tree without retargeting frozen local evidence. |
+| [`submitted_fact_execution.rs`](submitted_fact_execution.rs) | Executes a submitted fact through well-definedness, proof verification, storage, and inference. |
 | [`exec_verify_then_store_facts.rs`](exec_verify_then_store_facts.rs) | Implements verify-then-store for facts. |
 | [`exec_try_stmt.rs`](exec_try_stmt.rs) | Gives `try:` its transactional rollback behavior. |

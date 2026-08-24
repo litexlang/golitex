@@ -54,7 +54,7 @@ impl Runtime {
         }
 
         let template_body_stmt = def_template_stmt.template_def_stmt.to_stmt();
-        let mut body_statement_result = self.exec_stmt(&template_body_stmt)?;
+        let mut body_statement_result = self.execute_statement(&template_body_stmt)?;
         if body_statement_result.is_unknown() {
             return Err(short_exec_error(
                 template_body_stmt,
@@ -232,7 +232,7 @@ impl Runtime {
         // template was declared. Header validation above plus capture-avoiding
         // substitution preserves that result, so only commit the instantiated
         // statement's environment effects here.
-        let body_result = self.exec_preverified_stmt_affect_environment_only(&stmt)?;
+        let body_result = self.execute_preverified_statement(&stmt)?;
         let StmtResult::Success(body_statement_result) = body_result else {
             return Err(short_exec_error(
                 stmt,

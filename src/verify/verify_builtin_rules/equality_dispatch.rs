@@ -139,7 +139,7 @@ impl Runtime {
         if let Some(done) = self.try_verify_native_complex_equality(equal_fact, builtin_state)? {
             return Ok(done);
         }
-        if let Some(done) = self.try_verify_trigonometric_equality(equal_fact)? {
+        if let Some(done) = self.try_verify_trigonometric_equality(equal_fact, builtin_state)? {
             return Ok(done);
         }
 
@@ -2364,7 +2364,7 @@ impl Runtime {
         goal: &AtomicFact,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let lookup_key = (goal.key(), goal.is_true());
-        let candidates: Vec<(AtomicFact, Rc<KnownForallFactParamsAndDom>)> = self
+        let candidates: Vec<(AtomicFact, Rc<StoredForallConclusionReference>)> = self
             .iter_environments_from_top()
             .flat_map(|environment| {
                 environment

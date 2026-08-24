@@ -694,8 +694,8 @@ impl Runtime {
         ))
     }
 
-    // A zero product over R has a zero factor.
-    // Example: from `a * b = 0`, prove `a = 0 or b = 0`.
+    // A zero product over the native fields R or C has a zero factor.
+    // Example: from `a, b C` and `a * b = 0`, prove `a = 0 or b = 0`.
     fn try_verify_zero_product_or(
         &mut self,
         or_fact: &OrFact,
@@ -726,7 +726,7 @@ impl Runtime {
 
         let zero: Obj = Number::new("0".to_string()).into();
         let line_file = or_fact.line_file.clone();
-        let Some(mut steps) = self.verify_objects_are_known_reals(
+        let Some(mut steps) = self.verify_objects_are_known_real_or_complex_scalars(
             &[&first_factor, &second_factor],
             &line_file,
             verify_state,

@@ -19,6 +19,11 @@ impl Environment {
         for (name, definition) in child.symbols.iter() {
             if let Some(existing) = self.symbols.get(name) {
                 if same_symbol_definition(existing, definition) {
+                    let existing_symbol_id = existing.binding().id();
+                    self.symbols
+                        .get_by_id_mut(existing_symbol_id)
+                        .expect("the matching parent symbol should remain present")
+                        .merge_missing_declaration_type_views_from(definition);
                     continue;
                 }
                 return Err(merge_name_conflict_error(
@@ -571,69 +576,98 @@ fn append_missing_or_facts(parent: &mut Vec<OrFact>, child: Vec<OrFact>) {
 }
 
 fn append_missing_atomic_forall_pairs(
-    parent: &mut Vec<(AtomicFact, Rc<KnownForallFactParamsAndDom>)>,
-    child: Vec<(AtomicFact, Rc<KnownForallFactParamsAndDom>)>,
+    parent: &mut Vec<(AtomicFact, Rc<StoredForallConclusionReference>)>,
+    child: Vec<(AtomicFact, Rc<StoredForallConclusionReference>)>,
 ) {
     let mut seen = HashSet::new();
-    for (fact, params_and_dom) in parent.iter() {
-        seen.insert(forall_pair_key(fact.to_string(), params_and_dom));
+    for (fact, stored_forall_conclusion_reference) in parent.iter() {
+        seen.insert(forall_pair_key(
+            fact.to_string(),
+            stored_forall_conclusion_reference,
+        ));
     }
-    for (fact, params_and_dom) in child {
-        if seen.insert(forall_pair_key(fact.to_string(), &params_and_dom)) {
-            parent.push((fact, params_and_dom));
+    for (fact, stored_forall_conclusion_reference) in child {
+        if seen.insert(forall_pair_key(
+            fact.to_string(),
+            &stored_forall_conclusion_reference,
+        )) {
+            parent.push((fact, stored_forall_conclusion_reference));
         }
     }
 }
 
 fn append_missing_exist_forall_pairs(
-    parent: &mut Vec<(ExistFactEnum, Rc<KnownForallFactParamsAndDom>)>,
-    child: Vec<(ExistFactEnum, Rc<KnownForallFactParamsAndDom>)>,
+    parent: &mut Vec<(ExistFactEnum, Rc<StoredForallConclusionReference>)>,
+    child: Vec<(ExistFactEnum, Rc<StoredForallConclusionReference>)>,
 ) {
     let mut seen = HashSet::new();
-    for (fact, params_and_dom) in parent.iter() {
-        seen.insert(forall_pair_key(fact.to_string(), params_and_dom));
+    for (fact, stored_forall_conclusion_reference) in parent.iter() {
+        seen.insert(forall_pair_key(
+            fact.to_string(),
+            stored_forall_conclusion_reference,
+        ));
     }
-    for (fact, params_and_dom) in child {
-        if seen.insert(forall_pair_key(fact.to_string(), &params_and_dom)) {
-            parent.push((fact, params_and_dom));
+    for (fact, stored_forall_conclusion_reference) in child {
+        if seen.insert(forall_pair_key(
+            fact.to_string(),
+            &stored_forall_conclusion_reference,
+        )) {
+            parent.push((fact, stored_forall_conclusion_reference));
         }
     }
 }
 
 fn append_missing_and_forall_pairs(
-    parent: &mut Vec<(AndFact, Rc<KnownForallFactParamsAndDom>)>,
-    child: Vec<(AndFact, Rc<KnownForallFactParamsAndDom>)>,
+    parent: &mut Vec<(AndFact, Rc<StoredForallConclusionReference>)>,
+    child: Vec<(AndFact, Rc<StoredForallConclusionReference>)>,
 ) {
     let mut seen = HashSet::new();
-    for (fact, params_and_dom) in parent.iter() {
-        seen.insert(forall_pair_key(fact.to_string(), params_and_dom));
+    for (fact, stored_forall_conclusion_reference) in parent.iter() {
+        seen.insert(forall_pair_key(
+            fact.to_string(),
+            stored_forall_conclusion_reference,
+        ));
     }
-    for (fact, params_and_dom) in child {
-        if seen.insert(forall_pair_key(fact.to_string(), &params_and_dom)) {
-            parent.push((fact, params_and_dom));
+    for (fact, stored_forall_conclusion_reference) in child {
+        if seen.insert(forall_pair_key(
+            fact.to_string(),
+            &stored_forall_conclusion_reference,
+        )) {
+            parent.push((fact, stored_forall_conclusion_reference));
         }
     }
 }
 
 fn append_missing_or_forall_pairs(
-    parent: &mut Vec<(OrFact, Rc<KnownForallFactParamsAndDom>)>,
-    child: Vec<(OrFact, Rc<KnownForallFactParamsAndDom>)>,
+    parent: &mut Vec<(OrFact, Rc<StoredForallConclusionReference>)>,
+    child: Vec<(OrFact, Rc<StoredForallConclusionReference>)>,
 ) {
     let mut seen = HashSet::new();
-    for (fact, params_and_dom) in parent.iter() {
-        seen.insert(forall_pair_key(fact.to_string(), params_and_dom));
+    for (fact, stored_forall_conclusion_reference) in parent.iter() {
+        seen.insert(forall_pair_key(
+            fact.to_string(),
+            stored_forall_conclusion_reference,
+        ));
     }
-    for (fact, params_and_dom) in child {
-        if seen.insert(forall_pair_key(fact.to_string(), &params_and_dom)) {
-            parent.push((fact, params_and_dom));
+    for (fact, stored_forall_conclusion_reference) in child {
+        if seen.insert(forall_pair_key(
+            fact.to_string(),
+            &stored_forall_conclusion_reference,
+        )) {
+            parent.push((fact, stored_forall_conclusion_reference));
         }
     }
 }
 
-fn forall_pair_key(fact_key: String, params_and_dom: &KnownForallFactParamsAndDom) -> String {
+fn forall_pair_key(
+    fact_key: String,
+    stored_forall_conclusion_reference: &StoredForallConclusionReference,
+) -> String {
     format!(
         "{}|{}|{:?}",
-        fact_key, params_and_dom.source_fact_id, params_and_dom.conclusion_location
+        fact_key,
+        stored_forall_conclusion_reference.source_fact_id,
+        stored_forall_conclusion_reference.conclusion_location
     )
 }
 

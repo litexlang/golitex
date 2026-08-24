@@ -14,7 +14,7 @@ theorem __fact1 : Litex.Positive (1 : ℂ) := by
 theorem __fact2 :
     ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.NPos), Litex.In __p1 Litex.N := by
   intro n __h2_1
-  have __infer2_0 : Litex.Positive n := Litex.Rules.positiveOfInNPos (__h2_1)
+  have __infer2_1 : Litex.Positive n := Litex.Rules.positiveOfInNPos (__h2_1)
   have __c2_0 : Litex.In n Litex.N := Litex.Rules.inNOfInNPos (__h2_1)
   exact __c2_0
 

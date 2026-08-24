@@ -44,7 +44,7 @@ impl Runtime {
             let mut proof_steps = vec![];
             let proof_len = stmt.prove_process.len();
             for (proof_index, proof_stmt) in stmt.prove_process.iter().enumerate() {
-                let result = rt.exec_stmt(proof_stmt)?;
+                let result = rt.execute_statement(proof_stmt)?;
                 if result.is_unknown() {
                     return Err(RuntimeError::from(UnknownRuntimeError(
                         RuntimeErrorStruct::new_with_output(

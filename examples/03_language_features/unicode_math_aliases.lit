@@ -110,4 +110,3 @@ claim:
 # `witness_exist_unique_rejects_missing_uniqueness_proof`. `ℕ*` remains
 # unsupported, matching the absence of an ASCII `N*`; the parser regression is
 # `unicode_and_ascii_facts_share_one_canonical_representation`.
-# Evidence: target/release/litex -compact -isolated -runner -f examples/03_language_features/unicode_math_aliases.lit

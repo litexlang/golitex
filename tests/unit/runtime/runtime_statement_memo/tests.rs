@@ -1,5 +1,29 @@
 use super::*;
 
+impl StatementProofStateStack {
+    fn current_atomic_fact_proof_count(&self) -> usize {
+        self.current_scope()
+            .map(|scope| scope.atomic_fact_proofs.len())
+            .unwrap_or(0)
+    }
+
+    fn current_scope(&self) -> Option<&StatementProofScopeState> {
+        self.scopes.last()
+    }
+}
+
+impl Runtime {
+    fn statement_atomic_fact_proof_is_remembered(&self, key: &FactString) -> bool {
+        self.statement_proof_state
+            .scopes_from_inner()
+            .any(|scope| scope.atomic_fact_proofs.contains_key(key))
+    }
+
+    fn current_statement_atomic_fact_proof_count(&self) -> usize {
+        self.statement_proof_state.current_atomic_fact_proof_count()
+    }
+}
+
 #[test]
 fn successful_atomic_fact_is_shared_until_statement_memo_is_cleared() {
     let mut runtime = new_test_runtime();
@@ -45,7 +69,7 @@ fn unknown_atomic_fact_is_not_remembered() {
 
     runtime.clear_statement_proof_state();
     let stmt = parse_stmt(&mut runtime, "1 = 2");
-    assert!(runtime.exec_stmt(&stmt).is_err());
+    assert!(runtime.execute_statement(&stmt).is_err());
     assert_eq!(runtime.current_statement_atomic_fact_proof_count(), 0);
 }
 
@@ -124,7 +148,7 @@ fn next_statement_does_not_inherit_the_previous_memo_source() {
 
     let stmt = parse_stmt(&mut runtime, "1 < 2");
     let second = runtime
-        .exec_stmt(&stmt)
+        .execute_statement(&stmt)
         .expect("the next statement should verify independently");
     let second_source = direct_verification(&second);
     assert!(!Rc::ptr_eq(&first_source, &second_source));
@@ -138,7 +162,9 @@ fn exec_stmt_clears_temporary_successes_but_keeps_the_proof_evidence() {
     let Stmt::Fact(Fact::AtomicFact(fact)) = &stmt else {
         unreachable!()
     };
-    let result = runtime.exec_stmt(&stmt).expect("statement should verify");
+    let result = runtime
+        .execute_statement(&stmt)
+        .expect("statement should verify");
 
     assert_eq!(runtime.current_statement_atomic_fact_proof_count(), 0);
     assert!(runtime
@@ -151,7 +177,7 @@ fn exec_stmt_clears_temporary_successes_but_keeps_the_proof_evidence() {
 
 fn new_test_runtime() -> Runtime {
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope("statement_memo_test.lit");
+    runtime.start_isolated_source("statement_memo_test.lit");
     runtime
 }
 

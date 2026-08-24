@@ -28,7 +28,7 @@ impl Runtime {
         (
             (usize, usize),
             Option<(HashMap<String, Obj>, HashMap<String, Obj>)>,
-            Option<(ExistFactEnum, Rc<KnownForallFactParamsAndDom>)>,
+            Option<(ExistFactEnum, Rc<StoredForallConclusionReference>)>,
         ),
         RuntimeError,
     > {
@@ -39,7 +39,7 @@ impl Runtime {
             let env = self
                 .environment_by_top_index(i)
                 .expect("environment index should be valid");
-            let mut merged_bucket: Vec<(ExistFactEnum, Rc<KnownForallFactParamsAndDom>)> =
+            let mut merged_bucket: Vec<(ExistFactEnum, Rc<StoredForallConclusionReference>)> =
                 Vec::new();
             for lk in lookup_keys.iter() {
                 if let Some(known_forall_facts_in_env) =
@@ -135,7 +135,7 @@ impl Runtime {
     fn verify_exist_fact_args_satisfy_forall_requirements(
         &mut self,
         exist_fact_in_known_forall: &ExistFactEnum,
-        known_forall: &Rc<KnownForallFactParamsAndDom>,
+        known_forall: &Rc<StoredForallConclusionReference>,
         forall_arg_map: HashMap<String, Obj>,
         exist_arg_map: HashMap<String, Obj>,
         given_exist_fact: &ExistFactEnum,
@@ -357,6 +357,7 @@ impl Runtime {
             Obj::Floor(x) => Self::obj_depends_on_given_exist_param(x.arg.as_ref(), names),
             Obj::Ceil(x) => Self::obj_depends_on_given_exist_param(x.arg.as_ref(), names),
             Obj::Sin(x) => Self::obj_depends_on_given_exist_param(x.arg.as_ref(), names),
+            Obj::Arcsin(x) => Self::obj_depends_on_given_exist_param(x.arg.as_ref(), names),
             Obj::Cos(x) => Self::obj_depends_on_given_exist_param(x.arg.as_ref(), names),
             Obj::Tan(x) => Self::obj_depends_on_given_exist_param(x.arg.as_ref(), names),
             Obj::Cot(x) => Self::obj_depends_on_given_exist_param(x.arg.as_ref(), names),

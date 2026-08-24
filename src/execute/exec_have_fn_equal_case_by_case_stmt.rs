@@ -270,7 +270,7 @@ impl Runtime {
 
         let coverage: Fact = OrFact::new(stmt.cases.clone(), stmt.line_file.clone()).into();
         let coverage_result = self
-            .verify_fact_return_err_if_not_true(&coverage, &UseContextVerifyState::new(0, false))
+            .verify_fact_or_error(&coverage, &UseContextVerifyState::new(0, false))
             .map_err(|e| {
                 short_exec_error(
                     stmt.clone().into(),
@@ -464,9 +464,10 @@ impl Runtime {
                 )
                 .map_err(|cause| short_exec_error(stmt.clone().into(), "", Some(cause), vec![]))?;
             self.attach_known_fact_ids_to_infer_result(&mut infers)?;
+            let fact_id = self.require_known_fact_id_for_success_result(&fact)?;
             stores.push(SuccessStoreFactResult {
                 fact: fact.clone(),
-                fact_id: self.known_fact_id_for_fact(&fact)?,
+                fact_id: Some(fact_id),
                 infers,
             });
         }

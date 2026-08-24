@@ -361,7 +361,7 @@ impl Runtime {
         // Example: `x R` implies `sin(x) $in R`; `tan(x)` additionally needs `cos(x) != 0`.
         if matches!(
             &in_fact.element,
-            Obj::Sin(_) | Obj::Cos(_) | Obj::Tan(_) | Obj::Cot(_)
+            Obj::Sin(_) | Obj::Arcsin(_) | Obj::Cos(_) | Obj::Tan(_) | Obj::Cot(_)
         ) && matches!(
             &in_fact.set,
             Obj::StandardSet(StandardSet::R) | Obj::StandardSet(StandardSet::C)
@@ -779,6 +779,7 @@ impl Runtime {
                 | Obj::Pow(_)
                 | Obj::Abs(_)
                 | Obj::Sin(_)
+                | Obj::Arcsin(_)
                 | Obj::Cos(_)
                 | Obj::Tan(_)
                 | Obj::Cot(_)

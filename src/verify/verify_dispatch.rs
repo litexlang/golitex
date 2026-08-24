@@ -7,7 +7,7 @@ impl Runtime {
     /// known forall instantiation, user strategies, definitions, and recursive
     /// proof obligations where those features are part of the ordinary proof
     /// model. Restricted builtin premises use the atomic builtin helpers.
-    pub fn verify_fact_full(
+    pub fn verify_fact_allow_unknown(
         &mut self,
         fact: &Fact,
         verify_state: &UseContextVerifyState,
@@ -26,12 +26,21 @@ impl Runtime {
         }
     }
 
-    pub fn verify_fact_return_err_if_not_true(
+    /// Compatibility wrapper for the former ambiguous `full` vocabulary.
+    pub fn verify_fact_full(
         &mut self,
         fact: &Fact,
         verify_state: &UseContextVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
-        let result = self.verify_fact_full(fact, verify_state)?;
+        self.verify_fact_allow_unknown(fact, verify_state)
+    }
+
+    pub fn verify_fact_or_error(
+        &mut self,
+        fact: &Fact,
+        verify_state: &UseContextVerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        let result = self.verify_fact_allow_unknown(fact, verify_state)?;
         let result = self.structured_unknown_result_for_failed_fact(fact, verify_state, result)?;
 
         if result.is_unknown() {
@@ -59,6 +68,15 @@ impl Runtime {
         }
 
         Ok(result)
+    }
+
+    /// Compatibility wrapper for the former implementation-oriented name.
+    pub fn verify_fact_return_err_if_not_true(
+        &mut self,
+        fact: &Fact,
+        verify_state: &UseContextVerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        self.verify_fact_or_error(fact, verify_state)
     }
 
     pub fn structured_unknown_result_for_failed_fact(

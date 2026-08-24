@@ -3,6 +3,40 @@ use crate::output::display_stmt_result_json_v2;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 #[test]
+fn exported_symbol_keeps_its_declaration_owned_struct_view() {
+    run_repository_test_with_large_stack("exported-symbol-struct-view", || {
+        let fixture = Fixture::new("exported-symbol-struct-view");
+        let root = fixture.path("root");
+        write_file(
+            &root.join("litex.config"),
+            r#"[hierarchy]
+module
+
+[export]
+main = "./main.lit"
+consumer = "./consumer.lit"
+"#,
+        );
+        write_file(
+            &root.join("main.lit"),
+            r#"struct Pair:
+    first R
+    second R
+
+have pair_value &Pair = (1, 2)
+"#,
+        );
+        write_file(&root.join("consumer.lit"), "main::pair_value.second = 2\n");
+
+        let (ok, output) = run_repository(&root);
+        assert!(
+            ok,
+            "an exported symbol must carry its declaration-owned struct view by SymbolId:\n{output}"
+        );
+    });
+}
+
+#[test]
 fn allow_bare_export_collects_recursive_public_symbols_once_per_file() {
     run_repository_test_with_large_stack("allow-bare-recursive-export", || {
         let fixture = Fixture::new("allow-bare-recursive-export");

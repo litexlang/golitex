@@ -1137,8 +1137,8 @@ impl Runtime {
         Ok(Some(success.into()))
     }
 
-    // A nonzero product of real factors has no zero factor.
-    // Example: from `a * b != 0`, prove `a != 0` and separately `b != 0`.
+    // A nonzero product over the native fields R or C has no zero factor.
+    // Example: from `a, b C` and `a * b != 0`, prove `a != 0` and `b != 0`.
     fn try_verify_product_nonzero_component_from_known_product(
         &mut self,
         not_equal_fact: &NotEqualFact,
@@ -1202,11 +1202,12 @@ impl Runtime {
                 continue;
             }
 
-            let Some(mut steps) = self.verify_objects_are_known_reals_in_builtin(
-                &[product.left.as_ref(), product.right.as_ref()],
-                &not_equal_fact.line_file,
-                builtin_state,
-            )?
+            let Some(mut steps) = self
+                .verify_objects_are_known_real_or_complex_scalars_in_builtin(
+                    &[product.left.as_ref(), product.right.as_ref()],
+                    &not_equal_fact.line_file,
+                    builtin_state,
+                )?
             else {
                 continue;
             };

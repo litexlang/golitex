@@ -20,6 +20,24 @@ fn rust_files_below(root: &Path) -> Vec<PathBuf> {
     files
 }
 
+fn directories_below(root: &Path) -> Vec<PathBuf> {
+    let mut pending = vec![root.to_path_buf()];
+    let mut directories = Vec::new();
+    while let Some(path) = pending.pop() {
+        for entry in fs::read_dir(&path)
+            .unwrap_or_else(|error| panic!("failed to read {}: {error}", path.display()))
+        {
+            let path = entry.expect("directory entry should be readable").path();
+            if path.is_dir() {
+                pending.push(path.clone());
+                directories.push(path);
+            }
+        }
+    }
+    directories.sort();
+    directories
+}
+
 #[test]
 fn rust_visibility_does_not_regress_to_crate_only() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
@@ -84,10 +102,147 @@ fn production_sources_contain_loaders_but_no_test_bodies() {
 #[test]
 fn compiler_and_test_directories_follow_the_repository_layout() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let manifest =
+        fs::read_to_string(root.join("Cargo.toml")).expect("Cargo manifest should be readable");
+    let cli = root.join("src/cli");
+    assert!(cli.join("command_dispatch.rs").is_file());
+    assert!(!cli.join("cli.rs").exists());
+    assert!(root.join("tests/unit/cli/command_dispatch").is_dir());
+    assert!(!root.join("tests/unit/cli/cli").exists());
+    let runner = root.join("src/runner");
+    assert!(runner.join("target_execution.rs").is_file());
+    assert!(!runner.join("runner.rs").exists());
     let compiler = root.join("src/stmt_result_to_lean_compiler");
+    assert!(root
+        .join("src/bin/stmt_result_to_lean_compiler.rs")
+        .is_file());
+    assert!(!compiler.join("main.rs").exists());
+    assert!(manifest.contains("path = \"src/bin/stmt_result_to_lean_compiler.rs\""));
+    let compiler_cli_tests = root.join("tests/unit/stmt_result_to_lean_compiler");
+    assert!(compiler_cli_tests.join("compiler_cli").is_dir());
+    assert!(!compiler_cli_tests.join("main").exists());
+    let compiler_contracts = root.join("tests/unit/kernel_contracts/stmt_result_to_lean_compiler");
+    assert!(compiler_contracts.join("mod.rs").is_file());
+    assert!(!root
+        .join("tests/unit/kernel_contracts/stmt_result_to_lean_compiler.rs")
+        .exists());
+    for responsibility in [
+        "builtin_evidence_and_fact_ids.rs",
+        "definitions_and_collections.rs",
+        "existentials_claims_and_theorems.rs",
+        "forall_and_direct_fact_proofs.rs",
+        "known_forall_and_transformations.rs",
+        "proof_composition_and_scopes.rs",
+        "registered_rules_and_environments.rs",
+        "result_schema_contracts.rs",
+    ] {
+        assert!(compiler_contracts.join(responsibility).is_file());
+    }
     assert!(compiler.join("implementation").is_dir());
     assert!(!compiler.join("stmt_result_to_lean_compiler").exists());
+    assert!(compiler.join("compiler_state.rs").is_file());
+    assert!(!compiler.join("stmt_result_to_lean_compiler.rs").exists());
+    for current_file in [
+        "source_compilation.rs",
+        "file_compilation.rs",
+        "markdown_compilation.rs",
+        "compilation_report.rs",
+        "compiler_environment.rs",
+    ] {
+        assert!(compiler.join(current_file).is_file());
+    }
+    for retired_file in [
+        "compile_litex_source_to_lean_source.rs",
+        "compile_litex_file_to_lean_file.rs",
+        "compile_litex_markdown_code_blocks_to_lean_file.rs",
+        "stmt_result_to_lean_compilation_report.rs",
+        "stmt_result_to_lean_compiler_environment_stack.rs",
+    ] {
+        assert!(!compiler.join(retired_file).exists());
+    }
+    let runtime = root.join("src/runtime");
+    assert!(runtime.join("runtime_state.rs").is_file());
+    assert!(!runtime.join("runtime.rs").exists());
     assert!(root.join("tests/unit").is_dir());
     assert!(root.join("tests/integration").is_dir());
     assert!(root.join("tests/tooling").is_dir());
+}
+
+#[test]
+fn cli_dispatch_delegates_execution_and_path_resolution_to_their_owners() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let dispatch = fs::read_to_string(root.join("src/cli/command_dispatch.rs"))
+        .expect("CLI dispatch source should be readable");
+    let handlers = fs::read_to_string(root.join("src/cli/command_handlers.rs"))
+        .expect("CLI handler source should be readable");
+    let source_execution = fs::read_to_string(root.join("src/pipeline/source_execution.rs"))
+        .expect("source execution source should be readable");
+    let runner_execution = fs::read_to_string(root.join("src/runner/target_execution.rs"))
+        .expect("runner execution source should be readable");
+    let runner_module = fs::read_to_string(root.join("src/runner/mod.rs"))
+        .expect("runner module source should be readable");
+
+    assert!(dispatch.contains("run_code_command("));
+    assert!(!dispatch.contains("Runtime::new()"));
+    assert!(!handlers.contains("command_dispatch::"));
+    assert!(handlers.contains("resolve_source_file_path(file_flag)"));
+    assert!(source_execution.contains("pub fn resolve_source_file_path("));
+    assert!(runner_execution.contains("resolve_source_file_path(file_path)"));
+    assert!(!runner_execution.contains("fn resolve_litex_file_path("));
+    assert!(runner_module
+        .contains("pub use crate::pipeline::resolve_source_file_path as resolve_litex_file_path;"));
+}
+
+#[test]
+fn source_and_test_paths_do_not_repeat_their_parent_name() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let source_root = root.join("src");
+    let repeated_source_directories: Vec<_> = directories_below(&source_root)
+        .into_iter()
+        .filter(|path| {
+            let Some(name) = path.file_name() else {
+                return false;
+            };
+            path.parent()
+                .and_then(Path::file_name)
+                .is_some_and(|parent_name| parent_name == name)
+        })
+        .collect();
+    assert!(
+        repeated_source_directories.is_empty(),
+        "source directories must use responsibility names instead of repeating their parent: {repeated_source_directories:#?}"
+    );
+
+    let repeated_source_files: Vec<_> = rust_files_below(&source_root)
+        .into_iter()
+        .filter(|path| {
+            let Some(stem) = path.file_stem() else {
+                return false;
+            };
+            path.parent()
+                .and_then(Path::file_name)
+                .is_some_and(|parent_name| parent_name == stem)
+        })
+        .collect();
+    assert!(
+        repeated_source_files.is_empty(),
+        "source files must name their responsibility instead of repeating their parent: {repeated_source_files:#?}"
+    );
+
+    let unit_test_root = root.join("tests/unit");
+    let repeated_test_directories: Vec<_> = directories_below(&unit_test_root)
+        .into_iter()
+        .filter(|path| {
+            let Some(name) = path.file_name() else {
+                return false;
+            };
+            path.parent()
+                .and_then(Path::file_name)
+                .is_some_and(|parent_name| parent_name == name)
+        })
+        .collect();
+    assert!(
+        repeated_test_directories.is_empty(),
+        "unit-test directories must mirror responsibilities without repeating their parent: {repeated_test_directories:#?}"
+    );
 }

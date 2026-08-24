@@ -7,7 +7,7 @@ run_source_code(source, runtime)
   blocks = Tokenizer.parse_blocks(source)
   for block in blocks:
     stmt = runtime.parse_stmt(block)
-    result = run_stmt_at_global_env(runtime, stmt)
+    result = execute_top_level_statement(stmt, runtime)
     collect result or stop at RuntimeError
   render results, errors, and optional summary
 ```
@@ -26,8 +26,9 @@ run_source_code(source, runtime)
 
 | File | Example |
 | --- | --- |
-| [`pipeline.rs`](pipeline.rs) | Selects code, file, or repository execution for `-e`, `-f`, and `-r`. |
-| [`pipeline_run_stmt_globally.rs`](pipeline_run_stmt_globally.rs) | Runs each parsed statement in the global environment. |
+| [`source_execution.rs`](source_execution.rs) | Selects code, file, or repository execution for `-e`, `-f`, and `-r`, and canonically resolves relative source-file targets; the former public `pipeline` module name remains a compatibility alias. |
+| [`top_level_statement_execution.rs`](top_level_statement_execution.rs) | Executes one parsed top-level statement and owns isolated terminal imports. |
+| [`repository_execution.rs`](repository_execution.rs) | Runs ordered project imports, module trees, file targets, and registered prefixes. |
+| [`pipeline_run_stmt_globally.rs`](pipeline_run_stmt_globally.rs) | Retains the former public module path as a compatibility facade only. |
 | [`pipeline_session.rs`](pipeline_session.rs) | Keeps one runtime alive for `-session`. |
 | [`summary.rs`](summary.rs) | Builds the optional `-summarize` output. |
-

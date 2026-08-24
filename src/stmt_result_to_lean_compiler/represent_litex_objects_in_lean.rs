@@ -176,6 +176,7 @@ pub enum LeanTargetBuiltinObjectOperator {
     Pow,
     Abs,
     Sin,
+    Arcsin,
     Cos,
     Tan,
     Cot,
@@ -437,6 +438,11 @@ impl LeanTargetObjectRepresentation {
             Obj::Sin(value) => unary(
                 obj,
                 LeanTargetBuiltinObjectOperator::Sin,
+                value.arg.as_ref(),
+            ),
+            Obj::Arcsin(value) => unary(
+                obj,
+                LeanTargetBuiltinObjectOperator::Arcsin,
                 value.arg.as_ref(),
             ),
             Obj::Cos(value) => unary(

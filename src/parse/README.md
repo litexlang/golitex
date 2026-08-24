@@ -33,4 +33,11 @@ Runtime.parse_stmt(block)
 | [`tokenizer.rs`](tokenizer.rs) | Splits `forall x R:` and its indented body into one `TokenBlock`. |
 | [`parse_stmt.rs`](parse_stmt.rs) | Dispatches the first token `forall`, `have`, `claim`, or a bare fact. |
 | [`parse_fact.rs`](parse_fact.rs) | Builds equality, conjunction, chain, existential, and universal facts. |
-| [`parse_obj.rs`](parse_obj.rs) | Builds objects such as `x + 1`, `sin(x)`, or `{1, 2}`. |
+| [`parse_def_stmt.rs`](parse_def_stmt.rs) | Parses definition settings, templates, structs, propositions, trust definitions, and shared definition-header rules. |
+| [`parse_have_object_stmt.rs`](parse_have_object_stmt.rs) | Parses object, tuple, Cartesian, sequence, finite-sequence, and matrix `have` definitions. |
+| [`parse_have_function_stmt.rs`](parse_have_function_stmt.rs) | Parses equality, case-based, induction, and unique-existence function definitions. |
+| [`parse_obtain_and_algorithm_stmt.rs`](parse_obtain_and_algorithm_stmt.rs) | Parses `obtain`, preimage definitions, and algorithm branches. |
+| [`parse_obj.rs`](parse_obj.rs) | Owns object-expression precedence, numeric literals, call/field postfixes, and function-set syntax, such as `x + 1` and `f(x)`. |
+| [`parse_primary_obj.rs`](parse_primary_obj.rs) | Dispatches primary keyword and atom forms, including scalar, set, sequence/matrix, Cartesian, and iterated operators such as `sin(x)` and `sum(1, n, f)`. |
+| [`parse_obj_collections.rs`](parse_obj_collections.rs) | Parses argument groups, `unfold`, intervals, replacements, set builders, and set literals such as `{1, 2}`. |
+| [`parse_reference_obj.rs`](parse_reference_obj.rs) | Resolves bare and module-qualified names, struct views, field carriers, and template-backed reference types. |

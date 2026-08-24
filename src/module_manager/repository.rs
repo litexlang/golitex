@@ -43,10 +43,7 @@ pub fn discover_repository(
     let repository_root_string = path_string(&repository_root, repository_path, 0)?;
     let config_path_string = path_string(&config_path, repository_path, 0)?;
     let root_module_id = runtime
-        .new_repository_path_new_env_new_name_scope(
-            repository_root_string,
-            config_path_string.clone(),
-        )
+        .start_repository_run(repository_root_string, config_path_string.clone())
         .map_err(|message| repository_error(message, repository_path, 0))?;
 
     let mut mount_stack = vec![root_module_id];

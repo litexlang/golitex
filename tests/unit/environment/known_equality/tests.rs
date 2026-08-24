@@ -8,6 +8,24 @@ fn equality(left: &str, right: &str) -> EqualFact {
     EqualFact::new(named_obj(left), named_obj(right), default_line_file())
 }
 
+fn selected_real_template_instance() -> (Obj, Obj) {
+    let surface_name = "\\selected<R>".to_string();
+    let symbol = SymbolRef::new(SymbolId::new(700), surface_name.clone());
+    let surface_identifier: Obj = Identifier::new_bound(surface_name, symbol.clone()).into();
+    let instantiated_template: Obj = InstantiatedTemplateObj::new(
+        AtomicName::WithoutMod("selected".to_string()),
+        vec![StandardSet::R.into()],
+        symbol,
+    )
+    .into();
+    assert_eq!(
+        obj_equality_key(&surface_identifier),
+        obj_equality_key(&instantiated_template),
+        "the regression requires two Rust representations of one semantic object",
+    );
+    (surface_identifier, instantiated_template)
+}
+
 #[test]
 fn equality_classes_merge_and_enumerate_from_any_member() {
     let mut known = KnownEquality::new();
@@ -126,4 +144,54 @@ fn equality_proof_path_preserves_edge_order_and_orientation() {
     assert_eq!(backward[0].to.to_string(), "x1");
     assert_eq!(backward[1].from.to_string(), "x1");
     assert_eq!(backward[1].to.to_string(), "x0");
+}
+
+#[test]
+fn later_equality_endpoint_upgrades_a_surface_identifier_to_its_template_instance() {
+    let mut known = KnownEquality::new();
+    let (surface_identifier, instantiated_template) = selected_real_template_instance();
+    let ambient = named_obj("Ambient");
+    let template_key = obj_equality_key(&instantiated_template);
+
+    known.store(&EqualFact::new(
+        surface_identifier,
+        ambient.clone(),
+        default_line_file(),
+    ));
+    assert!(known
+        .get(&obj_equality_key(&ambient))
+        .expect("Ambient equality class")
+        .1
+        .iter()
+        .all(|member| !matches!(member, Obj::InstantiatedTemplateObj(_))));
+
+    // This equality is redundant at the semantic-key level, but it is the
+    // first time the equality store sees the concrete template-instance
+    // representation. The class must retain that richer representation.
+    known.store(&EqualFact::new(
+        instantiated_template,
+        ambient.clone(),
+        default_line_file(),
+    ));
+
+    let (_, members) = known
+        .get(&obj_equality_key(&ambient))
+        .expect("Ambient equality class remains available");
+    assert_eq!(
+        members
+            .iter()
+            .filter(|member| matches!(member, Obj::InstantiatedTemplateObj(_)))
+            .count(),
+        1,
+        "the semantic key should deterministically retain one concrete template instance",
+    );
+    let template_key_members = members
+        .iter()
+        .filter(|member| obj_equality_key(member) == template_key)
+        .collect::<Vec<_>>();
+    assert_eq!(template_key_members.len(), 1);
+    assert!(matches!(
+        template_key_members[0],
+        Obj::InstantiatedTemplateObj(_)
+    ));
 }

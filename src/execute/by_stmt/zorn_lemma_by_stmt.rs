@@ -23,17 +23,19 @@ impl Runtime {
         let (mut inside_results, obligations_for_output) = self.run_in_local_env(|rt| {
             let mut inside_results: Vec<StmtResult> = Vec::new();
             for proof_stmt in stmt.proof.iter() {
-                let result = rt.exec_stmt(proof_stmt).map_err(|statement_error| {
-                    short_exec_error(
-                        stmt.clone().into(),
-                        format!(
-                            "by zorn_lemma: failed to execute proof stmt `{}`",
-                            proof_stmt
-                        ),
-                        Some(statement_error),
-                        std::mem::take(&mut inside_results),
-                    )
-                })?;
+                let result = rt
+                    .execute_statement(proof_stmt)
+                    .map_err(|statement_error| {
+                        short_exec_error(
+                            stmt.clone().into(),
+                            format!(
+                                "by zorn_lemma: failed to execute proof stmt `{}`",
+                                proof_stmt
+                            ),
+                            Some(statement_error),
+                            std::mem::take(&mut inside_results),
+                        )
+                    })?;
                 inside_results.push(result);
             }
 
@@ -51,10 +53,7 @@ impl Runtime {
                     continue;
                 }
                 let result = rt
-                    .verify_fact_return_err_if_not_true(
-                        &fact,
-                        &UseContextVerifyState::new(0, false),
-                    )
+                    .verify_fact_or_error(&fact, &UseContextVerifyState::new(0, false))
                     .map_err(|verify_error| {
                         short_exec_error(
                             stmt.clone().into(),

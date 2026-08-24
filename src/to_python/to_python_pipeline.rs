@@ -1,4 +1,3 @@
-use crate::pipeline::execute_top_level_statement;
 use crate::prelude::*;
 use std::collections::HashSet;
 use std::env;
@@ -24,7 +23,7 @@ pub fn to_python(source_code: &str, runtime: &mut Runtime) -> Result<String, Run
 pub fn to_python_from_source(source_code: &str, entry_label: &str) -> Result<String, RuntimeError> {
     let normalized = source_code.replace('\r', "");
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(entry_label);
+    runtime.start_isolated_source(entry_label);
     to_python(normalized.as_str(), &mut runtime)
 }
 
@@ -35,7 +34,7 @@ pub fn to_python_from_file(file_path: &str) -> Result<String, RuntimeError> {
         Some(target) => to_python_project_run(&mut runtime, target),
         None => {
             let source = read_source(resolved_path.as_str())?;
-            runtime.new_file_path_new_env_new_name_scope(resolved_path.as_str());
+            runtime.start_isolated_source(resolved_path.as_str());
             to_python(source.as_str(), &mut runtime)
         }
     }
@@ -650,7 +649,7 @@ impl PythonExtractor {
                     "python extractor v1 does not support native complex coordinate or modulus expressions",
                 ))
             }
-            Obj::Sin(_) | Obj::Cos(_) | Obj::Tan(_) | Obj::Cot(_) => {
+            Obj::Sin(_) | Obj::Arcsin(_) | Obj::Cos(_) | Obj::Tan(_) | Obj::Cot(_) => {
                 Err(python_extract_error(
                     line_file,
                     "python extractor v1 does not support native trigonometric expressions",

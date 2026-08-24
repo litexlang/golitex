@@ -26,7 +26,7 @@ pub struct KnownForallProfileSnapshot {
     pub requirement_failures: u64,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub enum KnownForallSearchPhase {
     ExactShape,
     Fallback,

@@ -14,7 +14,7 @@ fn numeric_fact_json_v2_retains_normalization_store_and_infer() {
         .parse_stmt(&mut blocks[0])
         .expect("numeric membership parses");
     let result = runtime
-        .exec_stmt(&stmt)
+        .execute_statement(&stmt)
         .expect("numeric membership verifies");
 
     let success = result
@@ -129,7 +129,7 @@ fn refined_standard_set_infer_json_v2_retains_typed_source_carrier() {
             .parse_stmt(&mut blocks[0])
             .expect("refined standard-set membership parses");
         let result = runtime
-            .exec_stmt(&stmt)
+            .execute_statement(&stmt)
             .expect("refined standard-set membership verifies");
         let fact = result
             .factual_success()
@@ -168,7 +168,9 @@ fn object_choice_json_v2_retains_typed_standard_set_nonempty_child_evidence() {
     let stmt = runtime
         .parse_stmt(&mut blocks[0])
         .expect("object choice parses");
-    let result = runtime.exec_stmt(&stmt).expect("object choice verifies");
+    let result = runtime
+        .execute_statement(&stmt)
+        .expect("object choice verifies");
 
     let StmtResult::Success(SuccessStmtResult::DefObjStmt(
         SuccessDefObjStmtResult::HaveObjInNonemptySetStmt(choice),
@@ -213,7 +215,7 @@ fn claim_json_v2_serializes_named_verification_fields_and_children() {
         )
         .expect("claim tokenizes");
     let stmt = runtime.parse_stmt(&mut blocks[0]).expect("claim parses");
-    let result = runtime.exec_stmt(&stmt).expect("claim verifies");
+    let result = runtime.execute_statement(&stmt).expect("claim verifies");
 
     let StmtResult::Success(SuccessStmtResult::ProofBlock(SuccessProofBlockStmtResult::ClaimStmt(
         claim,
@@ -258,7 +260,7 @@ fn set_builder_wd_scope_is_owned_by_recursive_binder_fields() {
         .parse_stmt(&mut blocks[0])
         .expect("set-builder equality parses");
     let result = runtime
-        .exec_stmt(&stmt)
+        .execute_statement(&stmt)
         .expect("set-builder equality verifies");
 
     let fact = result
@@ -322,7 +324,7 @@ fn anonymous_function_wd_keeps_each_body_inside_its_own_binder_result() {
         .parse_stmt(&mut blocks[0])
         .expect("anonymous-function equality parses");
     let result = runtime
-        .exec_stmt(&stmt)
+        .execute_statement(&stmt)
         .expect("alpha-equivalent anonymous functions verify");
     let fact = result.factual_success().expect("result is factual");
     let SuccessVerifyFactWellDefinedProofResult::AtomicFact(wd) = fact
@@ -391,7 +393,7 @@ fn forall_wd_returns_binder_premise_and_conclusion_layers() {
         )
         .expect("forall tokenizes");
     let stmt = runtime.parse_stmt(&mut blocks[0]).expect("forall parses");
-    let result = runtime.exec_stmt(&stmt).expect("forall verifies");
+    let result = runtime.execute_statement(&stmt).expect("forall verifies");
     let fact = result.factual_success().expect("result is factual");
     let SuccessVerifyFactWellDefinedProofResult::ForallFact(wd) = fact
         .well_definedness
@@ -425,7 +427,9 @@ fn partial_predicate_wd_retains_its_domain_proof_result() {
     let stmt = runtime
         .parse_stmt(&mut blocks[0])
         .expect("prime fact parses");
-    let result = runtime.exec_stmt(&stmt).expect("prime fact verifies");
+    let result = runtime
+        .execute_statement(&stmt)
+        .expect("prime fact verifies");
     let fact = result.factual_success().expect("result is factual");
     let SuccessVerifyFactWellDefinedProofResult::AtomicFact(wd) = fact
         .well_definedness

@@ -1,6 +1,6 @@
 # Compiler examples
 
-This directory is the canonical generated ledger for examples targeting the
+This directory is the canonical generated example record for sources targeting the
 `stmt_result_to_lean_compiler` ABI. Every example has one authoritative `.lit`
 source and one same-name generated `.lean` output. It must not import or depend
 on the archived universal-`Litex.Object` ABI.
@@ -9,7 +9,8 @@ Every generated file imports the public `Litex` umbrella module. The umbrella
 owns the internal module list, so adding supported theorem or strategy modules
 does not require changing the generated import header.
 
-Refresh every pair from fresh Litex verification and verifier-owned IR:
+Refresh every pair from fresh Litex verification and verifier-owned recursive
+Results:
 
 ```sh
 cd lean
@@ -203,7 +204,7 @@ cover all four constructors, base/supercarrier projections, adjacent
 `Z* → Q* → R* → C*` widening, and verifier-inferred membership-to-`!= 0`
 elimination without a coherence premise. Verified closed reflection
 `1 $in Z*` is the paired negative boundary because its closed non-equality
-child has no reviewed standalone emitter.
+child has no reviewed standalone Lean proof rendering route.
 
 `23_MultilayerApplication.lit` traces exact unary source-layer chains and one
 same-layer dependent telescope.
@@ -361,6 +362,40 @@ child, the subtraction operand reversal, and strictness before selecting the
 Lean adapter for `v <= u -> 0 <= u - v`, `v < u -> 0 < u - v`, or the
 strict-to-weak `a > b -> a >= b` conversion. Reordering a parameter child with
 the semantic comparison fails closed.
+
+`50_SetExtensionResultComposition.lit` compiles the two directional children
+of `by extension` in one inherited compiler environment and closes the exact
+set equality with `Litex.Same.setExt`.
+
+`51_FiniteEnumerationResultComposition.lit` retains every finite assignment,
+its local equality FactId, and its conclusion Result. Each branch is compiled
+in its own inherited environment.
+
+`52_IntegerRangeIterationResultComposition.lit` adds recursive endpoint
+evaluation and ordered range assignments to the same branch-owned model.
+
+`53_RuntimeResolvedComparisonFromDefinitionResults.lit` checks that prior
+definition Results publish the exact object bindings needed to validate and
+compile a later runtime-resolved comparison and its typed inference child.
+
+`54_ComplexAlgebraicCalculation.lit` replays exact complex normalization,
+ordered nonzero children, and division/power side conditions without asking
+Lean to rediscover the source proof.
+
+`55_TemplateSequenceInstantiationResult.lit` compiles one reviewed template
+family, one created instance, and one reused instance directly from their
+successful Results.
+
+`56_StructuredIntegerInductionResult.lit` pairs closed numeric membership with
+a structured induction Result whose base, step, local assumptions, conclusion
+checks, and outer store remain explicitly nested.
+
+`57_KnownForallFactIdProvenance.lit` proves two grouped conclusions from one
+stored universal. Each indexed conclusion retains the complete source forall,
+its exact FactId, and a structural conclusion location. The second application
+also reuses a parameter-membership FactId recursively produced while compiling
+the first conclusion; corrupting either the source FactId or location fails
+closed.
 
 Generated `.lean` files are review artifacts, not editing surfaces. A new
 compiler feature must add the next numbered same-name pair. Unsupported

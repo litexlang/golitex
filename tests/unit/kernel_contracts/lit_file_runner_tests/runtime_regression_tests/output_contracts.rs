@@ -649,64 +649,6 @@ fn source_execution_requires_an_active_context() {
 }
 
 #[test]
-fn runner_success_returns_trace() {
-    let (ok, output) = run_runner_for_code("1 + 1 = 2", "-runner-test", true);
-
-    assert!(ok, "runner success run failed:\n{}", output);
-    assert!(output.contains("\"runner\": \"litex-runner\""));
-    assert!(output.contains("\"result\": \"success\""));
-    assert!(output.contains("\"trace\""));
-}
-
-#[test]
-fn runner_failure_returns_trace() {
-    let (ok, output) = run_runner_for_code("1 = 0", "-runner-test", true);
-
-    assert!(!ok, "runner unknown run should fail:\n{}", output);
-    assert!(output.contains("\"result\": \"error\""));
-    assert!(output.contains("\\\"error_type\\\": \\\"VerifyError\\\""));
-    assert!(output.contains("\\\"error_type\\\": \\\"UnknownError\\\""));
-    assert!(output.contains("\\\"phases\\\": {"));
-    assert!(output.contains("\\\"failed_goal\\\": \\\"1 = 0\\\""));
-    assert!(output.contains("\\\"unknown_result\\\": {"));
-}
-
-#[test]
-fn runner_target_error_returns_message() {
-    let (ok, output) = run_runner_for_file("does_not_exist.lit", true);
-
-    assert!(!ok, "runner target error should fail:\n{}", output);
-    assert!(output.contains("\"target\": {\n    \"kind\": \"file\",\n    \"label\": \"entry\""));
-    assert!(output.contains("\"error\": null"));
-    assert!(output.contains("\\\"error_type\\\": \\\"ParseError\\\""));
-    assert!(output.contains("\\\"source_kind\\\": \\\"file\\\""));
-    assert!(output.contains("does_not_exist.lit"));
-    assert!(!output.contains("\"kind\": \"target_error\""));
-}
-
-#[test]
-fn runner_accepts_trust_as_normal_execution() {
-    let (ok, output) = run_runner_for_code("trust 1 = 0", "-runner-test", true);
-
-    assert!(ok, "runner should not reject trust statements:\n{}", output);
-    assert!(output.contains("\"result\": \"success\""));
-}
-
-#[test]
-fn runner_accepts_trust_have_as_normal_execution() {
-    run_with_large_stack("runner_accepts_trust_have_as_normal_execution", || {
-        let (ok, output) = run_runner_for_code("trust have x R", "-runner-test", true);
-
-        assert!(
-            ok,
-            "runner should not reject trust have statements:\n{}",
-            output
-        );
-        assert!(output.contains("\"result\": \"success\""));
-    });
-}
-
-#[test]
 fn zh_output_localizes_unproved_trust_labels() {
     let source_code = "abstract_prop tmp_rel(m, n)\ntrust exist! m, n R st {$tmp_rel(m, n)}\n";
     let mut runtime = Runtime::new();
@@ -743,8 +685,10 @@ fn zh_output_localizes_citation_evidence_but_keeps_litex_statement() {
         run_output
     );
     assert!(run_output.contains("\"verification\""));
-    assert!(run_output.contains("\"kind\": \"StoredFactCitation\""));
-    assert!(run_output.contains("\"cited_statement\": \"prop is_one_tmp(t R):\\n"));
+    assert!(run_output.contains("\"kind\": \"DefinitionReduction\""));
+    assert!(run_output.contains("\"definition\": \"prop is_one_tmp(t R):\\n"));
+    assert!(run_output.contains("\"argument_verification\""));
+    assert!(run_output.contains("\"clause_checks\": ["));
     assert!(run_output.contains("\"statement\": \"$is_one_tmp(1)\""));
 }
 
@@ -791,26 +735,12 @@ $can_be_divided_by_2(x)
         run_output
     );
     assert!(run_output.contains("\"kind\": \"KnownForallInstantiation\""));
-    assert!(run_output.contains("\"cited_statement\": \"forall x Z:\\n    $can_be_divided_by_8(x)\\n    =>:\\n        $can_be_divided_by_2(x)\""));
+    assert!(run_output.contains("\"source_fact\": \"forall x Z:\\n    $can_be_divided_by_8(x)\\n    =>:\\n        $can_be_divided_by_2(x)\""));
+    assert!(run_output.contains("\"source_fact_id\": \"f"));
+    assert!(run_output.contains("\"source_conclusion_location\""));
     assert!(run_output.contains("\"verification\""));
     assert!(run_output.contains("\"instantiation\": ["));
     assert!(run_output.contains("\"requirements\": ["));
-}
-
-#[test]
-fn zh_runner_keeps_machine_wrapper_keys_and_localizes_trace() {
-    let (ok, output) = run_runner_for_code_with_language(
-        "trust 1 = 1",
-        "-runner-test",
-        true,
-        OutputLanguage::SimplifiedChinese,
-    );
-
-    assert!(ok, "Chinese runner should succeed:\n{}", output);
-    assert!(output.contains("\"runner\": \"litex-runner\""));
-    assert!(output.contains("\"result\": \"success\""));
-    assert!(output.contains("\"trace\""));
-    assert!(output.contains("\\\"kind\\\": \\\"TrustStmt\\\""));
 }
 
 #[test]
@@ -1025,149 +955,6 @@ fn non_english_languages_localize_unproved_trust_labels() {
 }
 
 #[test]
-fn non_english_runner_keeps_machine_wrapper_keys() {
-    let cases = vec![
-        (
-            OutputLanguage::SimplifiedChinese,
-            "运行器",
-            "结果",
-            "成功",
-            "是否成功",
-            "运行目标",
-            "运行轨迹",
-        ),
-        (
-            OutputLanguage::TraditionalChinese,
-            "執行器",
-            "結果",
-            "成功",
-            "是否成功",
-            "目標",
-            "執行追蹤",
-        ),
-        (
-            OutputLanguage::Japanese,
-            "ランナー",
-            "結果",
-            "成功",
-            "成功",
-            "対象",
-            "実行トレース",
-        ),
-        (
-            OutputLanguage::Korean,
-            "러너",
-            "결과",
-            "성공",
-            "성공 여부",
-            "대상",
-            "실행 추적",
-        ),
-        (
-            OutputLanguage::Spanish,
-            "ejecutor",
-            "resultado",
-            "éxito",
-            "correcto",
-            "objetivo",
-            "traza",
-        ),
-        (
-            OutputLanguage::French,
-            "exécuteur",
-            "résultat",
-            "succès",
-            "réussi",
-            "cible",
-            "trace",
-        ),
-        (
-            OutputLanguage::German,
-            "Runner",
-            "Ergebnis",
-            "Erfolg",
-            "erfolgreich",
-            "Ziel",
-            "Ablaufspur",
-        ),
-        (
-            OutputLanguage::Portuguese,
-            "executor",
-            "resultado",
-            "sucesso",
-            "bem_sucedido",
-            "alvo",
-            "rastreamento",
-        ),
-        (
-            OutputLanguage::Russian,
-            "запускатель",
-            "результат",
-            "успех",
-            "успешно",
-            "цель",
-            "трасса",
-        ),
-        (
-            OutputLanguage::Arabic,
-            "المشغل",
-            "النتيجة",
-            "نجاح",
-            "ناجح",
-            "الهدف",
-            "الأثر",
-        ),
-        (
-            OutputLanguage::Hindi,
-            "रनर",
-            "परिणाम",
-            "सफलता",
-            "सफल",
-            "लक्ष्य",
-            "चलन_चिह्न",
-        ),
-        (
-            OutputLanguage::Vietnamese,
-            "trình_chạy",
-            "kết_quả",
-            "thành công",
-            "đúng",
-            "mục_tiêu",
-            "vết_chạy",
-        ),
-        (
-            OutputLanguage::Indonesian,
-            "runner",
-            "hasil",
-            "sukses",
-            "berhasil",
-            "target",
-            "jejak",
-        ),
-    ];
-
-    for (language, runner_key, result_key, success_text, ok_key, target_key, trace_key) in cases {
-        let (ok, output) =
-            run_runner_for_code_with_language("trust 1 = 1", "-runner-test", true, language);
-
-        assert!(ok, "localized runner should succeed:\n{}", output);
-        let _legacy_localized_fields = (
-            runner_key,
-            result_key,
-            success_text,
-            ok_key,
-            target_key,
-            trace_key,
-        );
-        assert!(output.contains("\"runner\": \"litex-runner\""));
-        assert!(output.contains("\"result\": \"success\""));
-        assert!(output.contains("\"ok\": true"));
-        assert!(output.contains("\"target\""));
-        assert!(output.contains("\"trace\""));
-    }
-}
-
-#[test]
 fn axiom_declares_named_theorem_like_forall_fact() {
     let source_code = r#"
 abstract_prop axiom_prop(x)
@@ -1317,52 +1104,6 @@ axiom strict_axiom:
 }
 
 #[test]
-fn strict_runner_rejects_user_trust() {
-    let (ok, output) = run_runner_for_code_strict("trust 1 = 0", "-runner-test", true);
-
-    assert!(
-        !ok,
-        "strict runner should reject trust statements:\n{}",
-        output
-    );
-    assert!(output.contains("\"result\": \"error\""));
-    assert!(output.contains(TrustStmt::strict_mode_rejection_message()));
-}
-
-#[test]
-fn strict_runner_rejects_user_axiom() {
-    let source_code = r#"
-axiom strict_axiom:
-    ? forall:
-        1 = 1
-"#;
-    let (ok, output) = run_runner_for_code_strict(source_code, "-runner-test", true);
-
-    assert!(
-        !ok,
-        "strict runner should reject axiom statements:\n{}",
-        output
-    );
-    assert!(output.contains("\"result\": \"error\""));
-    assert!(output.contains(AxiomStmt::strict_mode_rejection_message()));
-}
-
-#[test]
-fn strict_runner_rejects_user_trust_have() {
-    run_with_large_stack("strict_runner_rejects_user_trust_have", || {
-        let (ok, output) = run_runner_for_code_strict("trust have x R", "-runner-test", true);
-
-        assert!(
-            !ok,
-            "strict runner should reject trust have statements:\n{}",
-            output
-        );
-        assert!(output.contains("\"result\": \"error\""));
-        assert!(output.contains(TrustHaveStmt::strict_mode_rejection_message()));
-    });
-}
-
-#[test]
 fn citation_verified_by_type_reflects_cited_stmt_kind() {
     let source_code = r#"
 abstract_prop p(x)
@@ -1394,8 +1135,10 @@ $q(1)
     assert!(run_output.contains("\"requirements\""));
     assert!(run_output.contains("\"statement\": \"2 $in R\""));
     assert!(run_output.contains("\"kind\": \"StoredFactCitation\""));
-    assert!(run_output.contains("\"cited_statement\": \"a = 1\""));
-    assert!(run_output.contains("\"cited_statement\": \"prop q(x R):\\n"));
+    assert!(run_output.contains("\"source_fact\": \"a = 1\""));
+    assert!(run_output.contains("\"source_fact_id\": \"f"));
+    assert!(run_output.contains("\"kind\": \"DefinitionReduction\""));
+    assert!(run_output.contains("\"definition\": \"prop q(x R):\\n"));
 }
 
 #[test]
@@ -2478,7 +2221,7 @@ pub(super) fn detail_output_keeps_composite_fact_step_metadata() {
     assert!(run_output.contains("\"kind\": \"AndFact\""));
     assert!(run_output.contains("\"kind\": \"ChainFact\""));
     assert!(run_output.contains("\"kind\": \"CombinedProofs\""));
-    assert!(run_output.contains("\"proofs\": ["));
+    assert!(run_output.contains("\"steps\": ["));
     assert!(run_output.contains("\"statement\": \"1 = 1\""));
     assert!(run_output.contains("\"statement\": \"2 = 2\""));
 }

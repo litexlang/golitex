@@ -8,11 +8,14 @@ forall x R:
 ```
 
 ```text
-verify_fact(1 + 1 = 2)
-  verify_well_defined(1 + 1 = 2)
-  dispatch EqualFact
-  try closed numeric evaluation
-  record RationalNormalization evidence
+exec_fact(1 + 1 = 2)
+  verify_fact_well_defined_for_execution(1 + 1 = 2)
+  verify_fact_or_error(1 + 1 = 2)
+    verify_fact_allow_unknown(1 + 1 = 2)
+    dispatch EqualFact
+    try closed numeric evaluation
+    record RationalNormalization evidence
+  store_executed_fact_and_infer(1 + 1 = 2)
   return SuccessFactStmtResult
 ```
 

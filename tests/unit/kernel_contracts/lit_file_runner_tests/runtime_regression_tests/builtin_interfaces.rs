@@ -357,7 +357,10 @@ $positive(1)
         succeeded,
         "a positive concrete prop should fold from all checked clauses:\n{output}"
     );
-    assert!(output.contains("\"kind\": \"StoredFactCitation\""));
+    assert!(output.contains("\"kind\": \"DefinitionReduction\""));
+    assert!(output.contains("\"definition\": \"prop positive(x R):\\n    x > 0\""));
+    assert!(output.contains("\"argument_verification\""));
+    assert!(output.contains("\"clause_checks\": ["));
 
     let missing_clause = r#"
 prop positive_and_large(x R):

@@ -2,7 +2,7 @@ use super::*;
 
 #[test]
 fn native_trigonometric_objects_have_reserved_syntax_and_stable_kinds() {
-    for name in [SIN, COS, TAN, COT] {
+    for name in [SIN, ARCSIN, COS, TAN, COT] {
         assert!(is_keyword(name), "{name} should be hard reserved");
         assert!(
             !is_builtin_identifier_name(name),
@@ -19,6 +19,10 @@ fn native_trigonometric_objects_have_reserved_syntax_and_stable_kinds() {
     assert_eq!(Obj::from(Cos::new(zero.clone())).kind_id(), 77);
     assert_eq!(Obj::from(Tan::new(zero.clone())).kind_id(), 78);
     assert_eq!(Obj::from(Cot::new(zero)).kind_id(), 79);
+    assert_eq!(
+        Obj::from(Arcsin::new(Number::new("0".to_string()).into())).kind_id(),
+        95
+    );
 }
 
 #[test]
@@ -125,6 +129,56 @@ forall x R:
             );
         },
     );
+}
+
+#[test]
+fn native_arcsin_enforces_domain_and_principal_branch() {
+    let accepted = r#"
+arcsin(0) = 0
+arcsin(1) = pi / 2
+arcsin(-1) = -pi / 2
+
+forall x R:
+    -1 <= x
+    x <= 1
+    =>:
+        arcsin(x) $in R
+        sin(arcsin(x)) = x
+        -pi / 2 <= arcsin(x)
+        arcsin(x) <= pi / 2
+
+forall y R:
+    -pi / 2 <= y
+    y <= pi / 2
+    =>:
+        arcsin(sin(y)) = y
+
+forall u, y R:
+    -1 <= u
+    u <= 1
+    -pi / 2 <= y
+    y <= pi / 2
+    u = sin(y)
+    =>:
+        arcsin(u) = y
+"#;
+    let (run_succeeded, run_output) =
+        run_trigonometric_source(accepted, "native_arcsin_principal_contract");
+    assert!(run_succeeded, "{run_output}");
+
+    for (source_code, label) in [
+        ("arcsin(2) $in R", "arcsin_rejects_out_of_domain_argument"),
+        (
+            "arcsin(sin(pi)) = pi",
+            "arcsin_rejects_wrong_principal_branch",
+        ),
+    ] {
+        let (run_succeeded, run_output) = run_trigonometric_source(source_code, label);
+        assert!(
+            !run_succeeded,
+            "{label} must remain rejected:\n{run_output}"
+        );
+    }
 }
 
 #[test]
@@ -429,7 +483,7 @@ fn native_trigonometry_does_not_gain_unstated_special_values() {
 
 #[test]
 fn native_trigonometric_names_are_hard_reserved_in_binding_positions() {
-    for name in [SIN, COS, TAN, COT] {
+    for name in [SIN, ARCSIN, COS, TAN, COT] {
         let source_code = format!("have {name} R");
         let (run_succeeded, run_output) =
             run_trigonometric_source(source_code.as_str(), "reserved_trig_name");
@@ -457,10 +511,14 @@ sine_value + cosine_value + tangent_value + cotangent_value = 10
 
 #[test]
 fn native_trigonometry_has_explicit_backend_boundaries() {
-    let latex = to_latex_from_source("sin(pi / 2) = 1\ncos(pi) = -1", "native_trigonometry_latex")
-        .expect("native trigonometry should convert to LaTeX");
+    let latex = to_latex_from_source(
+        "sin(pi / 2) = 1\ncos(pi) = -1\narcsin(0) = 0",
+        "native_trigonometry_latex",
+    )
+    .expect("native trigonometry should convert to LaTeX");
     assert!(latex.contains(r"\sin"), "{latex}");
     assert!(latex.contains(r"\cos"), "{latex}");
+    assert!(latex.contains(r"\arcsin"), "{latex}");
     assert!(latex.contains(r"\pi"), "{latex}");
 
     let python_error = to_python_from_source(

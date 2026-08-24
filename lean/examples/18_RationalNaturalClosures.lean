@@ -50,10 +50,10 @@ theorem __fact4 :
 theorem __fact5 :
     ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.N) (__p2 : ℂ) (__type2 : Litex.In __p2 Litex.N), Litex.In ((((Litex.In.rep __p1 __type1 : ℕ)) : ℂ) * (((Litex.In.rep __p2 __type2 : ℕ)) : ℂ)) Litex.N := by
   intro a __h5_1 b __h5_2
-  have __infer5_0 : Litex.Nonnegative a := Litex.Rules.nonnegativeOfInN (__h5_1)
-  have __infer5_1 : Litex.Nonpositive ((-1 : ℂ) * (((Litex.In.rep a __h5_1 : ℕ)) : ℂ)) := Litex.Rules.complexNegativeOneMulNonpositive ((Litex.Nonnegative.congr (Litex.Same.trans (Litex.In.same_rep a (__h5_1)) (Litex.Same.natComplex (Litex.In.rep a __h5_1)))).mp (__infer5_0))
-  have __infer5_2 : Litex.Nonnegative b := Litex.Rules.nonnegativeOfInN (__h5_2)
-  have __infer5_3 : Litex.Nonpositive ((-1 : ℂ) * (((Litex.In.rep b __h5_2 : ℕ)) : ℂ)) := Litex.Rules.complexNegativeOneMulNonpositive ((Litex.Nonnegative.congr (Litex.Same.trans (Litex.In.same_rep b (__h5_2)) (Litex.Same.natComplex (Litex.In.rep b __h5_2)))).mp (__infer5_2))
+  have __infer5_4 : Litex.Nonnegative a := Litex.Rules.nonnegativeOfInN (__h5_1)
+  have __infer5_5 : Litex.Nonpositive ((-1 : ℂ) * (((Litex.In.rep a __h5_1 : ℕ)) : ℂ)) := Litex.Rules.complexNegativeOneMulNonpositive ((Litex.Nonnegative.congr (Litex.Same.trans (Litex.In.same_rep a (__h5_1)) (Litex.Same.natComplex (Litex.In.rep a __h5_1)))).mp (__infer5_4))
+  have __infer5_6 : Litex.Nonnegative b := Litex.Rules.nonnegativeOfInN (__h5_2)
+  have __infer5_7 : Litex.Nonpositive ((-1 : ℂ) * (((Litex.In.rep b __h5_2 : ℕ)) : ℂ)) := Litex.Rules.complexNegativeOneMulNonpositive ((Litex.Nonnegative.congr (Litex.Same.trans (Litex.In.same_rep b (__h5_2)) (Litex.Same.natComplex (Litex.In.rep b __h5_2)))).mp (__infer5_6))
   have __c5_0 : Litex.In ((((Litex.In.rep a __h5_1 : ℕ)) : ℂ) * (((Litex.In.rep b __h5_2 : ℕ)) : ℂ)) Litex.N := Litex.Rules.complexMulInN (Litex.Rules.complexEqNatInN (((Litex.In.rep a __h5_1 : ℕ) : ℂ)) (Litex.In.rep a __h5_1 : ℕ) (by rfl)) (Litex.Rules.complexEqNatInN (((Litex.In.rep b __h5_2 : ℕ) : ℂ)) (Litex.In.rep b __h5_2 : ℕ) (by rfl))
   exact __c5_0
 

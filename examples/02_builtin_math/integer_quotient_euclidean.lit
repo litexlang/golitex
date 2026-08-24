@@ -8,7 +8,6 @@
 
 # Active interface: quot is a kernel object, so no std import is needed.
 # Boundary: the dividend must be in Z and the divisor must be in N+.
-# Evidence: target/release/litex -isolated -f examples/02_builtin_math/integer_quotient_euclidean.lit
 
 forall a Z, d N+:
     quot(a, d) $in Z

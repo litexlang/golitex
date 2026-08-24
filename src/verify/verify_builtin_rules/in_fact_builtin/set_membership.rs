@@ -71,7 +71,7 @@ impl Runtime {
         if self.set_builder_forall_transport_is_active() {
             return Ok(None);
         }
-        let forall_memberships: Vec<(InFact, Rc<KnownForallFactParamsAndDom>)> = self
+        let forall_memberships: Vec<(InFact, Rc<StoredForallConclusionReference>)> = self
             .iter_environments_from_top()
             .flat_map(|environment| {
                 environment
@@ -172,7 +172,7 @@ impl Runtime {
     ) -> Result<Option<StmtResult>, RuntimeError> {
         if !matches!(goal, AtomicFact::InFact(_)) && !self.set_builder_forall_transport_is_active()
         {
-            let forall_memberships: Vec<(InFact, Rc<KnownForallFactParamsAndDom>)> = self
+            let forall_memberships: Vec<(InFact, Rc<StoredForallConclusionReference>)> = self
                 .iter_environments_from_top()
                 .flat_map(|environment| {
                     environment
@@ -1355,7 +1355,7 @@ impl Runtime {
                 })?;
 
             let instantiated_fact_result =
-                self.verify_fact_full(&instantiated_fact.to_fact(), verify_state)?;
+                self.verify_fact_allow_unknown(&instantiated_fact.to_fact(), verify_state)?;
             if !instantiated_fact_result.is_true() {
                 return Ok((UnknownGenericStmtResult::new()).into());
             }
@@ -1514,7 +1514,7 @@ impl Runtime {
             // A structure's equivalent facts are its membership obligations. They
             // may be universal laws, such as associativity, so use the ordinary
             // verifier rather than the restricted atomic builtin path.
-            let fact_result = self.verify_fact_full(&instantiated_fact, verify_state)?;
+            let fact_result = self.verify_fact_allow_unknown(&instantiated_fact, verify_state)?;
             if !fact_result.is_true() {
                 return Ok((UnknownGenericStmtResult::new()).into());
             }
@@ -1839,8 +1839,19 @@ impl Runtime {
         indexed_fact: AtomicFact,
         detail: &str,
     ) -> Result<StmtResult, RuntimeError> {
+        let module_names = self.atomic_fact_referenced_module_names(&indexed_fact);
         let fact: Fact = indexed_fact.into();
-        let source_fact_id = self.require_known_fact_id_for_success_result(&fact)?;
+        let source_fact_id = self
+            .fact_id_for_transport_fact(&fact, &module_names)
+            .ok_or_else(|| {
+                UnknownRuntimeError(RuntimeErrorStruct::new(
+                    Some(fact.clone().into_stmt()),
+                    format!("successful indexed fact reference has no stored FactId: `{fact}`"),
+                    fact.line_file(),
+                    None,
+                    vec![],
+                ))
+            })?;
         Ok(SuccessFactStmtResult::new_with_verified_by_known_fact(
             fact.clone(),
             SuccessFactProofResult::stored_fact_citation(

@@ -23,4 +23,5 @@ later goal `a + 1 = 2`
 | A fact inside a failed `try:` | Is discarded with that temporary environment. |
 | A cached proof from a popped local scope | Cannot be retargeted to a different ambient fact merely because the text matches. |
 
-Start with [`environment.rs`](environment.rs) for the stored world and [`known_equality.rs`](known_equality.rs) for examples such as `a = 1 = b`.
+Start with [`environment_state.rs`](environment_state.rs) for the stored world
+and [`known_equality.rs`](known_equality.rs) for examples such as `a = 1 = b`.

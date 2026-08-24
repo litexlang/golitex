@@ -20,4 +20,3 @@ by extension {1} = {1}
 #
 # Boundary: `forall a R: a > 0 => {a > 0}`, `claim forall ...`,
 # `by for forall ...`, and `by enumerate finite_set forall ...` are rejected.
-# Evidence: target/release/litex -compact -isolated -runner -f examples/03_language_features/inline_forall.lit

@@ -52,6 +52,36 @@ fn committed_child_reuses_exact_symbol_identity_idempotently() {
 }
 
 #[test]
+fn committed_child_preserves_missing_declaration_type_views_for_the_same_symbol() {
+    let mut parent = Environment::new_empty_env();
+    let mut child = Environment::new_empty_env();
+    insert_object(&mut parent, "shared", 17, ParamObjType::Identifier);
+    insert_object(&mut child, "shared", 17, ParamObjType::Identifier);
+    child
+        .symbols
+        .get_by_id_mut(SymbolId::new(17))
+        .expect("the child symbol should exist")
+        .remember_default_struct_view_if_absent(StructObj::new(
+            AtomicName::WithoutMod("Pair".to_string()),
+            vec![],
+        ));
+
+    parent
+        .merge_committed_child(child)
+        .expect("matching symbol identity should merge declaration metadata");
+
+    assert_eq!(
+        parent
+            .symbols
+            .get_by_id(SymbolId::new(17))
+            .and_then(SymbolDefinition::default_struct_view)
+            .map(ToString::to_string)
+            .as_deref(),
+        Some("&Pair")
+    );
+}
+
+#[test]
 fn committed_child_still_rejects_same_name_with_distinct_symbol_identity() {
     let mut parent = Environment::new_empty_env();
     let mut child = Environment::new_empty_env();

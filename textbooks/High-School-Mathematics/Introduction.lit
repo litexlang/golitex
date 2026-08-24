@@ -69,14 +69,18 @@
 # includes concrete examples, not only declarations, so its main interface can
 # be seen in use.
 #
+# After Chapter 20, eleven `*_exercises.lit` companions revisit the directions
+# in this map. They contain original curriculum-based problems and short
+# solutions that cite the chapter namespaces instead of redefining the book's
+# concepts.
+#
 # Verification and scope
 #
-# Prior verified-book acceptance covers all 20 registered chapter files. The
-# current dirty verifier worktree is blocked in the unchanged shared cite layer
-# by a recorded FactId witness-storage regression; this comments-only
-# Introduction passes its registered release runner. The chapter files contain
-# no direct `trust`; five localized trusted conclusions and one abstract volume
+# Current release file gates pass the shared cite layer, all 20 chapters, and
+# all eleven exercise companions. The chapter and exercise files contain no
+# direct `trust`; five localized trusted conclusions and one abstract volume
 # interface remain visible in `HighSchoolCite`. Those boundaries record
 # unfinished supporting mathematics and are not claimed as verifier-checked
-# proofs. The project is a runnable curriculum map, not a claim to contain
-# every theorem, exercise, or proof in high-school mathematics.
+# proofs. The project is a runnable curriculum map with representative
+# exercises, not a claim to contain every theorem or proof in high-school
+# mathematics.

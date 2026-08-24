@@ -78,7 +78,7 @@ impl Runtime {
                                 )?;
                             let mut inside_results = Vec::new();
                             for (proof_index, proof_stmt) in proof.iter().enumerate() {
-                                let result = rt.exec_stmt(proof_stmt)?;
+                                let result = rt.execute_statement(proof_stmt)?;
                                 if result.is_unknown() {
                                     return Err(UnknownRuntimeError(
                                         RuntimeErrorStruct::new_with_output(
@@ -206,12 +206,10 @@ impl Runtime {
                 let body_result: Result<Vec<StmtResult>, RuntimeError> = (|| {
                     let mut inside_results = Vec::new();
                     for proof_stmt in proof.iter() {
-                        inside_results.push(rt.exec_stmt(proof_stmt)?);
+                        inside_results.push(rt.execute_statement(proof_stmt)?);
                     }
-                    inside_results.push(rt.verify_fact_return_err_if_not_true(
-                        fact,
-                        &UseContextVerifyState::new(0, true),
-                    )?);
+                    inside_results
+                        .push(rt.verify_fact_or_error(fact, &UseContextVerifyState::new(0, true))?);
                     for result in inside_results.iter_mut() {
                         rt.attach_known_fact_ids_to_stmt_result(result)?;
                     }

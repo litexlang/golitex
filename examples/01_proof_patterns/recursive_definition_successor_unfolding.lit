@@ -20,4 +20,3 @@ thm sqrt_two_newton_iterate_step:
 #
 # Boundary: Litex does not select a recursive case for an unconstrained `n`;
 # for example, `sqrt_two_newton_iterate(n) = 1` is not inferred for every n.
-# Evidence: target/release/litex -compact -isolated -runner -f examples/01_proof_patterns/recursive_definition_successor_unfolding.lit
