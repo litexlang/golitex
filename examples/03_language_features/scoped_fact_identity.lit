@@ -1,0 +1,24 @@
+# Tracer: a selected conclusion keeps the identity and location of its complete source fact.
+#
+# Before: instantiating the second conclusion of a multi-conclusion `forall`
+# could synthesize a one-conclusion source, so its FactId no longer identified
+# the fact that had actually been stored.
+#
+# Now: `$second_property(2)` cites `paired_source` together with conclusion
+# location 1; downstream result consumers can project that exact conclusion
+# from the complete two-conclusion source.
+#
+# Boundary: alpha-equivalent binder spellings may share a proposition lookup,
+# but a FactId may never be redirected to a different proposition. The latter
+# fail-closed boundary is covered by the paired Rust regression test.
+#
+# Evidence: target/release/litex -compact -isolated -runner -f examples/03_language_features/scoped_fact_identity.lit
+abstract_prop first_property(x)
+abstract_prop second_property(x)
+
+axiom paired_source:
+    ? forall x R:
+        $first_property(x)
+        $second_property(x)
+
+$second_property(2)

@@ -4,7 +4,7 @@ use crate::prelude::*;
 use std::collections::HashMap;
 
 impl Runtime {
-    pub(crate) fn build_not_exist_demorgan_forall_fact(
+    pub fn build_not_exist_demorgan_forall_fact(
         &self,
         not_exist: &ExistFactEnum,
     ) -> Result<ForallFact, RuntimeError> {
@@ -87,7 +87,7 @@ impl Runtime {
         )?)
     }
 
-    pub(crate) fn demorgan_negate_exist_body_conjunct(
+    pub fn demorgan_negate_exist_body_conjunct(
         conjunct: &QuantifierFreeFact,
     ) -> Result<Vec<AndChainAtomicFact>, RuntimeError> {
         let lf = conjunct.line_file();

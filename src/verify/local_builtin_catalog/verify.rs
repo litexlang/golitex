@@ -4,7 +4,7 @@ use crate::verify::rule_schema::{match_conclusion, MatchLimits, RuleSourceRef};
 use std::collections::HashMap;
 
 impl Runtime {
-    pub(crate) fn try_verify_atomic_fact_with_local_builtin_catalog(
+    pub fn try_verify_atomic_fact_with_local_builtin_catalog(
         &mut self,
         goal: &AtomicFact,
         builtin_state: &UseBuiltinRuleVerifyState,

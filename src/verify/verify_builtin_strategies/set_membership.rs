@@ -1,7 +1,7 @@
 use crate::prelude::*;
 
 impl Runtime {
-    pub(crate) fn verify_set_membership_with_builtin_strategy(
+    pub fn verify_set_membership_with_builtin_strategy(
         &mut self,
         fact: &InFact,
     ) -> Result<StmtResult, RuntimeError> {
@@ -263,7 +263,7 @@ impl Runtime {
         )
     }
 
-    pub(crate) fn verify_subset_with_builtin_strategy(
+    pub fn verify_subset_with_builtin_strategy(
         &mut self,
         fact: &SubsetFact,
     ) -> Result<StmtResult, RuntimeError> {

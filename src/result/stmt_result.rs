@@ -272,15 +272,5 @@ impl StmtResult {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn statement_result_stays_pointer_sized_enough_for_recursive_composition() {
-        assert!(
-            std::mem::size_of::<StmtResult>() <= 32,
-            "StmtResult unexpectedly grew to {} bytes; large success payloads belong behind Box",
-            std::mem::size_of::<StmtResult>()
-        );
-    }
-}
+#[path = "../../tests/unit/result/stmt_result/tests.rs"]
+mod tests;

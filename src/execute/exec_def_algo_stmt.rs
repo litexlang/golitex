@@ -12,17 +12,20 @@ impl Runtime {
                 SuccessStmtResult::DefAlgoStmt(Box::new(SuccessDefAlgoStmtResult {
                     statement: def_algo_stmt.clone(),
                     common: SuccessStmtCommonResult::new(SuccessInferResult::new()),
+                    run_in_local_env: None,
                 }))
                 .into(),
             );
         }
 
-        self.run_in_local_env(|rt| rt.exec_def_algo_stmt_verify_process(def_algo_stmt))?;
+        let run_in_local_env =
+            self.run_in_local_env(|rt| rt.exec_def_algo_stmt_verify_process(def_algo_stmt))?;
         self.store_def_algo(def_algo_stmt)?;
         Ok(
             SuccessStmtResult::DefAlgoStmt(Box::new(SuccessDefAlgoStmtResult {
                 statement: def_algo_stmt.clone(),
                 common: SuccessStmtCommonResult::new(SuccessInferResult::new()),
+                run_in_local_env: Some(run_in_local_env),
             }))
             .into(),
         )
@@ -31,7 +34,7 @@ impl Runtime {
     fn exec_def_algo_stmt_verify_process(
         &mut self,
         def_algo_stmt: &DefAlgoStmt,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<SuccessVerifyDefAlgoLocalEnvResult, RuntimeError> {
         let function_name_obj = self.declared_identifier_obj(&def_algo_stmt.name);
         let fn_set_where_algo_belongs = match self.get_object_in_fn_set(&function_name_obj) {
             Some(fn_set) => fn_set,
@@ -45,6 +48,18 @@ impl Runtime {
             &def_algo_stmt.param_bindings,
             ParamObjType::Forall,
         );
+        let parameter_retagging = def_algo_stmt
+            .param_bindings
+            .iter()
+            .enumerate()
+            .map(
+                |(parameter_index, source_binding)| SuccessVerifyDefAlgoParameterRetagResult {
+                    parameter_index,
+                    source_binding: source_binding.clone(),
+                    verification_object: algo_param_to_forall_obj[source_binding.name()].clone(),
+                },
+            )
+            .collect();
 
         let (requirement_facts_for_param, algo_param_defs_with_type) = self
             .collect_requirement_facts_and_algo_param_defs(
@@ -60,7 +75,7 @@ impl Runtime {
             &requirement_facts_for_param,
         )?;
 
-        self.verify_each_def_algo_case_implies_return(
+        let cases = self.verify_each_def_algo_case_implies_return(
             def_algo_stmt,
             &algo_param_defs_with_type,
             &fn_call_obj_for_verification,
@@ -68,7 +83,7 @@ impl Runtime {
             &algo_param_to_forall_obj,
         )?;
 
-        self.verify_def_algo_default_implies_return(
+        let default_return = self.verify_def_algo_default_implies_return(
             def_algo_stmt,
             &algo_param_defs_with_type,
             &fn_call_obj_for_verification,
@@ -76,20 +91,23 @@ impl Runtime {
             &algo_param_to_forall_obj,
         )?;
 
-        self.verify_def_algo_case_coverage_when_no_default_return(
+        let coverage = self.verify_def_algo_case_coverage_when_no_default_return(
             def_algo_stmt,
             &algo_param_defs_with_type,
             &requirement_dom_facts,
             &algo_param_to_forall_obj,
         )?;
 
-        Ok(
-            SuccessStmtResult::DefAlgoStmt(Box::new(SuccessDefAlgoStmtResult {
-                statement: def_algo_stmt.clone(),
-                common: SuccessStmtCommonResult::new(SuccessInferResult::new()),
-            }))
-            .into(),
-        )
+        Ok(SuccessVerifyDefAlgoLocalEnvResult {
+            declared_function_set: fn_set_where_algo_belongs,
+            parameter_retagging,
+            requirement_facts: requirement_facts_for_param,
+            parameter_definition: algo_param_defs_with_type,
+            function_call: fn_call_obj_for_verification,
+            cases,
+            default_return,
+            coverage,
+        })
     }
 
     fn def_algo_verify_exec_error_without_message(def_algo_stmt: &DefAlgoStmt) -> RuntimeError {
@@ -353,9 +371,10 @@ impl Runtime {
         fn_call_obj: &Obj,
         requirement_dom_facts: &[ExistOrAndChainAtomicFact],
         algo_param_to_forall_obj: &HashMap<String, Obj>,
-    ) -> Result<(), RuntimeError> {
+    ) -> Result<Vec<SuccessVerifyDefAlgoCaseResult>, RuntimeError> {
         let verify_state = UseContextVerifyState::new(0, false);
-        for algo_case in def_algo_stmt.cases.iter() {
+        let mut results = Vec::with_capacity(def_algo_stmt.cases.len());
+        for (case_index, algo_case) in def_algo_stmt.cases.iter().enumerate() {
             let case_forall_fact = self.forall_fact_for_def_algo_case(
                 algo_param_defs_with_type,
                 requirement_dom_facts,
@@ -363,7 +382,8 @@ impl Runtime {
                 fn_call_obj,
                 algo_param_to_forall_obj,
             )?;
-            self.verify_fact_return_err_if_not_true(&case_forall_fact, &verify_state)
+            let mut verification = self
+                .verify_fact_return_err_if_not_true(&case_forall_fact, &verify_state)
                 .map_err(|runtime_error| {
                     Self::def_algo_verify_exec_error_with_message_and_optional_cause(
                         def_algo_stmt,
@@ -374,8 +394,14 @@ impl Runtime {
                         Some(runtime_error),
                     )
                 })?;
+            self.attach_known_fact_ids_to_stmt_result(&mut verification)?;
+            results.push(SuccessVerifyDefAlgoCaseResult {
+                case_index,
+                verification_fact: case_forall_fact,
+                verification: Box::new(verification),
+            });
         }
-        Ok(())
+        Ok(results)
     }
 
     fn verify_def_algo_default_implies_return(
@@ -385,9 +411,9 @@ impl Runtime {
         fn_call_obj: &Obj,
         requirement_dom_facts: &[ExistOrAndChainAtomicFact],
         algo_param_to_forall_obj: &HashMap<String, Obj>,
-    ) -> Result<(), RuntimeError> {
+    ) -> Result<Option<SuccessVerifyDefAlgoDefaultResult>, RuntimeError> {
         let Some(default_return) = &def_algo_stmt.default_return else {
-            return Ok(());
+            return Ok(None);
         };
 
         let mut dom_facts: Vec<Fact> = requirement_dom_facts
@@ -432,18 +458,23 @@ impl Runtime {
         )?
         .into();
 
-        self.verify_fact_return_err_if_not_true(
-            &verification_fact,
-            &UseContextVerifyState::new(0, false),
-        )
-        .map_err(|runtime_error| {
-            Self::def_algo_verify_exec_error_with_message_and_optional_cause(
-                def_algo_stmt,
-                "algo verify: default return does not equal the declared function".to_string(),
-                Some(runtime_error),
+        let mut verification = self
+            .verify_fact_return_err_if_not_true(
+                &verification_fact,
+                &UseContextVerifyState::new(0, false),
             )
-        })?;
-        Ok(())
+            .map_err(|runtime_error| {
+                Self::def_algo_verify_exec_error_with_message_and_optional_cause(
+                    def_algo_stmt,
+                    "algo verify: default return does not equal the declared function".to_string(),
+                    Some(runtime_error),
+                )
+            })?;
+        self.attach_known_fact_ids_to_stmt_result(&mut verification)?;
+        Ok(Some(SuccessVerifyDefAlgoDefaultResult {
+            verification_fact,
+            verification: Box::new(verification),
+        }))
     }
 
     fn verify_def_algo_case_coverage_when_no_default_return(
@@ -452,9 +483,9 @@ impl Runtime {
         algo_param_defs_with_type: &ParamDefWithType,
         requirement_dom_facts: &[ExistOrAndChainAtomicFact],
         algo_param_to_forall_obj: &HashMap<String, Obj>,
-    ) -> Result<(), RuntimeError> {
+    ) -> Result<Option<SuccessVerifyDefAlgoCoverageResult>, RuntimeError> {
         if def_algo_stmt.default_return.is_some() {
-            return Ok(());
+            return Ok(None);
         }
 
         if def_algo_stmt.cases.is_empty() {
@@ -492,7 +523,8 @@ impl Runtime {
         .into();
 
         let verify_state = UseContextVerifyState::new(0, false);
-        self.verify_fact_return_err_if_not_true(&coverage_forall_fact, &verify_state)
+        let mut verification = self
+            .verify_fact_return_err_if_not_true(&coverage_forall_fact, &verify_state)
             .map_err(|runtime_error| {
                 Self::def_algo_verify_exec_error_with_message_and_optional_cause(
                     def_algo_stmt,
@@ -500,7 +532,11 @@ impl Runtime {
                     Some(runtime_error),
                 )
             })?;
+        self.attach_known_fact_ids_to_stmt_result(&mut verification)?;
 
-        Ok(())
+        Ok(Some(SuccessVerifyDefAlgoCoverageResult {
+            verification_fact: coverage_forall_fact,
+            verification: Box::new(verification),
+        }))
     }
 }

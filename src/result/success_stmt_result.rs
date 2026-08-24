@@ -284,6 +284,40 @@ impl fmt::Debug for SuccessFactStmtResult {
 pub struct SuccessDefAlgoStmtResult {
     pub statement: DefAlgoStmt,
     pub common: SuccessStmtCommonResult,
+    pub run_in_local_env: Option<SuccessVerifyDefAlgoLocalEnvResult>,
+}
+
+pub struct SuccessVerifyDefAlgoLocalEnvResult {
+    pub declared_function_set: FnSetBody,
+    pub parameter_retagging: Vec<SuccessVerifyDefAlgoParameterRetagResult>,
+    pub requirement_facts: Vec<Fact>,
+    pub parameter_definition: ParamDefWithType,
+    pub function_call: Obj,
+    pub cases: Vec<SuccessVerifyDefAlgoCaseResult>,
+    pub default_return: Option<SuccessVerifyDefAlgoDefaultResult>,
+    pub coverage: Option<SuccessVerifyDefAlgoCoverageResult>,
+}
+
+pub struct SuccessVerifyDefAlgoParameterRetagResult {
+    pub parameter_index: usize,
+    pub source_binding: SymbolBinding,
+    pub verification_object: Obj,
+}
+
+pub struct SuccessVerifyDefAlgoCaseResult {
+    pub case_index: usize,
+    pub verification_fact: Fact,
+    pub verification: Box<StmtResult>,
+}
+
+pub struct SuccessVerifyDefAlgoDefaultResult {
+    pub verification_fact: Fact,
+    pub verification: Box<StmtResult>,
+}
+
+pub struct SuccessVerifyDefAlgoCoverageResult {
+    pub verification_fact: Fact,
+    pub verification: Box<StmtResult>,
 }
 
 pub struct SuccessDefThmStmtResult {
@@ -397,6 +431,103 @@ pub struct SuccessHaveFnEqualCaseByCaseStmtResult {
 pub struct SuccessHaveFnByInducStmtResult {
     pub statement: HaveFnByInducStmt,
     pub common: SuccessStmtCommonResult,
+    pub verification: Option<SuccessVerifyHaveFnByInducResult>,
+}
+
+pub struct SuccessVerifyHaveFnByInducResult {
+    pub well_definedness_run_in_local_env: SuccessVerifyHaveFnByInducWellDefinednessLocalEnvResult,
+    pub verification_run_in_local_env: SuccessVerifyHaveFnByInducLocalEnvResult,
+}
+
+pub struct SuccessVerifyHaveFnByInducWellDefinednessLocalEnvResult {
+    pub function_binding: SymbolBinding,
+    pub function_set: FnSet,
+    pub function_set_well_definedness: Rc<SuccessVerifyObjWellDefinedResult>,
+    pub parameters_and_domain: SuccessVerifyHaveFnByInducParametersAndDomainResult,
+    pub measure_well_definedness: Rc<SuccessVerifyObjWellDefinedResult>,
+    pub lower_bound_well_definedness: Rc<SuccessVerifyObjWellDefinedResult>,
+}
+
+pub struct SuccessVerifyHaveFnByInducParametersAndDomainResult {
+    pub parameter_groups: Vec<SuccessVerifyHaveFnByInducParameterGroupResult>,
+    pub domain_facts: Vec<SuccessVerifyHaveFnByInducDomainFactResult>,
+}
+
+pub struct SuccessVerifyHaveFnByInducParameterGroupResult {
+    pub group_index: usize,
+    pub definition: ParamGroupWithSet,
+    pub infers: SuccessInferResult,
+}
+
+pub struct SuccessVerifyHaveFnByInducDomainFactResult {
+    pub domain_index: usize,
+    pub store: SuccessStoreFactResult,
+}
+
+pub struct SuccessVerifyHaveFnByInducLocalEnvResult {
+    pub parameters_and_domain: SuccessVerifyHaveFnByInducParametersAndDomainResult,
+    pub measure: SuccessVerifyHaveFnByInducMeasureResult,
+    pub recursive_function: SuccessVerifyHaveFnByInducRecursiveFunctionResult,
+    pub cases: SuccessVerifyHaveFnByInducCaseListResult,
+}
+
+pub struct SuccessVerifyHaveFnByInducMeasureResult {
+    pub measure_well_definedness: Rc<SuccessVerifyObjWellDefinedResult>,
+    pub lower_bound_well_definedness: Rc<SuccessVerifyObjWellDefinedResult>,
+    pub measure_integer_check: Box<StmtResult>,
+    pub lower_bound_integer_check: Box<StmtResult>,
+    pub lower_bound_check: Box<StmtResult>,
+}
+
+pub struct SuccessVerifyHaveFnByInducRecursiveFunctionResult {
+    pub function_set: FnSet,
+    pub membership_store: SuccessStoreFactResult,
+}
+
+pub struct SuccessVerifyHaveFnByInducCaseListResult {
+    pub coverage_fact: Fact,
+    pub coverage_check: Box<StmtResult>,
+    pub mutual_exclusions: Vec<SuccessVerifyCaseDisjointnessResult>,
+    pub cases: Vec<SuccessVerifyHaveFnByInducCaseResult>,
+}
+
+pub struct SuccessVerifyHaveFnByInducCaseResult {
+    pub case_index: usize,
+    pub case_fact: Fact,
+    pub assumption_store: SuccessStoreFactResult,
+    pub body: SuccessVerifyHaveFnByInducCaseBodyResult,
+}
+
+pub enum SuccessVerifyHaveFnByInducCaseBodyResult {
+    EqualTo(Box<SuccessVerifyHaveFnByInducEqualToResult>),
+    NestedCases(Box<SuccessVerifyHaveFnByInducCaseListResult>),
+}
+
+pub struct SuccessVerifyHaveFnByInducEqualToResult {
+    pub value: Obj,
+    pub well_definedness: Rc<SuccessVerifyObjWellDefinedResult>,
+    pub return_membership_fact: AtomicFact,
+    pub return_membership_check: Box<StmtResult>,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum CaseDisjointnessOrientation {
+    LeftImpliesNotRight,
+    RightImpliesNotLeft,
+}
+
+/// The one successful orientation selected while checking that two case
+/// conditions cannot hold together. Failed search attempts are not successful
+/// proof evidence and are deliberately absent.
+pub struct SuccessVerifyCaseDisjointnessResult {
+    pub left_case_index: usize,
+    pub right_case_index: usize,
+    pub orientation: CaseDisjointnessOrientation,
+    pub assumed_case: Fact,
+    pub assumption_store: SuccessStoreFactResult,
+    pub contradicted_atom: AtomicFact,
+    pub negated_atom: AtomicFact,
+    pub negated_atom_check: Box<StmtResult>,
 }
 
 pub struct SuccessHaveFnByForallExistUniqueStmtResult {
@@ -485,6 +616,51 @@ pub struct SuccessDefTemplateStmtResult {
 pub struct SuccessDefStructStmtResult {
     pub statement: DefStructStmt,
     pub common: SuccessStmtCommonResult,
+    /// The declaration is checked in a temporary environment containing only
+    /// its structure parameters and fields. Trusted materialization retains
+    /// the declaration but deliberately carries no invented verification.
+    pub run_in_local_env: Option<SuccessVerifyDefStructLocalEnvResult>,
+}
+
+/// Typed output of `def_struct_stmt_check_well_defined_result` before its local
+/// environment is popped. This is not a `StmtResult`: the local operation is
+/// the verification process for the enclosing `def struct`, not another
+/// source statement.
+pub struct SuccessVerifyDefStructLocalEnvResult {
+    /// Output of defining the declared structure parameters. These are
+    /// structure parameters, not template parameters.
+    pub structure_parameter_definition: Option<SuccessInferResult>,
+    pub structure_domains: Vec<SuccessVerifyDefStructDomainResult>,
+    pub field_types: Vec<SuccessVerifyDefStructFieldTypeResult>,
+    pub field_scope_run_in_local_env: SuccessVerifyDefStructFieldScopeResult,
+}
+
+pub struct SuccessVerifyDefStructDomainResult {
+    pub domain_index: usize,
+    pub proposition: Fact,
+    pub well_definedness: SuccessVerifyFactWellDefinedResult,
+}
+
+pub struct SuccessVerifyDefStructFieldTypeResult {
+    pub field_index: usize,
+    pub binding: SymbolBinding,
+    pub field_type: Obj,
+    pub well_definedness: Rc<SuccessVerifyObjWellDefinedResult>,
+}
+
+/// Typed output of the nested field environment. Field definitions and
+/// equivalent facts are ordinary semantic operations owned by the enclosing
+/// declaration, so neither is wrapped in a synthetic statement Result.
+pub struct SuccessVerifyDefStructFieldScopeResult {
+    pub field_definitions: Vec<SuccessVerifyDefStructFieldDefinitionResult>,
+    pub equivalent_facts: Vec<SuccessVerifyLocalFactWellDefinedResult>,
+}
+
+pub struct SuccessVerifyDefStructFieldDefinitionResult {
+    pub field_index: usize,
+    pub binding: SymbolBinding,
+    pub field_type: Obj,
+    pub infers: SuccessInferResult,
 }
 
 pub enum SuccessDefInterfaceStmtResult {
@@ -701,6 +877,25 @@ pub enum SuccessProofBlockStmtResult {
 pub struct SuccessImportStmtResult {
     pub statement: ImportStmt,
     pub common: SuccessStmtCommonResult,
+    pub execution: SuccessImportExecutionResult,
+}
+
+pub enum SuccessImportExecutionResult {
+    Executed(Box<SuccessExecutedImportResult>),
+    Reused(SuccessReusedImportResult),
+}
+
+pub struct SuccessExecutedImportResult {
+    pub module_id: ModuleId,
+    pub execution_mode: ExecutionMode,
+    /// Ordered source statement Results produced while loading the module,
+    /// including recursively executed configured imports.
+    pub statement_results: Vec<StmtResult>,
+}
+
+pub struct SuccessReusedImportResult {
+    pub module_id: ModuleId,
+    pub execution_mode: ExecutionMode,
 }
 
 pub struct SuccessDoNothingStmtResult {
@@ -800,6 +995,26 @@ impl SuccessStmtResult {
                 }
             }
         }
+        if let Self::DefAlgoStmt(result) = self {
+            if let Some(verification) = &result.run_in_local_env {
+                for case in &verification.cases {
+                    visitor(&case.verification);
+                }
+                if let Some(default_return) = &verification.default_return {
+                    visitor(&default_return.verification);
+                }
+                if let Some(coverage) = &verification.coverage {
+                    visitor(&coverage.verification);
+                }
+            }
+        }
+        if let Self::Command(SuccessCommandStmtResult::ImportStmt(result)) = self {
+            if let SuccessImportExecutionResult::Executed(execution) = &result.execution {
+                for child in &execution.statement_results {
+                    visitor(child);
+                }
+            }
+        }
         if let Self::Witness(witness) = self {
             witness.visit_named_child_results(visitor);
         }
@@ -835,6 +1050,26 @@ impl SuccessStmtResult {
                 }
                 for check in &mut verification.conclusion_checks {
                     visitor(check)?;
+                }
+            }
+        }
+        if let Self::DefAlgoStmt(result) = self {
+            if let Some(verification) = &mut result.run_in_local_env {
+                for case in &mut verification.cases {
+                    visitor(&mut case.verification)?;
+                }
+                if let Some(default_return) = &mut verification.default_return {
+                    visitor(&mut default_return.verification)?;
+                }
+                if let Some(coverage) = &mut verification.coverage {
+                    visitor(&mut coverage.verification)?;
+                }
+            }
+        }
+        if let Self::Command(SuccessCommandStmtResult::ImportStmt(result)) = self {
+            if let SuccessImportExecutionResult::Executed(execution) = &mut result.execution {
+                for child in &mut execution.statement_results {
+                    visitor(child)?;
                 }
             }
         }
@@ -975,6 +1210,27 @@ impl SuccessStmtResult {
                     children
                 })
                 .unwrap_or_default(),
+            Self::DefAlgoStmt(result) => result
+                .run_in_local_env
+                .map(|verification| {
+                    let mut children = verification
+                        .cases
+                        .into_iter()
+                        .map(|case| *case.verification)
+                        .collect::<Vec<_>>();
+                    if let Some(default_return) = verification.default_return {
+                        children.push(*default_return.verification);
+                    }
+                    if let Some(coverage) = verification.coverage {
+                        children.push(*coverage.verification);
+                    }
+                    children
+                })
+                .unwrap_or_default(),
+            Self::Command(SuccessCommandStmtResult::ImportStmt(result)) => match result.execution {
+                SuccessImportExecutionResult::Executed(execution) => execution.statement_results,
+                SuccessImportExecutionResult::Reused(_) => Vec::new(),
+            },
             Self::Witness(witness) => witness.into_child_results(),
             Self::By(by) => by.into_child_results(),
             _other => Vec::new(),
@@ -2033,6 +2289,11 @@ impl SuccessDefObjStmtResult {
                     }
                 }
             }
+            Self::HaveFnByInducStmt(result) => {
+                if let Some(verification) = &result.verification {
+                    visit_have_fn_by_induc_children(verification, visitor);
+                }
+            }
             Self::HaveFnByForallExistUniqueStmt(result) => {
                 if let Some(verification) = &result.verification {
                     if let Some(check) = &verification.source_forall_check {
@@ -2122,6 +2383,11 @@ impl SuccessDefObjStmtResult {
                     for check in &mut verification.return_checks {
                         visitor(check)?;
                     }
+                }
+            }
+            Self::HaveFnByInducStmt(result) => {
+                if let Some(verification) = &mut result.verification {
+                    try_visit_have_fn_by_induc_children_mut(verification, visitor)?;
                 }
             }
             Self::HaveFnByForallExistUniqueStmt(result) => {
@@ -2216,6 +2482,10 @@ impl SuccessDefObjStmtResult {
                 }
                 children
             }
+            Self::HaveFnByInducStmt(result) => result
+                .verification
+                .map(into_have_fn_by_induc_children)
+                .unwrap_or_default(),
             Self::HaveFnByForallExistUniqueStmt(result) => {
                 let mut children = Vec::new();
                 if let Some(verification) = result.verification {
@@ -2243,6 +2513,139 @@ impl SuccessDefObjStmtResult {
                 into_indexed_function_children(result.common, result.verification)
             }
             _other => Vec::new(),
+        }
+    }
+}
+
+fn visit_have_fn_by_induc_children(
+    verification: &SuccessVerifyHaveFnByInducResult,
+    visitor: &mut impl FnMut(&StmtResult),
+) {
+    visitor(
+        &verification
+            .verification_run_in_local_env
+            .measure
+            .measure_integer_check,
+    );
+    visitor(
+        &verification
+            .verification_run_in_local_env
+            .measure
+            .lower_bound_integer_check,
+    );
+    visitor(
+        &verification
+            .verification_run_in_local_env
+            .measure
+            .lower_bound_check,
+    );
+    visit_have_fn_by_induc_case_list_children(
+        &verification.verification_run_in_local_env.cases,
+        visitor,
+    );
+}
+
+fn visit_have_fn_by_induc_case_list_children(
+    cases: &SuccessVerifyHaveFnByInducCaseListResult,
+    visitor: &mut impl FnMut(&StmtResult),
+) {
+    visitor(&cases.coverage_check);
+    for disjointness in &cases.mutual_exclusions {
+        visitor(&disjointness.negated_atom_check);
+    }
+    for case in &cases.cases {
+        match &case.body {
+            SuccessVerifyHaveFnByInducCaseBodyResult::EqualTo(body) => {
+                visitor(&body.return_membership_check)
+            }
+            SuccessVerifyHaveFnByInducCaseBodyResult::NestedCases(nested) => {
+                visit_have_fn_by_induc_case_list_children(nested, visitor)
+            }
+        }
+    }
+}
+
+fn try_visit_have_fn_by_induc_children_mut<E>(
+    verification: &mut SuccessVerifyHaveFnByInducResult,
+    visitor: &mut impl FnMut(&mut StmtResult) -> Result<(), E>,
+) -> Result<(), E> {
+    visitor(
+        &mut verification
+            .verification_run_in_local_env
+            .measure
+            .measure_integer_check,
+    )?;
+    visitor(
+        &mut verification
+            .verification_run_in_local_env
+            .measure
+            .lower_bound_integer_check,
+    )?;
+    visitor(
+        &mut verification
+            .verification_run_in_local_env
+            .measure
+            .lower_bound_check,
+    )?;
+    try_visit_have_fn_by_induc_case_list_children_mut(
+        &mut verification.verification_run_in_local_env.cases,
+        visitor,
+    )
+}
+
+fn try_visit_have_fn_by_induc_case_list_children_mut<E>(
+    cases: &mut SuccessVerifyHaveFnByInducCaseListResult,
+    visitor: &mut impl FnMut(&mut StmtResult) -> Result<(), E>,
+) -> Result<(), E> {
+    visitor(&mut cases.coverage_check)?;
+    for disjointness in &mut cases.mutual_exclusions {
+        visitor(&mut disjointness.negated_atom_check)?;
+    }
+    for case in &mut cases.cases {
+        match &mut case.body {
+            SuccessVerifyHaveFnByInducCaseBodyResult::EqualTo(body) => {
+                visitor(&mut body.return_membership_check)?
+            }
+            SuccessVerifyHaveFnByInducCaseBodyResult::NestedCases(nested) => {
+                try_visit_have_fn_by_induc_case_list_children_mut(nested, visitor)?
+            }
+        }
+    }
+    Ok(())
+}
+
+fn into_have_fn_by_induc_children(
+    verification: SuccessVerifyHaveFnByInducResult,
+) -> Vec<StmtResult> {
+    let local = verification.verification_run_in_local_env;
+    let mut children = vec![
+        *local.measure.measure_integer_check,
+        *local.measure.lower_bound_integer_check,
+        *local.measure.lower_bound_check,
+    ];
+    into_have_fn_by_induc_case_list_children(local.cases, &mut children);
+    children
+}
+
+fn into_have_fn_by_induc_case_list_children(
+    cases: SuccessVerifyHaveFnByInducCaseListResult,
+    children: &mut Vec<StmtResult>,
+) {
+    children.push(*cases.coverage_check);
+    children.extend(
+        cases
+            .mutual_exclusions
+            .into_iter()
+            .map(|proof| *proof.negated_atom_check),
+    );
+    for case in cases.cases {
+        match case.body {
+            SuccessVerifyHaveFnByInducCaseBodyResult::EqualTo(body) => {
+                children.push(*body.return_membership_check)
+            }
+            SuccessVerifyHaveFnByInducCaseBodyResult::NestedCases(nested) => {
+                into_have_fn_by_induc_case_list_children(*nested, children)
+            }
         }
     }
 }

@@ -28,7 +28,7 @@ pub struct StmtResultToLeanCompilationReport {
 }
 
 impl StmtResultToLeanCompilationReport {
-    pub(crate) fn complete(lean_code: String) -> Self {
+    pub fn complete(lean_code: String) -> Self {
         Self {
             lean_code,
             status: StmtResultToLeanCompilationStatus::Complete,
@@ -36,7 +36,7 @@ impl StmtResultToLeanCompilationReport {
         }
     }
 
-    pub(crate) fn incomplete_lean_source_construction(source_label: &str, reason: String) -> Self {
+    pub fn incomplete_lean_source_construction(source_label: &str, reason: String) -> Self {
         let compact_reason = reason.replace(['\n', '\r'], " ");
         Self {
             lean_code: format!(

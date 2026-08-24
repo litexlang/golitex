@@ -1,7 +1,7 @@
 use crate::prelude::*;
 
 impl Fact {
-    pub(crate) fn contains_native_complex_syntax(&self) -> bool {
+    pub fn contains_native_complex_syntax(&self) -> bool {
         match self {
             Fact::AtomicFact(fact) => fact
                 .get_args_from_fact_ref()

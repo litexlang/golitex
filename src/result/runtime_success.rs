@@ -1064,6 +1064,7 @@ pub enum KnownForallRequirementKind {
 pub struct SuccessInstantiateKnownForallResult {
     pub source_fact: Fact,
     pub source_fact_id: FactId,
+    pub source_conclusion_location: ForallConclusionLocation,
     pub instantiation: Vec<KnownForallInstantiationItem>,
     pub requirements: Vec<SuccessVerifyKnownForallRequirementResult>,
 }
@@ -1245,18 +1246,11 @@ impl SuccessFactStmtResult {
     pub fn is_verified_by_builtin_rules_only(&self) -> bool {
         self.proof().tree_is_builtin_rules_only()
     }
-
-    #[cfg(test)]
-    pub(crate) fn underlying_verified_by(&self) -> &SuccessFactProofResult {
-        let mut proof = self.proof();
-        loop {
-            match proof {
-                SuccessFactProofResult::Reuse(result) => proof = result.source.proof(),
-                verified_by => return verified_by,
-            }
-        }
-    }
 }
+
+#[cfg(test)]
+#[path = "../../tests/unit/result/runtime_success/test_support.rs"]
+mod test_support;
 
 impl SuccessFactProofResult {
     pub fn builtin_rule(msg: impl Into<String>) -> Self {
@@ -1381,12 +1375,14 @@ impl SuccessFactProofResult {
     pub fn known_forall_instantiation(
         cite_what: Fact,
         source_fact_id: FactId,
+        source_conclusion_location: ForallConclusionLocation,
         instantiation: Vec<KnownForallInstantiationItem>,
         requirements: Vec<SuccessVerifyKnownForallRequirementResult>,
     ) -> Self {
         Self::KnownForallInstantiation(SuccessInstantiateKnownForallResult::new(
             cite_what,
             source_fact_id,
+            source_conclusion_location,
             instantiation,
             requirements,
         ))
@@ -1507,12 +1503,14 @@ impl SuccessInstantiateKnownForallResult {
     pub fn new(
         source_fact: Fact,
         source_fact_id: FactId,
+        source_conclusion_location: ForallConclusionLocation,
         instantiation: Vec<KnownForallInstantiationItem>,
         requirements: Vec<SuccessVerifyKnownForallRequirementResult>,
     ) -> Self {
         SuccessInstantiateKnownForallResult {
             source_fact,
             source_fact_id,
+            source_conclusion_location,
             instantiation,
             requirements,
         }

@@ -8,13 +8,13 @@ pub fn objs_match_for_pattern(a: &Obj, b: &Obj) -> bool {
 }
 
 #[inline]
-pub(crate) fn obj_expr_mentions_bare_id_on_two(l: &Obj, r: &Obj, id: &str) -> bool {
+pub fn obj_expr_mentions_bare_id_on_two(l: &Obj, r: &Obj, id: &str) -> bool {
     obj_expr_mentions_bare_id(l, id) || obj_expr_mentions_bare_id(r, id)
 }
 
 /// Whether `obj` contains a bare [`Identifier`] equal to `id` (used to detect index use in a
 /// summand `equal_to`). Unknown / unhandled shapes return `true` (conservative).
-pub(crate) fn obj_expr_mentions_bare_id(obj: &Obj, id: &str) -> bool {
+pub fn obj_expr_mentions_bare_id(obj: &Obj, id: &str) -> bool {
     match obj {
         Obj::Atom(AtomObj::Identifier(i)) => i.name == id,
         Obj::Number(_)
@@ -214,14 +214,11 @@ pub(crate) fn obj_expr_mentions_bare_id(obj: &Obj, id: &str) -> bool {
     }
 }
 
-pub(crate) fn factual_equal_success_by_builtin_reason(
-    equal_fact: &EqualFact,
-    reason: &str,
-) -> StmtResult {
+pub fn factual_equal_success_by_builtin_reason(equal_fact: &EqualFact, reason: &str) -> StmtResult {
     factual_equal_success_by_builtin_reason_with_subgoals(equal_fact, reason, Vec::new())
 }
 
-pub(crate) fn factual_equal_success_by_builtin_reason_with_subgoals(
+pub fn factual_equal_success_by_builtin_reason_with_subgoals(
     equal_fact: &EqualFact,
     reason: &str,
     subgoals: Vec<StmtResult>,
@@ -235,7 +232,7 @@ pub(crate) fn factual_equal_success_by_builtin_reason_with_subgoals(
     )
 }
 
-pub(crate) fn equality_builtin_match_subgoals(
+pub fn equality_builtin_match_subgoals(
     equal_fact: &EqualFact,
     result: StmtResult,
 ) -> Vec<StmtResult> {

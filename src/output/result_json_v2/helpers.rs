@@ -1442,6 +1442,25 @@ pub(super) fn fact_id(id: FactId) -> String {
     id.to_string()
 }
 
+pub(super) fn forall_conclusion_location(location: ForallConclusionLocation) -> JsonValue {
+    match location {
+        ForallConclusionLocation::DirectThenFact(location) => object(vec![
+            string_field("kind", "DirectThenFact"),
+            number_field("then_fact_index", location.then_fact_index),
+        ]),
+        ForallConclusionLocation::AndFactComponent(location) => object(vec![
+            string_field("kind", "AndFactComponent"),
+            number_field("then_fact_index", location.then_fact_index),
+            number_field("component_index", location.component_index),
+        ]),
+        ForallConclusionLocation::ChainFactComponent(location) => object(vec![
+            string_field("kind", "ChainFactComponent"),
+            number_field("then_fact_index", location.then_fact_index),
+            number_field("component_index", location.component_index),
+        ]),
+    }
+}
+
 pub(super) fn atomic_predicate_domain_check_role(
     role: AtomicPredicateDomainCheckRole,
 ) -> &'static str {

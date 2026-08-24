@@ -5,7 +5,7 @@ impl Runtime {
         self.exec_checked_goal_block(stmt.clone().into(), &stmt.fact, &stmt.proof, EXAMPLE)
     }
 
-    pub(crate) fn exec_checked_goal_block(
+    pub fn exec_checked_goal_block(
         &mut self,
         source_stmt: Stmt,
         fact: &Fact,

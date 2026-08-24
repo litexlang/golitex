@@ -116,7 +116,7 @@ impl Runtime {
         ))
     }
 
-    pub(crate) fn iterated_op_func_ret_set(&self, func: &Obj) -> Option<Obj> {
+    pub fn iterated_op_func_ret_set(&self, func: &Obj) -> Option<Obj> {
         match func {
             Obj::AnonymousFn(anon) => Some((*anon.body.ret_set).clone()),
             Obj::FnObj(fn_obj) if fn_obj.body.is_empty() => match fn_obj.head.as_ref() {
@@ -1515,7 +1515,7 @@ impl Runtime {
         })
     }
 
-    pub(crate) fn verify_objects_are_known_reals_in_builtin(
+    pub fn verify_objects_are_known_reals_in_builtin(
         &mut self,
         objs: &[&Obj],
         line_file: &LineFile,
@@ -1558,7 +1558,7 @@ impl Runtime {
         Ok(Some(steps))
     }
 
-    pub(crate) fn verify_objects_are_known_integers_in_builtin_leaf(
+    pub fn verify_objects_are_known_integers_in_builtin_leaf(
         &mut self,
         objs: &[&Obj],
         line_file: &LineFile,

@@ -102,7 +102,7 @@ impl Runtime {
         )
     }
 
-    pub(crate) fn exec_by_reflexive_prop_stmt_affect_environment_only(
+    pub fn exec_by_reflexive_prop_stmt_affect_environment_only(
         &mut self,
         stmt: &ByReflexivePropStmt,
     ) -> Result<StmtResult, RuntimeError> {

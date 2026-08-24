@@ -1,124 +1,174 @@
 use crate::prelude::*;
+use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
 
+#[derive(Default)]
+pub struct StatementProofScopeState {
+    atomic_fact_proofs: HashMap<FactString, Rc<SuccessVerifyFactResult>>,
+    well_defined_object_proofs: HashMap<WellDefinedCacheKey, Rc<SuccessVerifyObjWellDefinedResult>>,
+    active_atomic_fact_inferences: HashSet<FactString>,
+    active_well_defined_objects: HashSet<ObjString>,
+    active_set_builder_membership_unfolds: HashSet<FactString>,
+    active_set_builder_forall_transport: bool,
+}
+
+/// Runtime-owned stack for one statement's transient proof state.
+///
+/// The first scope corresponds to the persistent execution target. Every
+/// temporary environment adds one child scope. Lookups walk from inner to
+/// outer; popping a local environment drops its local memo entries exactly.
+pub struct StatementProofStateStack {
+    scopes: Vec<StatementProofScopeState>,
+}
+
+impl StatementProofStateStack {
+    pub fn new() -> Self {
+        Self {
+            scopes: vec![StatementProofScopeState::default()],
+        }
+    }
+
+    pub fn push_scope(&mut self) {
+        self.scopes.push(StatementProofScopeState::default());
+    }
+
+    pub fn pop_scope(&mut self) {
+        assert!(
+            self.scopes.len() > 1,
+            "statement proof base scope must not be popped"
+        );
+        self.scopes.pop();
+    }
+
+    fn current_scope_mut(&mut self) -> &mut StatementProofScopeState {
+        self.scopes
+            .last_mut()
+            .expect("statement proof base scope should exist")
+    }
+
+    fn scopes_from_inner(&self) -> impl Iterator<Item = &StatementProofScopeState> {
+        self.scopes.iter().rev()
+    }
+
+    fn scopes_mut(&mut self) -> impl Iterator<Item = &mut StatementProofScopeState> {
+        self.scopes.iter_mut()
+    }
+
+    pub fn clear_preserving_scope_depth(&mut self) {
+        let scope_count = self.scopes.len().max(1);
+        self.scopes = (0..scope_count)
+            .map(|_| StatementProofScopeState::default())
+            .collect();
+    }
+
+    #[cfg(test)]
+    pub fn current_atomic_fact_proof_count(&self) -> usize {
+        self.current_scope()
+            .map(|scope| scope.atomic_fact_proofs.len())
+            .unwrap_or(0)
+    }
+
+    #[cfg(test)]
+    fn current_scope(&self) -> Option<&StatementProofScopeState> {
+        self.scopes.last()
+    }
+}
+
 impl Runtime {
-    pub(crate) fn begin_atomic_fact_inference(&mut self, key: &FactString) -> bool {
-        if self.iter_environments_from_top().any(|environment| {
-            environment
-                .proof_search_state
-                .active_atomic_fact_inferences
-                .contains(key)
-        }) {
+    pub fn begin_atomic_fact_inference(&mut self, key: &FactString) -> bool {
+        if self
+            .statement_proof_state
+            .scopes_from_inner()
+            .any(|scope| scope.active_atomic_fact_inferences.contains(key))
+        {
             return false;
         }
-        self.top_level_env()
-            .proof_search_state
+        self.statement_proof_state
+            .current_scope_mut()
             .active_atomic_fact_inferences
             .insert(key.clone());
         true
     }
 
-    pub(crate) fn end_atomic_fact_inference(&mut self, key: &FactString) {
-        self.for_each_current_environment_mut(|environment| {
-            environment
-                .proof_search_state
-                .active_atomic_fact_inferences
-                .remove(key);
-        });
+    pub fn end_atomic_fact_inference(&mut self, key: &FactString) {
+        for scope in self.statement_proof_state.scopes_mut() {
+            scope.active_atomic_fact_inferences.remove(key);
+        }
     }
 
-    pub(crate) fn begin_well_defined_object(&mut self, key: &ObjString) -> bool {
-        if self.iter_environments_from_top().any(|environment| {
-            environment
-                .proof_search_state
-                .active_well_defined_objects
-                .contains(key)
-        }) {
+    pub fn begin_well_defined_object(&mut self, key: &ObjString) -> bool {
+        if self
+            .statement_proof_state
+            .scopes_from_inner()
+            .any(|scope| scope.active_well_defined_objects.contains(key))
+        {
             return false;
         }
-        self.top_level_env()
-            .proof_search_state
+        self.statement_proof_state
+            .current_scope_mut()
             .active_well_defined_objects
             .insert(key.clone());
         true
     }
 
-    pub(crate) fn end_well_defined_object(&mut self, key: &ObjString) {
-        self.for_each_current_environment_mut(|environment| {
-            environment
-                .proof_search_state
-                .active_well_defined_objects
-                .remove(key);
-        });
+    pub fn end_well_defined_object(&mut self, key: &ObjString) {
+        for scope in self.statement_proof_state.scopes_mut() {
+            scope.active_well_defined_objects.remove(key);
+        }
     }
 
-    pub(crate) fn has_active_set_builder_membership_unfold(&self) -> bool {
-        self.iter_environments_from_top().any(|environment| {
-            !environment
-                .proof_search_state
-                .active_set_builder_membership_unfolds
-                .is_empty()
-        })
+    pub fn has_active_set_builder_membership_unfold(&self) -> bool {
+        self.statement_proof_state
+            .scopes_from_inner()
+            .any(|scope| !scope.active_set_builder_membership_unfolds.is_empty())
     }
 
-    pub(crate) fn begin_set_builder_membership_unfold(&mut self, key: &FactString) -> bool {
-        if self.iter_environments_from_top().any(|environment| {
-            environment
-                .proof_search_state
-                .active_set_builder_membership_unfolds
-                .contains(key)
-        }) {
+    pub fn begin_set_builder_membership_unfold(&mut self, key: &FactString) -> bool {
+        if self
+            .statement_proof_state
+            .scopes_from_inner()
+            .any(|scope| scope.active_set_builder_membership_unfolds.contains(key))
+        {
             return false;
         }
-        self.top_level_env()
-            .proof_search_state
+        self.statement_proof_state
+            .current_scope_mut()
             .active_set_builder_membership_unfolds
             .insert(key.clone());
         true
     }
 
-    pub(crate) fn end_set_builder_membership_unfold(&mut self, key: &FactString) {
-        self.for_each_current_environment_mut(|environment| {
-            environment
-                .proof_search_state
-                .active_set_builder_membership_unfolds
-                .remove(key);
-        });
+    pub fn end_set_builder_membership_unfold(&mut self, key: &FactString) {
+        for scope in self.statement_proof_state.scopes_mut() {
+            scope.active_set_builder_membership_unfolds.remove(key);
+        }
     }
 
-    pub(crate) fn set_builder_forall_transport_is_active(&self) -> bool {
-        self.iter_environments_from_top().any(|environment| {
-            environment
-                .proof_search_state
-                .active_set_builder_forall_transport
-        })
+    pub fn set_builder_forall_transport_is_active(&self) -> bool {
+        self.statement_proof_state
+            .scopes_from_inner()
+            .any(|scope| scope.active_set_builder_forall_transport)
     }
 
-    pub(crate) fn set_set_builder_forall_transport_active(&mut self, active: bool) {
+    pub fn set_set_builder_forall_transport_active(&mut self, active: bool) {
         if active {
-            self.top_level_env()
-                .proof_search_state
+            self.statement_proof_state
+                .current_scope_mut()
                 .active_set_builder_forall_transport = true;
             return;
         }
-        self.for_each_current_environment_mut(|environment| {
-            environment
-                .proof_search_state
-                .active_set_builder_forall_transport = false;
-        });
+        for scope in self.statement_proof_state.scopes_mut() {
+            scope.active_set_builder_forall_transport = false;
+        }
     }
 
     /// Reuse a completed proof visible in the current environment chain.
-    pub(crate) fn verify_atomic_fact_from_statement_memo(
-        &self,
-        fact: &AtomicFact,
-    ) -> Option<StmtResult> {
+    pub fn verify_atomic_fact_from_statement_memo(&self, fact: &AtomicFact) -> Option<StmtResult> {
         let key = fact.to_string();
-        self.iter_environments_from_top().find_map(|environment| {
-            environment
-                .statement_atomic_fact_proofs
-                .get(&key)
-                .map(|source| {
+        self.statement_proof_state
+            .scopes_from_inner()
+            .find_map(|scope| {
+                scope.atomic_fact_proofs.get(&key).map(|source| {
                     SuccessFactStmtResult::new_with_statement_memo(
                         fact.clone().into(),
                         SuccessInferResult::new(),
@@ -126,11 +176,11 @@ impl Runtime {
                     )
                     .into()
                 })
-        })
+            })
     }
 
     /// Remember truth and its complete proof without committing the fact or running inference.
-    pub(crate) fn remember_successful_atomic_fact_for_statement(
+    pub fn remember_successful_atomic_fact_for_statement(
         &mut self,
         fact: &AtomicFact,
         mut result: StmtResult,
@@ -148,8 +198,9 @@ impl Runtime {
 
         let key = fact.to_string();
         let existing_source = {
-            self.iter_environments_from_top()
-                .find_map(|environment| environment.statement_atomic_fact_proofs.get(&key).cloned())
+            self.statement_proof_state
+                .scopes_from_inner()
+                .find_map(|scope| scope.atomic_fact_proofs.get(&key).cloned())
         };
         if existing_source.is_some() {
             return result;
@@ -159,256 +210,53 @@ impl Runtime {
             .factual_success()
             .expect("successful atomic fact verification must return a factual result");
         let source = source.verification.clone();
-        self.top_level_env()
-            .statement_atomic_fact_proofs
+        self.statement_proof_state
+            .current_scope_mut()
+            .atomic_fact_proofs
             .insert(key, source.clone());
 
         result
     }
 
     /// End the statement-local lifetime on every active scope of the current execution frame.
-    pub(crate) fn clear_statement_proof_state(&mut self) {
-        self.for_each_current_environment_mut(|environment| {
-            environment.statement_atomic_fact_proofs.clear();
-            environment.statement_well_defined_obj_proofs.clear();
-            environment.proof_search_state.clear();
-        });
+    pub fn clear_statement_proof_state(&mut self) {
+        self.statement_proof_state.clear_preserving_scope_depth();
     }
 
-    fn for_each_current_environment_mut(&mut self, mut visit: impl FnMut(&mut Environment)) {
-        let Some(frame) = self.execution_stack.last_mut() else {
-            return;
-        };
-        let module_id = frame.module_id;
-        let layer = frame.layer;
-        for environment in frame.local_environment_stack.iter_mut() {
-            visit(environment);
-        }
-        let Some(module) = self.module_manager.module_mut(module_id) else {
-            return;
-        };
-        visit(&mut module.main_environment);
-        if let ExecutionLayer::File(file_id) = layer {
-            if let Some(file) = module.file_mut(file_id) {
-                visit(&mut file.environment);
-            }
-        }
+    pub fn statement_well_defined_object_proof(
+        &self,
+        key: &WellDefinedCacheKey,
+    ) -> Option<Rc<SuccessVerifyObjWellDefinedResult>> {
+        self.statement_proof_state
+            .scopes_from_inner()
+            .find_map(|scope| scope.well_defined_object_proofs.get(key).cloned())
+    }
+
+    pub fn remember_statement_well_defined_object_proof(
+        &mut self,
+        key: WellDefinedCacheKey,
+        result: Rc<SuccessVerifyObjWellDefinedResult>,
+    ) {
+        self.statement_proof_state
+            .current_scope_mut()
+            .well_defined_object_proofs
+            .entry(key)
+            .or_insert(result);
+    }
+
+    #[cfg(test)]
+    pub fn statement_atomic_fact_proof_is_remembered(&self, key: &FactString) -> bool {
+        self.statement_proof_state
+            .scopes_from_inner()
+            .any(|scope| scope.atomic_fact_proofs.contains_key(key))
+    }
+
+    #[cfg(test)]
+    pub fn current_statement_atomic_fact_proof_count(&self) -> usize {
+        self.statement_proof_state.current_atomic_fact_proof_count()
     }
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn successful_atomic_fact_is_shared_until_statement_memo_is_cleared() {
-        let mut runtime = new_test_runtime();
-        let fact = parse_atomic_fact(&mut runtime, "1 < 2");
-
-        let first = runtime
-            .verify_atomic_fact(&fact, &UseContextVerifyState::new(0, false))
-            .expect("first verification should run");
-        let first_source = direct_verification(&first);
-        assert!(!matches!(
-            first_source.proof(),
-            SuccessFactProofResult::Reuse(_)
-        ));
-        assert!(runtime
-            .top_level_env()
-            .statement_atomic_fact_proofs
-            .contains_key(&fact.to_string()));
-        assert!(runtime
-            .verify_fact_from_cache_using_display_string(&fact.clone().into())
-            .is_none());
-
-        let second = runtime
-            .verify_atomic_fact(&fact, &UseContextVerifyState::new(0, false))
-            .expect("second verification should hit the statement memo");
-        let second_source = reused_verification(&second);
-        assert!(Rc::ptr_eq(&first_source, second_source));
-        assert!(second.infer_result().is_empty());
-        let output = display_stmt_exec_result_json(&runtime, &second, false);
-        assert!(output.contains("number comparison"), "{output}");
-        assert!(!output.contains("statement memo"), "{output}");
-
-        runtime.clear_statement_proof_state();
-        assert!(runtime
-            .top_level_env()
-            .statement_atomic_fact_proofs
-            .is_empty());
-    }
-
-    #[test]
-    fn unknown_atomic_fact_is_not_remembered() {
-        let mut runtime = new_test_runtime();
-        let fact = parse_atomic_fact(&mut runtime, "1 = 2");
-
-        let result = runtime
-            .verify_atomic_fact(&fact, &UseContextVerifyState::new(0, false))
-            .expect("unknown verification should not error");
-        assert!(result.is_unknown());
-        assert!(!runtime
-            .top_level_env()
-            .statement_atomic_fact_proofs
-            .contains_key(&fact.to_string()));
-
-        runtime.clear_statement_proof_state();
-        let stmt = parse_stmt(&mut runtime, "1 = 2");
-        assert!(runtime.exec_stmt(&stmt).is_err());
-        assert!(runtime
-            .top_level_env()
-            .statement_atomic_fact_proofs
-            .is_empty());
-    }
-
-    #[test]
-    fn local_environment_memo_is_visible_inward_and_discarded_outward() {
-        let mut runtime = new_test_runtime();
-        let parent_fact = parse_atomic_fact(&mut runtime, "1 < 2");
-        let child_fact = parse_atomic_fact(&mut runtime, "2 < 3");
-        runtime
-            .verify_atomic_fact(&parent_fact, &UseContextVerifyState::new(0, false))
-            .expect("parent fact should verify");
-
-        runtime
-            .run_in_local_env(|runtime| {
-                assert!(runtime
-                    .verify_atomic_fact_from_statement_memo(&parent_fact)
-                    .is_some());
-                runtime.verify_atomic_fact(&child_fact, &UseContextVerifyState::new(0, false))?;
-                assert!(runtime
-                    .top_level_env()
-                    .statement_atomic_fact_proofs
-                    .contains_key(&child_fact.to_string()));
-                Ok::<(), RuntimeError>(())
-            })
-            .expect("local verification should succeed");
-
-        assert!(runtime
-            .verify_atomic_fact_from_statement_memo(&parent_fact)
-            .is_some());
-        assert!(runtime
-            .verify_atomic_fact_from_statement_memo(&child_fact)
-            .is_none());
-    }
-
-    #[test]
-    fn known_only_entry_points_reuse_statement_proofs() {
-        let mut runtime = new_test_runtime();
-        let set_fact = parse_atomic_fact(&mut runtime, "$is_set(R)");
-        let first_set_result = runtime
-            .verify_atomic_fact(&set_fact, &UseContextVerifyState::new(0, false))
-            .expect("builtin set fact should verify");
-        let set_source = direct_verification(&first_set_result);
-        let known_set_result = runtime
-            .verify_non_equational_atomic_fact_with_known_atomic_facts(&set_fact)
-            .expect("known-only non-equality entry should consult the statement memo");
-        assert!(Rc::ptr_eq(
-            &set_source,
-            reused_verification(&known_set_result)
-        ));
-
-        let equality = parse_atomic_fact(&mut runtime, "1 = 1");
-        let first_equality_result = runtime
-            .verify_atomic_fact(&equality, &UseContextVerifyState::new(0, false))
-            .expect("reflexive equality should verify");
-        let equality_source = direct_verification(&first_equality_result);
-        let AtomicFact::EqualFact(equality_fact) = equality else {
-            unreachable!()
-        };
-        let known_equality_result =
-            runtime.verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
-                &equality_fact.left,
-                &equality_fact.right,
-                equality_fact.line_file,
-            ));
-        assert!(Rc::ptr_eq(
-            &equality_source,
-            reused_verification(&known_equality_result)
-        ));
-    }
-
-    #[test]
-    fn next_statement_does_not_inherit_the_previous_memo_source() {
-        let mut runtime = new_test_runtime();
-        let fact = parse_atomic_fact(&mut runtime, "1 < 2");
-        let first = runtime
-            .verify_atomic_fact(&fact, &UseContextVerifyState::new(0, false))
-            .expect("temporary proof should verify");
-        let first_source = direct_verification(&first);
-
-        let stmt = parse_stmt(&mut runtime, "1 < 2");
-        let second = runtime
-            .exec_stmt(&stmt)
-            .expect("the next statement should verify independently");
-        let second_source = direct_verification(&second);
-        assert!(!Rc::ptr_eq(&first_source, &second_source));
-        assert!(runtime
-            .top_level_env()
-            .statement_atomic_fact_proofs
-            .is_empty());
-    }
-
-    #[test]
-    fn exec_stmt_clears_temporary_successes_but_keeps_the_proof_evidence() {
-        let mut runtime = new_test_runtime();
-        let stmt = parse_stmt(&mut runtime, "1 < 2");
-        let Stmt::Fact(Fact::AtomicFact(fact)) = &stmt else {
-            unreachable!()
-        };
-        let result = runtime.exec_stmt(&stmt).expect("statement should verify");
-
-        assert!(runtime
-            .top_level_env()
-            .statement_atomic_fact_proofs
-            .is_empty());
-        assert!(runtime
-            .verify_fact_from_cache_using_display_string(&fact.clone().into())
-            .is_some());
-        let output = display_stmt_exec_result_json(&runtime, &result, false);
-        assert!(output.contains("number comparison"), "{output}");
-        assert!(!output.contains("statement memo"), "{output}");
-    }
-
-    fn new_test_runtime() -> Runtime {
-        let mut runtime = Runtime::new();
-        runtime.new_file_path_new_env_new_name_scope("statement_memo_test.lit");
-        runtime
-    }
-
-    fn parse_atomic_fact(runtime: &mut Runtime, source: &str) -> AtomicFact {
-        let stmt = parse_stmt(runtime, source);
-        let Stmt::Fact(Fact::AtomicFact(fact)) = stmt else {
-            panic!("expected an atomic fact: {source}");
-        };
-        fact
-    }
-
-    fn parse_stmt(runtime: &mut Runtime, source: &str) -> Stmt {
-        let tokenizer = Tokenizer::new();
-        let mut blocks = tokenizer
-            .parse_blocks(source, Rc::from("statement_memo_test.lit"))
-            .expect("test statement should tokenize");
-        assert_eq!(blocks.len(), 1);
-        runtime
-            .parse_stmt(&mut blocks[0])
-            .expect("test statement should parse")
-    }
-
-    fn direct_verification(result: &StmtResult) -> Rc<SuccessVerifyFactResult> {
-        let success = result
-            .factual_success()
-            .expect("atomic fact should be factual");
-        success.verification.clone()
-    }
-
-    fn reused_verification(result: &StmtResult) -> &Rc<SuccessVerifyFactResult> {
-        let success = result
-            .factual_success()
-            .expect("memoized atomic fact should be factual");
-        let SuccessFactProofResult::Reuse(result) = success.proof() else {
-            panic!("atomic success should retain its statement memo source");
-        };
-        &result.source
-    }
-}
+#[path = "../../tests/unit/runtime/runtime_statement_memo/tests.rs"]
+mod tests;

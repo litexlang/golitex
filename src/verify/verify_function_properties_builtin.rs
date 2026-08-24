@@ -4,7 +4,7 @@ impl Runtime {
     // Injectivity means equal outputs force equal inputs.
     // Example: `$injective(A, B, f)` unfolds to
     // `forall x1, x2 A: f(x1) = f(x2) => x1 = x2`.
-    pub(crate) fn verify_builtin_function_property_by_definition(
+    pub fn verify_builtin_function_property_by_definition(
         &mut self,
         fact: &NormalAtomicFact,
         verify_state: &UseContextVerifyState,
@@ -38,7 +38,7 @@ impl Runtime {
     // Positive function-property facts expose their mathematical definitions to inference.
     // Example: `$bijective(A, B, f)` adds both `$injective(A, B, f)` and
     // `$surjective(A, B, f)`; those facts then add their forall/exist bodies.
-    pub(crate) fn builtin_function_property_definition_facts(
+    pub fn builtin_function_property_definition_facts(
         &mut self,
         fact: &NormalAtomicFact,
     ) -> Result<Option<Vec<Fact>>, RuntimeError> {
@@ -80,7 +80,7 @@ impl Runtime {
         }
     }
 
-    pub(crate) fn verify_builtin_function_property_arg_types(
+    pub fn verify_builtin_function_property_arg_types(
         &mut self,
         fact: &AtomicFact,
         verify_state: &UseContextVerifyState,
@@ -247,7 +247,7 @@ impl Runtime {
     // A bijection has exactly one preimage for every codomain element.
     // This is a derived builtin consequence (injectivity + surjectivity), not
     // an additional clause in the definition of `$bijective`.
-    pub(crate) fn bijective_unique_preimage_fact(
+    pub fn bijective_unique_preimage_fact(
         &mut self,
         fact: &NormalAtomicFact,
     ) -> Result<Option<Fact>, RuntimeError> {

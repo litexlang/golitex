@@ -430,7 +430,7 @@ impl Runtime {
         })
     }
 
-    pub(crate) fn exec_witness_exist_fact_stmt_affect_environment(
+    pub fn exec_witness_exist_fact_stmt_affect_environment(
         &mut self,
         stmt: &WitnessExistFact,
     ) -> Result<SuccessInferResult, RuntimeError> {
@@ -452,7 +452,7 @@ impl Runtime {
         }
     }
 
-    pub(crate) fn exec_witness_exist_fact_stmt_affect_environment_only(
+    pub fn exec_witness_exist_fact_stmt_affect_environment_only(
         &mut self,
         stmt: &WitnessExistFact,
     ) -> Result<StmtResult, RuntimeError> {
@@ -467,7 +467,7 @@ impl Runtime {
         )
     }
 
-    pub(crate) fn exec_witness_atomic_fact_stmt_affect_environment(
+    pub fn exec_witness_atomic_fact_stmt_affect_environment(
         &mut self,
         stmt: &WitnessAtomicFact,
     ) -> Result<SuccessInferResult, RuntimeError> {
@@ -489,7 +489,7 @@ impl Runtime {
         })
     }
 
-    pub(crate) fn exec_witness_atomic_fact_stmt_affect_environment_only(
+    pub fn exec_witness_atomic_fact_stmt_affect_environment_only(
         &mut self,
         stmt: &WitnessAtomicFact,
     ) -> Result<StmtResult, RuntimeError> {
@@ -630,7 +630,7 @@ impl Runtime {
         })
     }
 
-    pub(crate) fn exec_witness_nonempty_set_stmt_affect_environment(
+    pub fn exec_witness_nonempty_set_stmt_affect_environment(
         &mut self,
         stmt: &WitnessNonemptySet,
     ) -> Result<SuccessInferResult, RuntimeError> {
@@ -652,7 +652,7 @@ impl Runtime {
         }
     }
 
-    pub(crate) fn exec_witness_nonempty_set_stmt_affect_environment_only(
+    pub fn exec_witness_nonempty_set_stmt_affect_environment_only(
         &mut self,
         stmt: &WitnessNonemptySet,
     ) -> Result<StmtResult, RuntimeError> {

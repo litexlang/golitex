@@ -1,6 +1,19 @@
-# Repository test harnesses
+# Repository test architecture
 
-`cargo test --release run_examples -- --nocapture` runs registered examples and the repository's executable Markdown snippets. The white-box harness is stored under `tests/kernel_contracts/` and is loaded as a private `#[cfg(test)]` module, so it can check crate-internal contracts without becoming part of the production `src` tree or public API.
+All Rust test bodies live under `tests/`. Production files in `src/` contain
+only small `#[cfg(test)] #[path = ...] mod ...;` loaders and, where unavoidable,
+narrow test-only access seams.
+
+| Directory | Responsibility | How it runs |
+| --- | --- | --- |
+| `unit/<source subsystem>/<source file>/` | White-box tests owned by one Rust source file. The path mirrors `src/`, and the final filename preserves the original test module name. | Loaded privately by the owning source module under `cfg(test)`. |
+| `unit/kernel_contracts/` | Cross-cutting white-box runtime, verifier, dataset-runner, and compiler contracts. | Loaded privately from `src/lib.rs` or the compiler owner. |
+| `integration/` | Black-box public API, CLI, output, publication, and repository-boundary tests. | Registered explicitly as Cargo `[[test]]` targets. |
+| `tooling/` | Tests for repository scripts and deployment tooling. | Run by the tool-specific Python gate. |
+
+`cargo test --release run_examples -- --nocapture` runs registered examples and
+the repository's executable Markdown snippets. The white-box harness is kept
+outside the production tree while retaining access to crate-internal contracts.
 
 ## Examples and boundaries
 
@@ -32,4 +45,4 @@ collect registered examples and Markdown fences
   -> fail if any collected example returns an error
 ```
 
-Start with [`kernel_contracts/lit_file_runner_tests/examples_runner.rs`](kernel_contracts/lit_file_runner_tests/examples_runner.rs); for example, `run_examples` and `run_docs_markdown_files` are separate gates. Compiler white-box regressions live in [`kernel_contracts/stmt_result_to_lean_compiler.rs`](kernel_contracts/stmt_result_to_lean_compiler.rs), compiler result tracers live in [`stmt_result_to_lean_compiler_tracers.rs`](stmt_result_to_lean_compiler_tracers.rs), and structural JSON black-box regressions live in [`result_json_v2.rs`](result_json_v2.rs).
+Start with [`unit/kernel_contracts/lit_file_runner_tests/examples_runner.rs`](unit/kernel_contracts/lit_file_runner_tests/examples_runner.rs); for example, `run_examples` and `run_docs_markdown_files` are separate gates. Compiler white-box regressions live in [`unit/kernel_contracts/stmt_result_to_lean_compiler.rs`](unit/kernel_contracts/stmt_result_to_lean_compiler.rs), compiler result tracers live in [`integration/stmt_result_to_lean_compiler_tracers.rs`](integration/stmt_result_to_lean_compiler_tracers.rs), and structural JSON black-box regressions live in [`integration/result_json_v2.rs`](integration/result_json_v2.rs).

@@ -3,7 +3,7 @@ use super::*;
 impl Runtime {
     // A finite-set product over the empty set is one.
     // Example: `finite_set_product({}, fn(x Z) Z {x}) = 1`.
-    pub(crate) fn try_verify_finite_set_product_empty(
+    pub fn try_verify_finite_set_product_empty(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -45,7 +45,7 @@ impl Runtime {
     // A finite-set product over a displayed finite set expands to the left-associated product
     // of the factor at each listed element. Example:
     // `finite_set_product({1, 2}, fn(x Z) Z {x}) = 1 * 2`.
-    pub(crate) fn try_verify_finite_set_product_list_expansion(
+    pub fn try_verify_finite_set_product_list_expansion(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -93,7 +93,7 @@ impl Runtime {
     // Inserting a fresh element splits a finite-set product into the old product and its factor.
     // Example: from `not x $in S`, prove
     // `finite_set_product(union({x}, S), f) = finite_set_product(S, f|S) * f(x)`.
-    pub(crate) fn try_verify_finite_set_product_fresh_insertion(
+    pub fn try_verify_finite_set_product_fresh_insertion(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -191,7 +191,7 @@ impl Runtime {
     // Removing a member splits a finite-set product into the remaining product and that member's factor.
     // Example: from `x $in A`, prove
     // `finite_set_product(A, f) = finite_set_product(set_minus(A, {x}), f|-) * f(x)`.
-    pub(crate) fn try_verify_finite_set_product_remove_member(
+    pub fn try_verify_finite_set_product_remove_member(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -286,7 +286,7 @@ impl Runtime {
 
     // A finite-set product over an integer closed range agrees with the existing range product.
     // Example: `finite_set_product(1...3, fn(x Z) Z {x}) = product(1, 3, fn(x Z) Z {x})`.
-    pub(crate) fn try_verify_finite_set_product_closed_range_bridge(
+    pub fn try_verify_finite_set_product_closed_range_bridge(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -353,7 +353,7 @@ impl Runtime {
 
     // A constant finite-set factor is the constant raised to the set cardinality.
     // Example: `finite_set_product(X, fn(x X) R {c}) = c ^ finite_set_size(X)`.
-    pub(crate) fn try_verify_finite_set_product_constant_factor(
+    pub fn try_verify_finite_set_product_constant_factor(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -406,7 +406,7 @@ impl Runtime {
     // Finite-set products are equal when their factors are pointwise equal on the same finite set.
     // Example: from `forall x X: f(x) = g(x)`, prove
     // `finite_set_product(X, f) = finite_set_product(X, g)`.
-    pub(crate) fn try_verify_finite_set_product_pointwise_equality(
+    pub fn try_verify_finite_set_product_pointwise_equality(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -506,7 +506,7 @@ impl Runtime {
     // Finite-set products distribute over pointwise multiplication on the same finite set.
     // Example: `finite_set_product(X, fn(x X) Z {f(x) * g(x)}) =
     // finite_set_product(X, f) * finite_set_product(X, g)`.
-    pub(crate) fn try_verify_finite_set_product_mul(
+    pub fn try_verify_finite_set_product_mul(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -590,7 +590,7 @@ impl Runtime {
     // Finite-set products may be reindexed along a known bijection.
     // Example: `$bijective(Y, X, g)` proves
     // `finite_set_product(X, f) = finite_set_product(Y, fn(y Y) Z {f(g(y))})`.
-    pub(crate) fn try_verify_finite_set_product_substitution(
+    pub fn try_verify_finite_set_product_substitution(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -800,7 +800,7 @@ impl Runtime {
         }))
     }
 
-    pub(crate) fn instantiate_unary_function_at(
+    pub fn instantiate_unary_function_at(
         &mut self,
         func: &Obj,
         x: &Obj,
@@ -824,7 +824,7 @@ impl Runtime {
         ))
     }
 
-    pub(crate) fn unary_anonymous_function_param_set(func: &Obj) -> Option<Obj> {
+    pub fn unary_anonymous_function_param_set(func: &Obj) -> Option<Obj> {
         let af: &AnonymousFn = match func {
             Obj::AnonymousFn(af) => af,
             Obj::FnObj(fo) => {

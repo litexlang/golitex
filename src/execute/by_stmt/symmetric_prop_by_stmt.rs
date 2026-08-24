@@ -113,7 +113,7 @@ impl Runtime {
         )
     }
 
-    pub(crate) fn exec_by_symmetric_prop_stmt_affect_environment_only(
+    pub fn exec_by_symmetric_prop_stmt_affect_environment_only(
         &mut self,
         stmt: &BySymmetricPropStmt,
     ) -> Result<StmtResult, RuntimeError> {

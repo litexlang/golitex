@@ -97,7 +97,7 @@ impl Runtime {
         Ok(result.with_infers(infer_after_store))
     }
 
-    pub(crate) fn exec_by_induc_stmt_affect_environment_only(
+    pub fn exec_by_induc_stmt_affect_environment_only(
         &mut self,
         stmt: &ByInducStmt,
     ) -> Result<StmtResult, RuntimeError> {

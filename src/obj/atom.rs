@@ -26,7 +26,7 @@ impl Identifier {
         Identifier { name, symbol: None }
     }
 
-    pub(crate) fn new_bound(name: String, symbol: SymbolRef) -> Self {
+    pub fn new_bound(name: String, symbol: SymbolRef) -> Self {
         Identifier {
             name,
             symbol: Some(symbol),
@@ -49,7 +49,7 @@ impl IdentifierWithMod {
         }
     }
 
-    pub(crate) fn new_bound(mod_name: String, name: String, symbol: SymbolRef) -> Self {
+    pub fn new_bound(mod_name: String, name: String, symbol: SymbolRef) -> Self {
         IdentifierWithMod {
             mod_name,
             name,

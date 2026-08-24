@@ -1,18 +1,19 @@
-# Middle-school mathematics in a nutshell.
+# School mathematics in a nutshell.
 #
-# Included: native gcd, linear and quadratic equations, AM-GM, elementary
-# functions and arithmetic sequences, coordinate distance, finite probability,
-# and basic descriptive statistics.
-#
-# The mainline moves from concrete arithmetic to equations, inequalities,
-# functions and sequences, coordinate geometry, and finally probability and
-# statistics. Each stop uses one classic example and native Litex objects.
+# This standalone tour follows the eleven mathematical directions mapped by
+# the high-school book. Each direction contributes a core definition, a major
+# theorem, or a concrete example. The goal is breadth with usable interfaces,
+# not a second compressed textbook.
 
-# 1. Number sense: use the native gcd object directly.
+# 1. Sets and logic: membership and subset are the language of collections.
+# The opening gcd calculation also keeps elementary number sense visible.
 
 gcd(84, 30) = 6
+2 $in {1, 2, 3}
+{1, 2} $subset {1, 2, 3}
+finite_set_size({1, 2, 3}) = 3
 
-# 2. Equations: isolate a linear unknown, then split a factorized quadratic.
+# 2. Algebra: solve equations, split a zero product, and compare two means.
 
 thm solve_linear_equation:
     ? forall a, b, c, x R:
@@ -23,7 +24,6 @@ thm solve_linear_equation:
     a * x = c - b
     x = (a * x) / a = (c - b) / a
 
-# A zero product splits into the two possible roots.
 thm factored_quadratic_roots:
     ? forall r, s, x R:
         (x - r) * (x - s) = 0
@@ -36,19 +36,10 @@ thm factored_quadratic_roots:
         case x - s = 0:
             x = s
 
-3 != 0
-3 * 2 + (-6) = 0
-by thm solve_linear_equation(3, -6, 0, 2) => 2 = (0 - (-6)) / 3
-(3 - 2) * (3 - 3) = 0
-3 = 3
-3 = 2 or 3 = 3
-
-# 3. Inequalities: AM-GM grows from the nonnegative square (x-y)^2.
-
 have fn arithmetic_mean(x, y R) R = (x + y) / 2
 have fn geometric_mean(x, y R: x >= 0, y >= 0) R = sqrt(x * y)
 
-# Expand the nonnegative square (x-y)^2 and compare the squares of the two means.
+# AM-GM follows from the nonnegative square (x-y)^2.
 thm two_variable_am_gm:
     ? forall x, y R:
         x >= 0
@@ -80,38 +71,175 @@ by thm two_variable_am_gm(9, 16) => geometric_mean(9, 16) <= arithmetic_mean(9, 
 geometric_mean(9, 16) = sqrt(9 * 16) = 12
 arithmetic_mean(9, 16) = (9 + 16) / 2 = 25 / 2
 
-# 4. Functions and sequences: evaluate a line, then expose constant difference.
+# Powers and logarithms expose the exponential laws behind algebraic growth.
+
+2^5 = 32
+log(2, 8) = 3
+log(10, 100) = 2
+
+forall a R, m, n N:
+    a^(m + n) = a^m * a^n
+
+log(2, 8 * 4) = log(2, 8) + log(2, 4) = 3 + 2 = 5
+
+# 3. Functions: named formulas can be evaluated and classified by identities.
 
 have fn linear_function(x R) R = 3 * x + 2
+have fn square_function(x R) R = x^2
+
 linear_function(4) = 3 * 4 + 2 = 14
 linear_function(-1) = 3 * (-1) + 2 = -1
+square_function(5) = 5^2 = 25
 
-# This closed form starts at `first` and advances by one fixed difference.
-have fn arithmetic_term(first, difference R, n N+) R = first + (n - 1) * difference
-arithmetic_term(2, 3, 1) = 2
-arithmetic_term(2, 3, 4) = 11
+forall x R:
+    square_function(-x) = (-x)^2 = x^2 = square_function(x)
 
-forall first, difference R, n N+:
-    arithmetic_term(first, difference, n + 1) = first + ((n + 1) - 1) * difference
-    arithmetic_term(first, difference, n) = first + (n - 1) * difference
-    arithmetic_term(first, difference, n + 1) - arithmetic_term(first, difference, n) = (first + ((n + 1) - 1) * difference) - (first + (n - 1) * difference) = difference
+# 4. Trigonometry: convert degrees to radians and use the Pythagorean identity
+# and cosine law in a right-triangle calculation.
 
-# 5. Coordinate geometry: the 3-4-5 triangle is a distance calculation.
+have fn radians_from_degrees(theta R) R = theta * pi / 180
+have fn cosine_law_third_side_sq(a, b, gamma R) R = a^2 + b^2 - 2 * a * b * cos(gamma)
 
-have fn distance_sq(p, q cart(R, R)) R = (q[1] - p[1])^2 + (q[2] - p[2])^2
-distance_sq((0, 0), (3, 4)) = (3 - 0)^2 + (4 - 0)^2 = 25
-3^2 + 4^2 = 5^2
+radians_from_degrees(180) = 180 * pi / 180 = pi
+radians_from_degrees(60) = 60 * pi / 180 = pi / 3
 
-# 6. Probability and statistics: a fair die, then the data 2, 4, 6.
+forall x R:
+    sin(x)^2 + cos(x)^2 = 1
+
+cos(pi / 2) = 0
+cosine_law_third_side_sq(3, 4, pi / 2) = 3^2 + 4^2 - 2 * 3 * 4 * cos(pi / 2) = 25
+
+# 5. Plane vectors and analytic geometry: operations act on coordinate pairs;
+# circles and ellipses are sets of points satisfying equations.
+
+have fn add2(u, v cart(R, R)) cart(R, R) = (u[1] + v[1], u[2] + v[2])
+have fn dot2(u, v cart(R, R)) R = u[1] * v[1] + u[2] * v[2]
+have fn norm2_sq(u cart(R, R)) R = dot2(u, u)
+
+prop perpendicular2(u, v cart(R, R)):
+    dot2(u, v) = 0
+
+have fn circle_center(h, k R, r R+) power_set(cart(R, R)) = {p cart(R, R): (p[1] - h)^2 + (p[2] - k)^2 = r^2}
+have fn ellipse(a, b R+) power_set(cart(R, R)) = {p cart(R, R): p[1]^2 / a^2 + p[2]^2 / b^2 = 1}
+
+add2((1, 2), (3, 4)) = (4, 6)
+dot2((1, 2), (3, 4)) = 11
+norm2_sq((3, 4)) = 25
+$perpendicular2((1, 0), (0, 1))
+(4, 6) $in circle_center(1, 2, 5)
+(3, 0) $in ellipse(3, 2)
+
+# 6. Complex numbers: conjugation changes the imaginary coordinate's sign,
+# while modulus measures distance from zero.
+
+have fn complex_conjugate(z C) C = re(z) - img(z) * i
+
+i^2 = -1
+re(3 + 4 * i) = 3
+img(3 + 4 * i) = 4
+C_abs(3 + 4 * i) = sqrt(re(3 + 4 * i)^2 + img(3 + 4 * i)^2)
+re(3 + 4 * i)^2 + img(3 + 4 * i)^2 = 3^2 + 4^2
+C_abs(3 + 4 * i) = sqrt(re(3 + 4 * i)^2 + img(3 + 4 * i)^2) = sqrt(3^2 + 4^2) = sqrt(25) = 5
+
+forall z C:
+    z = re(z) + img(z) * i
+    complex_conjugate(z) = re(z) - img(z) * i = re(z) + (-img(z)) * i
+    re(complex_conjugate(z)) = re(re(z) + (-img(z)) * i) = re(z)
+    img(complex_conjugate(z)) = img(re(z) + (-img(z)) * i) = -img(z)
+
+# 7. Solid geometry and measurement: triples model points and directions in
+# space; sets model planes; formulas compute surface area and volume.
+
+have fn dot3(u, v cart(R, R, R)) R = u[1] * v[1] + u[2] * v[2] + u[3] * v[3]
+have fn horizontal_plane(z R) power_set(cart(R, R, R)) = {p cart(R, R, R): p[3] = z}
+
+prop point_on_plane(p cart(R, R, R), P set):
+    p $in P
+
+have fn rectangular_prism_volume(length, width, height R) R = length * width * height
+have fn cube_surface_area(edge R) R = 6 * edge^2
+
+dot3((1, 0, 0), (0, 1, 0)) = 0
+(2, -3, 0) $in horizontal_plane(0)
+$point_on_plane((2, -3, 0), horizontal_plane(0))
+rectangular_prism_volume(2, 3, 4) = 24
+cube_surface_area(3) = 54
+
+# 8. Probability: finite counting gives uniform probability, while conditional
+# probability and Bayes' formula update probabilities from known evidence.
 
 have fn uniform_probability(S power_set(R), A power_set(S): $is_finite_set(S), $is_finite_set(A), finite_set_size(S) > 0) R = finite_set_size(A) / finite_set_size(S)
+have fn conditional_probability(joint_probability, condition_probability R: condition_probability > 0) R = joint_probability / condition_probability
+have fn bayes_posterior(prior, likelihood, evidence R: evidence > 0) R = likelihood * prior / evidence
 
 finite_set_size({1, 2, 3, 4, 5, 6}) = 6
 finite_set_size({2, 4, 6}) = 3
 {2, 4, 6} $subset {1, 2, 3, 4, 5, 6}
-uniform_probability({1, 2, 3, 4, 5, 6}, {2, 4, 6}) = 3 / 6 = 1 / 2
+uniform_probability({1, 2, 3, 4, 5, 6}, {2, 4, 6}) = 1 / 2
+conditional_probability(1 / 5, 2 / 5) = 1 / 2
+bayes_posterior(1 / 3, 3 / 4, 1 / 2) = 1 / 2
+
+# 9. Statistics and data analysis: mean, variance, range, covariance, and a
+# three-point regression slope summarize one-variable and paired data.
 
 have fn mean3(a, b, c R) R = (a + b + c) / 3
+have fn variance3(a, b, c R) R = ((a - mean3(a, b, c))^2 + (b - mean3(a, b, c))^2 + (c - mean3(a, b, c))^2) / 3
 have fn range3(minimum, maximum R) R = maximum - minimum
+have fn covariance3(x1, x2, x3, y1, y2, y3 R) R = ((x1 - mean3(x1, x2, x3)) * (y1 - mean3(y1, y2, y3)) + (x2 - mean3(x1, x2, x3)) * (y2 - mean3(y1, y2, y3)) + (x3 - mean3(x1, x2, x3)) * (y3 - mean3(y1, y2, y3))) / 3
+have fn regression_slope3(x1, x2, x3, y1, y2, y3 R: variance3(x1, x2, x3) != 0) R = covariance3(x1, x2, x3, y1, y2, y3) / variance3(x1, x2, x3)
+
+mean3(1, 2, 3) = (1 + 2 + 3) / 3 = 2
 mean3(2, 4, 6) = (2 + 4 + 6) / 3 = 4
 range3(2, 6) = 6 - 2 = 4
+variance3(1, 2, 3) = ((1 - mean3(1, 2, 3))^2 + (2 - mean3(1, 2, 3))^2 + (3 - mean3(1, 2, 3))^2) / 3 = ((1 - 2)^2 + (2 - 2)^2 + (3 - 2)^2) / 3 = 2 / 3
+variance3(1, 2, 3) != 0
+covariance3(1, 2, 3, 2, 4, 6) = ((1 - mean3(1, 2, 3)) * (2 - mean3(2, 4, 6)) + (2 - mean3(1, 2, 3)) * (4 - mean3(2, 4, 6)) + (3 - mean3(1, 2, 3)) * (6 - mean3(2, 4, 6))) / 3 = ((1 - 2) * (2 - 4) + (2 - 2) * (4 - 4) + (3 - 2) * (6 - 4)) / 3 = 4 / 3
+regression_slope3(1, 2, 3, 2, 4, 6) = covariance3(1, 2, 3, 2, 4, 6) / variance3(1, 2, 3) = (4 / 3) / (2 / 3) = 2
+
+# 10. Sequences, induction, and combinatorics: closed forms generate terms,
+# factorial counts arrangements, and induction proves a statement for all N.
+
+have fn arithmetic_term(first, difference R, n N+) R = first + (n - 1) * difference
+have fn geometric_term(first, ratio R, n N+) R = first * ratio^(n - 1)
+have fn permutation_count(n N) N = factorial(n)
+
+arithmetic_term(2, 3, 4) = 11
+geometric_term(2, 3, 4) = 54
+permutation_count(5) = factorial(5) = 120
+
+forall a, b R:
+    (a + b)^2 = a^2 + 2 * a * b + b^2
+
+claim:
+    ? forall n N:
+        2^n >= n + 1
+    by induc n from 0:
+        ? 2^n >= n + 1
+        2^0 = 1 >= 0 + 1
+
+        forall m Z:
+            m >= 0
+            2^m >= m + 1
+            =>:
+                2^m * 2^1 >= (m + 1) * 2
+                2^(m + 1) = 2^m * 2^1 >= (m + 1) * 2 = (m + 1) + (m + 1) >= m + 1 + 1
+
+# 11. Derivatives and elementary calculus: a difference quotient measures an
+# average rate of change; a derivative formula identifies a stationary point.
+
+have fn average_change_rate(f fn(x R) R, a R, h R+) R = (f(a + h) - f(a)) / h
+have fn circumference(r R) R = 2 * pi * r
+have fn quadratic_model(x R) R = x^2 - 6 * x + 5
+have fn quadratic_model_prime(x R) R = 2 * x - 6
+
+prop stationary_point_for_derivative(df fn(x R) R, x0 R):
+    df(x0) = 0
+
+forall a R, h R+:
+    circumference(a + h) = 2 * pi * (a + h)
+    circumference(a) = 2 * pi * a
+    average_change_rate(circumference, a, h) = (circumference(a + h) - circumference(a)) / h = (2 * pi * (a + h) - 2 * pi * a) / h = 2 * pi
+
+quadratic_model(3) = -4
+quadratic_model_prime(3) = 0
+$stationary_point_for_derivative(quadratic_model_prime, 3)

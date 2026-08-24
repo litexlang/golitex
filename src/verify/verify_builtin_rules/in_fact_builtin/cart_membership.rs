@@ -48,7 +48,7 @@ impl Runtime {
     // dimension and every coordinate's factor membership prove membership.
     // Example: `$is_cart(C)`, `tuple_dim(p) = cart_dim(C)`, and
     // `forall i closed_range(1, cart_dim(C)): p[i] $in proj(C, i)` imply `p $in C`.
-    pub(crate) fn try_verify_in_fact_by_symbolic_cart(
+    pub fn try_verify_in_fact_by_symbolic_cart(
         &mut self,
         in_fact: &InFact,
         verify_state: &UseContextVerifyState,

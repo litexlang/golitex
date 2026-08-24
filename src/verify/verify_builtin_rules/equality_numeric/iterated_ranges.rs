@@ -15,7 +15,7 @@ fn direct_additive_range_shift(base: &Obj, translated: &Obj) -> Option<Obj> {
 
 impl Runtime {
     /// A finite integer-range sum of the literal zero function is zero.
-    pub(crate) fn try_verify_literal_zero_range_sum_is_zero(
+    pub fn try_verify_literal_zero_range_sum_is_zero(
         &mut self,
         equal_fact: &EqualFact,
     ) -> Result<Option<StmtResult>, RuntimeError> {
@@ -51,7 +51,7 @@ impl Runtime {
     /// `sum(s,e,f) = sum(s,e,g)` when `f(x) = g(x)` is known for every integer
     /// `x` in the shared closed range. Example: after proving
     /// `forall x Z: s <= x, x <= e => f(x) = g(x)`, the two sums are equal.
-    pub(crate) fn try_verify_sum_pointwise_congruence(
+    pub fn try_verify_sum_pointwise_congruence(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -167,7 +167,7 @@ impl Runtime {
 
     /// `sum(s,e,f) = sum(s,e,g) + sum(s,e,h)` when for all integer `x` with `s <= x <= e`,
     /// `f(x) = g(x) + h(x)` (summands are unary anonymous `fn` bodies, instantiated at `x`).
-    pub(crate) fn try_verify_sum_additivity(
+    pub fn try_verify_sum_additivity(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -252,7 +252,7 @@ impl Runtime {
 
     /// Finite sums distribute over pointwise subtraction on the same integer range.
     /// Example: `sum(m,n,fn(i Z) R {f(i)-g(i)}) = sum(m,n,f) - sum(m,n,g)`.
-    pub(crate) fn try_verify_sum_subtraction(
+    pub fn try_verify_sum_subtraction(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -361,7 +361,7 @@ impl Runtime {
         )))
     }
 
-    pub(crate) fn instantiate_unary_anonymous_summand_at(
+    pub fn instantiate_unary_anonymous_summand_at(
         &mut self,
         func: &Obj,
         x: &Obj,
@@ -393,7 +393,7 @@ impl Runtime {
         )?))
     }
 
-    pub(crate) fn verify_integer_pointwise_atomic_fact_by_known_forall_or_builtin(
+    pub fn verify_integer_pointwise_atomic_fact_by_known_forall_or_builtin(
         &mut self,
         param_binding: SymbolBinding,
         dom_facts: Vec<Fact>,
@@ -421,7 +421,7 @@ impl Runtime {
     }
 
     /// `sum(a..b) + sum((b+1)..c) = sum(a..c)` with the same unary anonymous summand on each side.
-    pub(crate) fn try_verify_sum_merge_adjacent_ranges(
+    pub fn try_verify_sum_merge_adjacent_ranges(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -511,7 +511,7 @@ impl Runtime {
 
     // A finite sum over one index is the summand at that index.
     // Example: `sum(1, 1, fn(x N+) N+ {x}) = 1`.
-    pub(crate) fn try_verify_sum_single_term(
+    pub fn try_verify_sum_single_term(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -559,7 +559,7 @@ impl Runtime {
 
     // A finite product over one index is the factor at that index.
     // Example: `product(1, 1, fn(x N+) N+ {x}) = 1`.
-    pub(crate) fn try_verify_product_single_term(
+    pub fn try_verify_product_single_term(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -608,7 +608,7 @@ impl Runtime {
     }
 
     // sum(s,e,f) = sum(s,e-1,f) + f(e): same unary summand, shared start, e = (e-1)+1 on the shorter range.
-    pub(crate) fn try_verify_sum_split_last_term(
+    pub fn try_verify_sum_split_last_term(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -697,7 +697,7 @@ impl Runtime {
     }
 
     // product(s,e,f) = product(s,e-1,f) * f(e): same unary factor, shared start, e = (e-1)+1.
-    pub(crate) fn try_verify_product_split_last_term(
+    pub fn try_verify_product_split_last_term(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -808,7 +808,7 @@ impl Runtime {
     }
 
     // sum(s,e,f) = sum(s1,e1,f) + sum(s2,e2,f) + ... with contiguous [si,ei] tiling [s,e], same unary f.
-    pub(crate) fn try_verify_sum_partition_adjacent_ranges(
+    pub fn try_verify_sum_partition_adjacent_ranges(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -914,7 +914,7 @@ impl Runtime {
     }
 
     // product(s,e,f) = product(s1,e1,f) * product(s2,e2,f) * ... contiguous tiling, same unary f.
-    pub(crate) fn try_verify_product_partition_adjacent_ranges(
+    pub fn try_verify_product_partition_adjacent_ranges(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -1021,7 +1021,7 @@ impl Runtime {
 
     /// `sum(L) = sum(R)` with `R` a translate of `L` by `k` on both bounds, reduced to pointwise
     /// equality on the right-hand index range.
-    pub(crate) fn try_verify_sum_reindex_shift(
+    pub fn try_verify_sum_reindex_shift(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -1103,7 +1103,7 @@ impl Runtime {
     }
 
     /// `sum(s,e, \lambda x.c) = (e - s + 1) * c` when `c` does not mention the index parameter.
-    pub(crate) fn try_verify_sum_constant_summand(
+    pub fn try_verify_sum_constant_summand(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -1164,7 +1164,7 @@ impl Runtime {
 
     // Scalars factor out of finite sums over the same integer index range.
     // Example: `sum(m, n, fn(i Z) R {c * a(i)}) = c * sum(m, n, fn(i Z) R {a(i)})`.
-    pub(crate) fn try_verify_sum_scalar_mul(
+    pub fn try_verify_sum_scalar_mul(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,

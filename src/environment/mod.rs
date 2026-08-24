@@ -1,8 +1,10 @@
 mod environment;
 mod environment_merge;
-pub(crate) mod equality_linear_derive;
+pub mod equality_linear_derive;
 mod known_equality;
 mod known_fn;
+mod stored_fact_repository;
 pub use environment::*;
 pub use known_equality::{KnownEquality, KnownEqualityProofStep};
 pub use known_fn::KnownFnInfo;
+pub use stored_fact_repository::{EnvironmentStoredFact, EnvironmentStoredFactRepository};

@@ -571,7 +571,7 @@ impl Runtime {
         }
     }
 
-    pub(crate) fn obj_is_resolved_zero(&self, obj: &Obj) -> bool {
+    pub fn obj_is_resolved_zero(&self, obj: &Obj) -> bool {
         self.resolve_obj_to_number(obj)
             .map(|n| {
                 matches!(
@@ -583,7 +583,7 @@ impl Runtime {
     }
 
     /// If `obj` is `(-1) * u` or `u * (-1)` with literal `-1`, returns `u`.
-    pub(crate) fn peel_mul_by_literal_neg_one(&self, obj: &Obj) -> Option<Obj> {
+    pub fn peel_mul_by_literal_neg_one(&self, obj: &Obj) -> Option<Obj> {
         let Obj::Mul(m) = obj else {
             return None;
         };
@@ -705,7 +705,7 @@ impl Runtime {
         Some(Number::new(product).into())
     }
 
-    pub(crate) fn known_obj_value_from_obj(&self, obj: &Obj) -> Option<KnownObjValue> {
+    pub fn known_obj_value_from_obj(&self, obj: &Obj) -> Option<KnownObjValue> {
         if let Some(number) = self.resolve_obj_to_number(obj) {
             return Some(KnownObjValue::SimplifiedNumber(number));
         }

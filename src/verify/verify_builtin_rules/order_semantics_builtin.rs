@@ -106,7 +106,7 @@ impl Runtime {
     /// Direct order semantics that formerly required named source-level wrappers.
     /// They are limited to real binary order and integer discreteness, with every premise
     /// retained as a visible verification step.
-    pub(crate) fn try_verify_order_semantics_builtin_rule(
+    pub fn try_verify_order_semantics_builtin_rule(
         &mut self,
         atomic_fact: &AtomicFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -563,7 +563,7 @@ impl Runtime {
 
     /// A singleton integer interval has only its endpoint.
     /// Example: `n <= x`, `x < n + 1` => `x = n`.
-    pub(crate) fn try_verify_integer_singleton_interval_equality_builtin_rule(
+    pub fn try_verify_integer_singleton_interval_equality_builtin_rule(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -644,7 +644,7 @@ impl Runtime {
 
     /// Integer discreteness splits every pair at the next successor.
     /// Example: `forall x, n Z: x <= n or x >= n + 1`.
-    pub(crate) fn try_verify_integer_discrete_split_or_builtin_rule(
+    pub fn try_verify_integer_discrete_split_or_builtin_rule(
         &mut self,
         or_fact: &OrFact,
     ) -> Result<Option<StmtResult>, RuntimeError> {

@@ -1,7 +1,7 @@
 use crate::common::json_value::JsonValue;
 use crate::prelude::{ExecutionPhaseTrace, StatementExecutionTrace, StatementPhaseStatus};
 
-pub(crate) fn execution_phases_value(
+pub fn execution_phases_value(
     trace: &StatementExecutionTrace,
     well_definedness_checks: Vec<JsonValue>,
     process_fields: Vec<(String, JsonValue)>,
@@ -32,7 +32,7 @@ pub(crate) fn execution_phases_value(
     ])
 }
 
-pub(crate) fn error_execution_phases_value(trace: &StatementExecutionTrace) -> JsonValue {
+pub fn error_execution_phases_value(trace: &StatementExecutionTrace) -> JsonValue {
     execution_phases_value(trace, vec![], vec![], vec![])
 }
 

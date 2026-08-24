@@ -287,7 +287,7 @@ impl Runtime {
     /// Mathematical contract: a struct instantiation names a declared struct,
     /// supplies exactly its header arity, and gives well-defined arguments
     /// satisfying every declared parameter type and domain condition.
-    pub(crate) fn struct_header_param_to_arg_map(
+    pub fn struct_header_param_to_arg_map(
         &mut self,
         struct_obj: &StructObj,
         verify_state: &UseContextVerifyState,
@@ -396,7 +396,7 @@ impl Runtime {
 
     /// Mathematical contract: field carriers of a struct instance are the
     /// declared field expressions after sound header-parameter substitution.
-    pub(crate) fn instantiated_struct_field_types(
+    pub fn instantiated_struct_field_types(
         &mut self,
         struct_obj: &StructObj,
         verify_state: &UseContextVerifyState,
@@ -417,7 +417,7 @@ impl Runtime {
     /// Mathematical contract: the carrier of `value.field` is the field's
     /// declared carrier after substituting both struct header arguments and
     /// declaration-owned field projections of `value`.
-    pub(crate) fn instantiated_struct_field_type_for_access(
+    pub fn instantiated_struct_field_type_for_access(
         &mut self,
         field_access: &ObjAsStructInstanceWithFieldAccess,
         verify_state: &UseContextVerifyState,
@@ -448,7 +448,7 @@ impl Runtime {
 
     /// Field membership dispatch reaches this only after the field expression
     /// itself has passed ordinary well-definedness.
-    pub(crate) fn instantiated_struct_field_type_after_well_defined(
+    pub fn instantiated_struct_field_type_after_well_defined(
         &mut self,
         field_access: &ObjAsStructInstanceWithFieldAccess,
     ) -> Result<Obj, RuntimeError> {
@@ -461,7 +461,7 @@ impl Runtime {
     /// Mathematical contract: a one-field structure is a named view of its
     /// sole field carrier.
     /// Multi-field structures retain their Cartesian-product representation.
-    pub(crate) fn struct_carrier_from_field_types(&self, mut field_types: Vec<Obj>) -> Obj {
+    pub fn struct_carrier_from_field_types(&self, mut field_types: Vec<Obj>) -> Obj {
         if field_types.len() == 1 {
             return field_types.remove(0);
         }
@@ -470,7 +470,7 @@ impl Runtime {
 
     /// Mathematical contract: a field projection index exists exactly when
     /// the instantiated struct names a declared field of that name.
-    pub(crate) fn struct_field_index(
+    pub fn struct_field_index(
         &self,
         struct_obj: &StructObj,
         field_name: &str,
@@ -503,7 +503,7 @@ impl Runtime {
     /// Mathematical contract: field access denotes the value itself for a
     /// one-field struct and the corresponding one-based tuple projection for a
     /// multi-field struct.
-    pub(crate) fn struct_field_access_projection(
+    pub fn struct_field_access_projection(
         &self,
         field_access: &ObjAsStructInstanceWithFieldAccess,
     ) -> Result<Obj, RuntimeError> {

@@ -5,7 +5,7 @@ impl Runtime {
     ///
     /// Used to match residues after reducing summands: e.g. prove `X % Z = (X % Z) % Z` so
     /// `(X+Y)%Z = ((X%Z)+(Y%Z))%Z` can close via congruence.
-    pub(crate) fn try_verify_mod_nested_same_modulus_absorption(
+    pub fn try_verify_mod_nested_same_modulus_absorption(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -72,7 +72,7 @@ impl Runtime {
 
     /// If `d` divides `m`, reducing modulo `m` before modulo `d` changes nothing.
     /// Example: `(a % 8) % 2 = a % 2` for `a in Z`.
-    pub(crate) fn try_verify_mod_nested_divisible_modulus_absorption(
+    pub fn try_verify_mod_nested_divisible_modulus_absorption(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -165,7 +165,7 @@ impl Runtime {
     }
 
     // a % m = (b % m) % m reduces to a % m = b % m (same m); the inner equality must be known-only.
-    pub(crate) fn try_verify_mod_peel_nested_same_modulus(
+    pub fn try_verify_mod_peel_nested_same_modulus(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -244,7 +244,7 @@ impl Runtime {
     /// equalities.
     ///
     /// Example: `(x + y) % m = (x' + y') % m` from `(x % m) = (x' % m)` and `(y % m) = (y' % m)`.
-    pub(crate) fn try_verify_mod_congruence_from_inner_binary(
+    pub fn try_verify_mod_congruence_from_inner_binary(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -339,7 +339,7 @@ impl Runtime {
 
     // Negating an integer replaces its Euclidean residue by the complementary residue.
     // Example: for `n Z` and `k N+`, `(-n) % k = (k - n % k) % k`.
-    pub(crate) fn try_verify_integer_mod_negation_rule(
+    pub fn try_verify_integer_mod_negation_rule(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -443,7 +443,7 @@ impl Runtime {
 
     // Reducing an integer before a natural power preserves its Euclidean residue.
     // Example: for `n Z`, `m N`, and `k N+`, `n^m % k = ((n % k)^m) % k`.
-    pub(crate) fn try_verify_integer_mod_natural_power_rule(
+    pub fn try_verify_integer_mod_natural_power_rule(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,

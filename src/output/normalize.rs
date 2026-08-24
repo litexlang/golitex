@@ -1,7 +1,7 @@
 use crate::common::json_value::JsonValue;
 use crate::prelude::strip_free_param_numeric_tags_in_display;
 
-pub(crate) fn finalize_display_text_with_optional_strip(
+pub fn finalize_display_text_with_optional_strip(
     text: String,
     strip_free_param_tags: bool,
 ) -> String {
@@ -12,7 +12,7 @@ pub(crate) fn finalize_display_text_with_optional_strip(
     }
 }
 
-pub(crate) fn remove_empty_json_fields(value: JsonValue) -> JsonValue {
+pub fn remove_empty_json_fields(value: JsonValue) -> JsonValue {
     match value {
         JsonValue::Object(fields) => {
             let mut next_fields = Vec::new();
@@ -31,7 +31,7 @@ pub(crate) fn remove_empty_json_fields(value: JsonValue) -> JsonValue {
     }
 }
 
-pub(crate) fn json_value_is_empty_in_normal_output(value: &JsonValue) -> bool {
+pub fn json_value_is_empty_in_normal_output(value: &JsonValue) -> bool {
     match value {
         JsonValue::Null => true,
         JsonValue::JsonString(value) => value.is_empty(),

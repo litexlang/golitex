@@ -100,7 +100,7 @@ impl Runtime {
         Ok(infer_result)
     }
 
-    pub(crate) fn exec_have_tuple_stmt_affect_environment_only(
+    pub fn exec_have_tuple_stmt_affect_environment_only(
         &mut self,
         stmt: &HaveTupleStmt,
     ) -> Result<StmtResult, RuntimeError> {
@@ -180,7 +180,7 @@ impl Runtime {
         Ok(infer_result)
     }
 
-    pub(crate) fn exec_have_cart_stmt_affect_environment_only(
+    pub fn exec_have_cart_stmt_affect_environment_only(
         &mut self,
         stmt: &HaveCartStmt,
     ) -> Result<StmtResult, RuntimeError> {

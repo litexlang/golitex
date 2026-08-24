@@ -130,7 +130,7 @@ impl Runtime {
         .into())
     }
 
-    pub(crate) fn exec_by_enumerate_finite_set_stmt_affect_environment_only(
+    pub fn exec_by_enumerate_finite_set_stmt_affect_environment_only(
         &mut self,
         stmt: &ByEnumerateFiniteSetStmt,
     ) -> Result<StmtResult, RuntimeError> {

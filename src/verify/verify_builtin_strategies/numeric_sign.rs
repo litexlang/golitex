@@ -4,7 +4,7 @@ use crate::verify::verify_builtin_rules::normalize_positive_order_atomic_fact;
 impl Runtime {
     // Descends through nested additions while preserving weak or strict positivity.
     // Example: from nonnegative `a, b, c, d`, prove `0 <= (a + b) + (c + d)`.
-    pub(crate) fn verify_additive_sign_with_builtin_strategy(
+    pub fn verify_additive_sign_with_builtin_strategy(
         &mut self,
         atomic_fact: &AtomicFact,
     ) -> Result<StmtResult, RuntimeError> {

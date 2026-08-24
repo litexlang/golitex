@@ -932,7 +932,7 @@ impl Runtime {
     ///
     /// This is the well-definedness boundary for real matrix algebra. For example,
     /// `A '+ B` is accepted only when both operands have real entries and equal dimensions.
-    pub(crate) fn real_matrix_type(
+    pub fn real_matrix_type(
         &mut self,
         obj: &Obj,
         verify_state: &UseContextVerifyState,

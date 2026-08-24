@@ -43,7 +43,7 @@ impl Runtime {
         Ok(infer_result)
     }
 
-    pub(crate) fn exec_fact_stmt_affect_environment_only(
+    pub fn exec_fact_stmt_affect_environment_only(
         &mut self,
         fact: &Fact,
     ) -> Result<StmtResult, RuntimeError> {

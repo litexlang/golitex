@@ -6,6 +6,10 @@
 //! instead of long import lists.
 
 pub use crate::common::fact_id::FactId;
+pub use crate::common::forall_conclusion_location::{
+    AndFactComponentForallConclusionLocation, ChainFactComponentForallConclusionLocation,
+    DirectForallConclusionLocation, ForallConclusionLocation,
+};
 pub use crate::common::json_value::{render_json_value, JsonValue};
 pub use crate::common::name_types::{
     AbstractPropName, AlgoName, AndFactKey, AtomicFactKey, ExistFactKey, FactString,
@@ -15,8 +19,9 @@ pub use crate::common::name_types::{
 pub use crate::common::output_language::OutputLanguage;
 pub use crate::environment::{
     atomic_fact_in_forall_arg_shape_key, AtomicFactInForallArgShapeIndex,
-    AtomicFactInForallArgShapeKey, CachedKnownFact, Environment, KnownEquality,
-    KnownEqualityProofStep, KnownFnInfo, KnownForallFactParamsAndDom, KnownObjValue,
+    AtomicFactInForallArgShapeKey, CachedKnownFact, Environment, EnvironmentPersistentRepositories,
+    EnvironmentStoredFact, EnvironmentStoredFactRepository, KnownEquality, KnownEqualityProofStep,
+    KnownFnInfo, KnownForallFactParamsAndDom, KnownObjValue,
 };
 pub use crate::error::exec_stmt_error_with_stmt_and_cause;
 pub use crate::error::short_exec_error;
@@ -403,30 +408,32 @@ pub use crate::result::{
     WellDefinednessRequirementRole,
 };
 pub use crate::result::{
-    AtomicPredicateDomainCheckRole, SuccessAxiomStmtResult, SuccessByAntisymmetricPropStmtResult,
-    SuccessByAxiomOfChoiceStmtResult, SuccessByCasesStmtResult,
-    SuccessByClosedRangeAsCasesStmtResult, SuccessByContraStmtResult, SuccessByDefStmtResult,
-    SuccessByEnumerateFiniteSetStmtResult, SuccessByEnumerateRangeStmtResult,
-    SuccessByExtensionStmtResult, SuccessByFiniteSetInducStmtResult, SuccessByForStmtResult,
-    SuccessByInducStmtResult, SuccessByReflexivePropStmtResult, SuccessByRegularityAxiomStmtResult,
-    SuccessByStmtResult, SuccessByStructDefStmtResult, SuccessBySymmetricPropStmtResult,
-    SuccessByThmStmtResult, SuccessByTransitivePropStmtResult, SuccessByZornLemmaStmtResult,
-    SuccessClaimStmtResult, SuccessClearStmtResult, SuccessCommandStmtResult,
-    SuccessCreatedTemplateInstanceResult, SuccessDefAbstractPropStmtResult,
-    SuccessDefAlgoStmtResult, SuccessDefInterfaceStmtResult, SuccessDefObjStmtResult,
-    SuccessDefPredicateStmtResult, SuccessDefPropStmtResult, SuccessDefSettingStmtResult,
-    SuccessDefStrategyStmtResult, SuccessDefStructStmtResult, SuccessDefTemplateStmtResult,
-    SuccessDefThmStmtResult, SuccessDoNothingStmtResult, SuccessEvalStmtExecutionResult,
-    SuccessEvalStmtResult, SuccessEvaluatedEvalStmtResult, SuccessExampleStmtResult,
-    SuccessHaveByPreimageStmtResult, SuccessHaveCartStmtResult, SuccessHaveFiniteSeqStmtResult,
+    AtomicPredicateDomainCheckRole, CaseDisjointnessOrientation, SuccessAxiomStmtResult,
+    SuccessByAntisymmetricPropStmtResult, SuccessByAxiomOfChoiceStmtResult,
+    SuccessByCasesStmtResult, SuccessByClosedRangeAsCasesStmtResult, SuccessByContraStmtResult,
+    SuccessByDefStmtResult, SuccessByEnumerateFiniteSetStmtResult,
+    SuccessByEnumerateRangeStmtResult, SuccessByExtensionStmtResult,
+    SuccessByFiniteSetInducStmtResult, SuccessByForStmtResult, SuccessByInducStmtResult,
+    SuccessByReflexivePropStmtResult, SuccessByRegularityAxiomStmtResult, SuccessByStmtResult,
+    SuccessByStructDefStmtResult, SuccessBySymmetricPropStmtResult, SuccessByThmStmtResult,
+    SuccessByTransitivePropStmtResult, SuccessByZornLemmaStmtResult, SuccessClaimStmtResult,
+    SuccessClearStmtResult, SuccessCommandStmtResult, SuccessCreatedTemplateInstanceResult,
+    SuccessDefAbstractPropStmtResult, SuccessDefAlgoStmtResult, SuccessDefInterfaceStmtResult,
+    SuccessDefObjStmtResult, SuccessDefPredicateStmtResult, SuccessDefPropStmtResult,
+    SuccessDefSettingStmtResult, SuccessDefStrategyStmtResult, SuccessDefStructStmtResult,
+    SuccessDefTemplateStmtResult, SuccessDefThmStmtResult, SuccessDoNothingStmtResult,
+    SuccessEvalStmtExecutionResult, SuccessEvalStmtResult, SuccessEvaluatedEvalStmtResult,
+    SuccessExampleStmtResult, SuccessExecutedImportResult, SuccessHaveByPreimageStmtResult,
+    SuccessHaveCartStmtResult, SuccessHaveFiniteSeqStmtResult,
     SuccessHaveFnByForallExistUniqueStmtResult, SuccessHaveFnByInducStmtResult,
     SuccessHaveFnEqualCaseByCaseStmtResult, SuccessHaveFnEqualStmtResult,
     SuccessHaveMatrixStmtResult, SuccessHaveObjByExistFactsStmtResult,
     SuccessHaveObjEqualStmtResult, SuccessHaveObjInNonemptySetStmtResult, SuccessHaveSeqStmtResult,
-    SuccessHaveTupleStmtResult, SuccessImportStmtResult, SuccessLetObjStmtResult,
-    SuccessObtainObjFromAtomicFactResult, SuccessObtainObjFromExistFactResult,
-    SuccessObtainObjFromThmResult, SuccessProofBlockStmtResult,
-    SuccessRecursiveObjWellDefinedResult, SuccessReuseObjWellDefinedResult,
+    SuccessHaveTupleStmtResult, SuccessImportExecutionResult, SuccessImportStmtResult,
+    SuccessLetObjStmtResult, SuccessObtainObjFromAtomicFactResult,
+    SuccessObtainObjFromExistFactResult, SuccessObtainObjFromThmResult,
+    SuccessProofBlockStmtResult, SuccessRecursiveObjWellDefinedResult,
+    SuccessReuseObjWellDefinedResult, SuccessReusedImportResult,
     SuccessReusedTemplateInstanceResult, SuccessSketchProofResult, SuccessSketchStmtResult,
     SuccessStmtCommonResult, SuccessStopStrategyStmtResult, SuccessStoreFactResult,
     SuccessTemplateInstantiationResult, SuccessTrustHaveStmtResult, SuccessTrustStmtResult,
@@ -436,29 +443,41 @@ pub use crate::result::{
     SuccessVerifyAtomicFactResult, SuccessVerifyAtomicFactWellDefinedResult,
     SuccessVerifyAtomicPredicateDomainCheckResult, SuccessVerifyAtomicPredicateWellDefinedResult,
     SuccessVerifyBinderObjectWellDefinedResult, SuccessVerifyBinderPremiseResult,
-    SuccessVerifyChainFactResult, SuccessVerifyChainFactWellDefinedResult,
-    SuccessVerifyChildObjWellDefinedResult, SuccessVerifyDirectObjWellDefinedResult,
-    SuccessVerifyElementwiseReduceResult, SuccessVerifyEmptyFiniteAggregateResult,
-    SuccessVerifyEmptyReduceResult, SuccessVerifyEndpointIterationCoverageResult,
-    SuccessVerifyEnumeratedIterationCoverageResult, SuccessVerifyExactFiniteReduceDomainResult,
-    SuccessVerifyExistFactResult, SuccessVerifyExistFactWellDefinedResult,
-    SuccessVerifyFactBinderResult, SuccessVerifyFactForObjWellDefinedResult,
-    SuccessVerifyFactObjectWellDefinedResult, SuccessVerifyFactParameterGroupResult,
-    SuccessVerifyFactResult, SuccessVerifyFactWellDefinedProofResult,
-    SuccessVerifyFactWellDefinedResult, SuccessVerifyFiniteAggregateClosedRangeResult,
-    SuccessVerifyFiniteAggregateElementsResult, SuccessVerifyFiniteAggregateModeResult,
-    SuccessVerifyFiniteAggregateWellDefinedResult, SuccessVerifyFiniteReduceDomainCoverageResult,
-    SuccessVerifyFiniteReduceOperationLawsResult, SuccessVerifyForallFactResult,
-    SuccessVerifyForallFactWellDefinedResult, SuccessVerifyForallFactWithIffResult,
-    SuccessVerifyForallFactWithIffWellDefinedResult, SuccessVerifyFunctionSetWellDefinedResult,
-    SuccessVerifyIntervalReduceResult, SuccessVerifyIntervalSubsetCoverageResult,
-    SuccessVerifyIterationCoverageResult, SuccessVerifyIterationDomainResult,
-    SuccessVerifyIterationIntervalResult, SuccessVerifyIterationScalarReturnResult,
-    SuccessVerifyIterationWellDefinedResult, SuccessVerifyLocalFactWellDefinedResult,
-    SuccessVerifyNotForallFactResult, SuccessVerifyNotForallFactWellDefinedResult,
-    SuccessVerifyObjTargetRequirementResult, SuccessVerifyObjWellDefinedResult,
-    SuccessVerifyObjWellDefinedStepsResult, SuccessVerifyOrFactResult,
-    SuccessVerifyOrFactWellDefinedResult, SuccessVerifyReduceModeResult,
+    SuccessVerifyCaseDisjointnessResult, SuccessVerifyChainFactResult,
+    SuccessVerifyChainFactWellDefinedResult, SuccessVerifyChildObjWellDefinedResult,
+    SuccessVerifyDefAlgoCaseResult, SuccessVerifyDefAlgoCoverageResult,
+    SuccessVerifyDefAlgoDefaultResult, SuccessVerifyDefAlgoLocalEnvResult,
+    SuccessVerifyDefAlgoParameterRetagResult, SuccessVerifyDefStructDomainResult,
+    SuccessVerifyDefStructFieldDefinitionResult, SuccessVerifyDefStructFieldScopeResult,
+    SuccessVerifyDefStructFieldTypeResult, SuccessVerifyDefStructLocalEnvResult,
+    SuccessVerifyDirectObjWellDefinedResult, SuccessVerifyElementwiseReduceResult,
+    SuccessVerifyEmptyFiniteAggregateResult, SuccessVerifyEmptyReduceResult,
+    SuccessVerifyEndpointIterationCoverageResult, SuccessVerifyEnumeratedIterationCoverageResult,
+    SuccessVerifyExactFiniteReduceDomainResult, SuccessVerifyExistFactResult,
+    SuccessVerifyExistFactWellDefinedResult, SuccessVerifyFactBinderResult,
+    SuccessVerifyFactForObjWellDefinedResult, SuccessVerifyFactObjectWellDefinedResult,
+    SuccessVerifyFactParameterGroupResult, SuccessVerifyFactResult,
+    SuccessVerifyFactWellDefinedProofResult, SuccessVerifyFactWellDefinedResult,
+    SuccessVerifyFiniteAggregateClosedRangeResult, SuccessVerifyFiniteAggregateElementsResult,
+    SuccessVerifyFiniteAggregateModeResult, SuccessVerifyFiniteAggregateWellDefinedResult,
+    SuccessVerifyFiniteReduceDomainCoverageResult, SuccessVerifyFiniteReduceOperationLawsResult,
+    SuccessVerifyForallFactResult, SuccessVerifyForallFactWellDefinedResult,
+    SuccessVerifyForallFactWithIffResult, SuccessVerifyForallFactWithIffWellDefinedResult,
+    SuccessVerifyFunctionSetWellDefinedResult, SuccessVerifyHaveFnByInducCaseBodyResult,
+    SuccessVerifyHaveFnByInducCaseListResult, SuccessVerifyHaveFnByInducCaseResult,
+    SuccessVerifyHaveFnByInducDomainFactResult, SuccessVerifyHaveFnByInducEqualToResult,
+    SuccessVerifyHaveFnByInducLocalEnvResult, SuccessVerifyHaveFnByInducMeasureResult,
+    SuccessVerifyHaveFnByInducParameterGroupResult,
+    SuccessVerifyHaveFnByInducParametersAndDomainResult,
+    SuccessVerifyHaveFnByInducRecursiveFunctionResult, SuccessVerifyHaveFnByInducResult,
+    SuccessVerifyHaveFnByInducWellDefinednessLocalEnvResult, SuccessVerifyIntervalReduceResult,
+    SuccessVerifyIntervalSubsetCoverageResult, SuccessVerifyIterationCoverageResult,
+    SuccessVerifyIterationDomainResult, SuccessVerifyIterationIntervalResult,
+    SuccessVerifyIterationScalarReturnResult, SuccessVerifyIterationWellDefinedResult,
+    SuccessVerifyLocalFactWellDefinedResult, SuccessVerifyNotForallFactResult,
+    SuccessVerifyNotForallFactWellDefinedResult, SuccessVerifyObjTargetRequirementResult,
+    SuccessVerifyObjWellDefinedResult, SuccessVerifyObjWellDefinedStepsResult,
+    SuccessVerifyOrFactResult, SuccessVerifyOrFactWellDefinedResult, SuccessVerifyReduceModeResult,
     SuccessVerifyReduceOperationSignatureResult, SuccessVerifyReduceWellDefinedResult,
     SuccessVerifySetBuilderConditionResult, SuccessVerifySetBuilderWellDefinedResult,
     SuccessVerifyStructureEquivalentFactResult, SuccessVerifyStructureFieldResult,
@@ -497,7 +516,8 @@ pub use crate::runtime::FreeParamCollection;
 pub use crate::runtime::ParseContext;
 pub use crate::runtime::ScopeFrame;
 pub use crate::runtime::{
-    BareSymbol, ExecutionFrame, ExecutionLayer, OutputStyle, Runtime, TrustedPrefixReport,
+    BareSymbol, ExecutionFrame, ExecutionLayer, OutputStyle, Runtime, StatementProofStateStack,
+    TrustedPrefixReport,
 };
 pub use crate::stmt::by_stmt::ByAntisymmetricPropStmt;
 pub use crate::stmt::by_stmt::ByAxiomOfChoiceStmt;
@@ -592,8 +612,8 @@ pub use crate::symbol::{
     builtin_symbol_ref, insert_symbol_substitution, IntoSymbolRef, SymbolBinding, SymbolDefinition,
     SymbolId, SymbolIdAllocator, SymbolRef, SymbolRole, SymbolTable,
 };
-pub(crate) use crate::verify::general_cart_member_fn_set;
-pub(crate) use crate::verify::nested_obj_binder_normalized_fact_key;
+pub use crate::verify::general_cart_member_fn_set;
+pub use crate::verify::nested_obj_binder_normalized_fact_key;
 pub use crate::verify::{UseBuiltinRuleVerifyState, UseContextVerifyState};
 
 pub use crate::cli::run_cli;

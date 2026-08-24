@@ -1,7 +1,7 @@
 use crate::prelude::*;
 
 impl FnSetBody {
-    pub(crate) fn contains_native_complex_syntax(&self) -> bool {
+    pub fn contains_native_complex_syntax(&self) -> bool {
         self.params_def_with_set
             .iter()
             .any(|group| group.set_obj().contains_native_complex_syntax())
@@ -13,7 +13,7 @@ impl FnSetBody {
             || self.ret_set.contains_native_complex_syntax()
     }
 
-    pub(crate) fn contains_native_transcendental_syntax(&self) -> bool {
+    pub fn contains_native_transcendental_syntax(&self) -> bool {
         self.params_def_with_set
             .iter()
             .any(|group| group.set_obj().contains_native_transcendental_syntax())
@@ -27,11 +27,11 @@ impl FnSetBody {
 }
 
 impl AnonymousFn {
-    pub(crate) fn contains_native_complex_syntax(&self) -> bool {
+    pub fn contains_native_complex_syntax(&self) -> bool {
         self.body.contains_native_complex_syntax() || self.equal_to.contains_native_complex_syntax()
     }
 
-    pub(crate) fn contains_native_transcendental_syntax(&self) -> bool {
+    pub fn contains_native_transcendental_syntax(&self) -> bool {
         self.body.contains_native_transcendental_syntax()
             || self.equal_to.contains_native_transcendental_syntax()
     }
@@ -40,7 +40,7 @@ impl AnonymousFn {
 impl Obj {
     /// Detect native complex syntax before a symbolic-only backend attempts to lower the object
     /// as a real-valued expression.
-    pub(crate) fn contains_native_complex_syntax(&self) -> bool {
+    pub fn contains_native_complex_syntax(&self) -> bool {
         match self {
             Obj::ImaginaryUnit(_)
             | Obj::RealPart(_)
@@ -318,7 +318,7 @@ impl Obj {
 
     /// Detect native transcendental symbols before a backend attempts to lower them as ordinary
     /// identifiers or executable function calls.
-    pub(crate) fn contains_native_transcendental_syntax(&self) -> bool {
+    pub fn contains_native_transcendental_syntax(&self) -> bool {
         match self {
             Obj::EulerNumber(_)
             | Obj::Pi(_)

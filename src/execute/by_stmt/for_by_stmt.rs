@@ -34,7 +34,7 @@ impl Runtime {
         }
     }
 
-    pub(crate) fn exec_by_for_stmt_affect_environment_only(
+    pub fn exec_by_for_stmt_affect_environment_only(
         &mut self,
         stmt: &ByForStmt,
     ) -> Result<StmtResult, RuntimeError> {
@@ -335,7 +335,7 @@ impl Runtime {
 
 impl Runtime {
     // Negated domain: one atomic uses logical negation; conjunction uses De Morgan.
-    pub(crate) fn negated_domain_fact_for_by_for_skip(dom: &Fact) -> Option<Fact> {
+    pub fn negated_domain_fact_for_by_for_skip(dom: &Fact) -> Option<Fact> {
         match dom {
             Fact::AtomicFact(a) => a.logical_negation().ok().map(Fact::AtomicFact),
             Fact::AndFact(and_fact) => {

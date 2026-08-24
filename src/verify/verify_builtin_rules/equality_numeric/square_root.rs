@@ -3,7 +3,7 @@ use super::*;
 impl Runtime {
     // Principal square-root identity: `(sqrt(x))^2 = x` for real `x >= 0`.
     // Example: `forall x R: x >= 0 =>: (sqrt(x))^2 = x`.
-    pub(crate) fn try_verify_sqrt_square_identity(
+    pub fn try_verify_sqrt_square_identity(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -41,7 +41,7 @@ impl Runtime {
 
     // Square roots of the additive and multiplicative identities stay fixed.
     // Example: `sqrt(0) = 0` and `sqrt(1) = 1`.
-    pub(crate) fn try_verify_sqrt_zero_one_identity(
+    pub fn try_verify_sqrt_zero_one_identity(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -86,7 +86,7 @@ impl Runtime {
 
     // Principal square root of a square returns the nonnegative root.
     // Example: from `a >= 0` and `x = a^2`, prove `sqrt(x) = a`.
-    pub(crate) fn try_verify_sqrt_of_square_identity(
+    pub fn try_verify_sqrt_of_square_identity(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -129,7 +129,7 @@ impl Runtime {
     // Square root distributes over products of nonnegative factors.
     // Example: from `a >= 0`, `b >= 0`, and `x = a * b`, prove
     // `sqrt(x) = sqrt(a) * sqrt(b)`.
-    pub(crate) fn try_verify_sqrt_product_identity(
+    pub fn try_verify_sqrt_product_identity(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -203,7 +203,7 @@ impl Runtime {
     // Square root distributes over quotients with nonnegative numerator and positive denominator.
     // Example: from `a >= 0`, `b > 0`, and `x = a / b`, prove
     // `sqrt(x) = sqrt(a) / sqrt(b)`.
-    pub(crate) fn try_verify_sqrt_quotient_identity(
+    pub fn try_verify_sqrt_quotient_identity(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -278,7 +278,7 @@ impl Runtime {
         ))
     }
 
-    pub(crate) fn try_verify_sqrt_equalities(
+    pub fn try_verify_sqrt_equalities(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,

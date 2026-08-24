@@ -20,7 +20,7 @@ impl Runtime {
         }
     }
 
-    pub(crate) fn verify_non_equational_atomic_fact_with_known_forall(
+    pub fn verify_non_equational_atomic_fact_with_known_forall(
         &mut self,
         atomic_fact: &AtomicFact,
         verify_state: &UseContextVerifyState,
@@ -43,7 +43,7 @@ impl Runtime {
         Ok((UnknownGenericStmtResult::new()).into())
     }
 
-    pub(crate) fn verify_equal_fact_with_known_forall(
+    pub fn verify_equal_fact_with_known_forall(
         &mut self,
         equal_fact: &EqualFact,
         verify_state: &UseContextVerifyState,
@@ -737,9 +737,9 @@ impl Runtime {
         identifiers
     }
 
-    pub(crate) fn verify_args_satisfy_forall_requirements(
+    pub fn verify_args_satisfy_forall_requirements(
         &mut self,
-        atomic_fact_in_known_forall_fact: &AtomicFact,
+        _atomic_fact_in_known_forall_fact: &AtomicFact,
         known_forall: &Rc<KnownForallFactParamsAndDom>,
         mut arg_map: HashMap<String, Obj>,
         given_atomic_fact: &AtomicFact,
@@ -760,19 +760,14 @@ impl Runtime {
             return Ok(None);
         };
 
-        let verified_by_known_forall_fact = ForallFact::new_canonical_forall(
-            known_forall.params_def.clone(),
-            known_forall.dom.clone(),
-            vec![atomic_fact_in_known_forall_fact.clone().into()],
-            known_forall.line_file.clone(),
-        )?;
-        let source_fact: Fact = verified_by_known_forall_fact.clone().into();
-        let source_fact_id = self.require_known_fact_id_for_success_result(&source_fact)?;
+        let source_fact = known_forall.source_fact();
+        let source_fact_id = known_forall.source_fact_id;
         let fact_verified = SuccessFactStmtResult::new_with_verified_by_known_fact(
             given_atomic_fact.clone().into(),
             SuccessFactProofResult::known_forall_instantiation(
                 source_fact,
                 source_fact_id,
+                known_forall.conclusion_location,
                 instantiation,
                 requirements,
             ),
@@ -869,7 +864,7 @@ impl Runtime {
         candidates
     }
 
-    pub(crate) fn match_atomic_fact_args_against_known_forall_ordered_args(
+    pub fn match_atomic_fact_args_against_known_forall_ordered_args(
         &mut self,
         atomic_fact_in_known_forall: &AtomicFact,
         given_fact: &AtomicFact,
@@ -893,7 +888,7 @@ impl Runtime {
         )))
     }
 
-    pub(crate) fn match_args_in_fact_with_known_forall_bindings(
+    pub fn match_args_in_fact_with_known_forall_bindings(
         &mut self,
         fact_args_in_known_forall: &[&Obj],
         given_fact_args: &[&Obj],
@@ -2468,7 +2463,7 @@ impl ArgMatcher<'_> {
 }
 
 impl Runtime {
-    pub(crate) fn objs_match_for_fact_lookup(
+    pub fn objs_match_for_fact_lookup(
         &self,
         known_arg: &Obj,
         given_arg: &Obj,

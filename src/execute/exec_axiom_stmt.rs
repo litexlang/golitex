@@ -36,7 +36,7 @@ impl Runtime {
         )
     }
 
-    pub(crate) fn exec_axiom_stmt_affect_environment(
+    pub fn exec_axiom_stmt_affect_environment(
         &mut self,
         stmt: &AxiomStmt,
     ) -> Result<SuccessInferResult, RuntimeError> {
@@ -49,7 +49,7 @@ impl Runtime {
         )
     }
 
-    pub(crate) fn exec_axiom_stmt_affect_environment_only(
+    pub fn exec_axiom_stmt_affect_environment_only(
         &mut self,
         stmt: &AxiomStmt,
     ) -> Result<StmtResult, RuntimeError> {

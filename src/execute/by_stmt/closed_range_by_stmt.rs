@@ -138,7 +138,7 @@ impl Runtime {
         .into())
     }
 
-    pub(crate) fn exec_by_closed_range_as_cases_stmt_affect_environment_only(
+    pub fn exec_by_closed_range_as_cases_stmt_affect_environment_only(
         &mut self,
         stmt: &ByClosedRangeAsCasesStmt,
     ) -> Result<StmtResult, RuntimeError> {

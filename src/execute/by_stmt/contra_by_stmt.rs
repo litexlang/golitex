@@ -189,7 +189,7 @@ impl Runtime {
         ))
     }
 
-    pub(crate) fn exec_by_contra_stmt_affect_environment(
+    pub fn exec_by_contra_stmt_affect_environment(
         &mut self,
         stmt: &ByContraStmt,
     ) -> Result<SuccessInferResult, RuntimeError> {
@@ -215,7 +215,7 @@ impl Runtime {
             })
     }
 
-    pub(crate) fn exec_by_contra_stmt_affect_environment_only(
+    pub fn exec_by_contra_stmt_affect_environment_only(
         &mut self,
         stmt: &ByContraStmt,
     ) -> Result<StmtResult, RuntimeError> {
@@ -239,7 +239,7 @@ fn logical_negation_for_by_contra(fact: &Fact) -> Result<Fact, RuntimeError> {
         Fact::ExistFact(exist_fact) => match exist_fact {
             ExistFactEnum::ExistFact(body) => Ok(ExistFactEnum::NotExistFact(body.clone()).into()),
             ExistFactEnum::NotExistFact(body) => Ok(ExistFactEnum::ExistFact(body.clone()).into()),
-            ExistFactEnum::ExistUniqueFact(_) => Err(RuntimeError::ExecStmtError(
+            ExistFactEnum::ExistUniqueFact(_) => Err(RuntimeError::ExecStmtError(Box::new(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
                     format!(
                         "by contra: cannot build logical negation for `{}` yet",
@@ -247,10 +247,10 @@ fn logical_negation_for_by_contra(fact: &Fact) -> Result<Fact, RuntimeError> {
                     ),
                     fact.line_file(),
                 ),
-            )),
+            ))),
         },
         Fact::OrFact(_) | Fact::AndFact(_) | Fact::ChainFact(_) | Fact::ForallFactWithIff(_) => {
-            Err(RuntimeError::ExecStmtError(
+            Err(RuntimeError::ExecStmtError(Box::new(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
                     format!(
                         "by contra: cannot build logical negation for `{}` yet",
@@ -258,7 +258,7 @@ fn logical_negation_for_by_contra(fact: &Fact) -> Result<Fact, RuntimeError> {
                     ),
                     fact.line_file(),
                 ),
-            ))
+            )))
         }
     }
 }

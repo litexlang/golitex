@@ -2,7 +2,7 @@ use super::order_normalize::normalize_positive_order_atomic_fact;
 use crate::prelude::*;
 
 impl Runtime {
-    pub(crate) fn verify_abs_order_builtin_rule(
+    pub fn verify_abs_order_builtin_rule(
         &mut self,
         atomic_fact: &AtomicFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -55,7 +55,7 @@ impl Runtime {
         Ok(None)
     }
 
-    pub(crate) fn verify_abs_order_strict_builtin_rule(
+    pub fn verify_abs_order_strict_builtin_rule(
         &mut self,
         atomic_fact: &AtomicFact,
         builtin_state: &UseBuiltinRuleVerifyState,

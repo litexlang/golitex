@@ -33,7 +33,7 @@ impl Runtime {
 
     // Odd powers of minus one are minus one.
     // Example: `m $in N` proves `(-1)^(2*m+1) = -1`.
-    pub(crate) fn try_verify_minus_one_odd_natural_power(
+    pub fn try_verify_minus_one_odd_natural_power(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -101,7 +101,7 @@ impl Runtime {
 
     // First power identity: `a^1 = a`.
     // Example: `forall a Z: a^1 = a`.
-    pub(crate) fn try_verify_pow_one_identity(
+    pub fn try_verify_pow_one_identity(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -135,7 +135,7 @@ impl Runtime {
     // Zeroth power identity under the natural-exponent convention: `a^0 = 1`,
     // including `0^0 = 1`.
     // Example: `forall a C: a^0 = 1`.
-    pub(crate) fn try_verify_pow_zero_identity(
+    pub fn try_verify_pow_zero_identity(
         &mut self,
         equal_fact: &EqualFact,
     ) -> Result<Option<StmtResult>, RuntimeError> {
@@ -166,7 +166,7 @@ impl Runtime {
     // One as a base is invariant under exponentiation: `1^x = 1`.
     // This is used for simplifying powers with arbitrary well-defined exponents.
     // Example: `forall x R: 1^x = 1`.
-    pub(crate) fn try_verify_one_pow_identity(
+    pub fn try_verify_one_pow_identity(
         &mut self,
         equal_fact: &EqualFact,
     ) -> Result<Option<StmtResult>, RuntimeError> {
@@ -197,7 +197,7 @@ impl Runtime {
     // Zero as a base stays zero for positive exponents: `0^x = 0` when `x > 0`.
     // This intentionally does not cover the zeroth power convention `0^0 = 1`.
     // Example: `forall x R+: 0^x = 0`.
-    pub(crate) fn try_verify_zero_pow_positive_exponent_identity(
+    pub fn try_verify_zero_pow_positive_exponent_identity(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,

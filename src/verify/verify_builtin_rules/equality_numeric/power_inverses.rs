@@ -1,7 +1,7 @@
 use super::*;
 
 impl Runtime {
-    pub(crate) fn try_verify_base_zero_from_known_positive_power_zero(
+    pub fn try_verify_base_zero_from_known_positive_power_zero(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -98,7 +98,7 @@ impl Runtime {
 
     // Positive bases are injective under nonzero integer powers.
     // Example: from `0 < x`, `0 < y`, `n in Z`, `n != 0`, and `x^n = y^n`, prove `x = y`.
-    pub(crate) fn try_verify_positive_base_equal_from_equal_nonzero_integer_power(
+    pub fn try_verify_positive_base_equal_from_equal_nonzero_integer_power(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -163,7 +163,7 @@ impl Runtime {
         Ok(None)
     }
 
-    pub(crate) fn try_verify_abs_power_rule(
+    pub fn try_verify_abs_power_rule(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -349,7 +349,7 @@ impl Runtime {
 
     // Negative integer powers are reciprocals of the corresponding positive powers.
     // Example: for `x != 0` and `n in N+`, prove `x^(-n) = 1 / x^n`.
-    pub(crate) fn try_verify_power_inverse_rule(
+    pub fn try_verify_power_inverse_rule(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -399,7 +399,7 @@ impl Runtime {
     // Principal nth-root equality: `x^(1/n) = z` follows from `x = z^n`,
     // with `n` a positive integer and `z >= 0`.
     // Example: `8^(1/3) = 2`, since `3 $in N+`, `0 <= 2`, and `8 = 2^3`.
-    pub(crate) fn try_verify_pow_reciprocal_exponent_equals_root_by_power(
+    pub fn try_verify_pow_reciprocal_exponent_equals_root_by_power(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,

@@ -4,7 +4,7 @@ impl Runtime {
     // Descends through arithmetic syntax while keeping the requested numeric carrier explicit.
     // A strategy layer may use one direct builtin rule for each immediate child, then repeats
     // only this structural carrier decomposition when that direct attempt is unknown.
-    pub(crate) fn verify_numeric_carrier_with_builtin_strategy(
+    pub fn verify_numeric_carrier_with_builtin_strategy(
         &mut self,
         fact: &InFact,
     ) -> Result<StmtResult, RuntimeError> {

@@ -29,7 +29,7 @@ impl Runtime {
         .into())
     }
 
-    pub(crate) fn store_have_fn_equal_case_by_case_stmt_facts(
+    pub fn store_have_fn_equal_case_by_case_stmt_facts(
         &mut self,
         have_fn_equal_case_by_case_stmt: &HaveFnEqualCaseByCaseStmt,
         fn_set_stored: &FnSet,
@@ -225,7 +225,7 @@ impl Runtime {
         )
     }
 
-    pub(crate) fn exec_have_fn_equal_case_by_case_stmt_affect_environment_only(
+    pub fn exec_have_fn_equal_case_by_case_stmt_affect_environment_only(
         &mut self,
         have_fn_equal_case_by_case_stmt: &HaveFnEqualCaseByCaseStmt,
     ) -> Result<StmtResult, RuntimeError> {
@@ -402,7 +402,7 @@ impl Runtime {
         Ok(verify_result)
     }
 
-    pub(crate) fn store_template_surface_case_equations(
+    pub fn store_template_surface_case_equations(
         &mut self,
         stmt: &HaveFnEqualCaseByCaseStmt,
         surface: &InstantiatedTemplateObj,

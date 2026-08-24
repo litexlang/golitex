@@ -27,7 +27,7 @@ impl Runtime {
     /// is popped. The recursive inference Result remains the semantic owner of
     /// every source/conclusion identity; this helper only validates and names
     /// the source FactId for the enclosing assignment Result.
-    pub(crate) fn freeze_by_assignment_assumption_result(
+    pub fn freeze_by_assignment_assumption_result(
         &self,
         fact: Fact,
         reason: impl Into<String>,

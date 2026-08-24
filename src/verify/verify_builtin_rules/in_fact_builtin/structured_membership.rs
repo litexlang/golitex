@@ -328,7 +328,7 @@ impl Runtime {
     }
 
     // If the env already has `element $in fn_def` (from `known_objs_in_fn_sets`), compare to the RHS `fn ...`.
-    pub(crate) fn verify_in_fact_element_in_fn_set_by_stored_definition(
+    pub fn verify_in_fact_element_in_fn_set_by_stored_definition(
         &mut self,
         element: &Obj,
         expected_fn_set: &FnSet,
@@ -378,7 +378,7 @@ impl Runtime {
     ///
     /// This is a structural leaf. The caller owns the prior return-value
     /// well-definedness check; this comparison performs no proof search.
-    pub(crate) fn verify_in_fact_anonymous_fn_signature_matches_fn_set(
+    pub fn verify_in_fact_anonymous_fn_signature_matches_fn_set(
         &mut self,
         anon: &AnonymousFn,
         expected_fn_set: &FnSet,
@@ -429,7 +429,7 @@ impl Runtime {
 
     // Function-space membership transports across propositionally equal
     // signatures. Example: `J = A` permits `fn(x J) R {f(x)}` in `fn(x A) R`.
-    pub(crate) fn verify_in_fact_anonymous_fn_signature_matches_fn_set_through_equal_sets(
+    pub fn verify_in_fact_anonymous_fn_signature_matches_fn_set_through_equal_sets(
         &mut self,
         anon: &AnonymousFn,
         expected_fn_set: &FnSet,
@@ -463,7 +463,7 @@ impl Runtime {
         Ok((UnknownGenericStmtResult::new()).into())
     }
 
-    pub(crate) fn verify_anonymous_fn_in_fn_set_explicit(
+    pub fn verify_anonymous_fn_in_fn_set_explicit(
         &mut self,
         anon: &AnonymousFn,
         expected_fn_set: &FnSet,

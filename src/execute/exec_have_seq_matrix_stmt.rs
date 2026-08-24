@@ -44,7 +44,7 @@ impl Runtime {
         )
     }
 
-    pub(crate) fn exec_have_seq_stmt_affect_environment_only(
+    pub fn exec_have_seq_stmt_affect_environment_only(
         &mut self,
         stmt: &HaveSeqStmt,
     ) -> Result<StmtResult, RuntimeError> {
@@ -120,7 +120,7 @@ impl Runtime {
         )
     }
 
-    pub(crate) fn exec_have_finite_seq_stmt_affect_environment_only(
+    pub fn exec_have_finite_seq_stmt_affect_environment_only(
         &mut self,
         stmt: &HaveFiniteSeqStmt,
     ) -> Result<StmtResult, RuntimeError> {
@@ -203,7 +203,7 @@ impl Runtime {
         )
     }
 
-    pub(crate) fn exec_have_matrix_stmt_affect_environment_only(
+    pub fn exec_have_matrix_stmt_affect_environment_only(
         &mut self,
         stmt: &HaveMatrixStmt,
     ) -> Result<StmtResult, RuntimeError> {

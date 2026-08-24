@@ -3,7 +3,7 @@ use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 
 /// Objects whose `to_string()` is used as the key in `Environment::known_objs_in_fn_sets`.
-pub(crate) fn obj_eligible_for_known_objs_in_fn_sets(obj: &Obj) -> bool {
+pub fn obj_eligible_for_known_objs_in_fn_sets(obj: &Obj) -> bool {
     matches!(
         obj,
         Obj::Atom(AtomObj::Identifier(_))
@@ -84,7 +84,7 @@ impl Runtime {
 
     /// Record `element` as having function signature `body` (same lookup keys as `element $in fn ...` infer).
     /// When `equal_to` is `Some`, stores the defining expression (e.g. from `a = '…{…}` or `have fn`).
-    pub(crate) fn register_known_objs_in_fn_sets_for_element_body(
+    pub fn register_known_objs_in_fn_sets_for_element_body(
         &mut self,
         element: &Obj,
         body: FnSetBody,

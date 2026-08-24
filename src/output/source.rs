@@ -101,7 +101,7 @@ fn module_display_path(module_root: &Path, entry_path: &Rc<str>) -> String {
     }
 }
 
-pub(crate) fn source_ref_json_fields(
+pub fn source_ref_json_fields(
     runtime: &Runtime,
     source_line_file: &LineFile,
     current_line_file: Option<&LineFile>,
@@ -138,15 +138,11 @@ pub(crate) fn source_ref_json_fields(
     fields
 }
 
-pub(crate) fn stmt_text_for_json(_runtime: &Runtime, stmt: &Stmt) -> String {
+pub fn stmt_text_for_json(_runtime: &Runtime, stmt: &Stmt) -> String {
     user_visible_stmt_or_msg_text(&stmt.to_string())
 }
 
-pub(crate) fn stmt_json_field_lines(
-    runtime: &Runtime,
-    indent_inner: &str,
-    stmt: &Stmt,
-) -> Vec<String> {
+pub fn stmt_json_field_lines(runtime: &Runtime, indent_inner: &str, stmt: &Stmt) -> Vec<String> {
     let value = localize_json_value(runtime, stmt_json_value(runtime, stmt));
     let JsonValue::Object(fields) = value else {
         return vec![];
@@ -166,7 +162,7 @@ pub(crate) fn stmt_json_field_lines(
         .collect()
 }
 
-pub(crate) fn stmt_json_value(runtime: &Runtime, stmt: &Stmt) -> JsonValue {
+pub fn stmt_json_value(runtime: &Runtime, stmt: &Stmt) -> JsonValue {
     JsonValue::Object(vec![
         (
             JSON_KEY_STMT_TYPE.to_string(),

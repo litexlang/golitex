@@ -20,7 +20,7 @@ fn obj_is_non_const_leaf_for_solve(x: &Obj) -> bool {
 }
 
 /// Returns a derived [`EqualFact`] with the same `line_file` as `equal`, or `None`.
-pub(crate) fn maybe_derived_linear_equal_fact(equal: &EqualFact) -> Option<EqualFact> {
+pub fn maybe_derived_linear_equal_fact(equal: &EqualFact) -> Option<EqualFact> {
     try_linear_solve_one_side(&equal.left, &equal.right, &equal.line_file)
         .or_else(|| try_linear_solve_one_side(&equal.right, &equal.left, &equal.line_file))
 }

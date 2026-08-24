@@ -18,12 +18,12 @@ mod operator_signature;
 mod set_membership;
 mod structured_membership;
 
-pub(crate) use general_cart::{
+pub use general_cart::{
     choice_function_for_definition_facts, choice_function_for_fact,
     general_cart_member_choice_fact, general_cart_member_fn_set,
     verify_choice_function_for_arg_types,
 };
-pub(crate) use numeric_values::{
+pub use numeric_values::{
     builtin_in_fact_result_for_evaluated_number_in_standard_set,
     builtin_in_fact_result_for_evaluation_in_standard_set,
     builtin_not_in_fact_result_for_evaluated_number_in_standard_set,

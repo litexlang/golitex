@@ -66,7 +66,7 @@ impl Runtime {
         Ok(result.with_infers(infer_result))
     }
 
-    pub(crate) fn exec_by_finite_set_induc_stmt_affect_environment_only(
+    pub fn exec_by_finite_set_induc_stmt_affect_environment_only(
         &mut self,
         stmt: &ByFiniteSetInducStmt,
     ) -> Result<StmtResult, RuntimeError> {

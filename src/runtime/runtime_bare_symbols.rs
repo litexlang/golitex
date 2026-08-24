@@ -22,7 +22,7 @@ struct BareSymbolCandidate {
 impl Runtime {
     /// Rebuild the current source's bare-name index once, after configured
     /// imports and any preceding export targets have finished loading.
-    pub(crate) fn refresh_current_bare_symbol_index(&mut self) -> Result<(), RuntimeError> {
+    pub fn refresh_current_bare_symbol_index(&mut self) -> Result<(), RuntimeError> {
         let module_id = self.current_module_id();
         let sources = self.inherited_bare_symbol_sources(module_id);
         let mut index: HashMap<String, BareSymbol> = HashMap::new();
@@ -76,7 +76,7 @@ impl Runtime {
         Ok(())
     }
 
-    pub(crate) fn bare_symbol(&self, name: &str) -> Option<&BareSymbol> {
+    pub fn bare_symbol(&self, name: &str) -> Option<&BareSymbol> {
         self.execution_stack.last()?.bare_symbols.get(name)
     }
 

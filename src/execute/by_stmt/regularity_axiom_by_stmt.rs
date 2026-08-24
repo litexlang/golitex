@@ -80,7 +80,7 @@ impl Runtime {
         .into())
     }
 
-    pub(crate) fn exec_by_regularity_axiom_stmt_affect_environment_only(
+    pub fn exec_by_regularity_axiom_stmt_affect_environment_only(
         &mut self,
         stmt: &ByRegularityAxiomStmt,
     ) -> Result<StmtResult, RuntimeError> {

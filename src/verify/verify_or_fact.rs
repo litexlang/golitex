@@ -879,12 +879,12 @@ impl Runtime {
                     let source_fact: Fact = known_or_fact.clone().into();
                     let source_fact_key = source_fact.to_string();
                     let source_fact_id = environment
-                        .cache_known_fact
-                        .get(&source_fact_key)
+                        .stored_facts
+                        .lookup(&source_fact_key)
                         .or_else(|| {
                             environment
-                                .cache_known_fact
-                                .get(&nested_obj_binder_normalized_fact_key(&source_fact))
+                                .stored_facts
+                                .lookup(&nested_obj_binder_normalized_fact_key(&source_fact))
                         })
                         .map(|fact| fact.fact_id)
                         .ok_or_else(|| {

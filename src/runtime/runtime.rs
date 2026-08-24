@@ -23,9 +23,13 @@ pub struct Runtime {
     pub execution_stack: Vec<ExecutionFrame>,
     /// Monotone runtime-wide allocator. Local environments may disappear, but
     /// a fact ID is never reused during the run.
-    pub(crate) next_fact_id: u64,
-    pub(crate) symbol_id_allocator: Rc<SymbolIdAllocator>,
-    pub(crate) template_instance_interner: RefCell<HashMap<String, SymbolBinding>>,
+    pub next_fact_id: u64,
+    pub symbol_id_allocator: Rc<SymbolIdAllocator>,
+    pub template_instance_interner: RefCell<HashMap<String, SymbolBinding>>,
+    /// Statement-local proof reuse and recursion guards. These scopes mirror
+    /// temporary runtime environments, but are not part of the persistent
+    /// mathematical environment and are never merged or snapshotted.
+    pub statement_proof_state: StatementProofStateStack,
     pub output_style: OutputStyle,
     pub strict_mode: bool,
     pub output_language: OutputLanguage,
@@ -39,6 +43,7 @@ impl Runtime {
             next_fact_id: 1,
             symbol_id_allocator: Rc::new(SymbolIdAllocator::new()),
             template_instance_interner: RefCell::new(HashMap::new()),
+            statement_proof_state: StatementProofStateStack::new(),
             output_style: OutputStyle::Normal,
             strict_mode: false,
             output_language: OutputLanguage::English,
@@ -47,7 +52,7 @@ impl Runtime {
 }
 
 impl Runtime {
-    pub(crate) fn allocate_fact_id(&mut self) -> Result<FactId, RuntimeError> {
+    pub fn allocate_fact_id(&mut self) -> Result<FactId, RuntimeError> {
         let value = self.next_fact_id;
         self.next_fact_id = value.checked_add(1).ok_or_else(|| {
             RuntimeError::from(UnknownRuntimeError(RuntimeErrorStruct::new_with_just_msg(
@@ -84,7 +89,7 @@ impl Runtime {
             .unwrap_or_else(|| Rc::from(""))
     }
 
-    pub(crate) fn ensure_execution_frame_for_parse(&mut self) {
+    pub fn ensure_execution_frame_for_parse(&mut self) {
         if !self.execution_stack.is_empty() {
             return;
         }
@@ -102,7 +107,7 @@ impl Runtime {
         ));
     }
 
-    pub(crate) fn current_parse_context(&self) -> &ParseContext {
+    pub fn current_parse_context(&self) -> &ParseContext {
         &self
             .execution_stack
             .last()
@@ -110,7 +115,7 @@ impl Runtime {
             .parse_context
     }
 
-    pub(crate) fn current_parse_context_mut(&mut self) -> &mut ParseContext {
+    pub fn current_parse_context_mut(&mut self) -> &mut ParseContext {
         &mut self
             .execution_stack
             .last_mut()
@@ -214,7 +219,7 @@ impl Runtime {
             .is_some_and(|module| module.is_standard_library)
     }
 
-    pub(crate) fn has_active_execution_frame(&self) -> bool {
+    pub fn has_active_execution_frame(&self) -> bool {
         !self.execution_stack.is_empty()
     }
 
@@ -272,7 +277,7 @@ impl Runtime {
         (frame.module_id, frame.layer)
     }
 
-    pub(crate) fn replace_current_execution_mode(
+    pub fn replace_current_execution_mode(
         &mut self,
         execution_mode: ExecutionMode,
     ) -> ExecutionMode {
@@ -399,16 +404,11 @@ impl Runtime {
             .source_path = Rc::from(source_label);
         self.refresh_current_bare_symbol_index()
     }
-
-    /// Rebuild the module registry between independent runner items.
-    #[cfg(test)]
-    pub(crate) fn reset_for_isolated_runner_item(&mut self) {
-        let path = self.current_file_path_rc().to_string();
-        self.module_manager = Box::new(ModuleManager::new());
-        self.execution_stack.clear();
-        self.new_file_path_new_env_new_name_scope(path.as_str());
-    }
 }
+
+#[cfg(test)]
+#[path = "../../tests/unit/runtime/runtime/test_support.rs"]
+mod test_support;
 
 impl Runtime {
     pub fn top_level_env(&mut self) -> &mut Environment {
@@ -451,6 +451,7 @@ impl Runtime {
         frame
             .local_environment_stack
             .push(Box::new(Environment::new_empty_env()));
+        self.statement_proof_state.push_scope();
     }
 
     /// Replace the top user environment with an empty one and clear parse-time free-param scopes.
@@ -499,6 +500,7 @@ impl Runtime {
             .last_mut()
             .and_then(|frame| frame.local_environment_stack.pop())
             .expect("local environment should exist after push_env");
+        self.statement_proof_state.pop_scope();
         result
     }
 
@@ -515,6 +517,7 @@ impl Runtime {
             .last_mut()
             .and_then(|frame| frame.local_environment_stack.pop())
             .expect("local environment should exist after push_env");
+        self.statement_proof_state.pop_scope();
         result.map(|value| (value, *child))
     }
 
@@ -534,6 +537,7 @@ impl Runtime {
             .last_mut()
             .and_then(|frame| frame.local_environment_stack.pop())
             .expect("local environment should exist after push_env");
+        self.statement_proof_state.pop_scope();
 
         if result.is_ok() {
             self.current_parse_context_mut()

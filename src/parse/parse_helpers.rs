@@ -1,9 +1,9 @@
 use crate::prelude::*;
 use std::collections::HashMap;
 
-pub(crate) struct FreshSettingParameterBundle {
-    pub(crate) param_def: ParamDefWithType,
-    pub(crate) dom_facts: Vec<Fact>,
+pub struct FreshSettingParameterBundle {
+    pub param_def: ParamDefWithType,
+    pub dom_facts: Vec<Fact>,
 }
 
 impl Runtime {
@@ -14,7 +14,7 @@ impl Runtime {
     /// an outer binding. Each parameter is allocated afresh, while its type and
     /// the setting conditions are instantiated from the setting's `forall`
     /// binders into the target binding kind.
-    pub(crate) fn parse_fresh_setting_parameter_bundle(
+    pub fn parse_fresh_setting_parameter_bundle(
         &mut self,
         tb: &mut TokenBlock,
         target_kind: ParamObjType,
@@ -197,7 +197,7 @@ impl Runtime {
     }
 }
 
-pub(crate) fn collect_forall_param_bindings_from_facts(facts: &[Fact]) -> Vec<SymbolBinding> {
+pub fn collect_forall_param_bindings_from_facts(facts: &[Fact]) -> Vec<SymbolBinding> {
     let mut bindings = Vec::new();
     for fact in facts {
         if let Fact::ForallFact(forall_fact) = fact {
@@ -215,7 +215,7 @@ pub(crate) fn collect_forall_param_bindings_from_facts(facts: &[Fact]) -> Vec<Sy
 }
 
 impl Runtime {
-    pub(crate) fn parse_goal_fact_block(
+    pub fn parse_goal_fact_block(
         &mut self,
         block: &mut TokenBlock,
         syntax_name: &str,
@@ -252,7 +252,7 @@ impl Runtime {
         Ok(fact)
     }
 
-    pub(crate) fn parse_goal_fact_block_with_inline_proof(
+    pub fn parse_goal_fact_block_with_inline_proof(
         &mut self,
         block: &mut TokenBlock,
         syntax_name: &str,
@@ -260,7 +260,7 @@ impl Runtime {
         Ok((self.parse_goal_fact_block(block, syntax_name)?, 0))
     }
 
-    pub(crate) fn parse_goal_forall_fact_block_with_inline_proof(
+    pub fn parse_goal_forall_fact_block_with_inline_proof(
         &mut self,
         block: &mut TokenBlock,
         syntax_name: &str,
@@ -282,7 +282,7 @@ impl Runtime {
         }
     }
 
-    pub(crate) fn parse_goal_atomic_fact_block(
+    pub fn parse_goal_atomic_fact_block(
         &mut self,
         block: &mut TokenBlock,
         syntax_name: &str,
@@ -307,7 +307,7 @@ impl Runtime {
         Ok(fact)
     }
 
-    pub(crate) fn parse_goal_forall_fact_block(
+    pub fn parse_goal_forall_fact_block(
         &mut self,
         block: &mut TokenBlock,
         syntax_name: &str,
@@ -328,7 +328,7 @@ impl Runtime {
         }
     }
 
-    pub(crate) fn parse_goal_fact_list_blocks(
+    pub fn parse_goal_fact_list_blocks(
         &mut self,
         body: &mut [TokenBlock],
         syntax_name: &str,
@@ -354,7 +354,7 @@ impl Runtime {
         Ok((facts, consumed))
     }
 
-    pub(crate) fn parse_question_goal_exist_or_and_chain_atomic_fact(
+    pub fn parse_question_goal_exist_or_and_chain_atomic_fact(
         &mut self,
         block: &mut TokenBlock,
         syntax_name: &str,
@@ -379,7 +379,7 @@ impl Runtime {
         Ok(fact)
     }
 
-    pub(crate) fn parse_header_fact_before_trailing_colon(
+    pub fn parse_header_fact_before_trailing_colon(
         &mut self,
         tb: &mut TokenBlock,
         syntax_name: &str,
@@ -441,7 +441,7 @@ impl Runtime {
         Ok(fact)
     }
 
-    pub(crate) fn parse_optional_trailing_proof_colon(
+    pub fn parse_optional_trailing_proof_colon(
         &mut self,
         tb: &mut TokenBlock,
         syntax_name: &str,

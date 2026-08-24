@@ -601,7 +601,7 @@ impl Runtime {
     /// Mathematical contract: instantiate a callable's declared return carrier
     /// through every supplied argument group; intermediate carriers must remain
     /// function-like for a curried application to continue.
-    pub(crate) fn fn_obj_return_set_after_application(
+    pub fn fn_obj_return_set_after_application(
         &self,
         fn_obj: &FnObj,
     ) -> Result<Option<Obj>, RuntimeError> {
@@ -649,7 +649,7 @@ impl Runtime {
     /// Mathematical contract: a curried return can be called again only when
     /// its carrier, a refined base carrier, or an equal representative denotes
     /// a function/sequence/matrix space.
-    pub(crate) fn fn_set_space_from_return_set_obj(
+    pub fn fn_set_space_from_return_set_obj(
         &self,
         return_set: Obj,
     ) -> Result<FnSetSpace, RuntimeError> {

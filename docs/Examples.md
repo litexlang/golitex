@@ -151,6 +151,193 @@ representation, field surface, or recursive index, continue with the Manual's
 [well-defined objects](Manual.md#well-defined-objects) section before choosing
 a proof route.
 
+### Journal-Backed Repair Tracers
+
+The following five pairs come from recurring proof-journal transitions. A
+rejected block explains the observed shape and is deliberately excluded from
+the documentation harness. Every preferred block is standalone and runnable.
+The point is to choose the next experiment, not to treat a historical failure
+as a permanent language limitation.
+
+#### Phase First: Repair The Surface Before The Proof
+
+This legacy inline claim shape does not provide the current goal block. Its
+failure is grammatical, so changing the mathematics would be the wrong first
+response.
+
+<!-- litex:skip-test -->
+```litex
+claim forall x R:
+    x = 2
+    =>:
+        (x + 1)^2 = 9
+```
+
+Keep the same statement and put its proof on the current `claim:` surface:
+
+```litex
+claim:
+    ? forall x R:
+        x = 2
+        =>:
+            (x + 1)^2 = 9
+    x + 1 = 3
+    (x + 1)^2 = 9
+```
+
+Parsing now succeeds, but any later well-definedness or proof error is a new
+obligation. A syntax repair does not establish mathematical truth.
+
+#### Carrier First: Make The Object Legal Before Proving With It
+
+In a dependent caller, trying to unfold a function at a compound argument
+before that argument's carrier is known can fail in well-definedness:
+
+<!-- litex:skip-test -->
+```litex
+have fn p_affine(x R) R = 2 * x - 5
+
+forall y R:
+    p_affine((y + 5) / 2) = y
+```
+
+Store the exact construction fact before evaluating the function. The next
+line can then be one continuous calculation:
+
+```litex
+have fn p_affine(x R) R = 2 * x - 5
+
+forall y R:
+    (y + 5) / 2 $in R
+    p_affine((y + 5) / 2) = 2 * ((y + 5) / 2) - 5 = y
+```
+
+This is not a rule to repeat every implied membership. Delete candidate
+carrier lines after success and keep only those whose removal reproduces the
+construction failure.
+
+#### Inside Out: Rewrite The Smallest Changed Subterm First
+
+A one-jump outer equality can ask proof search to discover several definition
+and contextual rewrites at once:
+
+<!-- litex:skip-test -->
+```litex
+have fn f_add3(x R) R = x + 3
+have fn g_times2(y R) R = 2 * y
+have fn composite(x R) R = g_times2(f_add3(x))
+
+claim:
+    ? forall x R:
+        composite(x) = 2 * x + 6
+    composite(x) = 2 * x + 6
+```
+
+Expose the changed inner value, lift it through one outer layer, and finish in
+one chain:
+
+```litex
+have fn f_add3(x R) R = x + 3
+have fn g_times2(y R) R = 2 * y
+have fn composite(x R) R = g_times2(f_add3(x))
+
+claim:
+    ? forall x R:
+        composite(x) = 2 * x + 6
+    f_add3(x) = x + 3
+    g_times2(f_add3(x)) = 2 * f_add3(x)
+    composite(x) = g_times2(f_add3(x)) = 2 * f_add3(x) = 2 * (x + 3) = 2 * x + 6
+```
+
+Continuous chains also mix equality and order when every adjacent relation is
+the actual mathematical route:
+
+```litex
+have lower R = 0
+have x R = 1
+have upper R = 2
+
+lower < x <= upper = 1 + 1
+```
+
+Do not flatten blindly. If deleting the inner equality makes the outer
+consumer fail, that equality is a live verifier bridge.
+
+#### Liveness: Delete Echoes But Keep A Proven Live Bridge
+
+The following proof passes, but the witness body repeats the exact fact just
+stored above it:
+
+```litex
+have fn shift(x R) R = x + 1
+have fn unshift(y R) R = y - 1
+
+claim:
+    ? forall y R:
+        exist x R st {y = shift(x)}
+    unshift(y) = y - 1
+    unshift(y) + 1 = (y - 1) + 1 = y
+    shift(unshift(y)) = unshift(y) + 1 = (y - 1) + 1 = y
+    y = shift(unshift(y))
+    witness exist x R st {y = shift(x)} from unshift(y):
+        y = shift(unshift(y))
+```
+
+The bodyless witness checks the substituted body itself, so the final echo can
+go. The inverse equation remains because it is the live mathematical bridge:
+
+```litex
+have fn shift(x R) R = x + 1
+have fn unshift(y R) R = y - 1
+
+claim:
+    ? forall y R:
+        exist x R st {y = shift(x)}
+    unshift(y) = y - 1
+    unshift(y) + 1 = (y - 1) + 1 = y
+    shift(unshift(y)) = unshift(y) + 1 = (y - 1) + 1 = y
+    y = shift(unshift(y))
+    witness exist x R st {y = shift(x)} from unshift(y)
+```
+
+Run deletions one class at a time. Passing code is only a liveness candidate;
+the first real downstream failure decides which representation bridge stays.
+
+#### Interface Fidelity: Make Callable Data Callable Without Changing The Object
+
+A set-valued field can classify stored data, but it does not become callable
+merely because a consumer writes parentheses after the projection:
+
+<!-- litex:skip-test -->
+```litex
+struct StoredFamily:
+    values set
+    marker N
+
+by thm struct_member(({1, 2}, 0), &StoredFamily)
+have family &StoredFamily = ({1, 2}, 0)
+family.values(1) = 1
+```
+
+When downstream mathematics applies the field, expose the exact bounded
+function interface:
+
+```litex
+struct RealFamily:
+    values fn(k {1, 2}) R
+    marker N
+
+have fn table(k {1, 2}) R = k
+by thm struct_member((table, 0), &RealFamily)
+have family &RealFamily = (table, 0)
+
+family.values(1) = table(1) = 1
+```
+
+Verifier acceptance alone is not interface equivalence. A convenient
+restricted domain is not an acceptable repair when the source object has a
+different public domain; preserve that interface and record the narrow gap.
+
 Small proof moves come up again and again: conjunctions, cases, contradiction,
 witnesses, induction, theorem reuse, and named facts.
 

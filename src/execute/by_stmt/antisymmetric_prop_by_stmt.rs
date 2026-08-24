@@ -105,7 +105,7 @@ impl Runtime {
         .into())
     }
 
-    pub(crate) fn exec_by_antisymmetric_prop_stmt_affect_environment_only(
+    pub fn exec_by_antisymmetric_prop_stmt_affect_environment_only(
         &mut self,
         stmt: &ByAntisymmetricPropStmt,
     ) -> Result<StmtResult, RuntimeError> {

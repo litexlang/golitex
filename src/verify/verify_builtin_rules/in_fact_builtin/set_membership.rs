@@ -18,7 +18,7 @@ impl Runtime {
         result
     }
 
-    pub(crate) fn try_verify_set_builder_membership_definition_transport(
+    pub fn try_verify_set_builder_membership_definition_transport(
         &mut self,
         goal: &InFact,
     ) -> Result<Option<StmtResult>, RuntimeError> {
@@ -166,7 +166,7 @@ impl Runtime {
         Ok(None)
     }
 
-    pub(crate) fn try_verify_atomic_fact_from_known_set_builder_membership(
+    pub fn try_verify_atomic_fact_from_known_set_builder_membership(
         &mut self,
         goal: &AtomicFact,
     ) -> Result<Option<StmtResult>, RuntimeError> {
@@ -1266,7 +1266,7 @@ impl Runtime {
     // satisfying the named pointwise choice-function property.
     // Example: `f $in general_cart(I, s, g)` follows from
     // `f $in fn(t I)big_union(s)` and `$is_choice_function_for(I, s, g, f)`.
-    pub(crate) fn verify_in_fact_in_general_cart_by_defining_facts(
+    pub fn verify_in_fact_in_general_cart_by_defining_facts(
         &mut self,
         in_fact: &InFact,
         general_cart: &GeneralCart,
@@ -1304,7 +1304,7 @@ impl Runtime {
         )
     }
 
-    pub(crate) fn verify_in_fact_in_set_builder_by_defining_facts(
+    pub fn verify_in_fact_in_set_builder_by_defining_facts(
         &mut self,
         in_fact: &InFact,
         set_builder: &SetBuilder,
@@ -1375,7 +1375,7 @@ impl Runtime {
     // then `y $in S(a)` is checked by unfolding one layer and proving
     // `y $in T` plus `P(y)`. This includes instantiated template definitions.
     // Examples: `(3, 4) $in circle(5)` and `y $in \selected<T>`.
-    pub(crate) fn maybe_verify_in_fact_in_unfolded_user_defined_set(
+    pub fn maybe_verify_in_fact_in_unfolded_user_defined_set(
         &mut self,
         in_fact: &InFact,
         verify_state: &UseContextVerifyState,
@@ -1429,7 +1429,7 @@ impl Runtime {
         ))
     }
 
-    pub(crate) fn verify_in_fact_by_struct_obj(
+    pub fn verify_in_fact_by_struct_obj(
         &mut self,
         in_fact: &InFact,
         struct_obj: &StructObj,
@@ -1531,7 +1531,7 @@ impl Runtime {
 
     // The cardinality of a finite set is a natural number, hence also an integer, rational, and real.
     // Example: if `A finite_set`, then `finite_set_size(A) $in N` and `finite_set_size(A) $in R`.
-    pub(crate) fn verify_finite_set_size_in_standard_number_set(
+    pub fn verify_finite_set_size_in_standard_number_set(
         &mut self,
         in_fact: &InFact,
         finite_set_size: &FiniteSetSize,

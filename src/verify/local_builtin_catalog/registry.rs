@@ -14,7 +14,7 @@ pub(super) struct GeneratedLocalBuiltinRuleSource {
 include!("generated_catalog.rs");
 
 #[derive(Clone)]
-pub(crate) struct RegisteredLocalBuiltinRule {
+pub struct RegisteredLocalBuiltinRule {
     schema: CompiledRuleSchema,
     _lean_theorem_name: &'static str,
 }
@@ -27,25 +27,8 @@ impl RegisteredLocalBuiltinRule {
         rule_id
     }
 
-    #[cfg(test)]
-    pub fn semantic_fingerprint(&self) -> &RuleFingerprint {
-        let RuleSourceRef::LocalBuiltin {
-            semantic_fingerprint,
-            ..
-        } = &self.schema.source
-        else {
-            unreachable!("local builtin registry contained a non-builtin source")
-        };
-        semantic_fingerprint
-    }
-
     pub fn schema(&self) -> &CompiledRuleSchema {
         &self.schema
-    }
-
-    #[cfg(test)]
-    pub fn lean_theorem_name(&self) -> &str {
-        self._lean_theorem_name
     }
 }
 
@@ -79,7 +62,7 @@ fn compile_registered_local_builtin_rule(
 /// Read the generated semantic fingerprint without parsing the Litex schema.
 /// Result consumers use this narrow metadata lookup to reject stale
 /// certificates without rebuilding the verifier catalog.
-pub(crate) fn registered_local_builtin_fingerprint_by_id(
+pub fn registered_local_builtin_fingerprint_by_id(
     rule_id: &RuleId,
 ) -> Result<Option<RuleFingerprint>, RuntimeError> {
     GENERATED_LOCAL_BUILTIN_RULES
@@ -96,8 +79,7 @@ thread_local! {
         const { RefCell::new(None) };
 }
 
-pub(crate) fn registered_local_builtin_rules(
-) -> Result<Vec<RegisteredLocalBuiltinRule>, RuntimeError> {
+pub fn registered_local_builtin_rules() -> Result<Vec<RegisteredLocalBuiltinRule>, RuntimeError> {
     COMPILED_RULES.with(|cache| {
         if cache.borrow().is_none() {
             let compiled = compile_registered_local_builtin_rules()
@@ -112,31 +94,5 @@ pub(crate) fn registered_local_builtin_rules(
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use std::collections::HashSet;
-
-    #[test]
-    fn generated_catalog_parses_as_restricted_forall_schemas() {
-        std::thread::Builder::new()
-            .name("local-builtin-catalog-parse".to_string())
-            .stack_size(64 * 1024 * 1024)
-            .spawn(|| {
-                let rules = registered_local_builtin_rules().expect("compile generated catalog");
-                assert_eq!(rules.len(), GENERATED_LOCAL_BUILTIN_RULES.len());
-                let mut ids = HashSet::new();
-                let mut fingerprints = HashSet::new();
-                for rule in rules {
-                    assert!(ids.insert(rule.id().as_str().to_string()));
-                    assert!(fingerprints.insert(rule.semantic_fingerprint().as_hex().to_string()));
-                    assert_eq!(
-                        rule.lean_theorem_name(),
-                        rule.id().as_str().replace('.', "_")
-                    );
-                }
-            })
-            .expect("spawn catalog parser")
-            .join()
-            .expect("catalog parser panicked");
-    }
-}
+#[path = "../../../tests/unit/verify/local_builtin_catalog/registry/tests.rs"]
+mod tests;

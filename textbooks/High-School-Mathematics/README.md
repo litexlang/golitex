@@ -1,8 +1,12 @@
-# High-school mathematics: runnable Chapters 1--20
+# High-school mathematics: runnable Introduction and Chapters 1--20
 
-The current module exports the recovered shared cite interfaces and a coherent
-book through Chapter 20. Every registered chapter file passes the latest release
-`-f` runner, and the complete module passes the recursive `-r` gate.
+The current module opens with a reader-facing map of its eleven mathematical
+directions, then exports the recovered shared cite interfaces and a coherent
+book through Chapter 20. Its prior acceptance covers every registered chapter
+and the complete recursive module. On the current dirty verifier worktree, a
+rerun is blocked at the unchanged `cite/functions.lit:133` by a FactId
+witness-storage regression recorded in `scripts/high_school_book/todo.md`; the
+comments-only Introduction itself passes its registered release runner.
 
 Chapter 16's finite-sum examples now expose the recurrence and point-evaluation
 rewrites in one continuous equality chain. Chapters 17--20 replay unchanged after

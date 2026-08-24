@@ -40,7 +40,7 @@ impl Runtime {
         }
     }
 
-    pub(crate) fn parse_obj_with_default_struct_view(
+    pub fn parse_obj_with_default_struct_view(
         &mut self,
         tb: &mut TokenBlock,
     ) -> Result<(Obj, Option<StructObj>), RuntimeError> {

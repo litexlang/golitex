@@ -70,7 +70,7 @@ impl Runtime {
         )
     }
 
-    pub(crate) fn exec_obtain_obj_from_exist_fact_affect_environment_only(
+    pub fn exec_obtain_obj_from_exist_fact_affect_environment_only(
         &mut self,
         obtain: &ObtainObjFromExistFact,
     ) -> Result<StmtResult, RuntimeError> {
@@ -90,7 +90,7 @@ impl Runtime {
         .into())
     }
 
-    pub(crate) fn exec_obtain_obj_from_atomic_fact_affect_environment_only(
+    pub fn exec_obtain_obj_from_atomic_fact_affect_environment_only(
         &mut self,
         obtain: &ObtainObjFromAtomicFact,
     ) -> Result<StmtResult, RuntimeError> {
@@ -111,7 +111,7 @@ impl Runtime {
         .into())
     }
 
-    pub(crate) fn exec_obtain_obj_from_thm_affect_environment_only(
+    pub fn exec_obtain_obj_from_thm_affect_environment_only(
         &mut self,
         obtain: &ObtainObjFromThm,
     ) -> Result<StmtResult, RuntimeError> {
@@ -227,7 +227,7 @@ impl Runtime {
         )
     }
 
-    pub(crate) fn exec_have_obj_by_exist_facts_stmt_affect_environment_only(
+    pub fn exec_have_obj_by_exist_facts_stmt_affect_environment_only(
         &mut self,
         stmt: &HaveObjByExistFactsStmt,
     ) -> Result<StmtResult, RuntimeError> {

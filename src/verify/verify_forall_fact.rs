@@ -2,7 +2,7 @@ use crate::prelude::*;
 use std::result::Result;
 
 impl Runtime {
-    pub(crate) fn verify_forall_fact_from_known_cache_only(
+    pub fn verify_forall_fact_from_known_cache_only(
         &mut self,
         forall_fact: &ForallFact,
     ) -> Result<Option<StmtResult>, RuntimeError> {
@@ -16,11 +16,13 @@ impl Runtime {
             return Ok(None);
         };
         let fact: Fact = forall_fact.clone().into();
-        self.top_level_env().store_fact_to_cache_known_fact(
-            fact.to_string(),
-            cached_fact.line_file.clone(),
-            cached_fact.fact_id,
-        )?;
+        self.top_level_env()
+            .store_fact_to_cache_known_fact_with_equivalent_proposition_key(
+                fact.to_string(),
+                cached_fact.line_file.clone(),
+                cached_fact.fact_id,
+                cached_fact.equivalent_proposition_lookup_key.clone(),
+            )?;
         Ok(Some(
             SuccessFactStmtResult::new_with_verified_by_known_fact(
                 fact.clone(),
@@ -38,7 +40,7 @@ impl Runtime {
     /// Assume `forall` parameters and dom facts in the current environment (no extra `push_env`).
     /// Used by [`Self::verify_forall_fact`] and by `by cases` in the same `run_in_local_env` as the
     /// case branch.
-    pub(crate) fn forall_assume_params_and_dom_in_current_env(
+    pub fn forall_assume_params_and_dom_in_current_env(
         &mut self,
         forall_fact: &ForallFact,
         verify_state: &UseContextVerifyState,
@@ -89,7 +91,7 @@ impl Runtime {
 
     /// Verify and store each `then` clause of `forall_fact` in the current environment.
     /// `by_cases_case_label`: when set, unknown `then` messages include the active `by cases` case.
-    pub(crate) fn forall_verify_then_facts_in_current_env(
+    pub fn forall_verify_then_facts_in_current_env(
         &mut self,
         forall_fact: &ForallFact,
         verify_state: &UseContextVerifyState,

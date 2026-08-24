@@ -24,9 +24,11 @@ pub use crate::runtime::{OutputStyle, Runtime, TrustedPrefixReport};
 
 // Source, file, and repository execution entry points.
 pub use crate::pipeline::{
-    run_file_with_project_context, run_file_with_project_context_and_trusted_prefix,
-    run_repository_with_output, run_repository_with_output_style, run_source_code,
-    run_source_code_in_file, run_source_code_in_file_with_ok, RunSummary,
+    run_file, run_file_with_project_context, run_file_with_project_context_and_trusted_prefix,
+    run_repository, run_repository_with_output, run_repository_with_output_style, run_source_code,
+    run_source_code_in_file, run_source_code_in_file_with_ok, run_source_code_with_options,
+    FileRunOptions, RunOutputOptions, RunSourceFailureKind, RunSummary, SourceRunFailureKind,
+    SourceRunOptions, SourceRunOutcome,
 };
 
 // Stable rendering entry points for embedding and machine-readable output.

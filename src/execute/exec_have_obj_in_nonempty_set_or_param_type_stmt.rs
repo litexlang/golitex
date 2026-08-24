@@ -52,7 +52,7 @@ impl Runtime {
         })
     }
 
-    pub(crate) fn exec_have_obj_in_nonempty_set_or_param_type_stmt_affect_environment(
+    pub fn exec_have_obj_in_nonempty_set_or_param_type_stmt_affect_environment(
         &mut self,
         stmt: &HaveObjInNonemptySetOrParamTypeStmt,
     ) -> Result<SuccessInferResult, RuntimeError> {
@@ -70,7 +70,7 @@ impl Runtime {
         Ok(infer_result)
     }
 
-    pub(crate) fn exec_have_obj_in_nonempty_set_or_param_type_stmt_affect_environment_only(
+    pub fn exec_have_obj_in_nonempty_set_or_param_type_stmt_affect_environment_only(
         &mut self,
         stmt: &HaveObjInNonemptySetOrParamTypeStmt,
     ) -> Result<StmtResult, RuntimeError> {

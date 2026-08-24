@@ -26,7 +26,7 @@ impl Runtime {
         Ok(infer_result)
     }
 
-    pub(crate) fn parameter_type_fact_for_binding(
+    pub fn parameter_type_fact_for_binding(
         &mut self,
         binding: &SymbolBinding,
         param_type: &ParamType,

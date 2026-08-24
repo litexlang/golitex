@@ -20,14 +20,10 @@ impl Runtime {
         let verify_state = verify_state.without_known_forall_for_equality();
         let verify_state = &verify_state;
         let reusable_cache_key = self.well_defined_cache_key_for_obj(obj);
-        if let Some(source) = reusable_cache_key.as_ref().and_then(|key| {
-            self.iter_environments_from_top().find_map(|environment| {
-                environment
-                    .statement_well_defined_obj_proofs
-                    .get(key)
-                    .cloned()
-            })
-        }) {
+        if let Some(source) = reusable_cache_key
+            .as_ref()
+            .and_then(|key| self.statement_well_defined_object_proof(key))
+        {
             return Ok(Rc::new(SuccessVerifyObjWellDefinedResult::Reuse(Box::new(
                 SuccessReuseObjWellDefinedResult::new(obj.clone(), source),
             ))));
@@ -308,15 +304,12 @@ impl Runtime {
             ),
         )));
         if let Some(reusable_cache_key) = reusable_cache_key {
-            self.top_level_env()
-                .statement_well_defined_obj_proofs
-                .entry(reusable_cache_key)
-                .or_insert_with(|| result.clone());
+            self.remember_statement_well_defined_object_proof(reusable_cache_key, result.clone());
         }
         Ok(result)
     }
 
-    pub(crate) fn verify_child_obj_well_defined_result(
+    pub fn verify_child_obj_well_defined_result(
         &mut self,
         obj: &Obj,
         verify_state: &UseContextVerifyState,
@@ -346,7 +339,7 @@ impl Runtime {
             .map(|_| ())
     }
 
-    pub(crate) fn verify_child_obj_well_defined_and_store_cache(
+    pub fn verify_child_obj_well_defined_and_store_cache(
         &mut self,
         obj: &Obj,
         verify_state: &UseContextVerifyState,
@@ -359,7 +352,7 @@ impl Runtime {
     /// Verify an object visited only while discharging another object's
     /// contract. When compiler evidence is active this becomes an ordered
     /// `VerificationDependency`, never a target-constructor value slot.
-    pub(crate) fn verify_obj_well_defined_as_verification_dependency(
+    pub fn verify_obj_well_defined_as_verification_dependency(
         &mut self,
         obj: &Obj,
         verify_state: &UseContextVerifyState,
@@ -389,7 +382,7 @@ pub(super) fn success_obj_target_requirement(
     ))
 }
 
-pub(crate) fn success_obj_fact_check(
+pub fn success_obj_fact_check(
     result: StmtResult,
 ) -> Result<SuccessVerifyFactForObjWellDefinedResult, RuntimeError> {
     let success = result.into_factual_success().ok_or_else(|| {
@@ -406,46 +399,8 @@ pub(crate) fn success_obj_fact_check(
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn compositional_well_definedness_cache_returns_exact_reuse_source() {
-        let mut runtime = Runtime::new();
-        runtime.new_file_path_new_env_new_name_scope("compositional-wd-reuse.lit");
-        let object: Obj = Number::new("1".to_string()).into();
-        let verify_state = UseContextVerifyState::new(0, false);
-
-        let first = runtime
-            .verify_obj_well_defined_result(&object, &verify_state)
-            .expect("first object check succeeds");
-        assert!(matches!(
-            first.as_ref(),
-            SuccessVerifyObjWellDefinedResult::Direct(_)
-        ));
-
-        let second = runtime
-            .verify_obj_well_defined_result(&object, &verify_state)
-            .expect("second object check reuses the first proof");
-        let SuccessVerifyObjWellDefinedResult::Reuse(reuse) = second.as_ref() else {
-            panic!("second object check must be an explicit Reuse node");
-        };
-        assert!(Rc::ptr_eq(&reuse.source, &first));
-        assert_eq!(reuse.object.to_string(), object.to_string());
-    }
-
-    #[test]
-    fn ordinary_well_definedness_keeps_historical_active_reentry_suppression() {
-        let mut runtime = Runtime::new();
-        runtime.new_file_path_new_env_new_name_scope("ordinary-active-wd-reentry.lit");
-        let object: Obj = Number::new("1".to_string()).into();
-        runtime.begin_well_defined_object(&obj_equality_key(&object));
-
-        runtime
-            .verify_obj_well_defined_and_store_cache(&object, &UseContextVerifyState::new(0, false))
-            .expect("ordinary Litex verification should retain active-object suppression");
-    }
-}
+#[path = "../../tests/unit/verify/verify_obj_well_defined/tests.rs"]
+mod tests;
 
 /// Constructor-owned result carriers are part of the checked object contract,
 /// not guesses from surrounding Lean syntax. Example: Litex remainder is an

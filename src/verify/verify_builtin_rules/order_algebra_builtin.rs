@@ -15,7 +15,7 @@ use super::order_normalize::normalize_positive_order_atomic_fact;
 use crate::prelude::*;
 
 impl Runtime {
-    pub(crate) fn verify_order_algebra_structural_builtin_rule(
+    pub fn verify_order_algebra_structural_builtin_rule(
         &mut self,
         atomic_fact: &AtomicFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -45,11 +45,11 @@ impl Runtime {
         }
     }
 
-    pub(crate) fn literal_zero_obj() -> Obj {
+    pub fn literal_zero_obj() -> Obj {
         Obj::Number(Number::new("0".to_string()))
     }
 
-    pub(crate) fn literal_one_obj() -> Obj {
+    pub fn literal_one_obj() -> Obj {
         Obj::Number(Number::new("1".to_string()))
     }
 
@@ -1231,7 +1231,7 @@ impl Runtime {
     // parameter set when it is explicit.
     // Example: from `forall i N+: m <= i <= n => f(i) <= g(i)`, prove
     // `sum(m, n, fn(i N+) R {f(i)}) <= sum(m, n, fn(i N+) R {g(i)})`.
-    pub(crate) fn try_less_equal_sum_pointwise_on_same_integer_range(
+    pub fn try_less_equal_sum_pointwise_on_same_integer_range(
         &mut self,
         f: &LessEqualFact,
         atomic_fact: &AtomicFact,
@@ -1331,7 +1331,7 @@ impl Runtime {
     // Finite-set sum monotonicity on a shared finite set.
     // Example: from `forall x X: f(x) <= g(x)`, prove
     // `finite_set_sum(X, f) <= finite_set_sum(X, g)`.
-    pub(crate) fn try_less_equal_finite_set_sum_pointwise_on_same_set(
+    pub fn try_less_equal_finite_set_sum_pointwise_on_same_set(
         &mut self,
         f: &LessEqualFact,
         atomic_fact: &AtomicFact,
@@ -1393,7 +1393,7 @@ impl Runtime {
     // A non-negative summand is no larger than the finite sum containing it.
     // Example: from `x $in X` and `forall y X: h(y) >= 0`, prove
     // `h(x) <= finite_set_sum(X, h)`.
-    pub(crate) fn try_less_equal_finite_set_summand_nonnegative_sum(
+    pub fn try_less_equal_finite_set_summand_nonnegative_sum(
         &mut self,
         f: &LessEqualFact,
         atomic_fact: &AtomicFact,

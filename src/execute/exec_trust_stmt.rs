@@ -58,7 +58,7 @@ impl Runtime {
         Ok(infer_result)
     }
 
-    pub(crate) fn exec_trust_stmt_affect_environment_only(
+    pub fn exec_trust_stmt_affect_environment_only(
         &mut self,
         trust_stmt: &TrustStmt,
     ) -> Result<StmtResult, RuntimeError> {

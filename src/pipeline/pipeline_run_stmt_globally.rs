@@ -1,11 +1,28 @@
-use crate::pipeline::pipeline::run_source_code_with_failure_kind_and_trusted_prefix;
+use crate::pipeline::pipeline::{run_source_code_with_options, SourceRunOptions};
 use crate::prelude::*;
 use crate::runtime::TrustedPrefixPolicy;
 use std::fs;
 use std::rc::Rc;
 use std::time::Instant;
 
-pub fn run_stmt_at_global_env(
+#[derive(Clone, Copy)]
+enum RepositoryModuleRun {
+    Complete,
+    Before(RepositoryFileTarget),
+    Through(RepositoryFileTarget),
+}
+
+impl RepositoryModuleRun {
+    fn selected_target(self) -> Option<(RepositoryFileTarget, bool)> {
+        match self {
+            Self::Complete => None,
+            Self::Before(target) => Some((target, false)),
+            Self::Through(target) => Some((target, true)),
+        }
+    }
+}
+
+pub fn execute_top_level_statement(
     stmt: &Stmt,
     runtime: &mut Runtime,
 ) -> Result<StmtResult, RuntimeError> {
@@ -18,7 +35,7 @@ pub fn run_stmt_at_global_env(
     }
 }
 
-pub(crate) fn run_stmt_at_global_env_in_trusted_prefix_run(
+pub fn execute_top_level_statement_in_trusted_prefix_run(
     stmt: &Stmt,
     runtime: &mut Runtime,
 ) -> Result<StmtResult, RuntimeError> {
@@ -31,17 +48,34 @@ pub(crate) fn run_stmt_at_global_env_in_trusted_prefix_run(
     }
 }
 
+// Compatibility wrappers for the former environment-oriented vocabulary.
+pub fn run_stmt_at_global_env(
+    stmt: &Stmt,
+    runtime: &mut Runtime,
+) -> Result<StmtResult, RuntimeError> {
+    execute_top_level_statement(stmt, runtime)
+}
+
+pub fn run_stmt_at_global_env_in_trusted_prefix_run(
+    stmt: &Stmt,
+    runtime: &mut Runtime,
+) -> Result<StmtResult, RuntimeError> {
+    execute_top_level_statement_in_trusted_prefix_run(stmt, runtime)
+}
+
 pub fn run_repository_file_target(
     runtime: &mut Runtime,
     target: RepositoryFileTarget,
 ) -> (Vec<StmtResult>, Option<RuntimeError>) {
     match target {
         RepositoryFileTarget::Module(module_id) => run_repository_module_prefix(runtime, module_id),
-        RepositoryFileTarget::File { .. } => run_repository_prefix(runtime, target, true, None),
+        RepositoryFileTarget::File { .. } => {
+            run_repository_prefix(runtime, RepositoryModuleRun::Through(target), None)
+        }
     }
 }
 
-pub(crate) fn run_repository_file_target_with_trusted_prefix(
+pub fn run_repository_file_target_with_trusted_prefix(
     runtime: &mut Runtime,
     target: RepositoryFileTarget,
     trusted_prefix: &TrustedPrefixPolicy,
@@ -50,9 +84,11 @@ pub(crate) fn run_repository_file_target_with_trusted_prefix(
         RepositoryFileTarget::Module(module_id) => {
             run_repository_module_prefix_with_trusted_prefix(runtime, module_id, trusted_prefix)
         }
-        RepositoryFileTarget::File { .. } => {
-            run_repository_prefix(runtime, target, true, Some(trusted_prefix))
-        }
+        RepositoryFileTarget::File { .. } => run_repository_prefix(
+            runtime,
+            RepositoryModuleRun::Through(target),
+            Some(trusted_prefix),
+        ),
     }
 }
 
@@ -83,7 +119,7 @@ pub fn run_repository_before_file_target(
     };
 
     let execution_mode = runtime.current_execution_mode();
-    let result = run_repository_prefix(runtime, target, false, None);
+    let result = run_repository_prefix(runtime, RepositoryModuleRun::Before(target), None);
     if result.1.is_none() {
         runtime.push_file_execution_frame_with_mode(
             module_id,
@@ -147,16 +183,34 @@ fn run_isolated_import(
         runtime.record_unverified_import(kind, name, import.line_file());
         ExecutionMode::Trusted
     };
-    let (_, runtime_error) =
+    let module_status_before = runtime
+        .module_manager
+        .module(module_id)
+        .expect("discovered import module should be registered")
+        .status;
+    let (statement_results, runtime_error) =
         run_repository_module_target_with_mode(runtime, module_id, execution_mode, None);
     if let Some(error) = runtime_error {
         runtime.module_manager = module_manager_before;
         return Err(error);
     }
+    let execution = if module_status_before == ModuleStatus::Loaded {
+        SuccessImportExecutionResult::Reused(SuccessReusedImportResult {
+            module_id,
+            execution_mode,
+        })
+    } else {
+        SuccessImportExecutionResult::Executed(Box::new(SuccessExecutedImportResult {
+            module_id,
+            execution_mode,
+            statement_results,
+        }))
+    };
     Ok(
         SuccessCommandStmtResult::ImportStmt(Box::new(SuccessImportStmtResult {
             statement: import.clone(),
             common: SuccessStmtCommonResult::new(SuccessInferResult::new()),
+            execution,
         }))
         .into(),
     )
@@ -175,8 +229,7 @@ fn run_repository_module_prefix(
     }
     run_repository_prefix(
         runtime,
-        RepositoryFileTarget::Module(target_module_id),
-        true,
+        RepositoryModuleRun::Through(RepositoryFileTarget::Module(target_module_id)),
         None,
     )
 }
@@ -201,18 +254,19 @@ fn run_repository_module_prefix_with_trusted_prefix(
     }
     run_repository_prefix(
         runtime,
-        RepositoryFileTarget::Module(target_module_id),
-        true,
+        RepositoryModuleRun::Through(RepositoryFileTarget::Module(target_module_id)),
         Some(trusted_prefix),
     )
 }
 
 fn run_repository_prefix(
     runtime: &mut Runtime,
-    target: RepositoryFileTarget,
-    include_selected_target: bool,
+    module_run: RepositoryModuleRun,
     trusted_prefix: Option<&TrustedPrefixPolicy>,
 ) -> (Vec<StmtResult>, Option<RuntimeError>) {
+    let Some((target, _)) = module_run.selected_target() else {
+        unreachable!("repository prefix requires a selected target")
+    };
     let execution_mode = runtime.current_execution_mode();
     let target_module_id = match target {
         RepositoryFileTarget::Module(module_id) => module_id,
@@ -222,7 +276,10 @@ fn run_repository_prefix(
         .module_manager
         .entry_module_id
         .unwrap_or(target_module_id);
-    if !module_is_descendant_of(runtime, target_module_id, root_module_id) {
+    if !runtime
+        .module_manager
+        .module_is_descendant_of(target_module_id, root_module_id)
+    {
         return (
             vec![],
             Some(repository_target_error(
@@ -230,12 +287,11 @@ fn run_repository_prefix(
             )),
         );
     }
-    run_repository_module_plan_to_target(
+    run_repository_module_with_mode(
         runtime,
         root_module_id,
         execution_mode,
-        target,
-        include_selected_target,
+        module_run,
         trusted_prefix,
     )
 }
@@ -254,6 +310,22 @@ fn run_repository_module_target_with_mode(
     execution_mode: ExecutionMode,
     trusted_prefix: Option<&TrustedPrefixPolicy>,
 ) -> (Vec<StmtResult>, Option<RuntimeError>) {
+    run_repository_module_with_mode(
+        runtime,
+        module_id,
+        execution_mode,
+        RepositoryModuleRun::Complete,
+        trusted_prefix,
+    )
+}
+
+fn run_repository_module_with_mode(
+    runtime: &mut Runtime,
+    module_id: ModuleId,
+    execution_mode: ExecutionMode,
+    module_run: RepositoryModuleRun,
+    trusted_prefix: Option<&TrustedPrefixPolicy>,
+) -> (Vec<StmtResult>, Option<RuntimeError>) {
     let Some(module) = runtime.module_manager.module(module_id) else {
         return (
             vec![],
@@ -263,10 +335,17 @@ fn run_repository_module_target_with_mode(
         );
     };
     if runtime.current_module_id() == module_id {
-        return run_repository_module_plan(runtime, module_id, execution_mode, trusted_prefix);
+        return run_repository_module_plan(
+            runtime,
+            module_id,
+            execution_mode,
+            module_run,
+            trusted_prefix,
+        );
     }
     if module.status == ModuleStatus::Loaded {
-        if execution_mode == ExecutionMode::Verified
+        if matches!(module_run, RepositoryModuleRun::Complete)
+            && execution_mode == ExecutionMode::Verified
             && module.execution_mode == ExecutionMode::Trusted
         {
             return (
@@ -279,12 +358,12 @@ fn run_repository_module_target_with_mode(
         return (vec![], None);
     }
     if module.status == ModuleStatus::Loading {
-        return (
-            vec![],
-            Some(repository_target_error(
-                "cyclic module import while running project module",
-            )),
-        );
+        let message = if matches!(module_run, RepositoryModuleRun::Complete) {
+            "cyclic module import while running project module"
+        } else {
+            "cyclic module import while running project prefix"
+        };
+        return (vec![], Some(repository_target_error(message)));
     }
 
     let module_manager_before = runtime.module_manager.clone();
@@ -306,78 +385,11 @@ fn run_repository_module_target_with_mode(
         .expect("registered project module should exist")
         .execution_mode = execution_mode;
     runtime.push_module_execution_frame_with_mode(module_id, module_path.as_str(), execution_mode);
-    let result = run_repository_module_plan(runtime, module_id, execution_mode, trusted_prefix);
-    runtime.pop_execution_frame();
-    if result.1.is_some() {
-        runtime.module_manager = module_manager_before;
-        return result;
-    }
-    runtime.module_manager.finish_loading_module(module_id);
-    result
-}
-
-fn run_repository_module_prefix_with_mode(
-    runtime: &mut Runtime,
-    module_id: ModuleId,
-    execution_mode: ExecutionMode,
-    target: RepositoryFileTarget,
-    include_selected_target: bool,
-    trusted_prefix: Option<&TrustedPrefixPolicy>,
-) -> (Vec<StmtResult>, Option<RuntimeError>) {
-    let Some(module) = runtime.module_manager.module(module_id) else {
-        return (
-            vec![],
-            Some(repository_target_error(
-                "registered project module is missing",
-            )),
-        );
-    };
-    if runtime.current_module_id() == module_id {
-        return run_repository_module_plan_to_target(
-            runtime,
-            module_id,
-            execution_mode,
-            target,
-            include_selected_target,
-            trusted_prefix,
-        );
-    }
-    if module.status == ModuleStatus::Loaded {
-        return (vec![], None);
-    }
-    if module.status == ModuleStatus::Loading {
-        return (
-            vec![],
-            Some(repository_target_error(
-                "cyclic module import while running project prefix",
-            )),
-        );
-    }
-    let module_manager_before = runtime.module_manager.clone();
-    if let Err(message) = runtime
-        .module_manager
-        .begin_loading_discovered_module(module_id)
-    {
-        return (vec![], Some(repository_target_error(message.as_str())));
-    }
-    let module_path = runtime
-        .module_manager
-        .module(module_id)
-        .expect("registered project module should exist")
-        .main_file_path
-        .clone();
-    runtime
-        .module_manager
-        .module_mut(module_id)
-        .expect("registered project module should exist")
-        .execution_mode = execution_mode;
-    runtime.push_module_execution_frame_with_mode(module_id, module_path.as_str(), execution_mode);
-    let result = run_repository_module_plan_to_target(
+    let result = run_repository_module_plan(
         runtime,
         module_id,
         execution_mode,
-        target,
-        include_selected_target,
+        module_run,
         trusted_prefix,
     );
     runtime.pop_execution_frame();
@@ -389,96 +401,11 @@ fn run_repository_module_prefix_with_mode(
     result
 }
 
-fn run_repository_module_plan_to_target(
-    runtime: &mut Runtime,
-    module_id: ModuleId,
-    execution_mode: ExecutionMode,
-    selected_target: RepositoryFileTarget,
-    include_selected_target: bool,
-    trusted_prefix: Option<&TrustedPrefixPolicy>,
-) -> (Vec<StmtResult>, Option<RuntimeError>) {
-    let (mut results, import_error) = run_config_imports(runtime, module_id);
-    if let Some(error) = import_error {
-        return (results, Some(error));
-    }
-    if let Err(error) = runtime.refresh_current_bare_symbol_index() {
-        return (results, Some(error));
-    }
-    let Some(module) = runtime.module_manager.module(module_id) else {
-        return (
-            results,
-            Some(repository_target_error(
-                "registered project module is missing",
-            )),
-        );
-    };
-    let source_path = module.main_file_path.clone();
-    if source_path.ends_with(".lit") {
-        let (mut source_results, source_error) =
-            run_repository_source_file(runtime, source_path.as_str(), trusted_prefix);
-        results.append(&mut source_results);
-        return (results, source_error);
-    }
-    let run_targets = module.run_targets.clone();
-    for target in run_targets {
-        let target_matches = repository_target_matches_import_target(selected_target, target);
-        if target_matches && !include_selected_target {
-            return (results, None);
-        }
-        let target_contains = match target {
-            ImportTarget::Module(child_module_id) => {
-                repository_target_is_inside_module(runtime, selected_target, child_module_id)
-            }
-            ImportTarget::File { .. } => false,
-        };
-        let target_execution_mode = if target_matches || target_contains {
-            execution_mode
-        } else {
-            project_target_execution_mode(runtime, module_id, target)
-        };
-        let (mut target_results, runtime_error) = if target_contains && !target_matches {
-            let ImportTarget::Module(child_module_id) = target else {
-                unreachable!("only a module target can contain another project target")
-            };
-            run_repository_module_prefix_with_mode(
-                runtime,
-                child_module_id,
-                target_execution_mode,
-                selected_target,
-                include_selected_target,
-                trusted_prefix,
-            )
-        } else {
-            run_repository_import_target(
-                runtime,
-                target,
-                target_execution_mode,
-                if target_matches { trusted_prefix } else { None },
-            )
-        };
-        results.append(&mut target_results);
-        if let Some(error) = runtime_error {
-            return (results, Some(error));
-        }
-        if let Err(error) = runtime.refresh_current_bare_symbol_index() {
-            return (results, Some(error));
-        }
-        if target_matches || target_contains {
-            return (results, None);
-        }
-    }
-    (
-        results,
-        Some(repository_target_error(
-            "selected target is missing from its recursive ordered [export] tree",
-        )),
-    )
-}
-
 fn run_repository_module_plan(
     runtime: &mut Runtime,
     module_id: ModuleId,
     execution_mode: ExecutionMode,
+    module_run: RepositoryModuleRun,
     trusted_prefix: Option<&TrustedPrefixPolicy>,
 ) -> (Vec<StmtResult>, Option<RuntimeError>) {
     let (mut results, import_error) = run_config_imports(runtime, module_id);
@@ -503,10 +430,60 @@ fn run_repository_module_plan(
         results.append(&mut source_results);
         return (results, source_error);
     }
+
+    let selected_target = module_run.selected_target();
     let run_targets = module.run_targets.clone();
     for target in run_targets {
-        let (mut target_results, runtime_error) =
-            run_repository_import_target(runtime, target, execution_mode, None);
+        let (mut target_results, runtime_error, reached_selected_target) =
+            if let Some((selected_target, include_selected_target)) = selected_target {
+                let target_matches =
+                    repository_target_matches_import_target(selected_target, target);
+                if target_matches && !include_selected_target {
+                    return (results, None);
+                }
+                let target_contains = match target {
+                    ImportTarget::Module(child_module_id) => repository_target_is_inside_module(
+                        runtime,
+                        selected_target,
+                        child_module_id,
+                    ),
+                    ImportTarget::File { .. } => false,
+                };
+                let target_execution_mode = if target_matches || target_contains {
+                    execution_mode
+                } else {
+                    project_target_execution_mode(runtime, module_id, target)
+                };
+                let (target_results, runtime_error) = if target_contains && !target_matches {
+                    let ImportTarget::Module(child_module_id) = target else {
+                        unreachable!("only a module target can contain another project target")
+                    };
+                    run_repository_module_with_mode(
+                        runtime,
+                        child_module_id,
+                        target_execution_mode,
+                        module_run,
+                        trusted_prefix,
+                    )
+                } else {
+                    run_repository_import_target(
+                        runtime,
+                        target,
+                        target_execution_mode,
+                        if target_matches { trusted_prefix } else { None },
+                    )
+                };
+                (
+                    target_results,
+                    runtime_error,
+                    target_matches || target_contains,
+                )
+            } else {
+                let (target_results, runtime_error) =
+                    run_repository_import_target(runtime, target, execution_mode, None);
+                (target_results, runtime_error, false)
+            };
+
         results.append(&mut target_results);
         if let Some(error) = runtime_error {
             return (results, Some(error));
@@ -514,8 +491,21 @@ fn run_repository_module_plan(
         if let Err(error) = runtime.refresh_current_bare_symbol_index() {
             return (results, Some(error));
         }
+        if reached_selected_target {
+            return (results, None);
+        }
     }
-    (results, None)
+
+    if selected_target.is_some() {
+        (
+            results,
+            Some(repository_target_error(
+                "selected target is missing from its recursive ordered [export] tree",
+            )),
+        )
+    } else {
+        (results, None)
+    }
 }
 
 fn run_repository_import_target(
@@ -572,25 +562,9 @@ fn repository_target_is_inside_module(
             ..
         } => target_module_id,
     };
-    module_is_descendant_of(runtime, target_module_id, module_id)
-}
-
-fn module_is_descendant_of(
-    runtime: &Runtime,
-    module_id: ModuleId,
-    ancestor_module_id: ModuleId,
-) -> bool {
-    let mut current_module_id = Some(module_id);
-    while let Some(current) = current_module_id {
-        if current == ancestor_module_id {
-            return true;
-        }
-        current_module_id = runtime
-            .module_manager
-            .module(current)
-            .and_then(|module| module.parent_module_id);
-    }
-    false
+    runtime
+        .module_manager
+        .module_is_descendant_of(target_module_id, module_id)
 }
 
 fn run_config_imports(
@@ -776,12 +750,12 @@ fn run_repository_source_file(
             .filter(|policy| policy.matches(frame.module_id, frame.layer))
             .map(|policy| policy.before_line)
     });
-    let (stmt_results, runtime_error, _) = run_source_code_with_failure_kind_and_trusted_prefix(
+    let outcome = run_source_code_with_options(
         remove_windows_carriage_return(source_code.as_str()).as_str(),
         runtime,
-        trust_before_line,
+        SourceRunOptions { trust_before_line },
     );
-    (stmt_results, runtime_error)
+    (outcome.stmt_results, outcome.runtime_error)
 }
 
 fn repository_target_error(message: &str) -> RuntimeError {
@@ -793,38 +767,5 @@ fn repository_target_error(message: &str) -> RuntimeError {
 }
 
 #[cfg(test)]
-mod path_import_tests {
-    use super::*;
-
-    #[test]
-    fn fresh_runtime_has_no_preloaded_source_modules() {
-        let runtime = Runtime::new();
-
-        assert!(runtime.module_manager.modules.is_empty());
-        assert!(runtime.module_manager.module_by_name.is_empty());
-    }
-
-    #[test]
-    fn non_isolated_source_imports_require_the_terminal_boundary() {
-        for source in ["import \"./Demo\" as Demo", "import std basics"] {
-            let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope("repl");
-
-            let (_, runtime_error) = run_source_code(source, &mut runtime);
-
-            let runtime_error = runtime_error.expect("non-isolated import should fail");
-            assert!(format!("{runtime_error:?}").contains("only available in an isolated REPL"));
-            assert!(runtime.module_manager.module_by_name.is_empty());
-        }
-    }
-
-    #[test]
-    fn strict_mode_rejects_user_trust() {
-        let mut runtime = Runtime::new();
-        runtime.strict_mode = true;
-        runtime.new_file_path_new_env_new_name_scope("repl");
-
-        let (_, trust_error) = run_source_code("trust 1 = 1", &mut runtime);
-        assert!(trust_error.is_some(), "strict mode must reject user trust");
-    }
-}
+#[path = "../../tests/unit/pipeline/pipeline_run_stmt_globally/path_import_tests.rs"]
+mod path_import_tests;

@@ -39,7 +39,7 @@ impl fmt::Display for AtomObj {
 }
 
 impl AtomObj {
-    pub(crate) fn symbol_ref(&self) -> Option<&SymbolRef> {
+    pub fn symbol_ref(&self) -> Option<&SymbolRef> {
         match self {
             AtomObj::Identifier(identifier) => identifier.symbol.as_ref(),
             AtomObj::IdentifierWithMod(identifier) => identifier.symbol.as_ref(),

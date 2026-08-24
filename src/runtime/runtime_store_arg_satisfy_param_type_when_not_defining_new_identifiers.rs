@@ -46,7 +46,7 @@ impl Runtime {
     /// Pure transformation shared by ordinary argument storage and the typed
     /// defined-predicate inference producer. It returns one requirement fact
     /// per argument in source order and performs no store by itself.
-    pub(crate) fn instantiate_argument_parameter_requirement_facts(
+    pub fn instantiate_argument_parameter_requirement_facts(
         &mut self,
         param_defs: &ParamDefWithType,
         args: &[Obj],

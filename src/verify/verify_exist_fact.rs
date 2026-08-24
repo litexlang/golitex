@@ -899,14 +899,14 @@ impl Runtime {
         ))
     }
 
-    pub(crate) fn build_exist_unique_uniqueness_forall_fact(
+    pub fn build_exist_unique_uniqueness_forall_fact(
         &self,
         exist_fact: &ExistFactEnum,
     ) -> Result<ForallFact, RuntimeError> {
         self.build_exist_unique_uniqueness_forall_fact_inner(exist_fact, false)
     }
 
-    pub(crate) fn build_exist_unique_component_uniqueness_forall_fact(
+    pub fn build_exist_unique_component_uniqueness_forall_fact(
         &self,
         exist_fact: &ExistFactEnum,
     ) -> Result<ForallFact, RuntimeError> {
@@ -1213,7 +1213,7 @@ impl Runtime {
         keys
     }
 
-    pub(crate) fn exist_fact_normalized_body_string(
+    pub fn exist_fact_normalized_body_string(
         runtime: &Runtime,
         exist_fact: &ExistFactEnum,
     ) -> Result<String, RuntimeError> {

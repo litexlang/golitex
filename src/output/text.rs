@@ -3,7 +3,7 @@ use crate::prelude::{SuccessFactProofResult, SuccessInferResult, StmtResult, SUC
 const VERIFIED_BY: &str = "verified by";
 const STORE_FACTS_COLON: &str = "store facts:";
 
-pub(crate) fn stmt_result_body_string(result: &StmtResult) -> String {
+pub fn stmt_result_body_string(result: &StmtResult) -> String {
     if let Some(x) = result.non_factual_success() {
         let infer_block = x
             .common()

@@ -27,7 +27,7 @@ pub struct KnownForallProfileSnapshot {
 }
 
 #[derive(Clone, Copy)]
-pub(crate) enum KnownForallSearchPhase {
+pub enum KnownForallSearchPhase {
     ExactShape,
     Fallback,
     OtherShape,
@@ -66,25 +66,25 @@ pub fn snapshot() -> KnownForallProfileSnapshot {
     }
 }
 
-pub(crate) fn record_entry() {
+pub fn record_entry() {
     if enabled() {
         ENTRIES.fetch_add(1, Ordering::Relaxed);
     }
 }
 
-pub(crate) fn record_success() {
+pub fn record_success() {
     if enabled() {
         SUCCESSES.fetch_add(1, Ordering::Relaxed);
     }
 }
 
-pub(crate) fn record_unknown() {
+pub fn record_unknown() {
     if enabled() {
         UNKNOWNS.fetch_add(1, Ordering::Relaxed);
     }
 }
 
-pub(crate) fn record_candidate_attempt(phase: KnownForallSearchPhase) {
+pub fn record_candidate_attempt(phase: KnownForallSearchPhase) {
     if !enabled() {
         return;
     }
@@ -102,13 +102,13 @@ pub(crate) fn record_candidate_attempt(phase: KnownForallSearchPhase) {
     }
 }
 
-pub(crate) fn record_arg_match() {
+pub fn record_arg_match() {
     if enabled() {
         ARG_MATCHES.fetch_add(1, Ordering::Relaxed);
     }
 }
 
-pub(crate) fn record_requirement_failure() {
+pub fn record_requirement_failure() {
     if enabled() {
         REQUIREMENT_FAILURES.fetch_add(1, Ordering::Relaxed);
     }

@@ -1,7 +1,7 @@
 use crate::prelude::*;
 
 impl Runtime {
-    pub(crate) fn verify_builtin_proper_set_relation_from_quantifier_free_premise(
+    pub fn verify_builtin_proper_set_relation_from_quantifier_free_premise(
         &mut self,
         atomic_fact: &AtomicFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -29,7 +29,7 @@ impl Runtime {
 
     // Proper containment is ordinary containment plus inequality.
     // Example: `A $subset B` and `A != B` prove `A $proper_subset B`.
-    pub(crate) fn verify_builtin_proper_set_relation_by_definition(
+    pub fn verify_builtin_proper_set_relation_by_definition(
         &mut self,
         atomic_fact: &AtomicFact,
         verify_state: &UseContextVerifyState,
@@ -63,9 +63,7 @@ impl Runtime {
 
 // A positive proper-containment fact safely exposes both parts of its definition.
 // Example: `A $proper_subset B` infers `A $subset B` and `A != B`.
-pub(crate) fn positive_proper_set_relation_definition_facts(
-    fact: &NormalAtomicFact,
-) -> Option<Vec<Fact>> {
+pub fn positive_proper_set_relation_definition_facts(fact: &NormalAtomicFact) -> Option<Vec<Fact>> {
     let AtomicName::WithoutMod(name) = &fact.predicate else {
         return None;
     };
@@ -88,7 +86,7 @@ pub(crate) fn positive_proper_set_relation_definition_facts(
     Some(vec![containment, not_equal])
 }
 
-pub(crate) fn is_builtin_proper_set_relation_fact(fact: &AtomicFact) -> bool {
+pub fn is_builtin_proper_set_relation_fact(fact: &AtomicFact) -> bool {
     match fact {
         AtomicFact::NormalAtomicFact(fact) => matches!(
             &fact.predicate,

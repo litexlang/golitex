@@ -198,7 +198,7 @@ impl Runtime {
         Ok(infer_result)
     }
 
-    pub(crate) fn store_forall_fact_without_well_defined_verified_and_infer(
+    pub fn store_forall_fact_without_well_defined_verified_and_infer(
         &mut self,
         mut forall_fact: ForallFact,
     ) -> Result<SuccessInferResult, RuntimeError> {
@@ -316,6 +316,14 @@ impl Runtime {
         if self.non_forall_fact_is_cached(&fact) {
             return self.infer(&fact);
         }
+        // A stored forall may be found through its alpha-normalized alias even
+        // when this spelling has not appeared before. Its canonical FactId
+        // already owns the complete proposition, so reuse it instead of
+        // attempting to register the alpha-renamed display form as a new
+        // proposition for the same identity.
+        if matches!(fact, Fact::ForallFact(_)) && self.known_fact_id_for_fact(&fact)?.is_some() {
+            return self.infer(&fact);
+        }
         let line_file = fact.line_file();
         let fact_string: FactString = fact.to_string();
         let alpha_normalized_forall_key = match &fact {
@@ -333,16 +341,28 @@ impl Runtime {
             Fact::ChainFact(chain_fact) => self.transitive_prop_chain_closure_facts(chain_fact)?,
             _ => Vec::new(),
         };
-        self.top_level_env().store_fact(fact)?;
+        let fact_id = self.fact_id_for_fact_store(&fact_for_infer)?;
+        let equivalent_proposition_lookup_key =
+            self.equivalent_proposition_lookup_key_for_fact(&fact_for_infer)?;
+        self.top_level_env()
+            .store_fact_with_equivalent_proposition_key(
+                fact,
+                fact_id,
+                equivalent_proposition_lookup_key,
+            )?;
         self.store_chain_atomic_facts_to_cache(chain_atomic_facts)?;
         let mut transitive_chain_infers =
             self.store_transitive_prop_chain_atomic_facts(transitive_chain_facts)?;
-
-        let fact_id = self.store_fact_cache_keys_with_nested_obj_binders(&fact_for_infer)?;
+        self.store_fact_cache_keys_with_nested_obj_binders_and_fact_id(&fact_for_infer, fact_id)?;
         if let Some(alpha_key) = alpha_normalized_forall_key {
             if alpha_key != fact_string {
                 self.top_level_env()
-                    .store_fact_to_cache_known_fact(alpha_key, line_file, fact_id)?;
+                    .store_fact_to_cache_known_fact_with_equivalent_proposition_key(
+                        alpha_key.clone(),
+                        line_file,
+                        fact_id,
+                        alpha_key,
+                    )?;
             }
         }
 
@@ -430,7 +450,7 @@ impl Runtime {
 
     /// Stores a derived atomic fact whose well-definedness follows from its
     /// source fact, without recursively firing inference for the derived fact.
-    pub(crate) fn store_derived_atomic_fact_without_infer(
+    pub fn store_derived_atomic_fact_without_infer(
         &mut self,
         fact: AtomicFact,
         reason: impl Into<String>,
@@ -574,51 +594,118 @@ impl Runtime {
         Ok(())
     }
 
-    pub(crate) fn store_fact_cache_keys_with_nested_obj_binders(
+    pub fn store_fact_cache_keys_with_nested_obj_binders(
         &mut self,
         fact: &Fact,
     ) -> Result<FactId, RuntimeError> {
+        let fact_id = self.fact_id_for_fact_store(fact)?;
+        self.store_fact_cache_keys_with_nested_obj_binders_and_fact_id(fact, fact_id)?;
+        Ok(fact_id)
+    }
+
+    fn fact_id_for_fact_store(&mut self, fact: &Fact) -> Result<FactId, RuntimeError> {
+        self.known_fact_id_for_fact(fact)?
+            .map(Ok)
+            .unwrap_or_else(|| self.allocate_fact_id())
+    }
+
+    fn equivalent_proposition_lookup_key_for_fact(
+        &self,
+        fact: &Fact,
+    ) -> Result<FactString, RuntimeError> {
+        match fact {
+            Fact::ForallFact(forall_fact) => self.alpha_normalized_forall_cache_key(forall_fact),
+            Fact::ExistFact(exist_fact) => self.alpha_normalized_exist_fact_id_key(exist_fact),
+            _ => Ok(nested_obj_binder_normalized_fact_key(fact)),
+        }
+    }
+
+    fn store_fact_cache_keys_with_nested_obj_binders_and_fact_id(
+        &mut self,
+        fact: &Fact,
+        fact_id: FactId,
+    ) -> Result<(), RuntimeError> {
         let line_file = fact.line_file();
         let fact_string = fact.to_string();
         let normalized_key = nested_obj_binder_normalized_fact_key(fact);
+        let alpha_normalized_forall_key = match fact {
+            Fact::ForallFact(forall_fact) => {
+                Some(self.alpha_normalized_forall_cache_key(forall_fact)?)
+            }
+            _ => None,
+        };
         let alpha_normalized_exist_key = match fact {
             Fact::ExistFact(exist_fact) => {
                 Some(self.alpha_normalized_exist_fact_id_key(exist_fact)?)
             }
             _ => None,
         };
-        let fact_id = self
-            .known_fact_id_for_fact(fact)?
-            .map(Ok)
-            .unwrap_or_else(|| self.allocate_fact_id())?;
-        self.top_level_env().store_fact_to_cache_known_fact(
-            fact_string.clone(),
-            line_file.clone(),
-            fact_id,
-        )?;
-        if normalized_key != fact_string {
-            self.top_level_env().store_fact_to_cache_known_fact(
-                normalized_key.clone(),
-                line_file,
+        let equivalent_proposition_lookup_key = alpha_normalized_forall_key
+            .as_ref()
+            .or(alpha_normalized_exist_key.as_ref())
+            .cloned()
+            .unwrap_or_else(|| normalized_key.clone());
+        let existing_fact = self
+            .top_level_env()
+            .stored_facts
+            .stored_fact(fact_id)
+            .map(|stored| stored.fact.clone());
+        if let Some(existing_fact) = existing_fact {
+            if existing_fact.to_string() != fact_string
+                && self.known_fact_id_for_fact(fact)? != Some(fact_id)
+            {
+                return Err(StoreFactRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        format!(
+                            "FactId `{fact_id}` already identifies `{existing_fact}`, cannot retarget it to `{fact}`"
+                        ),
+                        fact.line_file(),
+                    ),
+                )
+                .into());
+            }
+        } else {
+            self.top_level_env()
+                .record_stored_fact_with_equivalent_proposition_key(
+                    fact.clone(),
+                    fact_id,
+                    equivalent_proposition_lookup_key.clone(),
+                )?;
+        }
+        self.top_level_env()
+            .store_fact_to_cache_known_fact_with_equivalent_proposition_key(
+                fact_string.clone(),
+                line_file.clone(),
                 fact_id,
+                equivalent_proposition_lookup_key.clone(),
             )?;
+        if normalized_key != fact_string {
+            self.top_level_env()
+                .store_fact_to_cache_known_fact_with_equivalent_proposition_key(
+                    normalized_key.clone(),
+                    line_file,
+                    fact_id,
+                    equivalent_proposition_lookup_key.clone(),
+                )?;
         }
         if let Some(alpha_key) = alpha_normalized_exist_key {
             if alpha_key != fact_string && alpha_key != normalized_key {
-                self.top_level_env().store_fact_to_cache_known_fact(
-                    alpha_key,
-                    fact.line_file(),
-                    fact_id,
-                )?;
+                self.top_level_env()
+                    .store_fact_to_cache_known_fact_with_equivalent_proposition_key(
+                        alpha_key,
+                        fact.line_file(),
+                        fact_id,
+                        equivalent_proposition_lookup_key,
+                    )?;
             }
         }
-        Ok(fact_id)
+        Ok(())
     }
 
     /// Mathematical contract: store a fact without deriving consequences only
     /// after central well-definedness succeeds, except at the explicit
     /// trusted-file boundary.
-    pub(crate) fn verify_well_defined_and_store_without_infer(
+    pub fn verify_well_defined_and_store_without_infer(
         &mut self,
         fact: Fact,
         reason: InferReason,
@@ -635,7 +722,7 @@ impl Runtime {
     /// Mathematical contract: the state-aware form preserves a caller's
     /// recursion restrictions while staging a checked fact without deriving
     /// consequences from it.
-    pub(crate) fn verify_well_defined_and_store_without_infer_with_state(
+    pub fn verify_well_defined_and_store_without_infer_with_state(
         &mut self,
         fact: Fact,
         verify_state: &UseContextVerifyState,
@@ -648,7 +735,7 @@ impl Runtime {
         self.store_fact_without_well_defined_verified_and_without_infer_with_reason(fact, reason)
     }
 
-    pub(crate) fn store_fact_without_well_defined_verified_and_without_infer_with_reason(
+    pub fn store_fact_without_well_defined_verified_and_without_infer_with_reason(
         &mut self,
         fact: Fact,
         reason: InferReason,
@@ -657,8 +744,16 @@ impl Runtime {
         if self.non_forall_fact_is_cached(&fact) {
             return Ok(SuccessInferResult::new());
         }
-        self.top_level_env().store_fact(fact.clone())?;
-        self.store_fact_cache_keys_with_nested_obj_binders(&fact)?;
+        let fact_id = self.fact_id_for_fact_store(&fact)?;
+        let equivalent_proposition_lookup_key =
+            self.equivalent_proposition_lookup_key_for_fact(&fact)?;
+        self.top_level_env()
+            .store_fact_with_equivalent_proposition_key(
+                fact.clone(),
+                fact_id,
+                equivalent_proposition_lookup_key,
+            )?;
+        self.store_fact_cache_keys_with_nested_obj_binders_and_fact_id(&fact, fact_id)?;
 
         let mut infer_result = SuccessInferResult::new();
         infer_result.add_store_fact_output(&fact, reason_text, vec![]);
@@ -733,79 +828,5 @@ impl Runtime {
 }
 
 #[cfg(test)]
-mod registered_transitive_predicate_chain_result_tests {
-    use crate::output::display_stmt_result_json_v2;
-    use crate::prelude::*;
-
-    #[test]
-    fn registered_transitive_predicate_chain_store_returns_typed_closure_inference() {
-        let mut runtime = Runtime::new();
-        runtime.new_file_path_new_env_new_name_scope(
-            "registered_transitive_predicate_chain_result_test.lit",
-        );
-        let (_, setup_error) = run_source_code(
-            "prop same_set(x set, y set):\n    x = y\ntrust R $same_set C\ntrust C $same_set N",
-            &mut runtime,
-        );
-        assert!(setup_error.is_none(), "{setup_error:?}");
-        runtime
-            .top_level_env()
-            .store_transitive_prop_name("same_set".to_string());
-
-        let (mut results, error) = run_source_code("R $same_set C $same_set N", &mut runtime);
-        assert!(error.is_none(), "{error:?}");
-        let result = results.pop().expect("chain execution returns one Result");
-        let success = result
-            .factual_success()
-            .expect("registered transitive chain should succeed");
-        let [application] = success.store.infers.rule_applications.as_slice() else {
-            panic!("three-object chain should retain exactly one transitive application")
-        };
-        let InferRule::RegisteredTransitivePredicateChainClosure(rule) = &application.rule else {
-            panic!("chain closure should retain its typed transitive rule")
-        };
-        assert_eq!(rule.predicate_name, "same_set");
-        assert_eq!(rule.start_object_index, 0);
-        assert_eq!(rule.end_object_index, 2);
-        assert_eq!(
-            application
-                .premises
-                .iter()
-                .map(|premise| premise.fact.to_string())
-                .collect::<Vec<_>>(),
-            vec!["$same_set(R, C)", "$same_set(C, N)"]
-        );
-        assert!(
-            application
-                .premises
-                .iter()
-                .all(|premise| premise.fact_id.is_some()),
-            "every transitive premise must freeze its exact FactId"
-        );
-        let [conclusion] = application.conclusions.as_slice() else {
-            panic!("transitive application should retain exactly one stored conclusion")
-        };
-        assert_eq!(conclusion.fact.to_string(), "$same_set(R, N)");
-        assert!(conclusion.fact_id.is_some());
-        assert!(success
-            .store
-            .infers
-            .store_fact_outputs
-            .iter()
-            .any(|output| {
-                output
-                    .inferred_facts
-                    .iter()
-                    .zip(output.inferred_fact_ids.iter())
-                    .any(|(fact, fact_id)| {
-                        fact.to_string() == conclusion.fact.to_string()
-                            && *fact_id == conclusion.fact_id
-                    })
-            }));
-        let json = display_stmt_result_json_v2(&result);
-        assert!(json.contains("\"rule\": \"RegisteredTransitivePredicateChainClosure\""));
-        assert!(json.contains("\"predicate_name\": \"same_set\""));
-        assert!(json.contains("\"start_object_index\": 0"));
-        assert!(json.contains("\"end_object_index\": 2"));
-    }
-}
+#[path = "../../tests/unit/runtime/runtime_store_fact/registered_transitive_predicate_chain_result_tests.rs"]
+mod registered_transitive_predicate_chain_result_tests;

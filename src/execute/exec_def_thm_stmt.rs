@@ -153,7 +153,7 @@ impl Runtime {
         })
     }
 
-    pub(crate) fn exec_def_thm_stmt_affect_environment(
+    pub fn exec_def_thm_stmt_affect_environment(
         &mut self,
         stmt: &DefThmStmt,
     ) -> Result<SuccessInferResult, RuntimeError> {
@@ -173,7 +173,7 @@ impl Runtime {
         )
     }
 
-    pub(crate) fn exec_def_thm_stmt_affect_environment_only(
+    pub fn exec_def_thm_stmt_affect_environment_only(
         &mut self,
         stmt: &DefThmStmt,
     ) -> Result<StmtResult, RuntimeError> {

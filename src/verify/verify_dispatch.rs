@@ -61,7 +61,7 @@ impl Runtime {
         Ok(result)
     }
 
-    pub(crate) fn structured_unknown_result_for_failed_fact(
+    pub fn structured_unknown_result_for_failed_fact(
         &mut self,
         fact: &Fact,
         verify_state: &UseContextVerifyState,

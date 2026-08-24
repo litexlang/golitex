@@ -82,7 +82,7 @@ pub(super) fn number_not_in_set_verified_by_evaluation_result(
     .into()
 }
 
-pub(crate) fn builtin_in_fact_result_for_evaluation_in_standard_set(
+pub fn builtin_in_fact_result_for_evaluation_in_standard_set(
     in_fact: &InFact,
     evaluation: &SuccessEvaluateObjResult,
     standard_set: &StandardSet,
@@ -207,7 +207,7 @@ pub(crate) fn builtin_in_fact_result_for_evaluation_in_standard_set(
     }
 }
 
-pub(crate) fn builtin_not_in_fact_result_for_evaluation_in_standard_set(
+pub fn builtin_not_in_fact_result_for_evaluation_in_standard_set(
     not_in_fact: &NotInFact,
     evaluation: &SuccessEvaluateObjResult,
     standard_set: &StandardSet,
@@ -240,7 +240,7 @@ pub(crate) fn builtin_not_in_fact_result_for_evaluation_in_standard_set(
     }
 }
 
-pub(crate) fn builtin_in_fact_result_for_evaluated_number_in_standard_set(
+pub fn builtin_in_fact_result_for_evaluated_number_in_standard_set(
     in_fact: &InFact,
     evaluated_number: &Number,
     standard_set: &StandardSet,
@@ -336,7 +336,7 @@ pub(crate) fn builtin_in_fact_result_for_evaluated_number_in_standard_set(
     }
 }
 
-pub(crate) fn builtin_not_in_fact_result_for_evaluated_number_in_standard_set(
+pub fn builtin_not_in_fact_result_for_evaluated_number_in_standard_set(
     not_in_fact: &NotInFact,
     evaluated_number: &Number,
     standard_set: &StandardSet,

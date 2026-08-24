@@ -8,7 +8,7 @@ use std::fmt;
 pub struct FactId(u64);
 
 impl FactId {
-    pub(crate) fn new(value: u64) -> Self {
+    pub fn new(value: u64) -> Self {
         FactId(value)
     }
 

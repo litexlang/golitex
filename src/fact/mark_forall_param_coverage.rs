@@ -775,7 +775,7 @@ fn mark_forall_param_coverage_in_exist_or_and_chain_atomic_fact(
 }
 
 impl ForallFact {
-    pub(crate) fn forall_param_coverage_for_then_clause(
+    pub fn forall_param_coverage_for_then_clause(
         &self,
         then_fact: &ExistOrAndChainAtomicFact,
     ) -> HashMap<IdentifierName, bool> {

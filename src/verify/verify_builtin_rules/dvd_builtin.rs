@@ -3,7 +3,7 @@ use crate::prelude::*;
 impl Runtime {
     // `$dvd(x, y)` means that the nonzero integer `y` divides the integer `x`.
     // Example: `$dvd(12, 3)` unfolds to `12 % 3 = 0` and `exist a Z st {12 = a * 3}`.
-    pub(crate) fn builtin_dvd_definition_facts(
+    pub fn builtin_dvd_definition_facts(
         &mut self,
         normal_fact: &NormalAtomicFact,
     ) -> Result<Option<Vec<Fact>>, RuntimeError> {

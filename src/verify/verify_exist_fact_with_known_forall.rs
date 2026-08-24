@@ -196,19 +196,14 @@ impl Runtime {
             return Ok(None);
         };
 
-        let verified_by_known_forall_fact = ForallFact::new_canonical_forall(
-            known_forall.params_def.clone(),
-            known_forall.dom.clone(),
-            vec![exist_fact_in_known_forall.clone().into()],
-            known_forall.line_file.clone(),
-        )?;
-        let source_fact: Fact = verified_by_known_forall_fact.clone().into();
-        let source_fact_id = self.require_known_fact_id_for_success_result(&source_fact)?;
+        let source_fact = known_forall.source_fact();
+        let source_fact_id = known_forall.source_fact_id;
         let fact_verified = SuccessFactStmtResult::new_with_verified_by_known_fact(
             given_exist_fact.clone().into(),
             SuccessFactProofResult::known_forall_instantiation(
                 source_fact,
                 source_fact_id,
+                known_forall.conclusion_location,
                 instantiation,
                 requirements,
             ),
@@ -221,7 +216,7 @@ impl Runtime {
         matches!(obj, Obj::Atom(AtomObj::Exist(p)) if p.name() == name)
     }
 
-    pub(crate) fn obj_depends_on_given_exist_param(obj: &Obj, names: &[String]) -> bool {
+    pub fn obj_depends_on_given_exist_param(obj: &Obj, names: &[String]) -> bool {
         match obj {
             Obj::Atom(AtomObj::Exist(p)) => names.iter().any(|name| name.as_str() == p.name()),
             Obj::Atom(_)
@@ -555,56 +550,5 @@ fn known_exist_lookup_keys_for_forall_bucket(goal: &ExistFactEnum) -> Vec<String
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn detects_nested_exist_witness_dependency() {
-        let runtime = Runtime::new();
-        let names = vec!["x".to_string()];
-        let binding = runtime
-            .allocate_local_symbol_binding("x".to_string())
-            .unwrap();
-        let witness: Obj = ExistFreeParamObj::new(&binding).into();
-        let external: Obj = Identifier::new("a".to_string()).into();
-        let nested: Obj = Union::new(witness, external.clone()).into();
-
-        assert!(Runtime::obj_depends_on_given_exist_param(&nested, &names));
-        assert!(!Runtime::obj_depends_on_given_exist_param(
-            &external, &names
-        ));
-    }
-
-    #[test]
-    fn detects_function_call_on_exist_witness() {
-        let runtime = Runtime::new();
-        let names = vec!["x".to_string()];
-        let binding = runtime
-            .allocate_local_symbol_binding("x".to_string())
-            .unwrap();
-        let head: FnObjHead = ExistFreeParamObj::new(&binding).into();
-        let arg: Obj = Number::new("1".to_string()).into();
-        let fn_obj: Obj = FnObj::new(head, vec![vec![Box::new(arg)]]).into();
-
-        assert!(Runtime::obj_depends_on_given_exist_param(&fn_obj, &names));
-    }
-
-    #[test]
-    fn existential_binding_validation_preserves_binder_kind() {
-        let runtime = Runtime::new();
-        let exist_binding = runtime
-            .allocate_local_symbol_binding("x".to_string())
-            .unwrap();
-        let forall_binding = runtime
-            .allocate_local_symbol_binding("x".to_string())
-            .unwrap();
-        let exist: Obj = ExistFreeParamObj::new(&exist_binding).into();
-        let captured_forall: Obj = ForallFreeParamObj::new(&forall_binding).into();
-
-        assert!(Runtime::obj_matches_exist_forall_binding_name(&exist, "x"));
-        assert!(!Runtime::obj_matches_exist_forall_binding_name(
-            &captured_forall,
-            "x"
-        ));
-    }
-}
+#[path = "../../tests/unit/verify/verify_exist_fact_with_known_forall/tests.rs"]
+mod tests;

@@ -1,5 +1,6 @@
 use crate::prelude::*;
 use std::collections::HashSet;
+use std::rc::Rc;
 
 impl Runtime {
     pub fn iter_environments_from_top(&self) -> impl Iterator<Item = &Environment> {
@@ -90,7 +91,7 @@ impl Runtime {
     /// function-space contract.  Unlike the structural-only lookup above,
     /// this is suitable for a proof citation because the source `FactId`
     /// remains attached to the same body and source location.
-    pub(crate) fn get_object_in_fn_set_with_membership_fact_id(
+    pub fn get_object_in_fn_set_with_membership_fact_id(
         &self,
         obj: &Obj,
     ) -> Option<(FnSetBody, LineFile, FactId)> {
@@ -156,7 +157,7 @@ impl Runtime {
         }
     }
 
-    pub(crate) fn known_struct_carrier_for_obj(&self, obj: &Obj) -> Option<StructObj> {
+    pub fn known_struct_carrier_for_obj(&self, obj: &Obj) -> Option<StructObj> {
         let key = obj_equality_key(obj);
         self.iter_environments_from_top().find_map(|environment| {
             environment
@@ -193,7 +194,7 @@ impl Runtime {
         None
     }
 
-    pub(crate) fn unfold_known_fn_application_once(
+    pub fn unfold_known_fn_application_once(
         &mut self,
         application: &Obj,
         verify_state: &UseContextVerifyState,
@@ -204,7 +205,7 @@ impl Runtime {
     /// Reduce only a definition attached directly to the submitted
     /// application. This route neither materializes a new template instance
     /// nor searches equality representatives for another function definition.
-    pub(crate) fn reduce_direct_known_fn_application_once(
+    pub fn reduce_direct_known_fn_application_once(
         &mut self,
         application: &Obj,
         verify_state: &UseContextVerifyState,
@@ -215,7 +216,7 @@ impl Runtime {
     /// Structural equality calls this only after the submitted objects have
     /// passed ordinary well-definedness, so definition reduction must not
     /// create a second verifier dependency path.
-    pub(crate) fn reduce_direct_known_fn_application_after_well_defined_once(
+    pub fn reduce_direct_known_fn_application_after_well_defined_once(
         &mut self,
         application: &Obj,
     ) -> Result<Option<Obj>, RuntimeError> {
@@ -413,7 +414,7 @@ impl Runtime {
     /// a set builder. This is intentionally bounded: it exposes a declared
     /// carrier through set-valued function families without turning definition
     /// unfolding into unbounded proof search.
-    pub(crate) fn unfold_known_fn_application_to_set_builder(
+    pub fn unfold_known_fn_application_to_set_builder(
         &mut self,
         application: &Obj,
         verify_state: &UseContextVerifyState,
@@ -447,7 +448,7 @@ impl Runtime {
     /// Capture-avoiding beta reduction for one complete anonymous-function
     /// application layer. Any remaining curried application layers are kept on
     /// the substituted result when that result is callable.
-    pub(crate) fn beta_reduce_complete_anonymous_application_once(
+    pub fn beta_reduce_complete_anonymous_application_once(
         &self,
         application: &Obj,
     ) -> Result<Option<Obj>, RuntimeError> {
@@ -480,7 +481,7 @@ impl Runtime {
         ))
     }
 
-    pub(crate) fn apply_curried_layers_to_callable_obj(
+    pub fn apply_curried_layers_to_callable_obj(
         &self,
         obj: Obj,
         layers: Vec<Vec<Box<Obj>>>,
@@ -512,7 +513,7 @@ impl Runtime {
         None
     }
 
-    pub(crate) fn get_direct_object_in_fn_set(&self, obj: &Obj) -> Option<FnSetBody> {
+    pub fn get_direct_object_in_fn_set(&self, obj: &Obj) -> Option<FnSetBody> {
         let info = self.get_known_fn_info_for_obj(obj)?;
         info.fn_set.map(|(body, _)| body)
     }
@@ -555,7 +556,7 @@ impl Runtime {
         self.well_defined_cache_entry(&key).is_some()
     }
 
-    pub(crate) fn well_defined_cache_key_for_obj(&self, obj: &Obj) -> Option<WellDefinedCacheKey> {
+    pub fn well_defined_cache_key_for_obj(&self, obj: &Obj) -> Option<WellDefinedCacheKey> {
         let mut contracts = Vec::new();
         if !self.collect_well_defined_function_contracts(obj, &mut contracts) {
             return None;
@@ -727,7 +728,7 @@ impl Runtime {
         }
     }
 
-    pub(crate) fn well_defined_cache_entry(
+    pub fn well_defined_cache_entry(
         &self,
         key: &WellDefinedCacheKey,
     ) -> Option<&CachedWellDefinedObj> {
@@ -737,7 +738,7 @@ impl Runtime {
 
     pub fn cache_known_facts_contains(&self, key: &str) -> (bool, LineFile) {
         for env in self.iter_environments_from_top() {
-            if let Some(cached_fact) = env.cache_known_fact.get(key) {
+            if let Some(cached_fact) = env.stored_facts.lookup(key) {
                 return (true, cached_fact.line_file.clone());
             }
         }
@@ -746,7 +747,13 @@ impl Runtime {
 
     pub fn cached_known_fact(&self, key: &str) -> Option<&CachedKnownFact> {
         self.iter_environments_from_top()
-            .find_map(|env| env.cache_known_fact.get(key))
+            .find_map(|env| env.stored_facts.lookup(key))
+    }
+
+    pub fn stored_fact(&self, fact_id: FactId) -> Option<&EnvironmentStoredFact> {
+        self.iter_environments_from_top()
+            .find_map(|environment| environment.stored_facts.stored_fact(fact_id))
+            .map(Rc::as_ref)
     }
 
     pub fn known_fact_id(&self, key: &str) -> Option<FactId> {
@@ -777,7 +784,7 @@ impl Runtime {
         Ok(None)
     }
 
-    pub(crate) fn require_known_fact_id_for_success_result(
+    pub fn require_known_fact_id_for_success_result(
         &self,
         fact: &Fact,
     ) -> Result<FactId, RuntimeError> {
@@ -793,7 +800,7 @@ impl Runtime {
         })
     }
 
-    pub(crate) fn alpha_normalized_exist_fact_id_key(
+    pub fn alpha_normalized_exist_fact_id_key(
         &self,
         exist_fact: &ExistFactEnum,
     ) -> Result<String, RuntimeError> {
@@ -1009,7 +1016,7 @@ impl Runtime {
         Self::get_all_objs_equal_to_given_in_environments(&[environment], given)
     }
 
-    pub(crate) fn get_all_objs_equal_to_given_in_environments(
+    pub fn get_all_objs_equal_to_given_in_environments(
         environments: &[&Environment],
         given: &str,
     ) -> Vec<String> {

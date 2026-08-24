@@ -753,9 +753,9 @@ impl EnvironmentSummary {
             environment.cache_well_defined_obj.len(),
         );
         summary.add_field_counts(
-            "cache_known_fact",
-            environment.cache_known_fact.len(),
-            environment.cache_known_fact.len(),
+            "stored_fact_lookup_keys",
+            environment.stored_facts.lookup_key_count(),
+            environment.stored_facts.lookup_key_count(),
         );
         summary.add_field_counts(
             "used_strategy_stmts",
@@ -808,7 +808,7 @@ impl EnvironmentSummary {
         );
         self.category_counts.insert(
             "known_facts".to_string(),
-            environment.cache_known_fact.len(),
+            environment.stored_facts.lookup_key_count(),
         );
         self.category_counts.insert(
             "object_cache_entries".to_string(),
@@ -833,7 +833,7 @@ impl EnvironmentSummary {
     fn add_fact_index_counts(&mut self, environment: &Environment) {
         self.fact_index_counts.insert(
             "known_facts".to_string(),
-            environment.cache_known_fact.len(),
+            environment.stored_facts.lookup_key_count(),
         );
     }
 
