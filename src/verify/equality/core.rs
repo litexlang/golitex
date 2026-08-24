@@ -62,7 +62,7 @@ impl Runtime {
 
     pub fn verify_equal_fact_with_known_fact(&mut self, equal_fact: &EqualFact) -> StmtResult {
         let result = self.verify_equal_fact_by_known_equality_without_direct_evaluation(equal_fact);
-        self.remember_successful_atomic_fact_for_statement(&equal_fact.clone().into(), result)
+        self.cache_successful_atomic_fact_for_statement(&equal_fact.clone().into(), result)
     }
 
     // A premise is a child fact that a rule must verify before concluding its parent fact.
@@ -83,7 +83,7 @@ impl Runtime {
 
         let direct_evaluation_result = self.verify_equal_fact_by_direct_evaluation(equal_fact);
         if direct_evaluation_result.is_success() {
-            return Ok(self.remember_successful_atomic_fact_for_statement(
+            return Ok(self.cache_successful_atomic_fact_for_statement(
                 &equal_fact.clone().into(),
                 direct_evaluation_result,
             ));
@@ -92,7 +92,7 @@ impl Runtime {
         let known_equality_evaluation_result =
             self.verify_equal_fact_by_known_equality_then_direct_evaluation(equal_fact);
         if known_equality_evaluation_result.is_success() {
-            return Ok(self.remember_successful_atomic_fact_for_statement(
+            return Ok(self.cache_successful_atomic_fact_for_statement(
                 &equal_fact.clone().into(),
                 known_equality_evaluation_result,
             ));
@@ -117,7 +117,7 @@ impl Runtime {
                 definition_side,
                 &after_parent_well_definedness,
             )? {
-                return Ok(self.remember_successful_atomic_fact_for_statement(
+                return Ok(self.cache_successful_atomic_fact_for_statement(
                     &equal_fact.clone().into(),
                     result,
                 ));
@@ -149,7 +149,7 @@ impl Runtime {
                 Vec::new(),
             )
             .into();
-        Ok(self.remember_successful_atomic_fact_for_statement(&equal_fact.clone().into(), result))
+        Ok(self.cache_successful_atomic_fact_for_statement(&equal_fact.clone().into(), result))
     }
 
     // Direct evaluation is the computation arm of zero-premise verification. It may normalize
@@ -305,20 +305,20 @@ impl Runtime {
                 &child_state,
             )?
         {
-            return Ok(self.remember_successful_atomic_fact_for_statement(&goal, result));
+            return Ok(self.cache_successful_atomic_fact_for_statement(&goal, result));
         }
         if let Some(result) =
             self.try_verify_atomic_fact_with_local_builtin_catalog(&goal, &child_state)?
         {
-            return Ok(self.remember_successful_atomic_fact_for_statement(&goal, result));
+            return Ok(self.cache_successful_atomic_fact_for_statement(&goal, result));
         }
         if let Some(result) =
             self.try_verify_atomic_fact_from_known_set_builder_membership(&goal)?
         {
-            return Ok(self.remember_successful_atomic_fact_for_statement(&goal, result));
+            return Ok(self.cache_successful_atomic_fact_for_statement(&goal, result));
         }
         let result = self.verify_equal_fact_by_builtin_rules(equal_fact, &child_state)?;
-        Ok(self.remember_successful_atomic_fact_for_statement(&goal, result))
+        Ok(self.cache_successful_atomic_fact_for_statement(&goal, result))
     }
 
     fn try_verify_equal_fact_by_complex_algebraic_normalization_with_nonzero_premises(

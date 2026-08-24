@@ -35,8 +35,7 @@ pub use crate::output::{
 // Litex-to-Lean entry points and their structured report types.
 pub use crate::stmt_result_to_lean_compiler::{
     compile_litex_file_to_lean_file, compile_litex_markdown_code_blocks_to_lean_file,
-    compile_litex_source_to_lean_source,
-    compile_litex_source_to_stmt_result_to_lean_compilation_report,
+    compile_litex_source_to_lean_compilation_report, compile_litex_source_to_lean_source,
     StmtResultToLeanCompilationPhase, StmtResultToLeanCompilationReport,
     StmtResultToLeanCompilationStatus, UnsupportedStmtResultToLeanCompilationItem,
 };

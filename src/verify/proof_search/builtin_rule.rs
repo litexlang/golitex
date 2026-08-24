@@ -71,7 +71,7 @@ impl Runtime {
         builtin_state: &BuiltinRuleSearchState,
     ) -> Result<StmtResult, RuntimeError> {
         if let Some(cached_result) =
-            self.verify_fact_from_cache_using_display_string(&and_fact.clone().into())
+            self.verification_result_from_known_fact_cache(&and_fact.clone().into())
         {
             return Ok(cached_result);
         }
@@ -99,7 +99,7 @@ impl Runtime {
         builtin_state: &BuiltinRuleSearchState,
     ) -> Result<StmtResult, RuntimeError> {
         if let Some(cached_result) =
-            self.verify_fact_from_cache_using_display_string(&chain_fact.clone().into())
+            self.verification_result_from_known_fact_cache(&chain_fact.clone().into())
         {
             return Ok(cached_result);
         }
@@ -146,7 +146,7 @@ impl Runtime {
         builtin_state: &BuiltinRuleSearchState,
     ) -> Result<StmtResult, RuntimeError> {
         if let Some(cached_result) =
-            self.verify_fact_from_cache_using_display_string(&or_fact.clone().into())
+            self.verification_result_from_known_fact_cache(&or_fact.clone().into())
         {
             return Ok(cached_result);
         }

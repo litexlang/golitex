@@ -455,7 +455,7 @@ impl Runtime {
                     )
                     .into();
                     let fn_eq_result = self
-                        .verify_fact_from_cache_using_display_string(&fn_eq_in.clone().into())
+                        .verification_result_from_known_fact_cache(&fn_eq_in.clone().into())
                         .unwrap_or(
                             self.verify_non_equational_atomic_fact_with_known_atomic_facts(
                                 &fn_eq_in,

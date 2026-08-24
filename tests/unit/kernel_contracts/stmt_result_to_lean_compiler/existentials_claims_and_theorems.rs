@@ -2,7 +2,7 @@ use super::super::*;
 
 #[test]
 fn explicit_source_axiom_preserves_its_name_and_fact_id() {
-    let results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_to_stmt_results(
+    let results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
             "axiom source_reflexivity:\n    ? forall x R:\n        x = x\n",
             "direct_source_axiom.lit",
         )
@@ -46,7 +46,7 @@ fn rename_object_choice_nonempty_diagnostic_label(results: &mut [StmtResult]) {
 #[test]
 fn direct_object_choice_compiler_uses_typed_child_evidence_not_its_label() {
     const SOURCE: &str = "have chosen R\nchosen $in R\n";
-    let original = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_to_stmt_results(
+    let original = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
             SOURCE,
             "direct_object_choice.lit",
         )
@@ -55,7 +55,7 @@ fn direct_object_choice_compiler_uses_typed_child_evidence_not_its_label() {
         .compile_stmt_results_to_lean_source(&original)
         .expect("compile object choice");
 
-    let mut renamed = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_to_stmt_results(
+    let mut renamed = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
             SOURCE,
             "direct_object_choice.lit",
         )
@@ -71,7 +71,7 @@ fn direct_object_choice_compiler_uses_typed_child_evidence_not_its_label() {
 }
 
 fn execute_single_existential_witness() -> Vec<StmtResult> {
-    crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_to_stmt_results(
+    crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
         "witness exist x R st {x = 1} from 1:\n    1 = 1\n",
         "direct_existential_witness.lit",
     )
@@ -158,7 +158,7 @@ fn existential_witness_rejects_a_missing_outer_fact_id() {
 
 #[test]
 fn existential_elimination_uses_source_and_projection_fact_ids_directly() {
-    let results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_to_stmt_results(
+    let results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
             "witness exist x R st {x = 1} from 1:\n    1 = 1\nobtain y from exist x R st {x = 1}\n",
             "direct_existential_elimination.lit",
         )
@@ -207,7 +207,7 @@ fn existential_elimination_uses_source_and_projection_fact_ids_directly() {
 
 #[test]
 fn existential_elimination_rejects_a_projection_without_fact_id() {
-    let mut results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_to_stmt_results(
+    let mut results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
             "witness exist x R st {x = 1} from 1:\n    1 = 1\nobtain y from exist x R st {x = 1}\n",
             "direct_existential_elimination.lit",
         )
@@ -227,7 +227,7 @@ fn existential_elimination_rejects_a_projection_without_fact_id() {
 }
 
 fn execute_predicate_backed_existential_elimination() -> Vec<StmtResult> {
-    crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_to_stmt_results(
+    crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
             "prop has_copy(a R):\n    exist x R st {x = a}\nwitness exist x R st {x = 2} from 2:\n    2 = 2\nby def $has_copy(2)\nobtain copy from $has_copy(2)\n",
             "direct_predicate_backed_existential_elimination.lit",
         )
@@ -248,7 +248,7 @@ fn predicate_backed_existential_elimination_compiles_definition_projection_direc
         StmtResultToLeanCompiler::new("direct_predicate_backed_existential_elimination.lit");
     for result in [definition, witness, by_definition] {
         compiler
-            .compile_stmt_result_to_lean_source(result)
+            .compile_stmt_result(result)
             .expect("compile prerequisite Result directly");
     }
     assert!(compiler
@@ -282,11 +282,11 @@ fn predicate_backed_existential_elimination_rejects_a_retargeted_source_publicat
         StmtResultToLeanCompiler::new("direct_predicate_backed_existential_elimination.lit");
     for result in &results[..2] {
         compiler
-            .compile_stmt_result_to_lean_source(result)
+            .compile_stmt_result(result)
             .expect("compile prerequisites before the corrupted publication");
     }
     let error = compiler
-        .compile_stmt_result_to_lean_source(&results[2])
+        .compile_stmt_result(&results[2])
         .expect_err("retargeting the source publication must fail at its typed infer edge");
     assert!(
         error.contains(&format!("unavailable cited fact `{source_fact_id}`")),
@@ -295,7 +295,7 @@ fn predicate_backed_existential_elimination_rejects_a_retargeted_source_publicat
 }
 
 fn execute_direct_cases_and_contradiction() -> Vec<StmtResult> {
-    crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_to_stmt_results(
+    crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
             "by cases:\n    ? 2 = 2\n    case 1 = 1 and 2 = 2:\n        1 = 1\nby contra:\n    ? not 2 < 1\n    impossible 2 < 1\n",
             "direct_cases_and_contradiction.lit",
         )
@@ -374,7 +374,7 @@ fn cases_and_contradiction_tracer_compiles_from_recursive_results() {
         env!("CARGO_MANIFEST_DIR"),
         "/lean/examples/9_CasesAndContradiction.lit"
     ));
-    let results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_to_stmt_results(
+    let results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
             source,
             "9_CasesAndContradiction.lit",
         )
@@ -435,7 +435,7 @@ fn contradiction_rejects_a_reverse_assumption_fact_id_mismatch() {
 }
 
 fn execute_ordinary_claim() -> Vec<StmtResult> {
-    crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_to_stmt_results(
+    crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
         "claim:\n    ? 2 = 2\n    2 = 2\n",
         "direct_claim.lit",
     )
@@ -488,7 +488,7 @@ fn local_claim_proof_step_store_keeps_its_local_fact_id_after_outer_store() {
 
 #[test]
 fn ordinary_claim_and_example_compile_directly_from_recursive_results() {
-    let results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_to_stmt_results(
+    let results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
             "claim:\n    ? 2 = 2\n    2 = 2\n\nexample:\n    ? 3 = 3\n    3 = 3\n",
             "direct_claim_and_example.lit",
         )
@@ -541,7 +541,7 @@ fn direct_claim_compiler_rejects_a_local_store_retargeted_to_the_outer_fact_id()
 }
 
 fn execute_zero_binder_named_theorem() -> Vec<StmtResult> {
-    crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_to_stmt_results(
+    crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
         "thm one_eq_one:\n    ? forall:\n        1 = 1\n",
         "direct_zero_binder_theorem.lit",
     )
@@ -616,7 +616,7 @@ fn zero_binder_named_theorem_compiler_rejects_missing_outer_fact_id() {
 
 #[test]
 fn standard_set_binder_named_theorem_compiles_in_a_child_environment() {
-    let mut results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_to_stmt_results(
+    let mut results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
             "thm local_reflexivity:\n    ? forall x R:\n        x = x\n    x = x\n",
             "direct_binder_theorem.lit",
         )
@@ -637,7 +637,7 @@ fn standard_set_binder_named_theorem_compiles_in_a_child_environment() {
 
 #[test]
 fn existential_theorem_compiles_nested_witness_in_two_child_environments() {
-    let mut results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_to_stmt_results(
+    let mut results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
             "thm member_has_witness:\n    ? forall S set, a S:\n        exist x S st {x = a}\n    witness exist x S st {x = a} from a:\n        a = a\n",
             "direct_existential_theorem.lit",
         )
@@ -660,7 +660,7 @@ fn existential_theorem_compiles_nested_witness_in_two_child_environments() {
 }
 
 fn execute_named_theorem_and_instantiation() -> Vec<StmtResult> {
-    crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_to_stmt_results(
+    crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
             "thm local_reflexivity:\n    ? forall x R:\n        x = x\n    x = x\n\nby thm local_reflexivity(1)\n",
             "direct_theorem_instantiation.lit",
         )
@@ -720,7 +720,7 @@ fn by_thm_rejects_a_missing_source_theorem_fact_id() {
 
 #[test]
 fn theorem_backed_obtain_consumes_but_does_not_publish_its_local_conclusion() {
-    let results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_to_stmt_results(
+    let results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
             "thm self_exists:\n    ? forall a R:\n        exist x R st {x = a}\n    witness exist x R st {x = a} from a:\n        a = a\nobtain selected from thm self_exists(3)\n",
             "direct_theorem_backed_obtain.lit",
         )

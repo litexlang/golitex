@@ -231,14 +231,14 @@ claim:
 # <pre style="margin: 0; white-space: pre-wrap"><code>claim forall a N+: 2 <= a => {exist k N+ st {k > a, $prime(k)}}:
 #     2 <= a <= product(1, a, fn(x N+) N+ {x}) <= product(1, a, fn(x N+) N+ {x}) + 1
 #     obtain k from exist k N+ st {$prime(k), (product(1, a, fn(x N+) N+ {x}) + 1) % k = 0}
-#     by cases k > a:
+#     by cases:
+#         ? k > a
 #         case k <= a:
 #             product(1, a, fn(x N+) N+ {x}) % k = 0
 #             1 % k = 1
 #             (product(1, a, fn(x N+) N+ {x}) + 1) % k = (product(1, a, fn(x N+) N+ {x}) % k + 1 % k) % k = (0 + 1) % k = 1
 #             impossible (product(1, a, fn(x N+) N+ {x}) + 1) % k = 0
-#         case k > a:
-#             do_nothing
+#         case k > a
 #     witness exist k N+ st {k > a, $prime(k)} from k</code></pre>
 #     </td>
 #     <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">

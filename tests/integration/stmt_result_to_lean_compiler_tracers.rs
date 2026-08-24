@@ -1,7 +1,6 @@
 use litex::prelude::*;
 use litex::stmt_result_to_lean_compiler::{
-    compile_litex_source_to_lean_source,
-    compile_litex_source_to_stmt_result_to_lean_compilation_report,
+    compile_litex_source_to_lean_compilation_report, compile_litex_source_to_lean_source,
     StmtResultToLeanCompilationPhase, StmtResultToLeanCompilationStatus,
 };
 
@@ -97,7 +96,7 @@ fn known_forall_multi_conclusion_fact_id_provenance_compiles_both_exact_projecti
 #[test]
 fn nonempty_set_witness_compiles_its_local_result_and_membership_evidence() {
     let generated = compile_direct_result_only_on_verifier_stack(
-        "witness $is_nonempty_set({1, 2}) from 1:\n    do_nothing\n",
+        "witness $is_nonempty_set({1, 2}) from 1\n",
         "nonempty_set_witness_result.lit",
     )
     .expect("compile a nonempty-set witness from recursive Results");
@@ -210,7 +209,7 @@ fn set_extension_combines_two_typed_subset_reflexivity_child_results() {
 #[test]
 fn finite_set_enumeration_compiles_frozen_assignment_fact_ids_and_children() {
     let generated = compile_on_verifier_stack(
-        "by enumerate finite_set:\n    ? forall x {1, 2}:\n        x = 1 or x = 2\n    do_nothing\n",
+        "by enumerate finite_set:\n    ? forall x {1, 2}:\n        x = 1 or x = 2\n",
         "finite_set_enumeration_recursive_result.lit",
     )
     .expect("compile a finite enumeration from its assignment Results");
@@ -228,7 +227,7 @@ fn finite_set_enumeration_compiles_frozen_assignment_fact_ids_and_children() {
 #[test]
 fn integer_range_iteration_compiles_evaluated_values_and_assignment_fact_ids() {
     let generated = compile_on_verifier_stack(
-        "by for:\n    ? forall n range(0, 3):\n        n < 3\n    do_nothing\n",
+        "by for:\n    ? forall n range(0, 3):\n        n < 3\n",
         "integer_range_iteration_recursive_result.lit",
     )
     .expect("compile integer range iteration from recursive Results");
@@ -315,23 +314,19 @@ fn compiler_core_keeps_representation_registry_closed() {
 
 #[test]
 fn compilation_report_is_transactional_and_marks_unsupported_result_routes() {
-    let complete = compile_litex_source_to_stmt_result_to_lean_compilation_report(
-        "1 = 1\n",
-        "complete_report.lit",
-    )
-    .expect("capture and emit a complete report");
+    let complete =
+        compile_litex_source_to_lean_compilation_report("1 = 1\n", "complete_report.lit")
+            .expect("capture and emit a complete report");
     assert_eq!(complete.status, StmtResultToLeanCompilationStatus::Complete);
     assert!(complete.is_complete());
     assert!(complete.unsupported.is_empty());
     assert!(complete.lean_code.contains("theorem __fact0"));
 
-    let incomplete = compile_litex_source_to_stmt_result_to_lean_compilation_report(
-        "1 != 0\n",
-        "incomplete_report.lit",
-    )
-    .expect(
-        "successful Result with an unsupported Lean-source construction route returns a report",
-    );
+    let incomplete =
+        compile_litex_source_to_lean_compilation_report("1 != 0\n", "incomplete_report.lit")
+            .expect(
+            "successful Result with an unsupported Lean-source construction route returns a report",
+        );
     assert_eq!(
         incomplete.status,
         StmtResultToLeanCompilationStatus::Incomplete

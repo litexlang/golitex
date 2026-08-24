@@ -73,10 +73,8 @@ claim:
             $HighSchoolCite::logic::hs_P()
     by cases:
         ? $HighSchoolCite::logic::hs_P()
-        case $HighSchoolCite::logic::hs_P():
-            do_nothing
-        case $HighSchoolCite::logic::hs_P():
-            do_nothing
+        case $HighSchoolCite::logic::hs_P()
+        case $HighSchoolCite::logic::hs_P()
 
 forall:
     =>:

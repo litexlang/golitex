@@ -115,7 +115,7 @@ impl SuccessFactStmtResult {
         )
     }
 
-    pub fn new_with_statement_memo(
+    pub fn new_with_statement_proof_cache(
         stmt: Fact,
         infers: SuccessInferResult,
         source: Rc<SuccessVerifyFactResult>,

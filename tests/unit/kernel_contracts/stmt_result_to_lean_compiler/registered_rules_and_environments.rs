@@ -13,7 +13,7 @@ fn registered_set_rule_rejects_stale_fingerprint() {
 }
 
 fn execute_registered_power_set_membership() -> Vec<StmtResult> {
-    crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_to_stmt_results(
+    crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
         "have A set = R\nhave B set = C\ntrust A $subset B\nA $in power_set(B)\n",
         "direct_registered_power_set_membership.lit",
     )
@@ -36,10 +36,10 @@ fn registered_set_rule_compiles_directly_from_its_recursive_certificate() {
         let mut compiler =
             StmtResultToLeanCompiler::new("direct_registered_power_set_membership.lit");
         compiler
-            .compile_stmt_result_to_lean_source(set_a)
+            .compile_stmt_result(set_a)
             .expect("compile first set definition");
         compiler
-            .compile_stmt_result_to_lean_source(set_b)
+            .compile_stmt_result(set_b)
             .expect("compile second set definition");
         for (index, child) in builtin.subgoals.iter().enumerate() {
             let child = child
@@ -98,7 +98,7 @@ fn registered_set_rule_result_rejects_a_stale_fingerprint() {
 #[test]
 fn common_arithmetic_sign_rule_combines_its_child_results_directly() {
     run_registered_rule_test(|| {
-        let results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_to_stmt_results(
+        let results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
                 "have a, b R\ntrust a >= 0\ntrust b >= 0\na + b >= 0\n",
                 "direct_arithmetic_sign_rule.lit",
             )
@@ -120,7 +120,7 @@ fn common_arithmetic_sign_rule_combines_its_child_results_directly() {
         ));
         let mut compiler = StmtResultToLeanCompiler::new("direct_arithmetic_sign_rule.lit");
         compiler
-            .compile_stmt_result_to_lean_source(objects)
+            .compile_stmt_result(objects)
             .expect("compile real object choice");
         for (index, child) in builtin.subgoals.iter().enumerate() {
             let child = child
@@ -151,7 +151,7 @@ fn common_arithmetic_sign_rule_combines_its_child_results_directly() {
 }
 
 fn execute_registered_componentwise_order_addition() -> Vec<StmtResult> {
-    crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_to_stmt_results(
+    crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
         "forall a, b, c, d R:\n    a <= b\n    c <= d\n    =>:\n        a + c <= b + d\n",
         "direct_registered_componentwise_order_addition.lit",
     )
@@ -269,7 +269,7 @@ fn registered_componentwise_order_addition_rejects_stale_fingerprint() {
 }
 
 fn execute_registered_subtraction_sign_and_greater_to_greater_equal_rules() -> Vec<StmtResult> {
-    crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_to_stmt_results(
+    crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
             "forall u, v R:\n    v <= u\n    =>:\n        0 <= u - v\n\nforall u, v R:\n    v < u\n    =>:\n        0 < u - v\n\nforall a, b R:\n    a > b\n    =>:\n        a >= b\n",
             "direct_registered_subtraction_sign_and_order.lit",
         )
@@ -318,7 +318,7 @@ fn registered_subtraction_sign_rejects_reordered_parameter_and_semantic_children
 #[test]
 fn clear_resets_result_visibility_and_opens_a_fresh_lean_namespace() {
     run_registered_rule_test(|| {
-        let results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_to_stmt_results(
+        let results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
                 "have A set = R\nclear\nhave A set = C\n",
                 "direct_clear_compiler_environment.lit",
             )
@@ -333,24 +333,8 @@ fn clear_resets_result_visibility_and_opens_a_fresh_lean_namespace() {
     });
 }
 
-#[test]
-fn source_with_only_do_nothing_produces_valid_declaration_free_lean_source() {
-    run_registered_rule_test(|| {
-        let results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_to_stmt_results(
-                "do_nothing\n",
-                "direct_do_nothing_result.lit",
-            )
-            .expect("execute do_nothing");
-        let generated = StmtResultToLeanCompiler::new("direct_do_nothing_result.lit")
-            .compile_stmt_results_to_lean_source(&results)
-            .expect("compile a declaration-free successful Result stream");
-        assert!(generated.contains("namespace __Compiler_direct_do_nothing_result"));
-        assert!(!generated.contains("theorem __fact"));
-    });
-}
-
 fn execute_order_transitivity() -> Vec<StmtResult> {
-    crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_to_stmt_results(
+    crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
         "forall a, b, c R:\n    a <= b\n    b < c\n    =>:\n        a < c\n",
         "direct_order_transitivity.lit",
     )
@@ -420,7 +404,7 @@ fn order_transitivity_rejects_reversed_order_children() {
 }
 
 fn execute_strategy_definition_with_local_proof_environment() -> Vec<StmtResult> {
-    crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_to_stmt_results(
+    crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
             "prop reflexive(x R):\n    x = x\n\nstrategy prove_reflexive:\n    ? forall x R:\n        $reflexive(x)\n    x = x\n    by def $reflexive(x)\n\nstop strategy prove_reflexive\nuse strategy prove_reflexive\n",
             "direct_strategy_definition_compiler_environment.lit",
         )
@@ -498,7 +482,7 @@ fn strategy_definition_rejects_a_result_missing_its_local_parameter_fact_id() {
 }
 
 fn execute_order_reflexivity_theorem() -> Vec<StmtResult> {
-    crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_to_stmt_results(
+    crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
         "thm local_weak_order_reflexivity:\n    ? forall x R:\n        x <= x\n",
         "direct_order_reflexivity_compiler_environment.lit",
     )
@@ -586,7 +570,7 @@ fn closed_numeric_comparison_evidence_mut(
 #[test]
 fn closed_numeric_comparison_retains_both_recursive_evaluations() {
     run_registered_rule_test(|| {
-        let mut results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_to_stmt_results(
+        let mut results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
                 "2 + 3 < 6\n",
                 "direct_closed_numeric_comparison_result.lit",
             )
@@ -607,7 +591,7 @@ fn closed_numeric_comparison_retains_both_recursive_evaluations() {
 #[test]
 fn closed_numeric_comparison_rejects_a_corrupted_normal_form() {
     run_registered_rule_test(|| {
-        let mut results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_to_stmt_results(
+        let mut results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
                 "2 + 3 < 6\n",
                 "direct_closed_numeric_comparison_result.lit",
             )
@@ -627,7 +611,7 @@ fn closed_numeric_comparison_rejects_a_corrupted_normal_form() {
 }
 
 fn execute_registered_reflexive_predicate_and_use() -> Vec<StmtResult> {
-    crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_to_stmt_results(
+    crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
             "prop rel(x set, y set):\n    x = y\n\nby reflexive_prop:\n    ? forall x set:\n        $rel(x, x)\n    x = x\n    by def $rel(x, x)\n\n$rel(R, R)\n",
             "direct_registered_reflexive_predicate_environment.lit",
         )
@@ -670,7 +654,7 @@ fn registered_reflexive_predicate_evidence_mut(
 }
 
 fn execute_all_registered_predicate_property_results() -> Vec<StmtResult> {
-    crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_to_stmt_results(
+    crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
         include_str!(concat!(
             env!("CARGO_MANIFEST_DIR"),
             "/lean/examples/46_RegisteredPredicateCompilerEnvironment.lit"
@@ -720,7 +704,7 @@ fn all_predicate_property_registrations_compile_in_result_owned_forall_environme
 }
 
 fn execute_registered_transitive_predicate_chain_and_use() -> Vec<StmtResult> {
-    crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_to_stmt_results(
+    crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
             "prop same_set(x set, y set):\n    x = y\n\nby transitive_prop:\n    ? forall x, y, z set:\n        $same_set(x, y)\n        $same_set(y, z)\n        =>:\n            $same_set(x, z)\n    x = y\n    y = z\n    x = z\n    by def $same_set(x, z)\n\ntrust R $same_set C\ntrust C $same_set N\nR $same_set C $same_set N\nR $same_set N\n",
             "direct_registered_transitive_predicate_environment.lit",
         )
@@ -1048,7 +1032,7 @@ fn install_registered_symmetric_predicate_proof(
 }
 
 fn execute_registered_symmetric_predicate_and_use() -> Vec<StmtResult> {
-    crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_to_stmt_results(
+    crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
             "prop any_set(x set, y set):\n    x = x\n\nby symmetric_prop:\n    ? forall x, y set:\n        $any_set(x, y)\n        =>:\n            $any_set(y, x)\n    x = x\n    by def $any_set(y, x)\n\ntrust $any_set(R, C)\n$any_set(R, C)\n$any_set(C, R)\n",
             "direct_registered_symmetric_predicate_environment.lit",
         )
@@ -1065,7 +1049,7 @@ fn registered_symmetric_predicate_use_compiles_its_exact_child_in_the_visible_en
             StmtResultToLeanCompiler::new("direct_registered_symmetric_predicate_environment.lit");
         for prefix in &results[..results.len() - 1] {
             focused_compiler
-                .compile_stmt_result_to_lean_source(prefix)
+                .compile_stmt_result(prefix)
                 .expect("compile the environment preceding the symmetry use");
         }
         let target = results
@@ -1190,7 +1174,7 @@ fn execute_registered_antisymmetric_predicate_and_use() -> Vec<StmtResult> {
             "/lean/examples/46_RegisteredPredicateCompilerEnvironment.lit"
         ))
     );
-    crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_to_stmt_results(
+    crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
         &source,
         "direct_registered_antisymmetric_predicate_environment.lit",
     )
@@ -1225,7 +1209,7 @@ fn registered_antisymmetric_predicate_use_combines_its_two_exact_children() {
 #[test]
 fn setting_definition_is_a_pass_through_before_its_elaborated_forall_result() {
     run_registered_rule_test(|| {
-        let results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_to_stmt_results(
+        let results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
                 "setting RealElement(x R)\n\nforall [RealElement]:\n    x = x\n",
                 "direct_setting_elaboration_result.lit",
             )

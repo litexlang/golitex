@@ -3,7 +3,7 @@ use super::run_registered_rule_test;
 
 #[test]
 fn direct_compiler_rejects_a_conjunction_component_result_with_changed_position() {
-    let mut results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_to_stmt_results(
+    let mut results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
             "1 = 1 and 2 = 2",
             "corrupted_conjunction_component_result.lit",
         )
@@ -26,7 +26,7 @@ fn direct_compiler_rejects_a_conjunction_component_result_with_changed_position(
 
 #[test]
 fn finite_enumeration_rejects_a_corrupted_assignment_fact_id() {
-    let mut results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_to_stmt_results(
+    let mut results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
             "by enumerate finite_set:\n    ? forall x {1, 2}:\n        x = 1 or x = 2\n",
             "corrupted_finite_enumeration_assignment.lit",
         )
@@ -51,7 +51,7 @@ fn finite_enumeration_rejects_a_corrupted_assignment_fact_id() {
 
 #[test]
 fn integer_range_iteration_rejects_a_corrupted_evaluated_value() {
-    let mut results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_to_stmt_results(
+    let mut results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
             "by for:\n    ? forall n range(0, 3):\n        n < 3\n",
             "corrupted_integer_range_iteration.lit",
         )
@@ -73,7 +73,7 @@ fn integer_range_iteration_rejects_a_corrupted_evaluated_value() {
 }
 
 pub(super) fn execute_closed_natural_membership() -> Vec<StmtResult> {
-    crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_to_stmt_results(
+    crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
         "2 + 3 $in N\n",
         "direct_closed_membership.lit",
     )
@@ -92,7 +92,7 @@ pub(super) fn closed_natural_membership_result_mut(
 #[test]
 fn numeric_eval_wraps_recursive_computation_and_publishes_its_exact_fact_id() {
     run_registered_rule_test(|| {
-        let results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_to_stmt_results(
+        let results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
                 "eval 2 + 3\n2 + 3 = 5\n",
                 "direct_numeric_eval.lit",
             )
@@ -144,7 +144,7 @@ fn numeric_eval_wraps_recursive_computation_and_publishes_its_exact_fact_id() {
 #[test]
 fn numeric_eval_rejects_a_corrupted_recursive_normal_form() {
     run_registered_rule_test(|| {
-        let mut results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_to_stmt_results(
+        let mut results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
                 "eval 2 + 3\n",
                 "corrupted_numeric_eval.lit",
             )
@@ -176,7 +176,7 @@ fn numeric_eval_rejects_a_corrupted_recursive_normal_form() {
 }
 
 fn execute_integer_remainder_membership() -> Vec<StmtResult> {
-    crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_to_stmt_results(
+    crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
         "forall a, b Z:\n    b != 0\n    =>:\n        a % b $in Z\n",
         "direct_integer_remainder_membership.lit",
     )
@@ -250,7 +250,7 @@ fn integer_remainder_rejects_a_certificate_retargeted_to_addition() {
 }
 
 fn execute_rational_power_membership() -> Vec<StmtResult> {
-    crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_to_stmt_results(
+    crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
         "forall a Q, z Z:\n    a != 0\n    =>:\n        a^z $in Q\n",
         "direct_rational_power_membership.lit",
     )

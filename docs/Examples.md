@@ -536,7 +536,6 @@ by enumerate finite_set:
 
 by enumerate finite_set:
     ? forall a {1, 2}, b {3, 4}: a $in R and b $in R and a > 1 and b > 3 => (a, b) = (2, 4)
-    do_nothing
 ```
 
 ### 8. Enumerating A Half-Open Range
@@ -595,21 +594,17 @@ by extension:
 by for:
     ? forall n range(0, 10):
         n < 10
-    do_nothing
 
 by for:
     ? forall n closed_range(0, 10):
         n <= 10
-    do_nothing
 
 by for:
     ? forall n range(0, 3) => n < 3
-    do_nothing
 
 by for:
     ? forall x cart({1, 2}, {3, 4}):
         0 <= x[1] + x[2]
-    do_nothing
 ```
 
 ```litex
@@ -816,7 +811,6 @@ claim:
 
 claim:
     ? 1 = 1
-    do_nothing
 ```
 
 ```litex
@@ -4086,15 +4080,7 @@ eval 1 + 2
 1 + 2 = 3
 ```
 
-#### 23. Empty Proof Steps
-
-Purpose: make an explicit empty proof step.
-
-```litex
-do_nothing
-```
-
-#### 24. Module Commands
+#### 23. Module Commands
 
 Purpose: cite configured project sources by canonical name, or clear the
 current environment.

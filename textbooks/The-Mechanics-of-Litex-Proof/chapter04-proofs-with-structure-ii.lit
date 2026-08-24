@@ -449,9 +449,8 @@ claim:
         case x = -3
         case x = 2
 
-# Here `do_nothing` is not a placeholder for omitted proof text. It is the
-# explicit no-op statement, used when no extra proof step is
-# needed at that point.
+# The two bodyless case headers still run their ordinary branch-final goal
+# checks; an empty branch is not an admission.
 
 # In the two cases above, the case assumption is enough. Under `case x = -3`,
 # Litex checks the goal `x^2 + x - 6 = 0` after substituting `x = -3`, and the

@@ -900,11 +900,6 @@ pub struct SuccessReusedImportResult {
     pub execution_mode: ExecutionMode,
 }
 
-pub struct SuccessDoNothingStmtResult {
-    pub statement: DoNothingStmt,
-    pub common: SuccessStmtCommonResult,
-}
-
 pub struct SuccessClearStmtResult {
     pub statement: ClearStmt,
     pub common: SuccessStmtCommonResult,
@@ -946,7 +941,6 @@ pub struct SuccessStopStrategyStmtResult {
 
 pub enum SuccessCommandStmtResult {
     ImportStmt(Box<SuccessImportStmtResult>),
-    DoNothingStmt(Box<SuccessDoNothingStmtResult>),
     ClearStmt(Box<SuccessClearStmtResult>),
     EvalStmt(Box<SuccessEvalStmtResult>),
     UseStrategyStmt(Box<SuccessUseStrategyStmtResult>),

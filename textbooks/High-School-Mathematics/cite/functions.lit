@@ -88,8 +88,7 @@ thm strictly_increasing_implies_injective:
                 x = y
         by cases:
             ? x = y
-            case x = y:
-                do_nothing
+            case x = y
             case x < y:
                 f(x) < f(y)
                 impossible f(x) = f(y)
@@ -110,8 +109,7 @@ thm strictly_decreasing_implies_injective:
                 x = y
         by cases:
             ? x = y
-            case x = y:
-                do_nothing
+            case x = y
             case x < y:
                 f(y) < f(x)
                 impossible f(x) = f(y)

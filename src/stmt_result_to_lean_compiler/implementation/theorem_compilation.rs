@@ -1301,15 +1301,6 @@ impl StmtResultToLeanCompiler {
         {
             return self.compile_let_obj_stmt_result_as_local_proof_steps(result, proof_step_index);
         }
-        if let StmtResult::Success(SuccessStmtResult::Command(
-            SuccessCommandStmtResult::DoNothingStmt(result),
-        )) = result
-        {
-            if !result.common.infers.is_empty() {
-                return Err("local `do_nothing` unexpectedly published effects".into());
-            }
-            return Ok(Some(Vec::new()));
-        }
         if let Some(factual) = result.factual_success() {
             return self
                 .compile_fact_stmt_result_as_local_proof_step(factual, proof_step_index)

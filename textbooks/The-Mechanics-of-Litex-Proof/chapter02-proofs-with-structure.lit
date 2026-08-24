@@ -385,13 +385,9 @@ forall y R:
 #         <proof for goal under assumption2>
 # ```
 
-# The second form is shorthand: write the case goal on the same line as
-# `by cases`. If the case assumption already implies the goal, `do_nothing` closes
-# that branch. `do_nothing` is a real Litex statement: it means there is no extra
-# proof step to write because the current context already closes the goal. Litex
-# also accepts `...` as a shorter spelling of the same no-op statement. If the
-# case leads to contradiction, close with
-# `impossible <atomic fact>`.
+# When a case assumption already implies the goal, write a bodyless `case`
+# header without a colon. Litex still performs the branch-final goal check. If
+# the case leads to contradiction, close with `impossible <atomic fact>`.
 
 # The example below uses `claim` with the shorthand form `by cases a = b:`.
 
@@ -822,9 +818,9 @@ witness exist a, b, c, d N st {a^3 + b^3 = 1729, c^3 + d^3 = 1729, a != c, a != 
 #            <proof for goal under assumption>
 #    ```
 
-#    A branch may close with `do_nothing` or its short form `...` when the case
-#    assumption already gives the goal, or with `impossible <atomic fact>` when
-#    the case is contradictory.
+#    A branch whose assumption already gives the goal may use a bodyless `case`
+#    header without a colon. A contradictory branch closes with
+#    `impossible <atomic fact>`.
 
 # 5. `exist ... st {...}` writes an existential fact. The braces contain the facts
 #    the witness must satisfy.

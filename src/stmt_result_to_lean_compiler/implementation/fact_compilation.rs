@@ -2976,16 +2976,4 @@ impl StmtResultToLeanCompiler {
             )?;
         Ok(())
     }
-
-    pub(super) fn unsupported_success_stmt_result(
-        &self,
-        result: &SuccessStmtResult,
-    ) -> Result<(), String> {
-        let statement = result.statement();
-        Err(format!(
-            "StmtResult-to-Lean compiler does not support statement kind `{}` at {:?}",
-            statement.stmt_type_name(),
-            statement.line_file()
-        ))
-    }
 }

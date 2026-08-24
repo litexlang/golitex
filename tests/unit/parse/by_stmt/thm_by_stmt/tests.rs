@@ -49,11 +49,11 @@ fn by_thm_selected_fact_rejects_missing_compound_and_indented_targets() {
             "by thm: `=>` expects exactly one atomic fact",
         ),
         (
-            "by thm T(a):\n    do_nothing",
+            "by thm T(a):\n    1 = 1",
             "by thm: expects a `? <fact>` goal block",
         ),
         (
-            "by thm T(a):\n    ? $P(a)\n    do_nothing",
+            "by thm T(a):\n    ? $P(a)\n    1 = 1",
             "by thm: expects exactly one `? <atomic fact>` goal block and no proof body",
         ),
     ];

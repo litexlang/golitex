@@ -1,7 +1,7 @@
 use super::super::*;
 
 fn execute_concrete_predicate_and_by_definition() -> Vec<StmtResult> {
-    crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_to_stmt_results(
+    crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
         "prop is_unit_pair(x R, y R):\n    x = 1\n    y = 1\n\n1 = 1\nby def $is_unit_pair(1, 1)\n",
         "direct_by_definition.lit",
     )
@@ -83,7 +83,7 @@ fn by_definition_rejects_a_missing_target_fact_id() {
 }
 
 fn execute_named_real_function(source: &str) -> Vec<StmtResult> {
-    crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_to_stmt_results(
+    crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
         source,
         "direct_named_real_function.lit",
     )
@@ -241,7 +241,7 @@ fn named_real_function_rejects_missing_local_parameter_fact_id() {
 }
 
 fn execute_indexed_tuple_definition() -> Vec<StmtResult> {
-    crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_to_stmt_results(
+    crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
         "have tuple coordinates for index <= 3, coordinates[index] = index + 1\n",
         "direct_indexed_tuple.lit",
     )
@@ -310,7 +310,7 @@ fn indexed_tuple_rejects_a_coordinate_store_without_fact_id() {
 }
 
 fn execute_indexed_sequence_definition() -> Vec<StmtResult> {
-    crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_to_stmt_results(
+    crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
         "have seq identity_sequence seq(R) for index, identity_sequence(index) = index + 1\n",
         "direct_indexed_sequence.lit",
     )
@@ -386,7 +386,7 @@ fn indexed_sequence_rejects_a_missing_local_parameter_fact_id() {
 }
 
 fn execute_finite_sequence_definition() -> Vec<StmtResult> {
-    crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_to_stmt_results(
+    crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
             "have finite_seq bounded_sequence finite_seq(R, 3) for index <= 3, bounded_sequence(index) = index + 1\nbounded_sequence(2) = 2 + 1\n",
             "direct_finite_sequence.lit",
         )
@@ -471,7 +471,7 @@ fn finite_sequence_rejects_a_missing_local_domain_fact_id() {
 }
 
 fn execute_matrix_definition() -> Vec<StmtResult> {
-    crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_to_stmt_results(
+    crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
             "have matrix entry_matrix matrix(R, 2, 3) for row <= 2, column <= 3, entry_matrix(row, column) = row + column\nentry_matrix(2, 3) = 2 + 3\n",
             "direct_matrix.lit",
         )

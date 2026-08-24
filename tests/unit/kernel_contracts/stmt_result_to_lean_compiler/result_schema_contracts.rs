@@ -3,7 +3,7 @@ use crate::output::display_stmt_result_json_v2;
 
 #[test]
 fn def_struct_result_retains_each_local_verification_phase_without_synthetic_statements() {
-    let results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_to_stmt_results(
+    let results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
             "struct ValueBox<S set>:\n    value S\n    <=>:\n        value = value\n",
             "def_struct_result_contract.lit",
         )
@@ -41,7 +41,7 @@ fn def_struct_result_retains_each_local_verification_phase_without_synthetic_sta
 
 #[test]
 fn def_algo_result_retains_retagged_parameters_and_the_exact_default_check() {
-    let results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_to_stmt_results(
+    let results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
             "have fn identity(x R) R = x\nhave algo for identity(x):\n    x\n",
             "def_algo_result_contract.lit",
         )
@@ -89,7 +89,7 @@ fn def_algo_result_retains_retagged_parameters_and_the_exact_default_check() {
 
 #[test]
 fn inductive_function_result_retains_both_local_flows_and_recursive_cases() {
-    let results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_to_stmt_results(
+    let results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
             r#"have fn step(x R+) R+ = (x + 2 / x) / 2
 have fn iterate(n N) R+ by induc n from 0:
     case n = 0: 1

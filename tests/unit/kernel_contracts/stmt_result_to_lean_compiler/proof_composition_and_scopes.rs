@@ -3,7 +3,7 @@ use crate::output::display_stmt_result_json_v2;
 
 #[test]
 fn combined_builtin_items_retain_and_compile_their_typed_component_evidence() {
-    let results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_to_stmt_results(
+    let results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
             "1 = 1 and 2 = 2\n",
             "combined_builtin_items.lit",
         )
@@ -25,9 +25,9 @@ fn combined_builtin_items_retain_and_compile_their_typed_component_evidence() {
 
 fn execute_structured_integer_induction_from(start: &str) -> Vec<StmtResult> {
     let source = format!(
-            "by induc n from {start}:\n    ? n + 1 = n + 1\n    ? from n = {start}:\n        do_nothing\n    ? induc:\n        do_nothing\n"
-        );
-    crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_to_stmt_results(
+        "by induc n from {start}:\n    ? n + 1 = n + 1\n    ? from n = {start}\n    ? induc\n"
+    );
+    crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
         &source,
         "structured_integer_induction_result.lit",
     )
@@ -145,7 +145,7 @@ fn structured_integer_induction_compiler_follows_result_scopes_and_balances_its_
     let mut compiler = StmtResultToLeanCompiler::new("structured_integer_induction_result.lit");
     for result in &results {
         compiler
-            .compile_stmt_result_to_lean_source(result)
+            .compile_stmt_result(result)
             .expect("compile recursive structured induction Result");
     }
     assert!(compiler.environment_stack.is_top_level());
@@ -202,8 +202,9 @@ fn structured_integer_induction_zero_and_strong_boundaries_fail_closed() {
         .expect_err("zero-ended order lowering must fail closed");
     assert!(zero_error.contains("nonnegative-value"), "{zero_error}");
 
-    let strong_source = "by strong_induc n from -1:\n    ? n + 1 = n + 1\n    ? from n = -1:\n        do_nothing\n    ? strong_induc:\n        do_nothing\n";
-    let strong_results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_to_stmt_results(
+    let strong_source =
+        "by strong_induc n from -1:\n    ? n + 1 = n + 1\n    ? from n = -1\n    ? strong_induc\n";
+    let strong_results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
             strong_source,
             "strong_structured_induction.lit",
         )
@@ -217,7 +218,7 @@ fn structured_integer_induction_zero_and_strong_boundaries_fail_closed() {
 #[test]
 fn forall_result_retains_exact_parameter_and_domain_fact_ids_for_compiler_scope() {
     let source = "forall a set, b set:\n    $is_set(a)\n    $is_set(b)\n    a != b\n    =>:\n        b != a\n";
-    let results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_to_stmt_results(
+    let results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
             source,
             "direct_forall_scope_fact_ids.lit",
         )

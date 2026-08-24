@@ -1948,8 +1948,7 @@ fn python_extractor_rejects_non_real_function_parameters() {
 fn strong_induc_requires_by_prefix() {
     run_with_large_stack("strong_induc_requires_by_prefix", || {
         let source_code = r#"
-strong_induc n from 0:
-    do_nothing
+strong_induc n from 0
 "#;
 
         let mut runtime = Runtime::new();

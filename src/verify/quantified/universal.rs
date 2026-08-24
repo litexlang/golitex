@@ -9,7 +9,7 @@ impl Runtime {
         forall_fact: &ForallFact,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         if let Some(cached_result) =
-            self.verify_fact_from_cache_using_display_string(&forall_fact.clone().into())
+            self.verification_result_from_known_fact_cache(&forall_fact.clone().into())
         {
             return Ok(Some(cached_result));
         }

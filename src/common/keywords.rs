@@ -196,7 +196,6 @@ pub const HAVE: &str = "have";
 pub const LET: &str = "let";
 pub const OBTAIN: &str = "obtain";
 pub const CLEAR: &str = "clear";
-pub const DO_NOTHING: &str = "do_nothing";
 pub const FROM: &str = "from";
 pub const EVAL: &str = "eval";
 pub const WITNESS: &str = "witness";
@@ -392,7 +391,6 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         LET,
         OBTAIN,
         CLEAR,
-        DO_NOTHING,
         INDUC,
         STRONG_INDUC,
         FROM,

@@ -25,7 +25,7 @@ pub use statement::success::{
     SuccessDefAbstractPropStmtResult, SuccessDefAlgoStmtResult, SuccessDefInterfaceStmtResult,
     SuccessDefObjStmtResult, SuccessDefPredicateStmtResult, SuccessDefPropStmtResult,
     SuccessDefSettingStmtResult, SuccessDefStrategyStmtResult, SuccessDefStructStmtResult,
-    SuccessDefTemplateStmtResult, SuccessDefThmStmtResult, SuccessDoNothingStmtResult,
+    SuccessDefTemplateStmtResult, SuccessDefThmStmtResult,
     SuccessEvalStmtExecutionResult, SuccessEvalStmtResult, SuccessEvaluatedEvalStmtResult,
     SuccessExampleStmtResult, SuccessExecutedImportResult, SuccessFactStmtResult,
     SuccessHaveByPreimageStmtResult, SuccessHaveCartStmtResult, SuccessHaveFiniteSeqStmtResult,

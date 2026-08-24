@@ -71,9 +71,9 @@ interfaces actually visited. For this statement the trace is:
 9. Runtime::execute_verified_statement — src/execute/verified_statement_execution.rs
 10. Runtime::execute_submitted_fact — src/execute/submitted_fact_execution.rs
 11. Runtime::verify_fact_well_defined_for_execution — src/execute/submitted_fact_execution.rs
-12. Runtime::verify_fact_for_execution — src/execute/submitted_fact_execution.rs
-13. Runtime::verify_fact_or_error — src/verify/dispatch.rs
-14. Runtime::verify_atomic_fact — src/verify/atomic/core.rs
+12. Runtime::verify_atomic_fact — src/verify/atomic/core.rs
+13. Runtime::verify_fact_for_execution — src/execute/submitted_fact_execution.rs
+14. Runtime::verify_fact_or_error — src/verify/dispatch.rs
 15. Runtime::verify_equal_fact — src/verify/equality/core.rs
 16. Runtime::store_executed_fact_and_infer — src/execute/submitted_fact_execution.rs
 17. Runtime::finish_statement_execution — src/execute/statement_execution.rs
@@ -82,7 +82,9 @@ Lean compiler: not executed
 ```
 
 The trace records each major function once, so a multi-statement run shows the
-architectural path instead of a helper-level profiler dump.
+architectural path instead of a helper-level profiler dump. In this example,
+`Runtime::verify_atomic_fact` is first entered while checking well-definedness,
+so it appears before the outer `Runtime::verify_fact_for_execution` route.
 
 The source files on this main path now import their owning modules explicitly.
 Statement execution also names its two independent axes: `ExecutionMode`

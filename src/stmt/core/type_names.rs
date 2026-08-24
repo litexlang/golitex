@@ -66,12 +66,6 @@ impl ImportStmt {
     }
 }
 
-impl DoNothingStmt {
-    pub fn stmt_type_name(&self) -> String {
-        "DoNothingStmt".to_string()
-    }
-}
-
 impl ClearStmt {
     pub fn stmt_type_name(&self) -> String {
         "ClearStmt".to_string()
@@ -417,12 +411,6 @@ impl DefTemplateStmt {
 impl DefSettingStmt {
     pub fn output_type_string() -> String {
         "setting definition".to_string()
-    }
-}
-
-impl DoNothingStmt {
-    pub fn output_type_string() -> String {
-        "no-op statement".to_string()
     }
 }
 

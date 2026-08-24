@@ -1,6 +1,7 @@
 use litex::api::{
-    compile_litex_source_to_lean_source, execute_source, run, OutputLanguage, OutputStyle,
-    RunOptions, RunOutcome, RunRequest, RunTarget, Runtime, StmtResult,
+    compile_litex_source_to_lean_compilation_report, compile_litex_source_to_lean_source,
+    execute_source, run, OutputLanguage, OutputStyle, RunOptions, RunOutcome, RunRequest,
+    RunTarget, Runtime, StmtResult, StmtResultToLeanCompilationReport,
 };
 
 #[test]
@@ -43,6 +44,8 @@ fn curated_api_keeps_only_canonical_execution_paths_public() {
     let _: fn(RunRequest) -> RunOutcome = litex::pipeline::run;
     let _: fn(&str) -> Result<String, String> = litex::pipeline::resolve_source_file_path;
     let _: fn(&str, &str) -> Result<String, String> = compile_litex_source_to_lean_source;
+    let _: fn(&str, &str) -> Result<StmtResultToLeanCompilationReport, String> =
+        compile_litex_source_to_lean_compilation_report;
 
     let _: fn(&litex::obj::FnSet) -> litex::stmt::definition_stmt::FnSetClause =
         litex::execute::function_equality_support::fn_set_to_fn_set_clause;

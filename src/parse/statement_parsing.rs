@@ -1,5 +1,5 @@
 use crate::common::keywords::{
-    ABSTRACT_PROP, ALGO, AXIOM, BY, CART, CLAIM, CLEAR, DO_NOTHING, EVAL, EXAMPLE, FINITE_SEQ,
+    ABSTRACT_PROP, ALGO, AXIOM, BY, CART, CLAIM, CLEAR, EVAL, EXAMPLE, FINITE_SEQ,
     FN_LOWER_CASE, FOR, HAVE, IMPORT, LET, MATRIX, OBTAIN, PREIMAGE, PROP, QUESTION_GOAL, SEQ,
     SETTING, SKETCH, STOP, STRATEGY, STRONG_INDUC, STRUCT, TEMPLATE, THM, TRUST, TRY, TUPLE, USE,
     WITNESS,
@@ -80,7 +80,6 @@ impl Runtime {
             ))),
             TRUST => self.parse_trust_stmt(tb),
             IMPORT => self.parse_import_stmt(tb),
-            DO_NOTHING => self.parse_do_nothing_stmt(tb),
             EVAL => self.parse_eval_stmt(tb),
             WITNESS => self.parse_witness_stmt(tb),
             STRUCT => self.parse_def_struct_stmt(tb),

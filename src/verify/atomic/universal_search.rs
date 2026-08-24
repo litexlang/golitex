@@ -28,8 +28,10 @@ impl Runtime {
         verify_state: &ProofSearchState,
     ) -> Result<StmtResult, RuntimeError> {
         debug_assert!(!matches!(atomic_fact, AtomicFact::EqualFact(_)));
-        if let Some(memoized_result) = self.verify_atomic_fact_from_statement_memo(atomic_fact) {
-            return Ok(memoized_result);
+        if let Some(cached_result) =
+            self.verification_result_from_statement_proof_cache(atomic_fact)
+        {
+            return Ok(cached_result);
         }
 
         known_forall_profile::record_entry();
@@ -38,7 +40,7 @@ impl Runtime {
         {
             known_forall_profile::record_success();
             let result = fact_verified.into();
-            return Ok(self.remember_successful_atomic_fact_for_statement(atomic_fact, result));
+            return Ok(self.cache_successful_atomic_fact_for_statement(atomic_fact, result));
         }
 
         known_forall_profile::record_unknown();
@@ -51,8 +53,10 @@ impl Runtime {
         verify_state: &ProofSearchState,
     ) -> Result<StmtResult, RuntimeError> {
         let atomic_fact: AtomicFact = equal_fact.clone().into();
-        if let Some(memoized_result) = self.verify_atomic_fact_from_statement_memo(&atomic_fact) {
-            return Ok(memoized_result);
+        if let Some(cached_result) =
+            self.verification_result_from_statement_proof_cache(&atomic_fact)
+        {
+            return Ok(cached_result);
         }
 
         known_forall_profile::record_entry();
@@ -61,7 +65,7 @@ impl Runtime {
         {
             known_forall_profile::record_success();
             let result = fact_verified.into();
-            return Ok(self.remember_successful_atomic_fact_for_statement(&atomic_fact, result));
+            return Ok(self.cache_successful_atomic_fact_for_statement(&atomic_fact, result));
         }
 
         if let Some(fact_verified) = self
@@ -72,7 +76,7 @@ impl Runtime {
         {
             known_forall_profile::record_success();
             let result = fact_verified.into();
-            return Ok(self.remember_successful_atomic_fact_for_statement(&atomic_fact, result));
+            return Ok(self.cache_successful_atomic_fact_for_statement(&atomic_fact, result));
         }
 
         let fact_with_reversed_args: AtomicFact = EqualFact::new(
@@ -86,7 +90,7 @@ impl Runtime {
         {
             known_forall_profile::record_success();
             let result = fact_verified.into();
-            return Ok(self.remember_successful_atomic_fact_for_statement(&atomic_fact, result));
+            return Ok(self.cache_successful_atomic_fact_for_statement(&atomic_fact, result));
         }
 
         known_forall_profile::record_unknown();

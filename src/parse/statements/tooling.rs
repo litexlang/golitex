@@ -73,11 +73,6 @@ impl Runtime {
         )
     }
 
-    pub fn parse_do_nothing_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
-        tb.skip_token(DO_NOTHING)?;
-        Ok(DoNothingStmt::new(tb.line_file.clone()).into())
-    }
-
     pub fn parse_clear_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(CLEAR)?;
         Ok(ClearStmt::new(tb.line_file.clone()).into())

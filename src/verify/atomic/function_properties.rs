@@ -86,7 +86,7 @@ impl Runtime {
         &mut self,
         fact: &AtomicFact,
         verify_state: &ProofSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
         let Some((predicate, args)) = builtin_function_property_name_and_args(fact) else {
             return Ok(None);
         };
@@ -97,14 +97,14 @@ impl Runtime {
         let domain = args[0].clone();
         let codomain = args[1].clone();
         let function = args[2].clone();
-        let mut infer_result = SuccessInferResult::new();
+        let mut type_results = Vec::new();
         for obj in [domain.clone(), codomain.clone()] {
             let param_type = ParamType::Set(Set::new());
             let result = self.verify_obj_satisfies_param_type(obj, &param_type, verify_state)?;
             if result.is_unknown() {
-                return Ok(Some(result));
+                return Ok(Some(vec![result]));
             }
-            infer_result.new_infer_result_inside(result.infer_result());
+            type_results.push(result);
         }
 
         let Some(function_body) = self.get_fn_range_function_body(&function) else {
@@ -122,9 +122,9 @@ impl Runtime {
                 &EqualFact::new_from_refs(param_group.set_obj(), &domain, fact.line_file()),
             );
             if domain_result.is_unknown() {
-                return Ok(Some(domain_result));
+                return Ok(Some(vec![domain_result]));
             }
-            infer_result.new_infer_result_inside(domain_result.infer_result());
+            type_results.push(domain_result);
         } else {
             // `fn(i N+: i <= n) S` is a unary function on the one-based prefix
             // `closed_range(1, n)`. This admits finite sequences to the standard
@@ -156,9 +156,9 @@ impl Runtime {
                 fact.line_file(),
             ));
             if start_result.is_unknown() {
-                return Ok(Some(start_result));
+                return Ok(Some(vec![start_result]));
             }
-            infer_result.new_infer_result_inside(start_result.infer_result());
+            type_results.push(start_result);
 
             let end_result = self.verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
                 closed_range.end.as_ref(),
@@ -166,9 +166,9 @@ impl Runtime {
                 fact.line_file(),
             ));
             if end_result.is_unknown() {
-                return Ok(Some(end_result));
+                return Ok(Some(vec![end_result]));
             }
-            infer_result.new_infer_result_inside(end_result.infer_result());
+            type_results.push(end_result);
         }
 
         let codomain_result = self.verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
@@ -177,17 +177,11 @@ impl Runtime {
             fact.line_file(),
         ));
         if codomain_result.is_unknown() {
-            return Ok(Some(codomain_result));
+            return Ok(Some(vec![codomain_result]));
         }
-        infer_result.new_infer_result_inside(codomain_result.infer_result());
+        type_results.push(codomain_result);
 
-        Ok(Some(
-            SuccessCommandStmtResult::DoNothingStmt(Box::new(SuccessDoNothingStmtResult {
-                statement: DoNothingStmt::new(fact.line_file()),
-                common: SuccessStmtCommonResult::new(infer_result),
-            }))
-            .into(),
-        ))
+        Ok(Some(type_results))
     }
 
     fn injective_definition_fact(
