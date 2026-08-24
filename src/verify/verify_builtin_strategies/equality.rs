@@ -1,7 +1,7 @@
 use crate::prelude::*;
 
 impl Runtime {
-    pub(crate) fn verify_equality_with_builtin_strategy(
+    pub fn verify_equality_with_builtin_strategy(
         &mut self,
         fact: &EqualFact,
     ) -> Result<StmtResult, RuntimeError> {

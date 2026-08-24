@@ -225,6 +225,23 @@ impl ModuleManager {
         self.modules.get_mut(&id)
     }
 
+    pub fn module_is_descendant_of(
+        &self,
+        module_id: ModuleId,
+        ancestor_module_id: ModuleId,
+    ) -> bool {
+        let mut current_module_id = Some(module_id);
+        while let Some(current) = current_module_id {
+            if current == ancestor_module_id {
+                return true;
+            }
+            current_module_id = self
+                .module(current)
+                .and_then(|module| module.parent_module_id);
+        }
+        false
+    }
+
     pub fn module_id_by_name(&self, module_name: &str) -> Option<ModuleId> {
         self.module_by_name.get(module_name).copied()
     }

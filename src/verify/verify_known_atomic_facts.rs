@@ -215,7 +215,7 @@ impl Runtime {
         Ok((UnknownGenericStmtResult::new()).into())
     }
 
-    pub(crate) fn all_objs_equal_to_arg_for_known_atomic_fact(
+    pub fn all_objs_equal_to_arg_for_known_atomic_fact(
         &self,
         arg: &Obj,
         module_names: &[String],
@@ -272,7 +272,7 @@ impl Runtime {
         }
     }
 
-    pub(crate) fn equality_transport_for_known_atomic_fact(
+    pub fn equality_transport_for_known_atomic_fact(
         &self,
         known_fact: &AtomicFact,
         goal: &AtomicFact,
@@ -383,7 +383,7 @@ impl Runtime {
         equalities
     }
 
-    pub(crate) fn fact_id_for_transport_fact(
+    pub fn fact_id_for_transport_fact(
         &self,
         fact: &Fact,
         module_names: &[String],
@@ -392,9 +392,9 @@ impl Runtime {
         let normalized_key = nested_obj_binder_normalized_fact_key(fact);
         let find_in_environment = |environment: &Environment| {
             environment
-                .cache_known_fact
-                .get(&display_key)
-                .or_else(|| environment.cache_known_fact.get(&normalized_key))
+                .stored_facts
+                .lookup(&display_key)
+                .or_else(|| environment.stored_facts.lookup(&normalized_key))
                 .map(|cached| cached.fact_id)
         };
 
@@ -549,7 +549,7 @@ impl Runtime {
         }
     }
 
-    pub(crate) fn atomic_fact_with_replaced_args(
+    pub fn atomic_fact_with_replaced_args(
         atomic_fact: &AtomicFact,
         args: Vec<Obj>,
     ) -> Option<AtomicFact> {
@@ -739,10 +739,7 @@ impl Runtime {
         .into()
     }
 
-    pub(crate) fn resolved_atomic_fact_for_lookup(
-        &self,
-        atomic_fact: &AtomicFact,
-    ) -> Option<AtomicFact> {
+    pub fn resolved_atomic_fact_for_lookup(&self, atomic_fact: &AtomicFact) -> Option<AtomicFact> {
         let args = atomic_fact.args_ref();
         let resolved_args = args
             .iter()

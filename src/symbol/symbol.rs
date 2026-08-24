@@ -10,19 +10,19 @@ const ALPHA_SYMBOL_ID_START: u64 = 3 << 62;
 pub struct SymbolId(u64);
 
 impl SymbolId {
-    pub(crate) fn new(value: u64) -> Self {
+    pub fn new(value: u64) -> Self {
         SymbolId(value)
     }
 
-    pub(crate) fn value(self) -> u64 {
+    pub fn value(self) -> u64 {
         self.0
     }
 
-    pub(crate) fn substitution_key(self) -> String {
+    pub fn substitution_key(self) -> String {
         format!("#symbol_id_{}", self.0)
     }
 
-    pub(crate) fn from_substitution_key(key: &str) -> Option<Self> {
+    pub fn from_substitution_key(key: &str) -> Option<Self> {
         key.strip_prefix("#symbol_id_")
             .and_then(|value| value.parse::<u64>().ok())
             .map(SymbolId::new)
@@ -64,7 +64,7 @@ pub struct SymbolBinding {
 }
 
 impl SymbolBinding {
-    pub(crate) fn new(id: SymbolId, name: String, canonical_display_name: String) -> Self {
+    pub fn new(id: SymbolId, name: String, canonical_display_name: String) -> Self {
         SymbolBinding {
             id,
             name,
@@ -84,7 +84,7 @@ impl SymbolBinding {
         self.canonical_display_name.as_str()
     }
 
-    pub(crate) fn substitution_key(&self) -> String {
+    pub fn substitution_key(&self) -> String {
         self.id.substitution_key()
     }
 
@@ -92,19 +92,19 @@ impl SymbolBinding {
         SymbolRef::new(self.id, self.canonical_display_name.clone())
     }
 
-    pub(crate) fn with_local_name(self, name: String) -> Self {
+    pub fn with_local_name(self, name: String) -> Self {
         SymbolBinding::new(self.id, name.clone(), name)
     }
 
-    pub(crate) fn with_canonical_display_name(self, canonical_display_name: String) -> Self {
+    pub fn with_canonical_display_name(self, canonical_display_name: String) -> Self {
         SymbolBinding::new(self.id, self.name, canonical_display_name)
     }
 
-    pub(crate) fn from_allocated_internal_name(name: String) -> Option<Self> {
+    pub fn from_allocated_internal_name(name: String) -> Option<Self> {
         internal_symbol_id(&name).map(|id| SymbolBinding::new(id, name.clone(), name))
     }
 
-    pub(crate) fn alpha_canonical(index: usize, name: String) -> Self {
+    pub fn alpha_canonical(index: usize, name: String) -> Self {
         let offset = u64::try_from(index).expect("alpha binder index exceeds u64");
         let id = SymbolId::new(
             ALPHA_SYMBOL_ID_START
@@ -207,7 +207,7 @@ pub struct SymbolRef {
 }
 
 impl SymbolRef {
-    pub(crate) fn new(id: SymbolId, display_name: String) -> Self {
+    pub fn new(id: SymbolId, display_name: String) -> Self {
         SymbolRef { id, display_name }
     }
 
@@ -223,16 +223,16 @@ impl SymbolRef {
         builtin_symbol_ref(name).is_some_and(|builtin| builtin.id == self.id)
     }
 
-    pub(crate) fn substitution_key(&self) -> String {
+    pub fn substitution_key(&self) -> String {
         self.id.substitution_key()
     }
 
-    pub(crate) fn identity_spine(&self, display_name: &str) -> String {
+    pub fn identity_spine(&self, display_name: &str) -> String {
         format!("#{}#{}", self.id.value(), display_name)
     }
 
     /// Keep the canonical owner readable while tagging only the terminal symbol name.
-    pub(crate) fn canonical_identity_spine(&self, local_display_name: &str) -> String {
+    pub fn canonical_identity_spine(&self, local_display_name: &str) -> String {
         let local_identity = self.identity_spine(local_display_name);
         if self.display_name == local_display_name {
             return local_identity;
@@ -246,11 +246,11 @@ impl SymbolRef {
         format!("{}{}", owner, local_identity)
     }
 
-    pub(crate) fn with_display_name(self, display_name: String) -> Self {
+    pub fn with_display_name(self, display_name: String) -> Self {
         SymbolRef::new(self.id, display_name)
     }
 
-    pub(crate) fn to_local_binding(&self) -> SymbolBinding {
+    pub fn to_local_binding(&self) -> SymbolBinding {
         SymbolBinding::new(
             self.id,
             self.display_name.clone(),
@@ -406,20 +406,5 @@ impl SymbolTable {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn allocator_is_monotonic_and_symbol_refs_compare_by_id() {
-        let allocator = SymbolIdAllocator::new();
-        let first = allocator.allocate().unwrap();
-        let second = allocator.allocate().unwrap();
-        assert_ne!(first, second);
-        assert_eq!(first.value(), 0);
-        assert_eq!(second.value(), 1);
-
-        let short = SymbolRef::new(first, "x".to_string());
-        let qualified = SymbolRef::new(first, "A::x".to_string());
-        assert_eq!(short, qualified);
-    }
-}
+#[path = "../../tests/unit/symbol/symbol/tests.rs"]
+mod tests;

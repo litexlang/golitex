@@ -11,12 +11,19 @@ use std::mem;
 use std::path::Path;
 use std::rc::Rc;
 
+#[path = "implementation/fact_compilation.rs"]
 mod fact_compilation;
+#[path = "implementation/object_statements.rs"]
 mod object_statements;
+#[path = "implementation/proof_rendering.rs"]
 mod proof_rendering;
+#[path = "implementation/source_rendering.rs"]
 mod source_rendering;
+#[path = "implementation/structured_proofs.rs"]
 mod structured_proofs;
+#[path = "implementation/theorem_compilation.rs"]
 mod theorem_compilation;
+#[path = "implementation/validation.rs"]
 mod validation;
 
 use proof_rendering::*;
@@ -821,5 +828,5 @@ impl StmtResultToLeanCompiler {
 }
 
 #[cfg(test)]
-#[path = "../../tests/kernel_contracts/stmt_result_to_lean_compiler.rs"]
+#[path = "../../tests/unit/kernel_contracts/stmt_result_to_lean_compiler.rs"]
 mod tests;

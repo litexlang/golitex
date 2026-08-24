@@ -204,7 +204,8 @@ impl Environment {
         &mut self,
         child: Environment,
     ) -> Result<(), RuntimeError> {
-        let Environment {
+        let Environment { repositories } = child;
+        let EnvironmentPersistentRepositories {
             symbols: _,
             defined_identifiers: _,
             defined_def_props: _,
@@ -242,14 +243,11 @@ impl Environment {
             known_reflexive_props,
             known_antisymmetric_props,
             cache_well_defined_obj,
-            cache_known_fact,
+            stored_facts,
             cache_infer_rule_firing,
-            statement_atomic_fact_proofs: _,
-            statement_well_defined_obj_proofs: _,
-            proof_search_state: _,
             used_strategy_stmts,
             stopped_strategy_stmts,
-        } = child;
+        } = repositories;
 
         self.merge_known_atomic_facts(known_atomic_facts_with_0_or_more_than_2_args);
         self.merge_known_atomic_facts_with_1_arg(known_atomic_facts_with_1_arg);
@@ -386,9 +384,7 @@ impl Environment {
         for (key, cached) in cache_well_defined_obj {
             self.cache_well_defined_obj.insert(key, cached);
         }
-        for (key, cached_fact) in cache_known_fact {
-            self.cache_known_fact.insert(key, cached_fact);
-        }
+        self.stored_facts.merge_from(stored_facts)?;
         for (key, _) in cache_infer_rule_firing {
             self.cache_infer_rule_firing.insert(key, ());
         }
@@ -635,12 +631,10 @@ fn append_missing_or_forall_pairs(
 }
 
 fn forall_pair_key(fact_key: String, params_and_dom: &KnownForallFactParamsAndDom) -> String {
-    let mut key = format!("{}|{}", fact_key, params_and_dom.params_def);
-    for fact in params_and_dom.dom.iter() {
-        key.push('|');
-        key.push_str(&fact.to_string());
-    }
-    key
+    format!(
+        "{}|{}|{:?}",
+        fact_key, params_and_dom.source_fact_id, params_and_dom.conclusion_location
+    )
 }
 
 fn merge_known_fn_info_map_entry(
@@ -659,115 +653,5 @@ fn merge_known_fn_info_map_entry(
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn insert_object(
-        environment: &mut Environment,
-        name: &str,
-        symbol_id: u64,
-        kind: ParamObjType,
-    ) {
-        insert_symbol(environment, name, symbol_id, SymbolRole::Object);
-        environment
-            .defined_identifiers
-            .insert(name.to_string(), kind);
-    }
-
-    fn insert_symbol(environment: &mut Environment, name: &str, symbol_id: u64, role: SymbolRole) {
-        let binding =
-            SymbolBinding::new(SymbolId::new(symbol_id), name.to_string(), name.to_string());
-        environment
-            .symbols
-            .insert(SymbolDefinition::new(binding, role))
-            .expect("test symbol name should be fresh");
-    }
-
-    #[test]
-    fn committed_child_reuses_exact_symbol_identity_idempotently() {
-        let mut parent = Environment::new_empty_env();
-        let mut child = Environment::new_empty_env();
-        insert_object(
-            &mut parent,
-            "\\template_instance<X>",
-            17,
-            ParamObjType::Identifier,
-        );
-        insert_object(
-            &mut child,
-            "\\template_instance<X>",
-            17,
-            ParamObjType::Identifier,
-        );
-
-        parent
-            .merge_committed_child(child)
-            .expect("the exact interned template instance is an idempotent commit");
-
-        assert_eq!(
-            parent
-                .symbols
-                .get("\\template_instance<X>")
-                .expect("parent symbol remains present")
-                .binding()
-                .id(),
-            SymbolId::new(17)
-        );
-        assert_eq!(
-            parent.defined_identifiers.get("\\template_instance<X>"),
-            Some(&ParamObjType::Identifier)
-        );
-    }
-
-    #[test]
-    fn committed_child_still_rejects_same_name_with_distinct_symbol_identity() {
-        let mut parent = Environment::new_empty_env();
-        let mut child = Environment::new_empty_env();
-        insert_object(
-            &mut parent,
-            "\\template_instance<X>",
-            17,
-            ParamObjType::Identifier,
-        );
-        insert_object(
-            &mut child,
-            "\\template_instance<X>",
-            18,
-            ParamObjType::Identifier,
-        );
-
-        let error = parent
-            .merge_committed_child(child)
-            .expect_err("same spelling with a distinct identity must remain a conflict");
-
-        assert!(matches!(error, RuntimeError::NameAlreadyUsedError(_)));
-    }
-
-    #[test]
-    fn committed_child_still_rejects_same_symbol_identity_with_distinct_role() {
-        let mut parent = Environment::new_empty_env();
-        let mut child = Environment::new_empty_env();
-        insert_symbol(&mut parent, "shared", 17, SymbolRole::Object);
-        insert_symbol(&mut child, "shared", 17, SymbolRole::Predicate);
-
-        let error = parent
-            .merge_committed_child(child)
-            .expect_err("one symbol identity cannot change declaration role during commit");
-
-        assert!(matches!(error, RuntimeError::NameAlreadyUsedError(_)));
-    }
-
-    #[test]
-    fn committed_child_still_rejects_same_symbol_identity_with_distinct_identifier_kind() {
-        let mut parent = Environment::new_empty_env();
-        let mut child = Environment::new_empty_env();
-        insert_object(&mut parent, "shared", 17, ParamObjType::Identifier);
-        insert_object(&mut child, "shared", 17, ParamObjType::Forall);
-
-        let error = parent
-            .merge_committed_child(child)
-            .expect_err("one symbol identity cannot change identifier kind during commit");
-
-        assert!(matches!(error, RuntimeError::NameAlreadyUsedError(_)));
-    }
-}
+#[path = "../../tests/unit/environment/environment_merge/tests.rs"]
+mod tests;

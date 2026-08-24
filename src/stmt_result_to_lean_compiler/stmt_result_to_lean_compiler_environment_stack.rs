@@ -13,12 +13,19 @@ use std::rc::Rc;
 #[derive(Clone)]
 pub(super) struct StmtResultToLeanCompilerEnvironmentStack {
     pub(super) environments: Vec<StmtResultToLeanCompilerEnvironment>,
+    /// WD compilation context follows Result nesting, but is deliberately not
+    /// cloned into the persistent symbol/fact binding repository.
+    pub(super) well_definedness: Option<StmtResultWellDefinednessToLeanCompilationContext>,
+    parent_well_definedness_contexts:
+        Vec<Option<StmtResultWellDefinednessToLeanCompilationContext>>,
 }
 
 impl Default for StmtResultToLeanCompilerEnvironmentStack {
     fn default() -> Self {
         Self {
             environments: vec![StmtResultToLeanCompilerEnvironment::default()],
+            well_definedness: None,
+            parent_well_definedness_contexts: Vec::new(),
         }
     }
 }
@@ -49,6 +56,8 @@ impl StmtResultToLeanCompilerEnvironmentStack {
             .cloned()
             .expect("compiler environment stack must retain its top-level environment");
         self.environments.push(inherited);
+        self.parent_well_definedness_contexts
+            .push(self.well_definedness.clone());
     }
 
     pub(super) fn pop_local_environment(&mut self) {
@@ -57,6 +66,10 @@ impl StmtResultToLeanCompilerEnvironmentStack {
             "compiler cannot pop its top-level environment"
         );
         self.environments.pop();
+        self.well_definedness = self
+            .parent_well_definedness_contexts
+            .pop()
+            .expect("compiler WD context stack must match lexical environments");
     }
 
     /// Match Litex `clear` at the target-generation boundary. The current
@@ -68,6 +81,7 @@ impl StmtResultToLeanCompilerEnvironmentStack {
             .last_mut()
             .expect("compiler environment stack must retain its top-level environment");
         *current = StmtResultToLeanCompilerEnvironment::default();
+        self.well_definedness = None;
     }
 
     pub(super) fn is_top_level(&self) -> bool {
@@ -79,6 +93,28 @@ impl StmtResultToLeanCompilerEnvironmentStack {
 /// This is compiler state, not a second statement/proof IR.
 #[derive(Clone, Default)]
 pub(super) struct StmtResultToLeanCompilerEnvironment {
+    /// All source identities and chosen Lean representations visible in this
+    /// lexical environment. Grouping them makes it explicit that they are one
+    /// compiler symbol/fact binding repository, not statement proof evidence.
+    pub(super) bindings: StmtResultToLeanCompilerBindings,
+}
+
+impl Deref for StmtResultToLeanCompilerEnvironment {
+    type Target = StmtResultToLeanCompilerBindings;
+
+    fn deref(&self) -> &Self::Target {
+        &self.bindings
+    }
+}
+
+impl DerefMut for StmtResultToLeanCompilerEnvironment {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.bindings
+    }
+}
+
+#[derive(Clone, Default)]
+pub(super) struct StmtResultToLeanCompilerBindings {
     pub(super) symbol_names: HashMap<SymbolId, String>,
     /// Canonical complex observations for numeric symbols whose Lean carrier
     /// is locally heterogeneous (for example a dependent function binder).
@@ -127,13 +163,6 @@ pub(super) struct StmtResultToLeanCompilerEnvironment {
         HashMap<String, RegisteredPredicatePropertyTheoremBinding>,
     pub(super) registered_antisymmetric_predicate_theorem_bindings:
         HashMap<String, RegisteredPredicatePropertyTheoremBinding>,
-    /// Result-owned evidence needed while one source object is rendered.
-    ///
-    /// This is a compiler index over the canonical recursive Result. It is not
-    /// a second WD certificate: object/fact proof nodes remain shared through
-    /// `Rc`, and the index exists only for the lifetime of a lexical compiler
-    /// environment.
-    pub(super) well_definedness: Option<StmtResultWellDefinednessToLeanCompilationContext>,
 }
 
 #[derive(Clone, Default)]

@@ -89,7 +89,7 @@ impl TrigExpansion {
 impl Runtime {
     // Native real trigonometric equalities are normalized from one small interface.
     // Example: `sin(x + y) = sin(x) * cos(y) + cos(x) * sin(y)`.
-    pub(crate) fn try_verify_trigonometric_equality(
+    pub fn try_verify_trigonometric_equality(
         &mut self,
         equal_fact: &EqualFact,
     ) -> Result<Option<StmtResult>, RuntimeError> {
@@ -159,7 +159,7 @@ impl Runtime {
 
     // Trigonometric range bounds come only from sin²+cos²=1 and square non-negativity.
     // Example: `forall x R: -1 <= sin(x) <= 1`.
-    pub(crate) fn try_verify_trigonometric_order_bound(
+    pub fn try_verify_trigonometric_order_bound(
         &mut self,
         atomic_fact: &AtomicFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -560,7 +560,7 @@ impl Runtime {
 
     // Transfer non-zero goals through the same canonical trigonometric expansion.
     // Example: `cos(x) != 0` implies `cos(x + pi) != 0`.
-    pub(crate) fn try_verify_trigonometric_not_equal(
+    pub fn try_verify_trigonometric_not_equal(
         &mut self,
         not_equal_fact: &NotEqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -1371,31 +1371,5 @@ fn first_trig_arg(obj: &Obj) -> Option<Obj> {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn derived_trig_lemmas_are_strictly_above_their_core_dependencies() {
-        for lemma in [
-            TrigLemma::Parity,
-            TrigLemma::Difference,
-            TrigLemma::DoubleAngle,
-            TrigLemma::SpecialPiValues,
-            TrigLemma::Cofunction,
-            TrigLemma::ShiftAndPeriod,
-            TrigLemma::Bounds,
-            TrigLemma::TanCotRelations,
-        ] {
-            assert!(lemma.level() > 0);
-        }
-        for lemma in [
-            TrigLemma::CoreValues,
-            TrigLemma::Addition,
-            TrigLemma::UnitCircle,
-            TrigLemma::Orientation,
-            TrigLemma::QuotientDefinition,
-        ] {
-            assert_eq!(lemma.level(), 0);
-        }
-    }
-}
+#[path = "../../../tests/unit/verify/verify_builtin_rules/trigonometry/tests.rs"]
+mod tests;

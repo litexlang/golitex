@@ -1083,7 +1083,7 @@ impl Runtime {
         Ok((UnknownGenericStmtResult::new()).into())
     }
 
-    pub(crate) fn verify_general_cart_nonempty_by_choice_explicit(
+    pub fn verify_general_cart_nonempty_by_choice_explicit(
         &mut self,
         conclusion: &IsNonemptySetFact,
         pointwise: bool,

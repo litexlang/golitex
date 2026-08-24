@@ -244,7 +244,7 @@ impl Runtime {
         Ok(infer_result)
     }
 
-    pub(crate) fn exec_have_fn_by_forall_exist_unique_stmt_affect_environment_only(
+    pub fn exec_have_fn_by_forall_exist_unique_stmt_affect_environment_only(
         &mut self,
         stmt: &HaveFnByForallExistUniqueStmt,
     ) -> Result<StmtResult, RuntimeError> {
@@ -360,7 +360,7 @@ impl Runtime {
         })
     }
 
-    pub(crate) fn direct_fn_set_body_for_have_fn_by_forall_exist_unique(
+    pub fn direct_fn_set_body_for_have_fn_by_forall_exist_unique(
         &self,
         stmt: &HaveFnByForallExistUniqueStmt,
     ) -> Result<FnSetBody, RuntimeError> {
@@ -418,7 +418,7 @@ impl Runtime {
         .map_err(|e| Self::have_fn_by_forall_exist_unique_err(stmt, e))
     }
 
-    pub(crate) fn store_instantiated_template_choice_property(
+    pub fn store_instantiated_template_choice_property(
         &mut self,
         stmt: &HaveFnByForallExistUniqueStmt,
         template_obj: &InstantiatedTemplateObj,

@@ -6,7 +6,7 @@ impl Runtime {
         self.exec_stmt_with_trusted_prefix_context(stmt, false)
     }
 
-    pub(crate) fn exec_stmt_in_trusted_prefix_run(
+    pub fn exec_stmt_in_trusted_prefix_run(
         &mut self,
         stmt: &Stmt,
     ) -> Result<StmtResult, RuntimeError> {
@@ -23,7 +23,14 @@ impl Runtime {
         let result = if trusted {
             self.exec_stmt_affect_environment_only(stmt, in_trusted_prefix_run)
         } else {
-            self.exec_stmt_verified(stmt)
+            // The generated local-builtin catalog is parsed once per thread.
+            // Do that work at the shallow statement boundary instead of on
+            // first use from deep inside object/fact verification: the parser
+            // intentionally has many precedence layers, and nesting that
+            // one-time compilation below a recursive verifier can exhaust a
+            // normal test thread's stack in debug builds.
+            crate::verify::local_builtin_catalog::registered_local_builtin_rules()
+                .and_then(|_| self.exec_stmt_verified(stmt))
         };
         let result = self.finish_statement_execution_with_trusted_prefix_context(
             result,
@@ -34,7 +41,7 @@ impl Runtime {
         result
     }
 
-    pub(crate) fn finish_statement_execution(
+    pub fn finish_statement_execution(
         &mut self,
         result: Result<StmtResult, RuntimeError>,
         trusted: bool,
@@ -42,7 +49,7 @@ impl Runtime {
         self.finish_statement_execution_with_trusted_prefix_context(result, trusted, false)
     }
 
-    pub(crate) fn finish_statement_execution_in_trusted_prefix_run(
+    pub fn finish_statement_execution_in_trusted_prefix_run(
         &mut self,
         result: Result<StmtResult, RuntimeError>,
         trusted: bool,
@@ -81,7 +88,7 @@ impl Runtime {
         }
     }
 
-    pub(crate) fn attach_known_fact_ids_to_stmt_result(
+    pub fn attach_known_fact_ids_to_stmt_result(
         &self,
         result: &mut StmtResult,
     ) -> Result<(), RuntimeError> {
@@ -155,7 +162,7 @@ impl Runtime {
         Ok(())
     }
 
-    pub(crate) fn attach_known_fact_ids_to_infer_result(
+    pub fn attach_known_fact_ids_to_infer_result(
         &self,
         infer_result: &mut SuccessInferResult,
     ) -> Result<(), RuntimeError> {
@@ -205,7 +212,7 @@ impl Runtime {
         Ok(())
     }
 
-    pub(crate) fn attach_known_fact_ids_to_verified_by(
+    pub fn attach_known_fact_ids_to_verified_by(
         &self,
         verified_by: &mut SuccessFactProofResult,
     ) -> Result<(), RuntimeError> {
@@ -367,7 +374,7 @@ impl Runtime {
         }
     }
 
-    pub(crate) fn exec_preverified_stmt_affect_environment_only(
+    pub fn exec_preverified_stmt_affect_environment_only(
         &mut self,
         stmt: &Stmt,
     ) -> Result<StmtResult, RuntimeError> {
@@ -487,6 +494,7 @@ impl Runtime {
                     SuccessDefStructStmtResult {
                         statement: s.clone(),
                         common: SuccessStmtCommonResult::new(SuccessInferResult::new()),
+                        run_in_local_env: None,
                     },
                 ))
                 .into())
@@ -498,6 +506,7 @@ impl Runtime {
                     SuccessStmtResult::DefAlgoStmt(Box::new(SuccessDefAlgoStmtResult {
                         statement: s.clone(),
                         common: SuccessStmtCommonResult::new(SuccessInferResult::new()),
+                        run_in_local_env: None,
                     }))
                     .into(),
                 )

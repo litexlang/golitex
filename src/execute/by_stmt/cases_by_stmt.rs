@@ -125,7 +125,7 @@ impl Runtime {
         )
     }
 
-    pub(crate) fn exec_by_cases_stmt_affect_environment(
+    pub fn exec_by_cases_stmt_affect_environment(
         &mut self,
         stmt: &ByCasesStmt,
     ) -> Result<SuccessInferResult, RuntimeError> {
@@ -154,7 +154,7 @@ impl Runtime {
         Ok(infer_result)
     }
 
-    pub(crate) fn exec_by_cases_stmt_affect_environment_only(
+    pub fn exec_by_cases_stmt_affect_environment_only(
         &mut self,
         stmt: &ByCasesStmt,
     ) -> Result<StmtResult, RuntimeError> {

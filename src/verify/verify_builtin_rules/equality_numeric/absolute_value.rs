@@ -256,7 +256,7 @@ impl Runtime {
         )))
     }
 
-    pub(crate) fn try_verify_abs_equalities(
+    pub fn try_verify_abs_equalities(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,

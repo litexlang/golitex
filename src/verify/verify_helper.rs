@@ -2,7 +2,7 @@ use crate::prelude::*;
 use std::collections::HashMap;
 
 impl Runtime {
-    pub(crate) fn contextual_rewrite_diagnostic_for_fact(&mut self, fact: &Fact) -> Vec<String> {
+    pub fn contextual_rewrite_diagnostic_for_fact(&mut self, fact: &Fact) -> Vec<String> {
         let Fact::AtomicFact(AtomicFact::EqualFact(equal_fact)) = fact else {
             return Vec::new();
         };
@@ -154,7 +154,7 @@ impl Runtime {
     /// This mode may use cached known facts and builtin-only checks. It must not
     /// invoke the full verifier features such as known forall instantiation,
     /// user strategies, or definition expansion.
-    pub(crate) fn verify_atomic_fact_restricted_known_builtin(
+    pub fn verify_atomic_fact_restricted_known_builtin(
         &mut self,
         atomic_fact: &AtomicFact,
         _verify_state: &UseContextVerifyState,
@@ -172,7 +172,7 @@ impl Runtime {
         }
     }
 
-    pub(crate) fn verify_quantifier_free_fact_restricted_known_builtin(
+    pub fn verify_quantifier_free_fact_restricted_known_builtin(
         &mut self,
         fact: &QuantifierFreeFact,
         verify_state: &UseContextVerifyState,
@@ -193,7 +193,7 @@ impl Runtime {
         }
     }
 
-    pub(crate) fn verify_and_chain_atomic_fact_restricted_known_builtin(
+    pub fn verify_and_chain_atomic_fact_restricted_known_builtin(
         &mut self,
         fact: &AndChainAtomicFact,
         verify_state: &UseContextVerifyState,
@@ -211,7 +211,7 @@ impl Runtime {
         }
     }
 
-    pub(crate) fn verify_and_fact_restricted_known_builtin(
+    pub fn verify_and_fact_restricted_known_builtin(
         &mut self,
         and_fact: &AndFact,
         verify_state: &UseContextVerifyState,
@@ -235,7 +235,7 @@ impl Runtime {
         )
     }
 
-    pub(crate) fn verify_chain_fact_restricted_known_builtin(
+    pub fn verify_chain_fact_restricted_known_builtin(
         &mut self,
         chain_fact: &ChainFact,
         verify_state: &UseContextVerifyState,
@@ -245,7 +245,7 @@ impl Runtime {
         self.verify_and_fact_restricted_known_builtin(&and_fact, verify_state)
     }
 
-    pub(crate) fn verify_or_fact_restricted_known_builtin(
+    pub fn verify_or_fact_restricted_known_builtin(
         &mut self,
         or_fact: &OrFact,
         verify_state: &UseContextVerifyState,
@@ -276,7 +276,7 @@ impl Runtime {
         Ok(UnknownGenericStmtResult::new().into())
     }
 
-    pub(crate) fn verify_known_forall_requirements_and_build_evidence(
+    pub fn verify_known_forall_requirements_and_build_evidence(
         &mut self,
         known_forall: &KnownForallFactParamsAndDom,
         arg_map: &HashMap<String, Obj>,
@@ -396,7 +396,7 @@ impl Runtime {
     }
 }
 
-pub(crate) fn nested_obj_binder_normalized_fact_key(fact: &Fact) -> String {
+pub fn nested_obj_binder_normalized_fact_key(fact: &Fact) -> String {
     let text = fact.to_string();
     match fact {
         Fact::AtomicFact(fact) => {
@@ -442,7 +442,7 @@ impl Runtime {
     /// builtin rule uses its totality or witness property. A direct `x $in R`
     /// fact is preferred; a known membership in a standard numeric subcarrier
     /// such as `N` also suffices.
-    pub(crate) fn verify_objects_are_known_reals(
+    pub fn verify_objects_are_known_reals(
         &mut self,
         objs: &[&Obj],
         line_file: &LineFile,
@@ -522,7 +522,7 @@ impl Runtime {
         Ok(Some(steps))
     }
 
-    pub(crate) fn known_sets_containing_obj(&self, obj: &Obj) -> Vec<Obj> {
+    pub fn known_sets_containing_obj(&self, obj: &Obj) -> Vec<Obj> {
         // This is an index of materialized facts, not the proof closure for
         // `obj`. A proof rule must not use this history to replace a finite
         // target-driven premise search; cache warmth cannot change semantics.

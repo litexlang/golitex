@@ -22,8 +22,9 @@ pub use parse_context::{ParseContext, ScopeFrame};
 pub use runtime::{OutputStyle, Runtime};
 pub use runtime_bare_symbols::BareSymbol;
 pub use runtime_parsing_free_param_collection::{FreeParamCollection, FreeParamTypeAndLineFile};
-pub(crate) use runtime_symbol::{
+pub use runtime_statement_memo::StatementProofStateStack;
+pub use runtime_symbol::{
     bare_symbol_name_reserved_error, source_binder_must_respect_bare_symbols,
 };
-pub(crate) use trusted_prefix::TrustedPrefixPolicy;
+pub use trusted_prefix::TrustedPrefixPolicy;
 pub use trusted_prefix::TrustedPrefixReport;

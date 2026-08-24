@@ -45,7 +45,7 @@ impl Runtime {
         )
     }
 
-    pub(crate) fn exec_by_struct_def_stmt_affect_environment_only(
+    pub fn exec_by_struct_def_stmt_affect_environment_only(
         &mut self,
         stmt: &ByStructDefStmt,
     ) -> Result<StmtResult, RuntimeError> {
@@ -67,7 +67,7 @@ impl Runtime {
 
     /// Release the facts belonging to exactly one declaration-owned struct
     /// layer. Callers must establish the corresponding membership first.
-    pub(crate) fn release_one_struct_definition_layer(
+    pub fn release_one_struct_definition_layer(
         &mut self,
         obj: &Obj,
         struct_obj: &StructObj,

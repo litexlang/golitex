@@ -9,7 +9,7 @@ impl Runtime {
         Ok(result.with_infers(infer_result_after_store))
     }
 
-    pub(crate) fn exec_claim_stmt_affect_environment(
+    pub fn exec_claim_stmt_affect_environment(
         &mut self,
         stmt: &ClaimStmt,
     ) -> Result<SuccessInferResult, RuntimeError> {
@@ -26,7 +26,7 @@ impl Runtime {
         )
     }
 
-    pub(crate) fn exec_claim_stmt_affect_environment_only(
+    pub fn exec_claim_stmt_affect_environment_only(
         &mut self,
         stmt: &ClaimStmt,
     ) -> Result<StmtResult, RuntimeError> {

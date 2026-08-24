@@ -114,7 +114,7 @@ impl Runtime {
 
     fn verify_and_fact_args_satisfy_forall_requirements(
         &mut self,
-        and_fact_in_known_forall: &AndFact,
+        _and_fact_in_known_forall: &AndFact,
         known_forall: &Rc<KnownForallFactParamsAndDom>,
         arg_map: HashMap<String, Obj>,
         given_and_fact: &AndFact,
@@ -131,19 +131,14 @@ impl Runtime {
             return Ok(None);
         };
 
-        let verified_by_known_forall_fact = ForallFact::new_canonical_forall(
-            known_forall.params_def.clone(),
-            known_forall.dom.clone(),
-            vec![and_fact_in_known_forall.clone().into()],
-            known_forall.line_file.clone(),
-        )?;
-        let source_fact: Fact = verified_by_known_forall_fact.into();
-        let source_fact_id = self.require_known_fact_id_for_success_result(&source_fact)?;
+        let source_fact = known_forall.source_fact();
+        let source_fact_id = known_forall.source_fact_id;
         let fact_verified = SuccessFactStmtResult::new_with_verified_by_known_fact(
             given_and_fact.clone().into(),
             SuccessFactProofResult::known_forall_instantiation(
                 source_fact,
                 source_fact_id,
+                known_forall.conclusion_location,
                 instantiation,
                 requirements,
             ),

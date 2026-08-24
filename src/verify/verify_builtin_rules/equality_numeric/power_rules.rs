@@ -406,7 +406,7 @@ impl Runtime {
         Ok(false)
     }
 
-    pub(crate) fn try_verify_power_addition_exponent_rule(
+    pub fn try_verify_power_addition_exponent_rule(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -664,7 +664,7 @@ impl Runtime {
         )
     }
 
-    pub(crate) fn try_verify_power_of_power_rule(
+    pub fn try_verify_power_of_power_rule(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -908,7 +908,7 @@ impl Runtime {
         Ok(false)
     }
 
-    pub(crate) fn try_verify_power_product_rule(
+    pub fn try_verify_power_product_rule(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,

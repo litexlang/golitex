@@ -1,8 +1,9 @@
 import Mathlib
 
-/- The same real-number mathematics as `main.lit`.
+/- A selected comparison for the original core scenes in `main.lit`.
 The linear equation and AM-GM theorem are proved over `ℝ`; square root,
-finite-cardinality probability, and division keep their ordinary meanings. -/
+finite-cardinality probability, and division keep their ordinary meanings.
+The expanded eleven-direction Litex survey is not mirrored line for line here. -/
 
 namespace MiddleSchoolMathInNutshell
 

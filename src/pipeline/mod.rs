@@ -6,9 +6,9 @@ mod summary;
 
 pub use crate::output::{display_runtime_error_json, display_stmt_exec_result_json};
 pub use pipeline::{
-    display_trusted_prefix_report_json, render_run_source_code_output,
+    display_trusted_prefix_report_json, render_run_source_code_output, run_file,
     run_file_with_project_context, run_file_with_project_context_and_trusted_prefix,
-    run_repository_with_output, run_repository_with_output_style, run_source_code,
+    run_repository, run_repository_with_output, run_repository_with_output_style, run_source_code,
     run_source_code_in_file, run_source_code_in_file_for_cli,
     run_source_code_in_file_for_cli_with_output_style_and_summary_and_language_and_isolation,
     run_source_code_in_file_for_cli_with_strict,
@@ -17,7 +17,9 @@ pub use pipeline::{
     run_source_code_in_file_for_cli_with_summary_and_language_and_isolation,
     run_source_code_in_file_with_ok,
     run_source_code_in_repository_for_cli_with_output_style_and_summary_and_language,
-    run_source_code_in_repository_for_cli_with_summary_and_language,
+    run_source_code_in_repository_for_cli_with_summary_and_language, run_source_code_with_options,
+    FileRunOptions, RunOutputOptions, RunSourceFailureKind, SourceRunFailureKind, SourceRunOptions,
+    SourceRunOutcome,
 };
 pub use pipeline_repl::{
     run_isolated_repl_with_runtime, run_latex_repl, run_repl, run_repl_with_detail_output,
@@ -26,6 +28,7 @@ pub use pipeline_repl::{
     run_repl_with_output_style_and_strict_and_language_and_isolation,
 };
 pub use pipeline_run_stmt_globally::{
+    execute_top_level_statement, execute_top_level_statement_in_trusted_prefix_run,
     run_repository_before_file_target, run_repository_file_target, run_stmt_at_global_env,
 };
 pub use pipeline_session::{

@@ -26,7 +26,7 @@ impl Runtime {
     }
 
     // Literal 0 vs `x - y`: verify the equality if `x = y` holds via the full equality pipeline.
-    pub(crate) fn try_verify_zero_equals_subtraction_implies_equal_operands(
+    pub fn try_verify_zero_equals_subtraction_implies_equal_operands(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -63,7 +63,7 @@ impl Runtime {
 
     // Zero-product cancellation: from `a * b = 0` and `a != 0`, infer `b = 0` (and symmetrically).
     // Example: from `(x - 1) * y = 0` and `x - 1 != 0`, prove `y = 0`.
-    pub(crate) fn verify_zero_product_factor_matches_target(
+    pub fn verify_zero_product_factor_matches_target(
         &mut self,
         equal_fact: &EqualFact,
         _builtin_state: &UseBuiltinRuleVerifyState,
@@ -83,7 +83,7 @@ impl Runtime {
         Ok(UnknownGenericStmtResult::new().into())
     }
 
-    pub(crate) fn try_verify_zero_equals_product_implies_other_factor_zero(
+    pub fn try_verify_zero_equals_product_implies_other_factor_zero(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -209,7 +209,7 @@ impl Runtime {
     }
 
     // 0 = a^n when n is a literal integer > 0 (does not rewrite 0^0 or 0^negative), from a = 0.
-    pub(crate) fn try_verify_zero_equals_pow_from_base_zero(
+    pub fn try_verify_zero_equals_pow_from_base_zero(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -264,7 +264,7 @@ impl Runtime {
 
     // Zero is divisible by every non-zero integer modulus: `0 % m = 0`.
     // Example: `forall m Z: m != 0 =>: 0 % m = 0`.
-    pub(crate) fn try_verify_zero_mod_equals_zero(
+    pub fn try_verify_zero_mod_equals_zero(
         &mut self,
         equal_fact: &EqualFact,
     ) -> Result<Option<StmtResult>, RuntimeError> {
@@ -295,7 +295,7 @@ impl Runtime {
     // Every integer is congruent to zero modulo one: `x % 1 = 0`.
     // This is the m = 1 version of the complete residue rule; no `or` is needed.
     // Example: `forall x Z: x % 1 = 0`.
-    pub(crate) fn try_verify_mod_one_equals_zero(
+    pub fn try_verify_mod_one_equals_zero(
         &mut self,
         equal_fact: &EqualFact,
     ) -> Result<Option<StmtResult>, RuntimeError> {
@@ -325,7 +325,7 @@ impl Runtime {
 
     // One has remainder one modulo every integer modulus at least two.
     // Example: `k >= 2` => `1 % k = 1`.
-    pub(crate) fn try_verify_one_mod_equals_one_for_modulus_at_least_two(
+    pub fn try_verify_one_mod_equals_one_for_modulus_at_least_two(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -377,7 +377,7 @@ impl Runtime {
 
     // Subtracting the Euclidean remainder leaves a multiple of the positive modulus.
     // Example: `forall a Z, b N+: (a - a % b) % b = 0`.
-    pub(crate) fn try_verify_mod_dividend_minus_remainder_equals_zero(
+    pub fn try_verify_mod_dividend_minus_remainder_equals_zero(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -438,7 +438,7 @@ impl Runtime {
 
     /// Definition of the native Euclidean quotient.
     /// Example: `forall a Z, d N+: a = d * quot(a, d) + a % d`.
-    pub(crate) fn try_verify_quot_euclidean_decomposition(
+    pub fn try_verify_quot_euclidean_decomposition(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -504,7 +504,7 @@ impl Runtime {
 
     // Euclidean remainder uniqueness identifies a known bounded remainder with `%`.
     // Example: `a = m * q + r`, `0 <= r < m`, `m > 0` => `a % m = r`.
-    pub(crate) fn try_verify_mod_eq_remainder_from_euclidean_division(
+    pub fn try_verify_mod_eq_remainder_from_euclidean_division(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,

@@ -3,18 +3,18 @@ use std::fmt;
 
 #[derive(Debug)]
 pub enum RuntimeError {
-    ArithmeticError(RuntimeErrorStruct),
-    NewFactError(RuntimeErrorStruct),
-    StoreFactError(RuntimeErrorStruct),
-    ParseError(RuntimeErrorStruct),
-    ExecStmtError(RuntimeErrorStruct),
-    WellDefinedError(RuntimeErrorStruct),
-    VerifyError(RuntimeErrorStruct),
-    UnknownError(RuntimeErrorStruct),
-    InferError(RuntimeErrorStruct),
-    NameAlreadyUsedError(RuntimeErrorStruct),
-    DefineParamsError(RuntimeErrorStruct),
-    InstantiateError(RuntimeErrorStruct),
+    ArithmeticError(Box<RuntimeErrorStruct>),
+    NewFactError(Box<RuntimeErrorStruct>),
+    StoreFactError(Box<RuntimeErrorStruct>),
+    ParseError(Box<RuntimeErrorStruct>),
+    ExecStmtError(Box<RuntimeErrorStruct>),
+    WellDefinedError(Box<RuntimeErrorStruct>),
+    VerifyError(Box<RuntimeErrorStruct>),
+    UnknownError(Box<RuntimeErrorStruct>),
+    InferError(Box<RuntimeErrorStruct>),
+    NameAlreadyUsedError(Box<RuntimeErrorStruct>),
+    DefineParamsError(Box<RuntimeErrorStruct>),
+    InstantiateError(Box<RuntimeErrorStruct>),
 }
 
 #[derive(Debug)]
@@ -50,7 +50,7 @@ pub struct ArithmeticRuntimeError(pub RuntimeErrorStruct);
 
 impl From<ArithmeticRuntimeError> for RuntimeError {
     fn from(w: ArithmeticRuntimeError) -> Self {
-        RuntimeError::ArithmeticError(w.0)
+        RuntimeError::ArithmeticError(Box::new(w.0))
     }
 }
 
@@ -59,7 +59,7 @@ pub struct NewFactRuntimeError(pub RuntimeErrorStruct);
 
 impl From<NewFactRuntimeError> for RuntimeError {
     fn from(w: NewFactRuntimeError) -> Self {
-        RuntimeError::NewFactError(w.0)
+        RuntimeError::NewFactError(Box::new(w.0))
     }
 }
 
@@ -68,7 +68,7 @@ pub struct StoreFactRuntimeError(pub RuntimeErrorStruct);
 
 impl From<StoreFactRuntimeError> for RuntimeError {
     fn from(w: StoreFactRuntimeError) -> Self {
-        RuntimeError::StoreFactError(w.0)
+        RuntimeError::StoreFactError(Box::new(w.0))
     }
 }
 
@@ -77,7 +77,7 @@ pub struct ParseRuntimeError(pub RuntimeErrorStruct);
 
 impl From<ParseRuntimeError> for RuntimeError {
     fn from(w: ParseRuntimeError) -> Self {
-        RuntimeError::ParseError(w.0)
+        RuntimeError::ParseError(Box::new(w.0))
     }
 }
 
@@ -86,7 +86,7 @@ pub struct WellDefinedRuntimeError(pub RuntimeErrorStruct);
 
 impl From<WellDefinedRuntimeError> for RuntimeError {
     fn from(w: WellDefinedRuntimeError) -> Self {
-        RuntimeError::WellDefinedError(w.0)
+        RuntimeError::WellDefinedError(Box::new(w.0))
     }
 }
 
@@ -95,7 +95,7 @@ pub struct VerifyRuntimeError(pub RuntimeErrorStruct);
 
 impl From<VerifyRuntimeError> for RuntimeError {
     fn from(w: VerifyRuntimeError) -> Self {
-        RuntimeError::VerifyError(w.0)
+        RuntimeError::VerifyError(Box::new(w.0))
     }
 }
 
@@ -104,7 +104,7 @@ pub struct UnknownRuntimeError(pub RuntimeErrorStruct);
 
 impl From<UnknownRuntimeError> for RuntimeError {
     fn from(w: UnknownRuntimeError) -> Self {
-        RuntimeError::UnknownError(w.0)
+        RuntimeError::UnknownError(Box::new(w.0))
     }
 }
 
@@ -113,7 +113,7 @@ pub struct InferRuntimeError(pub RuntimeErrorStruct);
 
 impl From<InferRuntimeError> for RuntimeError {
     fn from(w: InferRuntimeError) -> Self {
-        RuntimeError::InferError(w.0)
+        RuntimeError::InferError(Box::new(w.0))
     }
 }
 
@@ -122,7 +122,7 @@ pub struct NameAlreadyUsedRuntimeError(pub RuntimeErrorStruct);
 
 impl From<NameAlreadyUsedRuntimeError> for RuntimeError {
     fn from(w: NameAlreadyUsedRuntimeError) -> Self {
-        RuntimeError::NameAlreadyUsedError(w.0)
+        RuntimeError::NameAlreadyUsedError(Box::new(w.0))
     }
 }
 
@@ -131,7 +131,7 @@ pub struct DefineParamsRuntimeError(pub RuntimeErrorStruct);
 
 impl From<DefineParamsRuntimeError> for RuntimeError {
     fn from(w: DefineParamsRuntimeError) -> Self {
-        RuntimeError::DefineParamsError(w.0)
+        RuntimeError::DefineParamsError(Box::new(w.0))
     }
 }
 
@@ -140,7 +140,7 @@ pub struct InstantiateRuntimeError(pub RuntimeErrorStruct);
 
 impl From<InstantiateRuntimeError> for RuntimeError {
     fn from(w: InstantiateRuntimeError) -> Self {
-        RuntimeError::InstantiateError(w.0)
+        RuntimeError::InstantiateError(Box::new(w.0))
     }
 }
 
@@ -253,23 +253,23 @@ pub fn short_exec_error(
 ) -> RuntimeError {
     let message = message.into();
     let line_file = stmt.line_file();
-    RuntimeError::ExecStmtError(RuntimeErrorStruct::new(
+    RuntimeError::ExecStmtError(Box::new(RuntimeErrorStruct::new(
         Some(stmt.clone()),
         message,
         line_file.clone(),
         cause,
         inside_results,
-    ))
+    )))
 }
 
 pub fn exec_stmt_error_with_stmt_and_cause(stmt: Stmt, cause: RuntimeError) -> RuntimeError {
-    RuntimeError::ExecStmtError(RuntimeErrorStruct::new(
+    RuntimeError::ExecStmtError(Box::new(RuntimeErrorStruct::new(
         Some(stmt.clone()),
         String::new(),
         stmt.line_file(),
         Some(cause),
         vec![],
-    ))
+    )))
 }
 
 impl std::error::Error for RuntimeError {}
@@ -344,7 +344,7 @@ impl RuntimeError {
                 s.statement.clone(),
                 s.msg.clone(),
                 s.line_file.clone(),
-                Some(NewFactRuntimeError(s).into()),
+                Some(NewFactRuntimeError(*s).into()),
                 vec![],
             ))
             .into(),

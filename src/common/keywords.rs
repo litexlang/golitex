@@ -440,7 +440,7 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
 ///
 /// Unicode spellings are surface syntax only. The parser, stored facts, and
 /// rendered diagnostics continue to use the existing ASCII tokens.
-pub(crate) fn unicode_alias_tokens(token: &str) -> Option<&'static [&'static str]> {
+pub fn unicode_alias_tokens(token: &str) -> Option<&'static [&'static str]> {
     match token {
         "∀" => Some(&[FORALL]),
         "∃" => Some(&[EXIST]),
@@ -613,22 +613,5 @@ pub fn is_builtin_identifier_name(atom_name: &str) -> bool {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn output_labels_are_not_source_keywords() {
-        assert!(!is_keyword(SUCCESS_COLON));
-        assert!(!is_keyword(UNKNOWN_COLON));
-    }
-
-    #[test]
-    fn by_def_uses_a_contextual_keyword() {
-        assert!(!is_keyword(DEF));
-    }
-
-    #[test]
-    fn let_is_a_source_keyword() {
-        assert!(is_keyword(LET));
-    }
-}
+#[path = "../../tests/unit/common/keywords/tests.rs"]
+mod tests;

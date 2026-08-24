@@ -198,7 +198,7 @@ impl Runtime {
         Ok(check_results)
     }
 
-    pub(crate) fn exec_have_obj_equal_stmt_affect_environment(
+    pub fn exec_have_obj_equal_stmt_affect_environment(
         &mut self,
         have_obj_equal_stmt: &HaveObjEqualStmt,
     ) -> Result<SuccessInferResult, RuntimeError> {
@@ -293,7 +293,7 @@ impl Runtime {
         Ok(infer_result)
     }
 
-    pub(crate) fn exec_have_obj_equal_stmt_affect_environment_only(
+    pub fn exec_have_obj_equal_stmt_affect_environment_only(
         &mut self,
         have_obj_equal_stmt: &HaveObjEqualStmt,
     ) -> Result<StmtResult, RuntimeError> {

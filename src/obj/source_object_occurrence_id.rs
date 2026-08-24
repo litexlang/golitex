@@ -8,7 +8,7 @@ use crate::prelude::*;
 pub struct SourceObjectOccurrenceId(SymbolId);
 
 impl SourceObjectOccurrenceId {
-    pub(crate) fn new(id: SymbolId) -> Self {
+    pub fn new(id: SymbolId) -> Self {
         Self(id)
     }
 

@@ -3,7 +3,7 @@ use super::*;
 impl Runtime {
     // Two real squares sum to zero when both bases are zero.
     // Example: from `a = 0` and `b = 0`, prove `a^2 + b^2 = 0`.
-    pub(crate) fn try_verify_square_sum_zero_from_zero_components(
+    pub fn try_verify_square_sum_zero_from_zero_components(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -59,7 +59,7 @@ impl Runtime {
 
     // A zero sum of two real squares has each component equal to zero.
     // Example: from `a^2 + b^2 = 0`, prove `a = 0` and separately `b = 0`.
-    pub(crate) fn try_verify_square_sum_component_zero_from_known_sum_zero(
+    pub fn try_verify_square_sum_component_zero_from_known_sum_zero(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,

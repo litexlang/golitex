@@ -2,7 +2,7 @@ use crate::prelude::*;
 use std::collections::HashMap;
 
 impl Runtime {
-    pub(crate) fn infer_not_forall_fact(
+    pub fn infer_not_forall_fact(
         &mut self,
         not_forall: &NotForallFact,
     ) -> Result<SuccessInferResult, RuntimeError> {

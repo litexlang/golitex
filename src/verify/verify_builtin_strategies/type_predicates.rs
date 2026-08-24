@@ -3,7 +3,7 @@ use crate::prelude::*;
 impl Runtime {
     // Repeatedly applies finite-set constructor rules to strictly smaller set expressions.
     // Example: `$is_finite_set(power_set(power_set({1})))`.
-    pub(crate) fn verify_is_finite_set_with_builtin_strategy(
+    pub fn verify_is_finite_set_with_builtin_strategy(
         &mut self,
         fact: &IsFiniteSetFact,
     ) -> Result<StmtResult, RuntimeError> {
@@ -119,7 +119,7 @@ impl Runtime {
 
     // Nonemptiness is structural only for constructors whose witnesses come from their
     // immediate parts. Intersections and filtered sets deliberately do not participate.
-    pub(crate) fn verify_is_nonempty_set_with_builtin_strategy(
+    pub fn verify_is_nonempty_set_with_builtin_strategy(
         &mut self,
         fact: &IsNonemptySetFact,
     ) -> Result<StmtResult, RuntimeError> {

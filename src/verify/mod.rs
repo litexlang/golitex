@@ -1,6 +1,6 @@
 mod builtin_rule_verify_state;
 pub mod known_forall_profile;
-pub(crate) mod local_builtin_catalog;
+pub mod local_builtin_catalog;
 mod not_exist_demorgan_forall;
 pub mod rule_schema;
 mod verify_and_chain_fact;
@@ -26,11 +26,11 @@ mod verify_forall_fact;
 mod verify_forall_fact_with_iff;
 mod verify_function_properties_builtin;
 mod verify_helper;
-pub(crate) use verify_helper::nested_obj_binder_normalized_fact_key;
+pub use verify_helper::nested_obj_binder_normalized_fact_key;
 mod verify_known_atomic_facts;
 mod verify_non_equational_atomic_fact;
 mod verify_not_forall_fact;
-pub(crate) use verify_builtin_rules::{
+pub use verify_builtin_rules::{
     choice_function_for_definition_facts, choice_function_for_fact,
     general_cart_member_choice_fact, general_cart_member_fn_set,
     verify_choice_function_for_arg_types,
@@ -45,7 +45,7 @@ mod verify_number_in_standard_set;
 mod verify_obj_well_defined;
 mod verify_or_fact;
 mod verify_or_fact_with_known_forall;
-pub(crate) mod verify_proper_set_relations_builtin;
+pub mod verify_proper_set_relations_builtin;
 mod verify_well_defined_in_local_env;
 
 pub use verify_number_in_standard_set::number_is_in_c_star;

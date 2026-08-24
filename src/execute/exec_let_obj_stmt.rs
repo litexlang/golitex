@@ -42,7 +42,7 @@ impl Runtime {
         .map_err(|error| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), error))
     }
 
-    pub(crate) fn exec_let_obj_stmt_affect_environment_only(
+    pub fn exec_let_obj_stmt_affect_environment_only(
         &mut self,
         stmt: &LetObjStmt,
     ) -> Result<StmtResult, RuntimeError> {

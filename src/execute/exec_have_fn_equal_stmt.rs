@@ -105,7 +105,7 @@ impl Runtime {
         Ok(infer_result)
     }
 
-    pub(crate) fn exec_have_fn_equal_stmt_affect_environment_only(
+    pub fn exec_have_fn_equal_stmt_affect_environment_only(
         &mut self,
         have_fn_equal_stmt: &HaveFnEqualStmt,
     ) -> Result<StmtResult, RuntimeError> {

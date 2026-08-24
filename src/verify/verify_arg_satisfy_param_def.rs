@@ -48,7 +48,7 @@ impl Runtime {
     // carriers. Try that bounded evidence before opening known-forall and strategy search.
     // Example: an exact known `forall V G: preimage(V) in F` can package `Tendsto(f,F,G)`
     // without re-searching the whole environment for the types of X, Y, f, F, and G.
-    pub(crate) fn verify_args_satisfy_param_def_known_or_builtin_only(
+    pub fn verify_args_satisfy_param_def_known_or_builtin_only(
         &mut self,
         param_defs: &ParamDefWithType,
         args: &Vec<Obj>,

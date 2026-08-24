@@ -12,7 +12,7 @@ impl Runtime {
     // rule); only a nested product repeats this structural split. For example, `2 * cot(x) != 0`
     // reduces to `2 != 0` and `cot(x) != 0`, so the latter may use the direct trigonometry rule,
     // while the strategy itself never re-enters the unrestricted verifier search.
-    pub(crate) fn verify_nonzero_product_with_builtin_strategy(
+    pub fn verify_nonzero_product_with_builtin_strategy(
         &mut self,
         fact: &NotEqualFact,
     ) -> Result<StmtResult, RuntimeError> {

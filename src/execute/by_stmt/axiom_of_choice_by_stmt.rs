@@ -124,7 +124,7 @@ impl Runtime {
         )
     }
 
-    pub(crate) fn exec_by_axiom_of_choice_stmt_affect_environment_only(
+    pub fn exec_by_axiom_of_choice_stmt_affect_environment_only(
         &mut self,
         stmt: &ByAxiomOfChoiceStmt,
     ) -> Result<StmtResult, RuntimeError> {

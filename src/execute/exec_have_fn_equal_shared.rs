@@ -2,7 +2,7 @@ use crate::prelude::*;
 use std::collections::HashMap;
 
 /// Turn a [`FnSet`] (parser-level function-space type) into a [`FnSetClause`]-shaped bundle.
-pub(crate) fn fn_set_to_fn_set_clause(fs: &FnSet) -> FnSetClause {
+pub fn fn_set_to_fn_set_clause(fs: &FnSet) -> FnSetClause {
     FnSetClause::new(
         fs.body.params_def_with_set.clone(),
         fs.body.dom_facts.clone(),
@@ -13,7 +13,7 @@ pub(crate) fn fn_set_to_fn_set_clause(fs: &FnSet) -> FnSetClause {
 
 /// Forall parameters, `dom` [`Fact`]s, and curried `(...)(...)` argument layers (one vec per paren
 /// group), matching [`HaveFnEqualStmt`]'s `forall` for that signature.
-pub(crate) fn forall_binders_dom_and_curried_layers_from_fn_set_clause(
+pub fn forall_binders_dom_and_curried_layers_from_fn_set_clause(
     runtime: &Runtime,
     clause: &FnSetClause,
 ) -> Result<(ParamDefWithType, Vec<Fact>, Vec<Vec<SymbolBinding>>), RuntimeError> {
@@ -76,7 +76,7 @@ pub(crate) fn forall_binders_dom_and_curried_layers_from_fn_set_clause(
     Ok((ParamDefWithType::new(type_groups), dom_facts, layers))
 }
 
-pub(crate) fn build_curried_function_obj_from_layers_with_binding(
+pub fn build_curried_function_obj_from_layers_with_binding(
     function: Identifier,
     layer_param_names: &[Vec<SymbolBinding>],
     binding_kind: ParamObjType,
@@ -96,7 +96,7 @@ pub(crate) fn build_curried_function_obj_from_layers_with_binding(
 }
 
 /// Anonymous function value with curried `forall` binders.
-pub(crate) fn build_curried_anonymous_fn_from_layers_forall(
+pub fn build_curried_anonymous_fn_from_layers_forall(
     af: &AnonymousFn,
     layer_param_names: &[Vec<SymbolBinding>],
 ) -> Obj {
@@ -120,7 +120,7 @@ pub(crate) fn build_curried_anonymous_fn_from_layers_forall(
 
 /// Build `func` applied along `layers` using forall binders; `func` is a name, anonymous fn, or
 /// other shape accepted by [`FnObjHead::given_an_atom_return_a_fn_obj_head`].
-pub(crate) fn build_curried_fn_value_apply_for_fn_eq(
+pub fn build_curried_fn_value_apply_for_fn_eq(
     func: &Obj,
     layer_param_names: &[Vec<SymbolBinding>],
 ) -> Option<Obj> {
@@ -174,7 +174,7 @@ pub(crate) fn build_curried_fn_value_apply_for_fn_eq(
     None
 }
 
-pub(crate) fn build_declared_function_obj_with_param_bindings(
+pub fn build_declared_function_obj_with_param_bindings(
     function_identifier_obj: Obj,
     param_bindings: &[SymbolBinding],
 ) -> Obj {
@@ -187,7 +187,7 @@ pub(crate) fn build_declared_function_obj_with_param_bindings(
     FnObj::new(function_head, vec![params]).into()
 }
 
-pub(crate) fn forall_param_defs_dom_and_map_from_have_fn_clause(
+pub fn forall_param_defs_dom_and_map_from_have_fn_clause(
     runtime: &Runtime,
     clause: &FnSetClause,
 ) -> Result<(ParamDefWithType, Vec<Fact>, HashMap<String, Obj>), RuntimeError> {
@@ -254,37 +254,84 @@ fn append_fn_set_param_groups_as_forall_param_type_groups(
     Ok(forall_names)
 }
 
-pub(crate) fn case_conditions_are_disjoint(
+pub fn case_conditions_are_disjoint(
     runtime: &mut Runtime,
     left: &AndChainAtomicFact,
     right: &AndChainAtomicFact,
 ) -> Result<bool, RuntimeError> {
-    if case_condition_implies_not_other(runtime, left, right)? {
-        return Ok(true);
-    }
-    case_condition_implies_not_other(runtime, right, left)
+    Ok(case_conditions_are_disjoint_result(runtime, 0, 1, left, right)?.is_some())
 }
 
-fn case_condition_implies_not_other(
+pub fn case_conditions_are_disjoint_result(
     runtime: &mut Runtime,
+    left_case_index: usize,
+    right_case_index: usize,
+    left: &AndChainAtomicFact,
+    right: &AndChainAtomicFact,
+) -> Result<Option<SuccessVerifyCaseDisjointnessResult>, RuntimeError> {
+    if let Some(result) = case_condition_implies_not_other_result(
+        runtime,
+        left_case_index,
+        right_case_index,
+        CaseDisjointnessOrientation::LeftImpliesNotRight,
+        left,
+        right,
+    )? {
+        return Ok(Some(result));
+    }
+    case_condition_implies_not_other_result(
+        runtime,
+        left_case_index,
+        right_case_index,
+        CaseDisjointnessOrientation::RightImpliesNotLeft,
+        right,
+        left,
+    )
+}
+
+fn case_condition_implies_not_other_result(
+    runtime: &mut Runtime,
+    left_case_index: usize,
+    right_case_index: usize,
+    orientation: CaseDisjointnessOrientation,
     assumed: &AndChainAtomicFact,
     other: &AndChainAtomicFact,
-) -> Result<bool, RuntimeError> {
+) -> Result<Option<SuccessVerifyCaseDisjointnessResult>, RuntimeError> {
     runtime.run_in_local_env(|rt| {
-        rt.store_with_well_defined_verification_and_infer_with_default_verify_state(Fact::from(
-            assumed.clone(),
-        ))?;
+        let assumed_case = Fact::from(assumed.clone());
+        let mut infers = rt
+            .store_with_well_defined_verification_and_infer_with_default_verify_state(
+                assumed_case.clone(),
+            )?;
+        rt.attach_known_fact_ids_to_infer_result(&mut infers)?;
+        let fact_id = rt.known_fact_id_for_fact(&assumed_case)?;
+        let assumption_store = SuccessStoreFactResult {
+            fact: assumed_case.clone(),
+            fact_id,
+            infers,
+        };
 
         for atom in flatten_and_chain_to_atomic_facts(other) {
             let Ok(negated) = atom.logical_negation() else {
                 continue;
             };
-            let result = rt.verify_atomic_fact(&negated, &UseContextVerifyState::new(0, false))?;
+            let mut result =
+                rt.verify_atomic_fact(&negated, &UseContextVerifyState::new(0, false))?;
             if result.is_true() {
-                return Ok(true);
+                rt.attach_known_fact_ids_to_stmt_result(&mut result)?;
+                return Ok(Some(SuccessVerifyCaseDisjointnessResult {
+                    left_case_index,
+                    right_case_index,
+                    orientation,
+                    assumed_case,
+                    assumption_store,
+                    contradicted_atom: atom,
+                    negated_atom: negated,
+                    negated_atom_check: Box::new(result),
+                }));
             }
         }
-        Ok(false)
+        Ok(None)
     })
 }
 
@@ -299,7 +346,7 @@ fn flatten_and_chain_to_atomic_facts(fact: &AndChainAtomicFact) -> Vec<AtomicFac
 impl Runtime {
     // Parser and executor must use the same object form for declarations in a
     // named module. Example: `have fn f ...` in `m` stores facts about `m::f`.
-    pub(crate) fn declared_identifier_obj(&self, name: &str) -> Obj {
+    pub fn declared_identifier_obj(&self, name: &str) -> Obj {
         let symbol = self
             .visible_symbol_definition(name)
             .map(|definition| definition.binding().as_ref());

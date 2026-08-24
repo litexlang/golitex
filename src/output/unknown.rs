@@ -4,7 +4,7 @@ use crate::prelude::*;
 use super::fields::{user_visible_stmt_or_msg_text, JSON_KEY_STMT};
 use super::normalize::{json_value_is_empty_in_normal_output, remove_empty_json_fields};
 
-pub(crate) fn unknown_result_json_value(
+pub fn unknown_result_json_value(
     runtime: &Runtime,
     unknown_result: &RuntimeErrorUnknownResult,
     output_style: OutputStyle,
@@ -19,7 +19,7 @@ pub(crate) fn unknown_result_json_value(
     }
 }
 
-pub(crate) fn stmt_unknown_json_value(
+pub fn stmt_unknown_json_value(
     runtime: &Runtime,
     unknown: &UnknownGenericStmtResult,
     _output_style: OutputStyle,
@@ -32,7 +32,7 @@ pub(crate) fn stmt_unknown_json_value(
     JsonValue::Object(fields)
 }
 
-pub(crate) fn fact_unknown_json_value(
+pub fn fact_unknown_json_value(
     runtime: &Runtime,
     unknown: &UnknownFactResult,
     output_style: OutputStyle,

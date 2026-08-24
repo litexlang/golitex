@@ -36,7 +36,7 @@ impl Runtime {
         }
     }
 
-    pub(crate) fn verify_prime_fact_by_definition(
+    pub fn verify_prime_fact_by_definition(
         &mut self,
         atomic_fact: &AtomicFact,
         verify_state: &UseContextVerifyState,
@@ -65,7 +65,7 @@ impl Runtime {
         ))
     }
 
-    pub(crate) fn verify_coprime_fact_by_definition(
+    pub fn verify_coprime_fact_by_definition(
         &mut self,
         atomic_fact: &AtomicFact,
         verify_state: &UseContextVerifyState,
@@ -94,7 +94,7 @@ impl Runtime {
         ))
     }
 
-    pub(crate) fn verify_dvd_fact_by_definition(
+    pub fn verify_dvd_fact_by_definition(
         &mut self,
         atomic_fact: &AtomicFact,
         verify_state: &UseContextVerifyState,
@@ -123,7 +123,7 @@ impl Runtime {
         ))
     }
 
-    pub(crate) fn verify_choice_function_for_fact_by_definition(
+    pub fn verify_choice_function_for_fact_by_definition(
         &mut self,
         atomic_fact: &AtomicFact,
         verify_state: &UseContextVerifyState,
@@ -155,7 +155,7 @@ impl Runtime {
     }
 
     // Built-in subset/superset definitions first, then user `prop` iff-clauses.
-    pub(crate) fn verify_atomic_fact_using_builtin_or_prop_definition(
+    pub fn verify_atomic_fact_using_builtin_or_prop_definition(
         &mut self,
         atomic_fact: &AtomicFact,
         verify_state: &UseContextVerifyState,
@@ -357,7 +357,7 @@ impl Runtime {
         ))
     }
 
-    pub(crate) fn verify_normal_atomic_fact_definition_clauses(
+    pub fn verify_normal_atomic_fact_definition_clauses(
         &mut self,
         normal_atomic_fact: &NormalAtomicFact,
         definition: &DefPropStmt,

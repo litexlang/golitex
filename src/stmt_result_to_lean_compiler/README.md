@@ -63,7 +63,7 @@ The following sections describe the compiler's design for these two problems.
 
 ## Rust implementation boundaries
 
-[`stmt_result_to_lean_compiler.rs`](stmt_result_to_lean_compiler.rs) now owns only the compiler state, well-definedness context construction, and top-level Result dispatch. Its private implementation modules are grouped by responsibility under [`stmt_result_to_lean_compiler/`](stmt_result_to_lean_compiler/): object/statement compilation, structured proofs, fact compilation, theorem/local-proof compilation, validation, proof rendering, and source rendering. This keeps the public `StmtResultToLeanCompiler` type unchanged while preventing one source file from becoming the ownership boundary for every compiler concern.
+[`stmt_result_to_lean_compiler.rs`](stmt_result_to_lean_compiler.rs) owns only the compiler state, well-definedness context construction, and top-level Result dispatch. Its private implementation modules are grouped by responsibility under [`implementation/`](implementation/): object/statement compilation, structured proofs, fact compilation, theorem/local-proof compilation, validation, proof rendering, and source rendering. The responsibility name avoids repeating the parent module name while keeping the public `StmtResultToLeanCompiler` type unchanged.
 
 ## Representation of Litex Mathematics in Lean
 
@@ -228,8 +228,8 @@ The completed scope of this round is exact:
 
 The following work is deliberately outside this round:
 
-- changing Litex execution semantics, statement atomicity, `FactId`
-  allocation, or `Runtime`/`Environment` ownership;
+- changing Litex execution semantics, statement atomicity, or `FactId`
+  allocation;
 - inventing a successful Result for `RuntimeError`, or compiling `Unknown`;
 - broadening compiler coverage beyond the old reviewed compiler surface;
 - removing unrelated kernel compatibility methods merely because they are
@@ -240,6 +240,16 @@ change whether an existing Litex program executes. It may change compiler
 errors for unsupported targets, JSON shape, graph shape, and generated Lean
 spelling, but the reviewed v1-supported sources must still reach Lean and pass
 the Lean kernel.
+
+A subsequent state-ownership cleanup did refine the physical Runtime boundary
+without changing those execution semantics. `Environment` now owns only an
+`EnvironmentPersistentRepositories` aggregate. Its Fact repository is
+FactId-first: complete facts are stored by `FactId`, while display,
+nested-binder, and alpha-normalized strings are lookup aliases. Statement memo
+proofs and recursive proof-search guards live instead in
+`Runtime::statement_proof_state`, whose scopes are pushed and popped together
+with temporary Runtime environments and are never merged into the persistent
+mathematical world.
 
 The canonical execution boundary is:
 
@@ -901,15 +911,52 @@ pub struct StmtResultToLeanCompiler {
 
 struct StmtResultToLeanCompilerEnvironmentStack {
     environments: Vec<StmtResultToLeanCompilerEnvironment>,
+    well_definedness: Option<StmtResultWellDefinednessToLeanCompilationContext>,
+    parent_well_definedness_contexts:
+        Vec<Option<StmtResultWellDefinednessToLeanCompilationContext>>,
 }
 
 struct StmtResultToLeanCompilerEnvironment {
+    bindings: StmtResultToLeanCompilerBindings,
+}
+
+struct StmtResultToLeanCompilerBindings {
     symbol_names: HashMap<SymbolId, String>,
     fact_names: HashMap<FactId, String>,
     fact_propositions: HashMap<FactId, Fact>,
     // target representations for visible functions and predicates
 }
 ```
+
+The binding repository and WD compilation context are intentionally separate.
+Bindings model what Lean names remain visible in a lexical scope. The WD
+context is a temporary index over one recursive Result while its source object
+is rendered. Entering a child Result saves both independently; leaving it
+restores the parent's WD context instead of accidentally publishing child WD
+state as a symbol/fact binding.
+
+### Exact source selection for a known `forall`
+
+A known universal citation is not identified by rebuilding a smaller forall
+from the matched leaf. Its Result retains three pieces together:
+
+```rust
+struct SuccessInstantiateKnownForallResult {
+    source_fact: Fact,              // the complete stored forall
+    source_fact_id: FactId,         // its exact environment identity
+    source_conclusion_location: ForallConclusionLocation,
+    instantiation: Vec<KnownForallInstantiationItem>,
+    requirements: Vec<SuccessVerifyKnownForallRequirementResult>,
+}
+```
+
+`ForallConclusionLocation` selects either a direct `then` fact, an atomic
+component of an `and` fact, or an adjacent component of a chain. The compiler
+resolves `source_fact_id`, applies the complete source theorem to the retained
+parameter/domain requirement Results, and then emits the corresponding Lean
+conjunction projections. It fails closed if the location does not select the
+target fact. The persistent tracer is
+[`57_KnownForallFactIdProvenance.lit`](../../lean/examples/57_KnownForallFactIdProvenance.lit).
 
 For a binder-owning Result, the operational order is exact:
 
@@ -2147,8 +2194,8 @@ parameters. Domain/parameter stores with additional
 assumption-inference children remain the next forall-introduction tranche.
 
 The focused direct-compiler and corruption regressions live in
-[`tests/kernel_contracts/stmt_result_to_lean_compiler.rs`](../../tests/kernel_contracts/stmt_result_to_lean_compiler.rs), loaded as a private child module of the compiler, and the generated Lean assertions live in
-[`stmt_result_to_lean_compiler_tracers.rs`](../../tests/stmt_result_to_lean_compiler_tracers.rs).
+[`tests/unit/kernel_contracts/stmt_result_to_lean_compiler.rs`](../../tests/unit/kernel_contracts/stmt_result_to_lean_compiler.rs), loaded as a private child module of the compiler, and the generated Lean assertions live in
+[`stmt_result_to_lean_compiler_tracers.rs`](../../tests/integration/stmt_result_to_lean_compiler_tracers.rs).
 
 ## Strategy Definition as a Result-Owned Compiler Environment
 

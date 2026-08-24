@@ -1,17 +1,17 @@
 use crate::prelude::*;
 
 impl Runtime {
-    pub(crate) fn allocate_symbol_id(&self) -> Result<SymbolId, RuntimeError> {
+    pub fn allocate_symbol_id(&self) -> Result<SymbolId, RuntimeError> {
         self.symbol_id_allocator.allocate()
     }
 
-    pub(crate) fn allocate_source_object_occurrence_id(
+    pub fn allocate_source_object_occurrence_id(
         &self,
     ) -> Result<SourceObjectOccurrenceId, RuntimeError> {
         Ok(SourceObjectOccurrenceId::new(self.allocate_symbol_id()?))
     }
 
-    pub(crate) fn allocate_local_symbol_binding(
+    pub fn allocate_local_symbol_binding(
         &self,
         name: String,
     ) -> Result<SymbolBinding, RuntimeError> {
@@ -25,7 +25,7 @@ impl Runtime {
         ))
     }
 
-    pub(crate) fn allocate_local_symbol_bindings(
+    pub fn allocate_local_symbol_bindings(
         &self,
         names: &[String],
     ) -> Result<Vec<SymbolBinding>, RuntimeError> {
@@ -35,13 +35,13 @@ impl Runtime {
             .collect()
     }
 
-    pub(crate) fn allocate_internal_symbol_binding(&self) -> Result<SymbolBinding, RuntimeError> {
+    pub fn allocate_internal_symbol_binding(&self) -> Result<SymbolBinding, RuntimeError> {
         let id = self.allocate_symbol_id()?;
         let name = format!("#binder_{}", id.value());
         Ok(SymbolBinding::new(id, name.clone(), name))
     }
 
-    pub(crate) fn allocate_declared_symbol_binding(
+    pub fn allocate_declared_symbol_binding(
         &self,
         name: String,
     ) -> Result<SymbolBinding, RuntimeError> {
@@ -76,17 +76,17 @@ impl Runtime {
         }
     }
 
-    pub(crate) fn visible_symbol_definition(&self, name: &str) -> Option<&SymbolDefinition> {
+    pub fn visible_symbol_definition(&self, name: &str) -> Option<&SymbolDefinition> {
         self.iter_environments_from_top()
             .find_map(|environment| environment.symbols.get(name))
     }
 
-    pub(crate) fn resolved_identifier_symbol(&self, name: &str) -> Option<SymbolRef> {
+    pub fn resolved_identifier_symbol(&self, name: &str) -> Option<SymbolRef> {
         self.visible_symbol_definition(name)
             .map(|definition| definition.binding().as_ref())
     }
 
-    pub(crate) fn resolved_qualified_identifier_symbol(
+    pub fn resolved_qualified_identifier_symbol(
         &self,
         module_name: &str,
         name: &str,
@@ -100,11 +100,11 @@ impl Runtime {
             .map(|definition| definition.binding().as_ref())
     }
 
-    pub(crate) fn active_parse_symbol_binding(&self, name: &str) -> Option<SymbolBinding> {
+    pub fn active_parse_symbol_binding(&self, name: &str) -> Option<SymbolBinding> {
         self.current_parse_context().active_binding(name).cloned()
     }
 
-    pub(crate) fn register_default_struct_view(
+    pub fn register_default_struct_view(
         &mut self,
         bindings: &[SymbolBinding],
         struct_obj: &StructObj,
@@ -117,14 +117,14 @@ impl Runtime {
         }
     }
 
-    pub(crate) fn default_struct_view_for_symbol(&self, symbol: &SymbolRef) -> Option<StructObj> {
+    pub fn default_struct_view_for_symbol(&self, symbol: &SymbolRef) -> Option<StructObj> {
         self.current_parse_context()
             .default_struct_views
             .get(&symbol.id())
             .cloned()
     }
 
-    pub(crate) fn register_default_tuple_view(&mut self, bindings: &[SymbolBinding], cart: &Cart) {
+    pub fn register_default_tuple_view(&mut self, bindings: &[SymbolBinding], cart: &Cart) {
         for binding in bindings {
             self.current_parse_context_mut()
                 .default_tuple_views
@@ -133,14 +133,14 @@ impl Runtime {
         }
     }
 
-    pub(crate) fn default_tuple_view_for_symbol(&self, symbol: &SymbolRef) -> Option<Cart> {
+    pub fn default_tuple_view_for_symbol(&self, symbol: &SymbolRef) -> Option<Cart> {
         self.current_parse_context()
             .default_tuple_views
             .get(&symbol.id())
             .cloned()
     }
 
-    pub(crate) fn register_parsed_struct_definition(&mut self, def: &DefStructStmt) {
+    pub fn register_parsed_struct_definition(&mut self, def: &DefStructStmt) {
         let name = self
             .current_parse_namespace()
             .map(|owner| format!("{}{}{}", owner, MOD_SIGN, def.name))
@@ -151,21 +151,21 @@ impl Runtime {
             .or_insert_with(|| def.clone());
     }
 
-    pub(crate) fn parsed_struct_definition_by_name(&self, name: &str) -> Option<DefStructStmt> {
+    pub fn parsed_struct_definition_by_name(&self, name: &str) -> Option<DefStructStmt> {
         self.module_manager
             .parsed_struct_definitions
             .get(name)
             .cloned()
     }
 
-    pub(crate) fn template_instance_symbol_binding(
+    pub fn template_instance_symbol_binding(
         &mut self,
         surface_name: &str,
     ) -> Result<SymbolBinding, RuntimeError> {
         self.intern_template_instance_symbol_binding(surface_name)
     }
 
-    pub(crate) fn intern_template_instance_symbol_binding(
+    pub fn intern_template_instance_symbol_binding(
         &self,
         surface_name: &str,
     ) -> Result<SymbolBinding, RuntimeError> {
@@ -186,7 +186,7 @@ impl Runtime {
         Ok(binding)
     }
 
-    pub(crate) fn fresh_bound_param(
+    pub fn fresh_bound_param(
         &self,
         name: String,
         kind: ParamObjType,
@@ -196,7 +196,7 @@ impl Runtime {
         Ok((binding, obj))
     }
 
-    pub(crate) fn register_declared_symbol(
+    pub fn register_declared_symbol(
         &mut self,
         name: &str,
         role: SymbolRole,
@@ -222,7 +222,7 @@ impl Runtime {
         Ok(binding)
     }
 
-    pub(crate) fn register_existing_symbol_binding(
+    pub fn register_existing_symbol_binding(
         &mut self,
         binding: SymbolBinding,
         role: SymbolRole,
@@ -256,7 +256,7 @@ impl Runtime {
         Ok(())
     }
 
-    pub(crate) fn begin_parsing_scope(
+    pub fn begin_parsing_scope(
         &mut self,
         kind: ParamObjType,
         names: &[String],
@@ -321,14 +321,14 @@ impl Runtime {
         Ok(bindings)
     }
 
-    pub(crate) fn end_parsing_scope(&mut self, kind: ParamObjType, names: &[String]) {
+    pub fn end_parsing_scope(&mut self, kind: ParamObjType, names: &[String]) {
         self.current_parse_context_mut()
             .free_params
             .end_scope(kind, names);
         self.current_parse_context_mut().remove_bindings(names);
     }
 
-    pub(crate) fn fresh_param_group_with_type(
+    pub fn fresh_param_group_with_type(
         &self,
         names: Vec<String>,
         param_type: ParamType,
@@ -339,7 +339,7 @@ impl Runtime {
         ))
     }
 
-    pub(crate) fn fresh_param_group_with_set(
+    pub fn fresh_param_group_with_set(
         &self,
         names: Vec<String>,
         set: Obj,
@@ -351,7 +351,7 @@ impl Runtime {
     }
 }
 
-pub(crate) fn source_binder_must_respect_bare_symbols(kind: ParamObjType, name: &str) -> bool {
+pub fn source_binder_must_respect_bare_symbols(kind: ParamObjType, name: &str) -> bool {
     if name.starts_with("#binder_") {
         return false;
     }
@@ -364,7 +364,7 @@ pub(crate) fn source_binder_must_respect_bare_symbols(kind: ParamObjType, name: 
     )
 }
 
-pub(crate) fn bare_symbol_name_reserved_error(
+pub fn bare_symbol_name_reserved_error(
     name: &str,
     external: &BareSymbol,
     line_file: Option<LineFile>,
@@ -392,7 +392,7 @@ fn symbol_name_already_used_error(name: &str, existing_role: &str) -> RuntimeErr
     .into()
 }
 
-pub(crate) fn active_parse_name_error(name: &str, line_file: &LineFile) -> RuntimeError {
+pub fn active_parse_name_error(name: &str, line_file: &LineFile) -> RuntimeError {
     ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(
         format!(
             "name `{}` is already active in this scope and cannot be rebound",

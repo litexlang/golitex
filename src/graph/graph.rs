@@ -1,55 +1,21 @@
-#![allow(dead_code)] // Legacy dependency collector support; main output is ResultGraph v2.
-
 use super::result_graph::ResultGraph;
 use crate::prelude::*;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 
 const GRAPH_NAME: &str = "litex-result-graph";
 const GRAPH_VERSION: &str = "2";
 
-// Kept only for the definition-graph dependency collector below. The old
-// relation projection is no longer called by any public graph entry point and
-// can be deleted when the two legacy specialized graph commands are retired.
-#[allow(dead_code)]
-#[derive(Clone)]
-struct GraphNode {
-    id: String,
-    kind: String,
-    name: String,
-    label: String,
-    defined: bool,
-    fact_kind: Option<String>,
-    line_file: Option<LineFile>,
-    statement: Option<String>,
-}
-
-#[allow(dead_code)]
-struct GraphEdge {
-    from: String,
-    to: String,
-    kind: String,
-    count: usize,
-}
-
 #[derive(Default)]
-pub(crate) struct DepSet {
-    pub(crate) props: Vec<String>,
-    pub(crate) fns: Vec<String>,
-    pub(crate) structs: Vec<String>,
-    pub(crate) templates: Vec<String>,
+pub struct DepSet {
+    pub props: Vec<String>,
+    pub fns: Vec<String>,
+    pub structs: Vec<String>,
+    pub templates: Vec<String>,
 }
 
-pub(crate) struct DepCollector {
-    pub(crate) deps: DepSet,
+pub struct DepCollector {
+    pub deps: DepSet,
     local_names: HashSet<String>,
-}
-
-#[allow(dead_code)]
-struct GraphBuilder {
-    nodes: Vec<GraphNode>,
-    node_index: HashMap<String, usize>,
-    edges: Vec<GraphEdge>,
-    edge_index: HashMap<String, usize>,
 }
 
 pub fn run_graph_for_code(code: &str, label: &str, hide_file_paths: bool) -> (bool, String) {
@@ -390,558 +356,6 @@ fn target_json_value(target_kind: &str, target_label: &str, hide_file_paths: boo
     ])
 }
 
-impl GraphBuilder {
-    fn new() -> Self {
-        Self {
-            nodes: Vec::new(),
-            node_index: HashMap::new(),
-            edges: Vec::new(),
-            edge_index: HashMap::new(),
-        }
-    }
-
-    fn from_stmt_results(stmt_results: &[StmtResult]) -> Self {
-        let mut builder = Self::new();
-        for result in stmt_results.iter() {
-            if let Some(success) = result.non_factual_success() {
-                builder.add_stmt(&success.statement());
-            } else if let Some(success) = result.factual_success() {
-                builder.add_standalone_fact(&success.fact());
-            }
-        }
-        builder
-    }
-
-    fn add_stmt(&mut self, stmt: &Stmt) {
-        match stmt {
-            Stmt::DefPredicateStmt(DefPredicateStmt::DefAbstractPropStmt(s)) => {
-                let node_id = prop_id(&s.name);
-                self.ensure_node(
-                    node_id,
-                    "prop",
-                    &s.name,
-                    true,
-                    None,
-                    Some(&s.line_file),
-                    Some(&stmt.to_string()),
-                );
-            }
-            Stmt::DefPredicateStmt(DefPredicateStmt::DefPropStmt(s)) => {
-                let node_id = prop_id(&s.name);
-                self.ensure_node(
-                    node_id.clone(),
-                    "prop",
-                    &s.name,
-                    true,
-                    None,
-                    Some(&s.line_file),
-                    Some(&stmt.to_string()),
-                );
-                let mut collector = DepCollector::new();
-                collector.add_param_def_with_type(&s.params_def_with_type);
-                collector.collect_param_def_with_type_deps(&s.params_def_with_type);
-                for fact in s.iff_facts.iter() {
-                    collector.collect_fact(fact);
-                }
-                self.add_dependency_edges(&node_id, &collector.deps);
-            }
-            Stmt::DefObjStmt(def_obj_stmt) => self.add_def_obj_stmt(def_obj_stmt, stmt),
-            Stmt::DefThmStmt(s) => self.add_def_thm_stmt(s, stmt),
-            Stmt::AxiomStmt(s) => self.add_axiom_stmt(s, stmt),
-            Stmt::ProofBlock(ProofBlockStmt::ClaimStmt(s)) => self.add_claim_stmt(s, stmt),
-            _ => {}
-        }
-    }
-
-    fn add_standalone_fact(&mut self, fact: &Fact) {
-        let name = format!("fact@{}", line_label(&fact.line_file()));
-        let node_id = fact_id("fact", &name);
-        self.ensure_node(
-            node_id.clone(),
-            "fact",
-            &name,
-            true,
-            Some("fact"),
-            Some(&fact.line_file()),
-            Some(&fact.to_string()),
-        );
-        let mut collector = DepCollector::new();
-        collector.collect_fact(fact);
-        self.add_dependency_edges(&node_id, &collector.deps);
-    }
-
-    fn add_def_obj_stmt(&mut self, stmt: &DefObjStmt, full_stmt: &Stmt) {
-        match stmt {
-            DefObjStmt::HaveFnEqualStmt(s) => {
-                let node_id = self.add_fn_node(s.name(), &s.line_file, full_stmt);
-                let mut collector = DepCollector::new();
-                collector.add_local_name(s.name());
-                collector.collect_anonymous_fn(&s.equal_to_anonymous_fn);
-                self.add_dependency_edges(&node_id, &collector.deps);
-            }
-            DefObjStmt::HaveFnEqualCaseByCaseStmt(s) => {
-                let node_id = self.add_fn_node(s.name(), &s.line_file, full_stmt);
-                let mut collector = DepCollector::new();
-                collector.add_local_name(s.name());
-                collector.collect_fn_set_clause(&s.fn_set_clause);
-                for case_fact in s.cases.iter() {
-                    collector.collect_and_chain_atomic_fact(case_fact);
-                }
-                for obj in s.equal_tos.iter() {
-                    collector.collect_obj(obj);
-                }
-                self.add_dependency_edges(&node_id, &collector.deps);
-            }
-            DefObjStmt::HaveFnByInducStmt(s) => {
-                let node_id = self.add_fn_node(s.name(), &s.line_file, full_stmt);
-                let mut collector = DepCollector::new();
-                collector.add_local_name(s.name());
-                collector.collect_fn_set_clause(&s.fn_set_clause);
-                collector.collect_obj(&s.measure);
-                collector.collect_obj(&s.lower_bound);
-                for case in s.cases.iter() {
-                    collector.collect_have_fn_by_induc_case(case);
-                }
-                self.add_dependency_edges(&node_id, &collector.deps);
-            }
-            DefObjStmt::HaveFnByForallExistUniqueStmt(s) => {
-                let node_id = self.add_fn_node(s.fn_name(), &s.line_file, full_stmt);
-                let mut collector = DepCollector::new();
-                collector.add_local_name(s.fn_name());
-                collector.collect_forall_fact(&s.forall);
-                self.add_dependency_edges(&node_id, &collector.deps);
-                for thm_name in by_thm_names_in_stmts(&s.prove_process) {
-                    let fact_id = fact_id("thm", &thm_name);
-                    self.ensure_node(
-                        fact_id.clone(),
-                        "fact",
-                        &thm_name,
-                        false,
-                        Some("thm"),
-                        None,
-                        None,
-                    );
-                    self.add_edge(&fact_id, &node_id, "justified_by");
-                }
-            }
-            _ => {}
-        }
-    }
-
-    fn add_def_thm_stmt(&mut self, stmt: &DefThmStmt, full_stmt: &Stmt) {
-        let node_id = fact_id("thm", &stmt.name);
-        self.ensure_node(
-            node_id.clone(),
-            "fact",
-            &stmt.name,
-            true,
-            Some("thm"),
-            Some(&stmt.line_file),
-            Some(&full_stmt.to_string()),
-        );
-        let mut collector = DepCollector::new();
-        collector.collect_forall_fact(&stmt.forall_fact);
-        self.add_dependency_edges(&node_id, &collector.deps);
-        self.add_by_thm_edges_to(&node_id, &stmt.prove_process);
-    }
-
-    fn add_axiom_stmt(&mut self, stmt: &AxiomStmt, full_stmt: &Stmt) {
-        let node_id = fact_id("axiom", &stmt.name);
-        self.ensure_node(
-            node_id.clone(),
-            "fact",
-            &stmt.name,
-            true,
-            Some("axiom"),
-            Some(&stmt.line_file),
-            Some(&full_stmt.to_string()),
-        );
-        let mut collector = DepCollector::new();
-        collector.collect_forall_fact(&stmt.forall_fact);
-        self.add_dependency_edges(&node_id, &collector.deps);
-    }
-
-    fn add_claim_stmt(&mut self, stmt: &ClaimStmt, full_stmt: &Stmt) {
-        let name = format!("claim@{}", line_label(&stmt.line_file));
-        let node_id = fact_id("claim", &name);
-        self.ensure_node(
-            node_id.clone(),
-            "fact",
-            &name,
-            true,
-            Some("claim"),
-            Some(&stmt.line_file),
-            Some(&full_stmt.to_string()),
-        );
-        let mut collector = DepCollector::new();
-        collector.collect_fact(&stmt.fact);
-        self.add_dependency_edges(&node_id, &collector.deps);
-        self.add_by_thm_edges_to(&node_id, &stmt.proof);
-    }
-
-    fn add_fn_node(&mut self, name: &str, line_file: &LineFile, stmt: &Stmt) -> String {
-        let node_id = fn_id(name);
-        self.ensure_node(
-            node_id.clone(),
-            "fn",
-            name,
-            true,
-            None,
-            Some(line_file),
-            Some(&stmt.to_string()),
-        );
-        node_id
-    }
-
-    fn add_dependency_edges(&mut self, target_id: &str, deps: &DepSet) {
-        for prop_name in deps.props.iter() {
-            let source_id = prop_id(prop_name);
-            self.ensure_node(
-                source_id.clone(),
-                "prop",
-                prop_name,
-                false,
-                None,
-                None,
-                None,
-            );
-            self.add_edge(&source_id, target_id, "uses_prop");
-        }
-        for fn_name in deps.fns.iter() {
-            let source_id = fn_id(fn_name);
-            self.ensure_node(source_id.clone(), "fn", fn_name, false, None, None, None);
-            self.add_edge(&source_id, target_id, "uses_fn");
-        }
-    }
-
-    fn add_by_thm_edges_to(&mut self, target_id: &str, stmts: &[Stmt]) {
-        for thm_name in by_thm_names_in_stmts(stmts) {
-            let fact_id = fact_id("thm", &thm_name);
-            self.ensure_node(
-                fact_id.clone(),
-                "fact",
-                &thm_name,
-                false,
-                Some("thm"),
-                None,
-                None,
-            );
-            self.add_edge(&fact_id, target_id, "justified_by");
-        }
-    }
-
-    fn ensure_node(
-        &mut self,
-        id: String,
-        kind: &str,
-        name: &str,
-        defined: bool,
-        fact_kind: Option<&str>,
-        line_file: Option<&LineFile>,
-        statement: Option<&str>,
-    ) {
-        if let Some(index) = self.node_index.get(&id).copied() {
-            let node = &mut self.nodes[index];
-            if defined {
-                node.defined = true;
-                node.line_file = line_file.cloned();
-                node.statement = statement.map(|s| s.to_string());
-                if let Some(fact_kind) = fact_kind {
-                    node.fact_kind = Some(fact_kind.to_string());
-                }
-            }
-            return;
-        }
-        self.node_index.insert(id.clone(), self.nodes.len());
-        self.nodes.push(GraphNode {
-            id,
-            kind: kind.to_string(),
-            name: name.to_string(),
-            label: name.to_string(),
-            defined,
-            fact_kind: fact_kind.map(|s| s.to_string()),
-            line_file: line_file.cloned(),
-            statement: statement.map(|s| s.to_string()),
-        });
-    }
-
-    fn add_edge(&mut self, from: &str, to: &str, kind: &str) {
-        if from == to {
-            return;
-        }
-        let key = format!("{}|{}|{}", from, to, kind);
-        if let Some(index) = self.edge_index.get(&key).copied() {
-            self.edges[index].count += 1;
-            return;
-        }
-        self.edge_index.insert(key, self.edges.len());
-        self.edges.push(GraphEdge {
-            from: from.to_string(),
-            to: to.to_string(),
-            kind: kind.to_string(),
-            count: 1,
-        });
-    }
-
-    fn nodes_json(&self, include_source: bool) -> JsonValue {
-        JsonValue::Array(
-            self.nodes
-                .iter()
-                .map(|node| node.json_value(include_source, self))
-                .collect(),
-        )
-    }
-
-    fn edges_json(&self) -> JsonValue {
-        JsonValue::Array(self.edges.iter().map(GraphEdge::json_value).collect())
-    }
-
-    fn summary_json(&self) -> JsonValue {
-        let mut defined_nodes = 0;
-        let mut prop_nodes = 0;
-        let mut defined_props = 0;
-        let mut fn_nodes = 0;
-        let mut defined_fns = 0;
-        let mut fact_nodes = 0;
-        let mut defined_facts = 0;
-        let mut thm_nodes = 0;
-        let mut axiom_nodes = 0;
-        let mut claim_nodes = 0;
-
-        for node in self.nodes.iter() {
-            if node.defined {
-                defined_nodes += 1;
-            }
-            match node.kind.as_str() {
-                "prop" => {
-                    prop_nodes += 1;
-                    if node.defined {
-                        defined_props += 1;
-                    }
-                }
-                "fn" => {
-                    fn_nodes += 1;
-                    if node.defined {
-                        defined_fns += 1;
-                    }
-                }
-                "fact" => {
-                    fact_nodes += 1;
-                    if node.defined {
-                        defined_facts += 1;
-                    }
-                    match node.fact_kind.as_deref() {
-                        Some("thm") => thm_nodes += 1,
-                        Some("axiom") => axiom_nodes += 1,
-                        Some("claim") => claim_nodes += 1,
-                        _ => {}
-                    }
-                }
-                _ => {}
-            }
-        }
-
-        JsonValue::Object(vec![
-            ("nodes".to_string(), JsonValue::Number(self.nodes.len())),
-            (
-                "defined_nodes".to_string(),
-                JsonValue::Number(defined_nodes),
-            ),
-            ("edges".to_string(), JsonValue::Number(self.edges.len())),
-            (
-                "edge_uses".to_string(),
-                JsonValue::Number(self.edges.iter().map(|edge| edge.count).sum()),
-            ),
-            ("props".to_string(), JsonValue::Number(prop_nodes)),
-            (
-                "defined_props".to_string(),
-                JsonValue::Number(defined_props),
-            ),
-            ("functions".to_string(), JsonValue::Number(fn_nodes)),
-            (
-                "defined_functions".to_string(),
-                JsonValue::Number(defined_fns),
-            ),
-            ("facts".to_string(), JsonValue::Number(fact_nodes)),
-            (
-                "defined_facts".to_string(),
-                JsonValue::Number(defined_facts),
-            ),
-            ("theorems".to_string(), JsonValue::Number(thm_nodes)),
-            ("axioms".to_string(), JsonValue::Number(axiom_nodes)),
-            ("claims".to_string(), JsonValue::Number(claim_nodes)),
-        ])
-    }
-
-    fn empty_summary_json() -> JsonValue {
-        JsonValue::Object(vec![
-            ("nodes".to_string(), JsonValue::Number(0)),
-            ("defined_nodes".to_string(), JsonValue::Number(0)),
-            ("edges".to_string(), JsonValue::Number(0)),
-            ("edge_uses".to_string(), JsonValue::Number(0)),
-            ("props".to_string(), JsonValue::Number(0)),
-            ("defined_props".to_string(), JsonValue::Number(0)),
-            ("functions".to_string(), JsonValue::Number(0)),
-            ("defined_functions".to_string(), JsonValue::Number(0)),
-            ("facts".to_string(), JsonValue::Number(0)),
-            ("defined_facts".to_string(), JsonValue::Number(0)),
-            ("theorems".to_string(), JsonValue::Number(0)),
-            ("axioms".to_string(), JsonValue::Number(0)),
-            ("claims".to_string(), JsonValue::Number(0)),
-        ])
-    }
-
-    fn usage_json(&self) -> JsonValue {
-        let mut items = self
-            .nodes
-            .iter()
-            .map(|node| {
-                (
-                    self.outgoing_edge_use_count(&node.id),
-                    self.incoming_edge_use_count(&node.id),
-                    node.name.clone(),
-                    node.usage_json_value(self),
-                )
-            })
-            .collect::<Vec<_>>();
-        items.sort_by(|left, right| {
-            right
-                .0
-                .cmp(&left.0)
-                .then_with(|| right.1.cmp(&left.1))
-                .then_with(|| left.2.cmp(&right.2))
-        });
-        JsonValue::Array(items.into_iter().map(|(_, _, _, value)| value).collect())
-    }
-
-    fn incoming_edge_use_count(&self, node_id: &str) -> usize {
-        self.edges
-            .iter()
-            .filter(|edge| edge.to == node_id)
-            .map(|edge| edge.count)
-            .sum()
-    }
-
-    fn outgoing_edge_use_count(&self, node_id: &str) -> usize {
-        self.edges
-            .iter()
-            .filter(|edge| edge.from == node_id)
-            .map(|edge| edge.count)
-            .sum()
-    }
-
-    fn mermaid(&self) -> String {
-        let mut lines = vec!["flowchart LR".to_string()];
-        for node in self.nodes.iter() {
-            lines.push(format!(
-                "    {}{}",
-                mermaid_id(&node.id),
-                mermaid_node_shape(node)
-            ));
-        }
-        for edge in self.edges.iter() {
-            let arrow = if edge.kind == "justified_by" {
-                "-.->"
-            } else {
-                "-->"
-            };
-            let label = if edge.count > 1 {
-                format!("{} x{}", edge.kind, edge.count)
-            } else {
-                edge.kind.clone()
-            };
-            lines.push(format!(
-                "    {} {}|{}| {}",
-                mermaid_id(&edge.from),
-                arrow,
-                label,
-                mermaid_id(&edge.to)
-            ));
-        }
-        lines.join("\n")
-    }
-}
-
-impl GraphNode {
-    fn json_value(&self, include_source: bool, builder: &GraphBuilder) -> JsonValue {
-        let mut fields = vec![
-            ("id".to_string(), JsonValue::JsonString(self.id.clone())),
-            ("kind".to_string(), JsonValue::JsonString(self.kind.clone())),
-            ("name".to_string(), JsonValue::JsonString(self.name.clone())),
-            (
-                "label".to_string(),
-                JsonValue::JsonString(self.label.clone()),
-            ),
-            ("defined".to_string(), JsonValue::Bool(self.defined)),
-            (
-                "uses_count".to_string(),
-                JsonValue::Number(builder.incoming_edge_use_count(&self.id)),
-            ),
-            (
-                "used_by_count".to_string(),
-                JsonValue::Number(builder.outgoing_edge_use_count(&self.id)),
-            ),
-        ];
-        if let Some(fact_kind) = self.fact_kind.as_ref() {
-            fields.push((
-                "fact_kind".to_string(),
-                JsonValue::JsonString(fact_kind.clone()),
-            ));
-        }
-        if let Some(line_file) = self.line_file.as_ref() {
-            fields.push(("line".to_string(), line_json_value(line_file)));
-            if include_source && !is_default_line_file(line_file) {
-                fields.push((
-                    "source".to_string(),
-                    JsonValue::JsonString(line_file.1.as_ref().to_string()),
-                ));
-            }
-        }
-        if let Some(statement) = self.statement.as_ref() {
-            fields.push((
-                "statement".to_string(),
-                JsonValue::JsonString(strip_free_param_numeric_tags_in_display(statement)),
-            ));
-        }
-        JsonValue::Object(fields)
-    }
-
-    fn usage_json_value(&self, builder: &GraphBuilder) -> JsonValue {
-        let mut fields = vec![
-            ("id".to_string(), JsonValue::JsonString(self.id.clone())),
-            ("kind".to_string(), JsonValue::JsonString(self.kind.clone())),
-            ("name".to_string(), JsonValue::JsonString(self.name.clone())),
-            ("defined".to_string(), JsonValue::Bool(self.defined)),
-            (
-                "uses_count".to_string(),
-                JsonValue::Number(builder.incoming_edge_use_count(&self.id)),
-            ),
-            (
-                "used_by_count".to_string(),
-                JsonValue::Number(builder.outgoing_edge_use_count(&self.id)),
-            ),
-        ];
-        if let Some(fact_kind) = self.fact_kind.as_ref() {
-            fields.push((
-                "fact_kind".to_string(),
-                JsonValue::JsonString(fact_kind.clone()),
-            ));
-        }
-        JsonValue::Object(fields)
-    }
-}
-
-impl GraphEdge {
-    fn json_value(&self) -> JsonValue {
-        JsonValue::Object(vec![
-            ("from".to_string(), JsonValue::JsonString(self.from.clone())),
-            ("to".to_string(), JsonValue::JsonString(self.to.clone())),
-            ("kind".to_string(), JsonValue::JsonString(self.kind.clone())),
-            ("count".to_string(), JsonValue::Number(self.count)),
-        ])
-    }
-}
-
 impl DepSet {
     fn push_prop(&mut self, name: String) {
         if !self.props.contains(&name) {
@@ -969,30 +383,30 @@ impl DepSet {
 }
 
 impl DepCollector {
-    pub(crate) fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             deps: DepSet::default(),
             local_names: HashSet::new(),
         }
     }
 
-    pub(crate) fn add_local_name(&mut self, name: &str) {
+    pub fn add_local_name(&mut self, name: &str) {
         self.local_names.insert(name.to_string());
     }
 
-    pub(crate) fn add_param_def_with_type(&mut self, params: &ParamDefWithType) {
+    pub fn add_param_def_with_type(&mut self, params: &ParamDefWithType) {
         for name in params.collect_param_names() {
             self.add_local_name(&name);
         }
     }
 
-    pub(crate) fn add_param_def_with_set(&mut self, params: &ParamDefWithSet) {
+    pub fn add_param_def_with_set(&mut self, params: &ParamDefWithSet) {
         for name in params.collect_param_names() {
             self.add_local_name(&name);
         }
     }
 
-    pub(crate) fn collect_param_def_with_type_deps(&mut self, params: &ParamDefWithType) {
+    pub fn collect_param_def_with_type_deps(&mut self, params: &ParamDefWithType) {
         for group in params.groups.iter() {
             if let ParamType::Obj(obj) = &group.param_type {
                 self.collect_obj(obj);
@@ -1000,13 +414,13 @@ impl DepCollector {
         }
     }
 
-    pub(crate) fn collect_param_def_with_set_deps(&mut self, params: &ParamDefWithSet) {
+    pub fn collect_param_def_with_set_deps(&mut self, params: &ParamDefWithSet) {
         for group in params.groups.iter() {
             self.collect_obj(&group.param_type);
         }
     }
 
-    pub(crate) fn collect_fn_set_clause(&mut self, clause: &FnSetClause) {
+    pub fn collect_fn_set_clause(&mut self, clause: &FnSetClause) {
         self.collect_param_def_with_set_deps(&clause.params_def_with_set);
         self.add_param_def_with_set(&clause.params_def_with_set);
         for fact in clause.dom_facts.iter() {
@@ -1015,7 +429,7 @@ impl DepCollector {
         self.collect_obj(&clause.ret_set);
     }
 
-    pub(crate) fn collect_fn_set_body(&mut self, body: &FnSetBody) {
+    pub fn collect_fn_set_body(&mut self, body: &FnSetBody) {
         self.collect_param_def_with_set_deps(&body.params_def_with_set);
         self.add_param_def_with_set(&body.params_def_with_set);
         for fact in body.dom_facts.iter() {
@@ -1024,14 +438,14 @@ impl DepCollector {
         self.collect_obj(&body.ret_set);
     }
 
-    pub(crate) fn collect_anonymous_fn(&mut self, anonymous_fn: &AnonymousFn) {
+    pub fn collect_anonymous_fn(&mut self, anonymous_fn: &AnonymousFn) {
         let old = self.local_names.clone();
         self.collect_fn_set_body(&anonymous_fn.body);
         self.collect_obj(&anonymous_fn.equal_to);
         self.local_names = old;
     }
 
-    pub(crate) fn collect_have_fn_by_induc_case(&mut self, case: &HaveFnByInducCase) {
+    pub fn collect_have_fn_by_induc_case(&mut self, case: &HaveFnByInducCase) {
         self.collect_and_chain_atomic_fact(&case.case_fact);
         match &case.body {
             HaveFnByInducCaseBody::EqualTo(obj) => self.collect_obj(obj),
@@ -1043,7 +457,7 @@ impl DepCollector {
         }
     }
 
-    pub(crate) fn collect_fact(&mut self, fact: &Fact) {
+    pub fn collect_fact(&mut self, fact: &Fact) {
         match fact {
             Fact::AtomicFact(a) => self.collect_atomic_fact(a),
             Fact::ExistFact(e) => self.collect_exist_fact(e),
@@ -1061,7 +475,7 @@ impl DepCollector {
         }
     }
 
-    pub(crate) fn collect_forall_fact(&mut self, fact: &ForallFact) {
+    pub fn collect_forall_fact(&mut self, fact: &ForallFact) {
         let old = self.local_names.clone();
         self.collect_param_def_with_type_deps(&fact.params_def_with_type);
         self.add_param_def_with_type(&fact.params_def_with_type);
@@ -1074,7 +488,7 @@ impl DepCollector {
         self.local_names = old;
     }
 
-    pub(crate) fn collect_exist_fact(&mut self, fact: &ExistFactEnum) {
+    pub fn collect_exist_fact(&mut self, fact: &ExistFactEnum) {
         let body = fact.spec();
         let old = self.local_names.clone();
         self.collect_param_def_with_type_deps(&body.params_def_with_type);
@@ -1085,7 +499,7 @@ impl DepCollector {
         self.local_names = old;
     }
 
-    pub(crate) fn collect_quantifier_free_fact(&mut self, fact: &QuantifierFreeFact) {
+    pub fn collect_quantifier_free_fact(&mut self, fact: &QuantifierFreeFact) {
         match fact {
             QuantifierFreeFact::AtomicFact(a) => self.collect_atomic_fact(a),
             QuantifierFreeFact::AndFact(a) => self.collect_and_fact(a),
@@ -1094,10 +508,7 @@ impl DepCollector {
         }
     }
 
-    pub(crate) fn collect_exist_or_and_chain_atomic_fact(
-        &mut self,
-        fact: &ExistOrAndChainAtomicFact,
-    ) {
+    pub fn collect_exist_or_and_chain_atomic_fact(&mut self, fact: &ExistOrAndChainAtomicFact) {
         match fact {
             ExistOrAndChainAtomicFact::AtomicFact(a) => self.collect_atomic_fact(a),
             ExistOrAndChainAtomicFact::AndFact(a) => self.collect_and_fact(a),
@@ -1107,7 +518,7 @@ impl DepCollector {
         }
     }
 
-    pub(crate) fn collect_and_chain_atomic_fact(&mut self, fact: &AndChainAtomicFact) {
+    pub fn collect_and_chain_atomic_fact(&mut self, fact: &AndChainAtomicFact) {
         match fact {
             AndChainAtomicFact::AtomicFact(a) => self.collect_atomic_fact(a),
             AndChainAtomicFact::AndFact(a) => self.collect_and_fact(a),
@@ -1115,19 +526,19 @@ impl DepCollector {
         }
     }
 
-    pub(crate) fn collect_and_fact(&mut self, fact: &AndFact) {
+    pub fn collect_and_fact(&mut self, fact: &AndFact) {
         for atomic in fact.facts.iter() {
             self.collect_atomic_fact(atomic);
         }
     }
 
-    pub(crate) fn collect_or_fact(&mut self, fact: &OrFact) {
+    pub fn collect_or_fact(&mut self, fact: &OrFact) {
         for branch in fact.facts.iter() {
             self.collect_and_chain_atomic_fact(branch);
         }
     }
 
-    pub(crate) fn collect_chain_fact(&mut self, fact: &ChainFact) {
+    pub fn collect_chain_fact(&mut self, fact: &ChainFact) {
         for prop_name in fact.prop_names.iter() {
             let name = prop_name.to_string();
             if !is_builtin_predicate(&name) {
@@ -1139,7 +550,7 @@ impl DepCollector {
         }
     }
 
-    pub(crate) fn collect_atomic_fact(&mut self, fact: &AtomicFact) {
+    pub fn collect_atomic_fact(&mut self, fact: &AtomicFact) {
         match fact {
             AtomicFact::NormalAtomicFact(f) => {
                 let name = f.predicate.to_string();
@@ -1167,7 +578,7 @@ impl DepCollector {
         }
     }
 
-    pub(crate) fn collect_obj(&mut self, obj: &Obj) {
+    pub fn collect_obj(&mut self, obj: &Obj) {
         match obj {
             Obj::Atom(_)
             | Obj::Number(_)
@@ -1351,7 +762,7 @@ impl DepCollector {
         }
     }
 
-    pub(crate) fn collect_fn_head(&mut self, head: &FnObjHead) {
+    pub fn collect_fn_head(&mut self, head: &FnObjHead) {
         match head {
             FnObjHead::Identifier(identifier) => {
                 if !self.local_names.contains(&identifier.name)
@@ -1405,202 +816,12 @@ impl DepCollector {
         }
     }
 
-    pub(crate) fn collect_two_objs(&mut self, left: &Obj, right: &Obj) {
+    pub fn collect_two_objs(&mut self, left: &Obj, right: &Obj) {
         self.collect_obj(left);
         self.collect_obj(right);
     }
 }
 
-pub(crate) fn by_thm_names_in_stmts(stmts: &[Stmt]) -> Vec<String> {
-    let mut out = Vec::new();
-    for stmt in stmts.iter() {
-        collect_by_thm_names_in_stmt(stmt, &mut out);
-    }
-    out
-}
-
-fn collect_by_thm_names_in_stmt(stmt: &Stmt, out: &mut Vec<String>) {
-    match stmt {
-        Stmt::By(ByStmt::ByThmStmt(s)) => out.push(s.name.to_string()),
-        Stmt::DefObjStmt(DefObjStmt::ObtainObjFromThm(s)) => out.push(s.thm_name.to_string()),
-        Stmt::ProofBlock(ProofBlockStmt::ClaimStmt(s)) => {
-            for stmt in s.proof.iter() {
-                collect_by_thm_names_in_stmt(stmt, out);
-            }
-        }
-        Stmt::ProofBlock(ProofBlockStmt::ExampleStmt(s)) => {
-            for stmt in s.proof.iter() {
-                collect_by_thm_names_in_stmt(stmt, out);
-            }
-        }
-        Stmt::ProofBlock(ProofBlockStmt::SketchStmt(s)) => {
-            for stmt in s.proof.iter() {
-                collect_by_thm_names_in_stmt(stmt, out);
-            }
-        }
-        Stmt::ProofBlock(ProofBlockStmt::TryStmt(s)) => {
-            for stmt in s.proof.iter() {
-                collect_by_thm_names_in_stmt(stmt, out);
-            }
-        }
-        Stmt::Witness(WitnessStmt::WitnessExistFact(s)) => {
-            for stmt in s.proof.iter() {
-                collect_by_thm_names_in_stmt(stmt, out);
-            }
-        }
-        Stmt::Witness(WitnessStmt::WitnessAtomicFact(s)) => {
-            for stmt in s.proof.iter() {
-                collect_by_thm_names_in_stmt(stmt, out);
-            }
-        }
-        Stmt::Witness(WitnessStmt::WitnessNonemptySet(s)) => {
-            for stmt in s.proof.iter() {
-                collect_by_thm_names_in_stmt(stmt, out);
-            }
-        }
-        Stmt::DefThmStmt(s) => {
-            for stmt in s.prove_process.iter() {
-                collect_by_thm_names_in_stmt(stmt, out);
-            }
-        }
-        Stmt::DefObjStmt(DefObjStmt::HaveFnByForallExistUniqueStmt(s)) => {
-            for stmt in s.prove_process.iter() {
-                collect_by_thm_names_in_stmt(stmt, out);
-            }
-        }
-        _ => {}
-    }
-}
-
-fn prop_id(name: &str) -> String {
-    format!("prop:{}", name)
-}
-
-fn fn_id(name: &str) -> String {
-    format!("fn:{}", name)
-}
-
-fn fact_id(kind: &str, name: &str) -> String {
-    format!("fact:{}:{}", kind, name)
-}
-
-fn line_json_value(line_file: &LineFile) -> JsonValue {
-    if is_default_line_file(line_file) {
-        JsonValue::Null
-    } else {
-        JsonValue::Number(line_file.0)
-    }
-}
-
-fn line_label(line_file: &LineFile) -> String {
-    if is_default_line_file(line_file) {
-        "unknown".to_string()
-    } else {
-        line_file.0.to_string()
-    }
-}
-
-fn mermaid_id(id: &str) -> String {
-    let mut out = String::from("n_");
-    for ch in id.chars() {
-        if ch.is_ascii_alphanumeric() {
-            out.push(ch);
-        } else {
-            out.push('_');
-        }
-    }
-    out
-}
-
-fn mermaid_node_shape(node: &GraphNode) -> String {
-    let label = mermaid_label(&node.label);
-    match node.kind.as_str() {
-        "prop" => format!("([\"{}\"])", label),
-        "fn" => format!("{{\"{}\"}}", label),
-        "fact" => format!("[/\"{}\"/]", label),
-        _ => format!("[\"{}\"]", label),
-    }
-}
-
-fn mermaid_label(label: &str) -> String {
-    label.replace('"', "'")
-}
-
 #[cfg(test)]
-mod tests {
-    use super::{render_result_graph_from_stmt_results, run_graph_for_code};
-    use crate::prelude::*;
-
-    fn graph_output(source: &'static str) -> String {
-        std::thread::Builder::new()
-            .name("graph_output_large_stack".to_string())
-            .stack_size(64 * 1024 * 1024)
-            .spawn(move || run_graph_for_code(source, "graph_test", true).1)
-            .expect("spawn graph output test")
-            .join()
-            .expect("graph output test panicked")
-    }
-
-    #[test]
-    fn result_graph_records_statement_verification_proof_and_store_layers() {
-        let output = graph_output("2 + 3 $in N\n");
-
-        assert!(output.contains(r#""graph": "litex-result-graph""#));
-        assert!(output.contains(r#""graph_version": "2""#));
-        assert!(output.contains(r#""kind": "statement""#));
-        assert!(output.contains(r#""kind": "well_definedness""#));
-        assert!(output.contains(r#""kind": "verification""#));
-        assert!(output.contains(r#""kind": "proof""#));
-        assert!(output.contains(r#""kind": "store""#));
-        assert!(output.contains(r#""role": "AtomicFact""#));
-        assert!(output.contains(r#""role": "DirectObject""#));
-        assert!(output.contains(r#""kind": "argument""#));
-        assert!(output.contains(r#""role": "BuiltinRule""#));
-        assert!(output.contains(r#""kind": "verification""#));
-        assert!(output.contains(r#""kind": "proof""#));
-    }
-
-    #[test]
-    fn result_graph_uses_fact_ids_for_inference_edges() {
-        let output = graph_output("2 + 3 $in N\n");
-
-        assert!(output.contains(r#""role": "NaturalMembershipImpliesNonnegative""#));
-        assert!(output.contains(r#""kind": "premise""#));
-        assert!(output.contains(r#""kind": "conclusion""#));
-        assert!(output.contains(r#""id": "fact:f"#));
-        assert!(output.contains(r#""fact_id": "f"#));
-    }
-
-    #[test]
-    fn result_graph_recurses_through_statement_children() {
-        let output = graph_output("sketch:\n    1 = 1\n");
-
-        assert!(output.contains(r#""role": "ProofBlockStmt""#));
-        assert!(output.contains(r#""kind": "child""#));
-        assert!(output.contains(r#""id": "stmt:0/execution/child:0""#));
-    }
-
-    #[test]
-    fn result_graph_recurses_through_claim_binder_well_definedness() {
-        let output = graph_output("claim:\n    ? forall x R:\n        x = x\n");
-
-        assert!(output.contains(r#""role": "ForallFact""#));
-        assert!(output.contains(r#""role": "FactBinder""#));
-        assert!(output.contains(r#""kind": "parameter_group""#));
-        assert!(output.contains(r#""kind": "well_definedness""#));
-    }
-
-    #[test]
-    fn completed_result_graph_does_not_need_runtime() {
-        let mut runtime = Runtime::new();
-        runtime.new_file_path_new_env_new_name_scope("runtime_free_result_graph");
-        let (results, error) = run_source_code("2 + 3 $in N", &mut runtime);
-        assert!(error.is_none());
-        drop(runtime);
-
-        let output = render_result_graph_from_stmt_results("code", "dropped", true, &results);
-        assert!(output.contains(r#""graph": "litex-result-graph""#));
-        assert!(output.contains(r#""role": "NaturalMembershipImpliesNonnegative""#));
-        assert!(output.contains(r#""kind": "well_definedness""#));
-    }
-}
+#[path = "../../tests/unit/graph/graph/tests.rs"]
+mod tests;

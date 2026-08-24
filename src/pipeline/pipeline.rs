@@ -1,10 +1,11 @@
 use crate::common::json_value::{render_json_value, JsonValue};
 use crate::pipeline::pipeline_run_stmt_globally::{
-    run_repository_file_target_with_trusted_prefix, run_stmt_at_global_env_in_trusted_prefix_run,
+    execute_top_level_statement_in_trusted_prefix_run,
+    run_repository_file_target_with_trusted_prefix,
 };
 use crate::pipeline::summary::display_run_summary_json_with_runtime;
 use crate::pipeline::{display_runtime_error_json, display_stmt_exec_result_json};
-use crate::pipeline::{run_repository_file_target, run_stmt_at_global_env};
+use crate::pipeline::{execute_top_level_statement, run_repository_file_target};
 use crate::prelude::*;
 use crate::runtime::TrustedPrefixPolicy;
 use std::fs;
@@ -14,18 +15,82 @@ use std::time::Instant;
 
 pub use crate::result::StmtResult;
 
-pub fn run_source_code_in_file(entry_file_path: &str) -> String {
-    run_file_with_output_style(
-        entry_file_path,
-        OutputStyle::Normal,
-        false,
-        OutputLanguage::English,
-        false,
-        false,
-    )
-    .1
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct RunOutputOptions {
+    pub output_style: OutputStyle,
+    pub strict_mode: bool,
+    pub output_language: OutputLanguage,
+    pub summarize: bool,
 }
 
+impl Default for RunOutputOptions {
+    fn default() -> Self {
+        Self {
+            output_style: OutputStyle::Normal,
+            strict_mode: false,
+            output_language: OutputLanguage::English,
+            summarize: false,
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+pub struct FileRunOptions {
+    pub output: RunOutputOptions,
+    pub force_isolated: bool,
+}
+
+/// Run one file with an owned Runtime and render its complete output.
+pub fn run_file(entry_file_path: &str, options: FileRunOptions) -> (bool, String) {
+    let mut runtime = Runtime::new();
+    runtime.set_output_style(options.output.output_style);
+    runtime.strict_mode = options.output.strict_mode;
+    runtime.output_language = options.output.output_language;
+    let (stmt_results, runtime_error) =
+        run_file_with_project_context(entry_file_path, &mut runtime, options.force_isolated);
+    let (ok, mut output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, true);
+    if options.output.summarize {
+        output.push('\n');
+        output.push_str(
+            display_run_summary_json_with_runtime(&runtime, &stmt_results, &runtime_error).as_str(),
+        );
+        output.push('\n');
+    }
+    (ok, output)
+}
+
+/// Run a configured repository with an owned Runtime and render its complete output.
+pub fn run_repository(repository_path: &str, options: RunOutputOptions) -> (bool, String) {
+    let mut runtime = Runtime::new();
+    runtime.set_output_style(options.output_style);
+    runtime.strict_mode = options.strict_mode;
+    runtime.output_language = options.output_language;
+    let target = match discover_repository(&mut runtime, repository_path) {
+        Ok(target) => target,
+        Err(error) => {
+            return render_run_source_code_output(&runtime, &vec![], &Some(error), true);
+        }
+    };
+    let (stmt_results, runtime_error) = run_repository_file_target(&mut runtime, target);
+    let (ok, mut output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, true);
+    if options.summarize {
+        output.push('\n');
+        output.push_str(
+            display_run_summary_json_with_runtime(&runtime, &stmt_results, &runtime_error).as_str(),
+        );
+        output.push('\n');
+    }
+    (ok, output)
+}
+
+pub fn run_source_code_in_file(entry_file_path: &str) -> String {
+    run_file(entry_file_path, FileRunOptions::default()).1
+}
+
+// Compatibility wrappers. New callers should prefer `run_file` or
+// `run_repository` with named options.
 pub fn run_source_code_in_file_for_cli(entry_file_path: &str, detail_output: bool) -> String {
     run_source_code_in_file_for_cli_with_strict(entry_file_path, detail_output, false)
 }
@@ -65,13 +130,17 @@ pub fn run_source_code_in_file_for_cli_with_summary_and_language(
     output_language: OutputLanguage,
     summarize: bool,
 ) -> String {
-    run_file_with_output_style(
+    run_file(
         entry_file_path,
-        output_style_from_detail_output(detail_output),
-        strict_mode,
-        output_language,
-        summarize,
-        false,
+        FileRunOptions {
+            output: RunOutputOptions {
+                output_style: output_style_from_detail_output(detail_output),
+                strict_mode,
+                output_language,
+                summarize,
+            },
+            force_isolated: false,
+        },
     )
     .1
 }
@@ -84,13 +153,17 @@ pub fn run_source_code_in_file_for_cli_with_summary_and_language_and_isolation(
     summarize: bool,
     force_isolated: bool,
 ) -> String {
-    run_file_with_output_style(
+    run_file(
         entry_file_path,
-        output_style_from_detail_output(detail_output),
-        strict_mode,
-        output_language,
-        summarize,
-        force_isolated,
+        FileRunOptions {
+            output: RunOutputOptions {
+                output_style: output_style_from_detail_output(detail_output),
+                strict_mode,
+                output_language,
+                summarize,
+            },
+            force_isolated,
+        },
     )
     .1
 }
@@ -103,26 +176,23 @@ pub fn run_source_code_in_file_for_cli_with_output_style_and_summary_and_languag
     summarize: bool,
     force_isolated: bool,
 ) -> String {
-    run_file_with_output_style(
+    run_file(
         entry_file_path,
-        output_style,
-        strict_mode,
-        output_language,
-        summarize,
-        force_isolated,
+        FileRunOptions {
+            output: RunOutputOptions {
+                output_style,
+                strict_mode,
+                output_language,
+                summarize,
+            },
+            force_isolated,
+        },
     )
     .1
 }
 
 pub fn run_source_code_in_file_with_ok(entry_file_path: &str) -> (bool, String) {
-    run_file_with_output_style(
-        entry_file_path,
-        OutputStyle::Normal,
-        false,
-        OutputLanguage::English,
-        false,
-        false,
-    )
+    run_file(entry_file_path, FileRunOptions::default())
 }
 
 pub fn run_source_code_in_repository_for_cli_with_summary_and_language(
@@ -132,12 +202,14 @@ pub fn run_source_code_in_repository_for_cli_with_summary_and_language(
     output_language: OutputLanguage,
     summarize: bool,
 ) -> String {
-    run_repository_with_output_style(
+    run_repository(
         repository_path,
-        output_style_from_detail_output(detail_output),
-        strict_mode,
-        output_language,
-        summarize,
+        RunOutputOptions {
+            output_style: output_style_from_detail_output(detail_output),
+            strict_mode,
+            output_language,
+            summarize,
+        },
     )
     .1
 }
@@ -149,12 +221,14 @@ pub fn run_source_code_in_repository_for_cli_with_output_style_and_summary_and_l
     output_language: OutputLanguage,
     summarize: bool,
 ) -> String {
-    run_repository_with_output_style(
+    run_repository(
         repository_path,
-        output_style,
-        strict_mode,
-        output_language,
-        summarize,
+        RunOutputOptions {
+            output_style,
+            strict_mode,
+            output_language,
+            summarize,
+        },
     )
     .1
 }
@@ -166,12 +240,14 @@ pub fn run_repository_with_output(
     output_language: OutputLanguage,
     summarize: bool,
 ) -> (bool, String) {
-    run_repository_with_output_style(
+    run_repository(
         repository_path,
-        output_style_from_detail_output(detail_output),
-        strict_mode,
-        output_language,
-        summarize,
+        RunOutputOptions {
+            output_style: output_style_from_detail_output(detail_output),
+            strict_mode,
+            output_language,
+            summarize,
+        },
     )
 }
 
@@ -182,53 +258,15 @@ pub fn run_repository_with_output_style(
     output_language: OutputLanguage,
     summarize: bool,
 ) -> (bool, String) {
-    let mut runtime = Runtime::new();
-    runtime.set_output_style(output_style);
-    runtime.strict_mode = strict_mode;
-    runtime.output_language = output_language;
-    let target = match discover_repository(&mut runtime, repository_path) {
-        Ok(target) => target,
-        Err(error) => {
-            return render_run_source_code_output(&runtime, &vec![], &Some(error), true);
-        }
-    };
-    let (stmt_results, runtime_error) = run_repository_file_target(&mut runtime, target);
-    let (ok, mut output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, true);
-    if summarize {
-        output.push('\n');
-        output.push_str(
-            display_run_summary_json_with_runtime(&runtime, &stmt_results, &runtime_error).as_str(),
-        );
-        output.push('\n');
-    }
-    (ok, output)
-}
-
-fn run_file_with_output_style(
-    entry_file_path: &str,
-    output_style: OutputStyle,
-    strict_mode: bool,
-    output_language: OutputLanguage,
-    summarize: bool,
-    force_isolated: bool,
-) -> (bool, String) {
-    let mut runtime = Runtime::new();
-    runtime.set_output_style(output_style);
-    runtime.strict_mode = strict_mode;
-    runtime.output_language = output_language;
-    let (stmt_results, runtime_error) =
-        run_file_with_project_context(entry_file_path, &mut runtime, force_isolated);
-    let (ok, mut output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, true);
-    if summarize {
-        output.push('\n');
-        output.push_str(
-            display_run_summary_json_with_runtime(&runtime, &stmt_results, &runtime_error).as_str(),
-        );
-        output.push('\n');
-    }
-    (ok, output)
+    run_repository(
+        repository_path,
+        RunOutputOptions {
+            output_style,
+            strict_mode,
+            output_language,
+            summarize,
+        },
+    )
 }
 
 fn output_style_from_detail_output(detail_output: bool) -> OutputStyle {
@@ -383,12 +421,17 @@ pub fn run_file_with_project_context_and_trusted_prefix(
     };
     runtime.new_file_path_new_env_new_name_scope(entry_file_path);
     runtime.set_current_source_allows_inline_imports(true);
-    let (stmt_results, runtime_error, _) = run_source_code_with_failure_kind_and_trusted_prefix(
+    let outcome = run_source_code_with_options(
         remove_windows_carriage_return(source_code.as_str()).as_str(),
         runtime,
-        trust_before_line,
+        SourceRunOptions { trust_before_line },
     );
-    (stmt_results, runtime_error, trusted_prefix_report, false)
+    (
+        outcome.stmt_results,
+        outcome.runtime_error,
+        trusted_prefix_report,
+        false,
+    )
 }
 
 fn file_target_error(entry_file_path: &str, message: &str) -> RuntimeError {
@@ -400,20 +443,66 @@ fn file_target_error(entry_file_path: &str, message: &str) -> RuntimeError {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum RunSourceFailureKind {
+pub enum SourceRunFailureKind {
     TryStmt,
     Other,
+}
+
+pub type RunSourceFailureKind = SourceRunFailureKind;
+
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+pub struct SourceRunOptions {
+    pub trust_before_line: Option<usize>,
+}
+
+pub struct SourceRunOutcome {
+    pub stmt_results: Vec<StmtResult>,
+    pub runtime_error: Option<RuntimeError>,
+    pub failure_kind: Option<SourceRunFailureKind>,
+}
+
+impl SourceRunOutcome {
+    fn success(stmt_results: Vec<StmtResult>) -> Self {
+        Self {
+            stmt_results,
+            runtime_error: None,
+            failure_kind: None,
+        }
+    }
+
+    fn failure(
+        stmt_results: Vec<StmtResult>,
+        runtime_error: RuntimeError,
+        failure_kind: SourceRunFailureKind,
+    ) -> Self {
+        Self {
+            stmt_results,
+            runtime_error: Some(runtime_error),
+            failure_kind: Some(failure_kind),
+        }
+    }
+
+    pub fn into_parts(
+        self,
+    ) -> (
+        Vec<StmtResult>,
+        Option<RuntimeError>,
+        Option<SourceRunFailureKind>,
+    ) {
+        (self.stmt_results, self.runtime_error, self.failure_kind)
+    }
 }
 
 pub fn run_source_code(
     source_code: &str,
     runtime: &mut Runtime,
 ) -> (Vec<StmtResult>, Option<RuntimeError>) {
-    let (stmt_results, runtime_error, _) = run_source_code_with_failure_kind(source_code, runtime);
-    (stmt_results, runtime_error)
+    let outcome = run_source_code_with_options(source_code, runtime, SourceRunOptions::default());
+    (outcome.stmt_results, outcome.runtime_error)
 }
 
-pub(crate) fn run_source_code_with_failure_kind(
+// Compatibility wrapper for callers that still consume the legacy tuple.
+pub fn run_source_code_with_failure_kind(
     source_code: &str,
     runtime: &mut Runtime,
 ) -> (
@@ -421,10 +510,11 @@ pub(crate) fn run_source_code_with_failure_kind(
     Option<RuntimeError>,
     Option<RunSourceFailureKind>,
 ) {
-    run_source_code_with_failure_kind_and_trusted_prefix(source_code, runtime, None)
+    run_source_code_with_options(source_code, runtime, SourceRunOptions::default()).into_parts()
 }
 
-pub(crate) fn run_source_code_with_failure_kind_and_trusted_prefix(
+// Compatibility wrapper for callers that still consume the legacy tuple.
+pub fn run_source_code_with_failure_kind_and_trusted_prefix(
     source_code: &str,
     runtime: &mut Runtime,
     trust_before_line: Option<usize>,
@@ -433,101 +523,127 @@ pub(crate) fn run_source_code_with_failure_kind_and_trusted_prefix(
     Option<RuntimeError>,
     Option<RunSourceFailureKind>,
 ) {
-    if !runtime.has_active_execution_frame() {
-        return (
-            vec![],
-            Some(
-                ParseRuntimeError(RuntimeErrorStruct::new_with_just_msg(
-                    "runtime has no active source context; initialize a file or repository before running source"
-                        .to_string(),
-                ))
-                .into(),
-            ),
-            Some(RunSourceFailureKind::Other),
-        );
+    run_source_code_with_options(source_code, runtime, SourceRunOptions { trust_before_line })
+        .into_parts()
+}
+
+pub fn run_source_code_with_options(
+    source_code: &str,
+    runtime: &mut Runtime,
+    options: SourceRunOptions,
+) -> SourceRunOutcome {
+    if let Err(error) = require_active_source_context(runtime) {
+        return SourceRunOutcome::failure(vec![], error, SourceRunFailureKind::Other);
     }
 
-    let tokenizer = Tokenizer::new();
-    let current_file_path = runtime.current_file_path_rc();
-    let source_starts_with_try = source_code
+    let blocks = match tokenize_source_code(source_code, runtime) {
+        Ok(blocks) => blocks,
+        Err((error, failure_kind)) => {
+            return SourceRunOutcome::failure(vec![], error, failure_kind);
+        }
+    };
+    if let Some(before_line) = options.trust_before_line {
+        if let Err(error) = validate_trusted_prefix_boundary(&blocks, runtime, before_line) {
+            return SourceRunOutcome::failure(vec![], error, SourceRunFailureKind::Other);
+        }
+    }
+
+    execute_source_blocks(blocks, runtime, options)
+}
+
+fn require_active_source_context(runtime: &Runtime) -> Result<(), RuntimeError> {
+    if runtime.has_active_execution_frame() {
+        return Ok(());
+    }
+
+    Err(ParseRuntimeError(RuntimeErrorStruct::new_with_just_msg(
+        "runtime has no active source context; initialize a file or repository before running source"
+            .to_string(),
+    ))
+    .into())
+}
+
+fn tokenize_source_code(
+    source_code: &str,
+    runtime: &Runtime,
+) -> Result<Vec<TokenBlock>, (RuntimeError, SourceRunFailureKind)> {
+    let starts_with_try = source_code
         .lines()
         .find(|line| !line.trim().is_empty() && !line.trim_start().starts_with('#'))
         .is_some_and(|line| line.trim_end() == "try:");
-    let blocks = match tokenizer.parse_blocks(source_code, current_file_path) {
-        Ok(b) => b,
-        Err(e) => {
-            let failure_kind = if source_starts_with_try {
-                RunSourceFailureKind::TryStmt
-            } else {
-                RunSourceFailureKind::Other
-            };
-            return (vec![], Some(e), Some(failure_kind));
-        }
-    };
-    if let Some(before_line) = trust_before_line {
-        let statement_lines = blocks
-            .iter()
-            .map(|block| block.line_file.0)
-            .collect::<Vec<_>>();
-        if !statement_lines.contains(&before_line) {
-            let message = trusted_prefix_boundary_error_message(
-                runtime.current_file_path_rc().as_ref(),
-                before_line,
-                &statement_lines,
-            );
-            return (
-                vec![],
-                Some(
-                    ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(
-                        message,
-                        (before_line, runtime.current_file_path_rc()),
-                    ))
-                    .into(),
-                ),
-                Some(RunSourceFailureKind::Other),
-            );
-        }
+    Tokenizer::new()
+        .parse_blocks(source_code, runtime.current_file_path_rc())
+        .map_err(|error| (error, failure_kind_for_try(starts_with_try)))
+}
+
+fn validate_trusted_prefix_boundary(
+    blocks: &[TokenBlock],
+    runtime: &Runtime,
+    before_line: usize,
+) -> Result<(), RuntimeError> {
+    let statement_lines = blocks
+        .iter()
+        .map(|block| block.line_file.0)
+        .collect::<Vec<_>>();
+    if statement_lines.contains(&before_line) {
+        return Ok(());
     }
 
+    let message = trusted_prefix_boundary_error_message(
+        runtime.current_file_path_rc().as_ref(),
+        before_line,
+        &statement_lines,
+    );
+    Err(
+        ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(
+            message,
+            (before_line, runtime.current_file_path_rc()),
+        ))
+        .into(),
+    )
+}
+
+fn execute_source_blocks(
+    blocks: Vec<TokenBlock>,
+    runtime: &mut Runtime,
+    options: SourceRunOptions,
+) -> SourceRunOutcome {
     let profile_repository_run = std::env::var_os("LITEX_PROFILE_REPOSITORY").is_some();
     let mut stmt_results: Vec<StmtResult> = Vec::new();
     for mut block in blocks {
         let statement_start = profile_repository_run.then(Instant::now);
         let parsing_try_stmt = block.current_token_is_equal_to(TRY);
-        let stmt: Stmt = {
-            match runtime.parse_stmt(&mut block) {
-                Ok(s) => s,
-                Err(e) => {
-                    let failure_kind = if parsing_try_stmt {
-                        RunSourceFailureKind::TryStmt
-                    } else {
-                        RunSourceFailureKind::Other
-                    };
-                    return (stmt_results, Some(e), Some(failure_kind));
-                }
+        let stmt = match runtime.parse_stmt(&mut block) {
+            Ok(stmt) => stmt,
+            Err(error) => {
+                return SourceRunOutcome::failure(
+                    stmt_results,
+                    error,
+                    failure_kind_for_try(parsing_try_stmt),
+                );
             }
         };
         let executing_try_stmt = matches!(&stmt, Stmt::ProofBlock(ProofBlockStmt::TryStmt(_)));
-        let trusted_prefix_statement =
-            trust_before_line.is_some_and(|before_line| stmt.line_file().0 < before_line);
+        let trusted_prefix_statement = options
+            .trust_before_line
+            .is_some_and(|before_line| stmt.line_file().0 < before_line);
         let previous_execution_mode = trusted_prefix_statement
             .then(|| runtime.replace_current_execution_mode(ExecutionMode::Trusted));
-        let result = match if trust_before_line.is_some() {
-            run_stmt_at_global_env_in_trusted_prefix_run(&stmt, runtime)
+        let result = match if options.trust_before_line.is_some() {
+            execute_top_level_statement_in_trusted_prefix_run(&stmt, runtime)
         } else {
-            run_stmt_at_global_env(&stmt, runtime)
+            execute_top_level_statement(&stmt, runtime)
         } {
-            Ok(r) => r,
-            Err(e) => {
+            Ok(result) => result,
+            Err(error) => {
                 if let Some(previous_execution_mode) = previous_execution_mode {
                     runtime.replace_current_execution_mode(previous_execution_mode);
                 }
-                let failure_kind = if executing_try_stmt {
-                    RunSourceFailureKind::TryStmt
-                } else {
-                    RunSourceFailureKind::Other
-                };
-                return (stmt_results, Some(e), Some(failure_kind));
+                return SourceRunOutcome::failure(
+                    stmt_results,
+                    error,
+                    failure_kind_for_try(executing_try_stmt),
+                );
             }
         };
         if let Some(previous_execution_mode) = previous_execution_mode {
@@ -545,7 +661,15 @@ pub(crate) fn run_source_code_with_failure_kind_and_trusted_prefix(
         stmt_results.push(result);
     }
 
-    (stmt_results, None, None)
+    SourceRunOutcome::success(stmt_results)
+}
+
+fn failure_kind_for_try(is_try_stmt: bool) -> SourceRunFailureKind {
+    if is_try_stmt {
+        SourceRunFailureKind::TryStmt
+    } else {
+        SourceRunFailureKind::Other
+    }
 }
 
 fn trusted_prefix_boundary_error_message(
@@ -642,11 +766,7 @@ pub fn render_run_source_code_output(
 
     let output_text = strip_free_param_numeric_tags_in_display(&output_text);
 
-    if ok {
-        (true, output_text)
-    } else {
-        (false, output_text)
-    }
+    (ok, output_text)
 }
 
 fn unverified_import_warning_json(runtime: &Runtime) -> String {
@@ -693,3 +813,7 @@ fn unverified_import_warning_json(runtime: &Runtime) -> String {
         0,
     )
 }
+
+#[cfg(test)]
+#[path = "../../tests/unit/pipeline/pipeline/source_run_tests.rs"]
+mod source_run_tests;

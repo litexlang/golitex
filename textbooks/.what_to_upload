@@ -16,7 +16,7 @@ verified prefix
 [book]
 High-School-Mathematics
 verified book
-"The recovered cite package and all Chapters 1-20 pass the current release runner."
+"The Introduction maps eleven mathematical directions; the recovered cite package and Chapters 1-20 retain their prior verified-book acceptance. The current dirty-worktree rerun is blocked by the recorded FactId witness-storage regression in cite/functions.lit."
 
 [book]
 Linear-Algebra-Done-Right

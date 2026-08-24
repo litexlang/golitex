@@ -185,7 +185,7 @@ fn disallowed_control_stmt_name(stmt: &Stmt) -> Option<&'static str> {
 }
 
 fn try_control_stmt_error(control_stmt: Stmt, control_name: &str) -> RuntimeError {
-    RuntimeError::ExecStmtError(RuntimeErrorStruct::new(
+    RuntimeError::ExecStmtError(Box::new(RuntimeErrorStruct::new(
         Some(control_stmt.clone()),
         format!(
             "try cannot contain control statement `{}` because try commits by merging a child environment; run it outside try",
@@ -194,5 +194,5 @@ fn try_control_stmt_error(control_stmt: Stmt, control_name: &str) -> RuntimeErro
         control_stmt.line_file(),
         None,
         vec![],
-    ))
+    )))
 }

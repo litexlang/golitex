@@ -1,10 +1,10 @@
 use crate::prelude::*;
 
-pub(crate) fn localize_json_value(runtime: &Runtime, value: JsonValue) -> JsonValue {
+pub fn localize_json_value(runtime: &Runtime, value: JsonValue) -> JsonValue {
     localize_json_value_for_language(runtime.output_language, value)
 }
 
-pub(crate) fn localize_json_value_for_language(
+pub fn localize_json_value_for_language(
     output_language: OutputLanguage,
     value: JsonValue,
 ) -> JsonValue {
@@ -14,7 +14,7 @@ pub(crate) fn localize_json_value_for_language(
     localize_json_value_for_key(output_language, None, value)
 }
 
-pub(crate) fn localize_json_key(output_language: OutputLanguage, key: &str) -> String {
+pub fn localize_json_key(output_language: OutputLanguage, key: &str) -> String {
     key_translation(output_language, key).unwrap_or_else(|| key.to_string())
 }
 

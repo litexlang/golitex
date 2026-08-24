@@ -102,19 +102,11 @@ impl StmtResultJsonV2 {
                         self.success_stmt(&result.body_statement_result),
                     ),
                 ]),
-                SuccessDefInterfaceStmtResult::DefStructStmt(result) => self.non_fact_stmt(
-                    "DefStructStmt",
-                    result.statement.to_string(),
-                    &result.common,
-                    vec![],
-                ),
+                SuccessDefInterfaceStmtResult::DefStructStmt(result) => {
+                    self.def_struct_stmt(result)
+                }
             },
-            SuccessStmtResult::DefAlgoStmt(result) => self.non_fact_stmt(
-                "DefAlgoStmt",
-                result.statement.to_string(),
-                &result.common,
-                vec![],
-            ),
+            SuccessStmtResult::DefAlgoStmt(result) => self.def_algo_stmt(result),
             SuccessStmtResult::DefThmStmt(result) => {
                 let verification = result
                     .verification
@@ -197,6 +189,507 @@ impl StmtResultJsonV2 {
         ];
         fields.append(&mut specific_fields);
         object(fields)
+    }
+
+    fn def_struct_stmt(&mut self, result: &SuccessDefStructStmtResult) -> JsonValue {
+        let run_in_local_env = result
+            .run_in_local_env
+            .as_ref()
+            .map(|local| {
+                object(vec![
+                    string_field("kind", "SuccessVerifyDefStructLocalEnvResult"),
+                    (
+                        "structure_parameter_definition".to_string(),
+                        local
+                            .structure_parameter_definition
+                            .as_ref()
+                            .map(infer_result_value)
+                            .unwrap_or(JsonValue::Null),
+                    ),
+                    (
+                        "structure_domains".to_string(),
+                        array(
+                            local
+                                .structure_domains
+                                .iter()
+                                .map(|domain| {
+                                    object(vec![
+                                        number_field("domain_index", domain.domain_index),
+                                        string_field("proposition", domain.proposition.to_string()),
+                                        (
+                                            "well_definedness".to_string(),
+                                            self.fact_well_definedness(&domain.well_definedness),
+                                        ),
+                                    ])
+                                })
+                                .collect(),
+                        ),
+                    ),
+                    (
+                        "field_types".to_string(),
+                        array(
+                            local
+                                .field_types
+                                .iter()
+                                .map(|field| {
+                                    object(vec![
+                                        number_field("field_index", field.field_index),
+                                        string_field("binding", field.binding.name()),
+                                        string_field("field_type", field.field_type.to_string()),
+                                        (
+                                            "well_definedness".to_string(),
+                                            self.shared_wd_obj(&field.well_definedness),
+                                        ),
+                                    ])
+                                })
+                                .collect(),
+                        ),
+                    ),
+                    (
+                        "field_scope_run_in_local_env".to_string(),
+                        object(vec![
+                            (
+                                "field_definitions".to_string(),
+                                array(
+                                    local
+                                        .field_scope_run_in_local_env
+                                        .field_definitions
+                                        .iter()
+                                        .map(|field| {
+                                            object(vec![
+                                                number_field("field_index", field.field_index),
+                                                string_field("binding", field.binding.name()),
+                                                string_field(
+                                                    "field_type",
+                                                    field.field_type.to_string(),
+                                                ),
+                                                (
+                                                    "infers".to_string(),
+                                                    infer_result_value(&field.infers),
+                                                ),
+                                            ])
+                                        })
+                                        .collect(),
+                                ),
+                            ),
+                            (
+                                "equivalent_facts".to_string(),
+                                array(
+                                    local
+                                        .field_scope_run_in_local_env
+                                        .equivalent_facts
+                                        .iter()
+                                        .map(|fact| self.local_fact_wd_result(fact))
+                                        .collect(),
+                                ),
+                            ),
+                        ]),
+                    ),
+                ])
+            })
+            .unwrap_or(JsonValue::Null);
+        self.non_fact_stmt(
+            "DefStructStmt",
+            result.statement.to_string(),
+            &result.common,
+            vec![("run_in_local_env".to_string(), run_in_local_env)],
+        )
+    }
+
+    fn def_algo_stmt(&mut self, result: &SuccessDefAlgoStmtResult) -> JsonValue {
+        let run_in_local_env = result
+            .run_in_local_env
+            .as_ref()
+            .map(|local| {
+                object(vec![
+                    string_field("kind", "SuccessVerifyDefAlgoLocalEnvResult"),
+                    string_field(
+                        "declared_function_set",
+                        local.declared_function_set.to_string(),
+                    ),
+                    (
+                        "parameter_retagging".to_string(),
+                        array(
+                            local
+                                .parameter_retagging
+                                .iter()
+                                .map(|parameter| {
+                                    object(vec![
+                                        number_field("parameter_index", parameter.parameter_index),
+                                        string_field(
+                                            "source_binding",
+                                            parameter.source_binding.name(),
+                                        ),
+                                        string_field(
+                                            "verification_object",
+                                            parameter.verification_object.to_string(),
+                                        ),
+                                    ])
+                                })
+                                .collect(),
+                        ),
+                    ),
+                    (
+                        "requirement_facts".to_string(),
+                        display_values(&local.requirement_facts),
+                    ),
+                    string_field(
+                        "parameter_definition",
+                        local.parameter_definition.to_string(),
+                    ),
+                    string_field("function_call", local.function_call.to_string()),
+                    (
+                        "cases".to_string(),
+                        array(
+                            local
+                                .cases
+                                .iter()
+                                .map(|case| {
+                                    object(vec![
+                                        number_field("case_index", case.case_index),
+                                        string_field(
+                                            "verification_fact",
+                                            case.verification_fact.to_string(),
+                                        ),
+                                        (
+                                            "verification".to_string(),
+                                            self.stmt_result(&case.verification),
+                                        ),
+                                    ])
+                                })
+                                .collect(),
+                        ),
+                    ),
+                    (
+                        "default_return".to_string(),
+                        local
+                            .default_return
+                            .as_ref()
+                            .map(|default| {
+                                object(vec![
+                                    string_field(
+                                        "verification_fact",
+                                        default.verification_fact.to_string(),
+                                    ),
+                                    (
+                                        "verification".to_string(),
+                                        self.stmt_result(&default.verification),
+                                    ),
+                                ])
+                            })
+                            .unwrap_or(JsonValue::Null),
+                    ),
+                    (
+                        "coverage".to_string(),
+                        local
+                            .coverage
+                            .as_ref()
+                            .map(|coverage| {
+                                object(vec![
+                                    string_field(
+                                        "verification_fact",
+                                        coverage.verification_fact.to_string(),
+                                    ),
+                                    (
+                                        "verification".to_string(),
+                                        self.stmt_result(&coverage.verification),
+                                    ),
+                                ])
+                            })
+                            .unwrap_or(JsonValue::Null),
+                    ),
+                ])
+            })
+            .unwrap_or(JsonValue::Null);
+        self.non_fact_stmt(
+            "DefAlgoStmt",
+            result.statement.to_string(),
+            &result.common,
+            vec![("run_in_local_env".to_string(), run_in_local_env)],
+        )
+    }
+
+    fn have_fn_by_induc_stmt(&mut self, result: &SuccessHaveFnByInducStmtResult) -> JsonValue {
+        let verification = result
+            .verification
+            .as_ref()
+            .map(|verification| self.have_fn_by_induc_verification(verification))
+            .unwrap_or(JsonValue::Null);
+        self.non_fact_stmt(
+            "HaveFnByInducStmt",
+            result.statement.to_string(),
+            &result.common,
+            vec![("verification".to_string(), verification)],
+        )
+    }
+
+    fn have_fn_by_induc_verification(
+        &mut self,
+        result: &SuccessVerifyHaveFnByInducResult,
+    ) -> JsonValue {
+        let well_definedness = &result.well_definedness_run_in_local_env;
+        let verification = &result.verification_run_in_local_env;
+        object(vec![
+            string_field("kind", "SuccessVerifyHaveFnByInducResult"),
+            (
+                "well_definedness_run_in_local_env".to_string(),
+                object(vec![
+                    string_field("function_binding", well_definedness.function_binding.name()),
+                    string_field("function_set", well_definedness.function_set.to_string()),
+                    (
+                        "function_set_well_definedness".to_string(),
+                        self.shared_wd_obj(&well_definedness.function_set_well_definedness),
+                    ),
+                    (
+                        "parameters_and_domain".to_string(),
+                        self.have_fn_by_induc_parameters_and_domain(
+                            &well_definedness.parameters_and_domain,
+                        ),
+                    ),
+                    (
+                        "measure_well_definedness".to_string(),
+                        self.shared_wd_obj(&well_definedness.measure_well_definedness),
+                    ),
+                    (
+                        "lower_bound_well_definedness".to_string(),
+                        self.shared_wd_obj(&well_definedness.lower_bound_well_definedness),
+                    ),
+                ]),
+            ),
+            (
+                "verification_run_in_local_env".to_string(),
+                object(vec![
+                    (
+                        "parameters_and_domain".to_string(),
+                        self.have_fn_by_induc_parameters_and_domain(
+                            &verification.parameters_and_domain,
+                        ),
+                    ),
+                    (
+                        "measure".to_string(),
+                        object(vec![
+                            (
+                                "measure_well_definedness".to_string(),
+                                self.shared_wd_obj(&verification.measure.measure_well_definedness),
+                            ),
+                            (
+                                "lower_bound_well_definedness".to_string(),
+                                self.shared_wd_obj(
+                                    &verification.measure.lower_bound_well_definedness,
+                                ),
+                            ),
+                            (
+                                "measure_integer_check".to_string(),
+                                self.stmt_result(&verification.measure.measure_integer_check),
+                            ),
+                            (
+                                "lower_bound_integer_check".to_string(),
+                                self.stmt_result(&verification.measure.lower_bound_integer_check),
+                            ),
+                            (
+                                "lower_bound_check".to_string(),
+                                self.stmt_result(&verification.measure.lower_bound_check),
+                            ),
+                        ]),
+                    ),
+                    (
+                        "recursive_function".to_string(),
+                        object(vec![
+                            string_field(
+                                "function_set",
+                                verification.recursive_function.function_set.to_string(),
+                            ),
+                            (
+                                "membership_store".to_string(),
+                                self.store_fact(&verification.recursive_function.membership_store),
+                            ),
+                        ]),
+                    ),
+                    (
+                        "cases".to_string(),
+                        self.have_fn_by_induc_case_list(&verification.cases),
+                    ),
+                ]),
+            ),
+        ])
+    }
+
+    fn have_fn_by_induc_parameters_and_domain(
+        &mut self,
+        result: &SuccessVerifyHaveFnByInducParametersAndDomainResult,
+    ) -> JsonValue {
+        object(vec![
+            (
+                "parameter_groups".to_string(),
+                array(
+                    result
+                        .parameter_groups
+                        .iter()
+                        .map(|group| {
+                            object(vec![
+                                number_field("group_index", group.group_index),
+                                string_field("definition", group.definition.to_string()),
+                                ("infers".to_string(), infer_result_value(&group.infers)),
+                            ])
+                        })
+                        .collect(),
+                ),
+            ),
+            (
+                "domain_facts".to_string(),
+                array(
+                    result
+                        .domain_facts
+                        .iter()
+                        .map(|domain| {
+                            object(vec![
+                                number_field("domain_index", domain.domain_index),
+                                ("store".to_string(), self.store_fact(&domain.store)),
+                            ])
+                        })
+                        .collect(),
+                ),
+            ),
+        ])
+    }
+
+    fn have_fn_by_induc_case_list(
+        &mut self,
+        result: &SuccessVerifyHaveFnByInducCaseListResult,
+    ) -> JsonValue {
+        object(vec![
+            string_field("coverage_fact", result.coverage_fact.to_string()),
+            (
+                "coverage_check".to_string(),
+                self.stmt_result(&result.coverage_check),
+            ),
+            (
+                "mutual_exclusions".to_string(),
+                array(
+                    result
+                        .mutual_exclusions
+                        .iter()
+                        .map(|proof| {
+                            object(vec![
+                                number_field("left_case_index", proof.left_case_index),
+                                number_field("right_case_index", proof.right_case_index),
+                                string_field(
+                                    "orientation",
+                                    match proof.orientation {
+                                        CaseDisjointnessOrientation::LeftImpliesNotRight => {
+                                            "LeftImpliesNotRight"
+                                        }
+                                        CaseDisjointnessOrientation::RightImpliesNotLeft => {
+                                            "RightImpliesNotLeft"
+                                        }
+                                    },
+                                ),
+                                string_field("assumed_case", proof.assumed_case.to_string()),
+                                (
+                                    "assumption_store".to_string(),
+                                    self.store_fact(&proof.assumption_store),
+                                ),
+                                string_field(
+                                    "contradicted_atom",
+                                    proof.contradicted_atom.to_string(),
+                                ),
+                                string_field("negated_atom", proof.negated_atom.to_string()),
+                                (
+                                    "negated_atom_check".to_string(),
+                                    self.stmt_result(&proof.negated_atom_check),
+                                ),
+                            ])
+                        })
+                        .collect(),
+                ),
+            ),
+            (
+                "cases".to_string(),
+                array(
+                    result
+                        .cases
+                        .iter()
+                        .map(|case| {
+                            let body = match &case.body {
+                                SuccessVerifyHaveFnByInducCaseBodyResult::EqualTo(body) => {
+                                    object(vec![
+                                        string_field("kind", "EqualTo"),
+                                        string_field("value", body.value.to_string()),
+                                        (
+                                            "well_definedness".to_string(),
+                                            self.shared_wd_obj(&body.well_definedness),
+                                        ),
+                                        string_field(
+                                            "return_membership_fact",
+                                            body.return_membership_fact.to_string(),
+                                        ),
+                                        (
+                                            "return_membership_check".to_string(),
+                                            self.stmt_result(&body.return_membership_check),
+                                        ),
+                                    ])
+                                }
+                                SuccessVerifyHaveFnByInducCaseBodyResult::NestedCases(nested) => {
+                                    object(vec![
+                                        string_field("kind", "NestedCases"),
+                                        (
+                                            "cases".to_string(),
+                                            self.have_fn_by_induc_case_list(nested),
+                                        ),
+                                    ])
+                                }
+                            };
+                            object(vec![
+                                number_field("case_index", case.case_index),
+                                string_field("case_fact", case.case_fact.to_string()),
+                                (
+                                    "assumption_store".to_string(),
+                                    self.store_fact(&case.assumption_store),
+                                ),
+                                ("body".to_string(), body),
+                            ])
+                        })
+                        .collect(),
+                ),
+            ),
+        ])
+    }
+
+    fn import_stmt(&mut self, result: &SuccessImportStmtResult) -> JsonValue {
+        let execution = match &result.execution {
+            SuccessImportExecutionResult::Executed(executed) => object(vec![
+                string_field("kind", "Executed"),
+                number_field("module_id", executed.module_id.0),
+                string_field(
+                    "execution_mode",
+                    match executed.execution_mode {
+                        ExecutionMode::Verified => "Verified",
+                        ExecutionMode::Trusted => "Trusted",
+                    },
+                ),
+                (
+                    "statement_results".to_string(),
+                    self.stmt_results(&executed.statement_results),
+                ),
+            ]),
+            SuccessImportExecutionResult::Reused(reused) => object(vec![
+                string_field("kind", "Reused"),
+                number_field("module_id", reused.module_id.0),
+                string_field(
+                    "execution_mode",
+                    match reused.execution_mode {
+                        ExecutionMode::Verified => "Verified",
+                        ExecutionMode::Trusted => "Trusted",
+                    },
+                ),
+            ]),
+        };
+        self.non_fact_stmt(
+            "ImportStmt",
+            result.statement.to_string(),
+            &result.common,
+            vec![("execution".to_string(), execution)],
+        )
     }
 
     fn def_obj_stmt(&mut self, result: &SuccessDefObjStmtResult) -> JsonValue {
@@ -340,12 +833,9 @@ impl StmtResultJsonV2 {
                     vec![("verification".to_string(), verification)],
                 )
             }
-            SuccessDefObjStmtResult::HaveFnByInducStmt(result) => self.non_fact_stmt(
-                "HaveFnByInducStmt",
-                result.statement.to_string(),
-                &result.common,
-                vec![],
-            ),
+            SuccessDefObjStmtResult::HaveFnByInducStmt(result) => {
+                self.have_fn_by_induc_stmt(result)
+            }
             SuccessDefObjStmtResult::HaveFnByForallExistUniqueStmt(result) => {
                 let verification = result
                     .verification
@@ -870,12 +1360,7 @@ impl StmtResultJsonV2 {
 
     fn command_stmt(&mut self, result: &SuccessCommandStmtResult) -> JsonValue {
         match result {
-            SuccessCommandStmtResult::ImportStmt(result) => self.non_fact_stmt(
-                "ImportStmt",
-                result.statement.to_string(),
-                &result.common,
-                vec![],
-            ),
+            SuccessCommandStmtResult::ImportStmt(result) => self.import_stmt(result),
             SuccessCommandStmtResult::DoNothingStmt(result) => self.non_fact_stmt(
                 "DoNothingStmt",
                 result.statement.to_string(),
@@ -2265,6 +2750,10 @@ impl StmtResultJsonV2 {
             string_field("kind", "KnownForallInstantiation"),
             string_field("source_fact", result.source_fact.to_string()),
             string_field("source_fact_id", fact_id(result.source_fact_id)),
+            (
+                "source_conclusion_location".to_string(),
+                forall_conclusion_location(result.source_conclusion_location),
+            ),
             (
                 "instantiation".to_string(),
                 array(

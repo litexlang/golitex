@@ -4,7 +4,7 @@ use super::*;
 impl Runtime {
     // A finite-set sum over the empty set is zero.
     // Example: `finite_set_sum({}, fn(x Z) Z {x}) = 0`.
-    pub(crate) fn try_verify_finite_set_sum_empty(
+    pub fn try_verify_finite_set_sum_empty(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -46,7 +46,7 @@ impl Runtime {
     // A finite-set sum over a displayed finite set, or a name equal to one,
     // expands to the left-associated sum of the summand at each listed element.
     // Example: `P = {1, 2}` gives `finite_set_sum(P, fn(x P) Z {x}) = 1 + 2`.
-    pub(crate) fn try_verify_finite_set_sum_list_expansion(
+    pub fn try_verify_finite_set_sum_list_expansion(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -104,7 +104,7 @@ impl Runtime {
 
     // A finite-set sum over an integer closed range agrees with the existing range sum.
     // Example: `finite_set_sum(1...3, fn(x Z) Z {x}) = sum(1, 3, fn(x Z) Z {x})`.
-    pub(crate) fn try_verify_finite_set_sum_closed_range_bridge(
+    pub fn try_verify_finite_set_sum_closed_range_bridge(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -200,7 +200,7 @@ impl Runtime {
 
     // A constant finite-set summand is the set cardinality times the constant.
     // Example: `finite_set_sum(X, fn(x X) R {c}) = finite_set_size(X) * c`.
-    pub(crate) fn try_verify_finite_set_sum_constant_summand(
+    pub fn try_verify_finite_set_sum_constant_summand(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -266,7 +266,7 @@ impl Runtime {
     // Finite-set sums are equal when their summands are pointwise equal on the same finite set.
     // Example: from `forall x X: f(x) = g(x)`, prove
     // `finite_set_sum(X, f) = finite_set_sum(X, g)`.
-    pub(crate) fn try_verify_finite_set_sum_pointwise_equality(
+    pub fn try_verify_finite_set_sum_pointwise_equality(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -321,7 +321,7 @@ impl Runtime {
     // Finite-set sum substitution along a bijection onto the original set.
     // Example: from `forall x X: exist! y Y st {g(y) = x}`, prove
     // `finite_set_sum(X, f) = finite_set_sum(Y, fn(y Y) R {f(g(y))})`.
-    pub(crate) fn try_verify_finite_set_sum_substitution(
+    pub fn try_verify_finite_set_sum_substitution(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -423,7 +423,7 @@ impl Runtime {
     // Finite-set sums split over disjoint unions.
     // Example: from `intersect(X, Y) = {}`, prove
     // `finite_set_sum(union(X, Y), f) = finite_set_sum(X, f|X) + finite_set_sum(Y, f|Y)`.
-    pub(crate) fn try_verify_finite_set_sum_disjoint_union(
+    pub fn try_verify_finite_set_sum_disjoint_union(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -512,7 +512,7 @@ impl Runtime {
     // Finite-set sums distribute over pointwise addition on the same finite set.
     // Example: `finite_set_sum(X, fn(x X) R {f(x) + g(x)}) =
     // finite_set_sum(X, f) + finite_set_sum(X, g)`.
-    pub(crate) fn try_verify_finite_set_sum_add(
+    pub fn try_verify_finite_set_sum_add(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -594,7 +594,7 @@ impl Runtime {
 
     // Scalars factor out of finite-set sums on the same finite set.
     // Example: `finite_set_sum(X, fn(x X) R {c * f(x)}) = c * finite_set_sum(X, f)`.
-    pub(crate) fn try_verify_finite_set_sum_scalar_mul(
+    pub fn try_verify_finite_set_sum_scalar_mul(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -666,7 +666,7 @@ impl Runtime {
     // their Cartesian product.
     // Example: `finite_set_sum(X, fn(x X) R {finite_set_sum(Y, fn(y Y) R {f((x, y))})})
     // = finite_set_sum(cart(X, Y), f)`.
-    pub(crate) fn try_verify_finite_set_sum_over_cartesian_product(
+    pub fn try_verify_finite_set_sum_over_cartesian_product(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -719,7 +719,7 @@ impl Runtime {
     // Fubini for finite-set sums: two nested sums with the same flattened
     // Cartesian-product summand can swap their summation order.
     // Example: `sum_X sum_Y f((x, y)) = sum_Y sum_X f((x, y))`.
-    pub(crate) fn try_verify_finite_set_sum_fubini(
+    pub fn try_verify_finite_set_sum_fubini(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -769,7 +769,7 @@ impl Runtime {
     // Example: from `forall x X: exist! i 1...finite_set_size(X) st {g(i) = x}` and the
     // analogous fact for `h`, prove `sum(1, finite_set_size(X), fn(i 1...finite_set_size(X)) R {f(g(i))})
     // = sum(1, finite_set_size(X), fn(i 1...finite_set_size(X)) R {f(h(i))})`.
-    pub(crate) fn try_verify_sum_over_bijective_finite_set_enumerations(
+    pub fn try_verify_sum_over_bijective_finite_set_enumerations(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,

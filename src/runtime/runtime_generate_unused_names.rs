@@ -3,14 +3,14 @@ use std::collections::{HashMap, HashSet};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 impl Runtime {
-    pub(crate) fn generate_internal_binder_name(&self) -> String {
+    pub fn generate_internal_binder_name(&self) -> String {
         let id = self
             .allocate_symbol_id()
             .expect("internal binder identity counter exhausted");
         format!("#binder_{}", id.value())
     }
 
-    pub(crate) fn fresh_binder_retag_plan_for_bindings(
+    pub fn fresh_binder_retag_plan_for_bindings(
         &self,
         source_bindings: &[SymbolBinding],
         target_kind: ParamObjType,
@@ -105,17 +105,5 @@ impl Runtime {
 }
 
 #[cfg(test)]
-mod tests {
-    use crate::prelude::*;
-
-    #[test]
-    fn generated_kernel_binders_are_unique_and_not_user_names() {
-        let runtime = Runtime::new();
-        let first = runtime.generate_random_unused_name();
-        let second = runtime.generate_random_unused_name();
-
-        assert_ne!(first, second);
-        assert!(first.starts_with("#binder_"));
-        assert!(is_valid_litex_name(&first).is_err());
-    }
-}
+#[path = "../../tests/unit/runtime/runtime_generate_unused_names/tests.rs"]
+mod tests;

@@ -204,7 +204,7 @@ impl Runtime {
     /// Rename `fn_set` parameters in flat order to `generated_flat_names` (headers, param sets,
     /// `dom_facts`, `ret_set`). For comparing two alpha-equivalent signatures, call with the **same**
     /// list from one `generate_random_unused_names` (or similar) on both `FnSet`s.
-    pub(crate) fn fn_set_alpha_renamed_for_display_compare(
+    pub fn fn_set_alpha_renamed_for_display_compare(
         &self,
         fn_set: &FnSetBody,
         generated_flat_names: &[String],
@@ -230,7 +230,7 @@ impl Runtime {
     /// grouping syntax. `fn(x, y S) T` and `fn(x S, y S) T` bind the same
     /// ordered inputs; dependent carrier differences remain visible because
     /// every singleton group retains its instantiated carrier expression.
-    pub(crate) fn fn_set_flattened_alpha_renamed_for_display_compare(
+    pub fn fn_set_flattened_alpha_renamed_for_display_compare(
         &self,
         fn_set: &FnSetBody,
         generated_flat_names: &[String],

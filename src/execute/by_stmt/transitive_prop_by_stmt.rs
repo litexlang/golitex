@@ -104,7 +104,7 @@ impl Runtime {
         )
     }
 
-    pub(crate) fn exec_by_transitive_prop_stmt_affect_environment_only(
+    pub fn exec_by_transitive_prop_stmt_affect_environment_only(
         &mut self,
         stmt: &ByTransitivePropStmt,
     ) -> Result<StmtResult, RuntimeError> {

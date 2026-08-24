@@ -1,4 +1,5 @@
 use super::{StmtResultToLeanCompilationReport, StmtResultToLeanCompiler};
+use crate::pipeline::execute_top_level_statement;
 use crate::prelude::*;
 
 pub fn compile_litex_source_to_lean_source(
@@ -29,7 +30,7 @@ pub fn compile_litex_source_to_stmt_result_to_lean_compilation_report(
     )
 }
 
-pub(crate) fn execute_litex_source_to_stmt_results(
+pub fn execute_litex_source_to_stmt_results(
     source: &str,
     source_label: &str,
 ) -> Result<Vec<StmtResult>, RuntimeError> {
@@ -48,7 +49,7 @@ pub(crate) fn execute_litex_source_to_stmt_results(
                 "single-file StmtResult-to-Lean compilation does not support `import`",
             ));
         }
-        let result = run_stmt_at_global_env(&statement, &mut runtime)?;
+        let result = execute_top_level_statement(&statement, &mut runtime)?;
         if result.is_unknown() {
             return Err(stmt_result_to_lean_compilation_error(
                 &statement.line_file(),

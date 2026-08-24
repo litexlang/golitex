@@ -2,7 +2,7 @@ use super::*;
 
 impl Runtime {
     // log_a(a^b) = b  (Litex `log(a, a^b) = b`; same base in log and in the power.)
-    pub(crate) fn try_verify_log_identity_equalities(
+    pub fn try_verify_log_identity_equalities(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -208,7 +208,7 @@ impl Runtime {
     }
 
     // Algebraic log rules: log_{a^b}(c), log_a(x^b), log_a(x y), log_a(x / y) (see functions above).
-    pub(crate) fn try_verify_log_algebra_identities(
+    pub fn try_verify_log_algebra_identities(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -230,7 +230,7 @@ impl Runtime {
 
     // Reciprocal rule: log_a(1 / x) = -log_a(x).
     // Example: `forall a, x R+: a != 1 =>: log(a, 1 / x) = -log(a, x)`.
-    pub(crate) fn try_verify_log_reciprocal_rule(
+    pub fn try_verify_log_reciprocal_rule(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -295,7 +295,7 @@ impl Runtime {
 
     // Change of base: log_a(b) = log_c(b) / log_c(a).
     // Example: `forall a, b, c R+: a != 1, c != 1 =>: log(a, b) = log(c, b) / log(c, a)`.
-    pub(crate) fn try_verify_log_change_of_base_rule(
+    pub fn try_verify_log_change_of_base_rule(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -366,7 +366,7 @@ impl Runtime {
     }
 
     // log_a(b) = c  iff  a^c = b  (Litex `log(a, b) = c`; reduces to proving `a^c = b`.)
-    pub(crate) fn try_verify_log_equals_by_pow_inverse(
+    pub fn try_verify_log_equals_by_pow_inverse(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -430,7 +430,7 @@ impl Runtime {
 
     // Exponential inverse in the other direction: a^c = b from known c = log_a(b).
     // Example: `forall a, b R+, c R: log(a, b) = c =>: a^c = b`.
-    pub(crate) fn try_verify_pow_equals_by_known_log_inverse(
+    pub fn try_verify_pow_equals_by_known_log_inverse(
         &mut self,
         equal_fact: &EqualFact,
         _builtin_state: &UseBuiltinRuleVerifyState,

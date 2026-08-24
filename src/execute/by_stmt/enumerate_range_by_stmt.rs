@@ -120,7 +120,7 @@ impl Runtime {
         )
     }
 
-    pub(crate) fn exec_by_enumerate_range_stmt_affect_environment_only(
+    pub fn exec_by_enumerate_range_stmt_affect_environment_only(
         &mut self,
         stmt: &ByEnumerateRangeStmt,
     ) -> Result<StmtResult, RuntimeError> {

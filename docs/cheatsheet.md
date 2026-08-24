@@ -108,6 +108,24 @@ For an algebraic failure, split one large jump into a short equality chain. For
 rewriting inside a function, sequence, sum, product, or recursive call, prove
 the changed inner value or index first.
 
+## Five Journal-Backed Repair Tracers
+
+These routes summarize repeated failed-to-repaired transitions in proof
+journals. They are authoring decisions, not new language rules: first match the
+earliest phase, then try the smallest indicated change in the real caller.
+
+| Symptom | Next move | Keep this boundary | Runnable pair |
+|---|---|---|---|
+| The parser rejects a plausible mathematical move | Put the same move on a current proof surface such as `claim:` plus an indented `?` goal | Reaching proof verification does not prove the goal | [Phase first](Examples.md#phase-first-repair-the-surface-before-the-proof) |
+| A declaration or application is not well-defined | Establish the exact argument carrier, index bound, divisor premise, or typed construction first | Do not retain carrier echoes whose deletion still passes | [Carrier first](Examples.md#carrier-first-make-the-object-legal-before-proving-with-it) |
+| One compound equality or comparison is `unknown` | State the smallest changed inner value once, then continue with one outer equality or order chain | Preserve an inner representation equation when a deletion probe breaks its consumer | [Inside out](Examples.md#inside-out-rewrite-the-smallest-changed-subterm-first) |
+| The proof passes but reads like a verifier trace | Delete theorem-result echoes, witness-body repeats, and endpoint logs one class at a time | Restore only the first exact bridge whose removal fails in context | [Proof liveness](Examples.md#liveness-delete-echoes-but-keep-a-proven-live-bridge) |
+| Later code must apply data that was introduced only as a set-shaped value | Expose the exact `fn` interface, or construct the refined value before selecting it | A passing implementation is still wrong if it changes the source-facing domain | [Interface fidelity](Examples.md#interface-fidelity-make-callable-data-callable-without-changing-the-object) |
+
+The first four rows are ready for held-out behavior evaluation. Interface
+fidelity still needs its historical boundary refreshed by a current clean
+file gate before it can be considered for permanent skill promotion.
+
 ## Run And Inspect
 
 | Need | Command |

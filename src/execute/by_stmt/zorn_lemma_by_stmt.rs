@@ -132,7 +132,7 @@ impl Runtime {
         )
     }
 
-    pub(crate) fn exec_by_zorn_lemma_stmt_affect_environment_only(
+    pub fn exec_by_zorn_lemma_stmt_affect_environment_only(
         &mut self,
         stmt: &ByZornLemmaStmt,
     ) -> Result<StmtResult, RuntimeError> {

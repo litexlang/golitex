@@ -1,7 +1,8 @@
 use super::known_fn::KnownFnInfo;
 use crate::prelude::*;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::fmt;
+use std::ops::{Deref, DerefMut};
 use std::rc::Rc;
 
 pub type AtomicFactInForallArgShapeKey = Vec<(ObjKind, ObjOperatorString)>;
@@ -9,35 +10,6 @@ pub type AtomicFactInForallArgShapeIndex = HashMap<
     (AtomicFactKey, bool),
     HashMap<AtomicFactInForallArgShapeKey, Vec<(AtomicFact, Rc<KnownForallFactParamsAndDom>)>>,
 >;
-
-/// In-progress proof-search keys owned by one environment scope.
-///
-/// This state prevents recursive back-edges while a statement is being
-/// checked. It is deliberately absent from environment snapshots and merges:
-/// cloning an environment starts with no active search, and statement cleanup
-/// clears every active scope.
-#[derive(Default)]
-pub(crate) struct ProofSearchState {
-    pub(crate) active_atomic_fact_inferences: HashSet<FactString>,
-    pub(crate) active_well_defined_objects: HashSet<ObjString>,
-    pub(crate) active_set_builder_membership_unfolds: HashSet<FactString>,
-    pub(crate) active_set_builder_forall_transport: bool,
-}
-
-impl Clone for ProofSearchState {
-    fn clone(&self) -> Self {
-        Self::default()
-    }
-}
-
-impl ProofSearchState {
-    pub(crate) fn clear(&mut self) {
-        self.active_atomic_fact_inferences.clear();
-        self.active_well_defined_objects.clear();
-        self.active_set_builder_membership_unfolds.clear();
-        self.active_set_builder_forall_transport = false;
-    }
-}
 
 /// The mutable mathematical context for a runtime environment.
 ///
@@ -57,6 +29,33 @@ impl ProofSearchState {
 /// - strategy registrations and stopped-strategy state.
 #[derive(Clone)]
 pub struct Environment {
+    /// Persistent repositories that describe the checked mathematical world.
+    /// Statement-local proof search state belongs to `Runtime`, not here.
+    pub repositories: EnvironmentPersistentRepositories,
+}
+
+impl Deref for Environment {
+    type Target = EnvironmentPersistentRepositories;
+
+    fn deref(&self) -> &Self::Target {
+        &self.repositories
+    }
+}
+
+impl DerefMut for Environment {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.repositories
+    }
+}
+
+/// Named aggregate for all persistent Environment repositories.
+///
+/// The fields retain their domain names because verifier code addresses the
+/// corresponding indexes directly; grouping them here keeps `Environment`
+/// itself a clear owner instead of a mixture of persistent data and runtime
+/// scratch state.
+#[derive(Clone)]
+pub struct EnvironmentPersistentRepositories {
     pub symbols: SymbolTable,
     pub defined_identifiers: HashMap<IdentifierName, ParamObjType>,
     pub defined_def_props: HashMap<PropName, DefPropStmt>,
@@ -111,17 +110,8 @@ pub struct Environment {
     pub known_antisymmetric_props: HashMap<String, ()>,
 
     pub cache_well_defined_obj: HashMap<WellDefinedCacheKey, CachedWellDefinedObj>,
-    pub cache_known_fact: HashMap<FactString, CachedKnownFact>,
+    pub stored_facts: EnvironmentStoredFactRepository,
     pub cache_infer_rule_firing: HashMap<String, ()>,
-    /// Successful atomic subgoals reusable only while the current statement executes.
-    pub statement_atomic_fact_proofs: HashMap<FactString, Rc<SuccessVerifyFactResult>>,
-    /// Successful object WD nodes reusable only while the current statement executes.
-    /// A reuse result owns an `Rc` to the exact source, so no scope path must
-    /// be reconstructed after this transient map is cleared.
-    pub statement_well_defined_obj_proofs:
-        HashMap<WellDefinedCacheKey, Rc<SuccessVerifyObjWellDefinedResult>>,
-    pub(crate) proof_search_state: ProofSearchState,
-
     pub used_strategy_stmts: HashMap<(PropName, bool), StrategyName>,
     pub stopped_strategy_stmts: HashMap<(PropName, bool), StrategyName>,
 }
@@ -228,8 +218,8 @@ impl fmt::Display for Environment {
         )?;
         write!(
             f,
-            "    cache_known_fact: {:?}\n",
-            self.cache_known_fact.len()
+            "    stored_fact_lookup_keys: {:?}\n",
+            self.stored_facts.lookup_key_count()
         )?;
         write!(f, "}}")
     }
@@ -451,12 +441,21 @@ impl Environment {
         chain_fact: &ChainFact,
         forall_params_and_dom: Rc<KnownForallFactParamsAndDom>,
     ) -> Result<(), RuntimeError> {
-        for fact in chain_fact
+        for (component_index, fact) in chain_fact
             .facts()
             .map_err(RuntimeError::wrap_new_fact_as_store_conflict)?
             .into_iter()
+            .enumerate()
         {
-            self.store_atomic_fact_in_forall_fact(fact, forall_params_and_dom.clone())?;
+            self.store_atomic_fact_in_forall_fact(
+                fact,
+                forall_params_and_dom.with_conclusion_location(
+                    ForallConclusionLocation::chain_fact_component(
+                        forall_params_and_dom.conclusion_location.then_fact_index(),
+                        component_index,
+                    ),
+                ),
+            )?;
         }
         Ok(())
     }
@@ -492,21 +491,32 @@ impl Environment {
         forall_params_and_dom: Rc<KnownForallFactParamsAndDom>,
     ) -> Result<(), RuntimeError> {
         self.store_whole_and_fact_in_forall_fact(and_fact, forall_params_and_dom.clone())?;
-        for fact in and_fact.facts.iter() {
-            self.store_atomic_fact_in_forall_fact(fact.clone(), forall_params_and_dom.clone())?;
+        for (component_index, fact) in and_fact.facts.iter().enumerate() {
+            self.store_atomic_fact_in_forall_fact(
+                fact.clone(),
+                forall_params_and_dom.with_conclusion_location(
+                    ForallConclusionLocation::and_fact_component(
+                        forall_params_and_dom.conclusion_location.then_fact_index(),
+                        component_index,
+                    ),
+                ),
+            )?;
         }
         Ok(())
     }
 
-    fn store_forall_fact(&mut self, forall_fact: Rc<ForallFact>) -> Result<(), RuntimeError> {
-        let forall_params_and_dom = Rc::new(KnownForallFactParamsAndDom::new(
-            forall_fact.params_def_with_type.clone(),
-            forall_fact.dom_facts.clone(),
-            forall_fact.line_file.clone(),
-        ));
-
-        for fact in forall_fact.then_facts.iter() {
-            self.store_a_fact_in_forall_fact(fact, forall_params_and_dom.clone())?;
+    fn store_forall_fact(
+        &mut self,
+        forall_fact: Rc<ForallFact>,
+        source_fact_id: FactId,
+    ) -> Result<(), RuntimeError> {
+        for (then_fact_index, fact) in forall_fact.then_facts.iter().enumerate() {
+            let known_forall_conclusion = Rc::new(KnownForallFactParamsAndDom::new(
+                forall_fact.clone(),
+                source_fact_id,
+                ForallConclusionLocation::direct_then_fact(then_fact_index),
+            ));
+            self.store_a_fact_in_forall_fact(fact, known_forall_conclusion)?;
         }
         Ok(())
     }
@@ -521,24 +531,44 @@ impl Environment {
     fn store_forall_fact_with_iff(
         &mut self,
         forall_fact_with_iff: ForallFactWithIff,
+        source_fact_id: FactId,
     ) -> Result<(), RuntimeError> {
         let (forall_then_implies_iff, forall_iff_implies_then) =
             forall_fact_with_iff.to_two_forall_facts()?;
-        self.store_forall_fact(Rc::new(forall_then_implies_iff))?;
-        self.store_forall_fact(Rc::new(forall_iff_implies_then))?;
+        self.store_forall_fact(Rc::new(forall_then_implies_iff), source_fact_id)?;
+        self.store_forall_fact(Rc::new(forall_iff_implies_then), source_fact_id)?;
         Ok(())
     }
 
-    pub fn store_fact(&mut self, fact: Fact) -> Result<(), RuntimeError> {
+    pub fn store_fact(&mut self, fact: Fact, fact_id: FactId) -> Result<(), RuntimeError> {
+        let equivalent_proposition_lookup_key = nested_obj_binder_normalized_fact_key(&fact);
+        self.store_fact_with_equivalent_proposition_key(
+            fact,
+            fact_id,
+            equivalent_proposition_lookup_key,
+        )
+    }
+
+    pub fn store_fact_with_equivalent_proposition_key(
+        &mut self,
+        fact: Fact,
+        fact_id: FactId,
+        equivalent_proposition_lookup_key: FactString,
+    ) -> Result<(), RuntimeError> {
+        self.record_stored_fact_with_equivalent_proposition_key(
+            fact.clone(),
+            fact_id,
+            equivalent_proposition_lookup_key,
+        )?;
         match fact {
             Fact::AtomicFact(atomic_fact) => self.store_atomic_fact(atomic_fact),
             Fact::ExistFact(exist_fact) => self.store_exist_fact(exist_fact),
             Fact::OrFact(or_fact) => self.store_or_fact(or_fact),
             Fact::AndFact(and_fact) => self.store_and_fact(and_fact),
             Fact::ChainFact(chain_fact) => self.store_chain_fact(chain_fact),
-            Fact::ForallFact(forall_fact) => self.store_forall_fact(Rc::new(forall_fact)),
+            Fact::ForallFact(forall_fact) => self.store_forall_fact(Rc::new(forall_fact), fact_id),
             Fact::ForallFactWithIff(forall_fact_with_iff) => {
-                self.store_forall_fact_with_iff(forall_fact_with_iff)
+                self.store_forall_fact_with_iff(forall_fact_with_iff, fact_id)
             }
             Fact::NotForall(_) => Ok(()),
         }
@@ -620,50 +650,49 @@ impl Environment {
 impl Environment {
     pub fn new_empty_env() -> Self {
         Environment {
-            symbols: SymbolTable::new(),
-            defined_identifiers: HashMap::new(),
-            defined_def_props: HashMap::new(),
-            defined_abstract_props: HashMap::new(),
-            defined_algorithms: HashMap::new(),
-            defined_structs: HashMap::new(),
-            defined_templates: HashMap::new(),
-            defined_settings: HashMap::new(),
-            defined_thm_stmts: HashMap::new(),
-            defined_axiom_stmts: HashMap::new(),
-            defined_strategy_stmts: HashMap::new(),
-            known_equality: KnownEquality::new(),
-            known_atomic_facts_with_0_or_more_than_2_args: HashMap::new(),
-            known_atomic_facts_with_1_arg: HashMap::new(),
-            known_atomic_facts_with_2_args: HashMap::new(),
-            known_owner_sets: HashMap::new(),
-            known_direct_supersets: HashMap::new(),
-            known_exist_facts: HashMap::new(),
-            known_or_facts: HashMap::new(),
-            known_atomic_facts_in_forall_facts: HashMap::new(),
-            known_atomic_facts_in_forall_facts_by_arg_shape: HashMap::new(),
-            known_exist_facts_in_forall_facts: HashMap::new(),
-            known_and_facts_in_forall_facts: HashMap::new(),
-            known_or_facts_in_forall_facts: HashMap::new(),
-            known_objs_equal_to_tuple: HashMap::new(),
-            known_objs_equal_to_cart: HashMap::new(),
-            known_objs_equal_to_finite_seq_list: HashMap::new(),
-            known_objs_equal_to_matrix_list: HashMap::new(),
-            known_objs_in_matrix_sets: HashMap::new(),
-            known_obj_values: HashMap::new(),
-            known_objs_equal_to_set_builder: HashMap::new(),
-            known_objs_in_fn_sets: HashMap::new(),
-            known_transitive_props: HashMap::new(),
-            known_symmetric_props: HashMap::new(),
-            known_reflexive_props: HashMap::new(),
-            known_antisymmetric_props: HashMap::new(),
-            cache_well_defined_obj: HashMap::new(),
-            cache_known_fact: HashMap::new(),
-            cache_infer_rule_firing: HashMap::new(),
-            statement_atomic_fact_proofs: HashMap::new(),
-            statement_well_defined_obj_proofs: HashMap::new(),
-            proof_search_state: ProofSearchState::default(),
-            used_strategy_stmts: HashMap::new(),
-            stopped_strategy_stmts: HashMap::new(),
+            repositories: EnvironmentPersistentRepositories {
+                symbols: SymbolTable::new(),
+                defined_identifiers: HashMap::new(),
+                defined_def_props: HashMap::new(),
+                defined_abstract_props: HashMap::new(),
+                defined_algorithms: HashMap::new(),
+                defined_structs: HashMap::new(),
+                defined_templates: HashMap::new(),
+                defined_settings: HashMap::new(),
+                defined_thm_stmts: HashMap::new(),
+                defined_axiom_stmts: HashMap::new(),
+                defined_strategy_stmts: HashMap::new(),
+                known_equality: KnownEquality::new(),
+                known_atomic_facts_with_0_or_more_than_2_args: HashMap::new(),
+                known_atomic_facts_with_1_arg: HashMap::new(),
+                known_atomic_facts_with_2_args: HashMap::new(),
+                known_owner_sets: HashMap::new(),
+                known_direct_supersets: HashMap::new(),
+                known_exist_facts: HashMap::new(),
+                known_or_facts: HashMap::new(),
+                known_atomic_facts_in_forall_facts: HashMap::new(),
+                known_atomic_facts_in_forall_facts_by_arg_shape: HashMap::new(),
+                known_exist_facts_in_forall_facts: HashMap::new(),
+                known_and_facts_in_forall_facts: HashMap::new(),
+                known_or_facts_in_forall_facts: HashMap::new(),
+                known_objs_equal_to_tuple: HashMap::new(),
+                known_objs_equal_to_cart: HashMap::new(),
+                known_objs_equal_to_finite_seq_list: HashMap::new(),
+                known_objs_equal_to_matrix_list: HashMap::new(),
+                known_objs_in_matrix_sets: HashMap::new(),
+                known_obj_values: HashMap::new(),
+                known_objs_equal_to_set_builder: HashMap::new(),
+                known_objs_in_fn_sets: HashMap::new(),
+                known_transitive_props: HashMap::new(),
+                known_symmetric_props: HashMap::new(),
+                known_reflexive_props: HashMap::new(),
+                known_antisymmetric_props: HashMap::new(),
+                cache_well_defined_obj: HashMap::new(),
+                stored_facts: EnvironmentStoredFactRepository::default(),
+                cache_infer_rule_firing: HashMap::new(),
+                used_strategy_stmts: HashMap::new(),
+                stopped_strategy_stmts: HashMap::new(),
+            },
         }
     }
 }
@@ -754,14 +783,42 @@ impl Environment {
         fact_line_file: LineFile,
         fact_id: FactId,
     ) -> Result<(), RuntimeError> {
-        self.cache_known_fact.insert(
-            fact_key,
-            CachedKnownFact {
+        self.stored_facts
+            .record_lookup_key(fact_key, fact_line_file, fact_id)
+    }
+
+    pub fn store_fact_to_cache_known_fact_with_equivalent_proposition_key(
+        &mut self,
+        fact_key: FactString,
+        fact_line_file: LineFile,
+        fact_id: FactId,
+        equivalent_proposition_lookup_key: FactString,
+    ) -> Result<(), RuntimeError> {
+        self.stored_facts
+            .record_lookup_key_with_equivalent_proposition_key(
+                fact_key,
+                fact_line_file,
                 fact_id,
-                line_file: fact_line_file,
-            },
-        );
-        Ok(())
+                equivalent_proposition_lookup_key,
+            )
+    }
+
+    pub fn record_stored_fact(&mut self, fact: Fact, fact_id: FactId) -> Result<(), RuntimeError> {
+        self.stored_facts.record_fact(fact, fact_id)
+    }
+
+    pub fn record_stored_fact_with_equivalent_proposition_key(
+        &mut self,
+        fact: Fact,
+        fact_id: FactId,
+        equivalent_proposition_lookup_key: FactString,
+    ) -> Result<(), RuntimeError> {
+        self.stored_facts
+            .record_fact_with_equivalent_proposition_key(
+                fact,
+                fact_id,
+                equivalent_proposition_lookup_key,
+            )
     }
 
     pub fn store_infer_rule_firing(&mut self, firing_key: String) {
@@ -778,6 +835,7 @@ impl Environment {
 pub struct CachedKnownFact {
     pub fact_id: FactId,
     pub line_file: LineFile,
+    pub equivalent_proposition_lookup_key: FactString,
 }
 
 pub fn atomic_fact_in_forall_arg_shape_key(
@@ -794,15 +852,43 @@ pub struct KnownForallFactParamsAndDom {
     pub params_def: ParamDefWithType,
     pub dom: Vec<Fact>,
     pub line_file: LineFile,
+    /// Exact stored universal that produced every indexed conclusion sharing
+    /// this record. A consumer may select one conclusion for matching, but its
+    /// proof citation must retain this complete source proposition and FactId.
+    pub source_forall: Rc<ForallFact>,
+    pub source_fact_id: FactId,
+    pub conclusion_location: ForallConclusionLocation,
 }
 
 impl KnownForallFactParamsAndDom {
-    pub fn new(params: ParamDefWithType, dom: Vec<Fact>, line_file: LineFile) -> Self {
+    pub fn new(
+        source_forall: Rc<ForallFact>,
+        source_fact_id: FactId,
+        conclusion_location: ForallConclusionLocation,
+    ) -> Self {
         KnownForallFactParamsAndDom {
-            params_def: params,
-            dom,
-            line_file,
+            params_def: source_forall.params_def_with_type.clone(),
+            dom: source_forall.dom_facts.clone(),
+            line_file: source_forall.line_file.clone(),
+            source_forall,
+            source_fact_id,
+            conclusion_location,
         }
+    }
+
+    pub fn source_fact(&self) -> Fact {
+        self.source_forall.as_ref().clone().into()
+    }
+
+    pub fn with_conclusion_location(
+        &self,
+        conclusion_location: ForallConclusionLocation,
+    ) -> Rc<Self> {
+        Rc::new(Self::new(
+            self.source_forall.clone(),
+            self.source_fact_id,
+            conclusion_location,
+        ))
     }
 }
 

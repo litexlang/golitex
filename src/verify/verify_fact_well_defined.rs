@@ -182,7 +182,7 @@ impl Runtime {
             .expect("forall precheck returns recursive WD evidence"))
     }
 
-    pub(crate) fn verify_fact_binder_result(
+    pub fn verify_fact_binder_result(
         &mut self,
         parameter_definition: &ParamDefWithType,
         binding_kind: ParamObjType,
@@ -237,7 +237,7 @@ impl Runtime {
         Ok(SuccessVerifyFactBinderResult { parameter_groups })
     }
 
-    pub(crate) fn verify_and_store_quantifier_free_wd_result(
+    pub fn verify_and_store_quantifier_free_wd_result(
         &mut self,
         fact: &QuantifierFreeFact,
         verify_state: &UseContextVerifyState,

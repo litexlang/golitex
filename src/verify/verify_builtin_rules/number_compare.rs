@@ -583,7 +583,7 @@ fn normalized_decimal_string_is_integer(number_value: &str) -> bool {
     digits_are_all_zero(&fractional_digits)
 }
 
-pub(crate) fn normalized_decimal_string_is_even_integer(number_value: &str) -> bool {
+pub fn normalized_decimal_string_is_even_integer(number_value: &str) -> bool {
     if !normalized_decimal_string_is_integer(number_value) {
         return false;
     }

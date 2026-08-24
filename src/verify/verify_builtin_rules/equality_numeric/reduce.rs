@@ -4,7 +4,7 @@ const MAX_LITERAL_REDUCE_TERMS: u128 = 4096;
 
 impl Runtime {
     /// The ordered fold of an empty closed interval is its seed.
-    pub(crate) fn try_verify_reduce_empty(
+    pub fn try_verify_reduce_empty(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -47,7 +47,7 @@ impl Runtime {
     /// Expand a bounded literal integer interval as the specified ascending
     /// left fold. Example: `reduce(1,3,f,op,s)` becomes
     /// `op(op(op(s,f(1)),f(2)),f(3))`.
-    pub(crate) fn try_verify_reduce_literal_expansion(
+    pub fn try_verify_reduce_literal_expansion(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -121,7 +121,7 @@ impl Runtime {
     }
 
     /// Recursive defining equation for a nonempty ordered fold.
-    pub(crate) fn try_verify_reduce_step(
+    pub fn try_verify_reduce_step(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -186,7 +186,7 @@ impl Runtime {
         Ok(None)
     }
 
-    pub(crate) fn try_verify_finite_set_reduce_empty(
+    pub fn try_verify_finite_set_reduce_empty(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -228,7 +228,7 @@ impl Runtime {
     /// well-definedness gate has already established associativity and
     /// commutativity, so this order is only an evaluation witness, not syntax
     /// with mathematical significance.
-    pub(crate) fn try_verify_finite_set_reduce_list_expansion(
+    pub fn try_verify_finite_set_reduce_list_expansion(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -293,7 +293,7 @@ impl Runtime {
         Ok(None)
     }
 
-    pub(crate) fn try_verify_finite_set_reduce_closed_range_bridge(
+    pub fn try_verify_finite_set_reduce_closed_range_bridge(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -331,7 +331,7 @@ impl Runtime {
 
     /// Inserting one fresh element contributes exactly one new value. The
     /// operation-law gate makes the chosen side/order immaterial.
-    pub(crate) fn try_verify_finite_set_reduce_fresh_insertion(
+    pub fn try_verify_finite_set_reduce_fresh_insertion(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -407,7 +407,7 @@ impl Runtime {
     /// Addition with seed zero and multiplication with seed one specialize a
     /// range reduction to the existing `sum` and `product` objects.
     /// Example: `reduce(a,b,f,add,0) = sum(a,b,f)`.
-    pub(crate) fn try_verify_reduce_specialized_aggregate_bridge(
+    pub fn try_verify_reduce_specialized_aggregate_bridge(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -467,7 +467,7 @@ impl Runtime {
     /// Addition with seed zero and multiplication with seed one specialize a
     /// finite-set reduction to the existing finite-set aggregates.
     /// Example: `finite_set_reduce(S,f,add,0) = finite_set_sum(S,f)`.
-    pub(crate) fn try_verify_finite_set_reduce_specialized_aggregate_bridge(
+    pub fn try_verify_finite_set_reduce_specialized_aggregate_bridge(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -521,7 +521,7 @@ impl Runtime {
     /// Reductions are congruent when their structural parameters agree and
     /// their unary functions are pointwise equal on the exact index set.
     /// Examples use `$fn_eq_in(f,g,a...b)` or `$fn_eq_in(f,g,S)`.
-    pub(crate) fn try_verify_reduce_pointwise_congruence(
+    pub fn try_verify_reduce_pointwise_congruence(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -620,7 +620,7 @@ impl Runtime {
     /// interval when the pulled-back function supplies the same values in the
     /// same order. No associativity or commutativity is required.
     /// Example: `reduce(a,b,f,op,s) = reduce(0,b-a,fn(k Z) T {f(a+k)},op,s)`.
-    pub(crate) fn try_verify_reduce_order_preserving_translation(
+    pub fn try_verify_reduce_order_preserving_translation(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -764,7 +764,7 @@ impl Runtime {
     /// A nonempty ordered reduction may consume its first value into the seed
     /// and continue at the next integer, without any operation laws.
     /// Example: `reduce(a,b,f,op,s) = reduce(a+1,b,f,op,op(s,f(a)))`.
-    pub(crate) fn try_verify_reduce_first_step(
+    pub fn try_verify_reduce_first_step(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -855,7 +855,7 @@ impl Runtime {
     /// An ordered reduction can be resumed on the immediately adjacent tail,
     /// preserving order even for noncommutative operations.
     /// Example: `reduce(a,c,f,op,s) = reduce(b+1,c,f,op,reduce(a,b,f,op,s))`.
-    pub(crate) fn try_verify_reduce_adjacent_partition(
+    pub fn try_verify_reduce_adjacent_partition(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -931,7 +931,7 @@ impl Runtime {
     /// part seeded by the reduction of the other part. This form is valid even
     /// when `seed` is not an identity.
     /// Example: `F(union(A,B),s) = F(A,F(B,s))` when `intersect(A,B) = {}`.
-    pub(crate) fn try_verify_finite_set_reduce_disjoint_union(
+    pub fn try_verify_finite_set_reduce_disjoint_union(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -1032,7 +1032,7 @@ impl Runtime {
     /// A commutative finite-set reduction is invariant under a known
     /// bijective reindexing. Example: `$bijective(Y,X,g)` transports
     /// `F(X,f)` to `F(Y,fn(y Y) T {f(g(y))})`.
-    pub(crate) fn try_verify_finite_set_reduce_bijective_reindexing(
+    pub fn try_verify_finite_set_reduce_bijective_reindexing(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,

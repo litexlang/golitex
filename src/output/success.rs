@@ -18,7 +18,7 @@ pub fn display_stmt_exec_result_json(
 /// JSON v2 is the statement result itself, so compact/normal/detailed no
 /// longer project three different semantic shapes. The style parameter stays
 /// in this internal signature while callers migrate away from it.
-pub(crate) fn display_stmt_exec_result_json_with_style(
+pub fn display_stmt_exec_result_json_with_style(
     _runtime: &Runtime,
     result: &StmtResult,
     _output_style: OutputStyle,

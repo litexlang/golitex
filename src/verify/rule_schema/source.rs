@@ -59,16 +59,16 @@ pub enum RuleSourceRef {
 
 #[derive(Clone)]
 pub struct RuleVariable {
-    pub(crate) binding: SymbolBinding,
-    pub(crate) param_type: ParamType,
+    pub binding: SymbolBinding,
+    pub param_type: ParamType,
 }
 
 #[derive(Clone)]
 pub struct CompiledRuleSchema {
-    pub(crate) source: RuleSourceRef,
-    pub(crate) variables: Vec<RuleVariable>,
-    pub(crate) parameter_requirements: Vec<AtomicFact>,
-    pub(crate) premises: Vec<QuantifierFreeFact>,
-    pub(crate) conclusion: AtomicFact,
-    pub(crate) head_key: super::AtomicFactHead,
+    pub source: RuleSourceRef,
+    pub variables: Vec<RuleVariable>,
+    pub parameter_requirements: Vec<AtomicFact>,
+    pub premises: Vec<QuantifierFreeFact>,
+    pub conclusion: AtomicFact,
+    pub head_key: super::AtomicFactHead,
 }

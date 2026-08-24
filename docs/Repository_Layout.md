@@ -44,8 +44,12 @@ boundary. Prefer these rules:
    Glob imports remain an internal repository convention, not the public API.
 5. Tests are classified by the boundary they assert:
    - black-box behavior uses a normal integration-test crate;
-   - white-box kernel contracts live below `tests/kernel_contracts/` and are
+   - white-box tests mirror their owning source subsystem below `tests/unit/`;
+   - cross-cutting white-box kernel contracts live below
+     `tests/unit/kernel_contracts/` and are
      loaded privately under `cfg(test)`;
+   - black-box Cargo targets live below `tests/integration/` and are registered
+     explicitly in `Cargo.toml`;
    - generated or external fixtures stay beside the subsystem that owns their
      generation contract, not beside arbitrary Rust call sites.
 

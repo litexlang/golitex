@@ -169,7 +169,7 @@ impl Runtime {
         )
     }
 
-    pub(crate) fn exec_by_def_stmt_affect_environment_only(
+    pub fn exec_by_def_stmt_affect_environment_only(
         &mut self,
         stmt: &ByDefStmt,
     ) -> Result<StmtResult, RuntimeError> {

@@ -1,7 +1,7 @@
 use crate::prelude::*;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
-pub(crate) enum AtomicFactTag {
+pub enum AtomicFactTag {
     Normal,
     Equal,
     Less,
@@ -35,13 +35,13 @@ pub(crate) enum AtomicFactTag {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
-pub(crate) struct AtomicFactHead {
+pub struct AtomicFactHead {
     pub tag: AtomicFactTag,
     pub predicate: Option<(Option<String>, String)>,
     pub arity: usize,
 }
 
-pub(crate) fn atomic_fact_head(fact: &AtomicFact) -> AtomicFactHead {
+pub fn atomic_fact_head(fact: &AtomicFact) -> AtomicFactHead {
     let (tag, predicate) = match fact {
         AtomicFact::NormalAtomicFact(fact) => (
             AtomicFactTag::Normal,
@@ -95,7 +95,7 @@ fn atomic_name_scalar(name: &AtomicName) -> (Option<String>, String) {
 }
 
 #[derive(Clone, PartialEq, Eq)]
-pub(crate) enum CanonicalScalar {
+pub enum CanonicalScalar {
     Symbol(SymbolId),
     Text(String),
     AtomicName(Option<String>, String),
@@ -104,14 +104,14 @@ pub(crate) enum CanonicalScalar {
     Arity(usize),
 }
 
-pub(crate) struct CanonicalObjView<'a> {
+pub struct CanonicalObjView<'a> {
     pub tag: ObjKind,
     pub scalars: Vec<CanonicalScalar>,
     pub children: Vec<&'a Obj>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub(crate) struct CanonicalMatchError {
+pub struct CanonicalMatchError {
     pub message: String,
 }
 
@@ -165,7 +165,7 @@ fn atomic_name_canonical_scalar(name: &AtomicName) -> CanonicalScalar {
     CanonicalScalar::AtomicName(module, name)
 }
 
-pub(crate) fn canonical_obj_view(obj: &Obj) -> Result<CanonicalObjView<'_>, CanonicalMatchError> {
+pub fn canonical_obj_view(obj: &Obj) -> Result<CanonicalObjView<'_>, CanonicalMatchError> {
     let empty = |tag| CanonicalObjView {
         tag,
         scalars: Vec::new(),

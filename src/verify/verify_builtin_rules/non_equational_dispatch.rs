@@ -1,7 +1,7 @@
 use crate::prelude::*;
 
 impl Runtime {
-    pub(crate) fn verify_non_equational_atomic_fact_with_builtin_rules_inner(
+    pub fn verify_non_equational_atomic_fact_with_builtin_rules_inner(
         &mut self,
         atomic_fact: &AtomicFact,
         builtin_state: &UseBuiltinRuleVerifyState,

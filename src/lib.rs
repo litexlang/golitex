@@ -8,7 +8,7 @@ pub mod fact;
 pub mod graph;
 pub mod infer;
 #[cfg(test)]
-#[path = "../tests/kernel_contracts/mod.rs"]
+#[path = "../tests/unit/kernel_contracts/mod.rs"]
 mod kernel_contracts;
 pub mod module_manager;
 pub mod obj;

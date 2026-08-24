@@ -1620,7 +1620,7 @@ impl Runtime {
 
     /// Resolve the homogeneous carrier of an unconditional binary operation.
     /// The two parameter carriers and the return carrier must be the same set.
-    pub(crate) fn reduce_carrier_from_operation(&self, operation: &Obj) -> Option<Obj> {
+    pub fn reduce_carrier_from_operation(&self, operation: &Obj) -> Option<Obj> {
         let body = self.get_fn_range_function_body(operation)?;
         if body.params_def_with_set.number_of_params() != 2 || !body.dom_facts.is_empty() {
             return None;
@@ -1709,7 +1709,7 @@ impl Runtime {
         Ok(())
     }
 
-    pub(crate) fn reduce_callable_application_obj(
+    pub fn reduce_callable_application_obj(
         &self,
         callable: &Obj,
         args: &[Obj],
@@ -1742,7 +1742,7 @@ impl Runtime {
     /// Instantiate an anonymous function body directly; retain named
     /// functions as ordinary applications so definition unfolding and known
     /// forall facts remain available to equality verification.
-    pub(crate) fn instantiate_reduce_function_at(
+    pub fn instantiate_reduce_function_at(
         &mut self,
         function: &Obj,
         args: &[Obj],

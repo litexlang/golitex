@@ -20,7 +20,7 @@ impl Runtime {
         )
     }
 
-    pub(crate) fn exec_have_by_preimage_stmt_affect_environment_only(
+    pub fn exec_have_by_preimage_stmt_affect_environment_only(
         &mut self,
         stmt: &HaveByPreimageStmt,
     ) -> Result<StmtResult, RuntimeError> {

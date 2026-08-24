@@ -1,6 +1,6 @@
 use super::*;
 
-pub(crate) fn general_cart_member_fn_set(
+pub fn general_cart_member_fn_set(
     runtime: &Runtime,
     general_cart: &GeneralCart,
 ) -> Result<Obj, RuntimeError> {
@@ -16,7 +16,7 @@ pub(crate) fn general_cart_member_fn_set(
     .into())
 }
 
-pub(crate) fn general_cart_member_pointwise_fact(
+pub fn general_cart_member_pointwise_fact(
     runtime: &Runtime,
     general_cart: &GeneralCart,
     member: &Obj,
@@ -63,7 +63,7 @@ pub(crate) fn general_cart_member_pointwise_fact(
 // Names the pointwise selection condition used by general Cartesian products.
 // Example: `$is_choice_function_for(I, S, g, f)` means
 // `forall alpha I: f(alpha) $in g(alpha)`.
-pub(crate) fn choice_function_for_fact(
+pub fn choice_function_for_fact(
     index_set: Obj,
     family_set: Obj,
     family_fn: Obj,
@@ -78,7 +78,7 @@ pub(crate) fn choice_function_for_fact(
     .into()
 }
 
-pub(crate) fn general_cart_member_choice_fact(
+pub fn general_cart_member_choice_fact(
     general_cart: &GeneralCart,
     member: Obj,
     line_file: LineFile,
@@ -92,7 +92,7 @@ pub(crate) fn general_cart_member_choice_fact(
     )
 }
 
-pub(crate) fn choice_function_for_definition_facts(
+pub fn choice_function_for_definition_facts(
     runtime: &Runtime,
     normal_fact: &NormalAtomicFact,
 ) -> Result<Option<Vec<Fact>>, RuntimeError> {
@@ -112,7 +112,7 @@ pub(crate) fn choice_function_for_definition_facts(
     )
 }
 
-pub(crate) fn verify_choice_function_for_arg_types(
+pub fn verify_choice_function_for_arg_types(
     runtime: &mut Runtime,
     atomic_fact: &AtomicFact,
     verify_state: &UseContextVerifyState,

@@ -70,7 +70,7 @@ impl Runtime {
         Ok(())
     }
 
-    pub(crate) fn exec_def_prop_stmt_affect_environment(
+    pub fn exec_def_prop_stmt_affect_environment(
         &mut self,
         def_prop_stmt: &DefPropStmt,
     ) -> Result<SuccessInferResult, RuntimeError> {
@@ -78,7 +78,7 @@ impl Runtime {
         Ok(SuccessInferResult::new())
     }
 
-    pub(crate) fn exec_def_prop_stmt_affect_environment_only(
+    pub fn exec_def_prop_stmt_affect_environment_only(
         &mut self,
         def_prop_stmt: &DefPropStmt,
     ) -> Result<StmtResult, RuntimeError> {

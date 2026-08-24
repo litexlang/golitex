@@ -12,7 +12,7 @@ struct FnMembershipProofFlow {
 impl Runtime {
     /// Verify a value against a declared return set, including anonymous functions whose
     /// declared carrier is equal to a function space or set builder.
-    pub(crate) fn verify_value_in_declared_return_set(
+    pub fn verify_value_in_declared_return_set(
         &mut self,
         value: Obj,
         declared_return_set: Obj,

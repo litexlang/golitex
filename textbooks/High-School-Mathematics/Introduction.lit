@@ -1,0 +1,82 @@
+# About This Book
+#
+# Canonical Litex module: scripts/high_school_book/textbook
+# Published module: textbooks/High-School-Mathematics
+#
+# This book is a compact, runnable map of high-school mathematics expressed in
+# Litex. Its source of truth is the 20-unit curriculum inventory maintained in
+# `scripts/high_school_book/knowledge_core_json/`, rather than the prose of one
+# external textbook. The chapters introduce reusable definitions, state the
+# main relationships between them, and keep representative calculations close
+# to the concepts they illustrate.
+#
+# Mathematical directions
+#
+# 1. Sets and logic (Chapter 1). Membership, subsets, finite sets, set
+#    operations, implication, case analysis, and contradiction form the common
+#    language used by the rest of the book.
+#
+# 2. Algebra (Chapters 2--3). Equations, quadratic roots, inequalities, means,
+#    powers, exponentials, and logarithms develop symbolic calculation over the
+#    standard numeric carriers.
+#
+# 3. Functions (Chapter 4). Real functions are studied through values, graphs,
+#    ranges, parity, monotonicity, zeros, extrema, continuity, and inverse
+#    behavior.
+#
+# 4. Trigonometry (Chapters 5--6). Degree and radian measure, sine, cosine,
+#    tangent, identities, periods, amplitudes, and the sine and cosine laws
+#    connect algebraic formulas with angle and triangle calculations.
+#
+# 5. Plane vectors and analytic geometry (Chapters 7 and 13--15). Coordinate
+#    vector operations, dot products, lines, circles, conics, parametric and
+#    polar descriptions, and space vectors turn geometric objects into usable
+#    functions, sets, and relations.
+#
+# 6. Complex numbers (Chapter 8). Native complex arithmetic, real and
+#    imaginary coordinates, conjugation, and modulus extend scalar calculation
+#    beyond the real line.
+#
+# 7. Solid geometry and measurement (Chapters 9--10). Coordinate incidence,
+#    lines and planes in space, perpendicular and parallel directions, surface
+#    area, and volume formulas cover the three-dimensional geometric layer.
+#
+# 8. Probability (Chapters 11 and 19). Finite sample spaces, events, uniform
+#    probability, independence, conditional probability, Bayes' formula, and
+#    elementary distributions describe uncertainty through explicit numeric
+#    models.
+#
+# 9. Statistics and data analysis (Chapters 12 and 20). Mean, variance,
+#    standard deviation, range, relative frequency, percentile rank,
+#    covariance, correlation, regression, and independence tests summarize and
+#    compare finite data.
+#
+# 10. Sequences, induction, and combinatorics (Chapters 16 and 18). Arithmetic
+#     and geometric sequences, recursive definitions, finite sums, induction,
+#     permutations, combinations, Pascal's identity, and the binomial theorem
+#     provide the book's discrete-mathematics direction.
+#
+# 11. Derivatives and elementary calculus (Chapter 17). Difference quotients,
+#     derivative relations, stationary points, monotonicity, and optimization
+#     show how rates of change connect functions with local behavior.
+#
+# How to read the module
+#
+# The chapters are ordered so that later files can reuse earlier carriers and
+# constructions. Litex builtins supply standard numbers, sets, functions,
+# finite objects, trigonometric functions, and complex scalars; the chapter
+# files define the source-facing concepts that readers apply. Each direction
+# includes concrete examples, not only declarations, so its main interface can
+# be seen in use.
+#
+# Verification and scope
+#
+# Prior verified-book acceptance covers all 20 registered chapter files. The
+# current dirty verifier worktree is blocked in the unchanged shared cite layer
+# by a recorded FactId witness-storage regression; this comments-only
+# Introduction passes its registered release runner. The chapter files contain
+# no direct `trust`; five localized trusted conclusions and one abstract volume
+# interface remain visible in `HighSchoolCite`. Those boundaries record
+# unfinished supporting mathematics and are not claimed as verifier-checked
+# proofs. The project is a runnable curriculum map, not a claim to contain
+# every theorem, exercise, or proof in high-school mathematics.

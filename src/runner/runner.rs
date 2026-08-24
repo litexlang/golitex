@@ -77,13 +77,7 @@ pub fn run_runner_for_file_with_strict_language_and_isolation(
     let resolved_path = match resolve_litex_file_path(file_path) {
         Ok(path) => path,
         Err(message) => {
-            return runner_target_error_output(
-                "file",
-                file_path,
-                hide_file_paths,
-                message,
-                output_language,
-            );
+            return runner_target_error_output("file", file_path, hide_file_paths, message);
         }
     };
 
@@ -106,7 +100,6 @@ pub fn run_runner_for_file_with_strict_language_and_isolation(
         "file",
         resolved_path.as_str(),
         hide_file_paths,
-        output_language,
         ok,
         trace_output,
     )
@@ -142,14 +135,7 @@ pub fn run_runner_for_repo_with_strict_and_language(
         output_language,
         false,
     );
-    runner_output_from_trace(
-        "repo",
-        repo_path,
-        hide_file_paths,
-        output_language,
-        ok,
-        trace_output,
-    )
+    runner_output_from_trace("repo", repo_path, hide_file_paths, ok, trace_output)
 }
 
 pub fn resolve_litex_file_path(file_path: &str) -> Result<String, String> {
@@ -194,21 +180,13 @@ fn run_runner_on_source(
     let (stmt_results, runtime_error) = run_source_code(normalized_source.as_str(), &mut runtime);
     let (ok, trace_output) =
         render_run_source_code_output(&runtime, &stmt_results, &runtime_error, true);
-    runner_output_from_trace(
-        target_kind,
-        target_label,
-        hide_file_paths,
-        output_language,
-        ok,
-        trace_output,
-    )
+    runner_output_from_trace(target_kind, target_label, hide_file_paths, ok, trace_output)
 }
 
 fn runner_output_from_trace(
     target_kind: &str,
     target_label: &str,
     hide_file_paths: bool,
-    output_language: OutputLanguage,
     ok: bool,
     trace_output: String,
 ) -> (bool, String) {
@@ -239,10 +217,7 @@ fn runner_output_from_trace(
         ),
     ];
 
-    (
-        ok,
-        render_runner_json_value(output_language, JsonValue::Object(fields)),
-    )
+    (ok, render_runner_json_value(JsonValue::Object(fields)))
 }
 
 fn runner_target_error_output(
@@ -250,7 +225,6 @@ fn runner_target_error_output(
     target_label: &str,
     hide_file_paths: bool,
     message: String,
-    output_language: OutputLanguage,
 ) -> (bool, String) {
     let error = JsonValue::Object(vec![
         (
@@ -281,10 +255,10 @@ fn runner_target_error_output(
         ("trace".to_string(), JsonValue::JsonString(String::new())),
     ]);
 
-    (false, render_runner_json_value(output_language, output))
+    (false, render_runner_json_value(output))
 }
 
-fn render_runner_json_value(_output_language: OutputLanguage, value: JsonValue) -> String {
+fn render_runner_json_value(value: JsonValue) -> String {
     // Runner JSON is a machine interface. JSON v2 keeps structural keys and
     // enum names language-neutral; only human-readable diagnostic messages may
     // still be localized before they enter this envelope.
@@ -305,8 +279,4 @@ fn target_json_value(target_kind: &str, target_label: &str, hide_file_paths: boo
         ),
         ("label".to_string(), JsonValue::JsonString(label)),
     ])
-}
-
-fn remove_windows_carriage_return(text: &str) -> String {
-    text.replace('\r', "")
 }

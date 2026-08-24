@@ -1,7 +1,7 @@
 use crate::prelude::*;
 
 impl Runtime {
-    pub(crate) fn verify_prime_fact_by_computation(&self, atomic_fact: &AtomicFact) -> StmtResult {
+    pub fn verify_prime_fact_by_computation(&self, atomic_fact: &AtomicFact) -> StmtResult {
         let (fact_is_positive, predicate, args) = match atomic_fact {
             AtomicFact::NormalAtomicFact(f) => (true, &f.predicate, &f.body),
             AtomicFact::NotNormalAtomicFact(f) => (false, &f.predicate, &f.body),
@@ -29,7 +29,7 @@ impl Runtime {
         .into()
     }
 
-    pub(crate) fn builtin_prime_definition_facts(
+    pub fn builtin_prime_definition_facts(
         &mut self,
         normal_fact: &NormalAtomicFact,
     ) -> Result<Option<Vec<Fact>>, RuntimeError> {

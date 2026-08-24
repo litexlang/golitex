@@ -194,7 +194,7 @@ impl Runtime {
         )
     }
 
-    pub(crate) fn exec_def_strategy_stmt_affect_environment_only(
+    pub fn exec_def_strategy_stmt_affect_environment_only(
         &mut self,
         stmt: &DefStrategyStmt,
     ) -> Result<StmtResult, RuntimeError> {

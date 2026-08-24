@@ -1,7 +1,7 @@
 use crate::prelude::*;
 
 impl Runtime {
-    pub(crate) fn verify_builtin_strategy_child(
+    pub fn verify_builtin_strategy_child(
         &mut self,
         atomic_fact: &AtomicFact,
     ) -> Result<StmtResult, RuntimeError> {
@@ -24,7 +24,7 @@ impl Runtime {
         }
     }
 
-    pub(crate) fn verify_atomic_fact_with_builtin_strategy(
+    pub fn verify_atomic_fact_with_builtin_strategy(
         &mut self,
         atomic_fact: &AtomicFact,
     ) -> Result<StmtResult, RuntimeError> {

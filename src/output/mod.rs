@@ -11,4 +11,4 @@ mod unknown;
 pub use error::display_runtime_error_json;
 pub use result_json_v2::display_stmt_result_json_v2;
 pub use success::display_stmt_exec_result_json;
-pub(crate) use unknown::unknown_result_json_value;
+pub use unknown::unknown_result_json_value;

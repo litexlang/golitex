@@ -6,7 +6,7 @@ pub struct RuleSubstitution {
 }
 
 impl RuleSubstitution {
-    pub(crate) fn new(bindings: Vec<Obj>) -> Self {
+    pub fn new(bindings: Vec<Obj>) -> Self {
         Self { bindings }
     }
 
