@@ -17,6 +17,11 @@ forall a, b R:
     =>:
         a != 0 and b != 0
 
+forall z, w C:
+    z * w != 0
+    =>:
+        z != 0 and w != 0
+
 forall a R+, b R*:
     a = (a ^ b) ^ (1 / b)
     a = (a ^ (1 / b)) ^ b

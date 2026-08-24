@@ -15,7 +15,7 @@ impl Runtime {
 
         let mut inside_results = Vec::with_capacity(definition_facts.len());
         for definition_fact in definition_facts {
-            let result = self.verify_fact_full(&definition_fact, verify_state)?;
+            let result = self.verify_fact_allow_unknown(&definition_fact, verify_state)?;
             if result.is_unknown() {
                 return Ok(Some(result));
             }

@@ -712,6 +712,12 @@ fn collect_cited_param_indices_from_obj(
             shadowed_names,
             out,
         ),
+        Obj::Arcsin(x) => collect_cited_param_indices_from_obj(
+            &x.arg,
+            previous_param_indices,
+            shadowed_names,
+            out,
+        ),
         Obj::Cos(x) => collect_cited_param_indices_from_obj(
             &x.arg,
             previous_param_indices,

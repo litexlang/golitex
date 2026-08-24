@@ -716,7 +716,7 @@ template<S set>:
         .parse_stmt(&mut blocks[0])
         .expect("parse template declaration");
     let error = runtime
-        .exec_preverified_stmt_affect_environment_only(&stmt)
+        .execute_preverified_statement(&stmt)
         .expect_err("a template instance body must not become a nested template declaration");
 
     assert!(error
@@ -2307,6 +2307,43 @@ forall S nonempty_set, x S:
 }
 
 #[test]
+fn template_proof_indexes_a_materialized_callable_nested_inside_another_application() {
+    run_with_large_stack(
+        "template_proof_indexes_a_materialized_callable_nested_inside_another_application",
+        || {
+            let source_code = r#"
+axiom unique_wrapped_self:
+    ? forall S nonempty_set, wrap fn(value S) S, x S:
+        exist! y S st {wrap(y) = wrap(x)}
+
+template<S nonempty_set, wrap fn(value S) S>:
+    have fn selected_wrapped_self by exist!:
+        ? forall x S:
+            exist! y S st {wrap(y) = wrap(x)}
+        by thm unique_wrapped_self(S, wrap, x)
+
+forall S nonempty_set, wrap fn(value S) S, x S:
+    wrap(\selected_wrapped_self<S, wrap>(x)) = wrap(x)
+"#;
+
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "template_proof_indexes_a_materialized_callable_nested_inside_another_application",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "the materialized callable must remain matchable below the outer application:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
 fn template_recursive_function_materializes_public_computation_equations() {
     run_with_large_stack(
         "template_recursive_function_materializes_public_computation_equations",
@@ -3018,22 +3055,27 @@ exist x R st {x > a}
 }
 
 #[test]
-fn zero_product_split_requires_real_factors() {
+fn zero_product_split_accepts_real_or_complex_factors_and_rejects_non_scalars() {
     let positive_source = r#"
 have a, b R
 trust a * b = 0
 a = 0 or b = 0
+
+forall z, w C:
+    z * w = 0
+    =>:
+        z = 0 or w = 0
 "#;
     let mut positive_runtime = Runtime::new();
     positive_runtime
-        .new_file_path_new_env_new_name_scope("zero_product_split_requires_real_factors_positive");
+        .new_file_path_new_env_new_name_scope("zero_product_split_accepts_native_fields");
     let (positive_results, positive_error) =
         run_source_code(positive_source, &mut positive_runtime);
     let (positive_succeeded, positive_output) =
         render_run_source_code_output(&positive_runtime, &positive_results, &positive_error, false);
     assert!(
         positive_succeeded,
-        "zero-product splitting should retain real factors:\n{}",
+        "zero-product splitting should accept both native fields:\n{}",
         positive_output
     );
     assert!(
@@ -3048,8 +3090,7 @@ trust A * B = 0
 A = 0 or B = 0
 "#;
     let mut non_real_runtime = Runtime::new();
-    non_real_runtime
-        .new_file_path_new_env_new_name_scope("zero_product_split_requires_real_factors_non_real");
+    non_real_runtime.new_file_path_new_env_new_name_scope("zero_product_split_rejects_non_scalars");
     let (non_real_results, non_real_error) =
         run_source_code(non_real_source, &mut non_real_runtime);
     let (non_real_succeeded, non_real_output) =

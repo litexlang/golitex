@@ -169,7 +169,9 @@ forall S nonempty_set, left, right S, item &EqualPairWitness<S, left, right>:
     let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope("struct_header_bundle_shape");
     let setting_stmt = runtime.parse_stmt(&mut blocks[0]).expect("parse setting");
-    runtime.exec_stmt(&setting_stmt).expect("store setting");
+    runtime
+        .execute_statement(&setting_stmt)
+        .expect("store setting");
     let struct_stmt = runtime.parse_stmt(&mut blocks[1]).expect("parse struct");
     let Stmt::DefInterfaceStmt(DefInterfaceStmt::DefStructStmt(struct_def)) = struct_stmt else {
         panic!("expected struct definition");
@@ -264,9 +266,13 @@ forall [OneElement]:
     runtime.new_file_path_new_env_new_name_scope("setting_freshness");
 
     let setting_stmt = runtime.parse_stmt(&mut blocks[0]).expect("parse setting");
-    runtime.exec_stmt(&setting_stmt).expect("store setting");
+    runtime
+        .execute_statement(&setting_stmt)
+        .expect("store setting");
     let first = runtime.parse_stmt(&mut blocks[1]).expect("parse first use");
-    runtime.exec_stmt(&first).expect("execute first use");
+    runtime
+        .execute_statement(&first)
+        .expect("execute first use");
     let second = runtime
         .parse_stmt(&mut blocks[2])
         .expect("parse second use");
@@ -305,9 +311,13 @@ forall [OneElement(Y, y)]:
     runtime.new_file_path_new_env_new_name_scope("setting_explicit_freshness");
 
     let setting_stmt = runtime.parse_stmt(&mut blocks[0]).expect("parse setting");
-    runtime.exec_stmt(&setting_stmt).expect("store setting");
+    runtime
+        .execute_statement(&setting_stmt)
+        .expect("store setting");
     let first = runtime.parse_stmt(&mut blocks[1]).expect("parse first use");
-    runtime.exec_stmt(&first).expect("execute first use");
+    runtime
+        .execute_statement(&first)
+        .expect("execute first use");
     let second = runtime
         .parse_stmt(&mut blocks[2])
         .expect("parse second use");

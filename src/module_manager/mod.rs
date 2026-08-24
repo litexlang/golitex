@@ -1,9 +1,9 @@
-mod module_manager;
+mod manager_state;
 mod module_runner;
 mod project_config;
 mod repository;
 
-pub use module_manager::{ModuleManager, UnverifiedImport};
+pub use manager_state::{ModuleManager, UnverifiedImport};
 pub use module_runner::{
     BareSymbolSourceKind, ConfigBareSymbolSource, ConfigImport, ConfigImportKind, ExportEntry,
     FileId, FileRunner, FileStatus, ImportTarget, ModuleId, ModuleRunner, ModuleStatus,

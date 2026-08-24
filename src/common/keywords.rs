@@ -205,6 +205,7 @@ pub const IMPOSSIBLE: &str = "impossible";
 pub const ALGO: &str = "algo";
 pub const ABS: &str = "abs";
 pub const SIN: &str = "sin";
+pub const ARCSIN: &str = "arcsin";
 pub const COS: &str = "cos";
 pub const TAN: &str = "tan";
 pub const COT: &str = "cot";
@@ -409,6 +410,7 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         ABS,
         QUOT,
         SIN,
+        ARCSIN,
         COS,
         TAN,
         COT,

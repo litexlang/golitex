@@ -160,6 +160,12 @@ impl Sin {
     }
 }
 
+impl Arcsin {
+    pub fn to_latex_string(&self) -> String {
+        format!(r"\arcsin\left({}\right)", self.arg.to_latex_string())
+    }
+}
+
 impl Cos {
     pub fn to_latex_string(&self) -> String {
         format!(r"\cos\left({}\right)", self.arg.to_latex_string())
@@ -2310,6 +2316,7 @@ impl Obj {
             Obj::Pow(x) => x.to_latex_string(),
             Obj::Abs(x) => x.to_latex_string(),
             Obj::Sin(x) => x.to_latex_string(),
+            Obj::Arcsin(x) => x.to_latex_string(),
             Obj::Cos(x) => x.to_latex_string(),
             Obj::Tan(x) => x.to_latex_string(),
             Obj::Cot(x) => x.to_latex_string(),

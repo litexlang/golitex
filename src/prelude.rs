@@ -21,7 +21,7 @@ pub use crate::environment::{
     atomic_fact_in_forall_arg_shape_key, AtomicFactInForallArgShapeIndex,
     AtomicFactInForallArgShapeKey, CachedKnownFact, Environment, EnvironmentPersistentRepositories,
     EnvironmentStoredFact, EnvironmentStoredFactRepository, KnownEquality, KnownEqualityProofStep,
-    KnownFnInfo, KnownForallFactParamsAndDom, KnownObjValue,
+    KnownFnInfo, KnownObjValue, StoredForallConclusionReference,
 };
 pub use crate::error::exec_stmt_error_with_stmt_and_cause;
 pub use crate::error::short_exec_error;
@@ -143,6 +143,7 @@ pub use crate::obj::param_binding_element_obj_for_store;
 pub use crate::obj::Abs;
 pub use crate::obj::Add;
 pub use crate::obj::AnonymousFn;
+pub use crate::obj::Arcsin;
 pub use crate::obj::AtomObj;
 pub use crate::obj::AtomicName;
 pub use crate::obj::BigIntersect;
@@ -251,14 +252,16 @@ pub use crate::parse::{TokenBlock, Tokenizer};
 pub use crate::pipeline::{
     display_run_summary_json, display_run_summary_json_with_runtime,
     display_run_summary_json_with_runtime_and_trusted_prefix, display_runtime_error_json,
-    display_stmt_exec_result_json, display_trusted_prefix_report_json,
-    render_run_source_code_output, run_file_with_project_context,
+    display_stmt_exec_result_json, display_trusted_prefix_report_json, execute_top_level_statement,
+    execute_top_level_statement_in_trusted_prefix_run, render_run_source_code_output,
+    resolve_source_file_path, run_file, run_file_with_project_context,
     run_file_with_project_context_and_trusted_prefix, run_isolated_repl_with_runtime,
     run_latex_repl, run_repl, run_repl_with_detail_output, run_repl_with_detail_output_and_strict,
     run_repl_with_detail_output_and_strict_and_language,
     run_repl_with_output_style_and_strict_and_language,
-    run_repl_with_output_style_and_strict_and_language_and_isolation,
-    run_repository_before_file_target, run_repository_with_output,
+    run_repl_with_output_style_and_strict_and_language_and_isolation, run_repository,
+    run_repository_before_file_target, run_repository_file_target,
+    run_repository_file_target_with_trusted_prefix, run_repository_with_output,
     run_repository_with_output_style, run_session_with_output_style_and_strict_and_language,
     run_session_with_output_style_and_strict_and_language_and_preload, run_source_code,
     run_source_code_in_file, run_source_code_in_file_for_cli,
@@ -269,8 +272,9 @@ pub use crate::pipeline::{
     run_source_code_in_file_for_cli_with_summary_and_language_and_isolation,
     run_source_code_in_file_with_ok,
     run_source_code_in_repository_for_cli_with_output_style_and_summary_and_language,
-    run_source_code_in_repository_for_cli_with_summary_and_language, run_stmt_at_global_env,
-    RunSummary, SessionPreload,
+    run_source_code_in_repository_for_cli_with_summary_and_language, run_source_code_with_options,
+    run_stmt_at_global_env, FileRunOptions, RunOutputOptions, RunSourceFailureKind, RunSummary,
+    SessionPreload, SourceRunFailureKind, SourceRunOptions, SourceRunOutcome,
 };
 pub use crate::rational_expression::gcd_decimal_str_and_normalize;
 pub use crate::rational_expression::mul_signed_decimal_str;
@@ -504,8 +508,7 @@ pub use crate::result::{
 pub use crate::result::{KnownForallInstantiationItem, KnownForallRequirementKind};
 pub use crate::result::{SuccessBuiltinFactProofEvidenceResult, SuccessBuiltinFactProofResult};
 pub use crate::runner::{
-    resolve_litex_file_path, run_runner_for_code, run_runner_for_code_strict,
-    run_runner_for_code_strict_with_language, run_runner_for_code_with_language,
+    resolve_litex_file_path, run_runner_for_code_strict, run_runner_for_code_strict_with_language,
     run_runner_for_file, run_runner_for_file_with_strict,
     run_runner_for_file_with_strict_and_language,
     run_runner_for_file_with_strict_language_and_isolation, run_runner_for_repo,
@@ -517,7 +520,7 @@ pub use crate::runtime::ParseContext;
 pub use crate::runtime::ScopeFrame;
 pub use crate::runtime::{
     BareSymbol, ExecutionFrame, ExecutionLayer, OutputStyle, Runtime, StatementProofStateStack,
-    TrustedPrefixReport,
+    TrustedPrefixPolicy, TrustedPrefixReport,
 };
 pub use crate::stmt::by_stmt::ByAntisymmetricPropStmt;
 pub use crate::stmt::by_stmt::ByAxiomOfChoiceStmt;
@@ -650,6 +653,7 @@ pub use crate::common::keywords::ADD;
 pub use crate::common::keywords::ALGO;
 pub use crate::common::keywords::AND;
 pub use crate::common::keywords::ANTISYMMETRIC_PROP;
+pub use crate::common::keywords::ARCSIN;
 pub use crate::common::keywords::AS;
 pub use crate::common::keywords::AXIOM;
 pub use crate::common::keywords::AXIOM_OF_CHOICE;

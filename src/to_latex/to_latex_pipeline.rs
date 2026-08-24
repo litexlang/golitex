@@ -49,7 +49,7 @@ pub fn to_latex_from_file(file_path: &str) -> Result<String, RuntimeError> {
         Some(target) => to_latex_project_run(&mut runtime, target),
         None => {
             let source = read_source(resolved_path.as_str())?;
-            runtime.new_file_path_new_env_new_name_scope(resolved_path.as_str());
+            runtime.start_isolated_source(resolved_path.as_str());
             to_latex(source.as_str(), &mut runtime)
         }
     }
@@ -58,7 +58,7 @@ pub fn to_latex_from_file(file_path: &str) -> Result<String, RuntimeError> {
 pub fn to_latex_from_source(source_code: &str, entry_label: &str) -> Result<String, RuntimeError> {
     let normalized = source_code.replace('\r', "");
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(entry_label);
+    runtime.start_isolated_source(entry_label);
     to_latex(normalized.as_str(), &mut runtime)
 }
 

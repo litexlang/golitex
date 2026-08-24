@@ -356,7 +356,7 @@ impl Runtime {
             cases.iter().map(|c| c.case_fact.clone()).collect();
         let coverage: Fact = OrFact::new(coverage_cases, stmt.line_file.clone()).into();
         let mut coverage_check = self
-            .verify_fact_return_err_if_not_true(&coverage, &UseContextVerifyState::new(0, false))
+            .verify_fact_or_error(&coverage, &UseContextVerifyState::new(0, false))
             .map_err(|e| {
                 short_exec_error(
                     stmt.clone().into(),

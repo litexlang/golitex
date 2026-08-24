@@ -228,6 +228,7 @@ pub fn canonical_obj_view(obj: &Obj) -> Result<CanonicalObjView<'_>, CanonicalMa
         Obj::Factorial(x) => unary(ObjKind::Factorial, &x.arg),
         Obj::Abs(x) => unary(ObjKind::Abs, &x.arg),
         Obj::Sin(x) => unary(ObjKind::Sin, &x.arg),
+        Obj::Arcsin(x) => unary(ObjKind::Arcsin, &x.arg),
         Obj::Cos(x) => unary(ObjKind::Cos, &x.arg),
         Obj::Tan(x) => unary(ObjKind::Tan, &x.arg),
         Obj::Cot(x) => unary(ObjKind::Cot, &x.arg),

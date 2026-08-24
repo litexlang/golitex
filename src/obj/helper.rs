@@ -135,6 +135,7 @@ impl Obj {
             Obj::Sign(x) => x.arg.contains_native_complex_syntax(),
             Obj::Factorial(x) => x.arg.contains_native_complex_syntax(),
             Obj::Sin(x) => x.arg.contains_native_complex_syntax(),
+            Obj::Arcsin(x) => x.arg.contains_native_complex_syntax(),
             Obj::Cos(x) => x.arg.contains_native_complex_syntax(),
             Obj::Tan(x) => x.arg.contains_native_complex_syntax(),
             Obj::Cot(x) => x.arg.contains_native_complex_syntax(),
@@ -323,6 +324,7 @@ impl Obj {
             Obj::EulerNumber(_)
             | Obj::Pi(_)
             | Obj::Sin(_)
+            | Obj::Arcsin(_)
             | Obj::Cos(_)
             | Obj::Tan(_)
             | Obj::Cot(_)

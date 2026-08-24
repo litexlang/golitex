@@ -114,10 +114,7 @@ impl Runtime {
                 let base_fact =
                     rt.finite_set_induc_goal_fact_at_obj(stmt, fact, empty_set.clone())?;
                 let result = rt
-                    .verify_fact_return_err_if_not_true(
-                        &base_fact,
-                        &UseContextVerifyState::new(0, false),
-                    )
+                    .verify_fact_or_error(&base_fact, &UseContextVerifyState::new(0, false))
                     .map_err(|verify_error| {
                         short_exec_error(
                             stmt.clone().into(),
@@ -157,10 +154,7 @@ impl Runtime {
                 let extension_fact =
                     rt.finite_set_induc_goal_fact_at_obj(stmt, fact, extension.clone())?;
                 let result = rt
-                    .verify_fact_return_err_if_not_true(
-                        &extension_fact,
-                        &UseContextVerifyState::new(0, false),
-                    )
+                    .verify_fact_or_error(&extension_fact, &UseContextVerifyState::new(0, false))
                     .map_err(|verify_error| {
                         short_exec_error(
                             stmt.clone().into(),
@@ -324,7 +318,7 @@ impl Runtime {
     ) -> Result<Vec<StmtResult>, RuntimeError> {
         let mut inside_results = Vec::new();
         for (index, proof_stmt) in proof.iter().enumerate() {
-            match self.exec_stmt(proof_stmt) {
+            match self.execute_statement(proof_stmt) {
                 Ok(result) => inside_results.push(result),
                 Err(error) => {
                     return Err(short_exec_error(

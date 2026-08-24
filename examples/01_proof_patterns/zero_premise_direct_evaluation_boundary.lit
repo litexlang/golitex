@@ -21,4 +21,3 @@ forall x R:
 # Boundary: `one + 1 $in integer_set` above is intentionally unknown. Its
 # executable negative regression is
 # `direct_evaluation_does_not_rewrite_all_arguments_through_object_definitions`.
-# Evidence: target/release/litex -compact -isolated -runner -f examples/01_proof_patterns/zero_premise_direct_evaluation_boundary.lit

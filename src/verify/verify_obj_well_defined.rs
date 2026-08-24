@@ -122,6 +122,9 @@ impl Runtime {
             Obj::Sin(value) => self
                 .verify_sin_well_defined_result(value, verify_state)
                 .map(Some),
+            Obj::Arcsin(value) => self
+                .verify_arcsin_well_defined_result(value, verify_state)
+                .map(Some),
             Obj::Cos(value) => self
                 .verify_cos_well_defined_result(value, verify_state)
                 .map(Some),

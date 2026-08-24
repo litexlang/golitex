@@ -1,10 +1,10 @@
-mod environment;
 mod environment_merge;
+mod environment_state;
 pub mod equality_linear_derive;
 mod known_equality;
 mod known_fn;
 mod stored_fact_repository;
-pub use environment::*;
+pub use environment_state::*;
 pub use known_equality::{KnownEquality, KnownEqualityProofStep};
 pub use known_fn::KnownFnInfo;
 pub use stored_fact_repository::{EnvironmentStoredFact, EnvironmentStoredFactRepository};

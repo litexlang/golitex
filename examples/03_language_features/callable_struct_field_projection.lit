@@ -8,7 +8,6 @@
 # `boxed(f).entries(idx)` uses the direct `&CallableBox` return carrier.
 #
 # Boundary: `boxed(f).tag(idx)` remains invalid because `tag` has scalar carrier `N`.
-# Evidence: target/release/litex -compact -isolated -runner -f examples/03_language_features/callable_struct_field_projection.lit
 
 struct CallableBox:
     entries fn(k N+) N

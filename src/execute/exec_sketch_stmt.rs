@@ -6,7 +6,7 @@ impl Runtime {
             let body_result = (|| {
                 let mut inside_results: Vec<StmtResult> = Vec::new();
                 for proof_stmt in &stmt.proof {
-                    match rt.exec_stmt(proof_stmt) {
+                    match rt.execute_statement(proof_stmt) {
                         Ok(result) => inside_results.push(result),
                         Err(statement_error) => {
                             return Err(short_exec_error(

@@ -91,5 +91,3 @@ cart(Z, set_minus(N, {1})) = set_minus(cart(Z, N), cart(Z, {1}))
 # Cartesian coordinate, or a false equality strengthening is rejected by the
 # executable Rust regression.
 #
-# Evidence:
-# target/release/litex -compact -isolated -runner -f examples/02_builtin_math/indexed_set_family_operators.lit

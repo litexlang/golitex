@@ -27,4 +27,6 @@ RuntimeError::WellDefinedError {
 | Reusing an already defined name incorrectly | `NameAlreadyUsedError`. |
 | A nested failed proof step | Retains the outer statement, failed goal/step index, and previous cause. |
 
-Start with [`error.rs`](error.rs); for example, `RuntimeErrorStruct.previous_error` keeps the cause chain for a failed nested theorem step.
+Start with [`runtime_error.rs`](runtime_error.rs); for example,
+`RuntimeErrorStruct.previous_error` keeps the cause chain for a failed nested
+theorem step.

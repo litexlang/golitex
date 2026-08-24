@@ -1,4 +1,4 @@
-use super::graph::DepCollector;
+use super::result_graph_execution::DepCollector;
 use crate::prelude::*;
 use std::collections::{HashMap, HashSet};
 use std::fs;
@@ -230,7 +230,7 @@ fn run_definition_graph_on_source(
 ) -> (bool, String) {
     let normalized_source = remove_windows_carriage_return(source_code);
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(target_label);
+    runtime.start_isolated_source(target_label);
     runtime.set_output_style(if hide_file_paths {
         OutputStyle::Normal
     } else {

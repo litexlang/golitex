@@ -4,9 +4,9 @@
 
 This module is a standalone, one-file tour through every mathematical
 direction mapped by `scripts/high_school_book/textbook/Introduction.lit`. It is
-not a second textbook and does not duplicate all 20 chapters. Each direction
-instead contributes one core interface, named result, or worked calculation
-that shows how later mathematics would use that subject.
+not a second textbook and does not duplicate all 20 chapters. In each numbered
+section, `main.lit` places a small application beside the core interfaces and
+named results it consumes.
 
 The module uses native carriers and operations whenever they already express
 the mathematics. Formula-defined maps and set-valued constructions are
@@ -18,12 +18,16 @@ wrapper type created only for this showcase.
 
 ### 1. Sets, logic, and number sense
 
-- **Meaning:** membership, subset, finite cardinality, and gcd provide the
-  foundational language for collections and elementary arithmetic.
-- **Form:** native facts over finite sets and the builtin `gcd` object.
-- **Rejected form:** a custom finite-set or divisibility structure would
-  duplicate existing carriers.
-- **Use:** `2 $in {1,2,3}`, `{1,2} $subset {1,2,3}`, and `gcd(84,30)=6`.
+- **Meaning:** membership, subset, finite cardinality, symmetric difference,
+  and gcd provide the foundational language for collections and elementary
+  arithmetic.
+- **Form:** native facts over finite sets, the builtin `gcd` object, and
+  `have fn symmetric_difference(A, B power_set(R)) power_set(R)`.
+- **Rejected form:** a custom finite-set structure would duplicate existing
+  carriers, while a `prop` would not return the set that the application
+  inspects.
+- **Use:** `2 $in {1,2,3}`, `{1,2} $subset {1,2,3}`, `gcd(84,30)=6`, and a
+  concrete symmetric-difference membership calculation in section 1.
 
 ### 2. Algebra, powers, and logarithms
 
@@ -148,6 +152,7 @@ derived from earlier facts.
 ```text
 native N, Z, R, C, sets, cart, arithmetic
   -> sets, gcd, equations, powers, logarithms                 [signature/proof]
+  -> symmetric_difference -> set-comparison example          [definition]
   -> formula-defined functions and means                     [definition]
   -> trigonometry -> cosine-law example                      [definition/proof]
   -> plane vectors -> circles and ellipses                   [definition]
@@ -159,6 +164,8 @@ native N, Z, R, C, sets, cart, arithmetic
   -> functions and division -> average change rate           [definition]
 ```
 
-The graph is acyclic and follows the reader order in `main.lit`. The showcase
-has no import or trust edge; every definition and example is checked in the
-standalone module context.
+The graph is acyclic and follows the reader order in `main.lit`. Definitions
+and their applications share that one file, so there is no extra example-
+submodule dependency or qualified-name layer. The showcase has no import or
+trust edge; every definition and application is checked in the standalone
+module context.

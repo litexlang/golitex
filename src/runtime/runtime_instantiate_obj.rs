@@ -148,6 +148,12 @@ impl Runtime {
             Obj::Sin(inner) => {
                 Ok(Sin::new(self.inst_obj(&inner.arg, param_to_arg_map, param_obj_type)?).into())
             }
+            Obj::Arcsin(inner) => {
+                Ok(
+                    Arcsin::new(self.inst_obj(&inner.arg, param_to_arg_map, param_obj_type)?)
+                        .into(),
+                )
+            }
             Obj::Cos(inner) => {
                 Ok(Cos::new(self.inst_obj(&inner.arg, param_to_arg_map, param_obj_type)?).into())
             }

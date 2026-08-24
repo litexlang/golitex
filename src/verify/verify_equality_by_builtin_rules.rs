@@ -66,6 +66,7 @@ pub fn obj_expr_mentions_bare_id(obj: &Obj, id: &str) -> bool {
         Obj::Sign(u) => obj_expr_mentions_bare_id(u.arg.as_ref(), id),
         Obj::Factorial(u) => obj_expr_mentions_bare_id(u.arg.as_ref(), id),
         Obj::Sin(u) => obj_expr_mentions_bare_id(u.arg.as_ref(), id),
+        Obj::Arcsin(u) => obj_expr_mentions_bare_id(u.arg.as_ref(), id),
         Obj::Cos(u) => obj_expr_mentions_bare_id(u.arg.as_ref(), id),
         Obj::Tan(u) => obj_expr_mentions_bare_id(u.arg.as_ref(), id),
         Obj::Cot(u) => obj_expr_mentions_bare_id(u.arg.as_ref(), id),

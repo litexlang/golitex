@@ -1,3 +1,4 @@
+use std::collections::BTreeSet;
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -18,15 +19,16 @@ fn examples_are_publishable_content_not_run_instructions() {
         "developer proof journals do not belong in the publishable examples tree"
     );
 
-    let cases = repo.join("lean/examples/cases");
-    let case_count = fs::read_dir(&cases)
-        .unwrap_or_else(|error| panic!("read {}: {error}", cases.display()))
-        .filter_map(Result::ok)
-        .filter(|entry| entry.path().extension().and_then(|value| value.to_str()) == Some("lit"))
-        .count();
+    let compiler_examples = repo.join("lean/examples");
+    let litex_example_stems = example_file_stems_with_extension(&compiler_examples, "lit");
+    let lean_example_stems = example_file_stems_with_extension(&compiler_examples, "lean");
+    assert!(
+        litex_example_stems.len() >= 57,
+        "lean/examples must retain the established compiler ledger"
+    );
     assert_eq!(
-        case_count, 27,
-        "lean/examples must own all 27 Litex-to-Lean cases"
+        litex_example_stems, lean_example_stems,
+        "every Litex compiler example must own one same-name generated Lean file"
     );
 
     let forbidden = [
@@ -58,6 +60,18 @@ fn examples_are_publishable_content_not_run_instructions() {
             );
         }
     }
+}
+
+fn example_file_stems_with_extension(root: &Path, extension: &str) -> BTreeSet<String> {
+    fs::read_dir(root)
+        .unwrap_or_else(|error| panic!("read {}: {error}", root.display()))
+        .filter_map(Result::ok)
+        .filter_map(|entry| {
+            let path = entry.path();
+            (path.extension().and_then(|value| value.to_str()) == Some(extension))
+                .then(|| path.file_stem()?.to_str().map(str::to_string))?
+        })
+        .collect()
 }
 
 fn text_files_under(root: &Path) -> Vec<PathBuf> {

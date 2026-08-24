@@ -109,4 +109,3 @@ forall x R:
 # They do not reset a consumed builtin-rule step or invoke the full verifier.
 # Executable boundary: verify::verify_builtin_rule::tests::
 # quantifier_free_premise_structure_does_not_reset_the_builtin_depth_budget
-# Evidence: target/release/litex -compact -isolated -runner -f examples/02_builtin_math/quantifier_free_builtin_premises.lit

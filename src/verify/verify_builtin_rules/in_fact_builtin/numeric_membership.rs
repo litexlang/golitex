@@ -1487,6 +1487,7 @@ impl Runtime {
             | Obj::Quot(_)
             | Obj::Abs(_)
             | Obj::Sin(_)
+            | Obj::Arcsin(_)
             | Obj::Cos(_)
             | Obj::Tan(_)
             | Obj::Cot(_)
@@ -1556,6 +1557,29 @@ impl Runtime {
             steps.append(&mut object_steps);
         }
         Ok(Some(steps))
+    }
+
+    /// Requires every operand to belong to the native scalar field `C`.
+    /// Real operands are accepted through the standard-set inclusion `R subset C`.
+    /// Example: both real and complex factors may use field zero-product laws.
+    pub fn verify_objects_are_known_real_or_complex_scalars_in_builtin(
+        &mut self,
+        objs: &[&Obj],
+        line_file: &LineFile,
+        builtin_state: &UseBuiltinRuleVerifyState,
+    ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
+        let mut premises = Vec::new();
+        let mut seen = Vec::new();
+        for obj in objs {
+            let key = obj.to_string();
+            if seen.contains(&key) {
+                continue;
+            }
+            seen.push(key);
+            premises
+                .push(InFact::new((*obj).clone(), StandardSet::C.into(), line_file.clone()).into());
+        }
+        self.verify_builtin_rule_premises(&premises, builtin_state)
     }
 
     pub fn verify_objects_are_known_integers_in_builtin_leaf(
@@ -1797,6 +1821,7 @@ impl Runtime {
             Obj::Factorial(x) => vec![x.arg.as_ref()],
             Obj::Abs(x) => vec![x.arg.as_ref()],
             Obj::Sin(x) => vec![x.arg.as_ref()],
+            Obj::Arcsin(x) => vec![x.arg.as_ref()],
             Obj::Cos(x) => vec![x.arg.as_ref()],
             Obj::Tan(x) => vec![x.arg.as_ref()],
             Obj::Cot(x) => vec![x.arg.as_ref()],

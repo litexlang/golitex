@@ -64,10 +64,7 @@ impl Runtime {
         if stmt.prove_process.is_empty() {
             let forall_fact: Fact = stmt.forall.clone().into();
             let result = self
-                .verify_fact_return_err_if_not_true(
-                    &forall_fact,
-                    &UseContextVerifyState::new(0, false),
-                )
+                .verify_fact_or_error(&forall_fact, &UseContextVerifyState::new(0, false))
                 .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))?;
             Ok(SuccessVerifyFunctionFromUniqueExistenceResult {
                 source_forall_check: Some(Box::new(result)),
@@ -116,7 +113,7 @@ impl Runtime {
             let mut proof_steps = vec![];
             let proof_len = stmt.prove_process.len();
             for (proof_index, proof_stmt) in stmt.prove_process.iter().enumerate() {
-                let result = rt.exec_stmt(proof_stmt)?;
+                let result = rt.execute_statement(proof_stmt)?;
                 if result.is_unknown() {
                     return Err(RuntimeError::from(UnknownRuntimeError(
                         RuntimeErrorStruct::new_with_output(

@@ -122,6 +122,34 @@ impl Runtime {
             .default_struct_views
             .get(&symbol.id())
             .cloned()
+            .or_else(|| {
+                self.iter_environments_from_top().find_map(|environment| {
+                    environment
+                        .symbols
+                        .get_by_id(symbol.id())
+                        .and_then(SymbolDefinition::default_struct_view)
+                        .cloned()
+                })
+            })
+            .or_else(|| {
+                self.module_manager.modules.values().find_map(|module| {
+                    module
+                        .main_environment
+                        .symbols
+                        .get_by_id(symbol.id())
+                        .and_then(SymbolDefinition::default_struct_view)
+                        .cloned()
+                        .or_else(|| {
+                            module.files.iter().find_map(|file| {
+                                file.environment
+                                    .symbols
+                                    .get_by_id(symbol.id())
+                                    .and_then(SymbolDefinition::default_struct_view)
+                                    .cloned()
+                            })
+                        })
+                })
+            })
     }
 
     pub fn register_default_tuple_view(&mut self, bindings: &[SymbolBinding], cart: &Cart) {
@@ -138,6 +166,34 @@ impl Runtime {
             .default_tuple_views
             .get(&symbol.id())
             .cloned()
+            .or_else(|| {
+                self.iter_environments_from_top().find_map(|environment| {
+                    environment
+                        .symbols
+                        .get_by_id(symbol.id())
+                        .and_then(SymbolDefinition::default_tuple_view)
+                        .cloned()
+                })
+            })
+            .or_else(|| {
+                self.module_manager.modules.values().find_map(|module| {
+                    module
+                        .main_environment
+                        .symbols
+                        .get_by_id(symbol.id())
+                        .and_then(SymbolDefinition::default_tuple_view)
+                        .cloned()
+                        .or_else(|| {
+                            module.files.iter().find_map(|file| {
+                                file.environment
+                                    .symbols
+                                    .get_by_id(symbol.id())
+                                    .and_then(SymbolDefinition::default_tuple_view)
+                                    .cloned()
+                            })
+                        })
+                })
+            })
     }
 
     pub fn register_parsed_struct_definition(&mut self, def: &DefStructStmt) {
@@ -227,6 +283,16 @@ impl Runtime {
         binding: SymbolBinding,
         role: SymbolRole,
     ) -> Result<(), RuntimeError> {
+        let default_struct_view = self
+            .current_parse_context()
+            .default_struct_views
+            .get(&binding.id())
+            .cloned();
+        let default_tuple_view = self
+            .current_parse_context()
+            .default_tuple_views
+            .get(&binding.id())
+            .cloned();
         let binding = if role == SymbolRole::Object
             && !binding.name().starts_with(TEMPLATE_INSTANCE_PREFIX)
         {
@@ -249,9 +315,16 @@ impl Runtime {
         if is_keyword(name) || is_builtin_identifier_name(name) || is_builtin_predicate(name) {
             return Err(symbol_name_already_used_error(name, "builtin"));
         }
+        let mut definition = SymbolDefinition::new(binding, role);
+        if let Some(struct_obj) = default_struct_view {
+            definition.remember_default_struct_view_if_absent(struct_obj);
+        }
+        if let Some(cart) = default_tuple_view {
+            definition.remember_default_tuple_view_if_absent(cart);
+        }
         self.top_level_env()
             .symbols
-            .insert(SymbolDefinition::new(binding, role))
+            .insert(definition)
             .expect("symbol was checked absent before registration");
         Ok(())
     }

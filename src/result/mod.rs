@@ -1,9 +1,11 @@
 mod builtin_rule_evidence;
 mod execution_trace;
 mod runtime_success;
+mod runtime_success_access;
 mod stmt_result;
 mod success_evaluate_obj_result;
 mod success_stmt_result;
+mod success_stmt_result_traversal;
 mod success_well_defined_result;
 mod unknown_fact_result;
 mod unknown_stmt_result;

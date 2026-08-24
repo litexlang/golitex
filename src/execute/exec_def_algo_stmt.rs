@@ -383,7 +383,7 @@ impl Runtime {
                 algo_param_to_forall_obj,
             )?;
             let mut verification = self
-                .verify_fact_return_err_if_not_true(&case_forall_fact, &verify_state)
+                .verify_fact_or_error(&case_forall_fact, &verify_state)
                 .map_err(|runtime_error| {
                     Self::def_algo_verify_exec_error_with_message_and_optional_cause(
                         def_algo_stmt,
@@ -459,10 +459,7 @@ impl Runtime {
         .into();
 
         let mut verification = self
-            .verify_fact_return_err_if_not_true(
-                &verification_fact,
-                &UseContextVerifyState::new(0, false),
-            )
+            .verify_fact_or_error(&verification_fact, &UseContextVerifyState::new(0, false))
             .map_err(|runtime_error| {
                 Self::def_algo_verify_exec_error_with_message_and_optional_cause(
                     def_algo_stmt,
@@ -524,7 +521,7 @@ impl Runtime {
 
         let verify_state = UseContextVerifyState::new(0, false);
         let mut verification = self
-            .verify_fact_return_err_if_not_true(&coverage_forall_fact, &verify_state)
+            .verify_fact_or_error(&coverage_forall_fact, &verify_state)
             .map_err(|runtime_error| {
                 Self::def_algo_verify_exec_error_with_message_and_optional_cause(
                     def_algo_stmt,

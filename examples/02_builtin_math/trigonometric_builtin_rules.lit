@@ -99,6 +99,34 @@ forall x R:
     abs(sin(x)) <= 1
     abs(cos(x)) <= 1
 
+# Tracer: native inverse sine with an explicit principal branch.
+#
+# Before (did not work): `arcsin` was parsed as an ordinary identifier, so its
+# domain, codomain, inverse law, and branch restriction had no kernel meaning.
+#
+# Now: `arcsin(x)` is well-defined exactly for real x in [-1, 1]. Its result is
+# real and lies in [-pi/2, pi/2].
+arcsin(0) = 0
+arcsin(1) = pi / 2
+arcsin(-1) = -pi / 2
+
+forall x R:
+    -1 <= x
+    x <= 1
+    =>:
+        arcsin(x) $in R
+        sin(arcsin(x)) = x
+        -pi / 2 <= arcsin(x) <= pi / 2
+
+forall y R:
+    -pi / 2 <= y
+    y <= pi / 2
+    =>:
+        arcsin(sin(y)) = y
+
+# Boundary: `arcsin(2)` is not well-defined, and periodicity is never used to
+# claim `arcsin(sin(pi)) = pi` outside the principal interval.
+
 # tan and cot are partial: their denominator facts make each use well-defined.
 
 forall x R:
@@ -146,4 +174,3 @@ forall x R:
 # Boundary: `cos(x) != 0` alone does not prove `tan(x) != 0`, `sin(x) != 0`
 # alone does not prove `cot(x) != 0`, and a product remains unknown if any factor's
 # nonzero premise is missing.
-# Evidence: target/release/litex -compact -isolated -runner -f examples/02_builtin_math/trigonometric_builtin_rules.lit

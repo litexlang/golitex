@@ -100,7 +100,7 @@ impl Runtime {
             in_fact.line_file.clone(),
         )?
         .into();
-        let coordinate_result = self.verify_fact_full(&coordinate_forall, verify_state)?;
+        let coordinate_result = self.verify_fact_allow_unknown(&coordinate_forall, verify_state)?;
         if !coordinate_result.is_true() {
             return Ok(None);
         }

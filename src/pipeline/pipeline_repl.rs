@@ -297,7 +297,7 @@ fn run_repl_source_if_not_empty(
 }
 
 fn initialize_isolated_repl_runtime(runtime: &mut Runtime) {
-    runtime.new_file_path_new_env_new_name_scope("repl");
+    runtime.start_isolated_source("repl");
     runtime.set_current_source_allows_inline_imports(true);
 }
 

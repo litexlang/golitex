@@ -116,6 +116,7 @@ impl Obj {
             Obj::Sign(x) => x.arg.collect_free_param_names_into(collector),
             Obj::Factorial(x) => x.arg.collect_free_param_names_into(collector),
             Obj::Sin(x) => x.arg.collect_free_param_names_into(collector),
+            Obj::Arcsin(x) => x.arg.collect_free_param_names_into(collector),
             Obj::Cos(x) => x.arg.collect_free_param_names_into(collector),
             Obj::Tan(x) => x.arg.collect_free_param_names_into(collector),
             Obj::Cot(x) => x.arg.collect_free_param_names_into(collector),

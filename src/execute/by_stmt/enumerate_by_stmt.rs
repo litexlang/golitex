@@ -245,7 +245,7 @@ impl Runtime {
         let verify_state = UseContextVerifyState::new(0, false);
         let mut domain_checks = Vec::new();
         for dom_fact in stmt.forall_fact.dom_facts.iter() {
-            let verify_dom_result = self.verify_fact_full(dom_fact, &verify_state)?;
+            let verify_dom_result = self.verify_fact_allow_unknown(dom_fact, &verify_state)?;
             if verify_dom_result.is_true() {
                 let mut satisfied_infers = self
                     .store_with_well_defined_verification_and_infer_with_default_verify_state(
@@ -262,7 +262,7 @@ impl Runtime {
             } else if verify_dom_result.is_unknown() {
                 if let Some(negated_domain) = Self::negated_domain_fact_for_by_for_skip(dom_fact) {
                     let verify_negation_result =
-                        self.verify_fact_full(&negated_domain, &verify_state)?;
+                        self.verify_fact_allow_unknown(&negated_domain, &verify_state)?;
                     if verify_negation_result.is_true() {
                         domain_checks.push(SuccessVerifyByAssignmentDomainResult {
                             fact: dom_fact.clone(),
@@ -294,7 +294,7 @@ impl Runtime {
 
         let mut proof_steps = Vec::with_capacity(stmt.proof.len());
         for proof_stmt in stmt.proof.iter() {
-            proof_steps.push(self.exec_stmt(proof_stmt)?);
+            proof_steps.push(self.execute_statement(proof_stmt)?);
         }
         let mut conclusion_checks = Vec::with_capacity(stmt.forall_fact.then_facts.len());
         for fact_to_prove in stmt.forall_fact.then_facts.iter() {

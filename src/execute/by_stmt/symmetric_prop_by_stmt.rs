@@ -57,7 +57,7 @@ impl Runtime {
             let mut infer_result = SuccessInferResult::new();
             let mut proof_steps: Vec<StmtResult> = Vec::new();
             for proof_stmt in stmt.proof.iter() {
-                proof_steps.push(rt.exec_stmt(proof_stmt)?);
+                proof_steps.push(rt.execute_statement(proof_stmt)?);
             }
             let mut result = rt.forall_verify_then_facts_in_current_env(
                 &stmt.forall_fact,

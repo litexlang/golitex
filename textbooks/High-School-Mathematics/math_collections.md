@@ -10,9 +10,10 @@
 This module covers the 20 concept-level high-school curriculum units in
 `scripts/high_school_book/knowledge_core_json/index.json`. The local JSON
 summaries, not any external textbook prose, are the source of truth. The book
-includes definitions, reusable interfaces, representative theorems, and small
-checked examples. Standalone exercises, source answers, and long textbook
-explanations are excluded.
+includes definitions, reusable interfaces, representative theorems, small
+checked examples, and one original exercise companion for each of the eleven
+mathematical directions. External exercise prose, source answer keys, and long
+textbook explanations are excluded.
 
 ## Modeling conventions
 
@@ -172,6 +173,7 @@ circle unique-center relation ->[selection] center_of_circle (chapter 13)
 native complex coordinates ->[definition/proof] complex_conjugate (chapter 8)
 HighSchoolCite ->[checked-cite] chapters 1, 4, 11, 12, 18--20
 HighSchoolCite ->[trust/source] chapters 4, 9--12, 17, 18
+chapters 1--20 ->[proof] eleven direction exercise companions
 ```
 
 The graph is acyclic. The source order is retained, with the only deliberate
@@ -187,6 +189,8 @@ means to avoid an artificial overload.
 4. Build required-3 chapters 9--12.
 5. Build optional-1 chapters 13--16, reusing coordinate operations.
 6. Build optional-2 chapters 17--20.
+7. Run the eleven direction exercise companions against the completed chapter
+   namespace surface.
 
 ## Interface decisions and permissible gaps
 

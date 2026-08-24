@@ -599,6 +599,12 @@ fn collect_examples_phase1_groups(
             Ok(content) => content,
             Err(read_error) => panic!("failed to read {:?}: {}", lit_file_path, read_error),
         };
+        let run_in_project_context = lit_file_path
+            .file_name()
+            .is_some_and(|file_name| file_name == "main.lit")
+            && lit_file_path
+                .parent()
+                .is_some_and(|parent| parent.join("litex.config").is_file());
         let group_index = phase1_groups.len();
         phase1_groups.push(LitexRunGroup {
             group_index,
@@ -607,7 +613,7 @@ fn collect_examples_phase1_groups(
                 report_label: file_label_for_report,
                 source: source_code,
                 path_for_runtime: lit_file_path_str.to_string(),
-                run_in_project_context: false,
+                run_in_project_context,
             }],
         });
     }

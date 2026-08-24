@@ -473,6 +473,7 @@ impl Runtime {
             (Obj::Sign(left), Obj::Sign(right)) => compare(&left.arg, &right.arg),
             (Obj::Factorial(left), Obj::Factorial(right)) => compare(&left.arg, &right.arg),
             (Obj::Sin(left), Obj::Sin(right)) => compare(&left.arg, &right.arg),
+            (Obj::Arcsin(left), Obj::Arcsin(right)) => compare(&left.arg, &right.arg),
             (Obj::Cos(left), Obj::Cos(right)) => compare(&left.arg, &right.arg),
             (Obj::Tan(left), Obj::Tan(right)) => compare(&left.arg, &right.arg),
             (Obj::Cot(left), Obj::Cot(right)) => compare(&left.arg, &right.arg),

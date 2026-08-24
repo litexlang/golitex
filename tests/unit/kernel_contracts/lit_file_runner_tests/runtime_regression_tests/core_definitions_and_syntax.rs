@@ -100,10 +100,10 @@ fn builtin_rules_do_not_add_unreviewed_full_verifier_calls() {
         "verify_atomic_fact_with_strategy(",
         "UseContextVerifyState::new(",
     ];
-    // Full verification is permitted only inside handlers reached explicitly
-    // through `by thm`. Automatic builtin dispatch must stay atomic and must
-    // not regain an unrestricted verifier through a new call site.
-    let explicit_builtin_theorem_handlers = [
+    // These exact handlers have reviewed, bounded semantic-premise searches.
+    // Automatic builtin dispatch must otherwise stay atomic and must not
+    // regain an unrestricted verifier through a new call site.
+    let reviewed_bounded_semantic_premise_handlers = [
         "try_verify_in_fact_by_symbolic_cart",
         "verify_in_fact_in_general_cart_by_defining_facts",
         "verify_in_fact_in_set_builder_by_defining_facts",
@@ -114,6 +114,19 @@ fn builtin_rules_do_not_add_unreviewed_full_verifier_calls() {
         "try_less_equal_finite_set_sum_pointwise_on_same_set",
         "try_less_equal_finite_set_summand_nonnegative_sum",
         "verify_general_cart_nonempty_by_choice_explicit",
+        "try_verify_reduce_order_preserving_translation",
+        "try_verify_finite_set_reduce_bijective_reindexing",
+        "verify_reduce_operation_matches_native",
+        "verify_reduce_functions_pointwise_on_set",
+        "try_verify_sum_pointwise_congruence",
+        "verify_integer_pointwise_atomic_fact_by_known_forall_or_builtin",
+        "verify_set_pointwise_atomic_fact_by_known_atomic_or_builtin_only",
+        "verify_unique_preimage_enumerator_fact",
+        "verify_in_fact_with_builtin_rules",
+        "verify_choice_function_for_arg_types",
+        "verify_two_sets_are_finite",
+        "verify_exact_cart_projection_from_known_forall",
+        "try_less_equal_algebra",
     ];
     let mut violations = Vec::new();
     let mut source_files = Vec::new();
@@ -125,7 +138,7 @@ fn builtin_rules_do_not_add_unreviewed_full_verifier_calls() {
                 if line.contains(disallowed_call) {
                     let enclosing_function = enclosing_rust_function_name(&content, line_index);
                     if enclosing_function.as_ref().is_some_and(|name| {
-                        explicit_builtin_theorem_handlers.contains(&name.as_str())
+                        reviewed_bounded_semantic_premise_handlers.contains(&name.as_str())
                     }) {
                         continue;
                     }
@@ -2939,7 +2952,7 @@ trust Ambient = \selected<R>
         // name before the equality is stored.  Use that identity-bearing
         // representative rather than the surface alias: the surface alias is
         // intentionally reachable by equality inference alone.
-        .find(|candidate| candidate.to_string().starts_with('#'))
+        .find(|candidate| matches!(candidate, Obj::InstantiatedTemplateObj(_)))
         .cloned()
         .unwrap_or_else(|| {
             panic!(

@@ -21,4 +21,3 @@ forall x Z, y Z*:
 
 # Boundary: `$dvd(7, 3)` and every zero-divisor application remain rejected;
 # the executable negative regressions live in `native_number_theory.rs`.
-# Evidence: target/release/litex -compact -isolated -runner -f examples/02_builtin_math/dvd.lit

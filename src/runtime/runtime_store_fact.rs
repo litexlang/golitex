@@ -317,12 +317,38 @@ impl Runtime {
             return self.infer(&fact);
         }
         // A stored forall may be found through its alpha-normalized alias even
-        // when this spelling has not appeared before. Its canonical FactId
-        // already owns the complete proposition, so reuse it instead of
-        // attempting to register the alpha-renamed display form as a new
-        // proposition for the same identity.
-        if matches!(fact, Fact::ForallFact(_)) && self.known_fact_id_for_fact(&fact)?.is_some() {
-            return self.infer(&fact);
+        // when this exact Rust structure has not appeared before. Reuse the
+        // canonical FactId. Re-index conclusions only when materialization has
+        // genuinely changed their binder-normalized structure and introduced
+        // an `InstantiatedTemplateObj` as a callable-application head,
+        // including one nested inside another function application.
+        // Merely alpha-renaming binders must not duplicate indexes, because
+        // that can eagerly unfold otherwise opaque equal-set memberships.
+        if let Fact::ForallFact(forall_fact) = &fact {
+            if let Some(existing_fact_id) = self.known_fact_id_for_fact(&fact)? {
+                let current_structural_key = nested_obj_binder_normalized_fact_key(&fact);
+                let stored_structural_key = self
+                    .stored_fact(existing_fact_id)
+                    .map(|stored| nested_obj_binder_normalized_fact_key(&stored.fact))
+                    .ok_or_else(|| {
+                        StoreFactRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(
+                            format!("known FactId `{existing_fact_id}` has no stored proposition"),
+                            fact.line_file(),
+                        ))
+                    })?;
+                if current_structural_key != stored_structural_key
+                    && forall_conclusion_contains_instantiated_template_callable_application(
+                        forall_fact,
+                    )
+                {
+                    self.top_level_env()
+                        .index_additional_structural_spelling_of_existing_forall_fact(
+                            forall_fact.clone(),
+                            existing_fact_id,
+                        )?;
+                }
+                return self.infer(&fact);
+            }
         }
         let line_file = fact.line_file();
         let fact_string: FactString = fact.to_string();
@@ -825,6 +851,45 @@ impl Runtime {
         }
         false
     }
+}
+
+/// Template materialization sometimes changes a callable conclusion from an
+/// identifier-headed application into an application whose head is the
+/// public `InstantiatedTemplateObj`. The known-forall matcher indexes callable
+/// head structure, so that spelling needs an alias under the existing FactId.
+///
+/// A bare instantiated template object used as a set is deliberately excluded:
+/// membership through an opaque equal-set alias must continue to unfold only
+/// when verification demands it.
+fn forall_conclusion_contains_instantiated_template_callable_application(
+    forall_fact: &ForallFact,
+) -> bool {
+    fn contains_template_callable_application(object: &Obj) -> bool {
+        let Obj::FnObj(function) = object else {
+            return false;
+        };
+        matches!(
+            function.head.as_ref(),
+            FnObjHead::InstantiatedTemplateObj(_)
+        ) || function
+            .body
+            .iter()
+            .flatten()
+            .any(|object| contains_template_callable_application(object.as_ref()))
+    }
+
+    forall_fact.then_facts.iter().any(|conclusion| {
+        let arguments = match conclusion {
+            ExistOrAndChainAtomicFact::AtomicFact(fact) => fact.get_args_from_fact_ref(),
+            ExistOrAndChainAtomicFact::AndFact(fact) => fact.get_args_from_fact_ref(),
+            ExistOrAndChainAtomicFact::ChainFact(fact) => fact.get_args_from_fact_ref(),
+            ExistOrAndChainAtomicFact::OrFact(fact) => fact.get_args_from_fact_ref(),
+            ExistOrAndChainAtomicFact::ExistFact(fact) => fact.get_args_from_fact_ref(),
+        };
+        arguments
+            .into_iter()
+            .any(contains_template_callable_application)
+    })
 }
 
 #[cfg(test)]

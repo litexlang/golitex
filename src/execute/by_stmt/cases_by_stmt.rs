@@ -179,7 +179,7 @@ impl Runtime {
         let result = if let Some(Fact::ForallFact(ff)) = stmt.then_facts.first() {
             self.run_in_local_env(|rt| {
                 rt.forall_assume_params_and_dom_in_current_env(ff, &vs)?;
-                rt.verify_fact_return_err_if_not_true(&all_cases_or_fact, &vs)
+                rt.verify_fact_or_error(&all_cases_or_fact, &vs)
             })
             .map_err(|verify_error| {
                 short_exec_error(
@@ -190,7 +190,7 @@ impl Runtime {
                 )
             })?
         } else {
-            self.verify_fact_return_err_if_not_true(&all_cases_or_fact, &vs)
+            self.verify_fact_or_error(&all_cases_or_fact, &vs)
                 .map_err(|verify_error| {
                     short_exec_error(
                         stmt.clone().into(),
@@ -211,19 +211,21 @@ impl Runtime {
     ) -> Result<Vec<StmtResult>, RuntimeError> {
         let mut conclusion_checks = Vec::with_capacity(stmt.then_facts.len());
         for then_fact in stmt.then_facts.iter() {
-            let exec_fact_result = self.exec_fact(then_fact).map_err(|statement_error| {
-                let mut diagnostics = std::mem::take(proof_steps);
-                diagnostics.append(&mut conclusion_checks);
-                short_exec_error(
-                    stmt.clone().into(),
-                    format!(
-                        "by cases: failed to prove `{}` under case `{}`",
-                        then_fact, stmt.cases[case_index]
-                    ),
-                    Some(statement_error),
-                    diagnostics,
-                )
-            })?;
+            let exec_fact_result =
+                self.execute_submitted_fact(then_fact)
+                    .map_err(|statement_error| {
+                        let mut diagnostics = std::mem::take(proof_steps);
+                        diagnostics.append(&mut conclusion_checks);
+                        short_exec_error(
+                            stmt.clone().into(),
+                            format!(
+                                "by cases: failed to prove `{}` under case `{}`",
+                                then_fact, stmt.cases[case_index]
+                            ),
+                            Some(statement_error),
+                            diagnostics,
+                        )
+                    })?;
             conclusion_checks.push(exec_fact_result);
         }
         Ok(conclusion_checks)
@@ -282,7 +284,7 @@ impl Runtime {
             let assumption_components = case_assumption_components_with_fact_ids(self, case_fact)?;
 
             for proof_stmt in stmt.proofs[case_index].iter() {
-                let exec_stmt_result = self.exec_stmt(proof_stmt);
+                let exec_stmt_result = self.execute_statement(proof_stmt);
                 match exec_stmt_result {
                     Ok(result) => proof_steps.push(result),
                     Err(statement_error) => {
@@ -321,21 +323,23 @@ impl Runtime {
             let mut conclusion_checks = vec![forall_then_result];
 
             for then_fact in stmt.then_facts.iter().skip(1) {
-                let exec_fact_result = self.exec_fact(then_fact).map_err(|statement_error| {
-                    short_exec_error(
-                        stmt.clone().into(),
-                        format!(
-                            "by cases: failed to prove `{}` under case `{}`",
-                            then_fact, case_fact
-                        ),
-                        Some(statement_error),
-                        {
-                            let mut diagnostics = std::mem::take(&mut proof_steps);
-                            diagnostics.append(&mut conclusion_checks);
-                            diagnostics
-                        },
-                    )
-                })?;
+                let exec_fact_result =
+                    self.execute_submitted_fact(then_fact)
+                        .map_err(|statement_error| {
+                            short_exec_error(
+                                stmt.clone().into(),
+                                format!(
+                                    "by cases: failed to prove `{}` under case `{}`",
+                                    then_fact, case_fact
+                                ),
+                                Some(statement_error),
+                                {
+                                    let mut diagnostics = std::mem::take(&mut proof_steps);
+                                    diagnostics.append(&mut conclusion_checks);
+                                    diagnostics
+                                },
+                            )
+                        })?;
                 conclusion_checks.push(exec_fact_result);
             }
 
@@ -379,7 +383,7 @@ impl Runtime {
         let assumption_components = case_assumption_components_with_fact_ids(self, case_fact)?;
 
         for proof_stmt in stmt.proofs[case_index].iter() {
-            let exec_stmt_result = self.exec_stmt(proof_stmt);
+            let exec_stmt_result = self.execute_statement(proof_stmt);
             match exec_stmt_result {
                 Ok(result) => proof_steps.push(result),
                 Err(statement_error) => {

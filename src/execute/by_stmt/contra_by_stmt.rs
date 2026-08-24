@@ -137,7 +137,7 @@ impl Runtime {
 
         let mut last_error: Option<RuntimeError> = None;
         for proof_stmt in stmt.proof.iter() {
-            match self.exec_stmt(proof_stmt) {
+            match self.execute_statement(proof_stmt) {
                 Ok(result) => inside_results.push(result),
                 Err(statement_error) => {
                     last_error = Some(statement_error);

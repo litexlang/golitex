@@ -30,7 +30,9 @@ StmtResult::Success(
 | File | Example |
 | --- | --- |
 | [`stmt_result.rs`](stmt_result.rs) | Defines `Success` versus `Unknown`. |
-| [`runtime_success.rs`](runtime_success.rs) | Represents citations, forall instantiations, cases, induction, and other checked proof routes. |
+| [`success_stmt_result.rs`](success_stmt_result.rs) | Defines the successful statement-result variants and their retained evidence fields. |
+| [`success_stmt_result_traversal.rs`](success_stmt_result_traversal.rs) | Traverses, accesses, and consumes recursive children in the successful result tree. |
+| [`runtime_success.rs`](runtime_success.rs) | Defines citations, forall instantiations, cases, induction, and other checked proof-route evidence. |
+| [`runtime_success_access.rs`](runtime_success_access.rs) | Constructs and inspects those proof routes without mixing their behavior into the evidence declarations. |
 | [`builtin_rule_evidence.rs`](builtin_rule_evidence.rs) | Represents evidence such as `RationalNormalization` and `ComplexAlgebraicNormalization`. |
 | [`well_definedness_proof.rs`](well_definedness_proof.rs) | Records why an expression such as `x / 2` is well-defined. |
-

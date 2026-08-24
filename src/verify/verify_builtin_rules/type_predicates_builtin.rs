@@ -1102,7 +1102,7 @@ impl Runtime {
         } else {
             general_cart_global_family_nonempty_fact(self, general_cart, conclusion)
         };
-        let requirement_result = self.verify_fact_full(&requirement, verify_state)?;
+        let requirement_result = self.verify_fact_allow_unknown(&requirement, verify_state)?;
         if !requirement_result.is_true() {
             return Ok(UnknownGenericStmtResult::new().into());
         }

@@ -201,8 +201,37 @@ impl KnownEquality {
         let left_key = obj_equality_key(&equality.left);
         let right_key = obj_equality_key(&equality.right);
         if left_key == right_key {
+            // Alpha/equality-key normalization can intentionally identify a
+            // symbol-bound surface name with its materialized template
+            // object. No proof edge is needed, but discarding the richer
+            // representation makes later structural consumers depend on
+            // insertion/HashMap order. Retain the instantiated-template form
+            // deterministically while keeping the same semantic key.
+            let representative = if matches!(equality.left, Obj::InstantiatedTemplateObj(_)) {
+                equality.left.clone()
+            } else {
+                equality.right.clone()
+            };
+            self.insert_semantic_key_or_upgrade_to_instantiated_template_representation(
+                left_key.clone(),
+                representative,
+            );
+            self.insert_raw_alias(left_raw_key, &left_key);
+            self.insert_raw_alias(right_raw_key, &right_key);
             return;
         }
+
+        // A later ordinary equality may be the first place where an existing
+        // semantic key is seen with its concrete template-instance shape.
+        // Upgrade both endpoints before reusing their union-find nodes.
+        self.insert_semantic_key_or_upgrade_to_instantiated_template_representation(
+            left_key.clone(),
+            equality.left.clone(),
+        );
+        self.insert_semantic_key_or_upgrade_to_instantiated_template_representation(
+            right_key.clone(),
+            equality.right.clone(),
+        );
 
         let left_node = self.entries.get(&left_key).map(|entry| entry.node_id);
         let right_node = self.entries.get(&right_key).map(|entry| entry.node_id);
@@ -253,6 +282,30 @@ impl KnownEquality {
             },
         );
         node_id
+    }
+
+    fn insert_semantic_key_or_upgrade_to_instantiated_template_representation(
+        &mut self,
+        key: ObjString,
+        candidate: Obj,
+    ) {
+        let Some(node_id) = self.entries.get(&key).map(|entry| entry.node_id) else {
+            self.insert_term(key, candidate);
+            return;
+        };
+        if !matches!(candidate, Obj::InstantiatedTemplateObj(_)) {
+            return;
+        }
+        let root_id = self.root_id(node_id);
+        if let Some(existing) = self.nodes[root_id]
+            .members
+            .iter_mut()
+            .find(|member| obj_equality_key(member) == key)
+        {
+            if !matches!(existing, Obj::InstantiatedTemplateObj(_)) {
+                *existing = candidate;
+            }
+        }
     }
 
     fn insert_raw_alias(&mut self, raw_key: ObjString, normalized_key: &str) {

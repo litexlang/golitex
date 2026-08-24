@@ -38,7 +38,7 @@ impl Runtime {
                 let mut proof_steps: Vec<StmtResult> = Vec::new();
                 for proof_stmt in stmt.proof.iter() {
                     let one_proof_stmt_exec_result =
-                        rt.exec_stmt(proof_stmt).map_err(|stmt_error| {
+                        rt.execute_statement(proof_stmt).map_err(|stmt_error| {
                             short_exec_error(
                                 stmt.clone().into(),
                                 format!(
@@ -87,7 +87,7 @@ impl Runtime {
                 let left_to_right_result = if left_to_right_subset_result.is_true() {
                     left_to_right_subset_result
                 } else {
-                    rt.verify_fact_return_err_if_not_true(
+                    rt.verify_fact_or_error(
                         &left_to_right_forall_fact,
                         &UseContextVerifyState::new(0, false),
                     )
@@ -137,7 +137,7 @@ impl Runtime {
                 let right_to_left_result = if right_to_left_subset_result.is_true() {
                     right_to_left_subset_result
                 } else {
-                    rt.verify_fact_return_err_if_not_true(
+                    rt.verify_fact_or_error(
                         &right_to_left_forall_fact,
                         &UseContextVerifyState::new(0, false),
                     )

@@ -49,7 +49,7 @@ impl Runtime {
         };
         let mut subgoals = Vec::new();
         for definition_fact in definition_facts {
-            let result = self.verify_fact_full(&definition_fact, verify_state)?;
+            let result = self.verify_fact_allow_unknown(&definition_fact, verify_state)?;
             if result.is_unknown() {
                 return Ok(None);
             }
@@ -78,7 +78,7 @@ impl Runtime {
         };
         let mut subgoals = Vec::new();
         for definition_fact in definition_facts {
-            let result = self.verify_fact_full(&definition_fact, verify_state)?;
+            let result = self.verify_fact_allow_unknown(&definition_fact, verify_state)?;
             if result.is_unknown() {
                 return Ok(None);
             }
@@ -107,7 +107,7 @@ impl Runtime {
         };
         let mut subgoals = Vec::new();
         for definition_fact in definition_facts {
-            let result = self.verify_fact_full(&definition_fact, verify_state)?;
+            let result = self.verify_fact_allow_unknown(&definition_fact, verify_state)?;
             if result.is_unknown() {
                 return Ok(None);
             }
@@ -138,7 +138,7 @@ impl Runtime {
         };
         let mut subgoals = Vec::new();
         for definition_fact in definition_facts {
-            let result = self.verify_fact_full(&definition_fact, verify_state)?;
+            let result = self.verify_fact_allow_unknown(&definition_fact, verify_state)?;
             if result.is_unknown() {
                 return Ok(None);
             }
@@ -221,7 +221,8 @@ impl Runtime {
             subset_fact.line_file.clone(),
         )?
         .into();
-        let verify_forall_result = self.verify_fact_full(&membership_forall_fact, verify_state)?;
+        let verify_forall_result =
+            self.verify_fact_allow_unknown(&membership_forall_fact, verify_state)?;
         if !verify_forall_result.is_true() {
             return Ok(None);
         }
@@ -257,7 +258,8 @@ impl Runtime {
             superset_fact.line_file.clone(),
         )?
         .into();
-        let verify_forall_result = self.verify_fact_full(&membership_forall_fact, verify_state)?;
+        let verify_forall_result =
+            self.verify_fact_allow_unknown(&membership_forall_fact, verify_state)?;
         if !verify_forall_result.is_true() {
             return Ok(None);
         }
@@ -400,7 +402,8 @@ impl Runtime {
                             vec![],
                         )))
                     })?;
-                let clause_result = self.verify_fact_full(&instantiated_iff_fact, verify_state)?;
+                let clause_result =
+                    self.verify_fact_allow_unknown(&instantiated_iff_fact, verify_state)?;
                 let clause_is_unknown = clause_result.is_unknown();
                 clause_checks.push((instantiated_iff_fact, clause_result));
                 if clause_is_unknown {

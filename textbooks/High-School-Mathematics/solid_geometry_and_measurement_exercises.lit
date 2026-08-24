@@ -1,0 +1,11 @@
+# source: High-school curriculum inventory, solid geometry and measurement direction.
+# problem: Compute the volume of a rectangular prism and the surface area of a cube.
+# proof_idea: Substitute the dimensions into the Chapter 10 measurement functions.
+# litex_code: The two exercises below are the runnable reformulations.
+# comments: Original exercise wording; no external textbook prose is copied. Status: checkable by the registered file runner.
+
+# Exercise 1. Find the volume of a 5-by-4-by-3 rectangular prism.
+chap10::rectangular_prism_volume(5, 4, 3) = 5 * 4 * 3 = 60
+
+# Exercise 2. Find the surface area of a cube with edge 4.
+chap10::cube_surface_area(4) = 6 * 4^2 = 96

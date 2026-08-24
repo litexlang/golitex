@@ -60,18 +60,6 @@ impl StatementProofStateStack {
             .map(|_| StatementProofScopeState::default())
             .collect();
     }
-
-    #[cfg(test)]
-    pub fn current_atomic_fact_proof_count(&self) -> usize {
-        self.current_scope()
-            .map(|scope| scope.atomic_fact_proofs.len())
-            .unwrap_or(0)
-    }
-
-    #[cfg(test)]
-    fn current_scope(&self) -> Option<&StatementProofScopeState> {
-        self.scopes.last()
-    }
 }
 
 impl Runtime {
@@ -242,18 +230,6 @@ impl Runtime {
             .well_defined_object_proofs
             .entry(key)
             .or_insert(result);
-    }
-
-    #[cfg(test)]
-    pub fn statement_atomic_fact_proof_is_remembered(&self, key: &FactString) -> bool {
-        self.statement_proof_state
-            .scopes_from_inner()
-            .any(|scope| scope.atomic_fact_proofs.contains_key(key))
-    }
-
-    #[cfg(test)]
-    pub fn current_statement_atomic_fact_proof_count(&self) -> usize {
-        self.statement_proof_state.current_atomic_fact_proof_count()
     }
 }
 

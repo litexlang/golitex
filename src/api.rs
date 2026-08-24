@@ -10,7 +10,7 @@
 //! use litex::api::{run_source_code, Runtime};
 //!
 //! let mut runtime = Runtime::new();
-//! runtime.new_file_path_new_env_new_name_scope("embedded.lit");
+//! runtime.start_isolated_source("embedded.lit");
 //! let (results, error) = run_source_code("1 = 1", &mut runtime);
 //! assert!(error.is_none());
 //! assert_eq!(results.len(), 1);

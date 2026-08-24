@@ -18,5 +18,4 @@ forall z C:
 #
 # Boundary: i * i = 1 remains rejected; complex order and approximate evaluation
 # are not introduced by this rule.
-# Evidence: target/release/litex -compact -isolated -runner -f examples/02_builtin_math/complex_algebraic_calculation.lit
 # Implementation: src/rational_expression/algebraic_normalization.rs

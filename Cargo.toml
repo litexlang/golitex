@@ -27,7 +27,7 @@ path = "src/main.rs"
 
 [[bin]]
 name = "stmt_result_to_lean_compiler"
-path = "src/stmt_result_to_lean_compiler/main.rs"
+path = "src/bin/stmt_result_to_lean_compiler.rs"
 
 [[test]]
 name = "error_output_modes"

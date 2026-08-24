@@ -115,7 +115,7 @@ impl Runtime {
     fn verify_and_fact_args_satisfy_forall_requirements(
         &mut self,
         _and_fact_in_known_forall: &AndFact,
-        known_forall: &Rc<KnownForallFactParamsAndDom>,
+        known_forall: &Rc<StoredForallConclusionReference>,
         arg_map: HashMap<String, Obj>,
         given_and_fact: &AndFact,
         verify_state: &UseContextVerifyState,

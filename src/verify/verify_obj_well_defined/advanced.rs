@@ -21,7 +21,7 @@ impl Runtime {
         for set in [index_set, ambient_set] {
             let is_set: Fact = IsSetFact::new(set.clone(), default_line_file()).into();
             let result = self
-                .verify_fact_return_err_if_not_true(&is_set, verify_state)
+                .verify_fact_or_error(&is_set, verify_state)
                 .map_err(|error| {
                     RuntimeError::from(WellDefinedRuntimeError(
                         RuntimeErrorStruct::new_with_msg_and_cause(
@@ -43,7 +43,7 @@ impl Runtime {
         let family_fn_type: Fact =
             InFact::new(family_fn.clone(), family_fn_set, default_line_file()).into();
         let result = self
-            .verify_fact_return_err_if_not_true(&family_fn_type, verify_state)
+            .verify_fact_or_error(&family_fn_type, verify_state)
             .map_err(|error| {
                 RuntimeError::from(WellDefinedRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_cause(
@@ -118,7 +118,7 @@ impl Runtime {
         let index_is_set: Fact =
             IsSetFact::new((*value.index_set).clone(), default_line_file()).into();
         let index_result = self
-            .verify_fact_return_err_if_not_true(&index_is_set, verify_state)
+            .verify_fact_or_error(&index_is_set, verify_state)
             .map_err(|error| {
                 RuntimeError::from(WellDefinedRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_cause(
@@ -132,7 +132,7 @@ impl Runtime {
         let family_is_nonempty: Fact =
             IsNonemptySetFact::new((*value.family_set).clone(), default_line_file()).into();
         let family_result = self
-            .verify_fact_return_err_if_not_true(&family_is_nonempty, verify_state)
+            .verify_fact_or_error(&family_is_nonempty, verify_state)
             .map_err(|error| {
                 RuntimeError::from(WellDefinedRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_cause(
@@ -158,7 +158,7 @@ impl Runtime {
         )
         .into();
         let function_result = self
-            .verify_fact_return_err_if_not_true(&family_fn_type, verify_state)
+            .verify_fact_or_error(&family_fn_type, verify_state)
             .map_err(|error| {
                 RuntimeError::from(WellDefinedRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_cause(
@@ -283,7 +283,7 @@ impl Runtime {
 
         for set in [index_set, ambient_set] {
             let is_set: Fact = IsSetFact::new(set.clone(), default_line_file()).into();
-            self.verify_fact_return_err_if_not_true(&is_set, verify_state)
+            self.verify_fact_or_error(&is_set, verify_state)
                 .map_err(|e| {
                     RuntimeError::from(WellDefinedRuntimeError(
                         RuntimeErrorStruct::new_with_msg_and_cause(
@@ -303,7 +303,7 @@ impl Runtime {
         .into();
         let family_fn_type: Fact =
             InFact::new(family_fn.clone(), family_fn_set, default_line_file()).into();
-        self.verify_fact_return_err_if_not_true(&family_fn_type, verify_state)
+        self.verify_fact_or_error(&family_fn_type, verify_state)
             .map_err(|e| {
                 RuntimeError::from(WellDefinedRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_cause(
@@ -389,7 +389,7 @@ impl Runtime {
         )?;
 
         let index_is_set: Fact = IsSetFact::new((*x.index_set).clone(), default_line_file()).into();
-        self.verify_fact_return_err_if_not_true(&index_is_set, verify_state)
+        self.verify_fact_or_error(&index_is_set, verify_state)
             .map_err(|e| {
                 RuntimeError::from(WellDefinedRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_cause(
@@ -401,7 +401,7 @@ impl Runtime {
 
         let family_is_nonempty: Fact =
             IsNonemptySetFact::new((*x.family_set).clone(), default_line_file()).into();
-        self.verify_fact_return_err_if_not_true(&family_is_nonempty, verify_state)
+        self.verify_fact_or_error(&family_is_nonempty, verify_state)
             .map_err(|e| {
                 RuntimeError::from(WellDefinedRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_cause(
@@ -420,7 +420,7 @@ impl Runtime {
         .into();
         let family_fn_type: Fact =
             InFact::new((*x.family_fn).clone(), family_fn_set, default_line_file()).into();
-        self.verify_fact_return_err_if_not_true(&family_fn_type, verify_state)
+        self.verify_fact_or_error(&family_fn_type, verify_state)
             .map_err(|e| {
                 RuntimeError::from(WellDefinedRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_cause(

@@ -27,4 +27,12 @@ invalid combination -> print help and exit 2
 | `litex -compact -detail -e '1 = 1'` | Rejected because compact and detailed output conflict. |
 | `litex -strict -trust-before-line 10 -f example.lit` | Rejected because strict mode cannot use a trusted prefix. |
 
-Start with [`cli.rs`](cli.rs); for example, `run_cli` dispatches every command listed above.
+## Start here
+
+| File | Responsibility |
+| --- | --- |
+| [`command_dispatch.rs`](command_dispatch.rs) | `run_cli` selects one command and preserves its exit behavior. |
+| [`arguments.rs`](arguments.rs) | Removes and validates global flags into `CliOptions`. |
+| [`command_handlers.rs`](command_handlers.rs) | Owns the Runtime/output lifecycle for inline code, file, repository, runner, and graph targets after dispatch. |
+| [`conversion_commands.rs`](conversion_commands.rs) | Adapts `-latex` and `-python` targets to their compiler pipelines. |
+| [`messages.rs`](messages.rs) | Owns stable help and upgrade text. |

@@ -24,10 +24,7 @@ impl Runtime {
         let nonempty_fact: Fact =
             IsNonemptySetFact::new(stmt.set.clone(), stmt.line_file.clone()).into();
         let nonempty_result = self
-            .verify_fact_return_err_if_not_true(
-                &nonempty_fact,
-                &UseContextVerifyState::new(0, false),
-            )
+            .verify_fact_or_error(&nonempty_fact, &UseContextVerifyState::new(0, false))
             .map_err(|verify_error| {
                 short_exec_error(
                     stmt.clone().into(),

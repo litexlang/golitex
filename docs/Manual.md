@@ -173,7 +173,7 @@ sqrt(4) = 2
 | `a % b` | Euclidean integer remainder |
 | `a^b` | Exponentiation |
 | `abs(a)`, `sqrt(a)`, `log(base, a)` | Standard numeric objects |
-| `sin(a)`, `cos(a)`, `tan(a)`, `cot(a)` | Native symbolic real trigonometric objects |
+| `sin(a)`, `arcsin(a)`, `cos(a)`, `tan(a)`, `cot(a)` | Native symbolic real trigonometric objects; `arcsin` uses the principal branch |
 | `re(z)`, `img(z)`, `C_abs(z)` | Real coordinate, imaginary coordinate, and complex modulus |
 | `finite_set_max(S)`, `finite_set_min(S)` | Extremum of a suitable finite set |
 
@@ -247,10 +247,12 @@ values.
 
 ### Native real trigonometry (beta preview)
 
-`sin(x)`, `cos(x)`, `tan(x)`, and `cot(x)` are dedicated builtin object forms,
+`sin(x)`, `arcsin(x)`, `cos(x)`, `tan(x)`, and `cot(x)` are dedicated builtin object forms,
 not source-defined functions or ordinary function calls. Their arguments are
 real angles in radians. `sin` and `cos` are total on `R`; `tan(x)` is
 well-defined only when `cos(x) != 0`, and `cot(x)` only when `sin(x) != 0`.
+`arcsin(x)` is well-defined exactly when `x R`, `-1 <= x`, and `x <= 1`.
+It returns the principal value in `[-pi/2, pi/2]`.
 
 The expressions remain symbolic, while common exact identities verify:
 
@@ -259,14 +261,23 @@ sin(0) = 0
 cos(0) = 1
 forall x R:
     sin(x)^2 + cos(x)^2 = 1
+
+forall x R:
+    -1 <= x
+    x <= 1
+    =>:
+        sin(arcsin(x)) = x
+        -pi / 2 <= arcsin(x) <= pi / 2
 ```
 
 The preview intentionally does not assign every familiar special-angle value;
 for example, `sin(pi / 6) = 1 / 2` still needs an explicit source fact.
-Complex trigonometry, inverse trigonometric functions, analytic definitions,
-and continuity theorems are also outside this interface.
+Complex trigonometry, inverse cosine/tangent, analytic definitions, and
+continuity theorems are outside this interface. The reverse identity
+`arcsin(sin(y)) = y` is available only on the principal interval
+`-pi/2 <= y <= pi/2`.
 
-The names `sin`, `cos`, `tan`, and `cot` are hard-reserved. Their bare names
+The names `sin`, `arcsin`, `cos`, `tan`, and `cot` are hard-reserved. Their bare names
 are not first-class function values; higher-order code can use
 `fn(x R) R {sin(x)}`. The evaluator does not assign approximate runtime values
 to symbolic trigonometric expressions. The supported exact identities, bounds,
@@ -325,6 +336,11 @@ the ordinary polynomial/rational normalizer, with the additional relation
 
 forall z C:
     (z + i) * (z - i) = z^2 + 1
+
+forall z, w C:
+    z * w = 0
+    =>:
+        z = 0 or w = 0
 ```
 
 This route is exact and zero-premise: division side conditions are still
@@ -3349,7 +3365,7 @@ because equality verification failed.
 | Resolution and symmetry | Distinct resolved numeric values, including objects whose known equality representatives resolve to such values; the reverse known fact `b!=a`; and displayed sets with different structural lengths. Native `e`, `pi`, and `i` have their reviewed distinctness/nonzero facts. |
 | Order and membership separation | Any known strict real order proves disequality. A value above a known positive lower bound is nonzero. Membership of one object and known nonmembership of the other in the same set prove the objects distinct. A nonempty set is not `{}`. |
 | Addition and subtraction | `a!=b` gives `a-b!=0`, and `a-b!=0` gives `a!=b`. Likewise `a!=-b` gives `a+b!=0`, while a nonzero sum gives the corresponding operand-versus-negation fact. The immediate operand positions must match. |
-| Products and quotients | Two known nonzero real factors give a nonzero product; a known nonzero product gives both factors nonzero. A well-defined quotient is nonzero from a nonzero numerator; its denominator obligation was already checked. |
+| Products and quotients | Two known nonzero factors in `R` or `C` give a nonzero product; a known nonzero product in either native field gives both factors nonzero. The matching zero-product split is likewise available over `R` and `C`, but not for arbitrary user-defined multiplication. A well-defined quotient is nonzero from a nonzero numerator; its denominator obligation was already checked. |
 | Powers, roots, and absolute value | A supported well-defined power is nonzero from a nonzero base, and positive-base power branches are intrinsically nonzero. `abs(x)!=0` follows from `x!=0`; `sqrt(x)!=0` requires `x>0`, not merely `x>=0`. |
 | Sums of real squares | Either nonzero component, or the known two-branch component-nonzero disjunction, gives `a^2+b^2!=0` (also for the matching `a*a+b*b` shape). Conversely, the supported disjunction rule exposes that at least one component is nonzero. |
 | Native positive values | Well-defined `exp(x)` and `factorial(n)` are nonzero. Dedicated complex-modulus, sign, and trigonometric nonzero rules use the domains and canonical sign intervals described in their object sections. |
@@ -3455,12 +3471,13 @@ The symbolic trigonometric interface recognizes the following exact families:
 | Family | Recognized laws and required domains |
 |---|---|
 | Core identities | Values at `0` and `pi / 2`, sine and cosine addition and difference formulas, the unit-circle identity, and `tan(x)=sin(x)/cos(x)` or `cot(x)=cos(x)/sin(x)` when the denominator is known nonzero. |
+| Principal inverse sine | `arcsin(x)` requires `x in [-1,1]`, returns a value in `[-pi/2,pi/2]`, and satisfies `sin(arcsin(x))=x`. Conversely, `arcsin(sin(y))=y` requires `y` in that principal interval. |
 | Symmetry and angles | Odd/even parity, double-angle and cofunction formulas, supported integral and half-integral multiples of `pi`, shifts by `pi` and `pi/2`, and period `2*pi` for sine/cosine or `pi` for tangent/cotangent when defined. |
 | Bounds and signs | `-1 <= sin(x), cos(x) <= 1`, `3 < pi < 4`, and the standard sign intervals for sine, cosine, tangent, and cotangent. Open-domain bounds remain necessary for tangent and cotangent. |
 | Local order | Sine is monotone on `[-pi/2, pi/2]`, cosine on `[0, pi]`, tangent on `(-pi/2, pi/2)`, and cotangent in the reverse direction on `(0, pi)`. |
 
 These are exact symbolic rules, not numerical approximation. Unlisted special
-angles, inverse or complex trigonometry, continuity, and analytic definitions
+angles, inverse cosine/tangent or complex trigonometry, continuity, and analytic definitions
 need explicit source facts or library interfaces.
 
 ### Native numeric function rules

@@ -1,0 +1,12 @@
+# source: High-school curriculum inventory, trigonometry direction.
+# problem: Convert 45 degrees to radians and solve a right-triangle side calculation.
+# proof_idea: Apply the Chapter 5 conversion and cosine-law formulas, then use cos(pi/2)=0.
+# litex_code: The two exercises below are the runnable reformulations.
+# comments: Original exercise wording; no external textbook prose is copied. Status: checkable by the registered file runner.
+
+# Exercise 1. Convert 45 degrees to radians.
+chap05::deg(45) = 45 * pi / 180 = pi / 4
+
+# Exercise 2. Find the squared third side for legs 5 and 12 at a right angle.
+cos(pi / 2) = 0
+chap05::cosine_law_third_side_sq(5, 12, pi / 2) = 5^2 + 12^2 - 2 * 5 * 12 * cos(pi / 2) = 169

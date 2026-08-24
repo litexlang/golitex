@@ -92,7 +92,11 @@ impl Runtime {
     pub fn try_verify_trigonometric_equality(
         &mut self,
         equal_fact: &EqualFact,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        if let Some(result) = self.try_verify_arcsin_inverse_equality(equal_fact, builtin_state)? {
+            return Ok(Some(result));
+        }
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         if first_trig_arg(left).is_none() && first_trig_arg(right).is_none() {
@@ -164,6 +168,9 @@ impl Runtime {
         atomic_fact: &AtomicFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        if let Some(result) = self.try_verify_arcsin_principal_range(atomic_fact, builtin_state)? {
+            return Ok(Some(result));
+        }
         if let Some(result) =
             self.try_verify_trigonometric_interval_order(atomic_fact, builtin_state)?
         {
@@ -222,6 +229,137 @@ impl Runtime {
                 atomic_fact.clone().into(),
                 "trigonometry: -1 <= sin/cos <= 1 from the unit-circle square bound".to_string(),
                 vec![square_bound_result],
+            )
+            .into(),
+        ))
+    }
+
+    fn try_verify_arcsin_inverse_equality(
+        &mut self,
+        equal_fact: &EqualFact,
+        builtin_state: &UseBuiltinRuleVerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        for (left, right) in [
+            (&equal_fact.left, &equal_fact.right),
+            (&equal_fact.right, &equal_fact.left),
+        ] {
+            if let Obj::Sin(sin) = left {
+                if let Obj::Arcsin(arcsin) = sin.arg.as_ref() {
+                    if objs_equal_by_rational_expression_evaluation(&arcsin.arg, right) {
+                        let premises =
+                            arcsin_domain_premises(arcsin.arg.as_ref(), &equal_fact.line_file);
+                        let Some(steps) =
+                            self.verify_builtin_rule_premises(&premises, builtin_state)?
+                        else {
+                            continue;
+                        };
+                        return Ok(Some(
+                            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                                equal_fact.clone().into(),
+                                "arcsin principal inverse: sin(arcsin(x)) = x on [-1, 1]"
+                                    .to_string(),
+                                steps,
+                            )
+                            .into(),
+                        ));
+                    }
+                }
+            }
+
+            if let Obj::Arcsin(arcsin) = left {
+                if arcsin_supported_exact_value(arcsin.arg.as_ref(), right) {
+                    return Ok(Some(
+                        SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                            equal_fact.clone().into(),
+                            "arcsin principal branch: exact endpoint or zero value".to_string(),
+                            Vec::new(),
+                        )
+                        .into(),
+                    ));
+                }
+                if let Obj::Sin(sin) = arcsin.arg.as_ref() {
+                    if objs_equal_by_rational_expression_evaluation(&sin.arg, right) {
+                        let premises = arcsin_principal_argument_premises(
+                            sin.arg.as_ref(),
+                            &equal_fact.line_file,
+                        );
+                        let Some(steps) =
+                            self.verify_builtin_rule_premises(&premises, builtin_state)?
+                        else {
+                            continue;
+                        };
+                        return Ok(Some(
+                            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                                equal_fact.clone().into(),
+                                "arcsin principal branch: arcsin(sin(y)) = y on [-pi/2, pi/2]"
+                                    .to_string(),
+                                steps,
+                            )
+                            .into(),
+                        ));
+                    }
+                }
+
+                // The same principal-branch contract also derives exact
+                // supported values such as arcsin(0)=0 and
+                // arcsin(1)=pi/2.  The premise has no arcsin node, so the
+                // recursive builtin query is structurally smaller.
+                let mut premises = arcsin_principal_argument_premises(right, &equal_fact.line_file);
+                premises.push(
+                    EqualFact::new(
+                        arcsin.arg.as_ref().clone(),
+                        Sin::new(right.clone()).into(),
+                        equal_fact.line_file.clone(),
+                    )
+                    .into(),
+                );
+                if let Some(steps) = self.verify_builtin_rule_premises(&premises, builtin_state)? {
+                    return Ok(Some(
+                        SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                            equal_fact.clone().into(),
+                            "arcsin principal branch from a supported exact sine value".to_string(),
+                            steps,
+                        )
+                        .into(),
+                    ));
+                }
+            }
+        }
+        Ok(None)
+    }
+
+    fn try_verify_arcsin_principal_range(
+        &mut self,
+        atomic_fact: &AtomicFact,
+        builtin_state: &UseBuiltinRuleVerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let Some(AtomicFact::LessEqualFact(f)) = normalize_positive_order_atomic_fact(atomic_fact)
+        else {
+            return Ok(None);
+        };
+        let (negative_half_pi, half_pi) = arcsin_principal_bounds();
+        let argument = match (&f.left, &f.right) {
+            (lower, Obj::Arcsin(arcsin))
+                if objs_equal_by_rational_expression_evaluation(lower, &negative_half_pi) =>
+            {
+                arcsin.arg.as_ref()
+            }
+            (Obj::Arcsin(arcsin), upper)
+                if objs_equal_by_rational_expression_evaluation(upper, &half_pi) =>
+            {
+                arcsin.arg.as_ref()
+            }
+            _ => return Ok(None),
+        };
+        let premises = arcsin_domain_premises(argument, &f.line_file);
+        let Some(steps) = self.verify_builtin_rule_premises(&premises, builtin_state)? else {
+            return Ok(None);
+        };
+        Ok(Some(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                atomic_fact.clone().into(),
+                "arcsin principal value lies in [-pi/2, pi/2]".to_string(),
+                steps,
             )
             .into(),
         ))
@@ -1354,9 +1492,53 @@ fn obj_is_number(obj: &Obj, expected: &str) -> bool {
         .is_some_and(|number| number.normalized_value == expected)
 }
 
+fn arcsin_domain_premises(argument: &Obj, line_file: &LineFile) -> Vec<AtomicFact> {
+    vec![
+        InFact::new(argument.clone(), StandardSet::R.into(), line_file.clone()).into(),
+        LessEqualFact::new(
+            Number::new("-1".to_string()).into(),
+            argument.clone(),
+            line_file.clone(),
+        )
+        .into(),
+        LessEqualFact::new(
+            argument.clone(),
+            Number::new("1".to_string()).into(),
+            line_file.clone(),
+        )
+        .into(),
+    ]
+}
+
+fn arcsin_principal_argument_premises(argument: &Obj, line_file: &LineFile) -> Vec<AtomicFact> {
+    let (negative_half_pi, half_pi) = arcsin_principal_bounds();
+    vec![
+        InFact::new(argument.clone(), StandardSet::R.into(), line_file.clone()).into(),
+        LessEqualFact::new(negative_half_pi, argument.clone(), line_file.clone()).into(),
+        LessEqualFact::new(argument.clone(), half_pi, line_file.clone()).into(),
+    ]
+}
+
+fn arcsin_principal_bounds() -> (Obj, Obj) {
+    let half_pi: Obj = Div::new(Pi::new().into(), Number::new("2".to_string()).into()).into();
+    let negative_half_pi: Obj =
+        Mul::new(Number::new("-1".to_string()).into(), half_pi.clone()).into();
+    (negative_half_pi, half_pi)
+}
+
+fn arcsin_supported_exact_value(argument: &Obj, result: &Obj) -> bool {
+    let (negative_half_pi, half_pi) = arcsin_principal_bounds();
+    (obj_is_number(argument, "0") && obj_is_number(result, "0"))
+        || (obj_is_number(argument, "1")
+            && objs_equal_by_rational_expression_evaluation(result, &half_pi))
+        || (obj_is_number(argument, "-1")
+            && objs_equal_by_rational_expression_evaluation(result, &negative_half_pi))
+}
+
 fn first_trig_arg(obj: &Obj) -> Option<Obj> {
     match obj {
         Obj::Sin(x) => Some((*x.arg).clone()),
+        Obj::Arcsin(x) => Some((*x.arg).clone()),
         Obj::Cos(x) => Some((*x.arg).clone()),
         Obj::Tan(x) => Some((*x.arg).clone()),
         Obj::Cot(x) => Some((*x.arg).clone()),

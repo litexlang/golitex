@@ -21,4 +21,3 @@ forall x, y R:
 # Boundary: without the premise `x = y`, the symbolic product equality remains
 # unknown. The executable negative regression is
 # `zero_premise_structural_equality_still_requires_known_equal_leaves`.
-# Evidence: target/release/litex -compact -isolated -runner -f examples/01_proof_patterns/zero_premise_equality_boundary.lit

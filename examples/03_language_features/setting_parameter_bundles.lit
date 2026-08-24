@@ -24,8 +24,6 @@
 # references. Arity must match the setting exactly, active-name collisions are
 # rejected, and a struct bundle does not define dependent record fields.
 #
-# Evidence:
-# target/release/litex -compact -isolated -runner -f examples/03_language_features/setting_parameter_bundles.lit
 # Implementation: src/parse/parse_helpers.rs, src/parse/parse_fact.rs,
 # src/parse/parse_def_stmt.rs
 

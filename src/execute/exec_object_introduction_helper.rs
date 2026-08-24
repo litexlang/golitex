@@ -9,7 +9,7 @@ impl Runtime {
         for param_def in param_defs.groups.iter() {
             if let Some(fact) = nonempty_check_fact_for_param_type(&param_def.param_type) {
                 let verify_state = UseContextVerifyState::new(0, false);
-                let result = self.verify_fact_return_err_if_not_true(&fact, &verify_state)?;
+                let result = self.verify_fact_or_error(&fact, &verify_state)?;
                 checks.push(result);
             }
         }

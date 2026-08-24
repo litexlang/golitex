@@ -108,7 +108,7 @@ impl Runtime {
     ) -> Result<Option<SuccessFactStmtResult>, RuntimeError> {
         let target_atomic: AtomicFact = equal_fact.clone().into();
         let lookup_key = (target_atomic.key(), target_atomic.is_true());
-        let candidates: Vec<(AtomicFact, Rc<KnownForallFactParamsAndDom>)> = self
+        let candidates: Vec<(AtomicFact, Rc<StoredForallConclusionReference>)> = self
             .iter_environments_from_top()
             .flat_map(|environment| {
                 environment
@@ -192,7 +192,7 @@ impl Runtime {
     fn try_verify_known_forall_equality_candidate_after_nested_rational_normalization(
         &mut self,
         candidate: AtomicFact,
-        known_forall: Rc<KnownForallFactParamsAndDom>,
+        known_forall: Rc<StoredForallConclusionReference>,
         matching_target: &AtomicFact,
         given_target: &AtomicFact,
         verify_state: &UseContextVerifyState,
@@ -283,7 +283,7 @@ impl Runtime {
         (
             (usize, usize),
             Option<HashMap<String, Obj>>,
-            Option<(AtomicFact, Rc<KnownForallFactParamsAndDom>)>,
+            Option<(AtomicFact, Rc<StoredForallConclusionReference>)>,
         ),
         RuntimeError,
     > {
@@ -455,7 +455,7 @@ impl Runtime {
         &mut self,
         phase: KnownForallSearchPhase,
         atomic_fact_in_known_forall_fact: AtomicFact,
-        forall_rc: Rc<KnownForallFactParamsAndDom>,
+        forall_rc: Rc<StoredForallConclusionReference>,
         given_atomic_fact: &AtomicFact,
         verify_state: &UseContextVerifyState,
     ) -> Result<Option<SuccessFactStmtResult>, RuntimeError> {
@@ -473,7 +473,7 @@ impl Runtime {
         &mut self,
         phase: KnownForallSearchPhase,
         atomic_fact_in_known_forall_fact: AtomicFact,
-        forall_rc: Rc<KnownForallFactParamsAndDom>,
+        forall_rc: Rc<StoredForallConclusionReference>,
         matching_atomic_fact: &AtomicFact,
         given_atomic_fact: &AtomicFact,
         verify_state: &UseContextVerifyState,
@@ -740,7 +740,7 @@ impl Runtime {
     pub fn verify_args_satisfy_forall_requirements(
         &mut self,
         _atomic_fact_in_known_forall_fact: &AtomicFact,
-        known_forall: &Rc<KnownForallFactParamsAndDom>,
+        known_forall: &Rc<StoredForallConclusionReference>,
         mut arg_map: HashMap<String, Obj>,
         given_atomic_fact: &AtomicFact,
         verify_state: &UseContextVerifyState,
@@ -778,7 +778,7 @@ impl Runtime {
 
     fn complete_known_forall_arg_map_from_known_dom_facts(
         &mut self,
-        known_forall: &KnownForallFactParamsAndDom,
+        known_forall: &StoredForallConclusionReference,
         arg_map: &mut HashMap<String, Obj>,
     ) -> Result<(), RuntimeError> {
         let param_names = known_forall.params_def.collect_param_names();
@@ -1159,6 +1159,12 @@ impl ArgMatcher<'_> {
             },
             Obj::Sin(ref a) => match given_arg {
                 Obj::Sin(g) => {
+                    self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(&a.arg, &g.arg)
+                }
+                _ => Ok(None),
+            },
+            Obj::Arcsin(ref a) => match given_arg {
+                Obj::Arcsin(g) => {
                     self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(&a.arg, &g.arg)
                 }
                 _ => Ok(None),
@@ -2651,6 +2657,12 @@ impl ArgMatcher<'_> {
                     anonymous_fn_body,
                 ),
             (Obj::Sin(left), Obj::Sin(given)) => self
+                .match_arg_in_anonymous_fn_body_with_given_arg(
+                    left.arg.as_ref(),
+                    given.arg.as_ref(),
+                    anonymous_fn_body,
+                ),
+            (Obj::Arcsin(left), Obj::Arcsin(given)) => self
                 .match_arg_in_anonymous_fn_body_with_given_arg(
                     left.arg.as_ref(),
                     given.arg.as_ref(),

@@ -1,0 +1,12 @@
+# source: High-school curriculum inventory, sequences, induction, and combinatorics direction.
+# problem: Evaluate later arithmetic and geometric terms, then expand one binomial square.
+# proof_idea: Substitute into the Chapter 16 sequence formulas and Chapter 18 polynomial formula.
+# litex_code: The three calculations below form one runnable exercise set.
+# comments: Original exercise wording; no external textbook prose is copied. Status: checkable by the registered file runner.
+
+# Exercise 1. Find selected terms of two sequences.
+chap16::arith_term(5, 4, 6) = 5 + (6 - 1) * 4 = 25
+chap16::geo_term(3, 2, 5) = 3 * 2^(5 - 1) = 48
+
+# Exercise 2. Expand (2+3)^2 through the Chapter 18 formula.
+chap18::binomial_square(2, 3) = 2^2 + 2 * 2 * 3 + 3^2 = 25

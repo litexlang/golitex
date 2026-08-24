@@ -212,7 +212,7 @@ impl Runtime {
             // the restricted final round first, then fold exactly one named
             // proposition definition without reopening general proof search.
             let mut result =
-                self.verify_fact_full(&instantiated.clone().to_fact(), &final_state)?;
+                self.verify_fact_allow_unknown(&instantiated.clone().to_fact(), &final_state)?;
             if !result.is_true() {
                 if let QuantifierFreeFact::AtomicFact(atomic_fact) = &instantiated {
                     if matches!(atomic_fact, AtomicFact::NormalAtomicFact(_)) {

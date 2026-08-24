@@ -6,11 +6,13 @@ This standalone module models the elementary measure-theoretic foundation of
 probability through the Kolmogorov axioms. The source of truth is the standard
 mathematical identity of a probability space `(Omega, events, probability)`:
 `events` is a sigma-algebra on `Omega`, and `probability` is a nonnegative,
-normalized, countably additive real-valued set function. The first checkpoint
-includes the derived event-probability calculus, conditional probability,
-independence, measurable maps, real-valued random variables, and pushforward
-distributions. It excludes measure construction, Lebesgue/Borel generation,
-integration, expectation, laws of large numbers, and limit theorems.
+normalized, countably additive real-valued set function. The current module
+includes generated sigma algebras, the Borel sigma algebra on `R`, the derived
+event-probability calculus, conditional probability, independence, measurable
+maps, real-valued random variables, and constructed pushforward probability
+measures. It excludes Caratheodory extension from premeasures or outer
+measures, Lebesgue measure, integration, expectation, laws of large numbers,
+and limit theorems.
 
 The intended readers are users who want to see the probability-theory layer
 that conceptually precedes the finite calculations in
@@ -25,8 +27,9 @@ natural indices, matching Litex's existing sequence interface. A real series
 sum remains a relation defined by convergence of partial sums, rather than an
 unjustified selected `infinite_sum` function.
 
-Settings carry theorem-wide ambient data and laws. They do not construct a
-sigma-algebra or a probability measure. The sigma-algebra setting exposes the
+Settings carry theorem-wide ambient data and laws. Separate value-level
+interfaces now construct generated sigma algebras and push source probability
+through measurable maps. The sigma-algebra setting exposes the
 whole-space and binary-intersection laws, and the probability setting exposes
 the empty-event zero law, even though all three are derivable from smaller
 axiom bases; these are conservative, standard projection laws that make the
@@ -51,7 +54,7 @@ public interface usable without changing its models.
   fiber witnesses, and the indexed-union builtin (`signature`, `builtin`).
 - **Downstream uses:** Sigma-algebra closure and the left side of countable
   additivity.
-- **Allowable hole:** None in the first checkpoint.
+- **Allowable hole:** None in the current module.
 
 The dual `index_intersect(N+, Omega, family)` is the intended representation
 of countable intersection. Closure under it is a derived sigma-algebra theorem,
@@ -85,11 +88,25 @@ is separate from the present countable-union migration.
 - **Ideal Litex form:** `setting SigmaAlgebraSetting(Omega, events)` with a
   definition-facing `prop is_sigma_algebra([SigmaAlgebraSetting])`.
 - **Interface sketch:** `events power_set(power_set(Omega))` plus closure laws.
-- **Nearest wrong alternative:** A `struct` would force projections although
-  the first checkpoint never stores, returns, or compares sigma-algebra values.
+- **Nearest wrong alternative:** A `struct` would bundle proof fields into each
+  value, while the construction needs an ordinary event family plus a flat,
+  reusable law relation over candidate families.
 - **Dependencies:** Countable union and native complement (`signature`, `law`).
 - **Downstream uses:** Probability spaces, measurable maps, and event closure.
-- **Allowable hole:** Generating a sigma-algebra from a family is later work.
+- **Allowable hole:** None. `generated_sigma_algebra<X>(generators)` constructs
+  the intersection of all containing sigma algebras and proves its closure.
+
+### Borel sigma algebra on the reals
+
+- **Ordinary meaning:** The smallest sigma algebra on `R` containing every
+  bounded open interval; this is the standard Borel sigma algebra.
+- **Semantic role:** Constructed event family.
+- **Ideal Litex form:** `borel_sigma_algebra_on_R =
+  generated_sigma_algebra<R>(real_open_intervals)`.
+- **Dependencies:** Generated sigma algebra and existential endpoint
+  presentation of bounded open intervals (`definition`, `proof`).
+- **Downstream uses:** Real-valued measurable maps and Borel probability laws.
+- **Allowable hole:** General topological-space Borel generation is later work.
 
 ### Probability space
 
@@ -167,26 +184,29 @@ is separate from the present countable-union migration.
 - **Dependencies:** Two sigma-algebras, functions, and set-builder preimages
   (`signature`, `definition`).
 - **Downstream uses:** Pushforward distributions and, later, expectation.
-- **Allowable hole:** The Borel sigma-algebra is supplied rather than
-  constructed in the first checkpoint.
+- **Allowable hole:** Generic targets still supply their event family; for
+  `Target = R`, the module provides `borel_sigma_algebra_on_R` explicitly.
 
-### Pushforward distribution
+### Pushforward probability measure
 
 - **Ordinary meaning:** A target event receives the probability of its
   preimage under a measurable map.
-- **Semantic role:** Relation on a supplied candidate distribution.
-- **Ideal Litex form:** `prop is_distribution_of(...)`.
+- **Semantic role:** Constructed probability function, plus a relation exposing
+  its distribution equation.
+- **Ideal Litex form:** `pushforward_probability` together with
+  `pushforward_probability_is_distribution` and
+  `pushforward_probability_is_probability_space`.
 - **Interface sketch:** For every target event `B`, its preimage is a source
   event and `distribution(B) = probability(X^{-1}(B))`.
-- **Nearest wrong alternative:** A total selected distribution constructor
-  would hide the existence, measurability, and probability-space obligations;
-  a random variable itself is not its distribution.
+- **Nearest wrong alternative:** A supplied candidate relation alone would not
+  construct a function usable by later probability-space theorems; a random
+  variable itself is not its distribution.
 - **Dependencies:** Probability function, measurable preimages, and the target
   event family (`signature`, `definition`, `well-definedness`).
-- **Downstream uses:** `distribution_of_has_measurable_map` and later
-  distributional expectation.
-- **Allowable hole:** Existence and uniqueness of a probability-space-valued
-  pushforward construction remain separate future results.
+- **Downstream uses:** Target probability laws and later distributional
+  expectation.
+- **Allowable hole:** None for pushforward probability. Caratheodory extension
+  from independent premeasure data remains out of scope.
 
 ## Dependency map
 
@@ -203,6 +223,10 @@ real arithmetic + epsilon limits
 
 index_union + complement
   -> SigmaAlgebraSetting                          [law]
+generator family + all containing sigma algebras
+  -> generated_sigma_algebra                     [definition, proof]
+bounded real open intervals + generated sigma algebra
+  -> borel_sigma_algebra_on_R                    [definition, proof]
 SigmaAlgebraSetting + has_series_sum
   -> ProbabilitySpaceSetting                      [law]
   -> countable-additivity tracer                  [proof]
@@ -224,8 +248,9 @@ source SigmaAlgebraSetting + target SigmaAlgebraSetting + preimage
   -> is_measurable_map                            [definition]
   -> is_random_variable                           [specialization]
 ProbabilitySpaceSetting + is_measurable_map
-  -> is_distribution_of                           [definition]
-  -> distribution_of_has_measurable_map           [proof]
+  -> pushforward_probability                      [definition]
+  -> is_distribution_of                           [proof]
+  -> target probability space                     [proof]
 ```
 
 There is no cycle. The only axiomatic boundary is the supplied setting data
@@ -235,16 +260,18 @@ part of the intended public file.
 ## Intended build order
 
 Use the builtin indexed union first, then build partial sums and series
-convergence, then
-the sigma-algebra setting, the probability-space setting, and its direct
+convergence, then the sigma-algebra setting and the generated-sigma
+construction. Specialize it to Borel(R), then add the probability-space
+setting and its direct
 countable-additivity tracer. Next prove uniqueness of series sums and the
 two-term finite-support series, then specialize countable additivity to obtain
 binary finite additivity. Derive complement, difference, monotonicity,
 inclusion-exclusion, the union bound, and the unit interval bound before adding
 event-level conditional probability and independence. Add measurable maps and
 the real-valued random-variable specialization next, because they consume two
-already-defined measurable spaces. Add the pushforward-distribution relation
-last so it can reuse measurable preimages and the source probability.
+already-defined measurable spaces. Construct pushforward probability last so
+it can reuse measurable preimages, preimage preservation, and source countable
+additivity.
 
 ## Interface decisions and permissible gaps
 
@@ -252,6 +279,7 @@ Preserve real-valued probability: normalization guarantees finiteness, so an
 extended-nonnegative-real carrier would add machinery without improving this
 module's semantics. Keep series summation relational, keep the positivity guard
 on conditional probability, and keep a random variable distinct from its
-pushforward distribution. Expectation begins only after a genuine integration
-interface exists; finite weighted sums remain in showcase 8 rather than being
-presented here as general measure-theoretic expectation.
+pushforward distribution. The present measure construction is specifically a
+pushforward from an existing probability space; it is not a Caratheodory
+existence theorem. Expectation begins only after a genuine integration
+interface exists; finite weighted sums remain in showcase 8.

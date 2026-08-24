@@ -7,6 +7,7 @@ mod check_fact_has_no_duplicate_free_parameter;
 mod check_obj_has_no_duplicate_free_parameter;
 mod exist_fact;
 mod fact_inside_forall;
+mod fact_types;
 mod forall_fact;
 mod forall_fact_with_iff;
 mod helper;
@@ -35,6 +36,5 @@ pub use matchable_fact_with_atomic_fact_inside::{
 pub use or_fact::OrFact;
 pub use quantifier_free_fact::QuantifierFreeFact;
 
-pub use fact::{Fact, NotForallFact};
-mod fact;
 pub use fact_inside_forall::ExistOrAndChainAtomicFact;
+pub use fact_types::{Fact, NotForallFact};

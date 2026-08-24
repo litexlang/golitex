@@ -28,7 +28,7 @@ source `1 + 1 = 2`
 | Start with an observable input and result. | `verify/README.md` starts from `1 + 1 = 2`, not from a list of Rust types. |
 | Put every capability beside its nearest boundary. | `rational_expression/README.md` pairs `x ^ 2 / x = x` with the required premise `x != 0`. |
 | Add pseudocode only for an important control flow or algorithm. | `pipeline/README.md` shows the parse/execute loop; `common/README.md` only shows concrete helpers. |
-| Link the real implementation entry point. | `execute/README.md` links `exec_stmt.rs`; it does not duplicate that file line by line. |
+| Link the real implementation entry point. | `execute/README.md` links `statement_execution.rs`; it does not duplicate that file line by line. |
 
 ## Subsystems
 

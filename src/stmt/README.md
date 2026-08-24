@@ -16,4 +16,6 @@
 | `eval 1 + 1` | `Stmt::Command`. |
 | `trust 1 = 2` | `Stmt::UnsafeStmt`; strict execution rejects this example. |
 
-Start with [`stmt.rs`](stmt.rs); for example, its `Stmt` enum is the exact dispatch surface consumed by `execute/exec_stmt.rs`.
+Start with [`statement_types.rs`](statement_types.rs); for example, its `Stmt`
+enum is the exact dispatch surface consumed by
+`execute/verified_statement_execution.rs`.

@@ -107,6 +107,10 @@ impl Runtime {
                 Obj::Sin(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
+            Obj::Arcsin(a) => match right {
+                Obj::Arcsin(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
             Obj::Cos(a) => match right {
                 Obj::Cos(b) => a.to_string() == b.to_string(),
                 _ => false,

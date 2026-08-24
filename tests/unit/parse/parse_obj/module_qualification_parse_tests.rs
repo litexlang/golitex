@@ -70,13 +70,14 @@ fn parses_angle_bracketed_struct_params_and_declared_field_access() {
         strip_free_param_numeric_tags_in_display(&format!("{}", stmt)),
         "struct Group<s set>:"
     );
-    rt.exec_stmt(&Stmt::DefInterfaceStmt(DefInterfaceStmt::DefStructStmt(
+    rt.execute_statement(&Stmt::DefInterfaceStmt(DefInterfaceStmt::DefStructStmt(
         stmt,
     )))
     .expect("store struct definition");
 
     let have = parse_one_stmt_line_with_runtime(&mut rt, "trust have p &Group<R>");
-    rt.exec_stmt(&have).expect("store declared struct carrier");
+    rt.execute_statement(&have)
+        .expect("store declared struct carrier");
 
     let obj = parse_one_obj_line_with_runtime(&mut rt, "p.op");
     let Obj::ObjAsStructInstanceWithFieldAccess(access) = obj else {

@@ -1,6 +1,3 @@
-use crate::pipeline::{
-    run_source_code_with_options, SourceRunFailureKind, SourceRunOptions, SourceRunOutcome,
-};
 use crate::prelude::*;
 use std::env;
 use std::io::{self, BufRead, Write};
@@ -360,7 +357,7 @@ fn initialize_session_runtime(
     }
 
     if force_isolated || !directory.join("litex.config").is_file() {
-        runtime.new_file_path_new_env_new_name_scope("session");
+        runtime.start_isolated_source("session");
         runtime.set_current_source_allows_inline_imports(true);
         return Ok(("isolated", vec![]));
     }
