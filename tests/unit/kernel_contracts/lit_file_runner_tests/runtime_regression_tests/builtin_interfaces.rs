@@ -2,12 +2,12 @@ use super::*;
 
 fn run_source(source: &str, label: &str, detailed: bool) -> (Runtime, bool, String) {
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(label);
+    runtime.start_isolated_source(label);
     if detailed {
         runtime.set_output_style(OutputStyle::Detailed);
     }
-    let (results, error) = run_source_code(source, &mut runtime);
-    let (succeeded, output) = render_run_source_code_output(&runtime, &results, &error, false);
+    let (results, error) = execute_source(source, &mut runtime);
+    let (succeeded, output) = render_run_output(&runtime, &results, &error);
     (runtime, succeeded, output)
 }
 
@@ -182,23 +182,21 @@ exist! p Z, d N+ st {q = p / d, gcd(p, d) = 1}
 #[test]
 fn rational_reduced_fraction_builtin_theorem_requires_a_rational_argument_and_does_not_leak() {
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope("rational_reduced_fraction_no_leak");
-    let (setup_results, setup_error) = run_source_code("have x R", &mut runtime);
-    let (setup_succeeded, setup_output) =
-        render_run_source_code_output(&runtime, &setup_results, &setup_error, false);
+    runtime.start_isolated_source("rational_reduced_fraction_no_leak");
+    let (setup_results, setup_error) = execute_source("have x R", &mut runtime);
+    let (setup_succeeded, setup_output) = render_run_output(&runtime, &setup_results, &setup_error);
     assert!(setup_succeeded, "setup should succeed:\n{setup_output}");
 
     let call = "by thm rational_has_unique_reduced_fraction(x)";
-    let (results, error) = run_source_code(call, &mut runtime);
-    let (succeeded, output) = render_run_source_code_output(&runtime, &results, &error, false);
+    let (results, error) = execute_source(call, &mut runtime);
+    let (succeeded, output) = render_run_output(&runtime, &results, &error);
     assert!(!succeeded, "a merely real argument must fail:\n{output}");
     assert!(output.contains("requires its argument to belong to `Q`"));
 
     let target = "exist! p Z, d N+ st {x = p / d, gcd(p, d) = 1}";
     assert!(!runtime.cache_known_facts_contains(target).0);
-    let (probe_results, probe_error) = run_source_code(target, &mut runtime);
-    let (probe_succeeded, probe_output) =
-        render_run_source_code_output(&runtime, &probe_results, &probe_error, false);
+    let (probe_results, probe_error) = execute_source(target, &mut runtime);
+    let (probe_succeeded, probe_output) = render_run_output(&runtime, &probe_results, &probe_error);
     assert!(
         !probe_succeeded,
         "a failed builtin theorem must not store its existential conclusion:\n{probe_output}"
@@ -208,22 +206,21 @@ fn rational_reduced_fraction_builtin_theorem_requires_a_rational_argument_and_do
 #[test]
 fn finite_set_builtin_theorems_check_requirements_and_do_not_leak() {
     let mut subset_runtime = Runtime::new();
-    subset_runtime.new_file_path_new_env_new_name_scope("finite_subset_builtin_no_leak");
+    subset_runtime.start_isolated_source("finite_subset_builtin_no_leak");
     let (setup_results, setup_error) =
-        run_source_code("have A set\nhave B finite_set = {1}", &mut subset_runtime);
+        execute_source("have A set\nhave B finite_set = {1}", &mut subset_runtime);
     let (setup_succeeded, setup_output) =
-        render_run_source_code_output(&subset_runtime, &setup_results, &setup_error, false);
+        render_run_output(&subset_runtime, &setup_results, &setup_error);
     assert!(
         setup_succeeded,
         "subset setup should succeed:\n{setup_output}"
     );
 
-    let (results, error) = run_source_code(
+    let (results, error) = execute_source(
         "by thm subset_of_finite_set_is_finite(A, B)",
         &mut subset_runtime,
     );
-    let (succeeded, output) =
-        render_run_source_code_output(&subset_runtime, &results, &error, false);
+    let (succeeded, output) = render_run_output(&subset_runtime, &results, &error);
     assert!(
         !succeeded,
         "the missing subset premise must fail:\n{output}"
@@ -234,30 +231,29 @@ fn finite_set_builtin_theorems_check_requirements_and_do_not_leak() {
             .cache_known_facts_contains("$is_finite_set(A)")
             .0
     );
-    let (probe_results, probe_error) = run_source_code("$is_finite_set(A)", &mut subset_runtime);
+    let (probe_results, probe_error) = execute_source("$is_finite_set(A)", &mut subset_runtime);
     let (probe_succeeded, probe_output) =
-        render_run_source_code_output(&subset_runtime, &probe_results, &probe_error, false);
+        render_run_output(&subset_runtime, &probe_results, &probe_error);
     assert!(
         !probe_succeeded,
         "a failed subset theorem must not store its conclusion:\n{probe_output}"
     );
 
     let mut index_runtime = Runtime::new();
-    index_runtime.new_file_path_new_env_new_name_scope("finite_index_builtin_no_leak");
-    let (setup_results, setup_error) = run_source_code("have S set", &mut index_runtime);
+    index_runtime.start_isolated_source("finite_index_builtin_no_leak");
+    let (setup_results, setup_error) = execute_source("have S set", &mut index_runtime);
     let (setup_succeeded, setup_output) =
-        render_run_source_code_output(&index_runtime, &setup_results, &setup_error, false);
+        render_run_output(&index_runtime, &setup_results, &setup_error);
     assert!(
         setup_succeeded,
         "index setup should succeed:\n{setup_output}"
     );
 
-    let (results, error) = run_source_code(
+    let (results, error) = execute_source(
         "by thm finite_set_has_bijective_index(S)",
         &mut index_runtime,
     );
-    let (succeeded, output) =
-        render_run_source_code_output(&index_runtime, &results, &error, false);
+    let (succeeded, output) = render_run_output(&index_runtime, &results, &error);
     assert!(
         !succeeded,
         "a merely set-valued argument must fail:\n{output}"
@@ -270,20 +266,19 @@ fn finite_set_builtin_theorems_check_requirements_and_do_not_leak() {
 #[test]
 fn failed_builtin_theorem_call_does_not_leak_its_conclusion() {
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope("builtin_theorem_no_leak");
+    runtime.start_isolated_source("builtin_theorem_no_leak");
     let target = "0 $in {x R: x = 1}";
     let failed_call = format!("by thm set_builder_member(0, {{x R: x = 1}})");
-    let (results, error) = run_source_code(&failed_call, &mut runtime);
-    let (succeeded, output) = render_run_source_code_output(&runtime, &results, &error, false);
+    let (results, error) = execute_source(&failed_call, &mut runtime);
+    let (succeeded, output) = render_run_output(&runtime, &results, &error);
     assert!(
         !succeeded,
         "the missing predicate premise should fail:\n{output}"
     );
     assert!(!runtime.cache_known_facts_contains(target).0);
 
-    let (probe_results, probe_error) = run_source_code(target, &mut runtime);
-    let (probe_succeeded, probe_output) =
-        render_run_source_code_output(&runtime, &probe_results, &probe_error, false);
+    let (probe_results, probe_error) = execute_source(target, &mut runtime);
+    let (probe_succeeded, probe_output) = render_run_output(&runtime, &probe_results, &probe_error);
     assert!(
         !probe_succeeded,
         "a failed builtin theorem call must not store its conclusion:\n{probe_output}"

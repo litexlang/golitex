@@ -9,7 +9,7 @@ impl Runtime {
     pub fn verify_equal_fact_by_builtin_rules(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<StmtResult, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -748,7 +748,7 @@ impl Runtime {
                 InFact::new(target.clone(), owner_set, line_file.clone()).into();
             let membership_result =
                 self.verify_non_equational_atomic_fact_with_known_atomic_facts(&membership)?;
-            if !membership_result.is_true() {
+            if !membership_result.is_success() {
                 continue;
             }
             return Ok(Some(
@@ -856,7 +856,7 @@ impl Runtime {
     fn try_verify_set_minus_equalities(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -894,7 +894,7 @@ impl Runtime {
                 SubsetFact::new(subset, container, line_file.clone()).into();
             let subset_result =
                 self.verify_atomic_fact_as_builtin_rule_premise(&subset_fact, builtin_state)?;
-            if subset_result.is_true() {
+            if subset_result.is_success() {
                 return Ok(Some(
                     SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                         equal_fact.clone().into(),
@@ -933,7 +933,7 @@ impl Runtime {
     fn try_verify_finite_set_size_set_minus_equality(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -949,14 +949,14 @@ impl Runtime {
         let first_finite: AtomicFact = IsFiniteSetFact::new(first_set, line_file.clone()).into();
         let first_result =
             self.verify_atomic_fact_as_builtin_rule_premise(&first_finite, builtin_state)?;
-        if !first_result.is_true() {
+        if !first_result.is_success() {
             return Ok(None);
         }
 
         let second_finite: AtomicFact = IsFiniteSetFact::new(second_set, line_file.clone()).into();
         let second_result =
             self.verify_atomic_fact_as_builtin_rule_premise(&second_finite, builtin_state)?;
-        if !second_result.is_true() {
+        if !second_result.is_success() {
             return Ok(None);
         }
 
@@ -975,7 +975,7 @@ impl Runtime {
     fn try_verify_finite_set_size_union_equality(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -1010,7 +1010,7 @@ impl Runtime {
     fn try_verify_finite_set_size_partition_equality(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -1045,7 +1045,7 @@ impl Runtime {
     fn try_verify_finite_set_size_set_minus_of_subset_equality(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -1061,20 +1061,20 @@ impl Runtime {
             SubsetFact::new(subset.clone(), container.clone(), line_file.clone()).into();
         let subset_result =
             self.verify_atomic_fact_as_builtin_rule_premise(&subset_fact, builtin_state)?;
-        if !subset_result.is_true() {
+        if !subset_result.is_success() {
             return Ok(None);
         }
         let container_finite: AtomicFact =
             IsFiniteSetFact::new(container, line_file.clone()).into();
         let container_result =
             self.verify_atomic_fact_as_builtin_rule_premise(&container_finite, builtin_state)?;
-        if !container_result.is_true() {
+        if !container_result.is_success() {
             return Ok(None);
         }
         let subset_finite: AtomicFact = IsFiniteSetFact::new(subset, line_file.clone()).into();
         let subset_finite_result =
             self.verify_atomic_fact_as_builtin_rule_premise(&subset_finite, builtin_state)?;
-        if !subset_finite_result.is_true() {
+        if !subset_finite_result.is_success() {
             return Ok(None);
         }
 
@@ -1094,7 +1094,7 @@ impl Runtime {
     fn try_verify_finite_set_size_integer_range_equality(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -1109,7 +1109,7 @@ impl Runtime {
             InFact::new(start.clone(), StandardSet::N.into(), line_file.clone()).into();
         let start_result =
             self.verify_atomic_fact_as_builtin_rule_premise(&start_in_n, builtin_state)?;
-        if !start_result.is_true() {
+        if !start_result.is_success() {
             return Ok(None);
         }
 
@@ -1117,7 +1117,7 @@ impl Runtime {
             InFact::new(end.clone(), StandardSet::N.into(), line_file.clone()).into();
         let end_result =
             self.verify_atomic_fact_as_builtin_rule_premise(&end_in_n, builtin_state)?;
-        if !end_result.is_true() {
+        if !end_result.is_success() {
             return Ok(None);
         }
 
@@ -1125,7 +1125,7 @@ impl Runtime {
             LessEqualFact::new(start, end, line_file.clone()).into();
         let order_result =
             self.verify_atomic_fact_as_builtin_rule_premise(&endpoints_ordered, builtin_state)?;
-        if !order_result.is_true() {
+        if !order_result.is_success() {
             return Ok(None);
         }
 
@@ -1147,7 +1147,7 @@ impl Runtime {
     fn try_verify_power_set_finite_set_size_equality(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -1163,7 +1163,7 @@ impl Runtime {
         let base_finite: AtomicFact = IsFiniteSetFact::new(base_set, line_file.clone()).into();
         let base_result =
             self.verify_atomic_fact_as_builtin_rule_premise(&base_finite, builtin_state)?;
-        if !base_result.is_true() {
+        if !base_result.is_success() {
             return Ok(None);
         }
 
@@ -1528,17 +1528,17 @@ impl Runtime {
         first_set: Obj,
         second_set: Obj,
         line_file: LineFile,
-        _builtin_state: &UseBuiltinRuleVerifyState,
+        _builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
-        let type_state = UseContextVerifyState::new(0, true);
+        let type_state = ProofSearchState::after_well_definedness();
         let first_finite: AtomicFact = IsFiniteSetFact::new(first_set, line_file.clone()).into();
         let first_result = self.verify_atomic_fact(&first_finite, &type_state)?;
-        if !first_result.is_true() {
+        if !first_result.is_success() {
             return Ok(None);
         }
         let second_finite: AtomicFact = IsFiniteSetFact::new(second_set, line_file).into();
         let second_result = self.verify_atomic_fact(&second_finite, &type_state)?;
-        if !second_result.is_true() {
+        if !second_result.is_success() {
             return Ok(None);
         }
         Ok(Some(vec![first_result, second_result]))
@@ -1620,7 +1620,7 @@ impl Runtime {
     fn try_verify_indexed_set_family_equalities(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         for (indexed_side, other_side) in [
             (&equal_fact.left, &equal_fact.right),
@@ -1706,7 +1706,7 @@ impl Runtime {
                                     builtin_state,
                                 )?,
                             };
-                            if nonempty_result.is_true() {
+                            if nonempty_result.is_success() {
                                 return Ok(Some(
                                     factual_equal_success_by_builtin_reason_with_subgoals(
                                         equal_fact,
@@ -1893,7 +1893,7 @@ impl Runtime {
     fn try_verify_intersection_from_subset(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         for (intersection_side, target_side) in [
             (&equal_fact.left, &equal_fact.right),
@@ -1919,7 +1919,7 @@ impl Runtime {
             .into();
             let subset_result =
                 self.verify_atomic_fact_as_builtin_rule_premise(&subset_fact, builtin_state)?;
-            if !subset_result.is_true() {
+            if !subset_result.is_success() {
                 continue;
             }
 
@@ -1942,7 +1942,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         intersection_is_left: bool,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (intersection_side, target_side) = if intersection_is_left {
             (&equal_fact.left, &equal_fact.right)
@@ -1968,7 +1968,7 @@ impl Runtime {
                 InFact::new(element_obj.clone(), set.clone(), line_file.clone()).into();
             let in_result =
                 self.verify_atomic_fact_as_builtin_rule_premise(&in_set, builtin_state)?;
-            if in_result.is_true() {
+            if in_result.is_success() {
                 kept.push(element_obj);
                 steps.push(in_result);
                 continue;
@@ -1978,7 +1978,7 @@ impl Runtime {
                 NotInFact::new(element_obj, set.clone(), line_file.clone()).into();
             let not_in_result =
                 self.verify_atomic_fact_as_builtin_rule_premise(&not_in_set, builtin_state)?;
-            if not_in_result.is_true() {
+            if not_in_result.is_success() {
                 steps.push(not_in_result);
                 continue;
             }
@@ -2004,7 +2004,7 @@ impl Runtime {
     fn try_verify_subtraction_from_known_addition(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         if let Some(done) =
             self.try_verify_one_subtraction_from_known_addition(equal_fact, true, builtin_state)?
@@ -2020,7 +2020,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         target_is_left: bool,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (target_a, subtraction_side) = if target_is_left {
             (&equal_fact.left, &equal_fact.right)
@@ -2040,7 +2040,7 @@ impl Runtime {
             line_file.clone(),
         );
         let known_sum_1 = self.verify_equal_fact_by_known_equality(&sum_fact_1);
-        if known_sum_1.is_true() {
+        if known_sum_1.is_success() {
             return Ok(Some(
                 SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                     equal_fact.clone().into(),
@@ -2059,7 +2059,7 @@ impl Runtime {
             line_file.clone(),
         );
         let known_sum_2 = self.verify_equal_fact_by_known_equality(&sum_fact_2);
-        if known_sum_2.is_true() {
+        if known_sum_2.is_success() {
             return Ok(Some(
                 SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                     equal_fact.clone().into(),
@@ -2075,7 +2075,7 @@ impl Runtime {
             line_file.clone(),
             builtin_state,
         )?;
-        if premise_result.is_true() {
+        if premise_result.is_success() {
             return Ok(Some(
                 SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                     equal_fact.clone().into(),
@@ -2095,7 +2095,7 @@ impl Runtime {
     pub fn try_verify_tuple_equality_from_dim_and_projections(
         &mut self,
         equal_fact: &EqualFact,
-        verify_state: &UseContextVerifyState,
+        verify_state: &ProofSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -2113,7 +2113,7 @@ impl Runtime {
         let is_tuple_fact: AtomicFact =
             IsTupleFact::new(target_obj.clone(), line_file.clone()).into();
         let is_tuple_result = self.verify_atomic_fact(&is_tuple_fact, verify_state)?;
-        if !is_tuple_result.is_true() {
+        if !is_tuple_result.is_success() {
             return Ok(None);
         }
 
@@ -2122,7 +2122,7 @@ impl Runtime {
         let tuple_dim_fact: AtomicFact =
             EqualFact::new(tuple_dim_obj, tuple_dim_value_obj, line_file.clone()).into();
         let tuple_dim_result = self.verify_atomic_fact(&tuple_dim_fact, verify_state)?;
-        if !tuple_dim_result.is_true() {
+        if !tuple_dim_result.is_success() {
             return Ok(None);
         }
 
@@ -2133,7 +2133,7 @@ impl Runtime {
             let component_fact: AtomicFact =
                 EqualFact::new(projected_obj, arg.as_ref().clone(), line_file.clone()).into();
             let component_result = self.verify_atomic_fact(&component_fact, verify_state)?;
-            if !component_result.is_true() {
+            if !component_result.is_success() {
                 return Ok(None);
             }
             steps.push(component_result);
@@ -2156,7 +2156,7 @@ impl Runtime {
     pub fn try_verify_symbolic_tuple_equality_from_coordinates(
         &mut self,
         equal_fact: &EqualFact,
-        verify_state: &UseContextVerifyState,
+        verify_state: &ProofSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -2195,13 +2195,13 @@ impl Runtime {
 
         let left_is_tuple: AtomicFact = IsTupleFact::new(left.clone(), line_file.clone()).into();
         let left_is_tuple_result = self.verify_atomic_fact(&left_is_tuple, verify_state)?;
-        if !left_is_tuple_result.is_true() {
+        if !left_is_tuple_result.is_success() {
             return Ok(None);
         }
 
         let right_is_tuple: AtomicFact = IsTupleFact::new(right.clone(), line_file.clone()).into();
         let right_is_tuple_result = self.verify_atomic_fact(&right_is_tuple, verify_state)?;
-        if !right_is_tuple_result.is_true() {
+        if !right_is_tuple_result.is_success() {
             return Ok(None);
         }
 
@@ -2210,7 +2210,7 @@ impl Runtime {
         let same_dim: AtomicFact =
             EqualFact::new(left_dim.clone(), right_dim, line_file.clone()).into();
         let same_dim_result = self.verify_atomic_fact(&same_dim, verify_state)?;
-        if !same_dim_result.is_true() {
+        if !same_dim_result.is_success() {
             return Ok(None);
         }
 
@@ -2222,7 +2222,7 @@ impl Runtime {
         .into();
         let dimension_is_positive_result =
             self.verify_atomic_fact(&dimension_is_positive, verify_state)?;
-        if !dimension_is_positive_result.is_true() {
+        if !dimension_is_positive_result.is_success() {
             return Ok(None);
         }
 
@@ -2244,7 +2244,7 @@ impl Runtime {
             rt.define_params_with_type(&coordinate_params, false, ParamObjType::Forall)?;
             rt.verify_atomic_fact_with_known_forall(&coordinate_equality, verify_state)
         })?;
-        if !coordinate_result.is_true() {
+        if !coordinate_result.is_success() {
             return Ok(None);
         }
 
@@ -2272,7 +2272,7 @@ impl Runtime {
     fn try_verify_cart_equality_from_dim_and_projections(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -2318,13 +2318,13 @@ impl Runtime {
 
         let is_cart_result =
             self.verify_atomic_fact_as_builtin_rule_premise(&is_cart_fact, builtin_state)?;
-        if !is_cart_result.is_true() {
+        if !is_cart_result.is_success() {
             return Ok(None);
         }
 
         let cart_dim_result =
             self.verify_atomic_fact_as_builtin_rule_premise(&cart_dim_fact, builtin_state)?;
-        if !cart_dim_result.is_true() {
+        if !cart_dim_result.is_success() {
             return Ok(None);
         }
 
@@ -2336,14 +2336,14 @@ impl Runtime {
                 EqualFact::new(projected_target, arg.as_ref().clone(), line_file.clone()).into();
             let mut projection_result =
                 self.verify_atomic_fact_as_builtin_rule_premise(&projection_fact, builtin_state)?;
-            if !projection_result.is_true() {
+            if !projection_result.is_success() {
                 if let Some(known_forall_result) =
                     self.verify_exact_cart_projection_from_known_forall(&projection_fact)?
                 {
                     projection_result = known_forall_result;
                 }
             }
-            if !projection_result.is_true() {
+            if !projection_result.is_success() {
                 return Ok(None);
             }
             steps.push(projection_result);
@@ -2363,7 +2363,7 @@ impl Runtime {
         &mut self,
         goal: &AtomicFact,
     ) -> Result<Option<StmtResult>, RuntimeError> {
-        let lookup_key = (goal.key(), goal.is_true());
+        let lookup_key = (goal.key(), goal.has_positive_polarity());
         let candidates: Vec<(AtomicFact, Rc<StoredForallConclusionReference>)> = self
             .iter_environments_from_top()
             .flat_map(|environment| {
@@ -2387,7 +2387,8 @@ impl Runtime {
         // projection. Its domain requirements may use known facts and builtin
         // computation, but must not start another equality/forall search and
         // recursively re-enter cart extensionality.
-        let verify_state = UseContextVerifyState::new(0, true).without_known_forall_for_equality();
+        let verify_state =
+            ProofSearchState::after_well_definedness().without_known_forall_for_equality();
         for (pattern, forall_context) in candidates {
             let Some(arg_map) = self.match_atomic_fact_args_against_known_forall_ordered_args(
                 &pattern,
@@ -2413,7 +2414,7 @@ impl Runtime {
     fn try_verify_empty_set_equality_from_not_nonempty(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -2428,7 +2429,7 @@ impl Runtime {
             NotIsNonemptySetFact::new(set.clone(), line_file.clone()).into();
         let mut sub =
             self.verify_atomic_fact_as_builtin_rule_premise(&not_nonempty, builtin_state)?;
-        if !sub.is_true() {
+        if !sub.is_success() {
             let empty_order: Option<AtomicFact> = match &set {
                 Obj::Range(range) => Some(
                     LessEqualFact::new(
@@ -2453,7 +2454,7 @@ impl Runtime {
                     .verify_non_equational_atomic_fact_with_zero_premise_verification(
                         &empty_order,
                     )?;
-                if comparison.is_true() {
+                if comparison.is_success() {
                     sub = SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                         not_nonempty.clone().into(),
                         "integer interval emptiness by number comparison".to_string(),
@@ -2463,7 +2464,7 @@ impl Runtime {
                 }
             }
         }
-        if !sub.is_true() {
+        if !sub.is_success() {
             return Ok(None);
         }
 
@@ -2497,7 +2498,7 @@ impl Runtime {
             &zero,
             line_file.clone(),
         ));
-        if !size_zero.is_true() {
+        if !size_zero.is_success() {
             return Ok(None);
         }
 
@@ -2517,7 +2518,7 @@ impl Runtime {
         greater_or_equal: &Obj,
         less_or_equal: &Obj,
         line_file: LineFile,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let greater_equal: AtomicFact = GreaterEqualFact::new(
             greater_or_equal.clone(),
@@ -2527,14 +2528,14 @@ impl Runtime {
         .into();
         let result =
             self.verify_atomic_fact_as_builtin_rule_premise(&greater_equal, builtin_state)?;
-        if result.is_true() {
+        if result.is_success() {
             return Ok(Some(result));
         }
 
         let less_equal: AtomicFact =
             LessEqualFact::new(less_or_equal.clone(), greater_or_equal.clone(), line_file).into();
         let result = self.verify_atomic_fact_as_builtin_rule_premise(&less_equal, builtin_state)?;
-        if result.is_true() {
+        if result.is_success() {
             return Ok(Some(result));
         }
 
@@ -2548,7 +2549,7 @@ impl Runtime {
     fn try_verify_equality_from_two_sided_weak_order(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -2590,7 +2591,7 @@ impl Runtime {
             line_file.clone(),
             builtin_state,
         )?;
-        if complete_result.is_true() {
+        if complete_result.is_success() {
             return Ok(Some(
                 SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                     equal_fact.clone().into(),
@@ -2645,7 +2646,7 @@ impl Runtime {
         &mut self,
         denominator: &Obj,
         line_file: LineFile,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let not_zero: AtomicFact = NotEqualFact::new(
             denominator.clone(),
@@ -2654,7 +2655,7 @@ impl Runtime {
         )
         .into();
         let result = self.verify_atomic_fact_as_builtin_rule_premise(&not_zero, builtin_state)?;
-        if result.is_true() {
+        if result.is_success() {
             return Ok(Some(result));
         }
         Ok(None)
@@ -2666,7 +2667,7 @@ impl Runtime {
         dividend: &Obj,
         quotient: &Obj,
         denominator: &Obj,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let line_file = &equal_fact.line_file;
         let division_obj: Obj = Div::new(dividend.clone(), denominator.clone()).into();
@@ -2699,7 +2700,7 @@ impl Runtime {
     fn try_verify_product_from_known_division(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -2731,7 +2732,7 @@ impl Runtime {
     fn try_verify_division_from_known_product(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -2781,7 +2782,7 @@ impl Runtime {
     fn try_verify_division_product_conversion(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         if let Some(done) =
             self.try_verify_product_from_known_division(equal_fact, builtin_state)?
@@ -2796,7 +2797,7 @@ impl Runtime {
         &mut self,
         prop_name: &str,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<StmtResult, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -2816,7 +2817,7 @@ impl Runtime {
     fn try_verify_general_cart_set_builder_equality(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -2851,7 +2852,7 @@ impl Runtime {
         general_cart: &GeneralCart,
         set_builder: &SetBuilder,
         line_file: LineFile,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
         let Obj::FnSet(fn_set) = set_builder.param_set.as_ref() else {
             return Ok(None);
@@ -2871,7 +2872,7 @@ impl Runtime {
             ),
             builtin_state,
         )?;
-        if !domain_result.is_true() {
+        if !domain_result.is_success() {
             return Ok(None);
         }
         let expected_ret_set: Obj = BigUnion::new(general_cart.family_set.as_ref().clone()).into();
@@ -2883,7 +2884,7 @@ impl Runtime {
             ),
             builtin_state,
         )?;
-        if !ret_result.is_true() {
+        if !ret_result.is_success() {
             return Ok(None);
         }
 
@@ -2920,7 +2921,7 @@ impl Runtime {
                 &EqualFact::new_from_refs(actual, expected, line_file.clone()),
                 builtin_state,
             )?;
-            if !result.is_true() {
+            if !result.is_success() {
                 return Ok(None);
             }
             steps.push(result);
@@ -3051,7 +3052,7 @@ impl Runtime {
     fn try_verify_equality_from_known_antisymmetric_props(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -3068,7 +3069,7 @@ impl Runtime {
         for prop_name in prop_names {
             let left_to_right =
                 self.verify_user_prop_subgoal(&prop_name, equal_fact, builtin_state)?;
-            if !left_to_right.is_true() {
+            if !left_to_right.is_success() {
                 continue;
             }
             let right_to_left = self.verify_user_prop_subgoal(
@@ -3076,7 +3077,7 @@ impl Runtime {
                 &EqualFact::new_from_refs(right, left, line_file.clone()),
                 builtin_state,
             )?;
-            if !right_to_left.is_true() {
+            if !right_to_left.is_success() {
                 continue;
             }
             return Ok(Some(Self::wrap_registered_antisymmetric_predicate_result(

@@ -340,12 +340,13 @@ Basic behavior:
 | `-strict` | Verify configured dependencies and reject user trust or axiom statements. |
 | `-trust-before-line <X>` | Preview direct-file development mode: trust top-level statements before the exact header line `X`, then verify from `X`. |
 | `-summarize` | Append one final run-summary JSON object after ordinary verifier output. |
+| `-trace-pipeline` | Show the major Rust execution path for batch verification; runner mode emits a structured field. |
 | `-lang <code>` | Localize JSON keys and explanatory labels without changing Litex source text. |
 
 Commands that take a value require the next token to be present and not begin
-with `-`. Global options such as `-detail`, `-strict`, `-summarize`, and
-`-lang` may appear before or after the primary command; putting them first is
-usually easiest to read. After `-latex`, use `-f`, `-e`, or `-r` with its
+with `-`. Global options such as `-detail`, `-strict`, `-summarize`,
+`-trace-pipeline`, and `-lang` may appear before or after the primary command;
+putting them first is usually easiest to read. After `-latex`, use `-f`, `-e`, or `-r` with its
 argument; without a selector, `-latex` starts the interactive LaTeX-output
 REPL.
 

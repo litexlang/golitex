@@ -1,3 +1,4 @@
+use super::source_execution::SourceRunOptions;
 use crate::prelude::*;
 use std::fs;
 use std::rc::Rc;
@@ -20,31 +21,25 @@ impl RepositoryModuleRun {
     }
 }
 
-pub fn run_repository_file_target(
-    runtime: &mut Runtime,
-    target: RepositoryFileTarget,
-) -> (Vec<StmtResult>, Option<RuntimeError>) {
-    match target {
-        RepositoryFileTarget::Module(module_id) => run_repository_module_prefix(runtime, module_id),
-        RepositoryFileTarget::File { .. } => {
-            run_repository_prefix(runtime, RepositoryModuleRun::Through(target), None)
-        }
-    }
+#[derive(Clone, Debug, Default)]
+pub struct RepositoryExecutionOptions {
+    pub trusted_prefix: Option<TrustedPrefixPolicy>,
 }
 
-pub fn run_repository_file_target_with_trusted_prefix(
+pub fn execute_repository_target(
     runtime: &mut Runtime,
     target: RepositoryFileTarget,
-    trusted_prefix: &TrustedPrefixPolicy,
+    options: RepositoryExecutionOptions,
 ) -> (Vec<StmtResult>, Option<RuntimeError>) {
+    let trusted_prefix = options.trusted_prefix.as_ref();
     match target {
         RepositoryFileTarget::Module(module_id) => {
-            run_repository_module_prefix_with_trusted_prefix(runtime, module_id, trusted_prefix)
+            run_repository_module_prefix(runtime, module_id, trusted_prefix)
         }
         RepositoryFileTarget::File { .. } => run_repository_prefix(
             runtime,
             RepositoryModuleRun::Through(target),
-            Some(trusted_prefix),
+            trusted_prefix,
         ),
     }
 }
@@ -95,25 +90,7 @@ pub fn run_repository_before_file_target(
 fn run_repository_module_prefix(
     runtime: &mut Runtime,
     target_module_id: ModuleId,
-) -> (Vec<StmtResult>, Option<RuntimeError>) {
-    let root_module_id = runtime
-        .module_manager
-        .entry_module_id
-        .unwrap_or(target_module_id);
-    if root_module_id == target_module_id {
-        return run_repository_module_target(runtime, root_module_id);
-    }
-    run_repository_prefix(
-        runtime,
-        RepositoryModuleRun::Through(RepositoryFileTarget::Module(target_module_id)),
-        None,
-    )
-}
-
-fn run_repository_module_prefix_with_trusted_prefix(
-    runtime: &mut Runtime,
-    target_module_id: ModuleId,
-    trusted_prefix: &TrustedPrefixPolicy,
+    trusted_prefix: Option<&TrustedPrefixPolicy>,
 ) -> (Vec<StmtResult>, Option<RuntimeError>) {
     let root_module_id = runtime
         .module_manager
@@ -125,13 +102,13 @@ fn run_repository_module_prefix_with_trusted_prefix(
             runtime,
             root_module_id,
             execution_mode,
-            Some(trusted_prefix),
+            trusted_prefix,
         );
     }
     run_repository_prefix(
         runtime,
         RepositoryModuleRun::Through(RepositoryFileTarget::Module(target_module_id)),
-        Some(trusted_prefix),
+        trusted_prefix,
     )
 }
 
@@ -170,14 +147,6 @@ fn run_repository_prefix(
         module_run,
         trusted_prefix,
     )
-}
-
-fn run_repository_module_target(
-    runtime: &mut Runtime,
-    module_id: ModuleId,
-) -> (Vec<StmtResult>, Option<RuntimeError>) {
-    let execution_mode = runtime.current_execution_mode();
-    run_repository_module_target_with_mode(runtime, module_id, execution_mode, None)
 }
 
 pub fn run_repository_module_target_with_mode(
@@ -626,10 +595,13 @@ fn run_repository_source_file(
             .filter(|policy| policy.matches(frame.module_id, frame.layer))
             .map(|policy| policy.before_line)
     });
-    let outcome = run_source_code_with_options(
+    let outcome = super::source_execution::execute_source_with_options(
         remove_windows_carriage_return(source_code.as_str()).as_str(),
         runtime,
-        SourceRunOptions { trust_before_line },
+        SourceRunOptions {
+            trust_before_line,
+            ..SourceRunOptions::default()
+        },
     );
     (outcome.stmt_results, outcome.runtime_error)
 }

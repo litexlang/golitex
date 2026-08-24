@@ -14,12 +14,10 @@ value = combined(1)
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
-        "checked_definition_reduction_uses_stored_function_leaf_equalities",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime
+        .start_isolated_source("checked_definition_reduction_uses_stored_function_leaf_equalities");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
     assert!(
         run_succeeded,
         "a direct checked-definition reduction should compare structural leaves through stored non-forall equalities or direct computation:\n{}",
@@ -35,17 +33,13 @@ have value R = 1 + (1 + 1)
 value = combined(1)
 "#;
     let mut recursive_unfold_runtime = Runtime::new();
-    recursive_unfold_runtime.new_file_path_new_env_new_name_scope(
+    recursive_unfold_runtime.start_isolated_source(
         "checked_definition_reduction_does_not_unfold_named_child_definitions",
     );
     let (stmt_results, runtime_error) =
-        run_source_code(recursive_unfold_source, &mut recursive_unfold_runtime);
-    let (run_succeeded, run_output) = render_run_source_code_output(
-        &recursive_unfold_runtime,
-        &stmt_results,
-        &runtime_error,
-        false,
-    );
+        execute_source(recursive_unfold_source, &mut recursive_unfold_runtime);
+    let (run_succeeded, run_output) =
+        render_run_output(&recursive_unfold_runtime, &stmt_results, &runtime_error);
     assert!(
         !run_succeeded,
         "structural leaves must not recursively unfold more function definitions:\n{}",
@@ -58,17 +52,13 @@ have fn with_zero(t R) cart(R, R) = (0 + t, t)
 with_zero(q) = (q, q)
 "#;
     let mut normalization_leaf_runtime = Runtime::new();
-    normalization_leaf_runtime.new_file_path_new_env_new_name_scope(
+    normalization_leaf_runtime.start_isolated_source(
         "checked_definition_reduction_uses_bounded_normalization_for_structural_leaves",
     );
     let (stmt_results, runtime_error) =
-        run_source_code(normalization_leaf_source, &mut normalization_leaf_runtime);
-    let (run_succeeded, run_output) = render_run_source_code_output(
-        &normalization_leaf_runtime,
-        &stmt_results,
-        &runtime_error,
-        false,
-    );
+        execute_source(normalization_leaf_source, &mut normalization_leaf_runtime);
+    let (run_succeeded, run_output) =
+        render_run_output(&normalization_leaf_runtime, &stmt_results, &runtime_error);
     assert!(
         run_succeeded,
         "a structural leaf may use bounded obligation-free symbolic normalization:\n{}",
@@ -80,19 +70,14 @@ have a, t R
 a * t = a * t + 0
 "#;
     let mut direct_normalization_runtime = Runtime::new();
-    direct_normalization_runtime.new_file_path_new_env_new_name_scope(
-        "terminating_equality_leaf_uses_bounded_normalization",
-    );
-    let (stmt_results, runtime_error) = run_source_code(
+    direct_normalization_runtime
+        .start_isolated_source("terminating_equality_leaf_uses_bounded_normalization");
+    let (stmt_results, runtime_error) = execute_source(
         direct_normalization_source,
         &mut direct_normalization_runtime,
     );
-    let (run_succeeded, run_output) = render_run_source_code_output(
-        &direct_normalization_runtime,
-        &stmt_results,
-        &runtime_error,
-        false,
-    );
+    let (run_succeeded, run_output) =
+        render_run_output(&direct_normalization_runtime, &stmt_results, &runtime_error);
     assert!(
         run_succeeded,
         "a direct comparison may use bounded obligation-free normalization:\n{}",
@@ -108,13 +93,13 @@ have value cart(R, R) = wrapped(1)
 value = (f(1), 1)
 "#;
     let mut forall_leaf_runtime = Runtime::new();
-    forall_leaf_runtime.new_file_path_new_env_new_name_scope(
+    forall_leaf_runtime.start_isolated_source(
         "checked_definition_reduction_does_not_use_forall_for_structural_leaves",
     );
     let (stmt_results, runtime_error) =
-        run_source_code(forall_leaf_source, &mut forall_leaf_runtime);
+        execute_source(forall_leaf_source, &mut forall_leaf_runtime);
     let (run_succeeded, run_output) =
-        render_run_source_code_output(&forall_leaf_runtime, &stmt_results, &runtime_error, false);
+        render_run_output(&forall_leaf_runtime, &stmt_results, &runtime_error);
     assert!(
         !run_succeeded,
         "structural leaves must not instantiate known forall facts:\n{}",
@@ -126,11 +111,9 @@ have fn guarded(k N+: 2 <= k) R = k
 guarded(1) = 1
 "#;
     let mut invalid_runtime = Runtime::new();
-    invalid_runtime
-        .new_file_path_new_env_new_name_scope("definition_reduction_does_not_bypass_domain_facts");
-    let (stmt_results, runtime_error) = run_source_code(invalid_source, &mut invalid_runtime);
-    let (run_succeeded, _) =
-        render_run_source_code_output(&invalid_runtime, &stmt_results, &runtime_error, false);
+    invalid_runtime.start_isolated_source("definition_reduction_does_not_bypass_domain_facts");
+    let (stmt_results, runtime_error) = execute_source(invalid_source, &mut invalid_runtime);
+    let (run_succeeded, _) = render_run_output(&invalid_runtime, &stmt_results, &runtime_error);
     assert!(
         !run_succeeded,
         "checked-definition reduction must not bypass the function's domain facts"
@@ -144,17 +127,12 @@ have selected R = f(a, 0)
 selected = f(1, 0)
 "#;
     let mut implicit_alias_runtime = Runtime::new();
-    implicit_alias_runtime.new_file_path_new_env_new_name_scope(
-        "known_congruence_does_not_reopen_an_alias_representative",
-    );
+    implicit_alias_runtime
+        .start_isolated_source("known_congruence_does_not_reopen_an_alias_representative");
     let (stmt_results, runtime_error) =
-        run_source_code(implicit_alias_source, &mut implicit_alias_runtime);
-    let (run_succeeded, run_output) = render_run_source_code_output(
-        &implicit_alias_runtime,
-        &stmt_results,
-        &runtime_error,
-        false,
-    );
+        execute_source(implicit_alias_source, &mut implicit_alias_runtime);
+    let (run_succeeded, run_output) =
+        render_run_output(&implicit_alias_runtime, &stmt_results, &runtime_error);
     assert!(
         !run_succeeded,
         "an alias must not be reopened as an equality representative for structural congruence:\n{}",
@@ -169,13 +147,12 @@ have selected R = f(a, 0)
 selected = f(a, 0) = f(1, 0)
 "#;
     let mut one_argument_runtime = Runtime::new();
-    one_argument_runtime.new_file_path_new_env_new_name_scope(
-        "explicit_alias_bridge_then_known_argument_congruence",
-    );
+    one_argument_runtime
+        .start_isolated_source("explicit_alias_bridge_then_known_argument_congruence");
     let (stmt_results, runtime_error) =
-        run_source_code(one_argument_source, &mut one_argument_runtime);
+        execute_source(one_argument_source, &mut one_argument_runtime);
     let (run_succeeded, run_output) =
-        render_run_source_code_output(&one_argument_runtime, &stmt_results, &runtime_error, false);
+        render_run_output(&one_argument_runtime, &stmt_results, &runtime_error);
     assert!(
         run_succeeded,
         "an explicit alias bridge should expose the direct structural congruence step:\n{}",
@@ -192,11 +169,11 @@ selected = f(a, b) = f(1, 2)
 "#;
     let mut two_argument_runtime = Runtime::new();
     two_argument_runtime
-        .new_file_path_new_env_new_name_scope("explicit_alias_bridge_then_two_argument_congruence");
+        .start_isolated_source("explicit_alias_bridge_then_two_argument_congruence");
     let (stmt_results, runtime_error) =
-        run_source_code(two_argument_source, &mut two_argument_runtime);
+        execute_source(two_argument_source, &mut two_argument_runtime);
     let (run_succeeded, run_output) =
-        render_run_source_code_output(&two_argument_runtime, &stmt_results, &runtime_error, false);
+        render_run_output(&two_argument_runtime, &stmt_results, &runtime_error);
     assert!(
         run_succeeded,
         "the explicit bridge should allow all corresponding arguments to use known equalities:\n{}",
@@ -210,18 +187,16 @@ trust a = 1
 f(a, b) = f(1, 2)
 "#;
     let mut missing_argument_equality_runtime = Runtime::new();
-    missing_argument_equality_runtime.new_file_path_new_env_new_name_scope(
-        "known_congruence_requires_every_corresponding_argument_equality",
-    );
-    let (stmt_results, runtime_error) = run_source_code(
+    missing_argument_equality_runtime
+        .start_isolated_source("known_congruence_requires_every_corresponding_argument_equality");
+    let (stmt_results, runtime_error) = execute_source(
         missing_argument_equality_source,
         &mut missing_argument_equality_runtime,
     );
-    let (run_succeeded, run_output) = render_run_source_code_output(
+    let (run_succeeded, run_output) = render_run_output(
         &missing_argument_equality_runtime,
         &stmt_results,
         &runtime_error,
-        false,
     );
     assert!(
         !run_succeeded,
@@ -239,11 +214,10 @@ trust f = g(1, 2)
 f(a, b) = g(1, 2)(3, 4)
 "#;
     let mut curried_runtime = Runtime::new();
-    curried_runtime
-        .new_file_path_new_env_new_name_scope("known_congruence_aligns_curried_applications");
-    let (stmt_results, runtime_error) = run_source_code(curried_source, &mut curried_runtime);
+    curried_runtime.start_isolated_source("known_congruence_aligns_curried_applications");
+    let (stmt_results, runtime_error) = execute_source(curried_source, &mut curried_runtime);
     let (run_succeeded, run_output) =
-        render_run_source_code_output(&curried_runtime, &stmt_results, &runtime_error, false);
+        render_run_output(&curried_runtime, &stmt_results, &runtime_error);
     assert!(
         run_succeeded,
         "curried applications should align trailing argument groups and compare the remaining function parts:\n{}",
@@ -273,12 +247,11 @@ have expected cart(VSet, WSet) = (V.add(x[1], y[1]), W.add(x[2], y[2]))
 
     let implicit_source = format!("{setup}\nxy = expected\n");
     let mut implicit_runtime = Runtime::new();
-    implicit_runtime.new_file_path_new_env_new_name_scope(
-        "template_aliases_do_not_open_an_equality_representative_graph",
-    );
-    let (stmt_results, runtime_error) = run_source_code(&implicit_source, &mut implicit_runtime);
+    implicit_runtime
+        .start_isolated_source("template_aliases_do_not_open_an_equality_representative_graph");
+    let (stmt_results, runtime_error) = execute_source(&implicit_source, &mut implicit_runtime);
     let (run_succeeded, run_output) =
-        render_run_source_code_output(&implicit_runtime, &stmt_results, &runtime_error, false);
+        render_run_output(&implicit_runtime, &stmt_results, &runtime_error);
     assert!(
         !run_succeeded,
         "two aliases must not trigger representative enumeration plus definition reduction:\n{}",
@@ -293,10 +266,9 @@ xy = (V.add(x[1], y[1]), W.add(x[2], y[2]))
 "#
     );
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope("explicit_template_definition_reduction");
-    let (stmt_results, runtime_error) = run_source_code(&explicit_source, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("explicit_template_definition_reduction");
+    let (stmt_results, runtime_error) = execute_source(&explicit_source, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
     assert!(
         run_succeeded,
         "an explicit checked template definition equality should connect both aliases:\n{}",
@@ -311,12 +283,9 @@ have fn square(t R) R = t^2
 square(2) = 4
 "#;
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
-        "checked_definition_reduction_allows_direct_pure_computation",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("checked_definition_reduction_allows_direct_pure_computation");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
     assert!(
         run_succeeded,
         "one checked definition reduction may finish by direct terminating computation:\n{}",
@@ -335,12 +304,9 @@ trust b = d
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
-        "structural_known_congruence_compares_interval_endpoints",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("structural_known_congruence_compares_interval_endpoints");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
     assert!(
         run_succeeded,
         "bounded intervals and rays should share the central known-congruence route:\n{}",
@@ -363,12 +329,12 @@ forall p, q cart(N, N):
 "#;
 
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
+            runtime.start_isolated_source(
                 "cart_valued_function_membership_does_not_reenter_projection_well_definedness",
             );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
             assert!(
                 run_succeeded,
                 "Cartesian-return projections should use the already registered return metadata:\n{}",
@@ -400,12 +366,12 @@ claim:
 "#;
 
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
+            runtime.start_isolated_source(
                 "anonymous_function_application_in_unfolded_forall_uses_pointwise_fact",
             );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
             assert!(
                 run_succeeded,
                 "unfolded forall should beta-reduce the anonymous function application before using the pointwise fact:\n{}",
@@ -444,13 +410,11 @@ claim:
 "#;
 
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
-                "obtain_body_well_defined_can_use_forall_domain_fact",
-            );
+            runtime.start_isolated_source("obtain_body_well_defined_can_use_forall_domain_fact");
             runtime.set_output_style(OutputStyle::Detailed);
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
 
             assert!(
                 run_succeeded,
@@ -490,12 +454,12 @@ claim:
 "#;
 
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
+            runtime.start_isolated_source(
                 "function_space_membership_uses_same_domain_pointwise_values",
             );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
             assert!(
                 run_succeeded,
                 "same-domain pointwise function membership failed:\n{}",
@@ -521,17 +485,12 @@ claim:
 "#;
 
             let mut invalid_runtime = Runtime::new();
-            invalid_runtime.new_file_path_new_env_new_name_scope(
-                "function_space_membership_rejects_captured_outer_value",
-            );
+            invalid_runtime
+                .start_isolated_source("function_space_membership_rejects_captured_outer_value");
             let (invalid_results, invalid_error) =
-                run_source_code(invalid_source_code, &mut invalid_runtime);
-            let (invalid_succeeded, invalid_output) = render_run_source_code_output(
-                &invalid_runtime,
-                &invalid_results,
-                &invalid_error,
-                false,
-            );
+                execute_source(invalid_source_code, &mut invalid_runtime);
+            let (invalid_succeeded, invalid_output) =
+                render_run_output(&invalid_runtime, &invalid_results, &invalid_error);
 
             // Countermodel: outer x = 0 and f(t) = t. The premise f(x) = 0 holds,
             // but f does not map every real into {0}.
@@ -554,13 +513,13 @@ claim:
 "#;
 
             let mut valid_runtime = Runtime::new();
-            valid_runtime.new_file_path_new_env_new_name_scope(
+            valid_runtime.start_isolated_source(
                 "function_space_membership_accepts_full_pointwise_proof_with_same_name",
             );
             let (valid_results, valid_error) =
-                run_source_code(valid_source_code, &mut valid_runtime);
+                execute_source(valid_source_code, &mut valid_runtime);
             let (valid_succeeded, valid_output) =
-                render_run_source_code_output(&valid_runtime, &valid_results, &valid_error, false);
+                render_run_output(&valid_runtime, &valid_results, &valid_error);
             assert!(
                 valid_succeeded,
                 "freshening must preserve a full pointwise proof:\n{}",
@@ -587,12 +546,12 @@ f $in fn(x R: x >= 0) {0}
 "#;
 
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
+            runtime.start_isolated_source(
                 "function_space_membership_assumes_generated_domain_facts_before_application_check",
             );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
             assert!(
                 run_succeeded,
                 "generated pointwise application must be checked after its domain facts are assumed:\n{}",
@@ -615,12 +574,11 @@ x0 $in T0
 "#;
 
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
-                "parameter_membership_uses_direct_known_subset_on_demand",
-            );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            runtime
+                .start_isolated_source("parameter_membership_uses_direct_known_subset_on_demand");
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
             assert!(
                 run_succeeded,
                 "parameter membership should use one directly known subset on demand:\n{}",
@@ -640,17 +598,12 @@ forall A power_set(R+), x A:
     0 < x
 "#;
             let mut order_only_runtime = Runtime::new();
-            order_only_runtime.new_file_path_new_env_new_name_scope(
-                "membership_builtin_does_not_rewrite_positive_order_goals",
-            );
+            order_only_runtime
+                .start_isolated_source("membership_builtin_does_not_rewrite_positive_order_goals");
             let (stmt_results, runtime_error) =
-                run_source_code(order_only_source, &mut order_only_runtime);
-            let (run_succeeded, run_output) = render_run_source_code_output(
-                &order_only_runtime,
-                &stmt_results,
-                &runtime_error,
-                false,
-            );
+                execute_source(order_only_source, &mut order_only_runtime);
+            let (run_succeeded, run_output) =
+                render_run_output(&order_only_runtime, &stmt_results, &runtime_error);
             assert!(
                 !run_succeeded,
                 "the membership feature must not synthesize a positive-set premise from an order goal:\n{}",
@@ -663,17 +616,12 @@ forall A power_set(R+), x A:
     0 < x
 "#;
             let mut explicit_runtime = Runtime::new();
-            explicit_runtime.new_file_path_new_env_new_name_scope(
-                "explicit_positive_membership_can_keep_inference_moving",
-            );
+            explicit_runtime
+                .start_isolated_source("explicit_positive_membership_can_keep_inference_moving");
             let (stmt_results, runtime_error) =
-                run_source_code(explicit_membership_source, &mut explicit_runtime);
-            let (run_succeeded, run_output) = render_run_source_code_output(
-                &explicit_runtime,
-                &stmt_results,
-                &runtime_error,
-                false,
-            );
+                execute_source(explicit_membership_source, &mut explicit_runtime);
+            let (run_succeeded, run_output) =
+                render_run_output(&explicit_runtime, &stmt_results, &runtime_error);
             assert!(
                 run_succeeded,
                 "an explicit accepted R+ membership may still trigger existing order inference:\n{}",
@@ -709,10 +657,10 @@ trust x $in A
 
             for (label, source_code) in cases {
                 let mut runtime = Runtime::new();
-                runtime.new_file_path_new_env_new_name_scope(label);
-                let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+                runtime.start_isolated_source(label);
+                let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
                 let (run_succeeded, run_output) =
-                    render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                    render_run_output(&runtime, &stmt_results, &runtime_error);
                 assert!(
                     run_succeeded,
                     "{} could not establish the indexed source facts:\n{}",
@@ -739,13 +687,13 @@ trust x $in A
                 let result = runtime
                     .verify_atomic_fact_restricted_known_builtin(
                         &target,
-                        &UseContextVerifyState::new(0, false),
+                        &ProofSearchState::initial(),
                     )
                     .unwrap_or_else(|error| {
                         panic!("{} restricted membership check failed: {}", label, error)
                     });
                 assert!(
-                    result.is_true(),
+                    result.is_success(),
                     "{} should prove x in B through one direct subset edge",
                     label
                 );
@@ -786,10 +734,10 @@ trust x $in A
 
             for (label, source_code) in cases {
                 let mut runtime = Runtime::new();
-                runtime.new_file_path_new_env_new_name_scope(label);
-                let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+                runtime.start_isolated_source(label);
+                let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
                 let (run_succeeded, run_output) =
-                    render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                    render_run_output(&runtime, &stmt_results, &runtime_error);
                 assert!(
                     run_succeeded,
                     "{} could not establish the indexed source facts:\n{}",
@@ -811,13 +759,13 @@ trust x $in A
                 let result = runtime
                     .verify_atomic_fact_restricted_known_builtin(
                         &target,
-                        &UseContextVerifyState::new(0, false),
+                        &ProofSearchState::initial(),
                     )
                     .unwrap_or_else(|error| {
                         panic!("{} restricted membership check failed: {}", label, error)
                     });
                 assert!(
-                    result.is_true(),
+                    result.is_success(),
                     "{} should prove x in B through its direct inclusion edge",
                     label
                 );
@@ -839,12 +787,11 @@ trust B $subset U
 "#;
 
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
-                "restricted_membership_builtin_is_direct_and_forward_only",
-            );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            runtime
+                .start_isolated_source("restricted_membership_builtin_is_direct_and_forward_only");
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
             assert!(
                 run_succeeded,
                 "could not establish the direct-only source facts:\n{}",
@@ -866,13 +813,13 @@ trust B $subset U
             let direct_result = runtime
                 .verify_atomic_fact_restricted_known_builtin(
                     &direct_target,
-                    &UseContextVerifyState::new(0, false),
+                    &ProofSearchState::initial(),
                 )
                 .unwrap_or_else(|error| {
                     panic!("direct restricted membership check failed: {}", error)
                 });
             assert!(
-                direct_result.is_true(),
+                direct_result.is_success(),
                 "the first direct subset edge should prove x in B"
             );
 
@@ -888,13 +835,13 @@ trust B $subset U
             let transitive_result = runtime
                 .verify_atomic_fact_restricted_known_builtin(
                     &transitive_target,
-                    &UseContextVerifyState::new(0, false),
+                    &ProofSearchState::initial(),
                 )
                 .unwrap_or_else(|error| {
                     panic!("transitive restricted membership check failed: {}", error)
                 });
             assert!(
-                !transitive_result.is_true(),
+                !transitive_result.is_success(),
                 "restricted membership must not traverse A subset B subset U"
             );
 
@@ -904,17 +851,12 @@ trust y $in T
 trust S $subset T
 "#;
             let mut reverse_runtime = Runtime::new();
-            reverse_runtime.new_file_path_new_env_new_name_scope(
-                "restricted_membership_builtin_does_not_reverse_subset",
-            );
+            reverse_runtime
+                .start_isolated_source("restricted_membership_builtin_does_not_reverse_subset");
             let (stmt_results, runtime_error) =
-                run_source_code(reverse_source_code, &mut reverse_runtime);
-            let (run_succeeded, run_output) = render_run_source_code_output(
-                &reverse_runtime,
-                &stmt_results,
-                &runtime_error,
-                false,
-            );
+                execute_source(reverse_source_code, &mut reverse_runtime);
+            let (run_succeeded, run_output) =
+                render_run_output(&reverse_runtime, &stmt_results, &runtime_error);
             assert!(
                 run_succeeded,
                 "could not establish the reverse-safety source facts:\n{}",
@@ -936,13 +878,13 @@ trust S $subset T
             let reverse_result = reverse_runtime
                 .verify_atomic_fact_restricted_known_builtin(
                     &reverse_target,
-                    &UseContextVerifyState::new(0, false),
+                    &ProofSearchState::initial(),
                 )
                 .unwrap_or_else(|error| {
                     panic!("reverse restricted membership check failed: {}", error)
                 });
             assert!(
-                !reverse_result.is_true(),
+                !reverse_result.is_success(),
                 "restricted membership must not infer y in S from y in T and S subset T"
             );
         },
@@ -963,17 +905,12 @@ trust x $in A
 trust A $subset B
 "#;
             let mut equal_sets_runtime = Runtime::new();
-            equal_sets_runtime.new_file_path_new_env_new_name_scope(
-                "restricted_membership_builtin_uses_equal_sets",
-            );
+            equal_sets_runtime
+                .start_isolated_source("restricted_membership_builtin_uses_equal_sets");
             let (stmt_results, runtime_error) =
-                run_source_code(equal_sets_source, &mut equal_sets_runtime);
-            let (run_succeeded, run_output) = render_run_source_code_output(
-                &equal_sets_runtime,
-                &stmt_results,
-                &runtime_error,
-                false,
-            );
+                execute_source(equal_sets_source, &mut equal_sets_runtime);
+            let (run_succeeded, run_output) =
+                render_run_output(&equal_sets_runtime, &stmt_results, &runtime_error);
             assert!(
                 run_succeeded,
                 "could not establish the equal-set source facts:\n{}",
@@ -995,11 +932,11 @@ trust A $subset B
             let equal_set_result = equal_sets_runtime
                 .verify_atomic_fact_restricted_known_builtin(
                     &equal_set_target,
-                    &UseContextVerifyState::new(0, false),
+                    &ProofSearchState::initial(),
                 )
                 .expect("equal-set membership verification should not error");
             assert!(
-                equal_set_result.is_true(),
+                equal_set_result.is_success(),
                 "equal elements and equal endpoint sets should share the direct membership edge"
             );
 
@@ -1023,10 +960,10 @@ trust S $subset T
             ];
             for (label, source_code) in negative_cases {
                 let mut runtime = Runtime::new();
-                runtime.new_file_path_new_env_new_name_scope(label);
-                let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+                runtime.start_isolated_source(label);
+                let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
                 let (run_succeeded, run_output) =
-                    render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                    render_run_output(&runtime, &stmt_results, &runtime_error);
                 assert!(
                     run_succeeded,
                     "{} could not establish its negative source fact:\n{}",
@@ -1048,13 +985,13 @@ trust S $subset T
                 let result = runtime
                     .verify_atomic_fact_restricted_known_builtin(
                         &target,
-                        &UseContextVerifyState::new(0, false),
+                        &ProofSearchState::initial(),
                     )
                     .unwrap_or_else(|error| {
                         panic!("{} restricted membership check failed: {}", label, error)
                     });
                 assert!(
-                    !result.is_true(),
+                    !result.is_success(),
                     "{} must not index a negated membership or subset fact",
                     label
                 );
@@ -1073,12 +1010,11 @@ try:
     trust A $subset B
 "#;
         let mut committed_runtime = Runtime::new();
-        committed_runtime
-            .new_file_path_new_env_new_name_scope("membership_indexes_follow_try_commit");
+        committed_runtime.start_isolated_source("membership_indexes_follow_try_commit");
         let (stmt_results, runtime_error) =
-            run_source_code(committed_source, &mut committed_runtime);
+            execute_source(committed_source, &mut committed_runtime);
         let (run_succeeded, run_output) =
-            render_run_source_code_output(&committed_runtime, &stmt_results, &runtime_error, false);
+            render_run_output(&committed_runtime, &stmt_results, &runtime_error);
         assert!(
             run_succeeded,
             "a successful try block should commit membership indexes:\n{}",
@@ -1100,11 +1036,11 @@ try:
         let committed_result = committed_runtime
             .verify_atomic_fact_restricted_known_builtin(
                 &committed_target,
-                &UseContextVerifyState::new(0, false),
+                &ProofSearchState::initial(),
             )
             .expect("committed membership verification should not error");
         assert!(
-            committed_result.is_true(),
+            committed_result.is_success(),
             "a committed try block should preserve its owner and inclusion indexes"
         );
 
@@ -1116,8 +1052,7 @@ try:
     0 = 1
 "#;
         let mut failed_runtime = Runtime::new();
-        failed_runtime
-            .new_file_path_new_env_new_name_scope("membership_indexes_follow_try_rollback");
+        failed_runtime.start_isolated_source("membership_indexes_follow_try_rollback");
         let before_counts = {
             let environment = failed_runtime.top_level_env();
             (
@@ -1133,7 +1068,7 @@ try:
                     .sum::<usize>(),
             )
         };
-        let (_, runtime_error) = run_source_code(failed_source, &mut failed_runtime);
+        let (_, runtime_error) = execute_source(failed_source, &mut failed_runtime);
         assert!(
             runtime_error.is_some(),
             "the deliberately false final step should roll back the try block"
@@ -1196,10 +1131,10 @@ thm membership_from_trusted_owner:
 
             for (label, source_code) in cases {
                 let mut runtime = Runtime::new();
-                runtime.new_file_path_new_env_new_name_scope(label);
-                let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+                runtime.start_isolated_source(label);
+                let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
                 let (run_succeeded, run_output) =
-                    render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                    render_run_output(&runtime, &stmt_results, &runtime_error);
                 assert!(
                     run_succeeded,
                     "{} should verify through the direct membership builtin:\n{}",
@@ -1241,7 +1176,7 @@ fn membership_indexes_are_available_through_qualified_exports() {
             let repository_path = project_root
                 .to_str()
                 .expect("temporary project path should be UTF-8");
-            let (run_succeeded, run_output) = run_repository_with_output(
+            let (run_succeeded, run_output) = run_repository_for_test(
                 repository_path,
                 false,
                 false,
@@ -1272,12 +1207,10 @@ claim:
 "#;
 
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
-                "set_builder_parameter_inherits_known_numeric_carrier",
-            );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            runtime.start_isolated_source("set_builder_parameter_inherits_known_numeric_carrier");
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
             assert!(
                 run_succeeded,
                 "a set-builder parameter should inherit the known carrier of its domain:\n{}",
@@ -1301,12 +1234,10 @@ claim:
 "#;
 
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
-                "set_builder_parameter_does_not_invent_numeric_carrier",
-            );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            runtime.start_isolated_source("set_builder_parameter_does_not_invent_numeric_carrier");
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
             assert!(
                 !run_succeeded,
                 "a set-builder parameter must not acquire a numeric carrier without a subset fact:\n{}",
@@ -1333,12 +1264,12 @@ claim:
 "#;
 
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
+            runtime.start_isolated_source(
                 "parameter_over_set_builder_inherits_builder_domain_carrier",
             );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
             assert!(
                 run_succeeded,
                 "a parameter over a set builder should inherit the builder domain carrier:\n{}",
@@ -1362,12 +1293,11 @@ claim:
 "#;
 
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
-                "punctured_domain_parameter_inherits_ambient_real_carrier",
-            );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            runtime
+                .start_isolated_source("punctured_domain_parameter_inherits_ambient_real_carrier");
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
             assert!(
                 run_succeeded,
                 "a punctured-domain parameter should inherit its ambient real carrier:\n{}",
@@ -1394,12 +1324,12 @@ forall S set, f \FunctionCarrier<S>:
 "#;
 
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
+            runtime.start_isolated_source(
                 "template_named_function_space_accepts_anonymous_function_return",
             );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
 
             assert!(
                 run_succeeded,
@@ -1417,12 +1347,11 @@ fn(x R) N {x}(1 / 2) $in N
 "#;
 
     let mut invalid_runtime = Runtime::new();
-    invalid_runtime.new_file_path_new_env_new_name_scope(
-        "anonymous_function_body_must_belong_to_declared_return_set",
-    );
-    let (stmt_results, runtime_error) = run_source_code(invalid_source, &mut invalid_runtime);
+    invalid_runtime
+        .start_isolated_source("anonymous_function_body_must_belong_to_declared_return_set");
+    let (stmt_results, runtime_error) = execute_source(invalid_source, &mut invalid_runtime);
     let (run_succeeded, run_output) =
-        render_run_source_code_output(&invalid_runtime, &stmt_results, &runtime_error, false);
+        render_run_output(&invalid_runtime, &stmt_results, &runtime_error);
     assert!(
         !run_succeeded,
         "an anonymous function must not trust an incompatible declared return set:\n{}",
@@ -1440,12 +1369,11 @@ fn(x R) N {x}(1 / 2) $in N
 fn(x R) R {x}(1 / 2) = 1 / 2
 "#;
     let mut valid_runtime = Runtime::new();
-    valid_runtime.new_file_path_new_env_new_name_scope(
-        "anonymous_function_body_in_declared_return_set_is_well_defined",
-    );
-    let (stmt_results, runtime_error) = run_source_code(valid_source, &mut valid_runtime);
+    valid_runtime
+        .start_isolated_source("anonymous_function_body_in_declared_return_set_is_well_defined");
+    let (stmt_results, runtime_error) = execute_source(valid_source, &mut valid_runtime);
     let (run_succeeded, run_output) =
-        render_run_source_code_output(&valid_runtime, &stmt_results, &runtime_error, false);
+        render_run_output(&valid_runtime, &stmt_results, &runtime_error);
     assert!(
         run_succeeded,
         "a compatible anonymous function should remain well-defined:\n{}",
@@ -1458,13 +1386,12 @@ have cart c for i1 <= n, proj(c, i1) = R
 have fn coordinate_fn(p c) fn(i1 closed_range(1, n)) R = fn(j closed_range(1, n)) R {p[j]}
 "#;
     let mut symbolic_cart_runtime = Runtime::new();
-    symbolic_cart_runtime.new_file_path_new_env_new_name_scope(
-        "anonymous_function_cart_coordinate_in_declared_return_set",
-    );
+    symbolic_cart_runtime
+        .start_isolated_source("anonymous_function_cart_coordinate_in_declared_return_set");
     let (stmt_results, runtime_error) =
-        run_source_code(symbolic_cart_source, &mut symbolic_cart_runtime);
+        execute_source(symbolic_cart_source, &mut symbolic_cart_runtime);
     let (run_succeeded, run_output) =
-        render_run_source_code_output(&symbolic_cart_runtime, &stmt_results, &runtime_error, false);
+        render_run_output(&symbolic_cart_runtime, &stmt_results, &runtime_error);
     assert!(
         run_succeeded,
         "a symbolic Cartesian coordinate should retain its proved carrier:\n{}",
@@ -1499,10 +1426,10 @@ fn iterated_operators_require_scalar_return_sets() {
 
     for (label, source_code, expected_error) in invalid_cases {
         let mut runtime = Runtime::new();
-        runtime.new_file_path_new_env_new_name_scope(label);
-        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        runtime.start_isolated_source(label);
+        let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
-            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            render_run_output(&runtime, &stmt_results, &runtime_error);
         assert!(
             !run_succeeded,
             "{label} must reject a set-valued iterand:\n{run_output}"
@@ -1522,10 +1449,9 @@ finite_set_sum(3...1, fn(k Z) Z {0}) = 0
 finite_set_product(3...1, fn(k Z) Z {1}) = 1
 "#;
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope("iterated_scalar_return_sets_remain_valid");
-    let (stmt_results, runtime_error) = run_source_code(valid_source, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("iterated_scalar_return_sets_remain_valid");
+    let (stmt_results, runtime_error) = execute_source(valid_source, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
     assert!(
         run_succeeded,
         "scalar-valued iterands should remain well-defined:\n{run_output}"
@@ -1543,12 +1469,12 @@ forall E2 set, E power_set(E2), f fn(x E2) R:
 "#;
 
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
+            runtime.start_isolated_source(
                 "anonymous_fn_restriction_over_abstract_subset_is_well_defined",
             );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
             assert!(
                 run_succeeded,
                 "anonymous function restriction over abstract subset failed:\n{}",
@@ -1580,12 +1506,12 @@ claim:
 "#;
 
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
+            runtime.start_isolated_source(
                 "restricted_lambda_can_apply_function_on_larger_numeric_interval",
             );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
             assert!(
                 run_succeeded,
                 "restricted lambda should inherit numeric interval bounds:\n{}",
@@ -1646,10 +1572,10 @@ have fn f(x R) R by cases:
 
             for (label, source_code, expected_error) in invalid_cases {
                 let mut runtime = Runtime::new();
-                runtime.new_file_path_new_env_new_name_scope(label);
-                let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+                runtime.start_isolated_source(label);
+                let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
                 let (run_succeeded, run_output) =
-                    render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                    render_run_output(&runtime, &stmt_results, &runtime_error);
                 assert!(
                     !run_succeeded,
                     "{} should reject an invalid case partition:\n{}",
@@ -1669,9 +1595,9 @@ have fn f(x R) R by cases:
 
 f(0) = 1
 "#;
-                let (stmt_results, runtime_error) = run_source_code(recovery_source, &mut runtime);
+                let (stmt_results, runtime_error) = execute_source(recovery_source, &mut runtime);
                 let (run_succeeded, run_output) =
-                    render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                    render_run_output(&runtime, &stmt_results, &runtime_error);
                 assert!(
                     run_succeeded,
                     "{} should not bind the rejected function name:\n{}",
@@ -1686,11 +1612,11 @@ have fn only_nonnegative(x R: x >= 0) R by cases:
 only_nonnegative(0) = 0
 "#;
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope("casewise_function_domain_coverage");
+            runtime.start_isolated_source("casewise_function_domain_coverage");
             let (stmt_results, runtime_error) =
-                run_source_code(domain_relative_source, &mut runtime);
+                execute_source(domain_relative_source, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
             assert!(
                 run_succeeded,
                 "cases only need to cover the declared function domain:\n{}",
@@ -1705,13 +1631,11 @@ have fn rational_indicator(x R) R by cases:
 rational_indicator(0) = 1
 "#;
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
-                "casewise_function_negated_membership_condition",
-            );
+            runtime.start_isolated_source("casewise_function_negated_membership_condition");
             let (stmt_results, runtime_error) =
-                run_source_code(negated_membership_source, &mut runtime);
+                execute_source(negated_membership_source, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
             assert!(
                 run_succeeded,
                 "casewise functions should accept a leading negated atomic condition:\n{}",
@@ -1733,12 +1657,10 @@ fn(x {2}) R {ambient(x)} = fn(x {2}) R {ambient(x)}
 "#;
 
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
-                "anonymous_fn_body_can_use_singleton_parameter_equality",
-            );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            runtime.start_isolated_source("anonymous_fn_body_can_use_singleton_parameter_equality");
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
             assert!(
                 run_succeeded,
                 "a singleton-domain anonymous function should expose its parameter equality:\n{}",
@@ -1814,12 +1736,12 @@ finite_set_sum(P, fn(J P) R {0}) = finite_set_sum(P, c)
 "#;
 
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
+            runtime.start_isolated_source(
                 "conditional_contribution_family_reindexes_to_equal_finite_sum",
             );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
             assert!(
                 run_succeeded,
                 "conditional contribution family should reindex through an explicit function equality:\n{}",
@@ -1846,16 +1768,15 @@ forall f, g fn(x R) R, a R:
 "#;
 
             let mut positive_runtime = Runtime::new();
-            positive_runtime.new_file_path_new_env_new_name_scope(
+            positive_runtime.start_isolated_source(
                 "anonymous_fn_applications_beta_reduce_before_structural_equality_comparison_positive",
             );
             let (positive_stmt_results, positive_runtime_error) =
-                run_source_code(positive_source_code, &mut positive_runtime);
-            let (positive_run_succeeded, positive_run_output) = render_run_source_code_output(
+                execute_source(positive_source_code, &mut positive_runtime);
+            let (positive_run_succeeded, positive_run_output) = render_run_output(
                 &positive_runtime,
                 &positive_stmt_results,
                 &positive_runtime_error,
-                false,
             );
             assert!(
                 positive_run_succeeded,
@@ -1871,16 +1792,15 @@ forall f, g fn(x R) R, a, b R:
 "#;
 
             let mut negative_runtime = Runtime::new();
-            negative_runtime.new_file_path_new_env_new_name_scope(
+            negative_runtime.start_isolated_source(
                 "anonymous_fn_applications_beta_reduce_before_structural_equality_comparison_negative",
             );
             let (negative_stmt_results, negative_runtime_error) =
-                run_source_code(negative_source_code, &mut negative_runtime);
-            let (negative_run_succeeded, negative_run_output) = render_run_source_code_output(
+                execute_source(negative_source_code, &mut negative_runtime);
+            let (negative_run_succeeded, negative_run_output) = render_run_output(
                 &negative_runtime,
                 &negative_stmt_results,
                 &negative_runtime_error,
-                false,
             );
             assert!(
                 !negative_run_succeeded,
@@ -1901,10 +1821,9 @@ forall a, b seq(R), k N+:
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope("curried_have_fn_equal_unfolds_pointwise");
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("curried_have_fn_equal_unfolds_pointwise");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         run_succeeded,
@@ -1923,12 +1842,9 @@ forall a, b seq(R):
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
-        "fn_application_returning_fn_set_verifies_sequence_membership",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("fn_application_returning_fn_set_verifies_sequence_membership");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         run_succeeded,
@@ -1958,12 +1874,9 @@ forall p cart(R, R):
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
-        "set_valued_have_fn_application_unfolds_for_membership",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("set_valued_have_fn_application_unfolds_for_membership");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         run_succeeded,
@@ -1983,12 +1896,9 @@ forall n, K N+, point rows(n)(K):
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
-        "function_valued_set_family_preserves_member_cart_carrier",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("function_valued_set_family_preserves_member_cart_carrier");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         run_succeeded,
@@ -2008,12 +1918,10 @@ forall n, K N+, point scalar_rows(n)(K):
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
-        "function_valued_scalar_set_family_does_not_invent_tuple_carrier",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime
+        .start_isolated_source("function_valued_scalar_set_family_does_not_invent_tuple_carrier");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         !run_succeeded && run_output.contains("index target point is not a tuple"),
@@ -2030,12 +1938,9 @@ have nonnegative_reals power_set(R) = {x R: x >= 0}
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
-        "exactly_indexed_named_set_builder_unfolds_for_membership",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("exactly_indexed_named_set_builder_unfolds_for_membership");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
     assert!(
         run_succeeded,
         "a named set with an exact set-builder index should unfold one membership layer:\n{}",
@@ -2051,12 +1956,9 @@ have positive_reals power_set(R) = {x R: x > 0}
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
-        "exactly_indexed_named_set_builder_keeps_predicate_obligation",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("exactly_indexed_named_set_builder_keeps_predicate_obligation");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
     assert!(
         !run_succeeded,
         "named set-builder membership must not bypass its defining predicate:\n{}",
@@ -2074,12 +1976,9 @@ template<s set>:
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
-        "template_set_valued_have_fn_application_unfolds_for_membership",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("template_set_valued_have_fn_application_unfolds_for_membership");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         run_succeeded,
@@ -2097,12 +1996,9 @@ have fn line(a, b, c R: a != 0 or b != 0) power_set(cart(R, R)) = {x cart(R, R):
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
-        "set_valued_have_fn_application_keeps_side_conditions",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("set_valued_have_fn_application_keeps_side_conditions");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         !run_succeeded,
@@ -2121,10 +2017,9 @@ forall x, y R:
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope("unary_numeric_objects_respect_argument_equality");
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("unary_numeric_objects_respect_argument_equality");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         run_succeeded,
@@ -2147,15 +2042,13 @@ forall f, g fn(x Z) Z:
 "#;
 
             let mut positive_runtime = Runtime::new();
-            positive_runtime
-                .new_file_path_new_env_new_name_scope("iterated_operator_equality_fn_eq_positive");
+            positive_runtime.start_isolated_source("iterated_operator_equality_fn_eq_positive");
             let (positive_stmt_results, positive_runtime_error) =
-                run_source_code(positive_source_code, &mut positive_runtime);
-            let (positive_run_succeeded, positive_run_output) = render_run_source_code_output(
+                execute_source(positive_source_code, &mut positive_runtime);
+            let (positive_run_succeeded, positive_run_output) = render_run_output(
                 &positive_runtime,
                 &positive_stmt_results,
                 &positive_runtime_error,
-                false,
             );
             assert!(
                 positive_run_succeeded,
@@ -2168,15 +2061,13 @@ product(1, 3, fn(x Z) Z {x}) = product(1, 4, fn(y Z) Z {y})
 "#;
 
             let mut negative_runtime = Runtime::new();
-            negative_runtime
-                .new_file_path_new_env_new_name_scope("iterated_operator_equality_fn_eq_negative");
+            negative_runtime.start_isolated_source("iterated_operator_equality_fn_eq_negative");
             let (negative_stmt_results, negative_runtime_error) =
-                run_source_code(negative_source_code, &mut negative_runtime);
-            let (negative_run_succeeded, negative_run_output) = render_run_source_code_output(
+                execute_source(negative_source_code, &mut negative_runtime);
+            let (negative_run_succeeded, negative_run_output) = render_run_output(
                 &negative_runtime,
                 &negative_stmt_results,
                 &negative_runtime_error,
-                false,
             );
             assert!(
                 !negative_run_succeeded,
@@ -2233,10 +2124,10 @@ thm finite_series_scalar_mul_test:
 "#;
 
         let mut runtime = Runtime::new();
-        runtime.new_file_path_new_env_new_name_scope("finite_sum_order_uses_pointwise_bounds");
-        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        runtime.start_isolated_source("finite_sum_order_uses_pointwise_bounds");
+        let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
-            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            render_run_output(&runtime, &stmt_results, &runtime_error);
 
         assert!(
             run_succeeded,
@@ -2280,10 +2171,10 @@ thm bad_symbolic_empty_product:
 
             for (name, source_code, expected_message) in cases {
                 let mut runtime = Runtime::new();
-                runtime.new_file_path_new_env_new_name_scope(name);
-                let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+                runtime.start_isolated_source(name);
+                let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
                 let (run_succeeded, run_output) =
-                    render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                    render_run_output(&runtime, &stmt_results, &runtime_error);
 
                 assert!(
                     !run_succeeded,
@@ -2311,12 +2202,12 @@ eval sum(1, 3, fn(x N+) N+ {sum(1, x, fn(y N+) N+ {x + y})})
 "#;
 
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
+            runtime.start_isolated_source(
                 "nested_iterated_operator_with_positive_index_is_well_defined",
             );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
 
             assert!(
                 run_succeeded,
@@ -2376,12 +2267,11 @@ thm builtin_bijective_unfolds:
 "#;
 
         let mut runtime = Runtime::new();
-        runtime
-            .new_file_path_new_env_new_name_scope("builtin_function_properties_verify_and_unfold");
+        runtime.start_isolated_source("builtin_function_properties_verify_and_unfold");
         runtime.set_output_style(OutputStyle::Detailed);
-        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
-            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            render_run_output(&runtime, &stmt_results, &runtime_error);
 
         assert!(
             run_succeeded,
@@ -2412,12 +2302,10 @@ by contra:
 "#;
 
         let mut runtime = Runtime::new();
-        runtime.new_file_path_new_env_new_name_scope(
-            "builtin_function_property_negation_uses_by_contra",
-        );
-        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        runtime.start_isolated_source("builtin_function_property_negation_uses_by_contra");
+        let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
-            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            render_run_output(&runtime, &stmt_results, &runtime_error);
 
         assert!(
             run_succeeded,
@@ -2446,12 +2334,11 @@ forall:
 "#;
 
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
-                "known_forall_matches_alpha_equivalent_set_builder_binders",
-            );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            runtime
+                .start_isolated_source("known_forall_matches_alpha_equivalent_set_builder_binders");
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
 
             assert!(
                 run_succeeded,
@@ -2493,11 +2380,11 @@ thm finite_bijection_preserves_size:
 "#;
 
         let mut runtime = Runtime::new();
-        runtime.new_file_path_new_env_new_name_scope("finite_source_function_property_rules");
+        runtime.start_isolated_source("finite_source_function_property_rules");
         runtime.set_output_style(OutputStyle::Detailed);
-        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
-            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            render_run_output(&runtime, &stmt_results, &runtime_error);
 
         assert!(
             run_succeeded,
@@ -2527,12 +2414,10 @@ $injective({1}, {1}, 1)
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
-        "builtin_function_properties_require_matching_function_signature",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime
+        .start_isolated_source("builtin_function_properties_require_matching_function_signature");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         !run_succeeded,
@@ -2550,13 +2435,11 @@ have fn mismatched_codomain(x {1}) {2} = 2
 $injective({1}, {1}, mismatched_codomain)
 "#;
     let mut mismatch_runtime = Runtime::new();
-    mismatch_runtime.new_file_path_new_env_new_name_scope(
-        "builtin_function_properties_reject_mismatched_codomain",
-    );
-    let (stmt_results, runtime_error) =
-        run_source_code(mismatch_source_code, &mut mismatch_runtime);
+    mismatch_runtime
+        .start_isolated_source("builtin_function_properties_reject_mismatched_codomain");
+    let (stmt_results, runtime_error) = execute_source(mismatch_source_code, &mut mismatch_runtime);
     let (run_succeeded, run_output) =
-        render_run_source_code_output(&mismatch_runtime, &stmt_results, &runtime_error, false);
+        render_run_output(&mismatch_runtime, &stmt_results, &runtime_error);
 
     assert!(
         !run_succeeded,
@@ -2570,11 +2453,10 @@ $injective({1}, {1}, mismatched_codomain)
     );
 
     let mut arity_runtime = Runtime::new();
-    arity_runtime
-        .new_file_path_new_env_new_name_scope("builtin_function_properties_reject_wrong_arity");
-    let (stmt_results, runtime_error) = run_source_code("$injective({1}, {1})", &mut arity_runtime);
+    arity_runtime.start_isolated_source("builtin_function_properties_reject_wrong_arity");
+    let (stmt_results, runtime_error) = execute_source("$injective({1}, {1})", &mut arity_runtime);
     let (run_succeeded, run_output) =
-        render_run_source_code_output(&arity_runtime, &stmt_results, &runtime_error, false);
+        render_run_output(&arity_runtime, &stmt_results, &runtime_error);
 
     assert!(
         !run_succeeded,
@@ -2600,12 +2482,9 @@ $is_finite_set(A)
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
-        "finite_surjection_rules_do_not_bootstrap_finiteness_cycle",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("finite_surjection_rules_do_not_bootstrap_finiteness_cycle");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         !run_succeeded,
@@ -2704,10 +2583,10 @@ thm finite_set_sum_triangle_tmp:
 "#;
 
         let mut runtime = Runtime::new();
-        runtime.new_file_path_new_env_new_name_scope("finite_set_sum_core_rules");
-        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        runtime.start_isolated_source("finite_set_sum_core_rules");
+        let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
-            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            render_run_output(&runtime, &stmt_results, &runtime_error);
 
         assert!(
             run_succeeded,
@@ -2755,12 +2634,12 @@ by thm finite_set_sum_substitution(finite_set_sum(selected, fn(x selected) R {so
 "#;
 
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
+            runtime.start_isolated_source(
                 "finite_set_sum_pointwise_equality_uses_obtained_function_on_subset",
             );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
 
             assert!(
                 run_succeeded,
@@ -2781,12 +2660,9 @@ finite_set_sum(selected, fn(x selected) R {source_term(x)}) $in R
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
-        "finite_set_sum_dependent_restriction_still_requires_subset",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("finite_set_sum_dependent_restriction_still_requires_subset");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         !run_succeeded,
@@ -2815,12 +2691,12 @@ thm finite_set_sum_disjoint_union_restriction:
 "#;
 
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
+            runtime.start_isolated_source(
                 "restricting_a_function_from_a_union_domain_is_well_defined",
             );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
 
             assert!(
                 run_succeeded,
@@ -2852,10 +2728,10 @@ thm finite_fubini_tmp:
 "#;
 
         let mut runtime = Runtime::new();
-        runtime.new_file_path_new_env_new_name_scope("finite_set_sum_cartesian_product_and_fubini");
-        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        runtime.start_isolated_source("finite_set_sum_cartesian_product_and_fubini");
+        let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
-            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            render_run_output(&runtime, &stmt_results, &runtime_error);
 
         assert!(
             run_succeeded,
@@ -2894,12 +2770,10 @@ thm finite_set_sum_template_enumeration_well_defined:
 "#;
 
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
-                "finite_set_sum_bijective_enumerations_are_well_defined",
-            );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            runtime.start_isolated_source("finite_set_sum_bijective_enumerations_are_well_defined");
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
 
             assert!(
                 run_succeeded,
@@ -2960,10 +2834,9 @@ thm finite_set_product_remove_member:
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope("finite_set_product_core_rules");
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("finite_set_product_core_rules");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         run_succeeded,
@@ -2989,11 +2862,10 @@ f(3, 2) = f(3, 2)
 "#;
 
             let mut runtime = Runtime::new();
-            runtime
-                .new_file_path_new_env_new_name_scope("dependent_fn_param_set_uses_previous_arg");
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            runtime.start_isolated_source("dependent_fn_param_set_uses_previous_arg");
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
 
             assert!(
                 run_succeeded,
@@ -3018,12 +2890,10 @@ difference_quotient(R, fn(z R) R {z}, 0)(1) = 1
 "#;
 
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
-                "dependent_fn_return_set_instantiates_with_arguments",
-            );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            runtime.start_isolated_source("dependent_fn_return_set_instantiates_with_arguments");
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
 
             assert!(
                 run_succeeded,
@@ -3044,10 +2914,9 @@ a >= b
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope("known_equality_implies_weak_order");
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("known_equality_implies_weak_order");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         run_succeeded,
@@ -3072,12 +2941,9 @@ x $in R
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
-        "known_forall_membership_uses_standard_set_subset_direction",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("known_forall_membership_uses_standard_set_subset_direction");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         run_succeeded,
@@ -3101,12 +2967,9 @@ x $in Z
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
-        "known_forall_membership_narrowing_requires_known_fact",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("known_forall_membership_narrowing_requires_known_fact");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         !run_succeeded,
@@ -3130,12 +2993,9 @@ claim:
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
-        "known_forall_does_not_substitute_captured_outer_param",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("known_forall_does_not_substitute_captured_outer_param");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         !run_succeeded,
@@ -3159,12 +3019,9 @@ claim:
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
-        "known_forall_accepts_identical_captured_outer_param",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("known_forall_accepts_identical_captured_outer_param");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         run_succeeded,
@@ -3188,12 +3045,9 @@ witness exist S, T set st {$all_p(S), $p(1, T)} from N, {}:
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
-        "known_forall_does_not_substitute_captured_exist_param",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("known_forall_does_not_substitute_captured_exist_param");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         !run_succeeded,
@@ -3216,12 +3070,11 @@ exist y S st {$p(y)}
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
+    runtime.start_isolated_source(
         "parser_rejects_same_name_forall_and_exist_bindings_while_both_are_active",
     );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         !run_succeeded,
@@ -3390,10 +3243,10 @@ $p(1, S)
 
     for (name, source_code, expected_success) in cases {
         let mut runtime = Runtime::new();
-        runtime.new_file_path_new_env_new_name_scope(name);
-        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        runtime.start_isolated_source(name);
+        let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
-            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            render_run_output(&runtime, &stmt_results, &runtime_error);
         assert_eq!(
             run_succeeded, expected_success,
             "known-forall matcher case {name} returned the wrong result:\n{run_output}"
@@ -3556,10 +3409,10 @@ claim:
 
     for (name, source_code, expected_success) in cases {
         let mut runtime = Runtime::new();
-        runtime.new_file_path_new_env_new_name_scope(name);
-        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        runtime.start_isolated_source(name);
+        let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
-            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            render_run_output(&runtime, &stmt_results, &runtime_error);
         assert_eq!(
             run_succeeded, expected_success,
             "capture-avoiding instantiation case {name} returned the wrong result:\n{run_output}"
@@ -3601,10 +3454,10 @@ witness exist n R st {$q(n)} from 0:
 
     for (name, source_code, expected_success) in cases {
         let mut runtime = Runtime::new();
-        runtime.new_file_path_new_env_new_name_scope(name);
-        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        runtime.start_isolated_source(name);
+        let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
-            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            render_run_output(&runtime, &stmt_results, &runtime_error);
         assert_eq!(
             run_succeeded, expected_success,
             "exist capture-avoidance case {name} returned the wrong result:\n{run_output}"
@@ -3622,11 +3475,9 @@ f(1) = 1
 "#;
 
     let mut runtime = Runtime::new();
-    runtime
-        .new_file_path_new_env_new_name_scope("known_forall_equality_uses_indexed_function_head");
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("known_forall_equality_uses_indexed_function_head");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         run_succeeded,
@@ -3645,12 +3496,9 @@ trust forall a R:
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
-        "known_forall_equality_indexes_forall_param_side_as_wildcard",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("known_forall_equality_indexes_forall_param_side_as_wildcard");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         run_succeeded,
@@ -3669,12 +3517,11 @@ g(1) = 1
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
+    runtime.start_isolated_source(
         "known_forall_equality_with_forall_param_function_head_uses_fallback_bucket",
     );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         run_succeeded,
@@ -3693,12 +3540,9 @@ $p(1)
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
-        "known_forall_prop_indexes_forall_param_arg_as_wildcard",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("known_forall_prop_indexes_forall_param_arg_as_wildcard");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         run_succeeded,
@@ -3717,10 +3561,9 @@ $p(1 + 1)
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope("known_forall_prop_indexes_expression_arg_shape");
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("known_forall_prop_indexes_expression_arg_shape");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         run_succeeded,
@@ -3739,10 +3582,9 @@ $p(2, 3 + 1)
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope("known_forall_prop_indexes_multi_arg_shape");
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("known_forall_prop_indexes_multi_arg_shape");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         run_succeeded,
@@ -3762,12 +3604,11 @@ $p(g(2))
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
+    runtime.start_isolated_source(
         "known_forall_prop_with_forall_param_function_head_uses_fallback_bucket",
     );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         run_succeeded,
@@ -3798,12 +3639,11 @@ claim:
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
+    runtime.start_isolated_source(
         "known_forall_matches_function_param_application_inside_anonymous_fn_body",
     );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         run_succeeded,
@@ -3839,12 +3679,11 @@ claim:
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
+    runtime.start_isolated_source(
         "known_forall_binds_named_function_prefix_inside_different_codomain_anonymous_body",
     );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         run_succeeded,
@@ -3880,12 +3719,9 @@ claim:
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
-        "known_forall_does_not_strip_nonmatching_named_function_suffix",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("known_forall_does_not_strip_nonmatching_named_function_suffix");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         !run_succeeded && run_output.contains("atomic fact unknown"),
@@ -3907,12 +3743,11 @@ $p(fn(x R) R {h(x)})
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
+    runtime.start_isolated_source(
         "known_forall_does_not_infer_function_from_single_point_application",
     );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         !run_succeeded,
@@ -3956,12 +3791,10 @@ sketch:
 "#;
 
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
-                "eval_recursive_algo_memoizes_overlapping_calls",
-            );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            runtime.start_isolated_source("eval_recursive_algo_memoizes_overlapping_calls");
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
 
             assert!(
                 run_succeeded,
@@ -4053,10 +3886,10 @@ forall T set, op fn(x, y T) T, seed T, A, B finite_set, f fn(x A) T, g fn(y B) A
         finite_set_reduce(A, f, op, seed) = finite_set_reduce(B, fn(y B) T {f(g(y))}, op, seed)
 "#;
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope("reduce_positive_contracts");
-            let (stmt_results, runtime_error) = run_source_code(positive_source, &mut runtime);
+            runtime.start_isolated_source("reduce_positive_contracts");
+            let (stmt_results, runtime_error) = execute_source(positive_source, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
             assert!(
                 run_succeeded,
                 "reduce positive contracts should verify:\n{}",
@@ -4067,16 +3900,11 @@ forall T set, op fn(x, y T) T, seed T, A, B finite_set, f fn(x A) T, g fn(y B) A
 finite_set_reduce({1, 2}, fn(x Z) Z {x}, fn(x, y Z) Z {x - y}, 0) = finite_set_reduce({1, 2}, fn(x Z) Z {x}, fn(x, y Z) Z {x - y}, 0)
 "#;
             let mut rejected_runtime = Runtime::new();
-            rejected_runtime
-                .new_file_path_new_env_new_name_scope("finite_set_reduce_rejects_subtraction");
+            rejected_runtime.start_isolated_source("finite_set_reduce_rejects_subtraction");
             let (stmt_results, runtime_error) =
-                run_source_code(noncommutative_source, &mut rejected_runtime);
-            let (run_succeeded, run_output) = render_run_source_code_output(
-                &rejected_runtime,
-                &stmt_results,
-                &runtime_error,
-                false,
-            );
+                execute_source(noncommutative_source, &mut rejected_runtime);
+            let (run_succeeded, run_output) =
+                render_run_output(&rejected_runtime, &stmt_results, &runtime_error);
             assert!(
                 !run_succeeded,
                 "finite_set_reduce must reject a nonassociative operation:\n{}",
@@ -4094,15 +3922,11 @@ have fn add_z(x, y Z) Z = x + y
 reduce(1, 3, id_z, add_z, 1) = sum(1, 3, id_z)
 "#;
             let mut wrong_seed_runtime = Runtime::new();
-            wrong_seed_runtime.new_file_path_new_env_new_name_scope("reduce_wrong_sum_seed");
+            wrong_seed_runtime.start_isolated_source("reduce_wrong_sum_seed");
             let (stmt_results, runtime_error) =
-                run_source_code(wrong_seed_source, &mut wrong_seed_runtime);
-            let (run_succeeded, run_output) = render_run_source_code_output(
-                &wrong_seed_runtime,
-                &stmt_results,
-                &runtime_error,
-                false,
-            );
+                execute_source(wrong_seed_source, &mut wrong_seed_runtime);
+            let (run_succeeded, run_output) =
+                render_run_output(&wrong_seed_runtime, &stmt_results, &runtime_error);
             assert!(
                 !run_succeeded,
                 "the sum bridge must reject a nonzero seed:\n{}",
@@ -4116,15 +3940,11 @@ forall A, B finite_set, f fn(x A) Z, g fn(y B) A:
 "#;
             let mut missing_bijection_runtime = Runtime::new();
             missing_bijection_runtime
-                .new_file_path_new_env_new_name_scope("reduce_requires_bijection_for_reindexing");
+                .start_isolated_source("reduce_requires_bijection_for_reindexing");
             let (stmt_results, runtime_error) =
-                run_source_code(missing_bijection_source, &mut missing_bijection_runtime);
-            let (run_succeeded, run_output) = render_run_source_code_output(
-                &missing_bijection_runtime,
-                &stmt_results,
-                &runtime_error,
-                false,
-            );
+                execute_source(missing_bijection_source, &mut missing_bijection_runtime);
+            let (run_succeeded, run_output) =
+                render_run_output(&missing_bijection_runtime, &stmt_results, &runtime_error);
             assert!(
                 !run_succeeded,
                 "finite_set_reduce reindexing must not invent a bijection:\n{}",
@@ -4137,16 +3957,11 @@ have fn decimal_append_z(x, y Z) Z = 10 * x + y
 reduce(1, 2, id_z, decimal_append_z, 0) = reduce(1, 2, fn(k Z) Z {id_z(3 - k)}, decimal_append_z, 0)
 "#;
             let mut reversed_order_runtime = Runtime::new();
-            reversed_order_runtime
-                .new_file_path_new_env_new_name_scope("reduce_rejects_order_reversal");
+            reversed_order_runtime.start_isolated_source("reduce_rejects_order_reversal");
             let (stmt_results, runtime_error) =
-                run_source_code(reversed_order_source, &mut reversed_order_runtime);
-            let (run_succeeded, run_output) = render_run_source_code_output(
-                &reversed_order_runtime,
-                &stmt_results,
-                &runtime_error,
-                false,
-            );
+                execute_source(reversed_order_source, &mut reversed_order_runtime);
+            let (run_succeeded, run_output) =
+                render_run_output(&reversed_order_runtime, &stmt_results, &runtime_error);
             assert!(
                 !run_succeeded,
                 "reduce must not treat an arbitrary reordering as an order-preserving translation:\n{}",

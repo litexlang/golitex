@@ -19,6 +19,22 @@ forall x R:
 | The `forall x R:` example above | `Fact::ForallFact`. |
 | `exist x R st {x = 0}` | `Fact::ExistFact`. |
 
-[`fact_types.rs`](fact_types.rs) owns the top-level variants; for example,
-[`forall_fact.rs`](forall_fact.rs) stores the binder and body of the universal
-above, while [`atomic_fact.rs`](atomic_fact.rs) stores `1 = 1`.
+`AtomicFact::has_positive_polarity()` distinguishes a positive atomic form
+such as `x = y` from its negative counterpart `x != y`. It does not claim that
+the proposition has been verified; verification success belongs to
+`StmtResult::is_success()`.
+
+[`types.rs`](types.rs) owns the top-level `Fact` variants. The implementation is
+then grouped by mathematical shape:
+
+- [`atomic/`](atomic/) owns atomic representation, arguments, conversions, and
+  predicate metadata such as the `1 = 1` example.
+- [`composite/`](composite/) owns conjunctions, disjunctions, relation chains,
+  their order closure, and quantifier-free fact bodies.
+- [`quantified/`](quantified/) owns existential and universal binders, nested
+  bodies, iff universals, and parameter coverage.
+- [`validation/`](validation/) owns duplicate free-parameter checks for facts
+  and binder-owning objects.
+
+`mod.rs` preserves the flat public API, so consumers continue to import
+`litex::fact::{Fact, ForallFact, AtomicFact, ...}`.

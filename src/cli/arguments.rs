@@ -1,4 +1,6 @@
-use crate::prelude::*;
+use crate::common::output_language::OutputLanguage;
+use crate::pipeline::SessionPreload;
+use crate::runtime::OutputStyle;
 
 const DETAIL_FLAG: &str = "-detail";
 const COMPACT_FLAG: &str = "-compact";
@@ -7,6 +9,7 @@ const LANGUAGE_FLAG: &str = "-lang";
 const SUMMARIZE_FLAG: &str = "-summarize";
 const ISOLATED_FLAG: &str = "-isolated";
 const TRUST_BEFORE_LINE_FLAG: &str = "-trust-before-line";
+const TRACE_PIPELINE_FLAG: &str = "-trace-pipeline";
 
 pub struct CliOptions {
     pub output_style: OutputStyle,
@@ -15,6 +18,7 @@ pub struct CliOptions {
     pub force_isolated: bool,
     pub output_language: OutputLanguage,
     pub trust_before_line: Option<usize>,
+    pub trace_pipeline: bool,
 }
 
 pub fn parse_global_options(args: &mut Vec<String>) -> Result<CliOptions, String> {
@@ -35,8 +39,10 @@ pub fn parse_global_options(args: &mut Vec<String>) -> Result<CliOptions, String
     let summarize_output = remove_flag(args, SUMMARIZE_FLAG);
     let force_isolated = remove_flag(args, ISOLATED_FLAG);
     let output_language = remove_language_flag(args)?;
+    let trace_pipeline = remove_flag(args, TRACE_PIPELINE_FLAG);
     let trust_before_line = remove_trust_before_line_flag(args)?;
     validate_trust_before_line_invocation(args, strict_mode, trust_before_line)?;
+    validate_trace_pipeline_invocation(args, trace_pipeline)?;
 
     Ok(CliOptions {
         output_style,
@@ -45,7 +51,24 @@ pub fn parse_global_options(args: &mut Vec<String>) -> Result<CliOptions, String
         force_isolated,
         output_language,
         trust_before_line,
+        trace_pipeline,
     })
+}
+
+pub fn validate_trace_pipeline_invocation(
+    args: &[String],
+    trace_pipeline: bool,
+) -> Result<(), String> {
+    if !trace_pipeline {
+        return Ok(());
+    }
+    match args.first().map(String::as_str) {
+        Some("-e" | "-f" | "-r" | "-runner") => Ok(()),
+        _ => Err(
+            "-trace-pipeline is supported only with -e, -f, -r, or -runner batch execution"
+                .to_string(),
+        ),
+    }
 }
 
 fn remove_flag(args: &mut Vec<String>, flag_name: &str) -> bool {

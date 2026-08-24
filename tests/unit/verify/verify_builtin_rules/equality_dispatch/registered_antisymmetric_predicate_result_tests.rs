@@ -25,7 +25,7 @@ fn fixture_child(fact: Fact) -> StmtResult {
 #[test]
 fn registered_antisymmetric_predicate_verifier_combines_two_ordered_child_results() {
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope("registered_antisymmetric_result_test.lit");
+    runtime.start_isolated_source("registered_antisymmetric_result_test.lit");
     let Fact::AtomicFact(AtomicFact::EqualFact(equal_fact)) = parse_fact(&mut runtime, "R = C")
     else {
         panic!("fixture target should be an equality")

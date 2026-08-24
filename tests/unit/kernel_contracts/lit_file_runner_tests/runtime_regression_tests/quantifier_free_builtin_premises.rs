@@ -64,11 +64,9 @@ forall x R:
         x $in {y R: y <= 0 or 1 <= y}
 "#;
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
-        "builtin_rules_consume_complete_quantifier_free_premises",
-    );
-    let (results, error) = run_source_code(source, &mut runtime);
-    let (succeeded, output) = render_run_source_code_output(&runtime, &results, &error, false);
+    runtime.start_isolated_source("builtin_rules_consume_complete_quantifier_free_premises");
+    let (results, error) = execute_source(source, &mut runtime);
+    let (succeeded, output) = render_run_output(&runtime, &results, &error);
     assert!(
         succeeded,
         "complete quantifier-free premises should be reusable without selecting a branch:\n{output}"
@@ -123,9 +121,9 @@ x $in closed_range(a, b)
         ),
     ] {
         let mut runtime = Runtime::new();
-        runtime.new_file_path_new_env_new_name_scope(name);
-        let (results, error) = run_source_code(source, &mut runtime);
-        let (succeeded, output) = render_run_source_code_output(&runtime, &results, &error, false);
+        runtime.start_isolated_source(name);
+        let (results, error) = execute_source(source, &mut runtime);
+        let (succeeded, output) = render_run_output(&runtime, &results, &error);
         assert!(
             !succeeded,
             "a complete disjunction must not leak either branch into known atomic facts:\n{output}"

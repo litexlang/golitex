@@ -21,7 +21,7 @@ impl Runtime {
                 };
                 let child = IsFiniteSetFact::new(domain.set_obj().clone(), fact.line_file.clone());
                 let result = self.verify_is_finite_set_strategy_child(&child)?;
-                if !result.is_true() {
+                if !result.is_success() {
                     return Ok(UnknownGenericStmtResult::new().into());
                 }
                 child_results.push(result);
@@ -31,7 +31,7 @@ impl Runtime {
                 let child =
                     IsFiniteSetFact::new(power_set.set.as_ref().clone(), fact.line_file.clone());
                 let result = self.verify_is_finite_set_strategy_child(&child)?;
-                if !result.is_true() {
+                if !result.is_success() {
                     return Ok(UnknownGenericStmtResult::new().into());
                 }
                 child_results.push(result);
@@ -43,7 +43,7 @@ impl Runtime {
                     fact.line_file.clone(),
                 );
                 let result = self.verify_is_finite_set_strategy_child(&child)?;
-                if !result.is_true() {
+                if !result.is_success() {
                     return Ok(UnknownGenericStmtResult::new().into());
                 }
                 child_results.push(result);
@@ -53,7 +53,7 @@ impl Runtime {
                 for set in [union.left.as_ref(), union.right.as_ref()] {
                     let child = IsFiniteSetFact::new(set.clone(), fact.line_file.clone());
                     let result = self.verify_is_finite_set_strategy_child(&child)?;
-                    if !result.is_true() {
+                    if !result.is_success() {
                         return Ok(UnknownGenericStmtResult::new().into());
                     }
                     child_results.push(result);
@@ -64,7 +64,7 @@ impl Runtime {
                 for set in [intersect.left.as_ref(), intersect.right.as_ref()] {
                     let child = IsFiniteSetFact::new(set.clone(), fact.line_file.clone());
                     let result = self.verify_is_finite_set_strategy_child(&child)?;
-                    if !result.is_true() {
+                    if !result.is_success() {
                         return Ok(UnknownGenericStmtResult::new().into());
                     }
                     child_results.push(result);
@@ -75,7 +75,7 @@ impl Runtime {
                 let child =
                     IsFiniteSetFact::new(set_minus.left.as_ref().clone(), fact.line_file.clone());
                 let result = self.verify_is_finite_set_strategy_child(&child)?;
-                if !result.is_true() {
+                if !result.is_success() {
                     return Ok(UnknownGenericStmtResult::new().into());
                 }
                 child_results.push(result);
@@ -85,7 +85,7 @@ impl Runtime {
                 for set in &cart.args {
                     let child = IsFiniteSetFact::new(set.as_ref().clone(), fact.line_file.clone());
                     let result = self.verify_is_finite_set_strategy_child(&child)?;
-                    if !result.is_true() {
+                    if !result.is_success() {
                         return Ok(UnknownGenericStmtResult::new().into());
                     }
                     child_results.push(result);
@@ -110,8 +110,9 @@ impl Runtime {
         fact: &IsFiniteSetFact,
     ) -> Result<StmtResult, RuntimeError> {
         let atomic_fact: AtomicFact = fact.clone().into();
-        let direct = self.verify_non_equational_atomic_fact_with_direct_routes(&atomic_fact)?;
-        if direct.is_true() {
+        let direct =
+            self.verify_non_equational_atomic_fact_with_bounded_builtin_routes(&atomic_fact)?;
+        if direct.is_success() {
             return Ok(direct);
         }
         self.verify_is_finite_set_with_builtin_strategy(fact)
@@ -134,7 +135,7 @@ impl Runtime {
                 )
                 .into();
                 let result = self.verify_builtin_strategy_child(&endpoint_order)?;
-                if !result.is_true() {
+                if !result.is_success() {
                     return Ok(UnknownGenericStmtResult::new().into());
                 }
                 Ok(
@@ -157,7 +158,7 @@ impl Runtime {
                 )
                 .into();
                 let result = self.verify_builtin_strategy_child(&endpoint_order)?;
-                if !result.is_true() {
+                if !result.is_success() {
                     return Ok(UnknownGenericStmtResult::new().into());
                 }
                 Ok(
@@ -191,7 +192,7 @@ impl Runtime {
                     .into()
                 };
                 let result = self.verify_builtin_strategy_child(&endpoint_order)?;
-                if !result.is_true() {
+                if !result.is_success() {
                     return Ok(UnknownGenericStmtResult::new().into());
                 }
                 let reason = if both_closed {
@@ -212,7 +213,7 @@ impl Runtime {
                 for set in [union.left.as_ref(), union.right.as_ref()] {
                     let child = IsNonemptySetFact::new(set.clone(), fact.line_file.clone());
                     let result = self.verify_is_nonempty_set_strategy_child(&child)?;
-                    if result.is_true() {
+                    if result.is_success() {
                         return Ok(
                             SuccessFactStmtResult::new_with_verified_by_builtin_strategy_recording_stmt(
                                 fact.clone().into(),
@@ -231,7 +232,7 @@ impl Runtime {
                     let child =
                         IsNonemptySetFact::new(set.as_ref().clone(), fact.line_file.clone());
                     let result = self.verify_is_nonempty_set_strategy_child(&child)?;
-                    if !result.is_true() {
+                    if !result.is_success() {
                         return Ok(UnknownGenericStmtResult::new().into());
                     }
                     results.push(result);
@@ -282,7 +283,7 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         let child = IsNonemptySetFact::new(child_set.clone(), fact.line_file.clone());
         let result = self.verify_is_nonempty_set_strategy_child(&child)?;
-        if !result.is_true() {
+        if !result.is_success() {
             return Ok(UnknownGenericStmtResult::new().into());
         }
         Ok(
@@ -300,8 +301,9 @@ impl Runtime {
         fact: &IsNonemptySetFact,
     ) -> Result<StmtResult, RuntimeError> {
         let atomic_fact: AtomicFact = fact.clone().into();
-        let direct = self.verify_non_equational_atomic_fact_with_direct_routes(&atomic_fact)?;
-        if direct.is_true() {
+        let direct =
+            self.verify_non_equational_atomic_fact_with_bounded_builtin_routes(&atomic_fact)?;
+        if direct.is_success() {
             return Ok(direct);
         }
         self.verify_is_nonempty_set_with_builtin_strategy(fact)

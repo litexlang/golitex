@@ -114,7 +114,7 @@ impl Runtime {
                 let base_fact =
                     rt.finite_set_induc_goal_fact_at_obj(stmt, fact, empty_set.clone())?;
                 let result = rt
-                    .verify_fact_or_error(&base_fact, &UseContextVerifyState::new(0, false))
+                    .verify_fact_or_error(&base_fact, &ProofSearchState::initial())
                     .map_err(|verify_error| {
                         short_exec_error(
                             stmt.clone().into(),
@@ -154,7 +154,7 @@ impl Runtime {
                 let extension_fact =
                     rt.finite_set_induc_goal_fact_at_obj(stmt, fact, extension.clone())?;
                 let result = rt
-                    .verify_fact_or_error(&extension_fact, &UseContextVerifyState::new(0, false))
+                    .verify_fact_or_error(&extension_fact, &ProofSearchState::initial())
                     .map_err(|verify_error| {
                         short_exec_error(
                             stmt.clone().into(),

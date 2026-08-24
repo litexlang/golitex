@@ -2,17 +2,12 @@ use super::*;
 
 const LARGE_TEST_STACK_SIZE: usize = 64 * 1024 * 1024;
 
-fn run_runner_for_code(code: &str, label: &str, hide_file_paths: bool) -> (bool, String) {
-    run_runner_for_code_with_language(code, label, hide_file_paths, OutputLanguage::English)
-}
-
-fn run_runner_for_code_with_language(
-    code: &str,
-    label: &str,
-    hide_file_paths: bool,
-    output_language: OutputLanguage,
-) -> (bool, String) {
-    run_runner_on_source("code", label, code, hide_file_paths, false, output_language)
+fn run_runner_for_test(code: &str, options: RunOptions) -> (bool, String) {
+    run_runner(RunnerRequest::new(
+        RunRequest::new(RunTarget::code(code, "-runner-test"), options),
+        true,
+        false,
+    ))
 }
 
 fn run_with_large_stack(test_name: &str, f: impl FnOnce() + Send + 'static) {
@@ -27,7 +22,7 @@ fn run_with_large_stack(test_name: &str, f: impl FnOnce() + Send + 'static) {
 
 #[test]
 fn runner_success_returns_trace() {
-    let (ok, output) = run_runner_for_code("1 + 1 = 2", "-runner-test", true);
+    let (ok, output) = run_runner_for_test("1 + 1 = 2", RunOptions::default());
 
     assert!(ok, "runner success run failed:\n{}", output);
     assert!(output.contains("\"runner\": \"litex-runner\""));
@@ -37,7 +32,7 @@ fn runner_success_returns_trace() {
 
 #[test]
 fn runner_failure_returns_trace() {
-    let (ok, output) = run_runner_for_code("1 = 0", "-runner-test", true);
+    let (ok, output) = run_runner_for_test("1 = 0", RunOptions::default());
 
     assert!(!ok, "runner unknown run should fail:\n{}", output);
     assert!(output.contains("\"result\": \"error\""));
@@ -50,7 +45,11 @@ fn runner_failure_returns_trace() {
 
 #[test]
 fn runner_target_error_returns_message() {
-    let (ok, output) = run_runner_for_file("does_not_exist.lit", true);
+    let (ok, output) = run_runner(RunnerRequest::new(
+        RunRequest::new(RunTarget::file("does_not_exist.lit"), RunOptions::default()),
+        true,
+        false,
+    ));
 
     assert!(!ok, "runner target error should fail:\n{}", output);
     assert!(output.contains("\"target\": {\n    \"kind\": \"file\",\n    \"label\": \"entry\""));
@@ -63,7 +62,7 @@ fn runner_target_error_returns_message() {
 
 #[test]
 fn runner_accepts_trust_as_normal_execution() {
-    let (ok, output) = run_runner_for_code("trust 1 = 0", "-runner-test", true);
+    let (ok, output) = run_runner_for_test("trust 1 = 0", RunOptions::default());
 
     assert!(ok, "runner should not reject trust statements:\n{}", output);
     assert!(output.contains("\"result\": \"success\""));
@@ -72,7 +71,7 @@ fn runner_accepts_trust_as_normal_execution() {
 #[test]
 fn runner_accepts_trust_have_as_normal_execution() {
     run_with_large_stack("runner_accepts_trust_have_as_normal_execution", || {
-        let (ok, output) = run_runner_for_code("trust have x R", "-runner-test", true);
+        let (ok, output) = run_runner_for_test("trust have x R", RunOptions::default());
 
         assert!(
             ok,
@@ -85,11 +84,12 @@ fn runner_accepts_trust_have_as_normal_execution() {
 
 #[test]
 fn zh_runner_keeps_machine_wrapper_keys_and_localizes_trace() {
-    let (ok, output) = run_runner_for_code_with_language(
+    let (ok, output) = run_runner_for_test(
         "trust 1 = 1",
-        "-runner-test",
-        true,
-        OutputLanguage::SimplifiedChinese,
+        RunOptions {
+            output_language: OutputLanguage::SimplifiedChinese,
+            ..RunOptions::default()
+        },
     );
 
     assert!(ok, "Chinese runner should succeed:\n{}", output);
@@ -116,8 +116,13 @@ fn non_english_runner_keeps_machine_wrapper_keys() {
         OutputLanguage::Vietnamese,
         OutputLanguage::Indonesian,
     ] {
-        let (ok, output) =
-            run_runner_for_code_with_language("trust 1 = 1", "-runner-test", true, language);
+        let (ok, output) = run_runner_for_test(
+            "trust 1 = 1",
+            RunOptions {
+                output_language: language,
+                ..RunOptions::default()
+            },
+        );
 
         assert!(ok, "localized runner should succeed:\n{}", output);
         assert!(output.contains("\"runner\": \"litex-runner\""));
@@ -130,7 +135,13 @@ fn non_english_runner_keeps_machine_wrapper_keys() {
 
 #[test]
 fn strict_runner_rejects_user_trust() {
-    let (ok, output) = run_runner_for_code_strict("trust 1 = 0", "-runner-test", true);
+    let (ok, output) = run_runner_for_test(
+        "trust 1 = 0",
+        RunOptions {
+            strict_mode: true,
+            ..RunOptions::default()
+        },
+    );
 
     assert!(
         !ok,
@@ -148,7 +159,13 @@ axiom strict_axiom:
     ? forall:
         1 = 1
 "#;
-    let (ok, output) = run_runner_for_code_strict(source_code, "-runner-test", true);
+    let (ok, output) = run_runner_for_test(
+        source_code,
+        RunOptions {
+            strict_mode: true,
+            ..RunOptions::default()
+        },
+    );
 
     assert!(
         !ok,
@@ -162,7 +179,13 @@ axiom strict_axiom:
 #[test]
 fn strict_runner_rejects_user_trust_have() {
     run_with_large_stack("strict_runner_rejects_user_trust_have", || {
-        let (ok, output) = run_runner_for_code_strict("trust have x R", "-runner-test", true);
+        let (ok, output) = run_runner_for_test(
+            "trust have x R",
+            RunOptions {
+                strict_mode: true,
+                ..RunOptions::default()
+            },
+        );
 
         assert!(
             !ok,

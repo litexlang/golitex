@@ -1,11 +1,18 @@
-use super::{render_result_graph_from_stmt_results, run_graph_for_code};
+use super::render_result_graph_from_stmt_results;
 use crate::prelude::*;
 
 fn graph_output(source: &'static str) -> String {
     std::thread::Builder::new()
         .name("graph_output_large_stack".to_string())
         .stack_size(64 * 1024 * 1024)
-        .spawn(move || run_graph_for_code(source, "graph_test", true).1)
+        .spawn(move || {
+            run_graph(GraphRequest::new(
+                GraphKind::Result,
+                RunRequest::new(RunTarget::code(source, "graph_test"), RunOptions::default()),
+                true,
+            ))
+            .1
+        })
         .expect("spawn graph output test")
         .join()
         .expect("graph output test panicked")
@@ -92,8 +99,8 @@ have fn iterate(n N) R+ by induc n from 0:
 #[test]
 fn completed_result_graph_does_not_need_runtime() {
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope("runtime_free_result_graph");
-    let (results, error) = run_source_code("2 + 3 $in N", &mut runtime);
+    runtime.start_isolated_source("runtime_free_result_graph");
+    let (results, error) = execute_source("2 + 3 $in N", &mut runtime);
     assert!(error.is_none());
     drop(runtime);
 

@@ -8,96 +8,37 @@ enum ReplOutputMode {
     Latex,
 }
 
-fn output_style_from_detail_output(detail_output: bool) -> OutputStyle {
-    if detail_output {
-        OutputStyle::Detailed
-    } else {
-        OutputStyle::Normal
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct ReplOptions {
+    pub output_style: OutputStyle,
+    pub strict_mode: bool,
+    pub output_language: OutputLanguage,
+}
+
+impl ReplOptions {
+    pub fn new(
+        output_style: OutputStyle,
+        strict_mode: bool,
+        output_language: OutputLanguage,
+    ) -> Self {
+        Self {
+            output_style,
+            strict_mode,
+            output_language,
+        }
     }
 }
 
-pub fn run_repl(version: &str) {
-    return run_repl_with_detail_output(version, false);
-}
-
-pub fn run_repl_with_detail_output(version: &str, detail_output: bool) {
-    return run_repl_loop_internal(
-        version,
-        output_style_from_detail_output(detail_output),
-        false,
-        OutputLanguage::English,
-        false,
-    );
-}
-
-pub fn run_repl_with_detail_output_and_strict(
-    version: &str,
-    detail_output: bool,
-    strict_mode: bool,
-) {
-    return run_repl_loop_internal(
-        version,
-        output_style_from_detail_output(detail_output),
-        strict_mode,
-        OutputLanguage::English,
-        false,
-    );
-}
-
-pub fn run_repl_with_detail_output_and_strict_and_language(
-    version: &str,
-    detail_output: bool,
-    strict_mode: bool,
-    output_language: OutputLanguage,
-) {
-    return run_repl_loop_internal(
-        version,
-        output_style_from_detail_output(detail_output),
-        strict_mode,
-        output_language,
-        false,
-    );
-}
-
-pub fn run_repl_with_output_style_and_strict_and_language(
-    version: &str,
-    output_style: OutputStyle,
-    strict_mode: bool,
-    output_language: OutputLanguage,
-) {
-    return run_repl_loop_internal(version, output_style, strict_mode, output_language, false);
-}
-
-pub fn run_repl_with_output_style_and_strict_and_language_and_isolation(
-    version: &str,
-    output_style: OutputStyle,
-    strict_mode: bool,
-    output_language: OutputLanguage,
-    _force_isolated: bool,
-) {
-    return run_repl_loop_internal(version, output_style, strict_mode, output_language, false);
-}
-
-pub fn run_latex_repl(version: &str) {
-    return run_latex_repl_loop_internal(version);
-}
-
-fn run_repl_loop_internal(
-    version_banner: &str,
-    output_style: OutputStyle,
-    strict_mode: bool,
-    output_language: OutputLanguage,
-    _force_isolated: bool,
-) {
+pub fn run_repl(version: &str, options: ReplOptions) {
     let stdin_handle = io::stdin();
     let stdout_handle = io::stdout();
     let mut stdin_locked = stdin_handle.lock();
     let mut stdout_locked = stdout_handle.lock();
     let result = run_repl_loop_with_readers_and_mode(
-        version_banner,
-        output_style,
-        strict_mode,
-        output_language,
+        version,
+        options.output_style,
+        options.strict_mode,
+        options.output_language,
         &mut stdin_locked,
         &mut stdout_locked,
         ReplOutputMode::Json,
@@ -110,12 +51,12 @@ fn run_repl_loop_internal(
     }
 }
 
-fn run_latex_repl_loop_internal(version_banner: &str) {
+pub fn run_latex_repl(version: &str) {
     let stdin_handle = io::stdin();
     let stdout_handle = io::stdout();
     let mut stdin_locked = stdin_handle.lock();
     let mut stdout_locked = stdout_handle.lock();
-    match run_latex_repl_loop_with_readers(version_banner, &mut stdin_locked, &mut stdout_locked) {
+    match run_latex_repl_loop_with_readers(version, &mut stdin_locked, &mut stdout_locked) {
         Ok(()) => {}
         Err(write_error) => {
             eprintln!("repl output error: {}", write_error);
@@ -281,10 +222,8 @@ fn run_repl_source_if_not_empty(
     let normalized_source = remove_windows_carriage_return(source);
     match output_mode {
         ReplOutputMode::Json => {
-            let (stmt_results, runtime_error) =
-                run_source_code(normalized_source.as_str(), runtime);
-            let (_, output_text) =
-                render_run_source_code_output(runtime, &stmt_results, &runtime_error, true);
+            let (stmt_results, runtime_error) = execute_source(normalized_source.as_str(), runtime);
+            let (_, output_text) = render_run_output(runtime, &stmt_results, &runtime_error);
             output_text.trim().to_string()
         }
         ReplOutputMode::Latex => match to_latex(normalized_source.as_str(), runtime) {

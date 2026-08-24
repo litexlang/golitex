@@ -94,7 +94,7 @@ fn key_translation(output_language: OutputLanguage, key: &str) -> Option<String>
     match output_language {
         OutputLanguage::English => None,
         OutputLanguage::SimplifiedChinese => find_translation(ZH_KEYS, key),
-        OutputLanguage::TraditionalChinese => find_translation(ZH_HANS_KEYS, key),
+        OutputLanguage::TraditionalChinese => find_translation(ZH_HANT_KEYS, key),
         OutputLanguage::Japanese => find_translation(JA_KEYS, key),
         OutputLanguage::Korean => find_translation(KO_KEYS, key),
         OutputLanguage::Spanish => find_translation(ES_KEYS, key),
@@ -113,7 +113,7 @@ fn text_translation(output_language: OutputLanguage, text: &str) -> Option<Strin
     let exact = match output_language {
         OutputLanguage::English => None,
         OutputLanguage::SimplifiedChinese => find_translation(ZH_TEXTS, text),
-        OutputLanguage::TraditionalChinese => find_translation(ZH_HANS_TEXTS, text),
+        OutputLanguage::TraditionalChinese => find_translation(ZH_HANT_TEXTS, text),
         OutputLanguage::Japanese => find_translation(JA_TEXTS, text),
         OutputLanguage::Korean => find_translation(KO_TEXTS, text),
         OutputLanguage::Spanish => find_translation(ES_TEXTS, text),
@@ -377,7 +377,7 @@ const ZH_KEYS: &[(&str, &str)] = &[
     ("count", "总数"),
 ];
 
-const ZH_HANS_KEYS: &[(&str, &str)] = &[
+const ZH_HANT_KEYS: &[(&str, &str)] = &[
     ("result", "結果"),
     ("success", "成功"),
     ("error", "錯誤"),
@@ -1399,7 +1399,7 @@ const ZH_TEXTS: &[(&str, &str)] = &[
     ),
 ];
 
-const ZH_HANS_TEXTS: &[(&str, &str)] = &[
+const ZH_HANT_TEXTS: &[(&str, &str)] = &[
     ("success", "成功"),
     ("error", "錯誤"),
     ("target_error", "目標錯誤"),

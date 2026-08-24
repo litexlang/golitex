@@ -656,10 +656,10 @@ thm alpha_from_trust:
         $p(z)
 "#;
     let mut trusted_runtime = Runtime::new();
-    trusted_runtime.new_file_path_new_env_new_name_scope("forall_alpha_cache_reuses_trusted_fact");
-    let (trusted_results, trusted_error) = run_source_code(trusted_source, &mut trusted_runtime);
+    trusted_runtime.start_isolated_source("forall_alpha_cache_reuses_trusted_fact");
+    let (trusted_results, trusted_error) = execute_source(trusted_source, &mut trusted_runtime);
     let (trusted_succeeded, trusted_output) =
-        render_run_source_code_output(&trusted_runtime, &trusted_results, &trusted_error, false);
+        render_run_output(&trusted_runtime, &trusted_results, &trusted_error);
     assert!(
         trusted_succeeded,
         "trusted alpha-equivalent forall should verify:\n{}",
@@ -679,10 +679,10 @@ thm clean_alpha:
         z = z
 "#;
     let mut clean_runtime = Runtime::new();
-    clean_runtime.new_file_path_new_env_new_name_scope("forall_alpha_cache_stays_clean");
-    let (clean_results, clean_error) = run_source_code(clean_source, &mut clean_runtime);
+    clean_runtime.start_isolated_source("forall_alpha_cache_stays_clean");
+    let (clean_results, clean_error) = execute_source(clean_source, &mut clean_runtime);
     let (clean_succeeded, clean_output) =
-        render_run_source_code_output(&clean_runtime, &clean_results, &clean_error, false);
+        render_run_output(&clean_runtime, &clean_results, &clean_error);
     assert!(
         clean_succeeded,
         "clean alpha-equivalent forall should verify:\n{}",
@@ -929,7 +929,7 @@ $positive_value(-2, R)
 
 fn run_kernel_soundness_source(source_code: &str, label: &str) -> (bool, String) {
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(label);
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false)
+    runtime.start_isolated_source(label);
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    render_run_output(&runtime, &stmt_results, &runtime_error)
 }

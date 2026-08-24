@@ -2,7 +2,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::Instant;
 
-use crate::pipeline::{render_run_source_code_output, run_source_code};
+use crate::pipeline::{execute_source, render_run_output};
 use crate::prelude::*;
 
 use super::helper::{print_slowest_run_labels, run_with_large_stack, source_has_isolated_import};
@@ -101,7 +101,7 @@ fn run_math500_tmp() {
     };
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(path_for_runtime);
+    runtime.start_isolated_source(path_for_runtime);
 
     let mut durations_ms: Vec<(String, f64)> = Vec::new();
     for (snippet_index, snippet) in snippets.iter().enumerate() {
@@ -116,11 +116,11 @@ fn run_math500_tmp() {
         ));
         let start_time = Instant::now();
         let (stmt_results, runtime_error) =
-            run_source_code(normalized_source.as_str(), &mut runtime);
+            execute_source(normalized_source.as_str(), &mut runtime);
         let duration_ms = start_time.elapsed().as_secs_f64() * 1000.0;
 
         let (run_succeeded, run_output) =
-            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            render_run_output(&runtime, &stmt_results, &runtime_error);
 
         durations_ms.push((snippet.label.clone(), duration_ms));
 
@@ -234,7 +234,7 @@ fn run_math500_litex_lit_dir(base_dir: &Path) {
     let runtime_setup_start = Instant::now();
     let mut runtime = Runtime::new();
     let runtime_setup_duration_ms = runtime_setup_start.elapsed().as_secs_f64() * 1000.0;
-    runtime.new_file_path_new_env_new_name_scope(base_dir_str.as_str());
+    runtime.start_isolated_source(base_dir_str.as_str());
 
     let run_wall_start = Instant::now();
     let mut total_count: usize = 0;
@@ -278,12 +278,12 @@ fn run_math500_litex_lit_dir(base_dir: &Path) {
 
         let start_time_for_one_solution = Instant::now();
         let (stmt_results, runtime_error) =
-            run_source_code(normalized_source.as_str(), &mut runtime);
+            execute_source(normalized_source.as_str(), &mut runtime);
         let duration_ms = start_time_for_one_solution.elapsed().as_secs_f64() * 1000.0;
         total_solution_duration_ms += duration_ms;
 
         let (run_succeeded, run_output) =
-            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            render_run_output(&runtime, &stmt_results, &runtime_error);
 
         total_count += 1;
         if !run_succeeded {

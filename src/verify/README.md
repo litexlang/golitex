@@ -8,9 +8,9 @@ forall x R:
 ```
 
 ```text
-exec_fact(1 + 1 = 2)
+execute_submitted_fact(1 + 1 = 2)
   verify_fact_well_defined_for_execution(1 + 1 = 2)
-  verify_fact_or_error(1 + 1 = 2)
+  verify_fact_or_error(1 + 1 = 2, ProofSearchState::initial())
     verify_fact_allow_unknown(1 + 1 = 2)
     dispatch EqualFact
     try closed numeric evaluation
@@ -43,11 +43,30 @@ well-definedness
 
 The order above is observable in `1 / 0 = 0`: well-definedness rejects the divisor before any equality rule runs.
 
+`ProofSearchState` names the recursion boundary explicitly. `initial()` is the
+ordinary outer proof search, `after_well_definedness()` prevents a child from
+rechecking an already discharged gate, and `final_round()` selects the bounded
+last retry. `BuiltinRuleSearchState` separately limits recursive builtin-rule
+application; it is not the general proof-search state.
+
+Atomic-family entry points named `with_bounded_builtin_routes` first try their
+zero-premise leaves and may then spend one bounded builtin-rule step. For
+non-equational fallback, `AlternateFactSearch::Enabled` means that order-dual
+and registered symmetric alternatives may be tried; recursive alternatives use
+`Disabled` so they cannot select themselves again. Checked function-definition
+reduction similarly uses `EqualitySide::{Left, Right}` internally and converts
+to the retained evidence boolean only when the Result is built.
+
 ## Start here
 
 | File | Example |
 | --- | --- |
-| [`verify_dispatch.rs`](verify_dispatch.rs) | Dispatches `EqualFact`, `ForallFact`, `ExistFact`, and other fact shapes. |
-| [`verify_equality.rs`](verify_equality.rs) | Handles `1 + 1 = 2` and algebraic equality routes. |
-| [`verify_fact_well_defined.rs`](verify_fact_well_defined.rs) | Rejects `1 / 0 = 0` before proof search. |
-| [`verify_builtin_rule.rs`](verify_builtin_rule.rs) | Applies bounded builtin verification rules. |
+| [`dispatch.rs`](dispatch.rs) | Dispatches `EqualFact`, `ForallFact`, `ExistFact`, and other fact shapes. |
+| [`equality/core.rs`](equality/core.rs) | Handles `1 + 1 = 2` and algebraic equality routes. |
+| [`well_definedness/fact.rs`](well_definedness/fact.rs) | Rejects `1 / 0 = 0` before proof search. |
+| [`proof_search/builtin_rule.rs`](proof_search/builtin_rule.rs) | Applies bounded builtin verification rules. |
+| [`proof_search/context_state.rs`](proof_search/context_state.rs) | Defines semantic initial, post-well-definedness, and final-round proof-search states. |
+| [`proof_search/builtin_rule_state.rs`](proof_search/builtin_rule_state.rs) | Limits builtin-rule recursion independently from general proof search. |
+| [`atomic/`](atomic) | Owns atomic lookup, definitions, strategies, and non-equational predicates. |
+| [`quantified/`](quantified) | Owns universal, existential, and negated quantified facts. |
+| [`well_definedness/object.rs`](well_definedness/object.rs) | Dispatches recursive object well-definedness checks. |

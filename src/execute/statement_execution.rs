@@ -1,54 +1,59 @@
-use crate::prelude::*;
+use crate::error::RuntimeError;
+use crate::pipeline::record_pipeline_step;
+use crate::result::{StatementExecutionPhase, StatementExecutionTrace, StmtResult};
+use crate::runtime::{ExecutionMode, Runtime};
+use crate::stmt::Stmt;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(super) enum StatementExecutionContext {
+    OrdinaryRun,
+    TrustedPrefixRun,
+}
+
+impl StatementExecutionContext {
+    fn is_trusted_prefix_run(self) -> bool {
+        self == Self::TrustedPrefixRun
+    }
+}
 
 impl Runtime {
     pub fn execute_statement(&mut self, stmt: &Stmt) -> Result<StmtResult, RuntimeError> {
-        self.execute_statement_with_trusted_prefix_context(stmt, false)
-    }
-
-    /// Compatibility wrapper for the former abbreviated entry point.
-    pub fn exec_stmt(&mut self, stmt: &Stmt) -> Result<StmtResult, RuntimeError> {
-        self.execute_statement(stmt)
+        record_pipeline_step(
+            "execute",
+            "Runtime::execute_statement",
+            "src/execute/statement_execution.rs",
+        );
+        self.execute_statement_with_context(stmt, StatementExecutionContext::OrdinaryRun)
     }
 
     pub fn execute_statement_in_trusted_prefix_run(
         &mut self,
         stmt: &Stmt,
     ) -> Result<StmtResult, RuntimeError> {
-        self.execute_statement_with_trusted_prefix_context(stmt, true)
+        self.execute_statement_with_context(stmt, StatementExecutionContext::TrustedPrefixRun)
     }
 
-    /// Compatibility wrapper for the former abbreviated trusted-prefix entry.
-    pub fn exec_stmt_in_trusted_prefix_run(
+    fn execute_statement_with_context(
         &mut self,
         stmt: &Stmt,
-    ) -> Result<StmtResult, RuntimeError> {
-        self.execute_statement_in_trusted_prefix_run(stmt)
-    }
-
-    fn execute_statement_with_trusted_prefix_context(
-        &mut self,
-        stmt: &Stmt,
-        in_trusted_prefix_run: bool,
+        context: StatementExecutionContext,
     ) -> Result<StmtResult, RuntimeError> {
         self.clear_statement_proof_state();
-        let trusted = self.current_execution_is_trusted_file();
-        let result = if trusted {
-            self.execute_statement_without_verification(stmt, in_trusted_prefix_run)
-        } else {
-            // The generated local-builtin catalog is parsed once per thread.
-            // Do that work at the shallow statement boundary instead of on
-            // first use from deep inside object/fact verification: the parser
-            // intentionally has many precedence layers, and nesting that
-            // one-time compilation below a recursive verifier can exhaust a
-            // normal test thread's stack in debug builds.
-            crate::verify::local_builtin_catalog::registered_local_builtin_rules()
-                .and_then(|_| self.execute_verified_statement(stmt))
+        let execution_mode = self.current_execution_mode();
+        let result = match execution_mode {
+            ExecutionMode::Trusted => self.execute_statement_without_verification(stmt, context),
+            ExecutionMode::Verified => {
+                // The generated local-builtin catalog is parsed once per thread.
+                // Do that work at the shallow statement boundary instead of on
+                // first use from deep inside object/fact verification: the parser
+                // intentionally has many precedence layers, and nesting that
+                // one-time compilation below a recursive verifier can exhaust a
+                // normal test thread's stack in debug builds.
+                crate::verify::local_builtin_catalog::registered_local_builtin_rules()
+                    .and_then(|_| self.execute_verified_statement(stmt))
+            }
         };
-        let result = self.finish_statement_execution_with_trusted_prefix_context(
-            result,
-            trusted,
-            in_trusted_prefix_run,
-        );
+        let result = self.finish_statement_execution_with_context(result, execution_mode, context);
         self.clear_statement_proof_state();
         result
     }
@@ -56,38 +61,56 @@ impl Runtime {
     pub fn finish_statement_execution(
         &mut self,
         result: Result<StmtResult, RuntimeError>,
-        trusted: bool,
+        execution_mode: ExecutionMode,
     ) -> Result<StmtResult, RuntimeError> {
-        self.finish_statement_execution_with_trusted_prefix_context(result, trusted, false)
+        self.finish_statement_execution_with_context(
+            result,
+            execution_mode,
+            StatementExecutionContext::OrdinaryRun,
+        )
     }
 
     pub fn finish_statement_execution_in_trusted_prefix_run(
         &mut self,
         result: Result<StmtResult, RuntimeError>,
-        trusted: bool,
+        execution_mode: ExecutionMode,
     ) -> Result<StmtResult, RuntimeError> {
-        self.finish_statement_execution_with_trusted_prefix_context(result, trusted, true)
+        self.finish_statement_execution_with_context(
+            result,
+            execution_mode,
+            StatementExecutionContext::TrustedPrefixRun,
+        )
     }
 
-    fn finish_statement_execution_with_trusted_prefix_context(
+    fn finish_statement_execution_with_context(
         &mut self,
         result: Result<StmtResult, RuntimeError>,
-        trusted: bool,
-        in_trusted_prefix_run: bool,
+        execution_mode: ExecutionMode,
+        context: StatementExecutionContext,
     ) -> Result<StmtResult, RuntimeError> {
+        record_pipeline_step(
+            "result",
+            "Runtime::finish_statement_execution",
+            "src/execute/statement_execution.rs",
+        );
         match result {
             Ok(mut result) => {
                 self.attach_known_fact_ids_to_stmt_result(&mut result)?;
-                let trace = if in_trusted_prefix_run && !result.is_unknown() {
-                    if trusted {
+                let trace = match (
+                    context.is_trusted_prefix_run(),
+                    execution_mode,
+                    result.is_unknown(),
+                ) {
+                    (true, ExecutionMode::Trusted, false) => {
                         StatementExecutionTrace::trusted_prefix()
-                    } else {
+                    }
+                    (true, ExecutionMode::Verified, false) => {
                         StatementExecutionTrace::verified(false).with_verified_status()
                     }
-                } else if trusted {
-                    StatementExecutionTrace::trusted()
-                } else {
-                    StatementExecutionTrace::verified(result.is_unknown())
+                    (_, ExecutionMode::Trusted, _) => StatementExecutionTrace::trusted(),
+                    (_, ExecutionMode::Verified, process_is_unknown) => {
+                        StatementExecutionTrace::verified(process_is_unknown)
+                    }
                 };
                 let result = result.with_execution_trace(trace);
                 Ok(result)

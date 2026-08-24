@@ -1,4 +1,4 @@
-use crate::parse::parse_helpers::collect_forall_param_bindings_from_facts;
+use crate::parse::helper::collect_forall_param_bindings_from_facts;
 use crate::prelude::*;
 
 impl Runtime {

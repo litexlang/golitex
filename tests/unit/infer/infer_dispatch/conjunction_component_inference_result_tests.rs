@@ -4,8 +4,8 @@ use crate::prelude::*;
 #[test]
 fn conjunction_store_returns_typed_component_results_with_exact_fact_ids() {
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope("conjunction_component_result_test.lit");
-    let (mut results, error) = run_source_code("1 = 1 and 2 = 2", &mut runtime);
+    runtime.start_isolated_source("conjunction_component_result_test.lit");
+    let (mut results, error) = execute_source("1 = 1 and 2 = 2", &mut runtime);
     assert!(error.is_none(), "{error:?}");
     let result = results.pop().expect("one conjunction statement Result");
     let success = result

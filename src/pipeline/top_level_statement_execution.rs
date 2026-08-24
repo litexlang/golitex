@@ -1,13 +1,31 @@
-use crate::prelude::*;
+use super::record_pipeline_step;
+use crate::error::{short_exec_error, RuntimeError};
+use crate::infer::SuccessInferResult;
+use crate::module_manager::{
+    discover_isolated_module_import, discover_isolated_std_import, ImportTarget, ModuleStatus,
+};
+use crate::result::{
+    StmtResult, SuccessCommandStmtResult, SuccessExecutedImportResult,
+    SuccessImportExecutionResult, SuccessImportStmtResult, SuccessReusedImportResult,
+    SuccessStmtCommonResult,
+};
+use crate::runtime::{ExecutionMode, Runtime};
+use crate::stmt::tooling_stmt::ImportStmt;
+use crate::stmt::{CommandStmt, Stmt};
 
 pub fn execute_top_level_statement(
     stmt: &Stmt,
     runtime: &mut Runtime,
 ) -> Result<StmtResult, RuntimeError> {
+    record_pipeline_step(
+        "execute",
+        "pipeline::execute_top_level_statement",
+        "src/pipeline/top_level_statement_execution.rs",
+    );
     match stmt {
         Stmt::Command(CommandStmt::ImportStmt(import)) => {
             let result = run_isolated_import(import, runtime);
-            runtime.finish_statement_execution(result, false)
+            runtime.finish_statement_execution(result, ExecutionMode::Verified)
         }
         _ => runtime.execute_statement(stmt),
     }
@@ -20,25 +38,11 @@ pub fn execute_top_level_statement_in_trusted_prefix_run(
     match stmt {
         Stmt::Command(CommandStmt::ImportStmt(import)) => {
             let result = run_isolated_import(import, runtime);
-            runtime.finish_statement_execution_in_trusted_prefix_run(result, false)
+            runtime
+                .finish_statement_execution_in_trusted_prefix_run(result, ExecutionMode::Verified)
         }
         _ => runtime.execute_statement_in_trusted_prefix_run(stmt),
     }
-}
-
-// Compatibility wrappers for the former environment-oriented vocabulary.
-pub fn run_stmt_at_global_env(
-    stmt: &Stmt,
-    runtime: &mut Runtime,
-) -> Result<StmtResult, RuntimeError> {
-    execute_top_level_statement(stmt, runtime)
-}
-
-pub fn run_stmt_at_global_env_in_trusted_prefix_run(
-    stmt: &Stmt,
-    runtime: &mut Runtime,
-) -> Result<StmtResult, RuntimeError> {
-    execute_top_level_statement_in_trusted_prefix_run(stmt, runtime)
 }
 
 fn run_isolated_import(

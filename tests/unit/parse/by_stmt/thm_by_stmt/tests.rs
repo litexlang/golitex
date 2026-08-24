@@ -25,7 +25,7 @@ fn by_thm_parses_optional_selected_atomic_fact() {
         panic!("expected by thm statement")
     };
     assert!(selected.selected_facts.as_ref().is_some_and(
-        |facts| matches!(facts.as_slice(), [Fact::AtomicFact(fact)] if !fact.is_true())
+        |facts| matches!(facts.as_slice(), [Fact::AtomicFact(fact)] if !fact.has_positive_polarity())
     ));
     assert_eq!(selected.to_string(), "by thm T(a) => not $P(a)");
 
@@ -35,7 +35,7 @@ fn by_thm_parses_optional_selected_atomic_fact() {
         panic!("expected by thm statement")
     };
     assert!(goal_block.selected_facts.as_ref().is_some_and(
-        |facts| matches!(facts.as_slice(), [Fact::AtomicFact(fact)] if !fact.is_true())
+        |facts| matches!(facts.as_slice(), [Fact::AtomicFact(fact)] if !fact.has_positive_polarity())
     ));
     assert_eq!(goal_block.to_string(), "by thm T(a) => not $P(a)");
 }

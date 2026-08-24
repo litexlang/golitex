@@ -1,10 +1,20 @@
-use super::run_fact_graph_for_code;
+use crate::prelude::*;
 
 fn fact_graph_output(source: &'static str) -> String {
     std::thread::Builder::new()
         .name("fact_graph_output_large_stack".to_string())
         .stack_size(64 * 1024 * 1024)
-        .spawn(move || run_fact_graph_for_code(source, "fact_graph_test", true).1)
+        .spawn(move || {
+            run_graph(GraphRequest::new(
+                GraphKind::Fact,
+                RunRequest::new(
+                    RunTarget::code(source, "fact_graph_test"),
+                    RunOptions::default(),
+                ),
+                true,
+            ))
+            .1
+        })
         .expect("spawn fact graph output test")
         .join()
         .expect("fact graph output test panicked")

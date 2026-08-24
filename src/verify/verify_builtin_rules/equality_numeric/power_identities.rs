@@ -5,7 +5,7 @@ impl Runtime {
         &mut self,
         obj: &Obj,
         line_file: &LineFile,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let positive: AtomicFact = GreaterFact::new(
             obj.clone(),
@@ -15,7 +15,7 @@ impl Runtime {
         .into();
         let positive_result =
             self.verify_atomic_fact_as_builtin_rule_premise(&positive, builtin_state)?;
-        if positive_result.is_true() {
+        if positive_result.is_success() {
             return Ok(Some(positive_result));
         }
 
@@ -24,7 +24,7 @@ impl Runtime {
                 InFact::new(obj.clone(), carrier.into(), line_file.clone()).into();
             let membership_result =
                 self.verify_atomic_fact_as_builtin_rule_premise(&membership, builtin_state)?;
-            if membership_result.is_true() {
+            if membership_result.is_success() {
                 return Ok(Some(membership_result));
             }
         }
@@ -36,7 +36,7 @@ impl Runtime {
     pub fn try_verify_minus_one_odd_natural_power(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -86,7 +86,7 @@ impl Runtime {
         let m_in_n: AtomicFact =
             InFact::new(m.clone(), StandardSet::N.into(), line_file.clone()).into();
         let m_result = self.verify_atomic_fact_as_builtin_rule_premise(&m_in_n, builtin_state)?;
-        if !m_result.is_true() {
+        if !m_result.is_success() {
             return Ok(None);
         }
         Ok(Some(
@@ -104,7 +104,7 @@ impl Runtime {
     pub fn try_verify_pow_one_identity(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -122,7 +122,7 @@ impl Runtime {
                 &EqualFact::new_from_refs(pow.base.as_ref(), other, line_file.clone()),
                 builtin_state,
             )?
-            .is_true()
+            .is_success()
         {
             return Ok(None);
         }
@@ -200,7 +200,7 @@ impl Runtime {
     pub fn try_verify_zero_pow_positive_exponent_identity(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -231,7 +231,7 @@ impl Runtime {
         let positive_result =
             self.verify_atomic_fact_as_builtin_rule_premise(&positive_exponent, builtin_state)?;
         let mut positive_steps = Vec::new();
-        if positive_result.is_true() {
+        if positive_result.is_success() {
             positive_steps.push(positive_result);
         } else {
             // Keep reciprocal positivity inside this one power identity rule:

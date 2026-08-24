@@ -8,7 +8,7 @@ impl Runtime {
     pub fn try_verify_mod_nested_same_modulus_absorption(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -32,7 +32,7 @@ impl Runtime {
                     ),
                     builtin_state,
                 )?
-                .is_true()
+                .is_success()
             {
                 continue;
             }
@@ -45,7 +45,7 @@ impl Runtime {
                     ),
                     builtin_state,
                 )?
-                .is_true()
+                .is_success()
             {
                 continue;
             }
@@ -58,7 +58,7 @@ impl Runtime {
                     ),
                     builtin_state,
                 )?
-                .is_true()
+                .is_success()
             {
                 continue;
             }
@@ -75,7 +75,7 @@ impl Runtime {
     pub fn try_verify_mod_nested_divisible_modulus_absorption(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -99,7 +99,7 @@ impl Runtime {
                 ),
                 builtin_state,
             )?;
-            if !outer_modulus_matches.is_true() {
+            if !outer_modulus_matches.is_success() {
                 continue;
             }
             let dividend_matches = self.verify_equal_fact_as_builtin_premise(
@@ -110,7 +110,7 @@ impl Runtime {
                 ),
                 builtin_state,
             )?;
-            if !dividend_matches.is_true() {
+            if !dividend_matches.is_success() {
                 continue;
             }
 
@@ -168,7 +168,7 @@ impl Runtime {
     pub fn try_verify_mod_peel_nested_same_modulus(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -181,7 +181,7 @@ impl Runtime {
                 &EqualFact::new_from_refs(lm.right.as_ref(), rm.right.as_ref(), line_file.clone()),
                 builtin_state,
             )?
-            .is_true()
+            .is_success()
         {
             return Ok(None);
         }
@@ -193,7 +193,7 @@ impl Runtime {
                     &EqualFact::new_from_refs(r_inner.right.as_ref(), modulus, line_file.clone()),
                     builtin_state,
                 )?
-                .is_true()
+                .is_success()
             {
                 let lhs: Obj = Mod::new((*lm.left).clone(), (*lm.right).clone()).into();
                 let rhs: Obj = Mod::new((*r_inner.left).clone(), (*lm.right).clone()).into();
@@ -202,7 +202,7 @@ impl Runtime {
                         &EqualFact::new_from_refs(&lhs, &rhs, line_file.clone()),
                         builtin_state,
                     )?
-                    .is_true()
+                    .is_success()
                 {
                     return Ok(Some(factual_equal_success_by_builtin_reason(
                         equal_fact,
@@ -218,7 +218,7 @@ impl Runtime {
                     &EqualFact::new_from_refs(l_inner.right.as_ref(), modulus, line_file.clone()),
                     builtin_state,
                 )?
-                .is_true()
+                .is_success()
             {
                 let lhs: Obj = Mod::new((*l_inner.left).clone(), (*lm.right).clone()).into();
                 let rhs: Obj = Mod::new((*rm.left).clone(), (*lm.right).clone()).into();
@@ -227,7 +227,7 @@ impl Runtime {
                         &EqualFact::new_from_refs(&lhs, &rhs, line_file.clone()),
                         builtin_state,
                     )?
-                    .is_true()
+                    .is_success()
                 {
                     return Ok(Some(factual_equal_success_by_builtin_reason(
                         equal_fact,
@@ -247,7 +247,7 @@ impl Runtime {
     pub fn try_verify_mod_congruence_from_inner_binary(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -259,7 +259,7 @@ impl Runtime {
             &EqualFact::new_from_refs(lm.right.as_ref(), rm.right.as_ref(), line_file.clone()),
             builtin_state,
         )?;
-        if !modulus_result.is_true() {
+        if !modulus_result.is_success() {
             return Ok(None);
         }
 
@@ -311,7 +311,7 @@ impl Runtime {
                     &EqualFact::new_from_refs(&l, &r, line_file.clone()),
                     builtin_state,
                 )?
-                .is_true())
+                .is_success())
         };
         let ok = match (lm.left.as_ref(), rm.left.as_ref()) {
             (Obj::Add(la), Obj::Add(ra)) => {
@@ -342,7 +342,7 @@ impl Runtime {
     pub fn try_verify_integer_mod_negation_rule(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -372,7 +372,7 @@ impl Runtime {
                 ),
                 builtin_state,
             )?;
-            if !modulus_matches.is_true() {
+            if !modulus_matches.is_success() {
                 continue;
             }
             let complement_starts_at_modulus = self.verify_equal_fact_as_builtin_premise(
@@ -383,7 +383,7 @@ impl Runtime {
                 ),
                 builtin_state,
             )?;
-            if !complement_starts_at_modulus.is_true() {
+            if !complement_starts_at_modulus.is_success() {
                 continue;
             }
             let inner_modulus_matches = self.verify_equal_fact_as_builtin_premise(
@@ -394,7 +394,7 @@ impl Runtime {
                 ),
                 builtin_state,
             )?;
-            if !inner_modulus_matches.is_true() {
+            if !inner_modulus_matches.is_success() {
                 continue;
             }
             let dividend_matches = self.verify_equal_fact_as_builtin_premise(
@@ -405,7 +405,7 @@ impl Runtime {
                 ),
                 builtin_state,
             )?;
-            if !dividend_matches.is_true() {
+            if !dividend_matches.is_success() {
                 continue;
             }
 
@@ -446,7 +446,7 @@ impl Runtime {
     pub fn try_verify_integer_mod_natural_power_rule(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -476,7 +476,7 @@ impl Runtime {
                 ),
                 builtin_state,
             )?;
-            if !outer_modulus_matches.is_true() {
+            if !outer_modulus_matches.is_success() {
                 continue;
             }
             let inner_modulus_matches = self.verify_equal_fact_as_builtin_premise(
@@ -487,7 +487,7 @@ impl Runtime {
                 ),
                 builtin_state,
             )?;
-            if !inner_modulus_matches.is_true() {
+            if !inner_modulus_matches.is_success() {
                 continue;
             }
             let base_matches = self.verify_equal_fact_as_builtin_premise(
@@ -498,7 +498,7 @@ impl Runtime {
                 ),
                 builtin_state,
             )?;
-            if !base_matches.is_true() {
+            if !base_matches.is_success() {
                 continue;
             }
             let exponent_matches = self.verify_equal_fact_as_builtin_premise(
@@ -509,7 +509,7 @@ impl Runtime {
                 ),
                 builtin_state,
             )?;
-            if !exponent_matches.is_true() {
+            if !exponent_matches.is_success() {
                 continue;
             }
 
@@ -545,7 +545,7 @@ impl Runtime {
                 line_file.clone(),
                 builtin_state,
             )?;
-            if !carrier_result.is_true() {
+            if !carrier_result.is_success() {
                 continue;
             }
 

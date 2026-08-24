@@ -109,7 +109,7 @@ impl Runtime {
     pub fn try_verify_order_semantics_builtin_rule(
         &mut self,
         atomic_fact: &AtomicFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         if let Some(result) =
             self.try_verify_positive_even_integer_greater_than_one(atomic_fact, builtin_state)?
@@ -132,7 +132,7 @@ impl Runtime {
     fn try_verify_positive_even_integer_greater_than_one(
         &mut self,
         atomic_fact: &AtomicFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some((left, integer, true)) = direct_positive_order_shape(atomic_fact) else {
             return Ok(None);
@@ -146,7 +146,7 @@ impl Runtime {
             InFact::new(integer.clone(), StandardSet::NPos.into(), line_file.clone()).into();
         let membership_result =
             self.verify_atomic_fact_as_builtin_rule_premise(&in_n_pos, builtin_state)?;
-        if !membership_result.is_true() {
+        if !membership_result.is_success() {
             return Ok(None);
         }
 
@@ -156,7 +156,7 @@ impl Runtime {
         let even_fact: AtomicFact = EqualFact::new(remainder, zero, line_file).into();
         let even_result =
             self.verify_atomic_fact_as_builtin_rule_premise(&even_fact, builtin_state)?;
-        if !even_result.is_true() {
+        if !even_result.is_success() {
             return Ok(None);
         }
 
@@ -175,7 +175,7 @@ impl Runtime {
     fn try_verify_order_transitivity_builtin_rule(
         &mut self,
         atomic_fact: &AtomicFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some((target_left, target_right, target_is_strict)) =
             direct_positive_order_shape(atomic_fact)
@@ -237,7 +237,7 @@ impl Runtime {
                     self.verify_non_equational_atomic_fact_with_known_atomic_facts(first)?;
                 let second_result =
                     self.verify_non_equational_atomic_fact_with_known_atomic_facts(second)?;
-                if !first_result.is_true() || !second_result.is_true() {
+                if !first_result.is_success() || !second_result.is_success() {
                     continue;
                 }
                 steps.push(first_result);
@@ -279,7 +279,7 @@ impl Runtime {
             .into();
             let member_result =
                 self.verify_known_or_concrete_finite_set_membership(&member_fact)?;
-            if member_result.is_true() {
+            if member_result.is_success() {
                 return Ok(Some(
                     SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                         atomic_fact.clone().into(),
@@ -295,7 +295,7 @@ impl Runtime {
             let equality_result = self.verify_equal_fact_by_known_equality(
                 &EqualFact::new_from_refs(&fact.right, &maximum_obj, fact.line_file.clone()),
             );
-            if !equality_result.is_true() {
+            if !equality_result.is_success() {
                 continue;
             }
             let member_fact: AtomicFact = InFact::new(
@@ -306,7 +306,7 @@ impl Runtime {
             .into();
             let member_result =
                 self.verify_known_or_concrete_finite_set_membership(&member_fact)?;
-            if member_result.is_true() {
+            if member_result.is_success() {
                 return Ok(Some(
                     SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                         atomic_fact.clone().into(),
@@ -327,7 +327,7 @@ impl Runtime {
             .into();
             let member_result =
                 self.verify_known_or_concrete_finite_set_membership(&member_fact)?;
-            if member_result.is_true() {
+            if member_result.is_success() {
                 return Ok(Some(
                     SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                         atomic_fact.clone().into(),
@@ -343,7 +343,7 @@ impl Runtime {
             let equality_result = self.verify_equal_fact_by_known_equality(
                 &EqualFact::new_from_refs(&fact.left, &minimum_obj, fact.line_file.clone()),
             );
-            if !equality_result.is_true() {
+            if !equality_result.is_success() {
                 continue;
             }
             let member_fact: AtomicFact = InFact::new(
@@ -354,7 +354,7 @@ impl Runtime {
             .into();
             let member_result =
                 self.verify_known_or_concrete_finite_set_membership(&member_fact)?;
-            if member_result.is_true() {
+            if member_result.is_success() {
                 return Ok(Some(
                     SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                         atomic_fact.clone().into(),
@@ -374,7 +374,7 @@ impl Runtime {
         member_fact: &AtomicFact,
     ) -> Result<StmtResult, RuntimeError> {
         let known = self.verify_non_equational_atomic_fact_with_known_atomic_facts(member_fact)?;
-        if known.is_true() {
+        if known.is_success() {
             return Ok(known);
         }
         let AtomicFact::InFact(in_fact) = member_fact else {
@@ -442,7 +442,7 @@ impl Runtime {
     fn try_verify_integer_successor_predecessor_builtin_rule(
         &mut self,
         atomic_fact: &AtomicFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some(AtomicFact::LessEqualFact(fact)) =
             normalize_positive_order_atomic_fact(atomic_fact)
@@ -466,7 +466,7 @@ impl Runtime {
                     .into();
                     let strict_result =
                         self.verify_atomic_fact_as_builtin_rule_premise(&strict, builtin_state)?;
-                    if strict_result.is_true() {
+                    if strict_result.is_success() {
                         steps.push(strict_result);
                         return Ok(Some(
                             SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
@@ -495,7 +495,7 @@ impl Runtime {
             .into();
             let strict_result =
                 self.verify_atomic_fact_as_builtin_rule_premise(&strict, builtin_state)?;
-            if strict_result.is_true() {
+            if strict_result.is_success() {
                 steps.push(strict_result);
                 return Ok(Some(
                     SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
@@ -520,7 +520,7 @@ impl Runtime {
                 LessFact::new(predecessor, fact.right.clone(), fact.line_file.clone()).into();
             let strict_result =
                 self.verify_atomic_fact_as_builtin_rule_premise(&strict, builtin_state)?;
-            if strict_result.is_true() {
+            if strict_result.is_success() {
                 steps.push(strict_result);
                 return Ok(Some(
                     SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
@@ -545,7 +545,7 @@ impl Runtime {
                 LessFact::new(fact.left.clone(), successor, fact.line_file.clone()).into();
             let strict_result =
                 self.verify_atomic_fact_as_builtin_rule_premise(&strict, builtin_state)?;
-            if strict_result.is_true() {
+            if strict_result.is_success() {
                 steps.push(strict_result);
                 return Ok(Some(
                     SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
@@ -566,7 +566,7 @@ impl Runtime {
     pub fn try_verify_integer_singleton_interval_equality_builtin_rule(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;

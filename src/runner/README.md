@@ -24,14 +24,15 @@
 | A successful wrapper with diagnostic text inside `trace` | Success is decided from top-level `ok`, not by searching the nested string. |
 
 ```text
-run target
+run_runner(RunnerRequest)
+  -> pipeline::run(RunRequest)
   -> collect (ok, statement-result trace)
   -> wrap target metadata, error, and trace once
+  -> optionally attach structured pipeline_trace
   -> return wrapper JSON and the same boolean as the process status
 ```
 
-Start with [`target_execution.rs`](target_execution.rs); for example,
-`run_runner_on_source` executes one target and `runner_output_from_trace`
-constructs the wrapper shown above. File targets use the pipeline-owned
-`resolve_source_file_path`; `runner::resolve_litex_file_path` remains only as a
-compatibility name for that same function.
+Start with [`target_execution.rs`](target_execution.rs). `run_runner` is the only
+runner entry; code, file, and repository differences live in
+`RunRequest.target`, while strictness, language, isolation, output style, and
+pipeline tracing live in `RunRequest.options`.

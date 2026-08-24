@@ -18,7 +18,7 @@ impl Runtime {
     pub fn verify_order_algebra_structural_builtin_rule(
         &mut self,
         atomic_fact: &AtomicFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some(norm) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(None);
@@ -35,7 +35,7 @@ impl Runtime {
     fn verify_order_subgoal(
         &mut self,
         fact: AtomicFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<StmtResult, RuntimeError> {
         match fact {
             AtomicFact::LessFact(_) | AtomicFact::LessEqualFact(_) => {
@@ -67,7 +67,7 @@ impl Runtime {
         &mut self,
         obj: &Obj,
         lf: &LineFile,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<StmtResult, RuntimeError> {
         let in_n_pos: AtomicFact =
             InFact::new(obj.clone(), StandardSet::NPos.into(), lf.clone()).into();
@@ -81,7 +81,7 @@ impl Runtime {
         exponent: &Obj,
         lf: &LineFile,
         allow_strict_recursion: bool,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
         let positive_real_memberships: [AtomicFact; 3] = [
             InFact::new(left_base.clone(), StandardSet::RPos.into(), lf.clone()).into(),
@@ -119,7 +119,7 @@ impl Runtime {
             lf.clone(),
             builtin_state,
         )?;
-        Ok(result.is_true().then_some(vec![result]))
+        Ok(result.is_success().then_some(vec![result]))
     }
 
     fn obj_is_nonnegative_integer_number(obj: &Obj) -> bool {
@@ -176,14 +176,14 @@ impl Runtime {
         &mut self,
         exp: &Obj,
         lf: &LineFile,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
         if Self::obj_is_positive_even_integer_number(exp) {
             return Ok(Some(Vec::new()));
         }
         let mut steps = Vec::new();
         let n_pos_result = self.verify_obj_in_n_pos_subgoal(exp, lf, builtin_state)?;
-        if !n_pos_result.is_true() {
+        if !n_pos_result.is_success() {
             return Ok(None);
         }
         steps.push(n_pos_result);
@@ -193,7 +193,7 @@ impl Runtime {
         let even_fact: AtomicFact = EqualFact::new(mod_obj, zero, lf.clone()).into();
         let even_result =
             self.verify_atomic_fact_as_builtin_rule_premise(&even_fact, builtin_state)?;
-        if even_result.is_true() {
+        if even_result.is_success() {
             steps.push(even_result);
             return Ok(Some(steps));
         }
@@ -205,14 +205,14 @@ impl Runtime {
         &mut self,
         exp: &Obj,
         lf: &LineFile,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
         if Self::obj_is_positive_odd_integer_number(exp) {
             return Ok(Some(Vec::new()));
         }
         let mut steps = Vec::new();
         let n_pos_result = self.verify_obj_in_n_pos_subgoal(exp, lf, builtin_state)?;
-        if !n_pos_result.is_true() {
+        if !n_pos_result.is_success() {
             return Ok(None);
         }
         steps.push(n_pos_result);
@@ -224,7 +224,7 @@ impl Runtime {
             &one,
             lf.clone(),
         ));
-        if odd_result.is_true() {
+        if odd_result.is_success() {
             steps.push(odd_result);
             return Ok(Some(steps));
         }
@@ -278,7 +278,7 @@ impl Runtime {
         right_pow: &Pow,
         lf: &LineFile,
         atomic_fact: &AtomicFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         if left_pow.exponent.to_string() != right_pow.exponent.to_string() {
             return Ok(None);
@@ -385,7 +385,7 @@ impl Runtime {
         &mut self,
         f: &LessEqualFact,
         atomic_fact: &AtomicFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let candidates = self.collect_known_power_le_candidates(&f.left, &f.right);
         for candidate in candidates {
@@ -401,7 +401,7 @@ impl Runtime {
                 &f.line_file,
                 builtin_state,
             )?;
-            if !exponent_result.is_true() {
+            if !exponent_result.is_success() {
                 continue;
             }
 
@@ -414,7 +414,8 @@ impl Runtime {
                 self.verify_non_equational_atomic_fact_with_known_atomic_facts(&candidate)?;
             let left_result = self.verify_order_subgoal(left_nonnegative, builtin_state)?;
             let right_result = self.verify_order_subgoal(right_nonnegative, builtin_state)?;
-            if power_le_result.is_true() && left_result.is_true() && right_result.is_true() {
+            if power_le_result.is_success() && left_result.is_success() && right_result.is_success()
+            {
                 return Ok(Some(StmtResult::from(
                     SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                         atomic_fact.clone().into(),
@@ -433,7 +434,7 @@ impl Runtime {
         &mut self,
         f: &LessEqualFact,
         atomic_fact: &AtomicFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let candidates = self.collect_known_power_le_candidates(&f.left, &f.right);
         for candidate in candidates {
@@ -457,7 +458,7 @@ impl Runtime {
 
             let power_result =
                 self.verify_non_equational_atomic_fact_with_known_atomic_facts(&candidate)?;
-            if !power_result.is_true() {
+            if !power_result.is_success() {
                 continue;
             }
             steps.push(power_result);
@@ -480,7 +481,7 @@ impl Runtime {
         right_pow: &Pow,
         lf: &LineFile,
         atomic_fact: &AtomicFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         if left_pow.exponent.to_string() != right_pow.exponent.to_string() {
             return Ok(None);
@@ -499,7 +500,7 @@ impl Runtime {
         let subgoal: AtomicFact =
             LessEqualFact::new(left_base.clone(), right_base.clone(), lf.clone()).into();
         let result = self.verify_order_subgoal(subgoal, builtin_state)?;
-        if !result.is_true() {
+        if !result.is_success() {
             return Ok(None);
         }
         step_results.push(result);
@@ -521,7 +522,7 @@ impl Runtime {
         right_pow: &Pow,
         lf: &LineFile,
         atomic_fact: &AtomicFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         if left_pow.exponent.to_string() != right_pow.exponent.to_string() {
             return Ok(None);
@@ -563,7 +564,7 @@ impl Runtime {
         right_pow: &Pow,
         lf: &LineFile,
         atomic_fact: &AtomicFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         if left_pow.exponent.to_string() != right_pow.exponent.to_string() {
             return Ok(None);
@@ -583,7 +584,7 @@ impl Runtime {
         )
         .into();
         let abs_result = self.verify_non_equational_atomic_fact_with_known_atomic_facts(&abs_le)?;
-        if !abs_result.is_true() {
+        if !abs_result.is_success() {
             return Ok(None);
         }
         step_results.push(abs_result);
@@ -603,7 +604,7 @@ impl Runtime {
         right_pow: &Pow,
         lf: &LineFile,
         atomic_fact: &AtomicFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         if left_pow.exponent.to_string() != right_pow.exponent.to_string() {
             return Ok(None);
@@ -623,7 +624,7 @@ impl Runtime {
         )
         .into();
         let abs_result = self.verify_non_equational_atomic_fact_with_known_atomic_facts(&abs_lt)?;
-        if !abs_result.is_true() {
+        if !abs_result.is_success() {
             return Ok(None);
         }
         step_results.push(abs_result);
@@ -642,7 +643,7 @@ impl Runtime {
         &mut self,
         f: &LessEqualFact,
         atomic_fact: &AtomicFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (Obj::Abs(left_abs), Obj::Abs(right_abs)) = (&f.left, &f.right) else {
             return Ok(None);
@@ -682,7 +683,7 @@ impl Runtime {
                 self.verify_atomic_fact_as_builtin_rule_premise(&y_in_r, builtin_state)?;
             let power_result =
                 self.verify_non_equational_atomic_fact_with_known_atomic_facts(&candidate)?;
-            if !x_result.is_true() || !y_result.is_true() || !power_result.is_true() {
+            if !x_result.is_success() || !y_result.is_success() || !power_result.is_success() {
                 continue;
             }
             steps.push(x_result);
@@ -708,7 +709,7 @@ impl Runtime {
         right_pow: &Pow,
         lf: &LineFile,
         atomic_fact: &AtomicFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         if !Self::objs_have_same_display(left_pow.exponent.as_ref(), right_pow.exponent.as_ref()) {
             return Ok(None);
@@ -746,7 +747,7 @@ impl Runtime {
             lf.clone(),
             builtin_state,
         )?;
-        if !premise_result.is_true() {
+        if !premise_result.is_success() {
             return Ok(None);
         }
         let step_results = vec![premise_result];
@@ -766,7 +767,7 @@ impl Runtime {
         &mut self,
         f: &LessFact,
         atomic_fact: &AtomicFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let candidates = self.collect_known_power_lt_candidates(&f.left, &f.right);
         for candidate in candidates {
@@ -790,7 +791,7 @@ impl Runtime {
 
             let power_result =
                 self.verify_non_equational_atomic_fact_with_known_atomic_facts(&candidate)?;
-            if !power_result.is_true() {
+            if !power_result.is_success() {
                 continue;
             }
             steps.push(power_result);
@@ -813,7 +814,7 @@ impl Runtime {
         right_pow: &Pow,
         lf: &LineFile,
         atomic_fact: &AtomicFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         if left_pow.exponent.to_string() != right_pow.exponent.to_string() {
             return Ok(None);
@@ -832,7 +833,7 @@ impl Runtime {
         let subgoal: AtomicFact =
             LessFact::new(left_base.clone(), right_base.clone(), lf.clone()).into();
         let result = self.verify_order_subgoal(subgoal, builtin_state)?;
-        if !result.is_true() {
+        if !result.is_success() {
             return Ok(None);
         }
         step_results.push(result);
@@ -853,7 +854,7 @@ impl Runtime {
         pow: &Pow,
         lf: &LineFile,
         atomic_fact: &AtomicFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some(mut step_results) =
             self.verify_odd_exponent_in_n_pos_subgoal(pow.exponent.as_ref(), lf, builtin_state)?
@@ -865,7 +866,7 @@ impl Runtime {
         let base_nonpositive: AtomicFact =
             LessEqualFact::new(pow.base.as_ref().clone(), zero, lf.clone()).into();
         let base_result = self.verify_order_subgoal(base_nonpositive, builtin_state)?;
-        if !base_result.is_true() {
+        if !base_result.is_success() {
             return Ok(None);
         }
         step_results.push(base_result);
@@ -886,7 +887,7 @@ impl Runtime {
         pow: &Pow,
         lf: &LineFile,
         atomic_fact: &AtomicFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some(mut step_results) =
             self.verify_odd_exponent_in_n_pos_subgoal(pow.exponent.as_ref(), lf, builtin_state)?
@@ -898,7 +899,7 @@ impl Runtime {
         let base_negative: AtomicFact =
             LessFact::new(pow.base.as_ref().clone(), zero, lf.clone()).into();
         let base_result = self.verify_order_subgoal(base_negative, builtin_state)?;
-        if !base_result.is_true() {
+        if !base_result.is_success() {
             return Ok(None);
         }
         step_results.push(base_result);
@@ -921,7 +922,7 @@ impl Runtime {
         right_pow: &Pow,
         lf: &LineFile,
         atomic_fact: &AtomicFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         if left_pow.exponent.to_string() != right_pow.exponent.to_string() {
             return Ok(None);
@@ -967,7 +968,7 @@ impl Runtime {
         atomic_fact: &AtomicFact,
         msg_nonneg: &str,
         msg_nonpos: &str,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let z = Self::literal_zero_obj();
         let premise_result = self.verify_builtin_rule_premise_alternatives(
@@ -984,7 +985,7 @@ impl Runtime {
             lf.clone(),
             builtin_state,
         )?;
-        if premise_result.is_true() {
+        if premise_result.is_success() {
             return Ok(Some(StmtResult::from(
                 SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                     atomic_fact.clone().into(),
@@ -1006,7 +1007,7 @@ impl Runtime {
         atomic_fact: &AtomicFact,
         msg_pos: &str,
         msg_neg: &str,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let z = Self::literal_zero_obj();
         let premise_result = self.verify_builtin_rule_premise_alternatives(
@@ -1023,7 +1024,7 @@ impl Runtime {
             lf.clone(),
             builtin_state,
         )?;
-        if premise_result.is_true() {
+        if premise_result.is_success() {
             return Ok(Some(StmtResult::from(
                 SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                     atomic_fact.clone().into(),
@@ -1045,7 +1046,7 @@ impl Runtime {
         r2: &Obj,
         lf: &LineFile,
         atomic_fact: &AtomicFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let z = Self::literal_zero_obj();
         let nonnegative = vec![
@@ -1065,7 +1066,7 @@ impl Runtime {
             lf.clone(),
             builtin_state,
         )?;
-        if premise_result.is_true() {
+        if premise_result.is_success() {
             return Ok(Some(StmtResult::from(
                 SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                     atomic_fact.clone().into(),
@@ -1086,7 +1087,7 @@ impl Runtime {
         right: &Obj,
         lf: &LineFile,
         atomic_fact: &AtomicFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let z = Self::literal_zero_obj();
         let premise_result = self.verify_builtin_rule_premise_alternatives(
@@ -1103,7 +1104,7 @@ impl Runtime {
             lf.clone(),
             builtin_state,
         )?;
-        if premise_result.is_true() {
+        if premise_result.is_success() {
             return Ok(Some(StmtResult::from(
                 SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                     atomic_fact.clone().into(),
@@ -1121,7 +1122,7 @@ impl Runtime {
         right: &Obj,
         lf: &LineFile,
         atomic_fact: &AtomicFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let z = Self::literal_zero_obj();
         let premise_result = self.verify_builtin_rule_premise_alternatives(
@@ -1138,7 +1139,7 @@ impl Runtime {
             lf.clone(),
             builtin_state,
         )?;
-        if premise_result.is_true() {
+        if premise_result.is_success() {
             return Ok(Some(StmtResult::from(
                 SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                     atomic_fact.clone().into(),
@@ -1157,7 +1158,7 @@ impl Runtime {
         right: &Obj,
         lf: &LineFile,
         atomic_fact: &AtomicFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let z = Self::literal_zero_obj();
         let premise_result = self.verify_builtin_rule_premise_alternatives(
@@ -1174,7 +1175,7 @@ impl Runtime {
             lf.clone(),
             builtin_state,
         )?;
-        if premise_result.is_true() {
+        if premise_result.is_success() {
             return Ok(Some(StmtResult::from(
                 SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                     atomic_fact.clone().into(),
@@ -1192,7 +1193,7 @@ impl Runtime {
         right: &Obj,
         lf: &LineFile,
         atomic_fact: &AtomicFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let z = Self::literal_zero_obj();
         let alternatives = vec![
@@ -1215,7 +1216,7 @@ impl Runtime {
         ];
         let premise_result =
             self.verify_builtin_rule_premise_alternatives(alternatives, lf.clone(), builtin_state)?;
-        if premise_result.is_true() {
+        if premise_result.is_success() {
             return Ok(Some(StmtResult::from(
                 SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                     atomic_fact.clone().into(),
@@ -1235,7 +1236,7 @@ impl Runtime {
         &mut self,
         f: &LessEqualFact,
         atomic_fact: &AtomicFact,
-        verify_state: &UseContextVerifyState,
+        verify_state: &ProofSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (Obj::Sum(left_sum), Obj::Sum(right_sum)) = (&f.left, &f.right) else {
             return Ok(None);
@@ -1250,7 +1251,7 @@ impl Runtime {
             .into(),
             verify_state,
         )?;
-        if !start_result.is_true() {
+        if !start_result.is_success() {
             return Ok(None);
         }
         let end_result = self.verify_atomic_fact(
@@ -1262,7 +1263,7 @@ impl Runtime {
             .into(),
             verify_state,
         )?;
-        if !end_result.is_true() {
+        if !end_result.is_success() {
             return Ok(None);
         }
         let left_param_set = Self::unary_anonymous_function_param_set(left_sum.func.as_ref());
@@ -1273,7 +1274,7 @@ impl Runtime {
                     &EqualFact::new(left_set.clone(), right_set, f.line_file.clone()).into(),
                     verify_state,
                 )?;
-                if !set_result.is_true() {
+                if !set_result.is_success() {
                     return Ok(None);
                 }
                 left_set
@@ -1313,9 +1314,9 @@ impl Runtime {
             rt.define_params_with_type(&params_def, false, ParamObjType::Forall)?;
             rt.store_fact_without_forall_coverage_check_and_infer(dom_lo)?;
             rt.store_fact_without_forall_coverage_check_and_infer(dom_hi)?;
-            rt.verify_atomic_fact(&pointwise_fact, &UseContextVerifyState::new(0, true))
+            rt.verify_atomic_fact(&pointwise_fact, &ProofSearchState::after_well_definedness())
         })?;
-        if !pointwise_result.is_true() {
+        if !pointwise_result.is_success() {
             return Ok(None);
         }
 
@@ -1335,7 +1336,7 @@ impl Runtime {
         &mut self,
         f: &LessEqualFact,
         atomic_fact: &AtomicFact,
-        verify_state: &UseContextVerifyState,
+        verify_state: &ProofSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (Obj::SumOfFiniteSet(left_sum), Obj::SumOfFiniteSet(right_sum)) = (&f.left, &f.right)
         else {
@@ -1351,7 +1352,7 @@ impl Runtime {
             .into(),
             verify_state,
         )?;
-        if !set_result.is_true() {
+        if !set_result.is_success() {
             return Ok(None);
         }
 
@@ -1377,7 +1378,7 @@ impl Runtime {
             rt.define_params_with_type(&params_def, false, ParamObjType::Forall)?;
             rt.verify_atomic_fact(&pointwise_fact, verify_state)
         })?;
-        if !pointwise_result.is_true() {
+        if !pointwise_result.is_success() {
             return Ok(None);
         }
 
@@ -1397,7 +1398,7 @@ impl Runtime {
         &mut self,
         f: &LessEqualFact,
         atomic_fact: &AtomicFact,
-        verify_state: &UseContextVerifyState,
+        verify_state: &ProofSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Obj::SumOfFiniteSet(sum) = &f.right else {
             return Ok(None);
@@ -1420,14 +1421,14 @@ impl Runtime {
             &EqualFact::new(f.left.clone(), summand, f.line_file.clone()).into(),
             verify_state,
         )?;
-        if !summand_result.is_true() {
+        if !summand_result.is_success() {
             return Ok(None);
         }
 
         let member_fact: AtomicFact =
             InFact::new(member, sum.set.as_ref().clone(), f.line_file.clone()).into();
         let member_result = self.verify_atomic_fact(&member_fact, verify_state)?;
-        if !member_result.is_true() {
+        if !member_result.is_success() {
             return Ok(None);
         }
 
@@ -1447,7 +1448,7 @@ impl Runtime {
             rt.define_params_with_type(&params_def, false, ParamObjType::Forall)?;
             rt.verify_atomic_fact(&nonnegative_fact, verify_state)
         })?;
-        if !nonnegative_result.is_true() {
+        if !nonnegative_result.is_success() {
             return Ok(None);
         }
 
@@ -1464,12 +1465,12 @@ impl Runtime {
         &mut self,
         f: &LessEqualFact,
         atomic_fact: &AtomicFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let lf = &f.line_file;
         let z = Self::literal_zero_obj();
         let one = Self::literal_one_obj();
-        let structural_state = UseContextVerifyState::new(0, true);
+        let structural_state = ProofSearchState::after_well_definedness();
 
         if let Some(result) = self.try_less_equal_sum_pointwise_on_same_integer_range(
             f,
@@ -1512,10 +1513,10 @@ impl Runtime {
                     &positive_denominator,
                     builtin_state,
                 )?;
-                if positive_result.is_true() {
+                if positive_result.is_success() {
                     let numerator_result =
                         self.verify_order_subgoal(numerator_bound, builtin_state)?;
-                    if numerator_result.is_true() {
+                    if numerator_result.is_success() {
                         return Ok(Some(StmtResult::from(
                             SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                                 atomic_fact.clone().into(),
@@ -1538,10 +1539,10 @@ impl Runtime {
                     &negative_denominator,
                     builtin_state,
                 )?;
-                if negative_result.is_true() {
+                if negative_result.is_success() {
                     let numerator_result =
                         self.verify_order_subgoal(reversed_numerator_bound, builtin_state)?;
-                    if numerator_result.is_true() {
+                    if numerator_result.is_success() {
                         return Ok(Some(StmtResult::from(
                             SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                                 atomic_fact.clone().into(),
@@ -1636,7 +1637,7 @@ impl Runtime {
                 let subgoal: AtomicFact =
                     LessEqualFact::new(left_remaining, right_remaining, lf.clone()).into();
                 let result = self.verify_order_subgoal(subgoal, builtin_state)?;
-                if result.is_true() {
+                if result.is_success() {
                     return Ok(Some(StmtResult::from(
                         SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             atomic_fact.clone().into(),
@@ -1661,7 +1662,7 @@ impl Runtime {
             let order_result = self.verify_order_subgoal(order_subgoal, builtin_state)?;
             let nonnegative_result =
                 self.verify_order_subgoal(nonnegative_subtractor, builtin_state)?;
-            if order_result.is_true() && nonnegative_result.is_true() {
+            if order_result.is_success() && nonnegative_result.is_success() {
                 return Ok(Some(StmtResult::from(
                     SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         atomic_fact.clone().into(),
@@ -1680,7 +1681,7 @@ impl Runtime {
             let shifted_subgoal: AtomicFact =
                 LessEqualFact::new(sub.left.as_ref().clone(), shifted_right, lf.clone()).into();
             let shifted_result = self.verify_order_subgoal(shifted_subgoal, builtin_state)?;
-            if shifted_result.is_true() {
+            if shifted_result.is_success() {
                 return Ok(Some(StmtResult::from(
                     SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                         atomic_fact.clone().into(),
@@ -1703,7 +1704,7 @@ impl Runtime {
             if let Some(b) = b_opt {
                 let g0 = LessEqualFact::new(z.clone(), b, lf.clone()).into();
                 let r0 = self.verify_order_subgoal(g0, builtin_state)?;
-                if r0.is_true() {
+                if r0.is_success() {
                     return Ok(Some(StmtResult::from(
                         SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             atomic_fact.clone().into(),
@@ -1730,7 +1731,7 @@ impl Runtime {
                 lf.clone(),
                 builtin_state,
             )?;
-            if premise_result.is_true() {
+            if premise_result.is_success() {
                 return Ok(Some(StmtResult::from(
                     SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                         atomic_fact.clone().into(),
@@ -1748,7 +1749,7 @@ impl Runtime {
             let shifted_subgoal: AtomicFact =
                 LessEqualFact::new(shifted_left, sub.left.as_ref().clone(), lf.clone()).into();
             let shifted_result = self.verify_order_subgoal(shifted_subgoal, builtin_state)?;
-            if shifted_result.is_true() {
+            if shifted_result.is_success() {
                 return Ok(Some(StmtResult::from(
                     SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                         atomic_fact.clone().into(),
@@ -1765,7 +1766,7 @@ impl Runtime {
                         LessEqualFact::new(shifted_left, sub.left.as_ref().clone(), lf.clone())
                             .into();
                     let result = self.verify_order_subgoal(subgoal, builtin_state)?;
-                    if result.is_true() {
+                    if result.is_success() {
                         return Ok(Some(StmtResult::from(
                             SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                                 atomic_fact.clone().into(),
@@ -1802,7 +1803,7 @@ impl Runtime {
                     LessEqualFact::new(add.right.as_ref().clone(), z.clone(), lf.clone()).into();
                 let left_result = self.verify_order_subgoal(left_nonpositive, builtin_state)?;
                 let right_result = self.verify_order_subgoal(right_nonpositive, builtin_state)?;
-                if left_result.is_true() && right_result.is_true() {
+                if left_result.is_success() && right_result.is_success() {
                     return Ok(Some(StmtResult::from(
                         SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                             atomic_fact.clone().into(),
@@ -1854,11 +1855,11 @@ impl Runtime {
                 let g0 = LessEqualFact::new(z.clone(), f.left.clone(), lf.clone()).into();
                 let g1 = LessEqualFact::new(one, m.left.as_ref().clone(), lf.clone()).into();
                 let r0 = self.verify_order_subgoal(g0, builtin_state)?;
-                if !r0.is_true() {
+                if !r0.is_success() {
                     return Ok(None);
                 }
                 let r1 = self.verify_order_subgoal(g1, builtin_state)?;
-                if !r1.is_true() {
+                if !r1.is_success() {
                     return Ok(None);
                 }
                 return Ok(Some(StmtResult::from(
@@ -1927,11 +1928,11 @@ impl Runtime {
             )
             .into();
             let r1 = self.verify_order_subgoal(g1, builtin_state)?;
-            if !r1.is_true() {
+            if !r1.is_success() {
                 return Ok(None);
             }
             let r2 = self.verify_order_subgoal(g2, builtin_state)?;
-            if !r2.is_true() {
+            if !r2.is_success() {
                 return Ok(None);
             }
             return Ok(Some(StmtResult::from(
@@ -1962,11 +1963,11 @@ impl Runtime {
             )
             .into();
             let r1 = self.verify_order_subgoal(g1, builtin_state)?;
-            if !r1.is_true() {
+            if !r1.is_success() {
                 return Ok(None);
             }
             let r2 = self.verify_order_subgoal(g2, builtin_state)?;
-            if !r2.is_true() {
+            if !r2.is_success() {
                 return Ok(None);
             }
             return Ok(Some(StmtResult::from(
@@ -1987,7 +1988,7 @@ impl Runtime {
         &mut self,
         f: &LessEqualFact,
         atomic_fact: &AtomicFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Obj::Div(quotient) = &f.right else {
             return Ok(None);
@@ -2004,7 +2005,7 @@ impl Runtime {
         .into();
         let positive_result =
             self.verify_atomic_fact_as_builtin_rule_premise(&positive_denominator, builtin_state)?;
-        if !positive_result.is_true() {
+        if !positive_result.is_success() {
             return Ok(None);
         }
 
@@ -2020,7 +2021,7 @@ impl Runtime {
         ));
         let product_bound_result =
             self.verify_builtin_rule_premise(&product_bound_premise, builtin_state)?;
-        if !product_bound_result.is_true() {
+        if !product_bound_result.is_success() {
             return Ok(None);
         }
 
@@ -2039,7 +2040,7 @@ impl Runtime {
         &mut self,
         f: &LessEqualFact,
         atomic_fact: &AtomicFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Obj::Mul(product) = &f.right else {
             return Ok(None);
@@ -2065,7 +2066,7 @@ impl Runtime {
             .into();
             let positive_result = self
                 .verify_atomic_fact_as_builtin_rule_premise(&positive_denominator, builtin_state)?;
-            if !positive_result.is_true() {
+            if !positive_result.is_success() {
                 continue;
             }
 
@@ -2073,7 +2074,7 @@ impl Runtime {
             let quotient_bound: AtomicFact =
                 LessEqualFact::new(quotient, other_factor, line_file.clone()).into();
             let quotient_bound_result = self.verify_order_subgoal(quotient_bound, builtin_state)?;
-            if quotient_bound_result.is_true() {
+            if quotient_bound_result.is_success() {
                 return Ok(Some(StmtResult::from(
                     SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                         atomic_fact.clone().into(),
@@ -2091,7 +2092,7 @@ impl Runtime {
         &mut self,
         f: &LessFact,
         atomic_fact: &AtomicFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let lf = &f.line_file;
         let z = Self::literal_zero_obj();
@@ -2112,10 +2113,10 @@ impl Runtime {
                 .into();
                 let positive_result =
                     self.verify_order_subgoal(positive_denominator, builtin_state)?;
-                if positive_result.is_true() {
+                if positive_result.is_success() {
                     let numerator_result =
                         self.verify_order_subgoal(numerator_bound, builtin_state)?;
-                    if numerator_result.is_true() {
+                    if numerator_result.is_success() {
                         return Ok(Some(StmtResult::from(
                             SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                                 atomic_fact.clone().into(),
@@ -2136,10 +2137,10 @@ impl Runtime {
                 .into();
                 let negative_result =
                     self.verify_order_subgoal(negative_denominator, builtin_state)?;
-                if negative_result.is_true() {
+                if negative_result.is_success() {
                     let numerator_result =
                         self.verify_order_subgoal(reversed_numerator_bound, builtin_state)?;
-                    if numerator_result.is_true() {
+                    if numerator_result.is_success() {
                         return Ok(Some(StmtResult::from(
                             SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                                 atomic_fact.clone().into(),
@@ -2206,7 +2207,7 @@ impl Runtime {
                 let subgoal: AtomicFact =
                     LessFact::new(left_remaining, right_remaining, lf.clone()).into();
                 let result = self.verify_order_subgoal(subgoal, builtin_state)?;
-                if result.is_true() {
+                if result.is_success() {
                     return Ok(Some(StmtResult::from(
                         SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             atomic_fact.clone().into(),
@@ -2238,7 +2239,7 @@ impl Runtime {
             .into();
             let r1 = self.verify_order_subgoal(g1s, builtin_state)?;
             let r2 = self.verify_atomic_fact_as_builtin_rule_premise(&g2s, builtin_state)?;
-            if r1.is_true() && r2.is_true() {
+            if r1.is_success() && r2.is_success() {
                 return Ok(Some(StmtResult::from(
                     SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                         atomic_fact.clone().into(),
@@ -2264,7 +2265,7 @@ impl Runtime {
             .into();
             let r3 = self.verify_atomic_fact_as_builtin_rule_premise(&g1w, builtin_state)?;
             let r4 = self.verify_order_subgoal(g2w, builtin_state)?;
-            if r3.is_true() && r4.is_true() {
+            if r3.is_success() && r4.is_success() {
                 return Ok(Some(StmtResult::from(
                     SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                         atomic_fact.clone().into(),
@@ -2291,7 +2292,7 @@ impl Runtime {
                         &nonnegative_sub,
                         builtin_state,
                     )?;
-                    if r_pos.is_true() && r_sub.is_true() {
+                    if r_pos.is_success() && r_sub.is_success() {
                         return Ok(Some(StmtResult::from(
                             SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                                 atomic_fact.clone().into(),
@@ -2318,7 +2319,7 @@ impl Runtime {
                 &nonnegative_subtractor,
                 builtin_state,
             )?;
-            if strict_order_result.is_true() && nonnegative_result.is_true() {
+            if strict_order_result.is_success() && nonnegative_result.is_success() {
                 return Ok(Some(StmtResult::from(
                     SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                         atomic_fact.clone().into(),
@@ -2337,7 +2338,7 @@ impl Runtime {
             let weak_order_result = self
                 .verify_atomic_fact_as_builtin_rule_premise(&weak_order_subgoal, builtin_state)?;
             let positive_result = self.verify_order_subgoal(positive_subtractor, builtin_state)?;
-            if weak_order_result.is_true() && positive_result.is_true() {
+            if weak_order_result.is_success() && positive_result.is_success() {
                 return Ok(Some(StmtResult::from(
                     SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                         atomic_fact.clone().into(),
@@ -2353,7 +2354,7 @@ impl Runtime {
             let shifted_subgoal: AtomicFact =
                 LessFact::new(sub.left.as_ref().clone(), shifted_right, lf.clone()).into();
             let shifted_result = self.verify_order_subgoal(shifted_subgoal, builtin_state)?;
-            if shifted_result.is_true() {
+            if shifted_result.is_success() {
                 return Ok(Some(StmtResult::from(
                     SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                         atomic_fact.clone().into(),
@@ -2376,7 +2377,7 @@ impl Runtime {
             if let Some(b) = b_opt {
                 let g0 = LessFact::new(z.clone(), b, lf.clone()).into();
                 let r0 = self.verify_order_subgoal(g0, builtin_state)?;
-                if r0.is_true() {
+                if r0.is_success() {
                     return Ok(Some(StmtResult::from(
                         SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                             atomic_fact.clone().into(),
@@ -2400,7 +2401,7 @@ impl Runtime {
                 lf.clone(),
                 builtin_state,
             )?;
-            if premise_result.is_true() {
+            if premise_result.is_success() {
                 return Ok(Some(StmtResult::from(
                     SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                         atomic_fact.clone().into(),
@@ -2419,7 +2420,7 @@ impl Runtime {
             let shifted_subgoal: AtomicFact =
                 LessFact::new(shifted_left, sub.left.as_ref().clone(), lf.clone()).into();
             let shifted_result = self.verify_order_subgoal(shifted_subgoal, builtin_state)?;
-            if shifted_result.is_true() {
+            if shifted_result.is_success() {
                 return Ok(Some(StmtResult::from(
                     SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                         atomic_fact.clone().into(),
@@ -2452,11 +2453,11 @@ impl Runtime {
                 let g_denom_gt_one =
                     LessFact::new(one.clone(), div.right.as_ref().clone(), lf.clone()).into();
                 let r_pos = self.verify_order_subgoal(g_pos, builtin_state)?;
-                if !r_pos.is_true() {
+                if !r_pos.is_success() {
                     return Ok(None);
                 }
                 let r_denom_gt_one = self.verify_order_subgoal(g_denom_gt_one, builtin_state)?;
-                if !r_denom_gt_one.is_true() {
+                if !r_denom_gt_one.is_success() {
                     return Ok(None);
                 }
                 return Ok(Some(StmtResult::from(
@@ -2488,7 +2489,7 @@ impl Runtime {
                     let negative_result = self.verify_order_subgoal(negative, builtin_state)?;
                     let nonpositive_result = self
                         .verify_atomic_fact_as_builtin_rule_premise(&nonpositive, builtin_state)?;
-                    if negative_result.is_true() && nonpositive_result.is_true() {
+                    if negative_result.is_success() && nonpositive_result.is_success() {
                         return Ok(Some(StmtResult::from(
                             SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                                 atomic_fact.clone().into(),
@@ -2542,11 +2543,11 @@ impl Runtime {
                 let g0 = LessFact::new(z.clone(), f.left.clone(), lf.clone()).into();
                 let g1 = LessFact::new(one, m.left.as_ref().clone(), lf.clone()).into();
                 let r0 = self.verify_order_subgoal(g0, builtin_state)?;
-                if !r0.is_true() {
+                if !r0.is_success() {
                     return Ok(None);
                 }
                 let r1 = self.verify_order_subgoal(g1, builtin_state)?;
-                if !r1.is_true() {
+                if !r1.is_success() {
                     return Ok(None);
                 }
                 return Ok(Some(StmtResult::from(
@@ -2605,7 +2606,7 @@ impl Runtime {
             .into();
             let r1 = self.verify_order_subgoal(g1s, builtin_state)?;
             let r2 = self.verify_order_subgoal(g2s, builtin_state)?;
-            if r1.is_true() && r2.is_true() {
+            if r1.is_success() && r2.is_success() {
                 return Ok(Some(StmtResult::from(
                     SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         atomic_fact.clone().into(),
@@ -2631,7 +2632,7 @@ impl Runtime {
             .into();
             let r3 = self.verify_order_subgoal(g1m, builtin_state)?;
             let r4 = self.verify_atomic_fact_as_builtin_rule_premise(&g2m, builtin_state)?;
-            if r3.is_true() && r4.is_true() {
+            if r3.is_success() && r4.is_success() {
                 return Ok(Some(StmtResult::from(
                     SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         atomic_fact.clone().into(),
@@ -2657,7 +2658,7 @@ impl Runtime {
             .into();
             let r5 = self.verify_atomic_fact_as_builtin_rule_premise(&g1w, builtin_state)?;
             let r6 = self.verify_order_subgoal(g2w, builtin_state)?;
-            if r5.is_true() && r6.is_true() {
+            if r5.is_success() && r6.is_success() {
                 return Ok(Some(StmtResult::from(
                     SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         atomic_fact.clone().into(),

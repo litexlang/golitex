@@ -301,12 +301,12 @@ forall z, w C:
         fn(x C) R {re(x)}(z) = fn(x C) R {re(w)}(z)
 "#;
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
+            runtime.start_isolated_source(
                 "native_complex_congruence_composes_with_structural_beta_reduction",
             );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
             assert!(
                 run_succeeded,
                 "complex constructors should use central structural congruence:\n{run_output}"
@@ -320,19 +320,15 @@ forall z, w C:
             );
 
             let mut negative_runtime = Runtime::new();
-            negative_runtime.new_file_path_new_env_new_name_scope(
+            negative_runtime.start_isolated_source(
                 "native_complex_congruence_does_not_invent_argument_equality",
             );
-            let (negative_results, negative_error) = run_source_code(
+            let (negative_results, negative_error) = execute_source(
                 "forall z, w C:\n    C_abs(z) = C_abs(w)",
                 &mut negative_runtime,
             );
-            let (negative_succeeded, negative_output) = render_run_source_code_output(
-                &negative_runtime,
-                &negative_results,
-                &negative_error,
-                false,
-            );
+            let (negative_succeeded, negative_output) =
+                render_run_output(&negative_runtime, &negative_results, &negative_error);
             assert!(
                 !negative_succeeded,
                 "structural congruence must require argument equality:\n{negative_output}"
@@ -573,7 +569,7 @@ fn complex_python_and_evaluator_paths_fail_explicitly() {
 
 fn run_complex_source(source_code: &str, label: &str) -> (bool, String) {
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(label);
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false)
+    runtime.start_isolated_source(label);
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    render_run_output(&runtime, &stmt_results, &runtime_error)
 }

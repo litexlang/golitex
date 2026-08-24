@@ -273,7 +273,7 @@ impl Environment {
             AtomicFact::EqualFact(equal_fact) => self.store_equality(&equal_fact),
             _ => {
                 let key: AtomicFactKey = atomic_fact.key();
-                let is_true = atomic_fact.is_true();
+                let positive_polarity = atomic_fact.has_positive_polarity();
                 let (arg_len, arg_key1, arg_key2) = {
                     let args = atomic_fact.args_ref();
                     let arg_key1 = args.first().map(|arg| arg.to_string());
@@ -284,36 +284,38 @@ impl Environment {
                     let arg_key: ObjString = arg_key1.expect("one argument key should exist");
                     if let Some(map) = self
                         .known_atomic_facts_with_1_arg
-                        .get_mut(&(key.clone(), is_true))
+                        .get_mut(&(key.clone(), positive_polarity))
                     {
                         map.insert(arg_key, atomic_fact);
                     } else {
-                        self.known_atomic_facts_with_1_arg
-                            .insert((key, is_true), HashMap::from([(arg_key, atomic_fact)]));
+                        self.known_atomic_facts_with_1_arg.insert(
+                            (key, positive_polarity),
+                            HashMap::from([(arg_key, atomic_fact)]),
+                        );
                     }
                 } else if arg_len == 2 {
                     let arg_key1: ObjString = arg_key1.expect("first argument key should exist");
                     let arg_key2: ObjString = arg_key2.expect("second argument key should exist");
                     if let Some(map) = self
                         .known_atomic_facts_with_2_args
-                        .get_mut(&(key.clone(), is_true))
+                        .get_mut(&(key.clone(), positive_polarity))
                     {
                         map.insert((arg_key1, arg_key2), atomic_fact);
                     } else {
                         self.known_atomic_facts_with_2_args.insert(
-                            (key, is_true),
+                            (key, positive_polarity),
                             HashMap::from([((arg_key1, arg_key2), atomic_fact)]),
                         );
                     }
                 } else {
                     if let Some(vec_ref) = self
                         .known_atomic_facts_with_0_or_more_than_2_args
-                        .get_mut(&(key.clone(), is_true))
+                        .get_mut(&(key.clone(), positive_polarity))
                     {
                         vec_ref.push(atomic_fact);
                     } else {
                         self.known_atomic_facts_with_0_or_more_than_2_args
-                            .insert((key, is_true), vec![atomic_fact]);
+                            .insert((key, positive_polarity), vec![atomic_fact]);
                     }
                 }
                 Ok(())
@@ -356,10 +358,10 @@ impl Environment {
         stored_forall_conclusion_reference: Rc<StoredForallConclusionReference>,
     ) -> Result<(), RuntimeError> {
         let key: AtomicFactKey = atomic_fact.key();
-        let is_true = atomic_fact.is_true();
+        let positive_polarity = atomic_fact.has_positive_polarity();
 
         if atomic_fact_has_top_level_fn_arg_head_with_forall_free_param(&atomic_fact) {
-            let lookup_key = (key, is_true);
+            let lookup_key = (key, positive_polarity);
             if let Some(vec_ref) = self.known_atomic_facts_in_forall_facts.get_mut(&lookup_key) {
                 vec_ref.push((atomic_fact, stored_forall_conclusion_reference));
             } else {
@@ -371,7 +373,7 @@ impl Environment {
             return Ok(());
         }
 
-        let lookup_key = (key, is_true);
+        let lookup_key = (key, positive_polarity);
         let arg_shape_key = atomic_fact_in_forall_arg_shape_key(&atomic_fact);
         let arg_shape_map = self
             .known_atomic_facts_in_forall_facts_by_arg_shape

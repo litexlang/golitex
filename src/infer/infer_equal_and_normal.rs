@@ -494,8 +494,8 @@ impl Runtime {
         )
         .into();
         let power_result =
-            self.verify_non_equational_atomic_fact_with_direct_routes(&power_in_r_pos)?;
-        if !power_result.is_true() {
+            self.verify_non_equational_atomic_fact_with_bounded_builtin_routes(&power_in_r_pos)?;
+        if !power_result.is_success() {
             return Ok(());
         }
 

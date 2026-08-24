@@ -2,7 +2,7 @@ use super::{
     run_isolated_repl_with_runtime_and_readers, run_latex_repl_loop_with_readers,
     run_repl_loop_with_readers_and_mode, ReplOutputMode,
 };
-use crate::pipeline::{run_file_with_project_context, run_source_code};
+use crate::pipeline::{execute_file_in_runtime, execute_source, FileExecutionOptions};
 use crate::prelude::OutputLanguage;
 use crate::runtime::{OutputStyle, Runtime};
 use std::fs;
@@ -110,10 +110,13 @@ fn isolated_file_continues_in_the_same_repl_runtime() {
     fs::write(&file, "have from_file R = 1\n").expect("write isolated source file");
 
     let mut runtime = Runtime::new();
-    let (_, file_error) = run_file_with_project_context(
+    let (_, file_error, _, _) = execute_file_in_runtime(
         file.to_str().expect("file path is UTF-8"),
         &mut runtime,
-        true,
+        FileExecutionOptions {
+            force_isolated: true,
+            trust_before_line: None,
+        },
     );
     assert!(file_error.is_none(), "{file_error:?}");
     assert!(runtime.current_source_allows_inline_imports());
@@ -126,7 +129,7 @@ fn isolated_file_continues_in_the_same_repl_runtime() {
     assert!(output.contains("Continuing isolated REPL."));
     assert!(output.contains("\"outcome\": \"success\""), "{output}");
 
-    let (_, continuation_error) = run_source_code("from_repl = 2", &mut runtime);
+    let (_, continuation_error) = execute_source("from_repl = 2", &mut runtime);
     assert!(continuation_error.is_none(), "{continuation_error:?}");
 
     let _ = fs::remove_dir_all(&directory);

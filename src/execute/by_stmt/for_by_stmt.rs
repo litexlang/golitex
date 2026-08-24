@@ -11,7 +11,7 @@ impl Runtime {
             .map_err(|msg| short_exec_error(stmt.clone().into(), msg, None, vec![]))?;
         self.verify_forall_fact_params_and_dom_well_defined(
             &stmt.forall_fact,
-            &UseContextVerifyState::new(0, false),
+            &ProofSearchState::initial(),
         )
         .map_err(|well_defined_error| {
             short_exec_error(
@@ -576,11 +576,11 @@ impl Runtime {
         ),
         RuntimeError,
     > {
-        let verify_state = UseContextVerifyState::new(0, false);
+        let verify_state = ProofSearchState::initial();
         let mut domain_checks = Vec::new();
         for dom_fact in stmt.forall_fact.dom_facts.iter() {
             let verify_dom_result = self.verify_fact_allow_unknown(dom_fact, &verify_state)?;
-            if verify_dom_result.is_true() {
+            if verify_dom_result.is_success() {
                 let mut satisfied_infers = self
                     .store_with_well_defined_verification_and_infer_with_default_verify_state(
                         dom_fact.clone(),
@@ -597,7 +597,7 @@ impl Runtime {
                 if let Some(negated_domain) = Self::negated_domain_fact_for_by_for_skip(dom_fact) {
                     let verify_negation_result =
                         self.verify_fact_allow_unknown(&negated_domain, &verify_state)?;
-                    if verify_negation_result.is_true() {
+                    if verify_negation_result.is_success() {
                         domain_checks.push(SuccessVerifyByAssignmentDomainResult {
                             fact: dom_fact.clone(),
                             check: Box::new(verify_dom_result),

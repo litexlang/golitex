@@ -26,7 +26,7 @@ impl Runtime {
             .verify_objects_are_known_reals(
                 &[&left, &right],
                 &line_file,
-                &UseContextVerifyState::new(0, true),
+                &ProofSearchState::after_well_definedness(),
             )?
             .is_none()
         {
@@ -142,8 +142,8 @@ impl Runtime {
         )
         .into();
         let source_in_r_result =
-            self.verify_non_equational_atomic_fact_with_direct_routes(&source_in_r)?;
-        if !source_in_r_result.is_true() {
+            self.verify_non_equational_atomic_fact_with_bounded_builtin_routes(&source_in_r)?;
+        if !source_in_r_result.is_success() {
             return Ok(SuccessInferResult::new());
         }
         let fact_to_store: Fact = inferred_atomic.clone().into();

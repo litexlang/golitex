@@ -1,88 +1,18 @@
-mod builtin_rule_evidence;
-mod execution_trace;
-mod runtime_success;
-mod runtime_success_access;
-mod stmt_result;
-mod success_evaluate_obj_result;
-mod success_stmt_result;
-mod success_stmt_result_traversal;
-mod success_well_defined_result;
-mod unknown_fact_result;
-mod unknown_stmt_result;
-mod well_definedness_proof;
+mod object_evaluation;
+mod statement;
+mod verification;
+mod well_definedness;
 
-pub use builtin_rule_evidence::{
-    AbsoluteValueBuiltinRule, ArithmeticBuiltinRule, BuiltinRuleEvidence,
-    ClosedNumericComparisonBuiltinRuleEvidence, ClosedNumericMembershipBuiltinRuleEvidence,
-    ClosedNumericNonmembershipBuiltinRuleEvidence,
-    ComplexAlgebraicNormalizationBuiltinRuleEvidence,
-    ComplexArithmeticMembershipClosureBuiltinRule, DefinitionProjectionBuiltinRuleEvidence,
-    DisjunctionIntroductionBuiltinRuleEvidence, DivNotEqualZeroBuiltinRuleEvidence,
-    FiniteSetBuiltinRule, FunctionApplicationReturnMembershipBuiltinRuleEvidence,
-    FunctionSetMembershipBuiltinRuleEvidence, IntegerMembershipClosureBuiltinRule,
-    KnownEqualityBuiltinRuleEvidence, KnownEqualityBuiltinRuleStep,
-    ListSetMembershipBuiltinRuleEvidence, MatrixExpressionMembershipBuiltinRuleEvidence,
-    NativeConstantMembershipBuiltinRule, NaturalMembershipClosureBuiltinRule,
-    NonzeroExpressionOrientation, ObjectReflexivityBuiltinRuleEvidence,
-    OrderReflexivityBuiltinRuleEvidence, RationalMembershipClosureBuiltinRule,
-    RationalNormalizationBuiltinRuleEvidence, RealArithmeticMembershipClosureBuiltinRule,
-    RefinedNumericMembershipBuiltinRuleEvidence,
-    RegisteredAntisymmetricPredicateBuiltinRuleEvidence, RegisteredLocalBuiltinRuleEvidence,
-    RegisteredReflexivePredicateBuiltinRuleEvidence,
-    RegisteredSymmetricPredicateBuiltinRuleEvidence,
-    RuntimeResolvedNumericComparisonBuiltinRuleEvidence, SetBuilderMembershipBuiltinRuleEvidence,
-    SetBuiltinRule, SetRelationDualityBuiltinRule, StandardSetNonemptyBuiltinRuleEvidence,
-};
-pub use execution_trace::{
-    ExecutionPhaseTrace, StatementExecutionPhase, StatementExecutionTrace, StatementPhaseStatus,
-};
-pub use runtime_success::{
-    CheckedFunctionDefinitionReductionEvidence, DefinitionReductionVerificationEvidence,
-    EqualityTransportEvidence, EqualityTransportStep, FactTransformationEvidence,
-    FactTransformationRule, FactTransformationStep, KnownForallInstantiationItem,
-    KnownForallRequirementKind, ObjectIntroductionItem, SuccessBuiltinFactProofEvidenceResult,
-    SuccessBuiltinFactProofResult, SuccessCheckedFunctionDefinitionReductionFactProofResult,
-    SuccessCombinedFactProofResult, SuccessDefinitionReductionFactProofResult,
-    SuccessDiagnosticFactProofResult, SuccessFactProofResult, SuccessForallAssumptionFactResult,
-    SuccessForallProofResult, SuccessForallProvedFactResult, SuccessInstantiateKnownForallResult,
-    SuccessReuseFactProofResult, SuccessStoredFactCitationProofResult,
-    SuccessStrategyFactProofResult, SuccessTransformFactResult,
-    SuccessVerifyArgsSatisfyParamDefResult, SuccessVerifyByAssignmentAssumptionResult,
-    SuccessVerifyByAssignmentDomainResult, SuccessVerifyByAssignmentResult,
-    SuccessVerifyByCaseBranchExitResult, SuccessVerifyByCaseBranchResult,
-    SuccessVerifyByCaseConclusionsResult, SuccessVerifyByCaseContradictionResult,
-    SuccessVerifyByCasesResult, SuccessVerifyByChoiceObligationResult, SuccessVerifyByChoiceResult,
-    SuccessVerifyByContraResult, SuccessVerifyByDefinitionResult,
-    SuccessVerifyByEnumerateFiniteSetResult, SuccessVerifyByEnumerateRangeEndpointPosition,
-    SuccessVerifyByEnumerateRangeEndpointResult, SuccessVerifyByEnumerateRangeResult,
-    SuccessVerifyByExtensionResult, SuccessVerifyByFiniteSetInducResult,
-    SuccessVerifyByForCartesianProductOfListSetsResult, SuccessVerifyByForRangeParameterResult,
-    SuccessVerifyByForRangesResult, SuccessVerifyByForResult, SuccessVerifyByInducAssumptionResult,
-    SuccessVerifyByInducAssumptionRole, SuccessVerifyByInducCaseResult,
-    SuccessVerifyByInducConclusionResult, SuccessVerifyByInducGoalResult,
-    SuccessVerifyByInducProofResult, SuccessVerifyByInducResult,
-    SuccessVerifyByPropRegistrationResult, SuccessVerifyByStructuredIntegerInducCaseResult,
-    SuccessVerifyByStructuredIntegerInducResult, SuccessVerifyByTheoremResult,
-    SuccessVerifyByUnstructuredIntegerInducResult, SuccessVerifyCaseFunctionDefinitionResult,
-    SuccessVerifyClaimFactResult, SuccessVerifyClaimForallResult, SuccessVerifyClaimResult,
-    SuccessVerifyContradictionResult, SuccessVerifyExistentialEliminationResult,
-    SuccessVerifyFunctionDefinitionResult, SuccessVerifyFunctionFromUniqueExistenceResult,
-    SuccessVerifyHaveObjEqualResult, SuccessVerifyIndexedFunctionDefinitionResult,
-    SuccessVerifyIndexedFunctionDefinitionWellDefinedResult,
-    SuccessVerifyKnownForallRequirementResult, SuccessVerifyLocalProofScopeResult,
-    SuccessVerifyObjectChoiceGroupResult, SuccessVerifyObjectChoiceResult,
-    SuccessVerifyPreimageResult, SuccessVerifyStrategyDefinitionResult, SuccessVerifyTheoremResult,
-    SuccessVerifyTupleOrCartDefinitionResult, SuccessVerifyTupleOrCartDimensionResult,
-    SuccessVerifyWitnessAtomicFactResult, SuccessVerifyWitnessExistResult,
-    UnknownVerifyArgsSatisfyParamDefResult, VerifyArgsSatisfyParamDefResult,
-};
-pub use stmt_result::{StmtResult, UnknownStmtResult};
-pub use success_evaluate_obj_result::{
+pub use object_evaluation::{
     EvaluateBinaryObjOperator, EvaluateObjShapeOperator, EvaluateUnaryObjOperator,
     SuccessEvaluateBinaryObjResult, SuccessEvaluateLiteralResult, SuccessEvaluateObjByShapeResult,
     SuccessEvaluateObjResult, SuccessEvaluateObjStepResult, SuccessEvaluateUnaryObjResult,
 };
-pub use success_stmt_result::{
+pub use statement::execution_trace::{
+    ExecutionPhaseTrace, StatementExecutionPhase, StatementExecutionTrace, StatementPhaseStatus,
+};
+pub use statement::result::{StmtResult, UnknownStmtResult};
+pub use statement::success::{
     CaseDisjointnessOrientation, SuccessAxiomStmtResult, SuccessByAntisymmetricPropStmtResult,
     SuccessByAxiomOfChoiceStmtResult, SuccessByCasesStmtResult,
     SuccessByClosedRangeAsCasesStmtResult, SuccessByContraStmtResult, SuccessByDefStmtResult,
@@ -130,14 +60,75 @@ pub use success_stmt_result::{
     SuccessWitnessAtomicFactResult, SuccessWitnessExistFactResult, SuccessWitnessNonemptySetResult,
     SuccessWitnessStmtResult,
 };
-pub use success_well_defined_result::*;
-pub use unknown_fact_result::{
+pub use statement::unknown::UnknownGenericStmtResult;
+pub use verification::builtin_evidence::{
+    AbsoluteValueBuiltinRule, ArithmeticBuiltinRule, BuiltinRuleEvidence,
+    ClosedNumericComparisonBuiltinRuleEvidence, ClosedNumericMembershipBuiltinRuleEvidence,
+    ClosedNumericNonmembershipBuiltinRuleEvidence,
+    ComplexAlgebraicNormalizationBuiltinRuleEvidence,
+    ComplexArithmeticMembershipClosureBuiltinRule, DefinitionProjectionBuiltinRuleEvidence,
+    DisjunctionIntroductionBuiltinRuleEvidence, DivNotEqualZeroBuiltinRuleEvidence,
+    FiniteSetBuiltinRule, FunctionApplicationReturnMembershipBuiltinRuleEvidence,
+    FunctionSetMembershipBuiltinRuleEvidence, IntegerMembershipClosureBuiltinRule,
+    KnownEqualityBuiltinRuleEvidence, KnownEqualityBuiltinRuleStep,
+    ListSetMembershipBuiltinRuleEvidence, MatrixExpressionMembershipBuiltinRuleEvidence,
+    NativeConstantMembershipBuiltinRule, NaturalMembershipClosureBuiltinRule,
+    NonzeroExpressionOrientation, ObjectReflexivityBuiltinRuleEvidence,
+    OrderReflexivityBuiltinRuleEvidence, RationalMembershipClosureBuiltinRule,
+    RationalNormalizationBuiltinRuleEvidence, RealArithmeticMembershipClosureBuiltinRule,
+    RefinedNumericMembershipBuiltinRuleEvidence,
+    RegisteredAntisymmetricPredicateBuiltinRuleEvidence, RegisteredLocalBuiltinRuleEvidence,
+    RegisteredReflexivePredicateBuiltinRuleEvidence,
+    RegisteredSymmetricPredicateBuiltinRuleEvidence,
+    RuntimeResolvedNumericComparisonBuiltinRuleEvidence, SetBuilderMembershipBuiltinRuleEvidence,
+    SetBuiltinRule, SetRelationDualityBuiltinRule, StandardSetNonemptyBuiltinRuleEvidence,
+};
+pub use verification::success::{
+    CheckedFunctionDefinitionReductionEvidence, DefinitionReductionVerificationEvidence,
+    EqualityTransportEvidence, EqualityTransportStep, FactTransformationEvidence,
+    FactTransformationRule, FactTransformationStep, KnownForallInstantiationItem,
+    KnownForallRequirementKind, ObjectIntroductionItem, SuccessBuiltinFactProofEvidenceResult,
+    SuccessBuiltinFactProofResult, SuccessCheckedFunctionDefinitionReductionFactProofResult,
+    SuccessCombinedFactProofResult, SuccessDefinitionReductionFactProofResult,
+    SuccessDiagnosticFactProofResult, SuccessFactProofResult, SuccessForallAssumptionFactResult,
+    SuccessForallProofResult, SuccessForallProvedFactResult, SuccessInstantiateKnownForallResult,
+    SuccessReuseFactProofResult, SuccessStoredFactCitationProofResult,
+    SuccessStrategyFactProofResult, SuccessTransformFactResult,
+    SuccessVerifyArgsSatisfyParamDefResult, SuccessVerifyByAssignmentAssumptionResult,
+    SuccessVerifyByAssignmentDomainResult, SuccessVerifyByAssignmentResult,
+    SuccessVerifyByCaseBranchExitResult, SuccessVerifyByCaseBranchResult,
+    SuccessVerifyByCaseConclusionsResult, SuccessVerifyByCaseContradictionResult,
+    SuccessVerifyByCasesResult, SuccessVerifyByChoiceObligationResult, SuccessVerifyByChoiceResult,
+    SuccessVerifyByContraResult, SuccessVerifyByDefinitionResult,
+    SuccessVerifyByEnumerateFiniteSetResult, SuccessVerifyByEnumerateRangeEndpointPosition,
+    SuccessVerifyByEnumerateRangeEndpointResult, SuccessVerifyByEnumerateRangeResult,
+    SuccessVerifyByExtensionResult, SuccessVerifyByFiniteSetInducResult,
+    SuccessVerifyByForCartesianProductOfListSetsResult, SuccessVerifyByForRangeParameterResult,
+    SuccessVerifyByForRangesResult, SuccessVerifyByForResult, SuccessVerifyByInducAssumptionResult,
+    SuccessVerifyByInducAssumptionRole, SuccessVerifyByInducCaseResult,
+    SuccessVerifyByInducConclusionResult, SuccessVerifyByInducGoalResult,
+    SuccessVerifyByInducProofResult, SuccessVerifyByInducResult,
+    SuccessVerifyByPropRegistrationResult, SuccessVerifyByStructuredIntegerInducCaseResult,
+    SuccessVerifyByStructuredIntegerInducResult, SuccessVerifyByTheoremResult,
+    SuccessVerifyByUnstructuredIntegerInducResult, SuccessVerifyCaseFunctionDefinitionResult,
+    SuccessVerifyClaimFactResult, SuccessVerifyClaimForallResult, SuccessVerifyClaimResult,
+    SuccessVerifyContradictionResult, SuccessVerifyExistentialEliminationResult,
+    SuccessVerifyFunctionDefinitionResult, SuccessVerifyFunctionFromUniqueExistenceResult,
+    SuccessVerifyHaveObjEqualResult, SuccessVerifyIndexedFunctionDefinitionResult,
+    SuccessVerifyIndexedFunctionDefinitionWellDefinedResult,
+    SuccessVerifyKnownForallRequirementResult, SuccessVerifyLocalProofScopeResult,
+    SuccessVerifyObjectChoiceGroupResult, SuccessVerifyObjectChoiceResult,
+    SuccessVerifyPreimageResult, SuccessVerifyStrategyDefinitionResult, SuccessVerifyTheoremResult,
+    SuccessVerifyTupleOrCartDefinitionResult, SuccessVerifyTupleOrCartDimensionResult,
+    SuccessVerifyWitnessAtomicFactResult, SuccessVerifyWitnessExistResult,
+    UnknownVerifyArgsSatisfyParamDefResult, VerifyArgsSatisfyParamDefResult,
+};
+pub use verification::unknown_fact::{
     UnknownAndFactResult, UnknownAtomicFactResult, UnknownChainFactResult, UnknownExistFactResult,
     UnknownFactParam, UnknownFactPart, UnknownFactResult, UnknownForallFactResult,
     UnknownForallFactWithIffResult, UnknownNotForallFactResult, UnknownOrFactResult,
 };
-pub use unknown_stmt_result::UnknownGenericStmtResult;
-pub use well_definedness_proof::{
+pub use well_definedness::proof::{
     CachedWellDefinedObj, WellDefinedBinderPremiseProof, WellDefinedBinderPremiseRole,
     WellDefinedBinderScopeId, WellDefinedBinderScopeProof, WellDefinedCacheKey, WellDefinedFactId,
     WellDefinedFactProof, WellDefinedFunctionContract, WellDefinedObjChildRole,
@@ -145,3 +136,4 @@ pub use well_definedness_proof::{
     WellDefinedTargetRequirementProof, WellDefinedTargetRequirementUse,
     WellDefinednessTargetRequirementPhase,
 };
+pub use well_definedness::results::*;

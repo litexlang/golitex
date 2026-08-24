@@ -1,10 +1,25 @@
-use crate::prelude::*;
+use crate::error::{exec_stmt_error_with_stmt_and_cause, short_exec_error, RuntimeError};
+use crate::infer::SuccessInferResult;
+use crate::pipeline::record_pipeline_step;
+use crate::result::{
+    StmtResult, SuccessDefInterfaceStmtResult, SuccessDefSettingStmtResult, SuccessStmtCommonResult,
+};
+use crate::runtime::Runtime;
+use crate::stmt::{
+    ByStmt, CommandStmt, DefInterfaceStmt, DefObjStmt, DefPredicateStmt, ProofBlockStmt, Stmt,
+    UnsafeStmt, WitnessStmt,
+};
 
 impl Runtime {
     pub(super) fn execute_verified_statement(
         &mut self,
         stmt: &Stmt,
     ) -> Result<StmtResult, RuntimeError> {
+        record_pipeline_step(
+            "execute",
+            "Runtime::execute_verified_statement",
+            "src/execute/verified_statement_execution.rs",
+        );
         match stmt {
             Stmt::Fact(fact) => self.execute_submitted_fact(fact),
             Stmt::UnsafeStmt(UnsafeStmt::TrustStmt(s)) => self.exec_trust_stmt(s),

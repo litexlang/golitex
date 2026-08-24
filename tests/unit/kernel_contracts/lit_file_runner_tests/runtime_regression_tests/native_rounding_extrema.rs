@@ -261,7 +261,7 @@ fn assert_source_fails(source: &str, label: &str) {
 
 fn run_source(source: &str, label: &str) -> (bool, String) {
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(label);
-    let (results, error) = run_source_code(source, &mut runtime);
-    render_run_source_code_output(&runtime, &results, &error, false)
+    runtime.start_isolated_source(label);
+    let (results, error) = execute_source(source, &mut runtime);
+    render_run_output(&runtime, &results, &error)
 }

@@ -1,17 +1,16 @@
 //! Curated public Rust API for embedding Litex.
 //!
 //! Prefer this module over importing the kernel's implementation modules or
-//! the broad internal [`crate::prelude`]. Existing module paths remain
-//! available for compatibility, but new embedders should start here.
+//! the broad internal [`crate::prelude`].
 //!
-//! `run_source_code` executes inside an explicit source context:
+//! `execute_source` executes inside an explicit source context:
 //!
 //! ```
-//! use litex::api::{run_source_code, Runtime};
+//! use litex::api::{execute_source, Runtime};
 //!
 //! let mut runtime = Runtime::new();
 //! runtime.start_isolated_source("embedded.lit");
-//! let (results, error) = run_source_code("1 = 1", &mut runtime);
+//! let (results, error) = execute_source("1 = 1", &mut runtime);
 //! assert!(error.is_none());
 //! assert_eq!(results.len(), 1);
 //! ```
@@ -24,11 +23,8 @@ pub use crate::runtime::{OutputStyle, Runtime, TrustedPrefixReport};
 
 // Source, file, and repository execution entry points.
 pub use crate::pipeline::{
-    run_file, run_file_with_project_context, run_file_with_project_context_and_trusted_prefix,
-    run_repository, run_repository_with_output, run_repository_with_output_style, run_source_code,
-    run_source_code_in_file, run_source_code_in_file_with_ok, run_source_code_with_options,
-    FileRunOptions, RunOutputOptions, RunSourceFailureKind, RunSummary, SourceRunFailureKind,
-    SourceRunOptions, SourceRunOutcome,
+    execute_source, run, PipelineStep, PipelineTrace, RunOptions, RunOutcome, RunRequest,
+    RunSummary, RunTarget,
 };
 
 // Stable rendering entry points for embedding and machine-readable output.

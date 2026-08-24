@@ -13,8 +13,8 @@ impl Runtime {
         };
         if normalized.to_string() != atomic_fact.to_string() {
             let normalized_result =
-                self.verify_non_equational_atomic_fact_with_direct_routes(&normalized)?;
-            if normalized_result.is_true() {
+                self.verify_non_equational_atomic_fact_with_bounded_builtin_routes(&normalized)?;
+            if normalized_result.is_success() {
                 return Ok(
                     SuccessFactStmtResult::new_with_verified_by_builtin_strategy_recording_stmt(
                         atomic_fact.clone().into(),
@@ -54,7 +54,7 @@ impl Runtime {
                     true,
                     &fact.line_file,
                 )?;
-                if !left.is_true() {
+                if !left.is_success() {
                     return Ok(UnknownGenericStmtResult::new().into());
                 }
                 let right = self.verify_additive_sign_strategy_child(
@@ -62,7 +62,7 @@ impl Runtime {
                     true,
                     &fact.line_file,
                 )?;
-                if !right.is_true() {
+                if !right.is_success() {
                     return Ok(UnknownGenericStmtResult::new().into());
                 }
                 Ok(
@@ -106,19 +106,19 @@ impl Runtime {
         line_file: &LineFile,
     ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
         let left_strict = self.verify_additive_sign_strategy_child(left, false, line_file)?;
-        if left_strict.is_true() {
+        if left_strict.is_success() {
             let right_weak = self.verify_additive_sign_strategy_child(right, true, line_file)?;
-            if right_weak.is_true() {
+            if right_weak.is_success() {
                 return Ok(Some(vec![left_strict, right_weak]));
             }
         }
 
         let left_weak = self.verify_additive_sign_strategy_child(left, true, line_file)?;
-        if !left_weak.is_true() {
+        if !left_weak.is_success() {
             return Ok(None);
         }
         let right_strict = self.verify_additive_sign_strategy_child(right, false, line_file)?;
-        if right_strict.is_true() {
+        if right_strict.is_success() {
             Ok(Some(vec![left_weak, right_strict]))
         } else {
             Ok(None)
@@ -745,7 +745,7 @@ impl Runtime {
             let mut complete = true;
             for child in required {
                 let result = self.verify_builtin_strategy_child(&child)?;
-                if !result.is_true() {
+                if !result.is_success() {
                     complete = false;
                     break;
                 }

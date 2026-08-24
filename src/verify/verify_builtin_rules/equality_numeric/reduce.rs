@@ -7,7 +7,7 @@ impl Runtime {
     pub fn try_verify_reduce_empty(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -24,7 +24,7 @@ impl Runtime {
             .into();
             if !self
                 .verify_atomic_fact_as_builtin_rule_premise(&empty, builtin_state)?
-                .is_true()
+                .is_success()
             {
                 continue;
             }
@@ -33,7 +33,7 @@ impl Runtime {
                     &EqualFact::new_from_refs(other, reduce.seed.as_ref(), line_file.clone()),
                     builtin_state,
                 )?
-                .is_true()
+                .is_success()
             {
                 return Ok(Some(factual_equal_success_by_builtin_reason(
                     equal_fact,
@@ -50,7 +50,7 @@ impl Runtime {
     pub fn try_verify_reduce_literal_expansion(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -96,7 +96,7 @@ impl Runtime {
                     &EqualFact::new_from_refs(other, &accumulator, line_file.clone()),
                     builtin_state,
                 )?
-                .is_true()
+                .is_success()
             {
                 return Ok(Some(factual_equal_success_by_builtin_reason(
                     equal_fact,
@@ -124,7 +124,7 @@ impl Runtime {
     pub fn try_verify_reduce_step(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -141,7 +141,7 @@ impl Runtime {
             .into();
             if !self
                 .verify_atomic_fact_as_builtin_rule_premise(&nonempty, builtin_state)?
-                .is_true()
+                .is_success()
             {
                 continue;
             }
@@ -175,7 +175,7 @@ impl Runtime {
                     &EqualFact::new_from_refs(other, &expected, line_file.clone()),
                     builtin_state,
                 )?
-                .is_true()
+                .is_success()
             {
                 return Ok(Some(factual_equal_success_by_builtin_reason(
                     equal_fact,
@@ -189,7 +189,7 @@ impl Runtime {
     pub fn try_verify_finite_set_reduce_empty(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -204,7 +204,7 @@ impl Runtime {
                     &EqualFact::new_from_refs(reduce.set.as_ref(), &empty_set, line_file.clone()),
                     builtin_state,
                 )?
-                .is_true()
+                .is_success()
             {
                 continue;
             }
@@ -213,7 +213,7 @@ impl Runtime {
                     &EqualFact::new_from_refs(other, reduce.seed.as_ref(), line_file.clone()),
                     builtin_state,
                 )?
-                .is_true()
+                .is_success()
             {
                 return Ok(Some(factual_equal_success_by_builtin_reason(
                     equal_fact,
@@ -231,7 +231,7 @@ impl Runtime {
     pub fn try_verify_finite_set_reduce_list_expansion(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -281,7 +281,7 @@ impl Runtime {
                         &EqualFact::new_from_refs(other, &accumulator, line_file.clone()),
                         builtin_state,
                     )?
-                    .is_true()
+                    .is_success()
                 {
                     return Ok(Some(factual_equal_success_by_builtin_reason(
                         equal_fact,
@@ -296,7 +296,7 @@ impl Runtime {
     pub fn try_verify_finite_set_reduce_closed_range_bridge(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -321,7 +321,7 @@ impl Runtime {
                     &EqualFact::new_from_refs(other, &expected, line_file.clone()),
                     builtin_state,
                 )?
-                .is_true()
+                .is_success()
             {
                 return Ok(Some(factual_equal_success_by_builtin_reason(equal_fact, "equality: finite_set_reduce over a closed range uses its ascending enumeration")));
             }
@@ -334,7 +334,7 @@ impl Runtime {
     pub fn try_verify_finite_set_reduce_fresh_insertion(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -364,7 +364,7 @@ impl Runtime {
                 .into();
                 if !self
                     .verify_atomic_fact_as_builtin_rule_premise(&freshness, builtin_state)?
-                    .is_true()
+                    .is_success()
                 {
                     continue;
                 }
@@ -392,7 +392,7 @@ impl Runtime {
                         &EqualFact::new_from_refs(other, &expected, line_file.clone()),
                         builtin_state,
                     )?
-                    .is_true()
+                    .is_success()
                 {
                     return Ok(Some(factual_equal_success_by_builtin_reason(
                         equal_fact,
@@ -410,7 +410,7 @@ impl Runtime {
     pub fn try_verify_reduce_specialized_aggregate_bridge(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -470,7 +470,7 @@ impl Runtime {
     pub fn try_verify_finite_set_reduce_specialized_aggregate_bridge(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -524,7 +524,7 @@ impl Runtime {
     pub fn try_verify_reduce_pointwise_congruence(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -542,7 +542,7 @@ impl Runtime {
                         &EqualFact::new_from_refs(left_arg, right_arg, line_file.clone()),
                         builtin_state,
                     )?;
-                    if !result.is_true() {
+                    if !result.is_success() {
                         return Ok(None);
                     }
                     subgoals.extend(equality_builtin_match_subgoals(
@@ -564,7 +564,7 @@ impl Runtime {
                     &index_set,
                     builtin_state,
                 )?;
-                if !pointwise.is_true() {
+                if !pointwise.is_success() {
                     return Ok(None);
                 }
                 subgoals.push(pointwise);
@@ -585,7 +585,7 @@ impl Runtime {
                         &EqualFact::new_from_refs(left_arg, right_arg, line_file.clone()),
                         builtin_state,
                     )?;
-                    if !result.is_true() {
+                    if !result.is_success() {
                         return Ok(None);
                     }
                     subgoals.extend(equality_builtin_match_subgoals(
@@ -602,7 +602,7 @@ impl Runtime {
                     left_reduce.set.as_ref(),
                     builtin_state,
                 )?;
-                if !pointwise.is_true() {
+                if !pointwise.is_success() {
                     return Ok(None);
                 }
                 subgoals.push(pointwise);
@@ -623,7 +623,7 @@ impl Runtime {
     pub fn try_verify_reduce_order_preserving_translation(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -644,7 +644,7 @@ impl Runtime {
                     &EqualFact::new_from_refs(actual, expected, line_file.clone()),
                     builtin_state,
                 )?;
-                if !result.is_true() {
+                if !result.is_success() {
                     structural_match = false;
                     break;
                 }
@@ -668,7 +668,7 @@ impl Runtime {
                 &EqualFact::new_from_refs(&source_length, &translated_length, line_file.clone()),
                 builtin_state,
             )?;
-            if !length_result.is_true() {
+            if !length_result.is_success() {
                 continue;
             }
             subgoals.extend(equality_builtin_match_subgoals(
@@ -684,7 +684,7 @@ impl Runtime {
             .into();
             let nonempty_result =
                 self.verify_atomic_fact_as_builtin_rule_premise(&nonempty, builtin_state)?;
-            if !nonempty_result.is_true() {
+            if !nonempty_result.is_success() {
                 let empty: AtomicFact = LessFact::new(
                     source.end.as_ref().clone(),
                     source.start.as_ref().clone(),
@@ -693,7 +693,7 @@ impl Runtime {
                 .into();
                 let empty_result =
                     self.verify_atomic_fact_as_builtin_rule_premise(&empty, builtin_state)?;
-                if !empty_result.is_true() {
+                if !empty_result.is_success() {
                     continue;
                 }
                 subgoals.push(empty_result);
@@ -740,14 +740,14 @@ impl Runtime {
                     EqualFact::new(source_value, translated_value, line_file.clone()).into();
                 let known_forall = rt.verify_atomic_fact_with_known_forall(
                     &equality,
-                    &UseContextVerifyState::new(0, true),
+                    &ProofSearchState::after_well_definedness(),
                 )?;
-                if known_forall.is_true() {
+                if known_forall.is_success() {
                     return Ok(known_forall);
                 }
                 rt.verify_atomic_fact_as_builtin_rule_premise(&equality, builtin_state)
             })?;
-            if !pointwise_result.is_true() {
+            if !pointwise_result.is_success() {
                 continue;
             }
             subgoals.push(pointwise_result);
@@ -767,7 +767,7 @@ impl Runtime {
     pub fn try_verify_reduce_first_step(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -791,7 +791,7 @@ impl Runtime {
                     &EqualFact::new_from_refs(actual, expected, line_file.clone()),
                     builtin_state,
                 )?;
-                if !result.is_true() {
+                if !result.is_success() {
                     structural_match = false;
                     break;
                 }
@@ -812,7 +812,7 @@ impl Runtime {
             .into();
             let nonempty_result =
                 self.verify_atomic_fact_as_builtin_rule_premise(&nonempty, builtin_state)?;
-            if !nonempty_result.is_true() {
+            if !nonempty_result.is_success() {
                 continue;
             }
             subgoals.push(nonempty_result);
@@ -835,7 +835,7 @@ impl Runtime {
                 &EqualFact::new_from_refs(tail.seed.as_ref(), &expected_seed, line_file.clone()),
                 builtin_state,
             )?;
-            if !seed_result.is_true() {
+            if !seed_result.is_success() {
                 continue;
             }
             subgoals.extend(equality_builtin_match_subgoals(
@@ -858,7 +858,7 @@ impl Runtime {
     pub fn try_verify_reduce_adjacent_partition(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -888,7 +888,7 @@ impl Runtime {
                     &EqualFact::new_from_refs(actual, expected, line_file.clone()),
                     builtin_state,
                 )?;
-                if !result.is_true() {
+                if !result.is_success() {
                     structural_match = false;
                     break;
                 }
@@ -934,7 +934,7 @@ impl Runtime {
     pub fn try_verify_finite_set_reduce_disjoint_union(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -954,7 +954,7 @@ impl Runtime {
                 &EqualFact::new_from_refs(full.set.as_ref(), &expected_union, line_file.clone()),
                 builtin_state,
             )?;
-            if !union_result.is_true() {
+            if !union_result.is_success() {
                 continue;
             }
             let mut subgoals = equality_builtin_match_subgoals(
@@ -968,7 +968,7 @@ impl Runtime {
                 &EqualFact::new_from_refs(&intersection, &empty_set, line_file.clone()),
                 builtin_state,
             )?;
-            if !disjoint_result.is_true() {
+            if !disjoint_result.is_success() {
                 continue;
             }
             subgoals.push(disjoint_result);
@@ -982,7 +982,7 @@ impl Runtime {
                     &EqualFact::new_from_refs(actual, expected, line_file.clone()),
                     builtin_state,
                 )?;
-                if !result.is_true() {
+                if !result.is_success() {
                     structural_match = false;
                     break;
                 }
@@ -1003,7 +1003,7 @@ impl Runtime {
                 outer.set.as_ref(),
                 builtin_state,
             )?;
-            if !outer_pointwise.is_true() {
+            if !outer_pointwise.is_success() {
                 continue;
             }
             let inner_pointwise = self.verify_reduce_functions_pointwise_on_set(
@@ -1015,7 +1015,7 @@ impl Runtime {
                 inner.set.as_ref(),
                 builtin_state,
             )?;
-            if !inner_pointwise.is_true() {
+            if !inner_pointwise.is_success() {
                 continue;
             }
             subgoals.push(outer_pointwise);
@@ -1035,7 +1035,7 @@ impl Runtime {
     pub fn try_verify_finite_set_reduce_bijective_reindexing(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -1054,7 +1054,7 @@ impl Runtime {
                 ),
                 builtin_state,
             )?;
-            if !op_result.is_true() {
+            if !op_result.is_success() {
                 continue;
             }
             let seed_result = self.verify_equal_fact_as_builtin_premise(
@@ -1065,7 +1065,7 @@ impl Runtime {
                 ),
                 builtin_state,
             )?;
-            if !seed_result.is_true() {
+            if !seed_result.is_success() {
                 continue;
             }
 
@@ -1096,14 +1096,14 @@ impl Runtime {
                 rt.define_params_with_type(&params_def, false, ParamObjType::Forall)?;
                 let known_forall = rt.verify_atomic_fact_with_known_forall(
                     &pointwise_fact,
-                    &UseContextVerifyState::new(0, true),
+                    &ProofSearchState::after_well_definedness(),
                 )?;
-                if known_forall.is_true() {
+                if known_forall.is_success() {
                     return Ok(known_forall);
                 }
                 rt.verify_atomic_fact_as_builtin_rule_premise(&pointwise_fact, builtin_state)
             })?;
-            if !pointwise_result.is_true() {
+            if !pointwise_result.is_success() {
                 continue;
             }
             let Obj::FnObj(map_call) = map_y else {
@@ -1154,7 +1154,7 @@ impl Runtime {
         aggregate_func: &Obj,
         specialization: NativeReduceSpecialization,
         line_file: LineFile,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
         let mut subgoals = Vec::new();
         for (actual, expected) in [
@@ -1165,7 +1165,7 @@ impl Runtime {
                 &EqualFact::new_from_refs(actual, expected, line_file.clone()),
                 builtin_state,
             )?;
-            if !result.is_true() {
+            if !result.is_success() {
                 return Ok(None);
             }
             subgoals.extend(equality_builtin_match_subgoals(
@@ -1180,7 +1180,7 @@ impl Runtime {
             &index_set,
             builtin_state,
         )?;
-        if !function_result.is_true() {
+        if !function_result.is_success() {
             return Ok(None);
         }
         subgoals.push(function_result);
@@ -1189,7 +1189,7 @@ impl Runtime {
             &EqualFact::new_from_refs(reduce.seed.as_ref(), &identity, line_file.clone()),
             builtin_state,
         )?;
-        if !seed_result.is_true() {
+        if !seed_result.is_success() {
             return Ok(None);
         }
         subgoals.extend(equality_builtin_match_subgoals(
@@ -1206,7 +1206,7 @@ impl Runtime {
             line_file,
             builtin_state,
         )?;
-        if !operation_result.is_true() {
+        if !operation_result.is_success() {
             return Ok(None);
         }
         subgoals.push(operation_result);
@@ -1220,13 +1220,13 @@ impl Runtime {
         aggregate_func: &Obj,
         specialization: NativeReduceSpecialization,
         line_file: LineFile,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
         let set_result = self.verify_equal_fact_as_builtin_premise(
             &EqualFact::new_from_refs(reduce.set.as_ref(), aggregate_set, line_file.clone()),
             builtin_state,
         )?;
-        if !set_result.is_true() {
+        if !set_result.is_success() {
             return Ok(None);
         }
         let mut subgoals = equality_builtin_match_subgoals(
@@ -1238,7 +1238,7 @@ impl Runtime {
             reduce.set.as_ref(),
             builtin_state,
         )?;
-        if !function_result.is_true() {
+        if !function_result.is_success() {
             return Ok(None);
         }
         subgoals.push(function_result);
@@ -1247,7 +1247,7 @@ impl Runtime {
             &EqualFact::new_from_refs(reduce.seed.as_ref(), &identity, line_file.clone()),
             builtin_state,
         )?;
-        if !seed_result.is_true() {
+        if !seed_result.is_success() {
             return Ok(None);
         }
         subgoals.extend(equality_builtin_match_subgoals(
@@ -1264,7 +1264,7 @@ impl Runtime {
             line_file,
             builtin_state,
         )?;
-        if !operation_result.is_true() {
+        if !operation_result.is_success() {
             return Ok(None);
         }
         subgoals.push(operation_result);
@@ -1277,7 +1277,7 @@ impl Runtime {
         carrier: &Obj,
         specialization: NativeReduceSpecialization,
         line_file: LineFile,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<StmtResult, RuntimeError> {
         let operation = operation.clone();
         let carrier = carrier.clone();
@@ -1300,9 +1300,9 @@ impl Runtime {
             let equality: AtomicFact = EqualFact::new(actual, expected, line_file.clone()).into();
             let known_forall = rt.verify_atomic_fact_with_known_forall(
                 &equality,
-                &UseContextVerifyState::new(0, true),
+                &ProofSearchState::after_well_definedness(),
             )?;
-            if known_forall.is_true() {
+            if known_forall.is_success() {
                 return Ok(known_forall);
             }
             rt.verify_atomic_fact_as_builtin_rule_premise(&equality, builtin_state)
@@ -1313,13 +1313,13 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         set: &Obj,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<StmtResult, RuntimeError> {
         let left_func = &equal_fact.left;
         let right_func = &equal_fact.right;
         let line_file = &equal_fact.line_file;
         let direct = self.verify_equal_fact_as_builtin_premise(equal_fact, builtin_state)?;
-        if direct.is_true() {
+        if direct.is_success() {
             return Ok(direct);
         }
         for (first, second) in [
@@ -1335,7 +1335,7 @@ impl Runtime {
             } else {
                 self.verify_non_equational_atomic_fact_with_known_atomic_facts(&fn_eq_in)?
             };
-            if known.is_true() {
+            if known.is_success() {
                 return Ok(known);
             }
         }
@@ -1362,9 +1362,9 @@ impl Runtime {
                 EqualFact::new(left_value, right_value, line_file.clone()).into();
             let known_forall = rt.verify_atomic_fact_with_known_forall(
                 &equality,
-                &UseContextVerifyState::new(0, true),
+                &ProofSearchState::after_well_definedness(),
             )?;
-            if known_forall.is_true() {
+            if known_forall.is_success() {
                 return Ok(known_forall);
             }
             rt.verify_atomic_fact_as_builtin_rule_premise(&equality, builtin_state)

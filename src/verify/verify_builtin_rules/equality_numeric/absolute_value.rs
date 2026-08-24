@@ -48,7 +48,7 @@ impl Runtime {
     pub(super) fn try_verify_abs_nonnegative_identity(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -69,7 +69,7 @@ impl Runtime {
         .into();
         let mut nonnegative_result =
             self.verify_atomic_fact_as_builtin_rule_premise(&nonnegative, builtin_state)?;
-        if !nonnegative_result.is_true() {
+        if !nonnegative_result.is_success() {
             let positive: AtomicFact = LessFact::new(
                 Self::literal_zero_obj_for_abs_builtin(),
                 arg.clone(),
@@ -79,7 +79,7 @@ impl Runtime {
             nonnegative_result =
                 self.verify_atomic_fact_as_builtin_rule_premise(&positive, builtin_state)?;
         }
-        if !nonnegative_result.is_true() {
+        if !nonnegative_result.is_success() {
             return Ok(None);
         }
         Ok(Some(
@@ -96,7 +96,7 @@ impl Runtime {
     pub(super) fn try_verify_abs_nonpositive_negation(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -117,7 +117,7 @@ impl Runtime {
         .into();
         let mut nonpositive_result =
             self.verify_atomic_fact_as_builtin_rule_premise(&nonpositive, builtin_state)?;
-        if !nonpositive_result.is_true() {
+        if !nonpositive_result.is_success() {
             let negative: AtomicFact = LessFact::new(
                 arg.clone(),
                 Self::literal_zero_obj_for_abs_builtin(),
@@ -127,7 +127,7 @@ impl Runtime {
             nonpositive_result =
                 self.verify_atomic_fact_as_builtin_rule_premise(&negative, builtin_state)?;
         }
-        if !nonpositive_result.is_true() {
+        if !nonpositive_result.is_success() {
             return Ok(None);
         }
         Ok(Some(
@@ -180,7 +180,7 @@ impl Runtime {
     pub(super) fn try_verify_abs_even_power(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -259,7 +259,7 @@ impl Runtime {
     pub fn try_verify_abs_equalities(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         if let Some(done) = self.try_verify_abs_nonnegative_identity(equal_fact, builtin_state)? {
             return Ok(Some(done));

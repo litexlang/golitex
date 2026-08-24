@@ -311,7 +311,7 @@ well-definedness nodes use `Rc`; ordered sibling results use `Vec`. This keeps
 ```text
 Litex source
   -> parse Stmt
-  -> exec_stmt
+  -> execute_statement
        -> statement-specific exec_* function
             -> well-definedness verify_* result
             -> proof verify_* result
@@ -382,12 +382,12 @@ now known in the claim-local environment.
 ### 1. Execution constructs the recursive Result
 
 For an ordinary, non-`forall` claim,
-[`exec_goal_proof_block.rs`](../execute/exec_goal_proof_block.rs) performs these
+[`exec_goal_proof_block.rs`](../execute/proof_block_execution/goal_proof.rs) performs these
 operations in order:
 
 1. Check that the target fact is well-defined.
 2. Enter `run_in_local_env`.
-3. Execute every source proof statement with `exec_stmt`, retaining one
+3. Execute every source proof statement with `execute_statement`, retaining one
    `StmtResult` per statement in `proof_steps`.
 4. Verify the target once more and retain that synthetic `StmtResult` as
    `conclusion_check`.
@@ -402,14 +402,14 @@ Here is Rust-shaped pseudocode for the producer side. Bracketed comments name
 the exact Result field written by each operation; error wrapping and trusted
 file branches are omitted, but the ordering and ownership boundaries match the
 current implementation in [`statement_execution.rs`](../execute/statement_execution.rs),
-[`exec_claim_stmt.rs`](../execute/exec_claim_stmt.rs),
-[`exec_goal_proof_block.rs`](../execute/exec_goal_proof_block.rs), and
+[`exec_claim_stmt.rs`](../execute/proof_block_execution/claim.rs),
+[`exec_goal_proof_block.rs`](../execute/proof_block_execution/goal_proof.rs), and
 [`submitted_fact_execution.rs`](../execute/submitted_fact_execution.rs).
 
 ```rust
 fn execute_statement(runtime, stmt) -> StmtResult {
     // Dispatches ClaimStmt to exec_claim_stmt and a child FactStmt to exec_fact.
-    let mut result = exec_stmt_verified(runtime, stmt)?;
+    let mut result = execute_verified_statement(runtime, stmt)?;
 
     // Recurses through every named child Result. It fills only missing IDs,
     // so an ID frozen before a local environment was popped is never retargeted.
@@ -455,7 +455,7 @@ fn exec_checked_goal_block(runtime, source_stmt, target, source_proof)
             // [each complete child StmtResult becomes verification.proof_steps[i]]
         }
 
-        proof_steps.push(verify_fact_return_err_if_not_true(local, target)?);
+        proof_steps.push(verify_fact_or_error(local, target)?);
         // [becomes verification.conclusion_check]
         // This is a proof-only fact Result, not another source_proof element.
 
@@ -501,7 +501,7 @@ fn exec_fact(runtime, fact) -> StmtResult {
     let wd = verify_fact_well_defined_result(runtime, fact)?;
     // [child.well_definedness]
 
-    let result = verify_fact_return_err_if_not_true(runtime, fact)?;
+    let result = verify_fact_or_error(runtime, fact)?;
     // [constructs child.verification: Rc<SuccessVerifyFactResult>]
     // For 2 = 2, its proof is BuiltinRule(ObjectReflexivity(...)).
 
@@ -524,7 +524,7 @@ The producer-to-field correspondence is therefore:
 | `verify_fact_well_defined_result(target)` | `verification.well_definedness` | Evidence that the target can be formed before entering its proof scope. |
 | `SuccessVerifyLocalProofScopeResult::new(...)` | `verification.proof_scope` | Assumptions intentionally installed at entry to the local proof environment. Empty in this tracer. |
 | `execute_statement(child_stmt)` | `verification.proof_steps[i]` | One complete, recursively typed execution result per user-written child, in source order. |
-| Final `verify_fact_return_err_if_not_true(target)` | `verification.conclusion_check` | Synthetic proof-only Result showing that the target is known after all source proof steps. |
+| Final `verify_fact_or_error(target)` | `verification.conclusion_check` | Synthetic proof-only Result showing that the target is known after all source proof steps. |
 | Local `attach_known_fact_ids_to_stmt_result` | Fields inside `proof_steps` and `conclusion_check` | Freezes exact local store and citation identities before the Runtime scope disappears. |
 | `exec_claim_stmt_affect_environment` followed by `with_infers` | `common.infers` | Effects exported by the claim to its parent environment. |
 | Outer `finish_statement_execution` | `common.execution_trace` | Execution/trust provenance for this outer statement. |
@@ -2327,7 +2327,7 @@ consumes the Rust Result structures directly.
 - Missing `FactId` and execution-trace attachment happens at the statement
   boundary while the runtime is still alive. Already frozen local FactIds are
   never overwritten by a later ambient fact with the same proposition. After
-  `exec_stmt` returns, the Result is self-contained for JSON, graph, and
+  `execute_statement` returns, the Result is self-contained for JSON, graph, and
   compiler consumers.
 - Lean-source construction may use tactics only inside reviewed fixed adapters
   after validating verifier-owned evidence. It may not launch open-ended

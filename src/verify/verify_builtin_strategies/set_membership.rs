@@ -7,13 +7,13 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         let literal_struct =
             self.verify_literal_tuple_struct_membership_with_builtin_strategy(fact)?;
-        if literal_struct.is_true() {
+        if literal_struct.is_success() {
             return Ok(literal_struct);
         }
 
         let defined_set =
             self.verify_one_layer_set_builder_membership_with_builtin_strategy(fact)?;
-        if defined_set.is_true() {
+        if defined_set.is_success() {
             return Ok(defined_set);
         }
 
@@ -125,7 +125,7 @@ impl Runtime {
         let (Obj::Tuple(_), Obj::StructObj(struct_obj)) = (&fact.element, &fact.set) else {
             return Ok(UnknownGenericStmtResult::new().into());
         };
-        let final_state = UseContextVerifyState::new_with_final_round(false);
+        let final_state = ProofSearchState::final_round();
         self.verify_in_fact_by_struct_obj(fact, struct_obj, &final_state)
     }
 
@@ -165,7 +165,7 @@ impl Runtime {
         {
             return Ok(UnknownGenericStmtResult::new().into());
         }
-        let final_state = UseContextVerifyState::new_with_final_round(false);
+        let final_state = ProofSearchState::final_round();
         if let Obj::InstantiatedTemplateObj(template_obj) = &fact.set {
             self.instantiate_template_obj(template_obj, &final_state)?;
         }
@@ -188,7 +188,7 @@ impl Runtime {
         )
         .into();
         let base_result = self.verify_builtin_strategy_child(&base)?;
-        if !base_result.is_true() {
+        if !base_result.is_success() {
             return Ok(UnknownGenericStmtResult::new().into());
         }
         expected_premises.push(base.clone().into());
@@ -213,7 +213,7 @@ impl Runtime {
             // proposition definition without reopening general proof search.
             let mut result =
                 self.verify_fact_allow_unknown(&instantiated.clone().to_fact(), &final_state)?;
-            if !result.is_true() {
+            if !result.is_success() {
                 if let QuantifierFreeFact::AtomicFact(atomic_fact) = &instantiated {
                     if matches!(atomic_fact, AtomicFact::NormalAtomicFact(_)) {
                         if let Some(definition_result) = self
@@ -227,7 +227,7 @@ impl Runtime {
                     }
                 }
             }
-            if !result.is_true() {
+            if !result.is_success() {
                 return Ok(UnknownGenericStmtResult::new().into());
             }
             expected_premises.push(instantiated.clone().to_fact());
@@ -332,7 +332,7 @@ impl Runtime {
             let mut complete = true;
             for child in required {
                 let result = self.verify_builtin_strategy_child(&child)?;
-                if !result.is_true() {
+                if !result.is_success() {
                     complete = false;
                     break;
                 }

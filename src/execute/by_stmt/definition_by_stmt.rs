@@ -2,7 +2,7 @@ use crate::prelude::*;
 
 impl Runtime {
     pub fn exec_by_def_stmt(&mut self, stmt: &ByDefStmt) -> Result<StmtResult, RuntimeError> {
-        let verify_state = UseContextVerifyState::new(0, false);
+        let verify_state = ProofSearchState::initial();
         if let Some(result) = self.verify_explicit_builtin_definition(&stmt.fact, &verify_state)? {
             if result.is_unknown() {
                 return Err(short_exec_error(
@@ -188,7 +188,7 @@ impl Runtime {
     fn verify_explicit_builtin_definition(
         &mut self,
         fact: &AtomicFact,
-        verify_state: &UseContextVerifyState,
+        verify_state: &ProofSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         match fact {
             AtomicFact::SubsetFact(_) | AtomicFact::SupersetFact(_) => {

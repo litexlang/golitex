@@ -5,7 +5,7 @@ impl Runtime {
     pub fn verify_subset_fact_with_builtin_rules(
         &mut self,
         subset_fact: &SubsetFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<StmtResult, RuntimeError> {
         if let Some(result) =
             self.try_verify_indexed_set_family_algebra_subset(subset_fact, builtin_state)?
@@ -99,7 +99,7 @@ impl Runtime {
                 .into();
                 let result =
                     self.verify_atomic_fact_as_builtin_rule_premise(&premise, builtin_state)?;
-                if result.is_true() {
+                if result.is_success() {
                     return Ok(
                         SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                             subset_fact.clone().into(),
@@ -121,7 +121,7 @@ impl Runtime {
             .into();
             let result =
                 self.verify_atomic_fact_as_builtin_rule_premise(&premise, builtin_state)?;
-            if result.is_true() {
+            if result.is_success() {
                 return Ok(
                     SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                         subset_fact.clone().into(),
@@ -146,7 +146,7 @@ impl Runtime {
             .into();
             let result =
                 self.verify_atomic_fact_as_builtin_rule_premise(&premise, builtin_state)?;
-            if result.is_true() {
+            if result.is_success() {
                 return Ok(
                     SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                         subset_fact.clone().into(),
@@ -174,7 +174,7 @@ impl Runtime {
                 .into();
                 let result =
                     self.verify_atomic_fact_as_builtin_rule_premise(&premise, builtin_state)?;
-                if result.is_true() {
+                if result.is_success() {
                     return Ok(
                         SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                             subset_fact.clone().into(),
@@ -329,7 +329,7 @@ impl Runtime {
                         &start_membership,
                         builtin_state,
                     )?;
-                    if !result.is_true() {
+                    if !result.is_success() {
                         return Ok((UnknownGenericStmtResult::new()).into());
                     }
                     dependencies.push(result);
@@ -397,7 +397,7 @@ impl Runtime {
                 } else {
                     self.verify_atomic_fact_as_builtin_rule_premise(&ret_subset, builtin_state)?
                 };
-                if ret_subset_result.is_true() {
+                if ret_subset_result.is_success() {
                     return Ok(
                         (SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                             subset_fact.clone().into(),
@@ -418,7 +418,7 @@ impl Runtime {
         .into();
         let verify_result = self
             .verify_non_equational_atomic_fact_with_known_atomic_facts(&converted_superset_fact)?;
-        if verify_result.is_true() {
+        if verify_result.is_success() {
             Ok(
                 (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     subset_fact.clone().into(),
@@ -439,7 +439,7 @@ impl Runtime {
     pub fn verify_superset_fact_with_builtin_rules(
         &mut self,
         superset_fact: &SupersetFact,
-        _builtin_state: &UseBuiltinRuleVerifyState,
+        _builtin_state: &BuiltinRuleSearchState,
     ) -> Result<StmtResult, RuntimeError> {
         // Standard number sets form a fixed inclusion chain. Example: `R $supset N`.
         if let (Obj::StandardSet(left), Obj::StandardSet(right)) =
@@ -481,7 +481,7 @@ impl Runtime {
         .into();
         let verify_result =
             self.verify_non_equational_atomic_fact_with_known_atomic_facts(&converted_subset_fact)?;
-        if verify_result.is_true() {
+        if verify_result.is_success() {
             Ok(
                 (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     superset_fact.clone().into(),
@@ -502,7 +502,7 @@ impl Runtime {
     pub fn verify_not_subset_fact_with_builtin_rules(
         &mut self,
         not_subset_fact: &NotSubsetFact,
-        _builtin_state: &UseBuiltinRuleVerifyState,
+        _builtin_state: &BuiltinRuleSearchState,
     ) -> Result<StmtResult, RuntimeError> {
         let converted_not_superset_fact = NotSupersetFact::new(
             not_subset_fact.right.clone(),
@@ -513,7 +513,7 @@ impl Runtime {
         let verify_result = self.verify_non_equational_atomic_fact_with_known_atomic_facts(
             &converted_not_superset_fact,
         )?;
-        if verify_result.is_true() {
+        if verify_result.is_success() {
             Ok(
                 (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     not_subset_fact.clone().into(),
@@ -534,7 +534,7 @@ impl Runtime {
     pub fn verify_not_superset_fact_with_builtin_rules(
         &mut self,
         not_superset_fact: &NotSupersetFact,
-        _builtin_state: &UseBuiltinRuleVerifyState,
+        _builtin_state: &BuiltinRuleSearchState,
     ) -> Result<StmtResult, RuntimeError> {
         let converted_not_subset_fact = NotSubsetFact::new(
             not_superset_fact.right.clone(),
@@ -545,7 +545,7 @@ impl Runtime {
         let verify_result = self.verify_non_equational_atomic_fact_with_known_atomic_facts(
             &converted_not_subset_fact,
         )?;
-        if verify_result.is_true() {
+        if verify_result.is_success() {
             Ok(
                 (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     not_superset_fact.clone().into(),

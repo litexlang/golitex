@@ -44,13 +44,14 @@ target = "./target.lit"
 
             let target_path = path_string(&target_source);
             let mut runtime = Runtime::new();
-            let (stmt_results, runtime_error, report, setup_rejected) =
-                run_file_with_project_context_and_trusted_prefix(
-                    target_path.as_str(),
-                    &mut runtime,
-                    false,
-                    Some(3),
-                );
+            let (stmt_results, runtime_error, report, setup_rejected) = execute_file_in_runtime(
+                target_path.as_str(),
+                &mut runtime,
+                FileExecutionOptions {
+                    force_isolated: false,
+                    trust_before_line: Some(3),
+                },
+            );
 
             assert!(
                 runtime_error.is_none(),
@@ -135,13 +136,12 @@ target = "./target.lit"
             write_file(&target_source, "1 = 0\n\n1 = 1\n");
 
             let mut runtime = Runtime::new();
-            let (stmt_results, runtime_error) = run_file_with_project_context(
+            let (stmt_results, runtime_error, _, _) = execute_file_in_runtime(
                 path_string(&target_source).as_str(),
                 &mut runtime,
-                false,
+                FileExecutionOptions::default(),
             );
-            let (_, output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            let (_, output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
             assert!(
                 runtime_error.is_some(),
@@ -174,20 +174,21 @@ target = "./target.lit"
     write_file(&target_source, "1 = 1\n\n2 = 2\n");
 
     let mut runtime = Runtime::new();
-    let (stmt_results, runtime_error, report, setup_rejected) =
-        run_file_with_project_context_and_trusted_prefix(
-            path_string(&target_source).as_str(),
-            &mut runtime,
-            false,
-            Some(2),
-        );
+    let (stmt_results, runtime_error, report, setup_rejected) = execute_file_in_runtime(
+        path_string(&target_source).as_str(),
+        &mut runtime,
+        FileExecutionOptions {
+            force_isolated: false,
+            trust_before_line: Some(2),
+        },
+    );
 
     assert!(stmt_results.is_empty());
     assert!(runtime_error.is_some());
     assert!(report.is_none());
     assert!(setup_rejected);
 
-    let (probe_results, probe_error) = run_source_code("7 = 8", &mut runtime);
+    let (probe_results, probe_error) = execute_source("7 = 8", &mut runtime);
     assert!(
         probe_results.is_empty() && probe_error.is_some(),
         "an invalid boundary must be rejected before preceding exports write facts"

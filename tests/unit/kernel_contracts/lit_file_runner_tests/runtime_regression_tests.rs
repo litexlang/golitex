@@ -2,12 +2,36 @@ use std::fs;
 use std::path::PathBuf;
 use std::time::Instant;
 
-use crate::pipeline::{render_run_source_code_output, run_source_code};
+use crate::pipeline::{execute_source, render_run_output};
 use crate::prelude::*;
 use crate::to_latex::to_latex_from_source;
 use crate::to_python::to_python_from_source;
 
 use super::helper::run_with_large_stack;
+
+fn run_repository_for_test(
+    repository_path: &str,
+    detailed_output: bool,
+    strict_mode: bool,
+    output_language: OutputLanguage,
+    summarize: bool,
+) -> (bool, String) {
+    let outcome = run(RunRequest::new(
+        RunTarget::repository(repository_path),
+        RunOptions {
+            output_style: if detailed_output {
+                OutputStyle::Detailed
+            } else {
+                OutputStyle::Normal
+            },
+            strict_mode,
+            output_language,
+            summarize,
+            ..RunOptions::default()
+        },
+    ));
+    (outcome.ok, outcome.output)
+}
 
 fn legacy_acceptance_field_name() -> String {
     ["accepted", "by"].join("_")
@@ -38,16 +62,12 @@ fn runtime_contract_builtin_and_clear() {
     let source_code = "1 = 1";
 
     let mut import_runtime = Runtime::new();
-    import_runtime.new_file_path_new_env_new_name_scope("runtime_contract_import");
+    import_runtime.start_isolated_source("runtime_contract_import");
     import_runtime.strict_mode = true;
     let (import_stmt_results, import_runtime_error) =
-        run_source_code(source_code, &mut import_runtime);
-    let (import_run_succeeded, import_run_output) = render_run_source_code_output(
-        &import_runtime,
-        &import_stmt_results,
-        &import_runtime_error,
-        false,
-    );
+        execute_source(source_code, &mut import_runtime);
+    let (import_run_succeeded, import_run_output) =
+        render_run_output(&import_runtime, &import_stmt_results, &import_runtime_error);
     assert!(
         import_run_succeeded,
         "runtime contract builtin fixture failed:\n{}",
@@ -57,15 +77,11 @@ fn runtime_contract_builtin_and_clear() {
     let clear_source_code =
         "abstract_prop local_prop(x)\ntrust $local_prop(2)\nclear\n$local_prop(2)";
     let mut clear_runtime = Runtime::new();
-    clear_runtime.new_file_path_new_env_new_name_scope("runtime_contract_clear");
+    clear_runtime.start_isolated_source("runtime_contract_clear");
     let (clear_stmt_results, clear_runtime_error) =
-        run_source_code(clear_source_code, &mut clear_runtime);
-    let (clear_succeeded, clear_output) = render_run_source_code_output(
-        &clear_runtime,
-        &clear_stmt_results,
-        &clear_runtime_error,
-        false,
-    );
+        execute_source(clear_source_code, &mut clear_runtime);
+    let (clear_succeeded, clear_output) =
+        render_run_output(&clear_runtime, &clear_stmt_results, &clear_runtime_error);
     assert!(
         !clear_succeeded,
         "runtime contract clear fixture should drop local facts:\n{}",

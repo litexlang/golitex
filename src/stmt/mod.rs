@@ -1,24 +1,44 @@
+#[path = "definitions/axiom.rs"]
 mod axiom_stmt;
 pub mod by_stmt;
+#[path = "proof_blocks/claim.rs"]
 pub mod claim_stmt;
+#[path = "definitions/algorithm.rs"]
 pub mod define_algorithm_stmt;
+#[path = "definitions/statement.rs"]
 pub mod definition_stmt;
+#[path = "commands/evaluation.rs"]
 pub mod eval_stmt;
+#[path = "proof_blocks/example.rs"]
 pub mod example_stmt;
+#[path = "definitions/parameters.rs"]
 pub mod parameter_def;
+#[path = "proof_blocks/sketch.rs"]
 pub mod sketch_stmt;
+#[path = "commands/tooling.rs"]
 pub mod tooling_stmt;
+#[path = "proof_blocks/trust.rs"]
 pub mod trust_stmt;
+#[path = "proof_blocks/try_block.rs"]
 pub mod try_stmt;
+#[path = "proof_blocks/witness.rs"]
 pub mod witness_stmt;
 
+#[path = "core/types.rs"]
 mod statement_types;
+#[path = "core/display.rs"]
 mod stmt_display;
+#[path = "core/conversions.rs"]
 mod stmt_from;
+#[path = "core/metadata.rs"]
 mod stmt_metadata;
+#[path = "core/type_names.rs"]
 mod stmt_type_name;
+#[path = "definitions/strategy.rs"]
 mod strategy_stmt;
+#[path = "definitions/structure.rs"]
 mod struct_stmt;
+#[path = "definitions/theorem.rs"]
 mod thm_stmt;
 pub use axiom_stmt::AxiomStmt;
 pub use by_stmt::ByClosedRangeAsCasesStmt;

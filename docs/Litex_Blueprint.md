@@ -123,6 +123,8 @@ The difference should not be reduced to “short code is necessarily stronger th
 
 This set-theoretic surface does not mean that Litex imposes no constraints. Function domains and codomains, structure fields, and set-membership relations still undergo well-definedness checking; those constraints are simply written, as far as possible, where a mathematician would already write them. Litex also retains parameterized constructions such as `template`, because ordinary mathematics genuinely needs families of objects indexed by carriers, parameters, or hypotheses. Litex does not describe itself as a complete dependent type theory.
 
+More importantly, Litex does not require the author to repeat the transport of these well-definedness conditions at every use. Once a function has a checked contract—its parameter domains, return set, and any call conditions—that contract becomes a reusable part of the function's mathematical interface. At a call, the verifier checks the actual arguments against the parameter domains, derives that the returned object belongs to the return set, and carries those facts through nested calls. The well-definedness obligation has not disappeared; what disappears from the source is the author's repeated transcription of its transport chain. This matches ordinary mathematical practice: after `f : A → B`, `g : B → C`, and `a ∈ A` have been established, one writes `g(f(a))` without restating `a ∈ A ⇒ f(a) ∈ B ⇒ g(f(a)) ∈ C`.
+
 The same choice extends to mathematical structures such as groups. A structure still needs a carrier, and an operation still needs to say where its inputs and output live. The difference is whether those constraints are presented first as types and functions or first as sets, membership, and operations on sets.
 
 Because these constraints remain expressed through objects and relations familiar to mathematicians, the value of a set-theoretic surface is not only shorter code. It also helps keep the formal statement directly reviewable.
@@ -147,7 +149,11 @@ Readability matters after verification as well. A corpus that exposes its mathem
 > [Lean](https://lean-lang.org/doc/reference/latest/The-Type-System/) and
 > [Rocq](https://rocq-prover.org/doc/V9.2.0/refman/language/core/index.html) expose dependent type-theoretic kernels to users; and
 > [Isabelle/HOL](https://isabelle.in.tum.de/website-Isabelle2024/dist/library/Doc/Isar_Ref/HOL_Specific.html)
-> uses polymorphic higher-order logic. Litex asks a more specific question about the user-facing object interface:
+> uses polymorphic higher-order logic.
+>
+> At the proposition level, Litex's user-facing language is broadly first-order in flavor. Facts begin with atomic relations between mathematical objects or calls to named predicates, and are organized with a deliberately restricted set of classical logical forms and quantifiers. “Restricted” matters here: Litex favors canonical fact shapes over arbitrary recursive combinations of formulas, and propositions and proofs are not ordinary first-class values. This describes the proposition interface rather than claiming that the verifier is merely a general first-order prover: it also checks well-definedness and searches definitions, the current context, and supported builtin and inference rules for a justification.
+>
+> Against that background, Litex asks a more specific question about the user-facing object interface:
 > can a small, membership-centered, set-theoretic surface cover substantive mathematics without first requiring users to manage type universes?
 
 <a id="group-comparison"></a>
@@ -410,7 +416,7 @@ This writing style is closer to everyday mathematical prose. Mathematicians do n
 <details>
 <summary><strong>A personal analogy: declarative and imperative styles</strong></summary>
 
-An imperfect programming analogy can help here. Declarative source tends to emphasize *what should be produced*, while imperative source tends to emphasize *how to produce it*. Litex's fact-oriented style is closer to the former: users state *what is to be proved*, and the kernel searches for *how to prove it*. Lean itself is a functional language, but its tactic workflow can feel more imperative at the interaction level because the source describes a sequence of transformations to the current proof state. This is an analogy about interaction style, not a strict classification of programming languages.
+An imperfect programming analogy can help here. Declarative source tends to emphasize *what should be produced*, while imperative source tends to emphasize *how to produce it*. Litex's fact-oriented style is closer to the former: users state *what is to be proved*, and the kernel searches for *how to prove it*. Because Litex automatically searches both for the conditions that make an expression well-defined and for support that justifies a stated fact, authors usually do not need to thread hard-to-read fact names or `by ...` tactic instructions through the source to the exact syntactic positions where they apply; this greatly shortens function notation and helps the language retain a smaller, more uniform surface syntax. Lean itself is a functional language, but its tactic workflow can feel more imperative at the interaction level because the source describes a sequence of transformations to the current proof state. This is an analogy about interaction style, not a strict classification of programming languages.
 
 </details>
 
@@ -432,9 +438,9 @@ An imperfect programming analogy can help here. Declarative source tends to emph
 
 ## 3. Building Proof Flow Bottom-Up
 
-Fact-oriented answers the question “what is one line of Litex source?” It is a mathematical fact waiting for the kernel to verify. Bottom-up answers “how do those facts compose into a proof?” Every verified fact extends the context, allowing later facts to grow from earlier results.
+Mathematical facts are the basic units of Litex source. Within a proof, those facts do not stand alone: each verified fact extends the current context and becomes a known condition that later statements can use. As new facts accumulate, the proof flow moves forward from known conditions toward the conclusion. This is what “bottom-up” means here.
 
-Litex proofs proceed bottom-up. The default unit of reasoning is the next mathematical fact in the current context, not an active Goal that every line must immediately advance. As long as a statement is in the current scope, is well-defined, and has sufficient support in the existing context, the kernel can accept it, store it, apply currently relevant inference rules, and pass the enriched context to later statements. Several mathematical branches can grow separately before later statements bring them together.
+By design, Litex supports **declarative proof writing whose default flow is mostly forward reasoning**. The default unit of reasoning is the next mathematical fact in the current context, not an active Goal that every line must immediately advance. As long as a statement is in the current scope, is well-defined, and has sufficient support in the existing context, the kernel can accept it, store it, apply currently relevant inference rules, and pass the enriched context to later statements. Several mathematical branches can grow separately before later statements bring them together.
 
 Lean's usual interactive theorem proving is goal-directed, with a typical direction that is backward and top-down. The final theorem first fixes the final Goal. Local terms and tactic commands are elaborated under that expectation, progressively decomposing the Goal or reducing it backward to simpler subgoals until Lean can assemble a complete proof term.
 

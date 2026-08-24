@@ -399,7 +399,7 @@ impl Runtime {
         surface_set: &Obj,
         fn_set: &FnSet,
     ) -> Result<SuccessVerifyIndexedFunctionDefinitionWellDefinedResult, RuntimeError> {
-        let verify_state = UseContextVerifyState::new(0, false);
+        let verify_state = ProofSearchState::initial();
         let surface_set = self
             .verify_obj_well_defined_result(surface_set, &verify_state)
             .map_err(|e| short_exec_error(stmt.clone(), String::new(), Some(e), vec![]))?;
@@ -446,8 +446,8 @@ impl Runtime {
                     line_file,
                 )
                 .into();
-                let mut return_check = rt
-                    .verify_atomic_fact(&value_membership, &UseContextVerifyState::new(0, false))?;
+                let mut return_check =
+                    rt.verify_atomic_fact(&value_membership, &ProofSearchState::initial())?;
                 rt.attach_known_fact_ids_to_infer_result(&mut assumption_infers)?;
                 rt.attach_known_fact_ids_to_stmt_result(&mut return_check)?;
                 Ok((return_check, assumption_infers))
@@ -479,7 +479,7 @@ impl Runtime {
         let in_n_pos: AtomicFact =
             InFact::new(bound.clone(), StandardSet::NPos.into(), line_file.clone()).into();
         let in_n_pos_result = self
-            .verify_atomic_fact(&in_n_pos, &UseContextVerifyState::new(0, false))
+            .verify_atomic_fact(&in_n_pos, &ProofSearchState::initial())
             .map_err(|e| short_exec_error(stmt.clone(), String::new(), Some(e), vec![]))?;
         if in_n_pos_result.is_unknown() {
             return Err(short_exec_error(
@@ -494,7 +494,7 @@ impl Runtime {
         let equal_fact: AtomicFact =
             EqualFact::new(bound.clone(), expected.clone(), line_file).into();
         let equal_result = self
-            .verify_atomic_fact(&equal_fact, &UseContextVerifyState::new(0, false))
+            .verify_atomic_fact(&equal_fact, &ProofSearchState::initial())
             .map_err(|e| short_exec_error(stmt.clone(), String::new(), Some(e), vec![]))?;
         if equal_result.is_unknown() {
             return Err(short_exec_error(

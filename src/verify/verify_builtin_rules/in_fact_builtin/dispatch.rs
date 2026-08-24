@@ -4,7 +4,7 @@ impl Runtime {
     pub fn verify_not_in_fact_with_builtin_rules(
         &mut self,
         not_in_fact: &NotInFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<StmtResult, RuntimeError> {
         if let Obj::StandardSet(standard_set) = &not_in_fact.set {
             if matches!(standard_set, StandardSet::Z) {
@@ -97,7 +97,7 @@ impl Runtime {
     pub fn verify_in_fact_with_builtin_rules(
         &mut self,
         in_fact: &InFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<StmtResult, RuntimeError> {
         if let Obj::MatrixSet(expected_matrix_set) = &in_fact.set {
             if matches!(
@@ -110,7 +110,7 @@ impl Runtime {
             ) {
                 if let Ok(inferred_matrix_set) = self.real_matrix_type(
                     &in_fact.element,
-                    &UseContextVerifyState::new_with_final_round(true),
+                    &ProofSearchState::final_round_after_well_definedness(),
                     "membership",
                 ) {
                     let inferred_obj: Obj = inferred_matrix_set.clone().into();
@@ -142,7 +142,7 @@ impl Runtime {
                 &in_fact.element,
                 fn_set,
                 in_fact,
-                &UseContextVerifyState::new(0, true),
+                &ProofSearchState::after_well_definedness(),
             )? {
                 return Ok(result);
             }
@@ -158,7 +158,7 @@ impl Runtime {
                     fn_set,
                     in_fact,
                 )?;
-                if signature_result.is_true() {
+                if signature_result.is_success() {
                     return Ok(signature_result);
                 }
 
@@ -167,9 +167,9 @@ impl Runtime {
                         anonymous_fn,
                         fn_set,
                         in_fact,
-                        &UseContextVerifyState::new(0, true),
+                        &ProofSearchState::after_well_definedness(),
                     )?;
-                if transported_result.is_true() {
+                if transported_result.is_success() {
                     return Ok(transported_result);
                 }
             }
@@ -178,9 +178,9 @@ impl Runtime {
             let result = self.verify_in_fact_in_general_cart_by_defining_facts(
                 in_fact,
                 general_cart,
-                &UseContextVerifyState::new(0, true),
+                &ProofSearchState::after_well_definedness(),
             )?;
-            if result.is_true() {
+            if result.is_success() {
                 return Ok(result);
             }
         }
@@ -200,7 +200,7 @@ impl Runtime {
                 in_fact,
                 builtin_state,
             )?;
-            if fn_try.is_true() {
+            if fn_try.is_success() {
                 return Ok(fn_try);
             }
         }
@@ -210,7 +210,7 @@ impl Runtime {
                 field_access,
                 builtin_state,
             )?;
-            if field_try.is_true() {
+            if field_try.is_success() {
                 return Ok(field_try);
             }
         }
@@ -225,7 +225,7 @@ impl Runtime {
                             &evaluated_number,
                             standard_set,
                         );
-                    if evaluation_membership_result.is_true() {
+                    if evaluation_membership_result.is_success() {
                         return Ok(evaluation_membership_result);
                     }
                 }
@@ -237,7 +237,7 @@ impl Runtime {
                             &evaluated_number,
                             standard_set,
                         );
-                    if resolved_membership_result.is_true() {
+                    if resolved_membership_result.is_success() {
                         return Ok(resolved_membership_result);
                     }
                 }
@@ -249,11 +249,11 @@ impl Runtime {
         // closed-number reflection.
         let standard_projection =
             self.verify_in_fact_by_standard_subset_membership(in_fact, builtin_state)?;
-        if standard_projection.is_true() {
+        if standard_projection.is_success() {
             return Ok(standard_projection);
         }
         let direct_superset_result = self.verify_in_fact_by_known_direct_superset(in_fact)?;
-        if direct_superset_result.is_true() {
+        if direct_superset_result.is_success() {
             return Ok(direct_superset_result);
         }
         if let Some(result) = self.verify_reduce_membership_from_operation_carrier(in_fact) {
@@ -543,7 +543,7 @@ impl Runtime {
                         &source_membership,
                         builtin_state,
                     )?;
-                    if result.is_true() {
+                    if result.is_success() {
                         evidence = Some(result);
                         break;
                     }
@@ -1065,7 +1065,7 @@ impl Runtime {
                         target_set_obj,
                         builtin_state,
                     )?;
-                if literal_tuple_projection_result.is_true() {
+                if literal_tuple_projection_result.is_success() {
                     return Ok(literal_tuple_projection_result);
                 }
                 let finite_seq_literal_application_result = self
@@ -1074,7 +1074,7 @@ impl Runtime {
                         target_set_obj,
                         builtin_state,
                     )?;
-                if finite_seq_literal_application_result.is_true() {
+                if finite_seq_literal_application_result.is_success() {
                     return Ok(finite_seq_literal_application_result);
                 }
                 let cart_projection_result = self
@@ -1083,12 +1083,12 @@ impl Runtime {
                         target_set_obj,
                         builtin_state,
                     )?;
-                if cart_projection_result.is_true() {
+                if cart_projection_result.is_success() {
                     return Ok(cart_projection_result);
                 }
                 let list_set_carrier_result =
                     self.verify_in_fact_by_known_list_set_carrier(in_fact, builtin_state)?;
-                if list_set_carrier_result.is_true() {
+                if list_set_carrier_result.is_success() {
                     return Ok(list_set_carrier_result);
                 }
                 Ok((UnknownGenericStmtResult::new()).into())

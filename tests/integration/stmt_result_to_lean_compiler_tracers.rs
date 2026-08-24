@@ -37,7 +37,7 @@ fn capture_stmt_results_json_v2_on_verifier_stack(
         .stack_size(32 * 1024 * 1024)
         .spawn(move || {
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(label);
+            runtime.start_isolated_source(label);
             runtime.set_current_source_allows_inline_imports(true);
             let tokenizer = Tokenizer::new();
             let blocks = tokenizer
@@ -48,7 +48,7 @@ fn capture_stmt_results_json_v2_on_verifier_stack(
                 let statement = runtime
                     .parse_statement(&mut block)
                     .map_err(|error| format!("{error:?}"))?;
-                let result = run_stmt_at_global_env(&statement, &mut runtime)
+                let result = execute_top_level_statement(&statement, &mut runtime)
                     .map_err(|error| format!("{error:?}"))?;
                 results.push(result);
             }

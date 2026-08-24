@@ -5,7 +5,7 @@ impl Runtime {
     pub fn verify_abs_order_builtin_rule(
         &mut self,
         atomic_fact: &AtomicFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some(norm) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(None);
@@ -58,7 +58,7 @@ impl Runtime {
     pub fn verify_abs_order_strict_builtin_rule(
         &mut self,
         atomic_fact: &AtomicFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some(norm) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(None);
@@ -212,7 +212,7 @@ impl Runtime {
     fn verify_abs_order_subgoal(
         &mut self,
         fact: AtomicFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<StmtResult, RuntimeError> {
         match fact {
             AtomicFact::LessFact(_) | AtomicFact::LessEqualFact(_) => {
@@ -262,7 +262,7 @@ impl Runtime {
         &mut self,
         f: &LessEqualFact,
         atomic_fact: &AtomicFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Obj::Abs(abs) = &f.left else {
             return Ok(None);
@@ -282,7 +282,7 @@ impl Runtime {
         .into();
         let start_result =
             self.verify_atomic_fact_as_builtin_rule_premise(&start_fact, builtin_state)?;
-        if !start_result.is_true() {
+        if !start_result.is_success() {
             return Ok(None);
         }
         let end_fact: AtomicFact = EqualFact::new(
@@ -293,7 +293,7 @@ impl Runtime {
         .into();
         let end_result =
             self.verify_atomic_fact_as_builtin_rule_premise(&end_fact, builtin_state)?;
-        if !end_result.is_true() {
+        if !end_result.is_success() {
             return Ok(None);
         }
 
@@ -329,7 +329,7 @@ impl Runtime {
             rt.store_fact_without_forall_coverage_check_and_infer(dom_hi)?;
             rt.verify_atomic_fact_as_builtin_rule_premise(&pointwise_fact, builtin_state)
         })?;
-        if !pointwise_result.is_true() {
+        if !pointwise_result.is_success() {
             return Ok(None);
         }
 
@@ -348,7 +348,7 @@ impl Runtime {
         &mut self,
         f: &LessEqualFact,
         atomic_fact: &AtomicFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Obj::Abs(abs) = &f.left else {
             return Ok(None);
@@ -368,7 +368,7 @@ impl Runtime {
         .into();
         let set_result =
             self.verify_atomic_fact_as_builtin_rule_premise(&set_fact, builtin_state)?;
-        if !set_result.is_true() {
+        if !set_result.is_success() {
             return Ok(None);
         }
 
@@ -393,7 +393,7 @@ impl Runtime {
             rt.define_params_with_type(&params_def, false, ParamObjType::Forall)?;
             rt.verify_atomic_fact_as_builtin_rule_premise(&pointwise_fact, builtin_state)
         })?;
-        if !pointwise_result.is_true() {
+        if !pointwise_result.is_success() {
             return Ok(None);
         }
 
@@ -412,7 +412,7 @@ impl Runtime {
         &mut self,
         f: &LessFact,
         atomic_fact: &AtomicFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         if !obj_is_literal_zero(&f.left) {
             return Ok(None);
@@ -427,7 +427,7 @@ impl Runtime {
         )
         .into();
         let nonzero_result = self.verify_abs_order_subgoal(arg_nonzero, builtin_state)?;
-        if !nonzero_result.is_true() {
+        if !nonzero_result.is_success() {
             return Ok(None);
         }
         Ok(Some(StmtResult::from(
@@ -450,7 +450,7 @@ impl Runtime {
         line_file: &LineFile,
         atomic_fact: &AtomicFact,
         strict: bool,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Obj::Abs(abs) = left else {
             return Ok(None);
@@ -462,19 +462,19 @@ impl Runtime {
         let neg_bound_le_arg =
             abs_order_subgoal(neg_obj(right), arg.clone(), line_file.clone(), strict);
         let r1 = self.verify_abs_order_subgoal(arg_le_bound, builtin_state)?;
-        if !r1.is_true() {
+        if !r1.is_success() {
             return Ok(None);
         }
         // Accept either common spelling of the lower side of the sandwich:
         // `-x < b` or, equivalently, `-b < x`. Checking the latter directly
         // avoids requiring a second order-algebra builtin hop.
         let direct_lower = self.verify_abs_order_subgoal(neg_bound_le_arg, builtin_state)?;
-        let r2 = if direct_lower.is_true() {
+        let r2 = if direct_lower.is_success() {
             direct_lower
         } else {
             self.verify_abs_order_subgoal(neg_arg_le_bound, builtin_state)?
         };
-        if !r2.is_true() {
+        if !r2.is_success() {
             return Ok(None);
         }
         let rule = if strict {
@@ -503,7 +503,7 @@ impl Runtime {
         line_file: &LineFile,
         atomic_fact: &AtomicFact,
         strict: bool,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let rule_suffix = if strict { " (strict)" } else { "" };
         let zero: Obj = Number::new("0".to_string()).into();
@@ -536,7 +536,7 @@ impl Runtime {
                     let ge_y: AtomicFact =
                         GreaterEqualFact::new(y.clone(), zero.clone(), line_file.clone()).into();
                     let r_sign = self.verify_abs_order_subgoal(ge_y, builtin_state)?;
-                    if r_sign.is_true() {
+                    if r_sign.is_success() {
                         let rule = format!(
                             "abs: -y {} x from abs(x) {} abs(y) and 0 <= y{}",
                             if strict { "<" } else { "<=" },
@@ -602,7 +602,7 @@ impl Runtime {
             } else {
                 self.verify_abs_order_subgoal(le_y, builtin_state)?
             };
-            if r_sign.is_true() {
+            if r_sign.is_success() {
                 let rule = format!(
                     "abs: y {} x from abs(x) {} abs(y) and y <= 0{}",
                     if strict { "<" } else { "<=" },
@@ -631,7 +631,7 @@ impl Runtime {
                 } else {
                     self.verify_abs_order_subgoal(le_y, builtin_state)?
                 };
-                if r_sign.is_true() {
+                if r_sign.is_success() {
                     let rule = format!(
                         "abs: x {} -y from abs(x) {} abs(y) and y <= 0{}",
                         if strict { "<" } else { "<=" },
@@ -656,7 +656,7 @@ impl Runtime {
             let ge_y: AtomicFact =
                 GreaterEqualFact::new(right.clone(), zero.clone(), line_file.clone()).into();
             let r_sign = self.verify_abs_order_subgoal(ge_y, builtin_state)?;
-            if r_sign.is_true() {
+            if r_sign.is_success() {
                 let rule = format!(
                     "abs: x {} y from abs(x) {} abs(y) and 0 <= y{}",
                     if strict { "<" } else { "<=" },
@@ -692,7 +692,7 @@ impl Runtime {
         for environment in self.iter_environments_from_top() {
             if let Some(known_facts_map) = environment
                 .known_atomic_facts_with_2_args
-                .get(&(fact.key(), fact.is_true()))
+                .get(&(fact.key(), fact.has_positive_polarity()))
             {
                 let args = fact.args_ref();
                 let key = (args[0].to_string(), args[1].to_string());

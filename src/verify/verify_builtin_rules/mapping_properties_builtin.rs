@@ -6,7 +6,7 @@ impl Runtime {
     pub(super) fn try_verify_finite_codomain_from_known_surjection(
         &mut self,
         target: &IsFiniteSetFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         for property in self.known_function_property_facts(&[SURJECTIVE, BIJECTIVE]) {
             let Some((domain, codomain, _)) = function_property_parts(&property) else {
@@ -15,7 +15,7 @@ impl Runtime {
             let codomain_match = self.verify_equal_fact_by_known_equality(
                 &EqualFact::new_from_refs(&codomain, &target.set, target.line_file.clone()),
             );
-            if !codomain_match.is_true() {
+            if !codomain_match.is_success() {
                 continue;
             }
 
@@ -23,13 +23,13 @@ impl Runtime {
                 IsFiniteSetFact::new(domain, target.line_file.clone()).into();
             let domain_result =
                 self.verify_atomic_fact_as_builtin_rule_premise(&domain_finite, builtin_state)?;
-            if !domain_result.is_true() {
+            if !domain_result.is_success() {
                 continue;
             }
             let property_result = self.verify_non_equational_atomic_fact_with_known_atomic_facts(
                 &property.clone().into(),
             )?;
-            if !property_result.is_true() {
+            if !property_result.is_success() {
                 continue;
             }
 
@@ -51,7 +51,7 @@ impl Runtime {
     pub(super) fn try_verify_finite_set_size_fn_range_from_known_injection(
         &mut self,
         equal_fact: &EqualFact,
-        _builtin_state: &UseBuiltinRuleVerifyState,
+        _builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some((function, source)) = finite_fn_range_size_equality_shape(equal_fact) else {
             return Ok(None);
@@ -70,19 +70,19 @@ impl Runtime {
             let function_match = self.verify_equal_fact_by_known_equality(
                 &EqualFact::new_from_refs(&candidate_function, &function, line_file.clone()),
             );
-            if !domain_match.is_true() || !function_match.is_true() {
+            if !domain_match.is_success() || !function_match.is_success() {
                 continue;
             }
 
             let domain_finite: AtomicFact = IsFiniteSetFact::new(domain, line_file.clone()).into();
             let finite_result = self.verify_known_or_structurally_finite_set(&domain_finite)?;
-            if !finite_result.is_true() {
+            if !finite_result.is_success() {
                 continue;
             }
             let property_result = self.verify_non_equational_atomic_fact_with_known_atomic_facts(
                 &property.clone().into(),
             )?;
-            if !property_result.is_true() {
+            if !property_result.is_success() {
                 continue;
             }
 
@@ -104,7 +104,7 @@ impl Runtime {
     pub(super) fn try_verify_finite_set_size_from_known_bijection(
         &mut self,
         equal_fact: &EqualFact,
-        _builtin_state: &UseBuiltinRuleVerifyState,
+        _builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (Obj::FiniteSetSize(left_size), Obj::FiniteSetSize(right_size)) =
             (&equal_fact.left, &equal_fact.right)
@@ -130,9 +130,9 @@ impl Runtime {
                 &EqualFact::new_from_refs(&codomain, left_size.set.as_ref(), line_file.clone()),
             );
             let (domain_match, codomain_match) =
-                if direct_domain.is_true() && direct_codomain.is_true() {
+                if direct_domain.is_success() && direct_codomain.is_success() {
                     (direct_domain, direct_codomain)
-                } else if reverse_domain.is_true() && reverse_codomain.is_true() {
+                } else if reverse_domain.is_success() && reverse_codomain.is_success() {
                     (reverse_domain, reverse_codomain)
                 } else {
                     continue;
@@ -140,13 +140,13 @@ impl Runtime {
 
             let domain_finite: AtomicFact = IsFiniteSetFact::new(domain, line_file.clone()).into();
             let finite_result = self.verify_known_or_structurally_finite_set(&domain_finite)?;
-            if !finite_result.is_true() {
+            if !finite_result.is_success() {
                 continue;
             }
             let property_result = self.verify_non_equational_atomic_fact_with_known_atomic_facts(
                 &property.clone().into(),
             )?;
-            if !property_result.is_true() {
+            if !property_result.is_success() {
                 continue;
             }
 
@@ -168,7 +168,7 @@ impl Runtime {
     pub(super) fn try_verify_finite_set_size_codomain_le_domain_from_known_surjection(
         &mut self,
         target: &AtomicFact,
-        _builtin_state: &UseBuiltinRuleVerifyState,
+        _builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some((smaller, larger, line_file)) = ordered_finite_set_sizes(target) else {
             return Ok(None);
@@ -186,19 +186,19 @@ impl Runtime {
                 &larger,
                 line_file.clone(),
             ));
-            if !codomain_match.is_true() || !domain_match.is_true() {
+            if !codomain_match.is_success() || !domain_match.is_success() {
                 continue;
             }
 
             let domain_finite: AtomicFact = IsFiniteSetFact::new(domain, line_file.clone()).into();
             let finite_result = self.verify_known_or_structurally_finite_set(&domain_finite)?;
-            if !finite_result.is_true() {
+            if !finite_result.is_success() {
                 continue;
             }
             let property_result = self.verify_non_equational_atomic_fact_with_known_atomic_facts(
                 &property.clone().into(),
             )?;
-            if !property_result.is_true() {
+            if !property_result.is_success() {
                 continue;
             }
 
@@ -223,7 +223,7 @@ impl Runtime {
         codomain: &Obj,
         function: &Obj,
         line_file: LineFile,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<bool, RuntimeError> {
         Ok(self
             .known_builtin_bijection_results(domain, codomain, function, line_file, builtin_state)?
@@ -240,7 +240,7 @@ impl Runtime {
         codomain: &Obj,
         function: &Obj,
         line_file: LineFile,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
         for property in self.known_function_property_facts(&[BIJECTIVE]) {
             let Some((candidate_domain, candidate_codomain, candidate_function)) =
@@ -265,12 +265,15 @@ impl Runtime {
                 &EqualFact::new_from_refs(&candidate_function, function, line_file.clone()),
                 builtin_state,
             )?;
-            if domain_match.is_true() && codomain_match.is_true() && function_match.is_true() {
+            if domain_match.is_success()
+                && codomain_match.is_success()
+                && function_match.is_success()
+            {
                 let property_result = self
                     .verify_non_equational_atomic_fact_with_known_atomic_facts(
                         &property.clone().into(),
                     )?;
-                if property_result.is_true() {
+                if property_result.is_success() {
                     return Ok(Some(vec![
                         property_result,
                         domain_match,
@@ -288,7 +291,7 @@ impl Runtime {
         fact: &AtomicFact,
     ) -> Result<StmtResult, RuntimeError> {
         let known = self.verify_non_equational_atomic_fact_with_known_atomic_facts(fact)?;
-        if known.is_true() {
+        if known.is_success() {
             return Ok(known);
         }
         let AtomicFact::IsFiniteSetFact(finite) = fact else {

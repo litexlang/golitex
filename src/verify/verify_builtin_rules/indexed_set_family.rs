@@ -54,7 +54,7 @@ impl Runtime {
     pub(super) fn try_verify_indexed_set_family_algebra_equalities(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         for (indexed_side, other_side) in [
             (&equal_fact.left, &equal_fact.right),
@@ -134,7 +134,7 @@ impl Runtime {
                 .into();
                 let result =
                     self.verify_atomic_fact_as_builtin_rule_premise(&membership, builtin_state)?;
-                if result.is_true() {
+                if result.is_success() {
                     return Ok(Some(Self::indexed_family_equality_success(
                         equal_fact,
                         "indexed family peels a selected singleton from its domain",
@@ -178,7 +178,7 @@ impl Runtime {
                             SubsetFact::new(left, right, equal_fact.line_file.clone()).into();
                         let result = self
                             .verify_atomic_fact_as_builtin_rule_premise(&premise, builtin_state)?;
-                        if !result.is_true() {
+                        if !result.is_success() {
                             return Ok(None);
                         }
                         steps.push(result);
@@ -211,7 +211,7 @@ impl Runtime {
     pub(super) fn try_verify_indexed_set_family_algebra_subset(
         &mut self,
         subset_fact: &SubsetFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         if let Obj::IndexUnion(index_union) = &subset_fact.right {
             if let Some(index) = self.family_application_index_matching(
@@ -313,7 +313,7 @@ impl Runtime {
                 .into();
                 let ambient_result = self
                     .verify_atomic_fact_as_builtin_rule_premise(&ambient_premise, builtin_state)?;
-                if ambient_result.is_true() {
+                if ambient_result.is_success() {
                     return Ok(Some(Self::indexed_family_subset_success(
                         subset_fact,
                         "common lower bound is contained in indexed intersection",
@@ -461,7 +461,7 @@ impl Runtime {
         &mut self,
         index_set: &Obj,
         line_file: &LineFile,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let nonempty: AtomicFact =
             IsNonemptySetFact::new(index_set.clone(), line_file.clone()).into();
@@ -476,7 +476,7 @@ impl Runtime {
             ));
         }
         let result = self.verify_atomic_fact_as_builtin_rule_premise(&nonempty, builtin_state)?;
-        Ok(result.is_true().then_some(result))
+        Ok(result.is_success().then_some(result))
     }
 
     pub(super) fn indexed_family_pointwise_finite_fact(

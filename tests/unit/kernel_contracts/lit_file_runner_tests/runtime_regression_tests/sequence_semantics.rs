@@ -2,10 +2,9 @@ use super::*;
 
 fn run_sequence_source(source: &str, label: &str) -> (bool, String) {
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(label);
-    let (stmt_results, runtime_error) = run_source_code(source, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source(label);
+    let (stmt_results, runtime_error) = execute_source(source, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
     (run_succeeded, run_output)
 }
 

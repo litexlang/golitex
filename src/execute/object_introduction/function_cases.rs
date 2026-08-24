@@ -166,7 +166,7 @@ impl Runtime {
         let function_set_obj = fn_set_stored.clone().into();
         self.verify_obj_well_defined_and_store_cache(
             &function_set_obj,
-            &UseContextVerifyState::new(0, false),
+            &ProofSearchState::initial(),
         )
         .map_err(|well_defined_error| {
             short_exec_error(
@@ -270,7 +270,7 @@ impl Runtime {
 
         let coverage: Fact = OrFact::new(stmt.cases.clone(), stmt.line_file.clone()).into();
         let coverage_result = self
-            .verify_fact_or_error(&coverage, &UseContextVerifyState::new(0, false))
+            .verify_fact_or_error(&coverage, &ProofSearchState::initial())
             .map_err(|e| {
                 short_exec_error(
                     stmt.clone().into(),
@@ -338,7 +338,7 @@ impl Runtime {
         case_fact: &AndChainAtomicFact,
         equal_to: &Obj,
     ) -> Result<StmtResult, RuntimeError> {
-        let verify_state = UseContextVerifyState::new(0, false);
+        let verify_state = ProofSearchState::initial();
         let case_fact_as_fact: Fact = case_fact.clone().into();
 
         self.have_fn_equal_case_by_case_stmt_define_params_and_domain(

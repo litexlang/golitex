@@ -13,12 +13,11 @@ forall candidate &NonzeroRealView:
     candidate.value != 0
 "#;
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
+    runtime.start_isolated_source(
         "struct_equivalent_facts_provide_sequential_well_definedness_context",
     );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
     assert!(
         run_succeeded,
         "an earlier struct equivalent fact should justify later well-definedness both at declaration and carrier use:\n{run_output}"
@@ -46,14 +45,10 @@ struct ReversedNonzeroRealView:
         ),
     ] {
         let mut boundary_runtime = Runtime::new();
-        boundary_runtime.new_file_path_new_env_new_name_scope(name);
-        let (boundary_results, boundary_error) = run_source_code(source, &mut boundary_runtime);
-        let (boundary_succeeded, boundary_output) = render_run_source_code_output(
-            &boundary_runtime,
-            &boundary_results,
-            &boundary_error,
-            false,
-        );
+        boundary_runtime.start_isolated_source(name);
+        let (boundary_results, boundary_error) = execute_source(source, &mut boundary_runtime);
+        let (boundary_succeeded, boundary_output) =
+            render_run_output(&boundary_runtime, &boundary_results, &boundary_error);
         assert!(
             !boundary_succeeded && boundary_output.contains("must be non-zero"),
             "a reciprocal before its nonzero guard must remain ill-defined for {name}:\n{boundary_output}"
@@ -106,12 +101,10 @@ claim:
     (x, z) $in container.order.le_rel
 "#;
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
-                "one_field_struct_is_a_named_view_of_its_field_carrier",
-            );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            runtime.start_isolated_source("one_field_struct_is_a_named_view_of_its_field_carrier");
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
             assert!(
                 run_succeeded,
                 "a one-field struct should retain its field carrier, identity projection, and laws through a nested field:\n{run_output}"
@@ -128,13 +121,13 @@ claim:
             );
 
             let mut empty_runtime = Runtime::new();
-            empty_runtime.new_file_path_new_env_new_name_scope("zero_field_struct_still_rejects");
-            let (empty_results, empty_error) = run_source_code(
+            empty_runtime.start_isolated_source("zero_field_struct_still_rejects");
+            let (empty_results, empty_error) = execute_source(
                 "struct Empty:\n    <=>:\n        0 = 0\n",
                 &mut empty_runtime,
             );
             let (empty_succeeded, empty_output) =
-                render_run_source_code_output(&empty_runtime, &empty_results, &empty_error, false);
+                render_run_output(&empty_runtime, &empty_results, &empty_error);
             assert!(
                 !empty_succeeded
                     && empty_output.contains("struct definition expects at least one field"),
@@ -161,12 +154,12 @@ forall p &Pair<R>, a, b R:
         p.second = b
 "#;
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
+            runtime.start_isolated_source(
                 "struct_field_projection_is_a_structural_definitional_reduction",
             );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
             assert!(
                 run_succeeded,
                 "struct fields should reduce to their tuple projections:\n{run_output}"
@@ -180,10 +173,10 @@ forall p &Pair<R>, a, b R:
             );
 
             let mut negative_runtime = Runtime::new();
-            negative_runtime.new_file_path_new_env_new_name_scope(
+            negative_runtime.start_isolated_source(
                 "struct_field_projection_does_not_select_the_wrong_component",
             );
-            let (negative_results, negative_error) = run_source_code(
+            let (negative_results, negative_error) = execute_source(
                 r#"
 struct Pair<S set>:
     first S
@@ -196,12 +189,8 @@ forall p &Pair<R>, a, b R:
 "#,
                 &mut negative_runtime,
             );
-            let (negative_succeeded, negative_output) = render_run_source_code_output(
-                &negative_runtime,
-                &negative_results,
-                &negative_error,
-                false,
-            );
+            let (negative_succeeded, negative_output) =
+                render_run_output(&negative_runtime, &negative_results, &negative_error);
             assert!(
                 !negative_succeeded,
                 "field reduction must preserve the declared component index:\n{negative_output}"
@@ -224,12 +213,9 @@ template<X nonempty_set, n N, x X>:
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
-        "typed_have_admits_literal_dependent_struct_constructor",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("typed_have_admits_literal_dependent_struct_constructor");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         run_succeeded,
@@ -247,12 +233,9 @@ struct SizedList<X set, n N>:
 have invalid &SizedList<R, 2> = (3, fn(k N+: k <= 2) R {k})
 "#;
     let mut invalid_runtime = Runtime::new();
-    invalid_runtime.new_file_path_new_env_new_name_scope(
-        "typed_have_rejects_struct_constructor_with_false_law",
-    );
-    let (stmt_results, runtime_error) = run_source_code(invalid_source, &mut invalid_runtime);
-    let (run_succeeded, _) =
-        render_run_source_code_output(&invalid_runtime, &stmt_results, &runtime_error, false);
+    invalid_runtime.start_isolated_source("typed_have_rejects_struct_constructor_with_false_law");
+    let (stmt_results, runtime_error) = execute_source(invalid_source, &mut invalid_runtime);
+    let (run_succeeded, _) = render_run_output(&invalid_runtime, &stmt_results, &runtime_error);
     assert!(
         !run_succeeded,
         "typed tuple admission must reject a constructor whose structure law is false"
@@ -272,12 +255,11 @@ struct SizedList<X set, n N>:
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
+    runtime.start_isolated_source(
         "direct_literal_tuple_membership_checks_dependent_struct_constructor",
     );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
     assert!(
         run_succeeded,
         "direct tuple membership should verify dependent fields and laws:\n{}",
@@ -294,12 +276,10 @@ struct SizedList<X set, n N>:
 (3, fn(k N+: k <= 2) R {k}) $in &SizedList<R, 2>
 "#;
     let mut invalid_runtime = Runtime::new();
-    invalid_runtime.new_file_path_new_env_new_name_scope(
-        "direct_literal_tuple_membership_rejects_false_struct_law",
-    );
-    let (stmt_results, runtime_error) = run_source_code(invalid_source, &mut invalid_runtime);
-    let (run_succeeded, _) =
-        render_run_source_code_output(&invalid_runtime, &stmt_results, &runtime_error, false);
+    invalid_runtime
+        .start_isolated_source("direct_literal_tuple_membership_rejects_false_struct_law");
+    let (stmt_results, runtime_error) = execute_source(invalid_source, &mut invalid_runtime);
+    let (run_succeeded, _) = render_run_output(&invalid_runtime, &stmt_results, &runtime_error);
     assert!(
         !run_succeeded,
         "direct tuple membership must reject a false dependent structure law"
@@ -318,12 +298,10 @@ pair_value.second = 2
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
-        "named_struct_field_projects_through_one_checked_tuple_constructor",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime
+        .start_isolated_source("named_struct_field_projects_through_one_checked_tuple_constructor");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
     assert!(
         run_succeeded,
         "one checked tuple constructor should expose its named structure field:\n{}",
@@ -352,12 +330,10 @@ forall x1, x2 &BoxedReal:
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
-        "obtain_from_exist_unique_preserves_uniqueness_for_struct_members",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime
+        .start_isolated_source("obtain_from_exist_unique_preserves_uniqueness_for_struct_members");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         run_succeeded,
@@ -377,10 +353,9 @@ template<s set: s = s>:
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope("template_instantiation_prefers_angle_brackets");
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("template_instantiation_prefers_angle_brackets");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         run_succeeded,
@@ -412,10 +387,9 @@ template id_on_set<s set>:
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope("template_header_rejects_redundant_name");
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("template_header_rejects_redundant_name");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         !run_succeeded,
@@ -437,10 +411,9 @@ template<S set>:
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope("template_body_is_still_checked_when_declared");
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("template_body_is_still_checked_when_declared");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         !run_succeeded,
@@ -460,12 +433,11 @@ template<S set>:
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
+    runtime.start_isolated_source(
         "template_result_separates_header_parameters_from_body_declaration_parameters",
     );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
     assert!(
         run_succeeded,
         "the Template declaration and Created/Reused applications must verify:\n{run_output}"
@@ -630,10 +602,10 @@ template<S set, n N+: 2 <= n>:
         );
 
         let mut runtime = Runtime::new();
-        runtime.new_file_path_new_env_new_name_scope(case_name);
-        let (stmt_results, runtime_error) = run_source_code(&source_code, &mut runtime);
+        runtime.start_isolated_source(case_name);
+        let (stmt_results, runtime_error) = execute_source(&source_code, &mut runtime);
         let (run_succeeded, run_output) =
-            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            render_run_output(&runtime, &stmt_results, &runtime_error);
 
         assert!(
             !run_succeeded,
@@ -657,10 +629,9 @@ template<S set, n N+: 2 <= n>:
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope("valid_template_header");
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("valid_template_header");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         run_succeeded,
@@ -683,12 +654,9 @@ $marked(x)
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
-        "preverified_template_set_builder_definition_unfolds",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("preverified_template_set_builder_definition_unfolds");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         run_succeeded,
@@ -711,7 +679,7 @@ template<S set>:
         )
         .expect("tokenize nested-template boundary fixture");
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope("preverified_nested_template_boundary");
+    runtime.start_isolated_source("preverified_nested_template_boundary");
     let stmt = runtime
         .parse_statement(&mut blocks[0])
         .expect("parse template declaration");
@@ -739,19 +707,19 @@ have b &Box<R> = (0, 0)
 "#;
 
         let mut runtime = Runtime::new();
-        runtime.new_file_path_new_env_new_name_scope("deterministic_infer_rule_firings_are_cached");
-        let (stmt_results, runtime_error) = run_source_code(setup, &mut runtime);
+        runtime.start_isolated_source("deterministic_infer_rule_firings_are_cached");
+        let (stmt_results, runtime_error) = execute_source(setup, &mut runtime);
         let (run_succeeded, run_output) =
-            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            render_run_output(&runtime, &stmt_results, &runtime_error);
         assert!(
             run_succeeded,
             "cached infer-rule setup failed:\n{}",
             run_output
         );
 
-        let (stmt_results, runtime_error) = run_source_code("trust $accepts(R, b)", &mut runtime);
+        let (stmt_results, runtime_error) = execute_source("trust $accepts(R, b)", &mut runtime);
         let (run_succeeded, run_output) =
-            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            render_run_output(&runtime, &stmt_results, &runtime_error);
         assert!(
             run_succeeded,
             "the first predicate inference failed:\n{}",
@@ -765,9 +733,9 @@ have b &Box<R> = (0, 0)
             )
         };
 
-        let (stmt_results, runtime_error) = run_source_code("trust $accepts(R, b)", &mut runtime);
+        let (stmt_results, runtime_error) = execute_source("trust $accepts(R, b)", &mut runtime);
         let (run_succeeded, run_output) =
-            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            render_run_output(&runtime, &stmt_results, &runtime_error);
         assert!(
             run_succeeded,
             "the cached predicate inference failed:\n{}",
@@ -801,12 +769,11 @@ p.second $in R
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
+    runtime.start_isolated_source(
         "declared_struct_membership_materializes_named_and_positional_projections",
     );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
     assert!(
         run_succeeded,
         "declared struct fields and their Cartesian positions should both be available:\n{}",
@@ -839,12 +806,9 @@ p[1] $in R
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
-        "struct_tuple_projection_materializes_cart_view_on_demand",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("struct_tuple_projection_materializes_cart_view_on_demand");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
     assert!(
         run_succeeded,
         "an explicit projection must lazily materialize its struct cart view:\n{}",
@@ -872,11 +836,9 @@ trust (1, 2) $in &Pair<R>
 "#;
 
     let mut runtime = Runtime::new();
-    runtime
-        .new_file_path_new_env_new_name_scope("generic_struct_membership_keeps_tuple_view_opaque");
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("generic_struct_membership_keeps_tuple_view_opaque");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
     assert!(
         run_succeeded,
         "tuple struct membership must still verify the named membership itself:\n{}",
@@ -938,12 +900,12 @@ forall direct &Pair:
 "#;
 
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
+            runtime.start_isolated_source(
                 "by_struct_def_releases_one_verified_layer_and_direct_bindings_open_automatically",
             );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
             assert!(
                 run_succeeded,
                 "explicit and automatic releases should verify:\n{run_output}"
@@ -977,10 +939,9 @@ make_outer(1).inner.value = make_outer(1).inner.value
 $is_tuple(make_outer(1).inner)
 "#;
         let mut wd_only_runtime = Runtime::new();
-        wd_only_runtime.new_file_path_new_env_new_name_scope("field_path_wd_releases_no_facts");
-        let (results, error) = run_source_code(wd_only, &mut wd_only_runtime);
-        let (succeeded, output) =
-            render_run_source_code_output(&wd_only_runtime, &results, &error, false);
+        wd_only_runtime.start_isolated_source("field_path_wd_releases_no_facts");
+        let (results, error) = execute_source(wd_only, &mut wd_only_runtime);
+        let (succeeded, output) = render_run_output(&wd_only_runtime, &results, &error);
         assert!(
             !succeeded,
             "checking a deep field path for WD must not release the nested struct layer:\n{output}"
@@ -1004,10 +965,9 @@ make_pair(1, 2).first = 1
 "#;
         let mut without_release_runtime = Runtime::new();
         without_release_runtime
-            .new_file_path_new_env_new_name_scope("function_result_struct_facts_require_release");
-        let (results, error) = run_source_code(without_release, &mut without_release_runtime);
-        let (succeeded, output) =
-            render_run_source_code_output(&without_release_runtime, &results, &error, false);
+            .start_isolated_source("function_result_struct_facts_require_release");
+        let (results, error) = execute_source(without_release, &mut without_release_runtime);
+        let (succeeded, output) = render_run_output(&without_release_runtime, &results, &error);
         assert!(
         !succeeded,
         "a function-result field must not acquire its tuple bridge before `by struct def`:\n{output}"
@@ -1023,10 +983,9 @@ trust raw $in &Pair
 by struct def raw
 "#;
         let mut raw_runtime = Runtime::new();
-        raw_runtime.new_file_path_new_env_new_name_scope("raw_membership_has_no_struct_view");
-        let (results, error) = run_source_code(raw_membership, &mut raw_runtime);
-        let (succeeded, output) =
-            render_run_source_code_output(&raw_runtime, &results, &error, false);
+        raw_runtime.start_isolated_source("raw_membership_has_no_struct_view");
+        let (results, error) = execute_source(raw_membership, &mut raw_runtime);
+        let (succeeded, output) = render_run_output(&raw_runtime, &results, &error);
         assert!(
             !succeeded && output.contains("declaration-time struct carrier"),
             "membership alone must not supply the struct selected by `by struct def`:\n{output}"
@@ -1041,10 +1000,9 @@ have fn make_pair(first, second R) &Pair = (first, second)
 by struct def make_pair(1, 2) as &Pair
 "#;
         let mut as_form_runtime = Runtime::new();
-        as_form_runtime.new_file_path_new_env_new_name_scope("by_struct_def_has_no_as_form");
-        let (results, error) = run_source_code(as_form, &mut as_form_runtime);
-        let (succeeded, output) =
-            render_run_source_code_output(&as_form_runtime, &results, &error, false);
+        as_form_runtime.start_isolated_source("by_struct_def_has_no_as_form");
+        let (results, error) = execute_source(as_form, &mut as_form_runtime);
+        let (succeeded, output) = render_run_output(&as_form_runtime, &results, &error);
         assert!(
             !succeeded && output.contains("no `as &Struct` form"),
             "`by struct def` must reject caller-selected struct views:\n{output}"
@@ -1063,11 +1021,9 @@ forall outer &Outer:
     $is_tuple(outer.inner)
 "#;
         let mut non_recursive_runtime = Runtime::new();
-        non_recursive_runtime
-            .new_file_path_new_env_new_name_scope("struct_release_is_non_recursive");
-        let (results, error) = run_source_code(non_recursive, &mut non_recursive_runtime);
-        let (succeeded, output) =
-            render_run_source_code_output(&non_recursive_runtime, &results, &error, false);
+        non_recursive_runtime.start_isolated_source("struct_release_is_non_recursive");
+        let (results, error) = execute_source(non_recursive, &mut non_recursive_runtime);
+        let (succeeded, output) = render_run_output(&non_recursive_runtime, &results, &error);
         assert!(
         !succeeded,
         "opening the direct outer binder must not recursively open its inner struct field:\n{output}"
@@ -1082,18 +1038,18 @@ have fn make_pair(x R) &Pair = (x, x)
 have A set
 "#;
         let mut atomic_runtime = Runtime::new();
-        atomic_runtime.new_file_path_new_env_new_name_scope("failed_struct_release_is_atomic");
-        let (setup_results, setup_error) = run_source_code(setup, &mut atomic_runtime);
+        atomic_runtime.start_isolated_source("failed_struct_release_is_atomic");
+        let (setup_results, setup_error) = execute_source(setup, &mut atomic_runtime);
         let (setup_succeeded, setup_output) =
-            render_run_source_code_output(&atomic_runtime, &setup_results, &setup_error, false);
+            render_run_output(&atomic_runtime, &setup_results, &setup_error);
         assert!(
             setup_succeeded,
             "atomicity setup must succeed:\n{setup_output}"
         );
         let (failed_results, failed_error) =
-            run_source_code("by struct def make_pair(A)", &mut atomic_runtime);
+            execute_source("by struct def make_pair(A)", &mut atomic_runtime);
         let (failed_succeeded, failed_output) =
-            render_run_source_code_output(&atomic_runtime, &failed_results, &failed_error, false);
+            render_run_output(&atomic_runtime, &failed_results, &failed_error);
         assert!(
         !failed_succeeded,
         "the release must reject an ill-defined application before committing:\n{failed_output}"
@@ -1124,12 +1080,9 @@ $marked(x)
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
-        "cached_membership_can_use_later_set_builder_definition",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("cached_membership_can_use_later_set_builder_definition");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         run_succeeded,
@@ -1149,9 +1102,9 @@ try:
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope("failed_try_discards_infer_rule_firings");
+    runtime.start_isolated_source("failed_try_discards_infer_rule_firings");
     let firings_before = runtime.top_level_env().cache_infer_rule_firing.len();
-    let (_, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (_, runtime_error) = execute_source(source_code, &mut runtime);
     assert!(
         runtime_error.is_some(),
         "the deliberately false try body should fail"
@@ -1191,12 +1144,10 @@ template<s set>:
 "#;
 
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
-                "template_can_use_struct_with_function_valued_fields",
-            );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            runtime.start_isolated_source("template_can_use_struct_with_function_valued_fields");
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
 
             assert!(
                 run_succeeded,
@@ -1236,12 +1187,10 @@ claim:
 "#;
 
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
-                "struct_filter_predicate_unfolds_for_default_field_view",
-            );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            runtime.start_isolated_source("struct_filter_predicate_unfolds_for_default_field_view");
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
 
             assert!(
                 run_succeeded,
@@ -1278,12 +1227,12 @@ p2.first = 1
 "#;
 
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
+            runtime.start_isolated_source(
                 "declaration_struct_carrier_is_stable_across_other_memberships",
             );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
 
             assert!(
                 run_succeeded,
@@ -1384,12 +1333,12 @@ template<n N>:
 "#;
 
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
+            runtime.start_isolated_source(
                 "struct_unfold_spreads_declared_fields_through_call_argument_lists",
             );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
 
             assert!(
                 run_succeeded,
@@ -1426,11 +1375,10 @@ have fn identity(x R) R = x
 identity(unfold 1) = 1
 "#;
     let mut scalar_runtime = Runtime::new();
-    scalar_runtime
-        .new_file_path_new_env_new_name_scope("struct_unfold_rejects_non_tuple_non_struct_objects");
-    let (stmt_results, runtime_error) = run_source_code(scalar_source, &mut scalar_runtime);
+    scalar_runtime.start_isolated_source("struct_unfold_rejects_non_tuple_non_struct_objects");
+    let (stmt_results, runtime_error) = execute_source(scalar_source, &mut scalar_runtime);
     let (run_succeeded, run_output) =
-        render_run_source_code_output(&scalar_runtime, &stmt_results, &runtime_error, false);
+        render_run_output(&scalar_runtime, &stmt_results, &runtime_error);
     assert!(
         !run_succeeded
             && run_output.contains(
@@ -1450,15 +1398,11 @@ add_pair(unfold &Pair{1}) = 1
 "#;
     let mut explicit_selection_runtime = Runtime::new();
     explicit_selection_runtime
-        .new_file_path_new_env_new_name_scope("struct_unfold_rejects_removed_explicit_selection");
+        .start_isolated_source("struct_unfold_rejects_removed_explicit_selection");
     let (stmt_results, runtime_error) =
-        run_source_code(explicit_selection_source, &mut explicit_selection_runtime);
-    let (run_succeeded, run_output) = render_run_source_code_output(
-        &explicit_selection_runtime,
-        &stmt_results,
-        &runtime_error,
-        false,
-    );
+        execute_source(explicit_selection_source, &mut explicit_selection_runtime);
+    let (run_succeeded, run_output) =
+        render_run_output(&explicit_selection_runtime, &stmt_results, &runtime_error);
     assert!(
         !run_succeeded && run_output.contains("explicit struct selection"),
         "the removed explicit struct-selection syntax must fail directly:\n{}",
@@ -1471,12 +1415,12 @@ have fn first(left, right R) R = left
 first(unfold ProductSet) = first(unfold ProductSet)
 "#;
     let mut cart_set_runtime = Runtime::new();
-    cart_set_runtime.new_file_path_new_env_new_name_scope(
+    cart_set_runtime.start_isolated_source(
         "struct_unfold_does_not_treat_a_cartesian_product_set_as_a_tuple_value",
     );
-    let (stmt_results, runtime_error) = run_source_code(cart_set_source, &mut cart_set_runtime);
+    let (stmt_results, runtime_error) = execute_source(cart_set_source, &mut cart_set_runtime);
     let (run_succeeded, run_output) =
-        render_run_source_code_output(&cart_set_runtime, &stmt_results, &runtime_error, false);
+        render_run_output(&cart_set_runtime, &stmt_results, &runtime_error);
     assert!(
         !run_succeeded
             && run_output.contains(
@@ -1504,12 +1448,11 @@ thm point_default_view_is_available_in_proof:
 "#;
 
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
-                "default_struct_view_replays_from_theorem_goal_into_proof",
-            );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            runtime
+                .start_isolated_source("default_struct_view_replays_from_theorem_goal_into_proof");
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
 
             assert!(
                 run_succeeded,
@@ -1537,12 +1480,12 @@ thm box_default_view_keeps_its_carrier:
 "#;
 
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
+            runtime.start_isolated_source(
                 "parameterized_default_struct_view_keeps_dependent_symbol_ids",
             );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
 
             assert!(
                 run_succeeded,
@@ -1566,12 +1509,9 @@ p.x = p.x
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
-        "struct_membership_fact_does_not_enable_default_field_syntax",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("struct_membership_fact_does_not_enable_default_field_syntax");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         !run_succeeded,
@@ -1611,12 +1551,12 @@ thm tagged_integer_view_for_item:
 "#;
 
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
+            runtime.start_isolated_source(
                 "separate_same_name_binders_keep_symbol_specific_default_struct_views",
             );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
 
             assert!(
                 run_succeeded,
@@ -1642,12 +1582,10 @@ endomorphism.apply(2) = endomorphism.apply(2)
 "#;
 
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
-                "default_struct_view_function_field_remains_callable",
-            );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            runtime.start_isolated_source("default_struct_view_function_field_remains_callable");
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
 
             assert!(
                 run_succeeded,
@@ -1688,12 +1626,12 @@ prop share_scalar_system(s, v, w nonempty_set, Vspace &VectorSpace<s, v>, Wspace
 "#;
 
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
+            runtime.start_isolated_source(
                 "chained_default_struct_views_support_bundled_vector_space_operations",
             );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
 
             assert!(
                 run_succeeded,
@@ -1728,12 +1666,12 @@ node.leaf.value $in R
 "#;
 
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
+            runtime.start_isolated_source(
                 "chained_field_access_continues_from_the_declared_struct_carrier",
             );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
 
             assert!(
                 run_succeeded,
@@ -1767,12 +1705,12 @@ projected_entry(identity_entry, 1) $in N
 "#;
 
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
+            runtime.start_isolated_source(
                 "callable_struct_field_projection_is_well_defined_as_a_function_head",
             );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
 
             assert!(
                 run_succeeded,
@@ -1811,12 +1749,12 @@ thm local_struct_return_projection:
 "#;
 
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
+            runtime.start_isolated_source(
                 "local_function_struct_return_is_visible_before_nested_block_execution",
             );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
 
             assert!(
                 run_succeeded,
@@ -1841,12 +1779,10 @@ have fn invalid_scalar_call(f fn(k N+) N, idx N+) N = boxed(f).tag(idx)
 "#;
 
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
-                "callable_struct_field_projection_rejects_scalar_fields",
-            );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            runtime.start_isolated_source("callable_struct_field_projection_rejects_scalar_fields");
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
 
             assert!(
                 !run_succeeded,
@@ -1882,13 +1818,13 @@ claim:
 "#;
 
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
+            runtime.start_isolated_source(
                 "chained_default_struct_views_support_module_qualified_field_types",
             );
             runtime.current_module_mut().module_name = "Current".to_string();
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
 
             assert!(
                 run_succeeded,
@@ -1919,12 +1855,12 @@ point.x.value = 1
 "#;
 
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
+            runtime.start_isolated_source(
                 "chained_field_access_rejects_non_struct_intermediate_fields",
             );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
 
             assert!(
                 !run_succeeded,
@@ -1963,12 +1899,12 @@ holder.point.x = 1
 "#;
 
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
+            runtime.start_isolated_source(
                 "chained_field_access_does_not_follow_named_definitions_or_known_memberships",
             );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
 
             assert!(
                 !run_succeeded,
@@ -2000,12 +1936,10 @@ endomorphism.apply(1).value = 2
 "#;
 
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
-                "chained_field_access_rejects_scalar_function_returns",
-            );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            runtime.start_isolated_source("chained_field_access_rejects_scalar_function_returns");
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
 
             assert!(
                 !run_succeeded,
@@ -2039,12 +1973,11 @@ raw(1).x = 1
 "#;
 
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
-                "function_results_do_not_acquire_struct_fields_from_facts",
-            );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            runtime
+                .start_isolated_source("function_results_do_not_acquire_struct_fields_from_facts");
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
 
             assert!(
                 !run_succeeded,
@@ -2074,12 +2007,10 @@ have right_half_plane set = {p &Point: p.x >= 0}
 "#;
 
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
-                "default_struct_view_is_available_in_set_builder_body",
-            );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            runtime.start_isolated_source("default_struct_view_is_available_in_set_builder_body");
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
 
             assert!(
                 run_succeeded,
@@ -2103,12 +2034,11 @@ trust forall index N:
 by def $maps_into(R, f, {0})
 "#;
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
+    runtime.start_isolated_source(
         "by_def_packages_an_exact_known_universal_clause_with_bounded_type_checks",
     );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
     assert!(
         run_succeeded,
         "an exact universal definition clause should package directly:\n{run_output}"
@@ -2126,11 +2056,9 @@ trust have f fn(n N) R
 by def $maps_into(R, f, {0})
 "#;
     let mut runtime = Runtime::new();
-    runtime
-        .new_file_path_new_env_new_name_scope("by_def_does_not_package_a_missing_universal_clause");
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("by_def_does_not_package_a_missing_universal_clause");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
     assert!(
         !run_succeeded,
         "definition folding must not invent a missing universal premise:\n{run_output}"
@@ -2153,12 +2081,10 @@ struct PointHolder:
 "#;
 
         let mut runtime = Runtime::new();
-        runtime.new_file_path_new_env_new_name_scope(
-            "default_struct_view_is_available_for_struct_fields",
-        );
-        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        runtime.start_isolated_source("default_struct_view_is_available_for_struct_fields");
+        let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
-            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            render_run_output(&runtime, &stmt_results, &runtime_error);
 
         assert!(
             run_succeeded,
@@ -2183,10 +2109,10 @@ point.x = point.x
 "#;
 
         let mut runtime = Runtime::new();
-        runtime.new_file_path_new_env_new_name_scope("obtain_inherits_default_struct_view");
-        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        runtime.start_isolated_source("obtain_inherits_default_struct_view");
+        let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
-            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            render_run_output(&runtime, &stmt_results, &runtime_error);
 
         assert!(
             run_succeeded,
@@ -2213,12 +2139,12 @@ box.value = box.value
 "#;
 
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
+            runtime.start_isolated_source(
                 "obtain_instantiates_parameterized_default_struct_view_by_symbol_id",
             );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
 
             assert!(
                 run_succeeded,
@@ -2253,12 +2179,12 @@ prop is_real_vector_space(v nonempty_set, vector_zero v, vector_smul fn(a R, x v
 "#;
 
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
+            runtime.start_isolated_source(
                 "nested_struct_verification_freshens_same_named_field_binders",
             );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
 
             assert!(
                 run_succeeded,
@@ -2290,12 +2216,10 @@ forall S nonempty_set, x S:
 "#;
 
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
-                "template_proof_uses_the_instantiated_forall_binder_id",
-            );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            runtime.start_isolated_source("template_proof_uses_the_instantiated_forall_binder_id");
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
 
             assert!(
                 run_succeeded,
@@ -2327,12 +2251,12 @@ forall S nonempty_set, wrap fn(value S) S, x S:
 "#;
 
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
+            runtime.start_isolated_source(
                 "template_proof_indexes_a_materialized_callable_nested_inside_another_application",
             );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
 
             assert!(
                 run_succeeded,
@@ -2362,12 +2286,12 @@ forall T nonempty_set, combine fn(left, right T) T, identity T, values fn(index 
 "#;
 
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
+            runtime.start_isolated_source(
                 "template_recursive_function_materializes_public_computation_equations",
             );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
 
             assert!(
                 run_succeeded,
@@ -2401,12 +2325,12 @@ forall T nonempty_set, marker, fallback, value T:
 "#;
 
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
+            runtime.start_isolated_source(
                 "template_case_function_materializes_public_computation_equations",
             );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
 
             assert!(
                 run_succeeded,
@@ -2431,12 +2355,12 @@ forall T nonempty_set, combine fn(left, right T) T, marker, value T:
 "#;
 
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
+            runtime.start_isolated_source(
                 "template_simple_function_materializes_public_computation_equation",
             );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
 
             assert!(
                 run_succeeded,
@@ -2474,12 +2398,12 @@ forall S nonempty_set, x S:
 "#;
 
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
+            runtime.start_isolated_source(
                 "template_choice_materializes_local_exist_elimination_and_witness",
             );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
 
             assert!(
                 run_succeeded,
@@ -2516,12 +2440,12 @@ forall S nonempty_set, x S:
 "#;
 
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
+            runtime.start_isolated_source(
                 "template_choice_materializes_local_equal_object_definition",
             );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
 
             assert!(
                 run_succeeded,
@@ -2555,12 +2479,10 @@ forall S nonempty_set, marker, x S:
 "#;
 
         let mut runtime = Runtime::new();
-        runtime.new_file_path_new_env_new_name_scope(
-            "template_choice_materializes_local_case_function",
-        );
-        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        runtime.start_isolated_source("template_choice_materializes_local_case_function");
+        let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
-            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            render_run_output(&runtime, &stmt_results, &runtime_error);
 
         assert!(
             run_succeeded,
@@ -2612,12 +2534,12 @@ forall S nonempty_set, marker, seed, x S:
 "#;
 
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
+            runtime.start_isolated_source(
                 "template_choice_returning_refined_function_remains_callable",
             );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
 
             assert!(
                 run_succeeded,
@@ -2637,12 +2559,10 @@ A(1, 2, 3) $in R
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
-        "named_set_equal_to_fn_set_is_nonempty_and_registers_function_type",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime
+        .start_isolated_source("named_set_equal_to_fn_set_is_nonempty_and_registers_function_type");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         run_succeeded,
@@ -2662,12 +2582,11 @@ A(1, 2, 3) $in R
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
+    runtime.start_isolated_source(
         "template_named_set_equal_to_fn_set_is_nonempty_and_registers_function_type",
     );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         run_succeeded,
@@ -2685,10 +2604,9 @@ a = b
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope("weak_order_does_not_recursively_prove_equality");
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("weak_order_does_not_recursively_prove_equality");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         !run_succeeded,
@@ -2707,10 +2625,9 @@ a = b
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope("two_known_weak_order_directions_prove_equality");
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("two_known_weak_order_directions_prove_equality");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         run_succeeded,
@@ -2740,12 +2657,9 @@ exist a, b R st {b <= a}
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
-        "real_line_comparison_exist_witnesses_are_builtin_rules",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("real_line_comparison_exist_witnesses_are_builtin_rules");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         run_succeeded,
@@ -2773,10 +2687,9 @@ forall epsilon R+:
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope("archimedean_reciprocal_bound_is_a_builtin_rule");
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("archimedean_reciprocal_bound_is_a_builtin_rule");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         run_succeeded,
@@ -2806,12 +2719,11 @@ forall a, b R:
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
+    runtime.start_isolated_source(
         "sufficiently_wide_real_intervals_have_integer_witnesses_as_builtin_rules",
     );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         run_succeeded,
@@ -2831,10 +2743,10 @@ forall a, b R:
     }
 
     let mut short_interval_runtime = Runtime::new();
-    short_interval_runtime.new_file_path_new_env_new_name_scope(
+    short_interval_runtime.start_isolated_source(
         "strict_real_interval_without_length_bound_has_no_integer_builtin_witness",
     );
-    let (short_interval_results, short_interval_error) = run_source_code(
+    let (short_interval_results, short_interval_error) = execute_source(
         r#"
 forall a, b R:
     a < b
@@ -2843,11 +2755,10 @@ forall a, b R:
 "#,
         &mut short_interval_runtime,
     );
-    let (short_interval_succeeded, short_interval_output) = render_run_source_code_output(
+    let (short_interval_succeeded, short_interval_output) = render_run_output(
         &short_interval_runtime,
         &short_interval_results,
         &short_interval_error,
-        false,
     );
     assert!(
         !short_interval_succeeded,
@@ -2866,12 +2777,9 @@ forall S finite_set:
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
-        "finite_set_size_zero_is_not_nonempty_is_a_builtin_rule",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("finite_set_size_zero_is_not_nonempty_is_a_builtin_rule");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         run_succeeded,
@@ -2895,10 +2803,9 @@ forall x R:
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope("negation_reverses_order_as_a_builtin_rule");
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("negation_reverses_order_as_a_builtin_rule");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         run_succeeded,
@@ -2927,12 +2834,9 @@ forall a, b, q R+:
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
-        "positive_real_powers_reflect_order_as_builtin_rules",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("positive_real_powers_reflect_order_as_builtin_rules");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         run_succeeded,
@@ -2955,12 +2859,9 @@ forall q Q:
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
-        "rational_integer_ratio_representation_is_a_builtin_rule",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("rational_integer_ratio_representation_is_a_builtin_rule");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         run_succeeded,
@@ -2981,12 +2882,10 @@ exist a Z, b Z* st {sqrt(2) = a / b}
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
-        "rational_integer_ratio_representation_requires_a_rational_target",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime
+        .start_isolated_source("rational_integer_ratio_representation_requires_a_rational_target");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         !run_succeeded,
@@ -3009,17 +2908,13 @@ exist x R st {x = a}
 exist x R st {x > a}
 "#;
             let mut positive_runtime = Runtime::new();
-            positive_runtime.new_file_path_new_env_new_name_scope(
+            positive_runtime.start_isolated_source(
                 "real_line_comparison_builtins_require_real_operands_positive",
             );
             let (positive_results, positive_error) =
-                run_source_code(positive_source, &mut positive_runtime);
-            let (positive_succeeded, positive_output) = render_run_source_code_output(
-                &positive_runtime,
-                &positive_results,
-                &positive_error,
-                false,
-            );
+                execute_source(positive_source, &mut positive_runtime);
+            let (positive_succeeded, positive_output) =
+                render_run_output(&positive_runtime, &positive_results, &positive_error);
             assert!(
                 positive_succeeded,
                 "real-line comparison builtins should retain real examples:\n{}",
@@ -3034,16 +2929,16 @@ exist x R st {x > a}
                 ("existence_order", "have S set\nexist x R st {x > S}"),
             ] {
                 let mut runtime = Runtime::new();
-                runtime.new_file_path_new_env_new_name_scope(
+                runtime.start_isolated_source(
                     format!(
                         "real_line_comparison_builtins_require_real_operands_{}",
                         label
                     )
                     .as_str(),
                 );
-                let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+                let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
                 let (run_succeeded, run_output) =
-                    render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                    render_run_output(&runtime, &stmt_results, &runtime_error);
                 assert!(
                     !run_succeeded,
                     "{} must not apply a real-line rule to set operands:\n{}",
@@ -3067,12 +2962,10 @@ forall z, w C:
         z = 0 or w = 0
 "#;
     let mut positive_runtime = Runtime::new();
-    positive_runtime
-        .new_file_path_new_env_new_name_scope("zero_product_split_accepts_native_fields");
-    let (positive_results, positive_error) =
-        run_source_code(positive_source, &mut positive_runtime);
+    positive_runtime.start_isolated_source("zero_product_split_accepts_native_fields");
+    let (positive_results, positive_error) = execute_source(positive_source, &mut positive_runtime);
     let (positive_succeeded, positive_output) =
-        render_run_source_code_output(&positive_runtime, &positive_results, &positive_error, false);
+        render_run_output(&positive_runtime, &positive_results, &positive_error);
     assert!(
         positive_succeeded,
         "zero-product splitting should accept both native fields:\n{}",
@@ -3090,11 +2983,10 @@ trust A * B = 0
 A = 0 or B = 0
 "#;
     let mut non_real_runtime = Runtime::new();
-    non_real_runtime.new_file_path_new_env_new_name_scope("zero_product_split_rejects_non_scalars");
-    let (non_real_results, non_real_error) =
-        run_source_code(non_real_source, &mut non_real_runtime);
+    non_real_runtime.start_isolated_source("zero_product_split_rejects_non_scalars");
+    let (non_real_results, non_real_error) = execute_source(non_real_source, &mut non_real_runtime);
     let (non_real_succeeded, non_real_output) =
-        render_run_source_code_output(&non_real_runtime, &non_real_results, &non_real_error, false);
+        render_run_output(&non_real_runtime, &non_real_results, &non_real_error);
     assert!(
         !non_real_succeeded,
         "a non-real product must not become a zero-product premise:\n{}",
@@ -3112,13 +3004,12 @@ have chosen Z:
     chosen != 100
 "#;
     let mut equality_runtime = Runtime::new();
-    equality_runtime.new_file_path_new_env_new_name_scope(
-        "known_forall_existential_matching_rejects_equality_as_inequality",
-    );
+    equality_runtime
+        .start_isolated_source("known_forall_existential_matching_rejects_equality_as_inequality");
     let (equality_results, equality_error) =
-        run_source_code(equality_as_inequality, &mut equality_runtime);
+        execute_source(equality_as_inequality, &mut equality_runtime);
     let (equality_succeeded, equality_output) =
-        render_run_source_code_output(&equality_runtime, &equality_results, &equality_error, false);
+        render_run_output(&equality_runtime, &equality_results, &equality_error);
     assert!(
         !equality_succeeded,
         "an equality witness must not verify a distinctness witness:\n{}",
@@ -3134,17 +3025,12 @@ have chosen Z:
     not $p(chosen)
 "#;
     let mut predicate_runtime = Runtime::new();
-    predicate_runtime.new_file_path_new_env_new_name_scope(
-        "known_forall_existential_matching_rejects_positive_as_negative",
-    );
+    predicate_runtime
+        .start_isolated_source("known_forall_existential_matching_rejects_positive_as_negative");
     let (predicate_results, predicate_error) =
-        run_source_code(positive_as_negative, &mut predicate_runtime);
-    let (predicate_succeeded, predicate_output) = render_run_source_code_output(
-        &predicate_runtime,
-        &predicate_results,
-        &predicate_error,
-        false,
-    );
+        execute_source(positive_as_negative, &mut predicate_runtime);
+    let (predicate_succeeded, predicate_output) =
+        render_run_output(&predicate_runtime, &predicate_results, &predicate_error);
     assert!(
         !predicate_succeeded,
         "a positive predicate witness must not verify a negated witness:\n{}",
@@ -3159,12 +3045,11 @@ have chosen Z:
     chosen = 100
 "#;
     let mut exact_runtime = Runtime::new();
-    exact_runtime.new_file_path_new_env_new_name_scope(
-        "known_forall_existential_matching_still_accepts_exact_equality",
-    );
-    let (exact_results, exact_error) = run_source_code(exact_equality, &mut exact_runtime);
+    exact_runtime
+        .start_isolated_source("known_forall_existential_matching_still_accepts_exact_equality");
+    let (exact_results, exact_error) = execute_source(exact_equality, &mut exact_runtime);
     let (exact_succeeded, exact_output) =
-        render_run_source_code_output(&exact_runtime, &exact_results, &exact_error, false);
+        render_run_output(&exact_runtime, &exact_results, &exact_error);
     assert!(
         exact_succeeded,
         "an exact existential relation should still instantiate:\n{}",
@@ -3196,12 +3081,12 @@ thm use_rel_trans_like:
 "#;
 
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
+            runtime.start_isolated_source(
                 "known_forall_instantiation_fills_middle_param_from_dom_facts",
             );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
 
             assert!(
                 run_succeeded,
@@ -3224,12 +3109,10 @@ b = a * k1 = a * 0 = 0
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
-        "zero_product_cancellation_does_not_recursively_reenter_equality",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime
+        .start_isolated_source("zero_product_cancellation_does_not_recursively_reenter_equality");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         run_succeeded,
@@ -3251,10 +3134,9 @@ forall a1, b1, a2, b2 R:
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope("exist_unique_infers_component_uniqueness_forall");
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, true);
+    runtime.start_isolated_source("exist_unique_infers_component_uniqueness_forall");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         run_succeeded,
@@ -3277,12 +3159,9 @@ forall a1, b1, a2, b2 R:
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
-        "exist_unique_component_uniqueness_proves_split_then_facts",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("exist_unique_component_uniqueness_proves_split_then_facts");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         run_succeeded,
@@ -3307,11 +3186,9 @@ sketch:
 "#;
 
     let mut runtime = Runtime::new();
-    runtime
-        .new_file_path_new_env_new_name_scope("exist_unique_still_accepts_tuple_uniqueness_forall");
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("exist_unique_still_accepts_tuple_uniqueness_forall");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         run_succeeded,
@@ -3339,11 +3216,10 @@ forall x A:
 "#;
 
         let mut runtime = Runtime::new();
-        runtime
-            .new_file_path_new_env_new_name_scope("have_fn_by_exist_accepts_question_goal_target");
-        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        runtime.start_isolated_source("have_fn_by_exist_accepts_question_goal_target");
+        let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
-            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            render_run_output(&runtime, &stmt_results, &runtime_error);
 
         assert!(
             run_succeeded,
@@ -3371,12 +3247,10 @@ forall x A:
 "#;
 
         let mut runtime = Runtime::new();
-        runtime.new_file_path_new_env_new_name_scope(
-            "have_fn_by_exist_prove_body_can_establish_target",
-        );
-        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        runtime.start_isolated_source("have_fn_by_exist_prove_body_can_establish_target");
+        let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
-            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            render_run_output(&runtime, &stmt_results, &runtime_error);
 
         assert!(
             run_succeeded,
@@ -3428,12 +3302,12 @@ forall a, b R, f fn(t '[a, b]) R, x '[a, b]:
 "#;
 
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
+            runtime.start_isolated_source(
                 "have_fn_by_exist_rebinds_value_dependent_function_signature",
             );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
 
             assert!(
                 run_succeeded,
@@ -3464,12 +3338,10 @@ forall x A, y B:
 "#;
 
         let mut runtime = Runtime::new();
-        runtime.new_file_path_new_env_new_name_scope(
-            "have_fn_by_exist_releases_unique_witness_direction",
-        );
-        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        runtime.start_isolated_source("have_fn_by_exist_releases_unique_witness_direction");
+        let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
-            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            render_run_output(&runtime, &stmt_results, &runtime_error);
 
         assert!(
             run_succeeded,
@@ -3505,12 +3377,12 @@ $P(0)
 "#;
 
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
+            runtime.start_isolated_source(
                 "have_fn_by_exist_caches_alpha_equivalent_uniqueness_forall",
             );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
 
             assert!(
                 run_succeeded,
@@ -3545,12 +3417,12 @@ forall x A, y B:
 "#;
 
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
+            runtime.start_isolated_source(
                 "have_fn_by_exist_unique_witness_direction_keeps_all_body_facts",
             );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
 
             assert!(
                 run_succeeded,
@@ -3580,10 +3452,10 @@ forall x A:
 "#;
 
         let mut runtime = Runtime::new();
-        runtime.new_file_path_new_env_new_name_scope("have_fn_by_exist_requires_question_goal");
-        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        runtime.start_isolated_source("have_fn_by_exist_requires_question_goal");
+        let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
-            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            render_run_output(&runtime, &stmt_results, &runtime_error);
 
         assert!(
             !run_succeeded,
@@ -3609,12 +3481,10 @@ have fn f by exist!:
 "#;
 
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
-                "have_fn_by_exist_question_goal_requires_forall_target",
-            );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            runtime.start_isolated_source("have_fn_by_exist_question_goal_requires_forall_target");
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
 
             assert!(
                 !run_succeeded,
@@ -3659,12 +3529,9 @@ forall F finite_set, c set:
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
-        "elementary_set_elimination_and_subset_rules_are_builtin",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("elementary_set_elimination_and_subset_rules_are_builtin");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         run_succeeded,
@@ -3696,10 +3563,9 @@ B = set_minus(A, set_minus(A, B))
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope("set_minus_relative_complement_requires_subset");
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("set_minus_relative_complement_requires_subset");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         !run_succeeded,
@@ -3744,12 +3610,12 @@ trust $is_dual_family(R, 2, original, \selected_family<R, 2, original>)
 "#;
 
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
+            runtime.start_isolated_source(
                 "distinct_template_struct_memberships_expand_distinct_field_views",
             );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
 
             assert!(
                 run_succeeded,
@@ -3785,12 +3651,9 @@ thm equal_index_transport:
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
-        "have_equal_object_transports_across_equal_struct_indices",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("have_equal_object_transports_across_equal_struct_indices");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         run_succeeded,
@@ -3843,12 +3706,11 @@ thm concrete_template_after_symbolic_template:
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
+    runtime.start_isolated_source(
         "stale_local_template_equality_candidate_does_not_abort_later_application",
     );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         run_succeeded,

@@ -92,7 +92,7 @@ impl Runtime {
     pub fn try_verify_trigonometric_equality(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         if let Some(result) = self.try_verify_arcsin_inverse_equality(equal_fact, builtin_state)? {
             return Ok(Some(result));
@@ -166,7 +166,7 @@ impl Runtime {
     pub fn try_verify_trigonometric_order_bound(
         &mut self,
         atomic_fact: &AtomicFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         if let Some(result) = self.try_verify_arcsin_principal_range(atomic_fact, builtin_state)? {
             return Ok(Some(result));
@@ -237,7 +237,7 @@ impl Runtime {
     fn try_verify_arcsin_inverse_equality(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         for (left, right) in [
             (&equal_fact.left, &equal_fact.right),
@@ -331,7 +331,7 @@ impl Runtime {
     fn try_verify_arcsin_principal_range(
         &mut self,
         atomic_fact: &AtomicFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some(AtomicFact::LessEqualFact(f)) = normalize_positive_order_atomic_fact(atomic_fact)
         else {
@@ -368,7 +368,7 @@ impl Runtime {
     fn try_verify_trigonometric_interval_order(
         &mut self,
         atomic_fact: &AtomicFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         // Canonical interval facts connect trigonometric objects to real order.
         // Examples: `0 < x < pi => 0 < sin(x)`, sine is increasing on
@@ -701,7 +701,7 @@ impl Runtime {
     pub fn try_verify_trigonometric_not_equal(
         &mut self,
         not_equal_fact: &NotEqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         if first_trig_arg(&not_equal_fact.left).is_none()
             && first_trig_arg(&not_equal_fact.right).is_none()
@@ -835,7 +835,7 @@ impl Runtime {
                 not_equal_fact.line_file.clone(),
                 builtin_state,
             )?;
-            if interval_result.is_true() {
+            if interval_result.is_success() {
                 return Ok(Some(
                     SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                         not_equal_fact.clone().into(),
@@ -856,7 +856,7 @@ impl Runtime {
             .into();
             let reduced_result =
                 self.verify_atomic_fact_as_builtin_rule_premise(&reduced, builtin_state)?;
-            if reduced_result.is_true() {
+            if reduced_result.is_success() {
                 return Ok(Some(
                     SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                         not_equal_fact.clone().into(),
@@ -878,7 +878,7 @@ impl Runtime {
             NotEqualFact::new(left.obj, right.obj, not_equal_fact.line_file.clone()).into();
         let expanded_result =
             self.verify_atomic_fact_as_builtin_rule_premise(&expanded, builtin_state)?;
-        if !expanded_result.is_true() {
+        if !expanded_result.is_success() {
             return Ok(None);
         }
         Ok(Some(

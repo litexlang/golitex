@@ -61,7 +61,7 @@ fn trust_before_line_rejects_a_non_header_before_execution() {
     assert!(report.is_none());
     assert!(setup_rejected);
 
-    let (probe_results, probe_error) = run_source_code("2 = 3", &mut runtime);
+    let (probe_results, probe_error) = execute_source("2 = 3", &mut runtime);
     assert!(
         probe_results.is_empty() && probe_error.is_some(),
         "boundary setup failure must not execute or store the line-1 fact"
@@ -205,7 +205,7 @@ fn trust_before_line_reports_trusted_and_verified_statement_traces() {
     assert_trace(&results[0], "trusted_prefix");
     assert_trace(&results[1], "verified");
 
-    let (_, output) = render_run_source_code_output(&runtime, &results, &error, false);
+    let (_, output) = render_run_output(&runtime, &results, &error);
     assert!(output.contains("\"verification_status\": \"trusted_prefix\""));
     assert!(output.contains("\"verification_status\": \"verified\""));
     assert!(!output.contains("\"trust_dependencies\""));
@@ -227,9 +227,12 @@ fn trust_before_line_reports_a_suffix_trust_as_verified_execution() {
     let report = report
         .as_ref()
         .expect("the first statement is a valid zero-prefix boundary");
-    let summary = display_run_summary_json_with_runtime_and_trusted_prefix(
-        &runtime, &results, &error, report,
-    );
+    let summary = render_run_summary(RunSummaryRequest {
+        runtime: &runtime,
+        stmt_results: &results,
+        runtime_error: &error,
+        trusted_prefix_report: Some(report),
+    });
     assert!(summary.contains("\"direct_trust\": 1"));
     assert!(!summary.contains("indirect_trust"));
     assert!(!summary.contains("trust_dependencies"));
@@ -534,14 +537,16 @@ fn run_trusted_prefix_with_report(
     Option<TrustedPrefixReport>,
     bool,
 ) {
-    run_file_with_project_context_and_trusted_prefix(
+    execute_file_in_runtime(
         fixture
             .file
             .to_str()
             .expect("fixture path should be valid UTF-8"),
         runtime,
-        true,
-        Some(before_line),
+        FileExecutionOptions {
+            force_isolated: true,
+            trust_before_line: Some(before_line),
+        },
     )
 }
 
@@ -554,7 +559,7 @@ fn assert_trace(result: &StmtResult, status: &str) {
 
 fn assert_verified_probe_fails(runtime: &mut Runtime, source: &str) {
     assert_eq!(runtime.current_execution_mode(), ExecutionMode::Verified);
-    let (results, error) = run_source_code(source, runtime);
+    let (results, error) = execute_source(source, runtime);
     assert!(
         results.is_empty() && error.is_some(),
         "a false probe must be verified after trusted-prefix execution"

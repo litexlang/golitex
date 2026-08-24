@@ -53,7 +53,7 @@ impl Runtime {
         let right = &equal_fact.right;
         let known_result =
             self.verify_equal_fact_by_known_equality_without_direct_evaluation(equal_fact);
-        if known_result.is_true() {
+        if known_result.is_success() {
             return known_result;
         }
 
@@ -93,7 +93,7 @@ impl Runtime {
         }
 
         let direct_result = self.verify_equal_fact_directly_known_only(equal_fact);
-        if direct_result.is_true() {
+        if direct_result.is_success() {
             return direct_result;
         }
 
@@ -146,7 +146,7 @@ impl Runtime {
     ) -> bool {
         if self
             .verify_equal_fact_by_known_equality(equal_fact)
-            .is_true()
+            .is_success()
         {
             return true;
         }
@@ -168,11 +168,11 @@ impl Runtime {
         equal_fact: &EqualFact,
     ) -> Result<bool, RuntimeError> {
         let known_result = self.verify_equal_fact_with_known_fact(equal_fact);
-        if known_result.is_true() {
+        if known_result.is_success() {
             return Ok(true);
         }
         let direct_evaluation_result = self.verify_equal_fact_by_direct_evaluation(equal_fact);
-        if direct_evaluation_result.is_true() {
+        if direct_evaluation_result.is_success() {
             self.remember_successful_atomic_fact_for_statement(
                 &equal_fact.clone().into(),
                 direct_evaluation_result,
@@ -629,7 +629,7 @@ impl Runtime {
     pub fn verify_equal_fact_as_builtin_premise(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<StmtResult, RuntimeError> {
         let fact: AtomicFact = equal_fact.clone().into();
         self.verify_atomic_fact_as_builtin_rule_premise(&fact, builtin_state)

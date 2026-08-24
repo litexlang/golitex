@@ -1,16 +1,23 @@
 # Running Litex source
 
-`litex -runner -e '1 + 1 = 2'` and `litex -f example.lit` share the same source-to-result pipeline.
+`litex -e '1 + 1 = 2'`, `litex -f example.lit`, `litex -r project`, runner mode, and graph mode all enter through `run(RunRequest)`.
 
 ```text
-run_source_code(source, runtime)
-  blocks = Tokenizer.parse_blocks(source)
-  for block in blocks:
-    stmt = runtime.parse_statement(block)
-    result = execute_top_level_statement(stmt, runtime)
-    collect result or stop at RuntimeError
-  render results, errors, and optional summary
+run(RunRequest { target, options })
+  create and configure Runtime once
+  match target: Code | File | Repository
+  execute_source(source, runtime)
+    Tokenizer::parse_blocks
+    Runtime::parse_statement
+    execute_top_level_statement
+    Runtime::execute_statement -> verify -> Result
+  render output and optional summary once
 ```
+
+The files on this path import their dependency owners directly. Reading from
+`run.rs` into `source_execution.rs`, `statement_parsing.rs`, and the executor
+therefore shows whether a type comes from `runtime`, `stmt`, `result`, `error`,
+or `module_manager` without first expanding the crate-wide prelude.
 
 ## Examples and boundaries
 
@@ -26,10 +33,12 @@ run_source_code(source, runtime)
 
 | File | Example |
 | --- | --- |
-| [`source_execution.rs`](source_execution.rs) | Starts with the canonical `run_source_code` entry, then owns code, file, or repository execution for `-e`, `-f`, and `-r`, plus relative source-file target resolution. |
-| [`source_execution/compatibility.rs`](source_execution/compatibility.rs) | Retains the former long-signature file/repository helpers without placing them in the canonical reading path. |
+| [`run.rs`](run.rs) | Owns the single batch entry `run(RunRequest)`, its request/target types, Runtime creation, and target dispatch. |
+| [`source_execution.rs`](source_execution.rs) | Tokenizes, parses, and executes source inside an already initialized Runtime. |
+| [`file_execution.rs`](file_execution.rs) | Resolves `-f`, discovers project context, and selects repository-prefix or isolated-file execution. |
+| [`output_rendering.rs`](output_rendering.rs) | Renders statement results, errors, trusted-prefix metadata, and unverified-import warnings. |
+| [`execution_trace.rs`](execution_trace.rs) | Collects request-scoped major Rust steps without adding fields to `Runtime`. |
 | [`top_level_statement_execution.rs`](top_level_statement_execution.rs) | Executes one parsed top-level statement and owns isolated terminal imports. |
 | [`repository_execution.rs`](repository_execution.rs) | Runs ordered project imports, module trees, file targets, and registered prefixes. |
-| [`pipeline_run_stmt_globally.rs`](pipeline_run_stmt_globally.rs) | Retains the former public module path as a compatibility facade only. |
 | [`pipeline_session.rs`](pipeline_session.rs) | Keeps one runtime alive for `-session`. |
 | [`summary.rs`](summary.rs) | Builds the optional `-summarize` output. |

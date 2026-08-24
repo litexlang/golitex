@@ -7,7 +7,7 @@ impl Runtime {
     pub fn try_verify_finite_set_sum_empty(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -23,7 +23,7 @@ impl Runtime {
                     &EqualFact::new_from_refs(s.set.as_ref(), &empty_set, line_file.clone()),
                     builtin_state,
                 )?
-                .is_true()
+                .is_success()
             {
                 continue;
             }
@@ -32,7 +32,7 @@ impl Runtime {
                     &EqualFact::new_from_refs(other, &zero, line_file.clone()),
                     builtin_state,
                 )?
-                .is_true()
+                .is_success()
             {
                 return Ok(Some(factual_equal_success_by_builtin_reason(
                     equal_fact,
@@ -49,7 +49,7 @@ impl Runtime {
     pub fn try_verify_finite_set_sum_list_expansion(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -90,7 +90,7 @@ impl Runtime {
                         &EqualFact::new_from_refs(other, &expected, line_file.clone()),
                         builtin_state,
                     )?
-                    .is_true()
+                    .is_success()
                 {
                     return Ok(Some(factual_equal_success_by_builtin_reason(
                         equal_fact,
@@ -107,7 +107,7 @@ impl Runtime {
     pub fn try_verify_finite_set_sum_closed_range_bridge(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -131,7 +131,7 @@ impl Runtime {
                     ),
                     builtin_state,
                 )?
-                .is_true()
+                .is_success()
             {
                 continue;
             }
@@ -144,7 +144,7 @@ impl Runtime {
                     ),
                     builtin_state,
                 )?
-                .is_true()
+                .is_success()
             {
                 continue;
             }
@@ -156,7 +156,7 @@ impl Runtime {
                 ),
                 builtin_state,
             )?;
-            if !exact_func_result.is_true() {
+            if !exact_func_result.is_success() {
                 let x_name = self.generate_random_unused_name();
                 let (x_binding, x_obj) = self.fresh_bound_param(x_name, ParamObjType::Forall)?;
                 let Some(finite_inst) =
@@ -186,7 +186,7 @@ impl Runtime {
                         &pointwise_fact,
                         builtin_state,
                     )?;
-                if !pointwise_result.is_true() {
+                if !pointwise_result.is_success() {
                     continue;
                 }
             }
@@ -203,7 +203,7 @@ impl Runtime {
     pub fn try_verify_finite_set_sum_constant_summand(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -246,13 +246,13 @@ impl Runtime {
                     &EqualFact::new_from_refs(other, &m1, line_file.clone()),
                     builtin_state,
                 )?
-                .is_true()
+                .is_success()
                 || self
                     .verify_equal_fact_as_builtin_premise(
                         &EqualFact::new_from_refs(other, &m2, line_file.clone()),
                         builtin_state,
                     )?
-                    .is_true()
+                    .is_success()
             {
                 return Ok(Some(factual_equal_success_by_builtin_reason(
                     equal_fact,
@@ -269,7 +269,7 @@ impl Runtime {
     pub fn try_verify_finite_set_sum_pointwise_equality(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -287,7 +287,7 @@ impl Runtime {
                 ),
                 builtin_state,
             )?
-            .is_true()
+            .is_success()
         {
             return Ok(None);
         }
@@ -309,7 +309,7 @@ impl Runtime {
             &then_fact,
             builtin_state,
         )?;
-        if r.is_true() {
+        if r.is_success() {
             return Ok(Some(factual_equal_success_by_builtin_reason(
                 equal_fact,
                 "equality: finite-set sums from pointwise equality on the finite set",
@@ -324,7 +324,7 @@ impl Runtime {
     pub fn try_verify_finite_set_sum_substitution(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -363,7 +363,7 @@ impl Runtime {
                     &pointwise_fact,
                     builtin_state,
                 )?;
-            if !pointwise_result.is_true() {
+            if !pointwise_result.is_success() {
                 continue;
             }
 
@@ -426,7 +426,7 @@ impl Runtime {
     pub fn try_verify_finite_set_sum_disjoint_union(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -460,7 +460,7 @@ impl Runtime {
                     ),
                     builtin_state,
                 )?;
-                if !union_result.is_true() {
+                if !union_result.is_success() {
                     continue;
                 }
                 let empty_set: Obj = ListSet::new(vec![]).into();
@@ -473,7 +473,7 @@ impl Runtime {
                     &EqualFact::new_from_refs(&intersection, &empty_set, line_file.clone()),
                     builtin_state,
                 )?;
-                if !disjoint_result.is_true() {
+                if !disjoint_result.is_success() {
                     continue;
                 }
                 let first_pointwise = self.verify_finite_set_sum_functions_pointwise_premise(
@@ -485,7 +485,7 @@ impl Runtime {
                     first_sum.set.as_ref().clone(),
                     builtin_state,
                 )?;
-                if !first_pointwise.is_true() {
+                if !first_pointwise.is_success() {
                     continue;
                 }
                 let second_pointwise = self.verify_finite_set_sum_functions_pointwise_premise(
@@ -497,7 +497,7 @@ impl Runtime {
                     second_sum.set.as_ref().clone(),
                     builtin_state,
                 )?;
-                if !second_pointwise.is_true() {
+                if !second_pointwise.is_success() {
                     continue;
                 }
                 return Ok(Some(factual_equal_success_by_builtin_reason(
@@ -515,7 +515,7 @@ impl Runtime {
     pub fn try_verify_finite_set_sum_add(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -540,7 +540,7 @@ impl Runtime {
                 ),
                 builtin_state,
             )?;
-            if !first_set_result.is_true() {
+            if !first_set_result.is_success() {
                 continue;
             }
             let second_set_result = self.verify_equal_fact_as_builtin_premise(
@@ -551,7 +551,7 @@ impl Runtime {
                 ),
                 builtin_state,
             )?;
-            if !second_set_result.is_true() {
+            if !second_set_result.is_success() {
                 continue;
             }
 
@@ -581,7 +581,7 @@ impl Runtime {
                     &pointwise_fact,
                     builtin_state,
                 )?;
-            if !pointwise_result.is_true() {
+            if !pointwise_result.is_success() {
                 continue;
             }
             return Ok(Some(factual_equal_success_by_builtin_reason(
@@ -597,7 +597,7 @@ impl Runtime {
     pub fn try_verify_finite_set_sum_scalar_mul(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -624,7 +624,7 @@ impl Runtime {
                     ),
                     builtin_state,
                 )?;
-                if !set_result.is_true() {
+                if !set_result.is_success() {
                     continue;
                 }
 
@@ -650,7 +650,7 @@ impl Runtime {
                         &pointwise_fact,
                         builtin_state,
                     )?;
-                if !pointwise_result.is_true() {
+                if !pointwise_result.is_success() {
                     continue;
                 }
                 return Ok(Some(factual_equal_success_by_builtin_reason(
@@ -669,7 +669,7 @@ impl Runtime {
     pub fn try_verify_finite_set_sum_over_cartesian_product(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -694,7 +694,7 @@ impl Runtime {
                 ),
                 builtin_state,
             )?;
-            if !set_result.is_true() {
+            if !set_result.is_success() {
                 continue;
             }
             let func_result = self.verify_equal_fact_as_builtin_premise(
@@ -705,7 +705,7 @@ impl Runtime {
                 ),
                 builtin_state,
             )?;
-            if !func_result.is_true() {
+            if !func_result.is_success() {
                 continue;
             }
             return Ok(Some(factual_equal_success_by_builtin_reason(
@@ -722,7 +722,7 @@ impl Runtime {
     pub fn try_verify_finite_set_sum_fubini(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -745,7 +745,7 @@ impl Runtime {
             ),
             builtin_state,
         )?;
-        if !set_result.is_true() {
+        if !set_result.is_success() {
             return Ok(None);
         }
         let func_result = self.verify_equal_fact_as_builtin_premise(
@@ -756,7 +756,7 @@ impl Runtime {
             ),
             builtin_state,
         )?;
-        if !func_result.is_true() {
+        if !func_result.is_success() {
             return Ok(None);
         }
         Ok(Some(factual_equal_success_by_builtin_reason(
@@ -772,7 +772,7 @@ impl Runtime {
     pub fn try_verify_sum_over_bijective_finite_set_enumerations(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -790,7 +790,7 @@ impl Runtime {
                 ),
                 builtin_state,
             )?
-            .is_true()
+            .is_success()
         {
             return Ok(None);
         }
@@ -803,7 +803,7 @@ impl Runtime {
                 ),
                 builtin_state,
             )?
-            .is_true()
+            .is_success()
         {
             return Ok(None);
         }
@@ -828,7 +828,7 @@ impl Runtime {
                 ),
                 builtin_state,
             )?
-            .is_true()
+            .is_success()
         {
             return Ok(None);
         }
@@ -841,7 +841,7 @@ impl Runtime {
                 ),
                 builtin_state,
             )?
-            .is_true()
+            .is_success()
         {
             return Ok(None);
         }
@@ -854,7 +854,7 @@ impl Runtime {
                 ),
                 builtin_state,
             )?
-            .is_true()
+            .is_success()
         {
             return Ok(None);
         }
@@ -863,7 +863,7 @@ impl Runtime {
             IsFiniteSetFact::new(left_shape.target_set.clone(), line_file.clone()).into();
         if !self
             .verify_atomic_fact_as_builtin_rule_premise(&finite_target, builtin_state)?
-            .is_true()
+            .is_success()
         {
             return Ok(None);
         }

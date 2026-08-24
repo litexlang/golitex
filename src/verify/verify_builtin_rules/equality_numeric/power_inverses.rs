@@ -4,7 +4,7 @@ impl Runtime {
     pub fn try_verify_base_zero_from_known_positive_power_zero(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -37,7 +37,7 @@ impl Runtime {
                     &EqualFact::new_from_refs(target_base, pow.base.as_ref(), line_file.clone()),
                     builtin_state,
                 )?;
-                if !base_result.is_true() {
+                if !base_result.is_success() {
                     continue;
                 }
                 let exponent_result = self.obj_is_verified_in_n_pos(
@@ -101,7 +101,7 @@ impl Runtime {
     pub fn try_verify_positive_base_equal_from_equal_nonzero_integer_power(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -120,22 +120,22 @@ impl Runtime {
 
             let left_positive_result =
                 self.verify_atomic_fact_as_builtin_rule_premise(&left_positive, builtin_state)?;
-            if !left_positive_result.is_true() {
+            if !left_positive_result.is_success() {
                 continue;
             }
             let right_positive_result =
                 self.verify_atomic_fact_as_builtin_rule_premise(&right_positive, builtin_state)?;
-            if !right_positive_result.is_true() {
+            if !right_positive_result.is_success() {
                 continue;
             }
             let exponent_in_z_result =
                 self.verify_atomic_fact_as_builtin_rule_premise(&exponent_in_z, builtin_state)?;
-            if !exponent_in_z_result.is_true() {
+            if !exponent_in_z_result.is_success() {
                 continue;
             }
             let exponent_nonzero_result =
                 self.verify_atomic_fact_as_builtin_rule_premise(&exponent_nonzero, builtin_state)?;
-            if !exponent_nonzero_result.is_true() {
+            if !exponent_nonzero_result.is_success() {
                 continue;
             }
 
@@ -144,7 +144,7 @@ impl Runtime {
             let power_equal_result = self.verify_equal_fact_by_known_equality(
                 &EqualFact::new_from_refs(&left_power, &right_power, line_file.clone()),
             );
-            if !power_equal_result.is_true() {
+            if !power_equal_result.is_success() {
                 continue;
             }
 
@@ -166,7 +166,7 @@ impl Runtime {
     pub fn try_verify_abs_power_rule(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -191,7 +191,7 @@ impl Runtime {
                 ),
                 builtin_state,
             )?
-            .is_true()
+            .is_success()
         {
             return Ok(None);
         }
@@ -204,7 +204,7 @@ impl Runtime {
                 ),
                 builtin_state,
             )?
-            .is_true()
+            .is_success()
         {
             return Ok(None);
         }
@@ -285,7 +285,7 @@ impl Runtime {
         negative_power: &Pow,
         quotient: &Div,
         line_file: LineFile,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
         if !Self::obj_is_builtin_literal_one(quotient.left.as_ref()) {
             return Ok(None);
@@ -332,7 +332,7 @@ impl Runtime {
             self.verify_atomic_fact_as_builtin_rule_premise(&base_match, builtin_state)?;
         let exponent_match_result =
             self.verify_atomic_fact_as_builtin_rule_premise(&exponent_match, builtin_state)?;
-        if base_match_result.is_true() && exponent_match_result.is_true() {
+        if base_match_result.is_success() && exponent_match_result.is_success() {
             let Some(mut results) = self
                 .verify_builtin_rule_premises(&[exponent_in_n_pos, base_nonzero], builtin_state)?
             else {
@@ -352,7 +352,7 @@ impl Runtime {
     pub fn try_verify_power_inverse_rule(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -402,7 +402,7 @@ impl Runtime {
     pub fn try_verify_pow_reciprocal_exponent_equals_root_by_power(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -431,7 +431,7 @@ impl Runtime {
             EqualFact::new_from_refs(pow.base.as_ref(), &root_power, line_file.clone()).into();
         let inverse_result =
             self.verify_atomic_fact_as_builtin_rule_premise(&inverse, builtin_state)?;
-        let results = if inverse_result.is_true() {
+        let results = if inverse_result.is_success() {
             let Some(mut results) = self.verify_builtin_rule_premises(
                 &[degree_in_n_pos, root_nonnegative],
                 builtin_state,

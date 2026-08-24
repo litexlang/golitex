@@ -44,7 +44,7 @@ impl Runtime {
         let shape = self.have_fn_by_forall_exist_unique_shape(stmt)?;
         self.verify_fact_well_defined(
             &Fact::ForallFact(stmt.forall.clone()),
-            &UseContextVerifyState::new(0, false),
+            &ProofSearchState::initial(),
         )
         .map_err(|e| {
             short_exec_error(
@@ -64,7 +64,7 @@ impl Runtime {
         if stmt.prove_process.is_empty() {
             let forall_fact: Fact = stmt.forall.clone().into();
             let result = self
-                .verify_fact_or_error(&forall_fact, &UseContextVerifyState::new(0, false))
+                .verify_fact_or_error(&forall_fact, &ProofSearchState::initial())
                 .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))?;
             Ok(SuccessVerifyFunctionFromUniqueExistenceResult {
                 source_forall_check: Some(Box::new(result)),
@@ -82,7 +82,7 @@ impl Runtime {
     ) -> Result<SuccessVerifyFunctionFromUniqueExistenceResult, RuntimeError> {
         self.verify_fact_well_defined(
             &Fact::ForallFact(stmt.forall.clone()),
-            &UseContextVerifyState::new(0, false),
+            &ProofSearchState::initial(),
         )
         .map_err(|e| {
             short_exec_error(
@@ -106,7 +106,7 @@ impl Runtime {
             for dom_fact in stmt.forall.dom_facts.iter() {
                 rt.store_with_well_defined_verification_and_infer(
                     dom_fact.clone(),
-                    &UseContextVerifyState::new(0, false),
+                    &ProofSearchState::initial(),
                 )?;
             }
 
@@ -139,7 +139,7 @@ impl Runtime {
 
             let mut conclusion_checks = Vec::new();
             let then_count = stmt.forall.then_facts.len();
-            let then_verify_state = UseContextVerifyState::new(0, false);
+            let then_verify_state = ProofSearchState::initial();
             for (then_index, then_fact) in stmt.forall.then_facts.iter().enumerate() {
                 let mut result =
                     rt.verify_exist_or_and_chain_atomic_fact(then_fact, &then_verify_state)?;
