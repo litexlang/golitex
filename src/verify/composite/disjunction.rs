@@ -857,7 +857,7 @@ impl Runtime {
         or_fact: &OrFact,
         all_objs_equal_to_each_arg: &Vec<Vec<String>>,
     ) -> Result<StmtResult, RuntimeError> {
-        if let Some(known_or_facts) = environment.known_or_facts.get(&or_fact.key()) {
+        if let Some(known_or_facts) = environment.facts.known_or_facts.get(&or_fact.key()) {
             for known_or_fact in known_or_facts.iter() {
                 if !Self::_verify_or_fact_the_same_type_ref(known_or_fact, or_fact)? {
                     continue;
@@ -881,10 +881,12 @@ impl Runtime {
                     let source_fact: Fact = known_or_fact.clone().into();
                     let source_fact_key = source_fact.to_string();
                     let source_fact_id = environment
+                        .facts
                         .stored_facts
                         .lookup(&source_fact_key)
                         .or_else(|| {
                             environment
+                                .facts
                                 .stored_facts
                                 .lookup(&nested_obj_binder_normalized_fact_key(&source_fact))
                         })

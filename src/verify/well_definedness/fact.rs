@@ -608,7 +608,13 @@ impl Runtime {
         &mut self,
         forall_fact: &ForallFact,
         verify_state: &ProofSearchState,
-    ) -> Result<(SuccessVerifyFactWellDefinedResult, Environment), RuntimeError> {
+    ) -> Result<
+        (
+            SuccessVerifyFactWellDefinedResult,
+            WellDefinednessEnvironmentDelta,
+        ),
+        RuntimeError,
+    > {
         let bindings = forall_fact.params_def_with_type.collect_param_bindings();
         let rename_map =
             self.visible_binding_conflict_rename_map(&bindings, ParamObjType::Forall)?;
@@ -630,7 +636,7 @@ impl Runtime {
                 premises.push(rt.verify_and_store_fact_wd_result(premise, verify_state)?);
             }
 
-            let mut certificate = Environment::new_empty_env();
+            let mut certificate = WellDefinednessEnvironmentDelta::new();
             let mut conclusions = Vec::with_capacity(working.then_facts.len());
             for fact in working.then_facts.iter() {
                 let proposition = fact.clone().to_fact();
@@ -655,7 +661,7 @@ impl Runtime {
                 // definition reduction. The child does not own the forall
                 // parameters or premises (it inherits them), so retaining its
                 // complete checked effects cannot leak those assumptions.
-                certificate.merge_committed_child(checked_side_effects.clone())?;
+                certificate.merge_committed_environment(checked_side_effects.clone())?;
                 rt.top_level_env()
                     .merge_committed_child(checked_side_effects)?;
 

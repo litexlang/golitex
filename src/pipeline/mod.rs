@@ -1,4 +1,3 @@
-mod execution_trace;
 mod file_execution;
 mod output_rendering;
 pub mod pipeline_repl;
@@ -9,9 +8,6 @@ mod source_execution;
 mod summary;
 mod top_level_statement_execution;
 
-pub use execution_trace::{
-    record_pipeline_step, PipelineStep, PipelineTrace, PipelineTraceCapture,
-};
 pub use file_execution::{execute_file_in_runtime, resolve_source_file_path, FileExecutionOptions};
 pub use output_rendering::{display_trusted_prefix_report_json, render_run_output};
 

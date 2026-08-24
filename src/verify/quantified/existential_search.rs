@@ -45,7 +45,7 @@ impl Runtime {
                 Vec::new();
             for lk in lookup_keys.iter() {
                 if let Some(known_forall_facts_in_env) =
-                    env.known_exist_facts_in_forall_facts.get(lk.as_str())
+                    env.facts.known_exist_facts_in_forall_facts.get(lk.as_str())
                 {
                     merged_bucket.extend(known_forall_facts_in_env.iter().cloned());
                 }

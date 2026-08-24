@@ -6,15 +6,13 @@ const RUNNER_VERSION: &str = "0.1";
 pub struct RunnerRequest {
     pub run: RunRequest,
     pub hide_file_paths: bool,
-    pub include_cli_trace: bool,
 }
 
 impl RunnerRequest {
-    pub fn new(run: RunRequest, hide_file_paths: bool, include_cli_trace: bool) -> Self {
+    pub fn new(run: RunRequest, hide_file_paths: bool) -> Self {
         Self {
             run,
             hide_file_paths,
-            include_cli_trace,
         }
     }
 }
@@ -23,25 +21,14 @@ pub fn run_runner(request: RunnerRequest) -> (bool, String) {
     let RunnerRequest {
         run: run_request,
         hide_file_paths,
-        include_cli_trace,
     } = request;
-    let trace_requested = run_request.options.trace_pipeline;
-    let mut outcome = run(run_request);
-    if include_cli_trace && trace_requested {
-        outcome.pipeline_trace.prepend_step(PipelineStep::new(
-            "runner",
-            "runner::run_runner",
-            "src/runner/target_execution.rs",
-        ));
-        outcome.prepend_cli_trace();
-    }
+    let outcome = run(run_request);
     if let Some(message) = outcome.target_error {
         return runner_target_error_output(
             outcome.target_kind.as_str(),
             outcome.target_label.as_str(),
             hide_file_paths,
             message,
-            trace_requested.then_some(outcome.pipeline_trace),
         );
     }
     runner_output_from_trace(
@@ -50,7 +37,6 @@ pub fn run_runner(request: RunnerRequest) -> (bool, String) {
         hide_file_paths,
         outcome.ok,
         outcome.output,
-        trace_requested.then_some(outcome.pipeline_trace),
     )
 }
 
@@ -60,11 +46,10 @@ fn runner_output_from_trace(
     hide_file_paths: bool,
     ok: bool,
     trace_output: String,
-    pipeline_trace: Option<PipelineTrace>,
 ) -> (bool, String) {
     let result_label = if ok { "success" } else { "error" };
 
-    let mut fields = vec![
+    let fields = vec![
         (
             "runner".to_string(),
             JsonValue::JsonString(RUNNER_NAME.to_string()),
@@ -88,10 +73,6 @@ fn runner_output_from_trace(
             JsonValue::JsonString(trace_output.trim().to_string()),
         ),
     ];
-    if let Some(pipeline_trace) = pipeline_trace {
-        fields.push(("pipeline_trace".to_string(), pipeline_trace.json_value()));
-    }
-
     (ok, render_runner_json_value(JsonValue::Object(fields)))
 }
 
@@ -100,7 +81,6 @@ fn runner_target_error_output(
     target_label: &str,
     hide_file_paths: bool,
     message: String,
-    pipeline_trace: Option<PipelineTrace>,
 ) -> (bool, String) {
     let error = JsonValue::Object(vec![
         (
@@ -109,7 +89,7 @@ fn runner_target_error_output(
         ),
         ("message".to_string(), JsonValue::JsonString(message)),
     ]);
-    let mut fields = vec![
+    let fields = vec![
         (
             "runner".to_string(),
             JsonValue::JsonString(RUNNER_NAME.to_string()),
@@ -130,10 +110,6 @@ fn runner_target_error_output(
         ("error".to_string(), error),
         ("trace".to_string(), JsonValue::JsonString(String::new())),
     ];
-    if let Some(pipeline_trace) = pipeline_trace {
-        fields.push(("pipeline_trace".to_string(), pipeline_trace.json_value()));
-    }
-
     (false, render_runner_json_value(JsonValue::Object(fields)))
 }
 

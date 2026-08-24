@@ -28,11 +28,10 @@ run_runner(RunnerRequest)
   -> pipeline::run(RunRequest)
   -> collect (ok, statement-result trace)
   -> wrap target metadata, error, and trace once
-  -> optionally attach structured pipeline_trace
   -> return wrapper JSON and the same boolean as the process status
 ```
 
 Start with [`target_execution.rs`](target_execution.rs). `run_runner` is the only
 runner entry; code, file, and repository differences live in
 `RunRequest.target`, while strictness, language, isolation, output style, and
-pipeline tracing live in `RunRequest.options`.
+summary behavior live in `RunRequest.options`.

@@ -675,6 +675,7 @@ impl Runtime {
             .unwrap_or_else(|| normalized_key.clone());
         let existing_fact = self
             .top_level_env()
+            .facts
             .stored_facts
             .stored_fact(fact_id)
             .map(|stored| stored.fact.clone());
@@ -845,7 +846,7 @@ impl Runtime {
 
     fn is_transitive_prop_name_known(&self, prop_name: &str) -> bool {
         for env in self.iter_environments_from_top() {
-            if env.known_transitive_props.contains_key(prop_name) {
+            if env.predicate_properties.is_transitive(prop_name) {
                 return true;
             }
         }

@@ -123,10 +123,10 @@ fn compiler_and_test_directories_follow_the_repository_layout() {
         "source_execution.rs",
         "file_execution.rs",
         "output_rendering.rs",
-        "execution_trace.rs",
     ] {
         assert!(pipeline.join(responsibility).is_file());
     }
+    assert!(!pipeline.join("execution_trace.rs").exists());
     let compiler = root.join("src/stmt_result_to_lean_compiler");
     assert!(root
         .join("src/bin/stmt_result_to_lean_compiler.rs")
@@ -815,7 +815,7 @@ fn cli_dispatch_delegates_execution_and_path_resolution_to_their_owners() {
     assert!(!source_execution.contains("pub fn run_source_code_in_file"));
     assert!(!source_execution.contains("pub fn run_repository_with"));
     assert!(runner_execution.contains("pub fn run_runner(request: RunnerRequest)"));
-    assert!(runner_execution.contains("let mut outcome = run(run_request);"));
+    assert!(runner_execution.contains("let outcome = run(run_request);"));
     assert!(!runner_execution.contains("pub fn run_runner_for_"));
     assert!(graph_execution.contains("pub fn run_graph(request: GraphRequest)"));
     assert!(graph_execution.contains("let mut outcome = run(run_request);"));
@@ -1107,4 +1107,48 @@ fn source_and_test_paths_do_not_repeat_their_parent_name() {
         repeated_test_directories.is_empty(),
         "unit-test directories must mirror responsibilities without repeating their parent: {repeated_test_directories:#?}"
     );
+}
+
+#[test]
+fn environment_exposes_six_direct_owners_without_flat_compatibility_storage() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let environment = fs::read_to_string(root.join("src/environment/environment_state.rs"))
+        .expect("Environment source should be readable");
+    let object_store = fs::read_to_string(root.join("src/environment/object_knowledge_store.rs"))
+        .expect("object knowledge store should be readable");
+    let predicate_store =
+        fs::read_to_string(root.join("src/environment/predicate_property_store.rs"))
+            .expect("predicate property store should be readable");
+    let strategy_store = fs::read_to_string(root.join("src/environment/strategy_registry.rs"))
+        .expect("strategy registry should be readable");
+    let well_definedness_delta =
+        fs::read_to_string(root.join("src/environment/well_definedness_environment_delta.rs"))
+            .expect("well-definedness delta should be readable");
+
+    for direct_owner in [
+        "pub declarations: EnvironmentDeclarationRegistry",
+        "pub facts: EnvironmentFactDatabase",
+        "pub objects: EnvironmentObjectKnowledgeStore",
+        "pub predicate_properties: EnvironmentPredicatePropertyStore",
+        "pub caches: EnvironmentVerificationCache",
+        "pub strategies: EnvironmentStrategyRegistry",
+    ] {
+        assert!(environment.contains(direct_owner));
+    }
+    assert!(!environment.contains("pub repositories:"));
+    assert!(!environment.contains("impl Deref for Environment"));
+    assert!(!environment.contains("EnvironmentPersistentRepositories"));
+
+    assert!(object_store
+        .contains("pub knowledge_by_object: HashMap<ObjString, EnvironmentObjectKnowledge>"));
+    assert!(predicate_store
+        .contains("pub properties_by_predicate: HashMap<String, EnvironmentPredicateProperties>"));
+    assert!(strategy_store.contains("strategies_by_atomic_fact_family:"));
+    assert!(!strategy_store.contains("used_strategy_stmts:"));
+    assert!(!strategy_store.contains("stopped_strategy_stmts:"));
+
+    assert!(well_definedness_delta.contains("pub struct WellDefinednessEnvironmentDelta"));
+    assert!(well_definedness_delta.contains("pub fn apply_to("));
+    assert!(!well_definedness_delta.contains("pub declarations:"));
+    assert!(!well_definedness_delta.contains("pub facts:"));
 }

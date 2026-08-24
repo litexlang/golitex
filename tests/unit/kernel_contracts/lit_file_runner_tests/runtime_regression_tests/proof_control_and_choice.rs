@@ -195,13 +195,13 @@ try:
 
             let env = &runtime.current_module().main_environment;
             assert_eq!(
-                env.used_strategy_stmts
-                    .get(&("target_strategy_prop".to_string(), true)),
+                env.strategies
+                    .active_strategy(&("target_strategy_prop".to_string(), true)),
                 Some(&"use_target_strategy".to_string())
             );
             assert_eq!(
-                env.stopped_strategy_stmts
-                    .get(&("target_strategy_prop".to_string(), true)),
+                env.strategies
+                    .stopped_strategy(&("target_strategy_prop".to_string(), true)),
                 None
             );
         },

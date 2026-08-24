@@ -10,7 +10,7 @@ impl Runtime {
         }
 
         for env in self.iter_environments_from_top() {
-            if env.defined_identifiers.contains_key(name) {
+            if env.declarations.defined_identifiers.contains_key(name) {
                 return true;
             }
         }
@@ -43,31 +43,15 @@ impl Runtime {
         cart: Option<Cart>,
         line_file: LineFile,
     ) {
-        let known_tuple_objs = &mut self.top_level_env().known_objs_equal_to_tuple;
-        let old_tuple_and_cart = known_tuple_objs.get(name).cloned();
-
-        let merged_tuple = match (tuple, old_tuple_and_cart.as_ref()) {
-            (Some(new_tuple), _) => Some(new_tuple),
-            (None, Some((old_tuple, _, _))) => old_tuple.clone(),
-            (None, None) => None,
-        };
-        let merged_cart = match (cart, old_tuple_and_cart.as_ref()) {
-            (Some(new_cart), _) => Some(new_cart),
-            (None, Some((_, old_cart, _))) => old_cart.clone(),
-            (None, None) => None,
-        };
-        let merged_line_file = line_file;
-
-        known_tuple_objs.insert(
-            name.to_string(),
-            (merged_tuple, merged_cart, merged_line_file),
-        );
+        self.top_level_env()
+            .objects
+            .store_tuple_and_cart(name.to_string(), tuple, cart, line_file);
     }
 
     pub fn store_known_cart_obj(&mut self, name: &str, cart: Cart, line_file: LineFile) {
         self.top_level_env()
-            .known_objs_equal_to_cart
-            .insert(name.to_string(), (cart, line_file));
+            .objects
+            .store_cart(name.to_string(), cart, line_file);
     }
 
     pub fn store_known_set_builder_obj(
@@ -77,8 +61,8 @@ impl Runtime {
         line_file: LineFile,
     ) {
         self.top_level_env()
-            .known_objs_equal_to_set_builder
-            .insert(name.to_string(), (set_builder, line_file));
+            .objects
+            .store_set_builder(name.to_string(), set_builder, line_file);
     }
 
     pub fn store_known_finite_seq_list_obj(
@@ -88,14 +72,12 @@ impl Runtime {
         member_of_finite_seq_set: Option<FiniteSeqSet>,
         line_file: LineFile,
     ) {
-        let map = &mut self.top_level_env().known_objs_equal_to_finite_seq_list;
-        let old = map.get(name).cloned();
-        let merged_member = match (member_of_finite_seq_set, old.as_ref()) {
-            (Some(new_s), _) => Some(new_s),
-            (None, Some((_, Some(old_s), _))) => Some(old_s.clone()),
-            (None, _) => None,
-        };
-        map.insert(name.to_string(), (list, merged_member, line_file));
+        self.top_level_env().objects.store_finite_sequence_list(
+            name.to_string(),
+            list,
+            member_of_finite_seq_set,
+            line_file,
+        );
     }
 
     pub fn store_known_matrix_list_obj(
@@ -105,14 +87,12 @@ impl Runtime {
         member_of_matrix_set: Option<MatrixSet>,
         line_file: LineFile,
     ) {
-        let map = &mut self.top_level_env().known_objs_equal_to_matrix_list;
-        let old = map.get(name).cloned();
-        let merged_member = match (member_of_matrix_set, old.as_ref()) {
-            (Some(new_s), _) => Some(new_s),
-            (None, Some((_, Some(old_s), _))) => Some(old_s.clone()),
-            (None, _) => None,
-        };
-        map.insert(name.to_string(), (matrix, merged_member, line_file));
+        self.top_level_env().objects.store_matrix_list(
+            name.to_string(),
+            matrix,
+            member_of_matrix_set,
+            line_file,
+        );
     }
 
     pub fn store_obj_in_matrix_set(
@@ -121,9 +101,11 @@ impl Runtime {
         matrix_set: MatrixSet,
         line_file: LineFile,
     ) {
-        self.top_level_env()
-            .known_objs_in_matrix_sets
-            .insert(obj.to_string(), (matrix_set, line_file));
+        self.top_level_env().objects.store_matrix_set_membership(
+            obj.to_string(),
+            matrix_set,
+            line_file,
+        );
     }
 
     pub fn matrix_set_to_fn_set(&self, ms: &MatrixSet, line_file: LineFile) -> FnSet {
@@ -204,7 +186,7 @@ impl Runtime {
     }
 
     pub fn store_well_defined_obj_cache(&mut self, obj: &Obj) {
-        self.top_level_env().cache_well_defined_obj.insert(
+        self.top_level_env().caches.well_defined_objects.insert(
             WellDefinedCacheKey::without_function_contract(obj.to_string()),
             CachedWellDefinedObj::ordinary(),
         );
@@ -215,10 +197,9 @@ impl Runtime {
     /// conclusion itself and every temporary assumption used by the preflight.
     pub fn install_prechecked_well_definedness_certificate(
         &mut self,
-        certificate: &Environment,
+        certificate: &WellDefinednessEnvironmentDelta,
     ) -> Result<(), RuntimeError> {
-        self.top_level_env()
-            .merge_committed_child(certificate.clone())
+        certificate.apply_to(self.top_level_env())
     }
 }
 

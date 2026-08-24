@@ -5,11 +5,6 @@ pub fn compile_litex_source_to_lean_source(
     source: &str,
     source_label: &str,
 ) -> Result<String, String> {
-    record_pipeline_step(
-        "lean compiler",
-        "compile_litex_source_to_lean_source",
-        "src/stmt_result_to_lean_compiler/source_compilation.rs",
-    );
     let results = execute_litex_source_for_lean_compilation(source, source_label)
         .map_err(|error| format!("Litex execution failed before Lean compilation: {error:?}"))?;
     StmtResultToLeanCompiler::new(source_label).compile_stmt_results_to_lean_source(&results)
@@ -38,11 +33,6 @@ pub fn execute_litex_source_for_lean_compilation(
     source: &str,
     source_label: &str,
 ) -> Result<Vec<StmtResult>, RuntimeError> {
-    record_pipeline_step(
-        "lean compiler input",
-        "execute_litex_source_for_lean_compilation",
-        "src/stmt_result_to_lean_compiler/source_compilation.rs",
-    );
     let normalized = source.replace('\r', "");
     let mut runtime = Runtime::new();
     runtime.start_isolated_source(source_label);

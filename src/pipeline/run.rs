@@ -1,8 +1,7 @@
 use super::{
     display_trusted_prefix_report_json, execute_file_in_runtime, execute_repository_target,
-    execute_source, record_pipeline_step, render_run_output, render_run_summary,
-    resolve_source_file_path, FileExecutionOptions, PipelineTrace, PipelineTraceCapture,
-    RepositoryExecutionOptions, RunSummaryRequest,
+    execute_source, render_run_output, render_run_summary, resolve_source_file_path,
+    FileExecutionOptions, RepositoryExecutionOptions, RunSummaryRequest,
 };
 use crate::common::{helper::remove_windows_carriage_return, output_language::OutputLanguage};
 use crate::error::RuntimeError;
@@ -46,7 +45,6 @@ pub struct RunOptions {
     pub summarize: bool,
     pub force_isolated: bool,
     pub trust_before_line: Option<usize>,
-    pub trace_pipeline: bool,
 }
 
 impl Default for RunOptions {
@@ -58,7 +56,6 @@ impl Default for RunOptions {
             summarize: false,
             force_isolated: false,
             trust_before_line: None,
-            trace_pipeline: false,
         }
     }
 }
@@ -86,19 +83,10 @@ pub struct RunOutcome {
     pub selected_repository_target: Option<RepositoryFileTarget>,
     pub trusted_prefix_report: Option<TrustedPrefixReport>,
     pub trusted_prefix_setup_rejected: bool,
-    pub pipeline_trace: PipelineTrace,
-}
-
-impl RunOutcome {
-    pub fn prepend_cli_trace(&mut self) {
-        self.pipeline_trace.prepend_cli_entry();
-    }
 }
 
 pub fn run(request: RunRequest) -> RunOutcome {
     let RunRequest { target, options } = request;
-    let trace_capture = PipelineTraceCapture::new(options.trace_pipeline);
-    record_pipeline_step("pipeline", "pipeline::run", "src/pipeline/run.rs");
 
     let mut runtime = Runtime::new();
     runtime.set_output_style(options.output_style);
@@ -203,6 +191,5 @@ pub fn run(request: RunRequest) -> RunOutcome {
         selected_repository_target,
         trusted_prefix_report,
         trusted_prefix_setup_rejected,
-        pipeline_trace: trace_capture.finish(false),
     }
 }

@@ -9,28 +9,17 @@ use std::process;
 pub(super) const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 pub(super) fn run_code_command(code: &str, options: RunOptions) {
-    let mut outcome = run(RunRequest::new(RunTarget::code(code, "-e"), options));
-    outcome.prepend_cli_trace();
+    let outcome = run(RunRequest::new(RunTarget::code(code, "-e"), options));
     println!("{}", outcome.output.trim());
-    if options.trace_pipeline {
-        println!("{}", outcome.pipeline_trace.text());
-    }
 }
 
 pub(super) fn run_file_command(file_flag: &str, options: RunOptions) {
     let mut outcome = run(RunRequest::new(RunTarget::file(file_flag), options));
-    outcome.prepend_cli_trace();
     if let Some(message) = outcome.target_error.as_ref() {
         eprintln!("Error: {}", message);
-        if options.trace_pipeline {
-            println!("{}", outcome.pipeline_trace.text());
-        }
         return;
     }
     println!("{}", outcome.output.trim());
-    if options.trace_pipeline {
-        println!("{}", outcome.pipeline_trace.text());
-    }
     if outcome.trusted_prefix_setup_rejected {
         process::exit(2);
     }
@@ -43,12 +32,8 @@ pub(super) fn run_file_command(file_flag: &str, options: RunOptions) {
 }
 
 pub(super) fn run_repository_command(repo_path: &str, options: RunOptions) {
-    let mut outcome = run(RunRequest::new(RunTarget::repository(repo_path), options));
-    outcome.prepend_cli_trace();
+    let outcome = run(RunRequest::new(RunTarget::repository(repo_path), options));
     println!("{}", outcome.output.trim());
-    if options.trace_pipeline {
-        println!("{}", outcome.pipeline_trace.text());
-    }
 }
 
 pub(super) fn run_runner_command(
@@ -80,7 +65,6 @@ pub(super) fn run_runner_command(
     Ok(run_runner(RunnerRequest::new(
         RunRequest::new(target, options),
         hide_file_paths,
-        true,
     )))
 }
 

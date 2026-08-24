@@ -2368,12 +2368,14 @@ impl Runtime {
             .iter_environments_from_top()
             .flat_map(|environment| {
                 environment
+                    .facts
                     .known_atomic_facts_in_forall_facts
                     .get(&lookup_key)
                     .into_iter()
                     .flat_map(|facts| facts.iter())
                     .chain(
                         environment
+                            .facts
                             .known_atomic_facts_in_forall_facts_by_arg_shape
                             .get(&lookup_key)
                             .into_iter()
@@ -3059,7 +3061,10 @@ impl Runtime {
         let line_file = equal_fact.line_file.clone();
         let mut prop_names: Vec<String> = Vec::new();
         for env in self.iter_environments_from_top() {
-            for prop_name in env.known_antisymmetric_props.keys() {
+            for (prop_name, properties) in env.predicate_properties.properties_by_predicate.iter() {
+                if !properties.is_antisymmetric {
+                    continue;
+                }
                 if !prop_names.iter().any(|name| name == prop_name) {
                     prop_names.push(prop_name.clone());
                 }

@@ -379,7 +379,11 @@ impl DefinitionGraphBuilder {
     }
 
     fn add_identifiers(&mut self, environment: &Environment) {
-        let mut identifiers = environment.defined_identifiers.iter().collect::<Vec<_>>();
+        let mut identifiers = environment
+            .declarations
+            .defined_identifiers
+            .iter()
+            .collect::<Vec<_>>();
         identifiers.sort_by(|left, right| left.0.cmp(right.0));
         for (name, kind) in identifiers {
             self.ensure_node(
@@ -396,6 +400,7 @@ impl DefinitionGraphBuilder {
 
     fn add_props(&mut self, environment: &Environment) {
         let mut abstract_props = environment
+            .declarations
             .defined_abstract_props
             .iter()
             .collect::<Vec<_>>();
@@ -412,7 +417,11 @@ impl DefinitionGraphBuilder {
             );
         }
 
-        let mut props = environment.defined_def_props.iter().collect::<Vec<_>>();
+        let mut props = environment
+            .declarations
+            .defined_def_props
+            .iter()
+            .collect::<Vec<_>>();
         props.sort_by(|left, right| left.0.cmp(right.0));
         for (name, definition) in props {
             let node_id = definition_id("prop", name);
@@ -439,7 +448,17 @@ impl DefinitionGraphBuilder {
     }
 
     fn add_functions(&mut self, environment: &Environment) {
-        let mut functions = environment.known_objs_in_fn_sets.iter().collect::<Vec<_>>();
+        let mut functions = environment
+            .objects
+            .knowledge_by_object
+            .iter()
+            .filter_map(|(name, knowledge)| {
+                knowledge
+                    .function_set
+                    .as_ref()
+                    .map(|definition| (name, definition))
+            })
+            .collect::<Vec<_>>();
         functions.sort_by(|left, right| left.0.cmp(right.0));
         for (stored_name, definition) in functions {
             let display_name = strip_free_param_numeric_tags_in_display(stored_name);
@@ -486,7 +505,11 @@ impl DefinitionGraphBuilder {
     }
 
     fn add_algorithms(&mut self, environment: &Environment) {
-        let mut algorithms = environment.defined_algorithms.iter().collect::<Vec<_>>();
+        let mut algorithms = environment
+            .declarations
+            .defined_algorithms
+            .iter()
+            .collect::<Vec<_>>();
         algorithms.sort_by(|left, right| left.0.cmp(right.0));
         for (name, definition) in algorithms {
             let node_id = definition_id("algorithm", name);
@@ -515,7 +538,11 @@ impl DefinitionGraphBuilder {
     }
 
     fn add_structs(&mut self, environment: &Environment) {
-        let mut structs = environment.defined_structs.iter().collect::<Vec<_>>();
+        let mut structs = environment
+            .declarations
+            .defined_structs
+            .iter()
+            .collect::<Vec<_>>();
         structs.sort_by(|left, right| left.0.cmp(right.0));
         for (name, definition) in structs {
             let node_id = definition_id("struct", name);
@@ -556,7 +583,11 @@ impl DefinitionGraphBuilder {
     }
 
     fn add_templates(&mut self, environment: &Environment) {
-        let mut templates = environment.defined_templates.iter().collect::<Vec<_>>();
+        let mut templates = environment
+            .declarations
+            .defined_templates
+            .iter()
+            .collect::<Vec<_>>();
         templates.sort_by(|left, right| left.0.cmp(right.0));
         for (name, definition) in templates {
             let node_id = definition_id("template", name);
@@ -591,7 +622,11 @@ impl DefinitionGraphBuilder {
     }
 
     fn add_theorems(&mut self, environment: &Environment) {
-        let mut theorems = environment.defined_thm_stmts.iter().collect::<Vec<_>>();
+        let mut theorems = environment
+            .declarations
+            .defined_thm_stmts
+            .iter()
+            .collect::<Vec<_>>();
         theorems.sort_by(|left, right| left.0.cmp(right.0));
         for (name, definition) in theorems {
             let node_id = definition_id("theorem", name);
@@ -621,7 +656,11 @@ impl DefinitionGraphBuilder {
             self.add_dependency_edges(&node_id, well_definedness, "well_definedness");
         }
 
-        let mut axioms = environment.defined_axiom_stmts.iter().collect::<Vec<_>>();
+        let mut axioms = environment
+            .declarations
+            .defined_axiom_stmts
+            .iter()
+            .collect::<Vec<_>>();
         axioms.sort_by(|left, right| left.0.cmp(right.0));
         for (name, definition) in axioms {
             let node_id = definition_id("theorem", name);
@@ -654,6 +693,7 @@ impl DefinitionGraphBuilder {
 
     fn add_strategies(&mut self, environment: &Environment) {
         let mut strategies = environment
+            .declarations
             .defined_strategy_stmts
             .iter()
             .collect::<Vec<_>>();

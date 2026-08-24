@@ -1,4 +1,3 @@
-use super::record_pipeline_step;
 use crate::error::{short_exec_error, RuntimeError};
 use crate::infer::SuccessInferResult;
 use crate::module_manager::{
@@ -17,11 +16,6 @@ pub fn execute_top_level_statement(
     stmt: &Stmt,
     runtime: &mut Runtime,
 ) -> Result<StmtResult, RuntimeError> {
-    record_pipeline_step(
-        "execute",
-        "pipeline::execute_top_level_statement",
-        "src/pipeline/top_level_statement_execution.rs",
-    );
     match stmt {
         Stmt::Command(CommandStmt::ImportStmt(import)) => {
             let result = run_isolated_import(import, runtime);

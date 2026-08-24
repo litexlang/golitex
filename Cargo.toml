@@ -34,10 +34,6 @@ name = "error_output_modes"
 path = "tests/integration/error_output_modes.rs"
 
 [[test]]
-name = "execution_pipeline_trace"
-path = "tests/integration/execution_pipeline_trace.rs"
-
-[[test]]
 name = "examples_publication"
 path = "tests/integration/examples_publication.rs"
 

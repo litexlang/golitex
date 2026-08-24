@@ -16,11 +16,12 @@ impl Environment {
     }
 
     fn merge_defined_names(&mut self, child: &Environment) -> Result<(), RuntimeError> {
-        for (name, definition) in child.symbols.iter() {
-            if let Some(existing) = self.symbols.get(name) {
+        for (name, definition) in child.declarations.symbols.iter() {
+            if let Some(existing) = self.declarations.symbols.get(name) {
                 if same_symbol_definition(existing, definition) {
                     let existing_symbol_id = existing.binding().id();
-                    self.symbols
+                    self.declarations
+                        .symbols
                         .get_by_id_mut(existing_symbol_id)
                         .expect("the matching parent symbol should remain present")
                         .merge_missing_declaration_type_views_from(definition);
@@ -31,89 +32,108 @@ impl Environment {
                     existing.role().description(),
                 ));
             }
-            self.symbols
+            self.declarations
+                .symbols
                 .insert(definition.clone())
                 .expect("symbol was checked absent before merge");
         }
 
-        for (name, kind) in child.defined_identifiers.iter() {
-            if let Some(existing_kind) = self.defined_identifiers.get(name) {
+        for (name, kind) in child.declarations.defined_identifiers.iter() {
+            if let Some(existing_kind) = self.declarations.defined_identifiers.get(name) {
                 if existing_kind == kind && self.has_same_symbol_definition_as_child(child, name) {
                     continue;
                 }
                 return Err(merge_name_conflict_error(name, "identifier"));
             }
-            self.defined_identifiers.insert(name.clone(), kind.clone());
+            self.declarations
+                .defined_identifiers
+                .insert(name.clone(), kind.clone());
         }
 
-        for (name, stmt) in child.defined_def_props.iter() {
-            if self.defined_def_props.contains_key(name) {
+        for (name, stmt) in child.declarations.defined_def_props.iter() {
+            if self.declarations.defined_def_props.contains_key(name) {
                 return Err(merge_name_conflict_error(name, "prop"));
             }
-            if self.defined_abstract_props.contains_key(name) {
+            if self.declarations.defined_abstract_props.contains_key(name) {
                 return Err(merge_name_conflict_error(name, "abstract_prop"));
             }
-            self.defined_def_props.insert(name.clone(), stmt.clone());
-        }
-
-        for (name, stmt) in child.defined_abstract_props.iter() {
-            if self.defined_abstract_props.contains_key(name) {
-                return Err(merge_name_conflict_error(name, "abstract_prop"));
-            }
-            if self.defined_def_props.contains_key(name) {
-                return Err(merge_name_conflict_error(name, "prop"));
-            }
-            self.defined_abstract_props
+            self.declarations
+                .defined_def_props
                 .insert(name.clone(), stmt.clone());
         }
 
-        for (name, stmt) in child.defined_algorithms.iter() {
-            if self.defined_algorithms.contains_key(name) {
+        for (name, stmt) in child.declarations.defined_abstract_props.iter() {
+            if self.declarations.defined_abstract_props.contains_key(name) {
+                return Err(merge_name_conflict_error(name, "abstract_prop"));
+            }
+            if self.declarations.defined_def_props.contains_key(name) {
+                return Err(merge_name_conflict_error(name, "prop"));
+            }
+            self.declarations
+                .defined_abstract_props
+                .insert(name.clone(), stmt.clone());
+        }
+
+        for (name, stmt) in child.declarations.defined_algorithms.iter() {
+            if self.declarations.defined_algorithms.contains_key(name) {
                 return Err(merge_name_conflict_error(name, "algo"));
             }
-            self.defined_algorithms.insert(name.clone(), stmt.clone());
+            self.declarations
+                .defined_algorithms
+                .insert(name.clone(), stmt.clone());
         }
 
-        for (name, stmt) in child.defined_structs.iter() {
-            if self.defined_structs.contains_key(name) {
+        for (name, stmt) in child.declarations.defined_structs.iter() {
+            if self.declarations.defined_structs.contains_key(name) {
                 return Err(merge_name_conflict_error(name, "struct"));
             }
-            self.defined_structs.insert(name.clone(), stmt.clone());
+            self.declarations
+                .defined_structs
+                .insert(name.clone(), stmt.clone());
         }
 
-        for (name, stmt) in child.defined_templates.iter() {
-            if self.defined_templates.contains_key(name) {
+        for (name, stmt) in child.declarations.defined_templates.iter() {
+            if self.declarations.defined_templates.contains_key(name) {
                 return Err(merge_name_conflict_error(name, "template"));
             }
-            self.defined_templates.insert(name.clone(), stmt.clone());
+            self.declarations
+                .defined_templates
+                .insert(name.clone(), stmt.clone());
         }
 
-        for (name, stmt) in child.defined_settings.iter() {
-            if self.defined_settings.contains_key(name) {
+        for (name, stmt) in child.declarations.defined_settings.iter() {
+            if self.declarations.defined_settings.contains_key(name) {
                 return Err(merge_name_conflict_error(name, "setting"));
             }
-            self.defined_settings.insert(name.clone(), stmt.clone());
+            self.declarations
+                .defined_settings
+                .insert(name.clone(), stmt.clone());
         }
 
-        for (name, stmt) in child.defined_thm_stmts.iter() {
-            if self.defined_thm_stmts.contains_key(name) {
+        for (name, stmt) in child.declarations.defined_thm_stmts.iter() {
+            if self.declarations.defined_thm_stmts.contains_key(name) {
                 return Err(merge_name_conflict_error(name, "thm"));
             }
-            self.defined_thm_stmts.insert(name.clone(), stmt.clone());
+            self.declarations
+                .defined_thm_stmts
+                .insert(name.clone(), stmt.clone());
         }
 
-        for (name, stmt) in child.defined_axiom_stmts.iter() {
-            if self.defined_axiom_stmts.contains_key(name) {
+        for (name, stmt) in child.declarations.defined_axiom_stmts.iter() {
+            if self.declarations.defined_axiom_stmts.contains_key(name) {
                 return Err(merge_name_conflict_error(name, "axiom"));
             }
-            self.defined_axiom_stmts.insert(name.clone(), stmt.clone());
+            self.declarations
+                .defined_axiom_stmts
+                .insert(name.clone(), stmt.clone());
         }
 
-        for (name, stmt) in child.defined_strategy_stmts.iter() {
-            if self.defined_strategy_stmts.contains_key(name) {
+        for (name, stmt) in child.declarations.defined_strategy_stmts.iter() {
+            if self.declarations.defined_strategy_stmts.contains_key(name) {
                 return Err(merge_name_conflict_error(name, "strategy"));
             }
-            self.defined_strategy_stmts
+            self.declarations
+                .defined_strategy_stmts
                 .insert(name.clone(), stmt.clone());
         }
 
@@ -123,7 +143,7 @@ impl Environment {
     fn merge_equalities_from_child(&mut self, child: &Environment) -> Result<(), RuntimeError> {
         let mut seen_equalities = HashSet::new();
         let mut child_equalities = Vec::new();
-        for (_, (direct_proof_map, _)) in child.known_equality.iter() {
+        for (_, (direct_proof_map, _)) in child.facts.known_equality.iter() {
             for atomic_fact in direct_proof_map.values() {
                 let AtomicFact::EqualFact(equal_fact) = atomic_fact else {
                     continue;
@@ -148,6 +168,7 @@ impl Environment {
     ) {
         for (key, child_facts) in child_map {
             let parent_facts = self
+                .facts
                 .known_atomic_facts_with_0_or_more_than_2_args
                 .entry(key)
                 .or_default();
@@ -163,7 +184,11 @@ impl Environment {
         >,
     ) {
         for (key, child_facts) in child_map {
-            let parent_facts = self.known_atomic_facts_with_1_arg.entry(key).or_default();
+            let parent_facts = self
+                .facts
+                .known_atomic_facts_with_1_arg
+                .entry(key)
+                .or_default();
             for (arg_key, fact) in child_facts {
                 parent_facts.insert(arg_key, fact);
             }
@@ -178,7 +203,11 @@ impl Environment {
         >,
     ) {
         for (key, child_facts) in child_map {
-            let parent_facts = self.known_atomic_facts_with_2_args.entry(key).or_default();
+            let parent_facts = self
+                .facts
+                .known_atomic_facts_with_2_args
+                .entry(key)
+                .or_default();
             for (arg_key, fact) in child_facts {
                 parent_facts.insert(arg_key, fact);
             }
@@ -190,7 +219,7 @@ impl Environment {
         child_map: std::collections::HashMap<ExistFactKey, Vec<ExistFactEnum>>,
     ) {
         for (key, child_facts) in child_map {
-            let parent_facts = self.known_exist_facts.entry(key).or_default();
+            let parent_facts = self.facts.known_exist_facts.entry(key).or_default();
             append_missing_exist_facts(parent_facts, child_facts);
         }
     }
@@ -200,7 +229,7 @@ impl Environment {
         child_map: std::collections::HashMap<OrFactKey, Vec<OrFact>>,
     ) {
         for (key, child_facts) in child_map {
-            let parent_facts = self.known_or_facts.entry(key).or_default();
+            let parent_facts = self.facts.known_or_facts.entry(key).or_default();
             append_missing_or_facts(parent_facts, child_facts);
         }
     }
@@ -209,19 +238,15 @@ impl Environment {
         &mut self,
         child: Environment,
     ) -> Result<(), RuntimeError> {
-        let Environment { repositories } = child;
-        let EnvironmentPersistentRepositories {
-            symbols: _,
-            defined_identifiers: _,
-            defined_def_props: _,
-            defined_abstract_props: _,
-            defined_algorithms: _,
-            defined_structs: _,
-            defined_templates: _,
-            defined_settings: _,
-            defined_thm_stmts: _,
-            defined_axiom_stmts: _,
-            defined_strategy_stmts: _,
+        let Environment {
+            declarations: _,
+            facts,
+            objects,
+            predicate_properties,
+            caches,
+            strategies,
+        } = child;
+        let EnvironmentFactDatabase {
             known_equality: _,
             known_atomic_facts_with_0_or_more_than_2_args,
             known_atomic_facts_with_1_arg,
@@ -235,36 +260,31 @@ impl Environment {
             known_exist_facts_in_forall_facts,
             known_and_facts_in_forall_facts,
             known_or_facts_in_forall_facts,
-            known_objs_equal_to_tuple,
-            known_objs_equal_to_cart,
-            known_objs_equal_to_finite_seq_list,
-            known_objs_equal_to_matrix_list,
-            known_objs_in_matrix_sets,
-            known_obj_values,
-            known_objs_equal_to_set_builder,
-            known_objs_in_fn_sets,
-            known_transitive_props,
-            known_symmetric_props,
-            known_reflexive_props,
-            known_antisymmetric_props,
-            cache_well_defined_obj,
             stored_facts,
-            cache_infer_rule_firing,
-            used_strategy_stmts,
-            stopped_strategy_stmts,
-        } = repositories;
+        } = facts;
+        let EnvironmentPredicatePropertyStore {
+            properties_by_predicate,
+        } = predicate_properties;
+        let EnvironmentVerificationCache {
+            well_defined_objects: cache_well_defined_obj,
+            infer_rule_firings: cache_infer_rule_firing,
+        } = caches;
 
         self.merge_known_atomic_facts(known_atomic_facts_with_0_or_more_than_2_args);
         self.merge_known_atomic_facts_with_1_arg(known_atomic_facts_with_1_arg);
         self.merge_known_atomic_facts_with_2_args(known_atomic_facts_with_2_args);
         for (element_key, child_owner_sets) in known_owner_sets {
-            let parent_owner_sets = self.known_owner_sets.entry(element_key).or_default();
+            let parent_owner_sets = self.facts.known_owner_sets.entry(element_key).or_default();
             for (set_key, evidence) in child_owner_sets {
                 parent_owner_sets.entry(set_key).or_insert(evidence);
             }
         }
         for (subset_key, child_supersets) in known_direct_supersets {
-            let parent_supersets = self.known_direct_supersets.entry(subset_key).or_default();
+            let parent_supersets = self
+                .facts
+                .known_direct_supersets
+                .entry(subset_key)
+                .or_default();
             for (superset_key, evidence) in child_supersets {
                 parent_supersets.entry(superset_key).or_insert(evidence);
             }
@@ -274,6 +294,7 @@ impl Environment {
 
         for (key, child_facts) in known_atomic_facts_in_forall_facts {
             let parent_facts = self
+                .facts
                 .known_atomic_facts_in_forall_facts
                 .entry(key)
                 .or_default();
@@ -282,6 +303,7 @@ impl Environment {
 
         for (key, child_shape_map) in known_atomic_facts_in_forall_facts_by_arg_shape {
             let parent_shape_map = self
+                .facts
                 .known_atomic_facts_in_forall_facts_by_arg_shape
                 .entry(key)
                 .or_default();
@@ -293,6 +315,7 @@ impl Environment {
 
         for (key, child_facts) in known_exist_facts_in_forall_facts {
             let parent_facts = self
+                .facts
                 .known_exist_facts_in_forall_facts
                 .entry(key)
                 .or_default();
@@ -300,78 +323,36 @@ impl Environment {
         }
 
         for (key, child_facts) in known_and_facts_in_forall_facts {
-            let parent_facts = self.known_and_facts_in_forall_facts.entry(key).or_default();
+            let parent_facts = self
+                .facts
+                .known_and_facts_in_forall_facts
+                .entry(key)
+                .or_default();
             append_missing_and_forall_pairs(parent_facts, child_facts);
         }
 
         for (key, child_facts) in known_or_facts_in_forall_facts {
-            let parent_facts = self.known_or_facts_in_forall_facts.entry(key).or_default();
+            let parent_facts = self
+                .facts
+                .known_or_facts_in_forall_facts
+                .entry(key)
+                .or_default();
             append_missing_or_forall_pairs(parent_facts, child_facts);
         }
 
-        for (name, (tuple, cart, line_file)) in known_objs_equal_to_tuple {
-            let old = self.known_objs_equal_to_tuple.get(&name).cloned();
-            let merged_tuple = match (tuple, old.as_ref()) {
-                (Some(new_tuple), _) => Some(new_tuple),
-                (None, Some((old_tuple, _, _))) => old_tuple.clone(),
-                (None, None) => None,
-            };
-            let merged_cart = match (cart, old.as_ref()) {
-                (Some(new_cart), _) => Some(new_cart),
-                (None, Some((_, old_cart, _))) => old_cart.clone(),
-                (None, None) => None,
-            };
-            self.known_objs_equal_to_tuple
-                .insert(name, (merged_tuple, merged_cart, line_file));
-        }
+        self.objects.merge_from(objects);
 
-        for (name, value) in known_objs_equal_to_cart {
-            self.known_objs_equal_to_cart.insert(name, value);
-        }
-
-        for (name, (list, member_of, line_file)) in known_objs_equal_to_finite_seq_list {
-            let old = self.known_objs_equal_to_finite_seq_list.get(&name).cloned();
-            let merged_member = match (member_of, old.as_ref()) {
-                (Some(new_member), _) => Some(new_member),
-                (None, Some((_, Some(old_member), _))) => Some(old_member.clone()),
-                (None, _) => None,
-            };
-            self.known_objs_equal_to_finite_seq_list
-                .insert(name, (list, merged_member, line_file));
-        }
-
-        for (name, (matrix, member_of, line_file)) in known_objs_equal_to_matrix_list {
-            let old = self.known_objs_equal_to_matrix_list.get(&name).cloned();
-            let merged_member = match (member_of, old.as_ref()) {
-                (Some(new_member), _) => Some(new_member),
-                (None, Some((_, Some(old_member), _))) => Some(old_member.clone()),
-                (None, _) => None,
-            };
-            self.known_objs_equal_to_matrix_list
-                .insert(name, (matrix, merged_member, line_file));
-        }
-
-        for (name, matrix_set) in known_objs_in_matrix_sets {
-            self.known_objs_in_matrix_sets.insert(name, matrix_set);
-        }
-
-        for (name, value) in known_obj_values {
-            self.known_obj_values.insert(name, value);
-        }
-
-        for (name, value) in known_objs_equal_to_set_builder {
-            self.known_objs_equal_to_set_builder.insert(name, value);
-        }
-
-        for (name, child_info) in known_objs_in_fn_sets {
-            merge_known_fn_info_map_entry(&mut self.known_objs_in_fn_sets, name, child_info);
-        }
-
-        for (name, _) in known_transitive_props {
-            self.known_transitive_props.insert(name, ());
-        }
-        for (name, permutations) in known_symmetric_props {
-            for permutation in permutations {
+        for (name, properties) in properties_by_predicate {
+            if properties.is_transitive {
+                self.store_transitive_prop_name(name.clone());
+            }
+            if properties.is_reflexive {
+                self.store_reflexive_prop_name(name.clone());
+            }
+            if properties.is_antisymmetric {
+                self.store_antisymmetric_prop_name(name.clone());
+            }
+            for permutation in properties.symmetric_argument_permutations {
                 self.store_symmetric_prop_permutation(
                     name.clone(),
                     permutation,
@@ -379,35 +360,22 @@ impl Environment {
                 )?;
             }
         }
-        for (name, _) in known_reflexive_props {
-            self.known_reflexive_props.insert(name, ());
-        }
-        for (name, _) in known_antisymmetric_props {
-            self.known_antisymmetric_props.insert(name, ());
-        }
 
         for (key, cached) in cache_well_defined_obj {
-            self.cache_well_defined_obj.insert(key, cached);
+            self.caches.well_defined_objects.insert(key, cached);
         }
-        self.stored_facts.merge_from(stored_facts)?;
+        self.facts.stored_facts.merge_from(stored_facts)?;
         for (key, _) in cache_infer_rule_firing {
-            self.cache_infer_rule_firing.insert(key, ());
+            self.caches.infer_rule_firings.insert(key, ());
         }
 
-        for (key, strategy_name) in used_strategy_stmts {
-            self.used_strategy_stmts
-                .insert(key.clone(), strategy_name.clone());
-            self.stopped_strategy_stmts.remove(&key);
-        }
-        for (key, strategy_name) in stopped_strategy_stmts {
-            self.stopped_strategy_stmts.insert(key, strategy_name);
-        }
+        self.strategies.merge_from(strategies);
         Ok(())
     }
 
     fn validate_committed_child(&self, child: &Environment) -> Result<(), RuntimeError> {
-        for (name, child_definition) in child.symbols.iter() {
-            if let Some(existing) = self.symbols.get(name) {
+        for (name, child_definition) in child.declarations.symbols.iter() {
+            if let Some(existing) = self.declarations.symbols.get(name) {
                 if same_symbol_definition(existing, child_definition) {
                     continue;
                 }
@@ -418,8 +386,8 @@ impl Environment {
             }
         }
 
-        for (name, child_kind) in child.defined_identifiers.iter() {
-            if let Some(parent_kind) = self.defined_identifiers.get(name) {
+        for (name, child_kind) in child.declarations.defined_identifiers.iter() {
+            if let Some(parent_kind) = self.declarations.defined_identifiers.get(name) {
                 if parent_kind == child_kind
                     && self.has_same_symbol_definition_as_child(child, name)
                 {
@@ -428,65 +396,66 @@ impl Environment {
                 return Err(merge_name_conflict_error(name, "identifier"));
             }
         }
-        for name in child.defined_def_props.keys() {
-            if self.defined_def_props.contains_key(name) {
+        for name in child.declarations.defined_def_props.keys() {
+            if self.declarations.defined_def_props.contains_key(name) {
                 return Err(merge_name_conflict_error(name, "prop"));
             }
-            if self.defined_abstract_props.contains_key(name) {
+            if self.declarations.defined_abstract_props.contains_key(name) {
                 return Err(merge_name_conflict_error(name, "abstract_prop"));
             }
         }
-        for name in child.defined_abstract_props.keys() {
-            if self.defined_abstract_props.contains_key(name) {
+        for name in child.declarations.defined_abstract_props.keys() {
+            if self.declarations.defined_abstract_props.contains_key(name) {
                 return Err(merge_name_conflict_error(name, "abstract_prop"));
             }
-            if self.defined_def_props.contains_key(name) {
+            if self.declarations.defined_def_props.contains_key(name) {
                 return Err(merge_name_conflict_error(name, "prop"));
             }
         }
-        for name in child.defined_algorithms.keys() {
-            if self.defined_algorithms.contains_key(name) {
+        for name in child.declarations.defined_algorithms.keys() {
+            if self.declarations.defined_algorithms.contains_key(name) {
                 return Err(merge_name_conflict_error(name, "algo"));
             }
         }
-        for name in child.defined_structs.keys() {
-            if self.defined_structs.contains_key(name) {
+        for name in child.declarations.defined_structs.keys() {
+            if self.declarations.defined_structs.contains_key(name) {
                 return Err(merge_name_conflict_error(name, "struct"));
             }
         }
-        for name in child.defined_templates.keys() {
-            if self.defined_templates.contains_key(name) {
+        for name in child.declarations.defined_templates.keys() {
+            if self.declarations.defined_templates.contains_key(name) {
                 return Err(merge_name_conflict_error(name, "template"));
             }
         }
-        for name in child.defined_settings.keys() {
-            if self.defined_settings.contains_key(name) {
+        for name in child.declarations.defined_settings.keys() {
+            if self.declarations.defined_settings.contains_key(name) {
                 return Err(merge_name_conflict_error(name, "setting"));
             }
         }
-        for name in child.defined_thm_stmts.keys() {
-            if self.defined_thm_stmts.contains_key(name) {
+        for name in child.declarations.defined_thm_stmts.keys() {
+            if self.declarations.defined_thm_stmts.contains_key(name) {
                 return Err(merge_name_conflict_error(name, "thm"));
             }
         }
-        for name in child.defined_axiom_stmts.keys() {
-            if self.defined_axiom_stmts.contains_key(name) {
+        for name in child.declarations.defined_axiom_stmts.keys() {
+            if self.declarations.defined_axiom_stmts.contains_key(name) {
                 return Err(merge_name_conflict_error(name, "axiom"));
             }
         }
-        for name in child.defined_strategy_stmts.keys() {
-            if self.defined_strategy_stmts.contains_key(name) {
+        for name in child.declarations.defined_strategy_stmts.keys() {
+            if self.declarations.defined_strategy_stmts.contains_key(name) {
                 return Err(merge_name_conflict_error(name, "strategy"));
             }
         }
 
-        for (name, child_permutations) in child.known_symmetric_props.iter() {
+        for (name, child_properties) in child.predicate_properties.properties_by_predicate.iter() {
+            let child_permutations = &child_properties.symmetric_argument_permutations;
             let Some(child_arity) = child_permutations.first().map(Vec::len) else {
                 continue;
             };
             let Some(parent_arity) = self
-                .known_symmetric_props
-                .get(name)
+                .predicate_properties
+                .symmetric_argument_permutations(name)
                 .and_then(|permutations| permutations.first())
                 .map(Vec::len)
             else {
@@ -510,9 +479,10 @@ impl Environment {
     }
 
     fn has_same_symbol_definition_as_child(&self, child: &Environment, name: &str) -> bool {
-        self.symbols
+        self.declarations
+            .symbols
             .get(name)
-            .zip(child.symbols.get(name))
+            .zip(child.declarations.symbols.get(name))
             .is_some_and(|(parent, child)| same_symbol_definition(parent, child))
     }
 }
@@ -669,21 +639,6 @@ fn forall_pair_key(
         stored_forall_conclusion_reference.source_fact_id,
         stored_forall_conclusion_reference.conclusion_location
     )
-}
-
-fn merge_known_fn_info_map_entry(
-    map: &mut std::collections::HashMap<ObjString, KnownFnInfo>,
-    name: ObjString,
-    child_info: KnownFnInfo,
-) {
-    let parent_info = map.entry(name).or_default();
-    if let Some(fn_set) = child_info.fn_set {
-        parent_info.fn_set = Some(fn_set);
-        parent_info.fn_set_membership_fact_id = child_info.fn_set_membership_fact_id;
-    }
-    if let Some(equal_to) = child_info.equal_to {
-        parent_info.equal_to = Some(equal_to);
-    }
 }
 
 #[cfg(test)]

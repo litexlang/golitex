@@ -61,7 +61,8 @@ impl Runtime {
                 // non-membership in B.
                 let mut evidence = None;
                 for environment in self.iter_environments_from_top() {
-                    for known_facts_map in environment.known_atomic_facts_with_2_args.values() {
+                    for known_facts_map in environment.facts.known_atomic_facts_with_2_args.values()
+                    {
                         for known_fact in known_facts_map.values() {
                             let AtomicFact::InFact(member) = known_fact else {
                                 continue;

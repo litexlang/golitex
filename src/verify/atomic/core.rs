@@ -2,7 +2,6 @@
 
 use crate::error::{RuntimeError, RuntimeErrorStruct, VerifyRuntimeError};
 use crate::fact::{AtomicFact, Fact};
-use crate::pipeline::record_pipeline_step;
 use crate::result::StmtResult;
 use crate::runtime::Runtime;
 use crate::verify::{AlternateFactSearch, ProofSearchState};
@@ -13,11 +12,6 @@ impl Runtime {
         fact: &AtomicFact,
         verify_state: &ProofSearchState,
     ) -> Result<StmtResult, RuntimeError> {
-        record_pipeline_step(
-            "verify",
-            "Runtime::verify_atomic_fact",
-            "src/verify/atomic/core.rs",
-        );
         if let Some(cached_result) =
             self.verification_result_from_known_fact_cache(&fact.clone().into())
         {

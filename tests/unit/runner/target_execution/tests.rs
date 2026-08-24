@@ -6,7 +6,6 @@ fn run_runner_for_test(code: &str, options: RunOptions) -> (bool, String) {
     run_runner(RunnerRequest::new(
         RunRequest::new(RunTarget::code(code, "-runner-test"), options),
         true,
-        false,
     ))
 }
 
@@ -28,6 +27,7 @@ fn runner_success_returns_trace() {
     assert!(output.contains("\"runner\": \"litex-runner\""));
     assert!(output.contains("\"result\": \"success\""));
     assert!(output.contains("\"trace\""));
+    assert!(!output.contains("\"pipeline_trace\""));
 }
 
 #[test]
@@ -48,7 +48,6 @@ fn runner_target_error_returns_message() {
     let (ok, output) = run_runner(RunnerRequest::new(
         RunRequest::new(RunTarget::file("does_not_exist.lit"), RunOptions::default()),
         true,
-        false,
     ));
 
     assert!(!ok, "runner target error should fail:\n{}", output);

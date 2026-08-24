@@ -333,7 +333,7 @@ impl Runtime {
         infer_result.relabel_all_added_facts_with_store_reason(store_reason);
 
         let membership_fact_id = self.known_fact_id_for_fact(&surface_membership_fact)?;
-        self.register_known_objs_in_fn_sets_for_element_body(
+        self.register_function_set_knowledge_for_element(
             &function_identifier_obj,
             shape.fn_set.body.clone(),
             membership_fact_id,

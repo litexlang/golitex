@@ -2,7 +2,7 @@ use super::super::command_handlers::read_optional_graph_save_path;
 use super::super::messages::{help_message, upgrade_message};
 use crate::cli::arguments::{
     read_session_preload, remove_trust_before_line_flag, validate_session_preload,
-    validate_trace_pipeline_invocation, validate_trust_before_line_invocation,
+    validate_trust_before_line_invocation,
 };
 use crate::graph::GraphKind;
 use crate::pipeline::SessionPreload;
@@ -26,39 +26,9 @@ fn help_lists_summarize_command() {
 }
 
 #[test]
-fn help_lists_pipeline_trace_command() {
-    let message = help_message();
-    assert!(message.contains("litex -trace-pipeline -e '1 + 1 = 2'"));
-    assert!(message.contains("whether the Lean compiler ran"));
-}
-
-#[test]
 fn help_names_simplified_and_traditional_chinese_unambiguously() {
     let message = help_message();
     assert!(message.contains("zh|zh-Hans|zh-Hant"));
-}
-
-#[test]
-fn pipeline_trace_accepts_only_batch_execution_commands() {
-    for args in [
-        vec!["-e".to_string(), "1 = 1".to_string()],
-        vec!["-f".to_string(), "chapter.lit".to_string()],
-        vec!["-r".to_string(), "project".to_string()],
-        vec!["-runner".to_string(), "-e".to_string(), "1 = 1".to_string()],
-    ] {
-        assert!(validate_trace_pipeline_invocation(&args, true).is_ok());
-    }
-
-    for args in [
-        vec![],
-        vec!["-session".to_string()],
-        vec!["-graph".to_string(), "-e".to_string(), "1 = 1".to_string()],
-        vec!["-latex".to_string(), "-e".to_string(), "1 = 1".to_string()],
-    ] {
-        let error = validate_trace_pipeline_invocation(&args, true)
-            .expect_err("pipeline tracing must reject non-batch commands");
-        assert!(error.contains("supported only"));
-    }
 }
 
 #[test]

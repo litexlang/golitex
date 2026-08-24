@@ -68,7 +68,7 @@ impl Runtime {
                 let env = self
                     .environment_by_top_index(stack_idx)
                     .expect("environment index should be valid");
-                match env.known_and_facts_in_forall_facts.get(&key) {
+                match env.facts.known_and_facts_in_forall_facts.get(&key) {
                     Some(v) => v.len(),
                     None => continue,
                 }
@@ -80,7 +80,7 @@ impl Runtime {
                         .environment_by_top_index(stack_idx)
                         .expect("environment index should be valid");
                     let Some(known_forall_facts_in_env) =
-                        env.known_and_facts_in_forall_facts.get(&key)
+                        env.facts.known_and_facts_in_forall_facts.get(&key)
                     else {
                         continue;
                     };

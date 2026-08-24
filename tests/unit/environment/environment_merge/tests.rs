@@ -3,6 +3,7 @@ use super::*;
 fn insert_object(environment: &mut Environment, name: &str, symbol_id: u64, kind: ParamObjType) {
     insert_symbol(environment, name, symbol_id, SymbolRole::Object);
     environment
+        .declarations
         .defined_identifiers
         .insert(name.to_string(), kind);
 }
@@ -10,6 +11,7 @@ fn insert_object(environment: &mut Environment, name: &str, symbol_id: u64, kind
 fn insert_symbol(environment: &mut Environment, name: &str, symbol_id: u64, role: SymbolRole) {
     let binding = SymbolBinding::new(SymbolId::new(symbol_id), name.to_string(), name.to_string());
     environment
+        .declarations
         .symbols
         .insert(SymbolDefinition::new(binding, role))
         .expect("test symbol name should be fresh");
@@ -38,6 +40,7 @@ fn committed_child_reuses_exact_symbol_identity_idempotently() {
 
     assert_eq!(
         parent
+            .declarations
             .symbols
             .get("\\template_instance<X>")
             .expect("parent symbol remains present")
@@ -46,7 +49,10 @@ fn committed_child_reuses_exact_symbol_identity_idempotently() {
         SymbolId::new(17)
     );
     assert_eq!(
-        parent.defined_identifiers.get("\\template_instance<X>"),
+        parent
+            .declarations
+            .defined_identifiers
+            .get("\\template_instance<X>"),
         Some(&ParamObjType::Identifier)
     );
 }
@@ -58,6 +64,7 @@ fn committed_child_preserves_missing_declaration_type_views_for_the_same_symbol(
     insert_object(&mut parent, "shared", 17, ParamObjType::Identifier);
     insert_object(&mut child, "shared", 17, ParamObjType::Identifier);
     child
+        .declarations
         .symbols
         .get_by_id_mut(SymbolId::new(17))
         .expect("the child symbol should exist")
@@ -72,6 +79,7 @@ fn committed_child_preserves_missing_declaration_type_views_for_the_same_symbol(
 
     assert_eq!(
         parent
+            .declarations
             .symbols
             .get_by_id(SymbolId::new(17))
             .and_then(SymbolDefinition::default_struct_view)

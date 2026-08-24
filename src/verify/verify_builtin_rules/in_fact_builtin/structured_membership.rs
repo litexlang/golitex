@@ -328,7 +328,7 @@ impl Runtime {
         )
     }
 
-    // If the env already has `element $in fn_def` (from `known_objs_in_fn_sets`), compare to the RHS `fn ...`.
+    // If object knowledge already has `element $in fn_def`, compare it to the RHS `fn ...`.
     pub fn verify_in_fact_element_in_fn_set_by_stored_definition(
         &mut self,
         element: &Obj,
@@ -758,7 +758,7 @@ impl Runtime {
 
         let obj_key = obj_equality_key(obj);
         for env in self.iter_environments_from_top() {
-            let Some((_, equal_objs)) = env.known_equality.get(&obj_key) else {
+            let Some((_, equal_objs)) = env.facts.known_equality.get(&obj_key) else {
                 continue;
             };
             for equal_obj in equal_objs.iter() {

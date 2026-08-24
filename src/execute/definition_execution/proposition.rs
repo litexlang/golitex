@@ -61,10 +61,10 @@ impl Runtime {
     ) -> Result<(), RuntimeError> {
         let name = def_prop_stmt.name.clone();
         let env = self.top_level_env();
-        if env.defined_def_props.contains_key(&name) {
+        if env.declarations.defined_def_props.contains_key(&name) {
             return Err(def_prop_name_already_used_error(&name, "prop"));
         }
-        if env.defined_abstract_props.contains_key(&name) {
+        if env.declarations.defined_abstract_props.contains_key(&name) {
             return Err(def_prop_name_already_used_error(&name, "abstract_prop"));
         }
         Ok(())

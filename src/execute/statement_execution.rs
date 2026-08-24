@@ -1,5 +1,4 @@
 use crate::error::RuntimeError;
-use crate::pipeline::record_pipeline_step;
 use crate::result::{StatementExecutionPhase, StatementExecutionTrace, StmtResult};
 use crate::runtime::{ExecutionMode, Runtime};
 use crate::stmt::Stmt;
@@ -18,11 +17,6 @@ impl StatementExecutionContext {
 
 impl Runtime {
     pub fn execute_statement(&mut self, stmt: &Stmt) -> Result<StmtResult, RuntimeError> {
-        record_pipeline_step(
-            "execute",
-            "Runtime::execute_statement",
-            "src/execute/statement_execution.rs",
-        );
         self.execute_statement_with_context(stmt, StatementExecutionContext::OrdinaryRun)
     }
 
@@ -88,11 +82,6 @@ impl Runtime {
         execution_mode: ExecutionMode,
         context: StatementExecutionContext,
     ) -> Result<StmtResult, RuntimeError> {
-        record_pipeline_step(
-            "result",
-            "Runtime::finish_statement_execution",
-            "src/execute/statement_execution.rs",
-        );
         match result {
             Ok(mut result) => {
                 self.attach_known_fact_ids_to_stmt_result(&mut result)?;

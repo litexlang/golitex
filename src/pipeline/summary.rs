@@ -519,63 +519,64 @@ impl EnvironmentSummary {
 
         summary.add_field_counts(
             "defined_identifiers",
-            environment.defined_identifiers.len(),
-            environment.defined_identifiers.len(),
+            environment.declarations.defined_identifiers.len(),
+            environment.declarations.defined_identifiers.len(),
         );
         summary.add_field_counts(
             "defined_def_props",
-            environment.defined_def_props.len(),
-            environment.defined_def_props.len(),
+            environment.declarations.defined_def_props.len(),
+            environment.declarations.defined_def_props.len(),
         );
         summary.add_field_counts(
             "defined_abstract_props",
-            environment.defined_abstract_props.len(),
-            environment.defined_abstract_props.len(),
+            environment.declarations.defined_abstract_props.len(),
+            environment.declarations.defined_abstract_props.len(),
         );
         summary.add_field_counts(
             "defined_algorithms",
-            environment.defined_algorithms.len(),
-            environment.defined_algorithms.len(),
+            environment.declarations.defined_algorithms.len(),
+            environment.declarations.defined_algorithms.len(),
         );
         summary.add_field_counts(
             "defined_structs",
-            environment.defined_structs.len(),
-            environment.defined_structs.len(),
+            environment.declarations.defined_structs.len(),
+            environment.declarations.defined_structs.len(),
         );
         summary.add_field_counts(
             "defined_templates",
-            environment.defined_templates.len(),
-            environment.defined_templates.len(),
+            environment.declarations.defined_templates.len(),
+            environment.declarations.defined_templates.len(),
         );
         summary.add_field_counts(
             "defined_settings",
-            environment.defined_settings.len(),
-            environment.defined_settings.len(),
+            environment.declarations.defined_settings.len(),
+            environment.declarations.defined_settings.len(),
         );
         summary.add_field_counts(
             "defined_thm_stmts",
-            environment.defined_thm_stmts.len(),
-            environment.defined_thm_stmts.len(),
+            environment.declarations.defined_thm_stmts.len(),
+            environment.declarations.defined_thm_stmts.len(),
         );
         summary.add_field_counts(
             "defined_axiom_stmts",
-            environment.defined_axiom_stmts.len(),
-            environment.defined_axiom_stmts.len(),
+            environment.declarations.defined_axiom_stmts.len(),
+            environment.declarations.defined_axiom_stmts.len(),
         );
         summary.add_field_counts(
             "defined_strategy_stmts",
-            environment.defined_strategy_stmts.len(),
-            environment.defined_strategy_stmts.len(),
+            environment.declarations.defined_strategy_stmts.len(),
+            environment.declarations.defined_strategy_stmts.len(),
         );
 
         let equality_fact_count = unique_known_equality_count(environment);
         summary.add_field_counts(
             "known_equality",
-            environment.known_equality.len(),
+            environment.facts.known_equality.len(),
             equality_fact_count,
         );
 
         let atomic_0_count = environment
+            .facts
             .known_atomic_facts_with_0_or_more_than_2_args
             .values()
             .map(Vec::len)
@@ -583,63 +584,74 @@ impl EnvironmentSummary {
         summary.add_field_counts(
             "known_atomic_facts_with_0_or_more_than_2_args",
             environment
+                .facts
                 .known_atomic_facts_with_0_or_more_than_2_args
                 .len(),
             atomic_0_count,
         );
 
         let atomic_1_count = environment
+            .facts
             .known_atomic_facts_with_1_arg
             .values()
             .map(|facts| facts.len())
             .sum::<usize>();
         summary.add_field_counts(
             "known_atomic_facts_with_1_arg",
-            environment.known_atomic_facts_with_1_arg.len(),
+            environment.facts.known_atomic_facts_with_1_arg.len(),
             atomic_1_count,
         );
 
         let atomic_2_count = environment
+            .facts
             .known_atomic_facts_with_2_args
             .values()
             .map(|facts| facts.len())
             .sum::<usize>();
         summary.add_field_counts(
             "known_atomic_facts_with_2_args",
-            environment.known_atomic_facts_with_2_args.len(),
+            environment.facts.known_atomic_facts_with_2_args.len(),
             atomic_2_count,
         );
 
         let exist_count = environment
+            .facts
             .known_exist_facts
             .values()
             .map(Vec::len)
             .sum::<usize>();
         summary.add_field_counts(
             "known_exist_facts",
-            environment.known_exist_facts.len(),
+            environment.facts.known_exist_facts.len(),
             exist_count,
         );
 
         let or_count = environment
+            .facts
             .known_or_facts
             .values()
             .map(Vec::len)
             .sum::<usize>();
-        summary.add_field_counts("known_or_facts", environment.known_or_facts.len(), or_count);
+        summary.add_field_counts(
+            "known_or_facts",
+            environment.facts.known_or_facts.len(),
+            or_count,
+        );
 
         let forall_atomic_count = environment
+            .facts
             .known_atomic_facts_in_forall_facts
             .values()
             .map(Vec::len)
             .sum::<usize>();
         summary.add_field_counts(
             "known_atomic_facts_in_forall_facts",
-            environment.known_atomic_facts_in_forall_facts.len(),
+            environment.facts.known_atomic_facts_in_forall_facts.len(),
             forall_atomic_count,
         );
 
         let forall_atomic_by_shape_count = environment
+            .facts
             .known_atomic_facts_in_forall_facts_by_arg_shape
             .values()
             .map(|shape_map| shape_map.values().map(Vec::len).sum::<usize>())
@@ -647,125 +659,135 @@ impl EnvironmentSummary {
         summary.add_field_counts(
             "known_atomic_facts_in_forall_facts_by_arg_shape",
             environment
+                .facts
                 .known_atomic_facts_in_forall_facts_by_arg_shape
                 .len(),
             forall_atomic_by_shape_count,
         );
 
         let forall_exist_count = environment
+            .facts
             .known_exist_facts_in_forall_facts
             .values()
             .map(Vec::len)
             .sum::<usize>();
         summary.add_field_counts(
             "known_exist_facts_in_forall_facts",
-            environment.known_exist_facts_in_forall_facts.len(),
+            environment.facts.known_exist_facts_in_forall_facts.len(),
             forall_exist_count,
         );
 
         let forall_and_count = environment
+            .facts
             .known_and_facts_in_forall_facts
             .values()
             .map(Vec::len)
             .sum::<usize>();
         summary.add_field_counts(
             "known_and_facts_in_forall_facts",
-            environment.known_and_facts_in_forall_facts.len(),
+            environment.facts.known_and_facts_in_forall_facts.len(),
             forall_and_count,
         );
 
         let forall_or_count = environment
+            .facts
             .known_or_facts_in_forall_facts
             .values()
             .map(Vec::len)
             .sum::<usize>();
         summary.add_field_counts(
             "known_or_facts_in_forall_facts",
-            environment.known_or_facts_in_forall_facts.len(),
+            environment.facts.known_or_facts_in_forall_facts.len(),
             forall_or_count,
         );
 
         summary.add_field_counts(
             "known_objs_equal_to_tuple",
-            environment.known_objs_equal_to_tuple.len(),
-            environment.known_objs_equal_to_tuple.len(),
+            environment.objects.tuple_equality_count(),
+            environment.objects.tuple_equality_count(),
         );
         summary.add_field_counts(
             "known_objs_equal_to_cart",
-            environment.known_objs_equal_to_cart.len(),
-            environment.known_objs_equal_to_cart.len(),
+            environment.objects.cart_equality_count(),
+            environment.objects.cart_equality_count(),
         );
         summary.add_field_counts(
             "known_objs_equal_to_finite_seq_list",
-            environment.known_objs_equal_to_finite_seq_list.len(),
-            environment.known_objs_equal_to_finite_seq_list.len(),
+            environment.objects.finite_sequence_list_equality_count(),
+            environment.objects.finite_sequence_list_equality_count(),
         );
         summary.add_field_counts(
             "known_objs_equal_to_matrix_list",
-            environment.known_objs_equal_to_matrix_list.len(),
-            environment.known_objs_equal_to_matrix_list.len(),
+            environment.objects.matrix_list_equality_count(),
+            environment.objects.matrix_list_equality_count(),
         );
         summary.add_field_counts(
             "known_obj_values",
-            environment.known_obj_values.len(),
-            environment.known_obj_values.len(),
+            environment.objects.simplified_value_count(),
+            environment.objects.simplified_value_count(),
         );
         summary.add_field_counts(
             "known_objs_equal_to_set_builder",
-            environment.known_objs_equal_to_set_builder.len(),
-            environment.known_objs_equal_to_set_builder.len(),
+            environment.objects.set_builder_equality_count(),
+            environment.objects.set_builder_equality_count(),
         );
         summary.add_field_counts(
             "known_objs_in_fn_sets",
-            environment.known_objs_in_fn_sets.len(),
-            environment.known_objs_in_fn_sets.len(),
+            environment.objects.function_set_count(),
+            environment.objects.function_set_count(),
         );
         summary.add_field_counts(
             "known_transitive_props",
-            environment.known_transitive_props.len(),
-            environment.known_transitive_props.len(),
+            environment
+                .predicate_properties
+                .transitive_predicate_count(),
+            environment
+                .predicate_properties
+                .transitive_predicate_count(),
         );
 
         let symmetric_permutation_count = environment
-            .known_symmetric_props
-            .values()
-            .map(Vec::len)
-            .sum::<usize>();
+            .predicate_properties
+            .symmetric_permutation_count();
         summary.add_field_counts(
             "known_symmetric_props",
-            environment.known_symmetric_props.len(),
+            environment.predicate_properties.symmetric_predicate_count(),
             symmetric_permutation_count,
         );
 
         summary.add_field_counts(
             "known_reflexive_props",
-            environment.known_reflexive_props.len(),
-            environment.known_reflexive_props.len(),
+            environment.predicate_properties.reflexive_predicate_count(),
+            environment.predicate_properties.reflexive_predicate_count(),
         );
         summary.add_field_counts(
             "known_antisymmetric_props",
-            environment.known_antisymmetric_props.len(),
-            environment.known_antisymmetric_props.len(),
+            environment
+                .predicate_properties
+                .antisymmetric_predicate_count(),
+            environment
+                .predicate_properties
+                .antisymmetric_predicate_count(),
         );
         summary.add_field_counts(
             "cache_well_defined_obj",
-            environment.cache_well_defined_obj.len(),
-            environment.cache_well_defined_obj.len(),
+            environment.caches.well_defined_objects.len(),
+            environment.caches.well_defined_objects.len(),
         );
         summary.add_field_counts(
             "stored_fact_lookup_keys",
-            environment.stored_facts.lookup_key_count(),
-            environment.stored_facts.lookup_key_count(),
+            environment.facts.stored_facts.lookup_key_count(),
+            environment.facts.stored_facts.lookup_key_count(),
         );
         summary.add_field_counts(
             "used_strategy_stmts",
-            environment.used_strategy_stmts.len(),
-            environment.used_strategy_stmts.len(),
+            environment.strategies.used_strategy_count(),
+            environment.strategies.used_strategy_count(),
         );
         summary.add_field_counts(
             "stopped_strategy_stmts",
-            environment.stopped_strategy_stmts.len(),
-            environment.stopped_strategy_stmts.len(),
+            environment.strategies.stopped_strategy_count(),
+            environment.strategies.stopped_strategy_count(),
         );
 
         summary.add_category_counts(environment);
@@ -780,60 +802,67 @@ impl EnvironmentSummary {
     }
 
     fn add_category_counts(&mut self, environment: &Environment) {
-        self.category_counts
-            .insert("objects".to_string(), environment.defined_identifiers.len());
-        self.category_counts
-            .insert("props".to_string(), environment.defined_def_props.len());
+        self.category_counts.insert(
+            "objects".to_string(),
+            environment.declarations.defined_identifiers.len(),
+        );
+        self.category_counts.insert(
+            "props".to_string(),
+            environment.declarations.defined_def_props.len(),
+        );
         self.category_counts.insert(
             "abstract_props".to_string(),
-            environment.defined_abstract_props.len(),
+            environment.declarations.defined_abstract_props.len(),
         );
         self.category_counts.insert(
             "algorithms".to_string(),
-            environment.defined_algorithms.len(),
+            environment.declarations.defined_algorithms.len(),
         );
-        self.category_counts
-            .insert("structs".to_string(), environment.defined_structs.len());
-        self.category_counts
-            .insert("templates".to_string(), environment.defined_templates.len());
-        self.category_counts
-            .insert("settings".to_string(), environment.defined_settings.len());
-        self.category_counts
-            .insert("theorems".to_string(), environment.defined_thm_stmts.len());
-        self.category_counts
-            .insert("axioms".to_string(), environment.defined_axiom_stmts.len());
+        self.category_counts.insert(
+            "structs".to_string(),
+            environment.declarations.defined_structs.len(),
+        );
+        self.category_counts.insert(
+            "templates".to_string(),
+            environment.declarations.defined_templates.len(),
+        );
+        self.category_counts.insert(
+            "settings".to_string(),
+            environment.declarations.defined_settings.len(),
+        );
+        self.category_counts.insert(
+            "theorems".to_string(),
+            environment.declarations.defined_thm_stmts.len(),
+        );
+        self.category_counts.insert(
+            "axioms".to_string(),
+            environment.declarations.defined_axiom_stmts.len(),
+        );
         self.category_counts.insert(
             "strategies".to_string(),
-            environment.defined_strategy_stmts.len(),
+            environment.declarations.defined_strategy_stmts.len(),
         );
         self.category_counts.insert(
             "known_facts".to_string(),
-            environment.stored_facts.lookup_key_count(),
+            environment.facts.stored_facts.lookup_key_count(),
         );
         self.category_counts.insert(
             "object_cache_entries".to_string(),
-            environment.known_objs_equal_to_tuple.len()
-                + environment.known_objs_equal_to_cart.len()
-                + environment.known_objs_equal_to_finite_seq_list.len()
-                + environment.known_objs_equal_to_matrix_list.len()
-                + environment.known_obj_values.len()
-                + environment.known_objs_equal_to_set_builder.len()
-                + environment.known_objs_in_fn_sets.len()
-                + environment.cache_well_defined_obj.len(),
+            environment.objects.old_summary_object_knowledge_count()
+                + environment.caches.well_defined_objects.len(),
         );
         self.category_counts.insert(
             "property_registrations".to_string(),
-            environment.known_transitive_props.len()
-                + environment.known_symmetric_props.len()
-                + environment.known_reflexive_props.len()
-                + environment.known_antisymmetric_props.len(),
+            environment
+                .predicate_properties
+                .property_registration_count(),
         );
     }
 
     fn add_fact_index_counts(&mut self, environment: &Environment) {
         self.fact_index_counts.insert(
             "known_facts".to_string(),
-            environment.stored_facts.lookup_key_count(),
+            environment.facts.stored_facts.lookup_key_count(),
         );
     }
 
@@ -918,7 +947,7 @@ fn reason_rule_name(reason: &str, prefix: &str) -> Option<String> {
 
 fn unique_known_equality_count(environment: &Environment) -> usize {
     let mut seen = HashSet::new();
-    for (direct_proof_map, _) in environment.known_equality.values() {
+    for (direct_proof_map, _) in environment.facts.known_equality.values() {
         for fact in direct_proof_map.values() {
             seen.insert(fact.to_string());
         }

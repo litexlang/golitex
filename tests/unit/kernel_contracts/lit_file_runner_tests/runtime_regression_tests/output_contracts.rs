@@ -984,9 +984,14 @@ $axiom_prop(3)
         stmt_results[1].statement(),
         Some(Stmt::AxiomStmt(_))
     ));
-    assert!(runtime.top_level_env().defined_thm_stmts.is_empty());
     assert!(runtime
         .top_level_env()
+        .declarations
+        .defined_thm_stmts
+        .is_empty());
+    assert!(runtime
+        .top_level_env()
+        .declarations
         .defined_axiom_stmts
         .contains_key("axiom_prop_all"));
     assert!(runtime

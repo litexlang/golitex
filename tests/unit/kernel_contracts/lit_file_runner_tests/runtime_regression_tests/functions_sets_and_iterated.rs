@@ -1057,11 +1057,13 @@ try:
             let environment = failed_runtime.top_level_env();
             (
                 environment
+                    .facts
                     .known_owner_sets
                     .values()
                     .map(|owner_sets| owner_sets.len())
                     .sum::<usize>(),
                 environment
+                    .facts
                     .known_direct_supersets
                     .values()
                     .map(|supersets| supersets.len())
@@ -1077,11 +1079,13 @@ try:
             let environment = failed_runtime.top_level_env();
             (
                 environment
+                    .facts
                     .known_owner_sets
                     .values()
                     .map(|owner_sets| owner_sets.len())
                     .sum::<usize>(),
                 environment
+                    .facts
                     .known_direct_supersets
                     .values()
                     .map(|supersets| supersets.len())

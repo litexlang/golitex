@@ -80,7 +80,7 @@ impl Runtime {
 
     pub fn visible_symbol_definition(&self, name: &str) -> Option<&SymbolDefinition> {
         self.iter_environments_from_top()
-            .find_map(|environment| environment.symbols.get(name))
+            .find_map(|environment| environment.declarations.symbols.get(name))
     }
 
     pub fn resolved_identifier_symbol(&self, name: &str) -> Option<SymbolRef> {
@@ -98,7 +98,7 @@ impl Runtime {
         }
         self.imported_module_environments(module_name)
             .into_iter()
-            .find_map(|environment| environment.symbols.get(name))
+            .find_map(|environment| environment.declarations.symbols.get(name))
             .map(|definition| definition.binding().as_ref())
     }
 
@@ -127,6 +127,7 @@ impl Runtime {
             .or_else(|| {
                 self.iter_environments_from_top().find_map(|environment| {
                     environment
+                        .declarations
                         .symbols
                         .get_by_id(symbol.id())
                         .and_then(SymbolDefinition::default_struct_view)
@@ -137,6 +138,7 @@ impl Runtime {
                 self.module_manager.modules.values().find_map(|module| {
                     module
                         .main_environment
+                        .declarations
                         .symbols
                         .get_by_id(symbol.id())
                         .and_then(SymbolDefinition::default_struct_view)
@@ -144,6 +146,7 @@ impl Runtime {
                         .or_else(|| {
                             module.files.iter().find_map(|file| {
                                 file.environment
+                                    .declarations
                                     .symbols
                                     .get_by_id(symbol.id())
                                     .and_then(SymbolDefinition::default_struct_view)
@@ -171,6 +174,7 @@ impl Runtime {
             .or_else(|| {
                 self.iter_environments_from_top().find_map(|environment| {
                     environment
+                        .declarations
                         .symbols
                         .get_by_id(symbol.id())
                         .and_then(SymbolDefinition::default_tuple_view)
@@ -181,6 +185,7 @@ impl Runtime {
                 self.module_manager.modules.values().find_map(|module| {
                     module
                         .main_environment
+                        .declarations
                         .symbols
                         .get_by_id(symbol.id())
                         .and_then(SymbolDefinition::default_tuple_view)
@@ -188,6 +193,7 @@ impl Runtime {
                         .or_else(|| {
                             module.files.iter().find_map(|file| {
                                 file.environment
+                                    .declarations
                                     .symbols
                                     .get_by_id(symbol.id())
                                     .and_then(SymbolDefinition::default_tuple_view)
@@ -274,6 +280,7 @@ impl Runtime {
 
         let binding = self.allocate_declared_symbol_binding(name.to_string())?;
         self.top_level_env()
+            .declarations
             .symbols
             .insert(SymbolDefinition::new(binding.clone(), role))
             .expect("symbol was checked absent before registration");
@@ -325,6 +332,7 @@ impl Runtime {
             definition.remember_default_tuple_view_if_absent(cart);
         }
         self.top_level_env()
+            .declarations
             .symbols
             .insert(definition)
             .expect("symbol was checked absent before registration");

@@ -23,7 +23,6 @@ litex -detail -strict -isolated -f examples/tmp.lit
 litex -summarize -isolated -f examples/tmp.lit
 litex -compact -f chapter.lit -trust-before-line 420
 litex -lang zh -runner -e "1 = 1"
-litex -trace-pipeline -e "1 + 1 = 2"
 ```
 
 Do not rely on extra positional tokens after a command's required values, except
@@ -41,7 +40,6 @@ parser.
 | `-strict` | Verify every configured import and every export loaded by `-f`, then reject user `trust`, `trust have`, and `axiom`. `-r` already verifies its complete export tree. Use it for CI or a complete dependency audit. |
 | `-trust-before-line <X>` | Preview development option for a direct `-f` or `-isolated -f` run. Trust top-level statements whose header is before line `X`, then verify normally from the statement whose header is exactly line `X`. |
 | `-summarize` | Append one final run-summary JSON object after ordinary verifier command output. |
-| `-trace-pipeline` | For batch `-e`, `-f`, `-r`, runner, or single-file Lean compilation, report the major Rust functions actually visited and whether the Lean compiler ran. Runner mode adds a structured `pipeline_trace` field. |
 | `-lang <code>` | Localize JSON keys and explanatory labels. Mathematical source strings inside fields such as `statement`, `fact`, and `cited_statement` stay in Litex syntax. |
 
 Supported language codes are:
@@ -87,9 +85,7 @@ exit-code behavior are unchanged; compact and normal failures may contain
 additional diagnostic fields.
 
 `-compact` affects ordinary verifier commands. `-detail`, `-strict`, and `-lang` mainly affect verifier, runner, and graph commands.
-`-summarize` affects ordinary verifier commands. `-trace-pipeline` is limited to
-batch execution and is rejected for REPL, session, graph, LaTeX, and Python
-commands.
+`-summarize` affects ordinary verifier commands.
 They do not make module-management or tutorial placeholder commands functional.
 
 ## Value Rules
@@ -108,10 +104,9 @@ litex -r examples/08_module_repository
 This means source code beginning with `-` should usually be put in a `.lit`
 file and run with `-f`.
 
-Because `-compact`, `-detail`, `-strict`, `-summarize`, and `-trace-pipeline`
-are removed globally before command parsing, do not use a standalone command
-value exactly equal to any of those flags. `-lang` also consumes the next token
-globally.
+Because `-compact`, `-detail`, `-strict`, and `-summarize` are removed globally
+before command parsing, do not use a standalone command value exactly equal to
+any of those flags. `-lang` also consumes the next token globally.
 
 `-trust-before-line` consumes a positive ASCII decimal line number globally,
 so it may appear before or after `-f`. It may appear only once.
@@ -279,7 +274,6 @@ The runner wrapper contains:
 | `target` | Target kind and label. Without `-detail`, file and repo labels are hidden as `entry`. |
 | `error` | Target-load error object, or `null` when the target was loaded. |
 | `trace` | The ordinary statement-by-statement Litex JSON output as a string. |
-| `pipeline_trace` | Present only with `-trace-pipeline`; structured Rust steps plus `lean_compiler_executed`. |
 
 Runner exit behavior:
 

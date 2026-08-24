@@ -183,8 +183,8 @@ impl Runtime {
             })?;
         let atomic_fact_key = strategy_then_atomic_fact_key(&strategy, stmt.clone().into())?;
         self.top_level_env()
-            .stopped_strategy_stmts
-            .insert(atomic_fact_key, strategy_name);
+            .strategies
+            .stop(atomic_fact_key, strategy_name);
         Ok(
             SuccessCommandStmtResult::StopStrategyStmt(Box::new(SuccessStopStrategyStmtResult {
                 statement: stmt.clone(),
@@ -225,10 +225,9 @@ impl Runtime {
         caller_stmt: Stmt,
     ) -> Result<(), RuntimeError> {
         let atomic_fact_key = strategy_then_atomic_fact_key(strategy, caller_stmt)?;
-        let env = self.top_level_env();
-        env.used_strategy_stmts
-            .insert(atomic_fact_key.clone(), strategy_name.to_string());
-        env.stopped_strategy_stmts.remove(&atomic_fact_key);
+        self.top_level_env()
+            .strategies
+            .activate(atomic_fact_key, strategy_name.to_string());
         Ok(())
     }
 }

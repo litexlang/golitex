@@ -1166,7 +1166,7 @@ impl Runtime {
                 )))
             })?;
         for key in goal_keys.iter() {
-            let Some(known_exist_facts) = environment.known_exist_facts.get(key) else {
+            let Some(known_exist_facts) = environment.facts.known_exist_facts.get(key) else {
                 continue;
             };
             for known_fact in known_exist_facts.iter() {

@@ -445,7 +445,7 @@ impl Runtime {
 
         let mut known_orders = Vec::new();
         for environment in self.iter_environments_from_top() {
-            for known_facts_map in environment.known_atomic_facts_with_2_args.values() {
+            for known_facts_map in environment.facts.known_atomic_facts_with_2_args.values() {
                 for known_fact in known_facts_map.values() {
                     if let Some(normalized) =
                         super::normalize_positive_order_atomic_fact(known_fact)
@@ -1156,7 +1156,7 @@ impl Runtime {
 
         let mut known_not_equal_facts = Vec::new();
         for environment in self.iter_environments_from_top() {
-            for known_facts_map in environment.known_atomic_facts_with_2_args.values() {
+            for known_facts_map in environment.facts.known_atomic_facts_with_2_args.values() {
                 for known_fact in known_facts_map.values() {
                     if matches!(known_fact, AtomicFact::NotEqualFact(_)) {
                         known_not_equal_facts.push(known_fact.clone());
