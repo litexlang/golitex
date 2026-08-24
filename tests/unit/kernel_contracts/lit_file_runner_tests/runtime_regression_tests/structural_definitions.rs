@@ -713,7 +713,7 @@ template<S set>:
     let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope("preverified_nested_template_boundary");
     let stmt = runtime
-        .parse_stmt(&mut blocks[0])
+        .parse_statement(&mut blocks[0])
         .expect("parse template declaration");
     let error = runtime
         .execute_preverified_statement(&stmt)

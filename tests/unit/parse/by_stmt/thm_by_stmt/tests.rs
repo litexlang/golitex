@@ -8,7 +8,7 @@ fn parse_one(source: &str) -> Result<Stmt, RuntimeError> {
         .parse_blocks(source, Rc::from("by_thm_selected_fact_test.lit"))
         .expect("tokenize by thm statement");
     assert_eq!(blocks.len(), 1);
-    runtime.parse_stmt(&mut blocks[0])
+    runtime.parse_statement(&mut blocks[0])
 }
 
 #[test]

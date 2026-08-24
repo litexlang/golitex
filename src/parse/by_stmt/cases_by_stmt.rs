@@ -106,7 +106,7 @@ impl Runtime {
                     {
                         let proof: Vec<Stmt> = block.body[0..n - 1]
                             .iter_mut()
-                            .map(|b| this.parse_stmt(b))
+                            .map(|b| this.parse_statement(b))
                             .collect::<Result<_, _>>()?;
                         let last_block = block.body.get_mut(n - 1).ok_or_else(|| {
                             RuntimeError::from(ParseRuntimeError(
@@ -123,7 +123,7 @@ impl Runtime {
                         let proof: Vec<Stmt> = block
                             .body
                             .iter_mut()
-                            .map(|b| this.parse_stmt(b))
+                            .map(|b| this.parse_statement(b))
                             .collect::<Result<_, _>>()?;
                         (proof, None)
                     };

@@ -1,7 +1,7 @@
 use crate::prelude::*;
 use std::collections::HashMap;
 
-use super::exec_have_fn_equal_shared::build_declared_function_obj_with_param_bindings;
+use super::function_equality_support::build_declared_function_obj_with_param_bindings;
 
 struct HaveFnByForallExistUniqueShape {
     fn_set_clause: FnSetClause,

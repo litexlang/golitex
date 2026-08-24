@@ -1792,6 +1792,23 @@ justify `g(a)` and one checked unfolding of that application. This fallback
 does not prove a new equality, instantiate a `forall`, or skip the original
 function's arity, domain, or side-condition checks.
 
+Use a local name when a nontrivial object recurs and the proof treats it as one
+mathematical atom. Prefer a role-based name such as `event_union`,
+`probability_terms`, or `negative_x` over a name that only reports its source
+syntax. Use `let name = value` for a pure abbreviation whose carrier is not a
+new proof fact; use `have name S = value` when later steps consume `name $in S`
+or the declared carrier `S`. Keep a public theorem statement in its canonical
+mathematical form and introduce the shorter name inside the proof body.
+
+Do not apply this by character count alone. A one-use transparent calculation
+is usually clearer when expanded, while a long proposition or existential
+package needs a real `prop` rather than an object alias. If the same parameter
+bundle recurs across independent proofs, improve the reusable `setting`,
+`struct`, template, or function interface instead of adding the same local
+alias everywhere. After choosing a local name, use it as the proof's canonical
+spelling; if that would require a stack of equality-transport adapters under
+larger constructors, name the outer mathematical object instead.
+
 The words `set`, `nonempty_set`, and `finite_set` are binder kinds, not one
 ordinary set containing all sets. They cannot be used as function input sets:
 

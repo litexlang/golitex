@@ -186,7 +186,7 @@ impl Runtime {
                         block.line_file.clone(),
                     ));
                 }
-                proof.push(self.parse_stmt(block)?);
+                proof.push(self.parse_statement(block)?);
             }
         }
 
@@ -210,7 +210,7 @@ impl Runtime {
         self.run_in_local_proof_parsing_scope(|this| {
             let mut proof = Vec::with_capacity(block.body.len());
             for body_block in block.body.iter_mut() {
-                proof.push(this.parse_stmt(body_block)?);
+                proof.push(this.parse_statement(body_block)?);
             }
             Ok(proof)
         })

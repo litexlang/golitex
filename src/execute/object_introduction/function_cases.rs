@@ -1,6 +1,6 @@
 use crate::prelude::*;
 
-use super::exec_have_fn_equal_shared::{
+use super::function_equality_support::{
     case_conditions_are_disjoint, forall_param_defs_dom_and_map_from_have_fn_clause,
 };
 

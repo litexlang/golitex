@@ -12,7 +12,7 @@ pub fn to_python(source_code: &str, runtime: &mut Runtime) -> Result<String, Run
 
     let mut stmts: Vec<Stmt> = Vec::new();
     for mut block in blocks {
-        let stmt = runtime.parse_stmt(&mut block)?;
+        let stmt = runtime.parse_statement(&mut block)?;
         execute_top_level_statement(&stmt, runtime)?;
         stmts.push(stmt);
     }

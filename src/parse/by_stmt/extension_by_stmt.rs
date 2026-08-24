@@ -18,7 +18,7 @@ impl Runtime {
             let fact = self.parse_goal_atomic_fact_block(&mut tb.body[0], "by extension")?;
             let mut proof = Vec::new();
             for block in tb.body[1..].iter_mut() {
-                proof.push(self.parse_stmt(block)?);
+                proof.push(self.parse_statement(block)?);
             }
             (fact, proof)
         } else {

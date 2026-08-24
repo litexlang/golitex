@@ -104,7 +104,7 @@ impl Runtime {
                     block
                         .body
                         .iter_mut()
-                        .map(|body_block| self.parse_stmt(body_block))
+                        .map(|body_block| self.parse_statement(body_block))
                         .collect::<Result<Vec<_>, _>>()?,
                 );
                 continue;
@@ -129,7 +129,7 @@ impl Runtime {
                         block
                             .body
                             .iter_mut()
-                            .map(|body_block| this.parse_stmt(body_block))
+                            .map(|body_block| this.parse_statement(body_block))
                             .collect()
                     },
                 )?;

@@ -53,7 +53,7 @@ impl Runtime {
                 tb.body
                     .iter_mut()
                     .skip(1)
-                    .map(|b| this.parse_stmt(b))
+                    .map(|b| this.parse_statement(b))
                     .collect::<Result<_, _>>()
             },
         )?;

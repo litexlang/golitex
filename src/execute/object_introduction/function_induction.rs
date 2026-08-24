@@ -1,6 +1,6 @@
 use crate::prelude::*;
 
-use super::exec_have_fn_equal_shared::case_conditions_are_disjoint_result;
+use super::function_equality_support::case_conditions_are_disjoint_result;
 
 impl Runtime {
     pub fn exec_have_fn_by_induc(

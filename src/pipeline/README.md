@@ -6,7 +6,7 @@
 run_source_code(source, runtime)
   blocks = Tokenizer.parse_blocks(source)
   for block in blocks:
-    stmt = runtime.parse_stmt(block)
+    stmt = runtime.parse_statement(block)
     result = execute_top_level_statement(stmt, runtime)
     collect result or stop at RuntimeError
   render results, errors, and optional summary
@@ -26,7 +26,8 @@ run_source_code(source, runtime)
 
 | File | Example |
 | --- | --- |
-| [`source_execution.rs`](source_execution.rs) | Selects code, file, or repository execution for `-e`, `-f`, and `-r`, and canonically resolves relative source-file targets; the former public `pipeline` module name remains a compatibility alias. |
+| [`source_execution.rs`](source_execution.rs) | Starts with the canonical `run_source_code` entry, then owns code, file, or repository execution for `-e`, `-f`, and `-r`, plus relative source-file target resolution. |
+| [`source_execution/compatibility.rs`](source_execution/compatibility.rs) | Retains the former long-signature file/repository helpers without placing them in the canonical reading path. |
 | [`top_level_statement_execution.rs`](top_level_statement_execution.rs) | Executes one parsed top-level statement and owns isolated terminal imports. |
 | [`repository_execution.rs`](repository_execution.rs) | Runs ordered project imports, module trees, file targets, and registered prefixes. |
 | [`pipeline_run_stmt_globally.rs`](pipeline_run_stmt_globally.rs) | Retains the former public module path as a compatibility facade only. |

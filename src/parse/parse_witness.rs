@@ -60,7 +60,7 @@ impl Runtime {
                 |this| {
                     tb.body
                         .iter_mut()
-                        .map(|b| this.parse_stmt(b))
+                        .map(|b| this.parse_statement(b))
                         .collect::<Result<_, _>>()
                 },
             )?
@@ -112,7 +112,7 @@ impl Runtime {
             }
             tb.body
                 .iter_mut()
-                .map(|block| self.parse_stmt(block))
+                .map(|block| self.parse_statement(block))
                 .collect::<Result<_, _>>()?
         };
         Ok(WitnessAtomicFact::new(atomic_fact, witnesses, proof, tb.line_file.clone()).into())
@@ -133,7 +133,7 @@ impl Runtime {
 
         let mut proof = Vec::with_capacity(tb.body.len());
         for block in tb.body.iter_mut() {
-            proof.push(self.parse_stmt(block)?);
+            proof.push(self.parse_statement(block)?);
         }
         Ok(WitnessNonemptySet::new(obj, set, proof, tb.line_file.clone()).into())
     }

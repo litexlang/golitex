@@ -32,5 +32,6 @@ execute_statement(Stmt::Fact(1 + 1 = 2))
 | [`trusted_statement_execution.rs`](trusted_statement_execution.rs) | Replays trusted and preverified statements into the environment. |
 | [`attach_fact_ids_to_stmt_result.rs`](attach_fact_ids_to_stmt_result.rs) | Fills missing FactIds in the completed recursive Result tree without retargeting frozen local evidence. |
 | [`submitted_fact_execution.rs`](submitted_fact_execution.rs) | Executes a submitted fact through well-definedness, proof verification, storage, and inference. |
+| [`object_introduction/`](object_introduction/) | Groups object, function, tuple, sequence, matrix, obtain, preimage, and witness introduction implementations by responsibility. |
 | [`exec_verify_then_store_facts.rs`](exec_verify_then_store_facts.rs) | Implements verify-then-store for facts. |
 | [`exec_try_stmt.rs`](exec_try_stmt.rs) | Gives `try:` its transactional rollback behavior. |

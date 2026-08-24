@@ -10,7 +10,7 @@ forall x R:
 ```text
 Tokenizer.parse_blocks("1 + 1 = 2")
   -> TokenBlock([1, +, 1, =, 2])
-Runtime.parse_stmt(block)
+Runtime.parse_statement(block)
   -> parse_fact(block)
   -> parse_obj(left), parse_obj(right)
   -> Stmt::Fact(EqualFact(left, right))
@@ -31,7 +31,7 @@ Runtime.parse_stmt(block)
 | File | Example |
 | --- | --- |
 | [`tokenizer.rs`](tokenizer.rs) | Splits `forall x R:` and its indented body into one `TokenBlock`. |
-| [`parse_stmt.rs`](parse_stmt.rs) | Dispatches the first token `forall`, `have`, `claim`, or a bare fact. |
+| [`statement_parsing.rs`](statement_parsing.rs) | Parses one complete statement and dispatches its first token, such as `forall`, `have`, `claim`, or a bare fact. |
 | [`parse_fact.rs`](parse_fact.rs) | Builds equality, conjunction, chain, existential, and universal facts. |
 | [`parse_def_stmt.rs`](parse_def_stmt.rs) | Parses definition settings, templates, structs, propositions, trust definitions, and shared definition-header rules. |
 | [`parse_have_object_stmt.rs`](parse_have_object_stmt.rs) | Parses object, tuple, Cartesian, sequence, finite-sequence, and matrix `have` definitions. |

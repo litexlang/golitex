@@ -64,7 +64,7 @@ fn registered_symmetric_predicate_verifier_wraps_the_exact_reordered_child_resul
             .parse_blocks(source, Rc::from("registered_symmetric_result_test.lit"))
             .expect("property fact tokenizes");
         let statement = runtime
-            .parse_stmt(&mut blocks[0])
+            .parse_statement(&mut blocks[0])
             .expect("property fact parses");
         let Stmt::Fact(Fact::AtomicFact(fact)) = statement else {
             panic!("property fact should be atomic")

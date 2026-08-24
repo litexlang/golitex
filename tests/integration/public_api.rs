@@ -67,4 +67,9 @@ fn curated_api_keeps_existing_module_paths_compatible() {
     let _: fn(&str) -> Result<String, String> = litex::pipeline::resolve_source_file_path;
     let _: fn(&str) -> Result<String, String> = litex::runner::resolve_litex_file_path;
     let _: fn(&str, &str) -> Result<String, String> = compile_litex_source_to_lean_source;
+
+    let _: fn(&litex::obj::FnSet) -> litex::stmt::FnSetClause =
+        litex::execute::function_equality_support::fn_set_to_fn_set_clause;
+    let _: fn(&litex::obj::FnSet) -> litex::stmt::FnSetClause =
+        litex::execute::exec_have_fn_equal_shared::fn_set_to_fn_set_clause;
 }
