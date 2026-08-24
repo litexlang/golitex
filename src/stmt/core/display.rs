@@ -132,7 +132,6 @@ impl fmt::Display for CommandStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         match self {
             CommandStmt::ImportStmt(x) => write!(f, "{}", x),
-            CommandStmt::DoNothingStmt(x) => write!(f, "{}", x),
             CommandStmt::ClearStmt(x) => write!(f, "{}", x),
             CommandStmt::EvalStmt(x) => write!(f, "{}", x),
             CommandStmt::UseStrategyStmt(x) => write!(f, "{}", x),

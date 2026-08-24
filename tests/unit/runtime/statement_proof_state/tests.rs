@@ -1,6 +1,16 @@
 //! Contracts for statement-local proof reuse and recursion guards.
 
-use super::*;
+use super::{StatementProofScopeState, StatementProofStateStack};
+use crate::common::name_types::FactString;
+use crate::error::RuntimeError;
+use crate::fact::{AtomicFact, EqualFact, Fact};
+use crate::output::display_stmt_exec_result_json;
+use crate::parse::Tokenizer;
+use crate::result::{StmtResult, SuccessFactProofResult, SuccessVerifyFactResult};
+use crate::runtime::Runtime;
+use crate::stmt::Stmt;
+use crate::verify::ProofSearchState;
+use std::rc::Rc;
 
 impl StatementProofStateStack {
     fn current_atomic_fact_proof_count(&self) -> usize {
@@ -15,7 +25,7 @@ impl StatementProofStateStack {
 }
 
 impl Runtime {
-    fn statement_atomic_fact_proof_is_remembered(&self, key: &FactString) -> bool {
+    fn statement_atomic_fact_proof_is_cached(&self, key: &FactString) -> bool {
         self.statement_proof_state
             .scopes_from_inner()
             .any(|scope| scope.atomic_fact_proofs.contains_key(key))
@@ -27,7 +37,7 @@ impl Runtime {
 }
 
 #[test]
-fn successful_atomic_fact_is_shared_until_statement_memo_is_cleared() {
+fn successful_atomic_fact_is_shared_until_statement_proof_cache_is_cleared() {
     let mut runtime = new_test_runtime();
     let fact = parse_atomic_fact(&mut runtime, "1 < 2");
 
@@ -39,27 +49,27 @@ fn successful_atomic_fact_is_shared_until_statement_memo_is_cleared() {
         first_source.proof(),
         SuccessFactProofResult::Reuse(_)
     ));
-    assert!(runtime.statement_atomic_fact_proof_is_remembered(&fact.to_string()));
+    assert!(runtime.statement_atomic_fact_proof_is_cached(&fact.to_string()));
     assert!(runtime
-        .verify_fact_from_cache_using_display_string(&fact.clone().into())
+        .verification_result_from_known_fact_cache(&fact.clone().into())
         .is_none());
 
     let second = runtime
         .verify_atomic_fact(&fact, &ProofSearchState::initial())
-        .expect("second verification should hit the statement memo");
+        .expect("second verification should hit the statement proof cache");
     let second_source = reused_verification(&second);
     assert!(Rc::ptr_eq(&first_source, second_source));
     assert!(second.infer_result().is_empty());
     let output = display_stmt_exec_result_json(&runtime, &second, false);
     assert!(output.contains("number comparison"), "{output}");
-    assert!(!output.contains("statement memo"), "{output}");
+    assert!(!output.contains("statement proof cache"), "{output}");
 
     runtime.clear_statement_proof_state();
     assert_eq!(runtime.current_statement_atomic_fact_proof_count(), 0);
 }
 
 #[test]
-fn unknown_atomic_fact_is_not_remembered() {
+fn unknown_atomic_fact_is_not_cached() {
     let mut runtime = new_test_runtime();
     let fact = parse_atomic_fact(&mut runtime, "1 = 2");
 
@@ -67,7 +77,7 @@ fn unknown_atomic_fact_is_not_remembered() {
         .verify_atomic_fact(&fact, &ProofSearchState::initial())
         .expect("unknown verification should not error");
     assert!(result.is_unknown());
-    assert!(!runtime.statement_atomic_fact_proof_is_remembered(&fact.to_string()));
+    assert!(!runtime.statement_atomic_fact_proof_is_cached(&fact.to_string()));
 
     runtime.clear_statement_proof_state();
     let stmt = parse_stmt(&mut runtime, "1 = 2");
@@ -76,7 +86,7 @@ fn unknown_atomic_fact_is_not_remembered() {
 }
 
 #[test]
-fn local_environment_memo_is_visible_inward_and_discarded_outward() {
+fn local_environment_proof_cache_is_visible_inward_and_discarded_outward() {
     let mut runtime = new_test_runtime();
     let parent_fact = parse_atomic_fact(&mut runtime, "1 < 2");
     let child_fact = parse_atomic_fact(&mut runtime, "2 < 3");
@@ -87,19 +97,19 @@ fn local_environment_memo_is_visible_inward_and_discarded_outward() {
     runtime
         .run_in_local_env(|runtime| {
             assert!(runtime
-                .verify_atomic_fact_from_statement_memo(&parent_fact)
+                .verification_result_from_statement_proof_cache(&parent_fact)
                 .is_some());
             runtime.verify_atomic_fact(&child_fact, &ProofSearchState::initial())?;
-            assert!(runtime.statement_atomic_fact_proof_is_remembered(&child_fact.to_string()));
+            assert!(runtime.statement_atomic_fact_proof_is_cached(&child_fact.to_string()));
             Ok::<(), RuntimeError>(())
         })
         .expect("local verification should succeed");
 
     assert!(runtime
-        .verify_atomic_fact_from_statement_memo(&parent_fact)
+        .verification_result_from_statement_proof_cache(&parent_fact)
         .is_some());
     assert!(runtime
-        .verify_atomic_fact_from_statement_memo(&child_fact)
+        .verification_result_from_statement_proof_cache(&child_fact)
         .is_none());
 }
 
@@ -113,7 +123,7 @@ fn known_only_entry_points_reuse_statement_proofs() {
     let set_source = direct_verification(&first_set_result);
     let known_set_result = runtime
         .verify_non_equational_atomic_fact_with_known_atomic_facts(&set_fact)
-        .expect("known-only non-equality entry should consult the statement memo");
+        .expect("known-only non-equality entry should consult the statement proof cache");
     assert!(Rc::ptr_eq(
         &set_source,
         reused_verification(&known_set_result)
@@ -140,7 +150,7 @@ fn known_only_entry_points_reuse_statement_proofs() {
 }
 
 #[test]
-fn next_statement_does_not_inherit_the_previous_memo_source() {
+fn next_statement_does_not_inherit_the_previous_proof_cache_source() {
     let mut runtime = new_test_runtime();
     let fact = parse_atomic_fact(&mut runtime, "1 < 2");
     let first = runtime
@@ -170,16 +180,16 @@ fn exec_stmt_clears_temporary_successes_but_keeps_the_proof_evidence() {
 
     assert_eq!(runtime.current_statement_atomic_fact_proof_count(), 0);
     assert!(runtime
-        .verify_fact_from_cache_using_display_string(&fact.clone().into())
+        .verification_result_from_known_fact_cache(&fact.clone().into())
         .is_some());
     let output = display_stmt_exec_result_json(&runtime, &result, false);
     assert!(output.contains("number comparison"), "{output}");
-    assert!(!output.contains("statement memo"), "{output}");
+    assert!(!output.contains("statement proof cache"), "{output}");
 }
 
 fn new_test_runtime() -> Runtime {
     let mut runtime = Runtime::new();
-    runtime.start_isolated_source("statement_memo_test.lit");
+    runtime.start_isolated_source("statement_proof_cache_test.lit");
     runtime
 }
 
@@ -194,7 +204,7 @@ fn parse_atomic_fact(runtime: &mut Runtime, source: &str) -> AtomicFact {
 fn parse_stmt(runtime: &mut Runtime, source: &str) -> Stmt {
     let tokenizer = Tokenizer::new();
     let mut blocks = tokenizer
-        .parse_blocks(source, Rc::from("statement_memo_test.lit"))
+        .parse_blocks(source, Rc::from("statement_proof_cache_test.lit"))
         .expect("test statement should tokenize");
     assert_eq!(blocks.len(), 1);
     runtime
@@ -212,9 +222,9 @@ fn direct_verification(result: &StmtResult) -> Rc<SuccessVerifyFactResult> {
 fn reused_verification(result: &StmtResult) -> &Rc<SuccessVerifyFactResult> {
     let success = result
         .factual_success()
-        .expect("memoized atomic fact should be factual");
+        .expect("cached atomic fact should be factual");
     let SuccessFactProofResult::Reuse(result) = success.proof() else {
-        panic!("atomic success should retain its statement memo source");
+        panic!("atomic success should retain its statement proof-cache source");
     };
     &result.source
 }

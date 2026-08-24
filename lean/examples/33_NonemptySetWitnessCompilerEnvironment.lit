@@ -10,5 +10,4 @@
 # Boundary: a function-set witness has a different final nonempty-return-set
 # check and stays fail-closed until that separate Result shape is implemented.
 # An out-of-range selected list index is rejected by a focused Rust test.
-witness $is_nonempty_set({1, 2}) from 1:
-    do_nothing
+witness $is_nonempty_set({1, 2}) from 1

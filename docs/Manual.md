@@ -2313,26 +2313,12 @@ and [Setup](Setup.md) for installation and project-running examples.
 | Statement | Purpose |
 |---|---|
 | `eval expr` | Evaluate a supported object expression. |
-| `do_nothing` | Explicit successful no-op inside a proof context. |
 | `clear` | Reset the current user environment. |
 | `impossible fact` | Close a contradiction branch by identifying the impossible fact. |
 
 ```litex
 eval (1 + 2)^2
-
-sketch:
-    do_nothing
 ```
-
-`do_nothing` does not prove an unsolved goal:
-
-```text
-claim:
-    ? 1 = 2
-    do_nothing
-```
-
-The claim is `unknown` because the target was never established.
 
 ### Statement index
 
@@ -2379,7 +2365,6 @@ introductions.
 | `import` | Only the isolated-session import grammar and module constraints. | A qualified imported environment; maintained modules use manifests instead. |
 | `eval` | The expression belongs to the supported executable subset. | Evaluation output, not a new mathematical proof fact. |
 | `clear` | No proof obligation. | Resets the current user environment. |
-| `do_nothing` | No proof obligation. | A successful no-op; it never closes an outstanding goal. |
 | `use strategy`, `stop strategy` | The named strategy exists. | Changes later user-strategy search, not builtin rules or known facts. |
 
 ---
@@ -2793,10 +2778,8 @@ x = 0 or x != 0
 
 by cases:
     ? x > 0
-    case x = 0:
-        do_nothing
-    case x != 0:
-        do_nothing
+    case x = 0
+    case x != 0
 ```
 
 This proof is `unknown`; an exhaustive split does not make the unrelated goal

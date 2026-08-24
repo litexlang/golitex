@@ -19,7 +19,7 @@ impl Runtime {
             "src/verify/atomic/core.rs",
         );
         if let Some(cached_result) =
-            self.verify_fact_from_cache_using_display_string(&fact.clone().into())
+            self.verification_result_from_known_fact_cache(&fact.clone().into())
         {
             return Ok(cached_result);
         }
@@ -52,6 +52,6 @@ impl Runtime {
                 AlternateFactSearch::Enabled,
             ),
         }?;
-        Ok(self.remember_successful_atomic_fact_for_statement(fact, result))
+        Ok(self.cache_successful_atomic_fact_for_statement(fact, result))
     }
 }

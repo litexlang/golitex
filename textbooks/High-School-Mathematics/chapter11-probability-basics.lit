@@ -115,13 +115,11 @@ claim:
             x = 0 or x = 2
             by cases:
                 ? x $in {0}
-                case x = 0:
-                    do_nothing
+                case x = 0
                 case x = 1:
                     by cases:
                         ? x $in {0}
-                        case x = 0:
-                            do_nothing
+                        case x = 0
                         case x = 2:
                             impossible 1 = 2
         by enumerate finite_set:

@@ -80,7 +80,7 @@ examples` recompiles each source in memory, rejects checked-in drift, and
 submits every generated file to the real Lean kernel.
 
 Library callers that need diagnostics without a partial proof artifact use
-`compile_litex_source_to_stmt_result_to_lean_compilation_report`. Successful
+`compile_litex_source_to_lean_compilation_report`. Successful
 whole-file construction returns `Complete`; an unsupported Result route returns
 `Incomplete` with one structured diagnostic
 and an import-only Lean file marked unusable as a proof artifact. Verification

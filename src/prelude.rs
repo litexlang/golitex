@@ -392,7 +392,7 @@ pub use crate::result::{
     SuccessDefAbstractPropStmtResult, SuccessDefAlgoStmtResult, SuccessDefInterfaceStmtResult,
     SuccessDefObjStmtResult, SuccessDefPredicateStmtResult, SuccessDefPropStmtResult,
     SuccessDefSettingStmtResult, SuccessDefStrategyStmtResult, SuccessDefStructStmtResult,
-    SuccessDefTemplateStmtResult, SuccessDefThmStmtResult, SuccessDoNothingStmtResult,
+    SuccessDefTemplateStmtResult, SuccessDefThmStmtResult,
     SuccessEvalStmtExecutionResult, SuccessEvalStmtResult, SuccessEvaluatedEvalStmtResult,
     SuccessExampleStmtResult, SuccessExecutedImportResult, SuccessHaveByPreimageStmtResult,
     SuccessHaveCartStmtResult, SuccessHaveFiniteSeqStmtResult,
@@ -542,7 +542,6 @@ pub use crate::stmt::parameter_def::ParamType;
 pub use crate::stmt::parameter_def::Set;
 pub use crate::stmt::sketch_stmt::SketchStmt;
 pub use crate::stmt::tooling_stmt::ClearStmt;
-pub use crate::stmt::tooling_stmt::DoNothingStmt;
 pub use crate::stmt::tooling_stmt::ImportModuleStmt;
 pub use crate::stmt::tooling_stmt::ImportStdStmt;
 pub use crate::stmt::tooling_stmt::ImportStmt;
@@ -644,7 +643,6 @@ pub use crate::common::keywords::DIV;
 pub use crate::common::keywords::DOT_AKA_FIELD_ACCESS_SIGN;
 pub use crate::common::keywords::DOT_DOT_DOT;
 pub use crate::common::keywords::DOUBLE_QUOTE;
-pub use crate::common::keywords::DO_NOTHING;
 pub use crate::common::keywords::DVD;
 pub use crate::common::keywords::E;
 pub use crate::common::keywords::ENUMERATE;

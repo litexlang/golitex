@@ -88,8 +88,8 @@ impl Runtime {
         equal_fact: &EqualFact,
     ) -> StmtResult {
         let goal: AtomicFact = equal_fact.clone().into();
-        if let Some(memoized_result) = self.verify_atomic_fact_from_statement_memo(&goal) {
-            return memoized_result;
+        if let Some(cached_result) = self.verification_result_from_statement_proof_cache(&goal) {
+            return cached_result;
         }
 
         let direct_result = self.verify_equal_fact_directly_known_only(equal_fact);
@@ -173,7 +173,7 @@ impl Runtime {
         }
         let direct_evaluation_result = self.verify_equal_fact_by_direct_evaluation(equal_fact);
         if direct_evaluation_result.is_success() {
-            self.remember_successful_atomic_fact_for_statement(
+            self.cache_successful_atomic_fact_for_statement(
                 &equal_fact.clone().into(),
                 direct_evaluation_result,
             );

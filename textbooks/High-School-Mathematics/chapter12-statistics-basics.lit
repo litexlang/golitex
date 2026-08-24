@@ -96,8 +96,7 @@ by extension:
                 by enumerate finite_set:
                     ? forall y {2, 4}:
                         y $in {2, 4, 6}
-            case x $in {6}:
-                do_nothing
+            case x $in {6}
     by enumerate finite_set:
         ? forall x {2, 4, 6}:
             x $in union({2, 4}, {6})

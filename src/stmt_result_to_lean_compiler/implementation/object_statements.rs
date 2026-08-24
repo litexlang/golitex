@@ -3285,17 +3285,7 @@ impl StmtResultToLeanCompiler {
             return Err("successful `try` changed its source statement order".into());
         }
         for child in &proof.proof_steps {
-            self.compile_stmt_result_to_lean_source(child)?;
-        }
-        Ok(())
-    }
-
-    pub(super) fn compile_do_nothing_stmt_result_to_lean_source(
-        &mut self,
-        result: &SuccessDoNothingStmtResult,
-    ) -> Result<(), String> {
-        if !result.common.infers.is_empty() {
-            return Err("`do_nothing` unexpectedly changed the compiler environment".into());
+            self.compile_stmt_result(child)?;
         }
         Ok(())
     }

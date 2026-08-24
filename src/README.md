@@ -2,6 +2,85 @@
 
 The source tree turns `1 + 1 = 2` into a checked `StmtResult` and a machine-readable runner result.
 
+## Main execution spine
+
+The shortest map of the primary source path is:
+
+```text
+main → CLI → pipeline → Runtime → parse → execute → verify → Result → Lean compiler
+```
+
+`Runtime` is the state owner carried through parsing, execution, verification,
+and storage. `Result` is the completed semantic handoff: ordinary verification
+renders it directly, while Litex-to-Lean compilation consumes it as proof
+evidence. The Lean compiler is an optional branch, so an ordinary `-e` run
+stops after rendering the Result.
+
+| Boundary | Main Rust interface | Responsibility |
+| --- | --- | --- |
+| Process | [`main()`](main.rs) | Starts the CLI thread. |
+| CLI | [`cli::run_cli()`](cli/command_dispatch.rs) | Parses flags and selects code, file, repository, runner, graph, or compiler execution. |
+| Batch pipeline | [`pipeline::run(RunRequest)`](pipeline/run.rs) | Owns the code/file/repository batch entry and creates the `Runtime`. |
+| Runtime state | [`Runtime::new()`](runtime/state.rs) | Owns the environment, module state, proof state, identifiers, and run options. |
+| Source pipeline | [`execute_source_with_options`](pipeline/source_execution.rs) | Tokenizes the source and executes its statement blocks in order. |
+| Parse | [`Tokenizer::parse_blocks`](parse/tokenizer.rs) and [`Runtime::parse_statement`](parse/statement_parsing.rs) | Turn source text into `TokenBlock` values and then typed `Stmt` values. |
+| Execute | [`execute_top_level_statement`](pipeline/top_level_statement_execution.rs) and [`Runtime::execute_statement`](execute/statement_execution.rs) | Dispatch a statement, clear statement-local proof state, and select verified or trusted execution. |
+| Verify | [`Runtime::verify_fact_or_error`](verify/dispatch.rs) | Dispatches fact verification; equality reaches [`Runtime::verify_equal_fact`](verify/equality/core.rs). |
+| Result | [`Runtime::finish_statement_execution`](execute/statement_execution.rs) | Attaches FactIds and execution provenance, then returns the completed [`StmtResult`](result/statement/result.rs). |
+| Lean compiler | [`compile_litex_source_to_lean_source`](stmt_result_to_lean_compiler/source_compilation.rs) and [`StmtResultToLeanCompiler::compile_stmt_results_to_lean_source`](stmt_result_to_lean_compiler/implementation/result_dispatch.rs) | Optionally replay verified Results as Lean declarations and proof terms. |
+
+### Ask Litex which major functions were visited
+
+Build the release binary, then run the same input with `-trace-pipeline`:
+
+```sh
+target/release/litex -trace-pipeline -e '1 + 1 = 2'
+```
+
+Litex prints its ordinary statement Result first, followed by the actual major
+Rust functions visited by this run:
+
+```text
+Rust pipeline trace:
+1. main — src/main.rs
+2. cli::run_cli — src/cli/command_dispatch.rs
+3. pipeline::run — src/pipeline/run.rs
+4. pipeline::execute_source — src/pipeline/source_execution.rs
+5. Tokenizer::parse_blocks — src/parse/tokenizer.rs
+6. Runtime::parse_statement — src/parse/statement_parsing.rs
+7. pipeline::execute_top_level_statement — src/pipeline/top_level_statement_execution.rs
+8. Runtime::execute_statement — src/execute/statement_execution.rs
+9. Runtime::execute_verified_statement — src/execute/verified_statement_execution.rs
+10. Runtime::execute_submitted_fact — src/execute/submitted_fact_execution.rs
+11. Runtime::verify_fact_well_defined_for_execution — src/execute/submitted_fact_execution.rs
+12. Runtime::verify_atomic_fact — src/verify/atomic/core.rs
+13. Runtime::verify_fact_for_execution — src/execute/submitted_fact_execution.rs
+14. Runtime::verify_fact_or_error — src/verify/dispatch.rs
+15. Runtime::verify_equal_fact — src/verify/equality/core.rs
+16. Runtime::store_executed_fact_and_infer — src/execute/submitted_fact_execution.rs
+17. Runtime::finish_statement_execution — src/execute/statement_execution.rs
+18. pipeline::render_run_output — src/pipeline/output_rendering.rs
+Lean compiler: not executed
+```
+
+The trace records the first visit to each major interface, not every recursive
+helper call. Here `Runtime::verify_atomic_fact` is first entered while checking
+well-definedness, so it appears before the outer
+`Runtime::verify_fact_for_execution` route.
+
+To include the optional Lean compiler, put the same statement in a `.lit` file
+and run:
+
+```sh
+target/release/litex -trace-pipeline -isolated -f path/to/input.lit -lean path/to/output.lean
+```
+
+That route adds the Litex-to-Lean compiler entry points and ends with
+`Lean compiler: executed`. Runner users can combine `-trace-pipeline` with
+`-runner`; the same information then appears under the structured
+`pipeline_trace` JSON field. See the full design and command variants in
+[`docs/Execution_Pipeline.md`](../docs/Execution_Pipeline.md).
+
 ## Public Rust API boundary
 
 Rust embedders should start with [`api.rs`](api.rs), which re-exports the small execution, output, and Litex-to-Lean surface intended for external use. Existing subsystem paths remain available for compatibility. [`prelude.rs`](prelude.rs) is the broad kernel-internal convenience import required by repository code, not the recommended embedding API.

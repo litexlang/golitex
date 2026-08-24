@@ -2,7 +2,7 @@ use super::super::*;
 use super::run_registered_rule_test;
 
 fn execute_known_forall_instantiation() -> Vec<StmtResult> {
-    crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_to_stmt_results(
+    crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
         "abstract_prop p(x)\naxiom p_real:\n    ? forall x R:\n        $p(x)\n\n$p(2)\n",
         "direct_known_forall.lit",
     )
@@ -42,7 +42,7 @@ fn known_forall_instantiation_combines_exact_fact_id_and_requirement_result_dire
 }
 
 fn execute_multi_conclusion_known_forall_instantiation() -> Vec<StmtResult> {
-    crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_to_stmt_results(
+    crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
         "abstract_prop first(x)\nabstract_prop second(x)\naxiom paired_source:\n    ? forall x R:\n        $first(x)\n        $second(x)\n\n$second(2)\n",
         "direct_multi_conclusion_known_forall.lit",
     )
@@ -132,7 +132,7 @@ fn known_forall_instantiation_rejects_a_reclassified_parameter_requirement() {
 #[test]
 fn function_application_return_membership_resolves_its_exact_well_definedness_fact_id() {
     run_registered_rule_test(|| {
-        let results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_to_stmt_results(
+        let results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
                 "trust have f fn(x R) R\ntrust have a R\nf(a) $in R\n",
                 "direct_function_application_return_membership.lit",
             )
@@ -157,7 +157,7 @@ fn function_application_return_membership_resolves_its_exact_well_definedness_fa
 #[test]
 fn trust_have_rejects_a_missing_parameter_store_fact_id() {
     run_registered_rule_test(|| {
-        let mut results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_to_stmt_results(
+        let mut results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
                 "trust have a R\n",
                 "direct_trust_have.lit",
             )
@@ -181,7 +181,7 @@ fn trust_have_rejects_a_missing_parameter_store_fact_id() {
 fn known_fact_rational_transformation_replays_its_ordered_result_steps() {
     run_registered_rule_test(|| {
         const SOURCE: &str = "trust:\n    2 < 3\n1 + 1 < 3\n";
-        let results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_to_stmt_results(
+        let results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
                 SOURCE,
                 "direct_fact_transformation.lit",
             )
@@ -215,7 +215,7 @@ fn known_fact_rational_transformation_replays_its_ordered_result_steps() {
 #[test]
 fn known_fact_transformation_rejects_a_removed_result_step() {
     run_registered_rule_test(|| {
-        let mut results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_to_stmt_results(
+        let mut results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
                 "trust:\n    2 < 3\n1 + 1 < 3\n",
                 "direct_fact_transformation.lit",
             )

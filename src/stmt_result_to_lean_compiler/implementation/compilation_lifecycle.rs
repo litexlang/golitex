@@ -12,7 +12,7 @@ impl StmtResultToLeanCompiler {
 
         let compilation = results
             .iter()
-            .try_for_each(|result| self.compile_stmt_result_to_lean_source(result));
+            .try_for_each(|result| self.compile_stmt_result(result));
         let nested_declarations = mem::take(&mut self.declarations);
 
         self.declarations = outer_declarations;

@@ -1329,7 +1329,7 @@ impl Runtime {
             let fn_eq_in: AtomicFact =
                 FnEqualInFact::new(first, second, set.clone(), line_file.clone()).into();
             let known = if let Some(result) =
-                self.verify_fact_from_cache_using_display_string(&fn_eq_in.clone().into())
+                self.verification_result_from_known_fact_cache(&fn_eq_in.clone().into())
             {
                 result
             } else {

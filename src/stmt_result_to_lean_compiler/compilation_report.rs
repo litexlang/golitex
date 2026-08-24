@@ -6,7 +6,6 @@ pub enum StmtResultToLeanCompilationStatus {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum StmtResultToLeanCompilationPhase {
-    StmtResultReading,
     LeanSourceConstruction,
 }
 

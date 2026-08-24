@@ -11,7 +11,5 @@
 
 by induc n from -1:
     ? n + 1 = n + 1
-    ? from n = -1:
-        do_nothing
-    ? induc:
-        do_nothing
+    ? from n = -1
+    ? induc

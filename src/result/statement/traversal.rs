@@ -2130,7 +2130,6 @@ impl SuccessCommandStmtResult {
     fn into_common(self) -> SuccessStmtCommonResult {
         match self {
             Self::ImportStmt(result) => result.common,
-            Self::DoNothingStmt(result) => result.common,
             Self::ClearStmt(result) => result.common,
             Self::EvalStmt(result) => result.common,
             Self::UseStrategyStmt(result) => result.common,
@@ -2141,7 +2140,6 @@ impl SuccessCommandStmtResult {
     fn statement(&self) -> Stmt {
         match self {
             Self::ImportStmt(result) => result.statement.clone().into(),
-            Self::DoNothingStmt(result) => result.statement.clone().into(),
             Self::ClearStmt(result) => result.statement.clone().into(),
             Self::EvalStmt(result) => result.statement.clone().into(),
             Self::UseStrategyStmt(result) => result.statement.clone().into(),
@@ -2152,7 +2150,6 @@ impl SuccessCommandStmtResult {
     fn common(&self) -> &SuccessStmtCommonResult {
         match self {
             Self::ImportStmt(result) => &result.common,
-            Self::DoNothingStmt(result) => &result.common,
             Self::ClearStmt(result) => &result.common,
             Self::EvalStmt(result) => &result.common,
             Self::UseStrategyStmt(result) => &result.common,
@@ -2163,7 +2160,6 @@ impl SuccessCommandStmtResult {
     fn common_mut(&mut self) -> &mut SuccessStmtCommonResult {
         match self {
             Self::ImportStmt(result) => &mut result.common,
-            Self::DoNothingStmt(result) => &mut result.common,
             Self::ClearStmt(result) => &mut result.common,
             Self::EvalStmt(result) => &mut result.common,
             Self::UseStrategyStmt(result) => &mut result.common,

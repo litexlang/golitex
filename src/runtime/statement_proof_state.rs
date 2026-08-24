@@ -1,6 +1,13 @@
 //! Statement-local proof reuse and recursive inference guards.
 
-use crate::prelude::*;
+use crate::common::name_types::{FactString, ObjString};
+use crate::fact::AtomicFact;
+use crate::infer::SuccessInferResult;
+use crate::result::{
+    StmtResult, SuccessFactStmtResult, SuccessVerifyFactResult, SuccessVerifyObjWellDefinedResult,
+    WellDefinedCacheKey,
+};
+use crate::runtime::Runtime;
 use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
 
@@ -153,13 +160,16 @@ impl Runtime {
     }
 
     /// Reuse a completed proof visible in the current environment chain.
-    pub fn verify_atomic_fact_from_statement_memo(&self, fact: &AtomicFact) -> Option<StmtResult> {
+    pub fn verification_result_from_statement_proof_cache(
+        &self,
+        fact: &AtomicFact,
+    ) -> Option<StmtResult> {
         let key = fact.to_string();
         self.statement_proof_state
             .scopes_from_inner()
             .find_map(|scope| {
                 scope.atomic_fact_proofs.get(&key).map(|source| {
-                    SuccessFactStmtResult::new_with_statement_memo(
+                    SuccessFactStmtResult::new_with_statement_proof_cache(
                         fact.clone().into(),
                         SuccessInferResult::new(),
                         source.clone(),
@@ -169,8 +179,8 @@ impl Runtime {
             })
     }
 
-    /// Remember truth and its complete proof without committing the fact or running inference.
-    pub fn remember_successful_atomic_fact_for_statement(
+    /// Cache a successful proof without committing the fact or running inference.
+    pub fn cache_successful_atomic_fact_for_statement(
         &mut self,
         fact: &AtomicFact,
         mut result: StmtResult,

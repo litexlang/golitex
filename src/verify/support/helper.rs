@@ -70,8 +70,8 @@ impl Runtime {
         Vec::new()
     }
 
-    /// If the fact string is in the known-facts cache, return the cached verification result.
-    pub fn verify_fact_from_cache_using_display_string(&self, fact: &Fact) -> Option<StmtResult> {
+    /// Return verification evidence when the persistent known-fact cache contains this fact.
+    pub fn verification_result_from_known_fact_cache(&self, fact: &Fact) -> Option<StmtResult> {
         let key = fact.to_string();
         let normalized_key = nested_obj_binder_normalized_fact_key(fact);
         let cached_fact = self.cached_known_fact(&key);
@@ -162,7 +162,7 @@ impl Runtime {
         _verify_state: &ProofSearchState,
     ) -> Result<StmtResult, RuntimeError> {
         if let Some(cached_result) =
-            self.verify_fact_from_cache_using_display_string(&atomic_fact.clone().into())
+            self.verification_result_from_known_fact_cache(&atomic_fact.clone().into())
         {
             return Ok(cached_result);
         }
@@ -253,7 +253,7 @@ impl Runtime {
         verify_state: &ProofSearchState,
     ) -> Result<StmtResult, RuntimeError> {
         if let Some(cached_result) =
-            self.verify_fact_from_cache_using_display_string(&or_fact.clone().into())
+            self.verification_result_from_known_fact_cache(&or_fact.clone().into())
         {
             return Ok(cached_result);
         }

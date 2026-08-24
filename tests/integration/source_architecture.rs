@@ -995,6 +995,67 @@ fn result_outcomes_and_atomic_polarity_use_distinct_vocabulary() {
 }
 
 #[test]
+fn verification_cache_vocabulary_names_scope_and_operation() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let statement_cache = fs::read_to_string(root.join("src/runtime/statement_proof_state.rs"))
+        .expect("statement proof cache source should be readable");
+    let persistent_cache = fs::read_to_string(root.join("src/verify/support/helper.rs"))
+        .expect("persistent verification cache source should be readable");
+    let old_names = [
+        ["verify_fact_from_cache_using_", "display_string"].concat(),
+        ["verify_atomic_fact_from_", "statement_memo"].concat(),
+        ["remember_successful_atomic_fact_", "for_statement"].concat(),
+        ["new_with_", "statement_memo"].concat(),
+    ];
+
+    assert!(statement_cache.contains("verification_result_from_statement_proof_cache"));
+    assert!(statement_cache.contains("cache_successful_atomic_fact_for_statement"));
+    assert!(persistent_cache.contains("verification_result_from_known_fact_cache"));
+    let offenders: Vec<_> = [root.join("src"), root.join("tests")]
+        .into_iter()
+        .flat_map(|directory| rust_files_below(&directory))
+        .filter(|path| {
+            let source = fs::read_to_string(path).expect("Rust source should be readable");
+            old_names.iter().any(|name| source.contains(name))
+        })
+        .collect();
+    assert!(
+        offenders.is_empty(),
+        "verification cache names must identify their scope and operation: {offenders:#?}"
+    );
+}
+
+#[test]
+fn result_to_lean_entry_and_dispatch_names_match_their_effects() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let source_compilation =
+        fs::read_to_string(root.join("src/stmt_result_to_lean_compiler/source_compilation.rs"))
+            .expect("compiler source entry should be readable");
+    let result_dispatch = fs::read_to_string(
+        root.join("src/stmt_result_to_lean_compiler/implementation/result_dispatch.rs"),
+    )
+    .expect("compiler Result dispatcher should be readable");
+    let fact_compilation = fs::read_to_string(
+        root.join("src/stmt_result_to_lean_compiler/implementation/fact_compilation.rs"),
+    )
+    .expect("compiler fact implementation should be readable");
+    let report =
+        fs::read_to_string(root.join("src/stmt_result_to_lean_compiler/compilation_report.rs"))
+            .expect("compiler report source should be readable");
+
+    assert!(source_compilation.contains("compile_litex_source_to_lean_compilation_report"));
+    assert!(source_compilation.contains("execute_litex_source_for_lean_compilation"));
+    assert!(!source_compilation
+        .contains("compile_litex_source_to_stmt_result_to_lean_compilation_report"));
+    assert!(!source_compilation.contains("execute_litex_source_to_stmt_results"));
+    assert!(result_dispatch.contains("fn compile_stmt_result("));
+    assert!(!result_dispatch.contains("compile_stmt_result_to_lean_source"));
+    assert!(result_dispatch.contains("fn unsupported_success_stmt_result("));
+    assert!(!fact_compilation.contains("fn unsupported_success_stmt_result("));
+    assert!(!report.contains("StmtResultReading"));
+}
+
+#[test]
 fn source_and_test_paths_do_not_repeat_their_parent_name() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
     let source_root = root.join("src");

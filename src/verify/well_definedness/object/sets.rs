@@ -834,7 +834,7 @@ impl Runtime {
         let uniqueness_fact = self.replacement_uniqueness_fact(x)?;
         let uniqueness_as_fact: Fact = uniqueness_fact.clone().into();
         let exact_cached = self
-            .verify_fact_from_cache_using_display_string(&uniqueness_as_fact)
+            .verification_result_from_known_fact_cache(&uniqueness_as_fact)
             .is_some();
         let alpha_normalized_key = self.alpha_normalized_forall_cache_key(&uniqueness_fact)?;
         let (alpha_cached, _) = self.cache_known_facts_contains(&alpha_normalized_key);
@@ -1646,7 +1646,7 @@ impl Runtime {
         let uniqueness = self.replacement_uniqueness_fact(value)?;
         let uniqueness_as_fact: Fact = uniqueness.clone().into();
         let exact_cached = self
-            .verify_fact_from_cache_using_display_string(&uniqueness_as_fact)
+            .verification_result_from_known_fact_cache(&uniqueness_as_fact)
             .is_some();
         let alpha_key = self.alpha_normalized_forall_cache_key(&uniqueness)?;
         let (alpha_cached, _) = self.cache_known_facts_contains(&alpha_key);

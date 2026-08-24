@@ -1,10 +1,9 @@
 # Tracer: bodyless proof cases
 #
-# Before (required an administrative body):
+# Before (required an administrative proof-body statement):
 # by cases:
 #     ? 1 = 1
 #     case 1 = 1:
-#         do_nothing
 # Former limitation: `case 1 = 1` ended with `Unexpected end of tokens`.
 #
 # Now (verified):

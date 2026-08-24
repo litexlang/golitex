@@ -512,10 +512,10 @@ impl Runtime {
             }
         }
 
-        if let Some(type_result) =
+        if let Some(type_results) =
             self.verify_builtin_function_property_arg_types(atomic_fact, verify_state)?
         {
-            if type_result.is_unknown() {
+            if type_results.iter().any(StmtResult::is_unknown) {
                 return Err(WellDefinedRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_line_file(
                         format!(
@@ -527,10 +527,12 @@ impl Runtime {
                 )
                 .into());
             }
-            domain_checks.push(SuccessVerifyAtomicPredicateDomainCheckResult {
-                role: AtomicPredicateDomainCheckRole::FunctionPropertySignature,
-                result: Box::new(type_result),
-            });
+            domain_checks.extend(type_results.into_iter().map(|result| {
+                SuccessVerifyAtomicPredicateDomainCheckResult {
+                    role: AtomicPredicateDomainCheckRole::FunctionPropertySignature,
+                    result: Box::new(result),
+                }
+            }));
         }
 
         Ok(SuccessVerifyAtomicPredicateWellDefinedResult {

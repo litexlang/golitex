@@ -2053,7 +2053,7 @@ fn run_isolated_file_from_path() {
 }
 
 fn run_isolated_file_from_path_impl() {
-    let path: String = "./examples/_internal/regression/do_nothing.lit".to_string();
+    let path: String = "./examples/_internal/regression/enumerate_finite_set.lit".to_string();
     let file_path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(path);
     assert!(
         file_path.is_absolute(),

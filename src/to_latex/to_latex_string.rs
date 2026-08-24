@@ -836,12 +836,6 @@ impl Div {
     }
 }
 
-impl DoNothingStmt {
-    pub fn to_latex_string(&self) -> String {
-        format!(r"\mathrm{{{}}}", DO_NOTHING)
-    }
-}
-
 impl ClearStmt {
     pub fn to_latex_string(&self) -> String {
         format!(r"\mathrm{{{}}}", CLEAR)
@@ -2444,7 +2438,6 @@ impl Stmt {
             Stmt::ProofBlock(ProofBlockStmt::ExampleStmt(x)) => x.to_latex_string(),
             Stmt::ProofBlock(ProofBlockStmt::SketchStmt(x)) => x.to_latex_string(),
             Stmt::ProofBlock(ProofBlockStmt::TryStmt(x)) => x.to_latex_string(),
-            Stmt::Command(CommandStmt::DoNothingStmt(x)) => x.to_latex_string(),
             Stmt::Command(CommandStmt::ImportStmt(x)) => latex_texttt_escape(&x.to_string()),
             Stmt::Command(CommandStmt::ClearStmt(x)) => x.to_latex_string(),
             Stmt::Command(CommandStmt::EvalStmt(x)) => x.to_latex_string(),

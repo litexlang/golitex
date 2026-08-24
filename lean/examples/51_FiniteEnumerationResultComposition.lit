@@ -7,7 +7,6 @@
 by enumerate finite_set:
     ? forall x {1, 2}:
         x = 1 or x = 2
-    do_nothing
 
 # Boundary: a changed assignment FactId, reordered list element, missing
 # domain store Result, or mismatched conclusion child fails before emission.

@@ -9,8 +9,10 @@ impl Runtime {
         atomic_fact: &AtomicFact,
         verify_state: &ProofSearchState,
     ) -> Result<StmtResult, RuntimeError> {
-        if let Some(memoized_result) = self.verify_atomic_fact_from_statement_memo(atomic_fact) {
-            return Ok(memoized_result);
+        if let Some(cached_result) =
+            self.verification_result_from_statement_proof_cache(atomic_fact)
+        {
+            return Ok(cached_result);
         }
 
         let Some(strategy_name) = self.active_strategy_name_for_atomic_fact(atomic_fact) else {
@@ -44,7 +46,7 @@ impl Runtime {
             arg_map,
             verify_state,
         )?;
-        Ok(self.remember_successful_atomic_fact_for_statement(atomic_fact, result))
+        Ok(self.cache_successful_atomic_fact_for_statement(atomic_fact, result))
     }
 
     fn active_strategy_name_for_atomic_fact(

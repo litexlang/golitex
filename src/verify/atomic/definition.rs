@@ -7,7 +7,7 @@ impl Runtime {
         &mut self,
         clause: &Fact,
     ) -> Result<Option<StmtResult>, RuntimeError> {
-        if let Some(result) = self.verify_fact_from_cache_using_display_string(clause) {
+        if let Some(result) = self.verification_result_from_known_fact_cache(clause) {
             return Ok(Some(result));
         }
         match clause {

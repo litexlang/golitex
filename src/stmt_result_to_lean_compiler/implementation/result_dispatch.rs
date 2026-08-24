@@ -15,25 +15,21 @@ impl StmtResultToLeanCompiler {
             "src/stmt_result_to_lean_compiler/implementation/result_dispatch.rs",
         );
         for (statement_index, result) in results.iter().enumerate() {
-            self.compile_stmt_result_to_lean_source(result)
-                .map_err(|error| {
-                    format!(
-                        "statement Result {} failed to compile: {error}",
-                        statement_index + 1
-                    )
-                })?;
+            self.compile_stmt_result(result).map_err(|error| {
+                format!(
+                    "statement Result {} failed to compile: {error}",
+                    statement_index + 1
+                )
+            })?;
         }
         self.finish_lean_source()
     }
 
-    pub(super) fn compile_stmt_result_to_lean_source(
-        &mut self,
-        result: &StmtResult,
-    ) -> Result<(), String> {
+    /// Compile one completed execution Result into the compiler's declaration
+    /// buffer. Final Lean source is assembled only after the full stream.
+    pub(super) fn compile_stmt_result(&mut self, result: &StmtResult) -> Result<(), String> {
         match result {
-            StmtResult::Success(success) => {
-                self.compile_success_stmt_result_to_lean_source(success)
-            }
+            StmtResult::Success(success) => self.compile_success_stmt_result(success),
             StmtResult::Unknown(result) => Err(format!(
                 "StmtResult-to-Lean compiler cannot compile unknown result: {result:?}"
             )),
@@ -47,10 +43,7 @@ impl StmtResultToLeanCompiler {
     /// recursive `Combine`. The remaining currently supported families still
     /// use their focused compatibility adapter while their proof renderers are
     /// moved to consume the named Result fields directly.
-    fn compile_success_stmt_result_to_lean_source(
-        &mut self,
-        success: &SuccessStmtResult,
-    ) -> Result<(), String> {
+    fn compile_success_stmt_result(&mut self, success: &SuccessStmtResult) -> Result<(), String> {
         match success {
             SuccessStmtResult::Fact(result) => self.compile_fact_stmt_result_to_lean_source(result),
             SuccessStmtResult::UnsafeStmt(SuccessUnsafeStmtResult::TrustStmt(result)) => {
@@ -343,9 +336,6 @@ impl StmtResultToLeanCompiler {
                     self.compile_try_stmt_result_to_lean_source(result)
                 }
             },
-            SuccessStmtResult::Command(SuccessCommandStmtResult::DoNothingStmt(result)) => {
-                self.compile_do_nothing_stmt_result_to_lean_source(result)
-            }
             SuccessStmtResult::Command(SuccessCommandStmtResult::ClearStmt(result)) => {
                 self.compile_clear_stmt_result_to_lean_source(result)
             }
@@ -366,5 +356,14 @@ impl StmtResultToLeanCompiler {
                 self.unsupported_success_stmt_result(success)
             }
         }
+    }
+
+    fn unsupported_success_stmt_result(&self, result: &SuccessStmtResult) -> Result<(), String> {
+        let statement = result.statement();
+        Err(format!(
+            "StmtResult-to-Lean compiler does not support statement kind `{}` at {:?}",
+            statement.stmt_type_name(),
+            statement.line_file()
+        ))
     }
 }

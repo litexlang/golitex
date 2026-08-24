@@ -17,6 +17,5 @@ pub use compiler_state::StmtResultToLeanCompiler;
 pub use file_compilation::compile_litex_file_to_lean_file;
 pub use markdown_compilation::compile_litex_markdown_code_blocks_to_lean_file;
 pub use source_compilation::{
-    compile_litex_source_to_lean_source,
-    compile_litex_source_to_stmt_result_to_lean_compilation_report,
+    compile_litex_source_to_lean_compilation_report, compile_litex_source_to_lean_source,
 };

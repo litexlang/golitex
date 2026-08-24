@@ -57,23 +57,6 @@ impl fmt::Display for ImportStmt {
 }
 
 #[derive(Clone)]
-pub struct DoNothingStmt {
-    pub line_file: LineFile,
-}
-
-impl DoNothingStmt {
-    pub fn new(line_file: LineFile) -> Self {
-        DoNothingStmt { line_file }
-    }
-}
-
-impl fmt::Display for DoNothingStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        write!(f, "{}", DO_NOTHING)
-    }
-}
-
-#[derive(Clone)]
 pub struct ClearStmt {
     pub line_file: LineFile,
 }

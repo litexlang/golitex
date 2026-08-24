@@ -17,15 +17,13 @@ claim:
 by cases:
     ? 1 = 1
     ? 2 = 2
-    case 1 = 1:
-        do_nothing
+    case 1 = 1
     case 1 != 1:
         impossible 1 = 1
 
 # By contra: reversed assumption, proof steps, and impossible checks.
 by contra:
     ? 1 = 1
-    do_nothing
     impossible 1 != 1
 
 # By thm: theorem arguments, parameter/domain checks, and stored then facts.
@@ -39,13 +37,11 @@ by thm tmp_one_eq_one()
 by enumerate finite_set:
     ? forall a {1, 2}:
         a < 3
-    do_nothing
 
 # By for: each integer assignment is checked separately.
 by for:
     ? forall n range(0, 3):
         n < 3
-    do_nothing
 
 # By enumerate range: membership expands into equality cases.
 claim:

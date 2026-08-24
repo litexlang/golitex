@@ -10,16 +10,16 @@ pub fn compile_litex_source_to_lean_source(
         "compile_litex_source_to_lean_source",
         "src/stmt_result_to_lean_compiler/source_compilation.rs",
     );
-    let results = execute_litex_source_to_stmt_results(source, source_label)
+    let results = execute_litex_source_for_lean_compilation(source, source_label)
         .map_err(|error| format!("Litex execution failed before Lean compilation: {error:?}"))?;
     StmtResultToLeanCompiler::new(source_label).compile_stmt_results_to_lean_source(&results)
 }
 
-pub fn compile_litex_source_to_stmt_result_to_lean_compilation_report(
+pub fn compile_litex_source_to_lean_compilation_report(
     source: &str,
     source_label: &str,
 ) -> Result<StmtResultToLeanCompilationReport, String> {
-    let results = execute_litex_source_to_stmt_results(source, source_label)
+    let results = execute_litex_source_for_lean_compilation(source, source_label)
         .map_err(|error| format!("Litex execution failed before Lean compilation: {error:?}"))?;
     Ok(
         match StmtResultToLeanCompiler::new(source_label)
@@ -34,13 +34,13 @@ pub fn compile_litex_source_to_stmt_result_to_lean_compilation_report(
     )
 }
 
-pub fn execute_litex_source_to_stmt_results(
+pub fn execute_litex_source_for_lean_compilation(
     source: &str,
     source_label: &str,
 ) -> Result<Vec<StmtResult>, RuntimeError> {
     record_pipeline_step(
         "lean compiler input",
-        "execute_litex_source_to_stmt_results",
+        "execute_litex_source_for_lean_compilation",
         "src/stmt_result_to_lean_compiler/source_compilation.rs",
     );
     let normalized = source.replace('\r', "");

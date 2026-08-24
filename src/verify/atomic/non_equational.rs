@@ -58,7 +58,7 @@ impl Runtime {
         }
 
         let result = self.verify_non_equational_atomic_fact_by_direct_evaluation(atomic_fact);
-        Ok(self.remember_successful_atomic_fact_for_statement(atomic_fact, result))
+        Ok(self.cache_successful_atomic_fact_for_statement(atomic_fact, result))
     }
 
     // Direct evaluation is the computation arm of zero-premise verification: it may inspect
@@ -145,18 +145,18 @@ impl Runtime {
         if let Some(result) =
             self.try_verify_atomic_fact_with_local_builtin_catalog(atomic_fact, &child_state)?
         {
-            return Ok(self.remember_successful_atomic_fact_for_statement(atomic_fact, result));
+            return Ok(self.cache_successful_atomic_fact_for_statement(atomic_fact, result));
         }
         if let Some(result) =
             self.try_verify_atomic_fact_from_known_set_builder_membership(atomic_fact)?
         {
-            return Ok(self.remember_successful_atomic_fact_for_statement(atomic_fact, result));
+            return Ok(self.cache_successful_atomic_fact_for_statement(atomic_fact, result));
         }
         let result = self.verify_non_equational_atomic_fact_with_builtin_rules_inner(
             atomic_fact,
             &child_state,
         )?;
-        Ok(self.remember_successful_atomic_fact_for_statement(atomic_fact, result))
+        Ok(self.cache_successful_atomic_fact_for_statement(atomic_fact, result))
     }
 
     pub fn verify_non_equational_atomic_fact(
@@ -388,7 +388,7 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         match alternate_result {
             StmtResult::Success(SuccessStmtResult::Fact(inner_success)) => {
-                Ok(SuccessFactStmtResult::new_with_statement_memo(
+                Ok(SuccessFactStmtResult::new_with_statement_proof_cache(
                     original.clone().into(),
                     SuccessInferResult::new(),
                     inner_success.verification,

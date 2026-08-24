@@ -422,7 +422,7 @@ impl Runtime {
         verify_state: &ProofSearchState,
     ) -> Result<StmtResult, RuntimeError> {
         if let Some(cached_result) =
-            self.verify_fact_from_cache_using_display_string(&or_fact.clone().into())
+            self.verification_result_from_known_fact_cache(&or_fact.clone().into())
         {
             return Ok(cached_result);
         }

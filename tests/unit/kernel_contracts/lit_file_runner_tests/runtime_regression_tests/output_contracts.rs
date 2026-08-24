@@ -57,7 +57,7 @@ fn hidden_file_path_output_omits_source_fields() {
 
 #[test]
 fn json_v2_normal_output_keeps_structural_empty_arrays() {
-    let source_code = "do_nothing\nhave a R\nhave a R";
+    let source_code = "clear\nhave a R\nhave a R";
 
     let mut runtime = Runtime::new();
     runtime.start_isolated_source("normal_output_omits_empty_fields");
@@ -161,7 +161,7 @@ fn matrix_operator_latex_escapes_the_apostrophe_power_token() {
 
 #[test]
 fn json_v2_detailed_output_keeps_the_same_structural_empty_arrays() {
-    let source_code = "do_nothing\nhave a R\nhave a R";
+    let source_code = "clear\nhave a R\nhave a R";
 
     let mut runtime = Runtime::new();
     runtime.start_isolated_source("detail_output_keeps_empty_fields");
@@ -323,8 +323,7 @@ claim:
 
 by cases:
     ? 1 = 1
-    case 1 = 1:
-        do_nothing
+    case 1 = 1
     case 1 != 1:
         impossible 1 = 1
 
@@ -450,8 +449,7 @@ claim:
 
 by cases:
     ? 1 = 1
-    case 1 = 1:
-        do_nothing
+    case 1 = 1
     case 1 != 1:
         impossible 1 = 1
 
@@ -1762,8 +1760,7 @@ by thm one_eq_one()
 
 by cases:
     ? 1 = 1
-    case 1 = 1:
-        do_nothing
+    case 1 = 1
     case 1 != 1:
         impossible 1 = 1
 "#;
@@ -1852,8 +1849,7 @@ fn by_cases_normal_output_lists_readable_internal_results() {
 by cases:
     ? 1 = 1
     ? 2 = 2
-    case 1 = 1:
-        do_nothing
+    case 1 = 1
     case 1 != 1:
         impossible 1 = 1
 "#;
@@ -1888,8 +1884,7 @@ fn by_cases_detail_output_expands_case_inside_results() {
         let source_code = r#"
 by cases:
     ? 1 = 1
-    case 1 = 1:
-        do_nothing
+    case 1 = 1
     case 1 != 1:
         impossible 1 = 1
 "#;
@@ -1921,7 +1916,6 @@ fn by_contra_normal_output_keeps_readable_proof_tree() {
             let source_code = r#"
 by contra:
     ? 1 = 1
-    do_nothing
     impossible 1 != 1
 "#;
 
@@ -1941,7 +1935,6 @@ by contra:
             assert!(run_output.contains("\"to_prove\": \"1 = 1\""));
             assert!(run_output.contains("\"reverse_assumption\":"));
             assert!(run_output.contains("\"proof_steps\": ["));
-            assert!(run_output.contains("\"statement\": \"do_nothing\""));
             assert!(run_output.contains("\"statement\": \"1 != 1\""));
             assert!(run_output.contains("\"statement\": \"1 = 1\""));
             assert!(
@@ -1969,12 +1962,10 @@ by thm local_one_eq_one()
 by enumerate finite_set:
     ? forall a {1, 2}:
         a < 3
-    do_nothing
 
 by for:
     ? forall n range(0, 3):
         n < 3
-    do_nothing
 
 claim:
     ? forall x range(1, 3):
@@ -2443,8 +2434,7 @@ fn by_cases_failure_reports_case_split_failure_context() {
             let source_code = r#"
 by cases:
     ? 1 = 1
-    case 1 = 2:
-        do_nothing
+    case 1 = 2
 "#;
 
             let mut runtime = Runtime::new();
@@ -2600,11 +2590,11 @@ fn error_output_does_not_change_the_style_of_earlier_successes() {
 fn error_output_preserves_failed_step_and_step_indexes_in_all_styles() {
     let mut runtime = Runtime::new();
     runtime.start_isolated_source("error_output_failed_step");
-    let (stmt_results, runtime_error) = execute_source("do_nothing", &mut runtime);
+    let (stmt_results, runtime_error) = execute_source("clear", &mut runtime);
     assert!(runtime_error.is_none());
     let failed_step = stmt_results[0]
         .statement()
-        .expect("do_nothing should have a successful statement result");
+        .expect("clear should have a successful statement result");
     let unknown: StmtResult = UnknownGenericStmtResult::new().into();
     let error: RuntimeError = UnknownRuntimeError(RuntimeErrorStruct::new_with_output(
         Some(failed_step.clone()),
@@ -2632,7 +2622,7 @@ fn error_output_preserves_failed_step_and_step_indexes_in_all_styles() {
     assert_eq!(outputs[0], outputs[1]);
     assert_eq!(outputs[1], outputs[2]);
     assert!(outputs[2].contains("\"failed_step\": {"));
-    assert!(outputs[2].contains("\"statement\": \"do_nothing\""));
+    assert!(outputs[2].contains("\"statement\": \"clear\""));
     assert!(outputs[2].contains("\"proof_step_index\": 2"));
     assert!(outputs[2].contains("\"proof_step_count\": 3"));
     assert!(outputs[2].contains("\"unknown_result\": {"));

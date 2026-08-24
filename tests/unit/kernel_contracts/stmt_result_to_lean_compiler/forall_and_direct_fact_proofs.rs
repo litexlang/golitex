@@ -5,7 +5,7 @@ use super::builtin_evidence_and_fact_ids::{
 use super::run_registered_rule_test;
 
 fn execute_direct_forall_proof() -> Vec<StmtResult> {
-    crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_to_stmt_results(
+    crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
         "forall x R:\n    x = x\n",
         "direct_forall_proof.lit",
     )
@@ -70,7 +70,7 @@ fn forall_proof_rejects_a_parameter_assumption_with_the_wrong_fact_id() {
 
 #[test]
 fn forall_proof_compiles_natural_parameter_inference_inside_its_binder_environment() {
-    let results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_to_stmt_results(
+    let results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
             "forall a, b N:\n    a + b $in N\n",
             "direct_natural_forall.lit",
         )
@@ -112,7 +112,7 @@ fn forall_proof_compiles_natural_parameter_inference_inside_its_binder_environme
 
 #[test]
 fn forall_proof_rejects_natural_inference_citing_the_wrong_parameter_fact_id() {
-    let mut results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_to_stmt_results(
+    let mut results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
             "forall a, b N:\n    a + b $in N\n",
             "direct_natural_forall.lit",
         )
@@ -142,7 +142,7 @@ fn forall_proof_rejects_natural_inference_citing_the_wrong_parameter_fact_id() {
 #[test]
 fn forall_proof_compiles_positive_real_inference_only_inside_its_binder_environment() {
     run_registered_rule_test(|| {
-        let results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_to_stmt_results(
+        let results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
                 "forall r R+:\n    r > 0\n",
                 "direct_positive_real_forall.lit",
             )
@@ -179,7 +179,7 @@ fn forall_proof_compiles_positive_real_inference_only_inside_its_binder_environm
 #[test]
 fn forall_proof_rejects_positive_inference_with_a_corrupted_source_set() {
     run_registered_rule_test(|| {
-        let mut results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_to_stmt_results(
+        let mut results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
                 "forall r R+:\n    r > 0\n",
                 "direct_positive_real_forall.lit",
             )
@@ -212,7 +212,7 @@ fn forall_proof_rejects_positive_inference_with_a_corrupted_source_set() {
 #[test]
 fn forall_proof_keeps_a_function_parameter_contract_inside_its_binder_environment() {
     run_registered_rule_test(|| {
-        let results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_to_stmt_results(
+        let results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
                 "forall f fn(x R) R:\n    f = f\n",
                 "direct_forall_function_parameter.lit",
             )
@@ -232,7 +232,7 @@ fn forall_proof_keeps_a_function_parameter_contract_inside_its_binder_environmen
 #[test]
 fn forall_registered_set_parameter_checks_are_validated_without_lean_proof_terms() {
     run_registered_rule_test(|| {
-        let results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_to_stmt_results(
+        let results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
                 "forall A, B set:\n    union(A, B) = union(B, A)\n",
                 "direct_forall_set_parameters.lit",
             )
@@ -250,7 +250,7 @@ fn forall_registered_set_parameter_checks_are_validated_without_lean_proof_terms
 }
 
 fn execute_direct_forall_proof_with_domain() -> Vec<StmtResult> {
-    crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_to_stmt_results(
+    crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
         "forall a R:\n    a = a\n    =>:\n        a = a\n",
         "direct_forall_domain.lit",
     )
@@ -316,8 +316,8 @@ fn direct_closed_membership_compiler_ignores_diagnostic_label_text() {
 }
 
 fn execute_nonempty_set_witness() -> Vec<StmtResult> {
-    crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_to_stmt_results(
-        "witness $is_nonempty_set({1, 2}) from 1:\n    do_nothing\n",
+    crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
+        "witness $is_nonempty_set({1, 2}) from 1\n",
         "direct_nonempty_set_witness.lit",
     )
     .expect("execute nonempty-set witness")
@@ -403,7 +403,7 @@ fn common_zero_premise_builtin_families_compile_directly_from_results() {
         ("$is_tuple((1, 2))\n", "tuple literal shape"),
         ("not 0 $in C*\n", "closed zero nonmembership"),
     ] {
-        let results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_to_stmt_results(
+        let results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
                 source,
                 "direct_common_builtin.lit",
             )
@@ -423,7 +423,7 @@ fn common_zero_premise_builtin_families_compile_directly_from_results() {
 
 #[test]
 fn not_equal_symmetry_wraps_the_exact_cited_child_result() {
-    let results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_to_stmt_results(
+    let results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
             "have a, b R\ntrust a != b\nb != a\n",
             "direct_not_equal_symmetry.lit",
         )
@@ -433,10 +433,10 @@ fn not_equal_symmetry_wraps_the_exact_cited_child_result() {
     };
     let mut compiler = StmtResultToLeanCompiler::new("direct_not_equal_symmetry.lit");
     compiler
-        .compile_stmt_result_to_lean_source(objects)
+        .compile_stmt_result(objects)
         .expect("compile object bindings");
     compiler
-        .compile_stmt_result_to_lean_source(trusted)
+        .compile_stmt_result(trusted)
         .expect("compile source trust boundary");
     let factual = symmetric
         .factual_success()
@@ -451,7 +451,7 @@ fn not_equal_symmetry_wraps_the_exact_cited_child_result() {
 
 #[test]
 fn set_builder_membership_combines_its_ordered_child_results_directly() {
-    let results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_to_stmt_results(
+    let results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
             "1 $in {x R: x = 1}\n",
             "direct_set_builder_membership.lit",
         )
@@ -489,7 +489,7 @@ fn set_builder_membership_combines_its_ordered_child_results_directly() {
 
 #[test]
 fn set_builder_membership_rejects_a_corrupted_projection_clause_index() {
-    let mut results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_to_stmt_results(
+    let mut results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
             "1 $in {x R: x = 1}\n",
             "corrupted_set_builder_projection.lit",
         )
@@ -510,7 +510,7 @@ fn set_builder_membership_rejects_a_corrupted_projection_clause_index() {
 }
 
 fn execute_predicate_backed_witness() -> Vec<StmtResult> {
-    crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_to_stmt_results(
+    crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
         "prop has_copy(a R):\n    exist x R st {x = a}\nwitness $has_copy(2) from 2:\n    2 = 2\n",
         "direct_predicate_backed_witness.lit",
     )
@@ -548,7 +548,7 @@ fn arithmetic_membership_closures_publish_directly_from_recursive_results() {
         ("have a, b Q\na * b $in Q\n", "complexMulInQ"),
         ("have a, b N\na + b $in N\n", "complexAddInN"),
     ] {
-        let results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_to_stmt_results(
+        let results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
                 source,
                 "direct_arithmetic_closure.lit",
             )
@@ -558,10 +558,10 @@ fn arithmetic_membership_closures_publish_directly_from_recursive_results() {
         };
         let mut compiler = StmtResultToLeanCompiler::new("direct_arithmetic_closure.lit");
         compiler
-            .compile_stmt_result_to_lean_source(objects)
+            .compile_stmt_result(objects)
             .unwrap_or_else(|error| panic!("compile binders for {expected_theorem}: {error}"));
         compiler
-            .compile_stmt_result_to_lean_source(fact)
+            .compile_stmt_result(fact)
             .unwrap_or_else(|error| panic!("compile {expected_theorem}: {error}"));
         assert!(
             compiler
@@ -576,7 +576,7 @@ fn arithmetic_membership_closures_publish_directly_from_recursive_results() {
 
 #[test]
 fn set_relation_duality_passes_through_the_exact_child_result() {
-    let results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_to_stmt_results(
+    let results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
             "let A = R\nlet B = N\ntrust A $superset B\nB $subset A\n",
             "direct_set_relation_duality.lit",
         )
@@ -606,10 +606,10 @@ fn set_relation_duality_passes_through_the_exact_child_result() {
     let trusted_fact_id = source_citation.source_fact_id;
     let mut compiler = StmtResultToLeanCompiler::new("direct_set_relation_duality.lit");
     compiler
-        .compile_stmt_result_to_lean_source(set_a)
+        .compile_stmt_result(set_a)
         .expect("compile first set alias");
     compiler
-        .compile_stmt_result_to_lean_source(set_b)
+        .compile_stmt_result(set_b)
         .expect("compile second set alias");
     compiler
         .environment_stack

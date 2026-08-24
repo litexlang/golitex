@@ -468,8 +468,7 @@ by contra:
 by cases:
     ? 1 = 1
     ? 2 = 2
-    case 1 = 1:
-        do_nothing
+    case 1 = 1
     case 1 != 1:
         impossible 1 = 1
 
@@ -1349,7 +1348,7 @@ fn proof_method_goal_placement_boundaries_are_explicit() {
 
     let mut runtime = Runtime::new();
     runtime.start_isolated_source("inline_extension_body_boundary");
-    let (results, error) = execute_source("by extension {1} = {1}:\n    do_nothing", &mut runtime);
+    let (results, error) = execute_source("by extension {1} = {1}:\n    1 = 1", &mut runtime);
     let (succeeded, output) = render_run_output(&runtime, &results, &error);
     assert!(!succeeded, "inline extension accepted a body:\n{output}");
     assert!(
@@ -1767,7 +1766,7 @@ fn by_axiom_of_choice_reports_missing_members_nonempty() {
 have S set
 
 by axiom_of_choice: set S:
-    do_nothing
+    1 = 1
 "#;
 
     let (run_succeeded, run_output) = run_axiom_of_choice_regression_source(
@@ -1873,7 +1872,7 @@ by regularity_axiom({})
 #[test]
 fn remaining_by_goal_header_shorthands_are_rejected() {
     let cases = [
-        "by cases 1 = 1:\n    case 1 = 1:\n        do_nothing",
+        "by cases 1 = 1:\n    case 1 = 1",
         "by contra 1 = 1:\n    impossible 1 != 1",
     ];
 

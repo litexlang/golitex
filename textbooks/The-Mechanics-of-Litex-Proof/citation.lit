@@ -232,8 +232,7 @@ thm bezout_identity:
         v = 0
         by cases:
             ? u != 0
-            case u != 0:
-                do_nothing
+            case u != 0
             case v != 0:
                 impossible v = 0
         by thm gcd_euclidean_base(u)

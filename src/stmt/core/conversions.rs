@@ -182,12 +182,6 @@ impl From<ImportStmt> for Stmt {
     }
 }
 
-impl From<DoNothingStmt> for Stmt {
-    fn from(v: DoNothingStmt) -> Self {
-        CommandStmt::DoNothingStmt(v).into()
-    }
-}
-
 impl From<ClearStmt> for Stmt {
     fn from(v: ClearStmt) -> Self {
         CommandStmt::ClearStmt(v).into()
