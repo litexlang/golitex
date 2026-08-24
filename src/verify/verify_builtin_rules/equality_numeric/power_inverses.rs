@@ -22,7 +22,8 @@ impl Runtime {
         let zero_equal_objs_by_env: Vec<Vec<Obj>> = self
             .iter_environments_from_top()
             .filter_map(|env| {
-                env.known_equality
+                env.facts
+                    .known_equality
                     .get(&zero_key)
                     .map(|(_, equal_objs)| equal_objs.iter().cloned().collect())
             })
@@ -66,7 +67,7 @@ impl Runtime {
         let mut exponents = Vec::new();
         let mut seen = std::collections::HashSet::new();
         for environment in self.iter_environments_from_top() {
-            for (_, equal_objs) in environment.known_equality.values() {
+            for (_, equal_objs) in environment.facts.known_equality.values() {
                 let mut left_exponents = Vec::new();
                 let mut right_exponents = Vec::new();
                 for obj in equal_objs.iter() {

@@ -80,6 +80,7 @@ impl Runtime {
             .iter_environments_from_top()
             .filter_map(|environment| {
                 environment
+                    .facts
                     .known_equality
                     .get(&zero_key)
                     .map(|(_, equal_objs)| equal_objs.iter().cloned().collect())

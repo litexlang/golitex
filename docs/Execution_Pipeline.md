@@ -9,7 +9,7 @@ pub fn run(request: RunRequest) -> RunOutcome
 It lives in `src/pipeline/run.rs`. `RunRequest.target` is one of
 `RunTarget::Code`, `RunTarget::File`, or `RunTarget::Repository`, while
 `RunRequest.options` carries output style, strictness, language, summary,
-isolation, trusted-prefix, and trace choices. Target and option combinations
+isolation, and trusted-prefix choices. Target and option combinations
 are handled inside `run`; they are not encoded as function-name combinations.
 
 The main file boundaries are:
@@ -48,43 +48,39 @@ Now:
 The break is intentional. The retired public functions were not deprecated or
 kept as aliases.
 
-## Trace one statement
+## Static path for one statement
 
-Build Litex and run:
-
-```text
-target/release/litex -trace-pipeline -e "1 + 1 = 2"
-```
-
-Litex prints the ordinary verifier result unchanged, then the major Rust
-interfaces actually visited. For this statement the trace is:
+The following is a source-reading map for the representative statement
+`1 + 1 = 2`. It identifies major architectural interfaces; it is not emitted
+by a CLI flag and is not a runtime or JSON output contract.
 
 ```text
 1. main — src/main.rs
 2. cli::run_cli — src/cli/command_dispatch.rs
-3. pipeline::run — src/pipeline/run.rs
-4. pipeline::execute_source — src/pipeline/source_execution.rs
-5. Tokenizer::parse_blocks — src/parse/tokenizer.rs
-6. Runtime::parse_statement — src/parse/statement_parsing.rs
-7. pipeline::execute_top_level_statement — src/pipeline/top_level_statement_execution.rs
-8. Runtime::execute_statement — src/execute/statement_execution.rs
-9. Runtime::execute_verified_statement — src/execute/verified_statement_execution.rs
-10. Runtime::execute_submitted_fact — src/execute/submitted_fact_execution.rs
-11. Runtime::verify_fact_well_defined_for_execution — src/execute/submitted_fact_execution.rs
-12. Runtime::verify_atomic_fact — src/verify/atomic/core.rs
-13. Runtime::verify_fact_for_execution — src/execute/submitted_fact_execution.rs
-14. Runtime::verify_fact_or_error — src/verify/dispatch.rs
-15. Runtime::verify_equal_fact — src/verify/equality/core.rs
-16. Runtime::store_executed_fact_and_infer — src/execute/submitted_fact_execution.rs
-17. Runtime::finish_statement_execution — src/execute/statement_execution.rs
-18. pipeline::render_run_output — src/pipeline/output_rendering.rs
-Lean compiler: not executed
+3. cli::run_code_command — src/cli/command_handlers.rs
+4. pipeline::run — src/pipeline/run.rs
+5. Runtime::new — src/runtime/state.rs
+6. pipeline::execute_source — src/pipeline/source_execution.rs
+7. pipeline::execute_source_with_options — src/pipeline/source_execution.rs
+8. Tokenizer::parse_blocks — src/parse/tokenizer.rs
+9. Runtime::parse_statement — src/parse/statement_parsing.rs
+10. pipeline::execute_top_level_statement — src/pipeline/top_level_statement_execution.rs
+11. Runtime::execute_statement — src/execute/statement_execution.rs
+12. Runtime::execute_verified_statement — src/execute/verified_statement_execution.rs
+13. Runtime::execute_submitted_fact — src/execute/submitted_fact_execution.rs
+14. Runtime::verify_fact_well_defined_for_execution — src/execute/submitted_fact_execution.rs
+15. Runtime::verify_atomic_fact — src/verify/atomic/core.rs
+16. Runtime::verify_fact_for_execution — src/execute/submitted_fact_execution.rs
+17. Runtime::verify_fact_or_error — src/verify/dispatch.rs
+18. Runtime::verify_equal_fact — src/verify/equality/core.rs
+19. Runtime::store_executed_fact_and_infer — src/execute/submitted_fact_execution.rs
+20. Runtime::finish_statement_execution — src/execute/statement_execution.rs
+21. pipeline::render_run_output — src/pipeline/output_rendering.rs
 ```
 
-The trace records each major function once, so a multi-statement run shows the
-architectural path instead of a helper-level profiler dump. In this example,
-`Runtime::verify_atomic_fact` is first entered while checking well-definedness,
-so it appears before the outer `Runtime::verify_fact_for_execution` route.
+The ordering summarizes the main call path and omits recursive helper calls.
+`Runtime::verify_atomic_fact` can first be entered while checking
+well-definedness, before the outer `Runtime::verify_fact_for_execution` route.
 
 The source files on this main path now import their owning modules explicitly.
 Statement execution also names its two independent axes: `ExecutionMode`
@@ -92,26 +88,19 @@ selects verified versus trusted execution, while `StatementExecutionContext`
 selects an ordinary versus trusted-prefix run. These were previously passed as
 booleans at the most important navigation boundary.
 
-Runner mode exposes the same information as structured JSON:
+Ordinary verification stops after rendering the `StmtResult`. Single-file
+Litex-to-Lean compilation is a separate explicit command:
 
 ```text
-target/release/litex -trace-pipeline -runner -e "1 + 1 = 2"
-```
-
-Its envelope contains `pipeline_trace.steps` and
-`pipeline_trace.lean_compiler_executed`.
-
-For single-file Litex-to-Lean compilation:
-
-```text
-target/release/litex -trace-pipeline -isolated -f input.lit -lean output.lean
+target/release/litex -isolated -f input.lit -lean output.lean
 ```
 
 The compiler reuses `execute_source_with_options` for tokenization, parsing,
 execution, and verification before consuming verified `StmtResult` values. Its
-trace adds `compile_litex_source_to_lean_source` and ends with
-`Lean compiler: executed`. Single-file compilation still rejects source
-`import` statements with its existing diagnostic.
+source path continues through `compile_litex_source_to_lean_source` and
+`StmtResultToLeanCompiler::compile_stmt_results_to_lean_source`. Single-file
+compilation still rejects source `import` statements with its existing
+diagnostic.
 
 ## Stable semantic boundaries
 
@@ -143,10 +132,17 @@ The final 2026-08-24 state passed:
 - `cargo test --release run_all_docs_examples_runtime_contracts -- --ignored
   --nocapture`: 1 passed, covering 333 documentation Litex blocks, 123 selected
   example or ledger groups, and runtime contract smoke tests;
-- focused execution-trace, curated-public-API, runner, graph, CLI, summary, and
-  compiler suites;
-- the actual `target/release/litex -trace-pipeline -e "1 + 1 = 2"` command,
-  which exited successfully with the 18-step path above.
+- focused curated-public-API, runner, graph, CLI, summary, and compiler suites.
+
+The briefly introduced `-trace-pipeline` experiment was removed. The retired
+CLI regression requires that spelling to be rejected as an unknown argument,
+and runner JSON has no Rust pipeline-trace field.
+
+The removal was checked with the retired-command integration test, 31 CLI unit
+tests, 10 runner unit tests, the curated public-API and source-architecture
+tests, and the compiler CLI, 68 compiler tracer, and Markdown compiler suites.
+The release binary still accepts `-e "1 + 1 = 2"` and rejects the retired flag
+with exit code 2.
 
 Real Lean kernel replay was not rerun: this change altered the source-to-result
 producer route, not generated Lean representation or proof semantics. The 68

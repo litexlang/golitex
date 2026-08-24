@@ -23,7 +23,6 @@ pub fn run_cli() {
         force_isolated,
         output_language,
         trust_before_line,
-        trace_pipeline,
     } = match parse_global_options(&mut args) {
         Ok(options) => options,
         Err(message) => {
@@ -39,7 +38,6 @@ pub fn run_cli() {
         summarize: summarize_output,
         force_isolated,
         trust_before_line,
-        trace_pipeline,
     };
     let mut index: usize = 0;
 

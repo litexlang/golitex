@@ -6,7 +6,8 @@
 run(RunRequest { target, options })
   create and configure Runtime once
   match target: Code | File | Repository
-  execute_source(source, runtime)
+  execute_source(source, runtime)               # default options adapter
+    execute_source_with_options(source, runtime)
     Tokenizer::parse_blocks
     Runtime::parse_statement
     execute_top_level_statement
@@ -37,7 +38,6 @@ or `module_manager` without first expanding the crate-wide prelude.
 | [`source_execution.rs`](source_execution.rs) | Tokenizes, parses, and executes source inside an already initialized Runtime. |
 | [`file_execution.rs`](file_execution.rs) | Resolves `-f`, discovers project context, and selects repository-prefix or isolated-file execution. |
 | [`output_rendering.rs`](output_rendering.rs) | Renders statement results, errors, trusted-prefix metadata, and unverified-import warnings. |
-| [`execution_trace.rs`](execution_trace.rs) | Collects request-scoped major Rust steps without adding fields to `Runtime`. |
 | [`top_level_statement_execution.rs`](top_level_statement_execution.rs) | Executes one parsed top-level statement and owns isolated terminal imports. |
 | [`repository_execution.rs`](repository_execution.rs) | Runs ordered project imports, module trees, file targets, and registered prefixes. |
 | [`pipeline_session.rs`](pipeline_session.rs) | Keeps one runtime alive for `-session`. |

@@ -16,7 +16,13 @@ impl Runtime {
     fn exec_def_thm_stmt_verify_well_definedness(
         &mut self,
         stmt: &DefThmStmt,
-    ) -> Result<(SuccessVerifyFactWellDefinedResult, Environment), RuntimeError> {
+    ) -> Result<
+        (
+            SuccessVerifyFactWellDefinedResult,
+            WellDefinednessEnvironmentDelta,
+        ),
+        RuntimeError,
+    > {
         self.verify_forall_fact_well_defined_and_collect_certificate(
             &stmt.forall_fact,
             &ProofSearchState::initial(),
@@ -35,7 +41,7 @@ impl Runtime {
         &mut self,
         stmt: &DefThmStmt,
         well_definedness: SuccessVerifyFactWellDefinedResult,
-        prechecked_well_definedness: &Environment,
+        prechecked_well_definedness: &WellDefinednessEnvironmentDelta,
     ) -> Result<StmtResult, RuntimeError> {
         let thm_name = stmt.name.clone();
         let keyword = THM;

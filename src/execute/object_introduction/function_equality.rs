@@ -71,7 +71,7 @@ impl Runtime {
 
         let membership_fact_id = self.known_fact_id_for_fact(&function_in_function_set_fact)?;
         let stmt_lf = have_fn_equal_stmt.line_file.clone();
-        self.register_known_objs_in_fn_sets_for_element_body(
+        self.register_function_set_knowledge_for_element(
             &function_identifier_obj,
             fn_set_stored.body.clone(),
             membership_fact_id,

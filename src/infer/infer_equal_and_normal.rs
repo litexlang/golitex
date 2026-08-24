@@ -251,7 +251,7 @@ impl Runtime {
             if !matches!(&equal_fact.left, Obj::AnonymousFn(_)) {
                 let eq = (*anon.equal_to).clone();
                 let lf = equal_fact.line_file.clone();
-                self.register_known_objs_in_fn_sets_for_element_body(
+                self.register_function_set_knowledge_for_element(
                     &equal_fact.left,
                     anon.body.clone(),
                     None,
@@ -265,7 +265,7 @@ impl Runtime {
             if !matches!(&equal_fact.right, Obj::AnonymousFn(_)) {
                 let eq = (*anon.equal_to).clone();
                 let lf = equal_fact.line_file.clone();
-                self.register_known_objs_in_fn_sets_for_element_body(
+                self.register_function_set_knowledge_for_element(
                     &equal_fact.right,
                     anon.body.clone(),
                     None,
@@ -446,8 +446,8 @@ impl Runtime {
             return;
         };
         self.top_level_env()
-            .known_obj_values
-            .insert(target.to_string(), value);
+            .objects
+            .store_simplified_value(target.to_string(), value);
     }
 
     // From `a^x = y`, infer `y $in R+` when `0 < a` and `x $in R`.

@@ -43,7 +43,11 @@ impl Runtime {
                 let env = self
                     .environment_by_top_index(stack_idx)
                     .expect("environment index should be valid");
-                match env.known_or_facts_in_forall_facts.get(lookup_key.as_str()) {
+                match env
+                    .facts
+                    .known_or_facts_in_forall_facts
+                    .get(lookup_key.as_str())
+                {
                     Some(v) => v.len(),
                     None => continue,
                 }
@@ -59,8 +63,10 @@ impl Runtime {
                     let env = self
                         .environment_by_top_index(stack_idx)
                         .expect("environment index should be valid");
-                    let Some(known_forall_facts_in_env) =
-                        env.known_or_facts_in_forall_facts.get(lookup_key.as_str())
+                    let Some(known_forall_facts_in_env) = env
+                        .facts
+                        .known_or_facts_in_forall_facts
+                        .get(lookup_key.as_str())
                     else {
                         continue;
                     };

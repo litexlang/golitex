@@ -1534,7 +1534,11 @@ trust d = 1 / (2 / 3 * 4)
     let c_key = runtime.declared_identifier_obj("c").to_string();
     let d_key = runtime.declared_identifier_obj("d").to_string();
     let env = &runtime.current_module().main_environment;
-    match env.known_obj_values.get(&a_key) {
+    match env
+        .objects
+        .knowledge(&a_key)
+        .and_then(|knowledge| knowledge.simplified_value.as_ref())
+    {
         Some(KnownObjValue::SimplifiedFraction(div)) => {
             assert_eq!(div.left.to_string(), "1");
             assert_eq!(div.right.to_string(), "6");
@@ -1544,7 +1548,11 @@ trust d = 1 / (2 / 3 * 4)
             other.map(|_| "other value")
         ),
     }
-    match env.known_obj_values.get(&b_key) {
+    match env
+        .objects
+        .knowledge(&b_key)
+        .and_then(|knowledge| knowledge.simplified_value.as_ref())
+    {
         Some(KnownObjValue::SimplifiedNumber(number)) => {
             assert_eq!(number.normalized_value, "0.5");
         }
@@ -1553,7 +1561,11 @@ trust d = 1 / (2 / 3 * 4)
             other.map(|_| "other value")
         ),
     }
-    match env.known_obj_values.get(&c_key) {
+    match env
+        .objects
+        .knowledge(&c_key)
+        .and_then(|knowledge| knowledge.simplified_value.as_ref())
+    {
         Some(KnownObjValue::SimplifiedFraction(div)) => {
             assert_eq!(div.left.to_string(), "-1");
             assert_eq!(div.right.to_string(), "3");
@@ -1563,7 +1575,11 @@ trust d = 1 / (2 / 3 * 4)
             other.map(|_| "other value")
         ),
     }
-    match env.known_obj_values.get(&d_key) {
+    match env
+        .objects
+        .knowledge(&d_key)
+        .and_then(|knowledge| knowledge.simplified_value.as_ref())
+    {
         Some(KnownObjValue::SimplifiedNumber(number)) => {
             assert_eq!(number.normalized_value, "0.375");
         }

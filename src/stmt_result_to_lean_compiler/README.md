@@ -244,11 +244,13 @@ spelling, but the reviewed v1-supported sources must still reach Lean and pass
 the Lean kernel.
 
 A subsequent state-ownership cleanup did refine the physical Runtime boundary
-without changing those execution semantics. `Environment` now owns only an
-`EnvironmentPersistentRepositories` aggregate. Its Fact repository is
-FactId-first: complete facts are stored by `FactId`, while display,
-nested-binder, and alpha-normalized strings are lookup aliases. Statement memo
-proofs and recursive proof-search guards live instead in
+without changing those execution semantics. `Environment` now exposes six
+direct owners for declarations, facts, object knowledge, predicate properties,
+verification caches, and strategies; it no longer hides its world behind a
+one-field repository wrapper. Its Fact database is FactId-first: complete facts
+are stored by `FactId`, while display, nested-binder, and alpha-normalized
+strings are lookup aliases. Statement memo proofs and recursive proof-search
+guards live instead in
 `Runtime::statement_proof_state`, whose scopes are pushed and popped together
 with temporary Runtime environments and are never merged into the persistent
 mathematical world.

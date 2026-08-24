@@ -20,7 +20,7 @@ impl Runtime {
     ) -> Option<Vec<KnownEqualityBuiltinRuleStep>> {
         let mut equalities = KnownEquality::new();
         for environment in self.iter_environments_from_top() {
-            for equality in environment.known_equality.direct_equalities() {
+            for equality in environment.facts.known_equality.direct_equalities() {
                 let equality_fact: Fact = AtomicFact::EqualFact(equality.clone()).into();
                 if self
                     .known_fact_id_for_fact(&equality_fact)
@@ -312,7 +312,7 @@ impl Runtime {
 
         let target_key = obj_equality_key(&obj_at_index.obj);
         for env in self.iter_environments_from_top() {
-            let Some((_, equal_objs)) = env.known_equality.get(&target_key) else {
+            let Some((_, equal_objs)) = env.facts.known_equality.get(&target_key) else {
                 continue;
             };
             for equal_obj in equal_objs.iter() {

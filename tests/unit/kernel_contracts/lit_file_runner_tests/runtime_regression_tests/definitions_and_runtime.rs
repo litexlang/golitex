@@ -1108,8 +1108,8 @@ $target_strategy_prop(1)
 
     let env = &runtime.current_module().main_environment;
     assert_eq!(
-        env.used_strategy_stmts
-            .get(&("target_strategy_prop".to_string(), true)),
+        env.strategies
+            .active_strategy(&("target_strategy_prop".to_string(), true)),
         Some(&"use_target_strategy".to_string())
     );
 }
@@ -1184,16 +1184,17 @@ stop strategy use_target_strategy
 
     let env = &runtime.current_module().main_environment;
     assert!(env
+        .declarations
         .defined_strategy_stmts
         .contains_key("use_target_strategy"));
     assert_eq!(
-        env.used_strategy_stmts
-            .get(&("target_strategy_prop".to_string(), true)),
-        Some(&"use_target_strategy".to_string())
+        env.strategies
+            .active_strategy(&("target_strategy_prop".to_string(), true)),
+        None
     );
     assert_eq!(
-        env.stopped_strategy_stmts
-            .get(&("target_strategy_prop".to_string(), true)),
+        env.strategies
+            .stopped_strategy(&("target_strategy_prop".to_string(), true)),
         Some(&"use_target_strategy".to_string())
     );
 }
@@ -1245,23 +1246,23 @@ stop strategy use_negative_strategy
 
     let env = &runtime.current_module().main_environment;
     assert_eq!(
-        env.used_strategy_stmts
-            .get(&("target_strategy_prop".to_string(), true)),
+        env.strategies
+            .active_strategy(&("target_strategy_prop".to_string(), true)),
         Some(&"use_positive_strategy".to_string())
     );
     assert_eq!(
-        env.used_strategy_stmts
-            .get(&("target_strategy_prop".to_string(), false)),
+        env.strategies
+            .active_strategy(&("target_strategy_prop".to_string(), false)),
+        None
+    );
+    assert_eq!(
+        env.strategies
+            .stopped_strategy(&("target_strategy_prop".to_string(), false)),
         Some(&"use_negative_strategy".to_string())
     );
     assert_eq!(
-        env.stopped_strategy_stmts
-            .get(&("target_strategy_prop".to_string(), false)),
-        Some(&"use_negative_strategy".to_string())
-    );
-    assert_eq!(
-        env.stopped_strategy_stmts
-            .get(&("target_strategy_prop".to_string(), true)),
+        env.strategies
+            .stopped_strategy(&("target_strategy_prop".to_string(), true)),
         None
     );
 }
@@ -1355,8 +1356,8 @@ $target_strategy_prop(1)
 
     let env = &runtime.current_module().main_environment;
     assert_eq!(
-        env.stopped_strategy_stmts
-            .get(&("target_strategy_prop".to_string(), true)),
+        env.strategies
+            .stopped_strategy(&("target_strategy_prop".to_string(), true)),
         None
     );
 }
@@ -1399,8 +1400,8 @@ claim:
 
     let env = &runtime.current_module().main_environment;
     assert_eq!(
-        env.stopped_strategy_stmts
-            .get(&("target_strategy_prop".to_string(), true)),
+        env.strategies
+            .stopped_strategy(&("target_strategy_prop".to_string(), true)),
         Some(&"use_target_strategy".to_string())
     );
 }

@@ -57,12 +57,12 @@ impl Runtime {
         let mut stopped_strategy_names: Vec<StrategyName> = Vec::new();
 
         for env in self.iter_environments_from_top() {
-            if let Some(strategy_name) = env.stopped_strategy_stmts.get(&lookup_key) {
+            if let Some(strategy_name) = env.strategies.stopped_strategy(&lookup_key) {
                 if !stopped_strategy_names.contains(strategy_name) {
                     stopped_strategy_names.push(strategy_name.clone());
                 }
             }
-            if let Some(strategy_name) = env.used_strategy_stmts.get(&lookup_key) {
+            if let Some(strategy_name) = env.strategies.active_strategy(&lookup_key) {
                 if !stopped_strategy_names.contains(strategy_name) {
                     return Some(strategy_name.clone());
                 }

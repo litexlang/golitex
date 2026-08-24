@@ -1,5 +1,4 @@
 use super::source_compilation::compile_litex_source_to_lean_source;
-use crate::prelude::*;
 use std::fs;
 use std::path::Path;
 
@@ -7,11 +6,6 @@ pub fn compile_litex_file_to_lean_file(
     source_path: &Path,
     output_path: &Path,
 ) -> Result<(), String> {
-    record_pipeline_step(
-        "lean compiler",
-        "compile_litex_file_to_lean_file",
-        "src/stmt_result_to_lean_compiler/file_compilation.rs",
-    );
     reject_same_input_and_output(source_path, output_path)?;
 
     let source = fs::read_to_string(source_path)

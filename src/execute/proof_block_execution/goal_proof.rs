@@ -29,7 +29,13 @@ impl Runtime {
         source_stmt: &Stmt,
         fact: &Fact,
         label: &str,
-    ) -> Result<(SuccessVerifyFactWellDefinedResult, Environment), RuntimeError> {
+    ) -> Result<
+        (
+            SuccessVerifyFactWellDefinedResult,
+            WellDefinednessEnvironmentDelta,
+        ),
+        RuntimeError,
+    > {
         if matches!(fact, Fact::ForallFactWithIff(_)) {
             unreachable!("checked goal block forall with iff is not supported");
         }
@@ -42,7 +48,7 @@ impl Runtime {
                 ),
             _ => self
                 .verify_fact_well_defined_result(fact, &ProofSearchState::initial())
-                .map(|result| (result, Environment::new_empty_env())),
+                .map(|result| (result, WellDefinednessEnvironmentDelta::new())),
         };
         verify_result.map_err(|error| {
             short_exec_error(
@@ -61,7 +67,7 @@ impl Runtime {
         proof: &[Stmt],
         label: &str,
         well_definedness: SuccessVerifyFactWellDefinedResult,
-        prechecked_well_definedness: &Environment,
+        prechecked_well_definedness: &WellDefinednessEnvironmentDelta,
     ) -> Result<StmtResult, RuntimeError> {
         match fact {
             Fact::ForallFactWithIff(_) => {

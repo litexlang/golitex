@@ -321,7 +321,7 @@ impl Runtime {
     ) -> Vec<AtomicFact> {
         let mut candidates = Vec::new();
         for environment in self.iter_environments_from_top() {
-            for known_facts_map in environment.known_atomic_facts_with_2_args.values() {
+            for known_facts_map in environment.facts.known_atomic_facts_with_2_args.values() {
                 for known_fact in known_facts_map.values() {
                     let AtomicFact::LessEqualFact(known_le) = known_fact else {
                         continue;
@@ -354,7 +354,7 @@ impl Runtime {
     ) -> Vec<AtomicFact> {
         let mut candidates = Vec::new();
         for environment in self.iter_environments_from_top() {
-            for known_facts_map in environment.known_atomic_facts_with_2_args.values() {
+            for known_facts_map in environment.facts.known_atomic_facts_with_2_args.values() {
                 for known_fact in known_facts_map.values() {
                     let AtomicFact::LessFact(known_lt) = known_fact else {
                         continue;

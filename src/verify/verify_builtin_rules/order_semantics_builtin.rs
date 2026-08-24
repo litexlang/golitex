@@ -185,7 +185,7 @@ impl Runtime {
 
         let mut known_orders = Vec::new();
         for environment in self.iter_environments_from_top() {
-            for known_facts_map in environment.known_atomic_facts_with_2_args.values() {
+            for known_facts_map in environment.facts.known_atomic_facts_with_2_args.values() {
                 for known_fact in known_facts_map.values() {
                     if direct_positive_order_shape(known_fact).is_some() {
                         known_orders.push(known_fact.clone());
@@ -397,7 +397,7 @@ impl Runtime {
         let key = obj_equality_key(obj);
         let mut candidates = Vec::new();
         for environment in self.iter_environments_from_top() {
-            let Some((_, equal_objs)) = environment.known_equality.get(&key) else {
+            let Some((_, equal_objs)) = environment.facts.known_equality.get(&key) else {
                 continue;
             };
             for equal_obj in equal_objs.iter() {
@@ -419,7 +419,7 @@ impl Runtime {
         let key = obj_equality_key(obj);
         let mut candidates = Vec::new();
         for environment in self.iter_environments_from_top() {
-            let Some((_, equal_objs)) = environment.known_equality.get(&key) else {
+            let Some((_, equal_objs)) = environment.facts.known_equality.get(&key) else {
                 continue;
             };
             for equal_obj in equal_objs.iter() {

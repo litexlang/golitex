@@ -812,6 +812,7 @@ have ProductSet set = cart(R, R)
             .next()
             .expect("imported main environment should exist");
         let pair_symbol = imported_environment
+            .declarations
             .symbols
             .get("pair")
             .map(|definition| definition.binding().as_ref())
@@ -837,6 +838,7 @@ have ProductSet set = cart(R, R)
         );
         assert!(
             imported_environment
+                .facts
                 .known_equality
                 .get(&qualified_dim.to_string())
                 .is_some(),
@@ -844,14 +846,16 @@ have ProductSet set = cart(R, R)
         );
         assert!(
             imported_environment
-                .known_objs_equal_to_tuple
-                .contains_key(&canonical_pair_key),
+                .objects
+                .knowledge(&canonical_pair_key)
+                .is_some_and(|knowledge| knowledge.tuple_equality.is_some()),
             "the module environment must store the fully canonical pair key"
         );
         assert!(
             !imported_environment
-                .known_objs_equal_to_tuple
-                .contains_key("pair"),
+                .objects
+                .knowledge("pair")
+                .is_some_and(|knowledge| knowledge.tuple_equality.is_some()),
             "module lookup must not rely on a stripped local cache alias"
         );
         assert_eq!(

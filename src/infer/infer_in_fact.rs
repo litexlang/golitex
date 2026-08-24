@@ -1,9 +1,8 @@
 use crate::prelude::*;
-use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 
-/// Objects whose `to_string()` is used as the key in `Environment::known_objs_in_fn_sets`.
-pub fn obj_eligible_for_known_objs_in_fn_sets(obj: &Obj) -> bool {
+/// Objects whose equality key may own reusable function-set knowledge.
+pub fn object_eligible_for_function_set_knowledge(obj: &Obj) -> bool {
     matches!(
         obj,
         Obj::Atom(AtomObj::Identifier(_))
@@ -44,47 +43,32 @@ fn extra_known_fn_set_keys_for_bare_name_lookup(element: &Obj) -> Vec<String> {
 
 impl Runtime {
     fn upsert_known_fn_info_for_key(
-        map: &mut HashMap<ObjString, KnownFnInfo>,
+        object_knowledge: &mut EnvironmentObjectKnowledgeStore,
         key: ObjString,
         body: Option<(FnSetBody, LineFile, Option<FactId>)>,
         equal_to: Option<(Obj, LineFile)>,
     ) {
-        match map.entry(key) {
-            Entry::Occupied(mut o) => {
-                let info = o.get_mut();
-                if let Some((b, lf, membership_fact_id)) = body {
-                    // Once a defining RHS is paired with a signature, later
-                    // registrations must not replace only that signature: its
-                    // parameter bindings are the substitution keys used by the RHS.
-                    if info.equal_to.is_none() || info.fn_set.is_none() {
-                        info.fn_set = Some((b, lf));
-                        info.fn_set_membership_fact_id = membership_fact_id;
-                    }
-                }
-                if let Some((eq, lf)) = equal_to {
-                    info.equal_to = Some((eq, lf));
-                }
+        if body.is_none() && equal_to.is_none() {
+            return;
+        }
+        let info = object_knowledge.function_set_mut(key);
+        if let Some((body, line_file, membership_fact_id)) = body {
+            // Once a defining RHS is paired with a signature, later
+            // registrations must not replace only that signature: its
+            // parameter bindings are the substitution keys used by the RHS.
+            if info.equal_to.is_none() || info.fn_set.is_none() {
+                info.fn_set = Some((body, line_file));
+                info.fn_set_membership_fact_id = membership_fact_id;
             }
-            Entry::Vacant(v) => {
-                if body.is_none() && equal_to.is_none() {
-                    return;
-                }
-                let (fn_set, fn_set_membership_fact_id) = match body {
-                    Some((body, line_file, membership_fact_id)) => {
-                        (Some((body, line_file)), membership_fact_id)
-                    }
-                    None => (None, None),
-                };
-                let mut info = KnownFnInfo::merge_fn_set_equal_to(fn_set, equal_to);
-                info.fn_set_membership_fact_id = fn_set_membership_fact_id;
-                v.insert(info);
-            }
+        }
+        if let Some((equal_to, line_file)) = equal_to {
+            info.equal_to = Some((equal_to, line_file));
         }
     }
 
     /// Record `element` as having function signature `body` (same lookup keys as `element $in fn ...` infer).
     /// When `equal_to` is `Some`, stores the defining expression (e.g. from `a = '…{…}` or `have fn`).
-    pub fn register_known_objs_in_fn_sets_for_element_body(
+    pub fn register_function_set_knowledge_for_element(
         &mut self,
         element: &Obj,
         body: FnSetBody,
@@ -93,7 +77,7 @@ impl Runtime {
         fn_signature_line_file: LineFile,
         defining_expr_line_file: LineFile,
     ) {
-        if !obj_eligible_for_known_objs_in_fn_sets(element) {
+        if !object_eligible_for_function_set_knowledge(element) {
             return;
         }
         let key = element.to_string();
@@ -107,7 +91,7 @@ impl Runtime {
             .clone()
             .map(|eq| (eq, defining_expr_line_file.clone()));
         Self::upsert_known_fn_info_for_key(
-            &mut env.known_objs_in_fn_sets,
+            &mut env.objects,
             key.clone(),
             body_opt,
             equal_opt.clone(),
@@ -115,7 +99,7 @@ impl Runtime {
         for alternate_key in extra_known_fn_set_keys_for_bare_name_lookup(element) {
             if alternate_key != key {
                 Self::upsert_known_fn_info_for_key(
-                    &mut env.known_objs_in_fn_sets,
+                    &mut env.objects,
                     alternate_key,
                     Some((
                         body.clone(),
@@ -128,19 +112,19 @@ impl Runtime {
         }
     }
 
-    // RHS is a function space `FnSet`: record the element in `known_objs_in_fn_sets`.
+    // RHS is a function space `FnSet`: record it in the element's object-knowledge profile.
     pub fn infer_membership_in_fn_set_from_in_fact(
         &mut self,
         in_fact: &InFact,
         fn_set_with_dom: &FnSet,
     ) -> Result<SuccessInferResult, RuntimeError> {
-        if !obj_eligible_for_known_objs_in_fn_sets(&in_fact.element) {
+        if !object_eligible_for_function_set_knowledge(&in_fact.element) {
             return Ok(SuccessInferResult::new());
         }
 
         let lf = in_fact.line_file.clone();
         let membership_fact_id = self.known_fact_id_for_fact(&in_fact.clone().into())?;
-        self.register_known_objs_in_fn_sets_for_element_body(
+        self.register_function_set_knowledge_for_element(
             &in_fact.element,
             fn_set_with_dom.body.clone(),
             membership_fact_id,
@@ -463,7 +447,7 @@ impl Runtime {
         in_fact: &InFact,
     ) -> Result<SuccessInferResult, RuntimeError> {
         match &in_fact.set {
-            // Function space: side table `known_objs_in_fn_sets` for typing/satisfaction later.
+            // Function-space knowledge is retained for later typing and satisfaction checks.
             Obj::FnSet(fn_set_with_dom) => {
                 self.infer_membership_in_fn_set_from_in_fact(in_fact, fn_set_with_dom)
             }

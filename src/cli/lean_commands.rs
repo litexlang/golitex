@@ -1,6 +1,6 @@
 use super::arguments::read_non_flag_value_after_flag;
 use super::messages::print_help_message;
-use crate::pipeline::{PipelineTraceCapture, RunOptions};
+use crate::pipeline::RunOptions;
 use crate::runtime::OutputStyle;
 use crate::stmt_result_to_lean_compiler::{
     compile_litex_file_to_lean_file, compile_litex_markdown_code_blocks_to_lean_file,
@@ -47,23 +47,12 @@ pub(super) fn run_lean_file_command(
         process::exit(2);
     }
 
-    let trace_capture = PipelineTraceCapture::new(options.trace_pipeline);
-    let compile_result =
-        compile_litex_file_to_lean_file(Path::new(file_path), Path::new(&output_path));
-    let mut pipeline_trace = trace_capture.finish(true);
-    pipeline_trace.prepend_cli_entry();
-    match compile_result {
+    match compile_litex_file_to_lean_file(Path::new(file_path), Path::new(&output_path)) {
         Ok(()) => println!("wrote freshly generated Lean to {}", output_path),
         Err(message) => {
             eprintln!("{}", message);
-            if options.trace_pipeline {
-                println!("{}", pipeline_trace.text());
-            }
             process::exit(1);
         }
-    }
-    if options.trace_pipeline {
-        println!("{}", pipeline_trace.text());
     }
 }
 

@@ -112,6 +112,7 @@ claim:
             assert!(
                 !runtime
                     .top_level_env()
+                    .facts
                     .stored_facts
                     .lookup_keys()
                     .any(|fact| {
@@ -728,8 +729,8 @@ have b &Box<R> = (0, 0)
         let counts_after_first = {
             let environment = runtime.top_level_env();
             (
-                environment.stored_facts.lookup_key_count(),
-                environment.cache_infer_rule_firing.len(),
+                environment.facts.stored_facts.lookup_key_count(),
+                environment.caches.infer_rule_firings.len(),
             )
         };
 
@@ -744,8 +745,8 @@ have b &Box<R> = (0, 0)
         let counts_after_second = {
             let environment = runtime.top_level_env();
             (
-                environment.stored_facts.lookup_key_count(),
-                environment.cache_infer_rule_firing.len(),
+                environment.facts.stored_facts.lookup_key_count(),
+                environment.caches.infer_rule_firings.len(),
             )
         };
 
@@ -782,6 +783,7 @@ p.second $in R
 
     let tuple_related_facts = runtime
         .top_level_env()
+        .facts
         .stored_facts
         .lookup_keys()
         .filter(|fact| fact.contains("p[") || fact.contains("p $in cart("))
@@ -818,6 +820,7 @@ p[1] $in R
     assert!(
         runtime
             .top_level_env()
+            .facts
             .stored_facts
             .lookup_keys()
             .any(|fact| fact.contains("p $in cart(")),
@@ -848,6 +851,7 @@ trust (1, 2) $in &Pair<R>
     assert!(
         !runtime
             .top_level_env()
+            .facts
             .stored_facts
             .lookup_keys()
             .any(|fact| fact.contains("(1, 2) $in cart(")),
@@ -856,6 +860,7 @@ trust (1, 2) $in &Pair<R>
     assert!(
         !runtime
             .top_level_env()
+            .facts
             .stored_facts
             .lookup_keys()
             .any(|fact| {
@@ -949,6 +954,7 @@ $is_tuple(make_outer(1).inner)
         assert!(
             !wd_only_runtime
                 .top_level_env()
+                .facts
                 .stored_facts
                 .lookup_keys()
                 .any(|fact| fact.contains("$is_tuple(make_outer(1).inner)")),
@@ -1057,6 +1063,7 @@ have A set
         assert!(
             !atomic_runtime
                 .top_level_env()
+                .facts
                 .stored_facts
                 .lookup_keys()
                 .any(|fact| {
@@ -1103,13 +1110,13 @@ try:
 
     let mut runtime = Runtime::new();
     runtime.start_isolated_source("failed_try_discards_infer_rule_firings");
-    let firings_before = runtime.top_level_env().cache_infer_rule_firing.len();
+    let firings_before = runtime.top_level_env().caches.infer_rule_firings.len();
     let (_, runtime_error) = execute_source(source_code, &mut runtime);
     assert!(
         runtime_error.is_some(),
         "the deliberately false try body should fail"
     );
-    let firings_after = runtime.top_level_env().cache_infer_rule_firing.len();
+    let firings_after = runtime.top_level_env().caches.infer_rule_firings.len();
 
     assert_eq!(
         firings_after, firings_before,

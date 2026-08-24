@@ -1,7 +1,6 @@
 use crate::error::RuntimeError;
 use crate::fact::Fact;
 use crate::infer::{InferReason, SuccessInferResult};
-use crate::pipeline::record_pipeline_step;
 use crate::result::{StmtResult, SuccessFactStmtResult, SuccessVerifyFactWellDefinedResult};
 use crate::runtime::Runtime;
 use crate::verify::ProofSearchState;
@@ -9,11 +8,6 @@ use std::result::Result;
 
 impl Runtime {
     pub fn execute_submitted_fact(&mut self, fact: &Fact) -> Result<StmtResult, RuntimeError> {
-        record_pipeline_step(
-            "execute fact",
-            "Runtime::execute_submitted_fact",
-            "src/execute/submitted_fact_execution.rs",
-        );
         let well_definedness = self.verify_fact_well_defined_for_execution(fact)?;
         let result = self.verify_fact_for_execution(fact)?;
         let infer_result = self.store_executed_fact_and_infer(fact, &result)?;
@@ -30,20 +24,10 @@ impl Runtime {
         &mut self,
         fact: &Fact,
     ) -> Result<SuccessVerifyFactWellDefinedResult, RuntimeError> {
-        record_pipeline_step(
-            "well-definedness",
-            "Runtime::verify_fact_well_defined_for_execution",
-            "src/execute/submitted_fact_execution.rs",
-        );
         self.verify_fact_well_defined_result(fact, &ProofSearchState::initial())
     }
 
     fn verify_fact_for_execution(&mut self, fact: &Fact) -> Result<StmtResult, RuntimeError> {
-        record_pipeline_step(
-            "verify",
-            "Runtime::verify_fact_for_execution",
-            "src/execute/submitted_fact_execution.rs",
-        );
         self.verify_fact_or_error(fact, &ProofSearchState::initial())
     }
 
@@ -52,11 +36,6 @@ impl Runtime {
         fact: &Fact,
         result: &StmtResult,
     ) -> Result<SuccessInferResult, RuntimeError> {
-        record_pipeline_step(
-            "store and infer",
-            "Runtime::store_executed_fact_and_infer",
-            "src/execute/submitted_fact_execution.rs",
-        );
         let verification_store_facts = result.infer_result();
         let mut infer_result =
             self.store_without_well_defined_verification_and_infer(fact.clone())?;

@@ -58,7 +58,10 @@ impl Runtime {
 
     pub fn is_symmetric_prop_name_known(&self, prop_name: &str) -> bool {
         for env in self.iter_environments_from_top() {
-            if let Some(perms) = env.known_symmetric_props.get(prop_name) {
+            if let Some(perms) = env
+                .predicate_properties
+                .symmetric_argument_permutations(prop_name)
+            {
                 if !perms.is_empty() {
                     return true;
                 }
@@ -163,6 +166,7 @@ impl Runtime {
         let key = obj_equality_key(obj);
         self.iter_environments_from_top().find_map(|environment| {
             environment
+                .facts
                 .known_owner_sets
                 .get(&key)?
                 .values()
@@ -279,7 +283,7 @@ impl Runtime {
             if allow_indirect_lookup {
                 let key = obj_equality_key(&struct_value_obj);
                 for env in self.iter_environments_from_top() {
-                    if let Some((_, equal_objs)) = env.known_equality.get(&key) {
+                    if let Some((_, equal_objs)) = env.facts.known_equality.get(&key) {
                         struct_values.extend(equal_objs.iter().cloned());
                     }
                 }
@@ -502,7 +506,7 @@ impl Runtime {
                 continue;
             }
             for env in self.imported_module_environments(&module_name) {
-                if let Some(info) = env.known_objs_in_fn_sets.get(&key) {
+                if let Some(info) = env.objects.function_set(&key) {
                     return Some(info.clone());
                 }
             }
@@ -522,7 +526,7 @@ impl Runtime {
 
     fn get_known_fn_info_for_key_from_current_envs(&self, key: &str) -> Option<&KnownFnInfo> {
         for env in self.iter_environments_from_top() {
-            if let Some(info) = env.known_objs_in_fn_sets.get(key) {
+            if let Some(info) = env.objects.function_set(key) {
                 return Some(info);
             }
         }
@@ -546,9 +550,9 @@ impl Runtime {
         self.imported_module_environments(module_name)
             .into_iter()
             .find_map(|env| {
-                env.known_objs_in_fn_sets
-                    .get(local_name)
-                    .or_else(|| env.known_objs_in_fn_sets.get(&qualified_name))
+                env.objects
+                    .function_set(local_name)
+                    .or_else(|| env.objects.function_set(&qualified_name))
                     .cloned()
             })
     }
@@ -736,12 +740,12 @@ impl Runtime {
         key: &WellDefinedCacheKey,
     ) -> Option<&CachedWellDefinedObj> {
         self.iter_environments_from_top()
-            .find_map(|env| env.cache_well_defined_obj.get(key))
+            .find_map(|env| env.caches.well_defined_objects.get(key))
     }
 
     pub fn cache_known_facts_contains(&self, key: &str) -> (bool, LineFile) {
         for env in self.iter_environments_from_top() {
-            if let Some(cached_fact) = env.stored_facts.lookup(key) {
+            if let Some(cached_fact) = env.facts.stored_facts.lookup(key) {
                 return (true, cached_fact.line_file.clone());
             }
         }
@@ -750,12 +754,12 @@ impl Runtime {
 
     pub fn cached_known_fact(&self, key: &str) -> Option<&CachedKnownFact> {
         self.iter_environments_from_top()
-            .find_map(|env| env.stored_facts.lookup(key))
+            .find_map(|env| env.facts.stored_facts.lookup(key))
     }
 
     pub fn stored_fact(&self, fact_id: FactId) -> Option<&EnvironmentStoredFact> {
         self.iter_environments_from_top()
-            .find_map(|environment| environment.stored_facts.stored_fact(fact_id))
+            .find_map(|environment| environment.facts.stored_facts.stored_fact(fact_id))
             .map(Rc::as_ref)
     }
 
@@ -816,7 +820,7 @@ impl Runtime {
 
     pub fn infer_rule_firing_cached(&self, key: &str) -> bool {
         self.iter_environments_from_top()
-            .any(|env| env.cache_infer_rule_firing.contains_key(key))
+            .any(|env| env.caches.infer_rule_firings.contains_key(key))
     }
 
     pub fn store_infer_rule_firing(&mut self, key: String) {
@@ -826,11 +830,13 @@ impl Runtime {
     pub fn get_object_equal_to_cart(&self, obj: &Obj) -> Option<Cart> {
         let key = obj.to_string();
         for env in self.object_lookup_environments(obj) {
-            if let Some((known_cart_obj, _)) = env.known_objs_equal_to_cart.get(&key) {
-                return Some(known_cart_obj.clone());
-            }
-            if let Some((_, Some(known_cart_obj), _)) = env.known_objs_equal_to_tuple.get(&key) {
-                return Some(known_cart_obj.clone());
+            if let Some(knowledge) = env.objects.knowledge(&key) {
+                if let Some((known_cart_obj, _)) = &knowledge.cart_equality {
+                    return Some(known_cart_obj.clone());
+                }
+                if let Some((_, Some(known_cart_obj), _)) = &knowledge.tuple_equality {
+                    return Some(known_cart_obj.clone());
+                }
             }
         }
         None
@@ -839,7 +845,11 @@ impl Runtime {
     pub fn get_obj_equal_to_set_builder(&self, obj: &Obj) -> Option<SetBuilder> {
         let key = obj.to_string();
         for env in self.object_lookup_environments(obj) {
-            if let Some((set_builder, _)) = env.known_objs_equal_to_set_builder.get(&key) {
+            if let Some((set_builder, _)) = env
+                .objects
+                .knowledge(&key)
+                .and_then(|knowledge| knowledge.set_builder_equality.as_ref())
+            {
                 return Some(set_builder.clone());
             }
         }
@@ -849,7 +859,11 @@ impl Runtime {
     pub fn get_obj_equal_to_tuple(&self, obj: &Obj) -> Option<Tuple> {
         let key = obj.to_string();
         for env in self.object_lookup_environments(obj) {
-            if let Some((Some(known_tuple_obj), _, _)) = env.known_objs_equal_to_tuple.get(&key) {
+            if let Some((Some(known_tuple_obj), _, _)) = env
+                .objects
+                .knowledge(&key)
+                .and_then(|knowledge| knowledge.tuple_equality.as_ref())
+            {
                 return Some(known_tuple_obj.clone());
             }
         }
@@ -859,7 +873,11 @@ impl Runtime {
     pub fn get_obj_tuple_cart(&self, obj: &Obj) -> Option<Cart> {
         let key = obj.to_string();
         for env in self.object_lookup_environments(obj) {
-            if let Some((_, Some(known_cart_obj), _)) = env.known_objs_equal_to_tuple.get(&key) {
+            if let Some((_, Some(known_cart_obj), _)) = env
+                .objects
+                .knowledge(&key)
+                .and_then(|knowledge| knowledge.tuple_equality.as_ref())
+            {
                 return Some(known_cart_obj.clone());
             }
         }
@@ -869,7 +887,11 @@ impl Runtime {
     pub fn get_obj_equal_to_finite_seq_list(&self, obj: &Obj) -> Option<FiniteSeqListObj> {
         let key = obj.to_string();
         for env in self.object_lookup_environments(obj) {
-            if let Some((known_list, _, _)) = env.known_objs_equal_to_finite_seq_list.get(&key) {
+            if let Some((known_list, _, _)) = env
+                .objects
+                .knowledge(&key)
+                .and_then(|knowledge| knowledge.finite_sequence_list_equality.as_ref())
+            {
                 return Some(known_list.clone());
             }
         }
@@ -879,7 +901,11 @@ impl Runtime {
     pub fn get_finite_seq_set_for_obj_equal_to_seq_list(&self, obj: &Obj) -> Option<FiniteSeqSet> {
         let key = obj.to_string();
         for env in self.object_lookup_environments(obj) {
-            if let Some((_, member_of, _)) = env.known_objs_equal_to_finite_seq_list.get(&key) {
+            if let Some((_, member_of, _)) = env
+                .objects
+                .knowledge(&key)
+                .and_then(|knowledge| knowledge.finite_sequence_list_equality.as_ref())
+            {
                 return member_of.clone();
             }
         }
@@ -889,7 +915,11 @@ impl Runtime {
     pub fn get_obj_equal_to_matrix_list(&self, obj: &Obj) -> Option<MatrixListObj> {
         let key = obj.to_string();
         for env in self.object_lookup_environments(obj) {
-            if let Some((known_matrix, _, _)) = env.known_objs_equal_to_matrix_list.get(&key) {
+            if let Some((known_matrix, _, _)) = env
+                .objects
+                .knowledge(&key)
+                .and_then(|knowledge| knowledge.matrix_list_equality.as_ref())
+            {
                 return Some(known_matrix.clone());
             }
         }
@@ -899,7 +929,11 @@ impl Runtime {
     pub fn get_matrix_set_for_obj_equal_to_matrix_list(&self, obj: &Obj) -> Option<MatrixSet> {
         let key = obj.to_string();
         for env in self.object_lookup_environments(obj) {
-            if let Some((_, member_of, _)) = env.known_objs_equal_to_matrix_list.get(&key) {
+            if let Some((_, member_of, _)) = env
+                .objects
+                .knowledge(&key)
+                .and_then(|knowledge| knowledge.matrix_list_equality.as_ref())
+            {
                 return member_of.clone();
             }
         }
@@ -909,7 +943,11 @@ impl Runtime {
     pub fn get_matrix_set_for_obj(&self, obj: &Obj) -> Option<MatrixSet> {
         let key = obj.to_string();
         for env in self.object_lookup_environments(obj) {
-            if let Some((matrix_set, _)) = env.known_objs_in_matrix_sets.get(&key) {
+            if let Some((matrix_set, _)) = env
+                .objects
+                .knowledge(&key)
+                .and_then(|knowledge| knowledge.matrix_set_membership.as_ref())
+            {
                 return Some(matrix_set.clone());
             }
         }
@@ -919,8 +957,12 @@ impl Runtime {
     pub fn get_object_equal_to_tuple(&self, obj: &Obj) -> Option<Cart> {
         let key = obj.to_string();
         for env in self.object_lookup_environments(obj) {
-            if let Some(cart) = env.known_objs_equal_to_tuple.get(&key) {
-                return cart.1.clone();
+            if let Some((_, cart, _)) = env
+                .objects
+                .knowledge(&key)
+                .and_then(|knowledge| knowledge.tuple_equality.as_ref())
+            {
+                return cart.clone();
             }
         }
         None
@@ -929,7 +971,11 @@ impl Runtime {
     pub fn get_object_equal_to_normalized_decimal_number(&self, obj: &Obj) -> Option<Number> {
         let key = obj.to_string();
         for env in self.object_lookup_environments(obj) {
-            if let Some(KnownObjValue::SimplifiedNumber(number)) = env.known_obj_values.get(&key) {
+            if let Some(KnownObjValue::SimplifiedNumber(number)) = env
+                .objects
+                .knowledge(&key)
+                .and_then(|knowledge| knowledge.simplified_value.as_ref())
+            {
                 return Some(number.clone());
             }
         }
@@ -939,7 +985,11 @@ impl Runtime {
     pub fn get_known_obj_value_as_obj(&self, obj: &Obj) -> Option<Obj> {
         let key = obj.to_string();
         for env in self.object_lookup_environments(obj) {
-            if let Some(known_value) = env.known_obj_values.get(&key) {
+            if let Some(known_value) = env
+                .objects
+                .knowledge(&key)
+                .and_then(|knowledge| knowledge.simplified_value.as_ref())
+            {
                 return match known_value {
                     KnownObjValue::SimplifiedNumber(number) => Some(number.clone().into()),
                     KnownObjValue::SimplifiedFraction(div) => Some(div.clone().into()),
@@ -992,7 +1042,7 @@ impl Runtime {
             next_index += 1;
             for (environment_index, environment) in environments.iter().enumerate() {
                 let Some((class_id, _, equivalent_objects)) =
-                    environment.known_equality.get_with_class_id(&current)
+                    environment.facts.known_equality.get_with_class_id(&current)
                 else {
                     continue;
                 };
@@ -1035,7 +1085,7 @@ impl Runtime {
             next_index += 1;
             for (environment_index, environment) in environments.iter().enumerate() {
                 let Some((class_id, _, equivalent_objects)) =
-                    environment.known_equality.get_with_class_id(&current)
+                    environment.facts.known_equality.get_with_class_id(&current)
                 else {
                     continue;
                 };

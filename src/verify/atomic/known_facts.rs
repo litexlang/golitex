@@ -371,7 +371,7 @@ impl Runtime {
     }
 
     fn extend_equality_proof_graph(equalities: &mut KnownEquality, environment: &Environment) {
-        for equality in environment.known_equality.direct_equalities().iter() {
+        for equality in environment.facts.known_equality.direct_equalities().iter() {
             equalities.store(equality);
         }
     }
@@ -398,9 +398,10 @@ impl Runtime {
         let normalized_key = nested_obj_binder_normalized_fact_key(fact);
         let find_in_environment = |environment: &Environment| {
             environment
+                .facts
                 .stored_facts
                 .lookup(&display_key)
-                .or_else(|| environment.stored_facts.lookup(&normalized_key))
+                .or_else(|| environment.facts.stored_facts.lookup(&normalized_key))
                 .map(|cached| cached.fact_id)
         };
 
@@ -770,6 +771,7 @@ impl Runtime {
         module_names: &[String],
     ) -> Result<StmtResult, RuntimeError> {
         if let Some(known_facts_map) = environment
+            .facts
             .known_atomic_facts_with_1_arg
             .get(&(atomic_fact.key(), atomic_fact.has_positive_polarity()))
         {
@@ -802,6 +804,7 @@ impl Runtime {
         module_names: &[String],
     ) -> Result<StmtResult, RuntimeError> {
         if let Some(known_facts_map) = environment
+            .facts
             .known_atomic_facts_with_2_args
             .get(&(atomic_fact.key(), atomic_fact.has_positive_polarity()))
         {
@@ -858,6 +861,7 @@ impl Runtime {
         // Order facts are stored under `<` vs `>` etc.; e.g. known `a > 0` must match goal `0 < a`.
         if let Some(alt) = atomic_fact.transposed_binary_order_equivalent() {
             if let Some(known_facts_map) = environment
+                .facts
                 .known_atomic_facts_with_2_args
                 .get(&(alt.key(), alt.has_positive_polarity()))
             {
@@ -928,6 +932,7 @@ impl Runtime {
         module_names: &[String],
     ) -> Result<StmtResult, RuntimeError> {
         if let Some(known_facts) = environment
+            .facts
             .known_atomic_facts_with_0_or_more_than_2_args
             .get(&(atomic_fact.key(), atomic_fact.has_positive_polarity()))
         {
@@ -1030,17 +1035,26 @@ impl Runtime {
         let mut known_facts = Vec::new();
         match atomic_fact.number_of_args() {
             1 => {
-                if let Some(facts) = environment.known_atomic_facts_with_1_arg.get(&lookup_key) {
+                if let Some(facts) = environment
+                    .facts
+                    .known_atomic_facts_with_1_arg
+                    .get(&lookup_key)
+                {
                     known_facts.extend(facts.values());
                 }
             }
             2 => {
-                if let Some(facts) = environment.known_atomic_facts_with_2_args.get(&lookup_key) {
+                if let Some(facts) = environment
+                    .facts
+                    .known_atomic_facts_with_2_args
+                    .get(&lookup_key)
+                {
                     known_facts.extend(facts.values());
                 }
             }
             _ => {
                 if let Some(facts) = environment
+                    .facts
                     .known_atomic_facts_with_0_or_more_than_2_args
                     .get(&lookup_key)
                 {

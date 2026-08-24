@@ -1,7 +1,4 @@
-use super::{
-    execute_top_level_statement, execute_top_level_statement_in_trusted_prefix_run,
-    record_pipeline_step,
-};
+use super::{execute_top_level_statement, execute_top_level_statement_in_trusted_prefix_run};
 use crate::common::keywords::TRY;
 use crate::error::{ParseRuntimeError, RuntimeError, RuntimeErrorStruct, UnknownRuntimeError};
 use crate::parse::{TokenBlock, Tokenizer};
@@ -70,11 +67,6 @@ pub fn execute_source_with_options(
     runtime: &mut Runtime,
     options: SourceRunOptions,
 ) -> SourceRunOutcome {
-    record_pipeline_step(
-        "source pipeline",
-        "pipeline::execute_source",
-        "src/pipeline/source_execution.rs",
-    );
     if let Err(error) = require_active_source_context(runtime) {
         return SourceRunOutcome::failure(vec![], error, SourceRunFailureKind::Other);
     }

@@ -36,7 +36,7 @@ impl Runtime {
     }
 
     // After resolving children, fold literals; if still not a number, use
-    // `known_obj_values` so e.g. `a - b` becomes `100` when that
+    // simplified object knowledge so e.g. `a - b` becomes `100` when that
     // binding exists, then outer `(... - 10)` can evaluate (used by equality `calculation`).
     fn resolve_obj_try_fold_arithmetic(&self, result: Obj) -> Obj {
         if let Some(calculated) = result.evaluate_to_normalized_decimal_number() {

@@ -1,4 +1,3 @@
-use super::record_pipeline_step;
 use crate::common::json_value::{render_json_value, JsonValue};
 use crate::error::RuntimeError;
 use crate::obj::strip_free_param_numeric_tags_in_display;
@@ -41,11 +40,6 @@ pub fn render_run_output(
     stmt_results: &[StmtResult],
     runtime_error: &Option<RuntimeError>,
 ) -> (bool, String) {
-    record_pipeline_step(
-        "output",
-        "pipeline::render_run_output",
-        "src/pipeline/output_rendering.rs",
-    );
     let mut output_text = String::new();
     for stmt_result in stmt_results.iter() {
         output_text.push('\n');

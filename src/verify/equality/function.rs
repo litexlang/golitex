@@ -227,7 +227,7 @@ impl Runtime {
     }
 }
 
-// FnSet “type” for an anonymous fn, a bare FnSet obj, or a name in known_objs_in_fn_sets.
+// FnSet “type” for an anonymous function, a bare FnSet object, or stored object knowledge.
 fn fn_set_type_of_function_value(rt: &Runtime, obj: &Obj) -> Option<FnSet> {
     match obj {
         Obj::AnonymousFn(af) => FnSet::new(

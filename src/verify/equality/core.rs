@@ -8,7 +8,6 @@ use crate::obj::{
     obj_equality_key, objs_equal_with_nested_binder_alpha_equivalence, AnonymousFn, FnObjHead, Mul,
     Number, Obj,
 };
-use crate::pipeline::record_pipeline_step;
 use crate::rational_expression::{
     complex_algebraic_normalization_nonzero_requirements,
     objs_equal_by_complex_rational_expression_evaluation,
@@ -386,11 +385,6 @@ impl Runtime {
         equal_fact: &EqualFact,
         verify_state: &ProofSearchState,
     ) -> Result<StmtResult, RuntimeError> {
-        record_pipeline_step(
-            "verify equality",
-            "Runtime::verify_equal_fact",
-            "src/verify/equality/core.rs",
-        );
         let builtin_goal: AtomicFact = equal_fact.clone().into();
         let mut result = self.verify_equal_fact_with_bounded_builtin_routes(equal_fact)?;
         if result.is_success() {

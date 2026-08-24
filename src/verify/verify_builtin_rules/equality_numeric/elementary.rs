@@ -104,7 +104,8 @@ impl Runtime {
         let zero_equal_objs_by_env: Vec<Vec<Obj>> = self
             .iter_environments_from_top()
             .filter_map(|env| {
-                env.known_equality
+                env.facts
+                    .known_equality
                     .get(&zero_key)
                     .map(|(_, equal_objs)| equal_objs.iter().cloned().collect())
             })

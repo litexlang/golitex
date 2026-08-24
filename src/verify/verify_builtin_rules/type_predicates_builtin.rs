@@ -963,10 +963,11 @@ impl Runtime {
                 );
             }
             _ => {
-                if let Some((_, _, _)) = self
+                if self
                     .top_level_env()
-                    .known_objs_equal_to_tuple
-                    .get(&is_tuple_fact.set.to_string())
+                    .objects
+                    .knowledge(&is_tuple_fact.set.to_string())
+                    .is_some_and(|knowledge| knowledge.tuple_equality.is_some())
                 {
                     return Ok(
                         (SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(

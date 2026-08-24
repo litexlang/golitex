@@ -4,7 +4,6 @@ use crate::error::{
     RuntimeError, RuntimeErrorOutput, RuntimeErrorStruct, UnknownRuntimeError, VerifyRuntimeError,
 };
 use crate::fact::{AndChainAtomicFact, ExistOrAndChainAtomicFact, Fact, QuantifierFreeFact};
-use crate::pipeline::record_pipeline_step;
 use crate::result::{StmtResult, UnknownFactResult};
 use crate::runtime::Runtime;
 use crate::verify::ProofSearchState;
@@ -40,11 +39,6 @@ impl Runtime {
         fact: &Fact,
         verify_state: &ProofSearchState,
     ) -> Result<StmtResult, RuntimeError> {
-        record_pipeline_step(
-            "verify",
-            "Runtime::verify_fact_or_error",
-            "src/verify/dispatch.rs",
-        );
         let result = self.verify_fact_allow_unknown(fact, verify_state)?;
         let result = self.structured_unknown_result_for_failed_fact(fact, verify_state, result)?;
 

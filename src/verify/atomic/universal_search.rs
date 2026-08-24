@@ -118,12 +118,14 @@ impl Runtime {
             .iter_environments_from_top()
             .flat_map(|environment| {
                 environment
+                    .facts
                     .known_atomic_facts_in_forall_facts
                     .get(&lookup_key)
                     .into_iter()
                     .flat_map(|facts| facts.iter())
                     .chain(
                         environment
+                            .facts
                             .known_atomic_facts_in_forall_facts_by_arg_shape
                             .get(&lookup_key)
                             .into_iter()
@@ -163,12 +165,14 @@ impl Runtime {
                 .into_iter()
                 .flat_map(|environment| {
                     environment
+                        .facts
                         .known_atomic_facts_in_forall_facts
                         .get(&lookup_key)
                         .into_iter()
                         .flat_map(|facts| facts.iter())
                         .chain(
                             environment
+                                .facts
                                 .known_atomic_facts_in_forall_facts_by_arg_shape
                                 .get(&lookup_key)
                                 .into_iter()
@@ -304,7 +308,11 @@ impl Runtime {
                 let env = self
                     .environment_by_top_index(stack_idx)
                     .expect("environment index should be valid");
-                match env.known_atomic_facts_in_forall_facts.get(&lookup_key) {
+                match env
+                    .facts
+                    .known_atomic_facts_in_forall_facts
+                    .get(&lookup_key)
+                {
                     Some(v) => v.len(),
                     None => continue,
                 }
@@ -320,8 +328,10 @@ impl Runtime {
                     let env = self
                         .environment_by_top_index(stack_idx)
                         .expect("environment index should be valid");
-                    let Some(known_forall_facts_in_env) =
-                        env.known_atomic_facts_in_forall_facts.get(&lookup_key)
+                    let Some(known_forall_facts_in_env) = env
+                        .facts
+                        .known_atomic_facts_in_forall_facts
+                        .get(&lookup_key)
                     else {
                         continue;
                     };
@@ -408,7 +418,11 @@ impl Runtime {
             let candidates = self
                 .imported_module_environments(module_name)
                 .into_iter()
-                .filter_map(|env| env.known_atomic_facts_in_forall_facts.get(&lookup_key))
+                .filter_map(|env| {
+                    env.facts
+                        .known_atomic_facts_in_forall_facts
+                        .get(&lookup_key)
+                })
                 .flat_map(|facts| facts.iter().rev().cloned())
                 .collect::<Vec<_>>();
 
@@ -563,6 +577,7 @@ impl Runtime {
                     .environment_by_top_index(stack_idx)
                     .expect("environment index should be valid");
                 let Some(arg_shape_map) = env
+                    .facts
                     .known_atomic_facts_in_forall_facts_by_arg_shape
                     .get(&lookup_key)
                 else {
@@ -593,7 +608,8 @@ impl Runtime {
                 .imported_module_environments(module_name)
                 .into_iter()
                 .filter_map(|env| {
-                    env.known_atomic_facts_in_forall_facts_by_arg_shape
+                    env.facts
+                        .known_atomic_facts_in_forall_facts_by_arg_shape
                         .get(&lookup_key)
                 })
                 .flat_map(|arg_shape_map| arg_shape_map.keys())
@@ -639,7 +655,8 @@ impl Runtime {
             let env = self
                 .environment_by_top_index(stack_idx)
                 .expect("environment index should be valid");
-            env.known_atomic_facts_in_forall_facts_by_arg_shape
+            env.facts
+                .known_atomic_facts_in_forall_facts_by_arg_shape
                 .get(&lookup_key)
                 .and_then(|arg_shape_map| arg_shape_map.get(arg_shape_key))
                 .map(|bucket| bucket.len())
@@ -653,7 +670,8 @@ impl Runtime {
                 let env = self
                     .environment_by_top_index(stack_idx)
                     .expect("environment index should be valid");
-                env.known_atomic_facts_in_forall_facts_by_arg_shape
+                env.facts
+                    .known_atomic_facts_in_forall_facts_by_arg_shape
                     .get(lookup_key)
                     .and_then(|arg_shape_map| arg_shape_map.get(arg_shape_key))
                     .and_then(|bucket| bucket.get(entry_idx))
@@ -696,7 +714,8 @@ impl Runtime {
             .imported_module_environments(module_name)
             .into_iter()
             .filter_map(|env| {
-                env.known_atomic_facts_in_forall_facts_by_arg_shape
+                env.facts
+                    .known_atomic_facts_in_forall_facts_by_arg_shape
                     .get(lookup_key)
                     .and_then(|arg_shape_map| arg_shape_map.get(arg_shape_key))
             })
@@ -724,8 +743,8 @@ impl Runtime {
     ) -> HashMap<String, Obj> {
         let mut identifiers = HashMap::new();
         for environment in self.imported_module_environments(module_name) {
-            for name in environment.defined_identifiers.keys() {
-                let Some(definition) = environment.symbols.get(name) else {
+            for name in environment.declarations.defined_identifiers.keys() {
+                let Some(definition) = environment.declarations.symbols.get(name) else {
                     continue;
                 };
                 insert_symbol_substitution(
@@ -847,21 +866,26 @@ impl Runtime {
         for environment in self.iter_environments_from_top() {
             match dom_atomic_fact.number_of_args() {
                 1 => {
-                    if let Some(known_facts) =
-                        environment.known_atomic_facts_with_1_arg.get(&lookup_key)
+                    if let Some(known_facts) = environment
+                        .facts
+                        .known_atomic_facts_with_1_arg
+                        .get(&lookup_key)
                     {
                         candidates.extend(known_facts.values().cloned());
                     }
                 }
                 2 => {
-                    if let Some(known_facts) =
-                        environment.known_atomic_facts_with_2_args.get(&lookup_key)
+                    if let Some(known_facts) = environment
+                        .facts
+                        .known_atomic_facts_with_2_args
+                        .get(&lookup_key)
                     {
                         candidates.extend(known_facts.values().cloned());
                     }
                 }
                 _ => {
                     if let Some(known_facts) = environment
+                        .facts
                         .known_atomic_facts_with_0_or_more_than_2_args
                         .get(&lookup_key)
                     {

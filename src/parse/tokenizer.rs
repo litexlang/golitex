@@ -34,11 +34,6 @@ impl Tokenizer {
         s: &str,
         current_file_path: Rc<str>,
     ) -> Result<Vec<TokenBlock>, RuntimeError> {
-        record_pipeline_step(
-            "tokenize",
-            "Tokenizer::parse_blocks",
-            "src/parse/tokenizer.rs",
-        );
         let stripped_source_code = self.strip_triple_quote_comment_blocks(s);
         let lines: Vec<_> = stripped_source_code.lines().collect();
         let mut i = 0;
