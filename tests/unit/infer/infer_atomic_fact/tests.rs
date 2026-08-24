@@ -3,7 +3,7 @@ use super::*;
 #[test]
 fn fn_eq_infers_ordinary_equality() {
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope("fn_eq_infers_ordinary_equality");
+    runtime.start_isolated_source("fn_eq_infers_ordinary_equality");
 
     let f: Obj = Identifier::new("f".to_string()).into();
     let g: Obj = Identifier::new("g".to_string()).into();
@@ -17,5 +17,5 @@ fn fn_eq_infers_ordinary_equality() {
     assert!(infer_result.contains_added_fact(&ordinary_equality));
     assert!(runtime
         .verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(&f, &g, line_file))
-        .is_true());
+        .is_success());
 }

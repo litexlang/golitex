@@ -41,214 +41,6 @@ struct DefinitionGraphBuilder {
     canonical_name_by_source: HashMap<String, String>,
 }
 
-pub fn run_definition_graph_for_code(
-    code: &str,
-    label: &str,
-    hide_file_paths: bool,
-) -> (bool, String) {
-    run_definition_graph_for_code_with_language(
-        code,
-        label,
-        hide_file_paths,
-        OutputLanguage::English,
-    )
-}
-
-pub fn run_definition_graph_for_code_with_language(
-    code: &str,
-    label: &str,
-    hide_file_paths: bool,
-    _output_language: OutputLanguage,
-) -> (bool, String) {
-    run_definition_graph_on_source("code", label, code, hide_file_paths, false)
-}
-
-pub fn run_definition_graph_for_code_strict(
-    code: &str,
-    label: &str,
-    hide_file_paths: bool,
-) -> (bool, String) {
-    run_definition_graph_for_code_strict_with_language(
-        code,
-        label,
-        hide_file_paths,
-        OutputLanguage::English,
-    )
-}
-
-pub fn run_definition_graph_for_code_strict_with_language(
-    code: &str,
-    label: &str,
-    hide_file_paths: bool,
-    _output_language: OutputLanguage,
-) -> (bool, String) {
-    run_definition_graph_on_source("code", label, code, hide_file_paths, true)
-}
-
-pub fn run_definition_graph_for_file(file_path: &str, hide_file_paths: bool) -> (bool, String) {
-    run_definition_graph_for_file_with_strict(file_path, hide_file_paths, false)
-}
-
-pub fn run_definition_graph_for_file_with_strict(
-    file_path: &str,
-    hide_file_paths: bool,
-    strict_mode: bool,
-) -> (bool, String) {
-    run_definition_graph_for_file_with_strict_and_language(
-        file_path,
-        hide_file_paths,
-        strict_mode,
-        OutputLanguage::English,
-    )
-}
-
-pub fn run_definition_graph_for_file_with_strict_and_language(
-    file_path: &str,
-    hide_file_paths: bool,
-    strict_mode: bool,
-    output_language: OutputLanguage,
-) -> (bool, String) {
-    run_definition_graph_for_file_with_strict_language_and_isolation(
-        file_path,
-        hide_file_paths,
-        strict_mode,
-        output_language,
-        false,
-    )
-}
-
-pub fn run_definition_graph_for_file_with_strict_language_and_isolation(
-    file_path: &str,
-    hide_file_paths: bool,
-    strict_mode: bool,
-    _output_language: OutputLanguage,
-    force_isolated: bool,
-) -> (bool, String) {
-    let resolved_path = match resolve_litex_file_path(file_path) {
-        Ok(path) => path,
-        Err(message) => {
-            return definition_graph_target_error_output(
-                "file",
-                file_path,
-                hide_file_paths,
-                message,
-            );
-        }
-    };
-
-    let mut runtime = Runtime::new();
-    runtime.set_output_style(if hide_file_paths {
-        OutputStyle::Normal
-    } else {
-        OutputStyle::Detailed
-    });
-    runtime.strict_mode = strict_mode;
-    let (stmt_results, runtime_error) = crate::pipeline::run_file_with_project_context(
-        resolved_path.as_str(),
-        &mut runtime,
-        force_isolated,
-    );
-    let selected_target = if force_isolated {
-        None
-    } else {
-        definition_graph_file_target(&runtime, resolved_path.as_str())
-    };
-    render_definition_graph_result(
-        "file",
-        resolved_path.as_str(),
-        hide_file_paths,
-        &mut runtime,
-        stmt_results.as_slice(),
-        runtime_error.as_ref(),
-        selected_target,
-    )
-}
-
-pub fn run_definition_graph_for_repo(repo_path: &str, hide_file_paths: bool) -> (bool, String) {
-    run_definition_graph_for_repo_with_strict(repo_path, hide_file_paths, false)
-}
-
-pub fn run_definition_graph_for_repo_with_strict(
-    repo_path: &str,
-    hide_file_paths: bool,
-    strict_mode: bool,
-) -> (bool, String) {
-    run_definition_graph_for_repo_with_strict_and_language(
-        repo_path,
-        hide_file_paths,
-        strict_mode,
-        OutputLanguage::English,
-    )
-}
-
-pub fn run_definition_graph_for_repo_with_strict_and_language(
-    repo_path: &str,
-    hide_file_paths: bool,
-    strict_mode: bool,
-    _output_language: OutputLanguage,
-) -> (bool, String) {
-    let mut runtime = Runtime::new();
-    runtime.set_output_style(if hide_file_paths {
-        OutputStyle::Normal
-    } else {
-        OutputStyle::Detailed
-    });
-    runtime.strict_mode = strict_mode;
-    let target = match discover_repository(&mut runtime, repo_path) {
-        Ok(target) => target,
-        Err(error) => {
-            return render_definition_graph_result(
-                "repo",
-                repo_path,
-                hide_file_paths,
-                &mut runtime,
-                &[],
-                Some(&error),
-                None,
-            );
-        }
-    };
-    let (stmt_results, runtime_error) =
-        crate::pipeline::run_repository_file_target(&mut runtime, target);
-    render_definition_graph_result(
-        "repo",
-        repo_path,
-        hide_file_paths,
-        &mut runtime,
-        stmt_results.as_slice(),
-        runtime_error.as_ref(),
-        Some(target),
-    )
-}
-
-fn run_definition_graph_on_source(
-    target_kind: &str,
-    target_label: &str,
-    source_code: &str,
-    hide_file_paths: bool,
-    strict_mode: bool,
-) -> (bool, String) {
-    let normalized_source = remove_windows_carriage_return(source_code);
-    let mut runtime = Runtime::new();
-    runtime.start_isolated_source(target_label);
-    runtime.set_output_style(if hide_file_paths {
-        OutputStyle::Normal
-    } else {
-        OutputStyle::Detailed
-    });
-    runtime.strict_mode = strict_mode;
-    let (stmt_results, runtime_error) = run_source_code(normalized_source.as_str(), &mut runtime);
-    render_definition_graph_result(
-        target_kind,
-        target_label,
-        hide_file_paths,
-        &mut runtime,
-        stmt_results.as_slice(),
-        runtime_error.as_ref(),
-        None,
-    )
-}
-
 /// Render the definition inventory retained by the active environment.
 ///
 /// Unlike the relation graph, this projection starts from environment tables,
@@ -273,7 +65,7 @@ pub fn render_definition_graph_from_stmt_results(
     )
 }
 
-fn render_definition_graph_result(
+pub fn render_definition_graph_result(
     target_kind: &str,
     target_label: &str,
     hide_file_paths: bool,
@@ -344,7 +136,7 @@ fn render_definition_graph_result(
     (ok, render_json_value(&JsonValue::Object(fields), 0))
 }
 
-fn definition_graph_target_error_output(
+pub fn definition_graph_target_error_output(
     target_kind: &str,
     target_label: &str,
     hide_file_paths: bool,
@@ -406,7 +198,7 @@ fn definition_graph_target_json_value(
     ])
 }
 
-fn definition_graph_file_target(
+pub fn definition_graph_file_target(
     runtime: &Runtime,
     resolved_path: &str,
 ) -> Option<RepositoryFileTarget> {

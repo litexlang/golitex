@@ -3,7 +3,7 @@ use std::io::Write;
 use std::path::PathBuf;
 use std::time::Instant;
 
-use crate::pipeline::{render_run_source_code_output, run_source_code};
+use crate::pipeline::{execute_source, render_run_output};
 use crate::prelude::*;
 use crate::stmt_result_to_lean_compiler::compile_litex_source_to_lean_source;
 
@@ -27,18 +27,17 @@ fn run_example_lit_file(relative_path: &str) {
     };
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(path_str);
+    runtime.start_isolated_source(path_str);
     let normalized_source = remove_windows_carriage_return(lit_content.as_str());
     runtime.set_current_source_allows_inline_imports(source_has_isolated_import(
         normalized_source.as_str(),
     ));
 
     let start_time = Instant::now();
-    let (stmt_results, runtime_error) = run_source_code(normalized_source.as_str(), &mut runtime);
+    let (stmt_results, runtime_error) = execute_source(normalized_source.as_str(), &mut runtime);
     let duration_ms = start_time.elapsed().as_secs_f64() * 1000.0;
 
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     let status_label = if run_succeeded { "OK" } else { "FAILED" };
     println!(

@@ -5,33 +5,27 @@ impl Runtime {
         &mut self,
         stmt: &ByExtensionStmt,
     ) -> Result<StmtResult, RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(
-            &stmt.left,
-            &UseContextVerifyState::new(0, false),
-        )
-        .map_err(|well_defined_error| {
-            short_exec_error(
-                stmt.clone().into(),
-                format!("by extension: left set `{}` is not well-defined", stmt.left),
-                Some(well_defined_error),
-                vec![],
-            )
-        })?;
-        self.verify_obj_well_defined_and_store_cache(
-            &stmt.right,
-            &UseContextVerifyState::new(0, false),
-        )
-        .map_err(|well_defined_error| {
-            short_exec_error(
-                stmt.clone().into(),
-                format!(
-                    "by extension: right set `{}` is not well-defined",
-                    stmt.right
-                ),
-                Some(well_defined_error),
-                vec![],
-            )
-        })?;
+        self.verify_obj_well_defined_and_store_cache(&stmt.left, &ProofSearchState::initial())
+            .map_err(|well_defined_error| {
+                short_exec_error(
+                    stmt.clone().into(),
+                    format!("by extension: left set `{}` is not well-defined", stmt.left),
+                    Some(well_defined_error),
+                    vec![],
+                )
+            })?;
+        self.verify_obj_well_defined_and_store_cache(&stmt.right, &ProofSearchState::initial())
+            .map_err(|well_defined_error| {
+                short_exec_error(
+                    stmt.clone().into(),
+                    format!(
+                        "by extension: right set `{}` is not well-defined",
+                        stmt.right
+                    ),
+                    Some(well_defined_error),
+                    vec![],
+                )
+            })?;
 
         let local_proof_result: Result<(Vec<StmtResult>, StmtResult, StmtResult), RuntimeError> =
             self.run_in_local_env(|rt| {
@@ -62,7 +56,7 @@ impl Runtime {
                 .into();
                 let left_to_right_subset_result = rt.verify_atomic_fact_restricted_known_builtin(
                     &left_to_right_subset_fact,
-                    &UseContextVerifyState::new(0, false),
+                    &ProofSearchState::initial(),
                 )?;
 
                 let left_to_right_param = rt.fresh_param_group_with_type(
@@ -84,12 +78,12 @@ impl Runtime {
                     stmt.line_file.clone(),
                 )?
                 .into();
-                let left_to_right_result = if left_to_right_subset_result.is_true() {
+                let left_to_right_result = if left_to_right_subset_result.is_success() {
                     left_to_right_subset_result
                 } else {
                     rt.verify_fact_or_error(
                         &left_to_right_forall_fact,
-                        &UseContextVerifyState::new(0, false),
+                        &ProofSearchState::initial(),
                     )
                     .map_err(|verify_error| {
                         short_exec_error(
@@ -112,7 +106,7 @@ impl Runtime {
                 .into();
                 let right_to_left_subset_result = rt.verify_atomic_fact_restricted_known_builtin(
                     &right_to_left_subset_fact,
-                    &UseContextVerifyState::new(0, false),
+                    &ProofSearchState::initial(),
                 )?;
 
                 let right_to_left_param = rt.fresh_param_group_with_type(
@@ -134,12 +128,12 @@ impl Runtime {
                     stmt.line_file.clone(),
                 )?
                 .into();
-                let right_to_left_result = if right_to_left_subset_result.is_true() {
+                let right_to_left_result = if right_to_left_subset_result.is_success() {
                     right_to_left_subset_result
                 } else {
                     rt.verify_fact_or_error(
                         &right_to_left_forall_fact,
-                        &UseContextVerifyState::new(0, false),
+                        &ProofSearchState::initial(),
                     )
                     .map_err(|verify_error| {
                         short_exec_error(

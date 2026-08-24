@@ -9,6 +9,11 @@ impl StmtResultToLeanCompiler {
         mut self,
         results: &[StmtResult],
     ) -> Result<String, String> {
+        record_pipeline_step(
+            "lean compiler",
+            "StmtResultToLeanCompiler::compile_stmt_results_to_lean_source",
+            "src/stmt_result_to_lean_compiler/implementation/result_dispatch.rs",
+        );
         for (statement_index, result) in results.iter().enumerate() {
             self.compile_stmt_result_to_lean_source(result)
                 .map_err(|error| {

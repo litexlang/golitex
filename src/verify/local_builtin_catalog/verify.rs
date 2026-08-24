@@ -7,7 +7,7 @@ impl Runtime {
     pub fn try_verify_atomic_fact_with_local_builtin_catalog(
         &mut self,
         goal: &AtomicFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let mut rules = registered_local_builtin_rules()?;
         rules.sort_by(|left, right| {
@@ -49,7 +49,7 @@ impl Runtime {
                 )?;
                 let result =
                     self.verify_atomic_fact_as_builtin_rule_premise(&instantiated, builtin_state)?;
-                if !result.is_true() {
+                if !result.is_success() {
                     candidate_failed = true;
                     break;
                 }
@@ -70,7 +70,7 @@ impl Runtime {
                 // Compound structure may organize known/directly evaluable leaves, but cannot
                 // reset that budget or reopen general proof search.
                 let result = self.verify_builtin_rule_premise(&instantiated, builtin_state)?;
-                if !result.is_true() {
+                if !result.is_success() {
                     candidate_failed = true;
                     break;
                 }

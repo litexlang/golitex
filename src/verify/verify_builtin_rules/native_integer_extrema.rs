@@ -8,7 +8,7 @@ impl Runtime {
     pub(super) fn try_verify_native_rounding_integer_equality(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -48,7 +48,7 @@ impl Runtime {
     pub(super) fn try_verify_native_rounding_algebra_equality(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -73,7 +73,7 @@ impl Runtime {
             InFact::new(shift, StandardSet::Z.into(), line_file.clone()).into();
         let premise_result =
             self.verify_atomic_fact_as_builtin_rule_premise(&premise, builtin_state)?;
-        if !premise_result.is_true() {
+        if !premise_result.is_success() {
             return Ok(None);
         }
         Ok(Some(
@@ -91,7 +91,7 @@ impl Runtime {
     pub(super) fn try_verify_native_min_max_equality(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -143,7 +143,7 @@ impl Runtime {
     pub(super) fn try_verify_native_rounding_extrema_order(
         &mut self,
         atomic_fact: &AtomicFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         if let Some(result) =
             self.try_verify_native_lcm_le_common_positive_multiple(atomic_fact, builtin_state)?
@@ -181,7 +181,7 @@ impl Runtime {
     fn try_verify_native_lcm_le_common_positive_multiple(
         &mut self,
         atomic_fact: &AtomicFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         // A positive common multiple bounds the least common multiple.
         // The modulo premises intentionally use abs(input), matching the
@@ -230,7 +230,7 @@ impl Runtime {
     fn try_verify_native_rounding_extrema_monotonicity(
         &mut self,
         atomic_fact: &AtomicFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         // Floor, ceiling, min, and max preserve weak componentwise order.
         // Examples: `a <= b => floor(a) <= floor(b)` and

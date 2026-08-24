@@ -6,12 +6,12 @@ impl Runtime {
         fact: &EqualFact,
     ) -> Result<StmtResult, RuntimeError> {
         let extrema = self.verify_extremum_equality_with_builtin_strategy(fact)?;
-        if extrema.is_true() {
+        if extrema.is_success() {
             return Ok(extrema);
         }
         let finite_product =
             self.verify_finite_set_product_pointwise_equality_with_builtin_strategy(fact)?;
-        if finite_product.is_true() {
+        if finite_product.is_success() {
             return Ok(finite_product);
         }
         self.verify_mod_congruence_with_builtin_strategy(fact)
@@ -36,7 +36,7 @@ impl Runtime {
         )
         .into();
         let set_result = self.verify_builtin_strategy_child(&set_goal)?;
-        if !set_result.is_true() {
+        if !set_result.is_success() {
             return Ok(UnknownGenericStmtResult::new().into());
         }
 
@@ -60,7 +60,7 @@ impl Runtime {
             rt.define_params_with_type(&params_def, false, ParamObjType::Forall)?;
             rt.verify_builtin_strategy_child(&pointwise_goal)
         })?;
-        if !pointwise_result.is_true() {
+        if !pointwise_result.is_success() {
             return Ok(UnknownGenericStmtResult::new().into());
         }
 
@@ -109,7 +109,7 @@ impl Runtime {
         let mut steps = Vec::with_capacity(required.len());
         for child in &required {
             let result = self.verify_builtin_strategy_child(child)?;
-            if !result.is_true() {
+            if !result.is_success() {
                 return Ok(UnknownGenericStmtResult::new().into());
             }
             steps.push(result);
@@ -142,8 +142,8 @@ impl Runtime {
             right_mod.right.as_ref().clone(),
             fact.line_file.clone(),
         );
-        let modulus_result = self.verify_equal_fact_with_direct_routes(&modulus_goal)?;
-        if !modulus_result.is_true() {
+        let modulus_result = self.verify_equal_fact_with_bounded_builtin_routes(&modulus_goal)?;
+        if !modulus_result.is_success() {
             return Ok(UnknownGenericStmtResult::new().into());
         }
 
@@ -178,13 +178,13 @@ impl Runtime {
                 residue(right, right_mod.right.as_ref()),
                 fact.line_file.clone(),
             );
-            let direct = self.verify_equal_fact_with_direct_routes(&child)?;
-            let result = if direct.is_true() {
+            let direct = self.verify_equal_fact_with_bounded_builtin_routes(&child)?;
+            let result = if direct.is_success() {
                 direct
             } else {
                 self.verify_mod_congruence_with_builtin_strategy(&child)?
             };
-            if !result.is_true() {
+            if !result.is_success() {
                 return Ok(UnknownGenericStmtResult::new().into());
             }
             subgoals.push(result);

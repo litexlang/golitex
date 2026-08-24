@@ -5,26 +5,23 @@ impl Runtime {
         &mut self,
         stmt: &ByRegularityAxiomStmt,
     ) -> Result<StmtResult, RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(
-            &stmt.set,
-            &UseContextVerifyState::new(0, false),
-        )
-        .map_err(|well_defined_error| {
-            short_exec_error(
-                stmt.clone().into(),
-                format!(
-                    "by regularity_axiom: set `{}` is not well-defined",
-                    stmt.set
-                ),
-                Some(well_defined_error),
-                vec![],
-            )
-        })?;
+        self.verify_obj_well_defined_and_store_cache(&stmt.set, &ProofSearchState::initial())
+            .map_err(|well_defined_error| {
+                short_exec_error(
+                    stmt.clone().into(),
+                    format!(
+                        "by regularity_axiom: set `{}` is not well-defined",
+                        stmt.set
+                    ),
+                    Some(well_defined_error),
+                    vec![],
+                )
+            })?;
 
         let nonempty_fact: Fact =
             IsNonemptySetFact::new(stmt.set.clone(), stmt.line_file.clone()).into();
         let nonempty_result = self
-            .verify_fact_or_error(&nonempty_fact, &UseContextVerifyState::new(0, false))
+            .verify_fact_or_error(&nonempty_fact, &ProofSearchState::initial())
             .map_err(|verify_error| {
                 short_exec_error(
                     stmt.clone().into(),

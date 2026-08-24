@@ -5,7 +5,7 @@ impl Runtime {
     fn unfold_set_builder_definition_without_transport_reentry(
         &mut self,
         obj: &Obj,
-        verify_state: &UseContextVerifyState,
+        verify_state: &ProofSearchState,
     ) -> Result<Option<Obj>, RuntimeError> {
         if self.set_builder_forall_transport_is_active() {
             return Ok(None);
@@ -32,7 +32,7 @@ impl Runtime {
             .filter(|membership| objs_match_for_pattern(&membership.element, &goal.element))
             .cloned()
             .collect();
-        let final_state = UseContextVerifyState::new_with_final_round(true);
+        let final_state = ProofSearchState::final_round_after_well_definedness();
 
         for membership in memberships {
             let unfolded = match &membership.set {
@@ -138,7 +138,7 @@ impl Runtime {
             ) {
                 continue;
             }
-            let requirement_state = UseContextVerifyState::new_with_final_round(true)
+            let requirement_state = ProofSearchState::final_round_after_well_definedness()
                 .without_known_forall_for_equality();
             self.set_set_builder_forall_transport_active(true);
             let membership_result = self.verify_args_satisfy_forall_requirements(
@@ -197,7 +197,7 @@ impl Runtime {
                     Obj::SetBuilder(set_builder) => Some(set_builder.clone()),
                     _ => match self.unfold_set_builder_definition_without_transport_reentry(
                         &membership_pattern.set,
-                        &UseContextVerifyState::new_with_final_round(true),
+                        &ProofSearchState::final_round_after_well_definedness(),
                     )? {
                         Some(Obj::SetBuilder(set_builder)) => Some(set_builder),
                         _ => None,
@@ -239,7 +239,7 @@ impl Runtime {
                         ParamObjType::Forall,
                         Some(&goal.line_file()),
                     )?;
-                    let requirement_state = UseContextVerifyState::new_with_final_round(true)
+                    let requirement_state = ProofSearchState::final_round_after_well_definedness()
                         .without_known_forall_for_equality();
                     self.set_set_builder_forall_transport_active(true);
                     let membership_result = self.verify_args_satisfy_forall_requirements(
@@ -291,7 +291,7 @@ impl Runtime {
                 }
             }
         }
-        let final_state = UseContextVerifyState::new_with_final_round(false);
+        let final_state = ProofSearchState::final_round();
 
         for membership in memberships {
             let set_builder = match &membership.set {
@@ -353,7 +353,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         union: &Union,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<StmtResult, RuntimeError> {
         let mut alternatives = Vec::with_capacity(2);
         for (side, side_name) in [
@@ -369,7 +369,7 @@ impl Runtime {
             alternatives.push(vec![member_fact.clone()]);
             let member_result =
                 self.verify_atomic_fact_as_builtin_rule_premise(&member_fact, builtin_state)?;
-            if member_result.is_true() {
+            if member_result.is_success() {
                 return Ok(
                     SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         in_fact.clone().into(),
@@ -391,7 +391,7 @@ impl Runtime {
             in_fact.line_file.clone(),
             builtin_state,
         )?;
-        if premise_result.is_true() {
+        if premise_result.is_success() {
             return Ok(
                 SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                     in_fact.clone().into(),
@@ -411,7 +411,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         intersect: &Intersect,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<StmtResult, RuntimeError> {
         let left_member_fact: AtomicFact = InFact::new(
             in_fact.element.clone(),
@@ -429,7 +429,7 @@ impl Runtime {
             self.verify_atomic_fact_as_builtin_rule_premise(&left_member_fact, builtin_state)?;
         let right_member_result =
             self.verify_atomic_fact_as_builtin_rule_premise(&right_member_fact, builtin_state)?;
-        if left_member_result.is_true() && right_member_result.is_true() {
+        if left_member_result.is_success() && right_member_result.is_success() {
             return Ok(
                 SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
@@ -446,7 +446,7 @@ impl Runtime {
             in_fact.line_file.clone(),
         ));
         let premise_result = self.verify_builtin_rule_premise(&premise, builtin_state)?;
-        if premise_result.is_true() {
+        if premise_result.is_success() {
             return Ok(
                 SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                     in_fact.clone().into(),
@@ -466,7 +466,7 @@ impl Runtime {
         &mut self,
         not_in_fact: &NotInFact,
         intersect: &Intersect,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<StmtResult, RuntimeError> {
         let mut alternatives = Vec::with_capacity(2);
         for (side, side_name) in [
@@ -482,7 +482,7 @@ impl Runtime {
             alternatives.push(vec![non_member_fact.clone()]);
             let non_member_result =
                 self.verify_atomic_fact_as_builtin_rule_premise(&non_member_fact, builtin_state)?;
-            if non_member_result.is_true() {
+            if non_member_result.is_success() {
                 return Ok(
                     SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         not_in_fact.clone().into(),
@@ -504,7 +504,7 @@ impl Runtime {
             not_in_fact.line_file.clone(),
             builtin_state,
         )?;
-        if premise_result.is_true() {
+        if premise_result.is_success() {
             return Ok(
                 SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                     not_in_fact.clone().into(),
@@ -525,7 +525,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         set_minus: &SetMinus,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<StmtResult, RuntimeError> {
         let left_member_fact: AtomicFact = InFact::new(
             in_fact.element.clone(),
@@ -543,7 +543,7 @@ impl Runtime {
             self.verify_atomic_fact_as_builtin_rule_premise(&left_member_fact, builtin_state)?;
         let right_non_member_result =
             self.verify_atomic_fact_as_builtin_rule_premise(&right_non_member_fact, builtin_state)?;
-        if left_member_result.is_true() && right_non_member_result.is_true() {
+        if left_member_result.is_success() && right_non_member_result.is_success() {
             return Ok(
                 SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
@@ -561,7 +561,7 @@ impl Runtime {
             in_fact.line_file.clone(),
         ));
         let premise_result = self.verify_builtin_rule_premise(&premise, builtin_state)?;
-        if premise_result.is_true() {
+        if premise_result.is_success() {
             return Ok(
                 SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                     in_fact.clone().into(),
@@ -582,12 +582,12 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         big_union: &BigUnion,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<StmtResult, RuntimeError> {
         let exist_fact = self.big_union_membership_exist_fact(in_fact, big_union)?;
         let exist_result =
             self.verify_exist_fact_with_known_exist_fact(&exist_fact, &exist_fact)?;
-        if exist_result.is_true() {
+        if exist_result.is_success() {
             return Ok(
                 SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                     in_fact.clone().into(),
@@ -610,7 +610,7 @@ impl Runtime {
             .into();
             let member_set_result = self
                 .verify_atomic_fact_as_builtin_rule_premise(&member_set_in_family, builtin_state)?;
-            if !member_set_result.is_true() {
+            if !member_set_result.is_success() {
                 continue;
             }
 
@@ -624,7 +624,7 @@ impl Runtime {
                 &element_in_member_set,
                 builtin_state,
             )?;
-            if element_result.is_true() {
+            if element_result.is_success() {
                 return Ok(
                     SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                         in_fact.clone().into(),
@@ -733,12 +733,12 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         index_union: &IndexUnion,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<StmtResult, RuntimeError> {
         if let Some(exist_fact) = self.index_union_membership_exist_fact(in_fact, index_union)? {
             let exist_result =
                 self.verify_exist_fact_with_known_exist_fact(&exist_fact, &exist_fact)?;
-            if exist_result.is_true() {
+            if exist_result.is_success() {
                 return Ok(
                     SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                         in_fact.clone().into(),
@@ -775,7 +775,7 @@ impl Runtime {
             } else {
                 self.verify_atomic_fact_as_builtin_rule_premise(&index_member, builtin_state)?
             };
-            if !index_result.is_true() {
+            if !index_result.is_success() {
                 continue;
             }
             let Some(fiber) =
@@ -787,7 +787,7 @@ impl Runtime {
                 InFact::new(in_fact.element.clone(), fiber, in_fact.line_file.clone()).into();
             let fiber_result =
                 self.verify_atomic_fact_as_builtin_rule_premise(&fiber_member, builtin_state)?;
-            if fiber_result.is_true() {
+            if fiber_result.is_success() {
                 return Ok(
                     SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                         in_fact.clone().into(),
@@ -835,7 +835,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         index_intersect: &IndexIntersect,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<StmtResult, RuntimeError> {
         let ambient_member: AtomicFact = InFact::new(
             in_fact.element.clone(),
@@ -845,7 +845,7 @@ impl Runtime {
         .into();
         let ambient_result =
             self.verify_atomic_fact_as_builtin_rule_premise(&ambient_member, builtin_state)?;
-        if !ambient_result.is_true() {
+        if !ambient_result.is_success() {
             return Ok(UnknownGenericStmtResult::new().into());
         }
 
@@ -863,7 +863,7 @@ impl Runtime {
                     InFact::new(in_fact.element.clone(), fiber, in_fact.line_file.clone()).into();
                 let fiber_result =
                     self.verify_atomic_fact_as_builtin_rule_premise(&fiber_member, builtin_state)?;
-                if !fiber_result.is_true() {
+                if !fiber_result.is_success() {
                     return Ok(UnknownGenericStmtResult::new().into());
                 }
                 evidence.push(fiber_result);
@@ -888,7 +888,7 @@ impl Runtime {
         else {
             return Ok(UnknownGenericStmtResult::new().into());
         };
-        if !forall_result.is_true() {
+        if !forall_result.is_success() {
             return Ok(UnknownGenericStmtResult::new().into());
         }
         Ok(
@@ -908,12 +908,12 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         replacement: &Replacement,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<StmtResult, RuntimeError> {
         let exist_fact = self.replacement_membership_exist_fact(in_fact, replacement)?;
         let exist_result =
             self.verify_exist_fact_with_known_exist_fact(&exist_fact, &exist_fact)?;
-        if exist_result.is_true() {
+        if exist_result.is_success() {
             return Ok(
                 SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                     in_fact.clone().into(),
@@ -938,7 +938,7 @@ impl Runtime {
             // may discharge the witness carrier without consuming a second
             // recursive builtin-rule layer. Example: `$P(1,z)` introduces
             // `z $in replacement(P,{1,2})`.
-            if !preimage_result.is_true() {
+            if !preimage_result.is_success() {
                 if let (AtomicFact::InFact(preimage_in_fact), Obj::ListSet(source_elements)) =
                     (&preimage_in_source, replacement.source_set.as_ref())
                 {
@@ -949,7 +949,7 @@ impl Runtime {
                     )?;
                 }
             }
-            if !preimage_result.is_true() {
+            if !preimage_result.is_success() {
                 continue;
             }
 
@@ -961,7 +961,7 @@ impl Runtime {
             .into();
             let relation_result =
                 self.verify_atomic_fact_as_builtin_rule_premise(&relation_fact, builtin_state)?;
-            if relation_result.is_true() {
+            if relation_result.is_success() {
                 return Ok(
                     SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                         in_fact.clone().into(),
@@ -1167,7 +1167,7 @@ impl Runtime {
         in_fact: &InFact,
         fn_range: &FnRange,
         power_set: &PowerSet,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<StmtResult, RuntimeError> {
         let Some(body) = self.get_fn_range_function_body(&fn_range.function) else {
             return Ok((UnknownGenericStmtResult::new()).into());
@@ -1180,7 +1180,7 @@ impl Runtime {
         .into();
         let mut subset_result =
             self.verify_atomic_fact_as_builtin_rule_premise(&subset_fact, builtin_state)?;
-        if !subset_result.is_true()
+        if !subset_result.is_success()
             && (objs_equal_with_nested_binder_alpha_equivalence(
                 body.ret_set.as_ref(),
                 power_set.set.as_ref(),
@@ -1198,7 +1198,7 @@ impl Runtime {
                 )
                 .into();
         }
-        if !subset_result.is_true() {
+        if !subset_result.is_success() {
             return Ok((UnknownGenericStmtResult::new()).into());
         }
 
@@ -1219,7 +1219,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         power_set: &PowerSet,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<StmtResult, RuntimeError> {
         let subset_fact: AtomicFact = SubsetFact::new(
             in_fact.element.clone(),
@@ -1229,7 +1229,7 @@ impl Runtime {
         .into();
         let mut subset_result =
             self.verify_atomic_fact_as_builtin_rule_premise(&subset_fact, builtin_state)?;
-        if !subset_result.is_true()
+        if !subset_result.is_success()
             && (objs_equal_with_nested_binder_alpha_equivalence(
                 &in_fact.element,
                 power_set.set.as_ref(),
@@ -1247,7 +1247,7 @@ impl Runtime {
                 )
                 .into();
         }
-        if !subset_result.is_true() {
+        if !subset_result.is_success() {
             return Ok((UnknownGenericStmtResult::new()).into());
         }
 
@@ -1270,7 +1270,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         general_cart: &GeneralCart,
-        verify_state: &UseContextVerifyState,
+        verify_state: &ProofSearchState,
     ) -> Result<StmtResult, RuntimeError> {
         let fn_set_fact: AtomicFact = InFact::new(
             in_fact.element.clone(),
@@ -1279,7 +1279,7 @@ impl Runtime {
         )
         .into();
         let fn_set_result = self.verify_atomic_fact(&fn_set_fact, verify_state)?;
-        if !fn_set_result.is_true() {
+        if !fn_set_result.is_success() {
             return Ok((UnknownGenericStmtResult::new()).into());
         }
 
@@ -1289,7 +1289,7 @@ impl Runtime {
             in_fact.line_file.clone(),
         );
         let choice_result = self.verify_atomic_fact(&choice_fact, verify_state)?;
-        if !choice_result.is_true() {
+        if !choice_result.is_success() {
             return Ok((UnknownGenericStmtResult::new()).into());
         }
 
@@ -1308,7 +1308,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         set_builder: &SetBuilder,
-        verify_state: &UseContextVerifyState,
+        verify_state: &ProofSearchState,
     ) -> Result<StmtResult, RuntimeError> {
         let mut step_results = Vec::with_capacity(set_builder.facts.len() + 1);
 
@@ -1320,7 +1320,7 @@ impl Runtime {
         .into();
         let element_in_param_set_result =
             self.verify_atomic_fact(&element_in_param_set, verify_state)?;
-        if !element_in_param_set_result.is_true() {
+        if !element_in_param_set_result.is_success() {
             return Ok((UnknownGenericStmtResult::new()).into());
         }
         step_results.push(element_in_param_set_result);
@@ -1356,7 +1356,7 @@ impl Runtime {
 
             let instantiated_fact_result =
                 self.verify_fact_allow_unknown(&instantiated_fact.to_fact(), verify_state)?;
-            if !instantiated_fact_result.is_true() {
+            if !instantiated_fact_result.is_success() {
                 return Ok((UnknownGenericStmtResult::new()).into());
             }
             step_results.push(instantiated_fact_result);
@@ -1378,7 +1378,7 @@ impl Runtime {
     pub fn maybe_verify_in_fact_in_unfolded_user_defined_set(
         &mut self,
         in_fact: &InFact,
-        verify_state: &UseContextVerifyState,
+        verify_state: &ProofSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let goal_key = in_fact.to_string();
         if !self.begin_set_builder_membership_unfold(&goal_key) {
@@ -1393,7 +1393,7 @@ impl Runtime {
     fn maybe_verify_in_fact_in_unfolded_user_defined_set_once(
         &mut self,
         in_fact: &InFact,
-        verify_state: &UseContextVerifyState,
+        verify_state: &ProofSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         if let Obj::InstantiatedTemplateObj(template_obj) = &in_fact.set {
             self.instantiate_template_obj(template_obj, verify_state)?;
@@ -1415,7 +1415,7 @@ impl Runtime {
             &set_builder,
             verify_state,
         )?;
-        if !unfolded_result.is_true() {
+        if !unfolded_result.is_success() {
             return Ok(None);
         }
 
@@ -1433,7 +1433,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         struct_obj: &StructObj,
-        verify_state: &UseContextVerifyState,
+        verify_state: &ProofSearchState,
     ) -> Result<StmtResult, RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(
             &Obj::StructObj(struct_obj.clone()),
@@ -1461,7 +1461,7 @@ impl Runtime {
                     &ParamType::Obj(field_type.clone()),
                     verify_state,
                 )?;
-                if !field_result.is_true() {
+                if !field_result.is_success() {
                     return Ok((UnknownGenericStmtResult::new()).into());
                 }
                 field_results.push(field_result);
@@ -1476,7 +1476,7 @@ impl Runtime {
         } else {
             self.verify_atomic_fact(&carrier_membership, verify_state)?
         };
-        if !carrier_result.is_true() {
+        if !carrier_result.is_success() {
             return Ok((UnknownGenericStmtResult::new()).into());
         }
 
@@ -1515,7 +1515,7 @@ impl Runtime {
             // may be universal laws, such as associativity, so use the ordinary
             // verifier rather than the restricted atomic builtin path.
             let fact_result = self.verify_fact_allow_unknown(&instantiated_fact, verify_state)?;
-            if !fact_result.is_true() {
+            if !fact_result.is_success() {
                 return Ok((UnknownGenericStmtResult::new()).into());
             }
             step_results.push(fact_result);
@@ -1535,13 +1535,13 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         finite_set_size: &FiniteSetSize,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<StmtResult, RuntimeError> {
         let finite_fact =
             IsFiniteSetFact::new((*finite_set_size.set).clone(), in_fact.line_file.clone());
         let finite_result =
             self.verify_atomic_fact_as_builtin_rule_premise(&finite_fact.into(), builtin_state)?;
-        if finite_result.is_true() {
+        if finite_result.is_success() {
             return Ok(
                 number_in_set_verified_by_builtin_rules_result_with_subgoals(
                     in_fact,
@@ -1559,7 +1559,7 @@ impl Runtime {
     pub(super) fn maybe_verify_in_fact_finite_set_extremum(
         &mut self,
         in_fact: &InFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let source_set = match &in_fact.element {
             Obj::FiniteSetMax(extremum) => extremum.set.as_ref(),
@@ -1616,7 +1616,7 @@ impl Runtime {
         source_set: &Obj,
         standard_set: &Obj,
         line_file: &LineFile,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
         match source_set {
             Obj::ListSet(list_set) => {
@@ -1665,7 +1665,7 @@ impl Runtime {
                         .into();
                 let result =
                     self.verify_atomic_fact_as_builtin_rule_premise(&subset_fact, builtin_state)?;
-                if result.is_true() {
+                if result.is_success() {
                     Ok(Some(vec![result]))
                 } else {
                     Ok(None)
@@ -1680,7 +1680,7 @@ impl Runtime {
         right: &Obj,
         standard_set: &Obj,
         line_file: &LineFile,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
         let Some(mut left_results) = self.verify_finite_set_extremum_source_in_standard_set(
             left,

@@ -368,7 +368,7 @@ impl Runtime {
         let mut results = Vec::with_capacity(required.len());
         for child in required {
             let result = self.verify_builtin_strategy_child(child)?;
-            if !result.is_true() {
+            if !result.is_success() {
                 return Ok(None);
             }
             results.push(result);
@@ -385,8 +385,8 @@ impl Runtime {
         let target_obj: Obj = target.clone().into();
         let subset: AtomicFact =
             SubsetFact::new(set.clone(), target_obj.clone(), lf.clone()).into();
-        let direct = self.verify_non_equational_atomic_fact_with_direct_routes(&subset)?;
-        if direct.is_true() {
+        let direct = self.verify_non_equational_atomic_fact_with_bounded_builtin_routes(&subset)?;
+        if direct.is_success() {
             return Ok(Some(vec![direct]));
         }
 
@@ -398,8 +398,8 @@ impl Runtime {
                         InFact::new(element.as_ref().clone(), target_obj.clone(), lf.clone())
                             .into();
                     let direct =
-                        self.verify_non_equational_atomic_fact_with_direct_routes(&child)?;
-                    let result = if direct.is_true() {
+                        self.verify_non_equational_atomic_fact_with_bounded_builtin_routes(&child)?;
+                    let result = if direct.is_success() {
                         direct
                     } else {
                         let AtomicFact::InFact(child_fact) = child else {
@@ -407,7 +407,7 @@ impl Runtime {
                         };
                         self.verify_numeric_carrier_with_builtin_strategy(&child_fact)?
                     };
-                    if !result.is_true() {
+                    if !result.is_success() {
                         return Ok(None);
                     }
                     results.push(result);

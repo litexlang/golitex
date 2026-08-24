@@ -9,7 +9,7 @@ impl Runtime {
     pub(super) fn try_verify_native_complex_equality(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -42,7 +42,7 @@ impl Runtime {
                 &zero,
                 line_file.clone(),
             ));
-            if known_zero.is_true() {
+            if known_zero.is_success() {
                 let Some(mut steps) =
                     self.verify_objects_are_known_complex(&[z], &line_file, builtin_state)?
                 else {
@@ -101,7 +101,7 @@ impl Runtime {
             &right_re,
             line_file.clone(),
         ));
-        if !re_result.is_true() {
+        if !re_result.is_success() {
             return Ok(None);
         }
         let img_result = self.verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
@@ -109,7 +109,7 @@ impl Runtime {
             &right_img,
             line_file.clone(),
         ));
-        if !img_result.is_true() {
+        if !img_result.is_success() {
             return Ok(None);
         }
         steps.push(re_result);
@@ -143,7 +143,7 @@ impl Runtime {
     pub(super) fn try_verify_native_complex_abs_order(
         &mut self,
         atomic_fact: &AtomicFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some(normalized) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(None);
@@ -184,7 +184,7 @@ impl Runtime {
                 .into();
                 let result =
                     self.verify_atomic_fact_as_builtin_rule_premise(&premise, builtin_state)?;
-                if result.is_true() {
+                if result.is_success() {
                     return Ok(Some(complex_order_result(
                         atomic_fact,
                         "complex modulus is positive for a nonzero argument",
@@ -202,7 +202,7 @@ impl Runtime {
     pub(super) fn try_verify_native_complex_abs_nonzero(
         &mut self,
         not_equal_fact: &NotEqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let complex_abs = match (&not_equal_fact.left, &not_equal_fact.right) {
             (Obj::ComplexAbs(complex_abs), right) if obj_is_literal_zero(right) => complex_abs,
@@ -216,7 +216,7 @@ impl Runtime {
         )
         .into();
         let result = self.verify_atomic_fact_as_builtin_rule_premise(&premise, builtin_state)?;
-        if !result.is_true() {
+        if !result.is_success() {
             return Ok(None);
         }
         Ok(Some(
@@ -232,7 +232,7 @@ impl Runtime {
     fn try_collect_native_coordinate_equality_steps(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<(String, Vec<StmtResult>)>, RuntimeError> {
         if let Some(result) = self.try_collect_native_coordinate_equality_steps_in_direction(
             equal_fact,
@@ -252,7 +252,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         application_is_left: bool,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<(String, Vec<StmtResult>)>, RuntimeError> {
         let (application, expected) = if application_is_left {
             (&equal_fact.left, &equal_fact.right)
@@ -426,7 +426,7 @@ impl Runtime {
                 .into();
                 let exponent_result =
                     self.verify_atomic_fact_as_builtin_rule_premise(&exponent_in_n, builtin_state)?;
-                if !exponent_result.is_true() {
+                if !exponent_result.is_success() {
                     return Ok(None);
                 }
                 steps.push(exponent_result);
@@ -482,7 +482,7 @@ impl Runtime {
                     &denominator_nonzero,
                     builtin_state,
                 )?;
-                if !nonzero_result.is_true() {
+                if !nonzero_result.is_success() {
                     return Ok(None);
                 }
                 steps.push(nonzero_result);
@@ -499,7 +499,7 @@ impl Runtime {
     fn try_verify_native_complex_abs_equality(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         for application_is_left in [true, false] {
             if let Some((reason, steps)) = self
@@ -521,7 +521,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         application_is_left: bool,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<(String, Vec<StmtResult>)>, RuntimeError> {
         let (application, expected) = if application_is_left {
             (&equal_fact.left, &equal_fact.right)
@@ -565,7 +565,7 @@ impl Runtime {
                 &zero,
                 line_file.clone(),
             ));
-            if arg_zero.is_true() {
+            if arg_zero.is_success() {
                 return Ok(Some((
                     "complex modulus is zero when its argument is zero".to_string(),
                     vec![arg_zero],
@@ -598,7 +598,7 @@ impl Runtime {
         &mut self,
         objs: &[&Obj],
         line_file: &LineFile,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
         let premises = objs
             .iter()

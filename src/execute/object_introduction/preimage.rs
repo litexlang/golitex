@@ -131,7 +131,7 @@ impl Runtime {
         stmt: &HaveByPreimageStmt,
     ) -> Result<StmtResult, RuntimeError> {
         let source_atomic: AtomicFact = stmt.range_membership.clone().into();
-        let verify_state = UseContextVerifyState::new(0, false);
+        let verify_state = ProofSearchState::initial();
         let source_result = self
             .verify_atomic_fact(&source_atomic, &verify_state)
             .map_err(|verify_error| {
@@ -208,14 +208,14 @@ impl Runtime {
         infer_result.new_infer_result_inside(
             self.store_with_well_defined_verification_and_infer(
                 preimage_in_source,
-                &UseContextVerifyState::new(0, false),
+                &ProofSearchState::initial(),
             )
             .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))?,
         );
         infer_result.new_infer_result_inside(
             self.store_with_well_defined_verification_and_infer(
                 relation_fact,
-                &UseContextVerifyState::new(0, false),
+                &ProofSearchState::initial(),
             )
             .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))?,
         );
@@ -281,7 +281,7 @@ impl Runtime {
             infer_result.new_infer_result_inside(
                 self.store_with_well_defined_verification_and_infer(
                     fact,
-                    &UseContextVerifyState::new(0, false),
+                    &ProofSearchState::initial(),
                 )
                 .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))?,
             );
@@ -312,7 +312,7 @@ impl Runtime {
             infer_result.new_infer_result_inside(
                 self.store_with_well_defined_verification_and_infer(
                     instantiated_dom_fact,
-                    &UseContextVerifyState::new(0, false),
+                    &ProofSearchState::initial(),
                 )
                 .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))?,
             );
@@ -345,7 +345,7 @@ impl Runtime {
         .into();
         self.store_with_well_defined_verification_and_infer(
             equality_fact,
-            &UseContextVerifyState::new(0, false),
+            &ProofSearchState::initial(),
         )
         .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))
     }

@@ -63,7 +63,7 @@ fn trust_forms_and_import_boundaries_parse_as_expected() {
     );
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope("isolated_import_test.lit");
+    runtime.start_isolated_source("isolated_import_test.lit");
     runtime.set_current_source_allows_inline_imports(true);
     let tokenizer = Tokenizer::new();
     let mut blocks = tokenizer

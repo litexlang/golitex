@@ -29,7 +29,7 @@ impl Runtime {
     pub fn try_verify_zero_equals_subtraction_implies_equal_operands(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -52,7 +52,7 @@ impl Runtime {
             &EqualFact::new_from_refs(x, y, line_file.clone()),
             builtin_state,
         )?;
-        if inner.is_true() {
+        if inner.is_success() {
             return Ok(Some(factual_equal_success_by_builtin_reason(
                 equal_fact,
                 "equality: 0 = x - y with x = y (known or builtin)",
@@ -66,17 +66,17 @@ impl Runtime {
     pub fn verify_zero_product_factor_matches_target(
         &mut self,
         equal_fact: &EqualFact,
-        _builtin_state: &UseBuiltinRuleVerifyState,
+        _builtin_state: &BuiltinRuleSearchState,
     ) -> Result<StmtResult, RuntimeError> {
         // Do not call the full equality builtin here; that would re-enter zero-product
         // cancellation while this rule is already trying to match a factor.
         let known_result = self.verify_equal_fact_by_known_equality(equal_fact);
-        if known_result.is_true() {
+        if known_result.is_success() {
             return Ok(known_result);
         }
 
         let calculation_result = self.verify_equal_fact_by_direct_evaluation(equal_fact);
-        if calculation_result.is_true() {
+        if calculation_result.is_success() {
             return Ok(calculation_result);
         }
 
@@ -86,7 +86,7 @@ impl Runtime {
     pub fn try_verify_zero_equals_product_implies_other_factor_zero(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -155,7 +155,7 @@ impl Runtime {
                     &EqualFact::new_from_refs(target, mul.left.as_ref(), line_file.clone()),
                     builtin_state,
                 )?;
-                if left_target_result.is_true() {
+                if left_target_result.is_success() {
                     let right_nonzero: AtomicFact = NotEqualFact::new(
                         mul.right.as_ref().clone(),
                         zero_obj.clone(),
@@ -166,7 +166,7 @@ impl Runtime {
                         &right_nonzero,
                         builtin_state,
                     )?;
-                    if right_nonzero_result.is_true() {
+                    if right_nonzero_result.is_success() {
                         return Ok(Some(
                             SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                                 equal_fact.clone().into(),
@@ -182,7 +182,7 @@ impl Runtime {
                     &EqualFact::new_from_refs(target, mul.right.as_ref(), line_file.clone()),
                     builtin_state,
                 )?;
-                if right_target_result.is_true() {
+                if right_target_result.is_success() {
                     let left_nonzero: AtomicFact = NotEqualFact::new(
                         mul.left.as_ref().clone(),
                         zero_obj.clone(),
@@ -191,7 +191,7 @@ impl Runtime {
                     .into();
                     let left_nonzero_result = self
                         .verify_atomic_fact_as_builtin_rule_premise(&left_nonzero, builtin_state)?;
-                    if left_nonzero_result.is_true() {
+                    if left_nonzero_result.is_success() {
                         return Ok(Some(
                             SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                                 equal_fact.clone().into(),
@@ -212,7 +212,7 @@ impl Runtime {
     pub fn try_verify_zero_equals_pow_from_base_zero(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -253,7 +253,7 @@ impl Runtime {
             &EqualFact::new_from_refs(base, zero_side, line_file.clone()),
             builtin_state,
         )?;
-        if inner.is_true() {
+        if inner.is_success() {
             return Ok(Some(factual_equal_success_by_builtin_reason(
                 equal_fact,
                 "equality: 0 = a^n from a = 0, n positive integer literal",
@@ -328,7 +328,7 @@ impl Runtime {
     pub fn try_verify_one_mod_equals_one_for_modulus_at_least_two(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -361,7 +361,7 @@ impl Runtime {
         .into();
         let modulus_result =
             self.verify_atomic_fact_as_builtin_rule_premise(&modulus_at_least_two, builtin_state)?;
-        if !modulus_result.is_true() {
+        if !modulus_result.is_success() {
             return Ok(None);
         }
 
@@ -380,7 +380,7 @@ impl Runtime {
     pub fn try_verify_mod_dividend_minus_remainder_equals_zero(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -441,7 +441,7 @@ impl Runtime {
     pub fn try_verify_quot_euclidean_decomposition(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -507,7 +507,7 @@ impl Runtime {
     pub fn try_verify_mod_eq_remainder_from_euclidean_division(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -583,10 +583,10 @@ impl Runtime {
             let decomposition_result = self.verify_equal_fact_by_known_equality(
                 &EqualFact::new_from_refs(dividend, &candidate, line_file.clone()),
             );
-            if !divisor_result.is_true()
-                || !remainder_result.is_true()
-                || !bound_result.is_true()
-                || !decomposition_result.is_true()
+            if !divisor_result.is_success()
+                || !remainder_result.is_success()
+                || !bound_result.is_success()
+                || !decomposition_result.is_success()
             {
                 continue;
             }

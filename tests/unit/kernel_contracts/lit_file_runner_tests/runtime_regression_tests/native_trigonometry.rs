@@ -546,15 +546,15 @@ fn native_trigonometry_has_explicit_backend_boundaries() {
 
 fn run_trigonometric_source(source_code: &str, label: &str) -> (bool, String) {
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(label);
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false)
+    runtime.start_isolated_source(label);
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    render_run_output(&runtime, &stmt_results, &runtime_error)
 }
 
 fn run_trigonometric_source_detailed(source_code: &str, label: &str) -> (bool, String) {
     let mut runtime = Runtime::new();
     runtime.set_output_style(OutputStyle::Detailed);
-    runtime.new_file_path_new_env_new_name_scope(label);
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    render_run_source_code_output(&runtime, &stmt_results, &runtime_error, true)
+    runtime.start_isolated_source(label);
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    render_run_output(&runtime, &stmt_results, &runtime_error)
 }

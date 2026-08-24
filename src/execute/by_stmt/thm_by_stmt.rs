@@ -21,7 +21,7 @@ impl Runtime {
             })?;
         let source_fact_id = self.known_fact_id_for_fact(&forall_fact.clone().into())?;
 
-        let verify_state = UseContextVerifyState::new(0, false);
+        let verify_state = ProofSearchState::initial();
         let arg_type_result = self
             .verify_args_satisfy_param_def_flat_types(
                 &forall_fact.params_def_with_type,
@@ -282,7 +282,7 @@ impl Runtime {
             ));
         };
         let selected_fact = selected_fact.clone();
-        let verify_state = UseContextVerifyState::new(0, false);
+        let verify_state = ProofSearchState::initial();
         self.verify_atomic_fact_well_defined(&selected_fact, &verify_state)
             .map_err(|error| {
                 short_exec_error(
@@ -317,7 +317,7 @@ impl Runtime {
             let target_result = rt
                 .verify_atomic_fact(
                     &selected_fact,
-                    &verify_state.with_well_defined_already_verified(),
+                    &verify_state.with_well_definedness_verified(),
                 )
                 .map_err(|error| {
                     short_exec_error(
@@ -531,7 +531,7 @@ impl Runtime {
             };
         }
 
-        let verify_state = UseContextVerifyState::new(0, false);
+        let verify_state = ProofSearchState::initial();
         if name == "subset_of_finite_set_is_finite" {
             require_arity!(2);
 
@@ -559,7 +559,7 @@ impl Runtime {
                 ] {
                     self.verify_atomic_fact_well_defined(&requirement, &verify_state)?;
                     let result = self.verify_atomic_fact(&requirement, &verify_state)?;
-                    if !result.is_true() {
+                    if !result.is_success() {
                         return Err(builtin_thm_exec_error(
                             stmt,
                             format!(
@@ -641,7 +641,7 @@ impl Runtime {
                     IsFiniteSetFact::new(finite_set, stmt.line_file.clone()).into();
                 self.verify_atomic_fact_well_defined(&finite_requirement, &verify_state)?;
                 let result = self.verify_atomic_fact(&finite_requirement, &verify_state)?;
-                if !result.is_true() {
+                if !result.is_success() {
                     return Err(builtin_thm_exec_error(
                         stmt,
                         "builtin theorem `finite_set_has_bijective_index` requires a finite-set argument"
@@ -741,7 +741,7 @@ impl Runtime {
             let mut requirement_facts = Vec::new();
             let mut requirement_roles = Vec::new();
             if let Some(result) = verification {
-                if !result.is_true() {
+                if !result.is_success() {
                     return Err(builtin_thm_exec_error(
                         stmt,
                         "builtin theorem `rational_has_unique_reduced_fraction` requires its argument to belong to `Q`"
@@ -821,9 +821,11 @@ impl Runtime {
                 .into();
                 let verification = if verify_requirements {
                     self.verify_atomic_fact_well_defined(&conclusion, &verify_state)?;
-                    let automatic_result =
-                        self.verify_non_equational_atomic_fact_with_direct_routes(&conclusion)?;
-                    if automatic_result.is_true() {
+                    let automatic_result = self
+                        .verify_non_equational_atomic_fact_with_bounded_builtin_routes(
+                            &conclusion,
+                        )?;
+                    if automatic_result.is_success() {
                         Some(automatic_result)
                     } else if matches!(
                         (&stmt.args[0], &stmt.args[1]),
@@ -864,7 +866,7 @@ impl Runtime {
                                 stmt.line_file.clone(),
                             )),
                         ];
-                        if steps.iter().all(StmtResult::is_true) {
+                        if steps.iter().all(StmtResult::is_success) {
                             Some(
                                     SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                                         conclusion.clone().into(),
@@ -897,7 +899,7 @@ impl Runtime {
                                 &expanded_in_fact,
                             )?,
                         };
-                        if !result.is_true() {
+                        if !result.is_success() {
                             if let Some(pointwise_result) = self
                                 .verify_in_fact_element_in_fn_set_by_pointwise_values(
                                     &stmt.args[0],
@@ -1028,9 +1030,11 @@ impl Runtime {
                 .into();
                 let verification = if verify_requirements {
                     self.verify_atomic_fact_well_defined(&conclusion, &verify_state)?;
-                    let automatic =
-                        self.verify_non_equational_atomic_fact_with_direct_routes(&conclusion)?;
-                    if automatic.is_true() {
+                    let automatic = self
+                        .verify_non_equational_atomic_fact_with_bounded_builtin_routes(
+                            &conclusion,
+                        )?;
+                    if automatic.is_success() {
                         Some(automatic)
                     } else {
                         let AtomicFact::InFact(in_fact) = &conclusion else {
@@ -1302,7 +1306,7 @@ impl Runtime {
                 .into();
                 let verification = if verify_requirements {
                     self.verify_atomic_fact_well_defined(&conclusion, &verify_state)?;
-                    let builtin_state = UseBuiltinRuleVerifyState::new();
+                    let builtin_state = BuiltinRuleSearchState::initial();
                     let pointwise = self.try_verify_finite_set_sum_pointwise_equality(
                         &EqualFact::new_from_refs(
                             &stmt.args[0],
@@ -1352,7 +1356,7 @@ impl Runtime {
                 .into();
                 let verification = if verify_requirements {
                     self.verify_atomic_fact_well_defined(&conclusion, &verify_state)?;
-                    let builtin_state = UseBuiltinRuleVerifyState::new();
+                    let builtin_state = BuiltinRuleSearchState::initial();
                     Some(
                         self.try_verify_sum_over_bijective_finite_set_enumerations(
                             &EqualFact::new_from_refs(
@@ -1381,7 +1385,7 @@ impl Runtime {
         let mut requirement_facts = Vec::new();
         let mut requirement_roles = Vec::new();
         if let Some(result) = verification {
-            if !result.is_true() {
+            if !result.is_success() {
                 return Err(builtin_thm_exec_error(
                     stmt,
                     format!(

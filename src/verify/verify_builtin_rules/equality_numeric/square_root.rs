@@ -6,7 +6,7 @@ impl Runtime {
     pub fn try_verify_sqrt_square_identity(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -26,7 +26,7 @@ impl Runtime {
             &EqualFact::new_from_refs(sqrt.arg.as_ref(), other, line_file.clone()),
             builtin_state,
         )?;
-        if !arg_result.is_true() {
+        if !arg_result.is_success() {
             return Ok(None);
         }
         Ok(Some(
@@ -44,7 +44,7 @@ impl Runtime {
     pub fn try_verify_sqrt_zero_one_identity(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -62,14 +62,14 @@ impl Runtime {
                 &EqualFact::new_from_refs(sqrt.arg.as_ref(), &literal, line_file.clone()),
                 builtin_state,
             )?;
-            if !arg_result.is_true() {
+            if !arg_result.is_success() {
                 continue;
             }
             let other_result = self.verify_equal_fact_as_builtin_premise(
                 &EqualFact::new_from_refs(other, &literal, line_file.clone()),
                 builtin_state,
             )?;
-            if !other_result.is_true() {
+            if !other_result.is_success() {
                 continue;
             }
             return Ok(Some(
@@ -89,7 +89,7 @@ impl Runtime {
     pub fn try_verify_sqrt_of_square_identity(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -132,7 +132,7 @@ impl Runtime {
     pub fn try_verify_sqrt_product_identity(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -169,7 +169,7 @@ impl Runtime {
             EqualFact::new_from_refs(sqrt.arg.as_ref(), &arg_product, line_file.clone()).into();
         let arg_product_result =
             self.verify_atomic_fact_as_builtin_rule_premise(&arg_product_fact, builtin_state)?;
-        let results = if arg_product_result.is_true() {
+        let results = if arg_product_result.is_success() {
             let Some(mut results) = self.verify_builtin_rule_premises(
                 &[left_nonnegative, right_nonnegative],
                 builtin_state,
@@ -206,7 +206,7 @@ impl Runtime {
     pub fn try_verify_sqrt_quotient_identity(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -243,7 +243,7 @@ impl Runtime {
             EqualFact::new_from_refs(sqrt.arg.as_ref(), &arg_quotient, line_file.clone()).into();
         let arg_quotient_result =
             self.verify_atomic_fact_as_builtin_rule_premise(&arg_quotient_fact, builtin_state)?;
-        let results = if arg_quotient_result.is_true() {
+        let results = if arg_quotient_result.is_success() {
             let Some(mut results) = self.verify_builtin_rule_premises(
                 &[numerator_nonnegative, denominator_positive],
                 builtin_state,
@@ -281,7 +281,7 @@ impl Runtime {
     pub fn try_verify_sqrt_equalities(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         if let Some(done) = self.try_verify_sqrt_square_identity(equal_fact, builtin_state)? {
             return Ok(Some(done));

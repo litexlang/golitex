@@ -418,7 +418,7 @@ tail = "./tail.lit"
         write_file(&root.join("B/c/tail.lit"), "1 = 0\n");
 
         let target_path = path_string_for_test(&root.join("B/c"));
-        let (tail_ok, _) = run_repository_with_output(
+        let (tail_ok, _) = run_repository_for_test(
             target_path.as_str(),
             false,
             true,
@@ -434,7 +434,7 @@ tail = "./tail.lit"
             &root.join("B/c/tail.lit"),
             "B::c::target::c_value = 1\nhave tail_value R = 1\n",
         );
-        let (ok, output) = run_repository_with_output(
+        let (ok, output) = run_repository_for_test(
             target_path.as_str(),
             false,
             true,
@@ -489,7 +489,7 @@ after = "./after.lit"
         write_file(&root.join("B/after.lit"), "1 = 0\n");
 
         let target = path_string_for_test(&root.join("B/target.lit"));
-        let (ok, output) = run_source_code_in_file_with_ok(target.as_str());
+        let (ok, output) = run_file_for_test(target.as_str());
         assert!(ok, "{output}");
         assert!(output.contains("target_value"), "{output}");
         assert!(output.contains("project_export"), "{output}");
@@ -503,8 +503,11 @@ after = "./after.lit"
 
         let mut strict_runtime = Runtime::new();
         strict_runtime.strict_mode = true;
-        let (_, strict_error) =
-            run_file_with_project_context(target.as_str(), &mut strict_runtime, false);
+        let (_, strict_error, _, _) = execute_file_in_runtime(
+            target.as_str(),
+            &mut strict_runtime,
+            FileExecutionOptions::default(),
+        );
         let strict_error = strict_error.expect("strict -f must verify its export prefix");
         assert!(format!("{strict_error:?}").contains("1 = 0"));
     });
@@ -531,7 +534,7 @@ main = "./main.lit"
         );
 
         let file = path_string_for_test(&root.join("unconfigured/deep.lit"));
-        let (ok, output) = run_source_code_in_file_with_ok(file.as_str());
+        let (ok, output) = run_file_for_test(file.as_str());
         assert!(!ok, "{output}");
         assert!(
             output.contains("requires a litex.config in the same folder"),
@@ -586,12 +589,19 @@ main = "./main.lit"
         with_standard_library_root(&std_root, || {
             let mut runtime = Runtime::new();
             let file = path_string_for_test(&file_path);
-            let (_, file_error) = run_file_with_project_context(file.as_str(), &mut runtime, true);
+            let (_, file_error, _, _) = execute_file_in_runtime(
+                file.as_str(),
+                &mut runtime,
+                FileExecutionOptions {
+                    force_isolated: true,
+                    trust_before_line: None,
+                },
+            );
             assert!(file_error.is_none(), "{file_error:?}");
             assert!(runtime.current_source_allows_inline_imports());
 
             let broken_module_path = path_string_for_test(&broken_module_root);
-            let (_, failed_import) = run_source_code(
+            let (_, failed_import) = execute_source(
                 format!("import \"{}\" as broken", broken_module_path).as_str(),
                 &mut runtime,
             );
@@ -610,9 +620,8 @@ main = "./main.lit"
                     "import \"{}\" as yy\nyy::api::value = 7\nimport std basics\nbasics::std_value = 2\nimport std basics\nseed = 1\n",
                     module_path
                 );
-            let (stmt_results, runtime_error) = run_source_code(source.as_str(), &mut runtime);
-            let (ok, output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, true);
+            let (stmt_results, runtime_error) = execute_source(source.as_str(), &mut runtime);
+            let (ok, output) = render_run_output(&runtime, &stmt_results, &runtime_error);
             assert!(ok, "{output}");
             assert!(output.contains("import std basics"), "{output}");
             assert!(output.contains("unverified import warning"), "{output}");
@@ -722,7 +731,14 @@ main2 = "./main2.lit"
 
         let mut runtime = Runtime::new();
         let file = path_string_for_test(&file_path);
-        let (_, file_error) = run_file_with_project_context(file.as_str(), &mut runtime, true);
+        let (_, file_error, _, _) = execute_file_in_runtime(
+            file.as_str(),
+            &mut runtime,
+            FileExecutionOptions {
+                force_isolated: true,
+                trust_before_line: None,
+            },
+        );
         assert!(file_error.is_none(), "{file_error:?}");
 
         let module_path = path_string_for_test(&module_root);
@@ -730,12 +746,11 @@ main2 = "./main2.lit"
                 "import \"{}\" as gf\ngf::main::a + gf::main::a = gf::main2::b\ngf::main::pair[1] = 3\ngf::main2::pair[1] = 8\ncart_dim(gf::main::ProductSet) = 2\n",
                 module_path
             );
-        let (stmt_results, runtime_error) = run_source_code(source.as_str(), &mut runtime);
-        let (ok, output) =
-            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, true);
+        let (stmt_results, runtime_error) = execute_source(source.as_str(), &mut runtime);
+        let (ok, output) = render_run_output(&runtime, &stmt_results, &runtime_error);
         assert!(ok, "{output}");
 
-        let (_, missing_error) = run_source_code("gf::main::missing = 0", &mut runtime);
+        let (_, missing_error) = execute_source("gf::main::missing = 0", &mut runtime);
         let missing_error = missing_error.expect("an unknown qualified object must fail");
         assert!(
             format!("{missing_error:?}").contains("gf::main::missing"),
@@ -773,16 +788,22 @@ have ProductSet set = cart(R, R)
 
         let mut runtime = Runtime::new();
         let file = path_string_for_test(&file_path);
-        let (_, file_error) = run_file_with_project_context(file.as_str(), &mut runtime, true);
+        let (_, file_error, _, _) = execute_file_in_runtime(
+            file.as_str(),
+            &mut runtime,
+            FileExecutionOptions {
+                force_isolated: true,
+                trust_before_line: None,
+            },
+        );
         assert!(file_error.is_none(), "{file_error:?}");
 
         let module_path = path_string_for_test(&module_root);
-        let (stmt_results, runtime_error) = run_source_code(
+        let (stmt_results, runtime_error) = execute_source(
             format!("import \"{}\" as lib", module_path).as_str(),
             &mut runtime,
         );
-        let (ok, output) =
-            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, true);
+        let (ok, output) = render_run_output(&runtime, &stmt_results, &runtime_error);
         assert!(ok, "{output}");
 
         let imported_environment = runtime
@@ -854,9 +875,8 @@ have ProductSet set = cart(R, R)
         ];
         let mut failures = Vec::new();
         for (case_name, source) in probes {
-            let (stmt_results, runtime_error) = run_source_code(source, &mut runtime);
-            let (ok, output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, true);
+            let (stmt_results, runtime_error) = execute_source(source, &mut runtime);
+            let (ok, output) = render_run_output(&runtime, &stmt_results, &runtime_error);
             if !ok {
                 failures.push(format!("{case_name}:\n{output}"));
             }
@@ -886,11 +906,18 @@ assumption = "./assumption.lit"
         let mut runtime = Runtime::new();
         runtime.strict_mode = true;
         let file = path_string_for_test(&file_path);
-        let (_, file_error) = run_file_with_project_context(file.as_str(), &mut runtime, true);
+        let (_, file_error, _, _) = execute_file_in_runtime(
+            file.as_str(),
+            &mut runtime,
+            FileExecutionOptions {
+                force_isolated: true,
+                trust_before_line: None,
+            },
+        );
         assert!(file_error.is_none(), "{file_error:?}");
         let module_path = path_string_for_test(&module_root);
         let source = format!("import \"{}\" as External", module_path);
-        let (_, import_error) = run_source_code(source.as_str(), &mut runtime);
+        let (_, import_error) = execute_source(source.as_str(), &mut runtime);
         let import_error = import_error.expect("strict import must verify its target");
         assert!(format!("{import_error:?}").contains("1 = 0"));
     });
@@ -1179,7 +1206,7 @@ main = "./main.lit"
     write_file(&root.join("extra.lit"), "have extra R = 1\n");
 
     let extra = path_string_for_test(&root.join("extra.lit"));
-    let (ok, output) = run_source_code_in_file_with_ok(extra.as_str());
+    let (ok, output) = run_file_for_test(extra.as_str());
     assert!(!ok);
     assert!(
         output.contains("unexported Litex module path `extra.lit`"),
@@ -1461,7 +1488,7 @@ main = "./main.lit"
         write_file(&root.join("main.lit"), "have value R = 1\n");
 
         let root_string = path_string_for_test(&root);
-        let (ordinary_ok, ordinary_output) = run_repository_with_output(
+        let (ordinary_ok, ordinary_output) = run_repository_for_test(
             root_string.as_str(),
             false,
             false,
@@ -1476,7 +1503,7 @@ main = "./main.lit"
         );
 
         write_file(&root.join("assumption.lit"), "trust 1 = 1\n");
-        let (ordinary_trust_ok, ordinary_trust_output) = run_repository_with_output(
+        let (ordinary_trust_ok, ordinary_trust_output) = run_repository_for_test(
             root_string.as_str(),
             false,
             false,
@@ -1484,7 +1511,7 @@ main = "./main.lit"
             true,
         );
         assert!(ordinary_trust_ok, "{ordinary_trust_output}");
-        let (strict_ok, strict_output) = run_repository_with_output(
+        let (strict_ok, strict_output) = run_repository_for_test(
             root_string.as_str(),
             false,
             true,
@@ -1530,7 +1557,7 @@ assumption = "./assumption.lit"
         write_file(&dependency.join("assumption.lit"), "1 = 0\n");
 
         let root_string = path_string_for_test(&root);
-        let (ordinary_ok, ordinary_output) = run_repository_with_output(
+        let (ordinary_ok, ordinary_output) = run_repository_for_test(
             root_string.as_str(),
             false,
             false,
@@ -1540,7 +1567,7 @@ assumption = "./assumption.lit"
         assert!(ordinary_ok, "{ordinary_output}");
         assert!(ordinary_output.contains("\"kind\": \"project_import\""));
         assert!(ordinary_output.contains("\"name\": \"Dependency\""));
-        let (strict_ok, strict_output) = run_repository_with_output(
+        let (strict_ok, strict_output) = run_repository_for_test(
             root_string.as_str(),
             false,
             true,
@@ -1583,7 +1610,7 @@ main = "./main.lit"
         write_file(&dependency.join("main.lit"), "trust 1 = 1\n");
 
         let root_string = path_string_for_test(&root);
-        let (strict_ok, strict_output) = run_repository_with_output(
+        let (strict_ok, strict_output) = run_repository_for_test(
             root_string.as_str(),
             false,
             true,
@@ -1633,7 +1660,7 @@ main = "./main.lit"
 
         with_standard_library_root(&std_root, || {
             let root_string = path_string_for_test(&root);
-            let (strict_ok, strict_output) = run_repository_with_output(
+            let (strict_ok, strict_output) = run_repository_for_test(
                 root_string.as_str(),
                 false,
                 true,
@@ -1661,7 +1688,39 @@ fn standard_library_root_candidates_cover_installed_layouts() {
 
 fn run_repository(path: &Path) -> (bool, String) {
     let path = path_string_for_test(path);
-    run_repository_with_output(path.as_str(), false, false, OutputLanguage::English, false)
+    run_repository_for_test(path.as_str(), false, false, OutputLanguage::English, false)
+}
+
+fn run_repository_for_test(
+    repository_path: &str,
+    detailed_output: bool,
+    strict_mode: bool,
+    output_language: OutputLanguage,
+    summarize: bool,
+) -> (bool, String) {
+    let outcome = run(RunRequest::new(
+        RunTarget::repository(repository_path),
+        RunOptions {
+            output_style: if detailed_output {
+                OutputStyle::Detailed
+            } else {
+                OutputStyle::Normal
+            },
+            strict_mode,
+            output_language,
+            summarize,
+            ..RunOptions::default()
+        },
+    ));
+    (outcome.ok, outcome.output)
+}
+
+fn run_file_for_test(file_path: &str) -> (bool, String) {
+    let outcome = run(RunRequest::new(
+        RunTarget::file(file_path),
+        RunOptions::default(),
+    ));
+    (outcome.ok, outcome.output)
 }
 
 fn path_string_for_test(path: &Path) -> String {

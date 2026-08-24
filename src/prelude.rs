@@ -92,25 +92,8 @@ pub use crate::fact::SupersetFact;
 pub use crate::fact::{ExistFactEnum, ExistentialSpec};
 pub use crate::graph::{
     render_definition_graph_from_stmt_results, render_fact_graph_from_stmt_results,
-    render_graph_from_stmt_results, render_result_graph_from_stmt_results,
-    run_definition_graph_for_code, run_definition_graph_for_code_strict,
-    run_definition_graph_for_code_strict_with_language,
-    run_definition_graph_for_code_with_language, run_definition_graph_for_file,
-    run_definition_graph_for_file_with_strict,
-    run_definition_graph_for_file_with_strict_and_language,
-    run_definition_graph_for_file_with_strict_language_and_isolation,
-    run_definition_graph_for_repo, run_definition_graph_for_repo_with_strict,
-    run_definition_graph_for_repo_with_strict_and_language, run_fact_graph_for_code,
-    run_fact_graph_for_code_strict, run_fact_graph_for_code_strict_with_language,
-    run_fact_graph_for_code_with_language, run_fact_graph_for_file,
-    run_fact_graph_for_file_with_strict, run_fact_graph_for_file_with_strict_and_language,
-    run_fact_graph_for_file_with_strict_language_and_isolation, run_fact_graph_for_repo,
-    run_fact_graph_for_repo_with_strict, run_fact_graph_for_repo_with_strict_and_language,
-    run_graph_for_code, run_graph_for_code_strict, run_graph_for_code_strict_with_language,
-    run_graph_for_code_with_language, run_graph_for_file, run_graph_for_file_with_strict,
-    run_graph_for_file_with_strict_and_language,
-    run_graph_for_file_with_strict_language_and_isolation, run_graph_for_repo,
-    run_graph_for_repo_with_strict, run_graph_for_repo_with_strict_and_language,
+    render_graph_from_stmt_results, render_result_graph_from_stmt_results, run_graph, GraphKind,
+    GraphRequest,
 };
 pub use crate::infer::{
     ConjunctionImpliesComponentInferRule, DefinedPredicateDefinitionClauseProjectionInferRule,
@@ -250,31 +233,15 @@ pub use crate::obj::{
 };
 pub use crate::parse::{TokenBlock, Tokenizer};
 pub use crate::pipeline::{
-    display_run_summary_json, display_run_summary_json_with_runtime,
-    display_run_summary_json_with_runtime_and_trusted_prefix, display_runtime_error_json,
-    display_stmt_exec_result_json, display_trusted_prefix_report_json, execute_top_level_statement,
-    execute_top_level_statement_in_trusted_prefix_run, render_run_source_code_output,
-    resolve_source_file_path, run_file, run_file_with_project_context,
-    run_file_with_project_context_and_trusted_prefix, run_isolated_repl_with_runtime,
-    run_latex_repl, run_repl, run_repl_with_detail_output, run_repl_with_detail_output_and_strict,
-    run_repl_with_detail_output_and_strict_and_language,
-    run_repl_with_output_style_and_strict_and_language,
-    run_repl_with_output_style_and_strict_and_language_and_isolation, run_repository,
-    run_repository_before_file_target, run_repository_file_target,
-    run_repository_file_target_with_trusted_prefix, run_repository_with_output,
-    run_repository_with_output_style, run_session_with_output_style_and_strict_and_language,
-    run_session_with_output_style_and_strict_and_language_and_preload, run_source_code,
-    run_source_code_in_file, run_source_code_in_file_for_cli,
-    run_source_code_in_file_for_cli_with_output_style_and_summary_and_language_and_isolation,
-    run_source_code_in_file_for_cli_with_strict,
-    run_source_code_in_file_for_cli_with_strict_and_language,
-    run_source_code_in_file_for_cli_with_summary_and_language,
-    run_source_code_in_file_for_cli_with_summary_and_language_and_isolation,
-    run_source_code_in_file_with_ok,
-    run_source_code_in_repository_for_cli_with_output_style_and_summary_and_language,
-    run_source_code_in_repository_for_cli_with_summary_and_language, run_source_code_with_options,
-    run_stmt_at_global_env, FileRunOptions, RunOutputOptions, RunSourceFailureKind, RunSummary,
-    SessionPreload, SourceRunFailureKind, SourceRunOptions, SourceRunOutcome,
+    display_runtime_error_json, display_stmt_exec_result_json, display_trusted_prefix_report_json,
+    execute_file_in_runtime, execute_repository_target, execute_source,
+    execute_source_with_options, execute_top_level_statement,
+    execute_top_level_statement_in_trusted_prefix_run, record_pipeline_step, render_run_output,
+    render_run_summary, resolve_source_file_path, run, run_isolated_repl_with_runtime,
+    run_latex_repl, run_repl, run_repository_before_file_target, run_session, FileExecutionOptions,
+    PipelineStep, PipelineTrace, PipelineTraceCapture, ReplOptions, RepositoryExecutionOptions,
+    RunOptions, RunOutcome, RunRequest, RunSummary, RunSummaryRequest, RunTarget, SessionPreload,
+    SessionRequest, SourceImportPolicy, SourceRunOptions,
 };
 pub use crate::rational_expression::gcd_decimal_str_and_normalize;
 pub use crate::rational_expression::mul_signed_decimal_str;
@@ -507,13 +474,7 @@ pub use crate::result::{
 };
 pub use crate::result::{KnownForallInstantiationItem, KnownForallRequirementKind};
 pub use crate::result::{SuccessBuiltinFactProofEvidenceResult, SuccessBuiltinFactProofResult};
-pub use crate::runner::{
-    resolve_litex_file_path, run_runner_for_code_strict, run_runner_for_code_strict_with_language,
-    run_runner_for_file, run_runner_for_file_with_strict,
-    run_runner_for_file_with_strict_and_language,
-    run_runner_for_file_with_strict_language_and_isolation, run_runner_for_repo,
-    run_runner_for_repo_with_strict, run_runner_for_repo_with_strict_and_language,
-};
+pub use crate::runner::{run_runner, RunnerRequest};
 pub use crate::runtime::ExecutionMode;
 pub use crate::runtime::FreeParamCollection;
 pub use crate::runtime::ParseContext;
@@ -617,7 +578,7 @@ pub use crate::symbol::{
 };
 pub use crate::verify::general_cart_member_fn_set;
 pub use crate::verify::nested_obj_binder_normalized_fact_key;
-pub use crate::verify::{UseBuiltinRuleVerifyState, UseContextVerifyState};
+pub use crate::verify::{BuiltinRuleSearchState, ProofSearchState};
 
 pub use crate::cli::run_cli;
 pub use crate::common::defaults::default_line_file;

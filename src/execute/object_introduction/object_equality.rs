@@ -90,7 +90,7 @@ impl Runtime {
                     .verify_obj_satisfies_param_type(
                         current_param_equal_to.clone(),
                         current_type,
-                        &UseContextVerifyState::new(0, false),
+                        &ProofSearchState::initial(),
                     )
                     .map_err(|verify_error| {
                         short_exec_error(
@@ -112,12 +112,13 @@ impl Runtime {
                     if let ParamType::Obj(target_set) = current_type {
                         known_source_sets = self.known_sets_containing_obj(current_param_equal_to);
                         for source_set in known_source_sets.iter() {
-                            let set_equality =
-                                self.verify_equal_fact_with_direct_routes(&EqualFact::new(
+                            let set_equality = self.verify_equal_fact_with_bounded_builtin_routes(
+                                &EqualFact::new(
                                     source_set.clone(),
                                     target_set.clone(),
                                     have_obj_equal_stmt.line_file.clone(),
-                                ))?;
+                                ),
+                            )?;
                             if !set_equality.is_unknown() {
                                 verify_result = set_equality;
                                 break;
@@ -149,9 +150,9 @@ impl Runtime {
                             if let Ok(candidate_result) = self.verify_obj_satisfies_param_type(
                                 current_param_equal_to.clone(),
                                 &candidate_type,
-                                &UseContextVerifyState::new(0, false),
+                                &ProofSearchState::initial(),
                             ) {
-                                if candidate_result.is_true() {
+                                if candidate_result.is_success() {
                                     known_source_sets.push(candidate_set);
                                     break;
                                 }

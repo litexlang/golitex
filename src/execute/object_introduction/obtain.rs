@@ -361,13 +361,10 @@ impl Runtime {
         }
 
         self.run_in_local_env(|rt| {
-            rt.verify_exist_fact_well_defined(
-                source_exist_fact,
-                &UseContextVerifyState::new(0, false),
-            )
-            .map_err(|well_defined_error| {
-                exec_stmt_error_with_stmt_and_cause(stmt.clone(), well_defined_error)
-            })?;
+            rt.verify_exist_fact_well_defined(source_exist_fact, &ProofSearchState::initial())
+                .map_err(|well_defined_error| {
+                    exec_stmt_error_with_stmt_and_cause(stmt.clone(), well_defined_error)
+                })?;
             for binding in defined_bindings {
                 rt.store_parameter_binding(binding, ParamObjType::Identifier)
                     .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone(), e))?;
@@ -381,7 +378,7 @@ impl Runtime {
         stmt: Stmt,
         source_exist_fact: &ExistFactEnum,
     ) -> Result<StmtResult, RuntimeError> {
-        let verify_state = UseContextVerifyState::new(0, false);
+        let verify_state = ProofSearchState::initial();
         let result = self
             .verify_exist_fact(source_exist_fact, &verify_state)
             .map_err(|verify_error| {
@@ -408,7 +405,7 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         let source_atomic: AtomicFact = obtain.fact.clone().into();
         let source_result = self
-            .verify_atomic_fact(&source_atomic, &UseContextVerifyState::new(0, false))
+            .verify_atomic_fact(&source_atomic, &ProofSearchState::initial())
             .map_err(|verify_error| {
                 exec_stmt_error_with_stmt_and_cause(stmt.clone(), verify_error)
             })?;
@@ -512,7 +509,7 @@ impl Runtime {
             .params_def_with_type()
             .param_defs_and_args_to_param_to_arg_map(new_obj_names_as_identifier_objs.as_slice());
 
-        let body_fact_verify_state = UseContextVerifyState::new(0, false);
+        let body_fact_verify_state = ProofSearchState::initial();
         for fact in source_exist_fact.facts().iter() {
             let instantiated_fact = self
                 .inst_quantifier_free_fact(fact, &param_to_obj_map, ParamObjType::Exist, None)

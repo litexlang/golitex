@@ -115,7 +115,7 @@ pub fn choice_function_for_definition_facts(
 pub fn verify_choice_function_for_arg_types(
     runtime: &mut Runtime,
     atomic_fact: &AtomicFact,
-    verify_state: &UseContextVerifyState,
+    verify_state: &ProofSearchState,
 ) -> Result<Option<Vec<SuccessVerifyAtomicPredicateDomainCheckResult>>, RuntimeError> {
     let (predicate, args, line_file) = match atomic_fact {
         AtomicFact::NormalAtomicFact(fact) => (&fact.predicate, &fact.body, &fact.line_file),

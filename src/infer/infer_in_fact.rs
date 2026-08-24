@@ -401,7 +401,7 @@ impl Runtime {
             IsCartFact::new(in_fact.set.clone(), in_fact.line_file.clone()).into();
         let is_known_symbolic_cart = self
             .verify_non_equational_atomic_fact_with_known_atomic_facts(&is_cart_fact)?
-            .is_true();
+            .is_success();
         if !is_known_symbolic_cart && self.get_object_equal_to_cart(&in_fact.set).is_none() {
             return Ok(SuccessInferResult::new());
         }
@@ -971,7 +971,7 @@ impl Runtime {
                 // family such as `rows(n)(K) = row(K)`.
                 if let Some(set_builder) = self.unfold_known_fn_application_to_set_builder(
                     set_obj,
-                    &UseContextVerifyState::new(0, false),
+                    &ProofSearchState::initial(),
                 )? {
                     return self
                         .infer_membership_in_set_builder_from_in_fact(in_fact, &set_builder);

@@ -1,7 +1,5 @@
-use super::{
-    run_definition_graph_for_code, run_definition_graph_for_file,
-    run_definition_graph_for_file_with_strict, DefinitionGraphBuilder,
-};
+use super::DefinitionGraphBuilder;
+use crate::prelude::*;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -10,7 +8,17 @@ fn definition_graph_output(source: &'static str) -> String {
     std::thread::Builder::new()
         .name("definition_graph_output_large_stack".to_string())
         .stack_size(64 * 1024 * 1024)
-        .spawn(move || run_definition_graph_for_code(source, "definition_graph_test", true).1)
+        .spawn(move || {
+            run_graph(GraphRequest::new(
+                GraphKind::Definition,
+                RunRequest::new(
+                    RunTarget::code(source, "definition_graph_test"),
+                    RunOptions::default(),
+                ),
+                true,
+            ))
+            .1
+        })
         .expect("spawn definition graph output test")
         .join()
         .expect("definition graph output test panicked")
@@ -103,7 +111,17 @@ fn definition_graph_file_uses_selected_export_environment() {
     let output = std::thread::Builder::new()
         .name("definition_graph_selected_export".to_string())
         .stack_size(64 * 1024 * 1024)
-        .spawn(move || run_definition_graph_for_file(target_string.as_str(), true).1)
+        .spawn(move || {
+            run_graph(GraphRequest::new(
+                GraphKind::Definition,
+                RunRequest::new(
+                    RunTarget::file(target_string.as_str()),
+                    RunOptions::default(),
+                ),
+                true,
+            ))
+            .1
+        })
         .expect("spawn selected export definition graph test")
         .join()
         .expect("selected export definition graph test panicked");
@@ -188,7 +206,18 @@ fn definition_graph_project_proof_sources_normalize_local_qualifier() {
         .name("definition_graph_local_proof_source".to_string())
         .stack_size(64 * 1024 * 1024)
         .spawn(move || {
-            run_definition_graph_for_file_with_strict(target_string.as_str(), true, true).1
+            run_graph(GraphRequest::new(
+                GraphKind::Definition,
+                RunRequest::new(
+                    RunTarget::file(target_string.as_str()),
+                    RunOptions {
+                        strict_mode: true,
+                        ..RunOptions::default()
+                    },
+                ),
+                true,
+            ))
+            .1
         })
         .expect("spawn local proof-source definition graph test")
         .join()

@@ -67,7 +67,7 @@ fn def_algo_result_retains_retagged_parameters_and_the_exact_default_check() {
         .as_ref()
         .expect("default check")
         .verification
-        .is_true());
+        .is_success());
     let mut child_results = Vec::new();
     let StmtResult::Success(success) = &results[1] else {
         unreachable!("the statement was already matched as successful")
@@ -118,24 +118,24 @@ have fn iterate(n N) R+ by induc n from 0:
         1
     );
     let local = &verification.verification_run_in_local_env;
-    assert!(local.measure.measure_integer_check.is_true());
-    assert!(local.measure.lower_bound_integer_check.is_true());
-    assert!(local.measure.lower_bound_check.is_true());
+    assert!(local.measure.measure_integer_check.is_success());
+    assert!(local.measure.lower_bound_integer_check.is_success());
+    assert!(local.measure.lower_bound_check.is_success());
     assert!(local.recursive_function.membership_store.fact_id.is_some());
-    assert!(local.cases.coverage_check.is_true());
+    assert!(local.cases.coverage_check.is_success());
     assert_eq!(local.cases.mutual_exclusions.len(), 1);
     assert_eq!(local.cases.mutual_exclusions[0].left_case_index, 0);
     assert_eq!(local.cases.mutual_exclusions[0].right_case_index, 1);
     assert!(local.cases.mutual_exclusions[0]
         .negated_atom_check
-        .is_true());
+        .is_success());
     assert_eq!(local.cases.cases.len(), 2);
     for case in &local.cases.cases {
         assert!(case.assumption_store.fact_id.is_some());
         let SuccessVerifyHaveFnByInducCaseBodyResult::EqualTo(body) = &case.body else {
             panic!("fixture cases must retain equal-to bodies")
         };
-        assert!(body.return_membership_check.is_true());
+        assert!(body.return_membership_check.is_success());
     }
     let mut visited_children = 0;
     let StmtResult::Success(success) = &results[1] else {
@@ -164,9 +164,9 @@ have fn iterate(n N) R+ by induc n from 0:
 #[test]
 fn trusted_definition_results_do_not_invent_verification_evidence() {
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope("trusted_definition_results.lit");
+    runtime.start_isolated_source("trusted_definition_results.lit");
     runtime.replace_current_execution_mode(ExecutionMode::Trusted);
-    let (results, error) = crate::pipeline::pipeline::run_source_code(
+    let (results, error) = crate::pipeline::execute_source(
         r#"struct TrustedBox:
     value R
 have fn trustedIdentity(x R) R = x

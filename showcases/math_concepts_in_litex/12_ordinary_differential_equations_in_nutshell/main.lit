@@ -85,31 +85,34 @@ thm derivative_value_unique:
         slope1 != slope2
         slope1 - slope2 != 0
         abs(slope1 - slope2) > 0
-        abs(slope1 - slope2) / 3 $in R+
-        obtain delta1 from exist delta1 R+ st {$derivative_delta_controlled(f, x0, slope1, abs(slope1 - slope2) / 3, delta1)}
-        obtain delta2 from exist delta2 R+ st {$derivative_delta_controlled(f, x0, slope2, abs(slope1 - slope2) / 3, delta2)}
-        finite_set_min(union({delta1}, {delta2})) $in R+
-        finite_set_min(union({delta1}, {delta2})) / 2 $in R+
-        have sample R = x0 + finite_set_min(union({delta1}, {delta2})) / 2
-        sample = x0 + finite_set_min(union({delta1}, {delta2})) / 2 > x0
+        have epsilon R+ = abs(slope1 - slope2) / 3
+        obtain delta1 from exist delta1 R+ st {$derivative_delta_controlled(f, x0, slope1, epsilon, delta1)}
+        obtain delta2 from exist delta2 R+ st {$derivative_delta_controlled(f, x0, slope2, epsilon, delta2)}
+        have radius R+ = finite_set_min(union({delta1}, {delta2}))
+        have sample R = x0 + radius / 2
+        sample = x0 + radius / 2 > x0
         sample != x0
-        sample - x0 = finite_set_min(union({delta1}, {delta2})) / 2
+        sample - x0 = radius / 2
         sample - x0 > 0
-        abs(sample - x0) = sample - x0 = finite_set_min(union({delta1}, {delta2})) / 2
-        abs(sample - x0) = finite_set_min(union({delta1}, {delta2})) / 2 < finite_set_min(union({delta1}, {delta2})) <= delta1
-        abs(sample - x0) = finite_set_min(union({delta1}, {delta2})) / 2 < finite_set_min(union({delta1}, {delta2})) <= delta2
-        abs((f(sample) - f(x0)) / (sample - x0) - slope1) < abs(slope1 - slope2) / 3
-        abs((f(sample) - f(x0)) / (sample - x0) - slope2) < abs(slope1 - slope2) / 3
-        abs(slope1 - (f(sample) - f(x0)) / (sample - x0)) = abs((f(sample) - f(x0)) / (sample - x0) - slope1)
-        slope1 - slope2 = (slope1 - (f(sample) - f(x0)) / (sample - x0)) + ((f(sample) - f(x0)) / (sample - x0) - slope2)
-        abs(slope1 - slope2) = abs((slope1 - (f(sample) - f(x0)) / (sample - x0)) + ((f(sample) - f(x0)) / (sample - x0) - slope2)) <= abs(slope1 - (f(sample) - f(x0)) / (sample - x0)) + abs((f(sample) - f(x0)) / (sample - x0) - slope2)
-        abs(slope1 - (f(sample) - f(x0)) / (sample - x0)) + abs((f(sample) - f(x0)) / (sample - x0) - slope2) < abs(slope1 - slope2) / 3 + abs(slope1 - slope2) / 3 = 2 * abs(slope1 - slope2) / 3
+        abs(sample - x0) = sample - x0 = radius / 2
+        abs(sample - x0) = radius / 2 < radius <= delta1
+        abs(sample - x0) = radius / 2 < radius <= delta2
+        have difference_quotient R = (f(sample) - f(x0)) / (sample - x0)
+        abs((f(sample) - f(x0)) / (sample - x0) - slope1) < epsilon
+        abs(difference_quotient - slope1) = abs((f(sample) - f(x0)) / (sample - x0) - slope1) < epsilon
+        abs((f(sample) - f(x0)) / (sample - x0) - slope2) < epsilon
+        abs(difference_quotient - slope2) = abs((f(sample) - f(x0)) / (sample - x0) - slope2) < epsilon
+        abs(slope1 - difference_quotient) = abs(difference_quotient - slope1)
+        slope1 - slope2 = (slope1 - difference_quotient) + (difference_quotient - slope2)
+        abs(slope1 - slope2) = abs((slope1 - difference_quotient) + (difference_quotient - slope2)) <= abs(slope1 - difference_quotient) + abs(difference_quotient - slope2)
+        abs(slope1 - difference_quotient) + abs(difference_quotient - slope2) < epsilon + epsilon = 2 * epsilon
         2 / 3 < 1
         (2 / 3) * abs(slope1 - slope2) < 1 * abs(slope1 - slope2)
-        2 * abs(slope1 - slope2) / 3 = (2 / 3) * abs(slope1 - slope2)
+        2 * epsilon = 2 * (abs(slope1 - slope2) / 3)
+        2 * (abs(slope1 - slope2) / 3) = 2 * abs(slope1 - slope2) / 3 = (2 / 3) * abs(slope1 - slope2)
         1 * abs(slope1 - slope2) = abs(slope1 - slope2)
-        2 * abs(slope1 - slope2) / 3 < abs(slope1 - slope2)
-        abs(slope1 - slope2) <= abs(slope1 - (f(sample) - f(x0)) / (sample - x0)) + abs((f(sample) - f(x0)) / (sample - x0) - slope2) < 2 * abs(slope1 - slope2) / 3 < abs(slope1 - slope2)
+        2 * epsilon < abs(slope1 - slope2)
+        abs(slope1 - slope2) <= abs(slope1 - difference_quotient) + abs(difference_quotient - slope2) < 2 * epsilon < abs(slope1 - slope2)
         impossible abs(slope1 - slope2) < abs(slope1 - slope2)
 
 # Existence from differentiability and the uniqueness theorem define a callable

@@ -2,9 +2,9 @@ use super::*;
 
 fn run_setting_source(source_code: &str, label: &str) -> (bool, String) {
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(label);
-    let (results, error) = run_source_code(source_code, &mut runtime);
-    render_run_source_code_output(&runtime, &results, &error, false)
+    runtime.start_isolated_source(label);
+    let (results, error) = execute_source(source_code, &mut runtime);
+    render_run_output(&runtime, &results, &error)
 }
 
 #[test]
@@ -167,7 +167,7 @@ forall S nonempty_set, left, right S, item &EqualPairWitness<S, left, right>:
         .parse_blocks(source, std::rc::Rc::from("struct_header_bundle_shape"))
         .expect("tokenize struct setting bundle fixture");
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope("struct_header_bundle_shape");
+    runtime.start_isolated_source("struct_header_bundle_shape");
     let setting_stmt = runtime
         .parse_statement(&mut blocks[0])
         .expect("parse setting");
@@ -267,7 +267,7 @@ forall [OneElement]:
         .parse_blocks(source, std::rc::Rc::from("setting_freshness"))
         .expect("tokenize setting fixture");
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope("setting_freshness");
+    runtime.start_isolated_source("setting_freshness");
 
     let setting_stmt = runtime
         .parse_statement(&mut blocks[0])
@@ -316,7 +316,7 @@ forall [OneElement(Y, y)]:
         .parse_blocks(source, std::rc::Rc::from("setting_explicit_freshness"))
         .expect("tokenize setting fixture");
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope("setting_explicit_freshness");
+    runtime.start_isolated_source("setting_explicit_freshness");
 
     let setting_stmt = runtime
         .parse_statement(&mut blocks[0])

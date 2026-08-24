@@ -104,7 +104,7 @@ fn pure_congruence_and_definitional_reduction_are_not_ordinary_equality_builtins
 #[test]
 fn compiler_equality_evidence_does_not_leak_from_discarded_child() {
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope("compiler-equality-discarded-child");
+    runtime.start_isolated_source("compiler-equality-discarded-child");
     let a: Obj = Identifier::new("a".to_string()).into();
     let b: Obj = Identifier::new("b".to_string()).into();
     let c: Obj = Identifier::new("c".to_string()).into();
@@ -126,7 +126,7 @@ fn compiler_equality_evidence_does_not_leak_from_discarded_child() {
 #[test]
 fn compiler_equality_evidence_requires_a_cached_fact_id() {
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope("compiler-equality-missing-fact-id");
+    runtime.start_isolated_source("compiler-equality-missing-fact-id");
     let a: Obj = Identifier::new("a".to_string()).into();
     let b: Obj = Identifier::new("b".to_string()).into();
     runtime
@@ -142,7 +142,7 @@ fn compiler_equality_evidence_requires_a_cached_fact_id() {
 #[test]
 fn compiler_equality_evidence_merges_from_committed_child() {
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope("compiler-equality-committed-child");
+    runtime.start_isolated_source("compiler-equality-committed-child");
     let a: Obj = Identifier::new("a".to_string()).into();
     let b: Obj = Identifier::new("b".to_string()).into();
     let c: Obj = Identifier::new("c".to_string()).into();

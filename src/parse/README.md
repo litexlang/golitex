@@ -32,12 +32,13 @@ Runtime.parse_statement(block)
 | --- | --- |
 | [`tokenizer.rs`](tokenizer.rs) | Splits `forall x R:` and its indented body into one `TokenBlock`. |
 | [`statement_parsing.rs`](statement_parsing.rs) | Parses one complete statement and dispatches its first token, such as `forall`, `have`, `claim`, or a bare fact. |
-| [`parse_fact.rs`](parse_fact.rs) | Builds equality, conjunction, chain, existential, and universal facts. |
-| [`parse_def_stmt.rs`](parse_def_stmt.rs) | Parses definition settings, templates, structs, propositions, trust definitions, and shared definition-header rules. |
-| [`parse_have_object_stmt.rs`](parse_have_object_stmt.rs) | Parses object, tuple, Cartesian, sequence, finite-sequence, and matrix `have` definitions. |
-| [`parse_have_function_stmt.rs`](parse_have_function_stmt.rs) | Parses equality, case-based, induction, and unique-existence function definitions. |
-| [`parse_obtain_and_algorithm_stmt.rs`](parse_obtain_and_algorithm_stmt.rs) | Parses `obtain`, preimage definitions, and algorithm branches. |
-| [`parse_obj.rs`](parse_obj.rs) | Owns object-expression precedence, numeric literals, call/field postfixes, and function-set syntax, such as `x + 1` and `f(x)`. |
-| [`parse_primary_obj.rs`](parse_primary_obj.rs) | Dispatches primary keyword and atom forms, including scalar, set, sequence/matrix, Cartesian, and iterated operators such as `sin(x)` and `sum(1, n, f)`. |
-| [`parse_obj_collections.rs`](parse_obj_collections.rs) | Parses argument groups, `unfold`, intervals, replacements, set builders, and set literals such as `{1, 2}`. |
-| [`parse_reference_obj.rs`](parse_reference_obj.rs) | Resolves bare and module-qualified names, struct views, field carriers, and template-backed reference types. |
+| [`fact/expression.rs`](fact/expression.rs) | Builds equality, conjunction, chain, existential, and universal facts. |
+| [`fact/parameter_definition.rs`](fact/parameter_definition.rs) | Parses typed and carrier-bound parameters shared by facts and declarations. |
+| [`object/expression.rs`](object/expression.rs) | Owns object-expression precedence, numeric literals, call/field postfixes, and function-set syntax, such as `x + 1` and `f(x)`. |
+| [`object/primary.rs`](object/primary.rs) | Dispatches primary keyword and atom forms, including scalar, set, sequence/matrix, Cartesian, and iterated operators such as `sin(x)` and `sum(1, n, f)`. |
+| [`object/collections.rs`](object/collections.rs) | Parses argument groups, `unfold`, intervals, replacements, set builders, and set literals such as `{1, 2}`. |
+| [`object/reference.rs`](object/reference.rs) | Resolves bare and module-qualified names, struct views, field carriers, and template-backed reference types. |
+| [`statements/definition.rs`](statements/definition.rs) | Parses definition settings, templates, structs, propositions, trust definitions, and shared definition-header rules. |
+| [`statements/have_object.rs`](statements/have_object.rs) | Parses object, tuple, Cartesian, sequence, finite-sequence, and matrix `have` definitions. |
+| [`statements/have_function.rs`](statements/have_function.rs) | Parses equality, case-based, induction, and unique-existence function definitions. |
+| [`statements/obtain_and_algorithm.rs`](statements/obtain_and_algorithm.rs) | Parses `obtain`, preimage definitions, and algorithm branches. |

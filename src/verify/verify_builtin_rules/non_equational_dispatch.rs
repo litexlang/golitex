@@ -4,7 +4,7 @@ impl Runtime {
     pub fn verify_non_equational_atomic_fact_with_builtin_rules_inner(
         &mut self,
         atomic_fact: &AtomicFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<StmtResult, RuntimeError> {
         match atomic_fact {
             AtomicFact::EqualFact(_) => unreachable!(),
@@ -13,12 +13,12 @@ impl Runtime {
             }
             AtomicFact::FnEqualFact(fn_equal_fact) => self.verify_fn_equal_fact_with_builtin_rules(
                 fn_equal_fact,
-                &UseContextVerifyState::new_with_final_round(false),
+                &ProofSearchState::final_round(),
             ),
             AtomicFact::FnEqualInFact(fn_equal_in_fact) => self
                 .verify_fn_equal_in_fact_with_builtin_rules(
                     fn_equal_in_fact,
-                    &UseContextVerifyState::new_with_final_round(false),
+                    &ProofSearchState::final_round(),
                 ),
             AtomicFact::InFact(in_fact) => {
                 self.verify_in_fact_with_builtin_rules(in_fact, builtin_state)

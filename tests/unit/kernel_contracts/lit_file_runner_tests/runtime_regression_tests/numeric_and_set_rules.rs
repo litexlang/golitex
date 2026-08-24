@@ -9,11 +9,11 @@ have integer_set set = Z
 one + 1 $in integer_set
 "#;
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
+    runtime.start_isolated_source(
         "direct_evaluation_does_not_rewrite_all_arguments_through_object_definitions",
     );
-    let (results, error) = run_source_code(source, &mut runtime);
-    let (succeeded, output) = render_run_source_code_output(&runtime, &results, &error, false);
+    let (results, error) = execute_source(source, &mut runtime);
+    let (succeeded, output) = render_run_output(&runtime, &results, &error);
     assert!(
         !succeeded,
         "direct evaluation must not rewrite every argument through object definitions:\n{output}"
@@ -28,12 +28,10 @@ one + 1 $in integer_set
     );
 
     let mut direct_runtime = Runtime::new();
-    direct_runtime.new_file_path_new_env_new_name_scope(
-        "direct_evaluation_still_checks_the_written_closed_fact",
-    );
-    let (direct_results, direct_error) = run_source_code("2 $in Z", &mut direct_runtime);
+    direct_runtime.start_isolated_source("direct_evaluation_still_checks_the_written_closed_fact");
+    let (direct_results, direct_error) = execute_source("2 $in Z", &mut direct_runtime);
     let (direct_succeeded, direct_output) =
-        render_run_source_code_output(&direct_runtime, &direct_results, &direct_error, false);
+        render_run_output(&direct_runtime, &direct_results, &direct_error);
     assert!(
         direct_succeeded,
         "zero-premise direct evaluation on the written fact must remain available:\n{direct_output}"
@@ -49,16 +47,11 @@ forall x, y R:
         $P(y)
 "#;
     let mut known_fact_runtime = Runtime::new();
-    known_fact_runtime
-        .new_file_path_new_env_new_name_scope("known_fact_matching_still_uses_checked_equalities");
+    known_fact_runtime.start_isolated_source("known_fact_matching_still_uses_checked_equalities");
     let (known_fact_results, known_fact_error) =
-        run_source_code(known_fact_source, &mut known_fact_runtime);
-    let (known_fact_succeeded, known_fact_output) = render_run_source_code_output(
-        &known_fact_runtime,
-        &known_fact_results,
-        &known_fact_error,
-        false,
-    );
+        execute_source(known_fact_source, &mut known_fact_runtime);
+    let (known_fact_succeeded, known_fact_output) =
+        render_run_output(&known_fact_runtime, &known_fact_results, &known_fact_error);
     assert!(
         known_fact_succeeded,
         "known-fact matching through a checked equality must remain available:\n{known_fact_output}"
@@ -79,12 +72,10 @@ forall a Z:
     a $in R
 "#;
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
-        "standard_set_membership_lifting_is_target_driven_and_forward_only",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime
+        .start_isolated_source("standard_set_membership_lifting_is_target_driven_and_forward_only");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
     assert!(
         run_succeeded,
         "known integer membership should lift to real membership:\n{run_output}"
@@ -152,13 +143,11 @@ forall a Z:
 
     let boundary_source = "forall c C:\n    c $in R";
     let mut boundary_runtime = Runtime::new();
-    boundary_runtime.new_file_path_new_env_new_name_scope(
-        "standard_set_membership_lifting_rejects_complex_to_real",
-    );
-    let (boundary_results, boundary_error) =
-        run_source_code(boundary_source, &mut boundary_runtime);
+    boundary_runtime
+        .start_isolated_source("standard_set_membership_lifting_rejects_complex_to_real");
+    let (boundary_results, boundary_error) = execute_source(boundary_source, &mut boundary_runtime);
     let (boundary_succeeded, boundary_output) =
-        render_run_source_code_output(&boundary_runtime, &boundary_results, &boundary_error, false);
+        render_run_output(&boundary_runtime, &boundary_results, &boundary_error);
     assert!(
         !boundary_succeeded,
         "complex membership must not lift backward to real membership:\n{boundary_output}"
@@ -191,12 +180,10 @@ fn standard_set_membership_lifting_does_not_enumerate_stored_owner_sets() {
 fn compatible_modulus_remainder_absorption_requires_divisibility() {
     let positive_source = "forall p Z:\n    p % 2 = (p % 8) % 2\n\nforall p Z, m, d N+:\n    m % d = 0\n    =>:\n        p % d = (p % m) % d";
     let mut positive_runtime = Runtime::new();
-    positive_runtime
-        .new_file_path_new_env_new_name_scope("compatible_modulus_remainder_absorption_positive");
-    let (positive_results, positive_error) =
-        run_source_code(positive_source, &mut positive_runtime);
+    positive_runtime.start_isolated_source("compatible_modulus_remainder_absorption_positive");
+    let (positive_results, positive_error) = execute_source(positive_source, &mut positive_runtime);
     let (positive_succeeded, positive_output) =
-        render_run_source_code_output(&positive_runtime, &positive_results, &positive_error, false);
+        render_run_output(&positive_runtime, &positive_results, &positive_error);
     assert!(
         positive_succeeded,
         "literal and symbolic nested remainders should absorb when the outer modulus divides the inner modulus:\n{positive_output}"
@@ -210,12 +197,10 @@ fn compatible_modulus_remainder_absorption_requires_divisibility() {
 
     let negative_source = "forall p Z:\n    p % 3 = (p % 8) % 3";
     let mut negative_runtime = Runtime::new();
-    negative_runtime
-        .new_file_path_new_env_new_name_scope("compatible_modulus_remainder_absorption_negative");
-    let (negative_results, negative_error) =
-        run_source_code(negative_source, &mut negative_runtime);
+    negative_runtime.start_isolated_source("compatible_modulus_remainder_absorption_negative");
+    let (negative_results, negative_error) = execute_source(negative_source, &mut negative_runtime);
     let (negative_succeeded, negative_output) =
-        render_run_source_code_output(&negative_runtime, &negative_results, &negative_error, false);
+        render_run_output(&negative_runtime, &negative_results, &negative_error);
     assert!(
         !negative_succeeded,
         "nested remainders must not absorb when the outer modulus does not divide the inner modulus:\n{negative_output}"
@@ -236,12 +221,12 @@ forall x, y R+:
         sqrt(x) = sqrt(y)
 "#;
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
+            runtime.start_isolated_source(
                 "algebra_and_square_root_congruence_use_central_structural_equality",
             );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
             assert!(
                 run_succeeded,
                 "algebra and sqrt congruence should remain checkable:\n{run_output}"
@@ -255,17 +240,12 @@ forall x, y R+:
             );
 
             let mut negative_runtime = Runtime::new();
-            negative_runtime.new_file_path_new_env_new_name_scope(
-                "algebra_congruence_does_not_invent_argument_equality",
-            );
+            negative_runtime
+                .start_isolated_source("algebra_congruence_does_not_invent_argument_equality");
             let (negative_results, negative_error) =
-                run_source_code("forall x, y R+:\n    x + 1 = y + 1", &mut negative_runtime);
-            let (negative_succeeded, negative_output) = render_run_source_code_output(
-                &negative_runtime,
-                &negative_results,
-                &negative_error,
-                false,
-            );
+                execute_source("forall x, y R+:\n    x + 1 = y + 1", &mut negative_runtime);
+            let (negative_succeeded, negative_output) =
+                render_run_output(&negative_runtime, &negative_results, &negative_error);
             assert!(
                 !negative_succeeded,
                 "structural congruence must require corresponding argument equality:\n{negative_output}"
@@ -305,12 +285,9 @@ sum(lower_bound, 3, fn(positive_left_index N+) Z {positive_f(positive_left_index
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
-        "finite_sum_pointwise_congruence_uses_a_range_guarded_forall",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("finite_sum_pointwise_congruence_uses_a_range_guarded_forall");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         run_succeeded,
@@ -342,12 +319,9 @@ forall m, n Z:
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
-        "finite_sum_subtraction_and_negation_use_additive_group_rules",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("finite_sum_subtraction_and_negation_use_additive_group_rules");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         run_succeeded,
@@ -386,10 +360,10 @@ sum(1, 3, fn(difference_index Z) N {f(difference_index) - g(difference_index)}) 
 
     for (name, source_code) in cases {
         let mut runtime = Runtime::new();
-        runtime.new_file_path_new_env_new_name_scope(name);
-        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        runtime.start_isolated_source(name);
+        let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
-            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            render_run_output(&runtime, &stmt_results, &runtime_error);
         assert!(
             !run_succeeded,
             "{name} must remain outside the finite-sum subtraction boundary:\n{run_output}"
@@ -414,12 +388,9 @@ sum(1, 3, fn(source_index Z) Z {f(source_index - 1)}) = sum(0, 2, fn(target_inde
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
-        "finite_sum_shift_reindex_uses_a_range_guarded_forall",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("finite_sum_shift_reindex_uses_a_range_guarded_forall");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         run_succeeded,
@@ -447,12 +418,12 @@ forall a R:
 "#;
 
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
+            runtime.start_isolated_source(
                 "real_order_reflexivity_and_strict_irreflexivity_use_number_computation",
             );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, true);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
 
             assert!(
                 run_succeeded,
@@ -486,12 +457,9 @@ forall X set, a N:
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
-        "infinite_set_minus_rule_keeps_a_finite_deletion_infinite",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("infinite_set_minus_rule_keeps_a_finite_deletion_infinite");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         run_succeeded,
@@ -526,10 +494,10 @@ forall X, s set:
         ),
     ] {
         let mut runtime = Runtime::new();
-        runtime.new_file_path_new_env_new_name_scope(name);
-        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        runtime.start_isolated_source(name);
+        let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
-            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            render_run_output(&runtime, &stmt_results, &runtime_error);
 
         assert!(
             !run_succeeded,
@@ -554,12 +522,12 @@ have r R:
     a < r < b
 "#;
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
+            runtime.start_isolated_source(
                 "dense_real_intervals_have_rational_and_real_witnesses_as_builtin_rules",
             );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
 
             assert!(
                 run_succeeded,
@@ -601,12 +569,12 @@ forall k N+:
         1 % k = 1
 "#;
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
+            runtime.start_isolated_source(
                 "integer_ranges_and_euclidean_remainders_have_canonical_builtin_rules",
             );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
 
             assert!(
                 run_succeeded,
@@ -638,12 +606,11 @@ d = 3 * a + 0
 d % 3 = 0
 "#;
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
+    runtime.start_isolated_source(
         "euclidean_remainder_accepts_a_known_natural_quotient_as_an_integer_leaf",
     );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
     assert!(
         run_succeeded,
         "Euclidean remainder uniqueness should accept N as a static subset of Z:\n{run_output}"
@@ -743,12 +710,12 @@ forall x, n Z:
 "#;
 
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
+            runtime.start_isolated_source(
                 "direct_order_semantics_builtin_rules_cover_transitivity_bounds_and_integer_discreteness",
             );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
 
             assert!(
                 run_succeeded,
@@ -807,10 +774,10 @@ forall x, n Z:
         ),
     ] {
         let mut runtime = Runtime::new();
-        runtime.new_file_path_new_env_new_name_scope(name);
-        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        runtime.start_isolated_source(name);
+        let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
-            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            render_run_output(&runtime, &stmt_results, &runtime_error);
         assert!(
             !run_succeeded,
             "{name} must not prove the successor endpoint without both bounds:\n{run_output}"
@@ -828,12 +795,12 @@ forall n N:
     n <= 1 or n >= 1 + 1
 "#;
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
+            runtime.start_isolated_source(
                 "integer_discrete_split_accepts_a_natural_subject_and_literal_base",
             );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
             assert!(
                 run_succeeded,
                 "integer discreteness should cover natural subjects and literal integer bases:\n{run_output}"
@@ -898,12 +865,12 @@ thm shifted_hanoi_recurrence_predecessor_probe:
     shifted_hanoi_moves_predecessor_probe(n) = hanoi_moves_predecessor_probe(n) + 1 = 2 * hanoi_moves_predecessor_probe(n - 1) + 1 + 1 = 2 * (hanoi_moves_predecessor_probe(n - 1) + 1) = 2 * shifted_hanoi_moves_predecessor_probe(n - 1)
 "#;
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
+            runtime.start_isolated_source(
                 "positive_natural_predecessor_is_natural_in_recursive_definitions",
             );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
 
             assert!(
                 run_succeeded,
@@ -937,15 +904,11 @@ thm shifted_hanoi_recurrence_predecessor_probe:
                 ),
             ] {
                 let mut boundary_runtime = Runtime::new();
-                boundary_runtime.new_file_path_new_env_new_name_scope(name);
+                boundary_runtime.start_isolated_source(name);
                 let (boundary_results, boundary_error) =
-                    run_source_code(invalid_source, &mut boundary_runtime);
-                let (boundary_succeeded, boundary_output) = render_run_source_code_output(
-                    &boundary_runtime,
-                    &boundary_results,
-                    &boundary_error,
-                    false,
-                );
+                    execute_source(invalid_source, &mut boundary_runtime);
+                let (boundary_succeeded, boundary_output) =
+                    render_run_output(&boundary_runtime, &boundary_results, &boundary_error);
                 assert!(
                     !boundary_succeeded,
                     "{name} must stay outside the builtin boundary:\n{boundary_output}"
@@ -972,12 +935,12 @@ thm recursive_count_successor:
         recursive_count(n + 1) = successor(recursive_count(n))
 "#;
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
+            runtime.start_isolated_source(
                 "recursive_function_successor_equation_unfolds_and_normalizes_automatically",
             );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
             assert!(
                 run_succeeded,
                 "a provable recursive successor case should unfold directly:\n{run_output}"
@@ -1000,17 +963,13 @@ thm recursive_count_unknown_branch:
         recursive_count(n) = 0
 "#;
             let mut boundary_runtime = Runtime::new();
-            boundary_runtime.new_file_path_new_env_new_name_scope(
+            boundary_runtime.start_isolated_source(
                 "recursive_function_successor_equation_requires_a_provable_case",
             );
             let (boundary_results, boundary_error) =
-                run_source_code(boundary_source, &mut boundary_runtime);
-            let (boundary_succeeded, boundary_output) = render_run_source_code_output(
-                &boundary_runtime,
-                &boundary_results,
-                &boundary_error,
-                false,
-            );
+                execute_source(boundary_source, &mut boundary_runtime);
+            let (boundary_succeeded, boundary_output) =
+                render_run_output(&boundary_runtime, &boundary_results, &boundary_error);
             assert!(
                 !boundary_succeeded,
                 "an unconstrained recursive argument must not select the base case:\n{boundary_output}"
@@ -1059,12 +1018,10 @@ img(1 + i) = img(1) + img(i)
 img(1 + i) = 1
 "#;
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
-                "number_theory_for_beginners_migration_builtin_patterns",
-            );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            runtime.start_isolated_source("number_theory_for_beginners_migration_builtin_patterns");
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
             assert!(
                 run_succeeded,
                 "Number Theory for Beginners migration patterns should verify:\n{run_output}"
@@ -1097,11 +1054,10 @@ forall A, B set, x set:
 "#;
 
         let mut runtime = Runtime::new();
-        runtime
-            .new_file_path_new_env_new_name_scope("set_minus_membership_excludes_the_removed_set");
-        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        runtime.start_isolated_source("set_minus_membership_excludes_the_removed_set");
+        let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
-            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            render_run_output(&runtime, &stmt_results, &runtime_error);
         assert!(
             run_succeeded,
             "set-minus membership should exclude the removed set:\n{run_output}"
@@ -1142,12 +1098,10 @@ abs(finite_set_max(union({a}, {b})) - finite_set_max(union({A}, {B}))) = abs(b -
 "#;
 
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
-                "extrema_equalities_do_not_recurse_through_weak_order",
-            );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            runtime.start_isolated_source("extrema_equalities_do_not_recurse_through_weak_order");
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
 
             assert!(
                 run_succeeded,
@@ -1166,10 +1120,9 @@ forall x, n R:
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope("integer_discrete_split_does_not_apply_to_reals");
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("integer_discrete_split_does_not_apply_to_reals");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         !run_succeeded,
@@ -1185,12 +1138,11 @@ have fn half_power(x R: x >= 0) R = x^(1/2)
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
+    runtime.start_isolated_source(
         "pow_with_nonnegative_base_and_positive_real_exponent_is_well_defined",
     );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         run_succeeded,
@@ -1231,12 +1183,10 @@ forall n N+:
 "#;
 
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
-                "zero_to_zero_power_uses_natural_exponent_convention",
-            );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            runtime.start_isolated_source("zero_to_zero_power_uses_natural_exponent_convention");
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
 
             assert!(
                 run_succeeded,
@@ -1261,12 +1211,9 @@ forall x R:
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
-        "zero_base_real_power_still_requires_positive_exponent",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("zero_base_real_power_still_requires_positive_exponent");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         !run_succeeded,
@@ -1313,10 +1260,10 @@ forall x, a, b R:
 "#;
 
         let mut runtime = Runtime::new();
-        runtime.new_file_path_new_env_new_name_scope("sqrt_core_builtin_rules");
-        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        runtime.start_isolated_source("sqrt_core_builtin_rules");
+        let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
-            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            render_run_output(&runtime, &stmt_results, &runtime_error);
 
         assert!(
             run_succeeded,
@@ -1325,11 +1272,9 @@ forall x, a, b R:
         );
 
         let mut invalid_runtime = Runtime::new();
-        invalid_runtime
-            .new_file_path_new_env_new_name_scope("sqrt_zero_is_not_incorrectly_proved_nonzero");
-        let (stmt_results, runtime_error) = run_source_code("sqrt(0) != 0", &mut invalid_runtime);
-        let (run_succeeded, _) =
-            render_run_source_code_output(&invalid_runtime, &stmt_results, &runtime_error, false);
+        invalid_runtime.start_isolated_source("sqrt_zero_is_not_incorrectly_proved_nonzero");
+        let (stmt_results, runtime_error) = execute_source("sqrt(0) != 0", &mut invalid_runtime);
+        let (run_succeeded, _) = render_run_output(&invalid_runtime, &stmt_results, &runtime_error);
         assert!(
             !run_succeeded,
             "the sqrt nonzero rule must require a strictly positive argument"
@@ -1372,10 +1317,10 @@ forall a, b R:
 "#;
 
         let mut runtime = Runtime::new();
-        runtime.new_file_path_new_env_new_name_scope("sqrt_order_and_quotient_builtin_rules");
-        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        runtime.start_isolated_source("sqrt_order_and_quotient_builtin_rules");
+        let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
-            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            render_run_output(&runtime, &stmt_results, &runtime_error);
 
         assert!(
             run_succeeded,
@@ -1393,12 +1338,12 @@ fn direct_calculation_equality_is_reported_before_weak_order_fallback() {
             let source_code = "(-1 * sqrt (2)) ^ 2 = 2";
 
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
+            runtime.start_isolated_source(
                 "direct_calculation_equality_is_reported_before_weak_order_fallback",
             );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
 
             assert!(
                 run_succeeded,
@@ -1421,14 +1366,12 @@ fn direct_calculation_builtin_rule_output_localizes_to_zh() {
             let source_code = "(-1 * sqrt (2)) ^ 2 = 2";
 
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
-                "direct_calculation_builtin_rule_output_localizes_to_zh",
-            );
+            runtime.start_isolated_source("direct_calculation_builtin_rule_output_localizes_to_zh");
             runtime.output_language = OutputLanguage::SimplifiedChinese;
 
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
 
             assert!(
                 run_succeeded,
@@ -1451,12 +1394,10 @@ forall a, b R:
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
-        "known_equality_candidate_uses_rational_expression_simplification",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime
+        .start_isolated_source("known_equality_candidate_uses_rational_expression_simplification");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         run_succeeded,
@@ -1477,14 +1418,13 @@ forall a, b R:
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
+    runtime.start_isolated_source(
         "rational_expression_simplification_builtin_rule_output_localizes_to_zh",
     );
     runtime.output_language = OutputLanguage::SimplifiedChinese;
 
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         run_succeeded,
@@ -1500,12 +1440,9 @@ fn builtin_rule_output_hides_internal_complement_helper_name() {
     let source_code = "1 = 1 or 1 != 1";
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
-        "builtin_rule_output_hides_internal_complement_helper_name",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("builtin_rule_output_hides_internal_complement_helper_name");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         run_succeeded,
@@ -1528,12 +1465,9 @@ fn huge_integer_division_returns_error_instead_of_panicking() {
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
-        "huge_integer_division_returns_error_instead_of_panicking",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("huge_integer_division_returns_error_instead_of_panicking");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         !run_succeeded,
@@ -1554,12 +1488,9 @@ forall a, b R:
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
-        "quotient_nonzero_from_numerator_nonzero_builtin_rule",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("quotient_nonzero_from_numerator_nonzero_builtin_rule");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         run_succeeded,
@@ -1587,12 +1518,10 @@ trust d = 1 / (2 / 3 * 4)
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
-        "known_obj_values_store_simplified_fraction_for_nonfinite_decimal",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime
+        .start_isolated_source("known_obj_values_store_simplified_fraction_for_nonfinite_decimal");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         run_succeeded,
@@ -1671,11 +1600,9 @@ forall a R:
 "#;
 
     let mut runtime = Runtime::new();
-    runtime
-        .new_file_path_new_env_new_name_scope("simplified_fraction_known_value_is_used_by_resolve");
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("simplified_fraction_known_value_is_used_by_resolve");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         run_succeeded,
@@ -1749,10 +1676,9 @@ phi(a) $in R
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope("real_interval_membership_rules");
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("real_interval_membership_rules");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         run_succeeded,
@@ -1768,13 +1694,11 @@ forall center R, radius R+:
     center $in '(center - radius, center + radius)
 "#;
     let mut positive_runtime = Runtime::new();
-    positive_runtime.new_file_path_new_env_new_name_scope(
-        "symmetric_interval_center_membership_uses_positive_radius",
-    );
-    let (positive_results, positive_error) =
-        run_source_code(positive_source, &mut positive_runtime);
+    positive_runtime
+        .start_isolated_source("symmetric_interval_center_membership_uses_positive_radius");
+    let (positive_results, positive_error) = execute_source(positive_source, &mut positive_runtime);
     let (positive_succeeded, positive_output) =
-        render_run_source_code_output(&positive_runtime, &positive_results, &positive_error, false);
+        render_run_output(&positive_runtime, &positive_results, &positive_error);
     assert!(
         positive_succeeded,
         "a center should lie in its positive-radius open interval:\n{positive_output}"
@@ -1785,13 +1709,12 @@ forall center, radius R:
     center $in '(center - radius, center + radius)
 "#;
     let mut boundary_runtime = Runtime::new();
-    boundary_runtime.new_file_path_new_env_new_name_scope(
-        "symmetric_interval_center_membership_rejects_unrestricted_radius",
-    );
+    boundary_runtime
+        .start_isolated_source("symmetric_interval_center_membership_rejects_unrestricted_radius");
     let (boundary_results, boundary_error) =
-        run_source_code(unrestricted_radius, &mut boundary_runtime);
+        execute_source(unrestricted_radius, &mut boundary_runtime);
     let (boundary_succeeded, boundary_output) =
-        render_run_source_code_output(&boundary_runtime, &boundary_results, &boundary_error, false);
+        render_run_output(&boundary_runtime, &boundary_results, &boundary_error);
     assert!(
         !boundary_succeeded,
         "an unrestricted radius must not justify open-interval membership:\n{boundary_output}"
@@ -1831,10 +1754,9 @@ right $in '(,a)
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope("real_interval_nonempty_and_well_defined_rules");
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("real_interval_nonempty_and_well_defined_rules");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         run_succeeded,
@@ -1870,12 +1792,10 @@ forall b R:
     $is_nonempty_set('[b, b])
 "#;
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
-                "finite_endpoint_nonempty_strategies_use_order_children",
-            );
-            let (stmt_results, runtime_error) = run_source_code(positive_source, &mut runtime);
+            runtime.start_isolated_source("finite_endpoint_nonempty_strategies_use_order_children");
+            let (stmt_results, runtime_error) = execute_source(positive_source, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
             assert!(
                 run_succeeded,
                 "ordered finite endpoints should establish nonemptiness through bounded strategy children:\n{run_output}"
@@ -1909,15 +1829,11 @@ forall b R:
             ];
             for (name, source) in negative_sources {
                 let mut boundary_runtime = Runtime::new();
-                boundary_runtime.new_file_path_new_env_new_name_scope(name);
+                boundary_runtime.start_isolated_source(name);
                 let (boundary_results, boundary_error) =
-                    run_source_code(source, &mut boundary_runtime);
-                let (boundary_succeeded, boundary_output) = render_run_source_code_output(
-                    &boundary_runtime,
-                    &boundary_results,
-                    &boundary_error,
-                    false,
-                );
+                    execute_source(source, &mut boundary_runtime);
+                let (boundary_succeeded, boundary_output) =
+                    render_run_output(&boundary_runtime, &boundary_results, &boundary_error);
                 assert!(
                     !boundary_succeeded,
                     "nonemptiness must not be invented for {name}:\n{boundary_output}"
@@ -1936,16 +1852,11 @@ trust a != 0
 0 < a^2
 "#;
         let mut positive_runtime = Runtime::new();
-        positive_runtime
-            .new_file_path_new_env_new_name_scope("strict_even_power_requires_real_base_positive");
+        positive_runtime.start_isolated_source("strict_even_power_requires_real_base_positive");
         let (positive_results, positive_error) =
-            run_source_code(positive_source, &mut positive_runtime);
-        let (positive_succeeded, positive_output) = render_run_source_code_output(
-            &positive_runtime,
-            &positive_results,
-            &positive_error,
-            false,
-        );
+            execute_source(positive_source, &mut positive_runtime);
+        let (positive_succeeded, positive_output) =
+            render_run_output(&positive_runtime, &positive_results, &positive_error);
         assert!(
             positive_succeeded,
             "strict even powers should retain real bases:\n{}",
@@ -1963,16 +1874,11 @@ trust S != 0
 0 < S^2
 "#;
         let mut non_real_runtime = Runtime::new();
-        non_real_runtime
-            .new_file_path_new_env_new_name_scope("strict_even_power_requires_real_base_non_real");
+        non_real_runtime.start_isolated_source("strict_even_power_requires_real_base_non_real");
         let (non_real_results, non_real_error) =
-            run_source_code(non_real_source, &mut non_real_runtime);
-        let (non_real_succeeded, non_real_output) = render_run_source_code_output(
-            &non_real_runtime,
-            &non_real_results,
-            &non_real_error,
-            false,
-        );
+            execute_source(non_real_source, &mut non_real_runtime);
+        let (non_real_succeeded, non_real_output) =
+            render_run_output(&non_real_runtime, &non_real_results, &non_real_error);
         assert!(
             !non_real_succeeded,
             "a non-real base must not use strict even-power positivity:\n{}",
@@ -1995,12 +1901,10 @@ forall x, y R:
         abs(x + y) <= abs(3)
 "#;
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
-                "even_power_order_chain_implies_absolute_value_order",
-            );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            runtime.start_isolated_source("even_power_order_chain_implies_absolute_value_order");
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
 
             assert!(
                 run_succeeded,
@@ -2021,13 +1925,11 @@ trust x < epsilon
 abs(x) < epsilon
 "#;
     let mut positive_runtime = Runtime::new();
-    positive_runtime.new_file_path_new_env_new_name_scope(
-        "absolute_value_upper_bound_accepts_direct_two_sided_sandwich",
-    );
-    let (positive_results, positive_error) =
-        run_source_code(positive_source, &mut positive_runtime);
+    positive_runtime
+        .start_isolated_source("absolute_value_upper_bound_accepts_direct_two_sided_sandwich");
+    let (positive_results, positive_error) = execute_source(positive_source, &mut positive_runtime);
     let (positive_succeeded, positive_output) =
-        render_run_source_code_output(&positive_runtime, &positive_results, &positive_error, false);
+        render_run_output(&positive_runtime, &positive_results, &positive_error);
     assert!(
         positive_succeeded,
         "a direct two-sided sandwich should prove the absolute-value bound:\n{positive_output}"
@@ -2040,13 +1942,11 @@ trust x < epsilon
 abs(x) < epsilon
 "#;
     let mut negative_runtime = Runtime::new();
-    negative_runtime.new_file_path_new_env_new_name_scope(
-        "absolute_value_upper_bound_requires_both_sides_of_sandwich",
-    );
-    let (negative_results, negative_error) =
-        run_source_code(negative_source, &mut negative_runtime);
+    negative_runtime
+        .start_isolated_source("absolute_value_upper_bound_requires_both_sides_of_sandwich");
+    let (negative_results, negative_error) = execute_source(negative_source, &mut negative_runtime);
     let (negative_succeeded, negative_output) =
-        render_run_source_code_output(&negative_runtime, &negative_results, &negative_error, false);
+        render_run_output(&negative_runtime, &negative_results, &negative_error);
     assert!(
         !negative_succeeded,
         "one upper side alone must not prove an absolute-value bound:\n{negative_output}"
@@ -2085,17 +1985,13 @@ e1 < 4
 0 < f
 "#;
             let mut positive_runtime = Runtime::new();
-            positive_runtime.new_file_path_new_env_new_name_scope(
+            positive_runtime.start_isolated_source(
                 "real_power_and_order_builtins_require_real_operands_positive",
             );
             let (positive_results, positive_error) =
-                run_source_code(positive_source, &mut positive_runtime);
-            let (positive_succeeded, positive_output) = render_run_source_code_output(
-                &positive_runtime,
-                &positive_results,
-                &positive_error,
-                false,
-            );
+                execute_source(positive_source, &mut positive_runtime);
+            let (positive_succeeded, positive_output) =
+                render_run_output(&positive_runtime, &positive_results, &positive_error);
             assert!(
                 positive_succeeded,
                 "real power and order builtins should remain available:\n{}",
@@ -2150,16 +2046,16 @@ e1 < 4
                 ),
             ] {
                 let mut runtime = Runtime::new();
-                runtime.new_file_path_new_env_new_name_scope(
+                runtime.start_isolated_source(
                     format!(
                         "real_power_and_order_builtins_require_real_operands_{}",
                         label
                     )
                     .as_str(),
                 );
-                let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+                let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
                 let (run_succeeded, run_output) =
-                    render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                    render_run_output(&runtime, &stmt_results, &runtime_error);
                 assert!(
                     !run_succeeded,
                     "{} must not accept a non-real carrier:\n{}",
@@ -2211,10 +2107,10 @@ forall a, b R:
 
         for (name, source_code, expected_reason) in positive_cases {
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(name);
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            runtime.start_isolated_source(name);
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
 
             assert!(run_succeeded, "{name} should be builtin:\n{run_output}");
             assert!(
@@ -2246,10 +2142,10 @@ forall a, b R:
             ),
         ] {
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(name);
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            runtime.start_isolated_source(name);
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
 
             assert!(
                 !run_succeeded,
@@ -2277,12 +2173,12 @@ trust:
 x <= 1
 "#;
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
+            runtime.start_isolated_source(
                 "real_order_carrier_uses_known_subset_membership_without_forall_recursion",
             );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
             assert!(
                 run_succeeded,
                 "a known A subset N must provide x's real carrier without invoking known forall:\n{}",
@@ -2341,11 +2237,10 @@ forall m Z:
 "#;
 
         let mut runtime = Runtime::new();
-        runtime
-            .new_file_path_new_env_new_name_scope("common_power_equalities_and_order_are_builtin");
-        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        runtime.start_isolated_source("common_power_equalities_and_order_are_builtin");
+        let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
-            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            render_run_output(&runtime, &stmt_results, &runtime_error);
 
         assert!(
             run_succeeded,
@@ -2395,10 +2290,10 @@ forall a, b, x R:
 
         for (name, source_code) in cases {
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(name);
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            runtime.start_isolated_source(name);
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
 
             assert!(
                 run_succeeded,
@@ -2451,10 +2346,10 @@ forall a R+, x R:
 
             for (name, source_code) in cases {
                 let mut runtime = Runtime::new();
-                runtime.new_file_path_new_env_new_name_scope(name);
-                let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+                runtime.start_isolated_source(name);
+                let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
                 let (run_succeeded, run_output) =
-                    render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                    render_run_output(&runtime, &stmt_results, &runtime_error);
 
                 assert!(
                     !run_succeeded,
@@ -2498,10 +2393,10 @@ forall x R+, q, r Q:
 
         for (name, source_code) in cases {
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(name);
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            runtime.start_isolated_source(name);
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
 
             assert!(
                 run_succeeded,
@@ -2528,12 +2423,10 @@ forall a R*, b, c R:
 "#;
 
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
-                "real_exponent_power_addition_requires_positive_base",
-            );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            runtime.start_isolated_source("real_exponent_power_addition_requires_positive_base");
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
 
             assert!(
                 !run_succeeded,
@@ -2580,10 +2473,10 @@ forall x R, n N+:
 
         for (name, source_code) in cases {
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(name);
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            runtime.start_isolated_source(name);
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
 
             assert!(
                 run_succeeded,
@@ -2611,12 +2504,10 @@ fn real_exponent_power_of_power_requires_positive_base() {
 "#;
 
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
-                "real_exponent_power_of_power_requires_positive_base",
-            );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            runtime.start_isolated_source("real_exponent_power_of_power_requires_positive_base");
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
 
             assert!(
                 !run_succeeded,
@@ -2643,12 +2534,10 @@ fn reciprocal_power_root_rule_rejects_negative_even_root() {
 "#;
 
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
-                "reciprocal_power_root_rule_rejects_negative_even_root",
-            );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            runtime.start_isolated_source("reciprocal_power_root_rule_rejects_negative_even_root");
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
 
             assert!(
                 !run_succeeded,
@@ -2679,10 +2568,9 @@ $is_nonempty_set(union(c, D))
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope("union_nonempty_when_either_side_nonempty");
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("union_nonempty_when_either_side_nonempty");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         run_succeeded,
@@ -2729,12 +2617,9 @@ x $in U or x $in V
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
-        "binary_set_membership_introduction_and_elimination_are_builtin",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("binary_set_membership_introduction_and_elimination_are_builtin");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         run_succeeded,
@@ -2778,10 +2663,10 @@ trust x $in union(A, B)
         );
 
         let mut runtime = Runtime::new();
-        runtime.new_file_path_new_env_new_name_scope(name);
-        let (stmt_results, runtime_error) = run_source_code(&source_code, &mut runtime);
+        runtime.start_isolated_source(name);
+        let (stmt_results, runtime_error) = execute_source(&source_code, &mut runtime);
         let (run_succeeded, run_output) =
-            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            render_run_output(&runtime, &stmt_results, &runtime_error);
 
         assert!(
             !run_succeeded,
@@ -2809,10 +2694,10 @@ forall a, b Z:
 "#;
 
         let mut runtime = Runtime::new();
-        runtime.new_file_path_new_env_new_name_scope("empty_half_open_integer_range_is_builtin");
-        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        runtime.start_isolated_source("empty_half_open_integer_range_is_builtin");
+        let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
-            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            render_run_output(&runtime, &stmt_results, &runtime_error);
 
         assert!(
             run_succeeded,
@@ -2831,11 +2716,10 @@ fn nonempty_half_open_integer_range_is_not_empty() {
     run_with_large_stack("nonempty_half_open_integer_range_is_not_empty", || {
         let source_code = "range(0, 1) = {}";
         let mut runtime = Runtime::new();
-        runtime
-            .new_file_path_new_env_new_name_scope("nonempty_half_open_integer_range_is_not_empty");
-        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        runtime.start_isolated_source("nonempty_half_open_integer_range_is_not_empty");
+        let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
-            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            render_run_output(&runtime, &stmt_results, &runtime_error);
 
         assert!(
             !run_succeeded,
@@ -2869,13 +2753,13 @@ x $in set_minus(A, B)
         ),
     ] {
         let mut runtime = Runtime::new();
-        runtime.new_file_path_new_env_new_name_scope(
+        runtime.start_isolated_source(
             format!("binary_set_membership_introduction_requires_all_prerequisites_{label}")
                 .as_str(),
         );
-        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
-            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            render_run_output(&runtime, &stmt_results, &runtime_error);
 
         assert!(
             !run_succeeded,
@@ -2912,10 +2796,9 @@ A = union({}, A)
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope("union_set_equalities_are_builtin");
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("union_set_equalities_are_builtin");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         run_succeeded,
@@ -2961,10 +2844,9 @@ union(set_minus(A, B), set_minus(A, c)) = set_minus(A, intersect(B, c))
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope("common_set_algebra_equalities_are_builtin");
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("common_set_algebra_equalities_are_builtin");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         run_succeeded,
@@ -2985,10 +2867,9 @@ have A, B set
 B = set_minus(A, set_minus(A, B))
 "#;
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope("set_minus_subset_recovery_requires_subset");
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("set_minus_subset_recovery_requires_subset");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         !run_succeeded,
@@ -3078,11 +2959,10 @@ forall T set, x1 set, x2 set, x3 set, x4 set:
 
     for (i, source_code) in cases.iter().enumerate() {
         let mut runtime = Runtime::new();
-        runtime
-            .new_file_path_new_env_new_name_scope("literal_set_intersection_filtering_is_builtin");
-        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        runtime.start_isolated_source("literal_set_intersection_filtering_is_builtin");
+        let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
-            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            render_run_output(&runtime, &stmt_results, &runtime_error);
 
         assert!(
             run_succeeded,
@@ -3125,12 +3005,11 @@ forall T set, x1 set, x2 set, x3 set, x4 set:
 
             for (i, source_code) in cases.iter().enumerate() {
                 let mut runtime = Runtime::new();
-                runtime.new_file_path_new_env_new_name_scope(
-                    "intersection_absorption_and_literal_arity_are_builtin",
-                );
-                let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+                runtime
+                    .start_isolated_source("intersection_absorption_and_literal_arity_are_builtin");
+                let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
                 let (run_succeeded, run_output) =
-                    render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                    render_run_output(&runtime, &stmt_results, &runtime_error);
 
                 assert!(
                     run_succeeded,
@@ -3167,12 +3046,10 @@ fn one_sided_interval_literal_rejects_invalid_delimiters() {
         ),
     ] {
         let mut runtime = Runtime::new();
-        runtime.new_file_path_new_env_new_name_scope(
-            "one_sided_interval_literal_rejects_invalid_delimiters",
-        );
-        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        runtime.start_isolated_source("one_sided_interval_literal_rejects_invalid_delimiters");
+        let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
-            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            render_run_output(&runtime, &stmt_results, &runtime_error);
 
         assert!(!run_succeeded);
         assert!(
@@ -3192,11 +3069,10 @@ forall a Z, d N+:
 "#;
 
         let mut runtime = Runtime::new();
-        runtime
-            .new_file_path_new_env_new_name_scope("euclidean_quotient_unique_existence_is_builtin");
-        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        runtime.start_isolated_source("euclidean_quotient_unique_existence_is_builtin");
+        let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
-            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            render_run_output(&runtime, &stmt_results, &runtime_error);
 
         assert!(
             run_succeeded,
@@ -3228,12 +3104,12 @@ forall a Z, d N+:
 "#;
 
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
+            runtime.start_isolated_source(
                 "source_defined_integer_quotient_uses_unique_existence_builtin",
             );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
 
             assert!(
                 run_succeeded,
@@ -3259,10 +3135,10 @@ forall s, t finite_set:
     finite_set_size(set_minus(s, t)) = finite_set_size(s) - finite_set_size(intersect(s, t))
 "#;
         let mut runtime = Runtime::new();
-        runtime.new_file_path_new_env_new_name_scope("finite_set_size_set_minus_is_a_builtin_rule");
-        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        runtime.start_isolated_source("finite_set_size_set_minus_is_a_builtin_rule");
+        let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
-            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            render_run_output(&runtime, &stmt_results, &runtime_error);
 
         assert!(
             run_succeeded,
@@ -3285,12 +3161,12 @@ have A, B set
 $is_finite_set(set_diff(A, B))
 "#;
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
+            runtime.start_isolated_source(
                 "removed_set_diff_builtin_is_not_resolved_as_a_native_function",
             );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
 
             assert!(
                 !run_succeeded,
@@ -3334,12 +3210,10 @@ forall a, b N:
         finite_set_size(range(a, b)) = b - a
 "#;
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
-                "finite_set_cardinality_interfaces_are_builtin_rules",
-            );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            runtime.start_isolated_source("finite_set_cardinality_interfaces_are_builtin_rules");
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
 
             assert!(
                 run_succeeded,
@@ -3378,12 +3252,11 @@ forall a, b N:
         finite_set_size(range(a, b)) = b - a
 "#;
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
+    runtime.start_isolated_source(
         "finite_set_size_subset_and_integer_interval_cardinalities_are_builtin_rules",
     );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         run_succeeded,
@@ -3413,15 +3286,13 @@ forall A set, B finite_set:
         $is_finite_set(A)
 "#;
             let mut builtin_only_runtime = Runtime::new();
-            builtin_only_runtime
-                .new_file_path_new_env_new_name_scope("finite_subset_is_not_builtin");
+            builtin_only_runtime.start_isolated_source("finite_subset_is_not_builtin");
             let (builtin_only_results, builtin_only_error) =
-                run_source_code(builtin_only_source, &mut builtin_only_runtime);
-            let (builtin_only_succeeded, builtin_only_output) = render_run_source_code_output(
+                execute_source(builtin_only_source, &mut builtin_only_runtime);
+            let (builtin_only_succeeded, builtin_only_output) = render_run_output(
                 &builtin_only_runtime,
                 &builtin_only_results,
                 &builtin_only_error,
-                false,
             );
 
             assert!(
@@ -3446,15 +3317,13 @@ thm finite_subset_chain:
     $is_finite_set(A)
 "#;
             let mut finite_chain_runtime = Runtime::new();
-            finite_chain_runtime
-                .new_file_path_new_env_new_name_scope("finite_subset_builtin_theorem_chain");
+            finite_chain_runtime.start_isolated_source("finite_subset_builtin_theorem_chain");
             let (finite_chain_results, finite_chain_error) =
-                run_source_code(finite_chain_source, &mut finite_chain_runtime);
-            let (finite_chain_succeeded, finite_chain_output) = render_run_source_code_output(
+                execute_source(finite_chain_source, &mut finite_chain_runtime);
+            let (finite_chain_succeeded, finite_chain_output) = render_run_output(
                 &finite_chain_runtime,
                 &finite_chain_results,
                 &finite_chain_error,
-                false,
             );
 
             assert!(
@@ -3475,15 +3344,10 @@ forall A, B set:
         $is_finite_set(A)
 "#;
             let mut cyclic_runtime = Runtime::new();
-            cyclic_runtime.new_file_path_new_env_new_name_scope("cyclic_finite_subset_builtin");
-            let (cyclic_results, cyclic_error) =
-                run_source_code(cyclic_source, &mut cyclic_runtime);
-            let (cyclic_succeeded, cyclic_output) = render_run_source_code_output(
-                &cyclic_runtime,
-                &cyclic_results,
-                &cyclic_error,
-                false,
-            );
+            cyclic_runtime.start_isolated_source("cyclic_finite_subset_builtin");
+            let (cyclic_results, cyclic_error) = execute_source(cyclic_source, &mut cyclic_runtime);
+            let (cyclic_succeeded, cyclic_output) =
+                render_run_output(&cyclic_runtime, &cyclic_results, &cyclic_error);
 
             assert!(
                 !cyclic_succeeded,
@@ -3515,10 +3379,9 @@ thm finite_set_extrema_have_defining_properties:
             finite_set_min(S) <= x
 "#;
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope("finite_set_extrema_builtin_interfaces");
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("finite_set_extrema_builtin_interfaces");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         run_succeeded,
@@ -3544,13 +3407,11 @@ forall n1, n2 N+:
     finite_set_max(union({n1}, {n2})) $in N+
 "#;
     let mut positive_runtime = Runtime::new();
-    positive_runtime.new_file_path_new_env_new_name_scope(
-        "finite_set_extrema_inherit_positive_natural_carriers_in_one_rule",
-    );
-    let (positive_results, positive_error) =
-        run_source_code(positive_source, &mut positive_runtime);
+    positive_runtime
+        .start_isolated_source("finite_set_extrema_inherit_positive_natural_carriers_in_one_rule");
+    let (positive_results, positive_error) = execute_source(positive_source, &mut positive_runtime);
     let (positive_succeeded, positive_output) =
-        render_run_source_code_output(&positive_runtime, &positive_results, &positive_error, false);
+        render_run_output(&positive_runtime, &positive_results, &positive_error);
     assert!(
         positive_succeeded,
         "a maximum of positive naturals should inherit N+ directly:\n{positive_output}"
@@ -3565,13 +3426,12 @@ forall n N:
     finite_set_max({n}) $in N+
 "#;
     let mut boundary_runtime = Runtime::new();
-    boundary_runtime.new_file_path_new_env_new_name_scope(
-        "finite_set_extrema_do_not_invent_positive_natural_carriers",
-    );
+    boundary_runtime
+        .start_isolated_source("finite_set_extrema_do_not_invent_positive_natural_carriers");
     let (boundary_results, boundary_error) =
-        run_source_code(nonpositive_boundary, &mut boundary_runtime);
+        execute_source(nonpositive_boundary, &mut boundary_runtime);
     let (boundary_succeeded, boundary_output) =
-        render_run_source_code_output(&boundary_runtime, &boundary_results, &boundary_error, false);
+        render_run_output(&boundary_runtime, &boundary_results, &boundary_error);
     assert!(
         !boundary_succeeded,
         "a merely natural singleton maximum must not be promoted to N+:\n{boundary_output}"
@@ -3587,13 +3447,11 @@ forall a, b R:
         (a - b) / 2 $in R+
 "#;
     let mut positive_runtime = Runtime::new();
-    positive_runtime.new_file_path_new_env_new_name_scope(
-        "positive_quotient_strategy_descends_through_a_positive_difference",
-    );
-    let (positive_results, positive_error) =
-        run_source_code(positive_source, &mut positive_runtime);
+    positive_runtime
+        .start_isolated_source("positive_quotient_strategy_descends_through_a_positive_difference");
+    let (positive_results, positive_error) = execute_source(positive_source, &mut positive_runtime);
     let (positive_succeeded, positive_output) =
-        render_run_source_code_output(&positive_runtime, &positive_results, &positive_error, false);
+        render_run_output(&positive_runtime, &positive_results, &positive_error);
     assert!(
         positive_succeeded,
         "a positive difference divided by a positive constant should be positive:\n{positive_output}"
@@ -3606,13 +3464,12 @@ forall a, b R:
         (a - b) / (-2) $in R+
 "#;
     let mut boundary_runtime = Runtime::new();
-    boundary_runtime.new_file_path_new_env_new_name_scope(
-        "positive_quotient_strategy_rejects_a_negative_denominator",
-    );
+    boundary_runtime
+        .start_isolated_source("positive_quotient_strategy_rejects_a_negative_denominator");
     let (boundary_results, boundary_error) =
-        run_source_code(negative_denominator, &mut boundary_runtime);
+        execute_source(negative_denominator, &mut boundary_runtime);
     let (boundary_succeeded, boundary_output) =
-        render_run_source_code_output(&boundary_runtime, &boundary_results, &boundary_error, false);
+        render_run_output(&boundary_runtime, &boundary_results, &boundary_error);
     assert!(
         !boundary_succeeded,
         "a positive numerator over a negative denominator must not be positive:\n{boundary_output}"
@@ -3627,13 +3484,11 @@ prop has_positive_index_reciprocal_square(u fn(n N+) R):
         u(n) = 1 / n^2
 "#;
     let mut positive_runtime = Runtime::new();
-    positive_runtime.new_file_path_new_env_new_name_scope(
-        "positive_base_power_is_nonzero_during_definition_well_definedness",
-    );
-    let (positive_results, positive_error) =
-        run_source_code(positive_source, &mut positive_runtime);
+    positive_runtime
+        .start_isolated_source("positive_base_power_is_nonzero_during_definition_well_definedness");
+    let (positive_results, positive_error) = execute_source(positive_source, &mut positive_runtime);
     let (positive_succeeded, positive_output) =
-        render_run_source_code_output(&positive_runtime, &positive_results, &positive_error, false);
+        render_run_output(&positive_runtime, &positive_results, &positive_error);
     assert!(
         positive_succeeded,
         "a positive-natural base power should be nonzero while defining a reciprocal:\n{positive_output}"
@@ -3645,13 +3500,12 @@ prop has_natural_index_reciprocal_square(u fn(n N) R):
         u(n) = 1 / n^2
 "#;
     let mut boundary_runtime = Runtime::new();
-    boundary_runtime.new_file_path_new_env_new_name_scope(
-        "natural_base_power_may_be_zero_during_definition_well_definedness",
-    );
+    boundary_runtime
+        .start_isolated_source("natural_base_power_may_be_zero_during_definition_well_definedness");
     let (boundary_results, boundary_error) =
-        run_source_code(natural_boundary, &mut boundary_runtime);
+        execute_source(natural_boundary, &mut boundary_runtime);
     let (boundary_succeeded, boundary_output) =
-        render_run_source_code_output(&boundary_runtime, &boundary_results, &boundary_error, false);
+        render_run_output(&boundary_runtime, &boundary_results, &boundary_error);
     assert!(
         !boundary_succeeded,
         "an arbitrary natural base may be zero and must not justify a reciprocal:\n{boundary_output}"
@@ -3666,13 +3520,12 @@ prop reciprocal_on_positive_interval(a, b R+):
         1 / x $in R
 "#;
     let mut positive_runtime = Runtime::new();
-    positive_runtime.new_file_path_new_env_new_name_scope(
-        "positive_interval_lower_bound_keeps_reciprocal_well_defined",
-    );
+    positive_runtime
+        .start_isolated_source("positive_interval_lower_bound_keeps_reciprocal_well_defined");
     let (positive_results, positive_error) =
-        run_source_code(positive_interval, &mut positive_runtime);
+        execute_source(positive_interval, &mut positive_runtime);
     let (positive_succeeded, positive_output) =
-        render_run_source_code_output(&positive_runtime, &positive_results, &positive_error, false);
+        render_run_output(&positive_runtime, &positive_results, &positive_error);
     assert!(
         positive_succeeded,
         "a value above a positive interval endpoint should be nonzero:\n{positive_output}"
@@ -3684,13 +3537,11 @@ prop reciprocal_on_arbitrary_interval(a, b R):
         1 / x $in R
 "#;
     let mut boundary_runtime = Runtime::new();
-    boundary_runtime.new_file_path_new_env_new_name_scope(
-        "arbitrary_interval_lower_bound_does_not_prove_nonzero",
-    );
+    boundary_runtime.start_isolated_source("arbitrary_interval_lower_bound_does_not_prove_nonzero");
     let (boundary_results, boundary_error) =
-        run_source_code(interval_crossing_zero, &mut boundary_runtime);
+        execute_source(interval_crossing_zero, &mut boundary_runtime);
     let (boundary_succeeded, boundary_output) =
-        render_run_source_code_output(&boundary_runtime, &boundary_results, &boundary_error, false);
+        render_run_output(&boundary_runtime, &boundary_results, &boundary_error);
     assert!(
         !boundary_succeeded,
         "an interval with an unrestricted endpoint may contain zero:\n{boundary_output}"
@@ -3704,10 +3555,9 @@ max(1, 2) = 2
 min(1, 2) = 1
 "#;
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope("native_binary_max_and_min_calculate");
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("native_binary_max_and_min_calculate");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         run_succeeded,
@@ -3728,10 +3578,9 @@ forall a, b Z:
         gcd(a, b) $in N+
 "#;
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope("gcd_accepts_known_non_all_zero_disjunction");
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("gcd_accepts_known_non_all_zero_disjunction");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         run_succeeded,
@@ -3756,12 +3605,9 @@ forall S power_set(N):
         exist maximum N st {$is_greatest_natural_member(S, maximum)}
 "#;
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
-        "finite_nonempty_natural_set_has_a_builtin_greatest_member",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("finite_nonempty_natural_set_has_a_builtin_greatest_member");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         run_succeeded,
@@ -3810,10 +3656,10 @@ forall S power_set(N):
         ),
     ] {
         let mut runtime = Runtime::new();
-        runtime.new_file_path_new_env_new_name_scope(name);
-        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        runtime.start_isolated_source(name);
+        let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
-            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            render_run_output(&runtime, &stmt_results, &runtime_error);
         assert!(
             !run_succeeded,
             "the greatest-member rule must reject a missing boundary premise ({name}):\n{run_output}"
@@ -3833,12 +3679,10 @@ forall upper N+:
     range(1, upper) $subset N+
 "#;
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
-        "integer_ranges_inherit_natural_carriers_from_their_lower_endpoint",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime
+        .start_isolated_source("integer_ranges_inherit_natural_carriers_from_their_lower_endpoint");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         run_succeeded,
@@ -3856,12 +3700,11 @@ fn integer_range_natural_carrier_rule_rejects_a_negative_lower_endpoint() {
 closed_range(-2, 2) $subset N
 "#;
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
+    runtime.start_isolated_source(
         "integer_range_natural_carrier_rule_rejects_a_negative_lower_endpoint",
     );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         !run_succeeded,
@@ -3882,12 +3725,9 @@ forall r R+:
     -r $in R-
 "#;
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
-        "negation_maps_known_positive_scalars_to_negative_carriers",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("negation_maps_known_positive_scalars_to_negative_carriers");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
     assert!(
         run_succeeded,
         "negation of positive scalars should preserve the matching negative carrier:\n{run_output}"
@@ -3905,12 +3745,11 @@ forall n N:
     -n $in Z-
 "#;
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
+    runtime.start_isolated_source(
         "negation_does_not_make_a_merely_nonnegative_integer_strictly_negative",
     );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
     assert!(
         !run_succeeded,
         "negation of a possibly-zero natural must not imply Z-:\n{run_output}"
@@ -3927,12 +3766,9 @@ forall z Z-:
     abs(z) $in N+
 "#;
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
-        "absolute_value_of_a_known_nonzero_integer_is_positive_natural",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("absolute_value_of_a_known_nonzero_integer_is_positive_natural");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
     assert!(
         run_succeeded,
         "absolute value should map nonzero integers to N+:\n{run_output}"
@@ -3950,12 +3786,9 @@ forall n N:
     abs(n) $in N+
 "#;
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
-        "absolute_value_of_a_merely_natural_number_need_not_be_positive",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("absolute_value_of_a_merely_natural_number_need_not_be_positive");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
     assert!(
         !run_succeeded,
         "abs(0) prevents promotion from N to N+:\n{run_output}"
@@ -3976,10 +3809,9 @@ forall z Z*:
         z $in Z-
 "#;
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope("strict_sign_refines_known_integer_carriers");
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("strict_sign_refines_known_integer_carriers");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
     assert!(
         run_succeeded,
         "strict sign should refine a known integer carrier:\n{run_output}"
@@ -3998,12 +3830,9 @@ forall z Z:
     z $in N+
 "#;
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
-        "integer_membership_without_a_strict_sign_does_not_imply_n_pos",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("integer_membership_without_a_strict_sign_does_not_imply_n_pos");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
     assert!(
         !run_succeeded,
         "integer membership alone must not imply N+:\n{run_output}"
@@ -4020,10 +3849,9 @@ forall A1, A2, B1, B2 set:
         cart(A1, A2) $subset cart(B1, B2)
 "#;
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope("literal_cart_subsets_are_componentwise");
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("literal_cart_subsets_are_componentwise");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
     assert!(
         run_succeeded,
         "componentwise cart subset should verify:\n{run_output}"
@@ -4043,12 +3871,9 @@ forall A1, A2, B1, B2 set:
         cart(A1, A2) $subset cart(B1, B2)
 "#;
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
-        "literal_cart_subset_requires_every_component_subset",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("literal_cart_subset_requires_every_component_subset");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
     assert!(
         !run_succeeded,
         "cart subset must require every component subset:\n{run_output}"
@@ -4068,12 +3893,10 @@ forall A, B, T set:
         union(A, B) $subset T
 "#;
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
-        "union_and_literal_finite_set_subset_introduction_use_known_leaves",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime
+        .start_isolated_source("union_and_literal_finite_set_subset_introduction_use_known_leaves");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
     assert!(
         run_succeeded,
         "set-constructor subset introduction should verify:\n{run_output}"
@@ -4098,10 +3921,9 @@ forall A, B, T set:
         union(A, B) $subset T
 "#;
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope("union_subset_requires_both_operand_subsets");
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("union_subset_requires_both_operand_subsets");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
     assert!(
         !run_succeeded,
         "union subset must require both operand subsets:\n{run_output}"
@@ -4123,11 +3945,9 @@ claim:
 have fn selected_natural(upper N) N = finite_set_min({n closed_range(0, upper): n = upper})
 "#;
     let mut runtime = Runtime::new();
-    runtime
-        .new_file_path_new_env_new_name_scope("set_builder_over_a_finite_integer_range_is_finite");
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    runtime.start_isolated_source("set_builder_over_a_finite_integer_range_is_finite");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         run_succeeded,

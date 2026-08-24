@@ -12,7 +12,7 @@
 // Litex github repository: https://github.com/litexlang/golitex
 // Litex Zulip community: https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/
 
-use litex::prelude::*;
+use litex::cli::run_cli;
 
 const CLI_STACK_SIZE: usize = 64 * 1024 * 1024;
 

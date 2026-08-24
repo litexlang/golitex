@@ -5,6 +5,7 @@ For `1 + 1 = 2`, execution checks the expression, verifies the equality, stores 
 ```text
 execute_statement(Stmt::Fact(1 + 1 = 2))
   clear statement-local proof caches
+  read ExecutionMode::Verified or ExecutionMode::Trusted
   verify both sides are well-defined
   verify 1 + 1 = 2
   store the fact and allocate its FactId
@@ -12,6 +13,12 @@ execute_statement(Stmt::Fact(1 + 1 = 2))
   attach proof FactIds and execution phases
   return StmtResult::Success
 ```
+
+`ExecutionMode` says whether the current source is verified or trusted.
+`StatementExecutionContext` separately says whether this statement belongs to
+an ordinary run or a trusted-prefix run. Keeping those two axes named prevents
+the executor from threading unexplained `true` and `false` values through the
+statement lifecycle.
 
 ## Examples and boundaries
 
@@ -33,5 +40,10 @@ execute_statement(Stmt::Fact(1 + 1 = 2))
 | [`attach_fact_ids_to_stmt_result.rs`](attach_fact_ids_to_stmt_result.rs) | Fills missing FactIds in the completed recursive Result tree without retargeting frozen local evidence. |
 | [`submitted_fact_execution.rs`](submitted_fact_execution.rs) | Executes a submitted fact through well-definedness, proof verification, storage, and inference. |
 | [`object_introduction/`](object_introduction/) | Groups object, function, tuple, sequence, matrix, obtain, preimage, and witness introduction implementations by responsibility. |
-| [`exec_verify_then_store_facts.rs`](exec_verify_then_store_facts.rs) | Implements verify-then-store for facts. |
-| [`exec_try_stmt.rs`](exec_try_stmt.rs) | Gives `try:` its transactional rollback behavior. |
+| [`definition_execution/`](definition_execution/) | Groups proposition, theorem, axiom, template, structure, algorithm, parameter, and definition-storage execution. |
+| [`proof_block_execution/`](proof_block_execution/) | Groups claim, goal-proof, sketch, and transactional `try` execution. |
+| [`command_execution/`](command_execution/) | Groups evaluation and environment commands such as `clear`. |
+| [`trust_execution/`](trust_execution/) | Groups explicit unsafe fact and parameterized assumptions. |
+| [`strategy_execution.rs`](strategy_execution.rs) | Defines, applies, and stops proof strategies. |
+| [`verified_fact_storage.rs`](verified_fact_storage.rs) | Verifies fact well-definedness before storage and inference. |
+| [`proof_block_execution/try_block.rs`](proof_block_execution/try_block.rs) | Gives `try:` its transactional rollback behavior. |

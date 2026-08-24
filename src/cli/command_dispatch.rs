@@ -1,23 +1,17 @@
 use super::arguments::{
-    parse_global_options, read_any_value_after_flag, read_non_flag_value_after_flag,
-    read_session_preload, validate_session_preload, CliOptions,
+    parse_global_options, read_non_flag_value_after_flag, read_session_preload,
+    validate_session_preload, CliOptions,
 };
 use super::command_handlers::{
     print_or_save_graph_output, run_code_command, run_file_command, run_graph_command,
-    run_repository_command, run_runner_command, string_with_trimmed_outer_newlines, GraphKind,
-    VERSION,
+    run_repository_command, run_runner_command, VERSION,
 };
-use super::conversion_commands::{
-    compile_code_to_latex, compile_code_to_python, compile_file_to_latex, compile_file_to_python,
-    compile_repo_to_latex, compile_repo_to_python,
-};
+use super::conversion_commands::{run_latex_command, run_python_command};
+use super::lean_commands::{run_lean_file_command, run_lean_ledger_command};
 use super::messages::{print_help_message, upgrade_message};
-use crate::prelude::*;
-use crate::stmt_result_to_lean_compiler::{
-    compile_litex_file_to_lean_file, compile_litex_markdown_code_blocks_to_lean_file,
-};
+use crate::graph::GraphKind;
+use crate::pipeline::{run_repl, run_session, ReplOptions, RunOptions, SessionRequest};
 use std::env;
-use std::path::Path;
 use std::process;
 
 pub fn run_cli() {
@@ -29,6 +23,7 @@ pub fn run_cli() {
         force_isolated,
         output_language,
         trust_before_line,
+        trace_pipeline,
     } = match parse_global_options(&mut args) {
         Ok(options) => options,
         Err(message) => {
@@ -36,6 +31,15 @@ pub fn run_cli() {
             print_help_message();
             process::exit(2);
         }
+    };
+    let run_options = RunOptions {
+        output_style,
+        strict_mode,
+        output_language,
+        summarize: summarize_output,
+        force_isolated,
+        trust_before_line,
+        trace_pipeline,
     };
     let mut index: usize = 0;
 
@@ -67,13 +71,7 @@ pub fn run_cli() {
                         process::exit(2);
                     }
                 };
-                run_code_command(
-                    code.as_str(),
-                    output_style,
-                    strict_mode,
-                    output_language,
-                    summarize_output,
-                );
+                run_code_command(code.as_str(), run_options);
                 return;
             }
             "-f" => {
@@ -87,60 +85,10 @@ pub fn run_cli() {
                     }
                 };
                 if args.get(index).is_some_and(|arg| arg == "-lean") {
-                    index += 1;
-                    let output_path =
-                        match read_non_flag_value_after_flag(&args, &mut index, "-lean") {
-                            Ok(value) => value,
-                            Err(message) => {
-                                eprintln!("-lean requires an output .lean path: {}", message);
-                                print_help_message();
-                                process::exit(2);
-                            }
-                        };
-                    if !force_isolated {
-                        eprintln!(
-                            "single-file Litex-to-Lean requires `-isolated`: litex -f <input.lit> -isolated -lean <output.lean>"
-                        );
-                        print_help_message();
-                        process::exit(2);
-                    }
-                    if strict_mode
-                        || summarize_output
-                        || output_style != OutputStyle::Normal
-                        || trust_before_line.is_some()
-                    {
-                        eprintln!(
-                            "single-file Litex-to-Lean accepts only `-f <input.lit> -isolated -lean <output.lean>`"
-                        );
-                        print_help_message();
-                        process::exit(2);
-                    }
-                    if let Some(unexpected) = args.get(index) {
-                        eprintln!("unexpected argument after -lean output: {}", unexpected);
-                        print_help_message();
-                        process::exit(2);
-                    }
-                    match compile_litex_file_to_lean_file(
-                        Path::new(&file_path),
-                        Path::new(&output_path),
-                    ) {
-                        Ok(()) => println!("wrote freshly generated Lean to {}", output_path),
-                        Err(message) => {
-                            eprintln!("{}", message);
-                            process::exit(1);
-                        }
-                    }
+                    run_lean_file_command(&args, &mut index, &file_path, run_options);
                     return;
                 }
-                run_file_command(
-                    file_path.as_str(),
-                    output_style,
-                    strict_mode,
-                    output_language,
-                    summarize_output,
-                    force_isolated,
-                    trust_before_line,
-                );
+                run_file_command(file_path.as_str(), run_options);
                 return;
             }
             "-r" => {
@@ -153,13 +101,7 @@ pub fn run_cli() {
                         process::exit(2);
                     }
                 };
-                run_repository_command(
-                    repo_path.as_str(),
-                    output_style,
-                    strict_mode,
-                    output_language,
-                    summarize_output,
-                );
+                run_repository_command(repo_path.as_str(), run_options);
                 return;
             }
             "-runner" => {
@@ -167,10 +109,11 @@ pub fn run_cli() {
                 let (ok, output) = match run_runner_command(
                     &args,
                     &mut index,
-                    output_style,
-                    strict_mode,
-                    output_language,
-                    force_isolated,
+                    RunOptions {
+                        summarize: false,
+                        trust_before_line: None,
+                        ..run_options
+                    },
                 ) {
                     Ok(output) => output,
                     Err(message) => {
@@ -179,7 +122,7 @@ pub fn run_cli() {
                         process::exit(2);
                     }
                 };
-                println!("{}", string_with_trimmed_outer_newlines(output.as_str()));
+                println!("{}", output.trim());
                 if !ok {
                     process::exit(1);
                 }
@@ -197,10 +140,11 @@ pub fn run_cli() {
                     graph_kind,
                     &args,
                     &mut index,
-                    output_style,
-                    strict_mode,
-                    output_language,
-                    force_isolated,
+                    RunOptions {
+                        summarize: false,
+                        trust_before_line: None,
+                        ..run_options
+                    },
                 ) {
                     Ok(output) => output,
                     Err(message) => {
@@ -235,178 +179,26 @@ pub fn run_cli() {
                     print_help_message();
                     process::exit(2);
                 }
-                run_session_with_output_style_and_strict_and_language_and_preload(
-                    output_style,
-                    strict_mode,
-                    output_language,
-                    force_isolated,
+                run_session(SessionRequest::new(
+                    RunOptions {
+                        summarize: false,
+                        trust_before_line: None,
+                        ..run_options
+                    },
                     preload,
-                );
+                ));
                 return;
             }
             "-lean-ledger" => {
-                index += 1;
-                let markdown_path =
-                    match read_non_flag_value_after_flag(&args, &mut index, "-lean-ledger") {
-                        Ok(value) => value,
-                        Err(message) => {
-                            eprintln!("{}", message);
-                            print_help_message();
-                            process::exit(2);
-                        }
-                    };
-                let output_path =
-                    match read_non_flag_value_after_flag(&args, &mut index, "-lean-ledger") {
-                        Ok(value) => value,
-                        Err(message) => {
-                            eprintln!("-lean-ledger requires an output .lean path: {}", message);
-                            print_help_message();
-                            process::exit(2);
-                        }
-                    };
-                if let Some(unexpected) = args.get(index) {
-                    eprintln!(
-                        "unexpected argument after -lean-ledger output: {}",
-                        unexpected
-                    );
-                    print_help_message();
-                    process::exit(2);
-                }
-                match compile_litex_markdown_code_blocks_to_lean_file(
-                    Path::new(&markdown_path),
-                    Path::new(&output_path),
-                ) {
-                    Ok(count) => {
-                        println!(
-                            "wrote {} freshly generated Lean entries to {}",
-                            count, output_path
-                        );
-                    }
-                    Err(message) => {
-                        eprintln!("{}", message);
-                        process::exit(1);
-                    }
-                }
+                run_lean_ledger_command(&args, &mut index);
                 return;
             }
             "-latex" => {
-                index += 1;
-                if index >= args.len() {
-                    run_latex_repl(VERSION);
-                    return;
-                }
-                let latex_target_flag = match read_any_value_after_flag(&args, &mut index, "-latex")
-                {
-                    Ok(value) => value,
-                    Err(message) => {
-                        eprintln!("{}", message);
-                        print_help_message();
-                        process::exit(2);
-                    }
-                };
-                let latex_output_result = match latex_target_flag.as_str() {
-                    "-f" => {
-                        let file_path =
-                            match read_non_flag_value_after_flag(&args, &mut index, "-f") {
-                                Ok(value) => value,
-                                Err(message) => {
-                                    eprintln!("{}", message);
-                                    print_help_message();
-                                    process::exit(2);
-                                }
-                            };
-                        compile_file_to_latex(file_path.as_str(), output_language, force_isolated)
-                    }
-                    "-e" => {
-                        let code = match read_non_flag_value_after_flag(&args, &mut index, "-e") {
-                            Ok(value) => value,
-                            Err(message) => {
-                                eprintln!("{}", message);
-                                print_help_message();
-                                process::exit(2);
-                            }
-                        };
-                        compile_code_to_latex(code.as_str(), output_language)
-                    }
-                    "-r" => {
-                        let repo_path =
-                            match read_non_flag_value_after_flag(&args, &mut index, "-r") {
-                                Ok(value) => value,
-                                Err(message) => {
-                                    eprintln!("{}", message);
-                                    print_help_message();
-                                    process::exit(2);
-                                }
-                            };
-                        compile_repo_to_latex(repo_path.as_str(), output_language)
-                    }
-                    _ => {
-                        eprintln!(
-                            "-latex must be followed by one of: -f <file>, -e <code>, -r <repo>"
-                        );
-                        print_help_message();
-                        process::exit(2);
-                    }
-                };
-                println!("{}", latex_output_result);
+                run_latex_command(&args, &mut index, output_language, force_isolated);
                 return;
             }
             "-python" => {
-                index += 1;
-                let python_target_flag =
-                    match read_any_value_after_flag(&args, &mut index, "-python") {
-                        Ok(value) => value,
-                        Err(message) => {
-                            eprintln!("{}", message);
-                            print_help_message();
-                            process::exit(2);
-                        }
-                    };
-                let python_output_result = match python_target_flag.as_str() {
-                    "-f" => {
-                        let file_path =
-                            match read_non_flag_value_after_flag(&args, &mut index, "-f") {
-                                Ok(value) => value,
-                                Err(message) => {
-                                    eprintln!("{}", message);
-                                    print_help_message();
-                                    process::exit(2);
-                                }
-                            };
-                        compile_file_to_python(file_path.as_str(), output_language, force_isolated)
-                    }
-                    "-e" => {
-                        let code = match read_non_flag_value_after_flag(&args, &mut index, "-e") {
-                            Ok(value) => value,
-                            Err(message) => {
-                                eprintln!("{}", message);
-                                print_help_message();
-                                process::exit(2);
-                            }
-                        };
-                        compile_code_to_python(code.as_str(), output_language)
-                    }
-                    "-r" => {
-                        let repo_path =
-                            match read_non_flag_value_after_flag(&args, &mut index, "-r") {
-                                Ok(value) => value,
-                                Err(message) => {
-                                    eprintln!("{}", message);
-                                    print_help_message();
-                                    process::exit(2);
-                                }
-                            };
-                        compile_repo_to_python(repo_path.as_str(), output_language)
-                    }
-                    _ => {
-                        eprintln!(
-                            "-python must be followed by one of: -f <file>, -e <code>, -r <repo>"
-                        );
-                        print_help_message();
-                        process::exit(2);
-                    }
-                };
-                println!("{}", python_output_result);
+                run_python_command(&args, &mut index, output_language, force_isolated);
                 return;
             }
             other => {
@@ -417,12 +209,9 @@ pub fn run_cli() {
         }
     }
 
-    run_repl_with_output_style_and_strict_and_language_and_isolation(
+    run_repl(
         VERSION,
-        output_style,
-        strict_mode,
-        output_language,
-        force_isolated,
+        ReplOptions::new(output_style, strict_mode, output_language),
     );
 }
 

@@ -30,12 +30,20 @@ run source `1 = 1`
 | `ModuleManager` | Repository/module lifecycle plus parse-only struct declarations and unverified-import diagnostics shared by files in that module world. |
 | Local matcher/runner values | Recursive forall-argument bindings and trusted-prefix policy/report live only for the operation using them; they are not ambient `Runtime` state. |
 
-Start with [`runtime_state.rs`](runtime_state.rs) for the `Runtime` fields,
-run initialization, output configuration, and active execution frames;
-[`runtime_local_scopes.rs`](runtime_local_scopes.rs) for temporary environment
-and parser scopes; and
-[`runtime_definition_support.rs`](runtime_definition_support.rs) for definition
-name checks, known-object metadata, callable construction, and parameter maps.
+Start with [`state.rs`](state.rs) for the `Runtime` fields, run initialization,
+output configuration, and active execution frames. The remaining code is
+grouped by the state or operation it owns:
+
+- [`name_resolution/`](name_resolution/) owns local parser scopes, symbol and
+  binder policy, parameter definition, object resolution, and internal names.
+- [`definition_state/`](definition_state/) owns definition lookup and support,
+  known object properties, and parameter-type facts.
+- [`instantiation/`](instantiation/) owns capture-avoiding fact, object, and
+  function-forall instantiation.
+- [`statement_proof_state.rs`](statement_proof_state.rs) owns statement-local
+  proof reuse and recursion guards; [`fact_storage.rs`](fact_storage.rs) owns
+  FactId-backed storage and its immediate closure inference.
+
 Then follow [`execution_frame.rs`](execution_frame.rs) for source scopes,
 [`parse_context.rs`](parse_context.rs) for parser metadata, and
 [`../environment/environment_state.rs`](../environment/environment_state.rs)

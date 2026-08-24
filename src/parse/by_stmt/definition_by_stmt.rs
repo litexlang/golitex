@@ -43,7 +43,7 @@ impl Runtime {
             }
             fact
         };
-        if !fact.is_true() {
+        if !fact.has_positive_polarity() {
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
                     "by def expects one positive atomic fact".to_string(),

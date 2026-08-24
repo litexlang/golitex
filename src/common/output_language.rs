@@ -18,14 +18,15 @@ pub enum OutputLanguage {
 
 impl OutputLanguage {
     pub fn supported_codes_text() -> String {
-        "en, zh, zh-Hans, ja, ko, es, fr, de, pt, ru, ar, hi, vi, id".to_string()
+        "en, zh, zh-Hans, zh-Hant, ja, ko, es, fr, de, pt, ru, ar, hi, vi, id".to_string()
     }
 
     pub fn from_cli_lang(value: &str) -> Result<Self, String> {
         match value {
             "en" => Ok(OutputLanguage::English),
             "zh" => Ok(OutputLanguage::SimplifiedChinese),
-            "zh-Hans" => Ok(OutputLanguage::TraditionalChinese),
+            "zh-Hans" => Ok(OutputLanguage::SimplifiedChinese),
+            "zh-Hant" => Ok(OutputLanguage::TraditionalChinese),
             "ja" => Ok(OutputLanguage::Japanese),
             "ko" => Ok(OutputLanguage::Korean),
             "es" => Ok(OutputLanguage::Spanish),

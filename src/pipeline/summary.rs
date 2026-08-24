@@ -96,7 +96,7 @@ impl RunSummary {
     }
 
     fn visit_result(&mut self, result: &StmtResult, depth: usize) {
-        if result.is_true() {
+        if result.is_success() {
             self.verified_statements += 1;
         }
         if let Some(success) = result.factual_success() {
@@ -855,34 +855,25 @@ impl EnvironmentSummary {
     }
 }
 
-pub fn display_run_summary_json(
-    stmt_results: &[StmtResult],
-    runtime_error: &Option<RuntimeError>,
-) -> String {
-    let summary = RunSummary::from_run(stmt_results, runtime_error);
-    render_json_value(&summary.to_json_value(runtime_error.is_none()), 0)
+pub struct RunSummaryRequest<'a> {
+    pub runtime: &'a Runtime,
+    pub stmt_results: &'a [StmtResult],
+    pub runtime_error: &'a Option<RuntimeError>,
+    pub trusted_prefix_report: Option<&'a TrustedPrefixReport>,
 }
 
-pub fn display_run_summary_json_with_runtime(
-    runtime: &Runtime,
-    stmt_results: &[StmtResult],
-    runtime_error: &Option<RuntimeError>,
-) -> String {
-    let summary = RunSummary::from_run_with_runtime(runtime, stmt_results, runtime_error);
-    render_json_value(&summary.to_json_value(runtime_error.is_none()), 0)
-}
-
-pub fn display_run_summary_json_with_runtime_and_trusted_prefix(
-    runtime: &Runtime,
-    stmt_results: &[StmtResult],
-    runtime_error: &Option<RuntimeError>,
-    report: &TrustedPrefixReport,
-) -> String {
-    let summary = RunSummary::from_run_with_runtime(runtime, stmt_results, runtime_error);
-    render_json_value(
-        &summary.to_json_value_with_trusted_prefix(runtime_error.is_none(), report),
-        0,
-    )
+pub fn render_run_summary(request: RunSummaryRequest<'_>) -> String {
+    let success = request.runtime_error.is_none();
+    let summary = RunSummary::from_run_with_runtime(
+        request.runtime,
+        request.stmt_results,
+        request.runtime_error,
+    );
+    let json = match request.trusted_prefix_report {
+        None => summary.to_json_value(success),
+        Some(report) => summary.to_json_value_with_trusted_prefix(success, report),
+    };
+    render_json_value(&json, 0)
 }
 
 fn count_map_json_value(counts: &BTreeMap<String, usize>) -> JsonValue {

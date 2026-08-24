@@ -54,7 +54,7 @@ impl Runtime {
     pub fn try_verify_sum_pointwise_congruence(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -72,7 +72,7 @@ impl Runtime {
                 ),
                 builtin_state,
             )?
-            .is_true()
+            .is_success()
             || !self
                 .verify_equal_fact_as_builtin_premise(
                     &EqualFact::new_from_refs(
@@ -82,7 +82,7 @@ impl Runtime {
                     ),
                     builtin_state,
                 )?
-                .is_true()
+                .is_success()
         {
             return Ok(None);
         }
@@ -113,7 +113,7 @@ impl Runtime {
                         &EqualFact::new_from_refs(&left_set, &right_set, line_file.clone()),
                         builtin_state,
                     )?
-                    .is_true() =>
+                    .is_success() =>
             {
                 left_set
             }
@@ -151,14 +151,14 @@ impl Runtime {
 
             let known_forall_result = rt.verify_atomic_fact_with_known_forall(
                 &pointwise_fact,
-                &UseContextVerifyState::new(0, true),
+                &ProofSearchState::after_well_definedness(),
             )?;
-            if known_forall_result.is_true() {
+            if known_forall_result.is_success() {
                 return Ok(known_forall_result);
             }
             rt.verify_atomic_fact_as_builtin_rule_premise(&pointwise_fact, builtin_state)
         })?;
-        if !pointwise_result.is_true() {
+        if !pointwise_result.is_success() {
             return Ok(None);
         }
 
@@ -170,7 +170,7 @@ impl Runtime {
     pub fn try_verify_sum_additivity(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -193,7 +193,7 @@ impl Runtime {
                     &EqualFact::new_from_refs(a, b, line_file.clone()),
                     builtin_state,
                 )?
-                .is_true())
+                .is_success())
         };
         if !require_eq(sum_m.start.as_ref(), sum_a.start.as_ref())? {
             return Ok(None);
@@ -241,7 +241,7 @@ impl Runtime {
             &then_fact,
             builtin_state,
         )?;
-        if r.is_true() {
+        if r.is_success() {
             return Ok(Some(factual_equal_success_by_builtin_reason(
                 equal_fact,
                 "equality: sum additivity from pointwise equality on the integer index range",
@@ -255,7 +255,7 @@ impl Runtime {
     pub fn try_verify_sum_subtraction(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -290,7 +290,7 @@ impl Runtime {
                     ),
                     builtin_state,
                 )?
-                .is_true()
+                .is_success()
                 || !self
                     .verify_equal_fact_as_builtin_premise(
                         &EqualFact::new_from_refs(
@@ -300,7 +300,7 @@ impl Runtime {
                         ),
                         builtin_state,
                     )?
-                    .is_true()
+                    .is_success()
             {
                 return Ok(None);
             }
@@ -351,7 +351,7 @@ impl Runtime {
                 &pointwise_fact,
                 builtin_state,
             )?;
-        if !pointwise_result.is_true() {
+        if !pointwise_result.is_success() {
             return Ok(None);
         }
 
@@ -398,7 +398,7 @@ impl Runtime {
         param_binding: SymbolBinding,
         dom_facts: Vec<Fact>,
         then_fact: &AtomicFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<StmtResult, RuntimeError> {
         self.run_in_local_env(|rt| {
             let params_def = ParamDefWithType::new(vec![ParamGroupWithParamType::new(
@@ -411,9 +411,9 @@ impl Runtime {
             }
             let known_forall_result = rt.verify_atomic_fact_with_known_forall(
                 then_fact,
-                &UseContextVerifyState::new(0, true),
+                &ProofSearchState::after_well_definedness(),
             )?;
-            if known_forall_result.is_true() {
+            if known_forall_result.is_success() {
                 return Ok(known_forall_result);
             }
             rt.verify_atomic_fact_as_builtin_rule_premise(then_fact, builtin_state)
@@ -424,7 +424,7 @@ impl Runtime {
     pub fn try_verify_sum_merge_adjacent_ranges(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -453,7 +453,7 @@ impl Runtime {
         s1: &Sum,
         s2: &Sum,
         s3: &Sum,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let line_file = &equal_fact.line_file;
         let one: Obj = Number::new("1".to_string()).into();
@@ -463,7 +463,7 @@ impl Runtime {
                 &EqualFact::new_from_refs(&gap, s2.start.as_ref(), line_file.clone()),
                 builtin_state,
             )?
-            .is_true()
+            .is_success()
         {
             return Ok(None);
         }
@@ -472,7 +472,7 @@ impl Runtime {
                 &EqualFact::new_from_refs(s1.start.as_ref(), s3.start.as_ref(), line_file.clone()),
                 builtin_state,
             )?
-            .is_true()
+            .is_success()
         {
             return Ok(None);
         }
@@ -481,7 +481,7 @@ impl Runtime {
                 &EqualFact::new_from_refs(s2.end.as_ref(), s3.end.as_ref(), line_file.clone()),
                 builtin_state,
             )?
-            .is_true()
+            .is_success()
         {
             return Ok(None);
         }
@@ -490,7 +490,7 @@ impl Runtime {
                 &EqualFact::new_from_refs(s1.func.as_ref(), s2.func.as_ref(), line_file.clone()),
                 builtin_state,
             )?
-            .is_true()
+            .is_success()
         {
             return Ok(None);
         }
@@ -499,7 +499,7 @@ impl Runtime {
                 &EqualFact::new_from_refs(s1.func.as_ref(), s3.func.as_ref(), line_file.clone()),
                 builtin_state,
             )?
-            .is_true()
+            .is_success()
         {
             return Ok(None);
         }
@@ -514,7 +514,7 @@ impl Runtime {
     pub fn try_verify_sum_single_term(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -532,7 +532,7 @@ impl Runtime {
                     ),
                     builtin_state,
                 )?
-                .is_true()
+                .is_success()
             {
                 continue;
             }
@@ -546,7 +546,7 @@ impl Runtime {
                     &EqualFact::new_from_refs(&expected, other, line_file.clone()),
                     builtin_state,
                 )?
-                .is_true()
+                .is_success()
             {
                 return Ok(Some(factual_equal_success_by_builtin_reason(
                     equal_fact,
@@ -562,7 +562,7 @@ impl Runtime {
     pub fn try_verify_product_single_term(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -580,7 +580,7 @@ impl Runtime {
                     ),
                     builtin_state,
                 )?
-                .is_true()
+                .is_success()
             {
                 continue;
             }
@@ -596,7 +596,7 @@ impl Runtime {
                     &EqualFact::new_from_refs(&expected, other, line_file.clone()),
                     builtin_state,
                 )?
-                .is_true()
+                .is_success()
             {
                 return Ok(Some(factual_equal_success_by_builtin_reason(
                     equal_fact,
@@ -611,7 +611,7 @@ impl Runtime {
     pub fn try_verify_sum_split_last_term(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -640,7 +640,7 @@ impl Runtime {
                         ),
                         builtin_state,
                     )?
-                    .is_true()
+                    .is_success()
                 {
                     continue;
                 }
@@ -654,7 +654,7 @@ impl Runtime {
                         ),
                         builtin_state,
                     )?
-                    .is_true()
+                    .is_success()
                 {
                     continue;
                 }
@@ -667,7 +667,7 @@ impl Runtime {
                         ),
                         builtin_state,
                     )?
-                    .is_true()
+                    .is_success()
                 {
                     continue;
                 }
@@ -683,7 +683,7 @@ impl Runtime {
                         &EqualFact::new_from_refs(&expected_tail, tail, line_file.clone()),
                         builtin_state,
                     )?
-                    .is_true()
+                    .is_success()
                 {
                     continue;
                 }
@@ -700,7 +700,7 @@ impl Runtime {
     pub fn try_verify_product_split_last_term(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -729,7 +729,7 @@ impl Runtime {
                         ),
                         builtin_state,
                     )?
-                    .is_true()
+                    .is_success()
                 {
                     continue;
                 }
@@ -743,7 +743,7 @@ impl Runtime {
                         ),
                         builtin_state,
                     )?
-                    .is_true()
+                    .is_success()
                 {
                     continue;
                 }
@@ -756,7 +756,7 @@ impl Runtime {
                         ),
                         builtin_state,
                     )?
-                    .is_true()
+                    .is_success()
                 {
                     continue;
                 }
@@ -772,7 +772,7 @@ impl Runtime {
                         &EqualFact::new_from_refs(&expected_tail, tail, line_file.clone()),
                         builtin_state,
                     )?
-                    .is_true()
+                    .is_success()
                 {
                     continue;
                 }
@@ -811,7 +811,7 @@ impl Runtime {
     pub fn try_verify_sum_partition_adjacent_ranges(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -850,7 +850,7 @@ impl Runtime {
                     ),
                     builtin_state,
                 )?
-                .is_true()
+                .is_success()
             {
                 continue;
             }
@@ -863,7 +863,7 @@ impl Runtime {
                     ),
                     builtin_state,
                 )?
-                .is_true()
+                .is_success()
             {
                 continue;
             }
@@ -879,7 +879,7 @@ impl Runtime {
                         ),
                         builtin_state,
                     )?
-                    .is_true()
+                    .is_success()
                 {
                     gaps_ok = false;
                     break;
@@ -899,7 +899,7 @@ impl Runtime {
                         ),
                         builtin_state,
                     )?
-                    .is_true()
+                    .is_success()
                 {
                     func_ok = false;
                     break;
@@ -917,7 +917,7 @@ impl Runtime {
     pub fn try_verify_product_partition_adjacent_ranges(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -956,7 +956,7 @@ impl Runtime {
                     ),
                     builtin_state,
                 )?
-                .is_true()
+                .is_success()
             {
                 continue;
             }
@@ -969,7 +969,7 @@ impl Runtime {
                     ),
                     builtin_state,
                 )?
-                .is_true()
+                .is_success()
             {
                 continue;
             }
@@ -985,7 +985,7 @@ impl Runtime {
                         ),
                         builtin_state,
                     )?
-                    .is_true()
+                    .is_success()
                 {
                     gaps_ok = false;
                     break;
@@ -1005,7 +1005,7 @@ impl Runtime {
                         ),
                         builtin_state,
                     )?
-                    .is_true()
+                    .is_success()
                 {
                     func_ok = false;
                     break;
@@ -1024,7 +1024,7 @@ impl Runtime {
     pub fn try_verify_sum_reindex_shift(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -1049,7 +1049,7 @@ impl Runtime {
                     &EqualFact::new_from_refs(&k, &k_end, line_file.clone()),
                     builtin_state,
                 )?
-                .is_true()
+                .is_success()
             {
                 continue;
             }
@@ -1092,7 +1092,7 @@ impl Runtime {
                 &then_fact,
                 builtin_state,
             )?;
-            if r.is_true() {
+            if r.is_success() {
                 return Ok(Some(factual_equal_success_by_builtin_reason(
                     equal_fact,
                     "equality: sum reindexing (integer shift) from pointwise equality on the range",
@@ -1106,7 +1106,7 @@ impl Runtime {
     pub fn try_verify_sum_constant_summand(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -1145,13 +1145,13 @@ impl Runtime {
                     &EqualFact::new_from_refs(other, &m1, line_file.clone()),
                     builtin_state,
                 )?
-                .is_true()
+                .is_success()
                 || self
                     .verify_equal_fact_as_builtin_premise(
                         &EqualFact::new_from_refs(other, &m2, line_file.clone()),
                         builtin_state,
                     )?
-                    .is_true()
+                    .is_success()
             {
                 return Ok(Some(factual_equal_success_by_builtin_reason(
                     equal_fact,
@@ -1167,7 +1167,7 @@ impl Runtime {
     pub fn try_verify_sum_scalar_mul(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -1194,7 +1194,7 @@ impl Runtime {
                     ),
                     builtin_state,
                 )?;
-                if !start_result.is_true() {
+                if !start_result.is_success() {
                     continue;
                 }
                 let end_result = self.verify_equal_fact_as_builtin_premise(
@@ -1205,7 +1205,7 @@ impl Runtime {
                     ),
                     builtin_state,
                 )?;
-                if !end_result.is_true() {
+                if !end_result.is_success() {
                     continue;
                 }
 
@@ -1236,7 +1236,7 @@ impl Runtime {
                         &pointwise_fact,
                         builtin_state,
                     )?;
-                if !pointwise_result.is_true() {
+                if !pointwise_result.is_success() {
                     continue;
                 }
                 return Ok(Some(factual_equal_success_by_builtin_reason(

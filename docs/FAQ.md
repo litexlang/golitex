@@ -38,8 +38,8 @@ Litex is inspired by LaTeX's practical design for writing mathematics.
 Yes. Use `litex -lang <code> ...` to localize JSON keys and explanatory labels.
 The proof script inside fields such as `statement`, `fact`, and
 `cited_statement` remains ordinary Litex code. Supported codes include `en`,
-`zh`, `zh-Hans`, `ja`, `ko`, `es`, `fr`, `de`, `pt`, `ru`, `ar`, `hi`, `vi`,
-and `id`.
+`zh`, `zh-Hans`, `zh-Hant`, `ja`, `ko`, `es`, `fr`, `de`, `pt`, `ru`, `ar`,
+`hi`, `vi`, and `id`.
 
 ## How is Litex invented?
 

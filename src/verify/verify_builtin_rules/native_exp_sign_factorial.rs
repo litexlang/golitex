@@ -27,7 +27,7 @@ impl Runtime {
     pub(super) fn try_verify_native_exp_ln_injectivity(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -39,7 +39,7 @@ impl Runtime {
             &exp_right,
             line_file.clone(),
         ));
-        if exp_result.is_true() {
+        if exp_result.is_success() {
             return Ok(Some(native_equal_success(
                 equal_fact,
                 "injectivity of native exp",
@@ -53,7 +53,7 @@ impl Runtime {
             &ln_right,
             line_file.clone(),
         ));
-        if !ln_result.is_true() {
+        if !ln_result.is_success() {
             return Ok(None);
         }
         let zero: Obj = Number::new("0".to_string()).into();
@@ -79,7 +79,7 @@ impl Runtime {
     pub(super) fn try_verify_native_sign_zero_reflection(
         &mut self,
         equal_fact: &EqualFact,
-        _builtin_state: &UseBuiltinRuleVerifyState,
+        _builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -98,7 +98,7 @@ impl Runtime {
             &zero,
             line_file.clone(),
         ));
-        if !result.is_true() {
+        if !result.is_success() {
             return Ok(None);
         }
         Ok(Some(native_equal_success(
@@ -138,7 +138,7 @@ impl Runtime {
             }
         };
         let result = self.verify_non_equational_atomic_fact_with_known_atomic_facts(&premise)?;
-        if !result.is_true() {
+        if !result.is_success() {
             return Ok(None);
         }
         Ok(Some(
@@ -175,7 +175,7 @@ impl Runtime {
     pub(super) fn try_verify_native_sign_value(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -266,7 +266,7 @@ impl Runtime {
     pub(super) fn try_verify_native_factorial_divisibility(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -290,7 +290,7 @@ impl Runtime {
         )
         .into();
         let result = self.verify_atomic_fact_as_builtin_rule_premise(&premise, builtin_state)?;
-        if !result.is_true() {
+        if !result.is_success() {
             return Ok(None);
         }
         Ok(Some(native_equal_success(
@@ -305,7 +305,7 @@ impl Runtime {
     pub(super) fn try_verify_native_exp_sign_factorial_order(
         &mut self,
         atomic_fact: &AtomicFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         if let Some(result) =
             self.try_verify_native_factorial_monotonicity(atomic_fact, builtin_state)?
@@ -343,7 +343,7 @@ impl Runtime {
     fn try_verify_native_factorial_monotonicity(
         &mut self,
         atomic_fact: &AtomicFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         // Factorial preserves weak order on N and strict order from a positive
         // smaller argument. Examples: `m <= n => m! <= n!` and
@@ -403,7 +403,7 @@ impl Runtime {
     fn try_verify_native_sign_monotonicity(
         &mut self,
         atomic_fact: &AtomicFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         // The real sign function preserves weak order but not strict order.
         // Example: `a <= b => sign(a) <= sign(b)`.
@@ -421,7 +421,7 @@ impl Runtime {
         )
         .into();
         let result = self.verify_atomic_fact_as_builtin_rule_premise(&premise, builtin_state)?;
-        if !result.is_true() {
+        if !result.is_success() {
             return Ok(None);
         }
         Ok(Some(
@@ -437,7 +437,7 @@ impl Runtime {
     fn native_exp_sign_factorial_order_shape(
         &mut self,
         atomic_fact: &AtomicFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<(bool, Vec<StmtResult>)>, RuntimeError> {
         let (left, right, strict) = match atomic_fact {
             AtomicFact::LessFact(f) => (&f.left, &f.right, true),
@@ -501,7 +501,7 @@ impl Runtime {
     fn try_verify_native_exp_ln_monotonicity(
         &mut self,
         atomic_fact: &AtomicFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         // Natural exp is strictly increasing on R, and natural ln is strictly
         // increasing on R+. Examples: `a < b => exp(a) < exp(b)` and
@@ -551,7 +551,7 @@ impl Runtime {
         for (index, premise) in reflected_premises.iter().enumerate() {
             let result =
                 self.verify_non_equational_atomic_fact_with_known_atomic_facts(&premise)?;
-            if !result.is_true() {
+            if !result.is_success() {
                 continue;
             }
             let mut subgoals = Vec::new();
@@ -593,7 +593,7 @@ impl Runtime {
             line_file.clone(),
             builtin_state,
         )?;
-        if reflected_result.is_true() {
+        if reflected_result.is_success() {
             let order_kind = if strict { "strict" } else { "weak" };
             return Ok(Some(
                 SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(

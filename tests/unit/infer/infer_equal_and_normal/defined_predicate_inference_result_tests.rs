@@ -4,8 +4,8 @@ use crate::prelude::*;
 #[test]
 fn defined_predicate_inference_retains_parameter_and_clause_projection_results() {
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope("defined_predicate_inference_result_test.lit");
-    let (results, error) = run_source_code(
+    runtime.start_isolated_source("defined_predicate_inference_result_test.lit");
+    let (results, error) = execute_source(
         "prop same_set(x set, y set):\n    x = y\ntrust R $same_set C",
         &mut runtime,
     );

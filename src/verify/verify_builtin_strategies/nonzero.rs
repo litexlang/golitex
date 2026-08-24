@@ -40,7 +40,7 @@ impl Runtime {
         let mut children = Vec::with_capacity(required.len());
         for child in &required {
             let result = self.verify_builtin_strategy_child(child)?;
-            if !result.is_true() {
+            if !result.is_success() {
                 return Ok(UnknownGenericStmtResult::new().into());
             }
             children.push(result);

@@ -6,21 +6,18 @@ impl Runtime {
         &mut self,
         stmt: &ByAxiomOfChoiceStmt,
     ) -> Result<StmtResult, RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(
-            &stmt.family,
-            &UseContextVerifyState::new(0, false),
-        )
-        .map_err(|well_defined_error| {
-            short_exec_error(
-                stmt.clone().into(),
-                format!(
-                    "by axiom_of_choice: family `{}` is not well-defined",
-                    stmt.family
-                ),
-                Some(well_defined_error),
-                vec![],
-            )
-        })?;
+        self.verify_obj_well_defined_and_store_cache(&stmt.family, &ProofSearchState::initial())
+            .map_err(|well_defined_error| {
+                short_exec_error(
+                    stmt.clone().into(),
+                    format!(
+                        "by axiom_of_choice: family `{}` is not well-defined",
+                        stmt.family
+                    ),
+                    Some(well_defined_error),
+                    vec![],
+                )
+            })?;
 
         let (mut inside_results, obligations_for_output) = self.run_in_local_env(|rt| {
             let mut inside_results: Vec<StmtResult> = Vec::new();
@@ -50,7 +47,7 @@ impl Runtime {
                     continue;
                 }
                 let result = rt
-                    .verify_fact_or_error(&fact, &UseContextVerifyState::new(0, false))
+                    .verify_fact_or_error(&fact, &ProofSearchState::initial())
                     .map_err(|verify_error| {
                         short_exec_error(
                             stmt.clone().into(),

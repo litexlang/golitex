@@ -6,7 +6,7 @@ impl Runtime {
     pub fn try_verify_square_sum_zero_from_zero_components(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -41,7 +41,7 @@ impl Runtime {
             &zero,
             line_file.clone(),
         ));
-        if !first_zero.is_true() || !second_zero.is_true() {
+        if !first_zero.is_success() || !second_zero.is_success() {
             return Ok(None);
         }
         steps.push(first_zero);
@@ -62,7 +62,7 @@ impl Runtime {
     pub fn try_verify_square_sum_component_zero_from_known_sum_zero(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -104,7 +104,7 @@ impl Runtime {
                     &zero,
                     line_file.clone(),
                 ));
-                if !sum_zero.is_true() {
+                if !sum_zero.is_success() {
                     continue;
                 }
                 let first_matches = self.verify_zero_product_factor_matches_target(
@@ -115,11 +115,11 @@ impl Runtime {
                     &EqualFact::new_from_refs(target, &second_base, line_file.clone()),
                     builtin_state,
                 )?;
-                if !first_matches.is_true() && !second_matches.is_true() {
+                if !first_matches.is_success() && !second_matches.is_success() {
                     continue;
                 }
                 steps.push(sum_zero);
-                if first_matches.is_true() {
+                if first_matches.is_success() {
                     steps.push(first_matches);
                 } else {
                     steps.push(second_matches);

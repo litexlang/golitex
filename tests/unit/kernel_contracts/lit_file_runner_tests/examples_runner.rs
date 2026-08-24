@@ -2,7 +2,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::Instant;
 
-use crate::pipeline::{render_run_source_code_output, run_source_code};
+use crate::pipeline::{execute_source, render_run_output};
 use crate::prelude::*;
 
 use super::helper::{
@@ -13,6 +13,14 @@ use super::helper::{
     SCRATCH_EXAMPLE_FILE,
 };
 use super::runtime_regression_tests::run_runtime_contract_suite_impl;
+
+fn run_file_for_test(file_path: &str) -> (bool, String) {
+    let outcome = run(RunRequest::new(
+        RunTarget::file(file_path),
+        RunOptions::default(),
+    ));
+    (outcome.ok, outcome.output)
+}
 
 #[derive(Clone)]
 struct LitexRunItem {
@@ -247,8 +255,7 @@ fn run_examples_phase1_with_runtime(
         };
     }
 
-    runtime
-        .new_file_path_new_env_new_name_scope(phase1_groups[0].items[0].path_for_runtime.as_str());
+    runtime.start_isolated_source(phase1_groups[0].items[0].path_for_runtime.as_str());
     crate::verify::known_forall_profile::reset();
 
     let examples_wall_start = Instant::now();
@@ -352,14 +359,13 @@ fn run_examples_phase1_sequential_with_runtime(
         examples_ran = true;
         let examples_wall_start = Instant::now();
         let first_path = phase1_items[0].path_for_runtime.as_str();
-        runtime.new_file_path_new_env_new_name_scope(first_path);
+        runtime.start_isolated_source(first_path);
         crate::verify::known_forall_profile::reset();
 
         for (item_index, item) in phase1_items.iter().enumerate() {
             if item.run_in_project_context {
                 let start_time_for_one_file = Instant::now();
-                let (run_succeeded, run_output) =
-                    run_source_code_in_file_with_ok(item.path_for_runtime.as_str());
+                let (run_succeeded, run_output) = run_file_for_test(item.path_for_runtime.as_str());
                 let duration_ms_for_one_file =
                     start_time_for_one_file.elapsed().as_secs_f64() * 1000.0;
                 file_label_and_duration_ms_list
@@ -385,12 +391,11 @@ fn run_examples_phase1_sequential_with_runtime(
             ));
 
             let start_time_for_one_file = Instant::now();
-            let (stmt_results, runtime_error) =
-                run_source_code(normalized_source.as_str(), runtime);
+            let (stmt_results, runtime_error) = execute_source(normalized_source.as_str(), runtime);
             let duration_ms_for_one_file = start_time_for_one_file.elapsed().as_secs_f64() * 1000.0;
 
             let (run_succeeded, run_output) =
-                render_run_source_code_output(runtime, &stmt_results, &runtime_error, false);
+                render_run_output(runtime, &stmt_results, &runtime_error);
 
             if !run_succeeded {
                 every_file_run_ok = false;
@@ -495,7 +500,7 @@ fn run_docs_markdown_with_runtime(
 
     if runtime_needs_file_path {
         let synthetic_path = format!("{} ```litex``` snippets", docs_label);
-        runtime.new_file_path_new_env_new_name_scope(synthetic_path.as_str());
+        runtime.start_isolated_source(synthetic_path.as_str());
     }
 
     println!(
@@ -516,11 +521,10 @@ fn run_docs_markdown_with_runtime(
 
         let normalized_source = remove_windows_carriage_return(source_code);
         let start_snippet = Instant::now();
-        let (stmt_results, runtime_error) = run_source_code(normalized_source.as_str(), runtime);
+        let (stmt_results, runtime_error) = execute_source(normalized_source.as_str(), runtime);
         let duration_ms = start_snippet.elapsed().as_secs_f64() * 1000.0;
 
-        let (run_succeeded, run_output) =
-            render_run_source_code_output(runtime, &stmt_results, &runtime_error, false);
+        let (run_succeeded, run_output) = render_run_output(runtime, &stmt_results, &runtime_error);
 
         doc_durations_ms.push((label.clone(), duration_ms));
 
@@ -690,8 +694,7 @@ fn run_litex_run_group(group: LitexRunGroup) -> LitexRunGroupSummary {
     for (item_index, item) in group.items.iter().enumerate() {
         if item.run_in_project_context {
             let start_time_for_one_file = Instant::now();
-            let (run_succeeded, run_output) =
-                run_source_code_in_file_with_ok(item.path_for_runtime.as_str());
+            let (run_succeeded, run_output) = run_file_for_test(item.path_for_runtime.as_str());
             let duration_ms = start_time_for_one_file.elapsed().as_secs_f64() * 1000.0;
             run_durations_ms.push((item.report_label.clone(), duration_ms));
 
@@ -707,7 +710,7 @@ fn run_litex_run_group(group: LitexRunGroup) -> LitexRunGroupSummary {
         }
 
         if item_index == 0 {
-            runtime.new_file_path_new_env_new_name_scope(item.path_for_runtime.as_str());
+            runtime.start_isolated_source(item.path_for_runtime.as_str());
         } else {
             runtime.reset_for_isolated_runner_item();
             runtime.set_current_user_lit_file_path(item.path_for_runtime.as_str());
@@ -719,7 +722,7 @@ fn run_litex_run_group(group: LitexRunGroup) -> LitexRunGroupSummary {
         ));
         let start_time_for_one_file = Instant::now();
         let run_result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-            run_source_code(normalized_source.as_str(), &mut runtime)
+            execute_source(normalized_source.as_str(), &mut runtime)
         }));
         let (stmt_results, runtime_error) = match run_result {
             Ok(result) => result,
@@ -738,7 +741,7 @@ fn run_litex_run_group(group: LitexRunGroup) -> LitexRunGroupSummary {
         let duration_ms = start_time_for_one_file.elapsed().as_secs_f64() * 1000.0;
 
         let (run_succeeded, run_output) =
-            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            render_run_output(&runtime, &stmt_results, &runtime_error);
         run_durations_ms.push((item.report_label.clone(), duration_ms));
 
         if !run_succeeded {

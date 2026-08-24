@@ -1,4 +1,17 @@
-use crate::prelude::*;
+use super::statement_execution::StatementExecutionContext;
+use crate::error::{exec_stmt_error_with_stmt_and_cause, short_exec_error, RuntimeError};
+use crate::infer::SuccessInferResult;
+use crate::result::{
+    StmtResult, SuccessCommandStmtResult, SuccessDefAlgoStmtResult, SuccessDefInterfaceStmtResult,
+    SuccessDefSettingStmtResult, SuccessDefStructStmtResult, SuccessEvalStmtExecutionResult,
+    SuccessEvalStmtResult, SuccessExampleStmtResult, SuccessProofBlockStmtResult,
+    SuccessSketchStmtResult, SuccessStmtCommonResult, SuccessStmtResult, SuccessTryStmtResult,
+};
+use crate::runtime::{ExecutionMode, Runtime};
+use crate::stmt::{
+    ByStmt, CommandStmt, DefInterfaceStmt, DefObjStmt, DefPredicateStmt, ProofBlockStmt, Stmt,
+    UnsafeStmt, WitnessStmt,
+};
 
 impl Runtime {
     pub fn execute_preverified_statement(
@@ -16,23 +29,16 @@ impl Runtime {
         // Reuse the no-verification environment path for a statement whose
         // generic form was already checked before capture-avoiding substitution.
         let previous_execution_mode = self.replace_current_execution_mode(ExecutionMode::Trusted);
-        let result = self.execute_statement_without_verification(stmt, false);
+        let result = self
+            .execute_statement_without_verification(stmt, StatementExecutionContext::OrdinaryRun);
         self.replace_current_execution_mode(previous_execution_mode);
         result
-    }
-
-    /// Compatibility wrapper for the former implementation-oriented name.
-    pub fn exec_preverified_stmt_affect_environment_only(
-        &mut self,
-        stmt: &Stmt,
-    ) -> Result<StmtResult, RuntimeError> {
-        self.execute_preverified_statement(stmt)
     }
 
     pub(super) fn execute_statement_without_verification(
         &mut self,
         stmt: &Stmt,
-        in_trusted_prefix_run: bool,
+        context: StatementExecutionContext,
     ) -> Result<StmtResult, RuntimeError> {
         match stmt {
             Stmt::Fact(fact) => self.execute_trusted_fact(fact),
@@ -152,7 +158,9 @@ impl Runtime {
             Stmt::ProofBlock(ProofBlockStmt::ClaimStmt(s)) => {
                 self.exec_claim_stmt_affect_environment_only(s)
             }
-            Stmt::ProofBlock(ProofBlockStmt::TryStmt(s)) if in_trusted_prefix_run => {
+            Stmt::ProofBlock(ProofBlockStmt::TryStmt(s))
+                if context == StatementExecutionContext::TrustedPrefixRun =>
+            {
                 self.exec_try_stmt(s)
             }
             Stmt::ProofBlock(ProofBlockStmt::ExampleStmt(s)) => Ok(

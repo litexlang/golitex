@@ -9,9 +9,9 @@ g(1, 2) = 3
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope("callable_alias_arity_boundary");
-    let (results, error) = run_source_code(source, &mut runtime);
-    let (succeeded, output) = render_run_source_code_output(&runtime, &results, &error, false);
+    runtime.start_isolated_source("callable_alias_arity_boundary");
+    let (results, error) = execute_source(source, &mut runtime);
+    let (succeeded, output) = render_run_output(&runtime, &results, &error);
 
     assert!(
         !succeeded,

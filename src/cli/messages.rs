@@ -70,7 +70,8 @@ litex -detail : include full audit trace details and raw source paths for both s
 litex -strict : verify configured imports and -f prefix entries, and reject user trust, trust have, and axiom statements
 litex -trust-before-line <X> : preview development tool for direct -f runs; X must name an exact top-level statement header line, cannot be used with -strict, and an isolated cutoff run exits after its summary
 litex -summarize : append one run summary JSON object after ordinary verifier command output
-litex -lang <en|zh|zh-Hans|ja|ko|es|fr|de|pt|ru|ar|hi|vi|id> : choose output language
+litex -trace-pipeline -e '1 + 1 = 2' : append the major Rust function path and state whether the Lean compiler ran
+litex -lang <en|zh|zh-Hans|zh-Hant|ja|ko|es|fr|de|pt|ru|ar|hi|vi|id> : choose output language
 "#;
     result.to_string()
 }

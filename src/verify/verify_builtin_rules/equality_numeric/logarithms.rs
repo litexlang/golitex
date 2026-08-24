@@ -5,7 +5,7 @@ impl Runtime {
     pub fn try_verify_log_identity_equalities(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -21,12 +21,12 @@ impl Runtime {
                 &EqualFact::new_from_refs(p.base.as_ref(), log.base.as_ref(), line_file.clone()),
                 builtin_state,
             )?;
-            if base_ok.is_true() {
+            if base_ok.is_success() {
                 let exp_ok = self.verify_equal_fact_as_builtin_premise(
                     &EqualFact::new_from_refs(p.exponent.as_ref(), other, line_file.clone()),
                     builtin_state,
                 )?;
-                if exp_ok.is_true() {
+                if exp_ok.is_success() {
                     let mut subgoals = equality_builtin_match_subgoals(
                         &EqualFact::new_from_refs(
                             p.base.as_ref(),
@@ -55,7 +55,7 @@ impl Runtime {
     pub(super) fn try_verify_log_base_power_rule(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -74,7 +74,7 @@ impl Runtime {
             &EqualFact::new_from_refs(other, &expected, line_file.clone()),
             builtin_state,
         )?;
-        if inner.is_true() {
+        if inner.is_success() {
             let subgoals = equality_builtin_match_subgoals(
                 &EqualFact::new_from_refs(other, &expected, line_file.clone()),
                 inner,
@@ -92,7 +92,7 @@ impl Runtime {
     pub(super) fn try_verify_log_arg_power_rule(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -113,7 +113,7 @@ impl Runtime {
                 &EqualFact::new_from_refs(other, &expected, line_file.clone()),
                 builtin_state,
             )?;
-            if inner.is_true() {
+            if inner.is_success() {
                 let subgoals = equality_builtin_match_subgoals(
                     &EqualFact::new_from_refs(other, &expected, line_file.clone()),
                     inner,
@@ -132,7 +132,7 @@ impl Runtime {
     pub(super) fn try_verify_log_product_rule(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -154,7 +154,7 @@ impl Runtime {
                 &EqualFact::new_from_refs(other, &expected, line_file.clone()),
                 builtin_state,
             )?;
-            if inner.is_true() {
+            if inner.is_success() {
                 let subgoals = equality_builtin_match_subgoals(
                     &EqualFact::new_from_refs(other, &expected, line_file.clone()),
                     inner,
@@ -173,7 +173,7 @@ impl Runtime {
     pub(super) fn try_verify_log_quotient_rule(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -193,7 +193,7 @@ impl Runtime {
             &EqualFact::new_from_refs(other, &expected, line_file.clone()),
             builtin_state,
         )?;
-        if inner.is_true() {
+        if inner.is_success() {
             let subgoals = equality_builtin_match_subgoals(
                 &EqualFact::new_from_refs(other, &expected, line_file.clone()),
                 inner,
@@ -211,7 +211,7 @@ impl Runtime {
     pub fn try_verify_log_algebra_identities(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         if let Some(done) = self.try_verify_log_base_power_rule(equal_fact, builtin_state)? {
             return Ok(Some(done));
@@ -233,7 +233,7 @@ impl Runtime {
     pub fn try_verify_log_reciprocal_rule(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -251,7 +251,7 @@ impl Runtime {
             &EqualFact::new_from_refs(d.left.as_ref(), &one, line_file.clone()),
             builtin_state,
         )?;
-        if !one_ok.is_true() {
+        if !one_ok.is_success() {
             return Ok(None);
         }
 
@@ -273,7 +273,7 @@ impl Runtime {
                 &EqualFact::new_from_refs(other, &expected, line_file.clone()),
                 builtin_state,
             )?;
-            if ok.is_true() {
+            if ok.is_success() {
                 let mut subgoals = equality_builtin_match_subgoals(
                     &EqualFact::new_from_refs(d.left.as_ref(), &one, line_file.clone()),
                     one_ok,
@@ -298,7 +298,7 @@ impl Runtime {
     pub fn try_verify_log_change_of_base_rule(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -323,21 +323,21 @@ impl Runtime {
             ),
             builtin_state,
         )?;
-        if !base_ok.is_true() {
+        if !base_ok.is_success() {
             return Ok(None);
         }
         let arg_ok = self.verify_equal_fact_as_builtin_premise(
             &EqualFact::new_from_refs(log_cb.arg.as_ref(), log_ab.arg.as_ref(), line_file.clone()),
             builtin_state,
         )?;
-        if !arg_ok.is_true() {
+        if !arg_ok.is_success() {
             return Ok(None);
         }
         let inner_ok = self.verify_equal_fact_as_builtin_premise(
             &EqualFact::new_from_refs(log_ca.arg.as_ref(), log_ab.base.as_ref(), line_file.clone()),
             builtin_state,
         )?;
-        if !inner_ok.is_true() {
+        if !inner_ok.is_success() {
             return Ok(None);
         }
 
@@ -369,7 +369,7 @@ impl Runtime {
     pub fn try_verify_log_equals_by_pow_inverse(
         &mut self,
         equal_fact: &EqualFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -388,7 +388,7 @@ impl Runtime {
             let same_base_and_arg = self.verify_equal_fact_by_known_equality(
                 &EqualFact::new_from_refs(log.base.as_ref(), log.arg.as_ref(), line_file.clone()),
             );
-            if same_base_and_arg.is_true() {
+            if same_base_and_arg.is_success() {
                 let subgoals = equality_builtin_match_subgoals(
                     &EqualFact::new_from_refs(
                         log.base.as_ref(),
@@ -418,7 +418,7 @@ impl Runtime {
             &EqualFact::new_from_refs(&pow_obj, log.arg.as_ref(), line_file.clone()),
             builtin_state,
         )?;
-        if inner.is_true() {
+        if inner.is_success() {
             return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
                 equal_fact,
                 "equality: log(a, b) = c from a^c = b",
@@ -433,7 +433,7 @@ impl Runtime {
     pub fn try_verify_pow_equals_by_known_log_inverse(
         &mut self,
         equal_fact: &EqualFact,
-        _builtin_state: &UseBuiltinRuleVerifyState,
+        _builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -449,7 +449,7 @@ impl Runtime {
             &expected_log,
             line_file.clone(),
         ));
-        if !exponent_ok.is_true() {
+        if !exponent_ok.is_success() {
             return Ok(None);
         }
 

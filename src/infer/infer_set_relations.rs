@@ -10,10 +10,7 @@ impl Runtime {
         let left_set = subset_fact.left.clone();
         let left_is_set_builder = matches!(&left_set, Obj::SetBuilder(_))
             || matches!(
-                self.unfold_known_fn_application_once(
-                    &left_set,
-                    &UseContextVerifyState::new(0, false)
-                )?,
+                self.unfold_known_fn_application_once(&left_set, &ProofSearchState::initial())?,
                 Some(Obj::SetBuilder(_))
             )
             || self.get_obj_equal_to_set_builder(&left_set).is_some();
@@ -27,7 +24,7 @@ impl Runtime {
                 || matches!(
                     self.unfold_known_fn_application_once(
                         &representative,
-                        &UseContextVerifyState::new(0, false),
+                        &ProofSearchState::initial(),
                     )?,
                     Some(Obj::SetBuilder(_))
                 )

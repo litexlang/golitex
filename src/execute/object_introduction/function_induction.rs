@@ -96,22 +96,16 @@ impl Runtime {
             let function_set_well_definedness = rt
                 .verify_obj_well_defined_result(
                     &Obj::from(fn_set.clone()),
-                    &UseContextVerifyState::new(0, false),
+                    &ProofSearchState::initial(),
                 )
                 .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
             let parameters_and_domain =
                 rt.define_have_fn_by_induc_current_params_and_domain(stmt)?;
             let measure_well_definedness = rt
-                .verify_obj_well_defined_result(
-                    &stmt.measure,
-                    &UseContextVerifyState::new(0, false),
-                )
+                .verify_obj_well_defined_result(&stmt.measure, &ProofSearchState::initial())
                 .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
             let lower_bound_well_definedness = rt
-                .verify_obj_well_defined_result(
-                    &stmt.lower_bound,
-                    &UseContextVerifyState::new(0, false),
-                )
+                .verify_obj_well_defined_result(&stmt.lower_bound, &ProofSearchState::initial())
                 .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
             Ok(SuccessVerifyHaveFnByInducWellDefinednessLocalEnvResult {
                 function_binding: stmt.symbol_binding.clone(),
@@ -174,13 +168,10 @@ impl Runtime {
         stmt: &HaveFnByInducStmt,
     ) -> Result<SuccessVerifyHaveFnByInducMeasureResult, RuntimeError> {
         let measure_well_definedness = self
-            .verify_obj_well_defined_result(&stmt.measure, &UseContextVerifyState::new(0, false))
+            .verify_obj_well_defined_result(&stmt.measure, &ProofSearchState::initial())
             .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
         let lower_bound_well_definedness = self
-            .verify_obj_well_defined_result(
-                &stmt.lower_bound,
-                &UseContextVerifyState::new(0, false),
-            )
+            .verify_obj_well_defined_result(&stmt.lower_bound, &ProofSearchState::initial())
             .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
 
         let measure_integer_check =
@@ -195,7 +186,7 @@ impl Runtime {
         )
         .into();
         let mut lower_bound_check = self
-            .verify_atomic_fact(&lower_fact, &UseContextVerifyState::new(0, false))
+            .verify_atomic_fact(&lower_fact, &ProofSearchState::initial())
             .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
         if lower_bound_check.is_unknown() {
             return Err(short_exec_error(
@@ -231,7 +222,7 @@ impl Runtime {
         )
         .into();
         let mut result = self
-            .verify_atomic_fact(&integer_fact, &UseContextVerifyState::new(0, false))
+            .verify_atomic_fact(&integer_fact, &ProofSearchState::initial())
             .map_err(|e| {
                 short_exec_error(
                     stmt.clone().into(),
@@ -356,7 +347,7 @@ impl Runtime {
             cases.iter().map(|c| c.case_fact.clone()).collect();
         let coverage: Fact = OrFact::new(coverage_cases, stmt.line_file.clone()).into();
         let mut coverage_check = self
-            .verify_fact_or_error(&coverage, &UseContextVerifyState::new(0, false))
+            .verify_fact_or_error(&coverage, &ProofSearchState::initial())
             .map_err(|e| {
                 short_exec_error(
                     stmt.clone().into(),
@@ -424,7 +415,7 @@ impl Runtime {
         stmt: &HaveFnByInducStmt,
         equal_to: &Obj,
     ) -> Result<SuccessVerifyHaveFnByInducEqualToResult, RuntimeError> {
-        let verify_state = UseContextVerifyState::new(0, false);
+        let verify_state = ProofSearchState::initial();
         let well_definedness = self
             .verify_obj_well_defined_result(equal_to, &verify_state)
             .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;

@@ -1,3 +1,4 @@
+use super::source_execution::{SourceRunFailureKind, SourceRunOptions, SourceRunOutcome};
 use crate::prelude::*;
 use std::env;
 use std::io::{self, BufRead, Write};
@@ -11,6 +12,17 @@ pub enum SessionPreload {
     BeforeFile(String),
 }
 
+pub struct SessionRequest {
+    pub options: RunOptions,
+    pub preload: SessionPreload,
+}
+
+impl SessionRequest {
+    pub fn new(options: RunOptions, preload: SessionPreload) -> Self {
+        Self { options, preload }
+    }
+}
+
 /// Run a machine-readable, one-process Litex session.
 ///
 /// Input frames are `run <id> <utf8-byte-count>`, followed by exactly that
@@ -18,33 +30,8 @@ pub enum SessionPreload {
 /// The length frame keeps arbitrary multiline Litex source out of terminal
 /// prompt parsing while preserving the same project-local-import semantics as
 /// the interactive REPL.
-pub fn run_session_with_output_style_and_strict_and_language(
-    output_style: OutputStyle,
-    strict_mode: bool,
-    output_language: OutputLanguage,
-    force_isolated: bool,
-    preload_file: Option<&str>,
-) {
-    let preload = match preload_file {
-        Some(file) => SessionPreload::ThroughFile(file.to_string()),
-        None => SessionPreload::None,
-    };
-    run_session_with_output_style_and_strict_and_language_and_preload(
-        output_style,
-        strict_mode,
-        output_language,
-        force_isolated,
-        preload,
-    );
-}
-
-pub fn run_session_with_output_style_and_strict_and_language_and_preload(
-    output_style: OutputStyle,
-    strict_mode: bool,
-    output_language: OutputLanguage,
-    force_isolated: bool,
-    preload: SessionPreload,
-) {
+pub fn run_session(request: SessionRequest) {
+    let SessionRequest { options, preload } = request;
     let stdin_handle = io::stdin();
     let stdout_handle = io::stdout();
     let mut stdin_locked = stdin_handle.lock();
@@ -66,10 +53,10 @@ pub fn run_session_with_output_style_and_strict_and_language_and_preload(
         &mut stdin_locked,
         &mut stdout_locked,
         &directory,
-        output_style,
-        strict_mode,
-        output_language,
-        force_isolated,
+        options.output_style,
+        options.strict_mode,
+        options.output_language,
+        options.force_isolated,
         preload,
     ) {
         eprintln!("session output error: {}", error);
@@ -97,8 +84,7 @@ fn run_session_loop_with_readers_and_preload(
             Err((stmt_results, error)) => {
                 let error_json = display_runtime_error_json(&runtime, &error, true);
                 let runtime_error = Some(error);
-                let (_, trace) =
-                    render_run_source_code_output(&runtime, &stmt_results, &runtime_error, true);
+                let (_, trace) = render_run_output(&runtime, &stmt_results, &runtime_error);
                 write_session_event(
                     stdout_writer,
                     "startup_error",
@@ -181,13 +167,12 @@ fn run_session_loop_with_readers_and_preload(
                     stmt_results: mut results,
                     runtime_error,
                     failure_kind,
-                } = run_source_code_with_options(
+                } = super::source_execution::execute_source_with_options(
                     source.replace('\r', "").as_str(),
                     &mut runtime,
                     SourceRunOptions::default(),
                 );
-                let (ok, trace) =
-                    render_run_source_code_output(&runtime, &results, &runtime_error, true);
+                let (ok, trace) = render_run_output(&runtime, &results, &runtime_error);
                 all_results.append(&mut results);
                 if !ok && failure_kind != Some(SourceRunFailureKind::TryStmt) {
                     has_failed = true;
@@ -233,11 +218,12 @@ fn run_session_loop_with_readers_and_preload(
                 }
 
                 let no_error = None;
-                let summary = display_run_summary_json_with_runtime(
-                    &runtime,
-                    all_results.as_slice(),
-                    &no_error,
-                );
+                let summary = render_run_summary(RunSummaryRequest {
+                    runtime: &runtime,
+                    stmt_results: all_results.as_slice(),
+                    runtime_error: &no_error,
+                    trusted_prefix_report: None,
+                });
                 let (_, graph) = render_graph_from_stmt_results(
                     "session",
                     "entry",
@@ -302,8 +288,14 @@ fn initialize_session_runtime(
             directory.join(path)
         };
         let path_string = path.to_string_lossy().into_owned();
-        let (stmt_results, runtime_error) =
-            run_file_with_project_context(path_string.as_str(), runtime, force_isolated);
+        let (stmt_results, runtime_error, _, _) = execute_file_in_runtime(
+            path_string.as_str(),
+            runtime,
+            FileExecutionOptions {
+                force_isolated,
+                trust_before_line: None,
+            },
+        );
         if let Some(error) = runtime_error {
             return Err((stmt_results, error));
         }

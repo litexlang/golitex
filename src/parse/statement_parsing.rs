@@ -1,7 +1,22 @@
-use crate::prelude::*;
+use crate::common::keywords::{
+    ABSTRACT_PROP, ALGO, AXIOM, BY, CART, CLAIM, CLEAR, DO_NOTHING, EVAL, EXAMPLE, FINITE_SEQ,
+    FN_LOWER_CASE, FOR, HAVE, IMPORT, LET, MATRIX, OBTAIN, PREIMAGE, PROP, QUESTION_GOAL, SEQ,
+    SETTING, SKETCH, STOP, STRATEGY, STRONG_INDUC, STRUCT, TEMPLATE, THM, TRUST, TRY, TUPLE, USE,
+    WITNESS,
+};
+use crate::error::{ParseRuntimeError, RuntimeError, RuntimeErrorStruct};
+use crate::parse::TokenBlock;
+use crate::pipeline::record_pipeline_step;
+use crate::runtime::Runtime;
+use crate::stmt::Stmt;
 
 impl Runtime {
     pub fn parse_statement(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
+        record_pipeline_step(
+            "parse",
+            "Runtime::parse_statement",
+            "src/parse/statement_parsing.rs",
+        );
         self.ensure_execution_frame_for_parse();
         let saved_parse_context = self.current_parse_context().clone();
         let result = self.parse_statement_from_leading_token(tb);
@@ -9,11 +24,6 @@ impl Runtime {
             *self.current_parse_context_mut() = saved_parse_context;
         }
         result
-    }
-
-    /// Compatibility spelling retained for existing Rust API consumers.
-    pub fn parse_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
-        self.parse_statement(tb)
     }
 
     fn parse_statement_from_leading_token(

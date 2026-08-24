@@ -423,7 +423,9 @@ pub(super) fn facts_align_by_nested_rational_normalization_for_result_compiler(
     let (Fact::AtomicFact(source), Fact::AtomicFact(target)) = (source, target) else {
         return false;
     };
-    if source.key() != target.key() || source.is_true() != target.is_true() {
+    if source.key() != target.key()
+        || source.has_positive_polarity() != target.has_positive_polarity()
+    {
         return false;
     }
     let source_arguments = source.args_ref();
@@ -1564,9 +1566,9 @@ pub(super) fn validate_closed_numeric_comparison_builtin_rule_evidence(
         &evidence.left_evaluation.value.normalized_value,
         &evidence.right_evaluation.value.normalized_value,
     );
-    let comparison_is_true = matches!(comparison, crate::verify::NumberCompareResult::Less)
+    let comparison_holds = matches!(comparison, crate::verify::NumberCompareResult::Less)
         || (allow_equal && matches!(comparison, crate::verify::NumberCompareResult::Equal));
-    if !comparison_is_true {
+    if !comparison_holds {
         return Err("closed numeric comparison retained a false normalized relation".into());
     }
     Ok(())

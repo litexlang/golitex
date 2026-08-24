@@ -86,12 +86,12 @@ sum(1, finite_set_size(X), fn(left_index closed_range(1, finite_set_size(X))) R 
 "#;
 
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
+            runtime.start_isolated_source(
                 "requested_numeric_builtin_rules_verify_with_explicit_provenance",
             );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
 
             assert!(
                 run_succeeded,
@@ -134,12 +134,12 @@ forall a, b, c R:
 "#;
 
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
+            runtime.start_isolated_source(
                 "numeric_builtin_rules_consume_complete_disjunction_premises",
             );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_output(&runtime, &stmt_results, &runtime_error);
             assert!(
                 run_succeeded,
                 "numeric builtin rules should consume known disjunctions as complete premises:\n{run_output}"
@@ -277,10 +277,10 @@ forall a R, b C:
 
             for (name, source_code) in cases {
                 let mut runtime = Runtime::new();
-                runtime.new_file_path_new_env_new_name_scope(name);
-                let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+                runtime.start_isolated_source(name);
+                let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
                 let (run_succeeded, run_output) =
-                    render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                    render_run_output(&runtime, &stmt_results, &runtime_error);
                 assert!(
                     !run_succeeded,
                     "{name} must remain outside the builtin rule boundary:\n{run_output}"

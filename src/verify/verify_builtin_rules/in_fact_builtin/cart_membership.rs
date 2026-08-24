@@ -6,7 +6,7 @@ impl Runtime {
         in_fact: &InFact,
         tuple: &Tuple,
         cart: &Cart,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &BuiltinRuleSearchState,
     ) -> Result<StmtResult, RuntimeError> {
         if tuple.args.len() < 2 {
             return Ok((UnknownGenericStmtResult::new()).into());
@@ -51,19 +51,19 @@ impl Runtime {
     pub fn try_verify_in_fact_by_symbolic_cart(
         &mut self,
         in_fact: &InFact,
-        verify_state: &UseContextVerifyState,
+        verify_state: &ProofSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let is_cart_fact: AtomicFact =
             IsCartFact::new(in_fact.set.clone(), in_fact.line_file.clone()).into();
         let is_cart_result = self.verify_atomic_fact(&is_cart_fact, verify_state)?;
-        if !is_cart_result.is_true() {
+        if !is_cart_result.is_success() {
             return Ok(None);
         }
 
         let is_tuple_fact: AtomicFact =
             IsTupleFact::new(in_fact.element.clone(), in_fact.line_file.clone()).into();
         let is_tuple_result = self.verify_atomic_fact(&is_tuple_fact, verify_state)?;
-        if !is_tuple_result.is_true() {
+        if !is_tuple_result.is_success() {
             return Ok(None);
         }
 
@@ -74,7 +74,7 @@ impl Runtime {
         )
         .into();
         let tuple_dim_result = self.verify_atomic_fact(&tuple_dim_fact, verify_state)?;
-        if !tuple_dim_result.is_true() {
+        if !tuple_dim_result.is_success() {
             return Ok(None);
         }
 
@@ -101,7 +101,7 @@ impl Runtime {
         )?
         .into();
         let coordinate_result = self.verify_fact_allow_unknown(&coordinate_forall, verify_state)?;
-        if !coordinate_result.is_true() {
+        if !coordinate_result.is_success() {
             return Ok(None);
         }
 

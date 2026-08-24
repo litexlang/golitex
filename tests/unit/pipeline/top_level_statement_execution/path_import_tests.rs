@@ -1,4 +1,5 @@
-use super::*;
+use crate::pipeline::execute_source;
+use crate::runtime::Runtime;
 
 #[test]
 fn fresh_runtime_has_no_preloaded_source_modules() {
@@ -14,7 +15,7 @@ fn non_isolated_source_imports_require_the_terminal_boundary() {
         let mut runtime = Runtime::new();
         runtime.start_isolated_source("repl");
 
-        let (_, runtime_error) = run_source_code(source, &mut runtime);
+        let (_, runtime_error) = execute_source(source, &mut runtime);
 
         let runtime_error = runtime_error.expect("non-isolated import should fail");
         assert!(format!("{runtime_error:?}").contains("only available in an isolated REPL"));
@@ -28,6 +29,6 @@ fn strict_mode_rejects_user_trust() {
     runtime.strict_mode = true;
     runtime.start_isolated_source("repl");
 
-    let (_, trust_error) = run_source_code("trust 1 = 1", &mut runtime);
+    let (_, trust_error) = execute_source("trust 1 = 1", &mut runtime);
     assert!(trust_error.is_some(), "strict mode must reject user trust");
 }

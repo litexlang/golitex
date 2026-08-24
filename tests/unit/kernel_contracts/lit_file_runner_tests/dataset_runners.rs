@@ -2,7 +2,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::Instant;
 
-use crate::pipeline::{render_run_source_code_output, run_source_code};
+use crate::pipeline::{execute_source, render_run_output};
 use crate::prelude::*;
 
 use super::helper::{print_slowest_run_labels, run_with_large_stack, source_has_isolated_import};
@@ -98,7 +98,7 @@ fn run_gsm8k_jsonl_file(
     };
 
     if *total_count == 0 {
-        runtime.new_file_path_new_env_new_name_scope(jsonl_path_str.as_str());
+        runtime.start_isolated_source(jsonl_path_str.as_str());
     } else {
         runtime.reset_for_isolated_runner_item();
         runtime.set_current_user_lit_file_path(jsonl_path_str.as_str());
@@ -134,12 +134,12 @@ fn run_gsm8k_jsonl_file(
         let normalized_source = remove_windows_carriage_return(solution.as_str());
 
         let start_time_for_one_solution = Instant::now();
-        let (stmt_results, runtime_error) = run_source_code(normalized_source.as_str(), runtime);
+        let (stmt_results, runtime_error) = execute_source(normalized_source.as_str(), runtime);
         let duration_ms = start_time_for_one_solution.elapsed().as_secs_f64() * 1000.0;
         *total_solution_duration_ms += duration_ms;
 
         let (run_succeeded, run_output) =
-            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            render_run_output(&runtime, &stmt_results, &runtime_error);
 
         *total_count += 1;
         if !run_succeeded {
@@ -219,7 +219,7 @@ fn run_finished_litex_jsonl_dataset(dataset_label: &str, jsonl_path: &Path, labe
     let runtime_setup_start = Instant::now();
     let mut runtime = Runtime::new();
     let runtime_setup_duration_ms = runtime_setup_start.elapsed().as_secs_f64() * 1000.0;
-    runtime.new_file_path_new_env_new_name_scope(jsonl_path_str.as_str());
+    runtime.start_isolated_source(jsonl_path_str.as_str());
 
     let run_wall_start = Instant::now();
     let mut total_count: usize = 0;
@@ -260,11 +260,11 @@ fn run_finished_litex_jsonl_dataset(dataset_label: &str, jsonl_path: &Path, labe
         ));
         let start_time_for_one_solution = Instant::now();
         let (stmt_results, runtime_error) =
-            run_source_code(normalized_source.as_str(), &mut runtime);
+            execute_source(normalized_source.as_str(), &mut runtime);
         let duration_ms = start_time_for_one_solution.elapsed().as_secs_f64() * 1000.0;
 
         let (run_succeeded, run_output) =
-            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            render_run_output(&runtime, &stmt_results, &runtime_error);
 
         total_count += 1;
         durations_ms.push((item_label.clone(), duration_ms));
@@ -407,7 +407,7 @@ fn run_metamathqa_jsonl_file(
         Err(read_error) => panic!("failed to read {:?}: {}", jsonl_path, read_error),
     };
 
-    runtime.new_file_path_new_env_new_name_scope(jsonl_path_str.as_str());
+    runtime.start_isolated_source(jsonl_path_str.as_str());
 
     for (line_index, line) in jsonl_content.lines().enumerate() {
         if line.trim().is_empty() {
@@ -439,12 +439,11 @@ fn run_metamathqa_jsonl_file(
         let normalized_source = remove_windows_carriage_return(solution.as_str());
 
         let start_time_for_one_solution = Instant::now();
-        let (stmt_results, runtime_error) = run_source_code(normalized_source.as_str(), runtime);
+        let (stmt_results, runtime_error) = execute_source(normalized_source.as_str(), runtime);
         let duration_ms = start_time_for_one_solution.elapsed().as_secs_f64() * 1000.0;
         *total_solution_duration_ms += duration_ms;
 
-        let (run_succeeded, run_output) =
-            render_run_source_code_output(runtime, &stmt_results, &runtime_error, false);
+        let (run_succeeded, run_output) = render_run_output(runtime, &stmt_results, &runtime_error);
 
         *total_count += 1;
         if !run_succeeded {
