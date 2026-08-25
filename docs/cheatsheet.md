@@ -24,7 +24,7 @@ when stating the target directly is not enough.
 | What later code needs | Use | Remember |
 |---|---|---|
 | An arbitrary object in a nonempty set | `have x S` | Introduces `x` and `x $in S` |
-| A local abbreviation for an already well-defined object | `let name = value` | Stores `name = value`; it does not define a carrier |
+| A local abbreviation for an already well-defined object | `let name = value` | Transparently reduces `name` to `value` once; it does not define a carrier |
 | A name for a specific value | `have x S = value` | Checks the carrier and stores the equality |
 | A callable value | `have fn f(x S) T = body` | Use a function, not a predicate encoding its graph |
 | A concrete named property | `prop P(x S): ...` | Gives a definition that `by def` can fold |
@@ -47,6 +47,12 @@ improve a shared `setting`, `struct`, template, or function interface when the
 same parameter bundle recurs across independent proofs. If an inner alias
 would require repeated transport under a larger constructor, name that outer
 mathematical object instead.
+
+Transparent reduction is exact and directional. It can expose a `let` name in
+a comparison, function-head position, or theorem argument, but it does not make
+an ordinary `have name S = value` transparent and does not search arbitrary
+equal objects. Keep the typed form when later proof steps consume
+`name $in S`.
 
 ## Write The Fact Shape
 

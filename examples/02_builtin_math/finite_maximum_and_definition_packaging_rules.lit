@@ -18,7 +18,7 @@ prop maps_into(A set, f fn(n N) A, S power_set(A)):
     forall n N:
         f(n) $in S
 
-have identity fn(n N) N = fn(n N) N {n}
+let identity = fn(n N) N {n}
 claim:
     ? forall index N:
         identity(index) $in N

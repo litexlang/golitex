@@ -44,10 +44,8 @@ thm newton_sqrt_two_one_step_gap_identity:
         4 * x^2 * abs(square_root_two_residual(newton_sqrt_two(x))) = abs(square_root_two_residual(x))^2
     let next_residual = square_root_two_residual(newton_sqrt_two(x))
     let current_residual = square_root_two_residual(x)
-    square_root_two_residual(newton_sqrt_two(x)) = newton_sqrt_two(x)^2 - 2
-    next_residual = square_root_two_residual(newton_sqrt_two(x)) = newton_sqrt_two(x)^2 - 2
-    square_root_two_residual(x) = x^2 - 2
-    current_residual = square_root_two_residual(x) = x^2 - 2
+    next_residual = newton_sqrt_two(x)^2 - 2
+    current_residual = x^2 - 2
     newton_sqrt_two(x) = (x + 2 / x) / 2
     newton_sqrt_two(x)^2 - 2 = ((x + 2 / x) / 2)^2 - 2
     next_residual = newton_sqrt_two(x)^2 - 2 = ((x + 2 / x) / 2)^2 - 2

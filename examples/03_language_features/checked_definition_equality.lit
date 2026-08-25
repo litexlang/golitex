@@ -1,4 +1,4 @@
-# Tracer: checked definitions reduce directly; aliases require an explicit bridge.
+# Tracer: checked definitions and transparent `let` aliases reduce directly.
 #
 # Before (implicit candidate-graph bridge):
 # trust have f fn(x, y R) R
@@ -17,9 +17,14 @@ trust have a R
 trust a = 1
 have selected R = f(a, 0)
 selected = f(a, 0) = f(1, 0)
-# Current behavior: a checked application on the goal side reduces once;
-# alias transport is written explicitly before structural congruence.
+# A typed `have` keeps the explicit bridge above because its carrier fact is
+# part of the declaration and it is not a transparent abbreviation.
+let transparent_selected = f(a, 0)
+transparent_selected = f(1, 0)
+# Current behavior: a checked application on the goal side reduces once, and
+# an exact `let` symbol reduces once before structural congruence.
 #
-# Boundary: `selected = f(1, 0)` alone remains rejected. Definition reduction
-# does not enumerate equality representatives, instantiate known forall facts,
-# or recursively unfold a second named definition.
+# Boundary: `selected = f(1, 0)` alone remains rejected. Transparent reduction
+# does not make ordinary `have` definitions transparent, enumerate equality
+# representatives, instantiate known forall facts, or recursively unfold a
+# second named definition.

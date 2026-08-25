@@ -1199,13 +1199,14 @@ domain, and a division must have a nonzero denominator. If those facts are not
 available, Litex should report a problem with the expression, not merely say
 that the desired equality is `unknown`.
 
-A function name need not carry its signature directly when it is already known
-equal to a registered function. After `let g = f`, well-definedness may follow
-the stored equality class from `g` to `f`, reuse `f`'s checked signature, and
-then check the actual arguments against `f`'s domain. This is not circular
-truth checking: Litex reads only equalities and callable metadata that are
-already in the context, and it does not launch general equality or `forall`
-search from well-definedness.
+A function name introduced by `let` need not carry its signature directly.
+After `let g = f`, well-definedness follows that exact transparent definition
+from `g` to `f`, reuses `f`'s checked signature, and checks the actual arguments
+against `f`'s domain. Atomic verification uses the same deterministic,
+one-direction reduction and records proof evidence for it. This is not circular
+truth checking or equality-class search: Litex follows only the stored
+definition of the inspected `let` symbol, and it does not launch general
+equality or `forall` search from well-definedness.
 
 This design matters because many mathematical mistakes are not false theorems
 but ill-formed statements: applying a function outside its domain, using a

@@ -105,8 +105,7 @@ thm add_left_cancel:
         =>:
             y = z
     let nx = \vector_neg<K, field, V, space>(x)
-    by thm vector_neg_spec(K, field, V, space, x) => space.add(x, \vector_neg<K, field, V, space>(x)) = space.zero
-    space.add(x, nx) = space.add(x, \vector_neg<K, field, V, space>(x)) = space.zero
+    by thm vector_neg_spec(K, field, V, space, x) => space.add(x, nx) = space.zero
     space.add(nx, x) = space.add(x, nx) = space.zero
     space.add(nx, space.add(x, y)) = space.add(space.add(nx, x), y)
     space.add(space.add(nx, x), y) = space.add(space.zero, y) = y
