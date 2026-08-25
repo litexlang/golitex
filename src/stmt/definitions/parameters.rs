@@ -439,13 +439,12 @@ impl ParamGroupWithSet {
         self.param_type.as_ref()
     }
 
-    /// Membership facts for parameters; each element must use the same symbol binding
-    /// and scope role as [`Runtime::define_params_with_set_in_scope`].
-    pub fn facts_for_binding_scope(&self, binding_scope: ParamObjType) -> Vec<Fact> {
+    /// Membership facts for parameters; each element uses the parameter's exact symbol binding.
+    pub fn facts(&self) -> Vec<Fact> {
         let mut facts = Vec::with_capacity(self.params.len());
         for binding in self.params.iter() {
             let fact = InFact::new(
-                obj_for_bound_param_in_scope(binding, binding_scope),
+                obj_for_bound_param_in_scope(binding),
                 self.set_obj().clone(),
                 default_line_file(),
             )
@@ -455,19 +454,15 @@ impl ParamGroupWithSet {
         facts
     }
 
-    pub fn facts(&self) -> Vec<Fact> {
-        self.facts_for_binding_scope(ParamObjType::FnSet)
-    }
-
     // Example: given fn(x R, y Q(x)), we want to verify x = 1, y = 2 can be used as argument to this function. This function returns the facts that 1 $in R, 2 $in Q(1).
     pub fn facts_for_args_satisfy_param_def_with_set_vec(
         runtime: &Runtime,
         param_defs: &ParamDefWithSet,
         args: &Vec<Obj>,
-        param_obj_type: ParamObjType,
+        substitution_mode: SubstitutionMode,
     ) -> Result<Vec<AtomicFact>, RuntimeError> {
         let instantiated_param_sets =
-            runtime.inst_param_def_with_set_one_by_one(param_defs, args, param_obj_type)?;
+            runtime.inst_param_def_with_set_one_by_one(param_defs, args, substitution_mode)?;
         let flat_param_sets =
             param_defs.flat_instantiated_param_sets_for_args(&instantiated_param_sets);
         let mut facts = Vec::with_capacity(args.len());
@@ -1284,34 +1279,7 @@ fn collect_cited_param_indices_from_atom(
             push_cited_param_index(&x.name, previous_param_indices, shadowed_names, out)
         }
         AtomObj::IdentifierWithMod(_) => {}
-        AtomObj::Forall(x) => {
-            push_cited_param_index(x.name(), previous_param_indices, shadowed_names, out)
-        }
-        AtomObj::Def(x) => {
-            push_cited_param_index(x.name(), previous_param_indices, shadowed_names, out)
-        }
-        AtomObj::Exist(x) => {
-            push_cited_param_index(x.name(), previous_param_indices, shadowed_names, out)
-        }
-        AtomObj::SetBuilder(x) => {
-            push_cited_param_index(x.name(), previous_param_indices, shadowed_names, out)
-        }
-        AtomObj::FnSet(x) => {
-            push_cited_param_index(x.name(), previous_param_indices, shadowed_names, out)
-        }
-        AtomObj::Induc(x) => {
-            push_cited_param_index(x.name(), previous_param_indices, shadowed_names, out)
-        }
-        AtomObj::DefAlgo(x) => {
-            push_cited_param_index(x.name(), previous_param_indices, shadowed_names, out)
-        }
-        AtomObj::DefStructField(x) => {
-            push_cited_param_index(x.name(), previous_param_indices, shadowed_names, out)
-        }
-        AtomObj::TupleIndex(x) => {
-            push_cited_param_index(x.name(), previous_param_indices, shadowed_names, out)
-        }
-        AtomObj::CartIndex(x) => {
+        AtomObj::Bound(x) => {
             push_cited_param_index(x.name(), previous_param_indices, shadowed_names, out)
         }
     }
@@ -1328,22 +1296,7 @@ fn collect_cited_param_indices_from_fn_head(
             push_cited_param_index(&x.name, previous_param_indices, shadowed_names, out)
         }
         FnObjHead::IdentifierWithMod(_) => {}
-        FnObjHead::Forall(x) => {
-            push_cited_param_index(x.name(), previous_param_indices, shadowed_names, out)
-        }
-        FnObjHead::DefHeader(x) => {
-            push_cited_param_index(x.name(), previous_param_indices, shadowed_names, out)
-        }
-        FnObjHead::Exist(x) => {
-            push_cited_param_index(x.name(), previous_param_indices, shadowed_names, out)
-        }
-        FnObjHead::SetBuilder(x) => {
-            push_cited_param_index(x.name(), previous_param_indices, shadowed_names, out)
-        }
-        FnObjHead::FnSet(x) => {
-            push_cited_param_index(x.name(), previous_param_indices, shadowed_names, out)
-        }
-        FnObjHead::DefStructField(x) => {
+        FnObjHead::Bound(x) => {
             push_cited_param_index(x.name(), previous_param_indices, shadowed_names, out)
         }
         FnObjHead::AnonymousFnLiteral(x) => collect_cited_param_indices_from_anonymous_fn(
@@ -1391,18 +1344,6 @@ fn collect_cited_param_indices_from_fn_head(
                 shadowed_names,
                 out,
             );
-        }
-        FnObjHead::Induc(x) => {
-            push_cited_param_index(x.name(), previous_param_indices, shadowed_names, out)
-        }
-        FnObjHead::DefAlgo(x) => {
-            push_cited_param_index(x.name(), previous_param_indices, shadowed_names, out)
-        }
-        FnObjHead::TupleIndex(x) => {
-            push_cited_param_index(x.name(), previous_param_indices, shadowed_names, out)
-        }
-        FnObjHead::CartIndex(x) => {
-            push_cited_param_index(x.name(), previous_param_indices, shadowed_names, out)
         }
         FnObjHead::InstantiatedTemplateObj(x) => {
             for arg in x.args.iter() {

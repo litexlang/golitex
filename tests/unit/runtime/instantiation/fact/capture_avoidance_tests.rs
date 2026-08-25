@@ -4,7 +4,7 @@ use crate::prelude::*;
 use std::collections::HashMap;
 
 #[test]
-fn forall_alpha_rename_avoids_every_existing_same_kind_name() {
+fn forall_alpha_rename_avoids_every_existing_bound_name() {
     let mut runtime = Runtime::new();
     runtime.start_isolated_source("forall_alpha_rename_reserved_names");
     let a_binding = runtime
@@ -17,10 +17,10 @@ fn forall_alpha_rename_avoids_every_existing_same_kind_name() {
         .allocate_local_symbol_binding("x1".to_string())
         .unwrap();
     let body: AtomicFact = EqualFact::new(
-        DefHeaderFreeParamObj::new(&a_binding).into(),
+        BoundParamObj::new(&a_binding).into(),
         Add::new(
-            ForallFreeParamObj::new(&n_group.params[0]).into(),
-            ForallFreeParamObj::new(&x1_binding).into(),
+            BoundParamObj::new(&n_group.params[0]).into(),
+            BoundParamObj::new(&x1_binding).into(),
         )
         .into(),
         default_line_file(),
@@ -37,11 +37,11 @@ fn forall_alpha_rename_avoids_every_existing_same_kind_name() {
     insert_symbol_substitution(
         &mut map,
         &a_binding,
-        ForallFreeParamObj::new(&n_group.params[0]).into(),
+        BoundParamObj::new(&n_group.params[0]).into(),
     );
 
     let instantiated = runtime
-        .inst_forall_fact(&fact, &map, ParamObjType::DefHeader, None)
+        .inst_forall_fact(&fact, &map, SubstitutionMode::Exact, None)
         .unwrap();
     let fresh_name = instantiated.params_def_with_type.groups[0].params[0].name();
     assert_ne!(fresh_name, "n");
@@ -53,18 +53,18 @@ fn forall_alpha_rename_avoids_every_existing_same_kind_name() {
     };
     assert!(matches!(
         &equality.left,
-        Obj::Atom(AtomObj::Forall(param)) if param.name() == "n"
+        Obj::Atom(AtomObj::Bound(param)) if param.name() == "n"
     ));
     assert!(matches!(
         &equality.right,
         Obj::Add(add)
-            if matches!(add.left.as_ref(), Obj::Atom(AtomObj::Forall(param)) if param.name() == fresh_name)
-                && matches!(add.right.as_ref(), Obj::Atom(AtomObj::Forall(param)) if param.name() == "x1")
+            if matches!(add.left.as_ref(), Obj::Atom(AtomObj::Bound(param)) if param.name() == fresh_name)
+                && matches!(add.right.as_ref(), Obj::Atom(AtomObj::Bound(param)) if param.name() == "x1")
     ));
 }
 
 #[test]
-fn exist_alpha_rename_avoids_every_existing_same_kind_name() {
+fn exist_alpha_rename_avoids_every_existing_bound_name() {
     let mut runtime = Runtime::new();
     runtime.start_isolated_source("exist_alpha_rename_reserved_names");
     let a_binding = runtime
@@ -77,10 +77,10 @@ fn exist_alpha_rename_avoids_every_existing_same_kind_name() {
         .allocate_local_symbol_binding("x1".to_string())
         .unwrap();
     let body: AtomicFact = EqualFact::new(
-        DefHeaderFreeParamObj::new(&a_binding).into(),
+        BoundParamObj::new(&a_binding).into(),
         Add::new(
-            ExistFreeParamObj::new(&n_group.params[0]).into(),
-            ExistFreeParamObj::new(&x1_binding).into(),
+            BoundParamObj::new(&n_group.params[0]).into(),
+            BoundParamObj::new(&x1_binding).into(),
         )
         .into(),
         default_line_file(),
@@ -98,11 +98,11 @@ fn exist_alpha_rename_avoids_every_existing_same_kind_name() {
     insert_symbol_substitution(
         &mut map,
         &a_binding,
-        ExistFreeParamObj::new(&n_group.params[0]).into(),
+        BoundParamObj::new(&n_group.params[0]).into(),
     );
 
     let instantiated = runtime
-        .inst_exist_fact(&fact, &map, ParamObjType::DefHeader, None)
+        .inst_exist_fact(&fact, &map, SubstitutionMode::Exact, None)
         .unwrap();
     let fresh_name = instantiated.params_def_with_type().groups[0].params[0].name();
     assert_ne!(fresh_name, "n");
@@ -113,13 +113,13 @@ fn exist_alpha_rename_avoids_every_existing_same_kind_name() {
     };
     assert!(matches!(
         &equality.left,
-        Obj::Atom(AtomObj::Exist(param)) if param.name() == "n"
+        Obj::Atom(AtomObj::Bound(param)) if param.name() == "n"
     ));
     assert!(matches!(
         &equality.right,
         Obj::Add(add)
-            if matches!(add.left.as_ref(), Obj::Atom(AtomObj::Exist(param)) if param.name() == fresh_name)
-                && matches!(add.right.as_ref(), Obj::Atom(AtomObj::Exist(param)) if param.name() == "x1")
+            if matches!(add.left.as_ref(), Obj::Atom(AtomObj::Bound(param)) if param.name() == fresh_name)
+                && matches!(add.right.as_ref(), Obj::Atom(AtomObj::Bound(param)) if param.name() == "x1")
     ));
 }
 
@@ -132,21 +132,21 @@ fn forall_alpha_rename_respects_dependent_parameter_scope() {
     let first_group = runtime
         .fresh_param_group_with_type(
             vec!["n".to_string()],
-            ParamType::Obj(ForallFreeParamObj::new(&outer_n).into()),
+            ParamType::Obj(BoundParamObj::new(&outer_n).into()),
         )
         .unwrap();
     let second_group = runtime
         .fresh_param_group_with_type(
             vec!["m".to_string()],
-            ParamType::Obj(ForallFreeParamObj::new(&first_group.params[0]).into()),
+            ParamType::Obj(BoundParamObj::new(&first_group.params[0]).into()),
         )
         .unwrap();
     let fact = ForallFact::new_canonical_forall(
         ParamDefWithType::new(vec![first_group.clone(), second_group.clone()]),
         vec![],
         vec![AtomicFact::from(EqualFact::new(
-            ForallFreeParamObj::new(&first_group.params[0]).into(),
-            ForallFreeParamObj::new(&second_group.params[0]).into(),
+            BoundParamObj::new(&first_group.params[0]).into(),
+            BoundParamObj::new(&second_group.params[0]).into(),
             default_line_file(),
         ))
         .into()],
@@ -163,12 +163,12 @@ fn forall_alpha_rename_respects_dependent_parameter_scope() {
     insert_symbol_substitution(
         &mut rename_map,
         &first_group.params[0],
-        ForallFreeParamObj::new(n_fresh).into(),
+        BoundParamObj::new(n_fresh).into(),
     );
     insert_symbol_substitution(
         &mut rename_map,
         &second_group.params[0],
-        ForallFreeParamObj::new(m_fresh).into(),
+        BoundParamObj::new(m_fresh).into(),
     );
 
     let renamed = runtime
@@ -176,11 +176,11 @@ fn forall_alpha_rename_respects_dependent_parameter_scope() {
         .unwrap();
     assert!(matches!(
         &renamed.params_def_with_type.groups[0].param_type,
-        ParamType::Obj(Obj::Atom(AtomObj::Forall(param))) if param.name() == "n"
+        ParamType::Obj(Obj::Atom(AtomObj::Bound(param))) if param.name() == "n"
     ));
     assert!(matches!(
         &renamed.params_def_with_type.groups[1].param_type,
-        ParamType::Obj(Obj::Atom(AtomObj::Forall(param))) if param.name() == "n_fresh"
+        ParamType::Obj(Obj::Atom(AtomObj::Bound(param))) if param.name() == "n_fresh"
     ));
     assert_eq!(
         renamed.params_def_with_type.groups[0].param_names(),
@@ -201,21 +201,21 @@ fn exist_alpha_rename_respects_dependent_parameter_scope() {
     let first_group = runtime
         .fresh_param_group_with_type(
             vec!["n".to_string()],
-            ParamType::Obj(ExistFreeParamObj::new(&outer_n).into()),
+            ParamType::Obj(BoundParamObj::new(&outer_n).into()),
         )
         .unwrap();
     let second_group = runtime
         .fresh_param_group_with_type(
             vec!["m".to_string()],
-            ParamType::Obj(ExistFreeParamObj::new(&first_group.params[0]).into()),
+            ParamType::Obj(BoundParamObj::new(&first_group.params[0]).into()),
         )
         .unwrap();
     let fact = ExistFactEnum::ExistFact(
         ExistentialSpec::new(
             ParamDefWithType::new(vec![first_group.clone(), second_group.clone()]),
             vec![AtomicFact::from(EqualFact::new(
-                ExistFreeParamObj::new(&first_group.params[0]).into(),
-                ExistFreeParamObj::new(&second_group.params[0]).into(),
+                BoundParamObj::new(&first_group.params[0]).into(),
+                BoundParamObj::new(&second_group.params[0]).into(),
                 default_line_file(),
             ))
             .into()],
@@ -233,22 +233,22 @@ fn exist_alpha_rename_respects_dependent_parameter_scope() {
     insert_symbol_substitution(
         &mut rename_map,
         &first_group.params[0],
-        ExistFreeParamObj::new(n_fresh).into(),
+        BoundParamObj::new(n_fresh).into(),
     );
     insert_symbol_substitution(
         &mut rename_map,
         &second_group.params[0],
-        ExistFreeParamObj::new(m_fresh).into(),
+        BoundParamObj::new(m_fresh).into(),
     );
 
     let renamed = runtime.alpha_rename_exist_fact(&fact, &rename_map).unwrap();
     assert!(matches!(
         &renamed.params_def_with_type().groups[0].param_type,
-        ParamType::Obj(Obj::Atom(AtomObj::Exist(param))) if param.name() == "n"
+        ParamType::Obj(Obj::Atom(AtomObj::Bound(param))) if param.name() == "n"
     ));
     assert!(matches!(
         &renamed.params_def_with_type().groups[1].param_type,
-        ParamType::Obj(Obj::Atom(AtomObj::Exist(param))) if param.name() == "n_fresh"
+        ParamType::Obj(Obj::Atom(AtomObj::Bound(param))) if param.name() == "n_fresh"
     ));
     assert_eq!(
         renamed.params_def_with_type().groups[0].param_names(),

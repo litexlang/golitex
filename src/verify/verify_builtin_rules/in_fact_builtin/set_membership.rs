@@ -115,7 +115,7 @@ impl Runtime {
             let instantiated = self.inst_atomic_fact(
                 &membership_pattern_atomic,
                 &arg_map,
-                ParamObjType::Forall,
+                SubstitutionMode::Exact,
                 Some(&goal.line_file),
             )?;
             let AtomicFact::InFact(instantiated_membership) = &instantiated else {
@@ -220,7 +220,7 @@ impl Runtime {
                     let instantiated_pattern = self.inst_quantifier_free_fact(
                         defining_fact,
                         &element_substitution,
-                        ParamObjType::SetBuilder,
+                        SubstitutionMode::Exact,
                         Some(&goal.line_file()),
                     )?;
                     let QuantifierFreeFact::AtomicFact(atomic_pattern) = instantiated_pattern
@@ -240,7 +240,7 @@ impl Runtime {
                     let instantiated_membership = self.inst_atomic_fact(
                         &membership_pattern_atomic,
                         &arg_map,
-                        ParamObjType::Forall,
+                        SubstitutionMode::Exact,
                         Some(&goal.line_file()),
                     )?;
                     let requirement_state = ProofSearchState::final_round_after_well_definedness()
@@ -323,7 +323,7 @@ impl Runtime {
                 let instantiated = self.inst_quantifier_free_fact(
                     defining_fact,
                     &substitutions,
-                    ParamObjType::SetBuilder,
+                    SubstitutionMode::Exact,
                     Some(&goal.line_file()),
                 )?;
                 let QuantifierFreeFact::AtomicFact(instantiated_atomic) = instantiated else {
@@ -655,7 +655,7 @@ impl Runtime {
             vec![member_name],
             ParamType::Obj(big_union.left.as_ref().clone()),
         )?;
-        let member_obj = obj_for_bound_param_in_scope(&member_group.params[0], ParamObjType::Exist);
+        let member_obj = obj_for_bound_param_in_scope(&member_group.params[0]);
         let element_in_member: AtomicFact = InFact::new(
             in_fact.element.clone(),
             member_obj,
@@ -695,7 +695,7 @@ impl Runtime {
             vec![index_name],
             ParamType::Obj(index_union.index_set.as_ref().clone()),
         )?;
-        let index_obj = obj_for_bound_param_in_scope(&index_group.params[0], ParamObjType::Exist);
+        let index_obj = obj_for_bound_param_in_scope(&index_group.params[0]);
         let Some(fiber) =
             self.indexed_family_application(index_union.family_fn.as_ref(), index_obj)?
         else {
@@ -817,7 +817,7 @@ impl Runtime {
             vec![index_name],
             ParamType::Obj(index_intersect.index_set.as_ref().clone()),
         )?;
-        let index_obj = obj_for_bound_param_in_scope(&index_group.params[0], ParamObjType::Forall);
+        let index_obj = obj_for_bound_param_in_scope(&index_group.params[0]);
         let Some(fiber) =
             self.indexed_family_application(index_intersect.family_fn.as_ref(), index_obj)?
         else {
@@ -992,8 +992,7 @@ impl Runtime {
             vec![preimage_name],
             ParamType::Obj(replacement.source_set.as_ref().clone()),
         )?;
-        let preimage_obj =
-            obj_for_bound_param_in_scope(&preimage_group.params[0], ParamObjType::Exist);
+        let preimage_obj = obj_for_bound_param_in_scope(&preimage_group.params[0]);
         let relation_fact: AtomicFact = NormalAtomicFact::new(
             replacement.prop_name.clone(),
             vec![preimage_obj, in_fact.element.clone()],
@@ -1347,7 +1346,7 @@ impl Runtime {
                 .inst_quantifier_free_fact(
                     fact_in_set_builder,
                     &param_to_arg_map,
-                    ParamObjType::SetBuilder,
+                    SubstitutionMode::Exact,
                     Some(&in_fact.line_file),
                 )
                 .map_err(|e| {
@@ -1512,13 +1511,13 @@ impl Runtime {
             let after_header = self.inst_fact(
                 fact,
                 &header_map,
-                ParamObjType::DefHeader,
+                SubstitutionMode::Exact,
                 Some(in_fact.line_file.clone()),
             )?;
             let instantiated_fact = self.inst_fact(
                 &after_header,
                 &field_map,
-                ParamObjType::DefStructField,
+                SubstitutionMode::Exact,
                 Some(in_fact.line_file.clone()),
             )?;
             // A structure's equivalent facts are its membership obligations. They

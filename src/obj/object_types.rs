@@ -148,18 +148,11 @@ pub enum ObjKind {
     IntervalObj = 53,
     Identifier = 54,
     IdentifierWithMod = 55,
-    ForallFreeParam = 56,
-    DefHeaderFreeParam = 57,
-    ExistFreeParam = 58,
-    SetBuilderFreeParam = 59,
-    FnSetFreeParam = 60,
-    ByInducFreeParam = 61,
-    DefAlgoFreeParam = 62,
-    DefStructFieldFreeParam = 63,
+    BoundParam = 56,
+    // 57-63 were historically binder-source-specific free-parameter kinds.
     FnRange = 64,
     Replacement = 66,
-    TupleIndexFreeParam = 67,
-    CartIndexFreeParam = 68,
+    // 67-68 were historically tuple/cart binder-source-specific kinds.
     GeneralCart = 69,
     ImaginaryUnit = 70,
     RealPart = 71,
@@ -1569,16 +1562,7 @@ impl Obj {
             Obj::Atom(atom) => match atom {
                 AtomObj::Identifier(_) => ObjKind::Identifier,
                 AtomObj::IdentifierWithMod(_) => ObjKind::IdentifierWithMod,
-                AtomObj::Forall(_) => ObjKind::ForallFreeParam,
-                AtomObj::Def(_) => ObjKind::DefHeaderFreeParam,
-                AtomObj::Exist(_) => ObjKind::ExistFreeParam,
-                AtomObj::SetBuilder(_) => ObjKind::SetBuilderFreeParam,
-                AtomObj::FnSet(_) => ObjKind::FnSetFreeParam,
-                AtomObj::Induc(_) => ObjKind::ByInducFreeParam,
-                AtomObj::DefAlgo(_) => ObjKind::DefAlgoFreeParam,
-                AtomObj::DefStructField(_) => ObjKind::DefStructFieldFreeParam,
-                AtomObj::TupleIndex(_) => ObjKind::TupleIndexFreeParam,
-                AtomObj::CartIndex(_) => ObjKind::CartIndexFreeParam,
+                AtomObj::Bound(_) => ObjKind::BoundParam,
             },
             Obj::FnObj(_) => ObjKind::FnObj,
             Obj::Number(_) => ObjKind::Number,
@@ -2523,53 +2507,13 @@ fn replace_bound_identifier_in_fn_obj_head(head: FnObjHead, from: &str, to: &str
             ))
             .expect("name replace preserves fn head shape")
         }
-        FnObjHead::Forall(p) => {
+        FnObjHead::Bound(p) => {
             let symbol = if p.name() == from {
                 p.symbol.with_display_name(to.to_string())
             } else {
                 p.symbol
             };
-            ForallFreeParamObj::new(symbol).into()
-        }
-        FnObjHead::DefHeader(p) => {
-            let symbol = if p.name() == from {
-                p.symbol.with_display_name(to.to_string())
-            } else {
-                p.symbol
-            };
-            DefHeaderFreeParamObj::new(symbol).into()
-        }
-        FnObjHead::Exist(p) => {
-            let symbol = if p.name() == from {
-                p.symbol.with_display_name(to.to_string())
-            } else {
-                p.symbol
-            };
-            ExistFreeParamObj::new(symbol).into()
-        }
-        FnObjHead::SetBuilder(p) => {
-            let symbol = if p.name() == from {
-                p.symbol.with_display_name(to.to_string())
-            } else {
-                p.symbol
-            };
-            SetBuilderFreeParamObj::new(symbol).into()
-        }
-        FnObjHead::FnSet(p) => {
-            let symbol = if p.name() == from {
-                p.symbol.with_display_name(to.to_string())
-            } else {
-                p.symbol
-            };
-            FnSetFreeParamObj::new(symbol).into()
-        }
-        FnObjHead::DefStructField(p) => {
-            let symbol = if p.name() == from {
-                p.symbol.with_display_name(to.to_string())
-            } else {
-                p.symbol
-            };
-            DefStructFieldFreeParamObj::new(symbol).into()
+            BoundParamObj::new(symbol).into()
         }
         FnObjHead::AnonymousFnLiteral(a) => {
             let inner = (*a).clone();
@@ -2600,38 +2544,6 @@ fn replace_bound_identifier_in_fn_obj_head(head: FnObjHead, from: &str, to: &str
                 unreachable!()
             };
             FnObjHead::ObjAsStructInstanceWithFieldAccess(new_v)
-        }
-        FnObjHead::Induc(p) => {
-            let symbol = if p.name() == from {
-                p.symbol.with_display_name(to.to_string())
-            } else {
-                p.symbol
-            };
-            ByInducFreeParamObj::new(symbol).into()
-        }
-        FnObjHead::DefAlgo(p) => {
-            let symbol = if p.name() == from {
-                p.symbol.with_display_name(to.to_string())
-            } else {
-                p.symbol
-            };
-            DefAlgoFreeParamObj::new(symbol).into()
-        }
-        FnObjHead::TupleIndex(p) => {
-            let symbol = if p.name() == from {
-                p.symbol.with_display_name(to.to_string())
-            } else {
-                p.symbol
-            };
-            TupleIndexFreeParamObj::new(symbol).into()
-        }
-        FnObjHead::CartIndex(p) => {
-            let symbol = if p.name() == from {
-                p.symbol.with_display_name(to.to_string())
-            } else {
-                p.symbol
-            };
-            CartIndexFreeParamObj::new(symbol).into()
         }
         FnObjHead::InstantiatedTemplateObj(t) => {
             let replaced = Obj::replace_bound_identifier(t.into(), from, to);

@@ -158,7 +158,7 @@ impl Runtime {
             )?;
             if !exact_func_result.is_success() {
                 let x_name = self.generate_random_unused_name();
-                let (x_binding, x_obj) = self.fresh_bound_param(x_name, ParamObjType::Forall)?;
+                let (x_binding, x_obj) = self.fresh_bound_param(x_name)?;
                 let Some(finite_inst) =
                     self.instantiate_unary_function_at(finite_sum.func.as_ref(), &x_obj)?
                 else {
@@ -292,7 +292,7 @@ impl Runtime {
             return Ok(None);
         }
         let x_name = self.generate_random_unused_name();
-        let (x_binding, x_obj) = self.fresh_bound_param(x_name, ParamObjType::Forall)?;
+        let (x_binding, x_obj) = self.fresh_bound_param(x_name)?;
         let Some(left_inst) = self.instantiate_unary_function_at(left_sum.func.as_ref(), &x_obj)?
         else {
             return Ok(None);
@@ -337,7 +337,7 @@ impl Runtime {
             };
 
             let y_name = self.generate_random_unused_name();
-            let (y_binding, y_obj) = self.fresh_bound_param(y_name, ParamObjType::Forall)?;
+            let (y_binding, y_obj) = self.fresh_bound_param(y_name)?;
             let Some(pullback_at_y) =
                 self.instantiate_unary_function_at(pullback_sum.func.as_ref(), &y_obj)?
             else {
@@ -556,7 +556,7 @@ impl Runtime {
             }
 
             let x_name = self.generate_random_unused_name();
-            let (x_binding, x_obj) = self.fresh_bound_param(x_name, ParamObjType::Forall)?;
+            let (x_binding, x_obj) = self.fresh_bound_param(x_name)?;
             let Some(sum_inst) = self.instantiate_unary_function_at(sum.func.as_ref(), &x_obj)?
             else {
                 continue;
@@ -629,7 +629,7 @@ impl Runtime {
                 }
 
                 let x_name = self.generate_random_unused_name();
-                let (x_binding, x_obj) = self.fresh_bound_param(x_name, ParamObjType::Forall)?;
+                let (x_binding, x_obj) = self.fresh_bound_param(x_name)?;
                 let Some(sum_inst) =
                     self.instantiate_unary_function_at(sum.func.as_ref(), &x_obj)?
                 else {

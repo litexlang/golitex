@@ -366,7 +366,7 @@ impl Runtime {
                     exec_stmt_error_with_stmt_and_cause(stmt.clone(), well_defined_error)
                 })?;
             for binding in defined_bindings {
-                rt.store_parameter_binding(binding, ParamObjType::Identifier)
+                rt.store_parameter_binding(binding, BindingScope::DeclaredObject)
                     .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone(), e))?;
             }
             Ok(())
@@ -485,7 +485,7 @@ impl Runtime {
         line_file: LineFile,
     ) -> Result<SuccessInferResult, RuntimeError> {
         for binding in defined_bindings {
-            self.store_parameter_binding(binding, ParamObjType::Identifier)?;
+            self.store_parameter_binding(binding, BindingScope::DeclaredObject)?;
         }
 
         let new_obj_names_as_identifier_objs: Vec<Obj> = defined_bindings
@@ -500,7 +500,7 @@ impl Runtime {
                 source_exist_fact.params_def_with_type(),
                 &new_obj_names_as_identifier_objs,
                 line_file.clone(),
-                ParamObjType::Exist,
+                SubstitutionMode::Exact,
                 InferReason::ExistElimination,
             )
             .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone(), e))?;
@@ -512,7 +512,7 @@ impl Runtime {
         let body_fact_verify_state = ProofSearchState::initial();
         for fact in source_exist_fact.facts().iter() {
             let instantiated_fact = self
-                .inst_quantifier_free_fact(fact, &param_to_obj_map, ParamObjType::Exist, None)
+                .inst_quantifier_free_fact(fact, &param_to_obj_map, SubstitutionMode::Exact, None)
                 .map_err(|runtime_error| {
                     exec_stmt_error_with_stmt_and_cause(stmt.clone(), runtime_error)
                 })?
@@ -563,7 +563,7 @@ impl Runtime {
         let instantiated_types = self.inst_param_def_with_type_one_by_one(
             exist_fact.params_def_with_type(),
             &witnesses,
-            ParamObjType::Exist,
+            SubstitutionMode::Exact,
         )?;
         let flat_types = exist_fact
             .params_def_with_type()
@@ -591,8 +591,13 @@ impl Runtime {
             .facts()
             .iter()
             .map(|fact| {
-                self.inst_quantifier_free_fact(fact, &param_to_obj_map, ParamObjType::Exist, None)
-                    .map(QuantifierFreeFact::to_fact)
+                self.inst_quantifier_free_fact(
+                    fact,
+                    &param_to_obj_map,
+                    SubstitutionMode::Exact,
+                    None,
+                )
+                .map(QuantifierFreeFact::to_fact)
             })
             .collect::<Result<Vec<_>, RuntimeError>>()?;
 

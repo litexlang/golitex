@@ -488,7 +488,7 @@ impl Runtime {
         let param_name = self.generate_internal_binder_name();
         let param_group =
             self.fresh_param_group_with_type(vec![param_name], ParamType::Obj(index_set.clone()))?;
-        let param = obj_for_bound_param_in_scope(&param_group.params[0], ParamObjType::Forall);
+        let param = obj_for_bound_param_in_scope(&param_group.params[0]);
         let Some(fiber) = self.apply_indexed_family_once(family, param)? else {
             return Ok(None);
         };
@@ -511,7 +511,7 @@ impl Runtime {
         let param_name = self.generate_internal_binder_name();
         let param_group =
             self.fresh_param_group_with_type(vec![param_name], ParamType::Obj(index_set.clone()))?;
-        let param = obj_for_bound_param_in_scope(&param_group.params[0], ParamObjType::Exist);
+        let param = obj_for_bound_param_in_scope(&param_group.params[0]);
         let Some(fiber) = self.apply_indexed_family_once(family, param)? else {
             return Ok(None);
         };
@@ -559,7 +559,7 @@ impl Runtime {
         let param_name = self.generate_internal_binder_name();
         let param_group =
             self.fresh_param_group_with_type(vec![param_name], ParamType::Obj(index_set.clone()))?;
-        let param_obj = obj_for_bound_param_in_scope(&param_group.params[0], ParamObjType::Forall);
+        let param_obj = obj_for_bound_param_in_scope(&param_group.params[0]);
         let Some(fiber) = self.apply_indexed_family_once(family, param_obj)? else {
             return Ok(None);
         };
@@ -591,7 +591,7 @@ impl Runtime {
         let param_name = self.generate_internal_binder_name();
         let param_group =
             self.fresh_param_group_with_type(vec![param_name], ParamType::Obj(index_set.clone()))?;
-        let param_obj = obj_for_bound_param_in_scope(&param_group.params[0], ParamObjType::Forall);
+        let param_obj = obj_for_bound_param_in_scope(&param_group.params[0]);
         let Some(left_fiber) = self.apply_indexed_family_once(left_family, param_obj.clone())?
         else {
             return Ok(None);
@@ -657,7 +657,7 @@ impl Runtime {
         let Some(param_binding) = anonymous.body.get_param_bindings().first().cloned() else {
             return false;
         };
-        let param_obj = obj_for_bound_param_in_scope(&param_binding, ParamObjType::FnSet);
+        let param_obj = obj_for_bound_param_in_scope(&param_binding);
         body_matches(&param_obj, anonymous.equal_to.as_ref())
     }
 
@@ -1087,7 +1087,7 @@ impl Runtime {
             return None;
         }
         let param_binding = anonymous.body.get_param_bindings().first()?.clone();
-        let param = obj_for_bound_param_in_scope(&param_binding, ParamObjType::FnSet);
+        let param = obj_for_bound_param_in_scope(&param_binding);
         let original = Self::family_from_application_at(anonymous.equal_to.as_ref(), &param)?;
         Some((
             original,

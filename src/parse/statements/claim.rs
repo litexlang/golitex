@@ -58,7 +58,7 @@ impl Runtime {
         let bindings = collect_forall_param_bindings_from_facts(std::slice::from_ref(&fact));
         let lf = tb.line_file.clone();
         let proof: Vec<Stmt> = self.parse_stmts_with_existing_free_param_bindings(
-            ParamObjType::Forall,
+            BindingScope::LocalBinder,
             &bindings,
             lf,
             |this| {

@@ -923,14 +923,14 @@ forall:
 - Purpose: Shows nested universal facts and local instantiation.
 
 ```litex
-## Let a be a real number and suppose that for all real numbers x, a <= x^2 - 2x. Show that a <= -1.
+## Let a be a real number and suppose that for all real numbers x, a <= x^2 - 2x. Show that a <= (-1).
 
 
 forall a R:
     forall x R:
         a <= x^2 - 2 * x
     =>:
-        a <= 1^2 - 2 * 1 = -1
+        a <= 1^2 - 2 * 1 = (-1)
 
 """
 Let n be a natural number which is a factor of every natural number m. Show that n = 1.
@@ -1071,7 +1071,7 @@ have fn circle(r R+) power_set(cart(R, R)) = {x cart(R, R): x[1]^2 + x[2]^2 = r^
 have fn line(a, b, c R: a != 0 or b != 0) power_set(cart(R, R)) = {x cart(R, R): a * x[1] + b * x[2] + c = 0}
 
 by thm defined_set_member((3, 4), circle(5))
-by thm defined_set_member((2, 2), line(1, -1, 0))
+by thm defined_set_member((2, 2), line(1, (-1), 0))
 
 claim:
     ? forall a, b R:
@@ -1882,7 +1882,7 @@ struct InnerProductAccessProbe:
     marker N
 
 have fn real_mul(x, y R) R = x * y
-have fn real_neg(x R) R = -x
+have fn real_neg(x R) R = (-x)
 by thm struct_member((0, real_mul), &ScalarSystem)
 have scalar_system &ScalarSystem = (0, real_mul)
 by thm struct_member((scalar_system, 0, real_mul), &VectorSpace)
@@ -1945,11 +1945,11 @@ forall a R:
 forall a R:
     a <= 0
     =>:
-        abs(a) = -a
+        abs(a) = (-a)
 
 forall a R:
     0 <= abs(a)
-    abs(a) = a or abs(a) = -a
+    abs(a) = a or abs(a) = (-a)
 
 forall a R:
     abs(a) = 0
@@ -1973,41 +1973,41 @@ forall x, y R:
 
 forall x R:
     x <= abs(x)
-    -x <= abs(x)
+    (-x) <= abs(x)
 
 forall x, b R:
     x <= b
-    -x <= b
+    (-x) <= b
     =>:
         abs(x) <= b
 
 forall x, b R:
     x < b
-    -x < b
+    (-x) < b
     =>:
         abs(x) < b
 
 forall x, y R:
     abs(x) <= abs(y)
     =>:
-        -abs(y) <= x <= abs(y)
+        (-abs(y)) <= x <= abs(y)
 
 forall x, y R:
     abs(x) < abs(y)
     =>:
-        -abs(y) < x < abs(y)
+        (-abs(y)) < x < abs(y)
 
 forall x, y R:
     abs(x) <= abs(y)
     0 <= y
     =>:
-        -y <= x <= y
+        (-y) <= x <= y
 
 forall x, y R:
     abs(x) <= abs(y)
     y <= 0
     =>:
-        y <= x <= -y
+        y <= x <= (-y)
 
 forall x, y R:
     abs(x + y) <= abs(x) + abs(y)
@@ -2061,14 +2061,14 @@ builtin:
 
 ```litex
 i $in C
-i * i = -1
-i^2 = -1
+i * i = (-1)
+i^2 = (-1)
 i^4 = 1
-i^(-1) = -i
+i^(-1) = (-i)
 
 2 * i + 1 = i * i + 2 + 2 * i
 (1 + i) * (1 - i) = 2
-1 / i = -i
+1 / i = (-i)
 
 forall z C:
     (z + i) * (z - i) = z^2 + 1
@@ -2182,7 +2182,7 @@ cos(0) = 1
 sin(pi / 2) = 1
 cos(pi / 2) = 0
 sin(pi) = 0
-cos(pi) = -1
+cos(pi) = (-1)
 
 forall x, y R:
     sin(x + y) = sin(x) * cos(y) + cos(x) * sin(y)
@@ -2190,14 +2190,14 @@ forall x, y R:
 
 forall x R:
     sin(x)^2 + cos(x)^2 = 1
-    sin(-x) = -sin(x)
+    sin(-x) = (-sin(x))
     cos(-x) = cos(x)
     sin(2 * x) = 2 * sin(x) * cos(x)
     cos(2 * x) = 1 - 2 * sin(x)^2
     sin(x + 2 * pi) = sin(x)
     cos(x + 2 * pi) = cos(x)
-    -1 <= sin(x) <= 1
-    -1 <= cos(x) <= 1
+    (-1) <= sin(x) <= 1
+    (-1) <= cos(x) <= 1
 ```
 
 Tangent and cotangent are well-defined only with their denominator facts:
@@ -2228,11 +2228,11 @@ For a complete checked sample, see
   evaluation, and concrete primality and coprimality decisions.
 
 ```litex
-quot(-7, 3) = -3
--7 = 3 * quot(-7, 3) + -7 % 3
-gcd(54, -24) = 6
-gcd(54, -24) + gcd(10, 15) = 11
-eval gcd(54, -24)
+quot(-7, 3) = (-3)
+(-7) = 3 * quot(-7, 3) + (-7) % 3
+gcd(54, (-24)) = 6
+gcd(54, (-24)) + gcd(10, 15) = 11
+eval gcd(54, (-24))
 
 $prime(97)
 not $prime(0)
@@ -2243,8 +2243,8 @@ not $coprime(0, 0)
 ```
 
 `quot(a, d)` is the native Euclidean quotient on `Z x N+`. It satisfies
-`a = d * quot(a, d) + a % d`; therefore `quot(-7, 3) = -3`, while the
-nonnegative remainder is `-7 % 3 = 2`.
+`a = d * quot(a, d) + a % d`; therefore `quot(-7, 3) = (-3)`, while the
+nonnegative remainder is `(-7) % 3 = 2`.
 
 `gcd(a, b)` takes integer arguments and requires `a != 0 or b != 0`.
 Concrete gcd expressions normalize inside ordinary facts, so `eval` is a
@@ -2622,9 +2622,9 @@ forall u R:
         7 * u = 3
 
 forall u R:
-    u = (-8 / 33) / (-8)
+    u = ((-8) / 33) / (-8)
     =>:
-        u = (-8 / 33) / (-8) = 1 / 33
+        u = ((-8) / 33) / (-8) = 1 / 33
 
 forall u, v, w R:
     w != 0
@@ -2799,7 +2799,7 @@ log(3, 9^2) = 2 * log(3, 9) = 2 * 2 = 4
 forall a, x R+:
     a != 1
     =>:
-        log(a, 1 / x) = -log(a, x)
+        log(a, 1 / x) = (-log(a, x))
 
 forall a, b, c R+:
     a != 1
@@ -2907,7 +2907,7 @@ sketch:
 
     claim:
         ? $mod_eq(-5, 1, 3)
-        witness exist k Z st {(-5) - 1 = 3 * k} from -2:
+        witness exist k Z st {(-5) - 1 = 3 * k} from (-2):
             (-5) - 1 = 3 * (-2)
         by def $mod_eq(-5, 1, 3)
 
@@ -2939,11 +2939,11 @@ sketch:
         ? forall a, b, n Z:
             $mod_eq(a, b, n)
             =>:
-                $mod_eq(-a, -b, n)
+                $mod_eq(-a, (-b), n)
         obtain x from exist x Z st {a - b = n * x}
-        witness exist k Z st {(-a) - (-b) = n * k} from -x:
+        witness exist k Z st {(-a) - (-b) = n * k} from (-x):
             (-a) - (-b) = -(a - b) = -(n * x) = n * (-x)
-        by def $mod_eq(-a, -b, n)
+        by def $mod_eq(-a, (-b), n)
 
     claim:
         ? forall a, b, c, d, n Z:
@@ -3196,14 +3196,14 @@ C* $subset C
 
 1 $in Q+
 1 $in R+
--1 $in R-
--1.1 $in Q-
--1 $in Z-
+(-1) $in R-
+(-1.1) $in Q-
+(-1) $in Z-
 1 $in Q*
 
 1 + 1 $in N
 
--1 + 32.123 $in Q
+(-1) + 32.123 $in Q
 
 2 - 9.5 + 10.5 $in Z
 
@@ -3211,11 +3211,11 @@ C* $subset C
 2 + 3 $in N+
 4 - 1 $in N
 
--0.5 * 6 $in Q-
+(-0.5) * 6 $in Q-
 1 - 2.25 $in Q-
 0 - 3 $in R-
 
--2 * 2.5 $in R-
+(-2) * 2.5 $in R-
 7 - 3 $in Q*
 10 - 10 + 1 $in Q*
 
@@ -3272,7 +3272,7 @@ sum(1, 3, fn(x Z) Z {x + x}) = sum(1, 3, fn(x Z) Z {x}) + sum(1, 3, fn(x Z) Z {x
 have range_f fn(f_index Z) R
 have range_g fn(g_index Z) R
 sum(1, 3, fn(x Z) R {range_f(x) - range_g(x)}) = sum(1, 3, fn(x Z) R {range_f(x)}) - sum(1, 3, fn(x Z) R {range_g(x)})
-sum(1, 3, fn(x Z) R {-range_f(x)}) = -sum(1, 3, fn(x Z) R {range_f(x)})
+sum(1, 3, fn(x Z) R {(-range_f(x))}) = (-sum(1, 3, fn(x Z) R {range_f(x)}))
 
 ## Point-wise order on the same range gives order between finite sums.
 claim:
@@ -3467,7 +3467,7 @@ objects.  Litex uses exact arithmetic for integer and rational calculations.
 6 / 2 = 3
 5 % 2 = 1
 2^3 = 8
--1 + 2 = 1
+(-1) + 2 = 1
 ```
 
 #### 2. Standard Number Sets
@@ -3485,7 +3485,7 @@ nonzero numbers.
 0 $in C
 1 $in N+
 1 $in R+
--1 $in Z-
+(-1) $in Z-
 1 $in Z*
 i $in C*
 1 / 6 $in Q
@@ -4362,10 +4362,10 @@ struct Field<s nonempty_set>:
     <=>:
         $is_field(s, zero, one, add, neg, mul, inv)
 
-by def $is_group(Z, fn(x Z) Z {-x}, fn(x, y Z) Z {x + y}, 0)
-by def $is_abelian_group(Z, fn(x Z) Z {-x}, fn(x, y Z) Z {x + y}, 0)
-by thm struct_member((fn(x Z) Z {-x}, fn(x, y Z) Z {x + y}, 0), &AbelianGroup<Z>)
-have Z_additive_group &AbelianGroup<Z> = (fn(x Z) Z {-x}, fn(x, y Z) Z {x + y}, 0)
+by def $is_group(Z, fn(x Z) Z {(-x)}, fn(x, y Z) Z {x + y}, 0)
+by def $is_abelian_group(Z, fn(x Z) Z {(-x)}, fn(x, y Z) Z {x + y}, 0)
+by thm struct_member((fn(x Z) Z {(-x)}, fn(x, y Z) Z {x + y}, 0), &AbelianGroup<Z>)
+have Z_additive_group &AbelianGroup<Z> = (fn(x Z) Z {(-x)}, fn(x, y Z) Z {x + y}, 0)
 ```
 
 `Z_additive_group` is an immediate use probe: the supplied inverse, addition,

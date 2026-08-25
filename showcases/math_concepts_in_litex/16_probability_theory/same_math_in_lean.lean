@@ -335,6 +335,161 @@ theorem distributionOfHasMeasurableMap {Omega : Type u} {Target : Type v}
   intro B
   exact (isDistribution B).choose
 
+/-! ## Borel events, event limits, and concrete measure constructions
+
+The Litex development stays real-valued because a probability is finite.  For
+the library comparison below we use Mathlib's native `Measure`, whose values
+are extended nonnegative reals, and expose the corresponding checked standard
+theorems and constructors.
+-/
+
+open Filter MeasureTheory Set
+open scoped ENNReal Topology
+
+abbrev realBorelMeasurableSpace : MeasurableSpace Real := borel Real
+
+theorem realBorelGeneratedByBoundedOpenIntervals :
+    borel Real = MeasurableSpace.generateFrom
+      (⋃ (a : Rat) (b : Rat) (_ : a < b), {Set.Ioo (a : Real) (b : Real)}) :=
+  Real.borel_eq_generateFrom_Ioo_rat
+
+theorem realOpenIntervalMeasurable (left right : Real) :
+    MeasurableSet (Set.Ioo left right) :=
+  measurableSet_Ioo
+
+def eventTailUnion (events : Nat -> Set Omega) (skipped : Nat) : Set Omega :=
+  ⋃ offset, events (skipped + offset)
+
+def eventTailIntersection (events : Nat -> Set Omega) (skipped : Nat) : Set Omega :=
+  ⋂ offset, events (skipped + offset)
+
+def eventLimsup (events : Nat -> Set Omega) : Set Omega :=
+  Filter.limsup events Filter.atTop
+
+def eventLiminf (events : Nat -> Set Omega) : Set Omega :=
+  Filter.liminf events Filter.atTop
+
+theorem eventCountableIntersectionMeasurable [MeasurableSpace Omega]
+    (events : Nat -> Set Omega) (measurable : forall n, MeasurableSet (events n)) :
+    MeasurableSet (⋂ n, events n) :=
+  MeasurableSet.iInter measurable
+
+theorem eventTailUnionMeasurable [MeasurableSpace Omega]
+    (events : Nat -> Set Omega) (measurable : forall n, MeasurableSet (events n))
+    (skipped : Nat) : MeasurableSet (eventTailUnion events skipped) := by
+  exact MeasurableSet.iUnion fun offset => measurable (skipped + offset)
+
+theorem eventTailIntersectionMeasurable [MeasurableSpace Omega]
+    (events : Nat -> Set Omega) (measurable : forall n, MeasurableSet (events n))
+    (skipped : Nat) : MeasurableSet (eventTailIntersection events skipped) := by
+  exact MeasurableSet.iInter fun offset => measurable (skipped + offset)
+
+theorem eventLimsupMeasurable [MeasurableSpace Omega]
+    (events : Nat -> Set Omega) (measurable : forall n, MeasurableSet (events n)) :
+    MeasurableSet (eventLimsup events) := by
+  exact MeasurableSet.measurableSet_limsup measurable
+
+theorem eventLiminfMeasurable [MeasurableSpace Omega]
+    (events : Nat -> Set Omega) (measurable : forall n, MeasurableSet (events n)) :
+    MeasurableSet (eventLiminf events) := by
+  exact MeasurableSet.measurableSet_liminf measurable
+
+theorem probabilityContinuousFromBelow [MeasurableSpace Omega]
+    (mu : Measure Omega) (events : Nat -> Set Omega) (increasing : Monotone events) :
+    Tendsto (fun n => mu (events n)) atTop (nhds (mu (⋃ n, events n))) := by
+  simpa [Function.comp_def] using
+    (tendsto_measure_iUnion_atTop (μ := mu) increasing)
+
+theorem probabilityContinuousFromAbove [MeasurableSpace Omega]
+    (mu : Measure Omega) [IsFiniteMeasure mu] (events : Nat -> Set Omega)
+    (measurable : forall n, MeasurableSet (events n)) (decreasing : Antitone events) :
+    Tendsto (fun n => mu (events n)) atTop (nhds (mu (⋂ n, events n))) := by
+  simpa [Function.comp_def] using
+    (tendsto_measure_iInter_atTop (μ := mu)
+      (fun n => (measurable n).nullMeasurableSet) decreasing
+      ⟨0, measure_ne_top mu (events 0)⟩)
+
+theorem probabilityCountableSubadditivity [MeasurableSpace Omega]
+    (mu : Measure Omega) (events : Nat -> Set Omega) :
+    mu (⋃ n, events n) <= ∑' n, mu (events n) :=
+  measure_iUnion_le events
+
+def IsNullEvent [MeasurableSpace Omega] (mu : Measure Omega)
+    (event : Set Omega) : Prop :=
+  mu event = 0
+
+def IsAlmostSureEvent [MeasurableSpace Omega] (mu : Measure Omega)
+    (event : Set Omega) : Prop :=
+  mu event = 1
+
+theorem countableUnionOfNullEventsIsNull [MeasurableSpace Omega]
+    (mu : Measure Omega) (events : Nat -> Set Omega)
+    (nullEvents : forall n, IsNullEvent mu (events n)) :
+    IsNullEvent mu (⋃ n, events n) := by
+  exact measure_iUnion_null nullEvents
+
+theorem almostSureEventIffNullComplement [MeasurableSpace Omega]
+    (mu : Measure Omega) [IsProbabilityMeasure mu] (event : Set Omega)
+    (measurable : MeasurableSet event) :
+    IsAlmostSureEvent mu event <-> IsNullEvent mu eventᶜ := by
+  exact (prob_compl_eq_zero_iff measurable).symm
+
+theorem firstBorelCantelli [MeasurableSpace Omega]
+    (mu : Measure Omega) (events : Nat -> Set Omega)
+    (summableProbabilities : (∑' n, mu (events n)) ≠ ∞) :
+    IsNullEvent mu (eventLimsup events) := by
+  exact measure_limsup_atTop_eq_zero summableProbabilities
+
+def diracProbability [MeasurableSpace Omega] (point : Omega) : Measure Omega :=
+  Measure.dirac point
+
+theorem diracProbabilityIsProbabilitySpace [MeasurableSpace Omega]
+    (point : Omega) : IsProbabilityMeasure (diracProbability point) := by
+  change IsProbabilityMeasure (Measure.dirac point)
+  infer_instance
+
+def conditionedProbabilityMeasure [MeasurableSpace Omega]
+    (mu : Measure Omega) (evidence : Set Omega) : Measure Omega :=
+  ProbabilityTheory.cond mu evidence
+
+theorem conditionedProbabilityIsProbabilitySpace [MeasurableSpace Omega]
+    (mu : Measure Omega) [IsFiniteMeasure mu] (evidence : Set Omega)
+    (positive : mu evidence ≠ 0) :
+    IsProbabilityMeasure (conditionedProbabilityMeasure mu evidence) :=
+  ProbabilityTheory.cond_isProbabilityMeasure positive
+
+def pushforwardProbabilityMeasure {Source : Type u} {Target : Type v}
+    [MeasurableSpace Source] [MeasurableSpace Target]
+    (mu : Measure Source) (f : Source -> Target) : Measure Target :=
+  mu.map f
+
+theorem pushforwardProbabilityMeasure_apply {Source : Type u} {Target : Type v}
+    [MeasurableSpace Source] [MeasurableSpace Target]
+    (mu : Measure Source) (f : Source -> Target) (measurable : Measurable f)
+    {event : Set Target} (event_measurable : MeasurableSet event) :
+    pushforwardProbabilityMeasure mu f event = mu (f ⁻¹' event) := by
+  exact Measure.map_apply measurable event_measurable
+
+theorem pushforwardProbabilityIsProbabilitySpace
+    {Source : Type u} {Target : Type v}
+    [MeasurableSpace Source] [MeasurableSpace Target]
+    (mu : Measure Source) [IsProbabilityMeasure mu]
+    (f : Source -> Target) (measurable : Measurable f) :
+    IsProbabilityMeasure (pushforwardProbabilityMeasure mu f) := by
+  exact Measure.isProbabilityMeasure_map measurable.aemeasurable
+
+def finiteAtomicProbability [MeasurableSpace Omega] {Index : Type*}
+    (weight : Index -> ENNReal) (atom : Index -> Omega) : Measure Omega :=
+  Measure.sum fun index => weight index • Measure.dirac (atom index)
+
+theorem finiteAtomicProbabilityIsProbabilitySpace [MeasurableSpace Omega]
+    {Index : Type*} [Fintype Index] (weight : Index -> ENNReal)
+    (atom : Index -> Omega) (normalized : ∑ index, weight index = 1) :
+    IsProbabilityMeasure (finiteAtomicProbability weight atom) := by
+  apply HasSum.isProbabilityMeasure_sum_dirac_ennreal
+  rw [← normalized]
+  exact hasSum_fintype weight
+
 end
 
 end ProbabilityTheorySameMathInLean

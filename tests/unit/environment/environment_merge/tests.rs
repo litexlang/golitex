@@ -1,11 +1,7 @@
 use super::*;
 
-fn insert_object(environment: &mut Environment, name: &str, symbol_id: u64, kind: ParamObjType) {
+fn insert_object(environment: &mut Environment, name: &str, symbol_id: u64) {
     insert_symbol(environment, name, symbol_id, SymbolRole::Object);
-    environment
-        .declarations
-        .defined_identifiers
-        .insert(name.to_string(), kind);
 }
 
 fn insert_symbol(environment: &mut Environment, name: &str, symbol_id: u64, role: SymbolRole) {
@@ -21,18 +17,8 @@ fn insert_symbol(environment: &mut Environment, name: &str, symbol_id: u64, role
 fn committed_child_reuses_exact_symbol_identity_idempotently() {
     let mut parent = Environment::new_empty_env();
     let mut child = Environment::new_empty_env();
-    insert_object(
-        &mut parent,
-        "\\template_instance<X>",
-        17,
-        ParamObjType::Identifier,
-    );
-    insert_object(
-        &mut child,
-        "\\template_instance<X>",
-        17,
-        ParamObjType::Identifier,
-    );
+    insert_object(&mut parent, "\\template_instance<X>", 17);
+    insert_object(&mut child, "\\template_instance<X>", 17);
 
     parent
         .merge_committed_child(child)
@@ -51,9 +37,9 @@ fn committed_child_reuses_exact_symbol_identity_idempotently() {
     assert_eq!(
         parent
             .declarations
-            .defined_identifiers
-            .get("\\template_instance<X>"),
-        Some(&ParamObjType::Identifier)
+            .object_symbol("\\template_instance<X>")
+            .map(SymbolDefinition::role),
+        Some(SymbolRole::Object)
     );
 }
 
@@ -61,8 +47,8 @@ fn committed_child_reuses_exact_symbol_identity_idempotently() {
 fn committed_child_preserves_missing_declaration_type_views_for_the_same_symbol() {
     let mut parent = Environment::new_empty_env();
     let mut child = Environment::new_empty_env();
-    insert_object(&mut parent, "shared", 17, ParamObjType::Identifier);
-    insert_object(&mut child, "shared", 17, ParamObjType::Identifier);
+    insert_object(&mut parent, "shared", 17);
+    insert_object(&mut child, "shared", 17);
     child
         .declarations
         .symbols
@@ -93,18 +79,8 @@ fn committed_child_preserves_missing_declaration_type_views_for_the_same_symbol(
 fn committed_child_still_rejects_same_name_with_distinct_symbol_identity() {
     let mut parent = Environment::new_empty_env();
     let mut child = Environment::new_empty_env();
-    insert_object(
-        &mut parent,
-        "\\template_instance<X>",
-        17,
-        ParamObjType::Identifier,
-    );
-    insert_object(
-        &mut child,
-        "\\template_instance<X>",
-        18,
-        ParamObjType::Identifier,
-    );
+    insert_object(&mut parent, "\\template_instance<X>", 17);
+    insert_object(&mut child, "\\template_instance<X>", 18);
 
     let error = parent
         .merge_committed_child(child)
@@ -128,15 +104,66 @@ fn committed_child_still_rejects_same_symbol_identity_with_distinct_role() {
 }
 
 #[test]
-fn committed_child_still_rejects_same_symbol_identity_with_distinct_identifier_kind() {
+fn committed_child_still_rejects_same_symbol_identity_with_object_and_binder_roles() {
     let mut parent = Environment::new_empty_env();
     let mut child = Environment::new_empty_env();
-    insert_object(&mut parent, "shared", 17, ParamObjType::Identifier);
-    insert_object(&mut child, "shared", 17, ParamObjType::Forall);
+    insert_symbol(&mut parent, "shared", 17, SymbolRole::Object);
+    insert_symbol(&mut child, "shared", 17, SymbolRole::Binder);
 
     let error = parent
         .merge_committed_child(child)
-        .expect_err("one symbol identity cannot change identifier kind during commit");
+        .expect_err("one symbol identity cannot change symbol role during commit");
 
     assert!(matches!(error, RuntimeError::NameAlreadyUsedError(_)));
+}
+
+#[test]
+fn committed_child_keeps_a_function_definition_signature_paired_with_its_rhs() {
+    let mut parent = Environment::new_empty_env();
+    let mut child = Environment::new_empty_env();
+    let parent_binding = SymbolBinding::new(SymbolId::new(17), "x".to_string(), "x".to_string());
+    let child_binding = SymbolBinding::new(SymbolId::new(18), "x".to_string(), "x".to_string());
+    let body = |binding: &SymbolBinding| {
+        FnSetBody::new(
+            vec![ParamGroupWithSet::new(
+                vec![binding.clone()],
+                StandardSet::R.into(),
+            )],
+            vec![],
+            StandardSet::R.into(),
+        )
+    };
+
+    let parent_info = parent.objects.function_set_mut("f".to_string());
+    parent_info.fn_set = Some((body(&parent_binding), default_line_file()));
+    parent_info.equal_to = Some((
+        BoundParamObj::new(&parent_binding).into(),
+        default_line_file(),
+    ));
+
+    let child_info = child.objects.function_set_mut("f".to_string());
+    child_info.fn_set = Some((body(&child_binding), default_line_file()));
+
+    parent
+        .merge_committed_child(child)
+        .expect("an inferred child signature should merge without splitting the definition pair");
+
+    let merged = parent
+        .objects
+        .function_set("f")
+        .expect("the parent definition should remain available");
+    assert_eq!(
+        merged
+            .fn_set
+            .as_ref()
+            .expect("the paired signature remains present")
+            .0
+            .get_param_bindings()[0]
+            .id(),
+        parent_binding.id()
+    );
+    assert!(matches!(
+        merged.equal_to.as_ref().map(|(obj, _)| obj),
+        Some(Obj::Atom(AtomObj::Bound(param))) if param.symbol.id() == parent_binding.id()
+    ));
 }

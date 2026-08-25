@@ -38,7 +38,7 @@ impl Runtime {
         let verify_state = ProofSearchState::initial();
 
         if let Some((param_def_with_type, dom_facts)) = &def_struct_stmt.param_def_with_dom {
-            self.define_params_with_type(param_def_with_type, false, ParamObjType::DefHeader)?;
+            self.define_params_with_type(param_def_with_type, false, BindingScope::LocalBinder)?;
             for dom_fact in dom_facts.iter() {
                 self.verify_quantifier_free_fact_well_defined(dom_fact, &verify_state)?;
             }
@@ -52,7 +52,7 @@ impl Runtime {
             for field in def_struct_stmt.fields.iter() {
                 let param_def =
                     ParamGroupWithSet::new(vec![field.binding.clone()], field.field_type.clone());
-                rt.define_params_with_set_in_scope(&param_def, ParamObjType::DefStructField)?;
+                rt.define_params_with_set_in_scope(&param_def, BindingScope::StructureField)?;
             }
 
             for fact in def_struct_stmt.equivalent_facts.iter() {
@@ -79,8 +79,11 @@ impl Runtime {
         let mut structure_parameter_definition = None;
         let mut structure_domains = Vec::new();
         if let Some((param_def_with_type, dom_facts)) = &def_struct_stmt.param_def_with_dom {
-            let mut infers =
-                self.define_params_with_type(param_def_with_type, false, ParamObjType::DefHeader)?;
+            let mut infers = self.define_params_with_type(
+                param_def_with_type,
+                false,
+                BindingScope::LocalBinder,
+            )?;
             self.attach_known_fact_ids_to_infer_result(&mut infers)?;
             structure_parameter_definition = Some(infers);
 
@@ -115,7 +118,7 @@ impl Runtime {
                 let param_def =
                     ParamGroupWithSet::new(vec![field.binding.clone()], field.field_type.clone());
                 let mut infers =
-                    rt.define_params_with_set_in_scope(&param_def, ParamObjType::DefStructField)?;
+                    rt.define_params_with_set_in_scope(&param_def, BindingScope::StructureField)?;
                 rt.attach_known_fact_ids_to_infer_result(&mut infers)?;
                 field_definitions.push(SuccessVerifyDefStructFieldDefinitionResult {
                     field_index,

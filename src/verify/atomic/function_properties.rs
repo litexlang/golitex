@@ -143,8 +143,7 @@ impl Runtime {
             else {
                 return Ok(Some(vec![UnknownGenericStmtResult::new().into()]));
             };
-            let bound_param =
-                obj_for_bound_param_in_scope(&param_group.params[0], ParamObjType::FnSet);
+            let bound_param = obj_for_bound_param_in_scope(&param_group.params[0]);
             if !objs_equal_with_nested_binder_alpha_equivalence(&bound.left, &bound_param) {
                 return Ok(Some(vec![UnknownGenericStmtResult::new().into()]));
             }
@@ -192,8 +191,8 @@ impl Runtime {
     ) -> Result<Fact, RuntimeError> {
         let names = self.generate_random_unused_names(2);
         let params = self.fresh_param_group_with_type(names, ParamType::Obj(domain))?;
-        let x1 = obj_for_bound_param_in_scope(&params.params[0], ParamObjType::Forall);
-        let x2 = obj_for_bound_param_in_scope(&params.params[1], ParamObjType::Forall);
+        let x1 = obj_for_bound_param_in_scope(&params.params[0]);
+        let x2 = obj_for_bound_param_in_scope(&params.params[1]);
         let Some(fx1) = function_applied_to_one_arg(&function, x1.clone()) else {
             return Err(function_property_application_error(&function, line_file));
         };
@@ -221,8 +220,8 @@ impl Runtime {
         let x_name = names[1].clone();
         let y_group = self.fresh_param_group_with_type(vec![y_name], ParamType::Obj(codomain))?;
         let x_group = self.fresh_param_group_with_type(vec![x_name], ParamType::Obj(domain))?;
-        let y = obj_for_bound_param_in_scope(&y_group.params[0], ParamObjType::Forall);
-        let x = obj_for_bound_param_in_scope(&x_group.params[0], ParamObjType::Exist);
+        let y = obj_for_bound_param_in_scope(&y_group.params[0]);
+        let x = obj_for_bound_param_in_scope(&x_group.params[0]);
         let Some(fx) = function_applied_to_one_arg(&function, x) else {
             return Err(function_property_application_error(&function, line_file));
         };
@@ -258,8 +257,8 @@ impl Runtime {
             self.fresh_param_group_with_type(vec![names[0].clone()], ParamType::Obj(codomain))?;
         let x_group =
             self.fresh_param_group_with_type(vec![names[1].clone()], ParamType::Obj(domain))?;
-        let y = obj_for_bound_param_in_scope(&y_group.params[0], ParamObjType::Forall);
-        let x = obj_for_bound_param_in_scope(&x_group.params[0], ParamObjType::Exist);
+        let y = obj_for_bound_param_in_scope(&y_group.params[0]);
+        let x = obj_for_bound_param_in_scope(&x_group.params[0]);
         let Some(fx) = function_applied_to_one_arg(&function, x) else {
             return Err(function_property_application_error(
                 &function,

@@ -204,7 +204,7 @@ impl Runtime {
             let instantiated = self.inst_quantifier_free_fact(
                 defining_fact,
                 &param_to_arg_map,
-                ParamObjType::SetBuilder,
+                SubstitutionMode::Exact,
                 Some(&fact.line_file),
             )?;
             // A set-builder predicate may itself be a checked proposition whose

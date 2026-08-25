@@ -20,11 +20,11 @@ impl Runtime {
         &self,
         param_defs: &ParamDefWithType,
         line_file: LineFile,
-        binding_kind: ParamObjType,
+        binding_scope: BindingScope,
     ) -> Vec<ObjectIntroductionItem> {
         let mut items = Vec::new();
         for (binding, param_type) in param_defs.collect_param_bindings_with_types() {
-            let obj = param_binding_element_obj_for_store(&binding, binding_kind);
+            let obj = param_binding_element_obj_for_store(&binding, binding_scope);
             let fact = self.object_introduction_fact_for_param_type(
                 obj,
                 &param_type,
@@ -45,10 +45,10 @@ impl Runtime {
         names: &[String],
         args: &Vec<Obj>,
         line_file: LineFile,
-        param_obj_type: ParamObjType,
+        substitution_mode: SubstitutionMode,
     ) -> Result<Vec<ObjectIntroductionItem>, RuntimeError> {
         let instantiated_types =
-            self.inst_param_def_with_type_one_by_one(param_defs, args, param_obj_type)?;
+            self.inst_param_def_with_type_one_by_one(param_defs, args, substitution_mode)?;
         let mut items = Vec::new();
         for ((name, arg), param_type) in
             names.iter().zip(args.iter()).zip(instantiated_types.iter())

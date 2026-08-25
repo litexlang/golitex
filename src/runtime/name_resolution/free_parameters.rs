@@ -1,6 +1,5 @@
 //! Parser-owned free-parameter bindings and source locations.
 
-use crate::obj::DefStructFieldFreeParamObj;
 use crate::prelude::*;
 use std::collections::HashMap;
 
@@ -11,7 +10,7 @@ pub struct FreeParamCollection {
 
 #[derive(Clone, Debug)]
 pub struct FreeParamTypeAndLineFile {
-    pub kind: ParamObjType,
+    pub scope: BindingScope,
     pub binding: SymbolBinding,
 }
 
@@ -28,7 +27,7 @@ impl FreeParamCollection {
 
     pub fn begin_scope(
         &mut self,
-        kind: ParamObjType,
+        scope: BindingScope,
         bindings: &[SymbolBinding],
         line_file: LineFile,
     ) -> Result<(), RuntimeError> {
@@ -36,17 +35,17 @@ impl FreeParamCollection {
         for binding in bindings {
             let n = binding.name();
             let duplicates_new_name = names_in_new_scope.contains(&n);
-            let duplicates_active_binding = self
-                .params
-                .get(n)
-                .map(|stack| stack.iter().any(|binding| binding.kind == kind))
-                .unwrap_or(false);
+            let duplicates_active_binding = self.params.get(n).is_some_and(|stack| {
+                stack
+                    .last()
+                    .is_some_and(|active| active.binding.id() != binding.id())
+            });
             if duplicates_new_name || duplicates_active_binding {
                 return Err(RuntimeError::from(ParseRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_line_file(
                         format!(
-                            "free parameter `{}` is already bound as {:?} in an active scope",
-                            n, kind
+                            "free parameter `{}` is already bound to a different symbol in an active scope",
+                            n
                         ),
                         line_file,
                     ),
@@ -60,22 +59,21 @@ impl FreeParamCollection {
                 .entry(n.to_string())
                 .or_default()
                 .push(FreeParamTypeAndLineFile {
-                    kind,
+                    scope,
                     binding: binding.clone(),
                 });
         }
         Ok(())
     }
 
-    pub fn end_scope(&mut self, kind: ParamObjType, names: &[String]) {
+    pub fn end_scope(&mut self, names: &[String]) {
         for n in names {
             let Some(stack) = self.params.get_mut(n) else {
                 panic!("free param stack missing for `{}` on end_scope", n);
             };
-            let Some(top) = stack.pop() else {
+            let Some(_top) = stack.pop() else {
                 panic!("free param stack for `{}` empty on end_scope", n);
             };
-            debug_assert_eq!(top.kind, kind);
             if stack.is_empty() {
                 self.params.remove(n);
             }
@@ -98,27 +96,10 @@ impl FreeParamCollection {
         let Some(top) = stack.last() else {
             return Identifier::new(name.to_string()).into();
         };
-        match top.kind {
-            ParamObjType::Forall => ForallFreeParamObj::new(top.binding.as_ref()).into(),
-            ParamObjType::DefHeader => DefHeaderFreeParamObj::new(top.binding.as_ref()).into(),
-            ParamObjType::Exist => ExistFreeParamObj::new(top.binding.as_ref()).into(),
-            ParamObjType::SetBuilder => SetBuilderFreeParamObj::new(top.binding.as_ref()).into(),
-            ParamObjType::FnSet => FnSetFreeParamObj::new(top.binding.as_ref()).into(),
-            ParamObjType::Induc => ByInducFreeParamObj::new(top.binding.as_ref()).into(),
-            ParamObjType::DefAlgo => DefAlgoFreeParamObj::new(top.binding.as_ref()).into(),
-            ParamObjType::DefStructField => {
-                DefStructFieldFreeParamObj::new(top.binding.as_ref()).into()
-            }
-            ParamObjType::TupleIndex => TupleIndexFreeParamObj::new(top.binding.as_ref()).into(),
-            ParamObjType::CartIndex => CartIndexFreeParamObj::new(top.binding.as_ref()).into(),
-            ParamObjType::Identifier => {
-                Identifier::new_bound(name.to_string(), top.binding.as_ref()).into()
-            }
-            ParamObjType::TheoremInstantiation
-            | ParamObjType::AlphaRename
-            | ParamObjType::BinderRetag(_) => unreachable!(
-                "resolve_identifier_to_free_param_obj: instantiation modes are not parser scopes"
-            ),
+        if top.scope.is_declared_object() {
+            Identifier::new_bound(name.to_string(), top.binding.as_ref()).into()
+        } else {
+            BoundParamObj::new(top.binding.as_ref()).into()
         }
     }
 }

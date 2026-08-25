@@ -91,11 +91,11 @@ impl Runtime {
         let mut field_types = Vec::with_capacity(def.fields.len());
         for field in def.fields.iter() {
             let after_header =
-                self.inst_obj(&field.field_type, &header_map, ParamObjType::DefHeader)?;
+                self.inst_obj(&field.field_type, &header_map, SubstitutionMode::Exact)?;
             field_types.push(self.inst_obj(
                 &after_header,
                 &named_field_map,
-                ParamObjType::DefStructField,
+                SubstitutionMode::Exact,
             )?);
         }
 
@@ -189,13 +189,13 @@ impl Runtime {
             let after_header = self.inst_fact(
                 fact,
                 &header_map,
-                ParamObjType::DefHeader,
+                SubstitutionMode::Exact,
                 Some(line_file.clone()),
             )?;
             let named_fact = self.inst_fact(
                 &after_header,
                 &named_field_map,
-                ParamObjType::DefStructField,
+                SubstitutionMode::Exact,
                 Some(line_file.clone()),
             )?;
             infer_result.new_infer_result_inside(
@@ -219,7 +219,7 @@ impl Runtime {
                 let carrier_fact = self.inst_fact(
                     &after_header,
                     &carrier_field_map,
-                    ParamObjType::DefStructField,
+                    SubstitutionMode::Exact,
                     Some(line_file.clone()),
                 )?;
                 infer_result.new_infer_result_inside(

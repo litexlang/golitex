@@ -609,16 +609,7 @@ impl DepCollector {
                 }
             }
             FnObjHead::MatrixOperator(matrix) => self.collect_obj(matrix),
-            FnObjHead::Forall(_)
-            | FnObjHead::DefHeader(_)
-            | FnObjHead::Exist(_)
-            | FnObjHead::SetBuilder(_)
-            | FnObjHead::FnSet(_)
-            | FnObjHead::DefStructField(_)
-            | FnObjHead::Induc(_)
-            | FnObjHead::DefAlgo(_)
-            | FnObjHead::TupleIndex(_)
-            | FnObjHead::CartIndex(_) => {}
+            FnObjHead::Bound(_) => {}
         }
     }
 

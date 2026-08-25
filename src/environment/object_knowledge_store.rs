@@ -160,9 +160,19 @@ impl EnvironmentObjectKnowledgeStore {
             }
             if let Some(child_info) = child_knowledge.function_set {
                 let parent_info = knowledge.function_set.get_or_insert_default();
+                let child_has_equal_to = child_info.equal_to.is_some();
                 if let Some(fn_set) = child_info.fn_set {
-                    parent_info.fn_set = Some(fn_set);
-                    parent_info.fn_set_membership_fact_id = child_info.fn_set_membership_fact_id;
+                    // A defining RHS and its signature share exact parameter
+                    // SymbolIds. A child that learned only another membership
+                    // signature must not split an existing definition pair.
+                    if child_has_equal_to
+                        || parent_info.equal_to.is_none()
+                        || parent_info.fn_set.is_none()
+                    {
+                        parent_info.fn_set = Some(fn_set);
+                        parent_info.fn_set_membership_fact_id =
+                            child_info.fn_set_membership_fact_id;
+                    }
                 }
                 if let Some(equal_to) = child_info.equal_to {
                     parent_info.equal_to = Some(equal_to);

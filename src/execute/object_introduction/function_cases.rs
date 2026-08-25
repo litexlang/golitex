@@ -36,7 +36,7 @@ impl Runtime {
     ) -> Result<SuccessInferResult, RuntimeError> {
         self.store_parameter_binding(
             &have_fn_equal_case_by_case_stmt.symbol_binding,
-            ParamObjType::Identifier,
+            BindingScope::DeclaredObject,
         )?;
 
         let function_identifier_obj =
@@ -74,7 +74,7 @@ impl Runtime {
                 .expect("declared function identifier should be an atom");
         let function_args = param_bindings
             .iter()
-            .map(|binding| Box::new(obj_for_bound_param_in_scope(binding, ParamObjType::Forall)))
+            .map(|binding| Box::new(obj_for_bound_param_in_scope(binding)))
             .collect();
         let function_obj: Obj = FnObj::new(function_head, vec![function_args]).into();
 
@@ -89,7 +89,7 @@ impl Runtime {
                 self.inst_and_chain_atomic_fact(
                     case_fact,
                     &fn_set_param_to_forall_param,
-                    ParamObjType::BinderRetag(BinderRetagSource::FnSet),
+                    SubstitutionMode::Exact,
                     None,
                 )?
                 .into(),
@@ -98,7 +98,7 @@ impl Runtime {
             let equal_to = self.inst_obj(
                 equal_to,
                 &fn_set_param_to_forall_param,
-                ParamObjType::BinderRetag(BinderRetagSource::FnSet),
+                SubstitutionMode::Exact,
             )?;
             let function_equals_equal_to_fact: AtomicFact = EqualFact::new(
                 function_obj.clone(),
@@ -427,7 +427,7 @@ impl Runtime {
             })?;
         let function_args = param_bindings
             .iter()
-            .map(|binding| Box::new(obj_for_bound_param_in_scope(binding, ParamObjType::Forall)))
+            .map(|binding| Box::new(obj_for_bound_param_in_scope(binding)))
             .collect();
         let function_obj: Obj = FnObj::new(function_head, vec![function_args]).into();
 
@@ -438,16 +438,13 @@ impl Runtime {
                 self.inst_and_chain_atomic_fact(
                     case_fact,
                     &param_to_forall_param,
-                    ParamObjType::BinderRetag(BinderRetagSource::FnSet),
+                    SubstitutionMode::Exact,
                     None,
                 )?
                 .into(),
             );
-            let equal_to = self.inst_obj(
-                equal_to,
-                &param_to_forall_param,
-                ParamObjType::BinderRetag(BinderRetagSource::FnSet),
-            )?;
+            let equal_to =
+                self.inst_obj(equal_to, &param_to_forall_param, SubstitutionMode::Exact)?;
             let equation: AtomicFact =
                 EqualFact::new(function_obj.clone(), equal_to, stmt.line_file.clone()).into();
             let forall = ForallFact::new_canonical_forall(

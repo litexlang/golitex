@@ -167,7 +167,7 @@ sqrt(4) = 2
 | `floor(a)`, `ceil(a)` | Native integer floor and ceiling of a real argument |
 | `min(a, b)`, `max(a, b)` | Native binary minimum and maximum of real arguments |
 | `exp(a)`, `ln(a)` | Native real exponential and natural logarithm |
-| `sign(a)` | Native real sign function with values `-1`, `0`, and `1` |
+| `sign(a)` | Native real sign function with values `(-1)`, `0`, and `1` |
 | `factorial(n)` | Native natural-number factorial |
 | `a + b`, `a - b`, `a * b`, `a / b` | Arithmetic operations |
 | `a % b` | Euclidean integer remainder |
@@ -180,18 +180,18 @@ sqrt(4) = 2
 Exact numeric calls normalize inside ordinary facts or `eval` statements:
 
 ```litex
-gcd(54, -24) = 6
-quot(-7, 3) = -3
--7 % 3 = 2
-lcm(12, -18) = 36
+gcd(54, (-24)) = 6
+quot(-7, 3) = (-3)
+(-7) % 3 = 2
+lcm(12, (-18)) = 36
 lcm(0, 0) = 0
 floor(3.75) = 3
 ceil(3.25) = 4
-min(7, -2) = -2
-max(7, -2) = 7
+min(7, (-2)) = (-2)
+max(7, (-2)) = 7
 exp(0) = 1
 ln(1) = 0
-sign(-9) = -1
+sign(-9) = (-1)
 factorial(10) = 3628800
 ```
 
@@ -251,8 +251,8 @@ values.
 not source-defined functions or ordinary function calls. Their arguments are
 real angles in radians. `sin` and `cos` are total on `R`; `tan(x)` is
 well-defined only when `cos(x) != 0`, and `cot(x)` only when `sin(x) != 0`.
-`arcsin(x)` is well-defined exactly when `x R`, `-1 <= x`, and `x <= 1`.
-It returns the principal value in `[-pi/2, pi/2]`.
+`arcsin(x)` is well-defined exactly when `x R`, `(-1) <= x`, and `x <= 1`.
+It returns the principal value in `[(-pi)/2, pi/2]`.
 
 The expressions remain symbolic, while common exact identities verify:
 
@@ -263,11 +263,11 @@ forall x R:
     sin(x)^2 + cos(x)^2 = 1
 
 forall x R:
-    -1 <= x
+    (-1) <= x
     x <= 1
     =>:
         sin(arcsin(x)) = x
-        -pi / 2 <= arcsin(x) <= pi / 2
+        (-pi) / 2 <= arcsin(x) <= pi / 2
 ```
 
 The preview intentionally does not assign every familiar special-angle value;
@@ -275,7 +275,7 @@ for example, `sin(pi / 6) = 1 / 2` still needs an explicit source fact.
 Complex trigonometry, inverse cosine/tangent, analytic definitions, and
 continuity theorems are outside this interface. The reverse identity
 `arcsin(sin(y)) = y` is available only on the principal interval
-`-pi/2 <= y <= pi/2`.
+`(-pi)/2 <= y <= pi/2`.
 
 The names `sin`, `arcsin`, `cos`, `tan`, and `cot` are hard-reserved. Their bare names
 are not first-class function values; higher-order code can use
@@ -299,10 +299,10 @@ objects:
 
 ```litex
 i $in C
-i * i = -1
-i^2 = -1
+i * i = (-1)
+i^2 = (-1)
 i^4 = 1
-i^(-1) = -i
+i^(-1) = (-i)
 i $in C*
 not 0 $in C*
 
@@ -327,12 +327,12 @@ forall z C:
 
 Equality calculation also has a bounded exact complex-algebraic mode. It uses
 the ordinary polynomial/rational normalizer, with the additional relation
-`i * i = -1`:
+`i * i = (-1)`:
 
 ```litex
 2 * i + 1 = i * i + 2 + 2 * i
 (1 + i) * (1 - i) = 2
-1 / i = -i
+1 / i = (-i)
 
 forall z C:
     (z + i) * (z - i) = z^2 + 1
@@ -753,7 +753,7 @@ Finite sets, integer ranges, and real intervals have dedicated object forms.
 finite_set_size({1, 2, 3}) = 3
 sum(1, 3, fn(i1 Z) Z {i1}) = sum(1, 2, fn(i1 Z) Z {i1}) + fn(i1 Z) Z {i1}(3)
 product(1, 3, fn(i1 Z) Z {i1}) = product(1, 2, fn(i1 Z) Z {i1}) * fn(i1 Z) Z {i1}(3)
-reduce(1, 3, fn(i1 Z) Z {i1}, fn(x, y Z) Z {x - y}, 0) = -6
+reduce(1, 3, fn(i1 Z) Z {i1}, fn(x, y Z) Z {x - y}, 0) = (-6)
 finite_set_reduce({3, 1, 2}, fn(i1 Z) Z {i1}, fn(x, y Z) Z {x + y}, 0) = 6
 
 2 $in range(0, 3)
@@ -1894,10 +1894,10 @@ have fn successor(x Z) Z = x + 1
 have fn sign_value(x R) Z by cases:
     case x > 0: 1
     case x = 0: 0
-    case x < 0: -1
+    case x < 0: (-1)
 
 successor(2) = 3
-sign_value(-2) = -1
+sign_value(-2) = (-1)
 ```
 
 Overlapping conditions are rejected:
@@ -3165,7 +3165,7 @@ together.
 
 | Group | Recognized laws and required premises |
 |---|---|
-| Absolute-value algebra | `abs(x*y) = abs(x)*abs(y)`; `0 <= abs(x)`; `x <= abs(x)`; `-x <= abs(x)`; `-abs(x) <= x`; `abs(x+y) <= abs(x)+abs(y)`; `abs(x-y) <= abs(x)+abs(y)`; `abs(x)-abs(y) <= abs(x-y)` and `<= abs(x+y)`; `x != 0` gives `0 < abs(x)`; nonnegative/nonpositive `x` selects `abs(x)=x` or `abs(x)=-x`. |
+| Absolute-value algebra | `abs(x*y) = abs(x)*abs(y)`; `0 <= abs(x)`; `x <= abs(x)`; `(-x) <= abs(x)`; `(-abs(x)) <= x`; `abs(x+y) <= abs(x)+abs(y)`; `abs(x-y) <= abs(x)+abs(y)`; `abs(x)-abs(y) <= abs(x-y)` and `<= abs(x+y)`; `x != 0` gives `0 < abs(x)`; nonnegative/nonpositive `x` selects `abs(x)=x` or `abs(x)=(-x)`. |
 | Nonzero closure | Known nonzero real factors give `a*b != 0`; a nonzero numerator and denominator give `a/b != 0`. Division still requires the denominator fact for well-definedness. |
 | Order weakening | `a < b` gives `a <= b`, and `a > b` gives `a >= b`. The converse is not available without disequality or another strict premise. |
 | Addition | Weak+weak gives weak order; strict+strict gives strict order; weak+strict and strict+weak give strict order. Adding a common left term preserves either order. Nonnegative summands give a nonnegative sum; the sum is positive when both are positive or one is positive and the other nonnegative. `0 <= b` gives `a <= a+b`. |
@@ -3315,7 +3315,7 @@ aggregate, and remainder rows.
 | Same or known-equal objects | Reflexivity, symmetry, transitivity, equality-chain lookup, replacement of known-equal immediate subobjects, and calculation or rational-expression normalization. Equality is also obtained from both weak-order directions over an ordered numeric carrier. |
 | Additive and multiplicative cancellation | `x = y` gives `x-y=0`; `a*b=0` together with either nonzero factor gives the other factor equal to zero; a known `a+b=c` gives `a=c-b`, in either summand order. |
 | Division | From `a/b=c` and `b!=0`, Litex proves `a=c*b`. From `a=b*c` and `b!=0`, it proves `a/b=c`. The displayed multiplier and divisor positions must match; the rule does not silently commute a product first. |
-| Absolute value and square root | A known sign selects `abs(x)=x` or `abs(x)=-x`; `abs(x)=0` gives `x=0`; even powers may replace a real base by its absolute value. Square-root rules include the principal-root square, special values, product/quotient laws under their domains, and `sqrt(a^2)=a` when `a>=0`. |
+| Absolute value and square root | A known sign selects `abs(x)=x` or `abs(x)=(-x)`; `abs(x)=0` gives `x=0`; even powers may replace a real base by its absolute value. Square-root rules include the principal-root square, special values, product/quotient laws under their domains, and `sqrt(a^2)=a` when `a>=0`. |
 | Powers and logarithms | Zero/one, exponent addition, iterated power, product power, negative exponent, roots, and inverse logarithm/power shapes are supported only in the carrier branches listed below. |
 | Remainder and divisibility | Special residues, Euclidean-remainder uniqueness, compatible nested moduli, and congruence under matching `+`, `-`, and `*` operands. `gcd(a,b)` divides both inputs, and `(a*b)%a=(a*b)%b=0` when the objects are well-defined. |
 | Set and cardinality objects | Union/intersection/difference algebra, intersection reduction from a known subset, cardinality of products, differences, unions and power sets, and empty-set equality from emptiness or zero finite cardinality. |
@@ -3364,7 +3364,7 @@ because equality verification failed.
 |---|---|
 | Resolution and symmetry | Distinct resolved numeric values, including objects whose known equality representatives resolve to such values; the reverse known fact `b!=a`; and displayed sets with different structural lengths. Native `e`, `pi`, and `i` have their reviewed distinctness/nonzero facts. |
 | Order and membership separation | Any known strict real order proves disequality. A value above a known positive lower bound is nonzero. Membership of one object and known nonmembership of the other in the same set prove the objects distinct. A nonempty set is not `{}`. |
-| Addition and subtraction | `a!=b` gives `a-b!=0`, and `a-b!=0` gives `a!=b`. Likewise `a!=-b` gives `a+b!=0`, while a nonzero sum gives the corresponding operand-versus-negation fact. The immediate operand positions must match. |
+| Addition and subtraction | `a!=b` gives `a-b!=0`, and `a-b!=0` gives `a!=b`. Likewise `a!=(-b)` gives `a+b!=0`, while a nonzero sum gives the corresponding operand-versus-negation fact. The immediate operand positions must match. |
 | Products and quotients | Two known nonzero factors in `R` or `C` give a nonzero product; a known nonzero product in either native field gives both factors nonzero. The matching zero-product split is likewise available over `R` and `C`, but not for arbitrary user-defined multiplication. A well-defined quotient is nonzero from a nonzero numerator; its denominator obligation was already checked. |
 | Powers, roots, and absolute value | A supported well-defined power is nonzero from a nonzero base, and positive-base power branches are intrinsically nonzero. `abs(x)!=0` follows from `x!=0`; `sqrt(x)!=0` requires `x>0`, not merely `x>=0`. |
 | Sums of real squares | Either nonzero component, or the known two-branch component-nonzero disjunction, gives `a^2+b^2!=0` (also for the matching `a*a+b*b` shape). Conversely, the supported disjunction rule exposes that at least one component is nonzero. |
@@ -3419,7 +3419,7 @@ alone never supplies an order. The order layer recognizes these contracts:
 ```litex
 forall x R:
     0 <= x^2
-    -x <= abs(x)
+    (-x) <= abs(x)
     x <= abs(x)
 
 forall a, b, c, d R:
@@ -3471,10 +3471,10 @@ The symbolic trigonometric interface recognizes the following exact families:
 | Family | Recognized laws and required domains |
 |---|---|
 | Core identities | Values at `0` and `pi / 2`, sine and cosine addition and difference formulas, the unit-circle identity, and `tan(x)=sin(x)/cos(x)` or `cot(x)=cos(x)/sin(x)` when the denominator is known nonzero. |
-| Principal inverse sine | `arcsin(x)` requires `x in [-1,1]`, returns a value in `[-pi/2,pi/2]`, and satisfies `sin(arcsin(x))=x`. Conversely, `arcsin(sin(y))=y` requires `y` in that principal interval. |
+| Principal inverse sine | `arcsin(x)` requires `x in [(-1),1]`, returns a value in `[(-pi)/2,pi/2]`, and satisfies `sin(arcsin(x))=x`. Conversely, `arcsin(sin(y))=y` requires `y` in that principal interval. |
 | Symmetry and angles | Odd/even parity, double-angle and cofunction formulas, supported integral and half-integral multiples of `pi`, shifts by `pi` and `pi/2`, and period `2*pi` for sine/cosine or `pi` for tangent/cotangent when defined. |
-| Bounds and signs | `-1 <= sin(x), cos(x) <= 1`, `3 < pi < 4`, and the standard sign intervals for sine, cosine, tangent, and cotangent. Open-domain bounds remain necessary for tangent and cotangent. |
-| Local order | Sine is monotone on `[-pi/2, pi/2]`, cosine on `[0, pi]`, tangent on `(-pi/2, pi/2)`, and cotangent in the reverse direction on `(0, pi)`. |
+| Bounds and signs | `(-1) <= sin(x), cos(x) <= 1`, `3 < pi < 4`, and the standard sign intervals for sine, cosine, tangent, and cotangent. Open-domain bounds remain necessary for tangent and cotangent. |
+| Local order | Sine is monotone on `[(-pi)/2, pi/2]`, cosine on `[0, pi]`, tangent on `((-pi)/2, pi/2)`, and cotangent in the reverse direction on `(0, pi)`. |
 
 These are exact symbolic rules, not numerical approximation. Unlisted special
 angles, inverse cosine/tangent or complex trigonometry, continuity, and analytic definitions
@@ -3485,7 +3485,7 @@ need explicit source facts or library interfaces.
 | Family | Recognized laws and required domains |
 |---|---|
 | `exp` and `ln` | `exp(0)=1`, `ln(1)=0`, `exp(x)=e^x`, their inverse laws, and the usual addition/product identities. `exp` maps `R` to `R+` and preserves and reflects order and equality. `ln` has the corresponding behavior on `R+` and agrees with `log(e,x)`. |
-| `sign` | Returns `-1`, `0`, or `1`; is odd, multiplicative, and weakly monotone; characterizes zero and nonzero inputs; and satisfies `sign(x)*abs(x)=x`. |
+| `sign` | Returns `(-1)`, `0`, or `1`; is odd, multiplicative, and weakly monotone; characterizes zero and nonzero inputs; and satisfies `sign(x)*abs(x)=x`. |
 | `factorial` | Maps `N` to `N+`, evaluates finite natural inputs, exposes the successor recurrence, preserves weak order, is strictly increasing past the `0! = 1!` boundary, and gives divisibility from an earlier to a later factorial. |
 | `floor` and `ceil` | Return integers, expose their characteristic bounds, preserve weak order, commute with integer translation, and are dual under negation. |
 | `min` and `max` | Select an argument from a known comparison, bound both arguments, preserve componentwise weak order, and satisfy the usual commutative, associative, idempotent, and absorption laws. |
@@ -3745,7 +3745,7 @@ The `or` verifier recognizes these exhaustive forms:
 |---|---|
 | `P or not P` | Two exactly complementary atomic facts. |
 | Real order alternatives | Real operands; complementary strict/weak pairs, trichotomy permutations, or equality plus strict order when the matching weak comparison is already known. |
-| `abs(x)=x or abs(x)=-x` | Canonical two-branch absolute-value split. |
+| `abs(x)=x or abs(x)=(-x)` | Canonical two-branch absolute-value split. |
 | Complete residues | Every canonical equality `n % k = r` for `r=0,...,k-1`, with a positive literal/canonical modulus shape. |
 | Integer successor tail | Known `x,base $in Z` and `x>=base`; the branches list consecutive equalities from `base` followed by the matching strict tail. |
 | `a=0 or b=0` | `a,b $in R` and known `a*b=0` (either product order). |
@@ -3764,7 +3764,7 @@ forall a, b R:
         a = b or a < b
 
 forall x R:
-    abs(x) = x or abs(x) = -x
+    abs(x) = x or abs(x) = (-x)
 ```
 
 Branch order is flexible only where the matcher explicitly treats it as a
@@ -3835,7 +3835,7 @@ Most triggers are atomic facts. A few larger shapes have explicit behavior.
 | `$is_cart(C)` | The structural lower bound `2 <= cart_dim(C)`. Other positive/negative type predicates have no general inference branch. |
 | Subset or superset | One fresh universal membership consequence in the corresponding direction. A builder on the subset side skips this eager universal because builder membership already exposes its domain and filters. |
 | Proper inclusion | Through its builtin definition: ordinary inclusion and set inequality. |
-| Order against a resolved concrete bound | Selected sign information, including the equivalent comparison after multiplying both sides by `-1` when that normalized shape is supported. |
+| Order against a resolved concrete bound | Selected sign information, including the equivalent comparison after multiplying both sides by `(-1)` when that normalized shape is supported. |
 | `exist!` | A universal saying any two complete witness tuples satisfying the body are componentwise equal. |
 | `not exist` | The corresponding universal De Morgan negation when the body shape is supported. |
 | `not forall` | An existential counterexample containing the instantiated domain facts and negation of the conclusions, when those facts can be represented in an existential body. |

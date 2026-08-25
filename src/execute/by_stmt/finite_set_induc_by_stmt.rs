@@ -43,7 +43,7 @@ impl Runtime {
         };
         let verification = SuccessVerifyByInducResult::new(
             stmt.param_binding.clone(),
-            obj_for_bound_param_in_scope(&stmt.param_binding, ParamObjType::Induc),
+            obj_for_bound_param_in_scope(&stmt.param_binding),
             stmt.to_prove
                 .iter()
                 .map(|fact| fact.clone().to_fact())
@@ -187,7 +187,7 @@ impl Runtime {
             vec![stmt.param_binding.clone()],
             ParamType::FiniteSet(FiniteSet::new()),
         )]);
-        self.define_params_with_type(&params, false, ParamObjType::Induc)
+        self.define_params_with_type(&params, false, BindingScope::LocalBinder)
             .map_err(|error| {
                 short_exec_error(
                     stmt.clone().into(),
@@ -198,7 +198,7 @@ impl Runtime {
             })?;
         let empty_set: Obj = ListSet::new(vec![]).into();
         let base_eq: Fact = EqualFact::new(
-            obj_for_bound_param_in_scope(&stmt.param_binding, ParamObjType::Induc),
+            obj_for_bound_param_in_scope(&stmt.param_binding),
             empty_set,
             stmt.line_file.clone(),
         )
@@ -214,7 +214,7 @@ impl Runtime {
             })?;
         if let Some(carrier_set) = &stmt.carrier_set {
             let base_subset: Fact = SubsetFact::new(
-                obj_for_bound_param_in_scope(&stmt.param_binding, ParamObjType::Induc),
+                obj_for_bound_param_in_scope(&stmt.param_binding),
                 carrier_set.clone(),
                 stmt.line_file.clone(),
             )
@@ -249,7 +249,7 @@ impl Runtime {
                 ParamType::FiniteSet(FiniteSet::new()),
             ),
         ]);
-        self.define_params_with_type(&params, false, ParamObjType::Induc)
+        self.define_params_with_type(&params, false, BindingScope::LocalBinder)
             .map_err(|error| {
                 short_exec_error(
                     stmt.clone().into(),
@@ -259,10 +259,8 @@ impl Runtime {
                 )
             })?;
 
-        let element =
-            obj_for_bound_param_in_scope(&stmt.element_param_binding, ParamObjType::Induc);
-        let smaller_set =
-            obj_for_bound_param_in_scope(&stmt.smaller_set_param_binding, ParamObjType::Induc);
+        let element = obj_for_bound_param_in_scope(&stmt.element_param_binding);
+        let smaller_set = obj_for_bound_param_in_scope(&stmt.smaller_set_param_binding);
         let fresh_fact: Fact =
             NotInFact::new(element, smaller_set.clone(), stmt.line_file.clone()).into();
         self.store_with_well_defined_verification_and_infer_with_default_verify_state(fresh_fact)
@@ -348,15 +346,18 @@ impl Runtime {
         let mut param_to_set = HashMap::new();
         insert_symbol_substitution(&mut param_to_set, &stmt.param_binding, set);
         Ok(self
-            .inst_exist_or_and_chain_atomic_fact(fact, &param_to_set, ParamObjType::Induc, None)?
+            .inst_exist_or_and_chain_atomic_fact(
+                fact,
+                &param_to_set,
+                SubstitutionMode::Exact,
+                None,
+            )?
             .to_fact())
     }
 
     fn finite_set_induc_extension_obj(&self, stmt: &ByFiniteSetInducStmt) -> Obj {
-        let element =
-            obj_for_bound_param_in_scope(&stmt.element_param_binding, ParamObjType::Induc);
-        let smaller_set =
-            obj_for_bound_param_in_scope(&stmt.smaller_set_param_binding, ParamObjType::Induc);
+        let element = obj_for_bound_param_in_scope(&stmt.element_param_binding);
+        let smaller_set = obj_for_bound_param_in_scope(&stmt.smaller_set_param_binding);
         Union::new(ListSet::new(vec![element]).into(), smaller_set).into()
     }
 
@@ -364,17 +365,15 @@ impl Runtime {
         &mut self,
         stmt: &ByFiniteSetInducStmt,
     ) -> Result<Fact, RuntimeError> {
-        let (forall_names, param_to_forall) = self.fresh_binder_retag_plan_for_bindings(
-            std::slice::from_ref(&stmt.param_binding),
-            ParamObjType::Forall,
-        );
+        let (forall_names, param_to_forall) =
+            self.fresh_binder_retag_plan_for_bindings(std::slice::from_ref(&stmt.param_binding));
         let param = param_to_forall[stmt.param()].clone();
         let mut then_facts = Vec::with_capacity(stmt.to_prove.len());
         for fact in stmt.to_prove.iter() {
             then_facts.push(self.inst_exist_or_and_chain_atomic_fact(
                 fact,
                 &param_to_forall,
-                ParamObjType::BinderRetag(BinderRetagSource::Induc),
+                SubstitutionMode::Exact,
                 None,
             )?);
         }
@@ -400,7 +399,7 @@ impl Runtime {
         &mut self,
         stmt: &ByFiniteSetInducStmt,
     ) -> Result<(Vec<(String, String)>, Vec<(String, String)>), RuntimeError> {
-        let param = obj_for_bound_param_in_scope(&stmt.param_binding, ParamObjType::Induc);
+        let param = obj_for_bound_param_in_scope(&stmt.param_binding);
         let empty_set: Obj = ListSet::new(vec![]).into();
         let mut base_assumptions = vec![
             (
@@ -420,10 +419,8 @@ impl Runtime {
             ));
         }
 
-        let element =
-            obj_for_bound_param_in_scope(&stmt.element_param_binding, ParamObjType::Induc);
-        let smaller_set =
-            obj_for_bound_param_in_scope(&stmt.smaller_set_param_binding, ParamObjType::Induc);
+        let element = obj_for_bound_param_in_scope(&stmt.element_param_binding);
+        let smaller_set = obj_for_bound_param_in_scope(&stmt.smaller_set_param_binding);
         let mut step_assumptions = vec![
             (
                 IsFiniteSetFact::new(smaller_set.clone(), stmt.line_file.clone()).to_string(),

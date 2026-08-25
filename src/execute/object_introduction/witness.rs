@@ -159,7 +159,7 @@ impl Runtime {
                 &definition.params_def_with_type,
                 &stmt.atomic_fact.body,
                 &verify_state,
-                ParamObjType::DefHeader,
+                SubstitutionMode::Exact,
             )?;
             match result {
                 VerifyArgsSatisfyParamDefResult::Success(result) => Ok(*result),
@@ -231,7 +231,7 @@ impl Runtime {
                 stmt.exist_fact_in_witness.params_def_with_type(),
                 &stmt.equal_tos,
                 &verify_state_for_well_defined,
-                ParamObjType::Exist,
+                SubstitutionMode::Exact,
             )?;
             if type_check_result.is_unknown() {
                 return Err(short_exec_error(
@@ -262,7 +262,7 @@ impl Runtime {
             let instantiated_types = rt.inst_param_def_with_type_one_by_one(
                 stmt.exist_fact_in_witness.params_def_with_type(),
                 &stmt.equal_tos,
-                ParamObjType::Exist,
+                SubstitutionMode::Exact,
             )?;
             let flat_types = stmt
                 .exist_fact_in_witness
@@ -296,7 +296,7 @@ impl Runtime {
             rt.define_params_with_type(
                 stmt.exist_fact_in_witness.params_def_with_type(),
                 false,
-                ParamObjType::Exist,
+                BindingScope::LocalBinder,
             )
             .map_err(|define_error| {
                 short_exec_error(
@@ -313,7 +313,7 @@ impl Runtime {
                 .collect_param_bindings();
             for (binding, equal_to_obj) in exist_param_bindings.iter().zip(stmt.equal_tos.iter()) {
                 let equal_fact: AtomicFact = EqualFact::new(
-                    obj_for_bound_param_in_scope(binding, ParamObjType::Exist),
+                    obj_for_bound_param_in_scope(binding),
                     equal_to_obj.clone(),
                     stmt.line_file.clone(),
                 )
@@ -358,7 +358,7 @@ impl Runtime {
             let instantiated_exist_fact = rt.inst_exist_fact(
                 &stmt.exist_fact_in_witness,
                 &param_to_obj_map,
-                ParamObjType::Exist,
+                SubstitutionMode::Exact,
                 None,
             )?;
 

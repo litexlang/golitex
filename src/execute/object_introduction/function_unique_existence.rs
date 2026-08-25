@@ -97,7 +97,7 @@ impl Runtime {
             rt.define_params_with_type(
                 &stmt.forall.params_def_with_type,
                 false,
-                ParamObjType::Forall,
+                BindingScope::LocalBinder,
             )
             .map_err(|define_params_error| {
                 exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), define_params_error)
@@ -190,7 +190,7 @@ impl Runtime {
             .fn_set_from_fn_set_clause(&shape.fn_set_clause)
             .map_err(|e| Self::have_fn_by_forall_exist_unique_err(stmt, e))?;
 
-        self.store_parameter_binding(&stmt.symbol_binding, ParamObjType::Identifier)
+        self.store_parameter_binding(&stmt.symbol_binding, BindingScope::DeclaredObject)
             .map_err(|e| Self::have_fn_by_forall_exist_unique_err(stmt, e))?;
         let function_binding = self
             .visible_symbol_definition(stmt.fn_name())
@@ -202,7 +202,7 @@ impl Runtime {
             .define_parameter_by_binding_param_type(
                 &function_binding,
                 &ParamType::Obj(fn_set.clone().into()),
-                ParamObjType::Identifier,
+                BindingScope::DeclaredObject,
             )
             .map_err(|e| Self::have_fn_by_forall_exist_unique_err(stmt, e))?;
         let function_identifier_obj = self.declared_identifier_obj(stmt.fn_name());
@@ -342,7 +342,7 @@ impl Runtime {
             let rebound_dom_fact = self.inst_fact(
                 dom_fact,
                 &forall_param_to_fn_set_param,
-                ParamObjType::BinderRetag(BinderRetagSource::Forall),
+                SubstitutionMode::Exact,
                 None,
             )?;
             dom_facts.push(Self::fn_set_dom_fact_from_fact(stmt, &rebound_dom_fact)?);
@@ -399,7 +399,7 @@ impl Runtime {
                 .inst_quantifier_free_fact(
                     body_fact,
                     &witness_map,
-                    ParamObjType::BinderRetag(BinderRetagSource::Exist),
+                    SubstitutionMode::Exact,
                     Some(&stmt.line_file),
                 )
                 .map_err(|e| Self::have_fn_by_forall_exist_unique_err(stmt, e))?;
@@ -425,7 +425,7 @@ impl Runtime {
         let head = FnObjHead::InstantiatedTemplateObj(template_obj.clone());
         let args = forall_param_bindings
             .iter()
-            .map(|binding| Box::new(obj_for_bound_param_in_scope(binding, ParamObjType::Forall)))
+            .map(|binding| Box::new(obj_for_bound_param_in_scope(binding)))
             .collect();
         let function_obj: Obj = FnObj::new(head, vec![args]).into();
         let property_forall = self.have_fn_by_forall_exist_unique_property_forall_with_function(
@@ -458,10 +458,8 @@ impl Runtime {
             self.declared_identifier_obj(stmt.fn_name()),
             &forall_param_bindings,
         );
-        let (witness_names, witness_map) = self.fresh_binder_retag_plan_for_bindings(
-            std::slice::from_ref(&shape.witness_binding),
-            ParamObjType::Forall,
-        );
+        let (witness_names, witness_map) =
+            self.fresh_binder_retag_plan_for_bindings(std::slice::from_ref(&shape.witness_binding));
         let witness_obj = witness_map[&shape.witness_name].clone();
 
         let mut params = stmt.forall.params_def_with_type.groups.clone();
@@ -476,7 +474,7 @@ impl Runtime {
                 .inst_quantifier_free_fact(
                     body_fact,
                     &witness_map,
-                    ParamObjType::BinderRetag(BinderRetagSource::Exist),
+                    SubstitutionMode::Exact,
                     Some(&stmt.line_file),
                 )
                 .map_err(|e| Self::have_fn_by_forall_exist_unique_err(stmt, e))?;
@@ -502,17 +500,14 @@ impl Runtime {
         // The source signature uses Forall binders; its stored function type uses FnSet binders.
         let source_bindings = param_defs.collect_param_bindings();
         let (fn_set_names, full_forall_param_to_fn_set_param) =
-            self.fresh_binder_retag_plan_for_bindings(&source_bindings, ParamObjType::FnSet);
+            self.fresh_binder_retag_plan_for_bindings(&source_bindings);
         let mut forall_param_to_fn_set_param = HashMap::new();
         let mut name_index = 0;
         for group in param_defs.groups.iter() {
             match &group.param_type {
                 ParamType::Obj(obj) => {
-                    let rebound_param_set = self.inst_obj(
-                        obj,
-                        &forall_param_to_fn_set_param,
-                        ParamObjType::BinderRetag(BinderRetagSource::Forall),
-                    )?;
+                    let rebound_param_set =
+                        self.inst_obj(obj, &forall_param_to_fn_set_param, SubstitutionMode::Exact)?;
                     let group_fn_set_names =
                         fn_set_names[name_index..name_index + group.params.len()].to_vec();
                     result.push(ParamGroupWithSet::new(

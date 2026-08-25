@@ -95,7 +95,7 @@ impl Runtime {
 
             if tb.current_token_is_equal_to(LEFT_BRACKET) {
                 let setting_prefix =
-                    this.parse_fresh_setting_parameter_bundle(tb, ParamObjType::Forall)?;
+                    this.parse_fresh_setting_parameter_bundle(tb, BindingScope::LocalBinder)?;
                 if !tb.current_token_is_equal_to(RIGHT_ARROW) {
                     return Err(RuntimeError::from(ParseRuntimeError(
                         RuntimeErrorStruct::new_with_msg_and_line_file(
@@ -129,9 +129,10 @@ impl Runtime {
                 if cur == COLON || cur == RIGHT_ARROW || cur == LEFT_CURLY_BRACE {
                     break;
                 }
-                groups.push(
-                    this.parse_param_def_with_param_type_and_skip_comma(tb, ParamObjType::Forall)?,
-                );
+                groups.push(this.parse_param_def_with_param_type_and_skip_comma(
+                    tb,
+                    BindingScope::LocalBinder,
+                )?);
             }
             if groups.is_empty() {
                 return Err(RuntimeError::from(ParseRuntimeError(
@@ -169,7 +170,7 @@ impl Runtime {
 
             let (dom_facts, then_facts) = this.parse_inline_forall_after_header(tb, has_colon)?;
 
-            this.end_parsing_scope(ParamObjType::Forall, &forall_param_names);
+            this.end_parsing_scope(&forall_param_names);
 
             if !nested && !tb.exceed_end_of_head() {
                 return Err(RuntimeError::from(ParseRuntimeError(
@@ -335,7 +336,7 @@ impl Runtime {
             tb.skip_token(FORALL)?;
             let (mut groups, setting_dom_facts) = if tb.current_token_is_equal_to(LEFT_BRACKET) {
                 let setting_prefix =
-                    this.parse_fresh_setting_parameter_bundle(tb, ParamObjType::Forall)?;
+                    this.parse_fresh_setting_parameter_bundle(tb, BindingScope::LocalBinder)?;
                 if !tb.current_token_is_equal_to(COLON) {
                     tb.skip_token(COMMA).map_err(|_| {
                         RuntimeError::from(ParseRuntimeError(
@@ -352,9 +353,10 @@ impl Runtime {
             };
 
             while tb.current()? != COLON {
-                groups.push(
-                    this.parse_param_def_with_param_type_and_skip_comma(tb, ParamObjType::Forall)?,
-                );
+                groups.push(this.parse_param_def_with_param_type_and_skip_comma(
+                    tb,
+                    BindingScope::LocalBinder,
+                )?);
             }
             let param_def = ParamDefWithType::new(groups);
             let forall_param_names = param_def.collect_param_names();
@@ -548,9 +550,10 @@ impl Runtime {
             };
             let mut groups: Vec<ParamGroupWithParamType> = vec![];
             while tb.current()? != ST {
-                groups.push(
-                    this.parse_param_def_with_param_type_and_skip_comma(tb, ParamObjType::Exist)?,
-                );
+                groups.push(this.parse_param_def_with_param_type_and_skip_comma(
+                    tb,
+                    BindingScope::LocalBinder,
+                )?);
             }
             let param_def = ParamDefWithType::new(groups);
             let exist_param_names = param_def.collect_param_names();
@@ -583,7 +586,7 @@ impl Runtime {
                         ExistFactEnum::ExistFact(body)
                     })
                 })();
-                inner.end_parsing_scope(ParamObjType::Exist, &exist_param_names);
+                inner.end_parsing_scope(&exist_param_names);
                 fact_result
             })
         })

@@ -247,7 +247,7 @@ impl Runtime {
             .zip(other_bindings.iter())
             .zip(canonical_bindings.iter())
         {
-            let canonical_obj: Obj = ForallFreeParamObj::new(canonical_binding).into();
+            let canonical_obj: Obj = BoundParamObj::new(canonical_binding).into();
             insert_symbol_substitution(&mut fact_map, fact_binding, canonical_obj.clone());
             insert_symbol_substitution(&mut other_map, other_binding, canonical_obj);
         }

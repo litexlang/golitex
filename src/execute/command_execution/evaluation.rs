@@ -420,8 +420,11 @@ impl Runtime {
                 param_binding,
                 Number::new(k.to_string()).into(),
             );
-            let inst =
-                self.inst_obj(af.equal_to.as_ref(), &param_to_arg_map, ParamObjType::FnSet)?;
+            let inst = self.inst_obj(
+                af.equal_to.as_ref(),
+                &param_to_arg_map,
+                SubstitutionMode::Exact,
+            )?;
             let term = self.resolve_obj(&inst);
             let term =
                 self.eval_reduce_nested_sum_product_in_obj(term, eval_stmt, active_fn_calls)?;
@@ -1570,7 +1573,7 @@ impl Runtime {
         let AtomicFact::EqualFact(equal) = atomic_fact else {
             return None;
         };
-        let param_obj = obj_for_bound_param_in_scope(param_binding, ParamObjType::DefAlgo);
+        let param_obj = obj_for_bound_param_in_scope(param_binding);
         if equal.left.to_string() == param_obj.to_string() {
             return Self::integer_value_for_eval_obj(&equal.right);
         }
@@ -1584,7 +1587,7 @@ impl Runtime {
         atomic_fact: &AtomicFact,
         param_binding: &SymbolBinding,
     ) -> Option<i128> {
-        let param_obj = obj_for_bound_param_in_scope(param_binding, ParamObjType::DefAlgo);
+        let param_obj = obj_for_bound_param_in_scope(param_binding);
         match atomic_fact {
             AtomicFact::GreaterFact(greater)
                 if greater.left.to_string() == param_obj.to_string() =>
@@ -1687,7 +1690,7 @@ impl Runtime {
             let instantiated_case_condition = self.inst_atomic_fact(
                 &algo_case.condition,
                 &param_to_arg_map,
-                ParamObjType::DefAlgo,
+                SubstitutionMode::Exact,
                 None,
             )?;
             let verify_result = self
@@ -1705,7 +1708,7 @@ impl Runtime {
                 return self.inst_obj(
                     &algo_case.return_stmt.value,
                     &param_to_arg_map,
-                    ParamObjType::DefAlgo,
+                    SubstitutionMode::Exact,
                 );
             }
             if verify_result.is_unknown() {
@@ -1747,7 +1750,7 @@ impl Runtime {
             self.inst_obj(
                 &default_return_stmt.value,
                 &param_to_arg_map,
-                ParamObjType::DefAlgo,
+                SubstitutionMode::Exact,
             )
         } else {
             Err(short_exec_error(

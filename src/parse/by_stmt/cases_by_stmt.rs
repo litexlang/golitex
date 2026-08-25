@@ -40,7 +40,7 @@ impl Runtime {
             self.parse_by_cases_case_and_proof_blocks(tb, case_body_skip)?
         } else {
             self.parse_in_existing_free_param_scope(
-                ParamObjType::Forall,
+                BindingScope::LocalBinder,
                 &forall_param_bindings,
                 line_file,
                 |rt| rt.parse_by_cases_case_and_proof_blocks(tb, case_body_skip),

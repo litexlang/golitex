@@ -665,7 +665,7 @@ impl StmtResultToLeanCompiler {
                 }
                 ParamType::Obj(source_set) => {
                     let instantiated_set = substitution_runtime
-                        .inst_obj(source_set, &substitutions, ParamObjType::Forall)
+                        .inst_obj(source_set, &substitutions, SubstitutionMode::Exact)
                         .map_err(|error| {
                             format!("known-forall parameter substitution failed: {error:?}")
                         })?;
@@ -733,7 +733,7 @@ impl StmtResultToLeanCompiler {
                 ));
             }
             let expected_domain = substitution_runtime
-                .inst_fact(source_domain, &substitutions, ParamObjType::Forall, None)
+                .inst_fact(source_domain, &substitutions, SubstitutionMode::Exact, None)
                 .map_err(|error| format!("known-forall domain substitution failed: {error:?}"))?;
             let requirement_result = requirement.result.factual_success().ok_or_else(|| {
                 format!("known-forall domain requirement {domain_index} is not factual")
@@ -808,7 +808,7 @@ impl StmtResultToLeanCompiler {
             .inst_fact(
                 &source_conclusion,
                 &substitutions,
-                ParamObjType::Forall,
+                SubstitutionMode::Exact,
                 None,
             )
             .map_err(|error| format!("known-forall conclusion substitution failed: {error:?}"))?;

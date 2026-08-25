@@ -144,8 +144,7 @@ impl Runtime {
         verify_state: &ProofSearchState,
     ) -> Result<SuccessVerifyFactWellDefinedProofResult, RuntimeError> {
         let bindings = exist_fact.params_def_with_type().collect_param_bindings();
-        let rename_map =
-            self.visible_binding_conflict_rename_map(&bindings, ParamObjType::Exist)?;
+        let rename_map = self.visible_binding_conflict_rename_map(&bindings)?;
         let working = if rename_map.is_empty() {
             exist_fact.clone()
         } else {
@@ -154,7 +153,7 @@ impl Runtime {
         let (binder, body) = self.run_in_local_env(|runtime| -> Result<_, RuntimeError> {
             let binder = runtime.verify_fact_binder_result(
                 working.params_def_with_type(),
-                ParamObjType::Exist,
+                BindingScope::LocalBinder,
                 verify_state,
             )?;
             let mut body = Vec::with_capacity(working.facts().len());
@@ -187,7 +186,7 @@ impl Runtime {
     pub fn verify_fact_binder_result(
         &mut self,
         parameter_definition: &ParamDefWithType,
-        binding_kind: ParamObjType,
+        binding_scope: BindingScope,
         verify_state: &ProofSearchState,
     ) -> Result<SuccessVerifyFactBinderResult, RuntimeError> {
         let mut parameter_groups = Vec::with_capacity(parameter_definition.len());
@@ -204,9 +203,12 @@ impl Runtime {
             };
             let mut parameters = Vec::with_capacity(group.params.len());
             for (parameter_index, binding) in group.params.iter().enumerate() {
-                self.store_parameter_binding(binding, binding_kind)?;
-                let proposition =
-                    self.parameter_type_fact_for_binding(binding, &group.param_type, binding_kind)?;
+                self.store_parameter_binding(binding, binding_scope)?;
+                let proposition = self.parameter_type_fact_for_binding(
+                    binding,
+                    &group.param_type,
+                    binding_scope,
+                )?;
                 let well_definedness =
                     self.verify_fact_well_defined_result(&proposition, verify_state)?;
                 let Fact::AtomicFact(atomic) = proposition.clone() else {
@@ -616,8 +618,7 @@ impl Runtime {
         RuntimeError,
     > {
         let bindings = forall_fact.params_def_with_type.collect_param_bindings();
-        let rename_map =
-            self.visible_binding_conflict_rename_map(&bindings, ParamObjType::Forall)?;
+        let rename_map = self.visible_binding_conflict_rename_map(&bindings)?;
         let working = if rename_map.is_empty() {
             forall_fact.clone()
         } else {
@@ -628,7 +629,7 @@ impl Runtime {
         self.run_in_local_env(|rt| {
             let binder = rt.verify_fact_binder_result(
                 &working.params_def_with_type,
-                ParamObjType::Forall,
+                BindingScope::LocalBinder,
                 verify_state,
             )?;
             let mut premises = Vec::with_capacity(working.dom_facts.len());
@@ -732,7 +733,7 @@ impl Runtime {
         let _parameter_infers = match self.define_params_with_type(
             &forall_fact.params_def_with_type,
             false,
-            ParamObjType::Forall,
+            BindingScope::LocalBinder,
         ) {
             Ok(infers) => infers,
             Err(e) => {

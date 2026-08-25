@@ -47,7 +47,7 @@ impl Runtime {
             ParamType::Obj(subset_fact.left.clone()),
         )?;
         let in_fact_for_forall_then = InFact::new(
-            obj_for_bound_param_in_scope(&parameter_definition.params[0], ParamObjType::Forall),
+            obj_for_bound_param_in_scope(&parameter_definition.params[0]),
             subset_fact.right.clone(),
             subset_fact.line_file.clone(),
         )
@@ -103,7 +103,7 @@ impl Runtime {
             ParamType::Obj(superset_fact.right.clone()),
         )?;
         let in_fact_for_forall_then = InFact::new(
-            obj_for_bound_param_in_scope(&parameter_definition.params[0], ParamObjType::Forall),
+            obj_for_bound_param_in_scope(&parameter_definition.params[0]),
             superset_fact.left.clone(),
             superset_fact.line_file.clone(),
         )

@@ -314,7 +314,7 @@ impl Runtime {
         store_reason: &'static str,
         line_file: LineFile,
     ) -> Result<SuccessInferResult, RuntimeError> {
-        self.store_parameter_binding(binding, ParamObjType::Identifier)
+        self.store_parameter_binding(binding, BindingScope::DeclaredObject)
             .map_err(|e| short_exec_error(stmt.clone(), String::new(), Some(e), vec![]))?;
 
         let function_identifier_obj = self.declared_identifier_obj(name);
@@ -365,7 +365,7 @@ impl Runtime {
         binding: &SymbolBinding,
     ) -> Result<(), RuntimeError> {
         self.run_in_local_env(|rt| {
-            rt.store_parameter_binding(binding, ParamObjType::Identifier)
+            rt.store_parameter_binding(binding, BindingScope::DeclaredObject)
                 .map_err(|e| short_exec_error(stmt, String::new(), Some(e), vec![]))
         })
     }
@@ -528,7 +528,7 @@ fn build_have_finite_seq_anonymous_fn(
     _runtime: &Runtime,
     stmt: &HaveFiniteSeqStmt,
 ) -> Result<AnonymousFn, RuntimeError> {
-    let index_obj = obj_for_bound_param_in_scope(&stmt.index_binding, ParamObjType::FnSet);
+    let index_obj = obj_for_bound_param_in_scope(&stmt.index_binding);
     AnonymousFn::new(
         vec![ParamGroupWithSet::new(
             vec![stmt.index_binding.clone()],
@@ -549,8 +549,8 @@ fn build_have_matrix_anonymous_fn(
     _runtime: &Runtime,
     stmt: &HaveMatrixStmt,
 ) -> Result<AnonymousFn, RuntimeError> {
-    let row_obj = obj_for_bound_param_in_scope(&stmt.row_index_binding, ParamObjType::FnSet);
-    let col_obj = obj_for_bound_param_in_scope(&stmt.col_index_binding, ParamObjType::FnSet);
+    let row_obj = obj_for_bound_param_in_scope(&stmt.row_index_binding);
+    let col_obj = obj_for_bound_param_in_scope(&stmt.col_index_binding);
     AnonymousFn::new(
         vec![
             ParamGroupWithSet::new(

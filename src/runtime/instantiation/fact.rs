@@ -16,7 +16,7 @@ impl Runtime {
         &self,
         fact: &Fact,
         param_to_arg_map: &HashMap<String, Obj>,
-        to_inst_param_type: ParamObjType,
+        to_inst_param_type: SubstitutionMode,
         inst_to_line_file: Option<LineFile>,
     ) -> Result<Fact, RuntimeError> {
         let inst_lf = inst_to_line_file.as_ref();
@@ -80,7 +80,7 @@ impl Runtime {
         &self,
         fact: &ExistOrAndChainAtomicFact,
         param_to_arg_map: &HashMap<String, Obj>,
-        to_inst_param_type: ParamObjType,
+        to_inst_param_type: SubstitutionMode,
         inst_lf: Option<&LineFile>,
     ) -> Result<ExistOrAndChainAtomicFact, RuntimeError> {
         Ok(match fact {
@@ -121,7 +121,7 @@ impl Runtime {
         &self,
         fact: &QuantifierFreeFact,
         param_to_arg_map: &HashMap<String, Obj>,
-        to_inst_param_type: ParamObjType,
+        to_inst_param_type: SubstitutionMode,
         inst_lf: Option<&LineFile>,
     ) -> Result<QuantifierFreeFact, RuntimeError> {
         Ok(match fact {
@@ -147,7 +147,7 @@ impl Runtime {
         &self,
         fact: &AndChainAtomicFact,
         param_to_arg_map: &HashMap<String, Obj>,
-        to_inst_param_type: ParamObjType,
+        to_inst_param_type: SubstitutionMode,
         inst_lf: Option<&LineFile>,
     ) -> Result<AndChainAtomicFact, RuntimeError> {
         Ok(match fact {
@@ -167,7 +167,7 @@ impl Runtime {
         &self,
         atomic_fact: &AtomicFact,
         param_to_arg_map: &HashMap<String, Obj>,
-        to_inst_param_type: ParamObjType,
+        to_inst_param_type: SubstitutionMode,
         inst_lf: Option<&LineFile>,
     ) -> Result<AtomicFact, RuntimeError> {
         Ok(match atomic_fact {
@@ -337,7 +337,7 @@ impl Runtime {
         &self,
         normal_atomic_fact: &NormalAtomicFact,
         param_to_arg_map: &HashMap<String, Obj>,
-        to_inst_param_type: ParamObjType,
+        to_inst_param_type: SubstitutionMode,
         inst_lf: Option<&LineFile>,
     ) -> Result<NormalAtomicFact, RuntimeError> {
         let mut body = Vec::with_capacity(normal_atomic_fact.body.len());
@@ -355,7 +355,7 @@ impl Runtime {
         &self,
         equal_fact: &EqualFact,
         param_to_arg_map: &HashMap<String, Obj>,
-        to_inst_param_type: ParamObjType,
+        to_inst_param_type: SubstitutionMode,
         inst_lf: Option<&LineFile>,
     ) -> Result<EqualFact, RuntimeError> {
         Ok(EqualFact::new(
@@ -369,7 +369,7 @@ impl Runtime {
         &self,
         less_fact: &LessFact,
         param_to_arg_map: &HashMap<String, Obj>,
-        to_inst_param_type: ParamObjType,
+        to_inst_param_type: SubstitutionMode,
         inst_lf: Option<&LineFile>,
     ) -> Result<LessFact, RuntimeError> {
         Ok(LessFact::new(
@@ -383,7 +383,7 @@ impl Runtime {
         &self,
         greater_fact: &GreaterFact,
         param_to_arg_map: &HashMap<String, Obj>,
-        to_inst_param_type: ParamObjType,
+        to_inst_param_type: SubstitutionMode,
         inst_lf: Option<&LineFile>,
     ) -> Result<GreaterFact, RuntimeError> {
         Ok(GreaterFact::new(
@@ -397,7 +397,7 @@ impl Runtime {
         &self,
         less_equal_fact: &LessEqualFact,
         param_to_arg_map: &HashMap<String, Obj>,
-        to_inst_param_type: ParamObjType,
+        to_inst_param_type: SubstitutionMode,
         inst_lf: Option<&LineFile>,
     ) -> Result<LessEqualFact, RuntimeError> {
         Ok(LessEqualFact::new(
@@ -411,7 +411,7 @@ impl Runtime {
         &self,
         greater_equal_fact: &GreaterEqualFact,
         param_to_arg_map: &HashMap<String, Obj>,
-        to_inst_param_type: ParamObjType,
+        to_inst_param_type: SubstitutionMode,
         inst_lf: Option<&LineFile>,
     ) -> Result<GreaterEqualFact, RuntimeError> {
         Ok(GreaterEqualFact::new(
@@ -433,7 +433,7 @@ impl Runtime {
         &self,
         is_set_fact: &IsSetFact,
         param_to_arg_map: &HashMap<String, Obj>,
-        to_inst_param_type: ParamObjType,
+        to_inst_param_type: SubstitutionMode,
         inst_lf: Option<&LineFile>,
     ) -> Result<IsSetFact, RuntimeError> {
         Ok(IsSetFact::new(
@@ -446,7 +446,7 @@ impl Runtime {
         &self,
         is_nonempty_set_fact: &IsNonemptySetFact,
         param_to_arg_map: &HashMap<String, Obj>,
-        to_inst_param_type: ParamObjType,
+        to_inst_param_type: SubstitutionMode,
         inst_lf: Option<&LineFile>,
     ) -> Result<IsNonemptySetFact, RuntimeError> {
         Ok(IsNonemptySetFact::new(
@@ -463,7 +463,7 @@ impl Runtime {
         &self,
         is_finite_set_fact: &IsFiniteSetFact,
         param_to_arg_map: &HashMap<String, Obj>,
-        to_inst_param_type: ParamObjType,
+        to_inst_param_type: SubstitutionMode,
         inst_lf: Option<&LineFile>,
     ) -> Result<IsFiniteSetFact, RuntimeError> {
         Ok(IsFiniteSetFact::new(
@@ -480,7 +480,7 @@ impl Runtime {
         &self,
         in_fact: &InFact,
         param_to_arg_map: &HashMap<String, Obj>,
-        to_inst_param_type: ParamObjType,
+        to_inst_param_type: SubstitutionMode,
         inst_lf: Option<&LineFile>,
     ) -> Result<InFact, RuntimeError> {
         Ok(InFact::new(
@@ -494,7 +494,7 @@ impl Runtime {
         &self,
         is_cart_fact: &IsCartFact,
         param_to_arg_map: &HashMap<String, Obj>,
-        to_inst_param_type: ParamObjType,
+        to_inst_param_type: SubstitutionMode,
         inst_lf: Option<&LineFile>,
     ) -> Result<IsCartFact, RuntimeError> {
         Ok(IsCartFact::new(
@@ -507,7 +507,7 @@ impl Runtime {
         &self,
         is_tuple_fact: &IsTupleFact,
         param_to_arg_map: &HashMap<String, Obj>,
-        to_inst_param_type: ParamObjType,
+        to_inst_param_type: SubstitutionMode,
         inst_lf: Option<&LineFile>,
     ) -> Result<IsTupleFact, RuntimeError> {
         Ok(IsTupleFact::new(
@@ -520,7 +520,7 @@ impl Runtime {
         &self,
         subset_fact: &SubsetFact,
         param_to_arg_map: &HashMap<String, Obj>,
-        to_inst_param_type: ParamObjType,
+        to_inst_param_type: SubstitutionMode,
         inst_lf: Option<&LineFile>,
     ) -> Result<SubsetFact, RuntimeError> {
         Ok(SubsetFact::new(
@@ -534,7 +534,7 @@ impl Runtime {
         &self,
         superset_fact: &SupersetFact,
         param_to_arg_map: &HashMap<String, Obj>,
-        to_inst_param_type: ParamObjType,
+        to_inst_param_type: SubstitutionMode,
         inst_lf: Option<&LineFile>,
     ) -> Result<SupersetFact, RuntimeError> {
         Ok(SupersetFact::new(
@@ -548,7 +548,7 @@ impl Runtime {
         &self,
         not_normal_atomic_fact: &NotNormalAtomicFact,
         param_to_arg_map: &HashMap<String, Obj>,
-        to_inst_param_type: ParamObjType,
+        to_inst_param_type: SubstitutionMode,
         inst_lf: Option<&LineFile>,
     ) -> Result<NotNormalAtomicFact, RuntimeError> {
         let mut body = Vec::with_capacity(not_normal_atomic_fact.body.len());
@@ -566,7 +566,7 @@ impl Runtime {
         &self,
         not_equal_fact: &NotEqualFact,
         param_to_arg_map: &HashMap<String, Obj>,
-        to_inst_param_type: ParamObjType,
+        to_inst_param_type: SubstitutionMode,
         inst_lf: Option<&LineFile>,
     ) -> Result<NotEqualFact, RuntimeError> {
         Ok(NotEqualFact::new(
@@ -580,7 +580,7 @@ impl Runtime {
         &self,
         not_less_fact: &NotLessFact,
         param_to_arg_map: &HashMap<String, Obj>,
-        to_inst_param_type: ParamObjType,
+        to_inst_param_type: SubstitutionMode,
         inst_lf: Option<&LineFile>,
     ) -> Result<NotLessFact, RuntimeError> {
         Ok(NotLessFact::new(
@@ -594,7 +594,7 @@ impl Runtime {
         &self,
         not_greater_fact: &NotGreaterFact,
         param_to_arg_map: &HashMap<String, Obj>,
-        to_inst_param_type: ParamObjType,
+        to_inst_param_type: SubstitutionMode,
         inst_lf: Option<&LineFile>,
     ) -> Result<NotGreaterFact, RuntimeError> {
         Ok(NotGreaterFact::new(
@@ -612,7 +612,7 @@ impl Runtime {
         &self,
         not_less_equal_fact: &NotLessEqualFact,
         param_to_arg_map: &HashMap<String, Obj>,
-        to_inst_param_type: ParamObjType,
+        to_inst_param_type: SubstitutionMode,
         inst_lf: Option<&LineFile>,
     ) -> Result<NotLessEqualFact, RuntimeError> {
         Ok(NotLessEqualFact::new(
@@ -634,7 +634,7 @@ impl Runtime {
         &self,
         not_greater_equal_fact: &NotGreaterEqualFact,
         param_to_arg_map: &HashMap<String, Obj>,
-        to_inst_param_type: ParamObjType,
+        to_inst_param_type: SubstitutionMode,
         inst_lf: Option<&LineFile>,
     ) -> Result<NotGreaterEqualFact, RuntimeError> {
         Ok(NotGreaterEqualFact::new(
@@ -656,7 +656,7 @@ impl Runtime {
         &self,
         not_is_set_fact: &NotIsSetFact,
         param_to_arg_map: &HashMap<String, Obj>,
-        to_inst_param_type: ParamObjType,
+        to_inst_param_type: SubstitutionMode,
         inst_lf: Option<&LineFile>,
     ) -> Result<NotIsSetFact, RuntimeError> {
         Ok(NotIsSetFact::new(
@@ -669,7 +669,7 @@ impl Runtime {
         &self,
         not_is_nonempty_set_fact: &NotIsNonemptySetFact,
         param_to_arg_map: &HashMap<String, Obj>,
-        to_inst_param_type: ParamObjType,
+        to_inst_param_type: SubstitutionMode,
         inst_lf: Option<&LineFile>,
     ) -> Result<NotIsNonemptySetFact, RuntimeError> {
         Ok(NotIsNonemptySetFact::new(
@@ -686,7 +686,7 @@ impl Runtime {
         &self,
         not_is_finite_set_fact: &NotIsFiniteSetFact,
         param_to_arg_map: &HashMap<String, Obj>,
-        to_inst_param_type: ParamObjType,
+        to_inst_param_type: SubstitutionMode,
         inst_lf: Option<&LineFile>,
     ) -> Result<NotIsFiniteSetFact, RuntimeError> {
         Ok(NotIsFiniteSetFact::new(
@@ -703,7 +703,7 @@ impl Runtime {
         &self,
         not_in_fact: &NotInFact,
         param_to_arg_map: &HashMap<String, Obj>,
-        to_inst_param_type: ParamObjType,
+        to_inst_param_type: SubstitutionMode,
         inst_lf: Option<&LineFile>,
     ) -> Result<NotInFact, RuntimeError> {
         Ok(NotInFact::new(
@@ -717,7 +717,7 @@ impl Runtime {
         &self,
         not_is_cart_fact: &NotIsCartFact,
         param_to_arg_map: &HashMap<String, Obj>,
-        to_inst_param_type: ParamObjType,
+        to_inst_param_type: SubstitutionMode,
         inst_lf: Option<&LineFile>,
     ) -> Result<NotIsCartFact, RuntimeError> {
         Ok(NotIsCartFact::new(
@@ -730,7 +730,7 @@ impl Runtime {
         &self,
         not_is_tuple_fact: &NotIsTupleFact,
         param_to_arg_map: &HashMap<String, Obj>,
-        to_inst_param_type: ParamObjType,
+        to_inst_param_type: SubstitutionMode,
         inst_lf: Option<&LineFile>,
     ) -> Result<NotIsTupleFact, RuntimeError> {
         Ok(NotIsTupleFact::new(
@@ -743,7 +743,7 @@ impl Runtime {
         &self,
         not_subset_fact: &NotSubsetFact,
         param_to_arg_map: &HashMap<String, Obj>,
-        to_inst_param_type: ParamObjType,
+        to_inst_param_type: SubstitutionMode,
         inst_lf: Option<&LineFile>,
     ) -> Result<NotSubsetFact, RuntimeError> {
         Ok(NotSubsetFact::new(
@@ -757,7 +757,7 @@ impl Runtime {
         &self,
         not_superset_fact: &NotSupersetFact,
         param_to_arg_map: &HashMap<String, Obj>,
-        to_inst_param_type: ParamObjType,
+        to_inst_param_type: SubstitutionMode,
         inst_lf: Option<&LineFile>,
     ) -> Result<NotSupersetFact, RuntimeError> {
         Ok(NotSupersetFact::new(
@@ -824,7 +824,7 @@ impl Runtime {
         self.inst_exist_fact(
             definition_exist_fact,
             &param_to_arg_map,
-            ParamObjType::DefHeader,
+            SubstitutionMode::Exact,
             Some(line_file),
         )
     }
@@ -833,7 +833,7 @@ impl Runtime {
         &self,
         exist_fact: &ExistFactEnum,
         param_to_arg_map: &HashMap<String, Obj>,
-        to_inst_param_type: ParamObjType,
+        to_inst_param_type: SubstitutionMode,
         inst_lf: Option<&LineFile>,
     ) -> Result<ExistFactEnum, RuntimeError> {
         let rename_map = self.exist_capture_avoiding_rename_map(exist_fact, param_to_arg_map);
@@ -850,7 +850,7 @@ impl Runtime {
         &self,
         exist_fact: &ExistFactEnum,
         param_to_arg_map: &HashMap<String, Obj>,
-        to_inst_param_type: ParamObjType,
+        to_inst_param_type: SubstitutionMode,
         inst_lf: Option<&LineFile>,
     ) -> Result<ExistFactEnum, RuntimeError> {
         let mut groups = Vec::with_capacity(exist_fact.params_def_with_type().groups.len());
@@ -893,12 +893,11 @@ impl Runtime {
     ) -> HashMap<String, Obj> {
         let mut replacement_exist_names = HashSet::new();
         for replacement in param_to_arg_map.values() {
-            replacement_exist_names
-                .extend(replacement.collect_param_obj_names(ParamObjType::Exist));
+            replacement_exist_names.extend(replacement.collect_bound_param_names());
         }
 
         let mut reserved_names = replacement_exist_names.clone();
-        collect_param_obj_names_in_exist_fact(exist_fact, ParamObjType::Exist, &mut reserved_names);
+        collect_bound_param_names_in_exist_fact(exist_fact, &mut reserved_names);
 
         let mut rename_map = HashMap::new();
         for group in &exist_fact.params_def_with_type().groups {
@@ -923,7 +922,7 @@ impl Runtime {
                 insert_symbol_substitution(
                     &mut rename_map,
                     binding,
-                    ExistFreeParamObj::new(&fresh_binding).into(),
+                    BoundParamObj::new(&fresh_binding).into(),
                 );
             }
         }
@@ -945,7 +944,7 @@ impl Runtime {
             let param_type = self.inst_param_type(
                 &group.param_type,
                 &active_rename_map,
-                ParamObjType::AlphaRename,
+                SubstitutionMode::Exact,
             )?;
             let params = group
                 .params
@@ -969,7 +968,7 @@ impl Runtime {
             facts.push(self.inst_quantifier_free_fact(
                 fact,
                 rename_map,
-                ParamObjType::AlphaRename,
+                SubstitutionMode::Exact,
                 None,
             )?);
         }
@@ -989,7 +988,7 @@ impl Runtime {
         &self,
         or_fact: &OrFact,
         param_to_arg_map: &HashMap<String, Obj>,
-        to_inst_param_type: ParamObjType,
+        to_inst_param_type: SubstitutionMode,
         inst_lf: Option<&LineFile>,
     ) -> Result<OrFact, RuntimeError> {
         let mut facts = Vec::with_capacity(or_fact.facts.len());
@@ -1011,7 +1010,7 @@ impl Runtime {
         &self,
         and_fact: &AndFact,
         param_to_arg_map: &HashMap<String, Obj>,
-        to_inst_param_type: ParamObjType,
+        to_inst_param_type: SubstitutionMode,
         inst_lf: Option<&LineFile>,
     ) -> Result<AndFact, RuntimeError> {
         let mut facts = Vec::with_capacity(and_fact.facts.len());
@@ -1033,7 +1032,7 @@ impl Runtime {
         &self,
         chain_fact: &ChainFact,
         param_to_arg_map: &HashMap<String, Obj>,
-        to_inst_param_type: ParamObjType,
+        to_inst_param_type: SubstitutionMode,
         inst_lf: Option<&LineFile>,
     ) -> Result<ChainFact, RuntimeError> {
         let mut objs = Vec::with_capacity(chain_fact.objs.len());
@@ -1051,7 +1050,7 @@ impl Runtime {
         &self,
         forall_fact: &ForallFact,
         param_to_arg_map: &HashMap<String, Obj>,
-        to_inst_param_type: ParamObjType,
+        to_inst_param_type: SubstitutionMode,
         inst_lf: Option<&LineFile>,
     ) -> Result<ForallFact, RuntimeError> {
         let rename_map =
@@ -1069,7 +1068,7 @@ impl Runtime {
         &self,
         forall_fact: &ForallFact,
         param_to_arg_map: &HashMap<String, Obj>,
-        to_inst_param_type: ParamObjType,
+        to_inst_param_type: SubstitutionMode,
         inst_lf: Option<&LineFile>,
     ) -> Result<ForallFact, RuntimeError> {
         let mut groups = Vec::with_capacity(forall_fact.params_def_with_type.groups.len());
@@ -1114,7 +1113,7 @@ impl Runtime {
         &self,
         forall_fact_with_iff: &ForallFactWithIff,
         param_to_arg_map: &HashMap<String, Obj>,
-        to_inst_param_type: ParamObjType,
+        to_inst_param_type: SubstitutionMode,
         inst_lf: Option<&LineFile>,
     ) -> Result<ForallFactWithIff, RuntimeError> {
         let rename_map = self.forall_capture_avoiding_rename_map(
@@ -1135,7 +1134,7 @@ impl Runtime {
             let renamed_iff_fact = self.inst_exist_or_and_chain_atomic_fact(
                 iff_fact,
                 &rename_map,
-                ParamObjType::AlphaRename,
+                SubstitutionMode::Exact,
                 None,
             )?;
             iff_facts.push(self.inst_exist_or_and_chain_atomic_fact(
@@ -1164,17 +1163,9 @@ impl Runtime {
         }
 
         let mut reserved_names = replacement_forall_names.clone();
-        collect_param_obj_names_in_forall_fact(
-            forall_fact,
-            ParamObjType::Forall,
-            &mut reserved_names,
-        );
+        collect_bound_param_names_in_forall_fact(forall_fact, &mut reserved_names);
         for fact in extra_scope_facts {
-            collect_param_obj_names_in_exist_or_fact(
-                fact,
-                ParamObjType::Forall,
-                &mut reserved_names,
-            );
+            collect_bound_param_names_in_exist_or_fact(fact, &mut reserved_names);
         }
 
         let mut rename_map = HashMap::new();
@@ -1200,7 +1191,7 @@ impl Runtime {
                 insert_symbol_substitution(
                     &mut rename_map,
                     binding,
-                    ForallFreeParamObj::new(&fresh_binding).into(),
+                    BoundParamObj::new(&fresh_binding).into(),
                 );
             }
         }
@@ -1222,7 +1213,7 @@ impl Runtime {
             let param_type = self.inst_param_type(
                 &group.param_type,
                 &active_rename_map,
-                ParamObjType::AlphaRename,
+                SubstitutionMode::Exact,
             )?;
             let params = group
                 .params
@@ -1243,14 +1234,14 @@ impl Runtime {
 
         let mut dom_facts = Vec::with_capacity(forall_fact.dom_facts.len());
         for fact in forall_fact.dom_facts.iter() {
-            dom_facts.push(self.inst_fact(fact, rename_map, ParamObjType::AlphaRename, None)?);
+            dom_facts.push(self.inst_fact(fact, rename_map, SubstitutionMode::Exact, None)?);
         }
         let mut then_facts = Vec::with_capacity(forall_fact.then_facts.len());
         for fact in forall_fact.then_facts.iter() {
             then_facts.push(self.inst_exist_or_and_chain_atomic_fact(
                 fact,
                 rename_map,
-                ParamObjType::AlphaRename,
+                SubstitutionMode::Exact,
                 None,
             )?);
         }
@@ -1276,7 +1267,7 @@ impl Runtime {
                 insert_symbol_substitution(
                     &mut rename_map,
                     source_binding,
-                    ForallFreeParamObj::new(&target_binding).into(),
+                    BoundParamObj::new(&target_binding).into(),
                 );
                 index += 1;
             }
@@ -1298,13 +1289,12 @@ impl Runtime {
         )))
     }
 
-    pub fn collect_param_obj_names_in_exist_fact(
+    pub fn collect_bound_param_names_in_exist_fact(
         &self,
         exist_fact: &ExistFactEnum,
-        kind: ParamObjType,
         names: &mut HashSet<String>,
     ) {
-        collect_param_obj_names_in_exist_fact(exist_fact, kind, names);
+        collect_bound_param_names_in_exist_fact(exist_fact, names);
     }
 }
 
@@ -1313,7 +1303,7 @@ fn renamed_forall_param_binding(
     rename_map: &HashMap<String, Obj>,
 ) -> SymbolBinding {
     match rename_map.get(&binding.substitution_key()) {
-        Some(Obj::Atom(AtomObj::Forall(param))) => param.symbol.to_local_binding(),
+        Some(Obj::Atom(AtomObj::Bound(param))) => param.symbol.to_local_binding(),
         _ => binding.clone(),
     }
 }
@@ -1323,126 +1313,97 @@ fn renamed_exist_param_binding(
     rename_map: &HashMap<String, Obj>,
 ) -> SymbolBinding {
     match rename_map.get(&binding.substitution_key()) {
-        Some(Obj::Atom(AtomObj::Exist(param))) => param.symbol.to_local_binding(),
+        Some(Obj::Atom(AtomObj::Bound(param))) => param.symbol.to_local_binding(),
         _ => binding.clone(),
     }
 }
 
-fn collect_param_obj_names_in_forall_fact(
-    forall_fact: &ForallFact,
-    kind: ParamObjType,
-    names: &mut HashSet<String>,
-) {
-    collect_param_obj_names_in_param_def(
-        &forall_fact.params_def_with_type,
-        ParamObjType::Forall,
-        kind,
-        names,
-    );
+fn collect_bound_param_names_in_forall_fact(forall_fact: &ForallFact, names: &mut HashSet<String>) {
+    collect_bound_param_names_in_param_def(&forall_fact.params_def_with_type, names);
     for fact in forall_fact.dom_facts.iter() {
-        collect_param_obj_names_in_fact(fact, kind, names);
+        collect_bound_param_names_in_fact(fact, names);
     }
     for fact in forall_fact.then_facts.iter() {
-        collect_param_obj_names_in_exist_or_fact(fact, kind, names);
+        collect_bound_param_names_in_exist_or_fact(fact, names);
     }
 }
 
-fn collect_param_obj_names_in_fact(fact: &Fact, kind: ParamObjType, names: &mut HashSet<String>) {
+fn collect_bound_param_names_in_fact(fact: &Fact, names: &mut HashSet<String>) {
     match fact {
-        Fact::ExistFact(fact) => collect_param_obj_names_in_exist_fact(fact, kind, names),
-        Fact::ForallFact(fact) => collect_param_obj_names_in_forall_fact(fact, kind, names),
+        Fact::ExistFact(fact) => collect_bound_param_names_in_exist_fact(fact, names),
+        Fact::ForallFact(fact) => collect_bound_param_names_in_forall_fact(fact, names),
         Fact::ForallFactWithIff(fact) => {
-            collect_param_obj_names_in_forall_fact(&fact.forall_fact, kind, names);
+            collect_bound_param_names_in_forall_fact(&fact.forall_fact, names);
             for iff_fact in fact.iff_facts.iter() {
-                collect_param_obj_names_in_exist_or_fact(iff_fact, kind, names);
+                collect_bound_param_names_in_exist_or_fact(iff_fact, names);
             }
         }
-        Fact::NotForall(fact) => {
-            collect_param_obj_names_in_forall_fact(&fact.forall_fact, kind, names)
-        }
+        Fact::NotForall(fact) => collect_bound_param_names_in_forall_fact(&fact.forall_fact, names),
         Fact::AtomicFact(fact) => {
-            collect_param_obj_names_in_args(fact.get_args_from_fact_ref(), kind, names)
+            collect_bound_param_names_in_args(fact.get_args_from_fact_ref(), names)
         }
         Fact::OrFact(fact) => {
-            collect_param_obj_names_in_args(fact.get_args_from_fact_ref(), kind, names)
+            collect_bound_param_names_in_args(fact.get_args_from_fact_ref(), names)
         }
         Fact::AndFact(fact) => {
-            collect_param_obj_names_in_args(fact.get_args_from_fact_ref(), kind, names)
+            collect_bound_param_names_in_args(fact.get_args_from_fact_ref(), names)
         }
         Fact::ChainFact(fact) => {
-            collect_param_obj_names_in_args(fact.get_args_from_fact_ref(), kind, names)
+            collect_bound_param_names_in_args(fact.get_args_from_fact_ref(), names)
         }
     }
 }
 
-pub fn collect_param_obj_names_in_exist_fact(
+pub fn collect_bound_param_names_in_exist_fact(
     exist_fact: &ExistFactEnum,
-    kind: ParamObjType,
     names: &mut HashSet<String>,
 ) {
-    collect_param_obj_names_in_param_def(
-        exist_fact.params_def_with_type(),
-        ParamObjType::Exist,
-        kind,
-        names,
-    );
+    collect_bound_param_names_in_param_def(exist_fact.params_def_with_type(), names);
     for fact in exist_fact.facts().iter() {
-        collect_param_obj_names_in_args(fact.get_args_from_fact_ref(), kind, names);
+        collect_bound_param_names_in_args(fact.get_args_from_fact_ref(), names);
     }
 }
 
-fn collect_param_obj_names_in_exist_or_fact(
+fn collect_bound_param_names_in_exist_or_fact(
     fact: &ExistOrAndChainAtomicFact,
-    kind: ParamObjType,
     names: &mut HashSet<String>,
 ) {
     match fact {
         ExistOrAndChainAtomicFact::ExistFact(exist_fact) => {
-            collect_param_obj_names_in_exist_fact(exist_fact, kind, names)
+            collect_bound_param_names_in_exist_fact(exist_fact, names)
         }
         ExistOrAndChainAtomicFact::AtomicFact(fact) => {
-            collect_param_obj_names_in_args(fact.get_args_from_fact_ref(), kind, names)
+            collect_bound_param_names_in_args(fact.get_args_from_fact_ref(), names)
         }
         ExistOrAndChainAtomicFact::AndFact(fact) => {
-            collect_param_obj_names_in_args(fact.get_args_from_fact_ref(), kind, names)
+            collect_bound_param_names_in_args(fact.get_args_from_fact_ref(), names)
         }
         ExistOrAndChainAtomicFact::ChainFact(fact) => {
-            collect_param_obj_names_in_args(fact.get_args_from_fact_ref(), kind, names)
+            collect_bound_param_names_in_args(fact.get_args_from_fact_ref(), names)
         }
         ExistOrAndChainAtomicFact::OrFact(fact) => {
-            collect_param_obj_names_in_args(fact.get_args_from_fact_ref(), kind, names)
+            collect_bound_param_names_in_args(fact.get_args_from_fact_ref(), names)
         }
     }
 }
 
-fn collect_param_obj_names_in_param_def(
-    params: &ParamDefWithType,
-    binding_kind: ParamObjType,
-    target_kind: ParamObjType,
-    names: &mut HashSet<String>,
-) {
+fn collect_bound_param_names_in_param_def(params: &ParamDefWithType, names: &mut HashSet<String>) {
     for group in params.groups.iter() {
-        if binding_kind == target_kind {
-            names.extend(
-                group
-                    .params
-                    .iter()
-                    .map(|binding| binding.name().to_string()),
-            );
-        }
+        names.extend(
+            group
+                .params
+                .iter()
+                .map(|binding| binding.name().to_string()),
+        );
         if let ParamType::Obj(obj) = &group.param_type {
-            names.extend(obj.collect_param_obj_names(target_kind));
+            names.extend(obj.collect_bound_param_names());
         }
     }
 }
 
-fn collect_param_obj_names_in_args(
-    args: Vec<&Obj>,
-    kind: ParamObjType,
-    names: &mut HashSet<String>,
-) {
+fn collect_bound_param_names_in_args(args: Vec<&Obj>, names: &mut HashSet<String>) {
     for arg in args {
-        names.extend(arg.collect_param_obj_names(kind));
+        names.extend(arg.collect_bound_param_names());
     }
 }
 

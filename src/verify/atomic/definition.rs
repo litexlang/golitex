@@ -215,7 +215,7 @@ impl Runtime {
             ParamDefWithType::new(vec![bound_param.clone()]),
             vec![],
             vec![InFact::new(
-                obj_for_bound_param_in_scope(&bound_param.params[0], ParamObjType::Forall),
+                obj_for_bound_param_in_scope(&bound_param.params[0]),
                 subset_fact.right.clone(),
                 subset_fact.line_file.clone(),
             )
@@ -252,7 +252,7 @@ impl Runtime {
             ParamDefWithType::new(vec![bound_param.clone()]),
             vec![],
             vec![InFact::new(
-                obj_for_bound_param_in_scope(&bound_param.params[0], ParamObjType::Forall),
+                obj_for_bound_param_in_scope(&bound_param.params[0]),
                 superset_fact.left.clone(),
                 superset_fact.line_file.clone(),
             )
@@ -372,7 +372,7 @@ impl Runtime {
             &definition.params_def_with_type,
             &normal_atomic_fact.body,
             verify_state,
-            ParamObjType::DefHeader,
+            SubstitutionMode::Exact,
         );
         let map_param_type_error = |_| {
             RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
@@ -394,7 +394,7 @@ impl Runtime {
             let mut clause_checks = Vec::with_capacity(definition.iff_facts.len());
             for iff_fact in definition.iff_facts.iter() {
                 let instantiated_iff_fact = self
-                    .inst_fact(iff_fact, &param_to_arg_map, ParamObjType::DefHeader, None)
+                    .inst_fact(iff_fact, &param_to_arg_map, SubstitutionMode::Exact, None)
                     .map_err(|e| {
                         RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
                             Some(Fact::from(normal_atomic_fact.clone()).into_stmt()),
@@ -428,7 +428,7 @@ impl Runtime {
             .inst_fact(
                 &definition.iff_facts[0],
                 &param_to_arg_map,
-                ParamObjType::DefHeader,
+                SubstitutionMode::Exact,
                 None,
             )
             .map_err(|e| {
@@ -458,7 +458,7 @@ impl Runtime {
                 &definition.params_def_with_type,
                 &normal_atomic_fact.body,
                 verify_state,
-                ParamObjType::DefHeader,
+                SubstitutionMode::Exact,
             )
             .map_err(map_param_type_error)?;
         if args_param_types.is_unknown() {

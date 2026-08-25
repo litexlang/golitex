@@ -541,17 +541,7 @@ pub(super) fn render_obj(
     context: &StmtResultToLeanCompilerEnvironmentStack,
 ) -> Result<String, String> {
     match obj {
-        Obj::Atom(AtomObj::Forall(parameter)) => context
-            .symbol_names
-            .get(&parameter.symbol.id())
-            .cloned()
-            .ok_or_else(|| format!("unbound compiler symbol `{obj}`")),
-        Obj::Atom(AtomObj::Def(parameter)) => context
-            .symbol_names
-            .get(&parameter.symbol.id())
-            .cloned()
-            .ok_or_else(|| format!("unbound compiler symbol `{obj}`")),
-        Obj::Atom(AtomObj::Exist(parameter)) => context
+        Obj::Atom(AtomObj::Bound(parameter)) => context
             .symbol_names
             .get(&parameter.symbol.id())
             .cloned()
@@ -750,7 +740,7 @@ pub(super) fn validate_refined_set_parameter_premise(
 }
 
 pub(super) fn set_requires_heterogeneous_carrier(set: &Obj) -> bool {
-    matches!(set, Obj::Atom(AtomObj::Forall(_)))
+    matches!(set, Obj::Atom(AtomObj::Bound(_)))
 }
 
 pub(super) fn validate_unary_function_type(
@@ -2742,7 +2732,7 @@ pub(super) fn validate_forall_fact_as_subset(
     }
     let conclusion = candidate.then_facts[0].clone().to_fact();
     let (element, target_set) = membership_parts(&conclusion)?;
-    let expected_element = obj_for_bound_param_in_scope(&parameter.0, ParamObjType::Forall);
+    let expected_element = obj_for_bound_param_in_scope(&parameter.0);
     if obj_equality_key(element) != obj_equality_key(&expected_element)
         || obj_equality_key(target_set) != obj_equality_key(expected_target)
     {

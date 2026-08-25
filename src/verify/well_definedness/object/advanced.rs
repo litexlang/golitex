@@ -645,7 +645,11 @@ impl Runtime {
         let param_to_arg_map = space
             .params()
             .param_defs_and_args_to_param_to_arg_map(&args_as_obj);
-        self.inst_obj(&space.ret_set_obj(), &param_to_arg_map, space.binding())
+        self.inst_obj(
+            &space.ret_set_obj(),
+            &param_to_arg_map,
+            SubstitutionMode::Exact,
+        )
     }
 
     /// Mathematical contract: a curried return can be called again only when

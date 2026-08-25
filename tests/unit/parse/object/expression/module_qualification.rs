@@ -199,7 +199,7 @@ fn module_qualification_qualifies_bare_predicate_but_not_bound_arg() {
     };
     assert_eq!(mod_name, "Nat");
     assert_eq!(name, "some_prop");
-    let Obj::Atom(AtomObj::Forall(arg)) = &atomic_fact.body[0] else {
+    let Obj::Atom(AtomObj::Bound(arg)) = &atomic_fact.body[0] else {
         panic!("expected forall-bound argument");
     };
     assert_eq!(arg.name(), "x");

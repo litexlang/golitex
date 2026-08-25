@@ -44,7 +44,7 @@ impl Runtime {
                 let instantiated = self.inst_atomic_fact(
                     template,
                     &param_to_arg_map,
-                    ParamObjType::Forall,
+                    SubstitutionMode::Exact,
                     Some(&goal_line_file),
                 )?;
                 let result =
@@ -63,7 +63,7 @@ impl Runtime {
                 let instantiated = self.inst_quantifier_free_fact(
                     template,
                     &param_to_arg_map,
-                    ParamObjType::Forall,
+                    SubstitutionMode::Exact,
                     Some(&goal_line_file),
                 )?;
                 // The local rule has already consumed the one premise-producing builtin step.

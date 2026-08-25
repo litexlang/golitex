@@ -7,9 +7,9 @@ impl Runtime {
         tb.skip_token(HAVE)?;
         let has_fact_body = self.have_obj_stmt_has_fact_body(tb)?;
         let binding_kind = if has_fact_body {
-            ParamObjType::Exist
+            BindingScope::LocalBinder
         } else {
-            ParamObjType::Identifier
+            BindingScope::DeclaredObject
         };
         let param_defs = self.parse_have_obj_param_defs_until_header_delimiter(tb, binding_kind)?;
         if param_defs.is_empty() {
@@ -37,7 +37,7 @@ impl Runtime {
                 self.parse_quantifier_free_facts_in_body(tb)
             })();
             if !have_param_names.is_empty() {
-                self.end_parsing_scope(ParamObjType::Exist, &have_param_names);
+                self.end_parsing_scope(&have_param_names);
             }
             let facts = facts_result?;
             self.register_collected_param_names_for_def_parse(
@@ -56,13 +56,13 @@ impl Runtime {
         let register_result = self
             .register_collected_param_names_for_def_parse(&have_param_names, tb.line_file.clone());
         if register_result.is_err() && !have_param_names.is_empty() {
-            self.end_parsing_scope(ParamObjType::Identifier, &have_param_names);
+            self.end_parsing_scope(&have_param_names);
         }
         register_result?;
 
         if tb.current().map(|t| t != EQUAL).unwrap_or(true) {
             if !have_param_names.is_empty() {
-                self.end_parsing_scope(ParamObjType::Identifier, &have_param_names);
+                self.end_parsing_scope(&have_param_names);
             }
             self.register_local_existing_identifier_bindings_for_parse(
                 &param_defs.collect_param_bindings(),
@@ -79,7 +79,7 @@ impl Runtime {
                 }
                 Ok(objs_equal_to)
             })();
-            self.end_parsing_scope(ParamObjType::Identifier, &have_param_names);
+            self.end_parsing_scope(&have_param_names);
             let objs_equal_to = objs_result?;
             self.register_local_existing_identifier_bindings_for_parse(
                 &param_defs.collect_param_bindings(),
@@ -94,7 +94,7 @@ impl Runtime {
         self.run_in_local_parsing_time_name_scope(|this| {
             let param_defs = this.parse_have_obj_param_defs_until_header_delimiter(
                 &mut dry_tb,
-                ParamObjType::Identifier,
+                BindingScope::DeclaredObject,
             )?;
             if param_defs.is_empty() {
                 return Err(RuntimeError::from(ParseRuntimeError(
@@ -111,7 +111,7 @@ impl Runtime {
     fn parse_have_obj_param_defs_until_header_delimiter(
         &mut self,
         tb: &mut TokenBlock,
-        binding_kind: ParamObjType,
+        binding_scope: BindingScope,
     ) -> Result<Vec<ParamGroupWithParamType>, RuntimeError> {
         let mut param_defs: Vec<ParamGroupWithParamType> = vec![];
         loop {
@@ -120,7 +120,8 @@ impl Runtime {
                 Err(_) => break,
                 Ok(_) => {}
             }
-            param_defs.push(self.parse_param_def_with_param_type_and_skip_comma(tb, binding_kind)?);
+            param_defs
+                .push(self.parse_param_def_with_param_type_and_skip_comma(tb, binding_scope)?);
         }
         Ok(param_defs)
     }
@@ -138,7 +139,7 @@ impl Runtime {
 
         let index_names = vec![index_name.clone()];
         let ((lhs, value), index_bindings) = self.parse_in_local_free_param_scope_with_bindings(
-            ParamObjType::TupleIndex,
+            BindingScope::LocalBinder,
             &index_names,
             tb.line_file.clone(),
             |this| {
@@ -185,7 +186,7 @@ impl Runtime {
 
         let index_names = vec![index_name.clone()];
         let ((lhs, value), index_bindings) = self.parse_in_local_free_param_scope_with_bindings(
-            ParamObjType::CartIndex,
+            BindingScope::LocalBinder,
             &index_names,
             tb.line_file.clone(),
             |this| {
@@ -241,7 +242,7 @@ impl Runtime {
 
         let index_names = vec![index_name.clone()];
         let ((lhs, value), index_bindings) = self.parse_in_local_free_param_scope_with_bindings(
-            ParamObjType::FnSet,
+            BindingScope::LocalBinder,
             &index_names,
             tb.line_file.clone(),
             |this| {
@@ -302,7 +303,7 @@ impl Runtime {
 
         let index_names = vec![index_name.clone()];
         let ((lhs, value), index_bindings) = self.parse_in_local_free_param_scope_with_bindings(
-            ParamObjType::FnSet,
+            BindingScope::LocalBinder,
             &index_names,
             tb.line_file.clone(),
             |this| {
@@ -365,7 +366,7 @@ impl Runtime {
 
         let index_names = vec![row_index_name.clone(), col_index_name.clone()];
         let ((lhs, value), index_bindings) = self.parse_in_local_free_param_scope_with_bindings(
-            ParamObjType::FnSet,
+            BindingScope::LocalBinder,
             &index_names,
             tb.line_file.clone(),
             |this| {
@@ -568,15 +569,15 @@ fn is_identifier_named(obj: &Obj, name: &str) -> bool {
 }
 
 fn is_tuple_index_named(obj: &Obj, name: &str) -> bool {
-    matches!(obj, Obj::Atom(AtomObj::TupleIndex(index)) if index.name() == name)
+    matches!(obj, Obj::Atom(AtomObj::Bound(index)) if index.name() == name)
 }
 
 fn is_cart_index_named(obj: &Obj, name: &str) -> bool {
-    matches!(obj, Obj::Atom(AtomObj::CartIndex(index)) if index.name() == name)
+    matches!(obj, Obj::Atom(AtomObj::Bound(index)) if index.name() == name)
 }
 
 fn is_fn_set_index_named(obj: &Obj, name: &str) -> bool {
-    matches!(obj, Obj::Atom(AtomObj::FnSet(index)) if index.name() == name)
+    matches!(obj, Obj::Atom(AtomObj::Bound(index)) if index.name() == name)
 }
 
 fn have_tuple_or_cart_parse_error(msg: &str, line_file: LineFile) -> RuntimeError {

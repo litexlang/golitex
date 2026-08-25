@@ -42,7 +42,7 @@ impl Runtime {
         let verify_state = ProofSearchState::initial();
         let binder = self.verify_fact_binder_result(
             &def_template_stmt.template_arg_def,
-            ParamObjType::DefHeader,
+            BindingScope::LocalBinder,
             &verify_state,
         )?;
 
@@ -125,7 +125,7 @@ impl Runtime {
         let instantiated_types = self.inst_param_def_with_type_one_by_one(
             &def.template_arg_def,
             &template_obj.args,
-            ParamObjType::DefHeader,
+            SubstitutionMode::Exact,
         )?;
         let flat_types = def
             .template_arg_def
@@ -167,7 +167,7 @@ impl Runtime {
             let instantiated_dom_fact = self.inst_quantifier_free_fact(
                 dom_fact,
                 &param_to_arg_map,
-                ParamObjType::DefHeader,
+                SubstitutionMode::Exact,
                 None,
             )?;
             let verify_result =
@@ -353,7 +353,7 @@ impl Runtime {
                     objs_equal_to.push(self.inst_obj(
                         obj,
                         param_to_arg_map,
-                        ParamObjType::DefHeader,
+                        SubstitutionMode::Exact,
                     )?);
                 }
                 Ok(HaveObjEqualStmt::new(param_def, objs_equal_to, line_file.clone()).into())
@@ -367,7 +367,7 @@ impl Runtime {
                 let exist_fact = self.inst_exist_fact(
                     &ExistFactEnum::ExistFact(body),
                     param_to_arg_map,
-                    ParamObjType::DefHeader,
+                    SubstitutionMode::Exact,
                     Some(line_file),
                 )?;
                 Ok(ObtainObjFromExistFact::new(
@@ -404,7 +404,7 @@ impl Runtime {
                     facts.push(self.inst_fact(
                         fact,
                         &body_param_to_arg_map,
-                        ParamObjType::DefHeader,
+                        SubstitutionMode::Exact,
                         Some(line_file.clone()),
                     )?);
                 }
@@ -414,7 +414,7 @@ impl Runtime {
                 let exist_fact = self.inst_exist_fact(
                     &s.fact,
                     param_to_arg_map,
-                    ParamObjType::DefHeader,
+                    SubstitutionMode::Exact,
                     Some(line_file),
                 )?;
                 Ok(ObtainObjFromExistFact::new(
@@ -428,7 +428,7 @@ impl Runtime {
                 let fact = self.inst_normal_atomic_fact(
                     &s.fact,
                     param_to_arg_map,
-                    ParamObjType::DefHeader,
+                    SubstitutionMode::Exact,
                     Some(line_file),
                 )?;
                 Ok(ObtainObjFromAtomicFact::new(
@@ -441,7 +441,7 @@ impl Runtime {
             TemplateDefEnum::ObtainObjFromThm(s) => {
                 let mut args = Vec::with_capacity(s.args.len());
                 for arg in s.args.iter() {
-                    args.push(self.inst_obj(arg, param_to_arg_map, ParamObjType::DefHeader)?);
+                    args.push(self.inst_obj(arg, param_to_arg_map, SubstitutionMode::Exact)?);
                 }
                 Ok(ObtainObjFromThm::new(
                     vec![instance_binding.clone()],
@@ -455,7 +455,7 @@ impl Runtime {
                 let obj = self.inst_obj(
                     &s.equal_to_anonymous_fn.clone().into(),
                     param_to_arg_map,
-                    ParamObjType::DefHeader,
+                    SubstitutionMode::Exact,
                 )?;
                 let Obj::AnonymousFn(anonymous_fn) = obj else {
                     return Err(RuntimeError::from(InstantiateRuntimeError(
@@ -478,13 +478,13 @@ impl Runtime {
                     cases.push(self.inst_and_chain_atomic_fact(
                         c,
                         &body_map,
-                        ParamObjType::DefHeader,
+                        SubstitutionMode::Exact,
                         Some(line_file),
                     )?);
                 }
                 let mut equal_tos = Vec::with_capacity(s.equal_tos.len());
                 for obj in s.equal_tos.iter() {
-                    equal_tos.push(self.inst_obj(obj, &body_map, ParamObjType::DefHeader)?);
+                    equal_tos.push(self.inst_obj(obj, &body_map, SubstitutionMode::Exact)?);
                 }
                 Ok(HaveFnEqualCaseByCaseStmt::new(
                     instance_binding.clone(),
@@ -504,9 +504,9 @@ impl Runtime {
                     Identifier::new_bound(instance_name.to_string(), instance_binding.as_ref())
                         .into(),
                 );
-                let measure = self.inst_obj(&s.measure, &body_map, ParamObjType::DefHeader)?;
+                let measure = self.inst_obj(&s.measure, &body_map, SubstitutionMode::Exact)?;
                 let lower_bound =
-                    self.inst_obj(&s.lower_bound, &body_map, ParamObjType::DefHeader)?;
+                    self.inst_obj(&s.lower_bound, &body_map, SubstitutionMode::Exact)?;
                 let mut cases = Vec::with_capacity(s.cases.len());
                 for c in s.cases.iter() {
                     cases.push(self.inst_have_fn_by_induc_case(c, &body_map, line_file)?);
@@ -525,7 +525,7 @@ impl Runtime {
                 let forall = self.inst_forall_fact(
                     &s.forall,
                     param_to_arg_map,
-                    ParamObjType::DefHeader,
+                    SubstitutionMode::Exact,
                     Some(line_file),
                 )?;
                 let mut proof_param_to_arg_map = param_to_arg_map.clone();
@@ -539,7 +539,7 @@ impl Runtime {
                     insert_symbol_substitution(
                         &mut proof_param_to_arg_map,
                         source_binding,
-                        obj_for_bound_param_in_scope(instantiated_binding, ParamObjType::Forall),
+                        obj_for_bound_param_in_scope(instantiated_binding),
                     );
                 }
                 let prove_process = self.inst_template_proof_process(
@@ -562,11 +562,11 @@ impl Runtime {
                 insert_symbol_substitution(
                     &mut body_map,
                     &s.index_binding,
-                    obj_for_bound_param_in_scope(&index_binding, ParamObjType::TupleIndex),
+                    obj_for_bound_param_in_scope(&index_binding),
                 );
                 let dimension =
-                    self.inst_obj(&s.dimension, param_to_arg_map, ParamObjType::DefHeader)?;
-                let value = self.inst_obj(&s.value, &body_map, ParamObjType::TupleIndex)?;
+                    self.inst_obj(&s.dimension, param_to_arg_map, SubstitutionMode::Exact)?;
+                let value = self.inst_obj(&s.value, &body_map, SubstitutionMode::Exact)?;
                 Ok(HaveTupleStmt::new(
                     instance_binding.clone(),
                     index_binding,
@@ -583,11 +583,11 @@ impl Runtime {
                 insert_symbol_substitution(
                     &mut body_map,
                     &s.index_binding,
-                    obj_for_bound_param_in_scope(&index_binding, ParamObjType::CartIndex),
+                    obj_for_bound_param_in_scope(&index_binding),
                 );
                 let dimension =
-                    self.inst_obj(&s.dimension, param_to_arg_map, ParamObjType::DefHeader)?;
-                let value = self.inst_obj(&s.value, &body_map, ParamObjType::CartIndex)?;
+                    self.inst_obj(&s.dimension, param_to_arg_map, SubstitutionMode::Exact)?;
+                let value = self.inst_obj(&s.value, &body_map, SubstitutionMode::Exact)?;
                 Ok(HaveCartStmt::new(
                     instance_binding.clone(),
                     index_binding,
@@ -604,11 +604,11 @@ impl Runtime {
                 insert_symbol_substitution(
                     &mut body_map,
                     &s.index_binding,
-                    obj_for_bound_param_in_scope(&index_binding, ParamObjType::FnSet),
+                    obj_for_bound_param_in_scope(&index_binding),
                 );
                 let set =
-                    self.inst_obj(&s.seq_set.set, param_to_arg_map, ParamObjType::DefHeader)?;
-                let value = self.inst_obj(&s.value, &body_map, ParamObjType::FnSet)?;
+                    self.inst_obj(&s.seq_set.set, param_to_arg_map, SubstitutionMode::Exact)?;
+                let value = self.inst_obj(&s.value, &body_map, SubstitutionMode::Exact)?;
                 Ok(HaveSeqStmt::new(
                     instance_binding.clone(),
                     SeqSet::new(set),
@@ -625,20 +625,20 @@ impl Runtime {
                 insert_symbol_substitution(
                     &mut body_map,
                     &s.index_binding,
-                    obj_for_bound_param_in_scope(&index_binding, ParamObjType::FnSet),
+                    obj_for_bound_param_in_scope(&index_binding),
                 );
                 let set = self.inst_obj(
                     &s.finite_seq_set.set,
                     param_to_arg_map,
-                    ParamObjType::DefHeader,
+                    SubstitutionMode::Exact,
                 )?;
                 let n = self.inst_obj(
                     &s.finite_seq_set.n,
                     param_to_arg_map,
-                    ParamObjType::DefHeader,
+                    SubstitutionMode::Exact,
                 )?;
-                let bound = self.inst_obj(&s.bound, param_to_arg_map, ParamObjType::DefHeader)?;
-                let value = self.inst_obj(&s.value, &body_map, ParamObjType::FnSet)?;
+                let bound = self.inst_obj(&s.bound, param_to_arg_map, SubstitutionMode::Exact)?;
+                let value = self.inst_obj(&s.value, &body_map, SubstitutionMode::Exact)?;
                 Ok(HaveFiniteSeqStmt::new(
                     instance_binding.clone(),
                     FiniteSeqSet::new(set, n),
@@ -658,30 +658,30 @@ impl Runtime {
                 insert_symbol_substitution(
                     &mut body_map,
                     &s.row_index_binding,
-                    obj_for_bound_param_in_scope(&row_index_binding, ParamObjType::FnSet),
+                    obj_for_bound_param_in_scope(&row_index_binding),
                 );
                 insert_symbol_substitution(
                     &mut body_map,
                     &s.col_index_binding,
-                    obj_for_bound_param_in_scope(&col_index_binding, ParamObjType::FnSet),
+                    obj_for_bound_param_in_scope(&col_index_binding),
                 );
                 let set =
-                    self.inst_obj(&s.matrix_set.set, param_to_arg_map, ParamObjType::DefHeader)?;
+                    self.inst_obj(&s.matrix_set.set, param_to_arg_map, SubstitutionMode::Exact)?;
                 let row_len = self.inst_obj(
                     &s.matrix_set.row_len,
                     param_to_arg_map,
-                    ParamObjType::DefHeader,
+                    SubstitutionMode::Exact,
                 )?;
                 let col_len = self.inst_obj(
                     &s.matrix_set.col_len,
                     param_to_arg_map,
-                    ParamObjType::DefHeader,
+                    SubstitutionMode::Exact,
                 )?;
                 let row_bound =
-                    self.inst_obj(&s.row_bound, param_to_arg_map, ParamObjType::DefHeader)?;
+                    self.inst_obj(&s.row_bound, param_to_arg_map, SubstitutionMode::Exact)?;
                 let col_bound =
-                    self.inst_obj(&s.col_bound, param_to_arg_map, ParamObjType::DefHeader)?;
-                let value = self.inst_obj(&s.value, &body_map, ParamObjType::FnSet)?;
+                    self.inst_obj(&s.col_bound, param_to_arg_map, SubstitutionMode::Exact)?;
+                let value = self.inst_obj(&s.value, &body_map, SubstitutionMode::Exact)?;
                 Ok(HaveMatrixStmt::new(
                     instance_binding.clone(),
                     MatrixSet::new(set, row_len, col_len),
@@ -721,7 +721,7 @@ impl Runtime {
                 .inst_fact(
                     fact,
                     param_to_arg_map,
-                    ParamObjType::DefHeader,
+                    SubstitutionMode::Exact,
                     Some(line_file.clone()),
                 )?
                 .into()),
@@ -731,7 +731,7 @@ impl Runtime {
                     facts.push(self.inst_fact(
                         fact,
                         param_to_arg_map,
-                        ParamObjType::DefHeader,
+                        SubstitutionMode::Exact,
                         Some(line_file.clone()),
                     )?);
                 }
@@ -741,7 +741,7 @@ impl Runtime {
                 let exist_fact = self.inst_exist_fact(
                     &s.fact,
                     param_to_arg_map,
-                    ParamObjType::DefHeader,
+                    SubstitutionMode::Exact,
                     Some(line_file),
                 )?;
                 Ok(
@@ -753,7 +753,7 @@ impl Runtime {
                 let fact = self.inst_normal_atomic_fact(
                     &s.fact,
                     param_to_arg_map,
-                    ParamObjType::DefHeader,
+                    SubstitutionMode::Exact,
                     Some(line_file),
                 )?;
                 Ok(
@@ -764,7 +764,7 @@ impl Runtime {
             Stmt::DefObjStmt(DefObjStmt::ObtainObjFromThm(s)) => {
                 let mut args = Vec::with_capacity(s.args.len());
                 for arg in s.args.iter() {
-                    args.push(self.inst_obj(arg, param_to_arg_map, ParamObjType::DefHeader)?);
+                    args.push(self.inst_obj(arg, param_to_arg_map, SubstitutionMode::Exact)?);
                 }
                 Ok(ObtainObjFromThm::new(
                     s.equal_tos.clone(),
@@ -782,7 +782,7 @@ impl Runtime {
                         self.inst_param_type(
                             &group.param_type,
                             param_to_arg_map,
-                            ParamObjType::DefHeader,
+                            SubstitutionMode::Exact,
                         )?,
                     ));
                 }
@@ -791,7 +791,7 @@ impl Runtime {
                     objs_equal_to.push(self.inst_obj(
                         obj,
                         param_to_arg_map,
-                        ParamObjType::DefHeader,
+                        SubstitutionMode::Exact,
                     )?);
                 }
                 Ok(HaveObjEqualStmt::new(
@@ -809,13 +809,13 @@ impl Runtime {
                     cases.push(self.inst_and_chain_atomic_fact(
                         case,
                         &body_map,
-                        ParamObjType::DefHeader,
+                        SubstitutionMode::Exact,
                         Some(line_file),
                     )?);
                 }
                 let mut equal_tos = Vec::with_capacity(s.equal_tos.len());
                 for equal_to in s.equal_tos.iter() {
-                    equal_tos.push(self.inst_obj(equal_to, &body_map, ParamObjType::DefHeader)?);
+                    equal_tos.push(self.inst_obj(equal_to, &body_map, SubstitutionMode::Exact)?);
                 }
                 Ok(HaveFnEqualCaseByCaseStmt::new(
                     s.symbol_binding.clone(),
@@ -830,7 +830,7 @@ impl Runtime {
                 let obj = self.inst_obj(
                     &s.equal_to_anonymous_fn.clone().into(),
                     param_to_arg_map,
-                    ParamObjType::DefHeader,
+                    SubstitutionMode::Exact,
                 )?;
                 let Obj::AnonymousFn(anonymous_fn) = obj else {
                     return Err(RuntimeError::from(InstantiateRuntimeError(
@@ -851,13 +851,13 @@ impl Runtime {
                     equal_tos.push(self.inst_obj(
                         obj,
                         param_to_arg_map,
-                        ParamObjType::DefHeader,
+                        SubstitutionMode::Exact,
                     )?);
                 }
                 let exist_fact = self.inst_exist_fact(
                     &s.exist_fact_in_witness,
                     param_to_arg_map,
-                    ParamObjType::DefHeader,
+                    SubstitutionMode::Exact,
                     Some(line_file),
                 )?;
                 let proof =
@@ -869,7 +869,7 @@ impl Runtime {
                 let atomic = self.inst_atomic_fact(
                     &atomic,
                     param_to_arg_map,
-                    ParamObjType::DefHeader,
+                    SubstitutionMode::Exact,
                     Some(line_file),
                 )?;
                 let AtomicFact::NormalAtomicFact(atomic_fact) = atomic else {
@@ -885,7 +885,7 @@ impl Runtime {
                     witnesses.push(self.inst_obj(
                         witness,
                         param_to_arg_map,
-                        ParamObjType::DefHeader,
+                        SubstitutionMode::Exact,
                     )?);
                 }
                 let proof =
@@ -893,8 +893,8 @@ impl Runtime {
                 Ok(WitnessAtomicFact::new(atomic_fact, witnesses, proof, line_file.clone()).into())
             }
             Stmt::Witness(WitnessStmt::WitnessNonemptySet(s)) => {
-                let obj = self.inst_obj(&s.obj, param_to_arg_map, ParamObjType::DefHeader)?;
-                let set = self.inst_obj(&s.set, param_to_arg_map, ParamObjType::DefHeader)?;
+                let obj = self.inst_obj(&s.obj, param_to_arg_map, SubstitutionMode::Exact)?;
+                let set = self.inst_obj(&s.set, param_to_arg_map, SubstitutionMode::Exact)?;
                 let proof =
                     self.inst_template_proof_process(&s.proof, param_to_arg_map, line_file)?;
                 Ok(WitnessNonemptySet::new(obj, set, proof, line_file.clone()).into())
@@ -903,7 +903,7 @@ impl Runtime {
                 let fact = self.inst_fact(
                     &s.fact,
                     param_to_arg_map,
-                    ParamObjType::DefHeader,
+                    SubstitutionMode::Exact,
                     Some(line_file.clone()),
                 )?;
                 let proof =
@@ -914,7 +914,7 @@ impl Runtime {
                 let fact = self.inst_fact(
                     &s.fact,
                     param_to_arg_map,
-                    ParamObjType::DefHeader,
+                    SubstitutionMode::Exact,
                     Some(line_file.clone()),
                 )?;
                 let proof =
@@ -934,7 +934,7 @@ impl Runtime {
             Stmt::By(ByStmt::ByThmStmt(s)) => {
                 let mut args = Vec::with_capacity(s.args.len());
                 for arg in s.args.iter() {
-                    args.push(self.inst_obj(arg, param_to_arg_map, ParamObjType::DefHeader)?);
+                    args.push(self.inst_obj(arg, param_to_arg_map, SubstitutionMode::Exact)?);
                 }
                 let selected_facts = if let Some(facts) = s.selected_facts.as_ref() {
                     let mut instantiated = Vec::with_capacity(facts.len());
@@ -942,7 +942,7 @@ impl Runtime {
                         instantiated.push(self.inst_fact(
                             fact,
                             param_to_arg_map,
-                            ParamObjType::DefHeader,
+                            SubstitutionMode::Exact,
                             Some(line_file.clone()),
                         )?);
                     }
@@ -956,7 +956,7 @@ impl Runtime {
                 let fact = self.inst_atomic_fact(
                     &s.fact,
                     param_to_arg_map,
-                    ParamObjType::DefHeader,
+                    SubstitutionMode::Exact,
                     Some(line_file),
                 )?;
                 Ok(ByDefStmt::new(fact, line_file.clone()).into())
@@ -967,7 +967,7 @@ impl Runtime {
                     cases.push(self.inst_and_chain_atomic_fact(
                         case,
                         param_to_arg_map,
-                        ParamObjType::DefHeader,
+                        SubstitutionMode::Exact,
                         Some(line_file),
                     )?);
                 }
@@ -976,7 +976,7 @@ impl Runtime {
                     then_facts.push(self.inst_fact(
                         fact,
                         param_to_arg_map,
-                        ParamObjType::DefHeader,
+                        SubstitutionMode::Exact,
                         Some(line_file.clone()),
                     )?);
                 }
@@ -997,7 +997,7 @@ impl Runtime {
                                 self.inst_atomic_fact(
                                     fact,
                                     param_to_arg_map,
-                                    ParamObjType::DefHeader,
+                                    SubstitutionMode::Exact,
                                     Some(line_file),
                                 )
                             })
@@ -1014,8 +1014,8 @@ impl Runtime {
                 .into())
             }
             Stmt::By(ByStmt::ByExtensionStmt(s)) => {
-                let left = self.inst_obj(&s.left, param_to_arg_map, ParamObjType::DefHeader)?;
-                let right = self.inst_obj(&s.right, param_to_arg_map, ParamObjType::DefHeader)?;
+                let left = self.inst_obj(&s.left, param_to_arg_map, SubstitutionMode::Exact)?;
+                let right = self.inst_obj(&s.right, param_to_arg_map, SubstitutionMode::Exact)?;
                 let proof =
                     self.inst_template_proof_process(&s.proof, param_to_arg_map, line_file)?;
                 Ok(ByExtensionStmt::new(left, right, proof, line_file.clone()).into())
@@ -1048,7 +1048,7 @@ impl Runtime {
             if !params.is_empty() {
                 groups.push(ParamGroupWithParamType::new(
                     params,
-                    self.inst_param_type(&g.param_type, param_to_arg_map, ParamObjType::DefHeader)?,
+                    self.inst_param_type(&g.param_type, param_to_arg_map, SubstitutionMode::Exact)?,
                 ));
             }
         }
@@ -1068,13 +1068,13 @@ impl Runtime {
                     .iter()
                     .map(|binding| binding.name().to_string())
                     .collect(),
-                self.inst_obj(g.set_obj(), &body_map, ParamObjType::DefHeader)?,
+                self.inst_obj(g.set_obj(), &body_map, SubstitutionMode::Exact)?,
             )?;
             for (source_binding, fresh_binding) in g.params.iter().zip(fresh_group.params.iter()) {
                 insert_symbol_substitution(
                     &mut body_map,
                     source_binding,
-                    obj_for_bound_param_in_scope(fresh_binding, ParamObjType::FnSet),
+                    obj_for_bound_param_in_scope(fresh_binding),
                 );
             }
             params_def_with_set.push(fresh_group);
@@ -1084,11 +1084,11 @@ impl Runtime {
             dom_facts.push(self.inst_quantifier_free_fact(
                 fact,
                 &body_map,
-                ParamObjType::DefHeader,
+                SubstitutionMode::Exact,
                 None,
             )?);
         }
-        let ret_set = self.inst_obj(&clause.ret_set, &body_map, ParamObjType::DefHeader)?;
+        let ret_set = self.inst_obj(&clause.ret_set, &body_map, SubstitutionMode::Exact)?;
         Ok((
             FnSetClause::new(params_def_with_set, dom_facts, ret_set)?,
             body_map,
@@ -1104,13 +1104,13 @@ impl Runtime {
         let case_fact = self.inst_and_chain_atomic_fact(
             &c.case_fact,
             param_to_arg_map,
-            ParamObjType::DefHeader,
+            SubstitutionMode::Exact,
             Some(line_file),
         )?;
         let body =
             match &c.body {
                 HaveFnByInducCaseBody::EqualTo(obj) => HaveFnByInducCaseBody::EqualTo(
-                    self.inst_obj(obj, param_to_arg_map, ParamObjType::DefHeader)?,
+                    self.inst_obj(obj, param_to_arg_map, SubstitutionMode::Exact)?,
                 ),
                 HaveFnByInducCaseBody::NestedCases(cases) => {
                     let mut new_cases = Vec::with_capacity(cases.len());

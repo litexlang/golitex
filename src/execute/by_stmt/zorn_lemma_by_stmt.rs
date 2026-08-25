@@ -218,12 +218,12 @@ fn validate_zorn_upper_bound_prop(
         vec![runtime.generate_internal_binder_name()],
         ParamType::Obj(PowerSet::new(stmt.set.clone()).into()),
     )?;
-    let chain = obj_for_bound_param_in_scope(&chain_group.params[0], ParamObjType::Forall);
+    let chain = obj_for_bound_param_in_scope(&chain_group.params[0]);
     let upper_group = runtime.fresh_param_group_with_type(
         vec![runtime.generate_internal_binder_name()],
         ParamType::Obj(stmt.set.clone()),
     )?;
-    let upper = obj_for_bound_param_in_scope(&upper_group.params[0], ParamObjType::Forall);
+    let upper = obj_for_bound_param_in_scope(&upper_group.params[0]);
     let args = vec![chain.clone(), upper.clone()];
     if !zorn_prop_header_types_match(
         runtime,
@@ -291,7 +291,7 @@ fn validate_zorn_maximal_prop(
         vec![runtime.generate_internal_binder_name()],
         ParamType::Obj(stmt.set.clone()),
     )?;
-    let maximal = obj_for_bound_param_in_scope(&maximal_group.params[0], ParamObjType::Forall);
+    let maximal = obj_for_bound_param_in_scope(&maximal_group.params[0]);
     let args = vec![maximal.clone()];
     if !zorn_prop_header_types_match(runtime, &definition, &args, &[stmt.set.clone()])? {
         return Err(zorn_interface_error(
@@ -333,7 +333,7 @@ fn zorn_prop_header_types_match(
     let instantiated_types = runtime.inst_param_def_with_type_one_by_one(
         &definition.params_def_with_type,
         &args.to_vec(),
-        ParamObjType::DefHeader,
+        SubstitutionMode::Exact,
     )?;
     if instantiated_types.len() != expected_sets.len() {
         return Ok(false);
@@ -362,7 +362,7 @@ fn zorn_prop_has_exact_forall_definition(
     let actual = runtime.inst_forall_fact_without_capture_preparation(
         actual,
         &param_to_arg_map,
-        ParamObjType::DefHeader,
+        SubstitutionMode::Exact,
         None,
     )?;
     Ok(runtime.alpha_normalized_forall_cache_key(&actual)?
@@ -418,7 +418,7 @@ fn zorn_reflexive_fact(
         vec![runtime.generate_internal_binder_name()],
         ParamType::Obj(set),
     )?;
-    let x = obj_for_bound_param_in_scope(&x_group.params[0], ParamObjType::Forall);
+    let x = obj_for_bound_param_in_scope(&x_group.params[0]);
     Ok(ForallFact::new_canonical_forall(
         ParamDefWithType::new(vec![x_group]),
         vec![],
@@ -442,9 +442,9 @@ fn zorn_transitive_fact(
         ],
         ParamType::Obj(set),
     )?;
-    let x = obj_for_bound_param_in_scope(&params.params[0], ParamObjType::Forall);
-    let y = obj_for_bound_param_in_scope(&params.params[1], ParamObjType::Forall);
-    let z = obj_for_bound_param_in_scope(&params.params[2], ParamObjType::Forall);
+    let x = obj_for_bound_param_in_scope(&params.params[0]);
+    let y = obj_for_bound_param_in_scope(&params.params[1]);
+    let z = obj_for_bound_param_in_scope(&params.params[2]);
     Ok(ForallFact::new_canonical_forall(
         ParamDefWithType::new(vec![params]),
         vec![
@@ -475,8 +475,8 @@ fn zorn_antisymmetric_fact(
         ],
         ParamType::Obj(set),
     )?;
-    let x = obj_for_bound_param_in_scope(&params.params[0], ParamObjType::Forall);
-    let y = obj_for_bound_param_in_scope(&params.params[1], ParamObjType::Forall);
+    let x = obj_for_bound_param_in_scope(&params.params[0]);
+    let y = obj_for_bound_param_in_scope(&params.params[1]);
     Ok(ForallFact::new_canonical_forall(
         ParamDefWithType::new(vec![params]),
         vec![
@@ -505,7 +505,7 @@ fn zorn_chain_upper_bound_fact(
         vec![runtime.generate_internal_binder_name()],
         ParamType::Obj(PowerSet::new(set.clone()).into()),
     )?;
-    let c = obj_for_bound_param_in_scope(&c_group.params[0], ParamObjType::Forall);
+    let c = obj_for_bound_param_in_scope(&c_group.params[0]);
     let chain_total_fact = zorn_chain_total_fact(runtime, c.clone(), prop_name, line_file.clone())?;
     let upper_bound_fact =
         zorn_upper_bound_exist_fact(runtime, set, c, upper_bound_prop_name, line_file.clone())?;
@@ -532,8 +532,8 @@ fn zorn_chain_total_fact(
         ],
         ParamType::Obj(chain),
     )?;
-    let x = obj_for_bound_param_in_scope(&params.params[0], ParamObjType::Forall);
-    let y = obj_for_bound_param_in_scope(&params.params[1], ParamObjType::Forall);
+    let x = obj_for_bound_param_in_scope(&params.params[0]);
+    let y = obj_for_bound_param_in_scope(&params.params[1]);
     let left: AndChainAtomicFact = normal_prop_fact(
         prop_name.clone(),
         vec![x.clone(), y.clone()],
@@ -563,7 +563,7 @@ fn zorn_upper_bound_exist_fact(
         vec![runtime.generate_internal_binder_name()],
         ParamType::Obj(set),
     )?;
-    let u = obj_for_bound_param_in_scope(&u_group.params[0], ParamObjType::Exist);
+    let u = obj_for_bound_param_in_scope(&u_group.params[0]);
     let named_upper_bound =
         normal_prop_fact(upper_bound_prop_name, vec![chain, u], line_file.clone());
     let body = ExistentialSpec::new(
@@ -585,7 +585,7 @@ fn zorn_upper_bound_forall_fact(
         vec![runtime.generate_internal_binder_name()],
         ParamType::Obj(chain),
     )?;
-    let x = obj_for_bound_param_in_scope(&x_group.params[0], ParamObjType::Forall);
+    let x = obj_for_bound_param_in_scope(&x_group.params[0]);
     ForallFact::new_canonical_forall(
         ParamDefWithType::new(vec![x_group]),
         vec![],
@@ -604,7 +604,7 @@ fn zorn_lemma_maximal_fact(
         vec![runtime.generate_internal_binder_name()],
         ParamType::Obj(set),
     )?;
-    let m = obj_for_bound_param_in_scope(&m_group.params[0], ParamObjType::Exist);
+    let m = obj_for_bound_param_in_scope(&m_group.params[0]);
     let named_maximal = normal_prop_fact(maximal_prop_name, vec![m], line_file.clone());
     let body = ExistentialSpec::new(
         ParamDefWithType::new(vec![m_group]),
@@ -625,7 +625,7 @@ fn zorn_maximal_forall_fact(
         vec![runtime.generate_internal_binder_name()],
         ParamType::Obj(set),
     )?;
-    let x = obj_for_bound_param_in_scope(&x_group.params[0], ParamObjType::Forall);
+    let x = obj_for_bound_param_in_scope(&x_group.params[0]);
     ForallFact::new_canonical_forall(
         ParamDefWithType::new(vec![x_group]),
         vec![normal_prop_fact(

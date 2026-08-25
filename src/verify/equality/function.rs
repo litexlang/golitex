@@ -35,7 +35,8 @@ impl Runtime {
             self.fresh_param_group_with_type(vec![x_name], ParamType::Obj(f.set.clone()))?;
         // Use the same `Obj` shape as `define_params_with_type(..., Forall, ...)` and as parsed
         // `forall` parameters, so `verify_equal` can match `f(x) = g(x)` from stored `forall` facts.
-        let x: Obj = param_binding_element_obj_for_store(&x_group.params[0], ParamObjType::Forall);
+        let x: Obj =
+            param_binding_element_obj_for_store(&x_group.params[0], BindingScope::LocalBinder);
         let Some(left_ap) = fn_obj_apply_one_arg(&f.left, x.clone()) else {
             return Ok(UnknownGenericStmtResult::new().into());
         };

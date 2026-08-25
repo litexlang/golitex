@@ -39,7 +39,7 @@ impl Runtime {
         self.define_params_with_type(
             &def_prop_stmt.params_def_with_type,
             false,
-            ParamObjType::DefHeader,
+            BindingScope::LocalBinder,
         )
         .map_err(|e| exec_stmt_error_with_stmt_and_cause(def_prop_stmt.clone().into(), e))?;
 

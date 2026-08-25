@@ -1103,11 +1103,7 @@ impl StmtResultToLeanCompiler {
         }
         if verification.parameter_binding != result.statement.param_binding
             || verification.parameter.to_string()
-                != obj_for_bound_param_in_scope(
-                    &result.statement.param_binding,
-                    ParamObjType::Induc,
-                )
-                .to_string()
+                != obj_for_bound_param_in_scope(&result.statement.param_binding).to_string()
             || verification.prove_goals.len() != result.statement.to_prove.len()
             || verification.prove_goals.is_empty()
             || verification
@@ -1683,7 +1679,7 @@ impl StmtResultToLeanCompiler {
             {
                 return Err("by-enumerate parameter reused its SymbolId".into());
             }
-            let parameter_object = obj_for_bound_param_in_scope(binding, ParamObjType::Forall);
+            let parameter_object = obj_for_bound_param_in_scope(binding);
             let parameter_membership: Fact = InFact::new(
                 parameter_object.clone(),
                 resolved_parameter_set.clone(),
@@ -2134,7 +2130,7 @@ impl StmtResultToLeanCompiler {
                 }));
             }
 
-            let parameter_object = obj_for_bound_param_in_scope(binding, ParamObjType::Forall);
+            let parameter_object = obj_for_bound_param_in_scope(binding);
             let assignment_equalities = values
                 .iter()
                 .map(|value| {
@@ -2281,7 +2277,7 @@ impl StmtResultToLeanCompiler {
                 "by-for assignment {assignment_index} changed its parameter value or assumption arity"
             ));
         }
-        let parameter_object = obj_for_bound_param_in_scope(binding, ParamObjType::Forall);
+        let parameter_object = obj_for_bound_param_in_scope(binding);
         let expected_integer_membership: Fact = InFact::new(
             parameter_object,
             StandardSet::Z.into(),
@@ -2644,7 +2640,7 @@ impl StmtResultToLeanCompiler {
         let substitution_runtime = Runtime::new();
         let evaluate_substituted = |source: &Obj| -> Result<String, String> {
             let substituted = substitution_runtime
-                .inst_obj(source, substitutions, ParamObjType::Forall)
+                .inst_obj(source, substitutions, SubstitutionMode::Exact)
                 .map_err(|error| {
                     format!("Runtime-resolved comparison substitution failed: {error:?}")
                 })?;

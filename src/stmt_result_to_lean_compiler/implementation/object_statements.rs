@@ -376,7 +376,7 @@ impl StmtResultToLeanCompiler {
             .params_def_with_set
             .iter()
         {
-            expected_parameter_facts.extend(group.facts_for_binding_scope(ParamObjType::FnSet));
+            expected_parameter_facts.extend(group.facts());
         }
         let expected_domain_facts = statement
             .equal_to_anonymous_fn
@@ -1071,7 +1071,7 @@ impl StmtResultToLeanCompiler {
             &mut visited_well_definedness_results,
         )?;
 
-        let expected_parameter_facts = parameter_group.facts_for_binding_scope(ParamObjType::FnSet);
+        let expected_parameter_facts = parameter_group.facts();
         let [expected_parameter_fact] = expected_parameter_facts.as_slice() else {
             return Err("sequence index scope did not produce one parameter fact".into());
         };
@@ -1112,7 +1112,7 @@ impl StmtResultToLeanCompiler {
         }
         let expected_positive_index: Fact = LessFact::new(
             Number::new("0".to_string()).into(),
-            obj_for_bound_param_in_scope(&statement.index_binding, ParamObjType::FnSet),
+            obj_for_bound_param_in_scope(&statement.index_binding),
             statement.line_file.clone(),
         )
         .into();
@@ -1471,8 +1471,7 @@ impl StmtResultToLeanCompiler {
             }
         }
 
-        let index_object =
-            obj_for_bound_param_in_scope(&statement.index_binding, ParamObjType::FnSet);
+        let index_object = obj_for_bound_param_in_scope(&statement.index_binding);
         let expected_domain_atomic_fact: AtomicFact = LessEqualFact::new(
             index_object,
             statement.bound.clone(),
@@ -1531,7 +1530,7 @@ impl StmtResultToLeanCompiler {
             &mut visited_well_definedness_results,
         )?;
 
-        let expected_parameter_facts = parameter_group.facts_for_binding_scope(ParamObjType::FnSet);
+        let expected_parameter_facts = parameter_group.facts();
         let [expected_parameter_fact] = expected_parameter_facts.as_slice() else {
             return Err("finite-sequence index scope did not produce one parameter fact".into());
         };
@@ -1579,7 +1578,7 @@ impl StmtResultToLeanCompiler {
         }
         let expected_positive_index: Fact = LessFact::new(
             Number::new("0".to_string()).into(),
-            obj_for_bound_param_in_scope(&statement.index_binding, ParamObjType::FnSet),
+            obj_for_bound_param_in_scope(&statement.index_binding),
             statement.line_file.clone(),
         )
         .into();
@@ -2022,12 +2021,12 @@ impl StmtResultToLeanCompiler {
         ];
         let domain_atomic_facts = [
             AtomicFact::from(LessEqualFact::new(
-                obj_for_bound_param_in_scope(&statement.row_index_binding, ParamObjType::FnSet),
+                obj_for_bound_param_in_scope(&statement.row_index_binding),
                 statement.row_bound.clone(),
                 statement.line_file.clone(),
             )),
             AtomicFact::from(LessEqualFact::new(
-                obj_for_bound_param_in_scope(&statement.col_index_binding, ParamObjType::FnSet),
+                obj_for_bound_param_in_scope(&statement.col_index_binding),
                 statement.col_bound.clone(),
                 statement.line_file.clone(),
             )),
@@ -2093,7 +2092,7 @@ impl StmtResultToLeanCompiler {
 
         let expected_parameter_facts = parameter_groups
             .iter()
-            .flat_map(|group| group.facts_for_binding_scope(ParamObjType::FnSet))
+            .flat_map(|group| group.facts())
             .collect::<Vec<_>>();
         if expected_parameter_facts.len() != 2 {
             return Err("matrix index scope did not produce two parameter facts".into());
@@ -2132,10 +2131,7 @@ impl StmtResultToLeanCompiler {
                 .ok_or_else(|| format!("matrix parameter store {parameter_index} has no FactId"))?;
             let expected_positive: Fact = LessFact::new(
                 Number::new("0".to_string()).into(),
-                obj_for_bound_param_in_scope(
-                    parameter_bindings[parameter_index],
-                    ParamObjType::FnSet,
-                ),
+                obj_for_bound_param_in_scope(parameter_bindings[parameter_index]),
                 statement.line_file.clone(),
             )
             .into();

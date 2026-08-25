@@ -150,7 +150,7 @@ impl Runtime {
             .inst_obj(
                 &source.body.ret_set,
                 &source_param_to_generated_arg_map,
-                ParamObjType::AlphaRename,
+                SubstitutionMode::Exact,
             )
             .map_err(|e| {
                 fn_set_equality_verify_error(
@@ -165,7 +165,7 @@ impl Runtime {
             .inst_obj(
                 &target.body.ret_set,
                 &target_param_to_generated_arg_map,
-                ParamObjType::AlphaRename,
+                SubstitutionMode::Exact,
             )
             .map_err(|e| {
                 fn_set_equality_verify_error(
@@ -197,7 +197,7 @@ impl Runtime {
             insert_symbol_substitution(
                 &mut param_to_generated_arg_map,
                 param_binding,
-                obj_for_bound_param_in_scope(generated_binding, ParamObjType::FnSet),
+                obj_for_bound_param_in_scope(generated_binding),
             );
         }
         param_to_generated_arg_map
@@ -278,7 +278,7 @@ impl Runtime {
                 .inst_obj(
                     param_def_with_set.set_obj(),
                     &source_param_to_generated_arg_map,
-                    ParamObjType::AlphaRename,
+                    SubstitutionMode::Exact,
                 )
                 .map_err(|e| {
                     fn_set_equality_verify_error(
@@ -313,7 +313,7 @@ impl Runtime {
                 insert_symbol_substitution(
                     &mut source_param_to_generated_arg_map,
                     source_param_binding,
-                    obj_for_bound_param_in_scope(generated_param_binding, ParamObjType::FnSet),
+                    obj_for_bound_param_in_scope(generated_param_binding),
                 );
             }
             flat_index = next_flat_index;
@@ -334,7 +334,7 @@ impl Runtime {
                 .inst_quantifier_free_fact(
                     dom_fact,
                     source_param_to_generated_arg_map,
-                    ParamObjType::AlphaRename,
+                    SubstitutionMode::Exact,
                     None,
                 )
                 .map_err(|e| {
@@ -376,7 +376,7 @@ impl Runtime {
                 self.inst_obj(
                     param_def_with_set.set_obj(),
                     target_param_to_generated_arg_map,
-                    ParamObjType::AlphaRename,
+                    SubstitutionMode::Exact,
                 )
                 .map_err(|e| {
                     fn_set_equality_verify_error(
@@ -428,7 +428,7 @@ impl Runtime {
                 .inst_quantifier_free_fact(
                     dom_fact,
                     target_param_to_generated_arg_map,
-                    ParamObjType::AlphaRename,
+                    SubstitutionMode::Exact,
                     None,
                 )
                 .map_err(|e| {

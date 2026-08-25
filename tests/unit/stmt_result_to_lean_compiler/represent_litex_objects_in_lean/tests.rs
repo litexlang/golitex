@@ -98,7 +98,7 @@ fn indexed_set_family_operators_fail_closed_until_lean_semantics_are_added() {
 #[test]
 fn set_builder_is_an_explicit_binder_boundary() {
     let binding = SymbolBinding::new(SymbolId::new(7), "x".to_string(), "x".to_string());
-    let parameter: Obj = SetBuilderFreeParamObj::new(binding.as_ref()).into();
+    let parameter: Obj = BoundParamObj::new(binding.as_ref()).into();
     let builder: Obj = SetBuilder::new(
         binding.clone(),
         StandardSet::R.into(),

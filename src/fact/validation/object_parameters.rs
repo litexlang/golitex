@@ -2,13 +2,19 @@
 
 use crate::prelude::*;
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum ObjectBinderKind {
+    SetBuilder,
+    Function,
+}
+
 pub fn check_set_builder_has_no_duplicate_set_builder_free_parameter(
     set_builder: &SetBuilder,
 ) -> Result<(), RuntimeError> {
     let mut params_already_used: Vec<Vec<String>> = Vec::new();
     check_set_builder_has_no_duplicate_free_parameter(
         set_builder,
-        ParamObjType::SetBuilder,
+        ObjectBinderKind::SetBuilder,
         &mut params_already_used,
     )
 }
@@ -19,7 +25,7 @@ pub fn check_fn_set_has_no_duplicate_fn_set_free_parameter(
     let mut params_already_used: Vec<Vec<String>> = Vec::new();
     check_fn_set_body_has_no_duplicate_free_parameter(
         &fn_set.body,
-        ParamObjType::FnSet,
+        ObjectBinderKind::Function,
         &mut params_already_used,
     )
 }
@@ -30,14 +36,14 @@ pub fn check_anonymous_fn_has_no_duplicate_fn_set_free_parameter(
     let mut params_already_used: Vec<Vec<String>> = Vec::new();
     check_anonymous_fn_has_no_duplicate_free_parameter(
         anonymous_fn,
-        ParamObjType::FnSet,
+        ObjectBinderKind::Function,
         &mut params_already_used,
     )
 }
 
 fn check_obj_has_no_duplicate_free_parameter(
     obj: &Obj,
-    free_param_type: ParamObjType,
+    free_param_type: ObjectBinderKind,
     params_already_used: &mut Vec<Vec<String>>,
 ) -> Result<(), RuntimeError> {
     match obj {
@@ -537,10 +543,10 @@ fn check_obj_has_no_duplicate_free_parameter(
 
 fn check_set_builder_has_no_duplicate_free_parameter(
     set_builder: &SetBuilder,
-    free_param_type: ParamObjType,
+    free_param_type: ObjectBinderKind,
     params_already_used: &mut Vec<Vec<String>>,
 ) -> Result<(), RuntimeError> {
-    let pushed_scope = if free_param_type == ParamObjType::SetBuilder {
+    let pushed_scope = if free_param_type == ObjectBinderKind::SetBuilder {
         push_param_names_scope_or_error(
             vec![set_builder.param_name().to_string()],
             free_param_type,
@@ -573,10 +579,10 @@ fn check_set_builder_has_no_duplicate_free_parameter(
 
 fn check_fn_set_body_has_no_duplicate_free_parameter(
     body: &FnSetBody,
-    free_param_type: ParamObjType,
+    free_param_type: ObjectBinderKind,
     params_already_used: &mut Vec<Vec<String>>,
 ) -> Result<(), RuntimeError> {
-    let pushed_scope = if free_param_type == ParamObjType::FnSet {
+    let pushed_scope = if free_param_type == ObjectBinderKind::Function {
         push_param_names_scope_or_error(
             ParamGroupWithSet::collect_param_names(&body.params_def_with_set),
             free_param_type,
@@ -612,10 +618,10 @@ fn check_fn_set_body_has_no_duplicate_free_parameter(
 
 fn check_anonymous_fn_has_no_duplicate_free_parameter(
     anonymous_fn: &AnonymousFn,
-    free_param_type: ParamObjType,
+    free_param_type: ObjectBinderKind,
     params_already_used: &mut Vec<Vec<String>>,
 ) -> Result<(), RuntimeError> {
-    let pushed_scope = if free_param_type == ParamObjType::FnSet {
+    let pushed_scope = if free_param_type == ObjectBinderKind::Function {
         push_param_names_scope_or_error(
             ParamGroupWithSet::collect_param_names(&anonymous_fn.body.params_def_with_set),
             free_param_type,
@@ -660,7 +666,7 @@ fn check_anonymous_fn_has_no_duplicate_free_parameter(
 
 fn check_objs_in_quantifier_free_fact_have_no_duplicate_free_parameter(
     fact: &QuantifierFreeFact,
-    free_param_type: ParamObjType,
+    free_param_type: ObjectBinderKind,
     params_already_used: &mut Vec<Vec<String>>,
 ) -> Result<(), RuntimeError> {
     for obj in fact.get_args_from_fact_ref() {
@@ -672,7 +678,7 @@ fn check_objs_in_quantifier_free_fact_have_no_duplicate_free_parameter(
 fn check_two_objs(
     left: &Obj,
     right: &Obj,
-    free_param_type: ParamObjType,
+    free_param_type: ObjectBinderKind,
     params_already_used: &mut Vec<Vec<String>>,
 ) -> Result<(), RuntimeError> {
     check_obj_has_no_duplicate_free_parameter(left, free_param_type, params_already_used)?;
@@ -681,7 +687,7 @@ fn check_two_objs(
 
 fn push_param_names_scope_or_error(
     param_names: Vec<String>,
-    free_param_type: ParamObjType,
+    free_param_type: ObjectBinderKind,
     params_already_used: &mut Vec<Vec<String>>,
 ) -> Result<(), RuntimeError> {
     let mut params_in_current_scope: Vec<String> = Vec::new();
@@ -707,7 +713,7 @@ fn param_name_already_used(param_name: &String, params_already_used: &Vec<Vec<St
     false
 }
 
-fn duplicate_param_error(param_name: &String, free_param_type: ParamObjType) -> RuntimeError {
+fn duplicate_param_error(param_name: &String, free_param_type: ObjectBinderKind) -> RuntimeError {
     DefineParamsRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(
         format!(
             "duplicate {:?} free parameter `{}` in nested object scope",

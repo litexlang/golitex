@@ -7,7 +7,7 @@ fn collects_forall_name_from_function_head() {
         .allocate_local_symbol_binding("function".to_string())
         .unwrap();
     let object: Obj = FnObj::new(
-        ForallFreeParamObj::new(&function_binding).into(),
+        BoundParamObj::new(&function_binding).into(),
         vec![vec![Box::new(forall_obj(&runtime, "argument"))]],
     )
     .into();
@@ -19,7 +19,7 @@ fn collects_forall_name_from_function_head() {
 }
 
 #[test]
-fn separates_set_builder_and_fn_set_function_head_names() {
+fn collects_bound_function_head_names_without_source_kinds() {
     let runtime = Runtime::new();
     let builder_head = runtime
         .allocate_local_symbol_binding("builder_head".to_string())
@@ -34,26 +34,25 @@ fn separates_set_builder_and_fn_set_function_head_names() {
         .allocate_local_symbol_binding("builder_argument".to_string())
         .unwrap();
     let set_builder_head: Obj = FnObj::new(
-        SetBuilderFreeParamObj::new(&builder_head).into(),
-        vec![vec![Box::new(FnSetFreeParamObj::new(&fn_argument).into())]],
+        BoundParamObj::new(&builder_head).into(),
+        vec![vec![Box::new(BoundParamObj::new(&fn_argument).into())]],
     )
     .into();
     let fn_set_head: Obj = FnObj::new(
-        FnSetFreeParamObj::new(&fn_head).into(),
-        vec![vec![Box::new(
-            SetBuilderFreeParamObj::new(&builder_argument).into(),
-        )]],
+        BoundParamObj::new(&fn_head).into(),
+        vec![vec![Box::new(BoundParamObj::new(&builder_argument).into())]],
     )
     .into();
     let object: Obj = ListSet::new(vec![set_builder_head, fn_set_head]).into();
 
     assert_eq!(
-        object.collect_param_obj_names(ParamObjType::SetBuilder),
-        HashSet::from(["builder_head".to_string(), "builder_argument".to_string()])
-    );
-    assert_eq!(
-        object.collect_param_obj_names(ParamObjType::FnSet),
-        HashSet::from(["fn_head".to_string(), "fn_argument".to_string()])
+        object.collect_bound_param_names(),
+        HashSet::from([
+            "builder_head".to_string(),
+            "builder_argument".to_string(),
+            "fn_head".to_string(),
+            "fn_argument".to_string(),
+        ])
     );
 }
 
@@ -82,7 +81,7 @@ fn collects_fn_set_and_anonymous_function_binder_headers() {
     let object: Obj = ListSet::new(vec![fn_set, anonymous_fn]).into();
 
     assert_eq!(
-        object.collect_param_obj_names(ParamObjType::FnSet),
+        object.collect_bound_param_names(),
         HashSet::from(["fn_bound".to_string(), "anonymous_bound".to_string()])
     );
 }
@@ -91,5 +90,5 @@ fn forall_obj(runtime: &Runtime, name: &str) -> Obj {
     let binding = runtime
         .allocate_local_symbol_binding(name.to_string())
         .unwrap();
-    ForallFreeParamObj::new(&binding).into()
+    BoundParamObj::new(&binding).into()
 }

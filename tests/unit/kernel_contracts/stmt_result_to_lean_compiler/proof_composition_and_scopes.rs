@@ -25,7 +25,7 @@ fn combined_builtin_items_retain_and_compile_their_typed_component_evidence() {
 
 fn execute_structured_integer_induction_from(start: &str) -> Vec<StmtResult> {
     let source = format!(
-        "by induc n from {start}:\n    ? n + 1 = n + 1\n    ? from n = {start}\n    ? induc\n"
+        "by induc n from {start}:\n    ? n + 1 = n + 1\n    ? from n = {start}:\n        {start} + 1 = {start} + 1\n    ? induc:\n        n + 1 + 1 = n + 1 + 1\n"
     );
     crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
         &source,
@@ -202,8 +202,7 @@ fn structured_integer_induction_zero_and_strong_boundaries_fail_closed() {
         .expect_err("zero-ended order lowering must fail closed");
     assert!(zero_error.contains("nonnegative-value"), "{zero_error}");
 
-    let strong_source =
-        "by strong_induc n from -1:\n    ? n + 1 = n + 1\n    ? from n = -1\n    ? strong_induc\n";
+    let strong_source = "by strong_induc n from -1:\n    ? n + 1 = n + 1\n    ? from n = -1:\n        -1 + 1 = -1 + 1\n    ? strong_induc:\n        n + 1 + 1 = n + 1 + 1\n";
     let strong_results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
             strong_source,
             "strong_structured_induction.lit",

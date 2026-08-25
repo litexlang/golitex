@@ -9,7 +9,7 @@ impl Runtime {
     pub fn parse_param_def_with_param_type_and_skip_comma(
         &mut self,
         tb: &mut TokenBlock,
-        free_param_kind: ParamObjType,
+        binding_scope: BindingScope,
     ) -> Result<ParamGroupWithParamType, RuntimeError> {
         let param = tb.advance()?;
         let mut params = vec![param];
@@ -19,7 +19,7 @@ impl Runtime {
         }
         let (param_type, default_struct_view) =
             self.parse_param_type_with_default_struct_view(tb)?;
-        let bindings = self.begin_parsing_scope(free_param_kind, &params, tb.line_file.clone())?;
+        let bindings = self.begin_parsing_scope(binding_scope, &params, tb.line_file.clone())?;
         if let Some(struct_obj) = default_struct_view {
             self.register_default_struct_view(&bindings, &struct_obj);
         }

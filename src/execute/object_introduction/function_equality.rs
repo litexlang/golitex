@@ -44,7 +44,10 @@ impl Runtime {
         have_fn_equal_stmt: &HaveFnEqualStmt,
         fn_set_stored: &FnSet,
     ) -> Result<SuccessInferResult, RuntimeError> {
-        self.store_parameter_binding(&have_fn_equal_stmt.symbol_binding, ParamObjType::Identifier)?;
+        self.store_parameter_binding(
+            &have_fn_equal_stmt.symbol_binding,
+            BindingScope::DeclaredObject,
+        )?;
 
         let function_identifier_obj = self.declared_identifier_obj(have_fn_equal_stmt.name());
         let function_set_obj = fn_set_stored.clone().into();

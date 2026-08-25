@@ -67,10 +67,7 @@ impl Runtime {
                     ParamDefWithType::new(vec![left_to_right_param.clone()]),
                     vec![],
                     vec![InFact::new(
-                        obj_for_bound_param_in_scope(
-                            &left_to_right_param.params[0],
-                            ParamObjType::Forall,
-                        ),
+                        obj_for_bound_param_in_scope(&left_to_right_param.params[0]),
                         stmt.right.clone(),
                         stmt.line_file.clone(),
                     )
@@ -117,10 +114,7 @@ impl Runtime {
                     ParamDefWithType::new(vec![right_to_left_param.clone()]),
                     vec![],
                     vec![InFact::new(
-                        obj_for_bound_param_in_scope(
-                            &right_to_left_param.params[0],
-                            ParamObjType::Forall,
-                        ),
+                        obj_for_bound_param_in_scope(&right_to_left_param.params[0]),
                         stmt.left.clone(),
                         stmt.line_file.clone(),
                     )
@@ -173,7 +167,7 @@ impl Runtime {
             ParamDefWithType::new(vec![left_to_right_param.clone()]),
             vec![],
             vec![InFact::new(
-                obj_for_bound_param_in_scope(&left_to_right_param.params[0], ParamObjType::Forall),
+                obj_for_bound_param_in_scope(&left_to_right_param.params[0]),
                 stmt.right.clone(),
                 stmt.line_file.clone(),
             )
@@ -189,7 +183,7 @@ impl Runtime {
             ParamDefWithType::new(vec![right_to_left_param.clone()]),
             vec![],
             vec![InFact::new(
-                obj_for_bound_param_in_scope(&right_to_left_param.params[0], ParamObjType::Forall),
+                obj_for_bound_param_in_scope(&right_to_left_param.params[0]),
                 stmt.left.clone(),
                 stmt.line_file.clone(),
             )

@@ -1876,7 +1876,7 @@ impl Runtime {
         let Some(param_binding) = param_bindings.first() else {
             return false;
         };
-        let expected_argument = obj_for_bound_param_in_scope(param_binding, ParamObjType::FnSet);
+        let expected_argument = obj_for_bound_param_in_scope(param_binding);
         objs_match_for_pattern(application.body[0][0].as_ref(), &expected_argument)
     }
 
@@ -2163,31 +2163,11 @@ impl Runtime {
         let line_file = equal_fact.line_file.clone();
         let left_is_direct_symbol = matches!(
             left,
-            Obj::Atom(
-                AtomObj::Identifier(_)
-                    | AtomObj::IdentifierWithMod(_)
-                    | AtomObj::Forall(_)
-                    | AtomObj::Exist(_)
-                    | AtomObj::Def(_)
-                    | AtomObj::SetBuilder(_)
-                    | AtomObj::FnSet(_)
-                    | AtomObj::Induc(_)
-                    | AtomObj::DefAlgo(_)
-            )
+            Obj::Atom(AtomObj::Identifier(_) | AtomObj::IdentifierWithMod(_) | AtomObj::Bound(_))
         );
         let right_is_direct_symbol = matches!(
             right,
-            Obj::Atom(
-                AtomObj::Identifier(_)
-                    | AtomObj::IdentifierWithMod(_)
-                    | AtomObj::Forall(_)
-                    | AtomObj::Exist(_)
-                    | AtomObj::Def(_)
-                    | AtomObj::SetBuilder(_)
-                    | AtomObj::FnSet(_)
-                    | AtomObj::Induc(_)
-                    | AtomObj::DefAlgo(_)
-            )
+            Obj::Atom(AtomObj::Identifier(_) | AtomObj::IdentifierWithMod(_) | AtomObj::Bound(_))
         );
         if !left_is_direct_symbol || !right_is_direct_symbol {
             return Ok(None);
@@ -2231,8 +2211,7 @@ impl Runtime {
             vec![index_name],
             ParamType::Obj(ClosedRange::new(Number::new("1".to_string()).into(), left_dim).into()),
         )?;
-        let index_obj =
-            obj_for_bound_param_in_scope(&coordinate_group.params[0], ParamObjType::Forall);
+        let index_obj = obj_for_bound_param_in_scope(&coordinate_group.params[0]);
         let coordinate_equality: AtomicFact = EqualFact::new(
             ObjAtIndex::new(left.clone(), index_obj.clone()).into(),
             ObjAtIndex::new(right.clone(), index_obj).into(),
@@ -2241,7 +2220,7 @@ impl Runtime {
         .into();
         let coordinate_params = ParamDefWithType::new(vec![coordinate_group]);
         let coordinate_result = self.run_in_local_env(|rt| {
-            rt.define_params_with_type(&coordinate_params, false, ParamObjType::Forall)?;
+            rt.define_params_with_type(&coordinate_params, false, BindingScope::LocalBinder)?;
             rt.verify_atomic_fact_with_known_forall(&coordinate_equality, verify_state)
         })?;
         if !coordinate_result.is_success() {
@@ -2907,8 +2886,7 @@ impl Runtime {
         else {
             return Ok(None);
         };
-        let expected_member =
-            obj_for_bound_param_in_scope(&set_builder.param_binding, ParamObjType::SetBuilder);
+        let expected_member = obj_for_bound_param_in_scope(&set_builder.param_binding);
         if !objs_match_for_pattern(choice_member, &expected_member) {
             return Ok(None);
         }
@@ -2965,8 +2943,7 @@ impl Runtime {
             let [AtomicFact::LessEqualFact(lower), upper] = chain_facts.as_slice() else {
                 continue;
             };
-            let bound_param =
-                obj_for_bound_param_in_scope(&set_builder.param_binding, ParamObjType::SetBuilder);
+            let bound_param = obj_for_bound_param_in_scope(&set_builder.param_binding);
             let (upper_left_matches, upper_right_matches) = match (right_closed, upper) {
                 (true, AtomicFact::LessEqualFact(fact)) => (
                     objs_match_for_pattern(&fact.left, &bound_param),

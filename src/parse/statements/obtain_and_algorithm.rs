@@ -126,7 +126,7 @@ impl Runtime {
                 .inst_exist_fact(
                     definition_exist_fact,
                     &param_to_arg_map,
-                    ParamObjType::DefHeader,
+                    SubstitutionMode::Exact,
                     Some(&source_line_file),
                 )
                 .map_err(|cause| {
@@ -162,7 +162,7 @@ impl Runtime {
                 let equal_to_objs = equal_to_bindings
                     .iter()
                     .map(|binding| {
-                        param_binding_element_obj_for_store(binding, ParamObjType::Identifier)
+                        param_binding_element_obj_for_store(binding, BindingScope::DeclaredObject)
                     })
                     .collect::<Vec<_>>();
                 let param_to_arg_map =
@@ -176,7 +176,7 @@ impl Runtime {
                             let instantiated_type = self.inst_param_type(
                                 &param_group.param_type,
                                 &param_to_arg_map,
-                                ParamObjType::Exist,
+                                SubstitutionMode::Exact,
                             )?;
                             if let ParamType::Obj(Obj::StructObj(struct_obj)) = instantiated_type {
                                 default_struct_views
@@ -275,7 +275,7 @@ impl Runtime {
             .inst_exist_fact(
                 exist_fact,
                 &param_to_arg_map,
-                ParamObjType::TheoremInstantiation,
+                SubstitutionMode::Theorem,
                 Some(line_file),
             )
             .ok())
@@ -374,7 +374,7 @@ impl Runtime {
             this.register_collected_param_names_for_def_parse(&params, tb.line_file.clone())?;
             tb.skip_token(COLON)?;
             let param_bindings =
-                this.begin_parsing_scope(ParamObjType::DefAlgo, &params, tb.line_file.clone())?;
+                this.begin_parsing_scope(BindingScope::LocalBinder, &params, tb.line_file.clone())?;
             let params_for_end = params.clone();
             let algo_result = (|| -> Result<DefAlgoStmt, RuntimeError> {
                 let mut algo_cases: Vec<AlgoCase> = vec![];
@@ -400,7 +400,7 @@ impl Runtime {
                     tb.line_file.clone(),
                 ))
             })();
-            this.end_parsing_scope(ParamObjType::DefAlgo, &params_for_end);
+            this.end_parsing_scope(&params_for_end);
             Ok(algo_result?.into())
         })
     }

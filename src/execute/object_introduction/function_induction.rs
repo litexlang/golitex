@@ -88,7 +88,7 @@ impl Runtime {
         stmt: &HaveFnByInducStmt,
     ) -> Result<SuccessVerifyHaveFnByInducWellDefinednessLocalEnvResult, RuntimeError> {
         self.run_in_local_env(|rt| {
-            rt.store_parameter_binding(&stmt.symbol_binding, ParamObjType::Identifier)
+            rt.store_parameter_binding(&stmt.symbol_binding, BindingScope::DeclaredObject)
                 .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
             let fn_set = rt
                 .fn_set_from_fn_set_clause(&stmt.fn_set_clause)
@@ -253,7 +253,7 @@ impl Runtime {
         &mut self,
         stmt: &HaveFnByInducStmt,
     ) -> Result<SuccessVerifyHaveFnByInducRecursiveFunctionResult, RuntimeError> {
-        self.store_parameter_binding(&stmt.symbol_binding, ParamObjType::Identifier)
+        self.store_parameter_binding(&stmt.symbol_binding, BindingScope::DeclaredObject)
             .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
 
         let source_bindings = stmt
@@ -261,7 +261,7 @@ impl Runtime {
             .params_def_with_set
             .collect_param_bindings();
         let (_, param_to_generated_obj) =
-            self.fresh_binder_retag_plan_for_bindings(&source_bindings, ParamObjType::FnSet);
+            self.fresh_binder_retag_plan_for_bindings(&source_bindings);
 
         let generated_body = self
             .alpha_rename_fn_set_body(
@@ -280,7 +280,7 @@ impl Runtime {
             .inst_obj(
                 &stmt.measure,
                 &param_to_generated_obj,
-                ParamObjType::AlphaRename,
+                SubstitutionMode::Exact,
             )
             .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
         recursive_dom_facts.push(QuantifierFreeFact::AtomicFact(

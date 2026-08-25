@@ -50,7 +50,7 @@ impl Runtime {
             let instantiated_types = self.inst_param_def_with_type_one_by_one(
                 parameter_definition,
                 &struct_obj.params,
-                ParamObjType::DefHeader,
+                SubstitutionMode::Exact,
             )?;
             let flat_types =
                 parameter_definition.flat_instantiated_types_for_args(&instantiated_types);
@@ -86,7 +86,7 @@ impl Runtime {
                     .inst_quantifier_free_fact(
                         domain,
                         &param_to_arg_map,
-                        ParamObjType::DefHeader,
+                        SubstitutionMode::Exact,
                         None,
                     )
                     .map_err(|error| {
@@ -120,16 +120,13 @@ impl Runtime {
                 .iter()
                 .map(|field| field.binding.clone())
                 .collect::<Vec<_>>();
-            let field_rename_map = runtime.visible_binding_conflict_rename_map(
-                &field_bindings,
-                ParamObjType::DefStructField,
-            )?;
+            let field_rename_map = runtime.visible_binding_conflict_rename_map(&field_bindings)?;
             let active_field_bindings = def
                 .fields
                 .iter()
                 .map(
                     |field| match field_rename_map.get(&field.binding.substitution_key()) {
-                        Some(Obj::Atom(AtomObj::DefStructField(parameter))) => {
+                        Some(Obj::Atom(AtomObj::Bound(parameter))) => {
                             parameter.symbol.to_local_binding()
                         }
                         _ => field.binding.clone(),
@@ -146,12 +143,12 @@ impl Runtime {
                 let instantiated_field_type = runtime.inst_obj(
                     &field.field_type,
                     &param_to_arg_map,
-                    ParamObjType::DefHeader,
+                    SubstitutionMode::Exact,
                 )?;
                 let instantiated_field_type = runtime.inst_obj(
                     &instantiated_field_type,
                     &field_rename_map,
-                    ParamObjType::AlphaRename,
+                    SubstitutionMode::Exact,
                 )?;
                 let carrier = runtime.verify_child_obj_well_defined_result(
                     &instantiated_field_type,
@@ -160,9 +157,9 @@ impl Runtime {
                         parameter_group_index: field_index,
                     },
                 )?;
-                runtime.store_parameter_binding(field_binding, ParamObjType::DefStructField)?;
+                runtime.store_parameter_binding(field_binding, BindingScope::StructureField)?;
                 let proposition: Fact = InFact::new(
-                    obj_for_bound_param_in_scope(field_binding, ParamObjType::DefStructField),
+                    obj_for_bound_param_in_scope(field_binding),
                     instantiated_field_type,
                     default_line_file(),
                 )
@@ -199,11 +196,11 @@ impl Runtime {
             let mut equivalent_facts = Vec::with_capacity(def.equivalent_facts.len());
             for (fact_index, fact) in def.equivalent_facts.iter().enumerate() {
                 let proposition =
-                    runtime.inst_fact(fact, &param_to_arg_map, ParamObjType::DefHeader, None)?;
+                    runtime.inst_fact(fact, &param_to_arg_map, SubstitutionMode::Exact, None)?;
                 let proposition = runtime.inst_fact(
                     &proposition,
                     &field_rename_map,
-                    ParamObjType::AlphaRename,
+                    SubstitutionMode::Exact,
                     None,
                 )?;
                 let well_definedness =
@@ -332,7 +329,7 @@ impl Runtime {
                     param_def,
                     &struct_obj.params,
                     verify_state,
-                    ParamObjType::DefHeader,
+                    SubstitutionMode::Exact,
                 )
                 .map_err(|runtime_error| {
                     RuntimeError::from(WellDefinedRuntimeError(
@@ -362,7 +359,7 @@ impl Runtime {
                     .inst_quantifier_free_fact(
                         dom_fact,
                         &param_to_arg_map,
-                        ParamObjType::DefHeader,
+                        SubstitutionMode::Exact,
                         None,
                     )
                     .map_err(|e| {
@@ -410,7 +407,7 @@ impl Runtime {
             fields.push(self.inst_obj(
                 &field.field_type,
                 &param_to_arg_map,
-                ParamObjType::DefHeader,
+                SubstitutionMode::Exact,
             )?);
         }
         Ok(fields)
@@ -443,9 +440,9 @@ impl Runtime {
         let after_header = self.inst_obj(
             &def.fields[field_index].field_type,
             &header_map,
-            ParamObjType::DefHeader,
+            SubstitutionMode::Exact,
         )?;
-        self.inst_obj(&after_header, &field_map, ParamObjType::DefStructField)
+        self.inst_obj(&after_header, &field_map, SubstitutionMode::Exact)
     }
 
     /// Field membership dispatch reaches this only after the field expression

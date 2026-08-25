@@ -10,7 +10,7 @@ impl Runtime {
         }
 
         for env in self.iter_environments_from_top() {
-            if env.declarations.defined_identifiers.contains_key(name) {
+            if env.declarations.object_symbol(name).is_some() {
                 return true;
             }
         }
@@ -117,13 +117,13 @@ impl Runtime {
             vec![parameters.clone()],
             vec![
                 AtomicFact::from(LessEqualFact::new(
-                    obj_for_bound_param_in_scope(&parameters.params[0], ParamObjType::FnSet),
+                    obj_for_bound_param_in_scope(&parameters.params[0]),
                     (*ms.row_len).clone(),
                     line_file.clone(),
                 ))
                 .into(),
                 AtomicFact::from(LessEqualFact::new(
-                    obj_for_bound_param_in_scope(&parameters.params[1], ParamObjType::FnSet),
+                    obj_for_bound_param_in_scope(&parameters.params[1]),
                     (*ms.col_len).clone(),
                     line_file.clone(),
                 ))
@@ -142,7 +142,7 @@ impl Runtime {
         FnSet::new(
             vec![param_group.clone()],
             vec![AtomicFact::from(LessEqualFact::new(
-                obj_for_bound_param_in_scope(&param_group.params[0], ParamObjType::FnSet),
+                obj_for_bound_param_in_scope(&param_group.params[0]),
                 (*fs.n).clone(),
                 line_file,
             ))
@@ -176,7 +176,7 @@ impl Runtime {
         )?];
         let dom_facts: Vec<QuantifierFreeFact> = vec![QuantifierFreeFact::AtomicFact(
             LessEqualFact::new(
-                obj_for_bound_param_in_scope(&params[0].params[0], ParamObjType::FnSet),
+                obj_for_bound_param_in_scope(&params[0].params[0]),
                 (*fs.n).clone(),
                 line_file,
             )
@@ -216,11 +216,11 @@ impl Runtime {
             dom_stored.push(self.inst_quantifier_free_fact(
                 d,
                 &empty,
-                ParamObjType::FnSet,
+                SubstitutionMode::Exact,
                 None,
             )?);
         }
-        let ret_stored = self.inst_obj(&ret_set, &empty, ParamObjType::FnSet)?;
+        let ret_stored = self.inst_obj(&ret_set, &empty, SubstitutionMode::Exact)?;
         Ok(FnSet::new(params_and_their_sets, dom_stored, ret_stored)?)
     }
 
@@ -237,12 +237,12 @@ impl Runtime {
             dom_stored.push(self.inst_quantifier_free_fact(
                 d,
                 &empty,
-                ParamObjType::FnSet,
+                SubstitutionMode::Exact,
                 None,
             )?);
         }
-        let ret_stored = self.inst_obj(&ret_set, &empty, ParamObjType::FnSet)?;
-        let eq_stored = self.inst_obj(&equal_to, &empty, ParamObjType::FnSet)?;
+        let ret_stored = self.inst_obj(&ret_set, &empty, SubstitutionMode::Exact)?;
+        let eq_stored = self.inst_obj(&equal_to, &empty, SubstitutionMode::Exact)?;
         Ok(AnonymousFn::new_with_source_occurrence_id(
             params_and_their_sets,
             dom_stored,

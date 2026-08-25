@@ -43,7 +43,7 @@ impl Runtime {
         // the declaration alone. Dependent carriers keep using the executed
         // function signature, whose parameter substitution is exact.
         if let Obj::StructObj(struct_obj) = &fs.ret_set {
-            let return_fn_param_names = fs.ret_set.collect_param_obj_names(ParamObjType::FnSet);
+            let return_fn_param_names = fs.ret_set.collect_bound_param_names();
             let return_depends_on_fn_param = fn_param_bindings
                 .iter()
                 .any(|binding| return_fn_param_names.contains(binding.name()));
@@ -60,7 +60,7 @@ impl Runtime {
 
             let lf = tb.line_file.clone();
             let equal_to = self.parse_in_existing_free_param_scope(
-                ParamObjType::FnSet,
+                BindingScope::LocalBinder,
                 &fn_param_bindings,
                 lf,
                 |this| this.parse_obj(tb),
@@ -166,7 +166,7 @@ impl Runtime {
         };
         let bindings = forall.params_def_with_type.collect_param_bindings();
         let prove_process: Vec<Stmt> = self.parse_stmts_with_existing_free_param_bindings(
-            ParamObjType::Forall,
+            BindingScope::LocalBinder,
             &bindings,
             lf.clone(),
             |this| {
@@ -257,7 +257,7 @@ impl Runtime {
             block.skip_token(CASE)?;
             let case_lf = block.line_file.clone();
             cases.push(self.parse_in_existing_free_param_scope(
-                ParamObjType::FnSet,
+                BindingScope::LocalBinder,
                 fn_param_bindings,
                 case_lf,
                 |this| this.parse_and_chain_atomic_fact_allow_leading_not(block),
@@ -265,7 +265,7 @@ impl Runtime {
             block.skip_token(COLON)?;
             let rhs_lf = block.line_file.clone();
             equal_tos.push(self.parse_in_existing_free_param_scope(
-                ParamObjType::FnSet,
+                BindingScope::LocalBinder,
                 fn_param_bindings,
                 rhs_lf,
                 |this| this.parse_obj(block),
@@ -304,7 +304,7 @@ impl Runtime {
 
         let measure_lf = block.line_file.clone();
         let measure = self.parse_in_existing_free_param_scope(
-            ParamObjType::FnSet,
+            BindingScope::LocalBinder,
             fn_param_bindings,
             measure_lf,
             |this| this.parse_obj(block),
@@ -313,7 +313,7 @@ impl Runtime {
         block.skip_token(FROM)?;
         let lower_lf = block.line_file.clone();
         let lower_bound = self.parse_in_existing_free_param_scope(
-            ParamObjType::FnSet,
+            BindingScope::LocalBinder,
             fn_param_bindings,
             lower_lf,
             |this| this.parse_obj(block),
@@ -339,14 +339,14 @@ impl Runtime {
 
         let function_names = vec![name.clone()];
         self.current_parse_context_mut().free_params.begin_scope(
-            ParamObjType::Identifier,
+            BindingScope::DeclaredObject,
             std::slice::from_ref(&symbol_binding),
             block.line_file.clone(),
         )?;
         self.current_parse_context_mut()
             .push_scope_frame(vec![symbol_binding.clone()]);
         let cases_result = self.parse_have_fn_by_induc_cases(&mut block.body, fn_param_bindings);
-        self.end_parsing_scope(ParamObjType::Identifier, &function_names);
+        self.end_parsing_scope(&function_names);
         let cases = cases_result?;
         let stmt = HaveFnByInducStmt::new(
             symbol_binding.clone(),
@@ -383,7 +383,7 @@ impl Runtime {
         block.skip_token(CASE)?;
         let case_lf = block.line_file.clone();
         let case_fact = self.parse_in_existing_free_param_scope(
-            ParamObjType::FnSet,
+            BindingScope::LocalBinder,
             fn_param_bindings,
             case_lf,
             |this| this.parse_and_chain_atomic_fact_allow_leading_not(block),
@@ -393,7 +393,7 @@ impl Runtime {
         if !block.exceed_end_of_head() {
             let rhs_lf = block.line_file.clone();
             let equal_to = self.parse_in_existing_free_param_scope(
-                ParamObjType::FnSet,
+                BindingScope::LocalBinder,
                 fn_param_bindings,
                 rhs_lf,
                 |this| this.parse_obj(block),

@@ -51,7 +51,7 @@ impl Runtime {
             .define_params_with_type(
                 &forall_fact.params_def_with_type,
                 false,
-                ParamObjType::Forall,
+                BindingScope::LocalBinder,
             )
             .map_err(|e| {
                 WellDefinedRuntimeError(RuntimeErrorStruct::new(
@@ -233,7 +233,7 @@ impl Runtime {
                 let fact = self.parameter_type_fact_for_binding(
                     binding,
                     &parameter_group.param_type,
-                    ParamObjType::Forall,
+                    BindingScope::LocalBinder,
                 )?;
                 let fact_id = self
                     .known_fact_id_for_fact(&fact)?

@@ -250,13 +250,9 @@ impl Runtime {
         Ok(binding)
     }
 
-    pub fn fresh_bound_param(
-        &self,
-        name: String,
-        kind: ParamObjType,
-    ) -> Result<(SymbolBinding, Obj), RuntimeError> {
+    pub fn fresh_bound_param(&self, name: String) -> Result<(SymbolBinding, Obj), RuntimeError> {
         let binding = self.allocate_local_symbol_binding(name)?;
-        let obj = obj_for_bound_param_in_scope(&binding, kind);
+        let obj = obj_for_bound_param_in_scope(&binding);
         Ok((binding, obj))
     }
 
@@ -314,7 +310,13 @@ impl Runtime {
         let name = binding.name();
         if let Some(existing) = self.visible_symbol_definition(name) {
             if existing.binding().id() == binding.id() {
-                return Ok(());
+                if existing.role() == role {
+                    return Ok(());
+                }
+                return Err(symbol_name_already_used_error(
+                    name,
+                    existing.role().description(),
+                ));
             }
             return Err(symbol_name_already_used_error(
                 name,
@@ -341,11 +343,11 @@ impl Runtime {
 
     pub fn begin_parsing_scope(
         &mut self,
-        kind: ParamObjType,
+        scope: BindingScope,
         names: &[String],
         line_file: LineFile,
     ) -> Result<Vec<SymbolBinding>, RuntimeError> {
-        if kind == ParamObjType::Induc
+        if scope.reuses_active_binding()
             && names
                 .iter()
                 .all(|name| self.current_parse_context().active_binding(name).is_some())
@@ -361,7 +363,7 @@ impl Runtime {
                 .collect::<Vec<_>>();
             self.current_parse_context_mut()
                 .free_params
-                .begin_scope(kind, &bindings, line_file)?;
+                .begin_scope(scope, &bindings, line_file)?;
             self.current_parse_context_mut()
                 .push_reused_scope_frame(names.to_vec());
             return Ok(bindings);
@@ -380,7 +382,7 @@ impl Runtime {
             {
                 return Err(active_parse_name_error(name, &line_file));
             }
-            if source_binder_must_respect_bare_symbols(kind, name) {
+            if scope.respects_bare_symbols(name) {
                 if let Some(external) = self.bare_symbol(name) {
                     return Err(bare_symbol_name_reserved_error(
                         name,
@@ -389,7 +391,7 @@ impl Runtime {
                     ));
                 }
             }
-            let binding = if kind == ParamObjType::Identifier {
+            let binding = if scope.is_declared_object() {
                 self.allocate_declared_symbol_binding(name.clone())?
             } else {
                 self.allocate_local_symbol_binding(name.clone())?
@@ -398,16 +400,16 @@ impl Runtime {
         }
         self.current_parse_context_mut()
             .free_params
-            .begin_scope(kind, &bindings, line_file)?;
+            .begin_scope(scope, &bindings, line_file)?;
         self.current_parse_context_mut()
             .push_scope_frame(bindings.clone());
         Ok(bindings)
     }
 
-    pub fn end_parsing_scope(&mut self, kind: ParamObjType, names: &[String]) {
+    pub fn end_parsing_scope(&mut self, names: &[String]) {
         self.current_parse_context_mut()
             .free_params
-            .end_scope(kind, names);
+            .end_scope(names);
         self.current_parse_context_mut().remove_bindings(names);
     }
 
@@ -432,19 +434,6 @@ impl Runtime {
             set,
         ))
     }
-}
-
-pub fn source_binder_must_respect_bare_symbols(kind: ParamObjType, name: &str) -> bool {
-    if name.starts_with("#binder_") {
-        return false;
-    }
-    !matches!(
-        kind,
-        ParamObjType::DefStructField
-            | ParamObjType::TheoremInstantiation
-            | ParamObjType::AlphaRename
-            | ParamObjType::BinderRetag(_)
-    )
 }
 
 pub fn bare_symbol_name_reserved_error(

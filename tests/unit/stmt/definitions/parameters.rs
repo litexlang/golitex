@@ -12,8 +12,8 @@ fn param_def_with_type_records_flat_cited_param_indices() {
         )
         .unwrap();
     let cited_type = Tuple::new(vec![
-        ForallFreeParamObj::new(&first_group.params[0]).into(),
-        ForallFreeParamObj::new(&first_group.params[1]).into(),
+        BoundParamObj::new(&first_group.params[0]).into(),
+        BoundParamObj::new(&first_group.params[1]).into(),
     ])
     .into();
     let param_def = ParamDefWithType::new(vec![
@@ -35,7 +35,7 @@ fn param_def_with_set_records_flat_cited_param_indices() {
         .unwrap();
     let dependent_set = ClosedRange::new(
         Number::new("1".to_string()).into(),
-        FnSetFreeParamObj::new(&first_group.params[0]).into(),
+        BoundParamObj::new(&first_group.params[0]).into(),
     )
     .into();
     let param_def = ParamDefWithSet::new(vec![
@@ -57,7 +57,7 @@ fn dependent_param_set_instantiates_with_previous_arg() {
         .unwrap();
     let dependent_set = ClosedRange::new(
         Number::new("1".to_string()).into(),
-        FnSetFreeParamObj::new(&first_group.params[0]).into(),
+        BoundParamObj::new(&first_group.params[0]).into(),
     )
     .into();
     let param_def = ParamDefWithSet::new(vec![
@@ -71,7 +71,7 @@ fn dependent_param_set_instantiates_with_previous_arg() {
         Number::new("2".to_string()).into(),
     ];
     let instantiated = runtime
-        .inst_param_def_with_set_one_by_one(&param_def, &args, ParamObjType::FnSet)
+        .inst_param_def_with_set_one_by_one(&param_def, &args, SubstitutionMode::Exact)
         .unwrap();
 
     assert_eq!(instantiated[1].to_string(), "closed_range(1, 3)");

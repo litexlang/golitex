@@ -25,7 +25,7 @@ impl Runtime {
                 .define_params_with_type(
                     &stmt.forall_fact.params_def_with_type,
                     false,
-                    ParamObjType::Forall,
+                    BindingScope::LocalBinder,
                 )
                 .map_err(|define_params_error| {
                     exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), define_params_error)

@@ -28,7 +28,7 @@ impl Runtime {
             vec![witness_name],
             ParamType::Obj(StandardSet::Z.into()),
         )?;
-        let witness = obj_for_bound_param_in_scope(&witness_group.params[0], ParamObjType::Exist);
+        let witness = obj_for_bound_param_in_scope(&witness_group.params[0]);
         let multiple_equality: AtomicFact = EqualFact::new(
             dividend,
             Mul::new(witness, divisor).into(),
