@@ -27,6 +27,11 @@ Runtime.parse_statement(block)
 | `have` with no body | Rejected with `have: expected object definition, fn, or by preimage`. |
 | A failed parse after opening a binder | Restores the saved `ParseContext`, so a broken `forall x ...` does not leak `x`. |
 
+Object expressions bind, from tighter to looser, as postfix calls/indexing,
+right-associative power, prefix `-`, multiplicative operators, and additive
+operators. Thus `-t^2` parses as `-(t^2)`, while `(-t)^2` keeps the negative
+value as the power base. Public authoring still uses the explicit forms.
+
 ## Start here
 
 | File | Example |

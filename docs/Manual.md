@@ -140,12 +140,13 @@ defines a set of all objects.
 
 Names refer to builtin objects, earlier definitions, local binders, or
 module-qualified definitions. Arithmetic uses ordinary precedence:
-parentheses and indexing bind tightly, then powers, multiplication and
-division, then addition and subtraction.
+parentheses, calls, and indexing bind tightly, then powers, prefix `-`,
+multiplication and division, then addition and subtraction. Powers associate
+to the right.
 
-Litex authoring must not rely on an implicit precedence choice between prefix
-`-` and `^`. The spelling `-t^2` is noncanonical because it does not say
-whether the base or the completed power is negated. Write `-(t^2)` (equivalently
+The parser therefore reads `-t^2` as `-(t^2)`, not `(-t)^2`. That compatibility
+rule does not make the bare spelling canonical authoring: it still leaves a
+reader to recall the precedence choice. Write `-(t^2)` (equivalently
 `-1 * (t^2)`) for the opposite of a square, and write `(-t)^2` for the square
 of the negative value. Parenthesize a negative exponent too: `t^(-1)`, not
 `t^-1`. This explicit-parentheses rule applies to generated and agent-authored
@@ -2428,8 +2429,9 @@ explanation; this index does not repeat its examples.
 
 ### Operator and delimiter notes
 
-- `^` binds more tightly than multiplicative operators; multiplication and
-  division bind more tightly than addition and subtraction.
+- Arithmetic binding from tighter to looser is: calls/indexing, right-associative
+  `^`, prefix `-`, multiplicative operators, then binary `+` and `-`. Thus the
+  parser reads `-t^2` as `-(t^2)`, while `-t * u` groups as `(-t) * u`.
 - At the prefix-`-`/power boundary, always state the intended tree explicitly:
   `-(t^2)` or `-1 * (t^2)` negates the power, `(-t)^2` powers the negative
   base, and `t^(-1)` uses a negative exponent. Do not author `-t^2` or `t^-1`.
