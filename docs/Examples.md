@@ -3717,15 +3717,32 @@ have x R
 x $in R
 ```
 
+#### 4a. Transparent Local Abbreviation With `let`
+
+Purpose: give an already well-defined object a shorter local name without
+introducing a new carrier fact. The name reduces to its right side once in
+comparisons, function calls, and other object contexts.
+
+```litex
+have fn shift(x R) R = x + 1
+let successor = shift
+
+successor(2) = 3
+fn_range(successor) = fn_range(shift)
+```
+
 #### 5. Definitional `have`
 
-Purpose: introduce a name for a specific object.
+Purpose: introduce a name for a specific object and record its carrier.
 
 ```litex
 have a R = 1
 a $in R
 a = 1
 ```
+
+Unlike `let`, this typed definition is not a transparent abbreviation. Use it
+when the carrier fact itself is part of the proof.
 
 #### 6. Opening An Existential With `obtain`
 

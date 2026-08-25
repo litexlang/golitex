@@ -1786,20 +1786,26 @@ x = 1
 ```
 
 Litex checks the right side before committing the new name, then records the
-ordinary equality `x = value`. The definition itself does not require or
+exact defining equality `x = value`. The definition itself does not require or
 create a defined type or membership fact. It accepts exactly one fresh name
 and one value: `let x = x` fails when there was no earlier `x`, and multiple
 bindings, destructuring, recursive definitions, and template-body `let` forms
 are not part of this preview. The word `let` is reserved and cannot be reused
 as an identifier.
 
-If a later application uses a `let` name, callable well-definedness first
-looks for a signature registered directly on that name. If none exists, it may
-reuse the signature of an object in the name's already stored equality class.
-For example, after `let g = f`, a checked signature and definition for `f` can
-justify `g(a)` and one checked unfolding of that application. This fallback
-does not prove a new equality, instantiate a `forall`, or skip the original
-function's arity, domain, or side-condition checks.
+When a later fact uses a `let` name, Litex may replace that exact symbol by its
+right side once while comparing objects, checking a function call, or checking
+another object context. For example, after `let g = f`, `g(a)` reuses `f`'s
+checked signature and `g(a) = result` can replay the checked definition of
+`f(a)`. The verifier records this as transparent-definition proof evidence;
+it is not an unrecorded parser rewrite.
+
+This reduction is deterministic and directional: it follows the definition of
+the `let` symbol being inspected. It does not search an equality class,
+instantiate a `forall`, recursively unfold arbitrary definitions, or skip the
+right side's arity, domain, and side-condition checks. An ordinary typed
+definition such as `have g fn(x R) R = f` still supplies carrier evidence and
+an equality, but is not a transparent abbreviation.
 
 Use a local name when a nontrivial object recurs and the proof treats it as one
 mathematical atom. Prefer a role-based name such as `event_union`,
