@@ -19,16 +19,17 @@ fn remove_param_bindings_from_param_to_arg_map(
     filtered_param_to_arg_map
 }
 
-/// Parser occurrence IDs identify the original syntax tree. Once an object is
-/// rebuilt by substitution or alpha-renaming it is a verifier-owned synthetic
-/// object; the enclosing construction recipe projects the original source
-/// occurrence onto its checked `WellDefinedObjId` explicitly.
+/// Parser occurrence IDs identify the original syntax tree. Ordinary
+/// substitution or alpha-renaming produces verifier-owned synthetic objects.
+/// Transparent definition reduction is the exception: its typed transformation
+/// owns the source-to-reduced mapping, so rebuilt nodes retain the original
+/// occurrence and may reuse that Result-owned WD provenance.
 fn source_occurrence_after_instantiation(
     source_occurrence_id: Option<SourceObjectOccurrenceId>,
     param_to_arg_map: &HashMap<String, Obj>,
+    substitution_mode: SubstitutionMode,
 ) -> Option<SourceObjectOccurrenceId> {
-    param_to_arg_map
-        .is_empty()
+    (param_to_arg_map.is_empty() || substitution_mode == SubstitutionMode::TransparentDefinition)
         .then_some(source_occurrence_id)
         .flatten()
 }
@@ -402,7 +403,11 @@ impl Runtime {
         Ok(FnObj::new_with_source_occurrence_id(
             final_head,
             merged_body,
-            source_occurrence_after_instantiation(fn_obj.source_occurrence_id, param_to_arg_map),
+            source_occurrence_after_instantiation(
+                fn_obj.source_occurrence_id,
+                param_to_arg_map,
+                param_obj_type,
+            ),
         )
         .into())
     }
@@ -429,7 +434,11 @@ impl Runtime {
         Ok(Add::new_with_source_occurrence_id(
             instantiated_left_obj,
             instantiated_right_obj,
-            source_occurrence_after_instantiation(add.source_occurrence_id, param_to_arg_map),
+            source_occurrence_after_instantiation(
+                add.source_occurrence_id,
+                param_to_arg_map,
+                param_obj_type,
+            ),
         )
         .into())
     }
@@ -500,7 +509,11 @@ impl Runtime {
         Ok(Sub::new_with_source_occurrence_id(
             instantiated_left_obj,
             instantiated_right_obj,
-            source_occurrence_after_instantiation(sub.source_occurrence_id, param_to_arg_map),
+            source_occurrence_after_instantiation(
+                sub.source_occurrence_id,
+                param_to_arg_map,
+                param_obj_type,
+            ),
         )
         .into())
     }
@@ -516,7 +529,11 @@ impl Runtime {
         Ok(Mul::new_with_source_occurrence_id(
             instantiated_left_obj,
             instantiated_right_obj,
-            source_occurrence_after_instantiation(mul.source_occurrence_id, param_to_arg_map),
+            source_occurrence_after_instantiation(
+                mul.source_occurrence_id,
+                param_to_arg_map,
+                param_obj_type,
+            ),
         )
         .into())
     }
@@ -530,7 +547,11 @@ impl Runtime {
         Ok(Div::new_with_source_occurrence_id(
             self.inst_obj(&div.left, param_to_arg_map, param_obj_type)?,
             self.inst_obj(&div.right, param_to_arg_map, param_obj_type)?,
-            source_occurrence_after_instantiation(div.source_occurrence_id, param_to_arg_map),
+            source_occurrence_after_instantiation(
+                div.source_occurrence_id,
+                param_to_arg_map,
+                param_obj_type,
+            ),
         )
         .into())
     }
@@ -706,7 +727,11 @@ impl Runtime {
         }
         Ok(ListSet::new_with_source_occurrence_id(
             list,
-            source_occurrence_after_instantiation(list_set.source_occurrence_id, param_to_arg_map),
+            source_occurrence_after_instantiation(
+                list_set.source_occurrence_id,
+                param_to_arg_map,
+                param_obj_type,
+            ),
         )
         .into())
     }
@@ -942,6 +967,7 @@ impl Runtime {
             source_occurrence_after_instantiation(
                 af.source_occurrence_id,
                 &filtered_param_to_arg_map,
+                param_obj_type,
             ),
         )?
         .into())

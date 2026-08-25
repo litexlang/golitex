@@ -1827,6 +1827,33 @@ pub(super) fn render_lean_source_for_target_set_representation(
     }
 }
 
+fn matches_directly_or_after_one_transparent_definition_pass(
+    source: &Obj,
+    target: &Obj,
+    context: &StmtResultToLeanCompilerEnvironmentStack,
+) -> Result<bool, String> {
+    if obj_equality_key(source) == obj_equality_key(target) {
+        return Ok(true);
+    }
+    let substitutions = context
+        .transparent_object_definitions
+        .iter()
+        .map(|(symbol_id, definition)| (symbol_id.substitution_key(), definition.value.clone()))
+        .collect::<HashMap<_, _>>();
+    if substitutions.is_empty() {
+        return Ok(false);
+    }
+    let reduced = Runtime::new()
+        .inst_obj(source, &substitutions, SubstitutionMode::Exact)
+        .map_err(|error| {
+            format!(
+                "compiler could not replay transparent definition source alignment: {}",
+                error.trace_message()
+            )
+        })?;
+    Ok(obj_equality_key(&reduced) == obj_equality_key(target))
+}
+
 pub(super) fn render_function_application(
     application: &LeanTargetFunctionApplicationRepresentation,
     context: &StmtResultToLeanCompilerEnvironmentStack,
@@ -1868,9 +1895,11 @@ pub(super) fn render_function_application(
                 available_occurrences,
             )
         })?;
-    if obj_equality_key(&application_context.source_application)
-        != obj_equality_key(&application.source_application)
-    {
+    if !matches_directly_or_after_one_transparent_definition_pass(
+        &application_context.source_application,
+        &application.source_application,
+        context,
+    )? {
         return Err("function application Result context changed its source occurrence".into());
     }
 
@@ -1880,7 +1909,11 @@ pub(super) fn render_function_application(
     }
     for (layer_index, layer_context) in application_context.layers.iter().enumerate() {
         let source_prefix = source_application.prefix_obj(layer_index + 1);
-        if obj_equality_key(&layer_context.source_prefix) != obj_equality_key(&source_prefix) {
+        if !matches_directly_or_after_one_transparent_definition_pass(
+            &layer_context.source_prefix,
+            &source_prefix,
+            context,
+        )? {
             return Err(format!(
                 "application layer {layer_index} changed its verifier-owned source prefix"
             ));
@@ -1908,7 +1941,38 @@ pub(super) fn render_function_application(
                     format!("unavailable function membership FactId `{contract_fact_id}`")
                 })?;
             if *head_symbol_id != binding.symbol_id {
-                return Err("function membership FactId belongs to another head symbol".into());
+                let definition = context
+                    .transparent_object_definitions
+                    .get(head_symbol_id)
+                    .ok_or_else(|| {
+                        "function membership FactId belongs to another head symbol".to_string()
+                    })?;
+                let retained_fact = context
+                    .fact_propositions
+                    .get(&definition.defining_equality_fact_id)
+                    .ok_or_else(|| {
+                        "transparent callable alias lost its defining equality FactId".to_string()
+                    })?;
+                if retained_fact.to_string() != definition.defining_equality.to_string()
+                    || !context
+                        .fact_names
+                        .contains_key(&definition.defining_equality_fact_id)
+                {
+                    return Err(
+                        "transparent callable alias changed its defining equality citation".into(),
+                    );
+                }
+                let lowered_definition = LeanTargetObjectRepresentation::lower(&definition.value)?;
+                if !matches!(
+                    lowered_definition,
+                    LeanTargetObjectRepresentation::Symbol { symbol_id, .. }
+                        if symbol_id == binding.symbol_id
+                ) {
+                    return Err(
+                        "transparent callable alias does not reduce once to the selected function contract"
+                            .into(),
+                    );
+                }
             }
             (
                 binding.function.clone(),

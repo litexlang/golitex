@@ -119,6 +119,7 @@ pub use verification::success::{
     SuccessVerifyPreimageResult, SuccessVerifyStrategyDefinitionResult, SuccessVerifyTheoremResult,
     SuccessVerifyTupleOrCartDefinitionResult, SuccessVerifyTupleOrCartDimensionResult,
     SuccessVerifyWitnessAtomicFactResult, SuccessVerifyWitnessExistResult,
+    TransparentDefinitionReductionEvidence, TransparentDefinitionReductionUse,
     UnknownVerifyArgsSatisfyParamDefResult, VerifyArgsSatisfyParamDefResult,
 };
 pub use verification::unknown_fact::{

@@ -1974,3 +1974,32 @@ fn elementary_set_algebra_completion_replays_exact_certificates() {
     assert!(!generated.contains("axiom "));
     assert!(!generated.contains("sorry"));
 }
+
+#[test]
+fn transparent_let_resolution_replays_exact_definition_certificate() {
+    const SOURCE: &str = include_str!("../../lean/examples/59_TransparentLetResolution.lit");
+    let result_json =
+        capture_stmt_results_json_v2_on_verifier_stack(SOURCE, "59_TransparentLetResolution.lit")
+            .expect("capture transparent let definition certificate");
+    assert!(
+        result_json.contains(r#""kind": "TransparentDefinitionReduction""#),
+        "{result_json}"
+    );
+    assert!(
+        result_json.contains(r#""defining_equality_fact_id": "f7""#),
+        "{result_json}"
+    );
+
+    let generated = compile_on_verifier_stack(SOURCE, "59_TransparentLetResolution.lit")
+        .expect("compile transparent let definition certificate");
+    assert!(
+        generated.contains("noncomputable def g := f"),
+        "{generated}"
+    );
+    assert!(
+        generated.contains("(by\n  unfold g\n  exact"),
+        "{generated}"
+    );
+    assert!(!generated.contains("axiom "), "{generated}");
+    assert!(!generated.contains("sorry"), "{generated}");
+}

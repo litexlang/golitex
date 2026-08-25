@@ -907,6 +907,41 @@ impl FactTransformationStep {
 pub enum FactTransformationRule {
     EqualityRewrite(EqualityTransportEvidence),
     RationalNormalization,
+    TransparentDefinitionReduction(TransparentDefinitionReductionEvidence),
+}
+
+/// One exact `let` definition consumed by a transparent fact reduction.
+#[derive(Clone)]
+pub struct TransparentDefinitionReductionUse {
+    pub symbol: SymbolRef,
+    pub definition_object: Obj,
+    pub defining_equality: EqualFact,
+    pub defining_equality_fact_id: FactId,
+}
+
+impl fmt::Debug for TransparentDefinitionReductionUse {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter
+            .debug_struct("TransparentDefinitionReductionUse")
+            .field("symbol", &self.symbol)
+            .field("definition_object", &self.definition_object.to_string())
+            .field("defining_equality", &self.defining_equality.to_string())
+            .field("defining_equality_fact_id", &self.defining_equality_fact_id)
+            .finish()
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct TransparentDefinitionReductionEvidence {
+    /// Deterministic `SymbolId` order. All substitutions form one nonrecursive
+    /// pass from the source goal to the fact proved by the child Result.
+    pub definitions: Vec<TransparentDefinitionReductionUse>,
+}
+
+impl TransparentDefinitionReductionEvidence {
+    pub fn new(definitions: Vec<TransparentDefinitionReductionUse>) -> Self {
+        Self { definitions }
+    }
 }
 
 /// One target-directed fact transformation. The enclosing

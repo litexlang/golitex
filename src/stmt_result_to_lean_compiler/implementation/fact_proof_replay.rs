@@ -452,7 +452,98 @@ impl StmtResultToLeanCompiler {
                     evidence,
                     step_index,
                 ),
+            FactTransformationRule::TransparentDefinitionReduction(evidence) => self
+                .construct_lean_transparent_definition_reduction_from_result(
+                    source,
+                    target,
+                    source_proof,
+                    evidence,
+                    step_index,
+                ),
         }
+    }
+
+    fn construct_lean_transparent_definition_reduction_from_result(
+        &self,
+        source: &Fact,
+        target: &Fact,
+        source_proof: String,
+        evidence: &TransparentDefinitionReductionEvidence,
+        transformation_step_index: usize,
+    ) -> Result<String, String> {
+        if evidence.definitions.is_empty() {
+            return Err(format!(
+                "transparent definition transformation step {transformation_step_index} retained no definitions"
+            ));
+        }
+        let mut substitutions = HashMap::new();
+        let mut definition_names = Vec::with_capacity(evidence.definitions.len());
+        let mut seen_symbols = HashSet::new();
+        for (definition_index, definition) in evidence.definitions.iter().enumerate() {
+            let symbol_id = definition.symbol.id();
+            if !seen_symbols.insert(symbol_id) {
+                return Err(format!(
+                    "transparent definition transformation step {transformation_step_index} repeats symbol ID {}",
+                    symbol_id.value()
+                ));
+            }
+            if !object_is_symbol(&definition.defining_equality.left, symbol_id)
+                || obj_equality_key(&definition.defining_equality.right)
+                    != obj_equality_key(&definition.definition_object)
+            {
+                return Err(format!(
+                    "transparent definition {definition_index} changed its retained defining equality"
+                ));
+            }
+            let defining_fact: Fact = definition.defining_equality.clone().into();
+            resolve_fact_citation(
+                &definition.defining_equality_fact_id,
+                &defining_fact,
+                &self.environment_stack,
+            )?;
+            let lean_name = self
+                .environment_stack
+                .symbol_names
+                .get(&symbol_id)
+                .ok_or_else(|| {
+                    format!(
+                        "transparent definition {definition_index} references unavailable symbol ID {}",
+                        symbol_id.value()
+                    )
+                })?
+                .clone();
+            substitutions.insert(
+                symbol_id.substitution_key(),
+                definition.definition_object.clone(),
+            );
+            definition_names.push(lean_name);
+        }
+
+        let reduced_target = Runtime::new()
+            .inst_fact(
+                target,
+                &substitutions,
+                SubstitutionMode::TransparentDefinition,
+                None,
+            )
+            .map_err(|error| {
+                format!(
+                    "transparent definition transformation step {transformation_step_index} could not replay its exact substitution: {}",
+                    error.trace_message()
+                )
+            })?;
+        let rendered_reduced_target = render_fact(&reduced_target, &self.environment_stack)?;
+        let rendered_source = render_fact(source, &self.environment_stack)?;
+        if rendered_reduced_target != rendered_source {
+            return Err(format!(
+                "transparent definition transformation step {transformation_step_index} reduced `{target}` to `{reduced_target}` instead of `{source}`"
+            ));
+        }
+        render_fact(target, &self.environment_stack)?;
+        Ok(format!(
+            "(by\n  unfold {}\n  exact ({source_proof}))",
+            definition_names.join(" ")
+        ))
     }
 
     pub(super) fn construct_lean_equality_rewrite_transformation_from_result(

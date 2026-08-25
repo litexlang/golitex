@@ -26,6 +26,11 @@ impl Environment {
                         .get_by_id_mut(existing_symbol_id)
                         .expect("the matching parent symbol should remain present")
                         .merge_missing_definition_type_views_from(definition);
+                    self.definitions
+                        .symbols
+                        .get_by_id_mut(existing_symbol_id)
+                        .expect("the matching parent symbol should remain present")
+                        .merge_missing_transparent_object_definition_from(definition);
                     continue;
                 }
                 return Err(merge_name_conflict_error(
@@ -316,7 +321,16 @@ impl Environment {
 }
 
 fn same_symbol_definition(left: &SymbolDefinition, right: &SymbolDefinition) -> bool {
-    left.binding().id() == right.binding().id() && left.role() == right.role()
+    if left.binding().id() != right.binding().id() || left.role() != right.role() {
+        return false;
+    }
+    match (
+        left.transparent_object_definition(),
+        right.transparent_object_definition(),
+    ) {
+        (Some(left), Some(right)) => left.is_same_definition_as(right),
+        _ => true,
+    }
 }
 
 fn merge_name_conflict_error(name: &str, existing_namespace: &str) -> RuntimeError {

@@ -577,16 +577,28 @@ fn arithmetic_membership_closures_publish_directly_from_recursive_results() {
 #[test]
 fn set_relation_duality_passes_through_the_exact_child_result() {
     let results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
-            "let A = R\nlet B = N\ntrust A $superset B\nB $subset A\n",
+            "let A = {1}\nlet B = {2}\ntrust {1} $superset {2}\nB $subset A\n",
             "direct_set_relation_duality.lit",
         )
         .expect("execute set-relation duality source");
-    let [set_a, set_b, _, dual] = results.as_slice() else {
+    let [set_a, set_b, trusted, dual_result] = results.as_slice() else {
         panic!("expected two set aliases, trusted premise, and dual result")
     };
-    let dual = dual.factual_success().expect("duality result is factual");
-    let SuccessFactProofResult::BuiltinRule(proof) = dual.proof() else {
-        panic!("duality must retain builtin proof")
+    let dual = dual_result
+        .factual_success()
+        .expect("duality result is factual");
+    let SuccessFactProofResult::Reuse(reuse) = dual.proof() else {
+        panic!("transparent set aliases must retain the outer proof reuse")
+    };
+    let SuccessFactProofResult::Transform(transparent) = reuse.source.proof() else {
+        panic!("transparent set aliases must retain their definition reduction")
+    };
+    assert!(matches!(
+        transparent.rule,
+        FactTransformationRule::TransparentDefinitionReduction(_)
+    ));
+    let SuccessFactProofResult::BuiltinRule(proof) = transparent.source.proof() else {
+        panic!("the reduced relation must retain its builtin duality proof")
     };
     assert!(matches!(
         proof.evidence.typed(),
@@ -594,16 +606,22 @@ fn set_relation_duality_passes_through_the_exact_child_result() {
             SetRelationDualityBuiltinRule::SubsetFromSuperset
         ))
     ));
-    let [source_result] = proof.subgoals.as_slice() else {
+    let [_source_result] = proof.subgoals.as_slice() else {
         panic!("duality must retain one source Result")
     };
-    let source_result = source_result
-        .factual_success()
-        .expect("duality source must be factual");
-    let SuccessFactProofResult::StoredFactCitation(source_citation) = source_result.proof() else {
-        panic!("duality source must cite the preceding relation")
+    let StmtResult::Success(SuccessStmtResult::UnsafeStmt(SuccessUnsafeStmtResult::TrustStmt(
+        trusted,
+    ))) = trusted
+    else {
+        panic!("the source premise must remain the trusted relation")
     };
-    let trusted_fact_id = source_citation.source_fact_id;
+    let [trusted_store] = trusted.common.infers.store_fact_outputs.as_slice() else {
+        panic!("the trusted premise must retain one exact store")
+    };
+    let trusted_fact_id = trusted_store
+        .fact_id
+        .expect("the trusted premise must retain its FactId");
+    let trusted_fact = trusted_store.itself_and_why_itself_is_stored.0.clone();
     let mut compiler = StmtResultToLeanCompiler::new("direct_set_relation_duality.lit");
     compiler
         .compile_stmt_result(set_a)
@@ -618,7 +636,7 @@ fn set_relation_duality_passes_through_the_exact_child_result() {
     compiler
         .environment_stack
         .fact_propositions
-        .insert(trusted_fact_id, source_result.fact());
+        .insert(trusted_fact_id, trusted_fact);
     let proof = compiler
         .construct_lean_proof_from_direct_fact_result(dual)
         .expect("compile typed duality")

@@ -1,5 +1,7 @@
 #[path = "atomic/core.rs"]
 mod atomic_core;
+#[path = "atomic/transparent_definition.rs"]
+mod atomic_transparent_definition;
 #[path = "proof_search/builtin_rule_state.rs"]
 mod builtin_rule_state;
 #[path = "equality/core.rs"]

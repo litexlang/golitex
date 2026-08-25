@@ -245,3 +245,107 @@ fn known_fact_transformation_rejects_a_removed_result_step() {
         );
     });
 }
+
+fn execute_transparent_let_reduction() -> Vec<StmtResult> {
+    crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
+        "have fn f(x R) R = x\nlet g = f\ng(1) = 1\n",
+        "transparent_let_reduction.lit",
+    )
+    .expect("execute transparent let reduction")
+}
+
+fn transparent_let_reduction_evidence_mut(
+    results: &mut [StmtResult],
+) -> &mut TransparentDefinitionReductionEvidence {
+    let result = results
+        .last_mut()
+        .and_then(StmtResult::factual_success_mut)
+        .expect("the final transparent equality should be factual");
+    let verification = std::rc::Rc::get_mut(&mut result.verification)
+        .expect("the corruption fixture owns its verification");
+    let SuccessFactProofResult::Reuse(reuse) = verification.proof_mut() else {
+        panic!("expected outer proof reuse")
+    };
+    let transformed = std::rc::Rc::get_mut(&mut reuse.source)
+        .expect("the corruption fixture owns its transformed source");
+    let SuccessFactProofResult::Transform(transformation) = transformed.proof_mut() else {
+        panic!("expected transparent transformation")
+    };
+    let FactTransformationRule::TransparentDefinitionReduction(evidence) = &mut transformation.rule
+    else {
+        panic!("expected transparent definition evidence")
+    };
+    evidence
+}
+
+#[test]
+fn transparent_let_reduction_compiles_only_its_recorded_definition() {
+    run_registered_rule_test(|| {
+        let results = execute_transparent_let_reduction();
+        let generated = StmtResultToLeanCompiler::new("transparent_let_reduction.lit")
+            .compile_stmt_results_to_lean_source(&results)
+            .expect("compile transparent let reduction");
+
+        assert!(
+            generated.contains("(by\n  unfold g\n  exact"),
+            "{generated}"
+        );
+        assert!(!generated.contains("axiom "), "{generated}");
+        assert!(!generated.contains("sorry"), "{generated}");
+    });
+}
+
+#[test]
+fn transparent_let_reduction_compiles_non_equality_atomic_facts() {
+    run_registered_rule_test(|| {
+        let results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
+            "let S = R\n1 $in S\n",
+            "transparent_membership_reduction.lit",
+        )
+        .expect("execute transparent membership reduction");
+        let generated = StmtResultToLeanCompiler::new("transparent_membership_reduction.lit")
+            .compile_stmt_results_to_lean_source(&results)
+            .expect("compile transparent membership reduction");
+
+        assert!(
+            generated.contains("(by\n  unfold S\n  exact"),
+            "{generated}"
+        );
+        assert!(!generated.contains("axiom "), "{generated}");
+        assert!(!generated.contains("sorry"), "{generated}");
+    });
+}
+
+#[test]
+fn transparent_let_reduction_rejects_a_corrupted_defining_fact_id() {
+    run_registered_rule_test(|| {
+        let mut results = execute_transparent_let_reduction();
+        transparent_let_reduction_evidence_mut(&mut results).definitions[0]
+            .defining_equality_fact_id = FactId::new(u64::MAX);
+
+        let error = StmtResultToLeanCompiler::new("transparent_let_reduction.lit")
+            .compile_stmt_results_to_lean_source(&results)
+            .expect_err("a corrupted transparent definition FactId must fail closed");
+        assert!(
+            error.contains("unavailable cited fact `f18446744073709551615`"),
+            "{error}"
+        );
+    });
+}
+
+#[test]
+fn transparent_let_reduction_rejects_a_corrupted_definition_object() {
+    run_registered_rule_test(|| {
+        let mut results = execute_transparent_let_reduction();
+        transparent_let_reduction_evidence_mut(&mut results).definitions[0].definition_object =
+            StandardSet::C.into();
+
+        let error = StmtResultToLeanCompiler::new("transparent_let_reduction.lit")
+            .compile_stmt_results_to_lean_source(&results)
+            .expect_err("a corrupted transparent definition object must fail closed");
+        assert!(
+            error.contains("changed its retained defining equality"),
+            "{error}"
+        );
+    });
+}

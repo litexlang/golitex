@@ -1122,6 +1122,39 @@ pub(super) fn fact_transformation_rule_value(rule: &FactTransformationRule) -> J
         FactTransformationRule::RationalNormalization => {
             object(vec![string_field("kind", "RationalNormalization")])
         }
+        FactTransformationRule::TransparentDefinitionReduction(evidence) => object(vec![
+            string_field("kind", "TransparentDefinitionReduction"),
+            (
+                "definitions".to_string(),
+                array(
+                    evidence
+                        .definitions
+                        .iter()
+                        .map(|definition| {
+                            object(vec![
+                                string_field("symbol", definition.symbol.display_name()),
+                                string_field(
+                                    "symbol_id",
+                                    definition.symbol.id().value().to_string(),
+                                ),
+                                string_field(
+                                    "definition_object",
+                                    definition.definition_object.to_string(),
+                                ),
+                                string_field(
+                                    "defining_equality",
+                                    definition.defining_equality.to_string(),
+                                ),
+                                string_field(
+                                    "defining_equality_fact_id",
+                                    fact_id(definition.defining_equality_fact_id),
+                                ),
+                            ])
+                        })
+                        .collect(),
+                ),
+            ),
+        ]),
     }
 }
 
