@@ -66,6 +66,55 @@ impl StmtResultToLeanCompiler {
             };
             children.push((child.fact(), proof));
         }
+        let extended_rule = match rule {
+            SetBuiltinRule::SubsetTransitivity => {
+                Some(LeanSetBuiltinCompilationKind::SubsetTransitivity)
+            }
+            SetBuiltinRule::UnionSetMinusDecomposition => {
+                Some(LeanSetBuiltinCompilationKind::UnionSetMinusDecomposition)
+            }
+            SetBuiltinRule::UnionAbsorptionFromSubset => {
+                Some(LeanSetBuiltinCompilationKind::UnionAbsorptionFromSubset)
+            }
+            SetBuiltinRule::IntersectIdempotent => {
+                Some(LeanSetBuiltinCompilationKind::IntersectIdempotent)
+            }
+            SetBuiltinRule::IntersectSetMinusSelfEmpty => {
+                Some(LeanSetBuiltinCompilationKind::IntersectSetMinusSelfEmpty)
+            }
+            SetBuiltinRule::IntersectSetMinusDisjointFromSubset => {
+                Some(LeanSetBuiltinCompilationKind::IntersectSetMinusDisjointFromSubset)
+            }
+            SetBuiltinRule::SetMinusSelfEmpty => {
+                Some(LeanSetBuiltinCompilationKind::SetMinusSelfEmpty)
+            }
+            SetBuiltinRule::SetMinusEmptyRight => {
+                Some(LeanSetBuiltinCompilationKind::SetMinusEmptyRight)
+            }
+            SetBuiltinRule::SetMinusEmptyLeft => {
+                Some(LeanSetBuiltinCompilationKind::SetMinusEmptyLeft)
+            }
+            SetBuiltinRule::SetMinusIntersectSelf => {
+                Some(LeanSetBuiltinCompilationKind::SetMinusIntersectSelf)
+            }
+            _ => None,
+        };
+        if let Some(extended_rule) = extended_rule {
+            let premises = children
+                .into_iter()
+                .map(|(fact, proof_expression)| CompiledFactProofBody {
+                    proposition: String::new(),
+                    fact,
+                    proof_expression,
+                })
+                .collect::<Vec<_>>();
+            return Ok(Some(render_extended_set_rule(
+                target,
+                extended_rule,
+                &premises,
+                &self.environment_stack,
+            )?));
+        }
         Ok(Some(render_base_set_builtin_rule_from_compiled_children(
             target,
             rule,
@@ -1280,8 +1329,7 @@ impl StmtResultToLeanCompiler {
                     &result.verification,
                 )
                 .map(Some),
-            SuccessFactProofResult::Strategy(_)
-            | SuccessFactProofResult::DefinitionReduction(_)
+            SuccessFactProofResult::DefinitionReduction(_)
             | SuccessFactProofResult::DiagnosticOnly(_) => Ok(None),
             SuccessFactProofResult::BuiltinRule(builtin)
             | SuccessFactProofResult::BuiltinStrategy(builtin) => {

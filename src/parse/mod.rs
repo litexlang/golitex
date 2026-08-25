@@ -44,7 +44,5 @@ mod statement_tooling;
 mod statement_trust_fact;
 #[path = "statements/try_block.rs"]
 mod statement_try_block;
-#[path = "statements/use_strategy.rs"]
-mod statement_use_strategy;
 #[path = "statements/witness.rs"]
 mod statement_witness;

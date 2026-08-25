@@ -896,54 +896,15 @@ thm probability_of_disjoint_union:
 thm subset_intersect_complement_is_empty:
     ? forall Omega set, A power_set(Omega):
         intersect(A, set_minus(Omega, A)) = {}
-    by extension:
-        ? intersect(A, set_minus(Omega, A)) = {}
-        claim:
-            ? forall point intersect(A, set_minus(Omega, A)):
-                point $in {}
-            by contra:
-                ? point $in {}
-                not point $in {}
-                point $in A
-                point $in set_minus(Omega, A)
-                not point $in A
-                impossible not point $in A
-        claim:
-            ? forall point {}:
-                point $in intersect(A, set_minus(Omega, A))
-            by contra:
-                ? point $in intersect(A, set_minus(Omega, A))
-                not point $in intersect(A, set_minus(Omega, A))
-                impossible point $in {}
 
 # Every point of Omega lies either in A or in its relative complement.
 thm subset_union_complement_is_universe:
     ? forall Omega set, A power_set(Omega):
         union(A, set_minus(Omega, A)) = Omega
-    by extension:
-        ? union(A, set_minus(Omega, A)) = Omega
-        claim:
-            ? forall point union(A, set_minus(Omega, A)):
-                point $in Omega
-            point $in A or point $in set_minus(Omega, A)
-            by cases:
-                ? point $in Omega
-                case point $in A:
-                    A $subset Omega
-                    point $in Omega
-                case point $in set_minus(Omega, A):
-                    point $in Omega
-        claim:
-            ? forall point Omega:
-                point $in union(A, set_minus(Omega, A))
-            point $in A or not point $in A
-            by cases:
-                ? point $in union(A, set_minus(Omega, A))
-                case point $in A:
-                    point $in union(A, set_minus(Omega, A))
-                case not point $in A:
-                    point $in set_minus(Omega, A)
-                    point $in union(A, set_minus(Omega, A))
+    A $subset Omega
+    union(A, set_minus(Omega, A)) = union(A, Omega)
+    union(A, Omega) = Omega
+    union(A, set_minus(Omega, A)) = Omega
 
 # Apply finite additivity to the partition Omega = A union (Omega minus A).
 thm probability_of_event_complement:
@@ -1029,93 +990,16 @@ thm probability_mono:
 thm set_intersect_relative_complement_is_empty:
     ? forall A, B set:
         intersect(A, set_minus(B, A)) = {}
-    by extension:
-        ? intersect(A, set_minus(B, A)) = {}
-        claim:
-            ? forall point intersect(A, set_minus(B, A)):
-                point $in {}
-            by contra:
-                ? point $in {}
-                not point $in {}
-                point $in A
-                point $in set_minus(B, A)
-                not point $in A
-                impossible not point $in A
-        claim:
-            ? forall point {}:
-                point $in intersect(A, set_minus(B, A))
-            by contra:
-                ? point $in intersect(A, set_minus(B, A))
-                not point $in intersect(A, set_minus(B, A))
-                impossible point $in {}
 
 # Decompose A union B into the disjoint pieces A and B minus A.
 thm union_with_relative_complement:
     ? forall A, B set:
         union(A, set_minus(B, A)) = union(A, B)
-    by extension:
-        ? union(A, set_minus(B, A)) = union(A, B)
-        claim:
-            ? forall point union(A, set_minus(B, A)):
-                point $in union(A, B)
-            point $in A or point $in set_minus(B, A)
-            by cases:
-                ? point $in union(A, B)
-                case point $in A:
-                    point $in union(A, B)
-                case point $in set_minus(B, A):
-                    point $in B
-                    point $in union(A, B)
-        claim:
-            ? forall point union(A, B):
-                point $in union(A, set_minus(B, A))
-            point $in A or point $in B
-            by cases:
-                ? point $in union(A, set_minus(B, A))
-                case point $in A:
-                    point $in union(A, set_minus(B, A))
-                case point $in B:
-                    point $in A or not point $in A
-                    by cases:
-                        ? point $in union(A, set_minus(B, A))
-                        case point $in A:
-                            point $in union(A, set_minus(B, A))
-                        case not point $in A:
-                            point $in set_minus(B, A)
-                            point $in union(A, set_minus(B, A))
 
 # Removing A intersect B from B is the same as removing all of A from B.
 thm remove_intersection_equals_remove_set:
     ? forall A, B set:
         set_minus(B, intersect(A, B)) = set_minus(B, A)
-    by extension:
-        ? set_minus(B, intersect(A, B)) = set_minus(B, A)
-        claim:
-            ? forall point set_minus(B, intersect(A, B)):
-                point $in set_minus(B, A)
-            point $in B
-            not point $in intersect(A, B)
-            claim:
-                ? not point $in A
-                by contra:
-                    ? not point $in A
-                    point $in A
-                    point $in intersect(A, B)
-                    impossible not point $in intersect(A, B)
-            point $in set_minus(B, A)
-        claim:
-            ? forall point set_minus(B, A):
-                point $in set_minus(B, intersect(A, B))
-            point $in B
-            not point $in A
-            claim:
-                ? not point $in intersect(A, B)
-                by contra:
-                    ? not point $in intersect(A, B)
-                    point $in intersect(A, B)
-                    point $in A
-                    impossible not point $in A
-            point $in set_minus(B, intersect(A, B))
 
 # Use the disjoint decomposition A union (B minus A), then express the second
 # term as P(B)-P(A intersect B).
@@ -1169,69 +1053,10 @@ template<Omega set, events power_set(power_set(Omega)): $is_sigma_algebra(Omega,
 thm relative_complement_involution:
     ? forall Omega set, A power_set(Omega):
         set_minus(Omega, set_minus(Omega, A)) = A
-    by extension:
-        ? set_minus(Omega, set_minus(Omega, A)) = A
-        claim:
-            ? forall point set_minus(Omega, set_minus(Omega, A)):
-                point $in A
-            point $in Omega
-            not point $in set_minus(Omega, A)
-            by contra:
-                ? point $in A
-                not point $in A
-                point $in set_minus(Omega, A)
-                impossible point $in set_minus(Omega, A)
-        claim:
-            ? forall point A:
-                point $in set_minus(Omega, set_minus(Omega, A))
-            A $subset Omega
-            point $in Omega
-            claim:
-                ? not point $in set_minus(Omega, A)
-                by contra:
-                    ? not point $in set_minus(Omega, A)
-                    point $in set_minus(Omega, A)
-                    not point $in A
-                    impossible not point $in A
-            point $in set_minus(Omega, set_minus(Omega, A))
 
 thm complement_of_index_union:
     ? forall index_set, Omega set, family fn (index index_set) power_set(Omega):
         set_minus(Omega, index_union(index_set, Omega, family)) = index_intersect(index_set, Omega, fn (index index_set) power_set(Omega) {set_minus(Omega, family(index))})
-    by extension:
-        ? set_minus(Omega, index_union(index_set, Omega, family)) = index_intersect(index_set, Omega, fn (index index_set) power_set(Omega) {set_minus(Omega, family(index))})
-        claim:
-            ? forall point set_minus(Omega, index_union(index_set, Omega, family)):
-                point $in index_intersect(index_set, Omega, fn (index index_set) power_set(Omega) {set_minus(Omega, family(index))})
-            point $in Omega
-            not point $in index_union(index_set, Omega, family)
-            claim:
-                ? forall index index_set:
-                    point $in set_minus(Omega, family(index))
-                claim:
-                    ? not point $in family(index)
-                    by contra:
-                        ? not point $in family(index)
-                        point $in family(index)
-                        witness exist candidate_index index_set st {point $in family(candidate_index)} from index
-                        point $in index_union(index_set, Omega, family)
-                        impossible point $in index_union(index_set, Omega, family)
-                point $in set_minus(Omega, family(index))
-            point $in index_intersect(index_set, Omega, fn (index index_set) power_set(Omega) {set_minus(Omega, family(index))})
-        claim:
-            ? forall point index_intersect(index_set, Omega, fn (index index_set) power_set(Omega) {set_minus(Omega, family(index))}):
-                point $in set_minus(Omega, index_union(index_set, Omega, family))
-            point $in Omega
-            claim:
-                ? not point $in index_union(index_set, Omega, family)
-                by contra:
-                    ? not point $in index_union(index_set, Omega, family)
-                    point $in index_union(index_set, Omega, family)
-                    obtain index from exist index index_set st {point $in family(index)}
-                    point $in set_minus(Omega, family(index))
-                    not point $in family(index)
-                    impossible not point $in family(index)
-            point $in set_minus(Omega, index_union(index_set, Omega, family))
 
 thm event_countable_intersection_is_event:
     ? forall Omega set, events power_set(power_set(Omega)), event_sequence fn (n N+) events:
@@ -1412,12 +1237,6 @@ thm subset_transitive:
         middle_set $subset right_set
         =>:
             left_set $subset right_set
-    claim:
-        ? forall point left_set:
-            point $in right_set
-        point $in middle_set
-        point $in right_set
-    by def left_set $subset right_set
 thm increasing_event_sequence_shift_mono:
     ? forall Omega set, events power_set(power_set(Omega)), event_sequence fn (n N+) events, start N+, offset N:
         $is_increasing_event_sequence(Omega, events, event_sequence)
@@ -1462,36 +1281,15 @@ thm increasing_event_increment_partitions_next:
             union(event_sequence(k), \increasing_event_increment<Omega, events>(event_sequence, k + 1)) = event_sequence(k + 1)
     by def $is_increasing_event_sequence(Omega, events, event_sequence)
     event_sequence(k) $subset event_sequence(k + 1)
-    by thm increasing_event_increment_is_subset(Omega, events, event_sequence, k + 1) => \increasing_event_increment<Omega, events>(event_sequence, k + 1) $subset event_sequence(k + 1)
     \increasing_event_increment<Omega, events>(event_sequence, k + 1) = \raw_increasing_event_increment<Omega, events>(event_sequence, k + 1)
     k + 1 > 1
     \raw_increasing_event_increment<Omega, events>(event_sequence, k + 1) = set_minus(event_sequence(k + 1), event_sequence((k + 1) - 1))
     (k + 1) - 1 = k
     \increasing_event_increment<Omega, events>(event_sequence, k + 1) = set_minus(event_sequence(k + 1), event_sequence(k))
-    by extension:
-        ? union(event_sequence(k), \increasing_event_increment<Omega, events>(event_sequence, k + 1)) = event_sequence(k + 1)
-        claim:
-            ? forall point union(event_sequence(k), \increasing_event_increment<Omega, events>(event_sequence, k + 1)):
-                point $in event_sequence(k + 1)
-            point $in event_sequence(k) or point $in \increasing_event_increment<Omega, events>(event_sequence, k + 1)
-            by cases:
-                ? point $in event_sequence(k + 1)
-                case point $in event_sequence(k):
-                    point $in event_sequence(k + 1)
-                case point $in \increasing_event_increment<Omega, events>(event_sequence, k + 1):
-                    point $in event_sequence(k + 1)
-        claim:
-            ? forall point event_sequence(k + 1):
-                point $in union(event_sequence(k), \increasing_event_increment<Omega, events>(event_sequence, k + 1))
-            point $in event_sequence(k) or not point $in event_sequence(k)
-            by cases:
-                ? point $in union(event_sequence(k), \increasing_event_increment<Omega, events>(event_sequence, k + 1))
-                case point $in event_sequence(k):
-                    point $in union(event_sequence(k), \increasing_event_increment<Omega, events>(event_sequence, k + 1))
-                case not point $in event_sequence(k):
-                    point $in set_minus(event_sequence(k + 1), event_sequence(k))
-                    point $in \increasing_event_increment<Omega, events>(event_sequence, k + 1)
-                    point $in union(event_sequence(k), \increasing_event_increment<Omega, events>(event_sequence, k + 1))
+    union(event_sequence(k), \increasing_event_increment<Omega, events>(event_sequence, k + 1)) = union(event_sequence(k), set_minus(event_sequence(k + 1), event_sequence(k)))
+    union(event_sequence(k), set_minus(event_sequence(k + 1), event_sequence(k))) = union(event_sequence(k), event_sequence(k + 1))
+    union(event_sequence(k), event_sequence(k + 1)) = event_sequence(k + 1)
+    union(event_sequence(k), \increasing_event_increment<Omega, events>(event_sequence, k + 1)) = event_sequence(k + 1)
 
 thm increasing_event_sequence_mono:
     ? forall Omega set, events power_set(power_set(Omega)), event_sequence fn (index N+) events, earlier, later N+:
@@ -1518,31 +1316,12 @@ thm earlier_increasing_event_increment_disjoint_from_later:
     earlier <= later - 1
     by thm increasing_event_increment_is_subset(Omega, events, event_sequence, earlier) => \increasing_event_increment<Omega, events>(event_sequence, earlier) $subset event_sequence(earlier)
     by thm increasing_event_sequence_mono(Omega, events, event_sequence, earlier, later - 1) => event_sequence(earlier) $subset event_sequence(later - 1)
-    by thm subset_transitive(\increasing_event_increment<Omega, events>(event_sequence, earlier), event_sequence(earlier), event_sequence(later - 1)) => \increasing_event_increment<Omega, events>(event_sequence, earlier) $subset event_sequence(later - 1)
+    \increasing_event_increment<Omega, events>(event_sequence, earlier) $subset event_sequence(later - 1)
     \increasing_event_increment<Omega, events>(event_sequence, later) = \raw_increasing_event_increment<Omega, events>(event_sequence, later)
     \raw_increasing_event_increment<Omega, events>(event_sequence, later) = set_minus(event_sequence(later), event_sequence(later - 1))
     \increasing_event_increment<Omega, events>(event_sequence, later) = set_minus(event_sequence(later), event_sequence(later - 1))
-    by extension:
-        ? intersect(\increasing_event_increment<Omega, events>(event_sequence, earlier), \increasing_event_increment<Omega, events>(event_sequence, later)) = {}
-        claim:
-            ? forall point intersect(\increasing_event_increment<Omega, events>(event_sequence, earlier), \increasing_event_increment<Omega, events>(event_sequence, later)):
-                point $in {}
-            by contra:
-                ? point $in {}
-                not point $in {}
-                point $in \increasing_event_increment<Omega, events>(event_sequence, earlier)
-                point $in event_sequence(later - 1)
-                point $in \increasing_event_increment<Omega, events>(event_sequence, later)
-                point $in set_minus(event_sequence(later), event_sequence(later - 1))
-                not point $in event_sequence(later - 1)
-                impossible not point $in event_sequence(later - 1)
-        claim:
-            ? forall point {}:
-                point $in intersect(\increasing_event_increment<Omega, events>(event_sequence, earlier), \increasing_event_increment<Omega, events>(event_sequence, later))
-            by contra:
-                ? point $in intersect(\increasing_event_increment<Omega, events>(event_sequence, earlier), \increasing_event_increment<Omega, events>(event_sequence, later))
-                not point $in intersect(\increasing_event_increment<Omega, events>(event_sequence, earlier), \increasing_event_increment<Omega, events>(event_sequence, later))
-                impossible point $in {}
+    intersect(\increasing_event_increment<Omega, events>(event_sequence, earlier), set_minus(event_sequence(later), event_sequence(later - 1))) = {}
+    intersect(\increasing_event_increment<Omega, events>(event_sequence, earlier), \increasing_event_increment<Omega, events>(event_sequence, later)) = intersect(\increasing_event_increment<Omega, events>(event_sequence, earlier), set_minus(event_sequence(later), event_sequence(later - 1))) = {}
 
 thm equal_event_pairs_preserve_empty_intersection:
     ? forall left_event, right_event, source_left_event, source_right_event set:
@@ -1767,24 +1546,6 @@ thm pointwise_equal_families_have_equal_index_union:
             left_family(index) = right_family(index)
         =>:
             index_union(index_set, Omega, left_family) = index_union(index_set, Omega, right_family)
-    by extension:
-        ? index_union(index_set, Omega, left_family) = index_union(index_set, Omega, right_family)
-        claim:
-            ? forall point index_union(index_set, Omega, left_family):
-                point $in index_union(index_set, Omega, right_family)
-            obtain witness_index from exist witness_index index_set st {point $in left_family(witness_index)}
-            left_family(witness_index) = right_family(witness_index)
-            point $in right_family(witness_index)
-            witness exist candidate_index index_set st {point $in right_family(candidate_index)} from witness_index
-            point $in index_union(index_set, Omega, right_family)
-        claim:
-            ? forall point index_union(index_set, Omega, right_family):
-                point $in index_union(index_set, Omega, left_family)
-            obtain witness_index from exist witness_index index_set st {point $in right_family(witness_index)}
-            left_family(witness_index) = right_family(witness_index)
-            point $in left_family(witness_index)
-            witness exist candidate_index index_set st {point $in left_family(candidate_index)} from witness_index
-            point $in index_union(index_set, Omega, left_family)
 
 thm increasing_event_sequence_has_probability_disjointification:
     ? forall Omega set, events power_set(power_set(Omega)), probability fn (event events) R, event_sequence fn (index N+) events:

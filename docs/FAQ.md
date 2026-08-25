@@ -1488,12 +1488,11 @@ without a strategy, the user may have to introduce the intermediate pieces by
 hand: first `g - h`, then `(g - h) * t`, then the final sum with `f`. The proof
 is mathematically routine, but the object is syntactically deep.
 
-A `strategy` lets Litex attach a dedicated proof route to the target predicate
-shape, so this kind of structural proof can be handled in a controlled place
-instead of being baked into unrestricted global `forall` search. In other
-words, a strategy is not just "more automation"; it is a scoped way to teach
-Litex how to descend into a particular family of objects when proving a
-particular predicate.
+A `strategy` packages that structural argument as one checked, named universal
+proof. The potentially deep reasoning lives in the definition body; after the
+definition succeeds, the resulting `forall` participates in the same ordinary
+matching used by other known universal facts. There is no second strategy-only
+proof-search route.
 
 The shape is:
 
@@ -1505,11 +1504,11 @@ strategy name:
             $target_predicate(...)
 ```
 
-After the strategy is registered, Litex can use it when it sees a matching
-predicate goal. The strategy can also be stopped and re-enabled, so this form
-of automation remains local and controllable. In serious files, a strategy
-should be backed by a real checked proof or by clearly marked proof debt, just
-like any other reusable proof route.
+After the strategy is defined, Litex can use its proved `forall` when it sees a
+matching predicate goal. Its visibility follows the normal environment and
+lexical-scope rules. In serious files, a strategy should be backed by a real
+checked proof or by clearly marked proof debt, just like any other reusable
+universal fact.
 
 ## Why can definition folding stay fast in a large context?
 

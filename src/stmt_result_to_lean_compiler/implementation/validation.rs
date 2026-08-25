@@ -1032,7 +1032,6 @@ pub(super) fn describe_success_fact_result_for_direct_compilation_audit(
             proof.subgoals.len()
         ),
         SuccessFactProofResult::StoredFactCitation(_) => "StoredFactCitation".to_string(),
-        SuccessFactProofResult::Strategy(_) => "Strategy".to_string(),
         SuccessFactProofResult::KnownForallInstantiation(_) => {
             "KnownForallInstantiation".to_string()
         }
@@ -1076,7 +1075,6 @@ pub(super) fn describe_success_fact_result_for_direct_compilation_audit(
                             SuccessFactProofResult::StoredFactCitation(_) => {
                                 "StoredFactCitation".to_string()
                             }
-                            SuccessFactProofResult::Strategy(_) => "Strategy".to_string(),
                             SuccessFactProofResult::KnownForallInstantiation(_) => {
                                 "KnownForallInstantiation".to_string()
                             }

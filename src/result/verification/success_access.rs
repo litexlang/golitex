@@ -173,10 +173,6 @@ impl SuccessFactProofResult {
         })
     }
 
-    pub fn strategy(strategy: DefStrategyStmt, detail: Option<String>) -> Self {
-        Self::Strategy(SuccessStrategyFactProofResult { detail, strategy })
-    }
-
     pub fn cited_definition(
         _goal: Fact,
         definition: DefPropStmt,
@@ -333,7 +329,6 @@ impl SuccessFactProofResult {
                 !r.msg.is_empty()
             }
             SuccessFactProofResult::StoredFactCitation(_)
-            | SuccessFactProofResult::Strategy(_)
             | SuccessFactProofResult::KnownForallInstantiation(_)
             | SuccessFactProofResult::DefinitionReduction(_)
             | SuccessFactProofResult::CheckedFunctionDefinitionReduction(_)

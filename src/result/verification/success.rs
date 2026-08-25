@@ -950,26 +950,10 @@ pub struct SuccessStoredFactCitationProofResult {
     pub source_fact_id: FactId,
 }
 
-#[derive(Clone)]
-pub struct SuccessStrategyFactProofResult {
-    pub detail: Option<String>,
-    pub strategy: DefStrategyStmt,
-}
-
 pub struct SuccessDefinitionReductionFactProofResult {
     pub detail: Option<String>,
     pub definition: DefPropStmt,
     pub verification: Rc<DefinitionReductionVerificationEvidence>,
-}
-
-impl fmt::Debug for SuccessStrategyFactProofResult {
-    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        formatter
-            .debug_struct("SuccessStrategyFactProofResult")
-            .field("detail", &self.detail)
-            .field("strategy", &self.strategy.to_string())
-            .finish()
-    }
 }
 
 impl fmt::Debug for SuccessDefinitionReductionFactProofResult {
@@ -1110,7 +1094,6 @@ pub enum SuccessFactProofResult {
     BuiltinRule(SuccessBuiltinFactProofResult),
     BuiltinStrategy(SuccessBuiltinFactProofResult),
     StoredFactCitation(SuccessStoredFactCitationProofResult),
-    Strategy(SuccessStrategyFactProofResult),
     KnownForallInstantiation(SuccessInstantiateKnownForallResult),
     DefinitionReduction(SuccessDefinitionReductionFactProofResult),
     CheckedFunctionDefinitionReduction(SuccessCheckedFunctionDefinitionReductionFactProofResult),

@@ -195,12 +195,6 @@ impl Runtime {
             if result.is_success() {
                 return Ok(result);
             }
-
-            result = self
-                .verify_non_equational_atomic_fact_with_strategy(atomic_fact, &next_round_state)?;
-            if result.is_success() {
-                return Ok(result);
-            }
         }
 
         if alternate_fact_search == AlternateFactSearch::Enabled {

@@ -1265,8 +1265,6 @@ const ZH_TEXTS: &[(&str, &str)] = &[
     ("proof by regularity axiom", "由正则性公理证明"),
     ("proof by theorem", "由定理证明"),
     ("theorem", "定理"),
-    ("use strategy statement", "使用策略语句"),
-    ("stop strategy statement", "停止策略语句"),
     ("strategy definition", "策略定义"),
     (
         "abstract predicate interface definition",

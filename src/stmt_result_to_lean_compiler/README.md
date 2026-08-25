@@ -167,7 +167,16 @@ fail closed rather than rely on unstable elaboration.
 
 ## Native Mathlib Corollaries
 
-Status: confirmed target interface; not yet fully implemented.
+Status: the first closed native-export slice was implemented on 2026-08-25;
+the general interface remains ongoing.
+
+The implemented slice recognizes exactly a named theorem with two direct
+`R` binders, the premise `a < b`, the conclusion `a <= b`, and allowlisted
+typed strict-to-weak order evidence. It emits
+`theorem name (a b : ℝ) (h : a < b) : a ≤ b` under the generated `Native`
+namespace. The executable source, generated artifact, real Lean gate, and
+ordinary Mathlib consumer live in
+[`showcases/litex_to_mathlib_pipeline`](../../showcases/litex_to_mathlib_pipeline/README.md).
 
 A supported user theorem should have two Lean views. Its canonical theorem is
 the exact FactId/proof-provenance target and retains implicit host carriers,
@@ -188,11 +197,15 @@ has the intended Lean-facing corollary type:
 theorem litex_real_add_comm (a b : ℝ) : a + b = b + a
 ```
 
-The corollary must be derived from the canonical theorem through allowlisted,
-fully proved wrapper bridges. It must not ask Lean to rediscover the proof,
-lose the source FactId route, add an axiom or proof hole, or force a native
-statement when elimination is not lossless. If no reviewed elimination route
-exists, compiler emits only the canonical theorem.
+The native view must be generated from the same typed Result as the canonical
+view. When wrapper elimination is lossless it may specialize the canonical
+theorem through fully proved bridges. When a canonical parameter contains an
+opaque `In.rep` choice, it may instead replay the exact allowlisted verifier
+evidence through native introduction and elimination bridges. It must not ask
+Lean to rediscover the proof, substitute a different proof route, add an axiom
+or proof hole, or force a native statement when the evidence and wrappers do
+not support one. If no reviewed route exists, compiler emits only the canonical
+theorem.
 
 ## Direct Recursive Result Architecture
 
@@ -1212,11 +1225,6 @@ An evaluation performed by a runtime algorithm without typed computation
 evidence remains explicit in Result and fails closed at the standalone compiler
 boundary.
 
-Successful strategy activation/deactivation commands are true `PassThrough` layers: they
-validate that no mathematical effects were published and emit no Lean
-declaration. A Result stream containing only such commands still compiles to a
-valid declaration-free Lean namespace.
-
 The stack follows Result ownership. A top-level statement uses the root
 environment. A `sketch` pushes an inherited child environment, recursively
 compiles its `proof_steps`, emits those declarations inside a namespace, then
@@ -1793,7 +1801,6 @@ pub enum SuccessFactProofResult {
     BuiltinRule(SuccessBuiltinFactProofResult),
     BuiltinStrategy(SuccessBuiltinFactProofResult),
     StoredFactCitation(SuccessStoredFactCitationProofResult),
-    Strategy(SuccessStrategyFactProofResult),
     KnownForallInstantiation(SuccessInstantiateKnownForallResult),
     DefinitionReduction(SuccessDefinitionReductionFactProofResult),
     CheckedFunctionDefinitionReduction(
@@ -2257,10 +2264,10 @@ it is not a second IR and owns no copied proof data. A missing local parameter
 store, wrong FactId, changed conclusion, or reordered child is rejected before
 Lean source is published.
 
-Strategy activation has no Lean analogue. The successful definition proves
-and stores the forall theorem; later `use strategy` and `stop strategy` affect
-only Litex Runtime proof search. Their Results validate as pass-through layers
-and emit no declaration. The persistent example is
+The successful strategy definition proves and stores its forall theorem. Later
+matching uses the ordinary known-forall Result route, so neither Litex Runtime
+nor the compiler has a separate strategy-activation state or command Result.
+The persistent example is
 [`43_StrategyDefinitionCompilerEnvironment.lit`](../../lean/examples/43_StrategyDefinitionCompilerEnvironment.lit).
 
 ## Why There Is No Full Mirrored Statement IR

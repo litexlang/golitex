@@ -64,6 +64,62 @@ fn capture_stmt_results_json_v2_on_verifier_stack(
 }
 
 #[test]
+fn named_real_less_to_less_equal_emits_native_mathlib_corollary() {
+    let generated = compile_on_verifier_stack(
+        "thm order_bridge:\n    ? forall a, b R:\n        a < b\n        =>:\n            a <= b\n",
+        "native_real_order.lit",
+    )
+    .expect("compile the canonical theorem and its native real-order corollary");
+
+    assert!(generated.contains("theorem order_bridge :"), "{generated}");
+    assert!(generated.contains("namespace Native"), "{generated}");
+    assert!(
+        generated.contains("theorem order_bridge (a b : ℝ) (__domain1 : a < b) : a ≤ b := by"),
+        "{generated}"
+    );
+    assert!(
+        generated.contains("exact Litex.OrderBridge.real_le_iff.mp"),
+        "{generated}"
+    );
+    assert!(
+        generated.contains("Litex.Lt.toLe (Litex.OrderBridge.ltOfReal __domain1)"),
+        "{generated}"
+    );
+    assert!(!generated.contains("axiom "), "{generated}");
+    assert!(!generated.contains("sorry"), "{generated}");
+}
+
+#[test]
+fn litex_to_mathlib_pipeline_showcase_generated_lean_has_not_drifted() {
+    const SOURCE: &str = include_str!("../../showcases/litex_to_mathlib_pipeline/main.lit");
+    const CHECKED_IN: &str = include_str!(
+        "../../showcases/litex_to_mathlib_pipeline/LitexToMathlibPipelineGenerated.lean"
+    );
+
+    let generated =
+        compile_on_verifier_stack(SOURCE, "main.lit").expect("compile the pipeline showcase");
+
+    assert_eq!(generated, CHECKED_IN);
+}
+
+#[test]
+fn named_real_same_equality_remains_outside_native_corollary_surface() {
+    let generated = compile_on_verifier_stack(
+        "thm real_reflexivity:\n    ? forall a R:\n        a = a\n    a = a\n",
+        "native_real_equality_boundary.lit",
+    )
+    .expect("compile the canonical heterogeneous-equality theorem");
+
+    assert!(
+        generated.contains("theorem real_reflexivity :"),
+        "{generated}"
+    );
+    assert!(!generated.contains("namespace Native"), "{generated}");
+    assert!(!generated.contains("axiom "), "{generated}");
+    assert!(!generated.contains("sorry"), "{generated}");
+}
+
+#[test]
 fn known_forall_multi_conclusion_fact_id_provenance_compiles_both_exact_projections() {
     const SOURCE: &str = include_str!("../../lean/examples/57_KnownForallFactIdProvenance.lit");
     let generated = compile_on_verifier_stack(SOURCE, "57_KnownForallFactIdProvenance.lit")
@@ -1876,6 +1932,45 @@ fn extended_set_rules_use_exact_power_set_and_subset_certificates() {
     assert!(!generated.contains("LitexObject"));
     assert!(!generated.contains("Litex.Object"));
     assert!(!generated.contains("Set.univ"));
+    assert!(!generated.contains("axiom "));
+    assert!(!generated.contains("sorry"));
+}
+
+#[test]
+fn elementary_set_algebra_completion_replays_exact_certificates() {
+    const SOURCE: &str = include_str!("../../lean/examples/58_ElementarySetAlgebraCompletion.lit");
+    let result_json = capture_stmt_results_json_v2_on_verifier_stack(
+        SOURCE,
+        "58_ElementarySetAlgebraCompletion.lit",
+    )
+    .expect("capture elementary set-algebra certificates");
+    for rule in [
+        "set.union_set_minus_decomposition",
+        "set.intersect_set_minus_self_empty",
+        "set.intersect_idempotent",
+        "set.set_minus_self_empty",
+        "set.union_eq_right_of_subset",
+        "SubsetTransitivity",
+    ] {
+        assert!(result_json.contains(rule), "missing set certificate {rule}");
+    }
+
+    let generated = compile_on_verifier_stack(SOURCE, "58_ElementarySetAlgebraCompletion.lit")
+        .expect("compile elementary set-algebra certificates");
+    for theorem in [
+        "Litex.SetRules.unionSetMinusDecomposition",
+        "Litex.SetRules.intersectSetMinusSelfEmpty",
+        "Litex.SetRules.intersectIdempotent",
+        "Litex.SetRules.setMinusSelfEmpty",
+        "Litex.SetRules.unionEqRightOfSubset",
+        "Litex.SetRules.intersectSetMinusOfSubsetEmpty",
+        "Litex.SetRules.subsetTransitive",
+    ] {
+        assert!(
+            generated.contains(theorem),
+            "missing generated theorem {theorem}: {generated}"
+        );
+    }
     assert!(!generated.contains("axiom "));
     assert!(!generated.contains("sorry"));
 }

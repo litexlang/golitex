@@ -54,7 +54,5 @@ pub use statement_types::Stmt;
 pub use statement_types::UnsafeStmt;
 pub use statement_types::WitnessStmt;
 pub use strategy_stmt::DefStrategyStmt;
-pub use strategy_stmt::StopStrategyStmt;
-pub use strategy_stmt::UseStrategyStmt;
 pub use struct_stmt::{DefStructStmt, StructFieldDef};
 pub use thm_stmt::DefThmStmt;

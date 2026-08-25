@@ -329,16 +329,6 @@ impl StmtResultToLeanCompiler {
                     self.compile_try_stmt_result_to_lean_source(result)
                 }
             },
-            SuccessStmtResult::Command(SuccessCommandStmtResult::UseStrategyStmt(result)) => self
-                .compile_strategy_activation_command_result_to_lean_source(
-                    &result.common,
-                    "use strategy",
-                ),
-            SuccessStmtResult::Command(SuccessCommandStmtResult::StopStrategyStmt(result)) => self
-                .compile_strategy_activation_command_result_to_lean_source(
-                    &result.common,
-                    "stop strategy",
-                ),
             SuccessStmtResult::Command(SuccessCommandStmtResult::EvalStmt(result)) => {
                 self.compile_eval_stmt_result_to_lean_source(result)
             }

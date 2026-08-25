@@ -248,9 +248,6 @@ impl FactGraphBuilder {
             SuccessFactProofResult::StoredFactCitation(result) => {
                 self.add_cited_stmt_node(&result.source_fact.clone().into_stmt());
             }
-            SuccessFactProofResult::Strategy(result) => {
-                self.add_cited_stmt_node(&result.strategy.clone().into());
-            }
             SuccessFactProofResult::KnownForallInstantiation(result) => {
                 self.add_cited_stmt_node(&result.source_fact.clone().into_stmt());
                 for requirement in &result.requirements {
@@ -522,9 +519,6 @@ impl FactGraphBuilder {
             SuccessFactProofResult::StoredFactCitation(result) => {
                 self.add_cited_stmt_edges(target_id, &result.source_fact.clone().into_stmt())
             }
-            SuccessFactProofResult::Strategy(result) => {
-                self.add_cited_stmt_edges(target_id, &result.strategy.clone().into())
-            }
             SuccessFactProofResult::KnownForallInstantiation(result) => {
                 self.add_known_forall_edges(target_id, result);
             }
@@ -672,10 +666,6 @@ impl FactGraphBuilder {
             }
             SuccessFactProofResult::StoredFactCitation(result) => self
                 .add_cited_stmt_node(&result.source_fact.clone().into_stmt())
-                .into_iter()
-                .collect(),
-            SuccessFactProofResult::Strategy(result) => self
-                .add_cited_stmt_node(&result.strategy.clone().into())
                 .into_iter()
                 .collect(),
             SuccessFactProofResult::KnownForallInstantiation(result) => self

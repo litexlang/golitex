@@ -240,7 +240,6 @@ impl Environment {
             objects,
             predicate_properties,
             caches,
-            strategies,
         } = child;
         let EnvironmentFactStore {
             known_equality: _,
@@ -365,7 +364,6 @@ impl Environment {
             self.caches.infer_rule_firings.insert(key, ());
         }
 
-        self.strategies.merge_from(strategies);
         Ok(())
     }
 

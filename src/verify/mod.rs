@@ -16,8 +16,6 @@ mod verify_and_chain_fact;
 mod verify_atomic_fact_by_definition;
 #[path = "atomic/universal_search.rs"]
 mod verify_atomic_fact_with_known_forall;
-#[path = "atomic/strategy.rs"]
-mod verify_atomic_fact_with_strategy;
 #[path = "proof_search/builtin_rule.rs"]
 mod verify_builtin_rule;
 mod verify_builtin_rules;

@@ -1050,9 +1050,6 @@ impl DefinitionGraphBuilder {
             }
             SuccessFactProofResult::StoredFactCitation(result) => self
                 .collect_cited_stmt_source_ids(&result.source_fact.clone().into_stmt(), source_ids),
-            SuccessFactProofResult::Strategy(result) => {
-                self.collect_cited_stmt_source_ids(&result.strategy.clone().into(), source_ids)
-            }
             SuccessFactProofResult::KnownForallInstantiation(result) => {
                 self.collect_cited_stmt_source_ids(
                     &result.source_fact.clone().into_stmt(),

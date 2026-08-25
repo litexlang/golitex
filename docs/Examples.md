@@ -1316,7 +1316,7 @@ set_minus(A, union(B, c)) = intersect(set_minus(A, B), set_minus(A, c))
 set_minus(A, intersect(B, c)) = union(set_minus(A, B), set_minus(A, c))
 ```
 
-### 30. Defining And Controlling Strategies
+### 30. Defining Strategies
 
 - Category: `proof pattern`
 - Purpose: Shows reusable proof strategies over abstract propositions.
@@ -1324,11 +1324,6 @@ set_minus(A, intersect(B, c)) = union(set_minus(A, B), set_minus(A, c))
 ```litex
 prop p(x R):
     x = 1
-prop q(x R):
-    x = x
-prop r(x R):
-    x = 1
-
 strategy prove_p:
     ? forall x R:
         x = 1
@@ -1337,48 +1332,13 @@ strategy prove_p:
     x = 1
     by def $p(x)
 
-## A verified strategy is enabled immediately after definition.
+## The proved forall enters ordinary matching immediately after definition.
 $p(1)
-
-strategy prove_q:
-    ? forall x R:
-        x = x
-        =>:
-            $q(x)
-    x = x
-    by def $q(x)
-
-## A stopped strategy still leaves its proved forall available to ordinary proofs.
-strategy prove_r:
-    ? forall x R:
-        x = 1
-        =>:
-            $r(x)
-    x = 1
-    by def $r(x)
-
-stop strategy prove_r
 claim:
     ? forall z R:
         z = 1
         =>:
-            $r(z)
-
-## Same environment: stop followed by use re-enables the same strategy key.
-stop strategy prove_p
-use strategy prove_p
-$p(1)
-
-## Parent environment is stopped, but a child environment can enable the strategy locally.
-use strategy prove_q
-stop strategy prove_q
-claim:
-    ? $q(2)
-    use strategy prove_q
-
-## Back in the parent environment, use removes the parent stop and re-enables it.
-use strategy prove_q
-$q(3)
+            $p(z)
 ```
 
 ### 31. Strong Induction

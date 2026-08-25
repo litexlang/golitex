@@ -1403,9 +1403,6 @@ impl ResultGraph {
                     0,
                 );
             }
-            SuccessFactProofResult::Strategy(result) => {
-                self.ensure_node(id, "proof", "Strategy", result.strategy.to_string(), None);
-            }
             SuccessFactProofResult::DefinitionReduction(result) => {
                 self.ensure_node(
                     id.clone(),

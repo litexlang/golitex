@@ -138,62 +138,7 @@ impl Runtime {
                 Fact::ForallFact(stmt.forall_fact.clone()),
             )?;
 
-        self.activate_strategy(stmt, &stmt.name, stmt.clone().into())?;
-
         Ok(body_exec_result.with_infers(infer_result_after_store))
-    }
-
-    pub fn exec_use_strategy_stmt(
-        &mut self,
-        stmt: &UseStrategyStmt,
-    ) -> Result<StmtResult, RuntimeError> {
-        let strategy_name = stmt.name.to_string();
-        let strategy = self
-            .get_strategy_definition_by_name(&strategy_name)
-            .ok_or_else(|| {
-                short_exec_error(
-                    stmt.clone().into(),
-                    format!("use strategy: strategy `{}` is not defined", stmt.name),
-                    None,
-                    vec![],
-                )
-            })?;
-        self.activate_strategy(&strategy, &strategy_name, stmt.clone().into())?;
-        Ok(
-            SuccessCommandStmtResult::UseStrategyStmt(Box::new(SuccessUseStrategyStmtResult {
-                statement: stmt.clone(),
-                common: SuccessStmtCommonResult::new(SuccessInferResult::new()),
-            }))
-            .into(),
-        )
-    }
-
-    pub fn exec_stop_strategy_stmt(
-        &mut self,
-        stmt: &StopStrategyStmt,
-    ) -> Result<StmtResult, RuntimeError> {
-        let strategy_name = stmt.name.to_string();
-        let strategy = self
-            .get_strategy_definition_by_name(&strategy_name)
-            .ok_or_else(|| {
-                short_exec_error(
-                    stmt.clone().into(),
-                    format!("stop strategy: strategy `{}` is not defined", stmt.name),
-                    None,
-                    vec![],
-                )
-            })?;
-        let atomic_fact_key = strategy_then_atomic_fact_key(&strategy, stmt.clone().into())?;
-        self.top_level_env()
-            .strategies
-            .stop(atomic_fact_key, strategy_name);
-        Ok(
-            SuccessCommandStmtResult::StopStrategyStmt(Box::new(SuccessStopStrategyStmtResult {
-                statement: stmt.clone(),
-                common: SuccessStmtCommonResult::new(SuccessInferResult::new()),
-            }))
-            .into(),
-        )
     }
 
     pub fn exec_def_strategy_stmt_affect_environment_only(
@@ -208,8 +153,6 @@ impl Runtime {
             InferReason::VerifiedStatement,
         )?;
 
-        self.activate_strategy(stmt, &stmt.name, stmt.clone().into())?;
-
         Ok(
             SuccessStmtResult::Definition(SuccessDefinitionStmtResult::DefStrategyStmt(Box::new(
                 SuccessDefStrategyStmtResult {
@@ -220,44 +163,5 @@ impl Runtime {
             )))
             .into(),
         )
-    }
-
-    fn activate_strategy(
-        &mut self,
-        strategy: &DefStrategyStmt,
-        strategy_name: &str,
-        caller_stmt: Stmt,
-    ) -> Result<(), RuntimeError> {
-        let atomic_fact_key = strategy_then_atomic_fact_key(strategy, caller_stmt)?;
-        self.top_level_env()
-            .strategies
-            .activate(atomic_fact_key, strategy_name.to_string());
-        Ok(())
-    }
-}
-
-fn strategy_then_atomic_fact_key(
-    strategy: &DefStrategyStmt,
-    caller_stmt: Stmt,
-) -> Result<(PropName, bool), RuntimeError> {
-    let then_fact = strategy.forall_fact.then_facts.first().ok_or_else(|| {
-        short_exec_error(
-            caller_stmt.clone(),
-            "strategy: missing then-clause fact".to_string(),
-            None,
-            vec![],
-        )
-    })?;
-
-    match then_fact {
-        ExistOrAndChainAtomicFact::AtomicFact(atomic_fact) => {
-            Ok((atomic_fact.key(), atomic_fact.has_positive_polarity()))
-        }
-        _ => Err(short_exec_error(
-            caller_stmt,
-            "strategy: then-clause fact must be atomic".to_string(),
-            None,
-            vec![],
-        )),
     }
 }

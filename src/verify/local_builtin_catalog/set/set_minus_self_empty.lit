@@ -1,0 +1,2 @@
+forall A set:
+    set_minus(A, A) = {}

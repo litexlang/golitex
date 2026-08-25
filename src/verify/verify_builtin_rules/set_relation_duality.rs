@@ -359,6 +359,65 @@ impl Runtime {
             );
         }
 
+        // Compose exactly two stored subset facts through one shared middle
+        // set. This is deliberately a bounded leaf over known facts rather
+        // than recursive reachability over the whole subset graph.
+        // Example: `A subset B`, `B subset C` gives `A subset C`.
+        let mut known_subsets = Vec::new();
+        for environment in self.iter_environments_from_top() {
+            for known_facts_map in environment.facts.known_atomic_facts_with_2_args.values() {
+                for known_fact in known_facts_map.values() {
+                    if matches!(known_fact, AtomicFact::SubsetFact(_)) {
+                        known_subsets.push(known_fact.clone());
+                    }
+                }
+            }
+        }
+        known_subsets.sort_by_key(ToString::to_string);
+        known_subsets.dedup_by(|left, right| left.to_string() == right.to_string());
+
+        for first in &known_subsets {
+            let AtomicFact::SubsetFact(first_subset) = first else {
+                continue;
+            };
+            if !objs_equal_with_nested_binder_alpha_equivalence(
+                &first_subset.left,
+                &subset_fact.left,
+            ) {
+                continue;
+            }
+            for second in &known_subsets {
+                let AtomicFact::SubsetFact(second_subset) = second else {
+                    continue;
+                };
+                if !objs_equal_with_nested_binder_alpha_equivalence(
+                    &first_subset.right,
+                    &second_subset.left,
+                ) || !objs_equal_with_nested_binder_alpha_equivalence(
+                    &second_subset.right,
+                    &subset_fact.right,
+                ) {
+                    continue;
+                }
+                let first_result =
+                    self.verify_non_equational_atomic_fact_with_known_atomic_facts(first)?;
+                let second_result =
+                    self.verify_non_equational_atomic_fact_with_known_atomic_facts(second)?;
+                if !first_result.is_success() || !second_result.is_success() {
+                    continue;
+                }
+                return Ok(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                        subset_fact.clone().into(),
+                        "subset transitivity through one stored middle set".to_string(),
+                        BuiltinRuleEvidence::Set(SetBuiltinRule::SubsetTransitivity),
+                        vec![first_result, second_result],
+                    )
+                    .into(),
+                );
+            }
+        }
+
         // Every finite real interval is a subset of R once its endpoints are
         // well-defined reals. Example: `'[a, b] $subset R`.
         if matches!(subset_fact.left, Obj::IntervalObj(_))

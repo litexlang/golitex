@@ -294,18 +294,6 @@ fn module_qualification_qualifies_bare_thm_strategy_template_and_struct_refs() {
     };
     assert_with_mod(&fact.predicate, "Nat", "P");
 
-    let strategy_stmt = parse_one_stmt_line_with_runtime(&mut rt, "use strategy S");
-    let Stmt::Command(CommandStmt::UseStrategyStmt(strategy_stmt)) = strategy_stmt else {
-        panic!("expected use strategy stmt");
-    };
-    assert_with_mod(&strategy_stmt.name, "Nat", "S");
-
-    let stop_stmt = parse_one_stmt_line_with_runtime(&mut rt, "stop strategy S");
-    let Stmt::Command(CommandStmt::StopStrategyStmt(stop_stmt)) = stop_stmt else {
-        panic!("expected stop strategy stmt");
-    };
-    assert_with_mod(&stop_stmt.name, "Nat", "S");
-
     let template_obj = parse_one_obj_line_with_runtime(&mut rt, "\\Template<2>");
     let Obj::InstantiatedTemplateObj(template_obj) = template_obj else {
         panic!("expected instantiated template object");

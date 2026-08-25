@@ -88,8 +88,6 @@ impl Runtime {
                 vec![],
             )),
             Stmt::Command(CommandStmt::EvalStmt(s)) => self.exec_eval_stmt(s),
-            Stmt::Command(CommandStmt::UseStrategyStmt(s)) => self.exec_use_strategy_stmt(s),
-            Stmt::Command(CommandStmt::StopStrategyStmt(s)) => self.exec_stop_strategy_stmt(s),
             Stmt::Witness(WitnessStmt::WitnessExistFact(s)) => self.exec_witness_exist_fact(s),
             Stmt::Witness(WitnessStmt::WitnessAtomicFact(s)) => self.exec_witness_atomic_fact(s),
             Stmt::Witness(WitnessStmt::WitnessNonemptySet(s)) => self.exec_witness_nonempty_set(s),

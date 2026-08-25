@@ -1,0 +1,47 @@
+# Elementary set-algebra rules that should be verifier leaves.
+#
+# Before this builtin batch, the release verifier left the following primary
+# tracer unknown even though it is a direct property of union and set-minus:
+#
+# forall A, B set:
+#     union(A, set_minus(B, A)) = union(A, B)
+#
+# Now the rule and its reverse/commuted surface verify directly. The remaining
+# blocks cover the same elementary family plus its exact premise boundaries.
+# Evidence: target/release/litex -compact -runner -f examples/02_builtin_math/set_algebra_completion.lit
+
+forall A, B set:
+    union(A, set_minus(B, A)) = union(A, B)
+    union(A, B) = union(A, set_minus(B, A))
+    union(set_minus(B, A), A) = union(B, A)
+    intersect(A, set_minus(B, A)) = {}
+    intersect(set_minus(B, A), A) = {}
+    set_minus(B, intersect(A, B)) = set_minus(B, A)
+    set_minus(B, intersect(B, A)) = set_minus(B, A)
+
+forall A set:
+    intersect(A, A) = A
+    A = intersect(A, A)
+    set_minus(A, A) = {}
+    set_minus(A, {}) = A
+    set_minus({}, A) = {}
+
+forall A, B set:
+    A $subset B
+    =>:
+        union(A, B) = B
+        union(B, A) = B
+        B = union(A, B)
+        union(A, set_minus(B, A)) = B
+
+forall A, B, D set:
+    A $subset D
+    =>:
+        intersect(A, set_minus(B, D)) = {}
+        intersect(set_minus(B, D), A) = {}
+
+forall A, B, D set:
+    A $subset B
+    B $subset D
+    =>:
+        A $subset D

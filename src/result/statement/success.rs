@@ -916,19 +916,7 @@ pub struct SuccessEvaluatedEvalStmtResult {
     pub recursive_numeric_evaluation: Option<SuccessEvaluateObjResult>,
 }
 
-pub struct SuccessUseStrategyStmtResult {
-    pub statement: UseStrategyStmt,
-    pub common: SuccessStmtCommonResult,
-}
-
-pub struct SuccessStopStrategyStmtResult {
-    pub statement: StopStrategyStmt,
-    pub common: SuccessStmtCommonResult,
-}
-
 pub enum SuccessCommandStmtResult {
     ImportStmt(Box<SuccessImportStmtResult>),
     EvalStmt(Box<SuccessEvalStmtResult>),
-    UseStrategyStmt(Box<SuccessUseStrategyStmtResult>),
-    StopStrategyStmt(Box<SuccessStopStrategyStmtResult>),
 }

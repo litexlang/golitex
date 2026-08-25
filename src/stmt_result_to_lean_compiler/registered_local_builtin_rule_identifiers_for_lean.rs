@@ -77,12 +77,22 @@ pub const SET_INTERSECT_EQ_RIGHT_OF_SUBSET_FINGERPRINT: &str =
 pub const SET_INTERSECT_FINITE_RULE_ID: &str = "set.intersect_finite";
 pub const SET_INTERSECT_FINITE_FINGERPRINT: &str =
     "5509063c4ceb49e33176b96d0e4034c3ebcaf6461acc840b83cc551bb36f0411";
+pub const SET_INTERSECT_IDEMPOTENT_RULE_ID: &str = "set.intersect_idempotent";
+pub const SET_INTERSECT_IDEMPOTENT_FINGERPRINT: &str =
+    "5b8406e414bcb8298333d03ebd131ce723459cb79e666f13697ff50ea65899e7";
 pub const SET_INTERSECT_SUBSET_LEFT_RULE_ID: &str = "set.intersect_subset_left";
 pub const SET_INTERSECT_SUBSET_LEFT_FINGERPRINT: &str =
     "8ac50aaa52509a99febd318b7ced83da5f1230e960a2f5edd0e0b067e47af16a";
 pub const SET_INTERSECT_SUBSET_RIGHT_RULE_ID: &str = "set.intersect_subset_right";
 pub const SET_INTERSECT_SUBSET_RIGHT_FINGERPRINT: &str =
     "ef6ac1c794586736a7e8a9254b27cd40056d4fe36338837c766bde863de852d6";
+pub const SET_INTERSECT_SET_MINUS_OF_SUBSET_EMPTY_RULE_ID: &str =
+    "set.intersect_set_minus_of_subset_empty";
+pub const SET_INTERSECT_SET_MINUS_OF_SUBSET_EMPTY_FINGERPRINT: &str =
+    "3a69cc99bd44efec2949b9494966851e13fc827e06a60de3e9dd1ba4a608ffa6";
+pub const SET_INTERSECT_SET_MINUS_SELF_EMPTY_RULE_ID: &str = "set.intersect_set_minus_self_empty";
+pub const SET_INTERSECT_SET_MINUS_SELF_EMPTY_FINGERPRINT: &str =
+    "2f560f7b0e351881fed474244dea97d6014366df168bb48c1bed85a6a5a2793f";
 pub const SET_INTERSECT_UNION_DISTRIBUTIVE_RULE_ID: &str = "set.intersect_union_distributive";
 pub const SET_INTERSECT_UNION_DISTRIBUTIVE_FINGERPRINT: &str =
     "09e71f3095db011c27ece4185825cffba1d264ab3d3507a86c1fc142f740d445";
@@ -98,12 +108,24 @@ pub const SET_POWER_SET_NONEMPTY_FINGERPRINT: &str =
 pub const SET_MINUS_FINITE_LEFT_RULE_ID: &str = "set.set_minus_finite_left";
 pub const SET_MINUS_FINITE_LEFT_FINGERPRINT: &str =
     "176fa12c544205c1110577452f72b77e40c9ac9764ef6fcf09f7afc085120015";
+pub const SET_MINUS_EMPTY_LEFT_RULE_ID: &str = "set.set_minus_empty_left";
+pub const SET_MINUS_EMPTY_LEFT_FINGERPRINT: &str =
+    "990a9501579be3211802232e1d85018abd134756e06e710573aa5bbf090a7afc";
+pub const SET_MINUS_EMPTY_RIGHT_RULE_ID: &str = "set.set_minus_empty_right";
+pub const SET_MINUS_EMPTY_RIGHT_FINGERPRINT: &str =
+    "2847832b8076cb48c912a2e72b5060c965d0ae6fdda2c2e7f2fda0a47a8c1f3f";
 pub const SET_MINUS_INTERSECT_DE_MORGAN_RULE_ID: &str = "set.set_minus_intersect_de_morgan";
 pub const SET_MINUS_INTERSECT_DE_MORGAN_FINGERPRINT: &str =
     "daa2291e2c102a102835095bd06377dc0ce2011f4c30fdaa02ca65ec7a063fbe";
+pub const SET_MINUS_INTERSECT_SELF_RULE_ID: &str = "set.set_minus_intersect_self";
+pub const SET_MINUS_INTERSECT_SELF_FINGERPRINT: &str =
+    "cc5a063f6c080a0924b909b8884247b3bcde9d72f4f4b53c2fc852f65a64ccd4";
 pub const SET_MINUS_RECOVER_SUBSET_RULE_ID: &str = "set.set_minus_recover_subset";
 pub const SET_MINUS_RECOVER_SUBSET_FINGERPRINT: &str =
     "fd9957eadf4543561e313dbed2f74b97e8cbc9453eba9e1a59e7662951da3a46";
+pub const SET_MINUS_SELF_EMPTY_RULE_ID: &str = "set.set_minus_self_empty";
+pub const SET_MINUS_SELF_EMPTY_FINGERPRINT: &str =
+    "63ae8f8f4d1c3520c85642e1a4e0ef41b28e8c2418a0469645a4e5c56b9522a9";
 pub const SET_MINUS_SUBSET_LEFT_RULE_ID: &str = "set.set_minus_subset_left";
 pub const SET_MINUS_SUBSET_LEFT_FINGERPRINT: &str =
     "853bef607077556f3e486bf3871b193c8c18561a9b4fccf45e9932817b730207";
@@ -122,6 +144,9 @@ pub const SET_SUBSET_UNION_RIGHT_FINGERPRINT: &str =
 pub const SET_UNION_FINITE_RULE_ID: &str = "set.union_finite";
 pub const SET_UNION_FINITE_FINGERPRINT: &str =
     "e6e1919698b0f50f8cb599c095c7496058f029d1eb3cf9909cf8b83919b0d64c";
+pub const SET_UNION_EQ_RIGHT_OF_SUBSET_RULE_ID: &str = "set.union_eq_right_of_subset";
+pub const SET_UNION_EQ_RIGHT_OF_SUBSET_FINGERPRINT: &str =
+    "d77c403043bec609a9c0f10df11e91a820db204a9d92ccaa5dc65dea58988d2a";
 pub const SET_UNION_NONEMPTY_LEFT_RULE_ID: &str = "set.union_nonempty_left";
 pub const SET_UNION_NONEMPTY_LEFT_FINGERPRINT: &str =
     "e065a62b3ce305702fb3130c1dd4ad4ccda02a798d8a8e82f1dda6fe370a70ed";
@@ -131,3 +156,6 @@ pub const SET_UNION_NONEMPTY_RIGHT_FINGERPRINT: &str =
 pub const SET_UNION_SUBSET_RULE_ID: &str = "set.union_subset";
 pub const SET_UNION_SUBSET_FINGERPRINT: &str =
     "a5e4907694209f659903e84f55b46d7c5a1e320c7d4daf5c56ecc913ee9cb77c";
+pub const SET_UNION_SET_MINUS_DECOMPOSITION_RULE_ID: &str = "set.union_set_minus_decomposition";
+pub const SET_UNION_SET_MINUS_DECOMPOSITION_FINGERPRINT: &str =
+    "4844934d4857d8470f8a897969ab9a52e873f6faf627c3e436ff3b1b88c371ce";

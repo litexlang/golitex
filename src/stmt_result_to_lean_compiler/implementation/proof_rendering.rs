@@ -2306,6 +2306,48 @@ pub(super) fn render_extended_set_rule(
 ) -> Result<String, String> {
     render_fact(fact, context)?;
     match rule {
+        LeanSetBuiltinCompilationKind::SubsetTransitivity => {
+            if premises.len() != 2 {
+                return Err("subset transitivity requires two ordered subset premises".into());
+            }
+            let (source, target) = subset_parts(fact)?;
+            let (first_source, middle) = subset_parts(&premises[0].fact)?;
+            let (second_source, second_target) = subset_parts(&premises[1].fact)?;
+            if obj_equality_key(source) != obj_equality_key(first_source)
+                || obj_equality_key(middle) != obj_equality_key(second_source)
+                || obj_equality_key(target) != obj_equality_key(second_target)
+            {
+                return Err("subset transitivity changed its shared middle set".into());
+            }
+            Ok(format!(
+                "Litex.SetRules.subsetTransitive ({}) ({})",
+                premises[0].proof_expression, premises[1].proof_expression
+            ))
+        }
+        LeanSetBuiltinCompilationKind::UnionSetMinusDecomposition
+        | LeanSetBuiltinCompilationKind::IntersectIdempotent
+        | LeanSetBuiltinCompilationKind::IntersectSetMinusSelfEmpty
+        | LeanSetBuiltinCompilationKind::SetMinusSelfEmpty
+        | LeanSetBuiltinCompilationKind::SetMinusEmptyRight
+        | LeanSetBuiltinCompilationKind::SetMinusEmptyLeft
+        | LeanSetBuiltinCompilationKind::SetMinusIntersectSelf => {
+            if !premises.is_empty() {
+                return Err("elementary structural set equality retained premises".into());
+            }
+            render_elementary_set_equality(fact, rule, context)
+        }
+        LeanSetBuiltinCompilationKind::UnionAbsorptionFromSubset => {
+            if premises.len() != 1 {
+                return Err("union absorption requires one subset premise".into());
+            }
+            render_union_absorption_from_subset(fact, &premises[0], context)
+        }
+        LeanSetBuiltinCompilationKind::IntersectSetMinusDisjointFromSubset => {
+            if premises.len() != 1 {
+                return Err("set-minus disjointness requires one subset premise".into());
+            }
+            render_intersect_set_minus_disjoint_from_subset(fact, &premises[0], context)
+        }
         LeanSetBuiltinCompilationKind::EmptySubset => {
             if !premises.is_empty() {
                 return Err("empty-subset rule retained premises".into());
@@ -2599,6 +2641,325 @@ pub(super) fn render_extended_set_rule(
         }
         _ => Err("base set rule reached extended set-rule renderer".into()),
     }
+}
+
+fn render_elementary_set_equality(
+    fact: &Fact,
+    rule: LeanSetBuiltinCompilationKind,
+    context: &StmtResultToLeanCompilerEnvironmentStack,
+) -> Result<String, String> {
+    let (left, right) = equality_parts(fact)?;
+    let symmetric = |proof: String| format!("Litex.Same.symm ({proof})");
+    match rule {
+        LeanSetBuiltinCompilationKind::IntersectIdempotent => {
+            for (intersection_side, retained_side, reverse) in
+                [(left, right, false), (right, left, true)]
+            {
+                let Obj::Intersect(intersection) = intersection_side else {
+                    continue;
+                };
+                if obj_equality_key(intersection.left.as_ref())
+                    == obj_equality_key(intersection.right.as_ref())
+                    && obj_equality_key(intersection.left.as_ref())
+                        == obj_equality_key(retained_side)
+                {
+                    let proof = format!(
+                        "Litex.SetRules.intersectIdempotent {}",
+                        render_obj(retained_side, context)?
+                    );
+                    return Ok(if reverse { symmetric(proof) } else { proof });
+                }
+            }
+            Err("intersection idempotence changed its repeated operand".into())
+        }
+        LeanSetBuiltinCompilationKind::UnionSetMinusDecomposition => {
+            for (decomposed_side, original_side, reverse) in
+                [(left, right, false), (right, left, true)]
+            {
+                let (Obj::Union(decomposed), Obj::Union(original)) =
+                    (decomposed_side, original_side)
+                else {
+                    continue;
+                };
+                for (plain, difference, decomposed_swapped) in [
+                    (decomposed.left.as_ref(), decomposed.right.as_ref(), false),
+                    (decomposed.right.as_ref(), decomposed.left.as_ref(), true),
+                ] {
+                    let Obj::SetMinus(difference) = difference else {
+                        continue;
+                    };
+                    if obj_equality_key(plain) != obj_equality_key(difference.right.as_ref()) {
+                        continue;
+                    }
+                    let original_swapped = if obj_equality_key(original.left.as_ref())
+                        == obj_equality_key(plain)
+                        && obj_equality_key(original.right.as_ref())
+                            == obj_equality_key(difference.left.as_ref())
+                    {
+                        false
+                    } else if obj_equality_key(original.right.as_ref()) == obj_equality_key(plain)
+                        && obj_equality_key(original.left.as_ref())
+                            == obj_equality_key(difference.left.as_ref())
+                    {
+                        true
+                    } else {
+                        continue;
+                    };
+                    let plain_source = render_obj(plain, context)?;
+                    let base_source = render_obj(difference.left.as_ref(), context)?;
+                    let difference_source =
+                        render_obj(&Obj::SetMinus(difference.clone()), context)?;
+                    let mut proof = format!(
+                        "Litex.SetRules.unionSetMinusDecomposition {plain_source} {base_source}"
+                    );
+                    if decomposed_swapped {
+                        proof = format!(
+                            "Litex.Same.trans (Litex.SetRules.unionCommutative {difference_source} {plain_source}) ({proof})"
+                        );
+                    }
+                    if original_swapped {
+                        proof = format!(
+                            "Litex.Same.trans ({proof}) (Litex.SetRules.unionCommutative {plain_source} {base_source})"
+                        );
+                    }
+                    return Ok(if reverse { symmetric(proof) } else { proof });
+                }
+            }
+            Err("union set-minus decomposition changed its linked operands".into())
+        }
+        LeanSetBuiltinCompilationKind::IntersectSetMinusSelfEmpty => {
+            for (intersection_side, empty_side, reverse) in
+                [(left, right, false), (right, left, true)]
+            {
+                let Obj::Intersect(intersection) = intersection_side else {
+                    continue;
+                };
+                if !is_empty_set_obj(empty_side) {
+                    continue;
+                }
+                for (plain, difference, swapped) in [
+                    (
+                        intersection.left.as_ref(),
+                        intersection.right.as_ref(),
+                        false,
+                    ),
+                    (
+                        intersection.right.as_ref(),
+                        intersection.left.as_ref(),
+                        true,
+                    ),
+                ] {
+                    let Obj::SetMinus(difference) = difference else {
+                        continue;
+                    };
+                    if obj_equality_key(plain) != obj_equality_key(difference.right.as_ref()) {
+                        continue;
+                    }
+                    let plain_source = render_obj(plain, context)?;
+                    let base_source = render_obj(difference.left.as_ref(), context)?;
+                    let difference_source =
+                        render_obj(&Obj::SetMinus(difference.clone()), context)?;
+                    let mut proof = format!(
+                        "Litex.SetRules.intersectSetMinusSelfEmpty {plain_source} {base_source}"
+                    );
+                    if swapped {
+                        proof = format!(
+                            "Litex.Same.trans (Litex.SetRules.intersectCommutative {difference_source} {plain_source}) ({proof})"
+                        );
+                    }
+                    return Ok(if reverse { symmetric(proof) } else { proof });
+                }
+            }
+            Err("intersection/set-minus disjointness changed its removed operand".into())
+        }
+        LeanSetBuiltinCompilationKind::SetMinusSelfEmpty => {
+            render_simple_set_minus_equality(left, right, context, "self").or_else(|_| {
+                render_simple_set_minus_equality(right, left, context, "self").map(symmetric)
+            })
+        }
+        LeanSetBuiltinCompilationKind::SetMinusEmptyRight => {
+            render_simple_set_minus_equality(left, right, context, "empty_right").or_else(|_| {
+                render_simple_set_minus_equality(right, left, context, "empty_right").map(symmetric)
+            })
+        }
+        LeanSetBuiltinCompilationKind::SetMinusEmptyLeft => {
+            render_simple_set_minus_equality(left, right, context, "empty_left").or_else(|_| {
+                render_simple_set_minus_equality(right, left, context, "empty_left").map(symmetric)
+            })
+        }
+        LeanSetBuiltinCompilationKind::SetMinusIntersectSelf => {
+            for (restricted_side, plain_side, reverse) in
+                [(left, right, false), (right, left, true)]
+            {
+                let (Obj::SetMinus(restricted), Obj::SetMinus(plain)) =
+                    (restricted_side, plain_side)
+                else {
+                    continue;
+                };
+                let Obj::Intersect(intersection) = restricted.right.as_ref() else {
+                    continue;
+                };
+                if obj_equality_key(restricted.left.as_ref())
+                    != obj_equality_key(plain.left.as_ref())
+                {
+                    continue;
+                }
+                let (removed, theorem) = if obj_equality_key(intersection.right.as_ref())
+                    == obj_equality_key(restricted.left.as_ref())
+                    && obj_equality_key(intersection.left.as_ref())
+                        == obj_equality_key(plain.right.as_ref())
+                {
+                    (intersection.left.as_ref(), "setMinusIntersectSelf")
+                } else if obj_equality_key(intersection.left.as_ref())
+                    == obj_equality_key(restricted.left.as_ref())
+                    && obj_equality_key(intersection.right.as_ref())
+                        == obj_equality_key(plain.right.as_ref())
+                {
+                    (intersection.right.as_ref(), "setMinusIntersectSelfCommuted")
+                } else {
+                    continue;
+                };
+                let proof = format!(
+                    "Litex.SetRules.{theorem} {} {}",
+                    render_obj(restricted.left.as_ref(), context)?,
+                    render_obj(removed, context)?
+                );
+                return Ok(if reverse { symmetric(proof) } else { proof });
+            }
+            Err("set-minus/intersection simplification changed its retained operand".into())
+        }
+        _ => Err("non-elementary rule reached elementary set renderer".into()),
+    }
+}
+
+fn render_simple_set_minus_equality(
+    difference_side: &Obj,
+    result_side: &Obj,
+    context: &StmtResultToLeanCompilerEnvironmentStack,
+    shape: &str,
+) -> Result<String, String> {
+    let Obj::SetMinus(difference) = difference_side else {
+        return Err("set-minus unit changed its source constructor".into());
+    };
+    match shape {
+        "self"
+            if is_empty_set_obj(result_side)
+                && obj_equality_key(difference.left.as_ref())
+                    == obj_equality_key(difference.right.as_ref()) =>
+        {
+            Ok(format!(
+                "Litex.SetRules.setMinusSelfEmpty {}",
+                render_obj(difference.left.as_ref(), context)?
+            ))
+        }
+        "empty_right"
+            if is_empty_set_obj(difference.right.as_ref())
+                && obj_equality_key(difference.left.as_ref()) == obj_equality_key(result_side) =>
+        {
+            Ok(format!(
+                "Litex.SetRules.setMinusEmptyRight {}",
+                render_obj(result_side, context)?
+            ))
+        }
+        "empty_left"
+            if is_empty_set_obj(difference.left.as_ref()) && is_empty_set_obj(result_side) =>
+        {
+            Ok(format!(
+                "Litex.SetRules.setMinusEmptyLeft {}",
+                render_obj(difference.right.as_ref(), context)?
+            ))
+        }
+        _ => Err("set-minus unit changed its empty or retained operand".into()),
+    }
+}
+
+fn render_union_absorption_from_subset(
+    fact: &Fact,
+    premise: &CompiledFactProofBody,
+    _context: &StmtResultToLeanCompilerEnvironmentStack,
+) -> Result<String, String> {
+    let (subset, container) = subset_parts(&premise.fact)?;
+    let (left, right) = equality_parts(fact)?;
+    let symmetric = |proof: String| format!("Litex.Same.symm ({proof})");
+    for (union_side, retained_side, reverse) in [(left, right, false), (right, left, true)] {
+        let Obj::Union(union) = union_side else {
+            continue;
+        };
+        if obj_equality_key(retained_side) != obj_equality_key(container) {
+            continue;
+        }
+        let theorem = if obj_equality_key(union.left.as_ref()) == obj_equality_key(subset)
+            && obj_equality_key(union.right.as_ref()) == obj_equality_key(container)
+        {
+            "unionEqRightOfSubset"
+        } else if obj_equality_key(union.right.as_ref()) == obj_equality_key(subset)
+            && obj_equality_key(union.left.as_ref()) == obj_equality_key(container)
+        {
+            "unionEqLeftOfSubset"
+        } else {
+            continue;
+        };
+        let proof = format!("Litex.SetRules.{theorem} ({})", premise.proof_expression);
+        return Ok(if reverse { symmetric(proof) } else { proof });
+    }
+    Err("union absorption changed its subset or retained operand".into())
+}
+
+fn render_intersect_set_minus_disjoint_from_subset(
+    fact: &Fact,
+    premise: &CompiledFactProofBody,
+    context: &StmtResultToLeanCompilerEnvironmentStack,
+) -> Result<String, String> {
+    let (subset, removed) = subset_parts(&premise.fact)?;
+    let (left, right) = equality_parts(fact)?;
+    let symmetric = |proof: String| format!("Litex.Same.symm ({proof})");
+    for (intersection_side, empty_side, reverse) in [(left, right, false), (right, left, true)] {
+        let Obj::Intersect(intersection) = intersection_side else {
+            continue;
+        };
+        if !is_empty_set_obj(empty_side) {
+            continue;
+        }
+        for (candidate_subset, difference, swapped) in [
+            (
+                intersection.left.as_ref(),
+                intersection.right.as_ref(),
+                false,
+            ),
+            (
+                intersection.right.as_ref(),
+                intersection.left.as_ref(),
+                true,
+            ),
+        ] {
+            let Obj::SetMinus(difference) = difference else {
+                continue;
+            };
+            if obj_equality_key(candidate_subset) != obj_equality_key(subset)
+                || obj_equality_key(difference.right.as_ref()) != obj_equality_key(removed)
+            {
+                continue;
+            }
+            let mut proof = format!(
+                "Litex.SetRules.intersectSetMinusOfSubsetEmpty {} ({})",
+                render_obj(difference.left.as_ref(), context)?,
+                premise.proof_expression
+            );
+            if swapped {
+                proof = format!(
+                    "Litex.Same.trans (Litex.SetRules.intersectCommutative {} {}) ({proof})",
+                    render_obj(&Obj::SetMinus(difference.clone()), context)?,
+                    render_obj(candidate_subset, context)?
+                );
+            }
+            return Ok(if reverse { symmetric(proof) } else { proof });
+        }
+    }
+    Err("set-minus disjointness changed its subset premise operands".into())
+}
+
+fn is_empty_set_obj(object: &Obj) -> bool {
+    matches!(object, Obj::ListSet(set) if set.list.is_empty())
 }
 
 pub(super) fn render_three_set_equality(
@@ -3621,6 +3982,9 @@ pub(super) fn registered_set_rule(
         SET_INTERSECT_FINITE_RULE_ID if fingerprint == SET_INTERSECT_FINITE_FINGERPRINT => {
             (LeanSetBuiltinCompilationKind::IntersectFinite, 2, 2)
         }
+        SET_INTERSECT_IDEMPOTENT_RULE_ID if fingerprint == SET_INTERSECT_IDEMPOTENT_FINGERPRINT => {
+            (LeanSetBuiltinCompilationKind::IntersectIdempotent, 1, 0)
+        }
         SET_INTERSECT_SUBSET_LEFT_RULE_ID
             if fingerprint == SET_INTERSECT_SUBSET_LEFT_FINGERPRINT =>
         {
@@ -3630,6 +3994,24 @@ pub(super) fn registered_set_rule(
             if fingerprint == SET_INTERSECT_SUBSET_RIGHT_FINGERPRINT =>
         {
             (LeanSetBuiltinCompilationKind::IntersectSubsetRight, 2, 0)
+        }
+        SET_INTERSECT_SET_MINUS_OF_SUBSET_EMPTY_RULE_ID
+            if fingerprint == SET_INTERSECT_SET_MINUS_OF_SUBSET_EMPTY_FINGERPRINT =>
+        {
+            (
+                LeanSetBuiltinCompilationKind::IntersectSetMinusDisjointFromSubset,
+                3,
+                1,
+            )
+        }
+        SET_INTERSECT_SET_MINUS_SELF_EMPTY_RULE_ID
+            if fingerprint == SET_INTERSECT_SET_MINUS_SELF_EMPTY_FINGERPRINT =>
+        {
+            (
+                LeanSetBuiltinCompilationKind::IntersectSetMinusSelfEmpty,
+                2,
+                0,
+            )
         }
         SET_INTERSECT_UNION_DISTRIBUTIVE_RULE_ID
             if fingerprint == SET_INTERSECT_UNION_DISTRIBUTIVE_FINGERPRINT =>
@@ -3658,6 +4040,12 @@ pub(super) fn registered_set_rule(
         SET_MINUS_FINITE_LEFT_RULE_ID if fingerprint == SET_MINUS_FINITE_LEFT_FINGERPRINT => {
             (LeanSetBuiltinCompilationKind::SetMinusFiniteLeft, 2, 1)
         }
+        SET_MINUS_EMPTY_LEFT_RULE_ID if fingerprint == SET_MINUS_EMPTY_LEFT_FINGERPRINT => {
+            (LeanSetBuiltinCompilationKind::SetMinusEmptyLeft, 1, 0)
+        }
+        SET_MINUS_EMPTY_RIGHT_RULE_ID if fingerprint == SET_MINUS_EMPTY_RIGHT_FINGERPRINT => {
+            (LeanSetBuiltinCompilationKind::SetMinusEmptyRight, 1, 0)
+        }
         SET_MINUS_INTERSECT_DE_MORGAN_RULE_ID
             if fingerprint == SET_MINUS_INTERSECT_DE_MORGAN_FINGERPRINT =>
         {
@@ -3667,8 +4055,14 @@ pub(super) fn registered_set_rule(
                 0,
             )
         }
+        SET_MINUS_INTERSECT_SELF_RULE_ID if fingerprint == SET_MINUS_INTERSECT_SELF_FINGERPRINT => {
+            (LeanSetBuiltinCompilationKind::SetMinusIntersectSelf, 2, 0)
+        }
         SET_MINUS_RECOVER_SUBSET_RULE_ID if fingerprint == SET_MINUS_RECOVER_SUBSET_FINGERPRINT => {
             (LeanSetBuiltinCompilationKind::SetMinusRecoverSubset, 2, 1)
+        }
+        SET_MINUS_SELF_EMPTY_RULE_ID if fingerprint == SET_MINUS_SELF_EMPTY_FINGERPRINT => {
+            (LeanSetBuiltinCompilationKind::SetMinusSelfEmpty, 1, 0)
         }
         SET_MINUS_SUBSET_LEFT_RULE_ID if fingerprint == SET_MINUS_SUBSET_LEFT_FINGERPRINT => {
             (LeanSetBuiltinCompilationKind::SetMinusSubsetLeft, 2, 0)
@@ -3696,6 +4090,15 @@ pub(super) fn registered_set_rule(
         SET_UNION_FINITE_RULE_ID if fingerprint == SET_UNION_FINITE_FINGERPRINT => {
             (LeanSetBuiltinCompilationKind::UnionFinite, 2, 2)
         }
+        SET_UNION_EQ_RIGHT_OF_SUBSET_RULE_ID
+            if fingerprint == SET_UNION_EQ_RIGHT_OF_SUBSET_FINGERPRINT =>
+        {
+            (
+                LeanSetBuiltinCompilationKind::UnionAbsorptionFromSubset,
+                2,
+                1,
+            )
+        }
         SET_UNION_NONEMPTY_LEFT_RULE_ID if fingerprint == SET_UNION_NONEMPTY_LEFT_FINGERPRINT => {
             (LeanSetBuiltinCompilationKind::UnionNonemptyLeft, 2, 1)
         }
@@ -3704,6 +4107,15 @@ pub(super) fn registered_set_rule(
         }
         SET_UNION_SUBSET_RULE_ID if fingerprint == SET_UNION_SUBSET_FINGERPRINT => {
             (LeanSetBuiltinCompilationKind::UnionSubset, 3, 2)
+        }
+        SET_UNION_SET_MINUS_DECOMPOSITION_RULE_ID
+            if fingerprint == SET_UNION_SET_MINUS_DECOMPOSITION_FINGERPRINT =>
+        {
+            (
+                LeanSetBuiltinCompilationKind::UnionSetMinusDecomposition,
+                2,
+                0,
+            )
         }
         _ => return None,
     })

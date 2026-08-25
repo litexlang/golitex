@@ -1108,10 +1108,9 @@ by thm selected_signature(0) => selected_callable(1) = selected_callable(1)
 }
 
 #[test]
-fn strategy_definition_auto_enables_strategy() {
+fn strategy_definition_is_automatically_available_as_known_forall() {
     let source_code = r#"
-prop target_strategy_prop(x R):
-    x = 1
+abstract_prop target_strategy_prop(x)
 
 strategy use_target_strategy:
     ? forall x R:
@@ -1129,21 +1128,30 @@ $target_strategy_prop(1)
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.start_isolated_source("strategy_definition_auto_enables_strategy");
+    runtime.start_isolated_source("strategy_definition_is_automatically_available_as_known_forall");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         run_succeeded,
-        "strategy definition should enable the strategy immediately:\n{}",
+        "strategy definition should publish an automatically matched forall:\n{}",
         run_output
     );
-
-    let env = &runtime.current_module().main_environment;
+    let Some(StmtResult::Success(SuccessStmtResult::Fact(final_result))) = stmt_results.last()
+    else {
+        panic!("expected the final strategy-derived fact:\n{run_output}");
+    };
+    let SuccessFactProofResult::KnownForallInstantiation(instantiation) = final_result.proof()
+    else {
+        panic!("strategy use should be ordinary known-forall matching:\n{run_output}");
+    };
     assert_eq!(
-        env.strategies
-            .active_strategy(&("target_strategy_prop".to_string(), true)),
-        Some(&"use_target_strategy".to_string())
+        instantiation.source_fact.to_string(),
+        runtime
+            .get_strategy_definition_by_name("use_target_strategy")
+            .expect("strategy definition should remain named")
+            .forall_fact
+            .to_string()
     );
 }
 
@@ -1165,8 +1173,6 @@ strategy use_target_strategy:
             =>:
                 $target_strategy_prop(y)
 
-stop strategy use_target_strategy
-
 claim:
     ? forall z R:
         z = 1
@@ -1187,256 +1193,31 @@ claim:
 }
 
 #[test]
-fn strategy_definition_use_and_stop_are_stored() {
-    let source_code = r#"
-prop target_strategy_prop(x R):
-    x = 1
-
-strategy use_target_strategy:
-    ? forall x R:
-        x = 1
-        =>:
-            $target_strategy_prop(x)
-
-    by def $target_strategy_prop(x)
-
-use strategy use_target_strategy
-stop strategy use_target_strategy
-"#;
-
+fn retired_strategy_control_words_are_names_and_control_syntax_is_rejected() {
     let mut runtime = Runtime::new();
-    runtime.start_isolated_source("strategy_definition_use_and_stop_are_stored");
-    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    runtime.start_isolated_source("retired_strategy_control_words_are_names");
+    let (stmt_results, runtime_error) = execute_source(
+        "have use R = 1\nhave stop R = 2\nuse = 1\nstop = 2",
+        &mut runtime,
+    );
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
-
     assert!(
         run_succeeded,
-        "strategy definition/use/stop should succeed:\n{}",
+        "retired strategy-control words should be ordinary names:\n{}",
         run_output
     );
 
-    let env = &runtime.current_module().main_environment;
-    assert!(env
-        .definitions
-        .strategy_definitions
-        .contains_key("use_target_strategy"));
-    assert_eq!(
-        env.strategies
-            .active_strategy(&("target_strategy_prop".to_string(), true)),
-        None
-    );
-    assert_eq!(
-        env.strategies
-            .stopped_strategy(&("target_strategy_prop".to_string(), true)),
-        Some(&"use_target_strategy".to_string())
-    );
-}
-
-#[test]
-fn strategy_positive_and_negative_atomic_keys_do_not_collide() {
-    let source_code = r#"
-abstract_prop target_strategy_prop(x)
-
-strategy use_positive_strategy:
-    ? forall x R:
-        x = 1
-        =>:
-            $target_strategy_prop(x)
-
-    trust:
-        forall y R:
-            y = 1
-            =>:
-                $target_strategy_prop(y)
-
-strategy use_negative_strategy:
-    ? forall x R:
-        x != 1
-        =>:
-            not $target_strategy_prop(x)
-
-    trust:
-        forall y R:
-            y != 1
-            =>:
-                not $target_strategy_prop(y)
-
-use strategy use_positive_strategy
-use strategy use_negative_strategy
-stop strategy use_negative_strategy
-"#;
-
-    let mut runtime = Runtime::new();
-    runtime.start_isolated_source("strategy_positive_and_negative_atomic_keys_do_not_collide");
-    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
-    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
-
-    assert!(
-        run_succeeded,
-        "positive and negative strategy keys should both be stored:\n{}",
-        run_output
-    );
-
-    let env = &runtime.current_module().main_environment;
-    assert_eq!(
-        env.strategies
-            .active_strategy(&("target_strategy_prop".to_string(), true)),
-        Some(&"use_positive_strategy".to_string())
-    );
-    assert_eq!(
-        env.strategies
-            .active_strategy(&("target_strategy_prop".to_string(), false)),
-        None
-    );
-    assert_eq!(
-        env.strategies
-            .stopped_strategy(&("target_strategy_prop".to_string(), false)),
-        Some(&"use_negative_strategy".to_string())
-    );
-    assert_eq!(
-        env.strategies
-            .stopped_strategy(&("target_strategy_prop".to_string(), true)),
-        None
-    );
-}
-
-#[test]
-fn use_strategy_verifies_matching_atomic_fact_and_stop_leaves_known_forall_available() {
-    let strategy_setup = r#"
-abstract_prop target_strategy_prop(x)
-
-strategy use_target_strategy:
-    ? forall x R:
-        x = 1
-        =>:
-            $target_strategy_prop(x)
-
-    trust:
-        forall y R:
-            y = 1
-            =>:
-                $target_strategy_prop(y)
-"#;
-    let succeeds_source_code = format!(
-        "{}\nuse strategy use_target_strategy\n$target_strategy_prop(1)\n",
-        strategy_setup
-    );
-    let mut runtime = Runtime::new();
-    runtime.start_isolated_source("use_strategy_verifies_matching_atomic_fact");
-    let (stmt_results, runtime_error) = execute_source(succeeds_source_code.as_str(), &mut runtime);
-    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
-
-    assert!(
-        run_succeeded,
-        "enabled strategy should verify the matching atomic fact:\n{}",
-        run_output
-    );
-
-    let stop_source_code = format!(
-        "{}\nuse strategy use_target_strategy\nstop strategy use_target_strategy\n$target_strategy_prop(1)\n",
-        strategy_setup
-    );
-    let mut runtime = Runtime::new();
-    runtime.start_isolated_source("stop_strategy_leaves_known_forall_available");
-    let (stmt_results, runtime_error) = execute_source(stop_source_code.as_str(), &mut runtime);
-    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
-
-    assert!(
-        run_succeeded,
-        "stopped strategy search should still leave the stored forall available:\n{}",
-        run_output
-    );
-    assert!(
-        run_output.contains("\"kind\": \"KnownForallInstantiation\""),
-        "the stopped strategy case should verify by ordinary known-forall search:\n{}",
-        run_output
-    );
-}
-
-#[test]
-fn use_strategy_after_stop_in_same_env_removes_stop() {
-    let source_code = r#"
-abstract_prop target_strategy_prop(x)
-
-strategy use_target_strategy:
-    ? forall x R:
-        x = 1
-        =>:
-            $target_strategy_prop(x)
-
-    trust:
-        forall y R:
-            y = 1
-            =>:
-                $target_strategy_prop(y)
-
-use strategy use_target_strategy
-stop strategy use_target_strategy
-use strategy use_target_strategy
-$target_strategy_prop(1)
-"#;
-
-    let mut runtime = Runtime::new();
-    runtime.start_isolated_source("use_strategy_after_stop_in_same_env_removes_stop");
-    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
-    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
-
-    assert!(
-        run_succeeded,
-        "same-env use after stop should re-enable the strategy:\n{}",
-        run_output
-    );
-
-    let env = &runtime.current_module().main_environment;
-    assert_eq!(
-        env.strategies
-            .stopped_strategy(&("target_strategy_prop".to_string(), true)),
-        None
-    );
-}
-
-#[test]
-fn child_env_use_strategy_overrides_parent_stop_without_removing_it() {
-    let source_code = r#"
-abstract_prop target_strategy_prop(x)
-
-strategy use_target_strategy:
-    ? forall x R:
-        x = 1
-        =>:
-            $target_strategy_prop(x)
-
-    trust:
-        forall y R:
-            y = 1
-            =>:
-                $target_strategy_prop(y)
-
-use strategy use_target_strategy
-stop strategy use_target_strategy
-claim:
-    ? $target_strategy_prop(1)
-    use strategy use_target_strategy
-"#;
-
-    let mut runtime = Runtime::new();
-    runtime
-        .start_isolated_source("child_env_use_strategy_overrides_parent_stop_without_removing_it");
-    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
-    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
-
-    assert!(
-        run_succeeded,
-        "child-env use should override the parent stop while inside the child env:\n{}",
-        run_output
-    );
-
-    let env = &runtime.current_module().main_environment;
-    assert_eq!(
-        env.strategies
-            .stopped_strategy(&("target_strategy_prop".to_string(), true)),
-        Some(&"use_target_strategy".to_string())
-    );
+    for source_code in ["use strategy missing", "stop strategy missing"] {
+        let mut runtime = Runtime::new();
+        runtime.start_isolated_source("retired_strategy_control_syntax");
+        let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_output(&runtime, &stmt_results, &runtime_error);
+        assert!(
+            !run_succeeded,
+            "retired strategy-control syntax should fail: `{source_code}`\n{run_output}"
+        );
+    }
 }
 
 #[test]

@@ -91,6 +91,4 @@ pub enum ProofBlockStmt {
 pub enum CommandStmt {
     ImportStmt(ImportStmt),
     EvalStmt(EvalStmt),
-    UseStrategyStmt(UseStrategyStmt),
-    StopStrategyStmt(StopStrategyStmt),
 }
