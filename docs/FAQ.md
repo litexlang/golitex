@@ -190,6 +190,19 @@ give the `prop` corresponding parameters. This naming step preserves Litex's
 canonical fact representation while still exposing the intended mathematical
 statement through an atomic interface.
 
+## How does Litex parse a minus sign next to a power?
+
+Power binds tighter than prefix minus, and prefix minus binds tighter than
+multiplication, division, and binary addition or subtraction. Consequently,
+the parser reads `-t^2` as `-(t^2)`, while `-t * u` groups as `(-t) * u`.
+Powers remain right-associative, so `a^b^c` means `a^(b^c)`.
+
+Litex authoring should nevertheless make the minus/power boundary explicit.
+Write `-(t^2)` or `-1 * (t^2)` for the opposite of the square, `(-t)^2` for
+the square of the negative value, and `t^(-1)` for a negative exponent. This
+keeps the syntax tree visible to human readers and authoring agents instead of
+making them remember or guess the parser rule.
+
 ## What are builtin objects and builtin rules?
 
 Litex is easiest to understand through four related layers:

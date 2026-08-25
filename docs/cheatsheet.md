@@ -81,6 +81,10 @@ tree visible whenever prefix `-` meets exponentiation:
 | Square of the negative value | `(-t)^2` |
 | Negative exponent | `t^(-1)` |
 
+For compatibility, the parser's actual order is `^`, prefix `-`, `* /`, then
+binary `+ -`, so bare `-t^2` is parsed as `-(t^2)`. This fact is not permission
+to emit the bare form; authoring must keep the intended tree visible.
+
 The same rule applies inside larger products and sums. Automated authoring
 agents must insert these parentheses rather than infer an unstated intention.
 

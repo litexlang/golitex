@@ -16,4 +16,4 @@
 # negative exponents must use `t^(-1)`.
 # Evidence: `target/release/litex -compact -isolated -runner -f
 # examples/01_proof_patterns/unary_power_precedence.lit` and
-# `cargo test --release precedence_tests -- --nocapture`.
+# `cargo test --release --lib precedence_tests -- --nocapture`.

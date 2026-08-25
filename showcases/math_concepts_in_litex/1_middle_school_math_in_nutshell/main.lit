@@ -92,6 +92,11 @@ arithmetic_mean(9, 16) = (9 + 16) / 2 = 25 / 2
 log(2, 8) = 3
 log(10, 100) = 2
 
+# Parentheses distinguish the opposite of a square from the square of a
+# negative value. Public Litex keeps this syntax tree visible.
+-(2^2) = (-4)
+(-2)^2 = 4
+
 forall a R, m, n N:
     a^(m + n) = a^m * a^n
 
