@@ -349,10 +349,28 @@ pub(super) const GENERATED_LOCAL_BUILTIN_RULES: &[GeneratedLocalBuiltinRuleSourc
         lean_theorem_name: "set_intersect_finite",
     },
     GeneratedLocalBuiltinRuleSource {
+        id: "set.intersect_idempotent",
+        semantic_fingerprint: "5b8406e414bcb8298333d03ebd131ce723459cb79e666f13697ff50ea65899e7",
+        litex_source: include_str!("set/intersect_idempotent.lit"),
+        lean_theorem_name: "set_intersect_idempotent",
+    },
+    GeneratedLocalBuiltinRuleSource {
         id: "set.intersect_membership",
         semantic_fingerprint: "341153e303eb35ad6a5d14034ad32c7124fed0d484d711c7dbf9514091df15df",
         litex_source: include_str!("set/intersect_membership.lit"),
         lean_theorem_name: "set_intersect_membership",
+    },
+    GeneratedLocalBuiltinRuleSource {
+        id: "set.intersect_set_minus_of_subset_empty",
+        semantic_fingerprint: "3a69cc99bd44efec2949b9494966851e13fc827e06a60de3e9dd1ba4a608ffa6",
+        litex_source: include_str!("set/intersect_set_minus_of_subset_empty.lit"),
+        lean_theorem_name: "set_intersect_set_minus_of_subset_empty",
+    },
+    GeneratedLocalBuiltinRuleSource {
+        id: "set.intersect_set_minus_self_empty",
+        semantic_fingerprint: "2f560f7b0e351881fed474244dea97d6014366df168bb48c1bed85a6a5a2793f",
+        litex_source: include_str!("set/intersect_set_minus_self_empty.lit"),
+        lean_theorem_name: "set_intersect_set_minus_self_empty",
     },
     GeneratedLocalBuiltinRuleSource {
         id: "set.intersect_subset_left",
@@ -391,6 +409,18 @@ pub(super) const GENERATED_LOCAL_BUILTIN_RULES: &[GeneratedLocalBuiltinRuleSourc
         lean_theorem_name: "set_power_set_nonempty",
     },
     GeneratedLocalBuiltinRuleSource {
+        id: "set.set_minus_empty_left",
+        semantic_fingerprint: "990a9501579be3211802232e1d85018abd134756e06e710573aa5bbf090a7afc",
+        litex_source: include_str!("set/set_minus_empty_left.lit"),
+        lean_theorem_name: "set_set_minus_empty_left",
+    },
+    GeneratedLocalBuiltinRuleSource {
+        id: "set.set_minus_empty_right",
+        semantic_fingerprint: "2847832b8076cb48c912a2e72b5060c965d0ae6fdda2c2e7f2fda0a47a8c1f3f",
+        litex_source: include_str!("set/set_minus_empty_right.lit"),
+        lean_theorem_name: "set_set_minus_empty_right",
+    },
+    GeneratedLocalBuiltinRuleSource {
         id: "set.set_minus_finite_left",
         semantic_fingerprint: "176fa12c544205c1110577452f72b77e40c9ac9764ef6fcf09f7afc085120015",
         litex_source: include_str!("set/set_minus_finite_left.lit"),
@@ -409,6 +439,12 @@ pub(super) const GENERATED_LOCAL_BUILTIN_RULES: &[GeneratedLocalBuiltinRuleSourc
         lean_theorem_name: "set_set_minus_intersect_de_morgan",
     },
     GeneratedLocalBuiltinRuleSource {
+        id: "set.set_minus_intersect_self",
+        semantic_fingerprint: "cc5a063f6c080a0924b909b8884247b3bcde9d72f4f4b53c2fc852f65a64ccd4",
+        litex_source: include_str!("set/set_minus_intersect_self.lit"),
+        lean_theorem_name: "set_set_minus_intersect_self",
+    },
+    GeneratedLocalBuiltinRuleSource {
         id: "set.set_minus_membership",
         semantic_fingerprint: "e219681b5fab13bc2d1300525cde5e2da9a319cfc42bd25d7c12317206aae835",
         litex_source: include_str!("set/set_minus_membership.lit"),
@@ -419,6 +455,12 @@ pub(super) const GENERATED_LOCAL_BUILTIN_RULES: &[GeneratedLocalBuiltinRuleSourc
         semantic_fingerprint: "fd9957eadf4543561e313dbed2f74b97e8cbc9453eba9e1a59e7662951da3a46",
         litex_source: include_str!("set/set_minus_recover_subset.lit"),
         lean_theorem_name: "set_set_minus_recover_subset",
+    },
+    GeneratedLocalBuiltinRuleSource {
+        id: "set.set_minus_self_empty",
+        semantic_fingerprint: "63ae8f8f4d1c3520c85642e1a4e0ef41b28e8c2418a0469645a4e5c56b9522a9",
+        litex_source: include_str!("set/set_minus_self_empty.lit"),
+        lean_theorem_name: "set_set_minus_self_empty",
     },
     GeneratedLocalBuiltinRuleSource {
         id: "set.set_minus_subset_left",
@@ -475,6 +517,12 @@ pub(super) const GENERATED_LOCAL_BUILTIN_RULES: &[GeneratedLocalBuiltinRuleSourc
         lean_theorem_name: "set_union_empty_right",
     },
     GeneratedLocalBuiltinRuleSource {
+        id: "set.union_eq_right_of_subset",
+        semantic_fingerprint: "d77c403043bec609a9c0f10df11e91a820db204a9d92ccaa5dc65dea58988d2a",
+        litex_source: include_str!("set/union_eq_right_of_subset.lit"),
+        lean_theorem_name: "set_union_eq_right_of_subset",
+    },
+    GeneratedLocalBuiltinRuleSource {
         id: "set.union_finite",
         semantic_fingerprint: "e6e1919698b0f50f8cb599c095c7496058f029d1eb3cf9909cf8b83919b0d64c",
         litex_source: include_str!("set/union_finite.lit"),
@@ -509,6 +557,12 @@ pub(super) const GENERATED_LOCAL_BUILTIN_RULES: &[GeneratedLocalBuiltinRuleSourc
         semantic_fingerprint: "e6cbf3cc72382547d43887ed955055faee19058dd6827dd5e811a5e66b9dec1a",
         litex_source: include_str!("set/union_nonempty_right.lit"),
         lean_theorem_name: "set_union_nonempty_right",
+    },
+    GeneratedLocalBuiltinRuleSource {
+        id: "set.union_set_minus_decomposition",
+        semantic_fingerprint: "4844934d4857d8470f8a897969ab9a52e873f6faf627c3e436ff3b1b88c371ce",
+        litex_source: include_str!("set/union_set_minus_decomposition.lit"),
+        lean_theorem_name: "set_union_set_minus_decomposition",
     },
     GeneratedLocalBuiltinRuleSource {
         id: "set.union_subset",

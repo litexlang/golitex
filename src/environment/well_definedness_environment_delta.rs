@@ -13,7 +13,6 @@ pub struct WellDefinednessEnvironmentDelta {
     objects: EnvironmentObjectKnowledgeStore,
     predicate_properties: EnvironmentPredicatePropertyStore,
     caches: EnvironmentVerificationCache,
-    strategies: EnvironmentStrategyRegistry,
 }
 
 impl WellDefinednessEnvironmentDelta {
@@ -42,7 +41,6 @@ impl WellDefinednessEnvironmentDelta {
             objects,
             predicate_properties,
             caches,
-            strategies,
         } = environment;
         Self {
             definitions,
@@ -50,7 +48,6 @@ impl WellDefinednessEnvironmentDelta {
             objects,
             predicate_properties,
             caches,
-            strategies,
         }
     }
 
@@ -61,7 +58,6 @@ impl WellDefinednessEnvironmentDelta {
             objects,
             predicate_properties,
             caches,
-            strategies,
         } = self;
         Environment {
             definitions,
@@ -69,7 +65,6 @@ impl WellDefinednessEnvironmentDelta {
             objects,
             predicate_properties,
             caches,
-            strategies,
         }
     }
 }

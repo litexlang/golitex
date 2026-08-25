@@ -216,18 +216,6 @@ impl AxiomStmt {
     }
 }
 
-impl UseStrategyStmt {
-    pub fn stmt_type_name(&self) -> String {
-        "UseStrategyStmt".to_string()
-    }
-}
-
-impl StopStrategyStmt {
-    pub fn stmt_type_name(&self) -> String {
-        "StopStrategyStmt".to_string()
-    }
-}
-
 impl DefStrategyStmt {
     pub fn stmt_type_name(&self) -> String {
         "DefStrategyStmt".to_string()
@@ -543,18 +531,6 @@ impl DefThmStmt {
 impl AxiomStmt {
     pub fn output_type_string() -> String {
         "axiom".to_string()
-    }
-}
-
-impl UseStrategyStmt {
-    pub fn output_type_string() -> String {
-        "use strategy statement".to_string()
-    }
-}
-
-impl StopStrategyStmt {
-    pub fn output_type_string() -> String {
-        "stop strategy statement".to_string()
     }
 }
 

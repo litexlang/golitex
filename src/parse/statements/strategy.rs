@@ -73,21 +73,6 @@ impl Runtime {
         )
         .into())
     }
-
-    pub fn parse_stop_strategy_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
-        tb.skip_token(STOP)?;
-        tb.skip_token(STRATEGY)?;
-        let name = self.parse_module_qualified_reference_name(tb)?;
-        if !tb.exceed_end_of_head() {
-            return Err(RuntimeError::from(ParseRuntimeError(
-                RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "stop strategy: unexpected token after strategy name".to_string(),
-                    tb.line_file.clone(),
-                ),
-            )));
-        }
-        Ok(StopStrategyStmt::new(name, tb.line_file.clone()).into())
-    }
 }
 
 fn validate_strategy_forall_fact(forall_fact: &ForallFact) -> Result<(), RuntimeError> {

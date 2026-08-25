@@ -769,6 +769,19 @@ theorem intersectAssociative (left middle right : Litex.Set.{u}) :
           (inLeftOfInIntersect (inRightOfInIntersect membership)))
         (inRightOfInIntersect (inRightOfInIntersect membership)))
 
+theorem intersectIdempotent (set : Litex.Set.{u}) :
+    Same (intersect set set) set :=
+  Same.setExt
+    (intersectSubsetLeft set set)
+    (fun _ membership => inIntersect membership membership)
+
+theorem subsetTransitive
+    {left middle right : Litex.Set.{u}}
+    (leftMiddle : Subset left middle)
+    (middleRight : Subset middle right) :
+    Subset left right :=
+  fun value membership => middleRight value (leftMiddle value membership)
+
 theorem intersectEqLeftOfSubset
     {left right : Litex.Set.{u}}
     (leftSubset : Subset left right) :
@@ -784,6 +797,109 @@ theorem intersectEqRightOfSubset
   Same.setExt
     (intersectSubsetRight left right)
     (fun value membership => inIntersect (rightSubset value membership) membership)
+
+theorem unionEqRightOfSubset
+    {subset base : Litex.Set.{u}}
+    (subsetBase : Subset subset base) :
+    Same (union subset base) base :=
+  Same.setExt
+    (unionSubset subsetBase (fun _ membership => membership))
+    (subsetUnionRight subset base)
+
+theorem unionEqLeftOfSubset
+    {subset base : Litex.Set.{u}}
+    (subsetBase : Subset subset base) :
+    Same (union base subset) base :=
+  Same.trans
+    (unionCommutative base subset)
+    (unionEqRightOfSubset subsetBase)
+
+theorem setMinusSelfEmpty (set : Litex.Set.{u}) :
+    Same (setMinus set set) Set.empty :=
+  Same.setExt
+    (fun _ membership =>
+      False.elim
+        ((notInRightOfInSetMinus membership)
+          (inLeftOfInSetMinus membership)))
+    (emptySubset (setMinus set set))
+
+theorem setMinusEmptyRight (set : Litex.Set.{u}) :
+    Same (setMinus set Set.empty) set :=
+  Same.setExt
+    (setMinusSubsetLeft set Set.empty)
+    (fun _ membership =>
+      inSetMinus membership (fun emptyMembership => by
+        rcases emptyMembership with ⟨impossible, _⟩
+        exact PEmpty.elim impossible))
+
+theorem setMinusEmptyLeft (set : Litex.Set.{u}) :
+    Same (setMinus Set.empty set) Set.empty :=
+  Same.setExt
+    (setMinusSubsetLeft Set.empty set)
+    (emptySubset (setMinus Set.empty set))
+
+theorem intersectSetMinusOfSubsetEmpty
+    (outside : Litex.Set.{u})
+    {subset removed : Litex.Set.{u}}
+    (subsetRemoved : Subset subset removed) :
+    Same (intersect subset (setMinus outside removed)) Set.empty :=
+  Same.setExt
+    (fun _ membership =>
+      False.elim
+        ((notInRightOfInSetMinus (inRightOfInIntersect membership))
+          (subsetRemoved _ (inLeftOfInIntersect membership))))
+    (emptySubset (intersect subset (setMinus outside removed)))
+
+theorem intersectSetMinusSelfEmpty (removed outside : Litex.Set.{u}) :
+    Same (intersect removed (setMinus outside removed)) Set.empty :=
+  intersectSetMinusOfSubsetEmpty outside (fun _ membership => membership)
+
+theorem unionSetMinusDecomposition (retained base : Litex.Set.{u}) :
+    Same (union retained (setMinus base retained)) (union retained base) :=
+  Same.setExt
+    (fun _ membership => by
+      rcases unionCases membership with retainedMembership | differenceMembership
+      · exact inUnionLeft retainedMembership
+      · exact inUnionRight (inLeftOfInSetMinus differenceMembership))
+    (fun value membership => by
+      rcases unionCases membership with retainedMembership | baseMembership
+      · exact inUnionLeft retainedMembership
+      · classical
+        by_cases retainedMembership : In value retained
+        · exact inUnionLeft retainedMembership
+        · exact inUnionRight (inSetMinus baseMembership retainedMembership))
+
+theorem setMinusIntersectSelf (base removed : Litex.Set.{u}) :
+    Same (setMinus base (intersect removed base)) (setMinus base removed) :=
+  Same.setExt
+    (fun _ membership =>
+      inSetMinus
+        (inLeftOfInSetMinus membership)
+        (fun removedMembership =>
+          (notInRightOfInSetMinus membership)
+            (inIntersect removedMembership (inLeftOfInSetMinus membership))))
+    (fun _ membership =>
+      inSetMinus
+        (inLeftOfInSetMinus membership)
+        (fun intersectionMembership =>
+          (notInRightOfInSetMinus membership)
+            (inLeftOfInIntersect intersectionMembership)))
+
+theorem setMinusIntersectSelfCommuted (base removed : Litex.Set.{u}) :
+    Same (setMinus base (intersect base removed)) (setMinus base removed) :=
+  Same.setExt
+    (fun _ membership =>
+      inSetMinus
+        (inLeftOfInSetMinus membership)
+        (fun removedMembership =>
+          (notInRightOfInSetMinus membership)
+            (inIntersect (inLeftOfInSetMinus membership) removedMembership)))
+    (fun _ membership =>
+      inSetMinus
+        (inLeftOfInSetMinus membership)
+        (fun intersectionMembership =>
+          (notInRightOfInSetMinus membership)
+            (inRightOfInIntersect intersectionMembership)))
 
 theorem intersectUnionDistributive (left middle right : Litex.Set.{u}) :
     Same (intersect left (union middle right))

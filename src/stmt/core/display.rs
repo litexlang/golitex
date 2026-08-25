@@ -117,8 +117,6 @@ impl fmt::Display for CommandStmt {
         match self {
             CommandStmt::ImportStmt(x) => write!(f, "{}", x),
             CommandStmt::EvalStmt(x) => write!(f, "{}", x),
-            CommandStmt::UseStrategyStmt(x) => write!(f, "{}", x),
-            CommandStmt::StopStrategyStmt(x) => write!(f, "{}", x),
         }
     }
 }

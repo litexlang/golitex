@@ -3221,7 +3221,6 @@ strategy use_p:
     trust:
         forall y R:
             $p(y, S)
-use strategy use_p
 $p(1, T)
 "#,
             false,
@@ -3238,7 +3237,6 @@ strategy use_p:
     trust:
         forall y R:
             $p(y, S)
-use strategy use_p
 $p(1, S)
 "#,
             true,

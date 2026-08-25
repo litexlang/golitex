@@ -138,7 +138,6 @@ impl Runtime {
                 }
             }
             SuccessFactProofResult::StoredFactCitation(_)
-            | SuccessFactProofResult::Strategy(_)
             | SuccessFactProofResult::DefinitionReduction(_)
             | SuccessFactProofResult::CheckedFunctionDefinitionReduction(_)
             | SuccessFactProofResult::DiagnosticOnly(_) => {}

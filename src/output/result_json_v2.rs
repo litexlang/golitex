@@ -1378,18 +1378,6 @@ impl StmtResultJsonV2 {
                     ),
                 ],
             ),
-            SuccessCommandStmtResult::UseStrategyStmt(result) => self.non_fact_stmt(
-                "UseStrategyStmt",
-                result.statement.to_string(),
-                &result.common,
-                vec![],
-            ),
-            SuccessCommandStmtResult::StopStrategyStmt(result) => self.non_fact_stmt(
-                "StopStrategyStmt",
-                result.statement.to_string(),
-                &result.common,
-                vec![],
-            ),
         }
     }
 
@@ -2539,11 +2527,6 @@ impl StmtResultJsonV2 {
                 optional_string_field("detail", result.detail.as_deref()),
                 string_field("source_fact", result.source_fact.to_string()),
                 string_field("source_fact_id", fact_id(result.source_fact_id)),
-            ]),
-            SuccessFactProofResult::Strategy(result) => object(vec![
-                string_field("kind", "Strategy"),
-                optional_string_field("detail", result.detail.as_deref()),
-                string_field("strategy", result.strategy.to_string()),
             ]),
             SuccessFactProofResult::DefinitionReduction(result) => object(vec![
                 string_field("kind", "DefinitionReduction"),

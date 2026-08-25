@@ -22,7 +22,6 @@ pub use crate::environment::{
     AtomicFactInForallArgShapeKey, CachedKnownFact, Environment, EnvironmentDefinitionRegistry,
     EnvironmentFactStore, EnvironmentObjectKnowledge, EnvironmentObjectKnowledgeStore,
     EnvironmentPredicateProperties, EnvironmentPredicatePropertyStore, EnvironmentStoredFactStore,
-    EnvironmentStrategyActivationState, EnvironmentStrategyRegistry, EnvironmentStrategySelection,
     EnvironmentVerificationCache, KnownEquality, KnownEqualityProofStep, KnownFnInfo,
     KnownObjValue, StoredFactRecord, StoredForallConclusionReference, SymmetricPropValue,
     WellDefinednessEnvironmentDelta,
@@ -276,7 +275,6 @@ pub use crate::result::SuccessInstantiateKnownForallResult;
 pub use crate::result::SuccessReuseFactProofResult;
 pub use crate::result::SuccessStmtResult;
 pub use crate::result::SuccessStoredFactCitationProofResult;
-pub use crate::result::SuccessStrategyFactProofResult;
 pub use crate::result::SuccessTransformFactResult;
 pub use crate::result::SuccessVerifyArgsSatisfyParamDefResult;
 pub use crate::result::SuccessVerifyByAssignmentAssumptionResult;
@@ -398,10 +396,9 @@ pub use crate::result::{
     SuccessProofBlockStmtResult, SuccessRecursiveObjWellDefinedResult,
     SuccessReuseObjWellDefinedResult, SuccessReusedImportResult,
     SuccessReusedTemplateInstanceResult, SuccessSketchProofResult, SuccessSketchStmtResult,
-    SuccessStmtCommonResult, SuccessStopStrategyStmtResult, SuccessStoreFactResult,
-    SuccessTemplateInstantiationResult, SuccessTrustHaveStmtResult, SuccessTrustStmtResult,
-    SuccessTryProofResult, SuccessTryStmtResult, SuccessUnsafeStmtResult,
-    SuccessUseStrategyStmtResult, SuccessVerifyAndFactResult,
+    SuccessStmtCommonResult, SuccessStoreFactResult, SuccessTemplateInstantiationResult,
+    SuccessTrustHaveStmtResult, SuccessTrustStmtResult, SuccessTryProofResult,
+    SuccessTryStmtResult, SuccessUnsafeStmtResult, SuccessVerifyAndFactResult,
     SuccessVerifyAndFactWellDefinedResult, SuccessVerifyAnonymousFunctionWellDefinedResult,
     SuccessVerifyAtomicFactResult, SuccessVerifyAtomicFactWellDefinedResult,
     SuccessVerifyAtomicPredicateDomainCheckResult, SuccessVerifyAtomicPredicateWellDefinedResult,
@@ -555,10 +552,8 @@ pub use crate::stmt::DefThmStmt;
 pub use crate::stmt::DefinitionStmt;
 pub use crate::stmt::ProofBlockStmt;
 pub use crate::stmt::Stmt;
-pub use crate::stmt::StopStrategyStmt;
 pub use crate::stmt::StructFieldDef;
 pub use crate::stmt::UnsafeStmt;
-pub use crate::stmt::UseStrategyStmt;
 pub use crate::stmt::WitnessStmt;
 pub use crate::symbol::{
     builtin_symbol_ref, insert_symbol_substitution, IntoSymbolRef, SymbolBinding, SymbolDefinition,
@@ -749,7 +744,6 @@ pub use crate::common::keywords::SKETCH;
 pub use crate::common::keywords::SQRT;
 pub use crate::common::keywords::ST;
 pub use crate::common::keywords::STD;
-pub use crate::common::keywords::STOP;
 pub use crate::common::keywords::STRATEGY;
 pub use crate::common::keywords::STRONG_INDUC;
 pub use crate::common::keywords::STRUCT;
@@ -777,7 +771,6 @@ pub use crate::common::keywords::UNICODE_NOT_IN;
 pub use crate::common::keywords::UNICODE_UNION;
 pub use crate::common::keywords::UNION;
 pub use crate::common::keywords::UNKNOWN_COLON;
-pub use crate::common::keywords::USE;
 pub use crate::common::keywords::WITNESS;
 pub use crate::common::keywords::Z;
 pub use crate::common::keywords::ZORN_LEMMA;

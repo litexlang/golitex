@@ -301,8 +301,9 @@ owns the forall WD Result, the parameter-assumption store with its exact local
 `FactId`, two ordered proof-step Results, and the final conclusion check. The
 compiler pushes one inherited environment for that Result-owned forall body,
 compiles `x = x` and `by def $reflexive(x)` there, pops the local identities,
-then publishes only the stored outer forall theorem. `stop strategy` and
-`use strategy` are checked pass-through Results and emit no Lean declaration.
+then publishes only the stored outer forall theorem. Ordinary matching can
+cite that theorem directly; there is no activation command Result or compiler
+pass-through layer.
 
 `44_SettingElaborationResult.lit` records the complementary pass-through case.
 A `setting` is consumed by Litex elaboration, so later statement Results already

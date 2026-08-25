@@ -156,59 +156,6 @@ b = 1
 }
 
 #[test]
-fn try_stmt_commit_reactivates_parent_stopped_strategy() {
-    run_with_large_stack(
-        "try_stmt_commit_reactivates_parent_stopped_strategy",
-        || {
-            let source_code = r#"
-abstract_prop target_strategy_prop(x)
-
-strategy use_target_strategy:
-    ? forall x R:
-        x = 1
-        =>:
-            $target_strategy_prop(x)
-
-    trust:
-        forall y R:
-            y = 1
-            =>:
-                $target_strategy_prop(y)
-
-use strategy use_target_strategy
-stop strategy use_target_strategy
-try:
-    use strategy use_target_strategy
-"#;
-
-            let mut runtime = Runtime::new();
-            runtime.start_isolated_source("try_stmt_commit_reactivates_parent_stopped_strategy");
-            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
-            let (run_succeeded, run_output) =
-                render_run_output(&runtime, &stmt_results, &runtime_error);
-
-            assert!(
-                run_succeeded,
-                "try commit should succeed when reactivating a strategy:\n{}",
-                run_output
-            );
-
-            let env = &runtime.current_module().main_environment;
-            assert_eq!(
-                env.strategies
-                    .active_strategy(&("target_strategy_prop".to_string(), true)),
-                Some(&"use_target_strategy".to_string())
-            );
-            assert_eq!(
-                env.strategies
-                    .stopped_strategy(&("target_strategy_prop".to_string(), true)),
-                None
-            );
-        },
-    );
-}
-
-#[test]
 fn try_stmt_rejects_import_control_statement() {
     run_with_large_stack("try_stmt_rejects_import_control_statement", || {
         let source_code = r#"

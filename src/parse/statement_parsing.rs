@@ -1,7 +1,7 @@
 use crate::common::keywords::{
     ABSTRACT_PROP, ALGO, AXIOM, BY, CART, CLAIM, EVAL, EXAMPLE, FINITE_SEQ, FN_LOWER_CASE, FOR,
-    HAVE, IMPORT, LET, MATRIX, OBTAIN, PREIMAGE, PROP, QUESTION_GOAL, SEQ, SETTING, SKETCH, STOP,
-    STRATEGY, STRONG_INDUC, STRUCT, TEMPLATE, THM, TRUST, TRY, TUPLE, USE, WITNESS,
+    HAVE, IMPORT, LET, MATRIX, OBTAIN, PREIMAGE, PROP, QUESTION_GOAL, SEQ, SETTING, SKETCH,
+    STRATEGY, STRONG_INDUC, STRUCT, TEMPLATE, THM, TRUST, TRY, TUPLE, WITNESS,
 };
 use crate::error::{ParseRuntimeError, RuntimeError, RuntimeErrorStruct};
 use crate::parse::TokenBlock;
@@ -57,11 +57,6 @@ impl Runtime {
             THM => self.parse_def_thm_stmt(tb),
             AXIOM => self.parse_def_axiom_stmt(tb),
             STRATEGY => self.parse_def_strategy_stmt(tb),
-            USE => self.parse_use_strategy_stmt(tb),
-            STOP => match tb.token_at_add_index(1) {
-                STRATEGY => self.parse_stop_strategy_stmt(tb),
-                _ => Err(statement_dispatch_error(tb, "stop: expected `strategy`")),
-            },
             SKETCH => self.parse_sketch_stmt(tb),
             TRY => self.parse_try_stmt(tb),
             QUESTION_GOAL => Err(RuntimeError::from(ParseRuntimeError(

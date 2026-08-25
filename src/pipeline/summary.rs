@@ -289,9 +289,6 @@ impl RunSummary {
             SuccessFactProofResult::StoredFactCitation(_) => {
                 bump_count(&mut self.proof_method_counts, "known fact");
             }
-            SuccessFactProofResult::Strategy(_) => {
-                bump_count(&mut self.proof_method_counts, "strategy");
-            }
             SuccessFactProofResult::DefinitionReduction(_) => {
                 bump_count(&mut self.proof_method_counts, "definition reduction");
             }
@@ -779,17 +776,6 @@ impl EnvironmentSummary {
             environment.facts.stored_facts.lookup_key_count(),
             environment.facts.stored_facts.lookup_key_count(),
         );
-        summary.add_field_counts(
-            "used_strategy_stmts",
-            environment.strategies.used_strategy_count(),
-            environment.strategies.used_strategy_count(),
-        );
-        summary.add_field_counts(
-            "stopped_strategy_stmts",
-            environment.strategies.stopped_strategy_count(),
-            environment.strategies.stopped_strategy_count(),
-        );
-
         summary.add_category_counts(environment);
         summary.add_fact_index_counts(environment);
 

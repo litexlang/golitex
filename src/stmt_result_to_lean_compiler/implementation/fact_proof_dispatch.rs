@@ -20,8 +20,7 @@ impl StmtResultToLeanCompiler {
                     &result.verification,
                 )
                 .map(Some),
-            SuccessFactProofResult::Strategy(_)
-            | SuccessFactProofResult::DefinitionReduction(_)
+            SuccessFactProofResult::DefinitionReduction(_)
             | SuccessFactProofResult::DiagnosticOnly(_) => Ok(None),
             SuccessFactProofResult::BuiltinRule(builtin)
             | SuccessFactProofResult::BuiltinStrategy(builtin) => {

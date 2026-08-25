@@ -1,0 +1,25 @@
+# Natural statement: for real a and b, a < b implies a <= b.
+#
+# Before this MVP, the compiler emitted only Litex's canonical wrapper theorem
+# for this source. There was no generated native-real theorem that an ordinary
+# Mathlib file could import and use.
+#
+# Now the same typed verifier evidence produces both the canonical theorem and
+# a `Native` theorem over Mathlib's `Real`. The native proof replays the checked
+# strict-to-weak order rule through reviewed Litex order bridges.
+#
+# Boundary: this MVP recognizes exactly two direct R binders with the premise
+# `a < b`, conclusion `a <= b`, and allowlisted strict-to-weak order evidence.
+# Other theorem shapes remain canonical-only and fail closed at this export
+# layer. No Same-to-equality shortcut, axiom, `sorry`, or `admit` is introduced.
+#
+# Evidence:
+# target/release/litex -compact -runner -f showcases/litex_to_mathlib_pipeline/main.lit
+# target/release/stmt_result_to_lean_compiler compile showcases/litex_to_mathlib_pipeline/main.lit showcases/litex_to_mathlib_pipeline/LitexToMathlibPipelineGenerated.lean
+# (cd lean && lake build LitexToMathlibPipeline)
+
+thm litex_real_lt_to_le:
+    ? forall a, b R:
+        a < b
+        =>:
+            a <= b

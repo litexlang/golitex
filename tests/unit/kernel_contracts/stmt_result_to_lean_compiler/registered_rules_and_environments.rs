@@ -387,7 +387,7 @@ fn order_transitivity_rejects_reversed_order_children() {
 
 fn execute_strategy_definition_with_local_proof_environment() -> Vec<StmtResult> {
     crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
-            "prop reflexive(x R):\n    x = x\n\nstrategy prove_reflexive:\n    ? forall x R:\n        $reflexive(x)\n    x = x\n    by def $reflexive(x)\n\nstop strategy prove_reflexive\nuse strategy prove_reflexive\n",
+            "prop reflexive(x R):\n    x = x\n\nstrategy prove_reflexive:\n    ? forall x R:\n        $reflexive(x)\n    x = x\n    by def $reflexive(x)\n",
             "direct_strategy_definition_compiler_environment.lit",
         )
         .expect("execute a verified strategy with one local parameter scope")
@@ -399,9 +399,9 @@ fn strategy_definition_compiles_from_recursive_well_definedness_and_local_proof_
         let results = execute_strategy_definition_with_local_proof_environment();
         let [_, StmtResult::Success(SuccessStmtResult::Definition(
             SuccessDefinitionStmtResult::DefStrategyStmt(strategy),
-        )), _, _] = results.as_slice()
+        ))] = results.as_slice()
         else {
-            panic!("expected predicate, strategy, stop, and use Results")
+            panic!("expected predicate and strategy Results")
         };
         let verification = strategy
             .verification
@@ -441,9 +441,9 @@ fn strategy_definition_rejects_a_result_missing_its_local_parameter_fact_id() {
         let mut results = execute_strategy_definition_with_local_proof_environment();
         let [_, StmtResult::Success(SuccessStmtResult::Definition(
             SuccessDefinitionStmtResult::DefStrategyStmt(strategy),
-        )), _, _] = results.as_mut_slice()
+        ))] = results.as_mut_slice()
         else {
-            panic!("expected predicate, strategy, stop, and use Results")
+            panic!("expected predicate and strategy Results")
         };
         strategy
             .verification

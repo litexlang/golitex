@@ -1,0 +1,42 @@
+# Tracer: elementary set identities replay through exact Lean set theorems.
+#
+# Before: the verifier left the union/set-minus decomposition unknown, so the
+# direct Result compiler had no certificate to consume.
+# Now: canonical forms retain registered rule IDs; reverse and commuted forms
+# retain typed set-rule evidence and compile to explicit Same chains.
+# Boundary: premise-bearing absorption, disjointness, and transitivity consume
+# the exact ordered subset child Results. No theorem search or axiom is used.
+
+forall A, B set:
+    union(A, set_minus(B, A)) = union(A, B)
+    union(set_minus(B, A), A) = union(B, A)
+    intersect(A, set_minus(B, A)) = {}
+    intersect(set_minus(B, A), A) = {}
+    set_minus(B, intersect(A, B)) = set_minus(B, A)
+    set_minus(B, intersect(B, A)) = set_minus(B, A)
+
+forall A set:
+    intersect(A, A) = A
+    A = intersect(A, A)
+    set_minus(A, A) = {}
+    set_minus(A, {}) = A
+    set_minus({}, A) = {}
+
+forall A, B set:
+    A $subset B
+    =>:
+        union(A, B) = B
+        union(B, A) = B
+        B = union(A, B)
+
+forall A, B, D set:
+    A $subset D
+    =>:
+        intersect(A, set_minus(B, D)) = {}
+        intersect(set_minus(B, D), A) = {}
+
+forall A, B, D set:
+    A $subset B
+    B $subset D
+    =>:
+        A $subset D

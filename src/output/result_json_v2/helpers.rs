@@ -1239,12 +1239,24 @@ pub(super) fn set_builtin_rule_name(rule: SetBuiltinRule) -> &'static str {
     match rule {
         SetBuiltinRule::SubsetReflexivity => "SubsetReflexivity",
         SetBuiltinRule::SupersetReflexivity => "SupersetReflexivity",
+        SetBuiltinRule::SubsetTransitivity => "SubsetTransitivity",
         SetBuiltinRule::UnionCommutative => "UnionCommutative",
         SetBuiltinRule::UnionAssociative => "UnionAssociative",
         SetBuiltinRule::UnionIdempotent => "UnionIdempotent",
         SetBuiltinRule::UnionEmptyIdentity => "UnionEmptyIdentity",
+        SetBuiltinRule::UnionSetMinusDecomposition => "UnionSetMinusDecomposition",
+        SetBuiltinRule::UnionAbsorptionFromSubset => "UnionAbsorptionFromSubset",
         SetBuiltinRule::IntersectCommutative => "IntersectCommutative",
         SetBuiltinRule::IntersectAssociative => "IntersectAssociative",
+        SetBuiltinRule::IntersectIdempotent => "IntersectIdempotent",
+        SetBuiltinRule::IntersectSetMinusSelfEmpty => "IntersectSetMinusSelfEmpty",
+        SetBuiltinRule::IntersectSetMinusDisjointFromSubset => {
+            "IntersectSetMinusDisjointFromSubset"
+        }
+        SetBuiltinRule::SetMinusSelfEmpty => "SetMinusSelfEmpty",
+        SetBuiltinRule::SetMinusEmptyRight => "SetMinusEmptyRight",
+        SetBuiltinRule::SetMinusEmptyLeft => "SetMinusEmptyLeft",
+        SetBuiltinRule::SetMinusIntersectSelf => "SetMinusIntersectSelf",
         SetBuiltinRule::UnionMembershipLeft => "UnionMembershipLeft",
         SetBuiltinRule::UnionMembershipRight => "UnionMembershipRight",
         SetBuiltinRule::IntersectMembershipBoth => "IntersectMembershipBoth",

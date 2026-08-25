@@ -25,6 +25,12 @@ fn clear_is_not_a_reserved_keyword() {
 }
 
 #[test]
+fn retired_strategy_controls_are_not_reserved_keywords() {
+    assert!(is_valid_litex_name("use").is_ok());
+    assert!(is_valid_litex_name("stop").is_ok());
+}
+
+#[test]
 fn self_is_allowed_name() {
     assert!(is_valid_litex_name("self").is_ok());
 }

@@ -13,7 +13,6 @@ pub struct Environment {
     pub objects: EnvironmentObjectKnowledgeStore,
     pub predicate_properties: EnvironmentPredicatePropertyStore,
     pub caches: EnvironmentVerificationCache,
-    pub strategies: EnvironmentStrategyRegistry,
 }
 ```
 
@@ -32,10 +31,8 @@ There is now no `EnvironmentPersistentRepositories` and no compatibility
 | `objects` | One `ObjString -> EnvironmentObjectKnowledge` entry per object key. Tuple/cart shape, sequence or matrix shape, simplified value, set-builder equality, and function-set knowledge are optional facets of that one entry. |
 | `predicate_properties` | One predicate-name entry whose profile independently records transitivity, symmetry permutations, reflexivity, and antisymmetry. |
 | `caches` | Environment-scoped verification results reusable by later statements: well-defined object results and infer-rule firing guards. |
-| `strategies` | One atomic-fact-family entry with an `Active` or `Stopped` state and the selected strategy name. |
-
 Statement-local memoized proofs and recursive proof-search guards do not belong
-to these six stores. They live in Runtime's statement proof context and are
+to these five stores. They live in Runtime's statement proof context and are
 discarded with that statement/local scope.
 
 ## Example: storing and later reusing a fact
@@ -67,7 +64,6 @@ a child `Environment`. A successful child is committed by
 - definition conflicts are rejected before mutation;
 - fact indexes and exact `FactId` records are merged;
 - all facets for the same object or predicate key are combined;
-- the child's final strategy state overrides the same key in the parent;
 - failed or discarded child environments are not merged.
 
 The primary regression tracer is
@@ -80,7 +76,7 @@ inside a child environment and must remain reusable after the child commits.
 A quantified theorem or claim may materialize sound support while checking the
 well-definedness of its conclusions. That support is returned as
 `WellDefinednessEnvironmentDelta`, not as a second queryable `Environment`.
-The delta has the same six private ownership categories only so it can preserve
+The delta has the same five private ownership categories only so it can preserve
 the exact checked changes. Its public operations are intentionally limited to:
 
 ```rust
@@ -92,7 +88,7 @@ This makes the algorithmic boundary match the data structure: proof code can
 replay checked changes, but cannot accidentally ask a partial certificate what
 the complete world knows.
 
-Start with [`environment_state.rs`](environment_state.rs) for the six owners,
+Start with [`environment_state.rs`](environment_state.rs) for the five owners,
 [`environment_merge.rs`](environment_merge.rs) for child commit,
 [`object_knowledge_store.rs`](object_knowledge_store.rs) for the keyed object
 profile, and
@@ -101,19 +97,12 @@ for WD replay.
 
 ## Migration verification
 
-The ownership migration was checked at both structural and behavioral levels:
+The ownership boundary is checked at both structural and behavioral levels:
 
-- the source-architecture test requires the six direct fields, one object map,
-  one predicate-profile map, one strategy-state map, private WD-delta fields,
-  and the absence of the old repository/Deref facade;
-- all Environment merge tests and all 21 strategy-filtered regression tests
-  pass;
-- the isolated primary tracer returns runner `ok: true`;
-- the examples/docs harness passes all 122 selected example groups and every
-  extracted Litex documentation snippet;
-- the release all-target suite passes when excluding five concurrent
-  structured-integer-induction compiler tests whose fixture is rejected by the
-  current parser before Environment execution begins. Those five all report
-  the same `induc ? from` same-line parse error and are outside this ownership
-  migration; the remaining 1136 library tests and every integration target,
-  including all 17 public showcases, pass.
+- the source-architecture test requires the five direct fields, one object map,
+  one predicate-profile map, private WD-delta fields, and the absence of the
+  old repository/Deref facade;
+- Environment merge regressions exercise successful child commits and rejected
+  conflicts;
+- the user-strategy tracer confirms that a checked strategy publishes its
+  `forall` into the ordinary fact store without a separate activation owner.

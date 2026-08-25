@@ -67,6 +67,19 @@ The implemented scope is deliberately small:
 - custom `Litex.Lt` and `Litex.Le` reduce to native real `<` and `≤` through
   `OrderValue`; verifier-owned `R` evidence controls source admission.
 
+The first Mathlib-native export slice is executable in
+[`showcases/litex_to_mathlib_pipeline`](../showcases/litex_to_mathlib_pipeline/README.md).
+It compiles one checked Litex theorem into both the canonical wrapper view and
+a native real-order view, then builds a separate consumer that imports the
+generated theorem to prove a `Set.Icc` result. Run its real kernel gate with:
+
+```sh
+lake build LitexToMathlibPipeline
+```
+
+This is a closed first slice, not general native coverage: unsupported theorem
+or evidence shapes remain canonical-only.
+
 Every compiler example is a checked-in generated pair:
 
 ```text

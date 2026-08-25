@@ -23,8 +23,7 @@ pub type AtomicFactInForallArgShapeIndex = HashMap<
 ///   matching against later goals;
 /// - derived object-shape caches for tuples, carts, finite sequences,
 ///   matrices, object values, set builders, and function-set information;
-/// - verification caches for well-defined objects and already-known facts;
-/// - strategy registrations and stopped-strategy state.
+/// - verification caches for well-defined objects and already-known facts.
 #[derive(Clone)]
 pub struct Environment {
     pub definitions: EnvironmentDefinitionRegistry,
@@ -32,7 +31,6 @@ pub struct Environment {
     pub objects: EnvironmentObjectKnowledgeStore,
     pub predicate_properties: EnvironmentPredicatePropertyStore,
     pub caches: EnvironmentVerificationCache,
-    pub strategies: EnvironmentStrategyRegistry,
 }
 
 #[derive(Clone)]
@@ -660,7 +658,6 @@ impl Environment {
             objects: EnvironmentObjectKnowledgeStore::new(),
             predicate_properties: EnvironmentPredicatePropertyStore::new(),
             caches: EnvironmentVerificationCache::new(),
-            strategies: EnvironmentStrategyRegistry::new(),
         }
     }
 }

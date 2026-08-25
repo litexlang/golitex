@@ -8,7 +8,6 @@ mod known_fn;
 mod object_knowledge_store;
 mod predicate_property_store;
 mod stored_fact_store;
-mod strategy_registry;
 mod verification_cache;
 mod well_definedness_environment_delta;
 pub use definition_registry::EnvironmentDefinitionRegistry;
@@ -21,8 +20,5 @@ pub use predicate_property_store::{
     EnvironmentPredicateProperties, EnvironmentPredicatePropertyStore,
 };
 pub use stored_fact_store::{EnvironmentStoredFactStore, StoredFactRecord};
-pub use strategy_registry::{
-    EnvironmentStrategyActivationState, EnvironmentStrategyRegistry, EnvironmentStrategySelection,
-};
 pub use verification_cache::EnvironmentVerificationCache;
 pub use well_definedness_environment_delta::WellDefinednessEnvironmentDelta;

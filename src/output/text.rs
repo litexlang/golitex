@@ -56,10 +56,6 @@ fn verified_by_display_line(verified_by: &SuccessFactProofResult) -> String {
             }
             r.source_fact.to_string()
         }
-        SuccessFactProofResult::Strategy(r) => r
-            .detail
-            .clone()
-            .unwrap_or_else(|| r.strategy.to_string()),
         SuccessFactProofResult::KnownForallInstantiation(r) => r.source_fact.to_string(),
         SuccessFactProofResult::DefinitionReduction(r) => r
             .detail

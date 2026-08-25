@@ -45,6 +45,6 @@ statement lifecycle.
 | [`proof_block_execution/`](proof_block_execution/) | Groups claim, goal-proof, sketch, and transactional `try` execution. |
 | [`command_execution/`](command_execution/) | Executes `eval` commands. |
 | [`trust_execution/`](trust_execution/) | Groups explicit unsafe fact and parameterized assumptions. |
-| [`strategy_execution.rs`](strategy_execution.rs) | Defines, applies, and stops proof strategies. |
+| [`strategy_execution.rs`](strategy_execution.rs) | Checks strategy proof bodies, stores definitions, and publishes their proved forall facts. |
 | [`verified_fact_storage.rs`](verified_fact_storage.rs) | Verifies fact well-definedness before storage and inference. |
 | [`proof_block_execution/try_block.rs`](proof_block_execution/try_block.rs) | Gives `try:` its transactional rollback behavior. |

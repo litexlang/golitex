@@ -332,18 +332,6 @@ impl From<AxiomStmt> for Stmt {
     }
 }
 
-impl From<UseStrategyStmt> for Stmt {
-    fn from(v: UseStrategyStmt) -> Self {
-        CommandStmt::UseStrategyStmt(v).into()
-    }
-}
-
-impl From<StopStrategyStmt> for Stmt {
-    fn from(v: StopStrategyStmt) -> Self {
-        CommandStmt::StopStrategyStmt(v).into()
-    }
-}
-
 impl From<DefStrategyStmt> for Stmt {
     fn from(v: DefStrategyStmt) -> Self {
         DefinitionStmt::DefStrategyStmt(v).into()

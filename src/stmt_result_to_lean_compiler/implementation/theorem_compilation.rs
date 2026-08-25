@@ -150,9 +150,8 @@ impl StmtResultToLeanCompiler {
     }
 
     /// `Combine`: a strategy definition has the same proof-producing forall
-    /// body as a named theorem. Strategy activation is a Runtime concern; the
-    /// generated Lean declaration is the proved forall fact stored by the
-    /// statement. The recursive Result, rather than Runtime state, owns the
+    /// body as a named theorem. The generated Lean declaration is the proved
+    /// forall fact stored by the statement. The recursive Result owns the
     /// local WD, assumptions, proof steps, and conclusion checks.
     pub(super) fn compile_strategy_definition_stmt_result_to_lean_source(
         &mut self,
@@ -1006,6 +1005,14 @@ impl StmtResultToLeanCompiler {
             "theorem {theorem_name} :\n    {theorem_type} := by\n{}",
             indent_lines(&format!("{intro}{}", body.proof_lines.join("\n")), 2)
         ));
+        if let Some(corollary) = native_real_less_to_less_equal_corollary(
+            &theorem_name,
+            &parameters,
+            verification.forall_fact,
+            &verification.conclusion_checks,
+        ) {
+            self.declarations.push(corollary);
+        }
         if let Some(theorem_fact_id) = theorem_fact_id {
             self.environment_stack
                 .fact_names
@@ -1607,4 +1614,91 @@ impl StmtResultToLeanCompiler {
             "have {name} : {proposition} := by\n  exact {proof}"
         )))
     }
+}
+
+/// Expose the first reviewed Mathlib-native theorem view. The source shape is
+/// deliberately closed: two direct `R` binders, their strict-order premise,
+/// and the matching non-strict conclusion proved by allowlisted typed
+/// strict-to-weak order evidence. Canonical and native views are sibling
+/// replays of that one Result: this route never assumes that `In.rep`, which
+/// uses classical choice, is definitionally the native input. Unsupported
+/// wrappers or proof evidence keep only the canonical view.
+fn native_real_less_to_less_equal_corollary(
+    canonical_theorem_name: &str,
+    parameters: &[(SymbolBinding, ParamType)],
+    forall_fact: &ForallFact,
+    conclusion_checks: &[&StmtResult],
+) -> Option<String> {
+    let [(left_binding, left_type), (right_binding, right_type)] = parameters else {
+        return None;
+    };
+    if !matches!(left_type, ParamType::Obj(Obj::StandardSet(StandardSet::R)))
+        || !matches!(right_type, ParamType::Obj(Obj::StandardSet(StandardSet::R)))
+    {
+        return None;
+    }
+    let [premise] = forall_fact.dom_facts.as_slice() else {
+        return None;
+    };
+    let Fact::AtomicFact(AtomicFact::LessFact(premise)) = premise else {
+        return None;
+    };
+    let [conclusion] = forall_fact.then_facts.as_slice() else {
+        return None;
+    };
+    let conclusion = conclusion.clone().to_fact();
+    let Fact::AtomicFact(AtomicFact::LessEqualFact(conclusion)) = &conclusion else {
+        return None;
+    };
+    if !object_is_exact_symbol(&premise.left, left_binding)
+        || !object_is_exact_symbol(&premise.right, right_binding)
+        || !object_is_exact_symbol(&conclusion.left, left_binding)
+        || !object_is_exact_symbol(&conclusion.right, right_binding)
+    {
+        return None;
+    }
+    let [conclusion_check] = conclusion_checks else {
+        return None;
+    };
+    let conclusion_success = conclusion_check.factual_success()?;
+    let builtin = match conclusion_success.proof() {
+        SuccessFactProofResult::BuiltinRule(builtin)
+        | SuccessFactProofResult::BuiltinStrategy(builtin) => builtin,
+        _ => return None,
+    };
+    let replays_strict_to_weak_order = match builtin.evidence.typed() {
+        Some(BuiltinRuleEvidence::Arithmetic(ArithmeticBuiltinRule::LessEqualFromStrictOrder)) => {
+            true
+        }
+        Some(BuiltinRuleEvidence::RegisteredLocal(evidence)) => {
+            evidence.rule_id.as_str() == LESS_EQUAL_OF_LESS_RULE_ID
+                && evidence.semantic_fingerprint.as_hex() == LESS_EQUAL_OF_LESS_FINGERPRINT
+        }
+        _ => false,
+    };
+    if !replays_strict_to_weak_order {
+        return None;
+    }
+
+    let left_name = lean_identifier(left_binding.name());
+    let right_name = lean_identifier(right_binding.name());
+    let proof = format!(
+        "exact Litex.OrderBridge.real_le_iff.mp\n  \
+         (Litex.Lt.toLe (Litex.OrderBridge.ltOfReal __domain1))"
+    );
+    Some(format!(
+        "namespace Native\n\n\
+         theorem {canonical_theorem_name} ({left_name} {right_name} : ℝ) \
+         (__domain1 : {left_name} < {right_name}) : {left_name} ≤ {right_name} := by\n{}\n\n\
+         end Native",
+        indent_lines(&proof, 2)
+    ))
+}
+
+fn object_is_exact_symbol(object: &Obj, binding: &SymbolBinding) -> bool {
+    matches!(
+        LeanTargetObjectRepresentation::lower(object),
+        Ok(LeanTargetObjectRepresentation::Symbol { symbol_id, .. })
+            if symbol_id == binding.id()
+    )
 }

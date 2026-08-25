@@ -27,14 +27,13 @@ fn parse_one_stmt(source_code: &str) -> Result<Stmt, RuntimeError> {
 }
 
 #[test]
-fn incomplete_have_and_stop_dispatch_report_syntax_errors() {
+fn incomplete_have_dispatch_reports_syntax_errors() {
     let cases = [
         (
             "have",
             "have: expected object definition, `fn`, or `by preimage`",
         ),
         ("have by", "have by: expected `preimage`"),
-        ("stop", "stop: expected `strategy`"),
     ];
 
     for (source_code, expected_message) in cases {

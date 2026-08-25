@@ -1,0 +1,31 @@
+# Tracer: a user strategy is an automatically matched proved forall.
+#
+# Before (retired controls):
+# stop strategy prove_target
+# use strategy prove_target
+# Former behavior: these statements mutated a separate activation registry,
+# even though the strategy's proved forall remained in ordinary fact search.
+#
+# Now:
+abstract_prop target(x)
+
+strategy prove_target:
+    ? forall x R:
+        x = 1
+        =>:
+            $target(x)
+
+    # Deliberate background assumption used only to isolate automatic matching.
+    trust:
+        forall y R:
+            y = 1
+            =>:
+                $target(y)
+
+$target(1)
+# Current behavior: defining the strategy publishes its checked forall for
+# ordinary automatic matching; there is no activation-control statement.
+#
+# Boundary: strategy definitions still require one atomic conclusion and a
+# proof body that establishes it. `thm` remains the explicit named-call form.
+# Evidence: this tracer is collected by the repository examples harness.

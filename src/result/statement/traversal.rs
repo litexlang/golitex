@@ -2075,8 +2075,6 @@ impl SuccessCommandStmtResult {
         match self {
             Self::ImportStmt(result) => result.common,
             Self::EvalStmt(result) => result.common,
-            Self::UseStrategyStmt(result) => result.common,
-            Self::StopStrategyStmt(result) => result.common,
         }
     }
 
@@ -2084,8 +2082,6 @@ impl SuccessCommandStmtResult {
         match self {
             Self::ImportStmt(result) => result.statement.clone().into(),
             Self::EvalStmt(result) => result.statement.clone().into(),
-            Self::UseStrategyStmt(result) => result.statement.clone().into(),
-            Self::StopStrategyStmt(result) => result.statement.clone().into(),
         }
     }
 
@@ -2093,8 +2089,6 @@ impl SuccessCommandStmtResult {
         match self {
             Self::ImportStmt(result) => &result.common,
             Self::EvalStmt(result) => &result.common,
-            Self::UseStrategyStmt(result) => &result.common,
-            Self::StopStrategyStmt(result) => &result.common,
         }
     }
 
@@ -2102,8 +2096,6 @@ impl SuccessCommandStmtResult {
         match self {
             Self::ImportStmt(result) => &mut result.common,
             Self::EvalStmt(result) => &mut result.common,
-            Self::UseStrategyStmt(result) => &mut result.common,
-            Self::StopStrategyStmt(result) => &mut result.common,
         }
     }
 }

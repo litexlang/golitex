@@ -2900,6 +2900,98 @@ B = set_minus(A, set_minus(A, B))
 }
 
 #[test]
+fn elementary_set_algebra_completion_is_builtin() {
+    let source_code = r#"
+forall A, B set:
+    union(A, set_minus(B, A)) = union(A, B)
+    union(A, B) = union(A, set_minus(B, A))
+    union(set_minus(B, A), A) = union(B, A)
+    intersect(A, set_minus(B, A)) = {}
+    intersect(set_minus(B, A), A) = {}
+    set_minus(B, intersect(A, B)) = set_minus(B, A)
+    set_minus(B, intersect(B, A)) = set_minus(B, A)
+
+forall A set:
+    intersect(A, A) = A
+    A = intersect(A, A)
+    set_minus(A, A) = {}
+    set_minus(A, {}) = A
+    set_minus({}, A) = {}
+
+forall A, B set:
+    A $subset B
+    =>:
+        union(A, B) = B
+        union(B, A) = B
+        B = union(A, B)
+        union(A, set_minus(B, A)) = B
+
+forall A, B, D set:
+    A $subset D
+    =>:
+        intersect(A, set_minus(B, D)) = {}
+        intersect(set_minus(B, D), A) = {}
+
+forall A, B, D set:
+    A $subset B
+    B $subset D
+    =>:
+        A $subset D
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.start_isolated_source("elementary_set_algebra_completion_is_builtin");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
+
+    assert!(
+        run_succeeded,
+        "elementary set-algebra completion failed:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("local builtin set.union_set_minus_decomposition"),
+        "the primary canonical tracer should retain its registered rule identity:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn elementary_set_algebra_completion_preserves_premise_boundaries() {
+    let cases = [
+        (
+            "union absorption without subset",
+            "have A, B set\nunion(A, B) = B\n",
+        ),
+        (
+            "disjointness without subset",
+            "have A, B, D set\nintersect(A, set_minus(B, D)) = {}\n",
+        ),
+        (
+            "mismatched removed operand",
+            "have A, B, D set\nunion(A, set_minus(B, D)) = union(A, B)\n",
+        ),
+        (
+            "subset transitivity without second edge",
+            "have A, B, D set\nA $subset B\nA $subset D\n",
+        ),
+    ];
+
+    for (label, source_code) in cases {
+        let mut runtime = Runtime::new();
+        runtime.start_isolated_source(label);
+        let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_output(&runtime, &stmt_results, &runtime_error);
+        assert!(!run_succeeded, "{label} must remain unknown:\n{run_output}");
+        assert!(
+            run_output.contains("UnknownError"),
+            "{label} should fail at the exact unknown boundary:\n{run_output}"
+        );
+    }
+}
+
+#[test]
 fn literal_set_intersection_filtering_is_builtin() {
     let cases = [
         r#"

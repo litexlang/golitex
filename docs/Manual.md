@@ -2191,10 +2191,10 @@ trusted background or proof debt, never as a checked proof of the conclusion.
 
 ### Strategies
 
-A `strategy` proves and registers a restricted atomic proof pattern. It is
-enabled when defined; `use strategy` enables it again and `stop strategy`
-disables strategy search. The proved universal fact remains available for
-ordinary matching.
+A `strategy` proves a named, restricted atomic universal pattern. Once the
+definition succeeds, its proved `forall` enters ordinary fact matching and is
+available to all later statements in that environment. There is no separate
+activation state.
 
 ```litex
 prop is_one(x R):
@@ -2209,11 +2209,10 @@ strategy use_is_one:
     by def $is_one(x)
 
 $is_one(1)
-stop strategy use_is_one
-use strategy use_is_one
 ```
 
-Activate a strategy with `use strategy name`.
+`use` and `stop` are ordinary identifier names; the former strategy-control
+statements are no longer part of the language.
 
 ### Modules and manifests (preview)
 
@@ -2352,7 +2351,7 @@ introductions.
 | `try` | The whole block succeeds transactionally. | All block effects on success; none on failure. |
 | `thm`, `axiom` | `thm` proves its target; `axiom` checks its interface but trusts truth. | A named reusable theorem interface; universal facts also enter ordinary matching. |
 | `by thm` | Arity/domains/premises and optional selected atomic target. | All instantiated conclusions, or only the requested atomic selection. |
-| `strategy` | The statement proves its restricted atomic universal pattern. | A named user search rule, enabled when first defined. |
+| `strategy` | The statement proves its restricted atomic universal pattern. | A named definition whose proved `forall` enters ordinary matching. |
 | `witness exist/exist!` | Witness count/types/body; `exist!` additionally verifies the generated two-candidate uniqueness universal. | The exact existential fact. Binder names stay local. |
 | `witness $P(args)` | The concrete prop has one positive ordinary `exist` clause; ordinary witness checks run after substitution. `exist!` uses explicit `witness exist! ...` followed by `by def`. | `$P(args)` as the primary fact, then definition inference. |
 | `witness $is_nonempty_set(S)` | The proposed object is in `S`. | Nonemptiness of `S`. |
@@ -2366,7 +2365,6 @@ introductions.
 | `by zorn_lemma` | The set, binary relation, exact named upper-bound/maximality definitions, nonemptiness, partial-order laws, and chain-upper-bound obligation. | Stores `exist m S st {$M(m)}` using the supplied named maximality prop. The chain witness likewise uses the supplied atomic upper-bound prop. |
 | `import` | Only the isolated-session import grammar and module constraints. | A qualified imported environment; maintained modules use manifests instead. |
 | `eval` | The expression belongs to the supported executable subset. | Evaluation output, not a new mathematical proof fact. |
-| `use strategy`, `stop strategy` | The named strategy exists. | Changes later user-strategy search, not builtin rules or known facts. |
 
 ---
 
@@ -2510,8 +2508,8 @@ For an ordinary atomic fact, Litex follows this public progression:
 2. Reuse an already known fact, including transport through known equalities,
    or evaluate a closed expression directly.
 3. Try a bounded builtin mathematical rule or a terminating structural rule.
-4. Try an applicable known `forall`, a concrete definition, a registered
-   predicate property, or an enabled user strategy.
+4. Try an applicable known `forall` (including one published by a strategy
+   definition), a concrete definition, or a registered predicate property.
 5. On success, store the fact and run builtin inference on the new information.
 
 This is goal-directed verification, not unrestricted theorem search. A builtin
@@ -3214,10 +3212,10 @@ The declarative set schemas cover the following groups:
 
 | Group | Recognized laws and required premises |
 |---|---|
-| Union membership and containment | Membership in either operand introduces union membership. Both operands are subsets of the union. If `A $subset S` and `B $subset S`, then `union(A,B) $subset S`; componentwise inclusions also give `union(A,B) $subset union(C,D)`. |
+| Union membership and containment | Membership in either operand introduces union membership. Both operands are subsets of the union. If `A $subset S` and `B $subset S`, then `union(A,B) $subset S`; componentwise inclusions also give `union(A,B) $subset union(C,D)`. One stored two-edge subset chain is transitive, and `A $subset B` reduces `union(A,B)` to `B` (with the mirrored operand order). |
 | Intersection membership and containment | Membership in the intersection exposes membership in both operands. The intersection is a subset of each operand and of every known upper bound of either operand. A known `A $subset B` reduces `intersect(A,B)` to `A`, with the mirrored form for `B $subset A`. |
-| Union/intersection algebra | Both operations are commutative and associative; union is idempotent and has `{}` as a two-sided identity; `intersect(A,union(B,C))` distributes to the union of the two intersections. |
-| Relative complement | Membership exposes membership in the left set and nonmembership in the right; every upper bound of `A` bounds `set_minus(A,B)`, and `A $subset C` gives `set_minus(A,B) $subset set_minus(C,B)`. The two relative De Morgan laws hold. If `B $subset A`, then removing `A \\ B` from `A` recovers `B` in either equality orientation. |
+| Union/intersection algebra | Both operations are commutative and associative; both are idempotent; union has `{}` as a two-sided identity; `intersect(A,union(B,C))` distributes to the union of the two intersections. |
+| Relative complement | Membership exposes membership in the left set and nonmembership in the right; every upper bound of `A` bounds `set_minus(A,B)`, and `A $subset C` gives `set_minus(A,B) $subset set_minus(C,B)`. The two relative De Morgan laws hold. The empty/self laws, `intersect(A,set_minus(B,A)) = {}`, `union(A,set_minus(B,A)) = union(A,B)`, and `set_minus(B,intersect(A,B)) = set_minus(B,A)` are recognized directly. If `B $subset A`, then removing `A \\ B` from `A` recovers `B` in either equality orientation. |
 | Finiteness and infiniteness | Union/intersection of finite sets is finite; removing anything from a finite left operand is finite; removing a finite set from an infinite set remains infinite. |
 | Nonemptiness | A nonempty union operand makes the union nonempty. `power_set(A)` is nonempty for every set `A`. |
 | Power set | `A $subset B` introduces both `A $in power_set(B)` and `power_set(A) $subset power_set(B)`; a finite base gives a finite power set. |
@@ -3229,6 +3227,10 @@ Representative set algebra and containment rules verify directly:
 forall A, B, D set:
     union(A, B) = union(B, A)
     union(union(A, B), D) = union(A, union(B, D))
+    intersect(A, A) = A
+    intersect(A, set_minus(B, A)) = {}
+    union(A, set_minus(B, A)) = union(A, B)
+    set_minus(B, intersect(A, B)) = set_minus(B, A)
     intersect(A, union(B, D)) = union(intersect(A, B), intersect(A, D))
     set_minus(A, union(B, D)) = intersect(set_minus(A, B), set_minus(A, D))
 

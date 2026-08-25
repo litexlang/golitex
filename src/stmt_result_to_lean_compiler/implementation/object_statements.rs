@@ -3362,21 +3362,4 @@ impl StmtResultToLeanCompiler {
         self.next_fact_name_index += 1;
         Ok(())
     }
-
-    /// `PassThrough`: strategy activation changes Litex proof search after
-    /// this point, but a completed Result already contains the route selected
-    /// by that search. There is no corresponding Lean declaration or compiler
-    /// proof state to invent.
-    pub(super) fn compile_strategy_activation_command_result_to_lean_source(
-        &self,
-        common: &SuccessStmtCommonResult,
-        command: &str,
-    ) -> Result<(), String> {
-        if !common.infers.is_empty() {
-            return Err(format!(
-                "`{command}` unexpectedly published mathematical effects"
-            ));
-        }
-        Ok(())
-    }
 }

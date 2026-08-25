@@ -398,7 +398,6 @@ fn compiler_and_test_directories_follow_the_repository_layout() {
                 "tooling.rs",
                 "trust_fact.rs",
                 "try_block.rs",
-                "use_strategy.rs",
                 "witness.rs",
             ][..],
         ),
@@ -431,7 +430,6 @@ fn compiler_and_test_directories_follow_the_repository_layout() {
         "parse_tooling_stmt.rs",
         "parse_trust_fact_stmt.rs",
         "parse_try_stmt.rs",
-        "parse_use_strategy_stmt.rs",
         "parse_witness.rs",
     ] {
         assert!(!parser.join(retired_root_file).exists());
@@ -531,7 +529,6 @@ fn compiler_and_test_directories_follow_the_repository_layout() {
                 "non_equational.rs",
                 "numeric_membership.rs",
                 "set_relations.rs",
-                "strategy.rs",
                 "universal_search.rs",
             ][..],
         ),
@@ -1110,7 +1107,7 @@ fn source_and_test_paths_do_not_repeat_their_parent_name() {
 }
 
 #[test]
-fn environment_exposes_six_direct_owners_without_flat_compatibility_storage() {
+fn environment_exposes_five_direct_owners_without_flat_compatibility_storage() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
     let environment = fs::read_to_string(root.join("src/environment/environment_state.rs"))
         .expect("Environment source should be readable");
@@ -1119,8 +1116,6 @@ fn environment_exposes_six_direct_owners_without_flat_compatibility_storage() {
     let predicate_store =
         fs::read_to_string(root.join("src/environment/predicate_property_store.rs"))
             .expect("predicate property store should be readable");
-    let strategy_store = fs::read_to_string(root.join("src/environment/strategy_registry.rs"))
-        .expect("strategy registry should be readable");
     let well_definedness_delta =
         fs::read_to_string(root.join("src/environment/well_definedness_environment_delta.rs"))
             .expect("well-definedness delta should be readable");
@@ -1131,7 +1126,6 @@ fn environment_exposes_six_direct_owners_without_flat_compatibility_storage() {
         "pub objects: EnvironmentObjectKnowledgeStore",
         "pub predicate_properties: EnvironmentPredicatePropertyStore",
         "pub caches: EnvironmentVerificationCache",
-        "pub strategies: EnvironmentStrategyRegistry",
     ] {
         assert!(environment.contains(direct_owner));
     }
@@ -1143,10 +1137,6 @@ fn environment_exposes_six_direct_owners_without_flat_compatibility_storage() {
         .contains("pub knowledge_by_object: HashMap<ObjString, EnvironmentObjectKnowledge>"));
     assert!(predicate_store
         .contains("pub properties_by_predicate: HashMap<String, EnvironmentPredicateProperties>"));
-    assert!(strategy_store.contains("strategies_by_atomic_fact_family:"));
-    assert!(!strategy_store.contains("used_strategy_stmts:"));
-    assert!(!strategy_store.contains("stopped_strategy_stmts:"));
-
     assert!(well_definedness_delta.contains("pub struct WellDefinednessEnvironmentDelta"));
     assert!(well_definedness_delta.contains("pub fn apply_to("));
     assert!(!well_definedness_delta.contains("pub definitions:"));
