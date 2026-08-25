@@ -1516,6 +1516,19 @@ impl ResultGraph {
                         );
                     }
                 }
+                if let FactTransformationRule::TransparentDefinitionReduction(evidence) =
+                    &result.rule
+                {
+                    for (index, definition) in evidence.definitions.iter().enumerate() {
+                        self.add_cited_fact(
+                            &id,
+                            Some(definition.defining_equality_fact_id),
+                            definition.defining_equality.to_string(),
+                            "defining_equality",
+                            index,
+                        );
+                    }
+                }
             }
             SuccessFactProofResult::Reuse(result) => {
                 self.ensure_node(id.clone(), "proof", "Reuse", "shared proof", None);
@@ -1584,9 +1597,7 @@ impl ResultGraph {
             source.fact().to_string(),
             None,
         );
-        if self.expanded_nodes.insert(id.clone()) {
-            self.add_verify_fact_result(source, id.clone());
-        }
+        self.add_verify_fact_result(source, id.clone());
         id
     }
 
@@ -1910,6 +1921,9 @@ fn transform_role(rule: &FactTransformationRule) -> &'static str {
     match rule {
         FactTransformationRule::EqualityRewrite(_) => "EqualityRewrite",
         FactTransformationRule::RationalNormalization => "RationalNormalization",
+        FactTransformationRule::TransparentDefinitionReduction(_) => {
+            "TransparentDefinitionReduction"
+        }
     }
 }
 

@@ -52,6 +52,17 @@ impl Runtime {
     }
 
     pub fn resolve_obj(&self, obj: &Obj) -> Obj {
+        let transparent = self
+            .resolve_transparent_obj_once(obj)
+            .map(|(resolved, _)| resolved)
+            .unwrap_or_else(|_| obj.clone());
+        self.resolve_obj_after_transparent_once(&transparent)
+    }
+
+    /// Existing object simplification after the single transparent-definition
+    /// boundary. Recursive calls stay in this helper so inserted definition
+    /// bodies are not passed through transparent lookup again.
+    fn resolve_obj_after_transparent_once(&self, obj: &Obj) -> Obj {
         if let Some(number) = self.resolve_obj_to_number(obj) {
             return number.into();
         }
@@ -71,12 +82,12 @@ impl Runtime {
                     None => Identifier::new(identifier.name.clone()),
                 };
                 let local_obj: Obj = local_identifier.into();
-                self.resolve_obj(&local_obj)
+                self.resolve_obj_after_transparent_once(&local_obj)
             }
             Obj::Add(add) => {
                 let result: Obj = Add::new_with_source_occurrence_id(
-                    self.resolve_obj(&add.left),
-                    self.resolve_obj(&add.right),
+                    self.resolve_obj_after_transparent_once(&add.left),
+                    self.resolve_obj_after_transparent_once(&add.right),
                     add.source_occurrence_id,
                 )
                 .into();
@@ -84,8 +95,8 @@ impl Runtime {
             }
             Obj::Sub(sub) => {
                 let result: Obj = Sub::new_with_source_occurrence_id(
-                    self.resolve_obj(&sub.left),
-                    self.resolve_obj(&sub.right),
+                    self.resolve_obj_after_transparent_once(&sub.left),
+                    self.resolve_obj_after_transparent_once(&sub.right),
                     sub.source_occurrence_id,
                 )
                 .into();
@@ -93,8 +104,8 @@ impl Runtime {
             }
             Obj::Mul(mul) => {
                 let result: Obj = Mul::new_with_source_occurrence_id(
-                    self.resolve_obj(&mul.left),
-                    self.resolve_obj(&mul.right),
+                    self.resolve_obj_after_transparent_once(&mul.left),
+                    self.resolve_obj_after_transparent_once(&mul.right),
                     mul.source_occurrence_id,
                 )
                 .into();
@@ -102,71 +113,88 @@ impl Runtime {
             }
             Obj::Mod(mod_obj) => {
                 let result: Obj = Mod::new(
-                    self.resolve_obj(&mod_obj.left),
-                    self.resolve_obj(&mod_obj.right),
+                    self.resolve_obj_after_transparent_once(&mod_obj.left),
+                    self.resolve_obj_after_transparent_once(&mod_obj.right),
                 )
                 .into();
                 self.resolve_obj_try_fold_arithmetic(result)
             }
             Obj::Quot(x) => {
-                let result: Obj =
-                    Quot::new(self.resolve_obj(&x.left), self.resolve_obj(&x.right)).into();
+                let result: Obj = Quot::new(
+                    self.resolve_obj_after_transparent_once(&x.left),
+                    self.resolve_obj_after_transparent_once(&x.right),
+                )
+                .into();
                 self.resolve_obj_try_fold_arithmetic(result)
             }
             Obj::Gcd(gcd) => {
-                let result: Obj =
-                    Gcd::new(self.resolve_obj(&gcd.left), self.resolve_obj(&gcd.right)).into();
+                let result: Obj = Gcd::new(
+                    self.resolve_obj_after_transparent_once(&gcd.left),
+                    self.resolve_obj_after_transparent_once(&gcd.right),
+                )
+                .into();
                 self.resolve_obj_try_fold_arithmetic(result)
             }
             Obj::Lcm(x) => {
-                let result: Obj =
-                    Lcm::new(self.resolve_obj(&x.left), self.resolve_obj(&x.right)).into();
+                let result: Obj = Lcm::new(
+                    self.resolve_obj_after_transparent_once(&x.left),
+                    self.resolve_obj_after_transparent_once(&x.right),
+                )
+                .into();
                 self.resolve_obj_try_fold_arithmetic(result)
             }
             Obj::Floor(x) => {
-                let result: Obj = Floor::new(self.resolve_obj(&x.arg)).into();
+                let result: Obj =
+                    Floor::new(self.resolve_obj_after_transparent_once(&x.arg)).into();
                 self.resolve_obj_try_fold_arithmetic(result)
             }
             Obj::Ceil(x) => {
-                let result: Obj = Ceil::new(self.resolve_obj(&x.arg)).into();
+                let result: Obj = Ceil::new(self.resolve_obj_after_transparent_once(&x.arg)).into();
                 self.resolve_obj_try_fold_arithmetic(result)
             }
             Obj::Min(x) => {
-                let result: Obj =
-                    Min::new(self.resolve_obj(&x.left), self.resolve_obj(&x.right)).into();
+                let result: Obj = Min::new(
+                    self.resolve_obj_after_transparent_once(&x.left),
+                    self.resolve_obj_after_transparent_once(&x.right),
+                )
+                .into();
                 self.resolve_obj_try_fold_arithmetic(result)
             }
             Obj::Max(x) => {
-                let result: Obj =
-                    Max::new(self.resolve_obj(&x.left), self.resolve_obj(&x.right)).into();
+                let result: Obj = Max::new(
+                    self.resolve_obj_after_transparent_once(&x.left),
+                    self.resolve_obj_after_transparent_once(&x.right),
+                )
+                .into();
                 self.resolve_obj_try_fold_arithmetic(result)
             }
             Obj::Exp(x) => {
-                let result: Obj = Exp::new(self.resolve_obj(&x.arg)).into();
+                let result: Obj = Exp::new(self.resolve_obj_after_transparent_once(&x.arg)).into();
                 self.resolve_obj_try_fold_arithmetic(result)
             }
             Obj::Ln(x) => {
-                let result: Obj = Ln::new(self.resolve_obj(&x.arg)).into();
+                let result: Obj = Ln::new(self.resolve_obj_after_transparent_once(&x.arg)).into();
                 self.resolve_obj_try_fold_arithmetic(result)
             }
             Obj::Sign(x) => {
-                let result: Obj = Sign::new(self.resolve_obj(&x.arg)).into();
+                let result: Obj = Sign::new(self.resolve_obj_after_transparent_once(&x.arg)).into();
                 self.resolve_obj_try_fold_arithmetic(result)
             }
             Obj::Factorial(x) => {
-                let result: Obj = Factorial::new(self.resolve_obj(&x.arg)).into();
+                let result: Obj =
+                    Factorial::new(self.resolve_obj_after_transparent_once(&x.arg)).into();
                 self.resolve_obj_try_fold_arithmetic(result)
             }
             Obj::Pow(pow) => {
                 let result = self.resolve_pow_after_children(
-                    self.resolve_obj(&pow.base),
-                    self.resolve_obj(&pow.exponent),
+                    self.resolve_obj_after_transparent_once(&pow.base),
+                    self.resolve_obj_after_transparent_once(&pow.exponent),
                 );
                 self.resolve_obj_try_fold_arithmetic(result)
             }
             Obj::Div(div) => {
-                let resolved_left = self.resolve_obj(&div.left);
-                let resolved_right = self.resolve_obj(&div.right);
+                let resolved_left = self.resolve_obj_after_transparent_once(&div.left);
+                let resolved_right = self.resolve_obj_after_transparent_once(&div.right);
                 if let Some(cancelled) = self
                     .try_resolve_division_by_matching_mul_factor(&resolved_left, &resolved_right)
                 {
@@ -181,7 +209,7 @@ impl Runtime {
                 self.resolve_obj_try_fold_arithmetic(result)
             }
             Obj::Abs(a) => {
-                let resolved_arg = self.resolve_obj(&a.arg);
+                let resolved_arg = self.resolve_obj_after_transparent_once(&a.arg);
                 if self.obj_is_known_nonnegative(&resolved_arg) {
                     return resolved_arg;
                 }
@@ -193,43 +221,59 @@ impl Runtime {
                 let result: Obj = Abs::new(resolved_arg).into();
                 self.resolve_obj_try_fold_arithmetic(result)
             }
-            Obj::RealPart(real_part) => RealPart::new(self.resolve_obj(&real_part.arg)).into(),
+            Obj::RealPart(real_part) => {
+                RealPart::new(self.resolve_obj_after_transparent_once(&real_part.arg)).into()
+            }
             Obj::ImaginaryPart(imaginary_part) => {
-                ImaginaryPart::new(self.resolve_obj(&imaginary_part.arg)).into()
+                ImaginaryPart::new(self.resolve_obj_after_transparent_once(&imaginary_part.arg))
+                    .into()
             }
             Obj::ComplexAbs(complex_abs) => {
-                ComplexAbs::new(self.resolve_obj(&complex_abs.arg)).into()
+                ComplexAbs::new(self.resolve_obj_after_transparent_once(&complex_abs.arg)).into()
             }
             Obj::Log(l) => {
-                let result: Obj =
-                    Log::new(self.resolve_obj(&l.base), self.resolve_obj(&l.arg)).into();
+                let result: Obj = Log::new(
+                    self.resolve_obj_after_transparent_once(&l.base),
+                    self.resolve_obj_after_transparent_once(&l.arg),
+                )
+                .into();
                 self.resolve_obj_try_fold_arithmetic(result)
             }
-            Obj::FiniteSeqSet(fs) => {
-                FiniteSeqSet::new(self.resolve_obj(&fs.set), self.resolve_obj(&fs.n)).into()
-            }
-            Obj::SeqSet(ss) => SeqSet::new(self.resolve_obj(&ss.set)).into(),
+            Obj::FiniteSeqSet(fs) => FiniteSeqSet::new(
+                self.resolve_obj_after_transparent_once(&fs.set),
+                self.resolve_obj_after_transparent_once(&fs.n),
+            )
+            .into(),
+            Obj::SeqSet(ss) => SeqSet::new(self.resolve_obj_after_transparent_once(&ss.set)).into(),
             Obj::MatrixSet(ms) => MatrixSet::new(
-                self.resolve_obj(&ms.set),
-                self.resolve_obj(&ms.row_len),
-                self.resolve_obj(&ms.col_len),
+                self.resolve_obj_after_transparent_once(&ms.set),
+                self.resolve_obj_after_transparent_once(&ms.row_len),
+                self.resolve_obj_after_transparent_once(&ms.col_len),
             )
             .into(),
             Obj::FiniteSeqListObj(list) => {
-                let objs: Vec<Obj> = list.objs.iter().map(|o| self.resolve_obj(o)).collect();
+                let objs: Vec<Obj> = list
+                    .objs
+                    .iter()
+                    .map(|o| self.resolve_obj_after_transparent_once(o))
+                    .collect();
                 FiniteSeqListObj::new(objs).into()
             }
             Obj::MatrixListObj(matrix) => {
                 let rows: Vec<Vec<Obj>> = matrix
                     .rows
                     .iter()
-                    .map(|row| row.iter().map(|o| self.resolve_obj(o)).collect())
+                    .map(|row| {
+                        row.iter()
+                            .map(|o| self.resolve_obj_after_transparent_once(o))
+                            .collect()
+                    })
                     .collect();
                 MatrixListObj::new(rows).into()
             }
             Obj::IntervalObj(interval) => {
-                let start = self.resolve_obj(interval.start());
-                let end = self.resolve_obj(interval.end());
+                let start = self.resolve_obj_after_transparent_once(interval.start());
+                let end = self.resolve_obj_after_transparent_once(interval.end());
                 match interval {
                     IntervalObj::LeftOpenRightOpen(_) => {
                         IntervalObj::new_left_open_right_open(start, end).into()
@@ -246,7 +290,7 @@ impl Runtime {
                 }
             }
             Obj::OneSideInfinityIntervalObj(interval) => {
-                let start = self.resolve_obj(interval.start());
+                let start = self.resolve_obj_after_transparent_once(interval.start());
                 match interval {
                     OneSideInfinityIntervalObj::LeftOpen(_) => {
                         OneSideInfinityIntervalObj::new_left_open(start).into()
@@ -273,7 +317,7 @@ impl Runtime {
                         if let Some(entry) =
                             self.matrix_operator_entry(matrix, args[0].clone(), args[1].clone())
                         {
-                            return self.resolve_obj(&entry);
+                            return self.resolve_obj_after_transparent_once(&entry);
                         }
                     }
                 }
@@ -296,14 +340,15 @@ impl Runtime {
                                 &param_to_arg_map,
                                 SubstitutionMode::Exact,
                             ) {
-                                return self.resolve_obj(&reduced);
+                                return self.resolve_obj_after_transparent_once(&reduced);
                             }
                         }
                     }
                 }
                 if fn_obj.body.len() == 1 && fn_obj.body[0].len() == 1 {
                     if let FnObjHead::FiniteSeqListObj(list) = fn_obj.head.as_ref() {
-                        let arg = self.resolve_obj(fn_obj.body[0][0].as_ref());
+                        let arg =
+                            self.resolve_obj_after_transparent_once(fn_obj.body[0][0].as_ref());
                         if let Some(ix) = self.resolve_obj_to_number(&arg) {
                             if let Ok(one_based) = ix.normalized_value.parse::<usize>() {
                                 if one_based >= 1 && one_based <= list.objs.len() {
@@ -314,7 +359,8 @@ impl Runtime {
                     }
                     let head_obj: Obj = (*fn_obj.head).clone().into();
                     if let Some(list) = self.get_obj_equal_to_finite_seq_list(&head_obj) {
-                        let arg = self.resolve_obj(fn_obj.body[0][0].as_ref());
+                        let arg =
+                            self.resolve_obj_after_transparent_once(fn_obj.body[0][0].as_ref());
                         if let Some(ix) = self.resolve_obj_to_number(&arg) {
                             if let Ok(one_based) = ix.normalized_value.parse::<usize>() {
                                 if one_based >= 1 && one_based <= list.objs.len() {
@@ -328,8 +374,10 @@ impl Runtime {
                 {
                     let head_obj: Obj = (*fn_obj.head).clone().into();
                     if let Some(mat) = self.get_obj_equal_to_matrix_list(&head_obj) {
-                        let r_arg = self.resolve_obj(fn_obj.body[0][0].as_ref());
-                        let c_arg = self.resolve_obj(fn_obj.body[1][0].as_ref());
+                        let r_arg =
+                            self.resolve_obj_after_transparent_once(fn_obj.body[0][0].as_ref());
+                        let c_arg =
+                            self.resolve_obj_after_transparent_once(fn_obj.body[1][0].as_ref());
                         if let (Some(rn), Some(cn)) = (
                             self.resolve_obj_to_number(&r_arg),
                             self.resolve_obj_to_number(&c_arg),
@@ -352,8 +400,10 @@ impl Runtime {
                 if fn_obj.body.len() == 1 && fn_obj.body[0].len() == 2 {
                     let head_obj: Obj = (*fn_obj.head).clone().into();
                     if let Some(mat) = self.get_obj_equal_to_matrix_list(&head_obj) {
-                        let r_arg = self.resolve_obj(fn_obj.body[0][0].as_ref());
-                        let c_arg = self.resolve_obj(fn_obj.body[0][1].as_ref());
+                        let r_arg =
+                            self.resolve_obj_after_transparent_once(fn_obj.body[0][0].as_ref());
+                        let c_arg =
+                            self.resolve_obj_after_transparent_once(fn_obj.body[0][1].as_ref());
                         if let (Some(rn), Some(cn)) = (
                             self.resolve_obj_to_number(&r_arg),
                             self.resolve_obj_to_number(&c_arg),
@@ -382,7 +432,9 @@ impl Runtime {
                         .map(|group| {
                             group
                                 .iter()
-                                .map(|arg| Box::new(self.resolve_obj(arg.as_ref())))
+                                .map(|arg| {
+                                    Box::new(self.resolve_obj_after_transparent_once(arg.as_ref()))
+                                })
                                 .collect()
                         })
                         .collect();
@@ -430,7 +482,7 @@ impl Runtime {
                 Obj::Cart(cart) => {
                     let mut acc = "1".to_string();
                     for arg in &cart.args {
-                        let resolved_arg = self.resolve_obj(arg.as_ref());
+                        let resolved_arg = self.resolve_obj_after_transparent_once(arg.as_ref());
                         let finite_set_size_obj =
                             Obj::FiniteSetSize(FiniteSetSize::new(resolved_arg));
                         let n = match self.resolve_obj_to_number(&finite_set_size_obj) {
@@ -444,17 +496,23 @@ impl Runtime {
                 _ => obj.clone(),
             },
             Obj::FiniteSetMax(extremum) => {
-                let result: Obj = FiniteSetMax::new(self.resolve_obj(&extremum.set)).into();
+                let result: Obj =
+                    FiniteSetMax::new(self.resolve_obj_after_transparent_once(&extremum.set))
+                        .into();
                 self.resolve_obj_try_fold_arithmetic(result)
             }
             Obj::FiniteSetMin(extremum) => {
-                let result: Obj = FiniteSetMin::new(self.resolve_obj(&extremum.set)).into();
+                let result: Obj =
+                    FiniteSetMin::new(self.resolve_obj_after_transparent_once(&extremum.set))
+                        .into();
                 self.resolve_obj_try_fold_arithmetic(result)
             }
-            Obj::FnRange(fn_range) => FnRange::new(self.resolve_obj(&fn_range.function)).into(),
+            Obj::FnRange(fn_range) => {
+                FnRange::new(self.resolve_obj_after_transparent_once(&fn_range.function)).into()
+            }
             Obj::Replacement(replacement) => Replacement::new(
                 replacement.prop_name.clone(),
-                self.resolve_obj(&replacement.source_set),
+                self.resolve_obj_after_transparent_once(&replacement.source_set),
             )
             .into(),
             Obj::TupleDim(dim) => match &*dim.arg {
@@ -640,7 +698,7 @@ impl Runtime {
     fn resolve_pow_after_children(&self, base: Obj, exponent: Obj) -> Obj {
         if let Some(signless_base) = try_remove_even_power_negative_sign(&base, &exponent) {
             let signless_power: Obj = Pow::new(signless_base, exponent.clone()).into();
-            return self.resolve_obj(&signless_power);
+            return self.resolve_obj_after_transparent_once(&signless_power);
         }
 
         if let Some(resolved_sqrt_power) = self.try_resolve_sqrt_even_power(&base, &exponent) {
@@ -670,12 +728,12 @@ impl Runtime {
             return Some(Number::new("1".to_string()).into());
         }
         if half_exponent == 1 {
-            return Some(self.resolve_obj(sqrt.arg.as_ref()));
+            return Some(self.resolve_obj_after_transparent_once(sqrt.arg.as_ref()));
         }
 
         let half_exponent_obj: Obj = Number::new(half_exponent.to_string()).into();
         let result: Obj = Pow::new(sqrt.arg.as_ref().clone(), half_exponent_obj).into();
-        Some(self.resolve_obj(&result))
+        Some(self.resolve_obj_after_transparent_once(&result))
     }
 
     fn try_resolve_product_power_to_number(&self, base: &Obj, exponent: &Obj) -> Option<Obj> {
@@ -690,7 +748,7 @@ impl Runtime {
         let mut product = "1".to_string();
         for factor in factors {
             let factor_power: Obj = Pow::new(factor, exponent.clone()).into();
-            let resolved_factor_power = self.resolve_obj(&factor_power);
+            let resolved_factor_power = self.resolve_obj_after_transparent_once(&factor_power);
             let number = self.resolve_obj_to_number(&resolved_factor_power)?;
             product = mul_signed_decimal_str(product.as_str(), number.normalized_value.as_str());
         }
@@ -725,7 +783,7 @@ impl Runtime {
             return None;
         }
 
-        let resolved = self.resolve_obj(obj);
+        let resolved = self.resolve_obj_after_transparent_once(obj);
         rational_pair_from_obj(&resolved)
     }
 
@@ -779,7 +837,7 @@ impl Runtime {
                 Some(Sum::new(Number::new("1".to_string()).into(), end, function.into()).into())
             }
             Obj::MatrixPow(value) => {
-                let exponent = self.resolve_obj(&value.exponent);
+                let exponent = self.resolve_obj_after_transparent_once(&value.exponent);
                 let one: Obj = Number::new("1".to_string()).into();
                 if exponent.to_string() == one.to_string() {
                     return matrix_entry_application((*value.base).clone(), row, col);
@@ -793,11 +851,19 @@ impl Runtime {
                         Number::new((value - 1).to_string()).into()
                     }
                     Obj::Add(add)
-                        if self.resolve_obj(&add.right).to_string() == one.to_string() =>
+                        if self
+                            .resolve_obj_after_transparent_once(&add.right)
+                            .to_string()
+                            == one.to_string() =>
                     {
                         (*add.left).clone()
                     }
-                    Obj::Add(add) if self.resolve_obj(&add.left).to_string() == one.to_string() => {
+                    Obj::Add(add)
+                        if self
+                            .resolve_obj_after_transparent_once(&add.left)
+                            .to_string()
+                            == one.to_string() =>
+                    {
                         (*add.right).clone()
                     }
                     _ => return None,

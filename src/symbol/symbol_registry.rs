@@ -353,6 +353,66 @@ pub struct SymbolDefinition {
     binding: SymbolBinding,
     role: SymbolRole,
     definition_type_views: SymbolDefinitionTypeViews,
+    transparent_object_definition: Option<TransparentObjectDefinition>,
+}
+
+/// Executed `let` metadata for one exact object symbol.
+///
+/// The defining equality remains the proof-bearing source of truth. Keeping
+/// its `FactId` beside the right-hand side lets object resolution stay a
+/// deterministic definition lookup while proof consumers retain an exact
+/// citation instead of reconstructing provenance from the current fact store.
+#[derive(Clone)]
+pub struct TransparentObjectDefinition {
+    value: Obj,
+    defining_equality: EqualFact,
+    defining_equality_fact_id: FactId,
+}
+
+impl fmt::Debug for TransparentObjectDefinition {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter
+            .debug_struct("TransparentObjectDefinition")
+            .field("value", &self.value.to_string())
+            .field("defining_equality", &self.defining_equality.to_string())
+            .field("defining_equality_fact_id", &self.defining_equality_fact_id)
+            .finish()
+    }
+}
+
+impl TransparentObjectDefinition {
+    pub fn new(
+        value: Obj,
+        defining_equality: EqualFact,
+        defining_equality_fact_id: FactId,
+    ) -> Self {
+        Self {
+            value,
+            defining_equality,
+            defining_equality_fact_id,
+        }
+    }
+
+    pub fn value(&self) -> &Obj {
+        &self.value
+    }
+
+    pub fn defining_equality(&self) -> &EqualFact {
+        &self.defining_equality
+    }
+
+    pub fn defining_equality_fact_id(&self) -> FactId {
+        self.defining_equality_fact_id
+    }
+
+    pub fn is_same_definition_as(&self, other: &Self) -> bool {
+        self.defining_equality_fact_id == other.defining_equality_fact_id
+            && obj_equality_key(&self.value) == obj_equality_key(&other.value)
+            && obj_equality_key(&self.defining_equality.left)
+                == obj_equality_key(&other.defining_equality.left)
+            && obj_equality_key(&self.defining_equality.right)
+                == obj_equality_key(&other.defining_equality.right)
+    }
 }
 
 /// Type information that belongs to the definition of one exact symbol.
@@ -389,6 +449,7 @@ impl SymbolDefinition {
             binding,
             role,
             definition_type_views: SymbolDefinitionTypeViews::default(),
+            transparent_object_definition: None,
         }
     }
 
@@ -406,6 +467,24 @@ impl SymbolDefinition {
 
     pub fn default_tuple_view(&self) -> Option<&Cart> {
         self.definition_type_views.default_tuple_view.as_ref()
+    }
+
+    pub fn transparent_object_definition(&self) -> Option<&TransparentObjectDefinition> {
+        self.transparent_object_definition.as_ref()
+    }
+
+    pub fn remember_transparent_object_definition(
+        &mut self,
+        definition: TransparentObjectDefinition,
+    ) -> Result<(), TransparentObjectDefinition> {
+        match self.transparent_object_definition.as_ref() {
+            None => {
+                self.transparent_object_definition = Some(definition);
+                Ok(())
+            }
+            Some(existing) if existing.is_same_definition_as(&definition) => Ok(()),
+            Some(_) => Err(definition),
+        }
     }
 
     pub fn remember_default_struct_view_if_absent(&mut self, struct_obj: StructObj) {
@@ -426,6 +505,12 @@ impl SymbolDefinition {
         }
         if let Some(cart) = other.default_tuple_view() {
             self.remember_default_tuple_view_if_absent(cart.clone());
+        }
+    }
+
+    pub fn merge_missing_transparent_object_definition_from(&mut self, other: &SymbolDefinition) {
+        if self.transparent_object_definition.is_none() {
+            self.transparent_object_definition = other.transparent_object_definition.clone();
         }
     }
 }

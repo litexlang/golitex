@@ -11,6 +11,7 @@ mod trusted_prefix;
 pub use execution_frame::{ExecutionFrame, ExecutionLayer, ExecutionMode};
 pub use name_resolution::{
     bare_symbol_name_reserved_error, BareSymbol, FreeParamCollection, FreeParamTypeAndLineFile,
+    TransparentObjectDefinitionUse,
 };
 pub use parse_context::{ParseContext, ScopeFrame};
 pub use state::{OutputStyle, Runtime};

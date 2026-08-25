@@ -1,22 +1,25 @@
-# Tracer: callable shape follows an ordinary stored equality.
+# Tracer: a callable `let` alias is a transparent executed definition.
 #
-# Before (did not work):
+# Before (WD passed, direct proof did not work):
 # have fn f(x R) R = x + 1
 # let g = f
 # g(1) = 2
-# Former behavior: well-definedness stopped at `function g not defined`, so
-# equality verification never ran.
+# Former behavior: callable-shape lookup made `g(1)` well-defined, but equality
+# verification still returned unknown unless `g(1) = f(1)` was written first.
 #
 # Now (verified):
 have fn f(x R) R = x + 1
 let g = f
-f(1) = 2
-g(1) = f(1)
-g(1) = f(1) = 2
+g(1) = 2
 fn_range(g) = fn_range(f)
-# Current behavior: direct signature lookup falls back to a callable member of
-# g's already stored equality class. The application equality and computed
-# value are materialized separately before the final chain.
+# Current behavior: `let` records the exact defining equality FactId. Object
+# resolution replaces `g` by `f` once, including in function-head position,
+# and the atomic Result records a TransparentDefinitionReduction before
+# replaying the checked definition of `f`.
 #
-# Boundary: equality does not bypass arity or domain checks; `g(1, 2)` remains
-# rejected by the executable Rust regression.
+# Boundary: an ordinary `have a = b` is not a transparent definition, and
+# transparency does not bypass arity or domain checks; `g(1, 2)` remains
+# rejected by executable Rust regressions.
+# Evidence:
+# target/release/litex -compact -isolated -runner -f examples/03_language_features/let_callable_alias.lit
+# tests/unit/kernel_contracts/lit_file_runner_tests/runtime_regression_tests/callable_aliases.rs

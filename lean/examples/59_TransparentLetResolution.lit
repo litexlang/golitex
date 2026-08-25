@@ -1,0 +1,23 @@
+# Tracer: verifier-owned transparent `let` reduction reaches Lean.
+#
+# Before: `g(1) = 1` was well-defined but unknown unless the author first
+# materialized `g(1) = f(1)` and wrote an equality chain.
+#
+# Now: the verifier records one TransparentDefinitionReduction containing the
+# exact `g = f` FactId. The compiler validates that citation and the one-pass
+# substitution, then unfolds only `g` in the generated proof.
+#
+# Boundary: arbitrary `have a = b` equalities are not transparent, recursive
+# alias normalization is not part of one pass, and function arity/domain
+# checks still run before proof verification.
+#
+# Evidence:
+# target/release/litex -compact -strict -runner -isolated -f lean/examples/59_TransparentLetResolution.lit
+# cd lean && ./stmt_result_to_lean_compiler.sh compile examples/59_TransparentLetResolution.lit
+# cd lean && ./stmt_result_to_lean_compiler.sh check examples
+
+have fn f(x R) R = x
+
+let g = f
+
+g(1) = 1

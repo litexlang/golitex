@@ -57,6 +57,12 @@ compiler resolves that FactId in its own environment stack and unfolds only
 the recorded function; changing the FactId or reduced object fails before Lean
 source is emitted.
 
+`59_TransparentLetResolution.lit` covers one executed `let` used as a
+callable alias. The verifier's transformation records the exact defining
+equality `FactId` and one-pass `SymbolId` substitution; the compiler validates
+both and unfolds only the recorded Lean definition. Ordinary proved
+equalities remain outside this definition-reduction path.
+
 `40_RegisteredOrderResultComposition.lit` covers the six registered additive
 order rules. Each enclosing forall Result owns the parameter and premise
 scope; the compiler environment stack makes those exact FactIds visible only

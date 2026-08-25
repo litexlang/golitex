@@ -1499,7 +1499,17 @@ impl StmtResultToLeanCompiler {
             .insert(defining_equality_fact_id, theorem_name.clone());
         self.environment_stack
             .fact_propositions
-            .insert(defining_equality_fact_id, defining_equality);
+            .insert(defining_equality_fact_id, defining_equality.clone());
+        self.environment_stack
+            .transparent_object_definitions
+            .insert(
+                statement.symbol_binding.id(),
+                CompilerTransparentObjectDefinition {
+                    value: statement.value.clone(),
+                    defining_equality,
+                    defining_equality_fact_id,
+                },
+            );
 
         Ok(Some(vec![
             format!("let {lean_name} := {rendered_value}"),

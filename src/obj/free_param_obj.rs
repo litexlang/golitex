@@ -22,6 +22,10 @@ pub enum SubstitutionMode {
     Exact,
     Named,
     Theorem,
+    /// Replace an executed `let` symbol by its stored transparent object
+    /// definition while retaining parser occurrence provenance on the
+    /// surrounding syntax tree.
+    TransparentDefinition,
 }
 
 impl BindingScope {

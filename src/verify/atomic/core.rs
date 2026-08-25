@@ -7,6 +7,21 @@ use crate::runtime::Runtime;
 use crate::verify::{AlternateFactSearch, ProofSearchState};
 
 impl Runtime {
+    fn verify_atomic_fact_family_after_well_definedness(
+        &mut self,
+        fact: &AtomicFact,
+        verify_state: &ProofSearchState,
+    ) -> Result<StmtResult, RuntimeError> {
+        match fact {
+            AtomicFact::EqualFact(equal_fact) => self.verify_equal_fact(equal_fact, verify_state),
+            _ => self.verify_non_equational_atomic_fact(
+                fact,
+                verify_state,
+                AlternateFactSearch::Enabled,
+            ),
+        }
+    }
+
     pub fn verify_atomic_fact(
         &mut self,
         fact: &AtomicFact,
@@ -36,16 +51,27 @@ impl Runtime {
 
         let state_after_well_definedness = verify_state.with_well_definedness_verified();
 
-        let result = match fact {
-            AtomicFact::EqualFact(equal_fact) => {
-                self.verify_equal_fact(equal_fact, &state_after_well_definedness)
-            }
-            _ => self.verify_non_equational_atomic_fact(
-                fact,
+        if let Some((reduced_fact, evidence)) =
+            self.transparent_definition_reduction_for_atomic_fact(fact)?
+        {
+            let reduced_result = self.verify_atomic_fact_family_after_well_definedness(
+                &reduced_fact,
                 &state_after_well_definedness,
-                AlternateFactSearch::Enabled,
-            ),
-        }?;
+            )?;
+            if reduced_result.is_success() {
+                let result = self.retarget_transparent_definition_reduction_result(
+                    fact,
+                    reduced_result,
+                    evidence,
+                );
+                return Ok(self.cache_successful_atomic_fact_for_statement(fact, result));
+            }
+        }
+
+        let result = self.verify_atomic_fact_family_after_well_definedness(
+            fact,
+            &state_after_well_definedness,
+        )?;
         Ok(self.cache_successful_atomic_fact_for_statement(fact, result))
     }
 }

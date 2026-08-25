@@ -104,6 +104,12 @@ impl DerefMut for StmtResultToLeanCompilerEnvironment {
 #[derive(Clone, Default)]
 pub(super) struct StmtResultToLeanCompilerBindings {
     pub(super) symbol_names: HashMap<SymbolId, String>,
+    /// Executed `let` definitions only. This is separate from numeric
+    /// substitutions because WD rendering may transport a callable contract
+    /// across a transparent alias, while ordinary `have a = b` must not gain
+    /// that behavior.
+    pub(super) transparent_object_definitions:
+        HashMap<SymbolId, CompilerTransparentObjectDefinition>,
     /// Canonical complex observations for numeric symbols whose Lean carrier
     /// is locally heterogeneous (for example a dependent function binder).
     pub(super) numeric_representations: HashMap<SymbolId, String>,
@@ -151,6 +157,13 @@ pub(super) struct StmtResultToLeanCompilerBindings {
         HashMap<String, RegisteredPredicatePropertyTheoremBinding>,
     pub(super) registered_antisymmetric_predicate_theorem_bindings:
         HashMap<String, RegisteredPredicatePropertyTheoremBinding>,
+}
+
+#[derive(Clone)]
+pub(super) struct CompilerTransparentObjectDefinition {
+    pub(super) value: Obj,
+    pub(super) defining_equality: Fact,
+    pub(super) defining_equality_fact_id: FactId,
 }
 
 #[derive(Clone, Default)]

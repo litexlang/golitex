@@ -333,6 +333,8 @@ pub use crate::result::SuccessVerifyTupleOrCartDefinitionResult;
 pub use crate::result::SuccessVerifyTupleOrCartDimensionResult;
 pub use crate::result::SuccessVerifyWitnessAtomicFactResult;
 pub use crate::result::SuccessVerifyWitnessExistResult;
+pub use crate::result::TransparentDefinitionReductionEvidence;
+pub use crate::result::TransparentDefinitionReductionUse;
 pub use crate::result::UnknownAndFactResult;
 pub use crate::result::UnknownAtomicFactResult;
 pub use crate::result::UnknownChainFactResult;
@@ -557,7 +559,7 @@ pub use crate::stmt::UnsafeStmt;
 pub use crate::stmt::WitnessStmt;
 pub use crate::symbol::{
     builtin_symbol_ref, insert_symbol_substitution, IntoSymbolRef, SymbolBinding, SymbolDefinition,
-    SymbolId, SymbolIdAllocator, SymbolRef, SymbolRole, SymbolTable,
+    SymbolId, SymbolIdAllocator, SymbolRef, SymbolRole, SymbolTable, TransparentObjectDefinition,
 };
 pub use crate::verify::general_cart_member_fn_set;
 pub use crate::verify::nested_obj_binder_normalized_fact_key;

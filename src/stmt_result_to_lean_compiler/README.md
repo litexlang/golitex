@@ -1761,6 +1761,24 @@ from vector lengths, source strings, or traversal positions.
 
 ## Fact Statement Composition
 
+### Transparent `let` definition reduction
+
+An executed object `let` remains a statement and emits its ordinary defining
+equality. The runtime additionally attaches the right-hand-side object and the
+exact defining-equality `FactId` to that symbol's definition. When a later
+atomic fact succeeds only after one transparent substitution pass, its
+`TransparentDefinitionReduction` Result records each exact `SymbolId`, RHS,
+defining equality, and `FactId` used by the pass.
+
+The compiler validates that evidence against its visible `let` declarations,
+replays the same one-pass substitution, unfolds exactly those recorded names,
+and applies the recursively compiled source proof with `exact`. It also
+permits the reduced application to reuse the original parser occurrence's
+Result-owned WD context; this is occurrence provenance, not a second WD proof.
+Arbitrary `have a = b` facts never enter the compiler's
+transparent-definition map, and replacement objects are not recursively
+unfolded during the pass.
+
 [`execute_submitted_fact`](../execute/submitted_fact_execution.rs) makes the three major fact stages
 explicit:
 
