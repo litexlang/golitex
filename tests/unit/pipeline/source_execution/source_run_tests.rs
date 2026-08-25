@@ -40,7 +40,7 @@ fn structured_source_run_preserves_try_failure_classification() {
     let mut runtime = runtime_with_source_context("structured-source-try.lit");
 
     let outcome = execute_source_with_options(
-        "try:\n    clear\n",
+        "try:\n    1 = 0\n",
         &mut runtime,
         SourceRunOptions::default(),
     );

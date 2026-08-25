@@ -1246,7 +1246,6 @@ const ZH_TEXTS: &[(&str, &str)] = &[
     ("function implementation", "函数实现"),
     ("template definition", "模板定义"),
     ("no-op statement", "空操作语句"),
-    ("clear statement", "清空语句"),
     ("existence witness", "存在见证"),
     ("nonempty set witness", "非空集合见证"),
     ("proof by finite set enumeration", "由有限集合枚举证明"),

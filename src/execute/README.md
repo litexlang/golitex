@@ -43,7 +43,7 @@ statement lifecycle.
 | [`witness_execution.rs`](witness_execution.rs) | Executes logical witness statements; witness introduction remains separate from definition storage. |
 | [`definition_execution/`](definition_execution/) | Groups proposition, theorem, axiom, template, structure, algorithm, parameter, and definition-storage execution. |
 | [`proof_block_execution/`](proof_block_execution/) | Groups claim, goal-proof, sketch, and transactional `try` execution. |
-| [`command_execution/`](command_execution/) | Groups evaluation and environment commands such as `clear`. |
+| [`command_execution/`](command_execution/) | Executes `eval` commands. |
 | [`trust_execution/`](trust_execution/) | Groups explicit unsafe fact and parameterized assumptions. |
 | [`strategy_execution.rs`](strategy_execution.rs) | Defines, applies, and stops proof strategies. |
 | [`verified_fact_storage.rs`](verified_fact_storage.rs) | Verifies fact well-definedness before storage and inference. |

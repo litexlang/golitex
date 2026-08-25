@@ -1,6 +1,39 @@
 use super::*;
 
 #[test]
+fn clear_is_an_ordinary_name_and_bare_clear_does_not_reset_the_environment() {
+    let mut runtime = Runtime::new();
+    runtime.start_isolated_source("clear_is_an_ordinary_name");
+
+    let (definition_results, definition_error) =
+        execute_source("have clear R = 1\nclear = 1", &mut runtime);
+    let (definition_succeeded, definition_output) =
+        render_run_output(&runtime, &definition_results, &definition_error);
+    assert!(
+        definition_succeeded,
+        "clear should be accepted as an ordinary definition name:\n{}",
+        definition_output
+    );
+
+    let (bare_results, bare_error) = execute_source("clear", &mut runtime);
+    let (bare_succeeded, bare_output) = render_run_output(&runtime, &bare_results, &bare_error);
+    assert!(bare_results.is_empty());
+    assert!(
+        !bare_succeeded,
+        "bare clear must be parsed as an ordinary fact and rejected, not executed:\n{}",
+        bare_output
+    );
+
+    let (after_results, after_error) = execute_source("clear = 1", &mut runtime);
+    let (after_succeeded, after_output) = render_run_output(&runtime, &after_results, &after_error);
+    assert!(
+        after_succeeded,
+        "a rejected bare clear must not reset existing definitions:\n{}",
+        after_output
+    );
+}
+
+#[test]
 fn ordinary_prop_proof_still_requires_parameter_constraints() {
     let source_code = r#"
 prop natural_only(n N):

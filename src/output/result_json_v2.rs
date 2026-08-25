@@ -1355,12 +1355,6 @@ impl StmtResultJsonV2 {
     fn command_stmt(&mut self, result: &SuccessCommandStmtResult) -> JsonValue {
         match result {
             SuccessCommandStmtResult::ImportStmt(result) => self.import_stmt(result),
-            SuccessCommandStmtResult::ClearStmt(result) => self.non_fact_stmt(
-                "ClearStmt",
-                result.statement.to_string(),
-                &result.common,
-                vec![],
-            ),
             SuccessCommandStmtResult::EvalStmt(result) => self.non_fact_stmt(
                 "EvalStmt",
                 result.statement.to_string(),

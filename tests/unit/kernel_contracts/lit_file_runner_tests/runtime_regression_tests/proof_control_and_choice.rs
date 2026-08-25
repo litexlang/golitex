@@ -209,43 +209,6 @@ try:
 }
 
 #[test]
-fn try_stmt_rejects_clear_control_statement() {
-    run_with_large_stack("try_stmt_rejects_clear_control_statement", || {
-        let source_code = r#"
-have x R
-try:
-    clear
-"#;
-
-        let mut runtime = Runtime::new();
-        runtime.start_isolated_source("try_stmt_rejects_clear_control_statement");
-        let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
-        let (run_succeeded, run_output) =
-            render_run_output(&runtime, &stmt_results, &runtime_error);
-
-        assert!(
-            !run_succeeded,
-            "try with clear should be rejected:\n{}",
-            run_output
-        );
-        assert!(
-            run_output.contains("try cannot contain control statement `clear`"),
-            "try with clear should explain that control statements are disallowed:\n{}",
-            run_output
-        );
-
-        let (stmt_results_after, runtime_error_after) = execute_source("x = x", &mut runtime);
-        let (run_succeeded_after, run_output_after) =
-            render_run_output(&runtime, &stmt_results_after, &runtime_error_after);
-        assert!(
-            run_succeeded_after,
-            "rejected try should not have executed clear:\n{}",
-            run_output_after
-        );
-    });
-}
-
-#[test]
 fn try_stmt_rejects_import_control_statement() {
     run_with_large_stack("try_stmt_rejects_import_control_statement", || {
         let source_code = r#"
@@ -268,34 +231,6 @@ try:
         assert!(
             run_output.contains("try cannot contain control statement `import`"),
             "try with import should explain that control statements are disallowed:\n{}",
-            run_output
-        );
-    });
-}
-
-#[test]
-fn try_stmt_rejects_nested_control_statement() {
-    run_with_large_stack("try_stmt_rejects_nested_control_statement", || {
-        let source_code = r#"
-try:
-    sketch:
-        clear
-"#;
-
-        let mut runtime = Runtime::new();
-        runtime.start_isolated_source("try_stmt_rejects_nested_control_statement");
-        let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
-        let (run_succeeded, run_output) =
-            render_run_output(&runtime, &stmt_results, &runtime_error);
-
-        assert!(
-            !run_succeeded,
-            "try with nested clear should be rejected:\n{}",
-            run_output
-        );
-        assert!(
-            run_output.contains("try cannot contain control statement `clear`"),
-            "nested control statement should be rejected before execution:\n{}",
             run_output
         );
     });

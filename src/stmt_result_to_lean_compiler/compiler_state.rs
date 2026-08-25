@@ -52,8 +52,6 @@ pub struct StmtResultToLeanCompiler {
     next_fact_name_index: usize,
     next_local_inference_name_index: usize,
     next_sketch_namespace_index: usize,
-    next_clear_namespace_index: usize,
-    open_clear_namespace: Option<String>,
 }
 
 struct CompiledOrdinaryFactGoalProofBody {
@@ -234,8 +232,6 @@ impl StmtResultToLeanCompiler {
             next_fact_name_index: 0,
             next_local_inference_name_index: 0,
             next_sketch_namespace_index: 0,
-            next_clear_namespace_index: 0,
-            open_clear_namespace: None,
         }
     }
 

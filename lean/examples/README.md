@@ -66,12 +66,9 @@ Results before applying one fixed `Litex.Rules` theorem. Swapped children or a
 stale fingerprint fail closed instead of falling back to rule-name or label
 matching.
 
-`41_ClearCompilerEnvironmentLayer.lit` covers a command whose meaning exists
-only in the two state machines. Runtime forgets the current Litex environment;
-the compiler clears its matching SymbolId/FactId frame and opens a fresh Lean
-namespace so the same source spelling can be declared again. The earlier Lean
-declaration remains in source history but is no longer reachable through the
-compiler environment.
+`41_ClearOrdinaryName.lit` covers the removal of the former environment
+command. `clear` now follows the ordinary object-definition and fact paths in
+both Litex and Lean compilation; a bare line does not reset either environment.
 
 `42_OrderTransitivityResultComposition.lit` covers weak/weak, strict/weak,
 and weak/strict transitivity. The typed arithmetic Result retains carrier

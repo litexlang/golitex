@@ -72,18 +72,6 @@ impl StmtResultToLeanCompilerEnvironmentStack {
             .expect("compiler WD context stack must match lexical environments");
     }
 
-    /// Match Litex `clear` at the target-generation boundary. The current
-    /// lexical layer forgets every source identity that execution forgot;
-    /// parent layers, when one exists, remain owned by their enclosing Result.
-    pub(super) fn clear_current_environment(&mut self) {
-        let current = self
-            .environments
-            .last_mut()
-            .expect("compiler environment stack must retain its top-level environment");
-        *current = StmtResultToLeanCompilerEnvironment::default();
-        self.well_definedness = None;
-    }
-
     pub(super) fn is_top_level(&self) -> bool {
         self.environments.len() == 1
     }

@@ -1,7 +1,7 @@
 use crate::common::keywords::{
-    ABSTRACT_PROP, ALGO, AXIOM, BY, CART, CLAIM, CLEAR, EVAL, EXAMPLE, FINITE_SEQ, FN_LOWER_CASE,
-    FOR, HAVE, IMPORT, LET, MATRIX, OBTAIN, PREIMAGE, PROP, QUESTION_GOAL, SEQ, SETTING, SKETCH,
-    STOP, STRATEGY, STRONG_INDUC, STRUCT, TEMPLATE, THM, TRUST, TRY, TUPLE, USE, WITNESS,
+    ABSTRACT_PROP, ALGO, AXIOM, BY, CART, CLAIM, EVAL, EXAMPLE, FINITE_SEQ, FN_LOWER_CASE, FOR,
+    HAVE, IMPORT, LET, MATRIX, OBTAIN, PREIMAGE, PROP, QUESTION_GOAL, SEQ, SETTING, SKETCH, STOP,
+    STRATEGY, STRONG_INDUC, STRUCT, TEMPLATE, THM, TRUST, TRY, TUPLE, USE, WITNESS,
 };
 use crate::error::{ParseRuntimeError, RuntimeError, RuntimeErrorStruct};
 use crate::parse::TokenBlock;
@@ -52,7 +52,6 @@ impl Runtime {
                 _ => self.parse_have_obj_stmt(tb),
             },
             OBTAIN => self.parse_obtain_obj(tb),
-            CLEAR => self.parse_clear_stmt(tb),
             CLAIM => self.parse_claim_stmt(tb),
             EXAMPLE => self.parse_example_stmt(tb),
             THM => self.parse_def_thm_stmt(tb),

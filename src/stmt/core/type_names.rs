@@ -66,12 +66,6 @@ impl ImportStmt {
     }
 }
 
-impl ClearStmt {
-    pub fn stmt_type_name(&self) -> String {
-        "ClearStmt".to_string()
-    }
-}
-
 impl WitnessExistFact {
     pub fn stmt_type_name(&self) -> String {
         "WitnessExistFact".to_string()
@@ -411,12 +405,6 @@ impl DefTemplateStmt {
 impl DefSettingStmt {
     pub fn output_type_string() -> String {
         "setting definition".to_string()
-    }
-}
-
-impl ClearStmt {
-    pub fn output_type_string() -> String {
-        "clear statement".to_string()
     }
 }
 

@@ -315,24 +315,6 @@ fn registered_subtraction_sign_rejects_reordered_parameter_and_semantic_children
     });
 }
 
-#[test]
-fn clear_resets_result_visibility_and_opens_a_fresh_lean_namespace() {
-    run_registered_rule_test(|| {
-        let results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
-                "have A set = R\nclear\nhave A set = C\n",
-                "direct_clear_compiler_environment.lit",
-            )
-            .expect("execute a same-name definition after clear");
-        let generated = StmtResultToLeanCompiler::new("direct_clear_compiler_environment.lit")
-            .compile_stmt_results_to_lean_source(&results)
-            .expect("compile clear as an environment-layer operation");
-        assert!(generated.contains("abbrev A : Litex.Set := Litex.R"));
-        assert!(generated.contains("namespace __AfterClear01"));
-        assert!(generated.contains("abbrev A : Litex.Set := Litex.C"));
-        assert!(generated.contains("end __AfterClear01"));
-    });
-}
-
 fn execute_order_transitivity() -> Vec<StmtResult> {
     crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
         "forall a, b, c R:\n    a <= b\n    b < c\n    =>:\n        a < c\n",

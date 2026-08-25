@@ -694,10 +694,7 @@ fn compiler_and_test_directories_follow_the_repository_layout() {
             "proof_block_execution",
             &["claim.rs", "goal_proof.rs", "sketch.rs", "try_block.rs"][..],
         ),
-        (
-            "command_execution",
-            &["environment_commands.rs", "evaluation.rs"][..],
-        ),
+        ("command_execution", &["evaluation.rs"][..]),
         (
             "trust_execution",
             &["assumed_facts.rs", "parameterized_assumptions.rs"][..],

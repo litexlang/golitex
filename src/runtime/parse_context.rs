@@ -43,14 +43,6 @@ impl ParseContext {
         }
     }
 
-    pub fn clear(&mut self) {
-        self.free_params.clear();
-        self.local_binding_scope_depth = 0;
-        self.scope_frames.clear();
-        self.default_struct_views.clear();
-        self.default_tuple_views.clear();
-    }
-
     pub fn restore_scoped_state(&mut self, saved: ParseContext) {
         self.free_params = saved.free_params;
         self.local_binding_scope_depth = saved.local_binding_scope_depth;

@@ -1212,13 +1212,7 @@ An evaluation performed by a runtime algorithm without typed computation
 evidence remains explicit in Result and fails closed at the standalone compiler
 boundary.
 
-`clear` is the non-lexical counterpart. Its successful Result has no proof
-child and no mathematical effect, but it explicitly replaces the current
-compiler environment with an empty frame. Previously generated Lean text
-cannot be deleted, so the compiler opens `__AfterClearNN` for subsequent
-declarations; this permits a later Litex definition to reuse a source spelling
-without colliding with the earlier Lean name. Successful strategy
-activation/deactivation commands are true `PassThrough` layers: they
+Successful strategy activation/deactivation commands are true `PassThrough` layers: they
 validate that no mathematical effects were published and emit no Lean
 declaration. A Result stream containing only such commands still compiles to a
 valid declaration-free Lean namespace.

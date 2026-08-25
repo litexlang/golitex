@@ -4080,19 +4080,14 @@ eval 1 + 2
 1 + 2 = 3
 ```
 
-#### 23. Module Commands
+#### 23. Ordinary Names Formerly Used by Commands
 
-Purpose: cite configured project sources by canonical name, or clear the
-current environment.
-These examples are syntax only because they depend on local project files.
+`clear` is not a keyword or a statement. It can be used as an ordinary name.
 
-<!-- litex:skip-test -->
 ```litex
-clear
+have clear R = 1
+clear = 1
 ```
-
-`clear` only resets the current environment; it does not change the module
-manager.
 
 ---
 
