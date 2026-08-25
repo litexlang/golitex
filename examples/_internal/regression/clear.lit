@@ -1,13 +1,9 @@
-# clear empties the top env and top parse-time name map; use separate top-level blocks
-# so the second `trust have` is parsed after `clear` runs (parse-time names from the first block remain
-# only until that block finishes executing).
-sketch:
-    trust have a R:
-        a = 1
-    a = 1
-
-clear
-
-trust have a R:
-    a = 2
-a = 2
+# Tracer: `clear` is an ordinary definition name.
+#
+# Before: a bare `clear` statement reset the current user environment.
+# Now: there is no clear statement and the spelling is not reserved.
+# Boundary: the Rust regression test verifies that bare `clear` fails without
+# mutating definitions already present in the environment.
+# Evidence: this tracer is registered in the repository examples harness.
+have clear R = 1
+clear = 1

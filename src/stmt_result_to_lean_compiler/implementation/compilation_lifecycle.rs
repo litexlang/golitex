@@ -54,16 +54,12 @@ impl StmtResultToLeanCompiler {
         ))
     }
 
-    pub(super) fn finish_lean_source(mut self) -> Result<String, String> {
+    pub(super) fn finish_lean_source(self) -> Result<String, String> {
         if !self.environment_stack.is_top_level() {
             return Err(
                 "StmtResultToLeanCompiler finished with an unclosed local environment".into(),
             );
         }
-        if let Some(namespace) = self.open_clear_namespace.take() {
-            self.declarations.push(format!("end {namespace}"));
-        }
-
         let file_name = Path::new(&self.source_label)
             .file_name()
             .and_then(|name| name.to_str())

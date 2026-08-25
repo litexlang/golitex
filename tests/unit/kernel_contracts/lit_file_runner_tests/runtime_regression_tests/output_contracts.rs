@@ -57,7 +57,7 @@ fn hidden_file_path_output_omits_source_fields() {
 
 #[test]
 fn json_v2_normal_output_keeps_structural_empty_arrays() {
-    let source_code = "clear\nhave a R\nhave a R";
+    let source_code = "have a R\nhave a R";
 
     let mut runtime = Runtime::new();
     runtime.start_isolated_source("normal_output_omits_empty_fields");
@@ -161,7 +161,7 @@ fn matrix_operator_latex_escapes_the_apostrophe_power_token() {
 
 #[test]
 fn json_v2_detailed_output_keeps_the_same_structural_empty_arrays() {
-    let source_code = "clear\nhave a R\nhave a R";
+    let source_code = "have a R\nhave a R";
 
     let mut runtime = Runtime::new();
     runtime.start_isolated_source("detail_output_keeps_empty_fields");
@@ -2595,11 +2595,11 @@ fn error_output_does_not_change_the_style_of_earlier_successes() {
 fn error_output_preserves_failed_step_and_step_indexes_in_all_styles() {
     let mut runtime = Runtime::new();
     runtime.start_isolated_source("error_output_failed_step");
-    let (stmt_results, runtime_error) = execute_source("clear", &mut runtime);
+    let (stmt_results, runtime_error) = execute_source("1 = 1", &mut runtime);
     assert!(runtime_error.is_none());
     let failed_step = stmt_results[0]
         .statement()
-        .expect("clear should have a successful statement result");
+        .expect("checked equality should have a successful statement result");
     let unknown: StmtResult = UnknownGenericStmtResult::new().into();
     let error: RuntimeError = UnknownRuntimeError(RuntimeErrorStruct::new_with_output(
         Some(failed_step.clone()),
@@ -2627,7 +2627,7 @@ fn error_output_preserves_failed_step_and_step_indexes_in_all_styles() {
     assert_eq!(outputs[0], outputs[1]);
     assert_eq!(outputs[1], outputs[2]);
     assert!(outputs[2].contains("\"failed_step\": {"));
-    assert!(outputs[2].contains("\"statement\": \"clear\""));
+    assert!(outputs[2].contains("\"statement\": \"1 = 1\""));
     assert!(outputs[2].contains("\"proof_step_index\": 2"));
     assert!(outputs[2].contains("\"proof_step_count\": 3"));
     assert!(outputs[2].contains("\"unknown_result\": {"));

@@ -54,39 +54,6 @@ impl Runtime {
         self.statement_proof_state.push_scope();
     }
 
-    /// Replace the top user environment with an empty one and clear parse-time free-param scopes.
-    pub fn clear_current_env_and_parse_name_scope(&mut self) {
-        if self
-            .execution_stack
-            .last()
-            .is_some_and(|frame| !frame.local_environment_stack.is_empty())
-        {
-            if let Some(environment) = self
-                .execution_stack
-                .last_mut()
-                .and_then(|frame| frame.local_environment_stack.last_mut())
-            {
-                **environment = Environment::new_empty_env();
-            }
-        } else {
-            let (module_id, layer) = self.current_execution_target();
-            if let Some(module) = self.module_manager.module_mut(module_id) {
-                match layer {
-                    ExecutionLayer::Main => {
-                        module.main_environment = Box::new(Environment::new_empty_env());
-                    }
-                    ExecutionLayer::File(file_id) => {
-                        if let Some(file) = module.file_mut(file_id) {
-                            file.environment = Box::new(Environment::new_empty_env());
-                        }
-                    }
-                }
-            }
-        }
-        self.current_parse_context_mut().clear();
-        self.module_manager.parsed_struct_definitions.clear();
-    }
-
     /// Runs a closure in a temporary child environment and pops it on normal return.
     /// This matches manual `push_env`/`pop_env`; a panic will not restore the stack.
     pub fn run_in_local_env<T, E, F>(&mut self, f: F) -> Result<T, E>

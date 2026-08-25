@@ -373,7 +373,7 @@ impl Runtime {
     }
 
     /// After `start_isolated_source`, point the current user source label at
-    /// another path without pushing more layers (pair with `clear_current_env_and_parse_name_scope`).
+    /// another path without pushing more layers.
     pub fn set_current_user_lit_file_path(&mut self, path: &str) {
         let path_rc: Rc<str> = Rc::from(path);
         self.module_manager.entry_path_rc = path_rc.clone();

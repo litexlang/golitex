@@ -21,10 +21,6 @@ impl FreeParamCollection {
         }
     }
 
-    pub fn clear(&mut self) {
-        self.params.clear();
-    }
-
     pub fn begin_scope(
         &mut self,
         scope: BindingScope,

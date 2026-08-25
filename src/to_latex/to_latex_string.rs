@@ -836,12 +836,6 @@ impl Div {
     }
 }
 
-impl ClearStmt {
-    pub fn to_latex_string(&self) -> String {
-        format!(r"\mathrm{{{}}}", CLEAR)
-    }
-}
-
 impl EqualFact {
     pub fn to_latex_string(&self) -> String {
         format!(
@@ -2431,7 +2425,6 @@ impl Stmt {
             Stmt::ProofBlock(ProofBlockStmt::SketchStmt(x)) => x.to_latex_string(),
             Stmt::ProofBlock(ProofBlockStmt::TryStmt(x)) => x.to_latex_string(),
             Stmt::Command(CommandStmt::ImportStmt(x)) => latex_texttt_escape(&x.to_string()),
-            Stmt::Command(CommandStmt::ClearStmt(x)) => x.to_latex_string(),
             Stmt::Command(CommandStmt::EvalStmt(x)) => x.to_latex_string(),
             Stmt::Command(CommandStmt::UseStrategyStmt(x)) => latex_texttt_escape(&x.to_string()),
             Stmt::Command(CommandStmt::StopStrategyStmt(x)) => latex_texttt_escape(&x.to_string()),

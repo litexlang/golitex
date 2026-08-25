@@ -2313,12 +2313,14 @@ and [Setup](Setup.md) for installation and project-running examples.
 | Statement | Purpose |
 |---|---|
 | `eval expr` | Evaluate a supported object expression. |
-| `clear` | Reset the current user environment. |
 | `impossible fact` | Close a contradiction branch by identifying the impossible fact. |
 
 ```litex
 eval (1 + 2)^2
 ```
+
+`clear` is not a utility statement or a reserved word; it can be used as an
+ordinary definition name.
 
 ### Statement index
 
@@ -2364,7 +2366,6 @@ introductions.
 | `by zorn_lemma` | The set, binary relation, exact named upper-bound/maximality definitions, nonemptiness, partial-order laws, and chain-upper-bound obligation. | Stores `exist m S st {$M(m)}` using the supplied named maximality prop. The chain witness likewise uses the supplied atomic upper-bound prop. |
 | `import` | Only the isolated-session import grammar and module constraints. | A qualified imported environment; maintained modules use manifests instead. |
 | `eval` | The expression belongs to the supported executable subset. | Evaluation output, not a new mathematical proof fact. |
-| `clear` | No proof obligation. | Resets the current user environment. |
 | `use strategy`, `stop strategy` | The named strategy exists. | Changes later user-strategy search, not builtin rules or known facts. |
 
 ---

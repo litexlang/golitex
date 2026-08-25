@@ -1,4 +1,4 @@
-//! Tooling commands such as imports and environment controls.
+//! Tooling commands such as imports.
 
 use crate::prelude::*;
 
@@ -71,11 +71,6 @@ impl Runtime {
             )))
             .into(),
         )
-    }
-
-    pub fn parse_clear_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
-        tb.skip_token(CLEAR)?;
-        Ok(ClearStmt::new(tb.line_file.clone()).into())
     }
 }
 

@@ -381,7 +381,7 @@ pub use crate::result::{
     SuccessByReflexivePropStmtResult, SuccessByRegularityAxiomStmtResult, SuccessByStmtResult,
     SuccessByStructDefStmtResult, SuccessBySymmetricPropStmtResult, SuccessByThmStmtResult,
     SuccessByTransitivePropStmtResult, SuccessByZornLemmaStmtResult, SuccessClaimStmtResult,
-    SuccessClearStmtResult, SuccessCommandStmtResult, SuccessCreatedTemplateInstanceResult,
+    SuccessCommandStmtResult, SuccessCreatedTemplateInstanceResult,
     SuccessDefAbstractPropStmtResult, SuccessDefAlgoStmtResult, SuccessDefPropStmtResult,
     SuccessDefSettingStmtResult, SuccessDefStrategyStmtResult, SuccessDefStructStmtResult,
     SuccessDefTemplateStmtResult, SuccessDefThmStmtResult, SuccessDefinitionStmtResult,
@@ -533,7 +533,6 @@ pub use crate::stmt::parameters::SetBoundParameterList;
 pub use crate::stmt::parameters::TypedParameterGroup;
 pub use crate::stmt::parameters::TypedParameterList;
 pub use crate::stmt::sketch_stmt::SketchStmt;
-pub use crate::stmt::tooling_stmt::ClearStmt;
 pub use crate::stmt::tooling_stmt::ImportModuleStmt;
 pub use crate::stmt::tooling_stmt::ImportStdStmt;
 pub use crate::stmt::tooling_stmt::ImportStmt;
@@ -618,7 +617,6 @@ pub use crate::common::keywords::CASE;
 pub use crate::common::keywords::CASES;
 pub use crate::common::keywords::CEIL;
 pub use crate::common::keywords::CLAIM;
-pub use crate::common::keywords::CLEAR;
 pub use crate::common::keywords::CLOSED_RANGE;
 pub use crate::common::keywords::COLON;
 pub use crate::common::keywords::COMMA;

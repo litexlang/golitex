@@ -3379,35 +3379,4 @@ impl StmtResultToLeanCompiler {
         }
         Ok(())
     }
-
-    /// Compiler-environment operation for a successful Litex `clear`.
-    ///
-    /// The old Lean declarations remain earlier in the generated source, but
-    /// their SymbolIds and FactIds are no longer visible to later Results. A
-    /// fresh namespace permits the source to reuse the same spelling without
-    /// making two Lean declarations with one name.
-    pub(super) fn compile_clear_stmt_result_to_lean_source(
-        &mut self,
-        result: &SuccessClearStmtResult,
-    ) -> Result<(), String> {
-        if !result.common.infers.is_empty() {
-            return Err("`clear` unexpectedly published mathematical effects".into());
-        }
-        if !self.environment_stack.is_top_level() {
-            return Err(
-                "StmtResultToLeanCompiler does not yet support `clear` inside a local Result body"
-                    .into(),
-            );
-        }
-
-        if let Some(namespace) = self.open_clear_namespace.take() {
-            self.declarations.push(format!("end {namespace}"));
-        }
-        self.next_clear_namespace_index += 1;
-        let namespace = format!("__AfterClear{:02}", self.next_clear_namespace_index);
-        self.declarations.push(format!("namespace {namespace}"));
-        self.open_clear_namespace = Some(namespace);
-        self.environment_stack.clear_current_environment();
-        Ok(())
-    }
 }

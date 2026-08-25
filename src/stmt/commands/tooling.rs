@@ -1,4 +1,4 @@
-//! Tooling and environment-inspection command statements.
+//! Tooling command statements.
 
 use crate::prelude::*;
 use std::fmt;
@@ -53,22 +53,5 @@ impl fmt::Display for ImportStmt {
             Self::Module(stmt) => write!(f, "{} \"{}\" {} {}", IMPORT, stmt.path, AS, stmt.alias),
             Self::Std(stmt) => write!(f, "{} {} {}", IMPORT, STD, stmt.name),
         }
-    }
-}
-
-#[derive(Clone)]
-pub struct ClearStmt {
-    pub line_file: LineFile,
-}
-
-impl ClearStmt {
-    pub fn new(line_file: LineFile) -> Self {
-        ClearStmt { line_file }
-    }
-}
-
-impl fmt::Display for ClearStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        write!(f, "{}", CLEAR)
     }
 }

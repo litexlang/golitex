@@ -434,7 +434,7 @@ fn session_continues_after_failed_try_block_tokenization() {
 fn session_continues_after_failed_try_execution() {
     let input = format!(
         "{}{}artifacts final\nclose\n",
-        run_frame("failed_try", "try:\n    clear\n"),
+        run_frame("failed_try", "try:\n    1 = 0\n"),
         run_frame("next", "have after_try R = 2\nafter_try = 2\n"),
     );
     let output = run_isolated_session("failed-try-execution", input);

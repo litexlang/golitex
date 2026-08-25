@@ -303,7 +303,6 @@ impl CommandStmt {
     pub fn line_file(&self) -> LineFile {
         match self {
             CommandStmt::ImportStmt(stmt) => stmt.line_file(),
-            CommandStmt::ClearStmt(stmt) => stmt.line_file.clone(),
             CommandStmt::EvalStmt(stmt) => stmt.line_file.clone(),
             CommandStmt::UseStrategyStmt(stmt) => stmt.line_file.clone(),
             CommandStmt::StopStrategyStmt(stmt) => stmt.line_file.clone(),
@@ -313,7 +312,6 @@ impl CommandStmt {
     pub fn stmt_type_name(&self) -> String {
         match self {
             CommandStmt::ImportStmt(stmt) => stmt.stmt_type_name(),
-            CommandStmt::ClearStmt(stmt) => stmt.stmt_type_name(),
             CommandStmt::EvalStmt(stmt) => stmt.stmt_type_name(),
             CommandStmt::UseStrategyStmt(stmt) => stmt.stmt_type_name(),
             CommandStmt::StopStrategyStmt(stmt) => stmt.stmt_type_name(),
@@ -323,7 +321,6 @@ impl CommandStmt {
     pub fn output_type_string(&self) -> String {
         match self {
             CommandStmt::ImportStmt(stmt) => stmt.output_type_string(),
-            CommandStmt::ClearStmt(_) => ClearStmt::output_type_string(),
             CommandStmt::EvalStmt(_) => EvalStmt::output_type_string(),
             CommandStmt::UseStrategyStmt(_) => UseStrategyStmt::output_type_string(),
             CommandStmt::StopStrategyStmt(_) => StopStrategyStmt::output_type_string(),

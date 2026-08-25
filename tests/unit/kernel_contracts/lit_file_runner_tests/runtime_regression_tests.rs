@@ -49,7 +49,7 @@ fn assert_no_legacy_acceptance_field(run_output: &str, context: &str) {
 
 pub(super) fn run_runtime_contract_suite_impl() {
     println!("--- runtime contracts: running selected runtime/output smoke tests ---");
-    runtime_contract_builtin_and_clear();
+    runtime_contract_builtin();
     output_contracts::unknown_fact_failure_has_structured_output_fields();
     core_definitions_and_syntax::latex_output_is_fragment_without_default_packages();
     core_definitions_and_syntax::python_extractor_outputs_supported_have_subset();
@@ -58,7 +58,7 @@ pub(super) fn run_runtime_contract_suite_impl() {
 }
 
 #[test]
-fn runtime_contract_builtin_and_clear() {
+fn runtime_contract_builtin() {
     let source_code = "1 = 1";
 
     let mut import_runtime = Runtime::new();
@@ -72,20 +72,6 @@ fn runtime_contract_builtin_and_clear() {
         import_run_succeeded,
         "runtime contract builtin fixture failed:\n{}",
         import_run_output
-    );
-
-    let clear_source_code =
-        "abstract_prop local_prop(x)\ntrust $local_prop(2)\nclear\n$local_prop(2)";
-    let mut clear_runtime = Runtime::new();
-    clear_runtime.start_isolated_source("runtime_contract_clear");
-    let (clear_stmt_results, clear_runtime_error) =
-        execute_source(clear_source_code, &mut clear_runtime);
-    let (clear_succeeded, clear_output) =
-        render_run_output(&clear_runtime, &clear_stmt_results, &clear_runtime_error);
-    assert!(
-        !clear_succeeded,
-        "runtime contract clear fixture should drop local facts:\n{}",
-        clear_output
     );
 }
 
