@@ -415,8 +415,9 @@ fn execute_strategy_definition_with_local_proof_environment() -> Vec<StmtResult>
 fn strategy_definition_compiles_from_recursive_well_definedness_and_local_proof_scope() {
     run_registered_rule_test(|| {
         let results = execute_strategy_definition_with_local_proof_environment();
-        let [_, StmtResult::Success(SuccessStmtResult::DefStrategyStmt(strategy)), _, _] =
-            results.as_slice()
+        let [_, StmtResult::Success(SuccessStmtResult::Definition(
+            SuccessDefinitionStmtResult::DefStrategyStmt(strategy),
+        )), _, _] = results.as_slice()
         else {
             panic!("expected predicate, strategy, stop, and use Results")
         };
@@ -456,8 +457,9 @@ fn strategy_definition_compiles_from_recursive_well_definedness_and_local_proof_
 fn strategy_definition_rejects_a_result_missing_its_local_parameter_fact_id() {
     run_registered_rule_test(|| {
         let mut results = execute_strategy_definition_with_local_proof_environment();
-        let [_, StmtResult::Success(SuccessStmtResult::DefStrategyStmt(strategy)), _, _] =
-            results.as_mut_slice()
+        let [_, StmtResult::Success(SuccessStmtResult::Definition(
+            SuccessDefinitionStmtResult::DefStrategyStmt(strategy),
+        )), _, _] = results.as_mut_slice()
         else {
             panic!("expected predicate, strategy, stop, and use Results")
         };
@@ -1214,8 +1216,8 @@ fn setting_definition_is_a_pass_through_before_its_elaborated_forall_result() {
                 "direct_setting_elaboration_result.lit",
             )
             .expect("execute one setting and one elaborated forall");
-        let [StmtResult::Success(SuccessStmtResult::DefInterfaceStmt(
-            SuccessDefInterfaceStmtResult::DefSettingStmt(setting),
+        let [StmtResult::Success(SuccessStmtResult::Definition(
+            SuccessDefinitionStmtResult::DefSettingStmt(setting),
         )), StmtResult::Success(SuccessStmtResult::Fact(_))] = results.as_slice()
         else {
             panic!("expected setting Result followed by its elaborated forall Result")

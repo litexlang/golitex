@@ -41,31 +41,31 @@ impl Runtime {
             })?;
 
             match success {
-                SuccessStmtResult::DefObjStmt(SuccessDefObjStmtResult::HaveFnEqualStmt(result))
-                    if result.verification.is_some() =>
-                {
+                SuccessStmtResult::Definition(SuccessDefinitionStmtResult::HaveFnEqualStmt(
+                    result,
+                )) if result.verification.is_some() => {
                     let verification = result.verification.as_mut().unwrap();
                     self.attach_known_fact_ids_to_infer_result(
                         &mut verification.assumption_infers,
                     )?;
                 }
-                SuccessStmtResult::DefObjStmt(SuccessDefObjStmtResult::HaveSeqStmt(result))
+                SuccessStmtResult::Definition(SuccessDefinitionStmtResult::HaveSeqStmt(result))
                     if result.verification.is_some() =>
                 {
                     self.attach_known_fact_ids_to_infer_result(
                         &mut result.verification.as_mut().unwrap().assumption_infers,
                     )?;
                 }
-                SuccessStmtResult::DefObjStmt(SuccessDefObjStmtResult::HaveFiniteSeqStmt(
+                SuccessStmtResult::Definition(SuccessDefinitionStmtResult::HaveFiniteSeqStmt(
                     result,
                 )) if result.verification.is_some() => {
                     self.attach_known_fact_ids_to_infer_result(
                         &mut result.verification.as_mut().unwrap().assumption_infers,
                     )?;
                 }
-                SuccessStmtResult::DefObjStmt(SuccessDefObjStmtResult::HaveMatrixStmt(result))
-                    if result.verification.is_some() =>
-                {
+                SuccessStmtResult::Definition(SuccessDefinitionStmtResult::HaveMatrixStmt(
+                    result,
+                )) if result.verification.is_some() => {
                     self.attach_known_fact_ids_to_infer_result(
                         &mut result.verification.as_mut().unwrap().assumption_infers,
                     )?;

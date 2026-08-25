@@ -203,7 +203,7 @@ fn validate_zorn_upper_bound_prop(
             None,
         ));
     };
-    if definition.params_def_with_type.number_of_params() != 2 {
+    if definition.typed_parameters.number_of_params() != 2 {
         return Err(zorn_interface_error(
             stmt,
             format!(
@@ -234,7 +234,7 @@ fn validate_zorn_upper_bound_prop(
         return Err(zorn_interface_error(
             stmt,
             format!(
-                "by zorn_lemma: upper-bound `{}` must declare `(c power_set({}), u {})`",
+                "by zorn_lemma: upper-bound `{}` must bind `(c power_set({}), u {})`",
                 name, stmt.set, stmt.set
             ),
             None,
@@ -276,7 +276,7 @@ fn validate_zorn_maximal_prop(
             None,
         ));
     };
-    if definition.params_def_with_type.number_of_params() != 1 {
+    if definition.typed_parameters.number_of_params() != 1 {
         return Err(zorn_interface_error(
             stmt,
             format!(
@@ -297,7 +297,7 @@ fn validate_zorn_maximal_prop(
         return Err(zorn_interface_error(
             stmt,
             format!(
-                "by zorn_lemma: maximality `{}` must declare `(m {})`",
+                "by zorn_lemma: maximality `{}` must bind `(m {})`",
                 name, stmt.set
             ),
             None,
@@ -331,7 +331,7 @@ fn zorn_prop_header_types_match(
     expected_sets: &[Obj],
 ) -> Result<bool, RuntimeError> {
     let instantiated_types = runtime.inst_param_def_with_type_one_by_one(
-        &definition.params_def_with_type,
+        &definition.typed_parameters,
         &args.to_vec(),
         SubstitutionMode::Exact,
     )?;
@@ -358,7 +358,7 @@ fn zorn_prop_has_exact_forall_definition(
     let [Fact::ForallFact(actual)] = definition.iff_facts.as_slice() else {
         return Ok(false);
     };
-    let param_to_arg_map = runtime.params_to_arg_map(&definition.params_def_with_type, args)?;
+    let param_to_arg_map = runtime.params_to_arg_map(&definition.typed_parameters, args)?;
     let actual = runtime.inst_forall_fact_without_capture_preparation(
         actual,
         &param_to_arg_map,
@@ -420,7 +420,7 @@ fn zorn_reflexive_fact(
     )?;
     let x = obj_for_bound_param_in_scope(&x_group.params[0]);
     Ok(ForallFact::new_canonical_forall(
-        ParamDefWithType::new(vec![x_group]),
+        TypedParameterList::new(vec![x_group]),
         vec![],
         vec![normal_prop_fact(prop_name, vec![x.clone(), x], line_file.clone()).into()],
         line_file,
@@ -446,7 +446,7 @@ fn zorn_transitive_fact(
     let y = obj_for_bound_param_in_scope(&params.params[1]);
     let z = obj_for_bound_param_in_scope(&params.params[2]);
     Ok(ForallFact::new_canonical_forall(
-        ParamDefWithType::new(vec![params]),
+        TypedParameterList::new(vec![params]),
         vec![
             normal_prop_fact(
                 prop_name.clone(),
@@ -478,7 +478,7 @@ fn zorn_antisymmetric_fact(
     let x = obj_for_bound_param_in_scope(&params.params[0]);
     let y = obj_for_bound_param_in_scope(&params.params[1]);
     Ok(ForallFact::new_canonical_forall(
-        ParamDefWithType::new(vec![params]),
+        TypedParameterList::new(vec![params]),
         vec![
             normal_prop_fact(
                 prop_name.clone(),
@@ -511,7 +511,7 @@ fn zorn_chain_upper_bound_fact(
         zorn_upper_bound_exist_fact(runtime, set, c, upper_bound_prop_name, line_file.clone())?;
 
     Ok(ForallFact::new_canonical_forall(
-        ParamDefWithType::new(vec![c_group]),
+        TypedParameterList::new(vec![c_group]),
         vec![chain_total_fact],
         vec![upper_bound_fact.into()],
         line_file,
@@ -544,7 +544,7 @@ fn zorn_chain_total_fact(
         normal_prop_fact(prop_name, vec![y, x], line_file.clone()).into();
 
     Ok(ForallFact::new_canonical_forall(
-        ParamDefWithType::new(vec![params]),
+        TypedParameterList::new(vec![params]),
         vec![],
         vec![OrFact::new(vec![left, right], line_file.clone()).into()],
         line_file,
@@ -567,7 +567,7 @@ fn zorn_upper_bound_exist_fact(
     let named_upper_bound =
         normal_prop_fact(upper_bound_prop_name, vec![chain, u], line_file.clone());
     let body = ExistentialSpec::new(
-        ParamDefWithType::new(vec![u_group]),
+        TypedParameterList::new(vec![u_group]),
         vec![QuantifierFreeFact::AtomicFact(named_upper_bound)],
         line_file,
     )?;
@@ -587,7 +587,7 @@ fn zorn_upper_bound_forall_fact(
     )?;
     let x = obj_for_bound_param_in_scope(&x_group.params[0]);
     ForallFact::new_canonical_forall(
-        ParamDefWithType::new(vec![x_group]),
+        TypedParameterList::new(vec![x_group]),
         vec![],
         vec![normal_prop_fact(prop_name, vec![x, upper], line_file.clone()).into()],
         line_file,
@@ -607,7 +607,7 @@ fn zorn_lemma_maximal_fact(
     let m = obj_for_bound_param_in_scope(&m_group.params[0]);
     let named_maximal = normal_prop_fact(maximal_prop_name, vec![m], line_file.clone());
     let body = ExistentialSpec::new(
-        ParamDefWithType::new(vec![m_group]),
+        TypedParameterList::new(vec![m_group]),
         vec![QuantifierFreeFact::AtomicFact(named_maximal)],
         line_file,
     )?;
@@ -627,7 +627,7 @@ fn zorn_maximal_forall_fact(
     )?;
     let x = obj_for_bound_param_in_scope(&x_group.params[0]);
     ForallFact::new_canonical_forall(
-        ParamDefWithType::new(vec![x_group]),
+        TypedParameterList::new(vec![x_group]),
         vec![normal_prop_fact(
             prop_name,
             vec![maximal.clone(), x.clone()],

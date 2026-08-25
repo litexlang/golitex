@@ -32,7 +32,7 @@ impl Runtime {
         let Some((arg_map, _)) = self.match_args_in_fact_with_known_forall_bindings(
             &then_args,
             &atomic_args,
-            &strategy.forall_fact.params_def_with_type,
+            &strategy.forall_fact.typed_parameters,
             None,
         )?
         else {
@@ -80,10 +80,7 @@ impl Runtime {
         arg_map: HashMap<String, Obj>,
         verify_state: &ProofSearchState,
     ) -> Result<StmtResult, RuntimeError> {
-        let param_names = strategy
-            .forall_fact
-            .params_def_with_type
-            .collect_param_names();
+        let param_names = strategy.forall_fact.typed_parameters.collect_param_names();
         if !param_names
             .iter()
             .all(|param_name| arg_map.contains_key(param_name))
@@ -101,7 +98,7 @@ impl Runtime {
 
         let args_param_types = self
             .verify_args_satisfy_param_def_flat_types(
-                &strategy.forall_fact.params_def_with_type,
+                &strategy.forall_fact.typed_parameters,
                 &args_for_params,
                 verify_state,
                 SubstitutionMode::Exact,
@@ -121,7 +118,7 @@ impl Runtime {
 
         let Some(param_to_arg_map) = strategy
             .forall_fact
-            .params_def_with_type
+            .typed_parameters
             .param_def_params_to_arg_map(&arg_map)
         else {
             return Ok(UnknownGenericStmtResult::new().into());

@@ -1160,10 +1160,7 @@ fn failed_statement_parse_rolls_back_all_new_bindings() {
     runtime.start_isolated_source("failed_statement_parse_rolls_back_bindings");
 
     let (_, first_error) = execute_source("trust have x R, y", &mut runtime);
-    assert!(
-        first_error.is_some(),
-        "the incomplete declaration must fail"
-    );
+    assert!(first_error.is_some(), "the incomplete definition must fail");
 
     let (stmt_results, runtime_error) = execute_source("trust have x R", &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);

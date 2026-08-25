@@ -1,12 +1,11 @@
 use crate::error::{exec_stmt_error_with_stmt_and_cause, short_exec_error, RuntimeError};
 use crate::infer::SuccessInferResult;
 use crate::result::{
-    StmtResult, SuccessDefInterfaceStmtResult, SuccessDefSettingStmtResult, SuccessStmtCommonResult,
+    StmtResult, SuccessDefSettingStmtResult, SuccessDefinitionStmtResult, SuccessStmtCommonResult,
 };
 use crate::runtime::Runtime;
 use crate::stmt::{
-    ByStmt, CommandStmt, DefInterfaceStmt, DefObjStmt, DefPredicateStmt, ProofBlockStmt, Stmt,
-    UnsafeStmt, WitnessStmt,
+    ByStmt, CommandStmt, DefinitionStmt, ProofBlockStmt, Stmt, UnsafeStmt, WitnessStmt,
 };
 
 impl Runtime {
@@ -18,50 +17,54 @@ impl Runtime {
             Stmt::Fact(fact) => self.execute_submitted_fact(fact),
             Stmt::UnsafeStmt(UnsafeStmt::TrustStmt(s)) => self.exec_trust_stmt(s),
             Stmt::UnsafeStmt(UnsafeStmt::TrustHaveStmt(d)) => self.exec_trust_have_stmt(d),
-            Stmt::DefObjStmt(DefObjStmt::LetObjStmt(d)) => self.exec_let_obj_stmt(d),
-            Stmt::DefObjStmt(DefObjStmt::HaveObjInNonemptySetStmt(d)) => {
+            Stmt::Definition(DefinitionStmt::LetObjStmt(d)) => self.exec_let_obj_stmt(d),
+            Stmt::Definition(DefinitionStmt::HaveObjInNonemptySetStmt(d)) => {
                 self.exec_have_obj_in_nonempty_set_or_param_type_stmt(d)
             }
-            Stmt::DefObjStmt(DefObjStmt::HaveObjEqualStmt(d)) => self.exec_have_obj_equal_stmt(d),
-            Stmt::DefObjStmt(DefObjStmt::HaveObjByExistFactsStmt(d)) => {
+            Stmt::Definition(DefinitionStmt::HaveObjEqualStmt(d)) => {
+                self.exec_have_obj_equal_stmt(d)
+            }
+            Stmt::Definition(DefinitionStmt::HaveObjByExistFactsStmt(d)) => {
                 self.exec_have_obj_by_exist_facts_stmt(d)
             }
-            Stmt::DefObjStmt(DefObjStmt::ObtainObjFromExistFact(d)) => {
+            Stmt::Definition(DefinitionStmt::ObtainObjFromExistFact(d)) => {
                 self.exec_obtain_obj_from_exist_fact(d)
             }
-            Stmt::DefObjStmt(DefObjStmt::ObtainObjFromAtomicFact(d)) => {
+            Stmt::Definition(DefinitionStmt::ObtainObjFromAtomicFact(d)) => {
                 self.exec_obtain_obj_from_atomic_fact(d)
             }
-            Stmt::DefObjStmt(DefObjStmt::ObtainObjFromThm(d)) => self.exec_obtain_obj_from_thm(d),
-            Stmt::DefObjStmt(DefObjStmt::HaveByPreimageStmt(d)) => {
+            Stmt::Definition(DefinitionStmt::ObtainObjFromThm(d)) => {
+                self.exec_obtain_obj_from_thm(d)
+            }
+            Stmt::Definition(DefinitionStmt::HaveByPreimageStmt(d)) => {
                 self.exec_have_by_preimage_stmt(d)
             }
-            Stmt::DefObjStmt(DefObjStmt::HaveFnEqualStmt(d)) => self.exec_have_fn_equal_stmt(d),
-            Stmt::DefObjStmt(DefObjStmt::HaveFnEqualCaseByCaseStmt(d)) => {
+            Stmt::Definition(DefinitionStmt::HaveFnEqualStmt(d)) => self.exec_have_fn_equal_stmt(d),
+            Stmt::Definition(DefinitionStmt::HaveFnEqualCaseByCaseStmt(d)) => {
                 self.exec_have_fn_equal_case_by_case_stmt(d)
             }
-            Stmt::DefObjStmt(DefObjStmt::HaveFnByInducStmt(d)) => {
+            Stmt::Definition(DefinitionStmt::HaveFnByInducStmt(d)) => {
                 self.exec_have_fn_by_induc_stmt(d)
             }
-            Stmt::DefObjStmt(DefObjStmt::HaveFnByForallExistUniqueStmt(d)) => {
+            Stmt::Definition(DefinitionStmt::HaveFnByForallExistUniqueStmt(d)) => {
                 self.exec_have_fn_by_forall_exist_unique_stmt(d)
             }
-            Stmt::DefObjStmt(DefObjStmt::HaveTupleStmt(d)) => self.exec_have_tuple_stmt(d),
-            Stmt::DefObjStmt(DefObjStmt::HaveCartStmt(d)) => self.exec_have_cart_stmt(d),
-            Stmt::DefObjStmt(DefObjStmt::HaveSeqStmt(d)) => self.exec_have_seq_stmt(d),
-            Stmt::DefObjStmt(DefObjStmt::HaveFiniteSeqStmt(d)) => self.exec_have_finite_seq_stmt(d),
-            Stmt::DefObjStmt(DefObjStmt::HaveMatrixStmt(d)) => self.exec_have_matrix_stmt(d),
-            Stmt::DefPredicateStmt(DefPredicateStmt::DefPropStmt(d)) => self.exec_def_prop_stmt(d),
-            Stmt::DefPredicateStmt(DefPredicateStmt::DefAbstractPropStmt(d)) => {
+            Stmt::Definition(DefinitionStmt::HaveTupleStmt(d)) => self.exec_have_tuple_stmt(d),
+            Stmt::Definition(DefinitionStmt::HaveCartStmt(d)) => self.exec_have_cart_stmt(d),
+            Stmt::Definition(DefinitionStmt::HaveSeqStmt(d)) => self.exec_have_seq_stmt(d),
+            Stmt::Definition(DefinitionStmt::HaveFiniteSeqStmt(d)) => {
+                self.exec_have_finite_seq_stmt(d)
+            }
+            Stmt::Definition(DefinitionStmt::HaveMatrixStmt(d)) => self.exec_have_matrix_stmt(d),
+            Stmt::Definition(DefinitionStmt::DefPropStmt(d)) => self.exec_def_prop_stmt(d),
+            Stmt::Definition(DefinitionStmt::DefAbstractPropStmt(d)) => {
                 self.exec_def_abstract_prop_stmt(d)
             }
-            Stmt::DefInterfaceStmt(DefInterfaceStmt::DefTemplateStmt(d)) => {
-                self.exec_def_template_stmt(d)
-            }
-            Stmt::DefInterfaceStmt(DefInterfaceStmt::DefSettingStmt(s)) => {
+            Stmt::Definition(DefinitionStmt::DefTemplateStmt(d)) => self.exec_def_template_stmt(d),
+            Stmt::Definition(DefinitionStmt::DefSettingStmt(s)) => {
                 self.store_def_setting(s)
                     .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone(), e))?;
-                Ok(SuccessDefInterfaceStmtResult::DefSettingStmt(Box::new(
+                Ok(SuccessDefinitionStmtResult::DefSettingStmt(Box::new(
                     SuccessDefSettingStmtResult {
                         statement: s.clone(),
                         common: SuccessStmtCommonResult::new(SuccessInferResult::new()),
@@ -69,13 +72,11 @@ impl Runtime {
                 ))
                 .into())
             }
-            Stmt::DefInterfaceStmt(DefInterfaceStmt::DefStructStmt(s)) => {
-                self.exec_def_struct_stmt(s)
-            }
-            Stmt::DefAlgoStmt(d) => self.exec_def_algo_stmt(d),
-            Stmt::DefThmStmt(s) => self.exec_def_thm_stmt(s),
-            Stmt::AxiomStmt(s) => self.exec_axiom_stmt(s),
-            Stmt::DefStrategyStmt(s) => self.exec_def_strategy_stmt(s),
+            Stmt::Definition(DefinitionStmt::DefStructStmt(s)) => self.exec_def_struct_stmt(s),
+            Stmt::Definition(DefinitionStmt::DefAlgoStmt(d)) => self.exec_def_algo_stmt(d),
+            Stmt::Definition(DefinitionStmt::DefThmStmt(s)) => self.exec_def_thm_stmt(s),
+            Stmt::Definition(DefinitionStmt::AxiomStmt(s)) => self.exec_axiom_stmt(s),
+            Stmt::Definition(DefinitionStmt::DefStrategyStmt(s)) => self.exec_def_strategy_stmt(s),
             Stmt::ProofBlock(ProofBlockStmt::ClaimStmt(s)) => self.exec_claim_stmt(s),
             Stmt::ProofBlock(ProofBlockStmt::ExampleStmt(s)) => self.exec_example_stmt(s),
             Stmt::ProofBlock(ProofBlockStmt::SketchStmt(s)) => self.exec_sketch_stmt(s),

@@ -407,7 +407,7 @@ impl InstantiatedTemplateObj {
         )
     }
 
-    pub fn declaration_binding(&self) -> SymbolBinding {
+    pub fn definition_binding(&self) -> SymbolBinding {
         SymbolBinding::new(
             self.symbol.id(),
             self.surface_name(),
@@ -2148,11 +2148,11 @@ impl Obj {
             Obj::FnSet(fs) => {
                 let FnSet { body } = fs;
                 let FnSetBody {
-                    params_def_with_set,
+                    set_bound_parameters,
                     dom_facts,
                     ret_set,
                 } = body;
-                let params_def_with_set: Vec<ParamGroupWithSet> = params_def_with_set
+                let set_bound_parameters: Vec<SetBoundParameterGroup> = set_bound_parameters
                     .into_iter()
                     .map(|pg| {
                         let params = pg
@@ -2166,7 +2166,7 @@ impl Obj {
                                 }
                             })
                             .collect();
-                        ParamGroupWithSet::new(
+                        SetBoundParameterGroup::new(
                             params,
                             Obj::replace_bound_identifier(*pg.param_type, from, to),
                         )
@@ -2177,7 +2177,7 @@ impl Obj {
                     .map(|f| f.replace_bound_identifier(from, to))
                     .collect();
                 let ret_set = Obj::replace_bound_identifier(*ret_set, from, to);
-                FnSet::new(params_def_with_set, dom_facts, ret_set)
+                FnSet::new(set_bound_parameters, dom_facts, ret_set)
                     .expect("renaming a valid fn set preserves object scope validity")
                     .into()
             }
@@ -2188,11 +2188,11 @@ impl Obj {
                     source_occurrence_id,
                 } = af;
                 let FnSetBody {
-                    params_def_with_set,
+                    set_bound_parameters,
                     dom_facts,
                     ret_set,
                 } = body;
-                let params_def_with_set: Vec<ParamGroupWithSet> = params_def_with_set
+                let set_bound_parameters: Vec<SetBoundParameterGroup> = set_bound_parameters
                     .into_iter()
                     .map(|pg| {
                         let params = pg
@@ -2206,7 +2206,7 @@ impl Obj {
                                 }
                             })
                             .collect();
-                        ParamGroupWithSet::new(
+                        SetBoundParameterGroup::new(
                             params,
                             Obj::replace_bound_identifier(*pg.param_type, from, to),
                         )
@@ -2219,7 +2219,7 @@ impl Obj {
                 let ret_set = Obj::replace_bound_identifier(*ret_set, from, to);
                 let equal_to = Obj::replace_bound_identifier(*equal_to, from, to);
                 AnonymousFn::new_with_source_occurrence_id(
-                    params_def_with_set,
+                    set_bound_parameters,
                     dom_facts,
                     ret_set,
                     equal_to,

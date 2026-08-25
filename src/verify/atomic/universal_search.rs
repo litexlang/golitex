@@ -743,7 +743,7 @@ impl Runtime {
     ) -> HashMap<String, Obj> {
         let mut identifiers = HashMap::new();
         for environment in self.imported_module_environments(module_name) {
-            for (name, definition) in environment.declarations.object_symbols() {
+            for (name, definition) in environment.definitions.object_symbols() {
                 insert_symbol_substitution(
                     &mut identifiers,
                     definition.binding(),
@@ -898,7 +898,7 @@ impl Runtime {
         &mut self,
         atomic_fact_in_known_forall: &AtomicFact,
         given_fact: &AtomicFact,
-        known_forall_params: &ParamDefWithType,
+        known_forall_params: &TypedParameterList,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         let mut matcher = ArgMatcher::new(
             self,
@@ -921,8 +921,8 @@ impl Runtime {
         &mut self,
         fact_args_in_known_forall: &[&Obj],
         given_fact_args: &[&Obj],
-        known_forall_params: &ParamDefWithType,
-        known_exist_params: Option<&ParamDefWithType>,
+        known_forall_params: &TypedParameterList,
+        known_exist_params: Option<&TypedParameterList>,
     ) -> Result<Option<(HashMap<String, Obj>, HashMap<String, Obj>)>, RuntimeError> {
         let mut matcher = ArgMatcher::new(
             self,
@@ -2220,9 +2220,10 @@ impl ArgMatcher<'_> {
         let Obj::FnSet(given) = given_arg else {
             return Ok(None);
         };
-        let left_param_count = ParamGroupWithSet::number_of_params(&left.body.params_def_with_set);
+        let left_param_count =
+            SetBoundParameterGroup::number_of_params(&left.body.set_bound_parameters);
         let given_param_count =
-            ParamGroupWithSet::number_of_params(&given.body.params_def_with_set);
+            SetBoundParameterGroup::number_of_params(&given.body.set_bound_parameters);
         if left_param_count != given_param_count {
             return Ok(None);
         }
@@ -2245,15 +2246,15 @@ impl ArgMatcher<'_> {
         left: &FnSet,
         given: &FnSet,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
-        if left.body.params_def_with_set.len() != given.body.params_def_with_set.len() {
+        if left.body.set_bound_parameters.len() != given.body.set_bound_parameters.len() {
             return Ok(None);
         }
         let mut merged: HashMap<String, Obj> = HashMap::new();
         for (lg, gg) in left
             .body
-            .params_def_with_set
+            .set_bound_parameters
             .iter()
-            .zip(given.body.params_def_with_set.iter())
+            .zip(given.body.set_bound_parameters.iter())
         {
             if lg.params != gg.params {
                 return Ok(None);
@@ -2308,9 +2309,10 @@ impl ArgMatcher<'_> {
             return Ok(None);
         };
 
-        let left_param_count = ParamGroupWithSet::number_of_params(&left.body.params_def_with_set);
+        let left_param_count =
+            SetBoundParameterGroup::number_of_params(&left.body.set_bound_parameters);
         let given_param_count =
-            ParamGroupWithSet::number_of_params(&given.body.params_def_with_set);
+            SetBoundParameterGroup::number_of_params(&given.body.set_bound_parameters);
         if left_param_count != given_param_count {
             return Ok(None);
         }
@@ -2330,15 +2332,15 @@ impl ArgMatcher<'_> {
         left: &AnonymousFn,
         given: &AnonymousFn,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
-        if left.body.params_def_with_set.len() != given.body.params_def_with_set.len() {
+        if left.body.set_bound_parameters.len() != given.body.set_bound_parameters.len() {
             return Ok(None);
         }
         let mut merged: HashMap<String, Obj> = HashMap::new();
         for (lg, gg) in left
             .body
-            .params_def_with_set
+            .set_bound_parameters
             .iter()
-            .zip(given.body.params_def_with_set.iter())
+            .zip(given.body.set_bound_parameters.iter())
         {
             if lg.params != gg.params {
                 return Ok(None);
@@ -2436,9 +2438,10 @@ impl Runtime {
         left: &AnonymousFn,
         right: &AnonymousFn,
     ) -> Result<bool, RuntimeError> {
-        let left_param_count = ParamGroupWithSet::number_of_params(&left.body.params_def_with_set);
+        let left_param_count =
+            SetBoundParameterGroup::number_of_params(&left.body.set_bound_parameters);
         let right_param_count =
-            ParamGroupWithSet::number_of_params(&right.body.params_def_with_set);
+            SetBoundParameterGroup::number_of_params(&right.body.set_bound_parameters);
         if left_param_count != right_param_count {
             return Ok(false);
         }
@@ -2462,7 +2465,7 @@ impl Runtime {
     ) -> Result<AnonymousFn, RuntimeError> {
         let param_bindings = anonymous_fn
             .body
-            .params_def_with_set
+            .set_bound_parameters
             .collect_param_bindings();
         if param_bindings.len() != alpha_names.len() {
             return Err(VerifyRuntimeError(RuntimeErrorStruct::new_with_just_msg(
@@ -2847,7 +2850,7 @@ impl ArgMatcher<'_> {
         }
 
         let anonymous_fn = AnonymousFn::new(
-            anonymous_fn_body.params_def_with_set.clone(),
+            anonymous_fn_body.set_bound_parameters.clone(),
             anonymous_fn_body.dom_facts.clone(),
             (*anonymous_fn_body.ret_set).clone(),
             given_arg.clone(),
@@ -2886,8 +2889,8 @@ impl ArgMatcher<'_> {
 
     fn match_fn_param_group_type_in_known_forall_with_given(
         &mut self,
-        left: &ParamGroupWithSet,
-        given: &ParamGroupWithSet,
+        left: &SetBoundParameterGroup,
+        given: &SetBoundParameterGroup,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(
             left.set_obj(),
@@ -3335,8 +3338,8 @@ impl ArgMatcher<'_> {
 }
 
 fn arg_match_bindings_for_params(
-    known_forall_params: &ParamDefWithType,
-    known_exist_params: Option<&ParamDefWithType>,
+    known_forall_params: &TypedParameterList,
+    known_exist_params: Option<&TypedParameterList>,
 ) -> Vec<SymbolId> {
     let mut bindings = known_forall_params
         .collect_param_bindings()
@@ -3356,7 +3359,7 @@ fn arg_match_bindings_for_params(
 
 fn arg_match_map_for_params(
     raw_arg_map: &HashMap<String, Obj>,
-    params: &ParamDefWithType,
+    params: &TypedParameterList,
 ) -> HashMap<String, Obj> {
     let mut result = HashMap::new();
     for binding in params.collect_param_bindings() {

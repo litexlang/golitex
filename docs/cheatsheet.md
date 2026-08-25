@@ -24,7 +24,7 @@ when stating the target directly is not enough.
 | What later code needs | Use | Remember |
 |---|---|---|
 | An arbitrary object in a nonempty set | `have x S` | Introduces `x` and `x $in S` |
-| A local abbreviation for an already well-defined object | `let name = value` | Stores `name = value`; it does not declare a carrier |
+| A local abbreviation for an already well-defined object | `let name = value` | Stores `name = value`; it does not define a carrier |
 | A name for a specific value | `have x S = value` | Checks the carrier and stores the equality |
 | A callable value | `have fn f(x S) T = body` | Use a function, not a predicate encoding its graph |
 | A concrete named property | `prop P(x S): ...` | Gives a definition that `by def` can fold |
@@ -76,7 +76,7 @@ instead of placing `forall y Y` inside the conclusion for `x`.
 |---|---|---|
 | A direct carrier, arithmetic, equality, membership, or inferred consequence | State the target directly | Do not wrap a fact Litex already knows |
 | A positive concrete predicate whose body is proved | `by def $P(args)` | Folds only the matching positive definition target |
-| Properties of a declaration-owned struct expression | `by struct def expression` | Verifies membership, then opens exactly one layer; direct `x &Struct` symbols are the only automatic case |
+| Properties of a definition-owned struct expression | `by struct def expression` | Verifies membership, then opens exactly one layer; direct `x &Struct` symbols are the only automatic case |
 | One atomic consequence of a named theorem | `by thm name(args) => fact` | Use bare `by thm` when several conclusions are needed |
 | A semantic constructor with compound requirements | Its reserved `by thm` interface | One-layer automation does not invent quantified premises |
 | An existential target | `witness ... from ...` | Match the target's witnesses and carriers exactly |
@@ -128,7 +128,7 @@ earliest phase, then try the smallest indicated change in the real caller.
 | Symptom | Next move | Keep this boundary | Runnable pair |
 |---|---|---|---|
 | The parser rejects a plausible mathematical move | Put the same move on a current proof surface such as `claim:` plus an indented `?` goal | Reaching proof verification does not prove the goal | [Phase first](Examples.md#phase-first-repair-the-surface-before-the-proof) |
-| A declaration or application is not well-defined | Establish the exact argument carrier, index bound, divisor premise, or typed construction first | Do not retain carrier echoes whose deletion still passes | [Carrier first](Examples.md#carrier-first-make-the-object-legal-before-proving-with-it) |
+| A definition or application is not well-defined | Establish the exact argument carrier, index bound, divisor premise, or typed construction first | Do not retain carrier echoes whose deletion still passes | [Carrier first](Examples.md#carrier-first-make-the-object-legal-before-proving-with-it) |
 | One compound equality or comparison is `unknown` | State the smallest changed inner value once, then continue with one outer equality or order chain | Preserve an inner representation equation when a deletion probe breaks its consumer | [Inside out](Examples.md#inside-out-rewrite-the-smallest-changed-subterm-first) |
 | The proof passes but reads like a verifier trace | Delete theorem-result echoes, witness-body repeats, and endpoint logs one class at a time | Restore only the first exact bridge whose removal fails in context | [Proof liveness](Examples.md#liveness-delete-echoes-but-keep-a-proven-live-bridge) |
 | Later code must apply data that was introduced only as a set-shaped value | Expose the exact `fn` interface, or construct the refined value before selecting it | A passing implementation is still wrong if it changes the source-facing domain | [Interface fidelity](Examples.md#interface-fidelity-make-callable-data-callable-without-changing-the-object) |
@@ -157,7 +157,7 @@ for scripts and CI, and `-strict` for a full dependency and trust audit. See
 ## Hard Boundaries
 
 - `by def` folds a definition; it is not general proof automation.
-- `by struct def e` needs an existing declaration-owned view; later membership alone cannot select one.
+- `by struct def e` needs an existing definition-owned view; later membership alone cannot select one.
 - `claim` proves a fact; it does not introduce a callable object.
 - `prop` names a property; it does not replace `have` or `have fn`.
 - An explicit theorem selection should not be followed by the identical fact

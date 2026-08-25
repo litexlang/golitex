@@ -48,7 +48,7 @@ impl Runtime {
         self.run_in_local_env(|rt| {
             let mut assumption_infers = rt
                 .define_params_with_type(
-                    &stmt.forall_fact.params_def_with_type,
+                    &stmt.forall_fact.typed_parameters,
                     false,
                     BindingScope::LocalBinder,
                 )
@@ -149,11 +149,13 @@ impl Runtime {
             );
 
             Ok(
-                SuccessStmtResult::DefThmStmt(Box::new(SuccessDefThmStmtResult {
-                    statement: stmt.clone(),
-                    common: SuccessStmtCommonResult::new(SuccessInferResult::new()),
-                    verification: Some(theorem_verification),
-                }))
+                SuccessStmtResult::Definition(SuccessDefinitionStmtResult::DefThmStmt(Box::new(
+                    SuccessDefThmStmtResult {
+                        statement: stmt.clone(),
+                        common: SuccessStmtCommonResult::new(SuccessInferResult::new()),
+                        verification: Some(theorem_verification),
+                    },
+                )))
                 .into(),
             )
         })
@@ -185,11 +187,13 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         let infer_result = self.exec_def_thm_stmt_affect_environment(stmt)?;
         Ok(
-            SuccessStmtResult::DefThmStmt(Box::new(SuccessDefThmStmtResult {
-                statement: stmt.clone(),
-                common: SuccessStmtCommonResult::new(infer_result),
-                verification: None,
-            }))
+            SuccessStmtResult::Definition(SuccessDefinitionStmtResult::DefThmStmt(Box::new(
+                SuccessDefThmStmtResult {
+                    statement: stmt.clone(),
+                    common: SuccessStmtCommonResult::new(infer_result),
+                    verification: None,
+                },
+            )))
             .into(),
         )
     }

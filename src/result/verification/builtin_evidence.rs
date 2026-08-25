@@ -409,7 +409,7 @@ pub struct RegisteredAntisymmetricPredicateBuiltinRuleEvidence {
 }
 
 /// Exact dependent-elimination certificate for membership of a checked
-/// function application in its instantiated declared return set. The sole
+/// function application in its instantiated defined return set. The sole
 /// child proves that the application head belongs to the function space frozen
 /// in `expected_head_membership`.
 #[derive(Clone)]

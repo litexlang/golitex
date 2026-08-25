@@ -18,8 +18,8 @@ fn explicit_source_axiom_preserves_its_name_and_fact_id() {
 }
 
 fn rename_object_choice_nonempty_diagnostic_label(results: &mut [StmtResult]) {
-    let Some(StmtResult::Success(SuccessStmtResult::DefObjStmt(
-        SuccessDefObjStmtResult::HaveObjInNonemptySetStmt(choice),
+    let Some(StmtResult::Success(SuccessStmtResult::Definition(
+        SuccessDefinitionStmtResult::HaveObjInNonemptySetStmt(choice),
     ))) = results.first_mut()
     else {
         panic!("expected object-choice statement result")
@@ -165,8 +165,8 @@ fn existential_elimination_uses_source_and_projection_fact_ids_directly() {
         .expect("execute existential introduction and elimination");
     let [StmtResult::Success(SuccessStmtResult::Witness(
         SuccessWitnessStmtResult::WitnessExistFact(witness),
-    )), StmtResult::Success(SuccessStmtResult::DefObjStmt(
-        SuccessDefObjStmtResult::ObtainObjFromExistFact(elimination),
+    )), StmtResult::Success(SuccessStmtResult::Definition(
+        SuccessDefinitionStmtResult::ObtainObjFromExistFact(elimination),
     ))] = results.as_slice()
     else {
         panic!("expected witness followed by existential elimination")
@@ -212,8 +212,8 @@ fn existential_elimination_rejects_a_projection_without_fact_id() {
             "direct_existential_elimination.lit",
         )
         .expect("execute existential introduction and elimination");
-    let StmtResult::Success(SuccessStmtResult::DefObjStmt(
-        SuccessDefObjStmtResult::ObtainObjFromExistFact(elimination),
+    let StmtResult::Success(SuccessStmtResult::Definition(
+        SuccessDefinitionStmtResult::ObtainObjFromExistFact(elimination),
     )) = &mut results[1]
     else {
         panic!("expected existential elimination")
@@ -237,8 +237,8 @@ fn execute_predicate_backed_existential_elimination() -> Vec<StmtResult> {
 #[test]
 fn predicate_backed_existential_elimination_compiles_definition_projection_directly() {
     let results = execute_predicate_backed_existential_elimination();
-    let [definition, witness, by_definition, StmtResult::Success(SuccessStmtResult::DefObjStmt(
-        SuccessDefObjStmtResult::ObtainObjFromAtomicFact(elimination),
+    let [definition, witness, by_definition, StmtResult::Success(SuccessStmtResult::Definition(
+        SuccessDefinitionStmtResult::ObtainObjFromAtomicFact(elimination),
     ))] = results.as_slice()
     else {
         panic!("expected predicate definition, witness, by-definition, and obtain")
@@ -549,7 +549,10 @@ fn execute_zero_binder_named_theorem() -> Vec<StmtResult> {
 }
 
 pub(super) fn named_theorem_result_mut(results: &mut [StmtResult]) -> &mut SuccessDefThmStmtResult {
-    let [StmtResult::Success(SuccessStmtResult::DefThmStmt(result))] = results else {
+    let [StmtResult::Success(SuccessStmtResult::Definition(
+        SuccessDefinitionStmtResult::DefThmStmt(result),
+    ))] = results
+    else {
         panic!("expected one successful named-theorem result")
     };
     result
@@ -725,8 +728,10 @@ fn theorem_backed_obtain_consumes_but_does_not_publish_its_local_conclusion() {
             "direct_theorem_backed_obtain.lit",
         )
         .expect("execute theorem-backed obtain");
-    let [StmtResult::Success(SuccessStmtResult::DefThmStmt(theorem)), StmtResult::Success(SuccessStmtResult::DefObjStmt(
-        SuccessDefObjStmtResult::ObtainObjFromThm(obtain),
+    let [StmtResult::Success(SuccessStmtResult::Definition(
+        SuccessDefinitionStmtResult::DefThmStmt(theorem),
+    )), StmtResult::Success(SuccessStmtResult::Definition(
+        SuccessDefinitionStmtResult::ObtainObjFromThm(obtain),
     ))] = results.as_slice()
     else {
         panic!("expected theorem followed by theorem-backed obtain")

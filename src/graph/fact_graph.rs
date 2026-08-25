@@ -192,8 +192,12 @@ impl FactGraphBuilder {
 
         let source_stmt = success.statement();
         match &source_stmt {
-            Stmt::DefThmStmt(stmt) => self.add_theorem_nodes(stmt, &source_stmt),
-            Stmt::AxiomStmt(stmt) => self.add_axiom_nodes(stmt, &source_stmt),
+            Stmt::Definition(DefinitionStmt::DefThmStmt(stmt)) => {
+                self.add_theorem_nodes(stmt, &source_stmt)
+            }
+            Stmt::Definition(DefinitionStmt::AxiomStmt(stmt)) => {
+                self.add_axiom_nodes(stmt, &source_stmt)
+            }
             Stmt::ProofBlock(ProofBlockStmt::ClaimStmt(stmt)) => {
                 self.add_claim_nodes(stmt, &source_stmt)
             }
@@ -210,7 +214,9 @@ impl FactGraphBuilder {
             }
             _ => {}
         }
-        if let SuccessStmtResult::DefThmStmt(result) = success {
+        if let SuccessStmtResult::Definition(SuccessDefinitionStmtResult::DefThmStmt(result)) =
+            success
+        {
             if let Some(verification) = result.verification.as_ref() {
                 self.add_assumption_nodes(&verification.proof_scope.assumption_infers);
             }
@@ -298,7 +304,7 @@ impl FactGraphBuilder {
 
     fn add_assumption_nodes(&mut self, infers: &SuccessInferResult) {
         for output in infers.store_fact_outputs() {
-            if output.itself_and_why_itself_is_stored.1 == ParamDefWithType::store_reason() {
+            if output.itself_and_why_itself_is_stored.1 == TypedParameterList::store_reason() {
                 continue;
             }
             self.add_fact_node(
@@ -389,7 +395,7 @@ impl FactGraphBuilder {
                 let node_id = fact_node_id(fact);
                 self.node_index.contains_key(&node_id).then_some(node_id)
             }
-            Stmt::DefThmStmt(def_thm) => {
+            Stmt::Definition(DefinitionStmt::DefThmStmt(def_thm)) => {
                 let name = &def_thm.name;
                 let node_id = theorem_id(name);
                 self.ensure_node(
@@ -403,7 +409,7 @@ impl FactGraphBuilder {
                 );
                 Some(node_id)
             }
-            Stmt::AxiomStmt(axiom) => {
+            Stmt::Definition(DefinitionStmt::AxiomStmt(axiom)) => {
                 let name = &axiom.name;
                 let node_id = theorem_id(name);
                 self.ensure_node(
@@ -497,7 +503,7 @@ impl FactGraphBuilder {
             return;
         };
         match &source_stmt {
-            Stmt::DefThmStmt(stmt) => {
+            Stmt::Definition(DefinitionStmt::DefThmStmt(stmt)) => {
                 self.add_edge(&last_fact_id, &theorem_id(&stmt.name), "proves");
             }
             Stmt::ProofBlock(ProofBlockStmt::ClaimStmt(stmt)) => {
@@ -563,7 +569,7 @@ impl FactGraphBuilder {
     }
 
     fn add_cited_stmt_edges(&mut self, target_id: &str, cited_stmt: &Stmt) {
-        if let Stmt::DefPredicateStmt(DefPredicateStmt::DefPropStmt(definition)) = cited_stmt {
+        if let Stmt::Definition(DefinitionStmt::DefPropStmt(definition)) = cited_stmt {
             self.add_definition_unfolding_edges(target_id, &definition.iff_facts);
             return;
         }
@@ -642,8 +648,8 @@ impl FactGraphBuilder {
             return vec![];
         };
         match &success.statement() {
-            Stmt::DefThmStmt(stmt) => vec![theorem_id(&stmt.name)],
-            Stmt::AxiomStmt(stmt) => vec![theorem_id(&stmt.name)],
+            Stmt::Definition(DefinitionStmt::DefThmStmt(stmt)) => vec![theorem_id(&stmt.name)],
+            Stmt::Definition(DefinitionStmt::AxiomStmt(stmt)) => vec![theorem_id(&stmt.name)],
             Stmt::ProofBlock(ProofBlockStmt::ClaimStmt(stmt)) => {
                 vec![claim_id(&stmt.line_file)]
             }
@@ -766,8 +772,8 @@ impl FactGraphBuilder {
         }
         let success = result.non_factual_success()?;
         match &success.statement() {
-            Stmt::DefThmStmt(stmt) => Some(theorem_id(&stmt.name)),
-            Stmt::AxiomStmt(stmt) => Some(theorem_id(&stmt.name)),
+            Stmt::Definition(DefinitionStmt::DefThmStmt(stmt)) => Some(theorem_id(&stmt.name)),
+            Stmt::Definition(DefinitionStmt::AxiomStmt(stmt)) => Some(theorem_id(&stmt.name)),
             Stmt::ProofBlock(ProofBlockStmt::ClaimStmt(stmt)) => Some(claim_id(&stmt.line_file)),
             Stmt::By(ByStmt::ByDefStmt(stmt)) => {
                 let fact: Fact = stmt.fact.clone().into();

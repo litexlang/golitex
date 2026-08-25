@@ -494,7 +494,7 @@ impl Runtime {
         };
         let finite_fiber: AtomicFact = IsFiniteSetFact::new(fiber, line_file.clone()).into();
         Ok(Some(ForallFact::new_canonical_forall(
-            ParamDefWithType::new(vec![param_group]),
+            TypedParameterList::new(vec![param_group]),
             Vec::new(),
             vec![finite_fiber.into()],
             line_file.clone(),
@@ -521,7 +521,7 @@ impl Runtime {
             IsNonemptySetFact::new(fiber, line_file.clone()).into()
         };
         Ok(Some(ExistFactEnum::ExistFact(ExistentialSpec::new(
-            ParamDefWithType::new(vec![param_group]),
+            TypedParameterList::new(vec![param_group]),
             vec![predicate.into()],
             line_file.clone(),
         )?)))
@@ -572,7 +572,7 @@ impl Runtime {
             }
         };
         let forall_fact = ForallFact::new_canonical_forall(
-            ParamDefWithType::new(vec![param_group]),
+            TypedParameterList::new(vec![param_group]),
             vec![],
             vec![pointwise.into()],
             line_file.clone(),
@@ -608,7 +608,7 @@ impl Runtime {
             }
         };
         Ok(Some(ForallFact::new_canonical_forall(
-            ParamDefWithType::new(vec![param_group]),
+            TypedParameterList::new(vec![param_group]),
             vec![],
             vec![pointwise.into()],
             line_file.clone(),
@@ -643,12 +643,12 @@ impl Runtime {
             _ => return false,
         };
         if !anonymous.body.dom_facts.is_empty()
-            || anonymous.body.params_def_with_set.number_of_params() != 1
-            || anonymous.body.params_def_with_set.len() != 1
+            || anonymous.body.set_bound_parameters.number_of_params() != 1
+            || anonymous.body.set_bound_parameters.len() != 1
         {
             return false;
         }
-        let param_group = &anonymous.body.params_def_with_set.as_slice()[0];
+        let param_group = &anonymous.body.set_bound_parameters.as_slice()[0];
         if !objs_match_for_pattern(param_group.set_obj(), expected_domain)
             || !objs_match_for_pattern(anonymous.body.ret_set.as_ref(), expected_return_set)
         {
@@ -1056,13 +1056,13 @@ impl Runtime {
         let Some(body) = self.get_fn_range_function_body(whole.function.as_ref()) else {
             return false;
         };
-        if body.params_def_with_set.number_of_params() != 1
-            || body.params_def_with_set.len() != 1
+        if body.set_bound_parameters.number_of_params() != 1
+            || body.set_bound_parameters.len() != 1
             || !objs_match_for_pattern(body.ret_set.as_ref(), &first_ret)
         {
             return false;
         }
-        let Obj::Union(whole_domain) = body.params_def_with_set.as_slice()[0].set_obj() else {
+        let Obj::Union(whole_domain) = body.set_bound_parameters.as_slice()[0].set_obj() else {
             return false;
         };
         (objs_match_for_pattern(whole_domain.left.as_ref(), &first_domain)
@@ -1081,8 +1081,8 @@ impl Runtime {
             _ => return None,
         };
         if !anonymous.body.dom_facts.is_empty()
-            || anonymous.body.params_def_with_set.number_of_params() != 1
-            || anonymous.body.params_def_with_set.len() != 1
+            || anonymous.body.set_bound_parameters.number_of_params() != 1
+            || anonymous.body.set_bound_parameters.len() != 1
         {
             return None;
         }
@@ -1091,7 +1091,7 @@ impl Runtime {
         let original = Self::family_from_application_at(anonymous.equal_to.as_ref(), &param)?;
         Some((
             original,
-            anonymous.body.params_def_with_set.as_slice()[0]
+            anonymous.body.set_bound_parameters.as_slice()[0]
                 .set_obj()
                 .clone(),
             anonymous.body.ret_set.as_ref().clone(),

@@ -138,7 +138,7 @@ theorem, or an explicit assumption.
 
 ### Domains carried by mathematical objects
 
-Litex can place a condition directly in an object's declared domain and then
+Litex can place a condition directly in an object's definition domain and then
 use that condition when the object is passed to a function:
 
 ```litex
@@ -448,7 +448,7 @@ example {α : Type} {A B : Set α}
 ```
 
 Litex's surface begins with sets, objects, membership, and functions between
-declared domains. Lean's surface begins with typed terms, so the examples say
+definition domains. Lean's surface begins with typed terms, so the examples say
 `Set ℕ`, `Set (Set ℕ)`, and a general ambient type `α`. Lean's representation
 is more general and deeply integrated with dependent type theory; Litex's is
 intended to put the set-theoretic reading first.
@@ -592,7 +592,7 @@ is about the shape of the remaining proof text.
 Lean propositions and proofs inhabit its type-theoretic term language. Lean
 can quantify over `P : Prop`, pass theorem proofs as arguments, and recursively
 compose propositions. Litex deliberately separates mathematical objects from
-facts: a `prop` declaration defines a fact interface, and a call to that
+facts: a `prop` definition creates a fact interface, and a call to that
 predicate is a fact rather than an ordinary object.
 
 For example, Lean can directly place a universal proposition inside a
@@ -626,8 +626,8 @@ by def $all_reals_reflexive()
 $all_reals_reflexive() or 1 = 1 and 2 = 2
 ```
 
-The `prop` declaration makes `$all_reals_reflexive()` definitionally
-equivalent to its body; declaration alone does not assert the call. The `by
+The `prop` definition makes `$all_reals_reflexive()` definitionally
+equivalent to its body; the definition alone does not assert the call. The `by
 def` line verifies the body and stores the atomic fact. If a compound subclaim
 has free mathematical objects, those objects should be parameters of the
 named predicate.

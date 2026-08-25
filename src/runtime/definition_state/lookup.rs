@@ -15,8 +15,8 @@ impl Runtime {
                 .into_iter()
                 .find_map(|environment| {
                     environment
-                        .declarations
-                        .defined_settings
+                        .definitions
+                        .setting_definitions
                         .get(local_name)
                         .cloned()
                 });
@@ -31,7 +31,11 @@ impl Runtime {
         setting_name: &str,
     ) -> Option<&DefSettingStmt> {
         for environment in self.iter_environments_from_top() {
-            if let Some(definition) = environment.declarations.defined_settings.get(setting_name) {
+            if let Some(definition) = environment
+                .definitions
+                .setting_definitions
+                .get(setting_name)
+            {
                 return Some(definition);
             }
         }
@@ -80,8 +84,8 @@ impl Runtime {
             match get_prop_definition_by_name_in_env(environment, predicate_name.to_string()) {
                 Some(definition) => return Some(definition),
                 None if environment
-                    .declarations
-                    .defined_abstract_props
+                    .definitions
+                    .abstract_predicate_definitions
                     .contains_key(predicate_name) =>
                 {
                     return None
@@ -125,8 +129,8 @@ impl Runtime {
             ) {
                 Some(definition) => return Some(definition),
                 None if environment
-                    .declarations
-                    .defined_def_props
+                    .definitions
+                    .predicate_definitions
                     .contains_key(predicate_name) =>
                 {
                     return None
@@ -150,8 +154,8 @@ impl Runtime {
                 .into_iter()
                 .find_map(|environment| {
                     environment
-                        .declarations
-                        .defined_algorithms
+                        .definitions
+                        .algorithm_definitions
                         .get(local_name)
                         .cloned()
                 });
@@ -163,7 +167,7 @@ impl Runtime {
 
     fn get_algo_definition_by_name_in_current_envs(&self, algo_name: &str) -> Option<&DefAlgoStmt> {
         for environment in self.iter_environments_from_top() {
-            if let Some(definition) = environment.declarations.defined_algorithms.get(algo_name) {
+            if let Some(definition) = environment.definitions.algorithm_definitions.get(algo_name) {
                 return Some(definition);
             }
         }
@@ -182,8 +186,8 @@ impl Runtime {
                 .into_iter()
                 .find_map(|environment| {
                     environment
-                        .declarations
-                        .defined_structs
+                        .definitions
+                        .structure_definitions
                         .get(local_name)
                         .cloned()
                 });
@@ -198,7 +202,11 @@ impl Runtime {
         struct_name: &str,
     ) -> Option<&DefStructStmt> {
         for environment in self.iter_environments_from_top() {
-            if let Some(definition) = environment.declarations.defined_structs.get(struct_name) {
+            if let Some(definition) = environment
+                .definitions
+                .structure_definitions
+                .get(struct_name)
+            {
                 return Some(definition);
             }
         }
@@ -218,8 +226,8 @@ impl Runtime {
                 .into_iter()
                 .find_map(|environment| {
                     environment
-                        .declarations
-                        .defined_templates
+                        .definitions
+                        .template_definitions
                         .get(local_name)
                         .cloned()
                 });
@@ -235,8 +243,8 @@ impl Runtime {
     ) -> Option<&DefTemplateStmt> {
         for environment in self.iter_environments_from_top() {
             if let Some(definition) = environment
-                .declarations
-                .defined_templates
+                .definitions
+                .template_definitions
                 .get(template_name)
             {
                 return Some(definition);
@@ -258,8 +266,8 @@ impl Runtime {
                 .into_iter()
                 .find_map(|environment| {
                     environment
-                        .declarations
-                        .defined_thm_stmts
+                        .definitions
+                        .theorem_definitions
                         .get(local_name)
                         .cloned()
                 });
@@ -271,7 +279,7 @@ impl Runtime {
 
     fn get_thm_definition_by_name_in_current_envs(&self, thm_name: &str) -> Option<&DefThmStmt> {
         for environment in self.iter_environments_from_top() {
-            if let Some(definition) = environment.declarations.defined_thm_stmts.get(thm_name) {
+            if let Some(definition) = environment.definitions.theorem_definitions.get(thm_name) {
                 return Some(definition);
             }
         }
@@ -291,8 +299,8 @@ impl Runtime {
                 .into_iter()
                 .find_map(|environment| {
                     environment
-                        .declarations
-                        .defined_axiom_stmts
+                        .definitions
+                        .axiom_definitions
                         .get(local_name)
                         .cloned()
                 });
@@ -304,7 +312,7 @@ impl Runtime {
 
     fn get_axiom_definition_by_name_in_current_envs(&self, axiom_name: &str) -> Option<&AxiomStmt> {
         for environment in self.iter_environments_from_top() {
-            if let Some(definition) = environment.declarations.defined_axiom_stmts.get(axiom_name) {
+            if let Some(definition) = environment.definitions.axiom_definitions.get(axiom_name) {
                 return Some(definition);
             }
         }
@@ -332,8 +340,8 @@ impl Runtime {
                 .into_iter()
                 .find_map(|environment| {
                     environment
-                        .declarations
-                        .defined_strategy_stmts
+                        .definitions
+                        .strategy_definitions
                         .get(local_name)
                         .cloned()
                 });
@@ -349,8 +357,8 @@ impl Runtime {
     ) -> Option<&DefStrategyStmt> {
         for environment in self.iter_environments_from_top() {
             if let Some(definition) = environment
-                .declarations
-                .defined_strategy_stmts
+                .definitions
+                .strategy_definitions
                 .get(strategy_name)
             {
                 return Some(definition);
@@ -371,15 +379,15 @@ fn get_prop_definition_by_name_in_env(
     predicate_name: String,
 ) -> Option<&DefPropStmt> {
     if let Some(definition) = environment
-        .declarations
-        .defined_def_props
+        .definitions
+        .predicate_definitions
         .get(predicate_name.as_str())
     {
         return Some(definition);
     }
     if environment
-        .declarations
-        .defined_abstract_props
+        .definitions
+        .abstract_predicate_definitions
         .contains_key(predicate_name.as_str())
     {
         return None;
@@ -392,15 +400,15 @@ fn get_abstract_prop_definition_by_name_in_env(
     predicate_name: String,
 ) -> Option<&DefAbstractPropStmt> {
     if let Some(definition) = environment
-        .declarations
-        .defined_abstract_props
+        .definitions
+        .abstract_predicate_definitions
         .get(predicate_name.as_str())
     {
         return Some(definition);
     }
     if environment
-        .declarations
-        .defined_def_props
+        .definitions
+        .predicate_definitions
         .contains_key(predicate_name.as_str())
     {
         return None;
@@ -414,15 +422,15 @@ fn get_prop_definition_from_environments(
 ) -> Option<DefPropStmt> {
     for environment in environments {
         if let Some(definition) = environment
-            .declarations
-            .defined_def_props
+            .definitions
+            .predicate_definitions
             .get(predicate_name)
         {
             return Some(definition.clone());
         }
         if environment
-            .declarations
-            .defined_abstract_props
+            .definitions
+            .abstract_predicate_definitions
             .contains_key(predicate_name)
         {
             return None;
@@ -438,15 +446,15 @@ fn get_abstract_prop_definition_from_environments(
 ) -> Option<DefAbstractPropStmt> {
     for environment in environments {
         if let Some(definition) = environment
-            .declarations
-            .defined_abstract_props
+            .definitions
+            .abstract_predicate_definitions
             .get(predicate_name)
         {
             return Some(definition.clone());
         }
         if environment
-            .declarations
-            .defined_def_props
+            .definitions
+            .predicate_definitions
             .contains_key(predicate_name)
         {
             return None;

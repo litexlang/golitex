@@ -336,7 +336,7 @@ impl SymbolRole {
         }
     }
 
-    pub fn is_public_declaration(self) -> bool {
+    pub fn is_public_definition(self) -> bool {
         !matches!(self, SymbolRole::StructureField | SymbolRole::Binder)
     }
 
@@ -352,25 +352,25 @@ impl SymbolRole {
 pub struct SymbolDefinition {
     binding: SymbolBinding,
     role: SymbolRole,
-    declaration_type_views: SymbolDeclarationTypeViews,
+    definition_type_views: SymbolDefinitionTypeViews,
 }
 
-/// Type information that belongs to the declaration of one exact symbol.
+/// Type information that belongs to the definition of one exact symbol.
 ///
 /// Parsing scopes keep a temporary copy while a statement has not executed
 /// yet. Once the symbol is stored, these views travel with its definition so
-/// exported files and imported modules can resolve declaration-owned field and
+/// exported files and imported modules can resolve definition-owned field and
 /// tuple access by `SymbolId`, without reconstructing a type from later facts.
 #[derive(Clone, Default)]
-struct SymbolDeclarationTypeViews {
+struct SymbolDefinitionTypeViews {
     default_struct_view: Option<StructObj>,
     default_tuple_view: Option<Cart>,
 }
 
-impl fmt::Debug for SymbolDeclarationTypeViews {
+impl fmt::Debug for SymbolDefinitionTypeViews {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         formatter
-            .debug_struct("SymbolDeclarationTypeViews")
+            .debug_struct("SymbolDefinitionTypeViews")
             .field(
                 "default_struct_view",
                 &self.default_struct_view.as_ref().map(ToString::to_string),
@@ -388,7 +388,7 @@ impl SymbolDefinition {
         SymbolDefinition {
             binding,
             role,
-            declaration_type_views: SymbolDeclarationTypeViews::default(),
+            definition_type_views: SymbolDefinitionTypeViews::default(),
         }
     }
 
@@ -401,26 +401,26 @@ impl SymbolDefinition {
     }
 
     pub fn default_struct_view(&self) -> Option<&StructObj> {
-        self.declaration_type_views.default_struct_view.as_ref()
+        self.definition_type_views.default_struct_view.as_ref()
     }
 
     pub fn default_tuple_view(&self) -> Option<&Cart> {
-        self.declaration_type_views.default_tuple_view.as_ref()
+        self.definition_type_views.default_tuple_view.as_ref()
     }
 
     pub fn remember_default_struct_view_if_absent(&mut self, struct_obj: StructObj) {
-        self.declaration_type_views
+        self.definition_type_views
             .default_struct_view
             .get_or_insert(struct_obj);
     }
 
     pub fn remember_default_tuple_view_if_absent(&mut self, cart: Cart) {
-        self.declaration_type_views
+        self.definition_type_views
             .default_tuple_view
             .get_or_insert(cart);
     }
 
-    pub fn merge_missing_declaration_type_views_from(&mut self, other: &SymbolDefinition) {
+    pub fn merge_missing_definition_type_views_from(&mut self, other: &SymbolDefinition) {
         if let Some(struct_obj) = other.default_struct_view() {
             self.remember_default_struct_view_if_absent(struct_obj.clone());
         }

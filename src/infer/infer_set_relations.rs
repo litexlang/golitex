@@ -54,7 +54,7 @@ impl Runtime {
         .into();
         let binder_symbol_id = parameter_definition.params[0].id();
         let inferred_forall_fact: Fact = ForallFact::new_canonical_forall(
-            ParamDefWithType::new(vec![parameter_definition]),
+            TypedParameterList::new(vec![parameter_definition]),
             vec![],
             vec![in_fact_for_forall_then],
             subset_fact.line_file.clone(),
@@ -110,7 +110,7 @@ impl Runtime {
         .into();
         let binder_symbol_id = parameter_definition.params[0].id();
         let inferred_forall_fact: Fact = ForallFact::new_canonical_forall(
-            ParamDefWithType::new(vec![parameter_definition]),
+            TypedParameterList::new(vec![parameter_definition]),
             vec![],
             vec![in_fact_for_forall_then],
             superset_fact.line_file.clone(),

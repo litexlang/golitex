@@ -288,9 +288,9 @@ pub enum StmtResult {
 pub enum SuccessStmtResult {
     Fact(Box<SuccessFactStmtResult>),
     UnsafeStmt(SuccessUnsafeStmtResult),
-    DefObjStmt(SuccessDefObjStmtResult),
-    DefPredicateStmt(SuccessDefPredicateStmtResult),
-    DefInterfaceStmt(SuccessDefInterfaceStmtResult),
+    DefinitionStmt(SuccessDefinitionStmtResult),
+    DefinitionStmt(SuccessDefinitionStmtResult),
+    DefinitionStmt(SuccessDefinitionStmtResult),
     DefAlgoStmt(Box<SuccessDefAlgoStmtResult>),
     DefThmStmt(Box<SuccessDefThmStmtResult>),
     AxiomStmt(Box<SuccessAxiomStmtResult>),

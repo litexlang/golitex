@@ -19,7 +19,7 @@ pub(super) fn user_defined_prop_arity(rt: &Runtime, prop_name: &str) -> Option<u
         return Some(definition.params.len());
     }
     if let Some(definition) = rt.get_prop_definition_by_name(prop_name) {
-        return Some(definition.params_def_with_type.collect_param_names().len());
+        return Some(definition.typed_parameters.collect_param_names().len());
     }
     None
 }

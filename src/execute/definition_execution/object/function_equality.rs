@@ -11,7 +11,7 @@ impl Runtime {
         let infer_result =
             self.exec_have_fn_equal_stmt_affect_environment(have_fn_equal_stmt, &fn_set_stored)?;
 
-        let function_identifier_obj = self.declared_identifier_obj(have_fn_equal_stmt.name());
+        let function_identifier_obj = self.definition_identifier_obj(have_fn_equal_stmt.name());
         let function_membership: Fact = InFact::new(
             function_identifier_obj.clone(),
             fn_set_stored.clone().into(),
@@ -25,7 +25,7 @@ impl Runtime {
         )
         .into();
         Ok(
-            SuccessDefObjStmtResult::HaveFnEqualStmt(Box::new(SuccessHaveFnEqualStmtResult {
+            SuccessDefinitionStmtResult::HaveFnEqualStmt(Box::new(SuccessHaveFnEqualStmtResult {
                 statement: have_fn_equal_stmt.clone(),
                 common: SuccessStmtCommonResult::new(infer_result),
                 verification: Some(SuccessVerifyFunctionDefinitionResult::new(
@@ -46,10 +46,10 @@ impl Runtime {
     ) -> Result<SuccessInferResult, RuntimeError> {
         self.store_parameter_binding(
             &have_fn_equal_stmt.symbol_binding,
-            BindingScope::DeclaredObject,
+            BindingScope::DefinitionBinding,
         )?;
 
-        let function_identifier_obj = self.declared_identifier_obj(have_fn_equal_stmt.name());
+        let function_identifier_obj = self.definition_identifier_obj(have_fn_equal_stmt.name());
         let function_set_obj = fn_set_stored.clone().into();
         let function_in_function_set_fact: Fact = InFact::new(
             function_identifier_obj.clone(),
@@ -124,7 +124,7 @@ impl Runtime {
         let infer_result =
             self.exec_have_fn_equal_stmt_affect_environment(have_fn_equal_stmt, &fn_set_stored)?;
         Ok(
-            SuccessDefObjStmtResult::HaveFnEqualStmt(Box::new(SuccessHaveFnEqualStmtResult {
+            SuccessDefinitionStmtResult::HaveFnEqualStmt(Box::new(SuccessHaveFnEqualStmtResult {
                 statement: have_fn_equal_stmt.clone(),
                 common: SuccessStmtCommonResult::new(infer_result),
                 verification: None,
@@ -167,7 +167,7 @@ impl Runtime {
 
     /// Mathematical contract implementation: in an isolated scope, validate
     /// both the anonymous function (including `body in return_set`) and the
-    /// function carrier that will be stored for its declared name.
+    /// function carrier that will be stored for its defined name.
     fn have_fn_equal_stmt_verify_well_defined_body(
         &mut self,
         have_fn_equal_stmt: &HaveFnEqualStmt,
@@ -240,7 +240,7 @@ impl Runtime {
             for param_def_with_set in have_fn_equal_stmt
                 .equal_to_anonymous_fn
                 .body
-                .params_def_with_set
+                .set_bound_parameters
                 .iter()
             {
                 let param_infers = rt.define_params_with_set(param_def_with_set)?;
@@ -260,7 +260,7 @@ impl Runtime {
                     .relabel_all_added_facts_with_store_reason(ForallFact::premise_store_reason());
                 assumption_infers.new_infer_result_inside(dom_infers);
             }
-            let mut return_check = rt.verify_value_in_declared_return_set(
+            let mut return_check = rt.verify_value_in_definition_return_set(
                 (*have_fn_equal_stmt.equal_to_anonymous_fn.equal_to).clone(),
                 (*have_fn_equal_stmt.equal_to_anonymous_fn.body.ret_set).clone(),
                 have_fn_equal_stmt.line_file.clone(),

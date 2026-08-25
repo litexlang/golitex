@@ -10,25 +10,27 @@ impl Runtime {
         let infer_result =
             self.exec_have_obj_in_nonempty_set_or_param_type_stmt_affect_environment(stmt)?;
         let choice_verification = self.object_choice_verification_result(stmt, checks)?;
-        Ok(SuccessDefObjStmtResult::HaveObjInNonemptySetStmt(Box::new(
-            SuccessHaveObjInNonemptySetStmtResult {
-                statement: stmt.clone(),
-                common: SuccessStmtCommonResult::new(infer_result),
-                verification: Some(choice_verification),
-            },
-        ))
-        .into())
+        Ok(
+            SuccessDefinitionStmtResult::HaveObjInNonemptySetStmt(Box::new(
+                SuccessHaveObjInNonemptySetStmtResult {
+                    statement: stmt.clone(),
+                    common: SuccessStmtCommonResult::new(infer_result),
+                    verification: Some(choice_verification),
+                },
+            ))
+            .into(),
+        )
     }
 
-    /// Mathematical contract: an object introduction is meaningful when each
-    /// declared parameter type is meaningful in dependency order; nonemptiness
+    /// Mathematical contract: an object definition is meaningful when each
+    /// defined parameter type is meaningful in dependency order; nonemptiness
     /// of object carriers is proved in the following verification phase.
     fn exec_have_obj_in_nonempty_set_or_param_type_stmt_verify_well_definedness(
         &mut self,
         stmt: &HaveObjInNonemptySetOrParamTypeStmt,
     ) -> Result<(), RuntimeError> {
         self.run_in_local_env(|rt| {
-            rt.define_params_with_type(&stmt.param_def, false, BindingScope::DeclaredObject)
+            rt.define_params_with_type(&stmt.param_def, false, BindingScope::DefinitionBinding)
                 .map_err(|define_params_error| {
                     exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), define_params_error)
                 })?;
@@ -41,11 +43,11 @@ impl Runtime {
         stmt: &HaveObjInNonemptySetOrParamTypeStmt,
     ) -> Result<Vec<StmtResult>, RuntimeError> {
         self.run_in_local_env(|rt| {
-            rt.define_params_with_type(&stmt.param_def, false, BindingScope::DeclaredObject)
+            rt.define_params_with_type(&stmt.param_def, false, BindingScope::DefinitionBinding)
                 .map_err(|define_params_error| {
                     exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), define_params_error)
                 })?;
-            rt.object_introduction_nonempty_checks_for_param_def(&stmt.param_def)
+            rt.object_definition_nonempty_checks_for_param_def(&stmt.param_def)
                 .map_err(|check_error| {
                     exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), check_error)
                 })
@@ -57,9 +59,9 @@ impl Runtime {
         stmt: &HaveObjInNonemptySetOrParamTypeStmt,
     ) -> Result<SuccessInferResult, RuntimeError> {
         let mut infer_result = if self.current_execution_is_trusted_file() {
-            self.define_params_with_type_trusted(&stmt.param_def, BindingScope::DeclaredObject)
+            self.define_params_with_type_trusted(&stmt.param_def, BindingScope::DefinitionBinding)
         } else {
-            self.define_params_with_type(&stmt.param_def, false, BindingScope::DeclaredObject)
+            self.define_params_with_type(&stmt.param_def, false, BindingScope::DefinitionBinding)
         }
         .map_err(|define_params_error| {
             exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), define_params_error)
@@ -76,14 +78,16 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         let infer_result =
             self.exec_have_obj_in_nonempty_set_or_param_type_stmt_affect_environment(stmt)?;
-        Ok(SuccessDefObjStmtResult::HaveObjInNonemptySetStmt(Box::new(
-            SuccessHaveObjInNonemptySetStmtResult {
-                statement: stmt.clone(),
-                common: SuccessStmtCommonResult::new(infer_result),
-                verification: None,
-            },
-        ))
-        .into())
+        Ok(
+            SuccessDefinitionStmtResult::HaveObjInNonemptySetStmt(Box::new(
+                SuccessHaveObjInNonemptySetStmtResult {
+                    statement: stmt.clone(),
+                    common: SuccessStmtCommonResult::new(infer_result),
+                    verification: None,
+                },
+            ))
+            .into(),
+        )
     }
 
     fn object_choice_verification_result(
@@ -91,10 +95,10 @@ impl Runtime {
         stmt: &HaveObjInNonemptySetOrParamTypeStmt,
         checks: Vec<StmtResult>,
     ) -> Result<SuccessVerifyObjectChoiceResult, RuntimeError> {
-        let items = self.object_introduction_items_for_defined_params(
+        let items = self.object_definition_items_for_defined_params(
             &stmt.param_def,
             stmt.line_file.clone(),
-            BindingScope::DeclaredObject,
+            BindingScope::DefinitionBinding,
         );
         let mut selected_type_facts = Vec::with_capacity(items.len());
         for item in items {
@@ -136,7 +140,7 @@ impl Runtime {
                 group_type_facts.push(
                     selected_type_facts
                         .next()
-                        .expect("object choice facts must match declared parameters"),
+                        .expect("object choice facts must match defined parameters"),
                 );
             }
             groups.push(SuccessVerifyObjectChoiceGroupResult {

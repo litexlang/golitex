@@ -27,7 +27,7 @@ fn forall_alpha_rename_avoids_every_existing_bound_name() {
     )
     .into();
     let fact = ForallFact::new_canonical_forall(
-        ParamDefWithType::new(vec![n_group.clone()]),
+        TypedParameterList::new(vec![n_group.clone()]),
         vec![],
         vec![body.into()],
         default_line_file(),
@@ -43,7 +43,7 @@ fn forall_alpha_rename_avoids_every_existing_bound_name() {
     let instantiated = runtime
         .inst_forall_fact(&fact, &map, SubstitutionMode::Exact, None)
         .unwrap();
-    let fresh_name = instantiated.params_def_with_type.groups[0].params[0].name();
+    let fresh_name = instantiated.typed_parameters.groups[0].params[0].name();
     assert_ne!(fresh_name, "n");
     assert_ne!(fresh_name, "x1");
     let ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(equality)) =
@@ -88,7 +88,7 @@ fn exist_alpha_rename_avoids_every_existing_bound_name() {
     .into();
     let fact = ExistFactEnum::ExistFact(
         ExistentialSpec::new(
-            ParamDefWithType::new(vec![n_group.clone()]),
+            TypedParameterList::new(vec![n_group.clone()]),
             vec![body.into()],
             default_line_file(),
         )
@@ -104,7 +104,7 @@ fn exist_alpha_rename_avoids_every_existing_bound_name() {
     let instantiated = runtime
         .inst_exist_fact(&fact, &map, SubstitutionMode::Exact, None)
         .unwrap();
-    let fresh_name = instantiated.params_def_with_type().groups[0].params[0].name();
+    let fresh_name = instantiated.typed_parameters().groups[0].params[0].name();
     assert_ne!(fresh_name, "n");
     assert_ne!(fresh_name, "x1");
     let QuantifierFreeFact::AtomicFact(AtomicFact::EqualFact(equality)) = &instantiated.facts()[0]
@@ -142,7 +142,7 @@ fn forall_alpha_rename_respects_dependent_parameter_scope() {
         )
         .unwrap();
     let fact = ForallFact::new_canonical_forall(
-        ParamDefWithType::new(vec![first_group.clone(), second_group.clone()]),
+        TypedParameterList::new(vec![first_group.clone(), second_group.clone()]),
         vec![],
         vec![AtomicFact::from(EqualFact::new(
             BoundParamObj::new(&first_group.params[0]).into(),
@@ -175,19 +175,19 @@ fn forall_alpha_rename_respects_dependent_parameter_scope() {
         .alpha_rename_forall_fact(&fact, &rename_map)
         .unwrap();
     assert!(matches!(
-        &renamed.params_def_with_type.groups[0].param_type,
+        &renamed.typed_parameters.groups[0].param_type,
         ParamType::Obj(Obj::Atom(AtomObj::Bound(param))) if param.name() == "n"
     ));
     assert!(matches!(
-        &renamed.params_def_with_type.groups[1].param_type,
+        &renamed.typed_parameters.groups[1].param_type,
         ParamType::Obj(Obj::Atom(AtomObj::Bound(param))) if param.name() == "n_fresh"
     ));
     assert_eq!(
-        renamed.params_def_with_type.groups[0].param_names(),
+        renamed.typed_parameters.groups[0].param_names(),
         vec!["n_fresh"],
     );
     assert_eq!(
-        renamed.params_def_with_type.groups[1].param_names(),
+        renamed.typed_parameters.groups[1].param_names(),
         vec!["m_fresh"],
     );
 }
@@ -212,7 +212,7 @@ fn exist_alpha_rename_respects_dependent_parameter_scope() {
         .unwrap();
     let fact = ExistFactEnum::ExistFact(
         ExistentialSpec::new(
-            ParamDefWithType::new(vec![first_group.clone(), second_group.clone()]),
+            TypedParameterList::new(vec![first_group.clone(), second_group.clone()]),
             vec![AtomicFact::from(EqualFact::new(
                 BoundParamObj::new(&first_group.params[0]).into(),
                 BoundParamObj::new(&second_group.params[0]).into(),
@@ -243,19 +243,19 @@ fn exist_alpha_rename_respects_dependent_parameter_scope() {
 
     let renamed = runtime.alpha_rename_exist_fact(&fact, &rename_map).unwrap();
     assert!(matches!(
-        &renamed.params_def_with_type().groups[0].param_type,
+        &renamed.typed_parameters().groups[0].param_type,
         ParamType::Obj(Obj::Atom(AtomObj::Bound(param))) if param.name() == "n"
     ));
     assert!(matches!(
-        &renamed.params_def_with_type().groups[1].param_type,
+        &renamed.typed_parameters().groups[1].param_type,
         ParamType::Obj(Obj::Atom(AtomObj::Bound(param))) if param.name() == "n_fresh"
     ));
     assert_eq!(
-        renamed.params_def_with_type().groups[0].param_names(),
+        renamed.typed_parameters().groups[0].param_names(),
         vec!["n_fresh"],
     );
     assert_eq!(
-        renamed.params_def_with_type().groups[1].param_names(),
+        renamed.typed_parameters().groups[1].param_names(),
         vec!["m_fresh"],
     );
 }

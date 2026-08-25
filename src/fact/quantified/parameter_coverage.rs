@@ -311,7 +311,7 @@ fn mark_forall_param_coverage_in_obj(
             }
         }
         Obj::FnSet(fn_set) => {
-            for param_def_with_set in fn_set.body.params_def_with_set.iter() {
+            for param_def_with_set in fn_set.body.set_bound_parameters.iter() {
                 mark_forall_param_coverage_in_obj(
                     param_def_with_set.set_obj(),
                     coverage_by_forall_param,
@@ -329,7 +329,7 @@ fn mark_forall_param_coverage_in_obj(
             );
         }
         Obj::AnonymousFn(anon) => {
-            for param_def_with_set in anon.body.params_def_with_set.iter() {
+            for param_def_with_set in anon.body.set_bound_parameters.iter() {
                 mark_forall_param_coverage_in_obj(
                     param_def_with_set.set_obj(),
                     coverage_by_forall_param,
@@ -706,7 +706,7 @@ fn mark_forall_param_coverage_in_exist_fact(
     exist_fact: &ExistFactEnum,
     coverage_by_forall_param: &mut HashMap<IdentifierName, bool>,
 ) {
-    for param_def_with_type in exist_fact.params_def_with_type().groups.iter() {
+    for param_def_with_type in exist_fact.typed_parameters().groups.iter() {
         mark_forall_param_coverage_in_param_type(
             &param_def_with_type.param_type,
             coverage_by_forall_param,
@@ -755,7 +755,7 @@ impl ForallFact {
         then_fact: &ExistOrAndChainAtomicFact,
     ) -> HashMap<IdentifierName, bool> {
         let mut coverage_by_forall_param = HashMap::new();
-        for param_name in self.params_def_with_type.collect_param_names() {
+        for param_name in self.typed_parameters.collect_param_names() {
             coverage_by_forall_param.insert(param_name, false);
         }
         for dom_fact in self.dom_facts.iter() {
@@ -771,7 +771,7 @@ impl ForallFact {
     pub fn error_messages_if_forall_param_missing_in_some_then_clause(
         &self,
     ) -> Vec<(usize, String)> {
-        let forall_param_names = self.params_def_with_type.collect_param_names();
+        let forall_param_names = self.typed_parameters.collect_param_names();
         if forall_param_names.is_empty() {
             return Vec::new();
         }

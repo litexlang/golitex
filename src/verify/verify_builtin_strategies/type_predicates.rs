@@ -13,10 +13,10 @@ impl Runtime {
                 let Some(body) = self.get_fn_range_function_body(&fn_range.function) else {
                     return Ok(UnknownGenericStmtResult::new().into());
                 };
-                if body.params_def_with_set.number_of_params() != 1 {
+                if body.set_bound_parameters.number_of_params() != 1 {
                     return Ok(UnknownGenericStmtResult::new().into());
                 }
-                let Some(domain) = body.params_def_with_set.first() else {
+                let Some(domain) = body.set_bound_parameters.first() else {
                     return Ok(UnknownGenericStmtResult::new().into());
                 };
                 let child = IsFiniteSetFact::new(domain.set_obj().clone(), fact.line_file.clone());

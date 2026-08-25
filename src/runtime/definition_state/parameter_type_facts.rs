@@ -5,7 +5,7 @@ use crate::prelude::*;
 impl Runtime {
     pub fn store_args_satisfy_param_type_when_not_defining_new_identifiers(
         &mut self,
-        param_defs: &ParamDefWithType,
+        param_defs: &TypedParameterList,
         args: &Vec<Obj>,
         _line_file: LineFile,
         substitution_mode: SubstitutionMode,
@@ -21,7 +21,7 @@ impl Runtime {
 
     pub fn store_args_satisfy_param_type_when_not_defining_new_identifiers_with_reason(
         &mut self,
-        param_defs: &ParamDefWithType,
+        param_defs: &TypedParameterList,
         args: &Vec<Obj>,
         _line_file: LineFile,
         substitution_mode: SubstitutionMode,
@@ -50,7 +50,7 @@ impl Runtime {
     /// per argument in source order and performs no store by itself.
     pub fn instantiate_argument_parameter_requirement_facts(
         &mut self,
-        param_defs: &ParamDefWithType,
+        param_defs: &TypedParameterList,
         args: &[Obj],
         line_file: LineFile,
         substitution_mode: SubstitutionMode,

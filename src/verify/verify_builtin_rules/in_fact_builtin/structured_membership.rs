@@ -1,26 +1,26 @@
 use super::*;
 
 impl Runtime {
-    /// A declaration-owned field projection has the carrier declared by its
+    /// A definition-owned field projection has the carrier defined by its
     /// owning struct.  The receiver's struct membership remains an explicit
     /// proof premise, so later unrelated membership facts cannot select or
     /// change a field owner.
-    pub(super) fn verify_in_fact_struct_field_in_declared_carrier(
+    pub(super) fn verify_in_fact_struct_field_in_definition_carrier(
         &mut self,
         in_fact: &InFact,
         field_access: &ObjAsStructInstanceWithFieldAccess,
         builtin_state: &BuiltinRuleSearchState,
     ) -> Result<StmtResult, RuntimeError> {
-        let declared_carrier =
+        let definition_carrier =
             self.instantiated_struct_field_type_after_well_defined(field_access)?;
         let carrier_equality = self.verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
-            &declared_carrier,
+            &definition_carrier,
             &in_fact.set,
             in_fact.line_file.clone(),
         ));
         let standard_widening = matches!(
-            (&declared_carrier, &in_fact.set),
-            (Obj::StandardSet(declared), Obj::StandardSet(target)) if declared.is_subset_eq(target)
+            (&definition_carrier, &in_fact.set),
+            (Obj::StandardSet(defined), Obj::StandardSet(target)) if defined.is_subset_eq(target)
         );
         if !carrier_equality.is_success() && !standard_widening {
             return Ok((UnknownGenericStmtResult::new()).into());
@@ -45,7 +45,7 @@ impl Runtime {
         Ok(
             SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                 in_fact.clone().into(),
-                "declaration-owned struct field has its instantiated declared carrier".to_string(),
+                "definition-owned struct field has its instantiated defined carrier".to_string(),
                 steps,
             )
             .into(),
@@ -349,9 +349,9 @@ impl Runtime {
             );
         }
         let flat_stored =
-            ParamGroupWithSet::collect_param_names(&stored_fn_set.params_def_with_set);
+            SetBoundParameterGroup::collect_param_names(&stored_fn_set.set_bound_parameters);
         let flat_expected =
-            ParamGroupWithSet::collect_param_names(&expected_fn_set.body.params_def_with_set);
+            SetBoundParameterGroup::collect_param_names(&expected_fn_set.body.set_bound_parameters);
         if flat_stored.len() != flat_expected.len() {
             return Ok((UnknownGenericStmtResult::new()).into());
         }
@@ -386,7 +386,7 @@ impl Runtime {
         in_fact: &InFact,
     ) -> Result<StmtResult, RuntimeError> {
         let signature_from_anon = FnSet::new(
-            anon.body.params_def_with_set.clone(),
+            anon.body.set_bound_parameters.clone(),
             anon.body.dom_facts.clone(),
             (*anon.body.ret_set).clone(),
         )?;
@@ -401,10 +401,11 @@ impl Runtime {
                 .into(),
             );
         }
-        let flat_a =
-            ParamGroupWithSet::collect_param_names(&signature_from_anon.body.params_def_with_set);
+        let flat_a = SetBoundParameterGroup::collect_param_names(
+            &signature_from_anon.body.set_bound_parameters,
+        );
         let flat_e =
-            ParamGroupWithSet::collect_param_names(&expected_fn_set.body.params_def_with_set);
+            SetBoundParameterGroup::collect_param_names(&expected_fn_set.body.set_bound_parameters);
         if flat_a.len() != flat_e.len() {
             return Ok((UnknownGenericStmtResult::new()).into());
         }
@@ -438,7 +439,7 @@ impl Runtime {
         verify_state: &ProofSearchState,
     ) -> Result<StmtResult, RuntimeError> {
         let signature_from_anon = FnSet::new(
-            anon.body.params_def_with_set.clone(),
+            anon.body.set_bound_parameters.clone(),
             anon.body.dom_facts.clone(),
             (*anon.body.ret_set).clone(),
         )?;

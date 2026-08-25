@@ -4,7 +4,7 @@ use crate::prelude::*;
 use std::collections::HashMap;
 
 pub struct FreshSettingParameterBundle {
-    pub param_def: ParamDefWithType,
+    pub param_def: TypedParameterList,
     pub dom_facts: Vec<Fact>,
 }
 
@@ -12,7 +12,7 @@ impl Runtime {
     /// Parses `[Setting]` or `[Setting(fresh_name, ...)]` and elaborates it into
     /// ordinary parameters and facts in `target_kind`.
     ///
-    /// Explicit arguments are declarations, never expressions or references to
+    /// Explicit arguments are definitions, never expressions or references to
     /// an outer binding. Each parameter is allocated afresh, while its type and
     /// the setting conditions are instantiated from the setting's `forall`
     /// binders into the target binding kind.
@@ -119,10 +119,7 @@ impl Runtime {
                     obj_for_bound_param_in_scope(target),
                 );
             }
-            groups.push(ParamGroupWithParamType::new(
-                target_bindings,
-                instantiated_type,
-            ));
+            groups.push(TypedParameterGroup::new(target_bindings, instantiated_type));
             target_index += group_len;
         }
 
@@ -137,7 +134,7 @@ impl Runtime {
         }
 
         Ok(FreshSettingParameterBundle {
-            param_def: ParamDefWithType::new(groups),
+            param_def: TypedParameterList::new(groups),
             dom_facts,
         })
     }
@@ -203,7 +200,7 @@ pub fn collect_forall_param_bindings_from_facts(facts: &[Fact]) -> Vec<SymbolBin
     let mut bindings = Vec::new();
     for fact in facts {
         if let Fact::ForallFact(forall_fact) = fact {
-            for binding in forall_fact.params_def_with_type.collect_param_bindings() {
+            for binding in forall_fact.typed_parameters.collect_param_bindings() {
                 if !bindings
                     .iter()
                     .any(|existing: &SymbolBinding| existing.id() == binding.id())

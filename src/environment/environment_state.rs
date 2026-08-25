@@ -27,8 +27,8 @@ pub type AtomicFactInForallArgShapeIndex = HashMap<
 /// - strategy registrations and stopped-strategy state.
 #[derive(Clone)]
 pub struct Environment {
-    pub declarations: EnvironmentDeclarationRegistry,
-    pub facts: EnvironmentFactDatabase,
+    pub definitions: EnvironmentDefinitionRegistry,
+    pub facts: EnvironmentFactStore,
     pub objects: EnvironmentObjectKnowledgeStore,
     pub predicate_properties: EnvironmentPredicatePropertyStore,
     pub caches: EnvironmentVerificationCache,
@@ -47,32 +47,32 @@ impl fmt::Display for Environment {
         write!(
             f,
             "    objs: {:?}\n",
-            self.declarations.object_symbol_count()
+            self.definitions.object_symbol_count()
         )?;
         write!(
             f,
             "    def_props: {:?}\n",
-            self.declarations.defined_def_props.len()
+            self.definitions.predicate_definitions.len()
         )?;
         write!(
             f,
             "    algorithms: {:?}\n",
-            self.declarations.defined_algorithms.len()
+            self.definitions.algorithm_definitions.len()
         )?;
         write!(
             f,
             "    structs: {:?}\n",
-            self.declarations.defined_structs.len()
+            self.definitions.structure_definitions.len()
         )?;
         write!(
             f,
             "    templates: {:?}\n",
-            self.declarations.defined_templates.len()
+            self.definitions.template_definitions.len()
         )?;
         write!(
             f,
             "    settings: {:?}\n",
-            self.declarations.defined_settings.len()
+            self.definitions.setting_definitions.len()
         )?;
         write!(
             f,
@@ -655,8 +655,8 @@ impl Environment {
 impl Environment {
     pub fn new_empty_env() -> Self {
         Environment {
-            declarations: EnvironmentDeclarationRegistry::new(),
-            facts: EnvironmentFactDatabase::new(),
+            definitions: EnvironmentDefinitionRegistry::new(),
+            facts: EnvironmentFactStore::new(),
             objects: EnvironmentObjectKnowledgeStore::new(),
             predicate_properties: EnvironmentPredicatePropertyStore::new(),
             caches: EnvironmentVerificationCache::new(),
@@ -834,7 +834,7 @@ pub fn atomic_fact_in_forall_arg_shape_key(
 /// structural conclusion location, so consumers never rebuild a smaller
 /// universal from the matched conclusion.
 pub struct StoredForallConclusionReference {
-    pub params_def: ParamDefWithType,
+    pub params_def: TypedParameterList,
     pub dom: Vec<Fact>,
     pub line_file: LineFile,
     /// Exact stored universal that produced every indexed conclusion sharing
@@ -852,7 +852,7 @@ impl StoredForallConclusionReference {
         conclusion_location: ForallConclusionLocation,
     ) -> Self {
         StoredForallConclusionReference {
-            params_def: source_forall.params_def_with_type.clone(),
+            params_def: source_forall.typed_parameters.clone(),
             dom: source_forall.dom_facts.clone(),
             line_file: source_forall.line_file.clone(),
             source_forall,

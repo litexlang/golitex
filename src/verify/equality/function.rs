@@ -43,7 +43,7 @@ impl Runtime {
         let Some(right_ap) = fn_obj_apply_one_arg(&f.right, x) else {
             return Ok(UnknownGenericStmtResult::new().into());
         };
-        let param_def = ParamDefWithType::new(vec![x_group]);
+        let param_def = TypedParameterList::new(vec![x_group]);
         let forall_f = ForallFact::new_canonical_forall(
             param_def,
             vec![],
@@ -83,7 +83,7 @@ impl Runtime {
         };
 
         // Function extensionality may consume an already checked pointwise forall directly
-        // when both declared function carriers are alpha-equivalent. This exact indexed route
+        // when both defined function carriers are alpha-equivalent. This exact indexed route
         // runs before reconstructing mutual membership, which can otherwise reopen dependent
         // set definitions. Example: `forall x X: f(x) = g(x)` proves `$fn_eq(f, g)` for
         // `f, g fn(x X) Y`, but not for functions with different domains or return carriers.
@@ -214,8 +214,10 @@ impl Runtime {
         if objs_equal_with_nested_binder_alpha_equivalence(&left_obj, &right_obj) {
             return Ok(true);
         }
-        let left_names = ParamGroupWithSet::collect_param_names(&left.body.params_def_with_set);
-        let right_names = ParamGroupWithSet::collect_param_names(&right.body.params_def_with_set);
+        let left_names =
+            SetBoundParameterGroup::collect_param_names(&left.body.set_bound_parameters);
+        let right_names =
+            SetBoundParameterGroup::collect_param_names(&right.body.set_bound_parameters);
         if left_names.len() != right_names.len() {
             return Ok(false);
         }
@@ -232,7 +234,7 @@ impl Runtime {
 fn fn_set_type_of_function_value(rt: &Runtime, obj: &Obj) -> Option<FnSet> {
     match obj {
         Obj::AnonymousFn(af) => FnSet::new(
-            af.body.params_def_with_set.clone(),
+            af.body.set_bound_parameters.clone(),
             af.body.dom_facts.clone(),
             (*af.body.ret_set).clone(),
         )
@@ -243,7 +245,7 @@ fn fn_set_type_of_function_value(rt: &Runtime, obj: &Obj) -> Option<FnSet> {
             match rt.fn_set_space_from_return_set_obj(return_set).ok()? {
                 FnSetSpace::Set(fn_set) => Some(fn_set),
                 FnSetSpace::Anon(anonymous_fn) => FnSet::new(
-                    anonymous_fn.body.params_def_with_set,
+                    anonymous_fn.body.set_bound_parameters,
                     anonymous_fn.body.dom_facts,
                     (*anonymous_fn.body.ret_set).clone(),
                 )

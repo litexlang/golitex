@@ -117,7 +117,7 @@ end
 
 The first layer of objects in this Lean code is not a set but `α : Type*`: only afterward are `s`, `t`, and `u` declared as values of `Set α` over that carrier type. More precisely, `Set α` in Lean is a predicate whose domain is `α`; `Type*` and its universe hierarchy provide a type-theoretic organization that is more abstract and general than sets. This design allows the same theorems to be reused over arbitrary carrier types and is an important source of Lean's expressiveness and compositionality.
 
-Litex chooses a different task boundary. Because it takes set-theoretic objects and membership as its foundational surface, the language and kernel can provide specialized syntax and verification paths for high-frequency set-theoretic knowledge about sets, membership, subsets, intersections, and unions. For this task, the user need only declare three sets and the expected inclusion, so the code is closer to everyday set-theoretic writing and is visibly shorter.
+Litex chooses a different task boundary. Because it takes set-theoretic objects and membership as its foundational surface, the language and kernel can provide specialized syntax and verification paths for high-frequency set-theoretic knowledge about sets, membership, subsets, intersections, and unions. For this task, the user need only define three sets and write the expected inclusion, so the code is closer to everyday set-theoretic writing and is visibly shorter.
 
 The difference should not be reduced to “short code is necessarily stronger than long code.” Lean can prove the same proposition with a shorter proof term or with automation. The version above deliberately preserves the pedagogical route from *Mathematics in Lean*: unfold the definitions, decompose membership in the intersection, and then assemble it again. The real comparison concerns the default interface. Lean first gives a set a type-theoretic carrier, after which the user or a tactic constructs a proof. Litex instead makes common set-theoretic relations into mathematical facts the language can recognize and check directly.
 
@@ -213,14 +213,14 @@ forall s nonempty_set, G &Group<s>, identity s:
         identity = G.mul(G.one, identity) = G.one
 ```
 
-Litex starts from `s nonempty_set` and models a group directly as a structure on the nonempty set `s`. `mul fn(x, y s) s` directly denotes a binary operation that takes two elements of `s` and returns an element of `s`; the structural laws are written as ordinary mathematical facts inside `<=>:`. Users can begin with the mathematical materials—a set, an operation, an identity, inverses, and laws—and watch the group take shape one layer at a time. The uniqueness result is written directly as `identity = G.mul(G.one, identity) = G.one`, and the kernel searches for the corresponding instances of the identity laws and the needed equality directions. Litex does not forbid names: theorems worth citing over the long term and public interfaces can still be written as named `thm` declarations, but ordinary structural laws and local facts need not each enter a naming interface that authors must remember before those facts can be used.
+Litex starts from `s nonempty_set` and models a group directly as a structure on the nonempty set `s`. `mul fn(x, y s) s` directly denotes a binary operation that takes two elements of `s` and returns an element of `s`; the structural laws are written as ordinary mathematical facts inside `<=>:`. Users can begin with the mathematical materials—a set, an operation, an identity, inverses, and laws—and watch the group take shape one layer at a time. The uniqueness result is written directly as `identity = G.mul(G.one, identity) = G.one`, and the kernel searches for the corresponding instances of the identity laws and the needed equality directions. Litex does not forbid names: theorems worth citing over the long term and public interfaces can still be written as named `thm` definitions, but ordinary structural laws and local facts need not each enter a naming interface that authors must remember before those facts can be used.
 
 This author-facing simplicity does not mean that structural laws are released automatically without bounds; the release rules remain explicit and checkable.
 
 <details>
 <summary><strong>Implementation note: the release boundary for struct facts</strong></summary>
 
-A field path such as `G.mul` is well-defined from the struct carrier written in the declaration; checking that path does not itself add the group laws to the context. The direct binder `G &Group<s>` above opens exactly one struct layer automatically. For a function result or a nested struct-valued field, authors write `by struct def expression`, which first verifies the expression's declaration-owned struct membership and then releases only that layer. A later standalone fact `expression $in &Group<s>` remains opaque and cannot select a field view or release the laws by itself.
+A field path such as `G.mul` is well-defined from the struct carrier written in the definition; checking that path does not itself add the group laws to the context. The direct binder `G &Group<s>` above opens exactly one struct layer automatically. For a function result or a nested struct-valued field, authors write `by struct def expression`, which first verifies the expression's definition-owned struct membership and then releases only that layer. A later standalone fact `expression $in &Group<s>` remains opaque and cannot select a field view or release the laws by itself.
 
 </details>
 
@@ -336,7 +336,7 @@ In the convergence example, `abs(c) + 1 > 0`, `epsilon / (abs(c) + 1) $in R+`, a
 
 More concretely, the Litex kernel searches for proof support that matches the result and explains the verification path it finds. Lean's elaboration process instead follows the user's tactic commands to construct the corresponding proof term, the Infoview displays the transformed Goals, and the kernel checks that term.
 
-This does not mean that Litex forbids naming. Classic theorems, standard-library interfaces, and dependencies the author wishes to make explicit can still be written as named Litex `thm` declarations and invoked with `by thm`.
+This does not mean that Litex forbids naming. Classic theorems, standard-library interfaces, and dependencies the author wishes to make explicit can still be written as named Litex `thm` definitions and invoked with `by thm`.
 
 Ordinary facts need neither names nor explicit tactic calls because the Litex kernel searches for a verification path from the fact's predicate, argument shape, and current context. A fact is verified either by a universal fact—builtin or user-provided—or by known concrete facts together with equality information. The following examples make that process concrete. Litex also has more elaborate optimizations and strategies, but they do not change this core division of labor.
 
@@ -389,7 +389,7 @@ $p(1)
 
 For the target `$p(1)`, the kernel first uses the predicate `p` to find a universal fact whose conclusion has the shape `$p(a)`, then matches the argument `a` to `1`. This instantiation also requires `1 $in R`; because that condition passes checking, the kernel can use the universal fact to verify `$p(1)`.
 
-`abstract_prop` is Litex syntax for declaring an abstract predicate without supplying a definition. A `trust` declaration produces a warning and means that the fact is accepted without verification. Use `trust` carefully; it is normally reserved for tests or isolated examples.
+`abstract_prop` is Litex syntax for defining an abstract predicate without supplying a body. A `trust` statement produces a warning and means that the fact is accepted without verification. Use `trust` carefully; it is normally reserved for tests or isolated examples.
 
 #### 3. Match with Concrete Facts and Known Equalities
 

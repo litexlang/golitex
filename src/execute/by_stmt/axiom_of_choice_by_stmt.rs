@@ -168,7 +168,7 @@ fn axiom_of_choice_members_nonempty_fact(
         runtime.fresh_param_group_with_type(vec![a_name], ParamType::Obj(family.clone()))?;
     let a = obj_for_bound_param_in_scope(&a_group.params[0]);
     Ok(ForallFact::new_canonical_forall(
-        ParamDefWithType::new(vec![a_group]),
+        TypedParameterList::new(vec![a_group]),
         vec![],
         vec![IsNonemptySetFact::new(a, line_file.clone()).into()],
         line_file,
@@ -215,7 +215,7 @@ fn axiom_of_choice_exist_fact(
         line_file.clone(),
     );
     let body = ExistentialSpec::new(
-        ParamDefWithType::new(vec![f_group]),
+        TypedParameterList::new(vec![f_group]),
         vec![QuantifierFreeFact::AtomicFact(named_choice_fact)],
         line_file,
     )?;

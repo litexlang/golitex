@@ -292,7 +292,7 @@ impl Runtime {
         self.run_in_local_env(|rt| {
             let param_binding = stmt
                 .forall_fact
-                .params_def_with_type
+                .typed_parameters
                 .collect_param_bindings()
                 .into_iter()
                 .next()
@@ -507,10 +507,7 @@ impl Runtime {
     ) -> Result<SuccessVerifyByAssignmentResult, RuntimeError> {
         let mut assignment = Vec::new();
         let mut assumptions = Vec::new();
-        let param_bindings = stmt
-            .forall_fact
-            .params_def_with_type
-            .collect_param_bindings();
+        let param_bindings = stmt.forall_fact.typed_parameters.collect_param_bindings();
         for (parameter_position, parameter_name) in params.iter().enumerate() {
             let parameter_binding = &param_bindings[parameter_position];
             let assigned_integer_string = param_value_strings_of_each_param[parameter_position]

@@ -290,10 +290,10 @@ pub struct SuccessDefAlgoStmtResult {
 }
 
 pub struct SuccessVerifyDefAlgoLocalEnvResult {
-    pub declared_function_set: FnSetBody,
+    pub definition_function_set: FnSetBody,
     pub parameter_retagging: Vec<SuccessVerifyDefAlgoParameterRetagResult>,
     pub requirement_facts: Vec<Fact>,
-    pub parameter_definition: ParamDefWithType,
+    pub parameter_definition: TypedParameterList,
     pub function_call: Obj,
     pub cases: Vec<SuccessVerifyDefAlgoCaseResult>,
     pub default_return: Option<SuccessVerifyDefAlgoDefaultResult>,
@@ -343,13 +343,7 @@ pub struct SuccessDefStrategyStmtResult {
 pub enum SuccessStmtResult {
     Fact(Box<SuccessFactStmtResult>),
     UnsafeStmt(SuccessUnsafeStmtResult),
-    DefObjStmt(SuccessDefObjStmtResult),
-    DefPredicateStmt(SuccessDefPredicateStmtResult),
-    DefInterfaceStmt(SuccessDefInterfaceStmtResult),
-    DefAlgoStmt(Box<SuccessDefAlgoStmtResult>),
-    DefThmStmt(Box<SuccessDefThmStmtResult>),
-    AxiomStmt(Box<SuccessAxiomStmtResult>),
-    DefStrategyStmt(Box<SuccessDefStrategyStmtResult>),
+    Definition(SuccessDefinitionStmtResult),
     By(SuccessByStmtResult),
     Witness(SuccessWitnessStmtResult),
     ProofBlock(SuccessProofBlockStmtResult),
@@ -457,7 +451,7 @@ pub struct SuccessVerifyHaveFnByInducParametersAndDomainResult {
 
 pub struct SuccessVerifyHaveFnByInducParameterGroupResult {
     pub group_index: usize,
-    pub definition: ParamGroupWithSet,
+    pub definition: SetBoundParameterGroup,
     pub infers: SuccessInferResult,
 }
 
@@ -568,7 +562,7 @@ pub struct SuccessHaveMatrixStmtResult {
     pub verification: Option<SuccessVerifyIndexedFunctionDefinitionResult>,
 }
 
-pub enum SuccessDefObjStmtResult {
+pub enum SuccessDefinitionStmtResult {
     LetObjStmt(Box<SuccessLetObjStmtResult>),
     HaveObjInNonemptySetStmt(Box<SuccessHaveObjInNonemptySetStmtResult>),
     HaveObjEqualStmt(Box<SuccessHaveObjEqualStmtResult>),
@@ -586,6 +580,15 @@ pub enum SuccessDefObjStmtResult {
     HaveSeqStmt(Box<SuccessHaveSeqStmtResult>),
     HaveFiniteSeqStmt(Box<SuccessHaveFiniteSeqStmtResult>),
     HaveMatrixStmt(Box<SuccessHaveMatrixStmtResult>),
+    DefPropStmt(Box<SuccessDefPropStmtResult>),
+    DefAbstractPropStmt(Box<SuccessDefAbstractPropStmtResult>),
+    DefSettingStmt(Box<SuccessDefSettingStmtResult>),
+    DefTemplateStmt(Box<SuccessDefTemplateStmtResult>),
+    DefStructStmt(Box<SuccessDefStructStmtResult>),
+    DefAlgoStmt(Box<SuccessDefAlgoStmtResult>),
+    DefThmStmt(Box<SuccessDefThmStmtResult>),
+    AxiomStmt(Box<SuccessAxiomStmtResult>),
+    DefStrategyStmt(Box<SuccessDefStrategyStmtResult>),
 }
 
 pub struct SuccessDefPropStmtResult {
@@ -596,11 +599,6 @@ pub struct SuccessDefPropStmtResult {
 pub struct SuccessDefAbstractPropStmtResult {
     pub statement: DefAbstractPropStmt,
     pub common: SuccessStmtCommonResult,
-}
-
-pub enum SuccessDefPredicateStmtResult {
-    DefPropStmt(Box<SuccessDefPropStmtResult>),
-    DefAbstractPropStmt(Box<SuccessDefAbstractPropStmtResult>),
 }
 
 pub struct SuccessDefSettingStmtResult {
@@ -618,9 +616,9 @@ pub struct SuccessDefTemplateStmtResult {
 pub struct SuccessDefStructStmtResult {
     pub statement: DefStructStmt,
     pub common: SuccessStmtCommonResult,
-    /// The declaration is checked in a temporary environment containing only
+    /// The definition is checked in a temporary environment containing only
     /// its structure parameters and fields. Trusted materialization retains
-    /// the declaration but deliberately carries no invented verification.
+    /// the definition but deliberately carries no invented verification.
     pub run_in_local_env: Option<SuccessVerifyDefStructLocalEnvResult>,
 }
 
@@ -629,7 +627,7 @@ pub struct SuccessDefStructStmtResult {
 /// the verification process for the enclosing `def struct`, not another
 /// source statement.
 pub struct SuccessVerifyDefStructLocalEnvResult {
-    /// Output of defining the declared structure parameters. These are
+    /// Output of defining the structure parameters from the definition. These are
     /// structure parameters, not template parameters.
     pub structure_parameter_definition: Option<SuccessInferResult>,
     pub structure_domains: Vec<SuccessVerifyDefStructDomainResult>,
@@ -652,7 +650,7 @@ pub struct SuccessVerifyDefStructFieldTypeResult {
 
 /// Typed output of the nested field environment. Field definitions and
 /// equivalent facts are ordinary semantic operations owned by the enclosing
-/// declaration, so neither is wrapped in a synthetic statement Result.
+/// definition, so neither is wrapped in a synthetic statement Result.
 pub struct SuccessVerifyDefStructFieldScopeResult {
     pub field_definitions: Vec<SuccessVerifyDefStructFieldDefinitionResult>,
     pub equivalent_facts: Vec<SuccessVerifyLocalFactWellDefinedResult>,
@@ -663,12 +661,6 @@ pub struct SuccessVerifyDefStructFieldDefinitionResult {
     pub binding: SymbolBinding,
     pub field_type: Obj,
     pub infers: SuccessInferResult,
-}
-
-pub enum SuccessDefInterfaceStmtResult {
-    DefSettingStmt(Box<SuccessDefSettingStmtResult>),
-    DefTemplateStmt(Box<SuccessDefTemplateStmtResult>),
-    DefStructStmt(Box<SuccessDefStructStmtResult>),
 }
 
 pub struct SuccessByCasesStmtResult {

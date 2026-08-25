@@ -340,7 +340,7 @@ failing.
    environment.
 2. After the `ready` event, send the top-level statements from `chap5.lit` in
    source order. Wrap every candidate frame in a literal outermost `try:`.
-3. A successful `try:` commits its declarations and facts to the persistent
+3. A successful `try:` commits its definitions and facts to the persistent
    Runtime. A failed `try:` discards only that candidate, so the chap1--chap4
    prefix and all earlier successful chap5 frames remain available.
 4. Correct and resend only the failed fragment. If a proof remains blocked,
@@ -351,7 +351,7 @@ failing.
 
 A failed `try:` never requires a restart. Restart from `-before chap5.lit` only
 if the process exits, a loaded predecessor changes, or an already committed
-declaration must be replaced under the same name.
+definition must be replaced under the same name.
 
 For example, a client can send a frame shaped like:
 

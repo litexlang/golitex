@@ -332,7 +332,7 @@ impl Runtime {
     /// Mathematical contract: an object is well-defined exactly when all of
     /// its subobjects are meaningful and its constructor-specific domain
     /// conditions hold (for example, a divisor is nonzero and a function
-    /// application satisfies its declared parameter domain).
+    /// application satisfies its defined parameter domain).
     pub fn verify_obj_well_defined_and_store_cache(
         &mut self,
         obj: &Obj,

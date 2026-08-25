@@ -2,6 +2,7 @@ mod abstract_proposition;
 mod algorithm;
 mod axiom;
 mod definition_storage;
+pub mod object;
 mod parameter_definition;
 mod proposition;
 mod structure;

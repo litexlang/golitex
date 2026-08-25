@@ -35,7 +35,7 @@ impl Runtime {
             stmt.line_file.clone(),
         )?;
         Ok(
-            SuccessDefObjStmtResult::HaveSeqStmt(Box::new(SuccessHaveSeqStmtResult {
+            SuccessDefinitionStmtResult::HaveSeqStmt(Box::new(SuccessHaveSeqStmtResult {
                 statement: stmt.clone(),
                 common: SuccessStmtCommonResult::new(infer_result),
                 verification: Some(verification),
@@ -62,7 +62,7 @@ impl Runtime {
             stmt.line_file.clone(),
         )?;
         Ok(
-            SuccessDefObjStmtResult::HaveSeqStmt(Box::new(SuccessHaveSeqStmtResult {
+            SuccessDefinitionStmtResult::HaveSeqStmt(Box::new(SuccessHaveSeqStmtResult {
                 statement: stmt.clone(),
                 common: SuccessStmtCommonResult::new(infer_result),
                 verification: None,
@@ -110,14 +110,14 @@ impl Runtime {
             HaveFiniteSeqStmt::store_reason(),
             stmt.line_file.clone(),
         )?;
-        Ok(
-            SuccessDefObjStmtResult::HaveFiniteSeqStmt(Box::new(SuccessHaveFiniteSeqStmtResult {
+        Ok(SuccessDefinitionStmtResult::HaveFiniteSeqStmt(Box::new(
+            SuccessHaveFiniteSeqStmtResult {
                 statement: stmt.clone(),
                 common: SuccessStmtCommonResult::new(infer_result),
                 verification: Some(verification),
-            }))
-            .into(),
-        )
+            },
+        ))
+        .into())
     }
 
     pub fn exec_have_finite_seq_stmt_affect_environment_only(
@@ -137,14 +137,14 @@ impl Runtime {
             HaveFiniteSeqStmt::store_reason(),
             stmt.line_file.clone(),
         )?;
-        Ok(
-            SuccessDefObjStmtResult::HaveFiniteSeqStmt(Box::new(SuccessHaveFiniteSeqStmtResult {
+        Ok(SuccessDefinitionStmtResult::HaveFiniteSeqStmt(Box::new(
+            SuccessHaveFiniteSeqStmtResult {
                 statement: stmt.clone(),
                 common: SuccessStmtCommonResult::new(infer_result),
                 verification: None,
-            }))
-            .into(),
-        )
+            },
+        ))
+        .into())
     }
 
     pub fn exec_have_matrix_stmt(
@@ -194,7 +194,7 @@ impl Runtime {
             stmt.line_file.clone(),
         )?;
         Ok(
-            SuccessDefObjStmtResult::HaveMatrixStmt(Box::new(SuccessHaveMatrixStmtResult {
+            SuccessDefinitionStmtResult::HaveMatrixStmt(Box::new(SuccessHaveMatrixStmtResult {
                 statement: stmt.clone(),
                 common: SuccessStmtCommonResult::new(infer_result),
                 verification: Some(verification),
@@ -221,7 +221,7 @@ impl Runtime {
             stmt.line_file.clone(),
         )?;
         Ok(
-            SuccessDefObjStmtResult::HaveMatrixStmt(Box::new(SuccessHaveMatrixStmtResult {
+            SuccessDefinitionStmtResult::HaveMatrixStmt(Box::new(SuccessHaveMatrixStmtResult {
                 statement: stmt.clone(),
                 common: SuccessStmtCommonResult::new(infer_result),
                 verification: None,
@@ -314,10 +314,10 @@ impl Runtime {
         store_reason: &'static str,
         line_file: LineFile,
     ) -> Result<SuccessInferResult, RuntimeError> {
-        self.store_parameter_binding(binding, BindingScope::DeclaredObject)
+        self.store_parameter_binding(binding, BindingScope::DefinitionBinding)
             .map_err(|e| short_exec_error(stmt.clone(), String::new(), Some(e), vec![]))?;
 
-        let function_identifier_obj = self.declared_identifier_obj(name);
+        let function_identifier_obj = self.definition_identifier_obj(name);
         let surface_membership_fact: Fact = InFact::new(
             function_identifier_obj.clone(),
             surface_set,
@@ -365,7 +365,7 @@ impl Runtime {
         binding: &SymbolBinding,
     ) -> Result<(), RuntimeError> {
         self.run_in_local_env(|rt| {
-            rt.store_parameter_binding(binding, BindingScope::DeclaredObject)
+            rt.store_parameter_binding(binding, BindingScope::DefinitionBinding)
                 .map_err(|e| short_exec_error(stmt, String::new(), Some(e), vec![]))
         })
     }
@@ -426,7 +426,7 @@ impl Runtime {
         let (verify_result, assumption_infers) = self
             .run_in_local_env(|rt| {
                 let mut assumption_infers = SuccessInferResult::new();
-                for param_def_with_set in anonymous_fn.body.params_def_with_set.iter() {
+                for param_def_with_set in anonymous_fn.body.set_bound_parameters.iter() {
                     let param_infers = rt.define_params_with_set(param_def_with_set)?;
                     assumption_infers.new_infer_result_inside(param_infers);
                 }
@@ -514,7 +514,7 @@ fn build_have_seq_anonymous_fn(
     stmt: &HaveSeqStmt,
 ) -> Result<AnonymousFn, RuntimeError> {
     AnonymousFn::new(
-        vec![ParamGroupWithSet::new(
+        vec![SetBoundParameterGroup::new(
             vec![stmt.index_binding.clone()],
             StandardSet::NPos.into(),
         )],
@@ -530,7 +530,7 @@ fn build_have_finite_seq_anonymous_fn(
 ) -> Result<AnonymousFn, RuntimeError> {
     let index_obj = obj_for_bound_param_in_scope(&stmt.index_binding);
     AnonymousFn::new(
-        vec![ParamGroupWithSet::new(
+        vec![SetBoundParameterGroup::new(
             vec![stmt.index_binding.clone()],
             StandardSet::NPos.into(),
         )],
@@ -553,11 +553,11 @@ fn build_have_matrix_anonymous_fn(
     let col_obj = obj_for_bound_param_in_scope(&stmt.col_index_binding);
     AnonymousFn::new(
         vec![
-            ParamGroupWithSet::new(
+            SetBoundParameterGroup::new(
                 vec![stmt.row_index_binding.clone()],
                 StandardSet::NPos.into(),
             ),
-            ParamGroupWithSet::new(
+            SetBoundParameterGroup::new(
                 vec![stmt.col_index_binding.clone()],
                 StandardSet::NPos.into(),
             ),

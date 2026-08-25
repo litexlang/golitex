@@ -111,7 +111,7 @@ pub(super) fn render_forall_fact_type(
     let mut context = outer_context.clone();
     let mut binders = Vec::new();
     for (index, (binding, param_type)) in forall
-        .params_def_with_type
+        .typed_parameters
         .collect_param_bindings_with_types()
         .iter()
         .enumerate()
@@ -843,7 +843,7 @@ pub(super) fn instantiated_predicate_components(
     }
     let mut nested = context.clone();
     let mut argument_index = 0;
-    for group in &definition.params_def_with_type.groups {
+    for group in &definition.typed_parameters.groups {
         for parameter in &group.params {
             nested.symbol_names.insert(
                 parameter.id(),
@@ -854,7 +854,7 @@ pub(super) fn instantiated_predicate_components(
     }
     let mut components = Vec::new();
     argument_index = 0;
-    for group in &definition.params_def_with_type.groups {
+    for group in &definition.typed_parameters.groups {
         for _ in &group.params {
             match &group.param_type {
                 ParamType::Set(_) => components.push("True".to_string()),
@@ -979,7 +979,7 @@ pub(super) fn render_set_builder_membership_from_fact_and_proofs(
                     "abstract set-builder predicates have no transport definition".to_string()
                 })?;
                 let group = definition
-                    .params_def_with_type
+                    .typed_parameters
                     .groups
                     .first()
                     .ok_or_else(|| "concrete predicate lost its parameter group".to_string())?;
@@ -1155,7 +1155,7 @@ pub(super) fn render_set_builder_predicate_projection_from_fact_and_proof(
         "abstract set-builder predicates have no projection definition".to_string()
     })?;
     let group = definition
-        .params_def_with_type
+        .typed_parameters
         .groups
         .first()
         .ok_or_else(|| "concrete predicate lost its parameter group".to_string())?;
@@ -1299,7 +1299,7 @@ pub(super) fn render_forall_conclusion_citation(
 ) -> Result<String, String> {
     let parameters = binding
         .forall
-        .params_def_with_type
+        .typed_parameters
         .collect_param_bindings_with_types();
     if parameters.len() != binding.parameter_premises.len()
         || binding.forall.dom_facts.len() != binding.premises.len()
@@ -1670,7 +1670,7 @@ pub(super) fn construct_lean_registered_reflexive_predicate_from_result(
         })?;
     let parameters = binding
         .forall_fact
-        .params_def_with_type
+        .typed_parameters
         .collect_param_bindings_with_types();
     let [(parameter, ParamType::Set(_))] = parameters.as_slice() else {
         return Err(
@@ -1709,7 +1709,7 @@ pub(super) fn registered_predicate_property_parameter_objects(
     property_name: &str,
 ) -> Result<Vec<Obj>, String> {
     let parameters = forall_fact
-        .params_def_with_type
+        .typed_parameters
         .collect_param_bindings_with_types();
     if parameters.len() < 2
         || parameters
@@ -3153,7 +3153,7 @@ pub(super) fn validate_set_inclusion_elementwise_forall_inference_target(
     let Fact::ForallFact(target) = target else {
         return Err("set-inclusion inference conclusion is not a forall fact".into());
     };
-    let [parameter_group] = target.params_def_with_type.groups.as_slice() else {
+    let [parameter_group] = target.typed_parameters.groups.as_slice() else {
         return Err("set-inclusion inference conclusion changed its parameter-group arity".into());
     };
     let [parameter] = parameter_group.params.as_slice() else {

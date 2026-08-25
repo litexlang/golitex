@@ -592,7 +592,7 @@ impl Runtime {
 
         let parameter_requirement_facts = self
             .instantiate_argument_parameter_requirement_facts(
-                &predicate_definition.params_def_with_type,
+                &predicate_definition.typed_parameters,
                 &normal_atomic_fact.body,
                 normal_atomic_fact.line_file.clone(),
                 SubstitutionMode::Exact,
@@ -645,7 +645,7 @@ impl Runtime {
         }
 
         let param_to_arg_map = self.params_to_arg_map(
-            &predicate_definition.params_def_with_type,
+            &predicate_definition.typed_parameters,
             &normal_atomic_fact.body,
         )?;
 
@@ -676,7 +676,7 @@ impl Runtime {
             // A positive prop exposes its parameter-type facts as part of its
             // meaning. The call above stores their instantiated forms before
             // these clauses. Since the clauses were checked under the matching
-            // formal parameter facts when the prop was declared, typed,
+            // formal parameter facts when the prop was defined, typed,
             // capture-avoiding substitution preserves well-definedness.
             // The active-fact guard and firing cache stop cyclic definitions.
             let stored_clause = self

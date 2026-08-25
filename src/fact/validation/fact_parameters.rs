@@ -153,7 +153,7 @@ fn push_forall_scope_if_needed(
     }
 
     push_param_def_scope_or_error(
-        forall_fact.params_def_with_type.collect_param_names(),
+        forall_fact.typed_parameters.collect_param_names(),
         free_param_type,
         &forall_fact.line_file,
         params_already_used,
@@ -211,7 +211,7 @@ fn push_exist_scope_if_needed(
 
     let body = exist_fact.spec();
     push_param_def_scope_or_error(
-        body.params_def_with_type.collect_param_names(),
+        body.typed_parameters.collect_param_names(),
         free_param_type,
         &body.line_file,
         params_already_used,

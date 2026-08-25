@@ -16,133 +16,133 @@ impl From<TrustHaveStmt> for Stmt {
 
 impl From<DefPropStmt> for Stmt {
     fn from(v: DefPropStmt) -> Self {
-        DefPredicateStmt::DefPropStmt(v).into()
+        DefinitionStmt::DefPropStmt(v).into()
     }
 }
 
 impl From<DefAbstractPropStmt> for Stmt {
     fn from(v: DefAbstractPropStmt) -> Self {
-        DefPredicateStmt::DefAbstractPropStmt(v).into()
+        DefinitionStmt::DefAbstractPropStmt(v).into()
     }
 }
 
 impl From<HaveObjInNonemptySetOrParamTypeStmt> for Stmt {
     fn from(v: HaveObjInNonemptySetOrParamTypeStmt) -> Self {
-        DefObjStmt::HaveObjInNonemptySetStmt(v).into()
+        DefinitionStmt::HaveObjInNonemptySetStmt(v).into()
     }
 }
 
 impl From<LetObjStmt> for Stmt {
     fn from(v: LetObjStmt) -> Self {
-        DefObjStmt::LetObjStmt(v).into()
+        DefinitionStmt::LetObjStmt(v).into()
     }
 }
 
 impl From<HaveObjEqualStmt> for Stmt {
     fn from(v: HaveObjEqualStmt) -> Self {
-        DefObjStmt::HaveObjEqualStmt(v).into()
+        DefinitionStmt::HaveObjEqualStmt(v).into()
     }
 }
 
 impl From<HaveObjByExistFactsStmt> for Stmt {
     fn from(v: HaveObjByExistFactsStmt) -> Self {
-        DefObjStmt::HaveObjByExistFactsStmt(v).into()
+        DefinitionStmt::HaveObjByExistFactsStmt(v).into()
     }
 }
 
 impl From<ObtainObjFromExistFact> for Stmt {
     fn from(v: ObtainObjFromExistFact) -> Self {
-        DefObjStmt::ObtainObjFromExistFact(v).into()
+        DefinitionStmt::ObtainObjFromExistFact(v).into()
     }
 }
 
 impl From<ObtainObjFromAtomicFact> for Stmt {
     fn from(v: ObtainObjFromAtomicFact) -> Self {
-        DefObjStmt::ObtainObjFromAtomicFact(v).into()
+        DefinitionStmt::ObtainObjFromAtomicFact(v).into()
     }
 }
 
 impl From<ObtainObjFromThm> for Stmt {
     fn from(v: ObtainObjFromThm) -> Self {
-        DefObjStmt::ObtainObjFromThm(v).into()
+        DefinitionStmt::ObtainObjFromThm(v).into()
     }
 }
 
 impl From<HaveByPreimageStmt> for Stmt {
     fn from(v: HaveByPreimageStmt) -> Self {
-        DefObjStmt::HaveByPreimageStmt(v).into()
+        DefinitionStmt::HaveByPreimageStmt(v).into()
     }
 }
 
 impl From<HaveFnEqualStmt> for Stmt {
     fn from(v: HaveFnEqualStmt) -> Self {
-        DefObjStmt::HaveFnEqualStmt(v).into()
+        DefinitionStmt::HaveFnEqualStmt(v).into()
     }
 }
 
 impl From<HaveFnEqualCaseByCaseStmt> for Stmt {
     fn from(v: HaveFnEqualCaseByCaseStmt) -> Self {
-        DefObjStmt::HaveFnEqualCaseByCaseStmt(v).into()
+        DefinitionStmt::HaveFnEqualCaseByCaseStmt(v).into()
     }
 }
 
 impl From<HaveFnByInducStmt> for Stmt {
     fn from(v: HaveFnByInducStmt) -> Self {
-        DefObjStmt::HaveFnByInducStmt(v).into()
+        DefinitionStmt::HaveFnByInducStmt(v).into()
     }
 }
 
 impl From<HaveFnByForallExistUniqueStmt> for Stmt {
     fn from(v: HaveFnByForallExistUniqueStmt) -> Self {
-        DefObjStmt::HaveFnByForallExistUniqueStmt(v).into()
+        DefinitionStmt::HaveFnByForallExistUniqueStmt(v).into()
     }
 }
 
 impl From<HaveTupleStmt> for Stmt {
     fn from(v: HaveTupleStmt) -> Self {
-        DefObjStmt::HaveTupleStmt(v).into()
+        DefinitionStmt::HaveTupleStmt(v).into()
     }
 }
 
 impl From<HaveCartStmt> for Stmt {
     fn from(v: HaveCartStmt) -> Self {
-        DefObjStmt::HaveCartStmt(v).into()
+        DefinitionStmt::HaveCartStmt(v).into()
     }
 }
 
 impl From<HaveSeqStmt> for Stmt {
     fn from(v: HaveSeqStmt) -> Self {
-        DefObjStmt::HaveSeqStmt(v).into()
+        DefinitionStmt::HaveSeqStmt(v).into()
     }
 }
 
 impl From<HaveFiniteSeqStmt> for Stmt {
     fn from(v: HaveFiniteSeqStmt) -> Self {
-        DefObjStmt::HaveFiniteSeqStmt(v).into()
+        DefinitionStmt::HaveFiniteSeqStmt(v).into()
     }
 }
 
 impl From<HaveMatrixStmt> for Stmt {
     fn from(v: HaveMatrixStmt) -> Self {
-        DefObjStmt::HaveMatrixStmt(v).into()
+        DefinitionStmt::HaveMatrixStmt(v).into()
     }
 }
 
 impl From<DefTemplateStmt> for Stmt {
     fn from(v: DefTemplateStmt) -> Self {
-        DefInterfaceStmt::DefTemplateStmt(v).into()
+        DefinitionStmt::DefTemplateStmt(v).into()
     }
 }
 
 impl From<DefSettingStmt> for Stmt {
     fn from(v: DefSettingStmt) -> Self {
-        DefInterfaceStmt::DefSettingStmt(v).into()
+        DefinitionStmt::DefSettingStmt(v).into()
     }
 }
 
 impl From<DefAlgoStmt> for Stmt {
     fn from(v: DefAlgoStmt) -> Self {
-        Stmt::DefAlgoStmt(v)
+        DefinitionStmt::DefAlgoStmt(v).into()
     }
 }
 
@@ -328,13 +328,13 @@ impl From<ByStructDefStmt> for Stmt {
 
 impl From<DefThmStmt> for Stmt {
     fn from(v: DefThmStmt) -> Self {
-        Stmt::DefThmStmt(v)
+        DefinitionStmt::DefThmStmt(v).into()
     }
 }
 
 impl From<AxiomStmt> for Stmt {
     fn from(v: AxiomStmt) -> Self {
-        Stmt::AxiomStmt(v)
+        DefinitionStmt::AxiomStmt(v).into()
     }
 }
 
@@ -352,31 +352,19 @@ impl From<StopStrategyStmt> for Stmt {
 
 impl From<DefStrategyStmt> for Stmt {
     fn from(v: DefStrategyStmt) -> Self {
-        Stmt::DefStrategyStmt(v)
+        DefinitionStmt::DefStrategyStmt(v).into()
     }
 }
 
 impl From<DefStructStmt> for Stmt {
     fn from(v: DefStructStmt) -> Self {
-        DefInterfaceStmt::DefStructStmt(v).into()
+        DefinitionStmt::DefStructStmt(v).into()
     }
 }
 
-impl From<DefObjStmt> for Stmt {
-    fn from(v: DefObjStmt) -> Self {
-        Stmt::DefObjStmt(v)
-    }
-}
-
-impl From<DefPredicateStmt> for Stmt {
-    fn from(v: DefPredicateStmt) -> Self {
-        Stmt::DefPredicateStmt(v)
-    }
-}
-
-impl From<DefInterfaceStmt> for Stmt {
-    fn from(v: DefInterfaceStmt) -> Self {
-        Stmt::DefInterfaceStmt(v)
+impl From<DefinitionStmt> for Stmt {
+    fn from(v: DefinitionStmt) -> Self {
+        Stmt::Definition(v)
     }
 }
 

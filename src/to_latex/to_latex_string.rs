@@ -57,7 +57,7 @@ fn latex_texttt_escape(s: &str) -> String {
 
 fn fn_set_clause_latex(clause: &FnSetClause) -> String {
     let mut slots: Vec<String> = Vec::new();
-    for g in clause.params_def_with_set.iter() {
+    for g in clause.set_bound_parameters.iter() {
         let set = fn_param_group_type_to_latex(g);
         for p in &g.params {
             slots.push(format!(r"{} \in {}", latex_local_ident(p.name()), set));
@@ -86,7 +86,7 @@ fn fn_set_clause_latex(clause: &FnSetClause) -> String {
     }
 }
 
-fn fn_param_group_type_to_latex(g: &ParamGroupWithSet) -> String {
+fn fn_param_group_type_to_latex(g: &SetBoundParameterGroup) -> String {
     g.set_obj().to_latex_string()
 }
 
@@ -805,14 +805,14 @@ impl DefPropStmt {
                 r"\operatorname{{{}}}\, {}\left\{{ {} \right\}}",
                 PROP,
                 latex_local_ident(&self.name),
-                self.params_def_with_type.to_latex_string()
+                self.typed_parameters.to_latex_string()
             ),
             _ => {
                 let mut rows = vec![format!(
                     r"\operatorname{{{}}}\, {}\left\{{ {} \right\}} \texttt{{:}}",
                     PROP,
                     latex_local_ident(&self.name),
-                    self.params_def_with_type.to_latex_string()
+                    self.typed_parameters.to_latex_string()
                 )];
                 for fact in &self.iff_facts {
                     rows.push(format!(r"& \quad {}", fact.to_latex_string()));
@@ -871,7 +871,7 @@ impl ExistFactEnum {
         } else {
             r"\exists"
         };
-        let params = self.params_def_with_type().to_latex_string();
+        let params = self.typed_parameters().to_latex_string();
         let facts = self
             .facts()
             .iter()
@@ -951,7 +951,7 @@ impl FnObj {
 impl AnonymousFn {
     pub fn to_latex_string(&self) -> String {
         let mut slots: Vec<String> = Vec::new();
-        for g in self.body.params_def_with_set.iter() {
+        for g in self.body.set_bound_parameters.iter() {
             let set = fn_param_group_type_to_latex(g);
             for p in &g.params {
                 slots.push(format!(r"{} \in {}", latex_local_ident(p.name()), set));
@@ -981,7 +981,7 @@ impl AnonymousFn {
 impl FnSet {
     pub fn to_latex_string(&self) -> String {
         let mut slots: Vec<String> = Vec::new();
-        for g in self.body.params_def_with_set.iter() {
+        for g in self.body.set_bound_parameters.iter() {
             let set = fn_param_group_type_to_latex(g);
             for p in &g.params {
                 slots.push(format!(r"{} \in {}", latex_local_ident(p.name()), set));
@@ -1014,7 +1014,7 @@ impl FnSet {
 
 impl ForallFact {
     pub fn to_latex_string(&self) -> String {
-        let params = self.params_def_with_type.to_latex_string();
+        let params = self.typed_parameters.to_latex_string();
         let then = self
             .then_facts
             .iter()
@@ -1186,7 +1186,7 @@ impl HaveFnEqualCaseByCaseStmt {
 impl HaveFnEqualStmt {
     pub fn to_latex_string(&self) -> String {
         let fn_set_clause = FnSetClause::new(
-            self.equal_to_anonymous_fn.body.params_def_with_set.clone(),
+            self.equal_to_anonymous_fn.body.set_bound_parameters.clone(),
             self.equal_to_anonymous_fn.body.dom_facts.clone(),
             (*self.equal_to_anonymous_fn.body.ret_set).clone(),
         )
@@ -1867,7 +1867,7 @@ impl OrFact {
     }
 }
 
-impl ParamDefWithType {
+impl TypedParameterList {
     pub fn to_latex_string(&self) -> String {
         self.groups
             .iter()
@@ -1877,7 +1877,7 @@ impl ParamDefWithType {
     }
 }
 
-impl ParamGroupWithParamType {
+impl TypedParameterGroup {
     pub fn to_latex_string(&self) -> String {
         let names = self
             .params
@@ -2090,7 +2090,7 @@ impl WitnessExistFact {
             r"\mathrm{{witness}}\ {} : {} \mathrm{{st}} \left\{{ {}\right\}}",
             names,
             self.exist_fact_in_witness
-                .params_def_with_type()
+                .typed_parameters()
                 .to_latex_string(),
             facts
         );
@@ -2380,40 +2380,50 @@ impl Stmt {
             Stmt::Fact(x) => x.to_latex_string(),
             Stmt::UnsafeStmt(UnsafeStmt::TrustStmt(x)) => x.to_latex_string(),
             Stmt::UnsafeStmt(UnsafeStmt::TrustHaveStmt(x)) => x.to_latex_string(),
-            Stmt::DefObjStmt(DefObjStmt::LetObjStmt(x)) => x.to_latex_string(),
-            Stmt::DefObjStmt(DefObjStmt::HaveObjInNonemptySetStmt(x)) => x.to_latex_string(),
-            Stmt::DefObjStmt(DefObjStmt::HaveObjEqualStmt(x)) => x.to_latex_string(),
-            Stmt::DefObjStmt(DefObjStmt::HaveObjByExistFactsStmt(x)) => x.to_latex_string(),
-            Stmt::DefObjStmt(DefObjStmt::ObtainObjFromExistFact(x)) => x.to_latex_string(),
-            Stmt::DefObjStmt(DefObjStmt::ObtainObjFromAtomicFact(x)) => x.to_latex_string(),
-            Stmt::DefObjStmt(DefObjStmt::ObtainObjFromThm(x)) => x.to_latex_string(),
-            Stmt::DefObjStmt(DefObjStmt::HaveByPreimageStmt(x)) => {
+            Stmt::Definition(DefinitionStmt::LetObjStmt(x)) => x.to_latex_string(),
+            Stmt::Definition(DefinitionStmt::HaveObjInNonemptySetStmt(x)) => x.to_latex_string(),
+            Stmt::Definition(DefinitionStmt::HaveObjEqualStmt(x)) => x.to_latex_string(),
+            Stmt::Definition(DefinitionStmt::HaveObjByExistFactsStmt(x)) => x.to_latex_string(),
+            Stmt::Definition(DefinitionStmt::ObtainObjFromExistFact(x)) => x.to_latex_string(),
+            Stmt::Definition(DefinitionStmt::ObtainObjFromAtomicFact(x)) => x.to_latex_string(),
+            Stmt::Definition(DefinitionStmt::ObtainObjFromThm(x)) => x.to_latex_string(),
+            Stmt::Definition(DefinitionStmt::HaveByPreimageStmt(x)) => {
                 latex_texttt_escape(&x.to_string())
             }
-            Stmt::DefObjStmt(DefObjStmt::HaveFnEqualStmt(x)) => x.to_latex_string(),
-            Stmt::DefObjStmt(DefObjStmt::HaveFnEqualCaseByCaseStmt(x)) => x.to_latex_string(),
-            Stmt::DefObjStmt(DefObjStmt::HaveFnByInducStmt(x)) => x.to_latex_string(),
-            Stmt::DefObjStmt(DefObjStmt::HaveFnByForallExistUniqueStmt(x)) => x.to_latex_string(),
-            Stmt::DefObjStmt(DefObjStmt::HaveTupleStmt(x)) => latex_texttt_escape(&x.to_string()),
-            Stmt::DefObjStmt(DefObjStmt::HaveCartStmt(x)) => latex_texttt_escape(&x.to_string()),
-            Stmt::DefObjStmt(DefObjStmt::HaveSeqStmt(x)) => latex_texttt_escape(&x.to_string()),
-            Stmt::DefObjStmt(DefObjStmt::HaveFiniteSeqStmt(x)) => {
+            Stmt::Definition(DefinitionStmt::HaveFnEqualStmt(x)) => x.to_latex_string(),
+            Stmt::Definition(DefinitionStmt::HaveFnEqualCaseByCaseStmt(x)) => x.to_latex_string(),
+            Stmt::Definition(DefinitionStmt::HaveFnByInducStmt(x)) => x.to_latex_string(),
+            Stmt::Definition(DefinitionStmt::HaveFnByForallExistUniqueStmt(x)) => {
+                x.to_latex_string()
+            }
+            Stmt::Definition(DefinitionStmt::HaveTupleStmt(x)) => {
                 latex_texttt_escape(&x.to_string())
             }
-            Stmt::DefObjStmt(DefObjStmt::HaveMatrixStmt(x)) => latex_texttt_escape(&x.to_string()),
-            Stmt::DefPredicateStmt(DefPredicateStmt::DefPropStmt(x)) => x.to_latex_string(),
-            Stmt::DefPredicateStmt(DefPredicateStmt::DefAbstractPropStmt(x)) => x.to_latex_string(),
-            Stmt::DefAlgoStmt(x) => x.to_latex_string(),
-            Stmt::DefThmStmt(x) => latex_texttt_escape(&x.to_string()),
-            Stmt::AxiomStmt(x) => latex_texttt_escape(&x.to_string()),
-            Stmt::DefStrategyStmt(x) => latex_texttt_escape(&x.to_string()),
-            Stmt::DefInterfaceStmt(DefInterfaceStmt::DefStructStmt(x)) => {
+            Stmt::Definition(DefinitionStmt::HaveCartStmt(x)) => {
                 latex_texttt_escape(&x.to_string())
             }
-            Stmt::DefInterfaceStmt(DefInterfaceStmt::DefTemplateStmt(x)) => {
+            Stmt::Definition(DefinitionStmt::HaveSeqStmt(x)) => latex_texttt_escape(&x.to_string()),
+            Stmt::Definition(DefinitionStmt::HaveFiniteSeqStmt(x)) => {
                 latex_texttt_escape(&x.to_string())
             }
-            Stmt::DefInterfaceStmt(DefInterfaceStmt::DefSettingStmt(x)) => {
+            Stmt::Definition(DefinitionStmt::HaveMatrixStmt(x)) => {
+                latex_texttt_escape(&x.to_string())
+            }
+            Stmt::Definition(DefinitionStmt::DefPropStmt(x)) => x.to_latex_string(),
+            Stmt::Definition(DefinitionStmt::DefAbstractPropStmt(x)) => x.to_latex_string(),
+            Stmt::Definition(DefinitionStmt::DefAlgoStmt(x)) => x.to_latex_string(),
+            Stmt::Definition(DefinitionStmt::DefThmStmt(x)) => latex_texttt_escape(&x.to_string()),
+            Stmt::Definition(DefinitionStmt::AxiomStmt(x)) => latex_texttt_escape(&x.to_string()),
+            Stmt::Definition(DefinitionStmt::DefStrategyStmt(x)) => {
+                latex_texttt_escape(&x.to_string())
+            }
+            Stmt::Definition(DefinitionStmt::DefStructStmt(x)) => {
+                latex_texttt_escape(&x.to_string())
+            }
+            Stmt::Definition(DefinitionStmt::DefTemplateStmt(x)) => {
+                latex_texttt_escape(&x.to_string())
+            }
+            Stmt::Definition(DefinitionStmt::DefSettingStmt(x)) => {
                 latex_texttt_escape(&x.to_string())
             }
             Stmt::ProofBlock(ProofBlockStmt::ClaimStmt(x)) => x.to_latex_string(),

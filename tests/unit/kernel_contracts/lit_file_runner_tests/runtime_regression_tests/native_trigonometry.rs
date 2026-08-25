@@ -489,7 +489,7 @@ fn native_trigonometric_names_are_hard_reserved_in_binding_positions() {
             run_trigonometric_source(source_code.as_str(), "reserved_trig_name");
         assert!(
             !run_succeeded,
-            "{name} should be reserved in declarations:\n{run_output}"
+            "{name} should be reserved in definitions:\n{run_output}"
         );
         assert!(run_output.contains(name), "{run_output}");
     }

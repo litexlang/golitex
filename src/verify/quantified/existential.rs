@@ -22,21 +22,16 @@ fn real_line_comparison_exist_fact_non_witness_operands(
         return None;
     }
 
-    let param_bindings = exist_fact.params_def_with_type().collect_param_bindings();
+    let param_bindings = exist_fact.typed_parameters().collect_param_bindings();
     if !(param_bindings.len() == 1 || param_bindings.len() == 2) {
         return None;
     }
-    if !exist_fact
-        .params_def_with_type()
-        .groups
-        .iter()
-        .all(|group| {
-            matches!(
-                &group.param_type,
-                ParamType::Obj(Obj::StandardSet(StandardSet::R))
-            )
-        })
-    {
+    if !exist_fact.typed_parameters().groups.iter().all(|group| {
+        matches!(
+            &group.param_type,
+            ParamType::Obj(Obj::StandardSet(StandardSet::R))
+        )
+    }) {
         return None;
     }
 
@@ -93,7 +88,7 @@ fn rational_integer_ratio_exist_fact_non_witness_operand(
     }
 
     let params = exist_fact
-        .params_def_with_type()
+        .typed_parameters()
         .collect_param_bindings_with_types();
     if params.len() != 2 {
         return None;
@@ -146,7 +141,7 @@ fn rational_positive_denominator_exist_fact_non_witness_operand(
         return None;
     }
     let params = exist_fact
-        .params_def_with_type()
+        .typed_parameters()
         .collect_param_bindings_with_types();
     let [(numerator_binding, ParamType::Obj(Obj::StandardSet(StandardSet::Z))), (denominator_binding, ParamType::Obj(Obj::StandardSet(StandardSet::Z)))] =
         params.as_slice()
@@ -201,7 +196,7 @@ fn euclidean_quotient_exist_unique_operands(exist_fact: &ExistFactEnum) -> Optio
     }
 
     let params = exist_fact
-        .params_def_with_type()
+        .typed_parameters()
         .collect_param_bindings_with_types();
     let [(witness_binding, ParamType::Obj(Obj::StandardSet(StandardSet::Z)))] = params.as_slice()
     else {
@@ -243,7 +238,7 @@ fn integer_divisibility_exist_fact_operands(exist_fact: &ExistFactEnum) -> Optio
         return None;
     }
     let params = exist_fact
-        .params_def_with_type()
+        .typed_parameters()
         .collect_param_bindings_with_types();
     let [(witness_binding, ParamType::Obj(Obj::StandardSet(StandardSet::Z)))] = params.as_slice()
     else {
@@ -284,7 +279,7 @@ fn archimedean_reciprocal_bound_non_witness_operand(exist_fact: &ExistFactEnum) 
         return None;
     }
     let params = exist_fact
-        .params_def_with_type()
+        .typed_parameters()
         .collect_param_bindings_with_types();
     let [(witness_binding, ParamType::Obj(Obj::StandardSet(StandardSet::NPos)))] =
         params.as_slice()
@@ -316,7 +311,7 @@ fn dense_order_exist_fact_endpoints(
     }
 
     let params = exist_fact
-        .params_def_with_type()
+        .typed_parameters()
         .collect_param_bindings_with_types();
     let [(witness_binding, ParamType::Obj(Obj::StandardSet(carrier)))] = params.as_slice() else {
         return None;
@@ -358,7 +353,7 @@ fn integer_interval_exist_fact_endpoints(exist_fact: &ExistFactEnum) -> Option<(
     }
 
     let params = exist_fact
-        .params_def_with_type()
+        .typed_parameters()
         .collect_param_bindings_with_types();
     let [(witness_binding, ParamType::Obj(Obj::StandardSet(StandardSet::Z)))] = params.as_slice()
     else {
@@ -403,7 +398,7 @@ fn nonempty_set_exist_fact_set(exist_fact: &ExistFactEnum) -> Option<Obj> {
     }
 
     let params = exist_fact
-        .params_def_with_type()
+        .typed_parameters()
         .collect_param_bindings_with_types();
     let [(witness_binding, ParamType::Obj(witness_set))] = params.as_slice() else {
         return None;
@@ -786,7 +781,7 @@ impl Runtime {
         let ExistFactEnum::ExistFact(body) = exist_fact else {
             return Ok(None);
         };
-        let groups = &body.params_def_with_type.groups;
+        let groups = &body.typed_parameters.groups;
         if groups.len() != 1 || groups[0].params.len() != 1 {
             return Ok(None);
         }
@@ -811,7 +806,7 @@ impl Runtime {
             return Ok(None);
         }
         let param_to_arg_map = definition
-            .params_def_with_type
+            .typed_parameters
             .param_defs_and_args_to_param_to_arg_map(maximum_prop.body.as_slice());
         let member_clause = self.inst_fact(
             &definition.iff_facts[0],
@@ -834,7 +829,7 @@ impl Runtime {
         let Fact::ForallFact(upper_bound) = upper_bound_clause else {
             return Ok(None);
         };
-        let upper_groups = &upper_bound.params_def_with_type.groups;
+        let upper_groups = &upper_bound.typed_parameters.groups;
         if upper_groups.len() != 1 || upper_groups[0].params.len() != 1 {
             return Ok(None);
         }
@@ -917,7 +912,7 @@ impl Runtime {
         component_conclusion: bool,
     ) -> Result<ForallFact, RuntimeError> {
         let lf = exist_fact.line_file();
-        let flat_orig = exist_fact.params_def_with_type().collect_param_bindings();
+        let flat_orig = exist_fact.typed_parameters().collect_param_bindings();
         let n = flat_orig.len();
         let mut reserved_names = HashSet::new();
         self.collect_bound_param_names_in_exist_fact(exist_fact, &mut reserved_names);
@@ -936,8 +931,8 @@ impl Runtime {
 
         let mut map_running_a: HashMap<String, Obj> = HashMap::new();
         let mut map_running_b: HashMap<String, Obj> = HashMap::new();
-        let mut forall_groups: Vec<ParamGroupWithParamType> = Vec::new();
-        for group in exist_fact.params_def_with_type().groups.iter() {
+        let mut forall_groups: Vec<TypedParameterGroup> = Vec::new();
+        for group in exist_fact.typed_parameters().groups.iter() {
             let chunk_a: Vec<SymbolBinding> = group
                 .params
                 .iter()
@@ -958,9 +953,9 @@ impl Runtime {
                     obj_for_bound_param_in_scope(target),
                 );
             }
-            forall_groups.push(ParamGroupWithParamType::new(chunk_a, pt_a));
+            forall_groups.push(TypedParameterGroup::new(chunk_a, pt_a));
         }
-        for group in exist_fact.params_def_with_type().groups.iter() {
+        for group in exist_fact.typed_parameters().groups.iter() {
             let chunk_b: Vec<SymbolBinding> = group
                 .params
                 .iter()
@@ -981,7 +976,7 @@ impl Runtime {
                     obj_for_bound_param_in_scope(target),
                 );
             }
-            forall_groups.push(ParamGroupWithParamType::new(chunk_b, pt_b));
+            forall_groups.push(TypedParameterGroup::new(chunk_b, pt_b));
         }
 
         let mut map_a = HashMap::new();
@@ -1046,7 +1041,7 @@ impl Runtime {
         }
 
         ForallFact::new_canonical_forall(
-            ParamDefWithType::new(forall_groups),
+            TypedParameterList::new(forall_groups),
             dom_facts,
             then_facts,
             lf,
@@ -1058,11 +1053,11 @@ impl Runtime {
         exist_fact: &ExistFactEnum,
         verify_state: &ProofSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
-        if exist_fact.params_def_with_type().number_of_params() == 0 {
+        if exist_fact.typed_parameters().number_of_params() == 0 {
             return Ok(None);
         }
         let plain = ExistFactEnum::ExistFact(ExistentialSpec::new(
-            exist_fact.params_def_with_type().clone(),
+            exist_fact.typed_parameters().clone(),
             exist_fact.facts().clone(),
             exist_fact.line_file(),
         )?);
@@ -1193,7 +1188,7 @@ impl Runtime {
         let mut param_to_arg_map: HashMap<String, Obj> = HashMap::new();
         let mut param_index: usize = 0;
 
-        for param_def_with_type in exist_fact.params_def_with_type().groups.iter() {
+        for param_def_with_type in exist_fact.typed_parameters().groups.iter() {
             for original_binding in param_def_with_type.params.iter() {
                 let normalized_name = format!("#{}", param_index);
                 let normalized_binding =
@@ -1218,7 +1213,7 @@ impl Runtime {
         }
 
         let mut params_string_parts: Vec<String> = Vec::new();
-        for param_def_with_type in instantiated_exist_fact.params_def_with_type().groups.iter() {
+        for param_def_with_type in instantiated_exist_fact.typed_parameters().groups.iter() {
             let param_type_string = match &param_def_with_type.param_type {
                 ParamType::Obj(obj) => obj_equality_key(obj),
                 param_type => param_type.to_string(),

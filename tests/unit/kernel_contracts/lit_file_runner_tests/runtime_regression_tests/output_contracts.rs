@@ -38,7 +38,7 @@ by def $unit(1)
 #[test]
 fn hidden_file_path_output_omits_source_fields() {
     // Use a verification failure so the public error contract includes its line.
-    // An undeclared identifier fails earlier during well-definedness and does not
+    // An undefined identifier fails earlier during well-definedness and does not
     // promise a source line.
     let source_code = "1 = 0";
     let path = "/private/tmp/litex-hidden-source-test.lit";
@@ -977,22 +977,22 @@ $axiom_prop(3)
     );
     assert!(
         run_output.contains("\"kind\": \"AxiomStmt\""),
-        "axiom output should identify the declaration as an axiom:\n{}",
+        "axiom output should identify the definition as an axiom:\n{}",
         run_output
     );
     assert!(matches!(
         stmt_results[1].statement(),
-        Some(Stmt::AxiomStmt(_))
+        Some(Stmt::Definition(DefinitionStmt::AxiomStmt(_)))
     ));
     assert!(runtime
         .top_level_env()
-        .declarations
-        .defined_thm_stmts
+        .definitions
+        .theorem_definitions
         .is_empty());
     assert!(runtime
         .top_level_env()
-        .declarations
-        .defined_axiom_stmts
+        .definitions
+        .axiom_definitions
         .contains_key("axiom_prop_all"));
     assert!(runtime
         .get_axiom_definition_by_name("axiom_prop_all")
@@ -1600,7 +1600,7 @@ forall n N:
     assert!(run_output.contains("\"statement\": \"n $in N\""));
     assert!(run_output.contains("\"kind\": \"StoredFactCitation\""));
     assert!(run_output
-        .contains(format!("\"reason\": \"{}\"", ParamDefWithType::store_reason()).as_str()));
+        .contains(format!("\"reason\": \"{}\"", TypedParameterList::store_reason()).as_str()));
     assert!(!run_output.contains("\"source\": \"parameter definition\""));
     assert!(!run_output.contains("\"cite_source\""));
     assert!(!run_output.contains("\"verify_what\""));
@@ -1641,7 +1641,7 @@ forall a, b, c, d, e1, f R:
             assert!(run_output.contains("\"assumption_infers\": {"));
             assert!(run_output.contains("\"statement\": \"a $in R\""));
             assert!(run_output.contains(
-                format!("\"reason\": \"{}\"", ParamDefWithType::store_reason()).as_str()
+                format!("\"reason\": \"{}\"", TypedParameterList::store_reason()).as_str()
             ));
             assert!(run_output.contains("\"statement\": \"$p(a, b, c)\""));
             assert!(run_output.contains(
@@ -1690,7 +1690,7 @@ claim:
             assert!(run_output.contains("\"assumption_infers\": {"));
             assert!(run_output.contains("\"statement\": \"x $in R\""));
             assert!(run_output.contains(
-                format!("\"reason\": \"{}\"", ParamDefWithType::store_reason()).as_str()
+                format!("\"reason\": \"{}\"", TypedParameterList::store_reason()).as_str()
             ));
             assert!(run_output.contains("\"statement\": \"x = 1\""));
             assert!(run_output.contains(

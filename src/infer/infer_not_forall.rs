@@ -24,17 +24,17 @@ impl Runtime {
         not_forall: &NotForallFact,
     ) -> Result<Option<ExistFactEnum>, RuntimeError> {
         let forall = &not_forall.forall_fact;
-        if forall.params_def_with_type.number_of_params() == 0 || forall.then_facts.is_empty() {
+        if forall.typed_parameters.number_of_params() == 0 || forall.then_facts.is_empty() {
             return Ok(None);
         }
 
-        let source_bindings = forall.params_def_with_type.collect_param_bindings();
+        let source_bindings = forall.typed_parameters.collect_param_bindings();
         let (exist_names, full_param_to_exist_obj) =
             self.fresh_binder_retag_plan_for_bindings(&source_bindings);
         let mut param_to_exist_obj: HashMap<String, Obj> = HashMap::new();
-        let mut exist_groups: Vec<ParamGroupWithParamType> = Vec::new();
+        let mut exist_groups: Vec<TypedParameterGroup> = Vec::new();
         let mut name_index = 0;
-        for group in forall.params_def_with_type.groups.iter() {
+        for group in forall.typed_parameters.groups.iter() {
             let param_type = self.inst_param_type(
                 &group.param_type,
                 &param_to_exist_obj,
@@ -51,7 +51,7 @@ impl Runtime {
                 );
             }
             name_index += group.params.len();
-            exist_groups.push(ParamGroupWithParamType::new(group_exist_names, param_type));
+            exist_groups.push(TypedParameterGroup::new(group_exist_names, param_type));
         }
 
         let mut body_facts: Vec<QuantifierFreeFact> = Vec::new();
@@ -89,7 +89,7 @@ impl Runtime {
         });
 
         Ok(Some(ExistFactEnum::ExistFact(ExistentialSpec::new(
-            ParamDefWithType::new(exist_groups),
+            TypedParameterList::new(exist_groups),
             body_facts,
             forall.line_file.clone(),
         )?)))

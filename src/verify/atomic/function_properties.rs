@@ -110,10 +110,10 @@ impl Runtime {
         let Some(function_body) = self.get_fn_range_function_body(&function) else {
             return Ok(Some(vec![UnknownGenericStmtResult::new().into()]));
         };
-        if ParamGroupWithSet::number_of_params(&function_body.params_def_with_set) != 1 {
+        if SetBoundParameterGroup::number_of_params(&function_body.set_bound_parameters) != 1 {
             return Ok(Some(vec![UnknownGenericStmtResult::new().into()]));
         }
-        let Some(param_group) = function_body.params_def_with_set.first() else {
+        let Some(param_group) = function_body.set_bound_parameters.first() else {
             return Ok(Some(vec![UnknownGenericStmtResult::new().into()]));
         };
 
@@ -200,7 +200,7 @@ impl Runtime {
             return Err(function_property_application_error(&function, line_file));
         };
         Ok(ForallFact::new_canonical_forall(
-            ParamDefWithType::new(vec![params]),
+            TypedParameterList::new(vec![params]),
             vec![EqualFact::new(fx1, fx2, line_file.clone()).into()],
             vec![EqualFact::new(x1, x2, line_file.clone()).into()],
             line_file,
@@ -226,12 +226,12 @@ impl Runtime {
             return Err(function_property_application_error(&function, line_file));
         };
         let exist_body = ExistentialSpec::new(
-            ParamDefWithType::new(vec![x_group]),
+            TypedParameterList::new(vec![x_group]),
             vec![EqualFact::new(y, fx, line_file.clone()).into()],
             line_file.clone(),
         )?;
         Ok(ForallFact::new_canonical_forall(
-            ParamDefWithType::new(vec![y_group]),
+            TypedParameterList::new(vec![y_group]),
             vec![],
             vec![ExistFactEnum::ExistFact(exist_body).into()],
             line_file,
@@ -266,13 +266,13 @@ impl Runtime {
             ));
         };
         let exist_body = ExistentialSpec::new(
-            ParamDefWithType::new(vec![x_group]),
+            TypedParameterList::new(vec![x_group]),
             vec![EqualFact::new(fx, y, fact.line_file.clone()).into()],
             fact.line_file.clone(),
         )?;
         Ok(Some(
             ForallFact::new_canonical_forall(
-                ParamDefWithType::new(vec![y_group]),
+                TypedParameterList::new(vec![y_group]),
                 vec![],
                 vec![ExistFactEnum::ExistUniqueFact(exist_body).into()],
                 fact.line_file.clone(),

@@ -67,7 +67,7 @@ Syntax sugar of `xxx set` in `forall xxx set` meaning `$is_set(xxx)` is inspired
 
 Anonymous function syntax like`fn(x R) R {(-x)}` is essential because they are used as parameters of functions like `sum` and `product` and `\integral`. It's inspired by JavaScript's `(x) => (-x)` syntax.
 
-The correlation between `tuple`, `cart`, and `struct` is essential, because anything, including `struct`, must correlate to something in set theory. Nothing in Litex should be arbitrary and without concrete mathematical meaning. Once its parameters are fixed, `&Point` is one named subset of a Cartesian carrier. A declaration such as `have p &Point = (0, 0)` therefore gives `p` the corresponding field names, including `p.x` for its first coordinate.
+The correlation between `tuple`, `cart`, and `struct` is essential, because anything, including `struct`, must correlate to something in set theory. Nothing in Litex should be arbitrary and without concrete mathematical meaning. Once its parameters are fixed, `&Point` is one named subset of a Cartesian carrier. A definition such as `have p &Point = (0, 0)` therefore gives `p` the corresponding field names, including `p.x` for its first coordinate.
 
 ## What does "Litex is built on relationships between objects instead of meanings of them" mean?
 
@@ -162,7 +162,7 @@ atomic leaf keeps the surrounding builtin-depth budget; the compound fact does
 not reopen full proof search.
 
 Universal conclusions follow the same bounded grammar. A `forall` conclusion
-cannot contain another `forall`; declare all quantified parameters in the
+cannot contain another `forall`; bind all quantified parameters in the
 outer header instead. For example, write `forall x R, y R: ...` rather than
 placing `forall y R` inside the conclusion of `forall x R`. A universal fact
 may still appear as an explicit premise before `=>:` because premises are
@@ -184,7 +184,7 @@ by def $all_reals_reflexive()
 $all_reals_reflexive() or 1 = 1 and 2 = 2
 ```
 
-The declaration defines `$all_reals_reflexive()` to be equivalent to its body;
+The definition defines `$all_reals_reflexive()` to be equivalent to its body;
 it does not make the body true automatically. If the subclaim has free objects,
 give the `prop` corresponding parameters. This naming step preserves Litex's
 canonical fact representation while still exposing the intended mathematical
@@ -379,7 +379,7 @@ Inside a `struct` `<=>:` block, equivalent facts instead form an ordered local
 filter context. After a fact is well-defined it is staged without definition
 inference, so an earlier `value != 0` can make a later `1 / value`
 well-defined. Reversing those two facts still fails. The same ordered check is
-used at declaration time and whenever the instantiated struct carrier is
+used at definition time and whenever the instantiated struct carrier is
 checked; the temporary facts never leak into the surrounding environment.
 
 At outer round 0, equality does not enumerate stored representatives or open a
@@ -414,7 +414,7 @@ route implicitly.
 For integers, the checker also recognizes the two exact singleton intervals:
 `n <= x < n + 1` closes `x = n`, and `n < x <= n + 1` closes
 `x = n + 1`. An exact known pointwise universal packages `$fn_eq(f, g)` only
-when the declared function carriers are alpha-equivalent.
+when the defined function carriers are alpha-equivalent.
 Once that global function-equality fact is stored, inference stores `f = g` in
 the ordinary equality class, so constructor congruence can also prove facts
 such as `power_set(f) = power_set(g)`. `$fn_eq_in` does not trigger this global
@@ -442,8 +442,8 @@ search arbitrary subset chains. For finite `s`,
 `by thm finite_set_has_bijective_index(s)` stores a noncanonical existential
 index in `finite_seq(s, finite_set_size(s))`, bijective from
 `closed_range(1, finite_set_size(s))`. These are bare kernel names, not
-`basics::` declarations, and an arbitrary finite sequence is not thereby
-declared bijective.
+`basics::` definitions, and an arbitrary finite sequence is not thereby
+defined bijective.
 When only one atomic consequence should escape, use the preview form
 `by thm name(args) => atomic_fact`, or the equivalent bodyless goal block
 `by thm name(args):` followed by one `? atomic_fact`. Litex applies the ordinary
@@ -505,7 +505,7 @@ is no Python-style last-import-wins rule.
 
 Explicit `A::b` always bypasses bare lookup. Module names and symbol names are
 separate, so `A` may still be both a module head and a local object. In contrast,
-once external bare `b` is active, no local declaration or binder may also use
+once external bare `b` is active, no local definition or binder may also use
 `b`; struct fields such as `value.b` remain separate. Permissions inherit into
 submodules, but an export is not visible until it has loaded, so an earlier file
 cannot accidentally cite a later file. Dynamic imports in isolated sessions
@@ -544,7 +544,7 @@ names and record facts such as `$is_set(A)`, `$is_nonempty_set(B)`, and
 containing all sets. They are surface forms for introducing mathematical
 objects with the corresponding set-theoretic properties.
 
-Function "types" are also set-theoretic function spaces. A declaration such as
+Function "types" are also set-theoretic function spaces. A definition such as
 `fn(x S) T` means a function object whose inputs come from `S` and whose values
 come from `T`. Later parameter domains may cite earlier parameters, and the
 return set may cite the function parameters; an application substitutes its
@@ -661,8 +661,8 @@ normalizer.
 fails well-definedness before equality checking. The preview remains symbolic:
 `eval` and Python extraction reject native trigonometric expressions explicitly.
 The current Litex-to-Lean compiler has no checked trigonometric proof backend, so
-trigonometric expressions remain outside its declared subset even though some
-nontrigonometric declarations and scoped proof commands are now supported. The
+trigonometric expressions remain outside its defined subset even though some
+nontrigonometric definitions and scoped proof commands are now supported. The
 preview also does not yet include inverse or complex trigonometry, analytic
 definitions, or every common special-angle value.
 
@@ -675,7 +675,7 @@ arithmetic, and real arithmetic remains real arithmetic; an expression falls
 back to `C` only when no narrower supported carrier applies.
 
 `C*` denotes the nonzero complex carrier `C \ {0}`. Thus `R* $subset C*`,
-`C* $subset C`, and a declaration such as `have z C*` supplies both `z $in C`
+`C* $subset C`, and a definition such as `have z C*` supplies both `z $in C`
 and `z != 0`. The reverse inclusion `C $subset C*` is false, and `0 $in C*`
 is rejected.
 
@@ -825,16 +825,16 @@ Read this as a named set-builder over `cart(R, R)`:
 ```
 
 Here the field name `x` labels index `1`, and `y` labels index `2`. Because
-`p` was declared directly in `&FirstQuadrant`, `p.x` is its first component
+`p` was defined directly in `&FirstQuadrant`, `p.x` is its first component
 and `p.y` is its second component. This direct `p &FirstQuadrant` binding is
 the only automatic property-release case: it opens one struct layer and stores
 the tuple shape, dimension, field/index bridges, field carriers, and laws.
 
-For any other declaration-owned struct expression, write
+For any other definition-owned struct expression, write
 `by struct def expression`. The statement first verifies that exact expression
-belongs to its already-declared struct carrier, then releases exactly one
+belongs to its already-defined struct carrier, then releases exactly one
 layer. There is no `as &Struct` syntax and no recursive opening. For example,
-if `make_outer(t)` returns `&Outer` and `Outer.inner` is declared as `&Inner`,
+if `make_outer(t)` returns `&Outer` and `Outer.inner` is defined as `&Inner`,
 then `by struct def make_outer(t).inner` opens `Inner`, not `Outer` and not any
 struct below `Inner`.
 
@@ -849,24 +849,24 @@ non-parameterized struct, `&Name` is the struct set. Both are ordinary sets and
 are valid in every binder or function-signature position that expects a set.
 
 The same tuple may belong to several struct sets, but that does not make field
-selection ambiguous: named fields belong to the declaration of a symbol or
+selection ambiguous: named fields belong to the definition of a symbol or
 function return. Giving a fresh binding the carrier `p &FirstQuadrant` fixes
 that ownership for `p`. There is no surface form for changing it at one use.
 
-The same declaration-owned rule supports consecutive field chains. If
-`outer &Outer` and `Outer.inner` is declared directly as `&Inner`, then
+The same definition-owned rule supports consecutive field chains. If
+`outer &Outer` and `Outer.inner` is defined directly as `&Inner`, then
 `outer.inner.value` is valid. The intermediate field owner comes from the
-field declaration, not from proof search. A named set definition or a later
+field definition, not from proof search. A named set definition or a later
 fact saying that `outer.inner` belongs to `&Inner` does not add fields.
 
 This validity is only well-definedness. Looking up `outer.inner.value` checks
-that the declared field path exists; it does not store field membership,
+that the defined field path exists; it does not store field membership,
 field/index equalities, or struct laws. Use `by struct def outer.inner` before
 a proof that needs `Inner`'s properties. A function's explicit struct return
 carrier behaves the same way: it makes `f(t).field` a legal path but does not
 open the result's properties.
 
-Postfixes compose when declarations provide the carriers. A final field may be
+Postfixes compose when definitions provide the carriers. A final field may be
 callable, so `space.scalars.mul(a, b)` is supported when `scalars` is a
 struct-valued field and `mul` is callable. Likewise, after
 `have fn make_inner(...) &Inner = ...`, `make_inner(...).value` is valid.
@@ -875,8 +875,8 @@ This is not a unique nominal type, and Litex does not infer fields from all
 known memberships. A later fact `p $in &FirstQuadrant` supplies only that
 membership proposition; it does not eagerly store positional consequences,
 laws, or `p.x`. Nor can it be opened with `by struct def p`, because `p` has no
-declaration-owned `FirstQuadrant` view. If a `p &Point` also belongs to
-`&ComplexPair`, `p.x` remains the `Point` field fixed by its declaration. To use
+definition-owned `FirstQuadrant` view. If a `p &Point` also belongs to
+`&ComplexPair`, `p.x` remains the `Point` field fixed by its definition. To use
 the other names, introduce a new object explicitly, for example
 `have p2 &ComplexPair = (p.x, p.y)`, then write `p2.real` and `p2.img`.
 
@@ -1204,7 +1204,7 @@ the statement's `verify_process` phase and runs before `x` is stored. When a
 standard numeric source carrier can be established, the error reports both
 the required `S` and that source carrier. Thus a `Z`-valued remainder reports
 `required N` and `known Z`; later proof-body inequalities cannot retroactively
-make that failed declaration an `N` binding.
+make that failed definition an `N` binding.
 
 ## Can a predicate premise make a later expression well-defined?
 
@@ -1289,7 +1289,7 @@ The second line is accepted even though `{}` was not previously known to
 belong to `R`. A concrete `prop` parameter carrier is a proof-time condition
 when the definition is used normally; it is not a formation check that limits
 what the author may inject with `trust`. After the trusted proposition is
-stored, ordinary definition inference may also record its declared parameter
+stored, ordinary definition inference may also record its defined parameter
 fact, here `{} $in R`, and other consequences of the definition. Those are
 consequences of the unsafe assumption, not independently checked discoveries.
 

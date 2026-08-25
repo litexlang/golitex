@@ -116,7 +116,7 @@ impl Runtime {
     }
 
     // A literal tuple is a direct dependent-structure constructor. This is a
-    // strategy, rather than a raw builtin rule, because checking the declared
+    // strategy, rather than a raw builtin rule, because checking the defined
     // structure laws may require several independent child verifications.
     fn verify_literal_tuple_struct_membership_with_builtin_strategy(
         &mut self,

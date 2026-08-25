@@ -80,14 +80,16 @@ impl Runtime {
             &obtain.fact,
             obtain.line_file.clone(),
         )?;
-        Ok(SuccessDefObjStmtResult::ObtainObjFromExistFact(Box::new(
-            SuccessObtainObjFromExistFactResult {
-                statement: obtain.clone(),
-                common: SuccessStmtCommonResult::new(infer_result),
-                verification: None,
-            },
-        ))
-        .into())
+        Ok(
+            SuccessDefinitionStmtResult::ObtainObjFromExistFact(Box::new(
+                SuccessObtainObjFromExistFactResult {
+                    statement: obtain.clone(),
+                    common: SuccessStmtCommonResult::new(infer_result),
+                    verification: None,
+                },
+            ))
+            .into(),
+        )
     }
 
     pub fn exec_obtain_obj_from_atomic_fact_affect_environment_only(
@@ -101,14 +103,16 @@ impl Runtime {
             &source_exist_fact,
             obtain.line_file.clone(),
         )?;
-        Ok(SuccessDefObjStmtResult::ObtainObjFromAtomicFact(Box::new(
-            SuccessObtainObjFromAtomicFactResult {
-                statement: obtain.clone(),
-                common: SuccessStmtCommonResult::new(infer_result),
-                verification: None,
-            },
-        ))
-        .into())
+        Ok(
+            SuccessDefinitionStmtResult::ObtainObjFromAtomicFact(Box::new(
+                SuccessObtainObjFromAtomicFactResult {
+                    statement: obtain.clone(),
+                    common: SuccessStmtCommonResult::new(infer_result),
+                    verification: None,
+                },
+            ))
+            .into(),
+        )
     }
 
     pub fn exec_obtain_obj_from_thm_affect_environment_only(
@@ -134,11 +138,13 @@ impl Runtime {
             obtain.line_file.clone(),
         )?;
         Ok(
-            SuccessDefObjStmtResult::ObtainObjFromThm(Box::new(SuccessObtainObjFromThmResult {
-                statement: obtain.clone(),
-                common: SuccessStmtCommonResult::new(infer_result),
-                verification: None,
-            }))
+            SuccessDefinitionStmtResult::ObtainObjFromThm(Box::new(
+                SuccessObtainObjFromThmResult {
+                    statement: obtain.clone(),
+                    common: SuccessStmtCommonResult::new(infer_result),
+                    verification: None,
+                },
+            ))
             .into(),
         )
     }
@@ -245,14 +251,16 @@ impl Runtime {
             &exist_fact,
             stmt.line_file.clone(),
         )?;
-        Ok(SuccessDefObjStmtResult::HaveObjByExistFactsStmt(Box::new(
-            SuccessHaveObjByExistFactsStmtResult {
-                statement: stmt.clone(),
-                common: SuccessStmtCommonResult::new(infer_result),
-                verification: None,
-            },
-        ))
-        .into())
+        Ok(
+            SuccessDefinitionStmtResult::HaveObjByExistFactsStmt(Box::new(
+                SuccessHaveObjByExistFactsStmtResult {
+                    statement: stmt.clone(),
+                    common: SuccessStmtCommonResult::new(infer_result),
+                    verification: None,
+                },
+            ))
+            .into(),
+        )
     }
 
     fn exec_obj_from_exist_fact(
@@ -302,8 +310,8 @@ impl Runtime {
 
         let common = SuccessStmtCommonResult::new(infer_result);
         let ir = match stmt {
-            Stmt::DefObjStmt(DefObjStmt::HaveObjByExistFactsStmt(statement)) => {
-                SuccessDefObjStmtResult::HaveObjByExistFactsStmt(Box::new(
+            Stmt::Definition(DefinitionStmt::HaveObjByExistFactsStmt(statement)) => {
+                SuccessDefinitionStmtResult::HaveObjByExistFactsStmt(Box::new(
                     SuccessHaveObjByExistFactsStmtResult {
                         statement,
                         common,
@@ -311,8 +319,8 @@ impl Runtime {
                     },
                 ))
             }
-            Stmt::DefObjStmt(DefObjStmt::ObtainObjFromExistFact(statement)) => {
-                SuccessDefObjStmtResult::ObtainObjFromExistFact(Box::new(
+            Stmt::Definition(DefinitionStmt::ObtainObjFromExistFact(statement)) => {
+                SuccessDefinitionStmtResult::ObtainObjFromExistFact(Box::new(
                     SuccessObtainObjFromExistFactResult {
                         statement,
                         common,
@@ -320,8 +328,8 @@ impl Runtime {
                     },
                 ))
             }
-            Stmt::DefObjStmt(DefObjStmt::ObtainObjFromAtomicFact(statement)) => {
-                SuccessDefObjStmtResult::ObtainObjFromAtomicFact(Box::new(
+            Stmt::Definition(DefinitionStmt::ObtainObjFromAtomicFact(statement)) => {
+                SuccessDefinitionStmtResult::ObtainObjFromAtomicFact(Box::new(
                     SuccessObtainObjFromAtomicFactResult {
                         statement,
                         common,
@@ -329,12 +337,14 @@ impl Runtime {
                     },
                 ))
             }
-            Stmt::DefObjStmt(DefObjStmt::ObtainObjFromThm(statement)) => {
-                SuccessDefObjStmtResult::ObtainObjFromThm(Box::new(SuccessObtainObjFromThmResult {
-                    statement,
-                    common,
-                    verification: Some(elimination_verification),
-                }))
+            Stmt::Definition(DefinitionStmt::ObtainObjFromThm(statement)) => {
+                SuccessDefinitionStmtResult::ObtainObjFromThm(Box::new(
+                    SuccessObtainObjFromThmResult {
+                        statement,
+                        common,
+                        verification: Some(elimination_verification),
+                    },
+                ))
             }
             _ => unreachable!("existential elimination must retain its exact object statement"),
         };
@@ -350,7 +360,7 @@ impl Runtime {
         defined_bindings: &[SymbolBinding],
         source_exist_fact: &ExistFactEnum,
     ) -> Result<(), RuntimeError> {
-        if source_exist_fact.params_def_with_type().number_of_params() != defined_bindings.len() {
+        if source_exist_fact.typed_parameters().number_of_params() != defined_bindings.len() {
             return Err(short_exec_error(
                 stmt.clone(),
                 "existential elimination: number of parameters does not match number of obtained objects"
@@ -366,7 +376,7 @@ impl Runtime {
                     exec_stmt_error_with_stmt_and_cause(stmt.clone(), well_defined_error)
                 })?;
             for binding in defined_bindings {
-                rt.store_parameter_binding(binding, BindingScope::DeclaredObject)
+                rt.store_parameter_binding(binding, BindingScope::DefinitionBinding)
                     .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone(), e))?;
             }
             Ok(())
@@ -485,7 +495,7 @@ impl Runtime {
         line_file: LineFile,
     ) -> Result<SuccessInferResult, RuntimeError> {
         for binding in defined_bindings {
-            self.store_parameter_binding(binding, BindingScope::DeclaredObject)?;
+            self.store_parameter_binding(binding, BindingScope::DefinitionBinding)?;
         }
 
         let new_obj_names_as_identifier_objs: Vec<Obj> = defined_bindings
@@ -497,7 +507,7 @@ impl Runtime {
 
         let mut infer_result = self
             .store_args_satisfy_param_type_when_not_defining_new_identifiers_with_reason(
-                source_exist_fact.params_def_with_type(),
+                source_exist_fact.typed_parameters(),
                 &new_obj_names_as_identifier_objs,
                 line_file.clone(),
                 SubstitutionMode::Exact,
@@ -506,7 +516,7 @@ impl Runtime {
             .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone(), e))?;
 
         let param_to_obj_map = source_exist_fact
-            .params_def_with_type()
+            .typed_parameters()
             .param_defs_and_args_to_param_to_arg_map(new_obj_names_as_identifier_objs.as_slice());
 
         let body_fact_verify_state = ProofSearchState::initial();
@@ -561,12 +571,12 @@ impl Runtime {
             })
             .collect::<Vec<Obj>>();
         let instantiated_types = self.inst_param_def_with_type_one_by_one(
-            exist_fact.params_def_with_type(),
+            exist_fact.typed_parameters(),
             &witnesses,
             SubstitutionMode::Exact,
         )?;
         let flat_types = exist_fact
-            .params_def_with_type()
+            .typed_parameters()
             .flat_instantiated_types_for_args(&instantiated_types);
         let witness_type_facts = witnesses
             .iter()
@@ -585,7 +595,7 @@ impl Runtime {
             .collect::<Vec<Fact>>();
 
         let param_to_obj_map = exist_fact
-            .params_def_with_type()
+            .typed_parameters()
             .param_defs_and_args_to_param_to_arg_map(&witnesses);
         let instantiated_body_facts = exist_fact
             .facts()

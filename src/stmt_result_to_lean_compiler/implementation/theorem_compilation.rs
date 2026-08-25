@@ -289,7 +289,7 @@ impl StmtResultToLeanCompiler {
                 }
             }
 
-            let SuccessStmtResult::DefObjStmt(SuccessDefObjStmtResult::HaveObjEqualStmt(body)) =
+            let SuccessStmtResult::Definition(SuccessDefinitionStmtResult::HaveObjEqualStmt(body)) =
                 result.body_statement_result.as_ref()
             else {
                 return Err(
@@ -590,7 +590,7 @@ impl StmtResultToLeanCompiler {
     ) -> Result<bool, String> {
         let parameters = verification
             .forall_fact
-            .params_def_with_type
+            .typed_parameters
             .collect_param_bindings_with_types();
         if parameters.iter().any(|(_, parameter_type)| {
             !matches!(parameter_type, ParamType::Set(_) | ParamType::Obj(_))
@@ -1101,7 +1101,7 @@ impl StmtResultToLeanCompiler {
             return Err("by-thm source FactId does not identify a forall fact".into());
         };
         let source_parameters = source_forall
-            .params_def_with_type
+            .typed_parameters
             .collect_param_bindings_with_types();
         if !source_forall.dom_facts.is_empty()
             || source_parameters.iter().any(|(_, parameter_type)| {
@@ -1295,8 +1295,8 @@ impl StmtResultToLeanCompiler {
         result: &StmtResult,
         proof_step_index: usize,
     ) -> Result<Option<Vec<String>>, String> {
-        if let StmtResult::Success(SuccessStmtResult::DefObjStmt(
-            SuccessDefObjStmtResult::LetObjStmt(result),
+        if let StmtResult::Success(SuccessStmtResult::Definition(
+            SuccessDefinitionStmtResult::LetObjStmt(result),
         )) = result
         {
             return self.compile_let_obj_stmt_result_as_local_proof_steps(result, proof_step_index);

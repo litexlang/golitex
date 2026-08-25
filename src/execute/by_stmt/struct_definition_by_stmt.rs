@@ -19,7 +19,7 @@ impl Runtime {
             return Err(short_exec_error(
                 stmt.clone().into(),
                 format!(
-                    "by struct def `{}`: cannot verify declaration-owned membership `{}`",
+                    "by struct def `{}`: cannot verify definition-owned membership `{}`",
                     stmt.obj, membership
                 ),
                 None,
@@ -65,7 +65,7 @@ impl Runtime {
         )
     }
 
-    /// Release the facts belonging to exactly one declaration-owned struct
+    /// Release the facts belonging to exactly one definition-owned struct
     /// layer. Callers must establish the corresponding membership first.
     pub fn release_one_struct_definition_layer(
         &mut self,

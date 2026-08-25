@@ -39,7 +39,8 @@ statement lifecycle.
 | [`trusted_statement_execution.rs`](trusted_statement_execution.rs) | Replays trusted and preverified statements into the environment. |
 | [`attach_fact_ids_to_stmt_result.rs`](attach_fact_ids_to_stmt_result.rs) | Fills missing FactIds in the completed recursive Result tree without retargeting frozen local evidence. |
 | [`submitted_fact_execution.rs`](submitted_fact_execution.rs) | Executes a submitted fact through well-definedness, proof verification, storage, and inference. |
-| [`object_introduction/`](object_introduction/) | Groups object, function, tuple, sequence, matrix, obtain, preimage, and witness introduction implementations by responsibility. |
+| [`definition_execution/object/`](definition_execution/object/) | Executes object, function, tuple, sequence, matrix, preimage, and existential-elimination definitions and bindings. |
+| [`witness_execution.rs`](witness_execution.rs) | Executes logical witness statements; witness introduction remains separate from definition storage. |
 | [`definition_execution/`](definition_execution/) | Groups proposition, theorem, axiom, template, structure, algorithm, parameter, and definition-storage execution. |
 | [`proof_block_execution/`](proof_block_execution/) | Groups claim, goal-proof, sketch, and transactional `try` execution. |
 | [`command_execution/`](command_execution/) | Groups evaluation and environment commands such as `clear`. |

@@ -199,19 +199,19 @@ impl DepCollector {
         self.local_names.insert(name.to_string());
     }
 
-    pub fn add_param_def_with_type(&mut self, params: &ParamDefWithType) {
+    pub fn add_param_def_with_type(&mut self, params: &TypedParameterList) {
         for name in params.collect_param_names() {
             self.add_local_name(&name);
         }
     }
 
-    pub fn add_param_def_with_set(&mut self, params: &ParamDefWithSet) {
+    pub fn add_param_def_with_set(&mut self, params: &SetBoundParameterList) {
         for name in params.collect_param_names() {
             self.add_local_name(&name);
         }
     }
 
-    pub fn collect_param_def_with_type_deps(&mut self, params: &ParamDefWithType) {
+    pub fn collect_param_def_with_type_deps(&mut self, params: &TypedParameterList) {
         for group in params.groups.iter() {
             if let ParamType::Obj(obj) = &group.param_type {
                 self.collect_obj(obj);
@@ -219,15 +219,15 @@ impl DepCollector {
         }
     }
 
-    pub fn collect_param_def_with_set_deps(&mut self, params: &ParamDefWithSet) {
+    pub fn collect_param_def_with_set_deps(&mut self, params: &SetBoundParameterList) {
         for group in params.groups.iter() {
             self.collect_obj(&group.param_type);
         }
     }
 
     pub fn collect_fn_set_clause(&mut self, clause: &FnSetClause) {
-        self.collect_param_def_with_set_deps(&clause.params_def_with_set);
-        self.add_param_def_with_set(&clause.params_def_with_set);
+        self.collect_param_def_with_set_deps(&clause.set_bound_parameters);
+        self.add_param_def_with_set(&clause.set_bound_parameters);
         for fact in clause.dom_facts.iter() {
             self.collect_quantifier_free_fact(fact);
         }
@@ -235,8 +235,8 @@ impl DepCollector {
     }
 
     pub fn collect_fn_set_body(&mut self, body: &FnSetBody) {
-        self.collect_param_def_with_set_deps(&body.params_def_with_set);
-        self.add_param_def_with_set(&body.params_def_with_set);
+        self.collect_param_def_with_set_deps(&body.set_bound_parameters);
+        self.add_param_def_with_set(&body.set_bound_parameters);
         for fact in body.dom_facts.iter() {
             self.collect_quantifier_free_fact(fact);
         }
@@ -282,8 +282,8 @@ impl DepCollector {
 
     pub fn collect_forall_fact(&mut self, fact: &ForallFact) {
         let old = self.local_names.clone();
-        self.collect_param_def_with_type_deps(&fact.params_def_with_type);
-        self.add_param_def_with_type(&fact.params_def_with_type);
+        self.collect_param_def_with_type_deps(&fact.typed_parameters);
+        self.add_param_def_with_type(&fact.typed_parameters);
         for dom_fact in fact.dom_facts.iter() {
             self.collect_fact(dom_fact);
         }
@@ -296,8 +296,8 @@ impl DepCollector {
     pub fn collect_exist_fact(&mut self, fact: &ExistFactEnum) {
         let body = fact.spec();
         let old = self.local_names.clone();
-        self.collect_param_def_with_type_deps(&body.params_def_with_type);
-        self.add_param_def_with_type(&body.params_def_with_type);
+        self.collect_param_def_with_type_deps(&body.typed_parameters);
+        self.add_param_def_with_type(&body.typed_parameters);
         for body_fact in body.facts.iter() {
             self.collect_quantifier_free_fact(body_fact);
         }

@@ -64,7 +64,7 @@ impl Runtime {
                     ParamType::Obj(stmt.left.clone()),
                 )?;
                 let left_to_right_forall_fact = ForallFact::new_canonical_forall(
-                    ParamDefWithType::new(vec![left_to_right_param.clone()]),
+                    TypedParameterList::new(vec![left_to_right_param.clone()]),
                     vec![],
                     vec![InFact::new(
                         obj_for_bound_param_in_scope(&left_to_right_param.params[0]),
@@ -111,7 +111,7 @@ impl Runtime {
                     ParamType::Obj(stmt.right.clone()),
                 )?;
                 let right_to_left_forall_fact = ForallFact::new_canonical_forall(
-                    ParamDefWithType::new(vec![right_to_left_param.clone()]),
+                    TypedParameterList::new(vec![right_to_left_param.clone()]),
                     vec![],
                     vec![InFact::new(
                         obj_for_bound_param_in_scope(&right_to_left_param.params[0]),
@@ -164,7 +164,7 @@ impl Runtime {
             ParamType::Obj(stmt.left.clone()),
         )?;
         let left_to_right_subset = ForallFact::new_canonical_forall(
-            ParamDefWithType::new(vec![left_to_right_param.clone()]),
+            TypedParameterList::new(vec![left_to_right_param.clone()]),
             vec![],
             vec![InFact::new(
                 obj_for_bound_param_in_scope(&left_to_right_param.params[0]),
@@ -180,7 +180,7 @@ impl Runtime {
             ParamType::Obj(stmt.right.clone()),
         )?;
         let right_to_left_subset = ForallFact::new_canonical_forall(
-            ParamDefWithType::new(vec![right_to_left_param.clone()]),
+            TypedParameterList::new(vec![right_to_left_param.clone()]),
             vec![],
             vec![InFact::new(
                 obj_for_bound_param_in_scope(&right_to_left_param.params[0]),

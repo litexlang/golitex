@@ -505,16 +505,16 @@ pub(super) fn render_existential_fact_with_names(
 
 pub(super) fn one_witness_existential_group(
     existential: &ExistFactEnum,
-) -> Result<&ParamGroupWithParamType, String> {
+) -> Result<&TypedParameterGroup, String> {
     if !existential.is_plain_exist()
-        || existential.params_def_with_type().number_of_params() != 1
+        || existential.typed_parameters().number_of_params() != 1
         || existential.facts().len() != 1
     {
         return Err(
             "compiler existential facts support one positive witness and one body fact".into(),
         );
     }
-    let group = &existential.params_def_with_type().groups[0];
+    let group = &existential.typed_parameters().groups[0];
     if group.params.len() != 1 {
         return Err("compiler existential fact requires one singleton parameter group".into());
     }
@@ -2716,7 +2716,7 @@ pub(super) fn validate_forall_fact_as_subset(
     };
     let (expected_source, expected_target) = subset_parts(expected_subset)?;
     let parameters = candidate
-        .params_def_with_type
+        .typed_parameters
         .collect_param_bindings_with_types();
     let [parameter] = parameters.as_slice() else {
         return Err("subset forall must retain exactly one parameter".into());

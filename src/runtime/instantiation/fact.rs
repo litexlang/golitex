@@ -819,8 +819,7 @@ impl Runtime {
             )));
         }
 
-        let param_to_arg_map =
-            self.params_to_arg_map(&definition.params_def_with_type, &fact.body)?;
+        let param_to_arg_map = self.params_to_arg_map(&definition.typed_parameters, &fact.body)?;
         self.inst_exist_fact(
             definition_exist_fact,
             &param_to_arg_map,
@@ -853,9 +852,9 @@ impl Runtime {
         to_inst_param_type: SubstitutionMode,
         inst_lf: Option<&LineFile>,
     ) -> Result<ExistFactEnum, RuntimeError> {
-        let mut groups = Vec::with_capacity(exist_fact.params_def_with_type().groups.len());
-        for param_def_with_type in exist_fact.params_def_with_type().groups.iter() {
-            groups.push(ParamGroupWithParamType::new(
+        let mut groups = Vec::with_capacity(exist_fact.typed_parameters().groups.len());
+        for param_def_with_type in exist_fact.typed_parameters().groups.iter() {
+            groups.push(TypedParameterGroup::new(
                 param_def_with_type.params.clone(),
                 self.inst_param_type(
                     &param_def_with_type.param_type,
@@ -864,7 +863,7 @@ impl Runtime {
                 )?,
             ));
         }
-        let params_def_with_type = ParamDefWithType::new(groups);
+        let typed_parameters = TypedParameterList::new(groups);
         let mut facts = Vec::with_capacity(exist_fact.facts().len());
         for fact in exist_fact.facts().iter() {
             facts.push(self.inst_quantifier_free_fact(
@@ -875,7 +874,7 @@ impl Runtime {
             )?);
         }
         let body = ExistentialSpec::new(
-            params_def_with_type,
+            typed_parameters,
             facts,
             Self::line_file_after_inst(&exist_fact.spec().line_file, inst_lf),
         )?;
@@ -900,7 +899,7 @@ impl Runtime {
         collect_bound_param_names_in_exist_fact(exist_fact, &mut reserved_names);
 
         let mut rename_map = HashMap::new();
-        for group in &exist_fact.params_def_with_type().groups {
+        for group in &exist_fact.typed_parameters().groups {
             for binding in &group.params {
                 let conflicts_with_visible_binding = self
                     .visible_symbol_definition(binding.name())
@@ -938,9 +937,9 @@ impl Runtime {
             return Ok(exist_fact.clone());
         }
 
-        let mut groups = Vec::with_capacity(exist_fact.params_def_with_type().groups.len());
+        let mut groups = Vec::with_capacity(exist_fact.typed_parameters().groups.len());
         let mut active_rename_map = HashMap::new();
-        for group in exist_fact.params_def_with_type().groups.iter() {
+        for group in exist_fact.typed_parameters().groups.iter() {
             let param_type = self.inst_param_type(
                 &group.param_type,
                 &active_rename_map,
@@ -951,7 +950,7 @@ impl Runtime {
                 .iter()
                 .map(|binding| renamed_exist_param_binding(binding, rename_map))
                 .collect::<Vec<_>>();
-            groups.push(ParamGroupWithParamType::new(params, param_type));
+            groups.push(TypedParameterGroup::new(params, param_type));
             for binding in group.params.iter() {
                 if let Some(replacement) = rename_map.get(&binding.substitution_key()) {
                     insert_symbol_substitution(
@@ -973,7 +972,7 @@ impl Runtime {
             )?);
         }
         let body = ExistentialSpec::new(
-            ParamDefWithType::new(groups),
+            TypedParameterList::new(groups),
             facts,
             exist_fact.spec().line_file.clone(),
         )?;
@@ -1071,9 +1070,9 @@ impl Runtime {
         to_inst_param_type: SubstitutionMode,
         inst_lf: Option<&LineFile>,
     ) -> Result<ForallFact, RuntimeError> {
-        let mut groups = Vec::with_capacity(forall_fact.params_def_with_type.groups.len());
-        for param_def_with_type in forall_fact.params_def_with_type.groups.iter() {
-            groups.push(ParamGroupWithParamType::new(
+        let mut groups = Vec::with_capacity(forall_fact.typed_parameters.groups.len());
+        for param_def_with_type in forall_fact.typed_parameters.groups.iter() {
+            groups.push(TypedParameterGroup::new(
                 param_def_with_type.params.clone(),
                 self.inst_param_type(
                     &param_def_with_type.param_type,
@@ -1082,7 +1081,7 @@ impl Runtime {
                 )?,
             ));
         }
-        let params_def_with_type = ParamDefWithType::new(groups);
+        let typed_parameters = TypedParameterList::new(groups);
         let mut dom_facts = Vec::with_capacity(forall_fact.dom_facts.len());
         for dom_fact in forall_fact.dom_facts.iter() {
             dom_facts.push(self.inst_fact(
@@ -1102,7 +1101,7 @@ impl Runtime {
             )?);
         }
         Ok(ForallFact::new_canonical_forall(
-            params_def_with_type,
+            typed_parameters,
             dom_facts,
             then_facts,
             Self::line_file_after_inst(&forall_fact.line_file, inst_lf),
@@ -1169,7 +1168,7 @@ impl Runtime {
         }
 
         let mut rename_map = HashMap::new();
-        for group in &forall_fact.params_def_with_type.groups {
+        for group in &forall_fact.typed_parameters.groups {
             for binding in &group.params {
                 let conflicts_with_visible_binding = self
                     .visible_symbol_definition(binding.name())
@@ -1207,9 +1206,9 @@ impl Runtime {
             return Ok(forall_fact.clone());
         }
 
-        let mut groups = Vec::with_capacity(forall_fact.params_def_with_type.groups.len());
+        let mut groups = Vec::with_capacity(forall_fact.typed_parameters.groups.len());
         let mut active_rename_map = HashMap::new();
-        for group in forall_fact.params_def_with_type.groups.iter() {
+        for group in forall_fact.typed_parameters.groups.iter() {
             let param_type = self.inst_param_type(
                 &group.param_type,
                 &active_rename_map,
@@ -1220,7 +1219,7 @@ impl Runtime {
                 .iter()
                 .map(|binding| renamed_forall_param_binding(binding, rename_map))
                 .collect::<Vec<_>>();
-            groups.push(ParamGroupWithParamType::new(params, param_type));
+            groups.push(TypedParameterGroup::new(params, param_type));
             for binding in group.params.iter() {
                 if let Some(replacement) = rename_map.get(&binding.substitution_key()) {
                     insert_symbol_substitution(
@@ -1247,7 +1246,7 @@ impl Runtime {
         }
 
         ForallFact::new_canonical_forall(
-            ParamDefWithType::new(groups),
+            TypedParameterList::new(groups),
             dom_facts,
             then_facts,
             forall_fact.line_file.clone(),
@@ -1260,7 +1259,7 @@ impl Runtime {
     ) -> Result<String, RuntimeError> {
         let mut rename_map = HashMap::new();
         let mut index = 0;
-        for group in &forall_fact.params_def_with_type.groups {
+        for group in &forall_fact.typed_parameters.groups {
             for source_binding in &group.params {
                 let target_binding =
                     SymbolBinding::alpha_canonical(index, format!("#forall_cache_{}", index));
@@ -1274,16 +1273,16 @@ impl Runtime {
         }
         let mut normalized = self.alpha_rename_forall_fact(forall_fact, &rename_map)?;
         let groups = normalized
-            .params_def_with_type
+            .typed_parameters
             .groups
             .iter()
             .flat_map(|group| {
                 group.params.iter().map(|param| {
-                    ParamGroupWithParamType::new(vec![param.clone()], group.param_type.clone())
+                    TypedParameterGroup::new(vec![param.clone()], group.param_type.clone())
                 })
             })
             .collect();
-        normalized.params_def_with_type = ParamDefWithType::new(groups);
+        normalized.typed_parameters = TypedParameterList::new(groups);
         Ok(nested_obj_binder_normalized_fact_key(&Fact::from(
             normalized,
         )))
@@ -1319,7 +1318,7 @@ fn renamed_exist_param_binding(
 }
 
 fn collect_bound_param_names_in_forall_fact(forall_fact: &ForallFact, names: &mut HashSet<String>) {
-    collect_bound_param_names_in_param_def(&forall_fact.params_def_with_type, names);
+    collect_bound_param_names_in_param_def(&forall_fact.typed_parameters, names);
     for fact in forall_fact.dom_facts.iter() {
         collect_bound_param_names_in_fact(fact, names);
     }
@@ -1358,7 +1357,7 @@ pub fn collect_bound_param_names_in_exist_fact(
     exist_fact: &ExistFactEnum,
     names: &mut HashSet<String>,
 ) {
-    collect_bound_param_names_in_param_def(exist_fact.params_def_with_type(), names);
+    collect_bound_param_names_in_param_def(exist_fact.typed_parameters(), names);
     for fact in exist_fact.facts().iter() {
         collect_bound_param_names_in_args(fact.get_args_from_fact_ref(), names);
     }
@@ -1387,7 +1386,10 @@ fn collect_bound_param_names_in_exist_or_fact(
     }
 }
 
-fn collect_bound_param_names_in_param_def(params: &ParamDefWithType, names: &mut HashSet<String>) {
+fn collect_bound_param_names_in_param_def(
+    params: &TypedParameterList,
+    names: &mut HashSet<String>,
+) {
     for group in params.groups.iter() {
         names.extend(
             group

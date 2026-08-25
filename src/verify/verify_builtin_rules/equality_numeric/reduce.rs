@@ -717,7 +717,7 @@ impl Runtime {
             let pointwise_result = self.run_in_local_env(|rt| {
                 let index_name = rt.generate_random_unused_name();
                 let (index_binding, index) = rt.fresh_bound_param(index_name)?;
-                let params = ParamDefWithType::new(vec![ParamGroupWithParamType::new(
+                let params = TypedParameterList::new(vec![TypedParameterGroup::new(
                     vec![index_binding],
                     ParamType::Obj(translated_set),
                 )]);
@@ -1088,7 +1088,7 @@ impl Runtime {
             let pointwise_fact: AtomicFact =
                 EqualFact::new(pullback_at_y, source_at_map_y, line_file.clone()).into();
             let pointwise_result = self.run_in_local_env(|rt| {
-                let params_def = ParamDefWithType::new(vec![ParamGroupWithParamType::new(
+                let params_def = TypedParameterList::new(vec![TypedParameterGroup::new(
                     vec![y_binding],
                     ParamType::Obj(pullback.set.as_ref().clone()),
                 )]);
@@ -1285,7 +1285,7 @@ impl Runtime {
             let y_name = rt.generate_random_unused_name();
             let (x_binding, x) = rt.fresh_bound_param(x_name)?;
             let (y_binding, y) = rt.fresh_bound_param(y_name)?;
-            let params = ParamDefWithType::new(vec![ParamGroupWithParamType::new(
+            let params = TypedParameterList::new(vec![TypedParameterGroup::new(
                 vec![x_binding, y_binding],
                 ParamType::Obj(carrier),
             )]);
@@ -1345,7 +1345,7 @@ impl Runtime {
         self.run_in_local_env(|rt| {
             let x_name = rt.generate_random_unused_name();
             let (x_binding, x) = rt.fresh_bound_param(x_name)?;
-            let params = ParamDefWithType::new(vec![ParamGroupWithParamType::new(
+            let params = TypedParameterList::new(vec![TypedParameterGroup::new(
                 vec![x_binding],
                 ParamType::Obj(set),
             )]);

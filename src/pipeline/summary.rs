@@ -147,29 +147,27 @@ impl RunSummary {
             Stmt::UnsafeStmt(UnsafeStmt::TrustHaveStmt(_)) => {
                 self.trusted_object_assumptions += 1;
             }
-            Stmt::DefObjStmt(def_obj) => {
-                self.object_definitions += 1;
-                if is_function_definition(def_obj) {
-                    self.function_definitions += 1;
+            Stmt::Definition(definition) => match definition {
+                DefinitionStmt::DefPropStmt(_) => self.prop_definitions += 1,
+                DefinitionStmt::DefAbstractPropStmt(_) => {
+                    self.abstract_prop_definitions += 1;
+                    self.abstract_interfaces += 1;
                 }
-            }
-            Stmt::DefPredicateStmt(DefPredicateStmt::DefPropStmt(_)) => {
-                self.prop_definitions += 1;
-            }
-            Stmt::DefPredicateStmt(DefPredicateStmt::DefAbstractPropStmt(_)) => {
-                self.abstract_prop_definitions += 1;
-                self.abstract_interfaces += 1;
-            }
-            Stmt::DefInterfaceStmt(DefInterfaceStmt::DefSettingStmt(_)) => {}
-            Stmt::DefInterfaceStmt(_) => {
-                self.abstract_interfaces += 1;
-            }
-            Stmt::DefThmStmt(_) => {
-                self.theorem_statements += 1;
-            }
-            Stmt::AxiomStmt(_) => {
-                self.axioms += 1;
-            }
+                DefinitionStmt::DefTemplateStmt(_) | DefinitionStmt::DefStructStmt(_) => {
+                    self.abstract_interfaces += 1;
+                }
+                DefinitionStmt::DefThmStmt(_) => self.theorem_statements += 1,
+                DefinitionStmt::AxiomStmt(_) => self.axioms += 1,
+                DefinitionStmt::DefSettingStmt(_)
+                | DefinitionStmt::DefAlgoStmt(_)
+                | DefinitionStmt::DefStrategyStmt(_) => {}
+                object_definition => {
+                    self.object_definitions += 1;
+                    if is_function_definition(object_definition) {
+                        self.function_definitions += 1;
+                    }
+                }
+            },
             Stmt::By(_) => {
                 self.by_statements += 1;
             }
@@ -328,7 +326,9 @@ impl RunSummary {
 
     fn visit_non_factual_verification(&mut self, success: &SuccessStmtResult) {
         match success {
-            SuccessStmtResult::DefThmStmt(result) if result.verification.is_some() => {
+            SuccessStmtResult::Definition(SuccessDefinitionStmtResult::DefThmStmt(result))
+                if result.verification.is_some() =>
+            {
                 let theorem = result.verification.as_ref().unwrap();
                 bump_count(&mut self.proof_method_counts, "theorem proof");
                 self.visit_infer_result(&theorem.proof_scope.assumption_infers);
@@ -519,53 +519,53 @@ impl EnvironmentSummary {
 
         summary.add_field_counts(
             "symbols",
-            environment.declarations.symbols.len(),
-            environment.declarations.symbols.len(),
+            environment.definitions.symbols.len(),
+            environment.definitions.symbols.len(),
         );
         summary.add_field_counts(
-            "defined_def_props",
-            environment.declarations.defined_def_props.len(),
-            environment.declarations.defined_def_props.len(),
+            "predicate_definitions",
+            environment.definitions.predicate_definitions.len(),
+            environment.definitions.predicate_definitions.len(),
         );
         summary.add_field_counts(
-            "defined_abstract_props",
-            environment.declarations.defined_abstract_props.len(),
-            environment.declarations.defined_abstract_props.len(),
+            "abstract_predicate_definitions",
+            environment.definitions.abstract_predicate_definitions.len(),
+            environment.definitions.abstract_predicate_definitions.len(),
         );
         summary.add_field_counts(
-            "defined_algorithms",
-            environment.declarations.defined_algorithms.len(),
-            environment.declarations.defined_algorithms.len(),
+            "algorithm_definitions",
+            environment.definitions.algorithm_definitions.len(),
+            environment.definitions.algorithm_definitions.len(),
         );
         summary.add_field_counts(
-            "defined_structs",
-            environment.declarations.defined_structs.len(),
-            environment.declarations.defined_structs.len(),
+            "structure_definitions",
+            environment.definitions.structure_definitions.len(),
+            environment.definitions.structure_definitions.len(),
         );
         summary.add_field_counts(
-            "defined_templates",
-            environment.declarations.defined_templates.len(),
-            environment.declarations.defined_templates.len(),
+            "template_definitions",
+            environment.definitions.template_definitions.len(),
+            environment.definitions.template_definitions.len(),
         );
         summary.add_field_counts(
-            "defined_settings",
-            environment.declarations.defined_settings.len(),
-            environment.declarations.defined_settings.len(),
+            "setting_definitions",
+            environment.definitions.setting_definitions.len(),
+            environment.definitions.setting_definitions.len(),
         );
         summary.add_field_counts(
-            "defined_thm_stmts",
-            environment.declarations.defined_thm_stmts.len(),
-            environment.declarations.defined_thm_stmts.len(),
+            "theorem_definitions",
+            environment.definitions.theorem_definitions.len(),
+            environment.definitions.theorem_definitions.len(),
         );
         summary.add_field_counts(
-            "defined_axiom_stmts",
-            environment.declarations.defined_axiom_stmts.len(),
-            environment.declarations.defined_axiom_stmts.len(),
+            "axiom_definitions",
+            environment.definitions.axiom_definitions.len(),
+            environment.definitions.axiom_definitions.len(),
         );
         summary.add_field_counts(
-            "defined_strategy_stmts",
-            environment.declarations.defined_strategy_stmts.len(),
-            environment.declarations.defined_strategy_stmts.len(),
+            "strategy_definitions",
+            environment.definitions.strategy_definitions.len(),
+            environment.definitions.strategy_definitions.len(),
         );
 
         let equality_fact_count = unique_known_equality_count(environment);
@@ -804,43 +804,43 @@ impl EnvironmentSummary {
     fn add_category_counts(&mut self, environment: &Environment) {
         self.category_counts.insert(
             "objects".to_string(),
-            environment.declarations.object_symbol_count(),
+            environment.definitions.object_symbol_count(),
         );
         self.category_counts.insert(
             "props".to_string(),
-            environment.declarations.defined_def_props.len(),
+            environment.definitions.predicate_definitions.len(),
         );
         self.category_counts.insert(
             "abstract_props".to_string(),
-            environment.declarations.defined_abstract_props.len(),
+            environment.definitions.abstract_predicate_definitions.len(),
         );
         self.category_counts.insert(
             "algorithms".to_string(),
-            environment.declarations.defined_algorithms.len(),
+            environment.definitions.algorithm_definitions.len(),
         );
         self.category_counts.insert(
             "structs".to_string(),
-            environment.declarations.defined_structs.len(),
+            environment.definitions.structure_definitions.len(),
         );
         self.category_counts.insert(
             "templates".to_string(),
-            environment.declarations.defined_templates.len(),
+            environment.definitions.template_definitions.len(),
         );
         self.category_counts.insert(
             "settings".to_string(),
-            environment.declarations.defined_settings.len(),
+            environment.definitions.setting_definitions.len(),
         );
         self.category_counts.insert(
             "theorems".to_string(),
-            environment.declarations.defined_thm_stmts.len(),
+            environment.definitions.theorem_definitions.len(),
         );
         self.category_counts.insert(
             "axioms".to_string(),
-            environment.declarations.defined_axiom_stmts.len(),
+            environment.definitions.axiom_definitions.len(),
         );
         self.category_counts.insert(
             "strategies".to_string(),
-            environment.declarations.defined_strategy_stmts.len(),
+            environment.definitions.strategy_definitions.len(),
         );
         self.category_counts.insert(
             "known_facts".to_string(),
@@ -955,12 +955,12 @@ fn unique_known_equality_count(environment: &Environment) -> usize {
     seen.len()
 }
 
-fn is_function_definition(stmt: &DefObjStmt) -> bool {
+fn is_function_definition(stmt: &DefinitionStmt) -> bool {
     match stmt {
-        DefObjStmt::HaveFnEqualStmt(_)
-        | DefObjStmt::HaveFnEqualCaseByCaseStmt(_)
-        | DefObjStmt::HaveFnByInducStmt(_)
-        | DefObjStmt::HaveFnByForallExistUniqueStmt(_) => true,
+        DefinitionStmt::HaveFnEqualStmt(_)
+        | DefinitionStmt::HaveFnEqualCaseByCaseStmt(_)
+        | DefinitionStmt::HaveFnByInducStmt(_)
+        | DefinitionStmt::HaveFnByForallExistUniqueStmt(_) => true,
         _ => false,
     }
 }

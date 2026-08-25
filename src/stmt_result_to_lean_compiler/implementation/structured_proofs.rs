@@ -170,7 +170,7 @@ impl StmtResultToLeanCompiler {
         verification: &SuccessVerifyWitnessExistResult,
     ) -> Result<Option<CompiledExistentialWitnessProofBody>, String> {
         if !existential.is_plain_exist()
-            || existential.params_def_with_type().number_of_params() != 1
+            || existential.typed_parameters().number_of_params() != 1
             || existential.facts().len() != 1
             || witness_objects.len() != 1
         {
@@ -179,7 +179,7 @@ impl StmtResultToLeanCompiler {
                     .into(),
             );
         }
-        let group = &existential.params_def_with_type().groups[0];
+        let group = &existential.typed_parameters().groups[0];
         if group.params.len() != 1 || !matches!(group.param_type, ParamType::Obj(_)) {
             return Err(
                 "StmtResultToLeanCompiler currently requires one membership witness".into(),
@@ -350,7 +350,7 @@ impl StmtResultToLeanCompiler {
         }
         let mut expected_parameter_facts = Vec::new();
         let mut argument_index = 0;
-        for group in &verification.definition.params_def_with_type.groups {
+        for group in &verification.definition.typed_parameters.groups {
             let set = match &group.param_type {
                 ParamType::Obj(set) => set,
                 _ => return Ok(false),
@@ -512,7 +512,7 @@ impl StmtResultToLeanCompiler {
             return Ok(false);
         };
         let existential = &verification.source_exist_fact;
-        if result.statement.param_def.to_string() != existential.params_def_with_type().to_string()
+        if result.statement.param_def.to_string() != existential.typed_parameters().to_string()
             || result
                 .statement
                 .facts
@@ -653,7 +653,7 @@ impl StmtResultToLeanCompiler {
     ) -> Result<bool, String> {
         let existential = &verification.source_exist_fact;
         if !existential.is_plain_exist()
-            || existential.params_def_with_type().number_of_params() != 1
+            || existential.typed_parameters().number_of_params() != 1
             || existential.facts().len() != 1
             || introduced_bindings.len() != 1
             || verification.witness_type_facts.len() != 1
@@ -720,7 +720,7 @@ impl StmtResultToLeanCompiler {
             source_proof_body.proof_expression
         );
 
-        let group = &existential.params_def_with_type().groups[0];
+        let group = &existential.typed_parameters().groups[0];
         if group.params.len() != 1 || !matches!(group.param_type, ParamType::Obj(_)) {
             return Ok(false);
         }
@@ -1208,7 +1208,7 @@ impl StmtResultToLeanCompiler {
     ) -> Result<(), String> {
         let parameters = verification
             .generated_forall
-            .params_def_with_type
+            .typed_parameters
             .collect_param_bindings_with_types();
         let [(generated_binding, generated_type)] = parameters.as_slice() else {
             return Err("structured induction generated forall must own one parameter".into());
@@ -1639,7 +1639,7 @@ impl StmtResultToLeanCompiler {
         let source_forall = &statement.forall_fact;
         let target: Fact = source_forall.clone().into();
         let parameters = source_forall
-            .params_def_with_type
+            .typed_parameters
             .collect_param_bindings_with_types();
         if parameters.len() != 1
             || verification.parameters.len() != 1
@@ -2052,7 +2052,7 @@ impl StmtResultToLeanCompiler {
         let source_forall = &statement.forall_fact;
         let target: Fact = source_forall.clone().into();
         let parameters = source_forall
-            .params_def_with_type
+            .typed_parameters
             .collect_param_bindings_with_types();
         if parameters.len() != 1 || verification.parameters.len() != 1 {
             return Ok(None);

@@ -2,8 +2,8 @@
 
 use crate::prelude::*;
 
-fn set_param(runtime: &Runtime, name: &str) -> ParamDefWithType {
-    ParamDefWithType::new(vec![runtime
+fn set_param(runtime: &Runtime, name: &str) -> TypedParameterList {
+    TypedParameterList::new(vec![runtime
         .fresh_param_group_with_type(vec![name.to_string()], ParamType::Set(Set::new()))
         .unwrap()])
 }

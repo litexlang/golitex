@@ -14,7 +14,7 @@ impl Runtime {
 
         let forall_arity = stmt
             .forall_fact
-            .params_def_with_type
+            .typed_parameters
             .collect_param_names()
             .len();
         match user_defined_prop_arity(self, &prop_name) {
@@ -125,7 +125,7 @@ impl Runtime {
 
         let forall_arity = stmt
             .forall_fact
-            .params_def_with_type
+            .typed_parameters
             .collect_param_names()
             .len();
         match user_defined_prop_arity(self, &prop_name) {

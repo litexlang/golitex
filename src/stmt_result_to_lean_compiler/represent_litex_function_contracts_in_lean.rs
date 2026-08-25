@@ -115,8 +115,8 @@ impl LeanTargetFunctionTypeRepresentation {
     }
 
     fn lower_body(body: &FnSetBody, semantic_key: String) -> Result<Self, String> {
-        let mut parameters = Vec::with_capacity(body.params_def_with_set.number_of_params());
-        for group in body.params_def_with_set.groups.iter() {
+        let mut parameters = Vec::with_capacity(body.set_bound_parameters.number_of_params());
+        for group in body.set_bound_parameters.groups.iter() {
             let set = LeanTargetObjectRepresentation::lower(group.set_obj())?;
             for binding in group.params.iter() {
                 parameters.push(LeanTargetFunctionParameterRepresentation {

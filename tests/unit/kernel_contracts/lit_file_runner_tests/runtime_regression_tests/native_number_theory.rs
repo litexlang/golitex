@@ -334,7 +334,7 @@ thm deferred_symbolic_prime:
 fn native_number_theory_names_are_hard_reserved_but_uppercase_names_are_available() {
     for name in [QUOT, GCD, PRIME, COPRIME, DVD] {
         for (position, source) in [
-            ("declaration", format!("have {name} Z = 1")),
+            ("definition", format!("have {name} Z = 1")),
             ("forall binder", format!("forall {name} Z:\n    1 = 1")),
             ("function parameter", format!("have fn f({name} Z) Z = 0")),
             (

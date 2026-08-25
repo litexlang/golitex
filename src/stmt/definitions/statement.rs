@@ -1,7 +1,7 @@
 //! Object and proposition definition statement forms.
 
 use crate::prelude::*;
-use crate::stmt::parameter_def::ParamDefWithType;
+use crate::stmt::parameters::TypedParameterList;
 use std::fmt;
 
 #[derive(Clone)]
@@ -52,30 +52,30 @@ impl DefAbstractPropStmt {
 /// earlier function parameters.
 #[derive(Clone)]
 pub struct FnSetClause {
-    pub params_def_with_set: ParamDefWithSet,
+    pub set_bound_parameters: SetBoundParameterList,
     pub dom_facts: Vec<QuantifierFreeFact>,
     pub ret_set: Obj,
 }
 
 impl FnSetClause {
     pub fn new(
-        params_def_with_set: impl Into<ParamDefWithSet>,
+        set_bound_parameters: impl Into<SetBoundParameterList>,
         dom_facts: Vec<QuantifierFreeFact>,
         ret_set: Obj,
     ) -> Result<Self, RuntimeError> {
-        let params_def_with_set = params_def_with_set.into();
+        let set_bound_parameters = set_bound_parameters.into();
         Ok(FnSetClause {
-            params_def_with_set,
+            set_bound_parameters,
             dom_facts,
             ret_set,
         })
     }
 
     pub fn collect_all_param_bindings_including_nested_ret_fn_sets(&self) -> Vec<SymbolBinding> {
-        let mut bindings = self.params_def_with_set.collect_param_bindings();
+        let mut bindings = self.set_bound_parameters.collect_param_bindings();
         let mut ret_set = self.ret_set.clone();
         while let Obj::FnSet(inner) = ret_set {
-            bindings.extend(inner.body.params_def_with_set.collect_param_bindings());
+            bindings.extend(inner.body.set_bound_parameters.collect_param_bindings());
             ret_set = (*inner.body.ret_set).clone();
         }
         bindings
@@ -158,7 +158,7 @@ pub struct HaveMatrixStmt {
 #[derive(Clone)]
 pub struct DefTemplateStmt {
     pub template_name: String,
-    pub template_arg_def: ParamDefWithType,
+    pub template_arg_def: TypedParameterList,
     pub template_arg_dom: Vec<QuantifierFreeFact>,
     pub template_def_stmt: TemplateDefEnum,
     pub line_file: LineFile,
@@ -172,7 +172,7 @@ pub struct DefTemplateStmt {
 #[derive(Clone)]
 pub struct DefSettingStmt {
     pub name: String,
-    pub param_def: ParamDefWithType,
+    pub param_def: TypedParameterList,
     pub dom_facts: Vec<Fact>,
     pub line_file: LineFile,
 }
@@ -180,7 +180,7 @@ pub struct DefSettingStmt {
 impl DefSettingStmt {
     pub fn new(
         name: String,
-        param_def: ParamDefWithType,
+        param_def: TypedParameterList,
         dom_facts: Vec<Fact>,
         line_file: LineFile,
     ) -> Self {
@@ -272,27 +272,27 @@ pub struct LetObjStmt {
 
 #[derive(Clone)]
 pub struct HaveObjEqualStmt {
-    pub param_def: ParamDefWithType,
+    pub param_def: TypedParameterList,
     pub objs_equal_to: Vec<Obj>,
     pub line_file: LineFile,
 }
 
 #[derive(Clone)]
 pub struct HaveObjInNonemptySetOrParamTypeStmt {
-    pub param_def: ParamDefWithType,
+    pub param_def: TypedParameterList,
     pub line_file: LineFile,
 }
 
 #[derive(Clone)]
 pub struct HaveObjByExistFactsStmt {
-    pub param_def: ParamDefWithType,
+    pub param_def: TypedParameterList,
     pub facts: Vec<QuantifierFreeFact>,
     pub line_file: LineFile,
 }
 
 #[derive(Clone)]
 pub struct TrustHaveStmt {
-    pub param_def: ParamDefWithType,
+    pub param_def: TypedParameterList,
     pub facts: Vec<Fact>,
     pub line_file: LineFile,
 }
@@ -300,7 +300,7 @@ pub struct TrustHaveStmt {
 #[derive(Clone)]
 pub struct DefPropStmt {
     pub name: String,
-    pub params_def_with_type: ParamDefWithType,
+    pub typed_parameters: TypedParameterList,
     pub iff_facts: Vec<Fact>,
     pub line_file: LineFile,
 }
@@ -322,13 +322,13 @@ impl fmt::Display for DefAbstractPropStmt {
 impl DefPropStmt {
     pub fn new(
         name: String,
-        params_def_with_type: ParamDefWithType,
+        typed_parameters: TypedParameterList,
         iff_facts: Vec<Fact>,
         line_file: LineFile,
     ) -> Self {
         DefPropStmt {
             name,
-            params_def_with_type,
+            typed_parameters,
             iff_facts,
             line_file,
         }
@@ -343,14 +343,14 @@ impl fmt::Display for DefPropStmt {
                 "{} {}{}",
                 PROP,
                 self.name,
-                braced_string(&self.params_def_with_type)
+                braced_string(&self.typed_parameters)
             ),
             _ => write!(
                 f,
                 "{} {}{}{}\n{}",
                 PROP,
                 self.name,
-                braced_string(&self.params_def_with_type),
+                braced_string(&self.typed_parameters),
                 COLON,
                 vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.iff_facts, 1)
             ),
@@ -359,7 +359,7 @@ impl fmt::Display for DefPropStmt {
 }
 
 impl TrustHaveStmt {
-    pub fn new(param_def: ParamDefWithType, facts: Vec<Fact>, line_file: LineFile) -> Self {
+    pub fn new(param_def: TypedParameterList, facts: Vec<Fact>, line_file: LineFile) -> Self {
         TrustHaveStmt {
             param_def,
             facts,
@@ -394,7 +394,7 @@ impl fmt::Display for TrustHaveStmt {
 }
 
 impl HaveObjInNonemptySetOrParamTypeStmt {
-    pub fn new(param_def: ParamDefWithType, line_file: LineFile) -> Self {
+    pub fn new(param_def: TypedParameterList, line_file: LineFile) -> Self {
         HaveObjInNonemptySetOrParamTypeStmt {
             param_def,
             line_file,
@@ -414,7 +414,7 @@ impl fmt::Display for HaveObjInNonemptySetOrParamTypeStmt {
 
 impl HaveObjByExistFactsStmt {
     pub fn new(
-        param_def: ParamDefWithType,
+        param_def: TypedParameterList,
         facts: Vec<QuantifierFreeFact>,
         line_file: LineFile,
     ) -> Self {
@@ -468,7 +468,11 @@ impl fmt::Display for LetObjStmt {
 }
 
 impl HaveObjEqualStmt {
-    pub fn new(param_def: ParamDefWithType, objs_equal_to: Vec<Obj>, line_file: LineFile) -> Self {
+    pub fn new(
+        param_def: TypedParameterList,
+        objs_equal_to: Vec<Obj>,
+        line_file: LineFile,
+    ) -> Self {
         HaveObjEqualStmt {
             param_def,
             objs_equal_to,
@@ -973,7 +977,7 @@ impl HaveFnEqualStmt {
 impl fmt::Display for HaveFnEqualStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         let fn_set_clause = FnSetClause::new(
-            self.equal_to_anonymous_fn.body.params_def_with_set.clone(),
+            self.equal_to_anonymous_fn.body.set_bound_parameters.clone(),
             self.equal_to_anonymous_fn.body.dom_facts.clone(),
             (*self.equal_to_anonymous_fn.body.ret_set).clone(),
         )
@@ -985,7 +989,7 @@ impl fmt::Display for HaveFnEqualStmt {
             FN_LOWER_CASE,
             self.name(),
             brace_vec_colon_vec_to_string(
-                &fn_set_clause.params_def_with_set,
+                &fn_set_clause.set_bound_parameters,
                 &fn_set_clause.dom_facts
             ),
             EQUAL,
@@ -1044,7 +1048,7 @@ impl fmt::Display for HaveFnByForallExistUniqueStmt {
 impl DefTemplateStmt {
     pub fn new(
         template_name: String,
-        template_arg_def: ParamDefWithType,
+        template_arg_def: TypedParameterList,
         template_arg_dom: Vec<QuantifierFreeFact>,
         template_def_stmt: TemplateDefEnum,
         line_file: LineFile,
@@ -1191,7 +1195,7 @@ impl fmt::Display for HaveFnEqualCaseByCaseStmt {
             FN_LOWER_CASE,
             self.name(),
             brace_vec_colon_vec_to_string(
-                &self.fn_set_clause.params_def_with_set,
+                &self.fn_set_clause.set_bound_parameters,
                 &self.fn_set_clause.dom_facts
             ),
             self.fn_set_clause.ret_set,
@@ -1285,7 +1289,7 @@ impl HaveFnByInducStmt {
     }
 
     pub fn param_names(&self) -> Vec<String> {
-        ParamGroupWithSet::collect_param_names(&self.fn_set_clause.params_def_with_set)
+        SetBoundParameterGroup::collect_param_names(&self.fn_set_clause.set_bound_parameters)
     }
 
     /// Flatten nested cases into the ordinary case-by-case shape used for stored forall facts.
@@ -1340,7 +1344,7 @@ impl fmt::Display for HaveFnByInducStmt {
             FN_LOWER_CASE,
             self.name(),
             brace_vec_colon_vec_to_string(
-                &self.fn_set_clause.params_def_with_set,
+                &self.fn_set_clause.set_bound_parameters,
                 &self.fn_set_clause.dom_facts
             ),
             self.fn_set_clause.ret_set,

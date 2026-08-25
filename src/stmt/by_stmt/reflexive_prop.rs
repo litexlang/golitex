@@ -47,10 +47,10 @@ impl ByReflexivePropStmt {
 
 fn reflexive_prop_name_from_forall(forall_fact: &ForallFact) -> Result<String, String> {
     let params = forall_fact
-        .params_def_with_type
+        .typed_parameters
         .collect_param_names_with_types();
     if params.len() != 1 {
-        return Err("by reflexive_prop: forall must declare exactly one parameter".to_string());
+        return Err("by reflexive_prop: forall must bind exactly one parameter".to_string());
     }
     for (_, param_type) in params.iter() {
         match param_type {

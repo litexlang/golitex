@@ -10,7 +10,7 @@ impl Runtime {
         let dimension = self.exec_have_tuple_stmt_verify_process(stmt)?;
         let infer_result = self.exec_have_tuple_stmt_affect_environment(stmt)?;
         Ok(
-            SuccessDefObjStmtResult::HaveTupleStmt(Box::new(SuccessHaveTupleStmtResult {
+            SuccessDefinitionStmtResult::HaveTupleStmt(Box::new(SuccessHaveTupleStmtResult {
                 statement: stmt.clone(),
                 common: SuccessStmtCommonResult::new(infer_result),
                 verification: Some(SuccessVerifyTupleOrCartDefinitionResult {
@@ -27,7 +27,7 @@ impl Runtime {
         let dimension = self.exec_have_cart_stmt_verify_process(stmt)?;
         let infer_result = self.exec_have_cart_stmt_affect_environment(stmt)?;
         Ok(
-            SuccessDefObjStmtResult::HaveCartStmt(Box::new(SuccessHaveCartStmtResult {
+            SuccessDefinitionStmtResult::HaveCartStmt(Box::new(SuccessHaveCartStmtResult {
                 statement: stmt.clone(),
                 common: SuccessStmtCommonResult::new(infer_result),
                 verification: Some(SuccessVerifyTupleOrCartDefinitionResult {
@@ -39,9 +39,9 @@ impl Runtime {
         )
     }
 
-    /// Mathematical contract: a tuple-family declaration uses a fresh name
+    /// Mathematical contract: a tuple-family definition uses a fresh name
     /// and has a value expression meaningful for a locally bound positive
-    /// coordinate up to its declared dimension.
+    /// coordinate up to its defined dimension.
     fn exec_have_tuple_stmt_verify_well_definedness(
         &mut self,
         stmt: &HaveTupleStmt,
@@ -71,11 +71,11 @@ impl Runtime {
         &mut self,
         stmt: &HaveTupleStmt,
     ) -> Result<SuccessInferResult, RuntimeError> {
-        self.store_parameter_binding(&stmt.symbol_binding, BindingScope::DeclaredObject)
+        self.store_parameter_binding(&stmt.symbol_binding, BindingScope::DefinitionBinding)
             .map_err(|e| short_exec_error(stmt.clone().into(), String::new(), Some(e), vec![]))?;
 
         let mut infer_result = SuccessInferResult::new();
-        let target = self.declared_identifier_obj(stmt.name());
+        let target = self.definition_identifier_obj(stmt.name());
         infer_result.new_infer_result_inside(self.store_have_tuple_or_cart_fact(
             IsTupleFact::new(target.clone(), stmt.line_file.clone()).into(),
             HaveTupleStmt::store_reason(),
@@ -106,7 +106,7 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         let infer_result = self.exec_have_tuple_stmt_affect_environment(stmt)?;
         Ok(
-            SuccessDefObjStmtResult::HaveTupleStmt(Box::new(SuccessHaveTupleStmtResult {
+            SuccessDefinitionStmtResult::HaveTupleStmt(Box::new(SuccessHaveTupleStmtResult {
                 statement: stmt.clone(),
                 common: SuccessStmtCommonResult::new(infer_result),
                 verification: None,
@@ -115,9 +115,9 @@ impl Runtime {
         )
     }
 
-    /// Mathematical contract: a Cartesian-family declaration uses a fresh
+    /// Mathematical contract: a Cartesian-family definition uses a fresh
     /// name and has a factor expression meaningful for a locally bound
-    /// positive coordinate up to its declared dimension.
+    /// positive coordinate up to its defined dimension.
     fn exec_have_cart_stmt_verify_well_definedness(
         &mut self,
         stmt: &HaveCartStmt,
@@ -147,11 +147,11 @@ impl Runtime {
         &mut self,
         stmt: &HaveCartStmt,
     ) -> Result<SuccessInferResult, RuntimeError> {
-        self.store_parameter_binding(&stmt.symbol_binding, BindingScope::DeclaredObject)
+        self.store_parameter_binding(&stmt.symbol_binding, BindingScope::DefinitionBinding)
             .map_err(|e| short_exec_error(stmt.clone().into(), String::new(), Some(e), vec![]))?;
 
         let mut infer_result = SuccessInferResult::new();
-        let target = self.declared_identifier_obj(stmt.name());
+        let target = self.definition_identifier_obj(stmt.name());
         infer_result.new_infer_result_inside(self.store_have_tuple_or_cart_fact(
             IsSetFact::new(target.clone(), stmt.line_file.clone()).into(),
             HaveCartStmt::store_reason(),
@@ -186,7 +186,7 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         let infer_result = self.exec_have_cart_stmt_affect_environment(stmt)?;
         Ok(
-            SuccessDefObjStmtResult::HaveCartStmt(Box::new(SuccessHaveCartStmtResult {
+            SuccessDefinitionStmtResult::HaveCartStmt(Box::new(SuccessHaveCartStmtResult {
                 statement: stmt.clone(),
                 common: SuccessStmtCommonResult::new(infer_result),
                 verification: None,
@@ -201,7 +201,7 @@ impl Runtime {
         binding: &SymbolBinding,
     ) -> Result<(), RuntimeError> {
         self.run_in_local_env(|rt| {
-            rt.store_parameter_binding(binding, BindingScope::DeclaredObject)
+            rt.store_parameter_binding(binding, BindingScope::DefinitionBinding)
                 .map_err(|e| short_exec_error(stmt, String::new(), Some(e), vec![]))
         })
     }
@@ -285,7 +285,7 @@ impl Runtime {
             self.fresh_binder_retag_plan_for_bindings(std::slice::from_ref(&stmt.index_binding));
         let index_obj = index_map[stmt.index_name()].clone();
         let value = self.inst_obj(&stmt.value, &index_map, SubstitutionMode::Exact)?;
-        let target = self.declared_identifier_obj(stmt.name());
+        let target = self.definition_identifier_obj(stmt.name());
         let left: Obj = ObjAtIndex::new(target, index_obj).into();
         let equal_fact = EqualFact::new(left, value, stmt.line_file.clone());
         ForallFact::new_canonical_forall(
@@ -301,7 +301,7 @@ impl Runtime {
             self.fresh_binder_retag_plan_for_bindings(std::slice::from_ref(&stmt.index_binding));
         let index_obj = index_map[stmt.index_name()].clone();
         let value = self.inst_obj(&stmt.value, &index_map, SubstitutionMode::Exact)?;
-        let target = self.declared_identifier_obj(stmt.name());
+        let target = self.definition_identifier_obj(stmt.name());
         let left: Obj = Proj::new(target, index_obj).into();
         let equal_fact = EqualFact::new(left, value, stmt.line_file.clone());
         ForallFact::new_canonical_forall(
@@ -316,10 +316,10 @@ impl Runtime {
 fn tuple_or_cart_index_param_def(
     index_binding: &SymbolBinding,
     dimension: Obj,
-) -> ParamDefWithType {
+) -> TypedParameterList {
     let one: Obj = Number::new("1".to_string()).into();
     let index_set: Obj = ClosedRange::new(one, dimension).into();
-    ParamDefWithType::new(vec![ParamGroupWithParamType::new(
+    TypedParameterList::new(vec![TypedParameterGroup::new(
         vec![index_binding.clone()],
         ParamType::Obj(index_set),
     )])

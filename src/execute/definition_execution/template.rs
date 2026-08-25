@@ -13,20 +13,18 @@ impl Runtime {
             })?;
         self.store_def_template(def_template_stmt)?;
         Ok(
-            SuccessDefInterfaceStmtResult::DefTemplateStmt(Box::new(
-                SuccessDefTemplateStmtResult {
-                    statement: def_template_stmt.clone(),
-                    template_parameter_groups,
-                    template_domain_results,
-                    body_statement_result: Box::new(body_statement_result),
-                },
-            ))
+            SuccessDefinitionStmtResult::DefTemplateStmt(Box::new(SuccessDefTemplateStmtResult {
+                statement: def_template_stmt.clone(),
+                template_parameter_groups,
+                template_domain_results,
+                body_statement_result: Box::new(body_statement_result),
+            }))
             .into(),
         )
     }
 
-    /// Mathematical contract: a template declaration has meaningful typed
-    /// arguments and domain assumptions, and its entire body declaration is
+    /// Mathematical contract: a template definition has meaningful typed
+    /// arguments and domain assumptions, and its entire body definition is
     /// executable and well-defined under those local assumptions.
     fn def_template_stmt_check_well_defined(
         &mut self,
@@ -202,10 +200,10 @@ impl Runtime {
             &def.template_def_stmt,
             &param_to_arg_map,
             &instance_name,
-            &template_obj.declaration_binding(),
+            &template_obj.definition_binding(),
             &def.line_file,
         )?;
-        let instance_identifier = self.declared_identifier_obj(&instance_name);
+        let instance_identifier = self.definition_identifier_obj(&instance_name);
         // Register the public template application as a named definition before the
         // instantiated body stores derived facts. For a selected function,
         // this lets its unique-existence property normalize directly to calls
@@ -229,7 +227,7 @@ impl Runtime {
             infers: surface_equality_infers,
         };
         // The template body was verified once with symbolic parameters when the
-        // template was declared. Header validation above plus capture-avoiding
+        // template was defined. Header validation above plus capture-avoiding
         // substitution preserves that result, so only commit the instantiated
         // statement's environment effects here.
         let body_result = self.execute_preverified_statement(&stmt)?;
@@ -242,7 +240,7 @@ impl Runtime {
             ));
         };
         let mut public_values = match &stmt {
-            Stmt::DefObjStmt(DefObjStmt::HaveObjEqualStmt(value_stmt)) => {
+            Stmt::Definition(DefinitionStmt::HaveObjEqualStmt(value_stmt)) => {
                 value_stmt.objs_equal_to.clone()
             }
             _ => Vec::new(),
@@ -261,7 +259,7 @@ impl Runtime {
             }
         }
         // Preserve body values directly at the public template application.
-        // This makes declaration-owned projection a local definitional
+        // This makes definition-owned projection a local definitional
         // reduction instead of a transitive hop through the hidden identifier.
         let mut public_value_equalities = Vec::with_capacity(public_values.len());
         for value in public_values {
@@ -284,17 +282,18 @@ impl Runtime {
             });
         }
         let mut supplemental_stores = Vec::new();
-        if let Stmt::DefObjStmt(DefObjStmt::HaveFnEqualCaseByCaseStmt(case_stmt)) = &stmt {
+        if let Stmt::Definition(DefinitionStmt::HaveFnEqualCaseByCaseStmt(case_stmt)) = &stmt {
             supplemental_stores
                 .extend(self.store_template_surface_case_equations(case_stmt, template_obj)?);
         }
-        if let Stmt::DefObjStmt(DefObjStmt::HaveFnByInducStmt(recursive_stmt)) = &stmt {
+        if let Stmt::Definition(DefinitionStmt::HaveFnByInducStmt(recursive_stmt)) = &stmt {
             let flat = recursive_stmt.to_have_fn_equal_case_by_case_stmt();
             supplemental_stores
                 .extend(self.store_template_surface_case_equations(&flat, template_obj)?);
         }
-        if let Stmt::DefObjStmt(DefObjStmt::HaveFnByForallExistUniqueStmt(choice_stmt)) = &stmt {
-            // The generic choice theorem was checked at template declaration.
+        if let Stmt::Definition(DefinitionStmt::HaveFnByForallExistUniqueStmt(choice_stmt)) = &stmt
+        {
+            // The generic choice theorem was checked at template definition.
             // Register its instantiated property under the public template
             // application as well as the hidden materialized identifier.
             supplemental_stores
@@ -531,10 +530,10 @@ impl Runtime {
                 let mut proof_param_to_arg_map = param_to_arg_map.clone();
                 for (source_binding, instantiated_binding) in s
                     .forall
-                    .params_def_with_type
+                    .typed_parameters
                     .collect_param_bindings()
                     .iter()
-                    .zip(forall.params_def_with_type.collect_param_bindings().iter())
+                    .zip(forall.typed_parameters.collect_param_bindings().iter())
                 {
                     insert_symbol_substitution(
                         &mut proof_param_to_arg_map,
@@ -737,7 +736,7 @@ impl Runtime {
                 }
                 Ok(TrustStmt::new(facts, line_file.clone()).into())
             }
-            Stmt::DefObjStmt(DefObjStmt::ObtainObjFromExistFact(s)) => {
+            Stmt::Definition(DefinitionStmt::ObtainObjFromExistFact(s)) => {
                 let exist_fact = self.inst_exist_fact(
                     &s.fact,
                     param_to_arg_map,
@@ -749,7 +748,7 @@ impl Runtime {
                         .into(),
                 )
             }
-            Stmt::DefObjStmt(DefObjStmt::ObtainObjFromAtomicFact(s)) => {
+            Stmt::Definition(DefinitionStmt::ObtainObjFromAtomicFact(s)) => {
                 let fact = self.inst_normal_atomic_fact(
                     &s.fact,
                     param_to_arg_map,
@@ -761,7 +760,7 @@ impl Runtime {
                         .into(),
                 )
             }
-            Stmt::DefObjStmt(DefObjStmt::ObtainObjFromThm(s)) => {
+            Stmt::Definition(DefinitionStmt::ObtainObjFromThm(s)) => {
                 let mut args = Vec::with_capacity(s.args.len());
                 for arg in s.args.iter() {
                     args.push(self.inst_obj(arg, param_to_arg_map, SubstitutionMode::Exact)?);
@@ -774,10 +773,10 @@ impl Runtime {
                 )
                 .into())
             }
-            Stmt::DefObjStmt(DefObjStmt::HaveObjEqualStmt(s)) => {
+            Stmt::Definition(DefinitionStmt::HaveObjEqualStmt(s)) => {
                 let mut groups = Vec::with_capacity(s.param_def.groups.len());
                 for group in s.param_def.groups.iter() {
-                    groups.push(ParamGroupWithParamType::new(
+                    groups.push(TypedParameterGroup::new(
                         group.params.clone(),
                         self.inst_param_type(
                             &group.param_type,
@@ -795,13 +794,13 @@ impl Runtime {
                     )?);
                 }
                 Ok(HaveObjEqualStmt::new(
-                    ParamDefWithType::new(groups),
+                    TypedParameterList::new(groups),
                     objs_equal_to,
                     line_file.clone(),
                 )
                 .into())
             }
-            Stmt::DefObjStmt(DefObjStmt::HaveFnEqualCaseByCaseStmt(s)) => {
+            Stmt::Definition(DefinitionStmt::HaveFnEqualCaseByCaseStmt(s)) => {
                 let (fn_set_clause, body_map) =
                     self.inst_fn_set_clause(&s.fn_set_clause, param_to_arg_map)?;
                 let mut cases = Vec::with_capacity(s.cases.len());
@@ -826,7 +825,7 @@ impl Runtime {
                 )
                 .into())
             }
-            Stmt::DefObjStmt(DefObjStmt::HaveFnEqualStmt(s)) => {
+            Stmt::Definition(DefinitionStmt::HaveFnEqualStmt(s)) => {
                 let obj = self.inst_obj(
                     &s.equal_to_anonymous_fn.clone().into(),
                     param_to_arg_map,
@@ -1031,10 +1030,10 @@ impl Runtime {
 
     fn inst_single_result_param_def(
         &self,
-        param_def: &ParamDefWithType,
+        param_def: &TypedParameterList,
         param_to_arg_map: &HashMap<String, Obj>,
         instance_binding: &SymbolBinding,
-    ) -> Result<ParamDefWithType, RuntimeError> {
+    ) -> Result<TypedParameterList, RuntimeError> {
         let mut groups = Vec::with_capacity(param_def.groups.len());
         let mut first = true;
         for g in param_def.groups.iter() {
@@ -1046,13 +1045,13 @@ impl Runtime {
                 }
             }
             if !params.is_empty() {
-                groups.push(ParamGroupWithParamType::new(
+                groups.push(TypedParameterGroup::new(
                     params,
                     self.inst_param_type(&g.param_type, param_to_arg_map, SubstitutionMode::Exact)?,
                 ));
             }
         }
-        Ok(ParamDefWithType::new(groups))
+        Ok(TypedParameterList::new(groups))
     }
 
     fn inst_fn_set_clause(
@@ -1061,8 +1060,8 @@ impl Runtime {
         param_to_arg_map: &HashMap<String, Obj>,
     ) -> Result<(FnSetClause, HashMap<String, Obj>), RuntimeError> {
         let mut body_map = param_to_arg_map.clone();
-        let mut params_def_with_set = Vec::with_capacity(clause.params_def_with_set.len());
-        for g in clause.params_def_with_set.iter() {
+        let mut set_bound_parameters = Vec::with_capacity(clause.set_bound_parameters.len());
+        for g in clause.set_bound_parameters.iter() {
             let fresh_group = self.fresh_param_group_with_set(
                 g.params
                     .iter()
@@ -1077,7 +1076,7 @@ impl Runtime {
                     obj_for_bound_param_in_scope(fresh_binding),
                 );
             }
-            params_def_with_set.push(fresh_group);
+            set_bound_parameters.push(fresh_group);
         }
         let mut dom_facts = Vec::with_capacity(clause.dom_facts.len());
         for fact in clause.dom_facts.iter() {
@@ -1090,7 +1089,7 @@ impl Runtime {
         }
         let ret_set = self.inst_obj(&clause.ret_set, &body_map, SubstitutionMode::Exact)?;
         Ok((
-            FnSetClause::new(params_def_with_set, dom_facts, ret_set)?,
+            FnSetClause::new(set_bound_parameters, dom_facts, ret_set)?,
             body_map,
         ))
     }

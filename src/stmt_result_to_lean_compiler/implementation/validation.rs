@@ -1256,12 +1256,12 @@ pub(super) fn fact_is_supported_by_direct_named_theorem(fact: &Fact) -> bool {
         Fact::AndFact(and_fact) => !and_fact.facts.is_empty(),
         Fact::ExistFact(existential) => {
             if !existential.is_plain_exist()
-                || existential.params_def_with_type().number_of_params() != 1
+                || existential.typed_parameters().number_of_params() != 1
                 || existential.facts().len() != 1
             {
                 return false;
             }
-            let group = &existential.params_def_with_type().groups[0];
+            let group = &existential.typed_parameters().groups[0];
             group.params.len() == 1
                 && matches!(group.param_type, ParamType::Obj(_))
                 && matches!(
@@ -1317,7 +1317,7 @@ pub(super) fn validate_direct_named_theorem_conclusion_well_definedness(
     {
         return Err("existential theorem conclusion WD changed its source structure".into());
     }
-    let expected_group = &expected_existential.params_def_with_type().groups[0];
+    let expected_group = &expected_existential.typed_parameters().groups[0];
     let actual_group = &result.binder.parameter_groups[0];
     if actual_group.group_index != 0
         || actual_group.parameter_type.to_string() != expected_group.param_type.to_string()
@@ -1478,7 +1478,7 @@ pub(super) fn direct_forall_result_publication_selections(
 
     let source_fact: Fact = source_forall.clone().into();
     let source_parameters = source_forall
-        .params_def_with_type
+        .typed_parameters
         .collect_param_bindings_with_types();
     let source_conclusion_keys = source_forall
         .then_facts
@@ -1545,7 +1545,7 @@ pub(super) fn direct_forall_result_publication_selections(
         }
 
         let projected_parameters = projected
-            .params_def_with_type
+            .typed_parameters
             .collect_param_bindings_with_types();
         let mut source_parameter_indices = Vec::with_capacity(projected_parameters.len());
         let mut last_source_parameter_index = None;
@@ -2474,7 +2474,7 @@ pub(super) fn install_template_instantiation_result(
         }
     }
 
-    let SuccessStmtResult::DefObjStmt(SuccessDefObjStmtResult::HaveObjEqualStmt(body)) =
+    let SuccessStmtResult::Definition(SuccessDefinitionStmtResult::HaveObjEqualStmt(body)) =
         created.body_statement_result.as_ref()
     else {
         return Err("created Template instance retained a non-set-alias body Result".into());

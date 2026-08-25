@@ -19,13 +19,13 @@ pub use crate::common::name_types::{
 pub use crate::common::output_language::OutputLanguage;
 pub use crate::environment::{
     atomic_fact_in_forall_arg_shape_key, AtomicFactInForallArgShapeIndex,
-    AtomicFactInForallArgShapeKey, CachedKnownFact, Environment, EnvironmentDeclarationRegistry,
-    EnvironmentFactDatabase, EnvironmentObjectKnowledge, EnvironmentObjectKnowledgeStore,
-    EnvironmentPredicateProperties, EnvironmentPredicatePropertyStore, EnvironmentStoredFact,
-    EnvironmentStoredFactRepository, EnvironmentStrategyActivationState,
-    EnvironmentStrategyRegistry, EnvironmentStrategySelection, EnvironmentVerificationCache,
-    KnownEquality, KnownEqualityProofStep, KnownFnInfo, KnownObjValue,
-    StoredForallConclusionReference, SymmetricPropValue, WellDefinednessEnvironmentDelta,
+    AtomicFactInForallArgShapeKey, CachedKnownFact, Environment, EnvironmentDefinitionRegistry,
+    EnvironmentFactStore, EnvironmentObjectKnowledge, EnvironmentObjectKnowledgeStore,
+    EnvironmentPredicateProperties, EnvironmentPredicatePropertyStore, EnvironmentStoredFactStore,
+    EnvironmentStrategyActivationState, EnvironmentStrategyRegistry, EnvironmentStrategySelection,
+    EnvironmentVerificationCache, KnownEquality, KnownEqualityProofStep, KnownFnInfo,
+    KnownObjValue, StoredFactRecord, StoredForallConclusionReference, SymmetricPropValue,
+    WellDefinednessEnvironmentDelta,
 };
 pub use crate::error::exec_stmt_error_with_stmt_and_cause;
 pub use crate::error::short_exec_error;
@@ -258,7 +258,7 @@ pub use crate::result::FactTransformationEvidence;
 pub use crate::result::FactTransformationRule;
 pub use crate::result::FactTransformationStep;
 pub use crate::result::NonzeroExpressionOrientation;
-pub use crate::result::ObjectIntroductionItem;
+pub use crate::result::ObjectDefinitionItem;
 pub use crate::result::StatementExecutionPhase;
 pub use crate::result::StatementExecutionTrace;
 pub use crate::result::StatementPhaseStatus;
@@ -382,25 +382,25 @@ pub use crate::result::{
     SuccessByStructDefStmtResult, SuccessBySymmetricPropStmtResult, SuccessByThmStmtResult,
     SuccessByTransitivePropStmtResult, SuccessByZornLemmaStmtResult, SuccessClaimStmtResult,
     SuccessClearStmtResult, SuccessCommandStmtResult, SuccessCreatedTemplateInstanceResult,
-    SuccessDefAbstractPropStmtResult, SuccessDefAlgoStmtResult, SuccessDefInterfaceStmtResult,
-    SuccessDefObjStmtResult, SuccessDefPredicateStmtResult, SuccessDefPropStmtResult,
+    SuccessDefAbstractPropStmtResult, SuccessDefAlgoStmtResult, SuccessDefPropStmtResult,
     SuccessDefSettingStmtResult, SuccessDefStrategyStmtResult, SuccessDefStructStmtResult,
-    SuccessDefTemplateStmtResult, SuccessDefThmStmtResult, SuccessEvalStmtExecutionResult,
-    SuccessEvalStmtResult, SuccessEvaluatedEvalStmtResult, SuccessExampleStmtResult,
-    SuccessExecutedImportResult, SuccessHaveByPreimageStmtResult, SuccessHaveCartStmtResult,
-    SuccessHaveFiniteSeqStmtResult, SuccessHaveFnByForallExistUniqueStmtResult,
-    SuccessHaveFnByInducStmtResult, SuccessHaveFnEqualCaseByCaseStmtResult,
-    SuccessHaveFnEqualStmtResult, SuccessHaveMatrixStmtResult,
-    SuccessHaveObjByExistFactsStmtResult, SuccessHaveObjEqualStmtResult,
-    SuccessHaveObjInNonemptySetStmtResult, SuccessHaveSeqStmtResult, SuccessHaveTupleStmtResult,
-    SuccessImportExecutionResult, SuccessImportStmtResult, SuccessLetObjStmtResult,
-    SuccessObtainObjFromAtomicFactResult, SuccessObtainObjFromExistFactResult,
-    SuccessObtainObjFromThmResult, SuccessProofBlockStmtResult,
-    SuccessRecursiveObjWellDefinedResult, SuccessReuseObjWellDefinedResult,
-    SuccessReusedImportResult, SuccessReusedTemplateInstanceResult, SuccessSketchProofResult,
-    SuccessSketchStmtResult, SuccessStmtCommonResult, SuccessStopStrategyStmtResult,
-    SuccessStoreFactResult, SuccessTemplateInstantiationResult, SuccessTrustHaveStmtResult,
-    SuccessTrustStmtResult, SuccessTryProofResult, SuccessTryStmtResult, SuccessUnsafeStmtResult,
+    SuccessDefTemplateStmtResult, SuccessDefThmStmtResult, SuccessDefinitionStmtResult,
+    SuccessEvalStmtExecutionResult, SuccessEvalStmtResult, SuccessEvaluatedEvalStmtResult,
+    SuccessExampleStmtResult, SuccessExecutedImportResult, SuccessHaveByPreimageStmtResult,
+    SuccessHaveCartStmtResult, SuccessHaveFiniteSeqStmtResult,
+    SuccessHaveFnByForallExistUniqueStmtResult, SuccessHaveFnByInducStmtResult,
+    SuccessHaveFnEqualCaseByCaseStmtResult, SuccessHaveFnEqualStmtResult,
+    SuccessHaveMatrixStmtResult, SuccessHaveObjByExistFactsStmtResult,
+    SuccessHaveObjEqualStmtResult, SuccessHaveObjInNonemptySetStmtResult, SuccessHaveSeqStmtResult,
+    SuccessHaveTupleStmtResult, SuccessImportExecutionResult, SuccessImportStmtResult,
+    SuccessLetObjStmtResult, SuccessObtainObjFromAtomicFactResult,
+    SuccessObtainObjFromExistFactResult, SuccessObtainObjFromThmResult,
+    SuccessProofBlockStmtResult, SuccessRecursiveObjWellDefinedResult,
+    SuccessReuseObjWellDefinedResult, SuccessReusedImportResult,
+    SuccessReusedTemplateInstanceResult, SuccessSketchProofResult, SuccessSketchStmtResult,
+    SuccessStmtCommonResult, SuccessStopStrategyStmtResult, SuccessStoreFactResult,
+    SuccessTemplateInstantiationResult, SuccessTrustHaveStmtResult, SuccessTrustStmtResult,
+    SuccessTryProofResult, SuccessTryStmtResult, SuccessUnsafeStmtResult,
     SuccessUseStrategyStmtResult, SuccessVerifyAndFactResult,
     SuccessVerifyAndFactWellDefinedResult, SuccessVerifyAnonymousFunctionWellDefinedResult,
     SuccessVerifyAtomicFactResult, SuccessVerifyAtomicFactWellDefinedResult,
@@ -524,14 +524,14 @@ pub use crate::stmt::definition_stmt::TemplateDefEnum;
 pub use crate::stmt::definition_stmt::TrustHaveStmt;
 pub use crate::stmt::eval_stmt::EvalStmt;
 pub use crate::stmt::example_stmt::ExampleStmt;
-pub use crate::stmt::parameter_def::FiniteSet;
-pub use crate::stmt::parameter_def::NonemptySet;
-pub use crate::stmt::parameter_def::ParamDefWithSet;
-pub use crate::stmt::parameter_def::ParamDefWithType;
-pub use crate::stmt::parameter_def::ParamGroupWithParamType;
-pub use crate::stmt::parameter_def::ParamGroupWithSet;
-pub use crate::stmt::parameter_def::ParamType;
-pub use crate::stmt::parameter_def::Set;
+pub use crate::stmt::parameters::FiniteSet;
+pub use crate::stmt::parameters::NonemptySet;
+pub use crate::stmt::parameters::ParamType;
+pub use crate::stmt::parameters::Set;
+pub use crate::stmt::parameters::SetBoundParameterGroup;
+pub use crate::stmt::parameters::SetBoundParameterList;
+pub use crate::stmt::parameters::TypedParameterGroup;
+pub use crate::stmt::parameters::TypedParameterList;
 pub use crate::stmt::sketch_stmt::SketchStmt;
 pub use crate::stmt::tooling_stmt::ClearStmt;
 pub use crate::stmt::tooling_stmt::ImportModuleStmt;
@@ -550,12 +550,10 @@ pub use crate::stmt::ByStmt;
 pub use crate::stmt::ByStructDefStmt;
 pub use crate::stmt::ByThmStmt;
 pub use crate::stmt::CommandStmt;
-pub use crate::stmt::DefInterfaceStmt;
-pub use crate::stmt::DefObjStmt;
-pub use crate::stmt::DefPredicateStmt;
 pub use crate::stmt::DefStrategyStmt;
 pub use crate::stmt::DefStructStmt;
 pub use crate::stmt::DefThmStmt;
+pub use crate::stmt::DefinitionStmt;
 pub use crate::stmt::ProofBlockStmt;
 pub use crate::stmt::Stmt;
 pub use crate::stmt::StopStrategyStmt;

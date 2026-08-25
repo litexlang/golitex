@@ -15,13 +15,13 @@ impl Runtime {
         &self,
         forall_fact: ForallFact,
     ) -> Result<Fact, RuntimeError> {
-        let source_bindings = forall_fact.params_def_with_type.collect_param_bindings();
+        let source_bindings = forall_fact.typed_parameters.collect_param_bindings();
         let (target_names, full_param_to_arg_map) =
             self.fresh_binder_retag_plan_for_bindings(&source_bindings);
         let mut active_param_to_arg_map = HashMap::new();
-        let mut groups = Vec::with_capacity(forall_fact.params_def_with_type.groups.len());
+        let mut groups = Vec::with_capacity(forall_fact.typed_parameters.groups.len());
         let mut name_index = 0;
-        for group in &forall_fact.params_def_with_type.groups {
+        for group in &forall_fact.typed_parameters.groups {
             let renamed_param_type = self.inst_param_type(
                 &group.param_type,
                 &active_param_to_arg_map,
@@ -34,7 +34,7 @@ impl Runtime {
             )?;
             let group_target_names =
                 target_names[name_index..name_index + group.params.len()].to_vec();
-            groups.push(ParamGroupWithParamType::new(group_target_names, param_type));
+            groups.push(TypedParameterGroup::new(group_target_names, param_type));
             for source_binding in &group.params {
                 let source_name = source_binding.name();
                 insert_symbol_substitution(
@@ -74,7 +74,7 @@ impl Runtime {
         }
 
         Ok(ForallFact::new_canonical_forall(
-            ParamDefWithType::new(groups),
+            TypedParameterList::new(groups),
             dom_facts,
             then_facts,
             forall_fact.line_file,

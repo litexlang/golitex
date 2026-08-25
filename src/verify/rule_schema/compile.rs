@@ -110,7 +110,7 @@ pub fn compile_local_builtin_schema(
     }
 
     let variables = forall
-        .params_def_with_type
+        .typed_parameters
         .collect_param_bindings_with_types()
         .into_iter()
         .map(|(binding, param_type)| RuleVariable {

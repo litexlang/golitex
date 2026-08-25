@@ -12,7 +12,7 @@ pub struct StructFieldDef {
 #[derive(Clone)]
 pub struct DefStructStmt {
     pub name: String,
-    pub param_def_with_dom: Option<(ParamDefWithType, Vec<QuantifierFreeFact>)>,
+    pub param_def_with_dom: Option<(TypedParameterList, Vec<QuantifierFreeFact>)>,
     pub fields: Vec<StructFieldDef>,
     pub equivalent_facts: Vec<Fact>,
     pub line_file: LineFile,
@@ -21,7 +21,7 @@ pub struct DefStructStmt {
 impl DefStructStmt {
     pub fn new(
         name: String,
-        param_def_with_dom: Option<(ParamDefWithType, Vec<QuantifierFreeFact>)>,
+        param_def_with_dom: Option<(TypedParameterList, Vec<QuantifierFreeFact>)>,
         fields: Vec<StructFieldDef>,
         equivalent_facts: Vec<Fact>,
         line_file: LineFile,

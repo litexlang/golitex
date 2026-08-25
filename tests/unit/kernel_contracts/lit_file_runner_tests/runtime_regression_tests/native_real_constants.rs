@@ -66,7 +66,7 @@ fn native_real_constants_do_not_gain_unstated_values() {
 fn native_real_constant_names_are_hard_reserved_in_binding_positions() {
     for name in [E, PI] {
         let cases = [
-            ("declaration", format!("have {name} R")),
+            ("definition", format!("have {name} R")),
             ("forall binder", format!("forall {name} R:\n    1 = 1")),
             ("function parameter", format!("have fn f({name} R) R = 0")),
             (

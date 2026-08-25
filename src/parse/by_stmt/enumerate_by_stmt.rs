@@ -61,7 +61,7 @@ impl Runtime {
         let forall_fact =
             self.parse_goal_forall_fact_block(goal_block, "by enumerate finite_set")?;
 
-        for g in forall_fact.params_def_with_type.groups.iter() {
+        for g in forall_fact.typed_parameters.groups.iter() {
             if !matches!(&g.param_type, ParamType::Obj(_)) {
                 return Err(RuntimeError::from(ParseRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_line_file(
@@ -73,7 +73,7 @@ impl Runtime {
             }
         }
 
-        let bindings = forall_fact.params_def_with_type.collect_param_bindings();
+        let bindings = forall_fact.typed_parameters.collect_param_bindings();
         let lf = tb.line_file.clone();
         let proof: Vec<Stmt> = self.parse_stmts_with_existing_free_param_bindings(
             BindingScope::LocalBinder,

@@ -656,25 +656,24 @@ fn compiler_and_test_directories_follow_the_repository_layout() {
         assert!(verifier_tests.join(test_file).is_file());
     }
     let execute = root.join("src/execute");
-    let object_introduction = execute.join("object_introduction");
-    assert!(object_introduction.is_dir());
+    let object_definitions = execute.join("definition_execution/object");
+    assert!(object_definitions.is_dir());
     for responsibility in [
+        "definition_support.rs",
+        "existential_elimination.rs",
         "function_cases.rs",
         "function_equality.rs",
         "function_equality_support.rs",
         "function_induction.rs",
         "function_unique_existence.rs",
-        "introduction_support.rs",
         "let_binding.rs",
         "object_equality.rs",
         "object_membership.rs",
-        "obtain.rs",
         "preimage.rs",
         "sequence_and_matrix.rs",
         "tuple_and_cartesian.rs",
-        "witness.rs",
     ] {
-        assert!(object_introduction.join(responsibility).is_file());
+        assert!(object_definitions.join(responsibility).is_file());
     }
     for (directory, responsibilities) in [
         (
@@ -712,6 +711,8 @@ fn compiler_and_test_directories_follow_the_repository_layout() {
     }
     assert!(execute.join("strategy_execution.rs").is_file());
     assert!(execute.join("verified_fact_storage.rs").is_file());
+    assert!(execute.join("witness_execution.rs").is_file());
+    assert!(!execute.join("object_introduction").exists());
     for retired_root_file in [
         "exec_axiom_stmt.rs",
         "exec_claim_stmt.rs",
@@ -735,7 +736,7 @@ fn compiler_and_test_directories_follow_the_repository_layout() {
         "exec_have_seq_matrix_stmt.rs",
         "exec_have_tuple_cart_stmt.rs",
         "exec_let_obj_stmt.rs",
-        "exec_object_introduction_helper.rs",
+        "exec_object_definition_helper.rs",
         "exec_obtain_obj.rs",
         "exec_sketch_stmt.rs",
         "exec_store_definitions.rs",
@@ -751,7 +752,9 @@ fn compiler_and_test_directories_follow_the_repository_layout() {
     }
     let execute_module =
         fs::read_to_string(execute.join("mod.rs")).expect("execute module should be readable");
-    assert!(execute_module.contains("pub use object_introduction::function_equality_support;"));
+    assert!(
+        execute_module.contains("pub use definition_execution::object::function_equality_support;")
+    );
     assert!(!execute_module.contains(" as exec_have_fn_equal_shared"));
     assert!(root.join("tests/unit").is_dir());
     assert!(root.join("tests/integration").is_dir());
@@ -1126,8 +1129,8 @@ fn environment_exposes_six_direct_owners_without_flat_compatibility_storage() {
             .expect("well-definedness delta should be readable");
 
     for direct_owner in [
-        "pub declarations: EnvironmentDeclarationRegistry",
-        "pub facts: EnvironmentFactDatabase",
+        "pub definitions: EnvironmentDefinitionRegistry",
+        "pub facts: EnvironmentFactStore",
         "pub objects: EnvironmentObjectKnowledgeStore",
         "pub predicate_properties: EnvironmentPredicatePropertyStore",
         "pub caches: EnvironmentVerificationCache",
@@ -1149,6 +1152,96 @@ fn environment_exposes_six_direct_owners_without_flat_compatibility_storage() {
 
     assert!(well_definedness_delta.contains("pub struct WellDefinednessEnvironmentDelta"));
     assert!(well_definedness_delta.contains("pub fn apply_to("));
-    assert!(!well_definedness_delta.contains("pub declarations:"));
+    assert!(!well_definedness_delta.contains("pub definitions:"));
     assert!(!well_definedness_delta.contains("pub facts:"));
+}
+
+#[test]
+fn definition_terminology_has_one_core_route_without_legacy_rust_names() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let statement_types = fs::read_to_string(root.join("src/stmt/core/types.rs"))
+        .expect("statement types should be readable");
+    let success_results = fs::read_to_string(root.join("src/result/statement/success.rs"))
+        .expect("success result types should be readable");
+    let environment = fs::read_to_string(root.join("src/environment/environment_state.rs"))
+        .expect("environment should be readable");
+    let execute_module = fs::read_to_string(root.join("src/execute/mod.rs"))
+        .expect("execute module should be readable");
+    let parameter_types = fs::read_to_string(root.join("src/stmt/definitions/parameters.rs"))
+        .expect("parameter types should be readable");
+    let mut core_terminology_sources = [
+        "src/stmt/core/types.rs",
+        "src/result/statement/success.rs",
+        "src/environment/mod.rs",
+        "src/environment/environment_state.rs",
+        "src/environment/definition_registry.rs",
+        "src/environment/fact_store.rs",
+        "src/environment/stored_fact_store.rs",
+        "src/execute/mod.rs",
+        "src/obj/free_param_obj.rs",
+        "src/obj/object_types.rs",
+        "src/parse/object/reference.rs",
+        "src/runtime/definition_state/object_properties.rs",
+        "src/stmt/definitions/parameters.rs",
+        "src/verify/atomic/function_membership.rs",
+        "src/verify/verify_builtin_rules/in_fact_builtin/structured_membership.rs",
+    ]
+    .into_iter()
+    .map(|relative| {
+        fs::read_to_string(root.join(relative))
+            .unwrap_or_else(|error| panic!("{relative} should be readable: {error}"))
+    })
+    .collect::<Vec<_>>();
+    core_terminology_sources.extend(
+        rust_files_below(&root.join("src/execute/definition_execution"))
+            .into_iter()
+            .map(|path| {
+                fs::read_to_string(&path).unwrap_or_else(|error| {
+                    panic!("{} should be readable: {error}", path.display())
+                })
+            }),
+    );
+    let core_terminology_sources = core_terminology_sources.join("\n");
+
+    assert!(statement_types.contains("Definition(DefinitionStmt)"));
+    assert!(success_results.contains("Definition(SuccessDefinitionStmtResult)"));
+    assert!(environment.contains("pub definitions: EnvironmentDefinitionRegistry"));
+    assert!(
+        execute_module.contains("pub use definition_execution::object::function_equality_support;")
+    );
+    assert!(parameter_types.contains("pub struct TypedParameterList"));
+    assert!(parameter_types.contains("pub struct SetBoundParameterList"));
+
+    for legacy_name in [
+        "DefObjStmt",
+        "DefPredicateStmt",
+        "DefInterfaceStmt",
+        "SuccessDefObjStmtResult",
+        "SuccessDefPredicateStmtResult",
+        "SuccessDefInterfaceStmtResult",
+        "EnvironmentDeclarationRegistry",
+        "EnvironmentFactDatabase",
+        "EnvironmentStoredFactRepository",
+        "pub declarations:",
+        "ObjectIntroductionItem",
+        "ParamDefWithType",
+        "ParamDefWithSet",
+        "ParamGroupWithParamType",
+        "ParamGroupWithSet",
+        "BindingScope::DeclaredObject",
+        "is_declared_object",
+        "declaration_binding",
+        "declared_identifier_obj",
+        "build_declared_function_obj_with_param_bindings",
+        "verify_value_in_declared_return_set",
+        "declared_function_set",
+    ] {
+        assert!(
+            !core_terminology_sources.contains(legacy_name),
+            "legacy core name `{legacy_name}` returned"
+        );
+    }
+
+    assert!(!root.join("src/execute/object_introduction").exists());
+    assert!(root.join("docs/Developer_Terminology.md").is_file());
 }

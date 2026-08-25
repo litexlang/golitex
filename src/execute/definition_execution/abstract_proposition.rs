@@ -18,7 +18,7 @@ impl Runtime {
             .map_err(|e| {
                 exec_stmt_error_with_stmt_and_cause(def_abstract_prop_stmt.clone().into(), e)
             })?;
-        Ok(SuccessDefPredicateStmtResult::DefAbstractPropStmt(Box::new(
+        Ok(SuccessDefinitionStmtResult::DefAbstractPropStmt(Box::new(
             SuccessDefAbstractPropStmtResult {
                 statement: def_abstract_prop_stmt.clone(),
                 common: SuccessStmtCommonResult::new(infer_result),
@@ -43,13 +43,17 @@ impl Runtime {
     ) -> Result<(), RuntimeError> {
         let name = def_abstract_prop_stmt.name.clone();
         let env = self.top_level_env();
-        if env.declarations.defined_abstract_props.contains_key(&name) {
+        if env
+            .definitions
+            .abstract_predicate_definitions
+            .contains_key(&name)
+        {
             return Err(def_abstract_prop_name_already_used_error(
                 &name,
                 "abstract_prop",
             ));
         }
-        if env.declarations.defined_def_props.contains_key(&name) {
+        if env.definitions.predicate_definitions.contains_key(&name) {
             return Err(def_abstract_prop_name_already_used_error(&name, "prop"));
         }
         Ok(())
@@ -69,7 +73,7 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         let infer_result =
             self.exec_def_abstract_prop_stmt_affect_environment(def_abstract_prop_stmt)?;
-        Ok(SuccessDefPredicateStmtResult::DefAbstractPropStmt(Box::new(
+        Ok(SuccessDefinitionStmtResult::DefAbstractPropStmt(Box::new(
             SuccessDefAbstractPropStmtResult {
                 statement: def_abstract_prop_stmt.clone(),
                 common: SuccessStmtCommonResult::new(infer_result),

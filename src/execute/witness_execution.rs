@@ -156,7 +156,7 @@ impl Runtime {
                     exec_stmt_error_with_stmt_and_cause(witness_stmt.clone(), cause)
                 })?;
             let result = rt.verify_args_satisfy_param_def_flat_types(
-                &definition.params_def_with_type,
+                &definition.typed_parameters,
                 &stmt.atomic_fact.body,
                 &verify_state,
                 SubstitutionMode::Exact,
@@ -179,7 +179,7 @@ impl Runtime {
     /// Mathematical contract: an existential witness supplies exactly one
     /// well-defined value per bound variable, the existential formula itself
     /// is meaningful, and every witness value satisfies its instantiated
-    /// declared parameter type.
+    /// defined parameter type.
     fn exec_witness_exist_fact_stmt_verify_well_definedness(
         &mut self,
         stmt: &WitnessExistFact,
@@ -190,7 +190,7 @@ impl Runtime {
 
             let expected_param_count = stmt
                 .exist_fact_in_witness
-                .params_def_with_type()
+                .typed_parameters()
                 .number_of_params();
             if expected_param_count != stmt.equal_tos.len() {
                 return Err(short_exec_error(
@@ -228,7 +228,7 @@ impl Runtime {
             }
 
             let type_check_result = rt.verify_args_satisfy_param_def_flat_types(
-                stmt.exist_fact_in_witness.params_def_with_type(),
+                stmt.exist_fact_in_witness.typed_parameters(),
                 &stmt.equal_tos,
                 &verify_state_for_well_defined,
                 SubstitutionMode::Exact,
@@ -260,13 +260,13 @@ impl Runtime {
             // prevents the retained proof from depending on local binder
             // facts that disappear when this verification environment pops.
             let instantiated_types = rt.inst_param_def_with_type_one_by_one(
-                stmt.exist_fact_in_witness.params_def_with_type(),
+                stmt.exist_fact_in_witness.typed_parameters(),
                 &stmt.equal_tos,
                 SubstitutionMode::Exact,
             )?;
             let flat_types = stmt
                 .exist_fact_in_witness
-                .params_def_with_type()
+                .typed_parameters()
                 .flat_instantiated_types_for_args(&instantiated_types);
             let mut retained_parameter_checks = Vec::with_capacity(stmt.equal_tos.len());
             for (witness, param_type) in stmt.equal_tos.iter().zip(flat_types.iter()) {
@@ -294,7 +294,7 @@ impl Runtime {
             }
 
             rt.define_params_with_type(
-                stmt.exist_fact_in_witness.params_def_with_type(),
+                stmt.exist_fact_in_witness.typed_parameters(),
                 false,
                 BindingScope::LocalBinder,
             )
@@ -309,7 +309,7 @@ impl Runtime {
 
             let exist_param_bindings = stmt
                 .exist_fact_in_witness
-                .params_def_with_type()
+                .typed_parameters()
                 .collect_param_bindings();
             for (binding, equal_to_obj) in exist_param_bindings.iter().zip(stmt.equal_tos.iter()) {
                 let equal_fact: AtomicFact = EqualFact::new(
@@ -353,7 +353,7 @@ impl Runtime {
 
             let param_to_obj_map = stmt
                 .exist_fact_in_witness
-                .params_def_with_type()
+                .typed_parameters()
                 .param_defs_and_args_to_param_to_arg_map(stmt.equal_tos.as_slice());
             let instantiated_exist_fact = rt.inst_exist_fact(
                 &stmt.exist_fact_in_witness,

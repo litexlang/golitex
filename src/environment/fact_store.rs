@@ -4,7 +4,7 @@ use std::rc::Rc;
 
 /// Canonical stored facts and the search indexes derived from them.
 #[derive(Clone)]
-pub struct EnvironmentFactDatabase {
+pub struct EnvironmentFactStore {
     pub known_equality: KnownEquality,
     pub known_atomic_facts_with_0_or_more_than_2_args:
         HashMap<(AtomicFactKey, bool), Vec<AtomicFact>>,
@@ -25,10 +25,10 @@ pub struct EnvironmentFactDatabase {
         HashMap<AndFactKey, Vec<(AndFact, Rc<StoredForallConclusionReference>)>>,
     pub known_or_facts_in_forall_facts:
         HashMap<OrFactKey, Vec<(OrFact, Rc<StoredForallConclusionReference>)>>,
-    pub stored_facts: EnvironmentStoredFactRepository,
+    pub stored_facts: EnvironmentStoredFactStore,
 }
 
-impl EnvironmentFactDatabase {
+impl EnvironmentFactStore {
     pub fn new() -> Self {
         Self {
             known_equality: KnownEquality::new(),
@@ -44,7 +44,7 @@ impl EnvironmentFactDatabase {
             known_exist_facts_in_forall_facts: HashMap::new(),
             known_and_facts_in_forall_facts: HashMap::new(),
             known_or_facts_in_forall_facts: HashMap::new(),
-            stored_facts: EnvironmentStoredFactRepository::default(),
+            stored_facts: EnvironmentStoredFactStore::default(),
         }
     }
 }

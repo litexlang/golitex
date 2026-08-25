@@ -1,4 +1,4 @@
-//! Checks that instantiated arguments satisfy declared parameter requirements.
+//! Checks that instantiated arguments satisfy defined parameter requirements.
 
 use crate::prelude::*;
 
@@ -46,13 +46,13 @@ impl Runtime {
         self.verify_atomic_fact_restricted_known_builtin(&fact, verify_state)
     }
 
-    // Definition folding usually receives arguments already stored with their declared
+    // Definition folding usually receives arguments already stored with their defined
     // carriers. Try that bounded evidence before opening known-forall and strategy search.
     // Example: an exact known `forall V G: preimage(V) in F` can package `Tendsto(f,F,G)`
     // without re-searching the whole environment for the types of X, Y, f, F, and G.
     pub fn verify_args_satisfy_param_def_known_or_builtin_only(
         &mut self,
-        param_defs: &ParamDefWithType,
+        param_defs: &TypedParameterList,
         args: &Vec<Obj>,
         verify_state: &ProofSearchState,
         substitution_mode: SubstitutionMode,
@@ -122,7 +122,7 @@ impl Runtime {
                     return Ok(direct_result);
                 }
 
-                // A literal tuple may satisfy a declared dependent structure
+                // A literal tuple may satisfy a defined dependent structure
                 // return type by its immediate field carriers and structure
                 // laws. Example: `(n, entries)` returned as `&FiniteList<T,n>`.
                 // Keep this constructor check local to typed object/function
@@ -151,7 +151,7 @@ impl Runtime {
 
     pub fn verify_args_satisfy_param_def_flat_types(
         &mut self,
-        param_defs: &ParamDefWithType,
+        param_defs: &TypedParameterList,
         args: &Vec<Obj>,
         verify_state: &ProofSearchState,
         substitution_mode: SubstitutionMode,

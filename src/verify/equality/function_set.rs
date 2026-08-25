@@ -46,8 +46,8 @@ impl Runtime {
             return Ok(UnknownGenericStmtResult::new().into());
         };
         let line_file = &equal_fact.line_file;
-        if ParamGroupWithSet::number_of_params(&left.body.params_def_with_set)
-            != ParamGroupWithSet::number_of_params(&right.body.params_def_with_set)
+        if SetBoundParameterGroup::number_of_params(&left.body.set_bound_parameters)
+            != SetBoundParameterGroup::number_of_params(&right.body.set_bound_parameters)
         {
             return Ok((UnknownGenericStmtResult::new()).into());
         }
@@ -99,7 +99,7 @@ impl Runtime {
         line_file: LineFile,
         verify_state: &ProofSearchState,
     ) -> Result<bool, RuntimeError> {
-        let target_flat_param_bindings = target.body.params_def_with_set.collect_param_bindings();
+        let target_flat_param_bindings = target.body.set_bound_parameters.collect_param_bindings();
         let generated_param_names =
             self.generate_random_unused_names(target_flat_param_bindings.len());
         let generated_param_bindings = generated_param_names
@@ -211,7 +211,7 @@ impl Runtime {
         fn_set: &FnSetBody,
         generated_flat_names: &[String],
     ) -> Result<Obj, RuntimeError> {
-        let flat = fn_set.params_def_with_set.collect_param_bindings();
+        let flat = fn_set.set_bound_parameters.collect_param_bindings();
         if flat.len() != generated_flat_names.len() {
             return Err(
                 VerifyRuntimeError(RuntimeErrorStruct::new_with_just_msg("internal: fn_set alpha rename requires generated_flat_names len == flat param count"
@@ -243,9 +243,9 @@ impl Runtime {
             unreachable!("function-space alpha normalization returns a function space")
         };
         let mut singleton_groups = Vec::new();
-        for group in normalized.body.params_def_with_set.iter() {
+        for group in normalized.body.set_bound_parameters.iter() {
             for binding in group.params.iter() {
-                singleton_groups.push(ParamGroupWithSet::new(
+                singleton_groups.push(SetBoundParameterGroup::new(
                     vec![binding.clone()],
                     group.set_obj().clone(),
                 ));
@@ -270,7 +270,7 @@ impl Runtime {
             HashMap::with_capacity(generated_param_bindings.len() * 2);
         let mut flat_index: usize = 0;
 
-        for param_def_with_set in source.body.params_def_with_set.iter() {
+        for param_def_with_set in source.body.set_bound_parameters.iter() {
             let next_flat_index = flat_index + param_def_with_set.params.len();
             let generated_bindings_for_current_group =
                 generated_param_bindings[flat_index..next_flat_index].to_vec();
@@ -289,7 +289,7 @@ impl Runtime {
                         Some(e),
                     )
                 })?;
-            let generated_param_def = ParamGroupWithSet::new(
+            let generated_param_def = SetBoundParameterGroup::new(
                 generated_bindings_for_current_group,
                 instantiated_param_set,
             );
@@ -371,7 +371,7 @@ impl Runtime {
         line_file: LineFile,
         verify_state: &ProofSearchState,
     ) -> Result<bool, RuntimeError> {
-        for param_def_with_set in target.body.params_def_with_set.iter() {
+        for param_def_with_set in target.body.set_bound_parameters.iter() {
             let instantiated_param_type = ParamType::Obj(
                 self.inst_obj(
                     param_def_with_set.set_obj(),

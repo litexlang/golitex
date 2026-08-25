@@ -10,7 +10,7 @@ impl Runtime {
         }
 
         for env in self.iter_environments_from_top() {
-            if env.declarations.object_symbol(name).is_some() {
+            if env.definitions.object_symbol(name).is_some() {
                 return true;
             }
         }
@@ -206,7 +206,7 @@ impl Runtime {
 impl Runtime {
     pub fn new_fn_set(
         &self,
-        params_and_their_sets: impl Into<ParamDefWithSet>,
+        params_and_their_sets: impl Into<SetBoundParameterList>,
         dom_facts: Vec<QuantifierFreeFact>,
         ret_set: Obj,
     ) -> Result<FnSet, RuntimeError> {
@@ -226,7 +226,7 @@ impl Runtime {
 
     pub fn new_anonymous_fn(
         &self,
-        params_and_their_sets: impl Into<ParamDefWithSet>,
+        params_and_their_sets: impl Into<SetBoundParameterList>,
         dom_facts: Vec<QuantifierFreeFact>,
         ret_set: Obj,
         equal_to: Obj,
@@ -254,7 +254,7 @@ impl Runtime {
 
     pub fn fn_set_from_fn_set_clause(&self, clause: &FnSetClause) -> Result<FnSet, RuntimeError> {
         self.new_fn_set(
-            clause.params_def_with_set.clone(),
+            clause.set_bound_parameters.clone(),
             clause.dom_facts.clone(),
             clause.ret_set.clone(),
         )
@@ -264,7 +264,7 @@ impl Runtime {
 impl Runtime {
     pub fn params_to_arg_map(
         &self,
-        param_defs: &ParamDefWithType,
+        param_defs: &TypedParameterList,
         args: &[Obj],
     ) -> Result<HashMap<String, Obj>, RuntimeError> {
         let param_bindings = param_defs.collect_param_bindings();

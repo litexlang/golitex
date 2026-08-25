@@ -172,8 +172,8 @@ fn object_choice_json_v2_retains_typed_standard_set_nonempty_child_evidence() {
         .execute_statement(&stmt)
         .expect("object choice verifies");
 
-    let StmtResult::Success(SuccessStmtResult::DefObjStmt(
-        SuccessDefObjStmtResult::HaveObjInNonemptySetStmt(choice),
+    let StmtResult::Success(SuccessStmtResult::Definition(
+        SuccessDefinitionStmtResult::HaveObjInNonemptySetStmt(choice),
     )) = &result
     else {
         panic!("object choice returns its named result variant")

@@ -1307,7 +1307,7 @@ impl Runtime {
         let dom_hi: Fact =
             LessEqualFact::new(x_obj, (*left_sum.end).clone(), f.line_file.clone()).into();
         let pointwise_result = self.run_in_local_env(|rt| {
-            let params_def = ParamDefWithType::new(vec![ParamGroupWithParamType::new(
+            let params_def = TypedParameterList::new(vec![TypedParameterGroup::new(
                 vec![x_binding],
                 ParamType::Obj(index_param_set),
             )]);
@@ -1371,7 +1371,7 @@ impl Runtime {
         let pointwise_fact: AtomicFact =
             LessEqualFact::new(left_inst, right_inst, f.line_file.clone()).into();
         let pointwise_result = self.run_in_local_env(|rt| {
-            let params_def = ParamDefWithType::new(vec![ParamGroupWithParamType::new(
+            let params_def = TypedParameterList::new(vec![TypedParameterGroup::new(
                 vec![x_binding],
                 ParamType::Obj(left_sum.set.as_ref().clone()),
             )]);
@@ -1441,7 +1441,7 @@ impl Runtime {
         let nonnegative_fact: AtomicFact =
             LessEqualFact::new(Self::literal_zero_obj(), summand_at_x, f.line_file.clone()).into();
         let nonnegative_result = self.run_in_local_env(|rt| {
-            let params_def = ParamDefWithType::new(vec![ParamGroupWithParamType::new(
+            let params_def = TypedParameterList::new(vec![TypedParameterGroup::new(
                 vec![x_binding],
                 ParamType::Obj(sum.set.as_ref().clone()),
             )]);

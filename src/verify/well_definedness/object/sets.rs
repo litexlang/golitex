@@ -248,7 +248,7 @@ impl Runtime {
         x: &FnSet,
         verify_state: &ProofSearchState,
     ) -> Result<(), RuntimeError> {
-        let bindings = x.body.params_def_with_set.collect_param_bindings();
+        let bindings = x.body.set_bound_parameters.collect_param_bindings();
         let rename_map = self.visible_binding_conflict_rename_map(&bindings)?;
         if !rename_map.is_empty() {
             let renamed = self.alpha_rename_fn_set(x, &rename_map)?;
@@ -256,7 +256,7 @@ impl Runtime {
         }
 
         for (parameter_group_index, param_def_with_set) in
-            x.body.params_def_with_set.iter().enumerate()
+            x.body.set_bound_parameters.iter().enumerate()
         {
             self.verify_child_obj_well_defined_and_store_cache(
                 param_def_with_set.set_obj(),
@@ -325,7 +325,7 @@ impl Runtime {
         x: &AnonymousFn,
         verify_state: &ProofSearchState,
     ) -> Result<(), RuntimeError> {
-        let bindings = x.body.params_def_with_set.collect_param_bindings();
+        let bindings = x.body.set_bound_parameters.collect_param_bindings();
         let rename_map = self.visible_binding_conflict_rename_map(&bindings)?;
         if !rename_map.is_empty() {
             let renamed = self.alpha_rename_anonymous_fn(x, &rename_map)?;
@@ -334,7 +334,7 @@ impl Runtime {
 
         self.run_in_local_env(|rt| {
             for (parameter_group_index, param_def_with_set) in
-                x.body.params_def_with_set.iter().enumerate()
+                x.body.set_bound_parameters.iter().enumerate()
             {
                 rt.verify_child_obj_well_defined_and_store_cache(
                     param_def_with_set.set_obj(),
@@ -344,7 +344,7 @@ impl Runtime {
                     },
                 )?;
             }
-            for param_def_with_set in x.body.params_def_with_set.iter() {
+            for param_def_with_set in x.body.set_bound_parameters.iter() {
                 let mut parameter_infers = rt
                     .define_params_with_set_in_scope(param_def_with_set, BindingScope::LocalBinder)
                     .map_err(|e| {
@@ -414,7 +414,7 @@ impl Runtime {
             }
 
             let mut return_value_verified = !rt
-                .verify_value_in_declared_return_set(
+                .verify_value_in_definition_return_set(
                 (*x.equal_to).clone(),
                 (*x.body.ret_set).clone(),
                 default_line_file(),
@@ -422,7 +422,7 @@ impl Runtime {
             )?
                 .is_unknown();
             if !return_value_verified {
-                'parameter_groups: for param_group in x.body.params_def_with_set.iter() {
+                'parameter_groups: for param_group in x.body.set_bound_parameters.iter() {
                     for binding in param_group.params.iter() {
                         let param_obj =
                             obj_for_bound_param_in_scope(binding);
@@ -449,7 +449,7 @@ impl Runtime {
             if !return_value_verified {
                 return Err(RuntimeError::from(WellDefinedRuntimeError(
                     RuntimeErrorStruct::new_with_just_msg(format!(
-                        "anonymous function body {} is not verified to belong to declared return set {}",
+                        "anonymous function body {} is not verified to belong to defined return set {}",
                         x.equal_to, x.body.ret_set
                     )),
                 )));
@@ -854,7 +854,7 @@ impl Runtime {
     ) -> Result<usize, RuntimeError> {
         let prop_name = x.prop_name.to_string();
         if let Some(definition) = self.get_prop_definition_by_name(&prop_name) {
-            return Ok(definition.params_def_with_type.number_of_params());
+            return Ok(definition.typed_parameters.number_of_params());
         }
         if let Some(definition) = self.get_abstract_prop_definition_by_name(&prop_name) {
             return Ok(definition.params.len());
@@ -886,7 +886,7 @@ impl Runtime {
         let line_file = default_line_file();
 
         ForallFact::new_canonical_forall(
-            ParamDefWithType::new(vec![x_group, y_group]),
+            TypedParameterList::new(vec![x_group, y_group]),
             vec![
                 NormalAtomicFact::new(
                     x.prop_name.clone(),
@@ -1023,7 +1023,7 @@ impl Runtime {
         value: &FnSet,
         verify_state: &ProofSearchState,
     ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
-        let bindings = value.body.params_def_with_set.collect_param_bindings();
+        let bindings = value.body.set_bound_parameters.collect_param_bindings();
         let rename_map = self.visible_binding_conflict_rename_map(&bindings)?;
         if !rename_map.is_empty() {
             let renamed = self.alpha_rename_fn_set(value, &rename_map)?;
@@ -1032,7 +1032,7 @@ impl Runtime {
         self.run_in_local_env(|runtime| {
             let (parameter_carriers, parameters, domains) = runtime
                 .verify_fn_binder_inputs_result(
-                    &value.body.params_def_with_set,
+                    &value.body.set_bound_parameters,
                     &value.body.dom_facts,
                     verify_state,
                 )?;
@@ -1061,7 +1061,7 @@ impl Runtime {
         value: &AnonymousFn,
         verify_state: &ProofSearchState,
     ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
-        let bindings = value.body.params_def_with_set.collect_param_bindings();
+        let bindings = value.body.set_bound_parameters.collect_param_bindings();
         let rename_map = self.visible_binding_conflict_rename_map(&bindings)?;
         if !rename_map.is_empty() {
             let renamed = self.alpha_rename_anonymous_fn(value, &rename_map)?;
@@ -1070,7 +1070,7 @@ impl Runtime {
         self.run_in_local_env(|runtime| {
             let (parameter_carriers, parameters, domains) = runtime
                 .verify_fn_binder_inputs_result(
-                    &value.body.params_def_with_set,
+                    &value.body.set_bound_parameters,
                     &value.body.dom_facts,
                     verify_state,
                 )?;
@@ -1085,7 +1085,7 @@ impl Runtime {
                 WellDefinedObjChildRole::BinderBody,
             )?;
             let parent: Obj = value.clone().into();
-            let direct_membership = runtime.verify_value_in_declared_return_set(
+            let direct_membership = runtime.verify_value_in_definition_return_set(
                 (*value.equal_to).clone(),
                 (*value.body.ret_set).clone(),
                 default_line_file(),
@@ -1100,7 +1100,7 @@ impl Runtime {
             } else {
                 let mut subset_result = None;
                 'groups: for (parameter_group_index, group) in
-                    value.body.params_def_with_set.iter().enumerate()
+                    value.body.set_bound_parameters.iter().enumerate()
                 {
                     for (parameter_index, binding) in group.params.iter().enumerate() {
                         let parameter =
@@ -1134,7 +1134,7 @@ impl Runtime {
                 subset_result.ok_or_else(|| {
                     RuntimeError::from(WellDefinedRuntimeError(
                         RuntimeErrorStruct::new_with_just_msg(format!(
-                            "anonymous function body {} is not verified to belong to declared return set {}",
+                            "anonymous function body {} is not verified to belong to defined return set {}",
                             value.equal_to, value.body.ret_set
                         )),
                     ))
@@ -1159,7 +1159,7 @@ impl Runtime {
 
     pub(in crate::verify) fn verify_fn_binder_inputs_result(
         &mut self,
-        parameter_definition: &ParamDefWithSet,
+        parameter_definition: &SetBoundParameterList,
         domain_facts: &[QuantifierFreeFact],
         verify_state: &ProofSearchState,
     ) -> Result<

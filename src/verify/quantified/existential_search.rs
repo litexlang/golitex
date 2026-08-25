@@ -78,7 +78,7 @@ impl Runtime {
                         &fact_args_in_known_forall,
                         &given_fact_args,
                         &current_known_forall.1.params_def,
-                        Some(current_known_forall.0.params_def_with_type()),
+                        Some(current_known_forall.0.typed_parameters()),
                     )?;
                     if let Some(arg_map) = match_result {
                         let exist_in_forall = &current_known_forall.0;
@@ -147,12 +147,11 @@ impl Runtime {
             return Ok(None);
         }
         // exist param matches exist param
-        let given_exist_param_bindings = given_exist_fact
-            .params_def_with_type()
-            .collect_param_bindings();
+        let given_exist_param_bindings =
+            given_exist_fact.typed_parameters().collect_param_bindings();
 
         let known_exist_param_names = exist_fact_in_known_forall
-            .params_def_with_type()
+            .typed_parameters()
             .collect_param_names();
         if !known_exist_param_names
             .iter()
@@ -518,7 +517,7 @@ impl Runtime {
     }
 
     fn fn_set_body_depends_on_given_exist_param(body: &FnSetBody, symbol_ids: &[SymbolId]) -> bool {
-        body.params_def_with_set.iter().any(|param_group| {
+        body.set_bound_parameters.iter().any(|param_group| {
             Self::param_group_with_set_depends_on_given_exist_param(param_group, symbol_ids)
         }) || body
             .dom_facts
@@ -552,7 +551,7 @@ impl Runtime {
     }
 
     fn param_group_with_set_depends_on_given_exist_param(
-        param_group: &ParamGroupWithSet,
+        param_group: &SetBoundParameterGroup,
         symbol_ids: &[SymbolId],
     ) -> bool {
         Self::obj_depends_on_given_exist_param(param_group.set_obj(), symbol_ids)

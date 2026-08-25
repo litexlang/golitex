@@ -6,13 +6,7 @@ use crate::prelude::*;
 pub enum Stmt {
     Fact(Fact),
     UnsafeStmt(UnsafeStmt),
-    DefObjStmt(DefObjStmt),
-    DefPredicateStmt(DefPredicateStmt),
-    DefInterfaceStmt(DefInterfaceStmt),
-    DefAlgoStmt(DefAlgoStmt),
-    DefThmStmt(DefThmStmt),
-    AxiomStmt(AxiomStmt),
-    DefStrategyStmt(DefStrategyStmt),
+    Definition(DefinitionStmt),
     By(ByStmt),
     Witness(WitnessStmt),
     ProofBlock(ProofBlockStmt),
@@ -26,7 +20,7 @@ pub enum UnsafeStmt {
 }
 
 #[derive(Clone)]
-pub enum DefObjStmt {
+pub enum DefinitionStmt {
     LetObjStmt(LetObjStmt),
     HaveObjInNonemptySetStmt(HaveObjInNonemptySetOrParamTypeStmt),
     HaveObjEqualStmt(HaveObjEqualStmt),
@@ -44,19 +38,15 @@ pub enum DefObjStmt {
     HaveSeqStmt(HaveSeqStmt),
     HaveFiniteSeqStmt(HaveFiniteSeqStmt),
     HaveMatrixStmt(HaveMatrixStmt),
-}
-
-#[derive(Clone)]
-pub enum DefPredicateStmt {
     DefPropStmt(DefPropStmt),
     DefAbstractPropStmt(DefAbstractPropStmt),
-}
-
-#[derive(Clone)]
-pub enum DefInterfaceStmt {
     DefSettingStmt(DefSettingStmt),
     DefTemplateStmt(DefTemplateStmt),
     DefStructStmt(DefStructStmt),
+    DefAlgoStmt(DefAlgoStmt),
+    DefThmStmt(DefThmStmt),
+    AxiomStmt(AxiomStmt),
+    DefStrategyStmt(DefStrategyStmt),
 }
 
 #[derive(Clone)]

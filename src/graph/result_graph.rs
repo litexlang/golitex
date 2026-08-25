@@ -109,9 +109,8 @@ impl ResultGraph {
             self.add_edge(&child_parent, &child_id, "body_statement_result", index);
             index += 1;
         });
-        if let SuccessStmtResult::DefInterfaceStmt(
-            SuccessDefInterfaceStmtResult::DefTemplateStmt(result),
-        ) = success
+        if let SuccessStmtResult::Definition(SuccessDefinitionStmtResult::DefTemplateStmt(result)) =
+            success
         {
             self.add_fact_parameter_groups(&id, &result.template_parameter_groups);
             for (domain_index, domain) in result.template_domain_results.iter().enumerate() {
@@ -139,7 +138,7 @@ impl ResultGraph {
 
     fn add_non_fact_well_definedness(&mut self, success: &SuccessStmtResult, parent: &str) {
         match success {
-            SuccessStmtResult::DefThmStmt(result) => {
+            SuccessStmtResult::Definition(SuccessDefinitionStmtResult::DefThmStmt(result)) => {
                 if let Some(verification) = result.verification.as_ref() {
                     self.add_attached_fact_well_definedness(
                         parent,
@@ -150,7 +149,7 @@ impl ResultGraph {
                     );
                 }
             }
-            SuccessStmtResult::AxiomStmt(result) => {
+            SuccessStmtResult::Definition(SuccessDefinitionStmtResult::AxiomStmt(result)) => {
                 if let Some(well_definedness) = result.well_definedness.as_ref() {
                     self.add_attached_fact_well_definedness(
                         parent,
@@ -192,20 +191,23 @@ impl ResultGraph {
 
     fn add_statement_specific_result_fields(&mut self, success: &SuccessStmtResult, parent: &str) {
         match success {
-            SuccessStmtResult::DefInterfaceStmt(SuccessDefInterfaceStmtResult::DefStructStmt(
-                result,
-            )) => self.add_def_struct_result_fields(parent, result),
-            SuccessStmtResult::DefObjStmt(SuccessDefObjStmtResult::HaveFnByInducStmt(result)) => {
-                self.add_have_fn_by_induc_result_fields(parent, result)
+            SuccessStmtResult::Definition(SuccessDefinitionStmtResult::DefStructStmt(result)) => {
+                self.add_def_struct_result_fields(parent, result)
             }
-            SuccessStmtResult::DefAlgoStmt(result) => {
+            SuccessStmtResult::Definition(SuccessDefinitionStmtResult::HaveFnByInducStmt(
+                result,
+            )) => self.add_have_fn_by_induc_result_fields(parent, result),
+            SuccessStmtResult::Definition(SuccessDefinitionStmtResult::DefAlgoStmt(result)) => {
                 if let Some(local) = result.run_in_local_env.as_ref() {
                     let id = format!("{parent}/def-algo-local");
                     self.ensure_node(
                         id.clone(),
                         "verification_scope",
                         "DefAlgoLocalEnv",
-                        format!("{} in {}", local.function_call, local.declared_function_set),
+                        format!(
+                            "{} in {}",
+                            local.function_call, local.definition_function_set
+                        ),
                         None,
                     );
                     self.add_edge(parent, &id, "run_in_local_env", 0);
@@ -1859,13 +1861,34 @@ fn success_stmt_role(success: &SuccessStmtResult) -> &'static str {
     match success {
         SuccessStmtResult::Fact(_) => "Fact",
         SuccessStmtResult::UnsafeStmt(_) => "UnsafeStmt",
-        SuccessStmtResult::DefObjStmt(_) => "DefObjStmt",
-        SuccessStmtResult::DefPredicateStmt(_) => "DefPredicateStmt",
-        SuccessStmtResult::DefInterfaceStmt(_) => "DefInterfaceStmt",
-        SuccessStmtResult::DefAlgoStmt(_) => "DefAlgoStmt",
-        SuccessStmtResult::DefThmStmt(_) => "DefThmStmt",
-        SuccessStmtResult::AxiomStmt(_) => "AxiomStmt",
-        SuccessStmtResult::DefStrategyStmt(_) => "DefStrategyStmt",
+        SuccessStmtResult::Definition(definition) => match definition {
+            SuccessDefinitionStmtResult::LetObjStmt(_)
+            | SuccessDefinitionStmtResult::HaveObjInNonemptySetStmt(_)
+            | SuccessDefinitionStmtResult::HaveObjEqualStmt(_)
+            | SuccessDefinitionStmtResult::HaveObjByExistFactsStmt(_)
+            | SuccessDefinitionStmtResult::ObtainObjFromExistFact(_)
+            | SuccessDefinitionStmtResult::ObtainObjFromAtomicFact(_)
+            | SuccessDefinitionStmtResult::ObtainObjFromThm(_)
+            | SuccessDefinitionStmtResult::HaveByPreimageStmt(_)
+            | SuccessDefinitionStmtResult::HaveFnEqualStmt(_)
+            | SuccessDefinitionStmtResult::HaveFnEqualCaseByCaseStmt(_)
+            | SuccessDefinitionStmtResult::HaveFnByInducStmt(_)
+            | SuccessDefinitionStmtResult::HaveFnByForallExistUniqueStmt(_)
+            | SuccessDefinitionStmtResult::HaveTupleStmt(_)
+            | SuccessDefinitionStmtResult::HaveCartStmt(_)
+            | SuccessDefinitionStmtResult::HaveSeqStmt(_)
+            | SuccessDefinitionStmtResult::HaveFiniteSeqStmt(_)
+            | SuccessDefinitionStmtResult::HaveMatrixStmt(_) => "DefObjStmt",
+            SuccessDefinitionStmtResult::DefPropStmt(_)
+            | SuccessDefinitionStmtResult::DefAbstractPropStmt(_) => "DefPredicateStmt",
+            SuccessDefinitionStmtResult::DefSettingStmt(_)
+            | SuccessDefinitionStmtResult::DefTemplateStmt(_)
+            | SuccessDefinitionStmtResult::DefStructStmt(_) => "DefInterfaceStmt",
+            SuccessDefinitionStmtResult::DefAlgoStmt(_) => "DefAlgoStmt",
+            SuccessDefinitionStmtResult::DefThmStmt(_) => "DefThmStmt",
+            SuccessDefinitionStmtResult::AxiomStmt(_) => "AxiomStmt",
+            SuccessDefinitionStmtResult::DefStrategyStmt(_) => "DefStrategyStmt",
+        },
         SuccessStmtResult::By(_) => "ByStmt",
         SuccessStmtResult::Witness(_) => "WitnessStmt",
         SuccessStmtResult::ProofBlock(_) => "ProofBlockStmt",

@@ -594,7 +594,7 @@ impl StmtResultToLeanCompiler {
         let source_theorem =
             resolve_fact_citation(&source_fact_id, source_fact, &self.environment_stack)?;
         let source_parameters = source_forall
-            .params_def_with_type
+            .typed_parameters
             .collect_param_bindings_with_types();
         if source_parameters.len() != result.instantiation.len() {
             return Err("known-forall Result changed its argument arity".into());
@@ -620,7 +620,7 @@ impl StmtResultToLeanCompiler {
             })
             .collect::<Result<Vec<_>, String>>()?;
         let substitutions = source_forall
-            .params_def_with_type
+            .typed_parameters
             .param_defs_and_args_to_param_to_arg_map(&arguments);
         let substitution_runtime = Runtime::new();
 

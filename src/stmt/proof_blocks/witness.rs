@@ -68,9 +68,7 @@ impl fmt::Display for WitnessExistFact {
                 WITNESS,
                 vec_to_string_with_sep(&self.equal_tos, COMMA.to_string()),
                 COLON,
-                self.exist_fact_in_witness
-                    .params_def_with_type()
-                    .to_string(),
+                self.exist_fact_in_witness.typed_parameters().to_string(),
                 ST,
                 vec_to_string_join_by_comma(self.exist_fact_in_witness.facts())
             ),
@@ -80,9 +78,7 @@ impl fmt::Display for WitnessExistFact {
                 WITNESS,
                 vec_to_string_with_sep(&self.equal_tos, COMMA.to_string()),
                 COLON,
-                self.exist_fact_in_witness
-                    .params_def_with_type()
-                    .to_string(),
+                self.exist_fact_in_witness.typed_parameters().to_string(),
                 ST,
                 vec_to_string_join_by_comma(self.exist_fact_in_witness.facts()),
                 COLON,

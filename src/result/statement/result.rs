@@ -2,9 +2,8 @@
 
 use super::execution_trace::StatementExecutionTrace;
 use super::success::{
-    SuccessByStmtResult, SuccessCommandStmtResult, SuccessDefInterfaceStmtResult,
-    SuccessDefObjStmtResult, SuccessDefPredicateStmtResult, SuccessFactStmtResult,
-    SuccessProofBlockStmtResult, SuccessStmtResult, SuccessUnsafeStmtResult,
+    SuccessByStmtResult, SuccessCommandStmtResult, SuccessDefinitionStmtResult,
+    SuccessFactStmtResult, SuccessProofBlockStmtResult, SuccessStmtResult, SuccessUnsafeStmtResult,
     SuccessWitnessStmtResult,
 };
 use super::unknown::UnknownGenericStmtResult;
@@ -47,21 +46,9 @@ impl From<SuccessUnsafeStmtResult> for StmtResult {
     }
 }
 
-impl From<SuccessDefObjStmtResult> for StmtResult {
-    fn from(success: SuccessDefObjStmtResult) -> Self {
-        SuccessStmtResult::DefObjStmt(success).into()
-    }
-}
-
-impl From<SuccessDefPredicateStmtResult> for StmtResult {
-    fn from(success: SuccessDefPredicateStmtResult) -> Self {
-        SuccessStmtResult::DefPredicateStmt(success).into()
-    }
-}
-
-impl From<SuccessDefInterfaceStmtResult> for StmtResult {
-    fn from(success: SuccessDefInterfaceStmtResult) -> Self {
-        SuccessStmtResult::DefInterfaceStmt(success).into()
+impl From<SuccessDefinitionStmtResult> for StmtResult {
+    fn from(success: SuccessDefinitionStmtResult) -> Self {
+        SuccessStmtResult::Definition(success).into()
     }
 }
 

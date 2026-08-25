@@ -8,8 +8,8 @@ fn def_struct_result_retains_each_local_verification_phase_without_synthetic_sta
             "def_struct_result_contract.lit",
         )
         .expect("execute struct Result contract fixture");
-    let [StmtResult::Success(SuccessStmtResult::DefInterfaceStmt(
-        SuccessDefInterfaceStmtResult::DefStructStmt(result),
+    let [StmtResult::Success(SuccessStmtResult::Definition(
+        SuccessDefinitionStmtResult::DefStructStmt(result),
     ))] = results.as_slice()
     else {
         panic!("expected one successful def-struct Result")
@@ -46,7 +46,9 @@ fn def_algo_result_retains_retagged_parameters_and_the_exact_default_check() {
             "def_algo_result_contract.lit",
         )
         .expect("execute algorithm Result contract fixture");
-    let [_, StmtResult::Success(SuccessStmtResult::DefAlgoStmt(result))] = results.as_slice()
+    let [_, StmtResult::Success(SuccessStmtResult::Definition(
+        SuccessDefinitionStmtResult::DefAlgoStmt(result),
+    ))] = results.as_slice()
     else {
         panic!("expected function declaration followed by def-algo Result")
     };
@@ -98,8 +100,8 @@ have fn iterate(n N) R+ by induc n from 0:
             "have_fn_by_induc_result_contract.lit",
         )
         .expect("execute inductive-function Result contract fixture");
-    let [_, StmtResult::Success(SuccessStmtResult::DefObjStmt(
-        SuccessDefObjStmtResult::HaveFnByInducStmt(result),
+    let [_, StmtResult::Success(SuccessStmtResult::Definition(
+        SuccessDefinitionStmtResult::HaveFnByInducStmt(result),
     ))] = results.as_slice()
     else {
         panic!("expected helper function followed by inductive-function Result")
@@ -181,21 +183,24 @@ have fn trustedIterate(n N) R by induc n from 0:
     assert!(error.is_none(), "{error:?}");
     assert_eq!(results.len(), 4);
 
-    let StmtResult::Success(SuccessStmtResult::DefInterfaceStmt(
-        SuccessDefInterfaceStmtResult::DefStructStmt(result),
+    let StmtResult::Success(SuccessStmtResult::Definition(
+        SuccessDefinitionStmtResult::DefStructStmt(result),
     )) = &results[0]
     else {
         panic!("expected trusted struct Result")
     };
     assert!(result.run_in_local_env.is_none());
 
-    let StmtResult::Success(SuccessStmtResult::DefAlgoStmt(result)) = &results[2] else {
+    let StmtResult::Success(SuccessStmtResult::Definition(
+        SuccessDefinitionStmtResult::DefAlgoStmt(result),
+    )) = &results[2]
+    else {
         panic!("expected trusted algorithm Result")
     };
     assert!(result.run_in_local_env.is_none());
 
-    let StmtResult::Success(SuccessStmtResult::DefObjStmt(
-        SuccessDefObjStmtResult::HaveFnByInducStmt(result),
+    let StmtResult::Success(SuccessStmtResult::Definition(
+        SuccessDefinitionStmtResult::HaveFnByInducStmt(result),
     )) = &results[3]
     else {
         panic!("expected trusted inductive-function Result")

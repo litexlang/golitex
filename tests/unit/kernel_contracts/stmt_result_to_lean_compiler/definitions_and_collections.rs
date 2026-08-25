@@ -21,8 +21,8 @@ fn by_definition_result_mut(results: &mut [StmtResult]) -> &mut SuccessByDefStmt
 fn by_definition_combines_parameter_and_clause_results_directly() {
     let results = execute_concrete_predicate_and_by_definition();
     let mut compiler = StmtResultToLeanCompiler::new("direct_by_definition.lit");
-    let StmtResult::Success(SuccessStmtResult::DefPredicateStmt(
-        SuccessDefPredicateStmtResult::DefPropStmt(definition),
+    let StmtResult::Success(SuccessStmtResult::Definition(
+        SuccessDefinitionStmtResult::DefPropStmt(definition),
     )) = &results[0]
     else {
         panic!("first Result is a concrete predicate definition")
@@ -91,8 +91,8 @@ fn execute_named_real_function(source: &str) -> Vec<StmtResult> {
 }
 
 fn named_real_function_result_mut(results: &mut [StmtResult]) -> &mut SuccessHaveFnEqualStmtResult {
-    let [StmtResult::Success(SuccessStmtResult::DefObjStmt(
-        SuccessDefObjStmtResult::HaveFnEqualStmt(result),
+    let [StmtResult::Success(SuccessStmtResult::Definition(
+        SuccessDefinitionStmtResult::HaveFnEqualStmt(result),
     ))] = results
     else {
         panic!("expected one named-function Result")
@@ -135,8 +135,8 @@ fn checked_named_function_reduction_uses_its_exact_definition_fact_id() {
     else {
         panic!("checked definition reduction must retain typed evidence")
     };
-    let StmtResult::Success(SuccessStmtResult::DefObjStmt(
-        SuccessDefObjStmtResult::HaveFnEqualStmt(definition),
+    let StmtResult::Success(SuccessStmtResult::Definition(
+        SuccessDefinitionStmtResult::HaveFnEqualStmt(definition),
     )) = &results[0]
     else {
         panic!("first statement is the named-function definition")
@@ -182,8 +182,8 @@ fn checked_named_function_reduction_inside_forall_uses_wd_scope_fact_ids() {
     let results = execute_named_real_function(
             "have fn reciprocal(x R: x != 0) R = 1 / x\nforall a R:\n    a != 0\n    =>:\n        reciprocal(a) = 1 / a\n",
         );
-    let [StmtResult::Success(SuccessStmtResult::DefObjStmt(
-        SuccessDefObjStmtResult::HaveFnEqualStmt(definition),
+    let [StmtResult::Success(SuccessStmtResult::Definition(
+        SuccessDefinitionStmtResult::HaveFnEqualStmt(definition),
     )), StmtResult::Success(SuccessStmtResult::Fact(forall_result))] = results.as_slice()
     else {
         panic!("expected a function definition and one forall Result")
@@ -249,9 +249,9 @@ fn execute_indexed_tuple_definition() -> Vec<StmtResult> {
 }
 
 fn indexed_tuple_result_mut(results: &mut [StmtResult]) -> &mut SuccessHaveTupleStmtResult {
-    let [StmtResult::Success(SuccessStmtResult::DefObjStmt(SuccessDefObjStmtResult::HaveTupleStmt(
-        result,
-    )))] = results
+    let [StmtResult::Success(SuccessStmtResult::Definition(
+        SuccessDefinitionStmtResult::HaveTupleStmt(result),
+    ))] = results
     else {
         panic!("expected one indexed tuple Result")
     };
@@ -318,9 +318,9 @@ fn execute_indexed_sequence_definition() -> Vec<StmtResult> {
 }
 
 fn indexed_sequence_result_mut(results: &mut [StmtResult]) -> &mut SuccessHaveSeqStmtResult {
-    let [StmtResult::Success(SuccessStmtResult::DefObjStmt(SuccessDefObjStmtResult::HaveSeqStmt(
-        result,
-    )))] = results
+    let [StmtResult::Success(SuccessStmtResult::Definition(
+        SuccessDefinitionStmtResult::HaveSeqStmt(result),
+    ))] = results
     else {
         panic!("expected one indexed sequence Result")
     };
@@ -394,8 +394,8 @@ fn execute_finite_sequence_definition() -> Vec<StmtResult> {
 }
 
 fn finite_sequence_result_mut(results: &mut [StmtResult]) -> &mut SuccessHaveFiniteSeqStmtResult {
-    let [StmtResult::Success(SuccessStmtResult::DefObjStmt(
-        SuccessDefObjStmtResult::HaveFiniteSeqStmt(result),
+    let [StmtResult::Success(SuccessStmtResult::Definition(
+        SuccessDefinitionStmtResult::HaveFiniteSeqStmt(result),
     )), _] = results
     else {
         panic!("expected a finite-sequence definition followed by an application fact")
@@ -479,8 +479,8 @@ fn execute_matrix_definition() -> Vec<StmtResult> {
 }
 
 fn matrix_result_mut(results: &mut [StmtResult]) -> &mut SuccessHaveMatrixStmtResult {
-    let [StmtResult::Success(SuccessStmtResult::DefObjStmt(
-        SuccessDefObjStmtResult::HaveMatrixStmt(result),
+    let [StmtResult::Success(SuccessStmtResult::Definition(
+        SuccessDefinitionStmtResult::HaveMatrixStmt(result),
     )), _] = results
     else {
         panic!("expected a matrix definition followed by an application fact")

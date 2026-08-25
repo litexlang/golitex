@@ -96,7 +96,7 @@ impl FreeParamCollection {
         let Some(top) = stack.last() else {
             return Identifier::new(name.to_string()).into();
         };
-        if top.scope.is_declared_object() {
+        if top.scope.is_definition_binding() {
             Identifier::new_bound(name.to_string(), top.binding.as_ref()).into()
         } else {
             BoundParamObj::new(top.binding.as_ref()).into()

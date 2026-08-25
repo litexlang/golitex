@@ -55,31 +55,31 @@ impl StmtResultToLeanCompiler {
                     self.unsupported_success_stmt_result(success)
                 }
             }
-            SuccessStmtResult::DefObjStmt(result) => match result {
-                SuccessDefObjStmtResult::LetObjStmt(result) => {
+            SuccessStmtResult::Definition(result) => match result {
+                SuccessDefinitionStmtResult::LetObjStmt(result) => {
                     self.compile_let_obj_stmt_result_to_lean_source(result)
                 }
-                SuccessDefObjStmtResult::HaveObjInNonemptySetStmt(result) => {
+                SuccessDefinitionStmtResult::HaveObjInNonemptySetStmt(result) => {
                     self.compile_have_obj_in_nonempty_set_stmt_result_to_lean_source(result)
                 }
-                SuccessDefObjStmtResult::HaveObjEqualStmt(result) => {
+                SuccessDefinitionStmtResult::HaveObjEqualStmt(result) => {
                     self.compile_have_obj_equal_stmt_result_to_lean_source(result)
                 }
-                SuccessDefObjStmtResult::ObtainObjFromExistFact(result) => {
+                SuccessDefinitionStmtResult::ObtainObjFromExistFact(result) => {
                     if self.compile_obtain_obj_from_exist_fact_stmt_result_to_lean_source(result)? {
                         Ok(())
                     } else {
                         self.unsupported_success_stmt_result(success)
                     }
                 }
-                SuccessDefObjStmtResult::HaveObjByExistFactsStmt(result) => {
+                SuccessDefinitionStmtResult::HaveObjByExistFactsStmt(result) => {
                     if self.compile_have_obj_by_exist_facts_stmt_result_to_lean_source(result)? {
                         Ok(())
                     } else {
                         self.unsupported_success_stmt_result(success)
                     }
                 }
-                SuccessDefObjStmtResult::ObtainObjFromAtomicFact(result) => {
+                SuccessDefinitionStmtResult::ObtainObjFromAtomicFact(result) => {
                     if self
                         .compile_obtain_obj_from_atomic_fact_stmt_result_to_lean_source(result)?
                     {
@@ -88,89 +88,87 @@ impl StmtResultToLeanCompiler {
                         self.unsupported_success_stmt_result(success)
                     }
                 }
-                SuccessDefObjStmtResult::HaveFnEqualStmt(result) => {
+                SuccessDefinitionStmtResult::HaveFnEqualStmt(result) => {
                     if self.compile_have_fn_equal_stmt_result_to_lean_source(result)? {
                         Ok(())
                     } else {
                         self.unsupported_success_stmt_result(success)
                     }
                 }
-                SuccessDefObjStmtResult::HaveTupleStmt(result) => {
+                SuccessDefinitionStmtResult::HaveTupleStmt(result) => {
                     if self.compile_have_tuple_stmt_result_to_lean_source(result)? {
                         Ok(())
                     } else {
                         self.unsupported_success_stmt_result(success)
                     }
                 }
-                SuccessDefObjStmtResult::HaveSeqStmt(result) => {
+                SuccessDefinitionStmtResult::HaveSeqStmt(result) => {
                     if self.compile_have_sequence_stmt_result_to_lean_source(result)? {
                         Ok(())
                     } else {
                         self.unsupported_success_stmt_result(success)
                     }
                 }
-                SuccessDefObjStmtResult::HaveFiniteSeqStmt(result) => {
+                SuccessDefinitionStmtResult::HaveFiniteSeqStmt(result) => {
                     if self.compile_have_finite_sequence_stmt_result_to_lean_source(result)? {
                         Ok(())
                     } else {
                         self.unsupported_success_stmt_result(success)
                     }
                 }
-                SuccessDefObjStmtResult::HaveMatrixStmt(result) => {
+                SuccessDefinitionStmtResult::HaveMatrixStmt(result) => {
                     if self.compile_have_matrix_stmt_result_to_lean_source(result)? {
                         Ok(())
                     } else {
                         self.unsupported_success_stmt_result(success)
                     }
                 }
-                SuccessDefObjStmtResult::ObtainObjFromThm(result) => {
+                SuccessDefinitionStmtResult::ObtainObjFromThm(result) => {
                     if self.compile_obtain_obj_from_theorem_stmt_result_to_lean_source(result)? {
                         Ok(())
                     } else {
                         Err("StmtResultToLeanCompiler does not support this theorem-backed `obtain` Result shape".into())
                     }
                 }
-                SuccessDefObjStmtResult::HaveByPreimageStmt(_)
-                | SuccessDefObjStmtResult::HaveFnEqualCaseByCaseStmt(_)
-                | SuccessDefObjStmtResult::HaveFnByInducStmt(_)
-                | SuccessDefObjStmtResult::HaveFnByForallExistUniqueStmt(_)
-                | SuccessDefObjStmtResult::HaveCartStmt(_) => {
+                SuccessDefinitionStmtResult::HaveByPreimageStmt(_)
+                | SuccessDefinitionStmtResult::HaveFnEqualCaseByCaseStmt(_)
+                | SuccessDefinitionStmtResult::HaveFnByInducStmt(_)
+                | SuccessDefinitionStmtResult::HaveFnByForallExistUniqueStmt(_)
+                | SuccessDefinitionStmtResult::HaveCartStmt(_) => {
                     self.unsupported_success_stmt_result(success)
                 }
-            },
-            SuccessStmtResult::DefPredicateStmt(result) => match result {
-                SuccessDefPredicateStmtResult::DefPropStmt(result) => {
+                SuccessDefinitionStmtResult::DefPropStmt(result) => {
                     self.compile_def_prop_stmt_result_to_lean_source(result)
                 }
-                SuccessDefPredicateStmtResult::DefAbstractPropStmt(result) => {
+                SuccessDefinitionStmtResult::DefAbstractPropStmt(result) => {
                     self.compile_def_abstract_prop_stmt_result_to_lean_source(result)
                 }
-            },
-            SuccessStmtResult::AxiomStmt(result) => {
-                self.compile_source_axiom_stmt_result_to_lean_source(result)
-            }
-            SuccessStmtResult::DefInterfaceStmt(result) => match result {
-                SuccessDefInterfaceStmtResult::DefSettingStmt(result) => {
+                SuccessDefinitionStmtResult::DefSettingStmt(result) => {
                     self.compile_setting_definition_stmt_result_to_lean_source(result)
                 }
-                SuccessDefInterfaceStmtResult::DefTemplateStmt(result) => {
+                SuccessDefinitionStmtResult::DefTemplateStmt(result) => {
                     self.compile_template_definition_stmt_result_to_lean_source(result)
                 }
-                SuccessDefInterfaceStmtResult::DefStructStmt(_) => {
+                SuccessDefinitionStmtResult::DefStructStmt(_) => {
                     self.unsupported_success_stmt_result(success)
+                }
+                SuccessDefinitionStmtResult::DefAlgoStmt(_) => {
+                    self.unsupported_success_stmt_result(success)
+                }
+                SuccessDefinitionStmtResult::DefThmStmt(result) => {
+                    if self.compile_named_theorem_stmt_result_to_lean_source(result)? {
+                        Ok(())
+                    } else {
+                        self.unsupported_success_stmt_result(success)
+                    }
+                }
+                SuccessDefinitionStmtResult::AxiomStmt(result) => {
+                    self.compile_source_axiom_stmt_result_to_lean_source(result)
+                }
+                SuccessDefinitionStmtResult::DefStrategyStmt(result) => {
+                    self.compile_strategy_definition_stmt_result_to_lean_source(result)
                 }
             },
-            SuccessStmtResult::DefAlgoStmt(_) => self.unsupported_success_stmt_result(success),
-            SuccessStmtResult::DefThmStmt(result) => {
-                if self.compile_named_theorem_stmt_result_to_lean_source(result)? {
-                    Ok(())
-                } else {
-                    self.unsupported_success_stmt_result(success)
-                }
-            }
-            SuccessStmtResult::DefStrategyStmt(result) => {
-                self.compile_strategy_definition_stmt_result_to_lean_source(result)
-            }
             SuccessStmtResult::By(result) => match result {
                 SuccessByStmtResult::ByCasesStmt(result) => {
                     if self.compile_by_cases_stmt_result_to_lean_source(result)? {

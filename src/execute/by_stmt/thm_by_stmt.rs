@@ -24,7 +24,7 @@ impl Runtime {
         let verify_state = ProofSearchState::initial();
         let arg_type_result = self
             .verify_args_satisfy_param_def_flat_types(
-                &forall_fact.params_def_with_type,
+                &forall_fact.typed_parameters,
                 &stmt.args,
                 &verify_state,
                 SubstitutionMode::Exact,
@@ -56,7 +56,7 @@ impl Runtime {
         };
 
         let param_to_arg_map = forall_fact
-            .params_def_with_type
+            .typed_parameters
             .param_defs_and_args_to_param_to_arg_map(&stmt.args);
 
         let mut infer_result = SuccessInferResult::new();
@@ -198,7 +198,7 @@ impl Runtime {
         let source_fact_id = self.known_fact_id_for_fact(&forall_fact.clone().into())?;
 
         let param_to_arg_map = forall_fact
-            .params_def_with_type
+            .typed_parameters
             .param_defs_and_args_to_param_to_arg_map(&stmt.args);
 
         let mut infer_result = SuccessInferResult::new();
@@ -627,7 +627,7 @@ impl Runtime {
             )
             .into();
             let body = ExistentialSpec::new(
-                ParamDefWithType::new(vec![index_group]),
+                TypedParameterList::new(vec![index_group]),
                 vec![bijective.into()],
                 stmt.line_file.clone(),
             )?;
@@ -714,7 +714,7 @@ impl Runtime {
             )
             .into();
             let body = ExistentialSpec::new(
-                ParamDefWithType::new(vec![numerator_group, denominator_group]),
+                TypedParameterList::new(vec![numerator_group, denominator_group]),
                 vec![ratio_fact.into(), coprime_fact.into()],
                 stmt.line_file.clone(),
             )?;

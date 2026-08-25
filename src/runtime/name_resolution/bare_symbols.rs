@@ -163,8 +163,8 @@ fn collect_environment_symbols(
     canonical_owner: &str,
     output: &mut Vec<BareSymbolCandidate>,
 ) {
-    for (local_name, definition) in environment.declarations.symbols.iter() {
-        if !definition.role().is_public_declaration() {
+    for (local_name, definition) in environment.definitions.symbols.iter() {
+        if !definition.role().is_public_definition() {
             continue;
         }
         output.push(BareSymbolCandidate {

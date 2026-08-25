@@ -54,14 +54,14 @@ fn assert_without_mod(name: &AtomicName, expected_name: &str) {
 }
 
 #[test]
-fn parses_angle_bracketed_struct_params_and_declared_field_access() {
+fn parses_angle_bracketed_struct_params_and_defined_field_access() {
     let mut rt = Runtime::new();
 
     let stmt = parse_one_stmt_line_with_runtime(
         &mut rt,
         "struct Group<s set>:\n    inv fn(x s) s\n    op fn(x, y s) s\n    identity s",
     );
-    let Stmt::DefInterfaceStmt(DefInterfaceStmt::DefStructStmt(stmt)) = stmt else {
+    let Stmt::Definition(DefinitionStmt::DefStructStmt(stmt)) = stmt else {
         panic!("expected struct definition");
     };
     let Some((param_def, _)) = &stmt.param_def_with_dom else {
@@ -72,14 +72,12 @@ fn parses_angle_bracketed_struct_params_and_declared_field_access() {
         strip_free_param_numeric_tags_in_display(&format!("{}", stmt)),
         "struct Group<s set>:"
     );
-    rt.execute_statement(&Stmt::DefInterfaceStmt(DefInterfaceStmt::DefStructStmt(
-        stmt,
-    )))
-    .expect("store struct definition");
+    rt.execute_statement(&Stmt::Definition(DefinitionStmt::DefStructStmt(stmt)))
+        .expect("store struct definition");
 
     let have = parse_one_stmt_line_with_runtime(&mut rt, "trust have p &Group<R>");
     rt.execute_statement(&have)
-        .expect("store declared struct carrier");
+        .expect("store defined struct carrier");
 
     let obj = parse_one_obj_line_with_runtime(&mut rt, "p.op");
     let Obj::ObjAsStructInstanceWithFieldAccess(access) = obj else {
@@ -130,7 +128,7 @@ fn module_qualification_keeps_definition_name_bare() {
 
     let stmt = parse_one_stmt_line_with_runtime(&mut rt, "abstract_prop some_prop(x)");
 
-    let Stmt::DefPredicateStmt(DefPredicateStmt::DefAbstractPropStmt(stmt)) = stmt else {
+    let Stmt::Definition(DefinitionStmt::DefAbstractPropStmt(stmt)) = stmt else {
         panic!("expected abstract prop definition");
     };
     assert_eq!(stmt.name, "some_prop");

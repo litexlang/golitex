@@ -9,11 +9,13 @@ impl Runtime {
         if self.current_execution_is_trusted_file() {
             self.store_def_algo(def_algo_stmt)?;
             return Ok(
-                SuccessStmtResult::DefAlgoStmt(Box::new(SuccessDefAlgoStmtResult {
-                    statement: def_algo_stmt.clone(),
-                    common: SuccessStmtCommonResult::new(SuccessInferResult::new()),
-                    run_in_local_env: None,
-                }))
+                SuccessStmtResult::Definition(SuccessDefinitionStmtResult::DefAlgoStmt(Box::new(
+                    SuccessDefAlgoStmtResult {
+                        statement: def_algo_stmt.clone(),
+                        common: SuccessStmtCommonResult::new(SuccessInferResult::new()),
+                        run_in_local_env: None,
+                    },
+                )))
                 .into(),
             );
         }
@@ -22,11 +24,13 @@ impl Runtime {
             self.run_in_local_env(|rt| rt.exec_def_algo_stmt_verify_process(def_algo_stmt))?;
         self.store_def_algo(def_algo_stmt)?;
         Ok(
-            SuccessStmtResult::DefAlgoStmt(Box::new(SuccessDefAlgoStmtResult {
-                statement: def_algo_stmt.clone(),
-                common: SuccessStmtCommonResult::new(SuccessInferResult::new()),
-                run_in_local_env: Some(run_in_local_env),
-            }))
+            SuccessStmtResult::Definition(SuccessDefinitionStmtResult::DefAlgoStmt(Box::new(
+                SuccessDefAlgoStmtResult {
+                    statement: def_algo_stmt.clone(),
+                    common: SuccessStmtCommonResult::new(SuccessInferResult::new()),
+                    run_in_local_env: Some(run_in_local_env),
+                },
+            )))
             .into(),
         )
     }
@@ -35,7 +39,7 @@ impl Runtime {
         &mut self,
         def_algo_stmt: &DefAlgoStmt,
     ) -> Result<SuccessVerifyDefAlgoLocalEnvResult, RuntimeError> {
-        let function_name_obj = self.declared_identifier_obj(&def_algo_stmt.name);
+        let function_name_obj = self.definition_identifier_obj(&def_algo_stmt.name);
         let fn_set_where_algo_belongs = match self.get_object_in_fn_set(&function_name_obj) {
             Some(fn_set) => fn_set,
             None => {
@@ -97,7 +101,7 @@ impl Runtime {
         )?;
 
         Ok(SuccessVerifyDefAlgoLocalEnvResult {
-            declared_function_set: fn_set_where_algo_belongs,
+            definition_function_set: fn_set_where_algo_belongs,
             parameter_retagging,
             requirement_facts: requirement_facts_for_param,
             parameter_definition: algo_param_defs_with_type,
@@ -125,7 +129,7 @@ impl Runtime {
         def_algo_stmt: &DefAlgoStmt,
         fn_set_where_algo_belongs: &FnSetBody,
         algo_param_to_forall_obj: &HashMap<String, Obj>,
-    ) -> Result<(Vec<Fact>, ParamDefWithType), RuntimeError> {
+    ) -> Result<(Vec<Fact>, TypedParameterList), RuntimeError> {
         self.requirement_facts_and_param_defs_for_fn_set_with_dom(
             def_algo_stmt,
             fn_set_where_algo_belongs,
@@ -138,7 +142,7 @@ impl Runtime {
         def_algo_stmt: &DefAlgoStmt,
         fn_set_with_dom: &FnSetBody,
         algo_param_to_forall_obj: &HashMap<String, Obj>,
-    ) -> Result<(Vec<Fact>, ParamDefWithType), RuntimeError> {
+    ) -> Result<(Vec<Fact>, TypedParameterList), RuntimeError> {
         let mut args_for_algo_params: Vec<Obj> =
             Vec::with_capacity(def_algo_stmt.param_bindings.len());
         for param_binding in def_algo_stmt.param_bindings.iter() {
@@ -146,9 +150,9 @@ impl Runtime {
         }
 
         let param_satisfy_fn_param_set_facts_atomic =
-            ParamGroupWithSet::facts_for_args_satisfy_param_def_with_set_vec(
+            SetBoundParameterGroup::facts_for_args_satisfy_param_def_with_set_vec(
                 self,
-                &fn_set_with_dom.params_def_with_set,
+                &fn_set_with_dom.set_bound_parameters,
                 &args_for_algo_params,
                 SubstitutionMode::Exact,
             )
@@ -160,7 +164,9 @@ impl Runtime {
                 )
             })?;
 
-        let fn_set_param_bindings = fn_set_with_dom.params_def_with_set.collect_param_bindings();
+        let fn_set_param_bindings = fn_set_with_dom
+            .set_bound_parameters
+            .collect_param_bindings();
         if fn_set_param_bindings.len() != def_algo_stmt.param_bindings.len() {
             return Err(
                 Self::def_algo_verify_exec_error_with_message_and_optional_cause(
@@ -188,11 +194,11 @@ impl Runtime {
         }
 
         let mut requirement_facts: Vec<Fact> = Vec::new();
-        let mut algo_param_defs_with_type: Vec<ParamGroupWithParamType> =
-            Vec::with_capacity(fn_set_with_dom.params_def_with_set.len());
+        let mut algo_param_defs_with_type: Vec<TypedParameterGroup> =
+            Vec::with_capacity(fn_set_with_dom.set_bound_parameters.len());
         let mut active_fn_set_param_map = HashMap::new();
 
-        for param_def_with_set in fn_set_with_dom.params_def_with_set.iter() {
+        for param_def_with_set in fn_set_with_dom.set_bound_parameters.iter() {
             let mut mapped_param_names: Vec<String> =
                 Vec::with_capacity(param_def_with_set.params.len());
             for fn_set_param_binding in param_def_with_set.params.iter() {
@@ -265,7 +271,7 @@ impl Runtime {
 
         Ok((
             requirement_facts,
-            ParamDefWithType::new(algo_param_defs_with_type),
+            TypedParameterList::new(algo_param_defs_with_type),
         ))
     }
 
@@ -282,9 +288,9 @@ impl Runtime {
             ));
         }
         let function_head = FnObjHead::given_an_atom_return_a_fn_obj_head(
-            self.declared_identifier_obj(&def_algo_stmt.name),
+            self.definition_identifier_obj(&def_algo_stmt.name),
         )
-        .expect("declared algorithm name is a function head");
+        .expect("defined algorithm name is a function head");
         FnObj::new(function_head, vec![fn_call_arg_boxes]).into()
     }
 
@@ -319,7 +325,7 @@ impl Runtime {
 
     fn forall_fact_for_def_algo_case(
         &self,
-        algo_param_defs_with_type: &ParamDefWithType,
+        algo_param_defs_with_type: &TypedParameterList,
         requirement_dom_facts: &[ExistOrAndChainAtomicFact],
         algo_case: &AlgoCase,
         fn_call_obj: &Obj,
@@ -362,7 +368,7 @@ impl Runtime {
     fn verify_each_def_algo_case_implies_return(
         &mut self,
         def_algo_stmt: &DefAlgoStmt,
-        algo_param_defs_with_type: &ParamDefWithType,
+        algo_param_defs_with_type: &TypedParameterList,
         fn_call_obj: &Obj,
         requirement_dom_facts: &[ExistOrAndChainAtomicFact],
         algo_param_to_forall_obj: &HashMap<String, Obj>,
@@ -402,7 +408,7 @@ impl Runtime {
     fn verify_def_algo_default_implies_return(
         &mut self,
         def_algo_stmt: &DefAlgoStmt,
-        algo_param_defs_with_type: &ParamDefWithType,
+        algo_param_defs_with_type: &TypedParameterList,
         fn_call_obj: &Obj,
         requirement_dom_facts: &[ExistOrAndChainAtomicFact],
         algo_param_to_forall_obj: &HashMap<String, Obj>,
@@ -458,7 +464,7 @@ impl Runtime {
             .map_err(|runtime_error| {
                 Self::def_algo_verify_exec_error_with_message_and_optional_cause(
                     def_algo_stmt,
-                    "algo verify: default return does not equal the declared function".to_string(),
+                    "algo verify: default return does not equal the defined function".to_string(),
                     Some(runtime_error),
                 )
             })?;
@@ -472,7 +478,7 @@ impl Runtime {
     fn verify_def_algo_case_coverage_when_no_default_return(
         &mut self,
         def_algo_stmt: &DefAlgoStmt,
-        algo_param_defs_with_type: &ParamDefWithType,
+        algo_param_defs_with_type: &TypedParameterList,
         requirement_dom_facts: &[ExistOrAndChainAtomicFact],
         algo_param_to_forall_obj: &HashMap<String, Obj>,
     ) -> Result<Option<SuccessVerifyDefAlgoCoverageResult>, RuntimeError> {

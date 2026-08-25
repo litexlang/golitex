@@ -1,6 +1,7 @@
 # Parsing Litex
 
-`1 + 1 = 2` becomes `Stmt::Fact`, while `have a R = 1` becomes `Stmt::DefObjStmt`.
+`1 + 1 = 2` becomes `Stmt::Fact`, while `have a R = 1` becomes
+`Stmt::Definition(DefinitionStmt::HaveObjEqualStmt(..))`.
 
 ```litex
 forall x R:
@@ -33,7 +34,7 @@ Runtime.parse_statement(block)
 | [`tokenizer.rs`](tokenizer.rs) | Splits `forall x R:` and its indented body into one `TokenBlock`. |
 | [`statement_parsing.rs`](statement_parsing.rs) | Parses one complete statement and dispatches its first token, such as `forall`, `have`, `claim`, or a bare fact. |
 | [`fact/expression.rs`](fact/expression.rs) | Builds equality, conjunction, chain, existential, and universal facts. |
-| [`fact/parameter_definition.rs`](fact/parameter_definition.rs) | Parses typed and carrier-bound parameters shared by facts and declarations. |
+| [`fact/parameter_definition.rs`](fact/parameter_definition.rs) | Parses typed and carrier-bound parameters shared by facts and definitions. |
 | [`object/expression.rs`](object/expression.rs) | Owns object-expression precedence, numeric literals, call/field postfixes, and function-set syntax, such as `x + 1` and `f(x)`. |
 | [`object/primary.rs`](object/primary.rs) | Dispatches primary keyword and atom forms, including scalar, set, sequence/matrix, Cartesian, and iterated operators such as `sin(x)` and `sum(1, n, f)`. |
 | [`object/collections.rs`](object/collections.rs) | Parses argument groups, `unfold`, intervals, replacements, set builders, and set literals such as `{1, 2}`. |

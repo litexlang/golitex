@@ -47,12 +47,10 @@ impl ByAntisymmetricPropStmt {
 
 fn antisymmetric_prop_name_from_forall(forall_fact: &ForallFact) -> Result<String, String> {
     let params = forall_fact
-        .params_def_with_type
+        .typed_parameters
         .collect_param_names_with_types();
     if params.len() != 2 {
-        return Err(
-            "by antisymmetric_prop: forall must declare exactly two parameters".to_string(),
-        );
+        return Err("by antisymmetric_prop: forall must bind exactly two parameters".to_string());
     }
     for (_, param_type) in params.iter() {
         match param_type {

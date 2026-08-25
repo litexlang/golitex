@@ -1345,27 +1345,27 @@ forall S set, f \FunctionCarrier<S>:
 }
 
 #[test]
-fn anonymous_function_body_must_belong_to_declared_return_set() {
+fn anonymous_function_body_must_belong_to_definition_return_set() {
     let invalid_source = r#"
 fn(x R) N {x}(1 / 2) $in N
 "#;
 
     let mut invalid_runtime = Runtime::new();
     invalid_runtime
-        .start_isolated_source("anonymous_function_body_must_belong_to_declared_return_set");
+        .start_isolated_source("anonymous_function_body_must_belong_to_definition_return_set");
     let (stmt_results, runtime_error) = execute_source(invalid_source, &mut invalid_runtime);
     let (run_succeeded, run_output) =
         render_run_output(&invalid_runtime, &stmt_results, &runtime_error);
     assert!(
         !run_succeeded,
-        "an anonymous function must not trust an incompatible declared return set:\n{}",
+        "an anonymous function must not trust an incompatible defined return set:\n{}",
         run_output
     );
     assert!(
         run_output.contains(
-            "anonymous function body x is not verified to belong to declared return set N"
+            "anonymous function body x is not verified to belong to defined return set N"
         ),
-        "the rejection should identify the body and declared return set:\n{}",
+        "the rejection should identify the body and defined return set:\n{}",
         run_output
     );
 
@@ -1374,7 +1374,7 @@ fn(x R) R {x}(1 / 2) = 1 / 2
 "#;
     let mut valid_runtime = Runtime::new();
     valid_runtime
-        .start_isolated_source("anonymous_function_body_in_declared_return_set_is_well_defined");
+        .start_isolated_source("anonymous_function_body_in_definition_return_set_is_well_defined");
     let (stmt_results, runtime_error) = execute_source(valid_source, &mut valid_runtime);
     let (run_succeeded, run_output) =
         render_run_output(&valid_runtime, &stmt_results, &runtime_error);
@@ -1391,7 +1391,7 @@ have fn coordinate_fn(p c) fn(i1 closed_range(1, n)) R = fn(j closed_range(1, n)
 "#;
     let mut symbolic_cart_runtime = Runtime::new();
     symbolic_cart_runtime
-        .start_isolated_source("anonymous_function_cart_coordinate_in_declared_return_set");
+        .start_isolated_source("anonymous_function_cart_coordinate_in_definition_return_set");
     let (stmt_results, runtime_error) =
         execute_source(symbolic_cart_source, &mut symbolic_cart_runtime);
     let (run_succeeded, run_output) =
@@ -1440,7 +1440,7 @@ fn iterated_operators_require_scalar_return_sets() {
         );
         assert!(
             run_output.contains(expected_error),
-            "{label} should identify the non-scalar declared return set:\n{run_output}"
+            "{label} should identify the non-scalar defined return set:\n{run_output}"
         );
     }
 
@@ -1537,7 +1537,7 @@ fn casewise_function_definition_requires_a_total_disjoint_partition() {
 have fn f(x R) R by cases:
     case x >= 0: 1
 "#,
-                    "have fn by cases: cases do not cover the declared domain",
+                    "have fn by cases: cases do not cover the defined domain",
                 ),
                 (
                     "casewise_function_empty_case_list",
@@ -1623,7 +1623,7 @@ only_nonnegative(0) = 0
                 render_run_output(&runtime, &stmt_results, &runtime_error);
             assert!(
                 run_succeeded,
-                "cases only need to cover the declared function domain:\n{}",
+                "cases only need to cover the defined function domain:\n{}",
                 run_output
             );
 

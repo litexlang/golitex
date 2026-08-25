@@ -1,4 +1,4 @@
-//! Parameter-definition parsing shared by quantified facts and declarations.
+//! Parameter-definition parsing shared by quantified facts and definitions.
 
 use crate::prelude::*;
 
@@ -10,7 +10,7 @@ impl Runtime {
         &mut self,
         tb: &mut TokenBlock,
         binding_scope: BindingScope,
-    ) -> Result<ParamGroupWithParamType, RuntimeError> {
+    ) -> Result<TypedParameterGroup, RuntimeError> {
         let param = tb.advance()?;
         let mut params = vec![param];
         while tb.current_token_is_equal_to(COMMA) {
@@ -26,7 +26,7 @@ impl Runtime {
         if let ParamType::Obj(Obj::Cart(cart)) = &param_type {
             self.register_default_tuple_view(&bindings, cart);
         }
-        let param_def_with_param_type = ParamGroupWithParamType::new(bindings, param_type);
+        let param_def_with_param_type = TypedParameterGroup::new(bindings, param_type);
         if tb.current_token_is_equal_to(COMMA) {
             tb.skip_token(COMMA)?;
         }

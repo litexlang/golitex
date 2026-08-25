@@ -245,7 +245,7 @@ fn collect_fn_set_body_binder_bindings(
     depth: usize,
 ) {
     let mut position = 0;
-    for group in body.params_def_with_set.iter() {
+    for group in body.set_bound_parameters.iter() {
         for binding in &group.params {
             push_binding(binding, bindings, seen, depth, position);
             position += 1;

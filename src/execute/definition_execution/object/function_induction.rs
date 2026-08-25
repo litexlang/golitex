@@ -12,17 +12,17 @@ impl Runtime {
         let verification_run_in_local_env = self.exec_have_fn_by_induc_verify_process(stmt)?;
         let infer_result = self.exec_have_fn_by_induc_affect_environment(stmt)?;
 
-        Ok(
-            SuccessDefObjStmtResult::HaveFnByInducStmt(Box::new(SuccessHaveFnByInducStmtResult {
+        Ok(SuccessDefinitionStmtResult::HaveFnByInducStmt(Box::new(
+            SuccessHaveFnByInducStmtResult {
                 statement: stmt.clone(),
                 common: SuccessStmtCommonResult::new(infer_result),
                 verification: Some(SuccessVerifyHaveFnByInducResult {
                     well_definedness_run_in_local_env,
                     verification_run_in_local_env,
                 }),
-            }))
-            .into(),
-        )
+            },
+        ))
+        .into())
     }
 
     pub fn exec_have_fn_by_induc_affect_environment(
@@ -42,14 +42,14 @@ impl Runtime {
         stmt: &HaveFnByInducStmt,
     ) -> Result<StmtResult, RuntimeError> {
         let infer_result = self.exec_have_fn_by_induc_affect_environment(stmt)?;
-        Ok(
-            SuccessDefObjStmtResult::HaveFnByInducStmt(Box::new(SuccessHaveFnByInducStmtResult {
+        Ok(SuccessDefinitionStmtResult::HaveFnByInducStmt(Box::new(
+            SuccessHaveFnByInducStmtResult {
                 statement: stmt.clone(),
                 common: SuccessStmtCommonResult::new(infer_result),
                 verification: None,
-            }))
-            .into(),
-        )
+            },
+        ))
+        .into())
     }
 
     fn have_fn_by_induc_err(stmt: &HaveFnByInducStmt, cause: RuntimeError) -> RuntimeError {
@@ -79,7 +79,7 @@ impl Runtime {
         })
     }
 
-    /// Mathematical contract: an inductive function declaration has a fresh
+    /// Mathematical contract: an inductive function definition has a fresh
     /// name, a meaningful function signature, and well-defined measure and
     /// lower-bound expressions under its parameter domain. Integrality,
     /// descent, cases, and return values are checked in the proof phase.
@@ -88,7 +88,7 @@ impl Runtime {
         stmt: &HaveFnByInducStmt,
     ) -> Result<SuccessVerifyHaveFnByInducWellDefinednessLocalEnvResult, RuntimeError> {
         self.run_in_local_env(|rt| {
-            rt.store_parameter_binding(&stmt.symbol_binding, BindingScope::DeclaredObject)
+            rt.store_parameter_binding(&stmt.symbol_binding, BindingScope::DefinitionBinding)
                 .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
             let fn_set = rt
                 .fn_set_from_fn_set_clause(&stmt.fn_set_clause)
@@ -122,9 +122,10 @@ impl Runtime {
         &mut self,
         stmt: &HaveFnByInducStmt,
     ) -> Result<SuccessVerifyHaveFnByInducParametersAndDomainResult, RuntimeError> {
-        let mut parameter_groups = Vec::with_capacity(stmt.fn_set_clause.params_def_with_set.len());
+        let mut parameter_groups =
+            Vec::with_capacity(stmt.fn_set_clause.set_bound_parameters.len());
         for (group_index, param_def_with_set) in
-            stmt.fn_set_clause.params_def_with_set.iter().enumerate()
+            stmt.fn_set_clause.set_bound_parameters.iter().enumerate()
         {
             let mut infers = self
                 .define_params_with_set(param_def_with_set)
@@ -253,12 +254,12 @@ impl Runtime {
         &mut self,
         stmt: &HaveFnByInducStmt,
     ) -> Result<SuccessVerifyHaveFnByInducRecursiveFunctionResult, RuntimeError> {
-        self.store_parameter_binding(&stmt.symbol_binding, BindingScope::DeclaredObject)
+        self.store_parameter_binding(&stmt.symbol_binding, BindingScope::DefinitionBinding)
             .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
 
         let source_bindings = stmt
             .fn_set_clause
-            .params_def_with_set
+            .set_bound_parameters
             .collect_param_bindings();
         let (_, param_to_generated_obj) =
             self.fresh_binder_retag_plan_for_bindings(&source_bindings);
@@ -266,14 +267,14 @@ impl Runtime {
         let generated_body = self
             .alpha_rename_fn_set_body(
                 &FnSetBody::new(
-                    stmt.fn_set_clause.params_def_with_set.clone(),
+                    stmt.fn_set_clause.set_bound_parameters.clone(),
                     stmt.fn_set_clause.dom_facts.clone(),
                     stmt.fn_set_clause.ret_set.clone(),
                 ),
                 &param_to_generated_obj,
             )
             .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
-        let generated_groups = generated_body.params_def_with_set;
+        let generated_groups = generated_body.set_bound_parameters;
         let mut recursive_dom_facts = generated_body.dom_facts;
 
         let generated_measure = self
@@ -306,7 +307,7 @@ impl Runtime {
             .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
 
         let function_in_function_set_fact: Fact = InFact::new(
-            self.declared_identifier_obj(stmt.name()),
+            self.definition_identifier_obj(stmt.name()),
             recursive_fn_set.clone().into(),
             stmt.line_file.clone(),
         )

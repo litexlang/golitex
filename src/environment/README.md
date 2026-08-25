@@ -8,8 +8,8 @@ The ownership boundary is visible directly in Rust:
 
 ```rust
 pub struct Environment {
-    pub declarations: EnvironmentDeclarationRegistry,
-    pub facts: EnvironmentFactDatabase,
+    pub definitions: EnvironmentDefinitionRegistry,
+    pub facts: EnvironmentFactStore,
     pub objects: EnvironmentObjectKnowledgeStore,
     pub predicate_properties: EnvironmentPredicatePropertyStore,
     pub caches: EnvironmentVerificationCache,
@@ -27,8 +27,8 @@ There is now no `EnvironmentPersistentRepositories` and no compatibility
 
 | Field | Canonical responsibility |
 | --- | --- |
-| `declarations` | Symbol identity and definitions of objects, predicates, algorithms, structs, templates, settings, theorems, axioms, and strategies. |
-| `facts` | Stored `FactId` records plus equality, membership, quantified-fact, and argument-shape indexes used to find them. Search indexes remain here because they are maintained with the fact database. |
+| `definitions` | Symbol identity and definitions of objects, predicates, algorithms, structs, templates, settings, theorems, axioms, and strategies. |
+| `facts` | Stored `FactId` records plus equality, membership, quantified-fact, and argument-shape indexes used to find them. Search indexes remain here because they are maintained with the fact store. |
 | `objects` | One `ObjString -> EnvironmentObjectKnowledge` entry per object key. Tuple/cart shape, sequence or matrix shape, simplified value, set-builder equality, and function-set knowledge are optional facets of that one entry. |
 | `predicate_properties` | One predicate-name entry whose profile independently records transitivity, symmetry permutations, reflexivity, and antisymmetry. |
 | `caches` | Environment-scoped verification results reusable by later statements: well-defined object results and infer-rule firing guards. |
@@ -45,7 +45,7 @@ piece has one clear home:
 
 ```text
 store checked fact `a = 1`
-  declarations: resolve the SymbolId of `a`
+  definitions: resolve the SymbolId of `a`
   facts:        allocate/store FactId f3 and equality/search indexes
   objects:      remember the simplified value of `a` in a's knowledge profile
   caches:       remember only environment-valid reusable checks
@@ -54,7 +54,7 @@ later goal `a + 1 = 2`
   facts + objects provide the exact stored equality/value evidence
 ```
 
-The data is grouped by owner, not forced into a single enum: declaration and
+The data is grouped by owner, not forced into a single enum: definition and
 fact payloads are heterogeneous, while object and predicate knowledge genuinely
 share one stable key and therefore use one keyed profile.
 
@@ -64,7 +64,7 @@ Proof blocks, `try`, template materialization, and other local executions build
 a child `Environment`. A successful child is committed by
 `Environment::merge_committed_child`:
 
-- declaration conflicts are rejected before mutation;
+- definition conflicts are rejected before mutation;
 - fact indexes and exact `FactId` records are merged;
 - all facets for the same object or predicate key are combined;
 - the child's final strategy state overrides the same key in the parent;

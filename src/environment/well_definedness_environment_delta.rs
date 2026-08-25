@@ -8,8 +8,8 @@ use crate::prelude::*;
 /// partial preflight artifact as the complete mathematical world.
 #[derive(Clone)]
 pub struct WellDefinednessEnvironmentDelta {
-    declarations: EnvironmentDeclarationRegistry,
-    facts: EnvironmentFactDatabase,
+    definitions: EnvironmentDefinitionRegistry,
+    facts: EnvironmentFactStore,
     objects: EnvironmentObjectKnowledgeStore,
     predicate_properties: EnvironmentPredicatePropertyStore,
     caches: EnvironmentVerificationCache,
@@ -37,7 +37,7 @@ impl WellDefinednessEnvironmentDelta {
 
     fn from_environment(environment: Environment) -> Self {
         let Environment {
-            declarations,
+            definitions,
             facts,
             objects,
             predicate_properties,
@@ -45,7 +45,7 @@ impl WellDefinednessEnvironmentDelta {
             strategies,
         } = environment;
         Self {
-            declarations,
+            definitions,
             facts,
             objects,
             predicate_properties,
@@ -56,7 +56,7 @@ impl WellDefinednessEnvironmentDelta {
 
     fn into_environment(self) -> Environment {
         let Self {
-            declarations,
+            definitions,
             facts,
             objects,
             predicate_properties,
@@ -64,7 +64,7 @@ impl WellDefinednessEnvironmentDelta {
             strategies,
         } = self;
         Environment {
-            declarations,
+            definitions,
             facts,
             objects,
             predicate_properties,

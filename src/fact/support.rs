@@ -40,7 +40,7 @@ impl Fact {
 
 impl ForallFact {
     fn contains_native_complex_syntax(&self) -> bool {
-        self.params_def_with_type.groups.iter().any(|group| {
+        self.typed_parameters.groups.iter().any(|group| {
             matches!(
                 &group.param_type,
                 ParamType::Obj(obj) if obj.contains_native_complex_syntax()

@@ -183,7 +183,7 @@ impl Runtime {
         &mut self,
         stmt: &ByFiniteSetInducStmt,
     ) -> Result<(), RuntimeError> {
-        let params = ParamDefWithType::new(vec![ParamGroupWithParamType::new(
+        let params = TypedParameterList::new(vec![TypedParameterGroup::new(
             vec![stmt.param_binding.clone()],
             ParamType::FiniteSet(FiniteSet::new()),
         )]);
@@ -191,7 +191,7 @@ impl Runtime {
             .map_err(|error| {
                 short_exec_error(
                     stmt.clone().into(),
-                    "finite-set induc: failed to declare the base finite set".to_string(),
+                    "finite-set induc: failed to bind the base finite set".to_string(),
                     Some(error),
                     vec![],
                 )
@@ -242,9 +242,9 @@ impl Runtime {
             Some(carrier_set) => ParamType::Obj(carrier_set.clone()),
             None => ParamType::Set(Set::new()),
         };
-        let params = ParamDefWithType::new(vec![
-            ParamGroupWithParamType::new(vec![stmt.element_param_binding.clone()], element_type),
-            ParamGroupWithParamType::new(
+        let params = TypedParameterList::new(vec![
+            TypedParameterGroup::new(vec![stmt.element_param_binding.clone()], element_type),
+            TypedParameterGroup::new(
                 vec![stmt.smaller_set_param_binding.clone()],
                 ParamType::FiniteSet(FiniteSet::new()),
             ),
@@ -253,7 +253,7 @@ impl Runtime {
             .map_err(|error| {
                 short_exec_error(
                     stmt.clone().into(),
-                    "finite-set induc: failed to declare the insertion parameters".to_string(),
+                    "finite-set induc: failed to bind the insertion parameters".to_string(),
                     Some(error),
                     vec![],
                 )
@@ -384,7 +384,7 @@ impl Runtime {
             );
         }
         Ok(ForallFact::new_canonical_forall(
-            ParamDefWithType::new(vec![ParamGroupWithParamType::new(
+            TypedParameterList::new(vec![TypedParameterGroup::new(
                 vec![forall_names[0].clone()],
                 ParamType::FiniteSet(FiniteSet::new()),
             )]),

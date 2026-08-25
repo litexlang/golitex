@@ -60,7 +60,7 @@ impl Runtime {
         )
         .into();
         let trial_division: Fact = ForallFact::new_canonical_forall(
-            ParamDefWithType::new(vec![divisor_group]),
+            TypedParameterList::new(vec![divisor_group]),
             Vec::new(),
             vec![no_divisor.into()],
             line_file,

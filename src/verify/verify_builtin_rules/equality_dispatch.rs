@@ -1846,12 +1846,12 @@ impl Runtime {
             _ => return false,
         };
         if !anonymous.body.dom_facts.is_empty()
-            || anonymous.body.params_def_with_set.number_of_params() != 1
-            || anonymous.body.params_def_with_set.len() != 1
+            || anonymous.body.set_bound_parameters.number_of_params() != 1
+            || anonymous.body.set_bound_parameters.len() != 1
         {
             return false;
         }
-        let param_group = &anonymous.body.params_def_with_set.as_slice()[0];
+        let param_group = &anonymous.body.set_bound_parameters.as_slice()[0];
         if !objs_match_for_pattern(param_group.set_obj(), expected_index_set) {
             return false;
         }
@@ -2218,7 +2218,7 @@ impl Runtime {
             line_file.clone(),
         )
         .into();
-        let coordinate_params = ParamDefWithType::new(vec![coordinate_group]);
+        let coordinate_params = TypedParameterList::new(vec![coordinate_group]);
         let coordinate_result = self.run_in_local_env(|rt| {
             rt.define_params_with_type(&coordinate_params, false, BindingScope::LocalBinder)?;
             rt.verify_atomic_fact_with_known_forall(&coordinate_equality, verify_state)
@@ -2838,7 +2838,7 @@ impl Runtime {
         let Obj::FnSet(fn_set) = set_builder.param_set.as_ref() else {
             return Ok(None);
         };
-        if ParamGroupWithSet::number_of_params(&fn_set.body.params_def_with_set) != 1
+        if SetBoundParameterGroup::number_of_params(&fn_set.body.set_bound_parameters) != 1
             || !fn_set.body.dom_facts.is_empty()
             || set_builder.facts.len() != 1
         {
@@ -2847,7 +2847,7 @@ impl Runtime {
 
         let domain_result = self.verify_equal_fact_as_builtin_premise(
             &EqualFact::new_from_refs(
-                fn_set.body.params_def_with_set[0].set_obj(),
+                fn_set.body.set_bound_parameters[0].set_obj(),
                 general_cart.index_set.as_ref(),
                 line_file.clone(),
             ),
@@ -3004,8 +3004,9 @@ impl Runtime {
                 _ => continue,
             };
             let param_count =
-                ParamGroupWithSet::number_of_params(&expanded.body.params_def_with_set);
-            if param_count != ParamGroupWithSet::number_of_params(&fn_set.body.params_def_with_set)
+                SetBoundParameterGroup::number_of_params(&expanded.body.set_bound_parameters);
+            if param_count
+                != SetBoundParameterGroup::number_of_params(&fn_set.body.set_bound_parameters)
             {
                 continue;
             }

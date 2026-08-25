@@ -3,7 +3,7 @@ use crate::output::display_stmt_result_json_v2;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 #[test]
-fn exported_symbol_keeps_its_declaration_owned_struct_view() {
+fn exported_symbol_keeps_its_definition_owned_struct_view() {
     run_repository_test_with_large_stack("exported-symbol-struct-view", || {
         let fixture = Fixture::new("exported-symbol-struct-view");
         let root = fixture.path("root");
@@ -812,7 +812,7 @@ have ProductSet set = cart(R, R)
             .next()
             .expect("imported main environment should exist");
         let pair_symbol = imported_environment
-            .declarations
+            .definitions
             .symbols
             .get("pair")
             .map(|definition| definition.binding().as_ref())

@@ -584,7 +584,7 @@ fn check_fn_set_body_has_no_duplicate_free_parameter(
 ) -> Result<(), RuntimeError> {
     let pushed_scope = if free_param_type == ObjectBinderKind::Function {
         push_param_names_scope_or_error(
-            ParamGroupWithSet::collect_param_names(&body.params_def_with_set),
+            SetBoundParameterGroup::collect_param_names(&body.set_bound_parameters),
             free_param_type,
             params_already_used,
         )?;
@@ -593,7 +593,7 @@ fn check_fn_set_body_has_no_duplicate_free_parameter(
         false
     };
 
-    for param_def in body.params_def_with_set.iter() {
+    for param_def in body.set_bound_parameters.iter() {
         check_obj_has_no_duplicate_free_parameter(
             param_def.set_obj(),
             free_param_type,
@@ -623,7 +623,7 @@ fn check_anonymous_fn_has_no_duplicate_free_parameter(
 ) -> Result<(), RuntimeError> {
     let pushed_scope = if free_param_type == ObjectBinderKind::Function {
         push_param_names_scope_or_error(
-            ParamGroupWithSet::collect_param_names(&anonymous_fn.body.params_def_with_set),
+            SetBoundParameterGroup::collect_param_names(&anonymous_fn.body.set_bound_parameters),
             free_param_type,
             params_already_used,
         )?;
@@ -632,7 +632,7 @@ fn check_anonymous_fn_has_no_duplicate_free_parameter(
         false
     };
 
-    for param_def in anonymous_fn.body.params_def_with_set.iter() {
+    for param_def in anonymous_fn.body.set_bound_parameters.iter() {
         check_obj_has_no_duplicate_free_parameter(
             param_def.set_obj(),
             free_param_type,

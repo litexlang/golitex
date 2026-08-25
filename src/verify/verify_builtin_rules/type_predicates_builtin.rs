@@ -687,10 +687,10 @@ impl Runtime {
                 let Some(body) = self.get_fn_range_function_body(&fn_range.function) else {
                     return Ok((UnknownGenericStmtResult::new()).into());
                 };
-                if body.params_def_with_set.number_of_params() != 1 {
+                if body.set_bound_parameters.number_of_params() != 1 {
                     return Ok((UnknownGenericStmtResult::new()).into());
                 }
-                let Some(domain) = body.params_def_with_set.first() else {
+                let Some(domain) = body.set_bound_parameters.first() else {
                     return Ok((UnknownGenericStmtResult::new()).into());
                 };
                 let domain_finite: AtomicFact = IsFiniteSetFact::new(
@@ -1137,7 +1137,7 @@ fn general_cart_global_family_nonempty_fact(
         .expect("internal binder identity counter exhausted");
     let param_obj = obj_for_bound_param_in_scope(&param_group.params[0]);
     ForallFact::new_canonical_forall(
-        ParamDefWithType::new(vec![param_group]),
+        TypedParameterList::new(vec![param_group]),
         vec![],
         vec![IsNonemptySetFact::new(param_obj, source_fact.line_file.clone()).into()],
         source_fact.line_file.clone(),
@@ -1163,7 +1163,7 @@ fn general_cart_pointwise_family_nonempty_fact(
     let factor: Obj = FnObj::new(head, vec![vec![Box::new(param_obj.clone())]]).into();
     Ok(Some(
         ForallFact::new_canonical_forall(
-            ParamDefWithType::new(vec![param_group]),
+            TypedParameterList::new(vec![param_group]),
             vec![],
             vec![IsNonemptySetFact::new(factor, source_fact.line_file.clone()).into()],
             source_fact.line_file.clone(),

@@ -213,10 +213,7 @@ impl Runtime {
     ) -> Result<SuccessVerifyByAssignmentResult, RuntimeError> {
         let mut assignment = Vec::new();
         let mut assumptions = Vec::new();
-        let param_bindings = stmt
-            .forall_fact
-            .params_def_with_type
-            .collect_param_bindings();
+        let param_bindings = stmt.forall_fact.typed_parameters.collect_param_bindings();
         for (parameter_position, parameter_name) in params.iter().enumerate() {
             let parameter_binding = &param_bindings[parameter_position];
             let assigned_obj = (*param_sets[parameter_position].list
@@ -329,7 +326,7 @@ impl Runtime {
         let mut params = Vec::new();
         let mut param_sets = Vec::new();
 
-        for group in stmt.forall_fact.params_def_with_type.groups.iter() {
+        for group in stmt.forall_fact.typed_parameters.groups.iter() {
             let list_set = match &group.param_type {
                 ParamType::Obj(Obj::ListSet(list_set)) => list_set.clone(),
                 ParamType::Obj(domain) => self
@@ -359,7 +356,7 @@ impl Runtime {
 
         if params.is_empty() {
             return Err(
-                "by enumerate finite_set: forall must declare at least one parameter".to_string(),
+                "by enumerate finite_set: forall must bind at least one parameter".to_string(),
             );
         }
 

@@ -23,7 +23,7 @@ impl Runtime {
         let body_exec_result: StmtResult = self.run_in_local_env(|rt| {
             let mut assumption_infers = rt
                 .define_params_with_type(
-                    &stmt.forall_fact.params_def_with_type,
+                    &stmt.forall_fact.typed_parameters,
                     false,
                     BindingScope::LocalBinder,
                 )
@@ -112,18 +112,20 @@ impl Runtime {
             }
 
             Ok(
-                SuccessStmtResult::DefStrategyStmt(Box::new(SuccessDefStrategyStmtResult {
-                    statement: stmt.clone(),
-                    common: SuccessStmtCommonResult::new(SuccessInferResult::new()),
-                    verification: Some(SuccessVerifyStrategyDefinitionResult::new(
-                        stmt.name.clone(),
-                        stmt.forall_fact.clone(),
-                        well_definedness,
-                        SuccessVerifyLocalProofScopeResult::new(assumption_infers, Vec::new()),
-                        proof_steps,
-                        conclusion_checks,
-                    )),
-                }))
+                SuccessStmtResult::Definition(SuccessDefinitionStmtResult::DefStrategyStmt(
+                    Box::new(SuccessDefStrategyStmtResult {
+                        statement: stmt.clone(),
+                        common: SuccessStmtCommonResult::new(SuccessInferResult::new()),
+                        verification: Some(SuccessVerifyStrategyDefinitionResult::new(
+                            stmt.name.clone(),
+                            stmt.forall_fact.clone(),
+                            well_definedness,
+                            SuccessVerifyLocalProofScopeResult::new(assumption_infers, Vec::new()),
+                            proof_steps,
+                            conclusion_checks,
+                        )),
+                    }),
+                ))
                 .into(),
             )
         })?;
@@ -209,11 +211,13 @@ impl Runtime {
         self.activate_strategy(stmt, &stmt.name, stmt.clone().into())?;
 
         Ok(
-            SuccessStmtResult::DefStrategyStmt(Box::new(SuccessDefStrategyStmtResult {
-                statement: stmt.clone(),
-                common: SuccessStmtCommonResult::new(infer_result),
-                verification: None,
-            }))
+            SuccessStmtResult::Definition(SuccessDefinitionStmtResult::DefStrategyStmt(Box::new(
+                SuccessDefStrategyStmtResult {
+                    statement: stmt.clone(),
+                    common: SuccessStmtCommonResult::new(infer_result),
+                    verification: None,
+                },
+            )))
             .into(),
         )
     }

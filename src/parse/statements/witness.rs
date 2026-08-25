@@ -52,7 +52,7 @@ impl Runtime {
                 )));
             }
             let bindings = exist_fact_in_witness
-                .params_def_with_type()
+                .typed_parameters()
                 .collect_param_bindings();
             let lf = tb.line_file.clone();
             self.parse_stmts_with_existing_free_param_bindings(

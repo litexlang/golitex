@@ -8,16 +8,14 @@ impl Runtime {
         self.exec_have_by_preimage_stmt_verify_well_definedness(stmt)?;
         let verification = self.exec_have_by_preimage_stmt_verify_process(stmt)?;
         let infer_result = self.exec_have_by_preimage_stmt_affect_environment(stmt)?;
-        Ok(
-            SuccessDefObjStmtResult::HaveByPreimageStmt(Box::new(
-                SuccessHaveByPreimageStmtResult {
-                    statement: stmt.clone(),
-                    common: SuccessStmtCommonResult::new(infer_result),
-                    verification: Some(verification),
-                },
-            ))
-            .into(),
-        )
+        Ok(SuccessDefinitionStmtResult::HaveByPreimageStmt(Box::new(
+            SuccessHaveByPreimageStmtResult {
+                statement: stmt.clone(),
+                common: SuccessStmtCommonResult::new(infer_result),
+                verification: Some(verification),
+            },
+        ))
+        .into())
     }
 
     pub fn exec_have_by_preimage_stmt_affect_environment_only(
@@ -25,16 +23,14 @@ impl Runtime {
         stmt: &HaveByPreimageStmt,
     ) -> Result<StmtResult, RuntimeError> {
         let infer_result = self.exec_have_by_preimage_stmt_affect_environment(stmt)?;
-        Ok(
-            SuccessDefObjStmtResult::HaveByPreimageStmt(Box::new(
-                SuccessHaveByPreimageStmtResult {
-                    statement: stmt.clone(),
-                    common: SuccessStmtCommonResult::new(infer_result),
-                    verification: None,
-                },
-            ))
-            .into(),
-        )
+        Ok(SuccessDefinitionStmtResult::HaveByPreimageStmt(Box::new(
+            SuccessHaveByPreimageStmtResult {
+                statement: stmt.clone(),
+                common: SuccessStmtCommonResult::new(infer_result),
+                verification: None,
+            },
+        ))
+        .into())
     }
 
     /// Mathematical contract: preimage extraction targets a known function or
@@ -62,7 +58,7 @@ impl Runtime {
         }
 
         let (_function, fn_body) = self.preimage_function_and_body(stmt)?;
-        let param_count = fn_body.params_def_with_set.number_of_params();
+        let param_count = fn_body.set_bound_parameters.number_of_params();
         if stmt.preimage_bindings.len() != param_count {
             return Err(short_exec_error(
                 stmt.clone().into(),
@@ -162,7 +158,7 @@ impl Runtime {
     ) -> Result<(), RuntimeError> {
         self.run_in_local_env(|rt| {
             for binding in &stmt.preimage_bindings {
-                rt.store_parameter_binding(binding, BindingScope::DeclaredObject)
+                rt.store_parameter_binding(binding, BindingScope::DefinitionBinding)
                     .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))?;
             }
             Ok(())
@@ -171,7 +167,7 @@ impl Runtime {
 
     fn store_preimage_names(&mut self, stmt: &HaveByPreimageStmt) -> Result<(), RuntimeError> {
         for binding in &stmt.preimage_bindings {
-            self.store_parameter_binding(binding, BindingScope::DeclaredObject)
+            self.store_parameter_binding(binding, BindingScope::DefinitionBinding)
                 .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))?;
         }
         Ok(())
@@ -183,7 +179,7 @@ impl Runtime {
         replacement: &Replacement,
     ) -> Result<SuccessInferResult, RuntimeError> {
         let preimage_binding = &stmt.preimage_bindings[0];
-        self.store_parameter_binding(preimage_binding, BindingScope::DeclaredObject)
+        self.store_parameter_binding(preimage_binding, BindingScope::DefinitionBinding)
             .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))?;
         let preimage_obj: Obj = Identifier::new_bound(
             preimage_binding.name().to_string(),
@@ -261,13 +257,13 @@ impl Runtime {
     ) -> Result<SuccessInferResult, RuntimeError> {
         let instantiated_param_sets = self
             .inst_param_def_with_set_one_by_one(
-                &fn_body.params_def_with_set,
+                &fn_body.set_bound_parameters,
                 preimage_objs,
                 SubstitutionMode::Exact,
             )
             .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))?;
         let flat_param_sets = fn_body
-            .params_def_with_set
+            .set_bound_parameters
             .flat_instantiated_param_sets_for_args(&instantiated_param_sets);
 
         let mut infer_result = SuccessInferResult::new();
@@ -296,7 +292,7 @@ impl Runtime {
         preimage_objs: &Vec<Obj>,
     ) -> Result<SuccessInferResult, RuntimeError> {
         let param_to_obj_map = fn_body
-            .params_def_with_set
+            .set_bound_parameters
             .param_defs_and_args_to_param_to_arg_map(preimage_objs);
         let mut infer_result = SuccessInferResult::new();
         for dom_fact in fn_body.dom_facts.iter() {

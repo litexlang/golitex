@@ -62,7 +62,7 @@ impl Runtime {
 
     pub fn define_params_with_type(
         &mut self,
-        param_defs: &ParamDefWithType,
+        param_defs: &TypedParameterList,
         check_type_nonempty: bool,
         binding_scope: BindingScope,
     ) -> Result<SuccessInferResult, RuntimeError> {
@@ -99,7 +99,7 @@ impl Runtime {
                         RuntimeError::from(DefineParamsRuntimeError(
                             RuntimeErrorStruct::new_with_msg_and_cause(
                                 format!(
-                                    "define params with type: failed to declare parameter `{}`",
+                                    "define params with type: failed to bind parameter `{}`",
                                     name
                                 ),
                                 runtime_error,
@@ -126,7 +126,7 @@ impl Runtime {
 
     pub fn define_params_with_type_trusted(
         &mut self,
-        param_defs: &ParamDefWithType,
+        param_defs: &TypedParameterList,
         binding_scope: BindingScope,
     ) -> Result<SuccessInferResult, RuntimeError> {
         let mut infer_result = SuccessInferResult::new();

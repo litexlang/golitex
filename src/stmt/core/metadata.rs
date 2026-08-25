@@ -7,13 +7,7 @@ impl Stmt {
         match self {
             Stmt::Fact(fact) => fact.line_file(),
             Stmt::UnsafeStmt(stmt) => stmt.line_file(),
-            Stmt::DefObjStmt(stmt) => stmt.line_file(),
-            Stmt::DefPredicateStmt(stmt) => stmt.line_file(),
-            Stmt::DefInterfaceStmt(stmt) => stmt.line_file(),
-            Stmt::DefAlgoStmt(stmt) => stmt.line_file.clone(),
-            Stmt::DefThmStmt(stmt) => stmt.line_file.clone(),
-            Stmt::AxiomStmt(stmt) => stmt.line_file.clone(),
-            Stmt::DefStrategyStmt(stmt) => stmt.line_file.clone(),
+            Stmt::Definition(stmt) => stmt.line_file(),
             Stmt::By(stmt) => stmt.line_file(),
             Stmt::Witness(stmt) => stmt.line_file(),
             Stmt::ProofBlock(stmt) => stmt.line_file(),
@@ -25,13 +19,7 @@ impl Stmt {
         match self {
             Stmt::Fact(fact) => fact.fact_type_string(),
             Stmt::UnsafeStmt(stmt) => stmt.stmt_type_name(),
-            Stmt::DefObjStmt(stmt) => stmt.stmt_type_name(),
-            Stmt::DefPredicateStmt(stmt) => stmt.stmt_type_name(),
-            Stmt::DefInterfaceStmt(stmt) => stmt.stmt_type_name(),
-            Stmt::DefAlgoStmt(stmt) => stmt.stmt_type_name(),
-            Stmt::DefThmStmt(stmt) => stmt.stmt_type_name(),
-            Stmt::AxiomStmt(stmt) => stmt.stmt_type_name(),
-            Stmt::DefStrategyStmt(stmt) => stmt.stmt_type_name(),
+            Stmt::Definition(stmt) => stmt.stmt_type_name(),
             Stmt::By(stmt) => stmt.stmt_type_name(),
             Stmt::Witness(stmt) => stmt.stmt_type_name(),
             Stmt::ProofBlock(stmt) => stmt.stmt_type_name(),
@@ -43,13 +31,7 @@ impl Stmt {
         match self {
             Stmt::Fact(fact) => fact.output_type_string(),
             Stmt::UnsafeStmt(stmt) => stmt.output_type_string(),
-            Stmt::DefObjStmt(stmt) => stmt.output_type_string(),
-            Stmt::DefPredicateStmt(stmt) => stmt.output_type_string(),
-            Stmt::DefInterfaceStmt(stmt) => stmt.output_type_string(),
-            Stmt::DefAlgoStmt(_) => DefAlgoStmt::output_type_string(),
-            Stmt::DefThmStmt(_) => DefThmStmt::output_type_string(),
-            Stmt::AxiomStmt(_) => AxiomStmt::output_type_string(),
-            Stmt::DefStrategyStmt(_) => DefStrategyStmt::output_type_string(),
+            Stmt::Definition(stmt) => stmt.output_type_string(),
             Stmt::By(stmt) => stmt.output_type_string(),
             Stmt::Witness(stmt) => stmt.output_type_string(),
             Stmt::ProofBlock(stmt) => stmt.output_type_string(),
@@ -81,125 +63,109 @@ impl UnsafeStmt {
     }
 }
 
-impl DefObjStmt {
+impl DefinitionStmt {
     pub fn line_file(&self) -> LineFile {
         match self {
-            DefObjStmt::LetObjStmt(stmt) => stmt.line_file.clone(),
-            DefObjStmt::HaveObjInNonemptySetStmt(stmt) => stmt.line_file.clone(),
-            DefObjStmt::HaveObjEqualStmt(stmt) => stmt.line_file.clone(),
-            DefObjStmt::HaveObjByExistFactsStmt(stmt) => stmt.line_file.clone(),
-            DefObjStmt::ObtainObjFromExistFact(stmt) => stmt.line_file.clone(),
-            DefObjStmt::ObtainObjFromAtomicFact(stmt) => stmt.line_file.clone(),
-            DefObjStmt::ObtainObjFromThm(stmt) => stmt.line_file.clone(),
-            DefObjStmt::HaveByPreimageStmt(stmt) => stmt.line_file.clone(),
-            DefObjStmt::HaveFnEqualStmt(stmt) => stmt.line_file.clone(),
-            DefObjStmt::HaveFnEqualCaseByCaseStmt(stmt) => stmt.line_file.clone(),
-            DefObjStmt::HaveFnByInducStmt(stmt) => stmt.line_file.clone(),
-            DefObjStmt::HaveFnByForallExistUniqueStmt(stmt) => stmt.line_file.clone(),
-            DefObjStmt::HaveTupleStmt(stmt) => stmt.line_file.clone(),
-            DefObjStmt::HaveCartStmt(stmt) => stmt.line_file.clone(),
-            DefObjStmt::HaveSeqStmt(stmt) => stmt.line_file.clone(),
-            DefObjStmt::HaveFiniteSeqStmt(stmt) => stmt.line_file.clone(),
-            DefObjStmt::HaveMatrixStmt(stmt) => stmt.line_file.clone(),
+            DefinitionStmt::LetObjStmt(stmt) => stmt.line_file.clone(),
+            DefinitionStmt::HaveObjInNonemptySetStmt(stmt) => stmt.line_file.clone(),
+            DefinitionStmt::HaveObjEqualStmt(stmt) => stmt.line_file.clone(),
+            DefinitionStmt::HaveObjByExistFactsStmt(stmt) => stmt.line_file.clone(),
+            DefinitionStmt::ObtainObjFromExistFact(stmt) => stmt.line_file.clone(),
+            DefinitionStmt::ObtainObjFromAtomicFact(stmt) => stmt.line_file.clone(),
+            DefinitionStmt::ObtainObjFromThm(stmt) => stmt.line_file.clone(),
+            DefinitionStmt::HaveByPreimageStmt(stmt) => stmt.line_file.clone(),
+            DefinitionStmt::HaveFnEqualStmt(stmt) => stmt.line_file.clone(),
+            DefinitionStmt::HaveFnEqualCaseByCaseStmt(stmt) => stmt.line_file.clone(),
+            DefinitionStmt::HaveFnByInducStmt(stmt) => stmt.line_file.clone(),
+            DefinitionStmt::HaveFnByForallExistUniqueStmt(stmt) => stmt.line_file.clone(),
+            DefinitionStmt::HaveTupleStmt(stmt) => stmt.line_file.clone(),
+            DefinitionStmt::HaveCartStmt(stmt) => stmt.line_file.clone(),
+            DefinitionStmt::HaveSeqStmt(stmt) => stmt.line_file.clone(),
+            DefinitionStmt::HaveFiniteSeqStmt(stmt) => stmt.line_file.clone(),
+            DefinitionStmt::HaveMatrixStmt(stmt) => stmt.line_file.clone(),
+            DefinitionStmt::DefPropStmt(stmt) => stmt.line_file.clone(),
+            DefinitionStmt::DefAbstractPropStmt(stmt) => stmt.line_file.clone(),
+            DefinitionStmt::DefSettingStmt(stmt) => stmt.line_file.clone(),
+            DefinitionStmt::DefTemplateStmt(stmt) => stmt.line_file.clone(),
+            DefinitionStmt::DefStructStmt(stmt) => stmt.line_file.clone(),
+            DefinitionStmt::DefAlgoStmt(stmt) => stmt.line_file.clone(),
+            DefinitionStmt::DefThmStmt(stmt) => stmt.line_file.clone(),
+            DefinitionStmt::AxiomStmt(stmt) => stmt.line_file.clone(),
+            DefinitionStmt::DefStrategyStmt(stmt) => stmt.line_file.clone(),
         }
     }
 
     pub fn stmt_type_name(&self) -> String {
         match self {
-            DefObjStmt::LetObjStmt(stmt) => stmt.stmt_type_name(),
-            DefObjStmt::HaveObjInNonemptySetStmt(stmt) => stmt.stmt_type_name(),
-            DefObjStmt::HaveObjEqualStmt(stmt) => stmt.stmt_type_name(),
-            DefObjStmt::HaveObjByExistFactsStmt(stmt) => stmt.stmt_type_name(),
-            DefObjStmt::ObtainObjFromExistFact(stmt) => stmt.stmt_type_name(),
-            DefObjStmt::ObtainObjFromAtomicFact(stmt) => stmt.stmt_type_name(),
-            DefObjStmt::ObtainObjFromThm(stmt) => stmt.stmt_type_name(),
-            DefObjStmt::HaveByPreimageStmt(stmt) => stmt.stmt_type_name(),
-            DefObjStmt::HaveFnEqualStmt(stmt) => stmt.stmt_type_name(),
-            DefObjStmt::HaveFnEqualCaseByCaseStmt(stmt) => stmt.stmt_type_name(),
-            DefObjStmt::HaveFnByInducStmt(stmt) => stmt.stmt_type_name(),
-            DefObjStmt::HaveFnByForallExistUniqueStmt(stmt) => stmt.stmt_type_name(),
-            DefObjStmt::HaveTupleStmt(stmt) => stmt.stmt_type_name(),
-            DefObjStmt::HaveCartStmt(stmt) => stmt.stmt_type_name(),
-            DefObjStmt::HaveSeqStmt(stmt) => stmt.stmt_type_name(),
-            DefObjStmt::HaveFiniteSeqStmt(stmt) => stmt.stmt_type_name(),
-            DefObjStmt::HaveMatrixStmt(stmt) => stmt.stmt_type_name(),
+            DefinitionStmt::LetObjStmt(stmt) => stmt.stmt_type_name(),
+            DefinitionStmt::HaveObjInNonemptySetStmt(stmt) => stmt.stmt_type_name(),
+            DefinitionStmt::HaveObjEqualStmt(stmt) => stmt.stmt_type_name(),
+            DefinitionStmt::HaveObjByExistFactsStmt(stmt) => stmt.stmt_type_name(),
+            DefinitionStmt::ObtainObjFromExistFact(stmt) => stmt.stmt_type_name(),
+            DefinitionStmt::ObtainObjFromAtomicFact(stmt) => stmt.stmt_type_name(),
+            DefinitionStmt::ObtainObjFromThm(stmt) => stmt.stmt_type_name(),
+            DefinitionStmt::HaveByPreimageStmt(stmt) => stmt.stmt_type_name(),
+            DefinitionStmt::HaveFnEqualStmt(stmt) => stmt.stmt_type_name(),
+            DefinitionStmt::HaveFnEqualCaseByCaseStmt(stmt) => stmt.stmt_type_name(),
+            DefinitionStmt::HaveFnByInducStmt(stmt) => stmt.stmt_type_name(),
+            DefinitionStmt::HaveFnByForallExistUniqueStmt(stmt) => stmt.stmt_type_name(),
+            DefinitionStmt::HaveTupleStmt(stmt) => stmt.stmt_type_name(),
+            DefinitionStmt::HaveCartStmt(stmt) => stmt.stmt_type_name(),
+            DefinitionStmt::HaveSeqStmt(stmt) => stmt.stmt_type_name(),
+            DefinitionStmt::HaveFiniteSeqStmt(stmt) => stmt.stmt_type_name(),
+            DefinitionStmt::HaveMatrixStmt(stmt) => stmt.stmt_type_name(),
+            DefinitionStmt::DefPropStmt(stmt) => stmt.stmt_type_name(),
+            DefinitionStmt::DefAbstractPropStmt(stmt) => stmt.stmt_type_name(),
+            DefinitionStmt::DefSettingStmt(stmt) => stmt.stmt_type_name(),
+            DefinitionStmt::DefTemplateStmt(stmt) => stmt.stmt_type_name(),
+            DefinitionStmt::DefStructStmt(stmt) => stmt.stmt_type_name(),
+            DefinitionStmt::DefAlgoStmt(stmt) => stmt.stmt_type_name(),
+            DefinitionStmt::DefThmStmt(stmt) => stmt.stmt_type_name(),
+            DefinitionStmt::AxiomStmt(stmt) => stmt.stmt_type_name(),
+            DefinitionStmt::DefStrategyStmt(stmt) => stmt.stmt_type_name(),
         }
     }
 
     pub fn output_type_string(&self) -> String {
         match self {
-            DefObjStmt::LetObjStmt(_) => LetObjStmt::output_type_string(),
-            DefObjStmt::HaveObjInNonemptySetStmt(_) => {
+            DefinitionStmt::LetObjStmt(_) => LetObjStmt::output_type_string(),
+            DefinitionStmt::HaveObjInNonemptySetStmt(_) => {
                 HaveObjInNonemptySetOrParamTypeStmt::output_type_string()
             }
-            DefObjStmt::HaveObjEqualStmt(_) => HaveObjEqualStmt::output_type_string(),
-            DefObjStmt::HaveObjByExistFactsStmt(_) => HaveObjByExistFactsStmt::output_type_string(),
-            DefObjStmt::ObtainObjFromExistFact(_) => ObtainObjFromExistFact::output_type_string(),
-            DefObjStmt::ObtainObjFromAtomicFact(_) => ObtainObjFromAtomicFact::output_type_string(),
-            DefObjStmt::ObtainObjFromThm(_) => ObtainObjFromThm::output_type_string(),
-            DefObjStmt::HaveByPreimageStmt(_) => HaveByPreimageStmt::output_type_string(),
-            DefObjStmt::HaveFnEqualStmt(_) => HaveFnEqualStmt::output_type_string(),
-            DefObjStmt::HaveFnEqualCaseByCaseStmt(_) => {
+            DefinitionStmt::HaveObjEqualStmt(_) => HaveObjEqualStmt::output_type_string(),
+            DefinitionStmt::HaveObjByExistFactsStmt(_) => {
+                HaveObjByExistFactsStmt::output_type_string()
+            }
+            DefinitionStmt::ObtainObjFromExistFact(_) => {
+                ObtainObjFromExistFact::output_type_string()
+            }
+            DefinitionStmt::ObtainObjFromAtomicFact(_) => {
+                ObtainObjFromAtomicFact::output_type_string()
+            }
+            DefinitionStmt::ObtainObjFromThm(_) => ObtainObjFromThm::output_type_string(),
+            DefinitionStmt::HaveByPreimageStmt(_) => HaveByPreimageStmt::output_type_string(),
+            DefinitionStmt::HaveFnEqualStmt(_) => HaveFnEqualStmt::output_type_string(),
+            DefinitionStmt::HaveFnEqualCaseByCaseStmt(_) => {
                 HaveFnEqualCaseByCaseStmt::output_type_string()
             }
-            DefObjStmt::HaveFnByInducStmt(_) => HaveFnByInducStmt::output_type_string(),
-            DefObjStmt::HaveFnByForallExistUniqueStmt(_) => {
+            DefinitionStmt::HaveFnByInducStmt(_) => HaveFnByInducStmt::output_type_string(),
+            DefinitionStmt::HaveFnByForallExistUniqueStmt(_) => {
                 HaveFnByForallExistUniqueStmt::output_type_string()
             }
-            DefObjStmt::HaveTupleStmt(_) => HaveTupleStmt::output_type_string(),
-            DefObjStmt::HaveCartStmt(_) => HaveCartStmt::output_type_string(),
-            DefObjStmt::HaveSeqStmt(_) => HaveSeqStmt::output_type_string(),
-            DefObjStmt::HaveFiniteSeqStmt(_) => HaveFiniteSeqStmt::output_type_string(),
-            DefObjStmt::HaveMatrixStmt(_) => HaveMatrixStmt::output_type_string(),
-        }
-    }
-}
-
-impl DefPredicateStmt {
-    pub fn line_file(&self) -> LineFile {
-        match self {
-            DefPredicateStmt::DefPropStmt(stmt) => stmt.line_file.clone(),
-            DefPredicateStmt::DefAbstractPropStmt(stmt) => stmt.line_file.clone(),
-        }
-    }
-
-    pub fn stmt_type_name(&self) -> String {
-        match self {
-            DefPredicateStmt::DefPropStmt(stmt) => stmt.stmt_type_name(),
-            DefPredicateStmt::DefAbstractPropStmt(stmt) => stmt.stmt_type_name(),
-        }
-    }
-
-    pub fn output_type_string(&self) -> String {
-        match self {
-            DefPredicateStmt::DefPropStmt(_) => DefPropStmt::output_type_string(),
-            DefPredicateStmt::DefAbstractPropStmt(_) => DefAbstractPropStmt::output_type_string(),
-        }
-    }
-}
-
-impl DefInterfaceStmt {
-    pub fn line_file(&self) -> LineFile {
-        match self {
-            DefInterfaceStmt::DefSettingStmt(stmt) => stmt.line_file.clone(),
-            DefInterfaceStmt::DefTemplateStmt(stmt) => stmt.line_file.clone(),
-            DefInterfaceStmt::DefStructStmt(stmt) => stmt.line_file.clone(),
-        }
-    }
-
-    pub fn stmt_type_name(&self) -> String {
-        match self {
-            DefInterfaceStmt::DefSettingStmt(stmt) => stmt.stmt_type_name(),
-            DefInterfaceStmt::DefTemplateStmt(stmt) => stmt.stmt_type_name(),
-            DefInterfaceStmt::DefStructStmt(stmt) => stmt.stmt_type_name(),
-        }
-    }
-
-    pub fn output_type_string(&self) -> String {
-        match self {
-            DefInterfaceStmt::DefSettingStmt(_) => DefSettingStmt::output_type_string(),
-            DefInterfaceStmt::DefTemplateStmt(_) => DefTemplateStmt::output_type_string(),
-            DefInterfaceStmt::DefStructStmt(_) => DefStructStmt::output_type_string(),
+            DefinitionStmt::HaveTupleStmt(_) => HaveTupleStmt::output_type_string(),
+            DefinitionStmt::HaveCartStmt(_) => HaveCartStmt::output_type_string(),
+            DefinitionStmt::HaveSeqStmt(_) => HaveSeqStmt::output_type_string(),
+            DefinitionStmt::HaveFiniteSeqStmt(_) => HaveFiniteSeqStmt::output_type_string(),
+            DefinitionStmt::HaveMatrixStmt(_) => HaveMatrixStmt::output_type_string(),
+            DefinitionStmt::DefPropStmt(_) => DefPropStmt::output_type_string(),
+            DefinitionStmt::DefAbstractPropStmt(_) => DefAbstractPropStmt::output_type_string(),
+            DefinitionStmt::DefSettingStmt(_) => DefSettingStmt::output_type_string(),
+            DefinitionStmt::DefTemplateStmt(_) => DefTemplateStmt::output_type_string(),
+            DefinitionStmt::DefStructStmt(_) => DefStructStmt::output_type_string(),
+            DefinitionStmt::DefAlgoStmt(_) => DefAlgoStmt::output_type_string(),
+            DefinitionStmt::DefThmStmt(_) => DefThmStmt::output_type_string(),
+            DefinitionStmt::AxiomStmt(_) => AxiomStmt::output_type_string(),
+            DefinitionStmt::DefStrategyStmt(_) => DefStrategyStmt::output_type_string(),
         }
     }
 }

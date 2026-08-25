@@ -146,7 +146,7 @@ impl Runtime {
             None,
         )?;
         Ok(ForallFact::new_canonical_forall(
-            ParamDefWithType::new(vec![ParamGroupWithParamType::new(
+            TypedParameterList::new(vec![TypedParameterGroup::new(
                 vec![inner],
                 ParamType::Obj(StandardSet::Z.into()),
             )]),
@@ -182,7 +182,7 @@ impl Runtime {
             None,
         )?;
         let inner_forall: Fact = ForallFact::new_canonical_forall(
-            ParamDefWithType::new(vec![ParamGroupWithParamType::new(
+            TypedParameterList::new(vec![TypedParameterGroup::new(
                 vec![inner],
                 ParamType::Obj(StandardSet::Z.into()),
             )]),
@@ -207,7 +207,7 @@ impl Runtime {
         )?;
 
         Ok(ForallFact::new_canonical_forall(
-            ParamDefWithType::new(vec![ParamGroupWithParamType::new(
+            TypedParameterList::new(vec![TypedParameterGroup::new(
                 vec![outer],
                 ParamType::Obj(StandardSet::Z.into()),
             )]),
@@ -225,7 +225,7 @@ impl Runtime {
         &mut self,
         stmt: &ByInducStmt,
     ) -> Result<SuccessInferResult, RuntimeError> {
-        let params_def = ParamDefWithType::new(vec![ParamGroupWithParamType::new(
+        let params_def = TypedParameterList::new(vec![TypedParameterGroup::new(
             vec![stmt.param_binding.clone()],
             ParamType::Obj(StandardSet::Z.into()),
         )]);
@@ -234,7 +234,7 @@ impl Runtime {
             .map_err(|e| {
                 short_exec_error(
                     stmt.clone().into(),
-                    "strong_induc: failed to declare induction parameter in proof".to_string(),
+                    "strong_induc: failed to bind induction parameter in proof".to_string(),
                     Some(e),
                     vec![],
                 )
@@ -367,7 +367,7 @@ impl Runtime {
         &mut self,
         stmt: &ByInducStmt,
     ) -> Result<SuccessInferResult, RuntimeError> {
-        let params_def = ParamDefWithType::new(vec![ParamGroupWithParamType::new(
+        let params_def = TypedParameterList::new(vec![TypedParameterGroup::new(
             vec![stmt.param_binding.clone()],
             ParamType::Obj(StandardSet::Z.into()),
         )]);
@@ -376,7 +376,7 @@ impl Runtime {
             .map_err(|e| {
                 short_exec_error(
                     stmt.clone().into(),
-                    "by induc: failed to declare induction parameter in proof".to_string(),
+                    "by induc: failed to bind induction parameter in proof".to_string(),
                     Some(e),
                     vec![],
                 )
@@ -444,7 +444,7 @@ impl Runtime {
             )?);
         }
         Ok(ForallFact::new_canonical_forall(
-            ParamDefWithType::new(vec![ParamGroupWithParamType::new(
+            TypedParameterList::new(vec![TypedParameterGroup::new(
                 vec![forall_name],
                 ParamType::Obj(StandardSet::Z.into()),
             )]),
@@ -617,7 +617,7 @@ impl Runtime {
         )?;
 
         let corresponding_forall_fact = ForallFact::new_canonical_forall(
-            ParamDefWithType::new(vec![ParamGroupWithParamType::new(
+            TypedParameterList::new(vec![TypedParameterGroup::new(
                 vec![forall_names[0].clone()],
                 ParamType::Obj(StandardSet::Z.into()),
             )]),
@@ -804,7 +804,7 @@ impl Runtime {
         &mut self,
         stmt: &ByInducStmt,
     ) -> Result<SuccessExecStructuredInducCaseContextResult, RuntimeError> {
-        let params_def = ParamDefWithType::new(vec![ParamGroupWithParamType::new(
+        let params_def = TypedParameterList::new(vec![TypedParameterGroup::new(
             vec![stmt.param_binding.clone()],
             ParamType::Obj(StandardSet::Z.into()),
         )]);
@@ -814,7 +814,7 @@ impl Runtime {
                 short_exec_error(
                     stmt.clone().into(),
                     format!(
-                        "{}: failed to declare induction parameter in base proof",
+                        "{}: failed to bind induction parameter in base proof",
                         Self::induc_stmt_error_prefix(stmt)
                     ),
                     Some(e),
