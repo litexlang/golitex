@@ -46,7 +46,7 @@ impl Runtime {
             rt.define_params_with_type(
                 &have_obj_equal_stmt.param_def,
                 false,
-                ParamObjType::Identifier,
+                BindingScope::DeclaredObject,
             )
             .map_err(|define_params_error| {
                 short_exec_error(
@@ -72,7 +72,7 @@ impl Runtime {
                 .inst_param_type(
                     &param_def.param_type,
                     &param_to_obj_map,
-                    ParamObjType::Identifier,
+                    SubstitutionMode::Named,
                 )
                 .map_err(|runtime_error| {
                     short_exec_error(
@@ -208,7 +208,7 @@ impl Runtime {
         let mut param_infer_result = if self.current_execution_is_trusted_file() {
             self.define_params_with_type_trusted(
                 &have_obj_equal_stmt.param_def,
-                ParamObjType::Identifier,
+                BindingScope::DeclaredObject,
             )
         } else {
             // `verify_process` has already proved each right-hand side is in
@@ -218,7 +218,7 @@ impl Runtime {
             self.define_params_with_type(
                 &have_obj_equal_stmt.param_def,
                 false,
-                ParamObjType::Identifier,
+                BindingScope::DeclaredObject,
             )
         }
         .map_err(|define_params_error| {

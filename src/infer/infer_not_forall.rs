@@ -30,7 +30,7 @@ impl Runtime {
 
         let source_bindings = forall.params_def_with_type.collect_param_bindings();
         let (exist_names, full_param_to_exist_obj) =
-            self.fresh_binder_retag_plan_for_bindings(&source_bindings, ParamObjType::Exist);
+            self.fresh_binder_retag_plan_for_bindings(&source_bindings);
         let mut param_to_exist_obj: HashMap<String, Obj> = HashMap::new();
         let mut exist_groups: Vec<ParamGroupWithParamType> = Vec::new();
         let mut name_index = 0;
@@ -38,7 +38,7 @@ impl Runtime {
             let param_type = self.inst_param_type(
                 &group.param_type,
                 &param_to_exist_obj,
-                ParamObjType::BinderRetag(BinderRetagSource::Forall),
+                SubstitutionMode::Exact,
             )?;
             let group_exist_names =
                 exist_names[name_index..name_index + group.params.len()].to_vec();
@@ -100,12 +100,8 @@ impl Runtime {
         fact: &Fact,
         param_to_exist_obj: &HashMap<String, Obj>,
     ) -> Result<Option<QuantifierFreeFact>, RuntimeError> {
-        let instantiated = self.inst_fact(
-            fact,
-            param_to_exist_obj,
-            ParamObjType::BinderRetag(BinderRetagSource::Forall),
-            None,
-        )?;
+        let instantiated =
+            self.inst_fact(fact, param_to_exist_obj, SubstitutionMode::Exact, None)?;
         Ok(match instantiated {
             Fact::AtomicFact(f) => Some(QuantifierFreeFact::AtomicFact(f)),
             Fact::AndFact(f) => Some(QuantifierFreeFact::AndFact(f)),
@@ -126,7 +122,7 @@ impl Runtime {
         let instantiated = self.inst_exist_or_and_chain_atomic_fact(
             fact,
             param_to_exist_obj,
-            ParamObjType::BinderRetag(BinderRetagSource::Forall),
+            SubstitutionMode::Exact,
             None,
         )?;
         Ok(match instantiated {

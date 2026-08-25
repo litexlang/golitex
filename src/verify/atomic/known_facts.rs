@@ -616,7 +616,7 @@ impl Runtime {
                 let mut changes_goal = false;
                 for argument in atomic_fact.args_ref().iter() {
                     let replaced =
-                        self.inst_obj(argument, &trial_substitution, ParamObjType::Forall)?;
+                        self.inst_obj(argument, &trial_substitution, SubstitutionMode::Exact)?;
                     if obj_equality_key(argument) != obj_equality_key(&replaced) {
                         changes_goal = true;
                         break;
@@ -653,7 +653,7 @@ impl Runtime {
         let equality_rewritten_args = atomic_fact
             .args_ref()
             .iter()
-            .map(|argument| self.inst_obj(argument, &substitutions, ParamObjType::Forall))
+            .map(|argument| self.inst_obj(argument, &substitutions, SubstitutionMode::Exact))
             .collect::<Result<Vec<_>, _>>()?;
         let Some(equality_rewritten_fact) =
             Self::atomic_fact_with_replaced_args(atomic_fact, equality_rewritten_args)

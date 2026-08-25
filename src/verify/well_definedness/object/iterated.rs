@@ -74,8 +74,7 @@ impl Runtime {
             return Ok(None);
         }
         let bindings = body.params_def_with_set.collect_param_bindings();
-        let rename_map =
-            self.visible_binding_conflict_rename_map(&bindings, ParamObjType::FnSet)?;
+        let rename_map = self.visible_binding_conflict_rename_map(&bindings)?;
         if !rename_map.is_empty() {
             body = self.alpha_rename_fn_set_body(&body, &rename_map)?;
         }
@@ -274,7 +273,7 @@ impl Runtime {
                     ))
                 })?;
             let parameter =
-                obj_for_bound_param_in_scope(&parameter_binding, ParamObjType::FnSet);
+                obj_for_bound_param_in_scope(&parameter_binding);
             let lower = QuantifierFreeFact::AtomicFact(
                 LessEqualFact::new(start.clone(), parameter.clone(), default_line_file()).into(),
             );
@@ -576,9 +575,13 @@ impl Runtime {
                 &anonymous.body.params_def_with_set,
                 &arguments,
             );
-            let body = self.inst_obj(&anonymous.equal_to, &substitutions, ParamObjType::FnSet)?;
-            let return_set =
-                self.inst_obj(&anonymous.body.ret_set, &substitutions, ParamObjType::FnSet)?;
+            let body =
+                self.inst_obj(&anonymous.equal_to, &substitutions, SubstitutionMode::Exact)?;
+            let return_set = self.inst_obj(
+                &anonymous.body.ret_set,
+                &substitutions,
+                SubstitutionMode::Exact,
+            )?;
             let membership: AtomicFact =
                 InFact::new(body.clone(), return_set.clone(), default_line_file()).into();
             let result = self.verify_atomic_fact(&membership, verify_state)?;
@@ -999,7 +1002,7 @@ impl Runtime {
         parameter_index: usize,
         verify_state: &ProofSearchState,
     ) -> Result<SuccessVerifyBinderPremiseResult, RuntimeError> {
-        self.store_parameter_binding(binding, ParamObjType::Forall)?;
+        self.store_parameter_binding(binding, BindingScope::LocalBinder)?;
         let proposition: Fact = InFact::new(parameter, carrier.clone(), default_line_file()).into();
         let well_definedness = self.verify_fact_well_defined_result(&proposition, verify_state)?;
         let Fact::AtomicFact(atomic) = proposition.clone() else {
@@ -1042,9 +1045,9 @@ impl Runtime {
             let x_name = runtime.generate_random_unused_name();
             let y_name = runtime.generate_random_unused_name();
             let z_name = runtime.generate_random_unused_name();
-            let (x_binding, x) = runtime.fresh_bound_param(x_name, ParamObjType::Forall)?;
-            let (y_binding, y) = runtime.fresh_bound_param(y_name, ParamObjType::Forall)?;
-            let (z_binding, z) = runtime.fresh_bound_param(z_name, ParamObjType::Forall)?;
+            let (x_binding, x) = runtime.fresh_bound_param(x_name)?;
+            let (y_binding, y) = runtime.fresh_bound_param(y_name)?;
+            let (z_binding, z) = runtime.fresh_bound_param(z_name)?;
             let parameters = vec![
                 runtime.bind_reduce_law_parameter_result(
                     &x_binding,
@@ -1764,7 +1767,7 @@ impl Runtime {
             return Ok(Some(self.inst_obj(
                 anonymous.equal_to.as_ref(),
                 &substitutions,
-                ParamObjType::FnSet,
+                SubstitutionMode::Exact,
             )?));
         }
         let application = self.reduce_callable_application_obj(function, args, "reduce")?;
@@ -1801,14 +1804,14 @@ impl Runtime {
             let x_name = rt.generate_random_unused_name();
             let y_name = rt.generate_random_unused_name();
             let z_name = rt.generate_random_unused_name();
-            let (x_binding, x) = rt.fresh_bound_param(x_name, ParamObjType::Forall)?;
-            let (y_binding, y) = rt.fresh_bound_param(y_name, ParamObjType::Forall)?;
-            let (z_binding, z) = rt.fresh_bound_param(z_name, ParamObjType::Forall)?;
+            let (x_binding, x) = rt.fresh_bound_param(x_name)?;
+            let (y_binding, y) = rt.fresh_bound_param(y_name)?;
+            let (z_binding, z) = rt.fresh_bound_param(z_name)?;
             let params = ParamDefWithType::new(vec![ParamGroupWithParamType::new(
                 vec![x_binding, y_binding, z_binding],
                 ParamType::Obj(carrier.clone()),
             )]);
-            rt.define_params_with_type(&params, false, ParamObjType::Forall)?;
+            rt.define_params_with_type(&params, false, BindingScope::LocalBinder)?;
 
             let Some(xy) = rt.instantiate_reduce_function_at(
                 &operation,
@@ -2076,15 +2079,14 @@ impl Runtime {
         }
 
         let bindings = body.params_def_with_set.collect_param_bindings();
-        let rename_map =
-            self.visible_binding_conflict_rename_map(&bindings, ParamObjType::FnSet)?;
+        let rename_map = self.visible_binding_conflict_rename_map(&bindings)?;
         if !rename_map.is_empty() {
             body = self.alpha_rename_fn_set_body(&body, &rename_map)?;
         }
 
         self.run_in_local_env(|rt| {
             for param in body.params_def_with_set.iter() {
-                rt.define_params_with_set_in_scope(param, ParamObjType::FnSet)?;
+                rt.define_params_with_set_in_scope(param, BindingScope::LocalBinder)?;
             }
             for domain_fact in body.dom_facts.iter() {
                 rt.store_quantifier_free_fact_with_well_defined_verification_and_infer(
@@ -2553,7 +2555,7 @@ impl Runtime {
         let end_c = end.clone();
         self.run_in_local_env(|rt| {
             for g in fs_body.params_def_with_set.iter() {
-                rt.define_params_with_set_in_scope(g, ParamObjType::FnSet)
+                rt.define_params_with_set_in_scope(g, BindingScope::LocalBinder)
                     .map_err(|e| {
                         RuntimeError::from(WellDefinedRuntimeError(
                             RuntimeErrorStruct::new_with_msg_and_cause(
@@ -2565,7 +2567,7 @@ impl Runtime {
                         ))
                     })?;
             }
-            let k = obj_for_bound_param_in_scope(param_binding, ParamObjType::FnSet);
+            let k = obj_for_bound_param_in_scope(param_binding);
             let le_lo = QuantifierFreeFact::AtomicFact(
                 LessEqualFact::new(start_c.clone(), k.clone(), default_line_file()).into(),
             );
@@ -2753,12 +2755,12 @@ impl Runtime {
         )?;
         self.run_in_local_env(|rt| {
             for g in af.body.params_def_with_set.iter() {
-                rt.define_params_with_set_in_scope(g, ParamObjType::FnSet)
+                rt.define_params_with_set_in_scope(g, BindingScope::LocalBinder)
                     .map_err(|e| {
                         RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new_with_msg_and_cause(format!("{op}: could not bind index parameter in local well-defined check"), e)))
                     })?;
             }
-            let k = obj_for_bound_param_in_scope(param_binding, ParamObjType::FnSet);
+            let k = obj_for_bound_param_in_scope(param_binding);
             let le_lo = QuantifierFreeFact::AtomicFact(
                 LessEqualFact::new(start.clone(), k.clone(), default_line_file()).into(),
             );
@@ -2900,9 +2902,13 @@ impl Runtime {
                 &anonymous.body.params_def_with_set,
                 &args,
             );
-            let body = self.inst_obj(&anonymous.equal_to, &substitutions, ParamObjType::FnSet)?;
-            let return_set =
-                self.inst_obj(&anonymous.body.ret_set, &substitutions, ParamObjType::FnSet)?;
+            let body =
+                self.inst_obj(&anonymous.equal_to, &substitutions, SubstitutionMode::Exact)?;
+            let return_set = self.inst_obj(
+                &anonymous.body.ret_set,
+                &substitutions,
+                SubstitutionMode::Exact,
+            )?;
             let return_membership: AtomicFact =
                 InFact::new(body.clone(), return_set.clone(), default_line_file()).into();
             let result = self.verify_atomic_fact(&return_membership, verify_state)?;
@@ -2932,7 +2938,7 @@ impl Runtime {
         };
         self.run_in_local_env(|rt| {
             for param in anonymous.body.params_def_with_set.iter() {
-                rt.define_params_with_set_in_scope(param, ParamObjType::FnSet)?;
+                rt.define_params_with_set_in_scope(param, BindingScope::LocalBinder)?;
             }
             let bindings = anonymous.body.params_def_with_set.collect_param_bindings();
             if let [binding] = bindings.as_slice() {
@@ -2945,7 +2951,7 @@ impl Runtime {
                         anonymous.body.ret_set.as_ref(),
                         verify_state,
                     )? {
-                        let param_obj = obj_for_bound_param_in_scope(binding, ParamObjType::FnSet);
+                        let param_obj = obj_for_bound_param_in_scope(binding);
                         let domain_membership: AtomicFact =
                             InFact::new(param_obj.clone(), param_set, default_line_file()).into();
                         if rt

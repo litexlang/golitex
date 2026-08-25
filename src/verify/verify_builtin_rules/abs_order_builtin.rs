@@ -298,7 +298,7 @@ impl Runtime {
         }
 
         let x_name = self.generate_random_unused_name();
-        let (x_binding, x_obj) = self.fresh_bound_param(x_name, ParamObjType::Forall)?;
+        let (x_binding, x_obj) = self.fresh_bound_param(x_name)?;
         let Some(left_inst) =
             self.instantiate_unary_anonymous_summand_at(left_sum.func.as_ref(), &x_obj)?
         else {
@@ -324,7 +324,7 @@ impl Runtime {
                 vec![x_binding],
                 ParamType::Obj(StandardSet::Z.into()),
             )]);
-            rt.define_params_with_type(&params_def, false, ParamObjType::Forall)?;
+            rt.define_params_with_type(&params_def, false, BindingScope::LocalBinder)?;
             rt.store_fact_without_forall_coverage_check_and_infer(dom_lo)?;
             rt.store_fact_without_forall_coverage_check_and_infer(dom_hi)?;
             rt.verify_atomic_fact_as_builtin_rule_premise(&pointwise_fact, builtin_state)
@@ -373,7 +373,7 @@ impl Runtime {
         }
 
         let x_name = self.generate_random_unused_name();
-        let (x_binding, x_obj) = self.fresh_bound_param(x_name, ParamObjType::Forall)?;
+        let (x_binding, x_obj) = self.fresh_bound_param(x_name)?;
         let Some(left_inst) = self.instantiate_unary_function_at(left_sum.func.as_ref(), &x_obj)?
         else {
             return Ok(None);
@@ -390,7 +390,7 @@ impl Runtime {
                 vec![x_binding],
                 ParamType::Obj(left_sum.set.as_ref().clone()),
             )]);
-            rt.define_params_with_type(&params_def, false, ParamObjType::Forall)?;
+            rt.define_params_with_type(&params_def, false, BindingScope::LocalBinder)?;
             rt.verify_atomic_fact_as_builtin_rule_premise(&pointwise_fact, builtin_state)
         })?;
         if !pointwise_result.is_success() {

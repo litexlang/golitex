@@ -86,7 +86,7 @@ impl Runtime {
         .into();
         let index_group =
             self.fresh_param_group_with_type(vec![index_name], ParamType::Obj(index_set))?;
-        let index_obj = obj_for_bound_param_in_scope(&index_group.params[0], ParamObjType::Forall);
+        let index_obj = obj_for_bound_param_in_scope(&index_group.params[0]);
         let coordinate_fact: AtomicFact = InFact::new(
             ObjAtIndex::new(in_fact.element.clone(), index_obj.clone()).into(),
             Proj::new(in_fact.set.clone(), index_obj).into(),

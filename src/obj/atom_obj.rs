@@ -1,4 +1,4 @@
-use super::free_param_obj::DefStructFieldFreeParamObj;
+use super::free_param_obj::BoundParamObj;
 use crate::prelude::*;
 use std::fmt;
 
@@ -7,16 +7,7 @@ use std::fmt;
 pub enum AtomObj {
     Identifier(Identifier),
     IdentifierWithMod(IdentifierWithMod),
-    Forall(ForallFreeParamObj),
-    Def(DefHeaderFreeParamObj),
-    Exist(ExistFreeParamObj),
-    SetBuilder(SetBuilderFreeParamObj),
-    FnSet(FnSetFreeParamObj),
-    Induc(ByInducFreeParamObj),
-    DefAlgo(DefAlgoFreeParamObj),
-    DefStructField(DefStructFieldFreeParamObj),
-    TupleIndex(TupleIndexFreeParamObj),
-    CartIndex(CartIndexFreeParamObj),
+    Bound(BoundParamObj),
 }
 
 impl fmt::Display for AtomObj {
@@ -24,16 +15,7 @@ impl fmt::Display for AtomObj {
         match self {
             AtomObj::Identifier(x) => write!(f, "{}", x),
             AtomObj::IdentifierWithMod(x) => write!(f, "{}", x),
-            AtomObj::Forall(x) => write!(f, "{}", x),
-            AtomObj::Def(x) => write!(f, "{}", x),
-            AtomObj::Exist(x) => write!(f, "{}", x),
-            AtomObj::SetBuilder(x) => write!(f, "{}", x),
-            AtomObj::FnSet(x) => write!(f, "{}", x),
-            AtomObj::Induc(x) => write!(f, "{}", x),
-            AtomObj::DefAlgo(x) => write!(f, "{}", x),
-            AtomObj::DefStructField(x) => write!(f, "{}", x),
-            AtomObj::TupleIndex(x) => write!(f, "{}", x),
-            AtomObj::CartIndex(x) => write!(f, "{}", x),
+            AtomObj::Bound(x) => write!(f, "{}", x),
         }
     }
 }
@@ -43,16 +25,7 @@ impl AtomObj {
         match self {
             AtomObj::Identifier(identifier) => identifier.symbol.as_ref(),
             AtomObj::IdentifierWithMod(identifier) => identifier.symbol.as_ref(),
-            AtomObj::Forall(param) => Some(&param.symbol),
-            AtomObj::Def(param) => Some(&param.symbol),
-            AtomObj::Exist(param) => Some(&param.symbol),
-            AtomObj::SetBuilder(param) => Some(&param.symbol),
-            AtomObj::FnSet(param) => Some(&param.symbol),
-            AtomObj::Induc(param) => Some(&param.symbol),
-            AtomObj::DefAlgo(param) => Some(&param.symbol),
-            AtomObj::DefStructField(param) => Some(&param.symbol),
-            AtomObj::TupleIndex(param) => Some(&param.symbol),
-            AtomObj::CartIndex(param) => Some(&param.symbol),
+            AtomObj::Bound(param) => Some(&param.symbol),
         }
     }
 
@@ -91,85 +64,13 @@ impl AtomObj {
                 };
                 AtomObj::IdentifierWithMod(renamed)
             }
-            AtomObj::Forall(p) => {
+            AtomObj::Bound(p) => {
                 let symbol = if p.name() == from {
                     p.symbol.with_display_name(to.to_string())
                 } else {
                     p.symbol
                 };
-                AtomObj::Forall(ForallFreeParamObj::new(symbol))
-            }
-            AtomObj::Def(p) => {
-                let symbol = if p.name() == from {
-                    p.symbol.with_display_name(to.to_string())
-                } else {
-                    p.symbol
-                };
-                AtomObj::Def(DefHeaderFreeParamObj::new(symbol))
-            }
-            AtomObj::Exist(p) => {
-                let symbol = if p.name() == from {
-                    p.symbol.with_display_name(to.to_string())
-                } else {
-                    p.symbol
-                };
-                AtomObj::Exist(ExistFreeParamObj::new(symbol))
-            }
-            AtomObj::SetBuilder(p) => {
-                let symbol = if p.name() == from {
-                    p.symbol.with_display_name(to.to_string())
-                } else {
-                    p.symbol
-                };
-                AtomObj::SetBuilder(SetBuilderFreeParamObj::new(symbol))
-            }
-            AtomObj::FnSet(p) => {
-                let symbol = if p.name() == from {
-                    p.symbol.with_display_name(to.to_string())
-                } else {
-                    p.symbol
-                };
-                AtomObj::FnSet(FnSetFreeParamObj::new(symbol))
-            }
-            AtomObj::Induc(p) => {
-                let symbol = if p.name() == from {
-                    p.symbol.with_display_name(to.to_string())
-                } else {
-                    p.symbol
-                };
-                AtomObj::Induc(ByInducFreeParamObj::new(symbol))
-            }
-            AtomObj::DefAlgo(p) => {
-                let symbol = if p.name() == from {
-                    p.symbol.with_display_name(to.to_string())
-                } else {
-                    p.symbol
-                };
-                AtomObj::DefAlgo(DefAlgoFreeParamObj::new(symbol))
-            }
-            AtomObj::DefStructField(p) => {
-                let symbol = if p.name() == from {
-                    p.symbol.with_display_name(to.to_string())
-                } else {
-                    p.symbol
-                };
-                AtomObj::DefStructField(DefStructFieldFreeParamObj::new(symbol))
-            }
-            AtomObj::TupleIndex(p) => {
-                let symbol = if p.name() == from {
-                    p.symbol.with_display_name(to.to_string())
-                } else {
-                    p.symbol
-                };
-                AtomObj::TupleIndex(TupleIndexFreeParamObj::new(symbol))
-            }
-            AtomObj::CartIndex(p) => {
-                let symbol = if p.name() == from {
-                    p.symbol.with_display_name(to.to_string())
-                } else {
-                    p.symbol
-                };
-                AtomObj::CartIndex(CartIndexFreeParamObj::new(symbol))
+                AtomObj::Bound(BoundParamObj::new(symbol))
             }
         }
     }

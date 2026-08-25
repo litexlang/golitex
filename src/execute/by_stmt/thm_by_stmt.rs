@@ -27,7 +27,7 @@ impl Runtime {
                 &forall_fact.params_def_with_type,
                 &stmt.args,
                 &verify_state,
-                ParamObjType::Forall,
+                SubstitutionMode::Exact,
             )
             .map_err(|e| {
                 short_exec_error(
@@ -68,7 +68,7 @@ impl Runtime {
                 .inst_fact(
                     dom_fact,
                     &param_to_arg_map,
-                    ParamObjType::TheoremInstantiation,
+                    SubstitutionMode::Theorem,
                     Some(stmt.line_file.clone()),
                 )
                 .map_err(|e| {
@@ -118,7 +118,7 @@ impl Runtime {
                 .inst_exist_or_and_chain_atomic_fact(
                     then_fact,
                     &param_to_arg_map,
-                    ParamObjType::TheoremInstantiation,
+                    SubstitutionMode::Theorem,
                     Some(&stmt.line_file),
                 )
                 .map_err(|e| {
@@ -209,7 +209,7 @@ impl Runtime {
                 .inst_exist_or_and_chain_atomic_fact(
                     then_fact,
                     &param_to_arg_map,
-                    ParamObjType::TheoremInstantiation,
+                    SubstitutionMode::Theorem,
                     Some(&stmt.line_file),
                 )
                 .map_err(|e| {
@@ -618,7 +618,7 @@ impl Runtime {
                 vec!["idx".to_string()],
                 ParamType::Obj(sequence_set),
             )?;
-            let index = obj_for_bound_param_in_scope(&index_group.params[0], ParamObjType::Exist);
+            let index = obj_for_bound_param_in_scope(&index_group.params[0]);
             let domain: Obj = ClosedRange::new(Number::new("1".to_string()).into(), size).into();
             let bijective: AtomicFact = NormalAtomicFact::new(
                 AtomicName::WithoutMod(BIJECTIVE.to_string()),
@@ -701,10 +701,8 @@ impl Runtime {
                 vec!["d".to_string()],
                 ParamType::Obj(StandardSet::NPos.into()),
             )?;
-            let numerator =
-                obj_for_bound_param_in_scope(&numerator_group.params[0], ParamObjType::Exist);
-            let denominator =
-                obj_for_bound_param_in_scope(&denominator_group.params[0], ParamObjType::Exist);
+            let numerator = obj_for_bound_param_in_scope(&numerator_group.params[0]);
+            let denominator = obj_for_bound_param_in_scope(&denominator_group.params[0]);
             let ratio: Obj = Div::new(numerator.clone(), denominator.clone()).into();
             let gcd: Obj = Gcd::new(numerator, denominator).into();
             let ratio_fact: AtomicFact =

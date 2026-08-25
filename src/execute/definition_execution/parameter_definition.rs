@@ -5,13 +5,13 @@ impl Runtime {
         &mut self,
         param_def: &ParamGroupWithSet,
     ) -> Result<SuccessInferResult, RuntimeError> {
-        self.define_params_with_set_in_scope(param_def, ParamObjType::FnSet)
+        self.define_params_with_set_in_scope(param_def, BindingScope::LocalBinder)
     }
 
     pub fn define_params_with_set_in_scope(
         &mut self,
         param_def: &ParamGroupWithSet,
-        binding_scope: ParamObjType,
+        binding_scope: BindingScope,
     ) -> Result<SuccessInferResult, RuntimeError> {
         if self.current_execution_is_trusted_file() {
             return self.define_params_with_set_in_scope_trusted(param_def, binding_scope);
@@ -34,7 +34,7 @@ impl Runtime {
                 )))
             })?;
         let mut infer_result = SuccessInferResult::new();
-        let facts = param_def.facts_for_binding_scope(binding_scope);
+        let facts = param_def.facts();
         for (binding, fact) in param_def.params.iter().zip(facts.iter()) {
             let name = binding.name();
             self.store_parameter_binding(binding, binding_scope)
@@ -77,10 +77,10 @@ impl Runtime {
     fn define_params_with_set_in_scope_trusted(
         &mut self,
         param_def: &ParamGroupWithSet,
-        binding_scope: ParamObjType,
+        binding_scope: BindingScope,
     ) -> Result<SuccessInferResult, RuntimeError> {
         let mut infer_result = SuccessInferResult::new();
-        let facts = param_def.facts_for_binding_scope(binding_scope);
+        let facts = param_def.facts();
         for (binding, fact) in param_def.params.iter().zip(facts.iter()) {
             let name = binding.name();
             self.store_parameter_binding(binding, binding_scope)

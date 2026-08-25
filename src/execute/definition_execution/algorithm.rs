@@ -44,10 +44,8 @@ impl Runtime {
                 ));
             }
         };
-        let (_, algo_param_to_forall_obj) = self.fresh_binder_retag_plan_for_bindings(
-            &def_algo_stmt.param_bindings,
-            ParamObjType::Forall,
-        );
+        let (_, algo_param_to_forall_obj) =
+            self.fresh_binder_retag_plan_for_bindings(&def_algo_stmt.param_bindings);
         let parameter_retagging = def_algo_stmt
             .param_bindings
             .iter()
@@ -152,7 +150,7 @@ impl Runtime {
                 self,
                 &fn_set_with_dom.params_def_with_set,
                 &args_for_algo_params,
-                ParamObjType::BinderRetag(BinderRetagSource::FnSet),
+                SubstitutionMode::Exact,
             )
             .map_err(|runtime_error| {
                 Self::def_algo_verify_exec_error_with_message_and_optional_cause(
@@ -203,10 +201,7 @@ impl Runtime {
                     Some(Obj::Atom(AtomObj::Identifier(identifier))) => {
                         mapped_param_names.push(identifier.name.clone());
                     }
-                    Some(Obj::Atom(AtomObj::FnSet(p))) => {
-                        mapped_param_names.push(p.name().to_string());
-                    }
-                    Some(Obj::Atom(AtomObj::Forall(p))) => {
+                    Some(Obj::Atom(AtomObj::Bound(p))) => {
                         mapped_param_names.push(p.name().to_string());
                     }
                     _ => {
@@ -224,7 +219,7 @@ impl Runtime {
                 self.inst_obj(
                     param_def_with_set.set_obj(),
                     &active_fn_set_param_map,
-                    ParamObjType::BinderRetag(BinderRetagSource::FnSet),
+                    SubstitutionMode::Exact,
                 )
                 .map_err(|runtime_error| {
                     Self::def_algo_verify_exec_error_with_message_and_optional_cause(
@@ -255,7 +250,7 @@ impl Runtime {
                 .inst_quantifier_free_fact(
                     dom_fact,
                     &fn_set_param_name_to_algo_arg_obj,
-                    ParamObjType::BinderRetag(BinderRetagSource::FnSet),
+                    SubstitutionMode::Exact,
                     None,
                 )
                 .map_err(|runtime_error| {
@@ -333,13 +328,13 @@ impl Runtime {
         let inst_condition = self.inst_atomic_fact(
             &algo_case.condition,
             algo_param_to_forall_obj,
-            ParamObjType::BinderRetag(BinderRetagSource::DefAlgo),
+            SubstitutionMode::Exact,
             None,
         )?;
         let inst_return_value = self.inst_obj(
             &algo_case.return_stmt.value,
             algo_param_to_forall_obj,
-            ParamObjType::BinderRetag(BinderRetagSource::DefAlgo),
+            SubstitutionMode::Exact,
         )?;
 
         let mut case_dom_facts: Vec<Fact> = Vec::with_capacity(requirement_dom_facts.len() + 1);
@@ -425,7 +420,7 @@ impl Runtime {
             let condition = self.inst_atomic_fact(
                 &algo_case.condition,
                 algo_param_to_forall_obj,
-                ParamObjType::BinderRetag(BinderRetagSource::DefAlgo),
+                SubstitutionMode::Exact,
                 None,
             )?;
             let negated_condition = condition.logical_negation().map_err(|runtime_error| {
@@ -443,7 +438,7 @@ impl Runtime {
         let return_value = self.inst_obj(
             &default_return.value,
             algo_param_to_forall_obj,
-            ParamObjType::BinderRetag(BinderRetagSource::DefAlgo),
+            SubstitutionMode::Exact,
         )?;
         let verification_fact: Fact = ForallFact::new_canonical_forall(
             algo_param_defs_with_type.clone(),
@@ -501,7 +496,7 @@ impl Runtime {
             let inst_condition = self.inst_atomic_fact(
                 &algo_case.condition,
                 algo_param_to_forall_obj,
-                ParamObjType::BinderRetag(BinderRetagSource::DefAlgo),
+                SubstitutionMode::Exact,
                 None,
             )?;
             case_conditions.push(inst_condition.into());

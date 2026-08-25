@@ -518,9 +518,9 @@ impl EnvironmentSummary {
         let mut summary = Self::default();
 
         summary.add_field_counts(
-            "defined_identifiers",
-            environment.declarations.defined_identifiers.len(),
-            environment.declarations.defined_identifiers.len(),
+            "symbols",
+            environment.declarations.symbols.len(),
+            environment.declarations.symbols.len(),
         );
         summary.add_field_counts(
             "defined_def_props",
@@ -804,7 +804,7 @@ impl EnvironmentSummary {
     fn add_category_counts(&mut self, environment: &Environment) {
         self.category_counts.insert(
             "objects".to_string(),
-            environment.declarations.defined_identifiers.len(),
+            environment.declarations.object_symbol_count(),
         );
         self.category_counts.insert(
             "props".to_string(),

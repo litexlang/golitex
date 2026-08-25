@@ -38,30 +38,13 @@ impl Runtime {
         &self,
         obj: &Obj,
         param_to_arg_map: &HashMap<String, Obj>,
-        param_obj_type: ParamObjType,
+        param_obj_type: SubstitutionMode,
     ) -> Result<Obj, RuntimeError> {
         if let Obj::Atom(atom) = obj {
             if let Some(symbol) = atom.symbol_ref() {
                 if let Some(replacement) = param_to_arg_map.get(&symbol.substitution_key()) {
                     return Ok(replacement.clone());
                 }
-                if param_obj_type == ParamObjType::FnSet {
-                    if let Some(replacement) = param_to_arg_map.get(symbol.display_name()) {
-                        return Ok(replacement.clone());
-                    }
-                }
-            }
-            match param_obj_type {
-                ParamObjType::AlphaRename => {
-                    return Ok(
-                        alpha_renamed_atom(atom, param_to_arg_map).unwrap_or_else(|| obj.clone())
-                    );
-                }
-                ParamObjType::BinderRetag(source) => {
-                    return Ok(binder_retagged_atom(atom, param_to_arg_map, source)
-                        .unwrap_or_else(|| obj.clone()));
-                }
-                _ => {}
             }
             if atom.symbol_ref().is_some() {
                 return Ok(obj.clone());
@@ -69,19 +52,20 @@ impl Runtime {
         }
         match obj {
             Obj::Atom(AtomObj::Identifier(inner)) => {
-                if param_obj_type == ParamObjType::Identifier {
+                if param_obj_type == SubstitutionMode::Named {
                     self.inst_identifier(inner, param_to_arg_map)
                 } else {
                     Ok(inner.clone().into())
                 }
             }
             Obj::Atom(AtomObj::IdentifierWithMod(inner)) => {
-                if param_obj_type == ParamObjType::Identifier {
+                if param_obj_type == SubstitutionMode::Named {
                     self.inst_identifier_with_mod(inner, param_to_arg_map)
                 } else {
                     Ok(inner.clone().into())
                 }
             }
+            Obj::Atom(AtomObj::Bound(param)) => Ok(param.clone().into()),
             Obj::FnObj(inner) => self.inst_fn_obj(inner, param_to_arg_map, param_obj_type),
             Obj::Number(inner) => self.inst_number(inner, param_to_arg_map, param_obj_type),
             Obj::ImaginaryUnit(inner) => Ok(inner.clone().into()),
@@ -309,88 +293,6 @@ impl Runtime {
                 )
                 .into())
             }
-            Obj::Atom(AtomObj::Forall(p)) => {
-                if param_obj_type == ParamObjType::Forall
-                    || param_obj_type == ParamObjType::TheoremInstantiation
-                {
-                    if let Some(obj) = param_to_arg_map.get(p.name()) {
-                        return Ok(obj.clone());
-                    }
-                }
-                Ok(p.clone().into())
-            }
-            Obj::Atom(AtomObj::Def(p)) => {
-                if param_obj_type == ParamObjType::DefHeader {
-                    if let Some(obj) = param_to_arg_map.get(p.name()) {
-                        return Ok(obj.clone());
-                    }
-                }
-                Ok(p.clone().into())
-            }
-            Obj::Atom(AtomObj::Exist(p)) => {
-                if param_obj_type == ParamObjType::Exist {
-                    if let Some(obj) = param_to_arg_map.get(p.name()) {
-                        return Ok(obj.clone());
-                    }
-                }
-                Ok(p.clone().into())
-            }
-            Obj::Atom(AtomObj::SetBuilder(p)) => {
-                if param_obj_type == ParamObjType::SetBuilder {
-                    if let Some(obj) = param_to_arg_map.get(p.name()) {
-                        return Ok(obj.clone());
-                    }
-                }
-                Ok(p.clone().into())
-            }
-            Obj::Atom(AtomObj::FnSet(p)) => {
-                if param_obj_type == ParamObjType::FnSet {
-                    if let Some(obj) = param_to_arg_map.get(p.name()) {
-                        return Ok(obj.clone());
-                    }
-                }
-                Ok(p.clone().into())
-            }
-            Obj::Atom(AtomObj::Induc(p)) => {
-                if param_obj_type == ParamObjType::Induc {
-                    if let Some(obj) = param_to_arg_map.get(p.name()) {
-                        return Ok(obj.clone());
-                    }
-                }
-                Ok(p.clone().into())
-            }
-            Obj::Atom(AtomObj::DefAlgo(p)) => {
-                if param_obj_type == ParamObjType::DefAlgo {
-                    if let Some(obj) = param_to_arg_map.get(p.name()) {
-                        return Ok(obj.clone());
-                    }
-                }
-                Ok(p.clone().into())
-            }
-            Obj::Atom(AtomObj::DefStructField(p)) => {
-                if param_obj_type == ParamObjType::DefStructField {
-                    if let Some(obj) = param_to_arg_map.get(p.name()) {
-                        return Ok(obj.clone());
-                    }
-                }
-                Ok(p.clone().into())
-            }
-            Obj::Atom(AtomObj::TupleIndex(p)) => {
-                if param_obj_type == ParamObjType::TupleIndex {
-                    if let Some(obj) = param_to_arg_map.get(p.name()) {
-                        return Ok(obj.clone());
-                    }
-                }
-                Ok(p.clone().into())
-            }
-            Obj::Atom(AtomObj::CartIndex(p)) => {
-                if param_obj_type == ParamObjType::CartIndex {
-                    if let Some(obj) = param_to_arg_map.get(p.name()) {
-                        return Ok(obj.clone());
-                    }
-                }
-                Ok(p.clone().into())
-            }
         }
     }
 
@@ -421,7 +323,7 @@ impl Runtime {
         &self,
         fn_obj: &FnObj,
         param_to_arg_map: &HashMap<String, Obj>,
-        param_obj_type: ParamObjType,
+        param_obj_type: SubstitutionMode,
     ) -> Result<Obj, RuntimeError> {
         let mut merged_body = Vec::with_capacity(fn_obj.body.len());
         for obj_vec in fn_obj.body.iter() {
@@ -442,16 +344,7 @@ impl Runtime {
         let final_head: FnObjHead = match inst_head {
             Obj::Atom(AtomObj::Identifier(x)) => FnObjHead::Identifier(x.clone()),
             Obj::Atom(AtomObj::IdentifierWithMod(x)) => FnObjHead::IdentifierWithMod(x.clone()),
-            Obj::Atom(AtomObj::Forall(p)) => p.clone().into(),
-            Obj::Atom(AtomObj::Def(p)) => p.clone().into(),
-            Obj::Atom(AtomObj::Exist(p)) => p.clone().into(),
-            Obj::Atom(AtomObj::SetBuilder(p)) => p.clone().into(),
-            Obj::Atom(AtomObj::FnSet(p)) => p.clone().into(),
-            Obj::Atom(AtomObj::Induc(p)) => p.clone().into(),
-            Obj::Atom(AtomObj::DefAlgo(p)) => p.clone().into(),
-            Obj::Atom(AtomObj::TupleIndex(p)) => p.clone().into(),
-            Obj::Atom(AtomObj::CartIndex(p)) => p.clone().into(),
-            Obj::Atom(AtomObj::DefStructField(x)) => FnObjHead::DefStructField(x.clone()),
+            Obj::Atom(AtomObj::Bound(p)) => p.clone().into(),
             Obj::AnonymousFn(a) => FnObjHead::AnonymousFnLiteral(Box::new(a)),
             Obj::InstantiatedTemplateObj(t) => FnObjHead::InstantiatedTemplateObj(t),
             Obj::FnObj(x) => {
@@ -482,7 +375,7 @@ impl Runtime {
             }
         };
 
-        if param_obj_type == ParamObjType::TheoremInstantiation {
+        if param_obj_type == SubstitutionMode::Theorem {
             if let FnObjHead::AnonymousFnLiteral(anonymous_fn) = &final_head {
                 let args: Vec<Obj> = merged_body
                     .iter()
@@ -500,7 +393,7 @@ impl Runtime {
                     return self.inst_obj(
                         anonymous_fn.equal_to.as_ref(),
                         &param_to_arg_map,
-                        ParamObjType::FnSet,
+                        SubstitutionMode::Exact,
                     );
                 }
             }
@@ -518,7 +411,7 @@ impl Runtime {
         &self,
         number: &Number,
         param_to_arg_map: &HashMap<String, Obj>,
-        param_obj_type: ParamObjType,
+        param_obj_type: SubstitutionMode,
     ) -> Result<Obj, RuntimeError> {
         _ = param_to_arg_map;
         _ = param_obj_type;
@@ -529,7 +422,7 @@ impl Runtime {
         &self,
         add: &Add,
         param_to_arg_map: &HashMap<String, Obj>,
-        param_obj_type: ParamObjType,
+        param_obj_type: SubstitutionMode,
     ) -> Result<Obj, RuntimeError> {
         let instantiated_left_obj = self.inst_obj(&add.left, param_to_arg_map, param_obj_type)?;
         let instantiated_right_obj = self.inst_obj(&add.right, param_to_arg_map, param_obj_type)?;
@@ -545,7 +438,7 @@ impl Runtime {
         &self,
         ma: &MatrixAdd,
         param_to_arg_map: &HashMap<String, Obj>,
-        param_obj_type: ParamObjType,
+        param_obj_type: SubstitutionMode,
     ) -> Result<Obj, RuntimeError> {
         let instantiated_left_obj = self.inst_obj(&ma.left, param_to_arg_map, param_obj_type)?;
         let instantiated_right_obj = self.inst_obj(&ma.right, param_to_arg_map, param_obj_type)?;
@@ -556,7 +449,7 @@ impl Runtime {
         &self,
         ms: &MatrixSub,
         param_to_arg_map: &HashMap<String, Obj>,
-        param_obj_type: ParamObjType,
+        param_obj_type: SubstitutionMode,
     ) -> Result<Obj, RuntimeError> {
         let l = self.inst_obj(&ms.left, param_to_arg_map, param_obj_type)?;
         let r = self.inst_obj(&ms.right, param_to_arg_map, param_obj_type)?;
@@ -567,7 +460,7 @@ impl Runtime {
         &self,
         mm: &MatrixMul,
         param_to_arg_map: &HashMap<String, Obj>,
-        param_obj_type: ParamObjType,
+        param_obj_type: SubstitutionMode,
     ) -> Result<Obj, RuntimeError> {
         let l = self.inst_obj(&mm.left, param_to_arg_map, param_obj_type)?;
         let r = self.inst_obj(&mm.right, param_to_arg_map, param_obj_type)?;
@@ -578,7 +471,7 @@ impl Runtime {
         &self,
         m: &MatrixScalarMul,
         param_to_arg_map: &HashMap<String, Obj>,
-        param_obj_type: ParamObjType,
+        param_obj_type: SubstitutionMode,
     ) -> Result<Obj, RuntimeError> {
         let s = self.inst_obj(&m.scalar, param_to_arg_map, param_obj_type)?;
         let mat = self.inst_obj(&m.matrix, param_to_arg_map, param_obj_type)?;
@@ -589,7 +482,7 @@ impl Runtime {
         &self,
         m: &MatrixPow,
         param_to_arg_map: &HashMap<String, Obj>,
-        param_obj_type: ParamObjType,
+        param_obj_type: SubstitutionMode,
     ) -> Result<Obj, RuntimeError> {
         let b = self.inst_obj(&m.base, param_to_arg_map, param_obj_type)?;
         let e = self.inst_obj(&m.exponent, param_to_arg_map, param_obj_type)?;
@@ -600,7 +493,7 @@ impl Runtime {
         &self,
         sub: &Sub,
         param_to_arg_map: &HashMap<String, Obj>,
-        param_obj_type: ParamObjType,
+        param_obj_type: SubstitutionMode,
     ) -> Result<Obj, RuntimeError> {
         let instantiated_left_obj = self.inst_obj(&sub.left, param_to_arg_map, param_obj_type)?;
         let instantiated_right_obj = self.inst_obj(&sub.right, param_to_arg_map, param_obj_type)?;
@@ -616,7 +509,7 @@ impl Runtime {
         &self,
         mul: &Mul,
         param_to_arg_map: &HashMap<String, Obj>,
-        param_obj_type: ParamObjType,
+        param_obj_type: SubstitutionMode,
     ) -> Result<Obj, RuntimeError> {
         let instantiated_left_obj = self.inst_obj(&mul.left, param_to_arg_map, param_obj_type)?;
         let instantiated_right_obj = self.inst_obj(&mul.right, param_to_arg_map, param_obj_type)?;
@@ -632,7 +525,7 @@ impl Runtime {
         &self,
         div: &Div,
         param_to_arg_map: &HashMap<String, Obj>,
-        param_obj_type: ParamObjType,
+        param_obj_type: SubstitutionMode,
     ) -> Result<Obj, RuntimeError> {
         Ok(Div::new_with_source_occurrence_id(
             self.inst_obj(&div.left, param_to_arg_map, param_obj_type)?,
@@ -646,7 +539,7 @@ impl Runtime {
         &self,
         mod_obj: &Mod,
         param_to_arg_map: &HashMap<String, Obj>,
-        param_obj_type: ParamObjType,
+        param_obj_type: SubstitutionMode,
     ) -> Result<Obj, RuntimeError> {
         let instantiated_left_obj =
             self.inst_obj(&mod_obj.left, param_to_arg_map, param_obj_type)?;
@@ -659,7 +552,7 @@ impl Runtime {
         &self,
         pow: &Pow,
         param_to_arg_map: &HashMap<String, Obj>,
-        param_obj_type: ParamObjType,
+        param_obj_type: SubstitutionMode,
     ) -> Result<Obj, RuntimeError> {
         let instantiated_base_obj = self.inst_obj(&pow.base, param_to_arg_map, param_obj_type)?;
         let instantiated_exponent_obj =
@@ -671,7 +564,7 @@ impl Runtime {
         &self,
         abs: &Abs,
         param_to_arg_map: &HashMap<String, Obj>,
-        param_obj_type: ParamObjType,
+        param_obj_type: SubstitutionMode,
     ) -> Result<Obj, RuntimeError> {
         Ok(Abs::new(self.inst_obj(&abs.arg, param_to_arg_map, param_obj_type)?).into())
     }
@@ -680,7 +573,7 @@ impl Runtime {
         &self,
         sqrt: &Sqrt,
         param_to_arg_map: &HashMap<String, Obj>,
-        param_obj_type: ParamObjType,
+        param_obj_type: SubstitutionMode,
     ) -> Result<Obj, RuntimeError> {
         Ok(Sqrt::new(self.inst_obj(&sqrt.arg, param_to_arg_map, param_obj_type)?).into())
     }
@@ -689,7 +582,7 @@ impl Runtime {
         &self,
         log: &Log,
         param_to_arg_map: &HashMap<String, Obj>,
-        param_obj_type: ParamObjType,
+        param_obj_type: SubstitutionMode,
     ) -> Result<Obj, RuntimeError> {
         Ok(Log::new(
             self.inst_obj(&log.base, param_to_arg_map, param_obj_type)?,
@@ -702,7 +595,7 @@ impl Runtime {
         &self,
         union: &Union,
         param_to_arg_map: &HashMap<String, Obj>,
-        param_obj_type: ParamObjType,
+        param_obj_type: SubstitutionMode,
     ) -> Result<Obj, RuntimeError> {
         Ok(Union::new(
             self.inst_obj(&union.left, param_to_arg_map, param_obj_type)?,
@@ -715,7 +608,7 @@ impl Runtime {
         &self,
         intersect: &Intersect,
         param_to_arg_map: &HashMap<String, Obj>,
-        param_obj_type: ParamObjType,
+        param_obj_type: SubstitutionMode,
     ) -> Result<Obj, RuntimeError> {
         Ok(Intersect::new(
             self.inst_obj(&intersect.left, param_to_arg_map, param_obj_type)?,
@@ -728,7 +621,7 @@ impl Runtime {
         &self,
         set_minus: &SetMinus,
         param_to_arg_map: &HashMap<String, Obj>,
-        param_obj_type: ParamObjType,
+        param_obj_type: SubstitutionMode,
     ) -> Result<Obj, RuntimeError> {
         Ok(SetMinus::new(
             self.inst_obj(&set_minus.left, param_to_arg_map, param_obj_type)?,
@@ -741,7 +634,7 @@ impl Runtime {
         &self,
         big_union: &BigUnion,
         param_to_arg_map: &HashMap<String, Obj>,
-        param_obj_type: ParamObjType,
+        param_obj_type: SubstitutionMode,
     ) -> Result<Obj, RuntimeError> {
         Ok(BigUnion::new(self.inst_obj(&big_union.left, param_to_arg_map, param_obj_type)?).into())
     }
@@ -750,7 +643,7 @@ impl Runtime {
         &self,
         big_intersect: &BigIntersect,
         param_to_arg_map: &HashMap<String, Obj>,
-        param_obj_type: ParamObjType,
+        param_obj_type: SubstitutionMode,
     ) -> Result<Obj, RuntimeError> {
         Ok(BigIntersect::new(self.inst_obj(
             &big_intersect.left,
@@ -764,7 +657,7 @@ impl Runtime {
         &self,
         index_union: &IndexUnion,
         param_to_arg_map: &HashMap<String, Obj>,
-        param_obj_type: ParamObjType,
+        param_obj_type: SubstitutionMode,
     ) -> Result<Obj, RuntimeError> {
         Ok(IndexUnion::new(
             self.inst_obj(&index_union.index_set, param_to_arg_map, param_obj_type)?,
@@ -778,7 +671,7 @@ impl Runtime {
         &self,
         index_intersect: &IndexIntersect,
         param_to_arg_map: &HashMap<String, Obj>,
-        param_obj_type: ParamObjType,
+        param_obj_type: SubstitutionMode,
     ) -> Result<Obj, RuntimeError> {
         Ok(IndexIntersect::new(
             self.inst_obj(&index_intersect.index_set, param_to_arg_map, param_obj_type)?,
@@ -796,7 +689,7 @@ impl Runtime {
         &self,
         power_set: &PowerSet,
         param_to_arg_map: &HashMap<String, Obj>,
-        param_obj_type: ParamObjType,
+        param_obj_type: SubstitutionMode,
     ) -> Result<Obj, RuntimeError> {
         Ok(PowerSet::new(self.inst_obj(&power_set.set, param_to_arg_map, param_obj_type)?).into())
     }
@@ -805,7 +698,7 @@ impl Runtime {
         &self,
         list_set: &ListSet,
         param_to_arg_map: &HashMap<String, Obj>,
-        param_obj_type: ParamObjType,
+        param_obj_type: SubstitutionMode,
     ) -> Result<Obj, RuntimeError> {
         let mut list = Vec::with_capacity(list_set.list.len());
         for obj in list_set.list.iter() {
@@ -822,11 +715,10 @@ impl Runtime {
         &self,
         set_builder: &SetBuilder,
         param_to_arg_map: &HashMap<String, Obj>,
-        param_obj_type: ParamObjType,
+        param_obj_type: SubstitutionMode,
     ) -> Result<Obj, RuntimeError> {
         let target: Obj = set_builder.clone().into();
         let rename_map = self.capture_avoiding_obj_binder_rename_map(
-            ParamObjType::SetBuilder,
             std::slice::from_ref(&set_builder.param_binding),
             &target,
             param_to_arg_map,
@@ -837,16 +729,13 @@ impl Runtime {
             param_to_arg_map,
             param_obj_type,
         )?;
-        let restore_map =
-            safe_obj_binder_restore_map(&instantiated, &rename_map, ParamObjType::SetBuilder);
+        let restore_map = safe_obj_binder_restore_map(&instantiated, &rename_map);
         let Obj::SetBuilder(instantiated) = instantiated else {
             unreachable!("set-builder instantiation must return a set builder");
         };
         let restored = self.alpha_rename_set_builder(&instantiated, &restore_map)?;
-        let visible_rename_map = self.visible_binding_conflict_rename_map(
-            std::slice::from_ref(&restored.param_binding),
-            ParamObjType::SetBuilder,
-        )?;
+        let visible_rename_map = self
+            .visible_binding_conflict_rename_map(std::slice::from_ref(&restored.param_binding))?;
         Ok(self
             .alpha_rename_set_builder(&restored, &visible_rename_map)?
             .into())
@@ -856,16 +745,12 @@ impl Runtime {
         &self,
         set_builder: &SetBuilder,
         param_to_arg_map: &HashMap<String, Obj>,
-        param_obj_type: ParamObjType,
+        param_obj_type: SubstitutionMode,
     ) -> Result<Obj, RuntimeError> {
-        let filtered_param_to_arg_map = if param_obj_type == ParamObjType::SetBuilder {
-            remove_param_bindings_from_param_to_arg_map(
-                param_to_arg_map,
-                std::slice::from_ref(&set_builder.param_binding),
-            )
-        } else {
-            param_to_arg_map.clone()
-        };
+        let filtered_param_to_arg_map = remove_param_bindings_from_param_to_arg_map(
+            param_to_arg_map,
+            std::slice::from_ref(&set_builder.param_binding),
+        );
         let mut facts = Vec::with_capacity(set_builder.facts.len());
         for fact in set_builder.facts.iter() {
             facts.push(self.inst_quantifier_free_fact(
@@ -891,7 +776,7 @@ impl Runtime {
         &self,
         general_cart: &GeneralCart,
         param_to_arg_map: &HashMap<String, Obj>,
-        param_obj_type: ParamObjType,
+        param_obj_type: SubstitutionMode,
     ) -> Result<Obj, RuntimeError> {
         Ok(GeneralCart::new(
             self.inst_obj(&general_cart.index_set, param_to_arg_map, param_obj_type)?,
@@ -905,7 +790,7 @@ impl Runtime {
         &self,
         fn_set_with_params: &FnSet,
         param_to_arg_map: &HashMap<String, Obj>,
-        param_obj_type: ParamObjType,
+        param_obj_type: SubstitutionMode,
     ) -> Result<Obj, RuntimeError> {
         let param_bindings = fn_set_with_params
             .body
@@ -914,27 +799,21 @@ impl Runtime {
             .flat_map(|group| group.params.iter().cloned())
             .collect::<Vec<_>>();
         let target: Obj = fn_set_with_params.clone().into();
-        let rename_map = self.capture_avoiding_obj_binder_rename_map(
-            ParamObjType::FnSet,
-            &param_bindings,
-            &target,
-            param_to_arg_map,
-        );
+        let rename_map =
+            self.capture_avoiding_obj_binder_rename_map(&param_bindings, &target, param_to_arg_map);
         let renamed_fn_set = self.alpha_rename_fn_set(fn_set_with_params, &rename_map)?;
         let instantiated = self.inst_fn_set_without_capture_preparation(
             &renamed_fn_set,
             param_to_arg_map,
             param_obj_type,
         )?;
-        let restore_map =
-            safe_obj_binder_restore_map(&instantiated, &rename_map, ParamObjType::FnSet);
+        let restore_map = safe_obj_binder_restore_map(&instantiated, &rename_map);
         let Obj::FnSet(instantiated) = instantiated else {
             unreachable!("function-set instantiation must return a function set");
         };
         let restored = self.alpha_rename_fn_set(&instantiated, &restore_map)?;
         let restored_bindings = restored.body.params_def_with_set.collect_param_bindings();
-        let visible_rename_map =
-            self.visible_binding_conflict_rename_map(&restored_bindings, ParamObjType::FnSet)?;
+        let visible_rename_map = self.visible_binding_conflict_rename_map(&restored_bindings)?;
         Ok(self
             .alpha_rename_fn_set(&restored, &visible_rename_map)?
             .into())
@@ -944,17 +823,14 @@ impl Runtime {
         &self,
         fn_set_with_params: &FnSet,
         param_to_arg_map: &HashMap<String, Obj>,
-        param_obj_type: ParamObjType,
+        param_obj_type: SubstitutionMode,
     ) -> Result<Obj, RuntimeError> {
         let param_bindings = fn_set_with_params
             .body
             .params_def_with_set
             .collect_param_bindings();
-        let filtered_param_to_arg_map = if param_obj_type == ParamObjType::FnSet {
-            remove_param_bindings_from_param_to_arg_map(param_to_arg_map, &param_bindings)
-        } else {
-            param_to_arg_map.clone()
-        };
+        let filtered_param_to_arg_map =
+            remove_param_bindings_from_param_to_arg_map(param_to_arg_map, &param_bindings);
         let mut params_def_with_set =
             Vec::with_capacity(fn_set_with_params.body.params_def_with_set.len());
         for param_def_with_set in fn_set_with_params.body.params_def_with_set.iter() {
@@ -992,7 +868,7 @@ impl Runtime {
         &self,
         af: &AnonymousFn,
         param_to_arg_map: &HashMap<String, Obj>,
-        param_obj_type: ParamObjType,
+        param_obj_type: SubstitutionMode,
     ) -> Result<Obj, RuntimeError> {
         let param_bindings = af
             .body
@@ -1001,27 +877,21 @@ impl Runtime {
             .flat_map(|group| group.params.iter().cloned())
             .collect::<Vec<_>>();
         let target: Obj = af.clone().into();
-        let rename_map = self.capture_avoiding_obj_binder_rename_map(
-            ParamObjType::FnSet,
-            &param_bindings,
-            &target,
-            param_to_arg_map,
-        );
+        let rename_map =
+            self.capture_avoiding_obj_binder_rename_map(&param_bindings, &target, param_to_arg_map);
         let renamed_anonymous_fn = self.alpha_rename_anonymous_fn(af, &rename_map)?;
         let instantiated = self.inst_anonymous_fn_without_capture_preparation(
             &renamed_anonymous_fn,
             param_to_arg_map,
             param_obj_type,
         )?;
-        let restore_map =
-            safe_obj_binder_restore_map(&instantiated, &rename_map, ParamObjType::FnSet);
+        let restore_map = safe_obj_binder_restore_map(&instantiated, &rename_map);
         let Obj::AnonymousFn(instantiated) = instantiated else {
             unreachable!("anonymous-function instantiation must return an anonymous function");
         };
         let restored = self.alpha_rename_anonymous_fn(&instantiated, &restore_map)?;
         let restored_bindings = restored.body.params_def_with_set.collect_param_bindings();
-        let visible_rename_map =
-            self.visible_binding_conflict_rename_map(&restored_bindings, ParamObjType::FnSet)?;
+        let visible_rename_map = self.visible_binding_conflict_rename_map(&restored_bindings)?;
         Ok(self
             .alpha_rename_anonymous_fn(&restored, &visible_rename_map)?
             .into())
@@ -1031,14 +901,11 @@ impl Runtime {
         &self,
         af: &AnonymousFn,
         param_to_arg_map: &HashMap<String, Obj>,
-        param_obj_type: ParamObjType,
+        param_obj_type: SubstitutionMode,
     ) -> Result<Obj, RuntimeError> {
         let param_bindings = af.body.params_def_with_set.collect_param_bindings();
-        let filtered_param_to_arg_map = if param_obj_type == ParamObjType::FnSet {
-            remove_param_bindings_from_param_to_arg_map(param_to_arg_map, &param_bindings)
-        } else {
-            param_to_arg_map.clone()
-        };
+        let filtered_param_to_arg_map =
+            remove_param_bindings_from_param_to_arg_map(param_to_arg_map, &param_bindings);
         let mut params_def_with_set = Vec::with_capacity(af.body.params_def_with_set.len());
         for param_def_with_set in af.body.params_def_with_set.iter() {
             params_def_with_set.push(ParamGroupWithSet::new(
@@ -1082,18 +949,17 @@ impl Runtime {
 
     fn capture_avoiding_obj_binder_rename_map(
         &self,
-        binder_kind: ParamObjType,
         binder_bindings: &[SymbolBinding],
         target: &Obj,
         param_to_arg_map: &HashMap<String, Obj>,
     ) -> HashMap<String, Obj> {
         let mut replacement_names = std::collections::HashSet::new();
         for replacement in param_to_arg_map.values() {
-            replacement_names.extend(replacement.collect_param_obj_names(binder_kind));
+            replacement_names.extend(replacement.collect_bound_param_names());
         }
 
         let mut reserved_names = replacement_names.clone();
-        reserved_names.extend(target.collect_param_obj_names(binder_kind));
+        reserved_names.extend(target.collect_bound_param_names());
         let mut rename_map = HashMap::new();
         for binding in binder_bindings {
             if !replacement_names.contains(binding.name()) {
@@ -1107,7 +973,7 @@ impl Runtime {
             insert_symbol_substitution(
                 &mut rename_map,
                 binding,
-                obj_for_bound_param_in_scope(&fresh_binding, binder_kind),
+                obj_for_bound_param_in_scope(&fresh_binding),
             );
         }
         rename_map
@@ -1126,20 +992,16 @@ impl Runtime {
             facts.push(self.inst_quantifier_free_fact(
                 fact,
                 rename_map,
-                ParamObjType::AlphaRename,
+                SubstitutionMode::Exact,
                 None,
             )?);
         }
         SetBuilder::new(
-            renamed_bound_param_binding(
-                &set_builder.param_binding,
-                rename_map,
-                ParamObjType::SetBuilder,
-            ),
+            renamed_bound_param_binding(&set_builder.param_binding, rename_map),
             self.inst_obj(
                 set_builder.param_set.as_ref(),
                 rename_map,
-                ParamObjType::AlphaRename,
+                SubstitutionMode::Exact,
             )?,
             facts,
         )
@@ -1173,7 +1035,7 @@ impl Runtime {
             self.inst_obj(
                 anonymous_fn.equal_to.as_ref(),
                 rename_map,
-                ParamObjType::AlphaRename,
+                SubstitutionMode::Exact,
             )?,
             anonymous_fn.source_occurrence_id,
         )
@@ -1182,7 +1044,6 @@ impl Runtime {
     pub fn visible_binding_conflict_rename_map(
         &self,
         bindings: &[SymbolBinding],
-        target_kind: ParamObjType,
     ) -> Result<HashMap<String, Obj>, RuntimeError> {
         let mut rename_map = HashMap::new();
         for binding in bindings {
@@ -1196,7 +1057,7 @@ impl Runtime {
             insert_symbol_substitution(
                 &mut rename_map,
                 binding,
-                obj_for_bound_param_in_scope(&fresh, target_kind),
+                obj_for_bound_param_in_scope(&fresh),
             );
         }
         Ok(rename_map)
@@ -1210,17 +1071,12 @@ impl Runtime {
         let mut params_def_with_set = Vec::with_capacity(body.params_def_with_set.len());
         let mut active_rename_map = HashMap::new();
         for group in body.params_def_with_set.iter() {
-            let param_set = self.inst_obj(
-                group.set_obj(),
-                &active_rename_map,
-                ParamObjType::AlphaRename,
-            )?;
+            let param_set =
+                self.inst_obj(group.set_obj(), &active_rename_map, SubstitutionMode::Exact)?;
             let params = group
                 .params
                 .iter()
-                .map(|binding| {
-                    renamed_bound_param_binding(binding, rename_map, ParamObjType::FnSet)
-                })
+                .map(|binding| renamed_bound_param_binding(binding, rename_map))
                 .collect::<Vec<_>>();
             params_def_with_set.push(ParamGroupWithSet::new(params, param_set));
             for binding in group.params.iter() {
@@ -1238,14 +1094,14 @@ impl Runtime {
             dom_facts.push(self.inst_quantifier_free_fact(
                 fact,
                 rename_map,
-                ParamObjType::AlphaRename,
+                SubstitutionMode::Exact,
                 None,
             )?);
         }
         Ok(FnSetBody::new(
             params_def_with_set,
             dom_facts,
-            self.inst_obj(body.ret_set.as_ref(), rename_map, ParamObjType::AlphaRename)?,
+            self.inst_obj(body.ret_set.as_ref(), rename_map, SubstitutionMode::Exact)?,
         ))
     }
 
@@ -1253,7 +1109,7 @@ impl Runtime {
         &self,
         cart: &Cart,
         param_to_arg_map: &HashMap<String, Obj>,
-        param_obj_type: ParamObjType,
+        param_obj_type: SubstitutionMode,
     ) -> Result<Obj, RuntimeError> {
         let mut args = Vec::with_capacity(cart.args.len());
         for arg in cart.args.iter() {
@@ -1266,7 +1122,7 @@ impl Runtime {
         &self,
         cart_dim: &CartDim,
         param_to_arg_map: &HashMap<String, Obj>,
-        param_obj_type: ParamObjType,
+        param_obj_type: SubstitutionMode,
     ) -> Result<Obj, RuntimeError> {
         Ok(CartDim::new(self.inst_obj(&cart_dim.set, param_to_arg_map, param_obj_type)?).into())
     }
@@ -1275,7 +1131,7 @@ impl Runtime {
         &self,
         proj: &Proj,
         param_to_arg_map: &HashMap<String, Obj>,
-        param_obj_type: ParamObjType,
+        param_obj_type: SubstitutionMode,
     ) -> Result<Obj, RuntimeError> {
         Ok(Proj::new(
             self.inst_obj(&proj.set, param_to_arg_map, param_obj_type)?,
@@ -1288,7 +1144,7 @@ impl Runtime {
         &self,
         tuple_dim: &TupleDim,
         param_to_arg_map: &HashMap<String, Obj>,
-        param_obj_type: ParamObjType,
+        param_obj_type: SubstitutionMode,
     ) -> Result<Obj, RuntimeError> {
         Ok(TupleDim::new(self.inst_obj(&tuple_dim.arg, param_to_arg_map, param_obj_type)?).into())
     }
@@ -1297,7 +1153,7 @@ impl Runtime {
         &self,
         tuple: &Tuple,
         param_to_arg_map: &HashMap<String, Obj>,
-        param_obj_type: ParamObjType,
+        param_obj_type: SubstitutionMode,
     ) -> Result<Obj, RuntimeError> {
         let mut elements = Vec::with_capacity(tuple.args.len());
         for element in tuple.args.iter() {
@@ -1310,7 +1166,7 @@ impl Runtime {
         &self,
         finite_set_size: &FiniteSetSize,
         param_to_arg_map: &HashMap<String, Obj>,
-        param_obj_type: ParamObjType,
+        param_obj_type: SubstitutionMode,
     ) -> Result<Obj, RuntimeError> {
         Ok(FiniteSetSize::new(self.inst_obj(
             &finite_set_size.set,
@@ -1324,7 +1180,7 @@ impl Runtime {
         &self,
         finite_set_max: &FiniteSetMax,
         param_to_arg_map: &HashMap<String, Obj>,
-        param_obj_type: ParamObjType,
+        param_obj_type: SubstitutionMode,
     ) -> Result<Obj, RuntimeError> {
         Ok(FiniteSetMax::new(self.inst_obj(
             &finite_set_max.set,
@@ -1338,7 +1194,7 @@ impl Runtime {
         &self,
         finite_set_min: &FiniteSetMin,
         param_to_arg_map: &HashMap<String, Obj>,
-        param_obj_type: ParamObjType,
+        param_obj_type: SubstitutionMode,
     ) -> Result<Obj, RuntimeError> {
         Ok(FiniteSetMin::new(self.inst_obj(
             &finite_set_min.set,
@@ -1352,7 +1208,7 @@ impl Runtime {
         &self,
         fn_range: &FnRange,
         param_to_arg_map: &HashMap<String, Obj>,
-        param_obj_type: ParamObjType,
+        param_obj_type: SubstitutionMode,
     ) -> Result<Obj, RuntimeError> {
         Ok(
             FnRange::new(self.inst_obj(&fn_range.function, param_to_arg_map, param_obj_type)?)
@@ -1364,7 +1220,7 @@ impl Runtime {
         &self,
         replacement: &Replacement,
         param_to_arg_map: &HashMap<String, Obj>,
-        param_obj_type: ParamObjType,
+        param_obj_type: SubstitutionMode,
     ) -> Result<Obj, RuntimeError> {
         Ok(Replacement::new(
             replacement.prop_name.clone(),
@@ -1377,7 +1233,7 @@ impl Runtime {
         &self,
         sum: &Sum,
         param_to_arg_map: &HashMap<String, Obj>,
-        param_obj_type: ParamObjType,
+        param_obj_type: SubstitutionMode,
     ) -> Result<Obj, RuntimeError> {
         Ok(Sum::new(
             self.inst_obj(&sum.start, param_to_arg_map, param_obj_type)?,
@@ -1391,7 +1247,7 @@ impl Runtime {
         &self,
         sum: &SumOfFiniteSet,
         param_to_arg_map: &HashMap<String, Obj>,
-        param_obj_type: ParamObjType,
+        param_obj_type: SubstitutionMode,
     ) -> Result<Obj, RuntimeError> {
         Ok(SumOfFiniteSet::new(
             self.inst_obj(&sum.set, param_to_arg_map, param_obj_type)?,
@@ -1404,7 +1260,7 @@ impl Runtime {
         &self,
         product: &Product,
         param_to_arg_map: &HashMap<String, Obj>,
-        param_obj_type: ParamObjType,
+        param_obj_type: SubstitutionMode,
     ) -> Result<Obj, RuntimeError> {
         Ok(Product::new(
             self.inst_obj(&product.start, param_to_arg_map, param_obj_type)?,
@@ -1418,7 +1274,7 @@ impl Runtime {
         &self,
         product: &ProductOfFiniteSet,
         param_to_arg_map: &HashMap<String, Obj>,
-        param_obj_type: ParamObjType,
+        param_obj_type: SubstitutionMode,
     ) -> Result<Obj, RuntimeError> {
         Ok(ProductOfFiniteSet::new(
             self.inst_obj(&product.set, param_to_arg_map, param_obj_type)?,
@@ -1431,7 +1287,7 @@ impl Runtime {
         &self,
         reduce: &Reduce,
         param_to_arg_map: &HashMap<String, Obj>,
-        param_obj_type: ParamObjType,
+        param_obj_type: SubstitutionMode,
     ) -> Result<Obj, RuntimeError> {
         Ok(Reduce::new(
             self.inst_obj(&reduce.start, param_to_arg_map, param_obj_type)?,
@@ -1447,7 +1303,7 @@ impl Runtime {
         &self,
         reduce: &FiniteSetReduce,
         param_to_arg_map: &HashMap<String, Obj>,
-        param_obj_type: ParamObjType,
+        param_obj_type: SubstitutionMode,
     ) -> Result<Obj, RuntimeError> {
         Ok(FiniteSetReduce::new(
             self.inst_obj(&reduce.set, param_to_arg_map, param_obj_type)?,
@@ -1462,7 +1318,7 @@ impl Runtime {
         &self,
         range: &Range,
         param_to_arg_map: &HashMap<String, Obj>,
-        param_obj_type: ParamObjType,
+        param_obj_type: SubstitutionMode,
     ) -> Result<Obj, RuntimeError> {
         Ok(Range::new(
             self.inst_obj(&range.start, param_to_arg_map, param_obj_type)?,
@@ -1475,7 +1331,7 @@ impl Runtime {
         &self,
         closed_range: &ClosedRange,
         param_to_arg_map: &HashMap<String, Obj>,
-        param_obj_type: ParamObjType,
+        param_obj_type: SubstitutionMode,
     ) -> Result<Obj, RuntimeError> {
         Ok(ClosedRange::new(
             self.inst_obj(&closed_range.start, param_to_arg_map, param_obj_type)?,
@@ -1488,7 +1344,7 @@ impl Runtime {
         &self,
         interval: &IntervalObj,
         param_to_arg_map: &HashMap<String, Obj>,
-        param_obj_type: ParamObjType,
+        param_obj_type: SubstitutionMode,
     ) -> Result<Obj, RuntimeError> {
         let start = self.inst_obj(interval.start(), param_to_arg_map, param_obj_type)?;
         let end = self.inst_obj(interval.end(), param_to_arg_map, param_obj_type)?;
@@ -1512,7 +1368,7 @@ impl Runtime {
         &self,
         interval: &OneSideInfinityIntervalObj,
         param_to_arg_map: &HashMap<String, Obj>,
-        param_obj_type: ParamObjType,
+        param_obj_type: SubstitutionMode,
     ) -> Result<Obj, RuntimeError> {
         let start = self.inst_obj(interval.start(), param_to_arg_map, param_obj_type)?;
         Ok(match interval {
@@ -1535,7 +1391,7 @@ impl Runtime {
         &self,
         fs: &FiniteSeqSet,
         param_to_arg_map: &HashMap<String, Obj>,
-        param_obj_type: ParamObjType,
+        param_obj_type: SubstitutionMode,
     ) -> Result<Obj, RuntimeError> {
         Ok(FiniteSeqSet::new(
             self.inst_obj(&fs.set, param_to_arg_map, param_obj_type)?,
@@ -1548,7 +1404,7 @@ impl Runtime {
         &self,
         ss: &SeqSet,
         param_to_arg_map: &HashMap<String, Obj>,
-        param_obj_type: ParamObjType,
+        param_obj_type: SubstitutionMode,
     ) -> Result<Obj, RuntimeError> {
         Ok(SeqSet::new(self.inst_obj(&ss.set, param_to_arg_map, param_obj_type)?).into())
     }
@@ -1557,7 +1413,7 @@ impl Runtime {
         &self,
         v: &FiniteSeqListObj,
         param_to_arg_map: &HashMap<String, Obj>,
-        param_obj_type: ParamObjType,
+        param_obj_type: SubstitutionMode,
     ) -> Result<Obj, RuntimeError> {
         let mut objs = Vec::with_capacity(v.objs.len());
         for o in v.objs.iter() {
@@ -1570,7 +1426,7 @@ impl Runtime {
         &self,
         ms: &MatrixSet,
         param_to_arg_map: &HashMap<String, Obj>,
-        param_obj_type: ParamObjType,
+        param_obj_type: SubstitutionMode,
     ) -> Result<Obj, RuntimeError> {
         Ok(MatrixSet::new(
             self.inst_obj(&ms.set, param_to_arg_map, param_obj_type)?,
@@ -1584,7 +1440,7 @@ impl Runtime {
         &self,
         m: &MatrixListObj,
         param_to_arg_map: &HashMap<String, Obj>,
-        param_obj_type: ParamObjType,
+        param_obj_type: SubstitutionMode,
     ) -> Result<Obj, RuntimeError> {
         let mut rows: Vec<Vec<Obj>> = Vec::with_capacity(m.rows.len());
         for row in m.rows.iter() {
@@ -1601,7 +1457,7 @@ impl Runtime {
         &self,
         obj_at_index: &ObjAtIndex,
         param_to_arg_map: &HashMap<String, Obj>,
-        param_obj_type: ParamObjType,
+        param_obj_type: SubstitutionMode,
     ) -> Result<Obj, RuntimeError> {
         let instantiated_obj =
             self.inst_obj(&obj_at_index.obj, param_to_arg_map, param_obj_type)?;
@@ -1627,7 +1483,7 @@ impl Runtime {
         &self,
         param_type: &ParamType,
         param_to_arg_map: &HashMap<String, Obj>,
-        param_obj_type: ParamObjType,
+        param_obj_type: SubstitutionMode,
     ) -> Result<ParamType, RuntimeError> {
         match param_type {
             ParamType::Set(_) => Ok(param_type.clone()),
@@ -1645,7 +1501,7 @@ impl Runtime {
         &self,
         param_defs: &ParamDefWithSet,
         args: &Vec<Obj>,
-        param_obj_type: ParamObjType,
+        param_obj_type: SubstitutionMode,
     ) -> Result<Vec<Obj>, RuntimeError> {
         let total_param_count = param_defs.number_of_params();
         if total_param_count != args.len() {
@@ -1686,7 +1542,7 @@ impl Runtime {
         &self,
         param_defs: &ParamDefWithType,
         args: &Vec<Obj>,
-        param_obj_type: ParamObjType,
+        param_obj_type: SubstitutionMode,
     ) -> Result<Vec<ParamType>, RuntimeError> {
         let total_param_count = param_defs.number_of_params();
         if total_param_count != args.len() {
@@ -1727,9 +1583,8 @@ impl Runtime {
 fn safe_obj_binder_restore_map(
     instantiated: &Obj,
     rename_map: &HashMap<String, Obj>,
-    binder_kind: ParamObjType,
 ) -> HashMap<String, Obj> {
-    let remaining_names = instantiated.collect_param_obj_names(binder_kind);
+    let remaining_names = instantiated.collect_bound_param_names();
     let mut restore_map = HashMap::new();
     for (source_key, fresh_obj) in rename_map {
         let Some(source_id) = SymbolId::from_substitution_key(source_key) else {
@@ -1767,72 +1622,20 @@ fn safe_obj_binder_restore_map(
         insert_symbol_substitution(
             &mut restore_map,
             &fresh_binding,
-            obj_for_bound_param_in_scope(&source_binding, binder_kind),
+            obj_for_bound_param_in_scope(&source_binding),
         );
     }
     restore_map
 }
 
-fn alpha_renamed_atom(atom: &AtomObj, rename_map: &HashMap<String, Obj>) -> Option<Obj> {
-    if let Some(symbol) = atom.symbol_ref() {
-        return rename_map.get(&symbol.substitution_key()).cloned();
-    }
-    let name = match atom {
-        AtomObj::Identifier(_) | AtomObj::IdentifierWithMod(_) => return None,
-        AtomObj::Forall(param) => param.name(),
-        AtomObj::Def(param) => param.name(),
-        AtomObj::Exist(param) => param.name(),
-        AtomObj::SetBuilder(param) => param.name(),
-        AtomObj::FnSet(param) => param.name(),
-        AtomObj::Induc(param) => param.name(),
-        AtomObj::DefAlgo(param) => param.name(),
-        AtomObj::DefStructField(param) => param.name(),
-        AtomObj::TupleIndex(param) => param.name(),
-        AtomObj::CartIndex(param) => param.name(),
-    };
-    let replacement = rename_map.get(name)?;
-    let Obj::Atom(replacement_atom) = replacement else {
-        return None;
-    };
-    if std::mem::discriminant(atom) != std::mem::discriminant(replacement_atom) {
-        return None;
-    }
-    Some(replacement.clone())
-}
-
-fn binder_retagged_atom(
-    atom: &AtomObj,
-    binding_map: &HashMap<String, Obj>,
-    source: BinderRetagSource,
-) -> Option<Obj> {
-    if let Some(symbol) = atom.symbol_ref() {
-        return binding_map.get(&symbol.substitution_key()).cloned();
-    }
-    let name = match (source, atom) {
-        (BinderRetagSource::Forall, AtomObj::Forall(param)) => param.name(),
-        (BinderRetagSource::Exist, AtomObj::Exist(param)) => param.name(),
-        (BinderRetagSource::FnSet, AtomObj::FnSet(param)) => param.name(),
-        (BinderRetagSource::Induc, AtomObj::Induc(param)) => param.name(),
-        (BinderRetagSource::DefAlgo, AtomObj::DefAlgo(param)) => param.name(),
-        _ => return None,
-    };
-    binding_map.get(name).cloned()
-}
-
 fn renamed_bound_param_binding(
     binding: &SymbolBinding,
     rename_map: &HashMap<String, Obj>,
-    kind: ParamObjType,
 ) -> SymbolBinding {
-    match (kind, rename_map.get(&binding.substitution_key())) {
-        (ParamObjType::SetBuilder, Some(Obj::Atom(AtomObj::SetBuilder(param)))) => {
-            param.symbol.to_local_binding()
-        }
-        (ParamObjType::FnSet, Some(Obj::Atom(AtomObj::FnSet(param)))) => {
-            param.symbol.to_local_binding()
-        }
-        _ => binding.clone(),
+    if let Some(Obj::Atom(AtomObj::Bound(param))) = rename_map.get(&binding.substitution_key()) {
+        return param.symbol.to_local_binding();
     }
+    binding.clone()
 }
 
 #[cfg(test)]

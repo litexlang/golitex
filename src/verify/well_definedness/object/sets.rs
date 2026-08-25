@@ -157,7 +157,7 @@ impl Runtime {
         x: &SetBuilder,
         verify_state: &ProofSearchState,
     ) -> Result<(), RuntimeError> {
-        // Must use `ParamObjType::SetBuilder` here, not `define_params_with_set` (FnSet).
+        // A set-builder parameter is a local binder in this isolated environment.
         // Parsed set-builder facts use SetBuilder-tagged bound vars; a mismatched tag means
         // e.g. `x $in N` is never found when checking `b ^ x`, so pow domain fails.
         // Run in local env so param binding and body facts do not leak into the outer scope.
@@ -169,7 +169,8 @@ impl Runtime {
                     parameter_group_index: 0,
                 },
             )?;
-            if let Err(e) = rt.store_parameter_binding(&x.param_binding, ParamObjType::SetBuilder) {
+            if let Err(e) = rt.store_parameter_binding(&x.param_binding, BindingScope::LocalBinder)
+            {
                 return Err(RuntimeError::from(WellDefinedRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_cause(
                         format!("failed to verify well-defined of set builder {}", x),
@@ -178,7 +179,7 @@ impl Runtime {
                 )));
             }
             let param_in_set: Fact = InFact::new(
-                obj_for_bound_param_in_scope(&x.param_binding, ParamObjType::SetBuilder),
+                obj_for_bound_param_in_scope(&x.param_binding),
                 (*x.param_set).clone(),
                 default_line_file(),
             )
@@ -248,8 +249,7 @@ impl Runtime {
         verify_state: &ProofSearchState,
     ) -> Result<(), RuntimeError> {
         let bindings = x.body.params_def_with_set.collect_param_bindings();
-        let rename_map =
-            self.visible_binding_conflict_rename_map(&bindings, ParamObjType::FnSet)?;
+        let rename_map = self.visible_binding_conflict_rename_map(&bindings)?;
         if !rename_map.is_empty() {
             let renamed = self.alpha_rename_fn_set(x, &rename_map)?;
             return self.verify_fn_set_well_defined(&renamed, verify_state);
@@ -326,8 +326,7 @@ impl Runtime {
         verify_state: &ProofSearchState,
     ) -> Result<(), RuntimeError> {
         let bindings = x.body.params_def_with_set.collect_param_bindings();
-        let rename_map =
-            self.visible_binding_conflict_rename_map(&bindings, ParamObjType::FnSet)?;
+        let rename_map = self.visible_binding_conflict_rename_map(&bindings)?;
         if !rename_map.is_empty() {
             let renamed = self.alpha_rename_anonymous_fn(x, &rename_map)?;
             return self.verify_anonymous_fn_well_defined(&renamed, verify_state);
@@ -347,7 +346,7 @@ impl Runtime {
             }
             for param_def_with_set in x.body.params_def_with_set.iter() {
                 let mut parameter_infers = rt
-                    .define_params_with_set_in_scope(param_def_with_set, ParamObjType::FnSet)
+                    .define_params_with_set_in_scope(param_def_with_set, BindingScope::LocalBinder)
                     .map_err(|e| {
                         RuntimeError::from(WellDefinedRuntimeError(
                         RuntimeErrorStruct::new_with_msg_and_cause(
@@ -426,7 +425,7 @@ impl Runtime {
                 'parameter_groups: for param_group in x.body.params_def_with_set.iter() {
                     for binding in param_group.params.iter() {
                         let param_obj =
-                            obj_for_bound_param_in_scope(binding, ParamObjType::FnSet);
+                            obj_for_bound_param_in_scope(binding);
                         if !objs_equal_with_nested_binder_alpha_equivalence(
                             x.equal_to.as_ref(),
                             &param_obj,
@@ -881,9 +880,9 @@ impl Runtime {
         )?;
         let y_group =
             self.fresh_param_group_with_type(vec![y_name, y2_name], ParamType::Set(Set::new()))?;
-        let x_obj = obj_for_bound_param_in_scope(&x_group.params[0], ParamObjType::Forall);
-        let y_obj = obj_for_bound_param_in_scope(&y_group.params[0], ParamObjType::Forall);
-        let y2_obj = obj_for_bound_param_in_scope(&y_group.params[1], ParamObjType::Forall);
+        let x_obj = obj_for_bound_param_in_scope(&x_group.params[0]);
+        let y_obj = obj_for_bound_param_in_scope(&y_group.params[0]);
+        let y2_obj = obj_for_bound_param_in_scope(&y_group.params[1]);
         let line_file = default_line_file();
 
         ForallFact::new_canonical_forall(
@@ -930,10 +929,8 @@ impl Runtime {
         value: &SetBuilder,
         verify_state: &ProofSearchState,
     ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
-        let rename_map = self.visible_binding_conflict_rename_map(
-            std::slice::from_ref(&value.param_binding),
-            ParamObjType::SetBuilder,
-        )?;
+        let rename_map =
+            self.visible_binding_conflict_rename_map(std::slice::from_ref(&value.param_binding))?;
         if !rename_map.is_empty() {
             let renamed = self.alpha_rename_set_builder(value, &rename_map)?;
             return self.verify_set_builder_well_defined_result(&renamed, verify_state);
@@ -947,7 +944,7 @@ impl Runtime {
                 },
             )?;
             runtime
-                .store_parameter_binding(&value.param_binding, ParamObjType::SetBuilder)
+                .store_parameter_binding(&value.param_binding, BindingScope::LocalBinder)
                 .map_err(|error| {
                     RuntimeError::from(WellDefinedRuntimeError(
                         RuntimeErrorStruct::new_with_msg_and_cause(
@@ -958,7 +955,7 @@ impl Runtime {
                 })?;
 
             let parameter_fact: Fact = InFact::new(
-                obj_for_bound_param_in_scope(&value.param_binding, ParamObjType::SetBuilder),
+                obj_for_bound_param_in_scope(&value.param_binding),
                 (*value.param_set).clone(),
                 default_line_file(),
             )
@@ -1027,8 +1024,7 @@ impl Runtime {
         verify_state: &ProofSearchState,
     ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
         let bindings = value.body.params_def_with_set.collect_param_bindings();
-        let rename_map =
-            self.visible_binding_conflict_rename_map(&bindings, ParamObjType::FnSet)?;
+        let rename_map = self.visible_binding_conflict_rename_map(&bindings)?;
         if !rename_map.is_empty() {
             let renamed = self.alpha_rename_fn_set(value, &rename_map)?;
             return self.verify_fn_set_well_defined_result(&renamed, verify_state);
@@ -1066,8 +1062,7 @@ impl Runtime {
         verify_state: &ProofSearchState,
     ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
         let bindings = value.body.params_def_with_set.collect_param_bindings();
-        let rename_map =
-            self.visible_binding_conflict_rename_map(&bindings, ParamObjType::FnSet)?;
+        let rename_map = self.visible_binding_conflict_rename_map(&bindings)?;
         if !rename_map.is_empty() {
             let renamed = self.alpha_rename_anonymous_fn(value, &rename_map)?;
             return self.verify_anonymous_fn_well_defined_result(&renamed, verify_state);
@@ -1109,7 +1104,7 @@ impl Runtime {
                 {
                     for (parameter_index, binding) in group.params.iter().enumerate() {
                         let parameter =
-                            obj_for_bound_param_in_scope(binding, ParamObjType::FnSet);
+                            obj_for_bound_param_in_scope(binding);
                         if !objs_equal_with_nested_binder_alpha_equivalence(
                             value.equal_to.as_ref(),
                             &parameter,
@@ -1186,9 +1181,9 @@ impl Runtime {
                 },
             )?);
             for (parameter_index, binding) in group.params.iter().enumerate() {
-                self.store_parameter_binding(binding, ParamObjType::FnSet)?;
+                self.store_parameter_binding(binding, BindingScope::LocalBinder)?;
                 let proposition: Fact = InFact::new(
-                    obj_for_bound_param_in_scope(binding, ParamObjType::FnSet),
+                    obj_for_bound_param_in_scope(binding),
                     group.set_obj().clone(),
                     default_line_file(),
                 )

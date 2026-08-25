@@ -41,7 +41,7 @@ impl Runtime {
         }
 
         let x_name = self.generate_random_unused_name();
-        let (x_binding, x_obj) = self.fresh_bound_param(x_name, ParamObjType::Forall)?;
+        let (x_binding, x_obj) = self.fresh_bound_param(x_name)?;
         let Some(left_at_x) = self.instantiate_unary_function_at(left.func.as_ref(), &x_obj)?
         else {
             return Ok(UnknownGenericStmtResult::new().into());
@@ -57,7 +57,7 @@ impl Runtime {
                 vec![x_binding],
                 ParamType::Obj(left.set.as_ref().clone()),
             )]);
-            rt.define_params_with_type(&params_def, false, ParamObjType::Forall)?;
+            rt.define_params_with_type(&params_def, false, BindingScope::LocalBinder)?;
             rt.verify_builtin_strategy_child(&pointwise_goal)
         })?;
         if !pointwise_result.is_success() {

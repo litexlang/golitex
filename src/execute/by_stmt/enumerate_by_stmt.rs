@@ -223,9 +223,9 @@ impl Runtime {
                 [parameter_index_assignment[parameter_position]])
                 .clone();
             assignment.push((parameter_name.clone(), assigned_obj.to_string()));
-            self.store_parameter_binding(parameter_binding, ParamObjType::Forall)?;
+            self.store_parameter_binding(parameter_binding, BindingScope::LocalBinder)?;
             let parameter_equal_to_assigned_obj_atomic_fact: AtomicFact = EqualFact::new(
-                obj_for_bound_param_in_scope(parameter_binding, ParamObjType::Forall),
+                obj_for_bound_param_in_scope(parameter_binding),
                 assigned_obj,
                 stmt.line_file.clone(),
             )

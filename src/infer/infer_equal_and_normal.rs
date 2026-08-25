@@ -595,7 +595,7 @@ impl Runtime {
                 &predicate_definition.params_def_with_type,
                 &normal_atomic_fact.body,
                 normal_atomic_fact.line_file.clone(),
-                ParamObjType::DefHeader,
+                SubstitutionMode::Exact,
             )
             .map_err(|previous_error| {
                 RuntimeError::from(InferRuntimeError(RuntimeErrorStruct::new(
@@ -654,7 +654,7 @@ impl Runtime {
                 .inst_fact(
                     iff_fact,
                     &param_to_arg_map,
-                    ParamObjType::DefHeader,
+                    SubstitutionMode::Exact,
                     Some(normal_atomic_fact.line_file.clone()),
                 )
                 .map_err(|e| {

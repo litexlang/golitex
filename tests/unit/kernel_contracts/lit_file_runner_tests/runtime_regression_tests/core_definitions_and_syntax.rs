@@ -40,7 +40,7 @@ fn let_rejects_undefined_right_sides_duplicate_names_and_extra_values() {
         (
             "duplicate name",
             "let x = 1\nlet x = 2",
-            "identifier `x` is already bound",
+            "name `x` is already used in this scope as object",
         ),
         (
             "extra value",
@@ -2886,9 +2886,9 @@ trust Ambient = \selected<R>
         rt.define_params_with_type(
             &ParamDefWithType::new(vec![group]),
             false,
-            ParamObjType::Forall,
+            BindingScope::LocalBinder,
         )?;
-        let x = obj_for_bound_param_in_scope(&binding, ParamObjType::Forall);
+        let x = obj_for_bound_param_in_scope(&binding);
         let expanded_membership: AtomicFact =
             InFact::new(x, opaque_set.clone(), default_line_file()).into();
 

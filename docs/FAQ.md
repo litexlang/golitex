@@ -65,7 +65,7 @@ Most of the features of Litex come from the author's experience in writing mathe
 
 Syntax sugar of `xxx set` in `forall xxx set` meaning `$is_set(xxx)` is inspired by the discovery that when we talk about sets, we almost always are saying that `something is a set`. So the word `set` never appear independently in the language. It always shows up together with `<some_object> is a set`.
 
-Anonymous function syntax like`fn(x R) R {-x}` is essential because they are used as parameters of functions like `sum` and `product` and `\integral`. It's inspired by JavaScript's `(x) => -x` syntax.
+Anonymous function syntax like`fn(x R) R {(-x)}` is essential because they are used as parameters of functions like `sum` and `product` and `\integral`. It's inspired by JavaScript's `(x) => (-x)` syntax.
 
 The correlation between `tuple`, `cart`, and `struct` is essential, because anything, including `struct`, must correlate to something in set theory. Nothing in Litex should be arbitrary and without concrete mathematical meaning. Once its parameters are fixed, `&Point` is one named subset of a Cartesian carrier. A declaration such as `have p &Point = (0, 0)` therefore gives `p` the corresponding field names, including `p.x` for its first coordinate.
 
@@ -220,7 +220,7 @@ uses it constantly.
 ```litex
 have fn self_abs(x R) R by cases:
     case x = 0: 0
-    case x < 0: -x
+    case x < 0: (-x)
     case x > 0: x
 ```
 
@@ -686,7 +686,7 @@ with a nonnegative real result.
 
 The native complex layer remains symbolic in this release. Verification now
 also performs bounded exact polynomial/rational normalization with
-`i * i = -1`, so identities such as
+`i * i = (-1)`, so identities such as
 `2 * i + 1 = i * i + 2 + 2 * i` and
 `(1 + i) * (1 - i) = 2` verify directly. Division still needs its ordinary
 nonzero well-definedness proof. `eval` and Python extraction do not acquire a
@@ -895,19 +895,19 @@ multi-space relations use the same boundary. Scalar-only constructions, such
 as polynomial arithmetic, still receive an explicit `ScalarSystem` because no
 vector-space owner exists there.
 
-## Why can an anonymous function be written as `fn(x R) R {-x}`?
+## Why can an anonymous function be written as `fn(x R) R {(-x)}`?
 
 This is intentional shorthand, not a typo. The fully explicit anonymous
-function form is `fn(x R) R { -x }`: the parameter `x` ranges over `R`, the
-return set is `R`, and the body is `-x`.
+function form is `fn(x R) R { (-x) }`: the parameter `x` ranges over `R`, the
+return set is `R`, and the body is `(-x)`.
 
 When all parameters have the same domain as the return set, Litex also accepts
-the compact form `fn(x R) R {-x}`. Similarly, `fn(x, y) R {x + y}` means that both
+the compact form `fn(x R) R {(-x)}`. Similarly, `fn(x, y) R {x + y}` means that both
 inputs range over `R` and the return set is `R`; it is the compact version of
 `fn(x R, y R) R { x + y }`.
 
 The compact form is useful in short mathematical expressions, such as passing
-`fn(x R) R {x}` to a sum or using `fn(x R) R {-x}` as a group inverse operation. In
+`fn(x R) R {x}` to a sum or using `fn(x R) R {(-x)}` as a group inverse operation. In
 explanatory documentation or when the domain and return set are easy to
 confuse, the explicit form is usually clearer. Both forms denote ordinary
 anonymous function objects and can be compared by Litex's function-equality

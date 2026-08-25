@@ -162,7 +162,7 @@ impl Runtime {
     ) -> Result<(), RuntimeError> {
         self.run_in_local_env(|rt| {
             for binding in &stmt.preimage_bindings {
-                rt.store_parameter_binding(binding, ParamObjType::Identifier)
+                rt.store_parameter_binding(binding, BindingScope::DeclaredObject)
                     .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))?;
             }
             Ok(())
@@ -171,7 +171,7 @@ impl Runtime {
 
     fn store_preimage_names(&mut self, stmt: &HaveByPreimageStmt) -> Result<(), RuntimeError> {
         for binding in &stmt.preimage_bindings {
-            self.store_parameter_binding(binding, ParamObjType::Identifier)
+            self.store_parameter_binding(binding, BindingScope::DeclaredObject)
                 .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))?;
         }
         Ok(())
@@ -183,7 +183,7 @@ impl Runtime {
         replacement: &Replacement,
     ) -> Result<SuccessInferResult, RuntimeError> {
         let preimage_binding = &stmt.preimage_bindings[0];
-        self.store_parameter_binding(preimage_binding, ParamObjType::Identifier)
+        self.store_parameter_binding(preimage_binding, BindingScope::DeclaredObject)
             .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))?;
         let preimage_obj: Obj = Identifier::new_bound(
             preimage_binding.name().to_string(),
@@ -263,7 +263,7 @@ impl Runtime {
             .inst_param_def_with_set_one_by_one(
                 &fn_body.params_def_with_set,
                 preimage_objs,
-                ParamObjType::FnSet,
+                SubstitutionMode::Exact,
             )
             .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))?;
         let flat_param_sets = fn_body
@@ -304,7 +304,7 @@ impl Runtime {
                 .inst_quantifier_free_fact(
                     dom_fact,
                     &param_to_obj_map,
-                    ParamObjType::FnSet,
+                    SubstitutionMode::Exact,
                     Some(&stmt.line_file),
                 )
                 .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))?

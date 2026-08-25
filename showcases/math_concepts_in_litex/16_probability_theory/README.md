@@ -8,10 +8,11 @@ that precedes the finite calculations in
 sigma-algebra + real series convergence
   -> generated sigma algebras and Borel(R)
   -> Kolmogorov probability space
-  -> countable additivity
-  -> finite additivity and the ordinary event-probability calculus
+  -> finite and countable event-probability calculus
+  -> event limits, continuity, null/almost-sure events, Borel--Cantelli
   -> conditional probability and independence
-  -> measurable random variables and constructed pushforward measures
+  -> Dirac, conditioned, finite atomic, and pushforward probabilities
+  -> measurable random variables and their distributions
 ```
 
 Run the checked Litex module from the repository root:
@@ -49,12 +50,34 @@ lake env lean ../showcases/math_concepts_in_litex/16_probability_theory/same_mat
   two events with empty events and applying countable additivity. From it the
   module proves the complement and difference formulas, monotonicity,
   inclusion-exclusion, the union bound, and `0 <= P(A) <= 1`.
+- `event_countable_intersection_is_event` derives countable-intersection
+  closure by complements. `event_tail_union_after` and
+  `event_tail_intersection_after` construct event tails, while `event_limsup`
+  and `event_liminf` construct the usual events that occur infinitely often
+  and eventually always.
+- `probability_continuous_from_below` and
+  `probability_continuous_from_above` prove continuity on monotone event
+  sequences. `probability_countable_subadditivity` derives the countable union
+  bound from finite prefix unions and continuity from below.
+- `is_null_event` and `is_almost_sure_event` expose probability-zero and
+  probability-one events. The module proves downward closure of null events,
+  countable closure of null events, the complement equivalence between null
+  and almost-sure events, and `first_borel_cantelli`.
 - `conditional_probability` is guarded by positive evidence probability, and
   `are_independent` states factorization of intersection probability.
+- `dirac_probability`, `conditioned_probability_measure`, and
+  `finite_atomic_probability` are actual real-valued functions on the exact
+  event carrier. Their corresponding `*_is_probability_space` theorems prove
+  normalization, nonnegativity, and countable additivity. The finite atomic
+  proof reduces to a finite sum of weighted Dirac laws; conditioning is
+  restricted to positive-probability evidence.
 - `is_measurable_map` and `is_random_variable` use measurable preimages.
   `pushforward_probability` constructs `B |-> P(X^{-1}(B))` on the exact target
   event carrier. The module proves that this function is both the distribution
   of `X` and a probability space on the target sigma algebra.
+- `same_math_in_lean.lean` mirrors this last construction with Mathlib's native
+  `Measure.map`, including its measurable-set evaluation law and preservation
+  of `IsProbabilityMeasure`.
 
 The primary derived tracer is `probability_of_disjoint_union`. It constructs
 the sequence `(A, B, empty, empty, ...)`, proves that its countable union is
@@ -63,9 +86,13 @@ corresponding probability series sums to
 `P(A) + P(B)`, and uses uniqueness of real-series sums together with
 `kolmogorov_countable_additivity`. Thus finite additivity is visibly a theorem,
 not an extra probability axiom. Checked consumers then recover the familiar
-event calculus. Two further consumers show that independence makes
-positive-probability conditioning leave probability unchanged, and that any
-candidate distribution carries measurability of its underlying map.
+event calculus. The main limit tracer is `first_borel_cantelli`: it bounds
+every tail union by the corresponding remainder of a convergent probability
+series, uses continuity from above, and concludes that the limsup event is
+null. The independent construction tracer is
+`conditioned_probability_is_probability_space`; it intersects a disjoint
+family with the evidence event and transports the resulting real series
+through multiplication by `1 / P(evidence)`.
 
 ## Exact axiom boundary
 
@@ -78,14 +105,16 @@ the same derivations. Binary finite additivity and every event-probability
 formula listed above are proved after that boundary.
 
 The public Litex file contains no direct `trust`, global `axiom`, or
-`abstract_prop`. The settings assume source probability data, while the new
-construction derives its pushforward probability measure on any explicit
-target sigma algebra. It does not claim that every measurable space admits an
-unrelated probability measure, nor does it implement Caratheodory extension
-from a premeasure or outer measure. Integration, expectation, variance,
-almost-sure reasoning, laws of large numbers, and central limit theorems remain
-later layers.
+`abstract_prop`. The settings assume source probability data; the module then
+constructs Dirac probability on any sigma algebra and constructs conditioned,
+finite atomic, and pushforward probabilities from explicit source data. It
+does not claim that every measurable space admits an unrelated probability
+measure, nor does it implement Caratheodory extension from a premeasure or
+outer measure. Integration, expectation, variance, almost-sure convergence,
+laws of large numbers, and central limit theorems remain later layers.
 
-The generated-sigma construction, Borel specialization, pushforward laws, and
-the padded two-event finite-additivity tracer all pass the registered runner.
-See `math_collections.md` for the interface rationale and dependency graph.
+The generated-sigma construction, Borel specialization, event-limit layer,
+three concrete probability constructions, pushforward laws, and padded
+two-event finite-additivity tracer are all executable declarations in
+`main.lit`. See `math_collections.md` for the interface rationale and dependency
+graph.

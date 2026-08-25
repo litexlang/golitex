@@ -476,7 +476,7 @@ impl Runtime {
         }
 
         let x_name = self.generate_random_unused_name();
-        let (x_binding, x_obj) = self.fresh_bound_param(x_name, ParamObjType::Forall)?;
+        let (x_binding, x_obj) = self.fresh_bound_param(x_name)?;
         let Some(left_inst) =
             self.instantiate_unary_function_at(left_product.func.as_ref(), &x_obj)?
         else {
@@ -550,7 +550,7 @@ impl Runtime {
             }
 
             let x_name = self.generate_random_unused_name();
-            let (x_binding, x_obj) = self.fresh_bound_param(x_name, ParamObjType::Forall)?;
+            let (x_binding, x_obj) = self.fresh_bound_param(x_name)?;
             let Some(product_at_x) =
                 self.instantiate_unary_function_at(product.func.as_ref(), &x_obj)?
             else {
@@ -606,7 +606,7 @@ impl Runtime {
             };
 
             let y_name = self.generate_random_unused_name();
-            let (y_binding, y_obj) = self.fresh_bound_param(y_name, ParamObjType::Forall)?;
+            let (y_binding, y_obj) = self.fresh_bound_param(y_name)?;
             let Some(pullback_at_y) =
                 self.instantiate_unary_function_at(pullback.func.as_ref(), &y_obj)?
             else {
@@ -712,7 +712,7 @@ impl Runtime {
         let left_func = &equal_fact.left;
         let right_func = &equal_fact.right;
         let x_name = self.generate_random_unused_name();
-        let (x_binding, x_obj) = self.fresh_bound_param(x_name, ParamObjType::Forall)?;
+        let (x_binding, x_obj) = self.fresh_bound_param(x_name)?;
         let Some(left_inst) = self.instantiate_unary_function_at(left_func, &x_obj)? else {
             return Ok(UnknownGenericStmtResult::new().into());
         };
@@ -739,7 +739,7 @@ impl Runtime {
             return Ok(None);
         };
         let outer_name = self.generate_random_unused_name();
-        let (_, outer_obj) = self.fresh_bound_param(outer_name.clone(), ParamObjType::Forall)?;
+        let (_, outer_obj) = self.fresh_bound_param(outer_name.clone())?;
         let Some(inner_sum_obj) =
             self.instantiate_unary_function_at(outer_sum.func.as_ref(), &outer_obj)?
         else {
@@ -753,7 +753,7 @@ impl Runtime {
         }
 
         let inner_name = format!("{}_inner", outer_name);
-        let (_, inner_obj) = self.fresh_bound_param(inner_name, ParamObjType::Forall)?;
+        let (_, inner_obj) = self.fresh_bound_param(inner_name)?;
         let Some(summand) =
             self.instantiate_unary_function_at(inner_sum.func.as_ref(), &inner_obj)?
         else {
@@ -858,7 +858,7 @@ impl Runtime {
                 vec![param_binding],
                 ParamType::Obj(set),
             )]);
-            rt.define_params_with_type(&params_def, false, ParamObjType::Forall)?;
+            rt.define_params_with_type(&params_def, false, BindingScope::LocalBinder)?;
             let direct = rt.verify_atomic_fact_as_builtin_rule_premise(then_fact, builtin_state)?;
             if direct.is_success() {
                 return Ok(direct);
@@ -925,7 +925,7 @@ impl Runtime {
         if enumerator_call.body.len() != 1 || enumerator_call.body[0].len() != 1 {
             return Ok(None);
         }
-        let index_obj = obj_for_bound_param_in_scope(param_binding, ParamObjType::FnSet);
+        let index_obj = obj_for_bound_param_in_scope(param_binding);
         if !objs_match_for_pattern(enumerator_call.body[0][0].as_ref(), &index_obj) {
             return Ok(None);
         }
@@ -1034,8 +1034,8 @@ impl Runtime {
             .fresh_param_group_with_type(vec![x_name], ParamType::Obj(shape.target_set.clone()))?;
         let i_group = self
             .fresh_param_group_with_type(vec![i_name], ParamType::Obj(shape.index_set.clone()))?;
-        let x_obj = obj_for_bound_param_in_scope(&x_group.params[0], ParamObjType::Forall);
-        let i_obj = obj_for_bound_param_in_scope(&i_group.params[0], ParamObjType::Exist);
+        let x_obj = obj_for_bound_param_in_scope(&x_group.params[0]);
+        let i_obj = obj_for_bound_param_in_scope(&i_group.params[0]);
         let enumerator_at_i: Obj =
             FnObj::new(shape.enumerator_head.clone(), vec![vec![Box::new(i_obj)]]).into();
         let body_fact: AtomicFact =

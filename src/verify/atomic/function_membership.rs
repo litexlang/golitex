@@ -291,11 +291,8 @@ impl Runtime {
             .iter()
             .flat_map(|group| group.params.iter().cloned())
             .collect::<Vec<_>>();
-        let (forall_param_names, full_param_to_forall_obj) = self
-            .fresh_binder_retag_plan_for_bindings(
-                &expected_flat_param_bindings,
-                ParamObjType::Forall,
-            );
+        let (forall_param_names, full_param_to_forall_obj) =
+            self.fresh_binder_retag_plan_for_bindings(&expected_flat_param_bindings);
         let mut active_param_to_forall_obj = HashMap::new();
         let mut forall_param_type_groups = Vec::new();
         let mut name_index = 0;
@@ -303,7 +300,7 @@ impl Runtime {
             let param_set = self.inst_obj(
                 group.set_obj(),
                 &active_param_to_forall_obj,
-                ParamObjType::BinderRetag(BinderRetagSource::FnSet),
+                SubstitutionMode::Exact,
             )?;
             let group_forall_names =
                 forall_param_names[name_index..name_index + group.params.len()].to_vec();
@@ -326,7 +323,7 @@ impl Runtime {
                 self.inst_quantifier_free_fact(
                     fact,
                     &full_param_to_forall_obj,
-                    ParamObjType::BinderRetag(BinderRetagSource::FnSet),
+                    SubstitutionMode::Exact,
                     None,
                 )?
                 .into(),
@@ -335,7 +332,7 @@ impl Runtime {
         let pointwise_ret_set = self.inst_obj(
             expected_fn_set.body.ret_set.as_ref(),
             &full_param_to_forall_obj,
-            ParamObjType::BinderRetag(BinderRetagSource::FnSet),
+            SubstitutionMode::Exact,
         )?;
         let applied_fn_obj = if let Obj::AnonymousFn(function) = element {
             let known_bindings = known_fn_body
@@ -353,13 +350,13 @@ impl Runtime {
                 insert_symbol_substitution(
                     &mut known_param_to_forall_obj,
                     binding,
-                    obj_for_bound_param_in_scope(forall_binding, ParamObjType::Forall),
+                    obj_for_bound_param_in_scope(forall_binding),
                 );
             }
             self.inst_obj(
                 function.equal_to.as_ref(),
                 &known_param_to_forall_obj,
-                ParamObjType::BinderRetag(BinderRetagSource::FnSet),
+                SubstitutionMode::Exact,
             )?
         } else {
             FnObj::new(
@@ -447,7 +444,6 @@ impl Runtime {
             for _ in group.params.iter() {
                 args.push(Box::new(obj_for_bound_param_in_scope(
                     &expected_flat_param_names[index],
-                    ParamObjType::Forall,
                 )));
                 index += 1;
             }

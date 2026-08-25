@@ -52,7 +52,7 @@ impl Runtime {
             vec![divisor_name],
             ParamType::Obj(Range::new(Number::new("2".to_string()).into(), value.clone()).into()),
         )?;
-        let divisor = obj_for_bound_param_in_scope(&divisor_group.params[0], ParamObjType::Forall);
+        let divisor = obj_for_bound_param_in_scope(&divisor_group.params[0]);
         let no_divisor: AtomicFact = NotEqualFact::new(
             Mod::new(value, divisor).into(),
             Number::new("0".to_string()).into(),

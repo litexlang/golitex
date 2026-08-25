@@ -408,13 +408,7 @@ impl Runtime {
         let name_for_set_builder = match &left {
             Obj::Atom(AtomObj::Identifier(a)) => Some(a.name.as_str()),
             Obj::Atom(AtomObj::IdentifierWithMod(m)) => Some(m.name.as_str()),
-            Obj::Atom(AtomObj::Forall(p)) => Some(p.name()),
-            Obj::Atom(AtomObj::Def(p)) => Some(p.name()),
-            Obj::Atom(AtomObj::Exist(p)) => Some(p.name()),
-            Obj::Atom(AtomObj::SetBuilder(p)) => Some(p.name()),
-            Obj::Atom(AtomObj::FnSet(p)) => Some(p.name()),
-            Obj::Atom(AtomObj::Induc(p)) => Some(p.name()),
-            Obj::Atom(AtomObj::DefAlgo(p)) => Some(p.name()),
+            Obj::Atom(AtomObj::Bound(p)) => Some(p.name()),
             _ => None,
         };
         if let Some(name) = name_for_set_builder {
@@ -470,7 +464,7 @@ impl Runtime {
         self.run_in_local_parsing_time_name_scope(|this| {
             let set_builder_param = [a.name.clone()];
             let bindings = this.begin_parsing_scope(
-                ParamObjType::SetBuilder,
+                BindingScope::LocalBinder,
                 &set_builder_param,
                 tb.line_file.clone(),
             )?;
@@ -485,7 +479,7 @@ impl Runtime {
                     let user_names = vec![a.name.clone()];
                     this.validate_user_fn_param_names_for_parse(&user_names, tb.line_file.clone())?;
                     let empty: HashMap<String, Obj> = HashMap::new();
-                    let second_inst = this.inst_obj(&second, &empty, ParamObjType::SetBuilder)?;
+                    let second_inst = this.inst_obj(&second, &empty, SubstitutionMode::Exact)?;
 
                     let mut facts_inst = Vec::new();
                     loop {
@@ -493,7 +487,7 @@ impl Runtime {
                         facts_inst.push(this.inst_quantifier_free_fact(
                             &f,
                             &empty,
-                            ParamObjType::SetBuilder,
+                            SubstitutionMode::Exact,
                             None,
                         )?);
                         if tb.current()? == RIGHT_CURLY_BRACE {
@@ -513,7 +507,7 @@ impl Runtime {
                     )))
                 }
             })();
-            this.end_parsing_scope(ParamObjType::SetBuilder, &set_builder_param);
+            this.end_parsing_scope(&set_builder_param);
             parsed
         })
     }

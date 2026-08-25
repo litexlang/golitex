@@ -297,7 +297,7 @@ impl Runtime {
                 .into_iter()
                 .next()
                 .expect("cartesian by-for has one parameter");
-            rt.store_parameter_binding(&param_binding, ParamObjType::Forall)?;
+            rt.store_parameter_binding(&param_binding, BindingScope::LocalBinder)?;
             let elems: Vec<Obj> = factors
                 .iter()
                 .enumerate()
@@ -305,7 +305,7 @@ impl Runtime {
                 .collect();
             let tuple_obj: Obj = Tuple::new(elems).into();
             let parameter_equal_to_tuple: AtomicFact = EqualFact::new(
-                obj_for_bound_param_in_scope(&param_binding, ParamObjType::Forall),
+                obj_for_bound_param_in_scope(&param_binding),
                 tuple_obj.clone(),
                 stmt.line_file.clone(),
             )
@@ -517,10 +517,10 @@ impl Runtime {
                 [parameter_index_assignment[parameter_position]]
                 .clone();
             assignment.push((parameter_name.clone(), assigned_integer_string.clone()));
-            self.store_parameter_binding(parameter_binding, ParamObjType::Forall)?;
+            self.store_parameter_binding(parameter_binding, BindingScope::LocalBinder)?;
 
             let parameter_in_z_atomic_fact = AtomicFact::InFact(InFact::new(
-                obj_for_bound_param_in_scope(parameter_binding, ParamObjType::Forall),
+                obj_for_bound_param_in_scope(parameter_binding),
                 StandardSet::Z.into(),
                 stmt.line_file.clone(),
             ));
@@ -537,7 +537,7 @@ impl Runtime {
 
             let parameter_equal_to_assigned_obj_atomic_fact =
                 AtomicFact::EqualFact(EqualFact::new(
-                    obj_for_bound_param_in_scope(parameter_binding, ParamObjType::Forall),
+                    obj_for_bound_param_in_scope(parameter_binding),
                     Number::new(assigned_integer_string).into(),
                     stmt.line_file.clone(),
                 ));

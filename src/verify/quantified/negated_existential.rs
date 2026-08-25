@@ -38,7 +38,7 @@ impl Runtime {
         let lf = not_exist.line_file();
         let source_bindings = not_exist.params_def_with_type().collect_param_bindings();
         let (forall_names, full_param_to_forall_obj) =
-            self.fresh_binder_retag_plan_for_bindings(&source_bindings, ParamObjType::Forall);
+            self.fresh_binder_retag_plan_for_bindings(&source_bindings);
         let mut param_to_forall_obj: HashMap<String, Obj> = HashMap::new();
         let mut forall_groups: Vec<ParamGroupWithParamType> = Vec::new();
         let mut name_index = 0;
@@ -46,7 +46,7 @@ impl Runtime {
             let param_type = self.inst_param_type(
                 &group.param_type,
                 &param_to_forall_obj,
-                ParamObjType::BinderRetag(BinderRetagSource::Exist),
+                SubstitutionMode::Exact,
             )?;
             let group_forall_names =
                 forall_names[name_index..name_index + group.params.len()].to_vec();
@@ -67,7 +67,7 @@ impl Runtime {
             let forall_conjunct = self.inst_quantifier_free_fact(
                 conjunct,
                 &param_to_forall_obj,
-                ParamObjType::BinderRetag(BinderRetagSource::Exist),
+                SubstitutionMode::Exact,
                 None,
             )?;
             let mut part = Self::demorgan_negate_exist_body_conjunct(&forall_conjunct)?;

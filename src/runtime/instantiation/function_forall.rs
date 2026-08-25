@@ -3,7 +3,7 @@
 // Normalize ForallFact from have fn / recursive have fn before storage.
 //
 // The same source spelling can refer to different bindings in non-overlapping scopes.
-// from the fn header parse. Stored foralls should use one ForallFreeParamObj per quantified name
+// from the fn header parse. Stored foralls should use one BoundParamObj per quantified name
 // from the header. The dedicated retagging mode converts only those binder-tagged atoms; concrete
 // identifiers with the same spelling remain rigid.
 
@@ -17,7 +17,7 @@ impl Runtime {
     ) -> Result<Fact, RuntimeError> {
         let source_bindings = forall_fact.params_def_with_type.collect_param_bindings();
         let (target_names, full_param_to_arg_map) =
-            self.fresh_binder_retag_plan_for_bindings(&source_bindings, ParamObjType::Forall);
+            self.fresh_binder_retag_plan_for_bindings(&source_bindings);
         let mut active_param_to_arg_map = HashMap::new();
         let mut groups = Vec::with_capacity(forall_fact.params_def_with_type.groups.len());
         let mut name_index = 0;
@@ -25,12 +25,12 @@ impl Runtime {
             let renamed_param_type = self.inst_param_type(
                 &group.param_type,
                 &active_param_to_arg_map,
-                ParamObjType::AlphaRename,
+                SubstitutionMode::Exact,
             )?;
             let param_type = self.inst_param_type(
                 &renamed_param_type,
                 &active_param_to_arg_map,
-                ParamObjType::BinderRetag(BinderRetagSource::FnSet),
+                SubstitutionMode::Exact,
             )?;
             let group_target_names =
                 target_names[name_index..name_index + group.params.len()].to_vec();
@@ -48,16 +48,12 @@ impl Runtime {
 
         let mut dom_facts = Vec::with_capacity(forall_fact.dom_facts.len());
         for fact in &forall_fact.dom_facts {
-            let renamed_fact = self.inst_fact(
-                fact,
-                &full_param_to_arg_map,
-                ParamObjType::AlphaRename,
-                None,
-            )?;
+            let renamed_fact =
+                self.inst_fact(fact, &full_param_to_arg_map, SubstitutionMode::Exact, None)?;
             dom_facts.push(self.inst_fact(
                 &renamed_fact,
                 &full_param_to_arg_map,
-                ParamObjType::BinderRetag(BinderRetagSource::FnSet),
+                SubstitutionMode::Exact,
                 None,
             )?);
         }
@@ -66,13 +62,13 @@ impl Runtime {
             let renamed_fact = self.inst_exist_or_and_chain_atomic_fact(
                 fact,
                 &full_param_to_arg_map,
-                ParamObjType::AlphaRename,
+                SubstitutionMode::Exact,
                 None,
             )?;
             then_facts.push(self.inst_exist_or_and_chain_atomic_fact(
                 &renamed_fact,
                 &full_param_to_arg_map,
-                ParamObjType::BinderRetag(BinderRetagSource::FnSet),
+                SubstitutionMode::Exact,
                 None,
             )?);
         }

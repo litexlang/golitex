@@ -34,7 +34,7 @@ pub fn forall_binders_dom_and_curried_layers_from_fn_set_clause(
                 .inst_quantifier_free_fact(
                     d,
                     &fn_set_param_to_forall_param,
-                    ParamObjType::BinderRetag(BinderRetagSource::FnSet),
+                    SubstitutionMode::Exact,
                     None,
                 )?
                 .into(),
@@ -57,7 +57,7 @@ pub fn forall_binders_dom_and_curried_layers_from_fn_set_clause(
                     .inst_quantifier_free_fact(
                         d,
                         &fn_set_param_to_forall_param,
-                        ParamObjType::BinderRetag(BinderRetagSource::FnSet),
+                        SubstitutionMode::Exact,
                         None,
                     )?
                     .into(),
@@ -69,7 +69,7 @@ pub fn forall_binders_dom_and_curried_layers_from_fn_set_clause(
         ret_set = runtime.inst_obj(
             inner.body.ret_set.as_ref(),
             &fn_set_param_to_forall_param,
-            ParamObjType::BinderRetag(BinderRetagSource::FnSet),
+            SubstitutionMode::Exact,
         )?;
     }
 
@@ -79,16 +79,12 @@ pub fn forall_binders_dom_and_curried_layers_from_fn_set_clause(
 pub fn build_curried_function_obj_from_layers_with_binding(
     function: Identifier,
     layer_param_names: &[Vec<SymbolBinding>],
-    binding_kind: ParamObjType,
 ) -> Obj {
     let mut body_vectors: Vec<Vec<Box<Obj>>> = Vec::with_capacity(layer_param_names.len());
     for layer in layer_param_names {
         let mut group: Vec<Box<Obj>> = Vec::with_capacity(layer.len());
         for binding in layer {
-            group.push(Box::new(obj_for_bound_param_in_scope(
-                binding,
-                binding_kind,
-            )));
+            group.push(Box::new(obj_for_bound_param_in_scope(binding)));
         }
         body_vectors.push(group);
     }
@@ -104,10 +100,7 @@ pub fn build_curried_anonymous_fn_from_layers_forall(
     for layer in layer_param_names {
         let mut group: Vec<Box<Obj>> = Vec::with_capacity(layer.len());
         for binding in layer {
-            group.push(Box::new(obj_for_bound_param_in_scope(
-                binding,
-                ParamObjType::Forall,
-            )));
+            group.push(Box::new(obj_for_bound_param_in_scope(binding)));
         }
         body_vectors.push(group);
     }
@@ -124,9 +117,7 @@ pub fn build_curried_fn_value_apply_for_fn_eq(
     func: &Obj,
     layer_param_names: &[Vec<SymbolBinding>],
 ) -> Option<Obj> {
-    // Inside `verify_forall` with `define_params(..., Forall)`, curried args must be
-    // `ForallFreeParamObj` so `f(x)` matches the same `x` as user `forall` facts (e.g. chains like
-    // `f(x) = x = g(x)`). Function-body binders would not unify with those citations.
+    // Curried arguments retain the exact bindings allocated by the surrounding forall.
     if let Some(identifier) = match func {
         Obj::Atom(AtomObj::Identifier(identifier)) => Some(identifier.clone()),
         _ => None,
@@ -134,7 +125,6 @@ pub fn build_curried_fn_value_apply_for_fn_eq(
         return Some(build_curried_function_obj_from_layers_with_binding(
             identifier,
             layer_param_names,
-            ParamObjType::Forall,
         ));
     }
     if let Obj::AnonymousFn(af) = func {
@@ -148,10 +138,7 @@ pub fn build_curried_fn_value_apply_for_fn_eq(
         for layer in layer_param_names {
             let mut args: Vec<Box<Obj>> = Vec::with_capacity(layer.len());
             for binding in layer {
-                args.push(Box::new(obj_for_bound_param_in_scope(
-                    binding,
-                    ParamObjType::Forall,
-                )));
+                args.push(Box::new(obj_for_bound_param_in_scope(binding)));
             }
             applied.body.push(args);
         }
@@ -162,10 +149,7 @@ pub fn build_curried_fn_value_apply_for_fn_eq(
         for layer in layer_param_names {
             let mut group: Vec<Box<Obj>> = Vec::with_capacity(layer.len());
             for binding in layer {
-                group.push(Box::new(obj_for_bound_param_in_scope(
-                    binding,
-                    ParamObjType::Forall,
-                )));
+                group.push(Box::new(obj_for_bound_param_in_scope(binding)));
             }
             body_vectors.push(group);
         }
@@ -182,7 +166,7 @@ pub fn build_declared_function_obj_with_param_bindings(
         .expect("declared function identifier should be an atom");
     let params = param_bindings
         .iter()
-        .map(|binding| Box::new(obj_for_bound_param_in_scope(binding, ParamObjType::FnSet)))
+        .map(|binding| Box::new(obj_for_bound_param_in_scope(binding)))
         .collect();
     FnObj::new(function_head, vec![params]).into()
 }
@@ -208,7 +192,7 @@ pub fn forall_param_defs_dom_and_map_from_have_fn_clause(
                 .inst_quantifier_free_fact(
                     dom_fact,
                     &fn_set_param_to_forall_param,
-                    ParamObjType::BinderRetag(BinderRetagSource::FnSet),
+                    SubstitutionMode::Exact,
                     None,
                 )?
                 .into(),
@@ -233,10 +217,10 @@ fn append_fn_set_param_groups_as_forall_param_type_groups(
         let param_set = runtime.inst_obj(
             param_def_with_set.set_obj(),
             fn_set_param_to_forall_param,
-            ParamObjType::BinderRetag(BinderRetagSource::FnSet),
+            SubstitutionMode::Exact,
         )?;
-        let (group_forall_names, group_map) = runtime
-            .fresh_binder_retag_plan_for_bindings(&param_def_with_set.params, ParamObjType::Forall);
+        let (group_forall_names, group_map) =
+            runtime.fresh_binder_retag_plan_for_bindings(&param_def_with_set.params);
         groups.push(ParamGroupWithParamType::new(
             group_forall_names.clone(),
             ParamType::Obj(param_set),

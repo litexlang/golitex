@@ -2,31 +2,40 @@ use crate::prelude::*;
 use std::collections::HashMap;
 use std::fmt;
 
+/// Operational policy for introducing a symbol into a parser/runtime scope.
+/// The enclosing AST, rather than the occurrence object, owns whether that
+/// binder came from `forall`, `exist`, a set builder, or a function set.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum ParamObjType {
-    Identifier,
-    Forall,
-    DefHeader,
-    Exist,
-    SetBuilder,
-    FnSet,
-    Induc,
-    DefAlgo,
-    DefStructField,
-    TupleIndex,
-    CartIndex,
-    TheoremInstantiation,
-    AlphaRename,
-    BinderRetag(BinderRetagSource),
+pub enum BindingScope {
+    DeclaredObject,
+    LocalBinder,
+    StructureField,
+    ReuseActiveBinder,
 }
 
+/// Operation performed while rebuilding an object or fact.
+///
+/// These variants say how substitution is performed; they do not encode which
+/// AST construct owns a binder.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum BinderRetagSource {
-    Forall,
-    Exist,
-    FnSet,
-    Induc,
-    DefAlgo,
+pub enum SubstitutionMode {
+    Exact,
+    Named,
+    Theorem,
+}
+
+impl BindingScope {
+    pub fn is_declared_object(self) -> bool {
+        self == Self::DeclaredObject
+    }
+
+    pub fn reuses_active_binding(self) -> bool {
+        self == Self::ReuseActiveBinder
+    }
+
+    pub fn respects_bare_symbols(self, name: &str) -> bool {
+        !name.starts_with("#binder_") && self != Self::StructureField
+    }
 }
 
 pub const FREE_PARAM_DISPLAY_TAG_PREFIX: char = '~';
@@ -103,362 +112,59 @@ pub fn strip_free_param_numeric_tags_in_display(text: &str) -> String {
 }
 
 #[derive(Clone, Debug)]
-pub struct ForallFreeParamObj {
+pub struct BoundParamObj {
     pub symbol: SymbolRef,
 }
 
-#[derive(Clone, Debug)]
-pub struct DefHeaderFreeParamObj {
-    pub symbol: SymbolRef,
-}
-
-#[derive(Clone, Debug)]
-pub struct ExistFreeParamObj {
-    pub symbol: SymbolRef,
-}
-
-#[derive(Clone, Debug)]
-pub struct SetBuilderFreeParamObj {
-    pub symbol: SymbolRef,
-}
-
-#[derive(Clone, Debug)]
-pub struct FnSetFreeParamObj {
-    pub symbol: SymbolRef,
-}
-
-#[derive(Clone, Debug)]
-pub struct ByInducFreeParamObj {
-    pub symbol: SymbolRef,
-}
-
-#[derive(Clone, Debug)]
-pub struct DefAlgoFreeParamObj {
-    pub symbol: SymbolRef,
-}
-
-#[derive(Clone, Debug)]
-pub struct DefStructFieldFreeParamObj {
-    pub symbol: SymbolRef,
-}
-
-#[derive(Clone, Debug)]
-pub struct TupleIndexFreeParamObj {
-    pub symbol: SymbolRef,
-}
-
-#[derive(Clone, Debug)]
-pub struct CartIndexFreeParamObj {
-    pub symbol: SymbolRef,
-}
-
-impl ForallFreeParamObj {
+impl BoundParamObj {
     pub fn new(symbol: impl IntoSymbolRef) -> Self {
-        let symbol = symbol.into_symbol_ref();
-        ForallFreeParamObj { symbol }
-    }
-
-    pub fn name(&self) -> &str {
-        self.symbol.display_name()
-    }
-}
-
-impl DefHeaderFreeParamObj {
-    pub fn new(symbol: impl IntoSymbolRef) -> Self {
-        let symbol = symbol.into_symbol_ref();
-        DefHeaderFreeParamObj { symbol }
-    }
-
-    pub fn name(&self) -> &str {
-        self.symbol.display_name()
-    }
-}
-
-impl ExistFreeParamObj {
-    pub fn new(symbol: impl IntoSymbolRef) -> Self {
-        let symbol = symbol.into_symbol_ref();
-        ExistFreeParamObj { symbol }
-    }
-
-    pub fn name(&self) -> &str {
-        self.symbol.display_name()
-    }
-}
-
-impl SetBuilderFreeParamObj {
-    pub fn new(symbol: impl IntoSymbolRef) -> Self {
-        let symbol = symbol.into_symbol_ref();
-        SetBuilderFreeParamObj { symbol }
-    }
-
-    pub fn name(&self) -> &str {
-        self.symbol.display_name()
-    }
-}
-
-impl FnSetFreeParamObj {
-    pub fn new(symbol: impl IntoSymbolRef) -> Self {
-        let symbol = symbol.into_symbol_ref();
-        FnSetFreeParamObj { symbol }
-    }
-
-    pub fn name(&self) -> &str {
-        self.symbol.display_name()
-    }
-}
-
-impl ByInducFreeParamObj {
-    pub fn new(symbol: impl IntoSymbolRef) -> Self {
-        let symbol = symbol.into_symbol_ref();
-        ByInducFreeParamObj { symbol }
-    }
-
-    pub fn name(&self) -> &str {
-        self.symbol.display_name()
-    }
-}
-
-impl DefAlgoFreeParamObj {
-    pub fn new(symbol: impl IntoSymbolRef) -> Self {
-        let symbol = symbol.into_symbol_ref();
-        DefAlgoFreeParamObj { symbol }
-    }
-
-    pub fn name(&self) -> &str {
-        self.symbol.display_name()
-    }
-}
-
-impl DefStructFieldFreeParamObj {
-    pub fn new(symbol: impl IntoSymbolRef) -> Self {
-        let symbol = symbol.into_symbol_ref();
-        DefStructFieldFreeParamObj { symbol }
-    }
-
-    pub fn name(&self) -> &str {
-        self.symbol.display_name()
-    }
-}
-
-impl TupleIndexFreeParamObj {
-    pub fn new(symbol: impl IntoSymbolRef) -> Self {
-        let symbol = symbol.into_symbol_ref();
-        TupleIndexFreeParamObj { symbol }
-    }
-
-    pub fn name(&self) -> &str {
-        self.symbol.display_name()
-    }
-}
-
-impl CartIndexFreeParamObj {
-    pub fn new(symbol: impl IntoSymbolRef) -> Self {
-        let symbol = symbol.into_symbol_ref();
-        CartIndexFreeParamObj { symbol }
-    }
-
-    pub fn name(&self) -> &str {
-        self.symbol.display_name()
-    }
-}
-
-macro_rules! impl_free_param_eq {
-    ($($ty:ty),+ $(,)?) => {
-        $(
-            impl PartialEq for $ty {
-                fn eq(&self, other: &Self) -> bool {
-                    self.symbol == other.symbol
-                }
-            }
-
-            impl Eq for $ty {}
-        )+
-    };
-}
-
-impl_free_param_eq!(
-    ForallFreeParamObj,
-    DefHeaderFreeParamObj,
-    ExistFreeParamObj,
-    SetBuilderFreeParamObj,
-    FnSetFreeParamObj,
-    ByInducFreeParamObj,
-    DefAlgoFreeParamObj,
-    DefStructFieldFreeParamObj,
-    TupleIndexFreeParamObj,
-    CartIndexFreeParamObj,
-);
-
-impl fmt::Display for ForallFreeParamObj {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        write_symbol_identity_spine(f, &self.symbol, self.name())
-    }
-}
-
-impl fmt::Display for DefHeaderFreeParamObj {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        write_symbol_identity_spine(f, &self.symbol, self.name())
-    }
-}
-
-impl fmt::Display for ExistFreeParamObj {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        write_symbol_identity_spine(f, &self.symbol, self.name())
-    }
-}
-
-impl fmt::Display for SetBuilderFreeParamObj {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        write_symbol_identity_spine(f, &self.symbol, self.name())
-    }
-}
-
-impl fmt::Display for FnSetFreeParamObj {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        write_symbol_identity_spine(f, &self.symbol, self.name())
-    }
-}
-
-impl fmt::Display for ByInducFreeParamObj {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        write_symbol_identity_spine(f, &self.symbol, self.name())
-    }
-}
-
-impl fmt::Display for DefAlgoFreeParamObj {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        write_symbol_identity_spine(f, &self.symbol, self.name())
-    }
-}
-
-impl fmt::Display for DefStructFieldFreeParamObj {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        write_symbol_identity_spine(f, &self.symbol, self.name())
-    }
-}
-
-impl fmt::Display for TupleIndexFreeParamObj {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        write_symbol_identity_spine(f, &self.symbol, self.name())
-    }
-}
-
-impl fmt::Display for CartIndexFreeParamObj {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        write_symbol_identity_spine(f, &self.symbol, self.name())
-    }
-}
-
-impl From<ForallFreeParamObj> for Obj {
-    fn from(v: ForallFreeParamObj) -> Self {
-        Obj::Atom(AtomObj::Forall(v))
-    }
-}
-
-impl From<DefHeaderFreeParamObj> for Obj {
-    fn from(v: DefHeaderFreeParamObj) -> Self {
-        Obj::Atom(AtomObj::Def(v))
-    }
-}
-
-impl From<ExistFreeParamObj> for Obj {
-    fn from(v: ExistFreeParamObj) -> Self {
-        Obj::Atom(AtomObj::Exist(v))
-    }
-}
-
-impl From<SetBuilderFreeParamObj> for Obj {
-    fn from(v: SetBuilderFreeParamObj) -> Self {
-        Obj::Atom(AtomObj::SetBuilder(v))
-    }
-}
-
-impl From<FnSetFreeParamObj> for Obj {
-    fn from(v: FnSetFreeParamObj) -> Self {
-        Obj::Atom(AtomObj::FnSet(v))
-    }
-}
-
-impl From<ByInducFreeParamObj> for Obj {
-    fn from(v: ByInducFreeParamObj) -> Self {
-        Obj::Atom(AtomObj::Induc(v))
-    }
-}
-
-impl From<DefAlgoFreeParamObj> for Obj {
-    fn from(v: DefAlgoFreeParamObj) -> Self {
-        Obj::Atom(AtomObj::DefAlgo(v))
-    }
-}
-
-impl From<DefStructFieldFreeParamObj> for Obj {
-    fn from(v: DefStructFieldFreeParamObj) -> Self {
-        Obj::Atom(AtomObj::DefStructField(v))
-    }
-}
-
-impl From<TupleIndexFreeParamObj> for Obj {
-    fn from(v: TupleIndexFreeParamObj) -> Self {
-        Obj::Atom(AtomObj::TupleIndex(v))
-    }
-}
-
-impl From<CartIndexFreeParamObj> for Obj {
-    fn from(v: CartIndexFreeParamObj) -> Self {
-        Obj::Atom(AtomObj::CartIndex(v))
-    }
-}
-
-/// Bound-parameter [`Obj`] for runtime-synthesized facts (`by` stmts, coverage, etc.), matching parse-time `~kind` tagging and [`Runtime::inst_obj`] substitution rules.
-pub fn obj_for_bound_param_in_scope(binding: impl IntoSymbolRef, scope: ParamObjType) -> Obj {
-    let symbol = binding.into_symbol_ref();
-    match scope {
-        ParamObjType::Forall => ForallFreeParamObj::new(symbol).into(),
-        ParamObjType::Exist => ExistFreeParamObj::new(symbol).into(),
-        ParamObjType::DefHeader => DefHeaderFreeParamObj::new(symbol).into(),
-        ParamObjType::SetBuilder => SetBuilderFreeParamObj::new(symbol).into(),
-        ParamObjType::FnSet => FnSetFreeParamObj::new(symbol).into(),
-        ParamObjType::Induc => ByInducFreeParamObj::new(symbol).into(),
-        ParamObjType::DefAlgo => DefAlgoFreeParamObj::new(symbol).into(),
-        ParamObjType::DefStructField => DefStructFieldFreeParamObj::new(symbol).into(),
-        ParamObjType::TupleIndex => TupleIndexFreeParamObj::new(symbol).into(),
-        ParamObjType::CartIndex => CartIndexFreeParamObj::new(symbol).into(),
-        ParamObjType::Identifier
-        | ParamObjType::TheoremInstantiation
-        | ParamObjType::AlphaRename
-        | ParamObjType::BinderRetag(_) => {
-            unreachable!(
-                "obj_for_bound_param_in_scope: {:?} is not a bare-name binding scope",
-                scope
-            );
+        Self {
+            symbol: symbol.into_symbol_ref(),
         }
     }
+
+    pub fn name(&self) -> &str {
+        self.symbol.display_name()
+    }
+}
+
+impl PartialEq for BoundParamObj {
+    fn eq(&self, other: &Self) -> bool {
+        self.symbol == other.symbol
+    }
+}
+
+impl Eq for BoundParamObj {}
+
+impl fmt::Display for BoundParamObj {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        write_symbol_identity_spine(f, &self.symbol, self.name())
+    }
+}
+
+impl From<BoundParamObj> for Obj {
+    fn from(v: BoundParamObj) -> Self {
+        Obj::Atom(AtomObj::Bound(v))
+    }
+}
+
+/// Bound-parameter [`Obj`] for runtime-synthesized facts.
+///
+/// The binder's syntactic source (forall/exist/function/etc.) belongs to the
+/// enclosing AST node. Occurrences carry only their symbol identity.
+pub fn obj_for_bound_param_in_scope(binding: impl IntoSymbolRef) -> Obj {
+    BoundParamObj::new(binding).into()
 }
 
 /// Element [`Obj`] for stored typing / membership facts so keys match parsed bound names (`~tag` spine).
 pub fn param_binding_element_obj_for_store(
     binding: &SymbolBinding,
-    binding_kind: ParamObjType,
+    binding_scope: BindingScope,
 ) -> Obj {
-    match binding_kind {
-        ParamObjType::Identifier => {
-            Identifier::new_bound(binding.name().to_string(), binding.as_ref()).into()
-        }
-        ParamObjType::Forall
-        | ParamObjType::Exist
-        | ParamObjType::DefHeader
-        | ParamObjType::SetBuilder
-        | ParamObjType::FnSet
-        | ParamObjType::Induc
-        | ParamObjType::DefAlgo
-        | ParamObjType::DefStructField
-        | ParamObjType::TupleIndex
-        | ParamObjType::CartIndex => obj_for_bound_param_in_scope(binding, binding_kind),
-        ParamObjType::TheoremInstantiation
-        | ParamObjType::AlphaRename
-        | ParamObjType::BinderRetag(_) => unreachable!(
-            "param_binding_element_obj_for_store: instantiation modes are not binding kinds"
-        ),
+    if binding_scope.is_declared_object() {
+        Identifier::new_bound(binding.name().to_string(), binding.as_ref()).into()
+    } else {
+        obj_for_bound_param_in_scope(binding)
     }
 }
 

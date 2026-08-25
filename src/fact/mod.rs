@@ -18,7 +18,6 @@ pub use validation::fact_parameters::{
     check_exist_fact_has_no_duplicate_exist_free_parameter,
     check_forall_fact_has_no_duplicate_forall_free_parameter,
     check_forall_fact_with_iff_has_no_duplicate_forall_free_parameter,
-    check_quantifier_free_fact_has_no_duplicate_free_parameter,
 };
 pub use validation::object_parameters::{
     check_anonymous_fn_has_no_duplicate_fn_set_free_parameter,

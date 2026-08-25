@@ -4,6 +4,17 @@ use crate::prelude::*;
 use std::collections::{HashMap, HashSet};
 use std::result::Result;
 
+fn direct_bound_symbol_id(obj: &Obj) -> Option<SymbolId> {
+    match obj {
+        Obj::Atom(AtomObj::Bound(param)) => Some(param.symbol.id()),
+        _ => None,
+    }
+}
+
+fn is_bound_symbol(obj: &Obj, binding: &SymbolBinding) -> bool {
+    direct_bound_symbol_id(obj) == Some(binding.id())
+}
+
 fn real_line_comparison_exist_fact_non_witness_operands(
     exist_fact: &ExistFactEnum,
 ) -> Option<Vec<&Obj>> {
@@ -11,8 +22,8 @@ fn real_line_comparison_exist_fact_non_witness_operands(
         return None;
     }
 
-    let param_names = exist_fact.params_def_with_type().collect_param_names();
-    if !(param_names.len() == 1 || param_names.len() == 2) {
+    let param_bindings = exist_fact.params_def_with_type().collect_param_bindings();
+    if !(param_bindings.len() == 1 || param_bindings.len() == 2) {
         return None;
     }
     if !exist_fact
@@ -42,34 +53,30 @@ fn real_line_comparison_exist_fact_non_witness_operands(
         _ => return None,
     };
 
-    let direct_exist_param_name = |obj: &Obj| match obj {
-        Obj::Atom(AtomObj::Exist(param)) => Some(param.name().to_string()),
-        _ => None,
-    };
-
-    if param_names.len() == 1 {
-        let witness_name = &param_names[0];
-        let other = if direct_exist_param_name(left).as_deref() == Some(witness_name.as_str()) {
+    if param_bindings.len() == 1 {
+        let witness_id = param_bindings[0].id();
+        let other = if direct_bound_symbol_id(left) == Some(witness_id) {
             right
-        } else if direct_exist_param_name(right).as_deref() == Some(witness_name.as_str()) {
+        } else if direct_bound_symbol_id(right) == Some(witness_id) {
             left
         } else {
             return None;
         };
-        if Runtime::obj_depends_on_given_exist_param(other, param_names.as_slice()) {
+        if Runtime::obj_depends_on_given_exist_param(other, &[witness_id]) {
             return None;
         }
         return Some(vec![other]);
     } else {
-        let (Some(left_name), Some(right_name)) = (
-            direct_exist_param_name(left),
-            direct_exist_param_name(right),
-        ) else {
+        let (Some(left_id), Some(right_id)) =
+            (direct_bound_symbol_id(left), direct_bound_symbol_id(right))
+        else {
             return None;
         };
-        if left_name == right_name
-            || !param_names.iter().any(|name| name == &left_name)
-            || !param_names.iter().any(|name| name == &right_name)
+        if left_id == right_id
+            || !param_bindings.iter().any(|binding| binding.id() == left_id)
+            || !param_bindings
+                .iter()
+                .any(|binding| binding.id() == right_id)
         {
             return None;
         }
@@ -87,12 +94,12 @@ fn rational_integer_ratio_exist_fact_non_witness_operand(
 
     let params = exist_fact
         .params_def_with_type()
-        .collect_param_names_with_types();
+        .collect_param_bindings_with_types();
     if params.len() != 2 {
         return None;
     }
-    let (numerator_name, numerator_type) = &params[0];
-    let (denominator_name, denominator_type) = &params[1];
+    let (numerator_binding, numerator_type) = &params[0];
+    let (denominator_binding, denominator_type) = &params[1];
     if !matches!(
         numerator_type,
         ParamType::Obj(Obj::StandardSet(StandardSet::Z))
@@ -110,13 +117,8 @@ fn rational_integer_ratio_exist_fact_non_witness_operand(
 
     let is_selected_ratio = |obj: &Obj| match obj {
         Obj::Div(div) => {
-            matches!(
-                div.left.as_ref(),
-                Obj::Atom(AtomObj::Exist(param)) if param.name() == numerator_name.as_str()
-            ) && matches!(
-                div.right.as_ref(),
-                Obj::Atom(AtomObj::Exist(param)) if param.name() == denominator_name.as_str()
-            )
+            is_bound_symbol(div.left.as_ref(), numerator_binding)
+                && is_bound_symbol(div.right.as_ref(), denominator_binding)
         }
         _ => false,
     };
@@ -130,7 +132,7 @@ fn rational_integer_ratio_exist_fact_non_witness_operand(
     };
     if Runtime::obj_depends_on_given_exist_param(
         other,
-        &[numerator_name.clone(), denominator_name.clone()],
+        &[numerator_binding.id(), denominator_binding.id()],
     ) {
         return None;
     }
@@ -145,15 +147,15 @@ fn rational_positive_denominator_exist_fact_non_witness_operand(
     }
     let params = exist_fact
         .params_def_with_type()
-        .collect_param_names_with_types();
-    let [(numerator_name, ParamType::Obj(Obj::StandardSet(StandardSet::Z))), (denominator_name, ParamType::Obj(Obj::StandardSet(StandardSet::Z)))] =
+        .collect_param_bindings_with_types();
+    let [(numerator_binding, ParamType::Obj(Obj::StandardSet(StandardSet::Z))), (denominator_binding, ParamType::Obj(Obj::StandardSet(StandardSet::Z)))] =
         params.as_slice()
     else {
         return None;
     };
 
-    let is_numerator = |obj: &Obj| matches!(obj, Obj::Atom(AtomObj::Exist(param)) if param.name() == numerator_name.as_str());
-    let is_denominator = |obj: &Obj| matches!(obj, Obj::Atom(AtomObj::Exist(param)) if param.name() == denominator_name.as_str());
+    let is_numerator = |obj: &Obj| is_bound_symbol(obj, numerator_binding);
+    let is_denominator = |obj: &Obj| is_bound_symbol(obj, denominator_binding);
     let is_zero = |obj: &Obj| matches!(obj, Obj::Number(number) if number.normalized_value == "0");
     let denominator_is_positive = exist_fact.facts().iter().any(|fact| match fact {
         QuantifierFreeFact::AtomicFact(AtomicFact::GreaterFact(fact)) => {
@@ -186,7 +188,7 @@ fn rational_positive_denominator_exist_fact_non_witness_operand(
     })?;
     if Runtime::obj_depends_on_given_exist_param(
         ratio_other,
-        &[numerator_name.clone(), denominator_name.clone()],
+        &[numerator_binding.id(), denominator_binding.id()],
     ) {
         return None;
     }
@@ -200,8 +202,8 @@ fn euclidean_quotient_exist_unique_operands(exist_fact: &ExistFactEnum) -> Optio
 
     let params = exist_fact
         .params_def_with_type()
-        .collect_param_names_with_types();
-    let [(witness_name, ParamType::Obj(Obj::StandardSet(StandardSet::Z)))] = params.as_slice()
+        .collect_param_bindings_with_types();
+    let [(witness_binding, ParamType::Obj(Obj::StandardSet(StandardSet::Z)))] = params.as_slice()
     else {
         return None;
     };
@@ -216,10 +218,7 @@ fn euclidean_quotient_exist_unique_operands(exist_fact: &ExistFactEnum) -> Optio
     let Obj::Mul(product) = decomposition.left.as_ref() else {
         return None;
     };
-    if !matches!(
-        product.right.as_ref(),
-        Obj::Atom(AtomObj::Exist(param)) if param.name() == witness_name.as_str()
-    ) {
+    if !is_bound_symbol(product.right.as_ref(), witness_binding) {
         return None;
     }
     let Obj::Mod(remainder) = decomposition.right.as_ref() else {
@@ -230,8 +229,8 @@ fn euclidean_quotient_exist_unique_operands(exist_fact: &ExistFactEnum) -> Optio
     let divisor = product.left.as_ref().clone();
     if dividend.to_string() != remainder.left.to_string()
         || divisor.to_string() != remainder.right.to_string()
-        || Runtime::obj_depends_on_given_exist_param(&dividend, &[witness_name.clone()])
-        || Runtime::obj_depends_on_given_exist_param(&divisor, &[witness_name.clone()])
+        || Runtime::obj_depends_on_given_exist_param(&dividend, &[witness_binding.id()])
+        || Runtime::obj_depends_on_given_exist_param(&divisor, &[witness_binding.id()])
     {
         return None;
     }
@@ -245,8 +244,8 @@ fn integer_divisibility_exist_fact_operands(exist_fact: &ExistFactEnum) -> Optio
     }
     let params = exist_fact
         .params_def_with_type()
-        .collect_param_names_with_types();
-    let [(witness_name, ParamType::Obj(Obj::StandardSet(StandardSet::Z)))] = params.as_slice()
+        .collect_param_bindings_with_types();
+    let [(witness_binding, ParamType::Obj(Obj::StandardSet(StandardSet::Z)))] = params.as_slice()
     else {
         return None;
     };
@@ -256,10 +255,10 @@ fn integer_divisibility_exist_fact_operands(exist_fact: &ExistFactEnum) -> Optio
     };
 
     let extract_divisor = |candidate: &Obj| match candidate {
-        Obj::Mul(product) if matches!(product.left.as_ref(), Obj::Atom(AtomObj::Exist(param)) if param.name() == witness_name.as_str()) => {
+        Obj::Mul(product) if is_bound_symbol(product.left.as_ref(), witness_binding) => {
             Some(product.right.as_ref().clone())
         }
-        Obj::Mul(product) if matches!(product.right.as_ref(), Obj::Atom(AtomObj::Exist(param)) if param.name() == witness_name.as_str()) => {
+        Obj::Mul(product) if is_bound_symbol(product.right.as_ref(), witness_binding) => {
             Some(product.left.as_ref().clone())
         }
         _ => None,
@@ -272,8 +271,8 @@ fn integer_divisibility_exist_fact_operands(exist_fact: &ExistFactEnum) -> Optio
     } else {
         return None;
     };
-    if Runtime::obj_depends_on_given_exist_param(&dividend, &[witness_name.clone()])
-        || Runtime::obj_depends_on_given_exist_param(&divisor, &[witness_name.clone()])
+    if Runtime::obj_depends_on_given_exist_param(&dividend, &[witness_binding.id()])
+        || Runtime::obj_depends_on_given_exist_param(&divisor, &[witness_binding.id()])
     {
         return None;
     }
@@ -286,8 +285,9 @@ fn archimedean_reciprocal_bound_non_witness_operand(exist_fact: &ExistFactEnum) 
     }
     let params = exist_fact
         .params_def_with_type()
-        .collect_param_names_with_types();
-    let [(witness_name, ParamType::Obj(Obj::StandardSet(StandardSet::NPos)))] = params.as_slice()
+        .collect_param_bindings_with_types();
+    let [(witness_binding, ParamType::Obj(Obj::StandardSet(StandardSet::NPos)))] =
+        params.as_slice()
     else {
         return None;
     };
@@ -299,8 +299,8 @@ fn archimedean_reciprocal_bound_non_witness_operand(exist_fact: &ExistFactEnum) 
         return None;
     };
     if !matches!(div.left.as_ref(), Obj::Number(number) if number.normalized_value == "1")
-        || !matches!(div.right.as_ref(), Obj::Atom(AtomObj::Exist(param)) if param.name() == witness_name.as_str())
-        || Runtime::obj_depends_on_given_exist_param(&less_fact.right, &[witness_name.clone()])
+        || !is_bound_symbol(div.right.as_ref(), witness_binding)
+        || Runtime::obj_depends_on_given_exist_param(&less_fact.right, &[witness_binding.id()])
     {
         return None;
     }
@@ -317,8 +317,8 @@ fn dense_order_exist_fact_endpoints(
 
     let params = exist_fact
         .params_def_with_type()
-        .collect_param_names_with_types();
-    let [(witness_name, ParamType::Obj(Obj::StandardSet(carrier)))] = params.as_slice() else {
+        .collect_param_bindings_with_types();
+    let [(witness_binding, ParamType::Obj(Obj::StandardSet(carrier)))] = params.as_slice() else {
         return None;
     };
     let carrier_matches = matches!(
@@ -339,12 +339,12 @@ fn dense_order_exist_fact_endpoints(
         return None;
     };
 
-    let is_witness = |obj: &Obj| matches!(obj, Obj::Atom(AtomObj::Exist(param)) if param.name() == witness_name.as_str());
+    let is_witness = |obj: &Obj| is_bound_symbol(obj, witness_binding);
     if !is_witness(&left_less.right) || !is_witness(&right_less.left) {
         return None;
     }
-    if Runtime::obj_depends_on_given_exist_param(&left_less.left, &[witness_name.clone()])
-        || Runtime::obj_depends_on_given_exist_param(&right_less.right, &[witness_name.clone()])
+    if Runtime::obj_depends_on_given_exist_param(&left_less.left, &[witness_binding.id()])
+        || Runtime::obj_depends_on_given_exist_param(&right_less.right, &[witness_binding.id()])
     {
         return None;
     }
@@ -359,8 +359,8 @@ fn integer_interval_exist_fact_endpoints(exist_fact: &ExistFactEnum) -> Option<(
 
     let params = exist_fact
         .params_def_with_type()
-        .collect_param_names_with_types();
-    let [(witness_name, ParamType::Obj(Obj::StandardSet(StandardSet::Z)))] = params.as_slice()
+        .collect_param_bindings_with_types();
+    let [(witness_binding, ParamType::Obj(Obj::StandardSet(StandardSet::Z)))] = params.as_slice()
     else {
         return None;
     };
@@ -373,7 +373,7 @@ fn integer_interval_exist_fact_endpoints(exist_fact: &ExistFactEnum) -> Option<(
         return None;
     };
 
-    let is_witness = |obj: &Obj| matches!(obj, Obj::Atom(AtomObj::Exist(param)) if param.name() == witness_name.as_str());
+    let is_witness = |obj: &Obj| is_bound_symbol(obj, witness_binding);
     let (left, right, strict) = match (left_bound, right_bound) {
         (AtomicFact::LessFact(left_bound), AtomicFact::LessFact(right_bound))
             if is_witness(&left_bound.right) && is_witness(&right_bound.left) =>
@@ -388,8 +388,8 @@ fn integer_interval_exist_fact_endpoints(exist_fact: &ExistFactEnum) -> Option<(
         _ => return None,
     };
 
-    if Runtime::obj_depends_on_given_exist_param(left, &[witness_name.clone()])
-        || Runtime::obj_depends_on_given_exist_param(right, &[witness_name.clone()])
+    if Runtime::obj_depends_on_given_exist_param(left, &[witness_binding.id()])
+        || Runtime::obj_depends_on_given_exist_param(right, &[witness_binding.id()])
     {
         return None;
     }
@@ -404,8 +404,8 @@ fn nonempty_set_exist_fact_set(exist_fact: &ExistFactEnum) -> Option<Obj> {
 
     let params = exist_fact
         .params_def_with_type()
-        .collect_param_names_with_types();
-    let [(witness_name, ParamType::Obj(witness_set))] = params.as_slice() else {
+        .collect_param_bindings_with_types();
+    let [(witness_binding, ParamType::Obj(witness_set))] = params.as_slice() else {
         return None;
     };
 
@@ -413,10 +413,7 @@ fn nonempty_set_exist_fact_set(exist_fact: &ExistFactEnum) -> Option<Obj> {
     else {
         return None;
     };
-    let witness_is_member = matches!(
-        &membership.element,
-        Obj::Atom(AtomObj::Exist(param)) if param.name() == witness_name.as_str()
-    );
+    let witness_is_member = is_bound_symbol(&membership.element, witness_binding);
     if !witness_is_member || membership.set.to_string() != witness_set.to_string() {
         return None;
     }
@@ -799,7 +796,7 @@ impl Runtime {
         if witness_carrier.to_string() != StandardSet::N.to_string() {
             return Ok(None);
         }
-        let witness = obj_for_bound_param_in_scope(&groups[0].params[0], ParamObjType::Exist);
+        let witness = obj_for_bound_param_in_scope(&groups[0].params[0]);
         let [QuantifierFreeFact::AtomicFact(AtomicFact::NormalAtomicFact(maximum_prop))] =
             body.facts.as_slice()
         else {
@@ -819,13 +816,13 @@ impl Runtime {
         let member_clause = self.inst_fact(
             &definition.iff_facts[0],
             &param_to_arg_map,
-            ParamObjType::DefHeader,
+            SubstitutionMode::Exact,
             None,
         )?;
         let upper_bound_clause = self.inst_fact(
             &definition.iff_facts[1],
             &param_to_arg_map,
-            ParamObjType::DefHeader,
+            SubstitutionMode::Exact,
             None,
         )?;
         let Fact::AtomicFact(AtomicFact::InFact(member)) = member_clause else {
@@ -858,8 +855,7 @@ impl Runtime {
         else {
             return Ok(None);
         };
-        let upper_param =
-            obj_for_bound_param_in_scope(&upper_groups[0].params[0], ParamObjType::Forall);
+        let upper_param = obj_for_bound_param_in_scope(&upper_groups[0].params[0]);
         if domain_member.element.to_string() != upper_param.to_string()
             || domain_member.set.to_string() != member.set.to_string()
             || bound.left.to_string() != upper_param.to_string()
@@ -924,11 +920,7 @@ impl Runtime {
         let flat_orig = exist_fact.params_def_with_type().collect_param_bindings();
         let n = flat_orig.len();
         let mut reserved_names = HashSet::new();
-        self.collect_param_obj_names_in_exist_fact(
-            exist_fact,
-            ParamObjType::Forall,
-            &mut reserved_names,
-        );
+        self.collect_bound_param_names_in_exist_fact(exist_fact, &mut reserved_names);
         let mut flat_a = Vec::with_capacity(n);
         let mut flat_b = Vec::with_capacity(n);
         for _ in &flat_orig {
@@ -957,16 +949,13 @@ impl Runtime {
                     flat_a[index].clone()
                 })
                 .collect();
-            let pt_a = self.inst_param_type(
-                &group.param_type,
-                &map_running_a,
-                ParamObjType::BinderRetag(BinderRetagSource::Exist),
-            )?;
+            let pt_a =
+                self.inst_param_type(&group.param_type, &map_running_a, SubstitutionMode::Exact)?;
             for (orig, target) in group.params.iter().zip(chunk_a.iter()) {
                 insert_symbol_substitution(
                     &mut map_running_a,
                     orig,
-                    obj_for_bound_param_in_scope(target, ParamObjType::Forall),
+                    obj_for_bound_param_in_scope(target),
                 );
             }
             forall_groups.push(ParamGroupWithParamType::new(chunk_a, pt_a));
@@ -983,16 +972,13 @@ impl Runtime {
                     flat_b[index].clone()
                 })
                 .collect();
-            let pt_b = self.inst_param_type(
-                &group.param_type,
-                &map_running_b,
-                ParamObjType::BinderRetag(BinderRetagSource::Exist),
-            )?;
+            let pt_b =
+                self.inst_param_type(&group.param_type, &map_running_b, SubstitutionMode::Exact)?;
             for (orig, target) in group.params.iter().zip(chunk_b.iter()) {
                 insert_symbol_substitution(
                     &mut map_running_b,
                     orig,
-                    obj_for_bound_param_in_scope(target, ParamObjType::Forall),
+                    obj_for_bound_param_in_scope(target),
                 );
             }
             forall_groups.push(ParamGroupWithParamType::new(chunk_b, pt_b));
@@ -1001,45 +987,29 @@ impl Runtime {
         let mut map_a = HashMap::new();
         let mut map_b = HashMap::new();
         for ((source, target_a), target_b) in flat_orig.iter().zip(&flat_a).zip(&flat_b) {
-            insert_symbol_substitution(
-                &mut map_a,
-                source,
-                obj_for_bound_param_in_scope(target_a, ParamObjType::Forall),
-            );
-            insert_symbol_substitution(
-                &mut map_b,
-                source,
-                obj_for_bound_param_in_scope(target_b, ParamObjType::Forall),
-            );
+            insert_symbol_substitution(&mut map_a, source, obj_for_bound_param_in_scope(target_a));
+            insert_symbol_substitution(&mut map_b, source, obj_for_bound_param_in_scope(target_b));
         }
 
         // Retag only existential witness atoms into the two forall copies. Concrete identifiers
         // with the same spelling are captured from the surrounding environment and stay rigid.
         let mut dom_facts: Vec<Fact> = Vec::new();
         for inner in exist_fact.facts().iter() {
-            let f_a = self.inst_quantifier_free_fact(
-                inner,
-                &map_a,
-                ParamObjType::BinderRetag(BinderRetagSource::Exist),
-                None,
-            )?;
+            let f_a =
+                self.inst_quantifier_free_fact(inner, &map_a, SubstitutionMode::Exact, None)?;
             dom_facts.push(f_a.to_fact());
         }
         for inner in exist_fact.facts().iter() {
-            let f_b = self.inst_quantifier_free_fact(
-                inner,
-                &map_b,
-                ParamObjType::BinderRetag(BinderRetagSource::Exist),
-                None,
-            )?;
+            let f_b =
+                self.inst_quantifier_free_fact(inner, &map_b, SubstitutionMode::Exact, None)?;
             dom_facts.push(f_b.to_fact());
         }
 
         let mut then_facts: Vec<ExistOrAndChainAtomicFact> = Vec::new();
         if n == 1 {
             let eq = EqualFact::new(
-                obj_for_bound_param_in_scope(&flat_a[0], ParamObjType::Forall),
-                obj_for_bound_param_in_scope(&flat_b[0], ParamObjType::Forall),
+                obj_for_bound_param_in_scope(&flat_a[0]),
+                obj_for_bound_param_in_scope(&flat_b[0]),
                 lf.clone(),
             );
             then_facts.push(ExistOrAndChainAtomicFact::AtomicFact(eq.into()));
@@ -1048,8 +1018,8 @@ impl Runtime {
             for (left, right) in flat_a.iter().zip(flat_b.iter()) {
                 equal_facts.push(
                     EqualFact::new(
-                        obj_for_bound_param_in_scope(left, ParamObjType::Forall),
-                        obj_for_bound_param_in_scope(right, ParamObjType::Forall),
+                        obj_for_bound_param_in_scope(left),
+                        obj_for_bound_param_in_scope(right),
                         lf.clone(),
                     )
                     .into(),
@@ -1060,14 +1030,14 @@ impl Runtime {
             let left_tuple: Obj = Tuple::new(
                 flat_a
                     .iter()
-                    .map(|binding| obj_for_bound_param_in_scope(binding, ParamObjType::Forall))
+                    .map(|binding| obj_for_bound_param_in_scope(binding))
                     .collect::<Vec<Obj>>(),
             )
             .into();
             let right_tuple: Obj = Tuple::new(
                 flat_b
                     .iter()
-                    .map(|binding| obj_for_bound_param_in_scope(binding, ParamObjType::Forall))
+                    .map(|binding| obj_for_bound_param_in_scope(binding))
                     .collect::<Vec<Obj>>(),
             )
             .into();
@@ -1232,7 +1202,7 @@ impl Runtime {
                 insert_symbol_substitution(
                     &mut param_to_arg_map,
                     original_binding,
-                    obj_for_bound_param_in_scope(&normalized_binding, ParamObjType::Exist),
+                    obj_for_bound_param_in_scope(&normalized_binding),
                 );
             }
         }

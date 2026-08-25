@@ -166,7 +166,7 @@ fn axiom_of_choice_members_nonempty_fact(
     let a_name = runtime.generate_internal_binder_name();
     let a_group =
         runtime.fresh_param_group_with_type(vec![a_name], ParamType::Obj(family.clone()))?;
-    let a = obj_for_bound_param_in_scope(&a_group.params[0], ParamObjType::Forall);
+    let a = obj_for_bound_param_in_scope(&a_group.params[0]);
     Ok(ForallFact::new_canonical_forall(
         ParamDefWithType::new(vec![a_group]),
         vec![],
@@ -193,13 +193,12 @@ fn axiom_of_choice_exist_fact(
     let f_name = runtime.generate_internal_binder_name();
     let f_group =
         runtime.fresh_param_group_with_type(vec![f_name], ParamType::Obj(choice_fn_set.into()))?;
-    let f = obj_for_bound_param_in_scope(&f_group.params[0], ParamObjType::Exist);
+    let f = obj_for_bound_param_in_scope(&f_group.params[0]);
 
     let identity_index_name = runtime.generate_internal_binder_name();
     let identity_index_group =
         runtime.fresh_param_group_with_set(vec![identity_index_name], family.clone())?;
-    let identity_value =
-        obj_for_bound_param_in_scope(&identity_index_group.params[0], ParamObjType::FnSet);
+    let identity_value = obj_for_bound_param_in_scope(&identity_index_group.params[0]);
     let identity_family: Obj = AnonymousFn::new(
         vec![identity_index_group],
         vec![],

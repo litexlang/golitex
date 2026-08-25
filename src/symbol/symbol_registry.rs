@@ -339,6 +339,13 @@ impl SymbolRole {
     pub fn is_public_declaration(self) -> bool {
         !matches!(self, SymbolRole::StructureField | SymbolRole::Binder)
     }
+
+    pub fn is_object_symbol(self) -> bool {
+        matches!(
+            self,
+            SymbolRole::Object | SymbolRole::StructureField | SymbolRole::Binder
+        )
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -453,6 +460,10 @@ impl SymbolTable {
 
     pub fn contains(&self, name: &str) -> bool {
         self.definitions.contains_key(name)
+    }
+
+    pub fn len(&self) -> usize {
+        self.definitions.len()
     }
 
     pub fn insert(&mut self, definition: SymbolDefinition) -> Result<(), SymbolDefinition> {

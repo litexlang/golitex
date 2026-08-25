@@ -189,7 +189,7 @@ impl Runtime {
         if self.current_parse_context().local_binding_scope_depth == 0 || names.is_empty() {
             return Ok(());
         }
-        self.begin_parsing_scope(ParamObjType::Identifier, names, line_file)
+        self.begin_parsing_scope(BindingScope::DeclaredObject, names, line_file)
             .map(|_| ())
     }
 
@@ -220,7 +220,7 @@ impl Runtime {
             }
         }
         self.current_parse_context_mut().free_params.begin_scope(
-            ParamObjType::Identifier,
+            BindingScope::DeclaredObject,
             bindings,
             line_file,
         )?;
@@ -232,7 +232,7 @@ impl Runtime {
     /// `begin_scope` → `f` → `end_scope`; runs `end_scope` on both `Ok` and `Err` (not on `begin_scope` failure).
     pub fn parse_in_local_free_param_scope<T, F>(
         &mut self,
-        kind: ParamObjType,
+        scope: BindingScope,
         names: &[String],
         line_file: LineFile,
         f: F,
@@ -240,15 +240,15 @@ impl Runtime {
     where
         F: FnOnce(&mut Self) -> Result<T, RuntimeError>,
     {
-        self.begin_parsing_scope(kind, names, line_file)?;
+        self.begin_parsing_scope(scope, names, line_file)?;
         let result = f(self);
-        self.end_parsing_scope(kind, names);
+        self.end_parsing_scope(names);
         result
     }
 
     pub fn parse_in_local_free_param_scope_with_bindings<T, F>(
         &mut self,
-        kind: ParamObjType,
+        scope: BindingScope,
         names: &[String],
         line_file: LineFile,
         f: F,
@@ -256,15 +256,15 @@ impl Runtime {
     where
         F: FnOnce(&mut Self) -> Result<T, RuntimeError>,
     {
-        let bindings = self.begin_parsing_scope(kind, names, line_file)?;
+        let bindings = self.begin_parsing_scope(scope, names, line_file)?;
         let result = f(self);
-        self.end_parsing_scope(kind, names);
+        self.end_parsing_scope(names);
         result.map(|value| (value, bindings))
     }
 
     pub fn parse_in_existing_free_param_scope<T, F>(
         &mut self,
-        kind: ParamObjType,
+        scope: BindingScope,
         bindings: &[SymbolBinding],
         line_file: LineFile,
         parse_body: F,
@@ -280,7 +280,7 @@ impl Runtime {
             .map(|binding| binding.name().to_string())
             .collect::<Vec<_>>();
         for binding in bindings {
-            if super::symbols::source_binder_must_respect_bare_symbols(kind, binding.name()) {
+            if scope.respects_bare_symbols(binding.name()) {
                 if let Some(external) = self.bare_symbol(binding.name()) {
                     return Err(super::symbols::bare_symbol_name_reserved_error(
                         binding.name(),
@@ -308,17 +308,17 @@ impl Runtime {
         }
         self.current_parse_context_mut()
             .free_params
-            .begin_scope(kind, bindings, line_file)?;
+            .begin_scope(scope, bindings, line_file)?;
         self.current_parse_context_mut()
             .push_scope_frame(bindings.to_vec());
         let result = parse_body(self);
-        self.end_parsing_scope(kind, &names);
+        self.end_parsing_scope(&names);
         result
     }
 
     pub fn parse_stmts_with_existing_free_param_bindings<F>(
         &mut self,
-        kind: ParamObjType,
+        scope: BindingScope,
         bindings: &[SymbolBinding],
         line_file: LineFile,
         parse_body: F,
@@ -327,13 +327,13 @@ impl Runtime {
         F: FnOnce(&mut Self) -> Result<Vec<Stmt>, RuntimeError>,
     {
         self.run_in_local_proof_parsing_scope(|this| {
-            this.parse_in_existing_free_param_scope(kind, bindings, line_file, parse_body)
+            this.parse_in_existing_free_param_scope(scope, bindings, line_file, parse_body)
         })
     }
 
     pub fn parse_stmts_with_free_param_scope_and_bindings<F>(
         &mut self,
-        kind: ParamObjType,
+        scope: BindingScope,
         names: &[String],
         line_file: LineFile,
         parse_body: F,
@@ -342,7 +342,7 @@ impl Runtime {
         F: FnOnce(&mut Self) -> Result<Vec<Stmt>, RuntimeError>,
     {
         self.run_in_local_proof_parsing_scope(|this| {
-            this.parse_in_local_free_param_scope_with_bindings(kind, names, line_file, parse_body)
+            this.parse_in_local_free_param_scope_with_bindings(scope, names, line_file, parse_body)
         })
     }
 }

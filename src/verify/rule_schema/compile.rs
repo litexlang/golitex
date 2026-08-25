@@ -17,7 +17,7 @@ fn parameter_requirement(
     param_type: &ParamType,
     line_file: LineFile,
 ) -> AtomicFact {
-    let parameter = obj_for_bound_param_in_scope(binding, ParamObjType::Forall);
+    let parameter = obj_for_bound_param_in_scope(binding);
     match param_type {
         ParamType::Obj(set) => InFact::new(parameter, set.clone(), line_file).into(),
         ParamType::Set(_) => IsSetFact::new(parameter, line_file).into(),

@@ -75,7 +75,7 @@ impl Runtime {
         let induc_param = [param.clone()];
         let ((to_prove, proof, base_proof, step_proof), param_bindings) = self
             .parse_in_local_free_param_scope_with_bindings(
-                ParamObjType::Induc,
+                BindingScope::ReuseActiveBinder,
                 &induc_param,
                 goal_line,
                 |this| {
@@ -235,7 +235,7 @@ impl Runtime {
         let param_binding = self
             .active_parse_symbol_binding(param)
             .expect("induction parameter is active while parsing its proof");
-        let expected_param = obj_for_bound_param_in_scope(param_binding, ParamObjType::Induc);
+        let expected_param = obj_for_bound_param_in_scope(param_binding);
         if equal_fact.left.to_string() != expected_param.to_string()
             || equal_fact.right.to_string() != induc_from.to_string()
         {

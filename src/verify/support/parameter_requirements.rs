@@ -55,10 +55,10 @@ impl Runtime {
         param_defs: &ParamDefWithType,
         args: &Vec<Obj>,
         verify_state: &ProofSearchState,
-        to_inst_param_type: ParamObjType,
+        substitution_mode: SubstitutionMode,
     ) -> Result<VerifyArgsSatisfyParamDefResult, RuntimeError> {
         let instantiated_types =
-            self.inst_param_def_with_type_one_by_one(param_defs, args, to_inst_param_type)?;
+            self.inst_param_def_with_type_one_by_one(param_defs, args, substitution_mode)?;
         let flat_types = param_defs.flat_instantiated_types_for_args(&instantiated_types);
         let mut infer_result = SuccessInferResult::new();
         let mut check_results = Vec::with_capacity(args.len());
@@ -154,10 +154,10 @@ impl Runtime {
         param_defs: &ParamDefWithType,
         args: &Vec<Obj>,
         verify_state: &ProofSearchState,
-        to_inst_param_type: ParamObjType,
+        substitution_mode: SubstitutionMode,
     ) -> Result<VerifyArgsSatisfyParamDefResult, RuntimeError> {
         let instantiated_types =
-            self.inst_param_def_with_type_one_by_one(param_defs, args, to_inst_param_type)?;
+            self.inst_param_def_with_type_one_by_one(param_defs, args, substitution_mode)?;
         let flat_types = param_defs.flat_instantiated_types_for_args(&instantiated_types);
         let mut infer_result = SuccessInferResult::new();
         let mut check_results = Vec::with_capacity(args.len());

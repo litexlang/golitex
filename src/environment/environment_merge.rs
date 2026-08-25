@@ -38,18 +38,6 @@ impl Environment {
                 .expect("symbol was checked absent before merge");
         }
 
-        for (name, kind) in child.declarations.defined_identifiers.iter() {
-            if let Some(existing_kind) = self.declarations.defined_identifiers.get(name) {
-                if existing_kind == kind && self.has_same_symbol_definition_as_child(child, name) {
-                    continue;
-                }
-                return Err(merge_name_conflict_error(name, "identifier"));
-            }
-            self.declarations
-                .defined_identifiers
-                .insert(name.clone(), kind.clone());
-        }
-
         for (name, stmt) in child.declarations.defined_def_props.iter() {
             if self.declarations.defined_def_props.contains_key(name) {
                 return Err(merge_name_conflict_error(name, "prop"));
@@ -386,16 +374,6 @@ impl Environment {
             }
         }
 
-        for (name, child_kind) in child.declarations.defined_identifiers.iter() {
-            if let Some(parent_kind) = self.declarations.defined_identifiers.get(name) {
-                if parent_kind == child_kind
-                    && self.has_same_symbol_definition_as_child(child, name)
-                {
-                    continue;
-                }
-                return Err(merge_name_conflict_error(name, "identifier"));
-            }
-        }
         for name in child.declarations.defined_def_props.keys() {
             if self.declarations.defined_def_props.contains_key(name) {
                 return Err(merge_name_conflict_error(name, "prop"));
@@ -476,14 +454,6 @@ impl Environment {
         }
 
         Ok(())
-    }
-
-    fn has_same_symbol_definition_as_child(&self, child: &Environment, name: &str) -> bool {
-        self.declarations
-            .symbols
-            .get(name)
-            .zip(child.declarations.symbols.get(name))
-            .is_some_and(|(parent, child)| same_symbol_definition(parent, child))
     }
 }
 

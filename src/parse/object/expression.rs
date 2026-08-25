@@ -245,7 +245,7 @@ impl Runtime {
             let mut result: Obj = if tb.current_token_is_equal_to(LEFT_CURLY_BRACE) {
                 let fn_param_bindings = fn_set.get_param_bindings();
                 let equal_to = self.parse_in_existing_free_param_scope(
-                    ParamObjType::FnSet,
+                    BindingScope::LocalBinder,
                     &fn_param_bindings,
                     tb.line_file.clone(),
                     |this| {
@@ -299,7 +299,7 @@ impl Runtime {
                 let (param_set, default_struct_view) =
                     this.parse_obj_with_default_struct_view(tb)?;
                 let bindings = this.begin_parsing_scope(
-                    ParamObjType::FnSet,
+                    BindingScope::LocalBinder,
                     &current_params,
                     tb.line_file.clone(),
                 )?;
@@ -344,7 +344,7 @@ impl Runtime {
 
             tb.skip_token(RIGHT_BRACE)?;
             let ret_set_parsed = this.parse_obj(tb)?;
-            this.end_parsing_scope(ParamObjType::FnSet, &all_fn_names);
+            this.end_parsing_scope(&all_fn_names);
             let built = this.new_fn_set(params_def_with_set, dom_facts, ret_set_parsed);
             Ok(FnSetOrFnSetClause::FnSet(built?))
         });
@@ -378,7 +378,7 @@ impl Runtime {
                 let (param_set, default_struct_view) =
                     this.parse_obj_with_default_struct_view(tb)?;
                 let bindings = this.begin_parsing_scope(
-                    ParamObjType::FnSet,
+                    BindingScope::LocalBinder,
                     &current_params,
                     tb.line_file.clone(),
                 )?;
@@ -423,7 +423,7 @@ impl Runtime {
 
             tb.skip_token(RIGHT_BRACE)?;
             let ret_set_parsed = this.parse_obj(tb)?;
-            this.end_parsing_scope(ParamObjType::FnSet, &all_fn_names);
+            this.end_parsing_scope(&all_fn_names);
             let clause_ok = FnSetClause::new(params_def_with_set, dom_facts, ret_set_parsed)?;
             Ok(FnSetOrFnSetClause::FnSetClause(clause_ok))
         });

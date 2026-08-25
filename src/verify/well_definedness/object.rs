@@ -59,16 +59,7 @@ impl Runtime {
             Obj::FnObj(value) => self
                 .verify_fn_obj_well_defined_result(value, verify_state)
                 .map(Some),
-            Obj::Atom(AtomObj::Forall(_))
-            | Obj::Atom(AtomObj::Def(_))
-            | Obj::Atom(AtomObj::Exist(_))
-            | Obj::Atom(AtomObj::SetBuilder(_))
-            | Obj::Atom(AtomObj::FnSet(_))
-            | Obj::Atom(AtomObj::Induc(_))
-            | Obj::Atom(AtomObj::DefAlgo(_))
-            | Obj::Atom(AtomObj::DefStructField(_))
-            | Obj::Atom(AtomObj::TupleIndex(_))
-            | Obj::Atom(AtomObj::CartIndex(_))
+            Obj::Atom(AtomObj::Bound(_))
             | Obj::Number(_)
             | Obj::ImaginaryUnit(_)
             | Obj::EulerNumber(_)

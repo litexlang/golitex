@@ -47,18 +47,9 @@ fn mark_forall_param_coverage_in_fn_obj_head(
                 coverage_by_forall_param,
             );
         }
-        FnObjHead::Forall(p) => {
+        FnObjHead::Bound(p) => {
             mark_forall_param_name_if_tracked(coverage_by_forall_param, p.name());
         }
-        FnObjHead::DefHeader(_)
-        | FnObjHead::Exist(_)
-        | FnObjHead::SetBuilder(_)
-        | FnObjHead::FnSet(_)
-        | FnObjHead::DefStructField(_)
-        | FnObjHead::Induc(_)
-        | FnObjHead::DefAlgo(_)
-        | FnObjHead::TupleIndex(_)
-        | FnObjHead::CartIndex(_) => {}
         FnObjHead::FiniteSeqListObj(v) => {
             mark_forall_param_coverage_in_obj(
                 &Obj::FiniteSeqListObj(v.clone()),
@@ -104,6 +95,9 @@ fn mark_forall_param_coverage_in_obj(
             mark_forall_param_name_if_tracked(coverage_by_forall_param, &identifier.name);
         }
         Obj::Atom(AtomObj::IdentifierWithMod(_)) => {}
+        Obj::Atom(AtomObj::Bound(param)) => {
+            mark_forall_param_name_if_tracked(coverage_by_forall_param, param.name());
+        }
         Obj::FnObj(fn_obj) => {
             mark_forall_param_coverage_in_fn_obj_head(
                 fn_obj.head.as_ref(),
@@ -490,30 +484,6 @@ fn mark_forall_param_coverage_in_obj(
                 mark_forall_param_coverage_in_obj(o, coverage_by_forall_param);
             }
         }
-        Obj::Atom(AtomObj::Forall(p)) => {
-            mark_forall_param_name_if_tracked(coverage_by_forall_param, p.name());
-        }
-        Obj::Atom(AtomObj::Def(p)) => {
-            mark_forall_param_name_if_tracked(coverage_by_forall_param, p.name());
-        }
-        Obj::Atom(AtomObj::Exist(p)) => {
-            mark_forall_param_name_if_tracked(coverage_by_forall_param, p.name());
-        }
-        Obj::Atom(AtomObj::SetBuilder(p)) => {
-            mark_forall_param_name_if_tracked(coverage_by_forall_param, p.name());
-        }
-        Obj::Atom(AtomObj::FnSet(p)) => {
-            mark_forall_param_name_if_tracked(coverage_by_forall_param, p.name());
-        }
-        Obj::Atom(AtomObj::Induc(p)) => {
-            mark_forall_param_name_if_tracked(coverage_by_forall_param, p.name());
-        }
-        Obj::Atom(AtomObj::DefAlgo(p)) => {
-            mark_forall_param_name_if_tracked(coverage_by_forall_param, p.name());
-        }
-        Obj::Atom(AtomObj::DefStructField(_))
-        | Obj::Atom(AtomObj::TupleIndex(_))
-        | Obj::Atom(AtomObj::CartIndex(_)) => {}
     }
 }
 

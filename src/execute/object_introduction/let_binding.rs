@@ -19,7 +19,7 @@ impl Runtime {
         &mut self,
         stmt: &LetObjStmt,
     ) -> Result<SuccessInferResult, RuntimeError> {
-        self.store_parameter_binding(&stmt.symbol_binding, ParamObjType::Identifier)
+        self.store_parameter_binding(&stmt.symbol_binding, BindingScope::DeclaredObject)
             .map_err(|error| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), error))?;
 
         let equal_fact: AtomicFact = EqualFact::new(

@@ -31,7 +31,7 @@ Every directory publishes the same five artifacts:
 | 13 | `13_numerical_analysis_in_nutshell` | Newton iteration with a proved gap bound |
 | 14 | `14_tarski_geometry_from_axioms` | GeoCoq-aligned SST Chapters 2–11, Euclid I.5, and exact angle-based SAS |
 | 15 | `15_category_theory_in_set_theory` | a generic set-coded small-category signature plus checked terminal and two-object chaotic instances |
-| 16 | `16_probability_theory` | sigma-algebras, Kolmogorov countable additivity, random variables, and distributions |
+| 16 | `16_probability_theory` | Borel events, event limits/Borel--Cantelli, and concrete probability constructions |
 
 Run any project from the repository root:
 

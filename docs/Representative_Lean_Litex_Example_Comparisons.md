@@ -281,7 +281,7 @@ forall x, y R:
     4 * x + 5 * y = 14
     =>:
         y = 2 * (2 * x + 3 * y) - (4 * x + 5 * y) = 6
-        x = ((2 * x + 3 * y) - 3 * y) / 2 = -4
+        x = ((2 * x + 3 * y) - 3 * y) / 2 = (-4)
 ```
 
 An explicit Lean proof can present the same calculations inside two named

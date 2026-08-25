@@ -74,7 +74,7 @@ impl Runtime {
         };
         let verification = SuccessVerifyByInducResult::new(
             stmt.param_binding.clone(),
-            obj_for_bound_param_in_scope(&stmt.param_binding, ParamObjType::Induc),
+            obj_for_bound_param_in_scope(&stmt.param_binding),
             stmt.to_prove
                 .iter()
                 .map(|fact| fact.clone().to_fact())
@@ -134,17 +134,15 @@ impl Runtime {
         fact: &ExistOrAndChainAtomicFact,
     ) -> Result<Fact, RuntimeError> {
         let lf = stmt.line_file.clone();
-        let (inner_names, inner_map) = self.fresh_binder_retag_plan_for_bindings(
-            std::slice::from_ref(&stmt.param_binding),
-            ParamObjType::Forall,
-        );
+        let (inner_names, inner_map) =
+            self.fresh_binder_retag_plan_for_bindings(std::slice::from_ref(&stmt.param_binding));
         let inner = inner_names[0].clone();
         let y_obj = inner_map[stmt.param()].clone();
-        let n_induc = obj_for_bound_param_in_scope(&stmt.param_binding, ParamObjType::Induc);
+        let n_induc = obj_for_bound_param_in_scope(&stmt.param_binding);
         let p_y = self.inst_exist_or_and_chain_atomic_fact(
             fact,
             &inner_map,
-            ParamObjType::BinderRetag(BinderRetagSource::Induc),
+            SubstitutionMode::Exact,
             None,
         )?;
         Ok(ForallFact::new_canonical_forall(
@@ -169,14 +167,10 @@ impl Runtime {
         fact: &ExistOrAndChainAtomicFact,
     ) -> Result<Fact, RuntimeError> {
         let lf = stmt.line_file.clone();
-        let (outer_names, outer_map) = self.fresh_binder_retag_plan_for_bindings(
-            std::slice::from_ref(&stmt.param_binding),
-            ParamObjType::Forall,
-        );
-        let (inner_names, inner_map) = self.fresh_binder_retag_plan_for_bindings(
-            std::slice::from_ref(&stmt.param_binding),
-            ParamObjType::Forall,
-        );
+        let (outer_names, outer_map) =
+            self.fresh_binder_retag_plan_for_bindings(std::slice::from_ref(&stmt.param_binding));
+        let (inner_names, inner_map) =
+            self.fresh_binder_retag_plan_for_bindings(std::slice::from_ref(&stmt.param_binding));
         let outer = outer_names[0].clone();
         let inner = inner_names[0].clone();
         let n_forall = outer_map[stmt.param()].clone();
@@ -184,7 +178,7 @@ impl Runtime {
         let p_y = self.inst_exist_or_and_chain_atomic_fact(
             fact,
             &inner_map,
-            ParamObjType::BinderRetag(BinderRetagSource::Induc),
+            SubstitutionMode::Exact,
             None,
         )?;
         let inner_forall: Fact = ForallFact::new_canonical_forall(
@@ -208,7 +202,7 @@ impl Runtime {
         let p_n1 = self.inst_exist_or_and_chain_atomic_fact(
             fact,
             &n_to_n1,
-            ParamObjType::BinderRetag(BinderRetagSource::Induc),
+            SubstitutionMode::Exact,
             None,
         )?;
 
@@ -236,7 +230,7 @@ impl Runtime {
             ParamType::Obj(StandardSet::Z.into()),
         )]);
         let mut infers = self
-            .define_params_with_type(&params_def, false, ParamObjType::Induc)
+            .define_params_with_type(&params_def, false, BindingScope::LocalBinder)
             .map_err(|e| {
                 short_exec_error(
                     stmt.clone().into(),
@@ -247,7 +241,7 @@ impl Runtime {
             })?;
 
         let dom_ge: Fact = GreaterEqualFact::new(
-            obj_for_bound_param_in_scope(&stmt.param_binding, ParamObjType::Induc),
+            obj_for_bound_param_in_scope(&stmt.param_binding),
             stmt.induc_from.clone(),
             stmt.line_file.clone(),
         )
@@ -300,7 +294,7 @@ impl Runtime {
             .inst_exist_or_and_chain_atomic_fact(
                 fact,
                 &base_case_param_to_arg_map,
-                ParamObjType::Induc,
+                SubstitutionMode::Exact,
                 None,
             )?
             .to_fact();
@@ -378,7 +372,7 @@ impl Runtime {
             ParamType::Obj(StandardSet::Z.into()),
         )]);
         let mut infers = self
-            .define_params_with_type(&params_def, false, ParamObjType::Induc)
+            .define_params_with_type(&params_def, false, BindingScope::LocalBinder)
             .map_err(|e| {
                 short_exec_error(
                     stmt.clone().into(),
@@ -389,7 +383,7 @@ impl Runtime {
             })?;
 
         let dom_ge: Fact = GreaterEqualFact::new(
-            obj_for_bound_param_in_scope(&stmt.param_binding, ParamObjType::Induc),
+            obj_for_bound_param_in_scope(&stmt.param_binding),
             stmt.induc_from.clone(),
             stmt.line_file.clone(),
         )
@@ -407,13 +401,17 @@ impl Runtime {
             })?;
         infers.new_infer_result_inside(domain_infers);
 
-        let induc_param_obj =
-            obj_for_bound_param_in_scope(&stmt.param_binding, ParamObjType::Induc);
+        let induc_param_obj = obj_for_bound_param_in_scope(&stmt.param_binding);
         let mut induc_map = HashMap::new();
         insert_symbol_substitution(&mut induc_map, &stmt.param_binding, induc_param_obj);
         for fact in stmt.to_prove.iter() {
             let inst = self
-                .inst_exist_or_and_chain_atomic_fact(fact, &induc_map, ParamObjType::Induc, None)?
+                .inst_exist_or_and_chain_atomic_fact(
+                    fact,
+                    &induc_map,
+                    SubstitutionMode::Exact,
+                    None,
+                )?
                 .to_fact();
             let hypothesis_infers = self
                 .store_with_well_defined_verification_and_infer_with_default_verify_state(inst)
@@ -431,10 +429,8 @@ impl Runtime {
     }
 
     fn by_induc_stmt_stored_forall_fact(&self, stmt: &ByInducStmt) -> Result<Fact, RuntimeError> {
-        let (forall_names, forall_map) = self.fresh_binder_retag_plan_for_bindings(
-            std::slice::from_ref(&stmt.param_binding),
-            ParamObjType::Forall,
-        );
+        let (forall_names, forall_map) =
+            self.fresh_binder_retag_plan_for_bindings(std::slice::from_ref(&stmt.param_binding));
         let forall_name = forall_names[0].clone();
         let forall_obj = forall_map[stmt.param()].clone();
         let mut then_facts: Vec<ExistOrAndChainAtomicFact> =
@@ -443,7 +439,7 @@ impl Runtime {
             then_facts.push(self.inst_exist_or_and_chain_atomic_fact(
                 fact,
                 &forall_map,
-                ParamObjType::BinderRetag(BinderRetagSource::Induc),
+                SubstitutionMode::Exact,
                 None,
             )?);
         }
@@ -468,7 +464,7 @@ impl Runtime {
         &self,
         stmt: &ByInducStmt,
     ) -> Result<(Vec<(String, String)>, Vec<(String, String)>), RuntimeError> {
-        let param_obj = obj_for_bound_param_in_scope(&stmt.param_binding, ParamObjType::Induc);
+        let param_obj = obj_for_bound_param_in_scope(&stmt.param_binding);
         let base_assumptions = vec![
             (
                 InFact::new(
@@ -519,7 +515,7 @@ impl Runtime {
                 self.inst_exist_or_and_chain_atomic_fact(
                     fact,
                     &induc_map,
-                    ParamObjType::Induc,
+                    SubstitutionMode::Exact,
                     None,
                 )?
                 .to_fact()
@@ -552,7 +548,7 @@ impl Runtime {
             .inst_exist_or_and_chain_atomic_fact(
                 fact,
                 &base_case_param_to_arg_map,
-                ParamObjType::Induc,
+                SubstitutionMode::Exact,
                 None,
             )?
             .to_fact();
@@ -593,15 +589,13 @@ impl Runtime {
         }
         let start_in_z_check = verify_induc_from_in_z_result;
 
-        let (forall_names, forall_map) = self.fresh_binder_retag_plan_for_bindings(
-            std::slice::from_ref(&stmt.param_binding),
-            ParamObjType::Forall,
-        );
+        let (forall_names, forall_map) =
+            self.fresh_binder_retag_plan_for_bindings(std::slice::from_ref(&stmt.param_binding));
         let forall_bound_param = forall_map[stmt.param()].clone();
         let dom_p_fact = self.inst_exist_or_and_chain_atomic_fact(
             fact,
             &forall_map,
-            ParamObjType::BinderRetag(BinderRetagSource::Induc),
+            SubstitutionMode::Exact,
             None,
         )?;
         let param_plus_one_obj = Add::new(
@@ -618,7 +612,7 @@ impl Runtime {
         let next_fact_of_induction_step = self.inst_exist_or_and_chain_atomic_fact(
             fact,
             &induction_step_param_to_obj_map,
-            ParamObjType::BinderRetag(BinderRetagSource::Induc),
+            SubstitutionMode::Exact,
             None,
         )?;
 
@@ -815,7 +809,7 @@ impl Runtime {
             ParamType::Obj(StandardSet::Z.into()),
         )]);
         let mut infers = self
-            .define_params_with_type(&params_def, false, ParamObjType::Induc)
+            .define_params_with_type(&params_def, false, BindingScope::LocalBinder)
             .map_err(|e| {
                 short_exec_error(
                     stmt.clone().into(),
@@ -828,7 +822,7 @@ impl Runtime {
                 )
             })?;
 
-        let param_obj = obj_for_bound_param_in_scope(&stmt.param_binding, ParamObjType::Induc);
+        let param_obj = obj_for_bound_param_in_scope(&stmt.param_binding);
         let parameter_type_fact: Fact = InFact::new(
             param_obj.clone(),
             StandardSet::Z.into(),
@@ -883,7 +877,7 @@ impl Runtime {
         };
         self.attach_known_fact_ids_to_infer_result(&mut infers)?;
 
-        let param_obj = obj_for_bound_param_in_scope(&stmt.param_binding, ParamObjType::Induc);
+        let param_obj = obj_for_bound_param_in_scope(&stmt.param_binding);
         let parameter_type_fact: Fact = InFact::new(
             param_obj.clone(),
             StandardSet::Z.into(),
@@ -917,7 +911,7 @@ impl Runtime {
                 self.inst_exist_or_and_chain_atomic_fact(
                     fact,
                     &induc_map,
-                    ParamObjType::Induc,
+                    SubstitutionMode::Exact,
                     None,
                 )?
                 .to_fact()
@@ -1033,7 +1027,7 @@ impl Runtime {
             .inst_exist_or_and_chain_atomic_fact(
                 fact,
                 &param_to_obj_map,
-                ParamObjType::Induc,
+                SubstitutionMode::Exact,
                 None,
             )?
             .to_fact())
@@ -1041,7 +1035,7 @@ impl Runtime {
 
     fn induc_step_next_obj(&self, stmt: &ByInducStmt) -> Obj {
         Add::new(
-            obj_for_bound_param_in_scope(&stmt.param_binding, ParamObjType::Induc),
+            obj_for_bound_param_in_scope(&stmt.param_binding),
             Number::new("1".to_string()).into(),
         )
         .into()

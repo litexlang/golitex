@@ -21,7 +21,7 @@ impl Runtime {
                 tb,
                 LEFT_BRACE,
                 RIGHT_BRACE,
-                ParamObjType::Forall,
+                BindingScope::LocalBinder,
                 "setting",
             )?;
 
@@ -103,7 +103,7 @@ impl Runtime {
                 }
                 groups.push(this.parse_param_def_with_param_type_and_skip_comma(
                     &mut header_block,
-                    ParamObjType::DefHeader,
+                    BindingScope::LocalBinder,
                 )?);
             }
             let template_arg_def = ParamDefWithType::new(groups);
@@ -161,7 +161,7 @@ impl Runtime {
                 }
             };
 
-            this.end_parsing_scope(ParamObjType::DefHeader, &template_arg_names);
+            this.end_parsing_scope(&template_arg_names);
 
             Ok(DefTemplateStmt::new(
                 template_name,
@@ -195,7 +195,7 @@ impl Runtime {
                     tb,
                     LESS,
                     GREATER,
-                    ParamObjType::DefHeader,
+                    BindingScope::LocalBinder,
                     "struct",
                 )?;
                 (Some((param_def, Vec::new())), setting_facts)
@@ -204,7 +204,7 @@ impl Runtime {
                     tb,
                     LEFT_BRACE,
                     RIGHT_BRACE,
-                    ParamObjType::DefHeader,
+                    BindingScope::LocalBinder,
                     "struct",
                 )?;
                 (Some((param_def, Vec::new())), setting_facts)
@@ -317,7 +317,7 @@ impl Runtime {
             })();
 
             if !struct_param_names.is_empty() {
-                this.end_parsing_scope(ParamObjType::DefHeader, &struct_param_names);
+                this.end_parsing_scope(&struct_param_names);
             }
             parse_result
         });
@@ -379,14 +379,14 @@ impl Runtime {
             .map(|binding| binding.name().to_string())
             .collect::<Vec<_>>();
         self.current_parse_context_mut().free_params.begin_scope(
-            ParamObjType::DefStructField,
+            BindingScope::StructureField,
             field_bindings,
             block.line_file.clone(),
         )?;
         self.current_parse_context_mut()
             .push_scope_frame(field_bindings.to_vec());
         let facts_result = self.parse_facts_in_body(block);
-        self.end_parsing_scope(ParamObjType::DefStructField, &field_names);
+        self.end_parsing_scope(&field_names);
         facts_result
     }
 
@@ -408,7 +408,7 @@ impl Runtime {
                         ),
                     )));
                 } else {
-                    this.end_parsing_scope(ParamObjType::DefHeader, &def_param_names);
+                    this.end_parsing_scope(&def_param_names);
                     return Ok(DefPropStmt::new(
                         name,
                         param_defs,
@@ -419,7 +419,7 @@ impl Runtime {
             }
 
             let facts_result = this.parse_facts_in_body(tb);
-            this.end_parsing_scope(ParamObjType::DefHeader, &def_param_names);
+            this.end_parsing_scope(&def_param_names);
             setting_facts.extend(facts_result?);
             Ok(DefPropStmt::new(
                 name,
@@ -478,9 +478,10 @@ impl Runtime {
                 Err(_) => break,
                 Ok(_) => {}
             }
-            param_def.push(
-                self.parse_param_def_with_param_type_and_skip_comma(tb, ParamObjType::Identifier)?,
-            );
+            param_def.push(self.parse_param_def_with_param_type_and_skip_comma(
+                tb,
+                BindingScope::DeclaredObject,
+            )?);
         }
         let param_def = ParamDefWithType::new(param_def);
         let all_param_names = param_def.collect_param_names();
@@ -500,14 +501,14 @@ impl Runtime {
                 )))
             };
             if facts_result.is_err() && !all_param_names.is_empty() {
-                self.end_parsing_scope(ParamObjType::Identifier, &all_param_names);
+                self.end_parsing_scope(&all_param_names);
             }
             let facts = facts_result?;
-            self.end_parsing_scope(ParamObjType::Identifier, &all_param_names);
+            self.end_parsing_scope(&all_param_names);
             facts
         } else {
             if !all_param_names.is_empty() {
-                self.end_parsing_scope(ParamObjType::Identifier, &all_param_names);
+                self.end_parsing_scope(&all_param_names);
             }
             vec![]
         };
@@ -575,7 +576,7 @@ impl Runtime {
         tb: &mut TokenBlock,
         left_token: &str,
         right_token: &str,
-        target_kind: ParamObjType,
+        target_scope: BindingScope,
         definition_kind: &str,
     ) -> Result<(ParamDefWithType, Vec<Fact>), RuntimeError> {
         tb.skip_token(left_token)?;
@@ -583,7 +584,7 @@ impl Runtime {
         let mut setting_facts = Vec::new();
         while !tb.current_token_is_equal_to(right_token) {
             if tb.current_token_is_equal_to(LEFT_BRACKET) {
-                let bundle = self.parse_fresh_setting_parameter_bundle(tb, target_kind)?;
+                let bundle = self.parse_fresh_setting_parameter_bundle(tb, target_scope)?;
                 groups.extend(bundle.param_def.groups);
                 setting_facts.extend(bundle.dom_facts);
                 if tb.current_token_is_equal_to(COMMA) {
@@ -600,7 +601,7 @@ impl Runtime {
                     )));
                 }
             } else {
-                groups.push(self.parse_param_def_with_param_type_and_skip_comma(tb, target_kind)?);
+                groups.push(self.parse_param_def_with_param_type_and_skip_comma(tb, target_scope)?);
             }
         }
         tb.skip_token(right_token)?;
@@ -620,7 +621,7 @@ impl Runtime {
             tb,
             LEFT_BRACE,
             RIGHT_BRACE,
-            ParamObjType::DefHeader,
+            BindingScope::LocalBinder,
             "prop",
         )
     }

@@ -150,13 +150,6 @@ impl FnSetSpace {
         }
     }
 
-    pub fn binding(&self) -> ParamObjType {
-        match self {
-            FnSetSpace::Set(_) => ParamObjType::FnSet,
-            FnSetSpace::Anon(_) => ParamObjType::FnSet,
-        }
-    }
-
     pub fn from_ret_obj(obj: Obj) -> Result<Self, RuntimeError> {
         match obj {
             Obj::FnSet(f) => Ok(FnSetSpace::Set(f)),

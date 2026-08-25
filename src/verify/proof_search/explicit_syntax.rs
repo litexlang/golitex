@@ -15,6 +15,9 @@ impl Runtime {
                 Obj::Atom(AtomObj::IdentifierWithMod(b)) => a.to_string() == b.to_string(),
                 _ => false,
             },
+            Obj::Atom(AtomObj::Bound(a)) => {
+                matches!(right, Obj::Atom(AtomObj::Bound(b)) if a.symbol == b.symbol)
+            }
             Obj::FnObj(f) => match right {
                 Obj::FnObj(g) => f.to_string() == g.to_string(),
                 _ => false,
@@ -389,37 +392,6 @@ impl Runtime {
                 Obj::OneSideInfinityIntervalObj(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
-            // Parsing-time free params: compare [`fmt::Display`] (`~tag` + spine), not only `.name`.
-            Obj::Atom(AtomObj::Forall(a)) => {
-                matches!(right, Obj::Atom(AtomObj::Forall(b)) if a.to_string() == b.to_string())
-            }
-            Obj::Atom(AtomObj::Def(a)) => {
-                matches!(right, Obj::Atom(AtomObj::Def(b)) if a.to_string() == b.to_string())
-            }
-            Obj::Atom(AtomObj::Exist(a)) => {
-                matches!(right, Obj::Atom(AtomObj::Exist(b)) if a.to_string() == b.to_string())
-            }
-            Obj::Atom(AtomObj::SetBuilder(a)) => {
-                matches!(right, Obj::Atom(AtomObj::SetBuilder(b)) if a.to_string() == b.to_string())
-            }
-            Obj::Atom(AtomObj::FnSet(a)) => {
-                matches!(right, Obj::Atom(AtomObj::FnSet(b)) if a.to_string() == b.to_string())
-            }
-            Obj::Atom(AtomObj::Induc(a)) => {
-                matches!(right, Obj::Atom(AtomObj::Induc(b)) if a.to_string() == b.to_string())
-            }
-            Obj::Atom(AtomObj::DefAlgo(a)) => {
-                matches!(right, Obj::Atom(AtomObj::DefAlgo(b)) if a.to_string() == b.to_string())
-            }
-            Obj::Atom(AtomObj::DefStructField(a)) => {
-                matches!(right, Obj::Atom(AtomObj::DefStructField(b)) if a.to_string() == b.to_string())
-            }
-            Obj::Atom(AtomObj::TupleIndex(a)) => {
-                matches!(right, Obj::Atom(AtomObj::TupleIndex(b)) if a.to_string() == b.to_string())
-            }
-            Obj::Atom(AtomObj::CartIndex(a)) => {
-                matches!(right, Obj::Atom(AtomObj::CartIndex(b)) if a.to_string() == b.to_string())
-            }
         }
     }
 }

@@ -303,18 +303,7 @@ fn collect_fn_obj_head_binder_bindings(
             }
         }
         FnObjHead::MatrixOperator(x) => collect_obj_binder_bindings(x, bindings, seen, depth),
-        FnObjHead::Identifier(_)
-        | FnObjHead::IdentifierWithMod(_)
-        | FnObjHead::Forall(_)
-        | FnObjHead::DefHeader(_)
-        | FnObjHead::Exist(_)
-        | FnObjHead::SetBuilder(_)
-        | FnObjHead::FnSet(_)
-        | FnObjHead::DefStructField(_)
-        | FnObjHead::Induc(_)
-        | FnObjHead::DefAlgo(_)
-        | FnObjHead::TupleIndex(_)
-        | FnObjHead::CartIndex(_) => {}
+        FnObjHead::Identifier(_) | FnObjHead::IdentifierWithMod(_) | FnObjHead::Bound(_) => {}
     }
 }
 

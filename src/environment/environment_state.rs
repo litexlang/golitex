@@ -47,7 +47,7 @@ impl fmt::Display for Environment {
         write!(
             f,
             "    objs: {:?}\n",
-            self.declarations.defined_identifiers.len()
+            self.declarations.object_symbol_count()
         )?;
         write!(
             f,

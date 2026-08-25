@@ -8,13 +8,13 @@ impl Runtime {
         param_defs: &ParamDefWithType,
         args: &Vec<Obj>,
         _line_file: LineFile,
-        param_obj_type: ParamObjType,
+        substitution_mode: SubstitutionMode,
     ) -> Result<SuccessInferResult, RuntimeError> {
         self.store_args_satisfy_param_type_when_not_defining_new_identifiers_with_reason(
             param_defs,
             args,
             _line_file,
-            param_obj_type,
+            substitution_mode,
             InferReason::VerifiedStatement,
         )
     }
@@ -24,7 +24,7 @@ impl Runtime {
         param_defs: &ParamDefWithType,
         args: &Vec<Obj>,
         _line_file: LineFile,
-        param_obj_type: ParamObjType,
+        substitution_mode: SubstitutionMode,
         reason: InferReason,
     ) -> Result<SuccessInferResult, RuntimeError> {
         let mut infer_result = SuccessInferResult::new();
@@ -32,7 +32,7 @@ impl Runtime {
             param_defs,
             args,
             _line_file,
-            param_obj_type,
+            substitution_mode,
         )? {
             infer_result.new_infer_result_inside(
                 self.store_with_well_defined_verification_and_infer_with_default_verify_state_and_reason(
@@ -53,10 +53,13 @@ impl Runtime {
         param_defs: &ParamDefWithType,
         args: &[Obj],
         line_file: LineFile,
-        param_obj_type: ParamObjType,
+        substitution_mode: SubstitutionMode,
     ) -> Result<Vec<Fact>, RuntimeError> {
-        let instantiated_types =
-            self.inst_param_def_with_type_one_by_one(param_defs, &args.to_vec(), param_obj_type)?;
+        let instantiated_types = self.inst_param_def_with_type_one_by_one(
+            param_defs,
+            &args.to_vec(),
+            substitution_mode,
+        )?;
         Ok(args
             .iter()
             .zip(instantiated_types.iter())

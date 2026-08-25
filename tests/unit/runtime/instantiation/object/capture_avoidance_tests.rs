@@ -12,7 +12,7 @@ fn exact_symbol_substitution_does_not_replace_a_same_name_binding() {
     let other_binding = runtime
         .allocate_local_symbol_binding("x".to_string())
         .unwrap();
-    let target: Obj = DefHeaderFreeParamObj::new(&target_binding).into();
+    let target: Obj = BoundParamObj::new(&target_binding).into();
     let mut map = HashMap::new();
     insert_symbol_substitution(
         &mut map,
@@ -21,17 +21,17 @@ fn exact_symbol_substitution_does_not_replace_a_same_name_binding() {
     );
 
     let instantiated = runtime
-        .inst_obj(&target, &map, ParamObjType::DefHeader)
+        .inst_obj(&target, &map, SubstitutionMode::Exact)
         .unwrap();
 
     assert!(matches!(
         instantiated,
-        Obj::Atom(AtomObj::Def(param)) if param.symbol.id() == target_binding.id()
+        Obj::Atom(AtomObj::Bound(param)) if param.symbol.id() == target_binding.id()
     ));
 }
 
 #[test]
-fn set_builder_instantiation_alpha_renames_only_its_own_binder_kind() {
+fn set_builder_instantiation_alpha_renames_only_its_own_symbol() {
     let mut runtime = Runtime::new();
     runtime.start_isolated_source("set_builder_capture_avoidance");
     let a_binding = runtime
@@ -44,8 +44,8 @@ fn set_builder_instantiation_alpha_renames_only_its_own_binder_kind() {
         .allocate_local_symbol_binding("n".to_string())
         .unwrap();
     let body_fact: AtomicFact = EqualFact::new(
-        DefHeaderFreeParamObj::new(&a_binding).into(),
-        SetBuilderFreeParamObj::new(&n_binding).into(),
+        BoundParamObj::new(&a_binding).into(),
+        BoundParamObj::new(&n_binding).into(),
         default_line_file(),
     )
     .into();
@@ -60,11 +60,11 @@ fn set_builder_instantiation_alpha_renames_only_its_own_binder_kind() {
     insert_symbol_substitution(
         &mut map,
         &a_binding,
-        SetBuilderFreeParamObj::new(&replacement_n).into(),
+        BoundParamObj::new(&replacement_n).into(),
     );
 
     let instantiated = runtime
-        .inst_obj(&object, &map, ParamObjType::DefHeader)
+        .inst_obj(&object, &map, SubstitutionMode::Exact)
         .unwrap();
     let Obj::SetBuilder(instantiated) = instantiated else {
         panic!("expected set builder");
@@ -80,11 +80,11 @@ fn set_builder_instantiation_alpha_renames_only_its_own_binder_kind() {
     };
     assert!(matches!(
         &equality.left,
-        Obj::Atom(AtomObj::SetBuilder(param)) if param.name() == "n"
+        Obj::Atom(AtomObj::Bound(param)) if param.name() == "n"
     ));
     assert!(matches!(
         &equality.right,
-        Obj::Atom(AtomObj::SetBuilder(param)) if param.name() == instantiated.param_name()
+        Obj::Atom(AtomObj::Bound(param)) if param.name() == instantiated.param_name()
     ));
 }
 
@@ -102,8 +102,8 @@ fn surviving_closed_set_builder_replacement_keeps_outer_binder_fresh() {
         target_n.clone(),
         StandardSet::R.into(),
         vec![EqualFact::new(
-            DefHeaderFreeParamObj::new(&a_binding).into(),
-            SetBuilderFreeParamObj::new(&target_n).into(),
+            BoundParamObj::new(&a_binding).into(),
+            BoundParamObj::new(&target_n).into(),
             default_line_file(),
         )
         .into()],
@@ -117,8 +117,8 @@ fn surviving_closed_set_builder_replacement_keeps_outer_binder_fresh() {
         replacement_n.clone(),
         StandardSet::R.into(),
         vec![EqualFact::new(
-            SetBuilderFreeParamObj::new(&replacement_n).into(),
-            SetBuilderFreeParamObj::new(&replacement_n).into(),
+            BoundParamObj::new(&replacement_n).into(),
+            BoundParamObj::new(&replacement_n).into(),
             default_line_file(),
         )
         .into()],
@@ -129,7 +129,7 @@ fn surviving_closed_set_builder_replacement_keeps_outer_binder_fresh() {
     insert_symbol_substitution(&mut map, &a_binding, replacement);
 
     let instantiated = runtime
-        .inst_obj(&target, &map, ParamObjType::DefHeader)
+        .inst_obj(&target, &map, SubstitutionMode::Exact)
         .unwrap();
     let Obj::SetBuilder(instantiated) = instantiated else {
         panic!("expected set builder");
@@ -143,8 +143,8 @@ fn surviving_closed_set_builder_replacement_keeps_outer_binder_fresh() {
         unused_n.clone(),
         StandardSet::R.into(),
         vec![EqualFact::new(
-            SetBuilderFreeParamObj::new(&unused_n).into(),
-            SetBuilderFreeParamObj::new(&unused_n).into(),
+            BoundParamObj::new(&unused_n).into(),
+            BoundParamObj::new(&unused_n).into(),
             default_line_file(),
         )
         .into()],
@@ -152,7 +152,7 @@ fn surviving_closed_set_builder_replacement_keeps_outer_binder_fresh() {
     .unwrap()
     .into();
     let restored = runtime
-        .inst_obj(&unused_target, &map, ParamObjType::DefHeader)
+        .inst_obj(&unused_target, &map, SubstitutionMode::Exact)
         .unwrap();
     let Obj::SetBuilder(restored) = restored else {
         panic!("expected set builder");
@@ -175,8 +175,8 @@ fn function_binder_instantiation_preserves_outer_argument_and_concrete_type() {
         .unwrap();
     let n_binding = group.params[0].clone();
     let dom_fact: AtomicFact = EqualFact::new(
-        DefHeaderFreeParamObj::new(&a_binding).into(),
-        FnSetFreeParamObj::new(&n_binding).into(),
+        BoundParamObj::new(&a_binding).into(),
+        BoundParamObj::new(&n_binding).into(),
         default_line_file(),
     )
     .into();
@@ -194,11 +194,11 @@ fn function_binder_instantiation_preserves_outer_argument_and_concrete_type() {
     insert_symbol_substitution(
         &mut map,
         &a_binding,
-        FnSetFreeParamObj::new(&replacement_n).into(),
+        BoundParamObj::new(&replacement_n).into(),
     );
 
     let instantiated = runtime
-        .inst_obj(&object, &map, ParamObjType::DefHeader)
+        .inst_obj(&object, &map, SubstitutionMode::Exact)
         .unwrap();
     let Obj::FnSet(instantiated) = instantiated else {
         panic!("expected function set");
@@ -216,11 +216,11 @@ fn function_binder_instantiation_preserves_outer_argument_and_concrete_type() {
     };
     assert!(matches!(
         &equality.left,
-        Obj::Atom(AtomObj::FnSet(param)) if param.name() == "n"
+        Obj::Atom(AtomObj::Bound(param)) if param.name() == "n"
     ));
     assert!(matches!(
         &equality.right,
-        Obj::Atom(AtomObj::FnSet(param)) if param.name() == fresh_name
+        Obj::Atom(AtomObj::Bound(param)) if param.name() == fresh_name
     ));
 }
 
@@ -238,7 +238,7 @@ fn anonymous_function_restores_binder_only_after_collision_disappears() {
         vec![target_group],
         vec![],
         StandardSet::R.into(),
-        DefHeaderFreeParamObj::new(&f_binding).into(),
+        BoundParamObj::new(&f_binding).into(),
     )
     .unwrap()
     .into();
@@ -250,7 +250,7 @@ fn anonymous_function_restores_binder_only_after_collision_disappears() {
         vec![replacement_group],
         vec![],
         StandardSet::R.into(),
-        FnSetFreeParamObj::new(&replacement_x).into(),
+        BoundParamObj::new(&replacement_x).into(),
     )
     .unwrap()
     .into();
@@ -258,7 +258,7 @@ fn anonymous_function_restores_binder_only_after_collision_disappears() {
     insert_symbol_substitution(&mut map, &f_binding, replacement);
 
     let instantiated = runtime
-        .inst_obj(&target, &map, ParamObjType::DefHeader)
+        .inst_obj(&target, &map, SubstitutionMode::Exact)
         .unwrap();
     let Obj::AnonymousFn(instantiated) = instantiated else {
         panic!("expected anonymous function");
@@ -280,8 +280,8 @@ fn anonymous_function_restores_binder_only_after_collision_disappears() {
         vec![],
         StandardSet::R.into(),
         FnObj::new(
-            ForallFreeParamObj::new(&theorem_f).into(),
-            vec![vec![Box::new(FnSetFreeParamObj::new(&beta_x).into())]],
+            BoundParamObj::new(&theorem_f).into(),
+            vec![vec![Box::new(BoundParamObj::new(&beta_x).into())]],
         )
         .into(),
     )
@@ -290,11 +290,7 @@ fn anonymous_function_restores_binder_only_after_collision_disappears() {
     let mut theorem_map = HashMap::new();
     insert_symbol_substitution(&mut theorem_map, &theorem_f, map["f"].clone());
     let restored = runtime
-        .inst_obj(
-            &beta_target,
-            &theorem_map,
-            ParamObjType::TheoremInstantiation,
-        )
+        .inst_obj(&beta_target, &theorem_map, SubstitutionMode::Theorem)
         .unwrap();
     let Obj::AnonymousFn(restored) = restored else {
         panic!("expected anonymous function");
@@ -317,10 +313,10 @@ fn set_builder_alpha_rename_updates_a_dependent_parameter_set() {
         .unwrap();
     let object: Obj = SetBuilder::new(
         n_binding.clone(),
-        SetBuilderFreeParamObj::new(&n_binding).into(),
+        BoundParamObj::new(&n_binding).into(),
         vec![EqualFact::new(
-            DefHeaderFreeParamObj::new(&a_binding).into(),
-            SetBuilderFreeParamObj::new(&n_binding).into(),
+            BoundParamObj::new(&a_binding).into(),
+            BoundParamObj::new(&n_binding).into(),
             default_line_file(),
         )
         .into()],
@@ -334,11 +330,11 @@ fn set_builder_alpha_rename_updates_a_dependent_parameter_set() {
     insert_symbol_substitution(
         &mut map,
         &a_binding,
-        SetBuilderFreeParamObj::new(&replacement_n).into(),
+        BoundParamObj::new(&replacement_n).into(),
     );
 
     let instantiated = runtime
-        .inst_obj(&object, &map, ParamObjType::DefHeader)
+        .inst_obj(&object, &map, SubstitutionMode::Exact)
         .unwrap();
     let Obj::SetBuilder(instantiated) = instantiated else {
         panic!("expected set builder");
@@ -346,7 +342,7 @@ fn set_builder_alpha_rename_updates_a_dependent_parameter_set() {
     assert_ne!(instantiated.param_name(), "n");
     assert!(matches!(
         instantiated.param_set.as_ref(),
-        Obj::Atom(AtomObj::SetBuilder(param)) if param.name() == instantiated.param_name()
+        Obj::Atom(AtomObj::Bound(param)) if param.name() == instantiated.param_name()
     ));
 }
 
@@ -359,21 +355,18 @@ fn function_alpha_rename_respects_dependent_parameter_scope() {
     let n_group = runtime
         .fresh_param_group_with_set(
             vec!["n".to_string()],
-            FnSetFreeParamObj::new(&external_n).into(),
+            BoundParamObj::new(&external_n).into(),
         )
         .unwrap();
     let n_binding = n_group.params[0].clone();
     let m_group = runtime
-        .fresh_param_group_with_set(
-            vec!["m".to_string()],
-            FnSetFreeParamObj::new(&n_binding).into(),
-        )
+        .fresh_param_group_with_set(vec!["m".to_string()], BoundParamObj::new(&n_binding).into())
         .unwrap();
     let m_binding = m_group.params[0].clone();
     let body = FnSetBody::new(
         vec![n_group, m_group],
         vec![],
-        FnSetFreeParamObj::new(&m_binding).into(),
+        BoundParamObj::new(&m_binding).into(),
     );
     let n_fresh = runtime
         .allocate_local_symbol_binding("n_fresh".to_string())
@@ -385,12 +378,12 @@ fn function_alpha_rename_respects_dependent_parameter_scope() {
     insert_symbol_substitution(
         &mut rename_map,
         &n_binding,
-        FnSetFreeParamObj::new(&n_fresh).into(),
+        BoundParamObj::new(&n_fresh).into(),
     );
     insert_symbol_substitution(
         &mut rename_map,
         &m_binding,
-        FnSetFreeParamObj::new(&m_fresh).into(),
+        BoundParamObj::new(&m_fresh).into(),
     );
 
     let renamed = runtime
@@ -398,11 +391,11 @@ fn function_alpha_rename_respects_dependent_parameter_scope() {
         .unwrap();
     assert!(matches!(
         renamed.params_def_with_set[0].set_obj(),
-        Obj::Atom(AtomObj::FnSet(param)) if param.name() == "n"
+        Obj::Atom(AtomObj::Bound(param)) if param.name() == "n"
     ));
     assert!(matches!(
         renamed.params_def_with_set[1].set_obj(),
-        Obj::Atom(AtomObj::FnSet(param)) if param.name() == "n_fresh"
+        Obj::Atom(AtomObj::Bound(param)) if param.name() == "n_fresh"
     ));
     assert_eq!(
         renamed.params_def_with_set[0].param_names(),
@@ -414,6 +407,6 @@ fn function_alpha_rename_respects_dependent_parameter_scope() {
     );
     assert!(matches!(
         renamed.ret_set.as_ref(),
-        Obj::Atom(AtomObj::FnSet(param)) if param.name() == "m_fresh"
+        Obj::Atom(AtomObj::Bound(param)) if param.name() == "m_fresh"
     ));
 }

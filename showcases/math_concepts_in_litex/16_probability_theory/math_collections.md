@@ -8,11 +8,13 @@ mathematical identity of a probability space `(Omega, events, probability)`:
 `events` is a sigma-algebra on `Omega`, and `probability` is a nonnegative,
 normalized, countably additive real-valued set function. The current module
 includes generated sigma algebras, the Borel sigma algebra on `R`, the derived
-event-probability calculus, conditional probability, independence, measurable
-maps, real-valued random variables, and constructed pushforward probability
-measures. It excludes Caratheodory extension from premeasures or outer
-measures, Lebesgue measure, integration, expectation, laws of large numbers,
-and limit theorems.
+event-probability calculus, countable event limits, continuity of probability,
+null and almost-sure events, the first Borel--Cantelli lemma, conditional
+probability, independence, measurable maps, real-valued random variables, and
+Dirac, conditioned, finite atomic, and pushforward probability constructions.
+It excludes Caratheodory extension from premeasures or outer measures,
+Lebesgue measure, integration, expectation, almost-sure convergence, laws of
+large numbers, and central limit theorems.
 
 The intended readers are users who want to see the probability-theory layer
 that conceptually precedes the finite calculations in
@@ -56,10 +58,10 @@ public interface usable without changing its models.
   additivity.
 - **Allowable hole:** None in the current module.
 
-The dual `index_intersect(N+, Omega, family)` is the intended representation
-of countable intersection. Closure under it is a derived sigma-algebra theorem,
-not an additional field in this checkpoint; proving that De Morgan consequence
-is separate from the present countable-union migration.
+The dual `index_intersect(N+, Omega, family)` represents countable
+intersection. `event_countable_intersection_is_event` proves its closure from
+complement and countable-union closure; it is not an additional sigma-algebra
+field.
 
 ### Real series sum
 
@@ -147,11 +149,71 @@ is separate from the present countable-union migration.
 - **Dependencies:** Countable additivity, empty-event probability, elementary
   set identities, finite-support series convergence, and uniqueness of real
   sequence limits (`proof`).
-- **Downstream uses:** Conditional probability, estimates on unions, and later
-  continuity-of-measure and probabilistic limit arguments.
+- **Downstream uses:** Conditional probability, countable subadditivity,
+  continuity of probability, and probabilistic event-limit arguments.
 - **Allowable hole:** General finite-family additivity is left as a natural
   induction exercise; the binary theorem already supports the ordinary
   formulas exposed in this checkpoint.
+
+### Event tails, limsup, and liminf
+
+- **Ordinary meaning:** The tail union contains points appearing in at least
+  one event after a cutoff; the tail intersection contains points appearing in
+  every event after a cutoff. Limsup means infinitely often and liminf means
+  eventually always.
+- **Semantic role:** Constructed measurable events.
+- **Ideal Litex form:** Exact-carrier `have fn ... by exist!` definitions built
+  from `index_union` and `index_intersect`.
+- **Interface sketch:** `event_tail_union_after`,
+  `event_tail_intersection_after`, `event_limsup`, and `event_liminf`.
+- **Nearest wrong alternative:** Returning a raw subset of `Omega` would lose
+  event membership and make later probability applications ill-defined.
+- **Dependencies:** Sigma-algebra closure under countable unions and the
+  derived countable-intersection theorem (`definition`, `well-definedness`).
+- **Downstream uses:** Continuity from above and the first Borel--Cantelli
+  lemma.
+- **Allowable hole:** No two-sided convergence notion for arbitrary event
+  sequences is introduced; limsup and liminf remain separately usable.
+
+### Continuity and countable subadditivity
+
+- **Ordinary meaning:** Probabilities of increasing events converge to the
+  probability of their union, and probabilities of decreasing events converge
+  to the probability of their intersection. The probability of a countable
+  union is at most the sum of the event probabilities whenever that real
+  series has a supplied sum.
+- **Semantic role:** Derived theorem layer.
+- **Ideal Litex form:** `probability_continuous_from_below`,
+  `probability_continuous_from_above`, and
+  `probability_countable_subadditivity` using relational sequence/series
+  limits.
+- **Nearest wrong alternative:** Adding continuity or subadditivity as
+  probability-space fields would duplicate consequences of countable
+  additivity.
+- **Dependencies:** Disjointification of increasing sequences, complement
+  duality, finite prefix union bounds, and uniqueness/order of real sequence
+  limits (`proof`).
+- **Downstream uses:** Tail-event estimates and Borel--Cantelli.
+- **Allowable hole:** The series bound is deliberately conditional on a real
+  sum candidate; no total infinite-sum selector is added.
+
+### Null events, almost-sure events, and first Borel--Cantelli
+
+- **Ordinary meaning:** Null events have probability zero; almost-sure events
+  have probability one. If the sum of event probabilities converges, then the
+  event that infinitely many of them occur is null.
+- **Semantic role:** Relations and a derived limit theorem.
+- **Ideal Litex form:** `is_null_event`, `is_almost_sure_event`, closure
+  theorems, and `first_borel_cantelli`.
+- **Nearest wrong alternative:** An unrestricted phrase such as "almost
+  surely" without naming the event carrier and probability function would
+  hide the exact probability space.
+- **Dependencies:** Monotonicity, countable subadditivity, series-tail
+  convergence, event limsup, and continuity from above (`proof`).
+- **Downstream uses:** Later convergence-in-probability and almost-sure
+  arguments.
+- **Allowable hole:** Only the first Borel--Cantelli direction is present;
+  the converse requires an independence hypothesis and is later work.
 
 ### Conditional probability and independence
 
@@ -208,6 +270,28 @@ is separate from the present countable-union migration.
 - **Allowable hole:** None for pushforward probability. Caratheodory extension
   from independent premeasure data remains out of scope.
 
+### Concrete probability constructions
+
+- **Ordinary meaning:** Dirac probability concentrates unit mass at one point;
+  conditioning renormalizes intersection with positive-probability evidence;
+  a finite atomic probability is a finite nonnegative weighted sum of Dirac
+  probabilities with total weight one.
+- **Semantic role:** Constructed functions with checked probability-space
+  laws.
+- **Ideal Litex form:** `dirac_probability`,
+  `conditioned_probability_measure`, and `finite_atomic_probability`, each
+  followed by a public `*_is_probability_space` theorem.
+- **Nearest wrong alternative:** Merely asserting existence of a probability
+  function would not expose a reusable value; making conditioning total would
+  silently divide by zero.
+- **Dependencies:** Event membership, positive evidence probability, scalar
+  transport of convergent real series, finite-set sums, and Dirac countable
+  additivity (`definition`, `well-definedness`, `proof`).
+- **Downstream uses:** Direct model instances, conditional models, and finite
+  discrete distributions.
+- **Allowable hole:** These are probability constructions, not a general
+  measure-extension theorem; no outer measure or integration is implied.
+
 ## Dependency map
 
 Edge legend: `definition` means an interface unfolds to the dependency;
@@ -223,6 +307,8 @@ real arithmetic + epsilon limits
 
 index_union + complement
   -> SigmaAlgebraSetting                          [law]
+  -> index_intersect closure                      [proof]
+  -> tail unions/intersections -> limsup/liminf   [definition, proof]
 generator family + all containing sigma algebras
   -> generated_sigma_algebra                     [definition, proof]
 bounded real open intervals + generated sigma algebra
@@ -239,10 +325,25 @@ countable-additivity tracer + two-term series sum
   -> monotonicity + inclusion-exclusion            [proof]
   -> union bound + 0 <= P(A) <= 1                 [proof]
 
+increasing disjointification + countable additivity
+  -> continuity from below                        [proof]
+complement duality + continuity from below
+  -> continuity from above                        [proof]
+finite prefix unions + limit order
+  -> countable subadditivity                      [proof]
+series tails + tail unions + continuity from above
+  -> first_borel_cantelli                         [proof]
+
 ProbabilitySpaceSetting + intersection + P(B)>0
   -> conditional_probability                      [well-definedness]
 ProbabilitySpaceSetting + intersection
   -> are_independent                              [definition]
+  -> conditioned_probability_measure              [definition, proof]
+
+point + SigmaAlgebraSetting
+  -> dirac_probability                            [definition, proof]
+finite nonnegative normalized weights + Dirac laws
+  -> finite_atomic_probability                    [definition, proof]
 
 source SigmaAlgebraSetting + target SigmaAlgebraSetting + preimage
   -> is_measurable_map                            [definition]
@@ -266,12 +367,15 @@ setting and its direct
 countable-additivity tracer. Next prove uniqueness of series sums and the
 two-term finite-support series, then specialize countable additivity to obtain
 binary finite additivity. Derive complement, difference, monotonicity,
-inclusion-exclusion, the union bound, and the unit interval bound before adding
-event-level conditional probability and independence. Add measurable maps and
-the real-valued random-variable specialization next, because they consume two
-already-defined measurable spaces. Construct pushforward probability last so
-it can reuse measurable preimages, preimage preservation, and source countable
-additivity.
+inclusion-exclusion, the union bound, and the unit interval bound. Then derive
+countable intersections, event tails, limsup/liminf, continuity from below and
+above, and countable subadditivity. Null/almost-sure events and the first
+Borel--Cantelli lemma consume that limit layer. Add event-level conditional
+probability and independence, followed by the Dirac, conditioned, and finite
+atomic probability constructions. Add measurable maps and the real-valued
+random-variable specialization once both measurable spaces are available;
+construct pushforward probability from measurable preimages and source
+countable additivity.
 
 ## Interface decisions and permissible gaps
 
@@ -280,6 +384,7 @@ extended-nonnegative-real carrier would add machinery without improving this
 module's semantics. Keep series summation relational, keep the positivity guard
 on conditional probability, and keep a random variable distinct from its
 pushforward distribution. The present measure construction is specifically a
-pushforward from an existing probability space; it is not a Caratheodory
-existence theorem. Expectation begins only after a genuine integration
-interface exists; finite weighted sums remain in showcase 8.
+pushforward from an existing probability space, while Dirac, positive-evidence
+conditioning, and finite atomic sums are explicit special constructions. None
+is a Caratheodory existence theorem. Expectation begins only after a genuine
+integration interface exists.

@@ -294,7 +294,7 @@ impl Runtime {
                             if let Ok(reduced) = self.inst_obj(
                                 anonymous_fn.equal_to.as_ref(),
                                 &param_to_arg_map,
-                                ParamObjType::FnSet,
+                                SubstitutionMode::Exact,
                             ) {
                                 return self.resolve_obj(&reduced);
                             }
@@ -396,16 +396,7 @@ impl Runtime {
             }
             Obj::Atom(AtomObj::Identifier(_))
             | Obj::Atom(AtomObj::IdentifierWithMod(_))
-            | Obj::Atom(AtomObj::Forall(_))
-            | Obj::Atom(AtomObj::Def(_))
-            | Obj::Atom(AtomObj::Exist(_))
-            | Obj::Atom(AtomObj::SetBuilder(_))
-            | Obj::Atom(AtomObj::FnSet(_))
-            | Obj::Atom(AtomObj::Induc(_))
-            | Obj::Atom(AtomObj::DefAlgo(_))
-            | Obj::Atom(AtomObj::DefStructField(_))
-            | Obj::Atom(AtomObj::TupleIndex(_))
-            | Obj::Atom(AtomObj::CartIndex(_)) => {
+            | Obj::Atom(AtomObj::Bound(_)) => {
                 if let Some(number) = self.resolve_obj_to_number(obj) {
                     number.into()
                 } else {
@@ -767,8 +758,7 @@ impl Runtime {
                 let index_group = self
                     .fresh_param_group_with_set(vec![index_name], StandardSet::NPos.into())
                     .ok()?;
-                let index =
-                    obj_for_bound_param_in_scope(&index_group.params[0], ParamObjType::FnSet);
+                let index = obj_for_bound_param_in_scope(&index_group.params[0]);
                 let term: Obj = Mul::new(
                     matrix_entry_application((*value.left).clone(), row, index.clone())?,
                     matrix_entry_application((*value.right).clone(), index.clone(), col)?,

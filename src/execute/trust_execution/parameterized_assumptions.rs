@@ -44,13 +44,13 @@ impl Runtime {
         let mut infer_result = if self.current_execution_is_trusted_file() {
             self.define_params_with_type_trusted(
                 &trust_have_stmt.param_def,
-                ParamObjType::Identifier,
+                BindingScope::DeclaredObject,
             )
         } else {
             self.define_params_with_type(
                 &trust_have_stmt.param_def,
                 false,
-                ParamObjType::Identifier,
+                BindingScope::DeclaredObject,
             )
         }
         .map_err(|e| exec_stmt_error_with_stmt_and_cause(trust_have_stmt.clone().into(), e))?;

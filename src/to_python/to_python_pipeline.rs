@@ -757,8 +757,7 @@ impl PythonExtractor {
     ) -> Result<String, RuntimeError> {
         let name = match atom {
             AtomObj::Identifier(i) => i.name.as_str(),
-            AtomObj::FnSet(p) => p.name(),
-            AtomObj::DefAlgo(p) => p.name(),
+            AtomObj::Bound(p) => p.name(),
             _ => {
                 return Err(python_extract_error(
                     line_file,

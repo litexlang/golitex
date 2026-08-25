@@ -381,11 +381,10 @@ impl DefinitionGraphBuilder {
     fn add_identifiers(&mut self, environment: &Environment) {
         let mut identifiers = environment
             .declarations
-            .defined_identifiers
-            .iter()
+            .object_symbols()
             .collect::<Vec<_>>();
         identifiers.sort_by(|left, right| left.0.cmp(right.0));
-        for (name, kind) in identifiers {
+        for (name, definition) in identifiers {
             self.ensure_node(
                 definition_id("identifier", name),
                 "identifier",
@@ -393,7 +392,11 @@ impl DefinitionGraphBuilder {
                 name,
                 true,
                 None,
-                Some(&format!("identifier {}: {:?}", name, kind)),
+                Some(&format!(
+                    "identifier {}: {}",
+                    name,
+                    definition.role().description()
+                )),
             );
         }
     }

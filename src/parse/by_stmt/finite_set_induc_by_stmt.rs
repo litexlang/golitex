@@ -46,7 +46,7 @@ impl Runtime {
             (to_prove, base_proof, element_param_binding, smaller_set_param_binding, step_proof),
             param_bindings,
         ) = self.parse_in_local_free_param_scope_with_bindings(
-            ParamObjType::Induc,
+            BindingScope::ReuseActiveBinder,
             &goal_param,
             goal_line,
             |this| {
@@ -122,7 +122,7 @@ impl Runtime {
                 let names = [element_param.clone(), smaller_set_param.clone()];
                 let line_file = block.line_file.clone();
                 let (proof, bindings) = self.parse_stmts_with_free_param_scope_and_bindings(
-                    ParamObjType::Induc,
+                    BindingScope::ReuseActiveBinder,
                     &names,
                     line_file,
                     |this| {
@@ -196,7 +196,7 @@ impl Runtime {
                 block.line_file.clone(),
             )
         })?;
-        let expected_param = obj_for_bound_param_in_scope(&binding, ParamObjType::Induc);
+        let expected_param = obj_for_bound_param_in_scope(&binding);
         let empty_set: Obj = ListSet::new(vec![]).into();
         if equal_fact.left.to_string() != expected_param.to_string()
             || equal_fact.right.to_string() != empty_set.to_string()

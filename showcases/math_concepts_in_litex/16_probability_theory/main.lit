@@ -6,10 +6,10 @@
 #
 # Main line:
 #
-#   sigma-algebra + real series
-#       -> real-valued probability space
-#       -> countable additivity
-#       -> conditional probability and independence
+#   generated sigma-algebra + real series
+#       -> Borel(R)
+#       -> real-valued probability space and explicit measure constructions
+#       -> countable additivity, conditional probability, and independence
 #       -> measurable random variables and pushforward probability measures.
 
 # Countable unions use the first-class indexed-family operator. Its explicit
@@ -1161,13 +1161,11 @@ thm probability_between_zero_and_one:
     probability(A) <= probability(Omega) = 1
 
 # Countable event limits, continuity, null events, Borel--Cantelli, and
-# concrete probability-measure constructions. Every block below was first
-# accepted in the persistent proof session recorded by this module's journal.
-# Proof-journal block B001_A3
+# concrete probability-measure constructions. This layer stays entirely on
+# events and real series: it does not assume an integral or extended reals.
 template<Omega set, events power_set(power_set(Omega)): $is_sigma_algebra(Omega, events)>:
     have fn complement_event_sequence(family fn (family_index N+) events, n N+) events = set_minus(Omega, family(n))
 
-# Proof-journal block B026_A1
 thm relative_complement_involution:
     ? forall Omega set, A power_set(Omega):
         set_minus(Omega, set_minus(Omega, A)) = A
@@ -1197,7 +1195,6 @@ thm relative_complement_involution:
                     impossible not point $in A
             point $in set_minus(Omega, set_minus(Omega, A))
 
-# Proof-journal block B026_A2
 thm complement_of_index_union:
     ? forall index_set, Omega set, family fn (index index_set) power_set(Omega):
         set_minus(Omega, index_union(index_set, Omega, family)) = index_intersect(index_set, Omega, fn (index index_set) power_set(Omega) {set_minus(Omega, family(index))})
@@ -1236,17 +1233,9 @@ thm complement_of_index_union:
                     impossible not point $in family(index)
             point $in set_minus(Omega, index_union(index_set, Omega, family))
 
-# Proof-journal block B027_A2
 thm event_countable_intersection_is_event:
     ? forall Omega set, events power_set(power_set(Omega)), event_sequence fn (n N+) events:
-        {} $in events
-        Omega $in events
-        forall event events:
-            set_minus(Omega, event) $in events
-        forall left_event, right_event events:
-            intersect(left_event, right_event) $in events
-        forall family fn (family_index N+) events:
-            index_union(N+, Omega, fn (family_index N+) power_set(Omega) {family(family_index)}) $in events
+        $is_sigma_algebra(Omega, events)
         =>:
             index_intersect(N+, Omega, fn (n N+) power_set(Omega) {event_sequence(n)}) $in events
     by thm event_countable_union_is_event(Omega, events, fn (n N+) events {set_minus(Omega, event_sequence(n))}) => index_union(N+, Omega, fn (n N+) power_set(Omega) {set_minus(Omega, event_sequence(n))}) $in events
@@ -1268,7 +1257,6 @@ thm event_countable_intersection_is_event:
     source_intersection = index_intersect(N+, Omega, fn (n N+) power_set(Omega) {event_sequence(n)})
     index_intersect(N+, Omega, fn (n N+) power_set(Omega) {event_sequence(n)}) $in events
 
-# Proof-journal block B003_A4
 template<Omega set, events power_set(power_set(Omega)): $is_sigma_algebra(Omega, events)>:
     have fn event_tail_union_after by exist!:
         ? forall event_sequence fn (sequence_index N+) events, skipped N:
@@ -1283,7 +1271,6 @@ template<Omega set, events power_set(power_set(Omega)): $is_sigma_algebra(Omega,
                         tail1 = tail2
                 tail1 = index_union(N+, Omega, fn (offset N+) power_set(Omega) {event_sequence(skipped + offset)}) = tail2
 
-# Proof-journal block B004_A1
 template<Omega set, events power_set(power_set(Omega)): $is_sigma_algebra(Omega, events)>:
     have fn event_tail_intersection_after by exist!:
         ? forall event_sequence fn (sequence_index N+) events, skipped N:
@@ -1298,7 +1285,6 @@ template<Omega set, events power_set(power_set(Omega)): $is_sigma_algebra(Omega,
                         tail1 = tail2
                 tail1 = index_intersect(N+, Omega, fn (offset N+) power_set(Omega) {event_sequence(skipped + offset)}) = tail2
 
-# Proof-journal block B005_A1
 template<Omega set, events power_set(power_set(Omega)): $is_sigma_algebra(Omega, events)>:
     have fn event_limsup by exist!:
         ? forall event_sequence fn (sequence_index N+) events:
@@ -1313,7 +1299,6 @@ template<Omega set, events power_set(power_set(Omega)): $is_sigma_algebra(Omega,
                         candidate1 = candidate2
                 candidate1 = index_intersect(N+, Omega, fn (n N+) power_set(Omega) {\event_tail_union_after<Omega, events>(event_sequence, n - 1)}) = candidate2
 
-# Proof-journal block B006_A1
 template<Omega set, events power_set(power_set(Omega)): $is_sigma_algebra(Omega, events)>:
     have fn event_liminf by exist!:
         ? forall event_sequence fn (sequence_index N+) events:
@@ -1328,17 +1313,14 @@ template<Omega set, events power_set(power_set(Omega)): $is_sigma_algebra(Omega,
                         candidate1 = candidate2
                 candidate1 = index_union(N+, Omega, fn (n N+) power_set(Omega) {\event_tail_intersection_after<Omega, events>(event_sequence, n - 1)}) = candidate2
 
-# Proof-journal block B007_A1
 prop is_increasing_event_sequence(Omega set, events power_set(power_set(Omega)), event_sequence fn (sequence_index N+) events):
     forall n N+:
         event_sequence(n) $subset event_sequence(n + 1)
 
-# Proof-journal block B008_A1
 prop is_decreasing_event_sequence(Omega set, events power_set(power_set(Omega)), event_sequence fn (sequence_index N+) events):
     forall n N+:
         event_sequence(n + 1) $subset event_sequence(n)
 
-# Proof-journal block B009_A1
 thm pointwise_equal_sequences_preserve_limit:
     ? forall a, b seq(R), L R:
         forall n N+:
@@ -1363,14 +1345,12 @@ thm pointwise_equal_sequences_preserve_limit:
             by def $is_tail_close_to(a, L, epsilon, n0)
     by def $has_sequence_limit(a, L)
 
-# Proof-journal block B010_A2
 prop is_probability_disjointification_of(Omega set, events power_set(power_set(Omega)), probability fn (event events) R, event_sequence, increments fn (sequence_index N+) events):
     $pairwise_disjoint_event_sequence(Omega, events, increments)
     index_union(N+, Omega, fn (n N+) power_set(Omega) {increments(n)}) = index_union(N+, Omega, fn (n N+) power_set(Omega) {event_sequence(n)})
     forall k N+:
         partial_sum(fn (n N+) R {probability(increments(n))}, k) = probability(event_sequence(k))
 
-# Proof-journal block B011L_A1
 thm equal_values_preserve_sequence_limit:
     ? forall a seq(R), L1, L2 R:
         L1 = L2
@@ -1393,21 +1373,13 @@ thm equal_values_preserve_sequence_limit:
             by def $is_tail_close_to(a, L2, epsilon, n0)
     by def $has_sequence_limit(a, L2)
 
-# Proof-journal block B028_A4
 template<Omega set, events power_set(power_set(Omega))>:
     have fn raw_increasing_event_increment(event_sequence fn (sequence_index N+) events, n N+) power_set(union(event_sequence(1), event_sequence(n))) by cases :
         case n = 1: event_sequence(1)
         case n > 1: set_minus(event_sequence(n), event_sequence(n - 1))
 thm raw_increasing_event_increment_is_event:
     ? forall Omega set, events power_set(power_set(Omega)), event_sequence fn (sequence_index N+) events, n N+:
-        {} $in events
-        Omega $in events
-        forall event events:
-            set_minus(Omega, event) $in events
-        forall left_event, right_event events:
-            intersect(left_event, right_event) $in events
-        forall family fn (family_index N+) events:
-            index_union(N+, Omega, fn (family_index N+) power_set(Omega) {family(family_index)}) $in events
+        $is_sigma_algebra(Omega, events)
         =>:
             \raw_increasing_event_increment<Omega, events>(event_sequence, n) $in events
     n = 1 or n > 1
@@ -1434,7 +1406,6 @@ template<Omega set, events power_set(power_set(Omega)): $is_sigma_algebra(Omega,
                         increment1 = increment2
                 increment1 = \raw_increasing_event_increment<Omega, events>(event_sequence, n) = increment2
 
-# Proof-journal block B029_A3
 thm subset_transitive:
     ? forall left_set, middle_set, right_set set:
         left_set $subset middle_set
@@ -1465,7 +1436,6 @@ thm increasing_event_sequence_shift_mono:
             start + (offset + 1) = start + offset + 1
             event_sequence(start) $subset event_sequence(start + (offset + 1))
 
-# Proof-journal block B030_A5
 thm increasing_event_increment_is_subset:
     ? forall Omega set, events power_set(power_set(Omega)), event_sequence fn (sequence_index N+) events, n N+:
         $is_sigma_algebra(Omega, events)
@@ -1523,7 +1493,6 @@ thm increasing_event_increment_partitions_next:
                     point $in \increasing_event_increment<Omega, events>(event_sequence, k + 1)
                     point $in union(event_sequence(k), \increasing_event_increment<Omega, events>(event_sequence, k + 1))
 
-# Proof-journal block B031_A1
 thm increasing_event_sequence_mono:
     ? forall Omega set, events power_set(power_set(Omega)), event_sequence fn (index N+) events, earlier, later N+:
         $is_increasing_event_sequence(Omega, events, event_sequence)
@@ -1535,7 +1504,6 @@ thm increasing_event_sequence_mono:
     by thm increasing_event_sequence_shift_mono(Omega, events, event_sequence, earlier, later - earlier) => event_sequence(earlier) $subset event_sequence(earlier + (later - earlier))
     event_sequence(earlier) $subset event_sequence(later)
 
-# Proof-journal block B031_A3
 thm earlier_increasing_event_increment_disjoint_from_later:
     ? forall Omega set, events power_set(power_set(Omega)), event_sequence fn (index N+) events, earlier, later N+:
         $is_sigma_algebra(Omega, events)
@@ -1576,7 +1544,6 @@ thm earlier_increasing_event_increment_disjoint_from_later:
                 not point $in intersect(\increasing_event_increment<Omega, events>(event_sequence, earlier), \increasing_event_increment<Omega, events>(event_sequence, later))
                 impossible point $in {}
 
-# Proof-journal block B031_A7
 thm equal_event_pairs_preserve_empty_intersection:
     ? forall left_event, right_event, source_left_event, source_right_event set:
         left_event = source_left_event
@@ -1633,7 +1600,6 @@ thm increasing_event_increments_pairwise_disjoint:
                         by thm equal_event_pairs_preserve_empty_intersection(fn (n N+) events {\increasing_event_increment<Omega, events>(event_sequence, n)}(idx), fn (n N+) events {\increasing_event_increment<Omega, events>(event_sequence, n)}(j), \increasing_event_increment<Omega, events>(event_sequence, idx), \increasing_event_increment<Omega, events>(event_sequence, j)) => intersect(fn (n N+) events {\increasing_event_increment<Omega, events>(event_sequence, n)}(idx), fn (n N+) events {\increasing_event_increment<Omega, events>(event_sequence, n)}(j)) = {}
     by def $pairwise_disjoint_event_sequence(Omega, events, fn (n N+) events {\increasing_event_increment<Omega, events>(event_sequence, n)})
 
-# Proof-journal block B032_A1
 thm increasing_event_increment_union_covers_each_stage:
     ? forall Omega set, events power_set(power_set(Omega)), event_sequence fn (index N+) events, k N+:
         $is_sigma_algebra(Omega, events)
@@ -1668,7 +1634,6 @@ thm increasing_event_increment_union_covers_each_stage:
                         point $in index_union(N+, Omega, fn (n N+) power_set(Omega) {\increasing_event_increment<Omega, events>(event_sequence, n)})
             by def event_sequence(k + 1) $subset index_union(N+, Omega, fn (n N+) power_set(Omega) {\increasing_event_increment<Omega, events>(event_sequence, n)})
 
-# Proof-journal block B032_A2
 thm increasing_event_increment_union_equals_source_union:
     ? forall Omega set, events power_set(power_set(Omega)), event_sequence fn (index N+) events:
         $is_sigma_algebra(Omega, events)
@@ -1692,7 +1657,6 @@ thm increasing_event_increment_union_equals_source_union:
             by thm increasing_event_increment_union_covers_each_stage(Omega, events, event_sequence, index) => event_sequence(index) $subset index_union(N+, Omega, fn (n N+) power_set(Omega) {\increasing_event_increment<Omega, events>(event_sequence, n)})
             point $in index_union(N+, Omega, fn (n N+) power_set(Omega) {\increasing_event_increment<Omega, events>(event_sequence, n)})
 
-# Proof-journal block B033_A1
 thm previous_event_disjoint_from_next_increment:
     ? forall Omega set, events power_set(power_set(Omega)), event_sequence fn (index N+) events, k N+:
         $is_sigma_algebra(Omega, events)
@@ -1709,7 +1673,6 @@ thm previous_event_disjoint_from_next_increment:
     \increasing_event_increment<Omega, events>(event_sequence, k + 1) = set_minus(event_sequence(k + 1), event_sequence(k))
     by thm equal_event_pairs_preserve_empty_intersection(event_sequence(k), \increasing_event_increment<Omega, events>(event_sequence, k + 1), event_sequence(k), set_minus(event_sequence(k + 1), event_sequence(k))) => intersect(event_sequence(k), \increasing_event_increment<Omega, events>(event_sequence, k + 1)) = {}
 
-# Proof-journal block B033_A4
 thm equal_arguments_have_equal_function_values:
     ? forall Domain, Codomain set, f fn (x Domain) Codomain, x, y Domain:
         x = y
@@ -1717,7 +1680,6 @@ thm equal_arguments_have_equal_function_values:
             f(x) = f(y)
     f(x) = f(y)
 
-# Proof-journal block B033_A6
 thm equal_binary_arguments_have_equal_function_values:
     ? forall Domain, Codomain set, f fn (x, y Domain) Codomain, x1, x2, y1, y2 Domain:
         x1 = x2
@@ -1726,7 +1688,6 @@ thm equal_binary_arguments_have_equal_function_values:
             f(x1, y1) = f(x2, y2)
     f(x1, y1) = f(x2, y2)
 
-# Proof-journal block B033_A9
 thm equalities_compose:
     ? forall Domain set, x, y, z Domain:
         x = y
@@ -1735,17 +1696,9 @@ thm equalities_compose:
             x = z
     x = z
 
-# Proof-journal block B033_A12
 thm probability_of_next_increasing_stage:
     ? forall Omega set, events power_set(power_set(Omega)), probability fn (event events) R, event_sequence fn (index N+) events, k N+:
-        {} $in events
-        Omega $in events
-        forall event events:
-            set_minus(Omega, event) $in events
-        forall left_event, right_event events:
-            intersect(left_event, right_event) $in events
-        forall family fn (family_index N+) events:
-            index_union(N+, Omega, fn (family_index N+) power_set(Omega) {family(family_index)}) $in events
+        $is_sigma_algebra(Omega, events)
         probability({}) = 0
         probability(Omega) = 1
         forall event events:
@@ -1766,17 +1719,9 @@ thm probability_of_next_increasing_stage:
     by thm equal_arguments_have_equal_function_values(events, R, probability, union(event_sequence(k), \increasing_event_increment<Omega, events>(event_sequence, k + 1)), event_sequence(k + 1)) => probability(union(event_sequence(k), \increasing_event_increment<Omega, events>(event_sequence, k + 1))) = probability(event_sequence(k + 1))
     by thm equalities_compose(R, probability(event_sequence(k + 1)), probability(union(event_sequence(k), \increasing_event_increment<Omega, events>(event_sequence, k + 1))), probability(event_sequence(k)) + probability(\increasing_event_increment<Omega, events>(event_sequence, k + 1))) => probability(event_sequence(k + 1)) = probability(event_sequence(k)) + probability(\increasing_event_increment<Omega, events>(event_sequence, k + 1))
 
-# Proof-journal block B033_A13
 thm increasing_event_increment_probability_partial_sum:
     ? forall Omega set, events power_set(power_set(Omega)), probability fn (event events) R, event_sequence fn (index N+) events, k N+:
-        {} $in events
-        Omega $in events
-        forall event events:
-            set_minus(Omega, event) $in events
-        forall left_event, right_event events:
-            intersect(left_event, right_event) $in events
-        forall family fn (family_index N+) events:
-            index_union(N+, Omega, fn (family_index N+) power_set(Omega) {family(family_index)}) $in events
+        $is_sigma_algebra(Omega, events)
         probability({}) = 0
         probability(Omega) = 1
         forall event events:
@@ -1816,7 +1761,6 @@ thm increasing_event_increment_probability_partial_sum:
             probability(event_sequence(k)) + probability(\increasing_event_increment<Omega, events>(event_sequence, k + 1)) = probability(event_sequence(k + 1))
             by thm equalities_compose(R, partial_sum(fn (n N+) R {probability(\increasing_event_increment<Omega, events>(event_sequence, n))}, k + 1), probability(event_sequence(k)) + probability(\increasing_event_increment<Omega, events>(event_sequence, k + 1)), probability(event_sequence(k + 1))) => partial_sum(fn (n N+) R {probability(\increasing_event_increment<Omega, events>(event_sequence, n))}, k + 1) = probability(event_sequence(k + 1))
 
-# Proof-journal block B034_A4
 thm pointwise_equal_families_have_equal_index_union:
     ? forall index_set, Omega set, left_family, right_family fn (index index_set) power_set(Omega):
         forall index index_set:
@@ -1842,17 +1786,9 @@ thm pointwise_equal_families_have_equal_index_union:
             witness exist candidate_index index_set st {point $in left_family(candidate_index)} from witness_index
             point $in index_union(index_set, Omega, left_family)
 
-# Proof-journal block B034_A5
 thm increasing_event_sequence_has_probability_disjointification:
     ? forall Omega set, events power_set(power_set(Omega)), probability fn (event events) R, event_sequence fn (index N+) events:
-        {} $in events
-        Omega $in events
-        forall event events:
-            set_minus(Omega, event) $in events
-        forall left_event, right_event events:
-            intersect(left_event, right_event) $in events
-        forall family fn (family_index N+) events:
-            index_union(N+, Omega, fn (family_index N+) power_set(Omega) {family(family_index)}) $in events
+        $is_sigma_algebra(Omega, events)
         probability({}) = 0
         probability(Omega) = 1
         forall event events:
@@ -1887,17 +1823,9 @@ thm increasing_event_sequence_has_probability_disjointification:
             by thm equalities_compose(R, partial_sum(fn (wrapper_term N+) R {probability(fn (n N+) events {\increasing_event_increment<Omega, events>(event_sequence, n)}(wrapper_term))}, k), partial_sum(fn (canonical_term N+) R {probability(\increasing_event_increment<Omega, events>(event_sequence, canonical_term))}, k), probability(event_sequence(k))) => partial_sum(fn (wrapper_term N+) R {probability(fn (n N+) events {\increasing_event_increment<Omega, events>(event_sequence, n)}(wrapper_term))}, k) = probability(event_sequence(k))
         by def $is_probability_disjointification_of(Omega, events, probability, event_sequence, fn (n N+) events {\increasing_event_increment<Omega, events>(event_sequence, n)})
 
-# Proof-journal block B035_A2
 thm probability_continuous_from_below:
     ? forall Omega set, events power_set(power_set(Omega)), probability fn (event events) R, event_sequence fn (n N+) events:
-        {} $in events
-        Omega $in events
-        forall event events:
-            set_minus(Omega, event) $in events
-        forall left_event, right_event events:
-            intersect(left_event, right_event) $in events
-        forall family fn (family_index N+) events:
-            index_union(N+, Omega, fn (family_index N+) power_set(Omega) {family(family_index)}) $in events
+        $is_sigma_algebra(Omega, events)
         probability({}) = 0
         probability(Omega) = 1
         forall event events:
@@ -1928,7 +1856,6 @@ thm probability_continuous_from_below:
     by thm equal_arguments_have_equal_function_values(events, R, probability, source_union, index_union(N+, Omega, fn (n N+) power_set(Omega) {event_sequence(n)})) => probability(source_union) = probability(index_union(N+, Omega, fn (n N+) power_set(Omega) {event_sequence(n)}))
     by thm equal_values_preserve_sequence_limit(fn (k N+) R {probability(event_sequence(k))}, probability(source_union), probability(index_union(N+, Omega, fn (n N+) power_set(Omega) {event_sequence(n)}))) => $has_sequence_limit(fn (k N+) R {probability(event_sequence(k))}, probability(index_union(N+, Omega, fn (n N+) power_set(Omega) {event_sequence(n)})))
 
-# Proof-journal block B036_A1
 thm one_minus_sequence_preserves_limit:
     ? forall a seq(R), L R:
         $has_sequence_limit(a, L)
@@ -1954,7 +1881,6 @@ thm one_minus_sequence_preserves_limit:
             by def $is_tail_close_to(fn (n N+) R {1 - a(n)}, 1 - L, epsilon, n0)
     by def $has_sequence_limit(fn (n N+) R {1 - a(n)}, 1 - L)
 
-# Proof-journal block B036_A4
 thm complements_of_decreasing_events_are_increasing:
     ? forall Omega set, events power_set(power_set(Omega)), event_sequence fn (index N+) events:
         $is_sigma_algebra(Omega, events)
@@ -1990,7 +1916,6 @@ thm complements_of_decreasing_events_are_increasing:
         by def fn (index N+) events {\complement_event_sequence<Omega, events>(event_sequence, index)}(n) $subset fn (index N+) events {\complement_event_sequence<Omega, events>(event_sequence, index)}(n + 1)
     by def $is_increasing_event_sequence(Omega, events, fn (n N+) events {\complement_event_sequence<Omega, events>(event_sequence, n)})
 
-# Proof-journal block B036_A7
 thm complement_union_of_event_sequence_is_intersection:
     ? forall Omega set, events power_set(power_set(Omega)), event_sequence fn (n N+) events:
         $is_sigma_algebra(Omega, events)
@@ -2017,23 +1942,14 @@ thm complement_union_of_event_sequence_is_intersection:
     source_intersection = index_intersect(N+, Omega, fn (n N+) power_set(Omega) {event_sequence(n)})
     set_minus(Omega, index_union(N+, Omega, fn (n N+) power_set(Omega) {\complement_event_sequence<Omega, events>(event_sequence, n)})) = complement_union = source_intersection = index_intersect(N+, Omega, fn (n N+) power_set(Omega) {event_sequence(n)})
 
-# Proof-journal block B036_A10
 thm one_minus_one_minus:
     ? forall x R:
         1 - (1 - x) = x
     1 - (1 - x) = x
 
-# Proof-journal block B036_A12
 thm probability_continuous_from_above:
     ? forall Omega set, events power_set(power_set(Omega)), probability fn (event events) R, event_sequence fn (n N+) events:
-        {} $in events
-        Omega $in events
-        forall event events:
-            set_minus(Omega, event) $in events
-        forall left_event, right_event events:
-            intersect(left_event, right_event) $in events
-        forall family fn (family_index N+) events:
-            index_union(N+, Omega, fn (family_index N+) power_set(Omega) {family(family_index)}) $in events
+        $is_sigma_algebra(Omega, events)
         probability({}) = 0
         probability(Omega) = 1
         forall event events:
@@ -2090,24 +2006,15 @@ thm probability_continuous_from_above:
         by thm equal_arguments_have_equal_function_values(events, R, probability, source_intersection, index_intersect(N+, Omega, fn (n N+) power_set(Omega) {event_sequence(n)})) => probability(source_intersection) = probability(index_intersect(N+, Omega, fn (n N+) power_set(Omega) {event_sequence(n)}))
     by thm equal_values_preserve_sequence_limit(fn (n N+) R {probability(event_sequence(n))}, probability(source_intersection), probability(index_intersect(N+, Omega, fn (n N+) power_set(Omega) {event_sequence(n)}))) => $has_sequence_limit(fn (n N+) R {probability(event_sequence(n))}, probability(index_intersect(N+, Omega, fn (n N+) power_set(Omega) {event_sequence(n)})))
 
-# Proof-journal block B037_A2
 thm event_union_is_event:
     ? forall Omega set, events power_set(power_set(Omega)), A, B events:
-        {} $in events
-        Omega $in events
-        forall event events:
-            set_minus(Omega, event) $in events
-        forall left_event, right_event events:
-            intersect(left_event, right_event) $in events
-        forall family fn (family_index N+) events:
-            index_union(N+, Omega, fn (family_index N+) power_set(Omega) {family(family_index)}) $in events
+        $is_sigma_algebra(Omega, events)
         =>:
             union(A, B) $in events
     by thm event_countable_union_is_event(Omega, events, fn (n N+) events {\two_event_sequence<Omega, events>(A, B, n)}) => index_union(N+, Omega, fn (n N+) power_set(Omega) {\two_event_sequence<Omega, events>(A, B, n)}) $in events
     by thm two_event_sequence_countable_union(Omega, events, A, B) => index_union(N+, Omega, fn (n N+) power_set(Omega) {\two_event_sequence<Omega, events>(A, B, n)}) = union(A, B)
     union(A, B) $in events
 
-# Proof-journal block B037_A3
 template<Omega set, events power_set(power_set(Omega)): $is_sigma_algebra(Omega, events)>:
     have fn exact_event_union by exist!:
         ? forall A, B events:
@@ -2123,23 +2030,14 @@ template<Omega set, events power_set(power_set(Omega)): $is_sigma_algebra(Omega,
                         result1 = result2
                 result1 = union(A, B) = result2
 
-# Proof-journal block B037_A4
 template<Omega set, events power_set(power_set(Omega)): $is_sigma_algebra(Omega, events)>:
     have fn event_prefix_union(event_sequence fn (n N+) events, k N+) events by induc k from 1:
         case k = 1: event_sequence(1)
         case k > 1: \exact_event_union<Omega, events>(event_prefix_union(event_sequence, k - 1), event_sequence(k))
 
-# Proof-journal block B037_A5
 thm event_prefix_union_successor:
     ? forall Omega set, events power_set(power_set(Omega)), event_sequence fn (n N+) events, k N+:
-        {} $in events
-        Omega $in events
-        forall event events:
-            set_minus(Omega, event) $in events
-        forall left_event, right_event events:
-            intersect(left_event, right_event) $in events
-        forall family fn (family_index N+) events:
-            index_union(N+, Omega, fn (family_index N+) power_set(Omega) {family(family_index)}) $in events
+        $is_sigma_algebra(Omega, events)
         =>:
             \event_prefix_union<Omega, events>(event_sequence, k + 1) = union(\event_prefix_union<Omega, events>(event_sequence, k), event_sequence(k + 1))
     k + 1 > 1
@@ -2149,17 +2047,8 @@ thm event_prefix_union_successor:
     \exact_event_union<Omega, events>(\event_prefix_union<Omega, events>(event_sequence, k), event_sequence(k + 1)) = union(\event_prefix_union<Omega, events>(event_sequence, k), event_sequence(k + 1))
     \event_prefix_union<Omega, events>(event_sequence, k + 1) = union(\event_prefix_union<Omega, events>(event_sequence, k), event_sequence(k + 1))
 
-# Proof-journal block B037_A7
 thm event_prefix_union_sequence_is_increasing:
     ? forall Omega set, events power_set(power_set(Omega)), event_sequence fn (n N+) events:
-        {} $in events
-        Omega $in events
-        forall event events:
-            set_minus(Omega, event) $in events
-        forall left_event, right_event events:
-            intersect(left_event, right_event) $in events
-        forall family fn (family_index N+) events:
-            index_union(N+, Omega, fn (family_index N+) power_set(Omega) {family(family_index)}) $in events
         $is_sigma_algebra(Omega, events)
         =>:
             $is_increasing_event_sequence(Omega, events, fn (k N+) events {\event_prefix_union<Omega, events>(event_sequence, k)})
@@ -2178,17 +2067,8 @@ thm event_prefix_union_sequence_is_increasing:
         fn (index N+) events {\event_prefix_union<Omega, events>(event_sequence, index)}(k) $subset fn (index N+) events {\event_prefix_union<Omega, events>(event_sequence, index)}(k + 1)
     by def $is_increasing_event_sequence(Omega, events, fn (k N+) events {\event_prefix_union<Omega, events>(event_sequence, k)})
 
-# Proof-journal block B037_A10
 thm event_prefix_union_subset_source_union:
     ? forall Omega set, events power_set(power_set(Omega)), event_sequence fn (n N+) events, k N+:
-        {} $in events
-        Omega $in events
-        forall event events:
-            set_minus(Omega, event) $in events
-        forall left_event, right_event events:
-            intersect(left_event, right_event) $in events
-        forall family fn (family_index N+) events:
-            index_union(N+, Omega, fn (family_index N+) power_set(Omega) {family(family_index)}) $in events
         $is_sigma_algebra(Omega, events)
         =>:
             \event_prefix_union<Omega, events>(event_sequence, k) $subset index_union(N+, Omega, fn (n N+) power_set(Omega) {event_sequence(n)})
@@ -2225,17 +2105,8 @@ thm event_prefix_union_subset_source_union:
                         point $in index_union(N+, Omega, fn (n N+) power_set(Omega) {event_sequence(n)})
             by def \event_prefix_union<Omega, events>(event_sequence, k + 1) $subset index_union(N+, Omega, fn (n N+) power_set(Omega) {event_sequence(n)})
 
-# Proof-journal block B037_A12
 thm source_event_subset_same_prefix_union:
     ? forall Omega set, events power_set(power_set(Omega)), event_sequence fn (n N+) events, k N+:
-        {} $in events
-        Omega $in events
-        forall event events:
-            set_minus(Omega, event) $in events
-        forall left_event, right_event events:
-            intersect(left_event, right_event) $in events
-        forall family fn (family_index N+) events:
-            index_union(N+, Omega, fn (family_index N+) power_set(Omega) {family(family_index)}) $in events
         $is_sigma_algebra(Omega, events)
         =>:
             event_sequence(k) $subset \event_prefix_union<Omega, events>(event_sequence, k)
@@ -2262,17 +2133,8 @@ thm source_event_subset_same_prefix_union:
                 point $in \event_prefix_union<Omega, events>(event_sequence, k)
             by def event_sequence(k) $subset \event_prefix_union<Omega, events>(event_sequence, k)
 
-# Proof-journal block B037_A14
 thm event_prefix_union_countable_union_equals_source_union:
     ? forall Omega set, events power_set(power_set(Omega)), event_sequence fn (n N+) events:
-        {} $in events
-        Omega $in events
-        forall event events:
-            set_minus(Omega, event) $in events
-        forall left_event, right_event events:
-            intersect(left_event, right_event) $in events
-        forall family fn (family_index N+) events:
-            index_union(N+, Omega, fn (family_index N+) power_set(Omega) {family(family_index)}) $in events
         $is_sigma_algebra(Omega, events)
         =>:
             index_union(N+, Omega, fn (prefix_index N+) power_set(Omega) {\event_prefix_union<Omega, events>(event_sequence, prefix_index)}) = index_union(N+, Omega, fn (n N+) power_set(Omega) {event_sequence(n)})
@@ -2294,7 +2156,6 @@ thm event_prefix_union_countable_union_equals_source_union:
                 point $in \event_prefix_union<Omega, events>(event_sequence, k)
             point $in index_union(N+, Omega, fn (prefix_index N+) power_set(Omega) {\event_prefix_union<Omega, events>(event_sequence, prefix_index)})
 
-# Proof-journal block B037_A16
 thm partial_sum_successor:
     ? forall a seq(R), k N:
         partial_sum(a, k + 1) = partial_sum(a, k) + a(k + 1)
@@ -2304,7 +2165,6 @@ thm partial_sum_successor:
     partial_sum(a, (k + 1) - 1) = partial_sum(a, k)
     partial_sum(a, k + 1) = partial_sum(a, k) + a(k + 1)
 
-# Proof-journal block B037_A18
 thm partial_sum_one:
     ? forall a seq(R):
         partial_sum(a, 1) = a(1)
@@ -2314,17 +2174,9 @@ thm partial_sum_one:
     0 + a(1) = a(1)
     partial_sum(a, 1) = partial_sum(a, 0) + a(1) = 0 + a(1) = a(1)
 
-# Proof-journal block B037_A20
 thm probability_event_prefix_union_le_partial_sum:
     ? forall Omega set, events power_set(power_set(Omega)), probability fn (event events) R, event_sequence fn (n N+) events, k N+:
-        {} $in events
-        Omega $in events
-        forall event events:
-            set_minus(Omega, event) $in events
-        forall left_event, right_event events:
-            intersect(left_event, right_event) $in events
-        forall family fn (family_index N+) events:
-            index_union(N+, Omega, fn (family_index N+) power_set(Omega) {family(family_index)}) $in events
+        $is_sigma_algebra(Omega, events)
         probability({}) = 0
         probability(Omega) = 1
         forall event events:
@@ -2359,7 +2211,6 @@ thm probability_event_prefix_union_le_partial_sum:
             partial_sum(fn (n N+) R {probability(event_sequence(n))}, k) + probability(event_sequence(k + 1)) = partial_sum(fn (n N+) R {probability(event_sequence(n))}, k + 1)
             probability(\event_prefix_union<Omega, events>(event_sequence, k + 1)) <= probability(\event_prefix_union<Omega, events>(event_sequence, k)) + probability(event_sequence(k + 1)) <= partial_sum(fn (n N+) R {probability(event_sequence(n))}, k) + probability(event_sequence(k + 1)) = partial_sum(fn (n N+) R {probability(event_sequence(n))}, k + 1)
 
-# Proof-journal block B037_A26
 thm add_left_preserves_strict_order:
     ? forall x, y, z R:
         x < y
@@ -2367,7 +2218,6 @@ thm add_left_preserves_strict_order:
             z + x < z + y
     z + x < z + y
 
-# Proof-journal block B037_A27
 thm two_thirds_gap_stays_below_upper:
     ? forall A, B R:
         B < A
@@ -2386,7 +2236,6 @@ thm two_thirds_gap_stays_below_upper:
     B + (A - B) = A
     B + (A - B) / 3 + (A - B) / 3 = B + ((A - B) / 3 + (A - B) / 3) < B + (A - B) = A
 
-# Proof-journal block B037_A28
 thm add_left_preserves_order:
     ? forall x, y, z R:
         x <= y
@@ -2394,7 +2243,6 @@ thm add_left_preserves_order:
             z + x <= z + y
     z + x <= z + y
 
-# Proof-journal block B037_A29
 thm two_equal_thirds_gap_stays_below_upper:
     ? forall A, B, epsilon R:
         B < A
@@ -2408,7 +2256,6 @@ thm two_equal_thirds_gap_stays_below_upper:
     B + ((A - B) / 3 + (A - B) / 3) = B + (A - B) / 3 + (A - B) / 3
     B + epsilon + epsilon = B + (epsilon + epsilon) = B + ((A - B) / 3 + (A - B) / 3) = B + (A - B) / 3 + (A - B) / 3 < A
 
-# Proof-journal block B037_A30
 thm pointwise_le_sequences_preserve_limit_order:
     ? forall a, b seq(R), A, B R:
         forall n N+:
@@ -2436,9 +2283,8 @@ thm pointwise_le_sequences_preserve_limit_order:
         abs (a(common_index) - A) < epsilon
         by def $is_tail_close_to(b, B, epsilon, nb)
         abs (b(common_index) - B) < epsilon
-        -1 * (a(common_index) - A) <= abs (-1 * (a(common_index) - A)) = abs (a(common_index) - A)
-        -1 * abs (a(common_index) - A) <= a(common_index) - A
-        -1 * epsilon < -1 * abs (a(common_index) - A) <= a(common_index) - A
+        -abs (a(common_index) - A) <= a(common_index) - A
+        -epsilon < -abs (a(common_index) - A) <= a(common_index) - A
         A - epsilon = -1 * epsilon + A < a(common_index) - A + A = a(common_index)
         b(common_index) - B <= abs (b(common_index) - B) < epsilon
         b(common_index) = b(common_index) - B + B < epsilon + B = B + epsilon
@@ -2457,17 +2303,9 @@ thm pointwise_le_sequences_preserve_limit_order:
         A < a(common_index) + epsilon <= b(common_index) + epsilon < B + epsilon + epsilon < A
         impossible A < A
 
-# Proof-journal block B037_A32
 thm probability_countable_subadditivity:
     ? forall Omega set, events power_set(power_set(Omega)), probability fn (event events) R, event_sequence fn (n N+) events, total R:
-        {} $in events
-        Omega $in events
-        forall event events:
-            set_minus(Omega, event) $in events
-        forall left_event, right_event events:
-            intersect(left_event, right_event) $in events
-        forall family fn (family_index N+) events:
-            index_union(N+, Omega, fn (family_index N+) power_set(Omega) {family(family_index)}) $in events
+        $is_sigma_algebra(Omega, events)
         probability({}) = 0
         probability(Omega) = 1
         forall event events:
@@ -2495,23 +2333,14 @@ thm probability_countable_subadditivity:
     by thm equal_arguments_have_equal_function_values(events, R, probability, index_union(N+, Omega, fn (prefix_index N+) power_set(Omega) {\event_prefix_union<Omega, events>(event_sequence, prefix_index)}), index_union(N+, Omega, fn (n N+) power_set(Omega) {event_sequence(n)})) => probability(index_union(N+, Omega, fn (prefix_index N+) power_set(Omega) {\event_prefix_union<Omega, events>(event_sequence, prefix_index)})) = probability(index_union(N+, Omega, fn (n N+) power_set(Omega) {event_sequence(n)}))
     probability(index_union(N+, Omega, fn (n N+) power_set(Omega) {event_sequence(n)})) = probability(index_union(N+, Omega, fn (prefix_index N+) power_set(Omega) {\event_prefix_union<Omega, events>(event_sequence, prefix_index)})) <= total
 
-# Proof-journal block B014_A1
 prop is_null_event(Omega set, events power_set(power_set(Omega)), probability fn (event events) R, event events):
     probability(event) = 0
 prop is_almost_sure_event(Omega set, events power_set(power_set(Omega)), probability fn (event events) R, event events):
     probability(event) = 1
 
-# Proof-journal block B015_A1
 thm subset_of_null_event_is_null:
     ? forall Omega set, events power_set(power_set(Omega)), probability fn (event events) R, A, B events:
-        {} $in events
-        Omega $in events
-        forall event events:
-            set_minus(Omega, event) $in events
-        forall left_event, right_event events:
-            intersect(left_event, right_event) $in events
-        forall family fn (family_index N+) events:
-            index_union(N+, Omega, fn (family_index N+) power_set(Omega) {family(family_index)}) $in events
+        $is_sigma_algebra(Omega, events)
         probability({}) = 0
         probability(Omega) = 1
         forall event events:
@@ -2532,7 +2361,6 @@ thm subset_of_null_event_is_null:
     probability(A) = 0
     by def $is_null_event(Omega, events, probability, A)
 
-# Proof-journal block B016_A2
 thm pointwise_zero_series_has_sum:
     ? forall zero_terms seq(R):
         forall n N+:
@@ -2569,17 +2397,9 @@ thm pointwise_zero_series_has_sum:
         by def $has_sequence_limit(fn (k N+) R {partial_sum(zero_terms, k)}, 0)
     by def $has_series_sum(zero_terms, 0)
 
-# Proof-journal block B017_A3
 thm countable_union_of_null_events_is_null:
     ? forall Omega set, events power_set(power_set(Omega)), probability fn (event events) R, event_sequence fn (n N+) events:
-        {} $in events
-        Omega $in events
-        forall event events:
-            set_minus(Omega, event) $in events
-        forall left_event, right_event events:
-            intersect(left_event, right_event) $in events
-        forall family fn (family_index N+) events:
-            index_union(N+, Omega, fn (family_index N+) power_set(Omega) {family(family_index)}) $in events
+        $is_sigma_algebra(Omega, events)
         probability({}) = 0
         probability(Omega) = 1
         forall event events:
@@ -2603,17 +2423,9 @@ thm countable_union_of_null_events_is_null:
     probability(index_union(N+, Omega, fn (n N+) power_set(Omega) {event_sequence(n)})) = 0
     by def $is_null_event(Omega, events, probability, index_union(N+, Omega, fn (n N+) power_set(Omega) {event_sequence(n)}))
 
-# Proof-journal block B018_A1
 thm almost_sure_event_has_null_complement:
     ? forall Omega set, events power_set(power_set(Omega)), probability fn (event events) R, A events:
-        {} $in events
-        Omega $in events
-        forall event events:
-            set_minus(Omega, event) $in events
-        forall left_event, right_event events:
-            intersect(left_event, right_event) $in events
-        forall family fn (family_index N+) events:
-            index_union(N+, Omega, fn (family_index N+) power_set(Omega) {family(family_index)}) $in events
+        $is_sigma_algebra(Omega, events)
         probability({}) = 0
         probability(Omega) = 1
         forall event events:
@@ -2632,14 +2444,7 @@ thm almost_sure_event_has_null_complement:
     by def $is_null_event(Omega, events, probability, set_minus(Omega, A))
 thm null_complement_implies_almost_sure:
     ? forall Omega set, events power_set(power_set(Omega)), probability fn (event events) R, A events:
-        {} $in events
-        Omega $in events
-        forall event events:
-            set_minus(Omega, event) $in events
-        forall left_event, right_event events:
-            intersect(left_event, right_event) $in events
-        forall family fn (family_index N+) events:
-            index_union(N+, Omega, fn (family_index N+) power_set(Omega) {family(family_index)}) $in events
+        $is_sigma_algebra(Omega, events)
         probability({}) = 0
         probability(Omega) = 1
         forall event events:
@@ -2658,10 +2463,8 @@ thm null_complement_implies_almost_sure:
     probability(A) = 1
     by def $is_almost_sure_event(Omega, events, probability, A)
 
-# Proof-journal block B038_A1
 have fn real_sequence_tail_after(a seq(R), skipped N, offset N+) R = a(skipped + offset)
 
-# Proof-journal block B038_A2
 thm partial_sum_of_real_sequence_tail_after:
     ? forall a seq(R), skipped N, k N+:
         partial_sum(fn (offset N+) R {real_sequence_tail_after(a, skipped, offset)}, k) = partial_sum(a, skipped + k) - partial_sum(a, skipped)
@@ -2686,7 +2489,6 @@ thm partial_sum_of_real_sequence_tail_after:
             partial_sum(a, skipped + k + 1) - partial_sum(a, skipped) = partial_sum(a, skipped + (k + 1)) - partial_sum(a, skipped)
             partial_sum(fn (offset N+) R {real_sequence_tail_after(a, skipped, offset)}, k + 1) = partial_sum(a, skipped + (k + 1)) - partial_sum(a, skipped)
 
-# Proof-journal block B038_A3
 thm finite_shift_preserves_sequence_limit:
     ? forall a seq(R), L R, skipped N:
         $has_sequence_limit(a, L)
@@ -2711,7 +2513,6 @@ thm finite_shift_preserves_sequence_limit:
             by def $is_tail_close_to(fn (k N+) R {a(skipped + k)}, L, epsilon, n0)
     by def $has_sequence_limit(fn (k N+) R {a(skipped + k)}, L)
 
-# Proof-journal block B038_A4
 thm subtract_constant_preserves_sequence_limit:
     ? forall a seq(R), L, c R:
         $has_sequence_limit(a, L)
@@ -2736,7 +2537,6 @@ thm subtract_constant_preserves_sequence_limit:
             by def $is_tail_close_to(fn (n N+) R {a(n) - c}, L - c, epsilon, n0)
     by def $has_sequence_limit(fn (n N+) R {a(n) - c}, L - c)
 
-# Proof-journal block B038_A5
 thm real_series_tail_after_has_sum:
     ? forall a seq(R), total R, skipped N:
         $has_series_sum(a, total)
@@ -2752,17 +2552,9 @@ thm real_series_tail_after_has_sum:
     by thm pointwise_equal_sequences_preserve_limit(fn (k N+) R {partial_sum(fn (offset N+) R {real_sequence_tail_after(a, skipped, offset)}, k)}, fn (k N+) R {partial_sum(a, skipped + k) - partial_sum(a, skipped)}, total - partial_sum(a, skipped)) => $has_sequence_limit(fn (k N+) R {partial_sum(fn (offset N+) R {real_sequence_tail_after(a, skipped, offset)}, k)}, total - partial_sum(a, skipped))
     by def $has_series_sum(fn (offset N+) R {real_sequence_tail_after(a, skipped, offset)}, total - partial_sum(a, skipped))
 
-# Proof-journal block B038_A9
 thm probability_event_tail_union_after_le_series_remainder:
     ? forall Omega set, events power_set(power_set(Omega)), probability fn (event events) R, event_sequence fn (n N+) events, total R, skipped N:
-        {} $in events
-        Omega $in events
-        forall event events:
-            set_minus(Omega, event) $in events
-        forall left_event, right_event events:
-            intersect(left_event, right_event) $in events
-        forall family fn (family_index N+) events:
-            index_union(N+, Omega, fn (family_index N+) power_set(Omega) {family(family_index)}) $in events
+        $is_sigma_algebra(Omega, events)
         probability({}) = 0
         probability(Omega) = 1
         forall event events:
@@ -2788,7 +2580,6 @@ thm probability_event_tail_union_after_le_series_remainder:
     by thm equal_arguments_have_equal_function_values(events, R, probability, \event_tail_union_after<Omega, events>(event_sequence, skipped), index_union(N+, Omega, fn (offset N+) power_set(Omega) {event_sequence(skipped + offset)})) => probability(\event_tail_union_after<Omega, events>(event_sequence, skipped)) = probability(index_union(N+, Omega, fn (offset N+) power_set(Omega) {event_sequence(skipped + offset)}))
     probability(\event_tail_union_after<Omega, events>(event_sequence, skipped)) = probability(index_union(N+, Omega, fn (offset N+) power_set(Omega) {event_sequence(skipped + offset)})) <= total - partial_sum(fn (n N+) R {probability(event_sequence(n))}, skipped)
 
-# Proof-journal block B038_A11
 thm one_step_delay_preserves_N_indexed_sequence_limit:
     ? forall p fn (k N) R, L R:
         $has_sequence_limit(fn (n N+) R {p(n)}, L)
@@ -2820,7 +2611,6 @@ thm one_step_delay_preserves_N_indexed_sequence_limit:
             by def $is_tail_close_to(fn (n N+) R {p(n - 1)}, L, epsilon, delayed_start)
     by def $has_sequence_limit(fn (n N+) R {p(n - 1)}, L)
 
-# Proof-journal block B038_A12
 thm constant_minus_convergent_sequence_converges_to_zero:
     ? forall a seq(R), L R:
         $has_sequence_limit(a, L)
@@ -2845,7 +2635,6 @@ thm constant_minus_convergent_sequence_converges_to_zero:
             by def $is_tail_close_to(fn (n N+) R {L - a(n)}, 0, epsilon, n0)
     by def $has_sequence_limit(fn (n N+) R {L - a(n)}, 0)
 
-# Proof-journal block B038_A13
 thm nonnegative_sequence_below_zero_limit_converges_to_zero:
     ? forall lower, upper seq(R):
         forall n N+:
@@ -2877,17 +2666,8 @@ thm nonnegative_sequence_below_zero_limit_converges_to_zero:
             by def $is_tail_close_to(lower, 0, epsilon, n0)
     by def $has_sequence_limit(lower, 0)
 
-# Proof-journal block B038_A14
 thm event_tail_union_sequence_is_decreasing:
     ? forall Omega set, events power_set(power_set(Omega)), event_sequence fn (sequence_index N+) events:
-        {} $in events
-        Omega $in events
-        forall event events:
-            set_minus(Omega, event) $in events
-        forall left_event, right_event events:
-            intersect(left_event, right_event) $in events
-        forall family fn (family_index N+) events:
-            index_union(N+, Omega, fn (family_index N+) power_set(Omega) {family(family_index)}) $in events
         $is_sigma_algebra(Omega, events)
         =>:
             $is_decreasing_event_sequence(Omega, events, fn (n N+) events {\event_tail_union_after<Omega, events>(event_sequence, n - 1)})
@@ -2918,17 +2698,9 @@ thm event_tail_union_sequence_is_decreasing:
         fn (tail_index N+) events {\event_tail_union_after<Omega, events>(event_sequence, tail_index - 1)}(n + 1) $subset fn (tail_index N+) events {\event_tail_union_after<Omega, events>(event_sequence, tail_index - 1)}(n)
     by def $is_decreasing_event_sequence(Omega, events, fn (n N+) events {\event_tail_union_after<Omega, events>(event_sequence, n - 1)})
 
-# Proof-journal block B038_A15
 thm first_borel_cantelli:
     ? forall Omega set, events power_set(power_set(Omega)), probability fn (event events) R, event_sequence fn (n N+) events, total R:
-        {} $in events
-        Omega $in events
-        forall event events:
-            set_minus(Omega, event) $in events
-        forall left_event, right_event events:
-            intersect(left_event, right_event) $in events
-        forall family fn (family_index N+) events:
-            index_union(N+, Omega, fn (family_index N+) power_set(Omega) {family(family_index)}) $in events
+        $is_sigma_algebra(Omega, events)
         probability({}) = 0
         probability(Omega) = 1
         forall event events:
@@ -2966,18 +2738,15 @@ thm first_borel_cantelli:
     probability(\event_limsup<Omega, events>(event_sequence)) = probability(index_intersect(N+, Omega, fn (n N+) power_set(Omega) {\event_tail_union_after<Omega, events>(event_sequence, n - 1)})) = 0
     by def $is_null_event(Omega, events, probability, \event_limsup<Omega, events>(event_sequence))
 
-# Proof-journal block B020_A1
 template<Omega set, events power_set(power_set(Omega)), point Omega>:
     have fn dirac_probability(event events) R by cases :
         case point $in event: 1
         case not point $in event: 0
 
-# Proof-journal block B039_A1
 have fn single_one_sequence(hit N+, n N+) R by cases :
     case n = hit: 1
     case n != hit: 0
 
-# Proof-journal block B039_A9
 prop single_one_prefix_zero(hit N+, k N):
     k >= hit or partial_sum(fn(n N+) R {single_one_sequence(hit, n)}, k) = 0
 
@@ -3021,7 +2790,6 @@ thm single_one_prefix_zero_by_induction:
                                 ? $single_one_prefix_zero(hit, k + 1)
                             $single_one_prefix_zero(hit, k + 1)
 
-# Proof-journal block B039_A10
 thm single_one_partial_sum_before_hit:
     ? forall hit N+, k N:
         k < hit
@@ -3037,7 +2805,6 @@ thm single_one_partial_sum_before_hit:
         case partial_sum(fn(n N+) R {single_one_sequence(hit, n)}, k) = 0:
             partial_sum(fn(n N+) R {single_one_sequence(hit, n)}, k) = 0
 
-# Proof-journal block B039_A14
 thm single_one_partial_sum_at_hit:
     ? forall hit N+:
         partial_sum(fn(n N+) R {single_one_sequence(hit, n)}, hit) = 1
@@ -3053,7 +2820,6 @@ thm single_one_partial_sum_at_hit:
     0 + 1 = 1
     partial_sum(fn(n N+) R {single_one_sequence(hit, n)}, hit) = partial_sum(fn(n N+) R {single_one_sequence(hit, n)}, hit - 1) + single_one_sequence(hit, hit) = 0 + 1 = 1
 
-# Proof-journal block B039_A15
 thm single_one_partial_sum_from_hit_offset:
     ? forall hit N+, offset N:
         partial_sum(fn(n N+) R {single_one_sequence(hit, n)}, hit + offset) = 1
@@ -3081,7 +2847,6 @@ thm single_one_partial_sum_from_hit_offset:
             1 + 0 = 1
             partial_sum(fn(n N+) R {single_one_sequence(hit, n)}, hit + (offset + 1)) = partial_sum(fn(n N+) R {single_one_sequence(hit, n)}, (hit + offset) + 1) = partial_sum(fn(n N+) R {single_one_sequence(hit, n)}, hit + offset) + single_one_sequence(hit, (hit + offset) + 1) = 1 + 0 = 1
 
-# Proof-journal block B039_A16
 thm single_one_partial_sum_at_or_after_hit:
     ? forall hit N+, k N:
         k >= hit
@@ -3093,7 +2858,6 @@ thm single_one_partial_sum_at_or_after_hit:
     by thm equal_arguments_have_equal_function_values(N, R, fn(index N) R {partial_sum(fn(n N+) R {single_one_sequence(hit, n)}, index)}, hit + (k - hit), k) => partial_sum(fn(n N+) R {single_one_sequence(hit, n)}, hit + (k - hit)) = partial_sum(fn(n N+) R {single_one_sequence(hit, n)}, k)
     partial_sum(fn(n N+) R {single_one_sequence(hit, n)}, k) = partial_sum(fn(n N+) R {single_one_sequence(hit, n)}, hit + (k - hit)) = 1
 
-# Proof-journal block B039_A17
 thm single_one_sequence_has_series_sum_one:
     ? forall hit N+:
         $has_series_sum(fn(n N+) R {single_one_sequence(hit, n)}, 1)
@@ -3115,7 +2879,6 @@ thm single_one_sequence_has_series_sum_one:
         by def $has_sequence_limit(fn(k N+) R {partial_sum(fn(n N+) R {single_one_sequence(hit, n)}, k)}, 1)
     by def $has_series_sum(fn(n N+) R {single_one_sequence(hit, n)}, 1)
 
-# Proof-journal block B039_A18
 thm equal_values_preserve_series_sum:
     ? forall a seq(R), L1, L2 R:
         L1 = L2
@@ -3126,7 +2889,6 @@ thm equal_values_preserve_series_sum:
     by thm equal_values_preserve_sequence_limit(fn(k N+) R {partial_sum(a, k)}, L1, L2) => $has_sequence_limit(fn(k N+) R {partial_sum(a, k)}, L2)
     by def $has_series_sum(a, L2)
 
-# Proof-journal block B039_A21
 thm dirac_probability_countable_additivity:
     ? forall Omega set, events power_set(power_set(Omega)), point Omega, family fn(n N+) events:
         index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)}) $in events
@@ -3189,7 +2951,6 @@ thm dirac_probability_countable_additivity:
             1 = \dirac_probability<Omega, events, point>(index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)}))
             by thm equal_values_preserve_series_sum(fn(n N+) R {\dirac_probability<Omega, events, point>(family(n))}, 1, \dirac_probability<Omega, events, point>(index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)}))) => $has_series_sum(fn(n N+) R {\dirac_probability<Omega, events, point>(family(n))}, \dirac_probability<Omega, events, point>(index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)})))
 
-# Proof-journal block B039_A22
 thm dirac_probability_is_probability_space:
     ? forall Omega set, events power_set(power_set(Omega)), point Omega:
         {} $in events
@@ -3227,14 +2988,12 @@ thm dirac_probability_is_probability_space:
         by thm dirac_probability_countable_additivity(Omega, events, point, family) => $has_series_sum(fn(n N+) R {\dirac_probability<Omega, events, point>(family(n))}, \dirac_probability<Omega, events, point>(index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)})))
     by def $is_probability_space(Omega, events, \dirac_probability<Omega, events, point>)
 
-# Proof-journal block B022_A1
 prop is_conditioning_data(Omega set, events power_set(power_set(Omega)), probability fn (event events) R, evidence events):
     $is_probability_space(Omega, events, probability)
     probability(evidence) > 0
 template<Omega set, events power_set(power_set(Omega)), probability fn (event events) R, evidence events: $is_conditioning_data(Omega, events, probability, evidence)>:
     have fn conditioned_probability_measure(event events) R = probability(intersect(event, evidence)) / probability(evidence)
 
-# Proof-journal block B040_A3
 template<Omega set, events power_set(power_set(Omega)), probability fn(event events) R, evidence events, family fn(n N+) events: $is_probability_space(Omega, events, probability)>:
     have fn evidence_intersection_sequence(n N+) events = intersect(family(n), evidence)
 
@@ -3275,7 +3034,6 @@ thm evidence_intersection_sequence_is_pairwise_disjoint:
                     impossible point $in {}
     by def $pairwise_disjoint_event_sequence(Omega, events, \evidence_intersection_sequence<Omega, events, probability, evidence, family>)
 
-# Proof-journal block B040_A4
 thm index_union_evidence_intersections:
     ? forall Omega set, events power_set(power_set(Omega)), probability fn(event events) R, evidence events, family fn(n N+) events:
         $is_probability_space(Omega, events, probability)
@@ -3306,7 +3064,6 @@ thm index_union_evidence_intersections:
             witness exist candidate_index N+ st {point $in \evidence_intersection_sequence<Omega, events, probability, evidence, family>(candidate_index)} from idx
             point $in index_union(N+, Omega, fn(n N+) power_set(Omega) {\evidence_intersection_sequence<Omega, events, probability, evidence, family>(n)})
 
-# Proof-journal block B040_A5
 thm partial_sum_scalar_multiple:
     ? forall a seq(R), c R, k N:
         partial_sum(fn(n N+) R {c * a(n)}, k) = c * partial_sum(a, k)
@@ -3329,7 +3086,6 @@ thm partial_sum_scalar_multiple:
             c * partial_sum(a, k + 1) = c * (partial_sum(a, k) + a(k + 1)) = c * partial_sum(a, k) + c * a(k + 1)
             partial_sum(fn(n N+) R {c * a(n)}, k + 1) = partial_sum(fn(n N+) R {c * a(n)}, k) + c * a(k + 1) = c * partial_sum(a, k) + c * a(k + 1) = c * partial_sum(a, k + 1)
 
-# Proof-journal block B040_A6
 thm scalar_multiple_preserves_sequence_limit:
     ? forall c R, a seq(R), L R:
         $has_sequence_limit(a, L)
@@ -3358,7 +3114,6 @@ thm scalar_multiple_preserves_sequence_limit:
             by def $is_tail_close_to(fn(n N+) R {c * a(n)}, c * L, epsilon, n0)
     by def $has_sequence_limit(fn(n N+) R {c * a(n)}, c * L)
 
-# Proof-journal block B040_A7
 thm scalar_multiple_preserves_series_sum:
     ? forall c R, a seq(R), L R:
         $has_series_sum(a, L)
@@ -3373,7 +3128,6 @@ thm scalar_multiple_preserves_series_sum:
     by thm pointwise_equal_sequences_preserve_limit(fn(k N+) R {partial_sum(fn(n N+) R {c * a(n)}, k)}, fn(k N+) R {c * partial_sum(a, k)}, c * L) => $has_sequence_limit(fn(k N+) R {partial_sum(fn(n N+) R {c * a(n)}, k)}, c * L)
     by def $has_series_sum(fn(n N+) R {c * a(n)}, c * L)
 
-# Proof-journal block B040_A10
 thm reciprocal_left_mul_equals_division:
     ? forall x, denominator R:
         denominator != 0
@@ -3381,7 +3135,6 @@ thm reciprocal_left_mul_equals_division:
             (1 / denominator) * x = x / denominator
     (1 / denominator) * x = x / denominator
 
-# Proof-journal block B040_A11
 thm conditioned_probability_countable_additivity:
     ? forall Omega set, events power_set(power_set(Omega)), probability fn(event events) R, evidence events, family fn(n N+) events:
         $is_conditioning_data(Omega, events, probability, evidence)
@@ -3414,7 +3167,6 @@ thm conditioned_probability_countable_additivity:
     (1 / probability(evidence)) * probability(intersect(index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)}), evidence)) = probability(intersect(index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)}), evidence)) / probability(evidence) = \conditioned_probability_measure<Omega, events, probability, evidence>(index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)}))
     by thm equal_values_preserve_series_sum(fn(n N+) R {\conditioned_probability_measure<Omega, events, probability, evidence>(family(n))}, (1 / probability(evidence)) * probability(intersect(index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)}), evidence)), \conditioned_probability_measure<Omega, events, probability, evidence>(index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)}))) => $has_series_sum(fn(n N+) R {\conditioned_probability_measure<Omega, events, probability, evidence>(family(n))}, \conditioned_probability_measure<Omega, events, probability, evidence>(index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)})))
 
-# Proof-journal block B040_A12
 thm conditioned_probability_is_probability_space:
     ? forall Omega set, events power_set(power_set(Omega)), probability fn(event events) R, evidence events:
         $is_conditioning_data(Omega, events, probability, evidence)
@@ -3444,7 +3196,6 @@ thm conditioned_probability_is_probability_space:
         by thm conditioned_probability_countable_additivity(Omega, events, probability, evidence, family) => $has_series_sum(fn(n N+) R {\conditioned_probability_measure<Omega, events, probability, evidence>(family(n))}, \conditioned_probability_measure<Omega, events, probability, evidence>(index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)})))
     by def $is_probability_space(Omega, events, \conditioned_probability_measure<Omega, events, probability, evidence>)
 
-# Proof-journal block B024_A2
 prop is_finite_atomic_probability_data(Omega set, events power_set(power_set(Omega)), atom_indices finite_set, atom fn (atom_index atom_indices) Omega, weight fn (atom_index atom_indices) R):
     $is_sigma_algebra(Omega, events)
     forall atom_index atom_indices:
@@ -3457,7 +3208,6 @@ template<Omega set, events power_set(power_set(Omega)), atom_indices finite_set,
 template<Omega set, events power_set(power_set(Omega)), atom_indices finite_set, atom fn (atom_index atom_indices) Omega, weight fn (atom_index atom_indices) R: $is_finite_atomic_probability_data(Omega, events, atom_indices, atom, weight)>:
     have fn finite_atomic_probability(event events) R = finite_set_sum(atom_indices, fn (atom_index atom_indices) R {\finite_atomic_term<Omega, events, atom_indices, atom, weight>(atom_index, event)})
 
-# Proof-journal block B041_A2
 thm partial_sum_pointwise_add:
     ? forall a, b seq(R), k N:
         partial_sum(fn(n N+) R {a(n) + b(n)}, k) = partial_sum(a, k) + partial_sum(b, k)
@@ -3479,7 +3229,6 @@ thm partial_sum_pointwise_add:
             partial_sum(a, k) + partial_sum(b, k) + (a(k + 1) + b(k + 1)) = (partial_sum(a, k) + a(k + 1)) + (partial_sum(b, k) + b(k + 1))
             partial_sum(fn(n N+) R {a(n) + b(n)}, k + 1) = partial_sum(fn(n N+) R {a(n) + b(n)}, k) + (a(k + 1) + b(k + 1)) = (partial_sum(a, k) + partial_sum(b, k)) + (a(k + 1) + b(k + 1)) = (partial_sum(a, k) + a(k + 1)) + (partial_sum(b, k) + b(k + 1)) = partial_sum(a, k + 1) + partial_sum(b, k + 1)
 
-# Proof-journal block B041_A3
 thm pointwise_add_preserves_sequence_limit:
     ? forall a, b seq(R), A, B R:
         $has_sequence_limit(a, A)
@@ -3517,7 +3266,6 @@ thm pointwise_add_preserves_sequence_limit:
             by def $is_tail_close_to(fn(n N+) R {a(n) + b(n)}, A + B, epsilon, tail_start)
     by def $has_sequence_limit(fn(n N+) R {a(n) + b(n)}, A + B)
 
-# Proof-journal block B041_A4
 thm pointwise_add_preserves_series_sum:
     ? forall a, b seq(R), A, B R:
         $has_series_sum(a, A)
@@ -3534,7 +3282,6 @@ thm pointwise_add_preserves_series_sum:
     by thm pointwise_equal_sequences_preserve_limit(fn(k N+) R {partial_sum(fn(n N+) R {a(n) + b(n)}, k)}, fn(k N+) R {partial_sum(a, k) + partial_sum(b, k)}, A + B) => $has_sequence_limit(fn(k N+) R {partial_sum(fn(n N+) R {a(n) + b(n)}, k)}, A + B)
     by def $has_series_sum(fn(n N+) R {a(n) + b(n)}, A + B)
 
-# Proof-journal block B041_A12
 thm constant_zero_sequence_has_series_sum_zero:
     ? forall anchor N+:
         $has_series_sum(fn(n N+) R {0}, 0)
@@ -3546,7 +3293,6 @@ thm constant_zero_sequence_has_series_sum_zero:
         0 * single_one_sequence(anchor, n) = 0
     by thm pointwise_equal_sequences_preserve_series_sum(fn(n N+) R {0}, fn(n N+) R {0 * single_one_sequence(anchor, n)}, 0) => $has_series_sum(fn(n N+) R {0}, 0)
 
-# Proof-journal block B041_A18
 prop finite_sum_of_series_holds(S finite_set):
     forall terms fn(term_index S) seq(R), values fn(value_index S) R:
         forall component_index S:
@@ -3637,7 +3383,6 @@ thm finite_sum_of_series:
                 by thm equal_values_preserve_series_sum(fn(n N+) R {finite_set_sum(union({K}, I), fn(component_index union({K}, I)) R {terms(component_index)(n)})}, values(K) + finite_set_sum(I, values_on_I), finite_set_sum(union({K}, I), values)) => $has_series_sum(fn(n N+) R {finite_set_sum(union({K}, I), fn(component_index union({K}, I)) R {terms(component_index)(n)})}, finite_set_sum(union({K}, I), values))
             by def $finite_sum_of_series_holds(union({K}, I))
 
-# Proof-journal block B041_A19
 thm finite_atomic_term_as_weighted_dirac:
     ? forall Omega set, events power_set(power_set(Omega)), atom_indices finite_set, atom fn(atom_index atom_indices) Omega, weight fn(weight_index atom_indices) R, atom_index atom_indices, event events:
         $is_finite_atomic_probability_data(Omega, events, atom_indices, atom, weight)
@@ -3657,7 +3402,6 @@ thm finite_atomic_term_as_weighted_dirac:
             weight(atom_index) * 0 = 0
             \finite_atomic_term<Omega, events, atom_indices, atom, weight>(atom_index, event) = 0 = weight(atom_index) * 0 = weight(atom_index) * \dirac_probability<Omega, events, atom(atom_index)>(event)
 
-# Proof-journal block B041_A20
 thm finite_atomic_probability_countable_additivity:
     ? forall Omega set, events power_set(power_set(Omega)), atom_indices finite_set, atom fn(atom_index atom_indices) Omega, weight fn(weight_index atom_indices) R, family fn(n N+) events:
         $is_finite_atomic_probability_data(Omega, events, atom_indices, atom, weight)
@@ -3704,7 +3448,6 @@ thm finite_atomic_probability_countable_additivity:
     finite_set_sum(atom_indices, weighted_atom_value) = \finite_atomic_probability<Omega, events, atom_indices, atom, weight>(index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)}))
     by thm equal_values_preserve_series_sum(fn(n N+) R {\finite_atomic_probability<Omega, events, atom_indices, atom, weight>(family(n))}, finite_set_sum(atom_indices, weighted_atom_value), \finite_atomic_probability<Omega, events, atom_indices, atom, weight>(index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)}))) => $has_series_sum(fn(n N+) R {\finite_atomic_probability<Omega, events, atom_indices, atom, weight>(family(n))}, \finite_atomic_probability<Omega, events, atom_indices, atom, weight>(index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)})))
 
-# Proof-journal block B041_A21
 thm finite_atomic_probability_is_probability_space:
     ? forall Omega set, events power_set(power_set(Omega)), atom_indices finite_set, atom fn(atom_index atom_indices) Omega, weight fn(weight_index atom_indices) R:
         $is_finite_atomic_probability_data(Omega, events, atom_indices, atom, weight)

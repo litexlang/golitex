@@ -157,7 +157,7 @@ impl Runtime {
             let matching_target = self.inst_atomic_fact(
                 &target_atomic,
                 &module_local_identifiers,
-                ParamObjType::Identifier,
+                SubstitutionMode::Named,
                 None,
             )?;
             let imported_candidates = self
@@ -240,7 +240,7 @@ impl Runtime {
                 continue;
             }
             let instantiated =
-                self.inst_atomic_fact(&candidate, &arg_map, ParamObjType::Forall, None)?;
+                self.inst_atomic_fact(&candidate, &arg_map, SubstitutionMode::Exact, None)?;
             if !super::verify_known_atomic_facts::atomic_facts_align_by_nested_rational_normalization(
                 &instantiated,
                 matching_target,
@@ -412,7 +412,7 @@ impl Runtime {
             let matching_atomic_fact = self.inst_atomic_fact(
                 atomic_fact,
                 &module_local_identifiers,
-                ParamObjType::Identifier,
+                SubstitutionMode::Named,
                 None,
             )?;
             let candidates = self
@@ -707,7 +707,7 @@ impl Runtime {
         let matching_atomic_fact = self.inst_atomic_fact(
             atomic_fact,
             &module_local_identifiers,
-            ParamObjType::Identifier,
+            SubstitutionMode::Named,
             None,
         )?;
         let candidates = self
@@ -743,10 +743,7 @@ impl Runtime {
     ) -> HashMap<String, Obj> {
         let mut identifiers = HashMap::new();
         for environment in self.imported_module_environments(module_name) {
-            for name in environment.declarations.defined_identifiers.keys() {
-                let Some(definition) = environment.declarations.symbols.get(name) else {
-                    continue;
-                };
+            for (name, definition) in environment.declarations.object_symbols() {
                 insert_symbol_substitution(
                     &mut identifiers,
                     definition.binding(),
@@ -917,7 +914,6 @@ impl Runtime {
         Ok(Some(arg_match_map_for_params(
             &raw_arg_map,
             known_forall_params,
-            ParamObjType::Forall,
         )))
     }
 
@@ -937,10 +933,9 @@ impl Runtime {
         let Some(raw_arg_map) = result? else {
             return Ok(None);
         };
-        let forall_arg_map =
-            arg_match_map_for_params(&raw_arg_map, known_forall_params, ParamObjType::Forall);
+        let forall_arg_map = arg_match_map_for_params(&raw_arg_map, known_forall_params);
         let exist_arg_map = known_exist_params
-            .map(|params| arg_match_map_for_params(&raw_arg_map, params, ParamObjType::Exist))
+            .map(|params| arg_match_map_for_params(&raw_arg_map, params))
             .unwrap_or_default();
         Ok(Some((forall_arg_map, exist_arg_map)))
     }
@@ -967,11 +962,11 @@ impl Runtime {
 
 struct ArgMatcher<'runtime> {
     runtime: &'runtime mut Runtime,
-    active_bindings: Vec<(ParamObjType, String)>,
+    active_bindings: Vec<SymbolId>,
 }
 
 impl<'runtime> ArgMatcher<'runtime> {
-    fn new(runtime: &'runtime mut Runtime, active_bindings: Vec<(ParamObjType, String)>) -> Self {
+    fn new(runtime: &'runtime mut Runtime, active_bindings: Vec<SymbolId>) -> Self {
         Self {
             runtime,
             active_bindings,
@@ -1089,7 +1084,7 @@ impl ArgMatcher<'_> {
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match known_arg {
-            // Only `*FreeParamObj` bind; plain identifiers are fixed names.
+            // Only exact bound symbols bind; plain identifiers are fixed names.
             Obj::Atom(AtomObj::Identifier(ref id_known)) => {
                 match given_arg {
                     Obj::Atom(AtomObj::Identifier(id_given)) if id_known.name == id_given.name => {}
@@ -1102,6 +1097,22 @@ impl ArgMatcher<'_> {
             }
             Obj::Atom(AtomObj::IdentifierWithMod(ref id_known)) => {
                 self.match_arg_when_left_is_identifier_with_mod(id_known, given_arg)
+            }
+            Obj::Atom(AtomObj::Bound(ref bound)) => {
+                if !self
+                    .active_bindings
+                    .iter()
+                    .any(|active_id| *active_id == bound.symbol.id())
+                {
+                    return if bound.to_string() == given_arg.to_string() {
+                        Ok(Some(HashMap::new()))
+                    } else {
+                        Ok(None)
+                    };
+                }
+                let mut map = HashMap::new();
+                map.insert(arg_match_binding_key(&bound.symbol), given_arg.clone());
+                Ok(Some(map))
             }
             Obj::FnObj(ref f) => self.match_arg_when_left_is_fn_obj(f, given_arg),
             Obj::Number(ref left) => self.match_arg_when_left_is_number(left, given_arg),
@@ -1461,108 +1472,11 @@ impl ArgMatcher<'_> {
                 }
                 _ => Ok(None),
             },
-            Obj::Atom(AtomObj::Forall(ref p)) => {
-                self.match_arg_when_left_is_forall_param(p, given_arg)
-            }
-            Obj::Atom(AtomObj::Def(ref p)) => {
-                if p.to_string() != given_arg.to_string() {
-                    return Ok(None);
-                }
-                Ok(Some(HashMap::new()))
-            }
-            Obj::Atom(AtomObj::Exist(ref p)) => match given_arg {
-                Obj::Atom(AtomObj::Exist(_))
-                    if self.arg_match_binding_is_active(ParamObjType::Exist, p.name()) =>
-                {
-                    let mut m = HashMap::new();
-                    m.insert(arg_match_binding_key(&p.symbol), given_arg.clone());
-                    Ok(Some(m))
-                }
-                _ => {
-                    if p.to_string() != given_arg.to_string() {
-                        return Ok(None);
-                    }
-                    Ok(Some(HashMap::new()))
-                }
-            },
-            Obj::Atom(AtomObj::SetBuilder(ref p)) => {
-                if p.to_string() != given_arg.to_string() {
-                    return Ok(None);
-                }
-                Ok(Some(HashMap::new()))
-            }
-            Obj::Atom(AtomObj::FnSet(ref p)) => {
-                if p.to_string() != given_arg.to_string() {
-                    return Ok(None);
-                }
-                Ok(Some(HashMap::new()))
-            }
-            Obj::Atom(AtomObj::Induc(ref p)) => {
-                if p.to_string() != given_arg.to_string() {
-                    return Ok(None);
-                }
-                Ok(Some(HashMap::new()))
-            }
-            Obj::Atom(AtomObj::DefAlgo(ref p)) => {
-                if p.to_string() != given_arg.to_string() {
-                    return Ok(None);
-                }
-                Ok(Some(HashMap::new()))
-            }
-            Obj::Atom(AtomObj::DefStructField(ref p)) => {
-                if p.to_string() != given_arg.to_string() {
-                    return Ok(None);
-                }
-                Ok(Some(HashMap::new()))
-            }
-            Obj::Atom(AtomObj::TupleIndex(ref p)) => {
-                if !self.arg_match_binding_is_active(ParamObjType::TupleIndex, p.name()) {
-                    return if p.to_string() == given_arg.to_string() {
-                        Ok(Some(HashMap::new()))
-                    } else {
-                        Ok(None)
-                    };
-                }
-                let mut map = HashMap::new();
-                map.insert(arg_match_binding_key(&p.symbol), given_arg.clone());
-                Ok(Some(map))
-            }
-            Obj::Atom(AtomObj::CartIndex(ref p)) => {
-                if !self.arg_match_binding_is_active(ParamObjType::CartIndex, p.name()) {
-                    return if p.to_string() == given_arg.to_string() {
-                        Ok(Some(HashMap::new()))
-                    } else {
-                        Ok(None)
-                    };
-                }
-                let mut map = HashMap::new();
-                map.insert(arg_match_binding_key(&p.symbol), given_arg.clone());
-                Ok(Some(map))
-            }
         }
     }
 
-    fn match_arg_when_left_is_forall_param(
-        &mut self,
-        id_known: &ForallFreeParamObj,
-        given_arg: &Obj,
-    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
-        if !self.arg_match_binding_is_active(ParamObjType::Forall, id_known.name()) {
-            return if id_known.to_string() == given_arg.to_string() {
-                Ok(Some(HashMap::new()))
-            } else {
-                Ok(None)
-            };
-        }
-        let mut map = HashMap::new();
-        map.insert(arg_match_binding_key(&id_known.symbol), given_arg.clone());
-        Ok(Some(map))
-    }
-
-    fn arg_match_binding_is_active(&self, kind: ParamObjType, name: &str) -> bool {
-        self.active_bindings
-            .iter()
-            .any(|(active_kind, active_name)| *active_kind == kind && active_name == name)
+    fn arg_match_binding_is_active(&self, symbol: &SymbolRef) -> bool {
+        self.active_bindings.contains(&symbol.id())
     }
 
     fn match_arg_when_left_is_identifier_with_mod(
@@ -2224,13 +2138,13 @@ impl ArgMatcher<'_> {
         insert_symbol_substitution(
             &mut left_rename_map,
             &left.param_binding,
-            obj_for_bound_param_in_scope(&shared_binding, ParamObjType::SetBuilder),
+            obj_for_bound_param_in_scope(&shared_binding),
         );
         let mut given_rename_map = HashMap::new();
         insert_symbol_substitution(
             &mut given_rename_map,
             &given.param_binding,
-            obj_for_bound_param_in_scope(&shared_binding, ParamObjType::SetBuilder),
+            obj_for_bound_param_in_scope(&shared_binding),
         );
         let left = self.alpha_rename_set_builder(left, &left_rename_map)?;
         let given = self.alpha_rename_set_builder(given, &given_rename_map)?;
@@ -2568,7 +2482,7 @@ impl Runtime {
             insert_symbol_substitution(
                 &mut param_to_alpha_name,
                 param_binding,
-                obj_for_bound_param_in_scope(alpha_binding, ParamObjType::FnSet),
+                obj_for_bound_param_in_scope(alpha_binding),
             );
         }
         self.alpha_rename_anonymous_fn(anonymous_fn, &param_to_alpha_name)
@@ -2892,10 +2806,10 @@ impl ArgMatcher<'_> {
         let Obj::FnObj(fn_obj) = known_arg else {
             return Ok(None);
         };
-        let FnObjHead::Forall(forall_param) = fn_obj.head.as_ref() else {
+        let FnObjHead::Bound(forall_param) = fn_obj.head.as_ref() else {
             return Ok(None);
         };
-        if !self.arg_match_binding_is_active(ParamObjType::Forall, forall_param.name()) {
+        if !self.arg_match_binding_is_active(&forall_param.symbol) {
             return Ok(None);
         }
         if !Self::fn_obj_applies_to_exact_anonymous_fn_params(fn_obj, anonymous_fn_body) {
@@ -2960,10 +2874,7 @@ impl ArgMatcher<'_> {
         let mut flat_index = 0;
         for row in fn_obj.body.iter() {
             for arg in row.iter() {
-                let expected = obj_for_bound_param_in_scope(
-                    &expected_param_bindings[flat_index],
-                    ParamObjType::FnSet,
-                );
+                let expected = obj_for_bound_param_in_scope(&expected_param_bindings[flat_index]);
                 if arg.to_string() != expected.to_string() {
                     return false;
                 }
@@ -3426,18 +3337,18 @@ impl ArgMatcher<'_> {
 fn arg_match_bindings_for_params(
     known_forall_params: &ParamDefWithType,
     known_exist_params: Option<&ParamDefWithType>,
-) -> Vec<(ParamObjType, String)> {
+) -> Vec<SymbolId> {
     let mut bindings = known_forall_params
-        .collect_param_names()
+        .collect_param_bindings()
         .into_iter()
-        .map(|name| (ParamObjType::Forall, name))
+        .map(|binding| binding.id())
         .collect::<Vec<_>>();
     if let Some(exist_params) = known_exist_params {
         bindings.extend(
             exist_params
-                .collect_param_names()
+                .collect_param_bindings()
                 .into_iter()
-                .map(|name| (ParamObjType::Exist, name)),
+                .map(|binding| binding.id()),
         );
     }
     bindings
@@ -3446,7 +3357,6 @@ fn arg_match_bindings_for_params(
 fn arg_match_map_for_params(
     raw_arg_map: &HashMap<String, Obj>,
     params: &ParamDefWithType,
-    _kind: ParamObjType,
 ) -> HashMap<String, Obj> {
     let mut result = HashMap::new();
     for binding in params.collect_param_bindings() {
@@ -3466,7 +3376,7 @@ fn atomic_fact_in_forall_lookup_arg_shape_keys(
     atomic_fact: &AtomicFact,
 ) -> Vec<AtomicFactInForallArgShapeKey> {
     let exact_key = atomic_fact_in_forall_arg_shape_key(atomic_fact);
-    let forall_param_key_part = (ObjKind::ForallFreeParam, String::new());
+    let forall_param_key_part = (ObjKind::BoundParam, String::new());
     let mut keys = Vec::new();
     push_atomic_fact_in_forall_arg_shape_key_if_new(&mut keys, exact_key.clone());
 

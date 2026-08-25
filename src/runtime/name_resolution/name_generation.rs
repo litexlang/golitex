@@ -15,7 +15,6 @@ impl Runtime {
     pub fn fresh_binder_retag_plan_for_bindings(
         &self,
         source_bindings: &[SymbolBinding],
-        target_kind: ParamObjType,
     ) -> (Vec<SymbolBinding>, HashMap<String, Obj>) {
         let mut target_bindings = Vec::with_capacity(source_bindings.len());
         let mut source_to_target = HashMap::with_capacity(source_bindings.len() * 2);
@@ -26,7 +25,7 @@ impl Runtime {
             insert_symbol_substitution(
                 &mut source_to_target,
                 source_binding,
-                obj_for_bound_param_in_scope(&target_binding, target_kind),
+                obj_for_bound_param_in_scope(&target_binding),
             );
             target_bindings.push(target_binding);
         }

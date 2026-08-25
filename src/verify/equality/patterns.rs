@@ -19,6 +19,7 @@ pub fn obj_expr_mentions_bare_id_on_two(l: &Obj, r: &Obj, id: &str) -> bool {
 pub fn obj_expr_mentions_bare_id(obj: &Obj, id: &str) -> bool {
     match obj {
         Obj::Atom(AtomObj::Identifier(i)) => i.name == id,
+        Obj::Atom(AtomObj::Bound(p)) => p.name() == id,
         Obj::Number(_)
         | Obj::ImaginaryUnit(_)
         | Obj::EulerNumber(_)
@@ -204,16 +205,6 @@ pub fn obj_expr_mentions_bare_id(obj: &Obj, id: &str) -> bool {
                 || obj_expr_mentions_bare_id(anon.equal_to.as_ref(), id)
         }
         Obj::FnObj(_) | Obj::FnSet(_) | Obj::SetBuilder(_) => true,
-        Obj::Atom(AtomObj::Forall(p)) => p.name() == id,
-        Obj::Atom(AtomObj::Def(p)) => p.name() == id,
-        Obj::Atom(AtomObj::Exist(p)) => p.name() == id,
-        Obj::Atom(AtomObj::SetBuilder(p)) => p.name() == id,
-        Obj::Atom(AtomObj::FnSet(p)) => p.name() == id,
-        Obj::Atom(AtomObj::Induc(p)) => p.name() == id,
-        Obj::Atom(AtomObj::DefAlgo(p)) => p.name() == id,
-        Obj::Atom(AtomObj::DefStructField(p)) => p.name() == id,
-        Obj::Atom(AtomObj::TupleIndex(p)) => p.name() == id,
-        Obj::Atom(AtomObj::CartIndex(p)) => p.name() == id,
     }
 }
 

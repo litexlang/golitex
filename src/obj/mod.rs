@@ -20,9 +20,7 @@ pub use fn_set::{AnonymousFn, FnSet, FnSetBody, FnSetSpace};
 pub use free_param_obj::{
     obj_for_bound_param_in_scope, param_binding_element_obj_for_store,
     strip_free_param_numeric_tags_in_display, strip_parsing_free_param_tags_for_user_display,
-    BinderRetagSource, ByInducFreeParamObj, CartIndexFreeParamObj, DefAlgoFreeParamObj,
-    DefHeaderFreeParamObj, DefStructFieldFreeParamObj, ExistFreeParamObj, FnSetFreeParamObj,
-    ForallFreeParamObj, ParamObjType, SetBuilderFreeParamObj, TupleIndexFreeParamObj,
+    BindingScope, BoundParamObj, SubstitutionMode,
 };
 pub use obj_alpha_key::{
     nested_obj_binder_normalized_key, obj_equality_key,

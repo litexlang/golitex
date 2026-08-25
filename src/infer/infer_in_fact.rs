@@ -7,14 +7,7 @@ pub fn object_eligible_for_function_set_knowledge(obj: &Obj) -> bool {
         obj,
         Obj::Atom(AtomObj::Identifier(_))
             | Obj::Atom(AtomObj::IdentifierWithMod(_))
-            | Obj::Atom(AtomObj::Forall(_))
-            | Obj::Atom(AtomObj::Exist(_))
-            | Obj::Atom(AtomObj::Def(_))
-            | Obj::Atom(AtomObj::SetBuilder(_))
-            | Obj::Atom(AtomObj::FnSet(_))
-            | Obj::Atom(AtomObj::Induc(_))
-            | Obj::Atom(AtomObj::DefAlgo(_))
-            | Obj::Atom(AtomObj::DefStructField(_))
+            | Obj::Atom(AtomObj::Bound(_))
             | Obj::ObjAtIndex(_)
             | Obj::ObjAsStructInstanceWithFieldAccess(_)
     )
@@ -29,14 +22,7 @@ fn extra_known_fn_set_keys_for_bare_name_lookup(element: &Obj) -> Vec<String> {
             p.name.clone(),
             format!("{}{}{}", p.mod_name, MOD_SIGN, p.name),
         ],
-        Obj::Atom(AtomObj::Forall(p)) => vec![p.name().to_string()],
-        Obj::Atom(AtomObj::Exist(p)) => vec![p.name().to_string()],
-        Obj::Atom(AtomObj::Def(p)) => vec![p.name().to_string()],
-        Obj::Atom(AtomObj::SetBuilder(p)) => vec![p.name().to_string()],
-        Obj::Atom(AtomObj::FnSet(p)) => vec![p.name().to_string()],
-        Obj::Atom(AtomObj::Induc(p)) => vec![p.name().to_string()],
-        Obj::Atom(AtomObj::DefAlgo(p)) => vec![p.name().to_string()],
-        Obj::Atom(AtomObj::DefStructField(p)) => vec![p.name().to_string()],
+        Obj::Atom(AtomObj::Bound(p)) => vec![p.name().to_string()],
         _ => vec![],
     }
 }
@@ -177,10 +163,8 @@ impl Runtime {
         // already transport membership through known equality and unfold the
         // one-layer definition on demand, so keep eager inference for concrete
         // set constructors but defer opaque function/template applications.
-        let element_is_local_proof_binder = matches!(
-            &in_fact.element,
-            Obj::Atom(AtomObj::Forall(_)) | Obj::Atom(AtomObj::Exist(_))
-        );
+        let element_is_local_proof_binder =
+            matches!(&in_fact.element, Obj::Atom(AtomObj::Bound(_)));
         let mut infer_result = SuccessInferResult::new();
         for equal_set in self
             .get_all_obj_representatives_equal_to_given(&in_fact.set)
@@ -306,7 +290,7 @@ impl Runtime {
                 .inst_quantifier_free_fact(
                     fact_in_set_builder,
                     &param_to_arg_map,
-                    ParamObjType::SetBuilder,
+                    SubstitutionMode::Exact,
                     Some(&in_fact.line_file),
                 )
                 .map_err(|e| {
@@ -417,7 +401,7 @@ impl Runtime {
         .into();
         let index_group =
             self.fresh_param_group_with_type(vec![index_name], ParamType::Obj(index_set))?;
-        let index_obj = obj_for_bound_param_in_scope(&index_group.params[0], ParamObjType::Forall);
+        let index_obj = obj_for_bound_param_in_scope(&index_group.params[0]);
         let coordinate_fact: AtomicFact = InFact::new(
             ObjAtIndex::new(in_fact.element.clone(), index_obj.clone()).into(),
             Proj::new(in_fact.set.clone(), index_obj).into(),
@@ -1019,12 +1003,12 @@ impl Runtime {
         let preimage_bindings = self.allocate_local_symbol_bindings(&generated_names)?;
         let preimage_objs: Vec<Obj> = preimage_bindings
             .iter()
-            .map(|binding| obj_for_bound_param_in_scope(binding, ParamObjType::Exist))
+            .map(|binding| obj_for_bound_param_in_scope(binding))
             .collect();
         let instantiated_param_sets = self.inst_param_def_with_set_one_by_one(
             &body.params_def_with_set,
             &preimage_objs,
-            ParamObjType::FnSet,
+            SubstitutionMode::Exact,
         )?;
 
         let mut param_groups = Vec::with_capacity(body.params_def_with_set.len());
@@ -1050,7 +1034,7 @@ impl Runtime {
             let instantiated_dom_fact = self.inst_quantifier_free_fact(
                 dom_fact,
                 &param_to_obj_map,
-                ParamObjType::FnSet,
+                SubstitutionMode::Exact,
                 Some(&in_fact.line_file),
             )?;
             facts.push(instantiated_dom_fact.into());
@@ -1087,7 +1071,7 @@ impl Runtime {
             vec![member_name],
             ParamType::Obj(big_union.left.as_ref().clone()),
         )?;
-        let member_obj = obj_for_bound_param_in_scope(&member_group.params[0], ParamObjType::Exist);
+        let member_obj = obj_for_bound_param_in_scope(&member_group.params[0]);
         let element_in_member: AtomicFact = InFact::new(
             in_fact.element.clone(),
             member_obj,
@@ -1149,7 +1133,7 @@ impl Runtime {
             vec![index_name],
             ParamType::Obj(index_union.index_set.as_ref().clone()),
         )?;
-        let index_obj = obj_for_bound_param_in_scope(&index_group.params[0], ParamObjType::Exist);
+        let index_obj = obj_for_bound_param_in_scope(&index_group.params[0]);
         let Some(fiber) =
             self.indexed_family_application_for_infer(index_union.family_fn.as_ref(), index_obj)?
         else {
@@ -1196,7 +1180,7 @@ impl Runtime {
             vec![index_name],
             ParamType::Obj(index_intersect.index_set.as_ref().clone()),
         )?;
-        let index_obj = obj_for_bound_param_in_scope(&index_group.params[0], ParamObjType::Forall);
+        let index_obj = obj_for_bound_param_in_scope(&index_group.params[0]);
         let Some(fiber) = self
             .indexed_family_application_for_infer(index_intersect.family_fn.as_ref(), index_obj)?
         else {
@@ -1230,8 +1214,7 @@ impl Runtime {
             vec![preimage_name],
             ParamType::Obj(replacement.source_set.as_ref().clone()),
         )?;
-        let preimage_obj =
-            obj_for_bound_param_in_scope(&preimage_group.params[0], ParamObjType::Exist);
+        let preimage_obj = obj_for_bound_param_in_scope(&preimage_group.params[0]);
         let relation_fact: AtomicFact = NormalAtomicFact::new(
             replacement.prop_name.clone(),
             vec![preimage_obj, in_fact.element.clone()],

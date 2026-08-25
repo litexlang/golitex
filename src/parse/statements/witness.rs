@@ -56,7 +56,7 @@ impl Runtime {
                 .collect_param_bindings();
             let lf = tb.line_file.clone();
             self.parse_stmts_with_existing_free_param_bindings(
-                ParamObjType::Exist,
+                BindingScope::LocalBinder,
                 &bindings,
                 lf,
                 |this| {

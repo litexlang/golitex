@@ -19,7 +19,7 @@ impl Runtime {
     pub fn parse_fresh_setting_parameter_bundle(
         &mut self,
         tb: &mut TokenBlock,
-        target_kind: ParamObjType,
+        target_scope: BindingScope,
     ) -> Result<FreshSettingParameterBundle, RuntimeError> {
         tb.skip_token(LEFT_BRACKET)?;
         if tb.current_token_is_equal_to(RIGHT_BRACKET) {
@@ -100,12 +100,12 @@ impl Runtime {
             let instantiated_type = self.inst_param_type(
                 &source_group.param_type,
                 &source_to_target,
-                ParamObjType::BinderRetag(BinderRetagSource::Forall),
+                SubstitutionMode::Exact,
             )?;
             let group_len = source_group.params.len();
             let group_names = target_names[target_index..target_index + group_len].to_vec();
             let target_bindings =
-                self.begin_parsing_scope(target_kind, &group_names, tb.line_file.clone())?;
+                self.begin_parsing_scope(target_scope, &group_names, tb.line_file.clone())?;
             if let ParamType::Obj(Obj::StructObj(struct_obj)) = &instantiated_type {
                 self.register_default_struct_view(&target_bindings, struct_obj);
             }
@@ -116,7 +116,7 @@ impl Runtime {
                 insert_symbol_substitution(
                     &mut source_to_target,
                     source,
-                    obj_for_bound_param_in_scope(target, target_kind),
+                    obj_for_bound_param_in_scope(target),
                 );
             }
             groups.push(ParamGroupWithParamType::new(
@@ -131,7 +131,7 @@ impl Runtime {
             dom_facts.push(self.inst_fact(
                 fact,
                 &source_to_target,
-                ParamObjType::BinderRetag(BinderRetagSource::Forall),
+                SubstitutionMode::Exact,
                 Some(tb.line_file.clone()),
             )?);
         }

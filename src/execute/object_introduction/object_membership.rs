@@ -28,7 +28,7 @@ impl Runtime {
         stmt: &HaveObjInNonemptySetOrParamTypeStmt,
     ) -> Result<(), RuntimeError> {
         self.run_in_local_env(|rt| {
-            rt.define_params_with_type(&stmt.param_def, false, ParamObjType::Identifier)
+            rt.define_params_with_type(&stmt.param_def, false, BindingScope::DeclaredObject)
                 .map_err(|define_params_error| {
                     exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), define_params_error)
                 })?;
@@ -41,7 +41,7 @@ impl Runtime {
         stmt: &HaveObjInNonemptySetOrParamTypeStmt,
     ) -> Result<Vec<StmtResult>, RuntimeError> {
         self.run_in_local_env(|rt| {
-            rt.define_params_with_type(&stmt.param_def, false, ParamObjType::Identifier)
+            rt.define_params_with_type(&stmt.param_def, false, BindingScope::DeclaredObject)
                 .map_err(|define_params_error| {
                     exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), define_params_error)
                 })?;
@@ -57,9 +57,9 @@ impl Runtime {
         stmt: &HaveObjInNonemptySetOrParamTypeStmt,
     ) -> Result<SuccessInferResult, RuntimeError> {
         let mut infer_result = if self.current_execution_is_trusted_file() {
-            self.define_params_with_type_trusted(&stmt.param_def, ParamObjType::Identifier)
+            self.define_params_with_type_trusted(&stmt.param_def, BindingScope::DeclaredObject)
         } else {
-            self.define_params_with_type(&stmt.param_def, false, ParamObjType::Identifier)
+            self.define_params_with_type(&stmt.param_def, false, BindingScope::DeclaredObject)
         }
         .map_err(|define_params_error| {
             exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), define_params_error)
@@ -94,7 +94,7 @@ impl Runtime {
         let items = self.object_introduction_items_for_defined_params(
             &stmt.param_def,
             stmt.line_file.clone(),
-            ParamObjType::Identifier,
+            BindingScope::DeclaredObject,
         );
         let mut selected_type_facts = Vec::with_capacity(items.len());
         for item in items {

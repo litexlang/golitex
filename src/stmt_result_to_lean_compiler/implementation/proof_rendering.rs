@@ -3173,7 +3173,7 @@ pub(super) fn validate_set_inclusion_elementwise_forall_inference_target(
     }
     let target_membership = target.then_facts[0].clone().to_fact();
     let (target_element, target_set) = membership_parts(&target_membership)?;
-    let expected_element = obj_for_bound_param_in_scope(parameter, ParamObjType::Forall);
+    let expected_element = obj_for_bound_param_in_scope(parameter);
     if obj_equality_key(target_element) != obj_equality_key(&expected_element)
         || obj_equality_key(target_set) != obj_equality_key(expected_target_set)
     {

@@ -104,7 +104,7 @@ impl Runtime {
                 &strategy.forall_fact.params_def_with_type,
                 &args_for_params,
                 verify_state,
-                ParamObjType::Forall,
+                SubstitutionMode::Exact,
             )
             .map_err(|e| {
                 RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
@@ -129,7 +129,7 @@ impl Runtime {
 
         for dom_fact in strategy.forall_fact.dom_facts.iter() {
             let instantiated_dom_fact = self
-                .inst_fact(dom_fact, &param_to_arg_map, ParamObjType::Forall, None)
+                .inst_fact(dom_fact, &param_to_arg_map, SubstitutionMode::Exact, None)
                 .map_err(|e| {
                     RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
                         Some(Fact::from(atomic_fact.clone()).into_stmt()),

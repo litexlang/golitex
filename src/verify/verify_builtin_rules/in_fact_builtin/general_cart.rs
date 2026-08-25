@@ -34,7 +34,7 @@ pub fn general_cart_member_pointwise_fact(
         vec![param_name],
         ParamType::Obj(general_cart.index_set.as_ref().clone()),
     )?;
-    let param_obj = obj_for_bound_param_in_scope(&param_group.params[0], ParamObjType::Forall);
+    let param_obj = obj_for_bound_param_in_scope(&param_group.params[0]);
     let member_at_param_raw: Obj =
         FnObj::new(member_head, vec![vec![Box::new(param_obj.clone())]]).into();
     let family_at_param_raw: Obj =

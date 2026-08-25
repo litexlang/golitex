@@ -248,7 +248,7 @@ impl Runtime {
                 arguments,
                 space.params(),
                 space.dom(),
-                space.binding(),
+                SubstitutionMode::Exact,
                 verify_state,
             )
             .map_err(|error| {
@@ -295,7 +295,7 @@ impl Runtime {
         arguments: &[Box<Obj>],
         parameters: &ParamDefWithSet,
         domains: &[QuantifierFreeFact],
-        parameter_binding: ParamObjType,
+        substitution_mode: SubstitutionMode,
         verify_state: &ProofSearchState,
     ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
         let parameter_count = parameters.number_of_params();
@@ -334,7 +334,7 @@ impl Runtime {
                 ParamType::Obj(self.inst_obj(
                     parameter_group.set_obj(),
                     &substitutions,
-                    parameter_binding,
+                    substitution_mode,
                 )?)
             } else {
                 ParamType::Obj(parameter_group.set_obj().clone())
@@ -387,7 +387,7 @@ impl Runtime {
             parameters.param_defs_and_args_to_param_to_arg_map(&arguments_as_objects);
         for (domain_index, domain) in domains.iter().enumerate() {
             let instantiated = self
-                .inst_quantifier_free_fact(domain, &substitutions, parameter_binding, None)
+                .inst_quantifier_free_fact(domain, &substitutions, substitution_mode, None)
                 .map_err(|error| {
                     RuntimeError::from(WellDefinedRuntimeError(
                         RuntimeErrorStruct::new_with_msg_and_cause(
@@ -457,7 +457,7 @@ impl Runtime {
     ) -> Result<(), RuntimeError> {
         if self.is_current_parse_module(&x.mod_name) {
             for env in self.iter_environments_from_top() {
-                if env.declarations.defined_identifiers.contains_key(&x.name)
+                if env.declarations.object_symbol(&x.name).is_some()
                     || env.declarations.defined_structs.contains_key(&x.name)
                 {
                     return Ok(());
@@ -465,7 +465,7 @@ impl Runtime {
             }
         } else {
             for env in self.imported_module_environments(&x.mod_name) {
-                if env.declarations.defined_identifiers.contains_key(&x.name)
+                if env.declarations.object_symbol(&x.name).is_some()
                     || env.declarations.defined_structs.contains_key(&x.name)
                 {
                     return Ok(());

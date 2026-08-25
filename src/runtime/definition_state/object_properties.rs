@@ -153,7 +153,7 @@ impl Runtime {
             .inst_obj(
                 &def.fields[0].field_type,
                 &header_map,
-                ParamObjType::DefHeader,
+                SubstitutionMode::Exact,
             )
             .ok()?;
         match self.fn_set_space_from_return_set_obj(carrier).ok()? {
@@ -381,7 +381,7 @@ impl Runtime {
                     self,
                     param_defs,
                     &args,
-                    ParamObjType::FnSet,
+                    SubstitutionMode::Exact,
                 )?;
             for param_membership_fact in param_membership_facts.iter() {
                 let result = self.verify_atomic_fact_restricted_known_builtin(
@@ -396,7 +396,7 @@ impl Runtime {
                 let instantiated_dom_fact = self.inst_quantifier_free_fact(
                     dom_fact,
                     &param_to_arg_map,
-                    ParamObjType::FnSet,
+                    SubstitutionMode::Exact,
                     None,
                 )?;
                 let result = self.verify_quantifier_free_fact_restricted_known_builtin(
@@ -409,7 +409,7 @@ impl Runtime {
             }
         }
 
-        let reduced = self.inst_obj(&equal_to_expr, &param_to_arg_map, ParamObjType::FnSet)?;
+        let reduced = self.inst_obj(&equal_to_expr, &param_to_arg_map, SubstitutionMode::Exact)?;
         Ok(apply_extra_curried_layers_for_unfolding(
             reduced,
             extra_layers,
@@ -479,7 +479,7 @@ impl Runtime {
         let reduced = self.inst_obj(
             anonymous_fn.equal_to.as_ref(),
             &param_to_arg_map,
-            ParamObjType::FnSet,
+            SubstitutionMode::Exact,
         )?;
         Ok(apply_extra_curried_layers_for_unfolding(
             reduced,
@@ -1515,17 +1515,7 @@ fn collect_module_names_from_fn_obj_head(head: &FnObjHead, module_names: &mut Ve
         FnObjHead::MatrixOperator(matrix) => {
             collect_module_names_from_obj(matrix, module_names);
         }
-        FnObjHead::Identifier(_)
-        | FnObjHead::Forall(_)
-        | FnObjHead::DefHeader(_)
-        | FnObjHead::Exist(_)
-        | FnObjHead::SetBuilder(_)
-        | FnObjHead::FnSet(_)
-        | FnObjHead::DefStructField(_)
-        | FnObjHead::Induc(_)
-        | FnObjHead::DefAlgo(_)
-        | FnObjHead::TupleIndex(_)
-        | FnObjHead::CartIndex(_) => {}
+        FnObjHead::Identifier(_) | FnObjHead::Bound(_) => {}
     }
 }
 

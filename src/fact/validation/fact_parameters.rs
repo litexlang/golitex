@@ -2,13 +2,19 @@
 
 use crate::prelude::*;
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum QuantifierBinderKind {
+    Universal,
+    Existential,
+}
+
 pub fn check_forall_fact_has_no_duplicate_forall_free_parameter(
     forall_fact: &ForallFact,
 ) -> Result<(), RuntimeError> {
     let mut params_already_used: Vec<Vec<String>> = Vec::new();
     check_forall_fact_has_no_duplicate_free_parameter(
         forall_fact,
-        ParamObjType::Forall,
+        QuantifierBinderKind::Universal,
         &mut params_already_used,
     )
 }
@@ -19,7 +25,7 @@ pub fn check_exist_fact_has_no_duplicate_exist_free_parameter(
     let mut params_already_used: Vec<Vec<String>> = Vec::new();
     check_exist_fact_has_no_duplicate_free_parameter(
         exist_fact,
-        ParamObjType::Exist,
+        QuantifierBinderKind::Existential,
         &mut params_already_used,
     )
 }
@@ -30,14 +36,14 @@ pub fn check_forall_fact_with_iff_has_no_duplicate_forall_free_parameter(
     let mut params_already_used: Vec<Vec<String>> = Vec::new();
     check_forall_fact_with_iff_has_no_duplicate_free_parameter(
         forall_fact_with_iff,
-        ParamObjType::Forall,
+        QuantifierBinderKind::Universal,
         &mut params_already_used,
     )
 }
 
 fn check_fact_has_no_duplicate_free_parameter(
     fact: &Fact,
-    free_param_type: ParamObjType,
+    free_param_type: QuantifierBinderKind,
     params_already_used: &mut Vec<Vec<String>>,
 ) -> Result<(), RuntimeError> {
     match fact {
@@ -76,7 +82,7 @@ fn check_fact_has_no_duplicate_free_parameter(
 
 fn check_forall_fact_with_iff_has_no_duplicate_free_parameter(
     forall_fact_with_iff: &ForallFactWithIff,
-    free_param_type: ParamObjType,
+    free_param_type: QuantifierBinderKind,
     params_already_used: &mut Vec<Vec<String>>,
 ) -> Result<(), RuntimeError> {
     let pushed_scope = push_forall_scope_if_needed(
@@ -113,7 +119,7 @@ fn check_forall_fact_with_iff_has_no_duplicate_free_parameter(
 
 fn check_forall_fact_has_no_duplicate_free_parameter(
     forall_fact: &ForallFact,
-    free_param_type: ParamObjType,
+    free_param_type: QuantifierBinderKind,
     params_already_used: &mut Vec<Vec<String>>,
 ) -> Result<(), RuntimeError> {
     let pushed_scope =
@@ -139,10 +145,10 @@ fn check_forall_fact_has_no_duplicate_free_parameter(
 
 fn push_forall_scope_if_needed(
     forall_fact: &ForallFact,
-    free_param_type: ParamObjType,
+    free_param_type: QuantifierBinderKind,
     params_already_used: &mut Vec<Vec<String>>,
 ) -> Result<bool, RuntimeError> {
-    if free_param_type != ParamObjType::Forall {
+    if free_param_type != QuantifierBinderKind::Universal {
         return Ok(false);
     }
 
@@ -157,7 +163,7 @@ fn push_forall_scope_if_needed(
 
 fn check_exist_fact_has_no_duplicate_free_parameter(
     exist_fact: &ExistFactEnum,
-    free_param_type: ParamObjType,
+    free_param_type: QuantifierBinderKind,
     params_already_used: &mut Vec<Vec<String>>,
 ) -> Result<(), RuntimeError> {
     let pushed_scope =
@@ -177,9 +183,9 @@ fn check_exist_fact_has_no_duplicate_free_parameter(
     Ok(())
 }
 
-pub fn check_quantifier_free_fact_has_no_duplicate_free_parameter(
+fn check_quantifier_free_fact_has_no_duplicate_free_parameter(
     fact: &QuantifierFreeFact,
-    free_param_type: ParamObjType,
+    free_param_type: QuantifierBinderKind,
     params_already_used: &mut Vec<Vec<String>>,
 ) -> Result<(), RuntimeError> {
     match fact {
@@ -196,10 +202,10 @@ pub fn check_quantifier_free_fact_has_no_duplicate_free_parameter(
 
 fn push_exist_scope_if_needed(
     exist_fact: &ExistFactEnum,
-    free_param_type: ParamObjType,
+    free_param_type: QuantifierBinderKind,
     params_already_used: &mut Vec<Vec<String>>,
 ) -> Result<bool, RuntimeError> {
-    if free_param_type != ParamObjType::Exist {
+    if free_param_type != QuantifierBinderKind::Existential {
         return Ok(false);
     }
 
@@ -215,7 +221,7 @@ fn push_exist_scope_if_needed(
 
 fn check_exist_or_and_chain_atomic_fact_has_no_duplicate_free_parameter(
     fact: &ExistOrAndChainAtomicFact,
-    free_param_type: ParamObjType,
+    free_param_type: QuantifierBinderKind,
     params_already_used: &mut Vec<Vec<String>>,
 ) -> Result<(), RuntimeError> {
     match fact {
@@ -241,7 +247,7 @@ fn check_exist_or_and_chain_atomic_fact_has_no_duplicate_free_parameter(
 
 fn check_or_fact_has_no_duplicate_free_parameter(
     or_fact: &OrFact,
-    free_param_type: ParamObjType,
+    free_param_type: QuantifierBinderKind,
     params_already_used: &mut Vec<Vec<String>>,
 ) -> Result<(), RuntimeError> {
     for fact in or_fact.facts.iter() {
@@ -256,7 +262,7 @@ fn check_or_fact_has_no_duplicate_free_parameter(
 
 fn check_and_chain_atomic_fact_has_no_duplicate_free_parameter(
     fact: &AndChainAtomicFact,
-    _free_param_type: ParamObjType,
+    _free_param_type: QuantifierBinderKind,
     _params_already_used: &mut Vec<Vec<String>>,
 ) -> Result<(), RuntimeError> {
     match fact {
@@ -268,7 +274,7 @@ fn check_and_chain_atomic_fact_has_no_duplicate_free_parameter(
 
 fn push_param_def_scope_or_error(
     param_names: Vec<String>,
-    free_param_type: ParamObjType,
+    free_param_type: QuantifierBinderKind,
     line_file: &LineFile,
     params_already_used: &mut Vec<Vec<String>>,
 ) -> Result<(), RuntimeError> {
@@ -308,7 +314,7 @@ fn param_name_already_used(param_name: &String, params_already_used: &Vec<Vec<St
 
 fn duplicate_param_error(
     param_name: &String,
-    free_param_type: ParamObjType,
+    free_param_type: QuantifierBinderKind,
     line_file: LineFile,
 ) -> RuntimeError {
     DefineParamsRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(

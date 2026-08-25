@@ -203,7 +203,7 @@ impl Runtime {
         let instantiated = self.inst_obj(
             &Obj::StructObj(struct_obj.clone()),
             &param_to_arg_map,
-            ParamObjType::DefHeader,
+            SubstitutionMode::Exact,
         )?;
         let Obj::StructObj(instantiated) = instantiated else {
             unreachable!("instantiating a struct carrier must preserve its object kind");
@@ -253,7 +253,7 @@ impl Runtime {
                 .params_def_with_set
                 .param_defs_and_args_to_param_to_arg_map(&args_as_obj);
             let return_set =
-                self.inst_obj(&fn_body.ret_set, &param_to_arg_map, ParamObjType::FnSet)?;
+                self.inst_obj(&fn_body.ret_set, &param_to_arg_map, SubstitutionMode::Exact)?;
             if index == fn_obj.body.len() - 1 {
                 return Ok(Some(return_set));
             }
@@ -303,7 +303,7 @@ impl Runtime {
         let instantiated_return = self.inst_obj(
             &raw_body.ret_set,
             &template_param_to_arg,
-            ParamObjType::DefHeader,
+            SubstitutionMode::Exact,
         )?;
         Ok(Some(FnSetBody::new(
             raw_body.params_def_with_set,
@@ -374,7 +374,7 @@ impl Runtime {
             self.inst_obj(
                 &field.field_type,
                 &param_to_arg_map,
-                ParamObjType::DefHeader,
+                SubstitutionMode::Exact,
             )?
         } else {
             field.field_type.clone()

@@ -121,7 +121,7 @@ impl Runtime {
         };
 
         let x_name = self.generate_random_unused_name();
-        let (x_binding, x_obj) = self.fresh_bound_param(x_name, ParamObjType::Forall)?;
+        let (x_binding, x_obj) = self.fresh_bound_param(x_name)?;
         let Some(left_value) =
             self.instantiate_unary_anonymous_summand_at(left_sum.func.as_ref(), &x_obj)?
         else {
@@ -145,7 +145,7 @@ impl Runtime {
                 vec![x_binding],
                 ParamType::Obj(index_param_set),
             )]);
-            rt.define_params_with_type(&params_def, false, ParamObjType::Forall)?;
+            rt.define_params_with_type(&params_def, false, BindingScope::LocalBinder)?;
             rt.store_fact_without_forall_coverage_check_and_infer(lower_bound)?;
             rt.store_fact_without_forall_coverage_check_and_infer(upper_bound)?;
 
@@ -209,7 +209,7 @@ impl Runtime {
         }
 
         let x_name = self.generate_random_unused_name();
-        let (x_binding, x_obj) = self.fresh_bound_param(x_name, ParamObjType::Forall)?;
+        let (x_binding, x_obj) = self.fresh_bound_param(x_name)?;
 
         let Some(l_inst) =
             self.instantiate_unary_anonymous_summand_at(sum_m.func.as_ref(), &x_obj)?
@@ -314,7 +314,7 @@ impl Runtime {
         }
 
         let x_name = self.generate_random_unused_name();
-        let (x_binding, x_obj) = self.fresh_bound_param(x_name, ParamObjType::Forall)?;
+        let (x_binding, x_obj) = self.fresh_bound_param(x_name)?;
         let Some(difference_at_x) =
             self.instantiate_unary_anonymous_summand_at(difference_sum.func.as_ref(), &x_obj)?
         else {
@@ -389,7 +389,7 @@ impl Runtime {
         Ok(Some(self.inst_obj(
             af.equal_to.as_ref(),
             &param_to_arg_map,
-            ParamObjType::FnSet,
+            SubstitutionMode::Exact,
         )?))
     }
 
@@ -405,7 +405,7 @@ impl Runtime {
                 vec![param_binding],
                 ParamType::Obj(StandardSet::Z.into()),
             )]);
-            rt.define_params_with_type(&params_def, false, ParamObjType::Forall)?;
+            rt.define_params_with_type(&params_def, false, BindingScope::LocalBinder)?;
             for dom_fact in dom_facts {
                 rt.store_fact_without_forall_coverage_check_and_infer(dom_fact)?;
             }
@@ -1054,7 +1054,7 @@ impl Runtime {
                 continue;
             }
             let y_name = self.generate_random_unused_name();
-            let (y_binding, y_obj) = self.fresh_bound_param(y_name, ParamObjType::Forall)?;
+            let (y_binding, y_obj) = self.fresh_bound_param(y_name)?;
             let normalized_k = evaluate_obj_to_exact_rational_obj_for_eval(&k).unwrap_or(k);
             let index_for_left = match &normalized_k {
                 Obj::Number(number) => match number.normalized_value.parse::<i128>() {
@@ -1210,7 +1210,7 @@ impl Runtime {
                 }
 
                 let x_name = self.generate_random_unused_name();
-                let (x_binding, x_obj) = self.fresh_bound_param(x_name, ParamObjType::Forall)?;
+                let (x_binding, x_obj) = self.fresh_bound_param(x_name)?;
                 let Some(sum_inst) =
                     self.instantiate_unary_anonymous_summand_at(sum.func.as_ref(), &x_obj)?
                 else {

@@ -325,7 +325,7 @@ impl Runtime {
 
         for dom_fact in known_forall.dom.iter() {
             let instantiated_dom_fact = self
-                .inst_fact(dom_fact, &param_to_arg_map, ParamObjType::Forall, None)
+                .inst_fact(dom_fact, &param_to_arg_map, SubstitutionMode::Exact, None)
                 .map_err(|e| known_forall_requirement_error(goal.clone(), e))?;
             let result = self
                 .verify_fact_allow_unknown(&instantiated_dom_fact, verify_state)
@@ -373,7 +373,7 @@ impl Runtime {
             .inst_param_def_with_type_one_by_one(
                 &known_forall.params_def,
                 args_for_params,
-                ParamObjType::Forall,
+                SubstitutionMode::Exact,
             )
             .map_err(|e| known_forall_requirement_error(goal.clone(), e))?;
         let flat_types = known_forall

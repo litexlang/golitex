@@ -159,70 +159,25 @@ impl Runtime {
         Ok(())
     }
 
-    pub fn store_free_param_or_identifier_name(
-        &mut self,
-        name: &str,
-        kind: ParamObjType,
-    ) -> Result<(), RuntimeError> {
-        if let Some(existing_kind) = self
-            .top_level_env()
-            .declarations
-            .defined_identifiers
-            .get(name)
-        {
-            return Err(NameAlreadyUsedRuntimeError(RuntimeErrorStruct::new_with_just_msg(format!(
-                    "identifier `{}` is already bound in this scope as {:?} (cannot re-bind as {:?})",
-                    name, existing_kind, kind
-                )))
-            .into());
-        }
-        if kind == ParamObjType::Identifier {
-            self.register_declared_symbol(name, SymbolRole::Object)?;
-        }
-        let env = self.top_level_env();
-        env.declarations
-            .defined_identifiers
-            .insert(name.to_string(), kind);
-        Ok(())
-    }
-
     pub fn store_parameter_binding(
         &mut self,
         binding: &SymbolBinding,
-        kind: ParamObjType,
+        scope: BindingScope,
     ) -> Result<(), RuntimeError> {
         let name = binding.name();
-        if crate::runtime::source_binder_must_respect_bare_symbols(kind, name) {
+        if scope.respects_bare_symbols(name) {
             if let Some(external) = self.bare_symbol(name) {
                 return Err(crate::runtime::bare_symbol_name_reserved_error(
                     name, external, None,
                 ));
             }
         }
-        if let Some(existing_kind) = self
-            .top_level_env()
-            .declarations
-            .defined_identifiers
-            .get(name)
-        {
-            return Err(
-                NameAlreadyUsedRuntimeError(RuntimeErrorStruct::new_with_just_msg(format!(
-                "identifier `{}` is already bound in this scope as {:?} (cannot re-bind as {:?})",
-                name, existing_kind, kind
-            )))
-                .into(),
-            );
-        }
-        let role = if kind == ParamObjType::Identifier {
-            SymbolRole::Object
-        } else {
-            SymbolRole::Binder
+        let role = match scope {
+            BindingScope::DeclaredObject => SymbolRole::Object,
+            BindingScope::StructureField => SymbolRole::StructureField,
+            BindingScope::LocalBinder | BindingScope::ReuseActiveBinder => SymbolRole::Binder,
         };
         self.register_existing_symbol_binding(binding.clone(), role)?;
-        self.top_level_env()
-            .declarations
-            .defined_identifiers
-            .insert(name.to_string(), kind);
         Ok(())
     }
 }

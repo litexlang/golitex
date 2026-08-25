@@ -8,16 +8,16 @@ impl Runtime {
         &mut self,
         binding: &SymbolBinding,
         param_type: &ParamType,
-        binding_kind: ParamObjType,
+        binding_scope: BindingScope,
     ) -> Result<SuccessInferResult, RuntimeError> {
-        let type_fact = self.parameter_type_fact_for_binding(binding, param_type, binding_kind)?;
+        let type_fact = self.parameter_type_fact_for_binding(binding, param_type, binding_scope)?;
         let mut infer_result = self
             .store_with_well_defined_verification_and_infer_with_default_verify_state_and_reason(
                 type_fact,
                 InferReason::ParameterDefinition,
             )?;
         if let ParamType::Obj(Obj::StructObj(struct_obj)) = param_type {
-            let parameter = param_binding_element_obj_for_store(binding, binding_kind);
+            let parameter = param_binding_element_obj_for_store(binding, binding_scope);
             infer_result.new_infer_result_inside(self.release_one_struct_definition_layer(
                 &parameter,
                 struct_obj,
@@ -32,9 +32,9 @@ impl Runtime {
         &mut self,
         binding: &SymbolBinding,
         param_type: &ParamType,
-        binding_kind: ParamObjType,
+        binding_scope: BindingScope,
     ) -> Result<Fact, RuntimeError> {
-        let parameter = param_binding_element_obj_for_store(binding, binding_kind);
+        let parameter = param_binding_element_obj_for_store(binding, binding_scope);
         Ok(match param_type {
             ParamType::Obj(Obj::FiniteSeqSet(value)) => InFact::new(
                 parameter,
@@ -64,7 +64,7 @@ impl Runtime {
         &mut self,
         param_defs: &ParamDefWithType,
         check_type_nonempty: bool,
-        binding_kind: ParamObjType,
+        binding_scope: BindingScope,
     ) -> Result<SuccessInferResult, RuntimeError> {
         let mut infer_result = SuccessInferResult::new();
         for param_def in param_defs.groups.iter() {
@@ -94,7 +94,7 @@ impl Runtime {
 
             for binding in param_def.params.iter() {
                 let name = binding.name();
-                self.store_parameter_binding(binding, binding_kind)
+                self.store_parameter_binding(binding, binding_scope)
                     .map_err(|runtime_error| {
                         RuntimeError::from(DefineParamsRuntimeError(
                             RuntimeErrorStruct::new_with_msg_and_cause(
@@ -110,7 +110,7 @@ impl Runtime {
                     .define_parameter_by_binding_param_type(
                         binding,
                         &param_def.param_type,
-                        binding_kind,
+                        binding_scope,
                     )
                     .map_err(|runtime_error| {
                         RuntimeError::from(DefineParamsRuntimeError(RuntimeErrorStruct::new_with_msg_and_cause(format!(
@@ -127,13 +127,13 @@ impl Runtime {
     pub fn define_params_with_type_trusted(
         &mut self,
         param_defs: &ParamDefWithType,
-        binding_kind: ParamObjType,
+        binding_scope: BindingScope,
     ) -> Result<SuccessInferResult, RuntimeError> {
         let mut infer_result = SuccessInferResult::new();
         for param_def in param_defs.groups.iter() {
             for binding in param_def.params.iter() {
-                self.store_parameter_binding(binding, binding_kind)?;
-                let param_obj = param_binding_element_obj_for_store(binding, binding_kind);
+                self.store_parameter_binding(binding, binding_scope)?;
+                let param_obj = param_binding_element_obj_for_store(binding, binding_scope);
                 let fact: Fact = match &param_def.param_type {
                     ParamType::Obj(obj) => InFact::new(
                         param_obj,
@@ -167,7 +167,7 @@ impl Runtime {
                     )?,
                 );
                 if let ParamType::Obj(Obj::StructObj(struct_obj)) = &param_def.param_type {
-                    let parameter = param_binding_element_obj_for_store(binding, binding_kind);
+                    let parameter = param_binding_element_obj_for_store(binding, binding_scope);
                     infer_result.new_infer_result_inside(
                         self.release_one_struct_definition_layer(
                             &parameter,
