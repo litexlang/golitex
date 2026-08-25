@@ -1,18 +1,8 @@
+//! Stored FactId records and proposition lookup aliases.
+
 use crate::prelude::*;
 use std::collections::HashMap;
 use std::rc::Rc;
-
-/// The canonical environment-owned record for a fact identity.
-///
-/// Lookup strings are aliases only. An alias keeps the first representative
-/// `FactId` for its proposition-equivalence class, while every independently
-/// stored fact identity remains available through `facts_by_id`.
-#[derive(Clone)]
-pub struct StoredFactRecord {
-    pub fact_id: FactId,
-    pub fact: Fact,
-    pub equivalent_proposition_lookup_key: FactString,
-}
 
 #[derive(Clone, Default)]
 pub struct EnvironmentStoredFactStore {

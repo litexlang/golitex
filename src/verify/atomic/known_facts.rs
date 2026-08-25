@@ -772,7 +772,8 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         if let Some(known_facts_map) = environment
             .facts
-            .known_atomic_facts_with_1_arg
+            .atomic
+            .by_one_arg
             .get(&(atomic_fact.key(), atomic_fact.has_positive_polarity()))
         {
             for obj in all_objs_equal_to_arg.iter() {
@@ -805,7 +806,8 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         if let Some(known_facts_map) = environment
             .facts
-            .known_atomic_facts_with_2_args
+            .atomic
+            .by_two_args
             .get(&(atomic_fact.key(), atomic_fact.has_positive_polarity()))
         {
             for obj0 in all_objs_equal_to_arg0.iter() {
@@ -862,7 +864,8 @@ impl Runtime {
         if let Some(alt) = atomic_fact.transposed_binary_order_equivalent() {
             if let Some(known_facts_map) = environment
                 .facts
-                .known_atomic_facts_with_2_args
+                .atomic
+                .by_two_args
                 .get(&(alt.key(), alt.has_positive_polarity()))
             {
                 for obj0 in all_objs_equal_to_arg1.iter() {
@@ -933,7 +936,8 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         if let Some(known_facts) = environment
             .facts
-            .known_atomic_facts_with_0_or_more_than_2_args
+            .atomic
+            .by_other_arg_count
             .get(&(atomic_fact.key(), atomic_fact.has_positive_polarity()))
         {
             let atomic_fact_args = atomic_fact.args_ref();
@@ -1035,29 +1039,17 @@ impl Runtime {
         let mut known_facts = Vec::new();
         match atomic_fact.number_of_args() {
             1 => {
-                if let Some(facts) = environment
-                    .facts
-                    .known_atomic_facts_with_1_arg
-                    .get(&lookup_key)
-                {
+                if let Some(facts) = environment.facts.atomic.by_one_arg.get(&lookup_key) {
                     known_facts.extend(facts.values());
                 }
             }
             2 => {
-                if let Some(facts) = environment
-                    .facts
-                    .known_atomic_facts_with_2_args
-                    .get(&lookup_key)
-                {
+                if let Some(facts) = environment.facts.atomic.by_two_args.get(&lookup_key) {
                     known_facts.extend(facts.values());
                 }
             }
             _ => {
-                if let Some(facts) = environment
-                    .facts
-                    .known_atomic_facts_with_0_or_more_than_2_args
-                    .get(&lookup_key)
-                {
+                if let Some(facts) = environment.facts.atomic.by_other_arg_count.get(&lookup_key) {
                     known_facts.extend(facts.iter());
                 }
             }

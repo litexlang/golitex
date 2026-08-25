@@ -18,13 +18,13 @@ pub use crate::common::name_types::{
 };
 pub use crate::common::output_language::OutputLanguage;
 pub use crate::environment::{
-    atomic_fact_in_forall_arg_shape_key, AtomicFactInForallArgShapeIndex,
-    AtomicFactInForallArgShapeKey, CachedKnownFact, Environment, EnvironmentDefinitionRegistry,
-    EnvironmentFactStore, EnvironmentObjectKnowledge, EnvironmentObjectKnowledgeStore,
-    EnvironmentPredicateProperties, EnvironmentPredicatePropertyStore, EnvironmentStoredFactStore,
-    EnvironmentVerificationCache, KnownEquality, KnownEqualityProofStep, KnownFnInfo,
-    KnownObjValue, StoredFactRecord, StoredForallConclusionReference, SymmetricPropValue,
-    WellDefinednessEnvironmentDelta,
+    forall_argument_shape, AtomicFactIndex, CachedKnownFact, Environment,
+    EnvironmentDefinitionRegistry, EnvironmentFactStore, EnvironmentObjectKnowledge,
+    EnvironmentObjectKnowledgeStore, EnvironmentPredicateProperties,
+    EnvironmentPredicatePropertyStore, EnvironmentStoredFactStore, EnvironmentVerificationCache,
+    ForallArgumentShape, ForallConclusionIndex, KnownEquality, KnownEqualityProofStep, KnownFnInfo,
+    KnownObjValue, QuantifiedFactIndex, SetRelationIndex, StoredFactRecord,
+    StoredForallConclusionReference, WellDefinednessEnvironmentDelta,
 };
 pub use crate::error::exec_stmt_error_with_stmt_and_cause;
 pub use crate::error::short_exec_error;

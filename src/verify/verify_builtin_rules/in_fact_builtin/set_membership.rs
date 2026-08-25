@@ -27,7 +27,7 @@ impl Runtime {
         };
         let memberships: Vec<InFact> = self
             .iter_environments_from_top()
-            .flat_map(|environment| environment.facts.known_owner_sets.values())
+            .flat_map(|environment| environment.facts.set_relations.owner_sets.values())
             .flat_map(|owner_sets| owner_sets.values())
             .filter(|membership| objs_match_for_pattern(&membership.element, &goal.element))
             .cloned()
@@ -76,13 +76,15 @@ impl Runtime {
             .flat_map(|environment| {
                 environment
                     .facts
-                    .known_atomic_facts_in_forall_facts
+                    .forall_conclusions
+                    .atomic_with_parameterized_head
                     .values()
                     .flat_map(|facts| facts.iter())
                     .chain(
                         environment
                             .facts
-                            .known_atomic_facts_in_forall_facts_by_arg_shape
+                            .forall_conclusions
+                            .atomic_by_argument_shape
                             .values()
                             .flat_map(|shape_map| shape_map.values())
                             .flat_map(|facts| facts.iter()),
@@ -179,13 +181,15 @@ impl Runtime {
                 .flat_map(|environment| {
                     environment
                         .facts
-                        .known_atomic_facts_in_forall_facts
+                        .forall_conclusions
+                        .atomic_with_parameterized_head
                         .values()
                         .flat_map(|facts| facts.iter())
                         .chain(
                             environment
                                 .facts
-                                .known_atomic_facts_in_forall_facts_by_arg_shape
+                                .forall_conclusions
+                                .atomic_by_argument_shape
                                 .values()
                                 .flat_map(|shape_map| shape_map.values())
                                 .flat_map(|facts| facts.iter()),
@@ -275,7 +279,8 @@ impl Runtime {
             .flat_map(|environment| {
                 environment
                     .facts
-                    .known_atomic_facts_with_2_args
+                    .atomic
+                    .by_two_args
                     .values()
                     .flat_map(|facts| facts.values())
             })
@@ -285,7 +290,7 @@ impl Runtime {
             })
             .collect();
         for environment in self.iter_environments_from_top() {
-            for owner_sets in environment.facts.known_owner_sets.values() {
+            for owner_sets in environment.facts.set_relations.owner_sets.values() {
                 for membership in owner_sets.values() {
                     if !memberships
                         .iter()
@@ -1055,10 +1060,7 @@ impl Runtime {
         target_keys: &[String],
         candidates: &mut Vec<Obj>,
     ) {
-        let Some(known_relation_facts) = environment
-            .facts
-            .known_atomic_facts_with_2_args
-            .get(lookup_key)
+        let Some(known_relation_facts) = environment.facts.atomic.by_two_args.get(lookup_key)
         else {
             return;
         };
@@ -1120,10 +1122,7 @@ impl Runtime {
         candidates: &mut Vec<Obj>,
     ) {
         let lookup_key = (IN.to_string(), true);
-        let Some(known_membership_facts) = environment
-            .facts
-            .known_atomic_facts_with_2_args
-            .get(&lookup_key)
+        let Some(known_membership_facts) = environment.facts.atomic.by_two_args.get(&lookup_key)
         else {
             return;
         };
@@ -1804,7 +1803,8 @@ impl Runtime {
         owner_memberships: &mut Vec<InFact>,
     ) {
         for element_key in element_keys {
-            let Some(owner_sets) = environment.facts.known_owner_sets.get(element_key) else {
+            let Some(owner_sets) = environment.facts.set_relations.owner_sets.get(element_key)
+            else {
                 continue;
             };
             for owner_membership in owner_sets.values() {
@@ -1825,8 +1825,11 @@ impl Runtime {
         evidence: &mut Vec<AtomicFact>,
     ) {
         for owner_set_key in owner_set_keys {
-            let Some(direct_supersets) =
-                environment.facts.known_direct_supersets.get(owner_set_key)
+            let Some(direct_supersets) = environment
+                .facts
+                .set_relations
+                .direct_supersets
+                .get(owner_set_key)
             else {
                 continue;
             };

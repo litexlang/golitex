@@ -438,6 +438,7 @@ fn compiler_and_test_directories_follow_the_repository_layout() {
     for test_file in [
         "object/expression/module_qualification.rs",
         "object/expression/matrix_operators.rs",
+        "object/expression/precedence.rs",
         "object/primary/keyword_objects.rs",
         "fact/expression/inline_forall.rs",
         "statements/evaluation.rs",
@@ -1109,13 +1110,28 @@ fn source_and_test_paths_do_not_repeat_their_parent_name() {
 #[test]
 fn environment_exposes_five_direct_owners_without_flat_compatibility_storage() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
-    let environment = fs::read_to_string(root.join("src/environment/environment_state.rs"))
+    let production_sources = rust_files_below(&root.join("src"))
+        .into_iter()
+        .map(|path| {
+            fs::read_to_string(&path)
+                .unwrap_or_else(|error| panic!("{} should be readable: {error}", path.display()))
+        })
+        .collect::<Vec<_>>()
+        .join("\n");
+    let environment = fs::read_to_string(root.join("src/environment.rs"))
         .expect("Environment source should be readable");
-    let object_store = fs::read_to_string(root.join("src/environment/object_knowledge_store.rs"))
+    let fact_store = fs::read_to_string(root.join("src/environment/facts/store.rs"))
+        .expect("fact store should be readable");
+    let forall_index =
+        fs::read_to_string(root.join("src/environment/facts/forall_conclusion_index.rs"))
+            .expect("forall conclusion index should be readable");
+    let object_store = fs::read_to_string(root.join("src/environment/object_knowledge/store.rs"))
         .expect("object knowledge store should be readable");
-    let predicate_store =
-        fs::read_to_string(root.join("src/environment/predicate_property_store.rs"))
-            .expect("predicate property store should be readable");
+    let object_value =
+        fs::read_to_string(root.join("src/environment/object_knowledge/known_value.rs"))
+            .expect("known object value should be readable");
+    let predicate_store = fs::read_to_string(root.join("src/environment/predicates/store.rs"))
+        .expect("predicate property store should be readable");
     let well_definedness_delta =
         fs::read_to_string(root.join("src/environment/well_definedness_environment_delta.rs"))
             .expect("well-definedness delta should be readable");
@@ -1132,9 +1148,27 @@ fn environment_exposes_five_direct_owners_without_flat_compatibility_storage() {
     assert!(!environment.contains("pub repositories:"));
     assert!(!environment.contains("impl Deref for Environment"));
     assert!(!environment.contains("EnvironmentPersistentRepositories"));
+    assert!(!root.join("src/environment/environment_state.rs").exists());
+    assert!(!root.join("src/environment/mod.rs").exists());
+    assert!(!production_sources.contains("ParamObjType"));
+    assert!(!production_sources.contains("defined_identifiers"));
+
+    for fact_owner in [
+        "pub atomic: AtomicFactIndex",
+        "pub set_relations: SetRelationIndex",
+        "pub quantified: QuantifiedFactIndex",
+        "pub forall_conclusions: ForallConclusionIndex",
+        "pub stored_facts: EnvironmentStoredFactStore",
+    ] {
+        assert!(fact_store.contains(fact_owner));
+    }
+    assert!(forall_index.contains("pub struct ForallConclusionIndex"));
+    assert!(!environment.contains("AtomicFactInForallArgShapeIndex"));
+    assert!(!environment.contains("pub enum KnownObjValue"));
 
     assert!(object_store
         .contains("pub knowledge_by_object: HashMap<ObjString, EnvironmentObjectKnowledge>"));
+    assert!(object_value.contains("pub enum KnownObjValue"));
     assert!(predicate_store
         .contains("pub properties_by_predicate: HashMap<String, EnvironmentPredicateProperties>"));
     assert!(well_definedness_delta.contains("pub struct WellDefinednessEnvironmentDelta"));
@@ -1150,7 +1184,7 @@ fn definition_terminology_has_one_core_route_without_legacy_rust_names() {
         .expect("statement types should be readable");
     let success_results = fs::read_to_string(root.join("src/result/statement/success.rs"))
         .expect("success result types should be readable");
-    let environment = fs::read_to_string(root.join("src/environment/environment_state.rs"))
+    let environment = fs::read_to_string(root.join("src/environment.rs"))
         .expect("environment should be readable");
     let execute_module = fs::read_to_string(root.join("src/execute/mod.rs"))
         .expect("execute module should be readable");
@@ -1159,11 +1193,10 @@ fn definition_terminology_has_one_core_route_without_legacy_rust_names() {
     let mut core_terminology_sources = [
         "src/stmt/core/types.rs",
         "src/result/statement/success.rs",
-        "src/environment/mod.rs",
-        "src/environment/environment_state.rs",
-        "src/environment/definition_registry.rs",
-        "src/environment/fact_store.rs",
-        "src/environment/stored_fact_store.rs",
+        "src/environment.rs",
+        "src/environment/definitions/registry.rs",
+        "src/environment/facts/store.rs",
+        "src/environment/facts/stored_fact_store.rs",
         "src/execute/mod.rs",
         "src/obj/free_param_obj.rs",
         "src/obj/object_types.rs",

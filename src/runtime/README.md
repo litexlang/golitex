@@ -52,5 +52,5 @@ inserted by `cache_successful_atomic_fact_for_statement`.
 
 Then follow [`execution_frame.rs`](execution_frame.rs) for source scopes,
 [`parse_context.rs`](parse_context.rs) for parser metadata, and
-[`../environment/environment_state.rs`](../environment/environment_state.rs)
+[`../environment.rs`](../environment.rs)
 for checked definitions, stored facts, and persistent mathematical caches.

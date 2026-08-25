@@ -2634,14 +2634,16 @@ impl Runtime {
             .flat_map(|environment| {
                 environment
                     .facts
-                    .known_atomic_facts_in_forall_facts
+                    .forall_conclusions
+                    .atomic_with_parameterized_head
                     .get(&lookup_key)
                     .into_iter()
                     .flat_map(|facts| facts.iter())
                     .chain(
                         environment
                             .facts
-                            .known_atomic_facts_in_forall_facts_by_arg_shape
+                            .forall_conclusions
+                            .atomic_by_argument_shape
                             .get(&lookup_key)
                             .into_iter()
                             .flat_map(|shape_map| shape_map.values())

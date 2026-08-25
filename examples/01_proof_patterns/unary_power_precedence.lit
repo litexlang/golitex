@@ -1,0 +1,19 @@
+# Tracer: power binds tighter than prefix minus.
+#
+# Before (parsed with the negative value as the power base):
+# -2^2 = 4
+# Former behavior: the parser built `(-2)^2`, so the line verified as positive 4.
+#
+# Now (verified with the completed power negated):
+-2^2 = -(2^2) = (-4)
+(-2)^2 = 4
+-(2^2) != (-2)^2
+# Current behavior: `-2^2` parses as `-(2^2)`, while parentheses around the
+# negative base still produce its square.
+#
+# Boundary: the bare spelling above exists only to regress parser compatibility.
+# Authored Litex must write `-(t^2)` (or `-1 * (t^2)`) and `(-t)^2` explicitly;
+# negative exponents must use `t^(-1)`.
+# Evidence: `target/release/litex -compact -isolated -runner -f
+# examples/01_proof_patterns/unary_power_precedence.lit` and
+# `cargo test --release precedence_tests -- --nocapture`.

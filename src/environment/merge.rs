@@ -1,6 +1,7 @@
+//! Transactional merge of one committed child Environment.
+
 use crate::prelude::*;
 use std::collections::HashSet;
-use std::rc::Rc;
 
 impl Environment {
     pub fn merge_committed_child(&mut self, child: Environment) -> Result<(), RuntimeError> {
@@ -158,78 +159,6 @@ impl Environment {
         Ok(())
     }
 
-    fn merge_known_atomic_facts(
-        &mut self,
-        child_map: std::collections::HashMap<(AtomicFactKey, bool), Vec<AtomicFact>>,
-    ) {
-        for (key, child_facts) in child_map {
-            let parent_facts = self
-                .facts
-                .known_atomic_facts_with_0_or_more_than_2_args
-                .entry(key)
-                .or_default();
-            append_missing_atomic_facts(parent_facts, child_facts);
-        }
-    }
-
-    fn merge_known_atomic_facts_with_1_arg(
-        &mut self,
-        child_map: std::collections::HashMap<
-            (AtomicFactKey, bool),
-            std::collections::HashMap<ObjString, AtomicFact>,
-        >,
-    ) {
-        for (key, child_facts) in child_map {
-            let parent_facts = self
-                .facts
-                .known_atomic_facts_with_1_arg
-                .entry(key)
-                .or_default();
-            for (arg_key, fact) in child_facts {
-                parent_facts.insert(arg_key, fact);
-            }
-        }
-    }
-
-    fn merge_known_atomic_facts_with_2_args(
-        &mut self,
-        child_map: std::collections::HashMap<
-            (AtomicFactKey, bool),
-            std::collections::HashMap<(ObjString, ObjString), AtomicFact>,
-        >,
-    ) {
-        for (key, child_facts) in child_map {
-            let parent_facts = self
-                .facts
-                .known_atomic_facts_with_2_args
-                .entry(key)
-                .or_default();
-            for (arg_key, fact) in child_facts {
-                parent_facts.insert(arg_key, fact);
-            }
-        }
-    }
-
-    fn merge_known_exist_facts(
-        &mut self,
-        child_map: std::collections::HashMap<ExistFactKey, Vec<ExistFactEnum>>,
-    ) {
-        for (key, child_facts) in child_map {
-            let parent_facts = self.facts.known_exist_facts.entry(key).or_default();
-            append_missing_exist_facts(parent_facts, child_facts);
-        }
-    }
-
-    fn merge_known_or_facts(
-        &mut self,
-        child_map: std::collections::HashMap<OrFactKey, Vec<OrFact>>,
-    ) {
-        for (key, child_facts) in child_map {
-            let parent_facts = self.facts.known_or_facts.entry(key).or_default();
-            append_missing_or_facts(parent_facts, child_facts);
-        }
-    }
-
     fn merge_child_fact_and_cache_tables(
         &mut self,
         child: Environment,
@@ -241,22 +170,6 @@ impl Environment {
             predicate_properties,
             caches,
         } = child;
-        let EnvironmentFactStore {
-            known_equality: _,
-            known_atomic_facts_with_0_or_more_than_2_args,
-            known_atomic_facts_with_1_arg,
-            known_atomic_facts_with_2_args,
-            known_owner_sets,
-            known_direct_supersets,
-            known_exist_facts,
-            known_or_facts,
-            known_atomic_facts_in_forall_facts,
-            known_atomic_facts_in_forall_facts_by_arg_shape,
-            known_exist_facts_in_forall_facts,
-            known_and_facts_in_forall_facts,
-            known_or_facts_in_forall_facts,
-            stored_facts,
-        } = facts;
         let EnvironmentPredicatePropertyStore {
             properties_by_predicate,
         } = predicate_properties;
@@ -265,75 +178,7 @@ impl Environment {
             infer_rule_firings: cache_infer_rule_firing,
         } = caches;
 
-        self.merge_known_atomic_facts(known_atomic_facts_with_0_or_more_than_2_args);
-        self.merge_known_atomic_facts_with_1_arg(known_atomic_facts_with_1_arg);
-        self.merge_known_atomic_facts_with_2_args(known_atomic_facts_with_2_args);
-        for (element_key, child_owner_sets) in known_owner_sets {
-            let parent_owner_sets = self.facts.known_owner_sets.entry(element_key).or_default();
-            for (set_key, evidence) in child_owner_sets {
-                parent_owner_sets.entry(set_key).or_insert(evidence);
-            }
-        }
-        for (subset_key, child_supersets) in known_direct_supersets {
-            let parent_supersets = self
-                .facts
-                .known_direct_supersets
-                .entry(subset_key)
-                .or_default();
-            for (superset_key, evidence) in child_supersets {
-                parent_supersets.entry(superset_key).or_insert(evidence);
-            }
-        }
-        self.merge_known_exist_facts(known_exist_facts);
-        self.merge_known_or_facts(known_or_facts);
-
-        for (key, child_facts) in known_atomic_facts_in_forall_facts {
-            let parent_facts = self
-                .facts
-                .known_atomic_facts_in_forall_facts
-                .entry(key)
-                .or_default();
-            append_missing_atomic_forall_pairs(parent_facts, child_facts);
-        }
-
-        for (key, child_shape_map) in known_atomic_facts_in_forall_facts_by_arg_shape {
-            let parent_shape_map = self
-                .facts
-                .known_atomic_facts_in_forall_facts_by_arg_shape
-                .entry(key)
-                .or_default();
-            for (shape_key, child_facts) in child_shape_map {
-                let parent_facts = parent_shape_map.entry(shape_key).or_default();
-                append_missing_atomic_forall_pairs(parent_facts, child_facts);
-            }
-        }
-
-        for (key, child_facts) in known_exist_facts_in_forall_facts {
-            let parent_facts = self
-                .facts
-                .known_exist_facts_in_forall_facts
-                .entry(key)
-                .or_default();
-            append_missing_exist_forall_pairs(parent_facts, child_facts);
-        }
-
-        for (key, child_facts) in known_and_facts_in_forall_facts {
-            let parent_facts = self
-                .facts
-                .known_and_facts_in_forall_facts
-                .entry(key)
-                .or_default();
-            append_missing_and_forall_pairs(parent_facts, child_facts);
-        }
-
-        for (key, child_facts) in known_or_facts_in_forall_facts {
-            let parent_facts = self
-                .facts
-                .known_or_facts_in_forall_facts
-                .entry(key)
-                .or_default();
-            append_missing_or_forall_pairs(parent_facts, child_facts);
-        }
+        self.facts.merge_non_equality_from(facts)?;
 
         self.objects.merge_from(objects);
 
@@ -359,7 +204,6 @@ impl Environment {
         for (key, cached) in cache_well_defined_obj {
             self.caches.well_defined_objects.insert(key, cached);
         }
-        self.facts.stored_facts.merge_from(stored_facts)?;
         for (key, _) in cache_infer_rule_firing {
             self.caches.infer_rule_firings.insert(key, ());
         }
@@ -491,138 +335,6 @@ fn unordered_equality_key(equal_fact: &EqualFact) -> String {
     } else {
         format!("{}\n{}", right, left)
     }
-}
-
-fn append_missing_atomic_facts(parent: &mut Vec<AtomicFact>, child: Vec<AtomicFact>) {
-    let mut seen = HashSet::new();
-    for fact in parent.iter() {
-        seen.insert(fact.to_string());
-    }
-    for fact in child {
-        if seen.insert(fact.to_string()) {
-            parent.push(fact);
-        }
-    }
-}
-
-fn append_missing_exist_facts(parent: &mut Vec<ExistFactEnum>, child: Vec<ExistFactEnum>) {
-    let mut seen = HashSet::new();
-    for fact in parent.iter() {
-        seen.insert(fact.to_string());
-    }
-    for fact in child {
-        if seen.insert(fact.to_string()) {
-            parent.push(fact);
-        }
-    }
-}
-
-fn append_missing_or_facts(parent: &mut Vec<OrFact>, child: Vec<OrFact>) {
-    let mut seen = HashSet::new();
-    for fact in parent.iter() {
-        seen.insert(fact.to_string());
-    }
-    for fact in child {
-        if seen.insert(fact.to_string()) {
-            parent.push(fact);
-        }
-    }
-}
-
-fn append_missing_atomic_forall_pairs(
-    parent: &mut Vec<(AtomicFact, Rc<StoredForallConclusionReference>)>,
-    child: Vec<(AtomicFact, Rc<StoredForallConclusionReference>)>,
-) {
-    let mut seen = HashSet::new();
-    for (fact, stored_forall_conclusion_reference) in parent.iter() {
-        seen.insert(forall_pair_key(
-            fact.to_string(),
-            stored_forall_conclusion_reference,
-        ));
-    }
-    for (fact, stored_forall_conclusion_reference) in child {
-        if seen.insert(forall_pair_key(
-            fact.to_string(),
-            &stored_forall_conclusion_reference,
-        )) {
-            parent.push((fact, stored_forall_conclusion_reference));
-        }
-    }
-}
-
-fn append_missing_exist_forall_pairs(
-    parent: &mut Vec<(ExistFactEnum, Rc<StoredForallConclusionReference>)>,
-    child: Vec<(ExistFactEnum, Rc<StoredForallConclusionReference>)>,
-) {
-    let mut seen = HashSet::new();
-    for (fact, stored_forall_conclusion_reference) in parent.iter() {
-        seen.insert(forall_pair_key(
-            fact.to_string(),
-            stored_forall_conclusion_reference,
-        ));
-    }
-    for (fact, stored_forall_conclusion_reference) in child {
-        if seen.insert(forall_pair_key(
-            fact.to_string(),
-            &stored_forall_conclusion_reference,
-        )) {
-            parent.push((fact, stored_forall_conclusion_reference));
-        }
-    }
-}
-
-fn append_missing_and_forall_pairs(
-    parent: &mut Vec<(AndFact, Rc<StoredForallConclusionReference>)>,
-    child: Vec<(AndFact, Rc<StoredForallConclusionReference>)>,
-) {
-    let mut seen = HashSet::new();
-    for (fact, stored_forall_conclusion_reference) in parent.iter() {
-        seen.insert(forall_pair_key(
-            fact.to_string(),
-            stored_forall_conclusion_reference,
-        ));
-    }
-    for (fact, stored_forall_conclusion_reference) in child {
-        if seen.insert(forall_pair_key(
-            fact.to_string(),
-            &stored_forall_conclusion_reference,
-        )) {
-            parent.push((fact, stored_forall_conclusion_reference));
-        }
-    }
-}
-
-fn append_missing_or_forall_pairs(
-    parent: &mut Vec<(OrFact, Rc<StoredForallConclusionReference>)>,
-    child: Vec<(OrFact, Rc<StoredForallConclusionReference>)>,
-) {
-    let mut seen = HashSet::new();
-    for (fact, stored_forall_conclusion_reference) in parent.iter() {
-        seen.insert(forall_pair_key(
-            fact.to_string(),
-            stored_forall_conclusion_reference,
-        ));
-    }
-    for (fact, stored_forall_conclusion_reference) in child {
-        if seen.insert(forall_pair_key(
-            fact.to_string(),
-            &stored_forall_conclusion_reference,
-        )) {
-            parent.push((fact, stored_forall_conclusion_reference));
-        }
-    }
-}
-
-fn forall_pair_key(
-    fact_key: String,
-    stored_forall_conclusion_reference: &StoredForallConclusionReference,
-) -> String {
-    format!(
-        "{}|{}|{:?}",
-        fact_key,
-        stored_forall_conclusion_reference.source_fact_id,
-        stored_forall_conclusion_reference.conclusion_location
-    )
 }
 
 #[cfg(test)]

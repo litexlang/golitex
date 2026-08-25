@@ -315,11 +315,7 @@ impl Runtime {
         for predicate in predicates {
             let key = ((*predicate).to_string(), true);
             for environment in self.iter_environments_from_top() {
-                let Some(known) = environment
-                    .facts
-                    .known_atomic_facts_with_0_or_more_than_2_args
-                    .get(&key)
-                else {
+                let Some(known) = environment.facts.atomic.by_other_arg_count.get(&key) else {
                     continue;
                 };
                 for fact in known {

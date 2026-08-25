@@ -456,7 +456,7 @@ fn top_level_atomic_equality_compiles_typed_result_evidence() {
 
 #[test]
 fn complex_algebraic_normalization_compiles_typed_result_evidence() {
-    const SOURCE: &str = "2 * i + 1 = i * i + 2 + 2 * i\n(1 + i) * (1 - i) = 2\n1 / i = -1 * i\ni ^ -1 = -1 * i\n\nforall z C:\n    (z + i) * (z - i) = z * z + 1\n\nforall z C:\n    z + i != 0\n    =>:\n        (z + i) ^ 2 / (z + i) = z + i\n";
+    const SOURCE: &str = "2 * i + 1 = i * i + 2 + 2 * i\n(1 + i) * (1 - i) = 2\n1 / i = -1 * i\ni ^ (-1) = -1 * i\n\nforall z C:\n    (z + i) * (z - i) = z * z + 1\n\nforall z C:\n    z + i != 0\n    =>:\n        (z + i) ^ 2 / (z + i) = z + i\n";
     let result_json = capture_stmt_results_json_v2_on_verifier_stack(
         SOURCE,
         "54_ComplexAlgebraicCalculation.lit",

@@ -96,40 +96,72 @@ impl Runtime {
         }
     }
 
-    /// Power and matrix operators bind tighter than multiplication; power is right associative.
+    /// Closed interval `...` binds tighter than multiplication and accepts signed endpoints.
     fn parse_obj_hierarchy3(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
         let left = self.parse_obj_hierarchy4(tb)?;
+
+        if tb.current_token_is_equal_to(DOT_DOT_DOT) {
+            tb.skip_token(DOT_DOT_DOT)?;
+            let right = self.parse_obj_hierarchy1(tb)?;
+            Ok(ClosedRange::new(left, right).into())
+        } else {
+            Ok(left)
+        }
+    }
+
+    /// Prefix `-` binds below power and postfixes, but above multiplicative operators.
+    fn parse_obj_hierarchy4(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
+        if !tb.current_token_is_equal_to(SUB) {
+            return self.parse_obj_hierarchy5(tb);
+        }
+        if minus_token_is_standalone_operator_obj(tb) {
+            tb.skip()?;
+            return Ok(Identifier::new_bound(
+                SUB.to_string(),
+                builtin_symbol_ref(SUB).expect("minus is a builtin symbol"),
+            )
+            .into());
+        }
+
+        tb.skip()?;
+        let obj = self.parse_obj_hierarchy4(tb)?;
+        self.new_parsed_mul(Number::new("-1".to_string()).into(), obj)
+    }
+
+    /// Power and matrix operators bind tighter than prefix `-`; power is right associative.
+    fn parse_obj_hierarchy5(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
+        let left = self.parse_obj_hierarchy6(tb)?;
         if tb.exceed_end_of_head() {
             return Ok(left);
         }
         if tb.current_token_is_equal_to(POW) {
             tb.skip()?;
-            let right = self.parse_obj_hierarchy3(tb)?; // Right associative: the right side may contain another `^`.
+            let right = self.parse_obj_hierarchy4(tb)?;
             Ok(Pow::new(left, right).into())
         } else if tb.current_token_is_equal_to(MATRIX_POW) {
             tb.skip()?;
-            let right = self.parse_obj_hierarchy3(tb)?;
+            let right = self.parse_obj_hierarchy4(tb)?;
             Ok(MatrixPow::new(left, right).into())
         } else if tb.current_token_is_equal_to(MATRIX_MUL) {
             tb.skip()?;
-            let right = self.parse_obj_hierarchy3(tb)?;
+            let right = self.parse_obj_hierarchy4(tb)?;
             Ok(MatrixMul::new(left, right).into())
         } else if tb.current_token_is_equal_to(MATRIX_SUB) {
             tb.skip()?;
-            let right = self.parse_obj_hierarchy3(tb)?;
+            let right = self.parse_obj_hierarchy4(tb)?;
             Ok(MatrixSub::new(left, right).into())
         } else if tb.current_token_is_equal_to(MATRIX_ADD) {
             tb.skip()?;
-            let right = self.parse_obj_hierarchy3(tb)?;
+            let right = self.parse_obj_hierarchy4(tb)?;
             Ok(MatrixAdd::new(left, right).into())
         } else {
             Ok(left)
         }
     }
 
-    /// Subscript `[]`, tighter than `^`.
-    fn parse_obj_hierarchy4(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
-        let mut left = self.parse_obj_hierarchy5(tb)?;
+    /// Postfix field access, calls, and subscript `[]` bind tighter than `^`.
+    fn parse_obj_hierarchy6(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
+        let mut left = self.parse_obj_hierarchy7(tb)?;
         left = self.parse_field_and_call_postfixes(tb, left)?;
         loop {
             if tb.current_token_is_equal_to(LEFT_BRACKET) {
@@ -145,21 +177,8 @@ impl Runtime {
         Ok(left)
     }
 
-    /// Infix closed interval `...` (`closed_range`); same band as `[]`, applied after subscripts.
-    fn parse_obj_hierarchy5(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
-        let left = self.parse_obj_hierarchy6(tb)?;
-
-        if tb.current_token_is_equal_to(DOT_DOT_DOT) {
-            tb.skip_token(DOT_DOT_DOT)?;
-            let right = self.parse_obj_hierarchy1(tb)?;
-            Ok(ClosedRange::new(left, right).into())
-        } else {
-            Ok(left)
-        }
-    }
-
     /// Primary: `{ }`, `fn`, numbers, `()`, keywords, atoms.
-    fn parse_obj_hierarchy6(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
+    fn parse_obj_hierarchy7(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
         if tb.current_token_is_equal_to(LEFT_CURLY_BRACE) {
             self.parse_set_builder_or_set_list(tb)
         } else if tb.current_token_is_equal_to(LEFT_BRACKET) {
@@ -279,7 +298,7 @@ impl Runtime {
             }
             Ok(result)
         } else {
-            self.parse_number_or_primary_obj_or_fn_obj_with_minus_prefix(tb)
+            self.parse_number_or_primary_obj_or_fn_obj(tb)
         }
     }
 
@@ -435,27 +454,6 @@ impl Runtime {
                 }
             },
             Err(e) => Err(e),
-        }
-    }
-
-    pub fn parse_number_or_primary_obj_or_fn_obj_with_minus_prefix(
-        &mut self,
-        tb: &mut TokenBlock,
-    ) -> Result<Obj, RuntimeError> {
-        if tb.current_token_is_equal_to(SUB) {
-            if minus_token_is_standalone_operator_obj(tb) {
-                tb.skip()?;
-                return Ok(Identifier::new_bound(
-                    SUB.to_string(),
-                    builtin_symbol_ref(SUB).expect("minus is a builtin symbol"),
-                )
-                .into());
-            }
-            tb.skip()?;
-            let obj = self.parse_number_or_primary_obj_or_fn_obj(tb)?;
-            self.new_parsed_mul(Number::new("-1".to_string()).into(), obj)
-        } else {
-            self.parse_number_or_primary_obj_or_fn_obj(tb)
         }
     }
 
@@ -676,3 +674,7 @@ mod module_qualification_tests;
 #[cfg(test)]
 #[path = "../../../tests/unit/parse/object/expression/matrix_operators.rs"]
 mod matrix_operator_tests;
+
+#[cfg(test)]
+#[path = "../../../tests/unit/parse/object/expression/precedence.rs"]
+mod precedence_tests;

@@ -12,19 +12,21 @@ Chinese version: https://litexlang.com/doc/Litex中文蓝图
 
 - [Litex Blueprint Overview](#overview)
 - [Background: The AI Era Needs Formal Languages](#background)
+- [The Overall Interaction Loop: Write Facts Directly and See Why Verification Succeeds or Where It Stops](#interaction-loop)
 - [1. Based on Set Theory: Let Set-Theoretic Knowledge Look Like Set Theory](#set-theory)
   - [Two Ways to Define a Group: Building a Mathematical Theory from the Ground Up](#group-comparison)
 - [2. Fact-Oriented: Starting from the Everyday Mathematical Workflow—Definitions, Theorems, and Proofs](#fact-oriented)
 - [3. Building Proof Flow Bottom-Up](#bottom-up)
   - [Two Directions for Developing the Same Proof: Top-Down and Bottom-Up](#two-directions)
 - [4. Lean-Compatible: A Path to Lean's Trusted Ecosystem](#compatibility)
+- [From Language to Ecosystem: The Role Litex Aims to Play](#ecosystem-role)
 - [Conclusion](#conclusions)
 
 <a id="overview"></a>
 
 ## Litex Blueprint Overview
 
-*Litex is a set-theory-based, fact-oriented, bottom-up, Lean-compatible formal language.*
+*Litex is a formal language based on set theory, oriented around facts, designed to build proof flow bottom-up, and compatible with Lean. It lets humans and AI write mathematical facts directly and see why verification succeeds and where it stops.*
 
 1. Based on set theory: Litex is founded on ZFC set theory and organizes mathematical objects uniformly through sets and membership. The same object can belong to multiple sets, and objects, facts, and mathematical statements are separate. By comparison, Lean's `Set α` first depends on the more abstract carrier type `α : Type*`, while mathematical objects and mathematical facts are themselves types. Type theory offers stronger generality and compositionality. Litex instead provides a more direct surface interface for set theory and the common mathematical knowledge built on it.
 2. Fact-oriented: Litex source code primarily states *what mathematical facts should hold*. Based on each fact's predicate and arguments, the kernel looks for a verification route among builtin rules, previously proved facts, and equality matching. It also checks that objects and expressions are well-defined before accepting a fact. By comparison, typical Lean tactic source code primarily states *how to handle the next Goal*, while the Infoview shows which Goals remain after each operation.
@@ -32,8 +34,6 @@ Chinese version: https://litexlang.com/doc/Litex中文蓝图
 4. Lean-compatible: The goal of the Litex-to-Lean compiler is to translate verification paths already found by the Litex kernel into Lean proof terms, which the Lean kernel can then check independently. The current compiler covers only some verification paths. “Every Litex source file can be compiled to Lean” is an unfinished direction, not a capability already delivered by the beta release.
 
 The hope is that using Litex can feel like doing informal mathematics: users can keep their attention on mathematical objects, conditions, intermediate facts, and conclusions without first having to confront abstract mathematical theories, unfamiliar formal syntax, or vast external libraries. Litex acts as their copilot, providing fast, local, and traceable verification feedback. *The hope is that Litex will make it easier for non-specialists across many fields to enter the world of formal mathematics.*
-
-I will first provide the background, then address the four key terms in this summary in turn: **based on set theory, fact-oriented, building proof flow bottom-up, and Lean-compatible**. I hope this highly condensed, subjective, and exploratory blueprint will give readers an overall impression of Litex's design philosophy and goals, allowing them to follow the author's line of thought and “reinvent Litex” along the way.
 
 <a id="background"></a>
 
@@ -47,18 +47,10 @@ Litex aims to bring this technology closer to ordinary learners and users of mat
 
 > This is a design target, not a claim about current language or library coverage.
 
-To understand why this goal calls for a different language design, first consider the relationship between formal proof and the workflows common in everyday mathematics.
-
-> **Note.** Lean remains the main comparison throughout this blueprint because it makes the
-> difference between Goal-first and fact-first workflows especially concrete. References to Mizar,
-> Isabelle/Isar, Rocq, ACL2, and Naproche locate Litex within the existing design space. Litex was
-> designed independently and was not derived from these systems. They are cited to identify nearby
-> ideas and the differences that ultimately emerged, not to claim direct intellectual influence.
+This goal requires a formal-proof workflow closer to everyday mathematics.
 
 <details>
-<summary><strong>Basic terms before reading: formal language, Goal, tactic, and kernel</strong></summary>
-
-*If you have not used Lean or another proof assistant, you may want to read this subsection first. Skipping it will not affect the mathematical examples that follow.*
+<summary><strong>Basic Terms: Formal Language, Goal, Tactic, and Kernel</strong></summary>
 
 - **Formal language**: A language whose syntax and meaning are governed by explicit rules and can therefore be parsed and checked by a machine. “Formal” means that expressions have precise semantics; it does not mean that the prose sounds formal. A formal language also need not be a general-purpose programming language.
 - **Proof assistant**: Software that helps users express proofs, provides interactive feedback, and checks proofs mechanically. Lean is a proof assistant with general-purpose programming capabilities.
@@ -69,12 +61,105 @@ To understand why this goal calls for a different language design, first conside
 - **Kernel**: In Lean, the kernel is the trusted core that checks proof terms according to foundational rules. Tactics may be complex, but their results must still pass kernel checking; the kernel generally does not choose high-level proof steps for the user.
 - **Kernel/verifier**: A broad term for the part of a system responsible for checking. The Litex kernel not only checks that objects are well-defined but also searches builtin rules and the current context for grounds that verify a fact. It therefore cannot be identified directly with Lean's kernel. Litex's trusted boundary—the part on whose correctness the system relies and which must be trusted—is correspondingly larger.
 
-The two workflows can first be simplified as follows:
+The two workflows can be simplified as follows:
 
 ```text
 Lean: proposition → Goal → tactics and elaboration → proof term → kernel check
 Litex: objects and facts → kernel checks and searches for justification → verified facts extend the context
 ```
+
+</details>
+
+<a id="interaction-loop"></a>
+
+## The Overall Interaction Loop: Write Facts Directly and See Why Verification Succeeds or Where It Stops
+
+As humans and AI generate more candidate reasoning, a formal language needs to do more than check a finished artifact: it also needs to make visible both the support already found for each step and the first point at which that support runs out. Litex aims to provide the following overall interaction loop: **a human or AI writes the next mathematical fact; the verifier returns why it holds, or, when the current context is insufficient, identifies the fact at which verification stopped.**
+
+Consider a small set-inclusion example:
+
+```litex
+forall A, B, c set, x A:
+    A $subset B
+    B $subset c
+    =>:
+        x $in B
+        x $in c
+```
+
+The source states two mathematical facts directly. The current release runner records each fact together with the rule that verified it. The following excerpt keeps only the fields relevant to this example:
+
+```text
+{
+  "statement": "x $in B",
+  "proof": {
+    "kind": "BuiltinRule",
+    "diagnostic_label": "membership through a known direct set inclusion"
+  }
+}
+{
+  "statement": "x $in c",
+  "proof": {
+    "kind": "BuiltinRule",
+    "diagnostic_label": "membership through a known direct set inclusion"
+  }
+}
+```
+
+The first conclusion is supported by `x $in A` and `A $subset B`. Once accepted, `x $in B` becomes available to the second conclusion, where it combines with `B $subset c` to support `x $in c`. The example exposes both sides of the interface: user source preserves *which mathematical facts should hold*, while the verification result preserves *why the system accepted them*.
+
+Now declare another set `d`, provide no condition connecting `x` or the preceding sets to `d`, and add `x $in d` as a third conclusion. The current runner returns an `UnknownError` whose structured result identifies:
+
+```text
+"failed_prove": {
+  "index": 3,
+  "count": 3,
+  "statement": "x $in d",
+  "unknown_result": {
+    "type": "atomic fact unknown",
+    "goal": "x $in d"
+  }
+}
+```
+
+Here `unknown` does not mean that `x $in d` is false. It means that the current context and current verification capabilities did not establish it. For this single `forall` containing three conclusions, failure of the third causes the outer statement as a whole not to be written into the environment. In an incremental workflow made of separate statements or transactional attempts, previously accepted statements can instead remain as a verified prefix. “Seeing where verification stops” therefore does not mean that Litex has solved proof search, nor does it promise that every diagnostic gives a complete minimal cause. It means that both successful support and the concrete fact currently not established can become structured feedback for the next repair.
+
+This gives humans and AI the same loop: propose the next fact, inspect its verification support or stopping point, keep accepted progress, and continue from the boundary. Four design pillars support this loop. Set theory determines the objects users face directly; fact-oriented authoring determines what source preserves; bottom-up proof flow determines how verified facts grow; and Lean compatibility provides independent rechecking and an ecosystem path for verification routes already covered by the compiler.
+
+<details>
+<summary><strong>The Same Example: What Lean's Infoview and Litex's Verification Output Show</strong></summary>
+
+In Lean, the same set-inclusion proof begins from the final Goal `x ∈ c`, which tactics progressively reduce to an existing hypothesis:
+
+```lean
+import Mathlib
+
+example {α : Type} {A B c : Set α}
+    (hAB : A ⊆ B) (hBc : B ⊆ c)
+    {x : α} (hx : x ∈ A) :
+    x ∈ c := by
+  apply hBc
+  apply hAB
+  exact hx
+```
+
+The Infoview shows the Goal remaining after each tactic:
+
+```text
+After entering `by`:
+⊢ x ∈ c
+
+After `apply hBc`:
+⊢ x ∈ B
+
+After `apply hAB`:
+⊢ x ∈ A
+
+After `exact hx`:
+no goals
+```
+
+The Infoview clearly shows *what remains to be proved*; Litex source and the runner trace instead preserve *which mathematical facts have been established*, *why the system accepted them*, and, when verification cannot continue, the specific fact at which it stopped. Litex's default artifact is therefore closer to a proof record that humans and AI can directly read, inspect, repair, and continue; this compares default workflows and their natural artifacts, not whether Lean can express forward proofs or preserve intermediate results as lemmas.
 
 </details>
 
@@ -130,7 +215,7 @@ The same choice extends to mathematical structures such as groups. A structure s
 Because these constraints remain expressed through objects and relations familiar to mathematicians, the value of a set-theoretic surface is not only shorter code. It also helps keep the formal statement directly reviewable.
 
 <details>
-<summary><strong>Further reading: how Litex helps ensure AI-generated mathematics says what we mean</strong></summary>
+<summary><strong>Specification Alignment in AI-Generated Mathematics</strong></summary>
 
 A proof assistant can answer a precise formal question: does this proof establish the proposition that was actually encoded? It cannot, by kernel checking alone, answer a different question: is the encoded proposition exactly the mathematics its author intended to express? An AI-generated artifact may be internally valid while formalizing only a special case, changing a definition or domain, weakening the intended conclusion, or simply proving a different theorem under a plausible name. This is not a failure of logical soundness; it is a failure of alignment between mathematical intent and formal specification.
 
@@ -226,16 +311,16 @@ A field path such as `G.mul` is well-defined from the struct carrier written in 
 
 The Lean fragment itself shows that Lean can certainly define a group without relying on Mathlib's existing group interface. The real difference is not whether this is possible, but which experience is designed as the default path. For the authoring experience Litex seeks, set theory is especially suitable because sets, membership, functions, and relations form a cross-domain language close to everyday mathematics. Litex still depends on its own kernel, builtin rules, and standard library. Here, “building from the ground up” means that source dependencies in analysis, abstract algebra, or linear algebra should primarily reflect the theory's own mathematical structure, with external libraries serving as optional accelerators rather than boundaries on what can be expressed.
 
-This example naturally leads into the next section. If users do not first have to say “I want to invoke `one_mul`,” but can instead write “this is what the expression should equal,” then the source no longer centers on theorem names and proof commands. It centers on mathematical facts themselves.
+If users do not first have to say “I want to invoke `one_mul`,” but can instead write “this is what the expression should equal,” then the source no longer centers on theorem names and proof commands. It centers on mathematical facts themselves.
 
 <a id="fact-oriented"></a>
 <a id="workflow"></a>
 
 ## 2. Fact-Oriented: Starting from the Everyday Mathematical Workflow—Definitions, Theorems, and Proofs
 
-This section uses definitions, theorems, and proofs to explain concretely what a fact-oriented design changes. User source code primarily preserves the objects and facts that should hold mathematically; the kernel is responsible for finding, checking, and explaining their local justification.
+Fact orientation changes the division of labor between source code and kernel. User source code primarily preserves the objects and facts that should hold mathematically; the kernel is responsible for finding, checking, and explaining their local justification.
 
-Continuing the comparison above, Lean is a widely used proof assistant and formal language that can rigorously check formal proofs written by humans and AI. Its default interaction begins from the final Goal—the current proposition to be proved. The user continually rewrites, decomposes, or closes the current Goal with tactics, from which the system constructs a proof term and submits it to the kernel for checking.
+Lean is a widely used proof assistant and formal language that can rigorously check formal proofs written by humans and AI. Its default interaction begins from the final Goal—the current proposition to be proved. The user continually rewrites, decomposes, or closes the current Goal with tactics, from which the system constructs a proof term and submits it to the kernel for checking.
 
 > **Lean tactics: The theorem first presents the final Goal → the user says how it should be rewritten, decomposed, or closed → the Infoview shows which Goals remain → tactics construct a proof term → the kernel checks that term.**
 
@@ -286,9 +371,9 @@ The Lean proof above demonstrates a highly general, abstract, and compositional 
 3. Use a known fact, definition, or computation to write the next fact.
 4. Let that fact become part of the context for later reasoning.
 
-Litex makes this everyday mathematical workflow its default execution model. The entire process can be summarized as:
+Litex makes this everyday mathematical workflow its default execution model. At the fact-oriented layer, the process can be summarized as:
 
-> **Litex: The user states “what should hold” → the verifier searches for proof support → the output explains why and how the statement was verified → the verified fact extends the current context → the proof grows bottom-up.**
+> **Litex: The user states “what should hold” → the verifier searches for proof support → an accepted fact extends the current context.**
 
 The corresponding Litex version reads more like ordinary mathematical expression:
 
@@ -338,7 +423,7 @@ More concretely, the Litex kernel searches for proof support that matches the re
 
 This does not mean that Litex forbids naming. Classic theorems, standard-library interfaces, and dependencies the author wishes to make explicit can still be written as named Litex `thm` definitions and invoked with `by thm`.
 
-Ordinary facts need neither names nor explicit tactic calls because the Litex kernel searches for a verification path from the fact's predicate, argument shape, and current context. A fact is verified either by a universal fact—builtin or user-provided—or by known concrete facts together with equality information. The following examples make that process concrete. Litex also has more elaborate optimizations and strategies, but they do not change this core division of labor.
+Ordinary facts need neither names nor explicit tactic calls because the Litex kernel searches for a verification path from the fact's predicate, argument shape, and current context. A fact is verified either by a universal fact—builtin or user-provided—or by known concrete facts together with equality information. Litex also has more elaborate optimizations and strategies, but they do not change this core division of labor.
 
 <details>
 <summary><strong>Expanded: how the kernel searches for a verification path by fact shape</strong></summary>
@@ -353,7 +438,7 @@ a + b >= 0
 
 Its relational predicate is `>=`, and its two arguments are `a + b` and `0`. The arguments themselves contain more structure that can be inspected: the outer shape on the left is addition, while the right side is zero. The kernel can use this shape to narrow the candidates without first knowing a name for the fact.
 
-Consider the main example for this subsection:
+For example:
 
 ```litex
 have a R = 1
@@ -483,86 +568,9 @@ claim:
 
 These four equalities correspond exactly, in reverse order, to Lean's four `rw` commands. The Lean code tells the system which fact to invoke next and in which direction to rewrite the Goal. The Litex code tells the system what the important intermediate results should be if the reasoning succeeds. The kernel then searches the current context, equality matching, and structural rules for grounds that justify each adjacent equality.
 
-#### Example 2: Set Inclusion
+For humans and AI, the bottom-up workflow is also valuable because progress can accumulate. A sequence of separately submitted and accepted statements can remain as a verified prefix, while the next `unknown` identifies the current repair point. Accepted parts of an unfinished attempt can be inspected, reused, and continued. A composite statement whose internal conclusion fails, however, is not partially written into the environment.
 
-The preceding example used algebraic rewriting. To show that the difference in interaction direction does not depend on computation, consider a second example that transports membership along set inclusions. Lean begins from the target `x ∈ c` and progressively states, with `apply`, how it should be proved:
-
-```lean
-import Mathlib
-
-example {α : Type} {A B c : Set α}
-    (hAB : A ⊆ B) (hBc : B ⊆ c)
-    {x : α} (hx : x ∈ A) :
-    x ∈ c := by
-  apply hBc
-  apply hAB
-  exact hx
-```
-
-Litex instead states the intermediate result and final result that should be established, and the kernel searches for their support in the current context:
-
-```litex
-forall A, B, c set, x A:
-    A $subset B
-    B $subset c
-    =>:
-        x $in B
-        x $in c
-```
-
-Lean has a powerful Infoview that lets the user see the Goals remaining after each tactic:
-
-```text
-After entering `by`:
-⊢ x ∈ c
-
-After `apply hBc`:
-⊢ x ∈ B
-
-After `apply hAB`:
-⊢ x ∈ A
-
-After `exact hx`:
-no goals
-```
-
-Litex's runner trace instead shows why each conclusion holds:
-
-```text
-"conclusions": [
-  {
-    "statement": "x $in B",
-    "why_verified": {
-      "type": "builtin rule",
-      "rule": "membership through a known direct set inclusion"
-    }
-  },
-  {
-    "statement": "x $in c",
-    "why_verified": {
-      "type": "builtin rule",
-      "rule": "membership through a known direct set inclusion"
-    }
-  }
-]
-```
-
-The two outputs emphasize different questions. Litex source states the mathematical facts to be checked, and the runner trace explains why they passed. Lean tactic source describes transformations of the proof state, while the Infoview shows which Goals remain afterward.
-
-<details>
-<summary><strong>Further reading: how bottom-up proof flow helps AI write formal code</strong></summary>
-
-An unfinished formal proof need not be worthless. In a common Goal-directed Lean workflow, an incomplete attempt appears primarily as a Goal that remains unsolved. Lean's Infoview and error messages can expose the current proof state, and users can deliberately preserve intermediate results as lemmas, but the exploration does not by default become a durable mathematical record of which facts were established, where support first ran out, and how far the argument had progressed. This is a distinction between default workflows and artifacts, not a claim that Lean cannot express forward proofs or save intermediate results.
-
-In Litex's bottom-up workflow, every accepted statement extends the current context as a verified fact. If the next statement is `unknown`, the verified prefix remains available and the boundary of the failure is attached to that specific mathematical statement. A partial proof can therefore remain as **a sequence of verified facts plus an explicit `unknown` boundary**, rather than collapsing into an undifferentiated failed script. The correct part of an unfinished attempt can be retained, inspected, reused, and continued later.
-
-This changes the interaction loop for AI. A model can propose the next mathematical fact, receive local verification feedback, keep a successful step, and revise at the first `unknown`. It does not need to generate an entire proof correctly in one pass. The accumulated facts, their verification sources, and the explicit stopping point provide structured experience for the next attempt, whether it is made by the same model, another model, or a human.
-
-Bottom-up organization alone does not solve proof search, and the usefulness of a failure report still depends on the quality of the kernel's diagnostics. Its intended value is more specific: **even when a formalization is unfinished, its verified progress and precise point of uncertainty can remain first-class, reusable results.**
-
-</details>
-
-This workflow creates accumulable progress, but it also carries costs that should be stated plainly. The following observations separate the criticism of Lean's default interaction, the trusted cost Litex assumes in exchange, and Litex's position among existing systems.
+This workflow creates accumulable progress, but it also exposes costs that should be stated plainly: the direction of Lean's default interaction, the trusted cost Litex assumes in exchange, and Litex's position among existing systems.
 
 > **Put sharply: for authors more accustomed to reasoning forward from known conditions, a common Lean tactic workflow can sometimes feel like reading a mathematics book from its final page or writing a paper from its final page—fix the ultimate Goal first, then work backward to infer what must precede it.**
 
@@ -574,7 +582,7 @@ This workflow creates accumulable progress, but it also carries costs that shoul
 > that extends the context; local justification starts without a separate proof-method invocation; and explicit proof
 > structure appears only when ordinary reconstruction reaches its boundary.
 
-For this larger verification mechanism to receive independent rechecking, Litex must hand its recorded verification paths to the smaller Lean kernel. That requirement is the connection to the next section.
+For this larger verification mechanism to receive independent rechecking, Litex must hand its recorded verification paths to the smaller Lean kernel.
 
 <a id="compatibility"></a>
 
@@ -582,16 +590,14 @@ For this larger verification mechanism to receive independent rechecking, Litex 
 
 Litex is first an independently usable formal language. It has its own syntax, runtime, and kernel. Even when a Litex mathematical document is not compiled to Lean, Litex can directly check its well-definedness and facts and provide local proof feedback. “A mathematical front-end language for Lean” therefore means that the Litex-to-Lean compiler translates the verification paths it currently supports into Lean proof terms, expanding its coverage incrementally to connect with the Lean ecosystem. *I hope Litex's development can provide the Lean community with new formal mathematical content and interface experience, while Lean's kernel and Mathlib ecosystem can in turn strengthen Litex. The relationship is complementary, not competitive.*
 
-The first layer of complementarity lies in the authoring interface. The fact-first, small-step verification described in the preceding section lets humans and AI focus on mathematical objects, conditions, intermediate facts, and conclusions while receiving fast, local, and traceable feedback from the Litex kernel. By comparison, mechanisms such as elaboration, type classes, namespaces, and tactic calls are important sources of Lean's expressiveness and compositionality as a general-purpose programming language.
+Fact-first, small-step verification lets humans and AI focus on mathematical objects, conditions, intermediate facts, and conclusions while receiving fast, local, and traceable feedback from the Litex kernel. By comparison, mechanisms such as elaboration, type classes, namespaces, and tactic calls are important sources of Lean's expressiveness and compositionality as a general-purpose programming language.
 
 *The compiler gives this relationship a second role: an important independent safeguard for Litex's rigor.* The Rust source under Litex's `src/` directory alone currently contains roughly 210,000 lines, and that surface continues to grow with hundreds of builtin and infer rules and new capabilities. Auditing such a large trusted implementation is naturally harder than auditing Lean's much smaller kernel. When a Litex verification path can be compiled in full into a Lean proof and accepted by the Lean kernel, it supplies strong, independent correctness evidence for that covered path and substantially reduces reliance on Litex's own large implementation as the sole basis of trust.
 
 _This remains a goal that Litex is implementing and testing, not a capability already achieved comprehensively by the current beta. The Litex-to-Lean compiler currently covers only some verification paths. Its first-principles design and framework are in place, but many details still need work. Community feedback and contributions are welcome._
 
 <details>
-<summary><strong>Further reading: how the Litex-to-Lean compiler works</strong></summary>
-
-*This subsection explains the implementation mechanism and current correctness boundary in more detail. Skipping it will not affect the rest of the blueprint.*
+<summary><strong>How the Litex-to-Lean Compiler Works</strong></summary>
 
 The architectural route follows from these complementary roles. Litex is based on set theory, and Lean's Mathlib includes substantial support for set-theoretic mathematics. Litex's verification system saves users from writing many proof-construction steps themselves, but the verifier records the route it used. In principle, each supported recorded step can be represented by an appropriate Lean theorem or proof construction and assembled into a proof term. That is why a Litex-to-Lean compiler is a natural architectural goal.
 
@@ -645,6 +651,24 @@ The second problem is practical: how to turn the information produced by success
 
 The connection between Litex and Lean is therefore not a matter of one replacing the other. Litex can provide a mathematics-facing authoring interface, while Lean provides small-kernel rechecking and ecosystem reuse. For the paths already covered by the compiler, these two layers can form one verifiable, reviewable, and reusable workflow.
 
+<a id="ecosystem-role"></a>
+
+## From Language to Ecosystem: The Role Litex Aims to Play
+
+**Litex is designed for humans and AI. It serves both as a front end for readable reasoning and as a production layer for trustworthy reasoning data, connecting to the existing formal-mathematics ecosystem through Lean and Mathlib. It aims to make formal languages not only tools for mathematicians and proof-assistant experts, but also tools that AI, engineers, and practitioners in other fields can use to check, organize, and advance trustworthy reasoning.**
+
+These three roles correspond to the following concrete outputs:
+
+| Ecosystem role | Outputs Litex aims to produce |
+| --- | --- |
+| Front end for readable reasoning | Mathematical objects, conditions, intermediate facts, and conclusions that people can inspect directly |
+| Production layer for trustworthy reasoning data | Machine-checked facts and verification sources, explicit stopping boundaries, and explicitly marked uses of `trust` and other trust boundaries |
+| Connection to the existing ecosystem | Lean proof terms for currently supported routes and, when wrappers can be eliminated losslessly, native interfaces for Lean and Mathlib |
+
+“Trustworthy reasoning data” does not mean that every Litex output already has the same trust guarantees as a mature proof assistant. It first means that the data carries machine-checking results, verification sources, and explicit boundaries. Litex's own builtin and infer rules, uses of `trust`, and implementation remain part of the surface that must be audited. Only when a verification route is compiled in full and accepted by the Lean kernel does that covered route gain an additional, smaller, and relatively independent kernel check. Compiler coverage and native interfaces are still expanding.
+
+The amount of Litex code and the size of its datasets are therefore intermediate measures. What matters is whether people can understand the resulting artifacts, machines can check them, later reasoning can reuse them, and—within the currently supported surface—they can enter an existing formal-mathematics toolchain. Only through those outcomes could Litex grow from a language experiment into reasoning infrastructure shared by mathematics, AI, engineering, and other fields.
+
 <a id="conclusions"></a>
 
 ## Conclusion
@@ -668,11 +692,11 @@ An ordinary Litex user therefore need not name a newly obtained fact, remember i
 
 As humans and AI collaborate to create and accumulate more mathematical knowledge, formal systems should explore more than one way to write and verify that knowledge. Considering only the default direction of interaction, Litex can in a limited sense be viewed as “Lean in reverse.” This design path is not intended to replace Lean. It offers another idea worth practicing and testing for how humans and AI might write formal mathematical code.
 
-Along this path, Litex's potential value can be understood at three connected levels:
+**Litex's success will not be measured by how much Litex code is written, but by whether it can turn readable reasoning into useful results that interoperate with existing formal-language systems and genuinely serve mathematics, AI, engineering, and other fields.**
 
-1. **First, lower the barrier to writing and reviewing formal mathematics.** Litex tries to keep formal source close to mathematics that people can understand directly, so authors and reviewers can inspect its objects, premises, reasoning spine, and conclusions. This is especially important for AI-generated source: a verifier can check only the proposition that was actually written, while readable semantics let humans judge whether that proposition faithfully expresses the original mathematical intent.
-2. **Then make mathematical text executable.** When definitions, lemmas, and proofs remain readable and reviewable as mathematical exposition, they can also be checked by machines and reused across files and chapters. Only then can formal verification gradually move toward textbooks, teaching, and scientific writing instead of remaining only within proof-assistant engineering for experts.
-3. **Promote deeper mathematical understanding and discovery.** If formal languages make mathematics genuinely engineerable, and if more people gain access to them, I believe mathematicians, students, and AI will understand the relationships among mathematical objects, definitions, theorems, and proofs at a deeper level. That understanding may accelerate mathematical discovery and even support new mathematical paradigms.
+This means evaluating outcomes rather than output volume alone: can people read and audit the mathematical intent directly; can humans and AI use verification support and stopping boundaries to continue the work; can checked facts be reused across files, projects, and datasets; can currently supported verification routes enter Lean and Mathlib for independent rechecking; and are these artifacts actually adopted by tasks in mathematics, AI, engineering, or other fields? Code volume, theorem counts, and dataset size can track progress, but none of them alone establishes that these goals have been achieved.
+
+If this direction works, it can first lower the barrier to formal authorship and review, then let readable mathematical text become a checked and reusable artifact, and eventually help humans and AI understand relationships among mathematical objects, definitions, theorems, and proofs more systematically. Deeper mathematical understanding and discovery are possible long-term outcomes of that process, not conclusions already secured by the language design itself.
 
 ### Related Links
 
