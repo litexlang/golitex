@@ -253,7 +253,7 @@ fn exact_complex_algebraic_normalization_is_bounded_and_sound() {
 2 * i + 1 = i * i + 2 + 2 * i
 (1 + i) * (1 - i) = 2
 1 / i = -1 * i
-i ^ -1 = -1 * i
+i ^ (-1) = -1 * i
 
 forall z C:
     (z + i) * (z - i) = z ^ 2 + 1

@@ -574,82 +574,90 @@ impl EnvironmentSummary {
 
         let atomic_0_count = environment
             .facts
-            .known_atomic_facts_with_0_or_more_than_2_args
+            .atomic
+            .by_other_arg_count
             .values()
             .map(Vec::len)
             .sum::<usize>();
         summary.add_field_counts(
             "known_atomic_facts_with_0_or_more_than_2_args",
-            environment
-                .facts
-                .known_atomic_facts_with_0_or_more_than_2_args
-                .len(),
+            environment.facts.atomic.by_other_arg_count.len(),
             atomic_0_count,
         );
 
         let atomic_1_count = environment
             .facts
-            .known_atomic_facts_with_1_arg
+            .atomic
+            .by_one_arg
             .values()
             .map(|facts| facts.len())
             .sum::<usize>();
         summary.add_field_counts(
             "known_atomic_facts_with_1_arg",
-            environment.facts.known_atomic_facts_with_1_arg.len(),
+            environment.facts.atomic.by_one_arg.len(),
             atomic_1_count,
         );
 
         let atomic_2_count = environment
             .facts
-            .known_atomic_facts_with_2_args
+            .atomic
+            .by_two_args
             .values()
             .map(|facts| facts.len())
             .sum::<usize>();
         summary.add_field_counts(
             "known_atomic_facts_with_2_args",
-            environment.facts.known_atomic_facts_with_2_args.len(),
+            environment.facts.atomic.by_two_args.len(),
             atomic_2_count,
         );
 
         let exist_count = environment
             .facts
-            .known_exist_facts
+            .quantified
+            .existential
             .values()
             .map(Vec::len)
             .sum::<usize>();
         summary.add_field_counts(
             "known_exist_facts",
-            environment.facts.known_exist_facts.len(),
+            environment.facts.quantified.existential.len(),
             exist_count,
         );
 
         let or_count = environment
             .facts
-            .known_or_facts
+            .quantified
+            .disjunctions
             .values()
             .map(Vec::len)
             .sum::<usize>();
         summary.add_field_counts(
             "known_or_facts",
-            environment.facts.known_or_facts.len(),
+            environment.facts.quantified.disjunctions.len(),
             or_count,
         );
 
         let forall_atomic_count = environment
             .facts
-            .known_atomic_facts_in_forall_facts
+            .forall_conclusions
+            .atomic_with_parameterized_head
             .values()
             .map(Vec::len)
             .sum::<usize>();
         summary.add_field_counts(
             "known_atomic_facts_in_forall_facts",
-            environment.facts.known_atomic_facts_in_forall_facts.len(),
+            environment
+                .facts
+                .forall_conclusions
+                .atomic_with_parameterized_head
+                .len(),
             forall_atomic_count,
         );
 
         let forall_atomic_by_shape_count = environment
             .facts
-            .known_atomic_facts_in_forall_facts_by_arg_shape
+            .forall_conclusions
+            .atomic_by_argument_shape
             .values()
             .map(|shape_map| shape_map.values().map(Vec::len).sum::<usize>())
             .sum::<usize>();
@@ -657,44 +665,48 @@ impl EnvironmentSummary {
             "known_atomic_facts_in_forall_facts_by_arg_shape",
             environment
                 .facts
-                .known_atomic_facts_in_forall_facts_by_arg_shape
+                .forall_conclusions
+                .atomic_by_argument_shape
                 .len(),
             forall_atomic_by_shape_count,
         );
 
         let forall_exist_count = environment
             .facts
-            .known_exist_facts_in_forall_facts
+            .forall_conclusions
+            .existential
             .values()
             .map(Vec::len)
             .sum::<usize>();
         summary.add_field_counts(
             "known_exist_facts_in_forall_facts",
-            environment.facts.known_exist_facts_in_forall_facts.len(),
+            environment.facts.forall_conclusions.existential.len(),
             forall_exist_count,
         );
 
         let forall_and_count = environment
             .facts
-            .known_and_facts_in_forall_facts
+            .forall_conclusions
+            .conjunction
             .values()
             .map(Vec::len)
             .sum::<usize>();
         summary.add_field_counts(
             "known_and_facts_in_forall_facts",
-            environment.facts.known_and_facts_in_forall_facts.len(),
+            environment.facts.forall_conclusions.conjunction.len(),
             forall_and_count,
         );
 
         let forall_or_count = environment
             .facts
-            .known_or_facts_in_forall_facts
+            .forall_conclusions
+            .disjunction
             .values()
             .map(Vec::len)
             .sum::<usize>();
         summary.add_field_counts(
             "known_or_facts_in_forall_facts",
-            environment.facts.known_or_facts_in_forall_facts.len(),
+            environment.facts.forall_conclusions.disjunction.len(),
             forall_or_count,
         );
 

@@ -1,3 +1,5 @@
+//! Definitions that introduce reusable names.
+
 use crate::prelude::*;
 use std::collections::HashMap;
 

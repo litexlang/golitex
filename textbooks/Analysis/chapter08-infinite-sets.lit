@@ -5032,7 +5032,7 @@ claim:
 """
 Corollary 8.3.4. The real numbers are uncountable.  The source injects
 `power_set(N)` into `R` by sending a subset A to the decimal-style sum of
-`10^-n`.
+`10^(-n)`.
 """
 
 # The following three ordinary-series lemmas expose the exact interfaces used

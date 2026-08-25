@@ -16,6 +16,23 @@ pub struct Environment {
 }
 ```
 
+The type itself lives in [`../environment.rs`](../environment.rs). That root
+contains only the five owners, construction, module wiring, and public
+re-exports. Feature logic lives under this directory:
+
+```text
+definitions/       reusable name definitions
+facts/             fact records and typed search indexes
+object_knowledge/  reusable facets known about one object
+predicates/        algebraic properties registered for predicates
+display.rs         Environment formatting
+merge.rs           committed-child transaction
+```
+
+Each public domain data structure has one source file. A larger operation may
+have one file whose helper functions are branches of that operation; for
+example, `facts/storage.rs` is the central fact-storage dispatch.
+
 Before this split, callers saw `Environment { repositories }` and relied on
 `Deref` to reach roughly forty unrelated maps. That hid which subsystem owned
 each lookup and made a partial environment look like a meaningful abstraction.
@@ -31,6 +48,27 @@ There is now no `EnvironmentPersistentRepositories` and no compatibility
 | `objects` | One `ObjString -> EnvironmentObjectKnowledge` entry per object key. Tuple/cart shape, sequence or matrix shape, simplified value, set-builder equality, and function-set knowledge are optional facets of that one entry. |
 | `predicate_properties` | One predicate-name entry whose profile independently records transitivity, symmetry permutations, reflexivity, and antisymmetry. |
 | `caches` | Environment-scoped verification results reusable by later statements: well-defined object results and infer-rule firing guards. |
+
+Definitions retain symbol identity, not the syntactic construct that first
+introduced a name. `EnvironmentDefinitionRegistry` owns a `SymbolTable`; each
+entry has a globally allocated `SymbolId` and only the coarse `SymbolRole`
+needed for namespace/conflict rules. There is no `ParamObjType` table for
+remembering whether an object came from `forall`, `exist`, a function set, or
+another binder form. Alpha-renaming is implemented by `SymbolId`-keyed
+substitution and therefore does not depend on those declaration-site kinds.
+
+`EnvironmentFactStore` is itself a composition root rather than a flat list of
+maps:
+
+| Fact owner | Canonical responsibility |
+| --- | --- |
+| `known_equality` | Equality classes and exact proof paths. |
+| `atomic` | Atomic facts separated by argument arity. |
+| `set_relations` | Direct membership and inclusion edges. |
+| `quantified` | Stored existential and disjunctive facts. |
+| `forall_conclusions` | Conclusions projected from exact stored universal facts, including argument-shape lookup. |
+| `stored_facts` | Canonical `FactId` records and proposition lookup aliases. |
+
 Statement-local memoized proofs and recursive proof-search guards do not belong
 to these five stores. They live in Runtime's statement proof context and are
 discarded with that statement/local scope.
@@ -88,9 +126,10 @@ This makes the algorithmic boundary match the data structure: proof code can
 replay checked changes, but cannot accidentally ask a partial certificate what
 the complete world knows.
 
-Start with [`environment_state.rs`](environment_state.rs) for the five owners,
-[`environment_merge.rs`](environment_merge.rs) for child commit,
-[`object_knowledge_store.rs`](object_knowledge_store.rs) for the keyed object
+Start with [`../environment.rs`](../environment.rs) for the five owners,
+[`merge.rs`](merge.rs) for child commit,
+[`facts/store.rs`](facts/store.rs) for the fact composition root,
+[`object_knowledge/store.rs`](object_knowledge/store.rs) for the keyed object
 profile, and
 [`well_definedness_environment_delta.rs`](well_definedness_environment_delta.rs)
 for WD replay.
@@ -99,9 +138,10 @@ for WD replay.
 
 The ownership boundary is checked at both structural and behavioral levels:
 
-- the source-architecture test requires the five direct fields, one object map,
-  one predicate-profile map, private WD-delta fields, and the absence of the
-  old repository/Deref facade;
+- the source-architecture test requires the five direct fields, five typed fact
+  owners, one object map, one predicate-profile map, private WD-delta fields,
+  and the absence of both the old repository/Deref facade and
+  `environment_state.rs`;
 - Environment merge regressions exercise successful child commits and rejected
   conflicts;
 - the user-strategy tracer confirms that a checked strategy publishes its

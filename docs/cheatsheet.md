@@ -70,6 +70,20 @@ Declare every parameter of a universal conclusion in one `forall` header. A
 conclusion cannot itself be another `forall`; write `forall x X, y Y: ...`
 instead of placing `forall y Y` inside the conclusion for `x`.
 
+## Parenthesize Negatives Around Powers
+
+Never use `-t^2` as an allegedly unambiguous Litex expression. Make the syntax
+tree visible whenever prefix `-` meets exponentiation:
+
+| Intended mathematics | Required authoring shape |
+|---|---|
+| Opposite of the square | `-(t^2)` or `-1 * (t^2)` |
+| Square of the negative value | `(-t)^2` |
+| Negative exponent | `t^(-1)` |
+
+The same rule applies inside larger products and sums. Automated authoring
+agents must insert these parentheses rather than infer an unstated intention.
+
 ## Choose The Proof Action
 
 | Goal or available fact | Try first | Boundary |

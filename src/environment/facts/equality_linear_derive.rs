@@ -5,6 +5,8 @@
 //! - `t - 1 = 6` => `t = 7`
 //! - `2 * t = 6` => `t = 3` (only if the coefficient literal is provably non-zero; never divide by 0)
 
+//! Linear equality derivation owned by Environment fact storage.
+
 use crate::prelude::*;
 use crate::verify::{compare_normalized_number_str_to_zero, NumberCompareResult};
 

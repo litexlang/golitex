@@ -143,6 +143,14 @@ module-qualified definitions. Arithmetic uses ordinary precedence:
 parentheses and indexing bind tightly, then powers, multiplication and
 division, then addition and subtraction.
 
+Litex authoring must not rely on an implicit precedence choice between prefix
+`-` and `^`. The spelling `-t^2` is noncanonical because it does not say
+whether the base or the completed power is negated. Write `-(t^2)` (equivalently
+`-1 * (t^2)`) for the opposite of a square, and write `(-t)^2` for the square
+of the negative value. Parenthesize a negative exponent too: `t^(-1)`, not
+`t^-1`. This explicit-parentheses rule applies to generated and agent-authored
+Litex as well as handwritten source.
+
 User-defined names may begin with a letter or one underscore and may then use
 letters, numbers, and underscores. The prefix `__` is reserved for generated
 names and is rejected in Litex source. Prefixes such as `h_` and `fn_` remain
@@ -2422,6 +2430,9 @@ explanation; this index does not repeat its examples.
 
 - `^` binds more tightly than multiplicative operators; multiplication and
   division bind more tightly than addition and subtraction.
+- At the prefix-`-`/power boundary, always state the intended tree explicitly:
+  `-(t^2)` or `-1 * (t^2)` negates the power, `(-t)^2` powers the negative
+  base, and `t^(-1)` uses a negative exponent. Do not author `-t^2` or `t^-1`.
 - `[]` is index access. Function arguments use `()`.
 - `{a, b}` is a displayed set; `{x S: facts}` is a set comprehension.
 - `st { ... }` delimits an existential body. Its entries are atomic facts or

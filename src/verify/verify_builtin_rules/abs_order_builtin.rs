@@ -692,7 +692,8 @@ impl Runtime {
         for environment in self.iter_environments_from_top() {
             if let Some(known_facts_map) = environment
                 .facts
-                .known_atomic_facts_with_2_args
+                .atomic
+                .by_two_args
                 .get(&(fact.key(), fact.has_positive_polarity()))
             {
                 let args = fact.args_ref();

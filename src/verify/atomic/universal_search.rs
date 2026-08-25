@@ -119,14 +119,16 @@ impl Runtime {
             .flat_map(|environment| {
                 environment
                     .facts
-                    .known_atomic_facts_in_forall_facts
+                    .forall_conclusions
+                    .atomic_with_parameterized_head
                     .get(&lookup_key)
                     .into_iter()
                     .flat_map(|facts| facts.iter())
                     .chain(
                         environment
                             .facts
-                            .known_atomic_facts_in_forall_facts_by_arg_shape
+                            .forall_conclusions
+                            .atomic_by_argument_shape
                             .get(&lookup_key)
                             .into_iter()
                             .flat_map(|shape_map| shape_map.values())
@@ -166,14 +168,16 @@ impl Runtime {
                 .flat_map(|environment| {
                     environment
                         .facts
-                        .known_atomic_facts_in_forall_facts
+                        .forall_conclusions
+                        .atomic_with_parameterized_head
                         .get(&lookup_key)
                         .into_iter()
                         .flat_map(|facts| facts.iter())
                         .chain(
                             environment
                                 .facts
-                                .known_atomic_facts_in_forall_facts_by_arg_shape
+                                .forall_conclusions
+                                .atomic_by_argument_shape
                                 .get(&lookup_key)
                                 .into_iter()
                                 .flat_map(|shape_map| shape_map.values())
@@ -310,7 +314,8 @@ impl Runtime {
                     .expect("environment index should be valid");
                 match env
                     .facts
-                    .known_atomic_facts_in_forall_facts
+                    .forall_conclusions
+                    .atomic_with_parameterized_head
                     .get(&lookup_key)
                 {
                     Some(v) => v.len(),
@@ -330,7 +335,8 @@ impl Runtime {
                         .expect("environment index should be valid");
                     let Some(known_forall_facts_in_env) = env
                         .facts
-                        .known_atomic_facts_in_forall_facts
+                        .forall_conclusions
+                        .atomic_with_parameterized_head
                         .get(&lookup_key)
                     else {
                         continue;
@@ -420,7 +426,8 @@ impl Runtime {
                 .into_iter()
                 .filter_map(|env| {
                     env.facts
-                        .known_atomic_facts_in_forall_facts
+                        .forall_conclusions
+                        .atomic_with_parameterized_head
                         .get(&lookup_key)
                 })
                 .flat_map(|facts| facts.iter().rev().cloned())
@@ -524,7 +531,7 @@ impl Runtime {
     fn try_verify_with_arg_shape_known_forall_facts_in_envs(
         &mut self,
         atomic_fact: &AtomicFact,
-        arg_shape_lookup_keys: &[AtomicFactInForallArgShapeKey],
+        arg_shape_lookup_keys: &[ForallArgumentShape],
         verify_state: &ProofSearchState,
     ) -> Result<Option<SuccessFactStmtResult>, RuntimeError> {
         let lookup_key = (atomic_fact.key(), atomic_fact.has_positive_polarity());
@@ -566,7 +573,7 @@ impl Runtime {
     fn try_verify_with_other_arg_shape_known_forall_facts_in_envs(
         &mut self,
         atomic_fact: &AtomicFact,
-        arg_shape_lookup_keys: &[AtomicFactInForallArgShapeKey],
+        arg_shape_lookup_keys: &[ForallArgumentShape],
         verify_state: &ProofSearchState,
     ) -> Result<Option<SuccessFactStmtResult>, RuntimeError> {
         let lookup_key = (atomic_fact.key(), atomic_fact.has_positive_polarity());
@@ -578,7 +585,8 @@ impl Runtime {
                     .expect("environment index should be valid");
                 let Some(arg_shape_map) = env
                     .facts
-                    .known_atomic_facts_in_forall_facts_by_arg_shape
+                    .forall_conclusions
+                    .atomic_by_argument_shape
                     .get(&lookup_key)
                 else {
                     continue;
@@ -609,7 +617,8 @@ impl Runtime {
                 .into_iter()
                 .filter_map(|env| {
                     env.facts
-                        .known_atomic_facts_in_forall_facts_by_arg_shape
+                        .forall_conclusions
+                        .atomic_by_argument_shape
                         .get(&lookup_key)
                 })
                 .flat_map(|arg_shape_map| arg_shape_map.keys())
@@ -646,7 +655,7 @@ impl Runtime {
         &mut self,
         stack_idx: usize,
         lookup_key: &(AtomicFactKey, bool),
-        arg_shape_key: &AtomicFactInForallArgShapeKey,
+        arg_shape_key: &ForallArgumentShape,
         atomic_fact: &AtomicFact,
         verify_state: &ProofSearchState,
         phase: KnownForallSearchPhase,
@@ -656,7 +665,8 @@ impl Runtime {
                 .environment_by_top_index(stack_idx)
                 .expect("environment index should be valid");
             env.facts
-                .known_atomic_facts_in_forall_facts_by_arg_shape
+                .forall_conclusions
+                .atomic_by_argument_shape
                 .get(&lookup_key)
                 .and_then(|arg_shape_map| arg_shape_map.get(arg_shape_key))
                 .map(|bucket| bucket.len())
@@ -671,7 +681,8 @@ impl Runtime {
                     .environment_by_top_index(stack_idx)
                     .expect("environment index should be valid");
                 env.facts
-                    .known_atomic_facts_in_forall_facts_by_arg_shape
+                    .forall_conclusions
+                    .atomic_by_argument_shape
                     .get(lookup_key)
                     .and_then(|arg_shape_map| arg_shape_map.get(arg_shape_key))
                     .and_then(|bucket| bucket.get(entry_idx))
@@ -697,7 +708,7 @@ impl Runtime {
         &mut self,
         module_name: &str,
         lookup_key: &(AtomicFactKey, bool),
-        arg_shape_key: &AtomicFactInForallArgShapeKey,
+        arg_shape_key: &ForallArgumentShape,
         atomic_fact: &AtomicFact,
         verify_state: &ProofSearchState,
         phase: KnownForallSearchPhase,
@@ -715,7 +726,8 @@ impl Runtime {
             .into_iter()
             .filter_map(|env| {
                 env.facts
-                    .known_atomic_facts_in_forall_facts_by_arg_shape
+                    .forall_conclusions
+                    .atomic_by_argument_shape
                     .get(lookup_key)
                     .and_then(|arg_shape_map| arg_shape_map.get(arg_shape_key))
             })
@@ -863,28 +875,20 @@ impl Runtime {
         for environment in self.iter_environments_from_top() {
             match dom_atomic_fact.number_of_args() {
                 1 => {
-                    if let Some(known_facts) = environment
-                        .facts
-                        .known_atomic_facts_with_1_arg
-                        .get(&lookup_key)
+                    if let Some(known_facts) = environment.facts.atomic.by_one_arg.get(&lookup_key)
                     {
                         candidates.extend(known_facts.values().cloned());
                     }
                 }
                 2 => {
-                    if let Some(known_facts) = environment
-                        .facts
-                        .known_atomic_facts_with_2_args
-                        .get(&lookup_key)
+                    if let Some(known_facts) = environment.facts.atomic.by_two_args.get(&lookup_key)
                     {
                         candidates.extend(known_facts.values().cloned());
                     }
                 }
                 _ => {
-                    if let Some(known_facts) = environment
-                        .facts
-                        .known_atomic_facts_with_0_or_more_than_2_args
-                        .get(&lookup_key)
+                    if let Some(known_facts) =
+                        environment.facts.atomic.by_other_arg_count.get(&lookup_key)
                     {
                         candidates.extend(known_facts.iter().cloned());
                     }
@@ -3377,27 +3381,27 @@ fn arg_match_binding_key(symbol: &SymbolRef) -> String {
 
 fn atomic_fact_in_forall_lookup_arg_shape_keys(
     atomic_fact: &AtomicFact,
-) -> Vec<AtomicFactInForallArgShapeKey> {
-    let exact_key = atomic_fact_in_forall_arg_shape_key(atomic_fact);
+) -> Vec<ForallArgumentShape> {
+    let exact_key = forall_argument_shape(atomic_fact);
     let forall_param_key_part = (ObjKind::BoundParam, String::new());
     let mut keys = Vec::new();
-    push_atomic_fact_in_forall_arg_shape_key_if_new(&mut keys, exact_key.clone());
+    push_forall_argument_shape_if_new(&mut keys, exact_key.clone());
 
     for index in 0..exact_key.len() {
         let known_keys_count = keys.len();
         for key_index in 0..known_keys_count {
             let mut key = keys[key_index].clone();
             key[index] = forall_param_key_part.clone();
-            push_atomic_fact_in_forall_arg_shape_key_if_new(&mut keys, key);
+            push_forall_argument_shape_if_new(&mut keys, key);
         }
     }
 
     keys
 }
 
-fn push_atomic_fact_in_forall_arg_shape_key_if_new(
-    keys: &mut Vec<AtomicFactInForallArgShapeKey>,
-    key: AtomicFactInForallArgShapeKey,
+fn push_forall_argument_shape_if_new(
+    keys: &mut Vec<ForallArgumentShape>,
+    key: ForallArgumentShape,
 ) {
     if !keys.contains(&key) {
         keys.push(key);

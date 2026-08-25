@@ -45,7 +45,8 @@ impl Runtime {
                     .expect("environment index should be valid");
                 match env
                     .facts
-                    .known_or_facts_in_forall_facts
+                    .forall_conclusions
+                    .disjunction
                     .get(lookup_key.as_str())
                 {
                     Some(v) => v.len(),
@@ -65,7 +66,8 @@ impl Runtime {
                         .expect("environment index should be valid");
                     let Some(known_forall_facts_in_env) = env
                         .facts
-                        .known_or_facts_in_forall_facts
+                        .forall_conclusions
+                        .disjunction
                         .get(lookup_key.as_str())
                     else {
                         continue;

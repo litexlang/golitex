@@ -1,3 +1,5 @@
+//! Function-set knowledge retained for one object.
+
 use crate::prelude::*;
 
 #[derive(Clone, Default)]

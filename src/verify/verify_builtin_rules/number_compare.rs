@@ -1389,7 +1389,7 @@ impl Runtime {
     fn collect_known_lower_bound_candidates(&self, right: &Obj) -> Vec<AtomicFact> {
         let mut candidates = Vec::new();
         for environment in self.iter_environments_from_top() {
-            for known_facts_map in environment.facts.known_atomic_facts_with_2_args.values() {
+            for known_facts_map in environment.facts.atomic.by_two_args.values() {
                 for known_fact in known_facts_map.values() {
                     if self
                         .known_lower_bound_candidate_value(known_fact, right)
@@ -1481,7 +1481,7 @@ impl Runtime {
     fn collect_known_upper_bound_candidates(&self, left: &Obj) -> Vec<AtomicFact> {
         let mut candidates = Vec::new();
         for environment in self.iter_environments_from_top() {
-            for known_facts_map in environment.facts.known_atomic_facts_with_2_args.values() {
+            for known_facts_map in environment.facts.atomic.by_two_args.values() {
                 for known_fact in known_facts_map.values() {
                     if self
                         .known_upper_bound_candidate_value(known_fact, left)

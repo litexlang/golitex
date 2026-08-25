@@ -1058,13 +1058,15 @@ try:
             (
                 environment
                     .facts
-                    .known_owner_sets
+                    .set_relations
+                    .owner_sets
                     .values()
                     .map(|owner_sets| owner_sets.len())
                     .sum::<usize>(),
                 environment
                     .facts
-                    .known_direct_supersets
+                    .set_relations
+                    .direct_supersets
                     .values()
                     .map(|supersets| supersets.len())
                     .sum::<usize>(),
@@ -1080,13 +1082,15 @@ try:
             (
                 environment
                     .facts
-                    .known_owner_sets
+                    .set_relations
+                    .owner_sets
                     .values()
                     .map(|owner_sets| owner_sets.len())
                     .sum::<usize>(),
                 environment
                     .facts
-                    .known_direct_supersets
+                    .set_relations
+                    .direct_supersets
                     .values()
                     .map(|supersets| supersets.len())
                     .sum::<usize>(),

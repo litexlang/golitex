@@ -1,18 +1,7 @@
+//! Predicate-name to algebraic-property storage.
+
 use crate::prelude::*;
 use std::collections::HashMap;
-
-/// All algebraic properties currently registered for one predicate.
-///
-/// Keeping one profile per predicate makes the predicate name the single
-/// ownership key.  A property is still independently optional: registering
-/// symmetry does not imply transitivity, reflexivity, or antisymmetry.
-#[derive(Clone, Default)]
-pub struct EnvironmentPredicateProperties {
-    pub is_transitive: bool,
-    pub symmetric_argument_permutations: SymmetricPropValue,
-    pub is_reflexive: bool,
-    pub is_antisymmetric: bool,
-}
 
 /// Registered algebraic properties of predicates.
 #[derive(Clone)]
@@ -48,7 +37,7 @@ impl EnvironmentPredicatePropertyStore {
     pub fn symmetric_argument_permutations(
         &self,
         predicate_name: &str,
-    ) -> Option<&SymmetricPropValue> {
+    ) -> Option<&Vec<Vec<usize>>> {
         self.properties(predicate_name)
             .map(|properties| &properties.symmetric_argument_permutations)
             .filter(|permutations| !permutations.is_empty())

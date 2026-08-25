@@ -1,175 +1,8 @@
+//! Central fact-storage dispatch and its fact-shape branches.
+
 use crate::prelude::*;
 use std::collections::HashMap;
-use std::fmt;
 use std::rc::Rc;
-
-pub type AtomicFactInForallArgShapeKey = Vec<(ObjKind, ObjOperatorString)>;
-pub type AtomicFactInForallArgShapeIndex = HashMap<
-    (AtomicFactKey, bool),
-    HashMap<AtomicFactInForallArgShapeKey, Vec<(AtomicFact, Rc<StoredForallConclusionReference>)>>,
->;
-
-/// The mutable mathematical context for a runtime environment.
-///
-/// `Environment` is intentionally broad: it is the physical storage for the
-/// checked world that later statements can reuse. The fields are grouped by
-/// role rather than by proof rule:
-///
-/// - definition tables for identifiers, predicates, algorithms, structs,
-///   templates, theorems, and strategies;
-/// - known fact indexes for equality, atomic, existential, and disjunctive
-///   facts;
-/// - known `forall` indexes, including argument-shape indexes for faster
-///   matching against later goals;
-/// - derived object-shape caches for tuples, carts, finite sequences,
-///   matrices, object values, set builders, and function-set information;
-/// - verification caches for well-defined objects and already-known facts.
-#[derive(Clone)]
-pub struct Environment {
-    pub definitions: EnvironmentDefinitionRegistry,
-    pub facts: EnvironmentFactStore,
-    pub objects: EnvironmentObjectKnowledgeStore,
-    pub predicate_properties: EnvironmentPredicatePropertyStore,
-    pub caches: EnvironmentVerificationCache,
-}
-
-#[derive(Clone)]
-pub enum KnownObjValue {
-    SimplifiedNumber(Number), // when a = 1.0, store a = 1
-    SimplifiedFraction(Div),  // when a = 1/3, store a = 1/3
-}
-
-impl fmt::Display for Environment {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        write!(f, "Environment {{\n")?;
-        write!(
-            f,
-            "    objs: {:?}\n",
-            self.definitions.object_symbol_count()
-        )?;
-        write!(
-            f,
-            "    def_props: {:?}\n",
-            self.definitions.predicate_definitions.len()
-        )?;
-        write!(
-            f,
-            "    algorithms: {:?}\n",
-            self.definitions.algorithm_definitions.len()
-        )?;
-        write!(
-            f,
-            "    structs: {:?}\n",
-            self.definitions.structure_definitions.len()
-        )?;
-        write!(
-            f,
-            "    templates: {:?}\n",
-            self.definitions.template_definitions.len()
-        )?;
-        write!(
-            f,
-            "    settings: {:?}\n",
-            self.definitions.setting_definitions.len()
-        )?;
-        write!(
-            f,
-            "    known_equality: {:?}\n",
-            self.facts.known_equality.len()
-        )?;
-        write!(
-            f,
-            "    known_fn_in_fn_set: {:?}\n",
-            self.objects.function_set_count()
-        )?;
-        write!(
-            f,
-            "    known_transitive_props: {:?}\n",
-            self.predicate_properties.transitive_predicate_count()
-        )?;
-        write!(
-            f,
-            "    known_symmetric_props: {} predicates, {} permutations\n",
-            self.predicate_properties.symmetric_predicate_count(),
-            self.predicate_properties.symmetric_permutation_count()
-        )?;
-        write!(
-            f,
-            "    known_reflexive_props: {:?}\n",
-            self.predicate_properties.reflexive_predicate_count()
-        )?;
-        write!(
-            f,
-            "    known_antisymmetric_props: {:?}\n",
-            self.predicate_properties.antisymmetric_predicate_count()
-        )?;
-        write!(
-            f,
-            "    known_atomic_facts_with_0_or_more_than_two_params: {:?}\n",
-            self.facts
-                .known_atomic_facts_with_0_or_more_than_2_args
-                .len()
-        )?;
-        write!(
-            f,
-            "    known_atomic_facts_with_1_arg: {:?}\n",
-            self.facts.known_atomic_facts_with_1_arg.len()
-        )?;
-        write!(
-            f,
-            "    known_atomic_facts_with_2_args: {:?}\n",
-            self.facts.known_atomic_facts_with_2_args.len()
-        )?;
-        write!(
-            f,
-            "    known_exist_facts_with_more_than_two_params: {:?}\n",
-            self.facts.known_exist_facts.len()
-        )?;
-        write!(
-            f,
-            "    known_or_facts_with_more_than_two_params: {:?}\n",
-            self.facts.known_or_facts.len()
-        )?;
-        write!(
-            f,
-            "    known_atomic_facts_in_forall_facts: {:?}\n",
-            self.facts.known_atomic_facts_in_forall_facts.len()
-        )?;
-        write!(
-            f,
-            "    known_atomic_facts_in_forall_facts_by_arg_shape: {:?}\n",
-            self.facts
-                .known_atomic_facts_in_forall_facts_by_arg_shape
-                .len()
-        )?;
-        write!(
-            f,
-            "    known_exist_facts_in_forall_facts: {:?}\n",
-            self.facts.known_exist_facts_in_forall_facts.len()
-        )?;
-        write!(
-            f,
-            "    known_and_facts_in_forall_facts: {:?}\n",
-            self.facts.known_and_facts_in_forall_facts.len()
-        )?;
-        write!(
-            f,
-            "    known_or_facts_in_forall_facts: {:?}\n",
-            self.facts.known_or_facts_in_forall_facts.len()
-        )?;
-        write!(
-            f,
-            "    cache_known_valid_obj: {:?}\n",
-            self.caches.well_defined_objects.len()
-        )?;
-        write!(
-            f,
-            "    stored_fact_lookup_keys: {:?}\n",
-            self.facts.stored_facts.lookup_key_count()
-        )?;
-        write!(f, "}}")
-    }
-}
 
 impl Environment {
     pub fn store_atomic_fact_by_ref(
@@ -185,7 +18,8 @@ impl Environment {
                 let element_key = obj_equality_key(&in_fact.element);
                 let set_key = obj_equality_key(&in_fact.set);
                 self.facts
-                    .known_owner_sets
+                    .set_relations
+                    .owner_sets
                     .entry(element_key.clone())
                     .or_default()
                     .entry(set_key)
@@ -193,7 +27,8 @@ impl Environment {
 
                 if let Obj::PowerSet(power_set) = &in_fact.set {
                     self.facts
-                        .known_direct_supersets
+                        .set_relations
+                        .direct_supersets
                         .entry(element_key)
                         .or_default()
                         .entry(obj_equality_key(power_set.set.as_ref()))
@@ -202,7 +37,8 @@ impl Environment {
             }
             AtomicFact::SubsetFact(subset_fact) => {
                 self.facts
-                    .known_direct_supersets
+                    .set_relations
+                    .direct_supersets
                     .entry(obj_equality_key(&subset_fact.left))
                     .or_default()
                     .entry(obj_equality_key(&subset_fact.right))
@@ -210,7 +46,8 @@ impl Environment {
             }
             AtomicFact::SupersetFact(superset_fact) => {
                 self.facts
-                    .known_direct_supersets
+                    .set_relations
+                    .direct_supersets
                     .entry(obj_equality_key(&superset_fact.right))
                     .or_default()
                     .entry(obj_equality_key(&superset_fact.left))
@@ -234,12 +71,13 @@ impl Environment {
                     let arg_key: ObjString = arg_key1.expect("one argument key should exist");
                     if let Some(map) = self
                         .facts
-                        .known_atomic_facts_with_1_arg
+                        .atomic
+                        .by_one_arg
                         .get_mut(&(key.clone(), positive_polarity))
                     {
                         map.insert(arg_key, atomic_fact);
                     } else {
-                        self.facts.known_atomic_facts_with_1_arg.insert(
+                        self.facts.atomic.by_one_arg.insert(
                             (key, positive_polarity),
                             HashMap::from([(arg_key, atomic_fact)]),
                         );
@@ -249,12 +87,13 @@ impl Environment {
                     let arg_key2: ObjString = arg_key2.expect("second argument key should exist");
                     if let Some(map) = self
                         .facts
-                        .known_atomic_facts_with_2_args
+                        .atomic
+                        .by_two_args
                         .get_mut(&(key.clone(), positive_polarity))
                     {
                         map.insert((arg_key1, arg_key2), atomic_fact);
                     } else {
-                        self.facts.known_atomic_facts_with_2_args.insert(
+                        self.facts.atomic.by_two_args.insert(
                             (key, positive_polarity),
                             HashMap::from([((arg_key1, arg_key2), atomic_fact)]),
                         );
@@ -262,13 +101,15 @@ impl Environment {
                 } else {
                     if let Some(vec_ref) = self
                         .facts
-                        .known_atomic_facts_with_0_or_more_than_2_args
+                        .atomic
+                        .by_other_arg_count
                         .get_mut(&(key.clone(), positive_polarity))
                     {
                         vec_ref.push(atomic_fact);
                     } else {
                         self.facts
-                            .known_atomic_facts_with_0_or_more_than_2_args
+                            .atomic
+                            .by_other_arg_count
                             .insert((key, positive_polarity), vec![atomic_fact]);
                     }
                 }
@@ -279,20 +120,22 @@ impl Environment {
 
     fn store_exist_fact(&mut self, exist_fact: ExistFactEnum) -> Result<(), RuntimeError> {
         let key: ExistFactKey = exist_fact.key();
-        if let Some(vec_ref) = self.facts.known_exist_facts.get_mut(&key) {
+        if let Some(vec_ref) = self.facts.quantified.existential.get_mut(&key) {
             vec_ref.push(exist_fact.clone());
         } else {
             self.facts
-                .known_exist_facts
+                .quantified
+                .existential
                 .insert(key.clone(), vec![exist_fact.clone()]);
         }
         let alpha_key = exist_fact.alpha_normalized_key();
         if alpha_key != key {
-            if let Some(vec_ref) = self.facts.known_exist_facts.get_mut(&alpha_key) {
+            if let Some(vec_ref) = self.facts.quantified.existential.get_mut(&alpha_key) {
                 vec_ref.push(exist_fact);
             } else {
                 self.facts
-                    .known_exist_facts
+                    .quantified
+                    .existential
                     .insert(alpha_key, vec![exist_fact]);
             }
         }
@@ -301,10 +144,13 @@ impl Environment {
 
     fn store_or_fact(&mut self, or_fact: OrFact) -> Result<(), RuntimeError> {
         let key: OrFactKey = or_fact.key();
-        if let Some(vec_ref) = self.facts.known_or_facts.get_mut(&key) {
+        if let Some(vec_ref) = self.facts.quantified.disjunctions.get_mut(&key) {
             vec_ref.push(or_fact);
         } else {
-            self.facts.known_or_facts.insert(key, vec![or_fact]);
+            self.facts
+                .quantified
+                .disjunctions
+                .insert(key, vec![or_fact]);
         }
         Ok(())
     }
@@ -321,24 +167,29 @@ impl Environment {
             let lookup_key = (key, positive_polarity);
             if let Some(vec_ref) = self
                 .facts
-                .known_atomic_facts_in_forall_facts
+                .forall_conclusions
+                .atomic_with_parameterized_head
                 .get_mut(&lookup_key)
             {
                 vec_ref.push((atomic_fact, stored_forall_conclusion_reference));
             } else {
-                self.facts.known_atomic_facts_in_forall_facts.insert(
-                    lookup_key,
-                    vec![(atomic_fact, stored_forall_conclusion_reference)],
-                );
+                self.facts
+                    .forall_conclusions
+                    .atomic_with_parameterized_head
+                    .insert(
+                        lookup_key,
+                        vec![(atomic_fact, stored_forall_conclusion_reference)],
+                    );
             }
             return Ok(());
         }
 
         let lookup_key = (key, positive_polarity);
-        let arg_shape_key = atomic_fact_in_forall_arg_shape_key(&atomic_fact);
+        let arg_shape_key = forall_argument_shape(&atomic_fact);
         let arg_shape_map = self
             .facts
-            .known_atomic_facts_in_forall_facts_by_arg_shape
+            .forall_conclusions
+            .atomic_by_argument_shape
             .entry(lookup_key)
             .or_default();
         arg_shape_map
@@ -354,10 +205,10 @@ impl Environment {
         stored_forall_conclusion_reference: Rc<StoredForallConclusionReference>,
     ) -> Result<(), RuntimeError> {
         let key: OrFactKey = or_fact.key();
-        if let Some(vec_ref) = self.facts.known_or_facts_in_forall_facts.get_mut(&key) {
+        if let Some(vec_ref) = self.facts.forall_conclusions.disjunction.get_mut(&key) {
             vec_ref.push((or_fact.clone(), stored_forall_conclusion_reference));
         } else {
-            self.facts.known_or_facts_in_forall_facts.insert(
+            self.facts.forall_conclusions.disjunction.insert(
                 key,
                 vec![(or_fact.clone(), stored_forall_conclusion_reference)],
             );
@@ -371,10 +222,10 @@ impl Environment {
         stored_forall_conclusion_reference: Rc<StoredForallConclusionReference>,
     ) -> Result<(), RuntimeError> {
         let key: AndFactKey = and_fact.key();
-        if let Some(vec_ref) = self.facts.known_and_facts_in_forall_facts.get_mut(&key) {
+        if let Some(vec_ref) = self.facts.forall_conclusions.conjunction.get_mut(&key) {
             vec_ref.push((and_fact.clone(), stored_forall_conclusion_reference));
         } else {
-            self.facts.known_and_facts_in_forall_facts.insert(
+            self.facts.forall_conclusions.conjunction.insert(
                 key,
                 vec![(and_fact.clone(), stored_forall_conclusion_reference)],
             );
@@ -444,24 +295,27 @@ impl Environment {
             )
         };
         let key: ExistFactKey = exist_fact.key();
-        if let Some(vec_ref) = self.facts.known_exist_facts_in_forall_facts.get_mut(&key) {
+        if let Some(vec_ref) = self.facts.forall_conclusions.existential.get_mut(&key) {
             vec_ref.push(pair());
         } else {
             self.facts
-                .known_exist_facts_in_forall_facts
+                .forall_conclusions
+                .existential
                 .insert(key, vec![pair()]);
         }
         let alpha_key = exist_fact.alpha_normalized_key();
         if alpha_key != exist_fact.key() {
             if let Some(vec_ref) = self
                 .facts
-                .known_exist_facts_in_forall_facts
+                .forall_conclusions
+                .existential
                 .get_mut(&alpha_key)
             {
                 vec_ref.push(pair());
             } else {
                 self.facts
-                    .known_exist_facts_in_forall_facts
+                    .forall_conclusions
+                    .existential
                     .insert(alpha_key, vec![pair()]);
             }
         }
@@ -648,253 +502,6 @@ impl Environment {
         }
         Ok(())
     }
-}
-
-impl Environment {
-    pub fn new_empty_env() -> Self {
-        Environment {
-            definitions: EnvironmentDefinitionRegistry::new(),
-            facts: EnvironmentFactStore::new(),
-            objects: EnvironmentObjectKnowledgeStore::new(),
-            predicate_properties: EnvironmentPredicatePropertyStore::new(),
-            caches: EnvironmentVerificationCache::new(),
-        }
-    }
-}
-
-impl Environment {
-    pub fn store_transitive_prop_name(&mut self, prop_name: String) {
-        self.predicate_properties
-            .properties_mut(prop_name)
-            .is_transitive = true;
-    }
-
-    pub fn store_reflexive_prop_name(&mut self, prop_name: String) {
-        self.predicate_properties
-            .properties_mut(prop_name)
-            .is_reflexive = true;
-    }
-
-    pub fn store_antisymmetric_prop_name(&mut self, prop_name: String) {
-        self.predicate_properties
-            .properties_mut(prop_name)
-            .is_antisymmetric = true;
-    }
-
-    pub fn store_symmetric_prop_permutation(
-        &mut self,
-        prop_name: String,
-        gather: Vec<usize>,
-        line_file: LineFile,
-    ) -> Result<(), RuntimeError> {
-        let n = gather.len();
-        if n < 2 {
-            return Err(
-                StoreFactRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "store_symmetric_prop_permutation: arity must be at least 2".to_string(),
-                    line_file,
-                ))
-                .into(),
-            );
-        }
-        if !symmetric_gather_is_valid_permutation(&gather, n) {
-            return Err(
-                StoreFactRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "store_symmetric_prop_permutation: gather is not a valid permutation"
-                        .to_string(),
-                    line_file,
-                ))
-                .into(),
-            );
-        }
-        if symmetric_gather_is_identity(&gather) {
-            return Err(
-                StoreFactRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "store_symmetric_prop_permutation: identity permutation is not allowed"
-                        .to_string(),
-                    line_file,
-                ))
-                .into(),
-            );
-        }
-        if let Some(existing) = self
-            .predicate_properties
-            .symmetric_argument_permutations(&prop_name)
-        {
-            if let Some(first) = existing.first() {
-                if first.len() != n {
-                    return Err(StoreFactRuntimeError(
-                        RuntimeErrorStruct::new_with_msg_and_line_file(
-                            format!(
-                            "store_symmetric_prop_permutation: `{}` already has arity {}, got {}",
-                            prop_name,
-                            first.len(),
-                            n
-                        ),
-                            line_file,
-                        ),
-                    )
-                    .into());
-                }
-            }
-        }
-        let entry = &mut self
-            .predicate_properties
-            .properties_mut(prop_name)
-            .symmetric_argument_permutations;
-        if entry.iter().any(|g| g == &gather) {
-            return Ok(());
-        }
-        entry.push(gather);
-        Ok(())
-    }
-}
-
-impl Environment {
-    pub fn store_fact_to_cache_known_fact(
-        &mut self,
-        fact_key: FactString,
-        fact_line_file: LineFile,
-        fact_id: FactId,
-    ) -> Result<(), RuntimeError> {
-        self.facts
-            .stored_facts
-            .record_lookup_key(fact_key, fact_line_file, fact_id)
-    }
-
-    pub fn store_fact_to_cache_known_fact_with_equivalent_proposition_key(
-        &mut self,
-        fact_key: FactString,
-        fact_line_file: LineFile,
-        fact_id: FactId,
-        equivalent_proposition_lookup_key: FactString,
-    ) -> Result<(), RuntimeError> {
-        self.facts
-            .stored_facts
-            .record_lookup_key_with_equivalent_proposition_key(
-                fact_key,
-                fact_line_file,
-                fact_id,
-                equivalent_proposition_lookup_key,
-            )
-    }
-
-    pub fn record_stored_fact(&mut self, fact: Fact, fact_id: FactId) -> Result<(), RuntimeError> {
-        self.facts.stored_facts.record_fact(fact, fact_id)
-    }
-
-    pub fn record_stored_fact_with_equivalent_proposition_key(
-        &mut self,
-        fact: Fact,
-        fact_id: FactId,
-        equivalent_proposition_lookup_key: FactString,
-    ) -> Result<(), RuntimeError> {
-        self.facts
-            .stored_facts
-            .record_fact_with_equivalent_proposition_key(
-                fact,
-                fact_id,
-                equivalent_proposition_lookup_key,
-            )
-    }
-
-    pub fn store_infer_rule_firing(&mut self, firing_key: String) {
-        self.caches.infer_rule_firings.insert(firing_key, ());
-    }
-}
-
-/// The deliberately small payload kept by the fact cache.
-///
-/// Proof trees, origins, scopes, and Lean names belong to statement Results
-/// and compiler state. The environment only needs a stable identity and the
-/// source location already used by diagnostics.
-#[derive(Clone, Debug)]
-pub struct CachedKnownFact {
-    pub fact_id: FactId,
-    pub line_file: LineFile,
-    pub equivalent_proposition_lookup_key: FactString,
-}
-
-pub fn atomic_fact_in_forall_arg_shape_key(
-    atomic_fact: &AtomicFact,
-) -> AtomicFactInForallArgShapeKey {
-    atomic_fact
-        .args_ref()
-        .into_iter()
-        .map(|arg| arg.equality_in_forall_key_part())
-        .collect()
-}
-
-/// One conclusion indexed from one exact stored universal fact.
-///
-/// The complete source proposition and `FactId` remain together with the
-/// structural conclusion location, so consumers never rebuild a smaller
-/// universal from the matched conclusion.
-pub struct StoredForallConclusionReference {
-    pub params_def: TypedParameterList,
-    pub dom: Vec<Fact>,
-    pub line_file: LineFile,
-    /// Exact stored universal that produced every indexed conclusion sharing
-    /// this record. A consumer may select one conclusion for matching, but its
-    /// proof citation must retain this complete source proposition and FactId.
-    pub source_forall: Rc<ForallFact>,
-    pub source_fact_id: FactId,
-    pub conclusion_location: ForallConclusionLocation,
-}
-
-impl StoredForallConclusionReference {
-    pub fn new(
-        source_forall: Rc<ForallFact>,
-        source_fact_id: FactId,
-        conclusion_location: ForallConclusionLocation,
-    ) -> Self {
-        StoredForallConclusionReference {
-            params_def: source_forall.typed_parameters.clone(),
-            dom: source_forall.dom_facts.clone(),
-            line_file: source_forall.line_file.clone(),
-            source_forall,
-            source_fact_id,
-            conclusion_location,
-        }
-    }
-
-    pub fn source_fact(&self) -> Fact {
-        self.source_forall.as_ref().clone().into()
-    }
-
-    pub fn with_conclusion_location(
-        &self,
-        conclusion_location: ForallConclusionLocation,
-    ) -> Rc<Self> {
-        Rc::new(Self::new(
-            self.source_forall.clone(),
-            self.source_fact_id,
-            conclusion_location,
-        ))
-    }
-}
-
-pub type SymmetricPropValue = Vec<Vec<usize>>;
-
-fn symmetric_gather_is_identity(gather: &[usize]) -> bool {
-    gather.iter().enumerate().all(|(i, &g)| g == i)
-}
-
-fn symmetric_gather_is_valid_permutation(gather: &[usize], n: usize) -> bool {
-    if gather.len() != n {
-        return false;
-    }
-    let mut seen = vec![false; n];
-    for &i in gather {
-        if i >= n {
-            return false;
-        }
-        if seen[i] {
-            return false;
-        }
-        seen[i] = true;
-    }
-    true
 }
 
 fn atomic_fact_has_top_level_fn_arg_head_with_forall_free_param(atomic_fact: &AtomicFact) -> bool {
